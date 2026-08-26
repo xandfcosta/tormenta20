@@ -352,6 +352,20 @@ html {
     height: min(60vh, 32rem);
   }
 
+  /* O CENTRALIZAR SALTA, e não desliza — e a decisão é medida, não gosto.
+   *
+   * `scroll-behavior: smooth` aqui (ou `scrollTo({behavior:'smooth'})` no JS)
+   * deixava o `scrollTop` em ZERO, sem erro em lugar nenhum: a rolagem
+   * programática simplesmente não acontecia. Com a atribuição direta e sem
+   * `smooth`, ela chega ao lugar certo — conferido nos dois sentidos no mesmo
+   * navegador, e o `prefers-reduced-motion` de lá dizia `no-preference`, então
+   * a preferência do usuário não era a causa.
+   *
+   * Um botão que anima e não chega é pior que um botão que salta. Se a animação
+   * voltar à mesa, ela volta com a MEDIÇÃO de que a rolagem acontece — e sob
+   * `prefers-reduced-motion`, que é onde ela pode ser desligada por quem pediu
+   * menos movimento. */
+
   /* O PALCO DO MESTRE dá ao mapa a altura que sobra (ALE-269).
    *
    * A altura fixa acima é a resposta certa para a COLUNA do jogador, que rola:

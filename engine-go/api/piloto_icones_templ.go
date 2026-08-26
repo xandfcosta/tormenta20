@@ -312,8 +312,13 @@ func icone(nome, classe string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+		case "Crosshair":
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<circle cx=\"12\" cy=\"12\" r=\"10\"></circle> <line x1=\"22\" x2=\"18\" y1=\"12\" y2=\"12\"></line> <line x1=\"6\" x2=\"2\" y1=\"12\" y2=\"12\"></line> <line x1=\"12\" x2=\"12\" y1=\"6\" y2=\"2\"></line> <line x1=\"12\" x2=\"12\" y1=\"22\" y2=\"18\"></line>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "</svg>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</svg>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

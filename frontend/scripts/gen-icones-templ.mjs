@@ -85,6 +85,8 @@ const QUERIDOS = [
   'Ruler',
   'Radar',
   'MousePointer2',
+  // O CENTRALIZADOR (ALE-269, item 9), o mesmo ícone que a `ViewControls` da SPA.
+  'Crosshair',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

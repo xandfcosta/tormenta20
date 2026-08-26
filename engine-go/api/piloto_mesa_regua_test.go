@@ -274,6 +274,35 @@ func TestOTrilhoOfereceAReguaAoJogador(t *testing.T) {
 	}
 }
 
+// TestOCentroDaCenaEnquadraOCorpoDaPecaGrande (ALE-269, item 9).
+//
+// Num plano sem bordas, "voltar ao começo" não significa nada — o gesto tem de
+// achar o GRUPO. E o corpo entra na conta e não só a âncora: uma Colossal ocupa
+// 6×6 (p107), e enquadrar pela quina dela deixaria metade do dragão fora da
+// janela justamente na cena em que ele é o motivo de olhar.
+func TestOCentroDaCenaEnquadraOCorpoDaPecaGrande(t *testing.T) {
+	// Um rato em (0,0) e um dragão cuja âncora é (10,10) e cujo corpo vai até
+	// (15,15): o centro pelo corpo é 7, pela âncora seria 5.
+	v := tabuleiroView{Colunas: 40, Linhas: 40, Pecas: []pecaDoTabuleiro{
+		{Col: 0, Lin: 0, Pegada: 1},
+		{Col: 10, Lin: 10, Pegada: 6},
+	}}
+	if col, lin := oCentroDaCena(v); col != 7 || lin != 7 {
+		t.Errorf("o centro saiu (%d,%d), esperado (7,7) — o corpo da peça grande ficou fora da conta", col, lin)
+	}
+	// SEM PEÇA o alvo é o meio da MOLDURA e não a origem do plano: a moldura é o
+	// que está desenhado, e rolar para um canto vazio pareceria um botão morto.
+	vazia := tabuleiroView{Colunas: 20, Linhas: 14}
+	if col, lin := oCentroDaCena(vazia); col != 10 || lin != 7 {
+		t.Errorf("a cena vazia mirou (%d,%d), esperado o meio da moldura (10,7)", col, lin)
+	}
+	// E o RÓTULO acompanha: "nas peças" numa cena sem peça nenhuma ensina que o
+	// botão está quebrado.
+	if oAlvoDoCentralizar(vazia) == oAlvoDoCentralizar(v) {
+		t.Errorf("o rótulo não distingue cena com peça de cena vazia: %q", oAlvoDoCentralizar(v))
+	}
+}
+
 // TestACamadaDePinturaSoAcendeComPincel.
 //
 // A pergunta antiga era `$ferramenta != ” && != 'marcador'`, e ela era VERDADE

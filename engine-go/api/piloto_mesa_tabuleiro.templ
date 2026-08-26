@@ -79,7 +79,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				// O `ml-auto` mudou de dono para cá, e de propósito: ele precisa
 				// morar no primeiro grupo que existe SEMPRE. No bloco do mestre
 				// ele sumia da tela do jogador, e o alinhamento ia junto.
-				@oZoomDoPlano()
+				@oEnquadramentoDoPlano(v)
 				if v.Mestre {
 					// Os DOIS verbos do canto direito num agrupador só. O
 					// `ml-auto` saiu daqui para o grupo do zoom, que é o que
@@ -150,6 +150,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			// HTML, o remendo do SSE redesenha as peças sem que o mestre perca
 			// onde estava olhando.
 			<div
+				id={ idDoPalco }
 				data-attr:style={ estiloDoPalco }
 				data-on:wheel={ zoomPelaRoda }
 				data-on:keydown__window={ zoomPeloTeclado }
@@ -930,17 +931,23 @@ templ osPinceisDoMestre(v tabuleiroView) {
 	</div>
 }
 
-// O ZOOM do plano (ALE-264, item 6).
+// O ENQUADRAMENTO do plano: centralizar e o zoom (ALE-264 item 6, ALE-269 item 9).
 //
-// AÇÃO e não ferramenta, e a divisa é a mesma que a ALE-203 desenhou na SPA:
+// AÇÕES e não ferramentas, e a divisa é a mesma que a ALE-203 desenhou na SPA:
 // ferramenta muda o que o CLIQUE faz, ação acontece uma vez e acaba. Por isso
-// ele fica no cabeçalho e não no trilho — no trilho, aproximar pareceria um modo
-// que se liga.
+// elas ficam no cabeçalho e não no trilho — no trilho, aproximar pareceria um
+// modo que se liga.
 //
-// Os botões DESABILITAM no limite em vez de sumir: um botão que some move os
-// vizinhos debaixo do dedo de quem está clicando repetido para aproximar.
-templ oZoomDoPlano() {
-	<span role="group" aria-label="Aproximar e afastar o mapa" class="ml-auto flex items-center gap-1">
+// Os botões do zoom DESABILITAM no limite em vez de sumir: um botão que some
+// move os vizinhos debaixo do dedo de quem está clicando repetido para
+// aproximar.
+templ oEnquadramentoDoPlano(v tabuleiroView) {
+	<span role="group" aria-label="Enquadrar o mapa" class="ml-auto flex items-center gap-1">
+		// CENTRALIZAR vem ANTES do zoom e é a única ação da faixa que precisa
+		// saber da cena: num plano sem bordas, achar o grupo é a pergunta que se
+		// faz primeiro, e aproximar é o ajuste que vem depois de achar.
+		@oCentralizador(v)
+		<span aria-hidden="true" class="mx-0.5 h-5 w-px bg-grimorio-iron"></span>
 		<button
 			type="button"
 			aria-label="Afastar o mapa"
@@ -972,6 +979,28 @@ templ oZoomDoPlano() {
 			@icone("Plus", "size-4")
 		</button>
 	</span>
+}
+
+// oCentralizador acha o grupo num plano que não tem começo (ALE-269, item 9).
+//
+// "Voltar ao começo" não significa nada aqui: a origem do plano é um lugar como
+// outro qualquer, e o que o mestre quer é ver as peças. Por isso o alvo é a
+// caixa que as contém, e por isso o RÓTULO muda quando não há nenhuma — "nas
+// peças" numa cena vazia ensinaria que o botão está quebrado.
+//
+// ÍCONE e não texto, como os vizinhos: a linha do lugar é a mais estreita da
+// região, e o nome por extenso empurra o nome da cena para fora. O nome
+// acessível carrega a frase inteira.
+templ oCentralizador(v tabuleiroView) {
+	<button
+		type="button"
+		aria-label={ oAlvoDoCentralizar(v) }
+		title={ oAlvoDoCentralizar(v) }
+		data-on:click={ centralizaNasPecas(v) }
+		class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>
+		@icone("Crosshair", "size-4")
+	</button>
 }
 
 // O botão da CORTINA (ALE-202, portado na ALE-269).
