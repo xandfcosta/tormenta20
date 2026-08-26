@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/http"
 	"strconv"
+	"strings"
 	"t20engine/aovivo"
 	"t20engine/tabuleiro"
 	"time"
@@ -71,6 +72,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDosComandosDaMesa(r)
 		s.rotasDoBestiarioDaMesa(r)
 		s.rotasDoMovimento(r)
+		s.rotasDaRegua(r)
 		s.rotasDaCena(r)
 		s.rotasDosMarcadores(r)
 		s.rotasDaCortina(r)
@@ -136,18 +138,63 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 	// guardá-la serviria uma fila velha.
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
+		Sinais: sinaisDaMesa(),
+		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
+	}, s.corpoDaMesa(r, view, campaignID, sessionID))
+}
+
+// sinaisDaMesa é o estado que mora no NAVEGADOR, agrupado por superfície.
+//
+// Ele era uma linha só de mil e duzentos caracteres, e a régua a empurrou para
+// mil e quinhentos — a essa altura ninguém mais lia o que estava lá dentro, e
+// sinal repetido ou esquecido não dá erro em lugar nenhum: ele nasce `undefined`
+// no primeiro uso e a expressão que o lê fica muda.
+//
+// Nomes MINÚSCULOS nos que aparecem como CHAVE de atributo (`data-bind`,
+// `data-signals`): o HTML minuscula a chave, e um `data-bind="gabaritoTamanho"`
+// liga um sinal NOVO, vazio, ao lado do que se queria. Os que só vivem dentro de
+// expressão (`$erroDoComando`) mantêm a caixa.
+func sinaisDaMesa() string {
+	return "{" + strings.Join([]string{
 		// `erro` e `erroDoComando` são DOIS sinais e não um. Um só faria a
 		// recusa de "Adicionar grupo" acender a frase vermelha dentro da caixa
 		// "Registrar iniciativa" do mestre que também joga: a frase certa no
 		// lugar errado, que é como se lê um defeito. Uma palavra por conceito
 		// vale para sinal de página como vale para identificador.
+		"d20: 10, erro: '', erroDoComando: '', erroDoMovimento: ''",
 		// O chão padrão é DERIVADO e não digitado: escrever 'pedra' aqui seria a
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
-		Sinais: fmt.Sprintf("{d20: 10, erro: '', erroDoComando: '', erroDoMovimento: '', novolugar: '', novochao: '%s', ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: '', qualidadedodescanso: 'normal', formdecombatente: false, linhadacondicao: '', condicoesdalinha: '', rotulodalinha: '', novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0, rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, quadrado: %d, arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0, notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false, notassalvando: false, erroDasNotas: '', nomedonpc: ''}", tabuleiro.ChaoPadrao(), quadradoPadrao),
-		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
-	}, s.corpoDaMesa(r, view, campaignID, sessionID))
+		fmt.Sprintf("novolugar: '', novochao: '%s'", tabuleiro.ChaoPadrao()),
+		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
+		"ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: ''",
+		// A FILA e os verbos da linha.
+		"qualidadedodescanso: 'normal', formdecombatente: false",
+		"linhadacondicao: '', condicoesdalinha: '', rotulodalinha: ''",
+		"novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc'",
+		"edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0",
+		// O BESTIÁRIO e o elenco.
+		"rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, nomedonpc: ''",
+		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
+		fmt.Sprintf("quadrado: %d", quadradoPadrao),
+		"arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0",
+		// A RÉGUA: as duas pontas em coordenada do PLANO (podem ser negativas), a
+		// fase da máquina de dois cliques, e a leitura que o servidor escreve.
+		"regua1x: 0, regua1y: 0, regua2x: 0, regua2y: 0, reguafase: 0, reguatexto: ''",
+		// O GABARITO nasce na PRIMEIRA forma da lista, e ela é derivada e não
+		// digitada pelo mesmo motivo do chão: a página que escreve 'esfera' à mão
+		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a
+		// barra marcando uma forma e o mapa desenhando outra. `aponta: false`
+		// acompanha, porque a esfera vai para todos os lados (p225).
+		fmt.Sprintf("gabarito: %q, gabaritoaponta: %t, gabaritotamanho: 2",
+			string(asFormasDoLivro[0]), apontaOGabarito(asFormasDoLivro[0])),
+		"gabaritox: 0, gabaritoy: 0, gabaritomirax: 0, gabaritomiray: 0, gabaritofase: 0",
+		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", aDicaDoGabaritoVazio),
+		// As NOTAS da sessão.
+		"notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false",
+		"notassalvando: false, erroDasNotas: ''",
+	}, ", ") + "}"
 }
 
 // corpoDaMesa escolhe QUAL DAS DUAS FORMAS a página desenha (ALE-269).

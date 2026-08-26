@@ -667,6 +667,68 @@ html {
   }
   /* As peças e a trilha sobem acima da camada de casas. */
   .tabuleiro-peca { z-index: 2; }
+
+  /* Com FERRAMENTA ligada a peça e o losango saem do alcance do dedo (ALE-269).
+   *
+   * É a segunda metade da promessa do trilho — uma ferramenta por vez. A peça
+   * está acima das camadas de clique, então sem isto o pointerdown sobre ela
+   * vira arrasto: com a régua ligada, medir a distância até o ogro MOVERIA o
+   * ogro. Sai o ponteiro e não o foco; o teclado continua alcançando as duas. */
+  .tabuleiro-com-ferramenta .tabuleiro-peca,
+  .tabuleiro-com-ferramenta .tabuleiro-destino {
+    pointer-events: none;
+  }
+}
+
+/* A RÉGUA e o GABARITO (ALE-269, superfície 8).
+ *
+ * Os dois desenhos são SVG e não `<div>`, e a razão não é estética: um desenho
+ * feito de HTML teria de ser remendado dentro da região do mapa, e o quadro
+ * seguinte do stream — que não sabe do gabarito de ninguém — o apagaria em
+ * silêncio. Cabendo num `d` e em quatro números, eles moram em SINAIS, e sinal
+ * sobrevive ao remendo.
+ *
+ * O SVG fala em QUADRADOS: o `viewBox` é a moldura contada em casas, e o
+ * elemento mede `colunas × --quadrado`. É isso que faz o desenho acompanhar o
+ * zoom sem uma linha de JavaScript. */
+@layer components {
+  .tabuleiro-medida {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* Nunca recebe clique: quem responde continua sendo a camada de casas, e uma
+       régua que roubasse o clique não deixaria medir a segunda ponta. */
+    pointer-events: none;
+    overflow: visible;
+  }
+  /* O gabarito fica ABAIXO das peças (que estão em 2) e acima do terreno: quem a
+     bola de fogo pega precisa aparecer POR CIMA dela. A régua fica acima de
+     tudo, porque é um fio fino que uma peça apagaria pela metade. */
+  .tabuleiro-medida-fundo { z-index: 1; }
+  .tabuleiro-medida-frente { z-index: 3; }
+
+  .tabuleiro-gabarito {
+    fill: oklch(0.8 0.11 85 / 0.25);
+    stroke: oklch(0.8 0.11 85 / 0.5);
+    /* Em unidades de QUADRADO, como o resto do desenho: a borda engrossa junto
+       com o zoom, que é o que faz a forma continuar legível aproximada. */
+    stroke-width: 0.04;
+  }
+
+  .tabuleiro-regua-fio {
+    stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    /* `non-scaling-stroke` no atributo do elemento: o fio é uma LINHA de leitura
+       e não parte do mapa — ele tem de ter a mesma espessura em qualquer zoom,
+       ao contrário da borda do gabarito, que é a forma. */
+    stroke-width: 2;
+  }
+  .tabuleiro-regua-ponta { fill: var(--color-grimorio-gold, oklch(0.8 0.11 85)); }
+  .tabuleiro-regua-alvo {
+    fill: none;
+    stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    stroke-width: 2;
+  }
 }
 
 /* O ARRASTO, puramente visual (ALE-266).

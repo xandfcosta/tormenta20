@@ -79,6 +79,12 @@ const QUERIDOS = [
   'MapPin',
   'Square',
   'SquareCheck',
+  // A RÉGUA e o GABARITO (ALE-269, superfície 8), e o `MousePointer2` que passou
+  // a nomear o modo de MOVER: com ferramentas na mão do jogador, "nenhuma
+  // ferramenta" deixou de ser um estado que se adivinha e virou um botão.
+  'Ruler',
+  'Radar',
+  'MousePointer2',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')
