@@ -49,6 +49,15 @@ type mesaView struct {
 	// desenhar controle que não existe na view. Esconder por classe deixaria o
 	// HTML na página para quem abrisse o inspetor.
 	Mestre *mestreView
+	// Notas é o caderno da noite (ALE-269, superfície 5), e ele é DO MESTRE: na
+	// SPA o painel vive na `session-gm-view` e o jogador nunca o recebe. Vazio
+	// para quem não é mestre, pela mesma trava do resto — a view não tem o que
+	// desenhar, em vez de a tela esconder.
+	Notas string
+	// NotasBlocos é a mesma nota já em ÁRVORE, para o templ montar elementos em
+	// vez de cuspir HTML. Nasce aqui e não no template porque parsear em
+	// template é regra escondida onde ninguém a testa.
+	NotasBlocos []mdBloco
 }
 
 // mesaTurn é de quem é a vez, do ponto de vista de quem olha. Espelha o
