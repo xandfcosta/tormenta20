@@ -149,7 +149,20 @@ async function abreOTabuleiro(page: Page, mesa: string): Promise<void> {
  * aponta para a causa. O nome acessível existe justamente para dizer qual é
  * qual, e é por ele que se pergunta.
  */
-const camadaDe = (page: Page, gesto: RegExp) => page.getByRole('button', { name: gesto })
+/**
+ * A CAMADA de clique, e não qualquer botão com aquele nome.
+ *
+ * O papel + nome sozinho deixou de bastar na ALE-269, quando o trilho ganhou
+ * "Mover a peça" e "Régua" para o jogador: `/Mover/` passou a casar com o botão
+ * do trilho E com a camada ("Mover Ogro — escolha a casa"), e o caso morreu em
+ * `strict mode violation` — que é o modo certo de descobrir isso, porque a
+ * alternativa seria o clique cair no botão errado e o teste medir outra coisa.
+ *
+ * A classe é o que define a camada e é o que ela sempre teve; o nome sozinho é
+ * um prefixo que qualquer ferramenta nova pode voltar a colidir.
+ */
+const camadaDe = (page: Page, gesto: RegExp) =>
+  page.locator('.tabuleiro-casas').and(page.getByRole('button', { name: gesto }))
 
 const quadrado = (page: Page) =>
   page.locator('.tabuleiro-palco').evaluate((e) => getComputedStyle(e).getPropertyValue('--quadrado').trim())
