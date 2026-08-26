@@ -274,9 +274,9 @@ func cabecalhoDaCronica(v cronicaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 templ.SafeURL
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", v.ID, v.SessaoVivaID)))
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(rotaDaMesa(v.ID, v.SessaoVivaID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 73, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 73, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -970,9 +970,9 @@ func linhaDaSessao(campanhaID int64, sess sessaoNaCronica) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var43 templ.SafeURL
-		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", campanhaID, sess.ID)))
+		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(rotaDaMesa(campanhaID, sess.ID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 271, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 271, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 		if templ_7745c5c3_Err != nil {

@@ -28,19 +28,72 @@ templ mesa(v mesaView) {
 	<main
 		id="mesa"
 		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`"
-		class="mesa-palco mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col"
+		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@mesaCabecalho(v)
-		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
+		@oSeletorDeSuperficie()
+		// A MESA: quem está na cena e em que ordem. Rola por dentro, nunca a
+		// página. A largura de leitura mora AQUI e não no `main`, que perdeu o
+		// `max-w-3xl` na ALE-269: uma coluna de 48rem é a medida certa para a fila
+		// e para o grupo, e a errada para o mapa — que é justamente o que a
+		// ALE-129 foi consertar na SPA.
+		<div data-show={ naSuperficie(superficieDaMesa) } class="mx-auto min-h-0 w-full max-w-3xl flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
 			@mesaRegistrarRegiao(v)
 			@mesaGrupo(v)
-			@mesaTabuleiro(v)
-			@mesaPorNoMapa(v)
-			@mesaConfigDaSessao(v)
 			@mesaFila(v)
 		</div>
+		// O TABULEIRO ocupa a tela inteira, sem coluna: é a decisão da ALE-129, e
+		// a razão está medida lá — o trilho de 22rem espremia a cena a ponto de o
+		// mapa caber em 8×4 quadrados.
+		<div data-show={ naSuperficie(superficieDoTabuleiro) } class="flex min-h-0 flex-1 flex-col p-2 sm:p-3">
+			@mesaTabuleiro(v)
+		</div>
+		// AS DUAS REGIÕES QUE NÃO SÃO SUPERFÍCIE ficam fora das duas, e não é
+		// arrumação: elas são diálogos (e, para o jogador, cascas vazias), e o
+		// stream remenda POR ID. Uma região pendurada dentro de uma superfície
+		// escondida continua no documento — `data-show` é `display:none`, não
+		// remoção —, mas guardá-las aqui deixa à vista que elas não têm dono entre
+		// as duas.
+		@mesaPorNoMapa(v)
+		@mesaConfigDaSessao(v)
 		@mesaComandos(v)
 	</main>
+}
+
+// O SELETOR DE SUPERFÍCIE do jogador (ALE-129, portado na ALE-269).
+//
+// DOIS níveis e não um: aqui se escolhe A SUPERFÍCIE, e dentro de cada uma
+// continuam as seções dela. Uma fileira única misturando "partes de mim" com
+// "partes da mesa" fica ilegível no telefone.
+//
+// Ancorado no topo e sempre visível: a premissa do app é tela cheia, com ninguém
+// rolando a página atrás de menu.
+//
+// DUAS superfícies e não três (decisão do dono): a SPA tem "Minha ficha", e a
+// ficha é a última tela da migração — ela não existe em Datastar. A aba nasce
+// junto com ela. Uma terceira aba agora prometeria na tela o que o app ainda não
+// tem, e o jogador clicaria nela procurando a própria ficha.
+templ oSeletorDeSuperficie() {
+	// A MESMA largura de leitura da superfície Mesa, e não a linha inteira: com
+	// duas superfícies, ocupar 1920px daria dois botões de 780px cada — a razão
+	// do `flex-1` na SPA é o OPOSTO (lá são três abas que truncavam a ponto de
+	// sair "MINHA …"), e copiar a regra sem a razão dela produz o exagero
+	// simétrico. Centrado, ele encabeça a coluna na Mesa e continua alcançável no
+	// Tabuleiro.
+	<div role="group" aria-label="O que ver na sessão" class="mx-auto flex w-full max-w-3xl shrink-0 gap-1 px-3 pt-2 sm:px-4">
+		for _, superficie := range asSuperficiesDoJogador {
+			<button
+				type="button"
+				data-attr:aria-pressed={ fmt.Sprintf("%s ? 'true' : 'false'", naSuperficie(superficie.ID)) }
+				data-class={ oVestidoDaSuperficie(superficie.ID) }
+				data-on:click={ escolheASuperficie(superficie.ID) }
+				class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-none border px-2 text-xs uppercase tracking-wide outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				@icone(superficie.Icone, "size-4 shrink-0")
+				<span class="truncate">{ superficie.Rotulo }</span>
+			</button>
+		}
+	</div>
 }
 
 // AS REGIÕES DA MESA (ALE-264).
@@ -173,11 +226,17 @@ templ grupoEmCartoes(v mesaView) {
 // A raiz com id é o que separa o mapa da fila no remendo, e é ela que faz o
 // arrasto da próxima fatia ser possível: um jogador registrando iniciativa passa
 // a não tocar no elemento debaixo do dedo do mestre.
+// A RAIZ DA REGIÃO participa da altura nos DOIS papéis desde a forma do jogador
+// (ALE-269). Ela era um bloco comum para o jogador, porque lá o mapa era um item
+// numa coluna que rola — e um bloco cresce com o conteúdo.
+//
+// Com o tabuleiro ocupando a superfície inteira isso vira defeito, e ele foi
+// medido: com o zoom em 96px por quadrado, o plano de 1344px de altura empurrou
+// esta raiz para 1440, a `<section>` de dentro foi junto, e a PÁGINA passou a
+// rolar em vez do mapa. Uma altura que não é repassada para baixo faz o
+// `overflow: auto` do palco não ter contra o que medir.
 templ mesaTabuleiro(v mesaView) {
-	<div
-		id="mesa-tabuleiro"
-		class={ templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre != nil) }
-	>
+	<div id="mesa-tabuleiro" class="flex min-h-0 flex-1 flex-col">
 		@tabuleiroDaMesa(v.Tabuleiro)
 		// A RECUSA de uma parada, e ela mora aqui: quem move é o jogador, que
 		// não tem o rodapé do mestre onde o `erroDoComando` acende. Fora do

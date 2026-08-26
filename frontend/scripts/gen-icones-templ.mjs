@@ -79,6 +79,21 @@ const QUERIDOS = [
   'MapPin',
   'Square',
   'SquareCheck',
+  // A RÉGUA e o GABARITO (ALE-269, superfície 8), e o `MousePointer2` que passou
+  // a nomear o modo de MOVER: com ferramentas na mão do jogador, "nenhuma
+  // ferramenta" deixou de ser um estado que se adivinha e virou um botão.
+  'Ruler',
+  'Radar',
+  'MousePointer2',
+  // O CENTRALIZADOR (ALE-269, item 9), o mesmo ícone que a `ViewControls` da SPA.
+  'Crosshair',
+  // DESFAZER A PARADA (ALE-269, item 10), o mesmo da `MoveBar` da SPA.
+  'CornerUpLeft',
+  // O seletor de superfícies do jogador (ALE-269): os MESMOS ícones que a
+  // `PlayerSurfaceSwitch` da SPA importa. `Users2` já estava na lista.
+  'LayoutGrid',
+  // O menu de contexto da peça (ALE-206): duplicar.
+  'Copy',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

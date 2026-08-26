@@ -221,6 +221,11 @@ func (bs *BoardStore) UpdateToken(ctx context.Context, sessionID int64, tokenID 
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return UpdateToken(b, tokenID, patch) })
 }
 
+// VoltaAPeca desfaz o último pouso (ALE-206).
+func (bs *BoardStore) VoltaAPeca(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return VoltaAPeca(b, tokenID) })
+}
+
 // Marcadores (ALE-195): o lugar apontado no mapa que não é peça.
 func (bs *BoardStore) AddMarker(ctx context.Context, sessionID int64, m BoardMarker) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return AddMarker(b, m, bs.newID) })
@@ -318,6 +323,22 @@ func (bs *BoardStore) ProposeMove(ctx context.Context, sessionID int64, st *aovi
 			token.SpeedSquares = speedSquares
 		}
 		return ProposeMove(b, st, tokenID, path, by)
+	})
+}
+
+// ProposeMoveComParadas é a porta de quem monta o movimento CLICANDO, e ela
+// existe para a lista de paradas ser guardada junto (ALE-269, item 10).
+//
+// Mesma trava, mesmo orçamento fresco, mesma medição: o que muda é a memória de
+// ONDE a pessoa parou, que o caminho sozinho não deixa reconstruir. Sem ela,
+// "desfazer a última perna" seria um palpite sobre o movimento que a mesa está
+// vendo.
+func (bs *BoardStore) ProposeMoveComParadas(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		if token := FindToken(b, tokenID); token != nil && speedSquares > 0 {
+			token.SpeedSquares = speedSquares
+		}
+		return ProposeMoveComParadas(b, st, tokenID, paradas, by)
 	})
 }
 

@@ -115,7 +115,11 @@ async function abreAFila(page: Page): Promise<void> {
 async function poeUmaPecaNoMapa(page: Page): Promise<void> {
   await abreAFila(page)
   await page.getByRole('button', { name: '+ Combatente' }).click()
-  await page.getByLabel('Nome').fill('Ogro do E2E')
+  // `exact` porque `getByLabel` casa por SUBSTRING: desde o editor de bloco
+  // (ALE-269) a mesma cena tem "Nome do NPC", e `'Nome'` passou a resolver para
+  // dois campos. É a segunda vez nesta fatia que um seletor único por acidente
+  // deixa de ser — a outra foi a camada de clique.
+  await page.getByLabel('Nome', { exact: true }).fill('Ogro do E2E')
   await page.getByRole('button', { name: 'Acrescentar' }).click()
   // A GAVETA FECHA ANTES de o teste voltar ao mapa, e esta ordem é a jornada de
   // verdade: monta-se a fila na gaveta, fecha-se, e põe-se no mapa pela faixa do
@@ -149,7 +153,20 @@ async function abreOTabuleiro(page: Page, mesa: string): Promise<void> {
  * aponta para a causa. O nome acessível existe justamente para dizer qual é
  * qual, e é por ele que se pergunta.
  */
-const camadaDe = (page: Page, gesto: RegExp) => page.getByRole('button', { name: gesto })
+/**
+ * A CAMADA de clique, e não qualquer botão com aquele nome.
+ *
+ * O papel + nome sozinho deixou de bastar na ALE-269, quando o trilho ganhou
+ * "Mover a peça" e "Régua" para o jogador: `/Mover/` passou a casar com o botão
+ * do trilho E com a camada ("Mover Ogro — escolha a casa"), e o caso morreu em
+ * `strict mode violation` — que é o modo certo de descobrir isso, porque a
+ * alternativa seria o clique cair no botão errado e o teste medir outra coisa.
+ *
+ * A classe é o que define a camada e é o que ela sempre teve; o nome sozinho é
+ * um prefixo que qualquer ferramenta nova pode voltar a colidir.
+ */
+const camadaDe = (page: Page, gesto: RegExp) =>
+  page.locator('.tabuleiro-casas').and(page.getByRole('button', { name: gesto }))
 
 const quadrado = (page: Page) =>
   page.locator('.tabuleiro-palco').evaluate((e) => getComputedStyle(e).getPropertyValue('--quadrado').trim())

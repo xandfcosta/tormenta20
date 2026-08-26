@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/http"
 	"strconv"
+	"strings"
 	"t20engine/aovivo"
 	"t20engine/tabuleiro"
 	"time"
@@ -71,14 +72,18 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDosComandosDaMesa(r)
 		s.rotasDoBestiarioDaMesa(r)
 		s.rotasDoMovimento(r)
+		s.rotasDaRegua(r)
 		s.rotasDaCena(r)
 		s.rotasDosMarcadores(r)
 		s.rotasDaCortina(r)
+		s.rotasDaLente(r)
+		s.rotasDasAcoesDaPeca(r)
 		s.rotasDasCondicoes(r)
 		s.rotasDaSessao(r)
 		s.rotasDasNotas(r)
 		s.rotasDoElenco(r)
 		s.rotasDosNPCs(r)
+		s.rotasDoEditorDeNPC(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -102,6 +107,28 @@ func pilotoStaticHandler() http.Handler {
 		panic("piloto: static embutido ausente: " + err.Error())
 	}
 	return comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub)))
+}
+
+// rotaDaMesa é PARA ONDE se entra numa sessão, e desde a ALE-269 ela é a Mesa em
+// Datastar.
+//
+// Era `/campaigns/{id}/sessions/{sid}` — a rota da SPA — em quatro lugares: o
+// Hub, o cartão da campanha e duas linhas da crônica. Enquanto o piloto apontava
+// para lá, a Mesa nova só era alcançável por URL digitada, e é por isso que
+// trocar estes quatro `href` É a virada: a partir daqui, entrar numa sessão é
+// entrar nela.
+//
+// UMA função e não quatro `Sprintf`, e a razão vale para os dois sentidos: hoje
+// ela é o que faz os quatro caminhos concordarem, e no dia do `git rm` ela é o
+// único lugar que precisa ser lido para saber quem manda para onde.
+//
+// A tela antiga continua de pé e alcançável por URL (decisão do dono): apagar a
+// `SessionTrackerPage` é fatia própria, depois de uma sessão de verdade rodar na
+// Mesa nova. Enquanto isso, voltar atrás é um `git revert` deste commit.
+//
+// @example rotaDaMesa(1, 4) // "/piloto/mesa/1/4"
+func rotaDaMesa(campanhaID, sessaoID int64) string {
+	return fmt.Sprintf("/piloto/mesa/%d/%d", campanhaID, sessaoID)
 }
 
 // mesaParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
@@ -136,18 +163,79 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 	// guardá-la serviria uma fila velha.
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
+		Sinais: sinaisDaMesa(),
+		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
+	}, s.corpoDaMesa(r, view, campaignID, sessionID))
+}
+
+// sinaisDaMesa é o estado que mora no NAVEGADOR, agrupado por superfície.
+//
+// Ele era uma linha só de mil e duzentos caracteres, e a régua a empurrou para
+// mil e quinhentos — a essa altura ninguém mais lia o que estava lá dentro, e
+// sinal repetido ou esquecido não dá erro em lugar nenhum: ele nasce `undefined`
+// no primeiro uso e a expressão que o lê fica muda.
+//
+// Nomes MINÚSCULOS nos que aparecem como CHAVE de atributo (`data-bind`,
+// `data-signals`): o HTML minuscula a chave, e um `data-bind="gabaritoTamanho"`
+// liga um sinal NOVO, vazio, ao lado do que se queria. Os que só vivem dentro de
+// expressão (`$erroDoComando`) mantêm a caixa.
+func sinaisDaMesa() string {
+	return "{" + strings.Join([]string{
 		// `erro` e `erroDoComando` são DOIS sinais e não um. Um só faria a
 		// recusa de "Adicionar grupo" acender a frase vermelha dentro da caixa
 		// "Registrar iniciativa" do mestre que também joga: a frase certa no
 		// lugar errado, que é como se lê um defeito. Uma palavra por conceito
 		// vale para sinal de página como vale para identificador.
+		"d20: 10, erro: '', erroDoComando: '', erroDoMovimento: ''",
 		// O chão padrão é DERIVADO e não digitado: escrever 'pedra' aqui seria a
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
-		Sinais: fmt.Sprintf("{d20: 10, erro: '', erroDoComando: '', erroDoMovimento: '', novolugar: '', novochao: '%s', ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: '', qualidadedodescanso: 'normal', formdecombatente: false, linhadacondicao: '', condicoesdalinha: '', rotulodalinha: '', novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0, rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, quadrado: %d, arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0, notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false, notassalvando: false, erroDasNotas: '', nomedonpc: ''}", tabuleiro.ChaoPadrao(), quadradoPadrao),
-		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
-	}, s.corpoDaMesa(r, view, campaignID, sessionID))
+		fmt.Sprintf("novolugar: '', novochao: '%s'", tabuleiro.ChaoPadrao()),
+		// A SUPERFÍCIE do jogador (ALE-129): qual das duas ocupa a tela. Abre na
+		// MESA (decisão do dono) — quem entra na sessão quer saber de quem é a vez
+		// e quem está em cena, e o tabuleiro pode nem estar aberto.
+		fmt.Sprintf("superficie: '%s'", superficieQueAbrePadrao),
+		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
+		"ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: ''",
+		// O MENU DA PEÇA (ALE-206). `pecaescolhida` é qual menu está aberto e
+		// `pecaeditada` é qual peça o diálogo está editando: são DOIS porque abrir
+		// o diálogo FECHA o menu, e um sinal só faria o gesto de abrir apagar o
+		// alvo do gesto de salvar.
+		"pecaescolhida: '', pecaeditada: '', pecanome: '', pecatamanho: 1",
+		// A FILA e os verbos da linha.
+		"qualidadedodescanso: 'normal', formdecombatente: false",
+		"linhadacondicao: '', condicoesdalinha: '', rotulodalinha: ''",
+		"novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc'",
+		"edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0",
+		// O BESTIÁRIO e o elenco.
+		"rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, nomedonpc: ''",
+		// O EDITOR DE BLOCO. O `rascunho` nasce com a FORMA inteira e não vazio,
+		// e isso não é enfeite: `data-bind` num caminho que ainda não existe liga
+		// um sinal NOVO em vez de escrever no de baixo, e o campo ficaria mudo
+		// até o primeiro `@post`. A semente é a mesma do "criar do zero", vinda
+		// do `blocoEmBranco` — escrevê-la aqui à mão seria o segundo branco.
+		fmt.Sprintf("rascunhoaberto: false, rascunhoaba: %q, erroDoRascunho: '', rascunho: %s",
+			abaDosNumeros, oRascunhoEmBranco()),
+		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
+		fmt.Sprintf("quadrado: %d", quadradoPadrao),
+		"arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0",
+		// A RÉGUA: as duas pontas em coordenada do PLANO (podem ser negativas), a
+		// fase da máquina de dois cliques, e a leitura que o servidor escreve.
+		"regua1x: 0, regua1y: 0, regua2x: 0, regua2y: 0, reguafase: 0, reguatexto: ''",
+		// O GABARITO nasce na PRIMEIRA forma da lista, e ela é derivada e não
+		// digitada pelo mesmo motivo do chão: a página que escreve 'esfera' à mão
+		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a
+		// barra marcando uma forma e o mapa desenhando outra. `aponta: false`
+		// acompanha, porque a esfera vai para todos os lados (p225).
+		fmt.Sprintf("gabarito: '%s', gabaritoaponta: %t, gabaritotamanho: 2",
+			string(asFormasDoLivro[0]), apontaOGabarito(asFormasDoLivro[0])),
+		"gabaritox: 0, gabaritoy: 0, gabaritomirax: 0, gabaritomiray: 0, gabaritofase: 0",
+		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", aDicaDoGabaritoVazio),
+		// As NOTAS da sessão.
+		"notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false",
+		"notassalvando: false, erroDasNotas: ''",
+	}, ", ") + "}"
 }
 
 // corpoDaMesa escolhe QUAL DAS DUAS FORMAS a página desenha (ALE-269).
@@ -208,10 +296,21 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// contra o banco (o `meus` do roster) e nunca contra o cliente — é o mesmo
 	// fio de volta até a pessoa que a ALE-33 fixou.
 	quemOlha := tabuleiro.Mover{UserID: user.ID, Role: role}
+	cena := tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID))
+	// A LENTE DO MESTRE (ALE-193): com ela ligada, o que se desenha é a cena
+	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `quemOlha` continua
+	// dizendo "mestre", porque a lente é sobre o que ele vê e não sobre o que ele
+	// pode: ele confere a emboscada sem parar de montá-la.
+	escondidas := 0
+	naLente := role == "gm" && s.lentes.Ligada(sessionID, user.ID)
+	if naLente {
+		cena, escondidas = aCenaComoAMesaVe(cena)
+	}
 	view.Tabuleiro = tabuleiroViewOf(
-		tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID)), st,
-		saudeDaFila(st), combatenteDaVez(st), quemOlha, meus, campaignID, sessionID,
+		cena, st, saudeDaFila(st), combatenteDaVez(st), quemOlha, meus, campaignID, sessionID,
 	)
+	view.Tabuleiro.Lente = naLente
+	view.Tabuleiro.PecasEscondidas = escondidas
 	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
 	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
 	if role == "gm" {

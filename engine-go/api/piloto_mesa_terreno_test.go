@@ -134,9 +134,21 @@ func TestOTrilhoDizOEfeitoDeCadaEspecie(t *testing.T) {
 	}
 
 	// E o pincel é do MESTRE: o jogador não pinta chão.
+	//
+	// A asserção mudou de alvo na ALE-269 e vale dizer por quê: ela era sobre o
+	// TRILHO inteiro ("Ferramentas do mapa"), que era do mestre porque só ele
+	// tinha modo. A régua é de quem ataca, então o trilho passou a existir para
+	// os dois papéis e o que ficou do mestre foram os PINCÉIS dentro dele. Fosse
+	// mantida como estava, esta linha teria falhado dizendo a coisa errada — e
+	// fosse apagada, o vazamento do pincel deixaria de ser medido.
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
-	if strings.Contains(doJogador, "Ferramentas do mapa") {
-		t.Error("o jogador recebeu o trilho de ferramentas do mestre")
+	for _, pincel := range tabuleiro.EspeciesDeTerreno {
+		if strings.Contains(doJogador, pincel.Efeito) {
+			t.Errorf("o pincel %q apareceu na cena do jogador", pincel.ID)
+		}
+	}
+	if strings.Contains(doJogador, "Borracha") {
+		t.Error("a borracha do mestre apareceu na cena do jogador")
 	}
 }
 

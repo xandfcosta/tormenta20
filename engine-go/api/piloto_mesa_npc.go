@@ -98,11 +98,20 @@ func guardaOVerbeteNoElenco(st *Server, c mesaComando) (*aovivo.SessionRuntimeSt
 // ela, o mestre de uma mesa alcançaria o elenco de outra — e o elenco guarda a
 // preparação da campanha, que é o material mais privado que o mestre tem.
 func (s *Server) oNPCDaCampanha(c mesaComando) (sqlcgen.CampaignCreature, CreatureBlock, error) {
-	var bloco CreatureBlock
 	id, err := strconv.ParseInt(chi.URLParam(c.R, "npcId"), 10, 64)
 	if err != nil {
-		return sqlcgen.CampaignCreature{}, bloco, fmt.Errorf("npc inválido: %q", chi.URLParam(c.R, "npcId"))
+		return sqlcgen.CampaignCreature{}, CreatureBlock{}, fmt.Errorf("npc inválido: %q", chi.URLParam(c.R, "npcId"))
 	}
+	return s.oNPCDaCampanhaPorID(c, id)
+}
+
+// oNPCDaCampanhaPorID é o mesmo com o id já lido, para quem não o tem no caminho.
+//
+// O editor precisa dele porque lá o id vem do RASCUNHO — o formulário sabe quem
+// está editando —, e a conferência de campanha tem de ser a MESMA. Duas cópias
+// dariam duas travas, e a que envelhecesse seria a de menos uso.
+func (s *Server) oNPCDaCampanhaPorID(c mesaComando, id int64) (sqlcgen.CampaignCreature, CreatureBlock, error) {
+	var bloco CreatureBlock
 	linha, err := s.queries.GetCampaignCreature(c.R.Context(), id)
 	if err != nil {
 		return sqlcgen.CampaignCreature{}, bloco, fmt.Errorf("o npc %d não existe", id)

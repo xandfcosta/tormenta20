@@ -64,9 +64,19 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			<p class="text-sm text-muted-foreground">O mestre está montando a cena.</p>
 		</section>
 	} else {
+		// O TABULEIRO OCUPA A SUPERFÍCIE INTEIRA, e desde a forma do jogador
+		// (ALE-269) isso vale para os dois papéis. Antes o `flex-1` e o palco
+		// cheio eram condicionais ao mestre, porque só o palco dele dava altura ao
+		// mapa — na coluna do jogador o tabuleiro era um bloco entre outros e
+		// crescer empurraria a fila para fora da tela.
+		//
+		// A condição saiu porque a premissa saiu: com o seletor de superfícies, o
+		// mapa do jogador não divide tela com nada. Sempre que esta cena é
+		// desenhada, ela é a tela toda — e uma condição que agora é sempre
+		// verdadeira só serve para alguém acreditar que ainda decide algo.
 		<section
 			aria-label={ "Tabuleiro · " + v.Lugar }
-			class={ "space-y-1.5", templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre) }
+			class="flex min-h-0 flex-1 flex-col space-y-1.5"
 		>
 			<div class="flex flex-wrap items-baseline gap-x-2">
 				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
@@ -79,7 +89,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				// O `ml-auto` mudou de dono para cá, e de propósito: ele precisa
 				// morar no primeiro grupo que existe SEMPRE. No bloco do mestre
 				// ele sumia da tela do jogador, e o alinhamento ia junto.
-				@oZoomDoPlano()
+				@oEnquadramentoDoPlano(v)
 				if v.Mestre {
 					// Os DOIS verbos do canto direito num agrupador só. O
 					// `ml-auto` saiu daqui para o grupo do zoom, que é o que
@@ -90,6 +100,10 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						// caminho existia e era inalcançável, porque a lista só
 						// aparecia na cena vazia.
 						@botaoDaCortina(v)
+						// A LENTE é vizinha da CORTINA e a ordem não é aleatória: são as
+						// duas perguntas sobre o que a mesa vê. Uma esconde a cena, a
+						// outra confere o que sobrou dela.
+						@botaoDaLente(v)
 						@botaoDePorNoMapa(v)
 						if len(v.Acervo) > 0 {
 							@botaoDoAcervo(v)
@@ -113,6 +127,10 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			</div>
 			if v.Mestre {
 				@encerrarTabuleiro(v)
+				// UM diálogo de editar para TODAS as peças, semeado pelo gesto que o
+				// abre. Ele mora aqui, fora do plano, porque um `<dialog>` dentro do
+				// mapa herdaria o `--quadrado` e o empilhamento das camadas.
+				@editarAPeca(v)
 				if len(v.Acervo) > 0 {
 					@oAcervoDeLugares(v)
 				}
@@ -137,9 +155,29 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					>Abrir a cortina</button>
 				</p>
 			}
-			if v.Mestre {
-				@oTrilhoDoPincel(v)
+			// A TIRA DA LENTE, irmã da tira da cortina e pela MESMA razão: um modo
+			// que se esquece é pior que nenhum. Aqui o esquecimento é o oposto do
+			// da cortina — o mestre olha a própria cena e não vê a peça que ele
+			// mesmo escondeu, e conclui que ela sumiu. Ela diz o NÚMERO porque
+			// contar o que sobrou na tela não responde a pergunta dele, e carrega a
+			// própria saída porque quem percebe o modo tem de poder desfazê-lo de
+			// onde percebeu.
+			if v.Lente {
+				<p role="status" class="flex flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-2 py-1 text-xs text-grimorio-gold">
+					@icone("Eye", "size-4")
+					{ aFraseDaLente(v.PecasEscondidas) }
+					<button
+						type="button"
+						data-on:click={ comandoDaLente(v) }
+						class="ml-auto inline-flex min-h-6 items-center rounded-sm border border-grimorio-gold/60 px-2 text-xs outline-none transition-colors hover:bg-grimorio-gold/20 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+					>Voltar à vista do mestre</button>
+				</p>
 			}
+			// O TRILHO é de TODO MUNDO desde a régua (ALE-269): medir e mirar são
+			// gestos de quem ataca, e antes disto ele só existia para o mestre —
+			// o jogador não tinha onde ligar ferramenta nenhuma. Quem continua
+			// sendo só do mestre são os PINCÉIS, dentro dele.
+			@oTrilhoDeFerramentas(v)
 			// O PALCO é a janela; o PLANO é a moldura inteira dentro dela. O
 			// enquadramento é do NAVEGADOR e nunca do servidor — foi essa a
 			// escolha que tirou a ida ao servidor de cada passo de arrasto —, e
@@ -148,12 +186,21 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			// HTML, o remendo do SSE redesenha as peças sem que o mestre perca
 			// onde estava olhando.
 			<div
+				id={ idDoPalco }
 				data-attr:style={ estiloDoPalco }
 				data-on:wheel={ zoomPelaRoda }
 				data-on:keydown__window={ zoomPeloTeclado }
-				class={ "tabuleiro-palco grimorio-frame", templ.KV("tabuleiro-palco-cheio", v.Mestre) }
+				class="tabuleiro-palco tabuleiro-palco-cheio grimorio-frame"
 			>
+				// FERRAMENTA LIGADA torna a peça e o losango INERTES ao dedo, e
+				// isto é a segunda metade da promessa do trilho: uma ferramenta
+				// por vez. Sem isso a peça continua por CIMA das camadas de clique
+				// (ela está no z-index 2) e o pointerdown sobre ela vira arrasto —
+				// com a régua ligada, medir a distância até o ogro MOVERIA o ogro.
+				// O teclado continua alcançando as duas: o que sai é o ponteiro,
+				// não o foco.
 				<div
+					data-class="{'tabuleiro-com-ferramenta': $ferramenta !== ''}"
 					class={ "tabuleiro-plano chao-" + v.Chao }
 					style={ fmt.Sprintf("--colunas:%d; --linhas:%d", v.Colunas, v.Linhas) }
 				>
@@ -179,6 +226,13 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						for _, q := range v.Movimento.Trilha {
 							<div aria-hidden="true" class="tabuleiro-trilha" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
 						}
+						// As PARADAS marcadas sobre a trilha (ALE-266, portadas na
+						// ALE-269): sem elas o caminho é uma faixa contínua e não há
+						// como ver quantas pernas o "Desfazer parada" vai encontrar —
+						// o botão desfaria algo que a tela não mostra.
+						for _, q := range v.Movimento.Paradas {
+							<div aria-hidden="true" class="tabuleiro-parada" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
+						}
 					}
 					// O ALCANCE é PINTURA e não alvo de clique, e a diferença é o
 					// que fez este desenho mudar no meio: quem tem orçamento é o
@@ -193,9 +247,23 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					for _, q := range v.Alcance {
 						<div aria-hidden="true" class="tabuleiro-alcance" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
 					}
+					// O GABARITO vem ACIMA do terreno e ABAIXO das peças, e é essa
+					// ordem que responde a pergunta dele: quem está dentro precisa
+					// aparecer POR CIMA da área, senão a bola de fogo esconde
+					// justamente quem ela pega.
+					@oGabaritoDesenhado(v)
 					for _, p := range v.Pecas {
 						@pecaNoPlano(v, p)
+						// O MENU vem logo depois da peça e é irmão dela no plano,
+						// como o do marcador: ele é posicionado pela mesma casa, e
+						// pendurá-lo DENTRO do botão faria um botão dentro de outro.
+						if v.Mestre {
+							@oMenuDaPeca(v, p)
+						}
 					}
+					// A RÉGUA vem por CIMA de tudo: ela é uma linha fina entre dois
+					// pontos, e uma peça em cima dela apagaria metade da medida.
+					@aReguaDesenhada(v)
 					// O DESTINO é o que se arrasta enquanto há proposta, e ele é
 					// losango para não ser confundido com peça: a peça está no
 					// lugar dela, e isto é uma promessa.
@@ -241,7 +309,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					if v.Mestre {
 						<button
 							type="button"
-							data-show="$ferramenta != '' && $ferramenta != 'marcador'"
+							data-show={ oPincelEstaLigado() }
 							data-attr:aria-label="$apagando ? 'Apagar terreno — escolha a casa' : 'Pintar terreno — escolha a casa'"
 							data-on:click={ pinturaNoPontoClicado(v) }
 							class="tabuleiro-casas"
@@ -254,12 +322,30 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 							class="tabuleiro-casas"
 						></button>
 					}
+					// A camada de MEDIR é dos dois papéis, e por isso ela sai do
+					// bloco do mestre. O `data-show` do movimento passou a valer
+					// para todo mundo pelo mesmo motivo: antes da régua, o jogador
+					// não tinha ferramenta nenhuma para ligar, e a condição era
+					// escrita só onde havia pincel. Deixá-la lá tornaria a régua do
+					// jogador um desenho que rouba o clique do próprio movimento.
+					<button
+						type="button"
+						data-show={ "$ferramenta === '" + FerramentaDaRegua + "'" }
+						aria-label="Medir a distância — escolha as duas casas"
+						data-on:click={ reguaNoPontoClicado(v) }
+						class="tabuleiro-casas"
+					></button>
+					<button
+						type="button"
+						data-show={ "$ferramenta === '" + FerramentaDoGabarito + "'" }
+						aria-label="Pôr o gabarito de área — escolha a casa"
+						data-on:click={ gabaritoNoPontoClicado(v) }
+						class="tabuleiro-casas"
+					></button>
 					if v.AlvoDoMovimento != "" {
 						<button
 							type="button"
-							if v.Mestre {
-								data-show="$ferramenta === ''"
-							}
+							data-show="$ferramenta === ''"
 							aria-label={ "Mover " + v.RotuloDoAlvo + " — escolha a casa" }
 							data-on:click={ paradaNoPontoClicado(v) }
 							class="tabuleiro-casas"
@@ -267,11 +353,174 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					}
 				</div>
 			</div>
+			@aLeituraDaRegua()
+			@aBarraDoGabarito(v)
 			if v.Movimento != nil && v.Movimento.Meu {
 				@oMovimentoProposto(v)
 			}
 		</section>
 	}
+}
+
+// oGabaritoDesenhado é a área do livro (p225) sobre a cena, em UM nó.
+//
+// Um `<path>` e não um `<div>` por casa, e a razão não é o número de nós: é que
+// um desenho feito de HTML teria de ser remendado DENTRO da região do mapa, e o
+// quadro seguinte do stream — que não sabe do gabarito de ninguém — o apagaria
+// sem erro nenhum. O `d` cabe num SINAL, e sinal sobrevive ao remendo. É o mesmo
+// argumento da caixa de notas, que também não é região.
+//
+// O SVG fala em QUADRADOS, não em pixels: o `viewBox` é a moldura contada em
+// casas e o elemento mede `colunas × --quadrado`, então mudar o zoom muda a
+// escala do desenho inteiro sem uma linha de JavaScript.
+templ oGabaritoDesenhado(v tabuleiroView) {
+	<svg
+		aria-hidden="true"
+		data-show={ "$gabaritopath !== '' && $ferramenta === '" + FerramentaDoGabarito + "'" }
+		viewBox={ aMolduraEmQuadrados(v) }
+		preserveAspectRatio="none"
+		class="tabuleiro-medida tabuleiro-medida-fundo"
+	>
+		<g transform={ aQuinaDaMoldura(v) }>
+			<path data-attr:d="$gabaritopath" class="tabuleiro-gabarito"></path>
+		</g>
+	</svg>
+}
+
+// aReguaDesenhada é a linha entre as duas pontas.
+//
+// RETA e contínua, ao contrário do caminho proposto, que é tracejado e dobra
+// pelos quadrados: são coisas diferentes — um é por onde a peça VAI, a outra é a
+// distância até onde se quer acertar.
+//
+// A ponta de origem aparece com um clique só, e é ela que diz que a régua está
+// esperando o segundo: sem ela, o primeiro clique não devolve nada e a mesa
+// conclui que a ferramenta não funciona.
+templ aReguaDesenhada(v tabuleiroView) {
+	<svg
+		aria-hidden="true"
+		data-show={ "$reguafase > 0 && $ferramenta === '" + FerramentaDaRegua + "'" }
+		viewBox={ aMolduraEmQuadrados(v) }
+		preserveAspectRatio="none"
+		class="tabuleiro-medida tabuleiro-medida-frente"
+	>
+		<g transform={ aQuinaDaMoldura(v) }>
+			<line
+				data-show="$reguafase === 2"
+				data-attr:x1={ aPontaDaRegua("1", "x") }
+				data-attr:y1={ aPontaDaRegua("1", "y") }
+				data-attr:x2={ aPontaDaRegua("2", "x") }
+				data-attr:y2={ aPontaDaRegua("2", "y") }
+				vector-effect="non-scaling-stroke"
+				class="tabuleiro-regua-fio"
+			></line>
+			<circle
+				data-attr:cx={ aPontaDaRegua("1", "x") }
+				data-attr:cy={ aPontaDaRegua("1", "y") }
+				r="0.14"
+				class="tabuleiro-regua-ponta"
+			></circle>
+			<circle
+				data-show="$reguafase === 2"
+				data-attr:cx={ aPontaDaRegua("2", "x") }
+				data-attr:cy={ aPontaDaRegua("2", "y") }
+				r="0.2"
+				vector-effect="non-scaling-stroke"
+				class="tabuleiro-regua-alvo"
+			></circle>
+		</g>
+	</svg>
+}
+
+// aLeituraDaRegua é a faixa que diz a distância (ALE-124, portada na ALE-269).
+//
+// Quadrados E metros — quadrado é a unidade da regra (p236), metro é a unidade da
+// conversa — e, principalmente, a FAIXA de alcance do livro (p224). É a faixa que
+// responde a pergunta real: "10,5m" obriga o jogador a lembrar que curto são 9m,
+// enquanto "alcance médio" já é a resposta.
+//
+// A frase inteira vem pronta do servidor num sinal. Montá-la aqui exigiria a
+// conversão de metro e os limiares das faixas numa expressão da tela — a segunda
+// cópia da regra, e a que ninguém testa.
+templ aLeituraDaRegua() {
+	<p
+		role="status"
+		data-show={ "$reguatexto !== '' && $ferramenta === '" + FerramentaDaRegua + "'" }
+		class="flex flex-wrap items-center gap-2 border-t border-grimorio-iron px-1 pt-2 text-sm"
+	>
+		@icone("Ruler", "size-4 text-grimorio-gold")
+		<span data-text="$reguatexto" class="font-mono tabular-nums text-grimorio-gold"></span>
+		<button
+			type="button"
+			aria-label="Guardar a régua"
+			data-on:click={ guardaARegua }
+			class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			@icone("X", "size-4")
+		</button>
+	</p>
+}
+
+// aBarraDoGabarito responde, sem discussão, a pergunta que trava o turno do
+// conjurador: "se eu soltar aqui, quem pega?".
+//
+// Por isso a LISTA de quem está dentro é o que ela tem de maior — o desenho no
+// mapa mostra ONDE, mas é o NOME que resolve a dúvida, e é o nome que a mesa fala
+// em voz alta.
+//
+// O tamanho é dito em quadrados E em metros: quadrado é a unidade do gabarito
+// (p236) e metro é a unidade em que a magia está escrita na ficha.
+templ aBarraDoGabarito(v tabuleiroView) {
+	<div
+		role="status"
+		data-show={ "$ferramenta === '" + FerramentaDoGabarito + "'" }
+		class="flex flex-wrap items-center gap-1.5 border-t border-grimorio-iron px-1 pt-2 text-sm"
+	>
+		for _, forma := range asFormasDoLivro {
+			<button
+				type="button"
+				title={ rotuloDaForma(forma) + ": o " + aMedidaDaForma(forma) + " em quadrados (p225)" }
+				data-attr:aria-pressed={ fmt.Sprintf("$gabarito === %q ? 'true' : 'false'", string(forma)) }
+				data-class={ fmt.Sprintf("{'pincel-ligado': $gabarito === %q}", string(forma)) }
+				data-on:click={ escolheAForma(forma) }
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>{ rotuloDaForma(forma) }</button>
+		}
+		// O RÓTULO muda com a forma porque "tamanho" não responde a pergunta de
+		// nenhuma das quatro: o conjurador está lendo "raio 6m" na ficha, e é esse
+		// número que ele quer digitar. O `for` desenha os quatro e o `data-show`
+		// escolhe — o rótulo tem de casar com o `id` do campo, e um `id` só com
+		// quatro textos alternados deixaria três rótulos apontando para o nada.
+		for _, forma := range asFormasDoLivro {
+			<label
+				for="gabarito-tamanho"
+				data-show={ fmt.Sprintf("$gabarito === %q", string(forma)) }
+				class="text-xs text-muted-foreground"
+			>{ aMedidaDaForma(forma) }</label>
+		}
+		<input
+			id="gabarito-tamanho"
+			type="number"
+			min="1"
+			max={ oMaiorGabarito() }
+			data-bind="gabaritotamanho"
+			data-on:input__debounce.200ms={ remedeOGabarito(v) }
+			class="h-11 w-20 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		/>
+		<span
+			data-text={ oTamanhoEmMetros() }
+			class="font-mono text-xs tabular-nums text-muted-foreground"
+		></span>
+		<span data-text="$gabaritotexto" class="min-w-0 flex-1 truncate text-xs text-grimorio-gold"></span>
+		<button
+			type="button"
+			aria-label="Guardar o gabarito"
+			data-on:click={ guardaOGabarito }
+			class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			@icone("X", "size-4")
+		</button>
+	</div>
 }
 
 // oMovimentoProposto é a faixa que diz o CUSTO e oferece o par de decidir.
@@ -300,6 +549,21 @@ templ oMovimentoProposto(v tabuleiroView) {
 			}
 		</p>
 		<span class="ml-auto flex items-center gap-2">
+			// DESFAZER UMA vem antes de CANCELAR, e a ordem é a do arrependimento:
+			// primeiro se corrige a última perna, e só depois se joga a rota inteira
+			// fora. Some quando não há perna a desfazer — um botão que não faz nada
+			// é pior que nenhum, e com uma perna só desfazer JÁ É cancelar, que está
+			// ali do lado dizendo isso com a palavra certa.
+			if v.Movimento.PodeDesfazer {
+				<button
+					type="button"
+					data-on:click={ comandoDoMovimento(v, "desfazer-parada") }
+					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
+					@icone("CornerUpLeft", "size-4")
+					Desfazer parada
+				</button>
+			}
 			<button
 				type="button"
 				data-on:click={ comandoDoMovimento(v, "cancelar") }
@@ -337,6 +601,10 @@ templ pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) {
 			data-on:pointerdown={ pegaParaArrastar("peca") }
 			data-on:pointermove__window={ segueODedo("peca") }
 			data-on:pointerup__window={ soltaEPara(v, "peca", p.X, p.Y) }
+		}
+		if v.Mestre {
+			data-on:contextmenu={ abreOMenuDaPeca(p.ID) }
+			data-attr:aria-expanded={ aPecaEscolhida(p.ID) + " ? 'true' : 'false'" }
 		}
 		class={ "tabuleiro-peca",
 			templ.KV("tabuleiro-peca-na-vez", p.NaVez),
@@ -618,17 +886,214 @@ templ oAcervoDeLugares(v tabuleiroView) {
 	</dialog>
 }
 
-// O TRILHO do pincel (ALE-264, item 5): as quatro espécies e a borracha.
+// O MENU DE CONTEXTO DA PEÇA (ALE-206).
+//
+// Clique direito na peça acende os verbos dela, ancorados na casa — o MESMO
+// padrão que o marcador já usa nesta cena, e por isso o mestre não aprende um
+// gesto novo. Ele é do mestre: quem esconde, duplica e tira uma peça é quem monta
+// a mesa.
+//
+// O menu existe no HTML SEMPRE e quem o mostra é o sinal. Um grupo que só
+// nascesse depois de uma ida ao servidor chegaria tarde para um clique que já
+// aconteceu — é a mesma razão escrita no menu do marcador.
+//
+// A ISSUE PEDE que o gesto nunca seja o único caminho, e não é: a peça é um
+// `<button>` de verdade, o teclado a alcança, e o `Enter` abre este mesmo menu.
+templ oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) {
+	<div
+		role="group"
+		aria-label={ "O que fazer com " + p.Rotulo }
+		data-show={ aPecaEscolhida(p.ID) }
+		data-on:keydown__window={ "evt.key === 'Escape' && (" + fechaOMenuDaPeca + ")" }
+		style={ posicaoNoPlano(p.Col, p.Lin, p.Pegada) }
+		class="tabuleiro-peca-menu"
+	>
+		// VISIBILIDADE primeiro: é o verbo que a mesa vê, e o único cujo esquecimento
+		// entrega a emboscada. `aria-pressed` carrega o ESTADO; o nome carrega o
+		// VERBO, que é o que o clique vai fazer.
+		<button
+			type="button"
+			aria-label={ oNomeDaVisibilidade(p) }
+			title={ oNomeDaVisibilidade(p) }
+			aria-pressed={ fmt.Sprintf("%t", p.Oculta) }
+			data-on:click={ comandoDaPeca(v, p.ID, "visibilidade") }
+			class="tabuleiro-peca-verbo"
+		>
+			if p.Oculta {
+				@icone("EyeOff", "size-4")
+			} else {
+				@icone("Eye", "size-4")
+			}
+		</button>
+		<button
+			type="button"
+			aria-label={ "Duplicar " + p.Rotulo }
+			title="Duplicar: mais um, ao lado e com o número seguinte"
+			data-on:click={ comandoDaPeca(v, p.ID, "duplicar") }
+			class="tabuleiro-peca-verbo"
+		>
+			@icone("Copy", "size-4")
+		</button>
+		<button
+			type="button"
+			aria-label={ "Editar " + p.Rotulo }
+			title="Editar o nome e o tamanho"
+			data-on:click={ abreAEdicaoDaPeca(p) }
+			class="tabuleiro-peca-verbo"
+		>
+			@icone("Pencil", "size-4")
+		</button>
+		// VOLTAR só existe quando há para onde, e a frase diz a casa: "voltar" sem
+		// destino é um botão que promete desfazer algo que ninguém lembra.
+		if p.DeOndeVeio != nil {
+			<button
+				type="button"
+				aria-label={ "Voltar " + p.Rotulo + " para " + oQuadradoDaPeca(p.DeOndeVeio) }
+				title={ "Voltar para onde estava (" + oQuadradoDaPeca(p.DeOndeVeio) + ")" }
+				data-on:click={ comandoDaPeca(v, p.ID, "voltar") }
+				class="tabuleiro-peca-verbo"
+			>
+				@icone("CornerUpLeft", "size-4")
+			</button>
+		}
+		<span aria-hidden="true" class="tabuleiro-peca-vinco"></span>
+		// TIRAR fica depois do vinco e é o único em vermelho: ele é o que não se
+		// desfaz, e a distância é o que impede o clique de inércia depois de
+		// duplicar três zumbis seguidos.
+		<button
+			type="button"
+			aria-label={ "Tirar " + p.Rotulo + " do tabuleiro" }
+			title="Tirar do tabuleiro (a linha da iniciativa fica)"
+			data-on:click={ comandoDaPeca(v, p.ID, "remover") }
+			class="tabuleiro-peca-verbo tabuleiro-peca-verbo-perigo"
+		>
+			@icone("Trash2", "size-4")
+		</button>
+		<button
+			type="button"
+			aria-label={ "Fechar o menu de " + p.Rotulo }
+			data-on:click={ fechaOMenuDaPeca }
+			class="tabuleiro-peca-verbo"
+		>
+			@icone("X", "size-4")
+		</button>
+	</div>
+}
+
+// O DIÁLOGO DE EDITAR é UM só para todas as peças, e quem o semeia é o gesto que
+// o abre (`abreAEdicaoDaPeca`).
+//
+// Nó COMPARTILHADO exige limpeza no gesto que TROCA de item — a regra que o guia
+// do pacote escreveu depois do link de redefinição de senha aparecer sob o nome
+// errado. Aqui o risco é o mesmo em miniatura: abrir o Ogro depois do Zumbi
+// mostraria o nome do Zumbi sobre o Ogro, e o mestre salvaria isso.
+templ editarAPeca(v tabuleiroView) {
+	<dialog
+		id="editar-peca"
+		data-preserve-attr="open"
+		aria-labelledby="editar-peca-titulo"
+		class="scene-grimorio m-auto hidden w-[min(24rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground open:flex backdrop:bg-black/60"
+	>
+		<h2 id="editar-peca-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Editar a peça</h2>
+		<div class="space-y-1">
+			<label for="peca-nome" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Nome da peça</label>
+			<input
+				id="peca-nome"
+				type="text"
+				maxlength="60"
+				data-bind="pecanome"
+				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			/>
+		</div>
+		// O TAMANHO é uma lista fechada e não um número: o livro define 1, 2, 3 e 6
+		// (p107, Tab. 1-21), e não existe 4 nem 5. Um campo livre deixaria o mestre
+		// desenhar uma peça que nenhuma criatura tem.
+		<div class="space-y-1">
+			<label for="peca-tamanho" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Tamanho</label>
+			<select
+				id="peca-tamanho"
+				data-bind="pecatamanho"
+				class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			>
+				for _, t := range osTamanhosDaPeca {
+					<option value={ fmt.Sprint(t.Lado) }>{ t.Rotulo }</option>
+				}
+			</select>
+		</div>
+		<div class="flex items-center justify-end gap-2 border-t border-grimorio-iron pt-3">
+			<button
+				type="button"
+				data-on:click="document.getElementById('editar-peca').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Cancelar</button>
+			<button
+				type="button"
+				data-on:click={ salvaAEdicaoDaPeca(v) }
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Salvar</button>
+		</div>
+	</dialog>
+}
+
+// O TRILHO DE FERRAMENTAS (ALE-264 item 5, aberto ao jogador na ALE-269).
+//
+// Ele existe para que o que o CLIQUE vai fazer seja legível ANTES do clique. Era
+// só do mestre enquanto só o mestre tinha modo — pintar e marcar —, e a régua
+// quebrou isso: medir e mirar são gestos de quem ATACA, e "dá para acertar
+// daqui?" é pergunta de jogador.
+//
+// A divisa entre as duas metades é de PAPEL e não de assunto: em cima o que
+// todo mundo faz, embaixo o que muda a cena. É por isso que MOVER ganhou botão
+// próprio aqui — com o jogador tendo ferramentas, "nenhuma ferramenta ligada"
+// deixou de ser um estado que se adivinha pela ausência de marca.
+templ oTrilhoDeFerramentas(v tabuleiroView) {
+	<div role="group" aria-label="Ferramentas do mapa" class="flex flex-wrap items-center gap-1">
+		// O `aria-pressed` devolve STRING e não booleano: `data-attr` com valor
+		// booleano vira ATRIBUTO booleano, e `aria-pressed=""` não anuncia estado
+		// nenhum. Vale para todo `data-attr:aria-*`.
+		@ferramentaDoMapa("", "MousePointer2", "Mover a peça", "Mover a peça: o clique escolhe a casa para onde ela vai")
+		@ferramentaDoMapa(FerramentaDaRegua, "Ruler", "Régua", "Régua: dois cliques dizem a distância e a faixa de alcance do livro (p224)")
+		@ferramentaDoMapa(FerramentaDoGabarito, "Radar", "Gabarito", "Gabarito de área: desenha a esfera, o cone, a linha ou o quadrado (p225) e diz quem ele pega")
+		if v.Mestre {
+			<span aria-hidden="true" class="mx-1 h-6 w-px bg-grimorio-iron"></span>
+			@osPinceisDoMestre(v)
+		}
+	</div>
+}
+
+// ferramentaDoMapa é um botão do trilho: um ícone, um nome e o sinal único.
+//
+// UM componente para as três de todo mundo, e não três blocos iguais: eles
+// dividem o `aria-pressed`, a marca de ligado e a alternância do sinal, e três
+// cópias dariam três lugares onde a quarta ferramenta esquece de desligar as
+// vizinhas.
+templ ferramentaDoMapa(qual, nomeDoIcone, rotulo, dica string) {
+	<button
+		type="button"
+		title={ dica }
+		aria-label={ rotulo }
+		data-attr:aria-pressed={ fmt.Sprintf("$ferramenta === %q ? 'true' : 'false'", qual) }
+		data-class={ fmt.Sprintf("{'pincel-ligado': $ferramenta === %q}", qual) }
+		data-on:click={ escolheAFerramenta(qual) }
+		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>
+		@icone(nomeDoIcone, "size-4")
+		{ rotulo }
+	</button>
+}
+
+// Os PINCÉIS do mestre (ALE-264, item 5): as quatro espécies, o marcador e a
+// borracha.
 //
 // Diz o EFEITO ao lado do nome, e isso não é enfeite: "Cobertura" sozinho não
 // lembra ninguém de que são +5 na Defesa, e o mestre que precisa da regra sai da
 // mesa para procurá-la no livro. É a mesma razão de o diálogo de abrir dizer
 // que um quadrado são 1,5m.
 //
-// O trilho só existe para o MESTRE e só com cena aberta — pintar chão de uma
-// cena que não está na mesa não tem onde acontecer.
-templ oTrilhoDoPincel(v tabuleiroView) {
-	<div role="group" aria-label="Ferramentas do mapa" class="flex flex-wrap items-center gap-1">
+// Só para o MESTRE e só com cena aberta — pintar chão de uma cena que não está
+// na mesa não tem onde acontecer.
+templ osPinceisDoMestre(v tabuleiroView) {
+	<div class="flex flex-wrap items-center gap-1">
 		// O `aria-pressed` devolve STRING e não booleano: o `data-attr` do Datastar
 		// trata valor booleano como ATRIBUTO booleano — verdadeiro vira
 		// `aria-pressed=""`, que não anuncia estado nenhum. Vale para todo
@@ -672,7 +1137,7 @@ templ oTrilhoDoPincel(v tabuleiroView) {
 			type="button"
 			title="Borracha: o clique APAGA a espécie escolhida em vez de pintá-la"
 			data-attr:aria-pressed="$apagando ? 'true' : 'false'"
-			data-attr:disabled="$ferramenta === '' || $ferramenta === 'marcador'"
+			data-attr:disabled={ "!(" + oPincelEstaLigado() + ")" }
 			data-class="{'pincel-ligado': $apagando}"
 			data-on:click="$apagando = !$apagando"
 			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
@@ -683,17 +1148,23 @@ templ oTrilhoDoPincel(v tabuleiroView) {
 	</div>
 }
 
-// O ZOOM do plano (ALE-264, item 6).
+// O ENQUADRAMENTO do plano: centralizar e o zoom (ALE-264 item 6, ALE-269 item 9).
 //
-// AÇÃO e não ferramenta, e a divisa é a mesma que a ALE-203 desenhou na SPA:
+// AÇÕES e não ferramentas, e a divisa é a mesma que a ALE-203 desenhou na SPA:
 // ferramenta muda o que o CLIQUE faz, ação acontece uma vez e acaba. Por isso
-// ele fica no cabeçalho e não no trilho — no trilho, aproximar pareceria um modo
-// que se liga.
+// elas ficam no cabeçalho e não no trilho — no trilho, aproximar pareceria um
+// modo que se liga.
 //
-// Os botões DESABILITAM no limite em vez de sumir: um botão que some move os
-// vizinhos debaixo do dedo de quem está clicando repetido para aproximar.
-templ oZoomDoPlano() {
-	<span role="group" aria-label="Aproximar e afastar o mapa" class="ml-auto flex items-center gap-1">
+// Os botões do zoom DESABILITAM no limite em vez de sumir: um botão que some
+// move os vizinhos debaixo do dedo de quem está clicando repetido para
+// aproximar.
+templ oEnquadramentoDoPlano(v tabuleiroView) {
+	<span role="group" aria-label="Enquadrar o mapa" class="ml-auto flex items-center gap-1">
+		// CENTRALIZAR vem ANTES do zoom e é a única ação da faixa que precisa
+		// saber da cena: num plano sem bordas, achar o grupo é a pergunta que se
+		// faz primeiro, e aproximar é o ajuste que vem depois de achar.
+		@oCentralizador(v)
+		<span aria-hidden="true" class="mx-0.5 h-5 w-px bg-grimorio-iron"></span>
 		<button
 			type="button"
 			aria-label="Afastar o mapa"
@@ -725,6 +1196,62 @@ templ oZoomDoPlano() {
 			@icone("Plus", "size-4")
 		</button>
 	</span>
+}
+
+// oCentralizador acha o grupo num plano que não tem começo (ALE-269, item 9).
+//
+// "Voltar ao começo" não significa nada aqui: a origem do plano é um lugar como
+// outro qualquer, e o que o mestre quer é ver as peças. Por isso o alvo é a
+// caixa que as contém, e por isso o RÓTULO muda quando não há nenhuma — "nas
+// peças" numa cena vazia ensinaria que o botão está quebrado.
+//
+// ÍCONE e não texto, como os vizinhos: a linha do lugar é a mais estreita da
+// região, e o nome por extenso empurra o nome da cena para fora. O nome
+// acessível carrega a frase inteira.
+templ oCentralizador(v tabuleiroView) {
+	<button
+		type="button"
+		aria-label={ oAlvoDoCentralizar(v) }
+		title={ oAlvoDoCentralizar(v) }
+		data-on:click={ centralizaNasPecas(v) }
+		class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>
+		@icone("Crosshair", "size-4")
+	</button>
+}
+
+// O botão da LENTE (ALE-193, portado na ALE-269 como superfície 7).
+//
+// Até ele existir, conferir a emboscada exigia abrir DOIS navegadores com dois
+// logins — foi assim que a ALE-178 foi verificada, e é caro demais para se fazer
+// no meio de uma sessão.
+//
+// `aria-pressed` e não dois botões, como na cortina: é UM estado com dois lados.
+// O valor sai como STRING porque `data-attr` com booleano vira atributo booleano,
+// e `aria-pressed=""` não anuncia estado nenhum — mas aqui ele é CONSTANTE (o
+// servidor sabe se a lente está ligada), então vai no atributo mesmo.
+templ botaoDaLente(v tabuleiroView) {
+	<button
+		type="button"
+		aria-pressed={ fmt.Sprintf("%t", v.Lente) }
+		if v.Lente {
+			aria-label="Voltar à vista do mestre"
+			title="Voltar à vista do mestre"
+		} else {
+			aria-label="Ver a cena como a mesa vê"
+			title="Ver como jogador: confira a emboscada sem parar de montá-la"
+		}
+		data-on:click={ comandoDaLente(v) }
+		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.Lente),
+			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.Lente) }
+	>
+		if v.Lente {
+			@icone("EyeOff", "size-5")
+		} else {
+			@icone("Eye", "size-5")
+		}
+	</button>
 }
 
 // O botão da CORTINA (ALE-202, portado na ALE-269).

@@ -70,7 +70,7 @@ templ cabecalhoDaCronica(v cronicaView) {
 					{ fmt.Sprintf("Sessão %d em andamento", v.NumeroDaSessaoViva) }
 				}
 				<a
-					href={ templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", v.ID, v.SessaoVivaID)) }
+					href={ templ.SafeURL(rotaDaMesa(v.ID, v.SessaoVivaID)) }
 					class={ classesDoBotao(varPrimaria, tamPadrao, "") }
 				>
 					Continuar a sessão
@@ -268,7 +268,7 @@ templ linhaDoHeroi(h heroiNaMesa) {
 templ linhaDaSessao(campanhaID int64, sess sessaoNaCronica) {
 	<li>
 		<a
-			href={ templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", campanhaID, sess.ID)) }
+			href={ templ.SafeURL(rotaDaMesa(campanhaID, sess.ID)) }
 			data-nav-item
 			class="flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>

@@ -87,6 +87,14 @@ type tabuleiroView struct {
 	// redação usa, e não de um parâmetro novo: duas fontes para o papel é como
 	// nasce a tela que esconde o botão de quem pode e o mostra para quem não.
 	Mestre bool
+	// Lente é o mestre vendo a cena COMO A MESA (ALE-193). Ela não muda o que ele
+	// PODE — os controles continuam dele —, só o que ele VÊ: o tabuleiro chega
+	// redigido pelo mesmo `BoardForRole` que a mesa recebe.
+	Lente bool
+	// PecasEscondidas é quantas peças a mesa NÃO vê, e é a pergunta que trouxe o
+	// mestre até aqui ("a emboscada está mesmo invisível?"). Contar o que sobrou
+	// na tela não responderia: ele não sabe o que não está vendo.
+	PecasEscondidas int
 	// Acervo são os LUGARES guardados da campanha (ALE-124, fatia 5). Só o
 	// mestre tem — a mesa não escolhe onde joga.
 	//
@@ -134,6 +142,11 @@ type pecaDoTabuleiro struct {
 	// inclusive para o JOGADOR quando o mestre ocultou os PV (ALE-188). É assim
 	// que a redação por papel chega até a peça.
 	PV *int
+	// DeOndeVeio é onde ela estava antes do último pouso, e é o que decide se o
+	// menu oferece "voltar para onde estava" (ALE-206). Nil quando ela não foi
+	// movida nesta cena — e aí o verbo não é desenhado, porque um botão que não
+	// faz nada é pior que nenhum.
+	DeOndeVeio *engine.Square
 	// Oculta é a peça que o mestre escondeu da mesa. Ela só existe na view dele:
 	// o `BoardForRole` já a tirou da do jogador.
 	Oculta bool
@@ -245,7 +258,8 @@ func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, e tabuleiro.Moldura, saude map[s
 		Col: t.X - e.X0, Lin: t.Y - e.Y0, X: t.X, Y: t.Y, Onde: coordenada(t.X, t.Y),
 		Pegada:    pegada,
 		Monograma: a.Monograma, Instancia: a.Instancia, Matiz: a.Matiz,
-		Oculta: t.Hidden,
+		Oculta:     t.Hidden,
+		DeOndeVeio: t.DeOndeVeio,
 	}
 	if t.EntryID != nil {
 		p.NaVez = naVez != "" && *t.EntryID == naVez
@@ -357,6 +371,13 @@ type movimentoView struct {
 	// Meu diz se quem olha decide sobre este movimento. O mestre decide por
 	// qualquer um — é ele quem toca a mesa.
 	Meu bool
+	// Paradas são as casas onde a pessoa CLICOU, sem a última: elas viram uma
+	// marca na trilha, e é ela que faz o "Desfazer parada" ter o que desfazer aos
+	// olhos de quem clica. A última fica de fora porque já é o losango do destino.
+	Paradas []quadradoDoTabuleiro
+	// PodeDesfazer é ter mais de UMA perna. Com uma só, desfazer é cancelar — e o
+	// Cancelar está ali do lado, dizendo isso com a palavra certa.
+	PodeDesfazer bool
 }
 
 // movimentoDoTabuleiro monta o movimento em curso, ou nil quando não há.
@@ -378,6 +399,15 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover, e tabuleir
 	}
 	for _, q := range p.Path {
 		v.Trilha = append(v.Trilha, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+	}
+	// As paradas INTERMEDIÁRIAS: a última é o destino, que já tem desenho
+	// próprio, e a primeira é de onde a peça saiu — marcar as duas contaria a
+	// mesma coisa duas vezes.
+	if len(p.Stops) > 2 {
+		v.PodeDesfazer = true
+		for _, q := range p.Stops[1 : len(p.Stops)-1] {
+			v.Paradas = append(v.Paradas, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+		}
 	}
 	// O `Restante` é preenchido pelo chamador: ele sai da MESMA chamada que
 	// desenha o alcance, e recalculá-lo aqui seria a segunda conta da regra.
@@ -744,68 +774,6 @@ func escolheOMarcador(id string) string {
 	}
 	return fmt.Sprintf("$marcadorescolhido = ($marcadorescolhido === %q ? '' : %q)", id, id)
 }
-
-// ── O ZOOM do plano (ALE-264, item 6) ────────────────────────────────────────
-//
-// `--quadrado` É o zoom, e isso já estava escrito no CSS antes de haver gesto: o
-// plano tem `width: calc(var(--colunas) * var(--quadrado))`, e a grade, as
-// peças, os marcadores e o terreno derivam do mesmo número. Mudar UM valor
-// reenquadra a cena inteira, e a rolagem nativa continua valendo porque o plano
-// muda de tamanho DE VERDADE — não é um `transform` que mente sobre o leiaute.
-//
-// E a conta do clique acompanha de graça: ela já dividia por `$quadrado`, que é
-// o mesmo número. Era isso que o comentário da camada de casas prometia com "o
-// `$quadrado` acompanha o zoom quando ele chegar".
-
-// Os LIMITES são os da SPA, com as razões dela (`board-viewport.ts`): abaixo de
-// 20 a peça vira um ponto e o rótulo some; acima de 96 uma tela de 1024 mostra
-// 10 quadrados, menos que dois deslocamentos padrão (9m = 6 quadrados, p106), e
-// o mestre deixa de ver para onde dá para andar. Portar os números em vez de
-// inventá-los é o que faz as duas telas enquadrarem igual.
-const (
-	quadradoMinimo = 20
-	quadradoMaximo = 96
-	quadradoPadrao = 44
-	passoDoZoom    = 8
-)
-
-// ampliaOPlano soma um passo ao zoom, preso aos limites.
-func ampliaOPlano(delta int) string {
-	return fmt.Sprintf("$quadrado = Math.min(%d, Math.max(%d, $quadrado + (%d)))",
-		quadradoMaximo, quadradoMinimo, delta)
-}
-
-// zoomNoLimite é a pergunta que desabilita o botão que não faria nada.
-func zoomNoLimite(delta int) string {
-	if delta < 0 {
-		return fmt.Sprintf("$quadrado <= %d", quadradoMinimo)
-	}
-	return fmt.Sprintf("$quadrado >= %d", quadradoMaximo)
-}
-
-// estiloDoPalco é o que leva o zoom do sinal para o CSS.
-//
-// Vai no PALCO e não no plano porque é lá que a variável nasce, e porque o palco
-// é um nó que o remendo não substitui — o zoom sobrevive a cada mudança na cena,
-// que é a mesma razão de o enquadramento não estar no HTML.
-const estiloDoPalco = "'--quadrado: ' + $quadrado + 'px'"
-
-// zoomPelaRoda: só com CTRL, e a decisão é de não tirar nada de ninguém.
-//
-// A roda SOZINHA continua rolando o plano, que é como se percorre o mapa hoje —
-// a SPA pôde tomar a roda para o zoom porque lá não há rolagem nativa para
-// perder. `Ctrl+roda` é a convenção de mapa e o gesto que o navegador já ensina.
-const zoomPelaRoda = "evt.ctrlKey && (evt.preventDefault(), " +
-	"$quadrado = Math.min(96, Math.max(20, $quadrado + (evt.deltaY < 0 ? 8 : -8))))"
-
-// zoomPeloTeclado: `+` e `-`, as mesmas teclas da SPA.
-//
-// A guarda de alvo de digitação é a mesma do atalho da barra: sem ela, digitar
-// um "-" no nome de um combatente reenquadraria o tabuleiro atrás do formulário.
-const zoomPeloTeclado = `!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && ` +
-	`(evt.key === '+' || evt.key === '=' ? ` +
-	`$quadrado = Math.min(96, $quadrado + 8) : ` +
-	`evt.key === '-' ? $quadrado = Math.max(20, $quadrado - 8) : null)`
 
 // comandoDaCortina escreve o gesto que fecha ou abre (ALE-202, ALE-269).
 func comandoDaCortina(v tabuleiroView, estado string) string {

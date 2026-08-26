@@ -24,28 +24,69 @@ import (
 // falar — e fala em `erroDoMovimento`, no tabuleiro. O alcance continua sendo a
 // realimentação principal; a frase é a rede embaixo dela.
 //
-// Nada de lista de paradas guardada: o CAMINHO proposto já é o acumulado, e a
-// última parada é o último quadrado dele.
+// A LISTA DE PARADAS é guardada desde a ALE-269 (item 10), e a linha que estava
+// aqui dizia o contrário — "o CAMINHO proposto já é o acumulado, e a última
+// parada é o último quadrado dele". A primeira metade continua verdadeira; a
+// segunda basta para o Cancelar e não basta para DESFAZER UMA: um trecho legítimo
+// já tem uma dobra (a diagonal vem primeiro), e ela é indistinguível da dobra de
+// uma parada. Quem guarda é o `PendingMove.Stops`, e o caminho passou a ser o que
+// as paradas produzem em vez de o que se emenda à mão.
 
 func (s *Server) rotasDoMovimento(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
 	r.Post(base+"/parada/{x}/{y}", s.comandoDaMesa(paraNoQuadrado))
+	r.Post(base+"/desfazer-parada", s.comandoDaMesa(desfazAUltimaParada))
 	r.Post(base+"/confirmar", s.comandoDaMesa(confirmaOMovimento))
 	r.Post(base+"/cancelar", s.comandoDaMesa(cancelaOMovimento))
 }
 
 // paraNoQuadrado acrescenta uma parada ao movimento — ou começa um.
-//
-// Estender é somar o segmento novo ao caminho que já existe, descartando o
-// primeiro quadrado dele porque é o último do anterior — a mesma emenda do
-// `CaminhoPorParadas`, que é quem a define.
 func paraNoQuadrado(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	destino, err := quadradoDaURL(c.R)
 	if err != nil {
 		return nil, err
 	}
 	tokenID := chi.URLParam(c.R, "tokenId")
-	b := st.boards.Get(c.R.Context(), c.SessionID)
+	paradas, err := st.paradasDaProposta(c, tokenID)
+	if err != nil {
+		return nil, err
+	}
+	return st.propoePorParadas(c, tokenID, append(paradas, destino))
+}
+
+// desfazAUltimaParada corrige a última perna sem jogar a rota inteira fora
+// (ALE-266, portado na ALE-269).
+//
+// É a ordem do arrependimento: primeiro se tira a perna errada, e só depois se
+// cancela tudo. Sobrando só a origem, desfazer VIRA cancelar — uma proposta sem
+// perna nenhuma não é proposta, e deixar um provisório de custo zero na mesa
+// seria pedir um "Confirmar" que não move ninguém.
+//
+// Reconstrói pelas paradas que sobraram em vez de cortar o fim do caminho: o
+// número de quadrados de um trecho não se deduz das paradas sem redesenhá-lo, e
+// redesenhar é o que o `CaminhoPorParadas` faz de graça.
+func desfazAUltimaParada(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	tokenID := chi.URLParam(c.R, "tokenId")
+	paradas, err := st.paradasDaProposta(c, tokenID)
+	if err != nil {
+		return nil, err
+	}
+	if len(paradas) < 2 {
+		return nil, fmt.Errorf("não há parada a desfazer em %q", tokenID)
+	}
+	if paradas = paradas[:len(paradas)-1]; len(paradas) < 2 {
+		return cancelaOMovimento(st, c)
+	}
+	return st.propoePorParadas(c, tokenID, paradas)
+}
+
+// paradasDaProposta devolve as paradas já acumuladas, ou só o lugar da peça.
+//
+// A proposta de OUTRA pessoa não conta: duas mãos empilhando pernas no mesmo
+// movimento é o estado que o `ByUserID` existe para evitar, e sem esta conferência
+// um segundo jogador estenderia o caminho que o primeiro está montando.
+func (s *Server) paradasDaProposta(c mesaComando, tokenID string) ([]engine.Square, error) {
+	b := s.boards.Get(c.R.Context(), c.SessionID)
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
@@ -53,16 +94,18 @@ func paraNoQuadrado(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if peca == nil {
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
-
-	caminho := []engine.Square{{X: peca.X, Y: peca.Y}}
-	if p := b.Pending; p != nil && p.TokenID == tokenID && p.ByUserID == c.User.ID {
-		caminho = p.Path
+	if p := b.Pending; p != nil && p.TokenID == tokenID && p.ByUserID == c.User.ID && len(p.Stops) > 0 {
+		// Cópia, e não a fatia do estado: o `append` do chamador escreveria na
+		// memória do tabuleiro vivo antes de a proposta ser validada — e uma
+		// proposta RECUSADA teria deixado a parada lá.
+		return append([]engine.Square(nil), p.Stops...), nil
 	}
-	caminho = append(caminho, engine.CaminhoEntre(caminho[len(caminho)-1], destino)[1:]...)
+	return []engine.Square{{X: peca.X, Y: peca.Y}}, nil
+}
 
-	quem := st.quemMove(c)
-	return st.boards.ProposeMove(c.R.Context(), c.SessionID,
-		st.sessions.GetState(c.SessionID), tokenID, caminho, quem, 0)
+func (s *Server) propoePorParadas(c mesaComando, tokenID string, paradas []engine.Square) (*tabuleiro.BoardState, error) {
+	return s.boards.ProposeMoveComParadas(c.R.Context(), c.SessionID,
+		s.sessions.GetState(c.SessionID), tokenID, paradas, s.quemMove(c), 0)
 }
 
 func confirmaOMovimento(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {

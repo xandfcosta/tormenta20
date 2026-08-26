@@ -61,7 +61,14 @@ type CreatureAttack struct {
 	Ranged bool `json:"ranged,omitempty"`
 	// Special é a nota entre parênteses da linha de ataque ("mais agarrar"),
 	// que o livro escreve em prosa.
-	Special string `json:"special,omitempty"`
+	//
+	// SEM `omitempty`, ao contrário do `Ranged` logo acima, e a diferença é do
+	// EDITOR: o campo é ligado a uma caixa de texto por `data-bind`, e um sinal
+	// AUSENTE chega ao navegador como `undefined` — a caixa nasceria com a
+	// palavra "undefined" escrita dentro, e salvar a guardaria como o efeito do
+	// ataque. Booleano ausente vira `false`, que é o valor certo; texto ausente
+	// vira uma palavra.
+	Special string `json:"special"`
 }
 
 // CreatureSkill é uma perícia da linha "Perícias Furtividade +5" (p289).
@@ -75,7 +82,10 @@ type CreatureSkill struct {
 	//
 	// Cuidado com o outro parêntese, que quer o oposto: `Ofício (armeiro) +2`
 	// vem ANTES do número e faz parte do NOME da perícia (ALE-151).
-	Nota string `json:"nota,omitempty"`
+	//
+	// SEM `omitempty` pela mesma razão do `Special` do ataque: ela é uma caixa de
+	// texto do editor, e ausente ela chegaria escrita "undefined".
+	Nota string `json:"nota"`
 }
 
 // creatureTipos são os tipos de criatura do livro. Fechado porque o livro os
@@ -106,39 +116,45 @@ const creatureMaxAttacks = 12
 // validateCreature recusa um bloco que a tela não saberia mostrar. As mensagens
 // dizem o valor recebido e a forma esperada, como manda o guia da raiz: quem lê
 // o erro está com o formulário aberto e precisa saber o que corrigir.
+//
+// EM PORTUGUÊS desde a ALE-269, e não é cosmética: elas eram inglesas enquanto o
+// formulário sempre foi português, e o editor de bloco é a primeira tela em que
+// a recusa é COMUM — salvar sem nome e salvar com PV zero são o caminho normal
+// de quem está inventando um NPC. "hp is 0, must be >= 1" ao lado de uma caixa
+// escrita "Pontos de Vida" faz o mestre procurar um campo que não existe.
 func validateCreature(name string, b *CreatureBlock) error {
 	if strings.TrimSpace(name) == "" {
-		return fmt.Errorf("creature name is required")
+		return fmt.Errorf("o NPC precisa de um nome")
 	}
 	if len(name) > 60 {
-		return fmt.Errorf("creature name has %d chars, max is 60", len(name))
+		return fmt.Errorf("o nome tem %d caracteres, e o máximo é 60", len(name))
 	}
 	if b.ND < 0 {
-		return fmt.Errorf("nd is %v, must be >= 0", b.ND)
+		return fmt.Errorf("o ND é %v, e precisa ser 0 ou mais", b.ND)
 	}
 	if !creatureTipos[b.Tipo] {
-		return fmt.Errorf("tipo %q is not one of the book's creature types", b.Tipo)
+		return fmt.Errorf("o tipo %q não é um dos tipos de criatura do livro", b.Tipo)
 	}
 	if !creatureSizes[b.Size] {
-		return fmt.Errorf("size %q is not one of the book's sizes", b.Size)
+		return fmt.Errorf("o tamanho %q não é um dos tamanhos do livro", b.Size)
 	}
 	if b.HP < 1 {
-		return fmt.Errorf("hp is %d, must be >= 1", b.HP)
+		return fmt.Errorf("os PV são %d, e precisam ser 1 ou mais", b.HP)
 	}
 	if b.PM != nil && *b.PM < 0 {
-		return fmt.Errorf("pm is %d, must be >= 0 when present", *b.PM)
+		return fmt.Errorf("os PM são %d, e precisam ser 0 ou mais em quem conjura", *b.PM)
 	}
 	if len(b.Attacks) > creatureMaxAttacks {
-		return fmt.Errorf("creature has %d attacks, max is %d", len(b.Attacks), creatureMaxAttacks)
+		return fmt.Errorf("o NPC tem %d ataques, e o máximo é %d", len(b.Attacks), creatureMaxAttacks)
 	}
 	for i, a := range b.Attacks {
 		if strings.TrimSpace(a.Name) == "" {
-			return fmt.Errorf("attack %d has no name", i+1)
+			return fmt.Errorf("o ataque %d está sem nome", i+1)
 		}
 	}
 	for i, s := range b.Skills {
 		if strings.TrimSpace(s.Name) == "" {
-			return fmt.Errorf("skill %d has no name", i+1)
+			return fmt.Errorf("a perícia %d está sem nome", i+1)
 		}
 	}
 	return nil

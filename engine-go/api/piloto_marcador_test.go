@@ -98,8 +98,12 @@ func TestOZoomNasceNoPadraoERespeitaOsLimites(t *testing.T) {
 	// O CONTROLE: os controles estão na página. Sem isto, as buscas abaixo
 	// falhariam por motivo errado e "não achei o limite" leria como "o limite
 	// sumiu" quando a verdade seria "a cena não desenhou o zoom".
-	if !strings.Contains(tela, "Aproximar e afastar o mapa") {
-		t.Fatal("a cena não desenhou os controles de zoom")
+	// O nome do grupo virou "Enquadrar o mapa" na ALE-269, quando o centralizar
+	// entrou ao lado do zoom: "Aproximar e afastar" descrevia dois dos três
+	// botões. O CONTROLE continua sendo o mesmo — provar que a faixa está na
+	// página antes de procurar coisa dentro dela.
+	if !strings.Contains(tela, "Enquadrar o mapa") {
+		t.Fatal("a cena não desenhou os controles de enquadramento")
 	}
 
 	// O PADRÃO é derivado e não digitado: escrever 44 no `data-signals` seria a
@@ -124,10 +128,15 @@ func TestOZoomNasceNoPadraoERespeitaOsLimites(t *testing.T) {
 			t.Errorf("a expressão de limite %q não está na cena", expressao)
 		}
 	}
-	// O zoom é de TODO MUNDO: o jogador enquadra a própria janela, e depender do
-	// mestre para aproximar no telefone não é enquadramento, é pedido.
+	// O enquadramento é de TODO MUNDO: o jogador enquadra a própria janela, e
+	// depender do mestre para aproximar no telefone não é enquadramento, é
+	// pedido. Vale para o centralizar pela mesma razão — achar o grupo num plano
+	// sem bordas é problema de quem está olhando, não de quem montou a cena.
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
-	if !strings.Contains(doJogador, "Aproximar e afastar o mapa") {
-		t.Error("o jogador não recebeu os controles de zoom")
+	if !strings.Contains(doJogador, "Enquadrar o mapa") {
+		t.Error("o jogador não recebeu os controles de enquadramento")
+	}
+	if !strings.Contains(doJogador, oAlvoDoCentralizar(tabuleiroView{})) {
+		t.Error("o jogador não recebeu o centralizar")
 	}
 }

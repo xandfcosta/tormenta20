@@ -47,6 +47,18 @@ type BoardToken struct {
 	// re-sincronizado do motor a cada proposta, como o `RefreshCharacterMaxes`
 	// faz com o `hpMax`. Zero = nunca medido; vale o padrão do livro.
 	SpeedSquares int `json:"speedSquares,omitempty"`
+	// DeOndeVeio é onde a peça estava ANTES do último movimento confirmado, e é
+	// o que dá ao mestre o "voltar para onde estava" (ALE-206).
+	//
+	// Guardado na PEÇA e não na memória da tela, ao contrário da SPA: lá o
+	// desfazer do posicionamento morre no F5 e não existe na outra aba, e o
+	// gesto que ele conserta — "arrastei o dragão para o lugar errado na frente
+	// de seis pessoas" — é justamente o que se quer desfazer de qualquer tela.
+	//
+	// UMA posição e não uma pilha, como na SPA: o arrependimento do
+	// posicionamento é sobre o gesto que acabou de acontecer, e um histórico
+	// convidaria a andar para trás na cena com um botão que não diz até onde vai.
+	DeOndeVeio *engine.Square `json:"deOndeVeio,omitempty"`
 }
 
 // BoardMarker é um LUGAR marcado no mapa que não é uma peça (ALE-195): a
@@ -611,6 +623,19 @@ type PendingMove struct {
 	// ByUserID é quem propôs. O mestre confirma por qualquer um; o jogador só
 	// confirma o que ele mesmo propôs.
 	ByUserID int64 `json:"byUserId"`
+	// Stops são as casas onde a pessoa CLICOU, na ordem, com a primeira sendo o
+	// lugar de onde a peça saiu. O `Path` é o que elas produzem
+	// (`CaminhoPorParadas`), e não o contrário.
+	//
+	// Existe porque o caminho NÃO deixa descobri-las: um trecho legítimo já tem
+	// uma dobra (a diagonal vem primeiro), e ela é indistinguível da dobra de uma
+	// parada. Sem esta lista, "desfazer a última perna" só poderia ser adivinhado
+	// — e o que se adivinha errado aqui é o movimento que a mesa está vendo.
+	//
+	// NULO é um valor legítimo e quer dizer "não se sabe onde ela parou": é o que
+	// o `ProposeMove` deixa quando o caminho chega pronto de fora. Quem propõe por
+	// paradas usa o `ProposeMoveComParadas`, e só aí o desfazer de UMA existe.
+	Stops []engine.Square `json:"stops,omitempty"`
 }
 
 // boardDefaultSpeedSquares é o orçamento de quem não declarou deslocamento: 9m,
@@ -716,6 +741,26 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 	return nil
 }
 
+// ProposeMoveComParadas propõe pelas casas em que a pessoa CLICOU, e guarda a
+// lista junto (ALE-269, item 10).
+//
+// A primeira parada é onde a peça está; cada uma seguinte estende o caminho,
+// contornando o que quem move quiser. É a forma que o piloto usa, e é ela que
+// torna "desfazer a última perna" uma operação exata em vez de um palpite: o
+// caminho se reconstrói pelas paradas que sobraram, e reconstruir é o que o
+// `CaminhoPorParadas` já faz de graça.
+//
+// A validação inteira continua sendo a do `ProposeMove` — o orçamento, a vez, a
+// posse, a contiguidade. Esta função não afrouxa nada; ela só LEMBRA de onde o
+// caminho veio.
+func ProposeMoveComParadas(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover) error {
+	if err := ProposeMove(b, st, tokenID, engine.CaminhoPorParadas(paradas), by); err != nil {
+		return err
+	}
+	b.Pending.Stops = paradas
+	return nil
+}
+
 // PaintTerrain marca ou apaga UMA casa como terreno difícil (T20 p238).
 //
 // Recebe o valor DESEJADO e não alterna, e a razão mudou junto com a tela: o
@@ -807,8 +852,40 @@ func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 		return err
 	}
 	destination := pending.Path[len(pending.Path)-1]
+	// DE ONDE ELA VEIO fica gravado ANTES de a peça pousar: é o que faz o
+	// "voltar para onde estava" existir depois (ALE-206), e é aqui que a
+	// informação existe pela última vez.
+	//
+	// No CONFIRMAR e não no propor, porque o provisório não moveu ninguém: a
+	// peça só sai do lugar aqui, e gravar antes daria um "voltar" para um
+	// movimento que foi cancelado.
+	token.DeOndeVeio = &engine.Square{X: token.X, Y: token.Y}
 	token.X, token.Y = destination.X, destination.Y
 	b.Pending = nil
+	b.Version++
+	return nil
+}
+
+// VoltaAPeca põe a peça de volta onde ela estava antes do último pouso (ALE-206).
+//
+// LIMPA o registro ao usar, e por isso o gesto só existe uma vez por movimento: um
+// "voltar" que continuasse disponível andaria para trás na cena com um botão que
+// não diz até onde vai. Quem quiser desfazer duas vezes desfaz, move de novo, e
+// desfaz de novo — cada passo com a mesa vendo.
+//
+// Não confere a VEZ nem a posse, ao contrário do movimento: quem chama é o mestre
+// arrumando a cena (a rota é `comandoDoMestreNoTabuleiro`), e a peça já está onde
+// ele a pôs. Recusar por "não é a vez de Arwen" impediria justamente o conserto.
+func VoltaAPeca(b *BoardState, tokenID string) error {
+	token := FindToken(b, tokenID)
+	if token == nil {
+		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
+	}
+	if token.DeOndeVeio == nil {
+		return fmt.Errorf("%s não foi movida nesta cena: não há para onde voltar", token.Label)
+	}
+	token.X, token.Y = token.DeOndeVeio.X, token.DeOndeVeio.Y
+	token.DeOndeVeio = nil
 	b.Version++
 	return nil
 }
