@@ -1,0 +1,401 @@
+{
+  "_": "GERADO por scripts/dump-markdown-oracle.ts a partir de frontend/src/shared/lib/markdown.ts. Não edite à mão.",
+  "arvores": [
+    {
+      "nota": "o cabeçalho e o negrito, o caso comum",
+      "fonte": "# Cena 1\n- O ogro **fugiu** pela ponte",
+      "blocos": [
+        {
+          "kind": "heading",
+          "level": 1,
+          "spans": [
+            {
+              "kind": "text",
+              "text": "Cena 1"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "ordered": false,
+          "items": [
+            {
+              "spans": [
+                {
+                  "kind": "text",
+                  "text": "O ogro "
+                },
+                {
+                  "kind": "strong",
+                  "text": "fugiu"
+                },
+                {
+                  "kind": "text",
+                  "text": " pela ponte"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "ALE-122: a quebra de linha é INTENCIONAL, não junta",
+      "fonte": "linha um\nlinha dois\nlinha tres",
+      "blocos": [
+        {
+          "kind": "paragraph",
+          "lines": [
+            [
+              {
+                "kind": "text",
+                "text": "linha um"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "linha dois"
+              }
+            ],
+            [
+              {
+                "kind": "text",
+                "text": "linha tres"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "tarefa carrega a LINHA de origem, senão o clique não reescreve a nota",
+      "fonte": "- [ ] pagar o taverneiro\n- [x] dar o XP",
+      "blocos": [
+        {
+          "kind": "list",
+          "ordered": false,
+          "items": [
+            {
+              "spans": [
+                {
+                  "kind": "text",
+                  "text": "pagar o taverneiro"
+                }
+              ],
+              "task": {
+                "checked": false,
+                "line": 0
+              }
+            },
+            {
+              "spans": [
+                {
+                  "kind": "text",
+                  "text": "dar o XP"
+                }
+              ],
+              "task": {
+                "checked": true,
+                "line": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "citação",
+      "fonte": "> \"voltarei\", ele disse",
+      "blocos": [
+        {
+          "kind": "quote",
+          "spans": [
+            {
+              "kind": "text",
+              "text": "\"voltarei\", ele disse"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "lista ordenada",
+      "fonte": "1. primeiro\n2. segundo",
+      "blocos": [
+        {
+          "kind": "list",
+          "ordered": true,
+          "items": [
+            {
+              "spans": [
+                {
+                  "kind": "text",
+                  "text": "primeiro"
+                }
+              ]
+            },
+            {
+              "spans": [
+                {
+                  "kind": "text",
+                  "text": "segundo"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "régua",
+      "fonte": "---",
+      "blocos": [
+        {
+          "kind": "rule"
+        }
+      ]
+    },
+    {
+      "nota": "link http passa, javascript: vira TEXTO",
+      "fonte": "um `codigo` e um [elo](https://t20.com) e um [mau](javascript:alert(1))",
+      "blocos": [
+        {
+          "kind": "paragraph",
+          "lines": [
+            [
+              {
+                "kind": "text",
+                "text": "um "
+              },
+              {
+                "kind": "code",
+                "text": "codigo"
+              },
+              {
+                "kind": "text",
+                "text": " e um "
+              },
+              {
+                "kind": "link",
+                "text": "elo",
+                "href": "https://t20.com"
+              },
+              {
+                "kind": "text",
+                "text": " e um [mau](javascript:alert(1))"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "título fundo demais NÃO é título — o que ele não conhece vira texto",
+      "fonte": "#### fundo demais",
+      "blocos": [
+        {
+          "kind": "paragraph",
+          "lines": [
+            [
+              {
+                "kind": "text",
+                "text": "#### fundo demais"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "itálico com asterisco e com sublinhado",
+      "fonte": "*so italico* e **negrito** e _sublinhado_",
+      "blocos": [
+        {
+          "kind": "paragraph",
+          "lines": [
+            [
+              {
+                "kind": "em",
+                "text": "so italico"
+              },
+              {
+                "kind": "text",
+                "text": " e "
+              },
+              {
+                "kind": "strong",
+                "text": "negrito"
+              },
+              {
+                "kind": "text",
+                "text": " e "
+              },
+              {
+                "kind": "em",
+                "text": "sublinhado"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "nota vazia é caminho normal",
+      "fonte": "",
+      "blocos": []
+    },
+    {
+      "nota": "só espaços",
+      "fonte": "   \n  ",
+      "blocos": []
+    },
+    {
+      "nota": "marcação aberta e não fechada volta inteira como texto",
+      "fonte": "um **negrito que nao fecha e um [elo(sem parenteses",
+      "blocos": [
+        {
+          "kind": "paragraph",
+          "lines": [
+            [
+              {
+                "kind": "text",
+                "text": "um **negrito que nao fecha e um [elo(sem parenteses"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "lista colada num parágrafo",
+      "fonte": "antes\n- item\ndepois",
+      "blocos": [
+        {
+          "kind": "paragraph",
+          "lines": [
+            [
+              {
+                "kind": "text",
+                "text": "antes"
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "list",
+          "ordered": false,
+          "items": [
+            {
+              "spans": [
+                {
+                  "kind": "text",
+                  "text": "item"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "lines": [
+            [
+              {
+                "kind": "text",
+                "text": "depois"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "tarefa maiúscula [X] conta como marcada",
+      "fonte": "- [X] gritou",
+      "blocos": [
+        {
+          "kind": "list",
+          "ordered": false,
+          "items": [
+            {
+              "spans": [
+                {
+                  "kind": "text",
+                  "text": "gritou"
+                }
+              ],
+              "task": {
+                "checked": true,
+                "line": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "nota": "asterisco também abre item de lista",
+      "fonte": "* com asterisco",
+      "blocos": [
+        {
+          "kind": "list",
+          "ordered": false,
+          "items": [
+            {
+              "spans": [
+                {
+                  "kind": "text",
+                  "text": "com asterisco"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "alterna": [
+    {
+      "nota": "marca",
+      "fonte": "- [ ] dar XP",
+      "linha": 0,
+      "marcada": true,
+      "saida": "- [x] dar XP"
+    },
+    {
+      "nota": "desmarca",
+      "fonte": "- [x] dar XP",
+      "linha": 0,
+      "marcada": false,
+      "saida": "- [ ] dar XP"
+    },
+    {
+      "nota": "linha que não é tarefa volta INTACTA",
+      "fonte": "sem tarefa",
+      "linha": 0,
+      "marcada": true,
+      "saida": "sem tarefa"
+    },
+    {
+      "nota": "mexe só na linha pedida",
+      "fonte": "- [ ] a\n- [ ] b",
+      "linha": 1,
+      "marcada": true,
+      "saida": "- [ ] a\n- [x] b"
+    },
+    {
+      "nota": "linha fora da faixa volta intacta",
+      "fonte": "- [ ] a",
+      "linha": 9,
+      "marcada": true,
+      "saida": "- [ ] a"
+    },
+    {
+      "nota": "só o PRIMEIRO quadrinho da linha muda",
+      "fonte": "- [ ] anotar [ ] no mapa",
+      "linha": 0,
+      "marcada": true,
+      "saida": "- [x] anotar [ ] no mapa"
+    }
+  ]
+}
