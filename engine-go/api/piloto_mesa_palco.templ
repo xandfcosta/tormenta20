@@ -36,9 +36,10 @@ templ palcoDoMestre(v mesaView, b bestiarioView) {
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@mesaCabecalho(v)
-		<div class="flex min-h-0 flex-1 flex-col gap-2 p-2 sm:p-3 lg:flex-row">
+		<div class="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row">
 			@trilhoDaEsquerda(v)
 			@mesaTabuleiro(v)
+			@mesaNotas(v)
 			@trilhoDasConsultas(v)
 		</div>
 		@mesaComandos(v)
@@ -87,7 +88,9 @@ templ mesaTrilhoDaFila(v mesaView) {
 			title="Abrir a fila inteira: dano, ordem e condições"
 			data-on:click="document.getElementById('gaveta-da-fila').showModal()"
 			class="flex shrink-0 items-center justify-center rounded-sm border border-grimorio-iron py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>⤢</button>
+		>
+			@icone("PanelLeftOpen", "size-4")
+		</button>
 		if len(v.Fila) == 0 {
 			<p class="px-1 py-2 text-center text-2xs text-muted-foreground">Fila vazia</p>
 		} else {
@@ -162,13 +165,16 @@ templ trilhoDasConsultas(v mesaView) {
 			data-on:click="document.getElementById('gaveta-da-fila').showModal()"
 			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"
 		>Iniciativa · { fmt.Sprint(len(v.Fila)) }</button>
+		@oBotaoDasNotas()
 		<button
 			type="button"
 			aria-label="Abrir o bestiário"
 			title="Bestiário — trazer uma criatura do livro"
 			data-on:click="document.getElementById('bestiario-da-mesa').showModal()"
 			class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
-		>🐉</button>
+		>
+			@icone("Skull", "size-5")
+		</button>
 	</nav>
 }
 
@@ -200,7 +206,9 @@ templ gavetaDaFila(v mesaView) {
 					aria-label="Fechar a iniciativa"
 					data-on:click="document.getElementById('gaveta-da-fila').close()"
 					class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-				>✕</button>
+				>
+			@icone("X", "size-4")
+		</button>
 			</div>
 			<div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
 				@mesaRegistrarRegiao(v)

@@ -57,6 +57,28 @@ const QUERIDOS = [
   'Zap',
   'Backpack',
   'Star',
+  // A MESA em forma de shell (ALE-269). Ela era a única tela do piloto ainda
+  // desenhada com EMOJI, e emoji não obedece `currentColor`: o 🐉 e o 📝 saíam
+  // coloridos sobre a paleta de ouro e ferro, não escureciam quando o botão
+  // ficava desabilitado e não acendiam em dourado na vez. Os nomes abaixo são
+  // os MESMOS que a `session-gm-view` importa do lucide, para o mestre que
+  // aprendeu um lado reconhecer o outro.
+  'NotebookPen',
+  'PanelLeftOpen',
+  'X',
+  'Settings2',
+  'Hourglass',
+  'Moon',
+  'Theater',
+  'Library',
+  'Minus',
+  'Pencil',
+  'Eye',
+  'EyeOff',
+  'Eraser',
+  'MapPin',
+  'Square',
+  'SquareCheck',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

@@ -58,7 +58,9 @@ templ bestiarioDaMesa(v bestiarioView) {
 				aria-label="Fechar o bestiário"
 				data-on:click="document.getElementById('bestiario-da-mesa').close()"
 				class="ml-auto flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>✕</button>
+			>
+			@icone("X", "size-4")
+		</button>
 		</div>
 		// A mesma grade da cena do mestre, e a mesma consulta de contêiner: a
 		// pergunta "cabe o bloco ao lado da lista?" é sobre o espaço que ESTA

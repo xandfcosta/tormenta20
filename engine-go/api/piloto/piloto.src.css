@@ -367,6 +367,39 @@ html {
     min-height: 0;
     flex: 1 1 0%;
   }
+
+  /* AS NOTAS DA SESSÃO (ALE-269, superfície 5).
+   *
+   * UM NÓ NOS DOIS ARRANJOS, e isto não é economia: a prévia tem id, e id é
+   * como o remendo a encontra. Um segundo nó para o telefone seria um segundo
+   * `#mesa-notas-previa` — o `PatchElements` acerta o primeiro, o outro
+   * envelhece na tela, e as duas metades passam a discordar sobre a mesma nota.
+   * É o mesmo defeito da ALE-122, agora em HTML, e o guarda das regiões o
+   * pegaria. Então a "gaveta" do telefone é ESTA seção, posicionada por CSS.
+   *
+   * O contêiner é da SEÇÃO e não da janela, e a razão é a que a ALE-139 mediu
+   * três vezes: esta região é uma coluna de 40% ao lado do mapa e a tela
+   * inteira por cima dele, e um limiar de viewport prometeria duas colunas onde
+   * cabe uma só.
+   *
+   * 42rem = 672px é o MESMO corte do `@2xl` que a SPA usa para o lado a lado. */
+  .notas-coluna {
+    container-type: inline-size;
+    container-name: notas;
+  }
+
+  .notas-arranjo {
+    grid-template-columns: 1fr;
+  }
+
+  /* Só o modo DUPLO reparte, e a classe vem do sinal: com uma coluna fixa de
+   * duas trilhas, o modo "ler" deixaria metade da região vazia — o item
+   * escondido não é item de grade, e a trilha dele fica lá do mesmo jeito. */
+  @container notas (min-width: 42rem) {
+    .notas-arranjo.notas-duplo {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
   .tabuleiro-plano {
     position: relative;
     width: calc(var(--colunas) * var(--quadrado));

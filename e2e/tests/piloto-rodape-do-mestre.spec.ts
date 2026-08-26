@@ -85,7 +85,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
       await rota.abort()
     })
 
-    await page.getByRole('button', { name: '🌙 Recuperar · dia' }).first().click()
+    await page.getByRole('button', { name: 'Recuperar · dia' }).first().click()
     const qualidade = page.getByLabel('Qualidade do descanso')
     await expect(qualidade).toBeVisible()
     // O CONTROLE de que o sinal declarado chega ao elemento: sem ele o select
@@ -125,7 +125,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
   test('a recuperação sai da fileira quando o palco é baixo', async ({ page }) => {
     await page.goto(MESA)
     const naFileira = page.locator(`${rodape} .palco-alto-so`).getByRole('button', {
-      name: '⏳ Recuperar · cena',
+      name: 'Recuperar · cena',
     })
     const gaveta = page.locator(`${rodape} details.palco-gaveta`)
 
@@ -155,7 +155,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     // rodapé, e subir é o que pode estourar por cima num palco de 390.
     await abrir.click()
     const painel = gaveta.locator('div').first()
-    await expect(painel.getByRole('button', { name: '⏳ Recuperar · cena' })).toBeVisible()
+    await expect(painel.getByRole('button', { name: 'Recuperar · cena' })).toBeVisible()
     const caixa = await painel.evaluate((el) => {
       const r = el.getBoundingClientRect()
       return { top: r.top, bottom: r.bottom, left: r.left, right: r.right }
@@ -325,7 +325,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
   test('o diálogo do descanso nasce centralizado', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 })
     await page.goto(MESA)
-    await page.getByRole('button', { name: '🌙 Recuperar · dia' }).first().click()
+    await page.getByRole('button', { name: 'Recuperar · dia' }).first().click()
 
     const caixa = page.locator('dialog#descanso-de-dia')
     await expect(caixa).toBeVisible()

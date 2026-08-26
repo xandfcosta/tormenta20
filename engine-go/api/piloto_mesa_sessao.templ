@@ -20,7 +20,9 @@ templ verbosDaSessao(v mesaView) {
 				title="Configurações da sessão"
 				data-on:click={ abreAConfigDaSessao(v) }
 				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>⚙</button>
+			>
+			@icone("Settings2", "size-4")
+		</button>
 		}
 		// SAIR é um link e não um botão: ele navega, e navegação é do navegador.
 		// Assim o ctrl+clique e o "abrir em nova aba" continuam valendo.

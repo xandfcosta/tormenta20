@@ -63,7 +63,7 @@ templ mesa(v mesaView) {
 templ mesaCabecalho(v mesaView) {
 		<div
 			id="mesa-cabecalho"
-			class={ "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-3 py-2 sm:px-4",
+			class={ "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-2 py-1 sm:px-3",
 				templ.KV("border-grimorio-gold/60 bg-grimorio-gold/10", v.Turn.Kind == "mine"),
 				templ.KV("border-grimorio-iron bg-grimorio-panel", v.Turn.Kind != "mine") }
 		>
@@ -272,7 +272,9 @@ templ mesaFila(v mesaView) {
 								title="Bestiário — trazer uma criatura do livro"
 								data-on:click="document.getElementById('bestiario-da-mesa').showModal()"
 								class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-							>🐉</button>
+							>
+			@icone("Skull", "size-5")
+		</button>
 						</span>
 					}
 				</div>
@@ -410,7 +412,8 @@ templ mesaRegistrar(v mesaView) {
 				data-on:click="$d20 = Math.floor(Math.random() * 20) + 1"
 				class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
-				🎲 Rolar
+				@icone("Dices", "size-4")
+				Rolar
 			</button>
 			// A PRÉVIA some quando o dado não é um dado, e isso é conserto de um
 			// defeito medido (ALE-236, avisado pela outra sessão): o `data-bind`
@@ -569,14 +572,18 @@ templ verbosDaLinha(v mesaView, l mesaLinha) {
 			title={ "Condições de " + l.Rotulo + " (p394-395)" }
 			data-on:click={ abreAsCondicoes(l) }
 			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>🩹</button>
+		>
+			@icone("HeartPulse", "size-4")
+		</button>
 		<button
 			type="button"
 			aria-label={ "Remover " + l.Rotulo + " da fila" }
 			title={ "Remover " + l.Rotulo + " da fila" }
 			data-on:click={ comandoDaLinha(v, l, "remove") }
 			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>🗑</button>
+		>
+			@icone("Trash2", "size-4")
+		</button>
 	</div>
 }
 
@@ -622,9 +629,9 @@ templ oOlhoDaLinha(v mesaView, l mesaLinha) {
 			templ.KV("text-grimorio-gold", l.Oculto), templ.KV("text-muted-foreground", !l.Oculto) }
 	>
 		if l.Oculto {
-			🙈
+			@icone("EyeOff", "size-4")
 		} else {
-			👁
+			@icone("Eye", "size-4")
 		}
 	</button>
 }

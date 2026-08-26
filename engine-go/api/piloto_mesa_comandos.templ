@@ -16,7 +16,7 @@ package api
 templ controlesDoMestre(v mesaView, r mestreView) {
 	<section
 		aria-label="Controles do mestre"
-		class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 sm:px-4"
+		class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron bg-grimorio-panel px-2 py-1 sm:px-3"
 	>
 		// O CONTADOR vem primeiro e é texto, não enfeite: ele é quem explica por
 		// que o avanço está apagado quando está. Botão apagado sem frase ao lado
@@ -90,7 +90,9 @@ templ gavetaDaMesa(v mesaView) {
 		<summary
 			aria-label="Mais comandos da mesa"
 			class="flex size-11 cursor-pointer list-none items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>⚙</summary>
+		>
+			@icone("Settings2", "size-4")
+		</summary>
 		<div class="absolute bottom-full right-0 z-20 mb-2 flex w-56 flex-col gap-1 rounded-sm border border-grimorio-iron bg-grimorio-panel p-2 shadow-lg">
 			if v.SceneActive {
 				@encerrarCena(v)
@@ -118,12 +120,18 @@ templ aRecuperacao(v mesaView) {
 		data-attr:disabled="$descansando"
 		data-on:click={ comandoDaMesa(v, "POST", "rest/scene") }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
-	>⏳ Recuperar · cena</button>
+	>
+		@icone("Hourglass", "size-4")
+		Recuperar · cena
+	</button>
 	<button
 		type="button"
 		data-on:click="document.getElementById('descanso-de-dia').showModal()"
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-	>🌙 Recuperar · dia</button>
+	>
+		@icone("Moon", "size-4")
+		Recuperar · dia
+	</button>
 }
 
 // descansoDeDia pergunta a QUALIDADE antes de descansar (T20 p105).
