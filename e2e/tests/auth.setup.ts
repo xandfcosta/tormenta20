@@ -1,8 +1,15 @@
 import { type Page, expect, test as setup } from '@playwright/test'
 
-// Seeded accounts from the Go backend (engine-go/data/t20-dev.db). The GM owns
-// campaign 1; the player is only a member of it — the pair the role-gating
-// specs need (ALE-24).
+// Contas da SEED (`engine-go/seed.sql`), aplicada pelo projeto `semente` num
+// banco recriado a cada corrida — `data/e2e.db`, e não mais o `t20-dev.db` da
+// bancada (ALE-269). O mestre é dono da campanha 1; o jogador é só membro dela
+// — o par de que os specs de papel precisam (ALE-24).
+//
+// AS DUAS VARREDURAS ABAIXO ficaram REDUNDANTES com o banco novo por corrida:
+// não há o que varrer num arquivo que acabou de nascer. Ficam por ora porque
+// custam ~1,5s e a ordem de corte da casa é "escrever o substituto, ver
+// verde, DEPOIS apagar" — o substituto é o banco isolado, e este é o primeiro
+// dia dele.
 const PASSWORD = process.env.E2E_PASSWORD ?? 'mestre123456'
 const GM_EMAIL = process.env.E2E_EMAIL ?? 'mestre@t20.local'
 const PLAYER_EMAIL = process.env.E2E_PLAYER_EMAIL ?? 'jogador@t20.local'

@@ -40,6 +40,19 @@ const SERVIDOR_JA_DE_PE = process.env.E2E_SERVIDOR_EXTERNO === '1'
 // de dev SEM `STATIC_DIR`, que responde a API e não serve SPA nenhuma — a suíte
 // morreria em 404 com cara de defeito do app.
 const PORTA_DO_BUILD = process.env.E2E_PORT ?? '3010'
+// O BANCO DO E2E É PRÓPRIO, apagado e recriado a cada corrida (ALE-269).
+//
+// Antes a suíte caía no `DATABASE_URL` padrão — `data/t20-dev.db`, o MESMO
+// arquivo que se usa ao conferir qualquer coisa no navegador. Um tabuleiro
+// aberto à mão ou um combatente esquecido na fila viravam vermelho com cara de
+// regressão do commit: o teste que quebra não tem relação com o que mudou, e a
+// suíte estava verde antes. Aconteceu duas vezes na mesma issue.
+//
+// O `rm` mora no comando do servidor e não num passo à parte porque ele tem de
+// acontecer ANTES de a API abrir o arquivo — é a abertura que migra. Os
+// irmãos `-wal` e `-shm` vão junto: deixá-los faz o SQLite reconstruir o banco
+// velho por cima do novo, e o "banco limpo" seria o sujo com outro nome.
+const BANCO_DO_E2E = 'data/e2e.db'
 const BASE_URL =
   process.env.E2E_BASE_URL ??
   (CONTRA_O_DEV ? 'http://localhost:5173' : `http://localhost:${PORTA_DO_BUILD}`)
@@ -124,9 +137,20 @@ export default defineConfig({
     },
   },
   projects: [
+    // A SEMENTE vem antes do login, e é a ordem inteira do arranjo: a API migra
+    // o arquivo ao abrir, a seed é só INSERT, e o login precisa dos usuários que
+    // ela cria. Só existe quando NÓS subimos o servidor — com servidor externo
+    // quem semeia é o CI, e aplicar `seed.sql` duas vezes estoura nas chaves.
+    ...(SERVIDOR_JA_DE_PE || CONTRA_O_DEV
+      ? []
+      : [{ name: 'semente', testMatch: /semente\.setup\.ts/ }]),
     // Logs in once via the UI and saves the session (localStorage token) so the
     // other specs start authenticated.
-    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    {
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+      dependencies: SERVIDOR_JA_DE_PE || CONTRA_O_DEV ? [] : ['semente'],
+    },
     {
       name: 'chromium',
       dependencies: ['setup'],
@@ -158,7 +182,9 @@ export default defineConfig({
         // desenvolvimento servindo o BUILD, não produção pela metade.
         command:
           'pnpm --filter frontend build && cd engine-go && ' +
-          `STATIC_DIR=../frontend/dist PORT=${PORTA_DO_BUILD} go run ./cmd/api`,
+          `rm -f ${BANCO_DO_E2E} ${BANCO_DO_E2E}-wal ${BANCO_DO_E2E}-shm && ` +
+          `STATIC_DIR=../frontend/dist PORT=${PORTA_DO_BUILD} ` +
+          `DATABASE_URL=file:./${BANCO_DO_E2E} go run ./cmd/api`,
         url: BASE_URL,
         cwd: '..',
         reuseExistingServer: false,
