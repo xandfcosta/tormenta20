@@ -197,7 +197,7 @@ func sinaisDaMesa() string {
 		// e quem está em cena, e o tabuleiro pode nem estar aberto.
 		fmt.Sprintf("superficie: '%s'", superficieQueAbrePadrao),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
-		"ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: ''",
+		"ferramenta: '', marcadorescolhido: '', escolhidosdomapa: ''",
 		// O MENU DA PEÇA (ALE-206). `pecaescolhida` é qual menu está aberto e
 		// `pecaeditada` é qual peça o diálogo está editando: são DOIS porque abrir
 		// o diálogo FECHA o menu, e um sinal só faria o gesto de abrir apagar o

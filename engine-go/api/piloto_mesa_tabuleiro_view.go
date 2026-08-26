@@ -691,13 +691,14 @@ func pecasEmPortugues(n int) string {
 // somada ao ponto dividido pelo lado —, e ela é do cliente pelo mesmo motivo: é
 // sobre PIXELS, e o servidor não sabe o zoom.
 //
-// A BORRACHA não é uma espécie: ela é o `ligado=false` de qualquer uma. Por isso
-// o sinal do pincel guarda a espécie e o apagar vira um segundo sinal booleano —
-// uma "espécie borracha" obrigaria a decidir o que ela apaga quando a casa tem
-// duas, e a resposta certa (a que estiver selecionada) já é o que isto faz.
+// A BORRACHA saiu daqui na ALE-203. Ela era o `ligado=false` desta mesma rota, e
+// o comentário que estava nesta linha dizia que "a resposta certa é a que estiver
+// selecionada" — o dono usou e provou o contrário: com `Cobertura` na mão, clicar
+// num quadrado de `Difícil` apagava a cobertura que não estava ali, em silêncio.
+// Agora ela é ferramenta própria, com rota própria, e limpa a casa inteira.
 func pinturaNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d) + ($apagando ? '?apagar=1' : ''))",
+		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d))",
 		v.CampaignID, v.SessionID, v.X0, v.Y0,
 	)
 }
