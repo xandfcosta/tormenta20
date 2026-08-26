@@ -90,6 +90,10 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						// caminho existia e era inalcançável, porque a lista só
 						// aparecia na cena vazia.
 						@botaoDaCortina(v)
+						// A LENTE é vizinha da CORTINA e a ordem não é aleatória: são as
+						// duas perguntas sobre o que a mesa vê. Uma esconde a cena, a
+						// outra confere o que sobrou dela.
+						@botaoDaLente(v)
 						@botaoDePorNoMapa(v)
 						if len(v.Acervo) > 0 {
 							@botaoDoAcervo(v)
@@ -135,6 +139,24 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						data-on:click={ comandoDaCortina(v, "abrir") }
 						class="ml-auto inline-flex min-h-6 items-center rounded-sm border border-grimorio-gold/60 px-2 text-xs outline-none transition-colors hover:bg-grimorio-gold/20 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 					>Abrir a cortina</button>
+				</p>
+			}
+			// A TIRA DA LENTE, irmã da tira da cortina e pela MESMA razão: um modo
+			// que se esquece é pior que nenhum. Aqui o esquecimento é o oposto do
+			// da cortina — o mestre olha a própria cena e não vê a peça que ele
+			// mesmo escondeu, e conclui que ela sumiu. Ela diz o NÚMERO porque
+			// contar o que sobrou na tela não responde a pergunta dele, e carrega a
+			// própria saída porque quem percebe o modo tem de poder desfazê-lo de
+			// onde percebeu.
+			if v.Lente {
+				<p role="status" class="flex flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-2 py-1 text-xs text-grimorio-gold">
+					@icone("Eye", "size-4")
+					{ aFraseDaLente(v.PecasEscondidas) }
+					<button
+						type="button"
+						data-on:click={ comandoDaLente(v) }
+						class="ml-auto inline-flex min-h-6 items-center rounded-sm border border-grimorio-gold/60 px-2 text-xs outline-none transition-colors hover:bg-grimorio-gold/20 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+					>Voltar à vista do mestre</button>
 				</p>
 			}
 			// O TRILHO é de TODO MUNDO desde a régua (ALE-269): medir e mirar são
@@ -1022,6 +1044,40 @@ templ oCentralizador(v tabuleiroView) {
 		class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
 		@icone("Crosshair", "size-4")
+	</button>
+}
+
+// O botão da LENTE (ALE-193, portado na ALE-269 como superfície 7).
+//
+// Até ele existir, conferir a emboscada exigia abrir DOIS navegadores com dois
+// logins — foi assim que a ALE-178 foi verificada, e é caro demais para se fazer
+// no meio de uma sessão.
+//
+// `aria-pressed` e não dois botões, como na cortina: é UM estado com dois lados.
+// O valor sai como STRING porque `data-attr` com booleano vira atributo booleano,
+// e `aria-pressed=""` não anuncia estado nenhum — mas aqui ele é CONSTANTE (o
+// servidor sabe se a lente está ligada), então vai no atributo mesmo.
+templ botaoDaLente(v tabuleiroView) {
+	<button
+		type="button"
+		aria-pressed={ fmt.Sprintf("%t", v.Lente) }
+		if v.Lente {
+			aria-label="Voltar à vista do mestre"
+			title="Voltar à vista do mestre"
+		} else {
+			aria-label="Ver a cena como a mesa vê"
+			title="Ver como jogador: confira a emboscada sem parar de montá-la"
+		}
+		data-on:click={ comandoDaLente(v) }
+		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.Lente),
+			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.Lente) }
+	>
+		if v.Lente {
+			@icone("EyeOff", "size-5")
+		} else {
+			@icone("Eye", "size-5")
+		}
 	</button>
 }
 

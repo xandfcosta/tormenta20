@@ -76,6 +76,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDaCena(r)
 		s.rotasDosMarcadores(r)
 		s.rotasDaCortina(r)
+		s.rotasDaLente(r)
 		s.rotasDasCondicoes(r)
 		s.rotasDaSessao(r)
 		s.rotasDasNotas(r)
@@ -263,10 +264,21 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// contra o banco (o `meus` do roster) e nunca contra o cliente — é o mesmo
 	// fio de volta até a pessoa que a ALE-33 fixou.
 	quemOlha := tabuleiro.Mover{UserID: user.ID, Role: role}
+	cena := tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID))
+	// A LENTE DO MESTRE (ALE-193): com ela ligada, o que se desenha é a cena
+	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `quemOlha` continua
+	// dizendo "mestre", porque a lente é sobre o que ele vê e não sobre o que ele
+	// pode: ele confere a emboscada sem parar de montá-la.
+	escondidas := 0
+	naLente := role == "gm" && s.lentes.Ligada(sessionID, user.ID)
+	if naLente {
+		cena, escondidas = aCenaComoAMesaVe(cena)
+	}
 	view.Tabuleiro = tabuleiroViewOf(
-		tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID)), st,
-		saudeDaFila(st), combatenteDaVez(st), quemOlha, meus, campaignID, sessionID,
+		cena, st, saudeDaFila(st), combatenteDaVez(st), quemOlha, meus, campaignID, sessionID,
 	)
+	view.Tabuleiro.Lente = naLente
+	view.Tabuleiro.PecasEscondidas = escondidas
 	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
 	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
 	if role == "gm" {

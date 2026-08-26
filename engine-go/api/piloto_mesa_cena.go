@@ -125,6 +125,11 @@ func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error)
 		}
 	}
 	st.boards.Close(c.R.Context(), c.SessionID)
+	// A LENTE morre com a cena (ALE-193): "você está vendo como a mesa" sobre uma
+	// tela sem tabuleiro faria o mestre concluir que o mapa sumiu PARA OS
+	// JOGADORES — a resposta errada exatamente à pergunta que a lente existe para
+	// responder. Apaga a de todo mundo porque a cena era de todo mundo.
+	st.lentes.Apaga(c.SessionID)
 	// `nil` é a mensagem: "esta sessão não tem tabuleiro" é estado de verdade, e
 	// não uma grade vazia. O `comandoDoTabuleiro` só publica quando não é nil, e
 	// aqui o nil é justamente o que a mesa precisa saber — por isso a publicação

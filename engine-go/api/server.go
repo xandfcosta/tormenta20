@@ -30,6 +30,11 @@ type Server struct {
 	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
 	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
 	livro    livroServido             // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
+	// lentes é quem está vendo a cena COMO A MESA (ALE-193, ALE-269). Mora aqui
+	// e não num sinal do navegador porque o stream não pergunta nada a ninguém:
+	// um modo em `data-show` seria desfeito pelo primeiro quadro do SSE, com a
+	// peça escondida voltando sozinha à tela do mestre no meio da conferência.
+	lentes *asLentes
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.
@@ -136,6 +141,7 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 		livro:    abreOLivro(cfg),
 		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, vitaisDaFicha{q: q}),
 		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID),
+		lentes:   novasLentes(),
 		presence: aovivo.NewPresenceRegistry(),
 		sse:      aovivo.NewSSEHub(),
 	}

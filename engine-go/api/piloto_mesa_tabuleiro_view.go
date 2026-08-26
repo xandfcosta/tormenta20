@@ -87,6 +87,14 @@ type tabuleiroView struct {
 	// redação usa, e não de um parâmetro novo: duas fontes para o papel é como
 	// nasce a tela que esconde o botão de quem pode e o mostra para quem não.
 	Mestre bool
+	// Lente é o mestre vendo a cena COMO A MESA (ALE-193). Ela não muda o que ele
+	// PODE — os controles continuam dele —, só o que ele VÊ: o tabuleiro chega
+	// redigido pelo mesmo `BoardForRole` que a mesa recebe.
+	Lente bool
+	// PecasEscondidas é quantas peças a mesa NÃO vê, e é a pergunta que trouxe o
+	// mestre até aqui ("a emboscada está mesmo invisível?"). Contar o que sobrou
+	// na tela não responderia: ele não sabe o que não está vendo.
+	PecasEscondidas int
 	// Acervo são os LUGARES guardados da campanha (ALE-124, fatia 5). Só o
 	// mestre tem — a mesa não escolhe onde joga.
 	//
