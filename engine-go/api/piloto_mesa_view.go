@@ -103,6 +103,14 @@ type mesaMembro struct {
 	// "não mostrar" e "está fora" são coisas diferentes — um anel apagado diria
 	// "fora da mesa" a quem não tem por que saber.
 	Presenca *presencaDoMembro
+	// Defesa é TEXTO e nunca número, pela mesma razão do cartão de personagem:
+	// sem motor ela é desconhecida, e um ZERO é um valor de Defesa plausível e
+	// errado. Travessão diz "não sei"; zero mente com cara de dado.
+	Defesa string
+	// NaFila responde "este já está no combate?", e é o que decide se o elenco
+	// OFERECE pô-lo na fila. Oferecer o que só pode dar linha repetida é
+	// desenhar um erro — a mesma regra que trava os verbos do ciclo da sessão.
+	NaFila bool
 }
 
 // presencaDoMembro é "está com a aba aberta agora?", já com a frase pronta.
@@ -291,6 +299,18 @@ func mesaViewOf(
 				break
 			}
 		}
+	}
+	// QUEM JÁ ESTÁ NA FILA, marcado no elenco. A pergunta é da FILA e não do
+	// roster, então ela é respondida aqui, onde as duas estão à mão — o
+	// `mesaRoster` monta os cartões sem saber que existe combate.
+	naFila := map[int64]bool{}
+	for i := range st.Initiative {
+		if id := st.Initiative[i].CharacterID; id != nil {
+			naFila[*id] = true
+		}
+	}
+	for i := range grupo {
+		grupo[i].NaFila = naFila[grupo[i].CharacterID]
 	}
 	return mesaView{
 		CampaignID:  campaignID,

@@ -114,51 +114,11 @@ templ mesaGrupo(v mesaView) {
 		class={ templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre != nil) }
 	>
 		if v.Mestre != nil {
-			@elencoDoMestre(v)
+			@oElencoDoMestre(v)
 		} else {
 			@grupoEmCartoes(v)
 		}
 	</div>
-}
-
-// O ELENCO recolhido: o segundo bloco do trilho esquerdo (ALE-269, a vaga do
-// `CastRail` da SPA).
-//
-// A MESMA população do cartão do jogador — o roster já vem filtrado por
-// `role == "player"` no servidor —, desenhada como monograma porque 80px não
-// comportam nome, nível, classes e duas barras. O mestre lê PV na fila e na
-// gaveta, que é onde ele age sobre eles.
-//
-// Este bloco ROLA e o da fila não, e a assimetria é deliberada: a fila não pode
-// rolar porque a posição dela CARREGA significado (acima já agiu, abaixo ainda
-// vai). O elenco é lista sem ordem própria, e rolar não custa leitura nenhuma.
-//
-// A presença nunca vai só na cor: ela viaja no `title` e num rótulo só-para-
-// leitor, porque cor não existe para quem usa leitor de tela (ALE-212).
-templ elencoDoMestre(v mesaView) {
-	if len(v.Grupo) > 0 {
-		<nav
-			aria-label="Elenco"
-			class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto border border-grimorio-iron bg-grimorio-panel p-1"
-		>
-			for _, m := range v.Grupo {
-				<span
-					title={ rotuloDoElenco(m) }
-					class="relative flex flex-col items-center rounded-sm border border-grimorio-iron px-1 py-1.5"
-				>
-					<span class="text-sm font-semibold text-foreground">{ m.Iniciais }</span>
-					if m.Presenca != nil {
-						<span
-							class={ "absolute right-0.5 top-0.5 size-2 rounded-full",
-								templ.KV("bg-hp-full", m.Presenca.NaMesa),
-								templ.KV("bg-grimorio-iron", !m.Presenca.NaMesa) }
-						></span>
-					}
-					<span class="sr-only">{ rotuloDoElenco(m) }</span>
-				</span>
-			}
-		</nav>
-	}
 }
 
 // O GRUPO em cartões: a superfície do JOGADOR, como sempre foi.

@@ -77,6 +77,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDasCondicoes(r)
 		s.rotasDaSessao(r)
 		s.rotasDasNotas(r)
+		s.rotasDoElenco(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -272,6 +273,7 @@ func (s *Server) mesaRoster(ctx context.Context, user AuthUser, campaignID int64
 			CharacterID: m.Characterid,
 			Nome:        m.Charname,
 			Iniciais:    iniciais(m.Charname),
+			Defesa:      s.defesaDoMembro(ctx, m.Characterid),
 			Nivel:       m.Charlevel,
 			Classes:     s.mesaClasses(ctx, m.Characterid),
 			PV:          mesaBarraDe(m.Charhpcurrent, m.Charhpmax, false),
@@ -334,4 +336,24 @@ func (s *Server) membrosEPresenca(ctx context.Context, campaignID, sessionID int
 		presentes = append(presentes, u.UserID)
 	}
 	return membros, presentes
+}
+
+// defesaDoMembro pergunta ao MOTOR, que é a mesma `ComputeSheetV2` da ficha.
+//
+// Travessão quando o motor não está de pé: a cena inteira não pode cair por
+// causa de um número, e um zero seria pior — Defesa 0 é um valor plausível, e o
+// mestre agiria sobre ele. É a mesma escolha que o cartão de personagem faz.
+func (s *Server) defesaDoMembro(ctx context.Context, characterID int64) string {
+	if s.catalogs == nil {
+		return "—"
+	}
+	row, err := s.queries.GetCharacter(ctx, characterID)
+	if err != nil {
+		return "—"
+	}
+	ficha, err := s.computeSheet(ctx, row)
+	if err != nil {
+		return "—"
+	}
+	return strconv.Itoa(ficha.Defense.Total)
 }
