@@ -221,6 +221,11 @@ func (bs *BoardStore) UpdateToken(ctx context.Context, sessionID int64, tokenID 
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return UpdateToken(b, tokenID, patch) })
 }
 
+// VoltaAPeca desfaz o último pouso (ALE-206).
+func (bs *BoardStore) VoltaAPeca(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return VoltaAPeca(b, tokenID) })
+}
+
 // Marcadores (ALE-195): o lugar apontado no mapa que não é peça.
 func (bs *BoardStore) AddMarker(ctx context.Context, sessionID int64, m BoardMarker) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return AddMarker(b, m, bs.newID) })

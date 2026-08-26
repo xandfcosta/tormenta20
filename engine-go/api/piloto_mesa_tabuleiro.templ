@@ -127,6 +127,10 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			</div>
 			if v.Mestre {
 				@encerrarTabuleiro(v)
+				// UM diálogo de editar para TODAS as peças, semeado pelo gesto que o
+				// abre. Ele mora aqui, fora do plano, porque um `<dialog>` dentro do
+				// mapa herdaria o `--quadrado` e o empilhamento das camadas.
+				@editarAPeca(v)
 				if len(v.Acervo) > 0 {
 					@oAcervoDeLugares(v)
 				}
@@ -250,6 +254,12 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					@oGabaritoDesenhado(v)
 					for _, p := range v.Pecas {
 						@pecaNoPlano(v, p)
+						// O MENU vem logo depois da peça e é irmão dela no plano,
+						// como o do marcador: ele é posicionado pela mesma casa, e
+						// pendurá-lo DENTRO do botão faria um botão dentro de outro.
+						if v.Mestre {
+							@oMenuDaPeca(v, p)
+						}
 					}
 					// A RÉGUA vem por CIMA de tudo: ela é uma linha fina entre dois
 					// pontos, e uma peça em cima dela apagaria metade da medida.
@@ -592,6 +602,10 @@ templ pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) {
 			data-on:pointermove__window={ segueODedo("peca") }
 			data-on:pointerup__window={ soltaEPara(v, "peca", p.X, p.Y) }
 		}
+		if v.Mestre {
+			data-on:contextmenu={ abreOMenuDaPeca(p.ID) }
+			data-attr:aria-expanded={ aPecaEscolhida(p.ID) + " ? 'true' : 'false'" }
+		}
 		class={ "tabuleiro-peca",
 			templ.KV("tabuleiro-peca-na-vez", p.NaVez),
 			templ.KV("tabuleiro-peca-oculta", p.Oculta) }
@@ -868,6 +882,155 @@ templ oAcervoDeLugares(v tabuleiroView) {
 				data-on:click="document.getElementById('acervo-de-lugares').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Fechar</button>
+		</div>
+	</dialog>
+}
+
+// O MENU DE CONTEXTO DA PEÇA (ALE-206).
+//
+// Clique direito na peça acende os verbos dela, ancorados na casa — o MESMO
+// padrão que o marcador já usa nesta cena, e por isso o mestre não aprende um
+// gesto novo. Ele é do mestre: quem esconde, duplica e tira uma peça é quem monta
+// a mesa.
+//
+// O menu existe no HTML SEMPRE e quem o mostra é o sinal. Um grupo que só
+// nascesse depois de uma ida ao servidor chegaria tarde para um clique que já
+// aconteceu — é a mesma razão escrita no menu do marcador.
+//
+// A ISSUE PEDE que o gesto nunca seja o único caminho, e não é: a peça é um
+// `<button>` de verdade, o teclado a alcança, e o `Enter` abre este mesmo menu.
+templ oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) {
+	<div
+		role="group"
+		aria-label={ "O que fazer com " + p.Rotulo }
+		data-show={ aPecaEscolhida(p.ID) }
+		data-on:keydown__window={ "evt.key === 'Escape' && (" + fechaOMenuDaPeca + ")" }
+		style={ posicaoNoPlano(p.Col, p.Lin, p.Pegada) }
+		class="tabuleiro-peca-menu"
+	>
+		// VISIBILIDADE primeiro: é o verbo que a mesa vê, e o único cujo esquecimento
+		// entrega a emboscada. `aria-pressed` carrega o ESTADO; o nome carrega o
+		// VERBO, que é o que o clique vai fazer.
+		<button
+			type="button"
+			aria-label={ oNomeDaVisibilidade(p) }
+			title={ oNomeDaVisibilidade(p) }
+			aria-pressed={ fmt.Sprintf("%t", p.Oculta) }
+			data-on:click={ comandoDaPeca(v, p.ID, "visibilidade") }
+			class="tabuleiro-peca-verbo"
+		>
+			if p.Oculta {
+				@icone("EyeOff", "size-4")
+			} else {
+				@icone("Eye", "size-4")
+			}
+		</button>
+		<button
+			type="button"
+			aria-label={ "Duplicar " + p.Rotulo }
+			title="Duplicar: mais um, ao lado e com o número seguinte"
+			data-on:click={ comandoDaPeca(v, p.ID, "duplicar") }
+			class="tabuleiro-peca-verbo"
+		>
+			@icone("Copy", "size-4")
+		</button>
+		<button
+			type="button"
+			aria-label={ "Editar " + p.Rotulo }
+			title="Editar o nome e o tamanho"
+			data-on:click={ abreAEdicaoDaPeca(p) }
+			class="tabuleiro-peca-verbo"
+		>
+			@icone("Pencil", "size-4")
+		</button>
+		// VOLTAR só existe quando há para onde, e a frase diz a casa: "voltar" sem
+		// destino é um botão que promete desfazer algo que ninguém lembra.
+		if p.DeOndeVeio != nil {
+			<button
+				type="button"
+				aria-label={ "Voltar " + p.Rotulo + " para " + oQuadradoDaPeca(p.DeOndeVeio) }
+				title={ "Voltar para onde estava (" + oQuadradoDaPeca(p.DeOndeVeio) + ")" }
+				data-on:click={ comandoDaPeca(v, p.ID, "voltar") }
+				class="tabuleiro-peca-verbo"
+			>
+				@icone("CornerUpLeft", "size-4")
+			</button>
+		}
+		<span aria-hidden="true" class="tabuleiro-peca-vinco"></span>
+		// TIRAR fica depois do vinco e é o único em vermelho: ele é o que não se
+		// desfaz, e a distância é o que impede o clique de inércia depois de
+		// duplicar três zumbis seguidos.
+		<button
+			type="button"
+			aria-label={ "Tirar " + p.Rotulo + " do tabuleiro" }
+			title="Tirar do tabuleiro (a linha da iniciativa fica)"
+			data-on:click={ comandoDaPeca(v, p.ID, "remover") }
+			class="tabuleiro-peca-verbo tabuleiro-peca-verbo-perigo"
+		>
+			@icone("Trash2", "size-4")
+		</button>
+		<button
+			type="button"
+			aria-label={ "Fechar o menu de " + p.Rotulo }
+			data-on:click={ fechaOMenuDaPeca }
+			class="tabuleiro-peca-verbo"
+		>
+			@icone("X", "size-4")
+		</button>
+	</div>
+}
+
+// O DIÁLOGO DE EDITAR é UM só para todas as peças, e quem o semeia é o gesto que
+// o abre (`abreAEdicaoDaPeca`).
+//
+// Nó COMPARTILHADO exige limpeza no gesto que TROCA de item — a regra que o guia
+// do pacote escreveu depois do link de redefinição de senha aparecer sob o nome
+// errado. Aqui o risco é o mesmo em miniatura: abrir o Ogro depois do Zumbi
+// mostraria o nome do Zumbi sobre o Ogro, e o mestre salvaria isso.
+templ editarAPeca(v tabuleiroView) {
+	<dialog
+		id="editar-peca"
+		data-preserve-attr="open"
+		aria-labelledby="editar-peca-titulo"
+		class="scene-grimorio m-auto hidden w-[min(24rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground open:flex backdrop:bg-black/60"
+	>
+		<h2 id="editar-peca-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Editar a peça</h2>
+		<div class="space-y-1">
+			<label for="peca-nome" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Nome da peça</label>
+			<input
+				id="peca-nome"
+				type="text"
+				maxlength="60"
+				data-bind="pecanome"
+				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			/>
+		</div>
+		// O TAMANHO é uma lista fechada e não um número: o livro define 1, 2, 3 e 6
+		// (p107, Tab. 1-21), e não existe 4 nem 5. Um campo livre deixaria o mestre
+		// desenhar uma peça que nenhuma criatura tem.
+		<div class="space-y-1">
+			<label for="peca-tamanho" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Tamanho</label>
+			<select
+				id="peca-tamanho"
+				data-bind="pecatamanho"
+				class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			>
+				for _, t := range osTamanhosDaPeca {
+					<option value={ fmt.Sprint(t.Lado) }>{ t.Rotulo }</option>
+				}
+			</select>
+		</div>
+		<div class="flex items-center justify-end gap-2 border-t border-grimorio-iron pt-3">
+			<button
+				type="button"
+				data-on:click="document.getElementById('editar-peca').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Cancelar</button>
+			<button
+				type="button"
+				data-on:click={ salvaAEdicaoDaPeca(v) }
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Salvar</button>
 		</div>
 	</dialog>
 }

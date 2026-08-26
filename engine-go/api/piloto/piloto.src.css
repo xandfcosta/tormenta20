@@ -748,6 +748,69 @@ html {
   /* As peças e a trilha sobem acima da camada de casas. */
   .tabuleiro-peca { z-index: 2; }
 
+  /* O MENU DE CONTEXTO DA PEÇA (ALE-206).
+   *
+   * Ancorado na CASA da peça e saindo dela para baixo, como o do marcador: o
+   * mestre clicou ali e é ali que a resposta aparece. Acima de tudo (z-index 6)
+   * porque ele é a coisa mais recente na tela e nada do mapa pode cobri-lo. */
+  .tabuleiro-peca-menu {
+    position: absolute;
+    left: calc(var(--col) * var(--quadrado));
+    top: calc((var(--lin) + var(--pegada)) * var(--quadrado));
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.125rem;
+    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    background: oklch(0.18 0.012 300);
+    box-shadow: 0 6px 16px oklch(0 0 0 / 0.5);
+    /* Sem `white-space: nowrap` o menu quebraria em duas linhas dentro de uma
+     * casa de 20px; com ele, ele TRANSBORDA a casa de propósito — é um menu, não
+     * um enfeite da peça. */
+    white-space: nowrap;
+  }
+
+  .tabuleiro-peca-verbo {
+    display: flex;
+    /* 28px e não os 44px de alvo de toque da casa: são seis verbos ancorados numa
+     * casa que pode ter 20px de lado, e a 44px o menu seria mais largo que meio
+     * mapa. O alvo continua confortável porque eles estão colados, sem nada por
+     * perto para acertar por engano. */
+    width: 1.75rem;
+    height: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    color: var(--color-muted-foreground, oklch(0.74 0.02 85));
+    outline: none;
+    transition: color 150ms, border-color 150ms, background-color 150ms;
+  }
+  .tabuleiro-peca-verbo:hover {
+    border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    color: var(--color-foreground, oklch(0.93 0.014 85));
+  }
+  .tabuleiro-peca-verbo:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+  /* LIGADO em dourado: é o `aria-pressed` da visibilidade, e dourado é o que esta
+     casa usa para "o ativo" em toda parte. */
+  .tabuleiro-peca-verbo[aria-pressed='true'] {
+    border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+  }
+  .tabuleiro-peca-verbo-perigo:hover {
+    border-color: var(--destructive);
+    color: var(--destructive);
+  }
+  .tabuleiro-peca-vinco {
+    width: 1px;
+    height: 1.25rem;
+    margin-inline: 0.125rem;
+    background: var(--color-grimorio-iron, oklch(0.35 0.01 305));
+  }
+
   /* Com FERRAMENTA ligada a peça e o losango saem do alcance do dedo (ALE-269).
    *
    * É a segunda metade da promessa do trilho — uma ferramenta por vez. A peça

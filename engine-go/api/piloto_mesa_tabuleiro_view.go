@@ -142,6 +142,11 @@ type pecaDoTabuleiro struct {
 	// inclusive para o JOGADOR quando o mestre ocultou os PV (ALE-188). É assim
 	// que a redação por papel chega até a peça.
 	PV *int
+	// DeOndeVeio é onde ela estava antes do último pouso, e é o que decide se o
+	// menu oferece "voltar para onde estava" (ALE-206). Nil quando ela não foi
+	// movida nesta cena — e aí o verbo não é desenhado, porque um botão que não
+	// faz nada é pior que nenhum.
+	DeOndeVeio *engine.Square
 	// Oculta é a peça que o mestre escondeu da mesa. Ela só existe na view dele:
 	// o `BoardForRole` já a tirou da do jogador.
 	Oculta bool
@@ -253,7 +258,8 @@ func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, e tabuleiro.Moldura, saude map[s
 		Col: t.X - e.X0, Lin: t.Y - e.Y0, X: t.X, Y: t.Y, Onde: coordenada(t.X, t.Y),
 		Pegada:    pegada,
 		Monograma: a.Monograma, Instancia: a.Instancia, Matiz: a.Matiz,
-		Oculta: t.Hidden,
+		Oculta:     t.Hidden,
+		DeOndeVeio: t.DeOndeVeio,
 	}
 	if t.EntryID != nil {
 		p.NaVez = naVez != "" && *t.EntryID == naVez

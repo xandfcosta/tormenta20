@@ -77,6 +77,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDosMarcadores(r)
 		s.rotasDaCortina(r)
 		s.rotasDaLente(r)
+		s.rotasDasAcoesDaPeca(r)
 		s.rotasDasCondicoes(r)
 		s.rotasDaSessao(r)
 		s.rotasDasNotas(r)
@@ -197,6 +198,11 @@ func sinaisDaMesa() string {
 		fmt.Sprintf("superficie: '%s'", superficieQueAbrePadrao),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
 		"ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: ''",
+		// O MENU DA PEÇA (ALE-206). `pecaescolhida` é qual menu está aberto e
+		// `pecaeditada` é qual peça o diálogo está editando: são DOIS porque abrir
+		// o diálogo FECHA o menu, e um sinal só faria o gesto de abrir apagar o
+		// alvo do gesto de salvar.
+		"pecaescolhida: '', pecaeditada: '', pecanome: '', pecatamanho: 1",
 		// A FILA e os verbos da linha.
 		"qualidadedodescanso: 'normal', formdecombatente: false",
 		"linhadacondicao: '', condicoesdalinha: '', rotulodalinha: ''",

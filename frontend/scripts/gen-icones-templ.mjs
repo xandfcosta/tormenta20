@@ -92,6 +92,8 @@ const QUERIDOS = [
   // O seletor de superfícies do jogador (ALE-269): os MESMOS ícones que a
   // `PlayerSurfaceSwitch` da SPA importa. `Users2` já estava na lista.
   'LayoutGrid',
+  // O menu de contexto da peça (ALE-206): duplicar.
+  'Copy',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')
