@@ -25,7 +25,8 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	if err != nil {
 		t.Fatalf("Open test db: %v", err)
 	}
-	t.Cleanup(func() { _ = database.Close() })
+	// O fecho do banco é registrado DEPOIS do servidor existir, mais abaixo: ele
+	// precisa esperar o trabalho de segundo plano antes de fechar.
 	// `synchronous=OFF` só no TESTE, e é o resto do conserto da ALE-260: o que
 	// sobrava depois do molde eram os `fsync` das escritas dos próprios testes,
 	// um por transação. Durabilidade é o que um banco de teste não tem o que
@@ -42,7 +43,23 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 		JWTSecret: "test-secret", CookieName: "t20_session",
 		AdminEmails: adminEmails, DatabasePath: path,
 	}
-	return NewServer(cfg, database, nil)
+	srv := NewServer(cfg, database, nil)
+	// ESPERAR ANTES DE FECHAR. A persistência do estado da sessão roda em
+	// goroutine (`session_commands.go`), e fechar o banco debaixo dela produz
+	// dois sintomas que não se parecem com a causa: um `Persist failed (sql:
+	// database is closed)` no log, e — pior — um `TempDir RemoveAll cleanup:
+	// directory not empty`, porque o SQLite recria `-wal`/`-shm` depois do
+	// `RemoveAll`. O teste falha falando de LIMPEZA, e o caso que estourou não
+	// tem nada a ver com o que ele mede.
+	//
+	// Só aparece sob CPU escassa: verde em 8 núcleos, vermelho nos 2 vCPUs do
+	// CI, no `TestOComandoRecusadoChegaAoMestre` — que derruba uma tabela de
+	// propósito e por isso GARANTE a falha de persistência que abre a janela.
+	t.Cleanup(func() {
+		srv.EsperaOSegundoPlano()
+		_ = database.Close()
+	})
+	return srv
 }
 
 func seedUser(t *testing.T, s *Server, email string) int64 {

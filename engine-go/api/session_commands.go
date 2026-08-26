@@ -148,7 +148,11 @@ func (s *Server) mutateAndPublish(
 func (s *Server) publishSessionState(sessionID int64, state *aovivo.SessionRuntimeState) {
 	s.sse.EmitOrdered(sessionID, "gm", "session-state", state.Seq, state)
 	s.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, aovivo.RedactForPlayers(state))
-	go s.persistSessionAndWarn(sessionID)
+	s.emSegundoPlano.Add(1)
+	go func() {
+		defer s.emSegundoPlano.Done()
+		s.persistSessionAndWarn(sessionID)
+	}()
 }
 
 // --- Iniciativa ------------------------------------------------------------

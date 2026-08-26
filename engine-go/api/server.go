@@ -34,6 +34,27 @@ type Server struct {
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.
 	charMu sync.Map
+	// emSegundoPlano conta o trabalho que continua DEPOIS da resposta, e hoje é
+	// um só: a persistência do estado da sessão, disparada em goroutine para o
+	// mestre não esperar o disco no meio do turno.
+	//
+	// Ele existe porque uma goroutine que ninguém espera escreve num banco que
+	// já fechou. Em PRODUÇÃO isso é o `Shutdown` cortando a gravação do estado
+	// da mesa — justamente o que este store existe para guardar. No TESTE é
+	// pior de ler: o `t.TempDir()` falha ao limpar com "directory not empty",
+	// porque o SQLite recria `-wal`/`-shm` depois do `RemoveAll` — e a mensagem
+	// que sobra fala da LIMPEZA, não do defeito (ALE-245, a mesma família).
+	emSegundoPlano sync.WaitGroup
+}
+
+// EsperaOSegundoPlano bloqueia até o trabalho disparado por resposta terminar.
+//
+// Quem chama é o encerramento — o `Shutdown` de produção e o `Cleanup` do teste
+// —, sempre ANTES de fechar o banco. Sem isto o último estado de sessão da noite
+// pode não chegar ao disco, e o log da falha aparece depois de o processo já
+// estar indo embora.
+func (s *Server) EsperaOSegundoPlano() {
+	s.emSegundoPlano.Wait()
 }
 
 // characterChanged avisa as mesas AO VIVO que a ficha de um personagem mudou

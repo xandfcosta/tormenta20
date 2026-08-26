@@ -61,6 +61,18 @@ func main() {
 	if err := serve(ctx, cfg, mux); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
+	// O `Shutdown` do `net/http` espera as REQUISIÇÕES, e a gravação do estado
+	// da sessão NÃO é uma: ela é disparada em goroutine depois da resposta, para
+	// o mestre não esperar o disco no meio do turno. Sem esta linha o último
+	// estado da noite pode ser cortado pelo `defer database.Close()` lá em cima
+	// — justamente a gravação que a janela de 10s do `serve` existe para deixar
+	// terminar, e que ela não alcança.
+	//
+	// Aqui e não dentro do `serve`: o `defer` do banco é de MAIN, e esperar tem
+	// de acontecer antes dele. `log.Fatalf` acima pula os defers de qualquer
+	// forma, mas esse caminho é o de erro de listener — não há mesa no ar para
+	// perder.
+	srv.EsperaOSegundoPlano()
 }
 
 // httpServerFor monta o servidor com os timeouts da casa. Separado da `serve`
