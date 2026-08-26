@@ -491,6 +491,18 @@ html {
     background-color: oklch(0.22 0.01 305);
   }
 
+  /* A ABA ABERTA do editor de bloco (ALE-269).
+   *
+   * Dourado no TEXTO e um filete embaixo, e não o fundo cheio do
+   * `.pincel-ligado`: são coisas diferentes e a tela precisa dizer isso. Uma
+   * ferramenta LIGADA muda o que o próximo clique faz e fica ligada enquanto o
+   * mestre trabalha; uma aba só diz onde ele está olhando agora. Vestir as duas
+   * igual ensinaria que trocar de aba muda o comportamento de alguma coisa. */
+  .aba-ligada {
+    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    border-bottom-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+  }
+
   /* A ferramenta LIGADA, e é dourado porque nesta casa dourado é o que diz "a
      vez" e "o ativo" — na iniciativa e no tabuleiro (ALE-200/ALE-201). */
   .pincel-ligado {

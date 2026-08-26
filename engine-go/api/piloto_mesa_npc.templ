@@ -33,12 +33,31 @@ templ mesaElencoDaCampanha(v mesaView) {
 				@icone("X", "size-4")
 			</button>
 		</div>
-		<div class="min-h-0 flex-1 overflow-y-auto">
+		// A LISTA e o EDITOR trocam de lugar na MESMA janela (decisão do dono):
+		// sem diálogo dentro de diálogo, e o formulário fica com os 40rem
+		// inteiros. Quem alterna é `$rascunhoaberto`, e quem o liga é o SERVIDOR
+		// ao devolver o rascunho semeado — o editor nunca aparece antes de ter
+		// conteúdo.
+		<div data-show="!$rascunhoaberto" class="min-h-0 flex-1 overflow-y-auto">
 			@mesaListaDeNPCs(v)
 		</div>
-		<p class="shrink-0 border-t border-grimorio-iron pt-3 text-xs text-muted-foreground">
-			Para guardar alguém novo, abra o bestiário e use <span class="text-foreground">Guardar no elenco</span> — a cópia nasce com os números do livro e você muda o que quiser.
-		</p>
+		<div data-show="!$rascunhoaberto" class="shrink-0 space-y-2 border-t border-grimorio-iron pt-3">
+			<p class="text-xs text-muted-foreground">
+				Para guardar alguém novo, abra o bestiário e use <span class="text-foreground">Guardar no elenco</span> — a cópia nasce com os números do livro e você muda o que quiser.
+			</p>
+			// CRIAR DO ZERO é a exceção e fica embaixo da frase que ensina a
+			// regra, não acima dela: o caminho principal é copiar do livro, e um
+			// botão em cima faria a exceção parecer o caminho.
+			<button
+				type="button"
+				data-on:click={ abreOEditor(v, 0) }
+				class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				@icone("Plus", "size-4")
+				NPC do zero
+			</button>
+		</div>
+		@oEditorDeBloco(v)
 	</dialog>
 }
 
@@ -75,6 +94,15 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 			}
 		</div>
 		<div class="flex shrink-0 items-center gap-1.5">
+			<button
+				type="button"
+				aria-label={ "Editar o bloco de " + npc.Nome }
+				title="Editar o bloco — os números, os ataques e as perícias"
+				data-on:click={ abreOEditor(v, npc.ID) }
+				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				@icone("Pencil", "size-4")
+			</button>
 			if npc.PV > 0 {
 				<button
 					type="button"

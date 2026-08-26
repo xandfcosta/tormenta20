@@ -81,6 +81,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDasNotas(r)
 		s.rotasDoElenco(r)
 		s.rotasDosNPCs(r)
+		s.rotasDoEditorDeNPC(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -176,6 +177,13 @@ func sinaisDaMesa() string {
 		"edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0",
 		// O BESTIÁRIO e o elenco.
 		"rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, nomedonpc: ''",
+		// O EDITOR DE BLOCO. O `rascunho` nasce com a FORMA inteira e não vazio,
+		// e isso não é enfeite: `data-bind` num caminho que ainda não existe liga
+		// um sinal NOVO em vez de escrever no de baixo, e o campo ficaria mudo
+		// até o primeiro `@post`. A semente é a mesma do "criar do zero", vinda
+		// do `blocoEmBranco` — escrevê-la aqui à mão seria o segundo branco.
+		fmt.Sprintf("rascunhoaberto: false, rascunhoaba: %q, erroDoRascunho: '', rascunho: %s",
+			abaDosNumeros, oRascunhoEmBranco()),
 		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
 		fmt.Sprintf("quadrado: %d", quadradoPadrao),
 		"arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0",
