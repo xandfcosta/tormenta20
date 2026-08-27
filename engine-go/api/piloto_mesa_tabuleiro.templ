@@ -257,6 +257,13 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					for _, m := range v.Marcadores {
 						@marcadorNoPlano(v, m)
 					}
+					// O FANTASMA vem ANTES das peças, e é a ordem que resolve a
+					// única sobreposição possível: uma peça grande parada ao lado
+					// da origem invade a casa do fantasma, e quem tem de ficar por
+					// cima é a peça — ela se clica, ele não.
+					if v.Fantasma != nil {
+						@oFantasmaDaOrigem(*v.Fantasma)
+					}
 					for _, p := range v.Pecas {
 						@pecaNoPlano(v, p)
 						// O MENU vem logo depois da peça e é irmão dela no plano,
@@ -266,26 +273,14 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 							@oMenuDaPeca(v, p)
 						}
 					}
-					// O DESTINO é o que se arrasta enquanto há proposta, e ele é
-					// losango para não ser confundido com peça: a peça está no
-					// lugar dela, e isto é uma promessa.
-					if v.Destino != nil {
-						<button
-							type="button"
-							aria-label={ "Arrastar o destino de " + v.RotuloDoAlvo }
-							title="Arraste para escolher a próxima parada"
-							style={ posicaoNoPlano(v.Destino.X, v.Destino.Y, 1) }
-							data-class={ estaArrastando("destino") }
-							data-on:pointerdown={ pegaParaArrastar("destino") }
-							data-on:pointermove__window={ segueODedo("destino") }
-							data-on:pointerup__window={ soltaEPara(v, "destino", v.Destino.X, v.Destino.Y) }
-							class="tabuleiro-destino"
-						></button>
-					}
 				</div>
 				// A RÉGUA vem por CIMA de tudo: ela é uma linha fina entre dois
 				// pontos, e uma peça em cima dela apagaria metade da medida.
 				@aReguaDesenhada(v)
+				// A SETA DO MOVIMENTO é da mesma família e sobe pela mesma razão:
+				// ela liga o fantasma à peça, e as duas pontas dela são discos que
+				// a apagariam se ela passasse por baixo.
+				@aSetaDoMovimento(v)
 				// O TRILHO flutua sobre o mapa, colado à esquerda e centrado na
 				// altura: ele é o que se troca com mais frequência na cena, e a
 				// mão volta sempre ao mesmo lugar.
@@ -646,14 +641,10 @@ templ pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) {
 		title={ nomeDaPeca(p) }
 		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
 		data-class={ oVestidoDaPeca(p.ID, v.ArrastaAPeca == p.ID) }
-		if v.ArrastaAPeca == p.ID {
-			data-on:pointerdown={ pegaParaArrastar("peca") }
+		if aPecaRecebeOGesto(v, p.ID) {
+			data-on:pointerdown={ oPegarDaPeca(v, p.ID) }
 			data-on:pointermove__window={ segueODedo("peca") }
-			data-on:pointerup__window={ soltaEPara(v, "peca", p.X, p.Y) }
-		} else if v.Mestre {
-			data-on:pointerdown={ pegaOGrupo(p.ID) }
-			data-on:pointermove__window={ segueODedo("peca") }
-			data-on:pointerup__window={ soltaOGrupo(v) }
+			data-on:pointerup__window={ oSoltarDaPeca(v, p) }
 		}
 		if v.Mestre {
 			data-on:contextmenu={ abreOMenuDaPeca(p.ID) }
@@ -675,6 +666,81 @@ templ pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) {
 			</span>
 		}
 	</button>
+}
+
+// oFantasmaDaOrigem é a peça TRANSPARENTE na casa de onde ela saiu (ALE-203,
+// item 4 da lista do dono).
+//
+// A peça de verdade está no fim do caminho — ela pousa onde foi solta —, e sem
+// esta marca o começo do movimento não estaria em lugar nenhum: a trilha diz por
+// onde se passou, mas não de onde se PARTIU, porque um rastro sem ponta não tem
+// direção.
+//
+// É a peça INTEIRA e não um disco genérico porque o monograma e o selo são o que
+// dizem QUEM saiu dali: com três zumbis em campo, uma sombra anônima na casa não
+// responde qual deles está a caminho.
+//
+// Sem a barra de PV, e a falta é deliberada: o fantasma marca um LUGAR, e a vida
+// que a mesa consulta é a da peça, que está do outro lado da seta. Duas barras
+// para o mesmo combatente seriam duas chances de ler a errada.
+//
+// `aria-hidden` porque quem conta esta história ao leitor de tela é o nome da
+// PEÇA, que diz a parada proposta e a casa de onde ela saiu (`nomeDaPeca`). Um
+// segundo nó falante repetiria o mesmo combatente duas vezes na mesma cena.
+templ oFantasmaDaOrigem(p pecaDoTabuleiro) {
+	<div
+		aria-hidden="true"
+		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
+		class="tabuleiro-peca tabuleiro-peca-fantasma"
+	>
+		<span class="tabuleiro-monograma">{ p.Monograma }</span>
+		if p.Instancia != "" {
+			<span class="tabuleiro-selo">{ p.Instancia }</span>
+		}
+	</div>
+}
+
+// aSetaDoMovimento liga o fantasma à peça, dobrando nas paradas (ALE-203,
+// item 4: "a seta da régua conecta os dois pontos").
+//
+// Mesma gramática da régua — o mesmo dourado, o mesmo fio de espessura constante
+// —, e a ponta é o que a distingue: a régua MEDE entre dois lugares e não tem
+// sentido, o movimento VAI de um para o outro.
+//
+// Ela convive com a trilha pintada porque as duas dizem coisas diferentes: a
+// trilha são as casas que CUSTARAM (a diagonal do livro, p238, está no desenho
+// dela), e a seta é o gesto — onde a pessoa clicou. Trocar uma pela outra
+// perderia a conta ou perderia a direção.
+//
+// O `d` vem PRONTO do servidor, ao contrário do da régua, e é a diferença certa:
+// o caminho é do servidor, que é quem o calcula e o guarda no provisório. Montá-lo
+// aqui obrigaria a mandar as paradas para o navegador para ele redesenhá-las.
+templ aSetaDoMovimento(v tabuleiroView) {
+	if v.Movimento != nil && v.Movimento.Fio != "" {
+		<svg aria-hidden="true" class="tabuleiro-medida tabuleiro-medida-frente">
+			<defs>
+				<marker
+					id="tabuleiro-ponta-do-movimento"
+					markerUnits="userSpaceOnUse"
+					markerWidth="0.5"
+					markerHeight="0.44"
+					refX="0.5"
+					refY="0.22"
+					orient="auto"
+				>
+					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="tabuleiro-movimento-ponta"></path>
+				</marker>
+			</defs>
+			<g data-attr:transform={ oDesenhoNaJanela }>
+				<path
+					d={ v.Movimento.Fio }
+					marker-end="url(#tabuleiro-ponta-do-movimento)"
+					vector-effect="non-scaling-stroke"
+					class="tabuleiro-movimento-fio"
+				></path>
+			</g>
+		</svg>
+	}
 }
 
 // O MARCADOR no plano. Para a mesa ele é um selo que não se clica; para o mestre

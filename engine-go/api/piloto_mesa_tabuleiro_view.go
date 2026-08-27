@@ -76,10 +76,14 @@ type tabuleiroView struct {
 	// não há orçamento (o mestre, e todo mundo fora de combate): não há teto, e
 	// desenhar um seria inventá-lo.
 	Alcance []quadradoDoTabuleiro
-	// Destino é a última parada da proposta, e ele é o que se ARRASTA enquanto
-	// há uma: a peça fica onde está porque o provisório a promete, não a move.
-	Destino *quadradoDoTabuleiro
-	// ArrastaAPeca liga o gesto na PEÇA, e só quando não há proposta aberta.
+	// Fantasma é a peça DESENHADA na origem do movimento proposto, ou nil.
+	//
+	// Ela é a peça inteira e não um marcador genérico porque é o monograma e o
+	// selo que dizem QUEM saiu dali: com três zumbis em campo, um disco vazio na
+	// casa não responde qual deles está a caminho.
+	Fantasma *pecaDoTabuleiro
+	// ArrastaAPeca liga o gesto na PEÇA. Com proposta aberta ela é a mesma peça,
+	// desenhada no fim do caminho — ver `aPecaPousaOndeFoiSolta`.
 	ArrastaAPeca string
 	// CampaignID e SessionID moram aqui porque o tabuleiro escreve as próprias
 	// rotas, como a `mesaView` faz com as dela.
@@ -131,8 +135,18 @@ type pecaDoTabuleiro struct {
 	//
 	// O `Onde` é a mesma coisa escrita para gente ler, e é o que o nome acessível
 	// diz.
-	X, Y   int
-	Onde   string
+	X, Y int
+	Onde string
+	// SaiuDe é a casa GRAVADA da peça enquanto há movimento proposto, escrita
+	// para gente ler, e vazia quando não há. Ela existe porque desde a ALE-203
+	// (item 4) o `X`/`Y` acima é onde a peça é DESENHADA — o fim do caminho —, e
+	// sem esta linha o leitor de tela perderia de onde a peça saiu: ele receberia
+	// a peça já na parada proposta, como se ela tivesse andado.
+	//
+	// Texto e não um segundo par de coordenadas, e a diferença é o que a torna
+	// segura: ninguém calcula com ela. O par `Col`/`Lin` saiu com a moldura
+	// justamente por ser a segunda chance de usar a coordenada errada.
+	SaiuDe string
 	Pegada int
 	// Monograma, Instancia e Matiz vêm da regra da ALE-179: a cor é da ESPÉCIE e
 	// o número é da INSTÂNCIA.
@@ -251,8 +265,46 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	if v.Movimento != nil && v.Movimento.Meu {
 		v.Movimento.Restante = restante
 	}
-	v.Destino, v.ArrastaAPeca = oQueSeArrasta(b, quem, v.AlvoDoMovimento)
+	// A PEÇA POUSA ONDE FOI SOLTA (ALE-203, item 4) e por isso ela é a única
+	// coisa que se arrasta: o losango de destino sumiu junto, porque com a peça
+	// no fim do caminho ele era um segundo alvo em cima do primeiro.
+	v.Fantasma = aPecaPousaOndeFoiSolta(v.Pecas, v.Movimento)
+	v.ArrastaAPeca = v.AlvoDoMovimento
 	return v
+}
+
+// aPecaPousaOndeFoiSolta leva a peça proposta para o FIM do caminho e devolve o
+// FANTASMA que fica na origem, ou nil quando não há movimento.
+//
+// As palavras do dono: *"ao soltar a peça, ela vai ser renderizada no lugar que
+// foi solta e o início mostra a peça transparente para marcar o início do
+// movimento."* Antes disto a peça voltava para o começo ao soltar, e o que
+// marcava o destino era um losango — o gesto acabava desfazendo a si mesmo aos
+// olhos de quem arrastou.
+//
+// A peça continua com UM par de coordenadas, e ele passa a ser onde ela é
+// DESENHADA. Guardar os dois lugares nela seria refazer o par `Col`/`Lin` que
+// saiu com a moldura, e pela mesma razão: quem lê escolhe o errado. Quem precisa
+// da casa gravada é o fantasma, e ele é uma peça à parte.
+//
+// O que se ARRASTA é a peça no fim do caminho, e é por isso que o deslocamento
+// continua contando do lugar certo sem ninguém somar nada: o `soltaEPara` recebe
+// o `X`/`Y` desenhado.
+func aPecaPousaOndeFoiSolta(pecas []pecaDoTabuleiro, mov *movimentoView) *pecaDoTabuleiro {
+	if mov == nil {
+		return nil
+	}
+	for i := range pecas {
+		if pecas[i].ID != mov.TokenID {
+			continue
+		}
+		fantasma := pecas[i]
+		pecas[i].X, pecas[i].Y = mov.Fim.X, mov.Fim.Y
+		pecas[i].Onde = coordenada(mov.Fim.X, mov.Fim.Y)
+		pecas[i].SaiuDe = fantasma.Onde
+		return &fantasma
+	}
+	return nil
 }
 
 func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, saude map[string]int, naVez string) pecaDoTabuleiro {
@@ -327,6 +379,12 @@ func posicaoNoPlano(col, lin, pegada int) string {
 // nomeDaPeca é o que o leitor de tela recebe: QUEM e ONDE.
 func nomeDaPeca(p pecaDoTabuleiro) string {
 	nome := p.Rotulo + " em " + p.Onde
+	// A PARADA PROPOSTA na frase, porque a peça está desenhada nela: sem esta
+	// linha o leitor de tela ouviria a peça já no destino e concluiria que o
+	// movimento aconteceu (ALE-203, item 4).
+	if p.SaiuDe != "" {
+		nome += " — parada proposta, saiu de " + p.SaiuDe
+	}
 	if p.NaVez {
 		nome += " — na vez"
 	}
@@ -379,13 +437,26 @@ type movimentoView struct {
 	// Meu diz se quem olha decide sobre este movimento. O mestre decide por
 	// qualquer um — é ele quem toca a mesa.
 	Meu bool
-	// Paradas são as casas onde a pessoa CLICOU, sem a última: elas viram uma
-	// marca na trilha, e é ela que faz o "Desfazer parada" ter o que desfazer aos
-	// olhos de quem clica. A última fica de fora porque já é o losango do destino.
+	// Paradas são as casas onde a pessoa CLICOU, sem a primeira nem a última:
+	// elas viram um pingo na trilha, e é ele que faz o "Desfazer parada" ter o
+	// que desfazer aos olhos de quem clica. As duas pontas ficam de fora porque
+	// já têm desenho próprio — a origem é o FANTASMA e o fim é a PEÇA.
 	Paradas []quadradoDoTabuleiro
 	// PodeDesfazer é ter mais de UMA perna. Com uma só, desfazer é cancelar — e o
 	// Cancelar está ali do lado, dizendo isso com a palavra certa.
 	PodeDesfazer bool
+	// Origem é a casa de onde a peça SAIU, e ela existe porque a peça deixou de
+	// ficar lá: desde a ALE-203 (item 4) a peça é desenhada onde foi SOLTA, e
+	// quem marca o começo do movimento é o fantasma nesta casa.
+	Origem quadradoDoTabuleiro
+	// Fim é a casa onde a peça pousa, que é o fim do caminho. É dela que o
+	// arrasto da próxima parada conta o deslocamento — a peça está lá.
+	Fim quadradoDoTabuleiro
+	// Fio é o `d` da seta que liga o fantasma à peça, dobrando nas paradas. Vem
+	// pronto do servidor porque o caminho é dele; ver
+	// `piloto_mesa_movimento_desenho.go` para por que ela dobra na PARADA e não
+	// em cada casa.
+	Fio string
 }
 
 // movimentoDoTabuleiro monta o movimento em curso, ou nil quando não há.
@@ -408,9 +479,17 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover) *movimento
 	for _, q := range p.Path {
 		v.Trilha = append(v.Trilha, quadradoDoTabuleiro{X: q.X, Y: q.Y})
 	}
-	// As paradas INTERMEDIÁRIAS: a última é o destino, que já tem desenho
-	// próprio, e a primeira é de onde a peça saiu — marcar as duas contaria a
-	// mesma coisa duas vezes.
+	// As duas PONTAS do caminho, que desde a ALE-203 (item 4) têm desenho de
+	// peça: o fantasma sai da origem e a peça pousa no fim.
+	if len(p.Path) > 0 {
+		inicio, fim := p.Path[0], p.Path[len(p.Path)-1]
+		v.Origem = quadradoDoTabuleiro{X: inicio.X, Y: inicio.Y}
+		v.Fim = quadradoDoTabuleiro{X: fim.X, Y: fim.Y}
+	}
+	v.Fio = oFioDoMovimento(asDobrasDoMovimento(p))
+	// As paradas INTERMEDIÁRIAS: a última é onde a peça pousou e a primeira é de
+	// onde ela saiu — as duas já são um disco na tela, e marcá-las de novo
+	// contaria a mesma coisa duas vezes.
 	if len(p.Stops) > 2 {
 		v.PodeDesfazer = true
 		for _, q := range p.Stops[1 : len(p.Stops)-1] {
@@ -539,11 +618,12 @@ func paradaNoPontoClicado(v tabuleiroView) string {
 // morassem no plano ou na peça, o primeiro remendo de outro jogador as apagaria
 // no meio do gesto, que é exatamente o defeito que o dono nomeou.
 //
-// O QUE SE ARRASTA depende de haver proposta, e isso não é detalhe: o provisório
-// não move a peça — ele a PROMETE (é o `nextStepOrigin` da SPA). Então sem
-// proposta arrasta-se a PEÇA, de onde ela está; com proposta arrasta-se o
-// DESTINO, do fim da trilha. Arrastar a peça com uma proposta aberta faria o
-// deslocamento contar do lugar errado, e a parada cairia longe do dedo.
+// O QUE SE ARRASTA é sempre a PEÇA, e ela conta do lugar onde está DESENHADA.
+// Havia um segundo alvo — o losango do destino —, porque a peça voltava para a
+// origem ao soltar e o fim da trilha precisava de alguém que o representasse.
+// Com a peça pousando onde foi solta (ALE-203, item 4) o losango virou um alvo
+// em cima do outro, e a regra do `nextStepOrigin` passou a se cumprir sozinha: a
+// próxima parada conta do fim da trilha porque é lá que a peça está.
 
 // pegaParaArrastar escreve o `pointerdown`: marca quem está sendo arrastado e
 // guarda o ponto de partida.
@@ -620,26 +700,68 @@ func soltaEPara(v tabuleiroView, quem string, x, y int) string {
 // A expressão ficou inline no `piloto_mesa.templ`, num lugar só, para não haver
 // um segundo elemento tentado a usá-la.
 
+// ── QUEM RECEBE O GESTO DA PEÇA, decidido em GO ──────────────────────────────
+//
+// As três funções abaixo existem por um defeito MUDO do templ, e ele custa caro
+// porque o código-fonte parecia certo:
+//
+//	if v.ArrastaAPeca == p.ID {
+//	    data-on:pointerdown={ pegaParaArrastar("peca") }
+//	} else if v.Mestre {
+//	    data-on:pointerdown={ pegaOGrupo(p.ID) }
+//	}
+//
+// **O templ NÃO aceita `else if` numa lista de atributos.** Ele fecha o primeiro
+// `if`, escreve a palavra ` else` como TEXTO no meio das aspas do elemento e abre
+// um `if` INDEPENDENTE — então os dois ramos saíam juntos, e o HTML servido tinha
+// um atributo literalmente chamado `else` e `data-on:pointerdown` DUAS VEZES.
+//
+// Nada estourava: atributo repetido não existe no DOM, o navegador guarda o
+// PRIMEIRO e descarta o resto em silêncio. O ramo do grupo estava morto em toda
+// peça que era alvo do movimento, e só não se percebeu porque o `soltaEPara` já
+// escolhe o grupo por conta própria quando a peça está marcada — a decisão certa
+// chegava pelo outro caminho. O aviso já estava escrito duas linhas abaixo, no
+// `oVestidoDaPeca`: *"UM `data-class` só porque atributo repetido não existe"*.
+//
+// A escolha volta para o Go, onde `else if` é `else if`, e o elemento passa a ter
+// UMA lista de atributos. É a mesma forma que a fatia 1 desta issue usou para as
+// ferramentas: **exclusão por CONSTRUÇÃO**, e não por dois blocos que se
+// prometem exclusivos.
+
+// aPecaRecebeOGesto diz se ela escuta o ponteiro.
+//
+// O mestre entra sempre porque marcar é gesto dele: uma peça que não é alvo do
+// movimento ainda pode estar num grupo marcado, e o `pegaOGrupo` é quem checa a
+// marca. Para o jogador só a peça dele responde.
+func aPecaRecebeOGesto(v tabuleiroView, id string) bool {
+	return v.ArrastaAPeca == id || v.Mestre
+}
+
+// oPegarDaPeca escolhe entre começar o arrasto DA PEÇA e o DO GRUPO.
+func oPegarDaPeca(v tabuleiroView, id string) string {
+	if v.ArrastaAPeca == id {
+		return pegaParaArrastar("peca")
+	}
+	return pegaOGrupo(id)
+}
+
+// oSoltarDaPeca é o par do `oPegarDaPeca`, e os dois têm de concordar: um
+// `pointerdown` de grupo com um `pointerup` de parada proporia o movimento de
+// uma peça que a pessoa nem estava movendo.
+//
+// As coordenadas são as DESENHADAS (`p.X`/`p.Y`), que com movimento proposto são
+// o fim do caminho — é o que faz a próxima parada contar do lugar onde a peça
+// está (ALE-203, item 4).
+func oSoltarDaPeca(v tabuleiroView, p pecaDoTabuleiro) string {
+	if v.ArrastaAPeca == p.ID {
+		return soltaEPara(v, "peca", p.X, p.Y)
+	}
+	return soltaOGrupo(v)
+}
+
 // estaArrastando marca o elemento que o CSS deve deslocar.
 func estaArrastando(quem string) string {
 	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === '%s'}", quem)
-}
-
-// oQueSeArrasta decide o alvo do gesto: o DESTINO quando há proposta, a PEÇA
-// quando não há.
-//
-// Os dois nunca coexistem, e é a regra do `nextStepOrigin` que manda: a próxima
-// parada conta do fim da trilha quando ela existe, e da peça quando não. Oferecer
-// os dois faria o mesmo gesto contar de dois lugares.
-func oQueSeArrasta(b *tabuleiro.BoardState, quem tabuleiro.Mover, alvo string) (*quadradoDoTabuleiro, string) {
-	if b == nil || alvo == "" {
-		return nil, ""
-	}
-	if p := b.Pending; p != nil && len(p.Path) > 0 && (quem.Role == "gm" || p.ByUserID == quem.UserID) {
-		fim := p.Path[len(p.Path)-1]
-		return &quadradoDoTabuleiro{X: fim.X, Y: fim.Y}, ""
-	}
-	return nil, alvo
 }
 
 // comandoDoTabuleiroDaCena escreve a chamada de abrir ou encerrar.
