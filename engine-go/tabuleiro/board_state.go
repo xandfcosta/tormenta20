@@ -3,6 +3,7 @@ package tabuleiro
 import "t20engine/aovivo"
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -617,23 +618,15 @@ type PendingMove struct {
 	// em vez de refazer a aritmética em JavaScript (ALE-190).
 	Diagonals int `json:"diagonals"`
 	Difficult int `json:"difficult"`
-	// AlemDoDeslocamento é o ÍNDICE, no `Path`, do primeiro quadrado que o
-	// deslocamento não paga — e -1 quando o caminho inteiro cabe (ou quando não
-	// há orçamento).
+	// Budget é o DESLOCAMENTO da peça em quadrados, ou -1 fora de combate.
 	//
-	// Ele é o `StoppedAt` do `engine.PathCost`, guardado e não recalculado: quem
-	// mede é o motor, num lugar só, e a tela precisa do MESMO número para pintar
-	// o trecho de vermelho. Recalcular na view seria a segunda conta da regra, que
-	// é como este repositório já mostrou dois números para o mesmo combatente
-	// (ALE-122).
+	// Ele já foi orçamento no sentido de teto — o número contra o qual o servidor
+	// recusava. Não é mais: quem põe a peça no lugar é o mestre, e o mestre não
+	// tem limite. O que sobrou é DESENHO, e é a tela que o usa para partir a seta
+	// nas três faixas (uma ação de movimento, duas, mais que duas).
 	//
-	// Ele existe porque o caminho que estoura passou a ser ACEITO (ALE-203): o
-	// provisório é "o que eu quero fazer", desenhado inteiro com o excesso em
-	// vermelho, e quem recusa é o `CommitMove`. A peça continua sem PODER pousar
-	// além do deslocamento — o que mudou é ela poder ser DESENHADA lá.
-	AlemDoDeslocamento int `json:"alemDoDeslocamento"`
-	// Budget é o orçamento contra o qual o caminho foi medido, em quadrados, ou
-	// -1 quando não há (mestre, ou cena fora de combate).
+	// Por isso ele é o deslocamento da PEÇA e não a permissão de quem arrasta —
+	// ver `orcamentoDeDesenho`.
 	Budget int `json:"budget"`
 	// ByUserID é quem propôs. O mestre confirma por qualquer um; o jogador só
 	// confirma o que ele mesmo propôs.
@@ -703,7 +696,7 @@ func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string
 		return nil, 0, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
 	if by.Role == "gm" {
-		return token, -1, nil
+		return token, orcamentoDeDesenho(*token, st), nil
 	}
 	if !by.OwnsCharacter {
 		return nil, 0, fmt.Errorf("a peça %q não é sua", token.Label)
@@ -717,6 +710,25 @@ func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string
 	return token, speedOf(*token), nil
 }
 
+// orcamentoDeDesenho é o deslocamento da PEÇA, e não a permissão de quem move.
+//
+// O mestre recebia -1 aqui — "sem teto" —, e o número servia às duas coisas ao
+// mesmo tempo: a regra que barrava e o desenho das faixas. Com a trava fora do
+// `CommitMove` sobrou só o desenho, e aí o -1 passou a esconder da mesa
+// justamente o que ela quer ver: *"o mestre não tem limite, mas a parte visual
+// serve para todos"*. Arrastando a peça de um jogador, o mestre vê as mesmas
+// três faixas que o jogador vê, medidas contra o deslocamento DAQUELA peça.
+//
+// FORA DE COMBATE continua -1, e isso não é exceção, é a mesma frase: sem vez
+// não há ação padrão para trocar por movimento (p233), então azul e vermelho
+// não querem dizer nada e desenhá-los inventaria um teto que a cena não tem.
+func orcamentoDeDesenho(token BoardToken, st *aovivo.SessionRuntimeState) int {
+	if st == nil || st.TurnIndex < 0 {
+		return -1
+	}
+	return speedOf(token)
+}
+
 // isTokenOnTurn amarra a peça à LINHA da iniciativa: a vez não é copiada para o
 // tabuleiro, ela é perguntada ao rastreador — duas cópias da vez divergiriam no
 // primeiro turno passado com o tabuleiro fechado.
@@ -727,9 +739,11 @@ func isTokenOnTurn(token *BoardToken, st *aovivo.SessionRuntimeState) bool {
 	return st.Initiative[st.TurnIndex].ID == *token.EntryID
 }
 
-// ProposeMove mede o caminho e guarda o provisório. Recusa o que estoura o
-// deslocamento: a decisão do dono é BLOQUEAR no limite, e as saídas são o
-// mestre (sem orçamento) e a cena fora de combate.
+// ProposeMove mede o caminho e guarda o DESENHO dele.
+//
+// Não recusa por deslocamento — ver o corpo. Quem pode desenhar é quem
+// `assertMovable` deixa: o mestre em qualquer peça, e o jogador na peça dele, na
+// vez dele. Quem transforma desenho em pouso é o `CommitMove`, e só o mestre.
 func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by Mover) error {
 	token, budget, err := assertMovable(b, st, tokenID, by)
 	if err != nil {
@@ -742,21 +756,18 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 		return fmt.Errorf("o caminho começa em (%d,%d) e a peça está em (%d,%d)", path[0].X, path[0].Y, token.X, token.Y)
 	}
 	cost := engine.PathCost(path, moveTerrainOf(b), budget)
-	// O caminho que ESTOURA o deslocamento é ACEITO aqui e recusado no
-	// `CommitMove` (ALE-203, pedido do dono: "a distância além do deslocamento em
-	// vermelho").
+	// O DESLOCAMENTO não recusa nada, nem aqui nem no `CommitMove`.
 	//
-	// A decisão anterior era bloquear no PROPOR, e o que ela protegia continua
-	// protegido: a peça não pousa além do deslocamento, porque quem a faz pousar
-	// é o commit. O que ela custava era a tela — recusado no propor, não há
-	// provisório, e sem provisório não há o que desenhar: quem estourou recebia
-	// uma frase e nenhum desenho, sem ver ONDE estourou nem quanto sobrava para
-	// encurtar. O `MoveCost.StoppedAt` foi escrito para isto ("a tela pinta o
-	// trecho recusado em vez de recusar") e nunca tinha encontrado uma tela.
+	// Propor é DESENHAR, e o desenho é o produto: o do jogador é sempre visual —
+	// ele conta à mesa o que ele quer fazer — e o do mestre vira pouso quando ele
+	// confirma. Nas duas leituras, um caminho caro é uma coisa legítima de se
+	// querer desenhar, e é justamente o caro que a tela precisa mostrar em azul
+	// ("gasta a ação principal") e em vermelho ("não cabe nem em duas").
 	//
-	// Um caminho MALFORMADO continua recusado aqui: `Legal` é falso pelas duas
-	// razões, e só a do orçamento passa. Passo inválido não é uma proposta cara,
-	// é uma proposta que não existe.
+	// Um caminho MALFORMADO continua recusado: `Legal` é falso pelas duas razões
+	// e só a do orçamento passa. Passo inválido não é uma proposta cara, é uma
+	// proposta que não existe — e por isso o `Malformed` teve de nascer separado
+	// (ALE-203).
 	if cost.Malformed {
 		return fmt.Errorf("%s", cost.Reason)
 	}
@@ -765,8 +776,7 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 	}
 	b.Pending = &PendingMove{
 		TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget,
-		AlemDoDeslocamento: cost.StoppedAt,
-		Diagonals:          cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.UserID,
+		Diagonals: cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.UserID,
 	}
 	b.Version++
 	return nil
@@ -910,6 +920,19 @@ func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 	if version > 0 && version != b.Version {
 		return fmt.Errorf("o tabuleiro mudou (versão %d, você viu a %d): refaça o movimento", b.Version, version)
 	}
+	// QUEM PÕE A PEÇA NO LUGAR É O MESTRE, e só ele.
+	//
+	// O desenho do jogador é SEMPRE só visual: ele serve para a mesa entender o
+	// que ele quer fazer, e quem decide se aconteceu é quem toca a cena. Sem esta
+	// linha o jogador confirmava o próprio movimento, que é o modelo antigo — e
+	// era ele que obrigava o servidor a ter uma regra de deslocamento, porque
+	// alguém sem autoridade estava mexendo no tabuleiro.
+	//
+	// É a MESMA divisa do resto da Mesa (`comandoDoMestre`), e a razão de a trava
+	// de deslocamento ter podido sair inteira logo abaixo.
+	if by.Role != "gm" {
+		return errors.New("só o mestre põe a peça no lugar: o seu movimento é um rascunho para a mesa ver")
+	}
 	// A vez é conferida DE NOVO na confirmação: entre propor e confirmar o
 	// mestre pode ter passado o turno, e o que vale é a mesa no instante em que
 	// a peça pousa. O mestre confirma por qualquer um, então ele passa por aqui
@@ -918,22 +941,18 @@ func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 	if err != nil {
 		return err
 	}
-	// O DESLOCAMENTO é conferido AQUI desde a ALE-203, e não mais no propor.
+	// NÃO HÁ TRAVA DE DESLOCAMENTO AQUI, e a ausência é deliberada.
 	//
-	// A recusa mudou de porta, não de existência: propor um caminho caro é
-	// legítimo — é o que faz a tela poder desenhar o excesso em vermelho e a
-	// pessoa ver quanto precisa encurtar —, e o que continua impossível é a peça
-	// POUSAR além do que ela anda. A fronteira é o servidor, e ela é esta linha:
-	// a tela pinta de vermelho porque é UX, e isto aqui é a regra.
+	// Ela existiu em duas portas — no propor, e depois no confirmar — enquanto o
+	// jogador podia mover a própria peça: era preciso um guarda no servidor
+	// porque o gesto de quem não é o mestre chegava direto ao estado da cena.
+	// Com o confirmar sendo só do mestre, o guarda perdeu o objeto: o mestre não
+	// tem limite, ele faz o que quiser no tabuleiro.
 	//
-	// Contra o `AlemDoDeslocamento` GRAVADO e não contra uma nova medição: o
-	// terreno pode ter mudado entre propor e confirmar, e remedir aqui faria a
-	// mesa confirmar um movimento diferente do que ela viu. Quem quiser o
-	// caminho novo, propõe de novo — que é o mesmo motivo de a `Version` existir.
-	if pending.AlemDoDeslocamento >= 0 {
-		return fmt.Errorf("o caminho custa %d quadrados e o deslocamento alcança %d: encurte o movimento",
-			pending.Cost, pending.Budget)
-	}
+	// O deslocamento não sumiu — ele virou DESENHO. As três faixas da seta
+	// (ouro, azul, vermelho) contam à mesa quantas ações aquele caminho custa, e
+	// é a mesa que decide com essa informação na tela. Regra que ninguém aplica
+	// vira teatro; informação que todos veem vira conversa.
 	destination := pending.Path[len(pending.Path)-1]
 	// DE ONDE ELA VEIO fica gravado ANTES de a peça pousar: é o que faz o
 	// "voltar para onde estava" existir depois (ALE-206), e é aqui que a

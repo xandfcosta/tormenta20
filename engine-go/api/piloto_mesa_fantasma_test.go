@@ -85,19 +85,23 @@ func oElementoCom(t *testing.T, tela, atributo, trecho string) map[string]string
 func TestAPecaEDesenhadaOndeFoiSolta(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 4, 2)
+	f.naVezDoJogador(t)
 
-	antes := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	antes := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
 	if peca := oElementoCom(t, antes, "aria-label", "Arcanista em 4, 2"); peca == nil {
 		t.Fatal("a peça não está em 4,2 ANTES da proposta: o canal não está aberto e o que vem abaixo não é evidência")
 	} else if !strings.Contains(peca["style"], "--col:4; --lin:2;") {
 		t.Fatalf("a peça parada está desenhada em %q", peca["style"])
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost,
+	// O JOGADOR desenha, e é pelos olhos DELE que se lê: para quem pede, o
+	// destino é o fato — a peça sólida vai para lá. Para o mestre é o contrário,
+	// e o guarda disso é o `TestParaOMestreAPecaFicaEOFantasmaVai`.
+	if rec := f.pede(t, f.jogador, http.MethodPost,
 		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	depois := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	depois := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
 
 	peca := oElementoCom(t, depois, "aria-label", "Arcanista em 7, 3")
 	if peca == nil {
@@ -138,7 +142,7 @@ func TestOFantasmaMarcaAOrigemComOMonogramaDaPeca(t *testing.T) {
 		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
 
 	fantasma := oElementoCom(t, tela, "class", "tabuleiro-peca-fantasma")
 	if fantasma == nil {
@@ -157,7 +161,40 @@ func TestOFantasmaMarcaAOrigemComOMonogramaDaPeca(t *testing.T) {
 	// vezes na mesma cena.
 	peca := oElementoCom(t, tela, "aria-label", "Arcanista em 7, 3")
 	if peca == nil || !strings.Contains(peca["aria-label"], "saiu de 4, 2") {
-		t.Errorf("o nome da peça não diz de onde ela saiu: %q", peca["aria-label"])
+		t.Fatalf("o nome da peça não diz de onde ela saiu: %+v", peca)
+	}
+}
+
+// PARA O MESTRE É O CONTRÁRIO: a peça SÓLIDA fica onde ela realmente está, e o
+// FANTASMA vai para o fim do caminho (decisão do dono).
+//
+// A inversão diz DE QUEM É A DECISÃO. O jogador está pedindo — para ele o
+// destino é o fato, e é lá que a peça dele aparece. O mestre está olhando uma
+// cena que ele ainda não mudou: para ele o fato é onde a peça está, e o que é
+// hipótese é o destino. Quem confirma vê o mundo como ele é; quem pede vê o
+// mundo como ele quer.
+//
+// O guarda é o PAR: a mesma proposta lida pelos dois papéis, senão "achei a peça
+// em 4,2" não se distingue de "a proposta não chegou".
+func TestParaOMestreAPecaFicaEOFantasmaVai(t *testing.T) {
+	f := novoPiloto(t)
+	tokenID := f.noTabuleiroEm(t, 4, 2)
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		t.Fatalf("propor a parada deu %d", rec.Code)
+	}
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+
+	if peca := oElementoCom(t, tela, "aria-label", "Arcanista em 4, 2"); peca == nil {
+		t.Error("a peça do mestre saiu da casa dela numa proposta que ele ainda não confirmou")
+	}
+	fantasma := oElementoCom(t, tela, "class", "tabuleiro-peca-fantasma")
+	if fantasma == nil {
+		t.Fatal("o mestre não vê fantasma nenhum: o destino proposto não está marcado")
+	}
+	if !strings.Contains(fantasma["style"], "--col:7; --lin:3;") {
+		t.Errorf("o fantasma do mestre está em %q, e o destino proposto é 7,3", fantasma["style"])
 	}
 }
 
@@ -212,13 +249,13 @@ func TestOFioSemParadasLigaAsDuasPontasDoCaminho(t *testing.T) {
 	// A perna anda 3 e a ponta recua meio quadrado: de 0,5 até 3,0. Sem orçamento
 	// (-1) ela sai inteira de dourado — o vermelho do item 13 tem guarda próprio
 	// em `piloto_mesa_movimento_desenho_test.go`.
-	if fio, _ := osFiosDoMovimento(dobras, []int{3}, -1); fio != "M 0.5 0.5 L 3 0.5" {
+	if fio, _, _ := osFiosDoMovimento(dobras, []int{3}, -1); fio != "M 0.5 0.5 L 3 0.5" {
 		t.Errorf("a seta reta saiu %q", fio)
 	}
 	// E com uma dobra só não há o que ligar: `d` vazio é o jeito de o `<path>`
 	// não desenhar sem um `data-show` a mais, que é a combinação que congela a aba.
-	if fio, alem := osFiosDoMovimento([]engine.Square{{}}, nil, -1); fio != "" || alem != "" {
-		t.Errorf("uma dobra só desenhou %q e %q", fio, alem)
+	if fio, azul, alem := osFiosDoMovimento([]engine.Square{{}}, nil, -1); fio != "" || azul != "" || alem != "" {
+		t.Errorf("uma dobra só desenhou %q, %q e %q", fio, azul, alem)
 	}
 }
 

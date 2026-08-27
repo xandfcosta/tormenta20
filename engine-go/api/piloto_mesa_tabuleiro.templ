@@ -215,6 +215,14 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					// Então o alcance informa e a camada abaixo é que recebe o
 					// clique. Ele continua sendo o que impede o estouro, só que
 					// pela frente: a pessoa vê até onde cabe antes de escolher.
+					// O SEGUNDO MOVIMENTO vem ANTES do primeiro no HTML, e a ordem
+					// não é arrumação: as duas faixas não se sobrepõem (o motor as
+					// devolve disjuntas), mas quem lê o mapa lê de dentro para fora,
+					// e ter o ouro por cima na pilha garante que uma casa de fronteira
+					// nunca apareça azul por acidente de empate.
+					for _, q := range v.AlcanceSegundo {
+						<div aria-hidden="true" class="tabuleiro-alcance tabuleiro-alcance-segundo" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
+					}
 					for _, q := range v.Alcance {
 						<div aria-hidden="true" class="tabuleiro-alcance" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 					}
@@ -578,20 +586,49 @@ templ aBarraDoGabarito(v tabuleiroView) {
 // clique de volta que não existe.
 templ oMovimentoProposto(v tabuleiroView) {
 	<div class="tabuleiro-ajudante gap-2">
+		// RASCUNHO é a palavra do lado do jogador, e ela vem primeiro porque é ela
+		// que explica a ausência do Confirmar: sem nomear a natureza do traço, a
+		// tela dele parece a do mestre com um botão faltando.
+		if !v.Mestre {
+			<span class="tabuleiro-rascunho-selo">Rascunho</span>
+		}
 		<p aria-live="polite" class="text-muted-foreground">
 			{ v.Movimento.Rotulo } ·
 			if v.Movimento.Orcamento < 0 {
-				// Sem orçamento é o mestre, ou fora de combate: o custo continua
-				// sendo dito, porque ele informa, mas não há teto para comparar.
+				// Fora de combate não há vez nem ação de movimento a gastar: o custo
+				// continua sendo dito, porque ele informa, mas não há ação para nomear.
 				<span class="font-mono tabular-nums text-foreground">{ fmt.Sprint(v.Movimento.Custo) }</span>
 				{ " quadrados" }
 			} else {
 				<span class="font-mono tabular-nums text-foreground">
 					{ fmt.Sprintf("%d de %d", v.Movimento.Custo, v.Movimento.Orcamento) }
 				</span>
-				{ " quadrados · " + oSaldoDoMovimento(v.Movimento) }
+				{ " quadrados" }
+				if saldo := oSaldoDoMovimento(v.Movimento); saldo != "" {
+					{ " · " + saldo }
+				}
 			}
 		</p>
+		// A LEGENDA DAS CORES (o dono: "não tem um modo do usuário saber o que as
+		// cores indicam").
+		//
+		// AS TRÊS SEMPRE, com a da vez acesa: mostrar só a que vale ensinaria a
+		// cor do momento e esconderia que existe uma escala — quem nunca passou do
+		// deslocamento não descobriria o azul, que é justamente a informação que
+		// muda a decisão.
+		//
+		// Só em combate: fora dele não há ação de movimento a gastar, a seta sai de
+		// uma cor só, e uma legenda de três cores sobre um desenho de uma seria
+		// explicar o que não está na tela.
+		if v.Movimento.Orcamento >= 0 {
+			<ul aria-label="O que as cores do movimento querem dizer" class="tabuleiro-faixas">
+				for _, faixa := range aLegendaDoMovimento(v.Movimento) {
+					<li class={ "tabuleiro-faixa", faixa.Classe, templ.KV("tabuleiro-faixa-ativa", faixa.Ativa) }>
+						{ faixa.Texto }
+					</li>
+				}
+			</ul>
+		}
 		<span class="ml-auto flex items-center gap-2">
 			// DESFAZER UMA vem antes de CANCELAR, e a ordem é a do arrependimento:
 			// primeiro se corrige a última perna, e só depois se joga a rota inteira
@@ -613,11 +650,18 @@ templ oMovimentoProposto(v tabuleiroView) {
 				data-on:click={ comandoDoMovimento(v, "cancelar") }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
-			<button
-				type="button"
-				data-on:click={ comandoDoMovimento(v, "confirmar") }
-				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>Confirmar</button>
+			// CONFIRMAR é do MESTRE, e só dele: quem muda o estado do tabuleiro é
+			// quem toca a cena. O desenho do jogador é sempre visual — ele conta à
+			// mesa o que ele quer fazer —, e o botão que o transformaria em pouso
+			// não existe do lado dele nem escondido: a fronteira de verdade é o
+			// `CommitMove`, e isto aqui é só não oferecer o que seria recusado.
+			if v.Mestre {
+				<button
+					type="button"
+					data-on:click={ comandoDoMovimento(v, "confirmar") }
+					class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>Confirmar</button>
+			}
 		</span>
 	</div>
 }
@@ -730,11 +774,22 @@ templ aSetaDoMovimento(v tabuleiroView) {
 				>
 					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="tabuleiro-movimento-ponta"></path>
 				</marker>
-				// A PONTA DO ALÉM é um segundo `<marker>` e não o mesmo pintado por
-				// CSS: `marker-end` referencia um nó por `id`, e um `<marker>` só
-				// herdaria a cor do primeiro fio que o usasse.
+				// UMA PONTA POR FAIXA, e não a mesma repintada por CSS:
+				// `marker-end` referencia um nó por `id`, e um `<marker>` só herdaria
+				// a cor do primeiro fio que o usasse.
 				<marker
-					id="tabuleiro-ponta-alem-do-movimento"
+					id="tabuleiro-ponta-do-segundo"
+					markerUnits="userSpaceOnUse"
+					markerWidth="0.5"
+					markerHeight="0.44"
+					refX="0.5"
+					refY="0.22"
+					orient="auto"
+				>
+					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="tabuleiro-movimento-ponta-segundo"></path>
+				</marker>
+				<marker
+					id="tabuleiro-ponta-do-alem"
 					markerUnits="userSpaceOnUse"
 					markerWidth="0.5"
 					markerHeight="0.44"
@@ -748,17 +803,30 @@ templ aSetaDoMovimento(v tabuleiroView) {
 			<g data-attr:transform={ oDesenhoNaJanela }>
 				<path
 					d={ v.Movimento.Fio }
-					marker-end={ aPontaDoFioDourado(v.Movimento) }
+					marker-end={ aPontaDoFioQueCabe(v.Movimento) }
 					vector-effect="non-scaling-stroke"
 					class="tabuleiro-movimento-fio"
 				></path>
-				// O TRECHO ALÉM DO DESLOCAMENTO (ALE-203, item 13). Ele só existe
-				// no HTML quando existe de fato: um `<path>` de `d` vazio esperando
-				// um sinal seria um nó a mais em toda cena para o caso raro.
+				// O SEGUNDO MOVIMENTO, em azul: o trecho que passa da ação de
+				// movimento e ainda cabe na ação padrão trocada por ela (T20 p233).
+				//
+				// Cada faixa só existe no HTML quando existe de fato: um `<path>` de
+				// `d` vazio esperando um sinal seria um nó a mais em toda cena para
+				// o caso raro.
+				if v.Movimento.FioSegundo != "" {
+					<path
+						d={ v.Movimento.FioSegundo }
+						marker-end={ aPontaDoFioSegundo(v.Movimento) }
+						vector-effect="non-scaling-stroke"
+						class="tabuleiro-movimento-fio tabuleiro-movimento-segundo"
+					></path>
+				}
+				// O QUE NÃO CABE NO TURNO, em vermelho: passou das duas ações, e não
+				// há terceira ação de movimento para pagá-lo.
 				if v.Movimento.FioAlem != "" {
 					<path
 						d={ v.Movimento.FioAlem }
-						marker-end="url(#tabuleiro-ponta-alem-do-movimento)"
+						marker-end={ aPontaDoFioAlem(v.Movimento) }
 						vector-effect="non-scaling-stroke"
 						class="tabuleiro-movimento-fio tabuleiro-movimento-alem"
 					></path>

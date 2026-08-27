@@ -348,6 +348,29 @@ html {
     --quadrado: 44px;
     --vista-x: 0px;
     --vista-y: 0px;
+    /* AS TRÊS CORES DA ECONOMIA DE MOVIMENTO (T20 p233), declaradas UMA vez.
+
+       Elas pintam duas coisas diferentes — o sombreado do alcance e as faixas da
+       seta — e é o mesmo significado nas duas: `cabe` é o que a ação de movimento
+       paga, `segundo` é o que só se alcança gastando a ação padrão junto, `alem`
+       é o que não cabe no turno. Repetir os oklch em cada regra é como uma delas
+       envelhece sozinha e a mesa passa a ver dois azuis que deveriam ser um.
+
+       OS NOMES SÃO O SIGNIFICADO E NÃO A COR, e isso foi aprendido nesta mesma
+       fatia: a primeira faixa nasceu DOURADA e teve de virar verde, porque o
+       dourado sumia por cima da trilha — que é um banho dourado nas casas
+       percorridas — e por cima da própria grade. Medido no navegador: o `<path>`
+       estava lá, com 216px de largura e o `stroke` certo, e mesmo assim não se
+       via. Com os nomes presos à cor, aquela troca teria deixado um `--ouro`
+       verde e meia dúzia de `dourado` mentindo no Go.
+
+       O verde é CLARO (0.78) de propósito: a leitura é contra um fundo escuro
+       com banho quente, e é a luminosidade que separa, não o matiz. O azul é
+       AZUL de verdade (255) e não o ciano (200) que o alcance usava antes de
+       ganhar faixa — as duas faixas precisam ler como a MESMA escala. */
+    --movimento-cabe: oklch(0.78 0.19 145);
+    --movimento-segundo: oklch(0.62 0.16 255);
+    --movimento-alem: var(--destructive);
     position: relative;
     overflow: hidden;
     min-height: 0;
@@ -518,6 +541,80 @@ html {
     padding: 0.375rem 0.5rem;
     font-size: 0.875rem;
     box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
+  }
+
+  /* A LEGENDA DAS CORES do movimento (ALE-203).
+   *
+   * O dono reparou que "não tem um modo do usuário saber o que as cores
+   * indicam". As três ficam sempre na tela e a da vez ACENDE — mostrar só a
+   * ativa ensinaria a cor do momento e esconderia a escala, e é a escala que
+   * muda a decisão de quem está montando o movimento.
+   *
+   * A BOLINHA é um `::before` e não um ícone: ela precisa ser exatamente a cor
+   * do fio correspondente, e a única forma de garantir isso é as duas lerem a
+   * MESMA variável. Um ícone colorido à mão vira a segunda definição da cor, e
+   * dessa vez com o pior sintoma possível — a legenda ensinando errado.
+   *
+   * APAGADA é opacidade e não uma cor cinza: a bolinha continua na cor da faixa,
+   * só que fraca, e é isso que faz a acesa e a apagada serem reconhecíveis como
+   * a mesma coisa em dois estados. */
+  .tabuleiro-faixas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+  }
+  .tabuleiro-faixa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    opacity: 0.45;
+    color: var(--color-muted-foreground);
+  }
+  .tabuleiro-faixa::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--faixa-cor);
+  }
+  .tabuleiro-faixa-cabe {
+    --faixa-cor: var(--movimento-cabe);
+  }
+  .tabuleiro-faixa-segundo {
+    --faixa-cor: var(--movimento-segundo);
+  }
+  .tabuleiro-faixa-alem {
+    --faixa-cor: var(--movimento-alem);
+  }
+  .tabuleiro-faixa-ativa {
+    opacity: 1;
+    color: var(--color-foreground);
+    font-weight: 600;
+  }
+
+  /* O SELO DE RASCUNHO, no rodapé do movimento do JOGADOR (ALE-203).
+   *
+   * O desenho dele é sempre só visual — quem põe a peça no lugar é o mestre —, e
+   * sem nomear isso a tela do jogador vira a do mestre com um botão faltando. O
+   * selo responde "por que não posso confirmar?" antes de a pergunta nascer.
+   *
+   * Contorno e não preenchimento chapado: ele fica ao lado de um texto que já é
+   * a informação principal (o custo e as ações), e um bloco sólido ali roubaria
+   * a leitura do número. */
+  .tabuleiro-rascunho-selo {
+    margin-right: 0.5rem;
+    border: 1px solid color-mix(in oklch, var(--color-grimorio-gold, oklch(0.8 0.11 85)) 45%, transparent);
+    border-radius: 0.125rem;
+    padding: 0.0625rem 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
 
   /* O PALCO SAIU (ALE-203). Ele era a caixa que ROLAVA, e rolagem nativa precisa
@@ -915,12 +1012,27 @@ html {
 
   /* O ALCANCE é onde a peça AINDA cabe, e ele informa antes da escolha em vez de
    * avisar depois do erro. Não é alvo de clique — quem recebe é a camada de
-   * casas —, porque quem tem orçamento é só o jogador na vez dele: o mestre move
-   * sem teto, e sem alcance a desenhar ele ficaria sem onde clicar. */
+   * casas.
+   *
+   * DUAS FAIXAS desde a ALE-203: ouro é o que a ação de movimento alcança, azul
+   * é o que só se alcança gastando a ação padrão junto (T20 p233). O dono pediu
+   * exatamente essa leitura — "ver o quanto a peça pode mover e se precisa
+   * gastar a ação de movimento e a ação principal" — e ela é respondida de
+   * relance, sem desenhar caminho nenhum.
+   *
+   * O MESTRE vê o mesmo sombreado que a mesa. Ele não é barrado por ele: o
+   * comentário que morava aqui dizia que o mestre "move sem teto e ficaria sem
+   * onde clicar", e isso deixou de valer quando o clique passou a ir para a
+   * camada de casas e a trava saiu do servidor. Hoje o desenho é informação para
+   * todos, e a permissão é outra coisa. */
   .tabuleiro-alcance {
-    background: oklch(0.72 0.13 200 / 0.14);
-    box-shadow: inset 0 0 0 1px oklch(0.72 0.13 200 / 0.30);
+    background: color-mix(in oklch, var(--movimento-cabe) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--movimento-cabe) 30%, transparent);
     pointer-events: none;
+  }
+  .tabuleiro-alcance-segundo {
+    background: color-mix(in oklch, var(--movimento-segundo) 16%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--movimento-segundo) 32%, transparent);
   }
 
   /* A CAMADA DE CASAS é UM nó cobrindo a JANELA, e não um por quadrado: 280
@@ -1221,16 +1333,17 @@ html {
    * do tamanho de uma casa no zoom mínimo. */
   .tabuleiro-movimento-fio {
     fill: none;
-    stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    stroke: var(--movimento-cabe);
     stroke-width: 2;
     stroke-linejoin: round;
   }
   .tabuleiro-movimento-ponta {
-    fill: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    fill: var(--movimento-cabe);
   }
 
-  /* O TRECHO ALÉM DO DESLOCAMENTO (ALE-203, item 13: "a distância possível em
-     amarelo e a distância além do deslocamento em vermelho").
+  /* AS FAIXAS DA SETA (ALE-203, pedido do dono: "mostrar a distância possível em
+     amarelo, em azul quando ultrapassa o deslocamento e está gastando a ação
+     principal, e vermelho quando extrapola ambas").
    *
    * Só a COR muda: a espessura, a junta e o recuo da ponta continuam os do
    * `.tabuleiro-movimento-fio`, que esta classe acompanha em vez de substituir.
@@ -1240,11 +1353,17 @@ html {
    * `--destructive` é o vermelho que esta casa já usa para o que não se pode
    * fazer (o `.tabuleiro-peca-verbo-perigo` é o vizinho): um vermelho novo só
    * para a seta seria mais uma cor a aprender para dizer o que a folha já diz. */
+  .tabuleiro-movimento-segundo {
+    stroke: var(--movimento-segundo);
+  }
+  .tabuleiro-movimento-ponta-segundo {
+    fill: var(--movimento-segundo);
+  }
   .tabuleiro-movimento-alem {
-    stroke: var(--destructive);
+    stroke: var(--movimento-alem);
   }
   .tabuleiro-movimento-ponta-alem {
-    fill: var(--destructive);
+    fill: var(--movimento-alem);
   }
 
   /* A MARCA do leitor do livro (ALE-264): o destaque do verbete na página.

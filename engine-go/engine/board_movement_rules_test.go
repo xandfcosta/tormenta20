@@ -389,7 +389,7 @@ func TestComTerrenoDificilODesvioPodeCustarMenosQueAReta(t *testing.T) {
 func TestOAlcanceEncolheAcadaParadaEZeraNoFim(t *testing.T) {
 	const orcamento = 6
 
-	alcance, restante := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}}, orcamento, MoveTerrain{})
+	alcance, segundo, restante := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}}, orcamento, MoveTerrain{})
 	if restante != orcamento {
 		t.Errorf("sem andar, sobravam %d de %d", restante, orcamento)
 	}
@@ -397,7 +397,7 @@ func TestOAlcanceEncolheAcadaParadaEZeraNoFim(t *testing.T) {
 		t.Fatal("com orçamento inteiro não havia para onde ir")
 	}
 
-	depois, restanteDepois := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}}, orcamento, MoveTerrain{})
+	depois, _, restanteDepois := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}}, orcamento, MoveTerrain{})
 	if restanteDepois != orcamento-2 {
 		t.Errorf("depois de andar 2, sobravam %d", restanteDepois)
 	}
@@ -407,11 +407,58 @@ func TestOAlcanceEncolheAcadaParadaEZeraNoFim(t *testing.T) {
 
 	// Gastou tudo: o alcance é VAZIO, e a tela diz "acabou" em vez de oferecer
 	// casas que o servidor recusaria.
-	fim, semSobra := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}, {X: 6, Y: 0}}, orcamento, MoveTerrain{})
+	fim, aindaSegundo, semSobra := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}, {X: 6, Y: 0}}, orcamento, MoveTerrain{})
 	if semSobra != 0 {
 		t.Errorf("depois de gastar tudo, sobravam %d", semSobra)
 	}
 	if len(fim) != 0 {
 		t.Errorf("com orçamento zerado o alcance ofereceu %d casas", len(fim))
+	}
+	// E A SEGUNDA FAIXA CONTINUA OFERECENDO: gastar a ação de movimento inteira
+	// não encerra o turno — sobra a ação padrão para trocar por outra (p233), e é
+	// disso que o azul fala. Sem esta linha, "o ouro secou" seria lido como
+	// "acabou", que é a leitura antiga e agora está errada.
+	if len(aindaSegundo) == 0 {
+		t.Error("com a ação de movimento gasta, o segundo movimento não ofereceu casa nenhuma")
+	}
+	// E o CONTROLE do começo: sem andar nada, as duas faixas existem e a segunda
+	// é a de fora — ela alcança o que a primeira não alcança.
+	if len(segundo) == 0 {
+		t.Error("sem andar, a segunda faixa nasceu vazia")
+	}
+	for _, q := range segundo {
+		if RangeSquares(Square{}, q) <= 0 {
+			t.Fatalf("a segunda faixa trouxe a própria casa da peça: %+v", q)
+		}
+	}
+}
+
+// AS DUAS FAIXAS SÃO DISJUNTAS e cobrem tudo até 2× o deslocamento (T20 p233).
+//
+// É o que faz o mapa não pintar a mesma casa de duas cores, e é a garantia que a
+// leitura pedida pelo dono depende: "até onde vou com uma ação" e "até onde vou
+// gastando as duas" só são duas perguntas se as respostas não se sobrepõem.
+func TestAsDuasFaixasDoAlcanceNaoSeSobrepoem(t *testing.T) {
+	const orcamento = 4
+
+	dentro, segundo := ReachableInBands(Square{}, orcamento, MoveTerrain{})
+
+	na := map[Square]bool{}
+	for _, q := range dentro {
+		na[q] = true
+	}
+	for _, q := range segundo {
+		if na[q] {
+			t.Errorf("a casa %+v foi pintada nas duas faixas", q)
+		}
+	}
+	// A de dentro é EXATAMENTE o alcance de uma ação, e a de fora acrescenta o
+	// que a segunda alcança: as duas juntas são o alcance de 2×.
+	if len(dentro) != len(ReachableSquares(Square{}, orcamento, MoveTerrain{})) {
+		t.Errorf("a faixa de dentro tem %d casas e o alcance de uma ação tem %d",
+			len(dentro), len(ReachableSquares(Square{}, orcamento, MoveTerrain{})))
+	}
+	if soma, dobro := len(dentro)+len(segundo), len(ReachableSquares(Square{}, 2*orcamento, MoveTerrain{})); soma != dobro {
+		t.Errorf("as duas faixas somam %d casas e o alcance de duas ações tem %d", soma, dobro)
 	}
 }

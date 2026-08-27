@@ -72,10 +72,18 @@ type tabuleiroView struct {
 	// alvo que não faz nada é pior que a ausência dele.
 	AlvoDoMovimento string
 	RotuloDoAlvo    string
-	// Alcance são as casas que a peça ainda alcança, para PINTAR. Vazio quando
-	// não há orçamento (o mestre, e todo mundo fora de combate): não há teto, e
-	// desenhar um seria inventá-lo.
+	// Alcance são as casas que a peça alcança com a AÇÃO DE MOVIMENTO, para
+	// PINTAR na cor de "cabe na ação de movimento". Vazio fora de combate: sem vez não há ação de movimento, não
+	// há teto, e desenhar um seria inventá-lo.
 	Alcance []quadradoDoTabuleiro
+	// AlcanceSegundo são as casas que ela só alcança gastando também a AÇÃO
+	// PADRÃO (T20 p233), pintadas na segunda cor.
+	//
+	// Faixa própria e não uma lista só, porque a pergunta que a mesa faz não é
+	// "dá para chegar?" e sim "chegar aí me custa o turno inteiro?" — e essa é a
+	// diferença entre as duas cores. O que passa das duas ações não é desenhado:
+	// não há terceira ação de movimento para gastar.
+	AlcanceSegundo []quadradoDoTabuleiro
 	// Fantasma é a peça DESENHADA na origem do movimento proposto, ou nil.
 	//
 	// Ela é a peça inteira e não um marcador genérico porque é o monograma e o
@@ -260,15 +268,16 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 		v.Candidatos = candidatosAoMapa(b, st)
 	}
 	v.Movimento = movimentoDoTabuleiro(b, quem)
-	var restante int
-	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance, restante = oAlvoEOAlcance(b, st, quem, meus)
+	alcance := oAlvoEOAlcance(b, st, quem, meus)
+	v.AlvoDoMovimento, v.RotuloDoAlvo = alcance.Alvo, alcance.Rotulo
+	v.Alcance, v.AlcanceSegundo = alcance.Dentro, alcance.Segundo
 	if v.Movimento != nil && v.Movimento.Meu {
-		v.Movimento.Restante = restante
+		v.Movimento.Restante = alcance.Restante
 	}
 	// A PEÇA POUSA ONDE FOI SOLTA (ALE-203, item 4) e por isso ela é a única
 	// coisa que se arrasta: o losango de destino sumiu junto, porque com a peça
 	// no fim do caminho ele era um segundo alvo em cima do primeiro.
-	v.Fantasma = aPecaPousaOndeFoiSolta(v.Pecas, v.Movimento)
+	v.Fantasma = aPecaPousaOndeFoiSolta(v.Pecas, v.Movimento, v.Mestre)
 	v.ArrastaAPeca = v.AlvoDoMovimento
 	return v
 }
@@ -290,7 +299,14 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 // O que se ARRASTA é a peça no fim do caminho, e é por isso que o deslocamento
 // continua contando do lugar certo sem ninguém somar nada: o `soltaEPara` recebe
 // o `X`/`Y` desenhado.
-func aPecaPousaOndeFoiSolta(pecas []pecaDoTabuleiro, mov *movimentoView) *pecaDoTabuleiro {
+//
+// PARA O MESTRE É O CONTRÁRIO, e é decisão do dono: a peça SÓLIDA fica onde ela
+// realmente está e o FANTASMA vai para o fim do caminho. A inversão diz de quem
+// é a decisão — o jogador está mostrando onde ele QUER estar, e para ele o
+// destino é o fato; o mestre está olhando a cena que ele ainda não mudou, e para
+// ele o fato é onde a peça está. Quem confirma vê o mundo como ele é; quem pede
+// vê o mundo como ele quer.
+func aPecaPousaOndeFoiSolta(pecas []pecaDoTabuleiro, mov *movimentoView, mestre bool) *pecaDoTabuleiro {
 	if mov == nil {
 		return nil
 	}
@@ -298,11 +314,18 @@ func aPecaPousaOndeFoiSolta(pecas []pecaDoTabuleiro, mov *movimentoView) *pecaDo
 		if pecas[i].ID != mov.TokenID {
 			continue
 		}
-		fantasma := pecas[i]
+		copia := pecas[i]
+		if mestre {
+			// A sólida NÃO se move; o fantasma é que vai para o destino.
+			copia.X, copia.Y = mov.Fim.X, mov.Fim.Y
+			copia.Onde = coordenada(mov.Fim.X, mov.Fim.Y)
+			copia.SaiuDe = pecas[i].Onde
+			return &copia
+		}
 		pecas[i].X, pecas[i].Y = mov.Fim.X, mov.Fim.Y
 		pecas[i].Onde = coordenada(mov.Fim.X, mov.Fim.Y)
-		pecas[i].SaiuDe = fantasma.Onde
-		return &fantasma
+		pecas[i].SaiuDe = copia.Onde
+		return &copia
 	}
 	return nil
 }
@@ -457,10 +480,16 @@ type movimentoView struct {
 	// `piloto_mesa_movimento_desenho.go` para por que ela dobra na PARADA e não
 	// em cada casa.
 	Fio string
-	// FioAlem é o trecho da seta que passa do deslocamento, e sai VERMELHO
-	// (ALE-203, item 13). Vazio quando o caminho cabe, e também quando não há
-	// orçamento nenhum — sem teto não há além, e desenhar um seria inventá-lo.
-	FioAlem string
+	// FioSegundo é o trecho que passa da ação de movimento e ainda cabe na ação
+	// PADRÃO trocada por movimento (T20 p233): sai AZUL.
+	//
+	// FioAlem é o que passa das duas: sai VERMELHO, e não há terceira ação de
+	// movimento no turno para pagá-lo.
+	//
+	// Os dois são vazios quando o caminho cabe, e também fora de combate — sem vez
+	// não há ação padrão para trocar, e desenhar as faixas inventaria um teto.
+	FioSegundo string
+	FioAlem    string
 	// Pernas são os rótulos em metros, um por trecho entre duas paradas. Eles
 	// contam o CUSTO da perna e não a distância geométrica dela, para que o metro
 	// do rótulo seja o mesmo metro que decide onde o `FioAlem` começa.
@@ -499,7 +528,7 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover) *movimento
 	// sobre a linha explicar a cor dela em vez de contradizê-la.
 	dobras := asDobrasDoMovimento(p)
 	custos := osCustosDasPernas(dobras, terrenoDeMovimento(b))
-	v.Fio, v.FioAlem = osFiosDoMovimento(dobras, custos, p.Budget)
+	v.Fio, v.FioSegundo, v.FioAlem = osFiosDoMovimento(dobras, custos, p.Budget)
 	v.Pernas = asPernasDoMovimento(dobras, custos)
 	// As paradas INTERMEDIÁRIAS: a última é onde a peça pousou e a primeira é de
 	// onde ela saiu — as duas já são um disco na tela, e marcá-las de novo
@@ -551,10 +580,11 @@ func terrenoDeMovimento(b *tabuleiro.BoardState) engine.MoveTerrain {
 // argumentos, cada sítio jogando fora a metade que não usava — e duas contas da
 // mesma regra é como este repositório já mostrou dois números diferentes para o
 // mesmo combatente em duas telas (ALE-122).
-func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool) (alvo, rotulo string, alcance []quadradoDoTabuleiro, restante int) {
+func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool) alcanceDoTabuleiro {
 	if b == nil {
-		return "", "", nil, 0
+		return alcanceDoTabuleiro{}
 	}
+	var alvo, rotulo string
 	// COM movimento em curso o alvo é a peça dele, e o alcance sai do fim do
 	// caminho com o que sobrou. Sem, é a primeira peça que quem olha pode mover,
 	// e o alcance sai de onde ela está com o orçamento inteiro.
@@ -590,13 +620,35 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 		}
 	}
 	if alvo == "" {
-		return "", "", nil, 0
+		return alcanceDoTabuleiro{}
 	}
-	casas, restante := engine.AlcanceDaProximaParada(de, orcamento, terrenoDeMovimento(b))
+	dentro, segundo, restante := engine.AlcanceDaProximaParada(de, orcamento, terrenoDeMovimento(b))
+	return alcanceDoTabuleiro{
+		Alvo: alvo, Rotulo: rotulo, Restante: restante,
+		Dentro: emCasasDaTela(dentro), Segundo: emCasasDaTela(segundo),
+	}
+}
+
+// alcanceDoTabuleiro junta o que sai de UMA pergunta: qual peça o clique move, e
+// até onde ela vai com cada uma das duas ações de movimento (T20 p233).
+//
+// Struct e não seis valores de retorno porque as partes só fazem sentido juntas
+// — o `Restante` é medido a partir do mesmo caminho que produz as faixas —, e
+// porque a lista de retornos já tinha passado de quatro.
+type alcanceDoTabuleiro struct {
+	Alvo     string
+	Rotulo   string
+	Dentro   []quadradoDoTabuleiro
+	Segundo  []quadradoDoTabuleiro
+	Restante int
+}
+
+func emCasasDaTela(casas []engine.Square) []quadradoDoTabuleiro {
+	out := make([]quadradoDoTabuleiro, 0, len(casas))
 	for _, q := range casas {
-		alcance = append(alcance, quadradoDoTabuleiro{X: q.X, Y: q.Y})
+		out = append(out, quadradoDoTabuleiro{X: q.X, Y: q.Y})
 	}
-	return alvo, rotulo, alcance, restante
+	return out
 }
 
 // oSaldoDoMovimento diz o que SOBRA — ou o que passou (ALE-203, item 13).
@@ -613,30 +665,118 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 // para a mesma grandeza obrigariam a converter de cabeça justamente na conta que
 // decide o próximo clique.
 //
-// @example oSaldoDoMovimento(&movimentoView{Custo: 8, Orcamento: 6}) // "3,0m além do deslocamento"
+// @example oSaldoDoMovimento(&movimentoView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
 func oSaldoDoMovimento(m *movimentoView) string {
-	alem := m.Custo - m.Orcamento
-	if alem <= 0 {
+	if m.Custo <= m.Orcamento {
 		return fmt.Sprintf("sobram %d", m.Restante)
 	}
-	return emMetros(float64(alem)*engine.SquareMetres) + "m além do deslocamento"
+	// PASSANDO DO DESLOCAMENTO não há saldo a dizer, e quem conta a história é a
+	// LEGENDA logo abaixo. "15,0m além do deslocamento" media a mesma coisa que a
+	// faixa acesa, e ainda ficou ambígua quando surgiu o segundo limiar — além de
+	// QUAL dos dois? O metro por perna continua escrito sobre a seta, que é onde
+	// ele explica a cor.
+	return ""
 }
 
-// aPontaDoFioDourado é a ponta da seta, ou `none` quando ela não é dele.
+// asAcoesGastas nomeia o que o caminho CUSTA em ações do turno (T20 p233).
 //
-// A seta tem UMA ponta e ela vai no FIM do caminho. Com trecho vermelho, o
-// dourado termina no MEIO do plano — no ponto em que o deslocamento acabou —, e
-// uma ponta ali apontaria para o nada e pareceria um segundo destino. Quem a
-// leva, então, é o fio vermelho, com a ponta da cor dele.
+// É a pergunta que o dono pôs em primeiro lugar — *"eles poderão ver o quanto a
+// peça deles pode mover e se eles precisam gastar a ação de movimento e a ação
+// principal"* — e ela não se responde com quadrados: "13 de 6" diz que estourou,
+// não diz que estourar aqui é legítimo e custa o turno inteiro.
+//
+// A frase é a MESMA leitura das cores da seta, em palavras: quem não distingue o
+// azul do vermelho no mapa lê aqui, e quem lê o mapa confirma aqui.
+//
+// @example asAcoesGastas(&movimentoView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
+func asAcoesGastas(m *movimentoView) string {
+	return asTresFaixas[aFaixaDoCusto(m)].Texto
+}
+
+// faixaDoMovimento é uma linha da LEGENDA das cores, no rodapé do movimento.
+//
+// Ela existe porque as três cores não se explicavam: o dono reparou que "não tem
+// um modo do usuário saber o que as cores indicam". Um mapa que ensina a regra
+// pela cor só ensina se disser o que a cor quer dizer — senão ele pede que a
+// mesa adivinhe, e adivinhar cor é pior que não ter cor.
+type faixaDoMovimento struct {
+	Classe string
+	Texto  string
+	// Ativa é a faixa em que o caminho INTEIRO cai, e é a que fica acesa. As
+	// outras continuam na tela, apagadas: quem nunca viu o azul não descobriria
+	// que ele existe se só a faixa da vez aparecesse.
+	Ativa bool
+}
+
+// asTresFaixas são as faixas na ordem em que se gastam, e a ÚNICA lista delas.
+//
+// O texto daqui é o mesmo que o `asAcoesGastas` devolve, de propósito: a legenda
+// e a frase do rodapé são a mesma leitura, e duas listas divergiriam no dia em
+// que alguém reescrevesse uma — com a tela dizendo "gasta a ação principal" ao
+// lado de uma bolinha que diz outra coisa.
+var asTresFaixas = []faixaDoMovimento{
+	{Classe: "tabuleiro-faixa-cabe", Texto: "ação de movimento"},
+	{Classe: "tabuleiro-faixa-segundo", Texto: "ação de movimento + ação principal"},
+	{Classe: "tabuleiro-faixa-alem", Texto: "não cabe no turno"},
+}
+
+// aFaixaDoCusto diz em qual das três faixas o caminho INTEIRO cai (T20 p233).
+//
+// É o índice em `asTresFaixas`, e é a mesma conta que parte a seta — o que muda é
+// a granularidade: a seta corta perna a perna, e isto olha o total. Por isso a
+// legenda acesa concorda com a cor da PONTA da seta, que é onde o caminho acaba.
+func aFaixaDoCusto(m *movimentoView) int {
+	switch {
+	case m.Custo <= m.Orcamento:
+		return 0
+	case m.Custo <= 2*m.Orcamento:
+		return 1
+	default:
+		return 2
+	}
+}
+
+// aLegendaDoMovimento monta as três linhas, com a da vez acesa.
+func aLegendaDoMovimento(m *movimentoView) []faixaDoMovimento {
+	ativa := aFaixaDoCusto(m)
+	legenda := make([]faixaDoMovimento, 0, len(asTresFaixas))
+	for i, f := range asTresFaixas {
+		f.Ativa = i == ativa
+		legenda = append(legenda, f)
+	}
+	return legenda
+}
+
+// aPontaDoFioQueCabe é a ponta da seta, ou `none` quando ela não é dele.
+//
+// A seta tem UMA ponta e ela vai no FIM do caminho. Havendo faixa depois desta,
+// o dourado termina no MEIO do plano — no ponto em que a ação de movimento
+// acabou —, e uma ponta ali apontaria para o nada e pareceria um segundo
+// destino.
+func aPontaDoFioQueCabe(m *movimentoView) string {
+	return aPontaSeForOFim(m, m.FioSegundo == "" && m.FioAlem == "", "movimento")
+}
+
+// aPontaDoFioSegundo e aPontaDoFioAlem completam a regra: a ponta vai em quem
+// TERMINA o caminho, e cada faixa a carrega na cor dela.
+func aPontaDoFioSegundo(m *movimentoView) string {
+	return aPontaSeForOFim(m, m.FioAlem == "", "segundo")
+}
+
+func aPontaDoFioAlem(m *movimentoView) string {
+	return aPontaSeForOFim(m, true, "alem")
+}
+
+// aPontaSeForOFim devolve a ponta da cor pedida, ou `none`.
 //
 // `none` e não atributo ausente: `marker-end` é escrito pela mesma linha do
 // `.templ` nos dois casos, e o templ não aceita `else if` numa lista de
 // atributos — os DOIS ramos sairiam e o navegador guardaria o primeiro.
-func aPontaDoFioDourado(m *movimentoView) string {
-	if m.FioAlem != "" {
+func aPontaSeForOFim(m *movimentoView, eOFim bool, cor string) string {
+	if !eOFim {
 		return "none"
 	}
-	return "url(#tabuleiro-ponta-do-movimento)"
+	return "url(#tabuleiro-ponta-do-" + cor + ")"
 }
 
 // comandoDoMovimento escreve a chamada de confirmar ou cancelar.

@@ -22,12 +22,16 @@ import (
 // GESTO, que é onde a pessoa clicou. Desenhar a seta casa a casa faria dela uma
 // segunda trilha, mais grossa, contando a mesma coisa por cima.
 //
-// O item 13 (o último da lista) pôs NÚMERO e COR nessa seta: *"as setas entre
-// paradas de movimentação não mostram a distância em metros. Gostaria de mostrar
-// a distância possível em amarelo e a distância além do deslocamento em
-// vermelho"*. As duas coisas se respondem aqui, e as duas contam a mesma grandeza
-// — o CUSTO em quadrados, convertido em metros —, que é o que faz o número
-// explicar onde a cor vira.
+// Ela carrega NÚMERO e COR: *"mostrar a distância possível em amarelo, em azul
+// quando ultrapassa o deslocamento e está gastando a ação principal, e vermelho
+// quando extrapola ambas"*. As duas coisas se respondem aqui, e as duas contam a
+// MESMA grandeza — o CUSTO em quadrados, convertido em metros —, que é o que faz
+// o número explicar onde cada cor começa.
+//
+// Os dois limiares saem do livro (T20 p233): uma ação de movimento, e a ação
+// padrão trocada por uma segunda. Não há terceira, então o vermelho é
+// literalmente "não cabe no turno" — e não "o servidor vai recusar", que era a
+// leitura antiga, de quando a trava existia.
 
 // recuoDaSeta é o quanto a ponta PARA antes do centro da última casa, em
 // quadrados.
@@ -104,23 +108,49 @@ func osCustosDasPernas(dobras []engine.Square, terreno engine.MoveTerrain) []int
 // dourado. Não há teto, e desenhar um seria INVENTÁ-LO — é o mesmo argumento que
 // já governa o desenho do `Alcance`, que também não aparece ali.
 //
-// @example osFiosDoMovimento([]engine.Square{{}, {X: 3}}, []int{3}, -1) // "M 0.5 0.5 L 3 0.5", ""
-func osFiosDoMovimento(dobras []engine.Square, custos []int, orcamento int) (dourado, alem string) {
+// @example osFiosDoMovimento([]engine.Square{{}, {X: 3}}, []int{3}, -1) // ouro "M 0.5 0.5 L 3 0.5", resto vazio
+func osFiosDoMovimento(dobras []engine.Square, custos []int, orcamento int) (cabe, segundo, alem string) {
 	centros := osCentrosDasDobras(dobras)
 	if len(centros) < 2 {
-		return "", ""
+		return "", "", ""
 	}
 	pontos := comORecuoNaPonta(centros)
-	i, avanco, estourou := oCorteDoDeslocamento(custos, orcamento)
-	if !estourou {
-		return oFioPelosPontos(pontos), ""
+	if orcamento < 0 {
+		return oFioPelosPontos(pontos), "", ""
 	}
-	// O corte sai dos CENTROS e não dos pontos desenhados: o recuo encolhe a
-	// ponta para não riscar a peça, e medir o deslocamento contra ele mudaria de
-	// lugar onde a cor vira por causa de um enfeite.
-	corte := entreOsPontos(centros[i-1], centros[i], avanco)
-	return oFioPelosPontos(append(pontos[:i:i], corte)),
-		oFioPelosPontos(append([][2]float64{corte}, pontos[i:]...))
+	// AS DUAS TESOURAS são medidas contra o caminho INTEIRO, e não uma sobre o
+	// resto da outra: cortar em cadeia obrigaria a traduzir o índice da segunda
+	// para dentro do trecho que a primeira devolveu, e essa aritmética erra em
+	// silêncio — a linha continua saindo, só com a cor virando no lugar errado.
+	// Aqui os dois índices falam da mesma lista, e `pontos[i1:i2]` é o miolo azul.
+	i1, avanco1, passaDaPrimeira := oCorteDoDeslocamento(custos, orcamento)
+	if !passaDaPrimeira {
+		return oFioPelosPontos(pontos), "", ""
+	}
+	corte1 := entreOsPontos(centros[i1-1], centros[i1], avanco1)
+	i2, avanco2, passaDasDuas := oCorteDoDeslocamento(custos, 2*orcamento)
+	if !passaDasDuas {
+		return oFioPelosPontos(ateOPonto(pontos[:i1], corte1)),
+			oFioPelosPontos(doPonto(corte1, pontos[i1:])), ""
+	}
+	corte2 := entreOsPontos(centros[i2-1], centros[i2], avanco2)
+	return oFioPelosPontos(ateOPonto(pontos[:i1], corte1)),
+		oFioPelosPontos(ateOPonto(doPonto(corte1, pontos[i1:i2]), corte2)),
+		oFioPelosPontos(doPonto(corte2, pontos[i2:]))
+}
+
+// ateOPonto fecha uma polilinha num ponto solto; doPonto a abre num.
+//
+// Os dois COPIAM em vez de fatiar por cima: as três faixas saem da mesma lista
+// de pontos, e um `append` sobre o array de trás compartilhado faria a faixa
+// seguinte sobrescrever a anterior — o clássico do slice em Go, e aqui ele
+// apareceria como uma cor comendo a outra.
+func ateOPonto(inicio [][2]float64, fim [2]float64) [][2]float64 {
+	return append(append([][2]float64(nil), inicio...), fim)
+}
+
+func doPonto(inicio [2]float64, resto [][2]float64) [][2]float64 {
+	return append([][2]float64{inicio}, resto...)
 }
 
 // oCorteDoDeslocamento diz em QUE perna o deslocamento acaba e ONDE dentro dela.
