@@ -18,7 +18,7 @@ func boardCounter() func() string {
 
 func openBoard(t *testing.T) *BoardState {
 	t.Helper()
-	return newBoard("Taverna do Javali", "pedra")
+	return newBoard("t1", "Taverna do Javali", "pedra")
 }
 
 // O plano NÃO tem bordas: quadrado negativo é lugar legítimo, e é para lá que a
@@ -138,7 +138,7 @@ cópia nasce com um nome que o desenho colore como outra espécie.
 */
 
 func tabuleiroCom(labels ...string) *BoardState {
-	b := newBoard("Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "pedra")
 	for i, label := range labels {
 		b.Tokens = append(b.Tokens, BoardToken{
 			ID: fmt.Sprintf("t%d", i), Label: label, X: i, Y: 0, Footprint: 1, Kind: "npc",
@@ -249,7 +249,7 @@ alvo. O marcador aponta e mais nada.
 // Ele nasce ESCONDIDO e some inteiro da cópia do jogador — a mesma redação da
 // peça, e não uma segunda política.
 func TestOMarcadorEscondidoSomeParaOJogador(t *testing.T) {
-	b := newBoard("Cripta", "cripta")
+	b := newBoard("t1", "Cripta", "cripta")
 	if err := AddMarker(b, BoardMarker{X: 2, Y: 3, Text: "1A", Color: "carmim", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
@@ -270,7 +270,7 @@ func TestOMarcadorEscondidoSomeParaOJogador(t *testing.T) {
 // O rótulo tem DUAS letras, cortadas em runas: "Ê2A" não pode virar meio
 // caractere na tela.
 func TestOMarcadorCabeEmDuasLetras(t *testing.T) {
-	b := newBoard("Cripta", "cripta")
+	b := newBoard("t1", "Cripta", "cripta")
 	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "Ê2A", Color: "azul"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
@@ -283,7 +283,7 @@ func TestOMarcadorCabeEmDuasLetras(t *testing.T) {
 // A cor vem de um conjunto FECHADO: ela vira classe na tela, e aceitar qualquer
 // string deixaria o cliente escrever CSS no estado da mesa.
 func TestACorDoMarcadorEDeUmConjuntoFechado(t *testing.T) {
-	b := newBoard("Cripta", "cripta")
+	b := newBoard("t1", "Cripta", "cripta")
 	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "X", Color: "url(javascript:alert(1))"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
@@ -303,7 +303,7 @@ func TestACorDoMarcadorEDeUmConjuntoFechado(t *testing.T) {
 
 // Revelar é o gesto seguinte a marcar, e é o que a mesa vê mudar.
 func TestRevelarOMarcadorOEntregaAMesa(t *testing.T) {
-	b := newBoard("Cripta", "cripta")
+	b := newBoard("t1", "Cripta", "cripta")
 	if err := AddMarker(b, BoardMarker{X: 1, Y: 1, Text: "A", Color: "ouro", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}

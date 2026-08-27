@@ -38,7 +38,7 @@ func TestOTracoPintaOSegmentoInteiro(t *testing.T) {
 		t.Fatalf("o traço deu %d", rec.Code)
 	}
 
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	casas := tabuleiro.QuadradosDe(b, "dificil")
 	esperadas := tabuleiro.CasasDoTraco(engine.Square{X: 2, Y: 2}, engine.Square{X: 8, Y: 5})
 	if len(casas) != len(esperadas) {
@@ -76,7 +76,7 @@ func TestOTracoDaBorrachaApagaOSegmentoInteiro(t *testing.T) {
 	}
 	// O CONTROLE: havia o que apagar. Sem ele, "sobrou zero" é verdade também
 	// sobre um tabuleiro em que nada foi pintado.
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if len(tabuleiro.QuadradosDe(b, "cobertura")) < 7 {
 		t.Fatalf("o traço de pintura só fez %d casas — não há o que a borracha apagar",
 			len(tabuleiro.QuadradosDe(b, "cobertura")))
@@ -86,7 +86,7 @@ func TestOTracoDaBorrachaApagaOSegmentoInteiro(t *testing.T) {
 		f.urlDaMesa()+"/tabuleiro/terreno/limpar/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
-	b = f.s.boards.Get(context.Background(), f.sessionID)
+	b = f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if sobrou := tabuleiro.QuadradosDe(b, "cobertura"); len(sobrou) != 0 {
 		t.Errorf("a borracha deixou %v pelo caminho", sobrou)
 	}
@@ -106,7 +106,7 @@ func TestOTracoForjadoERecusado(t *testing.T) {
 	if !strings.Contains(corpo, "longo demais") {
 		t.Errorf("o traço forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if casas := tabuleiro.QuadradosDe(b, "dificil"); len(casas) != 0 {
 		t.Errorf("o traço recusado pintou %d casas assim mesmo", len(casas))
 	}
@@ -236,7 +236,7 @@ func TestORetanguloEncheAAreaInteira(t *testing.T) {
 		f.urlDaMesa()+"/tabuleiro/terreno/dificil/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o retângulo deu %d", rec.Code)
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	// 3 colunas × 4 linhas = 12 casas, e as duas pontas incluídas.
 	if casas := tabuleiro.QuadradosDe(b, "dificil"); len(casas) != 12 {
 		t.Errorf("(2,2)→(4,5) pintou %d casas, esperado as 12 do retângulo: %v", len(casas), casas)
@@ -246,7 +246,7 @@ func TestORetanguloEncheAAreaInteira(t *testing.T) {
 		f.urlDaMesa()+"/tabuleiro/terreno/limpar/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("limpar o retângulo deu %d", rec.Code)
 	}
-	b = f.s.boards.Get(context.Background(), f.sessionID)
+	b = f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if sobrou := tabuleiro.QuadradosDe(b, "dificil"); len(sobrou) != 0 {
 		t.Errorf("a borracha em área deixou %v", sobrou)
 	}
@@ -263,7 +263,7 @@ func TestORetanguloForjadoERecusadoPelaRota(t *testing.T) {
 	if !strings.Contains(corpo, "grande demais") {
 		t.Errorf("o retângulo forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if casas := tabuleiro.QuadradosDe(b, "dificil"); len(casas) != 0 {
 		t.Errorf("o retângulo recusado pintou %d casas assim mesmo", len(casas))
 	}

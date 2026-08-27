@@ -27,7 +27,7 @@ func TestOpenRefusesADatabaseMissingATable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("primeiro boot: %v", err)
 	}
-	if _, err := sqlDB.Exec("DROP TABLE session_boards"); err != nil {
+	if _, err := sqlDB.Exec("DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
 	_ = sqlDB.Close()
@@ -39,7 +39,7 @@ func TestOpenRefusesADatabaseMissingATable(t *testing.T) {
 	}
 	// A mensagem tem de dizer QUAL tabela: "schema inválido" mandaria alguém
 	// procurar no escuro justamente no momento em que a mesa está esperando.
-	if !strings.Contains(err.Error(), "session_boards") {
+	if !strings.Contains(err.Error(), "open_boards") {
 		t.Errorf("a recusa não nomeia a tabela que falta: %v", err)
 	}
 }
@@ -54,7 +54,7 @@ func TestExpectedTablesComesFromTheMigrations(t *testing.T) {
 	if len(tables) < 10 {
 		t.Fatalf("só %d tabelas lidas das migrações (%v) — o regex parou de casar", len(tables), tables)
 	}
-	for _, esperada := range []string{"users", "characters", "sessions", "session_boards", "campaign_creatures"} {
+	for _, esperada := range []string{"users", "characters", "sessions", "open_boards", "campaign_creatures"} {
 		if !contains(tables, esperada) {
 			t.Errorf("a tabela %q não foi lida das migrações: %v", esperada, tables)
 		}
@@ -63,6 +63,15 @@ func TestExpectedTablesComesFromTheMigrations(t *testing.T) {
 	// nome do controle do goose não é declarado por migração nenhuma.
 	if contains(tables, "goose_db_version") {
 		t.Error("a tabela de controle do goose entrou na lista de esperadas")
+	}
+	// E a DERRUBADA na seção Up tem de tirar da lista (ALE-205). A `session_boards`
+	// nasceu na 00005 e morreu na 00010, quando o tabuleiro deixou de ser um por
+	// sessão; enquanto o guarda lia só os `CREATE`, ele exigia para sempre toda
+	// tabela que qualquer migração já tivesse criado — e o servidor recusaria
+	// subir sobre um banco CORRETO, nomeando como faltante justamente a tabela
+	// que a migração acabou de derrubar de propósito.
+	if contains(tables, "session_boards") {
+		t.Error("a tabela derrubada pela 00010 continua sendo exigida: o guarda ignora o DROP da seção Up")
 	}
 }
 

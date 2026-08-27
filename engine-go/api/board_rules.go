@@ -41,7 +41,7 @@ func (s *Server) moverFor(ctx liveCtx, tokenID string) (tabuleiro.Mover, int) {
 	if by.Role == "gm" || tokenID == "" {
 		return by, 0
 	}
-	token := tabuleiro.FindToken(s.boards.Get(context.Background(), ctx.sessionID), tokenID)
+	token := tabuleiro.FindToken(s.boards.Get(context.Background(), ctx.sessionID, aAbaPadrao), tokenID)
 	if token == nil || token.CharacterID == nil {
 		return by, 0
 	}

@@ -86,7 +86,7 @@ func desfazAUltimaParada(st *Server, c mesaComando) (*tabuleiro.BoardState, erro
 // movimento é o estado que o `ByUserID` existe para evitar, e sem esta conferência
 // um segundo jogador estenderia o caminho que o primeiro está montando.
 func (s *Server) paradasDaProposta(c mesaComando, tokenID string) ([]engine.Square, error) {
-	b := s.boards.Get(c.R.Context(), c.SessionID)
+	b := s.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
@@ -104,7 +104,7 @@ func (s *Server) paradasDaProposta(c mesaComando, tokenID string) ([]engine.Squa
 }
 
 func (s *Server) propoePorParadas(c mesaComando, tokenID string, paradas []engine.Square) (*tabuleiro.BoardState, error) {
-	return s.boards.ProposeMoveComParadas(c.R.Context(), c.SessionID,
+	return s.boards.ProposeMoveComParadas(c.R.Context(), c.SessionID, c.TabuleiroID,
 		s.sessions.GetState(c.SessionID), tokenID, paradas, s.quemMove(c), 0)
 }
 
@@ -113,12 +113,12 @@ func confirmaOMovimento(st *Server, c mesaComando) (*tabuleiro.BoardState, error
 	// confirma acabou de ver a cena que o servidor desenhou — não há uma versão
 	// vinda do cliente para conferir contra. A trava contra a mesa ter mudado
 	// continua sendo a REVALIDAÇÃO da vez, que o `CommitMove` faz de novo.
-	return st.boards.CommitMove(c.R.Context(), c.SessionID,
+	return st.boards.CommitMove(c.R.Context(), c.SessionID, c.TabuleiroID,
 		st.sessions.GetState(c.SessionID), 0, st.quemMove(c))
 }
 
 func cancelaOMovimento(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	return st.boards.CancelMove(c.R.Context(), c.SessionID, st.quemMove(c))
+	return st.boards.CancelMove(c.R.Context(), c.SessionID, c.TabuleiroID, st.quemMove(c))
 }
 
 // quadradoDaURL lê o destino do CAMINHO e não de um sinal.
@@ -168,7 +168,7 @@ func (s *Server) quemMove(c mesaComando) tabuleiro.Mover {
 		return quem
 	}
 	_, meus, _ := s.mesaRoster(c.R.Context(), c.User, c.CampaignID)
-	b := s.boards.Get(c.R.Context(), c.SessionID)
+	b := s.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if peca := tabuleiro.FindToken(b, chi.URLParam(c.R, "tokenId")); peca != nil && peca.CharacterID != nil {
 		quem.OwnsCharacter = meus[*peca.CharacterID]
 	}
@@ -249,7 +249,13 @@ func (s *Server) comandoDoTabuleiro(
 		}
 		sinais := map[string]any{}
 		estado, err := mutar(s, mesaComando{
-			R: r, User: user, CampaignID: campaignID, SessionID: sessionID, Sinais: sinais,
+			R: r, User: user, CampaignID: campaignID, SessionID: sessionID,
+			// A ABA de quem clicou (ALE-205), resolvida aqui e uma vez só: é ela
+			// que diz em QUAL tabuleiro o gesto acontece. Resolver dentro de cada
+			// mutação seria a mesma pergunta escrita vinte vezes, e a vigésima
+			// primeira é a que esquece.
+			TabuleiroID: s.aAbaDe(r.Context(), sessionID, user.ID),
+			Sinais:      sinais,
 		})
 		if estado != nil {
 			s.publishBoardState(sessionID, estado)

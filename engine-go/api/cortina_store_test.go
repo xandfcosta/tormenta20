@@ -18,16 +18,16 @@ func TestACortinaVoltaDoBanco(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	s.boards.Open(ctx, sid, "Taverna do Javali", "taverna")
-	if _, _, err := s.boards.SetCurtain(ctx, sid, true); err != nil {
+	abre(t, s, sid, "Taverna do Javali", "taverna")
+	if _, _, err := s.boards.SetCurtain(ctx, sid, aAbaPadrao, true); err != nil {
 		t.Fatalf("fechar a cortina: %v", err)
 	}
-	s.boards.Persist(ctx, sid)
+	s.boards.Persist(ctx, sid, aAbaPadrao)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
 	frio := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID)
 
-	if voltou := frio.Get(ctx, sid); voltou == nil || !voltou.Curtained {
+	if voltou := frio.Get(ctx, sid, aAbaPadrao); voltou == nil || !voltou.Curtained {
 		t.Fatalf("a cortina não voltou do banco e a mesa veria a cena: %+v", voltou)
 	}
 }
@@ -47,9 +47,9 @@ func TestFecharACortinaAvancaAVersaoDoQuadro(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	antes := s.boards.Open(ctx, sid, "Taverna do Javali", "taverna").Version
+	antes := abre(t, s, sid, "Taverna do Javali", "taverna").Version
 
-	fechada, mudou, err := s.boards.SetCurtain(ctx, sid, true)
+	fechada, mudou, err := s.boards.SetCurtain(ctx, sid, aAbaPadrao, true)
 	if err != nil {
 		t.Fatalf("fechar a cortina: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestFecharACortinaAvancaAVersaoDoQuadro(t *testing.T) {
 	// Fechar o que já está fechado não é erro nem mutação — dois cliques no
 	// telefone do mestre, ou duas abas — e publicar por não-mudança acordaria a
 	// mesa inteira à toa.
-	denovo, mudou, err := s.boards.SetCurtain(ctx, sid, true)
+	denovo, mudou, err := s.boards.SetCurtain(ctx, sid, aAbaPadrao, true)
 	if err != nil {
 		t.Fatalf("fechar de novo: %v", err)
 	}

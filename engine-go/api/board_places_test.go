@@ -28,7 +28,7 @@ func mesaComTaverna(t *testing.T) (*Server, int64, int64) {
 	ctx := context.Background()
 
 	s.boards.Open(ctx, sessao, "Taverna do Javali", "taverna")
-	if _, err := s.boards.AddToken(ctx, sessao, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sessao, aAbaPadrao, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	return s, campanha, sessao
@@ -38,10 +38,10 @@ func TestEncerrarArquivaACenaEmVezDeDestruir(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 
-	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao)); err != nil {
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	s.boards.Close(ctx, sessao)
+	s.boards.Close(ctx, sessao, aAbaPadrao)
 
 	lugares := s.boards.Places(ctx, campanha)
 	if len(lugares) != 1 {
@@ -55,7 +55,7 @@ func TestEncerrarArquivaACenaEmVezDeDestruir(t *testing.T) {
 		t.Errorf("a taverna guardada tem %d peças, esperado 1", lugares[0].Tokens)
 	}
 	// E a mesa fica MESMO sem tabuleiro: arquivar não é deixar a cena aberta.
-	if b := s.boards.Get(ctx, sessao); b != nil {
+	if b := s.boards.Get(ctx, sessao, aAbaPadrao); b != nil {
 		t.Errorf("a sessão continuou com tabuleiro depois de encerrar: %+v", b)
 	}
 }
@@ -63,13 +63,13 @@ func TestEncerrarArquivaACenaEmVezDeDestruir(t *testing.T) {
 func TestReabrirTrazAsPecasOndeEstavam(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao)); err != nil {
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	s.boards.Close(ctx, sessao)
+	s.boards.Close(ctx, sessao, aAbaPadrao)
 	guardado := s.boards.Places(ctx, campanha)[0]
 
-	volta, err := s.boards.Reopen(ctx, sessao, guardado.ID)
+	volta, err := s.boards.Reopen(ctx, sessao, aAbaPadrao, guardado.ID)
 	if err != nil {
 		t.Fatalf("reabrir: %v", err)
 	}
@@ -91,13 +91,13 @@ func TestArquivarDuasVezesNaoEmpilhaOMesmoLugar(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 
-	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao)); err != nil {
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	if _, err := s.boards.AddToken(ctx, sessao, tabuleiro.BoardToken{Label: "Bandido", X: 9, Y: 9}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sessao, aAbaPadrao, tabuleiro.BoardToken{Label: "Bandido", X: 9, Y: 9}, true); err != nil {
 		t.Fatalf("segunda peça: %v", err)
 	}
-	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao)); err != nil {
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
 		t.Fatalf("arquivar de novo: %v", err)
 	}
 
@@ -115,14 +115,14 @@ func TestArquivarDuasVezesNaoEmpilhaOMesmoLugar(t *testing.T) {
 func TestOProvisorioNaoVoltaComOLugar(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
-	board := s.boards.Get(ctx, sessao)
+	board := s.boards.Get(ctx, sessao, aAbaPadrao)
 	board.Pending = &tabuleiro.PendingMove{TokenID: "t1", Cost: 3, Budget: 6}
 
 	if err := s.boards.Archive(ctx, campanha, board); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	s.boards.Close(ctx, sessao)
-	volta, err := s.boards.Reopen(ctx, sessao, s.boards.Places(ctx, campanha)[0].ID)
+	s.boards.Close(ctx, sessao, aAbaPadrao)
+	volta, err := s.boards.Reopen(ctx, sessao, aAbaPadrao, s.boards.Places(ctx, campanha)[0].ID)
 	if err != nil {
 		t.Fatalf("reabrir: %v", err)
 	}
@@ -137,7 +137,7 @@ func TestOProvisorioNaoVoltaComOLugar(t *testing.T) {
 func TestNaoSeApagaLugarDeOutraCronica(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao)); err != nil {
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
 	guardado := s.boards.Places(ctx, campanha)[0]
@@ -172,7 +172,7 @@ func TestTrocarDeCenaGuardaAQueEstavaNaMesa(t *testing.T) {
 	}
 	guardada := s.boards.Places(ctx, campanha)[0]
 
-	naMesa, err := s.boards.ShowPlace(ctx, campanha, sessao, guardada.ID)
+	naMesa, err := s.boards.ShowPlace(ctx, campanha, sessao, aAbaPadrao, guardada.ID)
 	if err != nil {
 		t.Fatalf("mostrar a cripta à mesa: %v", err)
 	}
@@ -199,10 +199,10 @@ func TestNaoSeMostraNaMesaACenaDeOutraCronica(t *testing.T) {
 	}
 	alheia := s.boards.Places(ctx, outra)[0]
 
-	if _, err := s.boards.ShowPlace(ctx, campanha, sessao, alheia.ID); err == nil {
+	if _, err := s.boards.ShowPlace(ctx, campanha, sessao, aAbaPadrao, alheia.ID); err == nil {
 		t.Fatal("mostrou à mesa a cena de outra crônica")
 	}
-	if naMesa := s.boards.Get(ctx, sessao); naMesa == nil || naMesa.Place != "Taverna do Javali" {
+	if naMesa := s.boards.Get(ctx, sessao, aAbaPadrao); naMesa == nil || naMesa.Place != "Taverna do Javali" {
 		t.Errorf("a recusa mexeu na cena que estava na mesa: %+v", naMesa)
 	}
 }
@@ -232,7 +232,7 @@ nada; o preço é conferir o que chega antes de virar acervo.
 func TestMontarOLugarGuardaACenaComIdParaAPecaNova(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao)); err != nil {
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 	lugar := s.boards.Places(ctx, campanha)[0]
@@ -259,7 +259,7 @@ func TestMontarOLugarGuardaACenaComIdParaAPecaNova(t *testing.T) {
 		t.Errorf("o lugar passou a se chamar %q", volta.Place)
 	}
 	// E a MESA não foi tocada: montar é preparação.
-	if naMesa := s.boards.Get(ctx, sessao); naMesa == nil || len(naMesa.Tokens) != 1 {
+	if naMesa := s.boards.Get(ctx, sessao, aAbaPadrao); naMesa == nil || len(naMesa.Tokens) != 1 {
 		t.Errorf("montar o lugar mexeu na cena que está na mesa: %+v", naMesa)
 	}
 }
@@ -270,7 +270,7 @@ func TestMontarOLugarGuardaACenaComIdParaAPecaNova(t *testing.T) {
 func TestCenaMontadaComCoordenadaAbsurdaERecusada(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
-	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao)); err != nil {
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
 	}
 	lugar := s.boards.Places(ctx, campanha)[0]

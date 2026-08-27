@@ -28,7 +28,7 @@ func TestOMestreTemComoCorrerACortina(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("fechar deu %d", rec.Code)
 	}
-	if b := f.s.boards.Get(context.Background(), f.sessionID); !b.Curtained {
+	if b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao); !b.Curtained {
 		t.Fatal("o gesto não fechou a cortina")
 	}
 
@@ -42,7 +42,7 @@ func TestOMestreTemComoCorrerACortina(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/abrir", ""); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
-	if b := f.s.boards.Get(context.Background(), f.sessionID); b.Curtained {
+	if b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao); b.Curtained {
 		t.Error("o gesto não abriu a cortina de volta")
 	}
 }
@@ -62,7 +62,7 @@ func TestOJogadorNaoCorreACortina(t *testing.T) {
 	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/abrir", ""); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu a cortina: %d", rec.Code)
 	}
-	if b := f.s.boards.Get(context.Background(), f.sessionID); !b.Curtained {
+	if b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao); !b.Curtained {
 		t.Error("a cortina abriu apesar do 403")
 	}
 	// E o gesto nem aparece para ele: cortesia, não a trava.

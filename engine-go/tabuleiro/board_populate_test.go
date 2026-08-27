@@ -31,7 +31,7 @@ func TestPopulateBringsOnlyTheChosen(t *testing.T) {
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
 	_ = aovivo.AddEntry(st, npc("Assassino", 20), id)
-	b := newBoard("Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "pedra")
 
 	escolhidos := EntrySelection{
 		entryIDByLabel(t, st, "Sílfide"):  true,

@@ -77,6 +77,14 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				// abre. Ele mora aqui, fora do plano, porque um `<dialog>` dentro do
 				// mapa herdaria o `--quadrado` e o empilhamento das camadas.
 				@editarAPeca(v)
+				// O MESMO diálogo de abrir, agora também COM cena na mesa (ALE-205).
+				//
+				// Ele só existia no ramo da cena vazia, e enquanto a sessão tinha um
+				// tabuleiro só isso bastava: abrir substituía. Com abas, deixá-lo lá
+				// faria a issue nascer INVISÍVEL — o servidor sabendo guardar oito
+				// cenas e o mestre sem um gesto que abrisse a segunda, que é a forma
+				// exata do defeito que a cortina e o menu da peça já tiveram.
+				@abrirTabuleiro(v)
 			}
 			// A CENA é a JANELA sobre um plano infinito (ALE-203, decisão do dono),
 			// e tudo o que não é o mapa flutua POR CIMA dela: o trilho, os avisos e
@@ -276,7 +284,8 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 	}
 }
 
-// O NOME DA CENA, flutuando no canto superior esquerdo (ALE-203).
+// O NOME DA CENA, flutuando no canto superior esquerdo (ALE-203) — e a BARRA DE
+// ABAS quando há mais de um tabuleiro aberto (ALE-205).
 //
 // Ele continua sendo o `<h2>` da região e não virou um rótulo solto: a `<section>`
 // já se anuncia como "Tabuleiro · Ponte", e quem navega por cabeçalho precisa
@@ -285,8 +294,64 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 // A palavra "TABULEIRO" que vinha antes do nome saiu com a linha: ela existia
 // para dizer de que região era aquela fileira quando a fileira dividia espaço
 // com o resto da Mesa. Sobre o mapa, o mapa é a resposta.
+//
+// A BARRA nasce AQUI e não no trilho de ferramentas, que é onde a issue a tinha
+// escrito em 2026-08-22 (decisão do dono, 2026-08-27). Duas razões: a aba É o
+// nome da cena, e é aqui que esse nome já se lê; e o trilho responde outra
+// pergunta — "o que o dedo faz" —, que o GLOSSARIO já separa desta em letras
+// grandes. Um trilho que misturasse as duas obrigaria a ler ícone por ícone para
+// saber qual é ferramenta e qual é lugar.
+//
+// Com UM tabuleiro aberto o HTML é exatamente o de antes: a `v.Abas` chega vazia
+// (ver `asAbasDaMesa`) e a tira não existe. Barra de uma aba só é enfeite
+// ocupando mapa.
 templ oNomeDaCena(v tabuleiroView) {
-	<h2 class="tabuleiro-nome-da-cena">{ v.Lugar }</h2>
+	if len(v.Abas) == 0 {
+		<h2 class="tabuleiro-nome-da-cena">{ v.Lugar }</h2>
+	} else {
+		<div class="tabuleiro-nome-da-cena" role="group" aria-label="Tabuleiros abertos">
+			for _, aba := range v.Abas {
+				@aAbaDoTabuleiro(aba)
+			}
+		</div>
+	}
+}
+
+// aAbaDoTabuleiro é uma ficha da barra.
+//
+// A ATIVA é o `<h2>` e as outras são botões, e essa assimetria é o que mantém a
+// região com UM cabeçalho: a `<section>` do tabuleiro nomeia a cena que está na
+// tela, não as três que poderiam estar. Um `<h2>` por aba faria o leitor de tela
+// anunciar três títulos para uma região só, e quem navega por cabeçalho pousaria
+// numa cena que não está sendo desenhada.
+//
+// A aba SOB CORTINA leva o ícone do teatro, e para o jogador ele é a única
+// informação que ela carrega: o nome não atravessa a cortina (ver
+// `BoardForRole`), então a ficha dele diz "Cena 2" e mais nada. Para o mestre o
+// mesmo ícone é a marca de que aquela cena está escondida da mesa — a mesma
+// pergunta, dos dois lados.
+templ aAbaDoTabuleiro(aba abaDoTabuleiro) {
+	if aba.Ativa {
+		<h2 class="tabuleiro-aba tabuleiro-aba-ativa" aria-current="true">
+			if aba.Cortina {
+				@icone("Theater", "size-3.5 shrink-0")
+			}
+			{ aba.Nome }
+		</h2>
+	} else {
+		<button
+			type="button"
+			aria-label={ "Ver o tabuleiro " + aba.Nome }
+			title={ "Ver o tabuleiro " + aba.Nome }
+			data-on:click={ aba.Comando }
+			class="tabuleiro-aba"
+		>
+			if aba.Cortina {
+				@icone("Theater", "size-3.5 shrink-0")
+			}
+			{ aba.Nome }
+		</button>
+	}
 }
 
 // OS VERBOS da cena, flutuando no canto superior direito (ALE-203).
@@ -308,6 +373,23 @@ templ osVerbosDaCena(v tabuleiroView) {
 			// o que sobrou dela.
 			@botaoDaLente(v)
 			@botaoDePorNoMapa(v)
+			// ABRIR OUTRA CENA sem fechar esta (ALE-205) — o caso de uso da issue:
+			// o grupo se separou, e a cripta não pode custar a taverna.
+			//
+			// VIZINHO DO ACERVO, e não do zoom: as duas são "traga outra cena", uma
+			// do zero e a outra do que já foi jogado. Medido na bancada: com um
+			// `Plus` ao lado do enquadramento, ele encostava no + de aproximar — dois
+			// sinais de mais lado a lado, um mexendo no zoom e o outro na sessão.
+			// A GRADE é o desenho do tabuleiro em toda esta cena.
+			<button
+				type="button"
+				aria-label="Abrir outro tabuleiro"
+				title="Abrir outro tabuleiro, sem fechar este"
+				data-on:click="document.getElementById('abrir-tabuleiro').showModal()"
+				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				@icone("LayoutGrid", "size-4")
+			</button>
 			if len(v.Acervo) > 0 {
 				@botaoDoAcervo(v)
 			}

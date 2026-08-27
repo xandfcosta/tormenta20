@@ -108,6 +108,10 @@ type tabuleiroView struct {
 	// mestre até aqui ("a emboscada está mesmo invisível?"). Contar o que sobrou
 	// na tela não responderia: ele não sabe o que não está vendo.
 	PecasEscondidas int
+	// Abas são os tabuleiros ABERTOS da sessão (ALE-205), e a barra só existe a
+	// partir de dois: com um só não há o que trocar, e a tira de fichas seria
+	// enfeite ocupando mapa. Ver `asAbasDaMesa`.
+	Abas []abaDoTabuleiro
 	// Acervo são os LUGARES guardados da campanha (ALE-124, fatia 5). Só o
 	// mestre tem — a mesa não escolhe onde joga.
 	//

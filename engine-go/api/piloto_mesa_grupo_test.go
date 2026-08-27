@@ -77,7 +77,7 @@ func TestOGrupoMoveTodasNumaResposta(t *testing.T) {
 	ficha, _ := idsDaCena(t, f)
 	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if len(b.Tokens) == 0 {
 		t.Fatal("a peça não entrou no mapa — o guarda mediria o vazio")
 	}
@@ -85,7 +85,7 @@ func TestOGrupoMoveTodasNumaResposta(t *testing.T) {
 	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/grupo/mover/3/-2",
 		`{"pecasmarcadas":"`+antes.ID+`"}`)
 
-	b = f.s.boards.Get(context.Background(), f.sessionID)
+	b = f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if b.Tokens[0].X != antes.X+3 || b.Tokens[0].Y != antes.Y-2 {
 		t.Errorf("a peça de %s foi para (%d,%d), esperado (%d,%d)",
 			ficha, b.Tokens[0].X, b.Tokens[0].Y, antes.X+3, antes.Y-2)

@@ -373,6 +373,18 @@ type mesaComando struct {
 	User       AuthUser
 	CampaignID int64
 	SessionID  int64
+	// TabuleiroID é a ABA em que este comando age, e ela é a aba que QUEM CLICOU
+	// está olhando (ALE-205).
+	//
+	// Ela não vem do caminho nem de um sinal da página: o gateway a resolve no
+	// servidor, pelo `asAbasEscolhidas`, e é essa escolha que mantém as vinte
+	// rotas do tabuleiro sem um id a mais na URL. A afirmação que ela faz é de
+	// domínio, e é forte: **não se pinta um tabuleiro que não se está olhando.**
+	// Uma aba no caminho deixaria essa porta aberta sem nenhum gesto que a
+	// abrisse.
+	//
+	// Vazia significa a aba PADRÃO — quem entrou na sessão e ainda não escolheu.
+	TabuleiroID string
 	// Sinais é o que a cena recebe de volta ALÉM do HTML, e a mutação escreve
 	// nele quando quer mexer no estado do CLIENTE.
 	//

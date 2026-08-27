@@ -26,26 +26,49 @@ import (
 // linha seguinte quando um `CREATE TABLE` estivesse mal formatado.
 var createTable = regexp.MustCompile(`(?i)CREATE\s+TABLE(?:[^\S\n]+IF[^\S\n]+NOT[^\S\n]+EXISTS)?[^\S\n]+["'` + "`" + `]?(\w+)`)
 
+// dropTable é o irmão do `createTable`, e ele existe porque sem ele o schema
+// nunca pode PERDER uma tabela (ALE-205).
+//
+// A derivação lia só os `CREATE`, então toda tabela criada por qualquer migração
+// era esperada para sempre: a `00010` troca a `session_boards` de 1:1 para uma
+// linha por tabuleiro aberto, e enquanto o guarda ignorasse o `DROP` da seção
+// Up o servidor recusaria subir sobre um banco CORRETO — nomeando como faltante
+// exatamente a tabela que a migração acabou de derrubar de propósito.
+//
+// O guarda continua derivado, que é a propriedade que importa: ele só aprendeu
+// o segundo verbo que as migrações usam.
+var dropTable = regexp.MustCompile(`(?i)DROP\s+TABLE(?:[^\S\n]+IF[^\S\n]+EXISTS)?[^\S\n]+["'` + "`" + `]?(\w+)`)
+
 // expectedTables lê das PRÓPRIAS migrações embutidas quais tabelas têm de
 // existir. Uma lista escrita à mão envelheceria em silêncio, e este repositório
 // já foi mordido duas vezes por isso no mesmo dia (o `cloneState` que zerou o
 // `TurnsTaken`, o `parseEntryPatch` que descartou o `creatureId`). Derivada,
 // ela nasce certa a cada migração nova sem ninguém lembrar de nada.
+//
+// A ORDEM dos arquivos é o que faz criar e derrubar significarem alguma coisa:
+// as migrações rodam em ordem de nome, e a resposta é o schema DEPOIS da última.
+// `fs.Glob` já devolve ordenado; o `sort` aqui é para essa garantia estar dita
+// onde ela é usada, e não a três pacotes de distância.
 func expectedTables(migrations fs.FS) ([]string, error) {
 	entries, err := fs.Glob(migrations, "migrations/*.sql")
 	if err != nil {
 		return nil, fmt.Errorf("listar migrações: %w", err)
 	}
+	sort.Strings(entries)
 	found := map[string]bool{}
 	for _, name := range entries {
 		raw, err := fs.ReadFile(migrations, name)
 		if err != nil {
 			return nil, fmt.Errorf("ler %s: %w", name, err)
 		}
-		// Só a seção Up: o `DROP TABLE` do Down não declara nada que deva existir.
+		// Só a seção Up: a seção Down descreve o caminho de volta, e uma tabela
+		// que ela recria não é uma tabela que o banco de hoje deva ter.
 		up := upSection(string(raw))
 		for _, match := range createTable.FindAllStringSubmatch(up, -1) {
 			found[match[1]] = true
+		}
+		for _, match := range dropTable.FindAllStringSubmatch(up, -1) {
+			delete(found, match[1])
 		}
 	}
 	tables := make([]string, 0, len(found))

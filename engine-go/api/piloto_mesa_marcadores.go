@@ -41,11 +41,11 @@ func marcaOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	b := st.boards.Get(c.R.Context(), c.SessionID)
+	b := st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {
 		return nil, errors.New("não há tabuleiro aberto para marcar")
 	}
-	return st.boards.AddMarker(c.R.Context(), c.SessionID, tabuleiro.BoardMarker{
+	return st.boards.AddMarker(c.R.Context(), c.SessionID, c.TabuleiroID, tabuleiro.BoardMarker{
 		X: casa.X, Y: casa.Y,
 		Text:  tabuleiro.ProximaLetraDeMarcador(b.Markers),
 		Color: tabuleiro.CorPadraoDeMarcador(),
@@ -64,7 +64,7 @@ func revelaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	return st.boards.UpdateMarker(c.R.Context(), c.SessionID, marcador.ID,
+	return st.boards.UpdateMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID,
 		tabuleiro.RevelacaoDeMarcador(!marcador.Hidden))
 }
 
@@ -81,7 +81,7 @@ func pintaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if !tabuleiro.CorDeMarcadorConhecida(cor) {
 		return nil, fmt.Errorf("a cor %q não existe; as do mapa são %s", cor, coresEmPortugues())
 	}
-	return st.boards.UpdateMarker(c.R.Context(), c.SessionID, marcador.ID,
+	return st.boards.UpdateMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID,
 		tabuleiro.CorNovaDeMarcador(cor))
 }
 
@@ -91,7 +91,7 @@ func apagaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	return st.boards.RemoveMarker(c.R.Context(), c.SessionID, marcador.ID)
+	return st.boards.RemoveMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID)
 }
 
 // marcadorDaURL acha o marcador que o gesto aponta.
@@ -102,7 +102,7 @@ func apagaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 // de mutação silenciosa que não acha ninguém.
 func marcadorDaURL(st *Server, c mesaComando) (tabuleiro.BoardMarker, error) {
 	id := chi.URLParam(c.R, "id")
-	b := st.boards.Get(c.R.Context(), c.SessionID)
+	b := st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {
 		return tabuleiro.BoardMarker{}, errors.New("não há tabuleiro aberto")
 	}

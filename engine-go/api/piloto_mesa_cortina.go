@@ -32,7 +32,7 @@ func (s *Server) rotasDaCortina(r chi.Router) {
 // mestre clica com pressa, no meio da cena.
 func correACortina(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	fechada := chi.URLParam(c.R, "estado") == "fechar"
-	board, mudou, err := st.boards.SetCurtain(c.R.Context(), c.SessionID, fechada)
+	board, mudou, err := st.boards.SetCurtain(c.R.Context(), c.SessionID, c.TabuleiroID, fechada)
 	if err != nil {
 		return board, err
 	}

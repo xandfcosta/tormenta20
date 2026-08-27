@@ -30,7 +30,7 @@ func TestOPincelPintaAEspecieQuePediu(t *testing.T) {
 		}
 	}
 
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	for i, pincel := range tabuleiro.EspeciesDeTerreno {
 		casas := tabuleiro.QuadradosDe(b, pincel.ID)
 		if len(casas) != 1 || casas[0].X != i {
@@ -59,7 +59,7 @@ func TestABorrachaApagaSoAEspecieEscolhida(t *testing.T) {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if n := len(tabuleiro.QuadradosDe(b, tabuleiro.TerrenoCamuflagem)); n != 0 {
 		t.Errorf("a camuflagem não foi apagada (%d casas)", n)
 	}
@@ -163,7 +163,7 @@ func TestSoOMestrePinta(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pintou o chão: %d", rec.Code)
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if n := len(tabuleiro.QuadradosDe(b, tabuleiro.TerrenoDificil)); n != 0 {
 		t.Errorf("a pintura do jogador entrou mesmo assim (%d casas)", n)
 	}

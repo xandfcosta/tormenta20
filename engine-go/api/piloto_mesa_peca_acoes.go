@@ -64,7 +64,7 @@ func alternaAVisibilidade(st *Server, c mesaComando) (*tabuleiro.BoardState, err
 	if err != nil {
 		return nil, err
 	}
-	return st.boards.UpdateToken(c.R.Context(), c.SessionID, peca.ID,
+	return st.boards.UpdateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID,
 		tabuleiro.ParseTokenPatch(map[string]any{"hidden": !peca.Hidden}))
 }
 
@@ -79,7 +79,7 @@ func duplicaAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	return st.boards.DuplicateToken(c.R.Context(), c.SessionID, peca.ID)
+	return st.boards.DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
 }
 
 // voltaAPecaParaOndeEstava desfaz o último pouso (ALE-206).
@@ -99,7 +99,7 @@ func voltaAPecaParaOndeEstava(st *Server, c mesaComando) (*tabuleiro.BoardState,
 	if peca.DeOndeVeio == nil {
 		return nil, fmt.Errorf("%s não foi movida nesta cena: não há para onde voltar", peca.Label)
 	}
-	return st.boards.VoltaAPeca(c.R.Context(), c.SessionID, peca.ID)
+	return st.boards.VoltaAPeca(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
 }
 
 // sinaisDaPeca é o que o diálogo de editar manda.
@@ -134,7 +134,7 @@ func editaAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if !tamanhoDePeca(sinais.Tamanho) {
 		return nil, fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", sinais.Tamanho)
 	}
-	return st.boards.UpdateToken(c.R.Context(), c.SessionID, peca.ID,
+	return st.boards.UpdateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID,
 		tabuleiro.ParseTokenPatch(map[string]any{"label": nome, "footprint": sinais.Tamanho}))
 }
 
@@ -149,7 +149,7 @@ func removeAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	return st.boards.RemoveToken(c.R.Context(), c.SessionID, peca.ID)
+	return st.boards.RemoveToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
 }
 
 // aPecaDoTabuleiro lê a peça pelo id do CAMINHO, e recusa a que não existe.
@@ -158,7 +158,7 @@ func removeAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 // ela some de verdade: outra aba do mestre pode ter removido a mesma peça meio
 // segundo antes. A frase diz o id porque é ele que o botão carregava.
 func (s *Server) aPecaDoTabuleiro(c mesaComando) (*tabuleiro.BoardToken, error) {
-	b := s.boards.Get(c.R.Context(), c.SessionID)
+	b := s.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}

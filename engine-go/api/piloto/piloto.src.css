@@ -430,6 +430,66 @@ html {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* A BARRA DE ABAS (ALE-205) mora no mesmo painel do nome, e com mais de uma
+   * cena aberta ele precisa de mais largura do que o nome sozinho pedia — sem
+   * chegar nos verbos do outro canto, que é o que o teto de 18rem protegia.
+   *
+   * Quem passar dali ROLA na horizontal em vez de enrolar linha: o painel tem
+   * altura de uma linha e uma segunda o faria crescer para dentro do mapa. Com
+   * oito abas (o teto do servidor) num telefone, rolar é a saída que não custa
+   * mapa. */
+  .tabuleiro-nome-da-cena:has(.tabuleiro-aba) {
+    /* 35% e não mais, MEDIDO com oito abas em 1280px: o painel dos verbos do
+     * MESTRE é o mais cheio da casa (zoom, cortina, lente, pôr no mapa, abrir
+     * outra, acervo com contagem, encerrar) e ocupa 61% da cena. Com 55% os
+     * dois se encostavam — o nome da última aba passava por baixo do "Lugares
+     * da campanha", e o corte com reticências que mantém os dois painéis dois
+     * deixava de acontecer. */
+    max-width: min(30rem, 35%);
+    gap: 0.125rem;
+    padding: 0.125rem 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  /* Cada ficha corta a SUA — o corte no painel cortaria a última aba pela
+   * metade e ela pareceria não existir. */
+  .tabuleiro-aba {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 9rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.125rem;
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 150ms, border-color 150ms;
+  }
+  .tabuleiro-aba:hover {
+    color: var(--color-foreground);
+    border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
+  }
+  .tabuleiro-aba:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  /* A ATIVA acende, e é o ÚNICO sinal de qual cena está na tela: o mapa embaixo
+   * não se identifica sozinho — duas cenas de cripta com o mesmo chão são a
+   * mesma imagem. */
+  .tabuleiro-aba-ativa {
+    color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
+    border-color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
+    /* A ATIVA tem mais largura que as outras porque é a que se LÊ: as demais
+     * respondem "onde mais eu posso ir" e cortar "Cripta do Rei Caolho" em
+     * "Cripta do Rei…" ali não custa nada. Medido na bancada com 9rem para
+     * todas: a ativa saía cortada em "Cripta do Rei Caolh", e o nome da cena em
+     * que se está é o que o painel existia para dizer. */
+    max-width: 14rem;
+  }
   .tabuleiro-verbos-da-cena {
     right: 0.5rem;
     gap: 0.125rem;

@@ -45,7 +45,7 @@ func (s *Server) rotasDoGrupo(r chi.Router) {
 // do jogador, mas aparece na do mestre, e a redação por papel tem de continuar
 // com um dono só.
 func (s *Server) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
-	papel, sessionID, ok := s.quemMedeAMesa(w, r)
+	papel, sessionID, tabuleiroID, ok := s.quemMedeAMesa(w, r)
 	if !ok {
 		return
 	}
@@ -59,7 +59,7 @@ func (s *Server) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "os cantos do laço precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}
-	b := s.boards.Get(r.Context(), sessionID)
+	b := s.boards.Get(r.Context(), sessionID, tabuleiroID)
 	ids := tabuleiro.PecasNoRetangulo(b, de, ate)
 	escreveSinais(w, r, map[string]any{
 		sinalDasPecasMarcadas: strings.Join(ids, ","),
@@ -85,7 +85,7 @@ func moveOGrupoDaMesa(st *Server, c mesaComando) (*tabuleiro.BoardState, error) 
 	if len(ids) == 0 {
 		return nil, fmt.Errorf("não há peça marcada para mover")
 	}
-	return st.boards.MoveOGrupo(c.R.Context(), c.SessionID, ids, dx, dy)
+	return st.boards.MoveOGrupo(c.R.Context(), c.SessionID, c.TabuleiroID, ids, dx, dy)
 }
 
 // sinalDasPecasMarcadas guarda os ids marcados, separados por vírgula.
