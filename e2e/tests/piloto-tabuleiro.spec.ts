@@ -143,7 +143,10 @@ async function abreOTabuleiro(page: Page, mesa: string): Promise<void> {
   await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
   await page.getByLabel('Lugar').fill('Taverna do E2E')
   await page.getByRole('button', { name: 'Abrir', exact: true }).click()
-  await page.locator('.tabuleiro-plano').waitFor({ timeout: 10_000 })
+  // A CENA e não o PLANO: desde a ALE-203 o plano é uma ORIGEM de tamanho zero
+  // num plano infinito, e o Playwright chama de invisível todo elemento sem
+  // caixa. Quem tem o retângulo agora é a janela que recorta.
+  await page.locator('.tabuleiro-cena').waitFor({ timeout: 10_000 })
 }
 
 /**
@@ -183,8 +186,14 @@ const camadaDe = (page: Page, gesto: RegExp) =>
 const ferramenta = (page: Page, nome: string) =>
   page.getByRole('navigation', { name: 'Ferramentas do mapa' }).getByRole('button', { name: nome })
 
+/**
+ * O `--quadrado` mudou de dono na ALE-203: o PALCO era a caixa que rolava, e ela
+ * saiu junto com a moldura — num plano infinito não há `scrollWidth` para o
+ * navegador prender. Quem guarda o enquadramento agora é a CENA, que é a janela
+ * que recorta.
+ */
 const quadrado = (page: Page) =>
-  page.locator('.tabuleiro-palco').evaluate((e) => getComputedStyle(e).getPropertyValue('--quadrado').trim())
+  page.locator('.tabuleiro-cena').evaluate((e) => getComputedStyle(e).getPropertyValue('--quadrado').trim())
 
 /**
  * O ZOOM SOBREVIVE AO REMENDO — e esta é A aposta da fatia inteira.
@@ -200,7 +209,7 @@ const quadrado = (page: Page) =>
  * o caso passaria verde sobre um stream morto — que é a família de defeito que
  * o CLAUDE.md desta casa persegue.
  */
-test('o zoom e a rolagem sobrevivem ao remendo do servidor', async ({ page }) => {
+test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => {
   const { mesa, apagar } = await mesaDescartavel(page)
   try {
     await abreOTabuleiro(page, mesa)
@@ -275,6 +284,239 @@ test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ 
       pontoY >= caixaDaCasa.y && pontoY <= caixaDaCasa.y + caixaDaCasa.height,
       `o clique em y=${pontoY} caiu fora da casa pintada (${caixaDaCasa.y}–${caixaDaCasa.y + caixaDaCasa.height})`,
     ).toBe(true)
+  } finally {
+    await apagar()
+  }
+})
+
+/**
+ * DEPOIS DE ARRASTAR A VISTA, A CASA CONTINUA SENDO A QUE ESTÁ SOB O DEDO.
+ *
+ * É o mesmo invariante do caso acima, com o gesto que a ALE-203 trouxe. Ele é
+ * outro caso e não uma repetição porque o que pode quebrar é outro: ali é o
+ * ZOOM entrando na divisão, aqui é a JANELA entrando na soma — e a janela é
+ * exatamente o termo que a moldura escondia. O defeito que o dono relatou
+ * ("apaguei e não apagou") era esta soma errada, com a moldura crescendo
+ * debaixo do ponteiro.
+ *
+ * Por que e2e: o deslocamento é um `transform` de CSS sobre um plano de tamanho
+ * ZERO, e a conta do clique é `offsetX + $vistax` num elemento IRMÃO desse
+ * plano. Nenhuma camada abaixo do navegador tem geometria para testemunhar
+ * isso — em jsdom todo elemento mede zero, e a asserção passaria verde com as
+ * duas contas erradas.
+ *
+ * A asserção é geométrica e não aritmética, pela mesma razão de lá: recalcular
+ * `floor((x + vista) / quadrado)` aqui seria comparar a implementação consigo
+ * mesma.
+ */
+test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    await abreOTabuleiro(page, mesa)
+
+    // ARRASTA A VISTA um bom pedaço, com a ferramenta da mão. O deslocamento é
+    // deliberadamente NÃO múltiplo do quadrado: um múltiplo esconderia um erro
+    // de fase, porque a casa certa e a errada cairiam no mesmo lugar da grade.
+    await ferramenta(page, 'Arrastar a vista').click()
+    const mao = page.locator('.tabuleiro-vista')
+    const caixaDaMao = (await mao.boundingBox())!
+    await page.mouse.move(caixaDaMao.x + 400, caixaDaMao.y + 300)
+    await page.mouse.down()
+    await page.mouse.move(caixaDaMao.x + 173, caixaDaMao.y + 191, { steps: 8 })
+    await page.mouse.up()
+
+    // O CONTROLE: a vista ANDOU. Sem ele, "a casa está certa" é verdade também
+    // numa tela onde o arrasto não fez nada — que é o verde mais caro que existe.
+    const vista = await page
+      .locator('.tabuleiro-cena')
+      .evaluate((e) => getComputedStyle(e).getPropertyValue('--vista-x').trim())
+    expect(vista, 'a vista não saiu do lugar — o arrasto não aconteceu e o resto não mede nada').not.toBe('0px')
+
+    await ferramenta(page, 'Camuflagem').click()
+    const casas = camadaDe(page, /Pintar terreno/)
+    const alvo = { x: 260, y: 180 }
+    await casas.click({ position: alvo })
+
+    const pintada = page.locator('.tabuleiro-terreno.tabuleiro-camuflagem')
+    await expect(pintada, 'nada foi pintado').toHaveCount(1)
+
+    const caixaDaCamada = (await casas.boundingBox())!
+    const caixaDaCasa = (await pintada.boundingBox())!
+    const pontoX = caixaDaCamada.x + alvo.x
+    const pontoY = caixaDaCamada.y + alvo.y
+
+    expect(
+      pontoX >= caixaDaCasa.x && pontoX <= caixaDaCasa.x + caixaDaCasa.width,
+      `com a vista em ${vista}, o clique em x=${pontoX} caiu fora da casa pintada ` +
+        `(${caixaDaCasa.x}–${caixaDaCasa.x + caixaDaCasa.width})`,
+    ).toBe(true)
+    expect(
+      pontoY >= caixaDaCasa.y && pontoY <= caixaDaCasa.y + caixaDaCasa.height,
+      `o clique em y=${pontoY} caiu fora da casa pintada ` +
+        `(${caixaDaCasa.y}–${caixaDaCasa.y + caixaDaCasa.height})`,
+    ).toBe(true)
+  } finally {
+    await apagar()
+  }
+})
+
+/**
+ * O DESENHO DA MEDIDA CABE NO SVG QUE O CARREGA — o guarda de um recorte que não
+ * acusa (ALE-203).
+ *
+ * O `<svg>` MAIS EXTERNO recorta pelo viewport dele, e `overflow: visible` não
+ * levanta esse recorte. Quando a régua e o gabarito passaram a viver dentro de um
+ * plano de tamanho ZERO, o viewport virou 0×0 e os dois PARARAM DE APARECER — com
+ * o `<path>` no DOM, com a caixa certa no lugar certo, com o `fill` certo e com
+ * `display: block`. Nada acusava, e a suíte inteira ficou verde por cima disso.
+ *
+ * O `toBeVisible` do Playwright também não pega: o `<path>` TEM caixa. Então a
+ * asserção é a que descreve o defeito: o desenho tem de estar DENTRO da caixa do
+ * SVG. Com o viewport em 0×0 (ou nos 300×150 intrínsecos de um `<svg>` sem
+ * `width`/`height`, que foi a segunda forma do mesmo erro), ele não está.
+ *
+ * Por que e2e: é geometria de SVG dentro de um `transform` de CSS. Nada abaixo do
+ * navegador tem viewport para recortar.
+ */
+test('o gabarito desenhado cabe dentro do SVG que o carrega', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    await abreOTabuleiro(page, mesa)
+
+    await ferramenta(page, 'Gabarito').click()
+    await camadaDe(page, /Pôr o gabarito/).click({ position: { x: 300, y: 200 } })
+
+    const svg = page.locator('.tabuleiro-medida-fundo')
+    const desenho = svg.locator('path')
+
+    // O CONTROLE: o servidor respondeu e há desenho. Sem ele, "cabe no SVG" seria
+    // verdade sobre um `<path>` vazio, que é o verde que este caso existe para
+    // não dar.
+    await expect(desenho, 'o gabarito não foi desenhado — não há o que medir').toHaveAttribute('d', /\S/)
+
+    const caixaDoSvg = (await svg.boundingBox())!
+    const caixaDoDesenho = (await desenho.boundingBox())!
+    expect(
+      caixaDoDesenho.x >= caixaDoSvg.x &&
+        caixaDoDesenho.x + caixaDoDesenho.width <= caixaDoSvg.x + caixaDoSvg.width &&
+        caixaDoDesenho.y >= caixaDoSvg.y &&
+        caixaDoDesenho.y + caixaDoDesenho.height <= caixaDoSvg.y + caixaDoSvg.height,
+      `o desenho está em (${caixaDoDesenho.x},${caixaDoDesenho.y},${caixaDoDesenho.width}×${caixaDoDesenho.height}) ` +
+        `e o SVG em (${caixaDoSvg.x},${caixaDoSvg.y},${caixaDoSvg.width}×${caixaDoSvg.height}): ` +
+        `o viewport do svg recorta o gabarito, e ninguém na mesa o vê`,
+    ).toBe(true)
+  } finally {
+    await apagar()
+  }
+})
+
+/**
+ * A JANELA VAI ATRÁS DO FOCO, e sem isto a ALE-203 teria embutido uma regressão
+ * de teclado.
+ *
+ * A rolagem nativa trazia o elemento focado para a vista de graça. Ela saiu com
+ * a moldura: a cena recorta com `overflow: hidden` e a página não rola, então
+ * não existe mais ancestral rolável — o navegador TENTA e não tem o que rolar.
+ * Medido vermelho antes do conserto: com a peça em (-2039,-1268) e a janela em
+ * (92,97,1756×807), focar a peça deixava tudo exatamente onde estava. Quem
+ * navega por teclado podia focar uma peça que nunca ia conseguir ver.
+ *
+ * Por que e2e: são FOCO e GEOMETRIA REAL ao mesmo tempo, num elemento cuja
+ * posição vem de um `transform` de CSS. Em jsdom todo retângulo é zero e a
+ * asserção passaria verde sobre nada.
+ *
+ * O CONTROLE é a metade que importa: a peça tem de estar FORA antes. Sem ele,
+ * "a peça está dentro" é verdade também numa janela que nunca saiu do lugar.
+ */
+test('a janela vai atrás do foco quando a peça está fora dela', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    await abreOTabuleiro(page, mesa)
+    await poeUmaPecaNoMapa(page)
+
+    const cena = page.locator('.tabuleiro-cena')
+    const peca = page.locator('.tabuleiro-peca')
+
+    // Arrasta a vista para BEM longe da peça, com a ferramenta da mão.
+    await ferramenta(page, 'Arrastar a vista').click()
+    const caixaDaMao = (await page.locator('.tabuleiro-vista').boundingBox())!
+    await page.mouse.move(caixaDaMao.x + caixaDaMao.width - 40, caixaDaMao.y + caixaDaMao.height - 40)
+    await page.mouse.down()
+    await page.mouse.move(caixaDaMao.x + 20, caixaDaMao.y + 20, { steps: 10 })
+    await page.mouse.up()
+
+    const dentroDaJanela = async () => {
+      const j = (await cena.boundingBox())!
+      const p = (await peca.boundingBox())!
+      return p.x >= j.x && p.x + p.width <= j.x + j.width && p.y >= j.y && p.y + p.height <= j.y + j.height
+    }
+
+    // O CONTROLE: a peça ficou FORA da janela.
+    expect(await dentroDaJanela(), 'a peça continuou visível — o arrasto não afastou nada e o resto não mede').toBe(false)
+
+    await peca.focus()
+
+    expect(
+      await dentroDaJanela(),
+      'a peça focada continuou fora da janela: quem navega por teclado pode alcançá-la e nunca vê-la',
+    ).toBe(true)
+  } finally {
+    await apagar()
+  }
+})
+
+/**
+ * SHIFT + ARRASTO ENCHE O RETÂNGULO (ALE-203, item 10 do dono).
+ *
+ * O gesto é browser puro e não tem onde ser medido mais barato: `Shift` decidido
+ * no `pointerdown`, `setPointerCapture`, o laço posicionado por uma expressão de
+ * CSS sobre um plano que um `transform` desloca, e a rota só saindo no
+ * `pointerup`. Um teste de handler prova que a ROTA enche a área — e prova zero
+ * sobre o gesto que a chama.
+ *
+ * O CONTROLE é a metade que importa: sem o `Shift`, o mesmo arrasto tem de
+ * pintar o TRAÇO e não o retângulo. Sem ele, "12 casas" seria verdade também
+ * para um app que ignorasse a tecla e enchesse sempre.
+ */
+test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    await abreOTabuleiro(page, mesa)
+    await ferramenta(page, 'Difícil').click()
+
+    const casas = camadaDe(page, /Pintar terreno/)
+    const caixa = (await casas.boundingBox())!
+    const de = { x: caixa.x + 120, y: caixa.y + 120 }
+    const ate = { x: de.x + 120, y: de.y + 90 }
+
+    // O CONTROLE: o MESMO arrasto sem Shift pinta uma linha, não uma área.
+    await page.mouse.move(de.x, de.y)
+    await page.mouse.down()
+    await page.mouse.move(ate.x, ate.y, { steps: 10 })
+    await page.mouse.up()
+    const doTraco = await page.locator('.tabuleiro-terreno.tabuleiro-dificil').count()
+
+    // E agora COM Shift, num pedaço virgem do plano.
+    const deB = { x: caixa.x + 420, y: caixa.y + 120 }
+    const ateB = { x: deB.x + 120, y: deB.y + 90 }
+    await page.keyboard.down('Shift')
+    await page.mouse.move(deB.x, deB.y)
+    await page.mouse.down()
+    await page.mouse.move(ateB.x, ateB.y, { steps: 6 })
+    // O LAÇO tem de estar na tela ENQUANTO o dedo segura: é a promessa visual do
+    // gesto, e sem ela a pessoa arrasta no escuro.
+    await expect(page.locator('.tabuleiro-laco'), 'o laço não apareceu durante o arrasto').toBeVisible()
+    await page.mouse.up()
+    await page.keyboard.up('Shift')
+
+    await expect
+      .poll(() => page.locator('.tabuleiro-terreno.tabuleiro-dificil').count(), {
+        message: 'o retângulo não encheu a área',
+      })
+      .toBeGreaterThan(doTraco * 2)
+
+    // E o laço some quando o dedo solta — ele é intenção, não resultado.
+    await expect(page.locator('.tabuleiro-laco'), 'o laço ficou na tela depois de soltar').toBeHidden()
   } finally {
     await apagar()
   }

@@ -2,8 +2,6 @@ package tabuleiro
 
 import (
 	"testing"
-
-	"t20engine/engine"
 )
 
 // ── a aparência da peça (ALE-179, portada na ALE-263) ────────────────────────
@@ -94,92 +92,5 @@ func TestOMatizEOMesmoDoRetratoDaSPA(t *testing.T) {
 		if got := matizDe(nome); got != quero {
 			t.Errorf("matiz de %q = %d, quero %d (rodado no hueFromName da SPA)", nome, got, quero)
 		}
-	}
-}
-
-// ── a moldura (ALE-263) ──────────────────────────────────────────────────────
-
-// Um tabuleiro VAZIO desenha o piso, e não o nada.
-func TestOTabuleiroVazioDesenhaOPiso(t *testing.T) {
-	e := MolduraDe(&BoardState{})
-	if e.Colunas != MinimoDeColunas || e.Linhas != MinimoDeLinhas {
-		t.Errorf("vazio deu %dx%d, queria o piso %dx%d", e.Colunas, e.Linhas, MinimoDeColunas, MinimoDeLinhas)
-	}
-	// E o piso nasce CENTRADO na origem: quem abre um tabuleiro põe a primeira
-	// peça perto do meio, não na quina.
-	if e.X0 > 0 || e.Y0 > 0 || e.X0+e.Colunas < 1 || e.Y0+e.Linhas < 1 {
-		t.Errorf("o piso vazio não contém a origem: %+v", e)
-	}
-}
-
-// A moldura ENVOLVE tudo que tem lugar, com margem — e a peça grande entra
-// inteira, não só a quina dela.
-func TestAMolduraEnvolveTudoComMargemEContaAPegada(t *testing.T) {
-	pv := &BoardState{
-		Tokens: []BoardToken{
-			{ID: "a", Label: "Ogro", X: 40, Y: 30, Footprint: 2},
-			{ID: "b", Label: "Arwen", X: 38, Y: 28},
-		},
-		Markers:   []BoardMarker{{ID: "m", X: 45, Y: 33}},
-		Difficult: []engine.Square{{X: 36, Y: 27}},
-	}
-	e := MolduraDe(pv)
-
-	// A asserção é de CONTINÊNCIA e não de números exatos, e a primeira versão
-	// deste teste errou por isso: eu previ origem 33 (o mínimo do conteúdo, 36,
-	// menos a margem 3) e o código deu 31 — porque o conteúdo mais a margem dá
-	// 16 colunas, abaixo do piso de 20, e o piso é aplicado CENTRADO. O código
-	// estava certo e a minha conta é que não tinha o piso.
-	//
-	// Continência é o que a regra promete de verdade: tudo que tem lugar cabe,
-	// com pelo menos a margem sobrando de cada lado.
-	dentro := func(x, y int, oque string) {
-		t.Helper()
-		if x < e.X0+MargemDaMoldura || x > e.X0+e.Colunas-1-MargemDaMoldura ||
-			y < e.Y0+MargemDaMoldura || y > e.Y0+e.Linhas-1-MargemDaMoldura {
-			t.Errorf("%s em %d,%d não tem a margem de %d dentro da moldura %+v", oque, x, y, MargemDaMoldura, e)
-		}
-	}
-	dentro(36, 27, "o terreno difícil")
-	dentro(45, 33, "o marcador")
-}
-
-// Pegada ZERO é peça de um quadrado: o campo é `omitempty` no fio, e tratá-la
-// como zero encolheria a moldura para DENTRO da própria peça.
-func TestPegadaZeroContaComoUmQuadrado(t *testing.T) {
-	e := MolduraDe(&BoardState{Tokens: []BoardToken{{ID: "a", Label: "Rato", X: 100, Y: 100}}})
-	if e.X0+e.Colunas-1 < 100+MargemDaMoldura {
-		t.Errorf("a moldura acaba em x=%d e não cobre a peça em 100 mais a margem", e.X0+e.Colunas-1)
-	}
-}
-
-// COORDENADA NEGATIVA é lugar legítimo: o plano não tem bordas, e uma moldura que
-// se recusasse a ir para o negativo empurraria a peça para fora do desenho.
-func TestAMolduraVaiParaONegativo(t *testing.T) {
-	e := MolduraDe(&BoardState{Tokens: []BoardToken{{ID: "a", Label: "Ogro", X: -20, Y: -15}}})
-	if e.X0 > -20 || e.Y0 > -15 {
-		t.Errorf("a peça em -20,-15 ficou fora da moldura %+v", e)
-	}
-}
-
-// A PEGADA entra inteira, e este teste precisou de duas tentativas para medir
-// isso de verdade.
-//
-// A primeira punha a peça grande no meio de um tabuleiro onde um marcador estava
-// mais longe — então ignorar a pegada não mudava a moldura, e a sabotagem passou
-// VERDE. Aqui a peça grande é o extremo e nada está além dela; e as duas peças
-// estão longe o bastante para o span passar do piso, senão o piso mascararia a
-// diferença exatamente como o marcador mascarava.
-func TestAPegadaEntraInteiraNaMoldura(t *testing.T) {
-	e := MolduraDe(&BoardState{Tokens: []BoardToken{
-		{ID: "perto", Label: "Rato", X: 0, Y: 0},
-		{ID: "longe", Label: "Dragão", X: 30, Y: 20, Footprint: 3},
-	}})
-
-	// O Dragão de pegada 3 em (30,20) ocupa até (32,22). Ignorar a pegada faria
-	// a moldura acabar em 33, e a quina da peça ficaria sem margem — ou fora.
-	limiteX, limiteY := e.X0+e.Colunas-1-MargemDaMoldura, e.Y0+e.Linhas-1-MargemDaMoldura
-	if limiteX < 32 || limiteY < 22 {
-		t.Errorf("a quina do Dragão (32,22) não tem margem dentro da moldura %+v (limite %d,%d)", e, limiteX, limiteY)
 	}
 }

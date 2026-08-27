@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	datastar "github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/engine"
 	"t20engine/tabuleiro"
 )
 
@@ -29,8 +30,17 @@ func (s *Server) rotasDaCena(r chi.Router) {
 	r.Post(base+"/encerrar", s.comandoDoMestreNoTabuleiro(encerraOTabuleiro))
 	r.Post(base+"/lugares/{placeId}/reabrir", s.comandoDoMestreNoTabuleiro(reabreOLugar))
 	r.Post(base+"/lugares/{placeId}/remover", s.comandoDoMestreNoTabuleiro(removeOLugar))
-	r.Post(base+"/terreno/{especie}/{x}/{y}", s.comandoDoMestreNoTabuleiro(pintaOTerreno))
-	r.Post(base+"/terreno/limpar/{x}/{y}", s.comandoDoMestreNoTabuleiro(limpaOTerreno))
+	// O TRAÇO e não o ponto (ALE-203): as duas rotas recebem de ONDE ATÉ ONDE o
+	// dedo andou desde o aviso anterior do ponteiro. Um clique parado manda o
+	// mesmo par duas vezes, que é um traço de uma casa. Ver `tabuleiro.CasasDoTraco`.
+	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.comandoContinuoDoMestre(pintaOTerreno))
+	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.comandoContinuoDoMestre(limpaOTerreno))
+	// O RETÂNGULO (ALE-203, item 10): os mesmos dois cantos, outra FORMA. Rota
+	// própria e não uma query na de cima porque o que muda é o que o par de
+	// cantos NOMEIA — a linha entre eles ou tudo o que cabe dentro —, e isso é o
+	// significado do pedido, não um modo dele.
+	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.comandoContinuoDoMestre(enchaORetangulo))
+	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.comandoContinuoDoMestre(limpaORetangulo))
 	r.Post(base+"/pecas", s.comandoDoMestreNoTabuleiro(poeNoMapa))
 }
 
@@ -45,7 +55,7 @@ func (s *Server) rotasDaCena(r chi.Router) {
 // ARRASTANDO e o arraste passa duas vezes pela mesma casa. Alternar faria a casa
 // piscar entre brejo e chão limpo debaixo do dedo.
 func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	casa, err := quadradoDaURL(c.R)
+	traco, err := tracoDaURL(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +64,7 @@ func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	}
 	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
 	ligado := c.R.URL.Query().Get("apagar") == ""
-	return st.boards.PaintTerrain(c.R.Context(), c.SessionID, casa, especie, ligado)
+	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, traco, especie, ligado)
 }
 
 // limpaOTerreno é a BORRACHA (ALE-203): o clique devolve a casa ao chão limpo,
@@ -65,14 +75,82 @@ func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 // a espécie que fazia a borracha apagar a coisa errada em silêncio. Sem espécie
 // no caminho, não há como errar qual.
 func limpaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	casa, err := quadradoDaURL(c.R)
+	traco, err := tracoDaURL(c.R)
 	if err != nil {
 		return nil, err
 	}
 	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
-	return st.boards.LimpaACasa(c.R.Context(), c.SessionID, casa)
+	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, traco)
+}
+
+// enchaORetangulo e limpaORetangulo são os irmãos de área dos dois de cima.
+//
+// Eles chamam as MESMAS gravações (`PintaOTraco`, `LimpaOTraco`) — o nome fala em
+// traço porque foi ele que as pediu primeiro, e o que elas recebem sempre foi uma
+// lista de casas. Quem escolhe a forma é a rota.
+func enchaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	casas, err := oRetanguloDaURL(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
+	}
+	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
+	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, casas, especie, true)
+}
+
+func limpaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	casas, err := oRetanguloDaURL(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
+	}
+	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, casas)
+}
+
+// oRetanguloDaURL lê os dois cantos e devolve as casas de dentro.
+//
+// A RECUSA vem do domínio (`tabuleiro.RetanguloValido`) e o teto dele é maior que
+// o do traço, pela razão escrita lá: o retângulo é um gesto DELIBERADO de dois
+// cantos, e o traço é um quadro de 16ms.
+func oRetanguloDaURL(r *http.Request) ([]engine.Square, error) {
+	de, err := quadradoDaURL(r)
+	if err != nil {
+		return nil, err
+	}
+	ate, err := segundoQuadradoDaURL(r)
+	if err != nil {
+		return nil, err
+	}
+	if !tabuleiro.RetanguloValido(de, ate) {
+		return nil, fmt.Errorf("o retângulo de %v até %v é grande demais para um gesto", de, ate)
+	}
+	return tabuleiro.CasasDoRetangulo(de, ate), nil
+}
+
+// tracoDaURL lê o segmento que o dedo percorreu e devolve as casas dele.
+//
+// A RECUSA de um traço grande demais vem do `tabuleiro.TracoValido` e é do
+// DOMÍNIO, não do transporte: o que ela protege é o tabuleiro gravado, e a razão
+// está escrita lá.
+func tracoDaURL(r *http.Request) ([]engine.Square, error) {
+	de, err := quadradoDaURL(r)
+	if err != nil {
+		return nil, err
+	}
+	ate, err := segundoQuadradoDaURL(r)
+	if err != nil {
+		return nil, err
+	}
+	if !tabuleiro.TracoValido(de, ate) {
+		return nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
+	}
+	return tabuleiro.CasasDoTraco(de, ate), nil
 }
 
 // reabreOLugar traz uma cena guardada de volta para a mesa.

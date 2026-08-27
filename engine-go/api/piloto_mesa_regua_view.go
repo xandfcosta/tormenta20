@@ -47,36 +47,95 @@ func oPincelEstaLigado() string {
 	return fmt.Sprintf("[%s].includes($ferramenta)", strings.Join(nomes, ", "))
 }
 
-// reguaNoPontoClicado é a máquina de dois cliques da régua.
+// AS FASES da régua. Elas eram 0/1/2 escritas à mão em nove lugares, e a
+// terceira mudou de significado na ALE-203 — "fechada" deixou de ser "as duas
+// pontas postas" e virou "CONGELADA", que é outra coisa.
+const (
+	reguaParada    = 0
+	reguaMedindo   = 1
+	reguaCongelada = 2
+)
+
+// reguaNoPontoClicado é a máquina da POLILINHA (ALE-203, escolha do dono).
 //
-// O primeiro clique fixa a origem, o segundo fecha a medida, e o terceiro
-// RECOMEÇA de onde clicou. Sem o recomeço, medir a distância seguinte exigiria
-// um botão de limpar — e a mesa mede muitas vezes seguidas, sempre a partir de
-// outro lugar.
+// Ela era de dois cliques: o primeiro punha a origem, o segundo fechava, o
+// terceiro recomeçava. O dono usou e apontou o que faltava — "a régua não
+// permite calcular distâncias com mais de uma parada" — e escolheu a gramática:
 //
-// A ida ao servidor acontece só no clique que FECHA: uma ponta solta não é
-// distância nenhuma, e postar a cada clique dobraria a conversa para a metade das
-// vezes em que ela não tem resposta.
+//	esquerdo        acrescenta uma parada (o primeiro começa a régua)
+//	duplo esquerdo  CONGELA: para de seguir o ponteiro e fica desenhada
+//	direito         APAGA, em qualquer estado
 //
-// A aritmética do quadrado é a mesma do `paradaNoPontoClicado`, repetida pelo
-// mesmo motivo que a `marcacaoNoPontoClicado` a repete — o destino é outro. Aqui
-// ela ganha nome (`cx`, `cy`) porque o valor é usado duas vezes na mesma
-// expressão.
+// Três gestos, três efeitos FIXOS: nenhum deles muda de significado conforme o
+// estado, que era o custo das outras duas formas que estavam na mesa.
+//
+// A PARADA REPETIDA é recusada, e isso não é higiene: o duplo clique dispara um
+// clique simples ANTES dele, na mesma casa. Sem esta linha a última parada
+// nasceria duplicada e o `dblclick` congelaria uma régua com uma perna de zero
+// quadrado pendurada. Com ela, o segundo clique do duplo não faz nada e o
+// congelamento cai limpo.
+//
+// O ESC NÃO ENTRA, e é medido: o `cena.js` mapeia Escape para "voltar" e chama
+// `stopPropagation` no documento — provado com controle, um `F2` chega a um
+// listener cru na janela e o `Escape` não. Era ele que a nota do dono usava para
+// apagar; quem apaga é o botão direito, que chega.
 func reguaNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"const cx = Math.floor(evt.offsetX / $quadrado) + %d, cy = Math.floor(evt.offsetY / $quadrado) + %d; "+
-			"if ($reguafase === 1) { $regua2x = cx; $regua2y = cy; $reguafase = 2; "+
-			"@post('/piloto/mesa/%d/%d/tabuleiro/regua/' + $regua1x + '/' + $regua1y + '/' + cx + '/' + cy) } "+
-			"else { $regua1x = cx; $regua1y = cy; $regua2x = cx; $regua2y = cy; $reguafase = 1; $reguatexto = '' }",
-		v.X0, v.Y0, v.CampaignID, v.SessionID,
+		// SÓ O BOTÃO PRIMÁRIO acrescenta parada. O `click` do Chrome já é só do
+		// primário, mas o guarda é barato e ele apareceu na bancada: a automação
+		// do navegador dispara um `click` sintético junto com o clique direito, e
+		// o sintético vem com `offsetX` ZERO — o que se via era a régua sendo
+		// apagada e nascendo de novo na ORIGEM do plano, no mesmo gesto.
+		"if (evt.button !== 0) return; const cx = %s, cy = %s; "+
+			"if ($reguafase !== %d) { $reguapontos = [[cx, cy]]; $reguafase = %d } "+
+			"else { const p = [...$reguapontos], u = p[p.length - 1]; "+
+			"if (u[0] === cx && u[1] === cy) return; $reguapontos = [...p, [cx, cy]] } "+
+			"$reguamirax = cx; $reguamiray = cy; %s",
+		clicouEmX, clicouEmY, reguaMedindo, reguaMedindo, remedeARegua(v),
 	)
 }
 
-// guardaARegua apaga as duas pontas E a leitura.
+// aReguaSegueOPonteiro é a PERNA VIVA: a linha que sai da última parada e vai
+// até o dedo, sempre (pedido do dono).
 //
-// As duas coisas juntas porque elas são a mesma: a frase de uma medida cujo
-// desenho sumiu é a resposta a uma pergunta que ninguém consegue mais ver.
-const guardaARegua = "$reguafase = 0; $reguatexto = ''"
+// Ela só fala com o servidor quando o ponteiro TROCA DE CASA, pelo mesmo motivo
+// do pincel: a medida muda por quadrado e não por pixel, e postar a cada quadro
+// seria mandar a mesma pergunta sessenta vezes por segundo.
+//
+// O DESENHO da perna, esse acompanha o pixel: ele sai dos sinais e não do
+// servidor, porque é geometria e não regra.
+func aReguaSegueOPonteiro(v tabuleiroView) string {
+	return fmt.Sprintf(
+		"if ($reguafase !== %d) return; const cx = %s, cy = %s; "+
+			"if (cx === $reguamirax && cy === $reguamiray) return; "+
+			"$reguamirax = cx; $reguamiray = cy; %s",
+		reguaMedindo, clicouEmX, clicouEmY, remedeARegua(v),
+	)
+}
+
+// congelaARegua fecha a medida: ela para de seguir o ponteiro e fica na tela.
+//
+// É o `dblclick`, que é a convenção de "terminar polilinha" de todo editor de
+// desenho. O `preventDefault` existe porque um duplo clique também SELECIONA
+// texto, e um tabuleiro com meia tela selecionada em azul é o que a mesa vê.
+var congelaARegua = fmt.Sprintf("evt.preventDefault(); $reguafase = %d", reguaCongelada)
+
+// guardaARegua apaga as paradas, o desenho E a leitura.
+//
+// As três juntas porque são a mesma coisa: a frase de uma medida cujo desenho
+// sumiu é a resposta a uma pergunta que ninguém consegue mais ver.
+var guardaARegua = fmt.Sprintf("$reguafase = %d; $reguapontos = []; $reguarotulos = []; $reguatexto = %q",
+	reguaParada, aDicaDaReguaVazia)
+
+// remedeARegua pede os rótulos das pernas e a frase do total.
+//
+// UMA expressão para os dois gestos que mudam a régua — acrescentar parada e
+// mover o ponteiro —, porque os dois fazem a mesma pergunta. Duas cópias dariam
+// dois lugares para esquecer de mandar, e o sintoma seria a régua que desenha
+// certo e mede errado.
+func remedeARegua(v tabuleiroView) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/regua')", v.CampaignID, v.SessionID)
+}
 
 // gabaritoNoPontoClicado põe o gabarito, e aponta quando a forma pede.
 //
@@ -91,11 +150,45 @@ const guardaARegua = "$reguafase = 0; $reguatexto = ''"
 // para divergir da primeira.
 func gabaritoNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"const cx = Math.floor(evt.offsetX / $quadrado) + %d, cy = Math.floor(evt.offsetY / $quadrado) + %d; "+
-			"if ($gabaritofase === 1 && $gabaritoaponta) { $gabaritomirax = cx; $gabaritomiray = cy; $gabaritofase = 2 } "+
-			"else { $gabaritox = cx; $gabaritoy = cy; $gabaritomirax = cx; $gabaritomiray = cy; $gabaritofase = 1 } "+
+		// SÓ O BOTÃO PRIMÁRIO põe gabarito, pela mesma razão medida na régua: o
+		// clique sintético que acompanha o botão direito vem com `offsetX` zero e
+		// poria a área na origem do plano no mesmo gesto que a apagou.
+		//
+		// A ORIGEM pousa onde o LIVRO manda, e é o `$gabaritonaintersecao` quem
+		// diz qual: a esfera na interseção de quatro quadrados, o resto na casa
+		// (p225). Perguntar aqui `$gabarito === 'esfera'` seria a segunda cópia da
+		// regra, livre para divergir da primeira — a mesma razão do
+		// `$gabaritoaponta`.
+		//
+		// A MIRA continua sendo CASA em qualquer forma: ela é para onde o cone
+		// aponta, e direção se escolhe apontando para um quadrado.
+		"if (evt.button !== 0) return; "+
+			"const cx = $gabaritonaintersecao ? %s : %s, cy = $gabaritonaintersecao ? %s : %s; "+
+			"if ($gabaritofase === 1 && $gabaritoaponta) { $gabaritomirax = %s; $gabaritomiray = %s; $gabaritofase = 2 } "+
+			"else { $gabaritox = cx; $gabaritoy = cy; $gabaritomirax = %s; $gabaritomiray = %s; $gabaritofase = 1 } "+
 			"%s",
-		v.X0, v.Y0, remedeOGabarito(v),
+		clicouNoCantoX, clicouEmX, clicouNoCantoY, clicouEmY,
+		clicouEmX, clicouEmY,
+		clicouEmX, clicouEmY,
+		remedeOGabarito(v),
+	)
+}
+
+// oGabaritoSegueOPonteiro leva a MIRA atrás do dedo enquanto a forma aponta.
+//
+// É o irmão do `aReguaSegueOPonteiro` e tem as mesmas duas guardas: só fala com
+// o servidor quando o ponteiro TROCA DE CASA — a área muda por quadrado e não
+// por pixel —, e só enquanto a fase é a de mirar. Posto, o desenho fica e o
+// ponteiro passeia.
+//
+// SÓ AS FORMAS QUE APONTAM: a esfera vai para todos os lados (p225), e arrastar
+// o ponteiro sobre uma esfera posta não tem o que mudar.
+func oGabaritoSegueOPonteiro(v tabuleiroView) string {
+	return fmt.Sprintf(
+		"if ($gabaritofase !== 1 || !$gabaritoaponta) return; const cx = %s, cy = %s; "+
+			"if (cx === $gabaritomirax && cy === $gabaritomiray) return; "+
+			"$gabaritomirax = cx; $gabaritomiray = cy; %s",
+		clicouEmX, clicouEmY, remedeOGabarito(v),
 	)
 }
 
@@ -123,8 +216,8 @@ func remedeOGabarito(v tabuleiroView) string {
 // O `$gabaritoaponta` sai daqui com o valor do SERVIDOR: é o botão que sabe qual
 // forma ele liga, e é o `apontaOGabarito` que sabe quais formas apontam.
 func escolheAForma(forma engine.AreaKind) string {
-	return fmt.Sprintf("$gabarito = %q; $gabaritoaponta = %t; %s",
-		string(forma), apontaOGabarito(forma), guardaOGabarito)
+	return fmt.Sprintf("$gabarito = %q; $gabaritoaponta = %t; $gabaritonaintersecao = %t; %s",
+		string(forma), apontaOGabarito(forma), aFormaNasceNaIntersecao(forma), guardaOGabarito)
 }
 
 // aDicaDoGabaritoVazio é o que a barra diz enquanto não há gabarito posto, e ela
@@ -180,29 +273,119 @@ func rotuloDaForma(k engine.AreaKind) string {
 	}
 }
 
-// aPontaDaRegua é a coordenada do CENTRO da casa, em unidades de QUADRADO.
+// AS EXPRESSÕES DO DESENHO da polilinha. Todas saem dos SINAIS e nenhuma do
+// servidor, e a divisa é a de sempre nesta casa: GEOMETRIA é do navegador,
+// REGRA é do motor. O caminho, os pontos e a posição dos rótulos são geometria;
+// o texto de cada rótulo é a regra, e vem de `aLeituraDaPolilinha`.
 //
-// O SVG desenha em quadrados e não em pixels, e é isso que faz a régua acompanhar
-// o zoom sem uma linha de JavaScript: o `viewBox` é a moldura em quadrados, e o
-// elemento mede `colunas × --quadrado`. Mudar o zoom muda a escala do SVG inteiro.
-func aPontaDaRegua(ponta, eixo string) string {
-	return fmt.Sprintf("$regua%s%s + 0.5", ponta, eixo)
+// Tudo em unidades de QUADRADO, porque o `<g>` já converte com o `scale` da
+// janela — desenhar em pixel aqui obrigaria cada expressão a conhecer o zoom.
+
+// oCaminhoDaRegua é o `d` da polilinha, do centro de uma parada ao da próxima.
+//
+// A MIRA entra no fim enquanto a régua mede, e é ela a "linha conectando a
+// última parada até o mouse" que o dono pediu. Congelada, o desenho para nas
+// paradas e o ponteiro passeia sem mexer nele.
+var oCaminhoDaRegua = fmt.Sprintf(
+	"(() => { const p = [...$reguapontos]; "+
+		"if ($reguafase === %d) p.push([$reguamirax, $reguamiray]); "+
+		"return p.map((c, i) => (i ? 'L' : 'M') + (c[0] + 0.5) + ' ' + (c[1] + 0.5)).join(' ') })()",
+	reguaMedindo)
+
+// ── LER UMA LISTA DE SINAL SEM CRIAR SINAL NENHUM ────────────────────────────
+//
+// `$reguapontos[0]` NÃO é "o primeiro item da lista": o Datastar lê `$nome...`
+// como CAMINHO DE SINAL e REGISTRA o que não existe. Medido no navegador, com a
+// reserva de doze rótulos no ar, o sinal virou
+//
+//	[[9,3], "", "", "", "", "", "", "", "", "", "", "", "", [17,7], [17,13], …]
+//
+// — doze strings vazias entre a primeira parada e as seguintes, uma por nó da
+// reserva que leu um índice. O desenho saía com pingos na origem do plano e o
+// servidor media zero, sem erro em lugar nenhum. É a mesma família da armadilha
+// que a memória desta casa já registra para `data-bind` em caminho inexistente.
+//
+// A saída é COPIAR a lista para fora do sinal antes de indexá-la. Guardar o
+// sinal numa constante não basta — medido: a constante continua sendo o proxy, e
+// `lista[12]` cria `reguapontos.12` do mesmo jeito. O espalhamento `[...]` anda
+// pelo ITERADOR, que só visita os índices que existem, e devolve um vetor comum:
+// depois dele, ler um índice ausente é `undefined` e mais nada.
+//
+// Daí este helper: toda leitura de lista passa por aqui, e nenhuma expressão
+// escreve `$lista[` no meio do código.
+func daLista(sinal, corpo string) string {
+	return fmt.Sprintf("(() => { const lista = [...$%s]; return %s })()", sinal, corpo)
 }
 
-// aQuinaDaMoldura tira do desenho a origem do plano.
-//
-// O sinal guarda a coordenada ABSOLUTA — o plano não tem bordas e a peça pode
-// estar em -3 —, e é o servidor que sabe onde a moldura começa. Pôr a subtração
-// aqui, num `transform` que o remendo redesenha, é o que mantém a medida certa
-// quando a moldura cresce debaixo dela.
-func aQuinaDaMoldura(v tabuleiroView) string {
-	return fmt.Sprintf("translate(%d %d)", -v.X0, -v.Y0)
+// aParadaDaRegua é o centro da i-ésima parada, para o pingo que a marca.
+func aParadaDaRegua(i int, eixo int) string {
+	return daLista("reguapontos", fmt.Sprintf("(lista[%d]?.[%d] ?? 0) + 0.5", i, eixo))
 }
 
-// aMolduraEmQuadrados é o `viewBox`: o SVG passa a falar a língua do tabuleiro.
-func aMolduraEmQuadrados(v tabuleiroView) string {
-	return fmt.Sprintf("0 0 %d %d", v.Colunas, v.Linhas)
+// oPingoExiste esconde o pingo da reserva que ainda não tem parada.
+func oPingoExiste(i int) string {
+	return daLista("reguapontos", fmt.Sprintf("lista.length > %d", i))
 }
+
+// oRotuloExiste esconde o rótulo da perna que ainda não existe.
+//
+// A RESERVA é o preço de o Datastar não ter laço: os rótulos são nós FIXOS no
+// HTML, um por perna possível, e cada um se mostra conforme a lista de textos
+// que o servidor devolveu. É verboso e é honesto — a alternativa seria remendar
+// HTML dentro da região do mapa, e o quadro seguinte do stream apagaria a régua
+// de quem estava medindo.
+func oRotuloExiste(i int) string {
+	// VAZIO também esconde, e não é a mesma pergunta que "existe": a perna de
+	// zero quadrado devolve texto vazio de propósito (ver `aPernaEmMetros`), e um
+	// `<text>` sem conteúdo continuaria ocupando o nó com o halo do contorno.
+	return daLista("reguarotulos", fmt.Sprintf("(lista[%d] ?? '') !== ''", i))
+}
+
+// oRotuloDaPerna é o texto que o servidor mediu para a perna `i`.
+func oRotuloDaPerna(i int) string {
+	return daLista("reguarotulos", fmt.Sprintf("lista[%d] ?? ''", i))
+}
+
+// oMeioDaPerna é onde o rótulo pousa: o meio do segmento entre a parada `i` e a
+// seguinte — que pode ser a MIRA, quando a perna é a viva.
+func oMeioDaPerna(i int, eixo int) string {
+	return daLista("reguapontos", fmt.Sprintf(
+		"(() => { const a = lista[%d], b = lista[%d] ?? "+
+			"($reguafase === %d ? [$reguamirax, $reguamiray] : a); "+
+			"return a && b ? ((a[%d] + b[%d]) / 2) + 0.5 : 0 })()",
+		i, i+1, reguaMedindo, eixo, eixo))
+}
+
+// aReservaDeParadas é a contagem que o `.templ` percorre para desenhar os nós
+// fixos. Sai do MESMO teto que o servidor recusa — escritos em dois lugares,
+// uma perna nasceria medida e sem rótulo.
+func aReservaDeParadas() []int {
+	reserva := make([]int, oMaximoDeParadas)
+	for i := range reserva {
+		reserva[i] = i
+	}
+	return reserva
+}
+
+// oDesenhoNaJanela põe o SVG a falar a língua do tabuleiro: a JANELA e o ZOOM.
+//
+// Ele era um `viewBox` do tamanho da moldura mais um `transform` que descontava
+// a quina dela, e a moldura saiu na ALE-203. A primeira tentativa foi só um
+// `scale($quadrado)` com o SVG dentro do plano deslocado — e ela NÃO DESENHAVA
+// NADA. Medido: o `<path>` tinha caixa certa (176×176 no lugar certo), `fill`
+// certo, `display: block`, e a tela ficava vazia; dar tamanho ao `<svg>` na mão
+// fazia a esfera aparecer na hora.
+//
+// A causa é que o `<svg>` MAIS EXTERNO recorta pelo VIEWPORT dele, e `overflow:
+// visible` não levanta esse recorte — dentro de um plano de tamanho zero, o
+// viewport era 0×0 e tudo caía fora. É um recorte que não acusa: nada no DOM
+// diz "isto está cortado".
+//
+// Então o SVG passou a ser filho da CENA e a cobrir a JANELA — que é um recorte
+// que a gente QUER —, e os dois números que todo o resto usa entram aqui no
+// `transform`: a janela desloca, o zoom escala. Nessa ordem, porque a janela é
+// medida em PIXELS e o `scale` viria depois multiplicá-la.
+const oDesenhoNaJanela = "`translate(${-$vistax}, ${-$vistay}) scale(${$quadrado})`"
 
 // oTamanhoEmMetros converte o número digitado para a unidade da FICHA.
 //
@@ -220,3 +403,15 @@ func oTamanhoEmMetros() string {
 // `tamanhoDoGabarito` trava do lado do servidor, e da mesma constante — a caixa
 // é cortesia, e a trava é de lá.
 func oMaiorGabarito() string { return strconv.Itoa(engine.LongRangeSquares) }
+
+// oNumero escreve um inteiro do Go dentro de uma expressão do navegador.
+func oNumero(n int) string { return strconv.Itoa(n) }
+
+// osSinaisDaRegua são a polilinha no navegador.
+//
+// `reguapontos` é uma LISTA de pares e não quatro números soltos, e foi a
+// polilinha que forçou a troca: com número variável de paradas, quatro sinais
+// nomeados viravam oito, depois vinte e quatro.
+var osSinaisDaRegua = fmt.Sprintf(
+	"reguapontos: [], reguamirax: 0, reguamiray: 0, reguafase: %d, reguarotulos: [], reguatexto: %q",
+	reguaParada, aDicaDaReguaVazia)

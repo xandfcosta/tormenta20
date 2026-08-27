@@ -358,6 +358,64 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
   o elemento aparece sem estilo em vez de dar erro.
 
+## Datastar: três armadilhas que não deixam erro para trás
+
+As três foram descobertas na ALE-203 e nenhuma delas escreve uma linha no
+console. Estão aqui porque o sintoma de cada uma aponta para o lugar errado.
+
+### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
+
+O `data-show` escreve `el.style.display`; o `data-attr:style` reescreve o
+atributo `style` INTEIRO, apagando o `display` que o outro acabou de pôr — que
+faz o outro pôr de novo. O renderizador entra em laço.
+
+O sintoma é o pior possível: a aba para de responder a TUDO. Sem console, sem
+exceção, sem conseguir sequer navegar para fora — a ferramenta de medir some
+junto, e o que sobra é "o navegador travou", que não aponta para nada.
+
+**Quem ESCONDE é um nó, quem POSICIONA é outro.** O
+`TestNenhumNoTemDataShowEDataAttrStyleJuntos` varre o HTML servido e recusa a
+combinação.
+
+### O sinal é um PROXY: ler um índice que não existe o CRIA
+
+`$lista[0]` não é "o primeiro item": o Datastar registra o caminho e o cria
+vazio. Com uma reserva de doze rótulos no ar, `$reguapontos[i]` encheu o sinal
+de strings vazias entre os pontos de verdade — pingos na origem do plano e o
+servidor medindo zero.
+
+**Guardar o sinal numa constante NÃO resolve** (a constante continua sendo o
+proxy). O que resolve é COPIAR: `const lista = [...$reguapontos]`. O
+`TestNenhumaExpressaoIndexaOSinalDaLista` afirma a regra pelo que PODE vir
+depois de `$lista` — `=` ou `]` —, e não por uma forma errada conhecida: a
+primeira versão dele procurava `$lista[` e passava verde sobre a segunda forma.
+
+### Sequência de comandos NÃO cabe num ternário
+
+`evt.shiftKey ? (stmt; stmt) : (stmt; stmt)` é erro de SINTAXE em JavaScript. O
+Datastar engole o erro de parse e o handler inteiro vira nada — não só o ramo
+novo: o gesto que já funcionava para junto. Use `if (…) { … } else { … }`.
+
+E `setPointerCapture` vai por ÚLTIMO na expressão: ele LANÇA quando o ponteiro
+não está mais ativo, e no meio ele engole o resto do gesto.
+
+## O evento de ponteiro SINTÉTICO destrói o que ele mede
+
+`element.dispatchEvent(new PointerEvent(...))` com um `pointerId` inventado faz
+o `setPointerCapture` lançar `NotFoundError` — e a exceção leva junto as
+escritas de sinal do Datastar daquele handler. O gesto parece MORTO quando ele
+está inteiro.
+
+Aconteceu duas vezes na mesma sessão: primeiro concluí "o retângulo não
+funciona", depois "o pincel também parou". A segunda conclusão estava certa por
+outra razão (o ternário acima) e a primeira estava errada — e as duas vieram do
+mesmo probe.
+
+**Gesto de ponteiro se mede com entrada REAL.** O Playwright (`page.mouse.down`,
+`page.keyboard.down('Shift')`) tem pointer de verdade; a automação do Chrome MCP
+NÃO aplica `modifiers` ao arrasto (medido: `shiftKey` chega `false`), então para
+modificador o caminho é o Playwright.
+
 ## Remendo em nó COMPARTILHADO exige limpeza no gesto que troca de item
 
 Uma cena em Datastar desenha **todos** os itens e alterna qual aparece com

@@ -39,13 +39,14 @@ type tabuleiroView struct {
 	// Chao é a APARÊNCIA do lugar (pedra, taverna, cripta…), e não o terreno
 	// difícil, que é regra de movimento e vive no `Dificil`. Ver GLOSSARIO.md.
 	Chao string
-	// Colunas e Linhas são o tamanho do plano em QUADRADOS. O pixel por
-	// quadrado é do navegador, num `--quadrado` que o dedo muda.
-	Colunas, Linhas int
-	// X0 e Y0 são a quina da moldura no plano, e podem ser NEGATIVOS — é assim
-	// que o rótulo do eixo diz o número que o servidor guarda, em vez do "+1" de
-	// planilha que mentiria sobre onde a peça está.
-	X0, Y0     int
+	// A MOLDURA SAIU na ALE-203 (decisão do dono: o tabuleiro é infinito para o
+	// usuário). O servidor não tem mais `X0`, `Colunas` nem `Linhas` — ele manda
+	// o que EXISTE, em coordenada ABSOLUTA do plano, e quem decide o que aparece
+	// é a JANELA, que mora no navegador ao lado do zoom.
+	//
+	// O que isso conserta, medido: a moldura CRESCIA ao pintar perto da borda, e
+	// `X0` mudava — o mesmo ponto da tela virava outro quadrado entre dois
+	// cliques. Foi uma das duas causas de "apaguei e não apagou".
 	Pecas      []pecaDoTabuleiro
 	Marcadores []marcadorDoTabuleiro
 	// Candidatos é a fila oferecida ao diálogo "Pôr no mapa", e ela é DO MESTRE:
@@ -122,14 +123,17 @@ type lugarDoAcervo struct {
 type pecaDoTabuleiro struct {
 	ID     string
 	Rotulo string
-	// X e Y são o lugar no PLANO: é de onde o arrasto conta o deslocamento.
-	X, Y int
-	// Col e Lin são o lugar DENTRO da moldura, contados de zero: é o que o CSS
-	// multiplica pelo `--quadrado`. A coordenada do plano fica no `Onde`, que é
-	// o que o nome acessível diz.
-	Col, Lin int
-	Onde     string
-	Pegada   int
+	// X e Y são o lugar no PLANO, com sinal: é de onde o arrasto conta o
+	// deslocamento, e o CSS os multiplica pelo `--quadrado` depois de descontar a
+	// janela. Havia um segundo par (`Col`/`Lin`) relativo à moldura, e ele saiu
+	// com ela na ALE-203 — duas coordenadas para a mesma peça eram duas chances
+	// de usar a errada.
+	//
+	// O `Onde` é a mesma coisa escrita para gente ler, e é o que o nome acessível
+	// diz.
+	X, Y   int
+	Onde   string
+	Pegada int
 	// Monograma, Instancia e Matiz vêm da regra da ALE-179: a cor é da ESPÉCIE e
 	// o número é da INSTÂNCIA.
 	Monograma string
@@ -153,11 +157,14 @@ type pecaDoTabuleiro struct {
 }
 
 type marcadorDoTabuleiro struct {
-	ID       string
-	Texto    string
-	Cor      string
-	Col, Lin int
-	Onde     string
+	ID    string
+	Texto string
+	Cor   string
+	// X e Y são a casa no PLANO, em coordenada absoluta — como todo o resto do
+	// tabuleiro desde a ALE-203. Eram `Col`/`Lin`, relativos à moldura, e a
+	// moldura saiu.
+	X, Y int
+	Onde string
 	// Escondido só chega ao MESTRE — para a mesa o marcador escondido nem existe
 	// (o `BoardForRole` o retira). Sem este campo o mestre revelava e a tela dele
 	// não mudava: ele não tinha como saber o que a mesa estava vendo, que é a
@@ -172,10 +179,13 @@ type quadradoDeTerreno struct {
 	Especie string
 }
 
+// quadradoDoTabuleiro é uma casa, em coordenada ABSOLUTA do plano.
+//
+// Ela tinha `Col`/`Lin` — o lugar dentro da moldura — e a moldura saiu na
+// ALE-203. Agora há um par de números só, e ele é o mesmo que o servidor guarda:
+// nada precisa ser traduzido para desenhar, e nada se desloca quando a cena
+// cresce.
 type quadradoDoTabuleiro struct {
-	Col, Lin int
-	// X e Y são o lugar no PLANO, e só o destino arrastável precisa deles: é de
-	// onde o deslocamento do dedo é contado.
 	X, Y int
 }
 
@@ -205,20 +215,18 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	if b.Curtained && quem.Role != "gm" {
 		return tabuleiroView{Aberto: true, Cortina: true, CampaignID: campaignID, SessionID: sessionID}
 	}
-	e := tabuleiro.MolduraDe(b)
 	v := tabuleiroView{
 		Aberto: true, AvisoDaCortina: b.Curtained,
 		Lugar: b.Place, Chao: chaoConhecido(b.Terrain),
-		Colunas: e.Colunas, Linhas: e.Linhas, X0: e.X0, Y0: e.Y0,
 	}
 	for i := range b.Tokens {
-		v.Pecas = append(v.Pecas, pecaDoTabuleiroDe(&b.Tokens[i], e, saude, naVez))
+		v.Pecas = append(v.Pecas, pecaDoTabuleiroDe(&b.Tokens[i], saude, naVez))
 	}
 	for i := range b.Markers {
 		m := &b.Markers[i]
 		v.Marcadores = append(v.Marcadores, marcadorDoTabuleiro{
 			ID: m.ID, Texto: m.Text, Cor: m.Color, Escondido: m.Hidden,
-			Col: m.X - e.X0, Lin: m.Y - e.Y0, Onde: coordenada(m.X, m.Y),
+			X: m.X, Y: m.Y, Onde: coordenada(m.X, m.Y),
 		})
 	}
 	// A ORDEM do laço é a de `EspeciesDeTerreno`, então o desenho de uma casa
@@ -228,7 +236,7 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	for _, pincel := range tabuleiro.EspeciesDeTerreno {
 		for _, q := range tabuleiro.QuadradosDe(b, pincel.ID) {
 			v.Terreno = append(v.Terreno, quadradoDeTerreno{
-				quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0}, string(pincel.ID),
+				quadradoDoTabuleiro{X: q.X, Y: q.Y}, string(pincel.ID),
 			})
 		}
 	}
@@ -237,17 +245,17 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	if v.Mestre {
 		v.Candidatos = candidatosAoMapa(b, st)
 	}
-	v.Movimento = movimentoDoTabuleiro(b, quem, e)
+	v.Movimento = movimentoDoTabuleiro(b, quem)
 	var restante int
-	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance, restante = oAlvoEOAlcance(b, st, quem, meus, e)
+	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance, restante = oAlvoEOAlcance(b, st, quem, meus)
 	if v.Movimento != nil && v.Movimento.Meu {
 		v.Movimento.Restante = restante
 	}
-	v.Destino, v.ArrastaAPeca = oQueSeArrasta(b, quem, v.AlvoDoMovimento, e)
+	v.Destino, v.ArrastaAPeca = oQueSeArrasta(b, quem, v.AlvoDoMovimento)
 	return v
 }
 
-func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, e tabuleiro.Moldura, saude map[string]int, naVez string) pecaDoTabuleiro {
+func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, saude map[string]int, naVez string) pecaDoTabuleiro {
 	a := tabuleiro.AparenciaDe(t.Label)
 	pegada := t.Footprint
 	if pegada < 1 {
@@ -255,7 +263,7 @@ func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, e tabuleiro.Moldura, saude map[s
 	}
 	p := pecaDoTabuleiro{
 		ID: t.ID, Rotulo: t.Label,
-		Col: t.X - e.X0, Lin: t.Y - e.Y0, X: t.X, Y: t.Y, Onde: coordenada(t.X, t.Y),
+		X: t.X, Y: t.Y, Onde: coordenada(t.X, t.Y),
 		Pegada:    pegada,
 		Monograma: a.Monograma, Instancia: a.Instancia, Matiz: a.Matiz,
 		Oculta:     t.Hidden,
@@ -384,7 +392,7 @@ type movimentoView struct {
 //
 // O ALCANCE só é desenhado para quem PODE decidir: oferecer casas clicáveis a
 // quem não vai poder confirmar é convidar para um beco.
-func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover, e tabuleiro.Moldura) *movimentoView {
+func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover) *movimentoView {
 	if b == nil || b.Pending == nil {
 		return nil
 	}
@@ -398,7 +406,7 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover, e tabuleir
 		Meu: m.Role == "gm" || p.ByUserID == m.UserID,
 	}
 	for _, q := range p.Path {
-		v.Trilha = append(v.Trilha, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+		v.Trilha = append(v.Trilha, quadradoDoTabuleiro{X: q.X, Y: q.Y})
 	}
 	// As paradas INTERMEDIÁRIAS: a última é o destino, que já tem desenho
 	// próprio, e a primeira é de onde a peça saiu — marcar as duas contaria a
@@ -406,7 +414,7 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover, e tabuleir
 	if len(p.Stops) > 2 {
 		v.PodeDesfazer = true
 		for _, q := range p.Stops[1 : len(p.Stops)-1] {
-			v.Paradas = append(v.Paradas, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+			v.Paradas = append(v.Paradas, quadradoDoTabuleiro{X: q.X, Y: q.Y})
 		}
 	}
 	// O `Restante` é preenchido pelo chamador: ele sai da MESMA chamada que
@@ -450,7 +458,7 @@ func terrenoDeMovimento(b *tabuleiro.BoardState) engine.MoveTerrain {
 // argumentos, cada sítio jogando fora a metade que não usava — e duas contas da
 // mesma regra é como este repositório já mostrou dois números diferentes para o
 // mesmo combatente em duas telas (ALE-122).
-func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool, e tabuleiro.Moldura) (alvo, rotulo string, alcance []quadradoDoTabuleiro, restante int) {
+func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool) (alvo, rotulo string, alcance []quadradoDoTabuleiro, restante int) {
 	if b == nil {
 		return "", "", nil, 0
 	}
@@ -493,7 +501,7 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 	}
 	casas, restante := engine.AlcanceDaProximaParada(de, orcamento, terrenoDeMovimento(b))
 	for _, q := range casas {
-		alcance = append(alcance, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+		alcance = append(alcance, quadradoDoTabuleiro{X: q.X, Y: q.Y})
 	}
 	return alvo, rotulo, alcance, restante
 }
@@ -515,8 +523,8 @@ func comandoDoMovimento(v tabuleiroView, acao string) string {
 // pode ser NEGATIVO.
 func paradaNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d))",
-		v.CampaignID, v.SessionID, v.AlvoDoMovimento, v.X0, v.Y0,
+		"@post('/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (%s) + '/' + (%s))",
+		v.CampaignID, v.SessionID, v.AlvoDoMovimento, clicouEmX, clicouEmY,
 	)
 }
 
@@ -573,14 +581,30 @@ func segueODedo(quem string) string {
 // propor ali gastaria uma parada no lugar onde a peça já está. Os sinais são
 // limpos NOS DOIS caminhos, senão o `transform` fica pendurado e a peça não
 // volta para o lugar.
+// A PEÇA MARCADA move o GRUPO, e não propõe (ALE-203, item 10).
+//
+// A decisão fica AQUI, num lugar só, porque ela é sobre o que o gesto SIGNIFICA:
+// arrastar a peça da vez propõe um movimento com custo, e arrastar uma peça
+// marcada reposiciona o grupo. Sem esta linha, a peça que é as duas coisas —
+// marcada E alvo do turno — proporia, e o mesmo arrasto significaria coisas
+// diferentes conforme um estado que não está na ponta do dedo. Medido no
+// navegador: marcar o Bandido e arrastá-lo abria a barra de "14 quadrados".
+//
+// MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
 func soltaEPara(v tabuleiroView, quem string, x, y int) string {
-	url := fmt.Sprintf("'/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
+	parada := fmt.Sprintf("'/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
 		v.CampaignID, v.SessionID, v.AlvoDoMovimento, x, y)
+	destino := "@post(" + parada + ")"
+	if quem == "peca" && v.Mestre && v.AlvoDoMovimento != "" {
+		grupo := fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy)",
+			v.CampaignID, v.SessionID)
+		destino = fmt.Sprintf("%s ? %s : %s", aPecaEstaMarcada(v.AlvoDoMovimento), grupo, destino)
+	}
 	return fmt.Sprintf(
 		"if ($arrastando === '%s') { "+
 			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
 			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
-			"if (dx || dy) @post(%s) }", quem, url)
+			"if (dx || dy) %s }", quem, destino)
 }
 
 // As variáveis do arrasto moram SÓ no `#mesa`, e descem por herança até quem
@@ -607,13 +631,13 @@ func estaArrastando(quem string) string {
 // Os dois nunca coexistem, e é a regra do `nextStepOrigin` que manda: a próxima
 // parada conta do fim da trilha quando ela existe, e da peça quando não. Oferecer
 // os dois faria o mesmo gesto contar de dois lugares.
-func oQueSeArrasta(b *tabuleiro.BoardState, quem tabuleiro.Mover, alvo string, e tabuleiro.Moldura) (*quadradoDoTabuleiro, string) {
+func oQueSeArrasta(b *tabuleiro.BoardState, quem tabuleiro.Mover, alvo string) (*quadradoDoTabuleiro, string) {
 	if b == nil || alvo == "" {
 		return nil, ""
 	}
 	if p := b.Pending; p != nil && len(p.Path) > 0 && (quem.Role == "gm" || p.ByUserID == quem.UserID) {
 		fim := p.Path[len(p.Path)-1]
-		return &quadradoDoTabuleiro{Col: fim.X - e.X0, Lin: fim.Y - e.Y0, X: fim.X, Y: fim.Y}, ""
+		return &quadradoDoTabuleiro{X: fim.X, Y: fim.Y}, ""
 	}
 	return nil, alvo
 }
@@ -685,24 +709,6 @@ func pecasEmPortugues(n int) string {
 // Vazio é o pincel guardado, e aí o clique volta a mover a peça. É a mesma
 // superfície disputada por dois gestos, e quem arbitra é o sinal.
 
-// pinturaNoPontoClicado escreve o clique que PINTA.
-//
-// A conta do quadrado é a mesma do `paradaNoPontoClicado` — a origem da moldura
-// somada ao ponto dividido pelo lado —, e ela é do cliente pelo mesmo motivo: é
-// sobre PIXELS, e o servidor não sabe o zoom.
-//
-// A BORRACHA saiu daqui na ALE-203. Ela era o `ligado=false` desta mesma rota, e
-// o comentário que estava nesta linha dizia que "a resposta certa é a que estiver
-// selecionada" — o dono usou e provou o contrário: com `Cobertura` na mão, clicar
-// num quadrado de `Difícil` apagava a cobertura que não estava ali, em silêncio.
-// Agora ela é ferramenta própria, com rota própria, e limpa a casa inteira.
-func pinturaNoPontoClicado(v tabuleiroView) string {
-	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d))",
-		v.CampaignID, v.SessionID, v.X0, v.Y0,
-	)
-}
-
 // escolheAFerramenta liga uma ferramenta, ou a DESliga se ela já estava.
 //
 // Clicar de novo na ferramenta ativa guarda o pincel, que é o gesto que devolve
@@ -733,8 +739,8 @@ const FerramentaDeMarcar = "marcador"
 // rotas mudarem juntas no dia em que uma delas precisar do canto e não do centro.
 func marcacaoNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/marcadores/novo/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d))",
-		v.CampaignID, v.SessionID, v.X0, v.Y0,
+		"@post('/piloto/mesa/%d/%d/tabuleiro/marcadores/novo/' + (%s) + '/' + (%s))",
+		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
 	)
 }
 

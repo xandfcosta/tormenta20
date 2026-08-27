@@ -74,6 +74,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDoMovimento(r)
 		s.rotasDaRegua(r)
 		s.rotasDaCena(r)
+		s.rotasDoGrupo(r)
 		s.rotasDosMarcadores(r)
 		s.rotasDaCortina(r)
 		s.rotasDaLente(r)
@@ -220,16 +221,30 @@ func sinaisDaMesa() string {
 		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
 		fmt.Sprintf("quadrado: %d", quadradoPadrao),
 		"arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0",
-		// A RÉGUA: as duas pontas em coordenada do PLANO (podem ser negativas), a
-		// fase da máquina de dois cliques, e a leitura que o servidor escreve.
-		"regua1x: 0, regua1y: 0, regua2x: 0, regua2y: 0, reguafase: 0, reguatexto: ''",
+		// A JANELA sobre o plano infinito (ALE-203): ela substituiu a rolagem
+		// nativa, que precisava de uma caixa com fim para ter até onde rolar.
+		osSinaisDaJanela,
+		// O TRAÇO do pincel e da borracha (ALE-203): o modo em curso e a última
+		// casa que ele já mandou.
+		osSinaisDoPincel,
+		// O LAÇO do retângulo (ALE-203, item 10): o modo em curso e os dois cantos.
+		osSinaisDoRetangulo,
+		// AS PEÇAS MARCADAS pelo laço (ALE-203, item 10): ids separados por
+		// vírgula, numa string só. Ver `sinalDasPecasMarcadas` para por que não é
+		// uma lista.
+		fmt.Sprintf("%s: '', %s: false", sinalDasPecasMarcadas, sinalDoCliqueEngolido),
+		// A RÉGUA: as PARADAS em coordenada do PLANO (podem ser negativas), a mira
+		// sob o ponteiro, a fase da máquina, os rótulos de cada perna e a frase do
+		// total — as duas últimas escritas pelo servidor.
+		osSinaisDaRegua,
 		// O GABARITO nasce na PRIMEIRA forma da lista, e ela é derivada e não
 		// digitada pelo mesmo motivo do chão: a página que escreve 'esfera' à mão
 		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a
 		// barra marcando uma forma e o mapa desenhando outra. `aponta: false`
 		// acompanha, porque a esfera vai para todos os lados (p225).
-		fmt.Sprintf("gabarito: '%s', gabaritoaponta: %t, gabaritotamanho: 2",
-			string(asFormasDoLivro[0]), apontaOGabarito(asFormasDoLivro[0])),
+		fmt.Sprintf("gabarito: '%s', gabaritoaponta: %t, gabaritonaintersecao: %t, gabaritotamanho: 2",
+			string(asFormasDoLivro[0]), apontaOGabarito(asFormasDoLivro[0]),
+			aFormaNasceNaIntersecao(asFormasDoLivro[0])),
 		"gabaritox: 0, gabaritoy: 0, gabaritomirax: 0, gabaritomiray: 0, gabaritofase: 0",
 		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", aDicaDoGabaritoVazio),
 		// As NOTAS da sessão.

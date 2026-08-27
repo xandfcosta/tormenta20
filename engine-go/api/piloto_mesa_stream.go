@@ -153,6 +153,11 @@ func regioesDaMesa(v mesaView) []regiaoDaMesa {
 		// mapa, `TestUmaMudancaNaFilaNaoRemendaOMapa` acusou na hora — a peça
 		// debaixo do dedo do mestre seria trocada no meio do arrasto.
 		{"mesa-por-no-mapa", mesaPorNoMapa(v)},
+		// O ACERVO é região pela MESMA razão, e ela foi medida (ALE-203): a lista
+		// de 147 lugares guardados era 236 dos 282 KB da região do tabuleiro, e
+		// ela muda duas vezes por sessão enquanto o mapa muda a cada peça que
+		// anda. Ver `mesaAcervoDeLugares`.
+		{"mesa-acervo", mesaAcervoDeLugares(v)},
 		{"mesa-config-da-sessao", mesaConfigDaSessao(v)},
 		{"mesa-fila", mesaFila(v)},
 		{"mesa-comandos", mesaComandos(v)},

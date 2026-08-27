@@ -175,7 +175,10 @@ func TestMedirNaoRemendaACena(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
-	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/regua/0/0/3/0", "")
+	// As paradas vêm nos SINAIS desde a ALE-203: com número variável de pernas,
+	// um caminho com as pontas dentro seria uma rota que muda de forma.
+	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/regua",
+		`{"reguapontos":[[0,0],[3,0]],"reguafase":2}`)
 	if !strings.Contains(resposta, "reguatexto") {
 		t.Fatalf("a medida não voltou: %s", resposta)
 	}
@@ -283,18 +286,19 @@ func TestOTrilhoOfereceAReguaAoJogador(t *testing.T) {
 func TestOCentroDaCenaEnquadraOCorpoDaPecaGrande(t *testing.T) {
 	// Um rato em (0,0) e um dragão cuja âncora é (10,10) e cujo corpo vai até
 	// (15,15): o centro pelo corpo é 7, pela âncora seria 5.
-	v := tabuleiroView{Colunas: 40, Linhas: 40, Pecas: []pecaDoTabuleiro{
-		{Col: 0, Lin: 0, Pegada: 1},
-		{Col: 10, Lin: 10, Pegada: 6},
+	v := tabuleiroView{Pecas: []pecaDoTabuleiro{
+		{X: 0, Y: 0, Pegada: 1},
+		{X: 10, Y: 10, Pegada: 6},
 	}}
-	if col, lin := oCentroDaCena(v); col != 7 || lin != 7 {
-		t.Errorf("o centro saiu (%d,%d), esperado (7,7) — o corpo da peça grande ficou fora da conta", col, lin)
+	if x, y := oCentroDaCena(v); x != 7 || y != 7 {
+		t.Errorf("o centro saiu (%d,%d), esperado (7,7) — o corpo da peça grande ficou fora da conta", x, y)
 	}
-	// SEM PEÇA o alvo é o meio da MOLDURA e não a origem do plano: a moldura é o
-	// que está desenhado, e rolar para um canto vazio pareceria um botão morto.
-	vazia := tabuleiroView{Colunas: 20, Linhas: 14}
-	if col, lin := oCentroDaCena(vazia); col != 10 || lin != 7 {
-		t.Errorf("a cena vazia mirou (%d,%d), esperado o meio da moldura (10,7)", col, lin)
+	// SEM PEÇA o alvo é a ORIGEM do plano (ALE-203). Era o meio da MOLDURA, e a
+	// moldura saiu: num plano infinito e vazio, o (0,0) é o único lugar sobre o
+	// qual duas pessoas concordam.
+	vazia := tabuleiroView{}
+	if x, y := oCentroDaCena(vazia); x != 0 || y != 0 {
+		t.Errorf("a cena vazia mirou (%d,%d), esperado a origem do plano (0,0)", x, y)
 	}
 	// E o RÓTULO acompanha: "nas peças" numa cena sem peça nenhuma ensina que o
 	// botão está quebrado.

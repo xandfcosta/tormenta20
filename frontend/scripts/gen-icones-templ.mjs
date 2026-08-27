@@ -94,6 +94,17 @@ const QUERIDOS = [
   'LayoutGrid',
   // O menu de contexto da peça (ALE-206): duplicar.
   'Copy',
+  // A MÃO que arrasta a vista sobre o plano infinito (ALE-203). É o ícone que
+  // toda ferramenta de tela infinita usa para o mesmo gesto — Figma, Excalidraw,
+  // Miro —, e reconhecê-lo é metade do que faz a ferramenta ser descoberta.
+  'Hand',
+  // O DESENHO DAS ESPÉCIES DE TERRENO (ALE-203, escolha do dono): cada uma ganha
+  // um ícone num canto próprio da casa, e o mesmo ícone marca o pincel no
+  // trilho. `Shield` (cobertura) e `EyeOff` (camuflagem) já estavam na lista —
+  // e as duas foram escolhidas por dizerem a REGRA da espécie, não a aparência
+  // dela: +5 na Defesa e 20% de chance de falha.
+  'Waves',
+  'Mountain',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')
