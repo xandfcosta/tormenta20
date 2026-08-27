@@ -618,7 +618,10 @@ html {
    * cada remendo para colocar meia dúzia de coisas. */
   .tabuleiro-terreno,
   .tabuleiro-peca,
-  .tabuleiro-marcador {
+  .tabuleiro-marcador,
+  .tabuleiro-trilha,
+  .tabuleiro-parada,
+  .tabuleiro-alcance {
     position: absolute;
     left: calc(var(--col) * var(--quadrado));
     top: calc(var(--lin) * var(--quadrado));
@@ -877,6 +880,21 @@ html {
     pointer-events: none;
     z-index: 1;
   }
+  /* A GEOMETRIA da trilha, da parada e do alcance mora no grupo posicionado lá
+   * em cima, e a viagem até lá é o conserto de um defeito MUDO (ALE-203).
+   *
+   * As três eram pintura SEM CAIXA: `background` e `box-shadow` sem `position`
+   * nem `left`/`top`/`width`/`height`. Um `<div>` vazio e estático mede 0×0, e
+   * uma tinta de área zero não desenha nada — medido no navegador, a trilha do
+   * movimento tinha caixa `0×0` com o `background` certo no `getComputedStyle`.
+   *
+   * O CSS parecia certo em cada regra, e o que faltava estava em OUTRO bloco: as
+   * três caíram fora da lista `.tabuleiro-terreno, .tabuleiro-peca,
+   * .tabuleiro-marcador` quando a moldura saiu, e ninguém volta a essa lista ao
+   * escrever a tinta de uma classe nova. Quem prende isso agora é o
+   * `TestTodaClassePosicionadaPorColLinTemCaixa`, que cruza o HTML servido com a
+   * folha compilada — a lista deixou de ser algo que se lembra e passou a ser
+   * algo que se afirma. */
 
   /* A PARADA é onde a pessoa CLICOU, e ela marca a junta entre duas pernas
    * (ALE-266, portada na ALE-269).
@@ -887,11 +905,6 @@ html {
    * está na trilha, e pintá-la de novo diria "o caminho passa aqui" em vez de
    * "aqui houve uma decisão". */
   .tabuleiro-parada {
-    position: absolute;
-    left: calc(var(--col) * var(--quadrado));
-    top: calc(var(--lin) * var(--quadrado));
-    width: var(--quadrado);
-    height: var(--quadrado);
     pointer-events: none;
     z-index: 1;
     background:
@@ -1045,8 +1058,7 @@ html {
    * está acima das camadas de clique, então sem isto o pointerdown sobre ela
    * vira arrasto: com a régua ligada, medir a distância até o ogro MOVERIA o
    * ogro. Sai o ponteiro e não o foco; o teclado continua alcançando as duas. */
-  .tabuleiro-com-ferramenta .tabuleiro-peca,
-  .tabuleiro-com-ferramenta .tabuleiro-destino {
+  .tabuleiro-com-ferramenta .tabuleiro-peca {
     pointer-events: none;
   }
 }
@@ -1160,37 +1172,61 @@ html {
    * quem percorre é o arrasto, e é ele que não pode ser confundido com rolagem.
    * Aqui a declaração fica pelo `cursor`, e porque repetir o que já vem por
    * herança custa menos que descobrir um dia que a herança quebrou. */
-  .tabuleiro-peca[data-on\:pointerdown],
-  .tabuleiro-destino {
+  .tabuleiro-peca[data-on\:pointerdown] {
     touch-action: none;
     cursor: grab;
   }
 
-  /* O DESTINO é LOSANGO para não ser confundido com peça: a peça está no lugar
-   * dela, e isto é uma promessa. Vazado, porque é o fim de um caminho e não uma
-   * coisa que ocupa a casa. */
-  .tabuleiro-destino {
-    position: absolute;
-    left: calc(var(--col) * var(--quadrado));
-    top: calc(var(--lin) * var(--quadrado));
-    width: var(--quadrado);
-    height: var(--quadrado);
-    background: transparent;
-    border: 0;
-    outline: none;
-    z-index: 3;
+  /* O DESTINO era um LOSANGO aqui, e ele SAIU na ALE-203 (item 4).
+   *
+   * Ele existia porque a peça voltava para a origem ao soltar, e o fim da trilha
+   * precisava de alguém que o representasse. Com a peça pousando onde foi solta,
+   * o losango virou um alvo em cima do outro — dois nós arrastáveis na mesma
+   * casa, e o de cima ganhando o dedo. Quem marca o fim do caminho é a PEÇA.
+   *
+   * O que ficou no lugar dele é o par abaixo: o FANTASMA na origem e a SETA
+   * entre os dois. */
+
+  /* O FANTASMA é a peça na casa de onde ela SAIU (ALE-203, item 4).
+   *
+   * Ele herda o `.tabuleiro-peca` inteiro — o disco, o gradiente do matiz, o
+   * monograma —, e o que muda é só a TINTA: é a mesma peça, meio apagada, e não
+   * uma segunda coisa que se aprende a ler. O traço cortado repete o que o
+   * `.tabuleiro-peca-oculta` já usa para "isto não é definitivo".
+   *
+   * `pointer-events: none` porque ele não é alvo de nada: o clique na casa dele
+   * continua sendo da camada de casas, e roubá-lo faria a origem virar um lugar
+   * onde não se pode propor parada.
+   *
+   * `z-index` abaixo da peça pela mesma razão da ordem no HTML: uma peça grande
+   * ao lado da origem invade a casa do fantasma, e quem tem de ficar por cima é
+   * a que se clica. */
+  .tabuleiro-peca-fantasma {
+    opacity: 0.4;
+    border-style: dashed;
+    pointer-events: none;
+    z-index: 1;
   }
-  .tabuleiro-destino::before {
-    content: '';
-    position: absolute;
-    inset: 22%;
-    transform: rotate(45deg);
-    border: 2px solid var(--grimorio-gold);
-    background: oklch(0.8 0.11 85 / 0.18);
+
+  /* A SETA DO MOVIMENTO, com a gramática da RÉGUA (ALE-203, item 4: "a seta da
+   * régua conecta os dois pontos").
+   *
+   * O mesmo dourado e o mesmo `non-scaling-stroke` do `.tabuleiro-regua-fio`:
+   * são a mesma família de linha de leitura, e duas espessuras diferentes para
+   * dois fios dourados fariam a mesa procurar uma diferença que não existe.
+   *
+   * A PONTA é o que distingue as duas: a régua mede ENTRE dois lugares e não tem
+   * sentido; o movimento VAI de um para o outro. Ela é `userSpaceOnUse` e mede
+   * em QUADRADOS, ao contrário do fio: uma ponta de espessura constante ficaria
+   * do tamanho de uma casa no zoom mínimo. */
+  .tabuleiro-movimento-fio {
+    fill: none;
+    stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    stroke-width: 2;
+    stroke-linejoin: round;
   }
-  .tabuleiro-destino:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: -2px;
+  .tabuleiro-movimento-ponta {
+    fill: var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
 
   /* A MARCA do leitor do livro (ALE-264): o destaque do verbete na página.
