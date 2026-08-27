@@ -407,3 +407,16 @@ func (bs *BoardStore) SetCurtain(ctx context.Context, sessionID int64, fechada b
 	})
 	return b, mudou, err
 }
+
+// MoveOGrupo desloca as peças marcadas pelo mesmo delta (ALE-203, item 10).
+//
+// Uma transação para o grupo inteiro, pelo mesmo motivo do `PintaOTraco`: o
+// gesto é UM, e uma gravação por peça faria a mesa ver a horda chegar pela
+// metade.
+func (bs *BoardStore) MoveOGrupo(
+	ctx context.Context, sessionID int64, ids []string, dx, dy int,
+) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		return MoveOGrupo(b, ids, dx, dy)
+	})
+}

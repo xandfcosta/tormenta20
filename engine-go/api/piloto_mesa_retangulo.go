@@ -112,6 +112,102 @@ const oEstiloDoLaco = "`left: ${Math.min($retangulodex, $retanguloatex) * $quadr
 	"width: ${(Math.abs($retanguloatex - $retangulodex) + 1) * $quadrado}px; " +
 	"height: ${(Math.abs($retanguloatey - $retangulodey) + 1) * $quadrado}px`"
 
+// sinalDoCliqueEngolido diz ao `click` que o gesto anterior foi um ARRASTO.
+//
+// Ele existe porque o navegador dispara `click` depois de um `pointerdown` +
+// `pointerup` no mesmo elemento, INCLUSIVE quando o dedo andou entre os dois. Sem
+// ele, terminar um laço em cima da camada de repouso também MOVERIA a peça da
+// vez para onde o laço terminou — o mestre marca um grupo e a peça do turno anda
+// junto, sem ninguém ter pedido.
+const sinalDoCliqueEngolido = "engoleoclique"
+
+// oRetanguloDePecasSolta fecha o laço e pergunta ao servidor quem ele pegou.
+//
+// Só PERGUNTA: marcar não muta a cena, e a resposta é do tamanho de um sinal.
+//
+// O laço que NÃO ANDOU (mesmo canto nas duas pontas) é um clique, não um laço, e
+// segue o caminho do clique — é assim que a mesma camada serve aos dois gestos.
+func oRetanguloDePecasSolta(v tabuleiroView) string {
+	return fmt.Sprintf(
+		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
+			"$%s = ''; if (de === ate) return; $%s = true; "+
+			"return @post('/piloto/mesa/%d/%d/tabuleiro/marcar-area/' + de + '/' + ate)",
+		sinalDoRetangulo, retanguloDePecas, sinalDoRetanguloDe,
+		sinalDoRetangulo, sinalDoCliqueEngolido,
+		v.CampaignID, v.SessionID,
+	)
+}
+
+// aPecaEstaMarcada é a pergunta que acende o anel, e ela é feita UMA VEZ POR
+// PEÇA na cena.
+//
+// `,id,` com vírgulas nas pontas e não um `includes(id)` cru: sem elas, marcar a
+// peça `abc` acenderia também a `abcd`. É a armadilha clássica de lista em
+// string, e ela aparece exatamente no dia em que dois ids compartilham prefixo.
+func aPecaEstaMarcada(id string) string {
+	return fmt.Sprintf("(',' + $%s + ',').includes(%q)", sinalDasPecasMarcadas, ","+id+",")
+}
+
+// aFraseDoGrupo é o que a barra diz, com o plural certo.
+//
+// A frase INTEIRA numa expressão só, e não um número num `data-text` ao lado de
+// um texto fixo: "1 peças marcadas" apareceu na tela na primeira medição, e a
+// única forma de a palavra acompanhar o número é ela estar na mesma conta.
+var aFraseDoGrupo = fmt.Sprintf(
+	"(() => { const n = $%s.split(',').filter(Boolean).length; "+
+		"return n + (n === 1 ? ' peça marcada' : ' peças marcadas') "+
+		"+ ' · arraste qualquer uma para mover o grupo' })()",
+	sinalDasPecasMarcadas)
+
+// haGrupoMarcado mostra a barra do grupo.
+var haGrupoMarcado = fmt.Sprintf("$%s !== ''", sinalDasPecasMarcadas)
+
+// largaOGrupo desmarca tudo.
+var largaOGrupo = fmt.Sprintf("$%s = ''", sinalDasPecasMarcadas)
+
+// ── ARRASTAR O GRUPO ─────────────────────────────────────────────────────────
+//
+// Com peças marcadas, arrastar QUALQUER UMA delas move todas pelo mesmo delta.
+// É o gesto que todo editor faz e o motivo inteiro de marcar: chegou uma horda
+// de seis zumbis e reposicioná-los hoje custa seis arrastos.
+
+// pegaOGrupo começa o arrasto, e SÓ se a peça estiver marcada.
+//
+// Sem a guarda, arrastar uma peça qualquer com um grupo marcado em outro canto
+// do mapa moveria o grupo distante — o gesto agiria sobre o que a pessoa não
+// está olhando, que é a pior classe de surpresa num tabuleiro.
+func pegaOGrupo(id string) string {
+	return fmt.Sprintf("if (!(%s)) return; %s", aPecaEstaMarcada(id), pegaParaArrastar("peca"))
+}
+
+// soltaOGrupo converte o deslocamento em QUADRADOS e move todas.
+//
+// O arredondamento é o mesmo do arrasto de uma peça só (para o quadrado mais
+// próximo, e não para baixo), porque o gesto é o mesmo gesto — o que muda é
+// quantas peças ele leva.
+func soltaOGrupo(v tabuleiroView) string {
+	return fmt.Sprintf(
+		"if ($arrastando === 'peca') { "+
+			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
+			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
+			"if (dx || dy) @post('/piloto/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy) }",
+		v.CampaignID, v.SessionID,
+	)
+}
+
+// oVestidoDaPeca junta as duas marcas que a peça pode vestir.
+//
+// UM `data-class` só porque atributo repetido não existe: o navegador guarda o
+// primeiro e descarta o segundo, e a marca do grupo nasceria morta — é a mesma
+// armadilha do `data-on:keydown__window` duplicado que a fatia 2 registrou.
+func oVestidoDaPeca(id string, arrastavel bool) string {
+	marcada := fmt.Sprintf("'tabuleiro-peca-marcada': %s", aPecaEstaMarcada(id))
+	if !arrastavel {
+		return "{" + marcada + "}"
+	}
+	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === 'peca', %s}", marcada)
+}
+
 // oGestoDoPincel decide entre TRAÇO e RETÂNGULO no `pointerdown`.
 //
 // A decisão é no `pointerdown` e vale para o gesto inteiro, como o modo do
@@ -128,4 +224,31 @@ const oEstiloDoLaco = "`left: ${Math.min($retangulodex, $retanguloatex) * $quadr
 func oGestoDoPincel(v tabuleiroView, modoFixo string) string {
 	return fmt.Sprintf("if (evt.shiftKey) { %s } else { %s }",
 		oRetanguloPega(retanguloDeTerreno), oPincelPega(v, modoFixo))
+}
+
+// oNomeDaCamadaDeRepouso diz os dois gestos que ela aceita.
+//
+// O nome acessível é onde o gesto de ARRASTO fica descoberto: ele não tem ícone
+// nem botão, e quem navega por teclado não tem outro lugar para achá-lo.
+func oNomeDaCamadaDeRepouso(v tabuleiroView) string {
+	if v.AlvoDoMovimento == "" {
+		return "Marcar peças — arraste um retângulo em volta delas"
+	}
+	if !v.Mestre {
+		return "Mover " + v.RotuloDoAlvo + " — escolha a casa"
+	}
+	return "Mover " + v.RotuloDoAlvo + " — escolha a casa, ou arraste para marcar um grupo"
+}
+
+// oCliqueEmRepouso é o clique da camada, com o ENGOLE na frente.
+//
+// Sem alvo de movimento não há o que o clique faça, e a expressão fica só com o
+// engole — que continua precisando existir, porque o `click` vem do mesmo jeito
+// depois de um laço.
+func oCliqueEmRepouso(v tabuleiroView) string {
+	engole := fmt.Sprintf("if ($%s) { $%s = false; return }", sinalDoCliqueEngolido, sinalDoCliqueEngolido)
+	if v.AlvoDoMovimento == "" {
+		return engole
+	}
+	return engole + "; " + paradaNoPontoClicado(v)
 }

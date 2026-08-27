@@ -581,14 +581,30 @@ func segueODedo(quem string) string {
 // propor ali gastaria uma parada no lugar onde a peça já está. Os sinais são
 // limpos NOS DOIS caminhos, senão o `transform` fica pendurado e a peça não
 // volta para o lugar.
+// A PEÇA MARCADA move o GRUPO, e não propõe (ALE-203, item 10).
+//
+// A decisão fica AQUI, num lugar só, porque ela é sobre o que o gesto SIGNIFICA:
+// arrastar a peça da vez propõe um movimento com custo, e arrastar uma peça
+// marcada reposiciona o grupo. Sem esta linha, a peça que é as duas coisas —
+// marcada E alvo do turno — proporia, e o mesmo arrasto significaria coisas
+// diferentes conforme um estado que não está na ponta do dedo. Medido no
+// navegador: marcar o Bandido e arrastá-lo abria a barra de "14 quadrados".
+//
+// MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
 func soltaEPara(v tabuleiroView, quem string, x, y int) string {
-	url := fmt.Sprintf("'/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
+	parada := fmt.Sprintf("'/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
 		v.CampaignID, v.SessionID, v.AlvoDoMovimento, x, y)
+	destino := "@post(" + parada + ")"
+	if quem == "peca" && v.Mestre && v.AlvoDoMovimento != "" {
+		grupo := fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy)",
+			v.CampaignID, v.SessionID)
+		destino = fmt.Sprintf("%s ? %s : %s", aPecaEstaMarcada(v.AlvoDoMovimento), grupo, destino)
+	}
 	return fmt.Sprintf(
 		"if ($arrastando === '%s') { "+
 			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
 			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
-			"if (dx || dy) @post(%s) }", quem, url)
+			"if (dx || dy) %s }", quem, destino)
 }
 
 // As variáveis do arrasto moram SÓ no `#mesa`, e descem por herança até quem

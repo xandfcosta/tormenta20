@@ -74,6 +74,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDoMovimento(r)
 		s.rotasDaRegua(r)
 		s.rotasDaCena(r)
+		s.rotasDoGrupo(r)
 		s.rotasDosMarcadores(r)
 		s.rotasDaCortina(r)
 		s.rotasDaLente(r)
@@ -228,6 +229,10 @@ func sinaisDaMesa() string {
 		osSinaisDoPincel,
 		// O LAÇO do retângulo (ALE-203, item 10): o modo em curso e os dois cantos.
 		osSinaisDoRetangulo,
+		// AS PEÇAS MARCADAS pelo laço (ALE-203, item 10): ids separados por
+		// vírgula, numa string só. Ver `sinalDasPecasMarcadas` para por que não é
+		// uma lista.
+		fmt.Sprintf("%s: '', %s: false", sinalDasPecasMarcadas, sinalDoCliqueEngolido),
 		// A RÉGUA: as PARADAS em coordenada do PLANO (podem ser negativas), a mira
 		// sob o ponteiro, a fase da máquina, os rótulos de cada perna e a frase do
 		// total — as duas últimas escritas pelo servidor.

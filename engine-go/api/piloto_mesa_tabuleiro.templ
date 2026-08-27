@@ -349,6 +349,9 @@ templ osAvisosDoTabuleiro(v tabuleiroView) {
 // no meio do gesto. Agora flutuam, e o conteúdo do tabuleiro fica imóvel.
 templ osAjudantesDaFerramenta(v tabuleiroView) {
 	<div class="tabuleiro-ajudantes">
+		if v.Mestre {
+			@aBarraDoGrupo(v)
+		}
 		@aLeituraDaRegua()
 		@aBarraDoGabarito(v)
 		if v.Movimento != nil && v.Movimento.Meu {
@@ -642,11 +645,15 @@ templ pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) {
 		aria-label={ nomeDaPeca(p) }
 		title={ nomeDaPeca(p) }
 		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
+		data-class={ oVestidoDaPeca(p.ID, v.ArrastaAPeca == p.ID) }
 		if v.ArrastaAPeca == p.ID {
-			data-class={ estaArrastando("peca") }
 			data-on:pointerdown={ pegaParaArrastar("peca") }
 			data-on:pointermove__window={ segueODedo("peca") }
 			data-on:pointerup__window={ soltaEPara(v, "peca", p.X, p.Y) }
+		} else if v.Mestre {
+			data-on:pointerdown={ pegaOGrupo(p.ID) }
+			data-on:pointermove__window={ segueODedo("peca") }
+			data-on:pointerup__window={ soltaOGrupo(v) }
 		}
 		if v.Mestre {
 			data-on:contextmenu={ abreOMenuDaPeca(p.ID) }
@@ -1423,12 +1430,33 @@ templ asCamadasDeClique(v tabuleiroView) {
 		data-on:contextmenu={ prendeOMenuDoNavegador + "; " + guardaOGabarito }
 		class="tabuleiro-casas"
 	></button>
-	if v.AlvoDoMovimento != "" {
+	// A CAMADA DE REPOUSO é UMA SÓ, e ela faz duas coisas: o CLIQUE escolhe a
+	// casa para onde a peça vai, e o ARRASTO marca um grupo (ALE-203, item 10).
+	//
+	// Duas camadas foi a primeira tentativa e ela não funciona: as duas se
+	// mostram com `$ferramenta === ''`, e a que vem DEPOIS no DOM cobre a outra —
+	// o dedo nunca chegava ao laço. Medido no navegador, e o sintoma é o gesto
+	// que simplesmente não acontece.
+	//
+	// O LAÇO só existe para o mestre, e a razão está no `tabuleiro.MoveOGrupo`:
+	// um jogador tem uma peça, e o que o grupo dispensa (a regra de deslocamento)
+	// é justamente o que protege o turno dele.
+	//
+	// E a camada existe para o mestre MESMO SEM alvo de movimento: fora de
+	// combate ninguém tem a vez, e é justamente quando ele está arrumando a cena
+	// que marcar um grupo serve.
+	if v.AlvoDoMovimento != "" || v.Mestre {
 		<button
 			type="button"
 			data-show="$ferramenta === ''"
-			aria-label={ "Mover " + v.RotuloDoAlvo + " — escolha a casa" }
-			data-on:click={ paradaNoPontoClicado(v) }
+			aria-label={ oNomeDaCamadaDeRepouso(v) }
+			data-on:click={ oCliqueEmRepouso(v) }
+			if v.Mestre {
+				data-on:pointerdown={ oRetanguloPega(retanguloDePecas) }
+				data-on:pointermove={ oRetanguloSegue(retanguloDePecas) }
+				data-on:pointerup={ oRetanguloDePecasSolta(v) }
+				data-on:pointercancel={ "$" + sinalDoRetangulo + " = ''" }
+			}
 			class="tabuleiro-casas"
 		></button>
 	}
@@ -1459,4 +1487,29 @@ templ mesaAcervoDeLugares(v mesaView) {
 			@oAcervoDeLugares(v.Tabuleiro)
 		}
 	</div>
+}
+
+// aBarraDoGrupo é o que o laço de peças deixa na tela (ALE-203, item 10).
+//
+// Ela diz QUANTAS foram marcadas e o que fazer com elas, e as duas metades
+// importam: sem o número, um laço que pegou peça escondida do jogador marcaria
+// mais do que o mestre viu; sem a saída, desmarcar exigiria clicar no vazio e
+// torcer.
+//
+// O verbo de MOVER não está aqui de propósito: mover é o ARRASTO de qualquer
+// peça marcada, e um botão "mover" numa barra teria de perguntar para onde —
+// que é justamente o que o dedo já responde.
+templ aBarraDoGrupo(v tabuleiroView) {
+	<p role="status" data-show={ haGrupoMarcado } class="tabuleiro-ajudante gap-2">
+		@icone("LayoutGrid", "size-4 text-grimorio-gold")
+		<span data-text={ aFraseDoGrupo } class="text-grimorio-gold"></span>
+		<button
+			type="button"
+			aria-label="Desmarcar o grupo"
+			data-on:click={ largaOGrupo }
+			class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			@icone("X", "size-4")
+		</button>
+	</p>
 }
