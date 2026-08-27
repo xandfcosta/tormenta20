@@ -381,17 +381,23 @@ GROUP BY s.campaignId;
 UPDATE sessions SET runtimeState = sqlc.arg('runtimeState'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
--- board (ALE-124)
+-- board (ALE-124, varios abertos na ALE-205)
 
--- name: GetSessionBoard :one
-SELECT state FROM session_boards WHERE sessionId = ? LIMIT 1;
+-- A ORDEM e a de ABERTURA, que e a ordem das abas na tela. Ver o comentario do
+-- `openSeq` na migracao 00010: contador e nao carimbo de tempo, porque carimbo
+-- empata.
+-- name: ListOpenBoards :many
+SELECT boardId, state, openSeq FROM open_boards WHERE sessionId = ? ORDER BY openSeq;
 
--- name: SaveSessionBoard :exec
-INSERT INTO session_boards (sessionId, state, updatedAt) VALUES (?, ?, ?)
-ON CONFLICT(sessionId) DO UPDATE SET state = excluded.state, updatedAt = excluded.updatedAt;
+-- O upsert NAO toca `openSeq`: gravar o tabuleiro e dizer que ele mudou, nunca
+-- que ele nasceu de novo. Sem o `excluded` de fora, a ordem das abas mudaria a
+-- cada peca que anda.
+-- name: SaveOpenBoard :exec
+INSERT INTO open_boards (sessionId, boardId, state, openSeq, updatedAt) VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(sessionId, boardId) DO UPDATE SET state = excluded.state, updatedAt = excluded.updatedAt;
 
--- name: DeleteSessionBoard :exec
-DELETE FROM session_boards WHERE sessionId = ?;
+-- name: DeleteOpenBoard :exec
+DELETE FROM open_boards WHERE sessionId = ? AND boardId = ?;
 
 -- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,

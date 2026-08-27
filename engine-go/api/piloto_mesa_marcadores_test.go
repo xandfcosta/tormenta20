@@ -14,7 +14,7 @@ import (
 // marcadoresDoMapa lê o estado depois do gesto.
 func marcadoresDoMapa(t *testing.T, f pilotoFixture) []tabuleiro.BoardMarker {
 	t.Helper()
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if b == nil {
 		t.Fatal("não há tabuleiro — o gesto não tinha onde acontecer")
 	}

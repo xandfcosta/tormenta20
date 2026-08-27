@@ -94,6 +94,24 @@ type BoardMarker struct {
 // cliente — dois jogadores olhando pedaços diferentes da mesma cena é uma
 // propriedade, não um bug.
 type BoardState struct {
+	// ID identifica ESTE tabuleiro dentro da sessão (ALE-205), desde que a
+	// sessão passou a poder ter vários abertos ao mesmo tempo.
+	//
+	// Cunhado pelo servidor no `Open`, com o mesmo `newID` das peças, e não pelo
+	// banco: o tabuleiro nasce em MEMÓRIA e a gravação vem depois, então um id
+	// vindo do disco obrigaria a cena a esperar o disco para saber quem ela é.
+	// Na hidratação ele vem da COLUNA e não deste campo — ver `hydrateLocked`.
+	ID string `json:"id"`
+	// Seq é a ORDEM DE ABERTURA dentro da sessão, e ela é a ordem das abas na
+	// tela (ALE-205). Mora numa COLUNA e não no JSON — `json:"-"` — porque é
+	// propriedade da aba e não da cena: o mesmo lugar arquivado reabre em
+	// qualquer posição, e um número gravado dentro da cena reabriria a taverna
+	// no lugar de outra aba.
+	//
+	// Contador e não carimbo de tempo, e isso foi MEDIDO: com o instante em
+	// milissegundos, duas cenas abertas no mesmo milissegundo empatam e o
+	// desempate cai no id, que é um UUID. O teste da hidratação pegou o caso.
+	Seq int64 `json:"-"`
 	// Version sobe a cada mutação aceita. É o que vai permitir recusar um
 	// movimento proposto sobre um tabuleiro que já mudou, e o que deixa o
 	// cliente descartar um broadcast atrasado depois de reconectar.
@@ -161,8 +179,8 @@ type BoardState struct {
 }
 
 // newBoard abre um tabuleiro vazio num plano sem bordas.
-func newBoard(place, terrain string) *BoardState {
-	return &BoardState{Version: 1, Place: place, Terrain: terrain, Tokens: []BoardToken{}}
+func newBoard(id, place, terrain string) *BoardState {
+	return &BoardState{ID: id, Version: 1, Place: place, Terrain: terrain, Tokens: []BoardToken{}}
 }
 
 // AddToken põe uma peça no tabuleiro, recusando o que sairia da grade.
@@ -554,7 +572,15 @@ func BoardForRole(papel string, b *BoardState) *BoardState {
 		// cliente indexa `tokens.length` no cabeçalho — a cortina derrubaria a
 		// tela da mesa em vez de escondê-la. O contrato do fio é "lista vazia é
 		// uma lista", e quem o garante é aqui, não cada leitor.
-		return &BoardState{Version: b.Version, Curtained: true, Tokens: []BoardToken{}}
+		//
+		// O `ID` ATRAVESSA a cortina, e é o único campo que atravessa (ALE-205).
+		// Sem ele a aba do jogador não teria como se chamar nem como ser clicada,
+		// e a decisão do dono foi que ela APARECE mostrando a cortina — some da
+		// barra dele, a aba trocaria debaixo do dedo de quem estava olhando. O id
+		// é um UUID: ele não conta nada sobre a cena, que é justamente o que a
+		// cortina protege. Quem esconde o NOME continua sendo esta linha, e é o
+		// nome que diria "Cripta do Rei" para quem não devia saber.
+		return &BoardState{ID: b.ID, Version: b.Version, Curtained: true, Tokens: []BoardToken{}}
 	}
 	return redactBoardForPlayers(b)
 }

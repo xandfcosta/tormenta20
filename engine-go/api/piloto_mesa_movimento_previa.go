@@ -46,7 +46,7 @@ const oMaximoDePernasNaPrevia = 12
 
 // handlePreviaDoMovimento responde "se eu soltar aqui, como fica" em sinais.
 func (s *Server) handlePreviaDoMovimento(w http.ResponseWriter, r *http.Request) {
-	papel, sessionID, ok := s.quemMedeAMesa(w, r)
+	papel, sessionID, tabuleiroID, ok := s.quemMedeAMesa(w, r)
 	if !ok {
 		return
 	}
@@ -56,7 +56,7 @@ func (s *Server) handlePreviaDoMovimento(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	tokenID := chi.URLParam(r, "tokenId")
-	b := tabuleiro.BoardForRole(papel, s.boards.Get(r.Context(), sessionID))
+	b := tabuleiro.BoardForRole(papel, s.boards.Get(r.Context(), sessionID, tabuleiroID))
 	previa, err := aPreviaDoArrasto(b, s.sessions.GetState(sessionID), tokenID, destino,
 		s.quemArrastaNaPrevia(r, papel, tabuleiro.FindToken(b, tokenID)))
 	if err != nil {

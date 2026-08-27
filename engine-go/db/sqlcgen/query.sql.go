@@ -737,6 +737,20 @@ func (q *Queries) DeleteMember(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteOpenBoard = `-- name: DeleteOpenBoard :exec
+DELETE FROM open_boards WHERE sessionId = ? AND boardId = ?
+`
+
+type DeleteOpenBoardParams struct {
+	Sessionid int64  `json:"sessionid"`
+	Boardid   string `json:"boardid"`
+}
+
+func (q *Queries) DeleteOpenBoard(ctx context.Context, arg DeleteOpenBoardParams) error {
+	_, err := q.db.ExecContext(ctx, deleteOpenBoard, arg.Sessionid, arg.Boardid)
+	return err
+}
+
 const deleteSceneAndDayEffects = `-- name: DeleteSceneAndDayEffects :exec
 DELETE FROM active_effects WHERE characterId = ? AND scope IN ('scene', 'day')
 `
@@ -752,15 +766,6 @@ DELETE FROM sessions WHERE id = ?
 
 func (q *Queries) DeleteSession(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteSession, id)
-	return err
-}
-
-const deleteSessionBoard = `-- name: DeleteSessionBoard :exec
-DELETE FROM session_boards WHERE sessionId = ?
-`
-
-func (q *Queries) DeleteSessionBoard(ctx context.Context, sessionid int64) error {
-	_, err := q.db.ExecContext(ctx, deleteSessionBoard, sessionid)
 	return err
 }
 
@@ -1203,19 +1208,6 @@ func (q *Queries) GetSession(ctx context.Context, id int64) (Session, error) {
 		&i.Runtimestate,
 	)
 	return i, err
-}
-
-const getSessionBoard = `-- name: GetSessionBoard :one
-
-SELECT state FROM session_boards WHERE sessionId = ? LIMIT 1
-`
-
-// board (ALE-124)
-func (q *Queries) GetSessionBoard(ctx context.Context, sessionid int64) (string, error) {
-	row := q.db.QueryRowContext(ctx, getSessionBoard, sessionid)
-	var state string
-	err := row.Scan(&state)
-	return state, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -2198,6 +2190,44 @@ func (q *Queries) ListOpenAccountInvites(ctx context.Context, now string) ([]Acc
 	return items, nil
 }
 
+const listOpenBoards = `-- name: ListOpenBoards :many
+
+SELECT boardId, state, openSeq FROM open_boards WHERE sessionId = ? ORDER BY openSeq
+`
+
+type ListOpenBoardsRow struct {
+	Boardid string `json:"boardid"`
+	State   string `json:"state"`
+	Openseq int64  `json:"openseq"`
+}
+
+// board (ALE-124, varios abertos na ALE-205)
+// A ORDEM e a de ABERTURA, que e a ordem das abas na tela. Ver o comentario do
+// `openSeq` na migracao 00010: contador e nao carimbo de tempo, porque carimbo
+// empata.
+func (q *Queries) ListOpenBoards(ctx context.Context, sessionid int64) ([]ListOpenBoardsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listOpenBoards, sessionid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListOpenBoardsRow{}
+	for rows.Next() {
+		var i ListOpenBoardsRow
+		if err := rows.Scan(&i.Boardid, &i.State, &i.Openseq); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRacesByCharacter = `-- name: ListRacesByCharacter :many
 SELECT race FROM character_races WHERE characterId = ? ORDER BY id ASC
 `
@@ -2560,19 +2590,30 @@ func (q *Queries) SaveCampaignPlace(ctx context.Context, arg SaveCampaignPlacePa
 	return i, err
 }
 
-const saveSessionBoard = `-- name: SaveSessionBoard :exec
-INSERT INTO session_boards (sessionId, state, updatedAt) VALUES (?, ?, ?)
-ON CONFLICT(sessionId) DO UPDATE SET state = excluded.state, updatedAt = excluded.updatedAt
+const saveOpenBoard = `-- name: SaveOpenBoard :exec
+INSERT INTO open_boards (sessionId, boardId, state, openSeq, updatedAt) VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(sessionId, boardId) DO UPDATE SET state = excluded.state, updatedAt = excluded.updatedAt
 `
 
-type SaveSessionBoardParams struct {
+type SaveOpenBoardParams struct {
 	Sessionid int64  `json:"sessionid"`
+	Boardid   string `json:"boardid"`
 	State     string `json:"state"`
+	Openseq   int64  `json:"openseq"`
 	Updatedat string `json:"updatedat"`
 }
 
-func (q *Queries) SaveSessionBoard(ctx context.Context, arg SaveSessionBoardParams) error {
-	_, err := q.db.ExecContext(ctx, saveSessionBoard, arg.Sessionid, arg.State, arg.Updatedat)
+// O upsert NAO toca `openSeq`: gravar o tabuleiro e dizer que ele mudou, nunca
+// que ele nasceu de novo. Sem o `excluded` de fora, a ordem das abas mudaria a
+// cada peca que anda.
+func (q *Queries) SaveOpenBoard(ctx context.Context, arg SaveOpenBoardParams) error {
+	_, err := q.db.ExecContext(ctx, saveOpenBoard,
+		arg.Sessionid,
+		arg.Boardid,
+		arg.State,
+		arg.Openseq,
+		arg.Updatedat,
+	)
 	return err
 }
 

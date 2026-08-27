@@ -51,7 +51,7 @@ func (s *Server) rotasDaRegua(r chi.Router) {
 // O que volta continua sendo só SINAL — a régua não muta nada, e uma medição que
 // remendasse o mapa trocaria a peça debaixo do dedo de quem está arrastando.
 func (s *Server) handleReguaDaMesa(w http.ResponseWriter, r *http.Request) {
-	if _, _, ok := s.quemMedeAMesa(w, r); !ok {
+	if _, _, _, ok := s.quemMedeAMesa(w, r); !ok {
 		return
 	}
 	paradas, err := asParadasDaRegua(r)
@@ -176,7 +176,7 @@ const aDicaDaReguaVazia = "Clique para acrescentar paradas · duplo clique fecha
 // A lista de nomes é o que ela tem de maior, e não o desenho: o desenho mostra
 // onde, mas é o nome que resolve a dúvida e é o nome que a mesa fala em voz alta.
 func (s *Server) handleGabaritoDaMesa(w http.ResponseWriter, r *http.Request) {
-	papel, sessionID, ok := s.quemMedeAMesa(w, r)
+	papel, sessionID, tabuleiroID, ok := s.quemMedeAMesa(w, r)
 	if !ok {
 		return
 	}
@@ -209,7 +209,7 @@ func (s *Server) handleGabaritoDaMesa(w http.ResponseWriter, r *http.Request) {
 	// O tabuleiro passa pelo MESMO gargalo por papel do resto da Mesa: quem
 	// pergunta quem o cone pega não pode descobrir por aí a peça que a cortina e
 	// o `Hidden` escondem dele.
-	b := tabuleiro.BoardForRole(papel, s.boards.Get(r.Context(), sessionID))
+	b := tabuleiro.BoardForRole(papel, s.boards.Get(r.Context(), sessionID, tabuleiroID))
 	escreveSinais(w, r, map[string]any{
 		"gabaritopath":  caminhoDasCasas(casas),
 		"gabaritotexto": quemOGabaritoPega(b, casas),
@@ -220,17 +220,23 @@ func (s *Server) handleGabaritoDaMesa(w http.ResponseWriter, r *http.Request) {
 //
 // Medir é de TODO MUNDO — "dá para acertar daqui?" é pergunta de quem ataca —, e
 // a trava que sobra é a de sempre: quem não está na mesa não mede a cena dela.
-func (s *Server) quemMedeAMesa(w http.ResponseWriter, r *http.Request) (papel string, sessionID int64, ok bool) {
+//
+// Devolve a ABA junto com o papel (ALE-205) porque medir é sempre sobre UMA cena:
+// a régua que perguntasse "o tabuleiro da sessão" mediria a distância na taverna
+// para quem está olhando a cripta, e o número sairia certo sobre o mapa errado —
+// sem nada na tela dizendo que ele é de outro lugar.
+func (s *Server) quemMedeAMesa(w http.ResponseWriter, r *http.Request) (papel string, sessionID int64, tabuleiroID string, ok bool) {
 	campaignID, sessionID, ok := mesaParams(w, r)
 	if !ok {
-		return "", 0, false
+		return "", 0, "", false
 	}
-	_, papel, status, err := s.sessionForCaller(r.Context(), currentUser(r), campaignID, sessionID)
+	user := currentUser(r)
+	_, papel, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
 	if err != nil {
 		http.Error(w, err.Error(), status)
-		return "", 0, false
+		return "", 0, "", false
 	}
-	return papel, sessionID, true
+	return papel, sessionID, s.aAbaDe(r.Context(), sessionID, user.ID), true
 }
 
 // escreveSinais responde SÓ com sinais, e é o que separa medir de comandar.

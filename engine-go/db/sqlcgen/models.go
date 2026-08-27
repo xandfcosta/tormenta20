@@ -168,6 +168,14 @@ type CharacterStance struct {
 	Pmpaid      int64  `json:"pmpaid"`
 }
 
+type OpenBoard struct {
+	Sessionid int64  `json:"sessionid"`
+	Boardid   string `json:"boardid"`
+	State     string `json:"state"`
+	Openseq   int64  `json:"openseq"`
+	Updatedat string `json:"updatedat"`
+}
+
 type PasswordReset struct {
 	ID        int64          `json:"id"`
 	Token     string         `json:"token"`
@@ -190,12 +198,6 @@ type Session struct {
 	Createdat     string         `json:"createdat"`
 	Updatedat     string         `json:"updatedat"`
 	Runtimestate  string         `json:"runtimestate"`
-}
-
-type SessionBoard struct {
-	Sessionid int64  `json:"sessionid"`
-	State     string `json:"state"`
-	Updatedat string `json:"updatedat"`
 }
 
 type User struct {

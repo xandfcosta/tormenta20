@@ -92,10 +92,24 @@ as colunas assim adicionadas na `00002` continuam valendo porque… continuam
 valendo: regenerar não as perde. Não perca tempo com a forma do comentário nem
 com a seção `Down` — foi tudo testado.
 
-Saída prática: **tabela 1:1 em vez de coluna nova**. Foi o que a `00005` fez com
-o tabuleiro (`session_boards`), e de quebra "sessão sem tabuleiro" passou a ser
-dito pelo schema (a linha existe ou não existe) em vez de por convenção sobre um
-JSON vazio.
+Saída prática: **tabela nova em vez de coluna nova**. Foi o que a `00005` fez
+com o tabuleiro, e de quebra "sessão sem tabuleiro" passou a ser dito pelo
+schema (a linha existe ou não existe) em vez de por convenção sobre um JSON
+vazio.
+
+E a `00010` mostrou a segunda metade da armadilha (ALE-205): **trocar a chave
+primária de uma tabela também não passa pelo gerador.** No SQLite isso é um
+rebuild com `CREATE` + `INSERT SELECT` + `RENAME TO`, e o `RENAME` some do
+catálogo do mesmo jeito que o `ADD COLUMN`. O caminho que funciona é criar a
+tabela NOVA com outro nome, copiar, e derrubar a velha — foi assim que o
+`session_boards` (1:1 com a sessão) virou `open_boards` (uma linha por tabuleiro
+aberto).
+
+**E o guarda de schema precisou aprender o `DROP`**: a lista de esperadas lia só
+os `CREATE`, então toda tabela que qualquer migração já tivesse criado era
+exigida para sempre — o servidor recusaria subir sobre um banco CORRETO,
+nomeando como faltante justamente a que a migração acabou de derrubar. Ver a
+seção abaixo.
 
 ## A SPA sai PRÉ-COMPRIMIDA do build
 
@@ -146,15 +160,21 @@ dentro do repositório.
 
 ## O boot confere o SCHEMA, não o `goose_db_version`
 
-A migração pode CONSTAR aplicada sem a tabela existir. Aconteceu: a
-`session_boards` sumiu do banco de desenvolvimento com a 00005 marcada, o goose
-disse "no migrations to run", e o tabuleiro passou um dia vivendo só em memória
-— cada gravação falhando numa linha de log que ninguém lê (ALE-154).
+A migração pode CONSTAR aplicada sem a tabela existir. Aconteceu: a tabela do
+tabuleiro (então `session_boards`) sumiu do banco de desenvolvimento com a 00005
+marcada, o goose disse "no migrations to run", e o tabuleiro passou um dia
+vivendo só em memória — cada gravação falhando numa linha de log que ninguém lê
+(ALE-154).
 
 Por isso o `db.Open` roda `assertSchema` DEPOIS de migrar e **recusa subir**
 nomeando as tabelas que faltam. A lista de esperadas é lida das próprias
 migrações embutidas, nunca escrita à mão: lista à mão envelhece em silêncio, que
 é como este repositório já perdeu o `TurnsTaken` e o `creatureId` no mesmo dia.
+
+Ela lê os DOIS verbos da seção `Up`, `CREATE TABLE` e `DROP TABLE`, na ordem dos
+arquivos (ALE-205). Só com o primeiro, o schema nunca podia PERDER uma tabela — a
+derrubada legítima da `00010` virava "falta a `session_boards`" num banco que
+estava certo.
 
 Consequência a saber: um banco alterado por fora (um `goose down` parcial, um
 backup anterior restaurado) agora **não sobe**. É deliberado — gravar no vazio
@@ -275,7 +295,7 @@ por layout.
 
 `newTestServer` abre um SQLite de VERDADE por teste — é o que faz este pacote
 provar composição em vez de mock. O que custava caro era migrar: `db.Open` roda
-as 9 migrações, e um teste por banco dava ~3.400 migrações com `fsync`.
+as migrações todas, e um teste por banco dava ~3.400 migrações com `fsync`.
 
 O preço de um `fsync` é o do dispositivo onde o `TMPDIR` cai, e a diferença não
 é de grau (ALE-260, medido nesta máquina):
@@ -295,7 +315,7 @@ Duas mudanças, as duas só no teste:
 
 1. **O molde** (`api/bancada_test.go`): o `TestMain` migra UM banco e cada teste
    o copia. `db.Open` continua sendo o mesmo de produção, com o mesmo
-   `assertSchema` — o goose só encontra a versão 9 e não tem o que fazer.
+   `assertSchema` — o goose encontra a última versão e não tem o que fazer.
 2. **`PRAGMA synchronous=OFF`** no banco de teste. Durabilidade é o que um banco
    que morre no fim do caso não tem o que proteger. Fica no helper e **nunca** no
    `db.Open`: em produção essa linha é perda de dados do mestre.

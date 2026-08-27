@@ -89,7 +89,7 @@ func (bs *BoardStore) Places(ctx context.Context, campaignID int64) []Place {
 // encerrar: lá o mestre mandou tirar a cena da mesa e prendê-lo numa cena que
 // já acabou seria pior; aqui ele mandou trocar, e trocar em cima de um acervo
 // que não gravou é justamente perder a taverna.
-func (bs *BoardStore) ShowPlace(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
+func (bs *BoardStore) ShowPlace(ctx context.Context, campaignID, sessionID int64, tabuleiroID string, placeID int64) (*BoardState, error) {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return nil, err
@@ -100,12 +100,16 @@ func (bs *BoardStore) ShowPlace(ctx context.Context, campaignID, sessionID, plac
 	if row.Campaignid != campaignID {
 		return nil, errPlaceFromAnotherCampaign
 	}
-	if atual := bs.Get(ctx, sessionID); atual != nil {
+	// A troca acontece DENTRO DE UMA ABA (ALE-205): é a cena daquela aba que vai
+	// para o acervo e é ali que a nova entra. Com vários tabuleiros abertos,
+	// arquivar "o tabuleiro da sessão" seria arquivar o de alguém que não pediu
+	// nada — o mestre troca a cripta pela ponte e a taverna da outra aba some.
+	if atual := bs.Get(ctx, sessionID, tabuleiroID); atual != nil {
 		if err := bs.Archive(ctx, campaignID, atual); err != nil {
 			return nil, fmt.Errorf("não consegui guardar %q antes de trocar de cena: %w", atual.Place, err)
 		}
 	}
-	return bs.Reopen(ctx, sessionID, placeID)
+	return bs.Reopen(ctx, sessionID, tabuleiroID, placeID)
 }
 
 // Reopen põe o lugar guardado de volta na mesa. É a PRIMITIVA: não confere de
@@ -115,7 +119,13 @@ func (bs *BoardStore) ShowPlace(ctx context.Context, campaignID, sessionID, plac
 // A VERSÃO continua a do tabuleiro que estava aberto, e não a que foi
 // arquivada: um cliente com a cena velha na mão precisa reconhecer esta como
 // mais recente. Reabrir é uma mutação de agora, não uma volta ao passado.
-func (bs *BoardStore) Reopen(ctx context.Context, sessionID, placeID int64) (*BoardState, error) {
+//
+// COM ABA ele TROCA a cena daquela aba; SEM aba nenhuma ele ABRE a primeira
+// (ALE-205). Os dois casos são o mesmo gesto do mestre — "põe esta na mesa" —, e
+// o que muda é se já havia mesa: recusar o segundo deixaria o acervo inalcançável
+// justamente na sessão que ainda não abriu tabuleiro, que é quando ele é mais
+// usado. O teto de abertos vale nos dois.
+func (bs *BoardStore) Reopen(ctx context.Context, sessionID int64, tabuleiroID string, placeID int64) (*BoardState, error) {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return nil, err
@@ -137,11 +147,33 @@ func (bs *BoardStore) Reopen(ctx context.Context, sessionID, placeID int64) (*Bo
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
-	if aberto := bs.boards[sessionID]; aberto != nil && aberto.Version >= guardado.Version {
+	aberto := bs.achaLocked(sessionID, tabuleiroID)
+	if aberto == nil {
+		if len(bs.boards[sessionID]) >= tetoDeAbertos {
+			return nil, fmt.Errorf(
+				"esta sessão já tem %d tabuleiros abertos (teto %d): feche um antes de mostrar outro lugar",
+				len(bs.boards[sessionID]), tetoDeAbertos)
+		}
+		guardado.ID = bs.newID()
+		guardado.Seq = bs.proximaSeqLocked(sessionID)
+		bs.boards[sessionID] = append(bs.boards[sessionID], &guardado)
+		bs.avisarLocked(sessionID)
+		return cloneBoard(&guardado), nil
+	}
+	if aberto.Version >= guardado.Version {
 		guardado.Version = aberto.Version + 1
 	}
-	bs.boards[sessionID] = &guardado
-	return cloneBoard(&guardado), nil
+	// A ABA continua a mesma: o que muda é a cena que está nela. O id é a
+	// identidade da aba na barra e no que cada pessoa escolheu olhar — trocá-lo
+	// aqui tiraria da tela de todo mundo a aba que ainda está lá.
+	guardado.ID = aberto.ID
+	// A POSIÇÃO na barra também é da aba, e não da cena que entrou nela: trocar
+	// a taverna pela cripta não pode fazer a aba pular de lugar debaixo do dedo
+	// de quem estava clicando nela.
+	guardado.Seq = aberto.Seq
+	*aberto = guardado
+	bs.avisarLocked(sessionID)
+	return cloneBoard(aberto), nil
 }
 
 // PlaceScene devolve a cena INTEIRA de um lugar guardado — é o que o mestre

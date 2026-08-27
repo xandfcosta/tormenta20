@@ -52,7 +52,7 @@ func mesaEmCombate(t *testing.T) (*BoardState, *aovivo.SessionRuntimeState) {
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)                     // e2
 	st.TurnIndex = 0
 
-	b := newBoard("Taverna do Javali", "pedra")
+	b := newBoard("t1", "Taverna do Javali", "pedra")
 	tokens := boardCounter()
 	heroi := int64(7)
 	_ = AddToken(b, BoardToken{Label: "Sílfide", X: 0, Y: 0, EntryID: strPtr("e1"), CharacterID: &heroi, SpeedSquares: 6}, tokens)
@@ -347,7 +347,7 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
 	_ = aovivo.AddEntry(st, npc("Goblin", 9), id)
-	b := newBoard("Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "pedra")
 
 	populateBoard(b, st, boardCounter(), nil)
 
@@ -398,7 +398,7 @@ func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
 	st := aovivo.EmptyRuntimeState()
 	id := ContadorDeIds()
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
-	b := newBoard("Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "pedra")
 	tokens := boardCounter()
 	_ = AddToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)
 
@@ -416,7 +416,7 @@ func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
 // Duas peças avulsas criadas seguidas não nascem uma em cima da outra — o
 // defeito que o "+ Peça" da ALE-178 traria com a posição fixa em (0,0).
 func TestLoosePiecesDoNotStack(t *testing.T) {
-	b := newBoard("Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "pedra")
 	tokens := boardCounter()
 
 	for _, nome := range []string{"Porta", "Baú", "Barril"} {

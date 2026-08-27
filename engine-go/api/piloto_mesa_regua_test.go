@@ -142,7 +142,7 @@ func TestOGabaritoPegaAPecaGrandePeloCorpo(t *testing.T) {
 func TestOGabaritoDoJogadorNaoContaAPecaEscondida(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
-	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
 		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}, true); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}

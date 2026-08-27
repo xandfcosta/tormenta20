@@ -93,7 +93,7 @@ func poeNoMapa(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 		return nil, err
 	}
 	board, err := st.boards.Populate(
-		c.R.Context(), c.SessionID, st.sessions.GetState(c.SessionID), escolhidos,
+		c.R.Context(), c.SessionID, c.TabuleiroID, st.sessions.GetState(c.SessionID), escolhidos,
 	)
 	if err != nil {
 		return board, err
@@ -102,7 +102,7 @@ func poeNoMapa(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 		// O erro do deslocamento NÃO derruba o comando: as peças já nasceram e a
 		// mesa precisa vê-las. Devolver erro aqui deixaria o mestre achando que
 		// nada aconteceu sobre um mapa que mudou.
-		if comVelocidade, err := st.boards.SetSpeeds(c.R.Context(), c.SessionID, speeds); err == nil {
+		if comVelocidade, err := st.boards.SetSpeeds(c.R.Context(), c.SessionID, c.TabuleiroID, speeds); err == nil {
 			board = comVelocidade
 		}
 	}

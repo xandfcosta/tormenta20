@@ -59,12 +59,12 @@ func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+	if st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
 	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
 	ligado := c.R.URL.Query().Get("apagar") == ""
-	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, traco, especie, ligado)
+	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
 }
 
 // limpaOTerreno é a BORRACHA (ALE-203): o clique devolve a casa ao chão limpo,
@@ -79,10 +79,10 @@ func limpaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+	if st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
-	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, traco)
+	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, c.TabuleiroID, traco)
 }
 
 // enchaORetangulo e limpaORetangulo são os irmãos de área dos dois de cima.
@@ -95,11 +95,11 @@ func enchaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+	if st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
 	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
-	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, casas, especie, true)
+	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, c.TabuleiroID, casas, especie, true)
 }
 
 func limpaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
@@ -107,10 +107,10 @@ func limpaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+	if st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
-	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, casas)
+	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, c.TabuleiroID, casas)
 }
 
 // oRetanguloDaURL lê os dois cantos e devolve as casas de dentro.
@@ -165,7 +165,7 @@ func reabreOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	return st.boards.ShowPlace(c.R.Context(), c.CampaignID, c.SessionID, id)
+	return st.boards.ShowPlace(c.R.Context(), c.CampaignID, c.SessionID, c.TabuleiroID, id)
 }
 
 // removeOLugar apaga uma cena do acervo, e ela não volta.
@@ -182,7 +182,7 @@ func removeOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err := st.boards.RemovePlace(c.R.Context(), c.CampaignID, id); err != nil {
 		return nil, err
 	}
-	return st.boards.Get(c.R.Context(), c.SessionID), nil
+	return st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID), nil
 }
 
 // lugarDaURL lê o id do CAMINHO, como o quadrado do movimento: o valor é do
@@ -197,12 +197,27 @@ func lugarDaURL(r *http.Request) (int64, error) {
 }
 
 // abreOTabuleiro monta a cena com o lugar e o chão que o mestre escolheu.
+//
+// Desde a ALE-205 ela ACRESCENTA uma aba em vez de substituir a cena que estava
+// na mesa: é a issue inteira, e o caso de uso é o grupo que se separou — mostrar
+// a cripta não pode custar a taverna. Quem tira cena da mesa continua sendo o
+// encerrar, que arquiva.
+//
+// E QUEM ABRE VAI PARA A ABA NOVA. O mestre digitou o nome do lugar e apertou
+// abrir: deixá-lo na cena anterior faria o gesto parecer que não aconteceu —
+// ele procuraria na tela uma taverna que nasceu na aba ao lado. É escolha de
+// quem clicou e de mais ninguém: a mesa não é puxada, porque a aba padrão
+// continua sendo a mais antiga.
 func abreOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	lugar, chao, err := cenaDosSinais(c.R)
 	if err != nil {
 		return nil, err
 	}
-	b := st.boards.Open(c.R.Context(), c.SessionID, lugar, chao)
+	b, err := st.boards.Open(c.R.Context(), c.SessionID, lugar, chao)
+	if err != nil {
+		return nil, err
+	}
+	st.abas.Escolhe(c.SessionID, c.User.ID, b.ID)
 	// O formulário volta ao zero, como o do combatente: sem isto o lugar fica no
 	// campo e a cena seguinte nasce com o nome da anterior.
 	c.Sinais["novolugar"] = ""
@@ -216,22 +231,33 @@ func abreOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 // de propósito: o mestre mandou tirar a cena da mesa, e recusar isso porque o
 // acervo falhou deixaria a mesa presa numa cena que já acabou.
 func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	if atual := st.boards.Get(c.R.Context(), c.SessionID); atual != nil {
+	if atual := st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID); atual != nil {
 		if err := st.boards.Archive(c.R.Context(), c.CampaignID, atual); err != nil {
 			log.Printf("session %d: falha ao arquivar o lugar (%v)", c.SessionID, err)
 		}
 	}
-	st.boards.Close(c.R.Context(), c.SessionID)
-	// A LENTE morre com a cena (ALE-193): "você está vendo como a mesa" sobre uma
-	// tela sem tabuleiro faria o mestre concluir que o mapa sumiu PARA OS
-	// JOGADORES — a resposta errada exatamente à pergunta que a lente existe para
-	// responder. Apaga a de todo mundo porque a cena era de todo mundo.
-	st.lentes.Apaga(c.SessionID)
-	// `nil` é a mensagem: "esta sessão não tem tabuleiro" é estado de verdade, e
-	// não uma grade vazia. O `comandoDoTabuleiro` só publica quando não é nil, e
-	// aqui o nil é justamente o que a mesa precisa saber — por isso a publicação
-	// é explícita e o retorno não a repete.
-	st.publishBoardState(c.SessionID, nil)
+	st.boards.Close(c.R.Context(), c.SessionID, c.TabuleiroID)
+	// AS ESCOLHAS DE ABA morrem com a ÚLTIMA cena, e não com esta (ALE-205).
+	//
+	// Fechar uma aba com outras abertas não é o fim do tabuleiro: quem estava
+	// olhando a que morreu cai na padrão sozinho, porque o `aAbaDe` confere a
+	// escolha contra o que existe. Apagar tudo aqui arrastaria de volta para a
+	// padrão gente que estava numa aba que continua aberta.
+	if len(st.boards.Abertos(c.R.Context(), c.SessionID)) == 0 {
+		// A LENTE morre com a cena (ALE-193): "você está vendo como a mesa" sobre
+		// uma tela sem tabuleiro faria o mestre concluir que o mapa sumiu PARA OS
+		// JOGADORES — a resposta errada exatamente à pergunta que a lente existe
+		// para responder. Apaga a de todo mundo porque a cena era de todo mundo.
+		//
+		// Com abas ela sobrevive ao fechamento de UMA, e isso está certo: a lente
+		// é sobre "o que a mesa vê", e a mesa continua vendo as outras.
+		st.lentes.Apaga(c.SessionID)
+		st.abas.Apaga(c.SessionID)
+	}
+	// `nil` é a mensagem "esta sessão não tem tabuleiro", e ela só é VERDADE
+	// quando não sobrou nenhum. Sobrando, quem vai é a aba padrão — ver
+	// `publicaOQueSobrou`.
+	st.publicaOQueSobrou(c.R.Context(), c.SessionID)
 	return nil, nil
 }
 

@@ -26,7 +26,7 @@ type Server struct {
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs         // nil if the catalog snapshot failed to Load
 	sessions *aovivo.SessionStore     // in-memory realtime tracker state (B.6)
-	boards   *tabuleiro.BoardStore    // tabuleiro tático vivo por sessão (ALE-124)
+	boards   *tabuleiro.BoardStore    // tabuleiros táticos vivos por sessão (ALE-124, vários na ALE-205)
 	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
 	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
 	livro    livroServido             // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
@@ -35,6 +35,11 @@ type Server struct {
 	// um modo em `data-show` seria desfeito pelo primeiro quadro do SSE, com a
 	// peça escondida voltando sozinha à tela do mestre no meio da conferência.
 	lentes *asLentes
+	// abas é qual tabuleiro cada pessoa está olhando (ALE-205). Mora aqui pelo
+	// MESMO motivo da lente, e o arquivo dela explica o argumento inteiro: o
+	// stream desenha, e o que ele desenha não pode depender de um sinal que ele
+	// não enxerga.
+	abas *asAbasEscolhidas
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.
@@ -142,6 +147,7 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, vitaisDaFicha{q: q}),
 		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID),
 		lentes:   novasLentes(),
+		abas:     novasAbas(),
 		presence: aovivo.NewPresenceRegistry(),
 		sse:      aovivo.NewSSEHub(),
 	}

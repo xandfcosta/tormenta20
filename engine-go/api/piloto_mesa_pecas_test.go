@@ -47,7 +47,7 @@ func TestPorNoMapaTrazSoQuemFoiEscolhido(t *testing.T) {
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
@@ -74,7 +74,7 @@ func TestSemEscolhaOComandoRecusaEmVezDeTrazerTodos(t *testing.T) {
 
 	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":""}`)
 
-	if b := f.s.boards.Get(context.Background(), f.sessionID); len(b.Tokens) != 0 {
+	if b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao); len(b.Tokens) != 0 {
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
 	}
 	// E a recusa FALA: um comando que não faz nada e não diz nada é lido como
@@ -98,7 +98,7 @@ func TestAPecaNasceComDeslocamento(t *testing.T) {
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
@@ -150,7 +150,7 @@ func TestOJogadorNaoPoeNoMapa(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça no mapa: %d", rec.Code)
 	}
-	if b := f.s.boards.Get(context.Background(), f.sessionID); len(b.Tokens) != 0 {
+	if b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao); len(b.Tokens) != 0 {
 		t.Errorf("o mapa mudou apesar do 403 (%d peças)", len(b.Tokens))
 	}
 }
@@ -168,7 +168,7 @@ func TestOsCandidatosDizemQuemJaEstaNoMapa(t *testing.T) {
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	candidatos := candidatosAoMapa(b, f.s.sessions.GetState(f.sessionID))
 	if len(candidatos) != 2 {
 		t.Fatalf("a fila tem 2 combatentes e o diálogo ofereceu %d", len(candidatos))
@@ -206,7 +206,7 @@ func TestPorNoMapaNaoPintaTerreno(t *testing.T) {
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	for _, especie := range tabuleiro.EspeciesDeTerreno {
 		if casas := tabuleiro.QuadradosDe(b, especie.ID); len(casas) != 0 {
 			t.Errorf("pôr no mapa pintou %s em %v", especie.ID, casas)

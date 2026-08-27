@@ -19,7 +19,7 @@ import (
 // paradasDoTabuleiro lê as paradas guardadas no provisório.
 func paradasDoTabuleiro(t *testing.T, f pilotoFixture) []engine.Square {
 	t.Helper()
-	b := f.s.boards.Get(context.Background(), f.sessionID)
+	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
 	if b == nil || b.Pending == nil {
 		return nil
 	}
@@ -65,7 +65,7 @@ func TestDesfazerTiraAUltimaPernaERecalculaOCusto(t *testing.T) {
 			t.Fatalf("a parada %s deu %d", casa, rec.Code)
 		}
 	}
-	antes := f.s.boards.Get(context.Background(), f.sessionID).Pending
+	antes := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao).Pending
 	if antes == nil || antes.Cost != 4 || len(antes.Stops) != 3 {
 		t.Fatalf("as duas pernas ficaram %+v — sem o caso positivo o desfazer não mede nada", antes)
 	}
@@ -73,7 +73,7 @@ func TestDesfazerTiraAUltimaPernaERecalculaOCusto(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/desfazer-parada", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desfazer deu %d", rec.Code)
 	}
-	depois := f.s.boards.Get(context.Background(), f.sessionID).Pending
+	depois := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao).Pending
 	if depois == nil {
 		t.Fatal("desfazer UMA parada cancelou o movimento inteiro")
 	}
@@ -101,14 +101,14 @@ func TestDesfazerAUltimaParadaCancelaOMovimento(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
-	if f.s.boards.Get(context.Background(), f.sessionID).Pending == nil {
+	if f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao).Pending == nil {
 		t.Fatal("não havia movimento para desfazer — o caso positivo falhou")
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/desfazer-parada", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desfazer deu %d", rec.Code)
 	}
-	if p := f.s.boards.Get(context.Background(), f.sessionID).Pending; p != nil {
+	if p := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao).Pending; p != nil {
 		t.Errorf("sobrou um provisório de custo %d sem perna nenhuma: %+v", p.Cost, p)
 	}
 }

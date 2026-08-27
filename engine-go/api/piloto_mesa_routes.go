@@ -78,6 +78,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDoGrupo(r)
 		s.rotasDosMarcadores(r)
 		s.rotasDaCortina(r)
+		s.rotasDasAbas(r)
 		s.rotasDaLente(r)
 		s.rotasDasAcoesDaPeca(r)
 		s.rotasDasCondicoes(r)
@@ -316,7 +317,11 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// contra o banco (o `meus` do roster) e nunca contra o cliente — é o mesmo
 	// fio de volta até a pessoa que a ALE-33 fixou.
 	quemOlha := tabuleiro.Mover{UserID: user.ID, Role: role}
-	cena := tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID))
+	// A ABA que ESTA pessoa está olhando (ALE-205), e não "o tabuleiro da
+	// sessão", que deixou de existir como coisa única. Ela é resolvida contra os
+	// abertos, então a aba que o mestre fechou não deixa ninguém numa tela morta.
+	aba := s.aAbaDe(ctx, sessionID, user.ID)
+	cena := tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID, aba))
 	// A LENTE DO MESTRE (ALE-193): com ela ligada, o que se desenha é a cena
 	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `quemOlha` continua
 	// dizendo "mestre", porque a lente é sobre o que ele vê e não sobre o que ele
@@ -331,6 +336,11 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	)
 	view.Tabuleiro.Lente = naLente
 	view.Tabuleiro.PecasEscondidas = escondidas
+	// A BARRA DE ABAS (ALE-205) é a lista dos abertos, redigida pelo papel de
+	// quem olha — e ela vem depois da lente de propósito: a lente é sobre a CENA
+	// que o mestre está vendo, não sobre quais cenas existem. Um mestre na lente
+	// que perdesse as abas não teria como sair da que está olhando.
+	view.Tabuleiro.Abas = asAbasDaMesa(s.boards.Abertos(ctx, sessionID), role, aba, campaignID, sessionID)
 	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
 	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
 	if role == "gm" {

@@ -21,9 +21,9 @@ import (
 // abreTabuleiro põe um tabuleiro na mesa com uma peça, e devolve o id dela.
 func (f pilotoFixture) abreTabuleiro(t *testing.T, terreno string) *tabuleiro.BoardState {
 	t.Helper()
-	b := f.s.boards.Open(context.Background(), f.sessionID, "Taverna do Javali", terreno)
-	if b == nil {
-		t.Fatal("o tabuleiro não abriu")
+	b, err := f.s.boards.Open(context.Background(), f.sessionID, "Taverna do Javali", terreno)
+	if err != nil {
+		t.Fatalf("o tabuleiro não abriu: %v", err)
 	}
 	return b
 }
@@ -55,11 +55,11 @@ func TestSemTabuleiroACenaDizQueNaoHaMapa(t *testing.T) {
 func TestAPecaEscondidaNaoChegaAoJogador(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
-	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
 		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}, true); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}
-	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
 		tabuleiro.BoardToken{ID: "avista", Label: "Arwen", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("pôr a peça à vista: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestAPecaDaVezAcendeComOMesmoDouradoDaFila(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.naFila(t)
 	f.abreTabuleiro(t, "pedra")
-	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
 		tabuleiro.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
@@ -171,17 +171,19 @@ func TestOTabuleiroAvisaQuemEscutaAcadaMudanca(t *testing.T) {
 	}
 
 	drenar()
-	bs.Open(ctx, sessao, "Taverna", "taverna")
+	if _, err := bs.Open(ctx, sessao, "Taverna", "taverna"); err != nil {
+		t.Fatalf("abrir: %v", err)
+	}
 	avisou("abrir o tabuleiro")
 
 	drenar()
-	if _, err := bs.AddToken(ctx, sessao, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}, true); err != nil {
+	if _, err := bs.AddToken(ctx, sessao, aAbaPadrao, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	avisou("pôr uma peça (pelo apply)")
 
 	drenar()
-	bs.Close(ctx, sessao)
+	bs.Close(ctx, sessao, aAbaPadrao)
 	avisou("fechar o tabuleiro")
 }
 
@@ -196,7 +198,7 @@ func TestUmaMutacaoRecusadaNaoAvisa(t *testing.T) {
 	aviso, parar := bs.Assinar(sessao)
 	defer parar()
 	// SEM tabuleiro aberto: o `apply` recusa antes de mexer em nada.
-	if _, err := bs.AddToken(ctx, sessao, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}, true); err == nil {
+	if _, err := bs.AddToken(ctx, sessao, aAbaPadrao, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}, true); err == nil {
 		t.Fatal("pôr peça sem tabuleiro devia recusar; sem a recusa este teste não mede nada")
 	}
 	select {
@@ -240,7 +242,7 @@ func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
 	// criando ao mesmo tempo não podem inventar o mesmo. Por isso ele é lido do
 	// estado devolvido em vez de assumido — a primeira versão deste teste
 	// assumiu "p" e morreu em `peça "p" não está no tabuleiro`.
-	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
 		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true)
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -303,7 +305,7 @@ func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
 	esperaAPeca("Ogro em 2, 2", "a carga fria não trouxe a peça onde ela está")
 
 	inicio := time.Now()
-	if _, err := f.s.boards.UpdateToken(context.Background(), f.sessionID, pecaID,
+	if _, err := f.s.boards.UpdateToken(context.Background(), f.sessionID, aAbaPadrao, pecaID,
 		tabuleiro.ParseTokenPatch(map[string]any{"x": 7})); err != nil {
 		t.Fatalf("mover a peça: %v", err)
 	}
@@ -336,7 +338,7 @@ func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
 func TestUmaMudancaNaFilaNaoRemendaOMapa(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
-	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
 		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
@@ -432,11 +434,11 @@ func TestUmaMudancaNaFilaNaoRemendaOMapa(t *testing.T) {
 func TestACortinaEscondeACenaENaoPareceTabuleiroVazio(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
-	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
 		tabuleiro.BoardToken{Label: "Dragão", X: 3, Y: 3}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	if _, _, err := f.s.boards.SetCurtain(context.Background(), f.sessionID, true); err != nil {
+	if _, _, err := f.s.boards.SetCurtain(context.Background(), f.sessionID, aAbaPadrao, true); err != nil {
 		t.Fatalf("fechar a cortina: %v", err)
 	}
 
