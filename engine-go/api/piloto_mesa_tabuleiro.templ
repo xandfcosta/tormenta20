@@ -289,6 +289,8 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				// ela liga o fantasma à peça, e as duas pontas dela são discos que
 				// a apagariam se ela passasse por baixo.
 				@aSetaDoMovimento(v)
+				// A SETA VIVA do arrasto sobe junto e pela mesma razão.
+				@aPreviaDoMovimento(v)
 				// O TRILHO flutua sobre o mapa, colado à esquerda e centrado na
 				// altura: ele é o que se troca com mais frequência na cena, e a
 				// mão volta sempre ao mesmo lugar.
@@ -356,6 +358,7 @@ templ osAjudantesDaFerramenta(v tabuleiroView) {
 			@aBarraDoGrupo(v)
 		}
 		@aLeituraDaRegua()
+		@aLeituraDaPrevia()
 		@aBarraDoGabarito(v)
 		if v.Movimento != nil && v.Movimento.Meu {
 			@oMovimentoProposto(v)
@@ -687,7 +690,7 @@ templ pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) {
 		data-class={ oVestidoDaPeca(p.ID, v.ArrastaAPeca == p.ID) }
 		if aPecaRecebeOGesto(v, p.ID) {
 			data-on:pointerdown={ oPegarDaPeca(v, p.ID) }
-			data-on:pointermove__window={ segueODedo("peca") }
+			data-on:pointermove__window={ oSeguirDaPeca(v, p) }
 			data-on:pointerup__window={ oSoltarDaPeca(v, p) }
 		}
 		if v.Mestre {
@@ -1696,5 +1699,78 @@ templ aBarraDoGrupo(v tabuleiroView) {
 		>
 			@icone("X", "size-4")
 		</button>
+	</p>
+}
+
+// aPreviaDoMovimento é a seta VIVA, desenhada enquanto o dedo arrasta a peça
+// (ALE-203, pedido do dono: "durante o drag do token, mostre a seta apontando
+// para o token movimentando e mostre a distância na seta").
+//
+// Ela é irmã da `aSetaDoMovimento` e não a mesma: aquela desenha o que o
+// SERVIDOR guardou, com o `d` vindo pronto no HTML; esta desenha o que ainda não
+// existe, e por isso vive em SINAIS — o caminho muda a cada casa que o dedo
+// atravessa, e remendar HTML no meio do gesto trocaria os nós debaixo do dedo.
+//
+// O CAMINHO TODO e não só a perna viva: as paradas já postas continuam na conta,
+// e as três cores são recalculadas sobre o TOTAL. É o que responde "se eu soltar
+// aqui, quanto gastei?" — que é a pergunta do gesto.
+templ aPreviaDoMovimento(v tabuleiroView) {
+	<svg
+		aria-hidden="true"
+		data-show="$previafiocabe !== ''"
+		class="tabuleiro-medida tabuleiro-medida-frente"
+	>
+		<g data-attr:transform={ oDesenhoNaJanela }>
+			// AS TRÊS FAIXAS, cada uma no seu nó fixo: o `d` vazio não desenha nada,
+			// então a faixa que não existe simplesmente não aparece — sem um
+			// `data-show` por nó, que é a combinação que congela a aba quando
+			// encontra um `data-attr` de estilo no mesmo elemento.
+			<path
+				data-attr:d="$previafiocabe"
+				vector-effect="non-scaling-stroke"
+				class="tabuleiro-previa-fio tabuleiro-previa-cabe"
+			></path>
+			<path
+				data-attr:d="$previafiosegundo"
+				vector-effect="non-scaling-stroke"
+				class="tabuleiro-previa-fio tabuleiro-previa-segundo"
+			></path>
+			<path
+				data-attr:d="$previafioalem"
+				vector-effect="non-scaling-stroke"
+				class="tabuleiro-previa-fio tabuleiro-previa-alem"
+			></path>
+		</g>
+		// OS RÓTULOS EM METROS, fora do grupo que escala — mesma razão dos da régua
+		// e dos da seta guardada: dentro dele a fonte seria multiplicada pelo zoom.
+		//
+		// QUEM ESCONDE É UM NÓ E QUEM POSICIONA É OUTRO: o `<g>` leva o `data-show`
+		// e o `<text>` leva os `data-attr` de posição. Juntos no mesmo elemento eles
+		// entram em laço e a aba PARA DE RESPONDER, sem console e sem exceção.
+		for _, i := range aReservaDePernas() {
+			<g data-show={ oRotuloDaPreviaExiste(i) }>
+				<text
+					data-attr:x={ oMeioDaPreviaEm(i, "x") + " * $quadrado - $vistax" }
+					data-attr:y={ oMeioDaPreviaEm(i, "y") + " * $quadrado - $vistay" }
+					data-text={ oTextoDaPrevia(i) }
+					text-anchor="middle"
+					dominant-baseline="middle"
+					class="tabuleiro-regua-rotulo"
+				></text>
+			</g>
+		}
+	</svg>
+}
+
+// aLeituraDaPrevia é a frase do custo enquanto o dedo arrasta.
+//
+// Ela mora nos AJUDANTES, junto da leitura da régua, e não no rodapé do
+// movimento: o rodapé fala do que já foi proposto, e durante o arrasto ainda não
+// há proposta nenhuma. Duas frases no mesmo lugar fariam a pessoa ler o custo
+// velho achando que é o novo.
+templ aLeituraDaPrevia() {
+	<p role="status" data-show="$previatexto !== ''" class="tabuleiro-ajudante gap-2">
+		@icone("MapPin", "size-4 text-grimorio-gold")
+		<span data-text="$previatexto" class="font-mono tabular-nums text-grimorio-gold"></span>
 	</p>
 }

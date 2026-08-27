@@ -575,3 +575,76 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
     await apagar()
   }
 })
+
+/**
+ * A PRÉVIA DO ARRASTO: a seta e a distância aparecem ENQUANTO o dedo arrasta
+ * (ALE-203, pedido do dono: "durante o drag do token, mostre a seta apontando
+ * para o token movimentando e mostre a distância na seta").
+ *
+ * POR QUE E2E, que é a faixa mais cara e precisa se justificar: o que se mede
+ * aqui só existe DENTRO de um gesto de ponteiro com movimentos intermediários.
+ * O Go prova o que a rota `/previa/` responde — quatro guardas, um deles provado
+ * vermelho — e nada mais: a ligação entre o `pointermove` e aquela rota mora
+ * numa string de expressão do Datastar, que nenhum compilador lê e nenhum teste
+ * de handler exercita. Quebrada, ela não dá erro: o atributo continua no HTML,
+ * inteiro e com cara de certo, e o arrasto simplesmente não desenha nada.
+ *
+ * CENTRALIZAR ANTES DE ARRASTAR não é arrumação, e esta linha custou uma
+ * investigação inteira: a peça pode cair debaixo do trilho de ferramentas, o
+ * `boundingBox` devolve a caixa de um elemento COBERTO sem reclamar, e o
+ * `mouse.down` acerta o trilho. O gesto não acontece, e a leitura vira "a prévia
+ * não funciona" — apontando para o código que está certo. Antes de ler o
+ * silêncio como defeito, o caso confere que a peça TEM o gesto pendurado.
+ */
+test('a seta e a distância aparecem durante o arrasto da peça', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    await abreOTabuleiro(page, mesa)
+    await poeUmaPecaNoMapa(page)
+    await page.getByLabel('Centralizar nas peças').click()
+
+    const peca = page.locator('.tabuleiro-peca').first()
+    // O CONTROLE, antes de qualquer ausência virar conclusão: o gesto está
+    // pendurado nesta peça? Sem isto, "não achei prévia" seria verdade também
+    // sobre uma peça que ninguém pode arrastar.
+    await expect(peca, 'a peça não tem o gesto de arrasto: o canal não está aberto').toHaveAttribute(
+      'data-on:pointermove__window',
+      /previa/,
+    )
+
+    const caixa = await peca.boundingBox()
+    if (!caixa) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
+    const x = caixa.x + caixa.width / 2
+    const y = caixa.y + caixa.height / 2
+
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    // PASSOS INTERMEDIÁRIOS, e é isto que um `dragTo` não tem: a prévia é pedida
+    // a cada CASA atravessada, então um salto direto do começo ao fim não a
+    // dispara nenhuma vez.
+    for (let i = 1; i <= 8; i++) {
+      await page.mouse.move(x + i * 44, y)
+    }
+
+    // MEDIR NO MEIO DO GESTO: é o único instante em que a prévia existe.
+    await expect(
+      page.locator('.tabuleiro-previa-cabe'),
+      'o arrasto não desenhou a seta viva',
+    ).toHaveAttribute('d', /^M /)
+    await expect(
+      page.locator('.tabuleiro-medida-frente text').filter({ hasText: /m$/ }).first(),
+      'a seta viva não diz a distância em metros',
+    ).toBeVisible()
+
+    await page.mouse.up()
+    // E A PRÉVIA SOME ao soltar: sobrevivendo, ela ficaria por cima da seta de
+    // verdade, com o mesmo formato e outra medida — dois caminhos na tela e
+    // nenhum jeito de saber qual vale.
+    await expect(
+      page.locator('.tabuleiro-previa-cabe'),
+      'a seta viva sobreviveu ao soltar',
+    ).toHaveAttribute('d', '')
+  } finally {
+    await apagar()
+  }
+})

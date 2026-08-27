@@ -72,6 +72,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDosComandosDaMesa(r)
 		s.rotasDoBestiarioDaMesa(r)
 		s.rotasDoMovimento(r)
+		s.rotasDaPreviaDoMovimento(r)
 		s.rotasDaRegua(r)
 		s.rotasDaCena(r)
 		s.rotasDoGrupo(r)
@@ -237,6 +238,10 @@ func sinaisDaMesa() string {
 		// sob o ponteiro, a fase da máquina, os rótulos de cada perna e a frase do
 		// total — as duas últimas escritas pelo servidor.
 		osSinaisDaRegua,
+		// A PRÉVIA DO ARRASTO: as três faixas da seta viva, os rótulos de cada
+		// perna e a frase do custo, todos escritos pelo servidor a cada casa que o
+		// dedo atravessa. Ver `piloto_mesa_movimento_previa.go`.
+		osSinaisDaPrevia,
 		// O GABARITO nasce na PRIMEIRA forma da lista, e ela é derivada e não
 		// digitada pelo mesmo motivo do chão: a página que escreve 'esfera' à mão
 		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a

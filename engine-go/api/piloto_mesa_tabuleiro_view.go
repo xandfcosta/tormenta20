@@ -844,6 +844,42 @@ func segueODedo(quem string) string {
 		"$arrastando === '%s' && ($arrastox = evt.clientX - $arrastoinix, $arrastoy = evt.clientY - $arrastoiniy)", quem)
 }
 
+// oDedoSegueComPrevia é o `segueODedo` da PEÇA, com a seta viva por cima.
+//
+// Ele pede a prévia ao servidor SÓ QUANDO O QUADRADO MUDA, e não a cada pixel:
+// é a mesma trava do `aReguaSegueOPonteiro`, e ela transforma "um pedido por
+// evento de ponteiro" em "um pedido por casa atravessada". Sem ela, um arrasto
+// de dois segundos abriria centenas de requisições para desenhar a mesma linha.
+//
+// A conta do quadrado é a MESMA do `soltaEPara` (`Math.round` do deslocamento
+// pelo `--quadrado`), e tem de ser: se a prévia arredondasse diferente do
+// soltar, a pessoa leria um custo e receberia outro — o defeito mais caro que
+// esta tela pode ter, porque ele só aparece depois da decisão.
+func oDedoSegueComPrevia(v tabuleiroView, p pecaDoTabuleiro) string {
+	return fmt.Sprintf(
+		"if ($arrastando !== 'peca') return; "+
+			"$arrastox = evt.clientX - $arrastoinix; $arrastoy = evt.clientY - $arrastoiniy; "+
+			"const cx = %d + Math.round($arrastox / $quadrado), cy = %d + Math.round($arrastoy / $quadrado); "+
+			"if (cx === $previax && cy === $previay) return; "+
+			"$previax = cx; $previay = cy; "+
+			"@post('/piloto/mesa/%d/%d/tabuleiro/%s/previa/' + cx + '/' + cy)",
+		p.X, p.Y, v.CampaignID, v.SessionID, p.ID)
+}
+
+// apagaAPrevia limpa a seta viva. Vai no `pointerup`, junto do que solta.
+//
+// QUEM LIMPA É QUEM TERMINA O GESTO, e não quem começa o próximo: um desenho de
+// prévia que sobrevivesse ao soltar ficaria por cima da seta de verdade, com o
+// mesmo formato e outra medida — dois caminhos na tela e nenhum jeito de saber
+// qual é o que vale. É a mesma regra do nó compartilhado que o diálogo de senha
+// ensinou (ver o CLAUDE.md deste pacote).
+//
+// O `$previax` volta para um valor IMPOSSÍVEL e não para zero: zero é uma casa
+// legítima do plano, e o próximo arrasto que começasse nela não pediria prévia
+// nenhuma — a trava do "só quando o quadrado muda" o engoliria em silêncio.
+const apagaAPrevia = "$previafiocabe = ''; $previafiosegundo = ''; $previafioalem = ''; " +
+	"$previarotulos = []; $previatexto = ''; $previax = null; $previay = null"
+
 // soltaEPara escreve o `pointerup`: converte o deslocamento em QUADRADOS e
 // propõe a parada.
 //
@@ -948,9 +984,22 @@ func oPegarDaPeca(v tabuleiroView, id string) string {
 // está (ALE-203, item 4).
 func oSoltarDaPeca(v tabuleiroView, p pecaDoTabuleiro) string {
 	if v.ArrastaAPeca == p.ID {
-		return soltaEPara(v, "peca", p.X, p.Y)
+		return apagaAPrevia + "; " + soltaEPara(v, "peca", p.X, p.Y)
 	}
 	return soltaOGrupo(v)
+}
+
+// oSeguirDaPeca é o par do `oPegarDaPeca` no `pointermove`: a peça que se
+// arrasta ganha a PRÉVIA, e o grupo continua só empurrando pixels.
+//
+// A divisa é a mesma dos outros dois, e ela tem de ser: a prévia mede o custo de
+// UMA peça, e o gesto do grupo move várias sem regra de deslocamento nenhuma —
+// pedir prévia ali desenharia a seta de uma peça sobre o arrasto de todas.
+func oSeguirDaPeca(v tabuleiroView, p pecaDoTabuleiro) string {
+	if v.ArrastaAPeca == p.ID {
+		return oDedoSegueComPrevia(v, p)
+	}
+	return segueODedo("peca")
 }
 
 // estaArrastando marca o elemento que o CSS deve deslocar.

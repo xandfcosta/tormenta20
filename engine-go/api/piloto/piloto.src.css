@@ -1353,6 +1353,35 @@ html {
    * `--destructive` é o vermelho que esta casa já usa para o que não se pode
    * fazer (o `.tabuleiro-peca-verbo-perigo` é o vizinho): um vermelho novo só
    * para a seta seria mais uma cor a aprender para dizer o que a folha já diz. */
+  /* A SETA VIVA do arrasto tem CLASSES PRÓPRIAS e não as da seta guardada.
+   *
+   * Ela é o mesmo desenho e a mesma cor, mas os três nós dela existem SEMPRE no
+   * HTML — o `d` vazio é que os apaga —, e reusar `.tabuleiro-movimento-alem`
+   * faria a classe do vermelho estar na página em toda cena, inclusive nas que
+   * não têm vermelho nenhum. Quem descobriu isso foi um guarda que procurava a
+   * classe no HTML servido e passou a achá-la sempre: o teste ficou verde sobre
+   * uma tela que não tinha o que ele dizia medir.
+   *
+   * TRACEJADA, e essa é a única diferença visual: durante o arrasto o caminho é
+   * uma hipótese, e ao soltar ele vira o traço cheio da proposta. Sem isso as
+   * duas setas seriam idênticas, e a que sobrevivesse a um remendo fora de hora
+   * seria indistinguível da que vale. */
+  .tabuleiro-previa-fio {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-dasharray: 6 4;
+  }
+  .tabuleiro-previa-cabe {
+    stroke: var(--movimento-cabe);
+  }
+  .tabuleiro-previa-segundo {
+    stroke: var(--movimento-segundo);
+  }
+  .tabuleiro-previa-alem {
+    stroke: var(--movimento-alem);
+  }
+
   .tabuleiro-movimento-segundo {
     stroke: var(--movimento-segundo);
   }
