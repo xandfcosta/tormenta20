@@ -1,152 +1,300 @@
-## Code style
+Gerenciador de mesa e ficha de **Tormenta 20**. O domínio é em português: o que
+se lê na tela e o que vira identificador de domínio fala a língua da mesa.
 
-- Functions: 4-20 lines. Split if longer.
-- Files: under 500 lines. Split by responsibility.
-- One thing per function, one responsibility per module (SRP).
-- Names: specific and unique. Avoid `data`, `handler`, `Manager`.
-  Prefer names that return <5 grep hits in the codebase.
-- Types: explicit. No `any`, no `Dict`, no untyped functions.
-- No code duplication. Extract shared logic into a function/module.
-- Early returns over nested ifs. Max 2 levels of indentation.
-- Exception messages must include the offending value and expected shape.
+São dois pacotes. `engine-go/` é o backend em Go — a API HTTP na :3001, o motor
+de regras, o mesmo motor compilado para WASM, e as cenas do piloto em `.templ`
+servidas com Datastar. `frontend/` é a SPA em SolidJS, que desde a virada para o
+Datastar segura só a ficha e a sessão. Um processo serve tudo em produção.
 
-## Comments
+## Antes de mexer
 
-- Keep your own comments. Don't strip them on refactor — they carry intent and provenance.
-- Write WHY, not WHAT. Skip `// increment counter` above `i++`.
-- Docstrings on public functions: intent + one usage example.
-- Reference issue numbers / commit SHAs when a line exists because of a specific bug or upstream constraint.
+- **Não assuma.** Se a regra do livro ou a decisão de produto não estiver clara
+  no código, no `.md` do pacote ou no [GLOSSARIO.md](GLOSSARIO.md), **pergunte**.
+  Adivinhar regra de T20 custa mais caro que esperar a resposta, e o erro sai na
+  ficha de alguém.
+- **Regra do livro se confere no livro**, com a página citada. O offset entre PDF
+  e livro e o histórico de citações erradas são do
+  [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — é lá que as regras moram, e o
+  número não é repetido aqui de propósito (ver "Documentação").
+- **Mexeu em `.templ`?** `go tool templ generate`, e **leia a saída DELE**, não a
+  do `go build`. **Classe CSS nova no piloto?**
+  `engine-go/scripts/build-piloto-css.sh`. As duas armadilhas — e as três do
+  Datastar que não deixam erro para trás — estão explicadas no
+  [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
+- **Antes de commitar:** `go test ./...`, `go vet ./...` e `gofmt` no
+  `engine-go/`; `pnpm test` e `pnpm typecheck` no `frontend/`. Mexeu em gesto de
+  ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e && npx playwright
+  test` (~4 min, sobe o próprio servidor e o próprio banco).
+- **Releia a documentação que a sua mudança tocou** — o `.md` do pacote e o
+  `GLOSSARIO.md`. Não "atualize se mudou o comportamento": **releia**. Ver
+  "Documentação".
 
-## Tests
+## Estilo de código
 
-**The goal is confidence that the app produces the results we want — not
-coverage of every small piece of code.** A test earns its place by protecting an
-outcome someone would notice breaking. Everything below follows from that.
+- Funções de 4 a 20 linhas; arquivos abaixo de 500. Passou, divida por
+  responsabilidade.
+- Uma coisa por função, uma responsabilidade por módulo.
+- Retorno cedo em vez de `if` aninhado. No máximo dois níveis de indentação.
+- **Nomes específicos e únicos.** Nada de `data`, `handler`, `Manager`. Prefira
+  nomes com menos de 5 ocorrências no `grep` — um nome que já existe em cinco
+  lugares não identifica coisa nenhuma.
+- Tipos explícitos. Sem `any`, sem `Dict`, sem função sem tipo.
+- Sem lógica repetida: extraia para função ou módulo.
+- **Mensagem de exceção carrega o valor ofensor e o formato esperado.** "Caminho
+  inválido" não ajuda ninguém no meio de uma sessão; "o caminho começa em (3,1) e
+  a peça está em (0,0)" ajuda.
 
-- **Prefer INTEGRATION.** The default test mounts a real page (or hits a real
-  handler through the real router) with the I/O faked at the edge, and asserts
-  what the user or the caller actually gets. That band catches composition bugs
-  — which is where the defects have actually been — and it is where new coverage
-  should go first.
-- **Unit-test what carries a RULE**, not what carries plumbing. Modifier
-  stacking, PV/PM, rounding, limits, optimistic rollback, wire formats: yes.
-  Getters, one-line formatters, a `Set` + `sort` the assertion re-implements,
-  and anything the typechecker already guarantees: no.
-- **E2E is the smallest possible set.** A Playwright test must justify itself
-  with a mechanism only a real browser has — animation timeline, real layout and
-  overflow, virtualized lists that measure zero in jsdom, a live stream across two
-  servers. "It's a user journey" is NOT a justification: journeys are cheaper
-  and steadier as integration tests. E2E is the most expensive and most fragile
-  thing in this repo; spend it deliberately.
-- **Push each guarantee to the cheapest layer that can hold it.** A server rule
-  belongs in a handler test, not in an assertion that a button is missing — UI
-  gating is UX, the security boundary is the server. Don't assert the same rule
-  in three layers; pick the one that owns it.
-- **Bug fixes get a regression test, and it must be proven RED first.** A test
-  that was never seen failing is a guess. When a fix and its test land together,
-  the commit says how the test was proven to fail.
-- **O INSTRUMENTO MENTE COM CARA DE RESULTADO, e o formato é sempre o mesmo:**
-  a infraestrutura em volta da medição destrói a medição, e o que sobra parece
-  um dado. Quatro casos num dia só, e nenhum deles pareceu erro na hora:
-  - Um `finally` que fecha contextos de browser lançou "Failed to find context"
-    e **substituiu o erro de verdade** do teste. Limpeza ganha `catch`, sempre:
-    *limpeza não pode falar mais alto que o defeito* (ALE-245).
-  - A suíte rodada com `| tail -15` deixou 981 bytes de stdout; procurar uma
-    linha ali e não achar foi lido como "o evento não aconteceu", quando era
-    "o canal não existe" (ALE-238).
-  - Uma sonda instalou `MutationObserver` em `document.body` num `addInitScript`,
-    onde o `body` ainda é `null` — e a ausência de mutação virou conclusão
-    (ALE-199).
-  - Um teste de componente não passava o tamanho e comparava o valor do
-    servidor com o **default** da SPA, passando verde sobre nada.
+## Comentários
 
-  **O controle é barato e é obrigatório: antes de ler AUSÊNCIA como evidência,
-  provar que o canal estaria lá se o evento tivesse acontecido.** Procurar no
-  mesmo arquivo uma linha que sai SEMPRE; conferir que a sonda vê o caso
-  positivo conhecido. Sem isso, "não reproduzi" não é evidência de ausência —
-  é ausência de evidência, e as duas se parecem no terminal.
+- **Preserve os comentários que já existem.** Não os apague num refactor — eles
+  carregam intenção e procedência.
+- Escreva **POR QUÊ**, não O QUÊ. Pule o `// incrementa o contador` sobre o `i++`.
+- Docstring em função pública: intenção e um exemplo de uso.
+- Cite a issue ou o SHA quando a linha existe por causa de um defeito específico
+  ou de uma restrição externa.
 
-  **E o canal pode morrer DEPOIS de instalado: um observador precisa afirmar
-  que o DOCUMENTO em que ele foi instalado ainda é o mesmo.** Navegação
-  descarta o documento, e com ele o `MutationObserver` — a lista de mutações
-  volta VAZIA, que é a mesma coisa que "nada mudou". O guarda
-  `não desanexa a cena` (ALE-238) passa exatamente no PIOR caso: a cena não
-  desanexou porque a cena deixou de existir. Não é um teste que falha em
-  detectar; é um teste que **afirma o oposto do que aconteceu**, e ele só foi
-  descoberto porque um clique estourou antes e denunciou a navegação.
+## Testes
 
-  O mesmo vale para qualquer sonda de vida longa — `addEventListener`,
-  `PerformanceObserver`, um `page.on(...)` cujo alvo recarregou. Afirme o
-  documento antes de afirmar o silêncio.
-- **Um guarda só mede o que ele VISITA.** Cobertura de contraste, de tipografia
-  e de leiaute é função de onde o teste NAVEGA, não de quantas asserções ele
-  tem. Dois defeitos de contraste sobreviveram anos com o guarda no ar porque
-  ele nunca abria um popover nem entrava no livro de campanhas (ALE-237); a
-  mesma forma reapareceu na tipografia (ALE-252).
+**O objetivo é confiança de que o app produz o resultado que a gente quer — não
+cobertura de cada pedacinho de código.** Um teste ganha o lugar dele protegendo
+um resultado que alguém notaria quebrar. Tudo abaixo decorre disso.
 
-  **Mas "põe a cena na lista" só resolve enquanto as cenas forem contáveis, e
-  vale saber a diferença.** Um guarda que mede a folha do grimório cobre 43
-  telas por AMOSTRAGEM — ele mede uma e vale para todas porque todas passam
-  pelos mesmos componentes. No dia em que uma tela escreve as classes à mão, o
-  regime vira ENUMERAÇÃO: uma entrada por cena, para sempre, e a que alguém
-  esquecer nasce sem medição — em silêncio, que é a marca desta família.
-  Enumerar é remendo; **o que restaura a amostragem é a tela nova passar pelos
-  componentes da casa.** Escolher o remendo dá sensação de conserto e deixa o
-  buraco aberto (ALE-252).
-- **Delete tests that cost more than they protect**: assertions on class names
-  and DOM shape nobody promised, tests that re-derive the expected value by
-  running the implementation, tests over code that is dead or gated out of the
-  bundle. Green tests over unused code are the worst kind of debt — they charge
-  maintenance and protect nothing.
-- Data transcribed from the book (catalogs) is validated by SCHEMA at the dump,
-  not by an `expect` per field repeating the same number. Pin the *exception*
-  (the trap in the table), never the whole table.
-- Mock external I/O (API, DB, filesystem) with named fake classes, not inline
-  stubs. Tests must be F.I.R.S.T: fast, independent, repeatable,
-  self-validating, timely.
-- Write the test first when you can state the expected result first; when
-  chasing a bug, reproduce it in the browser or a handler first, then encode it.
-- **Cutting order: write the replacement, watch it go green, THEN delete.**
-  Deleting first opens a blind window.
+- **Prefira INTEGRAÇÃO.** O teste padrão monta uma página de verdade (ou bate num
+  handler de verdade, pelo roteador de verdade) com o I/O trocado na borda, e
+  afirma o que a pessoa ou o chamador recebe. É a faixa que pega defeito de
+  COMPOSIÇÃO — que é onde os defeitos deste repositório de fato estiveram — e é
+  para lá que a cobertura nova vai primeiro.
+- **Unitário para o que carrega REGRA**, não para o que carrega encanamento.
+  Empilhamento de modificador, PV/PM, arredondamento, limites, rollback otimista,
+  formato de fio: sim. Getter, formatador de uma linha, um `Set` + `sort` que a
+  asserção reimplementa, e tudo que o typechecker já garante: não.
+- **E2E é o menor conjunto possível.** Um teste de Playwright precisa se
+  justificar com um mecanismo que só um navegador real tem — linha do tempo de
+  animação, leiaute e overflow reais, lista virtualizada que mede zero no jsdom,
+  gesto de ponteiro com passos intermediários, fluxo ao vivo entre dois
+  servidores. **"É uma jornada do usuário" NÃO é justificativa**: jornada é mais
+  barata e mais firme como teste de integração. E2E é a coisa mais cara e mais
+  frágil deste repositório; gaste com intenção.
+- **Empurre cada garantia para a camada mais barata que a segura.** Regra de
+  servidor pertence a um teste de handler, não a uma asserção de que o botão
+  sumiu — travar na UI é UX, a fronteira de segurança é o servidor.
+- **Uma regra, uma camada.** Uma regra é prendida UMA vez, onde ela mora; as
+  outras camadas afirmam presença e ligação, nunca a fronteira de novo. **Se
+  apagar um teste não muda nada que outra camada já não acuse, apague.**
+- **Correção de defeito ganha teste de regressão, e ele nasce VERMELHO.** Um
+  teste que nunca foi visto falhando é um palpite. Quando o conserto e o teste
+  entram juntos, o commit diz como o teste foi provado falho.
+- **Nunca derive o esperado do código sob teste.** Não importe o helper que está
+  sendo testado para montar o valor que se espera dele, e não espelhe a
+  implementação na asserção — os dois andam juntos com o defeito. Escreva o
+  número e a data na mão. Medido: um teste de componente que não passava o
+  tamanho comparava o valor do servidor com o **default** da SPA, e passava verde
+  sobre nada.
+- **Unitário prova DECISÃO, não consulta.** Um spec que troca a borda protege
+  exatamente duas coisas: a ramificação em volta da chamada e os argumentos dela.
+  Um spec que não afirma nenhuma das duas é um *mock echo* — arranje o dublê para
+  devolver X, afirme que o resultado é X — e não deve ser escrito. Ele prova que
+  a linguagem devolve valores.
+- **Quando o PREDICADO decide quem é afetado, prenda o predicado.** O `where` de
+  uma consulta, o papel num `BoardForRole`, o filtro que escolhe QUAIS peças a
+  mesa vê: isso não é encanamento, é a regra. Arranjar o resultado por ordem de
+  chamada diz o que acontece *com* as linhas achadas e nada sobre *quais* linhas
+  são essas.
 
-## Dependencies
+### O INSTRUMENTO MENTE COM CARA DE RESULTADO
 
-- Inject dependencies through constructor/parameter, not global/import.
-- Wrap third-party libs behind a thin interface owned by this project.
+O formato é sempre o mesmo: a infraestrutura em volta da medição destrói a
+medição, e o que sobra parece um dado. Quatro casos num dia só, e nenhum deles
+pareceu erro na hora:
 
-## Structure
+- Um `finally` que fecha contextos de browser lançou "Failed to find context" e
+  **substituiu o erro de verdade** do teste. Limpeza ganha `catch`, sempre:
+  *limpeza não pode falar mais alto que o defeito* (ALE-245).
+- A suíte rodada com `| tail -15` deixou 981 bytes de stdout; procurar uma linha
+  ali e não achar foi lido como "o evento não aconteceu", quando era "o canal não
+  existe" (ALE-238).
+- Uma sonda instalou `MutationObserver` em `document.body` num `addInitScript`,
+  onde o `body` ainda é `null` — e a ausência de mutação virou conclusão
+  (ALE-199).
+- Uma sonda de Playwright mediu zero prévias de arrasto e quase virou "a
+  funcionalidade não existe". A peça estava **debaixo do trilho de ferramentas**:
+  o `boundingBox` devolve a caixa de um elemento COBERTO sem reclamar, e o
+  `mouse.down` acertava o trilho (ALE-203).
 
-- Follow the framework's convention (Rails, Django, Next.js, etc.).
-- Prefer small focused modules over god files.
-- Predictable paths: controller/model/view, src/lib/test, etc.
+**O controle é barato e é obrigatório: antes de ler AUSÊNCIA como evidência,
+provar que o canal estaria lá se o evento tivesse acontecido.** Procurar no mesmo
+arquivo uma linha que sai SEMPRE; conferir que a sonda vê o caso positivo
+conhecido. Sem isso, "não reproduzi" não é evidência de ausência — é ausência de
+evidência, e as duas se parecem no terminal.
 
-## Formatting
+**E o canal pode morrer DEPOIS de instalado: um observador precisa afirmar que o
+DOCUMENTO em que ele foi instalado ainda é o mesmo.** Navegação descarta o
+documento, e com ele o `MutationObserver` — a lista de mutações volta VAZIA, que
+é a mesma coisa que "nada mudou". O guarda `não desanexa a cena` (ALE-238) passa
+exatamente no PIOR caso: a cena não desanexou porque a cena deixou de existir.
+Não é um teste que falha em detectar; é um teste que **afirma o oposto do que
+aconteceu**, e ele só foi descoberto porque um clique estourou antes e denunciou
+a navegação.
 
-- Use the language default formatter (`cargo fmt`, `gofmt`, `prettier`, `black`, `rubocop -A`). Don't discuss style beyond that.
+O mesmo vale para qualquer sonda de vida longa — `addEventListener`,
+`PerformanceObserver`, um `page.on(...)` cujo alvo recarregou. Afirme o documento
+antes de afirmar o silêncio.
 
-## Logging
+### Um guarda só mede o que ele VISITA
 
-- Structured JSON when logging for debugging / observability.
-- Plain text only for user-facing CLI output.
+Cobertura de contraste, de tipografia e de leiaute é função de onde o teste
+NAVEGA, não de quantas asserções ele tem. Dois defeitos de contraste
+sobreviveram anos com o guarda no ar porque ele nunca abria um popover nem
+entrava no livro de campanhas (ALE-237); a mesma forma reapareceu na tipografia
+(ALE-252).
+
+**Mas "põe a cena na lista" só resolve enquanto as cenas forem contáveis, e vale
+saber a diferença.** Um guarda que mede a folha do grimório cobre 43 telas por
+AMOSTRAGEM — ele mede uma e vale para todas porque todas passam pelos mesmos
+componentes. No dia em que uma tela escreve as classes à mão, o regime vira
+ENUMERAÇÃO: uma entrada por cena, para sempre, e a que alguém esquecer nasce sem
+medição — em silêncio, que é a marca desta família. Enumerar é remendo; **o que
+restaura a amostragem é a tela nova passar pelos componentes da casa.** Escolher
+o remendo dá sensação de conserto e deixa o buraco aberto (ALE-252).
+
+### O resto
+
+- **Apague teste que custa mais do que protege**: asserção sobre nome de classe e
+  forma de DOM que ninguém prometeu, teste que redescobre o esperado rodando a
+  implementação, teste sobre código morto ou fora do bundle. Teste verde sobre
+  código que ninguém usa é a pior dívida — cobra manutenção e não protege nada.
+- Dado transcrito do livro (catálogos) é validado por SCHEMA no despejo, não por
+  um `expect` por campo repetindo o mesmo número. Prenda a *exceção* (a armadilha
+  da tabela), nunca a tabela inteira.
+- Troque I/O externo (API, banco, sistema de arquivos) por classes dublê nomeadas, não por stub inline. Testes F.I.R.S.T: rápidos, independentes,
+  repetíveis, auto-verificáveis, oportunos.
+- Escreva o teste primeiro quando você consegue enunciar o resultado esperado
+  primeiro; caçando defeito, reproduza no navegador ou num handler antes, depois
+  codifique.
+- **Ordem do corte: escreva o substituto, veja-o verde, DEPOIS apague.** Apagar
+  primeiro abre uma janela cega.
+
+## Como uma convenção passa a valer
+
+Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que alguém
+apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
+**forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
+
+Este repositório já vive disso e nunca escreveu a regra: são **22 guardas de
+varredura** no formato `TestToda…` / `TestNenhum…` — toda espécie de terreno tem
+desenho, todo ícone pedido existe no gerado, toda classe posicionada por
+`--col`/`--lin` tem caixa, nenhum nó junta `data-show` com `data-attr:style`,
+nenhuma expressão indexa o sinal da lista. Cada um nasceu de um defeito que
+tinha irmãos.
+
+- **Uma convenção só foi adotada depois de varrida.** Uma revisão nomeia um
+  arquivo; a correção é *todo* arquivo com a mesma forma. Antes de fechar, rode a
+  busca que acha os irmãos e diga no commit quantos eram.
+- **Se a regra é mecanizável com o que já roda, ela vira guarda** — um `TestToda…`
+  no pacote que a possui, e não um parágrafo. Guarda de varredura falha com o
+  nome do caso que faltou, que é a diferença entre "conserte isto" e "procure".
+- **Comentário não é correção.** Docstring explicando por que a violação está ali
+  é dívida registrada, não desenho — e registrar faz parecer resolvido.
+- **Regra mora aqui ou não existe.** Corpo de commit, comentário no Linear e
+  docstring não vinculam: o próximo autor lê o `CLAUDE.md`, conclui que está em
+  conformidade, e escreve a mesma coisa de novo.
+
+## Dependências
+
+- Injete dependência por construtor ou parâmetro, não por global ou import.
+- Embrulhe biblioteca de terceiro atrás de uma interface fina, deste projeto.
+
+## Estrutura
+
+- Siga a convenção do framework.
+- Prefira módulos pequenos e focados a arquivos-deus.
+- Caminhos previsíveis: controller/model/view, src/lib/test.
+
+## Formatação
+
+- Use o formatador padrão da linguagem: `gofmt` no Go, `biome` no TypeScript
+  (`pnpm lint`). Não discuta estilo além disso.
+
+## Logs
+
+- JSON estruturado quando o log é para depuração ou observabilidade. Logue
+  objetos, não strings interpoladas — ponha o valor num campo para ele continuar
+  pesquisável.
+- Texto puro só na saída de CLI que uma pessoa lê.
 
 ## Linguagem ubíqua
 
 - **[GLOSSARIO.md](GLOSSARIO.md) — uma palavra por conceito, e um conceito por
   palavra.** Leia antes de nomear qualquer coisa que o usuário vá ler ou que vá
-  virar identificador. Ele tem a coluna dos termos PROIBIDOS (é "campanha", não
-  "campanha"), as colisões abertas que não se consertam por palpite, e a regra da
-  costura pt-BR/inglês. Termo novo: escreva a linha do glossário ANTES do código.
+  virar identificador. Ele tem a coluna dos termos PROIBIDOS, as colisões abertas
+  que não se consertam por palpite, e a regra da costura pt-BR/inglês. Termo
+  novo: escreva a linha do glossário ANTES do código.
+- **A costura é do glossário e não deste arquivo** (§F): o domínio fala
+  português, a **fronteira** fala inglês — nome de tabela, campo JSON, evento
+  SSE — e a mecânica de programação (`index`, `next`, `pending`) também. Não
+  invente a terceira regra.
 
-## Reference
-- Use [Tormenta 20 book](/t20-book.pdf) as reference for rules
+## Commits
 
-## Package guides
-- Frontend has its own adapted rules: [frontend/CLAUDE.md](frontend/CLAUDE.md)
-  (FSD layers, thin TanStack routes, styling tokens, vitest/tsgo/eslint).
-  When working under `frontend/`, follow it in addition to this file.
-- O backend `engine-go/` (Go) tem guia próprio: [engine-go/CLAUDE.md](engine-go/CLAUDE.md)
-  — regenerar oráculo é ato deliberado, citação de página conferida, o gerador de
-  tipos da fronteira, validação de schema dos catálogos. HTTP API on :3001, the rules engine, and
-  the same engine compiled to WASM for the browser. One process serves the SPA,
-  the API and the event stream in production (`STATIC_DIR`) — there is no nginx and no
-  compose. The NestJS backend was removed once nothing consumed it.
+**Conventional Commits**, assunto em português, numa linha só.
+
+- `<tipo>(<escopo>): <o que mudou> (ALE-NNN)`. Tipos: `feat`, `fix`, `refactor`,
+  `test`, `docs`, `chore`, `ci`, `build`, `style`. Merge usa `merge:`.
+- **O escopo é a superfície** (`tabuleiro`, `gabarito`, `mesa`, `ficha`), ou
+  `claude` para este arquivo. Não invente um por assunto — escopo é onde se
+  procura código.
+- **O assunto diz o que MUDOU para quem usa**, não o que foi editado. "a seta diz
+  os metros de cada perna e vira vermelha onde o deslocamento acaba" é o assunto;
+  "atualiza piloto_mesa_tabuleiro.templ" é o diff parafraseado.
+- Cite a issue do Linear. Varreu? Diga quantos eram. Provou o teste vermelho?
+  Diga como.
+- **Sem `Co-Authored-By` e sem rodapé de ferramenta.**
+
+## Documentação
+
+**Toda documentação deste projeto é escrita em português.** Um idioma só, porque
+documentação que alterna obriga quem lê a traduzir no meio da frase.
+
+> **Não varrido, e o número fica aqui em vez de dar a impressão de que já vale:**
+> o `frontend/CLAUDE.md` (362 linhas) ainda está em inglês. Texto novo nasce em
+> português; o inglês existente é convertido quando a seção for tocada por outro
+> motivo.
+
+**A regra mora no guia que a possui.** Este arquivo é sobre como escrever código
+neste repositório; o que cada pacote faz é do `.md` dele. Uma regra descrita aqui
+e no pacote diverge — e quando diverge, ninguém sabe qual está certa.
+
+**Toda mudança termina relendo a documentação que ela tocou.** Reler, e não
+"atualizar se mudei o comportamento": as duas coisas são diferentes, e é a
+segunda que falha.
+
+Um `.md` fica errado sem ninguém mexer nele. Renomear um símbolo deixa a
+explicação falando de um nome que não existe; mover uma regra de lugar deixa o
+texto apontando para onde ela não está; juntar duas coisas deixa a frase que as
+contrastava dizendo que A difere de A. Nenhum desses aparece no diff do código, e
+nenhum é pego por teste — só releitura pega.
+
+O critério: se depois da sua mudança um `.md` afirma algo que deixou de ser
+verdade, ele é um defeito entregue igual a qualquer outro. **Documentação errada
+é pior que documentação ausente, porque a ausente ninguém segue.**
+
+**Planejamento não vira `.md`**: fase, roadmap e plano de migração são issue no
+Linear (org ALE, projeto Tormenta20). Um `.md` descreve o que o sistema **faz** —
+plano executado vira mentira e fica, descrição executada vira verdade e fica
+certa.
+
+## Referência
+
+- O livro: [Tormenta 20](/t20-book.pdf). Toda regra citada com a página, e a
+  página conferida antes de escrever — como conferir é do
+  [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
+
+## Guias por pacote
+
+- **`engine-go/`** (Go): [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — regenerar
+  oráculo é ato deliberado, citação de página conferida, o gerador de tipos da
+  fronteira, validação de schema dos catálogos, as armadilhas do templ e as três
+  do Datastar que não deixam erro para trás.
+- **`frontend/`** (SolidJS): [frontend/CLAUDE.md](frontend/CLAUDE.md) — camadas
+  FSD, rotas TanStack finas, tokens de estilo, vitest/tsgo/eslint. Trabalhando
+  sob `frontend/`, siga-o além deste arquivo.
