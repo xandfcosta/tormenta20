@@ -617,6 +617,21 @@ type PendingMove struct {
 	// em vez de refazer a aritmética em JavaScript (ALE-190).
 	Diagonals int `json:"diagonals"`
 	Difficult int `json:"difficult"`
+	// AlemDoDeslocamento é o ÍNDICE, no `Path`, do primeiro quadrado que o
+	// deslocamento não paga — e -1 quando o caminho inteiro cabe (ou quando não
+	// há orçamento).
+	//
+	// Ele é o `StoppedAt` do `engine.PathCost`, guardado e não recalculado: quem
+	// mede é o motor, num lugar só, e a tela precisa do MESMO número para pintar
+	// o trecho de vermelho. Recalcular na view seria a segunda conta da regra, que
+	// é como este repositório já mostrou dois números para o mesmo combatente
+	// (ALE-122).
+	//
+	// Ele existe porque o caminho que estoura passou a ser ACEITO (ALE-203): o
+	// provisório é "o que eu quero fazer", desenhado inteiro com o excesso em
+	// vermelho, e quem recusa é o `CommitMove`. A peça continua sem PODER pousar
+	// além do deslocamento — o que mudou é ela poder ser DESENHADA lá.
+	AlemDoDeslocamento int `json:"alemDoDeslocamento"`
 	// Budget é o orçamento contra o qual o caminho foi medido, em quadrados, ou
 	// -1 quando não há (mestre, ou cena fora de combate).
 	Budget int `json:"budget"`
@@ -727,7 +742,22 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 		return fmt.Errorf("o caminho começa em (%d,%d) e a peça está em (%d,%d)", path[0].X, path[0].Y, token.X, token.Y)
 	}
 	cost := engine.PathCost(path, moveTerrainOf(b), budget)
-	if !cost.Legal {
+	// O caminho que ESTOURA o deslocamento é ACEITO aqui e recusado no
+	// `CommitMove` (ALE-203, pedido do dono: "a distância além do deslocamento em
+	// vermelho").
+	//
+	// A decisão anterior era bloquear no PROPOR, e o que ela protegia continua
+	// protegido: a peça não pousa além do deslocamento, porque quem a faz pousar
+	// é o commit. O que ela custava era a tela — recusado no propor, não há
+	// provisório, e sem provisório não há o que desenhar: quem estourou recebia
+	// uma frase e nenhum desenho, sem ver ONDE estourou nem quanto sobrava para
+	// encurtar. O `MoveCost.StoppedAt` foi escrito para isto ("a tela pinta o
+	// trecho recusado em vez de recusar") e nunca tinha encontrado uma tela.
+	//
+	// Um caminho MALFORMADO continua recusado aqui: `Legal` é falso pelas duas
+	// razões, e só a do orçamento passa. Passo inválido não é uma proposta cara,
+	// é uma proposta que não existe.
+	if cost.Malformed {
 		return fmt.Errorf("%s", cost.Reason)
 	}
 	if err := assertSaneCoords(BoardToken{X: path[len(path)-1].X, Y: path[len(path)-1].Y}); err != nil {
@@ -735,7 +765,8 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 	}
 	b.Pending = &PendingMove{
 		TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget,
-		Diagonals: cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.UserID,
+		AlemDoDeslocamento: cost.StoppedAt,
+		Diagonals:          cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.UserID,
 	}
 	b.Version++
 	return nil
@@ -886,6 +917,22 @@ func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 	token, _, err := assertMovable(b, st, pending.TokenID, by)
 	if err != nil {
 		return err
+	}
+	// O DESLOCAMENTO é conferido AQUI desde a ALE-203, e não mais no propor.
+	//
+	// A recusa mudou de porta, não de existência: propor um caminho caro é
+	// legítimo — é o que faz a tela poder desenhar o excesso em vermelho e a
+	// pessoa ver quanto precisa encurtar —, e o que continua impossível é a peça
+	// POUSAR além do que ela anda. A fronteira é o servidor, e ela é esta linha:
+	// a tela pinta de vermelho porque é UX, e isto aqui é a regra.
+	//
+	// Contra o `AlemDoDeslocamento` GRAVADO e não contra uma nova medição: o
+	// terreno pode ter mudado entre propor e confirmar, e remedir aqui faria a
+	// mesa confirmar um movimento diferente do que ela viu. Quem quiser o
+	// caminho novo, propõe de novo — que é o mesmo motivo de a `Version` existir.
+	if pending.AlemDoDeslocamento >= 0 {
+		return fmt.Errorf("o caminho custa %d quadrados e o deslocamento alcança %d: encurte o movimento",
+			pending.Cost, pending.Budget)
 	}
 	destination := pending.Path[len(pending.Path)-1]
 	// DE ONDE ELA VEIO fica gravado ANTES de a peça pousar: é o que faz o

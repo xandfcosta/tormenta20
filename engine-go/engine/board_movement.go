@@ -42,6 +42,17 @@ type MoveCost struct {
 	// caminho inteiro: quem estourou quer ver ONDE estourou.
 	StoppedAt int    `json:"stoppedAt"`
 	Reason    string `json:"reason,omitempty"`
+	// Malformed separa o caminho que NÃO É UM CAMINHO — um passo que pulou casa
+	// ou repetiu a mesma — do caminho que é apenas CARO.
+	//
+	// A diferença virou regra na ALE-203, quando o caminho que estoura o
+	// deslocamento passou a ser ACEITO e desenhado com o excesso em vermelho:
+	// quem propõe precisa recusar um e guardar o outro. Sem este campo, a única
+	// forma de distinguir seria reparar que o `Squares` sai ZERO no caminho
+	// malformado — verdade por acidente do `return` de emergência abaixo, e
+	// exatamente o tipo de inferência que se quebra em silêncio quando alguém
+	// resolve devolver o custo parcial.
+	Malformed bool `json:"malformed,omitempty"`
 	// Diagonals e Difficult contam QUANTOS passos dobraram, e por qual das duas
 	// regras. Existem para a tela poder NOMEAR a regra que produziu o número
 	// (ALE-190) em vez de refazer a conta em JavaScript: o texto sai do mesmo
@@ -101,7 +112,7 @@ func PathCost(path []Square, terrain MoveTerrain, budgetSquares int) MoveCost {
 	for i := 1; i < len(path); i++ {
 		cost, por, err := stepCost(path[i-1], path[i], terrain)
 		if err != nil {
-			return MoveCost{Budget: budgetSquares, Legal: false, StoppedAt: i, Reason: err.Error()}
+			return MoveCost{Budget: budgetSquares, Legal: false, Malformed: true, StoppedAt: i, Reason: err.Error()}
 		}
 		out.Squares += cost
 		if por.diagonal {

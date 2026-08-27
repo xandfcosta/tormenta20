@@ -1229,6 +1229,24 @@ html {
     fill: var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
 
+  /* O TRECHO ALÉM DO DESLOCAMENTO (ALE-203, item 13: "a distância possível em
+     amarelo e a distância além do deslocamento em vermelho").
+   *
+   * Só a COR muda: a espessura, a junta e o recuo da ponta continuam os do
+   * `.tabuleiro-movimento-fio`, que esta classe acompanha em vez de substituir.
+   * Um fio mais grosso ou tracejado no excesso faria a mesa procurar uma segunda
+   * diferença — a única que existe aqui é "isto você não anda".
+   *
+   * `--destructive` é o vermelho que esta casa já usa para o que não se pode
+   * fazer (o `.tabuleiro-peca-verbo-perigo` é o vizinho): um vermelho novo só
+   * para a seta seria mais uma cor a aprender para dizer o que a folha já diz. */
+  .tabuleiro-movimento-alem {
+    stroke: var(--destructive);
+  }
+  .tabuleiro-movimento-ponta-alem {
+    fill: var(--destructive);
+  }
+
   /* A MARCA do leitor do livro (ALE-264): o destaque do verbete na página.
    *
    * Escrita aqui e não como utilitário do Tailwind porque quem a cria é o
