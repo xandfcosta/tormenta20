@@ -215,10 +215,21 @@ func abs(v int) int {
 //
 //	ReachableSquares(Square{0, 0}, 2, MoveTerrain{}) // → 12 quadrados (o losango de raio 2)
 func ReachableSquares(from Square, budget int, terrain MoveTerrain) []Square {
-	if budget <= 0 {
-		return []Square{}
-	}
+	return aoAlcanceAte(custoAteCadaCasa(from, budget, terrain), from, 0, budget)
+}
+
+// custoAteCadaCasa é o Dijkstra cru: cada casa alcançável e o que ela CUSTOU.
+//
+// Separado do `ReachableSquares` porque o custo por casa é o que permite pintar
+// o alcance em FAIXAS (ALE-203): a mesma busca responde "até onde vou com uma
+// ação de movimento" e "até onde vou gastando a ação padrão também", e rodá-la
+// duas vezes para saber as duas coisas seria pagar o dobro por metade da
+// resposta — e abriria a porta para as duas contas divergirem.
+func custoAteCadaCasa(from Square, budget int, terrain MoveTerrain) map[Square]int {
 	cost := map[Square]int{from: 0}
+	if budget <= 0 {
+		return cost
+	}
 	frontier := []Square{from}
 	for len(frontier) > 0 {
 		current := frontier[0]
@@ -239,14 +250,42 @@ func ReachableSquares(from Square, budget int, terrain MoveTerrain) []Square {
 			frontier = append(frontier, next)
 		}
 	}
+	return cost
+}
+
+// aoAlcanceAte peneira as casas cujo custo cai na faixa `(minimo, maximo]`.
+//
+// A ponta de baixo é ABERTA e a de cima FECHADA, e é o que faz duas faixas
+// vizinhas cobrirem tudo sem pintar a mesma casa duas vezes: o ouro é
+// `(0, deslocamento]` e o azul é `(deslocamento, 2×deslocamento]`.
+func aoAlcanceAte(cost map[Square]int, from Square, minimo, maximo int) []Square {
 	out := make([]Square, 0, len(cost))
-	for square := range cost {
-		if square != from {
+	for square, c := range cost {
+		if square != from && c > minimo && c <= maximo {
 			out = append(out, square)
 		}
 	}
 	sortSquares(out)
 	return out
+}
+
+// ReachableInBands parte o alcance nas DUAS ações de movimento de um turno
+// (T20 p233: "Você pode trocar sua ação padrão por uma ação de movimento, para
+// fazer duas ações de movimento, mas não pode fazer o inverso").
+//
+// `dentro` é o que a criatura alcança com a ação de movimento; `segundo` é o que
+// ela só alcança gastando a ação padrão também. Não há terceira faixa porque não
+// há terceira ação — o que passa de `2×orcamento` simplesmente não é alcançável
+// no turno, e por isso não é desenhado.
+//
+// Um orçamento não-positivo devolve as duas vazias: fora de combate não há vez
+// nem ação padrão para trocar, e pintar faixas ali inventaria um teto.
+func ReachableInBands(from Square, orcamento int, terrain MoveTerrain) (dentro, segundo []Square) {
+	if orcamento <= 0 {
+		return []Square{}, []Square{}
+	}
+	cost := custoAteCadaCasa(from, 2*orcamento, terrain)
+	return aoAlcanceAte(cost, from, 0, orcamento), aoAlcanceAte(cost, from, orcamento, 2*orcamento)
 }
 
 func neighbours(s Square) []Square {
@@ -354,15 +393,30 @@ func CaminhoPorParadas(paradas []Square) []Square {
 // restante pode ser ZERO: aí o alcance é VAZIO — a tela diz "acabou" em vez de
 // oferecer casas que o servidor recusaria. Ele nunca inclui o quadrado onde a
 // peça está, porque ficar parado não é para onde se pode andar.
-func AlcanceDaProximaParada(paradas []Square, orcamento int, terreno MoveTerrain) (alcance []Square, restante int) {
+func AlcanceDaProximaParada(paradas []Square, orcamento int, terreno MoveTerrain) (dentro, segundo []Square, restante int) {
 	if len(paradas) == 0 {
-		return nil, orcamento
+		return nil, nil, orcamento
 	}
 	ultima := paradas[len(paradas)-1]
 	gasto := PathCost(CaminhoPorParadas(paradas), terreno, -1).Squares
-	restante = orcamento - gasto
-	if restante < 0 {
-		restante = 0
+	restante = semNegativo(orcamento - gasto)
+	if orcamento < 0 {
+		return nil, nil, restante
 	}
-	return ReachableSquares(ultima, restante, terreno), restante
+	// AS DUAS FAIXAS descontam o que JÁ FOI GASTO, e é isso que as faz encolher
+	// enquanto a pessoa empilha paradas: o ouro é o que sobra da ação de
+	// movimento, e o azul é o que sobra das duas juntas (p233). Quando o caminho
+	// já passou do deslocamento, o ouro seca e só o azul continua oferecendo
+	// casa — que é exatamente a leitura certa da cena.
+	cost := custoAteCadaCasa(ultima, semNegativo(2*orcamento-gasto), terreno)
+	return aoAlcanceAte(cost, ultima, 0, restante),
+		aoAlcanceAte(cost, ultima, restante, semNegativo(2*orcamento-gasto)),
+		restante
+}
+
+func semNegativo(n int) int {
+	if n < 0 {
+		return 0
+	}
+	return n
 }

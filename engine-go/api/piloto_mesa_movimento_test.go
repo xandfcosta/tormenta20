@@ -168,10 +168,42 @@ func TestOAlcanceSoApareceQuandoHaOrcamento(t *testing.T) {
 	if !strings.Contains(doJogador, "tabuleiro-alcance") {
 		t.Error("é a vez do jogador e ele não viu até onde pode andar")
 	}
+	// AS DUAS FAIXAS (T20 p233): ouro é o que a ação de movimento alcança, azul é
+	// o que só se alcança gastando a ação padrão junto. É a resposta de relance à
+	// pergunta do dono — "se ele precisa gastar a ação de movimento e a ação
+	// principal" — sem desenhar caminho nenhum.
+	if !strings.Contains(doJogador, "tabuleiro-alcance-segundo") {
+		t.Error("o jogador não viu até onde chega gastando a ação principal também")
+	}
 
+	// O MESTRE VÊ O MESMO SOMBREADO (decisão do dono: "o mestre não tem limite,
+	// mas a parte visual serve para todos"). Ele não é barrado por ele — a trava
+	// saiu do servidor —, e esconder as faixas dele tiraria da pessoa que decide
+	// exatamente o que a mesa está lendo.
 	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
-	if strings.Contains(doMestre, "tabuleiro-alcance") {
-		t.Error("o mestre não tem orçamento e mesmo assim viu um teto desenhado")
+	if !strings.Contains(doMestre, "tabuleiro-alcance-segundo") {
+		t.Error("o mestre não viu as faixas de alcance da peça que ele move")
+	}
+}
+
+// FORA DE COMBATE não há faixa nenhuma, para ninguém.
+//
+// O CONTROLE do guarda acima: sem ele, "o mestre viu o alcance" não se distingue
+// de "o alcance é desenhado sempre", e a regra que o dono escolheu — sem vez não
+// há ação padrão para trocar, então não há teto a desenhar — não estaria sendo
+// medida por ninguém.
+func TestForaDeCombateNinguemVeAlcance(t *testing.T) {
+	f := novoPiloto(t)
+	f.noTabuleiro(t)
+
+	for quem, quemChama := range map[string]int64{"jogador": f.jogador, "mestre": f.mestre} {
+		tela := f.pede(t, quemChama, http.MethodGet, f.urlDaMesa(), "").Body.String()
+		if !strings.Contains(tela, "tabuleiro-plano") {
+			t.Fatalf("o %s não viu o tabuleiro: a ausência abaixo não é evidência", quem)
+		}
+		if strings.Contains(tela, "tabuleiro-alcance") {
+			t.Errorf("fora de combate o %s viu um teto desenhado", quem)
+		}
 	}
 }
 
@@ -312,11 +344,20 @@ func TestASetaSaiEmDuasCoresQuandoOCaminhoEstoura(t *testing.T) {
 	}
 	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
 
-	if !strings.Contains(tela, "tabuleiro-movimento-alem") {
-		t.Error("o caminho estourou o deslocamento e a seta saiu inteira dourada")
+	if !strings.Contains(tela, "tabuleiro-movimento-segundo") {
+		t.Error("o caminho passou da ação de movimento e a seta saiu inteira dourada")
 	}
-	if !strings.Contains(tela, "url(#tabuleiro-ponta-alem-do-movimento)") {
-		t.Error("o trecho vermelho saiu sem ponta, ou com a ponta dourada")
+	if !strings.Contains(tela, "url(#tabuleiro-ponta-do-segundo)") {
+		t.Error("o trecho azul saiu sem ponta, ou com a ponta dourada")
+	}
+	// NOVE cabe em DOZE: passa da ação de movimento e ainda cabe na ação padrão
+	// trocada por ela (p233). Nada de vermelho — o vermelho é só o que não cabe
+	// no turno, e confundir os dois apagaria a distinção que o dono pediu.
+	if strings.Contains(tela, "tabuleiro-movimento-alem") {
+		t.Error("nove quadrados sobre um deslocamento de seis pintaram vermelho: eles cabem em duas ações")
+	}
+	if !strings.Contains(tela, "ação de movimento + ação principal") {
+		t.Error("o rodapé não nomeia as ações que o caminho gasta")
 	}
 	// A seta tem UMA ponta: com trecho vermelho o dourado termina no MEIO do
 	// plano, e uma ponta ali pareceria um segundo destino.
@@ -332,8 +373,12 @@ func TestASetaSaiEmDuasCoresQuandoOCaminhoEstoura(t *testing.T) {
 	if !strings.Contains(tela, ">13,5m<") {
 		t.Error("a seta não diz a distância da perna em metros")
 	}
-	if !strings.Contains(tela, "4,5m além do deslocamento") {
-		t.Error("o rodapé não conta quanto o caminho passou do deslocamento")
+	// E o rodapé NÃO repete a conta em metros: com dois limiares, "4,5m além do
+	// deslocamento" ficou ambíguo — além de qual dos dois? — e dizia a mesma coisa
+	// que a frase das ações ao lado. O metro por perna continua sobre a seta, que
+	// é onde ele explica a cor.
+	if strings.Contains(tela, "além do deslocamento") {
+		t.Error("o rodapé voltou a medir o excesso em metros, ao lado da frase que já o nomeia")
 	}
 }
 

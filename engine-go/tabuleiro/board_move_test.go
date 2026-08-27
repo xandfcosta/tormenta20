@@ -73,25 +73,29 @@ var (
 	mestre      = Mover{UserID: 1, Role: "gm"}
 )
 
-// O jogador anda com a própria peça na própria vez, e o caminho é MEDIDO: seis
-// quadrados de deslocamento (T20 p106: 9m) compram seis passos ortogonais.
-func TestJogadorMoveAPropriaPecaNaPropriaVez(t *testing.T) {
+// O jogador DESENHA com a própria peça na própria vez, e o caminho é MEDIDO:
+// seis quadrados de deslocamento (T20 p106: 9m) compram seis passos ortogonais.
+//
+// O que ele pode fazer é o desenho — quem o transforma em pouso é o mestre, e o
+// guarda disso é o `TestOJogadorDesenhaMasNaoPoeAPecaNoLugar`. Aqui o que se
+// prende é a outra metade: que ele PODE desenhar, e que a medida sai certa.
+func TestJogadorDesenhaComAPropriaPecaNaPropriaVez(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	err := ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}), jogadorDono)
 	if err != nil {
-		t.Fatalf("movimento legítimo recusado: %v", err)
+		t.Fatalf("desenho legítimo recusado: %v", err)
 	}
 	if b.Pending == nil || b.Pending.Cost != 2 {
 		t.Fatalf("provisório saiu como %+v, esperava custo 2", b.Pending)
 	}
-	// A peça NÃO se mexeu ainda: o provisório é proposta, e quem pousa é o commit.
+	// A peça NÃO se mexeu: o desenho é intenção, e quem pousa é o mestre.
 	if b.Tokens[0].X != 0 {
-		t.Errorf("a peça andou antes da confirmação: x=%d", b.Tokens[0].X)
+		t.Errorf("a peça andou com o desenho do jogador: x=%d", b.Tokens[0].X)
 	}
 
-	if err := CommitMove(b, st, b.Version, jogadorDono); err != nil {
-		t.Fatalf("confirmar: %v", err)
+	if err := CommitMove(b, st, b.Version, mestre); err != nil {
+		t.Fatalf("o mestre confirmar o desenho do jogador: %v", err)
 	}
 	if b.Tokens[0].X != 2 || b.Tokens[0].Y != 0 {
 		t.Errorf("a peça pousou em (%d,%d), esperava (2,0)", b.Tokens[0].X, b.Tokens[0].Y)
@@ -101,67 +105,83 @@ func TestJogadorMoveAPropriaPecaNaPropriaVez(t *testing.T) {
 	}
 }
 
-// O caminho além do deslocamento é PROPOSTO e recusado no CONFIRMAR (ALE-203).
+// O DESENHO DO JOGADOR É SÓ VISUAL: ele não põe a peça no lugar.
 //
-// A decisão anterior do dono era bloquear no PROPOR, e o que ela protegia
-// continua protegido — a peça não pousa além do que ela anda. O que mudou é a
-// PORTA: propor um caminho caro passou a ser legítimo, porque é isso que dá à
-// tela o que desenhar de vermelho ("a distância além do deslocamento em
-// vermelho"), e quem estourou precisa VER onde estourou para saber quanto
-// encurtar. Recusado no propor não há provisório, e sem provisório não há
-// desenho: a pessoa recebia uma frase e um mapa vazio.
+// As palavras do dono: *"o desenho do movimento do jogador é sempre só visual
+// para o mestre e outros jogadores entenderem o que ele quer fazer"*. Quem muda
+// o estado do tabuleiro é o mestre, e só ele.
 //
-// Com 6 quadrados de deslocamento, quatro diagonais custam 8 (T20 p238): as três
-// primeiras somam exatamente 6, então (3,3) ainda se paga e (4,4) — o índice 4
-// do caminho — é o primeiro quadrado que não.
-func TestCaminhoAlemDoDeslocamentoEPropostoERecusadoNoConfirmar(t *testing.T) {
-	b, st := mesaEmCombate(t)
-
-	if err := ProposeMove(b, st, "t1",
-		caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}, [2]int{4, 4}), jogadorDono); err != nil {
-		t.Fatalf("propor um caminho caro foi recusado, e ele precisa ser desenhado: %v", err)
-	}
-	if b.Pending == nil {
-		t.Fatal("não há provisório: a tela não tem o que pintar de vermelho")
-	}
-	if b.Pending.Cost != 8 {
-		t.Errorf("o caminho custou %d, esperado 8 (quatro diagonais, p238)", b.Pending.Cost)
-	}
-	if b.Pending.AlemDoDeslocamento != 4 {
-		t.Errorf("o deslocamento acabou no índice %d, esperado 4 — é onde o vermelho começa", b.Pending.AlemDoDeslocamento)
-	}
-
-	// A GARANTIA que a decisão do dono protegia, e ela não pode ter mudado de
-	// existência junto com a porta: a peça NÃO pousa além do deslocamento.
-	err := CommitMove(b, st, b.Version, jogadorDono)
-	if err == nil {
-		t.Fatal("oito quadrados de caminho pousaram sobre um deslocamento de seis")
-	}
-	if b.Tokens[0].X != 0 || b.Tokens[0].Y != 0 {
-		t.Errorf("a peça andou para (%d,%d) num movimento recusado", b.Tokens[0].X, b.Tokens[0].Y)
-	}
-	// E o provisório SOBREVIVE à recusa, senão o desenho some no clique e a
-	// pessoa perde o caminho que ela acabou de montar para encurtar.
-	if b.Pending == nil {
-		t.Error("a recusa do confirmar jogou fora o caminho que a pessoa montou")
-	}
-}
-
-// TestOCaminhoQueCABEContinuaPousando — o CONTROLE do caso acima.
-//
-// Sem ele, "o confirmar recusou" não se distingue de "o confirmar recusa
-// sempre", e a trava nova passaria verde sobre um tabuleiro em que ninguém anda.
-func TestOCaminhoQueCabeContinuaPousando(t *testing.T) {
+// Isto SUBSTITUI a trava de deslocamento que morava aqui. Ela existia porque o
+// jogador chegava direto ao estado da cena e precisava de um guarda no servidor;
+// com o confirmar sendo do mestre, o guarda perdeu o objeto — e o deslocamento
+// virou desenho (as três faixas da seta), não recusa.
+func TestOJogadorDesenhaMasNaoPoeAPecaNoLugar(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	if err := ProposeMove(b, st, "t1",
 		caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}), jogadorDono); err != nil {
+		t.Fatalf("o jogador não conseguiu DESENHAR o movimento dele: %v", err)
+	}
+	if b.Pending == nil {
+		t.Fatal("o desenho do jogador não ficou na cena: a mesa não vê o que ele quer fazer")
+	}
+
+	if err := CommitMove(b, st, b.Version, jogadorDono); err == nil {
+		t.Fatal("o jogador confirmou o próprio movimento: quem põe a peça no lugar é o mestre")
+	}
+	if b.Tokens[0].X != 0 || b.Tokens[0].Y != 0 {
+		t.Errorf("a peça andou para (%d,%d) por conta do jogador", b.Tokens[0].X, b.Tokens[0].Y)
+	}
+	// E o DESENHO SOBREVIVE à recusa: ele é o produto do gesto do jogador, e
+	// apagá-lo aqui tiraria da mesa exatamente o que ela precisa ver para decidir.
+	if b.Pending == nil {
+		t.Error("a recusa jogou fora o desenho do jogador")
+	}
+}
+
+// O MESTRE NÃO TEM LIMITE: ele põe a peça onde quiser, inclusive além do que ela
+// anda num turno.
+//
+// As palavras do dono: *"o mestre não tem limite, ele faz o que quiser no
+// tabuleiro, mas a parte visual serve para todos"*. Quatro diagonais custam 8
+// (T20 p238) sobre um deslocamento de 6 — antes esta era a recusa, e agora é um
+// pouso com a seta contando a história em azul.
+func TestOMestrePousaAPecaAlemDoDeslocamento(t *testing.T) {
+	b, st := mesaEmCombate(t)
+
+	if err := ProposeMove(b, st, "t1",
+		caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}, [2]int{4, 4}), mestre); err != nil {
+		t.Fatalf("propor um caminho caro: %v", err)
+	}
+	if b.Pending.Cost != 8 {
+		t.Errorf("o caminho custou %d, esperado 8 (quatro diagonais, p238)", b.Pending.Cost)
+	}
+	// O ORÇAMENTO DE DESENHO é o deslocamento da PEÇA, mesmo para o mestre: é ele
+	// que parte a seta nas três faixas, e -1 esconderia da mesa o que ela quer ver.
+	if b.Pending.Budget != 6 {
+		t.Errorf("o mestre desenhou com orçamento %d, esperado o deslocamento da peça (6)", b.Pending.Budget)
+	}
+
+	if err := CommitMove(b, st, b.Version, mestre); err != nil {
+		t.Fatalf("o mestre foi barrado pelo deslocamento, e ele não tem limite: %v", err)
+	}
+	if b.Tokens[0].X != 4 || b.Tokens[0].Y != 4 {
+		t.Errorf("a peça pousou em (%d,%d), esperava (4,4)", b.Tokens[0].X, b.Tokens[0].Y)
+	}
+}
+
+// TestOCONTROLE: o mestre pousando um caminho que CABE.
+//
+// Sem ele, "o mestre pousou o caro" não se distingue de "o mestre pousa
+// qualquer coisa porque o confirmar deixou de conferir a vez e a posse".
+func TestOMestrePousaOCaminhoQueCabe(t *testing.T) {
+	b, st := mesaEmCombate(t)
+
+	if err := ProposeMove(b, st, "t1",
+		caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}), mestre); err != nil {
 		t.Fatalf("propor seis quadrados sobre um deslocamento de seis: %v", err)
 	}
-	if b.Pending.AlemDoDeslocamento != -1 {
-		t.Errorf("um caminho que cabe marcou excesso no índice %d", b.Pending.AlemDoDeslocamento)
-	}
-	if err := CommitMove(b, st, b.Version, jogadorDono); err != nil {
+	if err := CommitMove(b, st, b.Version, mestre); err != nil {
 		t.Fatalf("confirmar um caminho que cabe: %v", err)
 	}
 	if b.Tokens[0].X != 3 || b.Tokens[0].Y != 3 {
@@ -189,18 +209,28 @@ func TestJogadorNaoMovePecaDeOutro(t *testing.T) {
 	}
 }
 
-// O mestre move qualquer peça, a qualquer hora, SEM orçamento: é a saída para
-// voo, empurrão, teleporte e "pode ir".
-func TestMestreMoveQualquerPecaSemOrcamento(t *testing.T) {
+// O mestre move qualquer peça, a qualquer hora, SEM ser barrado — é a saída para
+// voo, empurrão, teleporte e "pode ir" — e mesmo assim VÊ o deslocamento dela.
+//
+// As duas metades são a frase do dono inteira: *"o mestre não tem limite, ele faz
+// o que quiser no tabuleiro, mas a parte visual serve para todos"*. O orçamento
+// deixou de ser permissão e virou desenho, então mandá-lo como -1 aqui apagaria
+// da tela do mestre as três faixas que a mesa está lendo.
+func TestOMestreMoveSemLimiteMasVeODeslocamentoDaPeca(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	longe := caminho([2]int{9, 9}, [2]int{10, 10}, [2]int{11, 11}, [2]int{12, 12},
 		[2]int{13, 13}, [2]int{14, 14}, [2]int{15, 15}, [2]int{16, 16})
 	if err := ProposeMove(b, st, "t2", longe, mestre); err != nil {
-		t.Fatalf("o mestre foi barrado por orçamento: %v", err)
+		t.Fatalf("o mestre foi barrado: %v", err)
 	}
-	if b.Pending.Budget != -1 {
-		t.Errorf("o mestre propôs com orçamento %d, esperava nenhum (-1)", b.Pending.Budget)
+	if b.Pending.Budget != speedOf(b.Tokens[1]) {
+		t.Errorf("o mestre desenhou com orçamento %d, esperava o deslocamento da peça (%d)",
+			b.Pending.Budget, speedOf(b.Tokens[1]))
+	}
+	// E ele POUSA: catorze quadrados de caminho sobre um deslocamento de seis.
+	if err := CommitMove(b, st, b.Version, mestre); err != nil {
+		t.Fatalf("o mestre foi barrado no confirmar, e ele não tem limite: %v", err)
 	}
 }
 
@@ -230,14 +260,14 @@ func TestCommitSobreTabuleiroMudadoERecusado(t *testing.T) {
 	// O mestre mexe em outra peça: a cena que o jogador tinha na mão não existe mais.
 	_ = UpdateToken(b, "t2", tokenPatch{X: intPtr(5), Y: intPtr(5)})
 
-	if err := CommitMove(b, st, vista, jogadorDono); err == nil {
+	if err := CommitMove(b, st, vista, mestre); err == nil {
 		t.Fatal("o commit passou por cima de um tabuleiro que já tinha mudado")
 	}
 	if b.Pending == nil {
 		t.Error("o provisório foi perdido junto com a recusa: o jogador refaz o movimento do zero")
 	}
 	// Com a versão em dia, o mesmo commit entra.
-	if err := CommitMove(b, st, b.Version, jogadorDono); err != nil {
+	if err := CommitMove(b, st, b.Version, mestre); err != nil {
 		t.Fatalf("commit com a versão em dia recusado: %v", err)
 	}
 }
