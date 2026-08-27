@@ -253,12 +253,8 @@ tinha irmãos.
 ## Documentação
 
 **Toda documentação deste projeto é escrita em português.** Um idioma só, porque
-documentação que alterna obriga quem lê a traduzir no meio da frase.
-
-> **Não varrido, e o número fica aqui em vez de dar a impressão de que já vale:**
-> o `frontend/CLAUDE.md` (362 linhas) ainda está em inglês. Texto novo nasce em
-> português; o inglês existente é convertido quando a seção for tocada por outro
-> motivo.
+documentação que alterna obriga quem lê a traduzir no meio da frase. Os dois
+guias que existem hoje — este e o do `engine-go/` — já são.
 
 **A regra mora no guia que a possui.** Este arquivo é sobre como escrever código
 neste repositório; o que cada pacote faz é do `.md` dele. Uma regra descrita aqui
@@ -293,8 +289,17 @@ certa.
 
 - **`engine-go/`** (Go): [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — regenerar
   oráculo é ato deliberado, citação de página conferida, o gerador de tipos da
-  fronteira, validação de schema dos catálogos, as armadilhas do templ e as três
-  do Datastar que não deixam erro para trás.
-- **`frontend/`** (SolidJS): [frontend/CLAUDE.md](frontend/CLAUDE.md) — camadas
-  FSD, rotas TanStack finas, tokens de estilo, vitest/tsgo/eslint. Trabalhando
-  sob `frontend/`, siga-o além deste arquivo.
+  fronteira, validação de schema dos catálogos, as armadilhas do `templ` e as
+  três do Datastar que não deixam erro para trás, os dois defeitos silenciosos do
+  `sqlc`, e por que a bancada copia um molde migrado.
+- **`frontend/`** (SolidJS) **não tem guia próprio, e é deliberado.** A SPA está
+  sendo migrada para o Datastar e segura só a ficha e a sessão; um guia com
+  camadas FSD, Kobalte e rotas TanStack descreveria com detalhe uma superfície
+  que está saindo, e todo token gasto lendo-o seria gasto aprendendo o que vai
+  ser apagado. Trabalhando sob `frontend/`, valem as regras deste arquivo.
+
+  > O que se perde ao apagá-lo, para ninguém redescobrir por acidente: as
+  > armadilhas de renderização do Solid, os contornos do Kobalte e os tokens de
+  > estilo. O `.wasm` NÃO está nessa lista — ele é artefato de build e os hooks
+  > `pretest`/`prebuild` do `frontend/package.json` rodam o
+  > `scripts/build-engine-wasm.sh` sozinhos.

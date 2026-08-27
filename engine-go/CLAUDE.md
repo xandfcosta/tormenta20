@@ -301,8 +301,10 @@ Duas mudanças, as duas só no teste:
    `db.Open`: em produção essa linha é perda de dados do mestre.
 
 Resultado: `api/` de **15m01s para 24 s** no disco girante, e a suíte Go inteira
-de 6,8 s para **4,7 s** em tmpfs. Os 178 testes do pacote continuam rodando, zero
-pulados.
+de 6,8 s para **4,7 s** em tmpfs. Os 178 casos que o pacote tinha na época
+continuaram rodando, zero pulados — a aceleração não veio de cortar teste, que é
+a primeira suspeita quando uma suíte encolhe de quinze minutos para vinte e
+quatro segundos.
 
 **Por que o molde e não exportar `TMPDIR` para um tmpfs.** A variável funciona —
 mas só para quem lembrar, e só na máquina de quem lembrou. Quando isto foi
@@ -312,13 +314,26 @@ pedir que alguém escolha o disco certo.
 
 ## Testes
 
+As faixas, o vermelho antes de confiar e o que não merece teste estão no
+[CLAUDE.md da raiz](../CLAUDE.md). O que é deste pacote:
+
 - `go test ./...` — sem flag, sem setup.
-- Teste de regra vive junto da regra e cita a página; teste de paridade prova que
-  os dois motores concordam. **São coisas diferentes e nenhum substitui o outro.**
-- Correção de bug nasce **vermelha**. Sabotar a implementação depois de escrever
-  o teste é a forma barata de provar que ele mede o que diz medir — foi assim que
-  se descobriu que um teste de PV passava por acidente, porque em todos os casos
-  a primeira classe também era a maior.
+- **Teste de regra vive junto da regra e cita a página.** Ele não é a mesma coisa
+  que o ORÁCULO: o oráculo prende a ficha inteira de ponta a ponta e acusa
+  qualquer número que mude sem ter sido pedido; o teste de regra explica POR QUE
+  aquele número é aquele, com a página do livro do lado. Nenhum substitui o
+  outro.
+
+  > Aqui morava a frase "teste de paridade prova que os dois motores concordam".
+  > Ela ficou **falsa sem ninguém mexer nela**: o `t20-data` foi aposentado (ver
+  > "Regenerar oráculo"), não há segundo motor, e o mesmo arquivo passou a dizer
+  > as duas coisas. É o defeito que a seção "Documentação" da raiz descreve, e
+  > ele sobreviveu a uma épica inteira.
+
+- **Sabotar é a forma barata de provar que o teste mede o que diz medir**, e no
+  Go ela é barata mesmo: inverta o operador, rode o caso, confirme o vermelho,
+  reverta. Foi assim que se descobriu que um teste de PV passava por acidente —
+  em todos os casos a primeira classe também era a maior.
 
 ## templ — as armadilhas que já custaram tempo
 
