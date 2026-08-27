@@ -184,6 +184,12 @@ func TestOAlcanceSoApareceQuandoHaOrcamento(t *testing.T) {
 // renderiza rodapé nenhum: a frase existia no fio e não tinha onde pousar, e a
 // parada era engolida em silêncio.
 //
+// A ALE-203 mudou QUAL comando recusa — a parada cara passou a ser aceita e
+// desenhada, e quem barra é o confirmar —, e não mudou nada do que este guarda
+// prende: a frase continua tendo de sair no sinal do MOVIMENTO e a região do
+// jogador continua tendo de ter onde acendê-la. Trocar o gatilho e manter as
+// duas asserções é o que separa "o guarda ainda mede" de "o guarda ficou verde".
+//
 // Prende as DUAS metades, porque uma sem a outra não é o conserto: que a frase
 // sai no sinal certo, e que a região do tabuleiro tem onde acendê-la.
 func TestARecusaDeUmaParadaFalaNoTabuleiro(t *testing.T) {
@@ -205,14 +211,25 @@ func TestARecusaDeUmaParadaFalaNoTabuleiro(t *testing.T) {
 		t.Fatal("o tabuleiro do jogador não tem onde acender a recusa de uma parada")
 	}
 
-	// O deslocamento padrão são 6 quadrados (T20 p106); 9 não cabem.
-	recusado := f.pede(t, f.jogador, "POST", base+"/parada/9/0", "").Body.String()
+	// O deslocamento padrão são 6 quadrados (T20 p106); 9 não cabem — e desde a
+	// ALE-203 a PARADA os aceita, porque é o desenho que conta à pessoa onde ela
+	// estourou. Quem recusa é o CONFIRMAR, e é a recusa dele que precisa pousar
+	// aqui.
+	proposta := f.pede(t, f.jogador, "POST", base+"/parada/9/0", "")
+	if proposta.Code != http.StatusOK {
+		t.Fatalf("a parada cara deu %d: sem provisório não há trecho vermelho para desenhar", proposta.Code)
+	}
+	if sinais := trechoDeSinais(proposta.Body.String()); !strings.Contains(sinais, `"erroDoMovimento":""`) {
+		t.Errorf("a parada cara acendeu uma recusa que já não é dela; sinais = %s", sinais)
+	}
+
+	recusado := f.pede(t, f.jogador, "POST", base+"/confirmar", "").Body.String()
 	sinais := trechoDeSinais(recusado)
 	if !strings.Contains(sinais, "erroDoMovimento") {
 		t.Errorf("a recusa não saiu no sinal do movimento; sinais = %s", sinais)
 	}
 	if strings.Contains(sinais, `"erroDoMovimento":""`) {
-		t.Errorf("a recusa saiu VAZIA — a parada foi engolida em silêncio; sinais = %s", sinais)
+		t.Errorf("a recusa saiu VAZIA — o confirmar foi engolido em silêncio; sinais = %s", sinais)
 	}
 
 	// E APAGA no acerto: um sinal que só se escreve quando dá errado deixa a
@@ -258,5 +275,96 @@ func TestOQueSobraDoDeslocamentoAparecePorEscrito(t *testing.T) {
 	}
 	if !strings.Contains(tela, "sobram 4") {
 		t.Errorf("a tela não diz quanto ainda dá para andar")
+	}
+}
+
+// naVezDoJogador põe a cena em combate e passa a vez para o jogador, que é a
+// única condição em que existe DESLOCAMENTO para estourar: o mestre tem
+// orçamento -1 e nunca vê vermelho.
+func (f pilotoFixture) naVezDoJogador(t *testing.T) {
+	t.Helper()
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+		t.Fatalf("avançar deu %d", rec.Code)
+	}
+}
+
+// TestASetaSaiEmDuasCoresQuandoOCaminhoEstoura (ALE-203, item 13).
+//
+// A COMPOSIÇÃO, que é o que nenhum dos guardas de unidade alcança: que o caminho
+// caro chega até o HTML do JOGADOR com o trecho vermelho desenhado, com a ponta
+// da cor dele, e com os metros de cada perna escritos por cima.
+//
+// Vale pela porta de verdade — a parada, o mesmo POST que o dedo faz — porque o
+// desenho só existe se o `ProposeMove` tiver ACEITADO o caminho caro. Chamar o
+// `osFiosDoMovimento` direto provaria a aritmética sobre uma proposta que a cena
+// talvez recusasse.
+func TestASetaSaiEmDuasCoresQuandoOCaminhoEstoura(t *testing.T) {
+	f := novoPiloto(t)
+	tokenID := f.noTabuleiro(t)
+	f.naVezDoJogador(t)
+
+	// O deslocamento padrão são 6 quadrados (T20 p106); nove para o leste custam 9.
+	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/9/0", ""); rec.Code != http.StatusOK {
+		t.Fatalf("a parada cara deu %d: sem provisório não há seta para pintar", rec.Code)
+	}
+	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+
+	if !strings.Contains(tela, "tabuleiro-movimento-alem") {
+		t.Error("o caminho estourou o deslocamento e a seta saiu inteira dourada")
+	}
+	if !strings.Contains(tela, "url(#tabuleiro-ponta-alem-do-movimento)") {
+		t.Error("o trecho vermelho saiu sem ponta, ou com a ponta dourada")
+	}
+	// A seta tem UMA ponta: com trecho vermelho o dourado termina no MEIO do
+	// plano, e uma ponta ali pareceria um segundo destino.
+	if !strings.Contains(tela, `marker-end="none"`) {
+		t.Error("o fio dourado ficou com ponta no meio do caminho")
+	}
+	// O corte no centro de (6,0): o deslocamento paga seis casas para o leste.
+	if !strings.Contains(tela, `d="M 0.5 0.5 L 6.5 0.5"`) {
+		t.Error("o dourado não parou onde o deslocamento acaba")
+	}
+	// Os METROS da perna, e o rodapé contando a mesma história: nove quadrados
+	// são 13,5m, e passam três (4,5m) do deslocamento.
+	if !strings.Contains(tela, ">13,5m<") {
+		t.Error("a seta não diz a distância da perna em metros")
+	}
+	if !strings.Contains(tela, "4,5m além do deslocamento") {
+		t.Error("o rodapé não conta quanto o caminho passou do deslocamento")
+	}
+}
+
+// TestOControleDaSetaDeDuasCores: o caminho que CABE sai inteiro dourado.
+//
+// Sem ele, "a tela tem `tabuleiro-movimento-alem`" não se distingue de "a tela
+// tem sempre", e o vermelho poderia aparecer em todo movimento sem nenhum guarda
+// reclamar. O mesmo jogador, na mesma vez, com um caminho que o deslocamento
+// paga.
+func TestOControleDaSetaDeDuasCores(t *testing.T) {
+	f := novoPiloto(t)
+	tokenID := f.noTabuleiro(t)
+	f.naVezDoJogador(t)
+
+	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/4/0", ""); rec.Code != http.StatusOK {
+		t.Fatalf("a parada que cabe deu %d", rec.Code)
+	}
+	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+
+	if strings.Contains(tela, "tabuleiro-movimento-alem") {
+		t.Error("quatro quadrados sobre um deslocamento de seis pintaram vermelho")
+	}
+	if strings.Contains(tela, "além do deslocamento") {
+		t.Error("o rodapé falou de excesso num caminho que cabe")
+	}
+	// O CANAL continua aberto: a seta e o rótulo em metros saem do mesmo jeito,
+	// senão "não achei vermelho" seria verdade sobre uma cena sem seta nenhuma.
+	if !strings.Contains(tela, "tabuleiro-movimento-fio") {
+		t.Fatal("não há seta na tela: a ausência de vermelho não prova nada")
+	}
+	if !strings.Contains(tela, ">6,0m<") {
+		t.Error("a seta que cabe não diz a distância da perna em metros")
 	}
 }

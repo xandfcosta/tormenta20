@@ -589,7 +589,7 @@ templ oMovimentoProposto(v tabuleiroView) {
 				<span class="font-mono tabular-nums text-foreground">
 					{ fmt.Sprintf("%d de %d", v.Movimento.Custo, v.Movimento.Orcamento) }
 				</span>
-				{ fmt.Sprintf(" quadrados · sobram %d", v.Movimento.Restante) }
+				{ " quadrados · " + oSaldoDoMovimento(v.Movimento) }
 			}
 		</p>
 		<span class="ml-auto flex items-center gap-2">
@@ -730,15 +730,66 @@ templ aSetaDoMovimento(v tabuleiroView) {
 				>
 					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="tabuleiro-movimento-ponta"></path>
 				</marker>
+				// A PONTA DO ALÉM é um segundo `<marker>` e não o mesmo pintado por
+				// CSS: `marker-end` referencia um nó por `id`, e um `<marker>` só
+				// herdaria a cor do primeiro fio que o usasse.
+				<marker
+					id="tabuleiro-ponta-alem-do-movimento"
+					markerUnits="userSpaceOnUse"
+					markerWidth="0.5"
+					markerHeight="0.44"
+					refX="0.5"
+					refY="0.22"
+					orient="auto"
+				>
+					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="tabuleiro-movimento-ponta-alem"></path>
+				</marker>
 			</defs>
 			<g data-attr:transform={ oDesenhoNaJanela }>
 				<path
 					d={ v.Movimento.Fio }
-					marker-end="url(#tabuleiro-ponta-do-movimento)"
+					marker-end={ aPontaDoFioDourado(v.Movimento) }
 					vector-effect="non-scaling-stroke"
 					class="tabuleiro-movimento-fio"
 				></path>
+				// O TRECHO ALÉM DO DESLOCAMENTO (ALE-203, item 13). Ele só existe
+				// no HTML quando existe de fato: um `<path>` de `d` vazio esperando
+				// um sinal seria um nó a mais em toda cena para o caso raro.
+				if v.Movimento.FioAlem != "" {
+					<path
+						d={ v.Movimento.FioAlem }
+						marker-end="url(#tabuleiro-ponta-alem-do-movimento)"
+						vector-effect="non-scaling-stroke"
+						class="tabuleiro-movimento-fio tabuleiro-movimento-alem"
+					></path>
+				}
 			</g>
+			// OS RÓTULOS EM METROS de cada perna (ALE-203, item 13: "as setas entre
+			// paradas de movimentação não mostram a distância em metros").
+			//
+			// FORA do `<g>` que escala, pela mesma razão dos rótulos da régua:
+			// dentro dele o `scale($quadrado)` multiplicaria a fonte e 12px virariam
+			// 1000px no zoom máximo. Aqui o texto tem o tamanho que se lê, e quem o
+			// posiciona é o mesmo par de números que o `scale` aplicaria à mão.
+			//
+			// Sem RESERVA de nós, ao contrário da régua: as pernas do movimento são
+			// conhecidas no servidor — o caminho é dele —, então o laço é do `templ`
+			// e não um `data-show` por índice.
+			//
+			// TODOS dourados, inclusive os das pernas além do deslocamento: o rótulo
+			// responde "quanto anda esta perna", que é fato neutro, e a cor responde
+			// "quanto disso cabe". Uma perna que ATRAVESSA a virada não tem cor
+			// única, e pintar o número dela de vermelho ou de ouro mentiria metade
+			// das vezes.
+			for _, perna := range v.Movimento.Pernas {
+				<text
+					data-attr:x={ numeroDoFio(perna.MeioX) + " * $quadrado - $vistax" }
+					data-attr:y={ numeroDoFio(perna.MeioY) + " * $quadrado - $vistay" }
+					text-anchor="middle"
+					dominant-baseline="middle"
+					class="tabuleiro-regua-rotulo"
+				>{ perna.Rotulo }</text>
+			}
 		</svg>
 	}
 }

@@ -457,6 +457,14 @@ type movimentoView struct {
 	// `piloto_mesa_movimento_desenho.go` para por que ela dobra na PARADA e não
 	// em cada casa.
 	Fio string
+	// FioAlem é o trecho da seta que passa do deslocamento, e sai VERMELHO
+	// (ALE-203, item 13). Vazio quando o caminho cabe, e também quando não há
+	// orçamento nenhum — sem teto não há além, e desenhar um seria inventá-lo.
+	FioAlem string
+	// Pernas são os rótulos em metros, um por trecho entre duas paradas. Eles
+	// contam o CUSTO da perna e não a distância geométrica dela, para que o metro
+	// do rótulo seja o mesmo metro que decide onde o `FioAlem` começa.
+	Pernas []pernaDoMovimento
 }
 
 // movimentoDoTabuleiro monta o movimento em curso, ou nil quando não há.
@@ -486,7 +494,13 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover) *movimento
 		v.Origem = quadradoDoTabuleiro{X: inicio.X, Y: inicio.Y}
 		v.Fim = quadradoDoTabuleiro{X: fim.X, Y: fim.Y}
 	}
-	v.Fio = oFioDoMovimento(asDobrasDoMovimento(p))
+	// A SETA, os RÓTULOS em metros e a divisão dourado/vermelho saem das MESMAS
+	// dobras e do MESMO terreno (ALE-203, item 13): é o que faz o número escrito
+	// sobre a linha explicar a cor dela em vez de contradizê-la.
+	dobras := asDobrasDoMovimento(p)
+	custos := osCustosDasPernas(dobras, terrenoDeMovimento(b))
+	v.Fio, v.FioAlem = osFiosDoMovimento(dobras, custos, p.Budget)
+	v.Pernas = asPernasDoMovimento(dobras, custos)
 	// As paradas INTERMEDIÁRIAS: a última é onde a peça pousou e a primeira é de
 	// onde ela saiu — as duas já são um disco na tela, e marcá-las de novo
 	// contaria a mesma coisa duas vezes.
@@ -583,6 +597,46 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 		alcance = append(alcance, quadradoDoTabuleiro{X: q.X, Y: q.Y})
 	}
 	return alvo, rotulo, alcance, restante
+}
+
+// oSaldoDoMovimento diz o que SOBRA — ou o que passou (ALE-203, item 13).
+//
+// O rodapé dizia "sobram %d" sempre, e desde que o caminho caro passou a ser
+// aceito esse número parava em ZERO: o `AlcanceDaProximaParada` trava o restante
+// em zero de propósito, porque ele alimenta o desenho das casas alcançáveis e
+// alcance negativo não é lugar nenhum. O efeito era um rodapé que dizia "sobram
+// 0" para um caminho que passou três quadrados do deslocamento — verdade sobre
+// o alcance, silêncio sobre o excesso, e a pessoa sem saber quanto encurtar.
+//
+// Em METROS, e não em quadrados como o resto da frase: este número é a leitura
+// do trecho VERMELHO da seta, e é ali que a pessoa vai conferi-lo. Duas unidades
+// para a mesma grandeza obrigariam a converter de cabeça justamente na conta que
+// decide o próximo clique.
+//
+// @example oSaldoDoMovimento(&movimentoView{Custo: 8, Orcamento: 6}) // "3,0m além do deslocamento"
+func oSaldoDoMovimento(m *movimentoView) string {
+	alem := m.Custo - m.Orcamento
+	if alem <= 0 {
+		return fmt.Sprintf("sobram %d", m.Restante)
+	}
+	return emMetros(float64(alem)*engine.SquareMetres) + "m além do deslocamento"
+}
+
+// aPontaDoFioDourado é a ponta da seta, ou `none` quando ela não é dele.
+//
+// A seta tem UMA ponta e ela vai no FIM do caminho. Com trecho vermelho, o
+// dourado termina no MEIO do plano — no ponto em que o deslocamento acabou —, e
+// uma ponta ali apontaria para o nada e pareceria um segundo destino. Quem a
+// leva, então, é o fio vermelho, com a ponta da cor dele.
+//
+// `none` e não atributo ausente: `marker-end` é escrito pela mesma linha do
+// `.templ` nos dois casos, e o templ não aceita `else if` numa lista de
+// atributos — os DOIS ramos sairiam e o navegador guardaria o primeiro.
+func aPontaDoFioDourado(m *movimentoView) string {
+	if m.FioAlem != "" {
+		return "none"
+	}
+	return "url(#tabuleiro-ponta-do-movimento)"
 }
 
 // comandoDoMovimento escreve a chamada de confirmar ou cancelar.

@@ -101,20 +101,71 @@ func TestJogadorMoveAPropriaPecaNaPropriaVez(t *testing.T) {
 	}
 }
 
-// A decisão do dono é BLOQUEAR no limite: o caminho não passa do orçamento. Com
-// 6 quadrados de deslocamento, quatro diagonais custam 8 (T20 p238) e a peça
-// fica onde está.
-func TestCaminhoAlemDoDeslocamentoERecusado(t *testing.T) {
+// O caminho além do deslocamento é PROPOSTO e recusado no CONFIRMAR (ALE-203).
+//
+// A decisão anterior do dono era bloquear no PROPOR, e o que ela protegia
+// continua protegido — a peça não pousa além do que ela anda. O que mudou é a
+// PORTA: propor um caminho caro passou a ser legítimo, porque é isso que dá à
+// tela o que desenhar de vermelho ("a distância além do deslocamento em
+// vermelho"), e quem estourou precisa VER onde estourou para saber quanto
+// encurtar. Recusado no propor não há provisório, e sem provisório não há
+// desenho: a pessoa recebia uma frase e um mapa vazio.
+//
+// Com 6 quadrados de deslocamento, quatro diagonais custam 8 (T20 p238): as três
+// primeiras somam exatamente 6, então (3,3) ainda se paga e (4,4) — o índice 4
+// do caminho — é o primeiro quadrado que não.
+func TestCaminhoAlemDoDeslocamentoEPropostoERecusadoNoConfirmar(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
-	err := ProposeMove(b, st, "t1",
-		caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}, [2]int{4, 4}), jogadorDono)
-
-	if err == nil {
-		t.Fatal("oito quadrados de caminho passaram por um deslocamento de seis")
+	if err := ProposeMove(b, st, "t1",
+		caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}, [2]int{4, 4}), jogadorDono); err != nil {
+		t.Fatalf("propor um caminho caro foi recusado, e ele precisa ser desenhado: %v", err)
 	}
-	if b.Pending != nil {
-		t.Errorf("caminho recusado deixou provisório: %+v", b.Pending)
+	if b.Pending == nil {
+		t.Fatal("não há provisório: a tela não tem o que pintar de vermelho")
+	}
+	if b.Pending.Cost != 8 {
+		t.Errorf("o caminho custou %d, esperado 8 (quatro diagonais, p238)", b.Pending.Cost)
+	}
+	if b.Pending.AlemDoDeslocamento != 4 {
+		t.Errorf("o deslocamento acabou no índice %d, esperado 4 — é onde o vermelho começa", b.Pending.AlemDoDeslocamento)
+	}
+
+	// A GARANTIA que a decisão do dono protegia, e ela não pode ter mudado de
+	// existência junto com a porta: a peça NÃO pousa além do deslocamento.
+	err := CommitMove(b, st, b.Version, jogadorDono)
+	if err == nil {
+		t.Fatal("oito quadrados de caminho pousaram sobre um deslocamento de seis")
+	}
+	if b.Tokens[0].X != 0 || b.Tokens[0].Y != 0 {
+		t.Errorf("a peça andou para (%d,%d) num movimento recusado", b.Tokens[0].X, b.Tokens[0].Y)
+	}
+	// E o provisório SOBREVIVE à recusa, senão o desenho some no clique e a
+	// pessoa perde o caminho que ela acabou de montar para encurtar.
+	if b.Pending == nil {
+		t.Error("a recusa do confirmar jogou fora o caminho que a pessoa montou")
+	}
+}
+
+// TestOCaminhoQueCABEContinuaPousando — o CONTROLE do caso acima.
+//
+// Sem ele, "o confirmar recusou" não se distingue de "o confirmar recusa
+// sempre", e a trava nova passaria verde sobre um tabuleiro em que ninguém anda.
+func TestOCaminhoQueCabeContinuaPousando(t *testing.T) {
+	b, st := mesaEmCombate(t)
+
+	if err := ProposeMove(b, st, "t1",
+		caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}), jogadorDono); err != nil {
+		t.Fatalf("propor seis quadrados sobre um deslocamento de seis: %v", err)
+	}
+	if b.Pending.AlemDoDeslocamento != -1 {
+		t.Errorf("um caminho que cabe marcou excesso no índice %d", b.Pending.AlemDoDeslocamento)
+	}
+	if err := CommitMove(b, st, b.Version, jogadorDono); err != nil {
+		t.Fatalf("confirmar um caminho que cabe: %v", err)
+	}
+	if b.Tokens[0].X != 3 || b.Tokens[0].Y != 3 {
+		t.Errorf("a peça pousou em (%d,%d), esperava (3,3)", b.Tokens[0].X, b.Tokens[0].Y)
 	}
 }
 

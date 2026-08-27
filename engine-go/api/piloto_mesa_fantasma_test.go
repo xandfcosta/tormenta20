@@ -209,14 +209,16 @@ func TestOFioSemParadasLigaAsDuasPontasDoCaminho(t *testing.T) {
 	if len(dobras) != 2 || dobras[0] != (engine.Square{}) || dobras[1] != (engine.Square{X: 3}) {
 		t.Fatalf("as dobras de um caminho sem paradas saíram %+v", dobras)
 	}
-	// A perna anda 3 e a ponta recua meio quadrado: de 0,5 até 3,0.
-	if fio := oFioDoMovimento(dobras); fio != "M 0.5 0.5 L 3 0.5" {
+	// A perna anda 3 e a ponta recua meio quadrado: de 0,5 até 3,0. Sem orçamento
+	// (-1) ela sai inteira de dourado — o vermelho do item 13 tem guarda próprio
+	// em `piloto_mesa_movimento_desenho_test.go`.
+	if fio, _ := osFiosDoMovimento(dobras, []int{3}, -1); fio != "M 0.5 0.5 L 3 0.5" {
 		t.Errorf("a seta reta saiu %q", fio)
 	}
 	// E com uma dobra só não há o que ligar: `d` vazio é o jeito de o `<path>`
 	// não desenhar sem um `data-show` a mais, que é a combinação que congela a aba.
-	if fio := oFioDoMovimento([]engine.Square{{}}); fio != "" {
-		t.Errorf("uma dobra só desenhou %q", fio)
+	if fio, alem := osFiosDoMovimento([]engine.Square{{}}, nil, -1); fio != "" || alem != "" {
+		t.Errorf("uma dobra só desenhou %q e %q", fio, alem)
 	}
 }
 
