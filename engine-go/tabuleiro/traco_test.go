@@ -77,3 +77,38 @@ func TestOTracoPossuidoERecusado(t *testing.T) {
 		t.Error("um traço de nove casas foi recusado — o teto está mordendo o gesto real")
 	}
 }
+
+// TestORetanguloEOMesmoNasQuatroDirecoes.
+//
+// A REGRA: arrastar da direita para a esquerda, ou de baixo para cima, desenha o
+// MESMO retângulo — porque é o que o dedo faz. Sem o `min`/`max` um arrasto "para
+// trás" devolveria vazio, e a pessoa concluiria que a ferramenta falha às vezes,
+// que é a pior forma de falhar.
+func TestORetanguloEOMesmoNasQuatroDirecoes(t *testing.T) {
+	a, b := engine.Square{X: 0, Y: 0}, engine.Square{X: 2, Y: 1}
+	referencia := CasasDoRetangulo(a, b)
+	if len(referencia) != 6 {
+		t.Fatalf("(0,0)→(2,1) deu %d casas, esperado 6 — o guarda mediria o vazio", len(referencia))
+	}
+	for _, par := range [][2]engine.Square{
+		{b, a},
+		{{X: 2, Y: 0}, {X: 0, Y: 1}},
+		{{X: 0, Y: 1}, {X: 2, Y: 0}},
+	} {
+		if outro := CasasDoRetangulo(par[0], par[1]); len(outro) != len(referencia) {
+			t.Errorf("%v→%v deu %d casas, e %v→%v deu %d: a direção do arrasto mudou o retângulo",
+				par[0], par[1], len(outro), a, b, len(referencia))
+		}
+	}
+}
+
+// TestORetanguloForjadoERecusado: mil casas são 32×32, uma sala grande de
+// masmorra. Acima disso não saiu de dois cantos escolhidos por alguém.
+func TestORetanguloForjadoERecusado(t *testing.T) {
+	if RetanguloValido(engine.Square{}, engine.Square{X: 9999, Y: 9999}) {
+		t.Error("um retângulo de cem milhões de casas foi aceito")
+	}
+	if !RetanguloValido(engine.Square{}, engine.Square{X: 20, Y: 20}) {
+		t.Error("um retângulo de 21×21 foi recusado — o teto está mordendo o gesto real")
+	}
+}

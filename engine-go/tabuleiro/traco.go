@@ -84,3 +84,50 @@ const oTracoCabe = 100
 func TracoValido(de, ate engine.Square) bool {
 	return max(abs(ate.X-de.X), abs(ate.Y-de.Y)) < oTracoCabe
 }
+
+// ── O RETÂNGULO (ALE-203, item 10 do dono) ───────────────────────────────────
+//
+// "Não temos ferramenta de seleção em área." Com o pincel na mão, o retângulo
+// ENCHE: uma parede de taverna com dois cantos em vez de vinte passadas.
+//
+// Ele é irmão do traço e não uma máquina nova — as duas rotas de terreno passaram
+// a receber DOIS CANTOS e a diferir só em quais casas o par nomeia. O que muda é
+// a forma: o traço é a linha entre eles, o retângulo é tudo o que cabe dentro.
+
+// CasasDoRetangulo são todas as casas entre os dois cantos, inclusive eles.
+//
+// A ORDEM dos cantos não importa: arrastar da direita para a esquerda ou de baixo
+// para cima desenha o mesmo retângulo, porque é o que o dedo faz. Sem o `min`/`max`
+// um arrasto "para trás" devolveria vazio, e a pessoa concluiria que a ferramenta
+// falha às vezes — que é a pior forma de falhar.
+//
+// Exemplo:
+//
+//	CasasDoRetangulo(engine.Square{X: 2, Y: 1}, engine.Square{X: 0, Y: 0})
+//	// → as 6 casas de (0,0) a (2,1)
+func CasasDoRetangulo(de, ate engine.Square) []engine.Square {
+	x0, x1 := min(de.X, ate.X), max(de.X, ate.X)
+	y0, y1 := min(de.Y, ate.Y), max(de.Y, ate.Y)
+	casas := make([]engine.Square, 0, (x1-x0+1)*(y1-y0+1))
+	for y := y0; y <= y1; y++ {
+		for x := x0; x <= x1; x++ {
+			casas = append(casas, engine.Square{X: x, Y: y})
+		}
+	}
+	return casas
+}
+
+// oRetanguloCabe é o teto de casas de um retângulo, e ele é maior que o do traço
+// pela mesma razão que o traço tem um menor: o retângulo é UM gesto deliberado —
+// dois cantos escolhidos —, enquanto o traço é um quadro de 16ms. Mil casas são
+// 32×32, que é uma sala grande de masmorra; acima disso é pedido forjado.
+const oRetanguloCabe = 1000
+
+// RetanguloValido recusa a área que não pode ter saído de dois cantos escolhidos.
+//
+// Recusa em vez de cortar, como o traço: um retângulo cortado enche uma parte e
+// some com a outra, e quem pediu conclui que a ferramenta falha às vezes.
+func RetanguloValido(de, ate engine.Square) bool {
+	largura, altura := abs(ate.X-de.X)+1, abs(ate.Y-de.Y)+1
+	return largura*altura <= oRetanguloCabe
+}

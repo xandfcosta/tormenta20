@@ -226,6 +226,8 @@ func sinaisDaMesa() string {
 		// O TRAÇO do pincel e da borracha (ALE-203): o modo em curso e a última
 		// casa que ele já mandou.
 		osSinaisDoPincel,
+		// O LAÇO do retângulo (ALE-203, item 10): o modo em curso e os dois cantos.
+		osSinaisDoRetangulo,
 		// A RÉGUA: as PARADAS em coordenada do PLANO (podem ser negativas), a mira
 		// sob o ponteiro, a fase da máquina, os rótulos de cada perna e a frase do
 		// total — as duas últimas escritas pelo servidor.

@@ -466,6 +466,63 @@ test('a janela vai atrás do foco quando a peça está fora dela', async ({ page
 })
 
 /**
+ * SHIFT + ARRASTO ENCHE O RETÂNGULO (ALE-203, item 10 do dono).
+ *
+ * O gesto é browser puro e não tem onde ser medido mais barato: `Shift` decidido
+ * no `pointerdown`, `setPointerCapture`, o laço posicionado por uma expressão de
+ * CSS sobre um plano que um `transform` desloca, e a rota só saindo no
+ * `pointerup`. Um teste de handler prova que a ROTA enche a área — e prova zero
+ * sobre o gesto que a chama.
+ *
+ * O CONTROLE é a metade que importa: sem o `Shift`, o mesmo arrasto tem de
+ * pintar o TRAÇO e não o retângulo. Sem ele, "12 casas" seria verdade também
+ * para um app que ignorasse a tecla e enchesse sempre.
+ */
+test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    await abreOTabuleiro(page, mesa)
+    await ferramenta(page, 'Difícil').click()
+
+    const casas = camadaDe(page, /Pintar terreno/)
+    const caixa = (await casas.boundingBox())!
+    const de = { x: caixa.x + 120, y: caixa.y + 120 }
+    const ate = { x: de.x + 120, y: de.y + 90 }
+
+    // O CONTROLE: o MESMO arrasto sem Shift pinta uma linha, não uma área.
+    await page.mouse.move(de.x, de.y)
+    await page.mouse.down()
+    await page.mouse.move(ate.x, ate.y, { steps: 10 })
+    await page.mouse.up()
+    const doTraco = await page.locator('.tabuleiro-terreno.tabuleiro-dificil').count()
+
+    // E agora COM Shift, num pedaço virgem do plano.
+    const deB = { x: caixa.x + 420, y: caixa.y + 120 }
+    const ateB = { x: deB.x + 120, y: deB.y + 90 }
+    await page.keyboard.down('Shift')
+    await page.mouse.move(deB.x, deB.y)
+    await page.mouse.down()
+    await page.mouse.move(ateB.x, ateB.y, { steps: 6 })
+    // O LAÇO tem de estar na tela ENQUANTO o dedo segura: é a promessa visual do
+    // gesto, e sem ela a pessoa arrasta no escuro.
+    await expect(page.locator('.tabuleiro-laco'), 'o laço não apareceu durante o arrasto').toBeVisible()
+    await page.mouse.up()
+    await page.keyboard.up('Shift')
+
+    await expect
+      .poll(() => page.locator('.tabuleiro-terreno.tabuleiro-dificil').count(), {
+        message: 'o retângulo não encheu a área',
+      })
+      .toBeGreaterThan(doTraco * 2)
+
+    // E o laço some quando o dedo solta — ele é intenção, não resultado.
+    await expect(page.locator('.tabuleiro-laco'), 'o laço ficou na tela depois de soltar').toBeHidden()
+  } finally {
+    await apagar()
+  }
+})
+
+/**
  * O MARCADOR É ALCANÇÁVEL, e este caso existe porque ele já não era.
  *
  * As camadas de clique cobrem o plano inteiro e vêm depois no DOM; a de MOVER é

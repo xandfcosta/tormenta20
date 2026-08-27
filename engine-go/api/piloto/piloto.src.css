@@ -931,6 +931,21 @@ html {
     cursor: crosshair;
     outline: none;
   }
+  /* O LAÇO do retângulo (ALE-203, item 10).
+   *
+   * Tracejado e vazado: ele é uma INTENÇÃO e não um resultado. Preenchido, seria
+   * indistinguível do terreno que ele está prestes a criar — e num arrasto que a
+   * pessoa ainda vai cancelar isso é uma promessa que a tela não cumpriu.
+   *
+   * `pointer-events: none` porque quem recebe o dedo é a camada de clique acima
+   * dele; o laço só desenha. */
+  .tabuleiro-laco {
+    position: absolute;
+    pointer-events: none;
+    border: 2px dashed var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    background: oklch(0.8 0.11 85 / 0.10);
+  }
+
   /* A MÃO que arrasta a vista (ALE-203). Mesma geometria da camada de casas — a
    * janela inteira —, e o que muda é o CURSOR: aberta em repouso, fechada
    * enquanto o dedo segura. É a convenção de toda tela infinita (Figma,

@@ -218,6 +218,29 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					for _, q := range v.Alcance {
 						<div aria-hidden="true" class="tabuleiro-alcance" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 					}
+					// O LAÇO do retângulo (ALE-203, item 10). Dentro do plano
+					// porque ele fala em QUADRADOS e anda com a janela; no plano
+					// do CHÃO porque o que ele delimita é área, e área fica por
+					// baixo de quem está em pé nela.
+					//
+					// UM nó posicionado por expressão, e não um por casa: o laço
+					// é um retângulo, e desenhar mil divs para mostrar a intenção
+					// de pintar mil casas seria pagar o preço do resultado antes
+					// de a pessoa ter pedido.
+					// DOIS NÓS e não um, e isto CONGELA O NAVEGADOR se voltar a
+					// ser um só. Medido: com `data-show` e `data-attr:style` no
+					// MESMO elemento, o `data-show` escreve `el.style.display` e o
+					// `data-attr:style` reescreve o atributo `style` inteiro —
+					// apagando o `display` que o outro acabou de pôr, que faz o
+					// outro pôr de novo. O renderizador trava em laço, e o
+					// sintoma não é um erro: é a aba que para de responder a
+					// tudo, inclusive a navegar para fora.
+					//
+					// Então quem ESCONDE é o de fora e quem POSICIONA é o de
+					// dentro. É a mesma forma que os rótulos da régua já usam.
+					<div aria-hidden="true" data-show={ oLacoEstaAberto() }>
+						<div data-attr:style={ oEstiloDoLaco } class="tabuleiro-laco"></div>
+					</div>
 				</div>
 				// O GABARITO vem ACIMA do terreno e ABAIXO das peças, e é essa
 				// ordem que responde a pergunta dele: quem está dentro precisa
@@ -1330,11 +1353,11 @@ templ asCamadasDeClique(v tabuleiroView) {
 		<button
 			type="button"
 			data-show={ oPincelEstaLigado() }
-			aria-label="Pintar terreno — arraste para pintar, botão direito apaga"
-			data-on:pointerdown={ oPincelPega(v, "") }
-			data-on:pointermove={ oPincelSegue(v) }
-			data-on:pointerup={ oPincelLarga }
-			data-on:pointercancel={ oPincelLarga }
+			aria-label="Pintar terreno — arraste para pintar, Shift+arraste enche um retângulo, botão direito apaga"
+			data-on:pointerdown={ oGestoDoPincel(v, "") }
+			data-on:pointermove={ oPincelSegue(v) + "; " + oRetanguloSegue(retanguloDeTerreno) }
+			data-on:pointerup={ oPincelLarga + "; " + oRetanguloDeTerrenoSolta(v) }
+			data-on:pointercancel={ oPincelLarga + "; $" + sinalDoRetangulo + " = ''" }
 			data-on:contextmenu={ prendeOMenuDoNavegador }
 			class="tabuleiro-casas"
 		></button>
@@ -1350,11 +1373,11 @@ templ asCamadasDeClique(v tabuleiroView) {
 		<button
 			type="button"
 			data-show={ aFerramentaEstaLigada(FerramentaDaBorracha) }
-			aria-label="Apagar o terreno — arraste para apagar"
-			data-on:pointerdown={ aBorrachaPega(v) }
-			data-on:pointermove={ oPincelSegue(v) }
-			data-on:pointerup={ oPincelLarga }
-			data-on:pointercancel={ oPincelLarga }
+			aria-label="Apagar o terreno — arraste para apagar, Shift+arraste limpa um retângulo"
+			data-on:pointerdown={ oGestoDoPincel(v, pincelApaga) }
+			data-on:pointermove={ oPincelSegue(v) + "; " + oRetanguloSegue(retanguloDeTerreno) }
+			data-on:pointerup={ oPincelLarga + "; " + oRetanguloDeTerrenoSolta(v) }
+			data-on:pointercancel={ oPincelLarga + "; $" + sinalDoRetangulo + " = ''" }
 			data-on:contextmenu={ prendeOMenuDoNavegador }
 			class="tabuleiro-casas"
 		></button>

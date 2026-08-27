@@ -66,14 +66,20 @@ var osSinaisDoPincel = fmt.Sprintf("%s: '', %s: ''", sinalDoPincel, sinalDaUltim
 // O `setPointerCapture` é o mesmo do arrasto da vista, e pelo mesmo motivo:
 // soltar o botão fora do tabuleiro tem de terminar o traço. Sem ele o pincel
 // fica preso e a próxima passada do mouse pinta sem ninguém ter apertado nada.
+//
+// Ele vai por ÚLTIMO, e isso é seguro e não estilo: ele LANÇA quando o ponteiro
+// não está mais ativo (`NotFoundError: No active pointer with the given id`), e
+// no meio da expressão essa exceção engoliria a pintura da primeira casa — o
+// gesto começaria mudo. Por último, o pior que acontece é o traço perder a
+// captura e terminar quando o dedo sai do elemento.
 func oPincelPega(v tabuleiroView, modoFixo string) string {
 	modo := fmt.Sprintf("evt.button === 2 ? %q : %q", pincelApaga, pincelPinta)
 	if modoFixo != "" {
 		modo = fmt.Sprintf("%q", modoFixo)
 	}
 	return fmt.Sprintf(
-		"evt.preventDefault(); $%s = %s; $%s = ''; "+
-			"evt.currentTarget.setPointerCapture(evt.pointerId); %s",
+		"evt.preventDefault(); $%s = %s; $%s = ''; %s; "+
+			"evt.currentTarget.setPointerCapture(evt.pointerId)",
 		sinalDoPincel, modo, sinalDaUltimaCasa, oPincelAgeNaCasa(v),
 	)
 }

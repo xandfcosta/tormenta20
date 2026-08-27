@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -219,4 +220,114 @@ func TestACasaPintadaTrazOIconeDaEspecie(t *testing.T) {
 	if !strings.Contains(tela, "tabuleiro-matiz-camuflagem") {
 		t.Error("o pincel do trilho não veste o matiz da espécie")
 	}
+}
+
+// TestORetanguloEncheAAreaInteira (ALE-203, item 10).
+//
+// A rota do retângulo é IRMÃ da do traço e chama a mesma gravação — o que muda é
+// quais casas o par de cantos nomeia. O guarda mede as duas pontas que só esta
+// camada responde: a área inteira pintada, e a borracha usando o caminho SEM
+// espécie (o conserto da fatia 1, que não pode se perder numa rota nova).
+func TestORetanguloEncheAAreaInteira(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "pedra")
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.urlDaMesa()+"/tabuleiro/terreno/dificil/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
+		t.Fatalf("o retângulo deu %d", rec.Code)
+	}
+	b := f.s.boards.Get(context.Background(), f.sessionID)
+	// 3 colunas × 4 linhas = 12 casas, e as duas pontas incluídas.
+	if casas := tabuleiro.QuadradosDe(b, "dificil"); len(casas) != 12 {
+		t.Errorf("(2,2)→(4,5) pintou %d casas, esperado as 12 do retângulo: %v", len(casas), casas)
+	}
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.urlDaMesa()+"/tabuleiro/terreno/limpar/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
+		t.Fatalf("limpar o retângulo deu %d", rec.Code)
+	}
+	b = f.s.boards.Get(context.Background(), f.sessionID)
+	if sobrou := tabuleiro.QuadradosDe(b, "dificil"); len(sobrou) != 0 {
+		t.Errorf("a borracha em área deixou %v", sobrou)
+	}
+}
+
+// TestORetanguloForjadoERecusadoPelaRota: o teto é do domínio e a recusa chega
+// como FRASE. Mil casas são 32×32 — uma sala grande de masmorra.
+func TestORetanguloForjadoERecusadoPelaRota(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "pedra")
+
+	corpo := f.pede(t, f.mestre, http.MethodPost,
+		f.urlDaMesa()+"/tabuleiro/terreno/dificil/retangulo/0/0/999/999", "").Body.String()
+	if !strings.Contains(corpo, "grande demais") {
+		t.Errorf("o retângulo forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
+	}
+	b := f.s.boards.Get(context.Background(), f.sessionID)
+	if casas := tabuleiro.QuadradosDe(b, "dificil"); len(casas) != 0 {
+		t.Errorf("o retângulo recusado pintou %d casas assim mesmo", len(casas))
+	}
+}
+
+// TestATelaLigaOShiftDoRetangulo.
+//
+// O `Shift` é o que separa o TRAÇO do RETÂNGULO, e a decisão acontece no
+// `pointerdown` para valer o gesto inteiro: soltar a tecla no meio do arrasto não
+// pode trocar o que ele está fazendo, porque o dedo já está a caminho de um canto.
+func TestATelaLigaOShiftDoRetangulo(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+
+	for _, pedaco := range []string{"evt.shiftKey", "/retangulo/", "tabuleiro-laco"} {
+		if !strings.Contains(tela, pedaco) {
+			t.Errorf("a cena não tem %q: o retângulo do pincel não acontece", pedaco)
+		}
+	}
+}
+
+// TestNenhumNoTemDataShowEDataAttrStyleJuntos — o guarda de um defeito que
+// CONGELA A ABA, e que não deixa erro nenhum para trás.
+//
+// Os dois escrevem no MESMO lugar: o `data-show` põe `el.style.display` e o
+// `data-attr:style` reescreve o atributo `style` inteiro, apagando o `display`
+// que o outro acabou de pôr — que faz o outro pôr de novo. O renderizador entra
+// em laço.
+//
+// Medido na bancada, e o sintoma é o pior possível: a aba para de responder a
+// TUDO. Sem console, sem exceção, sem sequer conseguir navegar para fora — a
+// própria ferramenta de medir some junto, e o que sobra é "o navegador travou",
+// que não aponta para lugar nenhum.
+//
+// O conserto é sempre o mesmo: quem ESCONDE é um nó, quem POSICIONA é outro.
+func TestNenhumNoTemDataShowEDataAttrStyleJuntos(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+
+	// O CONTROLE: as duas diretivas existem na cena, em nós diferentes. Sem ele,
+	// não achar a combinação seria verdade também sobre uma página vazia.
+	for _, diretiva := range []string{"data-show=", "data-attr:style="} {
+		if !strings.Contains(tela, diretiva) {
+			t.Fatalf("a cena não usa %q — o guarda mediria o vazio", diretiva)
+		}
+	}
+
+	// Cada tag aberta é uma lista de atributos até o `>`. Um `<` dentro de valor
+	// de atributo não acontece no HTML servido (o templ escapa), então o corte
+	// simples basta.
+	for _, tag := range regexp.MustCompile(`<[a-zA-Z][^>]*>`).FindAllString(tela, -1) {
+		if strings.Contains(tag, "data-show=") && strings.Contains(tag, "data-attr:style=") {
+			t.Errorf("um nó tem `data-show` e `data-attr:style` juntos e vai CONGELAR a aba "+
+				"em laço de escrita: %s", primeirosAtributos(tag))
+		}
+	}
+}
+
+// primeirosAtributos encurta a tag para a mensagem caber na saída do teste.
+func primeirosAtributos(tag string) string {
+	if len(tag) > 160 {
+		return tag[:160] + "…"
+	}
+	return tag
 }

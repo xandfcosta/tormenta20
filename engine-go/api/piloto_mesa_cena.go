@@ -35,6 +35,12 @@ func (s *Server) rotasDaCena(r chi.Router) {
 	// mesmo par duas vezes, que é um traço de uma casa. Ver `tabuleiro.CasasDoTraco`.
 	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.comandoContinuoDoMestre(pintaOTerreno))
 	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.comandoContinuoDoMestre(limpaOTerreno))
+	// O RETÂNGULO (ALE-203, item 10): os mesmos dois cantos, outra FORMA. Rota
+	// própria e não uma query na de cima porque o que muda é o que o par de
+	// cantos NOMEIA — a linha entre eles ou tudo o que cabe dentro —, e isso é o
+	// significado do pedido, não um modo dele.
+	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.comandoContinuoDoMestre(enchaORetangulo))
+	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.comandoContinuoDoMestre(limpaORetangulo))
 	r.Post(base+"/pecas", s.comandoDoMestreNoTabuleiro(poeNoMapa))
 }
 
@@ -77,6 +83,54 @@ func limpaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
 	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, traco)
+}
+
+// enchaORetangulo e limpaORetangulo são os irmãos de área dos dois de cima.
+//
+// Eles chamam as MESMAS gravações (`PintaOTraco`, `LimpaOTraco`) — o nome fala em
+// traço porque foi ele que as pediu primeiro, e o que elas recebem sempre foi uma
+// lista de casas. Quem escolhe a forma é a rota.
+func enchaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	casas, err := oRetanguloDaURL(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
+	}
+	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
+	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, casas, especie, true)
+}
+
+func limpaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	casas, err := oRetanguloDaURL(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
+	}
+	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, casas)
+}
+
+// oRetanguloDaURL lê os dois cantos e devolve as casas de dentro.
+//
+// A RECUSA vem do domínio (`tabuleiro.RetanguloValido`) e o teto dele é maior que
+// o do traço, pela razão escrita lá: o retângulo é um gesto DELIBERADO de dois
+// cantos, e o traço é um quadro de 16ms.
+func oRetanguloDaURL(r *http.Request) ([]engine.Square, error) {
+	de, err := quadradoDaURL(r)
+	if err != nil {
+		return nil, err
+	}
+	ate, err := segundoQuadradoDaURL(r)
+	if err != nil {
+		return nil, err
+	}
+	if !tabuleiro.RetanguloValido(de, ate) {
+		return nil, fmt.Errorf("o retângulo de %v até %v é grande demais para um gesto", de, ate)
+	}
+	return tabuleiro.CasasDoRetangulo(de, ate), nil
 }
 
 // tracoDaURL lê o segmento que o dedo percorreu e devolve as casas dele.
