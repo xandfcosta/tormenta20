@@ -392,6 +392,50 @@ html {
    *
    * VERTICAL porque nove ferramentas numa linha não cabem em telefone nenhum —
    * é o enrolamento que a ALE-178 registrou, com o ✕ inalcançável a 390px. */
+  /* A BARRA DE CIMA, virada em DOIS PAINÉIS nos cantos (ALE-203, decisão do
+   * dono: "faça a barra de cima do tabuleiro ser uma barra overlay igual a
+   * sidebar").
+   *
+   * Ela era uma LINHA acima da cena e custava altura de mapa em toda tela.
+   * Flutuando, o tabuleiro cresce até o topo — que é a mesma decisão que já
+   * governa o trilho, os avisos e os ajudantes: nesta cena, tudo o que não é
+   * mapa mora POR CIMA dele.
+   *
+   * FUNDO OPACO, como o do trilho, e pela mesma razão medida lá: um fundo que
+   * deixa a grade passar transforma texto e ícones em ruído justamente sobre o
+   * terreno pintado.
+   *
+   * O `max-width` do nome não é zelo: nome de cena é digitado pelo mestre, e um
+   * "Salão dos Mil Espelhos de Wynlla" sem teto atravessaria o topo até debaixo
+   * dos verbos do outro canto. O corte com reticências é o que mantém os dois
+   * painéis dois. */
+  .tabuleiro-nome-da-cena,
+  .tabuleiro-verbos-da-cena {
+    position: absolute;
+    top: 0.5rem;
+    z-index: 7;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    border-radius: 0.125rem;
+    background: oklch(0.18 0.012 300);
+  }
+  .tabuleiro-nome-da-cena {
+    left: 0.5rem;
+    max-width: min(18rem, 40%);
+    padding: 0.25rem 0.625rem;
+    font-size: 0.875rem;
+    color: var(--color-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tabuleiro-verbos-da-cena {
+    right: 0.5rem;
+    gap: 0.125rem;
+    padding: 0.125rem 0.25rem;
+  }
+
   .tabuleiro-trilho {
     position: absolute;
     left: 0.5rem;
@@ -490,7 +534,13 @@ html {
     padding-left: 3.75rem;
     pointer-events: none;
   }
-  .tabuleiro-avisos { top: 0; }
+  /* Os AVISOS começam ABAIXO dos painéis dos cantos, e não no topo cru.
+   *
+   * A barra de cima virou dois painéis flutuantes (ALE-203), e eles ocupam
+   * justamente a faixa onde o primeiro aviso nascia. Sem este recuo, "a cortina
+   * está fechada" aparece por baixo do nome da cena — visível pela metade, que é
+   * pior que escondido: quem olha rápido lê meia frase e segue. */
+  .tabuleiro-avisos { top: 2.75rem; }
   .tabuleiro-ajudantes { bottom: 0; }
   .tabuleiro-avisos > *,
   .tabuleiro-ajudantes > * {

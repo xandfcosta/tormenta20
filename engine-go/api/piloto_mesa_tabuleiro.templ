@@ -71,53 +71,6 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			aria-label={ "Tabuleiro · " + v.Lugar }
 			class="flex min-h-0 flex-1 flex-col space-y-1.5"
 		>
-			<div class="flex flex-wrap items-baseline gap-x-2">
-				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
-				<p class="truncate text-sm text-foreground">{ v.Lugar }</p>
-				// O ZOOM é de TODO MUNDO, e é por isso que ele fica fora do bloco
-				// do mestre logo abaixo: cada pessoa enquadra a própria janela, e
-				// o jogador que não enxerga a peça no telefone não tem por que
-				// depender do mestre para aproximar.
-				//
-				// O `ml-auto` mudou de dono para cá, e de propósito: ele precisa
-				// morar no primeiro grupo que existe SEMPRE. No bloco do mestre
-				// ele sumia da tela do jogador, e o alinhamento ia junto.
-				@oEnquadramentoDoPlano(v)
-				if v.Mestre {
-					// Os DOIS verbos do canto direito num agrupador só. O
-					// `ml-auto` saiu daqui para o grupo do zoom, que é o que
-					// existe para os dois papéis.
-					<span class="flex items-center gap-1">
-						// O acervo alcançável COM cena na mesa (ALE-191): trocar da
-						// taverna para a cripta sem encerrar primeiro. Sem ele o
-						// caminho existia e era inalcançável, porque a lista só
-						// aparecia na cena vazia.
-						@botaoDaCortina(v)
-						// A LENTE é vizinha da CORTINA e a ordem não é aleatória: são as
-						// duas perguntas sobre o que a mesa vê. Uma esconde a cena, a
-						// outra confere o que sobrou dela.
-						@botaoDaLente(v)
-						@botaoDePorNoMapa(v)
-						if len(v.Acervo) > 0 {
-							@botaoDoAcervo(v)
-						}
-						// ÍCONE e não texto: a linha do lugar é a mais estreita da
-						// região, e "Encerrar o tabuleiro" por extenso empurra o
-						// nome da cena para fora. O nome acessível é o texto
-						// inteiro — quem usa leitor de tela não perde a palavra
-						// que o desenho economizou.
-						<button
-							type="button"
-							aria-label="Encerrar o tabuleiro"
-							title="Encerrar o tabuleiro"
-							data-on:click="document.getElementById('encerrar-tabuleiro').showModal()"
-							class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-						>
-			@icone("X", "size-4")
-		</button>
-					</span>
-				}
-			</div>
 			if v.Mestre {
 				@encerrarTabuleiro(v)
 				// UM diálogo de editar para TODAS as peças, semeado pelo gesto que o
@@ -295,6 +248,21 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				// altura: ele é o que se troca com mais frequência na cena, e a
 				// mão volta sempre ao mesmo lugar.
 				@oTrilhoDeFerramentas(v)
+				// A BARRA DE CIMA virou DOIS painéis flutuantes nos cantos, do
+				// mesmo feitio do trilho (decisão do dono).
+				//
+				// Ela era uma linha ACIMA da cena, e a linha custava altura de
+				// mapa em toda tela — no telefone deitado, os 28px dela saíam do
+				// que já era pouco. Flutuando, o tabuleiro cresce até o topo e a
+				// barra passa a viver sobre ele, como tudo o mais que não é mapa
+				// nesta cena.
+				//
+				// DOIS grupos e não uma faixa inteira: o meio do topo é onde o
+				// mapa costuma ter conteúdo, e uma faixa de ponta a ponta o
+				// cobriria sem precisar. O nome de um lado, os verbos do outro, e
+				// o meio livre.
+				@oNomeDaCena(v)
+				@osVerbosDaCena(v)
 				// OS AVISOS ficam no ALTO e os AJUDANTES no PÉ, e a divisa é de
 				// natureza: aviso é ESTADO da cena que se esquece (a cortina
 				// fechada, a lente acesa), ajudante é o que a ferramenta ativa
@@ -306,6 +274,58 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			</div>
 		</section>
 	}
+}
+
+// O NOME DA CENA, flutuando no canto superior esquerdo (ALE-203).
+//
+// Ele continua sendo o `<h2>` da região e não virou um rótulo solto: a `<section>`
+// já se anuncia como "Tabuleiro · Ponte", e quem navega por cabeçalho precisa
+// achar a cena onde ela está. Mudou o lugar na tela, não o lugar no documento.
+//
+// A palavra "TABULEIRO" que vinha antes do nome saiu com a linha: ela existia
+// para dizer de que região era aquela fileira quando a fileira dividia espaço
+// com o resto da Mesa. Sobre o mapa, o mapa é a resposta.
+templ oNomeDaCena(v tabuleiroView) {
+	<h2 class="tabuleiro-nome-da-cena">{ v.Lugar }</h2>
+}
+
+// OS VERBOS da cena, flutuando no canto superior direito (ALE-203).
+//
+// O ZOOM vem primeiro e é de TODO MUNDO: cada pessoa enquadra a própria janela,
+// e o jogador que não enxerga a peça no telefone não depende do mestre para
+// aproximar. Os verbos do mestre vêm depois, no mesmo painel — são todos "o que
+// se faz COM a cena", e separá-los em dois cantos faria o jogador procurar num
+// lugar que só existe para ele.
+templ osVerbosDaCena(v tabuleiroView) {
+	<div class="tabuleiro-verbos-da-cena">
+		@oEnquadramentoDoPlano(v)
+		if v.Mestre {
+			// O acervo alcançável COM cena na mesa (ALE-191): trocar da taverna
+			// para a cripta sem encerrar primeiro.
+			@botaoDaCortina(v)
+			// A LENTE é vizinha da CORTINA e a ordem não é aleatória: são as duas
+			// perguntas sobre o que a mesa vê. Uma esconde a cena, a outra confere
+			// o que sobrou dela.
+			@botaoDaLente(v)
+			@botaoDePorNoMapa(v)
+			if len(v.Acervo) > 0 {
+				@botaoDoAcervo(v)
+			}
+			// ÍCONE e não texto: o painel flutua sobre o mapa e cada palavra nele
+			// é mapa que a pessoa deixa de ver. O nome acessível é o texto
+			// inteiro — quem usa leitor de tela não perde a palavra que o desenho
+			// economizou.
+			<button
+				type="button"
+				aria-label="Encerrar o tabuleiro"
+				title="Encerrar o tabuleiro"
+				data-on:click="document.getElementById('encerrar-tabuleiro').showModal()"
+				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				@icone("X", "size-4")
+			</button>
+		}
+	</div>
 }
 
 // OS AVISOS da cena, flutuando no alto do tabuleiro (ALE-203).
