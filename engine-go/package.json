@@ -2,7 +2,7 @@
   "name": "@tormenta20/engine-go",
   "version": "0.0.0",
   "private": true,
-  "description": "Go API + rules engine. `dev` runs air (hot-reload of cmd/api :3001) reading .env.development; `build` compiles the production binary and `start` boots it with .env.production, serving the built SPA, the API and the socket from ONE process — that is the whole production stack, no nginx and no compose. The WASM is built by the frontend's predev/prebuild.",
+  "description": "Go API + rules engine. `dev` runs air (hot-reload of cmd/api :3001) reading .env.development; `build` compiles the production binary and `start` boots it with .env.production, serving the built SPA, the API and the live stream from ONE process. Production is that single process, in a container: `docker compose up -d --build` from the repo root, database on a host bind mount, and NO reverse proxy — rendered scenes are gzipped in-process by plataforma.Gzip (ALE-273). The WASM is built by the frontend's predev/prebuild.",
   "scripts": {
     "dev": "air",
     "build": "go build -o ./bin/t20-api ./cmd/api",

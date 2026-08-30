@@ -54,16 +54,38 @@ No CI o e2e tem job próprio.
 
 ## Produção (a mesa na LAN)
 
-Uma vez, no primeiro uso:
+Duas formas, e as duas sobem **o mesmo processo único** — o binário serve a SPA,
+a API e o fluxo ao vivo na mesma porta, com as cenas comprimidas por ele mesmo.
+Não há proxy reverso em nenhuma das duas.
+
+### Por contêiner (ALE-273)
+
+É a forma recomendada: o build é reproduzível, o processo volta sozinho depois
+de um reboot e o banco fica numa pasta que dá para copiar.
+
+```bash
+cp .env.example .env     # escreva o JWT_SECRET e o ADMIN_EMAILS
+mkdir -p data backups
+docker compose up -d --build
+```
+
+O `.env` pede o `T20_UID`/`T20_GID` do dono da pasta `data/` (`id -u`, `id -g`):
+o contêiner não roda como root, e sem isso ele não consegue escrever no bind
+mount — o sintoma é `unable to open database file`, que parece banco corrompido
+e é permissão.
+
+O **backup é copiar a pasta `data/`**, e o backup automático já escreve em
+`backups/` com o mesmo `VACUUM INTO` do manual.
+
+Livro em PDF e certificado TLS ficam num `docker-compose.override.yml`, porque
+apontam para caminhos que só existem na sua máquina — o modelo está comentado no
+fim do `docker-compose.yml`.
+
+### Direto na máquina
 
 ```bash
 cp engine-go/.env.production.example engine-go/.env.production
 openssl rand -hex 32     # cole no JWT_SECRET do arquivo copiado
-```
-
-Depois, sempre:
-
-```bash
 pnpm build               # WASM + SPA + o binário do servidor
 pnpm start               # build + sobe em produção
 ```

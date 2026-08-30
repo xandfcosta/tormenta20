@@ -28,10 +28,41 @@ import (
 	"t20engine/plataforma"
 )
 
+// SONDA DE SAÚDE, para o contêiner ter como se examinar (ALE-273).
+//
+// A imagem é `distroless`: não tem shell, `curl` nem `wget`, e é por isso que a
+// sonda mora AQUI. O `HEALTHCHECK` do compose chama o próprio binário com
+// `-health`, ele bate no `/health` de si mesmo e sai 0 ou 1.
+//
+// Não é um segundo modo do programa: é uma requisição HTTP e um código de saída,
+// e ela lê a MESMA `PORT` que o servidor escuta — apontar para uma porta escrita
+// à mão daria uma sonda que reprova um servidor saudável no dia em que a porta
+// mudasse.
+func sondaDeSaude(cfg plataforma.Config) int {
+	cliente := &http.Client{Timeout: 3 * time.Second}
+	resp, err := cliente.Get(fmt.Sprintf("http://127.0.0.1:%s/health", cfg.Port))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "health: %v\n", err)
+		return 1
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintf(os.Stderr, "health: %s\n", resp.Status)
+		return 1
+	}
+	return 0
+}
+
 func main() {
 	cfg, err := plataforma.LoadConfig()
 	if err != nil {
 		log.Fatalf("config: %v", err)
+	}
+	// A sonda sai ANTES de abrir o banco: ela é um cliente do servidor que já
+	// está de pé, e abrir o SQLite de novo aqui poria um segundo escritor no
+	// mesmo arquivo a cada 30 segundos.
+	if len(os.Args) > 1 && os.Args[1] == "-health" {
+		os.Exit(sondaDeSaude(cfg))
 	}
 	// Fatal, not a warning: a production boot with a forgeable signing key is
 	// worse than no boot at all, and a warning scrolls away.
@@ -46,7 +77,7 @@ func main() {
 	defer func() { _ = database.Close() }()
 
 	srv := api.NewServer(cfg, database, primeCatalogs(cfg.CatalogPath))
-	mux := buildMux(cfg, srv)
+	mux := plataforma.Gzip(buildMux(cfg, srv))
 
 	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação
 	// (ALE-157): sem isto, um Ctrl-C durante um `VACUUM INTO` ou um persist do

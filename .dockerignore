@@ -1,19 +1,57 @@
-# Keep build context small + reproducible — never ship host artifacts.
+# O que NÃO entra no contexto de build.
+#
+# Reescrito na ALE-273, quando o compose voltou. O arquivo tinha sobrevivido à
+# remoção do compose (ALE-101) e ainda listava `backend/src/generated` e
+# `backend/prisma/*.db` — caminhos do NestJS que foi apagado. Ignorar o que não
+# existe é inofensivo e enganoso: lê-se como se aquele diretório ainda fosse
+# parte do projeto.
+#
+# Sem este arquivo o `docker build` empacota `node_modules`, os bancos de
+# desenvolvimento e os relatórios do Playwright — centenas de MB que atravessam o
+# daemon a cada build só para serem descartados no primeiro `COPY`.
+
+# Dependências: o estágio de build as instala do lockfile.
 **/node_modules
+
+# Artefatos de build — o contêiner reconstrói tudo.
 **/dist
 **/.turbo
-backend/src/generated
-backend/prisma/*.db
-backend/prisma/*.db-journal
+frontend/.vite
+frontend/public/engine
+engine-go/bin
+
+# BANCOS E BACKUPS. O dado de desenvolvimento não entra na imagem, e o de
+# produção mora em VOLUME (ver `docker-compose.yml`).
+#
+# OS CAMINHOS SÃO ANCORADOS, e isso é conserto de um build quebrado: um `**/data`
+# solto pega também o `engine-go/catalog/data/`, que é onde vivem os catálogos do
+# livro embutidos por `go:embed`. O build morre em
+# `pattern data/*.json: no matching files found` — mensagem que aponta para o Go
+# e cuja causa está aqui. É a MESMA armadilha que o `.gitignore` da raiz já
+# registra, cometida de novo noutro arquivo por quem tinha acabado de ler o
+# comentário de lá.
+/data
+engine-go/data
+frontend/data
+/backups
 **/*.db
+**/*.db-wal
+**/*.db-shm
+**/*.db-journal
+
+# O `.env.production` é do dono da mesa e nunca entra numa imagem: a configuração
+# chega por ambiente, que é o que o `LoadConfig` já prefere (ALE-119).
+**/.env.production
+
+# Testes, relatórios e ferramentas
+e2e/test-results
+e2e/playwright-report
+e2e/.auth
+**/coverage
 .git
 .github
-**/coverage
+.claude
+.worktrees
 **/.vscode
 **/.idea
 **/*.log
-frontend/dist
-frontend/.vite
-
-/data
-/backups

@@ -42,8 +42,28 @@ func Open(path string) (*sql.DB, error) {
 	// continua livre (WAL), e as oito transações do app são todas de escrita.
 	// Numa mesa doméstica isso é de graça, e o `busy_timeout` acima é quem
 	// cobre a espera.
+	// `synchronous(1)` é NORMAL, e ele vale 139ms POR TOQUE na ficha (ALE-273).
+	//
+	// O padrão do SQLite é FULL, que faz `fsync` a cada commit. Medido neste
+	// repositório, num prato girante: o POST que muda o PV e redevolve a cena
+	// levava 121ms de servidor e 139ms até o número mudar na tela. Com NORMAL,
+	// no MESMO disco, os dois viraram 1,7ms e 12ms — o número que um SSD daria.
+	// O controle que isolou a causa foi trocar só o LUGAR do arquivo (disco →
+	// tmpfs) com o binário idêntico.
+	//
+	// O QUE SE PERDE, dito com precisão: numa queda de energia, os commits que
+	// ainda não foram sincronizados. O banco NÃO corrompe — essa é a garantia
+	// do WAL, e é o que separa NORMAL de OFF: o arquivo principal nunca fica
+	// meio-escrito, porque o conteúdo novo mora no `-wal` e a recuperação relê
+	// os quadros até o último commit válido, cada um com checksum.
+	//
+	// É `innodb_flush_log_at_trx_commit=2` para quem vem do MariaDB, e é o que a
+	// documentação do SQLite recomenda para WAL na maioria das aplicações. Para
+	// uma ficha de mesa, perder os últimos segundos numa queda de luz custa
+	// menos que 139ms em cada clique de PV — decisão do dono, ALE-273.
 	dsn := fmt.Sprintf(
-		"file:%s?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_txlock=immediate",
+		"file:%s?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)"+
+			"&_pragma=synchronous(1)&_pragma=busy_timeout(5000)&_txlock=immediate",
 		path,
 	)
 	sqlDB, err := sql.Open("sqlite", dsn)
