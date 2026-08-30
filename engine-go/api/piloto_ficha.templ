@@ -99,6 +99,8 @@ templ oPainelDaFicha(v fichaView) {
 			@oPainelDasProficiencias(v)
 		case "combat":
 			@oPainelDeCombate(v)
+		case "expertises":
+			@oPainelDePericias(v)
 	}
 	for _, aba := range v.Abas {
 		if aba.Ativa && !aba.Portada {

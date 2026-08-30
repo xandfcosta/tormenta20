@@ -118,6 +118,11 @@ const QUERIDOS = [
   // cartão de arma. Dois desenhos diferentes com nomes a uma letra de distância.
   'Sword',
   'Sparkles',
+  // O painel de Perícias (ALE-272, fatia 4): o haltere do treino, o cadeado da
+  // perícia que o livro fecha sem treinamento, e a lixeira do ofício. `Star`,
+  // `Search`, `Plus` e `Scroll` já estavam na lista.
+  'Dumbbell',
+  'Lock',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

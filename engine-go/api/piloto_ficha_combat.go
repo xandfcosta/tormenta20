@@ -85,6 +85,10 @@ type breakdownRow struct {
 	// Note é o PORQUÊ do modificador ("desbalanceada: -2 em ataque"), e ela
 	// quebra linha em vez de truncar.
 	Note string
+	// Indented é a linha que EXPLICA a de cima em vez de somar ao lado dela — as
+	// contribuições de item sob o "Outros" das Perícias. O Combate não a usa: lá
+	// a lista é plana, porque cada linha é uma parcela do total.
+	Indented bool
 }
 
 type extraBlock struct {
@@ -142,21 +146,36 @@ var theSaves = []struct {
 // do crachá vira travessão: a ficha inteira não pode deixar de abrir por causa
 // de um número, e a aba diz que não sabe em vez de mostrar zeros — um zero é um
 // valor plausível, e o jogador agiria sobre ele.
-func (s *Server) combatPanelOf(dto CharacterDTO) combatPanel {
+// sheetForPanels computa a ficha UMA vez para os painéis que a leem.
+//
+// Combate e Perícias precisam do MESMO resultado, e computar duas vezes daria
+// duas contas que podem divergir no dia em que uma delas passar um conjunto de
+// condicionais diferente do da outra — o jogador veria a Luta com um número no
+// Combate e outro nas Perícias.
+//
+// O segundo retorno diz se houve conta: sem catálogo primado não há ficha, e o
+// painel que chamar desenha o que sabe desenhar sem ela.
+func (s *Server) sheetForPanels(dto CharacterDTO) (engine.ComputedSheetV2, []engine.WeaponCard, bool) {
 	if s.catalogs == nil {
-		return combatPanel{}
+		return engine.ComputedSheetV2{}, nil, false
 	}
 	ec, err := engineCharacterFrom(dto)
 	if err != nil {
-		return combatPanel{}
+		return engine.ComputedSheetV2{}, nil, false
 	}
 	// O OPT-IN DO JOGADOR entra na conta, e é a primeira vez que uma cena do
 	// piloto o faz: todo uso anterior passou pelo `sheetFromDTO`, que computa a
 	// ficha base. Com Fúria ligada, a base mostraria o ataque de quem não está
 	// em Fúria e a ficha discordaria da Mesa.
 	active := toStringSet(dto.Conditionals)
-	sheet := s.catalogs.ComputeSheetV2(ec, active)
-	cards := s.catalogs.ComputeWeaponCards(ec, active)
+	return s.catalogs.ComputeSheetV2(ec, active), s.catalogs.ComputeWeaponCards(ec, active), true
+}
+
+func (s *Server) combatPanelOf(dto CharacterDTO) combatPanel {
+	sheet, cards, ok := s.sheetForPanels(dto)
+	if !ok {
+		return combatPanel{}
+	}
 	return combatPanelFor(sheet, cards, isCaster(sheet))
 }
 
