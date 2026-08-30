@@ -1,5 +1,6 @@
-Gerenciador de mesa e ficha de **Tormenta 20**. O domínio é em português: o que
-se lê na tela e o que vira identificador de domínio fala a língua da mesa.
+Gerenciador de mesa e ficha de **Tormenta 20**. O que se LÊ é em português — a
+tela, a documentação e os comentários falam a língua da mesa; o que se ESCREVE
+em código é em inglês. Ver "Idioma".
 
 São dois pacotes. `engine-go/` é o backend em Go — a API HTTP na :3001, o motor
 de regras, o mesmo motor compilado para WASM, e as cenas do piloto em `.templ`
@@ -222,17 +223,35 @@ tinha irmãos.
   pesquisável.
 - Texto puro só na saída de CLI que uma pessoa lê.
 
-## Linguagem ubíqua
+## Idioma
+
+**Identificador é em INGLÊS. Texto que uma pessoa lê é em PORTUGUÊS.** A linha
+passa entre o que o compilador consome e o que um humano consome, e não entre
+domínio e infraestrutura.
+
+- **Inglês:** nome de variável, função, tipo, método, campo de struct, constante,
+  pacote, arquivo, nome de teste. Também a fronteira, que já era: tabela, coluna,
+  campo JSON, evento SSE, rota.
+- **Português:** comentário, docstring, `.md`, mensagem de commit, tudo que
+  aparece na tela, e o texto de mensagem de erro que um humano vai ler.
+
+O conceito continua sendo o do livro — o que muda é a grafia do identificador.
+`sheet`, e não `characterData`: a tradução é do TERMO do glossário, não uma
+oportunidade de trocar o conceito por um genérico. Termo sem tradução assentada
+(`tormenta`, `goblinoide`) fica como está; é nome próprio.
 
 - **[GLOSSARIO.md](GLOSSARIO.md) — uma palavra por conceito, e um conceito por
   palavra.** Leia antes de nomear qualquer coisa que o usuário vá ler ou que vá
   virar identificador. Ele tem a coluna dos termos PROIBIDOS, as colisões abertas
-  que não se consertam por palpite, e a regra da costura pt-BR/inglês. Termo
-  novo: escreva a linha do glossário ANTES do código.
-- **A costura é do glossário e não deste arquivo** (§F): o domínio fala
-  português, a **fronteira** fala inglês — nome de tabela, campo JSON, evento
-  SSE — e a mecânica de programação (`index`, `next`, `pending`) também. Não
-  invente a terceira regra.
+  que não se consertam por palpite, e a tradução de cada termo. Termo novo:
+  escreva a linha do glossário ANTES do código.
+
+**O código existente NÃO é varrido de uma vez** — e esta é a exceção deliberada à
+regra "uma convenção só foi adotada depois de varrida". A base tem milhares de
+identificadores em português, e um renome em massa apagaria a procedência de cada
+linha no `git blame` por ganho de estilo. A regra vale para o código NOVO e para
+o que a sua mudança já ia tocar. Enquanto as duas grafias convivem, **o nome que
+você escreve segue a regra, e o nome que você chama segue o que está lá.**
 
 ## Commits
 

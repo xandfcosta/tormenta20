@@ -182,10 +182,10 @@ mesa para o botão que o aparelho dela não tem.
 
 ## E-bis. Os contextos do servidor (ALE-254)
 
-Nome de pacote é identificador, então o glossário manda nele. E a regra da
-costura já responde qual idioma: **fronteira** é o que fala inglês — tabela,
-campo JSON, evento SSE, rota HTTP. Nome de pacote interno não é fronteira, então
-contexto de domínio entra em **pt-BR**.
+Nome de pacote é identificador, então o glossário manda nele — e pela regra do
+§F identificador novo é em inglês. `aovivo/` e `plataforma/` são anteriores à
+regra e ficam: renomear pacote move todo import do repositório, que é o preço
+mais alto da lista por ganho puramente estético.
 
 | termo | no código | proibido | o que é |
 | -- | -- | -- | -- |
@@ -202,23 +202,30 @@ criaria a terceira acepção da palavra que a linha existe para impedir.
 
 ## F. A costura PT/EN
 
-O domínio é pt-BR e o código é misto — e isso não estava escrito em lugar
+O domínio é pt-BR e o código era misto — e isso não estava escrito em lugar
 nenhum, que é a raiz de metade desta lista. Em `board-region.tsx` convivem
 `selectedToken` e `linhasNoMapa`, e `board` e `cena` denotam o mesmo tipo no
 mesmo arquivo.
 
-A regra, daqui para frente:
+A regra, daqui para frente (a completa está em
+[CLAUDE.md § Idioma](CLAUDE.md#idioma); aqui fica o que é do glossário):
 
 - **A tela fala pt-BR.** Sem exceção, incluindo `aria-label` e `title` (o Kobalte
   injeta rótulos em inglês — passe o seu, mesmo quando a palavra está escrita).
-- **A fronteira fala inglês**: nomes de tabela, campos JSON, eventos SSE e
-  rotas HTTP. Trocá-los quebra clientes e migrações, e o ganho é estético.
-- **Dentro de uma função, o idioma é o do conceito.** Nome de domínio que o
-  glossário canoniza em pt-BR entra em pt-BR (`combatente`, `peça`, `lugar`);
-  mecânica de programação fica em inglês (`index`, `next`, `pending`).
-- **Um arquivo não mistura os dois nomes do MESMO conceito.** Se o arquivo já
-  chama `board`, não introduza `cena` ao lado; siga o que está lá e anote a
-  dívida.
+- **O identificador fala inglês.** Variável, função, tipo, campo, arquivo — e a
+  fronteira, que já era: tabela, campo JSON, evento SSE, rota HTTP.
+- **O que muda é a GRAFIA, não o conceito.** A coluna "no código" registra como
+  o termo está escrito HOJE, e boa parte dela ainda está em pt-BR — é o passivo,
+  não o alvo. Ao escrever um identificador novo para um termo que já tem
+  tradução em uso, use a que já está em uso; ao traduzir um termo pela primeira
+  vez, **anote a tradução na linha dele antes de escrever o código** — traduzir
+  na hora, duas vezes, é como um conceito vira dois (`place` e `location` para o
+  mesmo `lugar`). Termo sem tradução — `tormenta`, `goblinoide` — fica como
+  está: é nome próprio.
+- **Um arquivo não mistura os dois nomes do MESMO conceito.** O código antigo
+  não é varrido (a razão está no CLAUDE.md), então as duas grafias convivem por
+  um tempo: num arquivo que já chama `cena`, não introduza `scene` ao lado — o
+  nome NOVO segue a regra, o nome CHAMADO segue o que está lá.
 
 ---
 
