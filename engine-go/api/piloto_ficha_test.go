@@ -1,0 +1,200 @@
+package api
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"strings"
+	"testing"
+)
+
+// Os guardas da FICHA em Datastar (ALE-272, fatia 1).
+//
+// O que eles prendem é o que a casca PROMETE: o endereço das abas, a posse, e os
+// dois gestos que o crachá tem. Painel nenhum foi portado ainda — o que existe
+// aqui é o envoltório, e é ele que precisa estar certo antes de sete painéis se
+// pendurarem nele.
+
+// aFichaDe monta uma ficha alcançável, com classe (o degrau precisa de uma).
+func aFichaDe(t *testing.T, nome string, nivel int64) (pilotoFixture, int64) {
+	t.Helper()
+	f := novoPiloto(t)
+	id := seedCharacterAtLevel(t, f.s, f.jogador, nome, nivel, 20, 20, 10, 10)
+	seedClasse(t, f.s, id, "Arcanista", nivel)
+	return f, id
+}
+
+// O NÍVEL É DA CLASSE, e o do personagem é a SOMA — guarda de regressão.
+//
+// A primeira versão deste comando escrevia direto no nível do personagem, e o
+// defeito é silencioso do pior jeito: a ficha passa a dizer 13 com as classes
+// somando 12, e os pools de PV e PM — que derivam das CLASSES — não se mexem. O
+// número sobe e o personagem não fica mais forte.
+//
+// Eu não achei isso lendo o código: achei comparando com a SPA no navegador,
+// onde o degrau chama `PATCH /classes/level`. Por isso o caso prende as DUAS
+// metades: a soma bater, e o pool passar a dizer o que o livro diz.
+func TestODegrauDeNivelSobeAClasseENaoSoOTotal(t *testing.T) {
+	f, id := aFichaDe(t, "Arcanista Nv3", 3)
+	ctx := context.Background()
+	antes, err := f.s.queries.GetCharacter(ctx, id)
+	if err != nil {
+		t.Fatalf("ler o personagem: %v", err)
+	}
+
+	rec := f.pede(t, f.jogador, http.MethodPost,
+		fmt.Sprintf("/piloto/personagens/%d/nivel/Arcanista/1", id), "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("subir de nível deu %d: %s", rec.Code, rec.Body.String())
+	}
+
+	depois, err := f.s.queries.GetCharacter(ctx, id)
+	if err != nil {
+		t.Fatalf("reler: %v", err)
+	}
+	classes, err := f.s.queries.ListClassesByCharacter(ctx, id)
+	if err != nil {
+		t.Fatalf("ler as classes: %v", err)
+	}
+	var soma int64
+	for _, cl := range classes {
+		soma += cl.Level
+	}
+	if soma != 4 {
+		t.Errorf("a CLASSE não subiu: as classes somam %d, esperado 4", soma)
+	}
+	if depois.Level != soma {
+		t.Errorf("o nível do personagem (%d) não é a soma das classes (%d)", depois.Level, soma)
+	}
+	// E OS POOLS ACOMPANHAM. O número é do LIVRO e escrito à mão: o Arcanista tem
+	// PV inicial 8 e +2 por nível (T20 p36, a tabela da classe; a regra da soma
+	// está em p34), então no nível 4 com Constituição 0 são 8 + 3×2 = **14**.
+	//
+	// A primeira versão deste caso afirmava "o PV máximo CRESCEU", e ela estava
+	// errada de um jeito instrutivo: o personagem semeado tinha 20 gravados, que
+	// não é um número do motor — sincronizar o BAIXOU para 14, e "cresceu" falhou
+	// sobre um app correto. O que a sincronização garante não é crescer: é a
+	// ficha passar a dizer o que o livro diz.
+	if depois.Hpmax != 14 {
+		t.Errorf("o PV máximo do Arcanista 4 ficou em %d, e o livro dá 14 (8 inicial + 3×2, p36)", depois.Hpmax)
+	}
+	if antes.Hpmax == depois.Hpmax {
+		t.Error("o PV máximo não se mexeu: o degrau gravou o nível sem sincronizar os pools")
+	}
+}
+
+// DESCER uma classe de nível 1 é recusado: levá-la a zero apagaria a classe, e
+// apagar classe é outra coisa — não tem gesto nesta tela e não pode acontecer
+// por acidente num botão de menos.
+func TestODegrauNaoApagaUmaClasseDeNivelUm(t *testing.T) {
+	f, id := aFichaDe(t, "Aprendiz", 1)
+
+	rec := f.pede(t, f.jogador, http.MethodPost,
+		fmt.Sprintf("/piloto/personagens/%d/nivel/Arcanista/-1", id), "")
+
+	if rec.Code == http.StatusOK {
+		t.Fatal("desceu uma classe de nível 1: a classe teria sumido da ficha")
+	}
+	if !strings.Contains(rec.Body.String(), "apagaria a classe") {
+		t.Errorf("a recusa não diz o que ia acontecer: %q", rec.Body.String())
+	}
+}
+
+// O VITAL PRENDE na faixa em vez de recusar.
+//
+// É a diferença entre o gesto e a API: o `PATCH /vitals` manda o valor absoluto
+// e recusa fora da faixa, o que está certo para um cliente que calculou. Aqui o
+// gesto é "levou seis" — com 4 de PV o resultado é zero, e uma recusa faria o
+// mestre clicar quatro vezes de um em um para chegar no mesmo lugar.
+func TestOVitalPrendeEmZeroENoMaximo(t *testing.T) {
+	f, id := aFichaDe(t, "Alvo", 3)
+	ctx := context.Background()
+	url := fmt.Sprintf("/piloto/personagens/%d/vitais/pv/", id)
+
+	// Cinco golpes de −5 sobre 20 de PV: para em zero e não vira negativo.
+	for i := 0; i < 5; i++ {
+		if rec := f.pede(t, f.jogador, http.MethodPost, url+"-5", ""); rec.Code != http.StatusOK {
+			t.Fatalf("ferir deu %d", rec.Code)
+		}
+	}
+	ferido, _ := f.s.queries.GetCharacter(ctx, id)
+	if ferido.Hpcurrent != 0 {
+		t.Errorf("o PV foi para %d: o passo tinha de prender em zero", ferido.Hpcurrent)
+	}
+
+	// E curar além do máximo para NO máximo: passar dele seria PV temporário,
+	// que é outra regra e tem dono no motor.
+	for i := 0; i < 6; i++ {
+		f.pede(t, f.jogador, http.MethodPost, url+"5", "")
+	}
+	curado, _ := f.s.queries.GetCharacter(ctx, id)
+	if curado.Hpcurrent != curado.Hpmax {
+		t.Errorf("o PV parou em %d com máximo %d", curado.Hpcurrent, curado.Hpmax)
+	}
+}
+
+// A FICHA É DO DONO. A trava é do servidor, e não da tela não oferecer o link:
+// quem digitar o endereço de outro personagem leva 403.
+func TestAFichaDeOutraPessoaNaoAbre(t *testing.T) {
+	f, id := aFichaDe(t, "Segredo", 3)
+
+	rec := f.pede(t, f.mestre, http.MethodGet, fmt.Sprintf("/piloto/personagens/%d", id), "")
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("a ficha de outra pessoa abriu com %d", rec.Code)
+	}
+	// E o gesto também: barrar a leitura e deixar a escrita passar seria pior
+	// que não barrar nada.
+	escrita := f.pede(t, f.mestre, http.MethodPost,
+		fmt.Sprintf("/piloto/personagens/%d/vitais/pv/-5", id), "")
+	if escrita.Code != http.StatusForbidden {
+		t.Errorf("alguém feriu o personagem de outra pessoa: %d", escrita.Code)
+	}
+}
+
+// O ENDEREÇO DAS ABAS é contrato, e ele veio da SPA inteiro.
+//
+// `?tab=` é link compartilhado e favorito: `abilities` continua sendo Poderes
+// (o valor sobreviveu de propósito ao renome Habilidades→Poderes), e os dois
+// nomes velhos da Mochila continuam chegando nela. Lixo cai na primeira aba, e
+// não numa tela em branco.
+func TestOEnderecoDasAbasDaFichaSobrevive(t *testing.T) {
+	for _, caso := range []struct{ pedido, esperado string }{
+		{"abilities", "abilities"},
+		{"inventory", "bag"},
+		{"equipment", "bag"},
+		{"", "expertises"},
+		{"nao-existe", "expertises"},
+	} {
+		if achou := aAbaPedida(caso.pedido); achou != caso.esperado {
+			t.Errorf("?tab=%q abriu %q, esperado %q", caso.pedido, achou, caso.esperado)
+		}
+	}
+}
+
+// A ABA NÃO PORTADA DIZ ISSO, e leva para a ficha antiga.
+//
+// Enquanto os painéis não chegam, a casca não pode fingir: uma seção vazia é
+// lida como defeito, e mandar a pessoa procurar sozinha o endereço velho é pior
+// do que dar o link. Este guarda morre junto com a última fatia — quando não
+// houver painel por portar, ele não terá o que afirmar.
+func TestAAbaAindaNaoPortadaLevaParaAFichaAntiga(t *testing.T) {
+	f, id := aFichaDe(t, "Herói", 3)
+
+	tela := f.pede(t, f.jogador, http.MethodGet,
+		fmt.Sprintf("/piloto/personagens/%d?tab=spells", id), "").Body.String()
+
+	if !strings.Contains(tela, "ainda vive na ficha antiga") {
+		t.Fatal("a aba não portada não diz que está vazia: a tela parece defeito")
+	}
+	if !strings.Contains(tela, fmt.Sprintf("/characters/%d?tab=spells", id)) {
+		t.Error("a aba não portada não leva para a MESMA seção na ficha antiga")
+	}
+	// As sete existem sempre, mesmo sem painel: elas são o mapa da ficha, e uma
+	// barra que cresce a cada fatia esconderia o que ainda falta.
+	for _, rotulo := range []string{"Perícias", "Combate", "Mochila", "Proficiências", "Efeitos", "Poderes", "Magias"} {
+		if !strings.Contains(tela, rotulo) {
+			t.Errorf("a aba %q não está na barra", rotulo)
+		}
+	}
+}

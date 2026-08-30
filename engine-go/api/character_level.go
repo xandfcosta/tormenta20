@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"t20engine/plataforma"
@@ -162,47 +163,93 @@ func (s *Server) handleUpdateClassLevel(w http.ResponseWriter, r *http.Request) 
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"level": {msg}})
 		return
 	}
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, classes, total, vitals, err := s.aplicaONivelDaClasse(r, row, body.ClassName, *body.Level)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
+		escreveAFalhaDoNivel(w, err)
 		return
 	}
-	found := false
+	_ = dto
+	plataforma.WriteJSON(w, http.StatusOK, classLevelResult{Level: total, Classes: classes, Vitals: vitals})
+}
+
+// erroDeClasseDoNivel separa a recusa de REGRA da falha de infraestrutura, para
+// os dois chamadores traduzirem cada uma no idioma da própria tela — a API JSON
+// num erro de campo, o piloto numa frase no rodapé.
+type erroDeClasseDoNivel struct {
+	Campo string
+	Frase string
+}
+
+func (e erroDeClasseDoNivel) Error() string { return e.Frase }
+
+// escreveAFalhaDoNivel traduz a recusa para o formato da API JSON.
+func escreveAFalhaDoNivel(w http.ResponseWriter, err error) {
+	var recusa erroDeClasseDoNivel
+	if errors.As(err, &recusa) {
+		plataforma.WriteFieldError(w, http.StatusBadRequest, recusa.Frase,
+			plataforma.FieldErrorMap{recusa.Campo: {recusa.Frase}})
+		return
+	}
+	plataforma.WriteError(w, http.StatusInternalServerError, "Could not update class level")
+}
+
+// aplicaONivelDaClasse é A REGRA do degrau de nível, e ela é UMA para as duas
+// telas (ALE-272).
+//
+// Ela estava dentro do handler JSON, e extraí-la é o que impede a ficha em
+// Datastar de divergir da antiga: o nível de um personagem é a SOMA dos níveis
+// de classe, e uma segunda cópia dessa conta é como as duas telas passam a
+// discordar de quanto vale o Guerreiro 3 / Ladino 2.
+//
+// As três garantias que ela carrega, e que a tela não pode reescrever:
+//
+//   - a classe TEM de ser do personagem — subir "Bardo" em quem não é bardo
+//     criaria um nível que não existe em lugar nenhum;
+//   - o TOTAL é limitado a 20 (p32), e a soma é a conta que decide, não o campo;
+//   - os POOLS acompanham, porque PV e PM máximos derivam dos níveis de classe.
+//     Gravar o nível sem sincronizar deixa a ficha com o número novo e a vida
+//     velha, que é o defeito que ninguém liga ao botão que o causou.
+func (s *Server) aplicaONivelDaClasse(
+	r *http.Request, row sqlcgen.Character, classe string, nivel int64,
+) (CharacterDTO, []ClassDTO, int64, storedVitals, error) {
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		return dto, nil, 0, storedVitals{}, err
+	}
+	achou := false
 	var total int64
 	for i := range dto.Classes {
-		if dto.Classes[i].ClassName == body.ClassName {
-			dto.Classes[i].Level = *body.Level
-			found = true
+		if dto.Classes[i].ClassName == classe {
+			dto.Classes[i].Level = nivel
+			achou = true
 		}
 		total += dto.Classes[i].Level
 	}
-	if !found {
-		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Character does not have class %q", body.ClassName), plataforma.FieldErrorMap{"className": {"Class not on character"}})
-		return
+	if !achou {
+		return dto, nil, 0, storedVitals{}, erroDeClasseDoNivel{
+			Campo: "className",
+			Frase: fmt.Sprintf("Character does not have class %q", classe),
+		}
 	}
 	if total > 20 {
-		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Total level %d exceeds 20", total), plataforma.FieldErrorMap{"level": {"Sum of class levels capped at 20"}})
-		return
+		return dto, nil, 0, storedVitals{}, erroDeClasseDoNivel{
+			Campo: "level",
+			Frase: fmt.Sprintf("Total level %d exceeds 20", total),
+		}
 	}
 	if _, err := s.queries.SetCharacterClassLevel(r.Context(), sqlcgen.SetCharacterClassLevelParams{
-		Level: *body.Level, CharacterId: row.ID, ClassName: body.ClassName,
+		Level: nivel, CharacterId: row.ID, ClassName: classe,
 	}); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update class level")
-		return
+		return dto, nil, 0, storedVitals{}, err
 	}
 	if err := s.queries.SetCharacterLevel(r.Context(), sqlcgen.SetCharacterLevelParams{
 		Level: total, UpdatedAt: plataforma.NowISO(), ID: row.ID,
 	}); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update level")
-		return
+		return dto, nil, 0, storedVitals{}, err
 	}
 	dto.Level = total
 	vitals, err := s.syncLevelVitals(r, row.ID, dto)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sync vitals")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, classLevelResult{Level: total, Classes: dto.Classes, Vitals: vitals})
+	return dto, dto.Classes, total, vitals, err
 }
 
 // levelRangeError applies the UpdateLevelDto range (@IsInt @Min(1) @Max(20)).

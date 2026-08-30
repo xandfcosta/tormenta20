@@ -45,6 +45,8 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDoHub(r)
 		s.rotasDeCampanhas(r)
 		s.rotasDePersonagens(r)
+		// A FICHA (ALE-272) é filha do endereço do elenco: `/piloto/personagens/{id}`.
+		s.rotasDaFicha(r)
 		s.rotasDoGrimorio(r)
 		s.rotasDoMestre(r)
 		// O BUSCADOR (ALE-264) fica no grupo do Hub e não no do mestre: a caixa

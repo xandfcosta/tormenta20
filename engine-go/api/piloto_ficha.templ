@@ -1,0 +1,287 @@
+package api
+
+import (
+	"fmt"
+	"strconv"
+)
+
+// A FICHA desenhada (ALE-272, fatia 1) — a casca, as sete abas e o crachá.
+//
+// A forma é a da SPA e a decisão de leiaute mais importante veio de lá: **o
+// crachá fica no PÉ**, não no topo. Ele é a placa do jogador — retrato, nome,
+// classes, PV/PM — e no pé ele fica perto do polegar no telefone, que é onde o
+// PV é mexido a noite inteira.
+//
+// AS ABAS SÃO LINKS, e isso é decisão e não preguiça: `?tab=` é endereço
+// guardado (favorito, link no chat da mesa), então cada aba precisa ser uma URL
+// que se abre, se recarrega e volta no botão do navegador. É o mesmo caminho que
+// o grimório usa (`?aba=`), e a alternativa — trocar por sinal — daria uma troca
+// instantânea que não sobrevive a um F5.
+
+// cenaDaFicha embrulha a cena num elemento com `id`, e é ele que o remendo dos
+// comandos substitui. O `id` é o que o morph do Datastar casa — sem ele o
+// remendo não teria onde pousar.
+templ cenaDaFicha(v fichaView) {
+	<div id="cena-ficha" class="flex min-h-0 flex-1 flex-col">
+		@ficha(v)
+	</div>
+}
+
+templ ficha(v fichaView) {
+	<div class="flex min-h-0 flex-1 flex-col">
+		@aBarraDaFicha(v)
+		@asAbasDesenhadas(v)
+		<div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
+			@oPainelDaFicha(v)
+		</div>
+		@oCrachaDoJogador(v)
+	</div>
+}
+
+// aBarraDaFicha é o cabeçalho: a volta e o nome.
+//
+// O ‹ Voltar leva ao ELENCO e não ao histórico do navegador: quem chega por link
+// direto não tem para onde voltar, e um botão que às vezes não faz nada é pior
+// que nenhum.
+templ aBarraDaFicha(v fichaView) {
+	<div class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3">
+		<a
+			href="/piloto/personagens"
+			class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>‹ Voltar</a>
+		<h1 class="min-w-0 truncate font-heading text-xl tracking-wide text-foreground">{ v.Nome }</h1>
+		<span class="text-sm text-muted-foreground">{ v.Papel }</span>
+	</div>
+}
+
+// asAbasDesenhadas é a fileira das sete seções.
+//
+// `role="tablist"` com links dentro seria mentira de papel: uma aba ARIA troca
+// conteúdo na mesma página, e estas navegam. São links num `<nav>`, e quem está
+// na atual é dito por `aria-current` — o mesmo que o acervo de catálogos faz.
+templ asAbasDesenhadas(v fichaView) {
+	<nav aria-label="Seções da ficha" class="flex w-full flex-wrap gap-1 border-b border-grimorio-iron px-2 py-1.5">
+		for _, aba := range v.Abas {
+			@aAbaDaFicha(v, aba)
+		}
+	</nav>
+}
+
+templ aAbaDaFicha(v fichaView, aba abaDaFicha) {
+	<a
+		href={ templ.SafeURL(aRotaDaFicha(v.ID, aba.Valor)) }
+		if aba.Ativa {
+			aria-current="page"
+		}
+		class={ "inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+			templ.KV("border-grimorio-gold text-grimorio-gold", aba.Ativa),
+			templ.KV("border-transparent text-muted-foreground hover:border-grimorio-iron hover:text-foreground", !aba.Ativa) }
+	>
+		@icone(aba.Icone, "size-4")
+		{ aba.Rotulo }
+	</a>
+}
+
+// oPainelDaFicha desenha a seção ativa.
+//
+// Enquanto o painel não foi portado, ele DIZ isso e leva para a ficha antiga.
+// Uma aba vazia seria lida como defeito — e mandar a pessoa procurar sozinha o
+// endereço velho é pior do que dar o link. Cada fatia desta issue troca uma
+// destas caixas por conteúdo de verdade; quando a última cair, este ramo e o
+// `aFichaAntiga` somem juntos.
+templ oPainelDaFicha(v fichaView) {
+	for _, aba := range v.Abas {
+		if aba.Ativa && !aba.Portada {
+			<div class="m-auto flex max-w-md flex-col items-center gap-3 p-6 text-center">
+				@icone(aba.Icone, "size-7 text-muted-foreground")
+				<p class="text-sm text-muted-foreground">
+					{ "A seção " + aba.Rotulo + " ainda vive na ficha antiga." }
+				</p>
+				<a
+					href={ templ.SafeURL(aFichaAntiga(v.ID, aba.Valor)) }
+					class={ classesDoBotao(varSecundaria, tamPadrao, "") }
+				>
+					{ "Abrir " + aba.Rotulo + " na ficha antiga" }
+				</a>
+			</div>
+		}
+	}
+}
+
+// O CRACHÁ do jogador — retrato, identidade e vitais.
+//
+// Ele é o que a ficha tem de permanente: as abas trocam, ele fica. É por isso
+// que o PV e o PM moram aqui e nunca num painel — mexer no PV é o gesto mais
+// frequente da noite, e ele não pode depender de qual aba está aberta.
+templ oCrachaDoJogador(v fichaView) {
+	<div class="border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 sm:px-4">
+		<div class="flex min-w-0 items-stretch gap-3">
+			<div
+				aria-hidden="true"
+				class="flex h-auto w-20 shrink-0 select-none items-center justify-center rounded-none border-2 border-grimorio-iron font-display text-3xl text-white/25 sm:w-24 sm:text-4xl"
+				style={ "background: " + v.Gradiente }
+			>
+				{ v.Iniciais }
+			</div>
+			<div class="flex min-w-0 flex-1 flex-col gap-1.5">
+				<div class="flex items-start justify-between gap-2">
+					<div class="min-w-0">
+						<p class="truncate text-sm text-foreground">{ v.Resumo }</p>
+						if v.Classes != "" {
+							<p class="truncate text-xs text-muted-foreground">{ v.Classes }</p>
+						}
+					</div>
+					// A DEFESA é o número que a mesa pergunta em voz alta, e por
+					// isso ela fica no crachá e não só na aba Combate: com o
+					// Combate ainda na ficha antiga, sem ela aqui a ficha nova
+					// não responderia a pergunta mais comum de um turno.
+					<div class="flex shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1">
+						<span class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">DEF</span>
+						<span class="font-mono text-lg font-semibold tabular-nums text-foreground">{ v.Defesa }</span>
+					</div>
+				</div>
+				@aFileiraDoNivel(v)
+				@aBarraDoVital(v, "PV", v.PV, false)
+				@aBarraDoVital(v, "PM", v.PM, v.SemMana)
+			</div>
+		</div>
+	</div>
+}
+
+// aFileiraDoNivel é o degrau de nível.
+//
+// Ele está aqui porque é o ÚNICO lugar do app que muda o nível de um
+// personagem: não existe tela de edição, e a Forja só cria. Tirá-lo do crachá
+// seria tirar a capacidade, e não mover um controle — é a lição da ALE-183.
+templ aFileiraDoNivel(v fichaView) {
+	<div class="flex flex-wrap items-center gap-1.5">
+		<span class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Nível</span>
+		@oDegrauDoNivel(v, -1, "Diminuir o nível", "Minus")
+		<span class="min-w-6 text-center font-mono text-lg font-semibold tabular-nums text-foreground">
+			{ strconv.FormatInt(v.Nivel, 10) }
+		</span>
+		@oDegrauDoNivel(v, +1, "Aumentar o nível", "Plus")
+		@aEscolhaDaClasse(v, +1, "Qual classe sobe de nível?")
+		@aEscolhaDaClasse(v, -1, "Qual classe desce de nível?")
+	</div>
+}
+
+// oDegrauDoNivel é um lado do degrau, e ele decide entre AGIR e PERGUNTAR.
+//
+// Com UMA classe elegível ele age direto, que é o caso comum e o que a mesa
+// espera de um `+`. Com mais de uma ele abre a escolha — adivinhar qual classe
+// recebe o nível põe um nível de Bardo no Guerreiro em silêncio, e o erro só
+// aparece semanas depois, quando um poder que devia existir não está lá.
+//
+// SEM classe elegível o botão fica desabilitado: no total 20 não há para onde
+// subir (p32), e uma classe de nível 1 não desce sem sumir. Desabilitado e não
+// escondido, porque um controle que some deixa a fileira dançando.
+templ oDegrauDoNivel(v fichaView, passo int, rotulo, desenho string) {
+	<button
+		type="button"
+		aria-label={ rotulo }
+		title={ rotulo }
+		disabled?={ len(asQuePodem(v.AsClasses, passo)) == 0 }
+		if oDegrauDireto(v, passo) != "" {
+			data-on:click={ oDegrauDireto(v, passo) }
+		} else {
+			data-on:click={ "document.getElementById('" + oDialogoDoDegrau(passo) + "').showModal()" }
+		}
+		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-grimorio-iron disabled:hover:text-muted-foreground"
+	>
+		@icone(desenho, "size-4")
+	</button>
+}
+
+// aEscolhaDaClasse é o diálogo do multiclasse.
+//
+// Ele só nasce quando há MAIS DE UMA classe elegível: com uma só, o degrau age
+// direto e um diálogo no DOM seria um nó que nunca abre. `<dialog>` nativo, como
+// o resto da casa — ele entrega modalidade, foco, Esc e devolução do foco sem
+// biblioteca.
+templ aEscolhaDaClasse(v fichaView, passo int, titulo string) {
+	if len(asQuePodem(v.AsClasses, passo)) > 1 {
+		<dialog
+			id={ oDialogoDoDegrau(passo) }
+			data-preserve-attr="open"
+			aria-labelledby={ oDialogoDoDegrau(passo) + "-titulo" }
+			class="scene-grimorio m-auto w-[min(22rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+		>
+			<h2 id={ oDialogoDoDegrau(passo) + "-titulo" } class="font-heading text-lg tracking-wide text-grimorio-gold">{ titulo }</h2>
+			<p class="mt-1 text-sm text-muted-foreground">
+				O nível do personagem é a soma dos níveis de classe, então o nível é sempre de UMA delas.
+			</p>
+			<ul class="mt-3 space-y-1">
+				for _, classe := range asQuePodem(v.AsClasses, passo) {
+					<li>
+						<button
+							type="button"
+							data-on:click={ "document.getElementById('" + oDialogoDoDegrau(passo) + "').close(); " + oComandoDoDegrau(v.ID, classe.Nome, passo) }
+							class="flex min-h-11 w-full items-center justify-between gap-2 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+						>
+							<span>{ classe.Nome }</span>
+							<span class="font-mono tabular-nums text-muted-foreground">{ strconv.FormatInt(classe.Nivel, 10) }</span>
+						</button>
+					</li>
+				}
+			</ul>
+			<div class="mt-4 flex justify-end">
+				<button
+					type="button"
+					data-on:click={ "document.getElementById('" + oDialogoDoDegrau(passo) + "').close()" }
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>Cancelar</button>
+			</div>
+		</dialog>
+	}
+}
+
+// aBarraDoVital é o PV ou o PM, com os passos de mexer.
+//
+// OS PASSOS SÃO 1 E 5, e não um campo de digitar: no meio de um turno o gesto é
+// "levou seis", e dois toques resolvem sem teclado. O campo continua existindo
+// na ficha antiga; ele volta com a aba de Combate, que é onde o dano detalhado
+// mora.
+//
+// A barra é `aria-hidden` e o número é o que se lê: um leitor de tela não tem o
+// que fazer com uma largura em porcento, e a fração já diz tudo.
+templ aBarraDoVital(v fichaView, rotulo string, vital vitalDaFicha, apagado bool) {
+	<div class={ "flex flex-wrap items-center gap-2", templ.KV("opacity-50", apagado) }>
+		<span class="w-6 shrink-0 text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{ rotulo }</span>
+		<div aria-hidden="true" class="h-2 min-w-16 flex-1 overflow-hidden rounded-sm bg-grimorio-iron">
+			<div
+				class={ "h-full", templ.KV("bg-[color:var(--hp-full)]", rotulo == "PV"), templ.KV("bg-[color:var(--mp-arcane)]", rotulo == "PM") }
+				style={ fmt.Sprintf("width: %d%%", vital.Porcento) }
+			></div>
+		</div>
+		<span class="shrink-0 font-mono text-sm tabular-nums text-foreground">{ vital.Fracao }</span>
+		if !apagado {
+			// OS PASSOS SÃO UM GRUPO e a fileira ENROLA — medido a 390px: em
+			// linha única o `+5` do PV terminava em x=399 numa janela de 390, e
+			// sem rolagem que chegasse lá. Fora da janela um botão não é feio: é
+			// inalcançável, e a cura de 5 simplesmente deixa de existir no
+			// telefone. É a mesma família da ALE-162 e da ALE-178.
+			//
+			// ENROLAR e não encolher: os 44px são o mínimo de toque, e um passo
+			// menor trocaria um defeito por outro.
+			<div class="flex shrink-0 items-center gap-1">
+				@oPassoDoVital(v, rotulo, -5)
+				@oPassoDoVital(v, rotulo, -1)
+				@oPassoDoVital(v, rotulo, +1)
+				@oPassoDoVital(v, rotulo, +5)
+			</div>
+		}
+	</div>
+}
+
+templ oPassoDoVital(v fichaView, rotulo string, passo int) {
+	<button
+		type="button"
+		aria-label={ oRotuloDoPasso(rotulo, passo) }
+		title={ oRotuloDoPasso(rotulo, passo) }
+		data-on:click={ fmt.Sprintf("@post('/piloto/personagens/%d/vitais/%s/%d')", v.ID, oVitalNaRota(rotulo), passo) }
+		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-xs text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>
+		{ oSinalDoPasso(passo) }
+	</button>
+}
