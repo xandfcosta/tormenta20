@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { expectDentroDaJanela } from './support/geometry'
+import { expectDentroDaJanela, expectNadaRolaDeLado } from './support/geometry'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
@@ -36,6 +36,46 @@ test('a ficha cabe nos seis formatos, e nenhum botão do crachá sai da janela',
   // retrato na mesma fileira. No telefone em pé é onde a conta estoura.
   await page.setViewportSize({ width: 390, height: 844 })
   await expectDentroDaJanela(page)
+})
+
+/**
+ * O MESMO OLHAR, EM TODA ABA — e ele caminha pela barra em vez de ter uma lista.
+ *
+ * A primeira versão deste arquivo media só a aba padrão, que na fatia 1 era um
+ * aviso de duas linhas. Quando o painel de Proficiências chegou (fatia 2), o
+ * guarda continuou verde sem nunca ter aberto o painel novo: é exatamente a
+ * forma da ALE-237 e da ALE-252, onde a cobertura é função de onde o teste
+ * NAVEGA e não de quantas asserções ele tem.
+ *
+ * Ele lê os `href` da barra em vez de trazer uma lista escrita, e essa é a
+ * diferença entre AMOSTRAGEM e ENUMERAÇÃO: o painel da fatia 6 vai ser medido
+ * sem ninguém lembrar de vir aqui. Uma lista escrita à mão nasce incompleta na
+ * primeira vez que alguém esquece.
+ */
+test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
+  await aFichaDoPrimeiro(page)
+  const enderecos = await page
+    .getByRole('navigation', { name: 'Seções da ficha' })
+    .getByRole('link')
+    .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href))
+  expect(enderecos, 'a barra de abas veio vazia: este caso não mediria nada').toHaveLength(7)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  for (const endereco of enderecos) {
+    await page.goto(endereco)
+    await expect(page.getByRole('navigation', { name: 'Seções da ficha' })).toBeVisible()
+    await expectDentroDaJanela(page)
+    // AS DUAS, e a segunda não é redundância — foi medida.
+    //
+    // O `expectDentroDaJanela` ignora, DE PROPÓSITO, quem tem um eixo rolável
+    // acima: pela definição dele, há como chegar lá. O painel da ficha rola na
+    // vertical, e `overflow-y: auto` faz o navegador computar o `overflow-x`
+    // como `auto` junto — então um bloco de 500px numa janela de 390 passa
+    // por ele em silêncio. Provei sabotando: o caso ficou VERDE com o bloco
+    // largo no ar, e só o `expectNadaRolaDeLado` o viu. É a mesma lacuna que
+    // a ALE-178 nomeou.
+    await expectNadaRolaDeLado(page)
+  }
 })
 
 test('as sete abas são endereços, e a ativa se anuncia', async ({ page }) => {

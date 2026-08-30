@@ -393,11 +393,11 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
   o elemento aparece sem estilo em vez de dar erro.
 
-## Datastar: cinco armadilhas que não deixam erro para trás
+## Datastar: seis armadilhas que não deixam erro para trás
 
-As três primeiras foram descobertas na ALE-203, a quarta na ALE-205 e a quinta
-na ALE-235; nenhuma delas escreve uma linha no console. Estão aqui porque o
-sintoma de cada uma aponta para o lugar errado.
+As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na
+ALE-235 e a sexta na ALE-272; nenhuma delas escreve uma linha no console. Estão
+aqui porque o sintoma de cada uma aponta para o lugar errado.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 
@@ -478,6 +478,29 @@ Duas coisas para quem repetir a receita:
 - **E isso não aparece numa sonda que clica por `element.click()`**, porque ela
   não move o foco: só o gesto de verdade dispara os dois eventos. Mesma família
   do evento de ponteiro sintético, logo abaixo.
+
+### O `@post` que redesenha a CENA precisa carregar o estado que está na URL
+
+Um comando do Datastar responde com um remendo da cena inteira, e o handler
+descobre o que desenhar lendo a própria requisição. O que está na URL da PÁGINA
+— `?tab=`, `?aba=`, `?entrada=` — **não vai junto**: o `@post` manda o endereço
+que está escrito nele, e mais nada.
+
+O sintoma não parece um bug de estado. Na ficha, mexer no PV com a Mochila aberta
+devolvia a cena desenhada na PRIMEIRA aba, porque o resolvedor não achou `tab` na
+query e caiu no padrão — a tela parecia ter se fechado sozinha. Nada falha, nada
+loga: o servidor desenhou uma cena perfeitamente válida, só que de outra seção.
+
+**O remédio é o servidor escrever o `?` no comando**, já que é ele quem sabe o
+estado ao renderizar o botão: uma função só monta todo `@post` da cena
+(`oPostDaFicha`), e um guarda de varredura lê o HTML de cada aba e falha se algum
+comando sair sem ele (`TestNenhumComandoDaFichaPerdeAAba`). Sinal do cliente
+resolveria também, e é pior: some no F5, que é justamente o que o endereço na URL
+existe para sobreviver.
+
+Ele ficou ESCONDIDO uma fatia inteira porque todas as abas desenhavam o mesmo
+aviso de "ainda vive na ficha antiga" — o salto não tinha aparência. O primeiro
+painel de verdade o denunciou no primeiro clique da bancada.
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 

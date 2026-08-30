@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -33,6 +34,52 @@ func (s *Server) rotasDaFicha(r chi.Router) {
 	r.Post("/personagens/{id}/vitais/{qual}/{passo}", s.comandoDaFicha(mexeNoVital))
 	// A CLASSE vai no caminho porque o nível é dela: o do personagem é a SOMA.
 	r.Post("/personagens/{id}/nivel/{classe}/{passo}", s.comandoDaFicha(mudaONivel))
+	// DOIS caminhos e não um com "padrao" no lugar da categoria: aí o dia em que
+	// uma proficiência se chamasse `padrao` calaria o restaurar, e o `alterna`
+	// no meio é o que impede a colisão de existir.
+	r.Post("/personagens/{id}/proficiencias/alterna/{categoria}", s.comandoDaFicha(alternaAProficiencia))
+	r.Post("/personagens/{id}/proficiencias/padrao", s.comandoDaFicha(restauraOPadraoDaClasse))
+}
+
+// alternaAProficiencia liga ou desliga UMA categoria.
+//
+// O comando não manda o estado desejado, manda a categoria: mandar "ligada"
+// perderia para o clique repetido e para a segunda aba aberta no mesmo
+// personagem — quem clica quer INVERTER o que está na tela, e o servidor sabe o
+// que está na tela melhor do que o botão sabe.
+func alternaAProficiencia(s *Server, r *http.Request, row sqlcgen.Character) error {
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	depois, err := aTrocaDaProficiencia(dto, chi.URLParam(r, "categoria"))
+	if err != nil {
+		return err
+	}
+	return s.gravaAsProficienciasDaFicha(r, row.ID, depois)
+}
+
+// restauraOPadraoDaClasse joga fora os ajustes manuais.
+func restauraOPadraoDaClasse(s *Server, r *http.Request, row sqlcgen.Character) error {
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.gravaAsProficienciasDaFicha(r, row.ID, oPadraoDaClasse(dto))
+}
+
+// gravaAsProficienciasDaFicha usa a MESMA gravação da API JSON.
+//
+// A lista de desconhecidas vira frase porque quem está do outro lado é um
+// navegador mostrando página, e não um cliente lendo `FieldErrorMap`. Ela só
+// dispara se o servidor montar uma categoria que ele próprio não conhece — é o
+// guarda contra a tela e a validação divergirem, não contra o jogador.
+func (s *Server) gravaAsProficienciasDaFicha(r *http.Request, id int64, categorias []string) error {
+	_, desconhecidas, err := s.guardaAsProficiencias(r.Context(), id, categorias)
+	if len(desconhecidas) > 0 {
+		return fmt.Errorf("proficiência fora do catálogo: %s", strings.Join(desconhecidas, "; "))
+	}
+	return err
 }
 
 func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
