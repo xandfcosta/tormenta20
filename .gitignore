@@ -16,13 +16,6 @@ dist
 .env.*.local
 *.log
 
-backend/dist
-backend/dev.db
-backend/dev.db-journal
-backend/prisma/dev.db
-backend/prisma/dev.db-journal
-backend/src/generated
-
 frontend/dist
 frontend/.vite
 frontend/src/routeTree.gen.ts
@@ -34,6 +27,4 @@ t20-book.pdf
 
 # Playwright MCP scratch output (page/console dumps from browser automation)
 .playwright-mcp/
-frontend-solid/dist
-frontend-solid/src/routeTree.gen.ts
 __pycache__/

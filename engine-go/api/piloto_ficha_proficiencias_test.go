@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"testing"
@@ -212,6 +213,11 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 		"passo":     "1",
 		"classe":    "Guerreiro",
 		"categoria": "armas-marciais",
+		// A PERÍCIA vai ESCAPADA, como o comando a escreve: "Atuação" no caminho
+		// é `Atua%C3%A7%C3%A3o`, e um valor cru aqui mediria uma rota que o
+		// cliente nunca chama.
+		"nome":     url.PathEscape("Atuação"),
+		"atributo": "charisma",
 	}
 
 	var visitadas int

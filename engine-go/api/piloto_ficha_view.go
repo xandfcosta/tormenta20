@@ -61,6 +61,10 @@ type fichaView struct {
 	// crachá, e repartir esse resultado custa menos que um `if` a mais para um
 	// guarda cobrir.
 	Combat combatPanel
+	// Expertises é a aba homônima (fatia 4). Ela é a única que depende do que a
+	// pessoa DIGITOU — o filtro da busca —, e por isso a `carregaFicha` recebe o
+	// termo em vez de o painel ir buscá-lo.
+	Expertises expertisePanel
 }
 
 // classeDaFicha é uma classe do personagem, com o que o degrau precisa saber.
@@ -149,6 +153,7 @@ func oPainelJaPortado(valor string) bool {
 	portados := map[string]bool{
 		"proficiencies": true, // fatia 2
 		"combat":        true, // fatia 3
+		"expertises":    true, // fatia 4
 	}
 	return portados[valor]
 }
@@ -158,7 +163,9 @@ func oPainelJaPortado(valor string) bool {
 // A POSSE é conferida como em toda rota de personagem: quem não é dono não
 // abre. O `characterOwnedBy` é o mesmo gargalo que a API JSON usa — a cena não
 // ganha uma segunda regra sobre quem pode ver a ficha de quem.
-func (s *Server) carregaFicha(ctx context.Context, user AuthUser, id int64, aba string) (fichaView, int, error) {
+func (s *Server) carregaFicha(
+	ctx context.Context, user AuthUser, id int64, aba, busca string,
+) (fichaView, int, error) {
 	row, err := s.queries.GetCharacter(ctx, id)
 	if err != nil {
 		return fichaView{}, 404, fmt.Errorf("personagem %d não existe", id)
@@ -188,7 +195,11 @@ func (s *Server) carregaFicha(ctx context.Context, user AuthUser, id int64, aba 
 		AbaAtiva:  aba,
 
 		Proficiencias: oPainelDeProficiencias(dto),
-		Combat:        s.combatPanelOf(dto),
+	}
+	// UMA conta do motor para os DOIS painéis que a leem.
+	if sheet, cards, ok := s.sheetForPanels(dto); ok {
+		v.Combat = combatPanelFor(sheet, cards, isCaster(sheet))
+		v.Expertises = expertisePanelFor(dto, sheet, busca)
 	}
 	for _, item := range asAbasDaFicha() {
 		item.Ativa = item.Valor == aba
@@ -348,6 +359,39 @@ func oDegrauDireto(v fichaView, passo int) string {
 // gestos nas sete abas.
 func oPostDaFicha(v fichaView, caminho string) string {
 	return fmt.Sprintf("@post('/piloto/personagens/%d%s?tab=%s')", v.ID, caminho, v.AbaAtiva)
+}
+
+// oGetDaFicha escreve o `@get` que REDESENHA a cena sem mutar nada — hoje só a
+// busca das Perícias.
+//
+// Ele carrega o `?tab=` pela MESMA razão que todo `@post` carrega: sem ele o
+// resolvedor não acha a aba na query e devolve a cena desenhada na primeira.
+// A varredura `TestNenhumComandoDaFichaPerdeAAba` olha só os `@post`, então este
+// caminho tem guarda própria — `TestOGetDaBuscaCarregaAAba`.
+func oGetDaFicha(v fichaView) string {
+	return fmt.Sprintf("@get('/piloto/personagens/%d?tab=%s')", v.ID, v.AbaAtiva)
+}
+
+// oComandoDoAtributo escreve o `@post` que repõe a perícia noutro atributo.
+//
+// O valor escolhido entra por CONCATENAÇÃO no meio da expressão, e não como
+// texto fixo: são seis opções por linha e 29 linhas, e desenhar um comando por
+// combinação daria 174 comandos numa página que já tem 29 diálogos.
+func oComandoDoAtributo(v fichaView, comando string) string {
+	return fmt.Sprintf(
+		"@post('/piloto/personagens/%d/pericias/atributo/%s/' + evt.target.value + '?tab=%s')",
+		v.ID, comando, v.AbaAtiva)
+}
+
+// oRotuloDoTotal é o nome acessível do número de uma perícia.
+//
+// A falha automática não diz um número, porque não há um: ela diz o que
+// aconteceu. Um botão chamado "—" não informa nada a quem usa leitor de tela.
+func oRotuloDoTotal(linha expertiseRow) string {
+	if linha.AutoFail {
+		return "Falha automática em " + linha.Name + " — detalhar"
+	}
+	return "Detalhar " + linha.Name + " " + linha.Total
 }
 
 // oComandoDoDegrau escreve o `@post` de subir ou descer uma classe.

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -27,6 +28,28 @@ var attributeKeys = toStringSet([]string{
 	"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
 })
 
+// guardaOOficioNovo é a regra de quem pode virar ofício, e ela é a MESMA para a
+// API JSON e para a ficha em Datastar (ALE-272).
+//
+// Três recusas, e a do meio é a que importa: um ofício não pode ROUBAR o nome de
+// uma das 29 do livro, porque a ficha passaria a ter duas linhas com o mesmo
+// nome e a decomposição de uma cairia sobre a outra.
+func (s *Server) guardaOOficioNovo(ctx context.Context, characterID int64, nome string) error {
+	if nome == "" {
+		return fmt.Errorf("dê um nome ao ofício")
+	}
+	if expertiseNames[nome] {
+		return fmt.Errorf("%q é uma perícia do livro — escolha outro nome", nome)
+	}
+	_, err := s.queries.GetExpertiseMeta(ctx, sqlcgen.GetExpertiseMetaParams{
+		Characterid: characterID, Name: nome,
+	})
+	if err == nil {
+		return fmt.Errorf("esta ficha já tem %q", nome)
+	}
+	return nil
+}
+
 func expertiseDTO(name, attribute string, trained, custom int64) ExpertiseDTO {
 	return ExpertiseDTO{Name: name, Attribute: attribute, Trained: trained != 0, Custom: custom != 0}
 }
@@ -47,15 +70,11 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 	}
 	fields := plataforma.FieldErrorMap{}
 	name := strings.TrimSpace(body.Name)
-	switch {
-	case name == "":
-		fields["name"] = []string{"Name is required"}
-	case expertiseNames[name]:
-		fields["name"] = []string{fmt.Sprintf("%q is a builtin expertise — pick another name", name)}
-	default:
-		if _, err := s.queries.GetExpertiseMeta(r.Context(), sqlcgen.GetExpertiseMetaParams{Characterid: character.ID, Name: name}); err == nil {
-			fields["name"] = []string{fmt.Sprintf("Expertise %q already exists", name)}
-		}
+	// A REGRA DO NOME é UMA SÓ, e a extração é da ALE-272: a ficha em Datastar
+	// cria ofício pelo mesmo caminho, e duas validações divergiriam no dia em que
+	// uma regra nova chegasse — a esquecida aceitaria o que a outra recusa.
+	if err := s.guardaOOficioNovo(r.Context(), character.ID, name); err != nil {
+		fields["name"] = []string{err.Error()}
 	}
 	if !attributeKeys[body.Attribute] {
 		fields["attribute"] = []string{"attribute must be a valid AttributeKey"}
@@ -89,10 +108,19 @@ func (s *Server) handleUpdateExpertise(w http.ResponseWriter, r *http.Request) {
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	if !expertiseNames[body.Name] {
-		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {"name must be a builtin expertise"}})
-		return
-	}
+	// O NOME NÃO PRECISA SER UMA DAS 29 DO LIVRO, e a exigência saiu aqui na
+	// ALE-272: ela recusava o OFÍCIO que o próprio jogador criou.
+	//
+	// A ficha desenha o botão de treino e o seletor de atributo em toda linha,
+	// inclusive nos ofícios — e nos ofícios os dois davam 400. Era promessa de
+	// tela que o servidor não cumpria, e ninguém tinha notado porque nenhum teste
+	// mexia num ofício depois de criá-lo.
+	//
+	// Quem confere a existência é o `UpdateExpertise` logo abaixo, e ele confere
+	// MELHOR: a checagem é por PERSONAGEM, então um nome que não é de ninguém
+	// vira 404 em vez de passar por uma lista global. A `expertiseNames` continua
+	// valendo onde ela é a regra certa — no `handleAddExpertise`, para um ofício
+	// novo não roubar o nome de uma perícia do livro.
 	if body.Attribute == nil && body.Trained == nil {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
