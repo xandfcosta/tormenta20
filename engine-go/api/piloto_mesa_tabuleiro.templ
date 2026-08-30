@@ -1240,8 +1240,12 @@ templ oAcervoDeLugares(v tabuleiroView) {
 		class="scene-grimorio m-auto w-[min(30rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="acervo-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Lugares da campanha</h2>
+		// A FRASE MUDOU COM O COMPORTAMENTO (ALE-205, fatia 3). Ela dizia "reabrir
+		// traz a cena para a mesa e guarda a atual no lugar dela", que era verdade
+		// enquanto a sessão tinha um tabuleiro só — e virou mentira no dia em que
+		// reabrir passou a acrescentar uma aba, sem tirar nada de lugar nenhum.
 		<p class="mt-1 text-sm text-muted-foreground">
-			As cenas que você encerrou, com as peças onde estavam. Reabrir traz a cena para a mesa e guarda a atual no lugar dela.
+			As cenas que você encerrou, com as peças onde estavam. Reabrir traz a cena numa aba nova, sem fechar as que já estão abertas.
 		</p>
 		<ul class="mt-3 max-h-[50vh] space-y-1 overflow-y-auto">
 			for _, l := range v.Acervo {
@@ -1249,28 +1253,57 @@ templ oAcervoDeLugares(v tabuleiroView) {
 					<span class="min-w-0 flex-1">
 						<span class="block truncate text-sm text-foreground">{ l.Nome }</span>
 						<span class="block text-xs text-muted-foreground">
-							{ fmt.Sprintf("%s · %s", pecasEmPortugues(l.Pecas), l.Quando) }
+							if l.AbertaEm != "" {
+								// A LINHA DIZ O ESTADO, e não só a data: era este o
+								// papercut — com 148 lugares, o que está na mesa
+								// agora aparecia no meio dos outros sem nada que o
+								// distinguisse.
+								@icone("LayoutGrid", "mr-1 inline size-3")
+								{ "nesta mesa agora · " + pecasEmPortugues(l.Pecas) }
+							} else {
+								{ fmt.Sprintf("%s · %s", pecasEmPortugues(l.Pecas), l.Quando) }
+							}
 						</span>
 					</span>
-					<button
-						type="button"
-						data-on:click={ "document.getElementById('acervo-de-lugares').close(); " + comandoDoLugar(v, l.ID, "reabrir") }
-						class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-					>Reabrir</button>
+					if l.AbertaEm != "" {
+						// O QUE JÁ ESTÁ ABERTO NÃO SE REABRE: uma segunda aba da
+						// mesma cena seriam duas verdades sobre onde as peças
+						// estão, e a que fechasse por último apagaria a outra no
+						// acervo. O gesto que sobra é ir até ela.
+						<button
+							type="button"
+							data-on:click={ "document.getElementById('acervo-de-lugares').close(); " + comandoDaAba(v, l.AbertaEm) }
+							class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm font-semibold text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+						>Ver</button>
+					} else {
+						<button
+							type="button"
+							data-on:click={ "document.getElementById('acervo-de-lugares').close(); " + comandoDoLugar(v, l.ID, "reabrir") }
+							class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+						>Reabrir</button>
+					}
 					// APAGAR não fecha o diálogo, ao contrário do reabrir: quem
 					// está limpando o acervo geralmente apaga mais de um, e
 					// reabrir o menu a cada lixeira seria cobrar um clique por
-					// item. O reabrir fecha porque ele TROCA a cena — ficar com o
-					// menu por cima da cena nova esconderia o que ele fez.
-					<button
-						type="button"
-						aria-label={ "Apagar " + l.Nome }
-						title={ "Apagar " + l.Nome + " do acervo" }
-						data-on:click={ comandoDoLugar(v, l.ID, "remover") }
-						class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-					>
-			@icone("Trash2", "size-4")
-		</button>
+					// item. O reabrir fecha porque ele leva para a aba nova —
+					// ficar com o menu por cima dela esconderia o que ele fez.
+					//
+					// E ele NÃO aparece para o que está aberto: apagar do acervo
+					// uma cena que está na mesa não apaga nada, porque encerrar a
+					// aba a grava de volta com o mesmo nome. A trava de verdade é
+					// do servidor (`removeOLugar`); isto é a cortesia de não
+					// oferecer o gesto que ele vai recusar.
+					if l.AbertaEm == "" {
+						<button
+							type="button"
+							aria-label={ "Apagar " + l.Nome }
+							title={ "Apagar " + l.Nome + " do acervo" }
+							data-on:click={ comandoDoLugar(v, l.ID, "remover") }
+							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+						>
+							@icone("Trash2", "size-4")
+						</button>
+					}
 				</li>
 			}
 		</ul>

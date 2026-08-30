@@ -205,13 +205,20 @@ func TestSemLugarGuardadoNaoHaBotaoDeAcervo(t *testing.T) {
 	}
 }
 
-// TestReabrirTROCAacenaEGUARDAaqueEstavaNaMesa.
+// TestReabrirACRESCENTAumaAbaEnaoTrocaNada (ALE-205, fatia 3).
 //
-// As duas metades juntas porque é isso que deixa o mestre pular da taverna para
-// a cripta com a mesa jogando: reabrir sem guardar a atual perderia a cena em
-// que eles estavam.
-func TestReabrirTrocaACenaEGuardaAQueEstavaNaMesa(t *testing.T) {
+// Aqui morava `TestReabrirTrocaACenaEGuardaAQueEstavaNaMesa`, que prendia a
+// regra da ALE-191: reabrir ARQUIVAVA a cena que estava na mesa e entrava no
+// lugar dela. Aquilo existia porque a sessão tinha UM tabuleiro — o
+// arquivamento preventivo era o que impedia a taverna de se perder quando a
+// cripta entrava.
+//
+// Com abas, o problema que ele resolvia deixou de existir: nada é substituído,
+// então não há o que guardar antes. Um teste sobre a regra antiga ficaria verde
+// afirmando um mundo que não é este.
+func TestReabrirAcrescentaUmaAbaENaoTrocaNada(t *testing.T) {
 	f := novoPiloto(t)
+	ctx := context.Background()
 	f.abreTabuleiro(t, "taverna") // "Taverna do Javali"
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar a taverna deu %d", rec.Code)
@@ -222,7 +229,7 @@ func TestReabrirTrocaACenaEGuardaAQueEstavaNaMesa(t *testing.T) {
 	}
 
 	taverna := int64(0)
-	for _, l := range f.s.boards.Places(context.Background(), f.campaignID) {
+	for _, l := range f.s.boards.Places(ctx, f.campaignID) {
 		if l.Name == "Taverna do Javali" {
 			taverna = l.ID
 		}
@@ -235,19 +242,29 @@ func TestReabrirTrocaACenaEGuardaAQueEstavaNaMesa(t *testing.T) {
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/reabrir", f.urlDaMesa(), taverna), ""); rec.Code != http.StatusOK {
 		t.Fatalf("reabrir deu %d", rec.Code)
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
-	if b == nil || b.Place != "Taverna do Javali" {
-		t.Fatalf("a mesa não voltou para a taverna: %+v", b)
+
+	abertos := f.s.boards.Abertos(ctx, f.sessionID)
+	if len(abertos) != 2 {
+		t.Fatalf("a sessão ficou com %d cenas abertas, esperado 2 (a cripta e a taverna)", len(abertos))
 	}
-	// E a CRIPTA foi guardada na troca, em vez de perdida.
-	achouCripta := false
-	for _, l := range f.s.boards.Places(context.Background(), f.campaignID) {
+	if abertos[0].Place != "Cripta" {
+		t.Errorf("a cripta saiu da mesa quando a taverna entrou: %q", abertos[0].Place)
+	}
+	if abertos[1].Place != "Taverna do Javali" {
+		t.Errorf("a taverna não entrou como aba nova: %q", abertos[1].Place)
+	}
+	// E ela NÃO foi arquivada, porque não foi tirada de lugar nenhum: a cripta
+	// no acervo com a cripta na mesa seriam duas verdades sobre a mesma cena.
+	for _, l := range f.s.boards.Places(ctx, f.campaignID) {
 		if l.Name == "Cripta" {
-			achouCripta = true
+			t.Error("a cena que continua aberta foi arquivada: o acervo passou a ter uma cópia dela")
 		}
 	}
-	if !achouCripta {
-		t.Error("a cena que estava na mesa se perdeu na troca")
+	// Quem reabriu VAI para a aba nova — ele acabou de escolher aquele lugar
+	// numa lista, e ficar na cena anterior faria o gesto parecer que não pegou.
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(tela, "Taverna do Javali</h2>") {
+		t.Error("o mestre reabriu a taverna e continuou olhando a cripta")
 	}
 }
 

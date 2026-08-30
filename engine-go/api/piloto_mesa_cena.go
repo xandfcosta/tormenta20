@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -153,19 +154,30 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 	return tabuleiro.CasasDoTraco(de, ate), nil
 }
 
-// reabreOLugar traz uma cena guardada de volta para a mesa.
+// reabreOLugar traz uma cena guardada de volta para a mesa, NUMA ABA NOVA
+// (ALE-205, fatia 3).
 //
-// `ShowPlace` e não `Reopen`: ele ARQUIVA a cena atual antes de trocar, que é o
-// que deixa o mestre pular da taverna para a cripta com a mesa jogando sem
-// perder a taverna. E a política dele é o OPOSTO da do encerrar — falhar ao
-// guardar RECUSA a troca, porque trocar em cima de um acervo que não gravou é
-// justamente perder a cena que se queria guardar.
+// Era `ShowPlace`, que arquivava a cena atual e entrava no lugar dela — a saída
+// que a ALE-191 inventou para o mestre pular da taverna para a cripta sem perder
+// a taverna. **Com abas, o problema que ela resolvia deixou de existir**: nada é
+// substituído, então não há o que guardar antes, e a taverna continua aberta na
+// aba dela. O arquivamento preventivo saiu com a razão dele.
+//
+// Quem reabre VAI para a aba nova, como quem abre uma cena do zero: ele acabou
+// de escolher aquele lugar numa lista, e deixá-lo na cena anterior faria o gesto
+// parecer que não aconteceu. A MESA não é levada junto — isso é o "mostrar à
+// mesa", que é gesto próprio desde a fatia 2.
 func reabreOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	id, err := lugarDaURL(c.R)
 	if err != nil {
 		return nil, err
 	}
-	return st.boards.ShowPlace(c.R.Context(), c.CampaignID, c.SessionID, c.TabuleiroID, id)
+	cena, err := st.boards.AbreOLugar(c.R.Context(), c.CampaignID, c.SessionID, id)
+	if err != nil {
+		return nil, err
+	}
+	st.abas.Escolhe(c.SessionID, c.User.ID, cena.ID)
+	return cena, nil
 }
 
 // removeOLugar apaga uma cena do acervo, e ela não volta.
@@ -179,10 +191,50 @@ func removeOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
+	// APAGAR UM LUGAR QUE ESTÁ NA MESA não é apagar (ALE-205, fatia 3): a linha
+	// some do acervo e a cena continua aberta, e no dia em que a aba fechar o
+	// `Archive` a grava de novo com o mesmo nome. O mestre veria a taverna que
+	// ele apagou ontem reaparecer sozinha — um gesto que não faz o que diz, e que
+	// desfaz sozinho o trabalho de quem estava limpando o acervo.
+	//
+	// A recusa é do SERVIDOR e não da tela: a lista já não oferece a lixeira ao
+	// que está aberto, mas quem postar na mão passaria por cima.
+	if nome, aba := st.aAbaComOLugar(c.R.Context(), c.CampaignID, c.SessionID, id); aba != "" {
+		return nil, fmt.Errorf(
+			"%q está aberta numa aba: encerre a cena antes de apagá-la do acervo", nome)
+	}
 	if err := st.boards.RemovePlace(c.R.Context(), c.CampaignID, id); err != nil {
 		return nil, err
 	}
 	return st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID), nil
+}
+
+// aAbaComOLugar diz em qual aba um lugar guardado está aberto, e como ele se
+// chama. Aba vazia é "não está na mesa".
+//
+// A JUNÇÃO É PELO NOME, e não por um id do lugar guardado dentro do tabuleiro.
+// Não é atalho: **nome é a identidade que este app já dá ao lugar**, porque é
+// assim que o `Archive` decide se sobrescreve ou cria — encerrar a taverna duas
+// vezes produz UMA taverna. Um `placeId` dentro do `BoardState` seria uma segunda
+// identidade, e ela discordaria da primeira exatamente no caso que a mesa faz
+// toda semana: abrir "Taverna do Javali" do zero e encerrar por cima da guardada.
+//
+// A consequência, dita para ninguém a redescobrir: uma cena ABERTA do zero com o
+// nome de um lugar guardado é tratada como aquele lugar. É a mesma conta que o
+// arquivamento fará quando ela fechar.
+func (s *Server) aAbaComOLugar(ctx context.Context, campaignID, sessionID, placeID int64) (nome, tabuleiroID string) {
+	for _, lugar := range s.boards.Places(ctx, campaignID) {
+		if lugar.ID != placeID {
+			continue
+		}
+		for _, aberto := range s.boards.Abertos(ctx, sessionID) {
+			if aberto.Place == lugar.Name {
+				return lugar.Name, aberto.ID
+			}
+		}
+		return lugar.Name, ""
+	}
+	return "", ""
 }
 
 // lugarDaURL lê o id do CAMINHO, como o quadrado do movimento: o valor é do

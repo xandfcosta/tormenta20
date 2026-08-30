@@ -130,35 +130,18 @@ func (bs *BoardStore) Reopen(ctx context.Context, sessionID int64, tabuleiroID s
 	if err != nil {
 		return nil, err
 	}
-	var guardado BoardState
-	if err := json.Unmarshal([]byte(row.State), &guardado); err != nil {
+	cena, err := aCenaGuardada(row.State, row.Name)
+	if err != nil {
 		return nil, err
 	}
-	if guardado.Tokens == nil {
-		guardado.Tokens = []BoardToken{}
-	}
-	// O provisório não volta: ele é de uma cena que já acabou, e a mesa que
-	// reabre a taverna não deve nada a um movimento proposto na semana passada.
-	guardado.Pending = nil
-	// O nome vem da COLUNA e não do JSON: renomear o lugar mexeria em dois
-	// lugares, e o de fora é o que a lista mostra.
-	guardado.Place = row.Name
+	guardado := *cena
 
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
 	aberto := bs.achaLocked(sessionID, tabuleiroID)
 	if aberto == nil {
-		if len(bs.boards[sessionID]) >= tetoDeAbertos {
-			return nil, fmt.Errorf(
-				"esta sessão já tem %d tabuleiros abertos (teto %d): feche um antes de mostrar outro lugar",
-				len(bs.boards[sessionID]), tetoDeAbertos)
-		}
-		guardado.ID = bs.newID()
-		guardado.Seq = bs.proximaSeqLocked(sessionID)
-		bs.boards[sessionID] = append(bs.boards[sessionID], &guardado)
-		bs.avisarLocked(sessionID)
-		return cloneBoard(&guardado), nil
+		return bs.numaAbaNovaLocked(sessionID, &guardado)
 	}
 	if aberto.Version >= guardado.Version {
 		guardado.Version = aberto.Version + 1
@@ -174,6 +157,79 @@ func (bs *BoardStore) Reopen(ctx context.Context, sessionID int64, tabuleiroID s
 	*aberto = guardado
 	bs.avisarLocked(sessionID)
 	return cloneBoard(aberto), nil
+}
+
+// AbreOLugar põe um lugar guardado numa ABA NOVA, sem tocar no que já está na
+// mesa (ALE-205, fatia 3).
+//
+// É o que "Reabrir" passou a fazer, e a diferença com o `ShowPlace` é a issue
+// inteira: lá a cena guardada ENTRAVA no lugar de outra, que ia para o acervo
+// antes; aqui as duas ficam abertas, cada uma na sua aba. O arquivamento
+// preventivo que a ALE-191 inventou deixou de ser necessário porque deixou de
+// haver o que perder — nada é substituído.
+//
+// A posse é conferida como no `ShowPlace` e no `RemovePlace`, e pelo mesmo
+// motivo: o id vem do cliente, e sem a checagem um mestre puxaria para a própria
+// mesa a cena de OUTRA campanha.
+func (bs *BoardStore) AbreOLugar(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
+	row, err := bs.q.GetCampaignPlace(ctx, placeID)
+	if err != nil {
+		return nil, err
+	}
+	if row.Campaignid != campaignID {
+		return nil, errPlaceFromAnotherCampaign
+	}
+	cena, err := aCenaGuardada(row.State, row.Name)
+	if err != nil {
+		return nil, err
+	}
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	bs.hydrateLocked(ctx, sessionID)
+	return bs.numaAbaNovaLocked(sessionID, cena)
+}
+
+// numaAbaNovaLocked acrescenta a cena como mais uma aba, com a trava na mão.
+//
+// UM lugar só cunha id e sequência, e é por isso que ele existe: o `Reopen` sem
+// aba e o `AbreOLugar` fazem a mesma coisa, e duas cópias disso é como uma delas
+// esquece o teto — que é a diferença entre uma sessão com oito cenas e uma que
+// cresce sem limite carregando tudo em toda hidratação.
+func (bs *BoardStore) numaAbaNovaLocked(sessionID int64, cena *BoardState) (*BoardState, error) {
+	if len(bs.boards[sessionID]) >= tetoDeAbertos {
+		return nil, fmt.Errorf(
+			"esta sessão já tem %d tabuleiros abertos (teto %d): feche um antes de abrir outro lugar",
+			len(bs.boards[sessionID]), tetoDeAbertos)
+	}
+	cena.ID = bs.newID()
+	cena.Seq = bs.proximaSeqLocked(sessionID)
+	bs.boards[sessionID] = append(bs.boards[sessionID], cena)
+	bs.avisarLocked(sessionID)
+	return cloneBoard(cena), nil
+}
+
+// aCenaGuardada desempacota o que o acervo guardou, pronto para entrar na mesa.
+//
+// As três decisões que ela carrega estavam soltas no `Reopen`, e a segunda porta
+// de entrada (o `AbreOLugar`) precisava exatamente delas — copiadas, seria a
+// forma clássica de uma se esquecer: a cena reaberta por um caminho voltaria com
+// o movimento proposto da semana passada e a do outro não.
+func aCenaGuardada(blob, nome string) (*BoardState, error) {
+	var cena BoardState
+	if err := json.Unmarshal([]byte(blob), &cena); err != nil {
+		return nil, err
+	}
+	// Fatia VAZIA e não nula: `null` no JSON derruba quem indexa `tokens.length`.
+	if cena.Tokens == nil {
+		cena.Tokens = []BoardToken{}
+	}
+	// O provisório não volta: ele é de uma cena que já acabou, e a mesa que
+	// reabre a taverna não deve nada a um movimento proposto na semana passada.
+	cena.Pending = nil
+	// O nome vem da COLUNA e não do JSON: renomear o lugar mexeria em dois
+	// lugares, e o de fora é o que a lista mostra.
+	cena.Place = nome
+	return &cena, nil
 }
 
 // PlaceScene devolve a cena INTEIRA de um lugar guardado — é o que o mestre
