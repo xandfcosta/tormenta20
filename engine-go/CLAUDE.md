@@ -393,11 +393,11 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
   o elemento aparece sem estilo em vez de dar erro.
 
-## Datastar: quatro armadilhas que não deixam erro para trás
+## Datastar: cinco armadilhas que não deixam erro para trás
 
-As três primeiras foram descobertas na ALE-203 e a quarta na ALE-205; nenhuma
-delas escreve uma linha no console. Estão aqui porque o sintoma de cada uma
-aponta para o lugar errado.
+As três primeiras foram descobertas na ALE-203, a quarta na ALE-205 e a quinta
+na ALE-235; nenhuma delas escreve uma linha no console. Estão aqui porque o
+sintoma de cada uma aponta para o lugar errado.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 
@@ -453,6 +453,31 @@ do laço do stream), e não do servidor: duas abas da mesma pessoa merecem o
 empurrão cada uma. Vale para qualquer sinal que o servidor venha a escrever
 daqui: **remendo de HTML é idempotente, remendo de sinal não é** — o HTML
 descreve o estado, o sinal muda a decisão de quem está do outro lado.
+
+### Animação de ENTRADA numa cena que nunca monta: a classe substitui o mount
+
+Na SPA, animação de entrada era `animate-in` + `<Show keyed>`: o nó era
+RECONSTRUÍDO a cada troca e a animação vinha de graça (ALE-97). Nas cenas
+desenhadas pelo servidor — campanhas, personagens, e toda cena com cursor — nada
+nunca monta: o servidor manda todos os itens e o cursor só alterna `data-show`.
+
+**O que substitui o mount é a CLASSE entrando num nó que não a tinha** (ALE-235).
+O item que sai perde a classe, o que entra ganha, e são elementos DIFERENTES —
+então não existe o caso que não replica, que é "a mesma animação, já concluída,
+no mesmo nó". Dispensa morph, reflow forçado e id que muda a cada troca, que são
+as saídas que a issue previa e que ninguém precisou escrever.
+
+Duas coisas para quem repetir a receita:
+
+- **O gesto que move o cursor tem de ser IDEMPOTENTE.** Um clique num item do
+  trilho dispara `focusin` E `click`, os dois com a mesma expressão. Se ela
+  calcula alguma coisa a partir do estado que ela mesma escreve (a DIREÇÃO, a
+  partir do índice anterior), a segunda passagem lê o valor já atualizado e
+  produz o resultado errado — sempre o mesmo, silenciosamente. A guarda é um
+  `if` no começo da expressão.
+- **E isso não aparece numa sonda que clica por `element.click()`**, porque ela
+  não move o foco: só o gesto de verdade dispara os dois eventos. Mesma família
+  do evento de ponteiro sintético, logo abaixo.
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 

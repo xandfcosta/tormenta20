@@ -1547,4 +1547,71 @@ html {
     mix-blend-mode: multiply;
     border-radius: 2px;
   }
+
+  /* A ENTRADA DO PALCO (ALE-235) — o retrato que entra desliza do lado para
+   * onde o cursor foi, e a placa sobe 80ms depois.
+   *
+   * # Por que ela precisou de issue própria, e por que o remédio é uma CLASSE
+   *
+   * Na SPA quem animava era `animate-in`, que dispara NO MOUNT: o `<Show keyed>`
+   * reconstruía o nó a cada troca e a animação vinha junto (ALE-97). Aqui a cena
+   * é desenhada inteira e o cursor só alterna `data-show` — **nada nunca monta**,
+   * então uma animação de entrada presa ao mount não dispararia nunca.
+   *
+   * O que substitui o mount é a CLASSE entrando num nó que não a tinha: o
+   * navegador começa a animação quando ela aparece, e o `data-class` a põe só no
+   * palco que o cursor acabou de escolher. Não precisa de morph, de reflow
+   * forçado nem de id que muda — o palco que sai perde a classe, o que entra
+   * ganha, e são elementos DIFERENTES, então nunca há o caso de "a mesma
+   * animação já concluída no mesmo nó", que é o que não replica.
+   *
+   * # A direção é do gesto, não do palco
+   *
+   * `$sentido` é escrito pelo trilho (1 para frente, -1 para trás) comparando o
+   * índice do marcador com o do anterior. Sem ele o palco entraria sempre do
+   * mesmo lado, e a cena mentiria sobre para onde a pessoa andou. */
+  @keyframes palcoEntraAdiante {
+    from {
+      opacity: 0;
+      transform: translateX(1.5rem);
+    }
+  }
+  @keyframes palcoEntraAtras {
+    from {
+      opacity: 0;
+      transform: translateX(-1.5rem);
+    }
+  }
+  @keyframes placaSobe {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
+
+  .palco-entra-adiante .palco-retrato {
+    animation: palcoEntraAdiante 220ms ease-out both;
+  }
+  .palco-entra-atras .palco-retrato {
+    animation: palcoEntraAtras 220ms ease-out both;
+  }
+  /* A PLACA sobe com atraso, e o atraso é a metade do efeito: o retrato chega
+   * primeiro e o nome pousa em cima dele. Sem os 80ms as duas coisas se movem
+   * juntas e o palco parece um bloco só deslizando. */
+  .palco-entra-adiante .palco-placa,
+  .palco-entra-atras .palco-placa {
+    animation: placaSobe 220ms ease-out 80ms both;
+  }
+
+  /* Quem pediu menos movimento não recebe nenhum, e a SPA já honrava isto. O
+   * `both` das regras acima preenche o estado final, então sem animação o palco
+   * simplesmente aparece pronto — não fica preso no quadro inicial. */
+  @media (prefers-reduced-motion: reduce) {
+    .palco-entra-adiante .palco-retrato,
+    .palco-entra-atras .palco-retrato,
+    .palco-entra-adiante .palco-placa,
+    .palco-entra-atras .palco-placa {
+      animation: none;
+    }
+  }
 }

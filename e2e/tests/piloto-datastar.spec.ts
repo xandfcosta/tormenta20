@@ -885,11 +885,30 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     const retratoVisivel = () =>
       page.locator('a[aria-label^="Abrir ficha de"]:visible').first().boundingBox()
 
+    // A ENTRADA DO PALCO (ALE-235) desloca o retrato por 220ms de propósito, e
+    // isso não afrouxa esta garantia: ela é sobre a posição em REPOUSO — o
+    // retrato não pode ASSENTAR em lugar diferente ao sair da ponta. Sem a
+    // espera, a medição pega o meio de uma animação e mede um instante que
+    // ninguém vê parado.
+    //
+    // A espera é pelas animações DESTA cena, pelo nome: `document.getAnimations()`
+    // devolve também os `animate-pulse` da tela, que são INFINITOS — esperar
+    // "nenhuma rodando" nunca terminaria.
+    const palcoAssentado = () =>
+      page.waitForFunction(() =>
+        document
+          .getAnimations()
+          .filter((a) => /^(palcoEntra|placaSobe)/.test((a as CSSAnimation).animationName ?? ''))
+          .every((a) => a.playState !== 'running'),
+      )
+
     await page.getByRole('option').first().focus()
+    await palcoAssentado()
     const naPonta = await retratoVisivel()
 
     await page.keyboard.press('ArrowRight')
     await expect(page.getByRole('button', { name: /^Anterior:/ })).toBeVisible()
+    await palcoAssentado()
     const noMeio = await retratoVisivel()
 
     expect(naPonta, 'retrato não medido na ponta').not.toBeNull()
@@ -903,6 +922,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     // deles a coluna centralizada puxa o retrato para cima. Medido antes do
     // conserto: 74px. Este é o passo em que o palco dançava mais.
     for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
+    await palcoAssentado()
     const vaga = await page
       .locator('a[aria-label="Forjar um novo herói"]:visible')
       .first()
