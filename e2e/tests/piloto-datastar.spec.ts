@@ -1007,6 +1007,69 @@ test.describe('O bestiário (piloto Datastar)', () => {
     await page.keyboard.press('Escape')
     await expect(dialogo, 'o Esc não fechou a ficha').toBeHidden()
   })
+
+  /**
+   * A CORRIDA ENTRE OS DOIS PEDIDOS DE UM CLIQUE SÓ (ALE-272).
+   *
+   * O clique do mouse também FOCA, e por uma fatia inteira a linha saía com dois
+   * pedidos: o do foco, que só pré-visualiza e não leva `abrir=1`, e o do
+   * clique, que leva. Os dois remendam o `#bestiario`, que redeclara
+   * `fichaAberta` a cada remendo — então quem CHEGA por último manda, e a ordem
+   * de chegada não é a de saída. Na bancada o do clique chegava depois e a ficha
+   * abria; no CI a ordem inverteu e o teste acima pegou a criatura escolhida com
+   * a ficha fechada, duas vezes seguidas.
+   *
+   * O teste acima NÃO segura isto: ele passa por sorte de cronometragem, que é o
+   * que o deixou verde aqui enquanto o CI ficava vermelho. Este aqui INVERTE a
+   * ordem de propósito — atrasa a resposta do pedido sem `abrir` — e aí a
+   * garantia deixa de depender de quem é mais rápido.
+   *
+   * Browser é a única testemunha possível: são dois `fetch` em voo disparados
+   * pelo MESMO gesto de ponteiro, e é o `:focus-visible` do navegador que separa
+   * o foco do mouse do foco da seta.
+   */
+  test('a ficha abre no clique mesmo se a resposta do foco chegar depois', async ({ page }) => {
+    await page.goto(BESTIARIO)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await expect(page.getByRole('listitem').first()).toBeVisible()
+
+    // Só o pedido SEM `abrir=1` é atrasado: é o do foco, e é ele que chegaria
+    // por último para redeclarar `fichaAberta: false` por cima do clique.
+    await page.route('**/piloto/mestre/bestiario?*', async (route) => {
+      if (new URL(route.request().url()).searchParams.has('abrir')) {
+        await route.continue()
+        return
+      }
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      await route.continue()
+    })
+
+    await page.getByRole('listitem').first().getByRole('link').click()
+
+    // O ESTADO ASSENTADO, e não o primeiro quadro — e esta espera é a diferença
+    // entre um teste e um teste que mente. Medido: com o defeito no lugar a
+    // ficha ABRE com a resposta do clique e só fecha 600ms depois, quando a do
+    // foco chega. Um `toBeVisible` cru passa dentro dessa janela, e a primeira
+    // versão deste teste nasceu VERDE sobre o defeito que ela existia para
+    // pegar. A janela é de 600ms porque é ESTE teste que a injeta acima, então
+    // esperar mais que ela é determinístico e não um palpite de cronometragem.
+    await page.waitForTimeout(1500)
+
+    // O CLIQUE ATERRISSOU: sem isto, um seletor que um dia pare de achar a
+    // linha faria o teste passar sem nunca ter clicado em nada, que é a forma
+    // desta família — ausência de estímulo com cara de conserto. Com o defeito
+    // no lugar esta asserção passa e a de baixo falha, e é esse par que
+    // distingue "a ficha não abriu" de "o gesto não aconteceu".
+    await expect(
+      page.getByRole('listitem').first().getByRole('link'),
+      'o clique não escolheu a criatura: o gesto não aconteceu',
+    ).toHaveAttribute('aria-current', 'true')
+
+    await expect(
+      page.getByRole('dialog'),
+      'a resposta do foco chegou por último e fechou a ficha que o clique abriu',
+    ).toBeVisible()
+  })
 })
 
 test.describe('Os catálogos (piloto Datastar)', () => {

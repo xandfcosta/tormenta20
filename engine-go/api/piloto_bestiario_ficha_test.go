@@ -3,6 +3,9 @@ package api
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -112,5 +115,69 @@ func TestOCliqueNaLinhaNaoAbreAFichaSozinho(t *testing.T) {
 	}
 	if !strings.Contains(tela, "abrir=1") {
 		t.Error("o clique não pede ao servidor para abrir a ficha")
+	}
+}
+
+// TestNenhumFocoPedeAoServidorSemGuardaDeTeclado — a VARREDURA de um defeito
+// que só aparece em máquina carregada, e que o CI pegou duas vezes seguidas
+// enquanto a bancada passava verde (ALE-272).
+//
+// O clique do mouse TAMBÉM foca. Um nó que pede ao servidor no foco E no clique
+// manda DOIS pedidos por um gesto só, e os dois remendam a mesma cena — que
+// redeclara os sinais dela a cada remendo. Quem chega por último manda, e a
+// ordem de chegada não é a de saída: no bestiário o pedido do foco não leva
+// `abrir=1`, então chegando por último ele FECHAVA a ficha que o clique tinha
+// aberto. A criatura ficava escolhida e a ficha não abria.
+//
+// É a família "duas escritas no mesmo lugar sem ordem garantida", prima do
+// `data-show` com `data-attr:style` — e como aquela, não deixa erro nenhum
+// para trás.
+//
+// A REGRA: pedido disparado por FOCO é afordância de TECLADO, e por isso ele
+// pede `:focus-visible`. Medido no navegador: o clique dá `false`, o Tab dá
+// `true`, e o foco PROGRAMÁTICO do driver de setas também dá `true` — o guarda
+// preserva a prévia da seta e tira só o pedido que o mouse mandava à toa.
+//
+// Ele varre a FONTE e não uma cena servida de propósito. A lição da ALE-237 e
+// da ALE-252 é que um guarda só mede o que ele VISITA, e enumerar cena por cena
+// deixaria a próxima nascer sem medição, em silêncio. Como a regra cabe num
+// atributo só, a fonte inteira é alcançável de uma vez.
+func TestNenhumFocoPedeAoServidorSemGuardaDeTeclado(t *testing.T) {
+	fontes, err := filepath.Glob("*.templ")
+	if err != nil || len(fontes) == 0 {
+		t.Fatalf("não achei os .templ do pacote (%v) — o guarda mediria o vazio", err)
+	}
+
+	// Um `data-on:focus…` inteiro, com os modificadores e o valor: o Datastar
+	// escreve `data-on:focus__throttle.100ms.leading={ … }`, e é o VALOR que diz
+	// se há pedido e se há guarda.
+	oFoco := regexp.MustCompile(`data-on:focus[a-zA-Z0-9_.]*=(\{[^}]*\}|"[^"]*")`)
+
+	achados := 0
+	for _, fonte := range fontes {
+		corpo, err := os.ReadFile(fonte)
+		if err != nil {
+			t.Fatalf("não consegui ler %s: %v", fonte, err)
+		}
+		for _, gesto := range oFoco.FindAllString(string(corpo), -1) {
+			if !strings.Contains(gesto, "@get(") && !strings.Contains(gesto, "@post(") {
+				continue // só mexe em sinal local: não pede nada, não corre com ninguém
+			}
+			achados++
+			if !strings.Contains(gesto, ":focus-visible") {
+				t.Errorf("%s: um foco pede ao servidor sem guarda de teclado — o clique do mouse "+
+					"foca também, e o pedido dele chega DEPOIS do pedido do clique numa máquina "+
+					"carregada, desfazendo o que o clique fez. Embrulhe em "+
+					"`el.matches(':focus-visible') && (…)`: %s", fonte, gesto)
+			}
+		}
+	}
+
+	// O CONTROLE: existe pelo menos um foco que pede ao servidor. Sem ele, o dia
+	// em que o regex parar de casar — um modificador novo, outra grafia — este
+	// guarda passaria verde varrendo NADA, que é a forma desta família.
+	if achados == 0 {
+		t.Fatal("nenhum `data-on:focus…` com `@get`/`@post` foi encontrado na fonte: " +
+			"o guarda não mediu nada, e o casamento do padrão é o primeiro suspeito")
 	}
 }

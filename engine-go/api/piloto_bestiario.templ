@@ -409,10 +409,28 @@ templ listaDeVerbetes(v bestiarioView) {
 					// percebe como espera e acima do intervalo de repetição da
 					// tecla, então parar numa linha desenha e passar por ela
 					// não custa nada.
+					//
+					// `:focus-visible` GUARDA o pedido do foco, e é conserto de
+					// um defeito que o CI pegou e a bancada não (ALE-272): o
+					// clique do mouse TAMBÉM foca, então uma linha tocada saía
+					// com DOIS pedidos — o do foco, sem `abrir=1`, e o do
+					// clique, com. Os dois remendam o `#bestiario`, que
+					// redeclara `fichaAberta`, e quem chega por último manda.
+					// Na bancada o do clique chegava depois e a ficha abria; na
+					// máquina carregada do CI a ordem inverteu e a criatura
+					// ficava escolhida com a ficha FECHADA — medido, e
+					// reproduzido de propósito atrasando a resposta do foco.
+					//
+					// O guarda é a resposta da própria plataforma para "este
+					// foco veio do teclado?", e é a divisão que já estava
+					// escrita aqui em cima: medido, o clique dá `false`, o Tab
+					// dá `true`, e o foco PROGRAMÁTICO do driver de setas
+					// também dá `true` — a prévia da seta continua inteira e o
+					// mouse deixa de mandar o pedido que só desfaz o dele.
 					<a
 						href={ templ.SafeURL(v.bestiarioBase() + "?criatura=" + m.ID) }
 						data-on:click={ fmt.Sprintf("evt.preventDefault(); $criatura = %q; @get('%s')", m.ID, abrirAFicha(v.bestiarioBase())) }
-						data-on:focus__throttle.100ms.leading={ fmt.Sprintf("$criatura = %q; @get('%s')", m.ID, v.bestiarioBase()) }
+						data-on:focus__throttle.100ms.leading={ fmt.Sprintf("el.matches(':focus-visible') && ($criatura = %q, @get('%s'))", m.ID, v.bestiarioBase()) }
 						if v.Escolhido != nil && v.Escolhido.ID == m.ID {
 							aria-current="true"
 							class="block w-full rounded-sm border border-grimorio-gold bg-accent p-2 text-left transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
