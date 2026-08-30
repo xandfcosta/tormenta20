@@ -13,10 +13,19 @@ import (
 // fim da fita pareceria igual e quebraria a gramática — as setas o pulariam,
 // porque elas andam entre itens do trilho e não entre links da página.
 //
-// A ANIMAÇÃO DE ENTRADA do palco não está aqui, e a ausência é a mesma da
-// virada de página: `animate-in` dispara no mount, e uma cena inteira desenhada
-// com `data-show` nunca monta. As duas foram para a ALE-235 juntas porque o
-// mecanismo é UM só.
+// A ANIMAÇÃO DE ENTRADA do palco está aqui desde a ALE-235, e o mecanismo dela
+// é o que aquela issue existia para achar: `animate-in` dispara no MOUNT, e uma
+// cena inteira desenhada com `data-show` nunca monta. **O que substitui o mount
+// é a CLASSE entrando num nó que não a tinha** — o palco que sai perde a classe,
+// o que entra ganha, e são elementos diferentes, então nunca há o caso que não
+// replica ("a mesma animação, já concluída, no mesmo nó").
+//
+// Nenhuma das saídas que a issue previa foi necessária: nem morph, nem reflow
+// forçado, nem id que muda a cada troca. Ver `oPalcoQueEntra` e a folha.
+//
+// O que continua na ALE-235 é a VIRADA DE PÁGINA do livro de campanhas: lá a
+// folha carrega a arte dos DOIS lados, e desenhar isso exigiria copiar conteúdo
+// que só o servidor tem — outro problema, não este.
 
 templ personagens(v personagensView) {
 	@barraDePersonagens(v)
@@ -48,7 +57,7 @@ templ personagens(v personagensView) {
 templ barraDePersonagens(v personagensView) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
-		data-signals={ fmt.Sprintf("{busca: %q, cursor: %d, dossie: false}", v.Busca, v.CursorID) }
+		data-signals={ fmt.Sprintf("{busca: %q, cursor: %d, dossie: false, sentido: 1, indice: 0}", v.Busca, v.CursorID) }
 		data-on:keydown__window="(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossie = !$dossie)"
 	>
 		<a
@@ -81,6 +90,7 @@ templ barraDePersonagens(v personagensView) {
 templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 	<div
 		data-show={ fmt.Sprintf("$cursor == %d", h.ID) }
+		data-class={ oPalcoQueEntra(h.ID) }
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
 	>
 		// A lavagem de luz no matiz do herói. Decorativa, e por isso fora da
@@ -90,7 +100,7 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 			class="pointer-events-none absolute inset-0 -z-10"
 			style={ "background: " + lavagemDoHeroi(h) }
 		></div>
-		<div class="flex items-center justify-center gap-4 sm:gap-8">
+		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
 			@retratoVizinho(anterior, "Anterior")
 			<a
 				href={ templ.SafeURL("/characters/" + strconv.FormatInt(h.ID, 10)) }
@@ -109,7 +119,7 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
 		// que quebra em duas linhas empurra a fileira do retrato 20px para cima
 		// e os cartões dançam ao percorrer o elenco (ALE-99).
-		<div class="max-w-2xl px-4 text-center">
+		<div class="palco-placa max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Nome }</h2>
 			@rotuloDeSecao("gold", "mt-1") {
 				{ h.Papel }
@@ -163,10 +173,11 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 	<div
 		if !sozinha {
 			data-show="$cursor == 0"
+			data-class={ oPalcoQueEntra(0) }
 		}
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
 	>
-		<div class="flex items-center justify-center gap-4 sm:gap-8">
+		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
 			@retratoVizinho(anterior, "Anterior")
 			<a
 				href="/characters/new"
@@ -180,7 +191,7 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 			// direita ao chegar aqui.
 			@retratoVizinho(nil, "Próximo")
 		</div>
-		<div class="max-w-2xl px-4 text-center">
+		<div class="palco-placa max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Forjar um herói</h2>
 			@rotuloDeSecao("muted", "mt-1") {
 					Uma vaga vazia no grupo
@@ -227,7 +238,7 @@ templ retratoVizinho(vz *vizinho, lado string) {
 			title={ vz.Nome }
 			aria-label={ lado + ": " + vz.Nome }
 			data-cue-hover
-			data-on:click={ fmt.Sprintf("$cursor = %d", vz.ID) }
+			data-on:click={ oGestoQueMoveOCursor(vz.Indice, vz.ID) }
 			class="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-sm border border-grimorio-iron opacity-50 outline-none transition-all hover:opacity-80 focus-visible:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-28 lg:w-32"
 			style={ "background: " + vz.Gradiente }
 		>
@@ -254,14 +265,14 @@ templ filmeDePersonagens(v personagensView) {
 		data-nav-layout="row"
 		class="flex shrink-0 items-center gap-2 overflow-x-auto border-t border-grimorio-iron px-4 py-3"
 	>
-		for _, h := range v.Herois {
-			@quadroDoFilme(h)
+		for i, h := range v.Herois {
+			@quadroDoFilme(h, i)
 		}
-		@quadroDeCriar(v.TemAlgum)
+		@quadroDeCriar(v.TemAlgum, len(v.Herois))
 	</div>
 }
 
-templ quadroDoFilme(h heroiCartao) {
+templ quadroDoFilme(h heroiCartao, i int) {
 	<button
 		type="button"
 		role="option"
@@ -269,8 +280,8 @@ templ quadroDoFilme(h heroiCartao) {
 		data-cue-hover
 		aria-label={ h.Nome + " · " + h.Papel }
 		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", h.ID) }
-		data-on:focusin={ fmt.Sprintf("$cursor = %d", h.ID) }
-		data-on:click={ fmt.Sprintf("$cursor = %d", h.ID) }
+		data-on:focusin={ oGestoQueMoveOCursor(i, h.ID) }
+		data-on:click={ oGestoQueMoveOCursor(i, h.ID) }
 		data-on:keydown={ fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = '/characters/%d')", h.ID) }
 		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-display text-xs text-white/85 outline-none transition-all hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:ring-1 aria-selected:ring-grimorio-gold"
 		style={ "background: " + h.Gradiente }
@@ -283,7 +294,7 @@ templ quadroDoFilme(h heroiCartao) {
 // do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
 // que abriu tudo até ali não faz nada. (E é a QUINTA vez que um comentário
 // dentro da lista de atributos derruba o `templ generate` — ele não aceita.)
-templ quadroDeCriar(temAlgum bool) {
+templ quadroDeCriar(temAlgum bool, indice int) {
 	<button
 		type="button"
 		role="option"
@@ -293,8 +304,8 @@ templ quadroDeCriar(temAlgum bool) {
 		data-on:keydown="evt.key === 'Enter' && (evt.preventDefault(), location.href = '/characters/new')"
 		if temAlgum {
 			data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
-			data-on:focusin="$cursor = 0"
-			data-on:click="$cursor = 0"
+			data-on:focusin={ oGestoQueMoveOCursor(indice, 0) }
+			data-on:click={ oGestoQueMoveOCursor(indice, 0) }
 		}
 		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
 	>
