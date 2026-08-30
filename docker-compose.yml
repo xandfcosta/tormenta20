@@ -1,0 +1,90 @@
+# A MESA, DE PÉ (ALE-273).
+#
+#   cp .env.example .env    # e escreva o JWT_SECRET e o ADMIN_EMAILS
+#   docker compose up -d --build
+#
+# UM serviço, e é deliberado: o binário serve a SPA, a API e o fluxo ao vivo na
+# mesma porta desde a ALE-101, e as cenas saem comprimidas de dentro do próprio
+# Go (`plataforma.Gzip`). Um proxy na frente compraria só a compressão, e traria
+# um segundo runtime, um segundo lugar para configurar TLS e um segundo lugar
+# onde o SSE pode ser bufferizado por engano.
+
+services:
+  t20:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tormenta20:latest
+    container_name: tormenta20
+    # `unless-stopped` e não `always`: uma mesa parada de propósito continua
+    # parada depois de um reboot, que é o que "eu desliguei" quer dizer.
+    restart: unless-stopped
+    # RODA COMO O DONO DAS PASTAS, e não como o `nonroot` (uid 65532) da imagem.
+    #
+    # O banco é bind mount, e um contêiner com uid próprio não consegue escrever
+    # numa pasta criada pelo usuário do hospedeiro — o primeiro `up` sobe e morre
+    # em "unable to open database file", que se lê como banco corrompido e é só
+    # permissão. Rodar com o uid de quem criou as pastas dispensa `chown` de root
+    # no primeiro uso e continua sendo não-root, que era o ponto.
+    #
+    #   T20_UID=$(id -u) T20_GID=$(id -g) docker compose up -d
+    #
+    # ou escreva os dois no `.env`.
+    user: "${T20_UID:-65532}:${T20_GID:-65532}"
+    ports:
+      - "${T20_PORT:-3001}:3001"
+    environment:
+      # A configuração chega por AMBIENTE e não por `.env.production` dentro da
+      # imagem: o `LoadConfig` já prefere o processo ao arquivo (ALE-119), e
+      # chave de assinatura não entra em camada de imagem.
+      #
+      # O `:?` é o que transforma "esqueci de configurar" em recusa de subir com
+      # a mensagem certa, em vez de um `Validate` reclamando depois.
+      JWT_SECRET: ${JWT_SECRET:?defina o JWT_SECRET no .env — openssl rand -hex 32}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:?defina o ADMIN_EMAILS no .env — sem admin ninguém convida a mesa}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      # `COOKIE_SECURE=true` só com HTTPS na frente: com ele em HTTP o navegador
+      # DESCARTA o cookie e o login não conclui, sem erro em lugar nenhum
+      # (ALE-118).
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      BACKUP_EVERY: ${BACKUP_EVERY:-24h}
+      BACKUP_KEEP: ${BACKUP_KEEP:-7}
+    volumes:
+      # O BANCO NO DISCO DO HOSPEDEIRO, em bind mount e não em volume nomeado: o
+      # backup da mesa é copiar uma pasta, e uma pasta que se enxerga no `ls` é a
+      # diferença entre fazer backup e achar que faz.
+      #
+      # As duas precisam ser graváveis pelo uid 65532 (`nonroot` da imagem):
+      #   mkdir -p data backups && sudo chown -R 65532:65532 data backups
+      - ./data:/app/data
+      - ./backups:/app/backups
+    healthcheck:
+      # A imagem é distroless — sem shell, sem `curl`, sem `wget` —, então quem
+      # sonda é o PRÓPRIO binário com `-health`: ele bate no `/health` de si
+      # mesmo lendo a mesma `PORT` que o servidor escuta.
+      test: ["CMD", "/app/t20-api", "-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# O LIVRO e o TLS ficam FORA daqui de propósito, num arquivo de sobreposição.
+#
+# Os dois apontam para caminhos que só existem na máquina do dono da mesa, e um
+# `volumes:` com variável vazia não degrada — ele quebra o `up` inteiro com um
+# erro de sintaxe de montagem. Quem tem o PDF ou o certificado escreve um
+# `docker-compose.override.yml` ao lado, que o compose lê sozinho:
+#
+#   services:
+#     t20:
+#       environment:
+#         LIVRO_PDF: /app/livro/t20.pdf
+#         TLS_CERT_FILE: /app/tls/cert.pem
+#         TLS_KEY_FILE: /app/tls/key.pem
+#       volumes:
+#         - /caminho/no/host/t20-book.pdf:/app/livro/t20.pdf:ro
+#         - /caminho/no/host/tls:/app/tls:ro
+#
+# Sem o PDF, o botão "abrir no livro" simplesmente não aparece — ausência é
+# caminho normal, não erro. Meio par de TLS, ao contrário, DERRUBA o boot de
+# propósito (ALE-118).

@@ -5,7 +5,9 @@ em código é em inglês. Ver "Idioma".
 São dois pacotes. `engine-go/` é o backend em Go — a API HTTP na :3001, o motor
 de regras, o mesmo motor compilado para WASM, e as cenas do piloto em `.templ`
 servidas com Datastar. `frontend/` é a SPA em SolidJS, que desde a virada para o
-Datastar segura só a ficha e a sessão. Um processo serve tudo em produção.
+Datastar segura só a ficha e a sessão. Um processo serve tudo em produção, e ele
+sobe por `docker compose up -d --build` com o banco em bind mount no
+hospedeiro — um serviço só, sem proxy na frente (ALE-273).
 
 ## Antes de mexer
 

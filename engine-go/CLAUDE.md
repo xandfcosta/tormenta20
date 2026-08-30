@@ -7,6 +7,13 @@ valem; o que está aqui estende ou sobrepõe.
 compilado para WASM que roda no navegador. Um processo serve a SPA, a API e o
 fluxo de eventos em produção (`STATIC_DIR`).
 
+Desde a ALE-273 esse processo também sobe por `docker compose up -d --build`,
+com o banco em bind mount no hospedeiro. **O compose não trouxe um segundo
+runtime**: continua sendo UM serviço, e a decisão do ALE-101 está inteira. O
+proxy que normalmente viria junto foi considerado e recusado — ele compraria só
+a compressão, que mora em `plataforma.Gzip` por ~150 linhas e sem um segundo
+lugar onde o SSE pode ser bufferizado por engano.
+
 ## Ambientes
 
 `LoadConfig` lê `.env.<APP_ENV>` deste diretório antes do env do processo —
@@ -130,6 +137,78 @@ RECUSA — um `strings.Contains` a leria como aceitação.
 
 Sem os irmãos comprimidos o app continua funcionando, só mais pesado: ausência é
 caminho normal, não erro.
+
+## E o que o servidor RENDERIZA sai comprimido na hora
+
+As duas compressões convivem e a divisão é por NATUREZA do conteúdo, não por
+preguiça de unificar. Asset é imutável e se comprime UMA vez no build, com
+brotli -q11 e os ~8s que ele custa; cena renderizada não existe antes da
+requisição, então para ela a escolha real é gzip na hora ou nada.
+
+Era **nada** até a ALE-273, e a conta é maior do que parece porque todo comando
+da ficha responde redesenhando a cena INTEIRA: a aba de Combate viaja 44,7 KB
+crus, 5,6 KB em gzip, e vai de novo a cada toque no PV. Numa LAN isso não
+aparece; no telefone do jogador com dados móveis, são 44 KB por toque.
+
+Quem faz é o `plataforma.Gzip`, montado na borda do mux em `cmd/api`. Ele decide
+pelo `Content-Type` que o handler escreveu, e pula o que já chega com
+`Content-Encoding` — que é exatamente o caso dos irmãos pré-comprimidos da
+seção acima, e recomprimi-los produziria bytes maiores gastando CPU.
+
+**A armadilha mora no SSE, e ela não deixa erro para trás.** A resposta de todo
+comando do Datastar é `text/event-stream` — ela usa o envelope de SSE para
+mandar UM remendo e fechar. Então "não comprimir SSE" pularia justamente o que
+se quer comprimir; e comprimir SEM repassar o `Flush` prende o quadro no buffer
+interno do `gzip.Writer`, e o fluxo AO VIVO da Mesa para de atualizar. Nada
+falha, nada loga, e o sintoma — "o tempo real quebrou" — não aponta para um
+middleware de compressão. Por isso o `Flush` esvazia o gzip ANTES de quem está
+embaixo, e `TestOFluxoAoVivoAtravessaOGzip` mede um quadro chegando com a
+conexão ainda aberta.
+
+**E há uma segunda metade, que custou 27 casos vermelhos no e2e com os
+unitários TODOS verdes.** O `datastar-go` monta o fluxo nesta ordem: escreve o
+`Content-Type`, chama `Flush()` para MANDAR OS CABEÇALHOS, e só então escreve o
+primeiro remendo. Um envelope que decide comprimir apenas no `Write` chega
+tarde — os cabeçalhos já foram sem `Content-Encoding` e o corpo sai comprimido
+mesmo assim, então o navegador lê bytes de gzip como se fossem texto. Nenhuma
+requisição falha, nenhum status muda: o que se vê é que os remendos param de ser
+aplicados, e a busca não filtra, a seta não anda, o diálogo não abre.
+
+Os guardas unitários estavam verdes porque escreviam o cabeçalho ANTES de
+esvaziar, que não é o que a biblioteca faz. **Um envelope de resposta tem de
+decidir no `Flush` também**, e `TestOFlushAntesDoWriteJaDecideOEnvelope` repete a
+ordem do Datastar de propósito. A regra geral, que vale para qualquer middleware
+que se escreva aqui: *quem esvazia compromete os cabeçalhos*.
+
+O envelope também expõe `Unwrap() http.ResponseWriter`, que é o contrato do
+`http.ResponseController` desde o Go 1.20 — sem ele, um `SetWriteDeadline` ou um
+`Hijack` de qualquer camada acima responde `ErrNotSupported`, e quem chamou
+conclui que o ambiente não suporta fluxo.
+
+## O `synchronous` do SQLite vale 139ms POR TOQUE
+
+O padrão do SQLite é `FULL`, que faz `fsync` a cada commit, e num prato girante
+isso é uma rotação de disco por escrita. Medido (ALE-273): o comando que muda o
+PV e redevolve a cena levava **121ms** de servidor e **139ms** até o número
+mudar na tela. Com `synchronous=NORMAL`, no MESMO disco, viraram **1,7ms** e
+**12ms**.
+
+O controle que isolou a causa foi trocar só o LUGAR do arquivo — disco → tmpfs,
+binário idêntico —, e o número do tmpfs bateu com o do pragma. Antes disso a
+suspeita natural era o tamanho do HTML, e ela já estava descartada por outra
+medição: **o tempo do POST era o mesmo em abas de 15 KB e de 39 KB.**
+
+O que se perde numa queda de energia são os commits ainda não sincronizados. O
+banco NÃO corrompe, e essa é a garantia do WAL: o arquivo principal nunca fica
+meio-escrito, porque o conteúdo novo mora no `-wal` e a recuperação relê os
+quadros até o último commit válido, cada um com checksum. É a diferença entre
+`NORMAL` e `OFF` — e `OFF` continua sendo só do banco de teste, onde não há o
+que proteger.
+
+Para quem vem do MariaDB: `FULL` ≈ `innodb_flush_log_at_trx_commit=1`, `NORMAL`
+≈ `=2`. E o WAL do SQLite é parente do **redo log do InnoDB**, não do binlog —
+log físico de páginas, para recuperação e concorrência, e não log lógico de
+eventos para replicação.
 
 ## HTTPS termina NESTE processo (opcional)
 
