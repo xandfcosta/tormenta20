@@ -34,6 +34,7 @@ alguém já usou e que não voltam.
 | **buscador do livro** | `buscador` | ~~paleta~~, ~~palette~~, ~~busca global~~ | A caixa que o ⌃K abre em qualquer cena e que procura nas 1.072 entradas do livro de uma vez (ALE-264). **Não é a busca da cena**, que é o campo que o `/` foca e que filtra a lista da tela atual — uma procura no LIVRO, a outra estreita o que já está na frente. O sinal se chama `buscador` justamente para não colidir com o `busca` das cenas, que vive no mesmo documento. |
 | **livro** | `…DoLivro` | ~~manual~~, ~~PDF~~ (na tela) | O Tormenta 20 impresso, e a AUTORIDADE das regras: `criaturasDoLivro`, `magiaDoLivro`, `condicaoDoLivro` são entradas dele. Quando o ARQUIVO importa — o PDF que o servidor entrega em `/piloto/livro` —, diga **PDF do livro**: quem serve é a mesa, e serve só se o dono configurar `LIVRO_PDF` (ALE-264). |
 | **perícia** | `pericias` | ~~habilidade~~, ~~skill~~ | Uma das 29 do livro (T20 p115, Tabela 2-1). Ganhou catálogo na ALE-264: existia como lista de nome e atributo dentro do `options.json`, sem página e sem as DUAS regras que o livro imprime ao lado do nome — **só treinada** (sem treinamento nem se rola) e **penalidade de armadura**. As três com penalidade são as mesmas que o motor já conhecia, e há teste costurando as duas fontes. **Não confundir com poder**: perícia se ROLA, poder se TEM. |
+| **proficiência** | `proficiencies` | ~~treinamento~~, ~~habilitação~~ | Saber usar uma categoria de arma, armadura ou escudo. São SETE — armas simples, marciais, exóticas e de fogo (T20 p142), armaduras leves e pesadas, e escudos (p148) — e a classe concede as dela numa linha só ("Proficiências. Armas marciais e escudos.", p36–83). **Não confundir com perícia**: perícia se ROLA e tem graus de treinamento; proficiência se TEM ou não se tem, e o que falta vira PENALIDADE (−5 no ataque, p142; a penalidade da armadura nas perícias de Força e Destreza, p148). **Quem sabe usar armadura pesada sabe usar a leve, e isso o livro NÃO diz** — é decisão de produto, e está escrita e presa por teste em `piloto_ficha_proficiencias.go`. |
 | **escola de magia** | `escolas-de-magia` | ~~tipo de magia~~, ~~classe de magia~~ | A família de uma magia — **Abjuração**, **Evocação**, **Ilusão** (T20 p172, oito). O livro imprime a abreviatura ao lado ("Abjuração (Abjur)") e as tabelas dele usam a forma curta. Ganhou catálogo na ALE-264: a magia guardava `school: "evocacao"`, isso decidia o filtro, e o nome não aparecia em cartão nenhum. **Escola conta como tipo de efeito** — é o livro que diz —, então as duas famílias se tocam. |
 | **tipo de efeito** | `tipos-de-efeito` | ~~tag~~, ~~categoria~~ | A família de um efeito — **Medo**, **Mental**, **Movimento**, **Metabolismo** (T20 p228). O livro a imprime em itálico no fim da condição ("Abalado … *Medo*."), e ela é o que decide imunidade: "criatura com imunidade a medo não será afetada por efeitos do tipo medo". No dado a condição a guarda como CHAVE (`tags: ["cansaco"]`, sem acento); na tela sai o nome do livro. Ganhou catálogo próprio na ALE-264 porque não havia para onde o elo apontar. |
 | **elo** | `eloParaOAcervo` | ~~link~~ (no código) | A palavra que leva ao verbete dela: a tag da condição leva ao tipo de efeito, "Agrava para Apavorado" leva à condição, o poder concedido leva ao poder. **Não é o botão do livro** — o elo anda DENTRO do acervo, o botão sai para o PDF. Os dois usam o mesmo sublinhado pontilhado de propósito: são o mesmo gesto ("leva para outro lugar") e desenhá-los diferente ensinaria que não são. O clique MOSTRA o verbete numa caixa sobre a cena; o `href` (`?aba=X&entrada=<id>`) fica para o ctrl+clique e o link copiado. |
@@ -182,10 +183,10 @@ mesa para o botão que o aparelho dela não tem.
 
 ## E-bis. Os contextos do servidor (ALE-254)
 
-Nome de pacote é identificador, então o glossário manda nele. E a regra da
-costura já responde qual idioma: **fronteira** é o que fala inglês — tabela,
-campo JSON, evento SSE, rota HTTP. Nome de pacote interno não é fronteira, então
-contexto de domínio entra em **pt-BR**.
+Nome de pacote é identificador, então o glossário manda nele — e pela regra do
+§F identificador novo é em inglês. `aovivo/` e `plataforma/` são anteriores à
+regra e ficam: renomear pacote move todo import do repositório, que é o preço
+mais alto da lista por ganho puramente estético.
 
 | termo | no código | proibido | o que é |
 | -- | -- | -- | -- |
@@ -202,23 +203,30 @@ criaria a terceira acepção da palavra que a linha existe para impedir.
 
 ## F. A costura PT/EN
 
-O domínio é pt-BR e o código é misto — e isso não estava escrito em lugar
+O domínio é pt-BR e o código era misto — e isso não estava escrito em lugar
 nenhum, que é a raiz de metade desta lista. Em `board-region.tsx` convivem
 `selectedToken` e `linhasNoMapa`, e `board` e `cena` denotam o mesmo tipo no
 mesmo arquivo.
 
-A regra, daqui para frente:
+A regra, daqui para frente (a completa está em
+[CLAUDE.md § Idioma](CLAUDE.md#idioma); aqui fica o que é do glossário):
 
 - **A tela fala pt-BR.** Sem exceção, incluindo `aria-label` e `title` (o Kobalte
   injeta rótulos em inglês — passe o seu, mesmo quando a palavra está escrita).
-- **A fronteira fala inglês**: nomes de tabela, campos JSON, eventos SSE e
-  rotas HTTP. Trocá-los quebra clientes e migrações, e o ganho é estético.
-- **Dentro de uma função, o idioma é o do conceito.** Nome de domínio que o
-  glossário canoniza em pt-BR entra em pt-BR (`combatente`, `peça`, `lugar`);
-  mecânica de programação fica em inglês (`index`, `next`, `pending`).
-- **Um arquivo não mistura os dois nomes do MESMO conceito.** Se o arquivo já
-  chama `board`, não introduza `cena` ao lado; siga o que está lá e anote a
-  dívida.
+- **O identificador fala inglês.** Variável, função, tipo, campo, arquivo — e a
+  fronteira, que já era: tabela, campo JSON, evento SSE, rota HTTP.
+- **O que muda é a GRAFIA, não o conceito.** A coluna "no código" registra como
+  o termo está escrito HOJE, e boa parte dela ainda está em pt-BR — é o passivo,
+  não o alvo. Ao escrever um identificador novo para um termo que já tem
+  tradução em uso, use a que já está em uso; ao traduzir um termo pela primeira
+  vez, **anote a tradução na linha dele antes de escrever o código** — traduzir
+  na hora, duas vezes, é como um conceito vira dois (`place` e `location` para o
+  mesmo `lugar`). Termo sem tradução — `tormenta`, `goblinoide` — fica como
+  está: é nome próprio.
+- **Um arquivo não mistura os dois nomes do MESMO conceito.** O código antigo
+  não é varrido (a razão está no CLAUDE.md), então as duas grafias convivem por
+  um tempo: num arquivo que já chama `cena`, não introduza `scene` ao lado — o
+  nome NOVO segue a regra, o nome CHAMADO segue o que está lá.
 
 ---
 

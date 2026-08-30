@@ -111,6 +111,11 @@ type classeDoLivro struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	BookPage int    `json:"bookPage"`
+	// Proficiencias é a linha "Proficiências." do bloco da classe (p36–83),
+	// transcrita. Ela chegou na ALE-272 com o painel de Proficiências da ficha:
+	// a tabela existia só em TypeScript, fora do alcance da validação de schema
+	// — ver `piloto_ficha_proficiencias.go`.
+	Proficiencias []string `json:"proficiencies"`
 	// Derivados do que já existe — ver o cabeçalho do arquivo.
 	Pericias []string `json:"-"`
 	Escolhe  int      `json:"-"`

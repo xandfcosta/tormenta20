@@ -105,6 +105,10 @@ const QUERIDOS = [
   // dela: +5 na Defesa e 20% de chance de falha.
   'Waves',
   'Mountain',
+  // O painel de Proficiências (ALE-272) diz o estado de cada categoria por
+  // ícone, além do traço e do `aria-pressed` — `X` já estava na lista, e o par
+  // dele faltava.
+  'Check',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

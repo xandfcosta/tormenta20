@@ -51,6 +51,11 @@ type fichaView struct {
 	// AbaAtiva é o valor resolvido — nunca o que veio na URL cru, que pode ser
 	// um endereço antigo ou lixo digitado.
 	AbaAtiva string
+	// Proficiencias são os dois blocos do painel homônimo (fatia 2). Elas são
+	// computadas SEMPRE, e não só quando a aba está aberta: são sete linhas
+	// derivadas de dado que a ficha já carregou, e um `if` aqui trocaria
+	// microssegundos por um ramo a mais para um guarda cobrir.
+	Proficiencias []grupoDeProficiencias
 }
 
 // classeDaFicha é uma classe do personagem, com o que o degrau precisa saber.
@@ -136,7 +141,9 @@ func aAbaPedida(bruto string) string {
 // para a ficha antiga no mesmo commit em que o painel nasce. Enquanto o mapa
 // estiver vazio, a casca é honesta — ela não finge ter o que não tem.
 func oPainelJaPortado(valor string) bool {
-	portados := map[string]bool{}
+	portados := map[string]bool{
+		"proficiencies": true, // fatia 2
+	}
 	return portados[valor]
 }
 
@@ -173,6 +180,8 @@ func (s *Server) carregaFicha(ctx context.Context, user AuthUser, id int64, aba 
 		Classes:   cartao.Classes,
 		AsClasses: asClassesDoDegrau(dto),
 		AbaAtiva:  aba,
+
+		Proficiencias: oPainelDeProficiencias(dto),
 	}
 	for _, item := range asAbasDaFicha() {
 		item.Ativa = item.Valor == aba
@@ -313,7 +322,25 @@ func oDegrauDireto(v fichaView, passo int) string {
 	if len(elegiveis) != 1 {
 		return ""
 	}
-	return oComandoDoDegrau(v.ID, elegiveis[0].Nome, passo)
+	return oComandoDoDegrau(v, elegiveis[0].Nome, passo)
+}
+
+// oPostDaFicha escreve o `@post` de um gesto da ficha, CARREGANDO A ABA ABERTA.
+//
+// # O `?tab=` não é decoração
+//
+// Todo comando da ficha responde redesenhando a cena INTEIRA, e a cena precisa
+// saber em que seção a pessoa está. Sem o `?tab=` o `aAbaPedida` não acha nada
+// na query e cai na primeira aba — mexer no PV com a Mochila aberta jogava o
+// jogador em Perícias, e a ficha parecia ter se fechado sozinha.
+//
+// Este defeito foi ENTREGUE na fatia 1 e só apareceu na bancada da fatia 2: com
+// todas as abas mostrando o mesmo aviso de "ainda vive na ficha antiga", o salto
+// não tinha como ser visto. O primeiro painel portado o tornou visível no
+// primeiro clique. Ver `TestNenhumComandoDaFichaPerdeAAba`, que varre os quatro
+// gestos nas sete abas.
+func oPostDaFicha(v fichaView, caminho string) string {
+	return fmt.Sprintf("@post('/piloto/personagens/%d%s?tab=%s')", v.ID, caminho, v.AbaAtiva)
 }
 
 // oComandoDoDegrau escreve o `@post` de subir ou descer uma classe.
@@ -321,8 +348,23 @@ func oDegrauDireto(v fichaView, passo int) string {
 // A CLASSE VAI NO CAMINHO, codificada: nome de classe é do catálogo e não tem
 // espaço hoje, mas escrever a rota assumindo isso é o tipo de suposição que
 // quebra no dia em que uma classe nova chegar.
-func oComandoDoDegrau(id int64, classe string, passo int) string {
-	return fmt.Sprintf("@post('/piloto/personagens/%d/nivel/%s/%d')", id, url.PathEscape(classe), passo)
+func oComandoDoDegrau(v fichaView, classe string, passo int) string {
+	return oPostDaFicha(v, fmt.Sprintf("/nivel/%s/%d", url.PathEscape(classe), passo))
+}
+
+// oComandoDoVital escreve o `@post` de um passo de PV ou PM.
+func oComandoDoVital(v fichaView, rotulo string, passo int) string {
+	return oPostDaFicha(v, fmt.Sprintf("/vitais/%s/%d", oVitalNaRota(rotulo), passo))
+}
+
+// oComandoDaProficiencia escreve o `@post` de ligar ou desligar uma categoria.
+func oComandoDaProficiencia(v fichaView, chave string) string {
+	return oPostDaFicha(v, "/proficiencias/alterna/"+chave)
+}
+
+// oComandoDoPadraoDeClasse escreve o `@post` do "Restaurar padrão de classe".
+func oComandoDoPadraoDeClasse(v fichaView) string {
+	return oPostDaFicha(v, "/proficiencias/padrao")
 }
 
 // oDialogoDoDegrau é o id do diálogo de escolher a classe, por sentido.

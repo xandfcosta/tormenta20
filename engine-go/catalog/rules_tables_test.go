@@ -74,6 +74,53 @@ func TestClassExpertisesTable(t *testing.T) {
 	}
 }
 
+// classeDoLivro é o que `classes.json` guarda de cada uma das 14.
+type classeDoLivro struct {
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	BookPage      int      `json:"bookPage"`
+	Proficiencias []string `json:"proficiencies"`
+}
+
+// Proficiências por classe (a linha "Proficiências." de cada bloco, p36–83).
+//
+// O risco deste dado é typo, como o das perícias: uma categoria escrita errado
+// não explode — ela some. A classe deixa de conceder o que o livro concede, o
+// painel da ficha mostra a linha desmarcada, e o motor passa a aplicar a
+// penalidade da p142 num personagem que devia ser proficiente. Nada disso levanta
+// exceção em lugar nenhum.
+//
+// NINGUÉM CONCEDE `armas-simples`: ela é de todos os personagens por regra
+// (p142), e uma classe listando-a duplicaria a fonte na etiqueta ("Todas as
+// classes, Guerreiro") sem mudar nada — sintoma de quem transcreveu a frase do
+// livro em vez da linha da classe.
+func TestClassProficienciesTable(t *testing.T) {
+	classes := decodeResource[[]classeDoLivro](t, "classes")
+	if len(classes) != 14 {
+		t.Errorf("a tabela tem %d classes, want 14 (as classes-base do livro)", len(classes))
+	}
+	conhecidas := map[string]bool{
+		"armas-simples": true, "armas-marciais": true, "armas-exoticas": true,
+		"armas-de-fogo": true, "armaduras-leves": true, "armaduras-pesadas": true,
+		"escudos": true,
+	}
+	for _, c := range classes {
+		visto := map[string]bool{}
+		for _, cat := range c.Proficiencias {
+			if !conhecidas[cat] {
+				t.Errorf("%s: proficiência %q não é uma das sete categorias", c.Name, cat)
+			}
+			if cat == "armas-simples" {
+				t.Errorf("%s: lista `armas-simples`, que é de TODO personagem (p142) e não da classe", c.Name)
+			}
+			if visto[cat] {
+				t.Errorf("%s: proficiência %q repetida", c.Name, cat)
+			}
+			visto[cat] = true
+		}
+	}
+}
+
 // expertiseNames lê as perícias do catálogo de opções — a mesma lista que a
 // criação de personagem oferece, então uma divergência aqui é a que o jogador vê.
 func expertiseNames(t *testing.T) map[string]bool {

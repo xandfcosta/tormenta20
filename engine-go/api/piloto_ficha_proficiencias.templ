@@ -1,0 +1,87 @@
+package api
+
+import "fmt"
+
+// O painel de PROFICIÊNCIAS desenhado (ALE-272, fatia 2).
+//
+// Sete linhas em dois blocos, cada uma um botão que liga ou desliga. Não é
+// formulário com Salvar: o gesto da mesa é "ah, eu tenho escudo" no meio de um
+// combate, e um botão de salvar acrescentaria um passo entre a lembrança e o
+// registro — e a chance de sair da aba sem apertá-lo.
+//
+// O ESTADO É O DO SERVIDOR. Cada toque manda o comando e recebe a cena inteira
+// de volta pelo remendo; não há sinal de Datastar guardando "marcado" no
+// navegador. É o que a ALE-225 decidiu, e aqui ele se paga na hora: o mesmo
+// personagem aberto em dois aparelhos não diverge.
+
+// oPainelDasProficiencias é a seção inteira, com o restaurar no cabeçalho.
+templ oPainelDasProficiencias(v fichaView) {
+	<section class="flex min-h-0 flex-1 flex-col">
+		<div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
+			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Proficiências</h2>
+			// RESTAURAR é destrutivo de um jeito discreto — ele joga fora todo
+			// ajuste manual — e por isso diz no `title` o que vai fazer. Não
+			// pergunta antes: o estado anterior é reconstruível com um toque por
+			// linha, e um diálogo a cada uso cansaria o caso comum, que é
+			// consertar a ficha depois de multiclassar.
+			<button
+				type="button"
+				title="Marca exatamente o que as classes concedem e descarta os ajustes manuais"
+				data-on:click={ oComandoDoPadraoDeClasse(v) }
+				class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+			>Restaurar padrão de classe</button>
+		</div>
+		<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
+			for _, grupo := range v.Proficiencias {
+				@oGrupoDeProficiencias(v, grupo)
+			}
+		</div>
+	</section>
+}
+
+templ oGrupoDeProficiencias(v fichaView, grupo grupoDeProficiencias) {
+	<section class="rounded-none border border-grimorio-iron p-3">
+		<h3 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">{ grupo.Titulo }</h3>
+		<ul class="mt-2 space-y-1">
+			for _, linha := range grupo.Linhas {
+				@aLinhaDaProficiencia(v, linha)
+			}
+		</ul>
+	</section>
+}
+
+// aLinhaDaProficiencia é uma categoria, ligada ou desligada.
+//
+// O ESTADO É DITO DE TRÊS JEITOS de propósito: o ícone (✓ ou ✕), o traço sobre
+// o texto de quem não tem, e o `aria-pressed`. Cor sozinha não serve — é a
+// mesma razão pela qual o guarda de contraste existe — e aqui o dado é binário
+// e vale a redundância.
+templ aLinhaDaProficiencia(v fichaView, linha proficienciaDaFicha) {
+	<li class={ "rounded-sm text-xs", templ.KV("bg-bonus/10", linha.Tem) }>
+		<button
+			type="button"
+			aria-pressed={ fmt.Sprintf("%t", linha.Tem) }
+			aria-label={ oRotuloDaTroca(linha) }
+			data-on:click={ oComandoDaProficiencia(v, linha.Chave) }
+			class="flex min-h-11 w-full items-center gap-2 rounded-sm px-2 text-left outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			if linha.Tem {
+				@icone("Check", "size-3.5 text-bonus-ink")
+			} else {
+				@icone("X", "size-3.5 text-muted-foreground")
+			}
+			<span class={ templ.KV("text-foreground", linha.Tem), templ.KV("text-muted-foreground line-through", !linha.Tem) }>
+				{ linha.Rotulo }
+			</span>
+			// "classe" marca o que vem de fábrica, para o jogador distinguir um
+			// ajuste deliberado da conta — sem ela, uma proficiência tirada na
+			// mão parece defeito.
+			if linha.DeClasse {
+				<span
+					title={ aEtiquetaDaFonte(linha) }
+					class="ml-1 rounded-md bg-muted px-1 text-3xs uppercase tracking-[0.14em] text-muted-foreground"
+				>classe</span>
+			}
+		</button>
+	</li>
+}

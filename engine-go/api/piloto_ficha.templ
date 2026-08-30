@@ -90,6 +90,14 @@ templ aAbaDaFicha(v fichaView, aba abaDaFicha) {
 // destas caixas por conteúdo de verdade; quando a última cair, este ramo e o
 // `aFichaAntiga` somem juntos.
 templ oPainelDaFicha(v fichaView) {
+	// UM CASO POR PAINEL PORTADO, e a lista tem de andar junto com o
+	// `oPainelJaPortado`: um nome ali sem caso aqui abre a aba VAZIA — a aba
+	// para de mandar para a ficha antiga e não desenha nada no lugar. Os dois
+	// ficam presos pelo guarda `TestTodaAbaPortadaDesenhaAlgo`.
+	switch v.AbaAtiva {
+		case "proficiencies":
+			@oPainelDasProficiencias(v)
+	}
 	for _, aba := range v.Abas {
 		if aba.Ativa && !aba.Portada {
 			<div class="m-auto flex max-w-md flex-col items-center gap-3 p-6 text-center">
@@ -216,7 +224,7 @@ templ aEscolhaDaClasse(v fichaView, passo int, titulo string) {
 					<li>
 						<button
 							type="button"
-							data-on:click={ "document.getElementById('" + oDialogoDoDegrau(passo) + "').close(); " + oComandoDoDegrau(v.ID, classe.Nome, passo) }
+							data-on:click={ "document.getElementById('" + oDialogoDoDegrau(passo) + "').close(); " + oComandoDoDegrau(v, classe.Nome, passo) }
 							class="flex min-h-11 w-full items-center justify-between gap-2 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>
 							<span>{ classe.Nome }</span>
@@ -279,7 +287,7 @@ templ oPassoDoVital(v fichaView, rotulo string, passo int) {
 		type="button"
 		aria-label={ oRotuloDoPasso(rotulo, passo) }
 		title={ oRotuloDoPasso(rotulo, passo) }
-		data-on:click={ fmt.Sprintf("@post('/piloto/personagens/%d/vitais/%s/%d')", v.ID, oVitalNaRota(rotulo), passo) }
+		data-on:click={ oComandoDoVital(v, rotulo, passo) }
 		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-xs text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
 		{ oSinalDoPasso(passo) }

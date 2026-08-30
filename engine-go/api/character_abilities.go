@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -96,10 +97,35 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"proficiencies": {"proficiencies must be an array"}})
 		return
 	}
+	proficiencies, unknown, err := s.guardaAsProficiencias(r.Context(), row.ID, body.Proficiencies)
+	if len(unknown) > 0 {
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"proficiencies": unknown})
+		return
+	}
+	if err != nil {
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update proficiencies")
+		return
+	}
+	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"proficiencies": proficiencies})
+}
+
+// guardaAsProficiencias valida contra o catálogo, tira as repetidas e grava.
+//
+// Extraída na ALE-272 (fatia 2) porque a ficha em Datastar passou a gravar
+// proficiencia pelo mesmo caminho, e a regra e uma so: o painel do piloto e o
+// `PATCH /characters/{id}/proficiencies` guardam com a MESMA validacao. Duas
+// copias divergiriam no dia em que uma categoria nova chegasse — e a copia
+// esquecida aceitaria o que a outra recusa.
+//
+// Devolve a lista de DESCONHECIDAS separada do erro porque as duas respostas sao
+// diferentes: categoria invalida e 422 com o campo, falha de banco e 500.
+func (s *Server) guardaAsProficiencias(
+	ctx context.Context, id int64, categorias []string,
+) (string, []string, error) {
 	var unknown []string
 	seen := map[string]bool{}
 	dedup := []string{}
-	for _, cat := range body.Proficiencies {
+	for _, cat := range categorias {
 		if !proficiencyCategories[cat] {
 			unknown = append(unknown, fmt.Sprintf("Unknown category %q", cat))
 		}
@@ -109,17 +135,15 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 		}
 	}
 	if len(unknown) > 0 {
-		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"proficiencies": unknown})
-		return
+		return "", unknown, nil
 	}
 	proficiencies := marshalStrings(&dedup)
-	if err := s.queries.SetProficiencies(r.Context(), sqlcgen.SetProficienciesParams{
-		Proficiencies: proficiencies, UpdatedAt: plataforma.NowISO(), ID: row.ID,
+	if err := s.queries.SetProficiencies(ctx, sqlcgen.SetProficienciesParams{
+		Proficiencies: proficiencies, UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update proficiencies")
-		return
+		return "", nil, err
 	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"proficiencies": proficiencies})
+	return proficiencies, nil, nil
 }
 
 // compactJSON normalizes an object blob to compact JSON (matching JSON.stringify
