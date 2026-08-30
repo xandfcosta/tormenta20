@@ -56,6 +56,11 @@ type fichaView struct {
 	// derivadas de dado que a ficha já carregou, e um `if` aqui trocaria
 	// microssegundos por um ramo a mais para um guarda cobrir.
 	Proficiencias []grupoDeProficiencias
+	// Combat é a aba homônima (fatia 3). Como as Proficiências, ela é computada
+	// SEMPRE: o motor já roda uma vez por carga da ficha para a Defesa do
+	// crachá, e repartir esse resultado custa menos que um `if` a mais para um
+	// guarda cobrir.
+	Combat combatPanel
 }
 
 // classeDaFicha é uma classe do personagem, com o que o degrau precisa saber.
@@ -143,6 +148,7 @@ func aAbaPedida(bruto string) string {
 func oPainelJaPortado(valor string) bool {
 	portados := map[string]bool{
 		"proficiencies": true, // fatia 2
+		"combat":        true, // fatia 3
 	}
 	return portados[valor]
 }
@@ -182,6 +188,7 @@ func (s *Server) carregaFicha(ctx context.Context, user AuthUser, id int64, aba 
 		AbaAtiva:  aba,
 
 		Proficiencias: oPainelDeProficiencias(dto),
+		Combat:        s.combatPanelOf(dto),
 	}
 	for _, item := range asAbasDaFicha() {
 		item.Ativa = item.Valor == aba
