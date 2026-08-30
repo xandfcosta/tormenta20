@@ -36,14 +36,33 @@ import (
 // abas do navegador da mesma pessoa compartilham a escolha, e a escolha morre
 // com o processo (todo mundo volta para a aba padrão, que é a mais antiga).
 
-// asAbasEscolhidas guarda qual tabuleiro cada pessoa está olhando.
+// asAbasEscolhidas guarda qual tabuleiro cada pessoa está olhando, e o PUXÃO do
+// mestre por cima disso.
 //
 // Tipo próprio e não um `sync.Map` solto no `Server` pela mesma razão da lente:
 // a chave é composta e a regra de leitura tem um caso — "a aba que eu escolhi
 // foi fechada" — que precisa morar junto do dado.
+//
+// # O puxão é um CONTADOR da sessão, e não uma escrita na escolha de cada um
+//
+// "Mostrar esta à mesa" (ALE-205, fatia 2) tinha de alcançar TODO MUNDO, e o
+// mapa de escolhas só conhece quem já escolheu: quem entrou e ficou na aba
+// padrão não tem entrada nenhuma, e um laço sobre o mapa passaria por cima
+// justamente de quem nunca mexeu em nada.
+//
+// Então o puxão mora na SESSÃO, com um número que só sobe, e cada pessoa guarda
+// qual puxão ela já viu. Quem tem `ForcaVista` menor está sendo puxado agora —
+// inclusive quem nunca apareceu no mapa, cujo zero é menor que qualquer puxão.
+//
+// E ele **não sobrescreve a escolha de ninguém**, o que dá o "voltar para onde
+// eu estava" de graça: a escolha anterior continua lá, intacta, e é ela que a
+// tira do jogador oferece como saída. Sobrescrever seria apagar a informação de
+// que a tira precisa.
 type asAbasEscolhidas struct {
 	mu        sync.RWMutex
-	escolhida map[chaveDaAba]string
+	escolhida map[chaveDaAba]escolhaDeAba
+	// puxao é o "parem tudo e olhem isto" de cada sessão.
+	puxao map[int64]oPuxaoDaMesa
 }
 
 type chaveDaAba struct {
@@ -51,32 +70,98 @@ type chaveDaAba struct {
 	UserID    int64
 }
 
-func novasAbas() *asAbasEscolhidas {
-	return &asAbasEscolhidas{escolhida: map[chaveDaAba]string{}}
+// escolhaDeAba é o que uma pessoa escolheu, mais o puxão que ela já consumiu.
+type escolhaDeAba struct {
+	Tabuleiro string
+	// ForcaVista é o número do último puxão que esta pessoa já viu. É o que faz
+	// o puxão ser UM EMPURRÃO e não uma trava (decisão do dono): assim que ela
+	// escolhe qualquer aba, ela consome o puxão e volta a decidir sozinha.
+	ForcaVista int64
 }
 
-// Escolhe grava a aba que esta pessoa está olhando.
+type oPuxaoDaMesa struct {
+	Tabuleiro string
+	Seq       int64
+}
+
+func novasAbas() *asAbasEscolhidas {
+	return &asAbasEscolhidas{
+		escolhida: map[chaveDaAba]escolhaDeAba{},
+		puxao:     map[int64]oPuxaoDaMesa{},
+	}
+}
+
+// Escolhe grava a aba que esta pessoa está olhando, e CONSOME o puxão em curso.
+//
+// Consumir aqui é o que solta a pessoa: ela foi trazida, olhou, e escolheu outra
+// coisa — a partir daí a decisão é dela de novo, e a tira do puxão some. Vale
+// também quando ela escolhe a própria aba para onde foi trazida: ficar é uma
+// escolha, e a tira que continuasse acesa depois dela seria um modo sem gesto.
 func (a *asAbasEscolhidas) Escolhe(sessionID, userID int64, tabuleiroID string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	chave := chaveDaAba{SessionID: sessionID, UserID: userID}
-	if tabuleiroID == "" {
+	visto := a.puxao[sessionID].Seq
+	if tabuleiroID == "" && visto == 0 {
 		// APAGA em vez de gravar vazio, como o `Alterna` da lente: o mapa vive
 		// enquanto o processo viver, e uma sessão que acumulasse uma entrada
-		// morta por pessoa nunca devolveria a memória.
+		// morta por pessoa nunca devolveria a memória. Com puxão em curso a
+		// entrada TEM de existir, mesmo apontando para a padrão — ela é o
+		// registro de que esta pessoa já o consumiu.
 		delete(a.escolhida, chave)
 		return
 	}
-	a.escolhida[chave] = tabuleiroID
+	a.escolhida[chave] = escolhaDeAba{Tabuleiro: tabuleiroID, ForcaVista: visto}
 }
 
-func (a *asAbasEscolhidas) Escolhida(sessionID, userID int64) string {
+// Puxa traz a mesa para uma aba, e devolve o número do puxão.
+//
+// Quem puxa já CONSUMIU o próprio puxão: ele está olhando aquela aba — foi por
+// isso que a mostrou —, e a tira "o mestre trouxe você para cá" na tela do
+// próprio mestre seria a cena contando a ele o que ele acabou de fazer.
+func (a *asAbasEscolhidas) Puxa(sessionID, userID int64, tabuleiroID string) int64 {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	seq := a.puxao[sessionID].Seq + 1
+	a.puxao[sessionID] = oPuxaoDaMesa{Tabuleiro: tabuleiroID, Seq: seq}
+	a.escolhida[chaveDaAba{SessionID: sessionID, UserID: userID}] = escolhaDeAba{
+		Tabuleiro: tabuleiroID, ForcaVista: seq,
+	}
+	return seq
+}
+
+// Resolve diz qual aba vale para esta pessoa AGORA, se ela está sendo puxada, e
+// de onde ela veio.
+//
+// A ordem importa e é a regra inteira: o puxão ainda não consumido VENCE a
+// escolha, e a escolha vence o padrão.
+func (a *asAbasEscolhidas) Resolve(sessionID, userID int64) (tabuleiroID string, puxado bool, deOnde string) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.escolhida[chaveDaAba{SessionID: sessionID, UserID: userID}]
+	minha := a.escolhida[chaveDaAba{SessionID: sessionID, UserID: userID}]
+	if puxao := a.puxao[sessionID]; puxao.Seq > minha.ForcaVista {
+		return puxao.Tabuleiro, true, minha.Tabuleiro
+	}
+	return minha.Tabuleiro, false, ""
 }
 
-// Apaga esquece as escolhas de uma sessão inteira.
+// PuxaoEmCurso é o número do puxão que esta pessoa ainda NÃO consumiu (0 = nenhum).
+//
+// Existe para o stream, que precisa empurrar a SUPERFÍCIE uma vez por puxão e
+// não a cada quadro: empurrar sempre seria uma trava — a pessoa mandada para o
+// tabuleiro não conseguiria voltar para a Mesa, porque o quadro seguinte a
+// traria de volta 200ms depois, e ela concluiria que o botão está quebrado.
+func (a *asAbasEscolhidas) PuxaoEmCurso(sessionID, userID int64) int64 {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	minha := a.escolhida[chaveDaAba{SessionID: sessionID, UserID: userID}]
+	if puxao := a.puxao[sessionID]; puxao.Seq > minha.ForcaVista {
+		return puxao.Seq
+	}
+	return 0
+}
+
+// Apaga esquece as escolhas e o puxão de uma sessão inteira.
 //
 // Chamado quando a última cena morre, pelo mesmo motivo da lente: uma escolha
 // apontando para um tabuleiro que não existe mais é lixo que sobrevive à sessão.
@@ -88,6 +173,7 @@ func (a *asAbasEscolhidas) Apaga(sessionID int64) {
 			delete(a.escolhida, chave)
 		}
 	}
+	delete(a.puxao, sessionID)
 }
 
 // aAbaDe resolve qual tabuleiro esta pessoa está olhando AGORA, conferindo
@@ -104,16 +190,47 @@ func (a *asAbasEscolhidas) Apaga(sessionID int64) {
 // aqui como um id concreto faria a resposta envelhecer no instante em que a
 // primeira aba trocasse.
 func (s *Server) aAbaDe(ctx context.Context, sessionID, userID int64) string {
-	escolhida := s.abas.Escolhida(sessionID, userID)
-	if escolhida == "" {
-		return ""
-	}
-	for _, aberto := range s.boards.Abertos(ctx, sessionID) {
-		if aberto.ID == escolhida {
-			return escolhida
+	aba, _, _ := s.aAbaComOPuxao(ctx, sessionID, userID)
+	return aba
+}
+
+// aAbaComOPuxao é a resolução INTEIRA: a aba que vale, se ela veio de um puxão
+// do mestre, e de onde a pessoa foi trazida.
+//
+// As rotas usam o `aAbaDe`, que joga fora as duas últimas — para um comando só
+// importa ONDE ele age. Quem precisa do resto é a CENA, que tem de dizer à
+// pessoa que ela foi trazida e como voltar: um puxão silencioso trocaria o mapa
+// debaixo dela no meio de um turno, e ela procuraria o defeito na própria tela.
+//
+// O puxão para uma cena JÁ ENCERRADA cai na escolha de quem olha, e não numa
+// tela morta: o mestre mostra a cripta, encerra a cripta, e quem foi trazido
+// volta para onde estava em vez de ficar olhando um tabuleiro que não existe.
+func (s *Server) aAbaComOPuxao(ctx context.Context, sessionID, userID int64) (aba string, puxado bool, deOnde string) {
+	abertos := s.boards.Abertos(ctx, sessionID)
+	aberta := func(id string) bool {
+		if id == "" {
+			return false
 		}
+		for _, b := range abertos {
+			if b.ID == id {
+				return true
+			}
+		}
+		return false
 	}
-	return ""
+	alvo, puxado, deOnde := s.abas.Resolve(sessionID, userID)
+	if puxado && !aberta(alvo) {
+		alvo, puxado, deOnde = deOnde, false, ""
+	}
+	if !aberta(alvo) {
+		// A aba que a pessoa escolheu pode ter sido fechada pelo mestre enquanto
+		// ela olhava. Sem cair no padrão, a tela dela ficaria dizendo "esta sessão
+		// não tem tabuleiro" com duas cenas abertas na mesa ao lado — e o gesto
+		// que causou isso foi de outra pessoa, então ela não teria como ligar uma
+		// coisa à outra.
+		alvo = ""
+	}
+	return alvo, puxado, deOnde
 }
 
 func (s *Server) rotasDasAbas(r chi.Router) {
@@ -122,6 +239,33 @@ func (s *Server) rotasDasAbas(r chi.Router) {
 	// aba da cripta porque quer.
 	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/aba/{tabuleiroId}",
 		s.comandoDaMesa(trocaDeTabuleiro))
+	// MOSTRAR À MESA é só do mestre, e a trava é do servidor: um jogador que
+	// puxasse a mesa para a aba dele tiraria dos outros cinco o que esta issue
+	// acabou de lhes dar.
+	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/aba/{tabuleiroId}/mostrar",
+		s.comandoDoMestreNoTabuleiro(mostraAMesaEstaAba))
+}
+
+// mostraAMesaEstaAba é o "parem tudo e olhem isto".
+//
+// Devolve `nil` como a lente e a troca, e é a MESMA razão apesar de o alcance
+// ser outro: puxar não muda a CENA. Nenhuma peça andou, nenhum terreno foi
+// pintado — o que mudou foi para onde cada pessoa está olhando, e isso não é um
+// quadro do tabuleiro. Quem leva o puxão às outras telas é o batimento do
+// stream, que redesenha a cena de cada um a cada 200ms e já pergunta ao
+// `aAbaComOPuxao` qual aba vale.
+func mostraAMesaEstaAba(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	alvo := chi.URLParam(c.R, "tabuleiroId")
+	// Puxar para uma aba que não existe deixaria a mesa inteira caindo no padrão
+	// sem nada dizendo por quê. O id vem do caminho, então isto é a conferência
+	// de sempre: o que o cliente manda não é a verdade.
+	for _, aberto := range st.boards.Abertos(c.R.Context(), c.SessionID) {
+		if aberto.ID == alvo {
+			st.abas.Puxa(c.SessionID, c.User.ID, alvo)
+			return nil, nil
+		}
+	}
+	return nil, fmt.Errorf("o tabuleiro %q não está aberto nesta sessão", alvo)
 }
 
 // trocaDeTabuleiro põe outra aba na tela de quem clicou.
@@ -155,6 +299,29 @@ type abaDoTabuleiro struct {
 	// existe daquela aba — o nome não atravessa (ver `BoardForRole`).
 	Cortina bool
 	Comando string
+	// MostraAMesa é o gesto do mestre "parem tudo e olhem isto", e ele só é
+	// escrito na aba ATIVA (decisão do dono): ele já está olhando a cena que quer
+	// mostrar — foi por isso que trocou para ela —, e um alvo de clique por ficha
+	// encheria uma barra que é estreita por natureza.
+	MostraAMesa string
+}
+
+// oPuxaoNaTela é a tira "o mestre trouxe você para cá", com a saída dela.
+//
+// Ela existe porque o puxão é a única coisa nesta cena que muda o que a pessoa
+// está vendo SEM ela ter feito nada. A cortina e a lente são estados que o
+// próprio dono da tela ligou; este não — e um mapa que troca sozinho, no meio de
+// um turno, é lido como defeito.
+type oPuxaoNaTela struct {
+	// Cena é para onde a mesa foi trazida, e Volta é de onde esta pessoa veio.
+	//
+	// `Volta` VAZIO é quem já estava nesta aba: para essa pessoa o puxão mudou a
+	// superfície e não a cena, então não há para onde voltar — o `ComandoDeVolta`
+	// aponta para a aba atual, e clicar nele é dizer "vi", que é o mesmo gesto
+	// que solta qualquer um do puxão.
+	Cena           string
+	Volta          string
+	ComandoDeVolta string
 }
 
 // asAbasDaMesa monta a barra a partir dos tabuleiros abertos, JÁ REDIGIDOS pelo
@@ -174,16 +341,66 @@ func asAbasDaMesa(abertos []*tabuleiro.BoardState, papel, ativa string, campaign
 	barra := make([]abaDoTabuleiro, 0, len(abertos))
 	for i, aberto := range abertos {
 		daMesa := tabuleiro.BoardForRole(papel, aberto)
-		barra = append(barra, abaDoTabuleiro{
+		ficha := abaDoTabuleiro{
 			ID:      daMesa.ID,
 			Nome:    nomeDaAba(daMesa, i),
 			Ativa:   ehAAbaAtiva(daMesa.ID, ativa, i),
 			Cortina: daMesa.Curtained,
 			Comando: fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/aba/%s')",
 				campaignID, sessionID, daMesa.ID),
-		})
+		}
+		if ficha.Ativa && papel == "gm" {
+			ficha.MostraAMesa = fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/aba/%s/mostrar')",
+				campaignID, sessionID, daMesa.ID)
+		}
+		barra = append(barra, ficha)
 	}
 	return barra
+}
+
+// aTiraDoPuxao monta o aviso a partir da barra JÁ REDIGIDA, ou devolve nil.
+//
+// Ela lê a barra e não o estado cru de propósito: os nomes já passaram pelo
+// papel de quem olha, então a tira de um jogador trazido para uma cena sob
+// cortina diz "Cena 2" — o mesmo rótulo da ficha dele — em vez de contar o nome
+// que a cortina esconde.
+//
+// Devolve nil quando não há PARA ONDE VOLTAR, e isso não é economia: um aviso
+// que diz "você foi trazido" sem oferecer a saída é um modo que a pessoa não
+// tem como desfazer, e a casa já decidiu que cada tira carrega a própria saída.
+// Acontece de verdade — o mestre puxa e depois encerra a cena de onde a pessoa
+// veio — e o caminho de volta passa a ser a barra, que está ali do lado.
+func aTiraDoPuxao(barra []abaDoTabuleiro, deOnde string) *oPuxaoNaTela {
+	if len(barra) == 0 {
+		return nil
+	}
+	var atual, volta *abaDoTabuleiro
+	for i := range barra {
+		if barra[i].Ativa {
+			atual = &barra[i]
+		}
+		// `deOnde` vazio é a aba PADRÃO, que é a primeira da barra: quem nunca
+		// escolheu estava nela, e é para lá que "voltar" o leva.
+		if barra[i].ID == deOnde || (deOnde == "" && i == 0) {
+			volta = &barra[i]
+		}
+	}
+	if atual == nil {
+		return nil
+	}
+	// QUEM JÁ ESTAVA NA CENA também recebe a tira, e isso não é ruído: o puxão
+	// traz a pessoa para a superfície do TABULEIRO, e o caso mais comum da mesa é
+	// exatamente este — o jogador abre na Mesa (a superfície padrão) e fica na
+	// aba padrão. Sem a tira, a tela dele trocaria de superfície sozinha e sem
+	// explicação, que é a leitura de defeito.
+	//
+	// O que muda é a SAÍDA: quem veio de outra aba tem para onde voltar; quem já
+	// estava aqui só precisa de um jeito de dizer "vi" — e dizer "vi" é escolher
+	// esta aba, que é o mesmo gesto que solta qualquer um do puxão.
+	if volta == nil || volta.ID == atual.ID {
+		return &oPuxaoNaTela{Cena: atual.Nome, ComandoDeVolta: atual.Comando}
+	}
+	return &oPuxaoNaTela{Cena: atual.Nome, Volta: volta.Nome, ComandoDeVolta: volta.Comando}
 }
 
 // ehAAbaAtiva resolve o id vazio, que é "a primeira aberta".

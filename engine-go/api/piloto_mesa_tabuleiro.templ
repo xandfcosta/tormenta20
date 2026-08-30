@@ -338,6 +338,9 @@ templ aAbaDoTabuleiro(aba abaDoTabuleiro) {
 			}
 			{ aba.Nome }
 		</h2>
+		if aba.MostraAMesa != "" {
+			@mostrarEstaAMesa(aba)
+		}
 	} else {
 		<button
 			type="button"
@@ -352,6 +355,28 @@ templ aAbaDoTabuleiro(aba abaDoTabuleiro) {
 			{ aba.Nome }
 		</button>
 	}
+}
+
+// MOSTRAR ESTA À MESA (ALE-205, fatia 2): o "parem tudo e olhem isto".
+//
+// Ele fica COLADO na aba ativa e não no painel dos verbos, porque a frase que
+// ele completa é a ficha ao lado: o mestre lê "Cripta" e clica em "mostrar esta
+// à mesa". No painel dos verbos ele seria um ícone sem sujeito — "mostrar QUAL?"
+// —, e o painel já é o mais cheio da cena.
+//
+// É um EMPURRÃO e não uma trava (decisão do dono): a mesa salta para cá e volta
+// a escolher em seguida. Por isso ele não tem estado ligado/desligado e não vira
+// `aria-pressed` — um botão que se apaga sozinho seria um modo mentindo.
+templ mostrarEstaAMesa(aba abaDoTabuleiro) {
+	<button
+		type="button"
+		aria-label={ "Mostrar " + aba.Nome + " à mesa" }
+		title="Mostrar esta cena à mesa: todo mundo salta para ela"
+		data-on:click={ aba.MostraAMesa }
+		class="tabuleiro-aba-mostrar"
+	>
+		@icone("Users2", "size-3.5")
+	</button>
 }
 
 // OS VERBOS da cena, flutuando no canto superior direito (ALE-203).
@@ -421,8 +446,38 @@ templ osVerbosDaCena(v tabuleiroView) {
 // `role="status"` porque são estado da cena, e não ações. Cada um carrega a
 // própria saída: quem percebe o modo tem de poder desfazê-lo de onde percebeu.
 templ osAvisosDoTabuleiro(v tabuleiroView) {
-	if v.AvisoDaCortina || v.Lente {
+	if v.AvisoDaCortina || v.Lente || v.Puxado != nil {
 		<div class="tabuleiro-avisos">
+			if v.Puxado != nil {
+				// A TIRA DO PUXÃO é a única aqui que fala de uma mudança que quem
+				// lê NÃO fez — as outras duas são modos que o dono da tela ligou.
+				// Por isso ela nomeia a cena: "o mestre trouxe você" sobre um mapa
+				// que trocou sozinho ainda deixaria a pessoa procurando o que
+				// aconteceu.
+				<p role="status" class="tabuleiro-aviso">
+					@icone("Users2", "size-4 shrink-0")
+					{ "O mestre trouxe a mesa para " + v.Puxado.Cena + "." }
+					if v.Puxado.Volta != "" {
+						<button
+							type="button"
+							data-on:click={ v.Puxado.ComandoDeVolta }
+							class="tabuleiro-aviso-saida"
+						>{ "Voltar para " + v.Puxado.Volta }</button>
+					} else {
+						// Quem JÁ estava nesta aba não tem para onde voltar: o que
+						// mudou para ele foi a superfície. O gesto que sobra é dizer
+						// "vi" — e dizer "vi" é escolher esta aba, que é o mesmo
+						// comando que solta qualquer um do puxão. Sem ele a tira
+						// seria um modo sem gesto que a desfaça, porque a aba ativa
+						// é um `<h2>` e não se clica.
+						<button
+							type="button"
+							data-on:click={ v.Puxado.ComandoDeVolta }
+							class="tabuleiro-aviso-saida"
+						>Continuar aqui</button>
+					}
+				</p>
+			}
 			if v.AvisoDaCortina {
 				<p role="status" class="tabuleiro-aviso">
 					@icone("Theater", "size-4 shrink-0")

@@ -112,6 +112,11 @@ type tabuleiroView struct {
 	// partir de dois: com um só não há o que trocar, e a tira de fichas seria
 	// enfeite ocupando mapa. Ver `asAbasDaMesa`.
 	Abas []abaDoTabuleiro
+	// Puxado é a tira "o mestre trouxe você para cá", ou nil (ALE-205, fatia 2).
+	//
+	// É o único aviso desta cena que fala de uma mudança que quem lê NÃO fez: a
+	// cortina e a lente são modos que o dono da tela ligou. Ver `aTiraDoPuxao`.
+	Puxado *oPuxaoNaTela
 	// Acervo são os LUGARES guardados da campanha (ALE-124, fatia 5). Só o
 	// mestre tem — a mesa não escolhe onde joga.
 	//

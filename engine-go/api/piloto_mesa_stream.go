@@ -65,6 +65,9 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
 	ultimo := escreveMesa(r.Context(), sse, view, nil)
+	// O PUXÃO já empurrado NESTA conexão (ALE-205, fatia 2). Ver `empurraParaOMapa`.
+	var puxaoEmpurrado int64
+	puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
 
 	batimento := time.NewTicker(mesaBatimento)
 	defer batimento.Stop()
@@ -86,7 +89,41 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		ultimo = escreveMesa(r.Context(), sse, view, ultimo)
+		puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
 	}
+}
+
+// empurraParaOMapa leva quem foi puxado para a superfície do TABULEIRO, UMA vez
+// por puxão (ALE-205, fatia 2).
+//
+// Sem isto o "parem tudo e olhem isto" falha justamente no caso mais comum, e
+// falha em silêncio: o jogador abre a sessão na superfície **Mesa**, que é a
+// padrão, e o tabuleiro dele está num bloco com `display:none`. Medido na
+// bancada — o puxão chegou, a região do mapa foi remendada, a tira foi escrita
+// no HTML, e a pessoa não viu nada disso porque estava olhando a outra
+// superfície.
+//
+// UMA VEZ POR PUXÃO, e é o que separa o empurrão da trava (decisão do dono):
+// empurrar a cada quadro faria a pessoa que tenta voltar para a Mesa ser
+// devolvida ao mapa 200ms depois, para sempre. A memória do que já foi empurrado
+// é da CONEXÃO, e não do servidor: duas abas da mesma pessoa merecem o empurrão
+// cada uma, e um contador compartilhado daria o empurrão a uma só.
+//
+// A SUPERFÍCIE é sinal do navegador — é o cliente que decide o que aparece —,
+// então o que vai daqui é um remendo de SINAL e não de HTML. É o único lugar
+// desta cena em que o servidor escreve num sinal pelo stream.
+func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, sessionID, userID, jaEmpurrado int64) int64 {
+	seq := s.abas.PuxaoEmCurso(sessionID, userID)
+	if seq == 0 || seq == jaEmpurrado {
+		return jaEmpurrado
+	}
+	if err := sse.PatchSignals([]byte(`{"superficie":"` + superficieDoTabuleiro + `"}`)); err != nil {
+		// O leitor foi embora; o laço do stream descobre isso no próximo ciclo.
+		// NÃO grava o número: gravar faria este puxão ser considerado empurrado
+		// numa tela que nunca o recebeu.
+		return jaEmpurrado
+	}
+	return seq
 }
 
 // escreveMesa manda o fragmento SÓ quando o HTML mudou, e devolve a impressão

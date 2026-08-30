@@ -393,10 +393,11 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
   o elemento aparece sem estilo em vez de dar erro.
 
-## Datastar: três armadilhas que não deixam erro para trás
+## Datastar: quatro armadilhas que não deixam erro para trás
 
-As três foram descobertas na ALE-203 e nenhuma delas escreve uma linha no
-console. Estão aqui porque o sintoma de cada uma aponta para o lugar errado.
+As três primeiras foram descobertas na ALE-203 e a quarta na ALE-205; nenhuma
+delas escreve uma linha no console. Estão aqui porque o sintoma de cada uma
+aponta para o lugar errado.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 
@@ -433,6 +434,25 @@ novo: o gesto que já funcionava para junto. Use `if (…) { … } else { … }`
 
 E `setPointerCapture` vai por ÚLTIMO na expressão: ele LANÇA quando o ponteiro
 não está mais ativo, e no meio ele engole o resto do gesto.
+
+### O servidor escrevendo num SINAL pelo stream: uma vez, nunca a cada quadro
+
+O stream da Mesa remenda HTML, e desde a ALE-205 ele também escreve num SINAL —
+`PatchSignals` — num caso só: o "mostrar à mesa" leva quem foi puxado para a
+superfície do Tabuleiro, porque a superfície é sinal do navegador e o servidor
+não a alcança de outro jeito.
+
+**A armadilha é a cadência, e ela não parece uma armadilha:** o estado do puxão
+vive enquanto a pessoa não escolhe outra aba, então a leitura ingênua manda o
+sinal em TODO quadro. O resultado é uma trava disfarçada — quem tenta voltar
+para a Mesa é devolvido ao mapa um segundo depois, para sempre, sem erro em
+lugar nenhum, e conclui que o botão está quebrado.
+
+O que resolve é a memória do que já foi empurrado ser da CONEXÃO (uma variável
+do laço do stream), e não do servidor: duas abas da mesma pessoa merecem o
+empurrão cada uma. Vale para qualquer sinal que o servidor venha a escrever
+daqui: **remendo de HTML é idempotente, remendo de sinal não é** — o HTML
+descreve o estado, o sinal muda a decisão de quem está do outro lado.
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 
