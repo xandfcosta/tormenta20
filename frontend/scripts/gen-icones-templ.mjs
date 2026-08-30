@@ -109,6 +109,15 @@ const QUERIDOS = [
   // ícone, além do traço e do `aria-pressed` — `X` já estava na lista, e o par
   // dele faltava.
   'Check',
+  // O painel de Combate (ALE-272, fatia 3): os MESMOS ícones que a
+  // `combat-stats` e a `magic-stats` da SPA importam. `Shield`, `ShieldCheck`,
+  // `Crosshair` e `Zap` já estavam na lista.
+  //
+  // `Sword` no SINGULAR, e ele NÃO é o `Swords` que já está aqui: aquele é o
+  // ícone da ABA Combate na barra, este é o do ataque corpo a corpo e o do
+  // cartão de arma. Dois desenhos diferentes com nomes a uma letra de distância.
+  'Sword',
+  'Sparkles',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

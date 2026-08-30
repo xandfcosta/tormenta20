@@ -96,6 +96,14 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 		Titulo: view.Nome + " · Tormenta 20",
 		// `cascaNua`: a cena desenha o próprio cabeçalho, com a volta e o nome.
 		Forma: cascaNua,
+		// `detalhe` é a caixa do Combate cujo diálogo está aberto, e ele mora no
+		// <body> porque o <body> nunca é remendado: declarado dentro do painel, o
+		// `@post` do PV o redeclararia a cada toque e fecharia o diálogo que o
+		// jogador acabou de abrir. Mesma armadilha do `fichaAberta` do bestiário.
+		//
+		// Minúsculo de propósito: chave de atributo é minusculada pelo HTML, e um
+		// `detalheAberto` ligaria um sinal NOVO em vez do que a expressão lê.
+		Sinais: "{detalhe: ''}",
 	}, cenaDaFicha(view))
 }
 

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { expectDentroDaJanela, expectNadaRolaDeLado } from './support/geometry'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
+import { medeOContraste } from './support/contraste'
 
 /**
  * A FICHA em Datastar (ALE-272, fatia 1) — a casca, as abas e o crachá.
@@ -15,6 +16,9 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  * controle que sai da janela não é feio, é inalcançável.
  */
 test.use({ storageState: '.auth/user.json' })
+
+/** O conjurador da semente, o mesmo que o spec do Grimório usa. */
+const CONJURADOR = 'Necromante Nv12 Magias'
 
 /** O primeiro herói do elenco, pelo endereço da ficha nova. */
 async function aFichaDoPrimeiro(page: import('@playwright/test').Page) {
@@ -75,7 +79,63 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
     // largo no ar, e só o `expectNadaRolaDeLado` o viu. É a mesma lacuna que
     // a ALE-178 nomeou.
     await expectNadaRolaDeLado(page)
+
+    // O CONTRASTE entra no MESMO caminhar, e não num caso à parte com uma lista
+    // de abas: à parte ele seria enumeração, e a aba da fatia 6 nasceria sem
+    // medição. A ficha atravessou as fatias 1 e 2 sem medição nenhuma de
+    // contraste — não por decisão, mas porque o medidor era função privada de
+    // outro spec (ver `support/contraste.ts`). O painel de Combate estreia a
+    // paleta ARCANA na ficha, que é tinta clara sobre painel escuro e
+    // exatamente a forma dos dois defeitos que este medidor já pegou.
+    const contraste = await medeOContraste(page)
+    // O DENOMINADOR: sem ele, uma lista de falhas vazia é indistinguível de "o
+    // seletor não achou nada", e as duas se parecem no terminal. Trinta é bem
+    // abaixo do que a aba mais pobre desenha (medido: a de Poderes, a mais
+    // vazia das sete, passa de 40) e bem acima de zero.
+    expect(
+      contraste.medidos,
+      `em ${endereco} o medidor olhou ${contraste.medidos} textos: o seletor da cena parou de casar`,
+    ).toBeGreaterThan(30)
+    expect(contraste.falhas, `texto abaixo do AA em ${endereco}`).toEqual([])
   }
+})
+
+/**
+ * O PAINEL RAMIFICA POR PERSONAGEM, e caminhar pelas abas não alcança isso.
+ *
+ * O caso acima abre as sete abas de UM herói, e o primeiro do elenco é um
+ * guerreiro. A tripla mágica do Combate — Limite PM, CD Magia, Custo PM — só
+ * existe para quem conjura por classe, e ela usa a paleta ARCANA, que é outra
+ * tinta sobre o mesmo painel. Medida só no guerreiro, ela nunca foi medida.
+ *
+ * É a ALE-237 um nível abaixo: lá a cobertura era função de onde o teste
+ * NAVEGA; aqui é função de QUEM ele abre. A saída continua sendo amostragem e
+ * não lista — o herói é escolhido lendo o elenco, e o caso falha alto se o
+ * elenco deixar de ter um conjurador, em vez de medir o vazio.
+ */
+test('a paleta arcana do Combate é legível para quem conjura', async ({ page }) => {
+  // Pelo NOME e pela busca da cena, que é o jeito da casa (`openSheetFromRoster`):
+  // o elenco é um palco de um herói por vez, ordenado por última alteração, então
+  // "o primeiro do elenco" muda conforme o spec que rodou antes.
+  await page.goto('/piloto/personagens')
+  await page.getByRole('searchbox', { name: 'Buscar personagem' }).fill(CONJURADOR)
+  const abrir = page.getByRole('link', { name: `Abrir ficha de ${CONJURADOR}` })
+  await expect(abrir, `a semente não tem ${CONJURADOR}`).toBeVisible()
+  const href = await abrir.getAttribute('href')
+  const id = href?.match(/\d+/)?.[0]
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(`/piloto/personagens/${id}?tab=combat`)
+
+  // O CONTROLE de que a tripla está mesmo na tela: sem ela, o contraste abaixo
+  // mede um Combate sem nada de arcano e passa dizendo o contrário.
+  await expect(
+    page.getByRole('button', { name: /^CD Magia/ }),
+    'a ficha do conjurador não desenhou a tripla mágica: a paleta arcana não entrou na medição',
+  ).toBeVisible()
+
+  const contraste = await medeOContraste(page)
+  expect(contraste.falhas, 'texto abaixo do AA no Combate de um conjurador').toEqual([])
 })
 
 test('as sete abas são endereços, e a ativa se anuncia', async ({ page }) => {

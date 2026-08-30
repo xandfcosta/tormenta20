@@ -1,6 +1,7 @@
-import { type Page, expect, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 import { expectDentroDaJanela } from './support/geometry'
+import { textoComContrasteBaixo } from './support/contraste'
 
 /**
  * As DUAS telas do piloto Datastar (ALE-219): a Mesa do jogador e a
@@ -22,82 +23,6 @@ import { expectDentroDaJanela } from './support/geometry'
  * `/piloto` do `vite.config.ts` que a alcança. Se o piloto for apagado, este
  * arquivo vai junto.
  */
-/**
- * Mede o contraste de todo texto visível contra o fundo EFETIVO, subindo a
- * árvore até o primeiro fundo opaco.
- *
- * Contra o fundo efetivo e não contra o painel porque foi exatamente aí que os
- * DOIS defeitos que este arquivo pegou se escondiam: um crachá e um botão, os
- * dois com preenchimento próprio. Medir contra o painel teria dado verde nos
- * dois.
- */
-async function textoComContrasteBaixo(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
-    const tela = document.createElement('canvas')
-    tela.width = 1
-    tela.height = 1
-    const ctx = tela.getContext('2d')
-    if (!ctx) return ['sem canvas']
-
-    const rgb = (css: string): number[] => {
-      ctx.clearRect(0, 0, 1, 1)
-      ctx.fillStyle = css
-      ctx.fillRect(0, 0, 1, 1)
-      return [...ctx.getImageData(0, 0, 1, 1).data]
-    }
-    const luz = (c: number[]) => {
-      const [r, g, b] = c.slice(0, 3).map((v) => {
-        const x = v / 255
-        return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
-      })
-      return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
-    }
-    const fundoDe = (el: Element): number[] => {
-      let n: Element | null = el
-      while (n && n !== document.documentElement) {
-        const c = rgb(getComputedStyle(n).backgroundColor)
-        if ((c[3] ?? 0) > 250) return c
-        n = n.parentElement
-      }
-      return rgb(getComputedStyle(document.body).backgroundColor)
-    }
-    const razao = (a: number[], b: number[]) => {
-      const [x, y] = [luz(a), luz(b)].sort((p, q) => q - p)
-      return ((x ?? 0) + 0.05) / ((y ?? 0) + 0.05)
-    }
-
-    return [...document.querySelectorAll('.scene-grimorio *')]
-      .map((el) => {
-        const texto = [...el.childNodes]
-          .filter((n) => n.nodeType === 3)
-          .map((n) => n.textContent?.trim() ?? '')
-          .join('')
-        if (!texto) return null
-        const cs = getComputedStyle(el)
-        if (cs.visibility === 'hidden' || cs.display === 'none') return null
-        // Texto DECORATIVO não entra na conta, e isto não é afrouxar o guarda:
-        // o WCAG isenta texto que não é exposto, e `aria-hidden` é exatamente
-        // essa declaração. O caso que trouxe a regra foi o monograma do livro
-        // de campanhas — as iniciais gigantes em `text-white/15` sobre o emblema
-        // são um substituto de ARTE, com o nome da campanha escrito ao lado em
-        // texto de verdade. Medi-las é medir a ilustração.
-        //
-        // O perigo aqui é esconder defeito atrás de `aria-hidden`, e a proteção
-        // é a regra que já vale: se o texto CARREGA informação, escondê-lo do
-        // leitor de tela é um defeito PIOR que o de contraste — e é o guarda
-        // errado que estaria reclamando.
-        if (el.closest('[aria-hidden="true"]')) return null
-        const px = Number.parseFloat(cs.fontSize)
-        const peso = Number.parseInt(cs.fontWeight, 10) || 400
-        // A regra do AA: texto grande (24px, ou 18.66px em negrito) pede 3:1.
-        const minimo = px >= 24 || (px >= 18.66 && peso >= 700) ? 3 : 4.5
-        const r = razao(rgb(cs.color), fundoDe(el))
-        return r < minimo ? `"${texto.slice(0, 24)}" dá ${r.toFixed(2)}:1 (pede ${minimo})` : null
-      })
-      .filter((x): x is string => x !== null)
-  })
-}
-
 test.use({ storageState: '.auth/player.json' })
 
 test.describe('Mesa do jogador (piloto Datastar)', () => {

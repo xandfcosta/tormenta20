@@ -158,6 +158,39 @@ medição — em silêncio, que é a marca desta família. Enumerar é remendo; 
 restaura a amostragem é a tela nova passar pelos componentes da casa.** Escolher
 o remendo dá sensação de conserto e deixa o buraco aberto (ALE-252).
 
+**Duas formas a mais de "não visitar", as duas medidas na ALE-272 e nenhuma
+parecida com esquecer uma cena.**
+
+A primeira: **o guarda não alcança porque o MEDIDOR não é importável.** A ficha
+em Datastar atravessou duas fatias inteiras sem uma única medição de contraste,
+e não foi decisão — o medidor era função *privada* de outro arquivo de teste.
+Ninguém omitiu a ficha de uma lista; a lista nunca pôde existir. Quando o
+medidor virou módulo de `support/`, a primeira execução reprovou sete rótulos de
+uma vez, todos herdados da tela antiga. **Instrumento que mora dentro de um
+chamador tem exatamente um chamador**, e isso não aparece em nenhuma revisão de
+diff.
+
+A segunda: **o guarda visita todas as telas e um só DADO.** O caminhar pelas
+sete abas da ficha abre as sete — de um herói, e o primeiro do elenco é um
+guerreiro. Metade do painel de Combate (a tripla mágica, com a paleta arcana
+inteira) só existe para quem conjura, então ela estava fora da medição com o
+guarda passando por cima dela sete vezes. Quando a tela RAMIFICA pelo dado,
+percorrer a navegação não é cobertura: é preciso um caso por ramo, e o ramo tem
+de ser nomeado (`quem conjura`), com o controle afirmando que ele apareceu.
+
+**O controle que fecha as duas é o DENOMINADOR.** Uma lista de reprovados vazia
+e um seletor que não casa com nada se parecem no terminal, e por isso o medidor
+devolve `{falhas, medidos}`: quem afirma "nada reprovou" afirma junto quantos
+foram olhados. Sem isso, "verde" e "não mediu" são a mesma cor.
+
+> E saiba o que o medidor NÃO vê: ele lê `color` pelo canvas e ignora o canal
+> ALFA, então `text-x/50` é medido como se fosse opaco. O erro é sempre para o
+> lado seguro — texto translúcido tem contraste PIOR que o medido, nunca melhor
+> —, mas isso quer dizer duas coisas: uma variante `/80` nunca foi validada de
+> verdade, e **sabotar a opacidade não prova guarda nenhum.** Uma sabotagem
+> assim passou verde aqui e quase virou "o guarda está cego"; era sabotagem
+> inerte, e quem a desmentiu foi trocar a tinta por uma cor opaca.
+
 ### O resto
 
 - **Apague teste que custa mais do que protege**: asserção sobre nome de classe e
@@ -181,12 +214,18 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **22 guardas de
-varredura** no formato `TestToda…` / `TestNenhum…` — toda espécie de terreno tem
-desenho, todo ícone pedido existe no gerado, toda classe posicionada por
-`--col`/`--lin` tem caixa, nenhum nó junta `data-show` com `data-attr:style`,
-nenhuma expressão indexa o sinal da lista. Cada um nasceu de um defeito que
-tinha irmãos.
+Este repositório já vive disso e nunca escreveu a regra: são **28 guardas de
+varredura** no formato `TestToda…` / `TestTodo…` / `TestNenhum…` — toda espécie
+de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
+posicionada por `--col`/`--lin` tem caixa, nenhum nó junta `data-show` com
+`data-attr:style`, nenhuma expressão indexa o sinal da lista, nenhum foco pede
+ao servidor sem guarda de teclado. Cada um nasceu de um defeito que tinha
+irmãos.
+
+> O número é conferido com `grep -rn "func TestToda\|func TestTodo\|func
+> TestNenhum" --include=*_test.go .` e estava em 22 por bastante tempo depois de
+> já serem 27 — a família cresce a cada issue e a linha não. Se ele divergir de
+> novo, o certo é o `grep`.
 
 - **Uma convenção só foi adotada depois de varrida.** Uma revisão nomeia um
   arquivo; a correção é *todo* arquivo com a mesma forma. Antes de fechar, rode a
