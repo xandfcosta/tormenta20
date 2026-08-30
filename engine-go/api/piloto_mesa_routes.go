@@ -320,7 +320,7 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// A ABA que ESTA pessoa está olhando (ALE-205), e não "o tabuleiro da
 	// sessão", que deixou de existir como coisa única. Ela é resolvida contra os
 	// abertos, então a aba que o mestre fechou não deixa ninguém numa tela morta.
-	aba := s.aAbaDe(ctx, sessionID, user.ID)
+	aba, puxado, deOnde := s.aAbaComOPuxao(ctx, sessionID, user.ID)
 	cena := tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID, aba))
 	// A LENTE DO MESTRE (ALE-193): com ela ligada, o que se desenha é a cena
 	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `quemOlha` continua
@@ -341,6 +341,12 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// que o mestre está vendo, não sobre quais cenas existem. Um mestre na lente
 	// que perdesse as abas não teria como sair da que está olhando.
 	view.Tabuleiro.Abas = asAbasDaMesa(s.boards.Abertos(ctx, sessionID), role, aba, campaignID, sessionID)
+	// A TIRA DO PUXÃO vem depois da barra porque ela é feita DELA: os nomes já
+	// passaram pelo papel de quem olha, e ler o estado cru aqui contaria o nome
+	// de uma cena sob cortina a quem não pode sabê-lo.
+	if puxado {
+		view.Tabuleiro.Puxado = aTiraDoPuxao(view.Tabuleiro.Abas, deOnde)
+	}
 	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
 	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
 	if role == "gm" {

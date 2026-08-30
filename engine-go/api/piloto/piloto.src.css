@@ -477,6 +477,31 @@ html {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
+  /* MOSTRAR ESTA À MESA (ALE-205, fatia 2) vive colado na ficha ativa, e é o
+   * único item da barra que não é uma aba — por isso ele não herda o
+   * `.tabuleiro-aba`: uma ficha a mais ali seria lida como um quarto tabuleiro.
+   * Menor que 44px de propósito: ele não é alvo de toque frequente (o mestre o
+   * usa uma vez por cena), e a barra tem altura de uma linha. */
+  .tabuleiro-aba-mostrar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-left: -0.0625rem;
+    border-radius: 0.125rem;
+    color: var(--color-muted-foreground);
+    transition: color 150ms, background-color 150ms;
+  }
+  .tabuleiro-aba-mostrar:hover {
+    color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
+    background: oklch(0.24 0.014 300);
+  }
+  .tabuleiro-aba-mostrar:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
   /* A ATIVA acende, e é o ÚNICO sinal de qual cena está na tela: o mapa embaixo
    * não se identifica sozinho — duas cenas de cripta com o mesmo chão são a
    * mesma imagem. */
