@@ -65,6 +65,9 @@ type fichaView struct {
 	// pessoa DIGITOU — o filtro da busca —, e por isso a `carregaFicha` recebe o
 	// termo em vez de o painel ir buscá-lo.
 	Expertises expertisePanel
+	// Effects é a aba homônima (fatia 5) — tudo que está mexendo nos números
+	// AGORA, em quatro blocos que diferem por quem é dono do estado.
+	Effects effectsPanel
 }
 
 // classeDaFicha é uma classe do personagem, com o que o degrau precisa saber.
@@ -154,6 +157,7 @@ func oPainelJaPortado(valor string) bool {
 		"proficiencies": true, // fatia 2
 		"combat":        true, // fatia 3
 		"expertises":    true, // fatia 4
+		"conditionals":  true, // fatia 5
 	}
 	return portados[valor]
 }
@@ -196,6 +200,7 @@ func (s *Server) carregaFicha(
 
 		Proficiencias: oPainelDeProficiencias(dto),
 	}
+	v.Effects = s.effectsPanelOf(dto)
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = combatPanelFor(sheet, cards, isCaster(sheet))

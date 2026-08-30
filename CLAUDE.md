@@ -272,7 +272,11 @@ domínio e infraestrutura.
 
 - **Inglês:** nome de variável, função, tipo, método, campo de struct, constante,
   pacote, arquivo, nome de teste. Também a fronteira, que já era: tabela, coluna,
-  campo JSON, evento SSE, rota.
+  campo JSON, evento SSE, rota. **E componente `templ`**, que é função — a regra
+  não dizia isso com todas as letras e por isso duas fatias da ALE-272 nasceram
+  com os tipos em inglês e os componentes em português (`oPainelDeCombate` ao
+  lado de `combatPanel`). Decisão do dono, ALE-272 fatia 5: componente novo é
+  inglês; os que já existem ficam, pela regra do parágrafo final desta seção.
 - **Português:** comentário, docstring, `.md`, mensagem de commit, tudo que
   aparece na tela, e o texto de mensagem de erro que um humano vai ler.
 

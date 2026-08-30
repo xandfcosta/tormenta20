@@ -218,6 +218,13 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 		// cliente nunca chama.
 		"nome":     url.PathEscape("Atuação"),
 		"atributo": "charisma",
+		// Os quatro da aba Efeitos (fatia 5). Todos PLAUSÍVEIS: o 403 tem de vir
+		// antes de qualquer validação de conteúdo, e um valor impossível
+		// esconderia uma rota que valida primeiro e barra depois.
+		"cond":   "caido",
+		"magia":  "armadura-arcana",
+		"efeito": "1",
+		"flag":   "furia",
 	}
 
 	var visitadas int
