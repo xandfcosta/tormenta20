@@ -19,7 +19,7 @@ Datastar segura só a ficha e a sessão. Um processo serve tudo em produção.
   número não é repetido aqui de propósito (ver "Documentação").
 - **Mexeu em `.templ`?** `go tool templ generate`, e **leia a saída DELE**, não a
   do `go build`. **Classe CSS nova no piloto?**
-  `engine-go/scripts/build-piloto-css.sh`. As duas armadilhas — e as cinco do
+  `engine-go/scripts/build-piloto-css.sh`. As duas armadilhas — e as sete do
   Datastar que não deixam erro para trás — estão explicadas no
   [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
 - **Antes de commitar:** `go test ./...`, `go vet ./...` e `gofmt` no
@@ -309,7 +309,7 @@ certa.
 - **`engine-go/`** (Go): [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — regenerar
   oráculo é ato deliberado, citação de página conferida, o gerador de tipos da
   fronteira, validação de schema dos catálogos, as armadilhas do `templ` e as
-  cinco do Datastar que não deixam erro para trás, os dois defeitos silenciosos do
+  sete do Datastar que não deixam erro para trás, os dois defeitos silenciosos do
   `sqlc`, e por que a bancada copia um molde migrado.
 - **`frontend/`** (SolidJS) **não tem guia próprio, e é deliberado.** A SPA está
   sendo migrada para o Datastar e segura só a ficha e a sessão; um guia com

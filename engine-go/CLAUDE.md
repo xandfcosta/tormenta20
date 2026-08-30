@@ -393,11 +393,11 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
   o elemento aparece sem estilo em vez de dar erro.
 
-## Datastar: seis armadilhas que não deixam erro para trás
+## Datastar: sete armadilhas que não deixam erro para trás
 
 As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na
-ALE-235 e a sexta na ALE-272; nenhuma delas escreve uma linha no console. Estão
-aqui porque o sintoma de cada uma aponta para o lugar errado.
+ALE-235, e a sexta e a sétima na ALE-272; nenhuma delas escreve uma linha no
+console. Estão aqui porque o sintoma de cada uma aponta para o lugar errado.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 
@@ -501,6 +501,33 @@ existe para sobreviver.
 Ele ficou ESCONDIDO uma fatia inteira porque todas as abas desenhavam o mesmo
 aviso de "ainda vive na ficha antiga" — o salto não tinha aparência. O primeiro
 painel de verdade o denunciou no primeiro clique da bancada.
+
+### Dois pedidos de UM gesto: quem CHEGA por último manda
+
+O clique do mouse **também foca**. Um nó que pede ao servidor no foco e no
+clique manda dois pedidos por um gesto só, e se os dois remendam a mesma cena
+eles disputam os sinais que ela redeclara a cada remendo — a ordem de CHEGADA
+não é a de saída, e quem chega por último ganha.
+
+No bestiário o pedido do foco existe para a prévia da seta e não leva `abrir=1`.
+Chegando por último, ele fechava a ficha que o clique tinha acabado de abrir: a
+criatura ficava escolhida, o diálogo não aparecia, e nada falhava em lugar
+nenhum. **O CI pegou duas vezes seguidas o que a bancada nunca reproduziu** — a
+máquina rápida entregava as respostas na ordem de saída, e a carregada não.
+Reproduzido de propósito atrasando só a resposta do pedido sem `abrir`.
+
+É a mesma família do `data-show` com `data-attr:style`: duas escritas no mesmo
+lugar sem ordem garantida. A diferença é que esta atravessa a rede, então ela
+some da bancada e mora no CI.
+
+**O remédio é não mandar o segundo pedido:** pedido disparado por FOCO é
+afordância de TECLADO, e por isso ele pede `:focus-visible`
+(`el.matches(':focus-visible') && (…)`). Medido no navegador: o clique dá
+`false`, o Tab dá `true`, e o foco PROGRAMÁTICO do driver de setas também dá
+`true` — a prévia da seta fica inteira e o mouse deixa de mandar o pedido que só
+desfazia o dele. `TestNenhumFocoPedeAoServidorSemGuardaDeTeclado` varre a FONTE
+inteira, e não uma cena servida, porque enumerar cena por cena deixaria a
+próxima nascer sem medição.
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 
