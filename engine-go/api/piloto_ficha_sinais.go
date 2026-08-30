@@ -40,6 +40,10 @@ type fichaSignals struct {
 	// NovaPericia e NovoAtributo são os dois campos do diálogo de ofício novo.
 	NovaPericia  *string `json:"novapericia"`
 	NovoAtributo *string `json:"novoatributo"`
+	// Situacao é a CHAVE do condicional que o gesto quer alternar. Ela vem por
+	// sinal e não pelo caminho porque é um encadeado com `::` e texto livre do
+	// catálogo dentro — um `PathEscape` daquilo funciona e é ilegível no log.
+	Situacao *string `json:"situacao"`
 }
 
 // osSinaisDaFicha lê o que o cliente mandou, caindo na URL quando não há sinal.
