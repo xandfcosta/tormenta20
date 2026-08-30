@@ -138,6 +138,14 @@ type lugarDoAcervo struct {
 	Nome   string
 	Pecas  int
 	Quando string
+	// AbertaEm é a aba em que este lugar JÁ ESTÁ na mesa, ou vazio (ALE-205,
+	// fatia 3). É o que faz a lista distinguir o que se REABRE do que se VÊ.
+	//
+	// Sem ele o mestre não tinha como saber qual das 148 linhas é a cena que está
+	// na tela dele agora — o papercut que o dono levantou —, e "Reabrir" a que já
+	// está aberta abriria uma segunda aba da mesma cena, com duas verdades sobre
+	// onde as peças estão.
+	AbertaEm string
 }
 
 // pecaDoTabuleiro é uma peça posicionada e já com a aparência resolvida.
@@ -1031,11 +1039,21 @@ func comandoDoTabuleiroDaCena(v tabuleiroView, acao string) string {
 // hora não ajuda a escolher entre a taverna de ontem e a cripta de março. O
 // formato vem do banco em ISO, e cortar no `T` é mais honesto que reformatar —
 // não inventa fuso que o servidor não guardou.
-func acervoDaCampanha(lugares []tabuleiro.Place) []lugarDoAcervo {
+func acervoDaCampanha(lugares []tabuleiro.Place, abertos []*tabuleiro.BoardState) []lugarDoAcervo {
+	// O índice é montado UMA vez: com 148 lugares e oito abas, comparar cada
+	// linha com cada aba é a lista inteira multiplicada pelo número de cenas
+	// abertas, a cada carga da página e a cada quadro do stream.
+	naMesa := make(map[string]string, len(abertos))
+	for _, aberto := range abertos {
+		naMesa[aberto.Place] = aberto.ID
+	}
 	acervo := make([]lugarDoAcervo, 0, len(lugares))
 	for _, l := range lugares {
 		acervo = append(acervo, lugarDoAcervo{
 			ID: l.ID, Nome: l.Name, Pecas: l.Tokens, Quando: diaDe(l.UpdatedAt),
+			// Pelo NOME, que é a identidade que o `Archive` já dá ao lugar — ver
+			// `aAbaComOLugar`, onde o argumento inteiro está escrito.
+			AbertaEm: naMesa[l.Name],
 		})
 	}
 	return acervo
@@ -1052,6 +1070,16 @@ func diaDe(iso string) string {
 func comandoDoLugar(v tabuleiroView, placeID int64, acao string) string {
 	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/lugares/%d/%s')",
 		v.CampaignID, v.SessionID, placeID, acao)
+}
+
+// comandoDaAba escreve a troca de aba a partir do acervo (ALE-205, fatia 3).
+//
+// A MESMA rota que a barra de abas usa, e não uma "reabrir que só troca": o que
+// se quer aqui é literalmente ir até a aba que já existe, e uma segunda porta
+// para isso seria uma segunda regra sobre o que significa escolher uma cena.
+func comandoDaAba(v tabuleiroView, tabuleiroID string) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/aba/%s')",
+		v.CampaignID, v.SessionID, tabuleiroID)
 }
 
 // pecasEmPortugues concorda o número com o substantivo.
