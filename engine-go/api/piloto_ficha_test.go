@@ -180,25 +180,30 @@ func TestOEnderecoDasAbasDaFichaSobrevive(t *testing.T) {
 // Enquanto os painéis não chegam, a casca não pode fingir: uma seção vazia é
 // lida como defeito, e mandar a pessoa procurar sozinha o endereço velho é pior
 // do que dar o link. Este guarda morre junto com a última fatia — quando não
-// houver painel por portar, ele não terá o que afirmar.
-func TestAAbaAindaNaoPortadaLevaParaAFichaAntiga(t *testing.T) {
-	f, id := aFichaDe(t, "Herói", 3)
 
-	tela := f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=abilities", id), "").Body.String()
-
-	if !strings.Contains(tela, "ainda vive na ficha antiga") {
-		t.Fatal("a aba não portada não diz que está vazia: a tela parece defeito")
-	}
-	if !strings.Contains(tela, fmt.Sprintf("/characters/%d?tab=abilities", id)) {
-		t.Error("a aba não portada não leva para a MESMA seção na ficha antiga")
-	}
-	// As sete existem sempre, mesmo sem painel: elas são o mapa da ficha, e uma
-	// barra que cresce a cada fatia esconderia o que ainda falta.
-	for _, rotulo := range []string{"Perícias", "Combate", "Mochila", "Proficiências", "Efeitos", "Poderes", "Magias"} {
-		if !strings.Contains(tela, rotulo) {
-			t.Errorf("a aba %q não está na barra", rotulo)
+// TODA ABA DA FICHA ESTÁ PORTADA — e este guarda substitui o que media o
+// contrário (ALE-272, fatia 8).
+//
+// Aqui morava o `TestAAbaAindaNaoPortadaLevaParaAFichaAntiga`, que abria uma aba
+// sem painel e afirmava que ela mandava para a ficha velha na MESMA seção. Ele
+// perdeu o alvo: com os Poderes portados não existe mais aba sem painel, e um
+// teste sem caso é um teste que passa sobre nada.
+//
+// O que ficou é a outra metade da mesma pergunta: o placar da migração diz que
+// as sete estão prontas. É ele que autoriza a próxima fatia a apagar a ficha
+// antiga — e enquanto uma aba faltar, esta linha vermelha diz qual.
+func TestTodaAbaDaFichaEstaPortada(t *testing.T) {
+	var faltando []string
+	for _, aba := range asAbasDaFicha() {
+		if !oPainelJaPortado(aba.Valor) {
+			faltando = append(faltando, aba.Valor)
 		}
+	}
+	if len(faltando) > 0 {
+		t.Errorf("ainda falta portar: %v — a ficha antiga não pode ser apagada", faltando)
+	}
+	if len(asAbasDaFicha()) != 7 {
+		t.Errorf("a ficha tem %d abas, e o porte foi desenhado para sete", len(asAbasDaFicha()))
 	}
 }
 

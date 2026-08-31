@@ -108,6 +108,8 @@ templ oPainelDaFicha(v fichaView) {
 			@spellsPanelSection(v)
 		case "bag":
 			@bagPanelSection(v)
+		case "abilities":
+			@powersPanelSection(v)
 	}
 	for _, aba := range v.Abas {
 		if aba.Ativa && !aba.Portada {

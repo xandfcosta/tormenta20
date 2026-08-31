@@ -78,6 +78,12 @@ type fichaSignals struct {
 	// ids: são até quatro melhorias no mesmo item.
 	ItemMelhorias []string `json:"itemmelhorias"`
 	ItemMaterial  string   `json:"itemmaterial"`
+	// Os degraus escolhidos ao entrar numa postura que escala com o nível, e a
+	// busca da lista de poderes.
+	PoderDegraus *int64 `json:"poderdegraus"`
+	PoderBusca   string `json:"poderbusca"`
+	// Os atributos que a raça distribui, escolhidos no diálogo.
+	RacaAtributos []string `json:"racaatributos"`
 }
 
 // osAprimoramentos traduz os seis sinais no que a validação espera.
@@ -111,6 +117,7 @@ func osSinaisDaFicha(r *http.Request) fichaSignals {
 	// Os FILTROS caem para a query pela mesma razão da busca, e com uma a mais:
 	// eles são o estado que faz sentido num endereço guardado — "a mochila,
 	// filtrada por armas" é um lugar. O sinal do cliente vence quando existe.
+	preencheDaURL(r, "poderbusca", &sinais.PoderBusca)
 	preencheDaURL(r, "itembusca", &sinais.ItemBusca)
 	preencheDaURL(r, "itemcategoria", &sinais.ItemCategoria)
 	preencheDaURL(r, "magiabusca", &sinais.MagiaBusca)

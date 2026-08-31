@@ -242,6 +242,42 @@ test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', asy
   await expectNadaRolaDeLado(page)
 })
 
+/**
+ * A ABA PODERES ABERTA, com o diálogo de escolher.
+ *
+ * O caminhar pelas sete abas mede a lista do primeiro herói do elenco. O que ele
+ * não alcança é o DIÁLOGO — que leva os ~93 poderes eletivos de uma classe numa
+ * caixa que rola dentro de si, e é a forma que já transbordou nesta casa
+ * (ALE-178). E o contador de degraus da postura, que só existe para quem tem
+ * uma.
+ */
+test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({ page }) => {
+  const id = await oIdDoHeroi(page, TANQUE)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(`/piloto/personagens/${id}?tab=abilities`)
+
+  // O CONTROLE da lista: sem poderes na tela o resto mede uma aba vazia.
+  await expect(
+    page.getByRole('button', { name: 'Escolher poderes', exact: true }),
+    'a aba Poderes não desenhou o gesto de escolher: nada abaixo mediria a fatia 8',
+  ).toBeVisible()
+  await expectNadaRolaDeLado(page)
+  const naLista = await medeOContraste(page)
+  expect(naLista.medidos, 'o medidor não achou texto nos Poderes').toBeGreaterThan(30)
+  expect(naLista.falhas, 'texto abaixo do AA nos Poderes').toEqual([])
+
+  await page.getByRole('button', { name: 'Escolher poderes', exact: true }).click()
+  const dialogo = page.getByRole('dialog', { name: 'Escolher poderes' })
+  await expect(dialogo).toBeVisible()
+  await dialogo.getByRole('button', { name: 'Classe', exact: true }).click()
+  // O `:visible` não é preciosismo: as três abas são desenhadas de uma vez e
+  // alternadas por `data-show`, então o primeiro `switch` do DOM é o da Origem,
+  // que está escondido — e esperar por ele é esperar para sempre.
+  await expect(dialogo.locator('[role="switch"]:visible').first()).toBeVisible()
+  await expectDentroDaJanela(page)
+  await expectNadaRolaDeLado(page)
+})
+
 test('as sete abas são endereços, e a ativa se anuncia', async ({ page }) => {
   const id = await aFichaDoPrimeiro(page)
 

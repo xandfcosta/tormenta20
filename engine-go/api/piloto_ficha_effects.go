@@ -145,28 +145,10 @@ func stancesFromCatalog() map[string]stanceOfBook {
 			if flag == "" {
 				continue
 			}
-			stancesByFlag[flag] = stanceOfBook{Flag: flag, Name: a.Name, PM: a.PmCost, Page: a.BookPage}
+			stancesByFlag[flag] = stanceOfBook{Flag: flag, Name: a.Name, PM: oPmDaAtivacao(a), Page: a.BookPage}
 		}
 	})
 	return stancesByFlag
-}
-
-type activationOfBook struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Kind     string `json:"kind"`
-	PmCost   int    `json:"pmCost"`
-	BookPage int    `json:"bookPage"`
-}
-
-func activationsOfBook() []activationOfBook {
-	bruto, ok := catalog.Resource("activations")
-	if !ok {
-		return nil
-	}
-	var lista []activationOfBook
-	_ = json.Unmarshal(bruto, &lista)
-	return lista
 }
 
 // degrauDaPostura acha o sufixo do DEGRAU quando a postura não declara a flag no

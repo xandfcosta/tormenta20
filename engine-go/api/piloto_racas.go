@@ -30,15 +30,23 @@ import (
 
 // habilidadeDeRaca é o que o dossiê mostra: nome e uma linha.
 type habilidadeDeRaca struct {
-	ID        string `json:"id"`
-	Nome      string `json:"name"`
-	Descricao string `json:"description"`
+	ID        string      `json:"id"`
+	Nome      string      `json:"name"`
+	Descricao string      `json:"description"`
+	Variantes []aVariante `json:"variants"`
 }
 
 type racaParaTela struct {
 	ID          string             `json:"id"`
 	Nome        string             `json:"name"`
 	Habilidades []habilidadeDeRaca `json:"abilities"`
+}
+
+// aVariante é uma opção de uma habilidade que se escolhe — a Resistência
+// Elemental do qareen tem seis, a Herança Divina do suraggel tem duas.
+type aVariante struct {
+	ID   string `json:"id"`
+	Nome string `json:"name"`
 }
 
 // Lido UMA vez: o conteúdo vem de `go:embed` e não muda enquanto o binário for

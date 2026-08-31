@@ -51,10 +51,20 @@ func TestUpdateRaceAttributeChoicesHTTP(t *testing.T) {
 
 	// O endpoint escreve um SUBCONJUNTO: mandar a escolha de raça não pode
 	// apagar as outras cinco colunas de escolha.
+	//
+	// O poder é o `ataque-poderoso`, que EXISTE no livro. Aqui morava um
+	// `ataque-especial` inventado, e ele parou de passar quando a fatia 8 da
+	// ALE-272 fechou a fronteira das escolhas: um id que o catálogo não tem
+	// agora é recusado, e o preparo do teste era justamente um.
 	t.Run("não apaga as escolhas vizinhas", func(t *testing.T) {
 		char := seedCharacter(t, s, owner, "Com poderes", 20, 20, 5, 5)
+		// A CLASSE é o que abre a VAGA de poder. Ela entrou na fatia 8 da
+		// ALE-272: com a fronteira das escolhas fechada, um personagem sem
+		// classe tem zero vagas, e escolher um poder passou a ser recusado —
+		// esta ficha de teste era ilegal pelo livro e ninguém reclamava.
+		seedClasse(t, s, char, "Guerreiro", 2)
 		if rec := authed(t, s, owner, http.MethodPatch, abilitiesPath(char),
-			`{"classPowers":["ataque-especial"]}`); rec.Code != http.StatusOK {
+			`{"classPowers":["ataque-poderoso"]}`); rec.Code != http.StatusOK {
 			t.Fatalf("preparo: code=%d body=%s", rec.Code, rec.Body.String())
 		}
 
@@ -67,7 +77,7 @@ func TestUpdateRaceAttributeChoicesHTTP(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ler personagem: %v", err)
 		}
-		if row.Classpowers != `["ataque-especial"]` {
+		if row.Classpowers != `["ataque-poderoso"]` {
 			t.Errorf("classPowers=%s — a escolha vizinha foi apagada", row.Classpowers)
 		}
 	})

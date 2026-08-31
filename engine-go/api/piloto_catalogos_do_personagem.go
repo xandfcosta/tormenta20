@@ -65,6 +65,11 @@ type atributoDeRaca struct {
 	Count int            `json:"count"`
 	Value int            `json:"value"`
 	Mods  map[string]int `json:"mods"`
+	// Exclude é o atributo PROIBIDO na distribuição — o lefou não põe o +1 em
+	// Carisma, o osteon não põe em Constituição, e os dois ainda levam um −1
+	// nesse mesmo atributo. Ele entrou na fatia 8, com o diálogo que oferece os
+	// atributos: sem ele a tela ofereceria uma escolha que o motor recusa.
+	Exclude string `json:"exclude"`
 }
 
 // ordemDosAtributos é a do livro, e ela existe por DUAS razões — a segunda é a
@@ -210,9 +215,14 @@ func camposDaPericia(p periciaDoLivro) []string {
 // (`deuses.json`, `paladinoEligible`), e não "divindade" — uma palavra por
 // conceito.
 type deusDoLivro struct {
-	ID                string   `json:"id"`
-	Name              string   `json:"name"`
-	Major             bool     `json:"major"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Major bool   `json:"major"`
+	// Os dois elegíveis entraram na fatia 8: o Paladino e o Druida escolhem
+	// devoto de listas próprias (p82 e p61), e é o catálogo que diz quem entra
+	// em cada uma.
+	PaladinoEligible  bool     `json:"paladinoEligible"`
+	DruidaEligible    bool     `json:"druidaEligible"`
 	Portfolio         string   `json:"portfolio"`
 	Energia           string   `json:"energia"`
 	Simbolo           string   `json:"simbolo"`
