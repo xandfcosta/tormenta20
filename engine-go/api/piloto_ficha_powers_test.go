@@ -56,7 +56,11 @@ func TestOAcervoJuntaAsCincoProcedencias(t *testing.T) {
 	seedRaca(t, f.s, id, "Anão")
 	comEscolhas(t, f, id, `["class.barbaro.golpe-poderoso"]`, `["origin-batedor-pericia-Sobrevivência"]`)
 
-	tela := aTelaDosPoderes(t, f, id)
+	// O RECORTE É DO PAINEL, e não da tela: o diálogo de escolher desenha TODOS
+	// os benefícios e TODOS os poderes eletivos como opções, então procurar na
+	// tela inteira acharia justamente o que a lista não deve mostrar — e o
+	// guarda afirmaria o contrário do que mede.
+	tela := oPainelDosPoderes(aTelaDosPoderes(t, f, id))
 	for _, esperado := range []string{
 		"Fúria",          // automática da classe, nível 1
 		"Golpe Poderoso", // escolhida
@@ -110,6 +114,20 @@ func TestAsAcoesVemOrdenadasEAsPassivasSeparadas(t *testing.T) {
 	if strings.Contains(acoes, "Instinto Selvagem") {
 		t.Error("uma passiva foi para a seção de ações")
 	}
+}
+
+// oPainelDosPoderes corta a LISTA, deixando de fora os diálogos que vêm depois
+// dela — o de escolher poderes mostra o catálogo inteiro de opções.
+func oPainelDosPoderes(tela string) string {
+	// O CORTE é no ABRIR do primeiro diálogo, e não no primeiro `</section>`: as
+	// duas seções da lista são `<section>` ANINHADAS, e cortar no primeiro
+	// fechamento deixaria de fora justamente as passivas. Os diálogos começam
+	// depois do painel, e todos são sobreposições de tela cheia.
+	fim := strings.Index(tela, `class="fixed inset-0`)
+	if fim < 0 {
+		return tela
+	}
+	return tela[:fim]
 }
 
 // oRecorteDasAcoes corta a seção de Ações — procurar na tela inteira acharia a

@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"t20engine/aovivo"
@@ -38,7 +40,18 @@ type pilotoFixture struct {
 func novoPiloto(t *testing.T) pilotoFixture {
 	t.Helper()
 	s := newTestServer(t)
-	catalogs, err := engine.PrimeEngineCatalogs([]byte(`{"items":[]}`))
+	// O CATÁLOGO É O DE VERDADE, e não um `{"items":[]}`.
+	//
+	// Ele era vazio, e isso fazia regra sumir do TESTE sem sumir da produção: a
+	// fatia 7 mediu um escudo sendo VESTIDO porque o eixo de equipar não achava
+	// o item, e a fatia 8 mediu a distribuição de atributo do humano passando com
+	// três vezes o mesmo, porque a raça não estava no catálogo primado. Um
+	// fixture que desliga validação em silêncio é pior que um fixture lento.
+	bruto, err := os.ReadFile(filepath.Join("..", "parity", "_catalogs.json"))
+	if err != nil {
+		t.Fatalf("ler catálogos: %v (gere com `go run ./cmd/genoracle`)", err)
+	}
+	catalogs, err := engine.PrimeEngineCatalogs(bruto)
 	if err != nil {
 		t.Fatalf("preparar catálogo: %v", err)
 	}

@@ -101,6 +101,28 @@ func resolveFloating(raca *Raca, mod AtributoMod, picks []string) ([]attrDelta, 
 	return result, nil
 }
 
+// RaceAttributeChoiceIsComplete diz se a raça JÁ recebeu a escolha de atributo
+// que ela pede — o `+1 ×3` do humano, a ascendência do suraggel.
+//
+// Exportada na ALE-272 (fatia 8): a ficha precisa mostrar essa pendência, e a
+// forja promete por escrito "dá para criar assim e terminar na ficha". Ela
+// PERGUNTA em vez de repetir a condição: quantas escolhas cada raça pede, que
+// elas sejam distintas e qual atributo é proibido já está no `resolveFloating`,
+// e uma segunda cópia divergiria no dia em que uma raça nova tivesse uma quarta
+// condição.
+//
+// Raça desconhecida conta como completa: não dá para cobrar escolha de uma raça
+// que o catálogo não tem.
+func (c *Catalogs) RaceAttributeChoiceIsComplete(raceName, choicesJSON string) bool {
+	raca := c.racaByName(raceName)
+	if raca == nil {
+		return true
+	}
+	escolha := parseRaceAttributeChoices(choicesJSON)
+	_, err := resolveAtributoDeltas(raca, escolha.floatingPicks, escolha.ascendencia)
+	return err == nil
+}
+
 // RequiredProficiency é a proficiência que um item exige para ser usado sem
 // penalidade, ou "" quando ele não exige nenhuma (item-classify.ts).
 //

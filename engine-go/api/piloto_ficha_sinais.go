@@ -82,6 +82,8 @@ type fichaSignals struct {
 	// busca da lista de poderes.
 	PoderDegraus *int64 `json:"poderdegraus"`
 	PoderBusca   string `json:"poderbusca"`
+	// Os atributos que a raça distribui, escolhidos no diálogo.
+	RacaAtributos []string `json:"racaatributos"`
 }
 
 // osAprimoramentos traduz os seis sinais no que a validação espera.

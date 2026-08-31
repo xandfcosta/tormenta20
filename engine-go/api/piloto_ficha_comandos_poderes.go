@@ -1,8 +1,10 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/go-chi/chi/v5"
 
@@ -150,4 +152,202 @@ func (s *Server) ligaOsCondicionaisDaFlag(
 		}
 	}
 	return nil
+}
+
+// ── AS ESCOLHAS, e a validação que virou fronteira ───────────────────────────
+
+// pickPower liga ou desliga um poder eletivo.
+//
+// O comando manda o PODER e não a lista inteira, pela razão de sempre: mandar a
+// lista perde para o clique repetido e para a segunda aba aberta. Quem decide o
+// estado final é o servidor, que sabe o que está gravado.
+func pickPower(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	id := chi.URLParam(r, "poder")
+	return s.gravaAsEscolhas(r, row, func(dto *CharacterDTO) {
+		dto.ClassPowers = comOIdAlternado(dto.ClassPowers, id)
+	})
+}
+
+// pickOriginBenefit liga ou desliga um benefício da origem.
+func pickOriginBenefit(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	id := chi.URLParam(r, "beneficio")
+	return s.gravaAsEscolhas(r, row, func(dto *CharacterDTO) {
+		dto.OriginChoices = comOIdAlternado(dto.OriginChoices, id)
+	})
+}
+
+// pickRaceVariant escolhe a variante de uma habilidade de raça.
+//
+// Ela é EXCLUSIVA dentro da habilidade: escolher "resistência a fogo" tira
+// "resistência a frio", porque o qareen tem uma resistência e não seis.
+func pickRaceVariant(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	escolhida := chi.URLParam(r, "variante")
+	return s.gravaAsEscolhas(r, row, func(dto *CharacterDTO) {
+		dto.RaceAbilityChoices = comAVarianteTrocada(*dto, escolhida)
+	})
+}
+
+// pickClassChoice grava o caminho ou o devoto de uma classe.
+func pickClassChoice(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	escolha, valor := chi.URLParam(r, "escolha"), chi.URLParam(r, "valor")
+	if escolha != "caminho" && escolha != "devoto" {
+		return fmt.Errorf("%q não é uma escolha de classe", escolha)
+	}
+	classe, err := url.PathUnescape(chi.URLParam(r, "classe"))
+	if err != nil {
+		return fmt.Errorf("a classe %q não é um nome", chi.URLParam(r, "classe"))
+	}
+	return s.gravaAsEscolhas(r, row, func(dto *CharacterDTO) {
+		dto.ClassChoices = comAEscolhaDeClasse(dto.ClassChoices, classe, escolha, valor)
+	})
+}
+
+// pickRaceAttributes grava a distribuição de atributo da raça.
+//
+// Os atributos vêm por SINAL porque são uma lista — três chaves de uma vez — e
+// um caminho com três pedaços daria uma rota por combinação. Quem recusa a
+// combinação inválida é o motor, pelo `aFichaComEscolhasValidas`... e não: a
+// distribuição tem regra PRÓPRIA (distintas, count exato, atributo proibido), e
+// quem a conhece é o `RaceAttributeChoiceIsComplete`. Gravar e perguntar depois
+// seria aceitar uma ficha inválida por um instante.
+func pickRaceAttributes(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
+	escolhas := sinais.RacaAtributos
+	blob, err := json.Marshal(map[string]any{"floatingPicks": escolhas})
+	if err != nil {
+		return err
+	}
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	dto.RaceAttributeChoices = string(blob)
+	if s.catalogs != nil {
+		for _, raca := range dto.Races {
+			if !s.catalogs.RaceAttributeChoiceIsComplete(raca.Race, dto.RaceAttributeChoices) {
+				return fmt.Errorf("a distribuição não fecha para %s: ela pede atributos distintos", raca.Race)
+			}
+		}
+	}
+	return s.gravaOBlobDaFicha(r, row.ID, "raceAttributeChoices", string(blob))
+}
+
+// pickRaceAscendencia grava a metade escolhida de uma raça de ascendência.
+func pickRaceAscendencia(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	blob, err := json.Marshal(map[string]any{"ascendencia": chi.URLParam(r, "ascendencia")})
+	if err != nil {
+		return err
+	}
+	return s.gravaOBlobDaFicha(r, row.ID, "raceAttributeChoices", string(blob))
+}
+
+// gravaAsEscolhas aplica a mudança e CONFERE a ficha inteira antes de gravar.
+//
+// A conferência é sobre o RESULTADO e não sobre a diferença: a escrita tem de
+// deixar a ficha válida pelo livro. É a decisão do dono nesta fatia, e ela é
+// mais estrita do que "não acrescente além do limite" — uma ficha fora da conta
+// não aceita escrita de escolha nenhuma até ser arrumada.
+func (s *Server) gravaAsEscolhas(
+	r *http.Request, row sqlcgen.Character, muda func(*CharacterDTO),
+) error {
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	antes := dto
+	muda(&dto)
+	if err := aFichaComEscolhasValidas(dto); err != nil {
+		return err
+	}
+	var set setBuilder
+	if dto.ClassPowers != antes.ClassPowers {
+		set.Add("classPowers = ?", dto.ClassPowers)
+	}
+	if dto.OriginChoices != antes.OriginChoices {
+		set.Add("originChoices = ?", dto.OriginChoices)
+	}
+	if dto.ClassChoices != antes.ClassChoices {
+		set.Add("classChoices = ?", dto.ClassChoices)
+	}
+	if dto.RaceAbilityChoices != antes.RaceAbilityChoices {
+		set.Add("raceAbilityChoices = ?", dto.RaceAbilityChoices)
+	}
+	if set.empty() {
+		return nil
+	}
+	return set.execTouched(r.Context(), s.db, "UPDATE characters", row.ID)
+}
+
+// gravaOBlobDaFicha escreve UMA coluna de escolha.
+func (s *Server) gravaOBlobDaFicha(r *http.Request, id int64, coluna, valor string) error {
+	var set setBuilder
+	set.Add(coluna+" = ?", valor)
+	return set.execTouched(r.Context(), s.db, "UPDATE characters", id)
+}
+
+// comOIdAlternado liga ou desliga um id numa lista guardada como blob.
+func comOIdAlternado(blob, id string) string {
+	atuais := asEscolhasGuardadas(blob)
+	depois := []string{}
+	tinha := false
+	for _, atual := range atuais {
+		if atual == id {
+			tinha = true
+			continue
+		}
+		depois = append(depois, atual)
+	}
+	if !tinha {
+		depois = append(depois, id)
+	}
+	return marshalStrings(&depois)
+}
+
+// comAVarianteTrocada troca a variante escolhida dentro da MESMA habilidade.
+func comAVarianteTrocada(dto CharacterDTO, escolhida string) string {
+	irmas := asIrmasDaVariante(dto, escolhida)
+	depois := []string{escolhida}
+	for _, atual := range asEscolhasGuardadas(dto.RaceAbilityChoices) {
+		if !irmas[atual] {
+			depois = append(depois, atual)
+		}
+	}
+	return marshalStrings(&depois)
+}
+
+// asIrmasDaVariante são todas as opções da habilidade a que a escolhida
+// pertence — inclusive ela.
+func asIrmasDaVariante(dto CharacterDTO, escolhida string) map[string]bool {
+	fora := map[string]bool{}
+	for _, r := range dto.Races {
+		for _, hab := range asVariantesDaRaca(dto, r.Race) {
+			daHabilidade := map[string]bool{}
+			achou := false
+			for _, o := range hab.Options {
+				daHabilidade[o.Valor] = true
+				achou = achou || o.Valor == escolhida
+			}
+			if achou {
+				return daHabilidade
+			}
+		}
+	}
+	return fora
+}
+
+// comAEscolhaDeClasse escreve caminho ou devoto no blob de escolhas.
+func comAEscolhaDeClasse(blob, classe, qual, valor string) string {
+	escolhas := map[string]engine.ClassChoiceSelections{}
+	_ = json.Unmarshal([]byte(blob), &escolhas)
+	daClasse := escolhas[classe]
+	if qual == "caminho" {
+		daClasse.Caminho = valor
+	} else {
+		daClasse.Devoto = valor
+	}
+	escolhas[classe] = daClasse
+	depois, err := json.Marshal(escolhas)
+	if err != nil {
+		return blob
+	}
+	return string(depois)
 }

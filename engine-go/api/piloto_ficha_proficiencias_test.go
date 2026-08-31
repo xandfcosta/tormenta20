@@ -229,8 +229,13 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 		"item":     "1",
 		"slot":     "vested",
 		"catalogo": "adaga",
-		// O dos Poderes (fatia 8) — a `flag` já entrou com os Efeitos.
-		"poder": "class.barbaro.brado-assustador",
+		// Os dos Poderes (fatia 8) — a `flag` já entrou com os Efeitos.
+		"poder":       "class.barbaro.brado-assustador",
+		"beneficio":   "origin-batedor-pericia-Furtividade",
+		"variante":    "suraggel-aggelus",
+		"escolha":     "caminho",
+		"valor":       "bruxo",
+		"ascendencia": "aggelus",
 	}
 
 	var visitadas int

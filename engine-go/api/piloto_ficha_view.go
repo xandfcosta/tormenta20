@@ -77,6 +77,8 @@ type fichaView struct {
 	// Powers é a aba homônima (fatia 8) — a lista de jogo: o que se ativa em
 	// cima, o que é passivo recolhido embaixo.
 	Powers powersPanel
+	// Choices é o diálogo de escolher poderes — a administração da ficha.
+	Choices choicesPanel
 	// Recusa é a frase de uma regra que barrou o gesto — o teto de duas mãos, o
 	// PM que falta, a magia que não está preparada. Vazia no caminho normal.
 	// Ela vem com a cena INTEIRA redesenhada, que é o que mostra que nada mudou.
@@ -219,6 +221,7 @@ func (s *Server) carregaFicha(
 	v.Effects = s.effectsPanelOf(dto)
 	v.Spells = s.spellbookPanelOf(dto, sinais.MagiaBusca, sinais.MagiaCirculo, sinais.MagiaEscola)
 	v.Powers = s.powersPanelOf(dto, sinais.PoderBusca)
+	v.Choices = s.choicesPanelOf(dto, sinais.PoderBusca)
 	v.Bag = s.bagPanelOf(dto, osFiltrosDaMochila{
 		Busca: sinais.ItemBusca, Categoria: sinais.ItemCategoria,
 		BuscaNoCatalogo: sinais.CatalogoBusca, CategoriaNoCatalogo: sinais.CatalogoCategoria,

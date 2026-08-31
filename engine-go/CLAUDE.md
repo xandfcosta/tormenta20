@@ -367,6 +367,19 @@ item que os recebe (`appliesTo`) vivia no `familyFor` do TypeScript, e o
 `handleAddItem` carregava a dívida escrita em comentário. Agora ela é
 `aMelhoriaCabeNoItem`, e o filtro do diálogo é conveniência sobre a mesma regra.
 
+E a fatia 8 fechou a QUARTA, que era a maior: as regras de ESCOLHA de poder —
+quantas vagas o nível abre (uma por nível a partir do 2º, p33), quantos
+benefícios a origem dá, quais caminhos e quais deuses cada classe aceita — eram
+363 linhas de `shared/rules/abilities-*.ts`, e o `handleUpdateAbilities` gravava
+os cinco blobs sem conferir NADA. Um pedido montado à mão punha vinte poderes num
+personagem de nível 1 e o motor somava os modificadores de todos. A validação é
+`aFichaComEscolhasValidas`, ela roda nas DUAS portas (o endpoint JSON e os
+comandos da ficha), e é **estrita**: a escrita tem de deixar a ficha VÁLIDA, e
+não só "não piorar". Decisão do dono, com a razão registrada — o projeto ainda
+não foi usado numa mesa real, então não há ficha antiga fora da conta para
+proteger. O preço apareceu na hora: dois testes tinham fixtures ilegais pelo
+livro (um poder inventado, e um personagem sem classe com um poder escolhido).
+
 O que protege dado transcrito é **validação de schema**
 (`catalog/rules_tables_test.go`), não um `expect` por campo: o risco é typo, não
 regressão. O que ela cobre é o que quebra tela — perícia que não existe, faixa de
@@ -392,6 +405,27 @@ Uma armadilha que ela documenta e que vale para qualquer extração deste PDF: o
 `pdftotext -layout` junta colunas VIZINHAS na mesma linha de texto, então uma
 linha de atributos aparece colada à criatura errada. Ler por coordenada, nunca
 por layout.
+
+## O fixture do piloto prima o catálogo DE VERDADE
+
+O `novoPiloto` primava `{"items":[]}`, e isso fazia regra sumir do TESTE sem
+sumir da produção — duas vezes na mesma épica, e nenhuma delas apareceu como
+erro:
+
+- a fatia 7 mediu um escudo sendo **VESTIDO**, porque o eixo de equipar não
+  achava o item no catálogo vazio e devolvia "sem opinião";
+- a fatia 8 mediu a distribuição de atributo do humano passando com **três vezes
+  o mesmo atributo**, porque a raça não estava lá e a validação tratava
+  desconhecido como completo.
+
+Nos dois casos o guarda ficou verde afirmando o contrário do que mede. O fixture
+agora lê o mesmo `parity/_catalogs.json` que o servidor lê, como o
+`newTestServer` do `character_cast_rules_test.go` já fazia.
+
+**A regra geral: catálogo vazio no fixture é validação desligada em silêncio.**
+Quando uma checagem responde "não sei" para o que não está no catálogo — e é o
+que quase todas fazem, porque recusar o desconhecido travaria fichas antigas —,
+primar vazio é escolher que ela nunca rode.
 
 ## A bancada dos testes: um molde migrado, copiado por teste
 

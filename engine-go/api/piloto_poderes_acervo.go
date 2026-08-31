@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 
 	"t20engine/engine"
@@ -83,7 +84,7 @@ func osBeneficiosDeOrigem(dto CharacterDTO) []ownedPower {
 		}
 	}
 	fora := []ownedPower{}
-	for _, b := range origem.Benefits {
+	for _, b := range osBeneficiosQueAOrigemOferece(origem) {
 		if !escolhidos[b.ID] {
 			continue
 		}
@@ -189,7 +190,11 @@ type origemDoLivro struct {
 	ID       string              `json:"id"`
 	Name     string              `json:"name"`
 	Benefits []beneficioDeOrigem `json:"benefits"`
-	BookPage int                 `json:"bookPage"`
+	// PoderUnico é o poder exclusivo da origem, e ele NÃO está na lista de
+	// benefícios — é um campo à parte no catálogo. Ele conta como um dos dois
+	// que a pessoa leva (p85), e esquecê-lo torna o poder da origem inescolhível.
+	PoderUnico beneficioDeOrigem `json:"poderUnico"`
+	BookPage   int               `json:"bookPage"`
 }
 
 type beneficioDeOrigem struct {
@@ -271,4 +276,83 @@ func poderesDeClasseDoLivro() map[string]poderDeClasseDoLivro {
 func poderesGeraisDoLivro() map[string]poderGeralDoLivro {
 	osCatalogosDePoder()
 	return poderesGeraisPorID
+}
+
+// ── o que a RAÇA pede escolher ───────────────────────────────────────────────
+
+// oModDeAtributoDaRaca é como a raça mexe nos atributos: fixo, distribuído ou
+// por ascendência. Nil quando a raça não está no catálogo.
+//
+// Ele vem do `races.json` — a vitrine do mestre —, que é o único catálogo que
+// carrega o `atributoMod`. O `race-defs.json` traz as habilidades com id e
+// texto; os dois são lidos por esta aba, cada um pelo que só ele tem.
+func oModDeAtributoDaRaca(nome string) *atributoDeRaca {
+	racas, _, _ := catalogosDoPersonagem()
+	for i, r := range racas {
+		if r.Name == nome || r.ID == nome {
+			return &racas[i].AtributoMod
+		}
+	}
+	return nil
+}
+
+// asAscendenciasDaRaca são as metades de uma raça que se escolhe na criação — o
+// suraggel é "aggelus" ou "sulfure".
+func asAscendenciasDaRaca(nome string) []filterOption {
+	racas, _, _ := catalogosDoPersonagem()
+	for _, r := range racas {
+		if r.Name != nome && r.ID != nome {
+			continue
+		}
+		fora := []filterOption{}
+		for _, a := range r.Ascendencias {
+			fora = append(fora, filterOption{Valor: a, Rotulo: strings.ToUpper(a[:1]) + a[1:]})
+		}
+		return fora
+	}
+	return nil
+}
+
+// aRacaComVariantes é a entrada do `race-defs.json`, que é a que tem as
+// variantes de habilidade.
+func aRacaComVariantes(nome string) *racaParaTela {
+	if raca, tem := racasDaTela()[nome]; tem {
+		return &raca
+	}
+	return nil
+}
+
+// asEscolhasDeAtributoGuardadas são os atributos que a pessoa já distribuiu.
+func asEscolhasDeAtributoGuardadas(blob string) []string {
+	var escolha struct {
+		FloatingPicks []string `json:"floatingPicks"`
+	}
+	if json.Unmarshal([]byte(blob), &escolha) != nil {
+		return nil
+	}
+	return escolha.FloatingPicks
+}
+
+// aAscendenciaGuardada é a metade escolhida, ou "".
+func aAscendenciaGuardada(blob string) string {
+	var escolha struct {
+		Ascendencia string `json:"ascendencia"`
+	}
+	if json.Unmarshal([]byte(blob), &escolha) != nil {
+		return ""
+	}
+	return escolha.Ascendencia
+}
+
+// osBeneficiosQueAOrigemOferece são os benefícios MAIS o poder único.
+//
+// O catálogo guarda o poder único num campo à parte, e a ficha o trata como um
+// dos dois que a pessoa leva (p85) — a SPA já os juntava assim. Sem isso o poder
+// da origem não aparece em lugar nenhum e não dá para escolhê-lo.
+func osBeneficiosQueAOrigemOferece(origem origemDoLivro) []beneficioDeOrigem {
+	fora := append([]beneficioDeOrigem{}, origem.Benefits...)
+	if origem.PoderUnico.ID != "" {
+		fora = append(fora, origem.PoderUnico)
+	}
+	return fora
 }

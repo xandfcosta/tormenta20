@@ -72,6 +72,19 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
+	// A FRONTEIRA DAS ESCOLHAS (ALE-272, fatia 8). Este endpoint gravava os
+	// cinco blobs sem conferir nada: quantos poderes cabem no nível, quantos
+	// benefícios a origem dá e quais caminhos a classe aceita eram regra só da
+	// tela, em `shared/rules/abilities-*.ts`. Um pedido montado à mão punha
+	// vinte poderes num personagem de nível 1, e o motor somava todos.
+	//
+	// A conferência é sobre o RESULTADO — a ficha depois da escrita —, e por
+	// isso ela roda com o patch já aplicado sobre o DTO carregado.
+	if msg := s.escolhaInvalidaDepoisDoPatch(r, row, resp); msg != "" {
+		plataforma.WriteFieldError(w, http.StatusBadRequest, msg,
+			plataforma.FieldErrorMap{"classPowers": {msg}})
+		return
+	}
 
 	if err := set.execTouched(r.Context(), s.db, "UPDATE characters", row.ID); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update abilities")
@@ -155,4 +168,32 @@ func compactJSON(raw json.RawMessage) string {
 	}
 	b, _ := json.Marshal(v)
 	return string(b)
+}
+
+// escolhaInvalidaDepoisDoPatch aplica o patch sobre a ficha carregada e devolve
+// a frase da recusa, ou "" quando ela fica válida.
+//
+// Ele lê as colunas do `resp`, que é o que o handler já montou para devolver ao
+// cliente: um segundo mapeamento de nome de coluna daria duas listas para
+// manter iguais.
+func (s *Server) escolhaInvalidaDepoisDoPatch(
+	r *http.Request, row sqlcgen.Character, patch map[string]string,
+) string {
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		return ""
+	}
+	if v, tem := patch["classPowers"]; tem {
+		dto.ClassPowers = v
+	}
+	if v, tem := patch["originChoices"]; tem {
+		dto.OriginChoices = v
+	}
+	if v, tem := patch["classChoices"]; tem {
+		dto.ClassChoices = v
+	}
+	if err := aFichaComEscolhasValidas(dto); err != nil {
+		return err.Error()
+	}
+	return ""
 }

@@ -78,6 +78,13 @@ func (s *Server) rotasDaFicha(r chi.Router) {
 	// OS PODERES (fatia 8).
 	r.Post("/personagens/{id}/poderes/usa/{poder}", s.comandoDaFicha(usePower))
 	r.Post("/personagens/{id}/poderes/postura/{flag}/entra", s.comandoDaFicha(enterStance))
+	// AS ESCOLHAS do diálogo (fatia 8).
+	r.Post("/personagens/{id}/poderes/escolhe/{poder}", s.comandoDaFicha(pickPower))
+	r.Post("/personagens/{id}/poderes/origem/{beneficio}", s.comandoDaFicha(pickOriginBenefit))
+	r.Post("/personagens/{id}/poderes/variante/{variante}", s.comandoDaFicha(pickRaceVariant))
+	r.Post("/personagens/{id}/poderes/classe/{classe}/{escolha}/{valor}", s.comandoDaFicha(pickClassChoice))
+	r.Post("/personagens/{id}/poderes/atributos", s.comandoDaFicha(pickRaceAttributes))
+	r.Post("/personagens/{id}/poderes/ascendencia/{ascendencia}", s.comandoDaFicha(pickRaceAscendencia))
 }
 
 func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +123,8 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 			" itembusca: '', itemcategoria: '', tibarmodo: 'receber', tibarvalor: 0," +
 			" catalogobusca: '', catalogocategoria: '', itemqtd: 1, itemnome: '', itemespacos: 1," +
 			" itemrolagempv: 0, itemrolagempm: 0, itemmelhorias: [], itemmaterial: ''," +
-			" poderbusca: '', poderdegraus: 0, poder: '', passivas: false}",
+			" poderbusca: '', poderdegraus: 0, poder: '', passivas: false," +
+			" fonte: 'raca', racaatributos: []}",
 	}, cenaDaFicha(view))
 }
 

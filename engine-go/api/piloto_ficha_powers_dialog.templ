@@ -1,0 +1,241 @@
+package api
+
+import "strconv"
+
+// O DIÁLOGO DE ESCOLHER PODERES (ALE-272, fatia 8).
+//
+// Três abas de FONTE — Raça, Origem, Classe —, e elas fazem sentido AQUI: no
+// preparo a pergunta é "de onde vem o que eu ainda posso escolher". Na mesa a
+// pergunta é outra, e por isso a lista de trás não tem abas.
+//
+// As PENDÊNCIAS aparecem no topo e são o que traz a pessoa: quem abriu o
+// diálogo veio por causa delas.
+
+// choicesButton é o gesto que abre, com o crachá do que falta.
+templ choicesButton(v fichaView) {
+	<button
+		type="button"
+		aria-label="Escolher poderes"
+		aria-haspopup="dialog"
+		data-on:click={ "$fonte = '" + aFonteDaPrimeiraPendencia(v) + "'; $detalhe = 'escolher-poderes'" }
+		class={ classesDoBotao(varSecundaria, tamPequeno, "shrink-0 gap-1") }
+	>
+		Escolher
+		if len(v.Choices.Pendencias) > 0 {
+			<span aria-hidden="true" class="rounded-full bg-primary px-1.5 text-3xs font-bold text-primary-foreground">
+				{ strconv.Itoa(len(v.Choices.Pendencias)) }
+			</span>
+			<span class="sr-only">{ asPendenciasEscritas(len(v.Choices.Pendencias)) }</span>
+		}
+	</button>
+}
+
+// choicesDialog é a administração da ficha.
+templ choicesDialog(v fichaView) {
+	@aSobreposicao("escolher-poderes", "Escolher poderes", "Star", false) {
+		if len(v.Choices.Pendencias) > 0 {
+			<div class="space-y-1 rounded-sm border border-grimorio-gold/40 bg-accent p-2">
+				<p class="text-3xs uppercase tracking-wider text-grimorio-gold">
+					{ asPendenciasEscritas(len(v.Choices.Pendencias)) }
+				</p>
+				for _, p := range v.Choices.Pendencias {
+					<button
+						type="button"
+						data-on:click={ "$fonte = '" + p.Fonte + "'" }
+						class="block w-full text-left text-xs text-foreground underline-offset-2 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>{ p.Rotulo }</button>
+				}
+			</div>
+		}
+		<div class="flex gap-1">
+			for _, fonte := range asTresFontes {
+				<button
+					type="button"
+					data-on:click={ "$fonte = '" + fonte + "'" }
+					data-attr:aria-pressed={ "$fonte === '" + fonte + "' ? 'true' : 'false'" }
+					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>{ aFonteEscrita(fonte) }</button>
+			}
+		</div>
+		<div data-show="$fonte === 'raca'" class="space-y-3">
+			@raceChoicesBlock(v)
+		</div>
+		<div data-show="$fonte === 'origem'" class="space-y-3">
+			@originChoicesBlock(v)
+		</div>
+		<div data-show="$fonte === 'classe'" class="space-y-3">
+			@classChoicesBlock(v)
+		</div>
+	}
+}
+
+// raceChoicesBlock é o bônus de atributo e as variantes de habilidade.
+templ raceChoicesBlock(v fichaView) {
+	if len(v.Choices.Races) == 0 {
+		<p class="py-2 text-xs italic text-muted-foreground">A raça desta ficha não pede escolha.</p>
+	} else {
+		for _, cartao := range v.Choices.Races {
+			<section class="space-y-2 rounded-sm border border-grimorio-iron p-2">
+				<h4 class="font-heading text-2xs uppercase tracking-wider text-grimorio-gold">{ cartao.Race }</h4>
+				if cartao.Attribute != nil {
+					@attributeChoiceBlock(v, *cartao.Attribute)
+				}
+				for _, variante := range cartao.Variants {
+					<div class="space-y-1">
+						<p class="text-3xs uppercase tracking-wider text-muted-foreground">{ variante.Name }</p>
+						<div class="flex flex-wrap gap-1">
+							for _, o := range variante.Options {
+								<button
+									type="button"
+									role="switch"
+									aria-checked={ boolTexto(o.Ativo) }
+									aria-label={ o.Rotulo }
+									data-on:click={ oPostDaFicha(v, "/poderes/variante/"+o.Valor) }
+									class={ oChipDaEscolha(o.Ativo) }
+								>{ o.Rotulo }</button>
+							}
+						</div>
+					</div>
+				}
+			</section>
+		}
+	}
+}
+
+// attributeChoiceBlock distribui o bônus da raça.
+//
+// Os atributos entram num sinal de LISTA e vão juntos num comando só: a regra do
+// motor é sobre o CONJUNTO — três distintos, nenhum no proibido —, então mandar
+// um de cada vez faria o servidor recusar os dois primeiros cliques de uma
+// escolha que vai ficar válida no terceiro.
+templ attributeChoiceBlock(v fichaView, escolha attributeChoice) {
+	<div class="space-y-1">
+		<p class="text-3xs uppercase tracking-wider text-muted-foreground">{ aEscolhaDoAtributoEscrita(escolha) }</p>
+		if escolha.Kind == "ascendencia" {
+			<div class="flex flex-wrap gap-1">
+				for _, o := range escolha.Options {
+					<button
+						type="button"
+						role="switch"
+						aria-checked={ boolTexto(contemTraco(escolha.Chosen, o.Valor)) }
+						aria-label={ o.Rotulo }
+						data-on:click={ oPostDaFicha(v, "/poderes/ascendencia/"+o.Valor) }
+						class={ oChipDaEscolha(contemTraco(escolha.Chosen, o.Valor)) }
+					>{ o.Rotulo }</button>
+				}
+			</div>
+		} else {
+			<div class="flex flex-wrap gap-1">
+				for _, o := range escolha.Options {
+					<button
+						type="button"
+						role="switch"
+						aria-checked={ boolTexto(contemTraco(escolha.Chosen, o.Valor)) }
+						aria-label={ o.Rotulo }
+						data-on:click={ oGestoQueAlternaOAtributo(o.Valor) }
+						data-attr:data-escolhido={ "$racaatributos.includes('" + o.Valor + "')" }
+						class="rounded-full border border-grimorio-iron px-2 py-0.5 text-3xs uppercase tracking-wider text-muted-foreground outline-none transition-colors data-[escolhido]:border-grimorio-gold/60 data-[escolhido]:bg-accent data-[escolhido]:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>{ o.Rotulo }</button>
+				}
+			</div>
+			<button
+				type="button"
+				aria-label="Gravar a distribuição de atributos"
+				data-on:click={ oPostDaFicha(v, "/poderes/atributos") }
+				class={ classesDoBotao(varPrimaria, tamPequeno, "w-full") }
+			>Gravar distribuição</button>
+		}
+	</div>
+}
+
+// originChoicesBlock são os benefícios da origem, com o teto de dois.
+templ originChoicesBlock(v fichaView) {
+	if v.Choices.Origin == nil {
+		<p class="py-2 text-xs italic text-muted-foreground">Esta origem não está no livro.</p>
+	} else {
+		<section class="space-y-2 rounded-sm border border-grimorio-iron p-2">
+			<div class="flex items-baseline justify-between">
+				<h4 class="font-heading text-2xs uppercase tracking-wider text-grimorio-gold">{ v.Choices.Origin.Name }</h4>
+				<span class="font-mono text-2xs text-muted-foreground">
+					{ strconv.Itoa(len(v.Choices.Origin.Chosen)) + " de " + strconv.Itoa(oLimiteDeBeneficiosDaOrigem) }
+				</span>
+			</div>
+			for _, o := range v.Choices.Origin.Options {
+				<button
+					type="button"
+					role="switch"
+					aria-checked={ boolTexto(o.Ativo) }
+					aria-label={ o.Rotulo }
+					data-on:click={ oPostDaFicha(v, "/poderes/origem/"+o.Valor) }
+					class={ oChipDaEscolha(o.Ativo) + " block w-full text-left" }
+				>{ o.Rotulo }</button>
+			}
+		</section>
+	}
+}
+
+// classChoicesBlock são as vagas de poder, o caminho e o devoto de cada classe.
+templ classChoicesBlock(v fichaView) {
+	for _, cartao := range v.Choices.Classes {
+		<section class="space-y-2 rounded-sm border border-grimorio-iron p-2">
+			<div class="flex items-baseline justify-between">
+				<h4 class="font-heading text-2xs uppercase tracking-wider text-grimorio-gold">
+					{ cartao.ClassName + " " + strconv.FormatInt(cartao.Level, 10) }
+				</h4>
+				<span class="font-mono text-2xs text-muted-foreground">{ asVagasDaClasseEscritas(cartao) }</span>
+			</div>
+			if cartao.Caminho != nil {
+				@classPicker(v, cartao.ClassName, "caminho", "Caminho", *cartao.Caminho)
+			}
+			if cartao.Devoto != nil {
+				@classPicker(v, cartao.ClassName, "devoto", "Devoto", *cartao.Devoto)
+			}
+			<input
+				type="search"
+				data-bind:poderbusca
+				data-on:input__debounce.250ms={ oGetDaFicha(v) }
+				value={ v.Powers.Search }
+				placeholder="Buscar poder…"
+				aria-label={ "Buscar poder de " + cartao.ClassName }
+				class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			/>
+			<div class="max-h-[40vh] space-y-1 overflow-y-auto">
+				for _, poder := range cartao.Powers {
+					<button
+						type="button"
+						role="switch"
+						aria-checked={ boolTexto(poder.Chosen) }
+						aria-label={ poder.Name }
+						data-on:click={ oPostDaFicha(v, "/poderes/escolhe/"+poder.ID) }
+						class={ "flex w-full items-baseline gap-2 rounded-sm border px-2 py-1 text-left text-xs outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+							templ.KV("border-grimorio-gold/60 bg-accent", poder.Chosen),
+							templ.KV("border-grimorio-iron", !poder.Chosen) }
+					>
+						<span class="font-semibold text-foreground">{ poder.Name }</span>
+						<span class="min-w-0 flex-1 truncate text-muted-foreground">{ poder.Detail }</span>
+						<span class="shrink-0 text-3xs text-muted-foreground">{ poder.Fonte }</span>
+					</button>
+				}
+			</div>
+		</section>
+	}
+}
+
+// classPicker é uma escolha de valor único — caminho ou devoto.
+templ classPicker(v fichaView, classe, escolha, rotulo string, seletor pickerChoice) {
+	<div class="space-y-1">
+		<p class="text-3xs uppercase tracking-wider text-muted-foreground">{ rotulo }</p>
+		<div class="flex flex-wrap gap-1">
+			for _, o := range seletor.Options {
+				<button
+					type="button"
+					role="switch"
+					aria-checked={ boolTexto(o.Ativo) }
+					aria-label={ o.Rotulo }
+					data-on:click={ oComandoDaEscolhaDeClasse(v, classe, escolha, o.Valor) }
+					class={ oChipDaEscolha(o.Ativo) }
+				>{ o.Rotulo }</button>
+			}
+		</div>
+	</div>
+}
