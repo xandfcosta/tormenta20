@@ -177,14 +177,14 @@ func TestUmaProficienciaForaDoCatalogoNaoGrava(t *testing.T) {
 	rec := f.pede(t, f.jogador, http.MethodPost,
 		fmt.Sprintf("/piloto/personagens/%d/proficiencias/alterna/armas-de-laser", id), "")
 
-	if rec.Code == http.StatusOK {
-		t.Fatal("uma categoria inventada foi aceita")
-	}
 	// A MENSAGEM CARREGA O VALOR OFENSOR E O FORMATO ESPERADO: "proficiência
 	// inválida" não ajudaria ninguém a descobrir o que digitar.
-	corpo := rec.Body.String()
-	if !strings.Contains(corpo, "armas-de-laser") || !strings.Contains(corpo, "armas-simples") {
-		t.Errorf("a recusa não diz o valor recusado e as opções: %q", corpo)
+	recusa := aRecusaDaCena(rec.Body.String())
+	if recusa == "" {
+		t.Fatal("uma categoria inventada foi aceita sem uma palavra na tela")
+	}
+	if !strings.Contains(recusa, "armas-de-laser") || !strings.Contains(recusa, "armas-simples") {
+		t.Errorf("a recusa não diz o valor recusado e as opções: %q", recusa)
 	}
 	if !asGuardadas(t, f, id)["armas-marciais"] {
 		t.Error("a recusa mexeu no que já estava guardado")
@@ -225,6 +225,9 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 		"magia":  "armadura-arcana",
 		"efeito": "1",
 		"flag":   "furia",
+		// Os dois da Mochila (fatia 7).
+		"item": "1",
+		"slot": "vested",
 	}
 
 	var visitadas int
@@ -292,6 +295,7 @@ var oTituloDoPainel = map[string]string{
 	"expertises":    "Perícias",
 	"conditionals":  "Efeitos",
 	"spells":        "Grimório",
+	"bag":           "Mochila",
 }
 
 func TestTodaAbaPortadaDesenhaAlgo(t *testing.T) {

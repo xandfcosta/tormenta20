@@ -386,21 +386,62 @@ func modifierRowsOf(bruto string) []breakdownRow {
 // O motor fala `{k: "attack", scope: "all"}`, que é fronteira; quem lê a ficha
 // lê "ataque". Alvo sem tradução assentada cai no próprio `k`, que é feio e
 // honesto — melhor que inventar um nome que não é o do livro.
+//
+// A tabela cresceu na fatia 7 (ALE-272) porque a Mochila desenha o que um item
+// CONCEDE, e aí aparecem alvos que nenhuma condição usa — `inventorySlots`,
+// `spellDC`, `maneuver`, `critRange`. Ela é a mesma lista do
+// `describeModifierTarget` do front, e é o único lugar do Go que a tem.
 func targetLabel(t engine.ModifierTarget) string {
 	nomes := map[string]string{
 		"attack": "Ataque", "damage": "Dano", "defense": "Defesa",
 		"expertise": "Perícia", "expertiseAll": "Todas as perícias",
+		"expertiseRemovePenalty": "Remove penalidade em", "expertiseByAttribute": "Perícias de",
 		"attribute": "Atributo", "maxPv": "PV máximo", "maxPm": "PM máximo",
 		"displacement": "Deslocamento", "damageReduction": "Redução de dano",
+		"defenseDexCap": "Limite de Des na Defesa", "resistance": "Resistências",
+		"fearResistance": "Resistência a medo", "critRange": "Margem de ameaça",
+		"critMult": "Multiplicador crítico", "pmLimit": "Limite de PM por magia",
+		"pmCost": "Custo em PM", "catalyst": "Catalisador", "spellDC": "CD de magias",
+		"inventorySlots": "Espaços de carga", "flySpeed": "Voo",
+		"armorPenalty": "Penalidade de armadura", "armorPenaltyExpertises": "Penalidade em perícias",
+		"tempHp": "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
+	}
+	// FLAG é booleana e o rótulo dela é uma frase inteira ("Fadiga ao dormir"),
+	// não um alvo com complemento — por isso ela sai antes do resto.
+	if t.K == "flag" {
+		if rotulo, conhecida := itemFlagLabel[t.Name]; conhecida {
+			return rotulo
+		}
+		return t.Name
 	}
 	nome, tem := nomes[t.K]
 	if !tem {
 		nome = t.K
 	}
-	if t.Name != "" {
-		return nome + " (" + t.Name + ")"
+	if complemento := oComplementoDoAlvo(t); complemento != "" {
+		return nome + " (" + complemento + ")"
 	}
 	return nome
+}
+
+// oComplementoDoAlvo é o que vem entre parênteses depois do alvo.
+//
+// O escopo `this` NÃO vira texto: o crachá está desenhado no próprio item, e
+// "Ataque (deste item)" repete em palavras o que a posição já diz. Os outros
+// escopos aparecem traduzidos — deixá-los crus poria `all` e `melee` na tela de
+// alguém que joga em português.
+func oComplementoDoAlvo(t engine.ModifierTarget) string {
+	if t.Name != "" {
+		return t.Name
+	}
+	if t.Attribute != "" {
+		return t.Attribute
+	}
+	if t.School != "" {
+		return t.School
+	}
+	escopos := map[string]string{"all": "todos", "melee": "corpo a corpo", "ranged": "à distância"}
+	return escopos[t.Scope]
 }
 
 // buffOptions são as magias com efeito aplicável.

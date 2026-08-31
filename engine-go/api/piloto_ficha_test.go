@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"fmt"
+	"html"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -92,11 +94,12 @@ func TestODegrauNaoApagaUmaClasseDeNivelUm(t *testing.T) {
 	rec := f.pede(t, f.jogador, http.MethodPost,
 		fmt.Sprintf("/piloto/personagens/%d/nivel/Arcanista/-1", id), "")
 
-	if rec.Code == http.StatusOK {
+	recusa := aRecusaDaCena(rec.Body.String())
+	if recusa == "" {
 		t.Fatal("desceu uma classe de nível 1: a classe teria sumido da ficha")
 	}
-	if !strings.Contains(rec.Body.String(), "apagaria a classe") {
-		t.Errorf("a recusa não diz o que ia acontecer: %q", rec.Body.String())
+	if !strings.Contains(recusa, "apagaria a classe") {
+		t.Errorf("a recusa não diz o que ia acontecer: %q", recusa)
 	}
 }
 
@@ -182,12 +185,12 @@ func TestAAbaAindaNaoPortadaLevaParaAFichaAntiga(t *testing.T) {
 	f, id := aFichaDe(t, "Herói", 3)
 
 	tela := f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=bag", id), "").Body.String()
+		fmt.Sprintf("/piloto/personagens/%d?tab=abilities", id), "").Body.String()
 
 	if !strings.Contains(tela, "ainda vive na ficha antiga") {
 		t.Fatal("a aba não portada não diz que está vazia: a tela parece defeito")
 	}
-	if !strings.Contains(tela, fmt.Sprintf("/characters/%d?tab=bag", id)) {
+	if !strings.Contains(tela, fmt.Sprintf("/characters/%d?tab=abilities", id)) {
 		t.Error("a aba não portada não leva para a MESMA seção na ficha antiga")
 	}
 	// As sete existem sempre, mesmo sem painel: elas são o mapa da ficha, e uma
@@ -198,3 +201,49 @@ func TestAAbaAindaNaoPortadaLevaParaAFichaAntiga(t *testing.T) {
 		}
 	}
 }
+
+// A RECUSA VOLTA PELA CENA, e não por um status que o cliente descarta.
+//
+// Medido no navegador (ALE-272, fatia 7): com `http.Error(400)` o cliente do
+// Datastar não aplicava o remendo, e a única marca da recusa era uma linha
+// vermelha no CONSOLE. Na tela o gesto simplesmente não acontecia — gastar mais
+// do que se tem fechava o diálogo e deixava o saldo igual, sem uma palavra.
+//
+// Este guarda prende as TRÊS coisas que fazem a recusa chegar: o status que o
+// cliente aceita, a frase, e a cena INTEIRA junto — é ela que mostra o estado
+// que não mudou.
+func TestARecusaVoltaNaCenaEnaoNumStatusDeErro(t *testing.T) {
+	f, id := aFichaDe(t, "Herói", 3)
+
+	rec := f.pede(t, f.jogador, http.MethodPost,
+		fmt.Sprintf("/piloto/personagens/%d/proficiencias/alterna/armas-de-laser?tab=proficiencies", id), "")
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("a recusa respondeu %d: o cliente do Datastar descarta o remendo e a tela não muda",
+			rec.Code)
+	}
+	if recusa := aRecusaDaCena(rec.Body.String()); recusa == "" {
+		t.Error("a recusa não escreveu nada na cena")
+	}
+	if !strings.Contains(rec.Body.String(), "Seções da ficha") {
+		t.Error("a resposta não traz a cena inteira: o remendo apagaria a ficha em vez de avisar")
+	}
+}
+
+// aRecusaDaCena devolve a frase da regra que barrou o gesto, ou "".
+//
+// A recusa da ficha NÃO é um status de erro: o cliente do Datastar descarta o
+// remendo de uma resposta que não é 2xx, e um 400 deixava a tela igual e sem
+// uma palavra (medido na fatia 7 da ALE-272 — a única marca era uma linha
+// vermelha no console). Então o gesto barrado responde 200 com a cena inteira
+// redesenhada mais esta frase, e é ela que os testes de recusa afirmam: o
+// status não distingue mais "gravou" de "recusou", e o que a pessoa lê sim.
+func aRecusaDaCena(corpo string) string {
+	achado := oAlertaNaCena.FindStringSubmatch(corpo)
+	if achado == nil {
+		return ""
+	}
+	return html.UnescapeString(achado[1])
+}
+
+var oAlertaNaCena = regexp.MustCompile(`role="alert"[^>]*>([^<]*)</p>`)

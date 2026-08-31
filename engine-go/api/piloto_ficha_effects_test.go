@@ -88,8 +88,8 @@ func TestACondicaoEntraSaiEMoveOsNumeros(t *testing.T) {
 // condição fantasma injetaria na ficha um efeito que o livro não tem.
 func TestUmaCondicaoInventadaERecusada(t *testing.T) {
 	f, id := oCombatente(t)
-	if rec := oEfeito(t, f, id, "condicao/entediado"); rec.Code == http.StatusOK {
-		t.Error("uma condição que não existe foi aceita")
+	if recusa := aRecusaDaCena(oEfeito(t, f, id, "condicao/entediado").Body); recusa == "" {
+		t.Error("uma condição que não existe foi aceita sem uma palavra na tela")
 	}
 	if got := asCondicoesDe(t, f, id); len(got) != 0 {
 		t.Errorf("a recusa gravou assim mesmo: %v", got)
@@ -138,7 +138,7 @@ func TestOEfeitoDeOutraFichaNaoSeEncerra(t *testing.T) {
 	}
 
 	rec := oEfeito(t, f, meu, fmt.Sprintf("encerra/%d", alheio.ID))
-	if rec.Code == http.StatusOK {
+	if recusa := aRecusaDaCena(rec.Body); recusa == "" {
 		t.Error("encerrei o efeito de outro personagem pela minha ficha")
 	}
 	if _, err := f.s.queries.GetActiveEffectMeta(context.Background(), alheio.ID); err != nil {
