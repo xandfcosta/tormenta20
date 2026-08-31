@@ -29,6 +29,14 @@ type Spell struct {
 type Augment struct {
 	PmCost int    `json:"pmCost"`
 	Kind   string `json:"kind"`
+	// RequiresCircle é o círculo MÍNIMO que o personagem precisa alcançar para
+	// escolher este aprimoramento, e ele entrou na ALE-272 porque a regra estava
+	// só na tela: 126 dos 486 aprimoramentos o têm, e o `validateAugments`
+	// aceitava qualquer um porque este campo simplesmente não era lido.
+	//
+	// Ponteiro e não zero: círculo 0 é o TRUQUE, um valor legítimo, e um
+	// `int` zerado não distinguiria "exige truque" de "não exige nada".
+	RequiresCircle *int `json:"requiresCircle"`
 }
 
 // Buff carries the modifiers an applied spell effect stores (raw JSON so it

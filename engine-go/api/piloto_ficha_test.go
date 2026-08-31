@@ -182,12 +182,12 @@ func TestAAbaAindaNaoPortadaLevaParaAFichaAntiga(t *testing.T) {
 	f, id := aFichaDe(t, "Herói", 3)
 
 	tela := f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=spells", id), "").Body.String()
+		fmt.Sprintf("/piloto/personagens/%d?tab=bag", id), "").Body.String()
 
 	if !strings.Contains(tela, "ainda vive na ficha antiga") {
 		t.Fatal("a aba não portada não diz que está vazia: a tela parece defeito")
 	}
-	if !strings.Contains(tela, fmt.Sprintf("/characters/%d?tab=spells", id)) {
+	if !strings.Contains(tela, fmt.Sprintf("/characters/%d?tab=bag", id)) {
 		t.Error("a aba não portada não leva para a MESMA seção na ficha antiga")
 	}
 	// As sete existem sempre, mesmo sem painel: elas são o mapa da ficha, e uma

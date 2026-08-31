@@ -13,6 +13,15 @@ import type { Page } from '@playwright/test'
  * Contraste exige converter oklch para sRGB, e só o navegador faz isso: em jsdom
  * o `getComputedStyle` devolve o oklch cru, e ler aqueles três números como RGB
  * dá razão inventada. É o que prende esta medição ao browser.
+ *
+ * # Ele mede o que está ESCONDIDO POR UM ANCESTRAL, e isso é para saber
+ *
+ * O descarte olha o `display`/`visibility` do PRÓPRIO nó, e um filho de um pai
+ * com `display: none` tem `display: block` seu. Então todo diálogo da cena —
+ * que o Datastar esconde pelo `data-show` do pai — já entra na conta com a
+ * caixa fechada. Isso é bom para a cobertura e péssimo para quem quiser usar
+ * `medidos` como prova de que um diálogo ABRIU: o número não muda. Medido na
+ * ficha (ALE-272, fatia 6): 809 antes e 809 depois do clique.
  */
 
 /** Uma medição: o que reprovou, e QUANTOS textos foram olhados. */

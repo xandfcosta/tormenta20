@@ -281,21 +281,47 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 // Ele falha nomeando A ABA que ficou vazia, que é a diferença entre "conserte
 // isto" e "procure". Cada fatia desta issue acrescenta um nome ao mapa e este
 // guarda cobra o painel no mesmo commit.
+// O TÍTULO DO PAINEL NEM SEMPRE É O RÓTULO DA ABA, e a fatia 6 provou isso: a
+// aba se chama "Magias" e o painel se chama "Grimório" — a aba nomeia o assunto,
+// o painel nomeia a coisa, e é a escolha da tela antiga. O guarda passou a ter um
+// mapa, e ele cobra que TODA aba portada tenha entrada: uma fatia nova sem a
+// linha aqui falha nomeando a aba, em vez de o guarda se calar.
+var oTituloDoPainel = map[string]string{
+	"proficiencies": "Proficiências",
+	"combat":        "Combate",
+	"expertises":    "Perícias",
+	"conditionals":  "Efeitos",
+	"spells":        "Grimório",
+}
+
 func TestTodaAbaPortadaDesenhaAlgo(t *testing.T) {
 	f, id := oGuerreiro(t)
 
+	var visitadas int
 	for _, aba := range asAbasDaFicha() {
 		if !oPainelJaPortado(aba.Valor) {
 			continue
 		}
+		titulo, sabe := oTituloDoPainel[aba.Valor]
+		if !sabe {
+			t.Errorf("a aba %q foi marcada como portada e este guarda não sabe que título "+
+				"esperar — acrescente a linha ao mapa `oTituloDoPainel`", aba.Valor)
+			continue
+		}
+		visitadas++
 		tela := f.pede(t, f.jogador, http.MethodGet,
 			fmt.Sprintf("/piloto/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
 		if strings.Contains(tela, "ainda vive na ficha antiga") {
 			t.Errorf("a aba %q está marcada como portada e ainda manda para a ficha velha", aba.Valor)
 		}
-		if !strings.Contains(tela, ">"+aba.Rotulo+"</h2>") {
+		if !strings.Contains(tela, ">"+titulo+"</h2>") {
 			t.Errorf("a aba %q está marcada como portada e não desenhou painel nenhum", aba.Valor)
 		}
+	}
+	// CONTROLE: sem ele, um `oPainelJaPortado` que virasse vazio faria o laço não
+	// rodar nenhuma vez e o guarda passar afirmando nada.
+	if visitadas == 0 {
+		t.Fatal("nenhuma aba portada foi visitada: o guarda mediu o vazio")
 	}
 }
 

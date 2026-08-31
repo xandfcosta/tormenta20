@@ -37,6 +37,10 @@ alguém já usou e que não voltam.
 | **perícia inventada** | `customExpertise` | ~~ofício~~ na TELA | A perícia que o jogador cria e o livro não tem — o saber de um ferreiro, a arte de um marinheiro. Nasce TREINADA (inventar um saber e não tê-lo treinado não significa nada) e é a única que se REMOVE da ficha; a coluna `custom` do banco é quem decide, e não uma lista de nomes no código. **A tela diz "nova perícia" e NUNCA "ofício"** — e isto é colisão de verdade, não preferência: **Ofício É uma das 29 do livro** (p115), então chamar a inventada de ofício poria duas coisas diferentes com o mesmo nome na MESMA lista. O identificador pode falar de ofício, porque identificador não é o que a pessoa lê (ALE-272). |
 | **proficiência** | `proficiencies` | ~~treinamento~~, ~~habilitação~~ | Saber usar uma categoria de arma, armadura ou escudo. São SETE — armas simples, marciais, exóticas e de fogo (T20 p142), armaduras leves e pesadas, e escudos (p148) — e a classe concede as dela numa linha só ("Proficiências. Armas marciais e escudos.", p36–83). **Não confundir com perícia**: perícia se ROLA e tem graus de treinamento; proficiência se TEM ou não se tem, e o que falta vira PENALIDADE (−5 no ataque, p142; a penalidade da armadura nas perícias de Força e Destreza, p148). **Quem sabe usar armadura pesada sabe usar a leve, e isso o livro NÃO diz** — é decisão de produto, e está escrita e presa por teste em `piloto_ficha_proficiencias.go`. |
 | **escola de magia** | `escolas-de-magia` | ~~tipo de magia~~, ~~classe de magia~~ | A família de uma magia — **Abjuração**, **Evocação**, **Ilusão** (T20 p172, oito). O livro imprime a abreviatura ao lado ("Abjuração (Abjur)") e as tabelas dele usam a forma curta. Ganhou catálogo na ALE-264: a magia guardava `school: "evocacao"`, isso decidia o filtro, e o nome não aparecia em cartão nenhum. **Escola conta como tipo de efeito** — é o livro que diz —, então as duas famílias se tocam. |
+| **grimório** | `spellbook` | ~~livro de magias~~, ~~repertório~~ | As magias que a ficha SABE. É o título da aba Magias, e a palavra vem do livro. **Colide com a identidade visual do app** (`scene-grimorio`, "Grimório de Arton") e com as abas de catálogo do mestre — ver a colisão C8. |
+| **magia preparada** | `prepared` | ~~memorizada~~, ~~equipada~~ | A magia que o conjurador escolheu para hoje, e o interruptor só existe para quem PREPARA: Clérigo, Druida e o Arcanista do caminho mago (p171). Para os outros a magia se conjura direto, e um botão de preparar seria um controle que não significa nada. |
+| **círculo** | `circle` | ~~nível da magia~~, ~~grau~~ | A potência da magia, de **Truque** (0) ao **5º** (p170). **Nunca "nível"**: nível é do personagem, e o livro usa as duas palavras em frases vizinhas — o círculo que um personagem alcança é função do nível dele, e trocar as palavras torna a frase indecifrável. A tela escreve "Truque" e "3º", como a mesa fala. |
+| **aprimoramento** | `augment` | ~~upgrade~~, ~~melhoria~~ | O que se paga a mais para a magia fazer mais (p170). Custa PM sobre o custo base, e alguns só existem a partir de um círculo — esse aparece TRANCADO em vez de sumir, porque quem não alcança merece saber que existe. Quem recusa é o servidor (`validateAugments`); o cadeado é UX. |
 | **tipo de efeito** | `tipos-de-efeito` | ~~tag~~, ~~categoria~~ | A família de um efeito — **Medo**, **Mental**, **Movimento**, **Metabolismo** (T20 p228). O livro a imprime em itálico no fim da condição ("Abalado … *Medo*."), e ela é o que decide imunidade: "criatura com imunidade a medo não será afetada por efeitos do tipo medo". No dado a condição a guarda como CHAVE (`tags: ["cansaco"]`, sem acento); na tela sai o nome do livro. Ganhou catálogo próprio na ALE-264 porque não havia para onde o elo apontar. |
 | **elo** | `eloParaOAcervo` | ~~link~~ (no código) | A palavra que leva ao verbete dela: a tag da condição leva ao tipo de efeito, "Agrava para Apavorado" leva à condição, o poder concedido leva ao poder. **Não é o botão do livro** — o elo anda DENTRO do acervo, o botão sai para o PDF. Os dois usam o mesmo sublinhado pontilhado de propósito: são o mesmo gesto ("leva para outro lugar") e desenhá-los diferente ensinaria que não são. O clique MOSTRA o verbete numa caixa sobre a cena; o `href` (`?aba=X&entrada=<id>`) fica para o ctrl+clique e o link copiado. |
 | **entrada** | `?entrada=<id>` | ~~item~~, ~~registro~~ | O endereço de UM verbete: a aba dele mostrando só ele. **Não é busca** — `?busca=Medo` procura o termo nos oito catálogos e mostra os grupos; `?entrada=medo` é o Medo. A diferença nasceu de um defeito de UX: o elo endereçava por busca, e clicar num conceito caía numa lista onde ele era o quinto grupo. |
@@ -179,6 +183,18 @@ não instalou vivem do primeiro, e o iPhone não tem o primeiro (o Safari não
 expõe Fullscreen API para elemento), então lá o segundo é o único caminho.
 Escrever "tela cheia" no texto de instalar — ou o contrário — manda metade da
 mesa para o botão que o aparelho dela não tem.
+
+---
+
+**C8 — `grimório` é o app, é o catálogo do mestre e é a aba do jogador.** A
+casca visual inteira se chama assim (`scene-grimorio`, `grimorio-gold`,
+"— Grimório de Arton —"), as abas de catálogo do mestre são "as abas do
+grimório" (ver **aba**), e desde a ALE-272 a aba Magias da ficha tem
+**Grimório** por título — que é o sentido do LIVRO, e o mais estreito dos três.
+Nenhum é errado e nenhum se conserta por palpite: o primeiro é a marca do
+produto, o terceiro é a palavra da mesa. O identificador é que não pode ser só
+`grimorio` — os desta fatia são `spellbookPanel`, `learnedSpellRow`,
+`spellbookPanelOf`.
 
 ---
 

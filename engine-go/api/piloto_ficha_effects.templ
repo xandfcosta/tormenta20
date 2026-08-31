@@ -25,9 +25,17 @@ templ effectsPanelSection(v fichaView) {
 		<div class="flex shrink-0 items-center gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
 			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Efeitos</h2>
 			if v.Effects.Count > 0 {
-				<span class="rounded-full bg-grimorio-gold px-1.5 text-3xs font-bold text-grimorio-ink">
+				// O par de tinta é o da casa (`CountBadge`): `bg-primary` é o
+				// ouro do grimório e `text-primary-foreground` é a tinta que se
+				// lê sobre ele. Aqui morava um `text-grimorio-ink` INVENTADO —
+				// token que não existe não vira regra na folha, e o número saiu
+				// dourado sobre dourado. Ver `TestTodaTintaDaCasaExisteNaFolha`.
+				<span aria-hidden="true" class="rounded-full bg-primary px-1.5 text-3xs font-bold text-primary-foreground">
 					{ strconv.Itoa(v.Effects.Count) }
 				</span>
+				// A pílula é decorativa e quem carrega o sentido é esta linha:
+				// um "1" solto é lido como "1", e o número sozinho não diz de quê.
+				<span class="sr-only">{ osEfeitosAtivosEscrito(v.Effects.Count) }</span>
 			}
 		</div>
 		<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">

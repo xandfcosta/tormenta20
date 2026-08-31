@@ -44,6 +44,34 @@ type fichaSignals struct {
 	// sinal e não pelo caminho porque é um encadeado com `::` e texto livre do
 	// catálogo dentro — um `PathEscape` daquilo funciona e é ilegível no log.
 	Situacao *string `json:"situacao"`
+	// Aprimoramentos são as pilhas escolhidas no diálogo de conjurar, uma por
+	// índice: `aug0`..`aug5`. Seis porque é o máximo do catálogo (Conjurar
+	// Monstro), e nomes minúsculos pela regra de sempre.
+	Aug0 *int `json:"aug0"`
+	Aug1 *int `json:"aug1"`
+	Aug2 *int `json:"aug2"`
+	Aug3 *int `json:"aug3"`
+	Aug4 *int `json:"aug4"`
+	Aug5 *int `json:"aug5"`
+	// Os filtros do catálogo de magias. Minúsculos como todos os outros.
+	MagiaBusca   string `json:"magiabusca"`
+	MagiaCirculo string `json:"magiacirculo"`
+	MagiaEscola  string `json:"magiaescola"`
+}
+
+// osAprimoramentos traduz os seis sinais no que a validação espera.
+//
+// Zero e nulo saem da lista: "não escolhi" não é "escolhi zero pilhas", e um
+// `stacks: 0` é recusado pelo servidor de propósito.
+func (s fichaSignals) osAprimoramentos() []augmentPick {
+	picks := []augmentPick{}
+	for i, valor := range []*int{s.Aug0, s.Aug1, s.Aug2, s.Aug3, s.Aug4, s.Aug5} {
+		if valor == nil || *valor <= 0 {
+			continue
+		}
+		picks = append(picks, augmentPick{AugmentIndex: i, Stacks: *valor})
+	}
+	return picks
 }
 
 // osSinaisDaFicha lê o que o cliente mandou, caindo na URL quando não há sinal.
