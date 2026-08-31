@@ -192,8 +192,8 @@ func TestOAtributoTrocaESoAceitaOsSeis(t *testing.T) {
 	}
 
 	alvo := fmt.Sprintf("/piloto/personagens/%d/pericias/atributo/Acrobacia/sorte?tab=expertises", id)
-	if rec := f.pede(t, f.jogador, http.MethodPost, alvo, ""); rec.Code == http.StatusOK {
-		t.Error("um atributo inventado foi aceito")
+	if recusa := aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String()); recusa == "" {
+		t.Error("um atributo inventado foi aceito sem uma palavra na tela")
 	}
 	if _, atributo := oTreinoDe(t, f, id, "Acrobacia"); atributo != "strength" {
 		t.Error("a recusa mexeu no banco assim mesmo")
@@ -240,7 +240,7 @@ func TestOOficioNasceTreinadoESoEleSeRemove(t *testing.T) {
 	}
 
 	alvo := fmt.Sprintf("/piloto/personagens/%d/pericias/remove/Fortitude?tab=expertises", id)
-	if rec := f.pede(t, f.jogador, http.MethodPost, alvo, ""); rec.Code == http.StatusOK {
+	if recusa := aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String()); recusa == "" {
 		t.Error("uma perícia do LIVRO foi removida da ficha")
 	}
 	if _, _ = oTreinoDe(t, f, id, "Fortitude"); false {

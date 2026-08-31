@@ -1,0 +1,337 @@
+package api
+
+import (
+	"fmt"
+	"strconv"
+)
+
+// O painel da MOCHILA desenhado (ALE-272, fatia 7).
+//
+// A ordem é a da SPA e ela responde a três perguntas em sequência: o que está
+// na mão, quanto pesa, e o que sobra guardado.
+//
+// # A tira de equipados são DOIS TETOS, não casas de corpo
+//
+// O livro não tem casa de elmo nem de botas: ele tem "no máximo duas mãos
+// ocupadas" e "no máximo quatro itens vestidos" (p141). Desenhar quatro
+// posições de Vestido — inclusive as vazias — é o que faz o teto aparecer sem
+// escrever uma frase sobre ele.
+
+// bagPanelSection é a seção inteira.
+templ bagPanelSection(v fichaView) {
+	<section class="flex min-h-0 flex-1 flex-col">
+		<div class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-grimorio-iron px-3 py-2 sm:px-4">
+			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Mochila</h2>
+			@loadHeadline(v)
+			@moneyHeadline(v)
+			@bagAddButtons(v)
+		</div>
+		<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-2 sm:p-3">
+			@equippedStrip(v)
+			@stowedBlock(v)
+		</div>
+	</section>
+	@moneyDialog(v)
+	@catalogAddDialog(v)
+	@itemFormDialog(v, "item-custom", "Novo item", "Adicionar", oPostDaFicha(v, "/itens/custom"))
+	for _, ficha := range v.Bag.Sheets {
+		@itemSheetDialog(v, ficha)
+	}
+}
+
+// loadHeadline é a carga em uma linha, no cabeçalho.
+templ loadHeadline(v fichaView) {
+	<p class="text-3xs text-muted-foreground sm:text-xs">
+		carga
+		<span
+			class={ "font-mono", templ.KV("text-penalty-ink", v.Bag.Load.Overloaded),
+				templ.KV("text-foreground", !v.Bag.Load.Overloaded) }
+		>{ v.Bag.Load.Used }</span>
+		{ "/ " + strconv.Itoa(v.Bag.Load.Limit) }
+		if v.Bag.Load.Overloaded {
+			<span class="ml-1 uppercase tracking-wider text-penalty-ink">sobrecarga</span>
+		}
+		if !v.Bag.Load.Enforced {
+			// A regra desligada NÃO apaga o número: o livro condiciona o
+			// desligamento a "desde que os jogadores não abusem" (p141), e não
+			// dá para vigiar abuso sem ver o quanto se carrega. Sem esta frase,
+			// uma carga acima do limite e sem alerta pareceria defeito da tela.
+			<span class="ml-1 uppercase tracking-wider">a critério do mestre</span>
+		}
+		<span class="ml-1">{ "• " + v.Bag.Load.LimitLabel }</span>
+	</p>
+}
+
+// moneyHeadline é o dinheiro, com o gesto que abre o diálogo.
+templ moneyHeadline(v fichaView) {
+	<button
+		type="button"
+		aria-label="Mexer no dinheiro"
+		aria-haspopup="dialog"
+		data-on:click="$tibarmodo = 'receber'; $tibarvalor = 0; $detalhe = 'dinheiro'"
+		class="ml-auto inline-flex items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1 text-3xs outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:text-xs"
+	>
+		@icone("Coins", "size-3.5 text-grimorio-gold")
+		<span class="font-mono text-foreground">{ "T$ " + v.Bag.Money.Tibar }</span>
+		if v.Bag.Money.Slots != "" {
+			<span class="text-muted-foreground">{ "· " + v.Bag.Money.Slots }</span>
+		}
+	</button>
+}
+
+// equippedStrip é a tira de Mãos e Vestidos.
+templ equippedStrip(v fichaView) {
+	<div class="grid gap-2 sm:grid-cols-[1fr_2fr]">
+		@poolBox("Mãos", v.Bag.HandsUsed, 2) {
+			if v.Bag.Hands.TwoHand != nil {
+				@equippedCardItem(v, v.Bag.Hands.TwoHand, true)
+			} else {
+				for i, card := range v.Bag.Hands.Wielded {
+					@handSlot(v, card, oRotuloDaMao(i))
+				}
+			}
+		}
+		@poolBox("Vestidos", v.Bag.VestedUsed, 4) {
+			for _, card := range v.Bag.Vested {
+				@vestedSlot(v, card)
+			}
+		}
+	</div>
+}
+
+// handSlot desenha a mão, cheia ou vazia.
+templ handSlot(v fichaView, card *equippedCard, rotulo string) {
+	if card != nil {
+		@equippedCardItem(v, card, false)
+	} else {
+		@emptySlot(rotulo, false)
+	}
+}
+
+templ vestedSlot(v fichaView, card *equippedCard) {
+	if card != nil {
+		@equippedCardItem(v, card, false)
+	} else {
+		@emptySlot("Vestido", false)
+	}
+}
+
+// poolBox é um teto do livro com o contador x/max.
+templ poolBox(titulo string, usados, teto int) {
+	<div class="space-y-1.5">
+		<div class="flex items-baseline justify-between">
+			<h3 class="font-heading text-3xs font-bold uppercase tracking-[0.18em] text-grimorio-gold">{ titulo }</h3>
+			<span
+				class={ "font-mono text-xs", templ.KV("text-foreground", usados >= teto),
+					templ.KV("text-muted-foreground", usados < teto) }
+			>{ strconv.Itoa(usados) + "/" + strconv.Itoa(teto) }</span>
+		</div>
+		<div class="grid grid-cols-2 gap-2">
+			{ children... }
+		</div>
+	</div>
+}
+
+// equippedCardItem é o cartão de um item equipado.
+templ equippedCardItem(v fichaView, card *equippedCard, largo bool) {
+	<div
+		class={ "relative min-h-[3.75rem] rounded-none border border-grimorio-gold/40 bg-grimorio-panel-raised px-2 py-1.5",
+			templ.KV("col-span-2", largo) }
+	>
+		<button
+			type="button"
+			aria-label={ "Abrir " + card.Name }
+			aria-haspopup="dialog"
+			data-on:click={ "$detalhe = 'item-" + card.Command + "'" }
+			class="block w-[calc(100%-1.5rem)] text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			<p class="text-4xs uppercase tracking-wider text-muted-foreground">{ card.Label }</p>
+			<p class="truncate text-sm font-semibold text-grimorio-gold">{ card.Name }</p>
+			if card.NoProficiency {
+				// O motor já cobra a penalidade da p142; o crachá existe para
+				// ela não ser descoberta no meio de um teste de ataque.
+				<p class="flex items-center gap-1 text-3xs text-penalty-ink">
+					@icone("AlertTriangle", "size-3")
+					sem proficiência
+				</p>
+			}
+			if len(card.Chips) > 0 {
+				<span class="mt-1 flex flex-wrap gap-1">
+					for _, chip := range card.Chips {
+						// `max-w-full truncate` porque um crachá é uma caixa
+						// indivisível: o `flex-wrap` não quebra "Perícia
+						// Intimidação +1", e sem o corte ele é desenhado por
+						// cima do cartão vizinho (ALE-148).
+						<span
+							title={ chip }
+							class="max-w-full truncate rounded-full border border-grimorio-iron bg-muted px-1.5 py-0.5 text-3xs text-foreground"
+						>{ chip }</span>
+					}
+				</span>
+			}
+		</button>
+		<button
+			type="button"
+			aria-label={ "Guardar " + card.Name }
+			data-on:click={ oPostDaFicha(v, "/itens/"+card.Command+"/guarda") }
+			class="absolute right-1 top-1 inline-flex size-6 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:text-penalty-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			@icone("X", "size-3")
+		</button>
+	</div>
+}
+
+// emptySlot é a posição livre — ela existe para o teto aparecer.
+templ emptySlot(rotulo string, largo bool) {
+	<div
+		class={ "flex min-h-[3.75rem] flex-col justify-center rounded-none border border-dashed border-grimorio-iron bg-grimorio-panel px-2 py-1.5",
+			templ.KV("col-span-2", largo) }
+	>
+		<p class="text-4xs uppercase tracking-wider text-muted-foreground">{ rotulo }</p>
+		<p class="text-xs text-muted-foreground">vazio</p>
+	</div>
+}
+
+// stowedBlock é a grade do que está guardado.
+templ stowedBlock(v fichaView) {
+	<div class="space-y-2">
+		<div class="flex items-baseline justify-between">
+			<h3 class="font-heading text-3xs font-bold uppercase tracking-[0.18em] text-grimorio-gold">Guardado</h3>
+			<span class="font-mono text-xs text-muted-foreground">{ osItensEscrito(v.Bag.StowedTotal) }</span>
+		</div>
+		@loadBar(v)
+		@bagFilters(v)
+		if len(v.Bag.Stowed) == 0 {
+			<p class="py-4 text-center text-xs text-muted-foreground">
+				if v.Bag.StowedTotal > 0 {
+					{ "Nenhum item para esse filtro." }
+				} else {
+					{ "Mochila vazia." }
+				}
+			</p>
+		} else {
+			<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+				for _, ladrilho := range v.Bag.Stowed {
+					@stowedTileItem(ladrilho)
+				}
+			</div>
+		}
+	</div>
+}
+
+// loadBar é a barra da carga e o que acontece quando ela estoura.
+//
+// Os DOIS números da penalidade são os que o motor já aplicou no deslocamento e
+// nas perícias — a mochila anuncia o que a ficha faz, e não uma frase decorada
+// que pode divergir dela.
+templ loadBar(v fichaView) {
+	<div class="space-y-1">
+		<div
+			role="progressbar"
+			aria-label="Espaços de carga"
+			aria-valuenow={ v.Bag.Load.Used }
+			aria-valuemin="0"
+			aria-valuemax={ strconv.Itoa(v.Bag.Load.Limit) }
+			class="h-2 overflow-hidden rounded-full border border-grimorio-iron bg-muted"
+		>
+			<div
+				class={ "h-full", templ.KV("bg-hp-critical", v.Bag.Load.Overloaded),
+					templ.KV("bg-grimorio-gold", !v.Bag.Load.Overloaded) }
+				style={ fmt.Sprintf("width: %d%%", v.Bag.Load.Percent) }
+			></div>
+		</div>
+		if v.Bag.Load.Overloaded {
+			// A BARRA é `--hp-critical`; este aviso é TEXTO, e em 10px ele
+			// precisa da tinta da casa — o token da barra rende 3,59:1 sobre o
+			// painel (ALE-240).
+			<p class="text-3xs font-semibold text-penalty-ink">
+				{ oAvisoDaSobrecarga(v.Bag.Load) }
+			</p>
+		}
+	</div>
+}
+
+// bagFilters é a busca e os cinco chips de categoria.
+templ bagFilters(v fichaView) {
+	<div class="flex flex-wrap items-center gap-2">
+		<input
+			type="search"
+			data-bind:itembusca
+			data-on:input__debounce.250ms={ oGetDaFicha(v) }
+			value={ v.Bag.Search }
+			placeholder="Buscar item…"
+			aria-label="Buscar item na mochila"
+			class="h-8 min-w-32 flex-1 rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		/>
+		<div class="flex flex-wrap gap-1">
+			for _, chip := range v.Bag.Categories {
+				<button
+					type="button"
+					aria-pressed={ boolTexto(chip.Ativo) }
+					data-on:click={ "$itemcategoria = '" + chip.Valor + "'; " + oGetDaFicha(v) }
+					class={ "rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+						templ.KV("border-grimorio-gold/60 bg-accent text-grimorio-gold", chip.Ativo),
+						templ.KV("border-grimorio-iron text-muted-foreground hover:text-foreground", !chip.Ativo) }
+				>{ chip.Rotulo }</button>
+			}
+		</div>
+	</div>
+}
+
+// stowedTileItem é um ladrilho da grade.
+templ stowedTileItem(ladrilho stowedTile) {
+	<button
+		type="button"
+		aria-label={ "Abrir " + ladrilho.Name }
+		aria-haspopup="dialog"
+		data-on:click={ "$detalhe = 'item-" + ladrilho.Command + "'" }
+		class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>
+		if ladrilho.Quantity > 1 {
+			<span class="absolute right-1 top-1 rounded-full bg-accent px-1.5 font-mono text-3xs font-semibold text-grimorio-gold">
+				{ "×" + strconv.FormatInt(ladrilho.Quantity, 10) }
+			</span>
+		}
+		@icone(ladrilho.Glyph, "size-5 text-muted-foreground")
+		<span class="line-clamp-2 w-full text-2xs leading-tight text-foreground">{ ladrilho.Name }</span>
+		if len(ladrilho.Overlays) > 0 {
+			<span class="line-clamp-1 w-full text-3xs text-muted-foreground">{ juntoComPonto(ladrilho.Overlays) }</span>
+		}
+	</button>
+}
+
+// moneyDialog são as três coisas que se fazem com dinheiro na mesa: receber,
+// gastar e corrigir (ALE-224). O terceiro existe porque escrever o total é o
+// gesto da forja e o de consertar um erro de digitação.
+templ moneyDialog(v fichaView) {
+	@aSobreposicao("dinheiro", "Dinheiro", "Coins", false) {
+		<p class="text-xs text-muted-foreground">
+			{ "Você tem T$ " + v.Bag.Money.Tibar + "." }
+		</p>
+		<div class="flex gap-1">
+			for _, modo := range osModosDoDinheiro {
+				<button
+					type="button"
+					data-on:click={ "$tibarmodo = '" + modo.Valor + "'" }
+					data-attr:aria-pressed={ "$tibarmodo === '" + modo.Valor + "' ? 'true' : 'false'" }
+					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>{ modo.Rotulo }</button>
+			}
+		</div>
+		<label class="block space-y-1">
+			<span class="text-3xs uppercase tracking-wider text-muted-foreground">valor em T$</span>
+			<input
+				type="number"
+				min="0"
+				step="0.01"
+				data-bind:tibarvalor
+				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			/>
+		</label>
+		<button
+			type="button"
+			data-on:click={ oPostDaFicha(v, "/dinheiro") + "; $detalhe = ''" }
+			class={ classesDoBotao(varPrimaria, tamPadrao, "w-full") }
+		>Confirmar</button>
+	}
+}

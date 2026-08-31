@@ -71,6 +71,13 @@ type fichaView struct {
 	// Spells é a aba homônima (fatia 6) — o grimório, as concedidas por poder e
 	// o catálogo inteiro do Capítulo 4 para aprender.
 	Spells spellbookPanel
+	// Bag é a aba homônima (fatia 7) — a tira de equipados, a carga da p141, o
+	// dinheiro e a grade do que está guardado.
+	Bag bagPanel
+	// Recusa é a frase de uma regra que barrou o gesto — o teto de duas mãos, o
+	// PM que falta, a magia que não está preparada. Vazia no caminho normal.
+	// Ela vem com a cena INTEIRA redesenhada, que é o que mostra que nada mudou.
+	Recusa string
 }
 
 // classeDaFicha é uma classe do personagem, com o que o degrau precisa saber.
@@ -162,6 +169,7 @@ func oPainelJaPortado(valor string) bool {
 		"expertises":    true, // fatia 4
 		"conditionals":  true, // fatia 5
 		"spells":        true, // fatia 6
+		"bag":           true, // fatia 7
 	}
 	return portados[valor]
 }
@@ -206,6 +214,10 @@ func (s *Server) carregaFicha(
 	}
 	v.Effects = s.effectsPanelOf(dto)
 	v.Spells = s.spellbookPanelOf(dto, sinais.MagiaBusca, sinais.MagiaCirculo, sinais.MagiaEscola)
+	v.Bag = s.bagPanelOf(dto, osFiltrosDaMochila{
+		Busca: sinais.ItemBusca, Categoria: sinais.ItemCategoria,
+		BuscaNoCatalogo: sinais.CatalogoBusca, CategoriaNoCatalogo: sinais.CatalogoCategoria,
+	})
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = combatPanelFor(sheet, cards, isCaster(sheet))

@@ -12,6 +12,7 @@ import (
 	"golang.org/x/text/language"
 
 	"t20engine/catalog"
+	"t20engine/engine"
 )
 
 // OS CATÁLOGOS do mestre (ALE-258): condições, magias, poderes e itens numa
@@ -120,6 +121,13 @@ type poderDoLivro struct {
 	BookPage    int
 }
 
+// itemDoLivro é a entrada do catálogo de itens.
+//
+// Ela nasceu com os seis campos que a vitrine do mestre mostra e cresceu na
+// ALE-272 (fatia 7): a Mochila do jogador precisa do EIXO de equipar, das
+// estatísticas de arma/armadura/escudo, do consumível e da família a que uma
+// melhoria se aplica. Um segundo leitor do mesmo `items.json` daria duas
+// verdades sobre o mesmo arquivo, então quem cresce é este.
 type itemDoLivro struct {
 	ID       string  `json:"id"`
 	Name     string  `json:"name"`
@@ -127,6 +135,51 @@ type itemDoLivro struct {
 	Price    float64 `json:"price"`
 	Slots    float64 `json:"slots"`
 	BookPage int     `json:"bookPage"`
+	// Equip é o eixo do livro: `vested`, `wielded` ou `either`.
+	Equip string `json:"equip"`
+	Hands int    `json:"hands"`
+	// AppliesTo é a família que uma MELHORIA ou um MATERIAL aceita — arma,
+	// armadura, escudo, vestuário. Vazio em tudo que não é sobreposição.
+	AppliesTo  []string           `json:"appliesTo"`
+	Weapon     *armaDoLivro       `json:"weapon"`
+	Armor      *protecaoDoLivro   `json:"armor"`
+	Shield     *protecaoDoLivro   `json:"shield"`
+	Consumable *consumivelDoLivro `json:"consumable"`
+	Modifiers  []engine.Modifier  `json:"modifiers"`
+}
+
+type armaDoLivro struct {
+	Damage    string   `json:"damage"`
+	CritRange int      `json:"critRange"`
+	CritMult  int      `json:"critMult"`
+	Type      string   `json:"type"`
+	Purpose   string   `json:"purpose"`
+	Traits    []string `json:"traits"`
+}
+
+// protecaoDoLivro serve armadura E escudo: os dois trazem os mesmos três
+// números, e o livro os apresenta na mesma tabela (p154).
+type protecaoDoLivro struct {
+	Defense int  `json:"defense"`
+	Penalty int  `json:"penalty"`
+	Heavy   bool `json:"heavy"`
+}
+
+type consumivelDoLivro struct {
+	Scope   string         `json:"scope"`
+	Instant *ganhoImediato `json:"instant"`
+}
+
+// ganhoImediato é o PV/PM que um consumível devolve na hora. O `Dice` é a
+// rolagem que a MESA faz — a ficha não rola por ninguém.
+type ganhoImediato struct {
+	HP *rolagemDoGanho `json:"hp"`
+	MP *rolagemDoGanho `json:"mp"`
+}
+
+type rolagemDoGanho struct {
+	Dice  string `json:"dice"`
+	Bonus int    `json:"bonus"`
 }
 
 // ── a leitura, uma vez só ────────────────────────────────────────────────────

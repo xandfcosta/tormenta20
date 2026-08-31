@@ -57,6 +57,27 @@ type fichaSignals struct {
 	MagiaBusca   string `json:"magiabusca"`
 	MagiaCirculo string `json:"magiacirculo"`
 	MagiaEscola  string `json:"magiaescola"`
+	// Os filtros da Mochila: a busca da grade e o chip de categoria.
+	ItemBusca     string `json:"itembusca"`
+	ItemCategoria string `json:"itemcategoria"`
+	// O diálogo do dinheiro: o modo (receber, gastar, corrigir) e o valor.
+	TibarModo  string   `json:"tibarmodo"`
+	TibarValor *float64 `json:"tibarvalor"`
+	// Os filtros do diálogo de adicionar do catálogo.
+	CatalogoBusca     string `json:"catalogobusca"`
+	CatalogoCategoria string `json:"catalogocategoria"`
+	// Os campos de um item: quantidade, nome e espaços. `ItemQtd` serve ao
+	// catálogo e à edição; os outros dois só ao item custom.
+	ItemQtd     *int64   `json:"itemqtd"`
+	ItemNome    *string  `json:"itemnome"`
+	ItemEspacos *float64 `json:"itemespacos"`
+	// O que a MESA rolou ao usar um consumível. A ficha não rola por ninguém.
+	ItemRolagemPv *int64 `json:"itemrolagempv"`
+	ItemRolagemPm *int64 `json:"itemrolagempm"`
+	// As melhorias escolhidas no diálogo, e o material. Lista e não par de
+	// ids: são até quatro melhorias no mesmo item.
+	ItemMelhorias []string `json:"itemmelhorias"`
+	ItemMaterial  string   `json:"itemmaterial"`
 }
 
 // osAprimoramentos traduz os seis sinais no que a validação espera.
@@ -87,7 +108,22 @@ func osSinaisDaFicha(r *http.Request) fichaSignals {
 		daURL := r.URL.Query().Get("busca")
 		sinais.Busca = &daURL
 	}
+	// Os FILTROS caem para a query pela mesma razão da busca, e com uma a mais:
+	// eles são o estado que faz sentido num endereço guardado — "a mochila,
+	// filtrada por armas" é um lugar. O sinal do cliente vence quando existe.
+	preencheDaURL(r, "itembusca", &sinais.ItemBusca)
+	preencheDaURL(r, "itemcategoria", &sinais.ItemCategoria)
+	preencheDaURL(r, "magiabusca", &sinais.MagiaBusca)
+	preencheDaURL(r, "magiacirculo", &sinais.MagiaCirculo)
+	preencheDaURL(r, "magiaescola", &sinais.MagiaEscola)
 	return sinais
+}
+
+// preencheDaURL põe o valor da query no campo quando o sinal veio vazio.
+func preencheDaURL(r *http.Request, chave string, campo *string) {
+	if *campo == "" {
+		*campo = r.URL.Query().Get(chave)
+	}
 }
 
 // aBusca é o termo já resolvido, para quem só quer o texto.

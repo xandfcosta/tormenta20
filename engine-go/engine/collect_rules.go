@@ -101,6 +101,15 @@ func resolveFloating(raca *Raca, mod AtributoMod, picks []string) ([]attrDelta, 
 	return result, nil
 }
 
+// RequiredProficiency é a proficiência que um item exige para ser usado sem
+// penalidade, ou "" quando ele não exige nenhuma (item-classify.ts).
+//
+// Exportada na ALE-272 (fatia 7): a Mochila marca o item equipado SEM
+// proficiência, e essa marca tem de sair da MESMA tabela que decide a
+// penalidade do motor. Uma segunda cópia no pacote `api` daria uma tela que
+// avisa sobre um item e um motor que penaliza outro.
+func RequiredProficiency(item *CatalogItem) string { return requiredProficiency(item) }
+
 // requiredProficiency ports items/catalog/item-classify.ts: the proficiency an
 // item requires to use without penalty, or "" for none.
 func requiredProficiency(item *CatalogItem) string {

@@ -31,6 +31,7 @@ templ ficha(v fichaView) {
 	<div class="flex min-h-0 flex-1 flex-col">
 		@aBarraDaFicha(v)
 		@asAbasDesenhadas(v)
+		@aRecusaDaRegra(v)
 		<div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
 			@oPainelDaFicha(v)
 		</div>
@@ -105,6 +106,8 @@ templ oPainelDaFicha(v fichaView) {
 			@effectsPanelSection(v)
 		case "spells":
 			@spellsPanelSection(v)
+		case "bag":
+			@bagPanelSection(v)
 	}
 	for _, aba := range v.Abas {
 		if aba.Ativa && !aba.Portada {
@@ -300,4 +303,23 @@ templ oPassoDoVital(v fichaView, rotulo string, passo int) {
 	>
 		{ oSinalDoPasso(passo) }
 	</button>
+}
+
+// aRecusaDaRegra é a frase da regra que barrou o gesto.
+//
+// Ela fica ACIMA do painel e não dentro do diálogo que originou o gesto: a cena
+// é redesenhada inteira a cada comando, então o diálogo já se fechou quando a
+// frase chega — e uma caixa que reabre sozinha para mostrar um aviso é pior que
+// um aviso no lugar fixo.
+//
+// `role="alert"` porque ela aparece DEPOIS de um gesto da pessoa e é o retorno
+// dele: sem isso, quem usa leitor de tela clica, não ouve nada, e conclui que o
+// botão está quebrado.
+templ aRecusaDaRegra(v fichaView) {
+	if v.Recusa != "" {
+		<p
+			role="alert"
+			class="shrink-0 border-b border-penalty/40 bg-penalty/10 px-3 py-1.5 text-xs text-penalty-ink sm:px-4"
+		>{ v.Recusa }</p>
+	}
 }

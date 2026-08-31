@@ -49,6 +49,13 @@ func aMagia(t *testing.T, f pilotoFixture, id int64, caminho string) int {
 	return f.pede(t, f.jogador, http.MethodPost, alvo, "").Code
 }
 
+// aRecusaDaMagia é a frase da regra que barrou o comando, ou "".
+func aRecusaDaMagia(t *testing.T, f pilotoFixture, id int64, caminho string) string {
+	t.Helper()
+	alvo := fmt.Sprintf("/piloto/personagens/%d/magias/%s?tab=spells", id, caminho)
+	return aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String())
+}
+
 func oGrimorioDe(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 	t.Helper()
 	linhas, err := f.s.queries.ListSpellsByCharacter(context.Background(), id)
@@ -96,8 +103,8 @@ func existe(m map[string]bool, chave string) bool {
 // UMA MAGIA INVENTADA NÃO ENTRA no grimório.
 func TestUmaMagiaInventadaNaoEntraNoGrimorio(t *testing.T) {
 	f, id := oArcanista(t)
-	if got := aMagia(t, f, id, "aprende/bola-de-neve-magica"); got == http.StatusOK {
-		t.Error("uma magia que não existe foi aprendida")
+	if aRecusaDaMagia(t, f, id, "aprende/bola-de-neve-magica") == "" {
+		t.Error("uma magia que não existe foi aprendida sem uma palavra na tela")
 	}
 	if len(oGrimorioDe(t, f, id)) != 0 {
 		t.Error("a recusa gravou assim mesmo")
@@ -139,8 +146,8 @@ func TestSemPmAConjuracaoERecusada(t *testing.T) {
 		t.Fatalf("zerar o PM: %v", err)
 	}
 
-	if got := aMagia(t, f, id, "conjura/bola-de-fogo"); got == http.StatusOK {
-		t.Error("conjurei uma magia de 3 PM com 1 PM na ficha")
+	if recusa := aRecusaDaMagia(t, f, id, "conjura/bola-de-fogo"); !strings.Contains(recusa, "faltam PM") {
+		t.Errorf("a recusa por PM não chegou à tela: %q", recusa)
 	}
 	if pm := oPmDe(t, f, id); pm != 1 {
 		t.Errorf("a recusa mexeu no PM assim mesmo: sobrou %d", pm)

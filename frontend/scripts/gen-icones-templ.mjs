@@ -123,6 +123,15 @@ const QUERIDOS = [
   // `Search`, `Plus` e `Scroll` já estavam na lista.
   'Dumbbell',
   'Lock',
+  // A Mochila (ALE-272, fatia 7): o glifo de cada categoria no ladrilho, os
+  // mesmos que a `bag-tile` da SPA escolhe. `Sword`, `Shield` e `Wand2` já
+  // estavam na lista — a arma, a proteção e o item arcano de empunhar.
+  'Shirt',
+  'FlaskConical',
+  'Utensils',
+  'Package',
+  'AlertTriangle',
+  'Coins',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

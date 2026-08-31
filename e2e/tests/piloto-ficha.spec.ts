@@ -20,6 +20,9 @@ test.use({ storageState: '.auth/user.json' })
 /** O conjurador da semente, o mesmo que o spec do Grimório usa. */
 const CONJURADOR = 'Necromante Nv12 Magias'
 
+/** O herói de mochila cheia: armadura vestida, machado e escudo nas mãos. */
+const TANQUE = 'Tanque Placas Nv10'
+
 /** O primeiro herói do elenco, pelo endereço da ficha nova. */
 async function aFichaDoPrimeiro(page: import('@playwright/test').Page) {
   await page.goto('/piloto/personagens')
@@ -114,19 +117,21 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
  * elenco deixar de ter um conjurador, em vez de medir o vazio.
  */
 /**
- * O id do conjurador, pelo NOME e pela busca da cena — que é o jeito da casa
+ * O id de um herói, pelo NOME e pela busca da cena — que é o jeito da casa
  * (`openSheetFromRoster`). O elenco é um palco de um herói por vez, ordenado por
  * última alteração, então "o primeiro do elenco" muda conforme o spec que rodou
  * antes.
  */
-async function oIdDoConjurador(page: import('@playwright/test').Page) {
+async function oIdDoHeroi(page: import('@playwright/test').Page, nome: string) {
   await page.goto('/piloto/personagens')
-  await page.getByRole('searchbox', { name: 'Buscar personagem' }).fill(CONJURADOR)
-  const abrir = page.getByRole('link', { name: `Abrir ficha de ${CONJURADOR}` })
-  await expect(abrir, `a semente não tem ${CONJURADOR}`).toBeVisible()
+  await page.getByRole('searchbox', { name: 'Buscar personagem' }).fill(nome)
+  const abrir = page.getByRole('link', { name: `Abrir ficha de ${nome}` })
+  await expect(abrir, `a semente não tem ${nome}`).toBeVisible()
   const href = await abrir.getAttribute('href')
   return href?.match(/\d+/)?.[0] as string
 }
+
+const oIdDoConjurador = (page: import('@playwright/test').Page) => oIdDoHeroi(page, CONJURADOR)
 
 test('a paleta arcana do Combate é legível para quem conjura', async ({ page }) => {
   const id = await oIdDoConjurador(page)
@@ -193,6 +198,46 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
   await page.getByRole('button', { name: 'Aprender magia' }).click()
   const caixa = page.getByRole('dialog', { name: 'Aprender magia' })
   await expect(caixa).toBeVisible()
+  await expectDentroDaJanela(page)
+  await expectNadaRolaDeLado(page)
+})
+
+/**
+ * A MOCHILA ABERTA, com a ficha de um item e o catálogo do Capítulo 3.
+ *
+ * O caminhar pelas sete abas mede a Mochila do primeiro herói do elenco, e isso
+ * cobre a tira e a grade — mas nenhum dos DIÁLOGOS, que é onde a fatia 7 pôs o
+ * equipar, o usar, as melhorias e as ~160 linhas do catálogo. Eles justificam o
+ * navegador por conta própria: são caixas que rolam dentro de si numa tela de
+ * 390px, que é a forma que já transbordou nesta casa (ALE-178).
+ */
+test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', async ({ page }) => {
+  const id = await oIdDoHeroi(page, TANQUE)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(`/piloto/personagens/${id}?tab=bag`)
+
+  // O CONTROLE do painel: sem a tira desenhada, o resto mede uma mochila vazia.
+  await expect(
+    page.getByRole('button', { name: 'Guardar Machado de batalha' }),
+    'a mochila do tanque não desenhou os equipados: nada abaixo mediria a fatia 7',
+  ).toBeVisible()
+  await expectNadaRolaDeLado(page)
+  const noPainel = await medeOContraste(page)
+  expect(noPainel.medidos, 'o medidor não achou texto na mochila').toBeGreaterThan(30)
+  expect(noPainel.falhas, 'texto abaixo do AA na mochila').toEqual([])
+
+  // A FICHA DO ITEM, aberta pelo cartão da tira.
+  await page.getByRole('button', { name: 'Abrir Machado de batalha' }).click()
+  const ficha = page.getByRole('dialog', { name: 'Machado de batalha' })
+  await expect(ficha).toBeVisible()
+  await expect(ficha.getByRole('button', { name: 'Melhorias de Machado de batalha' })).toBeVisible()
+  await expectDentroDaJanela(page)
+  await expectNadaRolaDeLado(page)
+  await page.keyboard.press('Escape')
+
+  // O CATÁLOGO leva o Capítulo 3 inteiro numa caixa que rola dentro de si.
+  await page.getByRole('button', { name: 'Adicionar do catálogo' }).click()
+  await expect(page.getByRole('dialog', { name: 'Adicionar do catálogo' })).toBeVisible()
   await expectDentroDaJanela(page)
   await expectNadaRolaDeLado(page)
 })
