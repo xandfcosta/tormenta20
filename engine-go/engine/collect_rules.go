@@ -135,6 +135,23 @@ func requiredProficiency(item *CatalogItem) string {
 // carismaLossFromPowers (tormenta-carisma.ts) already lives in tormenta.go —
 // the collection layer reuses it.
 
+// OwnsClassPower é a REGRA de posse de um poder de classe: automático pelo
+// nível, escolhido pelo id, ou concedido por uma escolha da classe (o caminho
+// do arcanista, o deus do clérigo).
+//
+// Exportada na ALE-272 (fatia 8): a aba Poderes lista o que o personagem TEM, e
+// essa lista precisa ser a mesma que a derivação soma. Uma segunda leitura no
+// pacote `api` daria uma tela mostrando um poder que a ficha não conta — ou o
+// contrário, que é pior, porque o número aparece sem explicação.
+func OwnsClassPower(
+	power *ClassPower,
+	classLevel int,
+	chosen map[string]bool,
+	choice ClassChoiceSelections,
+) bool {
+	return ownsClassPower(power, classLevel, chosen, choice)
+}
+
 // ownsClassPower ports classes/ownership.ts ownsClassPower: auto by level,
 // elective by picked id, or grantedByChoice matching a classChoices value.
 func ownsClassPower(

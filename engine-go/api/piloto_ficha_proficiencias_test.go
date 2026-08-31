@@ -229,6 +229,8 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 		"item":     "1",
 		"slot":     "vested",
 		"catalogo": "adaga",
+		// O dos Poderes (fatia 8) — a `flag` já entrou com os Efeitos.
+		"poder": "class.barbaro.brado-assustador",
 	}
 
 	var visitadas int
@@ -297,6 +299,7 @@ var oTituloDoPainel = map[string]string{
 	"conditionals":  "Efeitos",
 	"spells":        "Grimório",
 	"bag":           "Mochila",
+	"abilities":     "Poderes",
 }
 
 func TestTodaAbaPortadaDesenhaAlgo(t *testing.T) {

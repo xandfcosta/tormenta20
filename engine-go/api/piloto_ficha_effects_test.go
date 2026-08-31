@@ -108,7 +108,7 @@ func TestACondicaoAvisaAMesaAoVivo(t *testing.T) {
 	// viva com este personagem na fila para ouvir um SSE é caro, e o que se quer
 	// prender é que a CHAMADA não some — que é como a ALE-245 foi perdida da
 	// primeira vez (um gancho que ninguém preenchia).
-	fonte := lerFonte(t, "piloto_ficha_routes.go")
+	fonte := lerFonte(t, "piloto_ficha_comandos_efeitos.go")
 	corpo := recorteDaFuncao(t, fonte, "func toggleBookCondition")
 	if !strings.Contains(corpo, "s.characterChanged(row.ID)") {
 		t.Error("o comando de condição não chama `characterChanged`: o mestre aplica " +
