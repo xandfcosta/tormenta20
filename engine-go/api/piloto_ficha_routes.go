@@ -73,6 +73,156 @@ func (s *Server) rotasDaFicha(r chi.Router) {
 	// dois juntos, e um caminho com o valor dentro daria um endereço diferente
 	// a cada tecla digitada no campo.
 	r.Post("/personagens/{id}/dinheiro", s.comandoDaFicha(changeMoney))
+	r.Post("/personagens/{id}/itens/adiciona/{catalogo}", s.comandoDaFicha(addCatalogItem))
+	r.Post("/personagens/{id}/itens/custom", s.comandoDaFicha(addCustomItem))
+	r.Post("/personagens/{id}/itens/{item}/edita", s.comandoDaFicha(editItem))
+	r.Post("/personagens/{id}/itens/{item}/remove", s.comandoDaFicha(removeItemFromSheet))
+	r.Post("/personagens/{id}/itens/{item}/usa", s.comandoDaFicha(useItem))
+	r.Post("/personagens/{id}/itens/{item}/melhorias", s.comandoDaFicha(applyOverlays))
+}
+
+// addCatalogItem põe na mochila um item do Capítulo 3.
+//
+// O NOME e os ESPAÇOS vêm do catálogo, e não do cliente: são dado transcrito do
+// livro, e deixar o navegador mandá-los abriria a porta para uma "Espada longa"
+// de 0 espaços.
+func addCatalogItem(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
+	catalogo := itemDoLivroPorID(chi.URLParam(r, "catalogo"))
+	if catalogo == nil {
+		return fmt.Errorf("o item %q não existe no livro", chi.URLParam(r, "catalogo"))
+	}
+	quantidade, err := aQuantidadePedida(sinais)
+	if err != nil {
+		return err
+	}
+	_, err = s.queries.CreateItem(r.Context(), sqlcgen.CreateItemParams{
+		Characterid: row.ID, Catalogid: sql.NullString{String: catalogo.ID, Valid: true},
+		Name: catalogo.Name, Quantity: quantidade, Slots: catalogo.Slots,
+		Improvements: "[]", Createdat: plataforma.NowISO(),
+	})
+	return err
+}
+
+// addCustomItem cria o item que o livro não tem — a lembrança de um NPC, a
+// chave de um cofre.
+func addCustomItem(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
+	nome, quantidade, espacos, err := oItemCustomPedido(sinais)
+	if err != nil {
+		return err
+	}
+	_, err = s.queries.CreateItem(r.Context(), sqlcgen.CreateItemParams{
+		Characterid: row.ID, Name: nome, Quantity: quantidade, Slots: espacos,
+		Improvements: "[]", Createdat: plataforma.NowISO(),
+	})
+	return err
+}
+
+// editItem muda nome, quantidade e espaços de um item já na ficha.
+func editItem(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
+	item, err := s.oItemDaFicha(r, row.ID)
+	if err != nil {
+		return err
+	}
+	nome, quantidade, espacos, err := oItemCustomPedido(sinais)
+	if err != nil {
+		return err
+	}
+	var set setBuilder
+	set.Add("name = ?", nome)
+	set.Add("quantity = ?", quantidade)
+	set.Add("slots = ?", espacos)
+	return set.exec(r.Context(), s.db, "UPDATE character_items", item.ID)
+}
+
+// removeItemFromSheet tira o item da ficha.
+func removeItemFromSheet(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	item, err := s.oItemDaFicha(r, row.ID)
+	if err != nil {
+		return err
+	}
+	return s.queries.DeleteItem(r.Context(), item.ID)
+}
+
+// useItem gasta uma dose do consumível.
+//
+// A regra inteira — a rolagem presa no máximo, a linha de efeito de cena ou dia,
+// a porção diária, a baixa do item — é a MESMA da API JSON
+// (`consumeItemForCharacter`), extraída nesta fatia. Os números rolados vêm por
+// sinal porque quem rola é a MESA: a ficha não rola dado por ninguém.
+func useItem(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
+	item, err := s.oItemDaFicha(r, row.ID)
+	if err != nil {
+		return err
+	}
+	_, err = s.consumeItemForCharacter(r, row, item.ID, sinais.ItemRolagemPv, sinais.ItemRolagemPm)
+	return err
+}
+
+// applyOverlays grava as melhorias e o material escolhidos.
+//
+// A COMPATIBILIDADE é conferida aqui (`aMelhoriaCabeNoItem`), e essa checagem
+// não existia em servidor nenhum até a fatia 7: a regra vivia no filtro do
+// diálogo da SPA, que some junto com ela.
+func applyOverlays(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
+	item, err := s.oItemDaFicha(r, row.ID)
+	if err != nil {
+		return err
+	}
+	catalogo := itemDoLivroPorID(oCatalogoDoItem(item))
+	if err := aMelhoriaCabeNoItem(catalogo, sinais.ItemMelhorias, "improvement"); err != nil {
+		return err
+	}
+	materiais := []string{}
+	if sinais.ItemMaterial != "" {
+		materiais = append(materiais, sinais.ItemMaterial)
+	}
+	if err := aMelhoriaCabeNoItem(catalogo, materiais, "material"); err != nil {
+		return err
+	}
+	var set setBuilder
+	set.Add("improvements = ?", marshalStrings(&sinais.ItemMelhorias))
+	set.Add("material = ?", sql.NullString{String: sinais.ItemMaterial, Valid: sinais.ItemMaterial != ""})
+	return set.exec(r.Context(), s.db, "UPDATE character_items", item.ID)
+}
+
+// aQuantidadePedida lê a quantidade, com as mesmas bordas da API JSON.
+func aQuantidadePedida(sinais fichaSignals) (int64, error) {
+	if sinais.ItemQtd == nil {
+		return 1, nil
+	}
+	if *sinais.ItemQtd < 1 || *sinais.ItemQtd > 9999 {
+		return 0, fmt.Errorf("a quantidade %d está fora de 1 a 9999", *sinais.ItemQtd)
+	}
+	return *sinais.ItemQtd, nil
+}
+
+// oItemCustomPedido lê nome, quantidade e espaços, com as bordas do formulário.
+//
+// Os ESPAÇOS são múltiplos de meio porque é assim que o livro conta carga
+// (p141) — e essa é a mesma borda que a API JSON cobra, `slotsNotMultiple`.
+func oItemCustomPedido(sinais fichaSignals) (string, int64, float64, error) {
+	nome := ""
+	if sinais.ItemNome != nil {
+		nome = strings.TrimSpace(*sinais.ItemNome)
+	}
+	if nome == "" {
+		return "", 0, 0, fmt.Errorf("informe um nome para o item")
+	}
+	if len([]rune(nome)) > 80 {
+		return "", 0, 0, fmt.Errorf("o nome tem %d letras, e o máximo são 80", len([]rune(nome)))
+	}
+	quantidade, err := aQuantidadePedida(sinais)
+	if err != nil {
+		return "", 0, 0, err
+	}
+	espacos := 1.0
+	if sinais.ItemEspacos != nil {
+		espacos = *sinais.ItemEspacos
+	}
+	if espacos < 0 || slotsNotMultiple(espacos) {
+		return "", 0, 0, fmt.Errorf("os espaços (%v) têm de ser múltiplos de 0,5", espacos)
+	}
+	return nome, quantidade, espacos, nil
 }
 
 // stowItem tira o item da mão ou do corpo e o devolve à mochila.
@@ -543,7 +693,9 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 			" condicao: false, buff: false, situacao: ''," +
 			" aprender: false, aug0: 0, aug1: 0, aug2: 0, aug3: 0, aug4: 0, aug5: 0," +
 			" magiabusca: '', magiacirculo: '', magiaescola: ''," +
-			" itembusca: '', itemcategoria: '', tibarmodo: 'receber', tibarvalor: 0}",
+			" itembusca: '', itemcategoria: '', tibarmodo: 'receber', tibarvalor: 0," +
+			" catalogobusca: '', catalogocategoria: '', itemqtd: 1, itemnome: '', itemespacos: 1," +
+			" itemrolagempv: 0, itemrolagempm: 0, itemmelhorias: [], itemmaterial: ''}",
 	}, cenaDaFicha(view))
 }
 

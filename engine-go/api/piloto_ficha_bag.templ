@@ -24,6 +24,7 @@ templ bagPanelSection(v fichaView) {
 			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Mochila</h2>
 			@loadHeadline(v)
 			@moneyHeadline(v)
+			@bagAddButtons(v)
 		</div>
 		<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-2 sm:p-3">
 			@equippedStrip(v)
@@ -31,6 +32,11 @@ templ bagPanelSection(v fichaView) {
 		</div>
 	</section>
 	@moneyDialog(v)
+	@catalogAddDialog(v)
+	@itemFormDialog(v, "item-custom", "Novo item", "Adicionar", oPostDaFicha(v, "/itens/custom"))
+	for _, ficha := range v.Bag.Sheets {
+		@itemSheetDialog(v, ficha)
+	}
 }
 
 // loadHeadline é a carga em uma linha, no cabeçalho.
@@ -132,7 +138,13 @@ templ equippedCardItem(v fichaView, card *equippedCard, largo bool) {
 		class={ "relative min-h-[3.75rem] rounded-none border border-grimorio-gold/40 bg-grimorio-panel-raised px-2 py-1.5",
 			templ.KV("col-span-2", largo) }
 	>
-		<div class="w-[calc(100%-1.5rem)]">
+		<button
+			type="button"
+			aria-label={ "Abrir " + card.Name }
+			aria-haspopup="dialog"
+			data-on:click={ "$detalhe = 'item-" + card.Command + "'" }
+			class="block w-[calc(100%-1.5rem)] text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
 			<p class="text-4xs uppercase tracking-wider text-muted-foreground">{ card.Label }</p>
 			<p class="truncate text-sm font-semibold text-grimorio-gold">{ card.Name }</p>
 			if card.NoProficiency {
@@ -157,7 +169,7 @@ templ equippedCardItem(v fichaView, card *equippedCard, largo bool) {
 					}
 				</span>
 			}
-		</div>
+		</button>
 		<button
 			type="button"
 			aria-label={ "Guardar " + card.Name }
@@ -268,7 +280,13 @@ templ bagFilters(v fichaView) {
 
 // stowedTileItem é um ladrilho da grade.
 templ stowedTileItem(ladrilho stowedTile) {
-	<div class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center">
+	<button
+		type="button"
+		aria-label={ "Abrir " + ladrilho.Name }
+		aria-haspopup="dialog"
+		data-on:click={ "$detalhe = 'item-" + ladrilho.Command + "'" }
+		class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>
 		if ladrilho.Quantity > 1 {
 			<span class="absolute right-1 top-1 rounded-full bg-accent px-1.5 font-mono text-3xs font-semibold text-grimorio-gold">
 				{ "×" + strconv.FormatInt(ladrilho.Quantity, 10) }
@@ -279,7 +297,7 @@ templ stowedTileItem(ladrilho stowedTile) {
 		if len(ladrilho.Overlays) > 0 {
 			<span class="line-clamp-1 w-full text-3xs text-muted-foreground">{ juntoComPonto(ladrilho.Overlays) }</span>
 		}
-	</div>
+	</button>
 }
 
 // moneyDialog são as três coisas que se fazem com dinheiro na mesa: receber,

@@ -225,9 +225,10 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 		"magia":  "armadura-arcana",
 		"efeito": "1",
 		"flag":   "furia",
-		// Os dois da Mochila (fatia 7).
-		"item": "1",
-		"slot": "vested",
+		// Os três da Mochila (fatia 7).
+		"item":     "1",
+		"slot":     "vested",
+		"catalogo": "adaga",
 	}
 
 	var visitadas int

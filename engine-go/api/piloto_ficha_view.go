@@ -214,7 +214,10 @@ func (s *Server) carregaFicha(
 	}
 	v.Effects = s.effectsPanelOf(dto)
 	v.Spells = s.spellbookPanelOf(dto, sinais.MagiaBusca, sinais.MagiaCirculo, sinais.MagiaEscola)
-	v.Bag = s.bagPanelOf(dto, sinais.ItemBusca, sinais.ItemCategoria)
+	v.Bag = s.bagPanelOf(dto, osFiltrosDaMochila{
+		Busca: sinais.ItemBusca, Categoria: sinais.ItemCategoria,
+		BuscaNoCatalogo: sinais.CatalogoBusca, CategoriaNoCatalogo: sinais.CatalogoCategoria,
+	})
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = combatPanelFor(sheet, cards, isCaster(sheet))

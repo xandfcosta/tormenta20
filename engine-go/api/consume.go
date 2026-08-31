@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -27,6 +28,10 @@ type consumeResult struct {
 	MpCurrent int64             `json:"mpCurrent"`
 }
 
+// errPorcaoDoDia é a recusa da porção diária, que a API JSON responde com um
+// erro de CAMPO próprio — por isso ela é reconhecível em vez de virar texto.
+var errPorcaoDoDia = errors.New("apenas uma porção por dia")
+
 // handleConsumeItem roll the instant
 // gain (clamped to max), create the scene/day effect (if any), decrement/Remove
 // the item — all in one transaction. hpRolled/mpRolled override the dice.
@@ -46,46 +51,62 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
+	resultado, err := s.consumeItemForCharacter(r, row, itemID, body.HpRolled, body.MpRolled)
+	if errors.Is(err, errPorcaoDoDia) {
+		writeOncePerDay(w, resultado.Nome)
+		return
+	}
+	if err != nil {
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	plataforma.WriteJSON(w, http.StatusOK, resultado.consumeResult)
+}
+
+// consumeItemForCharacter é a dose INTEIRA, sem HTTP: a rolagem imediata presa
+// no máximo, a linha de efeito de cena ou dia, e a baixa do item — tudo numa
+// transação.
+//
+// Ela nasceu extraída na fatia 7 da ALE-272, quando a Mochila em Datastar
+// passou a usar item: reescrever a regra lá daria DUAS respostas para "posso
+// beber esta poção?", e elas divergiriam no dia em que uma mudasse. É a mesma
+// razão do `castSpellForCharacter` da fatia 6.
+func (s *Server) consumeItemForCharacter(
+	r *http.Request, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
+) (doseUsada, error) {
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
-		return
+		return doseUsada{}, err
 	}
 	item := findItemDTO(dto.Items, itemID)
 	if item == nil {
-		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
-		return
+		return doseUsada{}, fmt.Errorf("o item %d não está nesta ficha", itemID)
 	}
 	if item.CatalogID == nil {
-		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Item %d is custom and has no consumable spec", itemID))
-		return
+		return doseUsada{}, fmt.Errorf("%q é um item custom e não tem o que usar", item.Name)
 	}
 	cat, known := catalog.LookupItem(*item.CatalogID)
 	if !known || cat.Consumable == nil {
-		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Item %q is not consumable", item.Name))
-		return
+		return doseUsada{}, fmt.Errorf("%q não é um consumível", item.Name)
 	}
 	if item.Quantity < 1 {
-		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("No remaining uses of %q", item.Name))
-		return
+		return doseUsada{}, fmt.Errorf("não sobrou nenhum uso de %q", item.Name)
 	}
 	spec := cat.Consumable
 	if spec.OncePerDay {
 		for _, e := range dto.ActiveEffects {
 			if e.CatalogID == cat.ID {
-				writeOncePerDay(w, cat.Name)
-				return
+				return doseUsada{Nome: cat.Name}, errPorcaoDoDia
 			}
 		}
 	}
 
-	hpGain, hasHp := rollGain(body.HpRolled, spec.Instant, true)
-	mpGain, hasMp := rollGain(body.MpRolled, spec.Instant, false)
+	hpGain, hasHp := rollGain(hpRolled, spec.Instant, true)
+	mpGain, hasMp := rollGain(mpRolled, spec.Instant, false)
 
 	tx, err := s.db.BeginTx(r.Context(), nil)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not consume item")
-		return
+		return doseUsada{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := s.queries.WithTx(tx)
@@ -97,12 +118,10 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
 		})
 		if db.IsUniqueViolation(err) {
-			writeOncePerDay(w, cat.Name)
-			return
+			return doseUsada{Nome: cat.Name}, errPorcaoDoDia
 		}
 		if err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply effect")
-			return
+			return doseUsada{}, err
 		}
 		effect = &EffectDTO{ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: eff.Modifiers, CreatedAt: eff.Createdat}
 	}
@@ -111,13 +130,11 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 	newQty := item.Quantity - 1
 	if item.Quantity > 1 {
 		if err := q.SetItemQuantity(r.Context(), sqlcgen.SetItemQuantityParams{Quantity: newQty, ID: itemID}); err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not update item")
-			return
+			return doseUsada{}, err
 		}
 	} else {
 		if err := q.DeleteItem(r.Context(), itemID); err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove item")
-			return
+			return doseUsada{}, err
 		}
 		removed, newQty = true, 0
 	}
@@ -131,18 +148,26 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 			mpCurrent = min(row.Mpmax, row.Mpcurrent+int64(mpGain))
 		}
 		if err := q.SetVitalsCurrent(r.Context(), sqlcgen.SetVitalsCurrentParams{HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID}); err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply vitals")
-			return
+			return doseUsada{}, err
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not consume item")
-		return
+		return doseUsada{}, err
 	}
-	plataforma.WriteJSON(w, http.StatusOK, consumeResult{
-		Item: consumeItemResult{ID: itemID, Quantity: newQty, Removed: removed}, Effect: effect,
-		HpCurrent: hpCurrent, MpCurrent: mpCurrent,
-	})
+	return doseUsada{
+		Nome: cat.Name,
+		consumeResult: consumeResult{
+			Item: consumeItemResult{ID: itemID, Quantity: newQty, Removed: removed}, Effect: effect,
+			HpCurrent: hpCurrent, MpCurrent: mpCurrent,
+		},
+	}, nil
+}
+
+// doseUsada é o resultado da dose mais o NOME do item, que a recusa da porção
+// diária precisa e o corpo da resposta JSON não carrega.
+type doseUsada struct {
+	consumeResult
+	Nome string
 }
 
 func writeOncePerDay(w http.ResponseWriter, name string) {

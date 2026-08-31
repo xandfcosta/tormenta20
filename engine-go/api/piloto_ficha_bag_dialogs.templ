@@ -1,0 +1,384 @@
+package api
+
+import (
+	"strconv"
+	"strings"
+)
+
+// OS DIÁLOGOS DA MOCHILA (ALE-272, fatia 7).
+//
+// Um por item, mais dois compartilhados — adicionar do catálogo e criar um item
+// custom. Todos são desenhados de uma vez e alternados pelo sinal `$detalhe`,
+// que é a forma desta migração; o custo é HTML a mais no fio e o ganho é que
+// abrir uma caixa não pede nada ao servidor.
+//
+// # Quem TROCA de item limpa
+//
+// O diálogo de melhorias de cada item traz as escolhas dele já marcadas, e o
+// gesto que ABRE zera os campos compartilhados (`$itemnome`, `$itemqtd`,
+// `$itemespacos`, as rolagens): sem isso, o que foi digitado numa caixa
+// reaparece na próxima, que é a armadilha do "remendo em nó compartilhado" do
+// guia do Go.
+
+// itemSheetDialog é a ficha de UM item — o alvo de todo toque na Mochila.
+templ itemSheetDialog(v fichaView, ficha itemSheet) {
+	@aSobreposicao("item-"+ficha.Command, ficha.Name, "Backpack", false) {
+		<p class="text-xs text-muted-foreground">
+			{ oPesoEscrito(ficha) }
+			if ficha.NoProficiency {
+				<span class="ml-2 font-semibold text-penalty-ink">sem proficiência</span>
+			}
+		</p>
+		if len(ficha.Equip) > 0 {
+			<div class="space-y-1">
+				<p class="text-3xs uppercase tracking-wider text-muted-foreground">Equipar</p>
+				<div class="grid grid-cols-2 gap-2">
+					for _, lugar := range ficha.Equip {
+						<button
+							type="button"
+							data-on:click={ oComandoDeEquipar(v, ficha, lugar) + "; $detalhe = ''" }
+							class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+						>{ lugar.Rotulo }</button>
+					}
+				</div>
+			</div>
+		}
+		if ficha.Consumable != nil {
+			@consumeBlock(v, ficha)
+		}
+		if ficha.Book != nil {
+			@bookBlock(ficha)
+		}
+		if len(ficha.Overlays) > 0 {
+			<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
+				<p class="text-3xs uppercase tracking-wider text-muted-foreground">Melhorias & material</p>
+				for _, melhoria := range ficha.Overlays {
+					<p class="text-xs">
+						<span class="font-semibold text-grimorio-gold">{ melhoria.Nome }</span>
+						<span class="ml-2 text-muted-foreground">{ melhoria.Efeito }</span>
+					</p>
+				}
+			</div>
+		}
+		<div class="flex flex-wrap gap-2 border-t border-grimorio-iron pt-2">
+			if ficha.Overlayable {
+				<button
+					type="button"
+					aria-label={ "Melhorias de " + ficha.Name }
+					aria-haspopup="dialog"
+					data-on:click={ oGestoQueAbreAsMelhorias(ficha) }
+					class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+				>Melhorias</button>
+			}
+			<button
+				type="button"
+				aria-label={ "Editar " + ficha.Name }
+				aria-haspopup="dialog"
+				data-on:click={ oGestoQueAbreAEdicao(ficha) }
+				class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+			>Editar</button>
+			<button
+				type="button"
+				aria-label={ "Remover " + ficha.Name }
+				data-on:click={ oPostDaFicha(v, "/itens/"+ficha.Command+"/remove") + "; $detalhe = ''" }
+				class={ classesDoBotao(varDestrutiva, tamPequeno, "ml-auto") }
+			>Remover</button>
+		</div>
+	}
+	if ficha.Overlayable {
+		@overlayDialog(v, ficha)
+	}
+	@itemFormDialog(v, "editar-"+ficha.Command, "Editar "+ficha.Name, "Salvar",
+		oPostDaFicha(v, "/itens/"+ficha.Command+"/edita"))
+}
+
+// consumeBlock é o "Usar", com o campo da rolagem quando o ganho é por dado.
+//
+// O DADO É DA MESA: quem rola é a pessoa, e o servidor aceita o número que ela
+// mandar. A ficha rolando por conta própria tiraria da mesa o gesto que ela
+// gosta de fazer — e obrigaria a inventar uma política para o crítico, para o
+// dado emprestado e para o "rolei de novo porque caiu no chão".
+templ consumeBlock(v fichaView, ficha itemSheet) {
+	<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
+		<p class="text-3xs uppercase tracking-wider text-muted-foreground">
+			{ "Usar · " + ficha.Consumable.Escopo }
+		</p>
+		if ficha.Consumable.HpDice != "" {
+			@rollField("itemrolagempv", "PV rolados ("+ficha.Consumable.HpDice+")")
+		}
+		if ficha.Consumable.MpDice != "" {
+			@rollField("itemrolagempm", "PM rolados ("+ficha.Consumable.MpDice+")")
+		}
+		<button
+			type="button"
+			aria-label={ "Usar " + ficha.Name }
+			data-on:click={ oPostDaFicha(v, "/itens/"+ficha.Command+"/usa") + "; $detalhe = ''" }
+			class={ classesDoBotao(varPrimaria, tamPequeno, "w-full") }
+		>Usar</button>
+	</div>
+}
+
+templ rollField(sinal, rotulo string) {
+	<label class="block space-y-1">
+		<span class="text-3xs text-muted-foreground">{ rotulo }</span>
+		<input
+			type="number"
+			min="0"
+			data-bind={ sinal }
+			class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		/>
+	</label>
+}
+
+// bookBlock é o que o livro diz do item.
+templ bookBlock(ficha itemSheet) {
+	<div class="space-y-1 rounded-sm border border-grimorio-iron p-2 text-xs text-muted-foreground">
+		<p>{ ficha.Book.Categoria + " · T$ " + ficha.Book.Preco + " · p" + strconv.Itoa(ficha.Book.Pagina) }</p>
+		for _, linha := range ficha.Book.Linhas {
+			<p>{ linha }</p>
+		}
+	</div>
+}
+
+// overlayDialog escolhe melhorias e material.
+//
+// As duas listas já vêm FILTRADAS pela família do item — não se põe corda de
+// arco num escudo —, e quem recusa o resto é o servidor: o filtro aqui é
+// conveniência, `aMelhoriaCabeNoItem` é a fronteira.
+templ overlayDialog(v fichaView, ficha itemSheet) {
+	@aSobreposicao("melhorias-"+ficha.Command, "Melhorias de "+ficha.Name, "Sparkles", false) {
+		<div class="space-y-1">
+			<p class="text-3xs uppercase tracking-wider text-muted-foreground">Melhorias</p>
+			for _, escolha := range ficha.Improvements {
+				<button
+					type="button"
+					role="switch"
+					aria-checked={ boolTexto(escolha.Ativa) }
+					aria-label={ escolha.Nome }
+					data-on:click={ oGestoQueAlternaAMelhoria(escolha) }
+					data-attr:data-escolhida={ oSinalDaMelhoria(escolha) }
+					class="flex w-full items-baseline gap-2 rounded-sm border border-grimorio-iron px-2 py-1 text-left text-xs outline-none transition-colors data-[escolhida]:border-grimorio-gold/60 data-[escolhida]:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
+					<span class="font-semibold text-foreground">{ escolha.Nome }</span>
+					<span class="min-w-0 flex-1 truncate text-muted-foreground">{ escolha.Efeito }</span>
+					<span class="shrink-0 font-mono text-3xs text-muted-foreground">{ "T$ " + escolha.Preco }</span>
+				</button>
+			}
+		</div>
+		<div class="space-y-1">
+			<p class="text-3xs uppercase tracking-wider text-muted-foreground">Material</p>
+			<select
+				data-bind:itemmaterial
+				aria-label={ "Material de " + ficha.Name }
+				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				<option value="">Nenhum</option>
+				for _, escolha := range ficha.Materials {
+					<option value={ escolha.ID } selected?={ escolha.Ativa }>
+						{ escolha.Nome + " · T$ " + escolha.Preco }
+					</option>
+				}
+			</select>
+		</div>
+		<button
+			type="button"
+			data-on:click={ oPostDaFicha(v, "/itens/"+ficha.Command+"/melhorias") + "; $detalhe = ''" }
+			class={ classesDoBotao(varPrimaria, tamPadrao, "w-full") }
+		>Aplicar</button>
+	}
+}
+
+// catalogAddDialog é o Capítulo 3 buscável.
+templ catalogAddDialog(v fichaView) {
+	@aSobreposicao("catalogo", "Adicionar do catálogo", "Plus", false) {
+		<div class="flex gap-2">
+			<input
+				type="search"
+				data-bind:catalogobusca
+				data-on:input__debounce.250ms={ oGetDaFicha(v) }
+				value={ v.Bag.CatalogSearch }
+				placeholder="Buscar no catálogo…"
+				aria-label="Buscar no catálogo"
+				class="h-9 min-w-0 flex-1 rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			/>
+			<select
+				data-bind:catalogocategoria
+				data-on:change={ oGetDaFicha(v) }
+				aria-label="Categoria do catálogo"
+				class="h-9 max-w-[45%] rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				for _, opcao := range v.Bag.CatalogCategories {
+					<option value={ opcao.Valor } selected?={ opcao.Ativo }>{ opcao.Rotulo }</option>
+				}
+			</select>
+		</div>
+		<label class="block space-y-1">
+			<span class="text-3xs uppercase tracking-wider text-muted-foreground">quantidade</span>
+			<input
+				type="number"
+				min="1"
+				max="9999"
+				data-bind:itemqtd
+				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			/>
+		</label>
+		if len(v.Bag.Catalogo) == 0 {
+			<p class="py-4 text-center text-xs text-muted-foreground">Nenhum item para essa busca.</p>
+		} else {
+			<div class="max-h-[45vh] space-y-1 overflow-y-auto">
+				for _, linha := range v.Bag.Catalogo {
+					<button
+						type="button"
+						aria-label={ "Adicionar " + linha.Nome }
+						data-on:click={ oPostDaFicha(v, "/itens/adiciona/"+linha.ID) + "; $detalhe = ''" }
+						class="flex w-full items-baseline gap-2 rounded-sm border border-grimorio-iron px-2 py-1 text-left text-xs outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>
+						<span class="min-w-0 flex-1 truncate text-foreground">{ linha.Nome }</span>
+						<span class="shrink-0 text-3xs text-muted-foreground">{ linha.Categoria }</span>
+						<span class="shrink-0 font-mono text-3xs text-muted-foreground">
+							{ "esp " + linha.Espacos + " · T$ " + linha.Preco }
+						</span>
+					</button>
+				}
+			</div>
+		}
+	}
+}
+
+// itemFormDialog é o formulário de um item CUSTOM — nome, quantidade e espaços.
+// Ele serve tanto ao "novo" quanto ao "editar", que é o mesmo formulário com
+// outro destino.
+templ itemFormDialog(v fichaView, chave, titulo, botao, comando string) {
+	@aSobreposicao(chave, titulo, "Pencil", false) {
+		<label class="block space-y-1">
+			<span class="text-3xs uppercase tracking-wider text-muted-foreground">nome</span>
+			<input
+				type="text"
+				maxlength="80"
+				data-bind:itemnome
+				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			/>
+		</label>
+		<div class="grid grid-cols-2 gap-2">
+			<label class="block space-y-1">
+				<span class="text-3xs uppercase tracking-wider text-muted-foreground">quantidade</span>
+				<input
+					type="number"
+					min="1"
+					max="9999"
+					data-bind:itemqtd
+					class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				/>
+			</label>
+			<label class="block space-y-1">
+				<span class="text-3xs uppercase tracking-wider text-muted-foreground">espaços</span>
+				<input
+					type="number"
+					min="0"
+					step="0.5"
+					data-bind:itemespacos
+					class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				/>
+			</label>
+		</div>
+		<button
+			type="button"
+			data-on:click={ comando + "; $detalhe = ''" }
+			class={ classesDoBotao(varPrimaria, tamPadrao, "w-full") }
+		>{ botao }</button>
+	}
+}
+
+// osBotoesDeAdicionar são os dois gestos do cabeçalho: catálogo e item custom.
+templ bagAddButtons(v fichaView) {
+	<div class="flex items-center gap-1">
+		<button
+			type="button"
+			aria-label="Adicionar do catálogo"
+			aria-haspopup="dialog"
+			data-on:click="$itemqtd = 1; $catalogobusca = ''; $catalogocategoria = ''; $detalhe = 'catalogo'"
+			class={ classesDoBotao(varSecundaria, tamPequeno, "gap-1") }
+		>
+			@icone("Plus", "size-3.5")
+			Catálogo
+		</button>
+		<button
+			type="button"
+			aria-label="Adicionar item custom"
+			aria-haspopup="dialog"
+			data-on:click="$itemnome = ''; $itemqtd = 1; $itemespacos = 1; $detalhe = 'item-custom'"
+			class={ classesDoBotao(varSecundaria, tamPequeno, "gap-1") }
+		>
+			@icone("Plus", "size-3.5")
+			Custom
+		</button>
+	</div>
+}
+
+// oPesoEscrito é "2 × 0,5 espaço = 1", que é o que a carga conta.
+func oPesoEscrito(ficha itemSheet) string {
+	return strconv.FormatInt(ficha.Quantity, 10) + " × " + ficha.Slots + " espaço = " + ficha.Total
+}
+
+// oComandoDeEquipar escreve o `@post` do lugar escolhido — guardar tem rota
+// própria, porque guardar não passa por teto nenhum.
+func oComandoDeEquipar(v fichaView, ficha itemSheet, lugar equipChoice) string {
+	if lugar.Slot == "" {
+		return oPostDaFicha(v, "/itens/"+ficha.Command+"/guarda")
+	}
+	return oPostDaFicha(v, "/itens/"+ficha.Command+"/equipa/"+lugar.Slot)
+}
+
+// oSinalDaMelhoria é a expressão que diz se a melhoria está escolhida AGORA.
+func oSinalDaMelhoria(escolha overlayChoice) string {
+	return "$itemmelhorias.includes('" + escolha.ID + "')"
+}
+
+// oGestoQueAlternaAMelhoria liga ou desliga uma melhoria na lista do sinal.
+//
+// A lista é COPIADA antes de ser mexida (`[...$itemmelhorias]`): o sinal é um
+// proxy, e escrever dentro dele item a item é a armadilha que o guia do Go
+// registra — ler um índice que não existe o CRIA.
+func oGestoQueAlternaAMelhoria(escolha overlayChoice) string {
+	return "const escolhidas = [...$itemmelhorias]; const onde = escolhidas.indexOf('" + escolha.ID + "'); " +
+		"if (onde >= 0) { escolhidas.splice(onde, 1) } else { escolhidas.push('" + escolha.ID + "') }; " +
+		"$itemmelhorias = escolhidas"
+}
+
+// oGestoQueAbreAsMelhorias carrega o que o item JÁ tem antes de abrir.
+//
+// Quem TROCA de item limpa: sem isto, as melhorias marcadas numa espada
+// apareceriam marcadas na armadura aberta em seguida — e o botão Aplicar
+// gravaria nela o que era de outra.
+func oGestoQueAbreAsMelhorias(ficha itemSheet) string {
+	return "$itemmelhorias = " + aListaDeMelhoriasEscrita(ficha) +
+		"; $itemmaterial = '" + oMaterialEscolhido(ficha) + "'" +
+		"; $detalhe = 'melhorias-" + ficha.Command + "'"
+}
+
+// oGestoQueAbreAEdicao põe os valores atuais no formulário.
+func oGestoQueAbreAEdicao(ficha itemSheet) string {
+	return "$itemnome = " + strconv.Quote(ficha.Name) +
+		"; $itemqtd = " + strconv.FormatInt(ficha.Quantity, 10) +
+		"; $itemespacos = " + strings.Replace(ficha.Slots, ",", ".", 1) +
+		"; $detalhe = 'editar-" + ficha.Command + "'"
+}
+
+func aListaDeMelhoriasEscrita(ficha itemSheet) string {
+	ids := []string{}
+	for _, escolha := range ficha.Improvements {
+		if escolha.Ativa {
+			ids = append(ids, "'"+escolha.ID+"'")
+		}
+	}
+	return "[" + strings.Join(ids, ", ") + "]"
+}
+
+func oMaterialEscolhido(ficha itemSheet) string {
+	for _, escolha := range ficha.Materials {
+		if escolha.Ativa {
+			return escolha.ID
+		}
+	}
+	return ""
+}

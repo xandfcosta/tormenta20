@@ -63,6 +63,21 @@ type fichaSignals struct {
 	// O diálogo do dinheiro: o modo (receber, gastar, corrigir) e o valor.
 	TibarModo  string   `json:"tibarmodo"`
 	TibarValor *float64 `json:"tibarvalor"`
+	// Os filtros do diálogo de adicionar do catálogo.
+	CatalogoBusca     string `json:"catalogobusca"`
+	CatalogoCategoria string `json:"catalogocategoria"`
+	// Os campos de um item: quantidade, nome e espaços. `ItemQtd` serve ao
+	// catálogo e à edição; os outros dois só ao item custom.
+	ItemQtd     *int64   `json:"itemqtd"`
+	ItemNome    *string  `json:"itemnome"`
+	ItemEspacos *float64 `json:"itemespacos"`
+	// O que a MESA rolou ao usar um consumível. A ficha não rola por ninguém.
+	ItemRolagemPv *int64 `json:"itemrolagempv"`
+	ItemRolagemPm *int64 `json:"itemrolagempm"`
+	// As melhorias escolhidas no diálogo, e o material. Lista e não par de
+	// ids: são até quatro melhorias no mesmo item.
+	ItemMelhorias []string `json:"itemmelhorias"`
+	ItemMaterial  string   `json:"itemmaterial"`
 }
 
 // osAprimoramentos traduz os seis sinais no que a validação espera.

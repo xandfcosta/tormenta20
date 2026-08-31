@@ -295,12 +295,21 @@ func TestAGradeFiltraPorBuscaEPorCategoria(t *testing.T) {
 }
 
 // oGuardadoDaTela recorta só a GRADE, e o recorte não é preciosismo: o nome de
-// um item também aparece no diálogo e nos crachás, então procurar na tela
-// inteira acharia o que o filtro escondeu.
+// um item aparece também nos crachás da tira e em CADA diálogo de ficha de
+// item, que são desenhados logo depois do painel. Procurar na tela inteira
+// acharia justamente o que o filtro escondeu, e o teste passaria dizendo o
+// contrário do que mede.
+//
+// O corte vai da grade até o fim da SEÇÃO, que é onde o painel acaba e os
+// diálogos começam.
 func oGuardadoDaTela(tela string) string {
 	inicio := strings.Index(tela, "grid-cols-3")
 	if inicio < 0 {
 		return ""
 	}
-	return tela[inicio:]
+	fim := strings.Index(tela[inicio:], "</section>")
+	if fim < 0 {
+		return tela[inicio:]
+	}
+	return tela[inicio : inicio+fim]
 }
