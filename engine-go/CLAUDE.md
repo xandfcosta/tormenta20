@@ -344,6 +344,15 @@ para o tratamento de `q=0` não divergir em duas cópias.
 arquivo só. O front os busca por HTTP e o `test-setup` do vitest lê os mesmos
 arquivos, então uma edição vale para os dois lados na hora.
 
+**Regra que só o front sabia é fronteira ABERTA, e a progressão de círculo era
+uma.** Em que nível cada classe destrava cada círculo vivia só no
+`SPELL_PROGRESSION` da SPA, então o servidor não tinha como perguntar — e o
+`validateAugments` aceitava qualquer `requiresCircle`, que são 126 dos 486
+aprimoramentos do catálogo. A tabela virou o campo `spellcasting` das cinco
+classes conjuradoras em `classes.json` (ALE-272), MOVIDA e não retranscrita: um
+teste do front compara as duas cópias campo a campo e morre com a SPA. O sintoma
+que essa família produz é sempre o mesmo — a tela tranca e o servidor não.
+
 O que protege dado transcrito é **validação de schema**
 (`catalog/rules_tables_test.go`), não um `expect` por campo: o risco é typo, não
 regressão. O que ela cobre é o que quebra tela — perícia que não existe, faixa de
@@ -471,6 +480,14 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   `../*.templ`, e só ele — por isso `classesDoBotao` mora no `.templ` e não no
   `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
   o elemento aparece sem estilo em vez de dar erro.
+- **E TOKEN inventado tem o mesmo fim, com o script rodado.** `text-grimorio-ink`
+  parece irmão de `text-grimorio-gold` e não é: `grimorio-ink` não está na
+  paleta, o Tailwind não emite regra para o que não conhece, e o elemento fica
+  com a cor HERDADA — o crachá de contagem dos Efeitos saiu dourado sobre
+  dourado, 1,53:1, e atravessou uma fatia inteira (ALE-272). O
+  `TestTodaTintaDaCasaExisteNaFolha` varre `piloto_*.templ` e `piloto_*.go` e
+  cobra cada token da casa contra a folha compilada. A paleta mora no
+  `@theme` do `frontend/src/index.css`; conferir lá antes de inventar o nome.
 
 ## Datastar: sete armadilhas que não deixam erro para trás
 

@@ -113,16 +113,23 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
  * não lista — o herói é escolhido lendo o elenco, e o caso falha alto se o
  * elenco deixar de ter um conjurador, em vez de medir o vazio.
  */
-test('a paleta arcana do Combate é legível para quem conjura', async ({ page }) => {
-  // Pelo NOME e pela busca da cena, que é o jeito da casa (`openSheetFromRoster`):
-  // o elenco é um palco de um herói por vez, ordenado por última alteração, então
-  // "o primeiro do elenco" muda conforme o spec que rodou antes.
+/**
+ * O id do conjurador, pelo NOME e pela busca da cena — que é o jeito da casa
+ * (`openSheetFromRoster`). O elenco é um palco de um herói por vez, ordenado por
+ * última alteração, então "o primeiro do elenco" muda conforme o spec que rodou
+ * antes.
+ */
+async function oIdDoConjurador(page: import('@playwright/test').Page) {
   await page.goto('/piloto/personagens')
   await page.getByRole('searchbox', { name: 'Buscar personagem' }).fill(CONJURADOR)
   const abrir = page.getByRole('link', { name: `Abrir ficha de ${CONJURADOR}` })
   await expect(abrir, `a semente não tem ${CONJURADOR}`).toBeVisible()
   const href = await abrir.getAttribute('href')
-  const id = href?.match(/\d+/)?.[0]
+  return href?.match(/\d+/)?.[0] as string
+}
+
+test('a paleta arcana do Combate é legível para quem conjura', async ({ page }) => {
+  const id = await oIdDoConjurador(page)
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(`/piloto/personagens/${id}?tab=combat`)
@@ -136,6 +143,58 @@ test('a paleta arcana do Combate é legível para quem conjura', async ({ page }
 
   const contraste = await medeOContraste(page)
   expect(contraste.falhas, 'texto abaixo do AA no Combate de um conjurador').toEqual([])
+})
+
+/**
+ * O GRIMÓRIO ABERTO — e os dois diálogos que só existem para quem conjura.
+ *
+ * O caminhar pelas sete abas mede a de Magias do PRIMEIRO herói do elenco, que
+ * é um guerreiro: sem classe conjuradora o painel é uma frase. Nada do que a
+ * fatia 6 desenhou — o ouro do grimório, o cadeado do aprimoramento fora de
+ * alcance, o contador de pilha — passa por lá. É a mesma lição da ALE-237 no
+ * nível de baixo: a cobertura é função de QUEM o teste abre.
+ *
+ * E os diálogos justificam o navegador por conta própria: o de aprender leva as
+ * ~198 magias do Capítulo 4 numa caixa que rola dentro de si, que é a forma que
+ * já transbordou nesta casa (ALE-178) e que o jsdom mede como zero.
+ */
+test('o grimório e os diálogos de conjurar e aprender cabem no telefone', async ({ page }) => {
+  const id = await oIdDoConjurador(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(`/piloto/personagens/${id}?tab=spells`)
+
+  // O CONTROLE do painel: sem magia na tela o resto mede um grimório vazio.
+  await expect(
+    page.getByRole('button', { name: 'Conjurar Bola de Fogo' }),
+    'o grimório do conjurador não desenhou as magias: nada abaixo mediria a fatia 6',
+  ).toBeVisible()
+  await expectNadaRolaDeLado(page)
+  const noPainel = await medeOContraste(page)
+  expect(noPainel.medidos, 'o medidor não achou texto no grimório').toBeGreaterThan(30)
+  expect(noPainel.falhas, 'texto abaixo do AA no grimório').toEqual([])
+
+  // O DENOMINADOR DE UM DIÁLOGO NÃO É COMPARATIVO, e a primeira versão disto
+  // errou: `medidos` deu 809 com o diálogo fechado e 809 com ele aberto. O
+  // medidor descarta o nó que ESCONDE A SI MESMO, não o que está debaixo de um
+  // ancestral escondido — e a cena do Datastar esconde por `data-show` no pai.
+  // Quem prova que o diálogo abriu é o `toBeVisible` de dentro dele; o que os
+  // dois blocos abaixo acrescentam é LEIAUTE REAL com a caixa no ar, que é o
+  // que nenhuma medição de cor alcança.
+
+  // O DIÁLOGO DE CONJURAR é onde mora o contador de pilha e o cadeado do
+  // aprimoramento fora de alcance — o Necromante é nível 12, alcança o 3º
+  // círculo, e a Invisibilidade tem aprimoramento de 4º.
+  await page.getByRole('button', { name: 'Conjurar Invisibilidade' }).click()
+  await expect(page.getByText(/exige o 4º círculo/)).toBeVisible()
+  await expectNadaRolaDeLado(page)
+  await page.keyboard.press('Escape')
+
+  // O DIÁLOGO DE APRENDER leva o Capítulo 4 inteiro.
+  await page.getByRole('button', { name: 'Aprender magia' }).click()
+  const caixa = page.getByRole('dialog', { name: 'Aprender magia' })
+  await expect(caixa).toBeVisible()
+  await expectDentroDaJanela(page)
+  await expectNadaRolaDeLado(page)
 })
 
 test('as sete abas são endereços, e a ativa se anuncia', async ({ page }) => {

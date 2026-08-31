@@ -1,1 +1,212 @@
-[{"id":"arcanista","name":"Arcanista","bookPage":36,"proficiencies":[]},{"id":"barbaro","name":"Bárbaro","bookPage":40,"proficiencies":["armas-marciais","escudos"]},{"id":"bardo","name":"Bardo","bookPage":43,"proficiencies":["armas-marciais"]},{"id":"bucaneiro","name":"Bucaneiro","bookPage":46,"proficiencies":["armas-marciais"]},{"id":"cacador","name":"Caçador","bookPage":49,"proficiencies":["armas-marciais","escudos"]},{"id":"cavaleiro","name":"Cavaleiro","bookPage":52,"proficiencies":["armas-marciais","armaduras-pesadas","escudos"]},{"id":"clerigo","name":"Clérigo","bookPage":56,"proficiencies":["armaduras-pesadas","escudos"]},{"id":"druida","name":"Druida","bookPage":60,"proficiencies":["escudos"]},{"id":"guerreiro","name":"Guerreiro","bookPage":64,"proficiencies":["armas-marciais","armaduras-pesadas","escudos"]},{"id":"inventor","name":"Inventor","bookPage":67,"proficiencies":[]},{"id":"ladino","name":"Ladino","bookPage":72,"proficiencies":[]},{"id":"lutador","name":"Lutador","bookPage":75,"proficiencies":[]},{"id":"nobre","name":"Nobre","bookPage":78,"proficiencies":["armas-marciais","armaduras-pesadas","escudos"]},{"id":"paladino","name":"Paladino","bookPage":81,"proficiencies":["armas-marciais","armaduras-pesadas","escudos"]}]
+[
+  {
+    "id": "arcanista",
+    "name": "Arcanista",
+    "bookPage": 36,
+    "proficiencies": [],
+    "spellcasting": {
+      "list": "arcana",
+      "attribute": "intelligence",
+      "schoolRestriction": null,
+      "unlockLevel": {
+        "0": 1,
+        "1": 1,
+        "2": 5,
+        "3": 9,
+        "4": 13,
+        "5": 17
+      },
+      "maxCircle": 5,
+      "startingSpellsKnown": 3,
+      "learnCadence": "every-level",
+      "paths": {
+        "bruxo": {
+          "attribute": "intelligence",
+          "learnCadence": "every-level"
+        },
+        "feiticeiro": {
+          "attribute": "charisma",
+          "learnCadence": "every-odd-level"
+        },
+        "mago": {
+          "attribute": "intelligence",
+          "learnCadence": "every-level",
+          "startingSpellsKnown": 4
+        }
+      }
+    }
+  },
+  {
+    "id": "barbaro",
+    "name": "Bárbaro",
+    "bookPage": 40,
+    "proficiencies": [
+      "armas-marciais",
+      "escudos"
+    ]
+  },
+  {
+    "id": "bardo",
+    "name": "Bardo",
+    "bookPage": 43,
+    "proficiencies": [
+      "armas-marciais"
+    ],
+    "spellcasting": {
+      "list": "arcana",
+      "attribute": "charisma",
+      "schoolRestriction": 3,
+      "unlockLevel": {
+        "0": 1,
+        "1": 1,
+        "2": 6,
+        "3": 10,
+        "4": 14,
+        "5": null
+      },
+      "maxCircle": 4,
+      "startingSpellsKnown": 2,
+      "learnCadence": "every-even-level"
+    }
+  },
+  {
+    "id": "bucaneiro",
+    "name": "Bucaneiro",
+    "bookPage": 46,
+    "proficiencies": [
+      "armas-marciais"
+    ]
+  },
+  {
+    "id": "cacador",
+    "name": "Caçador",
+    "bookPage": 49,
+    "proficiencies": [
+      "armas-marciais",
+      "escudos"
+    ]
+  },
+  {
+    "id": "cavaleiro",
+    "name": "Cavaleiro",
+    "bookPage": 52,
+    "proficiencies": [
+      "armas-marciais",
+      "armaduras-pesadas",
+      "escudos"
+    ]
+  },
+  {
+    "id": "clerigo",
+    "name": "Clérigo",
+    "bookPage": 56,
+    "proficiencies": [
+      "armaduras-pesadas",
+      "escudos"
+    ],
+    "spellcasting": {
+      "list": "divina",
+      "attribute": "wisdom",
+      "schoolRestriction": null,
+      "unlockLevel": {
+        "0": 1,
+        "1": 1,
+        "2": 5,
+        "3": 9,
+        "4": 13,
+        "5": 17
+      },
+      "maxCircle": 5,
+      "startingSpellsKnown": 3,
+      "learnCadence": "every-level"
+    }
+  },
+  {
+    "id": "druida",
+    "name": "Druida",
+    "bookPage": 60,
+    "proficiencies": [
+      "escudos"
+    ],
+    "spellcasting": {
+      "list": "divina",
+      "attribute": "wisdom",
+      "schoolRestriction": 3,
+      "unlockLevel": {
+        "0": 1,
+        "1": 1,
+        "2": 6,
+        "3": 10,
+        "4": 14,
+        "5": null
+      },
+      "maxCircle": 4,
+      "startingSpellsKnown": 2,
+      "learnCadence": "every-even-level"
+    }
+  },
+  {
+    "id": "guerreiro",
+    "name": "Guerreiro",
+    "bookPage": 64,
+    "proficiencies": [
+      "armas-marciais",
+      "armaduras-pesadas",
+      "escudos"
+    ]
+  },
+  {
+    "id": "inventor",
+    "name": "Inventor",
+    "bookPage": 67,
+    "proficiencies": []
+  },
+  {
+    "id": "ladino",
+    "name": "Ladino",
+    "bookPage": 72,
+    "proficiencies": []
+  },
+  {
+    "id": "lutador",
+    "name": "Lutador",
+    "bookPage": 75,
+    "proficiencies": []
+  },
+  {
+    "id": "nobre",
+    "name": "Nobre",
+    "bookPage": 78,
+    "proficiencies": [
+      "armas-marciais",
+      "armaduras-pesadas",
+      "escudos"
+    ]
+  },
+  {
+    "id": "paladino",
+    "name": "Paladino",
+    "bookPage": 81,
+    "proficiencies": [
+      "armas-marciais",
+      "armaduras-pesadas",
+      "escudos"
+    ],
+    "spellcasting": {
+      "list": "divina",
+      "attribute": "wisdom",
+      "schoolRestriction": null,
+      "unlockLevel": {
+        "0": null,
+        "1": 2,
+        "2": null,
+        "3": null,
+        "4": null,
+        "5": null
+      },
+      "maxCircle": 1,
+      "startingSpellsKnown": 0,
+      "learnCadence": "via-power"
+    }
+  }
+]

@@ -60,6 +60,72 @@ func (s *Server) rotasDaFicha(r chi.Router) {
 	// texto livre do catálogo dentro — por isso ela vai por SINAL e não no
 	// caminho. É a exceção da ficha, e a razão dela é o formato da chave.
 	r.Post("/personagens/{id}/efeitos/situacao", s.comandoDaFicha(toggleSituational))
+	// AS MAGIAS (fatia 6).
+	r.Post("/personagens/{id}/magias/aprende/{magia}", s.comandoDaFicha(learnSpell))
+	r.Post("/personagens/{id}/magias/esquece/{magia}", s.comandoDaFicha(forgetSpell))
+	r.Post("/personagens/{id}/magias/prepara/{magia}", s.comandoDaFicha(togglePrepared))
+	r.Post("/personagens/{id}/magias/conjura/{magia}", s.comandoDaFicha(castSpellFromSheet))
+}
+
+// learnSpell põe uma magia do catálogo no grimório.
+func learnSpell(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	id := chi.URLParam(r, "magia")
+	if _, conhecida := catalog.LookupSpell(id); !conhecida {
+		return fmt.Errorf("a magia %q não existe no livro", id)
+	}
+	_, err := s.queries.CreateSpell(r.Context(), sqlcgen.CreateSpellParams{
+		Characterid: row.ID, Catalogspellid: id, Prepared: 0, Learnedat: plataforma.NowISO(),
+	})
+	return err
+}
+
+// forgetSpell tira a magia do grimório.
+func forgetSpell(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	_, err := s.queries.DeleteSpell(r.Context(), sqlcgen.DeleteSpellParams{
+		Characterid: row.ID, Catalogspellid: chi.URLParam(r, "magia"),
+	})
+	return err
+}
+
+// togglePrepared prepara ou despreparar uma magia.
+//
+// O comando manda a MAGIA e não o estado, pela razão de sempre: mandar
+// "preparada" perde para o clique repetido e para a segunda aba aberta.
+func togglePrepared(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
+	id := chi.URLParam(r, "magia")
+	todas, err := s.queries.ListSpellsByCharacter(r.Context(), row.ID)
+	if err != nil {
+		return err
+	}
+	for _, m := range todas {
+		if m.Catalogspellid != id {
+			continue
+		}
+		depois := int64(0)
+		if m.Prepared == 0 {
+			depois = 1
+		}
+		_, err := s.queries.SetSpellPreparedByCatalog(r.Context(), sqlcgen.SetSpellPreparedByCatalogParams{
+			Prepared: depois, CharacterId: row.ID, CatalogSpellId: id,
+		})
+		return err
+	}
+	return fmt.Errorf("a magia %q não está no grimório", id)
+}
+
+// castSpellFromSheet conjura, cobrando o PM.
+//
+// A conta e as recusas são as MESMAS da API JSON — preparação, aprimoramentos, o
+// teto da p224 com a ressalva do custo mínimo, e o PM disponível. Escrevê-las de
+// novo aqui daria duas regras que divergem no dia em que uma mudar, e é
+// exatamente o defeito que a ALE-110 registrou: a redução de custo era exibida
+// num lugar e ignorada na hora de cobrar.
+func castSpellFromSheet(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.castSpellForCharacter(r, dto, chi.URLParam(r, "magia"), sinais.osAprimoramentos())
 }
 
 // toggleBookCondition liga ou desliga UMA condição do livro (p394-395).
@@ -342,9 +408,10 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	sinaisDaPagina := osSinaisDaFicha(r)
 	view, status, err := s.carregaFicha(
 		r.Context(), currentUser(r), id, aAbaPedida(r.URL.Query().Get("tab")),
-		osSinaisDaFicha(r).aBusca())
+		sinaisDaPagina.aBusca(), sinaisDaPagina)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
@@ -366,7 +433,9 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 		// que o servidor lê — mas o `data-bind` teria escrito noutro, e o campo
 		// chegaria sempre vazio.
 		Sinais: "{detalhe: '', oficio: false, novapericia: '', novoatributo: 'intelligence'," +
-			" condicao: false, buff: false, situacao: ''}",
+			" condicao: false, buff: false, situacao: ''," +
+			" aprender: false, aug0: 0, aug1: 0, aug2: 0, aug3: 0, aug4: 0, aug5: 0," +
+			" magiabusca: '', magiacirculo: '', magiaescola: ''}",
 	}, cenaDaFicha(view))
 }
 
@@ -405,7 +474,7 @@ func (s *Server) comandoDaFicha(
 			return
 		}
 		view, status, err := s.carregaFicha(
-			r.Context(), currentUser(r), id, aAbaPedida(r.URL.Query().Get("tab")), sinais.aBusca())
+			r.Context(), currentUser(r), id, aAbaPedida(r.URL.Query().Get("tab")), sinais.aBusca(), sinais)
 		if err != nil {
 			http.Error(w, err.Error(), status)
 			return

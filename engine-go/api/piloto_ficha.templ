@@ -103,6 +103,8 @@ templ oPainelDaFicha(v fichaView) {
 			@oPainelDePericias(v)
 		case "conditionals":
 			@effectsPanelSection(v)
+		case "spells":
+			@spellsPanelSection(v)
 	}
 	for _, aba := range v.Abas {
 		if aba.Ativa && !aba.Portada {

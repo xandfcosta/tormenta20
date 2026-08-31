@@ -43,8 +43,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	spell, known := catalog.LookupSpell(catalogSpellID)
-	if !known {
+	if _, known := catalog.LookupSpell(catalogSpellID); !known {
 		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Unknown spell %q", catalogSpellID))
 		return
 	}
@@ -54,62 +53,70 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	learned := findSpell(dto.Spells, catalogSpellID)
-	if learned == nil {
-		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Spell %q not in character's spellbook", catalogSpellID))
+	// A REGRA MORA NUM LUGAR SÓ. Este handler já teve cópia própria do teto da
+	// p224 e ela discordava da ficha sobre qual classe conta (ALE-92); desde a
+	// ALE-272 as duas pontas — este endpoint e o gesto da ficha em Datastar —
+	// chamam a MESMA função.
+	if err := s.castSpellForCharacter(r, dto, catalogSpellID, body.Augments); err != nil {
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if requiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
-		plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("Spell %q must be prepared before casting", catalogSpellID))
-		return
-	}
-
-	augmentPm, augErr := validateAugments(spell, body.Augments)
-	if augErr != "" {
-		plataforma.WriteError(w, http.StatusBadRequest, augErr)
-		return
-	}
-	basePm := spellBasePmCost[spell.Circle]
-
-	// One rule, one place (ALE-92): the engine owns the p224 ceiling and resolves
-	// the item bonus the same way the sheet does. This handler used to carry its
-	// own copy, and the two disagreed on which class counts AND on how item
-	// bonuses stack — so the sheet offered a cap this gate then refused.
-	ec, err := engineCharacterFrom(dto)
+	atualizado, err := s.queries.GetCharacter(r.Context(), row.ID)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not read character")
 		return
 	}
-	// p226: o modificador de custo entra AQUI, e não só na ficha — a redução era
-	// calculada, exibida no mosaico "Custo PM" e ignorada na hora de cobrar
-	// (ALE-110). O piso de 1 PM vem junto.
+	plataforma.WriteJSON(w, http.StatusOK, castResult{MpCurrent: atualizado.Mpcurrent, RemovedEffectIDs: []int64{}})
+}
+
+// castSpellForCharacter é a conjuração INTEIRA, sem HTTP.
+//
+// Ela nasceu extraída na ALE-272 (fatia 6), quando a ficha em Datastar passou a
+// conjurar: escrever as recusas de novo lá daria DUAS regras para a mesma
+// pergunta, e elas divergiriam no dia em que uma mudasse. É a mesma razão da
+// ALE-110, que registrou o custo sendo exibido num lugar e ignorado no outro.
+//
+// Devolve o PM que sobrou e uma frase de recusa quando a regra barra — a frase é
+// para um humano ler numa tela, e não um `FieldErrorMap` para um cliente.
+func (s *Server) castSpellForCharacter(
+	r *http.Request, dto CharacterDTO, catalogSpellID string, augments []augmentPick,
+) error {
+	spell, known := catalog.LookupSpell(catalogSpellID)
+	if !known {
+		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
+	}
+	learned := findSpell(dto.Spells, catalogSpellID)
+	if learned == nil {
+		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
+	}
+	if requiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
+		return fmt.Errorf("prepare a magia antes de conjurá-la")
+	}
+	augmentPm, augErr := validateAugments(spell, augments,
+		highestCastableCircle(dto.Classes, spell.Circle))
+	if augErr != "" {
+		return fmt.Errorf("%s", augErr)
+	}
+	ec, err := engineCharacterFrom(dto)
+	if err != nil {
+		return err
+	}
+	basePm := spellBasePmCost[spell.Circle]
 	totalPm := s.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
 	minPm := s.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
-
 	limit := s.catalogs.SpellPmLimitFor(ec, spell.Classes)
-	// A ressalva entre parênteses da p224: "(mas você sempre pode usar a
-	// habilidade em seu custo mínimo)". O teto limita o gasto ADICIONAL — ele
-	// nunca torna inconjurável uma magia que o personagem já possui, o que
-	// acontecia com uma magia de círculo alto vinda de fora da classe.
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
-		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("PM cost %d exceeds per-spell limit %d", totalPm, limit), plataforma.FieldErrorMap{"augments": {fmt.Sprintf("Limite PM excedido (%d)", limit)}})
-		return
+		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}
 	if int64(totalPm) > dto.MpCurrent {
-		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Insufficient PM (need %d, have %d)", totalPm, dto.MpCurrent), plataforma.FieldErrorMap{"mpCurrent": {"Sem PM suficiente"}})
-		return
+		return fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, dto.MpCurrent)
 	}
-
 	if totalPm == 0 {
-		plataforma.WriteJSON(w, http.StatusOK, castResult{MpCurrent: dto.MpCurrent, RemovedEffectIDs: []int64{}})
-		return
+		return nil
 	}
-	mpCurrent := dto.MpCurrent - int64(totalPm)
-	if err := s.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{MpCurrent: mpCurrent, UpdatedAt: plataforma.NowISO(), ID: row.ID}); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not cast spell")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, castResult{MpCurrent: mpCurrent, RemovedEffectIDs: []int64{}})
+	return s.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
+		MpCurrent: dto.MpCurrent - int64(totalPm), UpdatedAt: plataforma.NowISO(), ID: dto.ID,
+	})
 }
 
 func findSpell(spells []SpellDTO, catalogSpellID string) *SpellDTO {
@@ -143,9 +150,15 @@ func requiresPreparation(classes []ClassDTO, classChoicesRaw string) bool {
 	return choices["Arcanista"].Caminho == "mago"
 }
 
-// validateAugments ports validateAugments: returns the total augment PM, or a
-// message to 400 with.
-func validateAugments(spell catalog.Spell, picks []augmentPick) (int, string) {
+// validateAugments confere os aprimoramentos escolhidos e devolve o PM deles,
+// ou a frase da recusa.
+//
+// O `castableCircle` fechou uma FRONTEIRA que estava aberta (ALE-272, fatia 6):
+// 126 dos 486 aprimoramentos do catálogo exigem um círculo mínimo, e até aqui
+// esse limite existia só na tela. A tabela que o decide vivia só no TypeScript,
+// então o servidor nem tinha como perguntar — e um pedido montado à mão
+// conjurava o que a regra não permite. Travar na UI é UX; a fronteira é aqui.
+func validateAugments(spell catalog.Spell, picks []augmentPick, castableCircle int) (int, string) {
 	if len(picks) == 0 {
 		return 0, ""
 	}
@@ -168,6 +181,11 @@ func validateAugments(spell catalog.Spell, picks []augmentPick) (int, string) {
 		a := spell.Augments[p.AugmentIndex]
 		if a.Kind == "muda" && p.Stacks > 1 {
 			return 0, fmt.Sprintf("'muda' augment cannot stack (index %d)", p.AugmentIndex)
+		}
+		if a.RequiresCircle != nil && *a.RequiresCircle > castableCircle {
+			return 0, fmt.Sprintf(
+				"aprimoramento %d exige o %dº círculo e este personagem alcança o %dº",
+				p.AugmentIndex, *a.RequiresCircle, castableCircle)
 		}
 		total += a.PmCost * p.Stacks
 	}

@@ -68,6 +68,9 @@ type fichaView struct {
 	// Effects é a aba homônima (fatia 5) — tudo que está mexendo nos números
 	// AGORA, em quatro blocos que diferem por quem é dono do estado.
 	Effects effectsPanel
+	// Spells é a aba homônima (fatia 6) — o grimório, as concedidas por poder e
+	// o catálogo inteiro do Capítulo 4 para aprender.
+	Spells spellbookPanel
 }
 
 // classeDaFicha é uma classe do personagem, com o que o degrau precisa saber.
@@ -158,6 +161,7 @@ func oPainelJaPortado(valor string) bool {
 		"combat":        true, // fatia 3
 		"expertises":    true, // fatia 4
 		"conditionals":  true, // fatia 5
+		"spells":        true, // fatia 6
 	}
 	return portados[valor]
 }
@@ -168,7 +172,7 @@ func oPainelJaPortado(valor string) bool {
 // abre. O `characterOwnedBy` é o mesmo gargalo que a API JSON usa — a cena não
 // ganha uma segunda regra sobre quem pode ver a ficha de quem.
 func (s *Server) carregaFicha(
-	ctx context.Context, user AuthUser, id int64, aba, busca string,
+	ctx context.Context, user AuthUser, id int64, aba, busca string, sinais fichaSignals,
 ) (fichaView, int, error) {
 	row, err := s.queries.GetCharacter(ctx, id)
 	if err != nil {
@@ -201,6 +205,7 @@ func (s *Server) carregaFicha(
 		Proficiencias: oPainelDeProficiencias(dto),
 	}
 	v.Effects = s.effectsPanelOf(dto)
+	v.Spells = s.spellbookPanelOf(dto, sinais.MagiaBusca, sinais.MagiaCirculo, sinais.MagiaEscola)
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = combatPanelFor(sheet, cards, isCaster(sheet))

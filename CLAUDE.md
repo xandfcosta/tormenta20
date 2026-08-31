@@ -216,10 +216,11 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **28 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **29 guardas de
 varredura** no formato `TestToda…` / `TestTodo…` / `TestNenhum…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
-posicionada por `--col`/`--lin` tem caixa, nenhum nó junta `data-show` com
+posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
+`.templ` existe na folha compilada, nenhum nó junta `data-show` com
 `data-attr:style`, nenhuma expressão indexa o sinal da lista, nenhum foco pede
 ao servidor sem guarda de teclado. Cada um nasceu de um defeito que tinha
 irmãos.
