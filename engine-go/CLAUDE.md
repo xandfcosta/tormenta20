@@ -344,6 +344,15 @@ para o tratamento de `q=0` não divergir em duas cópias.
 arquivo só. O front os busca por HTTP e o `test-setup` do vitest lê os mesmos
 arquivos, então uma edição vale para os dois lados na hora.
 
+**E há DUAS fontes do mesmo `items.json` no processo, com durabilidades
+diferentes.** O `catalog.Resource` é `go:embed` — existe sempre que o binário
+existe. O `s.catalogs` é primado de um arquivo por caminho de configuração, e o
+`primeCatalogs` diz em log o que faz quando ele falta: "mutation validators
+disabled". Regra que se desliga sozinha quando um arquivo some não é regra, e a
+bancada mostrou o preço na ALE-272 — um escudo foi VESTIDO num teste porque o
+catálogo do fixture está vazio. **Validação de regra lê o embutido**; o
+`s.catalogs` fica para o motor, que é primado pelo mesmo caminho que o oráculo.
+
 **Regra que só o front sabia é fronteira ABERTA, e a progressão de círculo era
 uma.** Em que nível cada classe destrava cada círculo vivia só no
 `SPELL_PROGRESSION` da SPA, então o servidor não tinha como perguntar — e o
@@ -352,6 +361,11 @@ aprimoramentos do catálogo. A tabela virou o campo `spellcasting` das cinco
 classes conjuradoras em `classes.json` (ALE-272), MOVIDA e não retranscrita: um
 teste do front compara as duas cópias campo a campo e morre com a SPA. O sintoma
 que essa família produz é sempre o mesmo — a tela tranca e o servidor não.
+
+A fatia 7 fechou a terceira: a compatibilidade entre **melhoria/material** e o
+item que os recebe (`appliesTo`) vivia no `familyFor` do TypeScript, e o
+`handleAddItem` carregava a dívida escrita em comentário. Agora ela é
+`aMelhoriaCabeNoItem`, e o filtro do diálogo é conveniência sobre a mesma regra.
 
 O que protege dado transcrito é **validação de schema**
 (`catalog/rules_tables_test.go`), não um `expect` por campo: o risco é typo, não
@@ -489,11 +503,12 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   cobra cada token da casa contra a folha compilada. A paleta mora no
   `@theme` do `frontend/src/index.css`; conferir lá antes de inventar o nome.
 
-## Datastar: sete armadilhas que não deixam erro para trás
+## Datastar: oito armadilhas que não deixam erro para trás
 
 As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na
-ALE-235, e a sexta e a sétima na ALE-272; nenhuma delas escreve uma linha no
-console. Estão aqui porque o sintoma de cada uma aponta para o lugar errado.
+ALE-235, e as três últimas na ALE-272; nenhuma delas escreve uma linha no
+console — a oitava escreve UMA, e no lugar que ninguém olha. Estão aqui porque o
+sintoma de cada uma aponta para o lugar errado.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 
@@ -624,6 +639,25 @@ afordância de TECLADO, e por isso ele pede `:focus-visible`
 desfazia o dele. `TestNenhumFocoPedeAoServidorSemGuardaDeTeclado` varre a FONTE
 inteira, e não uma cena servida, porque enumerar cena por cena deixaria a
 próxima nascer sem medição.
+
+### Resposta que não é 2xx: o remendo é DESCARTADO e a recusa some
+
+O cliente do Datastar não aplica o remendo de uma resposta de erro. Um handler
+que responde `http.Error(w, msg, 400)` — que é o certo numa API JSON — deixa a
+tela EXATAMENTE como estava: o gesto não acontece, nada muda, e a única marca é
+uma linha no console do navegador ("Failed to load resource: 400").
+
+Isso atravessou três fatias da ficha sem ninguém ver, porque as recusas eram
+raras e pareciam "o botão não fez nada". O caso que denunciou foi gastar mais
+dinheiro do que se tem: o diálogo fechava, o saldo continuava igual, e não havia
+uma palavra na tela.
+
+**Numa cena servida, a recusa é CONTEÚDO.** Ela volta 200 com a cena inteira
+redesenhada — que é o que mostra que nada mudou — mais a frase num `role="alert"`
+(`comandoDaFicha` + `fichaView.Recusa`). A consequência para os testes é a parte
+que importa: o status deixou de distinguir "gravou" de "recusou", então **o que
+os guardas afirmam é a FRASE**, com `aRecusaDaCena`. A API JSON continua com os
+status dela; quem desenha página responde página.
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 
