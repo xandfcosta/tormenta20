@@ -80,7 +80,7 @@ templ barraDeCampanhas(v campanhasView) {
 		data-signals={ fmt.Sprintf("{busca: %q, papel: %q, cursor: %d}", v.Busca, v.Papel, v.CursorID) }
 	>
 		<a
-			href="/piloto/"
+			href="/"
 			class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>‹ Voltar</a>
 		<h1 class="font-heading text-xl tracking-wide text-foreground">Campanhas</h1>
@@ -95,7 +95,7 @@ templ barraDeCampanhas(v campanhasView) {
 					name="busca"
 					data-busca
 					data-bind:busca
-					data-on:input__debounce.250ms="@get('/piloto/campanhas')"
+					data-on:input__debounce.250ms="@get('/campanhas')"
 					value={ v.Busca }
 					placeholder="Buscar campanha"
 					aria-label="Buscar campanha"
@@ -105,11 +105,11 @@ templ barraDeCampanhas(v campanhasView) {
 			@filtroDePapel(v)
 		}
 		<div class="ml-auto flex gap-2 sm:ml-0">
-			<a href="/piloto/campanhas/entrar" aria-label="Entrar em campanha" class={ classesDoBotao(varSecundaria, tamPequeno, "") }>
+			<a href="/campanhas/entrar" aria-label="Entrar em campanha" class={ classesDoBotao(varSecundaria, tamPequeno, "") }>
 				@icone("UserPlus", "size-4 sm:mr-1")
 				<span class="hidden sm:inline">Entrar</span>
 			</a>
-			<a href="/piloto/campanhas/nova" aria-label="Nova campanha" class={ classesDoBotao(varPrimaria, tamPequeno, "") }>
+			<a href="/campanhas/nova" aria-label="Nova campanha" class={ classesDoBotao(varPrimaria, tamPequeno, "") }>
 				@icone("Plus", "size-4 sm:mr-1")
 				<span class="hidden sm:inline">Nova</span>
 			</a>
@@ -134,7 +134,7 @@ templ chipDePapel(v campanhasView, valor, rotulo string) {
 	<button
 		type="button"
 		aria-pressed={ boolStr(v.Papel == valor) }
-		data-on:click={ fmt.Sprintf("$papel = %q; @get('/piloto/campanhas')", valor) }
+		data-on:click={ fmt.Sprintf("$papel = %q; @get('/campanhas')", valor) }
 		class={ "h-8 rounded-sm px-3 text-sm font-medium outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
 			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Papel == valor),
 			templ.KV("text-muted-foreground hover:text-foreground", v.Papel != valor) }
@@ -224,7 +224,7 @@ templ folhaDaInformacao(c campanhaCartao) {
 templ acoesDaCampanha(c campanhaCartao) {
 	<div class="flex flex-wrap items-center gap-2 pt-1">
 		<a
-			href={ templ.SafeURL("/piloto/campanhas/" + strconv.FormatInt(c.ID, 10)) }
+			href={ templ.SafeURL("/campanhas/" + strconv.FormatInt(c.ID, 10)) }
 			class={ classesDoBotao(seAoVivo(c, varSecundaria, varPrimaria), tamGrande, "") }
 		>
 			Abrir campanha
@@ -337,7 +337,7 @@ templ buscaSemResultado(v campanhasView) {
 			<p class="text-sm text-muted-foreground">Nenhuma campanha combina com o que você buscou.</p>
 			@botao(varSecundaria, tamPequeno, "", templ.Attributes{
 				"type":          "button",
-				"data-on:click": "$busca = ''; $papel = 'todas'; @get('/piloto/campanhas')",
+				"data-on:click": "$busca = ''; $papel = 'todas'; @get('/campanhas')",
 			}) {
 				Limpar a busca
 			}

@@ -14,7 +14,7 @@ import (
 // cena obrigaria cada uma a ter a sua cópia do mesmo handler.
 
 // rotaDoVerbete é o endereço PÚBLICO, que é o que o `@get` do navegador pede.
-const rotaDoVerbete = "/piloto/verbete"
+const rotaDoVerbete = "/verbete"
 
 func (s *Server) rotasDoVerbete(r chi.Router) {
 	r.Get("/verbete", s.handleVerbeteDoElo)

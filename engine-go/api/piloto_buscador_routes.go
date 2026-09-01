@@ -18,8 +18,8 @@ import (
 // único requisito é ter entrado.
 
 // rotaDoBuscador é o endereço PÚBLICO, que é o que o `@get` do navegador pede. O
-// `chi` registra sem o `/piloto`, que o `buildMux` tira antes de entregar aqui.
-const rotaDoBuscador = "/piloto/buscador"
+// `chi` registra sem o `/`, que o `buildMux` tira antes de entregar aqui.
+const rotaDoBuscador = "/buscador"
 
 func (s *Server) rotasDoBuscador(r chi.Router) {
 	r.Get("/buscador", s.handleBuscador)

@@ -134,7 +134,7 @@ var guardaARegua = fmt.Sprintf("$reguafase = %d; $reguapontos = []; $reguarotulo
 // dois lugares para esquecer de mandar, e o sintoma seria a régua que desenha
 // certo e mede errado.
 func remedeARegua(v tabuleiroView) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/regua')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/regua')", v.CampaignID, v.SessionID)
 }
 
 // gabaritoNoPontoClicado põe o gabarito, e aponta quando a forma pede.
@@ -200,7 +200,7 @@ func oGabaritoSegueOPonteiro(v tabuleiroView) string {
 // sintoma seria um gabarito que ignora o número que a pessoa acabou de digitar.
 func remedeOGabarito(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/gabarito/' + $gabarito + '/' + $gabaritotamanho"+
+		"@post('/mesa/%d/%d/tabuleiro/gabarito/' + $gabarito + '/' + $gabaritotamanho"+
 			" + '/' + $gabaritox + '/' + $gabaritoy + '/' + $gabaritomirax + '/' + $gabaritomiray)",
 		v.CampaignID, v.SessionID,
 	)

@@ -11,7 +11,7 @@ import (
 // estão as ROTAS e o que decide, aqui está o que a tela dispara.
 
 func comandoDoNPC(v mesaView, npc npcDoElenco, acao string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/elenco/npc/%d/%s')",
+	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/%d/%s')",
 		v.CampaignID, v.SessionID, npc.ID, acao)
 }
 
@@ -26,7 +26,7 @@ func comandoDoNPC(v mesaView, npc npcDoElenco, acao string) string {
 // escreve no nó compartilhado é o mestre, não um remendo do servidor. O conserto
 // é o mesmo — quem limpa é o gesto que TERMINA, porque ele sabe que houve um
 // anterior.
-// A rota sai da BASE do bestiário (`/piloto/mesa/{c}/{s}/bestiario`) e não de
+// A rota sai da BASE do bestiário (`/mesa/{c}/{s}/bestiario`) e não de
 // ids soltos: ela já carrega a campanha e a sessão, e derivar daqui é o que
 // impede este botão de apontar para a mesa 0/0 — o defeito que a prévia das
 // notas teve por nascer de uma view sintética.

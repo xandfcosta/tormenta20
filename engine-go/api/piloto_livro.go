@@ -41,7 +41,7 @@ type enderecoDoLivro struct {
 // naPagina devolve o endereço que abre o livro na página IMPRESSA pedida, com o
 // verbete destacado.
 //
-//	v.Livro.naPagina(289, "Lobo") // → "/piloto/livro/ler?p=289&t=Lobo"
+//	v.Livro.naPagina(289, "Lobo") // → "/livro/ler?p=289&t=Lobo"
 //
 // Aponta para o LEITOR e não para o PDF cru, e a troca é medida: o visualizador
 // do Chrome obedece `#page=N` e IGNORA `#search=` — não há como pedir destaque
@@ -70,14 +70,14 @@ type livroServido struct {
 	endereco enderecoDoLivro
 }
 
-// rotaDoLivro é o caminho DENTRO do piloto; o público leva o `/piloto` na frente
+// rotaDoLivro é o caminho DENTRO do piloto; o público leva o `/` na frente
 // porque é isso que o navegador pede (o `buildMux` monta com `StripPrefix`).
 const rotaDoLivro = "/livro"
 
 // rotaDoLeitor é o endereço PÚBLICO da cena que desenha o livro. Ela não é
 // versionada porque é uma página HTML servida com `no-store`; quem carrega
 // versão é o PDF que ela pede.
-const rotaDoLeitor = "/piloto/livro/ler"
+const rotaDoLeitor = "/livro/ler"
 
 // abreOLivro lê a configuração UMA vez, no boot.
 //
@@ -100,7 +100,7 @@ func abreOLivro(cfg plataforma.Config) livroServido {
 		caminho: cfg.LivroPDF,
 		digito:  digito,
 		endereco: enderecoDoLivro{
-			Base:     "/piloto" + rotaDoLivro + "?v=" + digito,
+			Base:     rotaDoLivro + "?v=" + digito,
 			Abertura: cfg.LivroAbertura,
 		},
 	}
@@ -192,7 +192,7 @@ func (s *Server) carregaOLeitor(r *http.Request) leitorView {
 		// Referer de outro site (ou nenhum) não vira link de voltar: seria um
 		// endereço de terceiro na nossa barra. O Hub é o destino de quem chegou
 		// por um link colado.
-		voltar = "/piloto/"
+		voltar = "/"
 	}
 	return leitorView{
 		PDF:       s.livro.endereco.Base,

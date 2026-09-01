@@ -208,13 +208,19 @@ func primeCatalogs(path string) *engine.Catalogs {
 // toda exceção neste mux acabou saindo.
 func buildMux(srv *api.Server) *http.ServeMux {
 	mux := http.NewServeMux()
-	// O piloto Datastar (ALE-219): as cenas, renderizadas pelo servidor. Fora do
-	// `/api` de propósito — o jogador abre e favorita esta URL.
-	mux.Handle("/piloto/", http.StripPrefix("/piloto", srv.PilotoRouter()))
-	// A PORTA DA FRENTE. `"/{$}"` casa a raiz EXATA; `"/"` casaria tudo.
-	mux.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/piloto/", http.StatusFound)
-	})
+	// AS CENAS, na RAIZ (ALE-280). Elas viviam sob `/piloto/` — o nome de uma
+	// migração que acabou quando a SPA saiu (ALE-272) —, e o prefixo ficou onde
+	// mais custa: no endereço que o jogador favorita.
+	//
+	// O `"/"` casa tudo que não tiver padrão mais específico, e é o que dá o
+	// CORTE SECO de graça: `/piloto/mesa/1/5` cai aqui e o roteador das cenas
+	// responde 404, sem redirecionamento nenhum a manter. Decisão do dono — o app
+	// nunca foi usado numa mesa real, então não há link de jogador a proteger.
+	//
+	// Os padrões abaixo continuam ganhando dele porque são mais específicos, e é
+	// o `ServeMux` do Go que decide: `/api/`, `/health`, `/fonts/` e o favicon.
+	// A porta da frente deixou de precisar de redireção — a raiz É o Hub agora.
+	mux.Handle("/", srv.WebRouter())
 	// OS ENDEREÇOS ANTIGOS (ALE-272, fatia 10a). Eram cascas da SPA — um
 	// `beforeLoad` que mandava para o piloto — e nessa forma morreriam com ela.
 	api.MontaEnderecosAntigos(mux)

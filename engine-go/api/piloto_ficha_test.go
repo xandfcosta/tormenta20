@@ -45,7 +45,7 @@ func TestODegrauDeNivelSobeAClasseENaoSoOTotal(t *testing.T) {
 	}
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		fmt.Sprintf("/piloto/personagens/%d/nivel/Arcanista/1", id), "")
+		fmt.Sprintf("/personagens/%d/nivel/Arcanista/1", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("subir de nível deu %d: %s", rec.Code, rec.Body.String())
 	}
@@ -92,7 +92,7 @@ func TestODegrauNaoApagaUmaClasseDeNivelUm(t *testing.T) {
 	f, id := aFichaDe(t, "Aprendiz", 1)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		fmt.Sprintf("/piloto/personagens/%d/nivel/Arcanista/-1", id), "")
+		fmt.Sprintf("/personagens/%d/nivel/Arcanista/-1", id), "")
 
 	recusa := aRecusaDaCena(rec.Body.String())
 	if recusa == "" {
@@ -112,7 +112,7 @@ func TestODegrauNaoApagaUmaClasseDeNivelUm(t *testing.T) {
 func TestOVitalPrendeEmZeroENoMaximo(t *testing.T) {
 	f, id := aFichaDe(t, "Alvo", 3)
 	ctx := context.Background()
-	url := fmt.Sprintf("/piloto/personagens/%d/vitais/pv/", id)
+	url := fmt.Sprintf("/personagens/%d/vitais/pv/", id)
 
 	// Cinco golpes de −5 sobre 20 de PV: para em zero e não vira negativo.
 	for i := 0; i < 5; i++ {
@@ -141,7 +141,7 @@ func TestOVitalPrendeEmZeroENoMaximo(t *testing.T) {
 func TestAFichaDeOutraPessoaNaoAbre(t *testing.T) {
 	f, id := aFichaDe(t, "Segredo", 3)
 
-	rec := f.pede(t, f.mestre, http.MethodGet, fmt.Sprintf("/piloto/personagens/%d", id), "")
+	rec := f.pede(t, f.mestre, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "")
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("a ficha de outra pessoa abriu com %d", rec.Code)
@@ -149,7 +149,7 @@ func TestAFichaDeOutraPessoaNaoAbre(t *testing.T) {
 	// E o gesto também: barrar a leitura e deixar a escrita passar seria pior
 	// que não barrar nada.
 	escrita := f.pede(t, f.mestre, http.MethodPost,
-		fmt.Sprintf("/piloto/personagens/%d/vitais/pv/-5", id), "")
+		fmt.Sprintf("/personagens/%d/vitais/pv/-5", id), "")
 	if escrita.Code != http.StatusForbidden {
 		t.Errorf("alguém feriu o personagem de outra pessoa: %d", escrita.Code)
 	}
@@ -207,7 +207,7 @@ func TestARecusaVoltaNaCenaEnaoNumStatusDeErro(t *testing.T) {
 	f, id := aFichaDe(t, "Herói", 3)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		fmt.Sprintf("/piloto/personagens/%d/proficiencias/alterna/armas-de-laser?tab=proficiencies", id), "")
+		fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-de-laser?tab=proficiencies", id), "")
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("a recusa respondeu %d: o cliente do Datastar descarta o remendo e a tela não muda",

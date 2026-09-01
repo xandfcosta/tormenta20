@@ -10,7 +10,7 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
  * superfície do app que ainda falava a língua do template. Agora são cena.
  *
  * Desde a ALE-229 elas são renderizadas pelo SERVIDOR, e os caminhos antigos
- * encaminham para `/piloto/*`. Este arquivo continua entrando pelos caminhos
+ * encaminham para `/*`. Este arquivo continua entrando pelos caminhos
  * ANTIGOS de propósito: eles estão em links e favoritos, e o guarda de que o
  * encaminhamento funciona é entrar por onde as pessoas entram. O que se afirma
  * não mudou — mudou o motor que desenha.

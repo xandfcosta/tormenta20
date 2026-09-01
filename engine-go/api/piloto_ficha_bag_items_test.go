@@ -132,7 +132,7 @@ func TestOItemCustomExigeNomeEEspacosDeMeioEmMeio(t *testing.T) {
 
 func oItemCustom(t *testing.T, f pilotoFixture, id int64, corpo string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/itens/custom?tab=bag", id)
+	alvo := fmt.Sprintf("/personagens/%d/itens/custom?tab=bag", id)
 	return aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }
 
@@ -141,7 +141,7 @@ func TestEditarERemoverUmItem(t *testing.T) {
 	f, id := oCombatente(t)
 	item := semeiaItem(t, f, id, "", "Lembrança", "")
 
-	alvo := fmt.Sprintf("/piloto/personagens/%d/itens/%d/edita?tab=bag", id, item)
+	alvo := fmt.Sprintf("/personagens/%d/itens/%d/edita?tab=bag", id, item)
 	corpo := `{"itemnome":"Lembrança da Ana","itemqtd":3,"itemespacos":0.5}`
 	if recusa := aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String()); recusa != "" {
 		t.Fatalf("editar foi recusado: %q", recusa)
@@ -222,7 +222,7 @@ func TestOQueNaoEConsumivelNaoSeUsa(t *testing.T) {
 
 func oUso(t *testing.T, f pilotoFixture, id, item int64, corpo string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/itens/%d/usa?tab=bag", id, item)
+	alvo := fmt.Sprintf("/personagens/%d/itens/%d/usa?tab=bag", id, item)
 	return aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }
 
@@ -324,7 +324,7 @@ func oDialogoDeMelhoriasNaTela(tela, nome string) string {
 
 func asMelhorias(t *testing.T, f pilotoFixture, id, item int64, corpo string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/itens/%d/melhorias?tab=bag", id, item)
+	alvo := fmt.Sprintf("/personagens/%d/itens/%d/melhorias?tab=bag", id, item)
 	return aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }
 

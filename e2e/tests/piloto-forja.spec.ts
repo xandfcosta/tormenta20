@@ -33,7 +33,7 @@ async function escolheACarta(page: import('@playwright/test').Page, grupo: strin
 
 test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/piloto/personagens/nova')
+  await page.goto('/personagens/nova')
   await expect(page.getByRole('heading', { name: 'A folha em branco' })).toBeVisible()
 
   // O CONTROLE do caso: antes da classe não há kit para oferecer, e é essa
@@ -65,7 +65,7 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
 
 test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/piloto/personagens/nova')
+  await page.goto('/personagens/nova')
   await page.getByLabel('Nome').fill('Herói do Guarda da Forja')
   await escolheACarta(page, 'race', 'Humano')
   await escolheACarta(page, 'class', 'Guerreiro')

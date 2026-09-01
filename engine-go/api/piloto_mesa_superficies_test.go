@@ -83,7 +83,7 @@ func TestAFichaNaSessaoNaoNavegaParaForaDela(t *testing.T) {
 	dentroDaFicha := html[strings.Index(html, `id="cena-ficha"`):]
 	if i := strings.Index(dentroDaFicha, "Seções da ficha"); i >= 0 {
 		nav := dentroDaFicha[i : i+3000]
-		if strings.Contains(nav, `href="/piloto/personagens/`) {
+		if strings.Contains(nav, `href="/personagens/`) {
 			t.Error("a fileira de abas da ficha embutida ainda tem link para fora da sessão")
 		}
 		if !strings.Contains(nav, "embutida=1") {
@@ -119,7 +119,7 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 	}
 
 	solta := f.pede(t, f.jogador, http.MethodGet,
-		"/piloto/personagens/"+strconv.FormatInt(f.charID, 10), "").Body.String()
+		"/personagens/"+strconv.FormatInt(f.charID, 10), "").Body.String()
 	if !strings.Contains(solta, "‹ Voltar") {
 		t.Fatal("a ficha de página inteira perdeu a volta — sem ela o caso acima não mede nada")
 	}

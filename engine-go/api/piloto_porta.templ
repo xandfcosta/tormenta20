@@ -56,7 +56,7 @@ templ avisoDoFormulario(aviso string) {
 
 templ paginaEntrar(v entrarView) {
 	@portaEmVolta("Entrar", "Bem-vindo de volta, aventureiro.", rodapeDeEntrar()) {
-		<form method="post" action="/piloto/entrar" class="space-y-4">
+		<form method="post" action="/entrar" class="space-y-4">
 			if v.Destino != "" {
 				<input type="hidden" name="destino" value={ v.Destino }/>
 			}
@@ -86,7 +86,7 @@ templ rodapeDeEntrar() {
 
 templ paginaCriarConta(v criarContaView) {
 	@portaEmVolta("Criar conta", "Junte-se à mesa.", rodapeComEntrar()) {
-		<form method="post" action="/piloto/criar-conta" class="space-y-4">
+		<form method="post" action="/criar-conta" class="space-y-4">
 			<input type="hidden" name="convite" value={ v.Convite }/>
 			@campoDeTexto(campo{
 				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
@@ -112,7 +112,7 @@ templ paginaCriarConta(v criarContaView) {
 
 templ rodapeComEntrar() {
 	Já tem conta?&nbsp;
-	<a href="/piloto/entrar" class="underline underline-offset-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">Entrar</a>
+	<a href="/entrar" class="underline underline-offset-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">Entrar</a>
 }
 
 // ── redefinir senha ──────────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ templ rodapeComEntrar() {
 templ paginaRedefinir(v redefinirView) {
 	@portaEmVolta("Escolher nova senha", subtituloDoLink(v), rodapeComEntrar()) {
 		if v.LinkVale {
-			<form method="post" action="/piloto/redefinir-senha" class="space-y-4">
+			<form method="post" action="/redefinir-senha" class="space-y-4">
 				<input type="hidden" name="token" value={ v.Token }/>
 				@campoDeTexto(campo{
 					Nome: "senha", Label: "Nova senha", Tipo: "password", Autocomplete: "new-password",

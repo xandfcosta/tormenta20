@@ -40,7 +40,7 @@ func (s *Server) handleHub(w http.ResponseWriter, r *http.Request) {
 // imagem de terceiro.
 func (s *Server) handleHubSair(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, s.sessionCookie("", -1))
-	http.Redirect(w, r, "/piloto/entrar", http.StatusSeeOther)
+	http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 }
 
 // handleHubConvite cunha o link de conta e devolve o remendo com ele.

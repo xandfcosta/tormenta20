@@ -248,7 +248,7 @@ func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
 	}
 	pecaID := posto.Tokens[len(posto.Tokens)-1].ID
 
-	srv := httptest.NewServer(http.StripPrefix("/piloto", f.s.PilotoRouter()))
+	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
 	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)
 	if erroDoPedido != nil {
@@ -342,7 +342,7 @@ func TestUmaMudancaNaFilaNaoRemendaOMapa(t *testing.T) {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 
-	srv := httptest.NewServer(http.StripPrefix("/piloto", f.s.PilotoRouter()))
+	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
 	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)
 	if erroDoPedido != nil {

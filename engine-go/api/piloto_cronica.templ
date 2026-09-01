@@ -125,7 +125,7 @@ templ trilhaDaCronica(v cronicaView) {
 	>
 		for _, a := range v.Abas {
 			<a
-				href={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d?tab=%s", v.ID, a.ID)) }
+				href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", v.ID, a.ID)) }
 				data-nav-item
 				aria-current={ ariaAtual(a.Ativa) }
 				class={ "shrink-0 justify-start gap-2 rounded-none px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
@@ -237,7 +237,7 @@ templ painelDaCronica(sobrancelha, titulo string) {
 
 templ verTudo(campanhaID int64, aba, texto string) {
 	<a
-		href={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d?tab=%s", campanhaID, aba)) }
+		href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", campanhaID, aba)) }
 		class="inline-flex min-h-11 items-center text-xs text-muted-foreground underline-offset-4 outline-none hover:text-grimorio-gold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>{ texto }</a>
 }
@@ -355,7 +355,7 @@ templ abaDeConfiguracao(v cronicaView) {
 templ cadastroDaCronica(v cronicaView) {
 	<section class="space-y-4 border border-grimorio-iron bg-grimorio-panel p-4">
 		<h2 class="font-heading text-base tracking-wide text-foreground">Editar campanha</h2>
-		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d/editar", v.ID)) } class="space-y-4">
+		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/editar", v.ID)) } class="space-y-4">
 			@campoDeTexto(campo{
 				Nome: "name", Label: "Nome", Valor: v.Nome,
 				Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
@@ -419,7 +419,7 @@ templ interruptorDaRegra(v cronicaView, regra regraOpcional) {
 		aria-label={ regra.Titulo }
 		data-indicator:salvando
 		data-attr:disabled="$salvando"
-		data-on:click={ fmt.Sprintf("@post('/piloto/campanhas/%d/regras/%s')", v.ID, regra.ID) }
+		data-on:click={ fmt.Sprintf("@post('/campanhas/%d/regras/%s')", v.ID, regra.ID) }
 		class={ "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(regra.ID)),
 			templ.KV("border-grimorio-iron-light bg-grimorio-panel-raised", !v.RegraEmVigor(regra.ID)) }
@@ -488,7 +488,7 @@ templ dialogoDeExclusao(v cronicaView) {
 			// Formulário de VERDADE e não `@post`: apagar leva embora a página,
 			// e o que vem depois é uma navegação para o livro. Remendo não
 			// navega.
-			<form method="post" action={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d/excluir", v.ID)) }>
+			<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/excluir", v.ID)) }>
 				@botao(varDestrutiva, tamPadrao, "", templ.Attributes{"type": "submit"}) {
 					Excluir
 				}

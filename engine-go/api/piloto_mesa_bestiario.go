@@ -13,7 +13,7 @@ import (
 
 // O BESTIÁRIO DENTRO DA MESA (ALE-263).
 //
-// A cena do bestiário já existe em `/piloto/mestre/bestiario`, e o caminho mais
+// A cena do bestiário já existe em `/mestre/bestiario`, e o caminho mais
 // barato teria sido mandar o mestre até lá. Não é o que a mesa quer: uma
 // emboscada é UMA viagem, não seis — o mestre abre, escolhe o ogro, manda dois,
 // vê que faltou um goblin e manda mais. Sair da fila a cada bicho paga o custo
@@ -31,7 +31,7 @@ import (
 
 // rotaDoBestiarioDaMesa é a base das rotas do painel, montada por mesa.
 func rotaDoBestiarioDaMesa(campaignID, sessionID int64) string {
-	return fmt.Sprintf("/piloto/mesa/%d/%d/bestiario", campaignID, sessionID)
+	return fmt.Sprintf("/mesa/%d/%d/bestiario", campaignID, sessionID)
 }
 
 func (s *Server) rotasDoBestiarioDaMesa(r chi.Router) {

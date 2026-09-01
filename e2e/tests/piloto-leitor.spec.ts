@@ -18,7 +18,7 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
   page,
 }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario?criatura=lobo')
+  await page.goto('/mestre/bestiario?criatura=lobo')
 
   // O endereço vem da CENA e não é escrito aqui: se a página do Lobo mudar no
   // catálogo, este guarda continua medindo o que a tela oferece — e não um
@@ -29,12 +29,12 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
   // estourava por timeout. O `test.skip` logo abaixo era código INALCANÇÁVEL,
   // e o modo de falhar mentia sobre a causa: parecia leitor quebrado, era
   // bancada sem livro. `count()` resolve na hora, com zero.
-  const botao = page.locator('a[href*="/piloto/livro/ler"]').first()
+  const botao = page.locator('a[href*="/livro/ler"]').first()
 
   if ((await botao.count()) === 0) {
     // Sem `LIVRO_PDF` configurado não há botão, e isso é estado LEGÍTIMO. O que
     // não pode existir é meio caminho: link sem livro ou livro sem link.
-    expect(await page.locator('a[href*="/piloto/livro"]').count()).toBe(0)
+    expect(await page.locator('a[href*="/livro"]').count()).toBe(0)
     test.skip(true, 'esta bancada não serve o livro (LIVRO_PDF vazio)')
     return
   }
@@ -73,7 +73,7 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
 
 test('as setas andam pelo livro e a barra diz a página impressa', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  const resposta = await page.goto('/piloto/livro/ler?p=290&t=Lobo')
+  const resposta = await page.goto('/livro/ler?p=290&t=Lobo')
   if (resposta?.status() === 404) {
     test.skip(true, 'esta bancada não serve o livro (LIVRO_PDF vazio)')
     return
@@ -92,9 +92,9 @@ test('as setas andam pelo livro e a barra diz a página impressa', async ({ page
 
 test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/condicoes')
+  await page.goto('/mestre/condicoes')
 
-  const botao = page.locator('a[href*="/piloto/livro/ler"]').first()
+  const botao = page.locator('a[href*="/livro/ler"]').first()
   if ((await botao.count()) === 0) {
     test.skip(true, 'esta bancada não serve o livro (LIVRO_PDF vazio)')
     return
@@ -111,7 +111,7 @@ test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ pag
   // segunda falhar e quase consertei um defeito que não existia — o que estava
   // quebrado era a página em que eu tinha mexido à mão.
   for (const indice of [0, 3]) {
-    await page.locator('a[href*="/piloto/livro/ler"]').nth(indice).click()
+    await page.locator('a[href*="/livro/ler"]').nth(indice).click()
     expect(await dialogo.evaluate((d: HTMLDialogElement) => d.open)).toBe(true)
     // A CENA CONTINUA ATRÁS — é a diferença entre isto e a aba nova: a fila da
     // iniciativa e os filtros do acervo ficam onde estavam.

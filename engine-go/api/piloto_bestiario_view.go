@@ -278,8 +278,8 @@ func xpDoND(nd float64) int {
 // apertou muito ou se o bestiário é pequeno.
 type bestiarioView struct {
 	// Base é o prefixo das rotas que ESTA cena chama, e existe porque o mesmo
-	// desenho serve dois lugares: a cena do mestre em `/piloto/mestre/bestiario`
-	// e o painel da Mesa em `/piloto/mesa/{c}/{s}/bestiario`. O que muda entre
+	// desenho serve dois lugares: a cena do mestre em `/mestre/bestiario`
+	// e o painel da Mesa em `/mesa/{c}/{s}/bestiario`. O que muda entre
 	// as duas é o ENDEREÇO, não a lista nem o bloco — e um segundo desenho seria
 	// a mesma criatura mantida em dois lugares.
 	//

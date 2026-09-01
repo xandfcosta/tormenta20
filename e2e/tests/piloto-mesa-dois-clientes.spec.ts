@@ -20,7 +20,7 @@ import { type Browser, type Page, expect, test } from '@playwright/test'
  */
 test.describe.configure({ mode: 'serial' })
 
-const MESA = '/piloto/mesa/1/5'
+const MESA = '/mesa/1/5'
 
 /** As duas telas da mesma mesa, uma por papel. */
 async function asDuasTelas(browser: Browser) {

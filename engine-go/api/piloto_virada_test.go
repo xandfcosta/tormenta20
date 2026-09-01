@@ -18,7 +18,7 @@ import (
 // por gesto nenhum, só por URL digitada. Um caminho que existe e ninguém percorre
 // é indistinguível de um que não existe.
 //
-// O que se prende é a NEGATIVA junto com a positiva: achar `/piloto/mesa/` numa
+// O que se prende é a NEGATIVA junto com a positiva: achar `/mesa/` numa
 // página não prova que o link velho saiu — as duas rotas cabem no mesmo HTML, e
 // foi assim que a tela conviveu com as duas durante toda a migração.
 
@@ -28,9 +28,9 @@ import (
 func asPortasParaASessao(campanha int64) []struct{ Nome, Caminho string } {
 	id := strconv.FormatInt(campanha, 10)
 	return []struct{ Nome, Caminho string }{
-		{"o Hub", "/piloto/"},
-		{"a lista de campanhas", "/piloto/campanhas"},
-		{"a crônica da campanha", "/piloto/campanhas/" + id},
+		{"o Hub", "/"},
+		{"a lista de campanhas", "/campanhas"},
+		{"a crônica da campanha", "/campanhas/" + id},
 	}
 }
 
@@ -48,7 +48,7 @@ func TestTodasAsPortasLevamAMesaEmDatastar(t *testing.T) {
 	// Escrito à mão nos dois lados, e não derivado da produção: derivar o destino
 	// novo faria o teste concordar com o defeito, e derivar o velho o faria
 	// procurar uma string que ninguém escreve mais.
-	daMesa := "/piloto/mesa/" + strconv.FormatInt(campanha, 10) + "/" + strconv.FormatInt(sessao, 10)
+	daMesa := "/mesa/" + strconv.FormatInt(campanha, 10) + "/" + strconv.FormatInt(sessao, 10)
 	daSPA := "/campaigns/" + strconv.FormatInt(campanha, 10) + "/sessions/" + strconv.FormatInt(sessao, 10)
 
 	for _, porta := range asPortasParaASessao(campanha) {
@@ -81,9 +81,9 @@ func TestALinhaDaCronicaTambemLeva(t *testing.T) {
 	sessao := seedSession(t, s, campanha)
 
 	html := pedeHub(t, s, dono, http.MethodGet,
-		"/piloto/campanhas/"+strconv.FormatInt(campanha, 10)).Body.String()
+		"/campanhas/"+strconv.FormatInt(campanha, 10)).Body.String()
 
-	daMesa := "/piloto/mesa/" + strconv.FormatInt(campanha, 10) + "/" + strconv.FormatInt(sessao, 10)
+	daMesa := "/mesa/" + strconv.FormatInt(campanha, 10) + "/" + strconv.FormatInt(sessao, 10)
 	if !strings.Contains(html, daMesa) {
 		t.Errorf("a linha da crônica não leva à Mesa em Datastar (%s)", daMesa)
 	}

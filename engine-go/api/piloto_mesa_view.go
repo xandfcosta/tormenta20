@@ -395,7 +395,7 @@ func mestreViewOf(
 // compartilhar a REGRA. É por isso que a ALE-122 aconteceu com dois transportes
 // chamando dois caminhos de escrita, e não acontece aqui.
 func comandoDaMesa(v mesaView, metodo, acao string) string {
-	caminho := fmt.Sprintf("/piloto/mesa/%d/%d/%s", v.CampaignID, v.SessionID, acao)
+	caminho := fmt.Sprintf("/mesa/%d/%d/%s", v.CampaignID, v.SessionID, acao)
 	if metodo == "POST" {
 		return fmt.Sprintf("@post('%s')", caminho)
 	}
@@ -409,7 +409,7 @@ func comandoDaMesa(v mesaView, metodo, acao string) string {
 // postar é uma corrida esperando por um mestre de dedo rápido. Caminho é do
 // botão que foi clicado, e não há segundo escritor.
 func comandoDaLinha(v mesaView, l mesaLinha, acao string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/initiative/%s/%s')", v.CampaignID, v.SessionID, l.ID, acao)
+	return fmt.Sprintf("@post('/mesa/%d/%d/initiative/%s/%s')", v.CampaignID, v.SessionID, l.ID, acao)
 }
 
 // vitalDaLinha escreve o ferir/curar com os DOIS passos já resolvidos em duas
@@ -419,7 +419,7 @@ func comandoDaLinha(v mesaView, l mesaLinha, acao string) string {
 // cada braço de um ternário: a chamada é uma só, e o que varia é a string. Assim
 // o que o Datastar precisa reescrever é uma ação, não duas dentro de um desvio.
 func vitalDaLinha(v mesaView, l mesaLinha, verbo string) string {
-	base := fmt.Sprintf("/piloto/mesa/%d/%d/initiative/%s/vitals/%s/", v.CampaignID, v.SessionID, l.ID, verbo)
+	base := fmt.Sprintf("/mesa/%d/%d/initiative/%s/vitals/%s/", v.CampaignID, v.SessionID, l.ID, verbo)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }
 
@@ -442,7 +442,7 @@ func abreAEdicao(v mesaView, l mesaLinha) string {
 // salvaAEdicao monta o caminho com o id que o número semeou.
 func salvaAEdicao(v mesaView) string {
 	return fmt.Sprintf(
-		"document.getElementById('editar-combatente').close(); @post('/piloto/mesa/%d/%d/initiative/' + $edicaolinha + '/edit')",
+		"document.getElementById('editar-combatente').close(); @post('/mesa/%d/%d/initiative/' + $edicaolinha + '/edit')",
 		v.CampaignID, v.SessionID,
 	)
 }
@@ -491,7 +491,7 @@ func condicaoLigada(id string) string {
 // por combatente, e o sinal é reescrito a cada abertura.
 func alternaACondicaoDaLinha(v mesaView, id string) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/initiative/' + $linhadacondicao + '/condicao/%s')",
+		"@post('/mesa/%d/%d/initiative/' + $linhadacondicao + '/condicao/%s')",
 		v.CampaignID, v.SessionID, id,
 	)
 }
@@ -500,12 +500,12 @@ func alternaACondicaoDaLinha(v mesaView, id string) string {
 
 // comandoDaSessao escreve a chamada de um verbo do ciclo.
 func comandoDaSessao(v mesaView, acao string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/sessao/%s')", v.CampaignID, v.SessionID, acao)
+	return fmt.Sprintf("@post('/mesa/%d/%d/sessao/%s')", v.CampaignID, v.SessionID, acao)
 }
 
 // caminhoDeExcluir é o `action` do form, e não uma expressão: excluir NAVEGA.
 func caminhoDeExcluir(v mesaView) string {
-	return fmt.Sprintf("/piloto/mesa/%d/%d/sessao/excluir", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("/mesa/%d/%d/sessao/excluir", v.CampaignID, v.SessionID)
 }
 
 // aCronicaDaCampanha é para onde se sai da sessão.
@@ -514,7 +514,7 @@ func caminhoDeExcluir(v mesaView) string {
 // mestre continua o que estava fazendo. Sair para a raiz obrigaria a refazer
 // dois cliques para voltar à mesa que ele acabou de deixar.
 func aCronicaDaCampanha(v mesaView) string {
-	return fmt.Sprintf("/piloto/campanhas/%d", v.CampaignID)
+	return fmt.Sprintf("/campanhas/%d", v.CampaignID)
 }
 
 // oCicloEmPortugues é o que o crachá do cabeçalho diz.

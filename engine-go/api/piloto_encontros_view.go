@@ -199,7 +199,7 @@ func enderecoDoEncontro(v encontrosView) string {
 		}
 		q.Set("c", strings.Join(partes, ","))
 	}
-	return "/piloto/mestre/encontros?" + q.Encode()
+	return "/mestre/encontros?" + q.Encode()
 }
 
 // linhasDaURL lê `?c=goblin:4,ogro:1`.

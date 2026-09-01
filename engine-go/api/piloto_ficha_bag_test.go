@@ -23,13 +23,13 @@ import (
 func aTelaDaMochila(t *testing.T, f pilotoFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=bag", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=bag", id), "").Body.String()
 }
 
 // oComandoDaMochila dispara um gesto e devolve a recusa, ou "".
 func oComandoDaMochila(t *testing.T, f pilotoFixture, id int64, caminho string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/%s?tab=bag", id, caminho)
+	alvo := fmt.Sprintf("/personagens/%d/%s?tab=bag", id, caminho)
 	return aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String())
 }
 
@@ -256,7 +256,7 @@ func TestODinheiroNaoFicaNegativo(t *testing.T) {
 func oDinheiro(t *testing.T, f pilotoFixture, id int64, modo string, valor float64) string {
 	t.Helper()
 	corpo := fmt.Sprintf(`{"tibarmodo":%q,"tibarvalor":%v}`, modo, valor)
-	alvo := fmt.Sprintf("/piloto/personagens/%d/dinheiro?tab=bag", id)
+	alvo := fmt.Sprintf("/personagens/%d/dinheiro?tab=bag", id)
 	return aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }
 
@@ -276,7 +276,7 @@ func TestAGradeFiltraPorBuscaEPorCategoria(t *testing.T) {
 	semeiaItem(t, f, id, "espada-longa", "Espada longa", "")
 
 	comBusca := f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=bag&itembusca=balsamo", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=bag&itembusca=balsamo", id), "").Body.String()
 	if !strings.Contains(comBusca, "Bálsamo restaurador") {
 		t.Error("a busca sem acento não achou o Bálsamo")
 	}
@@ -285,7 +285,7 @@ func TestAGradeFiltraPorBuscaEPorCategoria(t *testing.T) {
 	}
 
 	comChip := f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=bag&itemcategoria=weapons", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=bag&itemcategoria=weapons", id), "").Body.String()
 	if !strings.Contains(oGuardadoDaTela(comChip), "Espada longa") {
 		t.Error("o chip de armas escondeu a espada")
 	}

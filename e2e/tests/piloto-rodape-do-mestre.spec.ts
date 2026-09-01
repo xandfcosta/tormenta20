@@ -16,14 +16,14 @@ import { expect, type Page, test } from '@playwright/test'
  *  3. **A centralização do `<dialog>`.** Depende da margem que o `preflight` do
  *     Tailwind zera e da camada de topo do navegador.
  *
- * A página é do Go, não da SPA: é o proxy `/piloto` que a alcança em dev, e o
+ * A página é do Go, não da SPA: é o proxy `/` que a alcança em dev, e o
  * mesmo binário a serve no alvo de build. Se o piloto for apagado, este arquivo
  * vai junto.
  */
 
 test.use({ storageState: '.auth/user.json' })
 
-const MESA = '/piloto/mesa/1/4'
+const MESA = '/mesa/1/4'
 
 const rodape = 'section[aria-label="Controles do mestre"]'
 
@@ -245,7 +245,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     // sem ele este teste teria passado verde com o stream ABERTO, medindo
     // exatamente o caminho que ele existe para excluir.
     let tentouAbrir = 0
-    await page.route(/\/piloto\/mesa\/\d+\/\d+\/stream(\?|$)/, async (rota) => {
+    await page.route(/\/mesa\/\d+\/\d+\/stream(\?|$)/, async (rota) => {
       tentouAbrir++
       await rota.abort()
     })

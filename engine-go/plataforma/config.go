@@ -77,7 +77,7 @@ type Config struct {
 	TLSCertFile string
 	TLSKeyFile  string
 	// LivroPDF é o caminho do Tormenta 20 em PDF que o servidor entrega em
-	// `/piloto/livro`, e VAZIO é o padrão: sem ele o botão "abrir no livro"
+	// `/livro`, e VAZIO é o padrão: sem ele o botão "abrir no livro"
 	// simplesmente não existe, e nada é servido.
 	//
 	// Por configuração e não embutido porque o PDF está FORA do módulo Go

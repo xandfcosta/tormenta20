@@ -37,7 +37,7 @@ func pedeEstatico(t *testing.T, alvo string, cabecalhos map[string]string) *http
 // É o caminho que TIRA a ida à rede, e é ele que conserta o clarão — revalidar
 // ainda atrasaria a primeira pintura, porque a folha bloqueia a renderização.
 func TestOEnderecoVersionadoNaoVolta(t *testing.T) {
-	rec := pedeEstatico(t, "/piloto/static/piloto.css?v="+versaoDosEstaticos, nil)
+	rec := pedeEstatico(t, "/static/piloto.css?v="+versaoDosEstaticos, nil)
 
 	cache := rec.Header().Get("Cache-Control")
 	if !strings.Contains(cache, "immutable") {
@@ -57,7 +57,7 @@ func TestOEnderecoVersionadoNaoVolta(t *testing.T) {
 // pode ter sido guardado antes de um deploy, e servi-lo como eterno prenderia a
 // pessoa numa folha velha sem nenhum gesto que a resgate — nem recarregar.
 func TestOEnderecoSemVersaoNaoEEterno(t *testing.T) {
-	rec := pedeEstatico(t, "/piloto/static/piloto.css", nil)
+	rec := pedeEstatico(t, "/static/piloto.css", nil)
 
 	if cache := rec.Header().Get("Cache-Control"); strings.Contains(cache, "immutable") {
 		t.Errorf("endereço sem versão servido como imutável (%q): uma folha velha ficaria presa para sempre", cache)
@@ -76,7 +76,7 @@ func TestOEnderecoSemVersaoNaoEEterno(t *testing.T) {
 // `ETag`. O `http.FileServer` estava certo; o sistema de arquivos por baixo é
 // que não tinha o que datar.
 func TestQuemJaTemAFolhaRecebe304(t *testing.T) {
-	rec := pedeEstatico(t, "/piloto/static/piloto.css",
+	rec := pedeEstatico(t, "/static/piloto.css",
 		map[string]string{"If-None-Match": `"` + versaoDosEstaticos + `"`})
 
 	if rec.Code != http.StatusNotModified {
@@ -89,7 +89,7 @@ func TestQuemJaTemAFolhaRecebe304(t *testing.T) {
 	// O CONTROLE: com um ETag ANTIGO o corpo VEM. Sem isto, "recebeu 304" seria
 	// verdade também sobre um handler que responde 304 para todo mundo — e o
 	// sintoma seria a folha nova nunca chegando depois de um deploy.
-	velho := pedeEstatico(t, "/piloto/static/piloto.css",
+	velho := pedeEstatico(t, "/static/piloto.css",
 		map[string]string{"If-None-Match": `"digito-de-outro-binario"`})
 	if velho.Code != http.StatusOK || velho.Body.Len() == 0 {
 		t.Errorf("com ETag velho veio %d e %d bytes — a folha nova não chegaria", velho.Code, velho.Body.Len())
@@ -123,23 +123,23 @@ func TestODigitoEEstavelEntreLeituras(t *testing.T) {
 // noutro arquivo.
 func TestTodoEnderecoEstaticoDaPaginaEVersionado(t *testing.T) {
 	f := novoPiloto(t)
-	tela := f.pede(t, f.mestre, http.MethodGet, "/piloto/", "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, "/", "").Body.String()
 
 	// O CONTROLE: a página REFERENCIA estáticos. Sem ele, "nenhum endereço cru"
 	// seria verdade também sobre uma página que não carregou.
-	if !strings.Contains(tela, "/piloto/static/") {
+	if !strings.Contains(tela, "/static/") {
 		t.Fatal("a página não referencia estático nenhum — o guarda mediria a tela errada")
 	}
-	if strings.Contains(tela, `"/piloto/static/piloto.css"`) {
+	if strings.Contains(tela, `"/static/piloto.css"`) {
 		t.Error("a folha entrou sem versão: ela volta a ser rebaixada a cada troca de página")
 	}
-	for _, pedaco := range strings.Split(tela, "/piloto/static/")[1:] {
+	for _, pedaco := range strings.Split(tela, "/static/")[1:] {
 		fim := strings.IndexAny(pedaco, `"'`)
 		if fim < 0 {
 			continue
 		}
 		if !strings.Contains(pedaco[:fim], "?v=") {
-			t.Errorf("endereço estático sem versão: /piloto/static/%s", pedaco[:fim])
+			t.Errorf("endereço estático sem versão: /static/%s", pedaco[:fim])
 		}
 	}
 }

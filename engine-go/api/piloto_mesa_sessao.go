@@ -132,5 +132,5 @@ func (s *Server) excluiAPartida(w http.ResponseWriter, r *http.Request) {
 	// O cache da fila morre junto: sem isto a sessão apagada continuaria
 	// respondendo em memória até o processo reiniciar.
 	s.sessions.Forget(sessionID)
-	http.Redirect(w, r, "/piloto/campanhas/"+strconv.FormatInt(campaignID, 10), http.StatusSeeOther)
+	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campaignID, 10), http.StatusSeeOther)
 }

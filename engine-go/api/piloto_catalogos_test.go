@@ -199,13 +199,13 @@ func TestOsPoderesVemDosTresCatalogos(t *testing.T) {
 // TestACenaDeUmCatalogoDesenhaOCatalogoInteiro.
 //
 // O endereço mudou na ALE-264: cada catálogo virou uma parada do trilho e ganhou
-// cena própria (`/piloto/mestre/condicoes`). Este guarda passou a pedir a cena
+// cena própria (`/mestre/condicoes`). Este guarda passou a pedir a cena
 // direto — quem cobra o endereço VELHO é o `TestOEnderecoVelhoDoAcervoRedireciona`.
 func TestACenaDeUmCatalogoDesenhaOCatalogoInteiro(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes", "")
+	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -230,7 +230,7 @@ func TestOAcervoInteiroSaiNaAbaDePoderes(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/poderes", "")
+	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/poderes", "")
 	poderes := catalogosDoLivro().Poderes
 	if !strings.Contains(rec.Body.String(), fmt.Sprintf("%d entradas", len(poderes))) {
 		t.Fatalf("a contagem não é a dos %d poderes", len(poderes))
@@ -248,7 +248,7 @@ func TestABuscaNaURLValeNaCargaFria(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes?busca=fogo", "")
+	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes?busca=fogo", "")
 	esperados := carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, enderecoDoLivro{}).Achados
 	if esperados == 0 {
 		t.Fatal("buscar fogo não acha nada: o dado mudou e o teste perdeu o sentido")
@@ -271,12 +271,12 @@ func TestBuscarVarreOsOitoCatalogosDeQualquerCena(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	// Da cena das CONDIÇÕES, buscando uma MAGIA.
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes?busca=bola+de+fogo", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes?busca=bola+de+fogo", "").Body.String()
 	if !strings.Contains(corpo, "Bola de Fogo") {
 		t.Error("a busca da cena de condições não achou a magia — voltou a filtrar só a aba")
 	}
 	// O CONTROLE: sem termo, a cena mostra só o catálogo dela.
-	so := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes", "").Body.String()
+	so := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes", "").Body.String()
 	if strings.Contains(so, "Bola de Fogo") {
 		t.Error("sem busca a cena das condições trouxe magia")
 	}
@@ -288,12 +288,12 @@ func TestOEnderecoVelhoDoAcervoRedireciona(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=magias&busca=fogo", "")
+	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/catalogos?aba=magias&busca=fogo", "")
 	if rec.Code != http.StatusMovedPermanently {
 		t.Fatalf("o endereço velho respondeu %d", rec.Code)
 	}
 	destino := rec.Header().Get("Location")
-	if !strings.HasPrefix(destino, "/piloto/mestre/magias") {
+	if !strings.HasPrefix(destino, "/mestre/magias") {
 		t.Errorf("levou para %q", destino)
 	}
 	// A CONSULTA sobrevive: um redirecionamento que perde a busca devolve a
@@ -317,8 +317,8 @@ func TestTodaAbaDoAcervoOfereceOLivro(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	for _, aba := range abasDoAcervo {
-		corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/"+aba.ID, "").Body.String()
-		if !strings.Contains(corpo, "/piloto/livro/ler?p=") {
+		corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/"+aba.ID, "").Body.String()
+		if !strings.Contains(corpo, "/livro/ler?p=") {
 			t.Errorf("a aba %q não oferece o livro em nenhuma entrada", aba.Rotulo)
 		}
 		if !strings.Contains(corpo, "Abrir o livro na página") {
@@ -328,8 +328,8 @@ func TestTodaAbaDoAcervoOfereceOLivro(t *testing.T) {
 
 	semLivro := newTestServer(t)
 	outro := seedUser(t, semLivro, "mestre@t20.local")
-	sem := pedeNoMestre(t, semLivro, outro, "GET", "/piloto/mestre/condicoes", "").Body.String()
-	if strings.Contains(sem, "/piloto/livro/ler") {
+	sem := pedeNoMestre(t, semLivro, outro, "GET", "/mestre/condicoes", "").Body.String()
+	if strings.Contains(sem, "/livro/ler") {
 		t.Error("sem LIVRO_PDF a cena linkou um livro que não é servido")
 	}
 	// E a página continua ESCRITA: o mestre com o livro de papel usa o número.

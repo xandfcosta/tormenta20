@@ -13,9 +13,9 @@ import "fmt"
 // A MESA DO MESTRE, e a primeira das quatro ferramentas (ALE-257).
 //
 // O título na tela continua "Mesa do Mestre", que é o nome do original, mas o
-// endereço é `/piloto/mestre/`. A decisão do dono foi em dois tempos, e o que a
-// virou foi um FATO que só apareceu ao escrever as rotas: `/piloto/mesa/` já
-// está ocupado desde a fatia 1 — `/piloto/mesa/{campanha}/{sessao}` é a sessão
+// endereço é `/mestre/`. A decisão do dono foi em dois tempos, e o que a
+// virou foi um FATO que só apareceu ao escrever as rotas: `/mesa/` já
+// está ocupado desde a fatia 1 — `/mesa/{campanha}/{sessao}` é a sessão
 // ao vivo. Pendurar as ferramentas ali daria à mesma palavra dois sentidos no
 // mesmo espaço de endereço, que é exatamente o que o GLOSSARIO.md proíbe (um
 // conceito por palavra), e ainda por cima no sentido que ele já rejeita:
@@ -192,9 +192,9 @@ func trilhaDoMestre(atual string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 templ.SafeURL
-				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/piloto/mestre/" + f.Slug))
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/mestre/" + f.Slug))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 140, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 140, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {

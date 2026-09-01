@@ -56,7 +56,7 @@ func hub(v hubView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = dialogoDeConvite("/piloto/convites").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = dialogoDeConvite("/convites").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -93,15 +93,15 @@ func menuDoHub(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = itemDoMenu("Users2", "Meus Heróis", "/piloto/personagens", false).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = itemDoMenu("Users2", "Meus Heróis", "/personagens", false).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = itemDoMenu("Scroll", "Campanhas", "/piloto/campanhas", false).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = itemDoMenu("Scroll", "Campanhas", "/campanhas", false).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = itemDoMenu("Wand2", "Ferramentas do Mestre", "/piloto/mestre/bestiario", false).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = itemDoMenu("Wand2", "Ferramentas do Mestre", "/mestre/bestiario", false).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -440,7 +440,7 @@ func menuDoJogador(v hubView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<a href=\"/piloto/admin\" class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<a href=\"/admin\" class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -492,7 +492,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<span>Configurações</span></button><form method=\"post\" action=\"/piloto/sair\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<span>Configurações</span></button><form method=\"post\" action=\"/sair\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

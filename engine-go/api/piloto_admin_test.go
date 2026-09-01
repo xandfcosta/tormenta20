@@ -257,7 +257,7 @@ func TestCunharPelaAdministracaoRemendaOPainelTambem(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	chefe := seedUser(t, s, "chefe@t20.local")
 
-	rec := pedeNoPiloto(t, s, chefe, http.MethodPost, "/piloto/admin/convites")
+	rec := pedeNoPiloto(t, s, chefe, http.MethodPost, "/admin/convites")
 	corpo := rec.Body.String()
 
 	if !strings.Contains(corpo, "convite-url") {
@@ -278,7 +278,7 @@ func TestQuemNaoAdministraNaoAlcancaARotaDeConvite(t *testing.T) {
 	seedUser(t, s, "chefe@t20.local")
 	qualquerUm := seedUser(t, s, "outro@t20.local")
 
-	rec := pedeNoPiloto(t, s, qualquerUm, http.MethodPost, "/piloto/admin/convites")
+	rec := pedeNoPiloto(t, s, qualquerUm, http.MethodPost, "/admin/convites")
 	if rec.Code == http.StatusOK {
 		t.Errorf("a rota respondeu %d para quem não é admin", rec.Code)
 	}
@@ -298,6 +298,6 @@ func pedeNoPiloto(t *testing.T, s *Server, userID int64, metodo, caminho string)
 	req := httptest.NewRequest(metodo, caminho, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }

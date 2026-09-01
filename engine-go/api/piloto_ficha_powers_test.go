@@ -41,12 +41,12 @@ func oBarbaro(t *testing.T, nivel int64) (pilotoFixture, int64) {
 func aTelaDosPoderes(t *testing.T, f pilotoFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=abilities", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=abilities", id), "").Body.String()
 }
 
 func oComandoDoPoder(t *testing.T, f pilotoFixture, id int64, caminho, corpo string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/poderes/%s?tab=abilities", id, caminho)
+	alvo := fmt.Sprintf("/personagens/%d/poderes/%s?tab=abilities", id, caminho)
 	return aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }
 
@@ -226,7 +226,7 @@ func TestEncerrarAPosturaNaoDevolvePm(t *testing.T) {
 	}
 	antes := oPmDe(t, f, id)
 
-	alvo := fmt.Sprintf("/piloto/personagens/%d/efeitos/postura/furia?tab=abilities", id)
+	alvo := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
 	if recusa := aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String()); recusa != "" {
 		t.Fatalf("encerrar foi recusado: %q", recusa)
 	}
@@ -311,7 +311,7 @@ func TestAConcessaoDaPosturaEntraESaiComEla(t *testing.T) {
 		t.Fatalf("a Alma de Bronze não virou efeito ao entrar na Fúria: %v", efeitos)
 	}
 
-	alvo := fmt.Sprintf("/piloto/personagens/%d/efeitos/postura/furia?tab=abilities", id)
+	alvo := fmt.Sprintf("/personagens/%d/efeitos/postura/furia?tab=abilities", id)
 	f.pede(t, f.jogador, http.MethodPost, alvo, "")
 	if efeitos := osEfeitosDe(t, f, id); efeitos["class.barbaro.alma-de-bronze"] {
 		t.Error("a reserva de PV temporários sobreviveu ao fim da postura")
@@ -336,7 +336,7 @@ func TestABuscaDosPoderesAchataEIgnoraAcento(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 
 	tela := f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=abilities&poderbusca=furia", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=abilities&poderbusca=furia", id), "").Body.String()
 
 	if !strings.Contains(tela, "Fúria") {
 		t.Error("a busca sem acento não achou a Fúria")

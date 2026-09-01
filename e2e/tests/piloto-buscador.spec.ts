@@ -24,8 +24,8 @@ const ACHADO = '[data-resultado]'
 // funciona em duas cenas de formas diferentes — o Hub (casca título) e o
 // bestiário (casca densa, e que já tem busca própria) — vale para as vinte.
 const CENAS = [
-  { nome: 'hub', url: '/piloto/' },
-  { nome: 'bestiário', url: '/piloto/mestre/bestiario' },
+  { nome: 'hub', url: '/' },
+  { nome: 'bestiário', url: '/mestre/bestiario' },
 ]
 
 for (const cena of CENAS) {
@@ -50,7 +50,7 @@ for (const cena of CENAS) {
 
 test('a seta desce do campo para o primeiro achado e o Enter abre a cena', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/')
+  await page.goto('/')
   await page.keyboard.press('Control+k')
   await page.keyboard.type('abalado')
 
@@ -63,25 +63,25 @@ test('a seta desce do campo para o primeiro achado e o Enter abre a cena', async
   await page.keyboard.press('Enter')
   // `waitForURL` e NUNCA `networkidle` depois de uma tecla que navega: o
   // segundo volta ANTES de a navegação começar, e a asserção leria a URL velha.
-  await page.waitForURL(/\/piloto\/mestre\/condicoes\?/)
+  await page.waitForURL(/\/mestre\/condicoes\?/)
   await expect(page.locator('#buscador')).toHaveCount(1)
 })
 
 test('o Enter no campo abre o primeiro achado sem passar pelas setas', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/')
+  await page.goto('/')
   await page.keyboard.press('Control+k')
   await page.keyboard.type('lobo')
 
   await expect(page.locator(ACHADO).first()).toHaveText(/Lobo/)
   await page.keyboard.press('Enter')
 
-  await page.waitForURL(/\/piloto\/mestre\/bestiario\?criatura=/)
+  await page.waitForURL(/\/mestre\/bestiario\?criatura=/)
 })
 
 test('o Esc fecha a caixa e devolve a cena', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.keyboard.press('Control+k')
   await page.keyboard.type('abal')
   await expect(page.locator(ACHADO).first()).toBeVisible()
@@ -91,12 +91,12 @@ test('o Esc fecha a caixa e devolve a cena', async ({ page }) => {
   expect(await page.locator(CAIXA).evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
   // E a cena continua onde estava: o Esc do diálogo não pode subir para o
   // `data-voltar` da casca e levar a pessoa para o Hub.
-  expect(page.url()).toContain('/piloto/mestre/bestiario')
+  expect(page.url()).toContain('/mestre/bestiario')
 })
 
 test('o campo do buscador acende a linha, e não um retângulo colado na caixa', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/condicoes')
+  await page.goto('/mestre/condicoes')
   await page.keyboard.press('Control+k')
   await expect(page.locator(CAMPO)).toBeFocused()
 

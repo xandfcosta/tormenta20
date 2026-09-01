@@ -137,7 +137,7 @@ func aCenaComoAMesaVe(doMestre *tabuleiro.BoardState) (daMesa *tabuleiro.BoardSt
 
 // comandoDaLente escreve o gesto que acende ou apaga.
 func comandoDaLente(v tabuleiroView) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/lente')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/lente')", v.CampaignID, v.SessionID)
 }
 
 // aFraseDaLente diz o modo E o número, e nunca só o modo.

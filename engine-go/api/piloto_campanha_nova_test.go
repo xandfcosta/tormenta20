@@ -24,11 +24,11 @@ func postaFolhaNova(t *testing.T, s *Server, userID int64, nome, descricao strin
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}
-	req := httptest.NewRequest(http.MethodPost, "/piloto/campanhas/nova", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/campanhas/nova", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -69,7 +69,7 @@ func TestAbrirCampanhaLevaAElaComVerHistoricoLimpo(t *testing.T) {
 	// A crônica virou cena do servidor na ALE-255, então abrir uma campanha
 	// leva à página DELA e não mais à da SPA.
 	destino := rec.Header().Get("Location")
-	if !strings.HasPrefix(destino, "/piloto/campanhas/") {
+	if !strings.HasPrefix(destino, "/campanhas/") {
 		t.Errorf("destino = %q, queria a crônica recém-aberta", destino)
 	}
 

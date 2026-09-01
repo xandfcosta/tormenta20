@@ -23,17 +23,17 @@ func oDesvioDe(t *testing.T, caminho string) (int, string) {
 	return rec.Code, rec.Header().Get("Location")
 }
 
-// TestTodoEnderecoAntigoLevaAoPiloto é guarda de varredura sobre a tabela.
+// TestEveryLegacyAddressLandsOnAScene é guarda de varredura sobre a tabela.
 //
 // Ela é uma lista escrita à mão — não há de onde derivá-la, porque a fonte era o
 // `beforeLoad` de cada rota da SPA, que some. O que este guarda impede é a
 // forma de errar que sobra: uma entrada apontando para um endereço que o piloto
 // não atende, ou um padrão que nunca casa.
-func TestTodoEnderecoAntigoLevaAoPiloto(t *testing.T) {
-	// Treze cascas da SPA na fatia 10a, mais os quatro endereços das telas que
-	// só morreram com ela na 10c: a ficha, a forja (em dois formatos) e a mesa.
-	if len(osEnderecosAntigos) < 17 {
-		t.Fatalf("%d endereços na tabela, e são pelo menos dezessete", len(osEnderecosAntigos))
+func TestEveryLegacyAddressLandsOnAScene(t *testing.T) {
+	// Treze cascas da SPA na fatia 10a, mais os quatro endereços das telas que só
+	// morreram com ela na 10c — menos as três que a raiz absorveu na ALE-280.
+	if len(osEnderecosAntigos) < 14 {
+		t.Fatalf("%d endereços na tabela, e são pelo menos catorze", len(osEnderecosAntigos))
 	}
 	for _, endereco := range osEnderecosAntigos {
 		// O padrão vira um caminho de exemplo: `{id}` e `{tool}` recebem um
@@ -47,8 +47,21 @@ func TestTodoEnderecoAntigoLevaAoPiloto(t *testing.T) {
 		if status != http.StatusFound {
 			t.Errorf("%s: status %d, esperado 302", caminho, status)
 		}
-		if !strings.HasPrefix(destino, "/piloto/") {
-			t.Errorf("%s levou para %q, que não é do piloto", caminho, destino)
+		// O DESTINO NÃO PODE SER A ORIGEM, e esta asserção substitui uma que
+		// deixou de medir. Ela era `HasPrefix(destino, "/piloto")`, e quando as
+		// cenas subiram para a raiz (ALE-280) ela virou "começa com barra" — que
+		// todo caminho começa. Verde sobre nada.
+		//
+		// O que ficou no lugar é o defeito que aquela mudança de fato produziu:
+		// três endereços que a SPA e o piloto escreviam IGUAIS passaram a apontar
+		// para si mesmos, e no mux o padrão literal ganha do `"/"` das cenas — o
+		// desvio responderia 302 para si mesmo para sempre.
+		if destino == caminho {
+			t.Errorf("%s desvia para SI MESMO: a cena já é dona deste endereço,\n"+
+				"e a entrada na tabela vira um laço de redirecionamento.", caminho)
+		}
+		if !strings.HasPrefix(destino, "/") {
+			t.Errorf("%s levou para %q, que não é um endereço deste servidor", caminho, destino)
 		}
 	}
 }
@@ -57,26 +70,24 @@ func TestTodoEnderecoAntigoLevaAoPiloto(t *testing.T) {
 // endereço em quatro deles — um convite sem token é uma tela de erro.
 func TestOEnderecoAntigoLevaOQueOFazValer(t *testing.T) {
 	casos := []struct{ de, para string }{
-		{"/campaigns/join?token=abc-123", "/piloto/campanhas/entrar?token=abc-123"},
-		{"/join/abc-123", "/piloto/campanhas/entrar?token=abc-123"},
-		{"/register?convite=xyz", "/piloto/criar-conta?convite=xyz"},
-		{"/redefinir-senha?token=t-9", "/piloto/redefinir-senha?token=t-9"},
-		{"/login?redirect=%2Fpiloto%2Fcampanhas", "/piloto/entrar?redirect=%2Fpiloto%2Fcampanhas"},
+		{"/campaigns/join?token=abc-123", "/campanhas/entrar?token=abc-123"},
+		{"/join/abc-123", "/campanhas/entrar?token=abc-123"},
+		{"/register?convite=xyz", "/criar-conta?convite=xyz"},
+		{"/login?redirect=%2Fcampanhas", "/entrar?redirect=%2Fcampanhas"},
 		// A SEÇÃO da crônica viaja junto: `?tab=` é endereço guardado, e é o que
 		// o caso "encaminha COM a seção" do e2e afirma.
-		{"/campaigns/12?tab=config", "/piloto/campanhas/12?tab=config"},
-		{"/campaigns/12", "/piloto/campanhas/12"},
-		{"/gm/condicoes", "/piloto/mestre/condicoes"},
+		{"/campaigns/12?tab=config", "/campanhas/12?tab=config"},
+		{"/campaigns/12", "/campanhas/12"},
+		{"/gm/condicoes", "/mestre/condicoes"},
 		// A FICHA, a FORJA e a MESA — os três endereços que só puderam desviar
 		// quando a tela antiga deles deixou de existir (fatia 10c).
-		{"/characters/13", "/piloto/personagens/13"},
-		{"/characters/13?tab=bag", "/piloto/personagens/13?tab=bag"},
-		{"/characters/new", "/piloto/personagens/nova"},
-		{"/characters/new/equipamento", "/piloto/personagens/nova"},
-		{"/campaigns/1/sessions/4", "/piloto/mesa/1/4"},
+		{"/characters/13", "/personagens/13"},
+		{"/characters/13?tab=bag", "/personagens/13?tab=bag"},
+		{"/characters/new", "/personagens/nova"},
+		{"/characters/new/equipamento", "/personagens/nova"},
+		{"/campaigns/1/sessions/4", "/mesa/1/4"},
 		// Busca que a casca da SPA não preservava continua não passando: o que
 		// não valia antes não passa a valer por acidente.
-		{"/grimorio?ruido=1", "/piloto/grimorio"},
 	}
 	for _, caso := range casos {
 		_, destino := oDesvioDe(t, caso.de)
@@ -92,9 +103,9 @@ func TestOEnderecoAntigoLevaOQueOFazValer(t *testing.T) {
 // chamada "new".
 func TestOLiteralGanhaDoCuringaNoEnderecoAntigo(t *testing.T) {
 	casos := map[string]string{
-		"/campaigns/new":  "/piloto/campanhas/nova",
-		"/campaigns/join": "/piloto/campanhas/entrar",
-		"/campaigns/":     "/piloto/campanhas",
+		"/campaigns/new":  "/campanhas/nova",
+		"/campaigns/join": "/campanhas/entrar",
+		"/campaigns/":     "/campanhas",
 	}
 	for de, para := range casos {
 		if _, destino := oDesvioDe(t, de); destino != para {

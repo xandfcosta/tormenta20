@@ -748,7 +748,7 @@ func (v catalogosView) crachaAceso(chave, valor string) bool {
 func alternaOCracha(aba, chave, valor string) string {
 	sinal := "$" + chave
 	return fmt.Sprintf(
-		"%s = %s.includes(%q) ? %s.filter(v => v !== %q) : [...%s, %q]; @get('/piloto/mestre/%s')",
+		"%s = %s.includes(%q) ? %s.filter(v => v !== %q) : [...%s, %q]; @get('/mestre/%s')",
 		sinal, sinal, valor, sinal, valor, sinal, valor, aba,
 	)
 }

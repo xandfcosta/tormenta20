@@ -31,7 +31,7 @@ test.describe('As listas do mestre', () => {
     //
     // A linha é LINK e não botão: abrir uma criatura passou a ser navegação,
     // com `?criatura=` no endereço.
-    await page.goto('/piloto/mestre/bestiario')
+    await page.goto('/mestre/bestiario')
 
     const busca = page.getByRole('searchbox', { name: 'Buscar criatura' })
     await expect(busca).toBeVisible()
@@ -57,7 +57,7 @@ test.describe('As listas do mestre', () => {
    */
 test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await expect(page.getByRole('link', { name: /ND / }).first()).toBeVisible()
 
   // Sem transbordo a asserção não prova nada: seria uma lista que coube.
@@ -102,7 +102,7 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
  * jsdom nenhuma consulta casa e a grade responde sempre a mesma coisa.
  */
 test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) => {
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await expect(page.getByRole('link', { name: /ND / }).first()).toBeVisible()
 
   await expectColunasMonotonicas(
@@ -130,7 +130,7 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
   // servidor manda todas —, então o alvo passa a ser a grade de verdade e não
   // a fileira que o virtualizador montava. A garantia é a mesma: alargar a
   // janela nunca pode tirar uma coluna.
-  await page.goto('/piloto/mestre/condicoes')
+  await page.goto('/mestre/condicoes')
   await expect(page.locator('.acervo-em-colunas').first()).toBeVisible()
 
   await expectColunasMonotonicas(
@@ -192,7 +192,7 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
   // estado desenhado em dois lugares. A garantia não foi apagada — ela MUDOU DE
   // ENDEREÇO junto com o risco: eram quatro abas numa faixa, são treze paradas
   // num trilho que no telefone rola na horizontal.
-  await page.goto('/piloto/mestre/condicoes')
+  await page.goto('/mestre/condicoes')
   const trilho = 'nav[aria-label="Ferramentas do mestre"]'
   await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 

@@ -85,7 +85,7 @@ func TestOFiltroEUmEndereco(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/magias?circulo=3&escola=evocacao", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/magias?circulo=3&escola=evocacao", "").Body.String()
 	if !strings.Contains(corpo, "6 entradas") {
 		t.Error("a cena não abriu filtrada pelo endereço")
 	}
@@ -105,7 +105,7 @@ func TestOFiltroDeOutraAbaNaoEntra(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes?circulo=3", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes?circulo=3", "").Body.String()
 	if !strings.Contains(corpo, "35 entradas") {
 		t.Error("um filtro de outra aba mexeu na lista das condições")
 	}
@@ -118,8 +118,8 @@ func TestABuscaEscondeOsFiltros(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	semBusca := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/magias", "").Body.String()
-	comBusca := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/magias?busca=fogo", "").Body.String()
+	semBusca := pedeNoMestre(t, s, eu, "GET", "/mestre/magias", "").Body.String()
+	comBusca := pedeNoMestre(t, s, eu, "GET", "/mestre/magias?busca=fogo", "").Body.String()
 
 	if !strings.Contains(semBusca, "Filtrar por Círculo") {
 		t.Error("a cena das magias não desenha os filtros")
@@ -178,15 +178,15 @@ func TestOCartaoDaMagiaDizEDeixaAbrirAEscola(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/magias?entrada=bola-de-fogo", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/magias?entrada=bola-de-fogo", "").Body.String()
 	if !strings.Contains(corpo, "Evocação") {
 		t.Error("o cartão da magia não diz a escola dela")
 	}
-	if !strings.Contains(corpo, "/piloto/mestre/escolas?entrada=evocacao") {
+	if !strings.Contains(corpo, "/mestre/escolas?entrada=evocacao") {
 		t.Error("a escola não virou elo")
 	}
 	// E o destino existe, com a definição do livro.
-	escola := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/escolas?entrada=evocacao", "").Body.String()
+	escola := pedeNoMestre(t, s, eu, "GET", "/mestre/escolas?entrada=evocacao", "").Body.String()
 	if !strings.Contains(escola, "manipulam ou geram energia pura") {
 		t.Error("o verbete da escola não traz a definição do livro")
 	}
@@ -244,13 +244,13 @@ func TestAClasseLigaAsPericiasQueTreina(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/classes?entrada=bardo", "").Body.String()
-	if !strings.Contains(corpo, "/piloto/mestre/pericias?entrada=atuacao") {
+	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/classes?entrada=bardo", "").Body.String()
+	if !strings.Contains(corpo, "/mestre/pericias?entrada=atuacao") {
 		t.Error("o Bardo não liga a perícia que ele treina")
 	}
 	// E o caminho de volta: a perícia diz quem a treina de saída.
-	pericia := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/pericias?entrada=atuacao", "").Body.String()
-	if !strings.Contains(pericia, "/piloto/mestre/classes?entrada=bardo") {
+	pericia := pedeNoMestre(t, s, eu, "GET", "/mestre/pericias?entrada=atuacao", "").Body.String()
+	if !strings.Contains(pericia, "/mestre/classes?entrada=bardo") {
 		t.Error("Atuação não diz que o Bardo a treina de saída")
 	}
 }

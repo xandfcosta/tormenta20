@@ -64,7 +64,7 @@ func admin(v adminView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = dialogoDeConvite("/piloto/admin/convites").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = dialogoDeConvite("/admin/convites").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -489,7 +489,7 @@ func painelServidor(v adminView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</p><button type=\"button\" data-indicator:salvando data-attr:disabled=\"$salvando\" data-on:click=\"@post('/piloto/admin/backup')\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50\">Fazer backup</button></div></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</p><button type=\"button\" data-indicator:salvando data-attr:disabled=\"$salvando\" data-on:click=\"@post('/admin/backup')\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50\">Fazer backup</button></div></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -536,7 +536,7 @@ func dialogoConfirmar() templ.Component {
 			templ_7745c5c3_Var26 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<dialog id=\"confirmar\" data-ref=\"confirmar\" aria-labelledby=\"confirmar-titulo\" aria-describedby=\"confirmar-custo\" class=\"m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"confirmar-titulo\" class=\"font-heading text-base\">Apagar a conta de <span data-text=\"$alvoNome\"></span>?</h2><p id=\"confirmar-custo\" class=\"mt-2 text-sm text-muted-foreground\" data-text=\"$alvoCusto\"></p><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Cancelar</button></form><button type=\"button\" data-on:click=\"@post('/piloto/admin/usuarios/' + $alvoId + '/apagar'); $confirmar.close()\" class=\"bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Apagar conta</button></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<dialog id=\"confirmar\" data-ref=\"confirmar\" aria-labelledby=\"confirmar-titulo\" aria-describedby=\"confirmar-custo\" class=\"m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"confirmar-titulo\" class=\"font-heading text-base\">Apagar a conta de <span data-text=\"$alvoNome\"></span>?</h2><p id=\"confirmar-custo\" class=\"mt-2 text-sm text-muted-foreground\" data-text=\"$alvoCusto\"></p><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Cancelar</button></form><button type=\"button\" data-on:click=\"@post('/admin/usuarios/' + $alvoId + '/apagar'); $confirmar.close()\" class=\"bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Apagar conta</button></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -582,7 +582,7 @@ func dialogoRedefinir() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "Redefinir senha</h2><p class=\"mt-2 text-sm text-muted-foreground\">Envie o link para <span data-text=\"$alvoNome\"></span>. Vale uma vez só, expira em 24 horas, e quem recebe escolhe a própria senha — você não digita senha nenhuma.</p><div id=\"reset-link\" class=\"mt-3\"></div><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Fechar</button></form><button type=\"button\" data-indicator:gerando data-attr:disabled=\"$gerando\" data-on:click=\"@post('/piloto/admin/usuarios/' + $alvoId + '/redefinir')\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50\">Gerar link</button></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "Redefinir senha</h2><p class=\"mt-2 text-sm text-muted-foreground\">Envie o link para <span data-text=\"$alvoNome\"></span>. Vale uma vez só, expira em 24 horas, e quem recebe escolhe a própria senha — você não digita senha nenhuma.</p><div id=\"reset-link\" class=\"mt-3\"></div><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Fechar</button></form><button type=\"button\" data-indicator:gerando data-attr:disabled=\"$gerando\" data-on:click=\"@post('/admin/usuarios/' + $alvoId + '/redefinir')\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50\">Gerar link</button></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

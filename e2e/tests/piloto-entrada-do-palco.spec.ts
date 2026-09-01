@@ -41,7 +41,7 @@ async function animacoesDoGesto(page: import('@playwright/test').Page, gesto: ()
 
 test('o palco entra pelo lado para onde o cursor foi', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/personagens')
+  await page.goto('/personagens')
   await page.waitForLoadState('networkidle')
 
   const quadros = page.locator('[role="option"]')
@@ -67,7 +67,7 @@ test('o palco que entra é o que o cursor escolheu, e a placa espera o retrato',
   page,
 }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/personagens')
+  await page.goto('/personagens')
   await page.waitForLoadState('networkidle')
 
   await page.locator('[role="option"]').nth(1).click()

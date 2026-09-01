@@ -25,11 +25,11 @@ const TANQUE = 'Tanque Placas Nv10'
 
 /** O primeiro herói do elenco, pelo endereço da ficha nova. */
 async function aFichaDoPrimeiro(page: import('@playwright/test').Page) {
-  await page.goto('/piloto/personagens')
+  await page.goto('/personagens')
   const href = await page.locator('a[aria-label^="Abrir ficha de"]').first().getAttribute('href')
   const id = href?.match(/\d+/)?.[0]
   expect(id, 'não achei um herói no elenco: o resto do caso não mediria nada').toBeTruthy()
-  await page.goto(`/piloto/personagens/${id}`)
+  await page.goto(`/personagens/${id}`)
   return id as string
 }
 
@@ -126,7 +126,7 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
  * servidor, ele ficou sem nenhum outro chamador.
  */
 async function oIdDoHeroi(page: import('@playwright/test').Page, nome: string) {
-  await page.goto('/piloto/personagens')
+  await page.goto('/personagens')
   await page.getByRole('searchbox', { name: 'Buscar personagem' }).fill(nome)
   const abrir = page.getByRole('link', { name: `Abrir ficha de ${nome}` })
   await expect(abrir, `a semente não tem ${nome}`).toBeVisible()
@@ -140,7 +140,7 @@ test('a paleta arcana do Combate é legível para quem conjura', async ({ page }
   const id = await oIdDoConjurador(page)
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`/piloto/personagens/${id}?tab=combat`)
+  await page.goto(`/personagens/${id}?tab=combat`)
 
   // O CONTROLE de que a tripla está mesmo na tela: sem ela, o contraste abaixo
   // mede um Combate sem nada de arcano e passa dizendo o contrário.
@@ -169,7 +169,7 @@ test('a paleta arcana do Combate é legível para quem conjura', async ({ page }
 test('o grimório e os diálogos de conjurar e aprender cabem no telefone', async ({ page }) => {
   const id = await oIdDoConjurador(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`/piloto/personagens/${id}?tab=spells`)
+  await page.goto(`/personagens/${id}?tab=spells`)
 
   // O CONTROLE do painel: sem magia na tela o resto mede um grimório vazio.
   await expect(
@@ -217,7 +217,7 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
 test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', async ({ page }) => {
   const id = await oIdDoHeroi(page, TANQUE)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`/piloto/personagens/${id}?tab=bag`)
+  await page.goto(`/personagens/${id}?tab=bag`)
 
   // O CONTROLE do painel: sem a tira desenhada, o resto mede uma mochila vazia.
   await expect(
@@ -257,7 +257,7 @@ test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', asy
 test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({ page }) => {
   const id = await oIdDoHeroi(page, TANQUE)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`/piloto/personagens/${id}?tab=abilities`)
+  await page.goto(`/personagens/${id}?tab=abilities`)
 
   // O CONTROLE da lista: sem poderes na tela o resto mede uma aba vazia.
   await expect(
@@ -290,13 +290,13 @@ test('as sete abas são endereços, e a ativa se anuncia', async ({ page }) => {
   // A ABA É UM ENDEREÇO: recarregar tem de cair na mesma seção. É o contrato que
   // a SPA tinha e que um sinal de cliente não daria — e é por isso que elas são
   // links e não botões.
-  await page.goto(`/piloto/personagens/${id}?tab=spells`)
+  await page.goto(`/personagens/${id}?tab=spells`)
   await expect(page.getByRole('link', { name: 'Magias', exact: true })).toHaveAttribute('aria-current', 'page')
   await page.reload()
   await expect(page.getByRole('link', { name: 'Magias', exact: true })).toHaveAttribute('aria-current', 'page')
 
   // E o endereço ANTIGO da Mochila continua chegando nela: `inventory` é
   // favorito de quando a aba se chamava assim.
-  await page.goto(`/piloto/personagens/${id}?tab=inventory`)
+  await page.goto(`/personagens/${id}?tab=inventory`)
   await expect(page.getByRole('link', { name: 'Mochila', exact: true })).toHaveAttribute('aria-current', 'page')
 })

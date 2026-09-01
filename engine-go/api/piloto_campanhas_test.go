@@ -210,13 +210,13 @@ func TestCenaRespondePaginaOuRemendoConformeQuemPergunta(t *testing.T) {
 		t.Fatalf("assinar: %v", err)
 	}
 	pede := func(datastar bool) string {
-		req := httptest.NewRequest(http.MethodGet, "/piloto/campanhas", nil)
+		req := httptest.NewRequest(http.MethodGet, "/campanhas", nil)
 		req.AddCookie(&http.Cookie{Name: f.s.cfg.CookieName, Value: tok})
 		if datastar {
 			req.Header.Set("datastar-request", "true")
 		}
 		rec := httptest.NewRecorder()
-		http.StripPrefix("/piloto", f.s.PilotoRouter()).ServeHTTP(rec, req)
+		f.s.WebRouter().ServeHTTP(rec, req)
 		return rec.Body.String()
 	}
 

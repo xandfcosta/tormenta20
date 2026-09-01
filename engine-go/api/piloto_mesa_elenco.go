@@ -78,6 +78,6 @@ func fechaAFichaDoElenco(m mesaMembro) string {
 // acende no `$erroDoComando`, que é do RODAPÉ — um diálogo aberto por cima dela
 // esconderia a única frase que explica o que houve.
 func poeNaFila(v mesaView, m mesaMembro) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/elenco/%d/na-fila')",
+	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/%d/na-fila')",
 		v.CampaignID, v.SessionID, m.CharacterID)
 }

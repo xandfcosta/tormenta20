@@ -74,20 +74,25 @@ func (s *Server) requirePagina(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := s.sessionUser(r)
 		if err != nil {
-			http.Redirect(w, r, "/piloto/entrar?redirect="+url.QueryEscape(alvoOriginal(r)), http.StatusSeeOther)
+			http.Redirect(w, r, "/entrar?redirect="+url.QueryEscape(alvoOriginal(r)), http.StatusSeeOther)
 			return
 		}
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userCtxKey, user)))
 	})
 }
 
-// alvoOriginal é a URL que o navegador pediu, com prefixo e query.
+// alvoOriginal é a URL que o navegador pediu, com a query.
 //
-// `RequestURI` e não `URL.Path`: o roteador do piloto é montado com
-// `http.StripPrefix`, que REESCREVE o caminho — quem lesse `URL.Path` mandaria
-// o jogador de volta para `/mesa/1/4` em vez de `/piloto/mesa/1/4`, e ele
-// entraria para cair num 404. O `RequestURI` é o alvo cru, intocado pelo strip,
-// e leva a query junto (uma URL de mesa guardada nos favoritos tem parâmetros).
+// `RequestURI` e não `URL.Path`, e a razão MUDOU na ALE-280 — a linha ficou, o
+// motivo não. Ela existia porque o roteador das cenas era montado com
+// `http.StripPrefix("/piloto", …)`, que REESCREVE o caminho: quem lesse
+// `URL.Path` mandaria o jogador de volta para `/mesa/1/4` quando o endereço era
+// `/piloto/mesa/1/4`, e ele entraria para cair num 404. Sem prefixo não há
+// strip, e `URL.Path` passou a servir.
+//
+// O que sustenta a escolha hoje é a QUERY: `URL.Path` a descarta, e uma URL de
+// mesa guardada nos favoritos tem parâmetros. Perdê-los devolveria a pessoa a
+// uma tela certa com o estado errado, que é pior que o 404 — ninguém desconfia.
 func alvoOriginal(r *http.Request) string {
 	if r.RequestURI != "" && strings.HasPrefix(r.RequestURI, "/") {
 		return r.RequestURI

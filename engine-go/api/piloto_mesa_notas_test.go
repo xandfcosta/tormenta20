@@ -137,7 +137,7 @@ func (f pilotoFixture) notaNoBanco(t *testing.T) string {
 // A prévia da resposta era montada a partir de uma `mesaView` SINTÉTICA, criada
 // só com o texto — e uma struct nova nasce com `CampaignID` e `SessionID` em
 // ZERO. Cada quadrinho do fragmento saía apontando para
-// `/piloto/mesa/0/0/notas/tarefa/N/marcar`.
+// `/mesa/0/0/notas/tarefa/N/marcar`.
 //
 // O SINTOMA É DA PIOR FAMÍLIA DESTA BASE, e é por isso que ele merece guarda: o
 // PRIMEIRO clique funcionava, porque acontece sobre o HTML da carga fria, que

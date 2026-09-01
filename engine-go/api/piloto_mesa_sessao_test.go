@@ -137,7 +137,7 @@ func TestExcluirApagaEMandaOMestreParaACronica(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("excluir deu %d, esperado 303", rec.Code)
 	}
-	if destino := rec.Header().Get("Location"); !strings.HasPrefix(destino, "/piloto/campanhas/") {
+	if destino := rec.Header().Get("Location"); !strings.HasPrefix(destino, "/campanhas/") {
 		t.Errorf("o destino depois de excluir é %q", destino)
 	}
 	if _, err := f.s.queries.GetSession(ctx, f.sessionID); err == nil {
