@@ -14,36 +14,6 @@ import (
 // e `sheet.sheet.StanceDTO` são forma de DADO e viajam dentro do `sheet.CharacterDTO`.
 // O que ficou aqui são os quatro handlers que os gravam, que é encanamento.
 
-// loadPlayState anexa os três ao DTO da ficha.
-//
-// Vai JUNTO com a ficha em vez de num endpoint próprio porque a tela precisa dos
-// três para desenhar o primeiro quadro: separados, a ficha abriria com a Fúria
-// desligada e a ligaria um instante depois, piscando os números que ela muda.
-func (s *Server) loadPlayState(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
-	conditionals, err := s.queries.ListCharacterConditionals(ctx, id)
-	if err != nil {
-		return err
-	}
-	dto.Conditionals = conditionals
-
-	uses, err := s.queries.ListCharacterPowerUses(ctx, id)
-	if err != nil {
-		return err
-	}
-	for _, u := range uses {
-		dto.PowerUses = append(dto.PowerUses, sheet.PowerUseDTO{PowerID: u.Powerid, Scope: u.Scope, Used: u.Used})
-	}
-
-	stances, err := s.queries.ListCharacterStances(ctx, id)
-	if err != nil {
-		return err
-	}
-	for _, st := range stances {
-		dto.Stances = append(dto.Stances, sheet.StanceDTO{Flag: st.Flag, Steps: st.Steps, PmPaid: st.Pmpaid})
-	}
-	return nil
-}
-
 // handleUpdateConditionals substitui o CONJUNTO inteiro, como o irmão das
 // condições do livro faz.
 //
@@ -173,7 +143,7 @@ func (s *Server) handleDeleteStance(w http.ResponseWriter, r *http.Request) {
 // otimismo: ela pinta antes, e o que volta é a verdade do servidor.
 func (s *Server) writePlayState(w http.ResponseWriter, r *http.Request, id int64) {
 	var dto sheet.CharacterDTO
-	if err := s.loadPlayState(r.Context(), id, &dto); err != nil {
+	if err := sheet.LoadPlayState(r.Context(), s.queries, id, &dto); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not read the play state")
 		return
 	}

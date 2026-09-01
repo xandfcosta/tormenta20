@@ -98,7 +98,7 @@ func (s *Server) castSpellForCharacter(
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
-	ec, err := engineCharacterFrom(dto)
+	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return err
 	}

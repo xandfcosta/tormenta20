@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/sheet"
 
 	"github.com/go-chi/chi/v5"
 
@@ -138,7 +139,7 @@ func (s *Server) removeConditionalsWithFlag(r *http.Request, row sqlcgen.Charact
 	if err != nil {
 		return err
 	}
-	ec, err := engineCharacterFrom(dto)
+	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil || s.catalogs == nil {
 		return nil
 	}

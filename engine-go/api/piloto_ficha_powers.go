@@ -218,7 +218,7 @@ func (s *Server) asFlagsAtivas(dto sheet.CharacterDTO) map[string]bool {
 	if s.catalogs == nil {
 		return fora
 	}
-	ec, err := engineCharacterFrom(dto)
+	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return fora
 	}
