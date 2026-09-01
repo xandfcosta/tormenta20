@@ -87,4 +87,18 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   expect(contraste.medidos, 'o medidor não achou texto: a cena não carregou').toBeGreaterThan(20)
   expect(contraste.falhas, 'texto abaixo do AA nos atributos da forja').toEqual([])
   await expectNoHorizontalOverflow(page, VIEWPORTS)
+
+  // A GRAMÁTICA DE TECLADO, medida aqui e não na lista do
+  // `piloto-gramatica-do-teclado.spec.ts`: aquele guarda enumera cenas de
+  // endereço FIXO, e o desta tem o id de um herói que só existe depois de
+  // alguém forjar. Sem esta asserção, a única cena do piloto com endereço
+  // dinâmico nasceria fora do regime — que é a forma exata do defeito que
+  // aquele guarda existe para prender.
+  await page.setViewportSize({ width: 1400, height: 900 })
+  const regiao = page.locator('[data-nav-region="content"]')
+  await expect(regiao).toHaveCount(1)
+  expect(
+    await regiao.locator('button:not([disabled]),a[href]').count(),
+    'a região da cena não tem item nenhum para as setas dirigirem',
+  ).toBeGreaterThan(0)
 })

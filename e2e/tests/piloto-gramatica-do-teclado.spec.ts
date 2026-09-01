@@ -36,7 +36,14 @@ const CENAS = [
   { nome: 'improviso', url: '/piloto/mestre/improviso' },
   { nome: 'admin', url: '/piloto/admin' },
   { nome: 'campanha nova', url: '/piloto/campanhas/nova' },
+  { nome: 'forja', url: '/piloto/personagens/nova' },
 ]
+
+// A segunda cena da forja NÃO cabe nesta lista: o endereço dela tem o id do
+// herói, e o herói só existe depois de alguém forjar. Ela é medida em
+// `piloto-forja.spec.ts`, que a alcança pelo caminho de verdade — a lista aqui é
+// de cenas com endereço fixo, e fingir um id faria o guarda medir um 403.
+
 
 for (const cena of CENAS) {
   test(`a cena de ${cena.nome} declara a gramática de teclado`, async ({ page }) => {
