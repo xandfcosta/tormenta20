@@ -1,0 +1,112 @@
+package api
+
+import (
+	"net/http"
+	"net/url"
+)
+
+// OS ENDEREÇOS ANTIGOS (ALE-272, fatia 10).
+//
+// Cada cena que saiu da SPA deixou um endereço para trás, e alguém pode tê-lo
+// guardado: o link da campanha mandado no grupo, o favorito do grimório, o
+// e-mail de convite que leva a `/register?convite=…`. Endereço publicado não se
+// apaga — se ele deixar de responder, a culpa cai na mesa e não na migração.
+//
+// Enquanto a SPA existiu, quem desviava era ELA: cada rota portada virou uma
+// casca com `entregaAPorta` no `beforeLoad`. Isso custava caro e, pior, morria
+// junto com o `git rm` — o desvio em JavaScript obriga o navegador a BAIXAR o
+// aplicativo inteiro para sair dele, e os endereços antigos são a única coisa
+// da SPA que precisa sobreviver a ela.
+//
+// A tabela abaixo é a MESMA lista das cascas, lida uma a uma. O que cada uma
+// preservava de busca (`?tab=`, `?token=`, `?convite=`, `?redirect=`) está
+// preservado aqui, porque é justamente o parâmetro que faz o endereço valer:
+// um convite sem token é uma tela de erro.
+
+// umEnderecoAntigo é um endereço que a SPA atendia e para onde ele leva hoje.
+type umEnderecoAntigo struct {
+	// Padrao é o do `http.ServeMux` (Go 1.22): `/campaigns/{id}` captura o
+	// segmento, e literal ganha de curinga na hora de casar — por isso
+	// `/campaigns/new` não cai no `{id}`.
+	Padrao string
+	// Destino monta o endereço novo a partir do pedido.
+	Destino func(*http.Request) string
+}
+
+// osEnderecosAntigos é a tabela inteira, na ordem em que as fatias portaram.
+var osEnderecosAntigos = []umEnderecoAntigo{
+	{"/admin", fixo("/piloto/admin")},
+	{"/grimorio", fixo("/piloto/grimorio")},
+	{"/campaigns", fixo("/piloto/campanhas")},
+	{"/campaigns/{$}", fixo("/piloto/campanhas")},
+	{"/campaigns/new", fixo("/piloto/campanhas/nova")},
+	{"/campaigns/join", comBusca("/piloto/campanhas/entrar", "token")},
+	{"/campaigns/{id}", comSegmento("/piloto/campanhas/", "id", "tab")},
+	{"/characters", fixo("/piloto/personagens")},
+	{"/characters/{$}", fixo("/piloto/personagens")},
+	{"/gm", fixo("/piloto/mestre/bestiario")},
+	{"/gm/{$}", fixo("/piloto/mestre/bestiario")},
+	{"/gm/{tool}", comSegmento("/piloto/mestre/", "tool")},
+	{"/login", comBusca("/piloto/entrar", "redirect")},
+	{"/register", comBusca("/piloto/criar-conta", "convite")},
+	{"/redefinir-senha", comBusca("/piloto/redefinir-senha", "token")},
+	// `/join/{token}` era um desvio DUPLO na SPA: ela mandava para
+	// `/campaigns/join?token=…`, que por sua vez mandava para o piloto. Aqui ele
+	// vai direto — dois saltos existiam porque eram duas rotas dela, não porque
+	// alguém precisava passar pelo meio.
+	{"/join/{token}", func(r *http.Request) string {
+		return "/piloto/campanhas/entrar?token=" + url.QueryEscape(r.PathValue("token"))
+	}},
+}
+
+// MontaEnderecosAntigos registra os desvios no mux da RAIZ.
+//
+// Na raiz e não sob `/piloto` porque é lá que eles moravam: quem tem o link
+// antigo digita `/grimorio`, e não `/piloto/grimorio`.
+func MontaEnderecosAntigos(mux *http.ServeMux) {
+	for _, endereco := range osEnderecosAntigos {
+		destino := endereco.Destino
+		mux.HandleFunc(endereco.Padrao, func(w http.ResponseWriter, r *http.Request) {
+			// 302 e não 301, e a diferença importa numa migração: o permanente
+			// fica GRAVADO no navegador de quem visitou uma vez, e voltar atrás
+			// depois disso exige limpar o cache de cada pessoa da mesa. É a
+			// mesma escolha que o desvio da raiz já fazia.
+			http.Redirect(w, r, destino(r), http.StatusFound)
+		})
+	}
+}
+
+// fixo é o destino que não depende do pedido.
+func fixo(destino string) func(*http.Request) string {
+	return func(*http.Request) string { return destino }
+}
+
+// comBusca leva só as chaves de busca nomeadas, e não a query inteira: o que
+// não estava na casca da SPA não passa a valer agora por acidente.
+func comBusca(destino string, chaves ...string) func(*http.Request) string {
+	return func(r *http.Request) string {
+		return destino + aBuscaPreservada(r, chaves)
+	}
+}
+
+// comSegmento acrescenta um segmento capturado do caminho.
+func comSegmento(prefixo, nomeDoSegmento string, chaves ...string) func(*http.Request) string {
+	return func(r *http.Request) string {
+		return prefixo + url.PathEscape(r.PathValue(nomeDoSegmento)) + aBuscaPreservada(r, chaves)
+	}
+}
+
+// aBuscaPreservada devolve "?a=1&b=2" só com as chaves pedidas que vieram
+// preenchidas, ou "" quando nenhuma veio.
+func aBuscaPreservada(r *http.Request, chaves []string) string {
+	guardadas := url.Values{}
+	for _, chave := range chaves {
+		if valor := r.URL.Query().Get(chave); valor != "" {
+			guardadas.Set(chave, valor)
+		}
+	}
+	if len(guardadas) == 0 {
+		return ""
+	}
+	return "?" + guardadas.Encode()
+}

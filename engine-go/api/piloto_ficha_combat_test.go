@@ -88,9 +88,6 @@ func TestOPainelDeCombateDizOsNumerosDoMotor(t *testing.T) {
 	f, id := oCombatente(t)
 	tela := aTelaDoCombate(t, f, id)
 
-	if strings.Contains(tela, "ainda vive na ficha antiga") {
-		t.Fatal("a aba de Combate ainda manda para a ficha velha: o painel não entrou na cena")
-	}
 	// Rótulo E valor no mesmo `aria-label`, que é como a caixa se nomeia: procurar
 	// só o número acharia o "12" de qualquer outro lugar da página.
 	for _, esperado := range []string{

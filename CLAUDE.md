@@ -216,15 +216,16 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **32 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **33 guardas de
 varredura** no formato `TestToda…` / `TestTodo…` / `TestNenhum…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
-`.templ` existe na folha compilada, toda aba da ficha está portada, nenhum nó
+`.templ` existe na folha compilada, toda aba da ficha desenha painel, nenhum nó
 junta `data-show` com `data-attr:style`, nenhuma expressão indexa o sinal da
 lista, nenhum foco pede ao servidor sem guarda de teclado, todo item do kit
-inicial existe no catálogo, nenhuma concessão de origem com escolha nasce
-fixa. Cada um nasceu de um defeito que tinha irmãos.
+inicial existe no catálogo, nenhuma concessão de origem com escolha nasce fixa,
+todo endereço antigo leva ao piloto. Cada um nasceu de um defeito que tinha
+irmãos.
 
 > O número é conferido com `grep -rn "func TestToda\|func TestTodo\|func
 > TestNenhum" --include=*_test.go .` e estava em 22 por bastante tempo depois de

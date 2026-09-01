@@ -117,10 +117,13 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
  * elenco deixar de ter um conjurador, em vez de medir o vazio.
  */
 /**
- * O id de um herói, pelo NOME e pela busca da cena — que é o jeito da casa
- * (`openSheetFromRoster`). O elenco é um palco de um herói por vez, ordenado por
- * última alteração, então "o primeiro do elenco" muda conforme o spec que rodou
- * antes.
+ * O id de um herói, pelo NOME e pela busca da cena. O elenco é um palco de um
+ * herói por vez, ordenado por última alteração, então "o primeiro do elenco"
+ * muda conforme o spec que rodou antes.
+ *
+ * Este era o `openSheetFromRoster` do `support/roster.ts`, que saiu na fatia 10
+ * junto com os specs da ficha da SPA: com o elenco apontando para a ficha do
+ * servidor, ele ficou sem nenhum outro chamador.
  */
 async function oIdDoHeroi(page: import('@playwright/test').Page, nome: string) {
   await page.goto('/piloto/personagens')

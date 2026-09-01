@@ -112,9 +112,6 @@ type abaDaFicha struct {
 	Rotulo string
 	Icone  string
 	Ativa  bool
-	// Portada diz se o painel já existe em Datastar. Enquanto for falso, a aba
-	// leva para a ficha antiga em vez de mostrar um vazio.
-	Portada bool
 }
 
 // asAbasDaFicha são as sete seções, na ORDEM da SPA.
@@ -159,25 +156,6 @@ func aAbaPedida(bruto string) string {
 		}
 	}
 	return asAbasDaFicha()[0].Valor
-}
-
-// oPainelJaPortado diz quais abas já têm contraparte em Datastar.
-//
-// Ela é uma LISTA e não um `false` solto porque é o placar da migração: cada
-// fatia desta issue acrescenta um nome aqui, e a aba deixa de mandar o jogador
-// para a ficha antiga no mesmo commit em que o painel nasce. Enquanto o mapa
-// estiver vazio, a casca é honesta — ela não finge ter o que não tem.
-func oPainelJaPortado(valor string) bool {
-	portados := map[string]bool{
-		"proficiencies": true, // fatia 2
-		"combat":        true, // fatia 3
-		"expertises":    true, // fatia 4
-		"conditionals":  true, // fatia 5
-		"spells":        true, // fatia 6
-		"bag":           true, // fatia 7
-		"abilities":     true, // fatia 8
-	}
-	return portados[valor]
 }
 
 // carregaFicha busca o personagem e computa a ficha.
@@ -233,7 +211,6 @@ func (s *Server) carregaFicha(
 	}
 	for _, item := range asAbasDaFicha() {
 		item.Ativa = item.Valor == aba
-		item.Portada = oPainelJaPortado(item.Valor)
 		v.Abas = append(v.Abas, item)
 	}
 	return v, 200, nil
@@ -272,15 +249,6 @@ func aRotaDaFicha(id int64, aba string) string {
 		return fmt.Sprintf("/piloto/personagens/%d", id)
 	}
 	return fmt.Sprintf("/piloto/personagens/%d?tab=%s", id, aba)
-}
-
-// aFichaAntiga é o endereço da SPA, para as abas que ainda não foram portadas.
-//
-// Ele existe para a casca ser honesta: uma aba vazia parece defeito, e mandar a
-// pessoa procurar a ficha velha por conta é pior do que dar o link. Some no
-// commit da última fatia, junto com a SPA.
-func aFichaAntiga(id int64, aba string) string {
-	return fmt.Sprintf("/characters/%d?tab=%s", id, aba)
 }
 
 // oVitalNaRota traduz o rótulo da tela para o pedaço da URL.
