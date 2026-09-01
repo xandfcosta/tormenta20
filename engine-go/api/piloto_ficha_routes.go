@@ -26,7 +26,7 @@ import (
 // ALE-269 — até lá esta cena se alcança por URL, que é o que a bancada e os
 // guardas usam.
 
-func (s *Server) rotasDaFicha(r chi.Router) {
+func (s *Server) SheetRoutes(r chi.Router) {
 	r.Get("/personagens/{id}", s.handleFicha)
 	// O PASSO no caminho e não no corpo, como o quadrado do movimento no
 	// tabuleiro: o valor é do botão que foi clicado, e não de um sinal da página
@@ -114,7 +114,7 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 		_ = datastar.NewSSE(w, r).PatchElements(fragmento)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: view.Nome + " · Tormenta 20",
 		// `cascaNua`: a cena desenha o próprio cabeçalho, com a volta e o nome.
 		Forma: ui.ShellBare,
@@ -288,7 +288,7 @@ func mudaONivel(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignal
 	if err != nil {
 		return fmt.Errorf("classe %q não é um nome válido", chi.URLParam(r, "classe"))
 	}
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}

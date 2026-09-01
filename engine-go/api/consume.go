@@ -74,7 +74,7 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 func (s *Server) consumeItemForCharacter(
 	r *http.Request, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
 ) (doseUsada, error) {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return doseUsada{}, err
 	}

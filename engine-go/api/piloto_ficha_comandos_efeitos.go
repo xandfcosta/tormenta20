@@ -134,7 +134,7 @@ func toggleSituational(s *Server, r *http.Request, row sqlcgen.Character, sinais
 
 // removeConditionalsWithFlag desliga todo condicional que a postura acendia.
 func (s *Server) removeConditionalsWithFlag(r *http.Request, row sqlcgen.Character, flag string) error {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}

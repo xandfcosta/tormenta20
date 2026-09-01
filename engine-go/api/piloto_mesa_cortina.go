@@ -17,7 +17,7 @@ import (
 // Encontrada no levantamento que precede a virada da sessão, cruzando os rótulos
 // da SPA com o piloto. É a razão de aquele levantamento existir.
 
-func (s *Server) rotasDaCortina(r chi.Router) {
+func (s *Server) CurtainRoutes(r chi.Router) {
 	// O ESTADO no caminho, e não um alternar: ver o comentário do `correACortina`.
 	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/cortina/{estado}",
 		s.comandoDoMestreNoTabuleiro(correACortina))

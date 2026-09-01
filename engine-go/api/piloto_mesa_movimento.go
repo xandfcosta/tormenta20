@@ -32,7 +32,7 @@ import (
 // uma parada. Quem guarda é o `PendingMove.Stops`, e o caminho passou a ser o que
 // as paradas produzem em vez de o que se emenda à mão.
 
-func (s *Server) rotasDoMovimento(r chi.Router) {
+func (s *Server) MoveRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
 	r.Post(base+"/parada/{x}/{y}", s.comandoDaMesa(paraNoQuadrado))
 	r.Post(base+"/desfazer-parada", s.comandoDaMesa(desfazAUltimaParada))

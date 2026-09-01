@@ -20,7 +20,7 @@ import (
 // cabeçalho do `piloto_bestiario.templ`: `mesa` já nomeia a sessão ao vivo
 // desde a fatia 1, e uma palavra com dois sentidos no mesmo espaço de endereço
 // é o que o glossário existe para impedir.
-func (s *Server) rotasDoMestre(r chi.Router) {
+func (s *Server) GMToolRoutes(r chi.Router) {
 	// `/mestre` sozinho não é uma tela: a trilha sempre tem uma ferramenta em
 	// cena. Ele leva à primeira, que é a mesma que a SPA abre.
 	r.Get("/mestre", func(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +130,7 @@ func (s *Server) respondeImproviso(w http.ResponseWriter, r *http.Request, tabel
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Improviso · Mesa do Mestre · Tormenta 20",
 		Forma:         ui.ShellDense,
 		Voltar:        "/",
@@ -251,7 +251,7 @@ func (s *Server) respondeEncontro(
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Encontros · Mesa do Mestre · Tormenta 20",
 		Forma:         ui.ShellDense,
 		Voltar:        "/",
@@ -334,7 +334,7 @@ func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo:        rotuloDaAba(v.Aba) + " · Mesa do Mestre · Tormenta 20",
 		Forma:         ui.ShellDense,
 		Voltar:        "/",
@@ -432,7 +432,7 @@ func (s *Server) handleBestiario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: "Bestiário · Mesa do Mestre · Tormenta 20",
 		Forma:  ui.ShellDense,
 		Voltar: "/",

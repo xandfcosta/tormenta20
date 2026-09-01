@@ -189,7 +189,7 @@ func (s *Server) carregaFicha(
 	if row.Ownerid != user.ID {
 		return fichaView{}, 403, fmt.Errorf("esta ficha não é sua")
 	}
-	dto, err := s.loadCharacter(ctx, row)
+	dto, err := s.LoadCharacter(ctx, row)
 	if err != nil {
 		return fichaView{}, 500, err
 	}

@@ -34,7 +34,7 @@ import (
 // a SPA chamava pelo WASM. O que vem do navegador são os cliques; o que volta é
 // o desenho e a frase, e nenhuma das duas é recalculada na tela.
 
-func (s *Server) rotasDaRegua(r chi.Router) {
+func (s *Server) RulerRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
 	r.Post(base+"/regua", s.handleReguaDaMesa)
 	r.Post(base+"/gabarito/{tipo}/{tamanho}/{x}/{y}/{mx}/{my}", s.handleGabaritoDaMesa)

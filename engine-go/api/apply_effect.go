@@ -207,7 +207,7 @@ func (s *Server) powerTempHpAmount(r *http.Request, row sqlcgen.Character, attri
 	if s.catalogs == nil {
 		return 0, false
 	}
-	sheet, err := s.computeSheet(r.Context(), row)
+	sheet, err := s.ComputeSheet(r.Context(), row)
 	if err != nil {
 		return 0, false
 	}

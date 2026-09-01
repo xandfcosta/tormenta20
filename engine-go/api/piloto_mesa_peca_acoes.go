@@ -44,7 +44,7 @@ import (
 // ao ponteiro (o `.tabuleiro-com-ferramenta` da superfície 8), então o clique
 // direito sobre ela nem chega à peça. Nenhuma condição a mais para lembrar.
 
-func (s *Server) rotasDasAcoesDaPeca(r chi.Router) {
+func (s *Server) TokenActionRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/pecas/{tokenId}"
 	r.Post(base+"/visibilidade", s.comandoDoMestreNoTabuleiro(alternaAVisibilidade))
 	r.Post(base+"/duplicar", s.comandoDoMestreNoTabuleiro(duplicaAPeca))

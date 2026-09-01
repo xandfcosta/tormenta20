@@ -314,12 +314,23 @@ oportunidade de trocar o conceito por um genérico. Termo sem tradução assenta
   que não se consertam por palpite, e a tradução de cada termo. Termo novo:
   escreva a linha do glossário ANTES do código.
 
-**O código existente NÃO é varrido de uma vez** — e esta é a exceção deliberada à
-regra "uma convenção só foi adotada depois de varrida". A base tem milhares de
-identificadores em português, e um renome em massa apagaria a procedência de cada
-linha no `git blame` por ganho de estilo. A regra vale para o código NOVO e para
-o que a sua mudança já ia tocar. Enquanto as duas grafias convivem, **o nome que
-você escreve segue a regra, e o nome que você chama segue o que está lá.**
+**RENOMEIE AO ENCONTRAR.** Decisão do dono, e ela substitui o que estava escrito
+aqui: identificador em português que você encontrar no caminho vira inglês, e não
+só o que você ia escrever. Não é preciso sair caçando — é preciso não passar por
+cima.
+
+> Aqui morava "o código existente NÃO é varrido de uma vez", com o argumento de
+> que um renome em massa apagaria a procedência de cada linha no `git blame`. O
+> argumento continua verdadeiro para uma varredura de mil identificadores num
+> commit só, e é por isso que os nomes de TESTE têm issue própria (ALE-282). O que
+> ele não sustentava era a inércia: com "só o que a sua mudança ia tocar", uma
+> função como `escrevePagina` atravessou quatro fatias sendo lida em toda uma e
+> renomeada em nenhuma.
+
+Na prática: quando uma fatia move ou reescreve um arquivo, os identificadores
+dele saem em inglês inteiros — não os do diff. **O nome que você CHAMA de fora e
+não vai tocar segue o que está lá**, porque renomear o chamado obriga a varrer
+todos os chamadores, e aí é a varredura em massa por outro caminho.
 
 ## Commits
 

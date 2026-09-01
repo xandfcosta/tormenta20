@@ -23,7 +23,7 @@ import (
 // que termina em `http.Redirect`, que é o mesmo padrão das ações destrutivas da
 // cena de campanhas.
 
-func (s *Server) rotasDaSessao(r chi.Router) {
+func (s *Server) SessionRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/sessao"
 	r.Post(base+"/iniciar", s.comandoDoMestre(iniciaAPartida))
 	r.Post(base+"/encerrar", s.comandoDoMestre(encerraAPartida))

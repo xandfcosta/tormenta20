@@ -24,7 +24,7 @@ import (
 // sinais do Datastar — devolve só o remendo da cena. Quem distingue os dois é o
 // cabeçalho `datastar-request`, que o cliente põe.
 
-func (s *Server) rotasDeCampanhas(r chi.Router) {
+func (s *Server) CampaignRoutes(r chi.Router) {
 	r.Get("/campanhas", s.handleCampanhas)
 	r.Get("/campanhas/nova", s.handleCampanhaNova)
 	r.Post("/campanhas/nova", s.handleCampanhaNovaPost)
@@ -56,7 +56,7 @@ func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: "Campanhas · Tormenta 20",
 		// `cascaNua`: esta cena desenha o próprio cabeçalho, porque ele carrega a
 		// busca e os filtros. A casca densa poria um segundo `<h1>` acima.
@@ -155,7 +155,7 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *Server) escreveFolhaNova(w http.ResponseWriter, r *http.Request, status int, v campanhaNovaView) {
-	s.escrevePagina(w, r, status, ui.Page{
+	s.WritePage(w, r, status, ui.Page{
 		Titulo: "Abrir nova campanha",
 		// `cascaDensa`: a tela da SPA usa o cabeçalho compacto com o "‹ Voltar",
 		// e sem ele a folha nasce sem saída visível — o Esc existe, mas atalho
@@ -258,7 +258,7 @@ func (s *Server) escreveCarta(w http.ResponseWriter, r *http.Request, status int
 	if v.Erros == nil {
 		v.Erros = plataforma.FieldErrorMap{}
 	}
-	s.escrevePagina(w, r, status, ui.Page{
+	s.WritePage(w, r, status, ui.Page{
 		Titulo: "Entrar na mesa",
 		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
@@ -431,7 +431,7 @@ func donoDaCronica(w http.ResponseWriter, r *http.Request, s *Server) (int64, Au
 }
 
 func (s *Server) escrevePaginaDaCronica(w http.ResponseWriter, r *http.Request, status int, v cronicaView) {
-	s.escrevePagina(w, r, status, ui.Page{
+	s.WritePage(w, r, status, ui.Page{
 		Titulo: v.Nome,
 		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",

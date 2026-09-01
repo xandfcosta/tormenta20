@@ -123,7 +123,7 @@ func criaOOficio(s *Server, r *http.Request, row sqlcgen.Character, sinais ficha
 // personagem — quem clica quer INVERTER o que está na tela, e o servidor sabe o
 // que está na tela melhor do que o botão sabe.
 func alternaAProficiencia(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func alternaAProficiencia(s *Server, r *http.Request, row sqlcgen.Character, _ f
 
 // restauraOPadraoDaClasse joga fora os ajustes manuais.
 func restauraOPadraoDaClasse(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}

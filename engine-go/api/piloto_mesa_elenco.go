@@ -18,7 +18,7 @@ import (
 // mão, e a linha nascia sem `characterId` — desligada da ficha, sem PV de
 // verdade e fora do descanso.
 
-func (s *Server) rotasDoElenco(r chi.Router) {
+func (s *Server) CastRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/na-fila",
 		s.comandoDoMestre(poeOJogadorNaFila))
 }

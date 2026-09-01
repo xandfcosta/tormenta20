@@ -21,7 +21,7 @@ import (
 // `chi` registra sem o `/`, que o `buildMux` tira antes de entregar aqui.
 const rotaDoBuscador = "/buscador"
 
-func (s *Server) rotasDoBuscador(r chi.Router) {
+func (s *Server) BookSearchRoutes(r chi.Router) {
 	r.Get("/buscador", s.handleBuscador)
 }
 

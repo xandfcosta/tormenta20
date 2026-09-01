@@ -294,7 +294,7 @@ func ligaOCondicional(t *testing.T, f pilotoFixture, id int64) {
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
-	dto, err := f.s.loadCharacter(context.Background(), row)
+	dto, err := f.s.LoadCharacter(context.Background(), row)
 	if err != nil {
 		t.Fatalf("carregar o personagem: %v", err)
 	}

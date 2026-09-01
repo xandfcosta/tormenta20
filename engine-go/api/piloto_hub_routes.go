@@ -11,7 +11,7 @@ import (
 // As rotas do HUB (ALE-231). Atrás de `requireAuth`: o menu principal é de quem
 // entrou, e quem não entrou é mandado à porta pelo próprio middleware.
 
-func (s *Server) rotasDoHub(r chi.Router) {
+func (s *Server) HubRoutes(r chi.Router) {
 	r.Get("/", s.handleHub)
 	r.Post("/sair", s.handleHubSair)
 	r.Post("/convites", s.handleHubConvite)
@@ -23,7 +23,7 @@ func (s *Server) handleHub(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: "Tormenta 20",
 		Forma:  ui.ShellTitled,
 		Kicker: "— Grimório de Arton —",

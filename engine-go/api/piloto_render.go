@@ -31,7 +31,7 @@ var pilotoFS embed.FS
 // e só então entrava no layout — porque o `html/template` não sabe invocar um
 // sub-template por nome dinâmico. Agora quem compõe é o compilador, e não há
 // passada intermediária onde escapar errado.
-func (s *Server) escrevePagina(
+func (s *Server) WritePage(
 	w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component,
 ) {
 	var buf bytes.Buffer

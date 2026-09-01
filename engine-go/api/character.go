@@ -38,7 +38,7 @@ func (s *Server) characterList(ctx context.Context, ownerID int64) ([]CharacterD
 	}
 	out := make([]CharacterDTO, 0, len(rows))
 	for _, row := range rows {
-		dto, err := s.loadCharacter(ctx, row)
+		dto, err := s.LoadCharacter(ctx, row)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +54,7 @@ func (s *Server) handleGetCharacter(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
 		return
@@ -127,7 +127,7 @@ func (s *Server) handleGetSheet(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusServiceUnavailable, "Rules catalog not loaded")
 		return
 	}
-	sheet, err := s.computeSheet(r.Context(), row)
+	sheet, err := s.ComputeSheet(r.Context(), row)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not compute sheet")
 		return
@@ -155,7 +155,7 @@ func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID i
 // loadCharacter attaches the six relations to a character row in the Prisma
 // include order (races/classes/items/effects by id, expertises by name, spells by
 // learnedAt).
-func (s *Server) loadCharacter(ctx context.Context, c sqlcgen.Character) (CharacterDTO, error) {
+func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (CharacterDTO, error) {
 	dto := characterScalarsFrom(c)
 
 	races, err := s.queries.ListRacesByCharacter(ctx, c.ID)

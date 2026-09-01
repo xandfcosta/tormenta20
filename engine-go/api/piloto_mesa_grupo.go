@@ -32,7 +32,7 @@ import (
 // é exatamente o que protege o turno dele. A razão inteira está no
 // `tabuleiro.MoveOGrupo`.
 
-func (s *Server) rotasDoGrupo(r chi.Router) {
+func (s *Server) PartyRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
 	r.Post(base+"/marcar-area/{x}/{y}/{x2}/{y2}", s.handleMarcarArea)
 	r.Post(base+"/grupo/mover/{dx}/{dy}", s.comandoContinuoDoMestre(moveOGrupoDaMesa))

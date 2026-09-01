@@ -32,7 +32,7 @@ import (
 //
 // Criar do zero é a exceção, e é o mesmo formulário com a semente em branco.
 
-func (s *Server) rotasDosNPCs(r chi.Router) {
+func (s *Server) NPCRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/elenco/npc"
 	r.Post(base+"/do-verbete", s.comandoDoMestre(guardaOVerbeteNoElenco))
 	r.Post(base+"/{npcId}/na-fila", s.comandoDoMestre(poeONPCNaFila))

@@ -60,7 +60,7 @@ func (s *Server) speedSquaresFor(characterID int64) int {
 	if err != nil {
 		return 0
 	}
-	sheet, err := s.computeSheet(context.Background(), row)
+	sheet, err := s.ComputeSheet(context.Background(), row)
 	if err != nil {
 		log.Printf("board: ficha do personagem %d não computada (%v)", characterID, err)
 		return 0

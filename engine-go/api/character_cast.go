@@ -47,7 +47,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Unknown spell %q", catalogSpellID))
 		return
 	}
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return

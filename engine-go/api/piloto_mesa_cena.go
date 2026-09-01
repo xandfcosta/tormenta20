@@ -25,7 +25,7 @@ import (
 // Encerrar ARQUIVA (ALE-124): a cena vira um Lugar da campanha com as peças onde
 // estavam. Por isso o rótulo é "Encerrar" e não "Fechar" — fechar sugere perder.
 
-func (s *Server) rotasDaCena(r chi.Router) {
+func (s *Server) SceneRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
 	r.Post(base+"/abrir", s.comandoDoMestreNoTabuleiro(abreOTabuleiro))
 	r.Post(base+"/encerrar", s.comandoDoMestreNoTabuleiro(encerraOTabuleiro))

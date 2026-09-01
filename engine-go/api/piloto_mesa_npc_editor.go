@@ -44,7 +44,7 @@ import (
 // estes caminhos não passam pelo `comandoDoMestre`, que redesenha a Mesa
 // inteira. O único que grava é o `salvaORascunho`.
 
-func (s *Server) rotasDoEditorDeNPC(r chi.Router) {
+func (s *Server) NPCEditorRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/elenco/npc"
 	r.Post(base+"/{npcId}/editar", s.abreORascunho)
 	r.Post(base+"/novo", s.abreORascunho)

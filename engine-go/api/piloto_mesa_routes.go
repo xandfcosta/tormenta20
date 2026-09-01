@@ -39,24 +39,24 @@ func (s *Server) WebRouter() http.Handler {
 	// tem de vir ANTES dos grupos com `requireAuth` — não por ordem de casamento
 	// (o chi casa por rota, não por ordem), mas porque ficar dentro do grupo a
 	// tornaria inalcançável para exatamente quem precisa dela.
-	s.rotasDaPorta(r)
+	s.DoorRoutes(r)
 	// O HUB (ALE-231): o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePagina)
-		s.rotasDoHub(r)
-		s.rotasDeCampanhas(r)
-		s.rotasDePersonagens(r)
+		s.HubRoutes(r)
+		s.CampaignRoutes(r)
+		s.CharacterRoutes(r)
 		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
-		s.rotasDaFicha(r)
-		s.rotasDoGrimorio(r)
-		s.rotasDoMestre(r)
+		s.SheetRoutes(r)
+		s.GrimoireRoutes(r)
+		s.GMToolRoutes(r)
 		// O BUSCADOR (ALE-264) fica no grupo do Hub e não no do mestre: a caixa
 		// abre em QUALQUER cena, inclusive na Mesa, e a rota tem de existir onde
 		// quer que o ⌃K seja apertado.
-		s.rotasDoBuscador(r)
+		s.BookSearchRoutes(r)
 		// O VERBETE citado por um elo (ALE-264), na casca pelo mesmo motivo do
 		// buscador: a caixa abre em qualquer cena.
-		s.rotasDoVerbete(r)
+		s.EntryRoutes(r)
 		// O LIVRO (ALE-264) é servido para quem ENTROU e não anonimamente como
 		// os estáticos: os estáticos são o bundle do Datastar, e isto é um
 		// arquivo do dono da mesa. Sem `LIVRO_PDF` a rota devolve 404 — o botão
@@ -72,24 +72,24 @@ func (s *Server) WebRouter() http.Handler {
 		r.Get("/mesa/{campaignId}/{sessionId}", s.handleMesaPage)
 		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleMesaStream)
 		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
-		s.rotasDosComandosDaMesa(r)
-		s.rotasDoBestiarioDaMesa(r)
-		s.rotasDoMovimento(r)
-		s.rotasDaPreviaDoMovimento(r)
-		s.rotasDaRegua(r)
-		s.rotasDaCena(r)
-		s.rotasDoGrupo(r)
-		s.rotasDosMarcadores(r)
-		s.rotasDaCortina(r)
-		s.rotasDasAbas(r)
-		s.rotasDaLente(r)
-		s.rotasDasAcoesDaPeca(r)
-		s.rotasDasCondicoes(r)
-		s.rotasDaSessao(r)
-		s.rotasDasNotas(r)
-		s.rotasDoElenco(r)
-		s.rotasDosNPCs(r)
-		s.rotasDoEditorDeNPC(r)
+		s.TableCommandRoutes(r)
+		s.TableBestiaryRoutes(r)
+		s.MoveRoutes(r)
+		s.MovePreviewRoutes(r)
+		s.RulerRoutes(r)
+		s.SceneRoutes(r)
+		s.PartyRoutes(r)
+		s.MarkerRoutes(r)
+		s.CurtainRoutes(r)
+		s.TabRoutes(r)
+		s.LensRoutes(r)
+		s.TokenActionRoutes(r)
+		s.ConditionRoutes(r)
+		s.SessionRoutes(r)
+		s.NoteRoutes(r)
+		s.CastRoutes(r)
+		s.NPCRoutes(r)
+		s.NPCEditorRoutes(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -168,7 +168,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 	view.MinhaFicha = s.aFichaDoJogadorNaMesa(r, view)
 	// A página é um retrato de agora, e o `escrevePagina` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: sinaisDaMesa(),
 		Init:   fmt.Sprintf("@get('/mesa/%d/%d/stream')", campaignID, sessionID),
@@ -525,7 +525,7 @@ func (s *Server) defesaDoMembro(ctx context.Context, characterID int64) string {
 	if err != nil {
 		return "—"
 	}
-	ficha, err := s.computeSheet(ctx, row)
+	ficha, err := s.ComputeSheet(ctx, row)
 	if err != nil {
 		return "—"
 	}
