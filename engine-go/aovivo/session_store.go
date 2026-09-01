@@ -232,14 +232,14 @@ func (st *SessionStore) EndScene(sessionID int64) (*SessionRuntimeState, error) 
 func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
-		return st.apply(sessionID, oVitalQueMudou(sessionID, entryID, nil),
+		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
 			func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
 	}
 	hp, mp, err := st.ficha.AplicaAbsoluto(context.Background(), *charID, hpCurrent, mpCurrent)
 	if err != nil {
 		return nil, err
 	}
-	return st.apply(sessionID, oVitalQueMudou(sessionID, entryID, charID),
+	return st.apply(sessionID, vitalsEvent(sessionID, entryID, charID),
 		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
@@ -250,14 +250,14 @@ func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, 
 func (st *SessionStore) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
-		return st.apply(sessionID, oVitalQueMudou(sessionID, entryID, nil),
+		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
 			func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
 	}
 	hp, mp, err := st.ficha.AplicaDelta(context.Background(), *charID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
-	return st.apply(sessionID, oVitalQueMudou(sessionID, entryID, charID),
+	return st.apply(sessionID, vitalsEvent(sessionID, entryID, charID),
 		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
@@ -422,13 +422,13 @@ func uniqueCharacterIDs(s *SessionRuntimeState) []int64 {
 	return ids
 }
 
-// oVitalQueMudou monta o evento do dano ou da cura.
+// vitalsEvent monta o evento do dano ou da cura.
 //
 // O `CharacterID` só entra quando HÁ ficha atrás da linha, e o zero do NPC é
 // significativo: ele é o que impede o dano num ogro de acordar toda ficha do
 // processo, porque um alvo zero casaria com um interesse zero. Ver
-// `TestOVitalDeNpcNaoAcordaFichaNenhuma`.
-func oVitalQueMudou(sessionID int64, entryID string, charID *int64) events.VitalsChanged {
+// `TestNpcVitalsWakeNoSheet`.
+func vitalsEvent(sessionID int64, entryID string, charID *int64) events.VitalsChanged {
 	ev := events.VitalsChanged{SessionID: sessionID, EntryID: entryID}
 	if charID != nil {
 		ev.CharacterID = *charID

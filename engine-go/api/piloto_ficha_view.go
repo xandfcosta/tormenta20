@@ -418,13 +418,13 @@ func oGetDaAbaEmbutida(v fichaView, aba string) string {
 		aba, v.ID, aba)
 }
 
-// oRepedidoDaFicha é o comando que o AVISO do stream dispara: a mesma ficha, na
+// sheetRefetch é o comando que o AVISO do stream dispara: a mesma ficha, na
 // aba que o sinal guarda.
 //
 // A aba entra por CONCATENAÇÃO e não como texto fixo, porque quem a escolhe é
 // quem está olhando — este comando é escrito uma vez, no servidor, e serve para
 // as sete seções.
-func oRepedidoDaFicha(v fichaView) string {
+func sheetRefetch(v fichaView) string {
 	// A GUARDA é a comparação com o que já está na tela, e ela existe por
 	// medição: sem ela, um gesto do próprio jogador saía como dois pedidos — o
 	// comando dele grava, o stream vê o `updatedAt` novo e manda o aviso, e o

@@ -105,7 +105,7 @@ func ficha(v fichaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Embutida {
-			templ_7745c5c3_Err = aPlacaDaFichaNaMesa(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = embeddedSheetHeader(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -207,7 +207,7 @@ func aBarraDaFicha(v fichaView) templ.Component {
 	})
 }
 
-// aPlacaDaFichaNaMesa é o cabeçalho da ficha DENTRO da sessão.
+// embeddedSheetHeader é o cabeçalho da ficha DENTRO da sessão.
 //
 // Ela existe porque a barra de cima não serve aqui: o ‹ Voltar levaria o jogador
 // para fora da mesa no meio do combate (mesma razão da aba virar botão logo
@@ -222,7 +222,7 @@ func aBarraDaFicha(v fichaView) templ.Component {
 // Medido a 390px: com o papel junto a placa quebrava em duas fileiras, e a de
 // baixo dizia "GUERREIRO 8 · HUMANO" — que é o que o crachá do rodapé já diz,
 // três dedos abaixo, na mesma tela.
-func aPlacaDaFichaNaMesa(v fichaView) templ.Component {
+func embeddedSheetHeader(v fichaView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

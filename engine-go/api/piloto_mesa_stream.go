@@ -67,7 +67,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	// Quem não tem ficha nesta mesa (o mestre, e quem só assiste) simplesmente
 	// não pede o interesse dela — antes isso era um canal NULO devolvido por uma
 	// função à parte, e agora é um item a menos numa lista.
-	sub, parar := s.bus.Subscribe(osInteressesDoLeitor(view)...)
+	sub, parar := s.bus.Subscribe(readerInterests(view)...)
 	defer parar()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
@@ -78,9 +78,9 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	// A ficha do jogador SEMEADA e não empurrada: o valor de agora entra como
 	// "já avisado" para o primeiro AVISO não disparar um repedido do que a
 	// página acabou de desenhar — e o primeiro aviso pode chegar no mesmo
-	// instante, porque o jogador mexe na própria ficha. Ver `avisaQueAFichaMudou`.
-	fichaAvisada := aVersaoDaFicha(s, r.Context(), view)
-	fichaMexeu := false
+	// instante, porque o jogador mexe na própria ficha. Ver `announceSheetChange`.
+	sheetAnnounced := sheetVersion(s, r.Context(), view)
+	sheetTouched := false
 
 	batimento := time.NewTicker(mesaBatimento)
 	defer batimento.Stop()
@@ -94,7 +94,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 			// A ficha só é relida quando o evento diz que ELA mudou. Antes a
 			// leitura acontecia a cada tique — uma linha por segundo por jogador
 			// conectado, quase sempre para descobrir que nada mudou.
-			fichaMexeu = fichaMexeu || aFichaMudou(ev)
+			sheetTouched = sheetTouched || sheetChanged(ev)
 		case <-batimento.C:
 		}
 		view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID)
@@ -106,9 +106,9 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 		}
 		ultimo = escreveMesa(r.Context(), sse, view, ultimo)
 		puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
-		if fichaMexeu {
-			fichaAvisada = avisaQueAFichaMudou(s, r.Context(), sse, view, fichaAvisada)
-			fichaMexeu = false
+		if sheetTouched {
+			sheetAnnounced = announceSheetChange(s, r.Context(), sse, view, sheetAnnounced)
+			sheetTouched = false
 		}
 	}
 }
@@ -146,7 +146,7 @@ func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, session
 	return seq
 }
 
-// osInteressesDoLeitor diz o que este stream quer receber: a mesa, sempre; a
+// readerInterests diz o que este stream quer receber: a mesa, sempre; a
 // ficha, só de quem tem uma aqui.
 //
 // Uma LISTA e não um canal nulo. Aqui morava o `assinaAFichaDoLeitor`, que
@@ -154,7 +154,7 @@ func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, session
 // era o truque certo para a forma antiga, e ele deixou de ser necessário: não
 // pedir o interesse é dizer a mesma coisa sem precisar que o leitor conheça o
 // truque.
-func osInteressesDoLeitor(view mesaView) []events.Interest {
+func readerInterests(view mesaView) []events.Interest {
 	interesses := []events.Interest{events.OfSession(view.SessionID)}
 	if view.Mestre == nil && view.Eu != nil {
 		interesses = append(interesses, events.OfCharacter(view.Eu.CharacterID))
@@ -162,13 +162,13 @@ func osInteressesDoLeitor(view mesaView) []events.Interest {
 	return interesses
 }
 
-// aFichaMudou diz se este evento mexeu na ficha de quem está olhando.
+// sheetChanged diz se este evento mexeu na ficha de quem está olhando.
 //
 // São DOIS, e o segundo é o que a ALE-275 existiu para cobrir: a ficha salva
 // pela própria tela do jogador, e o dano que o mestre aplica pela fila — que
 // chega como vital de um combatente COM personagem atrás. O `Subscribe` já
 // garantiu que o evento é de quem interessa; aqui a pergunta é só que tipo é.
-func aFichaMudou(ev events.Event) bool {
+func sheetChanged(ev events.Event) bool {
 	switch e := ev.(type) {
 	case events.CharacterChanged:
 		return true
@@ -178,7 +178,7 @@ func aFichaMudou(ev events.Event) bool {
 	return false
 }
 
-// avisaQueAFichaMudou acorda a superfície "Minha ficha" quando o personagem
+// announceSheetChange acorda a superfície "Minha ficha" quando o personagem
 // DESTE jogador mudou no banco (ALE-275).
 //
 // # Por que um AVISO e não a ficha remendada
@@ -207,11 +207,11 @@ func aFichaMudou(ev events.Event) bool {
 // quase sempre para descobrir que nada mudou —, e o dono cortou isso na
 // revisão: toda ação dentro de uma sessão já é um evento, e o servidor tem os
 // dois outros canais para provar que essa é a forma da casa.
-func avisaQueAFichaMudou(
+func announceSheetChange(
 	s *Server, ctx context.Context, sse *datastar.ServerSentEventGenerator,
 	view mesaView, jaAvisada string,
 ) string {
-	versao := aVersaoDaFicha(s, ctx, view)
+	versao := sheetVersion(s, ctx, view)
 	if versao == "" || versao == jaAvisada {
 		return jaAvisada
 	}
@@ -223,7 +223,7 @@ func avisaQueAFichaMudou(
 	return versao
 }
 
-// aVersaoDaFicha é o `updatedAt` do personagem de quem está olhando, ou "" para
+// sheetVersion é o `updatedAt` do personagem de quem está olhando, ou "" para
 // quem não tem ficha nesta mesa (o mestre, e o jogador sem personagem).
 //
 // O `updatedAt` da LINHA do personagem, e não um hash da ficha inteira: ele é
@@ -232,7 +232,7 @@ func avisaQueAFichaMudou(
 // carimba. O que ele NÃO pega são as tabelas filhas (perícias, itens, magias),
 // e isso é aceitável porque elas só mudam pelas mãos do próprio dono, que já
 // está remendando a ficha ao mexer nelas.
-func aVersaoDaFicha(s *Server, ctx context.Context, view mesaView) string {
+func sheetVersion(s *Server, ctx context.Context, view mesaView) string {
 	if view.Mestre != nil || view.Eu == nil {
 		return ""
 	}

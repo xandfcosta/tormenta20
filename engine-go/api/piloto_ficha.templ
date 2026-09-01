@@ -30,7 +30,7 @@ templ cenaDaFicha(v fichaView) {
 templ ficha(v fichaView) {
 	<div class="flex min-h-0 flex-1 flex-col">
 		if v.Embutida {
-			@aPlacaDaFichaNaMesa(v)
+			@embeddedSheetHeader(v)
 		} else {
 			@aBarraDaFicha(v)
 		}
@@ -59,7 +59,7 @@ templ aBarraDaFicha(v fichaView) {
 	</div>
 }
 
-// aPlacaDaFichaNaMesa é o cabeçalho da ficha DENTRO da sessão.
+// embeddedSheetHeader é o cabeçalho da ficha DENTRO da sessão.
 //
 // Ela existe porque a barra de cima não serve aqui: o ‹ Voltar levaria o jogador
 // para fora da mesa no meio do combate (mesma razão da aba virar botão logo
@@ -74,7 +74,7 @@ templ aBarraDaFicha(v fichaView) {
 // Medido a 390px: com o papel junto a placa quebrava em duas fileiras, e a de
 // baixo dizia "GUERREIRO 8 · HUMANO" — que é o que o crachá do rodapé já diz,
 // três dedos abaixo, na mesma tela.
-templ aPlacaDaFichaNaMesa(v fichaView) {
+templ embeddedSheetHeader(v fichaView) {
 	<div class="w-full border-b border-grimorio-iron px-4 py-2">
 		<h2 class="min-w-0 truncate font-heading text-lg tracking-wide text-foreground">{ v.Nome }</h2>
 	</div>

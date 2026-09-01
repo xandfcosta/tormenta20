@@ -241,9 +241,16 @@ todo endereço antigo leva ao piloto. Cada um nasceu de um defeito que tinha
 irmãos.
 
 > O número é conferido com `grep -rn "func TestToda\|func TestTodo\|func
-> TestNenhum" --include=*_test.go .` e estava em 22 por bastante tempo depois de
-> já serem 27 — a família cresce a cada issue e a linha não. Se ele divergir de
-> novo, o certo é o `grep`.
+> TestNenhum\|func TestEvery\|func TestNo[A-Z]" --include=*_test.go .` e estava
+> em 22 por bastante tempo depois de já serem 27 — a família cresce a cada issue
+> e a linha não. Se ele divergir de novo, o certo é o `grep`.
+>
+> **As duas gramáticas no `grep` não são descuido.** Nome de teste passou a ser
+> escrito em inglês (decisão do dono, e é o que a seção "Idioma" já mandava), e a
+> varredura dos 1038 nomes antigos é issue própria. Enquanto ela não roda, um
+> guarda novo se chama `TestEvery…`/`TestNo…` e os 33 antigos continuam
+> `TestToda…` — um `grep` que só conhecesse a grafia antiga contaria menos do que
+> existe, e este arquivo já registra que subcontar essa família aconteceu.
 
 - **Uma convenção só foi adotada depois de varrida.** Uma revisão nomeia um
   arquivo; a correção é *todo* arquivo com a mesma forma. Antes de fechar, rode a

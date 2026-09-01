@@ -220,7 +220,7 @@ func TestUmaMutacaoRecusadaNaoAvisa(t *testing.T) {
 
 // Aqui morava `TestABaixaLimpaOOuvinte`, que afirmava que o `desassinar` do
 // tabuleiro limpava o registro. O registro deixou de ser do tabuleiro: ele é do
-// barramento, e a baixa é medida onde ela mora, em `events.TestABaixaTiraOOuvinte`.
+// barramento, e a baixa é medida onde ela mora, em `events.TestUnsubscribeRemovesTheListener`.
 // Uma regra, uma camada.
 
 // TestMoverUmaPecaCHEGAaoStreamSemEsperarOBatimento.

@@ -187,7 +187,7 @@ func (bs *BoardStore) reopenLocked(ctx context.Context, sessionID int64, tabulei
 // motivo: o id vem do cliente, e sem a checagem um mestre puxaria para a própria
 // mesa a cena de OUTRA campanha.
 func (bs *BoardStore) AbreOLugar(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
-	b, err := bs.abreOLugarLocked(ctx, campaignID, sessionID, placeID)
+	b, err := bs.openPlaceLocked(ctx, campaignID, sessionID, placeID)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (bs *BoardStore) AbreOLugar(ctx context.Context, campaignID, sessionID, pla
 	return b, nil
 }
 
-func (bs *BoardStore) abreOLugarLocked(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
+func (bs *BoardStore) openPlaceLocked(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return nil, err
