@@ -306,9 +306,9 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
     await abreAFila(telaDoMestre)
     await telaDoMestre.getByRole('button', { name: 'Adicionar grupo' }).click()
 
-    // O NOME do personagem deste jogador, lido na superfície Mesa: a ficha
-    // embutida não desenha o nome, porque a barra que o traz é justamente a que
-    // some dentro da sessão.
+    // O NOME do personagem deste jogador, lido na superfície MESA — que é onde
+    // ele está antes de o jogador abrir a ficha, e é o nome que o botão "Ferir
+    // …" da gaveta do mestre carrega.
     const cabecalhoDaIniciativa = telaDoJogador.locator('h2', { hasText: '·' }).first()
     await expect(cabecalhoDaIniciativa).toBeVisible()
     const nomeDoPc = (await cabecalhoDaIniciativa.innerText()).split('·').pop()?.trim() ?? ''
