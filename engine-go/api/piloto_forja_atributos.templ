@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // OS ATRIBUTOS DA FORJA (ALE-272, fatia 9) — a segunda e última tela.
@@ -12,7 +13,7 @@ import (
 // recusa volta desenhada aqui dentro em vez de num status.
 
 templ attributesScene(v attributesView) {
-	@folhaDoTomo() {
+	@ui.TomeSheet() {
 		@attributesBody(v)
 	}
 }
@@ -40,7 +41,7 @@ templ attributesBody(v attributesView) {
 		<div class="flex justify-end">
 			<a
 				href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", v.ID)) }
-				class={ classesDoBotao(varPrimaria, tamPadrao, "") }
+				class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "") }
 			>Abrir a ficha</a>
 		</div>
 	</div>

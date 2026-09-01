@@ -8,14 +8,30 @@
  * o possuía — a paleta sempre foi da casa. */
 @import "./src/index.css";
 
-/* Os templates, que o scanner não acharia sozinho: a detecção automática do
- * Tailwind v4 parte da pasta desta folha, e eles moram dois níveis acima.
+/* Os templates. MEDIDO na ALE-278 (fatia 4), e o resultado desmente o que estava
+ * escrito aqui: estas duas linhas não mudam UM BYTE da folha compilada.
  *
- * Em `api/` e não numa pasta própria porque as views são MINÚSCULAS (`mesaView`,
- * `adminJogador`) e o `templ` gera Go no pacote do diretório — um pacote `tmpl`
- * não as enxergaria. Varre-se só o `piloto_*.templ` para o scanner não ler o
- * pacote `api` inteiro à procura de classe. */
+ * O comentário antigo dizia "os templates, que o scanner não acharia sozinho".
+ * Não é verdade — a detecção automática do Tailwind v4 varre a partir da pasta
+ * desta folha ATÉ A RAIZ do projeto, respeitando o `.gitignore`, então ela já
+ * alcança `api/` e `web/ui/`. Comprovado tirando as duas linhas e recompilando:
+ * 105.328 bytes com, 105.328 sem.
+ *
+ * Elas ficam como DECLARAÇÃO DE INTENÇÃO e como rede para o dia em que a folha
+ * mudar de pasta ou uma delas cair no `.gitignore` — mas quem for depurar
+ * "classe sumiu" não deve perder tempo aqui: o suspeito é o token que não existe
+ * na paleta, e esse o `TestTodaTintaDaCasaExisteNaFolha` acusa.
+ *
+ * A outra metade do comentário antigo continua valendo: as views são MINÚSCULAS
+ * (`mesaView`, `adminJogador`) e o `templ` gera Go no pacote do diretório, então
+ * um pacote `tmpl` não as enxergaria. É por isso que a divisão é por CENA — a
+ * view viaja junto com o template — e não por camada. */
 @source "../*.templ";
+@source "../../web/ui/*.templ";
+/* O KIT (ALE-278, fatia 4). Ele saiu de `api/` para `web/ui/`, e o glob acima é
+ * de um nível só — sem esta linha, `Button`, `TextField` e a casca inteira
+ * perderiam as classes, em silêncio. */
+
 
 /* A folha COMPILADA (`static/mesa.css`) é versionada, e isso é decisão e não
  * descuido: o `go:embed` não compila sem ela, então um clone limpo perderia

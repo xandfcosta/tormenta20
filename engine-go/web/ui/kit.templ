@@ -1,7 +1,4 @@
-package api
-
-import "fmt"
-import "net/url"
+package ui
 
 // A contraparte templ do `shared/ui` da SPA (ALE-229).
 //
@@ -23,43 +20,43 @@ import "net/url"
 // variante e tamanho são os do `buttonVariants` (cva) da SPA. Só os que o app
 // usa hoje: variante que ninguém pede é classe que o Tailwind emite para
 // ninguém.
-type variante string
+type Variant string
 
 const (
 	// A gramática da ALE-200: entre clicáveis, o dourado FAZ e o crimson
 	// DESTRÓI. Não há terceira cor de ação.
-	varPrimaria   variante = "default"
-	varSecundaria variante = "secondary"
-	varDestrutiva variante = "destructive"
+	VariantPrimary   Variant = "default"
+	VariantSecondary Variant = "secondary"
+	VariantDestructive Variant = "destructive"
 )
 
-type tamanho string
+type Size string
 
 const (
-	tamPadrao  tamanho = "default"
-	tamGrande  tamanho = "lg"
-	tamPequeno tamanho = "sm"
-	tamMinimo  tamanho = "xs"
+	SizeDefault  Size = "default"
+	SizeLarge  Size = "lg"
+	SizeSmall Size = "sm"
+	SizeTiny  Size = "xs"
 )
 
 // classesDoBotao mora neste arquivo, e não num `.go` ao lado, por uma razão
 // mecânica: o scanner do Tailwind varre `../*.templ`, então uma classe escrita
 // num `.go` comum não seria emitida e o botão sairia sem estilo. Foi assim que
 // as cores das barras de PV precisaram do `@source inline(...)`.
-func classesDoBotao(v variante, t tamanho, extra string) string {
+func ButtonClasses(v Variant, t Size, extra string) string {
 	base := "inline-flex shrink-0 items-center justify-center gap-2 rounded-sm text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
-	porVariante := map[variante]string{
-		varPrimaria:   "bg-primary text-primary-foreground hover:bg-primary/90",
-		varSecundaria: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
-		varDestrutiva: "bg-destructive text-white hover:bg-destructive/90",
+	porVariante := map[Variant]string{
+		VariantPrimary:   "bg-primary text-primary-foreground hover:bg-primary/90",
+		VariantSecondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
+		VariantDestructive: "bg-destructive text-white hover:bg-destructive/90",
 	}
-	porTamanho := map[tamanho]string{
-		tamPadrao:  "h-9 px-4 py-2",
-		tamGrande:  "h-10 rounded-sm px-6",
-		tamPequeno: "h-8 gap-1.5 rounded-sm px-3",
-		tamMinimo:  "h-6 gap-1 rounded-sm px-2 text-xs",
+	porTamanho := map[Size]string{
+		SizeDefault:  "h-9 px-4 py-2",
+		SizeLarge:  "h-10 rounded-sm px-6",
+		SizeSmall: "h-8 gap-1.5 rounded-sm px-3",
+		SizeTiny:  "h-6 gap-1 rounded-sm px-2 text-xs",
 	}
-	return juntar(base, porVariante[v], porTamanho[t], extra)
+	return Join(base, porVariante[v], porTamanho[t], extra)
 }
 
 // botao é o botão da casa. Os atributos chegam como mapa e são espalhados, e é
@@ -69,8 +66,8 @@ func classesDoBotao(v variante, t tamanho, extra string) string {
 // `extra` é um parâmetro e NÃO uma chave `class` dentro de `attrs`: duas
 // `class` na mesma tag não se somam — o navegador fica com a primeira e a outra
 // é ignorada em silêncio, que é como um `w-full` some sem ninguém notar.
-templ botao(v variante, t tamanho, extra string, attrs templ.Attributes) {
-	<button class={ classesDoBotao(v, t, extra) } { attrs... }>
+templ Button(v Variant, t Size, extra string, attrs templ.Attributes) {
+	<button class={ ButtonClasses(v, t, extra) } { attrs... }>
 		{ children... }
 	</button>
 }
@@ -80,7 +77,7 @@ templ botao(v variante, t tamanho, extra string, attrs templ.Attributes) {
 //
 // O `Nome` é o `id` E o `name`, porque é ele que liga o `<label for>` ao
 // controle; um rótulo sem controle é o defeito que essa amarração previne.
-type campo struct {
+type Field struct {
 	Nome  string
 	Label string
 	Tipo  string
@@ -103,7 +100,7 @@ type campo struct {
 	TamanhoMaximo int
 }
 
-templ campoDeTexto(c campo) {
+templ TextField(c Field) {
 	<div class="space-y-2">
 		<label for={ c.Nome } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
 			{ c.Label }
@@ -111,7 +108,7 @@ templ campoDeTexto(c campo) {
 		<input
 			id={ c.Nome }
 			name={ c.Nome }
-			type={ tipoOuTexto(c.Tipo) }
+			type={ InputType(c.Tipo) }
 			value={ c.Valor }
 			if c.Autocomplete != "" {
 				autocomplete={ c.Autocomplete }
@@ -120,10 +117,10 @@ templ campoDeTexto(c campo) {
 				required
 			}
 			if c.TamanhoMinimo > 0 {
-				minlength={ inteiro(c.TamanhoMinimo) }
+				minlength={ Int(c.TamanhoMinimo) }
 			}
 			if c.TamanhoMaximo > 0 {
-				maxlength={ inteiro(c.TamanhoMaximo) }
+				maxlength={ Int(c.TamanhoMaximo) }
 			}
 			if len(c.Erros) > 0 {
 				aria-invalid="true"
@@ -146,15 +143,15 @@ templ campoDeTexto(c campo) {
 
 // molduraDePainel é o contêiner padrão de uma cena: borda de ferro com um filete
 // dourado por dentro (`FramedPanel`, variante stone).
-templ molduraDePainel(extra string) {
-	<div data-slot="framed-panel" data-variant="stone" class={ juntar("grimorio-frame grimorio-frame--stone p-5 text-foreground", extra) }>
+templ PanelFrame(extra string) {
+	<div data-slot="framed-panel" data-variant="stone" class={ Join("grimorio-frame grimorio-frame--stone p-5 text-foreground", extra) }>
 		{ children... }
 	</div>
 }
 
 // tituloDaCena é o título cinematográfico do Grimório: Cinzel em caixa alta,
 // entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
-templ tituloDaCena(titulo, kicker string) {
+templ SceneTitle(titulo, kicker string) {
 	<div data-slot="scene-title" class="flex flex-col items-center gap-1 text-center">
 		<h1 class="scene-title-glow font-heading font-bold text-[clamp(2.2rem,8vw,3.4rem)] uppercase leading-tight tracking-[0.18em] text-foreground">
 			{ titulo }
@@ -186,7 +183,7 @@ templ tituloDaCena(titulo, kicker string) {
 // fixado a altura — o que dava 77px onde a SPA dá 64 e, pior, tirava o
 // crescimento. Num telefone DEITADO esses 13px são a diferença entre o botão de
 // enviar estar na tela e não estar.
-templ campoDeTextoLongo(c campo, linhas int) {
+templ TextArea(c Field, linhas int) {
 	<div class="space-y-2">
 		<label for={ c.Nome } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
 			{ c.Label }
@@ -194,9 +191,9 @@ templ campoDeTextoLongo(c campo, linhas int) {
 		<textarea
 			id={ c.Nome }
 			name={ c.Nome }
-			rows={ inteiro(linhas) }
+			rows={ Int(linhas) }
 			if c.TamanhoMaximo > 0 {
-				maxlength={ inteiro(c.TamanhoMaximo) }
+				maxlength={ Int(c.TamanhoMaximo) }
 			}
 			if len(c.Erros) > 0 {
 				aria-invalid="true"
@@ -229,7 +226,7 @@ templ campoDeTextoLongo(c campo, linhas int) {
 // casaria com o telefone EM PÉ e o teclado virtual aberto (390x494) — e estas
 // folhas hospedam campos de texto, então o espaçamento encolheria debaixo do
 // dedo no meio da digitação (ALE-176).
-templ folhaDoTomo() {
+templ TomeSheet() {
 	<div class="w-full">
 		<div class="grimorio-leather grimorio-page-in p-2.5 sm:p-3">
 			// `data-tome-root` é CONTRATO PUBLICADO e não decoração: é a raiz de
@@ -264,27 +261,27 @@ templ folhaDoTomo() {
 // ALE-262: o `h4` acabava filho da `<section>`, com `text-transform: none`
 // porque a classe ficou no parágrafo abandonado, e a página juntou 24 desses.
 // Para pôr a receita num cabeçalho, use `classesDoRotulo` direto no elemento.
-templ rotuloDeSecao(tom string, extra string) {
-	<p class={ classesDoRotulo(tom, extra) }>
+templ SectionLabel(tom string, extra string) {
+	<p class={ SectionLabelClasses(tom, extra) }>
 		{ children... }
 	</p>
 }
 
 // classesDoRotulo é a mesma receita para quem precisa dela no PRÓPRIO elemento —
 // um `<h4>`, um `<caption>`, um `<summary>`. Mesma forma do `classesDoBotao`.
-func classesDoRotulo(tom, extra string) string {
-	return juntar("text-2xs font-semibold uppercase tracking-[0.16em] "+tomDoRotulo(tom), extra)
+func SectionLabelClasses(tom, extra string) string {
+	return Join("text-2xs font-semibold uppercase tracking-[0.16em] "+SectionLabelTone(tom), extra)
 }
 
 // A mesma receita como LEGENDA de um `fieldset`, que é o elemento certo para a
 // pergunta de um grupo de escolhas.
-templ legendaDeSecao(tom string, extra string) {
-	<legend class={ classesDoRotulo(tom, extra) }>
+templ SectionCaption(tom string, extra string) {
+	<legend class={ SectionLabelClasses(tom, extra) }>
 		{ children... }
 	</legend>
 }
 
-func tomDoRotulo(tom string) string {
+func SectionLabelTone(tom string) string {
 	if tom == "gold" {
 		return "text-grimorio-gold"
 	}
@@ -312,12 +309,12 @@ func tomDoRotulo(tom string) string {
 // Existir como COMPONENTE é o ponto: enquanto cada cena escrever `overflow-y-auto`
 // à mão, cobrir isto é ENUMERAÇÃO — uma entrada por tela, para sempre, e a que
 // alguém esquecer nasce sem alcance. Passando por aqui, volta a ser amostragem.
-templ caixaRolavel(rotulo string, extra string) {
+templ ScrollBox(rotulo string, extra string) {
 	<div
 		role="region"
 		aria-label={ rotulo }
 		tabindex="0"
-		class={ juntar("min-h-0 flex-1 overflow-y-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", extra) }
+		class={ Join("min-h-0 flex-1 overflow-y-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", extra) }
 	>
 		{ children... }
 	</div>
@@ -346,15 +343,15 @@ templ caixaRolavel(rotulo string, extra string) {
 // Sem cor própria, como o `@tecla`: ela herda a de quem a contém. Cor de painel
 // escuro dentro de superfície clara foi como o guarda de contraste pegou a
 // primeira versão daquele componente.
-templ legendaDoTeclado() {
+templ KeyboardLegend() {
 	<p aria-hidden="true" class="hidden shrink-0 items-center justify-end gap-1 pt-1 text-3xs text-muted-foreground xl:flex">
-		@tecla("↑↓")
+		@Key("↑↓")
 		{ " navegar" }
-		@tecla("←→")
+		@Key("←→")
 		{ " trocar de painel" }
-		@tecla("⏎")
+		@Key("⏎")
 		{ " abrir" }
-		@tecla("⌃K")
+		@Key("⌃K")
 		{ " buscar no livro" }
 	</p>
 }
@@ -374,7 +371,7 @@ templ legendaDoTeclado() {
 // com id próprio, e procurar por id obrigaria a casca a conhecer as telas — o
 // contrário de quem serve a quem. Cena sem busca simplesmente não reage, que é
 // melhor que reagir para o lugar errado.
-const atalhoDaBarra = `evt.key === '/' && ` +
+const SlashShortcut = `evt.key === '/' && ` +
 	`!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && ` +
 	`(evt.preventDefault(), document.querySelector('[data-busca-da-cena]')?.focus())`
 
@@ -394,11 +391,11 @@ const atalhoDaBarra = `evt.key === '/' && ` +
 // documento — é justamente o que se perde aqui. E `session` e não `local` porque
 // a marca vale para ESTA aba e para os próximos milissegundos; sobreviver ao
 // fechamento do navegador seria o foco pulando sozinho numa sessão futura.
-const marcaDeTrocaPorTeclado = `evt.key === 'Enter' && sessionStorage.setItem('piloto-foco-no-trilho', '1')`
+const KeyboardSwapMark = `evt.key === 'Enter' && sessionStorage.setItem('piloto-foco-no-trilho', '1')`
 
 // restauraOFocoDoTrilho roda na carga. Lê a marca, APAGA, e devolve o foco ao
 // item da ferramenta atual — não ao primeiro, que é o que a pessoa não pediu.
-const restauraOFocoDoTrilho = `sessionStorage.getItem('piloto-foco-no-trilho') && ` +
+const RestoreRailFocus = `sessionStorage.getItem('piloto-foco-no-trilho') && ` +
 	`(sessionStorage.removeItem('piloto-foco-no-trilho'), ` +
 	`document.querySelector('[data-nav-region="rail"] [aria-current]')?.focus())`
 
@@ -423,7 +420,7 @@ const restauraOFocoDoTrilho = `sessionStorage.getItem('piloto-foco-no-trilho') &
 //
 // `.open ||` antes do `showModal()` porque chamar `showModal` num diálogo já
 // aberto lança `InvalidStateError` — apertar ⌃K duas vezes é gesto normal.
-const atalhoDoBuscador = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey || evt.metaKey) && ` +
+const SearchShortcut = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey || evt.metaKey) && ` +
 	`document.getElementById('buscador') && (` +
 	`evt.preventDefault(), ` +
 	`document.getElementById('buscador').open || document.getElementById('buscador').showModal(), ` +
@@ -444,54 +441,17 @@ const atalhoDoBuscador = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey |
 // catálogos, que já desenha 992 cartões, e continuaria vivo depois de fechar.
 // Com iframe, o custo nasce no clique e MORRE no fechamento: `about:blank`
 // descarta o documento, o worker e o bitmap de uma vez.
-const abreOLivroPorCima = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
+const OpenBookOverlay = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
 	`evt.preventDefault(), ` +
 	`document.getElementById('livro-em-dialogo').querySelector('iframe').src = el.getAttribute('href') + '&dialogo=1', ` +
 	`document.getElementById('livro-em-dialogo').showModal())`
-
-// abreOVerbetePorCima mostra o verbete do elo numa caixa sobre a cena.
-//
-// Mesma forma do `abreOLivroPorCima`: deixa passar o clique modificado, e o
-// `href` cuida desses. A diferença é que aqui o conteúdo vem por REMENDO do
-// Datastar e não por iframe — é um cartão de texto, não um visualizador de PDF
-// de 1,8 MB, e um documento inteiro para desenhar três linhas seria caro por
-// nada.
-//
-// A caixa abre ANTES da resposta chegar, com o "carregando" que ela já traz: o
-// fragmento sai da memória do servidor e volta em milissegundos na rede da mesa,
-// e abrir depois faria o clique parecer perdido.
-//
-// A aba e a entrada vêm de `data-` e não de partir o `href` em JavaScript, e
-// isso é conserto de um vermelho: quando cada catálogo ganhou cena própria
-// (`/mestre/efeitos?entrada=medo`), a aba saiu da CONSULTA e foi para o
-// CAMINHO — o pedido montado a partir da consulta passou a chegar sem aba, e a
-// caixa abria dizendo "este verbete não está no acervo". Endereço é do
-// navegador; o que o servidor precisa saber, o servidor escreve.
-const abreOVerbetePorCima = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
-	`evt.preventDefault(), ` +
-	`document.getElementById('verbete-em-dialogo').showModal(), ` +
-	"@get('" + rotaDoVerbete + "?aba=' + el.dataset.aba + '&entrada=' + encodeURIComponent(el.dataset.entrada)))"
-
-// abreOsAprimoramentos mostra os aprimoramentos da magia na MESMA caixa do elo.
-//
-// A mesma caixa e não uma segunda: as duas perguntas são "me mostra isso sem me
-// tirar daqui", e um segundo diálogo com o mesmo desenho seria a divergência
-// esperando acontecer.
-//
-// Não é `<a>` porque não há endereço para isto: os aprimoramentos são uma PARTE
-// do verbete, e a magia inteira já tem o endereço dela. Botão que não navega é
-// botão.
-func abreOsAprimoramentos(id string) string {
-	return `document.getElementById('verbete-em-dialogo').showModal(); ` +
-		`@get('` + rotaDoVerbete + `?aba=magias&parte=aprimoramentos&entrada=` + url.QueryEscape(id) + `')`
-}
 
 // atalhosDaCasca é o que o `keydown` da janela roda, e eles vão num atributo SÓ.
 //
 // Dois `data-on:keydown__window` no mesmo elemento não somam: é atributo
 // repetido, e o segundo é descartado pelo analisador de HTML antes de o Datastar
 // ver qualquer coisa — o atalho novo simplesmente não existiria, sem erro.
-const atalhosDaCasca = atalhoDaBarra + "; " + atalhoDoBuscador
+const ShellShortcuts = SlashShortcut + "; " + SearchShortcut
 
 // andaNoBuscador move o foco entre os resultados com as setas.
 //
@@ -508,7 +468,7 @@ const atalhosDaCasca = atalhoDaBarra + "; " + atalhoDoBuscador
 // resultado ele não faz nada aqui, porque o `<a>` já navega sozinho. Sem a
 // guarda, Enter em qualquer linha abriria a PRIMEIRA — o resultado errado, com o
 // certo em foco.
-const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preventDefault(), (() => {` +
+const WalkTheSearch = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preventDefault(), (() => {` +
 	`const itens = [...el.querySelectorAll('[data-resultado]')];` +
 	`if (!itens.length) return;` +
 	`const onde = itens.indexOf(document.activeElement);` +
@@ -519,174 +479,25 @@ const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preve
 	`evt.key === 'Enter' && document.activeElement?.id === 'buscador-campo' && ` +
 	`(evt.preventDefault(), el.querySelector('[data-resultado]')?.click())`
 
-// aPaginaDoLivro abre o PDF do livro na página de uma entrada (ALE-264).
+// Key é a dica de atalho — o `Kbd` da SPA.
 //
-// A página JÁ estava escrita na linha ("p289") — virar link é o gesto mais
-// barato que existia aqui: nada de botão novo disputando espaço com o nome da
-// criatura, e a seta diz que abre fora.
+// Ela só é escrita onde a Key FUNCIONA de verdade: uma dica que anuncia um
+// atalho morto é pior que dica nenhuma, porque ensina errado.
 //
-// `data-nav-skip` porque o painel da ficha é uma REGIÃO de layout `column` com
-// UM item, e é isso que faz a vertical ROLAR o bloco em vez de andar (ver o
-// comentário da região em `cenaDoBestiario`). O driver de teclado coleta
-// `a[href]`, então sem esta marca um segundo item nasceria aqui e a seta para
-// baixo passaria a saltar para o link em vez de rolar a ficha. O Tab continua
-// chegando, que é o caminho certo para um atalho de saída. Nos catálogos vale o
-// mesmo: são centenas de cartões, e cada um viraria uma parada da seta.
+// A chamada tem de começar a LINHA. Escrita no meio de um texto
+// (`Abrir ficha @Key("⏎")`), o templ a trata como texto literal e a página
+// mostra `@Key("⏎")` na tela — medido. É a quarta restrição de sintaxe dele
+// que este porte encontra, depois das três de comentário dentro da lista de
+// atributos.
 //
-// O clique abre o livro POR CIMA da cena, num diálogo — a mesa continua atrás,
-// com a fila da iniciativa onde estava. E ele continua sendo um `<a href>` de
-// verdade: o `target="_blank"` é o que sobra para o clique do meio, o Ctrl e o
-// "abrir em nova aba", que o `abreOLivroPorCima` deixa passar de propósito.
+// Ela NÃO define cor, e isso é a coisa importante: herda a do que a contém, com
+// `opacity-70`. Eu tinha escrito `text-muted-foreground`, que é tinta de painel
+// ESCURO, e dentro do botão dourado deu 1,22:1 — o guarda de contraste pegou.
+// Uma dica de Key aparece dentro de botões de cores diferentes, então cor
+// própria é cor errada em algum deles.
 //
-// O `termo` é o que o leitor DESTACA na página. Vem de quem chama e não do
-// número: é o nome do verbete, e é ele que o olho procura ao chegar.
-templ aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) {
-	@umLinkParaOLivro(livro, pagina, termo) {
-		{ fmt.Sprintf("p%d ↗", pagina) }
-	}
-}
-
-// umLinkParaOLivro é o mesmo link com o TEXTO de quem chama.
-//
-// Ele existe porque o livro se cita dentro do próprio texto ("veja a página
-// 230"), e ali o link tem de ser a frase que já está escrita — trocá-la por
-// "p230 ↗" reescreveria o livro na tela.
-templ umLinkParaOLivro(livro enderecoDoLivro, pagina int, termo string) {
-	<a
-		href={ templ.SafeURL(livro.naPagina(pagina, termo)) }
-		data-on:click={ abreOLivroPorCima }
-		target="_blank"
-		rel="noopener"
-		data-nav-skip
-		title={ fmt.Sprintf("Abrir o livro na página %d", pagina) }
-		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-	>{ children... }</a>
-}
-
-// pedacoDoTexto desenha UM pedaço de uma descrição varrida: elo para outro
-// verbete, elo para o livro, ou texto puro.
-//
-// Um componente porque o `for` que o consome aparece em cada cartão que tem
-// texto, e três `if` copiados divergem no primeiro que alguém ajustar.
-templ pedacoDoTexto(pedaco trecho, livro enderecoDoLivro) {
-	if pedaco.Aba != "" {
-		@eloParaOAcervo(pedaco.Aba, pedaco.ID, pedaco.Texto) {
-			{ pedaco.Texto }
-		}
-	} else if pedaco.Pagina > 0 && livro.naPagina(pedaco.Pagina, "") != "" {
-		@umLinkParaOLivro(livro, pedaco.Pagina, "") {
-			{ pedaco.Texto }
-		}
-	} else {
-		{ pedaco.Texto }
-	}
-}
-
-// oLivroEmDialogo é a moldura que a casca desenha uma vez por página.
-//
-// Ela nasce VAZIA: o `<iframe>` sem `src` não carrega nada, então uma cena que
-// nunca abre o livro não paga um byte de pdf.js. O `close` devolve o iframe ao
-// `about:blank`, e é essa linha que faz a memória voltar — sem ela, o worker e o
-// bitmap da página ficariam vivos até a navegação seguinte.
-//
-// `<dialog>` nativo pelo mesmo motivo do buscador: foco preso, Esc, fundo inerte
-// e camada de topo. E o driver de teclado da cena se recolhe sozinho, porque ele
-// procura `dialog[open]` — as setas passam a ser do livro, que é o que se quer
-// com o livro aberto na frente.
-templ oLivroEmDialogo() {
-	<dialog
-		id="livro-em-dialogo"
-		data-preserve-attr="open"
-		aria-label="O livro"
-		data-on:close="el.querySelector('iframe').src = 'about:blank'"
-		class="scene-grimorio m-auto h-[min(92vh,60rem)] w-[min(72rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/70"
-	>
-		<button
-			type="button"
-			aria-label="Fechar o livro"
-			data-on:click="el.closest('dialog').close()"
-			class="absolute right-2 top-2 z-10 flex size-11 items-center justify-center rounded-sm border border-grimorio-iron bg-grimorio-panel text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>×</button>
-		<iframe title="O livro" class="size-full border-0"></iframe>
-	</dialog>
-}
-
-// seloDaPagina é o que as CENAS chamam: o link quando há livro servido, o número
-// puro quando não há, e nada quando o catálogo não sabe a página.
-//
-// Um componente e não um `if` em cada cartão porque são sete catálogos hoje — e
-// a regra "zero significa que o catálogo não sabe" escrita sete vezes é a que
-// alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
-// papel na mesa usa exatamente isso.
-templ seloDaPagina(livro enderecoDoLivro, pagina int, termo string) {
-	if pagina > 0 {
-		if livro.naPagina(pagina, termo) != "" {
-			@aPaginaDoLivro(livro, pagina, termo)
-		} else {
-			<span class="font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", pagina) }</span>
-		}
-	}
-}
-
-
-// eloParaOAcervo liga uma palavra ao verbete dela (ALE-264).
-//
-// O destino é a MESMA cena com a entrada filtrada — o endereço que o buscador
-// já usa —, então o elo não inventa superfície: a entrada aparece sozinha na aba
-// dela, com o botão do livro ao lado.
-//
-// `data-nav-skip` pela mesma razão do selo de página: são centenas de cartões, e
-// cada palavra ligada viraria uma parada da seta. O Tab continua chegando.
-//
-// O sublinhado é PONTILHADO como o do selo de página, e isso é deliberado: as
-// duas coisas são "leva para outro lugar", e desenhar diferente ensinaria que
-// são gestos diferentes.
-// O CLIQUE abre a caixa por cima; o `href` fica para o ctrl+clique, o botão do
-// meio e o link copiado — e ele é um endereço de verdade, o do verbete sozinho
-// na aba dele.
-//
-// A caixa existe porque a alternativa confunde: navegar tira a pessoa da regra
-// que ela estava lendo, e antes disso o endereço era uma BUSCA — clicar em
-// "Medo" caía numa lista de oito grupos com o verbete no quinto.
-templ eloParaOAcervo(aba, id, nome string) {
-	<a
-		href={ templ.SafeURL(destinoDaEntrada(aba, id)) }
-		data-aba={ aba }
-		data-entrada={ id }
-		data-on:click={ abreOVerbetePorCima }
-		data-nav-skip
-		title={ "Ver " + nome }
-		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-	>{ children... }</a>
-}
-
-// A CAIXA do verbete do elo (ALE-264): o conceito citado, mostrado por cima da
-// cena que se estava lendo.
-//
-// Ela nasce com o "carregando" e é REMENDADA pelo `#verbete-do-elo` — o
-// conteúdo vem do servidor, que já tem os oito catálogos em memória. Sem sinal
-// nenhum: o que decide o que aparece é o endereço no `href` do elo, e sinal aqui
-// seria estado de cliente viajando em toda requisição da cena.
-//
-// Mora na CASCA e não na cena dos catálogos, e a razão é mecânica: o
-// `#catalogos` é REMENDADO a cada tecla da busca, e um diálogo lá dentro seria
-// redesenhado junto — perdendo o conteúdo que o elo acabou de trazer. A casca
-// nunca é remendada.
-templ oVerbeteEmDialogo() {
-	<dialog
-		id="verbete-em-dialogo"
-		data-preserve-attr="open"
-		aria-label="Verbete citado"
-		class="scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-3 text-foreground backdrop:bg-black/60"
-	>
-		<button
-			type="button"
-			aria-label="Fechar o verbete"
-			data-on:click="el.closest('dialog').close()"
-			class="absolute right-2 top-2 flex size-9 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>×</button>
-		<div id="verbete-do-elo" class="pr-8">
-			<p class="text-xs text-muted-foreground">Carregando…</p>
-		</div>
-	</dialog>
+// E some abaixo de `xl`, como na SPA: a Key não existe no toque, e anunciar
+// atalho para quem não tem teclado é ruído.
+templ Key(rotulo string) {
+	<kbd class="ml-1 hidden text-3xs opacity-70 xl:inline">{ rotulo }</kbd>
 }

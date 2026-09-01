@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // A tela de administração desenhada (ALE-219; em templ pela ALE-227).
 
@@ -64,7 +67,7 @@ templ painelJogadores(v adminView) {
 						aria-label={ "Redefinir a senha de " + j.Nome }
 						class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 					>
-						@icone("KeyRound", "size-4")
+						@ui.Icon("KeyRound", "size-4")
 					</button>
 					if !j.EhEu {
 						// O nome e o custo viajam em `data-*` e NUNCA dentro da
@@ -102,7 +105,7 @@ templ painelConvites(v adminView) {
 				data-on:click="$copiado = ''; document.getElementById('convite-link').innerHTML = ''; $convidar.showModal()"
 				class="inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
-				@icone("UserPlus", "size-4")
+				@ui.Icon("UserPlus", "size-4")
 				Convidar
 			</button>
 		</div>
@@ -247,7 +250,7 @@ templ dialogoRedefinir() {
 		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="redefinir-titulo" class="flex items-center gap-2 font-heading text-base">
-			@icone("KeyRound", "size-4 text-grimorio-gold")
+			@ui.Icon("KeyRound", "size-4 text-grimorio-gold")
 			Redefinir senha
 		</h2>
 		<p class="mt-2 text-sm text-muted-foreground">

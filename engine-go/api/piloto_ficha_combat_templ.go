@@ -8,6 +8,8 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "t20engine/web/ui"
+
 // O painel de COMBATE desenhado (ALE-272, fatia 3).
 //
 // Quatro blocos: os três números do meio do turno, as três resistências, os seis
@@ -195,7 +197,7 @@ func aCaixaDeCombate(tile statTile) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(tile.Label + " " + tile.Value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 99, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 101, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -208,7 +210,7 @@ func aCaixaDeCombate(tile statTile) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe = '" + tile.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 101, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 103, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -255,14 +257,14 @@ func aCaixaDeCombate(tile statTile) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone(tile.Icon, "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(tile.Icon, "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(tile.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 112, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 114, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -299,7 +301,7 @@ func aCaixaDeCombate(tile statTile) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(tile.Value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 118, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 120, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -337,7 +339,7 @@ func aCaixaDeCombate(tile statTile) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(tile.Sub)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 124, Col: 14}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 126, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -387,7 +389,7 @@ func aCaixaDeAtributo(attr attributeTile) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(attr.Abbr)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 134, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 136, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -400,7 +402,7 @@ func aCaixaDeAtributo(attr attributeTile) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(attr.Value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 135, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 137, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -511,7 +513,7 @@ func oCartaoDeArma(arma weaponTile) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("Detalhamento de " + arma.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 159, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 161, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
@@ -524,7 +526,7 @@ func oCartaoDeArma(arma weaponTile) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(arma.Skill + " " + arma.Attack + " · dano " + arma.Damage + " · crítico " + arma.Crit)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 161, Col: 98}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 163, Col: 98}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -537,7 +539,7 @@ func oCartaoDeArma(arma weaponTile) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe = '" + arma.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 162, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 164, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -550,7 +552,7 @@ func oCartaoDeArma(arma weaponTile) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(arma.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 165, Col: 109}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 167, Col: 109}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -563,7 +565,7 @@ func oCartaoDeArma(arma weaponTile) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(arma.Attack + " · " + arma.Damage)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 167, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 169, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -576,7 +578,7 @@ func oCartaoDeArma(arma weaponTile) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(arma.Crit)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 169, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 171, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -708,7 +710,7 @@ func oDetalheDaCaixa(tile statTile) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(tile.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 192, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 194, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
@@ -726,7 +728,7 @@ func oDetalheDaCaixa(tile statTile) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(tile.Extra.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 196, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 198, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
@@ -800,7 +802,7 @@ func oDetalheDaArma(arma weaponTile) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs("Ataque (" + arma.Skill + ") " + arma.Attack)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 212, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 214, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -821,7 +823,7 @@ func oDetalheDaArma(arma weaponTile) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs("Dano " + arma.Damage + " · crítico " + arma.Crit)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 220, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 222, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -895,7 +897,7 @@ func aSobreposicao(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe === '" + key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 246, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 248, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 		if templ_7745c5c3_Err != nil {
@@ -908,7 +910,7 @@ func aSobreposicao(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 259, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 261, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 		if templ_7745c5c3_Err != nil {
@@ -921,7 +923,7 @@ func aSobreposicao(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe === '" + key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 260, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 262, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 		if templ_7745c5c3_Err != nil {
@@ -934,7 +936,7 @@ func aSobreposicao(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue("Fechar " + titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 265, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 267, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 		if templ_7745c5c3_Err != nil {
@@ -975,7 +977,7 @@ func aSobreposicao(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 275, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 277, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1021,7 +1023,7 @@ func iconeDoDetalhe(nome string) templ.Component {
 			templ_7745c5c3_Var51 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = icone(nome, "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(nome, "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1081,7 +1083,7 @@ func asLinhasDaDecomposicao(rows []breakdownRow) templ.Component {
 			var templ_7745c5c3_Var55 string
 			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(row.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 297, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 299, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 			if templ_7745c5c3_Err != nil {
@@ -1094,7 +1096,7 @@ func asLinhasDaDecomposicao(rows []breakdownRow) templ.Component {
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(row.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 298, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 300, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {
@@ -1112,7 +1114,7 @@ func asLinhasDaDecomposicao(rows []breakdownRow) templ.Component {
 				var templ_7745c5c3_Var57 string
 				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(row.Note)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 304, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_combat.templ`, Line: 306, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 				if templ_7745c5c3_Err != nil {

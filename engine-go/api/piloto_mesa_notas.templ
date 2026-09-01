@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // AS NOTAS DA SESSÃO (ALE-269, superfície 5), portadas da `session-notes.tsx`.
 //
@@ -54,7 +57,7 @@ templ mesaNotas(v mesaView) {
 					data-on:click="$notasabertas = false"
 					class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>
-			@icone("X", "size-4")
+			@ui.Icon("X", "size-4")
 		</button>
 			</div>
 		</div>
@@ -193,9 +196,9 @@ templ itemDaNota(v mesaView, it mdItem) {
 			class="flex min-h-6 items-start gap-1.5 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			if it.Tarefa.Marcada {
-				@icone("SquareCheck", "size-4 shrink-0 text-grimorio-gold")
+				@ui.Icon("SquareCheck", "size-4 shrink-0 text-grimorio-gold")
 			} else {
-				@icone("Square", "size-4 shrink-0 text-muted-foreground")
+				@ui.Icon("Square", "size-4 shrink-0 text-muted-foreground")
 			}
 			<span class={ templ.KV("text-muted-foreground line-through", it.Tarefa.Marcada) }>
 				@trechosDaNota(it.Spans)
@@ -290,6 +293,6 @@ templ oBotaoDasNotas() {
 		data-on:click="$notasabertas = !$notasabertas"
 		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
 	>
-			@icone("NotebookPen", "size-5")
+			@ui.Icon("NotebookPen", "size-5")
 		</button>
 }

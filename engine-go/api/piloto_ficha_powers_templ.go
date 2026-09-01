@@ -8,7 +8,10 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "strconv"
+import (
+	"strconv"
+	"t20engine/web/ui"
+)
 
 // O painel de PODERES desenhado (ALE-272, fatia 8).
 //
@@ -49,7 +52,7 @@ func powersPanelSection(v fichaView) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(osPoderesEscrito(v.Powers.Total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 20, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 23, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -138,7 +141,7 @@ func powerSearch(v fichaView) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGetDaFicha(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 47, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 50, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -151,7 +154,7 @@ func powerSearch(v fichaView) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Powers.Search)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 48, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 51, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -195,7 +198,7 @@ func powerSearchResults(v fichaView) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs("Nenhum poder para \"" + v.Powers.Search + "\".")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 59, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 62, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -259,7 +262,7 @@ func actionsBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(aFraseDeSemAcoes(v.Powers.IsCaster))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 81, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 84, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -327,7 +330,7 @@ func passivesBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs("Passivas · mostrar (" + strconv.Itoa(len(v.Powers.Passives)) + ")")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 106, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 109, Col: 103}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -345,7 +348,7 @@ func passivesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs("● gatilho ativo: " + linha.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 111, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 114, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -408,7 +411,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue("Detalhes de " + linha.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 133, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 136, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -421,7 +424,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poder = $poder === '" + linha.ID + "' ? '' : '" + linha.ID + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 134, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 137, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -434,7 +437,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poder === '" + linha.ID + "' ? 'true' : 'false'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 135, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 138, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -444,7 +447,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone(linha.Glyph, "size-3.5 shrink-0 text-muted-foreground").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(linha.Glyph, "size-3.5 shrink-0 text-muted-foreground").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -455,7 +458,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 140, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 143, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -468,7 +471,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Source)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 141, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 144, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -481,7 +484,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poder !== '" + linha.ID + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 143, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 146, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -494,7 +497,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Detail)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 144, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 147, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -515,7 +518,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poder === '" + linha.ID + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 149, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 152, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -528,7 +531,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Detail)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 150, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 153, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -546,7 +549,7 @@ func powerRowItem(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs("(p" + strconv.Itoa(linha.Page) + ")")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 152, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 155, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -617,7 +620,7 @@ func powerActionSlot(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Cost)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 162, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 165, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -654,7 +657,7 @@ func powerActionSlot(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Spent)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 165, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 168, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 			if templ_7745c5c3_Err != nil {
@@ -690,7 +693,7 @@ func powerActionSlot(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Limit)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 167, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 170, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -707,7 +710,7 @@ func powerActionSlot(v fichaView, linha powerRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else if linha.Kind == "instant" {
-			var templ_7745c5c3_Var34 = []any{classesDoBotao(varSecundaria, tamPequeno, "gap-1")}
+			var templ_7745c5c3_Var34 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var34...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -719,7 +722,7 @@ func powerActionSlot(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue("Usar " + linha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 174, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 177, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -742,7 +745,7 @@ func powerActionSlot(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(linha.Why)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 176, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 179, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {
@@ -755,7 +758,7 @@ func powerActionSlot(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/poderes/usa/"+linha.Command))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 177, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 180, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 			if templ_7745c5c3_Err != nil {
@@ -778,7 +781,7 @@ func powerActionSlot(v fichaView, linha powerRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("Zap", "size-3").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Zap", "size-3").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -821,7 +824,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if linha.Stance.Active {
-			var templ_7745c5c3_Var40 = []any{classesDoBotao(varDestrutiva, tamPequeno, "")}
+			var templ_7745c5c3_Var40 = []any{ui.ButtonClasses(ui.VariantDestructive, ui.SizeSmall, "")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var40...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -833,7 +836,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue("Encerrar " + linha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 195, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 198, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 			if templ_7745c5c3_Err != nil {
@@ -846,7 +849,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/efeitos/postura/"+linha.Stance.Flag))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 196, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 199, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 			if templ_7745c5c3_Err != nil {
@@ -870,7 +873,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else if linha.Stance.MaxSteps > 0 {
-			var templ_7745c5c3_Var44 = []any{classesDoBotao(varSecundaria, tamPequeno, "gap-1")}
+			var templ_7745c5c3_Var44 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var44...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -882,7 +885,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ativar " + linha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 202, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 205, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 			if templ_7745c5c3_Err != nil {
@@ -905,7 +908,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(linha.Why)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 205, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 208, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 			if templ_7745c5c3_Err != nil {
@@ -918,7 +921,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poderdegraus = 0; $detalhe = 'postura-" + linha.Stance.Flag + "'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 206, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 209, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 			if templ_7745c5c3_Err != nil {
@@ -941,7 +944,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("Flame", "size-3").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Flame", "size-3").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -950,7 +953,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var49 = []any{classesDoBotao(varSecundaria, tamPequeno, "gap-1")}
+			var templ_7745c5c3_Var49 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var49...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -962,7 +965,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ativar " + linha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 215, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 218, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 			if templ_7745c5c3_Err != nil {
@@ -985,7 +988,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(linha.Why)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 217, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 220, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {
@@ -998,7 +1001,7 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poderdegraus = 0; " + oPostDaFicha(v, "/poderes/postura/"+linha.Stance.Flag+"/entra"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 218, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 221, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -1021,14 +1024,14 @@ func stanceButton(v fichaView, linha powerRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("Flame", "size-3").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Flame", "size-3").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs("Ativar " + strconv.Itoa(linha.Stance.BasePm) + " PM")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 222, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 225, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 			if templ_7745c5c3_Err != nil {
@@ -1087,7 +1090,7 @@ func stanceStepperDialog(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Stance.StepLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 233, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 236, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1097,7 +1100,7 @@ func stanceStepperDialog(v fichaView, linha powerRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var58 = []any{classesDoBotao(varSecundaria, tamPequeno, "")}
+			var templ_7745c5c3_Var58 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var58...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1119,7 +1122,7 @@ func stanceStepperDialog(v fichaView, linha powerRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var60 = []any{classesDoBotao(varSecundaria, tamPequeno, "")}
+			var templ_7745c5c3_Var60 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var60...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1131,7 +1134,7 @@ func stanceStepperDialog(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poderdegraus = Math.min(" + strconv.Itoa(linha.Stance.MaxSteps) + ", $poderdegraus + 1)")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 245, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 248, Col: 110}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 			if templ_7745c5c3_Err != nil {
@@ -1157,7 +1160,7 @@ func stanceStepperDialog(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue(aPreviaDoCustoDaPostura(linha))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 250, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 253, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 			if templ_7745c5c3_Err != nil {
@@ -1167,7 +1170,7 @@ func stanceStepperDialog(v fichaView, linha powerRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var64 = []any{classesDoBotao(varPrimaria, tamPadrao, "w-full")}
+			var templ_7745c5c3_Var64 = []any{ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var64...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1179,7 +1182,7 @@ func stanceStepperDialog(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue("Confirmar " + linha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 254, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 257, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 			if templ_7745c5c3_Err != nil {
@@ -1192,7 +1195,7 @@ func stanceStepperDialog(v fichaView, linha powerRow) templ.Component {
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") + "; $detalhe = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 255, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers.templ`, Line: 258, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 			if templ_7745c5c3_Err != nil {

@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O PALCO DO MESTRE (ALE-269): a Mesa em forma de SHELL DE JOGO.
 //
@@ -91,7 +94,7 @@ templ mesaTrilhoDaFila(v mesaView) {
 			data-on:click="document.getElementById('gaveta-da-fila').showModal()"
 			class="flex shrink-0 items-center justify-center rounded-sm border border-grimorio-iron py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("PanelLeftOpen", "size-4")
+			@ui.Icon("PanelLeftOpen", "size-4")
 		</button>
 		if len(v.Fila) == 0 {
 			<p class="px-1 py-2 text-center text-2xs text-muted-foreground">Fila vazia</p>
@@ -176,7 +179,7 @@ templ trilhoDasConsultas(v mesaView) {
 			data-on:click="document.getElementById('bestiario-da-mesa').showModal()"
 			class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
 		>
-			@icone("Skull", "size-5")
+			@ui.Icon("Skull", "size-5")
 		</button>
 	</nav>
 }
@@ -210,7 +213,7 @@ templ gavetaDaFila(v mesaView) {
 					data-on:click="document.getElementById('gaveta-da-fila').close()"
 					class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>
-			@icone("X", "size-4")
+			@ui.Icon("X", "size-4")
 		</button>
 			</div>
 			<div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">

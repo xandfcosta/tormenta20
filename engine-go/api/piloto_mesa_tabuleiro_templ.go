@@ -12,6 +12,7 @@ import (
 	"fmt"
 
 	"t20engine/tabuleiro"
+	"t20engine/web/ui"
 )
 
 // O TABULEIRO desenhado (ALE-263) — a fatia que se OLHA.
@@ -83,7 +84,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("Theater", "size-7 text-grimorio-gold/70").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Theater", "size-7 text-grimorio-gold/70").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -99,7 +100,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue("Tabuleiro · " + v.Lugar)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 71, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 72, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -143,7 +144,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(idDaCena)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 113, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 114, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -156,7 +157,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(estiloDaCena)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 114, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 115, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -169,7 +170,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(aRodaMoveAJanela)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 116, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 117, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 			if templ_7745c5c3_Err != nil {
@@ -182,7 +183,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(zoomPeloTeclado)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 117, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 118, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -195,7 +196,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(aJanelaSegueOFoco)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 118, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 119, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 			if templ_7745c5c3_Err != nil {
@@ -248,7 +249,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(q.X, q.Y, 1))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 150, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 151, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -258,7 +259,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = icone(oDesenhoDe(tabuleiro.EspecieDeTerreno(q.Especie)).Icone, "terreno-marca").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon(oDesenhoDe(tabuleiro.EspecieDeTerreno(q.Especie)).Icone, "terreno-marca").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -276,7 +277,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 					var templ_7745c5c3_Var13 string
 					templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(q.X, q.Y, 1))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 159, Col: 91}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 160, Col: 91}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 					if templ_7745c5c3_Err != nil {
@@ -299,7 +300,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 					var templ_7745c5c3_Var14 string
 					templ_7745c5c3_Var14, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(q.X, q.Y, 1))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 166, Col: 91}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 167, Col: 91}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 					if templ_7745c5c3_Err != nil {
@@ -319,7 +320,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(q.X, q.Y, 1))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 185, Col: 117}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 186, Col: 117}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -338,7 +339,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(q.X, q.Y, 1))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 188, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 189, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -356,7 +357,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(oLacoEstaAberto())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 210, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 211, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 			if templ_7745c5c3_Err != nil {
@@ -369,7 +370,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(oEstiloDoLaco)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 211, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 212, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 			if templ_7745c5c3_Err != nil {
@@ -514,7 +515,7 @@ func oNomeDaCena(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(v.Lugar)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 310, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 311, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -584,7 +585,7 @@ func aAbaDoTabuleiro(aba abaDoTabuleiro) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if aba.Cortina {
-				templ_7745c5c3_Err = icone("Theater", "size-3.5 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon("Theater", "size-3.5 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -592,7 +593,7 @@ func aAbaDoTabuleiro(aba abaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(aba.Nome)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 339, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 340, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -616,7 +617,7 @@ func aAbaDoTabuleiro(aba abaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ver o tabuleiro " + aba.Nome)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 347, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 348, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 			if templ_7745c5c3_Err != nil {
@@ -629,7 +630,7 @@ func aAbaDoTabuleiro(aba abaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ver o tabuleiro " + aba.Nome)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 348, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 349, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 			if templ_7745c5c3_Err != nil {
@@ -642,7 +643,7 @@ func aAbaDoTabuleiro(aba abaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(aba.Comando)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 349, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 350, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 			if templ_7745c5c3_Err != nil {
@@ -653,7 +654,7 @@ func aAbaDoTabuleiro(aba abaDoTabuleiro) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if aba.Cortina {
-				templ_7745c5c3_Err = icone("Theater", "size-3.5 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon("Theater", "size-3.5 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -661,7 +662,7 @@ func aAbaDoTabuleiro(aba abaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(aba.Nome)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 355, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 356, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -714,7 +715,7 @@ func mostrarEstaAMesa(aba abaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue("Mostrar " + aba.Nome + " à mesa")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 373, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 374, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -727,7 +728,7 @@ func mostrarEstaAMesa(aba abaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(aba.MostraAMesa)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 375, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 376, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -737,7 +738,7 @@ func mostrarEstaAMesa(aba abaDoTabuleiro) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Users2", "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Users2", "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -814,7 +815,7 @@ func osVerbosDaCena(v tabuleiroView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("LayoutGrid", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("LayoutGrid", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -832,7 +833,7 @@ func osVerbosDaCena(v tabuleiroView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -890,14 +891,14 @@ func osAvisosDoTabuleiro(v tabuleiroView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = icone("Users2", "size-4 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon("Users2", "size-4 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs("O mestre trouxe a mesa para " + v.Puxado.Cena + ".")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 459, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 460, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 				if templ_7745c5c3_Err != nil {
@@ -915,7 +916,7 @@ func osAvisosDoTabuleiro(v tabuleiroView) templ.Component {
 					var templ_7745c5c3_Var33 string
 					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Puxado.ComandoDeVolta)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 463, Col: 46}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 464, Col: 46}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 					if templ_7745c5c3_Err != nil {
@@ -928,7 +929,7 @@ func osAvisosDoTabuleiro(v tabuleiroView) templ.Component {
 					var templ_7745c5c3_Var34 string
 					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs("Voltar para " + v.Puxado.Volta)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 465, Col: 40}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 466, Col: 40}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 					if templ_7745c5c3_Err != nil {
@@ -946,7 +947,7 @@ func osAvisosDoTabuleiro(v tabuleiroView) templ.Component {
 					var templ_7745c5c3_Var35 string
 					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Puxado.ComandoDeVolta)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 475, Col: 46}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 476, Col: 46}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 					if templ_7745c5c3_Err != nil {
@@ -967,7 +968,7 @@ func osAvisosDoTabuleiro(v tabuleiroView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = icone("Theater", "size-4 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon("Theater", "size-4 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -978,7 +979,7 @@ func osAvisosDoTabuleiro(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaCortina(v, "abrir"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 487, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 488, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 				if templ_7745c5c3_Err != nil {
@@ -994,14 +995,14 @@ func osAvisosDoTabuleiro(v tabuleiroView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = icone("Eye", "size-4 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon("Eye", "size-4 shrink-0").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var37 string
 				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(aFraseDaLente(v.PecasEscondidas))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 495, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 496, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
@@ -1014,7 +1015,7 @@ func osAvisosDoTabuleiro(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaLente(v))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 498, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 499, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 				if templ_7745c5c3_Err != nil {
@@ -1137,7 +1138,7 @@ func oGabaritoDesenhado(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue("$gabaritopath !== '' && $ferramenta === '" + FerramentaDoGabarito + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 542, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 543, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 		if templ_7745c5c3_Err != nil {
@@ -1150,7 +1151,7 @@ func oGabaritoDesenhado(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(oDesenhoNaJanela)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 545, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 546, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 		if templ_7745c5c3_Err != nil {
@@ -1163,7 +1164,7 @@ func oGabaritoDesenhado(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.ResolveAttributeValue("$gabaritofase > 0")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 562, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 563, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 		if templ_7745c5c3_Err != nil {
@@ -1214,7 +1215,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue("$reguafase > 0 && $ferramenta === '" + FerramentaDaRegua + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 592, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 593, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 		if templ_7745c5c3_Err != nil {
@@ -1227,7 +1228,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(oDesenhoNaJanela)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 595, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 596, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 		if templ_7745c5c3_Err != nil {
@@ -1240,7 +1241,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCaminhoDaRegua)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 599, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 600, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 		if templ_7745c5c3_Err != nil {
@@ -1258,7 +1259,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPingoExiste(i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 607, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 608, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 			if templ_7745c5c3_Err != nil {
@@ -1271,7 +1272,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.ResolveAttributeValue(aParadaDaRegua(i, 0))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 608, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 609, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 			if templ_7745c5c3_Err != nil {
@@ -1284,7 +1285,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue(aParadaDaRegua(i, 1))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 609, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 610, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 			if templ_7745c5c3_Err != nil {
@@ -1302,7 +1303,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue("$reguafase === " + oNumero(reguaMedindo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 617, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 618, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 		if templ_7745c5c3_Err != nil {
@@ -1320,7 +1321,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(oRotuloExiste(i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 633, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 634, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -1333,7 +1334,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue(oMeioDaPerna(i, 0) + " * $quadrado - $vistax")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 635, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 636, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 			if templ_7745c5c3_Err != nil {
@@ -1346,7 +1347,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(oMeioDaPerna(i, 1) + " * $quadrado - $vistay")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 636, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 637, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 			if templ_7745c5c3_Err != nil {
@@ -1359,7 +1360,7 @@ func aReguaDesenhada(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var55 string
 			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(oRotuloDaPerna(i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 637, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 638, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 			if templ_7745c5c3_Err != nil {
@@ -1416,7 +1417,7 @@ func aLeituraDaRegua() templ.Component {
 		var templ_7745c5c3_Var57 string
 		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue("$reguatexto !== '' && $ferramenta === '" + FerramentaDaRegua + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 660, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 661, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 		if templ_7745c5c3_Err != nil {
@@ -1426,7 +1427,7 @@ func aLeituraDaRegua() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Ruler", "size-4 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Ruler", "size-4 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1437,7 +1438,7 @@ func aLeituraDaRegua() templ.Component {
 		var templ_7745c5c3_Var58 string
 		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(guardaARegua)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 668, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 669, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 		if templ_7745c5c3_Err != nil {
@@ -1447,7 +1448,7 @@ func aLeituraDaRegua() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1496,7 +1497,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var60 string
 		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.ResolveAttributeValue("$ferramenta === '" + FerramentaDoGabarito + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 688, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 689, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var60)
 		if templ_7745c5c3_Err != nil {
@@ -1514,7 +1515,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotuloDaForma(forma) + ": o " + aMedidaDaForma(forma) + " em quadrados (p225)")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 694, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 695, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 			if templ_7745c5c3_Err != nil {
@@ -1527,7 +1528,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var62 string
 			templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$gabarito === %q ? 'true' : 'false'", string(forma)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 695, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 696, Col: 94}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 			if templ_7745c5c3_Err != nil {
@@ -1540,7 +1541,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{'pincel-ligado': $gabarito === %q}", string(forma)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 696, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 697, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 			if templ_7745c5c3_Err != nil {
@@ -1553,7 +1554,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolheAForma(forma))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 697, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 698, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 			if templ_7745c5c3_Err != nil {
@@ -1566,7 +1567,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(rotuloDaForma(forma))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 699, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 700, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 			if templ_7745c5c3_Err != nil {
@@ -1585,7 +1586,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$gabarito === %q", string(forma)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 709, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 710, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 			if templ_7745c5c3_Err != nil {
@@ -1598,7 +1599,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(aMedidaDaForma(forma))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 711, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 712, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 			if templ_7745c5c3_Err != nil {
@@ -1616,7 +1617,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var68 string
 		templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(oMaiorGabarito())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 717, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 718, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 		if templ_7745c5c3_Err != nil {
@@ -1629,7 +1630,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var69 string
 		templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(remedeOGabarito(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 719, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 720, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 		if templ_7745c5c3_Err != nil {
@@ -1642,7 +1643,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var70 string
 		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue(oTamanhoEmMetros())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 723, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 724, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
 		if templ_7745c5c3_Err != nil {
@@ -1655,7 +1656,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var71 string
 		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue(guardaOGabarito)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 730, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 731, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var71)
 		if templ_7745c5c3_Err != nil {
@@ -1665,7 +1666,7 @@ func aBarraDoGabarito(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1724,7 +1725,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var73 string
 		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(v.Movimento.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 756, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 757, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 		if templ_7745c5c3_Err != nil {
@@ -1742,7 +1743,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var74 string
 			templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(v.Movimento.Custo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 760, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 761, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 			if templ_7745c5c3_Err != nil {
@@ -1755,7 +1756,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(" quadrados")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 761, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 762, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 			if templ_7745c5c3_Err != nil {
@@ -1769,7 +1770,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var76 string
 			templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d de %d", v.Movimento.Custo, v.Movimento.Orcamento))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 764, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 765, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 			if templ_7745c5c3_Err != nil {
@@ -1782,7 +1783,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var77 string
 			templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(" quadrados")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 766, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 767, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 			if templ_7745c5c3_Err != nil {
@@ -1796,7 +1797,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var78 string
 				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(" · " + saldo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 768, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 769, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {
@@ -1839,7 +1840,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var81 string
 				templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(faixa.Texto)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 787, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 788, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 				if templ_7745c5c3_Err != nil {
@@ -1867,7 +1868,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var82 string
 			templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDoMovimento(v, "desfazer-parada"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 801, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 802, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var82)
 			if templ_7745c5c3_Err != nil {
@@ -1877,7 +1878,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("CornerUpLeft", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("CornerUpLeft", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1893,7 +1894,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var83 string
 		templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDoMovimento(v, "cancelar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 810, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 811, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var83)
 		if templ_7745c5c3_Err != nil {
@@ -1911,7 +1912,7 @@ func oMovimentoProposto(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var84 string
 			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDoMovimento(v, "confirmar"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 821, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 822, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var84)
 			if templ_7745c5c3_Err != nil {
@@ -1975,7 +1976,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var87 string
 		templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.ResolveAttributeValue(nomeDaPeca(p))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 844, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 845, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var87)
 		if templ_7745c5c3_Err != nil {
@@ -1988,7 +1989,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var88 string
 		templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.ResolveAttributeValue(nomeDaPeca(p))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 845, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 846, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var88)
 		if templ_7745c5c3_Err != nil {
@@ -2001,7 +2002,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var89 string
 		templ_7745c5c3_Var89, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 846, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 847, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 		if templ_7745c5c3_Err != nil {
@@ -2014,7 +2015,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var90 string
 		templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.ResolveAttributeValue(oVestidoDaPeca(p.ID, v.ArrastaAPeca == p.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 847, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 848, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var90)
 		if templ_7745c5c3_Err != nil {
@@ -2032,7 +2033,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var91 string
 			templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPegarDaPeca(v, p.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 849, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 850, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var91)
 			if templ_7745c5c3_Err != nil {
@@ -2045,7 +2046,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var92 string
 			templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSeguirDaPeca(v, p))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 850, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 851, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var92)
 			if templ_7745c5c3_Err != nil {
@@ -2058,7 +2059,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var93 string
 			templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSoltarDaPeca(v, p))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 851, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 852, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var93)
 			if templ_7745c5c3_Err != nil {
@@ -2077,7 +2078,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var94 string
 			templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreOMenuDaPeca(p.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 854, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 855, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var94)
 			if templ_7745c5c3_Err != nil {
@@ -2090,7 +2091,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var95 string
 			templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.ResolveAttributeValue(aPecaEscolhida(p.ID) + " ? 'true' : 'false'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 855, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 856, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var95)
 			if templ_7745c5c3_Err != nil {
@@ -2121,7 +2122,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var97 string
 		templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(p.Monograma)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 861, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 862, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 		if templ_7745c5c3_Err != nil {
@@ -2139,7 +2140,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var98 string
 			templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinStringErrs(p.Instancia)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 865, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 866, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 			if templ_7745c5c3_Err != nil {
@@ -2180,7 +2181,7 @@ func pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var101 string
 			templ_7745c5c3_Var101, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width:%d%%", *p.PV))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 869, Col: 99}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 870, Col: 99}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
 			if templ_7745c5c3_Err != nil {
@@ -2246,7 +2247,7 @@ func oFantasmaDaOrigem(p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var103 string
 		templ_7745c5c3_Var103, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 897, Col: 82}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 898, Col: 82}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var103))
 		if templ_7745c5c3_Err != nil {
@@ -2259,7 +2260,7 @@ func oFantasmaDaOrigem(p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var104 string
 		templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinStringErrs(p.Monograma)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 900, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 901, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 		if templ_7745c5c3_Err != nil {
@@ -2277,7 +2278,7 @@ func oFantasmaDaOrigem(p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var105 string
 			templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.JoinStringErrs(p.Instancia)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 902, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 903, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 			if templ_7745c5c3_Err != nil {
@@ -2340,7 +2341,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var107 string
 			templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.ResolveAttributeValue(oDesenhoNaJanela)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 963, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 964, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var107)
 			if templ_7745c5c3_Err != nil {
@@ -2353,7 +2354,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var108 string
 			templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Movimento.Fio)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 965, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 966, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var108)
 			if templ_7745c5c3_Err != nil {
@@ -2366,7 +2367,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var109 string
 			templ_7745c5c3_Var109, templ_7745c5c3_Err = templ.ResolveAttributeValue(aPontaDoFioQueCabe(v.Movimento))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 966, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 967, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var109)
 			if templ_7745c5c3_Err != nil {
@@ -2384,7 +2385,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var110 string
 				templ_7745c5c3_Var110, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Movimento.FioSegundo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 978, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 979, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var110)
 				if templ_7745c5c3_Err != nil {
@@ -2397,7 +2398,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var111 string
 				templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.ResolveAttributeValue(aPontaDoFioSegundo(v.Movimento))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 979, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 980, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var111)
 				if templ_7745c5c3_Err != nil {
@@ -2416,7 +2417,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var112 string
 				templ_7745c5c3_Var112, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Movimento.FioAlem)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 988, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 989, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var112)
 				if templ_7745c5c3_Err != nil {
@@ -2429,7 +2430,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var113 string
 				templ_7745c5c3_Var113, templ_7745c5c3_Err = templ.ResolveAttributeValue(aPontaDoFioAlem(v.Movimento))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 989, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 990, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var113)
 				if templ_7745c5c3_Err != nil {
@@ -2452,7 +2453,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var114 string
 				templ_7745c5c3_Var114, templ_7745c5c3_Err = templ.ResolveAttributeValue(numeroDoFio(perna.MeioX) + " * $quadrado - $vistax")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1014, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1015, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var114)
 				if templ_7745c5c3_Err != nil {
@@ -2465,7 +2466,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var115 string
 				templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.ResolveAttributeValue(numeroDoFio(perna.MeioY) + " * $quadrado - $vistay")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1015, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1016, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var115)
 				if templ_7745c5c3_Err != nil {
@@ -2478,7 +2479,7 @@ func aSetaDoMovimento(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var116 string
 				templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(perna.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1019, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1020, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 				if templ_7745c5c3_Err != nil {
@@ -2538,7 +2539,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var119 string
 			templ_7745c5c3_Var119, templ_7745c5c3_Err = templ.ResolveAttributeValue(nomeDoMarcador(m))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1035, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1036, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var119)
 			if templ_7745c5c3_Err != nil {
@@ -2551,7 +2552,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var120 string
 			templ_7745c5c3_Var120, templ_7745c5c3_Err = templ.ResolveAttributeValue(nomeDoMarcador(m))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1036, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1037, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var120)
 			if templ_7745c5c3_Err != nil {
@@ -2564,7 +2565,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var121 string
 			templ_7745c5c3_Var121, templ_7745c5c3_Err = templ.ResolveAttributeValue(marcadorEscolhido(m.ID) + " ? 'true' : 'false'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1037, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1038, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var121)
 			if templ_7745c5c3_Err != nil {
@@ -2577,7 +2578,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var122 string
 			templ_7745c5c3_Var122, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolheOMarcador(m.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1038, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1039, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var122)
 			if templ_7745c5c3_Err != nil {
@@ -2590,7 +2591,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var123 string
 			templ_7745c5c3_Var123, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(m.X, m.Y, 1) + fmt.Sprintf("--marcador:%s;", corDeMarcador(m.Cor)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1039, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1040, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var123))
 			if templ_7745c5c3_Err != nil {
@@ -2616,7 +2617,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var125 string
 			templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.JoinStringErrs(m.Texto)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1041, Col: 12}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1042, Col: 12}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var125))
 			if templ_7745c5c3_Err != nil {
@@ -2638,7 +2639,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var126 string
 			templ_7745c5c3_Var126, templ_7745c5c3_Err = templ.ResolveAttributeValue("Marcador " + m.Texto + " em " + m.Onde)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1045, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1046, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var126)
 			if templ_7745c5c3_Err != nil {
@@ -2651,7 +2652,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var127 string
 			templ_7745c5c3_Var127, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Texto + " · " + m.Onde)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1046, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1047, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var127)
 			if templ_7745c5c3_Err != nil {
@@ -2664,7 +2665,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var128 string
 			templ_7745c5c3_Var128, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(m.X, m.Y, 1) + fmt.Sprintf("--marcador:%s;", corDeMarcador(m.Cor)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1047, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1048, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var128))
 			if templ_7745c5c3_Err != nil {
@@ -2677,7 +2678,7 @@ func marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var129 string
 			templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.JoinStringErrs(m.Texto)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1049, Col: 12}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1050, Col: 12}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var129))
 			if templ_7745c5c3_Err != nil {
@@ -2729,7 +2730,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var131 string
 		templ_7745c5c3_Var131, templ_7745c5c3_Err = templ.ResolveAttributeValue("O que fazer com o marcador " + m.Texto)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1065, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1066, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var131)
 		if templ_7745c5c3_Err != nil {
@@ -2742,7 +2743,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var132 string
 		templ_7745c5c3_Var132, templ_7745c5c3_Err = templ.ResolveAttributeValue(marcadorEscolhido(m.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1066, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1067, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var132)
 		if templ_7745c5c3_Err != nil {
@@ -2755,7 +2756,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var133 string
 		templ_7745c5c3_Var133, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(m.X, m.Y, 1))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1067, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1068, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var133))
 		if templ_7745c5c3_Err != nil {
@@ -2773,7 +2774,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var134 string
 			templ_7745c5c3_Var134, templ_7745c5c3_Err = templ.ResolveAttributeValue("Revelar o marcador " + m.Texto + " para a mesa")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1073, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1074, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var134)
 			if templ_7745c5c3_Err != nil {
@@ -2791,7 +2792,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var135 string
 			templ_7745c5c3_Var135, templ_7745c5c3_Err = templ.ResolveAttributeValue("Esconder o marcador " + m.Texto + " da mesa")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1076, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1077, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var135)
 			if templ_7745c5c3_Err != nil {
@@ -2809,7 +2810,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var136 string
 		templ_7745c5c3_Var136, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDoMarcador(v, m.ID, "revelar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1079, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1080, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var136)
 		if templ_7745c5c3_Err != nil {
@@ -2820,12 +2821,12 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if m.Escondido {
-			templ_7745c5c3_Err = icone("Eye", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Eye", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = icone("EyeOff", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("EyeOff", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -2842,7 +2843,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var137 string
 			templ_7745c5c3_Var137, templ_7745c5c3_Err = templ.ResolveAttributeValue("Pintar o marcador " + m.Texto + " de " + cor.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1091, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1092, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var137)
 			if templ_7745c5c3_Err != nil {
@@ -2855,7 +2856,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var138 string
 			templ_7745c5c3_Var138, templ_7745c5c3_Err = templ.ResolveAttributeValue(cor.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1092, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1093, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var138)
 			if templ_7745c5c3_Err != nil {
@@ -2868,7 +2869,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var139 string
 			templ_7745c5c3_Var139, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", cor.ID == m.Cor))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1093, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1094, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var139)
 			if templ_7745c5c3_Err != nil {
@@ -2881,7 +2882,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var140 string
 			templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDoMarcador(v, m.ID, "cor/"+cor.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1094, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1095, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var140)
 			if templ_7745c5c3_Err != nil {
@@ -2894,7 +2895,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var141 string
 			templ_7745c5c3_Var141, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("--marcador:var(--marcador-%s);", cor.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1095, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1096, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var141))
 			if templ_7745c5c3_Err != nil {
@@ -2912,7 +2913,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var142 string
 		templ_7745c5c3_Var142, templ_7745c5c3_Err = templ.ResolveAttributeValue("Apagar o marcador " + m.Texto)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1101, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1102, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var142)
 		if templ_7745c5c3_Err != nil {
@@ -2925,7 +2926,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var143 string
 		templ_7745c5c3_Var143, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolheOMarcador("") + "; " + comandoDoMarcador(v, m.ID, "remover"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1103, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1104, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var143)
 		if templ_7745c5c3_Err != nil {
@@ -2935,7 +2936,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2991,7 +2992,7 @@ func abrirTabuleiro(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var145 string
 			templ_7745c5c3_Var145, templ_7745c5c3_Err = templ.ResolveAttributeValue(chao.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1158, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1159, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var145)
 			if templ_7745c5c3_Err != nil {
@@ -3004,7 +3005,7 @@ func abrirTabuleiro(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var146 string
 			templ_7745c5c3_Var146, templ_7745c5c3_Err = templ.JoinStringErrs(chao.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1158, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1159, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var146))
 			if templ_7745c5c3_Err != nil {
@@ -3022,7 +3023,7 @@ func abrirTabuleiro(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var147 string
 		templ_7745c5c3_Var147, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('abrir-tabuleiro').close(); " + comandoDoTabuleiroDaCena(v, "abrir"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1172, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1173, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var147)
 		if templ_7745c5c3_Err != nil {
@@ -3070,7 +3071,7 @@ func encerrarTabuleiro(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var149 string
 		templ_7745c5c3_Var149, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('encerrar-tabuleiro').close(); " + comandoDoTabuleiroDaCena(v, "encerrar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1204, Col: 119}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1205, Col: 119}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var149)
 		if templ_7745c5c3_Err != nil {
@@ -3113,14 +3114,14 @@ func botaoDoAcervo(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Library", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Library", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var151 string
 		templ_7745c5c3_Var151, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Lugares da campanha · %d", len(v.Acervo)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1222, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1223, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var151))
 		if templ_7745c5c3_Err != nil {
@@ -3176,7 +3177,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var153 string
 			templ_7745c5c3_Var153, templ_7745c5c3_Err = templ.JoinStringErrs(l.Nome)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1254, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1255, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var153))
 			if templ_7745c5c3_Err != nil {
@@ -3191,7 +3192,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = icone("LayoutGrid", "mr-1 inline size-3").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon("LayoutGrid", "mr-1 inline size-3").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -3202,7 +3203,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var154 string
 				templ_7745c5c3_Var154, templ_7745c5c3_Err = templ.JoinStringErrs("nesta mesa agora · " + pecasEmPortugues(l.Pecas))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1262, Col: 60}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1263, Col: 60}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var154))
 				if templ_7745c5c3_Err != nil {
@@ -3212,7 +3213,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var155 string
 				templ_7745c5c3_Var155, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s · %s", pecasEmPortugues(l.Pecas), l.Quando))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1264, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1265, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var155))
 				if templ_7745c5c3_Err != nil {
@@ -3231,7 +3232,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var156 string
 				templ_7745c5c3_Var156, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('acervo-de-lugares').close(); " + comandoDaAba(v, l.AbertaEm))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1275, Col: 109}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1276, Col: 109}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var156)
 				if templ_7745c5c3_Err != nil {
@@ -3249,7 +3250,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var157 string
 				templ_7745c5c3_Var157, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('acervo-de-lugares').close(); " + comandoDoLugar(v, l.ID, "reabrir"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1281, Col: 116}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1282, Col: 116}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var157)
 				if templ_7745c5c3_Err != nil {
@@ -3268,7 +3269,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var158 string
 				templ_7745c5c3_Var158, templ_7745c5c3_Err = templ.ResolveAttributeValue("Apagar " + l.Nome)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1299, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1300, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var158)
 				if templ_7745c5c3_Err != nil {
@@ -3281,7 +3282,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var159 string
 				templ_7745c5c3_Var159, templ_7745c5c3_Err = templ.ResolveAttributeValue("Apagar " + l.Nome + " do acervo")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1300, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1301, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var159)
 				if templ_7745c5c3_Err != nil {
@@ -3294,7 +3295,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var160 string
 				templ_7745c5c3_Var160, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDoLugar(v, l.ID, "remover"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1301, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1302, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var160)
 				if templ_7745c5c3_Err != nil {
@@ -3304,7 +3305,7 @@ func oAcervoDeLugares(v tabuleiroView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = icone("Trash2", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon("Trash2", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -3372,7 +3373,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var162 string
 		templ_7745c5c3_Var162, templ_7745c5c3_Err = templ.ResolveAttributeValue("O que fazer com " + p.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1341, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1342, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var162)
 		if templ_7745c5c3_Err != nil {
@@ -3385,7 +3386,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var163 string
 		templ_7745c5c3_Var163, templ_7745c5c3_Err = templ.ResolveAttributeValue(aPecaEscolhida(p.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1342, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1343, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var163)
 		if templ_7745c5c3_Err != nil {
@@ -3398,7 +3399,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var164 string
 		templ_7745c5c3_Var164, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(posicaoNoPlano(p.X, p.Y, p.Pegada))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1343, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1344, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var164))
 		if templ_7745c5c3_Err != nil {
@@ -3411,7 +3412,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var165 string
 		templ_7745c5c3_Var165, templ_7745c5c3_Err = templ.ResolveAttributeValue(oNomeDaVisibilidade(p))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1351, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1352, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var165)
 		if templ_7745c5c3_Err != nil {
@@ -3424,7 +3425,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var166 string
 		templ_7745c5c3_Var166, templ_7745c5c3_Err = templ.ResolveAttributeValue(oNomeDaVisibilidade(p))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1352, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1353, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var166)
 		if templ_7745c5c3_Err != nil {
@@ -3437,7 +3438,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var167 string
 		templ_7745c5c3_Var167, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", p.Oculta))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1353, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1354, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var167)
 		if templ_7745c5c3_Err != nil {
@@ -3450,7 +3451,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var168 string
 		templ_7745c5c3_Var168, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaPeca(v, p.ID, "visibilidade"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1354, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1355, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var168)
 		if templ_7745c5c3_Err != nil {
@@ -3461,12 +3462,12 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if p.Oculta {
-			templ_7745c5c3_Err = icone("EyeOff", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("EyeOff", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = icone("Eye", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Eye", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -3478,7 +3479,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var169 string
 		templ_7745c5c3_Var169, templ_7745c5c3_Err = templ.ResolveAttributeValue("Duplicar " + p.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1365, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1366, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var169)
 		if templ_7745c5c3_Err != nil {
@@ -3491,7 +3492,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var170 string
 		templ_7745c5c3_Var170, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaPeca(v, p.ID, "duplicar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1367, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1368, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var170)
 		if templ_7745c5c3_Err != nil {
@@ -3501,7 +3502,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Copy", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Copy", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3512,7 +3513,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var171 string
 		templ_7745c5c3_Var171, templ_7745c5c3_Err = templ.ResolveAttributeValue("Editar " + p.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1374, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1375, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var171)
 		if templ_7745c5c3_Err != nil {
@@ -3525,7 +3526,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var172 string
 		templ_7745c5c3_Var172, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreAEdicaoDaPeca(p))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1376, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1377, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var172)
 		if templ_7745c5c3_Err != nil {
@@ -3535,7 +3536,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Pencil", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Pencil", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3551,7 +3552,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var173 string
 			templ_7745c5c3_Var173, templ_7745c5c3_Err = templ.ResolveAttributeValue("Voltar " + p.Rotulo + " para " + oQuadradoDaPeca(p.DeOndeVeio))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1386, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1387, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var173)
 			if templ_7745c5c3_Err != nil {
@@ -3564,7 +3565,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var174 string
 			templ_7745c5c3_Var174, templ_7745c5c3_Err = templ.ResolveAttributeValue("Voltar para onde estava (" + oQuadradoDaPeca(p.DeOndeVeio) + ")")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1387, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1388, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var174)
 			if templ_7745c5c3_Err != nil {
@@ -3577,7 +3578,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			var templ_7745c5c3_Var175 string
 			templ_7745c5c3_Var175, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaPeca(v, p.ID, "voltar"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1388, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1389, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var175)
 			if templ_7745c5c3_Err != nil {
@@ -3587,7 +3588,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("CornerUpLeft", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("CornerUpLeft", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -3603,7 +3604,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var176 string
 		templ_7745c5c3_Var176, templ_7745c5c3_Err = templ.ResolveAttributeValue("Tirar " + p.Rotulo + " do tabuleiro")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1400, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1401, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var176)
 		if templ_7745c5c3_Err != nil {
@@ -3616,7 +3617,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var177 string
 		templ_7745c5c3_Var177, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaPeca(v, p.ID, "remover"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1402, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1403, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var177)
 		if templ_7745c5c3_Err != nil {
@@ -3626,7 +3627,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Trash2", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Trash2", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3637,7 +3638,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var178 string
 		templ_7745c5c3_Var178, templ_7745c5c3_Err = templ.ResolveAttributeValue("Fechar o menu de " + p.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1409, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1410, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var178)
 		if templ_7745c5c3_Err != nil {
@@ -3650,7 +3651,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		var templ_7745c5c3_Var179 string
 		templ_7745c5c3_Var179, templ_7745c5c3_Err = templ.ResolveAttributeValue(fechaOMenuDaPeca)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1410, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1411, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var179)
 		if templ_7745c5c3_Err != nil {
@@ -3660,7 +3661,7 @@ func oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3712,7 +3713,7 @@ func editarAPeca(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var181 string
 			templ_7745c5c3_Var181, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(t.Lado))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1454, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1455, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var181)
 			if templ_7745c5c3_Err != nil {
@@ -3725,7 +3726,7 @@ func editarAPeca(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var182 string
 			templ_7745c5c3_Var182, templ_7745c5c3_Err = templ.JoinStringErrs(t.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1454, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1455, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var182))
 			if templ_7745c5c3_Err != nil {
@@ -3743,7 +3744,7 @@ func editarAPeca(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var183 string
 		templ_7745c5c3_Var183, templ_7745c5c3_Err = templ.ResolveAttributeValue(salvaAEdicaoDaPeca(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1466, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1467, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var183)
 		if templ_7745c5c3_Err != nil {
@@ -3802,7 +3803,7 @@ func oTrilhoDeFerramentas(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var185 string
 		templ_7745c5c3_Var185, templ_7745c5c3_Err = templ.ResolveAttributeValue(oTecladoDoTrilho(v.Mestre))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1493, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1494, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var185)
 		if templ_7745c5c3_Err != nil {
@@ -3873,7 +3874,7 @@ func aFerramentaNoTrilho(f ferramentaDoMapa) templ.Component {
 		var templ_7745c5c3_Var187 string
 		templ_7745c5c3_Var187, templ_7745c5c3_Err = templ.ResolveAttributeValue(f.Dica + " (tecla " + f.Atalho + ")")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1516, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1517, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var187)
 		if templ_7745c5c3_Err != nil {
@@ -3886,7 +3887,7 @@ func aFerramentaNoTrilho(f ferramentaDoMapa) templ.Component {
 		var templ_7745c5c3_Var188 string
 		templ_7745c5c3_Var188, templ_7745c5c3_Err = templ.ResolveAttributeValue(oNomeComAtalho(f))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1517, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1518, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var188)
 		if templ_7745c5c3_Err != nil {
@@ -3899,7 +3900,7 @@ func aFerramentaNoTrilho(f ferramentaDoMapa) templ.Component {
 		var templ_7745c5c3_Var189 string
 		templ_7745c5c3_Var189, templ_7745c5c3_Err = templ.ResolveAttributeValue(aFerramentaEstaLigada(f.ID) + " ? 'true' : 'false'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1518, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1519, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var189)
 		if templ_7745c5c3_Err != nil {
@@ -3912,7 +3913,7 @@ func aFerramentaNoTrilho(f ferramentaDoMapa) templ.Component {
 		var templ_7745c5c3_Var190 string
 		templ_7745c5c3_Var190, templ_7745c5c3_Err = templ.ResolveAttributeValue(oVestidoDaFerramenta(f.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1519, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1520, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var190)
 		if templ_7745c5c3_Err != nil {
@@ -3925,7 +3926,7 @@ func aFerramentaNoTrilho(f ferramentaDoMapa) templ.Component {
 		var templ_7745c5c3_Var191 string
 		templ_7745c5c3_Var191, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolheAFerramenta(f.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1520, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1521, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var191)
 		if templ_7745c5c3_Err != nil {
@@ -3935,7 +3936,7 @@ func aFerramentaNoTrilho(f ferramentaDoMapa) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone(f.Icone, "size-4 "+f.Matiz).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(f.Icone, "size-4 "+f.Matiz).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3946,7 +3947,7 @@ func aFerramentaNoTrilho(f ferramentaDoMapa) templ.Component {
 		var templ_7745c5c3_Var192 string
 		templ_7745c5c3_Var192, templ_7745c5c3_Err = templ.JoinStringErrs(f.Atalho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1524, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1525, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var192))
 		if templ_7745c5c3_Err != nil {
@@ -4006,7 +4007,7 @@ func oEnquadramentoDoPlano(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var194 string
 		templ_7745c5c3_Var194, templ_7745c5c3_Err = templ.ResolveAttributeValue(zoomNoLimite(-passoDoZoom))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1549, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1550, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var194)
 		if templ_7745c5c3_Err != nil {
@@ -4019,7 +4020,7 @@ func oEnquadramentoDoPlano(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var195 string
 		templ_7745c5c3_Var195, templ_7745c5c3_Err = templ.ResolveAttributeValue(ampliaPeloMeioDaCena(oPasso(-passoDoZoom)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1550, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1551, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var195)
 		if templ_7745c5c3_Err != nil {
@@ -4029,7 +4030,7 @@ func oEnquadramentoDoPlano(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Minus", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Minus", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4040,7 +4041,7 @@ func oEnquadramentoDoPlano(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var196 string
 		templ_7745c5c3_Var196, templ_7745c5c3_Err = templ.ResolveAttributeValue(zoomNoLimite(passoDoZoom))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1569, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1570, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var196)
 		if templ_7745c5c3_Err != nil {
@@ -4053,7 +4054,7 @@ func oEnquadramentoDoPlano(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var197 string
 		templ_7745c5c3_Var197, templ_7745c5c3_Err = templ.ResolveAttributeValue(ampliaPeloMeioDaCena(oPasso(passoDoZoom)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1570, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1571, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var197)
 		if templ_7745c5c3_Err != nil {
@@ -4063,7 +4064,7 @@ func oEnquadramentoDoPlano(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Plus", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Plus", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4113,7 +4114,7 @@ func oCentralizador(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var199 string
 		templ_7745c5c3_Var199, templ_7745c5c3_Err = templ.ResolveAttributeValue(oAlvoDoCentralizar(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1591, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1592, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var199)
 		if templ_7745c5c3_Err != nil {
@@ -4126,7 +4127,7 @@ func oCentralizador(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var200 string
 		templ_7745c5c3_Var200, templ_7745c5c3_Err = templ.ResolveAttributeValue(oAlvoDoCentralizar(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1592, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1593, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var200)
 		if templ_7745c5c3_Err != nil {
@@ -4139,7 +4140,7 @@ func oCentralizador(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var201 string
 		templ_7745c5c3_Var201, templ_7745c5c3_Err = templ.ResolveAttributeValue(centralizaNasPecas(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1593, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1594, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var201)
 		if templ_7745c5c3_Err != nil {
@@ -4149,7 +4150,7 @@ func oCentralizador(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Crosshair", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Crosshair", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4206,7 +4207,7 @@ func botaoDaLente(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var204 string
 		templ_7745c5c3_Var204, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", v.Lente))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1613, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1614, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var204)
 		if templ_7745c5c3_Err != nil {
@@ -4234,7 +4235,7 @@ func botaoDaLente(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var205 string
 		templ_7745c5c3_Var205, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaLente(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1621, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1622, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var205)
 		if templ_7745c5c3_Err != nil {
@@ -4258,12 +4259,12 @@ func botaoDaLente(v tabuleiroView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Lente {
-			templ_7745c5c3_Err = icone("EyeOff", "size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("EyeOff", "size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = icone("Eye", "size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Eye", "size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -4322,7 +4323,7 @@ func botaoDaCortina(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var209 string
 		templ_7745c5c3_Var209, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", v.AvisoDaCortina))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1648, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1649, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var209)
 		if templ_7745c5c3_Err != nil {
@@ -4350,7 +4351,7 @@ func botaoDaCortina(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var210 string
 		templ_7745c5c3_Var210, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaCortina(v, destinoDaCortina(v.AvisoDaCortina)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1656, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1657, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var210)
 		if templ_7745c5c3_Err != nil {
@@ -4373,7 +4374,7 @@ func botaoDaCortina(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Theater", "size-5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Theater", "size-5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4418,7 +4419,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var213 string
 		templ_7745c5c3_Var213, templ_7745c5c3_Err = templ.ResolveAttributeValue(aFerramentaEstaLigada(FerramentaDaVista))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1688, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1689, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var213)
 		if templ_7745c5c3_Err != nil {
@@ -4431,7 +4432,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var214 string
 		templ_7745c5c3_Var214, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'tabuleiro-vista-pegando': $" + sinalDoArrastoDaVista + "}")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1689, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1690, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var214)
 		if templ_7745c5c3_Err != nil {
@@ -4444,7 +4445,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var215 string
 		templ_7745c5c3_Var215, templ_7745c5c3_Err = templ.ResolveAttributeValue(pegaAVista)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1690, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1691, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var215)
 		if templ_7745c5c3_Err != nil {
@@ -4457,7 +4458,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var216 string
 		templ_7745c5c3_Var216, templ_7745c5c3_Err = templ.ResolveAttributeValue(segueAVista)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1691, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1692, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var216)
 		if templ_7745c5c3_Err != nil {
@@ -4470,7 +4471,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var217 string
 		templ_7745c5c3_Var217, templ_7745c5c3_Err = templ.ResolveAttributeValue(soltaAVista)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1692, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1693, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var217)
 		if templ_7745c5c3_Err != nil {
@@ -4483,7 +4484,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var218 string
 		templ_7745c5c3_Var218, templ_7745c5c3_Err = templ.ResolveAttributeValue(soltaAVista)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1693, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1694, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var218)
 		if templ_7745c5c3_Err != nil {
@@ -4501,7 +4502,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var219 string
 			templ_7745c5c3_Var219, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPincelEstaLigado())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1740, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1741, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var219)
 			if templ_7745c5c3_Err != nil {
@@ -4514,7 +4515,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var220 string
 			templ_7745c5c3_Var220, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGestoDoPincel(v, ""))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1742, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1743, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var220)
 			if templ_7745c5c3_Err != nil {
@@ -4527,7 +4528,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var221 string
 			templ_7745c5c3_Var221, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPincelSegue(v) + "; " + oRetanguloSegue(retanguloDeTerreno))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1743, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1744, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var221)
 			if templ_7745c5c3_Err != nil {
@@ -4540,7 +4541,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var222 string
 			templ_7745c5c3_Var222, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPincelLarga + "; " + oRetanguloDeTerrenoSolta(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1744, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1745, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var222)
 			if templ_7745c5c3_Err != nil {
@@ -4553,7 +4554,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var223 string
 			templ_7745c5c3_Var223, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPincelLarga + "; $" + sinalDoRetangulo + " = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1745, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1746, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var223)
 			if templ_7745c5c3_Err != nil {
@@ -4566,7 +4567,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var224 string
 			templ_7745c5c3_Var224, templ_7745c5c3_Err = templ.ResolveAttributeValue(prendeOMenuDoNavegador)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1746, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1747, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var224)
 			if templ_7745c5c3_Err != nil {
@@ -4579,7 +4580,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var225 string
 			templ_7745c5c3_Var225, templ_7745c5c3_Err = templ.ResolveAttributeValue(aFerramentaEstaLigada(FerramentaDaBorracha))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1760, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1761, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var225)
 			if templ_7745c5c3_Err != nil {
@@ -4592,7 +4593,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var226 string
 			templ_7745c5c3_Var226, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGestoDoPincel(v, pincelApaga))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1762, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1763, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var226)
 			if templ_7745c5c3_Err != nil {
@@ -4605,7 +4606,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var227 string
 			templ_7745c5c3_Var227, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPincelSegue(v) + "; " + oRetanguloSegue(retanguloDeTerreno))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1763, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1764, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var227)
 			if templ_7745c5c3_Err != nil {
@@ -4618,7 +4619,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var228 string
 			templ_7745c5c3_Var228, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPincelLarga + "; " + oRetanguloDeTerrenoSolta(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1764, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1765, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var228)
 			if templ_7745c5c3_Err != nil {
@@ -4631,7 +4632,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var229 string
 			templ_7745c5c3_Var229, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPincelLarga + "; $" + sinalDoRetangulo + " = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1765, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1766, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var229)
 			if templ_7745c5c3_Err != nil {
@@ -4644,7 +4645,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var230 string
 			templ_7745c5c3_Var230, templ_7745c5c3_Err = templ.ResolveAttributeValue(prendeOMenuDoNavegador)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1766, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1767, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var230)
 			if templ_7745c5c3_Err != nil {
@@ -4657,7 +4658,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var231 string
 			templ_7745c5c3_Var231, templ_7745c5c3_Err = templ.ResolveAttributeValue(aFerramentaEstaLigada(FerramentaDeMarcar))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1771, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1772, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var231)
 			if templ_7745c5c3_Err != nil {
@@ -4670,7 +4671,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var232 string
 			templ_7745c5c3_Var232, templ_7745c5c3_Err = templ.ResolveAttributeValue(marcacaoNoPontoClicado(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1773, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1774, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var232)
 			if templ_7745c5c3_Err != nil {
@@ -4688,7 +4689,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var233 string
 		templ_7745c5c3_Var233, templ_7745c5c3_Err = templ.ResolveAttributeValue("$ferramenta === '" + FerramentaDaRegua + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1790, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1791, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var233)
 		if templ_7745c5c3_Err != nil {
@@ -4701,7 +4702,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var234 string
 		templ_7745c5c3_Var234, templ_7745c5c3_Err = templ.ResolveAttributeValue(reguaNoPontoClicado(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1792, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1793, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var234)
 		if templ_7745c5c3_Err != nil {
@@ -4714,7 +4715,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var235 string
 		templ_7745c5c3_Var235, templ_7745c5c3_Err = templ.ResolveAttributeValue(congelaARegua)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1793, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1794, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var235)
 		if templ_7745c5c3_Err != nil {
@@ -4727,7 +4728,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var236 string
 		templ_7745c5c3_Var236, templ_7745c5c3_Err = templ.ResolveAttributeValue(aReguaSegueOPonteiro(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1794, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1795, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var236)
 		if templ_7745c5c3_Err != nil {
@@ -4740,7 +4741,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var237 string
 		templ_7745c5c3_Var237, templ_7745c5c3_Err = templ.ResolveAttributeValue(prendeOMenuDoNavegador + "; " + guardaARegua)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1795, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1796, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var237)
 		if templ_7745c5c3_Err != nil {
@@ -4753,7 +4754,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var238 string
 		templ_7745c5c3_Var238, templ_7745c5c3_Err = templ.ResolveAttributeValue("$ferramenta === '" + FerramentaDoGabarito + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1804, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1805, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var238)
 		if templ_7745c5c3_Err != nil {
@@ -4766,7 +4767,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var239 string
 		templ_7745c5c3_Var239, templ_7745c5c3_Err = templ.ResolveAttributeValue(gabaritoNoPontoClicado(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1806, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1807, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var239)
 		if templ_7745c5c3_Err != nil {
@@ -4779,7 +4780,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var240 string
 		templ_7745c5c3_Var240, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGabaritoSegueOPonteiro(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1807, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1808, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var240)
 		if templ_7745c5c3_Err != nil {
@@ -4792,7 +4793,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var241 string
 		templ_7745c5c3_Var241, templ_7745c5c3_Err = templ.ResolveAttributeValue(prendeOMenuDoNavegador + "; " + guardaOGabarito)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1808, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1809, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var241)
 		if templ_7745c5c3_Err != nil {
@@ -4810,7 +4811,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var242 string
 			templ_7745c5c3_Var242, templ_7745c5c3_Err = templ.ResolveAttributeValue(oNomeDaCamadaDeRepouso(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1830, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1831, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var242)
 			if templ_7745c5c3_Err != nil {
@@ -4823,7 +4824,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var243 string
 			templ_7745c5c3_Var243, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCliqueEmRepouso(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1831, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1832, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var243)
 			if templ_7745c5c3_Err != nil {
@@ -4841,7 +4842,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var244 string
 				templ_7745c5c3_Var244, templ_7745c5c3_Err = templ.ResolveAttributeValue(oRetanguloPega(retanguloDePecas))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1833, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1834, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var244)
 				if templ_7745c5c3_Err != nil {
@@ -4854,7 +4855,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var245 string
 				templ_7745c5c3_Var245, templ_7745c5c3_Err = templ.ResolveAttributeValue(oRetanguloSegue(retanguloDePecas))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1834, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1835, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var245)
 				if templ_7745c5c3_Err != nil {
@@ -4867,7 +4868,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var246 string
 				templ_7745c5c3_Var246, templ_7745c5c3_Err = templ.ResolveAttributeValue(oRetanguloDePecasSolta(v))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1835, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1836, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var246)
 				if templ_7745c5c3_Err != nil {
@@ -4880,7 +4881,7 @@ func asCamadasDeClique(v tabuleiroView) templ.Component {
 				var templ_7745c5c3_Var247 string
 				templ_7745c5c3_Var247, templ_7745c5c3_Err = templ.ResolveAttributeValue("$" + sinalDoRetangulo + " = ''")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1836, Col: 60}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1837, Col: 60}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var247)
 				if templ_7745c5c3_Err != nil {
@@ -4996,7 +4997,7 @@ func aBarraDoGrupo(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var250 string
 		templ_7745c5c3_Var250, templ_7745c5c3_Err = templ.ResolveAttributeValue(haGrupoMarcado)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1881, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1882, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var250)
 		if templ_7745c5c3_Err != nil {
@@ -5006,7 +5007,7 @@ func aBarraDoGrupo(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("LayoutGrid", "size-4 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("LayoutGrid", "size-4 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -5017,7 +5018,7 @@ func aBarraDoGrupo(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var251 string
 		templ_7745c5c3_Var251, templ_7745c5c3_Err = templ.ResolveAttributeValue(aFraseDoGrupo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1883, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1884, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var251)
 		if templ_7745c5c3_Err != nil {
@@ -5030,7 +5031,7 @@ func aBarraDoGrupo(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var252 string
 		templ_7745c5c3_Var252, templ_7745c5c3_Err = templ.ResolveAttributeValue(largaOGrupo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1887, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1888, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var252)
 		if templ_7745c5c3_Err != nil {
@@ -5040,7 +5041,7 @@ func aBarraDoGrupo(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("X", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -5092,7 +5093,7 @@ func aPreviaDoMovimento(v tabuleiroView) templ.Component {
 		var templ_7745c5c3_Var254 string
 		templ_7745c5c3_Var254, templ_7745c5c3_Err = templ.ResolveAttributeValue(oDesenhoNaJanela)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1913, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1914, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var254)
 		if templ_7745c5c3_Err != nil {
@@ -5110,7 +5111,7 @@ func aPreviaDoMovimento(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var255 string
 			templ_7745c5c3_Var255, templ_7745c5c3_Err = templ.ResolveAttributeValue(oRotuloDaPreviaExiste(i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1941, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1942, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var255)
 			if templ_7745c5c3_Err != nil {
@@ -5123,7 +5124,7 @@ func aPreviaDoMovimento(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var256 string
 			templ_7745c5c3_Var256, templ_7745c5c3_Err = templ.ResolveAttributeValue(oMeioDaPreviaEm(i, "x") + " * $quadrado - $vistax")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1943, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1944, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var256)
 			if templ_7745c5c3_Err != nil {
@@ -5136,7 +5137,7 @@ func aPreviaDoMovimento(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var257 string
 			templ_7745c5c3_Var257, templ_7745c5c3_Err = templ.ResolveAttributeValue(oMeioDaPreviaEm(i, "y") + " * $quadrado - $vistay")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1944, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1945, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var257)
 			if templ_7745c5c3_Err != nil {
@@ -5149,7 +5150,7 @@ func aPreviaDoMovimento(v tabuleiroView) templ.Component {
 			var templ_7745c5c3_Var258 string
 			templ_7745c5c3_Var258, templ_7745c5c3_Err = templ.ResolveAttributeValue(oTextoDaPrevia(i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1945, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_tabuleiro.templ`, Line: 1946, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var258)
 			if templ_7745c5c3_Err != nil {
@@ -5199,7 +5200,7 @@ func aLeituraDaPrevia() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("MapPin", "size-4 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("MapPin", "size-4 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

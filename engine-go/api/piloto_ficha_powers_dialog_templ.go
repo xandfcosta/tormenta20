@@ -8,7 +8,10 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "strconv"
+import (
+	"strconv"
+	"t20engine/web/ui"
+)
 
 // O DIÁLOGO DE ESCOLHER PODERES (ALE-272, fatia 8).
 //
@@ -41,7 +44,7 @@ func choicesButton(v fichaView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{classesDoBotao(varSecundaria, tamPequeno, "shrink-0 gap-1")}
+		var templ_7745c5c3_Var2 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "shrink-0 gap-1")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -53,7 +56,7 @@ func choicesButton(v fichaView) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("$fonte = '" + aFonteDaPrimeiraPendencia(v) + "'; $detalhe = 'escolher-poderes'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 20, Col: 98}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 23, Col: 98}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -84,7 +87,7 @@ func choicesButton(v fichaView) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(v.Choices.Pendencias)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 26, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 29, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -97,7 +100,7 @@ func choicesButton(v fichaView) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(asPendenciasEscritas(len(v.Choices.Pendencias)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 28, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 31, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -158,7 +161,7 @@ func choicesDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(asPendenciasEscritas(len(v.Choices.Pendencias)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 39, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 42, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -176,7 +179,7 @@ func choicesDialog(v fichaView) templ.Component {
 					var templ_7745c5c3_Var10 string
 					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue("$fonte = '" + p.Fonte + "'")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 44, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 47, Col: 50}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 					if templ_7745c5c3_Err != nil {
@@ -189,7 +192,7 @@ func choicesDialog(v fichaView) templ.Component {
 					var templ_7745c5c3_Var11 string
 					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(p.Rotulo)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 46, Col: 16}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 49, Col: 16}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {
@@ -217,7 +220,7 @@ func choicesDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("$fonte = '" + fonte + "'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 54, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 57, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
@@ -230,7 +233,7 @@ func choicesDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue("$fonte === '" + fonte + "' ? 'true' : 'false'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 55, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 58, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 				if templ_7745c5c3_Err != nil {
@@ -243,7 +246,7 @@ func choicesDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(aFonteEscrita(fonte))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 57, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 60, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -328,7 +331,7 @@ func raceChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(cartao.Race)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 79, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 82, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -352,7 +355,7 @@ func raceChoicesBlock(v fichaView) templ.Component {
 					var templ_7745c5c3_Var17 string
 					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(variante.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 85, Col: 88}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 88, Col: 88}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -375,7 +378,7 @@ func raceChoicesBlock(v fichaView) templ.Component {
 						var templ_7745c5c3_Var19 string
 						templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(o.Ativo))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 91, Col: 42}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 94, Col: 42}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 						if templ_7745c5c3_Err != nil {
@@ -388,7 +391,7 @@ func raceChoicesBlock(v fichaView) templ.Component {
 						var templ_7745c5c3_Var20 string
 						templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.Rotulo)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 92, Col: 30}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 95, Col: 30}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 						if templ_7745c5c3_Err != nil {
@@ -401,7 +404,7 @@ func raceChoicesBlock(v fichaView) templ.Component {
 						var templ_7745c5c3_Var21 string
 						templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/poderes/variante/"+o.Valor))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 93, Col: 70}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 96, Col: 70}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 						if templ_7745c5c3_Err != nil {
@@ -427,7 +430,7 @@ func raceChoicesBlock(v fichaView) templ.Component {
 						var templ_7745c5c3_Var23 string
 						templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(o.Rotulo)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 95, Col: 19}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 98, Col: 19}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 						if templ_7745c5c3_Err != nil {
@@ -487,7 +490,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(aEscolhaDoAtributoEscrita(escolha))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 113, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 116, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -515,7 +518,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(contemTraco(escolha.Chosen, o.Valor)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 120, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 123, Col: 68}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 				if templ_7745c5c3_Err != nil {
@@ -528,7 +531,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 121, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 124, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 				if templ_7745c5c3_Err != nil {
@@ -541,7 +544,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/poderes/ascendencia/"+o.Valor))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 122, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 125, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 				if templ_7745c5c3_Err != nil {
@@ -567,7 +570,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(o.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 124, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 127, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -595,7 +598,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(contemTraco(escolha.Chosen, o.Valor)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 133, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 136, Col: 68}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 				if templ_7745c5c3_Err != nil {
@@ -608,7 +611,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 134, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 137, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 				if templ_7745c5c3_Err != nil {
@@ -621,7 +624,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGestoQueAlternaOAtributo(o.Valor))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 135, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 138, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 				if templ_7745c5c3_Err != nil {
@@ -634,7 +637,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue("$racaatributos.includes('" + o.Valor + "')")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 136, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 139, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 				if templ_7745c5c3_Err != nil {
@@ -647,7 +650,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(o.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 138, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 141, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 				if templ_7745c5c3_Err != nil {
@@ -662,7 +665,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var37 = []any{classesDoBotao(varPrimaria, tamPequeno, "w-full")}
+			var templ_7745c5c3_Var37 = []any{ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "w-full")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var37...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -674,7 +677,7 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/poderes/atributos"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 144, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 147, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 			if templ_7745c5c3_Err != nil {
@@ -741,7 +744,7 @@ func originChoicesBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(v.Choices.Origin.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 158, Col: 105}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 161, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -754,7 +757,7 @@ func originChoicesBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(v.Choices.Origin.Chosen)) + " de " + strconv.Itoa(oLimiteDeBeneficiosDaOrigem))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 160, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 163, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -777,7 +780,7 @@ func originChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var44 string
 				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(o.Ativo))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 167, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 170, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 				if templ_7745c5c3_Err != nil {
@@ -790,7 +793,7 @@ func originChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var45 string
 				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 168, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 171, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 				if templ_7745c5c3_Err != nil {
@@ -803,7 +806,7 @@ func originChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var46 string
 				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/poderes/origem/"+o.Valor))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 169, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 172, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 				if templ_7745c5c3_Err != nil {
@@ -829,7 +832,7 @@ func originChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var48 string
 				templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(o.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 171, Col: 15}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 174, Col: 15}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 				if templ_7745c5c3_Err != nil {
@@ -879,7 +882,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(cartao.ClassName + " " + strconv.FormatInt(cartao.Level, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 183, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 186, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
@@ -892,7 +895,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(asVagasDaClasseEscritas(cartao))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 185, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 188, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -921,7 +924,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGetDaFicha(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 196, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 199, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -934,7 +937,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Powers.Search)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 197, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 200, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 			if templ_7745c5c3_Err != nil {
@@ -947,7 +950,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue("Buscar poder de " + cartao.ClassName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 199, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 202, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 			if templ_7745c5c3_Err != nil {
@@ -972,7 +975,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(poder.Chosen))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 207, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 210, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 				if templ_7745c5c3_Err != nil {
@@ -985,7 +988,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var57 string
 				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(poder.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 208, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 211, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 				if templ_7745c5c3_Err != nil {
@@ -998,7 +1001,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var58 string
 				templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/poderes/escolhe/"+poder.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 209, Col: 67}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 212, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 				if templ_7745c5c3_Err != nil {
@@ -1024,7 +1027,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var60 string
 				templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(poder.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 214, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 217, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 				if templ_7745c5c3_Err != nil {
@@ -1037,7 +1040,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var61 string
 				templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(poder.Detail)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 215, Col: 80}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 218, Col: 80}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 				if templ_7745c5c3_Err != nil {
@@ -1050,7 +1053,7 @@ func classChoicesBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var62 string
 				templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(poder.Fonte)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 216, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 219, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 				if templ_7745c5c3_Err != nil {
@@ -1099,7 +1102,7 @@ func classPicker(v fichaView, classe, escolha, rotulo string, seletor pickerChoi
 		var templ_7745c5c3_Var64 string
 		templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 227, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 230, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 		if templ_7745c5c3_Err != nil {
@@ -1122,7 +1125,7 @@ func classPicker(v fichaView, classe, escolha, rotulo string, seletor pickerChoi
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(o.Ativo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 233, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 236, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 			if templ_7745c5c3_Err != nil {
@@ -1135,7 +1138,7 @@ func classPicker(v fichaView, classe, escolha, rotulo string, seletor pickerChoi
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 234, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 237, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 			if templ_7745c5c3_Err != nil {
@@ -1148,7 +1151,7 @@ func classPicker(v fichaView, classe, escolha, rotulo string, seletor pickerChoi
 			var templ_7745c5c3_Var68 string
 			templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(oComandoDaEscolhaDeClasse(v, classe, escolha, o.Valor))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 235, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 238, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 			if templ_7745c5c3_Err != nil {
@@ -1174,7 +1177,7 @@ func classPicker(v fichaView, classe, escolha, rotulo string, seletor pickerChoi
 			var templ_7745c5c3_Var70 string
 			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(o.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 237, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 240, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 			if templ_7745c5c3_Err != nil {

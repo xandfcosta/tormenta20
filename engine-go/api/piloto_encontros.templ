@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O CONSTRUTOR DE ENCONTROS (ALE-259).
 //
@@ -29,7 +32,7 @@ templ cenaDosEncontros(v encontrosView) {
 
 templ oGrupoDoEncontro(v encontrosView) {
 	<div class="flex shrink-0 flex-wrap items-end gap-3 rounded-sm border border-grimorio-iron p-3">
-		@rotuloDeSecao("muted", "self-center") {
+		@ui.SectionLabel("muted", "self-center") {
 			O grupo
 		}
 		@campoDoGrupo("nivel", "Nível", v.Nivel, nivelMinimo, nivelMaximo)
@@ -42,15 +45,15 @@ templ oGrupoDoEncontro(v encontrosView) {
 // QUÊ para quem ouve a página em vez de vê-la.
 templ campoDoGrupo(sinal, rotulo string, valor, minimo, maximo int) {
 	<div class="space-y-1">
-		@rotuloDeSecao("muted", "block") {
+		@ui.SectionLabel("muted", "block") {
 			<label for={ "encontro-" + sinal }>{ rotulo }</label>
 		}
 		<input
 			id={ "encontro-" + sinal }
 			type="number"
-			min={ inteiro(minimo) }
-			max={ inteiro(maximo) }
-			value={ inteiro(valor) }
+			min={ ui.Int(minimo) }
+			max={ ui.Int(maximo) }
+			value={ ui.Int(valor) }
 			data-bind={ sinal }
 			data-on:input__debounce.300ms="@get('/mestre/encontros')"
 			aria-label={ rotulo + " do grupo" }
@@ -62,7 +65,7 @@ templ campoDoGrupo(sinal, rotulo string, valor, minimo, maximo int) {
 templ oVeredito(v encontrosView) {
 	<div class="flex shrink-0 flex-wrap items-center gap-x-8 gap-y-3 rounded-sm border border-grimorio-iron bg-muted/20 px-4 py-3">
 		<div class="flex items-baseline gap-3">
-			@rotuloDeSecao("muted", "") {
+			@ui.SectionLabel("muted", "") {
 				ND do encontro
 			}
 			<span class="font-mono text-4xl leading-none tabular-nums text-grimorio-gold">
@@ -70,7 +73,7 @@ templ oVeredito(v encontrosView) {
 			</span>
 		</div>
 		<div class="flex items-baseline gap-2">
-			@rotuloDeSecao("muted", "") {
+			@ui.SectionLabel("muted", "") {
 				Dificuldade
 			}
 			<span class="font-mono text-xl leading-none" style={ corDaDificuldade(v.Dificuldade().Tom) }>
@@ -78,7 +81,7 @@ templ oVeredito(v encontrosView) {
 			</span>
 		</div>
 		<div class="flex items-baseline gap-2">
-			@rotuloDeSecao("muted", "") {
+			@ui.SectionLabel("muted", "") {
 				XP por personagem
 			}
 			<span class="font-mono text-sm tabular-nums text-foreground">{ xpEscrito(v.XPPorPersonagem()) }</span>
@@ -122,7 +125,7 @@ templ aComposicao(v encontrosView) {
 					<span class="font-mono text-3xs text-muted-foreground">{ "grupo ND " + ndArredondado(l.ND) }</span>
 					<div class="ml-auto flex items-center gap-1">
 						@passoDaQuantidade(l.Verbete, "menos", "−")
-						<span class="w-8 text-center font-mono text-sm tabular-nums">{ inteiro(l.Qtd) }</span>
+						<span class="w-8 text-center font-mono text-sm tabular-nums">{ ui.Int(l.Qtd) }</span>
 						@passoDaQuantidade(l.Verbete, "mais", "+")
 						<button
 							type="button"
@@ -158,7 +161,7 @@ templ passoDaQuantidade(m verbete, passo, sinal string) {
 templ painelDeAdicionar(v encontrosView) {
 	<div class="flex min-h-0 flex-1 flex-col gap-2">
 		<div class="relative shrink-0">
-			@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
+			@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 			<input
 				type="search"
 				name="buscaCriatura"

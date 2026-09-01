@@ -8,6 +8,8 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "t20engine/web/ui"
+
 // O HUB desenhado (ALE-231).
 //
 // Três coisas nesta tela respondem, cada uma, a uma pergunta que a migração
@@ -159,7 +161,7 @@ func itemDoMenu(icone_, rotulo, destino string, temProximo bool) templ.Component
 		var templ_7745c5c3_Var4 templ.SafeURL
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(destino))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 61, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 63, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -169,7 +171,7 @@ func itemDoMenu(icone_, rotulo, destino string, temProximo bool) templ.Component
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone(icone_, "size-5 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon(icone_, "size-5 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -180,7 +182,7 @@ func itemDoMenu(icone_, rotulo, destino string, temProximo bool) templ.Component
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 69, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 71, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -233,7 +235,7 @@ func rodapeDoHub(v hubView) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("Menu de " + v.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 82, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 84, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -246,7 +248,7 @@ func rodapeDoHub(v hubView) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(v.Inicial)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 90, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 92, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -259,7 +261,7 @@ func rodapeDoHub(v hubView) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(v.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 92, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 94, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -269,7 +271,7 @@ func rodapeDoHub(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Settings", "size-4 text-muted-foreground transition-colors group-hover:text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Settings", "size-4 text-muted-foreground transition-colors group-hover:text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -346,7 +348,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Volume2", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Volume2", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -354,7 +356,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("VolumeX", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("VolumeX", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -384,7 +386,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Maximize", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Maximize", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -392,7 +394,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Minimize", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Minimize", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -427,7 +429,7 @@ func menuDoJogador(v hubView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("UserPlus", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("UserPlus", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -457,7 +459,7 @@ func menuDoJogador(v hubView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("ShieldCheck", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("ShieldCheck", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -488,7 +490,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Settings", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Settings", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -518,7 +520,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("LogOut", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("LogOut", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -535,9 +537,9 @@ func menuDoJogador(v hubView) templ.Component {
 func classeDoItemRapido(perigo bool) string {
 	base := "flex w-full items-center gap-2.5 rounded-none px-2.5 py-2 text-left font-heading text-sm tracking-wide transition-colors hover:bg-accent focus-visible:bg-accent outline-none"
 	if perigo {
-		return juntar(base, "text-grimorio-crimson-bright")
+		return ui.Join(base, "text-grimorio-crimson-bright")
 	}
-	return juntar(base, "text-foreground")
+	return ui.Join(base, "text-foreground")
 }
 
 // dialogoDeConvite cunha o link de conta (ALE-120): o admin gera, entrega, e
@@ -579,7 +581,7 @@ func dialogoDeConvite(rota string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("UserPlus", "size-4 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("UserPlus", "size-4 text-grimorio-gold").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -605,7 +607,7 @@ func dialogoDeConvite(rota string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = botao(varSecundaria, tamPadrao, "", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -631,7 +633,7 @@ func dialogoDeConvite(rota string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = botao(varPrimaria, tamPadrao, "", templ.Attributes{
+		templ_7745c5c3_Err = ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{
 			"type": "button", "data-on:click": "@post('" + rota + "')",
 			"data-indicator:gerando": true, "data-attr:disabled": "$gerando",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var25), templ_7745c5c3_Buffer)
@@ -686,7 +688,7 @@ func conviteGerado(caminho string) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 262, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 264, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -714,7 +716,7 @@ func conviteGerado(caminho string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = botao(varSecundaria, tamPadrao, "shrink-0", templ.Attributes{
+		templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeDefault, "shrink-0", templ.Attributes{
 			"type":          "button",
 			"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copiado = true",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)

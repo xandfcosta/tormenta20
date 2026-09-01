@@ -1,6 +1,9 @@
 package api
 
-import "strconv"
+import (
+	"strconv"
+	"t20engine/web/ui"
+)
 
 // A FORJA — a folha em branco de um herói (ALE-272, fatia 9).
 //
@@ -21,7 +24,7 @@ import "strconv"
 // recusa nome vazio é o servidor, que é a autoridade de qualquer jeito.
 
 templ forgeSheet(v forgeView) {
-	@folhaDoTomo() {
+	@ui.TomeSheet() {
 		@forgeBody(v)
 	}
 }
@@ -39,7 +42,7 @@ templ forgeBody(v forgeView) {
 			class="space-y-6"
 		>
 			@fieldRefusals(v.OrphanRefusals)
-			@campoDeTexto(campo{
+			@ui.TextField(ui.Field{
 				Nome: "name", Label: "Nome", Valor: v.Name,
 				TamanhoMaximo: heroNameMax, Erros: v.Errors["name"],
 			})
@@ -54,8 +57,8 @@ templ forgeBody(v forgeView) {
 				se terminam na ficha.
 			</p>
 			<div class="flex justify-end gap-2">
-				<a href="/personagens" class={ classesDoBotao(varSecundaria, tamPadrao, "") }>Cancelar</a>
-				@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+				<a href="/personagens" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }>Cancelar</a>
+				@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
 					Forjar
 				}
 			</div>
@@ -71,7 +74,7 @@ func forgeRedraw() string {
 
 templ raceChoice(v forgeView) {
 	<fieldset class="space-y-2">
-		@legendaDeSecao("gold", "") {
+		@ui.SectionCaption("gold", "") {
 			Linhagem
 		}
 		// A altura é limitada e a lista rola: são 17 raças, e uma grade inteira
@@ -79,7 +82,7 @@ templ raceChoice(v forgeView) {
 		// telefone. Quem rola passa pelo `caixaRolavel` da casa, e não por um
 		// `overflow-y-auto` escrito à mão — é o que mantém o alcance por teclado
 		// em regime de amostragem.
-		@caixaRolavel("Raças do livro", "max-h-64 pr-1") {
+		@ui.ScrollBox("Raças do livro", "max-h-64 pr-1") {
 			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 				for _, c := range v.Races {
 					@raceTile(c)
@@ -109,10 +112,10 @@ templ raceTile(c raceCard) {
 
 templ classChoice(v forgeView) {
 	<fieldset class="space-y-2">
-		@legendaDeSecao("gold", "") {
+		@ui.SectionCaption("gold", "") {
 			Ofício
 		}
-		@caixaRolavel("Classes do livro", "max-h-64 pr-1") {
+		@ui.ScrollBox("Classes do livro", "max-h-64 pr-1") {
 			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 				for _, c := range v.Classes {
 					@classTile(c)
@@ -148,7 +151,7 @@ templ classTile(c classCard) {
 // é uma só, e trinta e cinco cartas afogariam a folha.
 templ originChoice(v forgeView) {
 	<div class="space-y-2">
-		<label for="origin" class={ classesDoRotulo("gold", "block") }>Origem</label>
+		<label for="origin" class={ ui.SectionLabelClasses("gold", "block") }>Origem</label>
 		<select
 			id="origin"
 			name="origin"
@@ -178,7 +181,7 @@ templ originChoice(v forgeView) {
 // oferecer — e oferecer o errado é pior que não oferecer.
 templ gearChoice(g startingGear, erros map[string][]string) {
 	<fieldset class="space-y-3 border-t border-grimorio-iron pt-4">
-		@legendaDeSecao("gold", "") {
+		@ui.SectionCaption("gold", "") {
 			Equipamento inicial
 		}
 		<p class="text-xs text-muted-foreground">

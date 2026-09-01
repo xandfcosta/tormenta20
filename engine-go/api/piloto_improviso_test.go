@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strings"
+	"t20engine/web/ui"
 	"testing"
 )
 
@@ -55,7 +56,7 @@ func linhaOuErro[T interface{ Cobre(int) bool }](linhas []T, face int) (T, error
 type erroDeFace int
 
 func (e erroDeFace) Error() string {
-	return "nenhuma linha cobre a face " + inteiro(int(e))
+	return "nenhuma linha cobre a face " + ui.Int(int(e))
 }
 func errFaceSemLinha(f int) error { return erroDeFace(f) }
 

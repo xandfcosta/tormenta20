@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/web/ui"
+
 
 
 // OS CONTROLES DO MESTRE (ALE-265).
@@ -91,7 +93,7 @@ templ gavetaDaMesa(v mesaView) {
 			aria-label="Mais comandos da mesa"
 			class="flex size-11 cursor-pointer list-none items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("Settings2", "size-4")
+			@ui.Icon("Settings2", "size-4")
 		</summary>
 		<div class="absolute bottom-full right-0 z-20 mb-2 flex w-56 flex-col gap-1 rounded-sm border border-grimorio-iron bg-grimorio-panel p-2 shadow-lg">
 			if v.SceneActive {
@@ -121,7 +123,7 @@ templ aRecuperacao(v mesaView) {
 		data-on:click={ comandoDaMesa(v, "POST", "rest/scene") }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 	>
-		@icone("Hourglass", "size-4")
+		@ui.Icon("Hourglass", "size-4")
 		Recuperar · cena
 	</button>
 	<button
@@ -129,7 +131,7 @@ templ aRecuperacao(v mesaView) {
 		data-on:click="document.getElementById('descanso-de-dia').showModal()"
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
-		@icone("Moon", "size-4")
+		@ui.Icon("Moon", "size-4")
 		Recuperar · dia
 	</button>
 }

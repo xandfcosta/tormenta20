@@ -8,7 +8,10 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O IMPROVISO (ALE-261) — as tabelas do Cap 6 e o esqueleto de masmorra.
 //
@@ -70,7 +73,7 @@ func cenaDoImproviso(v improvisoView) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinaisDoImproviso(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 43, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 46, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -98,7 +101,7 @@ func cenaDoImproviso(v improvisoView) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = rotuloDeSecao("muted", "mb-2").Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.SectionLabel("muted", "mb-2").Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -140,7 +143,7 @@ func cenaDoImproviso(v improvisoView) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = rotuloDeSecao("muted", "mb-2").Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.SectionLabel("muted", "mb-2").Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -204,7 +207,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 83, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 86, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -217,7 +220,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 85, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 88, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -230,7 +233,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fonte)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 86, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 89, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -243,7 +246,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/improviso/%s')", id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 90, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 93, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -256,7 +259,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue("rolando" + id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 91, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 94, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -266,14 +269,14 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Dices", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Dices", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs("Rolar " + dado)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 95, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 98, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -291,7 +294,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("Limpar o histórico de " + titulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 109, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 112, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -304,7 +307,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 110, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 113, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -326,9 +329,9 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(inteiro(historico[0].Rolagem))
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(historico[0].Rolagem))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 124, Col: 114}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 127, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -341,7 +344,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(historico[0].Texto)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 125, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 128, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -359,7 +362,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(historico[0].Detalhe)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 128, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 131, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -385,9 +388,9 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var17 string
-					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(inteiro(s.Rolagem))
+					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(s.Rolagem))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 138, Col: 88}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 141, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -400,7 +403,7 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 					var templ_7745c5c3_Var18 string
 					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(s.Texto)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 139, Col: 39}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 142, Col: 39}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 					if templ_7745c5c3_Err != nil {
@@ -471,7 +474,7 @@ func planejadorDeMasmorra(v improvisoView) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = rotuloDeSecao("muted", "block").Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.SectionLabel("muted", "block").Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -480,9 +483,9 @@ func planejadorDeMasmorra(v improvisoView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(salasMinimo))
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(salasMinimo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 164, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 167, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -493,9 +496,9 @@ func planejadorDeMasmorra(v improvisoView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(salasMaximo))
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(salasMaximo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 165, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 168, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -506,9 +509,9 @@ func planejadorDeMasmorra(v improvisoView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var23 string
-		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(v.Salas))
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(v.Salas))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 166, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 169, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
@@ -519,7 +522,7 @@ func planejadorDeMasmorra(v improvisoView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.AcimaDoTeto {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "  <p class=\"text-xs text-muted-foreground\">Acima do maior tamanho do livro. Ele recomenda parar aqui e quebrar em masmorras menores.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "  <p class=\"text-xs text-muted-foreground\">Acima do maior ui.Size do livro. Ele recomenda parar aqui e quebrar em masmorras menores.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -536,12 +539,12 @@ func planejadorDeMasmorra(v improvisoView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = linhaDoEsqueleto("Ameaças a distribuir", inteiro(v.Ameacas)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = linhaDoEsqueleto("Ameaças a distribuir", ui.Int(v.Ameacas)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if v.Tamanho.MaxSecondaryObjectives > 0 {
-				templ_7745c5c3_Err = linhaDoEsqueleto("Objetivos secundários (até)", inteiro(v.Tamanho.MaxSecondaryObjectives)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = linhaDoEsqueleto("Objetivos secundários (até)", ui.Int(v.Tamanho.MaxSecondaryObjectives)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -587,7 +590,7 @@ func linhaDoEsqueleto(rotulo, valor string) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 194, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 197, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -600,7 +603,7 @@ func linhaDoEsqueleto(rotulo, valor string) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 195, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 198, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {

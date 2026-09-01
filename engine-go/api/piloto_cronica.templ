@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // A CRÔNICA desenhada (ALE-255): a página de uma campanha aberta no tomo.
@@ -18,7 +19,7 @@ import (
 // pedido. Não há o que espelhar.
 
 templ cronica(v cronicaView) {
-	@folhaDoTomo() {
+	@ui.TomeSheet() {
 		@cabecalhoDaCronica(v)
 		<div aria-hidden="true" class="h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent"></div>
 		<div class="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row sm:gap-6">
@@ -56,7 +57,7 @@ templ cabecalhoDaCronica(v cronicaView) {
 			// O PAPEL vem ACIMA do nome, como sobrancelha, e não misturado na
 			// linha de baixo: ele responde "o que eu sou nesta mesa", que é a
 			// primeira pergunta de quem abre a página.
-			@rotuloDeSecao("muted", "") {
+			@ui.SectionLabel("muted", "") {
 				{ papelNaMesa(v) }
 			}
 			<h1 class="truncate font-display text-2xl uppercase tracking-[0.05em] text-grimorio-gold sm:text-3xl">
@@ -66,12 +67,12 @@ templ cabecalhoDaCronica(v cronicaView) {
 		</div>
 		if v.SessaoVivaID > 0 {
 			<div class="flex shrink-0 flex-col items-end gap-1">
-				@rotuloDeSecao("gold", "") {
+				@ui.SectionLabel("gold", "") {
 					{ fmt.Sprintf("Sessão %d em andamento", v.NumeroDaSessaoViva) }
 				}
 				<a
 					href={ templ.SafeURL(rotaDaMesa(v.ID, v.SessaoVivaID)) }
-					class={ classesDoBotao(varPrimaria, tamPadrao, "") }
+					class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "") }
 				>
 					Continuar a sessão
 				</a>
@@ -214,10 +215,10 @@ templ abaDeVisao(v cronicaView) {
 templ sineteDaCronica(nomeDoIcone string, valor int, rotulo string) {
 	<div class="flex flex-col items-center gap-1 border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
 		<span aria-hidden="true" class="text-grimorio-gold/70">
-			@icone(nomeDoIcone, "size-4")
+			@ui.Icon(nomeDoIcone, "size-4")
 		</span>
 		<span class="font-mono text-xl font-semibold tabular-nums text-foreground">{ strconv.Itoa(valor) }</span>
-		@rotuloDeSecao("muted", "") {
+		@ui.SectionLabel("muted", "") {
 			{ rotulo }
 		}
 	</div>
@@ -226,7 +227,7 @@ templ sineteDaCronica(nomeDoIcone string, valor int, rotulo string) {
 templ painelDaCronica(sobrancelha, titulo string) {
 	<section class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
 		<header class="space-y-0.5">
-			@rotuloDeSecao("muted", "") {
+			@ui.SectionLabel("muted", "") {
 				{ sobrancelha }
 			}
 			<h2 class="font-heading text-base tracking-wide text-foreground">{ titulo }</h2>
@@ -256,7 +257,7 @@ templ linhaDoHeroi(h heroiNaMesa) {
 			// nomes para o truncamento. O ícone é `aria-hidden` e quem o
 			// anuncia é o rótulo ao lado.
 			<span aria-label="mestre da mesa" class="shrink-0 text-grimorio-gold">
-				@icone("Crown", "size-3.5")
+				@ui.Icon("Crown", "size-3.5")
 			</span>
 		}
 	</li>
@@ -340,7 +341,7 @@ templ abaDeMembros(v cronicaView) {
 // (ALE-221); posta depois da zona de perigo, ela herdaria o tom de risco.
 templ abaDeConfiguracao(v cronicaView) {
 	<div class="space-y-6">
-		@rotuloDeSecao("muted", "") {
+		@ui.SectionLabel("muted", "") {
 			Ajustes do tomo
 		}
 		@cadastroDaCronica(v)
@@ -356,12 +357,12 @@ templ cadastroDaCronica(v cronicaView) {
 	<section class="space-y-4 border border-grimorio-iron bg-grimorio-panel p-4">
 		<h2 class="font-heading text-base tracking-wide text-foreground">Editar campanha</h2>
 		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/editar", v.ID)) } class="space-y-4">
-			@campoDeTexto(campo{
+			@ui.TextField(ui.Field{
 				Nome: "name", Label: "Nome", Valor: v.Nome,
 				Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
 				Erros: v.Erros["name"],
 			})
-			@campoDeTextoLongo(campo{
+			@ui.TextArea(ui.Field{
 				Nome: "description", Label: "Descrição", Valor: v.Descricao,
 				TamanhoMaximo: descricaoDeCampanhaMax,
 				Erros:         v.Erros["description"],
@@ -370,7 +371,7 @@ templ cadastroDaCronica(v cronicaView) {
 				<p class="text-sm text-destructive">{ v.Aviso }</p>
 			}
 			<div class="flex justify-end">
-				@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+				@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
 					Salvar
 				}
 			</div>
@@ -389,7 +390,7 @@ templ cadastroDaCronica(v cronicaView) {
 templ regrasDaCronica(v cronicaView) {
 	<section id="painel-regras" aria-label="Regras da campanha" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
 		<header class="space-y-0.5">
-			@rotuloDeSecao("muted", "") {
+			@ui.SectionLabel("muted", "") {
 				Campanha
 			}
 			<h2 class="font-heading text-base tracking-wide text-foreground">Regras opcionais</h2>
@@ -448,7 +449,7 @@ templ zonaDePerigo(v cronicaView) {
 	<div class="flex flex-wrap items-center justify-between gap-3 rounded-none border border-[color:var(--grimorio-crimson)]/50 bg-[color:var(--grimorio-crimson)]/[0.06] p-4">
 		<div class="space-y-1">
 			<p class="flex items-center gap-1.5 font-heading text-sm tracking-wide text-[color:var(--grimorio-crimson-bright)]">
-				@icone("Flame", "size-4")
+				@ui.Icon("Flame", "size-4")
 				Zona de perigo
 			</p>
 			<p class="text-xs text-muted-foreground">
@@ -458,10 +459,10 @@ templ zonaDePerigo(v cronicaView) {
 		// O primeiro clique ABRE o diálogo; quem apaga é o botão de dentro. É a
 		// mesma propriedade do apagar conta da administração, e pelo mesmo
 		// motivo: primeiro clique não pode ser irreversível.
-		@botao(varDestrutiva, tamPequeno, "shrink-0", templ.Attributes{
+		@ui.Button(ui.VariantDestructive, ui.SizeSmall, "shrink-0", templ.Attributes{
 			"type": "button", "data-on:click": "$excluir.showModal()",
 		}) {
-			@icone("Trash2", "mr-1 size-3.5")
+			@ui.Icon("Trash2", "mr-1 size-3.5")
 			Excluir campanha
 		}
 		@dialogoDeExclusao(v)
@@ -481,7 +482,7 @@ templ dialogoDeExclusao(v cronicaView) {
 		</p>
 		<div class="mt-4 flex justify-end gap-2">
 			<form method="dialog">
-				@botao(varSecundaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+				@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
 					Cancelar
 				}
 			</form>
@@ -489,7 +490,7 @@ templ dialogoDeExclusao(v cronicaView) {
 			// e o que vem depois é uma navegação para o livro. Remendo não
 			// navega.
 			<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/excluir", v.ID)) }>
-				@botao(varDestrutiva, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+				@ui.Button(ui.VariantDestructive, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
 					Excluir
 				}
 			</form>

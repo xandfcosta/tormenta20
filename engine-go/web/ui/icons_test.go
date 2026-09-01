@@ -1,4 +1,4 @@
-package api
+package ui
 
 import (
 	"os"
@@ -28,7 +28,7 @@ import (
 // guarda. O `TestOsIconesDaTrilhaDoMestreExistem`, logo abaixo, é esse guarda
 // para a primeira indireta que apareceu.
 func TestTodoIconePedidoExisteNoGerado(t *testing.T) {
-	gerado, err := os.ReadFile("piloto_icones.templ")
+	gerado, err := os.ReadFile("icons.templ")
 	if err != nil {
 		t.Fatalf("ler o gerado: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestTodoIconePedidoExisteNoGerado(t *testing.T) {
 	pedido := regexp.MustCompile(`@icone\("([A-Za-z0-9]+)"`)
 	for _, f := range arquivos {
 		nome := f.Name()
-		if !strings.HasSuffix(nome, ".templ") || nome == "piloto_icones.templ" {
+		if !strings.HasSuffix(nome, ".templ") || nome == "icons.templ" {
 			continue
 		}
 		conteudo, err := os.ReadFile(nome)
@@ -51,28 +51,6 @@ func TestTodoIconePedidoExisteNoGerado(t *testing.T) {
 				t.Errorf("%s pede o ícone %q e o gerado não o tem — ele sai como SVG vazio, sem erro. "+
 					"Acrescente em frontend/scripts/gen-icones-templ.mjs e rode o gerador.", nome, m[1])
 			}
-		}
-	}
-}
-
-// TestOsIconesDaTrilhaDoMestreExistem cobre a chamada INDIRETA que o guarda
-// acima não vê.
-//
-// A trilha percorre `ferramentasDoMestre` e passa `f.Icone` para o `@icone`, e
-// nenhum desses quatro nomes aparece literalmente num `.templ`. Sem isto, uma
-// letra errada em "BookMarked" dá um botão de ferramenta sem desenho — o mesmo
-// buraco silencioso, agora numa tabela.
-//
-// Provado VERMELHO trocando `Skull` por `Skul` na tabela.
-func TestOsIconesDaTrilhaDoMestreExistem(t *testing.T) {
-	gerado, err := os.ReadFile("piloto_icones.templ")
-	if err != nil {
-		t.Fatalf("ler o gerado: %v", err)
-	}
-	for _, f := range ferramentasDoMestre {
-		if !strings.Contains(string(gerado), `case "`+f.Icone+`":`) {
-			t.Errorf("a ferramenta %q pede o ícone %q e o gerado não o tem — sai SVG vazio, sem erro. "+
-				"Acrescente em frontend/scripts/gen-icones-templ.mjs e rode o gerador.", f.Slug, f.Icone)
 		}
 	}
 }

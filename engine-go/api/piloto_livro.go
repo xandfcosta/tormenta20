@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"t20engine/plataforma"
+	"t20engine/web/ui"
 )
 
 // O LIVRO servido pela mesa (ALE-264): o Tormenta 20 em PDF, entregue pelo
@@ -214,9 +215,9 @@ func (s *Server) handleLeitorDoLivro(w http.ResponseWriter, r *http.Request) {
 	if v.Termo != "" {
 		titulo = v.Termo + " · Livro · Tormenta 20"
 	}
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo: titulo,
-		Forma:  cascaNua,
+		Forma:  ui.ShellBare,
 		Voltar: v.Voltar,
 		// O módulo do leitor só entra AQUI: são 540 KB de pdf.js, e mandá-los em
 		// toda cena seria pôr um visualizador de PDF no caminho de quem abriu a

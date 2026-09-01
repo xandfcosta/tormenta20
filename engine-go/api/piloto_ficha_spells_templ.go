@@ -11,6 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"fmt"
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // O painel de MAGIAS desenhado (ALE-272, fatia 6).
@@ -59,7 +60,7 @@ func spellsPanelSection(v fichaView) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(aprendidasEscrito(len(v.Spells.Learned)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 30, Col: 98}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 31, Col: 98}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -70,7 +71,7 @@ func spellsPanelSection(v fichaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Spells.IsCaster {
-			var templ_7745c5c3_Var3 = []any{classesDoBotao(varSecundaria, tamPequeno, "ml-auto")}
+			var templ_7745c5c3_Var3 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "ml-auto")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -92,7 +93,7 @@ func spellsPanelSection(v fichaView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = icone("Plus", "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Plus", "size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -118,7 +119,7 @@ func spellsPanelSection(v fichaView) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs("Nenhuma magia aprendida. Use Aprender para escolher no livro.")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 47, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 48, Col: 71}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -128,7 +129,7 @@ func spellsPanelSection(v fichaView) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("Este personagem não conjura por classe.")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 49, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 50, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -206,7 +207,7 @@ func grantedSpellsBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Circle)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 81, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 82, Col: 121}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -219,7 +220,7 @@ func grantedSpellsBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 82, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 83, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -232,7 +233,7 @@ func grantedSpellsBlock(v fichaView) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Source)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 83, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 84, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -281,7 +282,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Circle)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 93, Col: 118}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 94, Col: 118}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -294,7 +295,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue("Detalhar " + magia.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 96, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 97, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -307,7 +308,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGestoQueAbreOConjurar(magia))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 98, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 99, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -320,7 +321,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 100, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 101, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -338,7 +339,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs("CD " + magia.CD)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 102, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 103, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -355,7 +356,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		var templ_7745c5c3_Var17 = []any{classesDoBotao(varPrimaria, tamPequeno, "shrink-0")}
+		var templ_7745c5c3_Var17 = []any{ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "shrink-0")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var17...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -367,7 +368,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue("Conjurar " + magia.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 109, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 110, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {
@@ -380,7 +381,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGestoQueAbreOConjurar(magia))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 111, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 112, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -406,7 +407,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue("Esquecer " + magia.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 116, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 117, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -419,7 +420,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/magias/esquece/"+magia.Command))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 117, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 118, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -429,7 +430,7 @@ func learnedSpellRowItem(v fichaView, magia learnedSpellRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Trash2", "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Trash2", "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -479,7 +480,7 @@ func preparedToggle(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", magia.Prepared))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 132, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 133, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -492,7 +493,7 @@ func preparedToggle(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue(magia.Name + " preparada")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 133, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 134, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 		if templ_7745c5c3_Err != nil {
@@ -505,7 +506,7 @@ func preparedToggle(v fichaView, magia learnedSpellRow) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/magias/prepara/"+magia.Command))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 134, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 135, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -578,7 +579,7 @@ func castSpellDialog(v fichaView, magia learnedSpellRow) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Execution + " · " + magia.Range + " · " + magia.Duration)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 150, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 151, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -591,7 +592,7 @@ func castSpellDialog(v fichaView, magia learnedSpellRow) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Effect)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 152, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 153, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -604,7 +605,7 @@ func castSpellDialog(v fichaView, magia learnedSpellRow) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(aPreviaDoCusto(magia))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 155, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 156, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -617,7 +618,7 @@ func castSpellDialog(v fichaView, magia learnedSpellRow) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs("PM " + strconv.FormatInt(v.Spells.PmCurrent, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 156, Col: 117}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 157, Col: 117}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 			if templ_7745c5c3_Err != nil {
@@ -647,7 +648,7 @@ func castSpellDialog(v fichaView, magia learnedSpellRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var35 = []any{classesDoBotao(varPrimaria, tamPadrao, "w-full")}
+			var templ_7745c5c3_Var35 = []any{ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var35...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -659,7 +660,7 @@ func castSpellDialog(v fichaView, magia learnedSpellRow) templ.Component {
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/magias/conjura/"+magia.Command) + "; $detalhe = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 168, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 169, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {
@@ -685,7 +686,7 @@ func castSpellDialog(v fichaView, magia learnedSpellRow) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs("Conjurar " + magia.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 170, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 171, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -757,7 +758,7 @@ func augmentPicker(a augmentRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if a.Locked {
-			templ_7745c5c3_Err = icone("Lock", "size-3.5 shrink-0 text-warning-ink").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Icon("Lock", "size-3.5 shrink-0 text-warning-ink").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -769,7 +770,7 @@ func augmentPicker(a augmentRow) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(a.Description)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 190, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 191, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -783,7 +784,7 @@ func augmentPicker(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs("+" + strconv.Itoa(a.PM) + " PM · exige o " + strconv.Itoa(a.RequiredCircle) + "º círculo")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 193, Col: 100}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 194, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 			if templ_7745c5c3_Err != nil {
@@ -793,7 +794,7 @@ func augmentPicker(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs("+" + strconv.Itoa(a.PM) + " PM")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 195, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 196, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -854,7 +855,7 @@ func augmentStepper(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue("Menos de " + a.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 213, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 214, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 			if templ_7745c5c3_Err != nil {
@@ -867,7 +868,7 @@ func augmentStepper(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSinalDoAprimoramento(a.Index) + " = Math.max(0, " + oSinalDoAprimoramento(a.Index) + " - 1)")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 214, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 215, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 			if templ_7745c5c3_Err != nil {
@@ -880,7 +881,7 @@ func augmentStepper(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSinalDoAprimoramento(a.Index))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 217, Col: 109}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 218, Col: 109}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 			if templ_7745c5c3_Err != nil {
@@ -893,7 +894,7 @@ func augmentStepper(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.ResolveAttributeValue("Mais de " + a.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 220, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 221, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 			if templ_7745c5c3_Err != nil {
@@ -906,7 +907,7 @@ func augmentStepper(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSinalDoAprimoramento(a.Index) + "++")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 221, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 222, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 			if templ_7745c5c3_Err != nil {
@@ -924,7 +925,7 @@ func augmentStepper(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 228, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 229, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {
@@ -937,7 +938,7 @@ func augmentStepper(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSinalDoAprimoramento(a.Index) + " > 0 ? 'true' : 'false'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 229, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 230, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -950,7 +951,7 @@ func augmentStepper(a augmentRow) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSinalDoAprimoramento(a.Index) + " = " + oSinalDoAprimoramento(a.Index) + " > 0 ? 0 : 1")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 230, Col: 108}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 231, Col: 108}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 			if templ_7745c5c3_Err != nil {
@@ -1017,7 +1018,7 @@ func learnSpellDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var55 string
 				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/magias/aprende/"+magia.Command))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 270, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 271, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 				if templ_7745c5c3_Err != nil {
@@ -1030,7 +1031,7 @@ func learnSpellDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Circle)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 274, Col: 80}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 275, Col: 80}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 				if templ_7745c5c3_Err != nil {
@@ -1043,7 +1044,7 @@ func learnSpellDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var57 string
 				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(magia.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 275, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 276, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 				if templ_7745c5c3_Err != nil {
@@ -1056,7 +1057,7 @@ func learnSpellDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var58 string
 				templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(magia.School)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 276, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 277, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 				if templ_7745c5c3_Err != nil {
@@ -1102,7 +1103,7 @@ func spellFilters(v fichaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Search", "pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1113,7 +1114,7 @@ func spellFilters(v fichaView) templ.Component {
 		var templ_7745c5c3_Var60 string
 		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGetDaFicha(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 295, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 296, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var60)
 		if templ_7745c5c3_Err != nil {
@@ -1126,7 +1127,7 @@ func spellFilters(v fichaView) templ.Component {
 		var templ_7745c5c3_Var61 string
 		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Spells.Search)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 296, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 297, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 		if templ_7745c5c3_Err != nil {
@@ -1139,7 +1140,7 @@ func spellFilters(v fichaView) templ.Component {
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGetDaFicha(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 305, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 306, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 		if templ_7745c5c3_Err != nil {
@@ -1184,7 +1185,7 @@ func spellFilters(v fichaView) templ.Component {
 		var templ_7745c5c3_Var63 string
 		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGetDaFicha(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 320, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 321, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 		if templ_7745c5c3_Err != nil {
@@ -1203,7 +1204,7 @@ func spellFilters(v fichaView) templ.Component {
 				var templ_7745c5c3_Var64 string
 				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Valor)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 326, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 327, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 				if templ_7745c5c3_Err != nil {
@@ -1216,7 +1217,7 @@ func spellFilters(v fichaView) templ.Component {
 				var templ_7745c5c3_Var65 string
 				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 326, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 327, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 				if templ_7745c5c3_Err != nil {
@@ -1234,7 +1235,7 @@ func spellFilters(v fichaView) templ.Component {
 				var templ_7745c5c3_Var66 string
 				templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Valor)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 328, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 329, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 				if templ_7745c5c3_Err != nil {
@@ -1247,7 +1248,7 @@ func spellFilters(v fichaView) templ.Component {
 				var templ_7745c5c3_Var67 string
 				templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 328, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 329, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 				if templ_7745c5c3_Err != nil {
@@ -1296,7 +1297,7 @@ func circleOption(valor, rotulo, ativo string) templ.Component {
 			var templ_7745c5c3_Var69 string
 			templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(valor)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 337, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 338, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 			if templ_7745c5c3_Err != nil {
@@ -1309,7 +1310,7 @@ func circleOption(valor, rotulo, ativo string) templ.Component {
 			var templ_7745c5c3_Var70 string
 			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 337, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 338, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 			if templ_7745c5c3_Err != nil {
@@ -1327,7 +1328,7 @@ func circleOption(valor, rotulo, ativo string) templ.Component {
 			var templ_7745c5c3_Var71 string
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue(valor)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 339, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 340, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var71)
 			if templ_7745c5c3_Err != nil {
@@ -1340,7 +1341,7 @@ func circleOption(valor, rotulo, ativo string) templ.Component {
 			var templ_7745c5c3_Var72 string
 			templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 339, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_spells.templ`, Line: 340, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 			if templ_7745c5c3_Err != nil {

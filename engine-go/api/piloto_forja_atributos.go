@@ -12,6 +12,7 @@ import (
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/plataforma"
+	"t20engine/web/ui"
 )
 
 // A SEGUNDA CENA DA FORJA: distribuir os atributos (p17, Tabela 1-1).
@@ -217,9 +218,9 @@ func (s *Server) escreveOsAtributos(w http.ResponseWriter, r *http.Request, v at
 		_ = datastar.NewSSE(w, r).PatchElements(fragmento)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo:       "Atributos · Forja · Tormenta 20",
-		Forma:        cascaDensa,
+		Forma:        ui.ShellDense,
 		Voltar:       "/personagens",
 		VoltarRotulo: "Personagens",
 	}, attributesScene(v))

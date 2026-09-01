@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O CICLO DA SESSÃO na tela (ALE-269, superfícies 3, 4 e 11).
 //
@@ -21,7 +24,7 @@ templ verbosDaSessao(v mesaView) {
 				data-on:click={ abreAConfigDaSessao(v) }
 				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-			@icone("Settings2", "size-4")
+			@ui.Icon("Settings2", "size-4")
 		</button>
 		}
 		// SAIR é um link e não um botão: ele navega, e navegação é do navegador.

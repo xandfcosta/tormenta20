@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
+	"t20engine/web/ui"
 )
 
 // As rotas da MESA DO MESTRE (ALE-257).
@@ -129,9 +130,9 @@ func (s *Server) respondeImproviso(w http.ResponseWriter, r *http.Request, tabel
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Improviso · Mesa do Mestre · Tormenta 20",
-		Forma:         cascaDensa,
+		Forma:         ui.ShellDense,
 		Voltar:        "/",
 		VoltarRotulo:  "Hub",
 		TituloVisivel: "Mesa do Mestre",
@@ -250,9 +251,9 @@ func (s *Server) respondeEncontro(
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Encontros · Mesa do Mestre · Tormenta 20",
-		Forma:         cascaDensa,
+		Forma:         ui.ShellDense,
 		Voltar:        "/",
 		VoltarRotulo:  "Hub",
 		TituloVisivel: "Mesa do Mestre",
@@ -333,9 +334,9 @@ func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo:        rotuloDaAba(v.Aba) + " · Mesa do Mestre · Tormenta 20",
-		Forma:         cascaDensa,
+		Forma:         ui.ShellDense,
 		Voltar:        "/",
 		VoltarRotulo:  "Hub",
 		TituloVisivel: "Mesa do Mestre",
@@ -431,9 +432,9 @@ func (s *Server) handleBestiario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo: "Bestiário · Mesa do Mestre · Tormenta 20",
-		Forma:  cascaDensa,
+		Forma:  ui.ShellDense,
 		Voltar: "/",
 		// "Hub" e não a seta genérica: a Mesa do Mestre não é filha óbvia de
 		// nenhuma tela, e nomear o destino é o que a folha de especificação pede.

@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // O painel da MOCHILA desenhado (ALE-272, fatia 7).
@@ -71,7 +72,7 @@ templ moneyHeadline(v fichaView) {
 		data-on:click="$tibarmodo = 'receber'; $tibarvalor = 0; $detalhe = 'dinheiro'"
 		class="ml-auto inline-flex items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1 text-3xs outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:text-xs"
 	>
-		@icone("Coins", "size-3.5 text-grimorio-gold")
+		@ui.Icon("Coins", "size-3.5 text-grimorio-gold")
 		<span class="font-mono text-foreground">{ "T$ " + v.Bag.Money.Tibar }</span>
 		if v.Bag.Money.Slots != "" {
 			<span class="text-muted-foreground">{ "· " + v.Bag.Money.Slots }</span>
@@ -151,7 +152,7 @@ templ equippedCardItem(v fichaView, card *equippedCard, largo bool) {
 				// O motor já cobra a penalidade da p142; o crachá existe para
 				// ela não ser descoberta no meio de um teste de ataque.
 				<p class="flex items-center gap-1 text-3xs text-penalty-ink">
-					@icone("AlertTriangle", "size-3")
+					@ui.Icon("AlertTriangle", "size-3")
 					sem proficiência
 				</p>
 			}
@@ -176,7 +177,7 @@ templ equippedCardItem(v fichaView, card *equippedCard, largo bool) {
 			data-on:click={ oPostDaFicha(v, "/itens/"+card.Command+"/guarda") }
 			class="absolute right-1 top-1 inline-flex size-6 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:text-penalty-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("X", "size-3")
+			@ui.Icon("X", "size-3")
 		</button>
 	</div>
 }
@@ -292,7 +293,7 @@ templ stowedTileItem(ladrilho stowedTile) {
 				{ "×" + strconv.FormatInt(ladrilho.Quantity, 10) }
 			</span>
 		}
-		@icone(ladrilho.Glyph, "size-5 text-muted-foreground")
+		@ui.Icon(ladrilho.Glyph, "size-5 text-muted-foreground")
 		<span class="line-clamp-2 w-full text-2xs leading-tight text-foreground">{ ladrilho.Name }</span>
 		if len(ladrilho.Overlays) > 0 {
 			<span class="line-clamp-1 w-full text-3xs text-muted-foreground">{ juntoComPonto(ladrilho.Overlays) }</span>
@@ -331,7 +332,7 @@ templ moneyDialog(v fichaView) {
 		<button
 			type="button"
 			data-on:click={ oPostDaFicha(v, "/dinheiro") + "; $detalhe = ''" }
-			class={ classesDoBotao(varPrimaria, tamPadrao, "w-full") }
+			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Confirmar</button>
 	}
 }

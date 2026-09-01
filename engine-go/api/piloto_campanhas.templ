@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // A cena de CAMPANHAS desenhada (ALE-234).
@@ -89,7 +90,7 @@ templ barraDeCampanhas(v campanhasView) {
 			// requisição POR TECLA. 250ms é o que separa "ainda digitando" de
 			// "parou de digitar".
 			<div class="relative w-full sm:ml-auto sm:w-56 md:w-64">
-				@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
+				@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 				<input
 					type="search"
 					name="busca"
@@ -105,12 +106,12 @@ templ barraDeCampanhas(v campanhasView) {
 			@filtroDePapel(v)
 		}
 		<div class="ml-auto flex gap-2 sm:ml-0">
-			<a href="/campanhas/entrar" aria-label="Entrar em campanha" class={ classesDoBotao(varSecundaria, tamPequeno, "") }>
-				@icone("UserPlus", "size-4 sm:mr-1")
+			<a href="/campanhas/entrar" aria-label="Entrar em campanha" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }>
+				@ui.Icon("UserPlus", "size-4 sm:mr-1")
 				<span class="hidden sm:inline">Entrar</span>
 			</a>
-			<a href="/campanhas/nova" aria-label="Nova campanha" class={ classesDoBotao(varPrimaria, tamPequeno, "") }>
-				@icone("Plus", "size-4 sm:mr-1")
+			<a href="/campanhas/nova" aria-label="Nova campanha" class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "") }>
+				@ui.Icon("Plus", "size-4 sm:mr-1")
 				<span class="hidden sm:inline">Nova</span>
 			</a>
 		</div>
@@ -225,23 +226,23 @@ templ acoesDaCampanha(c campanhaCartao) {
 	<div class="flex flex-wrap items-center gap-2 pt-1">
 		<a
 			href={ templ.SafeURL("/campanhas/" + strconv.FormatInt(c.ID, 10)) }
-			class={ classesDoBotao(seAoVivo(c, varSecundaria, varPrimaria), tamGrande, "") }
+			class={ ui.ButtonClasses(seAoVivo(c, ui.VariantSecondary, ui.VariantPrimary), ui.SizeLarge, "") }
 		>
 			Abrir campanha
 		</a>
 		if c.AoVivo {
 			<a
 				href={ templ.SafeURL(rotaDaMesa(c.ID, c.SessaoID)) }
-				class={ classesDoBotao(varPrimaria, tamGrande, "") }
+				class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }
 			>
 				Continuar a sessão
-				@icone("ChevronRight", "ml-1 size-4")
+				@ui.Icon("ChevronRight", "ml-1 size-4")
 			</a>
 		}
 	</div>
 }
 
-func seAoVivo(c campanhaCartao, aoVivo, parado variante) variante {
+func seAoVivo(c campanhaCartao, aoVivo, parado variante) ui.Variant {
 	if c.AoVivo {
 		return aoVivo
 	}
@@ -335,7 +336,7 @@ templ buscaSemResultado(v campanhasView) {
 	<div class="flex flex-1 items-center justify-center p-8">
 		<div class="max-w-md space-y-3 text-center">
 			<p class="text-sm text-muted-foreground">Nenhuma campanha combina com o que você buscou.</p>
-			@botao(varSecundaria, tamPequeno, "", templ.Attributes{
+			@ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{
 				"type":          "button",
 				"data-on:click": "$busca = ''; $papel = 'todas'; @get('/campanhas')",
 			}) {

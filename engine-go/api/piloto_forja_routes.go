@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/starfederation/datastar-go/datastar"
+	"t20engine/web/ui"
 )
 
 // AS ROTAS DA FORJA (ALE-272, fatia 9).
@@ -90,11 +91,11 @@ func aForjaDoFormulario(r *http.Request) (forgeAnswers, error) {
 }
 
 func (s *Server) escreveAForja(w http.ResponseWriter, r *http.Request, status int, v forgeView) {
-	s.escrevePagina(w, r, status, paginaPiloto{
+	s.escrevePagina(w, r, status, ui.Page{
 		Titulo: "Forja · Tormenta 20",
 		// `cascaDensa`: o cabeçalho compacto com o "‹ Voltar", como a folha em
 		// branco da campanha. Sem ele a folha nasce sem saída visível.
-		Forma:        cascaDensa,
+		Forma:        ui.ShellDense,
 		Voltar:       "/personagens",
 		VoltarRotulo: "Personagens",
 	}, forgeSheet(v))

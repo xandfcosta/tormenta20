@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
+	"t20engine/web/ui"
 )
 
 // As rotas do HUB (ALE-231). Atrás de `requireAuth`: o menu principal é de quem
@@ -22,9 +23,9 @@ func (s *Server) handleHub(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo: "Tormenta 20",
-		Forma:  cascaTitulo,
+		Forma:  ui.ShellTitled,
 		Kicker: "— Grimório de Arton —",
 		// Sem `data-voltar`: o Hub é a cena raiz e o Esc não tem para onde ir.
 	}, hub(view))

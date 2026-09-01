@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/web/ui"
+
 // A FOLHA DE ESPECIFICAÇÃO do sistema de desenho (ALE-251, portada da ALE-173).
 //
 // Duas regras sustentam esta página, e as duas existem contra o mesmo
@@ -132,7 +134,7 @@ templ secaoDaFolha(id, titulo string) {
 // especificação.
 templ blocoDaFolha(titulo, nota string) {
 	<div class="space-y-2">
-		@rotuloDeSecao("muted", "") {
+		@ui.SectionLabel("muted", "") {
 			{ titulo }
 		}
 		if nota != "" {
@@ -385,19 +387,19 @@ templ secaoDePecas() {
 	@secaoDaFolha("pecas", "Peças") {
 		@blocoDaFolha("Botão — variantes", "As três do servidor são as que as cenas migradas pediram; as outras não faltam por descuido. E o `secondary` NÃO é par: o do servidor mede 2px a mais porque tem borda, e o da SPA não tem. Olhando quem o usa — Cancelar, Fechar, Convidar — ele está fazendo o papel do `outline` da SPA. O errado é o NOME, não a borda (ALE-250).") {
 			@cabecalhoDasColunas()
-			@parDePecas("default", botaoDaSpa("default", "default", "Abrir"), botaoTemplParaFolha(varPrimaria))
-			@parDePecas("secondary", botaoDaSpa("secondary", "default", "Abrir"), botaoTemplParaFolha(varSecundaria))
-			@parDePecas("destructive", botaoDaSpa("destructive", "default", "Abrir"), botaoTemplParaFolha(varDestrutiva))
+			@parDePecas("default", botaoDaSpa("default", "default", "Abrir"), botaoTemplParaFolha(ui.VariantPrimary))
+			@parDePecas("secondary", botaoDaSpa("secondary", "default", "Abrir"), botaoTemplParaFolha(ui.VariantSecondary))
+			@parDePecas("destructive", botaoDaSpa("destructive", "default", "Abrir"), botaoTemplParaFolha(ui.VariantDestructive))
 			@parDePecas("outline", botaoDaSpa("outline", "default", "Abrir"), nil)
 			@parDePecas("ghost", botaoDaSpa("ghost", "default", "Abrir"), nil)
 			@parDePecas("link", botaoDaSpa("link", "default", "Abrir"), nil)
 		}
 		@blocoDaFolha("Botão — tamanhos", "Paridade completa, e agora medida: 24, 32, 36 e 40 nos dois lados. Vale dizer que a primeira versão desta seção parecia mostrar o contrário — ela não passava o tamanho ao elemento da SPA, e comparava um xs do servidor com um default da SPA. Instrumento que mente é pior que instrumento nenhum, porque produz confiança em vez de dúvida.") {
 			@cabecalhoDasColunas()
-			@parDePecas("xs", botaoDaSpa("default", "xs", "xs"), botaoTemplNoTamanho(tamMinimo, "xs"))
-			@parDePecas("sm", botaoDaSpa("default", "sm", "sm"), botaoTemplNoTamanho(tamPequeno, "sm"))
-			@parDePecas("default", botaoDaSpa("default", "default", "default"), botaoTemplNoTamanho(tamPadrao, "default"))
-			@parDePecas("lg", botaoDaSpa("default", "lg", "lg"), botaoTemplNoTamanho(tamGrande, "lg"))
+			@parDePecas("xs", botaoDaSpa("default", "xs", "xs"), botaoTemplNoTamanho(ui.SizeTiny, "xs"))
+			@parDePecas("sm", botaoDaSpa("default", "sm", "sm"), botaoTemplNoTamanho(ui.SizeSmall, "sm"))
+			@parDePecas("default", botaoDaSpa("default", "default", "default"), botaoTemplNoTamanho(ui.SizeDefault, "default"))
+			@parDePecas("lg", botaoDaSpa("default", "lg", "lg"), botaoTemplNoTamanho(ui.SizeLarge, "lg"))
 		}
 		@blocoDaFolha("Chip", "O `Badge` tem seis variantes e quatro usos; a cena tem 17 chips escritos à mão (ALE-173, P6). Nenhum deles existe do lado do servidor ainda — e a coluna vazia é o registro disso.") {
 			@cabecalhoDasColunas()
@@ -431,20 +433,20 @@ templ barraDaSpa(tipo, rotulo, atual, max string) {
 
 // Os embrulhos do lado templ: a peça REAL, com o texto da amostra.
 templ botaoTemplParaFolha(v variante) {
-	@botao(v, tamPadrao, "", templ.Attributes{"type": "button"}) {
+	@ui.Button(v, ui.SizeDefault, "", templ.Attributes{"type": "button"}) {
 		Abrir
 	}
 }
 
 templ botaoTemplNoTamanho(t tamanho, texto string) {
-	@botao(varPrimaria, t, "", templ.Attributes{"type": "button"}) {
+	@ui.Button(ui.VariantPrimary, t, "", templ.Attributes{"type": "button"}) {
 		{ texto }
 	}
 }
 
 templ campoTemplParaFolha() {
 	<span class="w-full min-w-0">
-		@campoDeTexto(campo{Nome: "amostra-campo", Label: "Nome do combatente"})
+		@ui.TextField(ui.Field{Nome: "amostra-campo", Label: "Nome do combatente"})
 	</span>
 }
 
@@ -453,7 +455,7 @@ templ campoTemplParaFolha() {
 templ secaoDeFoco() {
 	@secaoDaFolha("foco", "Foco") {
 		@blocoDaFolha("Uma receita só", "Navegue com Tab: os quatro recebem o MESMO realce, e nenhum deles pede por ele. A regra é global e mora no index.css — era isso que faltava, porque um utilitário por peça nunca alcança quem não pediu, e 80 dos 84 botões do app não pediam (ALE-173, P4).") {
-			@botao(varSecundaria, tamPadrao, "", templ.Attributes{"type": "button"}) {
+			@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{"type": "button"}) {
 				botão do kit
 			}
 			<button type="button" class="rounded-none border border-grimorio-iron px-3 py-1.5 text-sm">
@@ -490,7 +492,7 @@ templ secaoDeMovimento() {
 				</div>
 				<div class="flex flex-wrap gap-2">
 					for _, d := range []amostraSimples{{Nome: "ferir", Uso: "Ferir"}, {Nome: "curar", Uso: "Curar"}, {Nome: "vez", Uso: "Passar a vez"}} {
-						@botao(varSecundaria, tamPequeno, "", templ.Attributes{"type": "button", "data-disparar": d.Nome}) {
+						@ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{"type": "button", "data-disparar": d.Nome}) {
 							{ d.Uso }
 						}
 					}

@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O ELENCO DA CAMPANHA (ALE-269, superfície 6a — os jogadores).
 //
@@ -98,7 +101,7 @@ templ aFichaDoElenco(v mesaView, m mesaMembro) {
 				data-on:click={ fechaAFichaDoElenco(m) }
 				class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				@icone("X", "size-4")
+				@ui.Icon("X", "size-4")
 			</button>
 		</div>
 		if m.Presenca != nil {
@@ -129,7 +132,7 @@ templ aFichaDoElenco(v mesaView, m mesaMembro) {
 					data-on:click={ fechaAFichaDoElenco(m) + " " + poeNaFila(v, m) }
 					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>
-					@icone("Swords", "size-4")
+					@ui.Icon("Swords", "size-4")
 					Pôr na iniciativa
 				</button>
 			}

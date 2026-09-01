@@ -1,6 +1,9 @@
 package api
 
-import "strconv"
+import (
+	"strconv"
+	"t20engine/web/ui"
+)
 
 // O painel de PODERES desenhado (ALE-272, fatia 8).
 //
@@ -136,7 +139,7 @@ templ powerRowItem(v fichaView, linha powerRow) {
 				class="flex min-w-0 flex-1 basis-40 flex-col gap-0.5 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				<span class="flex flex-wrap items-center gap-1.5">
-					@icone(linha.Glyph, "size-3.5 shrink-0 text-muted-foreground")
+					@ui.Icon(linha.Glyph, "size-3.5 shrink-0 text-muted-foreground")
 					<span class="text-xs font-semibold text-foreground">{ linha.Name }</span>
 					<span class="rounded-none bg-muted px-1 text-3xs text-muted-foreground">{ linha.Source }</span>
 				</span>
@@ -175,9 +178,9 @@ templ powerActionSlot(v fichaView, linha powerRow) {
 				disabled?={ !linha.Can }
 				title={ linha.Why }
 				data-on:click={ oPostDaFicha(v, "/poderes/usa/"+linha.Command) }
-				class={ classesDoBotao(varSecundaria, tamPequeno, "gap-1") }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 			>
-				@icone("Zap", "size-3")
+				@ui.Icon("Zap", "size-3")
 				Usar
 			</button>
 		}
@@ -194,7 +197,7 @@ templ stanceButton(v fichaView, linha powerRow) {
 			type="button"
 			aria-label={ "Encerrar " + linha.Name }
 			data-on:click={ oPostDaFicha(v, "/efeitos/postura/"+linha.Stance.Flag) }
-			class={ classesDoBotao(varDestrutiva, tamPequeno, "") }
+			class={ ui.ButtonClasses(ui.VariantDestructive, ui.SizeSmall, "") }
 		>ATIVA · Encerrar</button>
 	} else if linha.Stance.MaxSteps > 0 {
 		<button
@@ -204,9 +207,9 @@ templ stanceButton(v fichaView, linha powerRow) {
 			disabled?={ !linha.Can }
 			title={ linha.Why }
 			data-on:click={ "$poderdegraus = 0; $detalhe = 'postura-" + linha.Stance.Flag + "'" }
-			class={ classesDoBotao(varSecundaria, tamPequeno, "gap-1") }
+			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
-			@icone("Flame", "size-3")
+			@ui.Icon("Flame", "size-3")
 			Ativar
 		</button>
 	} else {
@@ -216,9 +219,9 @@ templ stanceButton(v fichaView, linha powerRow) {
 			disabled?={ !linha.Can }
 			title={ linha.Why }
 			data-on:click={ "$poderdegraus = 0; " + oPostDaFicha(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") }
-			class={ classesDoBotao(varSecundaria, tamPequeno, "gap-1") }
+			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
-			@icone("Flame", "size-3")
+			@ui.Icon("Flame", "size-3")
 			{ "Ativar " + strconv.Itoa(linha.Stance.BasePm) + " PM" }
 		</button>
 	}
@@ -236,14 +239,14 @@ templ stanceStepperDialog(v fichaView, linha powerRow) {
 				type="button"
 				aria-label="Menos um degrau"
 				data-on:click="$poderdegraus = Math.max(0, $poderdegraus - 1)"
-				class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>−</button>
 			<span class="font-mono text-lg text-foreground" data-text="$poderdegraus"></span>
 			<button
 				type="button"
 				aria-label="Mais um degrau"
 				data-on:click={ "$poderdegraus = Math.min(" + strconv.Itoa(linha.Stance.MaxSteps) + ", $poderdegraus + 1)" }
-				class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>+</button>
 		</div>
 		<p class="text-center text-xs text-muted-foreground">
@@ -253,7 +256,7 @@ templ stanceStepperDialog(v fichaView, linha powerRow) {
 			type="button"
 			aria-label={ "Confirmar " + linha.Name }
 			data-on:click={ oPostDaFicha(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") + "; $detalhe = ''" }
-			class={ classesDoBotao(varPrimaria, tamPadrao, "w-full") }
+			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Ativar</button>
 	}
 }

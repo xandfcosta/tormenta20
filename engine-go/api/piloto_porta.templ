@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/web/ui"
+
 // A PORTA desenhada (ALE-229): entrar, criar conta e redefinir senha.
 //
 // A decisão que governa este arquivo: aqui NÃO se usa sinal do Datastar.
@@ -22,7 +24,7 @@ package api
 // tela-título, com o rodapé embaixo e o aviso legal por último.
 templ portaEmVolta(titulo, subtitulo string, rodape templ.Component) {
 	<div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
-		@molduraDePainel("space-y-5") {
+		@ui.PanelFrame("space-y-5") {
 			<div class="space-y-1.5">
 				<h2 class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold">{ titulo }</h2>
 				if subtitulo != "" {
@@ -60,16 +62,16 @@ templ paginaEntrar(v entrarView) {
 			if v.Destino != "" {
 				<input type="hidden" name="destino" value={ v.Destino }/>
 			}
-			@campoDeTexto(campo{
+			@ui.TextField(ui.Field{
 				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
 				Valor: v.Email, Erros: v.Erros["email"], Obrigatorio: true,
 			})
-			@campoDeTexto(campo{
+			@ui.TextField(ui.Field{
 				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "current-password",
 				Erros: v.Erros["senha"], Obrigatorio: true,
 			})
 			@avisoDoFormulario(v.Aviso)
-			@botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}) {
+			@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
 				Entrar
 			}
 		</form>
@@ -88,22 +90,22 @@ templ paginaCriarConta(v criarContaView) {
 	@portaEmVolta("Criar conta", "Junte-se à mesa.", rodapeComEntrar()) {
 		<form method="post" action="/criar-conta" class="space-y-4">
 			<input type="hidden" name="convite" value={ v.Convite }/>
-			@campoDeTexto(campo{
+			@ui.TextField(ui.Field{
 				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
 				Valor: v.Email, Erros: v.Erros["email"], Obrigatorio: true,
 			})
-			@campoDeTexto(campo{
+			@ui.TextField(ui.Field{
 				Nome: "nome", Label: "Nome (opcional)", Autocomplete: "name",
 				Valor: v.Nome, Erros: v.Erros["nome"], TamanhoMaximo: 80,
 			})
-			@campoDeTexto(campo{
+			@ui.TextField(ui.Field{
 				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "new-password",
 				Dica: "Ao menos 8 caracteres.", Erros: v.Erros["senha"],
 				Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
 			})
 			@confirmacaoDeSenha(v.Erros["confirmar"])
 			@avisoDoFormulario(v.Aviso)
-			@botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}) {
+			@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
 				Criar conta
 			}
 		</form>
@@ -122,14 +124,14 @@ templ paginaRedefinir(v redefinirView) {
 		if v.LinkVale {
 			<form method="post" action="/redefinir-senha" class="space-y-4">
 				<input type="hidden" name="token" value={ v.Token }/>
-				@campoDeTexto(campo{
+				@ui.TextField(ui.Field{
 					Nome: "senha", Label: "Nova senha", Tipo: "password", Autocomplete: "new-password",
 					Dica: "Ao menos 8 caracteres.", Erros: v.Erros["senha"],
 					Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
 				})
 				@confirmacaoDeSenha(v.Erros["confirmar"])
 				@avisoDoFormulario(v.Aviso)
-				@botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}) {
+				@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
 					Salvar nova senha
 				}
 			</form>

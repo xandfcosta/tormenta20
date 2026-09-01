@@ -16,7 +16,7 @@ import (
 // guardas de contraste — porque parágrafo vazio não tem texto para medir.
 //
 // Medido: o `secaoDoBloco` do bestiário punha um `<h4>` dentro do
-// `@rotuloDeSecao`. Resultado na página — o `h4` virou filho da `<section>`,
+// `@ui.SectionLabel`. Resultado na página — o `h4` virou filho da `<section>`,
 // `text-transform: none`, e VINTE E QUATRO parágrafos vazios na árvore de
 // acessibilidade.
 //
@@ -29,7 +29,7 @@ func TestNadaDeConteudoDeFluxoDentroDeRotuloDeSecao(t *testing.T) {
 		t.Fatalf("listar: %v", err)
 	}
 	// O bloco do componente e as duas linhas seguintes: é onde o filho entra.
-	abre := regexp.MustCompile(`@rotuloDeSecao\([^)]*\)\s*\{`)
+	abre := regexp.MustCompile(`@ui.SectionLabel\([^)]*\)\s*\{`)
 	fluxo := regexp.MustCompile(`<(h[1-6]|div|p|ul|ol|dl|section|article|table|form|fieldset)[\s>]`)
 
 	var visitados int
@@ -61,7 +61,7 @@ func TestNadaDeConteudoDeFluxoDentroDeRotuloDeSecao(t *testing.T) {
 					break
 				}
 				if m := fluxo.FindString(linhas[j]); m != "" {
-					t.Errorf("%s:%d — `%s` dentro de @rotuloDeSecao. O `<p>` dele não aceita "+
+					t.Errorf("%s:%d — `%s` dentro de @ui.SectionLabel. O `<p>` dele não aceita "+
 						"conteúdo de fluxo: o navegador expulsa o elemento e a classe fica "+
 						"num parágrafo vazio. Use `classesDoRotulo` no próprio elemento.",
 						nome, j+1, strings.TrimSpace(m))
@@ -72,10 +72,10 @@ func TestNadaDeConteudoDeFluxoDentroDeRotuloDeSecao(t *testing.T) {
 	// CONTROLE: sem isto, um regex que deixou de casar passaria como "nenhuma
 	// violação" — o guarda diria verde por não ter visitado nada.
 	if visitados == 0 {
-		t.Fatal("o guarda não achou nenhum uso de @rotuloDeSecao: o padrão parou de casar " +
+		t.Fatal("o guarda não achou nenhum uso de @ui.SectionLabel: o padrão parou de casar " +
 			"e o verde não significa nada")
 	}
-	t.Logf("%d usos de @rotuloDeSecao visitados", visitados)
+	t.Logf("%d usos de @ui.SectionLabel visitados", visitados)
 }
 
 // semComentario corta o que vier depois de `//` em cada linha. Grosseiro de

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"t20engine/tabuleiro"
+	"t20engine/web/ui"
 )
 
 // O TABULEIRO desenhado (ALE-263) — a fatia que se OLHA.
@@ -53,7 +54,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 		// possível — o jogador resolve uma esperando e a outra cutucando o
 		// mestre. O nome do lugar não aparece porque o servidor já o apagou.
 		<section aria-label="Cortina" class="flex flex-col items-center justify-center gap-2 border border-dashed border-grimorio-gold/40 p-6 text-center">
-			@icone("Theater", "size-7 text-grimorio-gold/70")
+			@ui.Icon("Theater", "size-7 text-grimorio-gold/70")
 			<p class="text-sm text-muted-foreground">O mestre está montando a cena.</p>
 		</section>
 	} else {
@@ -148,7 +149,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						// `piloto_mesa_terreno_desenho.go` para o porquê dos
 						// cantos e de o ícone dizer a REGRA da espécie.
 						<div aria-hidden="true" class={ aClasseDaCasa(q.Especie) } style={ posicaoNoPlano(q.X, q.Y, 1) }>
-							@icone(oDesenhoDe(tabuleiro.EspecieDeTerreno(q.Especie)).Icone, "terreno-marca")
+							@ui.Icon(oDesenhoDe(tabuleiro.EspecieDeTerreno(q.Especie)).Icone, "terreno-marca")
 						</div>
 					}
 					// A TRILHA vem antes das peças e depois do chão: ela é rastro,
@@ -334,7 +335,7 @@ templ aAbaDoTabuleiro(aba abaDoTabuleiro) {
 	if aba.Ativa {
 		<h2 class="tabuleiro-aba tabuleiro-aba-ativa" aria-current="true">
 			if aba.Cortina {
-				@icone("Theater", "size-3.5 shrink-0")
+				@ui.Icon("Theater", "size-3.5 shrink-0")
 			}
 			{ aba.Nome }
 		</h2>
@@ -350,7 +351,7 @@ templ aAbaDoTabuleiro(aba abaDoTabuleiro) {
 			class="tabuleiro-aba"
 		>
 			if aba.Cortina {
-				@icone("Theater", "size-3.5 shrink-0")
+				@ui.Icon("Theater", "size-3.5 shrink-0")
 			}
 			{ aba.Nome }
 		</button>
@@ -375,7 +376,7 @@ templ mostrarEstaAMesa(aba abaDoTabuleiro) {
 		data-on:click={ aba.MostraAMesa }
 		class="tabuleiro-aba-mostrar"
 	>
-		@icone("Users2", "size-3.5")
+		@ui.Icon("Users2", "size-3.5")
 	</button>
 }
 
@@ -413,7 +414,7 @@ templ osVerbosDaCena(v tabuleiroView) {
 				data-on:click="document.getElementById('abrir-tabuleiro').showModal()"
 				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				@icone("LayoutGrid", "size-4")
+				@ui.Icon("LayoutGrid", "size-4")
 			</button>
 			if len(v.Acervo) > 0 {
 				@botaoDoAcervo(v)
@@ -429,7 +430,7 @@ templ osVerbosDaCena(v tabuleiroView) {
 				data-on:click="document.getElementById('encerrar-tabuleiro').showModal()"
 				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				@icone("X", "size-4")
+				@ui.Icon("X", "size-4")
 			</button>
 		}
 	</div>
@@ -455,7 +456,7 @@ templ osAvisosDoTabuleiro(v tabuleiroView) {
 				// que trocou sozinho ainda deixaria a pessoa procurando o que
 				// aconteceu.
 				<p role="status" class="tabuleiro-aviso">
-					@icone("Users2", "size-4 shrink-0")
+					@ui.Icon("Users2", "size-4 shrink-0")
 					{ "O mestre trouxe a mesa para " + v.Puxado.Cena + "." }
 					if v.Puxado.Volta != "" {
 						<button
@@ -480,7 +481,7 @@ templ osAvisosDoTabuleiro(v tabuleiroView) {
 			}
 			if v.AvisoDaCortina {
 				<p role="status" class="tabuleiro-aviso">
-					@icone("Theater", "size-4 shrink-0")
+					@ui.Icon("Theater", "size-4 shrink-0")
 					A cortina está fechada: a mesa não vê esta cena.
 					<button
 						type="button"
@@ -491,7 +492,7 @@ templ osAvisosDoTabuleiro(v tabuleiroView) {
 			}
 			if v.Lente {
 				<p role="status" class="tabuleiro-aviso">
-					@icone("Eye", "size-4 shrink-0")
+					@ui.Icon("Eye", "size-4 shrink-0")
 					{ aFraseDaLente(v.PecasEscondidas) }
 					<button
 						type="button"
@@ -660,7 +661,7 @@ templ aLeituraDaRegua() {
 		data-show={ "$reguatexto !== '' && $ferramenta === '" + FerramentaDaRegua + "'" }
 		class="tabuleiro-ajudante gap-2"
 	>
-		@icone("Ruler", "size-4 text-grimorio-gold")
+		@ui.Icon("Ruler", "size-4 text-grimorio-gold")
 		<span data-text="$reguatexto" class="font-mono tabular-nums text-grimorio-gold"></span>
 		<button
 			type="button"
@@ -668,7 +669,7 @@ templ aLeituraDaRegua() {
 			data-on:click={ guardaARegua }
 			class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("X", "size-4")
+			@ui.Icon("X", "size-4")
 		</button>
 	</p>
 }
@@ -730,7 +731,7 @@ templ aBarraDoGabarito(v tabuleiroView) {
 			data-on:click={ guardaOGabarito }
 			class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("X", "size-4")
+			@ui.Icon("X", "size-4")
 		</button>
 	</div>
 }
@@ -801,7 +802,7 @@ templ oMovimentoProposto(v tabuleiroView) {
 					data-on:click={ comandoDoMovimento(v, "desfazer-parada") }
 					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>
-					@icone("CornerUpLeft", "size-4")
+					@ui.Icon("CornerUpLeft", "size-4")
 					Desfazer parada
 				</button>
 			}
@@ -1080,9 +1081,9 @@ templ acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) {
 			class="inline-flex size-6 items-center justify-center rounded-sm text-xs outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>
 			if m.Escondido {
-				@icone("Eye", "size-4")
+				@ui.Icon("Eye", "size-4")
 			} else {
-				@icone("EyeOff", "size-4")
+				@ui.Icon("EyeOff", "size-4")
 			}
 		</button>
 		for _, cor := range tabuleiro.CoresDeMarcador {
@@ -1103,7 +1104,7 @@ templ acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) {
 			data-on:click={ escolheOMarcador("") + "; " + comandoDoMarcador(v, m.ID, "remover") }
 			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-muted-foreground outline-none hover:border hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>
-			@icone("X", "size-4")
+			@ui.Icon("X", "size-4")
 		</button>
 	</div>
 }
@@ -1218,7 +1219,7 @@ templ botaoDoAcervo(v tabuleiroView) {
 		data-on:click="document.getElementById('acervo-de-lugares').showModal()"
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
-		@icone("Library", "size-4")
+		@ui.Icon("Library", "size-4")
 		{ fmt.Sprintf("Lugares da campanha · %d", len(v.Acervo)) }
 	</button>
 }
@@ -1258,7 +1259,7 @@ templ oAcervoDeLugares(v tabuleiroView) {
 								// papercut — com 148 lugares, o que está na mesa
 								// agora aparecia no meio dos outros sem nada que o
 								// distinguisse.
-								@icone("LayoutGrid", "mr-1 inline size-3")
+								@ui.Icon("LayoutGrid", "mr-1 inline size-3")
 								{ "nesta mesa agora · " + pecasEmPortugues(l.Pecas) }
 							} else {
 								{ fmt.Sprintf("%s · %s", pecasEmPortugues(l.Pecas), l.Quando) }
@@ -1301,7 +1302,7 @@ templ oAcervoDeLugares(v tabuleiroView) {
 							data-on:click={ comandoDoLugar(v, l.ID, "remover") }
 							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>
-							@icone("Trash2", "size-4")
+							@ui.Icon("Trash2", "size-4")
 						</button>
 					}
 				</li>
@@ -1355,9 +1356,9 @@ templ oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) {
 			class="tabuleiro-peca-verbo"
 		>
 			if p.Oculta {
-				@icone("EyeOff", "size-4")
+				@ui.Icon("EyeOff", "size-4")
 			} else {
-				@icone("Eye", "size-4")
+				@ui.Icon("Eye", "size-4")
 			}
 		</button>
 		<button
@@ -1367,7 +1368,7 @@ templ oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) {
 			data-on:click={ comandoDaPeca(v, p.ID, "duplicar") }
 			class="tabuleiro-peca-verbo"
 		>
-			@icone("Copy", "size-4")
+			@ui.Icon("Copy", "size-4")
 		</button>
 		<button
 			type="button"
@@ -1376,7 +1377,7 @@ templ oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) {
 			data-on:click={ abreAEdicaoDaPeca(p) }
 			class="tabuleiro-peca-verbo"
 		>
-			@icone("Pencil", "size-4")
+			@ui.Icon("Pencil", "size-4")
 		</button>
 		// VOLTAR só existe quando há para onde, e a frase diz a casa: "voltar" sem
 		// destino é um botão que promete desfazer algo que ninguém lembra.
@@ -1388,7 +1389,7 @@ templ oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) {
 				data-on:click={ comandoDaPeca(v, p.ID, "voltar") }
 				class="tabuleiro-peca-verbo"
 			>
-				@icone("CornerUpLeft", "size-4")
+				@ui.Icon("CornerUpLeft", "size-4")
 			</button>
 		}
 		<span aria-hidden="true" class="tabuleiro-peca-vinco"></span>
@@ -1402,7 +1403,7 @@ templ oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) {
 			data-on:click={ comandoDaPeca(v, p.ID, "remover") }
 			class="tabuleiro-peca-verbo tabuleiro-peca-verbo-perigo"
 		>
-			@icone("Trash2", "size-4")
+			@ui.Icon("Trash2", "size-4")
 		</button>
 		<button
 			type="button"
@@ -1410,7 +1411,7 @@ templ oMenuDaPeca(v tabuleiroView, p pecaDoTabuleiro) {
 			data-on:click={ fechaOMenuDaPeca }
 			class="tabuleiro-peca-verbo"
 		>
-			@icone("X", "size-4")
+			@ui.Icon("X", "size-4")
 		</button>
 	</div>
 }
@@ -1520,7 +1521,7 @@ templ aFerramentaNoTrilho(f ferramentaDoMapa) {
 		data-on:click={ escolheAFerramenta(f.ID) }
 		class="tabuleiro-ferramenta"
 	>
-		@icone(f.Icone, "size-4 "+f.Matiz)
+		@ui.Icon(f.Icone, "size-4 "+f.Matiz)
 		<span aria-hidden="true" class="tabuleiro-ferramenta-tecla">{ f.Atalho }</span>
 	</button>
 }
@@ -1550,7 +1551,7 @@ templ oEnquadramentoDoPlano(v tabuleiroView) {
 			data-on:click={ ampliaPeloMeioDaCena(oPasso(-passoDoZoom)) }
 			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 		>
-			@icone("Minus", "size-4")
+			@ui.Icon("Minus", "size-4")
 		</button>
 		// O NÚMERO em quadrados por tela é mais útil que "120%": a pergunta do
 		// mestre é "cabe o deslocamento inteiro?" (6 quadrados, p106), e uma
@@ -1570,7 +1571,7 @@ templ oEnquadramentoDoPlano(v tabuleiroView) {
 			data-on:click={ ampliaPeloMeioDaCena(oPasso(passoDoZoom)) }
 			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 		>
-			@icone("Plus", "size-4")
+			@ui.Icon("Plus", "size-4")
 		</button>
 	</span>
 }
@@ -1593,7 +1594,7 @@ templ oCentralizador(v tabuleiroView) {
 		data-on:click={ centralizaNasPecas(v) }
 		class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
-		@icone("Crosshair", "size-4")
+		@ui.Icon("Crosshair", "size-4")
 	</button>
 }
 
@@ -1624,9 +1625,9 @@ templ botaoDaLente(v tabuleiroView) {
 			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.Lente) }
 	>
 		if v.Lente {
-			@icone("EyeOff", "size-5")
+			@ui.Icon("EyeOff", "size-5")
 		} else {
-			@icone("Eye", "size-5")
+			@ui.Icon("Eye", "size-5")
 		}
 	</button>
 }
@@ -1658,7 +1659,7 @@ templ botaoDaCortina(v tabuleiroView) {
 			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.AvisoDaCortina),
 			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.AvisoDaCortina) }
 	>
-			@icone("Theater", "size-5")
+			@ui.Icon("Theater", "size-5")
 		</button>
 }
 
@@ -1879,7 +1880,7 @@ templ mesaAcervoDeLugares(v mesaView) {
 // que é justamente o que o dedo já responde.
 templ aBarraDoGrupo(v tabuleiroView) {
 	<p role="status" data-show={ haGrupoMarcado } class="tabuleiro-ajudante gap-2">
-		@icone("LayoutGrid", "size-4 text-grimorio-gold")
+		@ui.Icon("LayoutGrid", "size-4 text-grimorio-gold")
 		<span data-text={ aFraseDoGrupo } class="text-grimorio-gold"></span>
 		<button
 			type="button"
@@ -1887,7 +1888,7 @@ templ aBarraDoGrupo(v tabuleiroView) {
 			data-on:click={ largaOGrupo }
 			class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("X", "size-4")
+			@ui.Icon("X", "size-4")
 		</button>
 	</p>
 }
@@ -1960,7 +1961,7 @@ templ aPreviaDoMovimento(v tabuleiroView) {
 // velho achando que é o novo.
 templ aLeituraDaPrevia() {
 	<p role="status" data-show="$previatexto !== ''" class="tabuleiro-ajudante gap-2">
-		@icone("MapPin", "size-4 text-grimorio-gold")
+		@ui.Icon("MapPin", "size-4 text-grimorio-gold")
 		<span data-text="$previatexto" class="font-mono tabular-nums text-grimorio-gold"></span>
 	</p>
 }

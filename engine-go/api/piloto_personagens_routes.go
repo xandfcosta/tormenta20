@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
+	"t20engine/web/ui"
 )
 
 // A rota da cena de PERSONAGENS (ALE-239). Mesma forma da de campanhas: uma
@@ -42,10 +43,10 @@ func (s *Server) handlePersonagens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo: "Personagens · Tormenta 20",
 		// `cascaNua`: a cena desenha o próprio cabeçalho, que carrega a busca.
-		Forma: cascaNua,
+		Forma: ui.ShellBare,
 	}, cenaDePersonagens(view))
 }
 

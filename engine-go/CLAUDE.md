@@ -5,7 +5,7 @@ valem; o que está aqui estende ou sobrepõe.
 
 `engine-go` é o app inteiro: a API HTTP na :3001, o motor de regras, e as CENAS
 em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
-`api/piloto/src`. Um processo serve tudo.
+`api/piloto/src`, e o kit de apresentação em `web/ui`. Um processo serve tudo.
 
 Ele já foi só o backend, com uma SPA em SolidJS ao lado e o mesmo motor
 compilado para WASM rodando no navegador. Os dois saíram na ALE-272: não há
@@ -619,18 +619,67 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   o HTML antigo. Isto já produziu uma medição de layout inteira contra a página
   velha — 74px de deslocamento "que não sumiam" depois do conserto, porque o
   conserto não estava no ar.
-- **Classe nova exige `scripts/build-piloto-css.sh`.** O scanner do Tailwind lê
-  `../*.templ`, e só ele — por isso `classesDoBotao` mora no `.templ` e não no
-  `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
-  o elemento aparece sem estilo em vez de dar erro.
+- **Classe nova exige `scripts/build-piloto-css.sh`.** Classe que não passou pelo
+  scanner simplesmente não existe na folha, e o elemento aparece sem estilo em
+  vez de dar erro.
+  **Aqui morava "o scanner lê `../*.templ`, e só ele", e é falso** — medido na
+  ALE-278: tirar os DOIS `@source` do `piloto.src.css` não muda um byte da folha
+  compilada (105.328 com, 105.328 sem), porque a detecção automática do Tailwind
+  v4 varre da pasta da folha até a raiz do projeto respeitando o `.gitignore`. As
+  linhas ficaram como declaração de intenção; quem depurar "classe sumiu" não
+  deve perder tempo nelas. O suspeito é o TOKEN que não existe na paleta.
 - **E TOKEN inventado tem o mesmo fim, com o script rodado.** `text-grimorio-ink`
   parece irmão de `text-grimorio-gold` e não é: `grimorio-ink` não está na
   paleta, o Tailwind não emite regra para o que não conhece, e o elemento fica
   com a cor HERDADA — o crachá de contagem dos Efeitos saiu dourado sobre
   dourado, 1,53:1, e atravessou uma fatia inteira (ALE-272). O
-  `TestTodaTintaDaCasaExisteNaFolha` varre `piloto_*.templ` e `piloto_*.go` e
-  cobra cada token da casa contra a folha compilada. A paleta mora no
-  `@theme` do `api/piloto/src/index.css`; conferir lá antes de inventar o nome.
+  `TestTodaTintaDaCasaExisteNaFolha` varre `piloto_*.templ`, `piloto_*.go` e
+  `web/ui/*` e cobra cada token da casa contra a folha compilada. A paleta mora
+  no `@theme` do `api/piloto/src/index.css`; conferir lá antes de inventar o nome.
+  **O `web/ui/*` entrou na ALE-278 e mostra a forma da falha desta família**: o
+  kit mudou de nome de arquivo, o padrão `piloto_*` deixou de casar com ele, e o
+  guarda teria seguido verde medindo as cenas e ignorando o botão, o campo e a
+  casca — os arquivos onde uma tinta errada aparece em TODA tela.
+
+## `web/ui`: o kit de apresentação, e o que ele NÃO pode saber
+
+O botão, o campo, a moldura, o rótulo de seção, a caixa rolável, o ícone e a
+CASCA moram em `web/ui` desde a ALE-278 (fatia 4). Eles são o que 35 famílias de
+arquivo liam do `api`, e sair de lá é o que permite as cenas se dividirem em um
+pacote cada.
+
+**A linha divisória não é tamanho, é DEPENDÊNCIA.** O que ficou no `api` foi o
+agrupamento do LIVRO e dos ELOS — `aPaginaDoLivro`, `pedacoDoTexto`,
+`eloParaOAcervo`, os dois diálogos — porque o `trecho` que eles desenham nasce de
+uma consulta ao catálogo de efeitos e de escolas de magia. Levá-los faria o
+pacote de apresentação importar catálogo, que é o contrário do que a divisão
+existe para conseguir.
+
+**A casca RECEBE o que não pode conhecer.** Duas dependências a prendiam ao
+`api`, e as duas viraram campo de `ui.Page`:
+
+- `Asset func(string) string` — o endereço versionado dos estáticos, que são
+  `go:embed` do `api`;
+- `Overlays []templ.Component` — o livro, o verbete e o buscador, que leem
+  catálogo. A casca só reserva o lugar.
+
+Quem preenche é o `piloto_render.go`, o ÚNICO lugar do projeto que monta uma
+página. Pôr esses campos em cada `ui.Page{…}` seria repetir dezoito vezes o que
+não varia.
+
+**A armadilha desta fatia foi o renomeador, e vale para a próxima.** Exportar um
+símbolo é escrever um nome novo, então o kit inteiro passou para inglês — e um
+`re.sub` por palavra trocou 250 arquivos, inclusive um comentário que virou "o
+diálogo Int". Os nomes do kit são palavras COMUNS em português (`campo`,
+`tamanho`, `variante`, `botao`, `layout`), e elas aparecem em comentário, em
+string, em nome de parâmetro de outro componente e dentro de identificador
+hifenizado — `data-nav-layout` virou `data-nav-ui.Layout`, que o HTML aceita sem
+reclamar e que só custa a navegação por teclado daquela cena, em silêncio.
+
+O que funcionou: um renomeador que pula comentário e string, mais o COMPILADOR
+como rede para o resto — em Go, `ui.Field := …` não é declaração válida, então
+todo parâmetro e toda variável local com nome colidente vira erro. O que o
+compilador não pega é o hifenizado; esse se acha com um `grep` por `-ui.` depois.
 
 ## Datastar: dez armadilhas que não deixam erro para trás
 

@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"t20engine/db"
+	"t20engine/web/ui"
 )
 
 // As rotas da PORTA (ALE-229). Anônimas — são elas que criam a sessão.
@@ -231,11 +232,11 @@ func (s *Server) gravaNovaSenha(r *http.Request, token, senha string) bool {
 func (s *Server) escrevePorta(
 	w http.ResponseWriter, r *http.Request, status int, corpo templ.Component,
 ) {
-	s.escrevePagina(w, r, status, paginaPiloto{
+	s.escrevePagina(w, r, status, ui.Page{
 		// O `<title>` é o do JOGO e não o da tela: a porta é a tela-título, e o
 		// nome dela já está desenhado em Cinzel no meio da página.
 		Titulo: "Tormenta 20",
-		Forma:  cascaTitulo,
+		Forma:  ui.ShellTitled,
 		Kicker: "— Grimório de Arton —",
 		// Sem `Sinais` e sem `Init`: esta superfície não tem estado de cliente
 		// nenhum, e é isso que mantém a senha fora dele. O campo abaixo DIZ isso

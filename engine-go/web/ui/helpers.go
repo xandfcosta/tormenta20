@@ -1,4 +1,4 @@
-package api
+package ui
 
 import (
 	"strconv"
@@ -12,7 +12,7 @@ import (
 // juntar cola pedaços de lista de classes ignorando os vazios, que é o `cn` da
 // SPA sem o `tailwind-merge`: aqui não há sobreposição para resolver, porque
 // quem monta a lista é o componente e não o chamador.
-func juntar(partes ...string) string {
+func Join(partes ...string) string {
 	presentes := make([]string, 0, len(partes))
 	for _, p := range partes {
 		if p != "" {
@@ -22,12 +22,12 @@ func juntar(partes ...string) string {
 	return strings.Join(presentes, " ")
 }
 
-func inteiro(n int) string { return strconv.Itoa(n) }
+func Int(n int) string { return strconv.Itoa(n) }
 
 // tipoOuTexto existe porque `<input>` sem `type` é `text`, mas um atributo
 // vazio no HTML não é: `type=""` faz o navegador cair no padrão por recuperação
 // de erro, e depender de recuperação de erro é depender do navegador.
-func tipoOuTexto(tipo string) string {
+func InputType(tipo string) string {
 	if tipo == "" {
 		return "text"
 	}
