@@ -769,7 +769,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     await expect(page.getByRole('heading', { name: 'Forjar um herói' })).toBeVisible()
 
     await page.keyboard.press('Enter')
-    await expect(page).toHaveURL(/\/characters\/new/)
+    await expect(page).toHaveURL(/\/piloto\/personagens\/nova/)
   })
 
   /**

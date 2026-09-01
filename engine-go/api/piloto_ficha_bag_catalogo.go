@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"strings"
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
@@ -150,4 +151,19 @@ func oItemComoDoMotor(catalogo *itemDoLivro) *engine.CatalogItem {
 		ID: catalogo.ID, Name: catalogo.Name, Category: catalogo.Category,
 		Equip: catalogo.Equip, Slots: catalogo.Slots,
 	}
+}
+
+// bookItemByName é a busca por NOME, sem diferenciar maiúsculas.
+//
+// Existe porque nem toda procedência cita o item por id: a linha "Itens" de uma
+// origem cita "Símbolo sagrado" por escrito (p85), e é o nome que tem de achar
+// a entrada do livro para a linha nascer com o preço e os espaços certos.
+func bookItemByName(nome string) *itemDoLivro {
+	procurado := strings.ToLower(strings.TrimSpace(nome))
+	for i, entrada := range catalogosDoLivro().Itens {
+		if strings.ToLower(entrada.Name) == procurado {
+			return &catalogosDoLivro().Itens[i]
+		}
+	}
+	return nil
 }

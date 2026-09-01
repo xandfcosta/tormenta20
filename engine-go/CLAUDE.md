@@ -537,10 +537,10 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   cobra cada token da casa contra a folha compilada. A paleta mora no
   `@theme` do `frontend/src/index.css`; conferir lá antes de inventar o nome.
 
-## Datastar: oito armadilhas que não deixam erro para trás
+## Datastar: nove armadilhas que não deixam erro para trás
 
 As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na
-ALE-235, e as três últimas na ALE-272; nenhuma delas escreve uma linha no
+ALE-235, e as quatro últimas na ALE-272; nenhuma delas escreve uma linha no
 console — a oitava escreve UMA, e no lugar que ninguém olha. Estão aqui porque o
 sintoma de cada uma aponta para o lugar errado.
 
@@ -692,6 +692,27 @@ redesenhada — que é o que mostra que nada mudou — mais a frase num `role="a
 que importa: o status deixou de distinguir "gravou" de "recusou", então **o que
 os guardas afirmam é a FRASE**, com `aRecusaDaCena`. A API JSON continua com os
 status dela; quem desenha página responde página.
+
+### `contentType: 'form'` valida o formulário ANTES de mandar
+
+`@post(url, {contentType: 'form'})` manda o `<form>` mais próximo em vez dos
+sinais, e é o que permite uma cena servida não ter sinal nenhum: os controles
+já são o estado, e uma segunda cópia deles num `data-signals` só cria a pergunta
+de qual das duas vale. A folha da forja (ALE-272, fatia 9) é assim inteira — o
+`@post` que redesenha o equipamento e o `submit` que forja leem o MESMO
+formulário, pelo mesmo `r.ParseForm()`.
+
+**A armadilha é a linha `if (!form.noValidate && !form.checkValidity())`**, que
+o cliente roda antes de qualquer coisa: com um campo `required` em branco ele
+chama `reportValidity()` e **não manda o pedido**. Na forja isso apareceu como o
+primeiro clique numa carta de classe não fazendo nada além de abrir o balão
+"preencha este campo" — e a pessoa escolhe a linhagem antes de batizar o herói,
+então o balão aparecia sempre.
+
+O conserto não é `novalidate`, que desligaria a validação nativa do `submit`
+também: é **o campo não ser `required` no HTML** e a recusa ser do servidor, que
+já é a autoridade. Vale a regra geral: **num formulário que também é remendado,
+validação nativa de campo brigará com o redesenho.**
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 

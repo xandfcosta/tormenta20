@@ -180,7 +180,7 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
 			@retratoVizinho(anterior, "Anterior")
 			<a
-				href="/characters/new"
+				href="/piloto/personagens/nova"
 				aria-label="Forjar um novo herói"
 				class="flex aspect-[3/4] w-44 items-center justify-center rounded-sm border-2 border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
 			>
@@ -212,7 +212,7 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 				Seu elenco está vazio. O primeiro herói começa aqui.
 			</p>
 		}
-		<a href="/characters/new" class={ classesDoBotao(varPrimaria, tamGrande, "") }>
+		<a href="/piloto/personagens/nova" class={ classesDoBotao(varPrimaria, tamGrande, "") }>
 			Abrir a Forja
 			@tecla("⏎")
 		</a>
@@ -301,7 +301,7 @@ templ quadroDeCriar(temAlgum bool, indice int) {
 		data-nav-item
 		data-cue-hover
 		aria-label="Forjar um novo herói"
-		data-on:keydown="evt.key === 'Enter' && (evt.preventDefault(), location.href = '/characters/new')"
+		data-on:keydown="evt.key === 'Enter' && (evt.preventDefault(), location.href = '/piloto/personagens/nova')"
 		if temAlgum {
 			data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
 			data-on:focusin={ oGestoQueMoveOCursor(indice, 0) }

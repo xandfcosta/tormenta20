@@ -1,6 +1,10 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+)
 
 // A BOLSA INICIAL — Tabela 3-1: Dinheiro Inicial (p140).
 //
@@ -23,8 +27,10 @@ const (
 	// classe — não há linha por classe nenhuma.
 	StartingMoneyDice = "4d6"
 
-	startingMoneyDiceCount = 4
-	startingMoneyDiceFaces = 6
+	// maxDiceRolled é o teto de dados numa notação. Ele não é regra do livro:
+	// é o guarda contra uma notação absurda ("9999d6") vinda de um catálogo
+	// editado à mão virar noventa e nove mil rolagens criptográficas.
+	maxDiceRolled = 100
 )
 
 // startingMoneyByLevel é a Tabela 3-1 do 2º ao 20º nível, transcrita.
@@ -63,13 +69,42 @@ func StartingMoneyForLevel(level int) (int, error) {
 // o jogador escolheu. A Mochila tem o gesto de CORRIGIR o saldo depois, que é
 // onde uma mesa que combinou outra coisa acerta a conta.
 func RollStartingMoney() (int, error) {
+	return RollDiceNotation(StartingMoneyDice)
+}
+
+// RollDiceNotation rola uma notação "NdM" e devolve a soma.
+//
+// Existe porque a bolsa inicial não é o único dado do nascimento: a linha
+// "Itens" de algumas origens concede dinheiro em vez de item — "T$ 2d6 (último
+// salário)", do Artesão —, e ele sai do mesmo catálogo, escrito do mesmo jeito.
+func RollDiceNotation(notation string) (int, error) {
+	quantidade, faces, err := parseDiceNotation(notation)
+	if err != nil {
+		return 0, err
+	}
 	total := 0
-	for i := 0; i < startingMoneyDiceCount; i++ {
-		rolagem, err := RolaDado(startingMoneyDiceFaces)
+	for i := 0; i < quantidade; i++ {
+		rolagem, err := RolaDado(faces)
 		if err != nil {
-			return 0, fmt.Errorf("rolar a bolsa inicial: %w", err)
+			return 0, fmt.Errorf("rolar %s: %w", notation, err)
 		}
 		total += rolagem.Valor
 	}
 	return total, nil
+}
+
+// diceNotation é "4d6": quantos dados e de quantas faces.
+var diceNotation = regexp.MustCompile(`^(\d+)d(\d+)$`)
+
+func parseDiceNotation(notation string) (quantidade, faces int, err error) {
+	partes := diceNotation.FindStringSubmatch(notation)
+	if partes == nil {
+		return 0, 0, fmt.Errorf("notação de dado inválida: %q, esperado algo como %q", notation, StartingMoneyDice)
+	}
+	quantidade, _ = strconv.Atoi(partes[1])
+	faces, _ = strconv.Atoi(partes[2])
+	if quantidade < 1 || quantidade > maxDiceRolled {
+		return 0, 0, fmt.Errorf("notação de dado com %d dados, esperado de 1 a %d", quantidade, maxDiceRolled)
+	}
+	return quantidade, faces, nil
 }

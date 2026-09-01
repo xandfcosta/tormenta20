@@ -184,6 +184,16 @@ SET hpMax = sqlc.arg('hpMax'), hpCurrent = sqlc.arg('hpCurrent'),
     mpMax = sqlc.arg('mpMax'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
+-- name: SetCharacterAttributes :exec
+-- The six base attributes, written together: point-buy (book p17) is one
+-- spread and not six numbers, so a partial write would be a spread nobody chose.
+UPDATE characters
+SET strength = sqlc.arg('strength'), dexterity = sqlc.arg('dexterity'),
+    constitution = sqlc.arg('constitution'), intelligence = sqlc.arg('intelligence'),
+    wisdom = sqlc.arg('wisdom'), charisma = sqlc.arg('charisma'),
+    updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');
+
 -- name: SetCharacterTibar :exec
 UPDATE characters SET tibar = sqlc.arg('tibar'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');

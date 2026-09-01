@@ -1,0 +1,102 @@
+package api
+
+import (
+	"fmt"
+	"strconv"
+)
+
+// OS ATRIBUTOS DA FORJA (ALE-272, fatia 9) — a segunda e última tela.
+//
+// Ela é uma cena de comandos, e não um formulário: o herói já existe, então
+// cada `+` e cada `−` grava. Por isso ela é Datastar de ponta a ponta, e a
+// recusa volta desenhada aqui dentro em vez de num status.
+
+templ attributesScene(v attributesView) {
+	@folhaDoTomo() {
+		@attributesBody(v)
+	}
+}
+
+templ attributesBody(v attributesView) {
+	<div id="forja-atributos" class="m-auto w-full max-w-xl space-y-6">
+		@tituloDaFolha(v.HeroName, "Distribua os atributos")
+		<p class="text-center text-xs text-muted-foreground">
+			Dez pontos para gastar (p17). Um único atributo pode descer a −1 e devolver
+			um ponto.
+		</p>
+		@aContagemDosPontos(v)
+		if v.Refusal != "" {
+			<p role="alert" class="text-center text-sm text-destructive">{ v.Refusal }</p>
+		}
+		<div data-nav-region="content" data-nav-layout="column" class="space-y-2">
+			for _, linha := range v.Rows {
+				@attributeStepper(v.ID, linha)
+			}
+		</div>
+		<p class="text-xs text-muted-foreground">
+			O total já traz o modificador da raça. A raça que ESCOLHE onde pôr o bônus
+			— o humano e os meio-elfos — se resolve na ficha, na aba Poderes.
+		</p>
+		<div class="flex justify-end">
+			<a
+				href={ templ.SafeURL(fmt.Sprintf("/piloto/personagens/%d", v.ID)) }
+				class={ classesDoBotao(varPrimaria, tamPadrao, "") }
+			>Abrir a ficha</a>
+		</div>
+	</div>
+}
+
+// aContagemDosPontos é o placar do orçamento. Ele fica ACIMA das linhas porque
+// é o que decide o próximo clique.
+templ aContagemDosPontos(v attributesView) {
+	<p class="text-center font-display text-lg text-grimorio-gold">
+		{ strconv.Itoa(v.Budget - v.Spent) + " de " + strconv.Itoa(v.Budget) + " pontos" }
+	</p>
+}
+
+// attributeStepper é uma linha: o nome, o `−`, o valor base, o `+` e o total.
+//
+// O botão desligado é conveniência sobre a MESMA regra do servidor — ele é
+// desligado com a resposta que o motor daria ao clique, e não com uma segunda
+// conta escrita aqui.
+templ attributeStepper(id int64, linha attributeRow) {
+	// As folgas e a coluna do total são apertadas de propósito: com `gap-3` e
+	// `w-16`, "Constituição" e "Inteligência" truncavam a 390px — medido na
+	// bancada. O nome do atributo é a única coisa desta linha que não se deduz
+	// do resto.
+	<div class="flex items-center gap-2 rounded-none border border-grimorio-iron bg-grimorio-panel p-2">
+		<span class="min-w-0 flex-1 text-sm text-foreground">{ linha.Label }</span>
+		@oPassoDoAtributo(id, linha, -1, "−", "Diminuir "+linha.Label)
+		<span class="w-8 text-center font-mono text-base text-foreground">
+			{ comSinalInt(linha.Base) }
+		</span>
+		@oPassoDoAtributo(id, linha, 1, "+", "Aumentar "+linha.Label)
+		<span class="w-14 shrink-0 text-right text-xs text-muted-foreground">
+			{ "total " + comSinalInt(linha.Total) }
+		</span>
+	</div>
+}
+
+templ oPassoDoAtributo(id int64, linha attributeRow, passo int, simbolo, rotulo string) {
+	<button
+		type="button"
+		aria-label={ rotulo }
+		disabled?={ !oBotaoCabe(linha, passo) }
+		data-on:click={ oPostDoAtributo(id, linha.Key, passo) }
+		class="inline-flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-base text-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40"
+	>{ simbolo }</button>
+}
+
+func oBotaoCabe(linha attributeRow, passo int) bool {
+	if passo > 0 {
+		return linha.CanRaise
+	}
+	return linha.CanLower
+}
+
+// oPostDoAtributo monta o comando. Ele não carrega estado nenhum na URL — esta
+// cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
+// `oPostDaFicha`.
+func oPostDoAtributo(id int64, chave string, passo int) string {
+	return fmt.Sprintf("@post('/piloto/personagens/%d/atributos/%s/%d')", id, chave, passo)
+}
