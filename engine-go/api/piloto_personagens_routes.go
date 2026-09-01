@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"t20engine/web/forge"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -14,16 +15,14 @@ import (
 
 func (s *Server) CharacterRoutes(r chi.Router) {
 	r.Get("/personagens", s.handlePersonagens)
-	// A forja mora aqui e não numa árvore própria porque ela é a porta de
-	// entrada DESTA cena: o elenco é de onde se abre a folha em branco.
-	r.Get("/personagens/nova", s.handleForja)
-	r.Post("/personagens/nova", s.handleForjaPost)
-	r.Post("/personagens/nova/esboco", s.handleForjaEsboco)
-	// A segunda cena da forja. Ela vive sob o id porque o herói JÁ existe: o
-	// nascimento é o `POST /personagens/nova`, e daqui em diante tudo é comando
-	// sobre uma linha do banco.
-	r.Get("/personagens/{id}/atributos", s.handleForjaAtributos)
-	r.Post("/personagens/{id}/atributos/{atributo}/{passo}", s.handleForjaAtributoPasso)
+	// A FORJA mora noutro PACOTE desde a ALE-278, e é montada aqui porque este é
+	// o endereço dela: o elenco é de onde se abre a folha em branco.
+	//
+	// `forge.New(s)` passa o `*Server` como a porta que a cena declarou. Quem
+	// decide o que ela pode usar é ela — a interface está em `web/forge`, e o
+	// `Server` a cumpre. No dia em que ele deixar de cumprir, o erro aparece
+	// AQUI, na linha que monta, e não espalhado pela cena.
+	forge.Routes(r, forge.New(s))
 }
 
 func (s *Server) handlePersonagens(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +34,7 @@ func (s *Server) handlePersonagens(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := renderFragmento(r.Context(), cenaDePersonagens(view))
+		fragmento, err := ui.RenderFragment(r.Context(), cenaDePersonagens(view))
 		if err != nil {
 			return
 		}

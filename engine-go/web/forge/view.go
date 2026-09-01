@@ -1,4 +1,4 @@
-package api
+package forge
 
 import (
 	"fmt"
@@ -209,7 +209,7 @@ func startingGearFor(folha forgeAnswers, classe book.Class) *startingGear {
 	if kit.MartialWeapon {
 		eq.MartialWeapons = itemOptionsInCategory("weapon-martial", folha.MartialWeapon)
 	}
-	if item := itemDoLivroPorID(kit.Shield); item != nil {
+	if item := book.ItemByID(kit.Shield); item != nil {
 		eq.Shield, eq.ShieldChosen = item.Name, folha.Shield
 	}
 	return eq
@@ -232,7 +232,7 @@ func itemOptionsInCategory(categoria, escolhido string) []itemOption {
 func itemOptionsByID(ids []string, escolhido string) []itemOption {
 	opcoes := make([]itemOption, 0, len(ids))
 	for _, id := range ids {
-		if item := itemDoLivroPorID(id); item != nil {
+		if item := book.ItemByID(id); item != nil {
 			opcoes = append(opcoes, itemOptionOf(*item, escolhido))
 		}
 	}

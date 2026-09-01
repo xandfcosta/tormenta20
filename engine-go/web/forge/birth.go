@@ -1,9 +1,10 @@
-package api
+package forge
 
 import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/sheet"
 
 	"t20engine/book"
 	"t20engine/db/sqlcgen"
@@ -56,14 +57,14 @@ func forgeRefusals(folha forgeAnswers) plataforma.FieldErrorMap {
 			"O nome é obrigatório e cabe em %d caracteres.", heroNameMax)}
 	}
 	if raceByName(folha.Race) == nil {
-		erros["race"] = []string{aRecusaDaEscolha(folha.Race, "a linhagem", "raça")}
+		erros["race"] = []string{choiceRefusal(folha.Race, "a linhagem", "raça")}
 	}
 	if _, tem := book.Origins()[folha.Origin]; !tem {
-		erros["origin"] = []string{aRecusaDaEscolha(folha.Origin, "a origem", "origem")}
+		erros["origin"] = []string{choiceRefusal(folha.Origin, "a origem", "origem")}
 	}
 	classe := classByName(folha.Class)
 	if classe == nil {
-		erros["class"] = []string{aRecusaDaEscolha(folha.Class, "o ofício", "classe")}
+		erros["class"] = []string{choiceRefusal(folha.Class, "o ofício", "classe")}
 		return erros
 	}
 	// O equipamento só se confere DEPOIS da classe: é ela que diz quais peças o
@@ -78,7 +79,7 @@ func forgeRefusals(folha forgeAnswers) plataforma.FieldErrorMap {
 // que falta, e um valor desconhecido só chega por POST feito na mão ou por
 // catálogo que mudou debaixo de uma folha aberta. Mandar `"" não é uma raça do
 // livro` para quem simplesmente ainda não escolheu é responder outra pergunta.
-func aRecusaDaEscolha(valor, oQueFalta, oQueE string) string {
+func choiceRefusal(valor, oQueFalta, oQueE string) string {
 	if strings.TrimSpace(valor) == "" {
 		return "Escolha " + oQueFalta + " do herói."
 	}
@@ -115,7 +116,7 @@ func weaponFitsKit(id, categoria string, oferecida bool) string {
 		}
 		return "Esta classe não começa com arma marcial."
 	}
-	item := itemDoLivroPorID(id)
+	item := book.ItemByID(id)
 	if item == nil {
 		return "Escolha a arma com que o herói nasce."
 	}
@@ -167,7 +168,7 @@ func classByName(nome string) *book.Class {
 // oNascimento cria o herói da folha e devolve o id dele.
 //
 // Assume a folha JÁ conferida por `forgeRefusals` — quem chama recusa antes.
-func (s *Server) birth(r *http.Request, ownerID int64, folha forgeAnswers) (int64, error) {
+func (s Scene) birthHero(r *http.Request, ownerID int64, folha forgeAnswers) (int64, error) {
 	raca, classe := raceByName(folha.Race), classByName(folha.Class)
 	if raca == nil || classe == nil {
 		return 0, fmt.Errorf("nascimento com folha não conferida: raça %q, classe %q", folha.Race, folha.Class)
@@ -176,8 +177,8 @@ func (s *Server) birth(r *http.Request, ownerID int64, folha forgeAnswers) (int6
 	if err != nil {
 		return 0, err
 	}
-	id, err := s.InsertCharacter(r, ownerID, corpo.Name, corpo, 1,
-		grantedProficiencies([]string{classe.Name}), toStringSet(corpo.TrainedExpertises))
+	id, err := s.deps.InsertCharacter(r, ownerID, corpo.Name, corpo, 1,
+		book.GrantedProficiencies([]string{classe.Name}), sheet.ToStringSet(corpo.TrainedExpertises))
 	if err != nil {
 		return 0, err
 	}
@@ -194,17 +195,17 @@ func (s *Server) birth(r *http.Request, ownerID int64, folha forgeAnswers) (int6
 //
 // Os seis atributos nascem em ZERO, que é o ponto de partida da compra de
 // pontos (p17): distribuí-los é a segunda cena da forja.
-func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (createCharacterBody, error) {
+func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (sheet.CreateBody, error) {
 	tibar, err := birthPurse(folha.Origin)
 	if err != nil {
-		return createCharacterBody{}, err
+		return sheet.CreateBody{}, err
 	}
 	kit := engine.StartingKitFor(classe.Name, classe.Proficiencias)
-	return createCharacterBody{
+	return sheet.CreateBody{
 		Name:              strings.TrimSpace(folha.Name),
 		Races:             []string{raca.Name},
 		Origin:            folha.Origin,
-		Classes:           []classEntryBody{{ClassName: classe.Name, Level: 1}},
+		Classes:           []sheet.ClassEntry{{ClassName: classe.Name, Level: 1}},
 		Tibar:             &tibar,
 		Items:             birthItems(folha, kit),
 		Size:              raca.Tamanho,
@@ -218,19 +219,19 @@ func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (createCha
 // São dois passos e não um porque o `healVitals` calcula os máximos a partir do
 // agregado já gravado — antes de existir linha no banco não há de onde tirar o
 // PV da classe. Nascer com o poço no zero seria nascer inconsciente.
-func (s *Server) fillPools(r *http.Request, id int64) error {
-	row, err := s.queries.GetCharacter(r.Context(), id)
+func (s Scene) fillPools(r *http.Request, id int64) error {
+	row, err := s.deps.Queries().GetCharacter(r.Context(), id)
 	if err != nil {
 		return err
 	}
-	dto, err := s.LoadCharacter(r.Context(), row)
+	dto, err := sheet.Load(r.Context(), s.deps.Queries(), row)
 	if err != nil {
 		return err
 	}
-	if err := s.HealVitals(r, id, &dto); err != nil {
+	if err := s.deps.HealVitals(r, id, &dto); err != nil {
 		return err
 	}
-	return s.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
+	return s.deps.Queries().SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
 		HpMax: dto.HpMax, HpCurrent: dto.HpMax, MpMax: dto.MpMax, MpCurrent: dto.MpMax,
 		UpdatedAt: plataforma.NowISO(), ID: id,
 	})

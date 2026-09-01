@@ -1,6 +1,7 @@
-package api
+package forge
 
 import (
+	"t20engine/book"
 	"fmt"
 	"strconv"
 	"t20engine/web/ui"
@@ -20,12 +21,12 @@ templ attributesScene(v attributesView) {
 
 templ attributesBody(v attributesView) {
 	<div id="forja-atributos" class="m-auto w-full max-w-xl space-y-6">
-		@tituloDaFolha(v.HeroName, "Distribua os atributos")
+		@ui.SheetTitle(v.HeroName, "Distribua os atributos")
 		<p class="text-center text-xs text-muted-foreground">
 			Dez pontos para gastar (p17). Um único atributo pode descer a −1 e devolver
 			um ponto.
 		</p>
-		@aContagemDosPontos(v)
+		@pointCount(v)
 		if v.Refusal != "" {
 			<p role="alert" class="text-center text-sm text-destructive">{ v.Refusal }</p>
 		}
@@ -49,7 +50,7 @@ templ attributesBody(v attributesView) {
 
 // aContagemDosPontos é o placar do orçamento. Ele fica ACIMA das linhas porque
 // é o que decide o próximo clique.
-templ aContagemDosPontos(v attributesView) {
+templ pointCount(v attributesView) {
 	<p class="text-center font-display text-lg text-grimorio-gold">
 		{ strconv.Itoa(v.Budget - v.Spent) + " de " + strconv.Itoa(v.Budget) + " pontos" }
 	</p>
@@ -67,28 +68,28 @@ templ attributeStepper(id int64, linha attributeRow) {
 	// do resto.
 	<div class="flex items-center gap-2 rounded-none border border-grimorio-iron bg-grimorio-panel p-2">
 		<span class="min-w-0 flex-1 text-sm text-foreground">{ linha.Label }</span>
-		@oPassoDoAtributo(id, linha, -1, "−", "Diminuir "+linha.Label)
+		@attributeStepCmd(id, linha, -1, "−", "Diminuir "+linha.Label)
 		<span class="w-8 text-center font-mono text-base text-foreground">
-			{ comSinalInt(linha.Base) }
+			{ book.WithSign(linha.Base) }
 		</span>
-		@oPassoDoAtributo(id, linha, 1, "+", "Aumentar "+linha.Label)
+		@attributeStepCmd(id, linha, 1, "+", "Aumentar "+linha.Label)
 		<span class="w-14 shrink-0 text-right text-xs text-muted-foreground">
-			{ "total " + comSinalInt(linha.Total) }
+			{ "total " + book.WithSign(linha.Total) }
 		</span>
 	</div>
 }
 
-templ oPassoDoAtributo(id int64, linha attributeRow, passo int, simbolo, rotulo string) {
+templ attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo string) {
 	<button
 		type="button"
 		aria-label={ rotulo }
-		disabled?={ !oBotaoCabe(linha, passo) }
-		data-on:click={ oPostDoAtributo(id, linha.Key, passo) }
+		disabled?={ !buttonFits(linha, passo) }
+		data-on:click={ attributePost(id, linha.Key, passo) }
 		class="inline-flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-base text-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40"
 	>{ simbolo }</button>
 }
 
-func oBotaoCabe(linha attributeRow, passo int) bool {
+func buttonFits(linha attributeRow, passo int) bool {
 	if passo > 0 {
 		return linha.CanRaise
 	}
@@ -98,6 +99,6 @@ func oBotaoCabe(linha attributeRow, passo int) bool {
 // oPostDoAtributo monta o comando. Ele não carrega estado nenhum na URL — esta
 // cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
 // `oPostDaFicha`.
-func oPostDoAtributo(id int64, chave string, passo int) string {
+func attributePost(id int64, chave string, passo int) string {
 	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, chave, passo)
 }

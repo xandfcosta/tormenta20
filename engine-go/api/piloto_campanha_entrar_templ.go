@@ -62,7 +62,7 @@ func campanhaEntrar(v campanhaEntrarView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = tituloDaFolha("Carta de convite", "Entrar na mesa").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.SheetTitle("Carta de convite", "Entrar na mesa").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

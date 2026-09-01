@@ -59,7 +59,7 @@ func (s *Server) handleHubConvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `conviteGerado`.
-	fragmento, err := renderFragmento(r.Context(), conviteGerado("/register?convite="+invite.Token))
+	fragmento, err := ui.RenderFragment(r.Context(), conviteGerado("/register?convite="+invite.Token))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
 		return

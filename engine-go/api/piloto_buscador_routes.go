@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -33,7 +34,7 @@ func (s *Server) handleBuscador(w http.ResponseWriter, r *http.Request) {
 	// é justamente o que faria o defeito nascer no dia da mudança para POST.
 	v := buscaNoLivro(termoDoBuscador(r))
 	sse := datastar.NewSSE(w, r)
-	fragmento, err := renderFragmento(r.Context(), achadosDoBuscador(v))
+	fragmento, err := ui.RenderFragment(r.Context(), achadosDoBuscador(v))
 	if err != nil {
 		return
 	}

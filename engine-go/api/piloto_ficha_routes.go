@@ -106,7 +106,7 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 	// pediu foi a aba "Minha ficha" da Mesa, e mandar a página inteira faria o
 	// Datastar remendar a cena da sessão com uma ficha de corpo inteiro.
 	if view.Embutida {
-		fragmento, err := renderFragmento(r.Context(), cenaDaFicha(view))
+		fragmento, err := ui.RenderFragment(r.Context(), cenaDaFicha(view))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -217,7 +217,7 @@ func (s *Server) comandoDaFicha(
 		}
 		view.Recusa = recusa
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := renderFragmento(r.Context(), cenaDaFicha(view))
+		fragmento, err := ui.RenderFragment(r.Context(), cenaDaFicha(view))
 		if err != nil {
 			return
 		}

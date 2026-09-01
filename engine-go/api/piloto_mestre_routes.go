@@ -122,7 +122,7 @@ func (s *Server) respondeImproviso(w http.ResponseWriter, r *http.Request, tabel
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := renderFragmento(r.Context(), cenaDoImproviso(pronta))
+		fragmento, err := ui.RenderFragment(r.Context(), cenaDoImproviso(pronta))
 		if err != nil {
 			return
 		}
@@ -243,7 +243,7 @@ func (s *Server) respondeEncontro(
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := renderFragmento(r.Context(), cenaDosEncontros(v))
+		fragmento, err := ui.RenderFragment(r.Context(), cenaDosEncontros(v))
 		if err != nil {
 			return
 		}
@@ -326,7 +326,7 @@ func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := renderFragmento(r.Context(), cenaDosCatalogos(v))
+		fragmento, err := ui.RenderFragment(r.Context(), cenaDosCatalogos(v))
 		if err != nil {
 			return
 		}
@@ -424,7 +424,7 @@ func (s *Server) handleBestiario(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := renderFragmento(r.Context(), cenaDoBestiario(v))
+		fragmento, err := ui.RenderFragment(r.Context(), cenaDoBestiario(v))
 		if err != nil {
 			return
 		}
@@ -469,7 +469,7 @@ func (s *Server) handleBestiarioTipo(w http.ResponseWriter, r *http.Request) {
 	criterios.Tipos = tipos
 	sse := datastar.NewSSE(w, r)
 
-	fragmento, err := renderFragmento(r.Context(), cenaDoBestiario(s.carregaBestiario(criterios)))
+	fragmento, err := ui.RenderFragment(r.Context(), cenaDoBestiario(s.carregaBestiario(criterios)))
 	if err != nil {
 		return
 	}

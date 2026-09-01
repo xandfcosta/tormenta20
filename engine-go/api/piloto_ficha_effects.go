@@ -222,7 +222,7 @@ func (s *Server) effectsPanelOf(dto sheet.CharacterDTO) effectsPanel {
 
 // effectsPanelFor monta a aba inteira.
 func effectsPanelFor(dto sheet.CharacterDTO, offered []engine.ConditionalEffect, flags []engine.EquippedFlag) effectsPanel {
-	ativos := toStringSet(dto.Conditionals)
+	ativos := sheet.ToStringSet(dto.Conditionals)
 	panel := effectsPanel{
 		Conditions:       conditionRowsOf(dto),
 		ConditionOptions: conditionOptionsFor(dto),
@@ -282,7 +282,7 @@ func parseConditionBlob(bruto string) []string {
 }
 
 func conditionOptionsFor(dto sheet.CharacterDTO) []pickerOption {
-	ligadas := toStringSet(parseConditionBlob(dto.ActiveConditions))
+	ligadas := sheet.ToStringSet(parseConditionBlob(dto.ActiveConditions))
 	opcoes := []pickerOption{}
 	for _, c := range book.Catalogs().Condicoes {
 		if ligadas[c.ID] {

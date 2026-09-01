@@ -458,7 +458,7 @@ func dobra(s string) string {
 }
 
 // comSinalInt escreve o modificador como o livro: "+2", "-1".
-func comSinalInt(n int) string {
+func WithSign(n int) string {
 	if n >= 0 {
 		return "+" + strconv.Itoa(n)
 	}

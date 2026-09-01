@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/book"
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
@@ -40,84 +41,13 @@ var expertisesList = []expertiseDef{
 // o painel da ficha. Duas cópias da mesma transcrição não divergiram por sorte,
 // e a que ficou é a que a validação de schema alcança.
 
-// proficiencyOrder is PROFICIENCY_CATEGORIES — grantedProficiencies emits in it.
-var proficiencyOrder = []string{
-	"armas-simples", "armas-marciais", "armas-exoticas", "armas-de-fogo",
-	"armaduras-leves", "armaduras-pesadas", "escudos",
-}
-
-// grantedProficiencies ports characterProficiencies(...).filter(granted): the
-// default proficiency categories for a class set, in catalog order.
-func grantedProficiencies(classNames []string) []string {
-	granted := map[string]bool{"armas-simples": true}
-	porClasse := asProficienciasPorClasse()
-	for _, cls := range classNames {
-		for _, cat := range porClasse[cls] {
-			granted[cat] = true
-			if cat == "armaduras-pesadas" {
-				granted["armaduras-leves"] = true
-			}
-		}
-	}
-	out := []string{}
-	for _, cat := range proficiencyOrder {
-		if granted[cat] {
-			out = append(out, cat)
-		}
-	}
-	return out
-}
-
-type classEntryBody struct {
-	ClassName string `json:"className"`
-	Level     int64  `json:"level"`
-}
-
-type startingItemBody struct {
-	CatalogID *string  `json:"catalogId"`
-	Name      *string  `json:"name"`
-	Quantity  *int64   `json:"quantity"`
-	Slots     *float64 `json:"slots"`
-	Equipped  *string  `json:"equipped"`
-}
-
-type createCharacterBody struct {
-	Name                 string             `json:"name"`
-	Races                []string           `json:"races"`
-	Origin               string             `json:"origin"`
-	Classes              []classEntryBody   `json:"classes"`
-	God                  *string            `json:"god"`
-	GodPower             *string            `json:"godPower"`
-	Tibar                *float64           `json:"tibar"`
-	Items                []startingItemBody `json:"items"`
-	HpMax                int64              `json:"hpMax"`
-	HpCurrent            int64              `json:"hpCurrent"`
-	MpMax                int64              `json:"mpMax"`
-	MpCurrent            int64              `json:"mpCurrent"`
-	Strength             int64              `json:"strength"`
-	Dexterity            int64              `json:"dexterity"`
-	Constitution         int64              `json:"constitution"`
-	Intelligence         int64              `json:"intelligence"`
-	Wisdom               int64              `json:"wisdom"`
-	Charisma             int64              `json:"charisma"`
-	Size                 string             `json:"size"`
-	Displacement         int64              `json:"displacement"`
-	ClassPowers          *[]string          `json:"classPowers"`
-	OriginChoices        *[]string          `json:"originChoices"`
-	TrainedExpertises    []string           `json:"trainedExpertises"`
-	ClassChoices         *json.RawMessage   `json:"classChoices"`
-	PowerChoices         *json.RawMessage   `json:"powerChoices"`
-	RaceAttributeChoices *json.RawMessage   `json:"raceAttributeChoices"`
-	SecondaryRaceChoices *json.RawMessage   `json:"secondaryRaceChoices"`
-}
-
 // handleCreateCharacter validate (assertCharacterRules
 // + presence), seed the aggregate (character + races + classes + all expertises +
 // items) with the class-default proficiencies, then heal vitals from the engine.
 // NOTE: catalog @IsIn checks (races/origin/god/size) + classChoices sanitize are
 // deferred — the frontend pre-validates.
 func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
-	var body createCharacterBody
+	var body sheet.CreateBody
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
@@ -159,8 +89,8 @@ func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 		totalLevel += c.Level
 		classNames[i] = c.ClassName
 	}
-	granted := grantedProficiencies(classNames)
-	trained := toStringSet(body.TrainedExpertises)
+	granted := book.GrantedProficiencies(classNames)
+	trained := sheet.ToStringSet(body.TrainedExpertises)
 
 	id, err := s.InsertCharacter(r, user.ID, name, body, totalLevel, granted, trained)
 	if err != nil {
@@ -186,7 +116,7 @@ func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 }
 
 // insertCharacter writes the character + all relations in one transaction.
-func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, body createCharacterBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {
+func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, body sheet.CreateBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {
 	tx, err := s.db.BeginTx(r.Context(), nil)
 	if err != nil {
 		return 0, err

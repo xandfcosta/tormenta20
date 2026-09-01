@@ -25,7 +25,7 @@ templ campanhaEntrar(v campanhaEntrarView) {
 		// de deixá-la encalhada no topo de uma folha vazia; com elenco cheio as
 		// margens automáticas somem e ela preenche a página.
 		<form method="post" action="/campanhas/entrar" class="m-auto w-full max-w-3xl space-y-6">
-			@tituloDaFolha("Carta de convite", "Entrar na mesa")
+			@ui.SheetTitle("Carta de convite", "Entrar na mesa")
 			if v.TemConvite {
 				<input type="hidden" name="token" value={ v.Convite }/>
 				@cartaDoConvite(v)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"net/http"
+	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -66,7 +67,7 @@ func (s *Server) handleBestiarioDaMesa(w http.ResponseWriter, r *http.Request) {
 	v := s.bestiarioDaMesaPara(r, campaignID, sessionID)
 
 	sse := datastar.NewSSE(w, r)
-	if fragmento, err := renderFragmento(r.Context(), bestiarioDaMesa(v)); err == nil {
+	if fragmento, err := ui.RenderFragment(r.Context(), bestiarioDaMesa(v)); err == nil {
 		_ = sse.PatchElements(fragmento)
 	}
 	// O PAINEL É O DONO DO RASCUNHO: os campos de PV, iniciativa e quantas
@@ -130,7 +131,7 @@ func (s *Server) handleTipoDoBestiarioDaMesa(w http.ResponseWriter, r *http.Requ
 	)
 
 	sse := datastar.NewSSE(w, r)
-	if fragmento, err := renderFragmento(r.Context(), bestiarioDaMesa(v)); err == nil {
+	if fragmento, err := ui.RenderFragment(r.Context(), bestiarioDaMesa(v)); err == nil {
 		_ = sse.PatchElements(fragmento)
 	}
 	// O sinal volta porque o crachá é a ÚNICA coisa que muda a lista sem passar

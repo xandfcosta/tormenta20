@@ -56,12 +56,12 @@ type RaceAttribute struct {
 //	"+1 em três atributos"          // humano
 func (a RaceAttribute) Escrito() string {
 	if a.Kind == "floating" {
-		return fmt.Sprintf("%s em %s", comSinalInt(a.Value), InWords(a.Count))
+		return fmt.Sprintf("%s em %s", WithSign(a.Value), InWords(a.Count))
 	}
 	var partes []string
 	for _, atributo := range AttributeOrder {
 		if mod, tem := a.Mods[atributo.Chave]; tem && mod != 0 {
-			partes = append(partes, comSinalInt(mod)+" "+atributo.Sigla)
+			partes = append(partes, WithSign(mod)+" "+atributo.Sigla)
 		}
 	}
 	return strings.Join(partes, ", ")

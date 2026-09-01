@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"strings"
+	"t20engine/web/ui"
 	"testing"
 
 	"golang.org/x/net/html"
@@ -52,24 +53,24 @@ func cenasDoPiloto(t *testing.T) map[string]string {
 
 	ctx := context.Background()
 	monta("bestiario", func() (string, error) {
-		return renderFragmento(ctx, cenaDoBestiario(carregaBestiarioDe(rotaDoBestiarioDoMestre, enderecoDoLivro{}, "", nil, ndMinimo, ndMaximo, "")))
+		return ui.RenderFragment(ctx, cenaDoBestiario(carregaBestiarioDe(rotaDoBestiarioDoMestre, enderecoDoLivro{}, "", nil, ndMinimo, ndMaximo, "")))
 	})
 	monta("catalogos", func() (string, error) {
-		return renderFragmento(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "condicoes"}, enderecoDoLivro{})))
+		return ui.RenderFragment(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "condicoes"}, enderecoDoLivro{})))
 	})
 	monta("catalogos-busca", func() (string, error) {
-		return renderFragmento(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, enderecoDoLivro{})))
+		return ui.RenderFragment(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, enderecoDoLivro{})))
 	})
 	monta("encontros", func() (string, error) {
 		v := carregaEncontros(3, 4, []linhaDoEncontro{{ID: "ogro", Qtd: 2}}, "ogro")
-		return renderFragmento(ctx, cenaDosEncontros(v))
+		return ui.RenderFragment(ctx, cenaDosEncontros(v))
 	})
 	monta("improviso", func() (string, error) {
 		v := carregaImproviso(improvisoView{
 			Salas: 14,
 			Ruina: []sorteio{{Rolagem: 4, Texto: "Vazia"}, {Rolagem: 2, Texto: "Vazia"}},
 		})
-		return renderFragmento(ctx, cenaDoImproviso(v))
+		return ui.RenderFragment(ctx, cenaDoImproviso(v))
 	})
 	return fora
 }

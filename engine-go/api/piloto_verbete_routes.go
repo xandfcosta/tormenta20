@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -39,7 +40,7 @@ func (s *Server) handleVerbeteDoElo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sse := datastar.NewSSE(w, r)
-	fragmento, err := renderFragmento(r.Context(), miolo)
+	fragmento, err := ui.RenderFragment(r.Context(), miolo)
 	if err != nil {
 		return
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -335,7 +336,7 @@ func blocoDoRascunho(rascunho rascunhoDoNPC) creature.Block {
 func (s *Server) respondeAoRascunho(w http.ResponseWriter, r *http.Request, c mesaComando, rascunho rascunhoDoNPC) {
 	sse := datastar.NewSSE(w, r)
 	for _, fragmento := range asListasDoRascunho(c, rascunho) {
-		if html, err := renderFragmento(r.Context(), fragmento); err == nil {
+		if html, err := ui.RenderFragment(r.Context(), fragmento); err == nil {
 			_ = sse.PatchElements(html)
 		}
 	}

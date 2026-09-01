@@ -48,7 +48,7 @@ func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
 	// barra também muda — o chip de papel aceso e o texto da busca.
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := renderFragmento(r.Context(), cenaDeCampanhas(view))
+		fragmento, err := ui.RenderFragment(r.Context(), cenaDeCampanhas(view))
 		if err != nil {
 			return
 		}
@@ -398,7 +398,7 @@ func (s *Server) handleCronicaAlternarRegra(w http.ResponseWriter, r *http.Reque
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
 		return
 	}
-	fragmento, err := renderFragmento(r.Context(), regrasDaCronica(v))
+	fragmento, err := ui.RenderFragment(r.Context(), regrasDaCronica(v))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
 		return

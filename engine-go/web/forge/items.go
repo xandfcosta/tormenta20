@@ -1,10 +1,9 @@
-package api
+package forge
 
 import (
-	"encoding/json"
-	"sync"
+	"t20engine/book"
+	"t20engine/sheet"
 
-	"t20engine/catalog"
 	"t20engine/engine"
 )
 
@@ -28,14 +27,14 @@ import (
 // disfarces OU gazua" não é item, é uma pergunta, e gravá-la como nome poria na
 // mochila uma linha que ocupa carga e não existe no livro. A folha diz quais
 // são, e a Mochila é onde elas viram item.
-func birthItems(folha forgeAnswers, kit engine.StartingKit) []startingItemBody {
+func birthItems(folha forgeAnswers, kit engine.StartingKit) []sheet.StartingItem {
 	escolhidos := append([]string{}, kit.BaseItems...)
 	escolhidos = append(escolhidos, folha.SimpleWeapon, folha.MartialWeapon, folha.Armor)
 	if folha.Shield {
 		escolhidos = append(escolhidos, kit.Shield)
 	}
 
-	itens := make([]startingItemBody, 0, len(escolhidos)+2)
+	itens := make([]sheet.StartingItem, 0, len(escolhidos)+2)
 	for _, id := range escolhidos {
 		if linha := catalogRow(id); linha != nil {
 			itens = append(itens, *linha)
@@ -52,13 +51,13 @@ func birthItems(folha forgeAnswers, kit engine.StartingKit) []startingItemBody {
 // catalogRow é um item do livro virando linha da mochila. Id vazio ou
 // desconhecido devolve nil: o kit tem peças opcionais, e conferir se elas EXISTEM
 // é trabalho de `forgeRefusals`, não deste montador.
-func catalogRow(id string) *startingItemBody {
-	item := itemDoLivroPorID(id)
+func catalogRow(id string) *sheet.StartingItem {
+	item := book.ItemByID(id)
 	if item == nil {
 		return nil
 	}
 	quantidade := int64(1)
-	return &startingItemBody{
+	return &sheet.StartingItem{
 		CatalogID: &item.ID, Name: &item.Name, Quantity: &quantidade, Slots: &item.Slots,
 	}
 }
@@ -69,15 +68,15 @@ func catalogRow(id string) *startingItemBody {
 // escrito e não por id — "Símbolo sagrado" é uma entrada de `items.json`. Quando
 // não casa (a origem cita coisas que o catálogo não vende, como "Traje de
 // sacerdote"), a linha nasce sem catálogo, ocupando um espaço.
-func originRow(nome string) startingItemBody {
-	if item := bookItemByName(nome); item != nil {
+func originRow(nome string) sheet.StartingItem {
+	if item := book.ItemByName(nome); item != nil {
 		quantidade := int64(1)
-		return startingItemBody{
+		return sheet.StartingItem{
 			CatalogID: &item.ID, Name: &item.Name, Quantity: &quantidade, Slots: &item.Slots,
 		}
 	}
 	quantidade, espacos := int64(1), 1.0
-	return startingItemBody{Name: &nome, Quantity: &quantidade, Slots: &espacos}
+	return sheet.StartingItem{Name: &nome, Quantity: &quantidade, Slots: &espacos}
 }
 
 // birthPurse rola os T$ 4d6 de p140 e soma o dinheiro que a origem
@@ -102,43 +101,10 @@ func birthPurse(origem string) (float64, error) {
 
 // originGrants são as linhas "Itens" da origem, já classificadas.
 func originGrants(origem string) []engine.OriginItemGrant {
-	frases := originItemsByName()[origem]
+	frases := book.OriginItemsByName()[origem]
 	concessoes := make([]engine.OriginItemGrant, 0, len(frases))
 	for _, frase := range frases {
 		concessoes = append(concessoes, engine.ParseOriginItem(frase))
 	}
 	return concessoes
-}
-
-// originItemsByName indexa a linha "Itens" de cada origem POR NOME.
-//
-// Lê `origens` e não `origins`: são dois arquivos sobre as mesmas 35 origens,
-// com campos diferentes — `origins` tem os benefícios (que a aba de Poderes já
-// usa, em `origensDoLivro`) e `origens` tem os itens e as perícias. Ler o
-// arquivo errado devolve mapa vazio em silêncio, que é a razão de o guarda de
-// varredura afirmar o denominador.
-var (
-	originItemsOnce  sync.Once
-	originItemsIndex map[string][]string
-)
-
-func originItemsByName() map[string][]string {
-	originItemsOnce.Do(func() {
-		originItemsIndex = map[string][]string{}
-		bruto, ok := catalog.Resource("origens")
-		if !ok {
-			return
-		}
-		var porID map[string]struct {
-			Name          string   `json:"name"`
-			ItensIniciais []string `json:"itensIniciais"`
-		}
-		if err := json.Unmarshal(bruto, &porID); err != nil {
-			return
-		}
-		for _, origem := range porID {
-			originItemsIndex[origem.Name] = origem.ItensIniciais
-		}
-	})
-	return originItemsIndex
 }
