@@ -153,96 +153,6 @@ func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID i
 	return http.StatusOK, nil
 }
 
-// loadCharacter attaches the six relations to a character row in the Prisma
-// include order (races/classes/items/effects by id, expertises by name, spells by
-// learnedAt).
-func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.CharacterDTO, error) {
-	dto := sheet.CharacterScalarsFrom(c)
-
-	races, err := s.queries.ListRacesByCharacter(ctx, c.ID)
-	if err != nil {
-		return dto, err
-	}
-	for _, race := range races {
-		dto.Races = append(dto.Races, sheet.RaceDTO{Race: race})
-	}
-
-	classes, err := s.queries.ListClassesByCharacter(ctx, c.ID)
-	if err != nil {
-		return dto, err
-	}
-	for _, cl := range classes {
-		dto.Classes = append(dto.Classes, sheet.ClassDTO{ClassName: cl.Classname, Level: cl.Level})
-	}
-
-	exps, err := s.queries.ListExpertisesByCharacter(ctx, c.ID)
-	if err != nil {
-		return dto, err
-	}
-	for _, e := range exps {
-		dto.Expertises = append(dto.Expertises, sheet.ExpertiseDTO{
-			Name: e.Name, Attribute: e.Attribute, Trained: e.Trained != 0, Custom: e.Custom != 0,
-		})
-	}
-
-	items, err := s.queries.ListItemsByCharacter(ctx, c.ID)
-	if err != nil {
-		return dto, err
-	}
-	for _, it := range items {
-		dto.Items = append(dto.Items, sheet.ItemDTO{
-			ID: it.ID, CatalogID: plataforma.NullToPtr(it.Catalogid), Name: it.Name,
-			Quantity: it.Quantity, Slots: it.Slots, Equipped: plataforma.NullToPtr(it.Equipped),
-			Improvements: it.Improvements, Material: plataforma.NullToPtr(it.Material),
-		})
-	}
-
-	effects, err := s.queries.ListActiveEffectsByCharacter(ctx, c.ID)
-	if err != nil {
-		return dto, err
-	}
-	for _, ef := range effects {
-		dto.ActiveEffects = append(dto.ActiveEffects, sheet.EffectDTO{
-			ID: ef.ID, CatalogID: ef.Catalogid, Scope: ef.Scope,
-			Modifiers: ef.Modifiers, CreatedAt: ef.Createdat,
-		})
-	}
-
-	spells, err := s.queries.ListSpellsByCharacter(ctx, c.ID)
-	if err != nil {
-		return dto, err
-	}
-	for _, sp := range spells {
-		dto.Spells = append(dto.Spells, sheet.SpellDTO{
-			ID: sp.ID, CatalogSpellID: sp.Catalogspellid, Prepared: sp.Prepared != 0, LearnedAt: sp.Learnedat,
-		})
-	}
-
-	// As regras opcionais da mesa entram na ficha AQUI, e num lugar só (ALE-221):
-	// tudo o que calcula — o `GET /sheet`, os PV/PM do nível, o bônus de
-	// iniciativa, a ficha que o navegador recalcula no WASM — passa por este
-	// carregamento. Falha de leitura não derruba a ficha: o `IgnoredRules` fica
-	// zerado, que significa TODAS as regras em vigor. É o lado seguro, e o único
-	// em que um banco mudo não afrouxa regra sem ninguém ver.
-	ignored, err := s.queries.ListIgnoredRulesForCharacter(ctx, c.ID)
-	if err == nil {
-		dto.IgnoredRules = engine.IgnoredRulesFrom(ignored)
-	}
-
-	// O estado de JOGO (ALE-222). Vem junto e nao por endpoint proprio: separado,
-	// a ficha abriria com a Furia desligada e a ligaria um instante depois,
-	// piscando os numeros que ela muda.
-	//
-	// Este DERRUBA a carga em caso de falha e o de cima nao, e a diferenca e
-	// deliberada: sem o estado de jogo a ficha mente sobre o que esta ligado,
-	// enquanto sem as regras opcionais ela cai no padrao do livro, que e o lado
-	// seguro. Uma regra a mais nunca inventa numero; uma postura a menos sim.
-	if err := s.loadPlayState(ctx, c.ID, &dto); err != nil {
-		return dto, err
-	}
-	return dto, nil
-}
-
 // intParam parses a chi :id-style path param, writing a 400 (like ParseIntPipe)
 // and returning false on a non-numeric value.
 func intParam(w http.ResponseWriter, r *http.Request, name string) (int64, bool) {
@@ -252,4 +162,21 @@ func intParam(w http.ResponseWriter, r *http.Request, name string) (int64, bool)
 		return 0, false
 	}
 	return int64(n), true
+}
+
+// Os três invólucros abaixo existem para os chamadores de dentro do `api` não
+// mudarem junto com a extração (ALE-278): a lógica mora no `sheet`, e aqui só
+// se passa o que o `Server` tem na mão. Eles somem quando cada cena receber as
+// dependências dela por construtor.
+
+func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.CharacterDTO, error) {
+	return sheet.Load(ctx, s.queries, c)
+}
+
+func (s *Server) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
+	return sheet.LoadAndCompute(ctx, s.queries, s.catalogs, row)
+}
+
+func (s *Server) sheetFromDTO(dto sheet.CharacterDTO) (engine.ComputedSheetV2, error) {
+	return sheet.Compute(s.catalogs, dto)
 }

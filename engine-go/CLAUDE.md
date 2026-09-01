@@ -677,7 +677,7 @@ mora, no próprio `book` — e ele nasceu vermelho por sabotagem.
 lugar de defeito silencioso.** Ela compila, tem o nome certo, e faz outra coisa.
 Quando copiar, copie o CORPO do original — não uma reescrita de memória.
 
-## `sheet` e `creature`: forma de dado, fora do `api`
+## `sheet` e `creature`: a ficha e a criatura, fora do `api`
 
 O `CharacterDTO` e os seus seis irmãos moram em `sheet`; o bloco de criatura do
 livro mora em `creature` (ALE-278). Eles saíram do `api` porque a medição da
@@ -695,6 +695,28 @@ O que NÃO saiu junto e vale saber por quê: os quatro handlers do estado de jog
 O `character_play_state.go` misturava a FORMA (dois structs sem dependência) com
 o encanamento que a grava — os structs viajam dentro do `CharacterDTO`, então
 foram; os handlers ficaram.
+
+**E o `sheet` ganhou a CONSTRUÇÃO junto, na terceira camada.** `Load` monta o
+agregado a partir das linhas do banco, `Compute` o passa pelo motor, e
+`LoadAndCompute` é a soma — as três eram métodos do `api.Server` e viraram
+funções com as dependências por parâmetro, porque o que elas usavam dele eram as
+`queries` e os `catalogs` e nada mais. Oito cenas leem isso.
+
+A medição que decidiu foi refeita DEPOIS das duas primeiras camadas, e ela disse
+duas coisas. A primeira: das 36 coisas que as cenas usam da família `character`,
+o núcleo é esse punhado. A segunda, que mudou o plano: **os treze arquivos
+`character*.go` misturam handler HTTP com domínio** — nenhum é puro, então não há
+arquivo a mover, só função.
+
+> A primeira versão dessa medição disse que os treze eram limpos, e era mentira
+> do INSTRUMENTO: `\\*Server\\b` dentro de uma f-string vira barra invertida
+> literal e não casa com nada. "Nenhum toca HTTP" era a resposta que eu queria, e
+> ela quase passou. A segunda versão tem CONTROLE — ela afirma primeiro que a
+> sonda enxerga HTTP num arquivo que sabidamente o tem.
+
+Os métodos do `Server` ficaram como invólucros de uma linha. Eles somem quando
+cada cena receber as dependências dela por construtor; o que interessa agora é
+que a lógica passou a ser alcançável sem o `api`.
 
 Os dois pacotes têm guarda de fronteira, e a razão é a que o `events` já
 documenta: **cada cena que se mudar vai importá-los.** No dia em que o `creature`

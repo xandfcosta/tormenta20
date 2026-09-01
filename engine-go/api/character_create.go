@@ -249,7 +249,7 @@ func (s *Server) HealVitals(r *http.Request, id int64, dto *sheet.CharacterDTO) 
 	if s.catalogs == nil || len(dto.Classes) == 0 {
 		return nil
 	}
-	ec, err := engineCharacterFrom(*dto)
+	ec, err := sheet.EngineCharacterFrom(*dto)
 	if err != nil {
 		return err
 	}

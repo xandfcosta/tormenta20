@@ -212,7 +212,7 @@ func (s *Server) effectsPanelOf(dto sheet.CharacterDTO) effectsPanel {
 	if s.catalogs == nil {
 		return effectsPanelFor(dto, nil, nil)
 	}
-	ec, err := engineCharacterFrom(dto)
+	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return effectsPanelFor(dto, nil, nil)
 	}

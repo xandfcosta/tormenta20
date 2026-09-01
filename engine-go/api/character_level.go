@@ -1,15 +1,12 @@
 package api
 
 import (
-	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
-	"t20engine/engine"
 	"t20engine/sheet"
 )
 
@@ -46,44 +43,6 @@ func levelVitalsNext(stored storedVitals, pvMax, pmMax int) (storedVitals, bool)
 
 func clampCurrent(c, hi int64) int64 { return min(max(int64(0), c), hi) }
 
-// engineCharacterFrom bridges the API aggregate to engine.Character via JSON —
-// both mirror the frontend Character contract, so the round-trip is lossless.
-func engineCharacterFrom(dto sheet.CharacterDTO) (engine.Character, error) {
-	var ec engine.Character
-	b, err := json.Marshal(dto)
-	if err != nil {
-		return ec, err
-	}
-	return ec, json.Unmarshal(b, &ec)
-}
-
-// computeSheet builds the engine input from an already-loaded character row and returns the
-// server-computed ComputedSheetV2 (base sheet, no active conditionals). Shared by GET /sheet
-// and the power-grant temp-HP amount so the Load→engine→compute wiring lives in one place.
-// Caller must ensure s.catalogs is primed.
-func (s *Server) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
-	dto, err := s.LoadCharacter(ctx, row)
-	if err != nil {
-		return engine.ComputedSheetV2{}, err
-	}
-	return s.sheetFromDTO(dto)
-}
-
-// sheetFromDTO computa a ficha de um agregado JÁ CARREGADO.
-//
-// Separado do `computeSheet` para a cena de personagens (ALE-239), que precisa
-// da ficha de TODOS de uma vez: ela já tem os agregados na mão, e passar por
-// `computeSheet` faria cada personagem ser lido do banco DUAS vezes — uma na
-// lista e outra dentro dele. Com uma dúzia de heróis isso é o dobro das
-// consultas para o mesmo resultado.
-func (s *Server) sheetFromDTO(dto sheet.CharacterDTO) (engine.ComputedSheetV2, error) {
-	ec, err := engineCharacterFrom(dto)
-	if err != nil {
-		return engine.ComputedSheetV2{}, err
-	}
-	return s.catalogs.ComputeSheetV2(ec, map[string]bool{}), nil
-}
-
 // syncLevelVitals recomputes the pools for the (already mutated) aggregate and
 // persists the level-shifted currents — the server-side syncVitalsForProjection.
 func (s *Server) syncLevelVitals(r *http.Request, id int64, dto sheet.CharacterDTO) (storedVitals, error) {
@@ -91,7 +50,7 @@ func (s *Server) syncLevelVitals(r *http.Request, id int64, dto sheet.CharacterD
 	if s.catalogs == nil || len(dto.Classes) == 0 {
 		return stored, nil // no engine pools (0/0) → keep what is stored
 	}
-	ec, err := engineCharacterFrom(dto)
+	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return stored, err
 	}

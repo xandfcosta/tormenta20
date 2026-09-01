@@ -138,7 +138,7 @@ func (s *Server) ligaOsCondicionaisDaFlag(
 	if s.catalogs == nil {
 		return nil
 	}
-	ec, err := engineCharacterFrom(dto)
+	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return err
 	}

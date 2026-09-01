@@ -160,7 +160,7 @@ func (s *Server) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheetV2,
 	if s.catalogs == nil {
 		return engine.ComputedSheetV2{}, nil, false
 	}
-	ec, err := engineCharacterFrom(dto)
+	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return engine.ComputedSheetV2{}, nil, false
 	}

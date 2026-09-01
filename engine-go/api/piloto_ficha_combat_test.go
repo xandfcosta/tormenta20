@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/sheet"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -298,7 +299,7 @@ func ligaOCondicional(t *testing.T, f pilotoFixture, id int64) {
 	if err != nil {
 		t.Fatalf("carregar o personagem: %v", err)
 	}
-	ec, err := engineCharacterFrom(dto)
+	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		t.Fatalf("converter para o motor: %v", err)
 	}
