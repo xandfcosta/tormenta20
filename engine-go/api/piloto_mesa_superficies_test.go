@@ -3,6 +3,7 @@ package api
 import (
 	stdhtml "html"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -90,6 +91,37 @@ func TestAFichaNaSessaoNaoNavegaParaForaDela(t *testing.T) {
 		}
 	} else {
 		t.Fatal("não achei a fileira de abas dentro da ficha embutida")
+	}
+}
+
+// TestAFichaNaSessaoDizDeQuemEla.
+//
+// A ficha embutida abre direto nas sete abas, e nenhuma delas diz o nome: a
+// barra de cima é pulada porque o ‹ Voltar dela levaria o jogador para fora da
+// mesa. Pular a barra inteira pulou junto o NOME — o crachá do rodapé diz a raça
+// e a classe, e nunca de quem é a ficha.
+//
+// O caso prende as DUAS metades, e a segunda tem controle: a ficha SOLTA continua
+// com a volta, senão "não achei a volta" seria verde num HTML vazio.
+func TestAFichaNaSessaoDizDeQuemEla(t *testing.T) {
+	f := novoPiloto(t)
+	f.cena(t)
+
+	naMesa := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	embutida := naMesa[strings.Index(naMesa, `id="cena-ficha"`):]
+	cabecalho, _, _ := strings.Cut(embutida, "Seções da ficha")
+
+	if !strings.Contains(cabecalho, ">Arcanista<") {
+		t.Error("a ficha dentro da sessão não diz de quem ela é")
+	}
+	if strings.Contains(cabecalho, "‹ Voltar") {
+		t.Error("a ficha embutida tem a volta que tira o jogador da mesa")
+	}
+
+	solta := f.pede(t, f.jogador, http.MethodGet,
+		"/piloto/personagens/"+strconv.FormatInt(f.charID, 10), "").Body.String()
+	if !strings.Contains(solta, "‹ Voltar") {
+		t.Fatal("a ficha de página inteira perdeu a volta — sem ela o caso acima não mede nada")
 	}
 }
 

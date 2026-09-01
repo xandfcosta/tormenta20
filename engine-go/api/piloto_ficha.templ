@@ -29,7 +29,9 @@ templ cenaDaFicha(v fichaView) {
 
 templ ficha(v fichaView) {
 	<div class="flex min-h-0 flex-1 flex-col">
-		if !v.Embutida {
+		if v.Embutida {
+			@aPlacaDaFichaNaMesa(v)
+		} else {
 			@aBarraDaFicha(v)
 		}
 		@asAbasDesenhadas(v)
@@ -54,6 +56,27 @@ templ aBarraDaFicha(v fichaView) {
 		>‹ Voltar</a>
 		<h1 class="min-w-0 truncate font-heading text-xl tracking-wide text-foreground">{ v.Nome }</h1>
 		<span class="text-sm text-muted-foreground">{ v.Papel }</span>
+	</div>
+}
+
+// aPlacaDaFichaNaMesa é o cabeçalho da ficha DENTRO da sessão.
+//
+// Ela existe porque a barra de cima não serve aqui: o ‹ Voltar levaria o jogador
+// para fora da mesa no meio do combate (mesma razão da aba virar botão logo
+// abaixo). Mas tirar a barra inteira tirou junto o NOME, e a ficha embutida
+// passou a abrir em sete abas sem dizer de quem ela é — o crachá do rodapé diz a
+// raça e a classe, nunca o nome.
+//
+// O título é `h2` e não `h1`: o `h1` da página é o da sessão, e esta é uma
+// região dentro dela.
+//
+// E ela leva SÓ o nome, enquanto a barra da ficha solta leva o papel do lado.
+// Medido a 390px: com o papel junto a placa quebrava em duas fileiras, e a de
+// baixo dizia "GUERREIRO 8 · HUMANO" — que é o que o crachá do rodapé já diz,
+// três dedos abaixo, na mesma tela.
+templ aPlacaDaFichaNaMesa(v fichaView) {
+	<div class="w-full border-b border-grimorio-iron px-4 py-2">
+		<h2 class="min-w-0 truncate font-heading text-lg tracking-wide text-foreground">{ v.Nome }</h2>
 	</div>
 }
 

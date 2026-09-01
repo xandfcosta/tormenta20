@@ -195,6 +195,17 @@ func (s *Server) comandoDaFicha(
 		recusa := ""
 		if err := mutar(s, r, row, sinais); err != nil {
 			recusa = err.Error()
+		} else {
+			// A FICHA MUDOU, e quem avisa é o GATEWAY e não cada comando
+			// (ALE-275). São mais de trinta mutações passando por aqui, e uma
+			// que esquecesse a linha nasceria sem aviso — a mesma forma de
+			// defeito que o `characterChanged` já documenta: recurso desligado
+			// porque alguém tinha de lembrar de ligá-lo.
+			//
+			// Só no caminho SEM recusa: uma regra que barrou o gesto não mudou
+			// nada, e avisar ali faria toda tela que escuta refazer a ficha por
+			// causa de um clique que não aconteceu.
+			s.characterChanged(row.ID)
 		}
 		view, status, err := s.carregaFicha(
 			r.Context(), currentUser(r), id, aAbaPedida(r.URL.Query().Get("tab")), sinais.aBusca(), sinais)

@@ -29,7 +29,12 @@ type Server struct {
 	boards   *tabuleiro.BoardStore    // tabuleiros táticos vivos por sessão (ALE-124, vários na ALE-205)
 	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
 	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
-	livro    livroServido             // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
+	// fichas é quem escuta "esta ficha mudou" (ALE-275). VALOR e não ponteiro:
+	// o zero dele já funciona, então não existe estado desligado para alguém
+	// tolerar — que é exatamente o defeito que o `characterChanged` abaixo
+	// conta ter tido, quando era um gancho que outro arquivo preenchia.
+	fichas aovivo.CharacterWatch
+	livro  livroServido // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
 	// lentes é quem está vendo a cena COMO A MESA (ALE-193, ALE-269). Mora aqui
 	// e não num sinal do navegador porque o stream não pergunta nada a ninguém:
 	// um modo em `data-show` seria desfeito pelo primeiro quadro do SSE, com a
@@ -91,6 +96,11 @@ func (s *Server) EsperaOSegundoPlano() {
 // que não tem aquele combatente mandaria todo cliente da casa refazer busca a
 // cada ficha salva.
 func (s *Server) characterChanged(characterID int64) {
+	// O AVISO PARA AS CENAS DO SERVIDOR (ALE-275). Ele é por PERSONAGEM e não
+	// por sessão: quem escuta é o stream da Mesa de quem tem essa ficha aberta,
+	// e a busca por sessão viva abaixo responde outra pergunta — a do hub SSE,
+	// que fala com a sala inteira.
+	s.fichas.Avisar(characterID)
 	for _, sessionID := range s.sessions.LiveSessionsWithCharacter(characterID) {
 		s.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
 	}
