@@ -280,3 +280,74 @@ test('o tabuleiro que o mestre abre aparece na tela do jogador, e a cortina o es
     await fecha()
   }
 })
+
+/**
+ * O DANO DO MESTRE CHEGA NA FICHA QUE O JOGADOR ESTÁ OLHANDO (ALE-275).
+ *
+ * A superfície "Ficha" não é região do stream — a ficha é sete painéis
+ * computados, e recomputá-los a cada tique custaria o preço mais caro da página
+ * para descobrir que nada mudou. O que o servidor manda é um SINAL de uma linha
+ * (`fichaversao`), e quem repede a ficha é o cliente.
+ *
+ * As duas metades importam, e a segunda é a que o desenho podia ter perdido:
+ * a ficha atualiza, E o jogador continua na seção em que estava. O servidor não
+ * sabe qual é — ela viaja na query dos comandos da ficha, e este stream abriu
+ * antes de qualquer clique —, então quem a guarda é o sinal `fichatab`. Sem ele
+ * o repedido devolveria a aba padrão, e quem estivesse lendo Combate no meio de
+ * um turno seria jogado de volta para a primeira seção a cada golpe recebido.
+ */
+test('o dano do mestre chega na ficha do jogador, na seção em que ele está', async ({
+  browser,
+}) => {
+  test.setTimeout(90_000)
+  const { telaDoMestre, telaDoJogador, fecha } = await asDuasTelas(browser)
+  try {
+    await garanteACena(telaDoMestre)
+    await abreAFila(telaDoMestre)
+    await telaDoMestre.getByRole('button', { name: 'Adicionar grupo' }).click()
+
+    // O NOME do personagem deste jogador, lido na superfície Mesa: a ficha
+    // embutida não desenha o nome, porque a barra que o traz é justamente a que
+    // some dentro da sessão.
+    const cabecalhoDaIniciativa = telaDoJogador.locator('h2', { hasText: '·' }).first()
+    await expect(cabecalhoDaIniciativa).toBeVisible()
+    const nomeDoPc = (await cabecalhoDaIniciativa.innerText()).split('·').pop()?.trim() ?? ''
+    expect(nomeDoPc, 'não achei o nome do personagem do jogador').not.toBe('')
+
+    await telaDoJogador.getByRole('button', { name: 'Ficha', exact: true }).click()
+    // Uma seção que NÃO é a que abre: é ela que prova que o remendo respeita
+    // onde a pessoa está.
+    await telaDoJogador.getByRole('button', { name: 'Combate' }).click()
+    await expect(telaDoJogador.getByRole('heading', { name: 'Combate' })).toBeVisible()
+
+    // A barra da ficha é `aria-hidden` de propósito — o que se LÊ é a fração.
+    const oPVdaFicha = async () => {
+      const texto = await telaDoJogador.locator('#cena-ficha').innerText()
+      return texto.match(/\d+\/\d+/)?.[0] ?? ''
+    }
+    await expect.poll(oPVdaFicha).toMatch(/\d+\/\d+/)
+    const antes = await oPVdaFicha()
+
+    // O mestre fere O PERSONAGEM DESTE JOGADOR, e não o primeiro da fila: a
+    // ordem sai de um d20, então mirar "o primeiro" editaria a ficha de outra
+    // pessoa e o caso passaria a afirmar nada.
+    await telaDoMestre
+      .locator('#gaveta-da-fila')
+      .getByRole('button', { name: `Ferir ${nomeDoPc}` })
+      .first()
+      .click()
+
+    await expect
+      .poll(oPVdaFicha, { timeout: 8000, message: 'a ficha do jogador não soube do dano' })
+      .not.toBe(antes)
+    // E ele continua em Combate: o remendo trouxe a seção dele, não a padrão.
+    await expect(
+      telaDoJogador.getByRole('heading', { name: 'Combate' }),
+      'o remendo devolveu a ficha na aba padrão e tirou o jogador de onde ele estava',
+    ).toBeVisible()
+
+    await tiraDaFila(telaDoMestre, nomeDoPc)
+  } finally {
+    await fecha()
+  }
+})

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"github.com/a-h/templ"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/starfederation/datastar-go/datastar"
@@ -68,6 +69,10 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	// O PUXÃO já empurrado NESTA conexão (ALE-205, fatia 2). Ver `empurraParaOMapa`.
 	var puxaoEmpurrado int64
 	puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
+	// A ficha do jogador SEMEADA e não empurrada: o valor de agora entra como
+	// "já avisado" para o primeiro tique não disparar um repedido do que a
+	// página acabou de desenhar. Ver `avisaQueAFichaMudou`.
+	fichaAvisada := aVersaoDaFicha(s, r.Context(), view)
 
 	batimento := time.NewTicker(mesaBatimento)
 	defer batimento.Stop()
@@ -90,6 +95,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 		}
 		ultimo = escreveMesa(r.Context(), sse, view, ultimo)
 		puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
+		fichaAvisada = avisaQueAFichaMudou(s, r.Context(), sse, view, fichaAvisada)
 	}
 }
 
@@ -124,6 +130,62 @@ func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, session
 		return jaEmpurrado
 	}
 	return seq
+}
+
+// avisaQueAFichaMudou acorda a superfície "Minha ficha" quando o personagem
+// DESTE jogador mudou no banco (ALE-275).
+//
+// # Por que um AVISO e não a ficha remendada
+//
+// A ficha é sete painéis computados e ela NÃO é região do stream (ver
+// `mesaView.MinhaFicha`): pendurá-la em `regioesDaMesa` faria cada tique
+// recomputá-la para descobrir que nada mudou, e o tabuleiro sozinho produz um
+// aviso por quadrado arrastado. O que vai daqui é um SINAL de uma linha; quem
+// repede a ficha é o cliente, e ele repede na ABA em que a pessoa está — coisa
+// que o servidor não tem como saber daqui, porque a aba viaja na query dos
+// comandos DELA e este stream abriu antes de qualquer clique.
+//
+// # A cadência é a do puxão, e pela mesma razão
+//
+// Remendo de HTML é idempotente; remendo de sinal não é. Mandar a versão em
+// TODO quadro faria o cliente repedir a ficha sem parar — o gasto exato que
+// esta função existe para evitar. A memória do que já foi avisado é da
+// CONEXÃO, e não do servidor: duas abas da mesma pessoa merecem o aviso cada
+// uma.
+func avisaQueAFichaMudou(
+	s *Server, ctx context.Context, sse *datastar.ServerSentEventGenerator,
+	view mesaView, jaAvisada string,
+) string {
+	versao := aVersaoDaFicha(s, ctx, view)
+	if versao == "" || versao == jaAvisada {
+		return jaAvisada
+	}
+	if err := sse.PatchSignals([]byte(`{"fichaversao":` + strconv.Quote(versao) + `}`)); err != nil {
+		// O leitor foi embora. NÃO grava: gravar faria esta mudança ser
+		// considerada avisada numa tela que nunca a recebeu.
+		return jaAvisada
+	}
+	return versao
+}
+
+// aVersaoDaFicha é o `updatedAt` do personagem de quem está olhando, ou "" para
+// quem não tem ficha nesta mesa (o mestre, e o jogador sem personagem).
+//
+// O `updatedAt` da LINHA do personagem, e não um hash da ficha inteira: ele é
+// uma leitura de uma linha, e toda mutação que o mestre alcança de fora — dano,
+// cura, condição do motor, nível — passa por um `UPDATE characters` que o
+// carimba. O que ele NÃO pega são as tabelas filhas (perícias, itens, magias),
+// e isso é aceitável porque elas só mudam pelas mãos do próprio dono, que já
+// está remendando a ficha ao mexer nelas.
+func aVersaoDaFicha(s *Server, ctx context.Context, view mesaView) string {
+	if view.Mestre != nil || view.Eu == nil {
+		return ""
+	}
+	row, err := s.queries.GetCharacter(ctx, view.Eu.CharacterID)
+	if err != nil {
+		return ""
+	}
+	return row.Updatedat
 }
 
 // escreveMesa manda o fragmento SÓ quando o HTML mudou, e devolve a impressão
