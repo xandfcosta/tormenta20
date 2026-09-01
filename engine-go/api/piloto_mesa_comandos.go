@@ -163,7 +163,18 @@ func mexeNosVitais(sinal int64) func(*Server, mesaComando) (*aovivo.SessionRunti
 			return nil, fmt.Errorf("passo %q não existe; a tela oferece 1 (clique) e 5 (Shift+clique)", bruto)
 		}
 		delta := sinal * passo
-		return st.sessions.DeltaVitals(c.SessionID, chi.URLParam(c.R, "entryId"), &delta, nil)
+		entryID := chi.URLParam(c.R, "entryId")
+		estado, err := st.sessions.DeltaVitals(c.SessionID, entryID, &delta, nil)
+		// QUANDO HÁ FICHA ATRÁS DA LINHA, quem levou o dano foi o PERSONAGEM e
+		// não o rastreador (ver `DeltaVitals`) — então a ficha de quem está na
+		// mesa mudou, e a tela dele precisa saber (ALE-275). NPC não tem ficha:
+		// ali o `CharacterIDOf` devolve nulo e não há quem avisar.
+		if err == nil {
+			if charID := st.sessions.CharacterIDOf(c.SessionID, entryID); charID != nil {
+				st.characterChanged(*charID)
+			}
+		}
+		return estado, err
 	}
 }
 

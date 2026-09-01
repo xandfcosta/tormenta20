@@ -63,6 +63,12 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	// arrastando na frente de seis pessoas.
 	avisoDoMapa, pararMapa := s.boards.Assinar(sessionID)
 	defer pararMapa()
+	// E o TERCEIRO: "a ficha de quem está olhando mudou" (ALE-275). Ele é por
+	// PERSONAGEM e não por sessão — o mestre e quem não tem ficha nesta mesa não
+	// assinam nada, e o canal nulo de um `select` nunca dispara, que é
+	// exatamente o comportamento certo para eles.
+	avisoDaFicha, pararFicha := s.assinaAFichaDoLeitor(view)
+	defer pararFicha()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
 	ultimo := escreveMesa(r.Context(), sse, view, nil)
@@ -70,9 +76,11 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	var puxaoEmpurrado int64
 	puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
 	// A ficha do jogador SEMEADA e não empurrada: o valor de agora entra como
-	// "já avisado" para o primeiro tique não disparar um repedido do que a
-	// página acabou de desenhar. Ver `avisaQueAFichaMudou`.
+	// "já avisado" para o primeiro AVISO não disparar um repedido do que a
+	// página acabou de desenhar — e o primeiro aviso pode chegar no mesmo
+	// instante, porque o jogador mexe na própria ficha. Ver `avisaQueAFichaMudou`.
 	fichaAvisada := aVersaoDaFicha(s, r.Context(), view)
+	fichaMexeu := false
 
 	batimento := time.NewTicker(mesaBatimento)
 	defer batimento.Stop()
@@ -84,6 +92,11 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 			return
 		case <-aviso:
 		case <-avisoDoMapa:
+		case <-avisoDaFicha:
+			// A ficha mudou: este é o ÚNICO caminho que lê o carimbo dela. Antes
+			// a leitura acontecia a cada tique — uma linha por segundo por
+			// jogador conectado, quase sempre para descobrir que nada mudou.
+			fichaMexeu = true
 		case <-batimento.C:
 		}
 		view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID)
@@ -95,7 +108,10 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 		}
 		ultimo = escreveMesa(r.Context(), sse, view, ultimo)
 		puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
-		fichaAvisada = avisaQueAFichaMudou(s, r.Context(), sse, view, fichaAvisada)
+		if fichaMexeu {
+			fichaAvisada = avisaQueAFichaMudou(s, r.Context(), sse, view, fichaAvisada)
+			fichaMexeu = false
+		}
 	}
 }
 
@@ -132,6 +148,19 @@ func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, session
 	return seq
 }
 
+// assinaAFichaDoLeitor registra este stream como ouvinte da ficha de quem está
+// olhando, ou devolve um canal nulo para quem não tem ficha nesta mesa.
+//
+// Canal NULO e não um canal vazio: no `select` do laço, ler de um canal nulo
+// bloqueia para sempre — o ramo simplesmente nunca é escolhido. Um canal vazio
+// custaria uma alocação e uma linha de `if` em quem lê.
+func (s *Server) assinaAFichaDoLeitor(view mesaView) (<-chan struct{}, func()) {
+	if view.Mestre != nil || view.Eu == nil {
+		return nil, func() {}
+	}
+	return s.fichas.Assinar(view.Eu.CharacterID)
+}
+
 // avisaQueAFichaMudou acorda a superfície "Minha ficha" quando o personagem
 // DESTE jogador mudou no banco (ALE-275).
 //
@@ -152,6 +181,15 @@ func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, session
 // esta função existe para evitar. A memória do que já foi avisado é da
 // CONEXÃO, e não do servidor: duas abas da mesma pessoa merecem o aviso cada
 // uma.
+//
+// # Quem chama é o CANAL, não o relógio
+//
+// Ela só roda quando o `CharacterWatch` cutuca, e é por isso que a leitura do
+// banco aqui é barata: uma linha por MUDANÇA. A primeira versão desta função
+// lia a cada tique do stream — uma linha por segundo por jogador conectado,
+// quase sempre para descobrir que nada mudou —, e o dono cortou isso na
+// revisão: toda ação dentro de uma sessão já é um evento, e o servidor tem os
+// dois outros canais para provar que essa é a forma da casa.
 func avisaQueAFichaMudou(
 	s *Server, ctx context.Context, sse *datastar.ServerSentEventGenerator,
 	view mesaView, jaAvisada string,

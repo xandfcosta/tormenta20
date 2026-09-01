@@ -741,6 +741,28 @@ data-on-signal-patch="@get('/piloto/personagens/13?tab=' + $fichatab + '&embutid
 mesma regra do puxão, e pelo mesmo motivo: remendo de sinal não é idempotente. A
 memória do que já foi avisado é da CONEXÃO (`avisaQueAFichaMudou`).
 
+**Quem diz "mudou" é um EVENTO, e não a comparação de um carimbo a cada tique.**
+A primeira versão lia o `updatedAt` do personagem em todo quadro do batimento —
+uma consulta por segundo por jogador conectado, quase sempre para descobrir que
+nada mudou —, e a decisão do dono foi que toda escrita dentro da sessão já é um
+evento que dá para escutar. O `aovivo.CharacterWatch` é o TERCEIRO canal do
+`select` do stream, ao lado do da sessão e do do tabuleiro, e o carimbo só é lido
+no ramo dele.
+
+Duas coisas que esse canal ensina, e valem para o próximo:
+
+- **Ele é por PERSONAGEM, não por sessão.** A pergunta é sobre uma ficha, e a
+  mesma ficha pode estar em duas mesas — pendurar isso no `SessionStore`
+  obrigaria quem AVISA a saber em quais mesas o personagem está.
+- **Quem assina é o leitor com ficha; os outros recebem um canal NULO**, e um
+  canal nulo num `select` nunca dispara. É o comportamento certo para o mestre
+  sem uma linha a mais de `if`.
+
+Quem cutuca é o GATEWAY (`characterChanged`) e não cada comando: passam mais de
+trinta mutações pelo `comandoDaFicha`, e a linha esquecida numa delas seria uma
+ficha que não atualiza só naquele gesto. É a mesma lição do gancho que nascia
+desligado, na seção do SSE.
+
 **A segunda metade é o que o desenho quase perdeu:** o servidor NÃO sabe em que
 aba a pessoa está, porque a aba viaja na query dos comandos da ficha e o stream
 abriu antes de qualquer clique. Quem a guarda é um sinal que o clique na aba
