@@ -39,6 +39,21 @@ var permitidos = map[string]bool{
 	// e é de lá que elas devem vir — reimplementá-las aqui seria a segunda
 	// definição que o oráculo existe para impedir.
 	"t20engine/engine": true,
+	// O VOCABULÁRIO DA MESA é shared kernel, e não um contexto (ALE-279).
+	//
+	// Ele entra nesta lista sabendo do aviso que está escrito acima — que
+	// acrescentar import aqui transforma a porta em enfeite —, e a diferença
+	// está no que ele PODE conter. Uma porta não resolve este caso: um
+	// barramento TIPADO exige que os dois lados falem do mesmo tipo, e
+	// interface declarada aqui só casaria com um tipo daqui, o que devolveria
+	// um vocabulário por contexto e o problema inteiro.
+	//
+	// O que impede a porta dos fundos ("importe `events` para chegar na ficha")
+	// não é confiança: é o `TestOVocabularioNaoImportaNinguem`, que recusa
+	// QUALQUER import do projeto dentro de `events/`. Enquanto ele for folha,
+	// depender dele não cria fronteira errada nenhuma — que é exatamente a
+	// justificativa da `plataforma`, por outro caminho.
+	"t20engine/events": true,
 }
 
 func TestOTabuleiroNaoConheceAFicha(t *testing.T) {

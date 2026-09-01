@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/aovivo"
+	"t20engine/events"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -413,35 +414,41 @@ func TestMesaStreamComprime(t *testing.T) {
 }
 
 // O aviso do store — o passo (b). O que este teste afirma é a INVARIANTE que
-// torna o aviso confiável: `apply` é o funil das treze mutações da fila,
-// então nenhuma delas pode escapar sem cutucar quem escuta.
+// torna o aviso confiável: `apply` é o funil das treze mutações da fila, então
+// nenhuma delas pode escapar sem virar notícia.
+//
+// Desde a ALE-279 a invariante é mais forte, e não é este teste que a segura: o
+// `apply` recebe o EVENTO por parâmetro, então uma mutação sem notícia não
+// compila. O que sobrou aqui para medir é que a notícia certa chega a quem
+// escuta — que abrir a cena publique `SceneStarted`, e não um sino genérico que
+// serviria igualmente para o encerramento.
 func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
 	f := novoPiloto(t)
-	aviso, parar := f.s.sessions.Assinar(f.sessionID)
+	sub, parar := f.s.bus.Subscribe(events.OfSession(f.sessionID))
 
 	if _, err := f.s.sessions.StartScene(f.sessionID); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	select {
-	case <-aviso:
+	case ev := <-sub.C:
+		if _, ok := ev.(events.SceneStarted); !ok {
+			t.Fatalf("iniciar a cena publicou %T", ev)
+		}
 	default:
 		t.Fatal("a mutação passou sem avisar quem escuta")
 	}
 
-	// Baixar a assinatura tem de PARAR o aviso: sem isto cada aba fechada deixa
-	// um canal para sempre, e o `avisarLocked` passa a percorrer uma lista que só
+	// Baixar a assinatura tem de PARAR a entrega: sem isto cada aba fechada deixa
+	// um canal para sempre, e o `Publish` passa a percorrer uma lista que só
 	// cresce escrevendo em canais que ninguém lê.
 	parar()
 	if _, err := f.s.sessions.EndScene(f.sessionID); err != nil {
 		t.Fatalf("encerrar cena: %v", err)
 	}
 	select {
-	case <-aviso:
-		t.Fatal("o ouvinte baixado continuou recebendo — a lista vaza")
+	case ev := <-sub.C:
+		t.Fatalf("o ouvinte baixado continuou recebendo %T — a lista vaza", ev)
 	default:
-	}
-	if n := f.s.sessions.Ouvintes(f.sessionID); n != 0 {
-		t.Errorf("sobraram %d ouvintes registrados depois da baixa", n)
 	}
 }
 

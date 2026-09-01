@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"t20engine/db/sqlcgen"
+	"t20engine/events"
 )
 
 // NewUUID generates a random v4 UUID string for initiative entry ids (randomUUID() in the
@@ -40,10 +41,19 @@ type SessionStore struct {
 	// session's runtime-state writes so concurrent mutations can't land out of order —
 	// WITHOUT coupling latency across sessions.
 	persistMus sync.Map
-	// ouvintes são os streams SSE acordados a cada mutação (piloto ALE-219, em
-	// mesa_watch.go). Guardados sob o MESMO `mu` das mutações, que é o que faz o
-	// aviso sair junto com a mudança e não depois dela.
-	ouvintes map[int64][]chan struct{}
+	// bus é por onde as mutações desta sessão viram notícia (ALE-279).
+	//
+	// Aqui morava `ouvintes map[int64][]chan struct{}`, guardado sob o MESMO `mu`
+	// das mutações — o aviso saía de dentro da trava, junto com a mudança. O
+	// barramento não precisa disso: quem publica é o `apply`, DEPOIS de soltar a
+	// trava, e o evento diz o que aconteceu em vez de só tocar o sino.
+	//
+	// Ponteiro e não valor porque ele é COMPARTILHADO com o tabuleiro e com o
+	// servidor: um barramento por store devolveria o problema que esta issue
+	// veio resolver, que é quem escuta ter de juntar as peças de novo. Nulo
+	// EXPLODE, e é para explodir: quem monta um store à mão sem barramento
+	// descobre no primeiro `apply`, e não numa tela que não atualiza.
+	bus *events.Bus
 }
 
 // persistLock returns the per-session DB-write mutex, creating it on first use.
@@ -54,7 +64,7 @@ func (st *SessionStore) persistLock(sessionID int64) *sync.Mutex {
 
 // NewSessionStore recebe a PORTA da ficha por parâmetro (ALE-254) — injetada e
 // não importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha VitaisDaFicha) *SessionStore {
+func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha VitaisDaFicha, bus *events.Bus) *SessionStore {
 	return &SessionStore{
 		States: map[int64]*SessionRuntimeState{},
 		Dirty:  map[int64]bool{},
@@ -62,6 +72,7 @@ func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha VitaisDaFich
 		newID:  newID,
 		ficha:  ficha,
 		q:      q,
+		bus:    bus,
 	}
 }
 
@@ -131,62 +142,88 @@ func (st *SessionStore) GetState(sessionID int64) *SessionRuntimeState {
 	return cloneState(st.getOrCreateLocked(sessionID))
 }
 
-// apply runs a pure mutation under the lock and returns a snapshot for broadcast.
-func (st *SessionStore) apply(sessionID int64, fn func(*SessionRuntimeState) error) (*SessionRuntimeState, error) {
+// apply runs a pure mutation under the lock, publishes the event, and returns a
+// snapshot for broadcast.
+//
+// O EVENTO É PARÂMETRO OBRIGATÓRIO, e é isso que substitui uma promessa por uma
+// garantia (ALE-279). Antes o aviso era uma linha aqui dentro, e o comentário
+// prometia que ninguém escapava porque `apply` é o funil das treze mutações —
+// uma promessa que vale enquanto ninguém escrever a décima quarta por fora.
+// Agora não dá para mutar sem dizer O QUE aconteceu: o compilador cobra.
+//
+// A publicação sai FORA da trava. O barramento é folha e poderia ser chamado de
+// dentro (ver `events.Bus.Publish`), mas quem acorda agora sabe o que houve e
+// pode ler o estado na hora — publicar sob a trava faria esse leitor esperar
+// pelo escritor no exato instante em que foi acordado para ler.
+func (st *SessionStore) apply(sessionID int64, ev events.Event, fn func(*SessionRuntimeState) error) (*SessionRuntimeState, error) {
+	clone, err := st.applyLocked(sessionID, fn)
+	if err != nil {
+		return nil, err
+	}
+	st.bus.Publish(ev)
+	return clone, nil
+}
+
+// applyLocked é a parte que precisa da trava: mutar e tirar o retrato.
+//
+// A `seq` (ALE-253) nasce AQUI DENTRO e não na publicação: ela numera as
+// mutações para o hub reconhecer quadro atrasado, e decidir a sequência e
+// entregar têm de ser atômicos.
+func (st *SessionStore) applyLocked(sessionID int64, fn func(*SessionRuntimeState) error) (*SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	s := st.getOrCreateLocked(sessionID)
 	if err := fn(s); err != nil {
 		return nil, err
 	}
-	// AS DUAS COISAS, e não uma escolha entre elas — elas resolvem problemas
-	// diferentes que o merge só empilhou no mesmo lugar.
-	//
-	// O aviso (ALE-219) é para o stream do piloto: ele é um SINO, não carrega
-	// estado, e quem o ouve relê. A `seq` (ALE-253) é para o hub SSE, que
-	// publica o CLONE e por isso precisa de ordem — decidir a sequência e
-	// entregar têm de ser atômicos, e é por isso que ela nasce aqui dentro da
-	// trava e não na publicação.
-	st.avisarLocked(sessionID)
 	clone := cloneState(s)
 	clone.Seq = st.proximaSeqLocked(sessionID)
 	return clone, nil
 }
 
 func (st *SessionStore) AddInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return AddEntry(s, e, st.newID) })
+	return st.apply(sessionID, events.CombatantJoined{SessionID: sessionID, EntryID: e.ID},
+		func(s *SessionRuntimeState) error { return AddEntry(s, e, st.newID) })
 }
 
 func (st *SessionStore) UpsertInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return upsertCharacterEntry(s, e, st.newID) })
+	return st.apply(sessionID, events.CombatantJoined{SessionID: sessionID, EntryID: e.ID},
+		func(s *SessionRuntimeState) error { return upsertCharacterEntry(s, e, st.newID) })
 }
 
 func (st *SessionStore) UpdateInitiativeEntry(sessionID int64, entryID string, patch EntryPatch) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return UpdateEntry(s, entryID, patch) })
+	return st.apply(sessionID, events.CombatantChanged{SessionID: sessionID, EntryID: entryID},
+		func(s *SessionRuntimeState) error { return UpdateEntry(s, entryID, patch) })
 }
 
 func (st *SessionStore) RemoveInitiativeEntry(sessionID int64, entryID string) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return RemoveEntry(s, entryID) })
+	return st.apply(sessionID, events.CombatantLeft{SessionID: sessionID, EntryID: entryID},
+		func(s *SessionRuntimeState) error { return RemoveEntry(s, entryID) })
 }
 
 func (st *SessionStore) NextTurn(sessionID int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { advanceTurn(s); return nil })
+	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
+		func(s *SessionRuntimeState) error { advanceTurn(s); return nil })
 }
 
 func (st *SessionStore) PreviousTurn(sessionID int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { rewindTurn(s); return nil })
+	return st.apply(sessionID, events.TurnAdvanced{SessionID: sessionID},
+		func(s *SessionRuntimeState) error { rewindTurn(s); return nil })
 }
 
 func (st *SessionStore) Reset(sessionID int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { resetInitiative(s); return nil })
+	return st.apply(sessionID, events.InitiativeReset{SessionID: sessionID},
+		func(s *SessionRuntimeState) error { resetInitiative(s); return nil })
 }
 
 func (st *SessionStore) StartScene(sessionID int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { StartScene(s); return nil })
+	return st.apply(sessionID, events.SceneStarted{SessionID: sessionID},
+		func(s *SessionRuntimeState) error { StartScene(s); return nil })
 }
 
 func (st *SessionStore) EndScene(sessionID int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { EndScene(s); return nil })
+	return st.apply(sessionID, events.SceneEnded{SessionID: sessionID},
+		func(s *SessionRuntimeState) error { EndScene(s); return nil })
 }
 
 // PatchVitals fixa os vitais de uma entrada. Mesma regra do delta sobre quem é a
@@ -195,13 +232,15 @@ func (st *SessionStore) EndScene(sessionID int64) (*SessionRuntimeState, error) 
 func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
-		return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
+		return st.apply(sessionID, oVitalQueMudou(sessionID, entryID, nil),
+			func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
 	}
 	hp, mp, err := st.ficha.AplicaAbsoluto(context.Background(), *charID, hpCurrent, mpCurrent)
 	if err != nil {
 		return nil, err
 	}
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
+	return st.apply(sessionID, oVitalQueMudou(sessionID, entryID, charID),
+		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
 // DeltaVitals move os vitais de uma entrada. Se há personagem atrás dela, quem
@@ -211,13 +250,15 @@ func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, 
 func (st *SessionStore) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
-		return st.apply(sessionID, func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
+		return st.apply(sessionID, oVitalQueMudou(sessionID, entryID, nil),
+			func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
 	}
 	hp, mp, err := st.ficha.AplicaDelta(context.Background(), *charID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
+	return st.apply(sessionID, oVitalQueMudou(sessionID, entryID, charID),
+		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
 // Load hydrates the session from Session.runtimeState on first access, then serves the
@@ -379,4 +420,18 @@ func uniqueCharacterIDs(s *SessionRuntimeState) []int64 {
 		}
 	}
 	return ids
+}
+
+// oVitalQueMudou monta o evento do dano ou da cura.
+//
+// O `CharacterID` só entra quando HÁ ficha atrás da linha, e o zero do NPC é
+// significativo: ele é o que impede o dano num ogro de acordar toda ficha do
+// processo, porque um alvo zero casaria com um interesse zero. Ver
+// `TestOVitalDeNpcNaoAcordaFichaNenhuma`.
+func oVitalQueMudou(sessionID int64, entryID string, charID *int64) events.VitalsChanged {
+	ev := events.VitalsChanged{SessionID: sessionID, EntryID: entryID}
+	if charID != nil {
+		ev.CharacterID = *charID
+	}
+	return ev
 }

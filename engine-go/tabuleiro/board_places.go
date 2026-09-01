@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"t20engine/db/sqlcgen"
+	"t20engine/events"
 )
 
 // Place é uma cena guardada da crônica (ALE-124, fatia 5).
@@ -126,13 +127,27 @@ func (bs *BoardStore) ShowPlace(ctx context.Context, campaignID, sessionID int64
 // justamente na sessão que ainda não abriu tabuleiro, que é quando ele é mais
 // usado. O teto de abertos vale nos dois.
 func (bs *BoardStore) Reopen(ctx context.Context, sessionID int64, tabuleiroID string, placeID int64) (*BoardState, error) {
-	row, err := bs.q.GetCampaignPlace(ctx, placeID)
+	b, ev, err := bs.reopenLocked(ctx, sessionID, tabuleiroID, placeID)
 	if err != nil {
 		return nil, err
 	}
+	bs.bus.Publish(ev)
+	return b, nil
+}
+
+// reopenLocked faz o trabalho e DEVOLVE o evento que ele produziu.
+//
+// Devolver em vez de publicar aqui dentro é o que permite dizer a verdade: com
+// aba já aberta a cena TROCA dentro dela, e sem aba ela NASCE. Um wrapper que
+// adivinhasse o evento pelo nome do método chamaria as duas de "abriu".
+func (bs *BoardStore) reopenLocked(ctx context.Context, sessionID int64, tabuleiroID string, placeID int64) (*BoardState, events.Event, error) {
+	row, err := bs.q.GetCampaignPlace(ctx, placeID)
+	if err != nil {
+		return nil, nil, err
+	}
 	cena, err := aCenaGuardada(row.State, row.Name)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	guardado := *cena
 
@@ -141,7 +156,8 @@ func (bs *BoardStore) Reopen(ctx context.Context, sessionID int64, tabuleiroID s
 	bs.hydrateLocked(ctx, sessionID)
 	aberto := bs.achaLocked(sessionID, tabuleiroID)
 	if aberto == nil {
-		return bs.numaAbaNovaLocked(sessionID, &guardado)
+		b, err := bs.numaAbaNovaLocked(sessionID, &guardado)
+		return b, events.BoardOpened{SessionID: sessionID}, err
 	}
 	if aberto.Version >= guardado.Version {
 		guardado.Version = aberto.Version + 1
@@ -155,8 +171,7 @@ func (bs *BoardStore) Reopen(ctx context.Context, sessionID int64, tabuleiroID s
 	// de quem estava clicando nela.
 	guardado.Seq = aberto.Seq
 	*aberto = guardado
-	bs.avisarLocked(sessionID)
-	return cloneBoard(aberto), nil
+	return cloneBoard(aberto), events.BoardChanged{SessionID: sessionID}, nil
 }
 
 // AbreOLugar põe um lugar guardado numa ABA NOVA, sem tocar no que já está na
@@ -172,6 +187,15 @@ func (bs *BoardStore) Reopen(ctx context.Context, sessionID int64, tabuleiroID s
 // motivo: o id vem do cliente, e sem a checagem um mestre puxaria para a própria
 // mesa a cena de OUTRA campanha.
 func (bs *BoardStore) AbreOLugar(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
+	b, err := bs.abreOLugarLocked(ctx, campaignID, sessionID, placeID)
+	if err != nil {
+		return nil, err
+	}
+	bs.bus.Publish(events.BoardOpened{SessionID: sessionID})
+	return b, nil
+}
+
+func (bs *BoardStore) abreOLugarLocked(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return nil, err
@@ -204,7 +228,6 @@ func (bs *BoardStore) numaAbaNovaLocked(sessionID int64, cena *BoardState) (*Boa
 	cena.ID = bs.newID()
 	cena.Seq = bs.proximaSeqLocked(sessionID)
 	bs.boards[sessionID] = append(bs.boards[sessionID], cena)
-	bs.avisarLocked(sessionID)
 	return cloneBoard(cena), nil
 }
 

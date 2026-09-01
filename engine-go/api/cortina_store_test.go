@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"t20engine/aovivo"
+	"t20engine/events"
 	"t20engine/tabuleiro"
 )
 
@@ -25,7 +26,7 @@ func TestACortinaVoltaDoBanco(t *testing.T) {
 	s.boards.Persist(ctx, sid, aAbaPadrao)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	frio := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID)
+	frio := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{})
 
 	if voltou := frio.Get(ctx, sid, aAbaPadrao); voltou == nil || !voltou.Curtained {
 		t.Fatalf("a cortina não voltou do banco e a mesa veria a cena: %+v", voltou)

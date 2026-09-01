@@ -7,6 +7,7 @@ import (
 	"github.com/a-h/templ"
 	"net/http"
 	"strconv"
+	"t20engine/events"
 	"time"
 
 	"github.com/starfederation/datastar-go/datastar"
@@ -53,22 +54,21 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// O aviso é assinado ANTES do primeiro quadro, senão uma mutação que caia
-	// entre render e assinatura se perde e a tela fica velha até o batimento.
-	aviso, parar := s.sessions.Assinar(sessionID)
+	// A ASSINATURA vem ANTES do primeiro quadro, senão uma mutação que caia entre
+	// render e assinatura se perde e a tela fica velha até o batimento.
+	//
+	// UMA, com os interesses de quem está olhando (ALE-279). Eram TRÊS canais —
+	// a sessão, o tabuleiro e a ficha —, um por store, e o `select` abaixo tinha
+	// um `case` para cada um só para juntar de novo o que estava separado por
+	// acidente de onde o estado mora. O tabuleiro precisou do segundo porque sem
+	// ele mover uma peça só aparecia no BATIMENTO: 1310ms para andar um quadrado,
+	// medido no navegador com o mestre arrastando na frente de seis pessoas.
+	//
+	// Quem não tem ficha nesta mesa (o mestre, e quem só assiste) simplesmente
+	// não pede o interesse dela — antes isso era um canal NULO devolvido por uma
+	// função à parte, e agora é um item a menos numa lista.
+	sub, parar := s.bus.Subscribe(osInteressesDoLeitor(view)...)
 	defer parar()
-	// DOIS canais porque são dois stores, e o tabuleiro não passa pelo da
-	// sessão. Sem este segundo, mover uma peça só aparecia no BATIMENTO —
-	// medido no navegador, 1310ms para a peça andar um quadrado, com o mestre
-	// arrastando na frente de seis pessoas.
-	avisoDoMapa, pararMapa := s.boards.Assinar(sessionID)
-	defer pararMapa()
-	// E o TERCEIRO: "a ficha de quem está olhando mudou" (ALE-275). Ele é por
-	// PERSONAGEM e não por sessão — o mestre e quem não tem ficha nesta mesa não
-	// assinam nada, e o canal nulo de um `select` nunca dispara, que é
-	// exatamente o comportamento certo para eles.
-	avisoDaFicha, pararFicha := s.assinaAFichaDoLeitor(view)
-	defer pararFicha()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
 	ultimo := escreveMesa(r.Context(), sse, view, nil)
@@ -90,13 +90,11 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 			// A aba fechou, o jogador trocou de superfície ou a rede caiu. Sair
 			// aqui é o que impede a goroutine de sobreviver ao leitor.
 			return
-		case <-aviso:
-		case <-avisoDoMapa:
-		case <-avisoDaFicha:
-			// A ficha mudou: este é o ÚNICO caminho que lê o carimbo dela. Antes
-			// a leitura acontecia a cada tique — uma linha por segundo por
-			// jogador conectado, quase sempre para descobrir que nada mudou.
-			fichaMexeu = true
+		case ev := <-sub.C:
+			// A ficha só é relida quando o evento diz que ELA mudou. Antes a
+			// leitura acontecia a cada tique — uma linha por segundo por jogador
+			// conectado, quase sempre para descobrir que nada mudou.
+			fichaMexeu = fichaMexeu || aFichaMudou(ev)
 		case <-batimento.C:
 		}
 		view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID)
@@ -148,17 +146,36 @@ func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, session
 	return seq
 }
 
-// assinaAFichaDoLeitor registra este stream como ouvinte da ficha de quem está
-// olhando, ou devolve um canal nulo para quem não tem ficha nesta mesa.
+// osInteressesDoLeitor diz o que este stream quer receber: a mesa, sempre; a
+// ficha, só de quem tem uma aqui.
 //
-// Canal NULO e não um canal vazio: no `select` do laço, ler de um canal nulo
-// bloqueia para sempre — o ramo simplesmente nunca é escolhido. Um canal vazio
-// custaria uma alocação e uma linha de `if` em quem lê.
-func (s *Server) assinaAFichaDoLeitor(view mesaView) (<-chan struct{}, func()) {
-	if view.Mestre != nil || view.Eu == nil {
-		return nil, func() {}
+// Uma LISTA e não um canal nulo. Aqui morava o `assinaAFichaDoLeitor`, que
+// devolvia `nil` para o mestre porque um canal nulo num `select` nunca dispara —
+// era o truque certo para a forma antiga, e ele deixou de ser necessário: não
+// pedir o interesse é dizer a mesma coisa sem precisar que o leitor conheça o
+// truque.
+func osInteressesDoLeitor(view mesaView) []events.Interest {
+	interesses := []events.Interest{events.OfSession(view.SessionID)}
+	if view.Mestre == nil && view.Eu != nil {
+		interesses = append(interesses, events.OfCharacter(view.Eu.CharacterID))
 	}
-	return s.fichas.Assinar(view.Eu.CharacterID)
+	return interesses
+}
+
+// aFichaMudou diz se este evento mexeu na ficha de quem está olhando.
+//
+// São DOIS, e o segundo é o que a ALE-275 existiu para cobrir: a ficha salva
+// pela própria tela do jogador, e o dano que o mestre aplica pela fila — que
+// chega como vital de um combatente COM personagem atrás. O `Subscribe` já
+// garantiu que o evento é de quem interessa; aqui a pergunta é só que tipo é.
+func aFichaMudou(ev events.Event) bool {
+	switch e := ev.(type) {
+	case events.CharacterChanged:
+		return true
+	case events.VitalsChanged:
+		return e.CharacterID != 0
+	}
+	return false
 }
 
 // avisaQueAFichaMudou acorda a superfície "Minha ficha" quando o personagem
