@@ -1,4 +1,4 @@
-//#region src/shared/lib/spatial-nav.ts
+//#region api/piloto/src/lib/spatial-nav.ts
 var e = 2, t = {
 	left: !0,
 	right: !0,
@@ -56,7 +56,7 @@ function l(e, t) {
 	return i;
 }
 //#endregion
-//#region src/shared/lib/scene-nav.ts
+//#region api/piloto/src/lib/scene-nav.ts
 var u = "(min-width: 1280px) and (pointer: fine)", d = "a[href], button:not([disabled]), [tabindex]:not([tabindex=\"-1\"]), [data-nav-item]";
 function f(e) {
 	let t = /* @__PURE__ */ new WeakMap(), n = (n) => p(n, e, t), r = typeof window.matchMedia == "function" ? window.matchMedia(u) : null, i = !1, a = () => {
@@ -260,7 +260,7 @@ function j(e) {
 	e.preventDefault(), e.stopPropagation();
 }
 //#endregion
-//#region src/shared/lib/audio-gate.ts
+//#region api/piloto/src/lib/audio-gate.ts
 var M = ["pointerdown", "keydown"], N = class {
 	ctx = null;
 	constructor(e, t) {
@@ -347,7 +347,7 @@ function R(e, t, n, r, i) {
 	return a.gain.setValueAtTime(1e-4, n), a.gain.exponentialRampToValueAtTime(Math.max(t, 2e-4), n + r), a.gain.exponentialRampToValueAtTime(1e-4, n + i), a;
 }
 //#endregion
-//#region src/shared/lib/sfx-player.ts
+//#region api/piloto/src/lib/sfx-player.ts
 var z = class {
 	constructor(e = B()) {
 		this.gate = e;
@@ -370,7 +370,7 @@ function H() {
 	return new z();
 }
 //#endregion
-//#region src/shared/stores/ui-store.ts
+//#region api/piloto/src/lib/ui-store.ts
 var U = "t20-ui";
 function W(e, t = globalThis.localStorage) {
 	t?.setItem(U, JSON.stringify({ state: e }));
@@ -393,7 +393,7 @@ function Y(e) {
 	return typeof e != "number" || Number.isNaN(e) ? G : Math.min(100, Math.max(0, Math.round(e)));
 }
 //#endregion
-//#region src/piloto/cena.ts
+//#region api/piloto/src/cena.ts
 function X() {
 	let e = globalThis.localStorage?.getItem("t20-ui") ?? null;
 	return {

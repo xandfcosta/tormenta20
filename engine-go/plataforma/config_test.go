@@ -54,13 +54,12 @@ func TestValidateAcceptsDevelopmentWithoutASecret(t *testing.T) {
 }
 
 func TestLoadConfigReadsTheEnvironmentFile(t *testing.T) {
-	sandboxEnv(t, "PORT", "DATABASE_URL", "JWT_SECRET", "STATIC_DIR", "CORS_ORIGIN", "COOKIE_SECURE", "ADMIN_EMAILS")
+	sandboxEnv(t, "PORT", "DATABASE_URL", "JWT_SECRET", "CORS_ORIGIN", "COOKIE_SECURE", "ADMIN_EMAILS")
 	t.Setenv("APP_ENV", string(EnvProduction))
 	t.Setenv("ENV_FILE", writeEnvFile(t, strings.Join([]string{
 		"PORT=8080",
 		"DATABASE_URL=file:./data/t20-prod.db",
 		"JWT_SECRET=6f1c1a0d9e2b",
-		"STATIC_DIR=../frontend/dist",
 		"ADMIN_EMAILS=Dono@T20.local",
 	}, "\n")))
 
@@ -69,7 +68,7 @@ func TestLoadConfigReadsTheEnvironmentFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadConfig: %v", err)
 	}
-	if cfg.AppEnv != EnvProduction || cfg.Port != "8080" || cfg.StaticDir != "../frontend/dist" {
+	if cfg.AppEnv != EnvProduction || cfg.Port != "8080" {
 		t.Errorf("LoadConfig() = %+v, want the production file's values", cfg)
 	}
 	// The DSN's "file:" prefix is stripped for the SQLite driver.

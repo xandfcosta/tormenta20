@@ -87,7 +87,7 @@ func TestParseEnvLine(t *testing.T) {
 		{name: "blank", raw: "   "},
 		{name: "comment", raw: "# PORT=3001"},
 		{name: "spaces around the pair", raw: "  PORT = 3001  ", key: "PORT", value: "3001"},
-		{name: "empty value", raw: "STATIC_DIR=", key: "STATIC_DIR"},
+		{name: "empty value", raw: "CORS_ORIGIN=", key: "CORS_ORIGIN"},
 		// The DSN and a base64 secret both carry '='; only the first one splits.
 		{name: "value with =", raw: "DATABASE_URL=file:./t20.db?a=b", key: "DATABASE_URL", value: "file:./t20.db?a=b"},
 		{name: "double quoted", raw: `CORS_ORIGIN="http://localhost:5173"`, key: "CORS_ORIGIN", value: "http://localhost:5173"},

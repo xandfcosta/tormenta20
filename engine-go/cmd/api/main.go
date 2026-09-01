@@ -77,7 +77,7 @@ func main() {
 	defer func() { _ = database.Close() }()
 
 	srv := api.NewServer(cfg, database, primeCatalogs(cfg.CatalogPath))
-	mux := plataforma.Gzip(buildMux(cfg, srv))
+	mux := plataforma.Gzip(buildMux(srv))
 
 	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação
 	// (ALE-157): sem isto, um Ctrl-C durante um `VACUUM INTO` ou um persist do
@@ -193,73 +193,50 @@ func primeCatalogs(path string) *engine.Catalogs {
 	return catalogs
 }
 
-// buildMux monta ou o binário único de produção (SPA + /api/* na mesma porta),
-// ou a forma de desenvolvimento, em que o Vite serve o front e tira o /api antes
-// de encaminhar para cá.
+// buildMux monta o binário único: as cenas do piloto, a API em `/api/` e os
+// endereços antigos, tudo na mesma porta.
 //
-// O socket.io tinha caminho PRÓPRIO aqui ("/socket.io/"), fora do `Router()` e
-// por isso fora do CORS e do `requireAuth` — o que obrigava o `guardSocketOrigin`
-// a repetir a política de origem por conta. Com SSE o tempo real é uma rota como
-// as outras e essa exceção sumiu (ALE-253).
-func buildMux(cfg plataforma.Config, srv *api.Server) *http.ServeMux {
+// Ele já teve DOIS formatos — um de produção, que servia o `dist` da SPA na
+// raiz, e um de desenvolvimento, em que o Vite servia o front e tirava o `/api`
+// antes de encaminhar para cá. A SPA saiu na ALE-272 (fatia 10c) e os dois
+// viraram um: não há mais front para servir nem proxy para atravessar, e o
+// `STATIC_DIR` deixou de existir junto com o `spaHandler`.
+//
+// O socket.io também teve caminho PRÓPRIO aqui ("/socket.io/"), fora do
+// `Router()` e por isso fora do CORS e do `requireAuth`. Com SSE o tempo real é
+// uma rota como as outras e essa exceção sumiu (ALE-253). O padrão se repete:
+// toda exceção neste mux acabou saindo.
+func buildMux(srv *api.Server) *http.ServeMux {
 	mux := http.NewServeMux()
-	// O piloto Datastar (ALE-219): uma PÁGINA renderizada pelo servidor, ao lado
-	// da SPA. Fora do `/api` de propósito — o jogador abre e favorita esta URL.
-	// Vive nos dois formatos porque o `ServeMux` casa pelo prefixo mais longo.
-	// Apagar esta linha é metade da saída do piloto.
+	// O piloto Datastar (ALE-219): as cenas, renderizadas pelo servidor. Fora do
+	// `/api` de propósito — o jogador abre e favorita esta URL.
 	mux.Handle("/piloto/", http.StripPrefix("/piloto", srv.PilotoRouter()))
-	// A PORTA DA FRENTE é do servidor desde a ALE-231, e o desvio acontece AQUI
-	// e não dentro da SPA por uma razão medida: a rota `/` dela fazia o desvio em
-	// JavaScript, o que obriga o navegador a baixar e executar o aplicativo
-	// inteiro só para sair dele. Em desenvolvimento isso são ~1600 módulos — o
-	// `lucide-solid` publica um arquivo por ícone e o Vite se RECUSA a
-	// pré-empacotá-lo, porque ele vem em JSX-fonte —, e a carga desperdiçada
-	// esgotou o pool de conexões do Chromium: página em branco, sem erro de
-	// JavaScript nenhum.
-	//
-	// No mux e não no `spaHandler` porque em desenvolvimento o `spaHandler` nem
-	// é montado (sem `STATIC_DIR`), e aí o desvio só existiria em produção — o
-	// e2e mediria uma coisa e o jogador veria outra.
-	//
-	// `"/{$}"` casa a raiz EXATA; `"/"` casaria o app inteiro. A rota `/` da SPA
-	// continua existindo para quem já está DENTRO dela e chama
-	// `navigate({ to: '/' })` — as duas cobrem casos que a outra não alcança.
+	// A PORTA DA FRENTE. `"/{$}"` casa a raiz EXATA; `"/"` casaria tudo.
 	mux.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/piloto/", http.StatusFound)
 	})
-	// OS ENDEREÇOS ANTIGOS descem para cá na ALE-272 (fatia 10). Eles eram
-	// cascas da SPA — `beforeLoad` que mandava para o piloto —, e nessa forma
-	// morriam junto com ela. Aqui em cima do `spaHandler` de propósito: o mux
-	// casa pelo padrão mais específico, então `/grimorio` desvia sem que a SPA
-	// chegue a ser servida.
+	// OS ENDEREÇOS ANTIGOS (ALE-272, fatia 10a). Eram cascas da SPA — um
+	// `beforeLoad` que mandava para o piloto — e nessa forma morreriam com ela.
 	api.MontaEnderecosAntigos(mux)
-	if cfg.StaticDir == "" {
-		// As FONTES só entram aqui, e não no caminho com `STATIC_DIR`: lá o
-		// `dist` da SPA já as serve, e sobrepor uma rota da raiz em produção
-		// seria mudar o que hoje funciona para consertar o que só quebra no
-		// modo sem SPA. O 404 que o dono relatou é deste modo — e é nele que a
-		// cena do piloto é revisada, com a Cinzel caindo para uma serifada do
-		// sistema em toda tela.
-		mux.Handle("/fonts/", srv.FontesDoPiloto())
-		mux.Handle("/", srv.Router())
-		return mux
-	}
+	// As FONTES que a folha pede por caminho absoluto (`/fonts/…`). Elas eram
+	// servidas pelo `dist` da SPA em produção, e é por isso que o binário sem
+	// SPA desenhava toda tela com uma serifada do sistema.
+	mux.Handle("/fonts/", srv.FontesDoPiloto())
+	mux.Handle("/favicon.svg", srv.FaviconDoPiloto())
+	// A API JSON fica sob `/api/`, e agora em TODO ambiente. Ela vivia na raiz
+	// em desenvolvimento porque o Vite tirava o prefixo antes de encaminhar; sem
+	// Vite, dois endereços para a mesma API seriam duas coisas para lembrar.
 	mux.Handle("/api/", http.StripPrefix("/api", srv.Router()))
-	mux.Handle("/", spaHandler(cfg.StaticDir))
-	log.Printf("serving built frontend from %s", cfg.StaticDir)
 	return mux
 }
 
-// announce prints where to point a browser. When this process serves the SPA it
-// also prints the LAN addresses, because the players open the app from their own
-// machines and the host would otherwise have to go read `ip addr` (ALE-119).
+// announce diz onde apontar o navegador, com os endereços da REDE junto: os
+// jogadores abrem o app das máquinas deles, e sem esta linha o dono da mesa
+// teria de ir ler `ip addr` (ALE-119).
 func announce(cfg plataforma.Config) {
 	log.Printf("t20 %s server listening on :%s (%s, db=%s)", cfg.AppEnv, cfg.Port, cfg.Scheme(), cfg.DatabasePath)
 	if cfg.TLSEnabled() && !cfg.CookieSecure {
 		log.Print("  aviso: há TLS e COOKIE_SECURE=false — o cookie de sessão viaja sem a marca Secure")
-	}
-	if cfg.StaticDir == "" {
-		return
 	}
 	for _, url := range lanURLs(cfg) {
 		log.Printf("  players can open %s", url)
@@ -288,59 +265,6 @@ func lanURLs(cfg plataforma.Config) []string {
 		urls = append(urls, fmt.Sprintf("%s://%s:%s", cfg.Scheme(), ipNet.IP, cfg.Port))
 	}
 	return urls
-}
-
-// spaHandler serves the built SPA from dir: an existing file (JS/CSS/wasm assets) is
-// served directly, anything else falls back to index.html so client-side (TanStack)
-// routes resolve on a hard refresh. Mirrors what the Vite dev server does implicitly.
-func spaHandler(dir string) http.Handler {
-	index := filepath.Join(dir, "index.html")
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Rooted Clean so "../" can't escape dir; serve the file when it exists.
-		p := filepath.Join(dir, filepath.Clean("/"+r.URL.Path))
-		if info, err := os.Stat(p); err == nil && !info.IsDir() {
-			serveMaybeCompressed(w, r, p)
-			return
-		}
-		serveMaybeCompressed(w, r, index)
-	})
-}
-
-// serveMaybeCompressed entrega o irmão `.br`/`.gz` pré-comprimido quando o
-// navegador aceita e ele existe, e o arquivo cru quando não (ALE-153).
-//
-// O `net/http` não comprime nada sozinho, e ninguém percebeu: o navegador PEDE
-// `gzip, br` e recebia os 3,7 MB crus do `t20.wasm` — 4,9 MB de carga fria que
-// comprimidos são 1,1 MB. Comprimir na REQUISIÇÃO seria pagar CPU da máquina do
-// mestre a cada jogador que entra; o build pré-comprime uma vez
-// (`frontend/scripts/precompress-dist.sh`) e aqui só se escolhe a variante.
-//
-// Ausência de irmão é caminho normal, não erro: um build sem o passo de
-// compressão continua servindo o app, só mais pesado.
-func serveMaybeCompressed(w http.ResponseWriter, r *http.Request, file string) {
-	// O `Content-Type` sai do nome ORIGINAL: o `ServeFile` o adivinharia pela
-	// extensão do irmão, e `application/octet-stream` faz o
-	// `WebAssembly.instantiateStreaming` recusar o wasm.
-	if ctype := contentTypeFor(file); ctype != "" {
-		w.Header().Set("Content-Type", ctype)
-	}
-	// Sem `Vary`, um proxy no meio serviria a resposta comprimida para quem não
-	// aceita — e o contrário, que é pior.
-	w.Header().Set("Vary", "Accept-Encoding")
-	w.Header().Set("Cache-Control", cacheControlFor(file))
-
-	for _, variant := range []struct{ encoding, ext string }{{"br", ".br"}, {"gzip", ".gz"}} {
-		if !plataforma.AcceptsEncoding(r.Header.Get("Accept-Encoding"), variant.encoding) {
-			continue
-		}
-		if info, err := os.Stat(file + variant.ext); err != nil || info.IsDir() {
-			continue
-		}
-		w.Header().Set("Content-Encoding", variant.encoding)
-		http.ServeFile(w, r, file+variant.ext)
-		return
-	}
-	http.ServeFile(w, r, file)
 }
 
 // tiposFora são as extensões que a tabela do `mime` do Go não conhece e que

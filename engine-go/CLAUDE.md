@@ -3,9 +3,13 @@
 Adapta o [CLAUDE.md da raiz](../CLAUDE.md) a este pacote. As regras da raiz
 valem; o que está aqui estende ou sobrepõe.
 
-`engine-go` é o backend: API HTTP na :3001, o motor de regras, e o mesmo motor
-compilado para WASM que roda no navegador. Um processo serve a SPA, a API e o
-fluxo de eventos em produção (`STATIC_DIR`).
+`engine-go` é o app inteiro: a API HTTP na :3001, o motor de regras, e as CENAS
+em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
+`api/piloto/src`. Um processo serve tudo.
+
+Ele já foi só o backend, com uma SPA em SolidJS ao lado e o mesmo motor
+compilado para WASM rodando no navegador. Os dois saíram na ALE-272: não há
+`STATIC_DIR`, não há `dist` para servir, e a regra tem um lugar só.
 
 Desde a ALE-273 esse processo também sobe por `docker compose up -d --build`,
 com o banco em bind mount no hospedeiro. **O compose não trouxe um segundo
@@ -64,23 +68,22 @@ mesma frase.
 livro + 6`. Onze citações erradas já foram corrigidas neste repositório, três
 delas escritas no mesmo dia em que eu as "verifiquei".
 
-## O gerador de tipos da fronteira
+## O gerador de tipos da fronteira SAIU
 
-```
-go generate ./engine          # escreve frontend/src/shared/api/engine-types.ts
-```
+Aqui morava o `go generate ./engine`, que escrevia
+`frontend/src/shared/api/engine-types.ts` — as formas que atravessavam a
+fronteira do WASM —, mais o `TestGeneratedTypesAreCurrent` que falhava apontando
+a primeira linha divergente.
 
-O arquivo gerado é commitado e `TestGeneratedTypesAreCurrent` falha apontando a
-primeira linha divergente se alguém mudar uma struct sem regenerar.
+Ele existia porque havia DOIS lados. Com a SPA e o WASM apagados (ALE-272, fatia
+10c) não há fronteira a manter em dia: o motor é chamado de dentro do mesmo
+processo, pelo tipo Go de verdade. O `cmd/tsgen`, o `engine/tsgen.go` e o guarda
+saíram juntos.
 
-Gera-se **só a fronteira** (o que o WASM devolve e recebe), não os catálogos: o
-Go serve catálogo como bytes crus e não tem struct para a maioria deles; as três
-que existem são subconjuntos deliberados. Ver ALE-108.
-
-Um tipo com `MarshalJSON` próprio **precisa** declarar sua forma de fio em
-`tsWireOverrides` — o emissor recusa com panic caso contrário, porque refletir a
-struct em memória produziria um tipo que mente (o `ItemEffects` guarda flags num
-Set e serializa um array).
+A lição que fica, porque ela vale para o próximo gerador: **um tipo com
+`MarshalJSON` próprio precisa declarar a forma de FIO**, e o emissor recusava com
+panic quem não declarasse — refletir a struct em memória produz um tipo que
+mente (o `ItemEffects` guarda flags num Set e serializa um array).
 
 ## O sqlc trunca SQL por causa de comentário acentuado
 
@@ -118,25 +121,24 @@ exigida para sempre — o servidor recusaria subir sobre um banco CORRETO,
 nomeando como faltante justamente a que a migração acabou de derrubar. Ver a
 seção abaixo.
 
-## A SPA sai PRÉ-COMPRIMIDA do build
+## A PRÉ-COMPRESSÃO do build saiu com a SPA
 
-O `net/http` não comprime nada sozinho, e por isso o servidor mandava os 3,7 MB
-crus do `t20.wasm` para um navegador que pedia `gzip, br` — 4,9 MB de carga fria
-que comprimidos são 1,1 MB (ALE-153).
+Aqui morava a explicação do `spaHandler` escolhendo o irmão `.br`/`.gz` que o
+`postbuild` do front gerava (ALE-153): o `net/http` não comprime nada sozinho, e
+o servidor mandava os 3,7 MB crus do `t20.wasm` para um navegador que pedia
+`gzip, br`.
 
-Quem comprime é o BUILD (`frontend/scripts/precompress-dist.sh`, rodado pelo
-`postbuild`), gerando `.br` e `.gz` ao lado de cada asset; o `spaHandler` só
-escolhe a variante pelo `Accept-Encoding`. Comprimir na requisição seria gastar
-CPU da máquina do mestre a cada jogador que entra — brotli -q11 custa ~8s UMA vez
-no build.
+Com a SPA apagada (ALE-272, fatia 10c) não há `dist` para servir nem asset
+pesado para pré-comprimir — os estáticos do piloto são a folha, quatro ilhas de
+JS e duas fontes, todos embutidos no binário. O que sobrou é a compressão do que
+o servidor RENDERIZA, logo abaixo.
 
-Duas armadilhas que os testes de `cmd/api` congelam: o `Content-Type` tem de sair
-do nome ORIGINAL (adivinhado pela extensão do irmão, o wasm vira
-`application/octet-stream` e o `instantiateStreaming` recusa), e `gzip;q=0` é uma
-RECUSA — um `strings.Contains` a leria como aceitação.
-
-Sem os irmãos comprimidos o app continua funcionando, só mais pesado: ausência é
-caminho normal, não erro.
+Duas coisas que aquele caminho ensinou e que valem para qualquer arquivo servido
+daqui: o `Content-Type` tem de sair do nome ORIGINAL (adivinhado pela extensão
+do irmão comprimido, o wasm virava `application/octet-stream` e o
+`instantiateStreaming` recusava), e `gzip;q=0` é uma RECUSA — um
+`strings.Contains` a leria como aceitação, e é por isso que
+`plataforma.AcceptsEncoding` existe.
 
 ## E o que o servidor RENDERIZA sai comprimido na hora
 
@@ -280,7 +282,7 @@ doméstica isso é de graça; o `busy_timeout(5000)` cobre a espera.
 
 O servidor tem `ReadHeaderTimeout` (5s) e `IdleTimeout` (120s), e **não tem
 `WriteTimeout` de propósito** (ALE-157): ele mataria o fluxo SSE, que é conexão
-longa por natureza, e o download do wasm numa rede ruim. É o timeout que parece
+longa por natureza, e um download grande numa rede ruim. É o timeout que parece
 obrigatório e é justamente o errado aqui — há teste afirmando a AUSÊNCIA dele.
 
 Um sinal encerra com ordem (`signal.NotifyContext` + `Shutdown`, janela de 10s).
@@ -333,16 +335,16 @@ desligado.
 ## Catálogos
 
 O catálogo viaja COMPRIMIDO (`writeCatalogJSON`, ALE-159): `spells` sozinho são
-179 KB crus e 40 KB em gzip, e o front os busca por HTTP de propósito (ALE-107),
-então esses bytes entram em toda carga fria. Comprimido UMA vez e guardado, não
-por requisição — o conteúdo vem de `go:embed` e não muda enquanto o binário for
-o mesmo. A leitura do `Accept-Encoding` é a MESMA da SPA (`api.AcceptsEncoding`),
-para o tratamento de `q=0` não divergir em duas cópias.
+179 KB crus e 40 KB em gzip. Isso importava quando a SPA os buscava por HTTP
+(ALE-107) e eles entravam em toda carga fria; hoje as cenas leem o embutido
+direto, e a rota `GET /catalog/:nome` está entre as que perderam consumidor com
+a SPA. Comprimido UMA vez e guardado, não por requisição — o conteúdo vem de
+`go:embed` e não muda enquanto o binário for o mesmo. A leitura do `Accept-Encoding` é a do `plataforma.AcceptsEncoding`, uma
+só, para o tratamento de `q=0` não divergir em duas cópias.
 
-`catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.
-**Este é o único lugar onde catálogo é autorado** — mudar uma magia é editar um
-arquivo só. O front os busca por HTTP e o `test-setup` do vitest lê os mesmos
-arquivos, então uma edição vale para os dois lados na hora.
+`catalog/data/*.json` é embutido no binário. **Este é o único lugar onde
+catálogo é autorado** — mudar uma magia é editar um arquivo só, e a cena, o
+motor e os testes leem o mesmo arquivo.
 
 **E há DUAS fontes do mesmo `items.json` no processo, com durabilidades
 diferentes.** O `catalog.Resource` é `go:embed` — existe sempre que o binário
@@ -359,8 +361,9 @@ uma.** Em que nível cada classe destrava cada círculo vivia só no
 `validateAugments` aceitava qualquer `requiresCircle`, que são 126 dos 486
 aprimoramentos do catálogo. A tabela virou o campo `spellcasting` das cinco
 classes conjuradoras em `classes.json` (ALE-272), MOVIDA e não retranscrita: um
-teste do front compara as duas cópias campo a campo e morre com a SPA. O sintoma
-que essa família produz é sempre o mesmo — a tela tranca e o servidor não.
+teste do front comparava as duas cópias campo a campo, e morreu com a SPA — a
+tabela do catálogo ficou como fonte única. O sintoma que essa família produz é
+sempre o mesmo: a tela tranca e o servidor não.
 
 A fatia 7 fechou a terceira: a compatibilidade entre **melhoria/material** e o
 item que os recebe (`appliesTo`) vivia no `familyFor` do TypeScript, e o
@@ -535,7 +538,7 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   dourado, 1,53:1, e atravessou uma fatia inteira (ALE-272). O
   `TestTodaTintaDaCasaExisteNaFolha` varre `piloto_*.templ` e `piloto_*.go` e
   cobra cada token da casa contra a folha compilada. A paleta mora no
-  `@theme` do `frontend/src/index.css`; conferir lá antes de inventar o nome.
+  `@theme` do `api/piloto/src/index.css`; conferir lá antes de inventar o nome.
 
 ## Datastar: nove armadilhas que não deixam erro para trás
 

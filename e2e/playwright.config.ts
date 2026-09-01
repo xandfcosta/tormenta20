@@ -1,44 +1,30 @@
 import { defineConfig, devices } from '@playwright/test'
 
 /**
- * E2E suite (ALE-68). Lives OUTSIDE `frontend/` on purpose: it drives the running
- * app by URL, so it's **framework-agnostic** and survives the React→Solid
- * migration (ALE-63) unchanged — unlike the React-coupled unit tests.
+ * A suíte de e2e (ALE-68). Ela vive FORA dos pacotes de propósito: dirige o app
+ * RODANDO, por URL, e por isso atravessou o React→Solid (ALE-63) e o
+ * Solid→Datastar (ALE-272) sem mudar de forma — ao contrário dos testes de
+ * unidade, que morreram com o stack de cada época.
  *
- * O ALVO PADRÃO É O BUILD, servido pelo Go — a forma de produção (ALE-256).
+ * O ALVO É O BINÁRIO DO GO, que é a forma de produção: um processo servindo as
+ * cenas, a API e o fluxo ao vivo na mesma origem. Ele já foi o servidor de
+ * desenvolvimento do Vite, e isso custava duas coisas — tempo (7,7 min contra
+ * ~2,9) e, o que importa mais, **os guardas mediam um CSS que não ia para
+ * produção**: o `o aviso da mesa é pintado na cor da mesa` passava em dev e
+ * falhava contra o build, porque o minificador reescreve `oklch(0.27 0.016 300)`
+ * como `oklch(27% .016 300)` — mesma cor, texto diferente (ALE-256).
  *
- * Era o servidor de desenvolvimento, e isso custava duas coisas. A primeira é
- * tempo: cada carregamento puxava ~2.500 módulos ES soltos contra 33 chamadas de
- * API, e a suíte levava 7,7 min contra ~2,9 min pelo build.
- *
- * A segunda é a que importa: **os guardas mediam um CSS que não vai para
- * produção.** O `o aviso da mesa é pintado na cor da mesa` passava em dev e
- * falhava contra o build porque o minificador reescreve `oklch(0.27 0.016 300)`
- * como `oklch(27% .016 300)` — mesma cor, texto diferente. Esta suíte tem
- * dezenas de guardas de cor, contraste, tipografia e leiaute, e todos estavam do
- * lado errado do aviso que o `vite.config.ts` já carregava desde a ALE-76:
- * medir em DEV produziu o fantasma "o React bloqueia 64–74 ms", que não
- * sobreviveu a uma corrida de produção.
- *
- * `E2E_DEV=1` volta ao Vite para iterar num spec, e é ESCAPE explícito de
- * propósito: enquanto o atalho era o padrão, ninguém sabia que estava medindo
- * outra coisa.
- *
- * `vite preview` não serve de alvo — ele não é a forma de produção. O binário
- * único do Go serve SPA e API na MESMA ORIGEM, que é o que roda na mesa do dono,
- * e desde a ALE-253 isso dispensa `CORS_ORIGIN`: sem socket, o tempo real é uma
- * rota como as outras.
+ * Com a SPA apagada não há mais dois alvos possíveis: o `E2E_DEV=1` que voltava
+ * ao Vite saiu junto com ele.
  */
-const CONTRA_O_DEV = process.env.E2E_DEV === '1'
 // O CI sobe o servidor ELE MESMO, porque precisa aplicar a seed depois de o
 // goose migrar e antes de o primeiro teste rodar — ordem que o `webServer` do
 // Playwright não expõe. Então ele diz aqui que já há alguém de pé, em vez de a
 // gente adivinhar por `process.env.CI`: adivinhar acertaria hoje e erraria no
 // dia em que alguém rodasse a suíte localmente com um servidor próprio.
 const SERVIDOR_JA_DE_PE = process.env.E2E_SERVIDOR_EXTERNO === '1'
-// Porta própria para o alvo do build: reaproveitar a :3001 pegaria um servidor
-// de dev SEM `STATIC_DIR`, que responde a API e não serve SPA nenhuma — a suíte
-// morreria em 404 com cara de defeito do app.
+// Porta própria: reaproveitar a :3001 pegaria o servidor de desenvolvimento de
+// quem estiver com o app aberto, e a suíte mediria o banco dele.
 const PORTA_DO_BUILD = process.env.E2E_PORT ?? '3010'
 // O BANCO DO E2E É PRÓPRIO, apagado e recriado a cada corrida (ALE-269).
 //
@@ -53,9 +39,7 @@ const PORTA_DO_BUILD = process.env.E2E_PORT ?? '3010'
 // irmãos `-wal` e `-shm` vão junto: deixá-los faz o SQLite reconstruir o banco
 // velho por cima do novo, e o "banco limpo" seria o sujo com outro nome.
 const BANCO_DO_E2E = 'data/e2e.db'
-const BASE_URL =
-  process.env.E2E_BASE_URL ??
-  (CONTRA_O_DEV ? 'http://localhost:5173' : `http://localhost:${PORTA_DO_BUILD}`)
+const BASE_URL = process.env.E2E_BASE_URL ?? `http://localhost:${PORTA_DO_BUILD}`
 
 export default defineConfig({
   testDir: './tests',
@@ -141,15 +125,13 @@ export default defineConfig({
     // o arquivo ao abrir, a seed é só INSERT, e o login precisa dos usuários que
     // ela cria. Só existe quando NÓS subimos o servidor — com servidor externo
     // quem semeia é o CI, e aplicar `seed.sql` duas vezes estoura nas chaves.
-    ...(SERVIDOR_JA_DE_PE || CONTRA_O_DEV
-      ? []
-      : [{ name: 'semente', testMatch: /semente\.setup\.ts/ }]),
+    ...(SERVIDOR_JA_DE_PE ? [] : [{ name: 'semente', testMatch: /semente\.setup\.ts/ }]),
     // Logs in once via the UI and saves the session (localStorage token) so the
     // other specs start authenticated.
     {
       name: 'setup',
       testMatch: /auth\.setup\.ts/,
-      dependencies: SERVIDOR_JA_DE_PE || CONTRA_O_DEV ? [] : ['semente'],
+      dependencies: SERVIDOR_JA_DE_PE ? [] : ['semente'],
     },
     {
       name: 'chromium',
@@ -161,30 +143,20 @@ export default defineConfig({
   // qualquer tentativa esbarraria na porta ocupada.
   webServer: SERVIDOR_JA_DE_PE
     ? undefined
-    : CONTRA_O_DEV
-    ? {
-        command: 'pnpm --filter frontend dev',
-        url: BASE_URL,
-        cwd: '..',
-        reuseExistingServer: true,
-        timeout: 120_000,
-      }
     : {
-        // Constrói e serve como produção. `reuseExistingServer: false` é
-        // deliberado: um servidor já no ar nesta porta pode estar sem
-        // `STATIC_DIR` ou com um `dist` velho, e a suíte mediria o binário
-        // errado sem nada acusar. Falhar por porta ocupada é barulhento, que é
-        // o que se quer.
+        // Serve como produção. `reuseExistingServer: false` é deliberado: um
+        // servidor já no ar nesta porta pode ser de outra árvore ou de um
+        // binário velho, e a suíte mediria o errado sem nada acusar. Falhar por
+        // porta ocupada é barulhento, que é o que se quer.
         // `go run` e não o `start` do engine-go: aquele roda um binário
         // pré-construído com `APP_ENV=production`, que leria o
         // `.env.production` do dono da mesa — arquivo não versionado, com
         // `COOKIE_SECURE` e banco próprios. A bancada tem de ser o ambiente de
-        // desenvolvimento servindo o BUILD, não produção pela metade.
+        // desenvolvimento, não produção pela metade.
         command:
-          'pnpm --filter frontend build && cd engine-go && ' +
+          'cd engine-go && ' +
           `rm -f ${BANCO_DO_E2E} ${BANCO_DO_E2E}-wal ${BANCO_DO_E2E}-shm && ` +
-          `STATIC_DIR=../frontend/dist PORT=${PORTA_DO_BUILD} ` +
-          `DATABASE_URL=file:./${BANCO_DO_E2E} go run ./cmd/api`,
+          `PORT=${PORTA_DO_BUILD} DATABASE_URL=file:./${BANCO_DO_E2E} go run ./cmd/api`,
         url: BASE_URL,
         cwd: '..',
         reuseExistingServer: false,

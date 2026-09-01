@@ -1,9 +1,7 @@
 package api
 
 import (
-	"bytes"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -94,38 +92,29 @@ func TestARegraQueEscondeODialogoFicaForaDeCamada(t *testing.T) {
 	}
 }
 
-// TestAsFONTESembutidasSAOasMESMASdaSPA.
+// TestAsFontesDaFolhaExistem.
 //
-// A cópia é deliberada e o guarda é o que a torna dívida em vez de armadilha:
-// `go:embed` não alcança `../frontend/public/fonts`, que está fora do módulo Go,
-// então as duas woff2 vivem em dois lugares. Sem este guarda, atualizar a fonte
-// num lado só apareceria como um desenho levemente errado no outro — a classe de
-// defeito que ninguém liga à causa.
-func TestAsFontesEmbutidasSaoAsMesmasDaSPA(t *testing.T) {
+// Aqui morava o `TestAsFontesEmbutidasSaoAsMesmasDaSPA`, que comparava as woff2
+// embutidas com as da SPA byte a byte: `go:embed` não alcançava
+// `../frontend/public/fonts`, então a fonte vivia em dois lugares e o guarda era
+// o que tornava a cópia dívida em vez de armadilha.
+//
+// Com a SPA apagada (ALE-272, fatia 10c) não há segundo lado: estas SÃO as
+// fontes. O que sobra para prender é a presença — a folha pede `/fonts/…` por
+// caminho absoluto, e sem arquivo a Cinzel cai para uma serifada do sistema em
+// toda tela, que é um defeito de aparência que ninguém liga à causa.
+func TestAsFontesDaFolhaExistem(t *testing.T) {
 	fontes, err := os.ReadDir("piloto/static/fonts")
 	if err != nil {
 		t.Fatalf("ler as fontes embutidas: %v", err)
 	}
-	// O CONTROLE: há fonte para comparar. Um diretório vazio faria o laço abaixo
-	// não rodar nenhuma vez, e o teste passaria verde afirmando nada.
-	if len(fontes) == 0 {
-		t.Fatal("nenhuma fonte embutida: a folha pede /fonts/ e o piloto não tem o que servir")
+	if len(fontes) != 2 {
+		t.Fatalf("%d fontes embutidas, e a folha declara duas (latin e latin-ext)", len(fontes))
 	}
-
 	for _, f := range fontes {
-		embutida, err := os.ReadFile(filepath.Join("piloto/static/fonts", f.Name()))
-		if err != nil {
-			t.Errorf("ler %s embutida: %v", f.Name(), err)
-			continue
-		}
-		daSPA, err := os.ReadFile(filepath.Join("..", "..", "frontend", "public", "fonts", f.Name()))
-		if err != nil {
-			t.Errorf("%s está embutida no piloto e não existe na SPA: %v", f.Name(), err)
-			continue
-		}
-		if !bytes.Equal(embutida, daSPA) {
-			t.Errorf("%s divergiu: %d bytes embutidos contra %d na SPA — a fonte foi atualizada num lugar só",
-				f.Name(), len(embutida), len(daSPA))
+		info, err := f.Info()
+		if err != nil || info.Size() == 0 {
+			t.Errorf("%s está vazia: o navegador ignora a fonte e cai na do sistema", f.Name())
 		}
 	}
 }

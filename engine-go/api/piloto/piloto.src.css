@@ -1,9 +1,12 @@
 /* A folha do piloto Datastar (ALE-219).
  *
- * Ela NÃO redefine cor nenhuma: importa a folha da SPA inteira, que é onde os
- * tokens moram. Uma segunda paleta é uma paleta que diverge — o piloto existe
- * para medir o Datastar, não para inventar um tema. */
-@import "../../../frontend/src/index.css";
+ * Ela NÃO redefine cor nenhuma: importa a folha do sistema de desenho, que é
+ * onde os tokens moram. Uma segunda paleta é uma paleta que diverge.
+ *
+ * O `index.css` vinha da SPA (`frontend/src/index.css`) e veio para cá na
+ * ALE-272 (fatia 10c), quando a SPA saiu: era ela quem o hospedava, e não quem
+ * o possuía — a paleta sempre foi da casa. */
+@import "./src/index.css";
 
 /* Os templates, que o scanner não acharia sozinho: a detecção automática do
  * Tailwind v4 parte da pasta desta folha, e eles moram dois níveis acima.

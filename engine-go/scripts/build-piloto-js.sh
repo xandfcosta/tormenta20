@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 # O módulo JS do piloto Datastar (ALE-231).
 #
-# Mesma forma e mesmo motivo do `build-piloto-css.sh`: o fonte é o da SPA
-# (`frontend/src/piloto/cena.ts`, que importa `shared/lib/*`), e o produto é
-# embutido no binário pelo `go:embed`. UMA fonte, dois consumidores — duplicar
-# o driver de teclado seria a armadilha de divergência que a casca e os botões
-# já mostraram.
+# Mesma forma e mesmo motivo do `build-piloto-css.sh`: o fonte agora é daqui
+# (`api/piloto/src/cena.ts`) e o produto é embutido no binário pelo `go:embed`.
+# Ele vivia em `frontend/` enquanto a SPA existia, porque o driver de teclado, o
+# som e as peças eram compartilhados — a ALE-272 (fatia 10c) trouxe as fontes
+# para cá junto com as dependências.
 #
-# ESTE SCRIPT PRECISA RODAR ANTES DO `go build`, como o do CSS e o do WASM.
+# ESTE SCRIPT PRECISA RODAR ANTES DO `go build`, como o do CSS.
 set -euo pipefail
-raiz="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-cd "$raiz/frontend"
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # O binário direto, e não `pnpm exec`, pelo mesmo motivo do CSS: o `pnpm exec`
 # roda uma checagem de dependências que aborta quando há script de instalação
 # pendente de aprovação, e isso é irrelevante para gerar um bundle.
@@ -22,4 +21,4 @@ cd "$raiz/frontend"
 # pede — e é justamente por rodar fora da thread principal que a página do livro
 # desenha sem travar a cena.
 cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs \
-   "$raiz/engine-go/api/piloto/static/pdf.worker.js"
+   ./api/piloto/static/pdf.worker.js

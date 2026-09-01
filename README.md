@@ -3,18 +3,19 @@
 pnpm workspace monorepo.
 
 ```
-engine-go/ Go: API (:3001), motor de regras, e o mesmo motor compilado pra WASM
-frontend/  Vite + SolidJS + TanStack Router/Query + Kobalte (Tailwind v4, CSS variables)
-e2e/       Playwright, fora do frontend de propósito
+engine-go/ Go: API (:3001), motor de regras, e as CENAS em templ + Datastar —
+           com a folha e as ilhas de JS delas em api/piloto/src (Tailwind v4)
+e2e/       Playwright, dirigindo o app rodando
 ```
 
 A linguagem do domínio mora em **[GLOSSARIO.md](GLOSSARIO.md)**: uma palavra por
 conceito, os sinônimos proibidos e a regra de quando se escreve em português e
 quando em inglês. Consulte antes de nomear algo que o usuário vá ler.
 
-O frontend era React até o cutover (ALE-76), e o backend NestJS foi removido — o
-Go é o backend, e migra o próprio banco (goose embutido) ao subir. O histórico
-das duas migrações vive no `git log` e nas issues do Linear.
+Houve três stacks de tela: React, depois SolidJS (ALE-76), e desde a ALE-272 as
+cenas são renderizadas pelo SERVIDOR com templ + Datastar. O backend NestJS
+também foi removido — o Go é o app, e migra o próprio banco (goose embutido) ao
+subir. O histórico das migrações vive no `git log` e nas issues do Linear.
 
 ## Setup
 
@@ -27,12 +28,12 @@ Não há passo de migração: `db.Open` aplica as migrações embutidas na parti
 ## Dev
 
 ```bash
-pnpm dev                 # API Go (:3001) + Vite (:5173) juntos
-pnpm dev:frontend        # só o Vite (/api proxiado pra :3001)
+pnpm dev                 # a API e as cenas, com recarga a quente (:3001)
 ```
 
-O `predev` do frontend compila `engine-go` → WASM antes de subir o Vite, porque
-o app deriva a ficha pelo MESMO motor do servidor. Precisa do toolchain Go.
+Um servidor só: abra `http://localhost:3001`. Mexeu num `.templ`? `go tool templ
+generate`. Mexeu na folha ou nas ilhas de JS? `pnpm -F @tormenta20/engine-go run
+prebuild`.
 
 A configuração vem de `engine-go/.env.development`, que é **versionado**: nada
 ali é segredo, e o servidor recusa subir em produção com aquele `JWT_SECRET`.
@@ -42,20 +43,17 @@ admin ali, então o menu do Hub tem **Convidar jogador** desde o primeiro boot.
 ## Testes
 
 ```bash
-pnpm test                # unit: frontend (NÃO inclui o e2e)
-pnpm test:e2e            # Playwright — exige os dois servers de pé (:5173 e :3001)
-cd engine-go && go test ./...
+cd engine-go && go test ./...   # a suíte inteira do app
+pnpm test:e2e                   # Playwright — sobe o próprio servidor e o próprio banco
 ```
 
-O e2e ficou FORA do `pnpm test` de propósito (ALE-93): `pnpm -r` roda os pacotes
-em paralelo, e disputar CPU com os vitest do front derruba o Playwright por
-timeout — e o job `ci`, que roda `pnpm test`, não instala browser nem sobe a API.
-No CI o e2e tem job próprio.
+O e2e tem comando próprio e job próprio no CI (ALE-93): ele instala browser e
+sobe a API, e disputar CPU com o resto o derruba por timeout.
 
 ## Produção (a mesa na LAN)
 
-Duas formas, e as duas sobem **o mesmo processo único** — o binário serve a SPA,
-a API e o fluxo ao vivo na mesma porta, com as cenas comprimidas por ele mesmo.
+Duas formas, e as duas sobem **o mesmo processo único** — o binário serve as
+cenas, a API e o fluxo ao vivo na mesma porta, com tudo comprimido por ele mesmo.
 Não há proxy reverso em nenhuma das duas.
 
 ### Por contêiner (ALE-273)
@@ -86,7 +84,7 @@ fim do `docker-compose.yml`.
 ```bash
 cp engine-go/.env.production.example engine-go/.env.production
 openssl rand -hex 32     # cole no JWT_SECRET do arquivo copiado
-pnpm build               # WASM + SPA + o binário do servidor
+pnpm build               # a folha, as ilhas e o binário do servidor
 pnpm start               # build + sobe em produção
 ```
 
@@ -118,11 +116,10 @@ backup. Duas ações sobre uma conta: gerar um **link de redefinição de senha*
 você nunca digita nem vê a senha de ninguém — e **apagar**, que leva as fichas
 junto e passa as mesas dela para você.
 
-**A stack de produção é um processo só.** Com `STATIC_DIR` apontando para
-`frontend/dist`, o `cmd/api` serve o SPA (com fallback pras rotas de cliente), os
-assets e `/api/*` na mesma porta. Não há nginx, não há
-docker-compose e não há segundo runtime pra manter — foi por isso que os dois
-saíram quando o Nest saiu.
+**A stack de produção é um processo só.** O `cmd/api` serve as cenas, os
+estáticos (que viajam DENTRO do binário) e `/api/*` na mesma porta. Não há nginx
+e não há segundo runtime pra manter — foi por isso que os dois saíram quando o
+Nest saiu.
 
 ### HTTPS na LAN, e o app instalado no telefone
 
@@ -226,9 +223,9 @@ dois — é o mesmo binário (ALE-119):
 | | dev (`pnpm dev`) | produção (`pnpm start`) |
 |---|---|---|
 | arquivo | `engine-go/.env.development` (versionado) | `engine-go/.env.production` (seu, não versionado) |
-| quem serve o SPA | Vite :5173, proxiando `/api` | o próprio binário, mesma porta da API |
+| quem serve as cenas | o próprio binário | o próprio binário |
 | banco | `engine-go/data/t20-dev.db` | `engine-go/data/t20-prod.db` |
-| CORS | libera `http://localhost:5173` | nenhum header: tudo é mesma-origem |
+| CORS | libera `http://localhost:5173` (herança da SPA) | nenhum header: tudo é mesma-origem |
 | `JWT_SECRET` | público, no repositório | seu, e o boot **falha** sem ele |
 | admin | `mestre@t20.local` (o do seed) | o seu, e o boot **falha** sem nenhum |
 
@@ -247,7 +244,6 @@ Variáveis (defaults em `engine-go/api/config.go`):
 | `COOKIE_SECURE` | `false` | ligue quando houver TLS na frente — em HTTP na LAN, ligado, o browser descarta o cookie e o login não conclui |
 | `CORS_ORIGIN` | `http://localhost:5173` (vazio em produção) | a ÚNICA origem liberada; vazio = sem CORS |
 | `TLS_CERT_FILE` / `TLS_KEY_FILE` | vazios | o par de certificados; os DOIS preenchidos = este processo fala HTTPS, os dois vazios = HTTP. Meio par **derruba o boot** |
-| `STATIC_DIR` | vazio | o `dist` do front; vazio = modo dev (o Vite serve) |
 | `BACKUP_DIR` | `../backups` | onde o `pnpm db:backup` e a tela de admin escrevem |
 | `CATALOG_PATH` | `parity/_catalogs.json` | catálogos dos validadores de mutação |
 | `LIVRO_PDF` | vazio | o Tormenta 20 em PDF que o servidor entrega em `/piloto/livro`; vazio = não serve nada e o botão "abrir no livro" não aparece. **Linearize antes** (`qpdf --linearize`): medido, o navegador transfere o arquivo inteiro para abrir uma página nos dois casos, e o qpdf encolhe os 89,5 MB para 78,6 — o boot avisa quando não está |

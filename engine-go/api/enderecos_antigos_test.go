@@ -30,14 +30,17 @@ func oDesvioDe(t *testing.T, caminho string) (int, string) {
 // forma de errar que sobra: uma entrada apontando para um endereço que o piloto
 // não atende, ou um padrão que nunca casa.
 func TestTodoEnderecoAntigoLevaAoPiloto(t *testing.T) {
-	if len(osEnderecosAntigos) < 13 {
-		t.Fatalf("%d endereços na tabela — as cascas da SPA eram treze", len(osEnderecosAntigos))
+	// Treze cascas da SPA na fatia 10a, mais os quatro endereços das telas que
+	// só morreram com ela na 10c: a ficha, a forja (em dois formatos) e a mesa.
+	if len(osEnderecosAntigos) < 17 {
+		t.Fatalf("%d endereços na tabela, e são pelo menos dezessete", len(osEnderecosAntigos))
 	}
 	for _, endereco := range osEnderecosAntigos {
 		// O padrão vira um caminho de exemplo: `{id}` e `{tool}` recebem um
 		// valor, e `{$}` (fim exato) vira a barra que ele exige.
 		caminho := strings.NewReplacer(
-			"{id}", "7", "{tool}", "condicoes", "{token}", "abc-123", "{$}", "",
+			"{id}", "7", "{sid}", "9", "{tool}", "condicoes", "{token}", "abc-123",
+			"{passo}", "raca", "{$}", "",
 		).Replace(endereco.Padrao)
 
 		status, destino := oDesvioDe(t, caminho)
@@ -64,6 +67,13 @@ func TestOEnderecoAntigoLevaOQueOFazValer(t *testing.T) {
 		{"/campaigns/12?tab=config", "/piloto/campanhas/12?tab=config"},
 		{"/campaigns/12", "/piloto/campanhas/12"},
 		{"/gm/condicoes", "/piloto/mestre/condicoes"},
+		// A FICHA, a FORJA e a MESA — os três endereços que só puderam desviar
+		// quando a tela antiga deles deixou de existir (fatia 10c).
+		{"/characters/13", "/piloto/personagens/13"},
+		{"/characters/13?tab=bag", "/piloto/personagens/13?tab=bag"},
+		{"/characters/new", "/piloto/personagens/nova"},
+		{"/characters/new/equipamento", "/piloto/personagens/nova"},
+		{"/campaigns/1/sessions/4", "/piloto/mesa/1/4"},
 		// Busca que a casca da SPA não preservava continua não passando: o que
 		// não valia antes não passa a valer por acidente.
 		{"/grimorio?ruido=1", "/piloto/grimorio"},

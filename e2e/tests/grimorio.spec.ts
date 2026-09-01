@@ -46,18 +46,19 @@ const SUPERFICIES_COM_TINTA = [
       // fora da folha onde ela vira texto grande (ALE-240).
       //
       // O que ele mede é o tom que estiver na tela: com o rascunho vazio isso é
-      // "Trivial", em `--hp-full`. Ele NÃO exercita o "Mortal" — montar um
-      // encontro mortal aqui custaria semear criaturas, e o token daquele tom
-      // já é a tinta da casa, medida nas outras três cenas por identidade. O
-      // que esta entrada garante é que a família vital continue legível ONDE
-      // ela escreve grande, e que a tela entre na varredura quando alguém puser
-      // tinta nova nela.
-      await page.goto('/campaigns/1/sessions/4')
-      await page
-        .getByRole('navigation', { name: 'Consultas do mestre' })
-        .getByRole('button', { name: 'Encontros', exact: true })
-        .click()
-      await expect(page.getByRole('dialog', { name: 'Montar encontro' })).toBeVisible()
+      // "Trivial". Ele NÃO exercita o "Mortal" — montar um encontro mortal aqui
+      // custaria semear criaturas, e o token daquele tom já é a tinta da casa,
+      // medida nas outras cenas por identidade. O que esta entrada garante é
+      // que a família vital continue legível ONDE ela escreve grande, e que a
+      // tela entre na varredura quando alguém puser tinta nova nela.
+      //
+      // O endereço era o do construtor DENTRO da sessão da SPA
+      // (`/campaigns/1/sessions/4`, num diálogo do trilho do mestre). Com a SPA
+      // apagada (ALE-272, fatia 10c) o construtor é cena própria do servidor, e
+      // é ela que passa a ser medida — o guarda mede TINTA CONTRA FUNDO, e isso
+      // independe de quem desenhou.
+      await page.goto('/piloto/mestre/encontros')
+      await expect(page.getByRole('heading', { name: 'Encontros' })).toBeVisible()
     },
   },
   {

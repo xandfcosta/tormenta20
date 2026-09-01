@@ -3,7 +3,7 @@
 #   cp .env.example .env    # e escreva o JWT_SECRET e o ADMIN_EMAILS
 #   docker compose up -d --build
 #
-# UM serviço, e é deliberado: o binário serve a SPA, a API e o fluxo ao vivo na
+# UM serviço, e é deliberado: o binário serve as cenas, a API e o fluxo ao vivo na
 # mesma porta desde a ALE-101, e as cenas saem comprimidas de dentro do próprio
 # Go (`plataforma.Gzip`). Um proxy na frente compraria só a compressão, e traria
 # um segundo runtime, um segundo lugar para configurar TLS e um segundo lugar

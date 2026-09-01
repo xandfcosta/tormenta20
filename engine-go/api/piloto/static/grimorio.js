@@ -1,4 +1,4 @@
-//#region src/features/session-tracker/turn-juice.ts
+//#region api/piloto/src/lib/turn-juice.ts
 function e(e) {
 	return !!e && typeof e.animate == "function";
 }
@@ -37,7 +37,7 @@ function n(t) {
 	});
 }
 //#endregion
-//#region src/piloto/grimorio.ts
+//#region api/piloto/src/grimorio.ts
 function r(e) {
 	return e.closest("figure, [data-par]")?.querySelector("[data-amostra]") ?? null;
 }

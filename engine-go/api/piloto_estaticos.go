@@ -109,20 +109,16 @@ func comCacheVersionado(versao, alcance string, interno http.Handler) http.Handl
 
 // FontesDoPiloto serve as fontes que a FOLHA pede em `/fonts/…`.
 //
-// O defeito, relatado pelo dono com o cabeçalho na mão: `GET
-// /fonts/cinzel-latin.woff2` devolvia 404. A folha do piloto importa a da SPA
-// inteira, e é lá que mora o `@font-face` com `url('/fonts/cinzel-latin.woff2')`
-// — caminho ABSOLUTO. Em produção o `STATIC_DIR` serve o `dist` da SPA, onde o
-// Vite copiou `public/fonts/`, e o caminho resolve. No binário do piloto sozinho
-// não existe rota nenhuma ali, e a Cinzel caía para uma serifada do sistema em
-// TODA tela — que é justamente o binário em que a cena é revisada.
+// O defeito que a criou, relatado pelo dono com o cabeçalho na mão: `GET
+// /fonts/cinzel-latin.woff2` devolvia 404 no binário sem SPA, e a Cinzel caía
+// para uma serifada do sistema em TODA tela — que é justamente o binário em que
+// a cena era revisada. O `@font-face` do `index.css` pede o caminho ABSOLUTO, e
+// quem o resolvia era o `dist` da SPA.
 //
-// As duas fontes viraram cópia embutida porque `go:embed` não alcança fora do
-// módulo Go: `../frontend/public/fonts` está fora do `engine-go/`. São 40KB, e o
-// `TestAsFontesEmbutidasSaoAsMesmasDaSPA` prende as cópias byte a byte — cópia
-// anotada com guarda é dívida; sem o guarda seria armadilha, com a fonte
-// atualizada num lugar só e a diferença aparecendo como um desenho levemente
-// errado que ninguém liga à causa.
+// As fontes eram CÓPIA das da SPA, com o
+// `TestAsFontesEmbutidasSaoAsMesmasDaSPA` prendendo as duas byte a byte. Com a
+// SPA apagada (ALE-272, fatia 10c) elas deixaram de ser cópia: são as fontes, e
+// o guarda saiu junto com o outro lado que ele comparava.
 func (s *Server) FontesDoPiloto() http.Handler {
 	sub, err := fs.Sub(pilotoFS, "piloto/static/fonts")
 	if err != nil {
@@ -132,4 +128,23 @@ func (s *Server) FontesDoPiloto() http.Handler {
 	// `fonts/x.woff2` DENTRO do sub-FS, que já tem a pasta como raiz. Sem ele o
 	// 404 continua e parece que o embed falhou — medido.
 	return http.StripPrefix("/fonts", comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub))))
+}
+
+// FaviconDoPiloto serve o `/favicon.svg` que o layout pede.
+//
+// Ele era do `public/` da SPA e o `dist` o servia; com a SPA apagada (ALE-272,
+// fatia 10c) o arquivo veio para os estáticos do piloto. Sem esta rota o ícone
+// da aba fica com o padrão do navegador — não quebra nada e ninguém liga à
+// causa, que é a marca desta família de perda numa migração.
+func (s *Server) FaviconDoPiloto() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bruto, err := pilotoFS.ReadFile("piloto/static/favicon.svg")
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		_, _ = w.Write(bruto)
+	})
 }

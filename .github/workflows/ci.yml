@@ -30,8 +30,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      # The frontend's `prebuild` compiles engine-go → WASM, so the Go toolchain
-      # is needed even for the JS build.
+      # O Go é necessário para o build, os testes e o `templ generate`.
       - uses: actions/setup-go@v5
         with:
           go-version-file: engine-go/go.mod
@@ -40,24 +39,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # `cena.js` e os ícones são gerados dos MESMOS fontes que a SPA usa
-      # (ALE-231) e commitados, pelo mesmo motivo da folha e dos `_templ.go`:
-      # `go build` num clone limpo não pode depender de rodar um gerador. O
-      # guarda é o par recompila + `git diff --quiet`, como os outros três.
+      # As ilhas de JS e os ícones são artefato COMMITADO, pelo mesmo motivo da
+      # folha e dos `_templ.go`: `go build` num clone limpo não pode depender de
+      # rodar um gerador. O guarda é o par recompila + `git diff --quiet`.
       #
       # O dos ÍCONES importa mais do que parece: ele lê o lucide instalado e
       # segue o APELIDO do pacote, então uma atualização que renomeie um ícone
-      # aparece aqui em vez de a SPA e o Datastar passarem a desenhar coisas
-      # diferentes em silêncio.
-      - name: Rebuild the shared scene module and the icons
+      # aparece aqui em vez de a cena passar a desenhar outra coisa em silêncio.
+      - name: Rebuild the scene module and the icons
         run: |
           ./engine-go/scripts/build-piloto-js.sh
-          node frontend/scripts/gen-icones-templ.mjs
+          node engine-go/scripts/gen-icones-templ.mjs
 
       - name: Fail if the generated scene assets were stale
         run: |
           if ! git diff --quiet -- engine-go/api/piloto/static/cena.js engine-go/api/piloto_icones.templ; then
-            echo "::error::cena.js ou os ícones estão desatualizados. Rode ./engine-go/scripts/build-piloto-js.sh e node frontend/scripts/gen-icones-templ.mjs, e commite."
+            echo "::error::cena.js ou os ícones estão desatualizados. Rode ./engine-go/scripts/build-piloto-js.sh e node engine-go/scripts/gen-icones-templ.mjs, e commite."
             git diff --stat -- engine-go/api/piloto/static/cena.js engine-go/api/piloto_icones.templ
             exit 1
           fi
@@ -108,9 +105,6 @@ jobs:
             exit 1
           fi
 
-      - name: Tests
-        run: pnpm test
-
       - name: Go engine tests
         run: go test ./...
         working-directory: engine-go
@@ -118,18 +112,11 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # O typecheck NUNCA esteve no CI: até aqui, erro de tipo só aparecia na
-      # máquina de quem lembrasse de rodar `pnpm typecheck`. Com o TypeScript 7
-      # ele leva ~2s (eram ~13 no 6), então o passo custa menos que o `git
-      # checkout` do job e fecha o buraco.
-      #
-      # Ele vem DEPOIS do build de propósito: o `routeTree.gen.ts` é gerado e
-      # gitignored, e quem o escreve é o plugin do TanStack dentro de um
-      # comando vite. Num clone limpo, sem ele, o `tsc` reprova as 26 rotas de
-      # uma vez ("/campaigns/new is not assignable to parameter of type
-      # undefined") — foi assim que este passo estreou vermelho.
+      # O typecheck cobre as ilhas de JS do piloto. Ele NUNCA esteve no CI até a
+      # ALE-266: erro de tipo só aparecia na máquina de quem lembrasse de rodar
+      # `pnpm typecheck`, e com o TypeScript 7 ele leva ~2s.
       - name: Typecheck
-        run: pnpm --filter frontend typecheck
+        run: pnpm --filter @tormenta20/engine-go typecheck
 
   e2e:
     name: e2e (playwright)
@@ -146,8 +133,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      # Needed twice here: to build the API binary, and by the frontend's
-      # `predev`, which compiles engine-go → WASM before Vite starts.
       - uses: actions/setup-go@v5
         with:
           go-version-file: engine-go/go.mod
@@ -163,14 +148,6 @@ jobs:
         run: go build -o ./tmp/api ./cmd/api
         working-directory: engine-go
 
-      # O e2e roda contra o BUILD, não contra o Vite (ALE-256): é 2,3× mais
-      # rápido e — o que importa mais — é o CSS de produção que os guardas de
-      # cor, contraste e tipografia passam a medir. Um deles passava em dev por
-      # acidente, comparando o texto de uma custom property com um valor
-      # computado; o minificador reescreve `oklch(0.27 …)` como `oklch(27% …)`.
-      - name: Build the SPA
-        run: pnpm --filter frontend build
-
       # The API migrates the SQLite file on open (goose), so it has to run once
       # before seed.sql — which is data-only (INSERTs, no DDL) — can apply.
       # É esta ordem que impede o `webServer` do Playwright de subir o servidor:
@@ -181,7 +158,6 @@ jobs:
           JWT_SECRET: e2e-ci-secret
           PORT: '3010'
           COOKIE_NAME: t20_session
-          STATIC_DIR: ../frontend/dist
         run: |
           ./tmp/api > api.log 2>&1 &
           for _ in $(seq 1 60); do
@@ -189,15 +165,11 @@ jobs:
             sleep 0.5
           done
           curl -sf http://localhost:3010/health > /dev/null || { cat api.log; exit 1; }
-          # O controle que a ALE-256 pede: provar que é o BUILD que está sendo
-          # servido, e não uma API sem SPA. Sem isto a suíte morreria em 404 com
-          # cara de defeito do app.
-          grep -q "serving built frontend" api.log || { cat api.log; exit 1; }
           sqlite3 data/t20-dev.db ".timeout 5000" ".read seed.sql"
 
-      # Um servidor só, mesma origem para SPA e API — a forma de produção. Desde
-      # a ALE-253 não há socket, então não há `/socket.io` a encaminhar nem
-      # `CORS_ORIGIN` a declarar.
+      # Um servidor só, servindo as cenas e a API — a forma de produção. Desde a
+      # ALE-253 não há socket, então não há `/socket.io` a encaminhar nem
+      # `CORS_ORIGIN` a declarar; desde a ALE-272 não há SPA a construir antes.
       - name: E2E
         env:
           E2E_BASE_URL: http://localhost:3010
