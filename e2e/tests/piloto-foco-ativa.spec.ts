@@ -18,7 +18,7 @@ test.use({ storageState: '.auth/user.json' })
 
 test('a seta anda na lista e a ficha segue junto', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   const fichaLateral = page.locator('.mesa-painel')
@@ -40,7 +40,7 @@ test('a seta anda na lista e a ficha segue junto', async ({ page }) => {
 
 test('cada passo da seta desenha a ficha sem espera perceptível', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   const ficha = page.locator('.mesa-painel')
@@ -77,7 +77,7 @@ test('cada passo da seta desenha a ficha sem espera perceptível', async ({ page
 
 test('depois de uma travessia rápida a ficha é a da linha onde o foco PAROU', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   await page.locator('a[href*="criatura="]').first().focus()
@@ -137,7 +137,7 @@ test('com o foco na ficha, as setas rolam o painel', async ({ page }) => {
   // mede 550, empilha, e esconde 211px. O guarda perdeu a PREMISSA, não a
   // garantia — e ele mesmo denunciou isso, em vez de passar verde sobre nada.
   await page.setViewportSize({ width: 1200, height: 680 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   const painel = page.locator('.mesa-painel')
@@ -182,7 +182,7 @@ test('com o foco na ficha, as setas rolam o painel', async ({ page }) => {
  */
 test('a seta sobe da lista para os filtros e volta', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   // O CONTROLE: as DUAS regiões existem. Sem ele, "a seta não cruzou" seria
@@ -216,7 +216,7 @@ test('a seta sobe da lista para os filtros e volta', async ({ page }) => {
  */
 test('a seta chega na ficha sem nenhum TAB', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   await page.locator('a[href*="criatura="]').first().focus()
@@ -272,7 +272,7 @@ test('a seta chega na ficha sem nenhum TAB', async ({ page }) => {
  */
 test('a legenda de teclado aparece no laptop e some no telefone', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   const legenda = page.getByText('trocar de painel')
@@ -301,7 +301,7 @@ test('a legenda de teclado aparece no laptop e some no telefone', async ({ page 
  */
 test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 760 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   await page.locator('a[href*="criatura="]').first().focus()
@@ -348,11 +348,11 @@ test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
  */
 test('trocar de ferramenta pelo teclado mantém o foco no trilho', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   // O DESTINO SAI DO TRILHO, não do meu dedo. Este guarda escrevia
-  // `/piloto/mestre/encontros` à mão e ficou vermelho quando o `aa3edc9`
+  // `/mestre/encontros` à mão e ficou vermelho quando o `aa3edc9`
   // (ALE-264) reordenou o trilho em Ferramentas + Catálogos: a segunda parada
   // passou a ser `improviso`. Manutenção cobrada sem nada protegido — a
   // garantia é "o foco sobrevive à troca", e qual é a parada vizinha não
@@ -386,11 +386,11 @@ test('trocar de ferramenta pelo teclado mantém o foco no trilho', async ({ page
 
 test('trocar de ferramenta pelo MOUSE não rouba o foco', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/bestiario')
+  await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   await page.locator('[data-nav-region="rail"] a', { hasText: 'IMPROVISO' }).click()
-  await page.waitForURL('**/piloto/mestre/improviso')
+  await page.waitForURL('**/mestre/improviso')
 
   const roubou = await page.evaluate(
     () => !!document.activeElement?.closest('[data-nav-region="rail"]'),

@@ -29,7 +29,7 @@ import (
 //
 // SAÍDA DO PILOTO: apagar `api/mesa*`, a linha do `buildMux` e a entrada do
 // proxy no `vite.config.ts`.
-func (s *Server) PilotoRouter() http.Handler {
+func (s *Server) WebRouter() http.Handler {
 	r := chi.NewRouter()
 	// Os estáticos são anônimos: são o bundle do Datastar e a folha de estilo,
 	// e exigir sessão para eles só quebraria o cache.
@@ -45,7 +45,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDoHub(r)
 		s.rotasDeCampanhas(r)
 		s.rotasDePersonagens(r)
-		// A FICHA (ALE-272) é filha do endereço do elenco: `/piloto/personagens/{id}`.
+		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
 		s.rotasDaFicha(r)
 		s.rotasDoGrimorio(r)
 		s.rotasDoMestre(r)
@@ -131,9 +131,9 @@ func pilotoStaticHandler() http.Handler {
 // `SessionTrackerPage` é fatia própria, depois de uma sessão de verdade rodar na
 // Mesa nova. Enquanto isso, voltar atrás é um `git revert` deste commit.
 //
-// @example rotaDaMesa(1, 4) // "/piloto/mesa/1/4"
+// @example rotaDaMesa(1, 4) // "/mesa/1/4"
 func rotaDaMesa(campanhaID, sessaoID int64) string {
-	return fmt.Sprintf("/piloto/mesa/%d/%d", campanhaID, sessaoID)
+	return fmt.Sprintf("/mesa/%d/%d", campanhaID, sessaoID)
 }
 
 // mesaParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
@@ -170,7 +170,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: sinaisDaMesa(),
-		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
+		Init:   fmt.Sprintf("@get('/mesa/%d/%d/stream')", campaignID, sessionID),
 	}, s.corpoDaMesa(r, view, campaignID, sessionID))
 }
 

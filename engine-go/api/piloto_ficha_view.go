@@ -260,12 +260,12 @@ func oVital(atual, max int64) vitalDaFicha {
 // dia da virada ela é o único lugar que precisa ser lido para saber quem manda
 // para onde.
 //
-// @example aRotaDaFicha(7, "bag") // "/piloto/personagens/7?tab=bag"
+// @example aRotaDaFicha(7, "bag") // "/personagens/7?tab=bag"
 func aRotaDaFicha(id int64, aba string) string {
 	if aba == "" {
-		return fmt.Sprintf("/piloto/personagens/%d", id)
+		return fmt.Sprintf("/personagens/%d", id)
 	}
-	return fmt.Sprintf("/piloto/personagens/%d?tab=%s", id, aba)
+	return fmt.Sprintf("/personagens/%d?tab=%s", id, aba)
 }
 
 // oVitalNaRota traduz o rótulo da tela para o pedaço da URL.
@@ -383,7 +383,7 @@ func oPostDaFicha(v fichaView, caminho string) string {
 // lendo a requisição, e um comando sem ela devolveria a ficha de página inteira
 // — com a barra do "‹ Voltar" e as abas navegando — dentro da sessão.
 func aRotaDoComando(v fichaView, caminho string) string {
-	rota := fmt.Sprintf("/piloto/personagens/%d%s?tab=%s", v.ID, caminho, v.AbaAtiva)
+	rota := fmt.Sprintf("/personagens/%d%s?tab=%s", v.ID, caminho, v.AbaAtiva)
 	if v.Embutida {
 		rota += "&embutida=1"
 	}
@@ -414,7 +414,7 @@ func oGetDaFicha(v fichaView) string {
 // Dois comandos separados por `;` e NUNCA num ternário: sequência dentro de
 // ternário é erro de sintaxe que o Datastar engole, e o gesto inteiro vira nada.
 func oGetDaAbaEmbutida(v fichaView, aba string) string {
-	return fmt.Sprintf("$fichatab = %q; @get('/piloto/personagens/%d?tab=%s&embutida=1')",
+	return fmt.Sprintf("$fichatab = %q; @get('/personagens/%d?tab=%s&embutida=1')",
 		aba, v.ID, aba)
 }
 
@@ -436,7 +436,7 @@ func sheetRefetch(v fichaView) string {
 	// exatamente o tipo de segunda escrita que sai de sincronia.
 	return fmt.Sprintf(
 		"$fichaversao !== document.getElementById('cena-ficha').dataset.versao && "+
-			"@get('/piloto/personagens/%d?tab=' + $fichatab + '&embutida=1')", v.ID)
+			"@get('/personagens/%d?tab=' + $fichatab + '&embutida=1')", v.ID)
 }
 
 // oComandoDoAtributo escreve o `@post` que repõe a perícia noutro atributo.
@@ -446,7 +446,7 @@ func sheetRefetch(v fichaView) string {
 // combinação daria 174 comandos numa página que já tem 29 diálogos.
 func oComandoDoAtributo(v fichaView, comando string) string {
 	return fmt.Sprintf(
-		"@post('/piloto/personagens/%d/pericias/atributo/%s/' + evt.target.value + '?tab=%s')",
+		"@post('/personagens/%d/pericias/atributo/%s/' + evt.target.value + '?tab=%s')",
 		v.ID, comando, v.AbaAtiva)
 }
 

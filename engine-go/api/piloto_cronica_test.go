@@ -31,7 +31,7 @@ func pedeNaCronica(t *testing.T, s *Server, userID int64, metodo, caminho, corpo
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -120,7 +120,7 @@ func TestAsAcoesDaCronicaSaoDoMestre(t *testing.T) {
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
 	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
 	seedMember(t, s, campanha, heroi, "player")
-	base := "/piloto/campanhas/" + strconv.FormatInt(campanha, 10)
+	base := "/campanhas/" + strconv.FormatInt(campanha, 10)
 
 	for _, caminho := range []string{base + "/editar", base + "/excluir", base + "/regras/carga"} {
 		rec := pedeNaCronica(t, s, visitante, http.MethodPost, caminho, "name=Roubada")
@@ -146,7 +146,7 @@ func TestARecusaDoCadastroDevolveOTextoDigitado(t *testing.T) {
 
 	form := url.Values{"name": {"   "}, "description": {novaDescricao}}
 	rec := pedeNaCronica(t, s, dono, http.MethodPost,
-		"/piloto/campanhas/"+strconv.FormatInt(campanha, 10)+"/editar", form.Encode())
+		"/campanhas/"+strconv.FormatInt(campanha, 10)+"/editar", form.Encode())
 
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status = %d, queria 422", rec.Code)
@@ -170,7 +170,7 @@ func TestOInterruptorAlternaAValeENaoOContrario(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	rota := "/piloto/campanhas/" + strconv.FormatInt(campanha, 10) + "/regras/carga"
+	rota := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/regras/carga"
 
 	// Nasce EM VIGOR: nenhuma linha no banco significa "a regra vale".
 	v, _ := s.carregaCronica(context.Background(), s.authUserPorID(t, dono), campanha, "config")

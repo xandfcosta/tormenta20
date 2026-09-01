@@ -21,7 +21,7 @@ func (s *Server) handleGrimorio(w http.ResponseWriter, r *http.Request) {
 		Titulo:        "Grimório",
 		Forma:         cascaDensa,
 		TituloVisivel: "Grimório",
-		Voltar:        "/piloto/",
+		Voltar:        "/",
 		VoltarRotulo:  "Hub",
 		Scripts: []string{
 			EstaticoDoPiloto("grimorio.js"),

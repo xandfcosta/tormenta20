@@ -173,7 +173,7 @@ func aBarraDaFicha(v fichaView) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3\"><a href=\"/piloto/personagens\" class=\"inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">‹ Voltar</a><h1 class=\"min-w-0 truncate font-heading text-xl tracking-wide text-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3\"><a href=\"/personagens\" class=\"inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">‹ Voltar</a><h1 class=\"min-w-0 truncate font-heading text-xl tracking-wide text-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

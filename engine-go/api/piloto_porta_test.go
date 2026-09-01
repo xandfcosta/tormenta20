@@ -43,7 +43,7 @@ func novaPorta(t *testing.T, admins ...string) portaFixture {
 	return f
 }
 
-// bate manda um pedido pelo PilotoRouter. `form` nil = GET.
+// bate manda um pedido pelo WebRouter. `form` nil = GET.
 func (f portaFixture) bate(t *testing.T, caminho string, form url.Values, cookie string) *httptest.ResponseRecorder {
 	t.Helper()
 	metodo, corpo := http.MethodGet, ""
@@ -58,7 +58,7 @@ func (f portaFixture) bate(t *testing.T, caminho string, form url.Values, cookie
 		req.AddCookie(&http.Cookie{Name: f.s.cfg.CookieName, Value: cookie})
 	}
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", f.s.PilotoRouter()).ServeHTTP(rec, req)
+	f.s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -90,7 +90,7 @@ func temCookieDeSessao(f portaFixture, rec *httptest.ResponseRecorder) bool {
 // aviso deixa o jogador achando que entrou.
 func TestPortaRecusaSenhaErradaSemAbrirSessao(t *testing.T) {
 	f := novaPorta(t)
-	rec := f.bate(t, "/piloto/entrar", url.Values{
+	rec := f.bate(t, "/entrar", url.Values{
 		"email": {f.email}, "senha": {"não é essa"},
 	}, "")
 
@@ -109,10 +109,10 @@ func TestPortaRecusaSenhaErradaSemAbrirSessao(t *testing.T) {
 // dois entrega a quem sonda a lista de quem tem conta na mesa.
 func TestPortaNaoDistingueContaInexistenteDeSenhaErrada(t *testing.T) {
 	f := novaPorta(t)
-	inexistente := f.bate(t, "/piloto/entrar", url.Values{
+	inexistente := f.bate(t, "/entrar", url.Values{
 		"email": {"ninguem@t20.local"}, "senha": {"seja o que for"},
 	}, "")
-	errada := f.bate(t, "/piloto/entrar", url.Values{
+	errada := f.bate(t, "/entrar", url.Values{
 		"email": {f.email}, "senha": {"não é essa"},
 	}, "")
 
@@ -126,7 +126,7 @@ func TestPortaNaoDistingueContaInexistenteDeSenhaErrada(t *testing.T) {
 
 func TestPortaEntraEMandaParaODestino(t *testing.T) {
 	f := novaPorta(t)
-	rec := f.bate(t, "/piloto/entrar", url.Values{
+	rec := f.bate(t, "/entrar", url.Values{
 		"email": {f.email}, "senha": {f.senha}, "destino": {"/campaigns/7"},
 	}, "")
 
@@ -161,7 +161,7 @@ func TestDestinoPedidoSoAceitaCaminhoInterno(t *testing.T) {
 
 func TestPortaMandaQuemJaTemSessaoEmboraDaTelaDeEntrar(t *testing.T) {
 	f := novaPorta(t)
-	rec := f.bate(t, "/piloto/entrar", nil, f.sessao(t))
+	rec := f.bate(t, "/entrar", nil, f.sessao(t))
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303 — quem já entrou não vê a porta", rec.Code)
 	}
@@ -173,15 +173,15 @@ func TestPortaMandaQuemJaTemSessaoEmboraDaTelaDeEntrar(t *testing.T) {
 // parecia um cadastro comum (ALE-120).
 func TestPortaNaoAbreCriarContaSemConvite(t *testing.T) {
 	f := novaPorta(t)
-	rec := f.bate(t, "/piloto/criar-conta", nil, "")
-	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/piloto/entrar" {
+	rec := f.bate(t, "/criar-conta", nil, "")
+	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/entrar" {
 		t.Errorf("status %d para %q — sem convite a tela não abre", rec.Code, rec.Header().Get("Location"))
 	}
 }
 
 func TestPortaRecusaConviteInvalidoEmPortugues(t *testing.T) {
 	f := novaPorta(t)
-	rec := f.bate(t, "/piloto/criar-conta", url.Values{
+	rec := f.bate(t, "/criar-conta", url.Values{
 		"convite": {"não-existe"}, "email": {"nova@t20.local"},
 		"senha": {"uma senha boa"}, "confirmar": {"uma senha boa"},
 	}, "")
@@ -203,7 +203,7 @@ func TestPortaRecusaConviteInvalidoEmPortugues(t *testing.T) {
 // typo com JavaScript desligado.
 func TestPortaRecusaSenhasQueNaoConferemNoServidor(t *testing.T) {
 	f := novaPorta(t, "dono@t20.local")
-	rec := f.bate(t, "/piloto/criar-conta", url.Values{
+	rec := f.bate(t, "/criar-conta", url.Values{
 		"convite": {"tanto-faz"}, "email": {"dono@t20.local"},
 		"senha": {"uma senha boa"}, "confirmar": {"outra senha"},
 	}, "")
@@ -223,7 +223,7 @@ func TestPortaRecusaSenhasQueNaoConferemNoServidor(t *testing.T) {
 // escondia isso validando com Zod antes de chamar.
 func TestPortaDizAsRecusasDeValidacaoEmPortugues(t *testing.T) {
 	f := novaPorta(t)
-	rec := f.bate(t, "/piloto/entrar", url.Values{
+	rec := f.bate(t, "/entrar", url.Values{
 		"email": {"isto-não-é-e-mail"}, "senha": {"x"},
 	}, "")
 
@@ -261,7 +261,7 @@ func TestPortaNaoMostraFormularioComLinkVencido(t *testing.T) {
 	f := novaPorta(t)
 	token := f.semeiaLink(t, -time.Hour)
 
-	rec := f.bate(t, "/piloto/redefinir-senha?token="+token, nil, "")
+	rec := f.bate(t, "/redefinir-senha?token="+token, nil, "")
 	corpo := rec.Body.String()
 
 	if !strings.Contains(corpo, avisoLink) {
@@ -277,11 +277,11 @@ func TestPortaTrocaASenhaEDevolveAoLogin(t *testing.T) {
 	token := f.semeiaLink(t, time.Hour)
 	nova := "outra senha boa"
 
-	rec := f.bate(t, "/piloto/redefinir-senha", url.Values{
+	rec := f.bate(t, "/redefinir-senha", url.Values{
 		"token": {token}, "senha": {nova}, "confirmar": {nova},
 	}, "")
 
-	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/piloto/entrar" {
+	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/entrar" {
 		t.Fatalf("status %d para %q", rec.Code, rec.Header().Get("Location"))
 	}
 	// Sem cookie: um link de recuperação chega por um canal que ninguém
@@ -305,7 +305,7 @@ func TestPortaTrocaASenhaEDevolveAoLogin(t *testing.T) {
 // uma senha em `data-bind` viajaria de novo a cada pedido da página.
 func TestPortaNaoPoeNadaEmSinalDoDatastar(t *testing.T) {
 	f := novaPorta(t)
-	for _, caminho := range []string{"/piloto/entrar", "/piloto/criar-conta?convite=x", "/piloto/redefinir-senha"} {
+	for _, caminho := range []string{"/entrar", "/criar-conta?convite=x", "/redefinir-senha"} {
 		corpo := f.bate(t, caminho, nil, "").Body.String()
 		for _, proibido := range []string{"data-bind", "data-signals", "data-init"} {
 			if strings.Contains(corpo, proibido) {

@@ -57,7 +57,7 @@ const SUPERFICIES_COM_TINTA = [
       // apagada (ALE-272, fatia 10c) o construtor é cena própria do servidor, e
       // é ela que passa a ser medida — o guarda mede TINTA CONTRA FUNDO, e isso
       // independe de quem desenhou.
-      await page.goto('/piloto/mestre/encontros')
+      await page.goto('/mestre/encontros')
       await expect(page.getByRole('heading', { name: 'Encontros' })).toBeVisible()
     },
   },

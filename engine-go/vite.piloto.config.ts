@@ -39,7 +39,7 @@ export default defineConfig({
         'pecas-solid': resolve(import.meta.dirname, 'api/piloto/src/pecas-solid.tsx'),
         // O leitor do livro (ALE-264) é a terceira entrada com o mesmo motivo
         // das duas anteriores: ele carrega o pdf.js, que são 448 KB, e só a
-        // cena `/piloto/livro/ler` o pede. Pô-lo no `cena.js` seria mandar um
+        // cena `/livro/ler` o pede. Pô-lo no `cena.js` seria mandar um
         // visualizador de PDF para quem abriu a ficha de um personagem.
         leitor: resolve(import.meta.dirname, 'api/piloto/src/leitor.ts'),
       },

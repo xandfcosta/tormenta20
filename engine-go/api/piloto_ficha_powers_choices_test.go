@@ -243,7 +243,7 @@ func TestODialogoOfereceOQueCabeEmCadaAba(t *testing.T) {
 // A API JSON tem a MESMA fronteira, e ela era a porta que estava aberta.
 //
 // O pedido vai pelo roteador da API — `authed`, e não o `pede` do piloto: o
-// `pede` monta o `PilotoRouter`, onde `/characters/...` não existe, e um 404
+// `pede` monta o `WebRouter`, onde `/characters/...` não existe, e um 404
 // passaria por "recusou" sem que a regra tivesse rodado. Medido: escrito assim,
 // o teste continuava verde com a validação REMOVIDA.
 func TestAApiJsonRecusaAEscolhaForaDaRegra(t *testing.T) {

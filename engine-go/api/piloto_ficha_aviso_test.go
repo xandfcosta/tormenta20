@@ -25,7 +25,7 @@ func TestSheetCommandNotifiesListeners(t *testing.T) {
 
 	// Um comando qualquer que GRAVA: tirar 1 de PV.
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		"/piloto/personagens/"+strconv.FormatInt(f.charID, 10)+"/vitais/pv/-1", "")
+		"/personagens/"+strconv.FormatInt(f.charID, 10)+"/vitais/pv/-1", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o comando respondeu %d", rec.Code)
 	}
@@ -54,7 +54,7 @@ func TestRefusedCommandNotifiesNobody(t *testing.T) {
 	defer parar()
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		"/piloto/personagens/"+strconv.FormatInt(f.charID, 10)+"/proficiencias/alterna/gargalhada", "")
+		"/personagens/"+strconv.FormatInt(f.charID, 10)+"/proficiencias/alterna/gargalhada", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("a recusa devia voltar 200 com a cena: veio %d", rec.Code)
 	}

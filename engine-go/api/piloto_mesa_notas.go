@@ -153,7 +153,7 @@ func primeiroErro(erros ...error) error {
 // OS IDS VIAJAM PARA A PRÉVIA, e esta linha existe por um defeito MEDIDO no
 // navegador: a `mesaView` sintética nascia com `CampaignID` e `SessionID` ZERO,
 // e cada quadrinho do fragmento remendado saía apontando para
-// `/piloto/mesa/0/0/notas/tarefa/N/marcar`.
+// `/mesa/0/0/notas/tarefa/N/marcar`.
 //
 // O sintoma é da pior família desta base: o PRIMEIRO clique funcionava — ele
 // acontece sobre o HTML da carga fria, que tem os ids certos — e a partir do
@@ -211,7 +211,7 @@ func escolheOModo(valor string) string {
 }
 
 func salvaAsNotas(v mesaView) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/notas')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('/mesa/%d/%d/notas')", v.CampaignID, v.SessionID)
 }
 
 func alternaATarefaDaNota(v mesaView, t mdTarefa) string {
@@ -219,7 +219,7 @@ func alternaATarefaDaNota(v mesaView, t mdTarefa) string {
 	if t.Marcada {
 		estado = "desmarcar"
 	}
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/notas/tarefa/%d/%s')",
+	return fmt.Sprintf("@post('/mesa/%d/%d/notas/tarefa/%d/%s')",
 		v.CampaignID, v.SessionID, t.Linha, estado)
 }
 

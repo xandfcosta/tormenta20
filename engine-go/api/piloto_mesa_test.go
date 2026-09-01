@@ -102,12 +102,12 @@ func (f pilotoFixture) pede(t *testing.T, userID int64, method, path, body strin
 		req.Header.Set("Content-Type", "application/json")
 	}
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", f.s.PilotoRouter()).ServeHTTP(rec, req)
+	f.s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
 
 func (f pilotoFixture) urlDaMesa() string {
-	return "/piloto/mesa/" + strconv.FormatInt(f.campaignID, 10) + "/" + strconv.FormatInt(f.sessionID, 10)
+	return "/mesa/" + strconv.FormatInt(f.campaignID, 10) + "/" + strconv.FormatInt(f.sessionID, 10)
 }
 
 // posta manda a escrita por um servidor HTTP DE VERDADE, e não pelo par
@@ -121,7 +121,7 @@ func (f pilotoFixture) urlDaMesa() string {
 // não apareça assim de novo.
 func (f pilotoFixture) posta(t *testing.T, userID int64, caminho, corpo string) string {
 	t.Helper()
-	srv := httptest.NewServer(http.StripPrefix("/piloto", f.s.PilotoRouter()))
+	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
 
 	req, err := http.NewRequest(http.MethodPost, srv.URL+caminho, strings.NewReader(corpo))
@@ -352,7 +352,7 @@ func TestHpTomDeNosLimiares(t *testing.T) {
 func TestMesaStreamComprime(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
-	srv := httptest.NewServer(http.StripPrefix("/piloto", f.s.PilotoRouter()))
+	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
 
 	req, err := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)

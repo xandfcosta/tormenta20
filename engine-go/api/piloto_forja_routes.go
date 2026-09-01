@@ -65,7 +65,7 @@ func (s *Server) handleForjaPost(w http.ResponseWriter, r *http.Request) {
 	// 303 e não 302: depois de um POST, o `See Other` é o que garante que o
 	// navegador siga com GET — sem ele, recarregar a cena dos atributos forjaria
 	// um segundo herói igual.
-	http.Redirect(w, r, "/piloto/personagens/"+strconv.FormatInt(id, 10)+"/atributos", http.StatusSeeOther)
+	http.Redirect(w, r, "/personagens/"+strconv.FormatInt(id, 10)+"/atributos", http.StatusSeeOther)
 }
 
 // aForjaDoFormulario lê as respostas do formulário.
@@ -95,7 +95,7 @@ func (s *Server) escreveAForja(w http.ResponseWriter, r *http.Request, status in
 		// `cascaDensa`: o cabeçalho compacto com o "‹ Voltar", como a folha em
 		// branco da campanha. Sem ele a folha nasce sem saída visível.
 		Forma:        cascaDensa,
-		Voltar:       "/piloto/personagens",
+		Voltar:       "/personagens",
 		VoltarRotulo: "Personagens",
 	}, forgeSheet(v))
 }

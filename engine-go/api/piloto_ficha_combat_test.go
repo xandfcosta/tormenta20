@@ -69,7 +69,7 @@ func seedPericia(t *testing.T, s *Server, id int64, nome, atributo string, trein
 func aTelaDoCombate(t *testing.T, f pilotoFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=combat", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
 }
 
 // O PAINEL CHEGA NA TELA com os números do motor.

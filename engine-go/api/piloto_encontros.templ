@@ -52,7 +52,7 @@ templ campoDoGrupo(sinal, rotulo string, valor, minimo, maximo int) {
 			max={ inteiro(maximo) }
 			value={ inteiro(valor) }
 			data-bind={ sinal }
-			data-on:input__debounce.300ms="@get('/piloto/mestre/encontros')"
+			data-on:input__debounce.300ms="@get('/mestre/encontros')"
 			aria-label={ rotulo + " do grupo" }
 			class="h-9 w-20 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
 		/>
@@ -127,7 +127,7 @@ templ aComposicao(v encontrosView) {
 						<button
 							type="button"
 							aria-label={ "Remover " + l.Verbete.Name + " do encontro" }
-							data-on:click={ fmt.Sprintf("@post('/piloto/mestre/encontros/remover/%s')", l.Verbete.ID) }
+							data-on:click={ fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Verbete.ID) }
 							class="flex size-11 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>✕</button>
 					</div>
@@ -144,7 +144,7 @@ templ passoDaQuantidade(m verbete, passo, sinal string) {
 	<button
 		type="button"
 		aria-label={ rotuloDoPasso(passo, m.Name) }
-		data-on:click={ fmt.Sprintf("@post('/piloto/mestre/encontros/%s/%s')", passo, m.ID) }
+		data-on:click={ fmt.Sprintf("@post('/mestre/encontros/%s/%s')", passo, m.ID) }
 		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>{ sinal }</button>
 }
@@ -163,7 +163,7 @@ templ painelDeAdicionar(v encontrosView) {
 				type="search"
 				name="buscaCriatura"
 				data-bind:buscaCriatura
-				data-on:input__debounce.250ms="@get('/piloto/mestre/encontros')"
+				data-on:input__debounce.250ms="@get('/mestre/encontros')"
 				value={ v.Busca }
 				placeholder="Buscar criatura para acrescentar"
 				aria-label="Buscar criatura para acrescentar"
@@ -180,7 +180,7 @@ templ painelDeAdicionar(v encontrosView) {
 							<button
 								type="button"
 								aria-label={ "Acrescentar " + m.Name + " ao encontro" }
-								data-on:click={ fmt.Sprintf("@post('/piloto/mestre/encontros/adicionar/%s')", m.ID) }
+								data-on:click={ fmt.Sprintf("@post('/mestre/encontros/adicionar/%s')", m.ID) }
 								class="flex min-h-11 w-full flex-wrap items-baseline gap-x-2 rounded-sm border border-grimorio-iron p-2 text-left outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 							>
 								<span class="text-xs font-semibold">{ m.Name }</span>

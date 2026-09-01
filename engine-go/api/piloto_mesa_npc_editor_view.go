@@ -142,9 +142,9 @@ func oNomeNoBloco(lista string) string {
 // preenche meio segundo depois mostra os números de outro NPC no meio do caminho.
 func abreOEditor(v mesaView, npcID int64) string {
 	if npcID == 0 {
-		return fmt.Sprintf("@post('/piloto/mesa/%d/%d/elenco/npc/novo')", v.CampaignID, v.SessionID)
+		return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/novo')", v.CampaignID, v.SessionID)
 	}
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/elenco/npc/%d/editar')", v.CampaignID, v.SessionID, npcID)
+	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/%d/editar')", v.CampaignID, v.SessionID, npcID)
 }
 
 // fechaOEditor é o Cancelar, e ele não fala com o servidor.
@@ -156,7 +156,7 @@ const fechaOEditor = "$rascunhoaberto = false; $erroDoRascunho = ''"
 
 // comandoDaLista escreve o gesto que acrescenta ou tira uma linha.
 func comandoDaLista(campanha, sessao int64, lista string, indice int) string {
-	base := fmt.Sprintf("/piloto/mesa/%d/%d/elenco/npc/rascunho/%s", campanha, sessao, lista)
+	base := fmt.Sprintf("/mesa/%d/%d/elenco/npc/rascunho/%s", campanha, sessao, lista)
 	if indice < 0 {
 		return fmt.Sprintf("@post('%s/nova')", base)
 	}
@@ -165,7 +165,7 @@ func comandoDaLista(campanha, sessao int64, lista string, indice int) string {
 
 // salvaOBloco é o único gesto desta tela que grava.
 func salvaOBloco(v mesaView) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/elenco/npc/rascunho/salvar')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/rascunho/salvar')", v.CampaignID, v.SessionID)
 }
 
 // naAba é a condição que mostra uma aba. Escrita aqui e não no `.templ` porque o

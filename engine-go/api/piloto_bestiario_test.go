@@ -188,7 +188,7 @@ func pedeNoMestre(t *testing.T, s *Server, userID int64, metodo, caminho string,
 		req.Header.Set("datastar-request", "true")
 	}
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -198,7 +198,7 @@ func TestOBestiarioAbreComOLivroInteiro(t *testing.T) {
 	s := newTestServer(t)
 	quemQuerQueSeja := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, quemQuerQueSeja, "GET", "/piloto/mestre/bestiario", "")
+	rec := pedeNoMestre(t, s, quemQuerQueSeja, "GET", "/mestre/bestiario", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -222,7 +222,7 @@ func TestABuscaEUmEndereco(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/bestiario?busca=ogro", "")
+	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario?busca=ogro", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -243,7 +243,7 @@ func TestOTipoInventadoERecusadoNoGesto(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/bestiario/tipo/dragao-roxo", "{}")
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/bestiario/tipo/dragao-roxo", "{}")
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status %d, queria 400 — tipo inventado passou", rec.Code)
 	}
@@ -258,7 +258,7 @@ func TestOCrachaDeTipoAlternaSemNavegar(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/bestiario/tipo/animal", `{"tipos":[]}`)
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/bestiario/tipo/animal", `{"tipos":[]}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -278,7 +278,7 @@ func TestODesligarOCrachaVoltaAoLivroInteiro(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/bestiario/tipo/animal", `{"tipos":["animal"]}`)
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/bestiario/tipo/animal", `{"tipos":["animal"]}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -294,11 +294,11 @@ func TestMestreSozinhoLevaAoBestiario(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre", "")
+	rec := pedeNoMestre(t, s, eu, "GET", "/mestre", "")
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status %d, queria 303", rec.Code)
 	}
-	if destino := rec.Header().Get("Location"); destino != "/piloto/mestre/bestiario" {
+	if destino := rec.Header().Get("Location"); destino != "/mestre/bestiario" {
 		t.Errorf("foi para %q", destino)
 	}
 }
@@ -386,17 +386,17 @@ func TestOTrilhoTemUmaParadaPorCatalogo(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes", "").Body.String()
 
 	for _, a := range abasDoAcervo {
-		if !strings.Contains(corpo, `href="/piloto/mestre/`+a.ID+`"`) {
+		if !strings.Contains(corpo, `href="/mestre/`+a.ID+`"`) {
 			t.Errorf("o catálogo %q não tem parada no trilho", a.ID)
 		}
 	}
 	// O bestiário é catálogo como os outros (ALE-264), e as duas ferramentas
 	// são a outra seção do trilho — se alguma sumir, o mestre perde a porta.
 	for _, parada := range []string{"bestiario", "encontros", "improviso"} {
-		if !strings.Contains(corpo, `href="/piloto/mestre/`+parada+`"`) {
+		if !strings.Contains(corpo, `href="/mestre/`+parada+`"`) {
 			t.Errorf("a parada %q sumiu do trilho", parada)
 		}
 	}

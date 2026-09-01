@@ -30,7 +30,7 @@ templ admin(v adminView) {
 		// razão pela qual o `mintAccountInvite` saiu do manipulador HTTP. Fica
 		// aqui porque este é o lugar natural da ação, ao lado da LISTA que ela
 		// muda; a entrada do Hub continua valendo para quem já está lá.
-		@dialogoDeConvite("/piloto/admin/convites")
+		@dialogoDeConvite("/admin/convites")
 		<p class="text-sm text-destructive" data-show="$erro != ''" data-text="$erro"></p>
 	</main>
 }
@@ -169,7 +169,7 @@ templ painelServidor(v adminView) {
 				type="button"
 				data-indicator:salvando
 				data-attr:disabled="$salvando"
-				data-on:click="@post('/piloto/admin/backup')"
+				data-on:click="@post('/admin/backup')"
 				class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 			>
 				Fazer backup
@@ -221,7 +221,7 @@ templ dialogoConfirmar() {
 			</form>
 			<button
 				type="button"
-				data-on:click="@post('/piloto/admin/usuarios/' + $alvoId + '/apagar'); $confirmar.close()"
+				data-on:click="@post('/admin/usuarios/' + $alvoId + '/apagar'); $confirmar.close()"
 				class="bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
 				Apagar conta
@@ -264,7 +264,7 @@ templ dialogoRedefinir() {
 				type="button"
 				data-indicator:gerando
 				data-attr:disabled="$gerando"
-				data-on:click="@post('/piloto/admin/usuarios/' + $alvoId + '/redefinir')"
+				data-on:click="@post('/admin/usuarios/' + $alvoId + '/redefinir')"
 				class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 			>
 				Gerar link

@@ -36,7 +36,7 @@ templ cenaDosCatalogos(v catalogosView) {
 				data-busca-da-cena
 				name="busca"
 				data-bind:busca
-				data-on:input__debounce.250ms={ "@get('/piloto/mestre/" + v.Aba + "')" }
+				data-on:input__debounce.250ms={ "@get('/mestre/" + v.Aba + "')" }
 				value={ v.Busca }
 				placeholder="Buscar em todos os catálogos"
 				aria-label="Buscar nos catálogos"
@@ -64,7 +64,7 @@ templ cenaDosCatalogos(v catalogosView) {
 		if v.Entrada != "" {
 			<p class="shrink-0 text-xs text-muted-foreground">
 				<a
-					href={ templ.SafeURL("/piloto/mestre/catalogos?aba=" + v.Aba) }
+					href={ templ.SafeURL("/mestre/catalogos?aba=" + v.Aba) }
 					class="underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>{ "‹ ver " + rotuloDaAba(v.Aba) + " inteiro" }</a>
 			</p>

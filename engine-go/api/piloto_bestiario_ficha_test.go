@@ -39,7 +39,7 @@ func fluxoDaFicha(t *testing.T, f pilotoFixture, alvo string) string {
 	req.Header.Set("Authorization", "Bearer "+f.token(t, f.mestre))
 	req.Header.Set("datastar-request", "true")
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", f.s.PilotoRouter()).ServeHTTP(rec, req)
+	f.s.WebRouter().ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("%s deu %d", alvo, rec.Code)
 	}
@@ -57,7 +57,7 @@ func fluxoDaFicha(t *testing.T, f pilotoFixture, alvo string) string {
 // estado de aberto chegam juntos e não existe janela entre eles.
 func TestAFichaNasceAbertaNoMesmoRemendoDoConteudo(t *testing.T) {
 	f := novoPiloto(t)
-	corpo := fluxoDaFicha(t, f, "/piloto/mestre/bestiario?criatura=lobo&abrir=1")
+	corpo := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
 
 	if !strings.Contains(corpo, "datastar-patch-elements") {
 		t.Fatal("o fluxo não trouxe conteúdo nenhum — o guarda mediria a resposta errada")
@@ -86,12 +86,12 @@ func TestBuscaEFiltroNaoAbremAFicha(t *testing.T) {
 
 	// O CONTROLE: com `abrir` o sinal SAI. Sem ele, "não abriu" seria verdade
 	// também sobre uma rota quebrada que não responde nada.
-	comAbrir := fluxoDaFicha(t, f, "/piloto/mestre/bestiario?criatura=lobo&abrir=1")
+	comAbrir := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
 	if !strings.Contains(comAbrir, sinalQueAbre) {
 		t.Fatal("nem com abrir=1 a ficha abre — o guarda abaixo não mediria nada")
 	}
 
-	semAbrir := fluxoDaFicha(t, f, "/piloto/mestre/bestiario?criatura=lobo&busca=lo")
+	semAbrir := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&busca=lo")
 	if strings.Contains(semAbrir, sinalQueAbre) {
 		t.Error("buscar abriu a ficha: a cada tecla o diálogo saltaria por cima da lista")
 	}
@@ -105,7 +105,7 @@ func TestBuscaEFiltroNaoAbremAFicha(t *testing.T) {
 // atribui a um commit.
 func TestOCliqueNaLinhaNaoAbreAFichaSozinho(t *testing.T) {
 	f := novoPiloto(t)
-	tela := f.pede(t, f.mestre, http.MethodGet, "/piloto/mestre/bestiario", "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, "/mestre/bestiario", "").Body.String()
 
 	if !strings.Contains(tela, "criatura=") {
 		t.Fatal("a lista não desenhou — o guarda mediria a tela errada")

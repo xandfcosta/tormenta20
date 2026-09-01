@@ -15,7 +15,7 @@ import (
 
 // As rotas da MESA DO MESTRE (ALE-257).
 //
-// O prefixo é `/piloto/mestre/` e não `/piloto/mesa/` — a razão está no
+// O prefixo é `/mestre/` e não `/mesa/` — a razão está no
 // cabeçalho do `piloto_bestiario.templ`: `mesa` já nomeia a sessão ao vivo
 // desde a fatia 1, e uma palavra com dois sentidos no mesmo espaço de endereço
 // é o que o glossário existe para impedir.
@@ -23,13 +23,13 @@ func (s *Server) rotasDoMestre(r chi.Router) {
 	// `/mestre` sozinho não é uma tela: a trilha sempre tem uma ferramenta em
 	// cena. Ele leva à primeira, que é a mesma que a SPA abre.
 	r.Get("/mestre", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/piloto/mestre/bestiario", http.StatusSeeOther)
+		http.Redirect(w, r, "/mestre/bestiario", http.StatusSeeOther)
 	})
 	r.Get("/mestre/bestiario", s.handleBestiario)
 	r.Post("/mestre/bestiario/tipo/{tipo}", s.handleBestiarioTipo)
 	// CADA CATÁLOGO tem endereço próprio desde a ALE-264: eles viraram paradas do
-	// trilho, e parada de trilho é uma cena. `/piloto/mestre/condicoes` em vez de
-	// `/piloto/mestre/catalogos?aba=condicoes` — o mesmo handler, com a aba vindo
+	// trilho, e parada de trilho é uma cena. `/mestre/condicoes` em vez de
+	// `/mestre/catalogos?aba=condicoes` — o mesmo handler, com a aba vindo
 	// do CAMINHO.
 	//
 	// O laço sobre `abasDoAcervo` e não nove linhas escritas: o catálogo que
@@ -58,7 +58,7 @@ func (s *Server) rotasDoMestre(r chi.Router) {
 	// No chi o segmento ESTÁTICO ganha do parâmetro, então as quatro rotas
 	// acima continuam sendo as que atendem; esta só recolhe o resto.
 	r.Get("/mestre/{ferramenta}", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/piloto/mestre/bestiario", http.StatusSeeOther)
+		http.Redirect(w, r, "/mestre/bestiario", http.StatusSeeOther)
 	})
 	r.Post("/mestre/improviso/{tabela}", s.handleImprovisoRola)
 	r.Post("/mestre/improviso/{tabela}/limpar", s.handleImprovisoLimpa)
@@ -132,7 +132,7 @@ func (s *Server) respondeImproviso(w http.ResponseWriter, r *http.Request, tabel
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo:        "Improviso · Mesa do Mestre · Tormenta 20",
 		Forma:         cascaDensa,
-		Voltar:        "/piloto/",
+		Voltar:        "/",
 		VoltarRotulo:  "Hub",
 		TituloVisivel: "Mesa do Mestre",
 	}, mesaDoMestre("improviso", cenaDoImproviso(pronta)))
@@ -253,7 +253,7 @@ func (s *Server) respondeEncontro(
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo:        "Encontros · Mesa do Mestre · Tormenta 20",
 		Forma:         cascaDensa,
-		Voltar:        "/piloto/",
+		Voltar:        "/",
 		VoltarRotulo:  "Hub",
 		TituloVisivel: "Mesa do Mestre",
 	}, mesaDoMestre("encontros", cenaDosEncontros(v)))
@@ -312,7 +312,7 @@ func numeroDaURL(bruto string, padrao int) int {
 // devolveria a pessoa a uma tela que não é a que ela pediu.
 func (s *Server) handleCatalogosVelho(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	destino := "/piloto/mestre/" + abaConhecida(q.Get("aba"))
+	destino := "/mestre/" + abaConhecida(q.Get("aba"))
 	q.Del("aba")
 	if resto := q.Encode(); resto != "" {
 		destino += "?" + resto
@@ -336,7 +336,7 @@ func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo:        rotuloDaAba(v.Aba) + " · Mesa do Mestre · Tormenta 20",
 		Forma:         cascaDensa,
-		Voltar:        "/piloto/",
+		Voltar:        "/",
 		VoltarRotulo:  "Hub",
 		TituloVisivel: "Mesa do Mestre",
 	}, mesaDoMestre(v.Aba, cenaDosCatalogos(v)))
@@ -366,7 +366,7 @@ func filtrosDaURL(q url.Values, aba string) map[string][]string {
 func criteriosDoPedidoDoAcervo(r *http.Request) criteriosDoAcervo {
 	q := r.URL.Query()
 	// A ABA vem do CAMINHO desde que cada catálogo virou uma cena
-	// (`/piloto/mestre/condicoes`). A consulta continua sendo lida para o
+	// (`/mestre/condicoes`). A consulta continua sendo lida para o
 	// endereço velho e para quem digitar `?aba=` à mão.
 	aba := path.Base(r.URL.Path)
 	if abaConhecida(aba) != aba {
@@ -410,7 +410,7 @@ func criteriosDoPedidoDoAcervo(r *http.Request) criteriosDoAcervo {
 
 // rotaDoBestiarioDoMestre é a base da CENA do mestre. O painel da Mesa tem a
 // sua, e as duas dividem o mesmo desenho — ver `bestiarioView.Base`.
-const rotaDoBestiarioDoMestre = "/piloto/mestre/bestiario"
+const rotaDoBestiarioDoMestre = "/mestre/bestiario"
 
 // handleBestiario serve os DOIS casos numa rota, como a cena de campanhas: a
 // carga fria devolve a página inteira e o Datastar recebe só o remendo da cena.
@@ -434,7 +434,7 @@ func (s *Server) handleBestiario(w http.ResponseWriter, r *http.Request) {
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo: "Bestiário · Mesa do Mestre · Tormenta 20",
 		Forma:  cascaDensa,
-		Voltar: "/piloto/",
+		Voltar: "/",
 		// "Hub" e não a seta genérica: a Mesa do Mestre não é filha óbvia de
 		// nenhuma tela, e nomear o destino é o que a folha de especificação pede.
 		VoltarRotulo: "Hub",

@@ -130,7 +130,7 @@ func TestOAchadoSabeParaOndeLevar(t *testing.T) {
 		t.Error("a criatura veio sem página do livro, e o bestiário é o único catálogo que sabe a dele")
 	}
 	condicao := primeiroDoGrupo(t, buscaNoLivro("abalado"), "Condições")
-	if !strings.Contains(condicao.Destino, "/piloto/mestre/condicoes") {
+	if !strings.Contains(condicao.Destino, "/mestre/condicoes") {
 		t.Errorf("a condição leva para %q", condicao.Destino)
 	}
 }
@@ -169,12 +169,12 @@ func TestAPortaNaoDesenhaOBuscador(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	porta := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(porta, httptest.NewRequest(http.MethodGet, "/piloto/entrar", nil))
+	s.WebRouter().ServeHTTP(porta, httptest.NewRequest(http.MethodGet, "/entrar", nil))
 	if strings.Contains(porta.Body.String(), `id="buscador"`) {
 		t.Error("a porta desenhou a caixa do buscador, e com ela um sinal que viaja com a senha")
 	}
 
-	dentro := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/bestiario", "")
+	dentro := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "")
 	if !strings.Contains(dentro.Body.String(), `id="buscador"`) {
 		t.Error("a caixa sumiu da cena com sessão — o guarda acima passaria por ausência de tudo")
 	}
@@ -194,7 +194,7 @@ func pedeAoBuscador(t *testing.T, s *Server, userID int64, sinais string) string
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("datastar-request", "true")
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o buscador respondeu %d", rec.Code)
 	}

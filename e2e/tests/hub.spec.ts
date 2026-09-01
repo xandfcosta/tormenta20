@@ -30,6 +30,6 @@ test('o Hub sobe autenticado e o menu leva ao elenco', async ({ page }) => {
   await expect(page.getByText('Ferramentas do Mestre')).toBeVisible()
 
   await page.getByText('Meus Heróis').click()
-  await expect(page).toHaveURL(/\/piloto\/personagens$/)
+  await expect(page).toHaveURL(/\/personagens$/)
   await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
 })

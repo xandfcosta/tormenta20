@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 
-const CAMPAIGN = '/piloto/campanhas/1' // Snapshot Test ALE-33 (seed)
+const CAMPAIGN = '/campanhas/1' // Snapshot Test ALE-33 (seed)
 
 test.describe('Detalhe da campanha', () => {
   // 'troca de aba mostra o roster de membros' saiu na ALE-187: clique numa aba
@@ -53,7 +53,7 @@ test.describe('Abrir e fechar uma campanha', () => {
     await page.getByRole('button', { name: 'Abrir campanha' }).click()
 
     // Landed on the new chronicle's own page — a do SERVIDOR desde a ALE-255.
-    await expect(page).toHaveURL(/\/piloto\/campanhas\/\d+/)
+    await expect(page).toHaveURL(/\/campanhas\/\d+/)
     await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible()
 
     // Clean up through the UI, which also exercises the ALE-79 delete path.
@@ -62,8 +62,8 @@ test.describe('Abrir e fechar uma campanha', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click()
     // Volta para a LISTA, e o que se afirma é a lista — não a URL dela. Desde a
     // ALE-234 a cena é do servidor e `/campaigns` encaminha para
-    // `/piloto/campanhas`; prender o teste ao endereço faria ele quebrar de novo
-    // quando o prefixo `/piloto` cair, sem que nada de verdade tivesse mudado.
+    // `/campanhas`; prender o teste ao endereço faria ele quebrar de novo
+    // quando o prefixo `/` cair, sem que nada de verdade tivesse mudado.
     await expect(page.getByRole('listbox', { name: 'Campanhas' })).toBeVisible()
     await expect(page.getByRole('option', { name: new RegExp(name) })).toHaveCount(0)
   })
@@ -78,8 +78,8 @@ test.describe('Abrir e fechar uma campanha', () => {
  */
 const SCENES = [
   { name: 'detalhe', path: `${CAMPAIGN}?tab=membros`, heading: /Snapshot Test ALE-33/i },
-  { name: 'nova', path: '/piloto/campanhas/nova', heading: /Abrir nova campanha/i },
-  { name: 'convite', path: '/piloto/campanhas/entrar', heading: /Entrar na mesa/i },
+  { name: 'nova', path: '/campanhas/nova', heading: /Abrir nova campanha/i },
+  { name: 'convite', path: '/campanhas/entrar', heading: /Entrar na mesa/i },
 ]
 
 test.describe('Campanha — responsivo (sem overflow horizontal)', () => {

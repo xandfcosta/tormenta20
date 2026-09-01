@@ -64,7 +64,7 @@ func TestOPainelDeProficienciasDizOQueAClasseConcede(t *testing.T) {
 	f, id := oGuerreiro(t)
 
 	tela := f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=proficiencies", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=proficiencies", id), "").Body.String()
 
 	if !strings.Contains(tela, "Padrão: Guerreiro") {
 		t.Error("a etiqueta não diz de qual classe vem a proficiência")
@@ -96,7 +96,7 @@ func TestArmaduraPesadaConcedeALeve(t *testing.T) {
 	f, id := oGuerreiro(t)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		fmt.Sprintf("/piloto/personagens/%d/proficiencias/padrao", id), "")
+		fmt.Sprintf("/personagens/%d/proficiencias/padrao", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("restaurar deu %d: %s", rec.Code, rec.Body.String())
 	}
@@ -123,7 +123,7 @@ func TestRestaurarOPadraoDescartaOAjusteManual(t *testing.T) {
 	gravaNaMao(t, f, id, `["armas-exoticas"]`)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		fmt.Sprintf("/piloto/personagens/%d/proficiencias/padrao", id), "")
+		fmt.Sprintf("/personagens/%d/proficiencias/padrao", id), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("restaurar deu %d: %s", rec.Code, rec.Body.String())
 	}
@@ -145,7 +145,7 @@ func TestRestaurarOPadraoDescartaOAjusteManual(t *testing.T) {
 func TestAlternarLigaEDesligaAProficiencia(t *testing.T) {
 	f, id := oGuerreiro(t)
 	gravaNaMao(t, f, id, `["armas-marciais"]`)
-	rota := fmt.Sprintf("/piloto/personagens/%d/proficiencias/alterna/armas-marciais", id)
+	rota := fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-marciais", id)
 
 	if rec := f.pede(t, f.jogador, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar deu %d: %s", rec.Code, rec.Body.String())
@@ -172,7 +172,7 @@ func TestUmaProficienciaForaDoCatalogoNaoGrava(t *testing.T) {
 	gravaNaMao(t, f, id, `["armas-marciais"]`)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		fmt.Sprintf("/piloto/personagens/%d/proficiencias/alterna/armas-de-laser", id), "")
+		fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-de-laser", id), "")
 
 	// A MENSAGEM CARREGA O VALOR OFENSOR E O FORMATO ESPERADO: "proficiência
 	// inválida" não ajudaria ninguém a descobrir o que digitar.
@@ -255,14 +255,14 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 			caminho = strings.Replace(caminho, pedaco, valor, 1)
 		}
 		visitadas++
-		rec := f.pede(t, f.mestre, http.MethodPost, "/piloto"+caminho, "")
+		rec := f.pede(t, f.mestre, http.MethodPost, caminho, "")
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("%s aceitou quem não é dono: %d — a rota não passa pelo `comandoDaFicha`",
 				rota, rec.Code)
 		}
 		return nil
 	}
-	roteador, ok := f.s.PilotoRouter().(chi.Routes)
+	roteador, ok := f.s.WebRouter().(chi.Routes)
 	if !ok {
 		t.Fatal("o roteador do piloto deixou de ser um chi.Mux: esta varredura não alcança mais as rotas")
 	}
@@ -321,7 +321,7 @@ func TestTodaAbaDaFichaDesenhaAlgo(t *testing.T) {
 		}
 		visitadas++
 		tela := f.pede(t, f.jogador, http.MethodGet,
-			fmt.Sprintf("/piloto/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
+			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
 		if !strings.Contains(tela, ">"+titulo+"</h2>") {
 			t.Errorf("a aba %q não desenhou painel nenhum", aba.Valor)
 		}
@@ -365,7 +365,7 @@ func TestNenhumComandoDaFichaPerdeAAba(t *testing.T) {
 	var vistos int
 	for _, aba := range asAbasDaFicha() {
 		tela := f.pede(t, f.jogador, http.MethodGet,
-			fmt.Sprintf("/piloto/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
+			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
 		for _, achado := range postados.FindAllStringSubmatch(tela, -1) {
 			vistos++
 			if !strings.HasSuffix(achado[1], "?tab="+aba.Valor) {

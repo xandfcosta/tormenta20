@@ -145,9 +145,9 @@ func attributesBody(v attributesView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 templ.SafeURL
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/piloto/personagens/%d", v.ID)))
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/personagens/%d", v.ID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_forja_atributos.templ`, Line: 42, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_forja_atributos.templ`, Line: 42, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -396,7 +396,7 @@ func oBotaoCabe(linha attributeRow, passo int) bool {
 // cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
 // `oPostDaFicha`.
 func oPostDoAtributo(id int64, chave string, passo int) string {
-	return fmt.Sprintf("@post('/piloto/personagens/%d/atributos/%s/%d')", id, chave, passo)
+	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, chave, passo)
 }
 
 var _ = templruntime.GeneratedTemplate

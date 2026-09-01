@@ -122,8 +122,8 @@ func oPincelAgeNaCasa(v tabuleiroView) string {
 			"const de = $%s === '' ? casa : $%s; $%s = casa; "+
 			"const traco = de + '/ate/' + casa; "+
 			"return $%s === %q "+
-			"? @post('/piloto/mesa/%d/%d/tabuleiro/terreno/limpar/' + traco) "+
-			": @post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + traco) })()",
+			"? @post('/mesa/%d/%d/tabuleiro/terreno/limpar/' + traco) "+
+			": @post('/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + traco) })()",
 		clicouEmX, clicouEmY,
 		sinalDaUltimaCasa,
 		sinalDaUltimaCasa, sinalDaUltimaCasa, sinalDaUltimaCasa,

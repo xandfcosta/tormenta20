@@ -39,7 +39,7 @@ func seedOficio(t *testing.T, s *Server, id int64, nome, atributo string) {
 
 func aTelaDasPericias(t *testing.T, f pilotoFixture, id int64, busca string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d?tab=expertises", id)
+	alvo := fmt.Sprintf("/personagens/%d?tab=expertises", id)
 	if busca != "" {
 		alvo += "&busca=" + url.QueryEscape(busca)
 	}
@@ -49,7 +49,7 @@ func aTelaDasPericias(t *testing.T, f pilotoFixture, id int64, busca string) str
 // aPericia manda um dos gestos e devolve a tela redesenhada.
 func aPericia(t *testing.T, f pilotoFixture, id int64, caminho string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/pericias/%s?tab=expertises", id, caminho)
+	alvo := fmt.Sprintf("/personagens/%d/pericias/%s?tab=expertises", id, caminho)
 	rec := f.pede(t, f.jogador, http.MethodPost, alvo, "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o comando %q respondeu %d: %s", caminho, rec.Code, rec.Body.String())
@@ -188,7 +188,7 @@ func TestOAtributoTrocaESoAceitaOsSeis(t *testing.T) {
 		t.Errorf("a Acrobacia ficou em %q, quer strength", atributo)
 	}
 
-	alvo := fmt.Sprintf("/piloto/personagens/%d/pericias/atributo/Acrobacia/sorte?tab=expertises", id)
+	alvo := fmt.Sprintf("/personagens/%d/pericias/atributo/Acrobacia/sorte?tab=expertises", id)
 	if recusa := aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String()); recusa == "" {
 		t.Error("um atributo inventado foi aceito sem uma palavra na tela")
 	}
@@ -236,7 +236,7 @@ func TestOOficioNasceTreinadoESoEleSeRemove(t *testing.T) {
 		}
 	}
 
-	alvo := fmt.Sprintf("/piloto/personagens/%d/pericias/remove/Fortitude?tab=expertises", id)
+	alvo := fmt.Sprintf("/personagens/%d/pericias/remove/Fortitude?tab=expertises", id)
 	if recusa := aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String()); recusa == "" {
 		t.Error("uma perícia do LIVRO foi removida da ficha")
 	}

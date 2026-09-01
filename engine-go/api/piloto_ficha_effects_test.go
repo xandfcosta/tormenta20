@@ -21,12 +21,12 @@ import (
 func aTelaDosEfeitos(t *testing.T, f pilotoFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=conditionals", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=conditionals", id), "").Body.String()
 }
 
 func oEfeito(t *testing.T, f pilotoFixture, id int64, caminho string) *responseRecorderLike {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/efeitos/%s?tab=conditionals", id, caminho)
+	alvo := fmt.Sprintf("/personagens/%d/efeitos/%s?tab=conditionals", id, caminho)
 	rec := f.pede(t, f.jogador, http.MethodPost, alvo, "")
 	return &responseRecorderLike{Code: rec.Code, Body: rec.Body.String()}
 }

@@ -1273,7 +1273,7 @@ const abreOLivroPorCima = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.bu
 //
 // A aba e a entrada vêm de `data-` e não de partir o `href` em JavaScript, e
 // isso é conserto de um vermelho: quando cada catálogo ganhou cena própria
-// (`/piloto/mestre/efeitos?entrada=medo`), a aba saiu da CONSULTA e foi para o
+// (`/mestre/efeitos?entrada=medo`), a aba saiu da CONSULTA e foi para o
 // CAMINHO — o pedido montado a partir da consulta passou a chegar sem aba, e a
 // caixa abria dizendo "este verbete não está no acervo". Endereço é do
 // navegador; o que o servidor precisa saber, o servidor escreve.

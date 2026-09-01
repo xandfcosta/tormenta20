@@ -31,12 +31,12 @@ import { expect, test } from '@playwright/test'
 test.use({ storageState: '.auth/user.json' })
 
 const CENAS = [
-  { nome: 'catálogos do mestre', url: '/piloto/mestre/condicoes' },
-  { nome: 'bestiário do mestre', url: '/piloto/mestre/bestiario' },
-  { nome: 'encontros', url: '/piloto/mestre/encontros' },
-  { nome: 'improviso', url: '/piloto/mestre/improviso' },
-  { nome: 'grimório', url: '/piloto/grimorio' },
-  { nome: 'personagens', url: '/piloto/personagens' },
+  { nome: 'catálogos do mestre', url: '/mestre/condicoes' },
+  { nome: 'bestiário do mestre', url: '/mestre/bestiario' },
+  { nome: 'encontros', url: '/mestre/encontros' },
+  { nome: 'improviso', url: '/mestre/improviso' },
+  { nome: 'grimório', url: '/grimorio' },
+  { nome: 'personagens', url: '/personagens' },
 ]
 
 for (const cena of CENAS) {

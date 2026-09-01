@@ -11,6 +11,28 @@ Ele já foi só o backend, com uma SPA em SolidJS ao lado e o mesmo motor
 compilado para WASM rodando no navegador. Os dois saíram na ALE-272: não há
 `STATIC_DIR`, não há `dist` para servir, e a regra tem um lugar só.
 
+**As cenas atendem na RAIZ**, e `/piloto/*` responde 404 (ALE-280). O prefixo era
+o nome daquela migração — a SPA de um lado, as cenas de outro — e sobreviveu a
+ela no lugar mais caro, que é o endereço que o jogador favorita. O corte foi
+SECO por decisão do dono: o app nunca foi usado numa mesa real, então não há link
+de jogador a proteger, e um desvio a menos é uma exceção a menos no mux.
+
+Duas consequências que o `git grep` não mostra e que já morderam uma vez:
+
+- **`http.StripPrefix` saiu junto**, e com ele a razão de o `alvoOriginal` ler
+  `RequestURI`. A linha ficou porque `URL.Path` descarta a QUERY — mas o motivo
+  escrito nela era o outro, e uma explicação que aponta para um mecanismo que não
+  existe mais é pior que nenhuma.
+- **Endereço interno deixou de somar prefixo.** O `"/" + rotaDoLivro` virava
+  `//livro`, que não é uma barra a mais: `//algo` é URL relativa a PROTOCOLO, e o
+  navegador a lê como o HOST `algo`. Quem denunciou foi um teste de cena; o
+  compilador não tem como.
+
+E três entradas saíram de `enderecos_antigos.go` — `/admin`, `/grimorio` e
+`/redefinir-senha` eram escritas iguais pela SPA e pelo piloto, então sem prefixo
+o desvio virou origem igual a destino. Isso não é linha inútil, é laço: o padrão
+literal ganha do `"/"` das cenas no `ServeMux`, e a tela nunca apareceria.
+
 Desde a ALE-273 esse processo também sobe por `docker compose up -d --build`,
 com o banco em bind mount no hospedeiro. **O compose não trouxe um segundo
 runtime**: continua sendo UM serviço, e a decisão do ALE-101 está inteira. O
@@ -781,7 +803,7 @@ O filtro mora num atributo IRMÃO e não no valor:
 
 ```
 data-on-signal-patch-filter="{include: /^fichaversao$/}"
-data-on-signal-patch="@get('/piloto/personagens/13?tab=' + $fichatab + '&embutida=1')"
+data-on-signal-patch="@get('/personagens/13?tab=' + $fichatab + '&embutida=1')"
 ```
 
 **E o servidor precisa mandar UMA vez por mudança**, nunca por quadro — é a

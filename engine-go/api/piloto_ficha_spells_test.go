@@ -40,19 +40,19 @@ func oArcanista(t *testing.T) (pilotoFixture, int64) {
 func aTelaDasMagias(t *testing.T, f pilotoFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
-		fmt.Sprintf("/piloto/personagens/%d?tab=spells", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=spells", id), "").Body.String()
 }
 
 func aMagia(t *testing.T, f pilotoFixture, id int64, caminho string) int {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/magias/%s?tab=spells", id, caminho)
+	alvo := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, caminho)
 	return f.pede(t, f.jogador, http.MethodPost, alvo, "").Code
 }
 
 // aRecusaDaMagia é a frase da regra que barrou o comando, ou "".
 func aRecusaDaMagia(t *testing.T, f pilotoFixture, id int64, caminho string) string {
 	t.Helper()
-	alvo := fmt.Sprintf("/piloto/personagens/%d/magias/%s?tab=spells", id, caminho)
+	alvo := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, caminho)
 	return aRecusaDaCena(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String())
 }
 

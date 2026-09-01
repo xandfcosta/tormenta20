@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
  * O defeito que isto prende foi contado antes de ser consertado: 6 das 20 cenas
  * declaravam alguma `data-nav-region` e 14 não declaravam nenhuma. O motor
  * estava no ar em todas, sem nada para dirigir. E ninguém viu porque o guarda
- * que prova a tese exercita as setas em `/piloto/` e não entra em mais nenhuma
+ * que prova a tese exercita as setas em `/` e não entra em mais nenhuma
  * tela — "um guarda só mede o que ele VISITA" (ALE-237, ALE-252).
  *
  * Este é o guarda que troca "visita o Hub" por "percorre a lista": cena nova
@@ -22,21 +22,21 @@ import { expect, test } from '@playwright/test'
 test.use({ storageState: '.auth/user.json' })
 
 const CENAS = [
-  { nome: 'hub', url: '/piloto/' },
-  { nome: 'campanhas', url: '/piloto/campanhas' },
-  { nome: 'personagens', url: '/piloto/personagens' },
-  { nome: 'grimório', url: '/piloto/grimorio' },
-  { nome: 'bestiário', url: '/piloto/mestre/bestiario' },
+  { nome: 'hub', url: '/' },
+  { nome: 'campanhas', url: '/campanhas' },
+  { nome: 'personagens', url: '/personagens' },
+  { nome: 'grimório', url: '/grimorio' },
+  { nome: 'bestiário', url: '/mestre/bestiario' },
     // Os catálogos viraram NOVE cenas na ALE-264 — cada uma é uma parada do
   // trilho. Duas amostram as nove: elas passam pelos mesmos componentes, e a
   // que fugir disso é a que este guarda existe para pegar.
-  { nome: 'condições', url: '/piloto/mestre/condicoes' },
-  { nome: 'deuses', url: '/piloto/mestre/deuses' },
-  { nome: 'encontros', url: '/piloto/mestre/encontros' },
-  { nome: 'improviso', url: '/piloto/mestre/improviso' },
-  { nome: 'admin', url: '/piloto/admin' },
-  { nome: 'campanha nova', url: '/piloto/campanhas/nova' },
-  { nome: 'forja', url: '/piloto/personagens/nova' },
+  { nome: 'condições', url: '/mestre/condicoes' },
+  { nome: 'deuses', url: '/mestre/deuses' },
+  { nome: 'encontros', url: '/mestre/encontros' },
+  { nome: 'improviso', url: '/mestre/improviso' },
+  { nome: 'admin', url: '/admin' },
+  { nome: 'campanha nova', url: '/campanhas/nova' },
+  { nome: 'forja', url: '/personagens/nova' },
 ]
 
 // A segunda cena da forja NÃO cabe nesta lista: o endereço dela tem o id do

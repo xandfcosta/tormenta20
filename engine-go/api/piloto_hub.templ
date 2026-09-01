@@ -23,7 +23,7 @@ templ hub(v hubView) {
 		// título "Convidar jogador" e um botão de cunhar no HTML de quem não
 		// administra — marcação morta, e uma tela dizendo o que ela não faz. O
 		// servidor recusaria de todo jeito; o que se conserta aqui é a tela.
-		@dialogoDeConvite("/piloto/convites")
+		@dialogoDeConvite("/convites")
 	}
 }
 
@@ -37,9 +37,9 @@ templ menuDoHub(v hubView) {
 		data-nav-layout="column"
 		class="mx-auto mt-10 flex w-full max-w-md flex-col gap-2.5"
 	>
-		@itemDoMenu("Users2", "Meus Heróis", "/piloto/personagens", false)
-		@itemDoMenu("Scroll", "Campanhas", "/piloto/campanhas", false)
-		@itemDoMenu("Wand2", "Ferramentas do Mestre", "/piloto/mestre/bestiario", false)
+		@itemDoMenu("Users2", "Meus Heróis", "/personagens", false)
+		@itemDoMenu("Scroll", "Campanhas", "/campanhas", false)
+		@itemDoMenu("Wand2", "Ferramentas do Mestre", "/mestre/bestiario", false)
 		if v.Viva != nil {
 			// Só aparece com partida rolando — o "Continue" de um jogo. Mestre e
 			// jogador retomam a MESMA tela.
@@ -161,7 +161,7 @@ templ menuDoJogador(v hubView) {
 				@icone("UserPlus", "size-4")
 				<span>Convidar jogador</span>
 			</button>
-			<a href="/piloto/admin" class={ classeDoItemRapido(false) }>
+			<a href="/admin" class={ classeDoItemRapido(false) }>
 				@icone("ShieldCheck", "size-4")
 				<span>Administração</span>
 			</a>
@@ -174,7 +174,7 @@ templ menuDoJogador(v hubView) {
 			@icone("Settings", "size-4")
 			<span>Configurações</span>
 		</button>
-		<form method="post" action="/piloto/sair">
+		<form method="post" action="/sair">
 			<button type="submit" class={ classeDoItemRapido(true) }>
 				@icone("LogOut", "size-4")
 				<span>Sair</span>

@@ -346,11 +346,11 @@ func asAbasDaMesa(abertos []*tabuleiro.BoardState, papel, ativa string, campaign
 			Nome:    nomeDaAba(daMesa, i),
 			Ativa:   ehAAbaAtiva(daMesa.ID, ativa, i),
 			Cortina: daMesa.Curtained,
-			Comando: fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/aba/%s')",
+			Comando: fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/aba/%s')",
 				campaignID, sessionID, daMesa.ID),
 		}
 		if ficha.Ativa && papel == "gm" {
-			ficha.MostraAMesa = fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/aba/%s/mostrar')",
+			ficha.MostraAMesa = fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/aba/%s/mostrar')",
 				campaignID, sessionID, daMesa.ID)
 		}
 		barra = append(barra, ficha)

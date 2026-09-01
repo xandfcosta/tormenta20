@@ -38,7 +38,7 @@ func aCenaComTresHerois(t *testing.T) (pilotoFixture, int64) {
 // "procure".
 func TestTodoGestoQueMoveOCursorDizOSentido(t *testing.T) {
 	f, quem := aCenaComTresHerois(t)
-	tela := f.pede(t, quem, http.MethodGet, "/piloto/personagens", "").Body.String()
+	tela := f.pede(t, quem, http.MethodGet, "/personagens", "").Body.String()
 
 	// O CONTROLE vem primeiro: sem ele, "não achei escritor solto" é
 	// indistinguível de "não achei escritor nenhum" — e as duas passam verde.
@@ -95,7 +95,7 @@ func TestOGestoDoCursorNaoRecalculaOSentidoDuasVezes(t *testing.T) {
 // entra", que ninguém liga a um seletor de CSS.
 func TestOPalcoTemAsDuasPartesQueAnimam(t *testing.T) {
 	f, quem := aCenaComTresHerois(t)
-	tela := f.pede(t, quem, http.MethodGet, "/piloto/personagens", "").Body.String()
+	tela := f.pede(t, quem, http.MethodGet, "/personagens", "").Body.String()
 
 	for _, parte := range []string{"palco-retrato", "palco-placa"} {
 		if !strings.Contains(tela, parte) {

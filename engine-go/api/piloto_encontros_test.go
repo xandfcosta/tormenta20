@@ -157,7 +157,7 @@ func TestOGestoDeAcrescentarDevolveRemendo(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/encontros/adicionar/ogro", `{"encontro":[]}`)
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/encontros/adicionar/ogro", `{"encontro":[]}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -175,7 +175,7 @@ func TestOEncontroDaURLValeNaCargaFria(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	rec := pedeNoMestre(t, s, eu, "GET",
-		"/piloto/mestre/encontros?nivel=3&grupo=4&c=ogro:2", "")
+		"/mestre/encontros?nivel=3&grupo=4&c=ogro:2", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}

@@ -54,18 +54,18 @@ func servidorComLivro(t *testing.T, s *Server, conteudo string) *Server {
 // transfere o arquivo inteiro; o leitor destaca o termo e custou 1 MiB contra
 // 85 MiB, contados na interface de loopback.
 func TestOBotaoAbreOLeitorNaPaginaImpressaComOTermo(t *testing.T) {
-	livro := enderecoDoLivro{Base: "/piloto/livro?v=abc", Abertura: 6}
-	if got := livro.naPagina(289, "Lobo"); got != "/piloto/livro/ler?p=289&t=Lobo" {
+	livro := enderecoDoLivro{Base: "/livro?v=abc", Abertura: 6}
+	if got := livro.naPagina(289, "Lobo"); got != "/livro/ler?p=289&t=Lobo" {
 		t.Errorf("o botão do Lobo aponta para %q", got)
 	}
 	// O termo vai ESCAPADO: "Bola de Fogo" tem espaço, e nome de verbete com
 	// "&" quebraria a consulta inteira.
-	if got := livro.naPagina(180, "Bola de Fogo"); got != "/piloto/livro/ler?p=180&t=Bola+de+Fogo" {
+	if got := livro.naPagina(180, "Bola de Fogo"); got != "/livro/ler?p=180&t=Bola+de+Fogo" {
 		t.Errorf("o termo não foi escapado: %q", got)
 	}
 	// A ABERTURA não entra no endereço: quem soma é o leitor, que fala em página
 	// impressa com quem lê e em página de arquivo com o pdf.js.
-	if got := livro.naPagina(289, ""); got != "/piloto/livro/ler?p=289" {
+	if got := livro.naPagina(289, ""); got != "/livro/ler?p=289" {
 		t.Errorf("sem termo o endereço devia ser só a página, e foi %q", got)
 	}
 }
@@ -75,7 +75,7 @@ func TestSemLivroConfiguradoNaoHaEndereco(t *testing.T) {
 	if got := (enderecoDoLivro{}).naPagina(289, "Lobo"); got != "" {
 		t.Errorf("sem livro o endereço devia ser vazio, e foi %q", got)
 	}
-	if got := (enderecoDoLivro{Base: "/piloto/livro"}).naPagina(0, "Lobo"); got != "" {
+	if got := (enderecoDoLivro{Base: "/livro"}).naPagina(0, "Lobo"); got != "" {
 		t.Errorf("criatura sem página no livro devia ficar sem endereço, e ficou %q", got)
 	}
 }
@@ -148,9 +148,9 @@ func TestOLivroSaiComCachePrivado(t *testing.T) {
 func TestOLivroNaoSaiSemSessao(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 
-	req := httptest.NewRequest(http.MethodGet, "/piloto/livro?v="+s.livro.digito, nil)
+	req := httptest.NewRequest(http.MethodGet, "/livro?v="+s.livro.digito, nil)
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 	if rec.Code == http.StatusOK {
 		t.Error("o livro saiu para quem não entrou na mesa")
 	}
@@ -176,13 +176,13 @@ func pedeOLivro(t *testing.T, s *Server, userID int64, faixa string) *httptest.R
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}
-	req := httptest.NewRequest(http.MethodGet, "/piloto/livro?v="+s.livro.digito, nil)
+	req := httptest.NewRequest(http.MethodGet, "/livro?v="+s.livro.digito, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	if faixa != "" {
 		req.Header.Set("Range", faixa)
 	}
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -200,7 +200,7 @@ func TestACenaDoBestiarioAbreOLivroNaPaginaDaCriatura(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/bestiario?criatura=lobo", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
 	// O endereço leva ao LEITOR, na página impressa e com o nome a destacar.
 	//
 	// 290 e não 289: o bloco do Lobo abre na impressa 290, e o catálogo dizia
@@ -208,14 +208,14 @@ func TestACenaDoBestiarioAbreOLivroNaPaginaDaCriatura(t *testing.T) {
 	// conferência por substring aprovava a página que CITA em vez da que ABRE.
 	// Corrigido pela assinatura "<nome> nd <valor>", que é como o livro imprime
 	// o começo de todo bloco de criatura.
-	if !strings.Contains(corpo, "/piloto/livro/ler?p=290&amp;t=Lobo") {
+	if !strings.Contains(corpo, "/livro/ler?p=290&amp;t=Lobo") {
 		t.Error("a ficha do Lobo não abre o leitor na página dele")
 	}
 
 	semLivro := newTestServer(t)
 	outro := seedUser(t, semLivro, "mestre@t20.local")
-	sem := pedeNoMestre(t, semLivro, outro, "GET", "/piloto/mestre/bestiario?criatura=lobo", "").Body.String()
-	if strings.Contains(sem, "/piloto/livro/ler") {
+	sem := pedeNoMestre(t, semLivro, outro, "GET", "/mestre/bestiario?criatura=lobo", "").Body.String()
+	if strings.Contains(sem, "/livro/ler") {
 		t.Error("sem LIVRO_PDF a cena desenhou um link para um livro que não é servido")
 	}
 	if !strings.Contains(sem, "p289") {
@@ -235,13 +235,13 @@ func TestALeituraDoLivroCarregaOQueACenaPrecisa(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/livro/ler?p=290&t=Lobo", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290&t=Lobo", "").Body.String()
 	for _, dado := range []string{
 		`data-pagina="290"`,
 		`data-termo="Lobo"`,
 		`data-abertura="6"`,
-		`data-worker="/piloto/static/pdf.worker.js`,
-		`data-livro="/piloto/livro?v=`,
+		`data-worker="/static/pdf.worker.js`,
+		`data-livro="/livro?v=`,
 	} {
 		if !strings.Contains(corpo, dado) {
 			t.Errorf("a cena do leitor não escreveu %s", dado)
@@ -251,7 +251,7 @@ func TestALeituraDoLivroCarregaOQueACenaPrecisa(t *testing.T) {
 	if !strings.Contains(corpo, "leitor.js") {
 		t.Error("a cena não carrega o módulo do leitor")
 	}
-	if bestiario := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/bestiario", "").Body.String(); strings.Contains(bestiario, "leitor.js") {
+	if bestiario := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "").Body.String(); strings.Contains(bestiario, "leitor.js") {
 		t.Error("o bestiário carregou o pdf.js — 540 KB no caminho de quem só quer a ficha")
 	}
 }
@@ -261,7 +261,7 @@ func TestSemLivroNaoHaLeitor(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	if rec := pedeNoMestre(t, s, eu, "GET", "/piloto/livro/ler?p=290", ""); rec.Code != http.StatusNotFound {
+	if rec := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290", ""); rec.Code != http.StatusNotFound {
 		t.Errorf("sem LIVRO_PDF o leitor respondeu %d, e não 404", rec.Code)
 	}
 }
@@ -271,7 +271,7 @@ func TestAPaginaDoLeitorRecusaLixo(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	for _, alvo := range []string{"/piloto/livro/ler?p=abacaxi", "/piloto/livro/ler?p=-3", "/piloto/livro/ler"} {
+	for _, alvo := range []string{"/livro/ler?p=abacaxi", "/livro/ler?p=-3", "/livro/ler"} {
 		corpo := pedeNoMestre(t, s, eu, "GET", alvo, "").Body.String()
 		if !strings.Contains(corpo, `data-pagina="1"`) {
 			t.Errorf("%s não caiu na primeira página — a cena aceitou lixo", alvo)

@@ -500,7 +500,7 @@ templ mesaRegistrar(v mesaView) {
 			type="button"
 			data-indicator:registrando
 			data-attr:disabled="$registrando || !($d20 >= 1 && $d20 <= 20)"
-			data-on:click={ fmt.Sprintf("@post('/piloto/mesa/%d/%d/iniciativa')", v.CampaignID, v.SessionID) }
+			data-on:click={ fmt.Sprintf("@post('/mesa/%d/%d/iniciativa')", v.CampaignID, v.SessionID) }
 			class="bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 		>
 			Registrar
@@ -770,7 +770,7 @@ templ formDeCombatente(v mesaView) {
 		<button
 			type="button"
 			data-attr:disabled="!$novonome.trim()"
-			data-on:click={ fmt.Sprintf("@post('/piloto/mesa/%d/%d/initiative/add')", v.CampaignID, v.SessionID) }
+			data-on:click={ fmt.Sprintf("@post('/mesa/%d/%d/initiative/add')", v.CampaignID, v.SessionID) }
 			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 		>Acrescentar</button>
 	</div>

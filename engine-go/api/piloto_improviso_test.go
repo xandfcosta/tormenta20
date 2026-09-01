@@ -156,7 +156,7 @@ func TestRolarDevolveRemendoEEmpilha(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/improviso/ruina",
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/ruina",
 		`{"ruina":[{"r":2,"t":"Vazia"}]}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
@@ -178,7 +178,7 @@ func TestTabelaInventadaERecusada(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/improviso/tarot", `{}`)
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/tarot", `{}`)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status %d, quero 400", rec.Code)
 	}
@@ -211,7 +211,7 @@ func TestOTrilhoOfereceTodasAsParadas(t *testing.T) {
 	}
 	for _, f := range ferramentasDoMestre {
 		t.Run(f.Slug, func(t *testing.T) {
-			rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/"+f.Slug, "")
+			rec := pedeNoMestre(t, s, eu, "GET", "/mestre/"+f.Slug, "")
 			if rec.Code != http.StatusOK {
 				t.Fatalf("%s respondeu %d", f.Slug, rec.Code)
 			}
@@ -262,7 +262,7 @@ func TestLimparZeraSoAquelaTabela(t *testing.T) {
 
 	sinais := `{"ruina":[{"r":4,"t":"Vazia"}],"perseguicao":[{"r":9,"t":"Obstáculo"}],` +
 		`"recompensa":[{"r":2,"t":"Favor"}],"ideias":[{"r":7,"t":"Cripta"}]}`
-	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/improviso/ruina/limpar", sinais)
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/ruina/limpar", sinais)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -281,7 +281,7 @@ func TestLimparZeraSoAquelaTabela(t *testing.T) {
 func TestLimparTabelaInventadaERecusado(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
-	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/improviso/tarot/limpar", `{}`)
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/tarot/limpar", `{}`)
 	if rec.Code != http.StatusBadRequest {
 		t.Errorf("status %d, quero 400", rec.Code)
 	}

@@ -49,7 +49,7 @@ async function mesaDescartavel(page: Page): Promise<{ mesa: string; apagar: () =
   const sid = (await sessao.json()).id as number
 
   return {
-    mesa: `/piloto/mesa/${campanha}/${sid}`,
+    mesa: `/mesa/${campanha}/${sid}`,
     // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO (ALE-245), e eu aprendi
     // isto de novo na primeira corrida deste arquivo: sem o `catch`, um caso que
     // falhou no meio deixa a página num estado em que o `delete` estoura, e o

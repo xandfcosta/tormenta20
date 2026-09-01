@@ -222,7 +222,7 @@ const fechaOMenuDaPeca = "$pecaescolhida = ''"
 
 // comandoDaPeca escreve o gesto de um verbo do menu.
 func comandoDaPeca(v tabuleiroView, id, acao string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/pecas/%s/%s')",
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/pecas/%s/%s')",
 		v.CampaignID, v.SessionID, id, acao)
 }
 
@@ -251,7 +251,7 @@ func abreAEdicaoDaPeca(p pecaDoTabuleiro) string {
 func salvaAEdicaoDaPeca(v tabuleiroView) string {
 	return fmt.Sprintf(
 		"document.getElementById('editar-peca').close(); "+
-			"@post('/piloto/mesa/%d/%d/tabuleiro/pecas/' + $pecaeditada + '/editar')",
+			"@post('/mesa/%d/%d/tabuleiro/pecas/' + $pecaeditada + '/editar')",
 		v.CampaignID, v.SessionID)
 }
 

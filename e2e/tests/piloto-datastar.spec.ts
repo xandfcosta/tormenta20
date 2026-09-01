@@ -20,7 +20,7 @@ import { textoComContrasteBaixo } from './support/contraste'
  * só o vi porque medi.
  *
  * A página é do Go, não da SPA: o `baseURL` do Playwright é o Vite, e é o proxy
- * `/piloto` do `vite.config.ts` que a alcança. Se o piloto for apagado, este
+ * `/` do `vite.config.ts` que a alcança. Se o piloto for apagado, este
  * arquivo vai junto.
  */
 test.use({ storageState: '.auth/player.json' })
@@ -29,7 +29,7 @@ test.describe('Mesa do jogador (piloto Datastar)', () => {
   test.use({ storageState: '.auth/player.json' })
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/piloto/mesa/1/4')
+    await page.goto('/mesa/1/4')
     // `exact`, e isto é conserto de um defeito LATENTE deste arquivo (ALE-234):
     // com a cena começada aparece um segundo `<h2>`, "Registrar iniciativa ·
     // <nome>", e o localizador casava os dois — strict mode violation. Ele
@@ -48,7 +48,7 @@ test.describe('Administração (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/piloto/admin')
+    await page.goto('/admin')
     await expect(page.getByRole('heading', { name: 'Administração' })).toBeVisible()
 
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na administração').toEqual([])
@@ -66,14 +66,15 @@ test.describe('Administração (piloto Datastar)', () => {
    * E2E porque nada disto existe em jsdom: não há `showModal`, não há
    * `:modal`, e o foco é uma ficção.
    */
-  // O endereço antigo é favorito de quem administra: ele não pode quebrar. Sem
-  // `requireAdmin` no cliente de propósito — a rota do servidor tem o mesmo
-  // guarda, e essa é a fronteira.
-  test('o endereço antigo /admin encaminha para a cena nova', async ({ page }) => {
-    await page.goto('/admin')
-    await expect(page).toHaveURL(/\/piloto\/admin$/)
-    await expect(page.getByRole('heading', { name: 'Administração' })).toBeVisible()
-  })
+  // Aqui morava `o endereço antigo /admin encaminha para a cena nova`, que
+  // media o desvio de `/admin` para `/piloto/admin`. As cenas subiram para a
+  // raiz na ALE-280 e os dois endereços viraram um só: não há desvio para medir,
+  // e o que sobrava era "a cena de administração abre" — sem mecanismo que só um
+  // navegador tenha, que é a única justificativa de e2e que o guia aceita.
+  //
+  // Quem prende que a rota existe e é do administrador é o Go
+  // (`piloto_admin_test.go`), e a decisão de o endereço VELHO responder 404 está
+  // em `TestTheOldPilotPrefixIsGone`.
 
   /**
    * O LINK DE UMA PESSOA NÃO PODE APARECER SOB O NOME DE OUTRA (ALE-242).
@@ -95,7 +96,7 @@ test.describe('Administração (piloto Datastar)', () => {
    * ficou em Go.
    */
   test('o link de redefinição não vaza para a caixa do jogador seguinte', async ({ page }) => {
-    await page.goto('/piloto/admin')
+    await page.goto('/admin')
     const gatilhos = page.getByRole('button', { name: /^Redefinir a senha de/ })
     await expect(gatilhos.first()).toBeVisible()
 
@@ -117,7 +118,7 @@ test.describe('Administração (piloto Datastar)', () => {
   })
 
   test('o diálogo de apagar conta é modal, nomeado, e devolve o foco', async ({ page }) => {
-    await page.goto('/piloto/admin')
+    await page.goto('/admin')
     const gatilho = page.getByRole('button', { name: /^Apagar a conta de/ }).first()
     await gatilho.focus()
     await gatilho.press('Enter')
@@ -173,9 +174,9 @@ test.describe('A porta (piloto Datastar)', () => {
    */
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
     for (const [caminho, marco] of [
-      ['/piloto/entrar', 'Entrar'],
-      ['/piloto/criar-conta?convite=nao-importa', 'Criar conta'],
-      ['/piloto/redefinir-senha', 'Escolher nova senha'],
+      ['/entrar', 'Entrar'],
+      ['/criar-conta?convite=nao-importa', 'Criar conta'],
+      ['/redefinir-senha', 'Escolher nova senha'],
     ] as const) {
       await page.goto(caminho)
       await expect(page.getByRole('heading', { name: marco, level: 2 })).toBeVisible()
@@ -194,7 +195,7 @@ test.describe('A porta (piloto Datastar)', () => {
   test('a confirmação de senha avisa o typo sem pôr a senha em estado de cliente', async ({
     page,
   }) => {
-    await page.goto('/piloto/criar-conta?convite=nao-importa')
+    await page.goto('/criar-conta?convite=nao-importa')
     await page.locator('#senha').fill('uma senha boa')
     await page.locator('#confirmar').fill('outra coisa')
 
@@ -213,7 +214,7 @@ test.describe('O Hub (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/piloto/')
+    await page.goto('/')
     await expect(page.getByRole('navigation', { name: 'Menu principal' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no Hub').toEqual([])
   })
@@ -230,14 +231,14 @@ test.describe('O Hub (piloto Datastar)', () => {
    * zero e o driver não teria como escolher o vizinho.
    */
   test('as setas andam no menu que o servidor desenhou', async ({ page }) => {
-    await page.goto('/piloto/')
+    await page.goto('/')
     await page.getByRole('link', { name: 'Meus Heróis' }).focus()
 
     await page.keyboard.press('ArrowDown')
-    await expect(page.locator(':focus')).toHaveAttribute('href', '/piloto/campanhas')
+    await expect(page.locator(':focus')).toHaveAttribute('href', '/campanhas')
 
     await page.keyboard.press('ArrowUp')
-    await expect(page.locator(':focus')).toHaveAttribute('href', '/piloto/personagens')
+    await expect(page.locator(':focus')).toHaveAttribute('href', '/personagens')
   })
 
   /**
@@ -253,7 +254,7 @@ test.describe('O Hub (piloto Datastar)', () => {
    * `dialog[open]`.
    */
   test('o menu do jogador é popover nativo: Esc fecha e devolve o foco', async ({ page }) => {
-    await page.goto('/piloto/')
+    await page.goto('/')
     const gatilho = page.getByRole('button', { name: /^Menu de / })
     await gatilho.click()
 
@@ -289,7 +290,7 @@ test.describe('O Hub e a SPA dividem a preferência de som', () => {
     // script da página, que é o único momento em que limpar significa alguma
     // coisa.
     await page.addInitScript(() => localStorage.removeItem('t20-ui'))
-    await page.goto('/piloto/')
+    await page.goto('/')
 
     await page.getByRole('button', { name: /^Menu de / }).click()
     const alternador = page.locator('#menu-do-jogador button').first()
@@ -310,7 +311,7 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/piloto/campanhas')
+    await page.goto('/campanhas')
     await expect(page.getByRole('listbox', { name: 'Campanhas' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nas campanhas').toEqual([])
   })
@@ -327,7 +328,7 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
    * zero e o driver não teria como escolher o vizinho.
    */
   test('as setas trocam de campanha sem pedir nada ao servidor', async ({ page }) => {
-    await page.goto('/piloto/campanhas')
+    await page.goto('/campanhas')
     const opcoes = page.getByRole('option')
     await expect(opcoes.first()).toBeVisible()
 
@@ -366,7 +367,7 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
    * lista renderizada.
    */
   test('a busca filtra a lista que o servidor desenhou', async ({ page }) => {
-    await page.goto('/piloto/campanhas')
+    await page.goto('/campanhas')
     const antes = await page.getByRole('option').count()
     expect(antes, 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
 
@@ -383,7 +384,7 @@ test.describe('A folha em branco (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/piloto/campanhas/nova')
+    await page.goto('/campanhas/nova')
     await expect(page.getByRole('heading', { name: 'Abrir nova campanha' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na folha em branco').toEqual([])
   })
@@ -393,7 +394,7 @@ test.describe('A folha em branco (piloto Datastar)', () => {
   // ORIENTAÇÃO justamente porque num telefone deitado o botão de enviar caía
   // para fora da tela (ALE-176).
   test('a folha cabe nos seis formatos', async ({ page }) => {
-    await page.goto('/piloto/campanhas/nova')
+    await page.goto('/campanhas/nova')
     await expect(page.getByRole('button', { name: 'Abrir campanha' })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
@@ -413,7 +414,7 @@ test.describe('A folha em branco (piloto Datastar)', () => {
    * escreve é melhor que perder o texto ao enviar.
    */
   test('a recusa devolve o texto, e o limite avisa enquanto se escreve', async ({ page }) => {
-    await page.goto('/piloto/campanhas/nova')
+    await page.goto('/campanhas/nova')
     const descricao = page.getByLabel('Descrição')
 
     // O `maxlength` nativo é o aviso durante a digitação.
@@ -434,7 +435,7 @@ test.describe('A folha em branco (piloto Datastar)', () => {
   // O endereço antigo é favorito: ele não pode quebrar.
   test('o endereço antigo /campaigns/new encaminha para a folha nova', async ({ page }) => {
     await page.goto('/campaigns/new')
-    await expect(page).toHaveURL(/\/piloto\/campanhas\/nova$/)
+    await expect(page).toHaveURL(/\/campanhas\/nova$/)
     await expect(page.getByRole('heading', { name: 'Abrir nova campanha' })).toBeVisible()
   })
 })
@@ -443,13 +444,13 @@ test.describe('A crônica (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/piloto/campanhas/1')
+    await page.goto('/campanhas/1')
     await expect(page.getByRole('navigation', { name: 'Seções da crônica' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na crônica').toEqual([])
   })
 
   test('a crônica cabe nos seis formatos', async ({ page }) => {
-    await page.goto('/piloto/campanhas/1')
+    await page.goto('/campanhas/1')
     // UM `h1` só, e é o nome da campanha: a casca só desenha o dela quando há
     // título, e a crônica não passa um — ela tem o próprio.
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
@@ -472,7 +473,7 @@ test.describe('A crônica (piloto Datastar)', () => {
    * E2E porque histórico é do navegador: `goBack` não existe em jsdom.
    */
   test('a seção é endereço: ela sobrevive ao link colado e ao botão voltar', async ({ page }) => {
-    await page.goto('/piloto/campanhas/1?tab=membros')
+    await page.goto('/campanhas/1?tab=membros')
     await expect(page.locator('[aria-current="page"]')).toHaveText('Membros')
 
     await page.getByRole('link', { name: 'Sessões', exact: true }).click()
@@ -497,7 +498,7 @@ test.describe('A crônica (piloto Datastar)', () => {
    * campanha 1 para o próximo teste — a família de problema da ALE-238.
    */
   test('alternar a regra opcional troca o estado sem recarregar a página', async ({ page }) => {
-    await page.goto('/piloto/campanhas/1?tab=config')
+    await page.goto('/campanhas/1?tab=config')
     const chave = page.getByRole('switch', { name: 'Limites de carga' })
     const antes = await chave.getAttribute('aria-checked')
 
@@ -527,7 +528,7 @@ test.describe('A crônica (piloto Datastar)', () => {
   // perdê-lo quebraria todo link de seção já compartilhado.
   test('o endereço antigo /campaigns/:id encaminha COM a seção', async ({ page }) => {
     await page.goto('/campaigns/1?tab=sessoes')
-    await expect(page).toHaveURL(/\/piloto\/campanhas\/1\?tab=sessoes$/)
+    await expect(page).toHaveURL(/\/campanhas\/1\?tab=sessoes$/)
     await expect(page.locator('[aria-current="page"]')).toHaveText('Sessões')
   })
 })
@@ -551,7 +552,7 @@ test.describe('A folha de especificação (piloto Datastar)', () => {
    * `getBoundingClientRect` — nada disso existe sem navegador.
    */
   test('a coluna dupla mede os DOIS stacks, e a ladeira cresce nos dois', async ({ page }) => {
-    await page.goto('/piloto/grimorio')
+    await page.goto('/grimorio')
     const tamanhos = page.locator('#pecas [data-par]').filter({ hasText: /^(xs|sm|default|lg)/ })
     await expect(tamanhos.first()).toBeVisible()
 
@@ -589,7 +590,7 @@ test.describe('A folha de especificação (piloto Datastar)', () => {
   test('as peças da SPA montam SEM shadow root, senão o Tailwind não as alcança', async ({
     page,
   }) => {
-    await page.goto('/piloto/grimorio')
+    await page.goto('/grimorio')
     const botao = page.locator('spa-botao').first()
     await expect(botao.locator('button')).toBeVisible()
     expect(await botao.evaluate((el) => !!el.shadowRoot)).toBe(false)
@@ -598,7 +599,7 @@ test.describe('A folha de especificação (piloto Datastar)', () => {
   // O endereço antigo é o que os dois comentários do index.css mandam abrir.
   test('o endereço antigo /grimorio encaminha para a folha nova', async ({ page }) => {
     await page.goto('/grimorio')
-    await expect(page).toHaveURL(/\/piloto\/grimorio$/)
+    await expect(page).toHaveURL(/\/grimorio$/)
     await expect(page.getByRole('heading', { name: 'Cor' })).toBeVisible()
   })
 })
@@ -607,13 +608,13 @@ test.describe('A carta de convite (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/piloto/campanhas/entrar')
+    await page.goto('/campanhas/entrar')
     await expect(page.getByRole('heading', { name: 'Entrar na mesa' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na carta').toEqual([])
   })
 
   test('a carta cabe nos seis formatos', async ({ page }) => {
-    await page.goto('/piloto/campanhas/entrar')
+    await page.goto('/campanhas/entrar')
     await expect(page.getByRole('group', { name: /Qual herói/ })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
@@ -635,7 +636,7 @@ test.describe('A carta de convite (piloto Datastar)', () => {
    * `validationMessage` é do navegador, e o envio que NÃO acontece também.
    */
   test('sem escolher herói o navegador barra o envio e diz por quê', async ({ page }) => {
-    await page.goto('/piloto/campanhas/entrar')
+    await page.goto('/campanhas/entrar')
     const radios = page.locator('input[name="characterId"]')
     await expect(radios.first()).toBeAttached()
     expect(await page.locator('input[name="characterId"]:checked').count()).toBe(0)
@@ -644,7 +645,7 @@ test.describe('A carta de convite (piloto Datastar)', () => {
     await page.getByRole('button', { name: 'Entrar na mesa' }).click()
 
     await expect(page, 'o envio passou sem herói escolhido').toHaveURL(
-      /\/piloto\/campanhas\/entrar$/,
+      /\/campanhas\/entrar$/,
     )
     const aviso = await radios.first().evaluate((el: HTMLInputElement) => el.validationMessage)
     expect(aviso, 'o navegador barrou em silêncio').not.toBe('')
@@ -653,7 +654,7 @@ test.describe('A carta de convite (piloto Datastar)', () => {
   // Convite morto: a carta diz, e NÃO oferece o botão. Um botão que não pode
   // funcionar é uma porta pintada na parede — quem explica é a carta.
   test('convite morto vira frase, e a carta não oferece o botão', async ({ page }) => {
-    await page.goto('/piloto/campanhas/entrar?token=nao-existe-mesmo')
+    await page.goto('/campanhas/entrar?token=nao-existe-mesmo')
     await expect(page.getByText(/Convite inválido ou expirado/)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toHaveCount(0)
   })
@@ -662,7 +663,7 @@ test.describe('A carta de convite (piloto Datastar)', () => {
   // ENVIA. Perder o token aqui quebraria todo convite já compartilhado.
   test('o endereço antigo /campaigns/join encaminha COM o token', async ({ page }) => {
     await page.goto('/campaigns/join?token=um-token-qualquer')
-    await expect(page).toHaveURL(/\/piloto\/campanhas\/entrar\?token=um-token-qualquer$/)
+    await expect(page).toHaveURL(/\/campanhas\/entrar\?token=um-token-qualquer$/)
     await expect(page.getByRole('heading', { name: 'Entrar na mesa' })).toBeVisible()
   })
 })
@@ -671,7 +672,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/piloto/personagens')
+    await page.goto('/personagens')
     await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos personagens').toEqual([])
   })
@@ -689,7 +690,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
    * cara. A checagem é por `display`.
    */
   test('a tecla D abre e fecha o dossiê do herói em cena', async ({ page }) => {
-    await page.goto('/piloto/personagens')
+    await page.goto('/personagens')
     await page.getByRole('option').first().focus()
 
     const dossie = page.locator('aside[aria-label^="Dossiê"]').first()
@@ -714,7 +715,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
    * passa a custar uma chamada da `ComputeSheetV2` por passo.
    */
   test('as setas trocam de herói sem pedir nada ao servidor', async ({ page }) => {
-    await page.goto('/piloto/personagens')
+    await page.goto('/personagens')
     const opcoes = page.getByRole('option')
     await expect(opcoes.first()).toBeVisible()
 
@@ -739,14 +740,14 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
    * um lado.
    */
   test('⏎ no trilho abre a ficha do herói em cena', async ({ page }) => {
-    await page.goto('/piloto/personagens')
+    await page.goto('/personagens')
     const primeiro = page.getByRole('option').first()
     await primeiro.focus()
     const nome = (await primeiro.getAttribute('aria-label'))?.split(' · ')[0]
 
     await page.keyboard.press('Enter')
 
-    await expect(page).toHaveURL(/\/piloto\/personagens\/\d+$/)
+    await expect(page).toHaveURL(/\/personagens\/\d+$/)
     await expect(page.getByRole('heading', { name: nome, level: 1 }).first()).toBeVisible()
   })
 
@@ -760,7 +761,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
    * até então não faz nada justamente onde não há ficha para abrir.
    */
   test('a seta alcança a vaga de criar e ⏎ leva à Forja', async ({ page }) => {
-    await page.goto('/piloto/personagens')
+    await page.goto('/personagens')
     const vaga = page.getByRole('option', { name: 'Forjar um novo herói' })
     await expect(vaga).toBeVisible()
 
@@ -771,7 +772,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     await expect(page.getByRole('heading', { name: 'Forjar um herói' })).toBeVisible()
 
     await page.keyboard.press('Enter')
-    await expect(page).toHaveURL(/\/piloto\/personagens\/nova/)
+    await expect(page).toHaveURL(/\/personagens\/nova/)
   })
 
   /**
@@ -785,7 +786,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
    * `opacity: 0` passaria nos dois.
    */
   test('os peeks mostram o nome do vizinho sem precisar de hover', async ({ page }) => {
-    await page.goto('/piloto/personagens')
+    await page.goto('/personagens')
     await page.getByRole('option').first().focus()
     // Um passo para dentro, para haver vizinho dos DOIS lados do palco.
     await page.keyboard.press('ArrowRight')
@@ -808,7 +809,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
    * do DOM e não a garantia.
    */
   test('o retrato fica no mesmo lugar nas pontas do elenco', async ({ page }) => {
-    await page.goto('/piloto/personagens')
+    await page.goto('/personagens')
     const retratoVisivel = () =>
       page.locator('a[aria-label^="Abrir ficha de"]:visible').first().boundingBox()
 
@@ -863,7 +864,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
 
   // Tela nova se valida nos seis formatos — regra da casa, e overflow é layout.
   test('personagens: sem scroll horizontal nos seis formatos', async ({ page }) => {
-    await page.goto('/piloto/personagens')
+    await page.goto('/personagens')
     await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
@@ -874,7 +875,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
   // para o Go na fatia 10 — na SPA ela morreria junto com o `git rm`.
   test('o endereço antigo /characters encaminha para a cena nova', async ({ page }) => {
     await page.goto('/characters')
-    await expect(page).toHaveURL(/\/piloto\/personagens$/)
+    await expect(page).toHaveURL(/\/personagens$/)
     await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
   })
 })
@@ -882,7 +883,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
 test.describe('O bestiário (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  const BESTIARIO = '/piloto/mestre/bestiario'
+  const BESTIARIO = '/mestre/bestiario'
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
     await page.goto(BESTIARIO)
@@ -963,7 +964,7 @@ test.describe('O bestiário (piloto Datastar)', () => {
 
     // Só o pedido SEM `abrir=1` é atrasado: é o do foco, e é ele que chegaria
     // por último para redeclarar `fichaAberta: false` por cima do clique.
-    await page.route('**/piloto/mestre/bestiario?*', async (route) => {
+    await page.route('**/mestre/bestiario?*', async (route) => {
       if (new URL(route.request().url()).searchParams.has('abrir')) {
         await route.continue()
         return
@@ -1003,7 +1004,7 @@ test.describe('O bestiário (piloto Datastar)', () => {
 test.describe('Os catálogos (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  const CATALOGOS = '/piloto/mestre/condicoes'
+  const CATALOGOS = '/mestre/condicoes'
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
     await page.goto(CATALOGOS)
@@ -1099,7 +1100,7 @@ test.describe('Os catálogos (piloto Datastar)', () => {
 test.describe('O construtor de encontros (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  const ENCONTROS = '/piloto/mestre/encontros'
+  const ENCONTROS = '/mestre/encontros'
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
     await page.goto(`${ENCONTROS}?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4`)
@@ -1128,7 +1129,7 @@ test.describe('O construtor de encontros (piloto Datastar)', () => {
    * existem em jsdom, e nenhuma asserção de servidor vê a diferença.
    */
   test('montar o encontro não empilha histórico, e o Voltar sai da tela', async ({ page }) => {
-    await page.goto('/piloto/')
+    await page.goto('/')
     await page.goto(ENCONTROS)
     const antes = await page.evaluate(() => history.length)
 
@@ -1144,7 +1145,7 @@ test.describe('O construtor de encontros (piloto Datastar)', () => {
     expect(new URL(page.url()).search, 'o rascunho vazou para a URL').toBe('')
 
     await page.goBack()
-    await expect(page, 'o Voltar desfez um clique em vez de sair da tela').toHaveURL(/\/piloto\/$/)
+    await expect(page, 'o Voltar desfez um clique em vez de sair da tela').toHaveURL(/\/$/)
   })
 
   /**
@@ -1171,7 +1172,7 @@ test.describe('O construtor de encontros (piloto Datastar)', () => {
 test.describe('O improviso (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  const IMPROVISO = '/piloto/mestre/improviso'
+  const IMPROVISO = '/mestre/improviso'
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
     await page.goto(IMPROVISO)
@@ -1203,7 +1204,7 @@ test.describe('O improviso (piloto Datastar)', () => {
    * existem em jsdom.
    */
   test('rolar não empilha histórico, e o Voltar sai da tela', async ({ page }) => {
-    await page.goto('/piloto/')
+    await page.goto('/')
     await page.goto(IMPROVISO)
     const antes = await page.evaluate(() => history.length)
 
@@ -1216,7 +1217,7 @@ test.describe('O improviso (piloto Datastar)', () => {
       antes,
     )
     await page.goBack()
-    await expect(page, 'o Voltar desfez uma rolagem em vez de sair').toHaveURL(/\/piloto\/$/)
+    await expect(page, 'o Voltar desfez uma rolagem em vez de sair').toHaveURL(/\/$/)
   })
 
   /**

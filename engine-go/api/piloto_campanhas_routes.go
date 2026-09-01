@@ -95,9 +95,9 @@ func urlDeCampanhas(busca, papel string) string {
 		q.Set("papel", papel)
 	}
 	if len(q) == 0 {
-		return "/piloto/campanhas"
+		return "/campanhas"
 	}
-	return "/piloto/campanhas?" + q.Encode()
+	return "/campanhas?" + q.Encode()
 }
 
 // ── a folha em branco: abrir campanha (ALE-246) ──────────────────────────────
@@ -150,7 +150,7 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 	// 303 e não 302: depois de um POST, o `See Other` é o que garante que o
 	// navegador siga com GET. Sem ele, recarregar a crônica reenviaria o
 	// formulário e abriria uma segunda campanha igual.
-	http.Redirect(w, r, "/piloto/campanhas/"+strconv.FormatInt(c.ID, 10), http.StatusSeeOther)
+	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(c.ID, 10), http.StatusSeeOther)
 }
 
 func (s *Server) escreveFolhaNova(w http.ResponseWriter, r *http.Request, status int, v campanhaNovaView) {
@@ -160,7 +160,7 @@ func (s *Server) escreveFolhaNova(w http.ResponseWriter, r *http.Request, status
 		// e sem ele a folha nasce sem saída visível — o Esc existe, mas atalho
 		// não é a única porta.
 		Forma:  cascaDensa,
-		Voltar: "/piloto/campanhas",
+		Voltar: "/campanhas",
 	}, campanhaNova(v))
 }
 
@@ -228,7 +228,7 @@ func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request
 	}
 	// 303, como a folha em branco: depois de um POST, recarregar a crônica não
 	// pode reenviar o formulário.
-	http.Redirect(w, r, "/piloto/campanhas/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
+	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
 }
 
 // recusaDeEntrada traduz cada erro da regra para a frase que a pessoa lê.
@@ -260,7 +260,7 @@ func (s *Server) escreveCarta(w http.ResponseWriter, r *http.Request, status int
 	s.escrevePagina(w, r, status, paginaPiloto{
 		Titulo: "Entrar na mesa",
 		Forma:  cascaDensa,
-		Voltar: "/piloto/campanhas",
+		Voltar: "/campanhas",
 	}, campanhaEntrar(v))
 }
 
@@ -337,7 +337,7 @@ func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, avisoInterno, http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/piloto/campanhas/%d?tab=config", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
 }
 
 // handleCronicaExcluir apaga a crônica e devolve ao livro.
@@ -350,7 +350,7 @@ func (s *Server) handleCronicaExcluir(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, avisoInterno, http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/piloto/campanhas", http.StatusSeeOther)
+	http.Redirect(w, r, "/campanhas", http.StatusSeeOther)
 }
 
 // handleCronicaAlternarRegra liga ou desliga UMA regra opcional e devolve só o
@@ -433,7 +433,7 @@ func (s *Server) escrevePaginaDaCronica(w http.ResponseWriter, r *http.Request, 
 	s.escrevePagina(w, r, status, paginaPiloto{
 		Titulo: v.Nome,
 		Forma:  cascaDensa,
-		Voltar: "/piloto/campanhas",
+		Voltar: "/campanhas",
 		// O rótulo nomeia o destino em vez da seta genérica: daqui se volta
 		// para o livro, e "Campanhas" diz isso melhor que "Voltar".
 		VoltarRotulo: "Campanhas",

@@ -105,7 +105,7 @@ func forgeBody(v forgeView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<form method=\"post\" action=\"/piloto/personagens/nova\" data-nav-region=\"content\" data-nav-layout=\"column\" class=\"space-y-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<form method=\"post\" action=\"/personagens/nova\" data-nav-region=\"content\" data-nav-layout=\"column\" class=\"space-y-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -147,7 +147,7 @@ func forgeBody(v forgeView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<a href=\"/piloto/personagens\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<a href=\"/personagens\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -197,7 +197,7 @@ func forgeBody(v forgeView) templ.Component {
 // forgeRedraw é o comando que redesenha a folha com o formulário do jeito que
 // ele está agora. Ele NÃO grava nada — quem cria o herói é o `submit`.
 func forgeRedraw() string {
-	return "@post('/piloto/personagens/nova/esboco', {contentType: 'form'})"
+	return "@post('/personagens/nova/esboco', {contentType: 'form'})"
 }
 
 func raceChoice(v forgeView) templ.Component {

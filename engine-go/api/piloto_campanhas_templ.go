@@ -173,7 +173,7 @@ func barraDeCampanhas(v campanhasView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><a href=\"/piloto/\" class=\"inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">‹ Voltar</a><h1 class=\"font-heading text-xl tracking-wide text-foreground\">Campanhas</h1>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"><a href=\"/\" class=\"inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">‹ Voltar</a><h1 class=\"font-heading text-xl tracking-wide text-foreground\">Campanhas</h1>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -186,7 +186,7 @@ func barraDeCampanhas(v campanhasView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<input type=\"search\" name=\"busca\" data-busca data-bind:busca data-on:input__debounce.250ms=\"@get('/piloto/campanhas')\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<input type=\"search\" name=\"busca\" data-busca data-bind:busca data-on:input__debounce.250ms=\"@get('/campanhas')\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -217,7 +217,7 @@ func barraDeCampanhas(v campanhasView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<a href=\"/piloto/campanhas/entrar\" aria-label=\"Entrar em campanha\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<a href=\"/campanhas/entrar\" aria-label=\"Entrar em campanha\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -247,7 +247,7 @@ func barraDeCampanhas(v campanhasView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<a href=\"/piloto/campanhas/nova\" aria-label=\"Nova campanha\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<a href=\"/campanhas/nova\" aria-label=\"Nova campanha\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -369,9 +369,9 @@ func chipDePapel(v campanhasView, valor, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$papel = %q; @get('/piloto/campanhas')", valor))
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$papel = %q; @get('/campanhas')", valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 137, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 137, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -727,9 +727,9 @@ func acoesDaCampanha(c campanhaCartao) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var32 templ.SafeURL
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/piloto/campanhas/" + strconv.FormatInt(c.ID, 10)))
+		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/campanhas/" + strconv.FormatInt(c.ID, 10)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 227, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 227, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -1099,7 +1099,7 @@ func buscaSemResultado(v campanhasView) templ.Component {
 		})
 		templ_7745c5c3_Err = botao(varSecundaria, tamPequeno, "", templ.Attributes{
 			"type":          "button",
-			"data-on:click": "$busca = ''; $papel = 'todas'; @get('/piloto/campanhas')",
+			"data-on:click": "$busca = ''; $papel = 'todas'; @get('/campanhas')",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var50), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

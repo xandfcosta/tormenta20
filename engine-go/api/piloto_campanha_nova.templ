@@ -28,7 +28,7 @@ templ campanhaNova(v campanhaNovaView) {
 			// Declará-la mesmo assim vale por duas razões: o Esc passa a subir
 			// para a casca em vez de morrer, e a cena deixa de ser a única sem
 			// gramática nenhuma — o que o guarda de cenas cobra.
-			<form method="post" action="/piloto/campanhas/nova" data-nav-region="content" data-nav-layout="column" class="space-y-4">
+			<form method="post" action="/campanhas/nova" data-nav-region="content" data-nav-layout="column" class="space-y-4">
 				@campoDeTexto(campo{
 					Nome: "name", Label: "Nome", Valor: v.Nome,
 					Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
@@ -43,7 +43,7 @@ templ campanhaNova(v campanhaNovaView) {
 					<p class="text-sm text-destructive">{ v.Aviso }</p>
 				}
 				<div class="flex justify-end gap-2">
-					<a href="/piloto/campanhas" class={ classesDoBotao(varSecundaria, tamPadrao, "") }>Cancelar</a>
+					<a href="/campanhas" class={ classesDoBotao(varSecundaria, tamPadrao, "") }>Cancelar</a>
 					@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
 						Abrir campanha
 					}

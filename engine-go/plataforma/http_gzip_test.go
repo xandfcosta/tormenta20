@@ -33,7 +33,7 @@ func aCena(corpo string) http.Handler {
 
 func pedeCom(t *testing.T, h http.Handler, accept string) *http.Response {
 	t.Helper()
-	req := httptest.NewRequest(http.MethodGet, "/piloto/personagens/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/personagens/1", nil)
 	if accept != "" {
 		req.Header.Set("Accept-Encoding", accept)
 	}
@@ -218,7 +218,7 @@ func TestOFlushAntesDoWriteJaDecideOEnvelope(t *testing.T) {
 		w.(http.Flusher).Flush()
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/piloto/personagens/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/personagens/1", nil)
 	req.Header.Set("Accept-Encoding", "gzip")
 	rec := httptest.NewRecorder()
 	Gzip(handler).ServeHTTP(rec, req)

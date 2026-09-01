@@ -71,7 +71,7 @@ func digitoDosEstaticos() string {
 // e é servido SEM cache de propósito — então a página que o escrever à mão volta
 // a piscar, em silêncio, e ninguém liga uma coisa à outra.
 func EstaticoDoPiloto(arquivo string) string {
-	return "/piloto/static/" + arquivo + "?v=" + versaoDosEstaticos
+	return "/static/" + arquivo + "?v=" + versaoDosEstaticos
 }
 
 // comCacheVersionado embrulha o servidor de arquivos com a política de cache.

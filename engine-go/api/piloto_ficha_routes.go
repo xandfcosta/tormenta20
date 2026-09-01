@@ -15,7 +15,7 @@ import (
 
 // As rotas da FICHA no piloto (ALE-272, fatia 1).
 //
-// A ficha nova mora em `/piloto/personagens/{id}` — filha do endereço do elenco,
+// A ficha nova mora em `/personagens/{id}` — filha do endereço do elenco,
 // e não numa raiz própria: ela é o que se abre DE dentro da lista, e o endereço
 // dizer isso é o que faz o ‹ Voltar ter para onde voltar.
 //

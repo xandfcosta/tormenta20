@@ -23,7 +23,7 @@ func postaAForja(t *testing.T, f pilotoFixture, userID int64, caminho string, ca
 	req.Header.Set("Authorization", "Bearer "+f.token(t, userID))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", f.s.PilotoRouter()).ServeHTTP(rec, req)
+	f.s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -45,7 +45,7 @@ func aFolhaPreenchida() url.Values {
 // principais", que é como as cartas costumam começar.
 func TestTodaRacaEClasseDoLivroTemCartaNaForja(t *testing.T) {
 	f := novoPiloto(t)
-	corpo := f.pede(t, f.jogador, http.MethodGet, "/piloto/personagens/nova", "").Body.String()
+	corpo := f.pede(t, f.jogador, http.MethodGet, "/personagens/nova", "").Body.String()
 
 	racas, classes, _ := catalogosDoPersonagem()
 	if len(racas) < 17 || len(classes) != 14 {
@@ -68,12 +68,12 @@ func TestTodaRacaEClasseDoLivroTemCartaNaForja(t *testing.T) {
 // classe, e antes dela a seção não existe.
 func TestAFolhaSoOfereceEquipamentoDepoisDaClasse(t *testing.T) {
 	f := novoPiloto(t)
-	vazia := f.pede(t, f.jogador, http.MethodGet, "/piloto/personagens/nova", "").Body.String()
+	vazia := f.pede(t, f.jogador, http.MethodGet, "/personagens/nova", "").Body.String()
 	if strings.Contains(vazia, "Equipamento inicial") {
 		t.Error("a folha vazia já oferece equipamento, sem saber a classe")
 	}
 
-	comClasse := postaAForja(t, f, f.jogador, "/piloto/personagens/nova/esboco",
+	comClasse := postaAForja(t, f, f.jogador, "/personagens/nova/esboco",
 		url.Values{"class": {"Guerreiro"}}).Body.String()
 	if !strings.Contains(comClasse, "Equipamento inicial") {
 		t.Fatal("o esboço com classe não trouxe o equipamento")
@@ -104,7 +104,7 @@ func TestOEquipamentoOferecidoSegueAClasse(t *testing.T) {
 	}
 	for _, caso := range casos {
 		t.Run(caso.classe, func(t *testing.T) {
-			corpo := postaAForja(t, f, f.jogador, "/piloto/personagens/nova/esboco",
+			corpo := postaAForja(t, f, f.jogador, "/personagens/nova/esboco",
 				url.Values{"class": {caso.classe}}).Body.String()
 			for _, texto := range caso.presente {
 				if !strings.Contains(corpo, texto) {
@@ -164,7 +164,7 @@ func TestAForjaRecusaOQueOKitNaoOferece(t *testing.T) {
 			caso.muda(campos)
 			antes := quantosHerois(t, f)
 
-			rec := postaAForja(t, f, f.jogador, "/piloto/personagens/nova", campos)
+			rec := postaAForja(t, f, f.jogador, "/personagens/nova", campos)
 			if rec.Code != http.StatusUnprocessableEntity {
 				t.Fatalf("status %d, esperado 422", rec.Code)
 			}
@@ -185,7 +185,7 @@ func TestARecusaDevolveOQueFoiRespondido(t *testing.T) {
 	campos := aFolhaPreenchida()
 	campos.Set("origin", "Pirata Espacial")
 
-	corpo := postaAForja(t, f, f.jogador, "/piloto/personagens/nova", campos).Body.String()
+	corpo := postaAForja(t, f, f.jogador, "/personagens/nova", campos).Body.String()
 	if !strings.Contains(corpo, `value="Thessa de Valkaria"`) {
 		t.Error("o nome respondido não voltou no campo")
 	}
@@ -200,7 +200,7 @@ func TestARecusaDevolveOQueFoiRespondido(t *testing.T) {
 // TestOHeroiNasceVestidoEComBolsa é o teste do NASCIMENTO inteiro (p140).
 func TestOHeroiNasceVestidoEComBolsa(t *testing.T) {
 	f := novoPiloto(t)
-	rec := postaAForja(t, f, f.jogador, "/piloto/personagens/nova", aFolhaPreenchida())
+	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status %d, esperado 303: %s", rec.Code, rec.Body.String())
 	}
@@ -266,7 +266,7 @@ func TestOHeroiNasceVestidoEComBolsa(t *testing.T) {
 // proficiências dela. O que se ESCOLHE não nasce escolhido — vira pendência.
 func TestOHeroiNasceComOQueAClasseTreinaEUsa(t *testing.T) {
 	f := novoPiloto(t)
-	rec := postaAForja(t, f, f.jogador, "/piloto/personagens/nova", aFolhaPreenchida())
+	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
 
 	row, err := f.s.queries.GetCharacter(context.Background(), id)
@@ -301,9 +301,9 @@ func TestOHeroiNasceComOQueAClasseTreinaEUsa(t *testing.T) {
 // TestACompraDePontosDaForjaRecusaOQueOLivroProibe — p17, Tabela 1-1.
 func TestACompraDePontosDaForjaRecusaOQueOLivroProibe(t *testing.T) {
 	f := novoPiloto(t)
-	rec := postaAForja(t, f, f.jogador, "/piloto/personagens/nova", aFolhaPreenchida())
+	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
-	atributos := "/piloto/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
+	atributos := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
 
 	// Quatro em Força custa 7 e cabe.
 	for i := 0; i < 4; i++ {
@@ -342,9 +342,9 @@ func TestACompraDePontosDaForjaRecusaOQueOLivroProibe(t *testing.T) {
 // personagem.
 func TestOsAtributosDaForjaSaoDoDono(t *testing.T) {
 	f := novoPiloto(t)
-	rec := postaAForja(t, f, f.jogador, "/piloto/personagens/nova", aFolhaPreenchida())
+	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
-	caminho := "/piloto/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
+	caminho := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
 
 	if code := postaAForja(t, f, f.mestre, caminho+"/strength/1", nil).Code; code != http.StatusForbidden {
 		t.Errorf("o mestre distribuiu atributo de herói alheio: status %d", code)
@@ -354,14 +354,19 @@ func TestOsAtributosDaForjaSaoDoDono(t *testing.T) {
 	}
 }
 
-// oIDDoDestino tira o id de "/piloto/personagens/7/atributos".
+// oIDDoDestino tira o id de "/personagens/7/atributos".
+//
+// Ele lia `partes[2]` porque o endereço começava em `/piloto`, e o prefixo saiu
+// na ALE-280. Contar segmento por POSIÇÃO é o que quebra quando a rota muda de
+// profundidade, e o modo de falhar é ruim: `ParseInt("atributos")` não diz que o
+// endereço mudou, diz que um número está mal escrito.
 func oIDDoDestino(t *testing.T, destino string) int64 {
 	t.Helper()
 	partes := strings.Split(strings.Trim(destino, "/"), "/")
-	if len(partes) < 3 {
-		t.Fatalf("destino inesperado: %q", destino)
+	if len(partes) < 2 || partes[0] != "personagens" {
+		t.Fatalf("destino inesperado: %q — esperava /personagens/{id}/…", destino)
 	}
-	id, err := strconv.ParseInt(partes[2], 10, 64)
+	id, err := strconv.ParseInt(partes[1], 10, 64)
 	if err != nil {
 		t.Fatalf("id no destino %q: %v", destino, err)
 	}
@@ -383,7 +388,7 @@ func TestAFolhaEmBrancoPedeAEscolhaEmVezDeAcusarValorVazio(t *testing.T) {
 	f := novoPiloto(t)
 	campos := url.Values{"name": {"Sem escolhas"}}
 
-	corpo := postaAForja(t, f, f.jogador, "/piloto/personagens/nova", campos).Body.String()
+	corpo := postaAForja(t, f, f.jogador, "/personagens/nova", campos).Body.String()
 	for _, frase := range []string{
 		"Escolha a linhagem do herói.", "Escolha o ofício do herói.", "Escolha a origem do herói.",
 	} {

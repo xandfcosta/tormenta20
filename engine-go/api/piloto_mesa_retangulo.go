@@ -85,8 +85,8 @@ func oRetanguloDeTerrenoSolta(v tabuleiroView) string {
 		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
 			"$%s = ''; "+
 			"return $ferramenta === %q "+
-			"? @post('/piloto/mesa/%d/%d/tabuleiro/terreno/limpar/retangulo/' + de + '/' + ate) "+
-			": @post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/retangulo/' + de + '/' + ate)",
+			"? @post('/mesa/%d/%d/tabuleiro/terreno/limpar/retangulo/' + de + '/' + ate) "+
+			": @post('/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/retangulo/' + de + '/' + ate)",
 		sinalDoRetangulo, retanguloDeTerreno, sinalDoRetanguloDe,
 		sinalDoRetangulo,
 		FerramentaDaBorracha,
@@ -131,7 +131,7 @@ func oRetanguloDePecasSolta(v tabuleiroView) string {
 	return fmt.Sprintf(
 		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
 			"$%s = ''; if (de === ate) return; $%s = true; "+
-			"return @post('/piloto/mesa/%d/%d/tabuleiro/marcar-area/' + de + '/' + ate)",
+			"return @post('/mesa/%d/%d/tabuleiro/marcar-area/' + de + '/' + ate)",
 		sinalDoRetangulo, retanguloDePecas, sinalDoRetanguloDe,
 		sinalDoRetangulo, sinalDoCliqueEngolido,
 		v.CampaignID, v.SessionID,
@@ -190,7 +190,7 @@ func soltaOGrupo(v tabuleiroView) string {
 		"if ($arrastando === 'peca') { "+
 			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
 			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
-			"if (dx || dy) @post('/piloto/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy) }",
+			"if (dx || dy) @post('/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy) }",
 		v.CampaignID, v.SessionID,
 	)
 }

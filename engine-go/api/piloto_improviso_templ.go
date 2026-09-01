@@ -241,9 +241,9 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/piloto/mestre/improviso/%s')", id))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/improviso/%s')", id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 90, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 90, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -302,9 +302,9 @@ func tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) templ.Co
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/piloto/mestre/improviso/%s/limpar')", id))
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 110, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_improviso.templ`, Line: 110, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -514,7 +514,7 @@ func planejadorDeMasmorra(v improvisoView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\" data-bind:salas data-on:input__debounce.300ms=\"@get('/piloto/mestre/improviso')\" aria-label=\"Número de salas da masmorra\" class=\"h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\" data-bind:salas data-on:input__debounce.300ms=\"@get('/mestre/improviso')\" aria-label=\"Número de salas da masmorra\" class=\"h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -34,45 +34,50 @@ type umEnderecoAntigo struct {
 }
 
 // osEnderecosAntigos é a tabela inteira, na ordem em que as fatias portaram.
+//
+// TRÊS SAÍRAM na ALE-280, quando as cenas subiram para a raiz: `/admin`,
+// `/grimorio` e `/redefinir-senha` eram endereços que a SPA e o piloto
+// escreviam IGUAIS, e sem o prefixo `/piloto` o destino virou a própria origem.
+// No mux isso não é uma entrada inútil — é um laço: o padrão literal ganha do
+// `"/"` das cenas, então o desvio responderia 302 para si mesmo para sempre, e a
+// tela nunca apareceria. Quem atende esses três agora é o roteador das cenas,
+// direto.
 var osEnderecosAntigos = []umEnderecoAntigo{
-	{"/admin", fixo("/piloto/admin")},
-	{"/grimorio", fixo("/piloto/grimorio")},
-	{"/campaigns", fixo("/piloto/campanhas")},
-	{"/campaigns/{$}", fixo("/piloto/campanhas")},
-	{"/campaigns/new", fixo("/piloto/campanhas/nova")},
-	{"/campaigns/join", comBusca("/piloto/campanhas/entrar", "token")},
-	{"/campaigns/{id}", comSegmento("/piloto/campanhas/", "id", "tab")},
-	{"/characters", fixo("/piloto/personagens")},
-	{"/characters/{$}", fixo("/piloto/personagens")},
+	{"/campaigns", fixo("/campanhas")},
+	{"/campaigns/{$}", fixo("/campanhas")},
+	{"/campaigns/new", fixo("/campanhas/nova")},
+	{"/campaigns/join", comBusca("/campanhas/entrar", "token")},
+	{"/campaigns/{id}", comSegmento("/campanhas/", "id", "tab")},
+	{"/characters", fixo("/personagens")},
+	{"/characters/{$}", fixo("/personagens")},
 	// As TRÊS últimas entraram na fatia 10c, com o `git rm` da SPA: enquanto ela
 	// existia, estes eram os endereços das telas que ainda viviam lá — a ficha,
 	// a forja e a sessão ao vivo. Desviá-los antes teria tornado a tela antiga
 	// inalcançável enquanto ela ainda era a única.
-	{"/characters/new", fixo("/piloto/personagens/nova")},
-	{"/characters/new/{passo}", fixo("/piloto/personagens/nova")},
-	{"/characters/{id}", comSegmento("/piloto/personagens/", "id", "tab")},
+	{"/characters/new", fixo("/personagens/nova")},
+	{"/characters/new/{passo}", fixo("/personagens/nova")},
+	{"/characters/{id}", comSegmento("/personagens/", "id", "tab")},
 	{"/campaigns/{id}/sessions/{sid}", func(r *http.Request) string {
-		return "/piloto/mesa/" + url.PathEscape(r.PathValue("id")) + "/" + url.PathEscape(r.PathValue("sid"))
+		return "/mesa/" + url.PathEscape(r.PathValue("id")) + "/" + url.PathEscape(r.PathValue("sid"))
 	}},
-	{"/gm", fixo("/piloto/mestre/bestiario")},
-	{"/gm/{$}", fixo("/piloto/mestre/bestiario")},
-	{"/gm/{tool}", comSegmento("/piloto/mestre/", "tool")},
-	{"/login", comBusca("/piloto/entrar", "redirect")},
-	{"/register", comBusca("/piloto/criar-conta", "convite")},
-	{"/redefinir-senha", comBusca("/piloto/redefinir-senha", "token")},
+	{"/gm", fixo("/mestre/bestiario")},
+	{"/gm/{$}", fixo("/mestre/bestiario")},
+	{"/gm/{tool}", comSegmento("/mestre/", "tool")},
+	{"/login", comBusca("/entrar", "redirect")},
+	{"/register", comBusca("/criar-conta", "convite")},
 	// `/join/{token}` era um desvio DUPLO na SPA: ela mandava para
 	// `/campaigns/join?token=…`, que por sua vez mandava para o piloto. Aqui ele
 	// vai direto — dois saltos existiam porque eram duas rotas dela, não porque
 	// alguém precisava passar pelo meio.
 	{"/join/{token}", func(r *http.Request) string {
-		return "/piloto/campanhas/entrar?token=" + url.QueryEscape(r.PathValue("token"))
+		return "/campanhas/entrar?token=" + url.QueryEscape(r.PathValue("token"))
 	}},
 }
 
 // MontaEnderecosAntigos registra os desvios no mux da RAIZ.
 //
-// Na raiz e não sob `/piloto` porque é lá que eles moravam: quem tem o link
-// antigo digita `/grimorio`, e não `/piloto/grimorio`.
+// Na raiz e não sob `/` porque é lá que eles moravam: quem tem o link
+// antigo digita `/grimorio`, e não `/grimorio`.
 func MontaEnderecosAntigos(mux *http.ServeMux) {
 	for _, endereco := range osEnderecosAntigos {
 		destino := endereco.Destino

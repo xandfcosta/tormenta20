@@ -39,7 +39,7 @@ templ attributesBody(v attributesView) {
 		</p>
 		<div class="flex justify-end">
 			<a
-				href={ templ.SafeURL(fmt.Sprintf("/piloto/personagens/%d", v.ID)) }
+				href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", v.ID)) }
 				class={ classesDoBotao(varPrimaria, tamPadrao, "") }
 			>Abrir a ficha</a>
 		</div>
@@ -98,5 +98,5 @@ func oBotaoCabe(linha attributeRow, passo int) bool {
 // cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
 // `oPostDaFicha`.
 func oPostDoAtributo(id int64, chave string, passo int) string {
-	return fmt.Sprintf("@post('/piloto/personagens/%d/atributos/%s/%d')", id, chave, passo)
+	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, chave, passo)
 }

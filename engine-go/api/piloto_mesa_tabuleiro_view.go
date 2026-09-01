@@ -798,7 +798,7 @@ func aPontaSeForOFim(m *movimentoView, eOFim bool, cor string) string {
 
 // comandoDoMovimento escreve a chamada de confirmar ou cancelar.
 func comandoDoMovimento(v tabuleiroView, acao string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/%s/%s')", v.CampaignID, v.SessionID, v.Movimento.TokenID, acao)
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/%s/%s')", v.CampaignID, v.SessionID, v.Movimento.TokenID, acao)
 }
 
 // paradaNoPontoClicado traduz o PONTO do clique em quadrado do plano.
@@ -813,7 +813,7 @@ func comandoDoMovimento(v tabuleiroView, acao string) string {
 // pode ser NEGATIVO.
 func paradaNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (%s) + '/' + (%s))",
+		"@post('/mesa/%d/%d/tabuleiro/%s/parada/' + (%s) + '/' + (%s))",
 		v.CampaignID, v.SessionID, v.AlvoDoMovimento, clicouEmX, clicouEmY,
 	)
 }
@@ -879,7 +879,7 @@ func oDedoSegueComPrevia(v tabuleiroView, p pecaDoTabuleiro) string {
 			"const cx = %d + Math.round($arrastox / $quadrado), cy = %d + Math.round($arrastoy / $quadrado); "+
 			"if (cx === $previax && cy === $previay) return; "+
 			"$previax = cx; $previay = cy; "+
-			"@post('/piloto/mesa/%d/%d/tabuleiro/%s/previa/' + cx + '/' + cy)",
+			"@post('/mesa/%d/%d/tabuleiro/%s/previa/' + cx + '/' + cy)",
 		p.X, p.Y, v.CampaignID, v.SessionID, p.ID)
 }
 
@@ -919,11 +919,11 @@ const apagaAPrevia = "$previafiocabe = ''; $previafiosegundo = ''; $previafioale
 //
 // MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
 func soltaEPara(v tabuleiroView, quem string, x, y int) string {
-	parada := fmt.Sprintf("'/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
+	parada := fmt.Sprintf("'/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
 		v.CampaignID, v.SessionID, v.AlvoDoMovimento, x, y)
 	destino := "@post(" + parada + ")"
 	if quem == "peca" && v.Mestre && v.AlvoDoMovimento != "" {
-		grupo := fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy)",
+		grupo := fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy)",
 			v.CampaignID, v.SessionID)
 		destino = fmt.Sprintf("%s ? %s : %s", aPecaEstaMarcada(v.AlvoDoMovimento), grupo, destino)
 	}
@@ -1030,7 +1030,7 @@ func estaArrastando(quem string) string {
 // da PEÇA no caminho, e este não tem peça nenhuma — abrir acontece justamente
 // quando não há tabuleiro.
 func comandoDoTabuleiroDaCena(v tabuleiroView, acao string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/%s')", v.CampaignID, v.SessionID, acao)
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/%s')", v.CampaignID, v.SessionID, acao)
 }
 
 // acervoDaCampanha traduz os lugares guardados para a tela.
@@ -1068,7 +1068,7 @@ func diaDe(iso string) string {
 
 // comandoDoLugar escreve a chamada de reabrir ou apagar um lugar do acervo.
 func comandoDoLugar(v tabuleiroView, placeID int64, acao string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/lugares/%d/%s')",
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/lugares/%d/%s')",
 		v.CampaignID, v.SessionID, placeID, acao)
 }
 
@@ -1078,7 +1078,7 @@ func comandoDoLugar(v tabuleiroView, placeID int64, acao string) string {
 // se quer aqui é literalmente ir até a aba que já existe, e uma segunda porta
 // para isso seria uma segunda regra sobre o que significa escolher uma cena.
 func comandoDaAba(v tabuleiroView, tabuleiroID string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/aba/%s')",
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/aba/%s')",
 		v.CampaignID, v.SessionID, tabuleiroID)
 }
 
@@ -1141,14 +1141,14 @@ const FerramentaDeMarcar = "marcador"
 // rotas mudarem juntas no dia em que uma delas precisar do canto e não do centro.
 func marcacaoNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/marcadores/novo/' + (%s) + '/' + (%s))",
+		"@post('/mesa/%d/%d/tabuleiro/marcadores/novo/' + (%s) + '/' + (%s))",
 		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
 	)
 }
 
 // comandoDoMarcador escreve o gesto sobre um marcador que já existe.
 func comandoDoMarcador(v tabuleiroView, id, acao string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/marcadores/%s/%s')",
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/marcadores/%s/%s')",
 		v.CampaignID, v.SessionID, id, acao)
 }
 
@@ -1186,7 +1186,7 @@ func escolheOMarcador(id string) string {
 
 // comandoDaCortina escreve o gesto que fecha ou abre (ALE-202, ALE-269).
 func comandoDaCortina(v tabuleiroView, estado string) string {
-	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/cortina/%s')",
+	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/cortina/%s')",
 		v.CampaignID, v.SessionID, estado)
 }
 

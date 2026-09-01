@@ -25,7 +25,7 @@ func hubFixture(t *testing.T, admins ...string) (*Server, int64) {
 	return s, dono
 }
 
-// pedeHub manda um pedido pelo PilotoRouter com a sessão de `userID`.
+// pedeHub manda um pedido pelo WebRouter com a sessão de `userID`.
 func pedeHub(t *testing.T, s *Server, userID int64, metodo, caminho string) *httptest.ResponseRecorder {
 	t.Helper()
 	user, err := s.queries.GetUserByID(context.Background(), userID)
@@ -39,7 +39,7 @@ func pedeHub(t *testing.T, s *Server, userID int64, metodo, caminho string) *htt
 	req := httptest.NewRequest(metodo, caminho, nil)
 	req.AddCookie(&http.Cookie{Name: s.cfg.CookieName, Value: tok})
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -52,7 +52,7 @@ func TestHubSoOfereceContinuarComSessaoViva(t *testing.T) {
 	campanha := seedCampaign(t, s, dono)
 	sessao := seedSession(t, s, campanha)
 
-	semViva := pedeHub(t, s, dono, http.MethodGet, "/piloto/").Body.String()
+	semViva := pedeHub(t, s, dono, http.MethodGet, "/").Body.String()
 	if strings.Contains(semViva, "Continuar sessão") {
 		t.Error("ofereceu continuar sem sessão ativa")
 	}
@@ -63,7 +63,7 @@ func TestHubSoOfereceContinuarComSessaoViva(t *testing.T) {
 		t.Fatalf("iniciar sessão: %v", err)
 	}
 
-	comViva := pedeHub(t, s, dono, http.MethodGet, "/piloto/").Body.String()
+	comViva := pedeHub(t, s, dono, http.MethodGet, "/").Body.String()
 	if !strings.Contains(comViva, "Continuar sessão") {
 		t.Fatal("não ofereceu continuar com sessão ativa")
 	}
@@ -123,7 +123,7 @@ func TestSessaoVivaSemNenhumaNaoEhErro(t *testing.T) {
 // faria o teste concordar com o defeito, e um destino trocado por engano passaria
 // verde nos dois lados.
 func destinoDaSessao(campanha, sessao int64) string {
-	return fmt.Sprintf("/piloto/mesa/%d/%d", campanha, sessao)
+	return fmt.Sprintf("/mesa/%d/%d", campanha, sessao)
 }
 
 // ── quem vê o quê ────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ func TestHubNaoDesenhaEntradasDeAdminParaJogador(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogadora@t20.local")
 
-	corpo := pedeHub(t, s, jogador, http.MethodGet, "/piloto/").Body.String()
+	corpo := pedeHub(t, s, jogador, http.MethodGet, "/").Body.String()
 	for _, entrada := range []string{"Convidar jogador", "Administração"} {
 		if strings.Contains(corpo, entrada) {
 			t.Errorf("o Hub ofereceu %q para quem não administra", entrada)
@@ -151,7 +151,7 @@ func TestHubRecusaConviteDeQuemNaoEhAdmin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
-	pedeHub(t, s, jogador, http.MethodPost, "/piloto/convites")
+	pedeHub(t, s, jogador, http.MethodPost, "/convites")
 	depois, err := s.queries.ListOpenAccountInvites(context.Background(), plataforma.NowISO())
 	if err != nil {
 		t.Fatalf("listar: %v", err)
@@ -163,7 +163,7 @@ func TestHubRecusaConviteDeQuemNaoEhAdmin(t *testing.T) {
 
 func TestHubDesenhaEntradasDeAdminParaAdmin(t *testing.T) {
 	s, dono := hubFixture(t, "mestre@t20.local")
-	corpo := pedeHub(t, s, dono, http.MethodGet, "/piloto/").Body.String()
+	corpo := pedeHub(t, s, dono, http.MethodGet, "/").Body.String()
 	for _, entrada := range []string{"Convidar jogador", "Administração"} {
 		if !strings.Contains(corpo, entrada) {
 			t.Errorf("o Hub escondeu %q de quem administra", entrada)
@@ -175,11 +175,11 @@ func TestHubDesenhaEntradasDeAdminParaAdmin(t *testing.T) {
 
 // Sair é POST, e isso é a regra de CSRF desta migração inteira. O cookie é
 // `SameSite=Lax`, que NÃO viaja em POST cross-site — mas viaja em navegação de
-// topo por GET. Um `<a href="/piloto/sair">` seria disparável por qualquer
+// topo por GET. Um `<a href="/sair">` seria disparável por qualquer
 // imagem de terceiro, e o jogador seria deslogado no meio da mesa.
 func TestSairNaoAtendeGET(t *testing.T) {
 	s, dono := hubFixture(t)
-	rec := pedeHub(t, s, dono, http.MethodGet, "/piloto/sair")
+	rec := pedeHub(t, s, dono, http.MethodGet, "/sair")
 	if rec.Code != http.StatusMethodNotAllowed && rec.Code != http.StatusNotFound {
 		t.Errorf("GET /sair respondeu %d — ação com efeito não pode viver num GET", rec.Code)
 	}
@@ -187,9 +187,9 @@ func TestSairNaoAtendeGET(t *testing.T) {
 
 func TestSairApagaOCookieEDevolveAPorta(t *testing.T) {
 	s, dono := hubFixture(t)
-	rec := pedeHub(t, s, dono, http.MethodPost, "/piloto/sair")
+	rec := pedeHub(t, s, dono, http.MethodPost, "/sair")
 
-	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/piloto/entrar" {
+	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/entrar" {
 		t.Fatalf("status %d para %q", rec.Code, rec.Header().Get("Location"))
 	}
 	var apagou bool
@@ -212,15 +212,15 @@ func TestSairApagaOCookieEDevolveAPorta(t *testing.T) {
 // o jogador de volta para `/mesa/1/4` e ele cairia num 404 depois de entrar.
 func TestPaginaAnonimaVaiParaAPortaLembrandoOCaminhoInteiro(t *testing.T) {
 	s, _ := hubFixture(t)
-	req := httptest.NewRequest(http.MethodGet, "/piloto/mesa/1/4", nil)
+	req := httptest.NewRequest(http.MethodGet, "/mesa/1/4", nil)
 	rec := httptest.NewRecorder()
-	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	s.WebRouter().ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303 — página não responde JSON 401 para o navegador", rec.Code)
 	}
-	if got := rec.Header().Get("Location"); got != "/piloto/entrar?redirect=%2Fpiloto%2Fmesa%2F1%2F4" {
-		t.Errorf("Location = %q — o prefixo /piloto precisa sobreviver ao StripPrefix", got)
+	if got := rec.Header().Get("Location"); got != "/entrar?redirect=%2Fmesa%2F1%2F4" {
+		t.Errorf("Location = %q — o caminho inteiro, com a query, precisa voltar depois do login", got)
 	}
 }
 

@@ -89,7 +89,7 @@ func (s *Server) handlePortaCriarConta(w http.ResponseWriter, r *http.Request) {
 		// porta já era fechada (o servidor responde 403), mas a TELA ficava
 		// aberta e parecia um cadastro comum. O destino é a de entrar, onde a
 		// frase explica que a mesa é por convite.
-		http.Redirect(w, r, "/piloto/entrar", http.StatusSeeOther)
+		http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 		return
 	}
 	s.escrevePorta(w, r, http.StatusOK, paginaCriarConta(criarContaView{Convite: convite}))
@@ -189,7 +189,7 @@ func (s *Server) handlePortaRedefinirSubmit(w http.ResponseWriter, r *http.Reque
 	// Sem sessão: quem redefiniu a senha entra com ela. Emitir cookie aqui
 	// transformaria um link de recuperação num login, e o link chega por um
 	// canal que ninguém controla.
-	http.Redirect(w, r, "/piloto/entrar", http.StatusSeeOther)
+	http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 }
 
 // olhaOLink pergunta pelo link ANTES de o formulário existir. Um link vencido

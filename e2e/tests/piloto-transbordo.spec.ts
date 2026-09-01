@@ -26,7 +26,7 @@ test.use({ storageState: '.auth/user.json' })
  * décima primeira já entra medida.
  */
 async function cenasDosCatalogos(page: Page): Promise<string[]> {
-  await page.goto('/piloto/mestre/condicoes')
+  await page.goto('/mestre/condicoes')
   const enderecos = await page
     .locator('nav[aria-label="Ferramentas do mestre"] a')
     .evaluateAll((links) =>
@@ -83,7 +83,7 @@ test('nenhum cartão do acervo transborda a coluna, em nenhuma cena', async ({ p
 
 test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/condicoes')
+  await page.goto('/mestre/condicoes')
 
   // A condição Abalado termina em "Medo." — o tipo de efeito, que é outro
   // verbete. É o caso que o dono trouxe.
@@ -101,7 +101,7 @@ test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', as
   await expect(caixa).toContainText('Medo capaz de prejudicar o alvo')
   // A CENA CONTINUA: o endereço não mudou e a condição que se estava lendo está
   // lá atrás. Era isso que a navegação para uma busca destruía.
-  expect(page.url()).toContain('/piloto/mestre/condicoes')
+  expect(page.url()).toContain('/mestre/condicoes')
   await expect(page.getByText('-2 em testes de perícia.')).toBeVisible()
 
   await page.keyboard.press('Escape')
@@ -119,7 +119,7 @@ test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quan
   // da Mesa, ficha em diálogo do telefone). Em jsdom todo elemento mede zero e a
   // consulta de contêiner nunca dispara.
   await page.setViewportSize({ width: 1500, height: 900 })
-  await page.goto('/piloto/mestre/bestiario?criatura=dragao-adulto')
+  await page.goto('/mestre/bestiario?criatura=dragao-adulto')
 
   // O bloco é desenhado DUAS vezes na cena — no painel e na ficha em diálogo do
   // telefone, que o CSS esconde nesta largura. Medir o do painel é medir o que
@@ -168,7 +168,7 @@ test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, li
   await page.setViewportSize({ width: 1500, height: 900 })
 
   const medidas: Record<string, { livro: number; tiraAbaixo: boolean; tiraDeitada: boolean }> = {}
-  for (const cena of ['/piloto/campanhas', '/piloto/personagens']) {
+  for (const cena of ['/campanhas', '/personagens']) {
     await page.goto(cena)
     medidas[cena] = await page.evaluate(() => {
       // A tira é a região que o driver de teclado dirige: `rail` nas campanhas

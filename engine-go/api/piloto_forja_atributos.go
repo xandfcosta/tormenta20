@@ -220,7 +220,7 @@ func (s *Server) escreveOsAtributos(w http.ResponseWriter, r *http.Request, v at
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo:       "Atributos · Forja · Tormenta 20",
 		Forma:        cascaDensa,
-		Voltar:       "/piloto/personagens",
+		Voltar:       "/personagens",
 		VoltarRotulo: "Personagens",
 	}, attributesScene(v))
 }
