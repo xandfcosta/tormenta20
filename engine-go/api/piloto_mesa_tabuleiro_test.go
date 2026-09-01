@@ -9,6 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
+	"t20engine/events"
 	"t20engine/tabuleiro"
 )
 
@@ -148,23 +151,30 @@ func TestUmTerrenoInventadoCaiNoChaoPadrao(t *testing.T) {
 // eles não passam pelo `apply`: abrir e fechar são as mudanças mais VISÍVEIS do
 // tabuleiro — a grade aparecendo e sumindo —, e um aviso que cobrisse só o que
 // se move perderia o que nasce.
+//
+// Desde a ALE-279 o caso afirma QUAL evento chegou, e não só que algo chegou. É
+// a diferença que o barramento comprou: com `chan struct{}` abrir e fechar eram
+// o mesmo sino, então trocar um pelo outro no código passava verde aqui.
 func TestOTabuleiroAvisaQuemEscutaAcadaMudanca(t *testing.T) {
-	bs := novoPiloto(t).s.boards
+	f := novoPiloto(t)
+	bs := f.s.boards
 	ctx := context.Background()
 	const sessao = int64(1)
 
-	aviso, parar := bs.Assinar(sessao)
+	sub, parar := f.s.bus.Subscribe(events.OfSession(sessao))
 	defer parar()
 	drenar := func() {
-		select {
-		case <-aviso:
-		default:
+		for len(sub.C) > 0 {
+			<-sub.C
 		}
 	}
-	avisou := func(oque string) {
+	avisou := func(oque string, esperado events.Event) {
 		t.Helper()
 		select {
-		case <-aviso:
+		case ev := <-sub.C:
+			if fmt.Sprintf("%T", ev) != fmt.Sprintf("%T", esperado) {
+				t.Errorf("%s publicou %T, esperado %T", oque, ev, esperado)
+			}
 		default:
 			t.Errorf("%s não avisou quem escuta", oque)
 		}
@@ -174,55 +184,44 @@ func TestOTabuleiroAvisaQuemEscutaAcadaMudanca(t *testing.T) {
 	if _, err := bs.Open(ctx, sessao, "Taverna", "taverna"); err != nil {
 		t.Fatalf("abrir: %v", err)
 	}
-	avisou("abrir o tabuleiro")
+	avisou("abrir o tabuleiro", events.BoardOpened{})
 
 	drenar()
 	if _, err := bs.AddToken(ctx, sessao, aAbaPadrao, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	avisou("pôr uma peça (pelo apply)")
+	avisou("pôr uma peça (pelo apply)", events.BoardChanged{})
 
 	drenar()
 	bs.Close(ctx, sessao, aAbaPadrao)
-	avisou("fechar o tabuleiro")
+	avisou("fechar o tabuleiro", events.BoardClosed{})
 }
 
 // E uma mutação RECUSADA não avisa: "mudou" tem de significar mudou, senão o
 // stream relê e o hash o faz calar — trabalho para nada a cada erro de quem
 // clica.
 func TestUmaMutacaoRecusadaNaoAvisa(t *testing.T) {
-	bs := novoPiloto(t).s.boards
+	f := novoPiloto(t)
 	ctx := context.Background()
 	const sessao = int64(2)
 
-	aviso, parar := bs.Assinar(sessao)
+	sub, parar := f.s.bus.Subscribe(events.OfSession(sessao))
 	defer parar()
 	// SEM tabuleiro aberto: o `apply` recusa antes de mexer em nada.
-	if _, err := bs.AddToken(ctx, sessao, aAbaPadrao, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}, true); err == nil {
+	if _, err := f.s.boards.AddToken(ctx, sessao, aAbaPadrao, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}, true); err == nil {
 		t.Fatal("pôr peça sem tabuleiro devia recusar; sem a recusa este teste não mede nada")
 	}
 	select {
-	case <-aviso:
-		t.Error("a mutação recusada avisou que algo mudou")
+	case ev := <-sub.C:
+		t.Errorf("a mutação recusada publicou %T", ev)
 	default:
 	}
 }
 
-// A BAIXA limpa o registro: sem ela, cada aba fechada deixa um canal para sempre
-// e o aviso percorre uma lista que só cresce.
-func TestABaixaLimpaOOuvinte(t *testing.T) {
-	bs := novoPiloto(t).s.boards
-	const sessao = int64(3)
-
-	_, parar := bs.Assinar(sessao)
-	if n := bs.Ouvintes(sessao); n != 1 {
-		t.Fatalf("depois de assinar havia %d ouvintes, queria 1", n)
-	}
-	parar()
-	if n := bs.Ouvintes(sessao); n != 0 {
-		t.Errorf("depois da baixa sobraram %d ouvintes", n)
-	}
-}
+// Aqui morava `TestABaixaLimpaOOuvinte`, que afirmava que o `desassinar` do
+// tabuleiro limpava o registro. O registro deixou de ser do tabuleiro: ele é do
+// barramento, e a baixa é medida onde ela mora, em `events.TestABaixaTiraOOuvinte`.
+// Uma regra, uma camada.
 
 // TestMoverUmaPecaCHEGAaoStreamSemEsperarOBatimento.
 //

@@ -332,6 +332,53 @@ era caminho normal — e quem acusou foi o e2e de dois clientes. Campo que preci
 ser preenchido por outro arquivo para o recurso existir é recurso que nasce
 desligado.
 
+## O barramento de eventos: o que acontece na mesa é TIPADO
+
+O `events.Bus` (ALE-279) entrega, dentro do processo, o que aconteceu numa mesa.
+Ele substituiu quatro mecanismos com a mesma forma e nenhum nome em comum — o
+`SessionStore.Assinar`, o `BoardStore.Assinar`, o `CharacterWatch.Assinar` e um
+`Emit` —, os três primeiros `chan struct{}`: diziam QUE algo mudou e nunca O
+QUÊ, e o `select` do stream da Mesa tinha um `case` para cada um só para juntar
+de volta o que estava separado por acidente de onde o estado mora.
+
+**Não é event sourcing, e a diferença é a decisão inteira.** O banco continua
+sendo o estado. As regras do livro são conta e não fluxo — empilhamento de
+modificador, PV/PM, círculo de magia são função pura de `sheet → números`, com o
+oráculo como rede —, então o `engine/` não participa disto e reconstruir ficha a
+partir de eventos compraria versionamento de evento e snapshot sem nada em troca.
+
+Três coisas que este desenho pede, e uma que ele proíbe:
+
+- **Nomear o evento é obrigação de COMPILAÇÃO.** O `apply` dos dois stores recebe
+  o evento por parâmetro, então não dá para mutar sem dizer o que aconteceu.
+  Antes o aviso era uma linha dentro do funil e um comentário prometia que
+  ninguém escapava — promessa que vale enquanto ninguém escrever a mutação de
+  fora.
+- **Publicar acontece FORA da trava.** O barramento é folha e poderia ser chamado
+  de dentro, mas quem acorda agora sabe o que houve e pode ler o estado na hora;
+  publicar sob a trava faria esse leitor esperar pelo escritor no instante em que
+  foi acordado para ler. Onde o método usa `defer Unlock`, o corpo vira
+  `…Locked` e um invólucro fino publica.
+- **A fila cheia DESCARTA e CONTA.** `chan struct{}` colapsa — dois "mudou"
+  pendentes não dizem mais que um —, e evento tipado não colapsa, então a fila
+  tem dezesseis lugares. O contrato de quem escuta continua o mesmo: o evento é a
+  notícia, a verdade está no store. O que mudou é que o descarte deixou de ser
+  invisível (`Subscription.Dropped`), pela mesma razão que o medidor de contraste
+  devolve o denominador.
+- **`events/` não importa NADA do projeto.** Ele teve de entrar na lista de
+  permitidos do `aovivo` e do `tabuleiro`, cujos guardas de fronteira avisam que
+  acrescentar import à lista transforma a porta em enfeite. O que impede a porta
+  dos fundos é o `TestOVocabularioNaoImportaNinguem`: enquanto o vocabulário for
+  folha, depender dele não cria fronteira errada — e no dia em que alguém
+  importar a ficha ali "para enriquecer o evento", os dois contextos passam a
+  alcançar a ficha de graça com o guarda de lá verde.
+
+Um barramento tipado é o caso em que a PORTA não serve, e vale saber por quê:
+porta é interface declarada no consumidor, e ela só casa com tipos do consumidor
+— um vocabulário por contexto, que é o problema de novo. O que legitima o
+compartilhamento é ele ser *shared kernel*: pequeno, sem dependências, e de todos
+porque não é de ninguém.
+
 ## Catálogos
 
 O catálogo viaja COMPRIMIDO (`writeCatalogJSON`, ALE-159): `spells` sozinho são
@@ -745,20 +792,19 @@ memória do que já foi avisado é da CONEXÃO (`avisaQueAFichaMudou`).
 A primeira versão lia o `updatedAt` do personagem em todo quadro do batimento —
 uma consulta por segundo por jogador conectado, quase sempre para descobrir que
 nada mudou —, e a decisão do dono foi que toda escrita dentro da sessão já é um
-evento que dá para escutar. O `aovivo.CharacterWatch` é o TERCEIRO canal do
-`select` do stream, ao lado do da sessão e do do tabuleiro, e o carimbo só é lido
-no ramo dele.
+evento que dá para escutar. O stream só lê o carimbo quando o evento diz que a
+ficha mexeu; ver "O barramento de eventos" acima.
 
-Duas coisas que esse canal ensina, e valem para o próximo:
+- **O interesse é por PERSONAGEM, não por sessão.** A pergunta é sobre uma ficha,
+  e a mesma ficha pode estar em duas mesas — pendurar isso no `SessionStore`
+  obrigaria quem PUBLICA a saber em quais mesas o personagem está.
+- **Quem não tem ficha nesta mesa simplesmente não pede o interesse dela.** Aqui
+  morava "os outros recebem um canal NULO, e canal nulo num `select` nunca
+  dispara" — era o truque certo enquanto havia um canal por store, e ele deixou
+  de ser necessário na ALE-279: não pedir diz a mesma coisa sem exigir que quem
+  lê conheça o truque.
 
-- **Ele é por PERSONAGEM, não por sessão.** A pergunta é sobre uma ficha, e a
-  mesma ficha pode estar em duas mesas — pendurar isso no `SessionStore`
-  obrigaria quem AVISA a saber em quais mesas o personagem está.
-- **Quem assina é o leitor com ficha; os outros recebem um canal NULO**, e um
-  canal nulo num `select` nunca dispara. É o comportamento certo para o mestre
-  sem uma linha a mais de `if`.
-
-Quem cutuca é o GATEWAY (`characterChanged`) e não cada comando: passam mais de
+Quem publica é o GATEWAY (`characterChanged`) e não cada comando: passam mais de
 trinta mutações pelo `comandoDaFicha`, e a linha esquecida numa delas seria uma
 ficha que não atualiza só naquele gesto. É a mesma lição do gancho que nascia
 desligado, na seção do SSE.

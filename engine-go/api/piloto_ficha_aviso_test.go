@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strconv"
+	"t20engine/events"
 	"testing"
 	"time"
 )
@@ -19,7 +20,7 @@ import (
 // depende de cada chamador lembrar nasce meio desligado, e o Go segue verde.
 func TestOComandoDaFichaAvisaQuemEscuta(t *testing.T) {
 	f := novoPiloto(t)
-	aviso, parar := f.s.fichas.Assinar(f.charID)
+	aviso, parar := f.s.bus.Subscribe(events.OfCharacter(f.charID))
 	defer parar()
 
 	// Um comando qualquer que GRAVA: tirar 1 de PV.
@@ -30,7 +31,10 @@ func TestOComandoDaFichaAvisaQuemEscuta(t *testing.T) {
 	}
 
 	select {
-	case <-aviso:
+	case ev := <-aviso.C:
+		if _, ok := ev.(events.CharacterChanged); !ok {
+			t.Fatalf("chegou %T, e quem escuta a ficha espera um CharacterChanged", ev)
+		}
 	case <-time.After(time.Second):
 		t.Fatal("ninguém foi avisado: a ficha dentro da sessão ficaria com o estado velho")
 	}
@@ -46,7 +50,7 @@ func TestOComandoDaFichaAvisaQuemEscuta(t *testing.T) {
 // recusa. Ela estava certa: não havia recusa nenhuma.
 func TestOComandoRecusadoNaoAvisa(t *testing.T) {
 	f := novoPiloto(t)
-	aviso, parar := f.s.fichas.Assinar(f.charID)
+	aviso, parar := f.s.bus.Subscribe(events.OfCharacter(f.charID))
 	defer parar()
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
@@ -59,22 +63,13 @@ func TestOComandoRecusadoNaoAvisa(t *testing.T) {
 	}
 
 	select {
-	case <-aviso:
-		t.Fatal("um gesto recusado avisou que a ficha mudou")
+	case ev := <-aviso.C:
+		t.Fatalf("um gesto recusado publicou %T", ev)
 	case <-time.After(100 * time.Millisecond):
 	}
 }
 
-// A BAIXA limpa o registro. Sem ela, cada aba fechada deixa um canal para
-// sempre, e o `Avisar` passa a percorrer uma lista que só cresce.
-func TestABaixaTiraOOuvinteDaFicha(t *testing.T) {
-	f := novoPiloto(t)
-	_, parar := f.s.fichas.Assinar(f.charID)
-	if n := f.s.fichas.Ouvintes(f.charID); n != 1 {
-		t.Fatalf("%d ouvintes depois de assinar, esperado 1", n)
-	}
-	parar()
-	if n := f.s.fichas.Ouvintes(f.charID); n != 0 {
-		t.Errorf("%d ouvintes depois da baixa, esperado 0", n)
-	}
-}
+// Aqui morava `TestABaixaTiraOOuvinteDaFicha`. A baixa deixou de ser do
+// `CharacterWatch` — ela é do barramento, e está medida onde mora, em
+// `events.TestABaixaTiraOOuvinte`. O que este arquivo protege é outra coisa: que
+// o GATEWAY publique, e que a recusa não publique.

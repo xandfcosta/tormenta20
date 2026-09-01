@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/cors"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/events"
 )
 
 // Server holds the API dependencies (config, DB handle, typed queries, primed
@@ -29,12 +30,13 @@ type Server struct {
 	boards   *tabuleiro.BoardStore    // tabuleiros táticos vivos por sessão (ALE-124, vários na ALE-205)
 	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
 	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
-	// fichas é quem escuta "esta ficha mudou" (ALE-275). VALOR e não ponteiro:
-	// o zero dele já funciona, então não existe estado desligado para alguém
-	// tolerar — que é exatamente o defeito que o `characterChanged` abaixo
-	// conta ter tido, quando era um gancho que outro arquivo preenchia.
-	fichas aovivo.CharacterWatch
-	livro  livroServido // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
+	// bus é o barramento de eventos da casa (ALE-279): o que acontece numa mesa
+	// vira notícia tipada aqui, e quem desenha cena escuta.
+	//
+	// Aqui morava `fichas aovivo.CharacterWatch`, o terceiro dos avisos que este
+	// barramento substituiu.
+	bus   *events.Bus
+	livro livroServido // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
 	// lentes é quem está vendo a cena COMO A MESA (ALE-193, ALE-269). Mora aqui
 	// e não num sinal do navegador porque o stream não pergunta nada a ninguém:
 	// um modo em `data-show` seria desfeito pelo primeiro quadro do SSE, com a
@@ -96,11 +98,11 @@ func (s *Server) EsperaOSegundoPlano() {
 // que não tem aquele combatente mandaria todo cliente da casa refazer busca a
 // cada ficha salva.
 func (s *Server) characterChanged(characterID int64) {
-	// O AVISO PARA AS CENAS DO SERVIDOR (ALE-275). Ele é por PERSONAGEM e não
-	// por sessão: quem escuta é o stream da Mesa de quem tem essa ficha aberta,
-	// e a busca por sessão viva abaixo responde outra pergunta — a do hub SSE,
-	// que fala com a sala inteira.
-	s.fichas.Avisar(characterID)
+	// O AVISO PARA AS CENAS DO SERVIDOR (ALE-275, no barramento desde a ALE-279).
+	// Ele é por PERSONAGEM e não por sessão: quem escuta é o stream da Mesa de
+	// quem tem essa ficha aberta, e a busca por sessão viva abaixo responde outra
+	// pergunta — a do hub SSE, que fala com a sala inteira.
+	s.bus.Publish(events.CharacterChanged{CharacterID: characterID})
 	for _, sessionID := range s.sessions.LiveSessionsWithCharacter(characterID) {
 		s.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
 	}
@@ -149,13 +151,18 @@ func characterIDFromPath(path string) (int64, bool) {
 // catalogs may be nil (best-effort) — rule-heavy handlers guard on it.
 func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
 	q := sqlcgen.New(database)
+	// UM barramento para os dois stores e para o servidor (ALE-279). Compartilhar
+	// é o ponto: um por store devolveria o problema que a issue veio resolver,
+	// que é quem escuta ter de juntar as peças de novo.
+	bus := &events.Bus{}
 	return &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		livro:    abreOLivro(cfg),
-		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, vitaisDaFicha{q: q}),
-		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID),
+		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, vitaisDaFicha{q: q}, bus),
+		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID, bus),
+		bus:      bus,
 		lentes:   novasLentes(),
 		abas:     novasAbas(),
 		presence: aovivo.NewPresenceRegistry(),

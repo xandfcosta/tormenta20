@@ -1,6 +1,9 @@
 package api
 
-import "t20engine/aovivo"
+import (
+	"t20engine/aovivo"
+	"t20engine/events"
+)
 
 import (
 	"strings"
@@ -30,6 +33,11 @@ import (
 func TestAFichaQueMudouChegaNaMesa(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	s := &Server{
+		// O barramento é OBRIGATÓRIO, e um `Server` montado à mão sem ele
+		// explode no primeiro `characterChanged` (ALE-279). É o desenho: nulo
+		// que EXPLODE é melhor que nulo tolerado — a segunda forma foi o gancho
+		// que este arquivo conta ter nascido desligado.
+		bus: &events.Bus{},
 		sse: aovivo.NewSSEHub(),
 		sessions: &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
 			7: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
@@ -55,6 +63,11 @@ func TestAFichaQueMudouChegaNaMesa(t *testing.T) {
 func TestMesaSemOPersonagemNaoRecebe(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	s := &Server{
+		// O barramento é OBRIGATÓRIO, e um `Server` montado à mão sem ele
+		// explode no primeiro `characterChanged` (ALE-279). É o desenho: nulo
+		// que EXPLODE é melhor que nulo tolerado — a segunda forma foi o gancho
+		// que este arquivo conta ter nascido desligado.
+		bus: &events.Bus{},
 		sse: aovivo.NewSSEHub(),
 		sessions: &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
 			7: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(99)}}},

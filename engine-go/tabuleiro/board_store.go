@@ -14,6 +14,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/events"
 )
 
 // errNoBoard é a resposta a "mexa no tabuleiro" quando a sessão não tem um. É
@@ -54,15 +55,25 @@ type BoardStore struct {
 	// tarja por aba faria ele conferir oito lugares para saber se o disco está
 	// vivo.
 	Dirty map[int64]bool
-	// ouvintes são os streams que querem saber quando este tabuleiro muda
-	// (ALE-264). Ver `aviso.go`.
-	ouvintes map[int64][]chan struct{}
-	newID    func() string
-	q        *sqlcgen.Queries
+	// bus é por onde as mudanças deste tabuleiro viram notícia (ALE-279).
+	//
+	// Aqui morava `ouvintes map[int64][]chan struct{}`, num arquivo `aviso.go`
+	// que espelhava o do `aovivo` linha por linha. O comentário dele explicava
+	// por que eram DOIS registros e não um compartilhado: os dois stores têm
+	// travas próprias, e chamar o aviso do outro pacote de dentro da trava daqui
+	// é como se escreve um abraço mortal.
+	//
+	// O barramento não tem esse risco porque é FOLHA — pega só a própria trava e
+	// nunca chama de volta um store (ver `events.Bus.Publish`) —, e mesmo assim
+	// a publicação sai de fora da trava.
+	bus   *events.Bus
+	newID func() string
+	q     *sqlcgen.Queries
 }
 
-func NewBoardStore(q *sqlcgen.Queries, newID func() string) *BoardStore {
+func NewBoardStore(q *sqlcgen.Queries, newID func() string, bus *events.Bus) *BoardStore {
 	return &BoardStore{
+		bus:    bus,
 		boards: map[int64][]*BoardState{},
 		loaded: map[int64]bool{},
 		Dirty:  map[int64]bool{},
@@ -237,6 +248,15 @@ func (bs *BoardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 // dois contadores, e continuar um no outro faria o número mentir sobre quantas
 // vezes ESTA cena mudou.
 func (bs *BoardStore) Open(ctx context.Context, sessionID int64, place, terrain string) (*BoardState, error) {
+	b, err := bs.openLocked(ctx, sessionID, place, terrain)
+	if err != nil {
+		return nil, err
+	}
+	bs.bus.Publish(events.BoardOpened{SessionID: sessionID})
+	return b, nil
+}
+
+func (bs *BoardStore) openLocked(ctx context.Context, sessionID int64, place, terrain string) (*BoardState, error) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -248,7 +268,6 @@ func (bs *BoardStore) Open(ctx context.Context, sessionID int64, place, terrain 
 	b := newBoard(bs.newID(), place, terrain)
 	b.Seq = bs.proximaSeqLocked(sessionID)
 	bs.boards[sessionID] = append(bs.boards[sessionID], b)
-	bs.avisarLocked(sessionID)
 	return cloneBoard(b), nil
 }
 
@@ -279,8 +298,8 @@ func (bs *BoardStore) Close(ctx context.Context, sessionID int64, tabuleiroID st
 		bs.boards[sessionID] = restantes
 	}
 	bs.loaded[sessionID] = true
-	bs.avisarLocked(sessionID)
 	bs.Mu.Unlock()
+	bs.bus.Publish(events.BoardClosed{SessionID: sessionID})
 
 	err := bs.q.DeleteOpenBoard(ctx, sqlcgen.DeleteOpenBoardParams{
 		Sessionid: sessionID, Boardid: fechado,
@@ -306,6 +325,17 @@ func (bs *BoardStore) Close(ctx context.Context, sessionID int64, tabuleiroID st
 func (bs *BoardStore) apply(
 	ctx context.Context, sessionID int64, tabuleiroID string, fn func(*BoardState) error,
 ) (*BoardState, error) {
+	b, err := bs.applyLocked(ctx, sessionID, tabuleiroID, fn)
+	if err != nil {
+		return nil, err
+	}
+	bs.bus.Publish(events.BoardChanged{SessionID: sessionID})
+	return b, nil
+}
+
+func (bs *BoardStore) applyLocked(
+	ctx context.Context, sessionID int64, tabuleiroID string, fn func(*BoardState) error,
+) (*BoardState, error) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -316,7 +346,6 @@ func (bs *BoardStore) apply(
 	if err := fn(b); err != nil {
 		return nil, err
 	}
-	bs.avisarLocked(sessionID)
 	return cloneBoard(b), nil
 }
 
