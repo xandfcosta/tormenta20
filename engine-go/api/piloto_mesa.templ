@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"t20engine/web/ui"
+	"t20engine/book"
 )
 
 // A Mesa do jogador desenhada (ALE-219; em templ pela ALE-227). Nenhuma REGRA
@@ -396,7 +397,7 @@ templ condicoesDoCombatente(v mesaView) {
 			As condições do livro (p394-395). Aqui elas são RASTREIO: o bloco de uma criatura é escrito à mão, então o app não recalcula Defesa nem ataque — quem aplica o efeito é você.
 		</p>
 		<ul class="mt-3 flex max-h-[50vh] flex-wrap gap-1.5 overflow-y-auto">
-			for _, c := range catalogosDoLivro().Condicoes {
+			for _, c := range book.Catalogs().Condicoes {
 				<li>
 					<button
 						type="button"
@@ -581,7 +582,7 @@ templ mesaLinhaDaFila(v mesaView, l mesaLinha) {
 						<li
 							title={ efeitoDaCondicao(c) }
 							class="rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]"
-						>{ nomeDaCondicao(c) }</li>
+						>{ book.ConditionName(c) }</li>
 					}
 				</ul>
 			}

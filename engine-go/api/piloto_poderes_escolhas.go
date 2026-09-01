@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"t20engine/book"
 	"t20engine/sheet"
 )
 
@@ -71,21 +72,21 @@ var osCaminhosDaClasse = map[string]struct {
 // Druida serve Allihanna, Megalokk ou Oceano (p61), e não tem alternativa fora
 // das divindades.
 func osDevotosDaClasse(classe string) []filterOption {
-	_, _, deuses := catalogosDoPersonagem()
+	_, _, deuses := book.CharacterCatalogs()
 	switch classe {
 	case "Clérigo":
-		return append(osDeusesQue(deuses, func(d deusDoLivro) bool { return d.Major }),
+		return append(osDeusesQue(deuses, func(d book.God) bool { return d.Major }),
 			filterOption{Valor: "panteao", Rotulo: "Panteão"})
 	case "Paladino":
-		return append(osDeusesQue(deuses, func(d deusDoLivro) bool { return d.PaladinoEligible }),
+		return append(osDeusesQue(deuses, func(d book.God) bool { return d.PaladinoEligible }),
 			filterOption{Valor: "paladino-do-bem", Rotulo: "Paladino do Bem"})
 	case "Druida":
-		return osDeusesQue(deuses, func(d deusDoLivro) bool { return d.DruidaEligible })
+		return osDeusesQue(deuses, func(d book.God) bool { return d.DruidaEligible })
 	}
 	return nil
 }
 
-func osDeusesQue(deuses []deusDoLivro, aceita func(deusDoLivro) bool) []filterOption {
+func osDeusesQue(deuses []book.God, aceita func(book.God) bool) []filterOption {
 	fora := []filterOption{}
 	for _, d := range deuses {
 		if aceita(d) {
@@ -141,7 +142,7 @@ func osPoderesEscolhidosCabem(dto sheet.CharacterDTO) error {
 }
 
 func oPoderEscolhidoExiste(id string, classes map[string]bool) error {
-	if poder, tem := poderesDeClasseDoLivro()[id]; tem {
+	if poder, tem := book.ClassPowers()[id]; tem {
 		if poder.GrantedAtLevel != nil {
 			return fmt.Errorf("%q é automático da classe e não ocupa vaga", poder.Name)
 		}
@@ -151,7 +152,7 @@ func oPoderEscolhidoExiste(id string, classes map[string]bool) error {
 		}
 		return nil
 	}
-	if _, tem := poderesGeraisDoLivro()[id]; tem {
+	if _, tem := book.GeneralPowers()[id]; tem {
 		return nil
 	}
 	return fmt.Errorf("o poder %q não existe no livro", id)
@@ -171,7 +172,7 @@ func osBeneficiosDeOrigemCabem(dto sheet.CharacterDTO) error {
 		return fmt.Errorf("a origem dá %d benefícios, e foram escolhidos %d",
 			oLimiteDeBeneficiosDaOrigem, len(escolhidos))
 	}
-	origem, tem := origensDoLivro()[dto.Origin]
+	origem, tem := book.Origins()[dto.Origin]
 	if !tem {
 		return nil
 	}
@@ -287,7 +288,7 @@ func (s *Server) aPendenciaDoAtributoDeRaca(dto sheet.CharacterDTO) []pendencia 
 }
 
 func aPendenciaDaOrigem(dto sheet.CharacterDTO) []pendencia {
-	origem, tem := origensDoLivro()[dto.Origin]
+	origem, tem := book.Origins()[dto.Origin]
 	if !tem {
 		return nil
 	}

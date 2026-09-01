@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"t20engine/book"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/plataforma"
@@ -57,7 +58,7 @@ func forgeRefusals(folha forgeAnswers) plataforma.FieldErrorMap {
 	if raceByName(folha.Race) == nil {
 		erros["race"] = []string{aRecusaDaEscolha(folha.Race, "a linhagem", "raça")}
 	}
-	if _, tem := origensDoLivro()[folha.Origin]; !tem {
+	if _, tem := book.Origins()[folha.Origin]; !tem {
 		erros["origin"] = []string{aRecusaDaEscolha(folha.Origin, "a origem", "origem")}
 	}
 	classe := classByName(folha.Class)
@@ -142,8 +143,8 @@ func armorFitsKit(id string, oferecidas []string) string {
 }
 
 // raceByName acha a raça pelo nome, ou nil.
-func raceByName(nome string) *racaDoLivro {
-	racas, _, _ := catalogosDoPersonagem()
+func raceByName(nome string) *book.Race {
+	racas, _, _ := book.CharacterCatalogs()
 	for i := range racas {
 		if racas[i].Name == nome {
 			return &racas[i]
@@ -153,8 +154,8 @@ func raceByName(nome string) *racaDoLivro {
 }
 
 // classByName acha a classe pelo nome, ou nil.
-func classByName(nome string) *classeDoLivro {
-	_, classes, _ := catalogosDoPersonagem()
+func classByName(nome string) *book.Class {
+	_, classes, _ := book.CharacterCatalogs()
 	for i := range classes {
 		if classes[i].Name == nome {
 			return &classes[i]
@@ -193,7 +194,7 @@ func (s *Server) birth(r *http.Request, ownerID int64, folha forgeAnswers) (int6
 //
 // Os seis atributos nascem em ZERO, que é o ponto de partida da compra de
 // pontos (p17): distribuí-los é a segunda cena da forja.
-func birthBody(folha forgeAnswers, raca racaDoLivro, classe classeDoLivro) (createCharacterBody, error) {
+func birthBody(folha forgeAnswers, raca book.Race, classe book.Class) (createCharacterBody, error) {
 	tibar, err := birthPurse(folha.Origin)
 	if err != nil {
 		return createCharacterBody{}, err

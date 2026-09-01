@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/book"
 	"testing"
 )
 
@@ -23,7 +24,7 @@ import (
 //
 // Provado VERMELHO removendo a linha "catalyst" do `rotuloDaCategoria`.
 func TestTodoValorDoLivroTemRotulo(t *testing.T) {
-	a := catalogosDoLivro()
+	a := book.Catalogs()
 	if len(a.Magias) == 0 || len(a.Itens) == 0 {
 		t.Fatal("catálogo vazio: não há o que medir, e verde aqui não valeria nada")
 	}
@@ -49,9 +50,9 @@ func TestTodoValorDoLivroTemRotulo(t *testing.T) {
 		categorias[i.Category]++
 	}
 
-	cobra("execução", execucoes, nomeDaExecucao)
-	cobra("alcance", alcances, nomeDoAlcance)
-	cobra("categoria", categorias, nomeDaCategoria)
+	cobra("execução", execucoes, book.CastingName)
+	cobra("alcance", alcances, book.RangeName)
+	cobra("categoria", categorias, book.CategoryName)
 }
 
 // TestABuscaExigeTODOSOsTermos: "luz cur" só casa com o que carrega as duas
@@ -118,7 +119,7 @@ func TestBuscarVarreOsQuatroCatalogos(t *testing.T) {
 
 // TestSemBuscaMostraSoAAbaAberta: sem termo a cena é um catálogo por vez.
 func TestSemBuscaMostraSoAAbaAberta(t *testing.T) {
-	a := catalogosDoLivro()
+	a := book.Catalogs()
 	for _, caso := range []struct {
 		aba     string
 		rotulo  string
@@ -163,7 +164,7 @@ func TestAbaInventadaCaiNaPrimeira(t *testing.T) {
 // veio. Sem a fonte, "Ataque Poderoso" não diz se é poder de classe ou geral.
 func TestOsPoderesVemDosTresCatalogos(t *testing.T) {
 	fontes := map[string]int{}
-	for _, p := range catalogosDoLivro().Poderes {
+	for _, p := range book.Catalogs().Poderes {
 		switch {
 		case strings.HasPrefix(p.ID, "general."):
 			fontes["geral"]++
@@ -210,7 +211,7 @@ func TestACenaDeUmCatalogoDesenhaOCatalogoInteiro(t *testing.T) {
 		t.Fatalf("status %d", rec.Code)
 	}
 	corpo := rec.Body.String()
-	a := catalogosDoLivro()
+	a := book.Catalogs()
 	if !strings.Contains(corpo, fmt.Sprintf("%d entradas", len(a.Condicoes))) {
 		t.Errorf("a contagem não é a das %d condições", len(a.Condicoes))
 	}
@@ -231,7 +232,7 @@ func TestOAcervoInteiroSaiNaAbaDePoderes(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/poderes", "")
-	poderes := catalogosDoLivro().Poderes
+	poderes := book.Catalogs().Poderes
 	if !strings.Contains(rec.Body.String(), fmt.Sprintf("%d entradas", len(poderes))) {
 		t.Fatalf("a contagem não é a dos %d poderes", len(poderes))
 	}

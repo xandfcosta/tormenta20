@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"t20engine/book"
 	"t20engine/sheet"
 )
 
@@ -143,7 +144,7 @@ func oMaterialAplicado(item sheet.ItemDTO) []string {
 // Item custom não tem eixo no catálogo, então ele aceita os três: não há o que
 // saber sobre uma coisa que a pessoa inventou, e recusar por precaução tiraria
 // dela a única forma de equipar o que ela criou.
-func osLugaresAlcancaveis(item sheet.ItemDTO, catalogo *itemDoLivro) []equipChoice {
+func osLugaresAlcancaveis(item sheet.ItemDTO, catalogo *book.Item) []equipChoice {
 	atual := equippedSlotOf(item)
 	fora := []equipChoice{}
 	for _, escolha := range osLugaresDoItem(catalogo) {
@@ -160,7 +161,7 @@ func osLugaresAlcancaveis(item sheet.ItemDTO, catalogo *itemDoLivro) []equipChoi
 // As duas mãos só aparecem quando são OBRIGATÓRIAS (`hands: 2`) ou quando
 // mudam alguma coisa: uma arma versátil dá mais dano empunhada com as duas
 // (p150). Numa arma de uma mão só, ocupar as duas não ganha nada.
-func osLugaresDoItem(catalogo *itemDoLivro) []equipChoice {
+func osLugaresDoItem(catalogo *book.Item) []equipChoice {
 	guardar := equipChoice{Slot: "", Rotulo: "Guardar"}
 	if catalogo == nil {
 		return []equipChoice{guardar, {Slot: "vested", Rotulo: "Vestir"},
@@ -179,7 +180,7 @@ func osLugaresDoItem(catalogo *itemDoLivro) []equipChoice {
 	return append([]equipChoice{guardar, {Slot: "vested", Rotulo: "Vestir"}}, maos...)
 }
 
-func asMaosDoItem(catalogo itemDoLivro) []equipChoice {
+func asMaosDoItem(catalogo book.Item) []equipChoice {
 	duas := equipChoice{Slot: "wielded2", Rotulo: "Empunhar (2 mãos)"}
 	if catalogo.Hands == 2 {
 		return []equipChoice{duas}
@@ -201,7 +202,7 @@ func contemTraco(tracos []string, alvo string) bool {
 }
 
 // oUsoDoConsumivel descreve a dose, ou nil quando o item não se usa.
-func oUsoDoConsumivel(catalogo itemDoLivro) *consumeChoice {
+func oUsoDoConsumivel(catalogo book.Item) *consumeChoice {
 	if catalogo.Consumable == nil {
 		return nil
 	}
@@ -228,7 +229,7 @@ func oEscopoEscrito(escopo string) string {
 //
 // Ganho fixo não pergunta nada: perguntar o resultado de um dado que não existe
 // é pedir que a pessoa invente um número.
-func aRolagemQuePedeNumero(ganho *rolagemDoGanho) string {
+func aRolagemQuePedeNumero(ganho *book.GainRoll) string {
 	if ganho == nil || ganho.Dice == "" || ganho.Dice == "0" {
 		return ""
 	}
@@ -236,7 +237,7 @@ func aRolagemQuePedeNumero(ganho *rolagemDoGanho) string {
 }
 
 // oQueOLivroDiz é o bloco de referência da ficha do item.
-func oQueOLivroDiz(catalogo itemDoLivro) *bookInfo {
+func oQueOLivroDiz(catalogo book.Item) *bookInfo {
 	info := &bookInfo{
 		Categoria: aCategoriaEscrita(catalogo.Category),
 		Preco:     comVirgula(catalogo.Price),
@@ -262,7 +263,7 @@ func oQueOLivroDiz(catalogo itemDoLivro) *bookInfo {
 	return info
 }
 
-func aLinhaDaProtecao(protecao protecaoDoLivro, ehArmadura bool) string {
+func aLinhaDaProtecao(protecao book.Armor, ehArmadura bool) string {
 	linha := "Defesa " + comSinalInt(protecao.Defense) + " · penalidade " + strconv.Itoa(protecao.Penalty)
 	if !ehArmadura {
 		return linha
@@ -324,7 +325,7 @@ func asMelhoriasAplicadas(item sheet.ItemDTO) []overlayRow {
 //
 // A Equilibrada carrega quatro modificadores de manobra que dividem a mesma
 // nota "+2 em manobras"; juntá-las cruas escrevia a frase quatro vezes.
-func oResumoDaSobreposicao(entrada itemDoLivro) string {
+func oResumoDaSobreposicao(entrada book.Item) string {
 	notas := []string{}
 	for _, m := range entrada.Modifiers {
 		if m.Note != "" {
@@ -344,7 +345,7 @@ func oResumoDaSobreposicao(entrada itemDoLivro) string {
 // recusa o resto é o servidor.
 func asSobreposicoesQueCabem(categoria, familia string, aplicadas []string) []overlayChoice {
 	escolhas := []overlayChoice{}
-	for _, entrada := range catalogosDoLivro().Itens {
+	for _, entrada := range book.Catalogs().Itens {
 		if entrada.Category != categoria || !aceitaAFamilia(entrada, familia) {
 			continue
 		}
@@ -367,7 +368,7 @@ func asSobreposicoesQueCabem(categoria, familia string, aplicadas []string) []ov
 func catalogItemRowsOf(busca, categoria string) []catalogItemRow {
 	termo := foldAccents(strings.TrimSpace(busca))
 	linhas := []catalogItemRow{}
-	for _, entrada := range catalogosDoLivro().Itens {
+	for _, entrada := range book.Catalogs().Itens {
 		if entrada.Category == "improvement" || entrada.Category == "material" {
 			continue
 		}
@@ -392,7 +393,7 @@ func asCategoriasDoCatalogo(ativa string) []filterOption {
 	vistas := map[string]bool{}
 	opcoes := []filterOption{{Valor: "", Rotulo: "Todas as categorias", Ativo: ativa == ""}}
 	ids := []string{}
-	for _, entrada := range catalogosDoLivro().Itens {
+	for _, entrada := range book.Catalogs().Itens {
 		if entrada.Category == "improvement" || entrada.Category == "material" || vistas[entrada.Category] {
 			continue
 		}

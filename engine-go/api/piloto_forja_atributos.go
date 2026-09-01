@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/book"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -175,7 +176,7 @@ func (s *Server) carregaAtributosDaForja(r *http.Request, recusa string) (attrib
 		ID: row.ID, HeroName: row.Name, Spent: gasto,
 		Budget: engine.PointBuyBudget, Refusal: recusa,
 	}
-	for _, atributo := range ordemDosAtributos {
+	for _, atributo := range book.AttributeOrder {
 		v.Rows = append(v.Rows, aLinhaDoAtributo(atributo.Chave, espalhamento, sheet, gasto))
 	}
 	return v, http.StatusOK, nil

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/book"
 	"t20engine/catalog"
 	"t20engine/sheet"
 )
@@ -238,13 +239,13 @@ func augmentDescription(spellID string, index int) string {
 }
 
 // spellOfBook acha a magia no acervo já ordenado.
-func spellOfBook(id string) magiaDoLivro {
-	for _, m := range catalogosDoLivro().Magias {
+func spellOfBook(id string) book.Spell {
+	for _, m := range book.Catalogs().Magias {
 		if m.ID == id {
 			return m
 		}
 	}
-	return magiaDoLivro{ID: id, Name: id}
+	return book.Spell{ID: id, Name: id}
 }
 
 // catalogSpellRowsOf são as magias que ainda dá para aprender, filtradas.
@@ -254,7 +255,7 @@ func catalogSpellRowsOf(dto sheet.CharacterDTO, busca, circulo, escola string) [
 		sabidas[s.CatalogSpellID] = true
 	}
 	linhas := []catalogSpellRow{}
-	for _, m := range catalogosDoLivro().Magias {
+	for _, m := range book.Catalogs().Magias {
 		if sabidas[m.ID] || !passaNoFiltro(m, busca, circulo, escola) {
 			continue
 		}
@@ -266,7 +267,7 @@ func catalogSpellRowsOf(dto sheet.CharacterDTO, busca, circulo, escola string) [
 	return linhas
 }
 
-func passaNoFiltro(m magiaDoLivro, busca, circulo, escola string) bool {
+func passaNoFiltro(m book.Spell, busca, circulo, escola string) bool {
 	if circulo != "" && strconv.Itoa(m.Circle) != circulo {
 		return false
 	}
@@ -289,8 +290,8 @@ func grantedSpellRowsOf(dto sheet.CharacterDTO) []grantedSpellRow {
 	if err := json.Unmarshal([]byte(dto.PowerChoices), &escolhas); err != nil {
 		return nil
 	}
-	porNome := map[string]magiaDoLivro{}
-	for _, m := range catalogosDoLivro().Magias {
+	porNome := map[string]book.Spell{}
+	for _, m := range book.Catalogs().Magias {
 		porNome[m.Name] = m
 	}
 	linhas := []grantedSpellRow{}

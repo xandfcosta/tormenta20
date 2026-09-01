@@ -75,7 +75,7 @@ func TestClassExpertisesTable(t *testing.T) {
 }
 
 // classeDoLivro é o que `classes.json` guarda de cada uma das 14.
-type classeDoLivro struct {
+type classeDoCatalogo struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	BookPage      int      `json:"bookPage"`
@@ -95,7 +95,7 @@ type classeDoLivro struct {
 // classes, Guerreiro") sem mudar nada — sintoma de quem transcreveu a frase do
 // livro em vez da linha da classe.
 func TestClassProficienciesTable(t *testing.T) {
-	classes := decodeResource[[]classeDoLivro](t, "classes")
+	classes := decodeResource[[]classeDoCatalogo](t, "classes")
 	if len(classes) != 14 {
 		t.Errorf("a tabela tem %d classes, want 14 (as classes-base do livro)", len(classes))
 	}

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/book"
 	"t20engine/catalog"
 )
 
@@ -179,7 +180,7 @@ func TestODialogoOfereceAsCondicoesDoCatalogo(t *testing.T) {
 
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
 
-	condicoes := catalogosDoLivro().Condicoes
+	condicoes := book.Catalogs().Condicoes
 	if len(condicoes) == 0 {
 		t.Fatal("o catálogo não tem condição nenhuma — o laço abaixo não mediria nada")
 	}

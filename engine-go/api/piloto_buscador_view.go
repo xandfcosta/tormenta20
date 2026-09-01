@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"t20engine/book"
 )
 
 // O BUSCADOR DO LIVRO (ALE-264): ⌃K abre uma caixa que procura nas 1.072
@@ -109,20 +110,20 @@ func montaAchados(busca string, peloTexto bool) buscadorView {
 	if !v.Buscando() {
 		return v
 	}
-	a := catalogosDoLivro()
-	racas, classes, deuses := catalogosDoPersonagem()
+	a := book.Catalogs()
+	racas, classes, deuses := book.CharacterCatalogs()
 	for _, g := range []grupoDoBuscador{
-		grupoBuscado("Condições", a.Condicoes, busca, peloTexto, destinoNoAcervo("condicoes", busca), camposDaCondicao, achadoDaCondicao),
+		grupoBuscado("Condições", a.Condicoes, busca, peloTexto, destinoNoAcervo("condicoes", busca), book.ConditionFields, achadoDaCondicao),
 		grupoBuscado("Criaturas", criaturasDoLivro(), busca, peloTexto, destinoNoBestiario(busca), camposDoVerbete, achadoDoVerbete),
-		grupoBuscado("Magias", a.Magias, busca, peloTexto, destinoNoAcervo("magias", busca), camposDaMagia, achadoDaMagia),
-		grupoBuscado("Poderes", a.Poderes, busca, peloTexto, destinoNoAcervo("poderes", busca), camposDoPoder, achadoDoPoder),
-		grupoBuscado("Itens", a.Itens, busca, peloTexto, destinoNoAcervo("itens", busca), camposDoItem, achadoDoItem),
-		grupoBuscado("Efeitos", tiposDeEfeito(), busca, peloTexto, destinoNoAcervo("efeitos", busca), camposDoEfeito, achadoDoEfeito),
-		grupoBuscado("Escolas", escolasDeMagia(), busca, peloTexto, destinoNoAcervo("escolas", busca), camposDaEscola, achadoDaEscola),
-		grupoBuscado("Perícias", periciasDoAcervo(), busca, peloTexto, destinoNoAcervo("pericias", busca), camposDaPericia, achadoDaPericia),
-		grupoBuscado("Raças", racas, busca, peloTexto, destinoNoAcervo("racas", busca), camposDaRaca, achadoDaRaca),
-		grupoBuscado("Classes", classes, busca, peloTexto, destinoNoAcervo("classes", busca), camposDaClasse, achadoDaClasse),
-		grupoBuscado("Deuses", deuses, busca, peloTexto, destinoNoAcervo("deuses", busca), camposDoDeus, achadoDoDeus),
+		grupoBuscado("Magias", a.Magias, busca, peloTexto, destinoNoAcervo("magias", busca), book.SpellFields, achadoDaMagia),
+		grupoBuscado("Poderes", a.Poderes, busca, peloTexto, destinoNoAcervo("poderes", busca), book.PowerFields, achadoDoPoder),
+		grupoBuscado("Itens", a.Itens, busca, peloTexto, destinoNoAcervo("itens", busca), book.ItemFields, achadoDoItem),
+		grupoBuscado("Efeitos", book.EffectKinds(), busca, peloTexto, destinoNoAcervo("efeitos", busca), book.EffectFields, achadoDoEfeito),
+		grupoBuscado("Escolas", book.SpellSchools(), busca, peloTexto, destinoNoAcervo("escolas", busca), book.SchoolFields, achadoDaEscola),
+		grupoBuscado("Perícias", book.Expertises(), busca, peloTexto, destinoNoAcervo("pericias", busca), book.ExpertiseFields, achadoDaPericia),
+		grupoBuscado("Raças", racas, busca, peloTexto, destinoNoAcervo("racas", busca), book.RaceFields, achadoDaRaca),
+		grupoBuscado("Classes", classes, busca, peloTexto, destinoNoAcervo("classes", busca), book.ClassFields, achadoDaClasse),
+		grupoBuscado("Deuses", deuses, busca, peloTexto, destinoNoAcervo("deuses", busca), book.GodFields, achadoDoDeus),
 	} {
 		if g.Total == 0 {
 			continue
@@ -218,37 +219,37 @@ func camposDoVerbete(m verbete) []string {
 	return append([]string{m.Name, nomeDoTipo(m.Tipo)}, m.SpecialAbilities...)
 }
 
-func achadoDaCondicao(c condicaoDoLivro) achadoDoBuscador {
+func achadoDaCondicao(c book.Condition) achadoDoBuscador {
 	detalhe := "Condição"
 	if c.UpgradesTo != "" {
-		detalhe = "Condição · agrava para " + nomeDaCondicao(c.UpgradesTo)
+		detalhe = "Condição · agrava para " + book.ConditionName(c.UpgradesTo)
 	}
 	return achadoDoBuscador{Nome: c.Name, Detalhe: detalhe, Destino: destinoDaEntrada("condicoes", c.ID), Pagina: c.BookPage}
 }
 
-func achadoDaMagia(m magiaDoLivro) achadoDoBuscador {
+func achadoDaMagia(m book.Spell) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    m.Name,
-		Detalhe: fmt.Sprintf("%dº círculo · %s", m.Circle, nomeDaExecucao(m.Execution)),
+		Detalhe: fmt.Sprintf("%dº círculo · %s", m.Circle, book.CastingName(m.Execution)),
 		Destino: destinoDaEntrada("magias", m.ID),
 		Pagina:  m.BookPage,
 	}
 }
 
-func achadoDoPoder(p poderDoLivro) achadoDoBuscador {
+func achadoDoPoder(p book.Power) achadoDoBuscador {
 	return achadoDoBuscador{Nome: p.Name, Detalhe: p.Fonte, Destino: destinoDaEntrada("poderes", p.ID), Pagina: p.BookPage}
 }
 
-func achadoDoItem(i itemDoLivro) achadoDoBuscador {
+func achadoDoItem(i book.Item) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    i.Name,
-		Detalhe: nomeDaCategoria(i.Category),
+		Detalhe: book.CategoryName(i.Category),
 		Destino: destinoDaEntrada("itens", i.ID),
 		Pagina:  i.BookPage,
 	}
 }
 
-func achadoDoEfeito(e efeitoDoLivro) achadoDoBuscador {
+func achadoDoEfeito(e book.EffectKind) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    e.Name,
 		Detalhe: "Tipo de efeito",
@@ -257,7 +258,7 @@ func achadoDoEfeito(e efeitoDoLivro) achadoDoBuscador {
 	}
 }
 
-func achadoDaEscola(e escolaDeMagia) achadoDoBuscador {
+func achadoDaEscola(e book.SpellSchool) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    e.Name,
 		Detalhe: "Escola de magia",
@@ -266,8 +267,8 @@ func achadoDaEscola(e escolaDeMagia) achadoDoBuscador {
 	}
 }
 
-func achadoDaPericia(p periciaDoLivro) achadoDoBuscador {
-	detalhe := "Perícia · " + siglaDoAtributo(p.Attribute)
+func achadoDaPericia(p book.Expertise) achadoDoBuscador {
+	detalhe := "Perícia · " + book.AttributeAbbrev(p.Attribute)
 	if p.SoTreinada {
 		detalhe += " · só treinada"
 	}
@@ -279,16 +280,16 @@ func achadoDaPericia(p periciaDoLivro) achadoDoBuscador {
 	}
 }
 
-func achadoDaRaca(r racaDoLivro) achadoDoBuscador {
+func achadoDaRaca(r book.Race) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    r.Name,
-		Detalhe: nomeDoTier(r.Tier) + " · " + r.AtributoMod.Escrito(),
+		Detalhe: book.TierName(r.Tier) + " · " + r.AtributoMod.Escrito(),
 		Destino: destinoDaEntrada("racas", r.ID),
 		Pagina:  r.BookPage,
 	}
 }
 
-func achadoDaClasse(c classeDoLivro) achadoDoBuscador {
+func achadoDaClasse(c book.Class) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    c.Name,
 		Detalhe: fmt.Sprintf("Classe · %d poderes", c.Poderes),
@@ -297,7 +298,7 @@ func achadoDaClasse(c classeDoLivro) achadoDoBuscador {
 	}
 }
 
-func achadoDoDeus(d deusDoLivro) achadoDoBuscador {
+func achadoDoDeus(d book.God) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    d.Name,
 		Detalhe: d.Portfolio,

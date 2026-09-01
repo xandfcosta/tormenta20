@@ -2,6 +2,7 @@ package api
 
 import (
 	"strings"
+	"t20engine/book"
 	"testing"
 )
 
@@ -54,7 +55,7 @@ func TestCadaCatalogoOfereceOsFiltrosDele(t *testing.T) {
 // "filtrou do jeito certo" — um E virando OU daria 39 + as evocações todas, que
 // também é uma lista plausível.
 func TestOFiltroSomaDentroEMultiplicaEntre(t *testing.T) {
-	todas := len(catalogosDoLivro().Magias)
+	todas := len(book.Catalogs().Magias)
 	if todas != 198 {
 		t.Fatalf("%d magias no catálogo — os números abaixo perderam o sentido", todas)
 	}
@@ -136,10 +137,10 @@ func TestABuscaEscondeOsFiltros(t *testing.T) {
 // apareceu ao medir o dado para montar o filtro; na tela era um rótulo plausível
 // em todo cartão.
 func TestAsRacasExoticasDizemQueSaoExoticas(t *testing.T) {
-	racas, _, _ := catalogosDoPersonagem()
+	racas, _, _ := book.CharacterCatalogs()
 	contagem := map[string]int{}
 	for _, r := range racas {
-		contagem[nomeDoTier(r.Tier)]++
+		contagem[book.TierName(r.Tier)]++
 	}
 	if contagem["Exótica"] != 9 || contagem["Comum"] != 8 {
 		t.Errorf("%d exóticas e %d comuns — o livro tem 9 e 8", contagem["Exótica"], contagem["Comum"])
@@ -153,7 +154,7 @@ func TestAsRacasExoticasDizemQueSaoExoticas(t *testing.T) {
 // magias. Pior: a escola decidia o filtro e não estava escrita em cartão nenhum
 // — o mestre filtrava por evocação e as magias não diziam que eram de evocação.
 func TestAEscolaDaMagiaTemVerbeteEViraElo(t *testing.T) {
-	escolas := escolasDeMagia()
+	escolas := book.SpellSchools()
 	if len(escolas) != 8 {
 		t.Fatalf("%d escolas de magia — o livro tem 8", len(escolas))
 	}
@@ -166,7 +167,7 @@ func TestAEscolaDaMagiaTemVerbeteEViraElo(t *testing.T) {
 			t.Errorf("a escola %q veio sem definição ou sem página", e.Name)
 		}
 	}
-	for _, m := range catalogosDoLivro().Magias {
+	for _, m := range book.Catalogs().Magias {
 		if m.School != "" && !conhecidas[m.School] {
 			t.Errorf("a magia %q é da escola %q, que não tem verbete", m.Name, m.School)
 		}
@@ -205,7 +206,7 @@ func TestOCartaoDaMagiaDizEDeixaAbrirAEscola(t *testing.T) {
 // comparado com o do `options.json`, que é o que o motor usa para ROLAR. As duas
 // fontes concordarem é o que diz que a leitura da tabela do livro está certa.
 func TestAPericiaTrazOQueOLivroImprimeAoLadoDoNome(t *testing.T) {
-	pericias := periciasDoAcervo()
+	pericias := book.Expertises()
 	if len(pericias) != 29 {
 		t.Fatalf("%d perícias — o livro tem 29", len(pericias))
 	}
@@ -221,7 +222,7 @@ func TestAPericiaTrazOQueOLivroImprimeAoLadoDoNome(t *testing.T) {
 		if p.BookPage == 0 {
 			t.Errorf("a perícia %q ficou sem página", p.Name)
 		}
-		if siglaDoAtributo(p.Attribute) == p.Attribute {
+		if book.AttributeAbbrev(p.Attribute) == p.Attribute {
 			t.Errorf("a perícia %q tem atributo desconhecido: %q", p.Name, p.Attribute)
 		}
 	}

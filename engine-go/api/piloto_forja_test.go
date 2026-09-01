@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"t20engine/book"
 	"testing"
 )
 
@@ -47,7 +48,7 @@ func TestTodaRacaEClasseDoLivroTemCartaNaForja(t *testing.T) {
 	f := novoPiloto(t)
 	corpo := f.pede(t, f.jogador, http.MethodGet, "/personagens/nova", "").Body.String()
 
-	racas, classes, _ := catalogosDoPersonagem()
+	racas, classes, _ := book.CharacterCatalogs()
 	if len(racas) < 17 || len(classes) != 14 {
 		t.Fatalf("o catálogo chegou com %d raças e %d classes — o livro tem 17 e 14",
 			len(racas), len(classes))

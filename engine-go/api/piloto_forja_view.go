@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"t20engine/book"
 	"t20engine/engine"
 	"t20engine/plataforma"
 )
@@ -93,7 +94,7 @@ type itemOption struct {
 // vazia do primeiro GET, a folha redesenhada quando a classe muda, e a folha
 // recusada com os erros por campo.
 func blankForgeSheet(folha forgeAnswers, erros plataforma.FieldErrorMap) forgeView {
-	racas, classes, _ := catalogosDoPersonagem()
+	racas, classes, _ := book.CharacterCatalogs()
 	v := forgeView{Name: folha.Name, Errors: erros}
 	for _, raca := range racas {
 		v.Races = append(v.Races, raceCardOf(raca, folha.Race))
@@ -129,7 +130,7 @@ func orphanRefusals(erros plataforma.FieldErrorMap, gear *startingGear) []string
 	return orfas
 }
 
-func raceCardOf(raca racaDoLivro, escolhida string) raceCard {
+func raceCardOf(raca book.Race, escolhida string) raceCard {
 	nomes := make([]string, 0, 2)
 	for _, habilidade := range raca.Abilities {
 		if len(nomes) == 2 {
@@ -144,7 +145,7 @@ func raceCardOf(raca racaDoLivro, escolhida string) raceCard {
 	}
 }
 
-func classCardOf(classe classeDoLivro, escolhida string) classCard {
+func classCardOf(classe book.Class, escolhida string) classCard {
 	pv, pm, _ := engine.ClassStartingVitals(classe.Name)
 	return classCard{
 		Name: classe.Name, PV: pv, PM: pm,
@@ -156,7 +157,7 @@ func classCardOf(classe classeDoLivro, escolhida string) classCard {
 // treinadas de saída e quantas ainda se escolhem.
 //
 //	"Fortitude · mais 2 a escolher"
-func cardExpertisesLine(classe classeDoLivro) string {
+func cardExpertisesLine(classe book.Class) string {
 	fixas := strings.Join(classe.Pericias, ", ")
 	if classe.Escolhe == 0 {
 		return fixas
@@ -170,12 +171,12 @@ func cardExpertisesLine(classe classeDoLivro) string {
 
 // originOptions são as 35 origens com uma linha do que elas dão.
 func originOptions(escolhida string) []originOption {
-	origens := origensDoLivro()
+	origens := book.Origins()
 	nomes := make([]string, 0, len(origens))
 	for nome := range origens {
 		nomes = append(nomes, nome)
 	}
-	ordenaPorNome(nomes, func(n string) string { return n })
+	book.SortByName(nomes, func(n string) string { return n })
 
 	lista := make([]originOption, 0, len(nomes))
 	for _, nome := range nomes {
@@ -189,7 +190,7 @@ func originOptions(escolhida string) []originOption {
 
 // benefitsLine resume a lista de benefícios da origem. São dois a
 // escolher (p85), e a escolha é da ficha — aqui é só o que a origem oferece.
-func benefitsLine(origem origemDoLivro) string {
+func benefitsLine(origem book.Origin) string {
 	nomes := make([]string, 0, len(origem.Benefits))
 	for _, beneficio := range origem.Benefits {
 		nomes = append(nomes, beneficio.Name)
@@ -198,7 +199,7 @@ func benefitsLine(origem origemDoLivro) string {
 }
 
 // startingGearFor monta os seletores do kit desta classe.
-func startingGearFor(folha forgeAnswers, classe classeDoLivro) *startingGear {
+func startingGearFor(folha forgeAnswers, classe book.Class) *startingGear {
 	kit := engine.StartingKitFor(classe.Name, classe.Proficiencias)
 	eq := &startingGear{
 		SimpleWeapons: itemOptionsInCategory("weapon-simple", folha.SimpleWeapon),
@@ -218,7 +219,7 @@ func startingGearFor(folha forgeAnswers, classe classeDoLivro) *startingGear {
 // em que o acervo já os guarda.
 func itemOptionsInCategory(categoria, escolhido string) []itemOption {
 	var opcoes []itemOption
-	for _, item := range catalogosDoLivro().Itens {
+	for _, item := range book.Catalogs().Itens {
 		if item.Category == categoria {
 			opcoes = append(opcoes, itemOptionOf(item, escolhido))
 		}
@@ -238,7 +239,7 @@ func itemOptionsByID(ids []string, escolhido string) []itemOption {
 	return opcoes
 }
 
-func itemOptionOf(item itemDoLivro, escolhido string) itemOption {
+func itemOptionOf(item book.Item, escolhido string) itemOption {
 	return itemOption{ID: item.ID, Label: item.Name, Chosen: item.ID == escolhido}
 }
 

@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"t20engine/web/ui"
+	"t20engine/book"
 )
 
 // A MESA DO MESTRE, e a primeira das quatro ferramentas (ALE-257).
@@ -557,7 +558,7 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 						<ul class="list-disc space-y-1 pl-5 text-xs">
 							for _, h := range m.SpecialAbilities {
 								<li>
-									for _, pedaco := range comElosDoTexto(h) {
+									for _, pedaco := range book.WithLinks(h) {
 										@pedacoDoTexto(pedaco, livro)
 									}
 								</li>
@@ -575,7 +576,7 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 								// A perícia da criatura leva ao verbete dela: o
 								// mestre lê "Furtividade +5" e pode querer saber
 								// se ela sofre penalidade de armadura.
-								@eloParaOAcervo("pericias", chaveDoNome(p.Name), p.Name) {
+								@eloParaOAcervo("pericias", book.KeyOfName(p.Name), p.Name) {
 									{ p.Name }
 								}
 								{ " " }
@@ -597,7 +598,7 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 				if m.Equipamento != "" {
 					@secaoDoBloco("Equipamento") {
 						<p class="text-xs">
-							for _, pedaco := range comElosDoTexto(m.Equipamento) {
+							for _, pedaco := range book.WithLinks(m.Equipamento) {
 								@pedacoDoTexto(pedaco, livro)
 							}
 						</p>
@@ -606,7 +607,7 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 				if m.Tesouro != "" {
 					@secaoDoBloco("Tesouro") {
 						<p class="text-xs">
-							for _, pedaco := range comElosDoTexto(m.Tesouro) {
+							for _, pedaco := range book.WithLinks(m.Tesouro) {
 								@pedacoDoTexto(pedaco, livro)
 							}
 						</p>
