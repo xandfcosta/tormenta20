@@ -432,13 +432,13 @@ templ barraDaSpa(tipo, rotulo, atual, max string) {
 }
 
 // Os embrulhos do lado templ: a peça REAL, com o texto da amostra.
-templ botaoTemplParaFolha(v variante) {
+templ botaoTemplParaFolha(v ui.Variant) {
 	@ui.Button(v, ui.SizeDefault, "", templ.Attributes{"type": "button"}) {
 		Abrir
 	}
 }
 
-templ botaoTemplNoTamanho(t tamanho, texto string) {
+templ botaoTemplNoTamanho(t ui.Size, texto string) {
 	@ui.Button(ui.VariantPrimary, t, "", templ.Attributes{"type": "button"}) {
 		{ texto }
 	}

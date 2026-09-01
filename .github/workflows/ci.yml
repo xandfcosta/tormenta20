@@ -69,9 +69,9 @@ jobs:
 
       - name: Fail if the generated templates were stale
         run: |
-          if ! git diff --quiet -- 'engine-go/api/*_templ.go'; then
+          if ! git diff --quiet -- 'engine-go/api/*_templ.go' 'engine-go/web/**/*_templ.go'; then
             echo "::error::Os _templ.go estão desatualizados. Rode 'go tool templ generate' em engine-go/ e commite o resultado."
-            git diff --stat -- 'engine-go/api/*_templ.go'
+            git diff --stat -- 'engine-go/api/*_templ.go' 'engine-go/web/**/*_templ.go'
             exit 1
           fi
 
