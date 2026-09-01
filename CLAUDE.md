@@ -29,9 +29,9 @@ e a regra tem um lugar só.
   Datastar que não deixam erro para trás — estão explicadas no
   [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
 - **Antes de commitar:** `go test ./...`, `go vet ./...` e `gofmt` no
-  `engine-go/`, e `pnpm typecheck` lá também quando mexer nas ilhas de JS. Mexeu em gesto de
-  ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e && npx playwright
-  test` (~4 min, sobe o próprio servidor e o próprio banco).
+  `engine-go/` — mais `pnpm typecheck` lá, quando mexer nas ilhas de JS. Mexeu
+  em gesto de ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e &&
+  npx playwright test` (~2 min, sobe o próprio servidor e o próprio banco).
 - **Releia a documentação que a sua mudança tocou** — o `.md` do pacote e o
   `GLOSSARIO.md`. Não "atualize se mudou o comportamento": **releia**. Ver
   "Documentação".
@@ -359,10 +359,10 @@ certa.
 ## Guias por pacote
 
 - **`engine-go/`** (Go): [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — regenerar
-  oráculo é ato deliberado, citação de página conferida, o gerador de tipos da
-  fronteira, validação de schema dos catálogos, as armadilhas do `templ` e as
-  nove do Datastar que não deixam erro para trás, os dois defeitos silenciosos do
-  `sqlc`, e por que a bancada copia um molde migrado.
+  oráculo é ato deliberado, citação de página conferida, validação de schema dos
+  catálogos, as armadilhas do `templ` e as nove do Datastar que não deixam erro
+  para trás, os dois defeitos silenciosos do `sqlc`, e por que a bancada copia um
+  molde migrado.
 - **`e2e/`** (Playwright) **não tem guia próprio**: o que reger e2e está na
   seção "Testes" deste arquivo, e é uma regra só — e2e é a faixa mais cara do
   repositório e cada caso se justifica com um mecanismo que só um navegador tem.
