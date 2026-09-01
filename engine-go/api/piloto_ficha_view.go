@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"t20engine/sheet"
 )
 
 // A FICHA como dado (ALE-272, fatia 1) — a casca, as abas e o crachá.
@@ -318,7 +319,7 @@ func oRotuloDoPasso(rotulo string, passo int) string {
 // SUBIR exige que o TOTAL caiba em 20 (p32) — o teto é do personagem, não da
 // classe. DESCER exige que a classe tenha mais de um nível: levá-la a zero
 // apagaria a classe, que é outra coisa e não tem gesto nesta tela.
-func asClassesDoDegrau(dto CharacterDTO) []classeDaFicha {
+func asClassesDoDegrau(dto sheet.CharacterDTO) []classeDaFicha {
 	var total int64
 	for _, cl := range dto.Classes {
 		total += cl.Level

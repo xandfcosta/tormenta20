@@ -1,4 +1,4 @@
-package api
+package sheet
 
 import (
 	"t20engine/db/sqlcgen"
@@ -105,7 +105,7 @@ type SpellDTO struct {
 }
 
 // characterScalarsFrom maps the flat DB row; relations are attached by the loader.
-func characterScalarsFrom(c sqlcgen.Character) CharacterDTO {
+func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 	return CharacterDTO{
 		ID:                   c.ID,
 		OwnerID:              c.Ownerid,

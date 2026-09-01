@@ -9,6 +9,7 @@ import (
 
 	"t20engine/catalog"
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 // A aba EFEITOS como dado (ALE-272, fatia 5).
@@ -206,7 +207,7 @@ func flagsOfClassPowers() map[string]string {
 // o que está ligado é o `dto.Conditionals`, que é do jogador. Sem catálogo
 // primado a aba mostra o que não depende do motor (condições, posturas e
 // efeitos aplicados) e perde a Situação, que é derivada.
-func (s *Server) effectsPanelOf(dto CharacterDTO) effectsPanel {
+func (s *Server) effectsPanelOf(dto sheet.CharacterDTO) effectsPanel {
 	if s.catalogs == nil {
 		return effectsPanelFor(dto, nil, nil)
 	}
@@ -219,7 +220,7 @@ func (s *Server) effectsPanelOf(dto CharacterDTO) effectsPanel {
 }
 
 // effectsPanelFor monta a aba inteira.
-func effectsPanelFor(dto CharacterDTO, offered []engine.ConditionalEffect, flags []engine.EquippedFlag) effectsPanel {
+func effectsPanelFor(dto sheet.CharacterDTO, offered []engine.ConditionalEffect, flags []engine.EquippedFlag) effectsPanel {
 	ativos := toStringSet(dto.Conditionals)
 	panel := effectsPanel{
 		Conditions:       conditionRowsOf(dto),
@@ -248,7 +249,7 @@ func activeCountOf(linhas []situationalRow) int {
 //
 // Id desconhecido é DESCARTADO: o catálogo é a autoridade sobre o que é uma
 // condição, e um blob velho não pode injetar uma condição fantasma na ficha.
-func conditionRowsOf(dto CharacterDTO) []conditionRow {
+func conditionRowsOf(dto sheet.CharacterDTO) []conditionRow {
 	porID := map[string]condicaoDoLivro{}
 	for _, c := range catalogosDoLivro().Condicoes {
 		porID[c.ID] = c
@@ -279,7 +280,7 @@ func parseConditionBlob(bruto string) []string {
 	return ids
 }
 
-func conditionOptionsFor(dto CharacterDTO) []pickerOption {
+func conditionOptionsFor(dto sheet.CharacterDTO) []pickerOption {
 	ligadas := toStringSet(parseConditionBlob(dto.ActiveConditions))
 	opcoes := []pickerOption{}
 	for _, c := range catalogosDoLivro().Condicoes {
@@ -292,7 +293,7 @@ func conditionOptionsFor(dto CharacterDTO) []pickerOption {
 }
 
 // stanceRowsOf são as posturas em curso.
-func stanceRowsOf(dto CharacterDTO) []stanceRow {
+func stanceRowsOf(dto sheet.CharacterDTO) []stanceRow {
 	doLivro := stancesFromCatalog()
 	linhas := []stanceRow{}
 	for _, s := range dto.Stances {
@@ -313,7 +314,7 @@ func stanceRowsOf(dto CharacterDTO) []stanceRow {
 }
 
 // appliedEffectRowsOf são os consumíveis e as magias de bônus em curso.
-func appliedEffectRowsOf(dto CharacterDTO) []appliedEffectRow {
+func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
 	linhas := []appliedEffectRow{}
 	for _, e := range dto.ActiveEffects {
 		linhas = append(linhas, appliedEffectRow{

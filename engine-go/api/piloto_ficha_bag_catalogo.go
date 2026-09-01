@@ -6,6 +6,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 // O CATÁLOGO DE ITENS lido pela Mochila (ALE-272, fatia 7).
@@ -15,7 +16,7 @@ import (
 // ela está usando, e em que chip da grade ela cai.
 
 // itemDoCatalogo acha a entrada do livro de um item da ficha.
-func itemDoCatalogo(item ItemDTO) *itemDoLivro {
+func itemDoCatalogo(item sheet.ItemDTO) *itemDoLivro {
 	if item.CatalogID == nil || *item.CatalogID == "" {
 		return nil
 	}
@@ -33,7 +34,7 @@ func itemDoLivroPorID(id string) *itemDoLivro {
 }
 
 // asSobreposicoesDoItem são os NOMES das melhorias e do material aplicados.
-func asSobreposicoesDoItem(item ItemDTO) []string {
+func asSobreposicoesDoItem(item sheet.ItemDTO) []string {
 	nomes := []string{}
 	for _, entrada := range asSobreposicoesDoLivro(item) {
 		nomes = append(nomes, entrada.Name)
@@ -45,7 +46,7 @@ func asSobreposicoesDoItem(item ItemDTO) []string {
 //
 // Id desconhecido é PULADO em vez de virar erro: a coluna guarda um blob de
 // texto, e uma linha torta não pode impedir a mochila inteira de abrir.
-func asSobreposicoesDoLivro(item ItemDTO) []itemDoLivro {
+func asSobreposicoesDoLivro(item sheet.ItemDTO) []itemDoLivro {
 	ids := asMelhoriasGuardadas(item.Improvements)
 	if item.Material != nil && *item.Material != "" {
 		ids = append(ids, *item.Material)
@@ -73,7 +74,7 @@ func asMelhoriasGuardadas(blob string) []string {
 // A Defesa base de armadura e escudo sai UMA vez: o catálogo traz o número em
 // `armor.defense` E como modificador de Defesa do mesmo valor, e desenhar os
 // dois daria "Defesa +2 · Defesa +2" em toda armadura.
-func oQueOItemConcede(item ItemDTO) []string {
+func oQueOItemConcede(item sheet.ItemDTO) []string {
 	catalogo := itemDoCatalogo(item)
 	if catalogo == nil {
 		return nil

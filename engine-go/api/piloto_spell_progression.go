@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"t20engine/catalog"
+	"t20engine/sheet"
 )
 
 // A PROGRESSÃO DE CÍRCULO por classe (ALE-272, fatia 6).
@@ -78,7 +79,7 @@ func spellProgressions() map[string]spellProgression {
 // magia concedida por poder (Totem Espiritual, p42) é conjurável por quem não
 // tem classe nenhuma de conjurador — no círculo dela, e só nele. Sem o piso, um
 // bárbaro com Totem não conseguiria conjurar a magia que o poder lhe deu.
-func highestCastableCircle(classes []ClassDTO, spellCircle int) int {
+func highestCastableCircle(classes []sheet.ClassDTO, spellCircle int) int {
 	melhor := spellCircle
 	for _, entrada := range classes {
 		prog, conjura := spellProgressions()[entrada.ClassName]

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 // A aba PODERES como dado (ALE-272, fatia 8).
@@ -88,7 +89,7 @@ type stanceState struct {
 }
 
 // powersPanelOf monta a aba.
-func (s *Server) powersPanelOf(dto CharacterDTO, busca string) powersPanel {
+func (s *Server) powersPanelOf(dto sheet.CharacterDTO, busca string) powersPanel {
 	panel := powersPanel{Search: busca, IsCaster: len(casterClassesOf(dto)) > 0}
 	linhas := s.powerRowsOf(dto)
 	panel.Total = len(linhas)
@@ -103,7 +104,7 @@ func (s *Server) powersPanelOf(dto CharacterDTO, busca string) powersPanel {
 
 // powerRowsOf traduz o acervo em linhas de tela, resolvendo a ativação de cada
 // poder e o estado de jogo dele.
-func (s *Server) powerRowsOf(dto CharacterDTO) []powerRow {
+func (s *Server) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
 	contexto := contextoDoUso{PmAtual: int(dto.MpCurrent), Flags: s.asFlagsAtivas(dto)}
 	usos := osUsosPorPoder(dto)
 	posturas := asPosturasPagas(dto)
@@ -115,7 +116,7 @@ func (s *Server) powerRowsOf(dto CharacterDTO) []powerRow {
 }
 
 func aLinhaDoPoder(
-	dto CharacterDTO, poder ownedPower, contexto contextoDoUso,
+	dto sheet.CharacterDTO, poder ownedPower, contexto contextoDoUso,
 	usos map[string]usoDoPoder, posturas map[string]bool,
 ) powerRow {
 	linha := powerRow{
@@ -155,7 +156,7 @@ func aLinhaDoPoder(
 
 // oEstadoDaPostura resolve a flag, os degraus do nível e se ela está em curso.
 func oEstadoDaPostura(
-	dto CharacterDTO, spec activationOfBook, posturas map[string]bool, contexto contextoDoUso,
+	dto sheet.CharacterDTO, spec activationOfBook, posturas map[string]bool, contexto contextoDoUso,
 ) *stanceState {
 	flag := aFlagDaPostura(spec)
 	if flag == "" {
@@ -192,7 +193,7 @@ func aFlagDaPostura(spec activationOfBook) string {
 // catálogo. Sem casar, o nível é o do personagem — o que é generoso, e é a
 // escolha certa entre errar para menos e errar para mais numa tela que só
 // OFERECE degraus: quem paga é o servidor, que cobra pelo que foi escolhido.
-func oNivelNaClasseDoPoder(dto CharacterDTO, activationID string) int {
+func oNivelNaClasseDoPoder(dto sheet.CharacterDTO, activationID string) int {
 	for _, classe := range dto.Classes {
 		if strings.Contains(activationID, "."+foldAccents(strings.ToLower(classe.ClassName))+".") {
 			return int(classe.Level)
@@ -212,7 +213,7 @@ func oNivelNaClasseDoPoder(dto CharacterDTO, activationID string) int {
 //
 // Sem catálogo primado não há condicional oferecido, e o mapa sai vazio: a
 // consequência é a tela não OFERECER o poder de gatilho, que é o lado seguro.
-func (s *Server) asFlagsAtivas(dto CharacterDTO) map[string]bool {
+func (s *Server) asFlagsAtivas(dto sheet.CharacterDTO) map[string]bool {
 	fora := map[string]bool{}
 	if s.catalogs == nil {
 		return fora
@@ -231,7 +232,7 @@ func (s *Server) asFlagsAtivas(dto CharacterDTO) map[string]bool {
 }
 
 // asPosturasPagas são as posturas com pagamento registrado.
-func asPosturasPagas(dto CharacterDTO) map[string]bool {
+func asPosturasPagas(dto sheet.CharacterDTO) map[string]bool {
 	fora := map[string]bool{}
 	for _, p := range dto.Stances {
 		fora[p.Flag] = true
@@ -241,7 +242,7 @@ func asPosturasPagas(dto CharacterDTO) map[string]bool {
 
 type usoDoPoder struct{ Cena, Dia int }
 
-func osUsosPorPoder(dto CharacterDTO) map[string]usoDoPoder {
+func osUsosPorPoder(dto sheet.CharacterDTO) map[string]usoDoPoder {
 	fora := map[string]usoDoPoder{}
 	for _, u := range dto.PowerUses {
 		conta := fora[u.PowerID]

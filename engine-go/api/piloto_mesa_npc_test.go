@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/creature"
 	"t20engine/db/sqlcgen"
 )
 
@@ -32,7 +33,7 @@ func TestGuardarOVerbeteCriaOBlocoDoMestre(t *testing.T) {
 	if npcs[0].Name != "Ogro Capitão" {
 		t.Errorf("o nome guardado é %q", npcs[0].Name)
 	}
-	var bloco CreatureBlock
+	var bloco creature.Block
 	if err := json.Unmarshal([]byte(npcs[0].Block), &bloco); err != nil {
 		t.Fatalf("o bloco guardado está ilegível: %v", err)
 	}

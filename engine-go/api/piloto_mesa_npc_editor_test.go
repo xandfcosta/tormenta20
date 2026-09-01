@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/creature"
 	"t20engine/db/sqlcgen"
 )
 
@@ -63,7 +64,7 @@ func oRascunhoDaResposta(t *testing.T, resposta string) map[string]any {
 
 // npcNoBanco lê o bloco guardado pelo nome, para as asserções não dependerem do
 // id que o banco escolheu.
-func npcNoBanco(t *testing.T, f pilotoFixture, nome string) CreatureBlock {
+func npcNoBanco(t *testing.T, f pilotoFixture, nome string) creature.Block {
 	t.Helper()
 	for _, npc := range f.s.oElencoDaCampanha(context.Background(), f.campaignID) {
 		if npc.Nome != nome {
@@ -77,7 +78,7 @@ func npcNoBanco(t *testing.T, f pilotoFixture, nome string) CreatureBlock {
 			if l.Name != nome {
 				continue
 			}
-			var bloco CreatureBlock
+			var bloco creature.Block
 			if err := json.Unmarshal([]byte(l.Block), &bloco); err != nil {
 				t.Fatalf("o bloco de %q está ilegível: %v", nome, err)
 			}
@@ -85,7 +86,7 @@ func npcNoBanco(t *testing.T, f pilotoFixture, nome string) CreatureBlock {
 		}
 	}
 	t.Fatalf("%q não está no elenco", nome)
-	return CreatureBlock{}
+	return creature.Block{}
 }
 
 // TestOGestoDeFORMAnaoGravaEnaoPerdeODigitado — o coração desta superfície.

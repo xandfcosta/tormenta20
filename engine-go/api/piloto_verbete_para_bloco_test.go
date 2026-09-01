@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"reflect"
+	"t20engine/creature"
 	"testing"
 )
 
@@ -21,9 +22,9 @@ import (
 
 type oraculoDaCopia struct {
 	Casos []struct {
-		ID    string        `json:"id"`
-		Nota  string        `json:"nota"`
-		Bloco CreatureBlock `json:"bloco"`
+		ID    string         `json:"id"`
+		Nota  string         `json:"nota"`
+		Bloco creature.Block `json:"bloco"`
 	} `json:"casos"`
 }
 

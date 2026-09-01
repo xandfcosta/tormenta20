@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 // handleListCharacters returns the caller's own characters (newest-updated first),
@@ -31,12 +32,12 @@ func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 // do `mintAccountInvite` e do `campaignList`. Seis é padrão, não anedota: uma
 // base com exatamente um transporte não tem por que separar regra de handler, e
 // o segundo transporte é o que cobra a conta (ALE-239).
-func (s *Server) characterList(ctx context.Context, ownerID int64) ([]CharacterDTO, error) {
+func (s *Server) characterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error) {
 	rows, err := s.queries.ListCharactersByOwner(ctx, ownerID)
 	if err != nil {
 		return nil, err
 	}
-	out := make([]CharacterDTO, 0, len(rows))
+	out := make([]sheet.CharacterDTO, 0, len(rows))
 	for _, row := range rows {
 		dto, err := s.LoadCharacter(ctx, row)
 		if err != nil {
@@ -155,15 +156,15 @@ func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID i
 // loadCharacter attaches the six relations to a character row in the Prisma
 // include order (races/classes/items/effects by id, expertises by name, spells by
 // learnedAt).
-func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (CharacterDTO, error) {
-	dto := characterScalarsFrom(c)
+func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.CharacterDTO, error) {
+	dto := sheet.CharacterScalarsFrom(c)
 
 	races, err := s.queries.ListRacesByCharacter(ctx, c.ID)
 	if err != nil {
 		return dto, err
 	}
 	for _, race := range races {
-		dto.Races = append(dto.Races, RaceDTO{Race: race})
+		dto.Races = append(dto.Races, sheet.RaceDTO{Race: race})
 	}
 
 	classes, err := s.queries.ListClassesByCharacter(ctx, c.ID)
@@ -171,7 +172,7 @@ func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 		return dto, err
 	}
 	for _, cl := range classes {
-		dto.Classes = append(dto.Classes, ClassDTO{ClassName: cl.Classname, Level: cl.Level})
+		dto.Classes = append(dto.Classes, sheet.ClassDTO{ClassName: cl.Classname, Level: cl.Level})
 	}
 
 	exps, err := s.queries.ListExpertisesByCharacter(ctx, c.ID)
@@ -179,7 +180,7 @@ func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 		return dto, err
 	}
 	for _, e := range exps {
-		dto.Expertises = append(dto.Expertises, ExpertiseDTO{
+		dto.Expertises = append(dto.Expertises, sheet.ExpertiseDTO{
 			Name: e.Name, Attribute: e.Attribute, Trained: e.Trained != 0, Custom: e.Custom != 0,
 		})
 	}
@@ -189,7 +190,7 @@ func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 		return dto, err
 	}
 	for _, it := range items {
-		dto.Items = append(dto.Items, ItemDTO{
+		dto.Items = append(dto.Items, sheet.ItemDTO{
 			ID: it.ID, CatalogID: plataforma.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: plataforma.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: plataforma.NullToPtr(it.Material),
@@ -201,7 +202,7 @@ func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 		return dto, err
 	}
 	for _, ef := range effects {
-		dto.ActiveEffects = append(dto.ActiveEffects, EffectDTO{
+		dto.ActiveEffects = append(dto.ActiveEffects, sheet.EffectDTO{
 			ID: ef.ID, CatalogID: ef.Catalogid, Scope: ef.Scope,
 			Modifiers: ef.Modifiers, CreatedAt: ef.Createdat,
 		})
@@ -212,7 +213,7 @@ func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 		return dto, err
 	}
 	for _, sp := range spells {
-		dto.Spells = append(dto.Spells, SpellDTO{
+		dto.Spells = append(dto.Spells, sheet.SpellDTO{
 			ID: sp.ID, CatalogSpellID: sp.Catalogspellid, Prepared: sp.Prepared != 0, LearnedAt: sp.Learnedat,
 		})
 	}

@@ -9,6 +9,7 @@ import (
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
 var campaignMemberRoles = map[string]bool{"player": true, "gm": true}
@@ -23,26 +24,26 @@ type memberDTO struct {
 }
 
 type memberCharacterDTO struct {
-	ID        int64      `json:"id"`
-	OwnerID   int64      `json:"ownerId"`
-	Name      string     `json:"name"`
-	Level     int64      `json:"level"`
-	HpCurrent int64      `json:"hpCurrent"`
-	HpMax     int64      `json:"hpMax"`
-	MpCurrent int64      `json:"mpCurrent"`
-	MpMax     int64      `json:"mpMax"`
-	Classes   []ClassDTO `json:"classes"`
+	ID        int64            `json:"id"`
+	OwnerID   int64            `json:"ownerId"`
+	Name      string           `json:"name"`
+	Level     int64            `json:"level"`
+	HpCurrent int64            `json:"hpCurrent"`
+	HpMax     int64            `json:"hpMax"`
+	MpCurrent int64            `json:"mpCurrent"`
+	MpMax     int64            `json:"mpMax"`
+	Classes   []sheet.ClassDTO `json:"classes"`
 }
 
 func memberScalars(m sqlcgen.CampaignMember) memberDTO {
 	return memberDTO{ID: m.ID, CampaignID: m.Campaignid, CharacterID: m.Characterid, Role: m.Role, AddedAt: m.Addedat}
 }
 
-func (s *Server) classDTOs(r *http.Request, characterID int64) []ClassDTO {
+func (s *Server) classDTOs(r *http.Request, characterID int64) []sheet.ClassDTO {
 	classes, _ := s.queries.ListClassesByCharacter(r.Context(), characterID)
-	out := make([]ClassDTO, 0, len(classes))
+	out := make([]sheet.ClassDTO, 0, len(classes))
 	for _, cl := range classes {
-		out = append(out, ClassDTO{ClassName: cl.Classname, Level: cl.Level})
+		out = append(out, sheet.ClassDTO{ClassName: cl.Classname, Level: cl.Level})
 	}
 	return out
 }

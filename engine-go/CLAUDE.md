@@ -641,6 +641,32 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   guarda teria seguido verde medindo as cenas e ignorando o botão, o campo e a
   casca — os arquivos onde uma tinta errada aparece em TODA tela.
 
+## `sheet` e `creature`: forma de dado, fora do `api`
+
+O `CharacterDTO` e os seus seis irmãos moram em `sheet`; o bloco de criatura do
+livro mora em `creature` (ALE-278). Eles saíram do `api` porque a medição da
+divisão apontou para eles: **toda cena usa de 15 a 60 símbolos de outras
+famílias**, e os DTOs estão em quase todas as listas — enquanto eles fossem do
+`api`, nenhuma cena podia sair sem levar o `api` junto.
+
+**A pergunta que decidiu foi "eles carregam HTTP?", e a resposta foi medida antes
+de mover:** o `character_dto.go` importava `sqlcgen`, `engine` e `plataforma` e
+não tocava `*Server` nem `http`; o `creature_block.go` importava `fmt` e
+`strings` e mais nada. Os dois eram forma de dado hospedada por acidente de
+história.
+
+O que NÃO saiu junto e vale saber por quê: os quatro handlers do estado de jogo.
+O `character_play_state.go` misturava a FORMA (dois structs sem dependência) com
+o encanamento que a grava — os structs viajam dentro do `CharacterDTO`, então
+foram; os handlers ficaram.
+
+Os dois pacotes têm guarda de fronteira, e a razão é a que o `events` já
+documenta: **cada cena que se mudar vai importá-los.** No dia em que o `creature`
+alcançar o catálogo, todas as cenas alcançam junto — de graça, e com o guarda de
+fronteira de cada uma continuando VERDE, porque cada guarda só olha os imports
+dele. A lista do `creature` é vazia; a do `sheet` tem os três que ele já
+importava.
+
 ## `web/ui`: o kit de apresentação, e o que ele NÃO pode saber
 
 O botão, o campo, a moldura, o rótulo de seção, a caixa rolável, o ícone e a

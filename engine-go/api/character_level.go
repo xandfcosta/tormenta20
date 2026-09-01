@@ -10,6 +10,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 type storedVitals struct {
@@ -25,9 +26,9 @@ type levelResult struct {
 }
 
 type classLevelResult struct {
-	Level   int64        `json:"level"`
-	Classes []ClassDTO   `json:"classes"`
-	Vitals  storedVitals `json:"vitals"`
+	Level   int64            `json:"level"`
+	Classes []sheet.ClassDTO `json:"classes"`
+	Vitals  storedVitals     `json:"vitals"`
 }
 
 // levelVitalsNext ports vitals-sync.helpers levelVitalsPatch: new maxes from the
@@ -47,7 +48,7 @@ func clampCurrent(c, hi int64) int64 { return min(max(int64(0), c), hi) }
 
 // engineCharacterFrom bridges the API aggregate to engine.Character via JSON —
 // both mirror the frontend Character contract, so the round-trip is lossless.
-func engineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
+func engineCharacterFrom(dto sheet.CharacterDTO) (engine.Character, error) {
 	var ec engine.Character
 	b, err := json.Marshal(dto)
 	if err != nil {
@@ -75,7 +76,7 @@ func (s *Server) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engin
 // `computeSheet` faria cada personagem ser lido do banco DUAS vezes — uma na
 // lista e outra dentro dele. Com uma dúzia de heróis isso é o dobro das
 // consultas para o mesmo resultado.
-func (s *Server) sheetFromDTO(dto CharacterDTO) (engine.ComputedSheetV2, error) {
+func (s *Server) sheetFromDTO(dto sheet.CharacterDTO) (engine.ComputedSheetV2, error) {
 	ec, err := engineCharacterFrom(dto)
 	if err != nil {
 		return engine.ComputedSheetV2{}, err
@@ -85,7 +86,7 @@ func (s *Server) sheetFromDTO(dto CharacterDTO) (engine.ComputedSheetV2, error) 
 
 // syncLevelVitals recomputes the pools for the (already mutated) aggregate and
 // persists the level-shifted currents — the server-side syncVitalsForProjection.
-func (s *Server) syncLevelVitals(r *http.Request, id int64, dto CharacterDTO) (storedVitals, error) {
+func (s *Server) syncLevelVitals(r *http.Request, id int64, dto sheet.CharacterDTO) (storedVitals, error) {
 	stored := storedVitals{HpMax: dto.HpMax, HpCurrent: dto.HpCurrent, MpMax: dto.MpMax, MpCurrent: dto.MpCurrent}
 	if s.catalogs == nil || len(dto.Classes) == 0 {
 		return stored, nil // no engine pools (0/0) → keep what is stored
@@ -211,7 +212,7 @@ func escreveAFalhaDoNivel(w http.ResponseWriter, err error) {
 //     velha, que é o defeito que ninguém liga ao botão que o causou.
 func (s *Server) aplicaONivelDaClasse(
 	r *http.Request, row sqlcgen.Character, classe string, nivel int64,
-) (CharacterDTO, []ClassDTO, int64, storedVitals, error) {
+) (sheet.CharacterDTO, []sheet.ClassDTO, int64, storedVitals, error) {
 	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return dto, nil, 0, storedVitals{}, err

@@ -7,41 +7,19 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
-// O estado de JOGO da ficha (ALE-222): o que muda durante a partida e não é a
-// ficha em si — os situacionais ligados, os usos gastos e o preço pago pelas
-// posturas.
-//
-// Os três viviam em `localStorage`. Decisão do dono, 2026-08-22: "o servidor
-// mantém estado, ponto final." Os comentários dos stores no front registravam a
-// decisão CONTRÁRIA e foram atualizados junto, não apagados.
-//
-// CUIDADO com o vizinho: `conditionals` é o opt-in do JOGADOR (Fúria, Ataque
-// Poderoso); `conditions` são as do LIVRO (p394-395, Caído/Atordoado) e moram na
-// coluna `characters.activeConditions`. Ver a colisão C6 no GLOSSARIO.md.
-
-// PowerUseDTO é quanto de um poder já se gastou num escopo.
-type PowerUseDTO struct {
-	PowerID string `json:"powerId"`
-	Scope   string `json:"scope"`
-	Used    int64  `json:"used"`
-}
-
-// StanceDTO é o que foi PAGO para entrar numa postura — não se ela está ligada.
-// Quem diz isso é o situacional de mesmo nome, na lista `conditionals`.
-type StanceDTO struct {
-	Flag   string `json:"flag"`
-	Steps  int64  `json:"steps"`
-	PmPaid int64  `json:"pmPaid"`
-}
+// O ESTADO DE JOGO da ficha vive em `sheet` desde a ALE-278: `sheet.sheet.PowerUseDTO`
+// e `sheet.sheet.StanceDTO` são forma de DADO e viajam dentro do `sheet.CharacterDTO`.
+// O que ficou aqui são os quatro handlers que os gravam, que é encanamento.
 
 // loadPlayState anexa os três ao DTO da ficha.
 //
 // Vai JUNTO com a ficha em vez de num endpoint próprio porque a tela precisa dos
 // três para desenhar o primeiro quadro: separados, a ficha abriria com a Fúria
 // desligada e a ligaria um instante depois, piscando os números que ela muda.
-func (s *Server) loadPlayState(ctx context.Context, id int64, dto *CharacterDTO) error {
+func (s *Server) loadPlayState(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
 	conditionals, err := s.queries.ListCharacterConditionals(ctx, id)
 	if err != nil {
 		return err
@@ -53,7 +31,7 @@ func (s *Server) loadPlayState(ctx context.Context, id int64, dto *CharacterDTO)
 		return err
 	}
 	for _, u := range uses {
-		dto.PowerUses = append(dto.PowerUses, PowerUseDTO{PowerID: u.Powerid, Scope: u.Scope, Used: u.Used})
+		dto.PowerUses = append(dto.PowerUses, sheet.PowerUseDTO{PowerID: u.Powerid, Scope: u.Scope, Used: u.Used})
 	}
 
 	stances, err := s.queries.ListCharacterStances(ctx, id)
@@ -61,7 +39,7 @@ func (s *Server) loadPlayState(ctx context.Context, id int64, dto *CharacterDTO)
 		return err
 	}
 	for _, st := range stances {
-		dto.Stances = append(dto.Stances, StanceDTO{Flag: st.Flag, Steps: st.Steps, PmPaid: st.Pmpaid})
+		dto.Stances = append(dto.Stances, sheet.StanceDTO{Flag: st.Flag, Steps: st.Steps, PmPaid: st.Pmpaid})
 	}
 	return nil
 }
@@ -194,7 +172,7 @@ func (s *Server) handleDeleteStance(w http.ResponseWriter, r *http.Request) {
 // Devolver o estado e não um "ok" é o que deixa a tela conferir o próprio
 // otimismo: ela pinta antes, e o que volta é a verdade do servidor.
 func (s *Server) writePlayState(w http.ResponseWriter, r *http.Request, id int64) {
-	var dto CharacterDTO
+	var dto sheet.CharacterDTO
 	if err := s.loadPlayState(r.Context(), id, &dto); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not read the play state")
 		return

@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
 // CampaignDTO is the base campaign row (create/update responses).
@@ -25,10 +26,10 @@ type CampaignDTO struct {
 }
 
 type campaignCharacterDTO struct {
-	ID      int64      `json:"id"`
-	Name    string     `json:"name"`
-	Level   int64      `json:"level"`
-	Classes []ClassDTO `json:"classes"`
+	ID      int64            `json:"id"`
+	Name    string           `json:"name"`
+	Level   int64            `json:"level"`
+	Classes []sheet.ClassDTO `json:"classes"`
 }
 
 // campaignListDTO adds the caller's role + own member character (GET /campaigns).
@@ -102,9 +103,9 @@ func (s *Server) campaignList(ctx context.Context, user AuthUser) ([]campaignLis
 		char, err := s.queries.CallerCharacterInCampaign(ctx, sqlcgen.CallerCharacterInCampaignParams{Campaignid: c.ID, Ownerid: user.ID})
 		if err == nil {
 			classes, _ := s.queries.ListClassesByCharacter(ctx, char.ID)
-			cc := &campaignCharacterDTO{ID: char.ID, Name: char.Name, Level: char.Level, Classes: []ClassDTO{}}
+			cc := &campaignCharacterDTO{ID: char.ID, Name: char.Name, Level: char.Level, Classes: []sheet.ClassDTO{}}
 			for _, cl := range classes {
-				cc.Classes = append(cc.Classes, ClassDTO{ClassName: cl.Classname, Level: cl.Level})
+				cc.Classes = append(cc.Classes, sheet.ClassDTO{ClassName: cl.Classname, Level: cl.Level})
 			}
 			item.Character = cc
 		}

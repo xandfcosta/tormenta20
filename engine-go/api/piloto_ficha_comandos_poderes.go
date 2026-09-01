@@ -11,6 +11,7 @@ import (
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 )
 
 // OS COMANDOS DA ABA PODERES (ALE-272, fatia 8).
@@ -132,7 +133,7 @@ func (s *Server) cobraOPm(r *http.Request, row sqlcgen.Character, quanto int) er
 // Vontade —, e eles sobem juntos: metade ligada é uma ficha que soma metade de
 // uma regra do livro.
 func (s *Server) ligaOsCondicionaisDaFlag(
-	r *http.Request, row sqlcgen.Character, dto CharacterDTO, flag string,
+	r *http.Request, row sqlcgen.Character, dto sheet.CharacterDTO, flag string,
 ) error {
 	if s.catalogs == nil {
 		return nil
@@ -163,7 +164,7 @@ func (s *Server) ligaOsCondicionaisDaFlag(
 // estado final é o servidor, que sabe o que está gravado.
 func pickPower(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
 	id := chi.URLParam(r, "poder")
-	return s.gravaAsEscolhas(r, row, func(dto *CharacterDTO) {
+	return s.gravaAsEscolhas(r, row, func(dto *sheet.CharacterDTO) {
 		dto.ClassPowers = comOIdAlternado(dto.ClassPowers, id)
 	})
 }
@@ -171,7 +172,7 @@ func pickPower(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals
 // pickOriginBenefit liga ou desliga um benefício da origem.
 func pickOriginBenefit(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
 	id := chi.URLParam(r, "beneficio")
-	return s.gravaAsEscolhas(r, row, func(dto *CharacterDTO) {
+	return s.gravaAsEscolhas(r, row, func(dto *sheet.CharacterDTO) {
 		dto.OriginChoices = comOIdAlternado(dto.OriginChoices, id)
 	})
 }
@@ -182,7 +183,7 @@ func pickOriginBenefit(s *Server, r *http.Request, row sqlcgen.Character, _ fich
 // "resistência a frio", porque o qareen tem uma resistência e não seis.
 func pickRaceVariant(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
 	escolhida := chi.URLParam(r, "variante")
-	return s.gravaAsEscolhas(r, row, func(dto *CharacterDTO) {
+	return s.gravaAsEscolhas(r, row, func(dto *sheet.CharacterDTO) {
 		dto.RaceAbilityChoices = comAVarianteTrocada(*dto, escolhida)
 	})
 }
@@ -197,7 +198,7 @@ func pickClassChoice(s *Server, r *http.Request, row sqlcgen.Character, _ fichaS
 	if err != nil {
 		return fmt.Errorf("a classe %q não é um nome", chi.URLParam(r, "classe"))
 	}
-	return s.gravaAsEscolhas(r, row, func(dto *CharacterDTO) {
+	return s.gravaAsEscolhas(r, row, func(dto *sheet.CharacterDTO) {
 		dto.ClassChoices = comAEscolhaDeClasse(dto.ClassChoices, classe, escolha, valor)
 	})
 }
@@ -247,7 +248,7 @@ func pickRaceAscendencia(s *Server, r *http.Request, row sqlcgen.Character, _ fi
 // mais estrita do que "não acrescente além do limite" — uma ficha fora da conta
 // não aceita escrita de escolha nenhuma até ser arrumada.
 func (s *Server) gravaAsEscolhas(
-	r *http.Request, row sqlcgen.Character, muda func(*CharacterDTO),
+	r *http.Request, row sqlcgen.Character, muda func(*sheet.CharacterDTO),
 ) error {
 	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
@@ -303,7 +304,7 @@ func comOIdAlternado(blob, id string) string {
 }
 
 // comAVarianteTrocada troca a variante escolhida dentro da MESMA habilidade.
-func comAVarianteTrocada(dto CharacterDTO, escolhida string) string {
+func comAVarianteTrocada(dto sheet.CharacterDTO, escolhida string) string {
 	irmas := asIrmasDaVariante(dto, escolhida)
 	depois := []string{escolhida}
 	for _, atual := range asEscolhasGuardadas(dto.RaceAbilityChoices) {
@@ -316,7 +317,7 @@ func comAVarianteTrocada(dto CharacterDTO, escolhida string) string {
 
 // asIrmasDaVariante são todas as opções da habilidade a que a escolhida
 // pertence — inclusive ela.
-func asIrmasDaVariante(dto CharacterDTO, escolhida string) map[string]bool {
+func asIrmasDaVariante(dto sheet.CharacterDTO, escolhida string) map[string]bool {
 	fora := map[string]bool{}
 	for _, r := range dto.Races {
 		for _, hab := range asVariantesDaRaca(dto, r.Race) {

@@ -10,6 +10,7 @@ import (
 
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
 const manualTempHpCatalogID = "manual-temp-hp"
@@ -130,10 +131,10 @@ func (s *Server) applyPool(w http.ResponseWriter, r *http.Request, id int64, sou
 // carry a buff block; upsert its modifiers under (character, spell, scope). Used by the
 // HTTP handler and — via the same core — the WS `apply-effect` gateway handler (B.6).
 // Returns the effect + an HTTP-ish status the caller maps to its transport.
-func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID string, scopeOverride *string) (EffectDTO, int, error) {
+func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID string, scopeOverride *string) (sheet.EffectDTO, int, error) {
 	spell, known := catalog.LookupSpell(spellID)
 	if !known || spell.Buff == nil {
-		return EffectDTO{}, http.StatusBadRequest, plataforma.NewFieldError(
+		return sheet.EffectDTO{}, http.StatusBadRequest, plataforma.NewFieldError(
 			http.StatusBadRequest,
 			fmt.Sprintf("Spell %q has no applicable buff", spellID),
 			plataforma.FieldErrorMap{"spellId": {"Magia sem efeito aplicável"}},
@@ -144,7 +145,7 @@ func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID
 		Characterid: charID, Source: "spell", Catalogid: spellID, Scope: scope, Modifiers: string(spell.Buff.Modifiers), Createdat: plataforma.NowISO(),
 	})
 	if err != nil {
-		return EffectDTO{}, http.StatusInternalServerError, errors.New("Could not apply buff")
+		return sheet.EffectDTO{}, http.StatusInternalServerError, errors.New("Could not apply buff")
 	}
 	return effectDTOFromUpsert(eff), http.StatusOK, nil
 }
@@ -218,6 +219,6 @@ func (s *Server) powerTempHpAmount(r *http.Request, row sqlcgen.Character, attri
 	return int(row.Level) + attr.Total, true
 }
 
-func effectDTOFromUpsert(e sqlcgen.UpsertActiveEffectRow) EffectDTO {
-	return EffectDTO{ID: e.ID, CatalogID: e.Catalogid, Scope: e.Scope, Modifiers: e.Modifiers, CreatedAt: e.Createdat}
+func effectDTOFromUpsert(e sqlcgen.UpsertActiveEffectRow) sheet.EffectDTO {
+	return sheet.EffectDTO{ID: e.ID, CatalogID: e.Catalogid, Scope: e.Scope, Modifiers: e.Modifiers, CreatedAt: e.Createdat}
 }

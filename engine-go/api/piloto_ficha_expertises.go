@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 // A aba PERÍCIAS como dado (ALE-272, fatia 4).
@@ -84,7 +85,7 @@ type attributeOption struct {
 var theSaveNames = map[string]bool{"Fortitude": true, "Reflexos": true, "Vontade": true}
 
 // expertisePanelFor monta a aba inteira.
-func expertisePanelFor(dto CharacterDTO, sheet engine.ComputedSheetV2, search string) expertisePanel {
+func expertisePanelFor(dto sheet.CharacterDTO, sheet engine.ComputedSheetV2, search string) expertisePanel {
 	panel := expertisePanel{
 		TrainingBonus: comSinalInt(trainingBonusFor(dto.Level)),
 		HalfLevel:     strconv.FormatInt(dto.Level/2, 10),
@@ -118,12 +119,12 @@ func trainingBonusFor(level int64) int {
 }
 
 // sortedExpertises devolve as perícias na ordem da tela.
-func sortedExpertises(dto CharacterDTO) []ExpertiseDTO {
+func sortedExpertises(dto sheet.CharacterDTO) []sheet.ExpertiseDTO {
 	doLivro := map[string]int{}
 	for i, p := range periciasDoAcervo() {
 		doLivro[p.Name] = i
 	}
-	ordenadas := append([]ExpertiseDTO(nil), dto.Expertises...)
+	ordenadas := append([]sheet.ExpertiseDTO(nil), dto.Expertises...)
 	sort.SliceStable(ordenadas, func(a, b int) bool {
 		return rankOf(ordenadas[a], doLivro) < rankOf(ordenadas[b], doLivro)
 	})
@@ -136,7 +137,7 @@ func sortedExpertises(dto CharacterDTO) []ExpertiseDTO {
 // Os degraus são largos de propósito — somar o índice do catálogo a um bloco de
 // mil mantém a ordem alfabética DENTRO do bloco sem que um bloco invada o
 // seguinte.
-func rankOf(e ExpertiseDTO, doLivro map[string]int) int {
+func rankOf(e sheet.ExpertiseDTO, doLivro map[string]int) int {
 	if theSaveNames[e.Name] {
 		return doLivro[e.Name]
 	}
@@ -185,7 +186,7 @@ func attributeOptions(sheet engine.ComputedSheetV2) []attributeOption {
 }
 
 // expertiseRowFor monta uma linha.
-func expertiseRowFor(index int, entry ExpertiseDTO, sheet engine.ComputedSheetV2) expertiseRow {
+func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedSheetV2) expertiseRow {
 	quebra := expertiseOrZero(sheet, entry.Name, entry.Attribute)
 	soTreinada := trainedOnlyByBook(entry.Name)
 	linha := expertiseRow{

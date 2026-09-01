@@ -10,6 +10,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/aovivo"
+	"t20engine/creature"
 	"t20engine/db/sqlcgen"
 	"t20engine/plataforma"
 )
@@ -61,10 +62,10 @@ func (s *Server) NPCEditorRoutes(r chi.Router) {
 // digitar "ausente", então a caixa guarda um número e o interruptor diz se ele
 // conta. Quem traduz de volta é o `blocoDoRascunho`, num lugar só.
 type rascunhoDoNPC struct {
-	ID      int64         `json:"id"`
-	Nome    string        `json:"nome"`
-	Conjura bool          `json:"conjura"`
-	Bloco   CreatureBlock `json:"bloco"`
+	ID      int64          `json:"id"`
+	Nome    string         `json:"nome"`
+	Conjura bool           `json:"conjura"`
+	Bloco   creature.Block `json:"bloco"`
 }
 
 // oRascunhoDaPagina lê o rascunho que veio nos sinais.
@@ -152,9 +153,9 @@ func (s *Server) mexeNaLista(
 func acrescentaNaLista(rascunho *rascunhoDoNPC, lista string, _ int) error {
 	switch lista {
 	case listaDeAtaques:
-		rascunho.Bloco.Attacks = append(rascunho.Bloco.Attacks, CreatureAttack{})
+		rascunho.Bloco.Attacks = append(rascunho.Bloco.Attacks, creature.Attack{})
 	case listaDePericias:
-		rascunho.Bloco.Skills = append(rascunho.Bloco.Skills, CreatureSkill{})
+		rascunho.Bloco.Skills = append(rascunho.Bloco.Skills, creature.Skill{})
 	case listaDeHabilidades:
 		rascunho.Bloco.SpecialAbilities = append(rascunho.Bloco.SpecialAbilities, "")
 	default:
@@ -246,10 +247,10 @@ func (s *Server) tentaGravarORascunho(c mesaComando) error {
 		return err
 	}
 	bloco := blocoDoRascunho(rascunho)
-	if err := validateCreature(rascunho.Nome, &bloco); err != nil {
+	if err := creature.Validate(rascunho.Nome, &bloco); err != nil {
 		return err
 	}
-	normalizeCreature(&bloco)
+	creature.Normalize(&bloco)
 	blob, err := json.Marshal(bloco)
 	if err != nil {
 		return fmt.Errorf("não deu para guardar o bloco de %q", rascunho.Nome)
@@ -293,7 +294,7 @@ func (s *Server) gravaOBloco(c mesaComando, rascunho rascunhoDoNPC, blob string)
 // nasceria com a palavra escrita dentro no instante em que o mestre marcasse
 // "Conjura". O formulário guarda sempre um número; quem diz se ele conta é o
 // interruptor.
-func paraOFormulario(id int64, nome string, bloco CreatureBlock) rascunhoDoNPC {
+func paraOFormulario(id int64, nome string, bloco creature.Block) rascunhoDoNPC {
 	conjura := bloco.PM != nil
 	if bloco.PM == nil {
 		zero := 0
@@ -302,7 +303,7 @@ func paraOFormulario(id int64, nome string, bloco CreatureBlock) rascunhoDoNPC {
 	// As três listas nunca chegam nulas ao navegador: `$rascunho.bloco.attacks.length`
 	// numa lista ausente estoura a expressão do contador da aba, e o número some
 	// sem erro em lugar nenhum.
-	normalizeCreature(&bloco)
+	creature.Normalize(&bloco)
 	return rascunhoDoNPC{ID: id, Nome: nome, Conjura: conjura, Bloco: bloco}
 }
 
@@ -313,7 +314,7 @@ func paraOFormulario(id int64, nome string, bloco CreatureBlock) rascunhoDoNPC {
 // p290; o Bandido não tem linha nenhuma), e um zero ali diria "tem mana e está
 // sem" — que é outro estado. O formulário guarda um número e um interruptor; o
 // bloco guarda a AUSÊNCIA.
-func blocoDoRascunho(rascunho rascunhoDoNPC) CreatureBlock {
+func blocoDoRascunho(rascunho rascunhoDoNPC) creature.Block {
 	bloco := rascunho.Bloco
 	if !rascunho.Conjura {
 		bloco.PM = nil

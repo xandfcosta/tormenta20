@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"t20engine/catalog"
+	"t20engine/sheet"
 )
 
 // A aba MAGIAS como dado (ALE-272, fatia 6).
@@ -111,7 +112,7 @@ type augmentRow struct {
 }
 
 // spellbookPanelOf monta a aba.
-func (s *Server) spellbookPanelOf(dto CharacterDTO, busca, circulo, escola string) spellbookPanel {
+func (s *Server) spellbookPanelOf(dto sheet.CharacterDTO, busca, circulo, escola string) spellbookPanel {
 	panel := spellbookPanel{
 		IsCaster:       len(casterClassesOf(dto)) > 0,
 		RequiresPrep:   requiresPreparation(dto.Classes, dto.ClassChoices),
@@ -133,7 +134,7 @@ func (s *Server) spellbookPanelOf(dto CharacterDTO, busca, circulo, escola strin
 }
 
 // casterClassesOf são as classes do personagem que conjuram.
-func casterClassesOf(dto CharacterDTO) []string {
+func casterClassesOf(dto sheet.CharacterDTO) []string {
 	nomes := []string{}
 	for _, c := range dto.Classes {
 		if _, conjura := spellProgressions()[c.ClassName]; conjura {
@@ -144,7 +145,7 @@ func casterClassesOf(dto CharacterDTO) []string {
 }
 
 // learnedSpellRowsOf é o grimório, por círculo e depois por nome.
-func learnedSpellRowsOf(s *Server, dto CharacterDTO, castable int) []learnedSpellRow {
+func learnedSpellRowsOf(s *Server, dto sheet.CharacterDTO, castable int) []learnedSpellRow {
 	linhas := []learnedSpellRow{}
 	for _, aprendida := range dto.Spells {
 		magia, conhecida := catalog.LookupSpell(aprendida.CatalogSpellID)
@@ -176,7 +177,7 @@ func learnedSpellRowsOf(s *Server, dto CharacterDTO, castable int) []learnedSpel
 //
 // Ela vem do MOTOR, pelo mapa por atributo que a caixa "CD Magia" do Combate já
 // usa: uma segunda conta aqui daria dois números para a mesma pergunta.
-func (s *Server) spellCdOf(dto CharacterDTO, magia catalog.Spell) string {
+func (s *Server) spellCdOf(dto sheet.CharacterDTO, magia catalog.Spell) string {
 	sheet, _, ok := s.sheetForPanels(dto)
 	if !ok {
 		return "—"
@@ -247,7 +248,7 @@ func spellOfBook(id string) magiaDoLivro {
 }
 
 // catalogSpellRowsOf são as magias que ainda dá para aprender, filtradas.
-func catalogSpellRowsOf(dto CharacterDTO, busca, circulo, escola string) []catalogSpellRow {
+func catalogSpellRowsOf(dto sheet.CharacterDTO, busca, circulo, escola string) []catalogSpellRow {
 	sabidas := map[string]bool{}
 	for _, s := range dto.Spells {
 		sabidas[s.CatalogSpellID] = true
@@ -283,7 +284,7 @@ func passaNoFiltro(m magiaDoLivro, busca, circulo, escola string) bool {
 // Elas não moram no grimório: não se aprendem nem se esquecem, e some com o
 // poder. Aparecem mesmo para quem não tem classe conjuradora — um bárbaro com
 // Totem Espiritual (p42) tem de ver a magia dele.
-func grantedSpellRowsOf(dto CharacterDTO) []grantedSpellRow {
+func grantedSpellRowsOf(dto sheet.CharacterDTO) []grantedSpellRow {
 	escolhas := map[string][]string{}
 	if err := json.Unmarshal([]byte(dto.PowerChoices), &escolhas); err != nil {
 		return nil

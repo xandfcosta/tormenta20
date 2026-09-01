@@ -12,6 +12,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/aovivo"
+	"t20engine/creature"
 	"t20engine/db/sqlcgen"
 	"t20engine/plataforma"
 )
@@ -70,10 +71,10 @@ func guardaOVerbeteNoElenco(st *Server, c mesaComando) (*aovivo.SessionRuntimeSt
 		nome = v.Name
 	}
 	bloco := copiaDoVerbete(*v)
-	if err := validateCreature(nome, &bloco); err != nil {
+	if err := creature.Validate(nome, &bloco); err != nil {
 		return nil, err
 	}
-	normalizeCreature(&bloco)
+	creature.Normalize(&bloco)
 	blob, err := json.Marshal(bloco)
 	if err != nil {
 		return nil, fmt.Errorf("não deu para guardar o bloco de %q", nome)
@@ -97,10 +98,10 @@ func guardaOVerbeteNoElenco(st *Server, c mesaComando) (*aovivo.SessionRuntimeSt
 // A conferência não é zelo: o id vem do CAMINHO, e caminho é digitável. Sem
 // ela, o mestre de uma mesa alcançaria o elenco de outra — e o elenco guarda a
 // preparação da campanha, que é o material mais privado que o mestre tem.
-func (s *Server) oNPCDaCampanha(c mesaComando) (sqlcgen.CampaignCreature, CreatureBlock, error) {
+func (s *Server) oNPCDaCampanha(c mesaComando) (sqlcgen.CampaignCreature, creature.Block, error) {
 	id, err := strconv.ParseInt(chi.URLParam(c.R, "npcId"), 10, 64)
 	if err != nil {
-		return sqlcgen.CampaignCreature{}, CreatureBlock{}, fmt.Errorf("npc inválido: %q", chi.URLParam(c.R, "npcId"))
+		return sqlcgen.CampaignCreature{}, creature.Block{}, fmt.Errorf("npc inválido: %q", chi.URLParam(c.R, "npcId"))
 	}
 	return s.oNPCDaCampanhaPorID(c, id)
 }
@@ -110,8 +111,8 @@ func (s *Server) oNPCDaCampanha(c mesaComando) (sqlcgen.CampaignCreature, Creatu
 // O editor precisa dele porque lá o id vem do RASCUNHO — o formulário sabe quem
 // está editando —, e a conferência de campanha tem de ser a MESMA. Duas cópias
 // dariam duas travas, e a que envelhecesse seria a de menos uso.
-func (s *Server) oNPCDaCampanhaPorID(c mesaComando, id int64) (sqlcgen.CampaignCreature, CreatureBlock, error) {
-	var bloco CreatureBlock
+func (s *Server) oNPCDaCampanhaPorID(c mesaComando, id int64) (sqlcgen.CampaignCreature, creature.Block, error) {
+	var bloco creature.Block
 	linha, err := s.queries.GetCampaignCreature(c.R.Context(), id)
 	if err != nil {
 		return sqlcgen.CampaignCreature{}, bloco, fmt.Errorf("o npc %d não existe", id)
@@ -197,7 +198,7 @@ func (s *Server) oElencoDaCampanha(ctx context.Context, campaignID int64) []npcD
 	fora := make([]npcDoElenco, 0, len(linhas))
 	for _, l := range linhas {
 		npc := npcDoElenco{ID: l.ID, Nome: l.Name}
-		var bloco CreatureBlock
+		var bloco creature.Block
 		if err := json.Unmarshal([]byte(l.Block), &bloco); err == nil {
 			npc.Resumo = resumoDoBloco(bloco)
 			npc.DoLivro = bloco.SourceMonsterID
@@ -209,7 +210,7 @@ func (s *Server) oElencoDaCampanha(ctx context.Context, campaignID int64) []npcD
 }
 
 // resumoDoBloco é a linha de identidade do livro, na ordem em que ele escreve.
-func resumoDoBloco(b CreatureBlock) string {
+func resumoDoBloco(b creature.Block) string {
 	// As MESMAS funções que o bestiário usa para a linha dele. Um segundo par de
 	// rótulos faria o mesmo Ogro ser "Humanoide" numa tela e "humanoid" na
 	// outra — e o mestre não teria como saber qual das duas está certa.

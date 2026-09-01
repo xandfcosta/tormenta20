@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 // A aba COMBATE como dado (ALE-272, fatia 3).
@@ -155,7 +156,7 @@ var theSaves = []struct {
 //
 // O segundo retorno diz se houve conta: sem catálogo primado não há ficha, e o
 // painel que chamar desenha o que sabe desenhar sem ela.
-func (s *Server) sheetForPanels(dto CharacterDTO) (engine.ComputedSheetV2, []engine.WeaponCard, bool) {
+func (s *Server) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheetV2, []engine.WeaponCard, bool) {
 	if s.catalogs == nil {
 		return engine.ComputedSheetV2{}, nil, false
 	}
@@ -171,7 +172,7 @@ func (s *Server) sheetForPanels(dto CharacterDTO) (engine.ComputedSheetV2, []eng
 	return s.catalogs.ComputeSheetV2(ec, active), s.catalogs.ComputeWeaponCards(ec, active), true
 }
 
-func (s *Server) combatPanelOf(dto CharacterDTO) combatPanel {
+func (s *Server) combatPanelOf(dto sheet.CharacterDTO) combatPanel {
 	sheet, cards, ok := s.sheetForPanels(dto)
 	if !ok {
 		return combatPanel{}

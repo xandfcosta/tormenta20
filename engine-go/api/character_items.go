@@ -11,6 +11,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 type createItemBody struct {
@@ -111,7 +112,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create item")
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusCreated, ItemDTO{
+	plataforma.WriteJSON(w, http.StatusCreated, sheet.ItemDTO{
 		ID: item.ID, CatalogID: plataforma.NullToPtr(item.Catalogid), Name: item.Name,
 		Quantity: item.Quantity, Slots: item.Slots, Equipped: plataforma.NullToPtr(item.Equipped),
 		Improvements: item.Improvements, Material: plataforma.NullToPtr(item.Material),
@@ -227,7 +228,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not reload item")
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, ItemDTO{
+	plataforma.WriteJSON(w, http.StatusOK, sheet.ItemDTO{
 		ID: updated.ID, CatalogID: plataforma.NullToPtr(updated.Catalogid), Name: updated.Name,
 		Quantity: updated.Quantity, Slots: updated.Slots, Equipped: plataforma.NullToPtr(updated.Equipped),
 		Improvements: updated.Improvements, Material: plataforma.NullToPtr(updated.Material),

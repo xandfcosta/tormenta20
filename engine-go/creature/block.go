@@ -1,11 +1,11 @@
-package api
+package creature
 
 import (
 	"fmt"
 	"strings"
 )
 
-// CreatureBlock é o bloco de criatura do livro, que é como o Tormenta 20
+// Block é o bloco de criatura do livro, que é como o Tormenta 20
 // descreve TANTO monstro quanto NPC humano — "BANDIDO — ND 1/4 — Humanoide
 // (humano) Médio" (p289) tem a mesma forma do Ogro (p293).
 //
@@ -19,7 +19,7 @@ import (
 // O que NÃO está aqui, de propósito: PV e PM ATUAIS. Eles são estado de
 // combate e vivem na linha da iniciativa — o bloco é a descrição da criatura,
 // e um vilão recorrente não guarda o dano da semana passada.
-type CreatureBlock struct {
+type Block struct {
 	ND         float64 `json:"nd"`
 	Tipo       string  `json:"tipo"`
 	Size       string  `json:"size"`
@@ -32,27 +32,27 @@ type CreatureBlock struct {
 	HP         int     `json:"hp"`
 	// PM é ponteiro porque a maioria das criaturas não tem a linha: o Bandido
 	// não conjura, e um zero ali diria "tem mana e está sem", que é outra coisa.
-	PM               *int             `json:"pm,omitempty"`
-	Deslocamento     string           `json:"deslocamento"`
-	Forca            int              `json:"forca"`
-	Destreza         int              `json:"destreza"`
-	Constituicao     int              `json:"constituicao"`
-	Inteligencia     int              `json:"inteligencia"`
-	Sabedoria        int              `json:"sabedoria"`
-	Carisma          int              `json:"carisma"`
-	Attacks          []CreatureAttack `json:"attacks"`
-	Skills           []CreatureSkill  `json:"skills"`
-	Equipment        string           `json:"equipment"`
-	Treasure         string           `json:"treasure"`
-	SpecialAbilities []string         `json:"specialAbilities"`
+	PM               *int     `json:"pm,omitempty"`
+	Deslocamento     string   `json:"deslocamento"`
+	Forca            int      `json:"forca"`
+	Destreza         int      `json:"destreza"`
+	Constituicao     int      `json:"constituicao"`
+	Inteligencia     int      `json:"inteligencia"`
+	Sabedoria        int      `json:"sabedoria"`
+	Carisma          int      `json:"carisma"`
+	Attacks          []Attack `json:"attacks"`
+	Skills           []Skill  `json:"skills"`
+	Equipment        string   `json:"equipment"`
+	Treasure         string   `json:"treasure"`
+	SpecialAbilities []string `json:"specialAbilities"`
 	// SourceMonsterID diz de qual verbete este bloco foi copiado, quando foi.
 	// Serve para a tela dizer "veio do Ogro (p293)" e para uma futura
 	// comparação com o catálogo; vazio quando o mestre escreveu do zero.
 	SourceMonsterID string `json:"sourceMonsterId,omitempty"`
 }
 
-// CreatureAttack é uma linha de ataque: "Corpo a Corpo Clava +7 (1d6+3)".
-type CreatureAttack struct {
+// Attack é uma linha de ataque: "Corpo a Corpo Clava +7 (1d6+3)".
+type Attack struct {
 	Name        string `json:"name"`
 	AttackBonus int    `json:"attackBonus"`
 	Damage      string `json:"damage"`
@@ -71,8 +71,8 @@ type CreatureAttack struct {
 	Special string `json:"special"`
 }
 
-// CreatureSkill é uma perícia da linha "Perícias Furtividade +5" (p289).
-type CreatureSkill struct {
+// Skill é uma perícia da linha "Perícias Furtividade +5" (p289).
+type Skill struct {
 	Name  string `json:"name"`
 	Bonus int    `json:"bonus"`
 	// Nota é o bônus CONDICIONAL que o livro escreve entre parênteses depois do
@@ -122,7 +122,7 @@ const creatureMaxAttacks = 12
 // a recusa é COMUM — salvar sem nome e salvar com PV zero são o caminho normal
 // de quem está inventando um NPC. "hp is 0, must be >= 1" ao lado de uma caixa
 // escrita "Pontos de Vida" faz o mestre procurar um campo que não existe.
-func validateCreature(name string, b *CreatureBlock) error {
+func Validate(name string, b *Block) error {
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("o NPC precisa de um nome")
 	}
@@ -163,12 +163,12 @@ func validateCreature(name string, b *CreatureBlock) error {
 // normalizeCreature preenche as listas vazias para o JSON sair com `[]` e não
 // `null` — o cliente itera sobre elas sem checar, e `null` viraria erro de
 // runtime na primeira criatura sem ataque.
-func normalizeCreature(b *CreatureBlock) {
+func Normalize(b *Block) {
 	if b.Attacks == nil {
-		b.Attacks = []CreatureAttack{}
+		b.Attacks = []Attack{}
 	}
 	if b.Skills == nil {
-		b.Skills = []CreatureSkill{}
+		b.Skills = []Skill{}
 	}
 	if b.SpecialAbilities == nil {
 		b.SpecialAbilities = []string{}

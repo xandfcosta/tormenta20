@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/a-h/templ"
+	"t20engine/creature"
 )
 
 // As expressões e as listas do EDITOR DE BLOCO (ALE-269).
@@ -56,11 +57,11 @@ var asAbasDoEditor = []abaDoEditor{
 // Os mesmos números do `blankCreatureBlock` da SPA, portados e não inventados: as
 // duas telas escrevem na MESMA coluna do MESMO banco, e dois brancos diferentes
 // dariam dois NPCs diferentes para o mesmo gesto.
-func blocoEmBranco() CreatureBlock {
-	return CreatureBlock{
+func blocoEmBranco() creature.Block {
+	return creature.Block{
 		ND: 1, Tipo: "humanoide", Size: "medio",
 		Defesa: 10, HP: 10, Deslocamento: "9m (6q)",
-		Attacks: []CreatureAttack{}, Skills: []CreatureSkill{}, SpecialAbilities: []string{},
+		Attacks: []creature.Attack{}, Skills: []creature.Skill{}, SpecialAbilities: []string{},
 	}
 }
 
@@ -241,11 +242,11 @@ func oVestidoDaAba(aba string) string {
 // idênticos para quem navega por leitor de tela — e o que se apaga por engano é
 // justamente o que se acabou de escrever. A linha em branco (a que acabou de
 // nascer) cai no número, que é o que ela tem.
-func nomeDoAtaque(a CreatureAttack, indice int) string {
+func nomeDoAtaque(a creature.Attack, indice int) string {
 	return oNomeOuAOrdem(a.Name, "o ataque", indice)
 }
 
-func nomeDaPericia(p CreatureSkill, indice int) string {
+func nomeDaPericia(p creature.Skill, indice int) string {
 	return oNomeOuAOrdem(p.Name, "a perícia", indice)
 }
 

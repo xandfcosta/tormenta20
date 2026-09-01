@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 // A aba MOCHILA como dado (ALE-272, fatia 7).
@@ -131,7 +132,7 @@ type osFiltrosDaMochila struct {
 }
 
 // bagPanelOf monta a aba.
-func (s *Server) bagPanelOf(dto CharacterDTO, filtros osFiltrosDaMochila) bagPanel {
+func (s *Server) bagPanelOf(dto sheet.CharacterDTO, filtros osFiltrosDaMochila) bagPanel {
 	busca, categoria := filtros.Busca, filtros.Categoria
 	proficiencias := asProficienciasGuardadas(dto.Proficiencies)
 	panel := bagPanel{
@@ -145,7 +146,7 @@ func (s *Server) bagPanelOf(dto CharacterDTO, filtros osFiltrosDaMochila) bagPan
 	}
 	panel.Catalogo = catalogItemRowsOf(filtros.BuscaNoCatalogo, filtros.CategoriaNoCatalogo)
 	panel.CatalogTotal = len(panel.Catalogo)
-	guardados := []ItemDTO{}
+	guardados := []sheet.ItemDTO{}
 	for _, item := range dto.Items {
 		switch equippedSlotOf(item) {
 		case "wielded2":
@@ -173,7 +174,7 @@ func (s *Server) bagPanelOf(dto CharacterDTO, filtros osFiltrosDaMochila) bagPan
 }
 
 // equippedSlotOf lê o estado de equipar, tratando nulo como guardado.
-func equippedSlotOf(item ItemDTO) string {
+func equippedSlotOf(item sheet.ItemDTO) string {
 	if item.Equipped == nil {
 		return ""
 	}
@@ -221,7 +222,7 @@ func asDuasMaos(cards []*equippedCard) []*equippedCard {
 }
 
 // equippedCardOf traduz um item equipado para o cartão da tira.
-func equippedCardOf(item ItemDTO, rotulo string, proficiencias map[string]bool) *equippedCard {
+func equippedCardOf(item sheet.ItemDTO, rotulo string, proficiencias map[string]bool) *equippedCard {
 	return &equippedCard{
 		ID:            item.ID,
 		Label:         rotulo,
@@ -239,7 +240,7 @@ func equippedCardOf(item ItemDTO, rotulo string, proficiencias map[string]bool) 
 // sobre um item e um motor que penaliza outro. Item custom e item fora do
 // catálogo contam como proficientes — não há categoria de onde tirar exigência,
 // e acusar o que não se sabe seria pior que calar.
-func ehProficiente(item ItemDTO, proficiencias map[string]bool) bool {
+func ehProficiente(item sheet.ItemDTO, proficiencias map[string]bool) bool {
 	catalogo := itemDoCatalogo(item)
 	if catalogo == nil {
 		return true
@@ -249,7 +250,7 @@ func ehProficiente(item ItemDTO, proficiencias map[string]bool) bool {
 }
 
 // stowedTilesOf traduz os itens guardados em ladrilhos.
-func stowedTilesOf(itens []ItemDTO) []stowedTile {
+func stowedTilesOf(itens []sheet.ItemDTO) []stowedTile {
 	linhas := make([]stowedTile, 0, len(itens))
 	for _, item := range itens {
 		linhas = append(linhas, stowedTile{
@@ -266,7 +267,7 @@ func stowedTilesOf(itens []ItemDTO) []stowedTile {
 //
 // Item sem catálogo cai no pacote genérico, que é honesto: não há o que
 // adivinhar sobre um item que a pessoa inventou.
-func oGlifoDoItem(item ItemDTO) string {
+func oGlifoDoItem(item sheet.ItemDTO) string {
 	catalogo := itemDoCatalogo(item)
 	if catalogo == nil {
 		return "Package"
@@ -292,9 +293,9 @@ func oGlifoDoItem(item ItemDTO) string {
 //
 // A busca ignora acento pela mesma razão das Perícias: quem digita "balsamo"
 // tem de achar "Bálsamo restaurador".
-func filtradosNaMochila(itens []ItemDTO, busca, categoria string) []ItemDTO {
+func filtradosNaMochila(itens []sheet.ItemDTO, busca, categoria string) []sheet.ItemDTO {
 	termo := foldAccents(strings.TrimSpace(busca))
-	fora := []ItemDTO{}
+	fora := []sheet.ItemDTO{}
 	for _, item := range itens {
 		if termo != "" && !strings.Contains(foldAccents(item.Name), termo) {
 			continue
@@ -332,7 +333,7 @@ func bagCategoryOptions(ativa string) []filterOption {
 //
 // Item custom não tem categoria de catálogo e conta como equipamento comum —
 // assim ele cai em "tudo" e em "outros", e nunca some da mochila inteira.
-func daCategoriaDaMochila(item ItemDTO, chip string) bool {
+func daCategoriaDaMochila(item sheet.ItemDTO, chip string) bool {
 	if chip == "" {
 		return true
 	}
@@ -394,7 +395,7 @@ func oRotuloDoLimite(limite, forca int) string {
 }
 
 // moneyLineOf escreve o dinheiro e o espaço que ele ocupa.
-func moneyLineOf(dto CharacterDTO) moneyLine {
+func moneyLineOf(dto sheet.CharacterDTO) moneyLine {
 	linha := moneyLine{Tibar: comVirgula(dto.Tibar)}
 	if espacos := espacosDeMoeda(dto.Tibar); espacos > 0 {
 		linha.Slots = comVirgula(espacos) + oPluralDoEspaco(espacos)
@@ -426,7 +427,7 @@ func comVirgula(valor float64) string {
 
 // asMelhoriasOrdenadas devolve as sobreposições do item ordenadas por nome,
 // para a ficha do item listá-las sempre na mesma ordem.
-func asMelhoriasOrdenadas(item ItemDTO) []itemDoLivro {
+func asMelhoriasOrdenadas(item sheet.ItemDTO) []itemDoLivro {
 	entradas := asSobreposicoesDoLivro(item)
 	sort.SliceStable(entradas, func(a, b int) bool { return entradas[a].Name < entradas[b].Name })
 	return entradas

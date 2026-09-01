@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"t20engine/sheet"
 )
 
 // AS PROFICIÊNCIAS como dado (ALE-272, fatia 2).
@@ -81,7 +82,7 @@ type grupoDeProficiencias struct {
 }
 
 // oPainelDeProficiencias monta as sete linhas nos dois grupos.
-func oPainelDeProficiencias(dto CharacterDTO) []grupoDeProficiencias {
+func oPainelDeProficiencias(dto sheet.CharacterDTO) []grupoDeProficiencias {
 	tem := asProficienciasGuardadas(dto.Proficiencies)
 	fontes := asFontesDeProficiencia(dto)
 
@@ -137,7 +138,7 @@ func asProficienciasGuardadas(blob string) map[string]bool {
 //     motor passaria a aplicar a penalidade da p148 num personagem treinado em
 //     algo mais pesado. Está aqui explícita para poder ser revista de propósito,
 //     e não redescoberta como defeito.
-func asFontesDeProficiencia(dto CharacterDTO) map[string][]string {
+func asFontesDeProficiencia(dto sheet.CharacterDTO) map[string][]string {
 	daClasse := asProficienciasPorClasse()
 	fontes := map[string][]string{aBaseDeTodoMundo: {aFonteDeTodoMundo}}
 	for _, cl := range dto.Classes {
@@ -187,7 +188,7 @@ func asProficienciasPorClasse() map[string][]string {
 
 // oPadraoDaClasse é o alvo do "Restaurar padrão de classe": tudo o que as
 // classes concedem, e nada do que foi acrescentado na mão.
-func oPadraoDaClasse(dto CharacterDTO) []string {
+func oPadraoDaClasse(dto sheet.CharacterDTO) []string {
 	fontes := asFontesDeProficiencia(dto)
 	padrao := make([]string, 0, len(fontes))
 	for _, cat := range asCategoriasDeProficiencia {
@@ -203,7 +204,7 @@ func oPadraoDaClasse(dto CharacterDTO) []string {
 // A saída sai na ordem do catálogo e não na de chegada: o blob é lido por
 // pessoa numa revisão de banco, e uma ordem estável faz o diff de duas gravações
 // significar alguma coisa.
-func aTrocaDaProficiencia(dto CharacterDTO, chave string) ([]string, error) {
+func aTrocaDaProficiencia(dto sheet.CharacterDTO, chave string) ([]string, error) {
 	if !proficiencyCategories[chave] {
 		return nil, fmt.Errorf("proficiência %q não existe: são %s",
 			chave, strings.Join(asChavesDeProficiencia(), ", "))
