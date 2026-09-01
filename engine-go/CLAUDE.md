@@ -786,7 +786,7 @@ data-on-signal-patch="@get('/piloto/personagens/13?tab=' + $fichatab + '&embutid
 
 **E o servidor precisa mandar UMA vez por mudança**, nunca por quadro — é a
 mesma regra do puxão, e pelo mesmo motivo: remendo de sinal não é idempotente. A
-memória do que já foi avisado é da CONEXÃO (`avisaQueAFichaMudou`).
+memória do que já foi avisado é da CONEXÃO (`announceSheetChange`).
 
 **Quem diz "mudou" é um EVENTO, e não a comparação de um carimbo a cada tique.**
 A primeira versão lia o `updatedAt` do personagem em todo quadro do batimento —

@@ -114,7 +114,7 @@ func TestOLiteralGanhaDoCuringaNoEnderecoAntigo(t *testing.T) {
 func TestASaudeRespondeNaRaizEnaAPI(t *testing.T) {
 	s := newTestServer(t)
 	mux := http.NewServeMux()
-	mux.Handle("/health", s.SondaDeSaude())
+	mux.Handle("/health", s.HealthProbe())
 	mux.Handle("/api/", http.StripPrefix("/api", s.Router()))
 
 	for _, caminho := range []string{"/health", "/api/health"} {

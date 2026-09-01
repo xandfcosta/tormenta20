@@ -18,7 +18,7 @@ import (
 //
 // É a família do gancho que o `characterChanged` documenta: um aviso que
 // depende de cada chamador lembrar nasce meio desligado, e o Go segue verde.
-func TestOComandoDaFichaAvisaQuemEscuta(t *testing.T) {
+func TestSheetCommandNotifiesListeners(t *testing.T) {
 	f := novoPiloto(t)
 	aviso, parar := f.s.bus.Subscribe(events.OfCharacter(f.charID))
 	defer parar()
@@ -48,7 +48,7 @@ func TestOComandoDaFichaAvisaQuemEscuta(t *testing.T) {
 // faixa: passo fora da faixa é aceito e PRENDIDO na borda, então ele grava — a
 // primeira versão deste caso media isso e reprovava dizendo que faltava a
 // recusa. Ela estava certa: não havia recusa nenhuma.
-func TestOComandoRecusadoNaoAvisa(t *testing.T) {
+func TestRefusedCommandNotifiesNobody(t *testing.T) {
 	f := novoPiloto(t)
 	aviso, parar := f.s.bus.Subscribe(events.OfCharacter(f.charID))
 	defer parar()
@@ -71,5 +71,5 @@ func TestOComandoRecusadoNaoAvisa(t *testing.T) {
 
 // Aqui morava `TestABaixaTiraOOuvinteDaFicha`. A baixa deixou de ser do
 // `CharacterWatch` — ela é do barramento, e está medida onde mora, em
-// `events.TestABaixaTiraOOuvinte`. O que este arquivo protege é outra coisa: que
+// `events.TestUnsubscribeRemovesTheListener`. O que este arquivo protege é outra coisa: que
 // o GATEWAY publique, e que a recusa não publique.

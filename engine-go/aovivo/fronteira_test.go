@@ -45,7 +45,7 @@ var permitidos = map[string]bool{
 	// um vocabulário por contexto e o problema inteiro.
 	//
 	// O que impede a porta dos fundos ("importe `events` para chegar na ficha")
-	// não é confiança: é o `TestOVocabularioNaoImportaNinguem`, que recusa
+	// não é confiança: é o `TestVocabularyImportsNothing`, que recusa
 	// QUALQUER import do projeto dentro de `events/`. Enquanto ele for folha,
 	// depender dele não cria fronteira errada nenhuma — que é exatamente a
 	// justificativa da `plataforma`, por outro caminho.

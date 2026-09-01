@@ -31,7 +31,7 @@ import (
 // Tipo de evento, e o barramento. Nada que precise ler banco, catálogo ou regra:
 // um evento carrega os identificadores do que aconteceu, e quem quiser saber
 // mais vai ao store — que é o contrato escrito no `Publish`.
-func TestOVocabularioNaoImportaNinguem(t *testing.T) {
+func TestVocabularyImportsNothing(t *testing.T) {
 	arquivos, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)

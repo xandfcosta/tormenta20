@@ -224,8 +224,8 @@ func buildMux(srv *api.Server) *http.ServeMux {
 	mux.Handle("/fonts/", srv.FontesDoPiloto())
 	mux.Handle("/favicon.svg", srv.FaviconDoPiloto())
 	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta ali é a
-	// infraestrutura, e ela não sabe de prefixo. Ver `SondaDeSaude`.
-	mux.Handle("/health", srv.SondaDeSaude())
+	// infraestrutura, e ela não sabe de prefixo. Ver `HealthProbe`.
+	mux.Handle("/health", srv.HealthProbe())
 	// A API JSON fica sob `/api/`, e agora em TODO ambiente. Ela vivia na raiz
 	// em desenvolvimento porque o Vite tirava o prefixo antes de encaminhar; sem
 	// Vite, dois endereços para a mesma API seriam duas coisas para lembrar.

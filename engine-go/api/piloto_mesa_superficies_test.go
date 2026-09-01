@@ -94,7 +94,7 @@ func TestAFichaNaSessaoNaoNavegaParaForaDela(t *testing.T) {
 	}
 }
 
-// TestAFichaNaSessaoDizDeQuemEla.
+// TestEmbeddedSheetNamesItsCharacter.
 //
 // A ficha embutida abre direto nas sete abas, e nenhuma delas diz o nome: a
 // barra de cima é pulada porque o ‹ Voltar dela levaria o jogador para fora da
@@ -103,7 +103,7 @@ func TestAFichaNaSessaoNaoNavegaParaForaDela(t *testing.T) {
 //
 // O caso prende as DUAS metades, e a segunda tem controle: a ficha SOLTA continua
 // com a volta, senão "não achei a volta" seria verde num HTML vazio.
-func TestAFichaNaSessaoDizDeQuemEla(t *testing.T) {
+func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
