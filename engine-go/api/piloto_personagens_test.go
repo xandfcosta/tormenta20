@@ -162,7 +162,7 @@ func TestComElencoVazioAVagaDeCriarEhOQueSobra(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	if !strings.Contains(html, "Forjar um herói") || !strings.Contains(html, "/characters/new") {
+	if !strings.Contains(html, "Forjar um herói") || !strings.Contains(html, "/piloto/personagens/nova") {
 		t.Error("a tela vazia não oferece a Forja")
 	}
 }

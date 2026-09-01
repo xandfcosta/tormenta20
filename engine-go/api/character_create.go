@@ -33,18 +33,11 @@ var expertisesList = []expertiseDef{
 	{"Sobrevivência", "wisdom"}, {"Vontade", "wisdom"},
 }
 
-// classProficiencies mirrors t20-data CLASS_PROFICIENCIES. armas-simples is
-// granted to every class; a class with armaduras-pesadas also gets leves.
-var classProficiencies = map[string][]string{
-	"Arcanista": {}, "Bárbaro": {"armas-marciais", "escudos"}, "Bardo": {"armas-marciais"},
-	"Bucaneiro": {"armas-marciais"}, "Caçador": {"armas-marciais", "escudos"},
-	"Cavaleiro": {"armas-marciais", "armaduras-pesadas", "escudos"},
-	"Clérigo":   {"armaduras-pesadas", "escudos"}, "Druida": {"escudos"},
-	"Guerreiro": {"armas-marciais", "armaduras-pesadas", "escudos"},
-	"Inventor":  {}, "Ladino": {}, "Lutador": {},
-	"Nobre":    {"armas-marciais", "armaduras-pesadas", "escudos"},
-	"Paladino": {"armas-marciais", "armaduras-pesadas", "escudos"},
-}
+// classProficiencies eram as proficiências de cada classe escritas à mão aqui.
+// Elas saíram na ALE-272: a MESMA tabela já vinha do catálogo (`classes.json`,
+// a linha "Proficiências." de p36–83), lida por `asProficienciasPorClasse` para
+// o painel da ficha. Duas cópias da mesma transcrição não divergiram por sorte,
+// e a que ficou é a que a validação de schema alcança.
 
 // proficiencyOrder is PROFICIENCY_CATEGORIES — grantedProficiencies emits in it.
 var proficiencyOrder = []string{
@@ -56,8 +49,9 @@ var proficiencyOrder = []string{
 // default proficiency categories for a class set, in catalog order.
 func grantedProficiencies(classNames []string) []string {
 	granted := map[string]bool{"armas-simples": true}
+	porClasse := asProficienciasPorClasse()
 	for _, cls := range classNames {
-		for _, cat := range classProficiencies[cls] {
+		for _, cat := range porClasse[cls] {
 			granted[cat] = true
 			if cat == "armaduras-pesadas" {
 				granted["armaduras-leves"] = true

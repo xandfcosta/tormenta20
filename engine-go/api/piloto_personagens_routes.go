@@ -13,6 +13,16 @@ import (
 
 func (s *Server) rotasDePersonagens(r chi.Router) {
 	r.Get("/personagens", s.handlePersonagens)
+	// A forja mora aqui e não numa árvore própria porque ela é a porta de
+	// entrada DESTA cena: o elenco é de onde se abre a folha em branco.
+	r.Get("/personagens/nova", s.handleForja)
+	r.Post("/personagens/nova", s.handleForjaPost)
+	r.Post("/personagens/nova/esboco", s.handleForjaEsboco)
+	// A segunda cena da forja. Ela vive sob o id porque o herói JÁ existe: o
+	// nascimento é o `POST /personagens/nova`, e daqui em diante tudo é comando
+	// sobre uma linha do banco.
+	r.Get("/personagens/{id}/atributos", s.handleForjaAtributos)
+	r.Post("/personagens/{id}/atributos/{atributo}/{passo}", s.handleForjaAtributoPasso)
 }
 
 func (s *Server) handlePersonagens(w http.ResponseWriter, r *http.Request) {

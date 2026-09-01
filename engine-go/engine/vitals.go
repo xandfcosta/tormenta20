@@ -65,3 +65,17 @@ func multiclassMpPool(classes []ClassEntry) int {
 // collector, deleted with it (the catalog-driven `vitals_v2.go` is what the app
 // runs). What survives above is `classVitalsTable`, `pvPoolWithCon`,
 // `multiclassPvPool` and `multiclassMpPool`, which vitals_v2 still calls.
+
+// ClassStartingVitals são o PV inicial e o PM por nível de uma classe (p34).
+//
+// Exportados para a FORJA: a carta de classe precisa dizer o que a escolha
+// compra — "PV 20 · PM 3" — antes de existir personagem para calcular. Os dois
+// números são os da tabela, sem Constituição e sem nível, porque é isso que o
+// bloco da classe imprime.
+func ClassStartingVitals(className string) (pvInicial, pmPorNivel int, ok bool) {
+	v, ok := classVitalsTable[className]
+	if !ok {
+		return 0, 0, false
+	}
+	return v.pvInicial, v.mpPerLevel, true
+}

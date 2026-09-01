@@ -2617,6 +2617,42 @@ func (q *Queries) SaveOpenBoard(ctx context.Context, arg SaveOpenBoardParams) er
 	return err
 }
 
+const setCharacterAttributes = `-- name: SetCharacterAttributes :exec
+UPDATE characters
+SET strength = ?1, dexterity = ?2,
+    constitution = ?3, intelligence = ?4,
+    wisdom = ?5, charisma = ?6,
+    updatedAt = ?7
+WHERE id = ?8
+`
+
+type SetCharacterAttributesParams struct {
+	Strength     int64  `json:"strength"`
+	Dexterity    int64  `json:"dexterity"`
+	Constitution int64  `json:"constitution"`
+	Intelligence int64  `json:"intelligence"`
+	Wisdom       int64  `json:"wisdom"`
+	Charisma     int64  `json:"charisma"`
+	UpdatedAt    string `json:"updatedAt"`
+	ID           int64  `json:"id"`
+}
+
+// The six base attributes, written together: point-buy (book p17) is one
+// spread and not six numbers, so a partial write would be a spread nobody chose.
+func (q *Queries) SetCharacterAttributes(ctx context.Context, arg SetCharacterAttributesParams) error {
+	_, err := q.db.ExecContext(ctx, setCharacterAttributes,
+		arg.Strength,
+		arg.Dexterity,
+		arg.Constitution,
+		arg.Intelligence,
+		arg.Wisdom,
+		arg.Charisma,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	return err
+}
+
 const setCharacterClassLevel = `-- name: SetCharacterClassLevel :execrows
 UPDATE character_classes SET level = ?1
 WHERE characterId = ?2 AND className = ?3

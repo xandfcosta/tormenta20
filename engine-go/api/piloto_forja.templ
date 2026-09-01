@@ -1,0 +1,241 @@
+package api
+
+import "strconv"
+
+// A FORJA — a folha em branco de um herói (ALE-272, fatia 9).
+//
+// Ela é a mesma folha do tomo da campanha nova (ALE-246), e por isso mora no
+// `folhaDoTomo`: mesmo couro, mesma virada de página, com você segurando a pena.
+//
+// O ESTADO TEM UMA CASA SÓ: o próprio formulário. Não há `data-signals` aqui, e
+// isso é decisão — o único pedaço que precisa do servidor é o EQUIPAMENTO, que
+// muda com a classe, e o `@post` do Datastar sabe mandar o formulário inteiro
+// (`contentType: 'form'`). Guardar as mesmas respostas num sinal criaria uma
+// segunda cópia do que os controles já sabem, com a pergunta de qual das duas
+// vale quando divergirem.
+//
+// O NOME NÃO É `required` no navegador de propósito. Com ele, o `@post` do
+// Datastar chamaria `checkValidity()` antes de redesenhar e o primeiro clique
+// numa carta de classe viraria um "preencha este campo" — a pessoa escolhe a
+// linhagem antes de batizar o herói, e a tela não deve brigar com isso. Quem
+// recusa nome vazio é o servidor, que é a autoridade de qualquer jeito.
+
+templ forgeSheet(v forgeView) {
+	@folhaDoTomo() {
+		@forgeBody(v)
+	}
+}
+
+// forgeBody é o que o Datastar remenda quando a classe ou a origem muda — daí
+// o `id`, que é por onde o remendo acha o lugar.
+templ forgeBody(v forgeView) {
+	<div id="forja" class="m-auto w-full max-w-3xl space-y-6">
+		@tituloDaFolha("Forja", "A folha em branco")
+		<form
+			method="post"
+			action="/piloto/personagens/nova"
+			data-nav-region="content"
+			data-nav-layout="column"
+			class="space-y-6"
+		>
+			@fieldRefusals(v.OrphanRefusals)
+			@campoDeTexto(campo{
+				Nome: "name", Label: "Nome", Valor: v.Name,
+				TamanhoMaximo: heroNameMax, Erros: v.Errors["name"],
+			})
+			@raceChoice(v)
+			@classChoice(v)
+			@originChoice(v)
+			if v.Gear != nil {
+				@gearChoice(*v.Gear, v.Errors)
+			}
+			<p class="text-xs text-muted-foreground">
+				Poderes, benefícios de origem, treino de perícia e as escolhas da raça
+				se terminam na ficha.
+			</p>
+			<div class="flex justify-end gap-2">
+				<a href="/piloto/personagens" class={ classesDoBotao(varSecundaria, tamPadrao, "") }>Cancelar</a>
+				@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					Forjar
+				}
+			</div>
+		</form>
+	</div>
+}
+
+// forgeRedraw é o comando que redesenha a folha com o formulário do jeito que
+// ele está agora. Ele NÃO grava nada — quem cria o herói é o `submit`.
+func forgeRedraw() string {
+	return "@post('/piloto/personagens/nova/esboco', {contentType: 'form'})"
+}
+
+templ raceChoice(v forgeView) {
+	<fieldset class="space-y-2">
+		@legendaDeSecao("gold", "") {
+			Linhagem
+		}
+		// A altura é limitada e a lista rola: são 17 raças, e uma grade inteira
+		// empurraria a classe e o equipamento para muito abaixo da dobra num
+		// telefone. Quem rola passa pelo `caixaRolavel` da casa, e não por um
+		// `overflow-y-auto` escrito à mão — é o que mantém o alcance por teclado
+		// em regime de amostragem.
+		@caixaRolavel("Raças do livro", "max-h-64 pr-1") {
+			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+				for _, c := range v.Races {
+					@raceTile(c)
+				}
+			</div>
+		}
+		@fieldRefusals(v.Errors["race"])
+	</fieldset>
+}
+
+// raceTile: o rádio é INVISÍVEL mas real, e o rótulo inteiro é a área de clique
+// — a mesma plaqueta do "entrar na mesa" (ALE-246), pela mesma razão: o estado
+// visual segue o estado REAL do controle, e não uma segunda cópia dele.
+templ raceTile(c raceCard) {
+	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring">
+		<input type="radio" name="race" value={ c.Name } checked?={ c.Chosen } class="sr-only"/>
+		<span class="truncate text-sm font-medium text-foreground">{ c.Name }</span>
+		<span class="text-xs text-grimorio-gold">{ c.Attributes }</span>
+		<span class="text-2xs text-muted-foreground">
+			{ c.Size + " · " + strconv.Itoa(c.Displacement) + "m" }
+		</span>
+		if c.Abilities != "" {
+			<span class="line-clamp-2 text-2xs text-muted-foreground">{ c.Abilities }</span>
+		}
+	</label>
+}
+
+templ classChoice(v forgeView) {
+	<fieldset class="space-y-2">
+		@legendaDeSecao("gold", "") {
+			Ofício
+		}
+		@caixaRolavel("Classes do livro", "max-h-64 pr-1") {
+			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+				for _, c := range v.Classes {
+					@classTile(c)
+				}
+			</div>
+		}
+		@fieldRefusals(v.Errors["class"])
+	</fieldset>
+}
+
+// classTile pede ao servidor a cada troca: é a classe que diz o que o kit de
+// p140 oferece — arma marcial, brunea, escudo —, e essa regra não é copiada
+// para dentro de uma expressão do navegador.
+templ classTile(c classCard) {
+	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring">
+		<input
+			type="radio"
+			name="class"
+			value={ c.Name }
+			checked?={ c.Chosen }
+			data-on:change={ forgeRedraw() }
+			class="sr-only"
+		/>
+		<span class="truncate text-sm font-medium text-foreground">{ c.Name }</span>
+		<span class="text-xs text-grimorio-gold">
+			{ "PV " + strconv.Itoa(c.PV) + " · PM " + strconv.Itoa(c.PM) }
+		</span>
+		<span class="line-clamp-2 text-2xs text-muted-foreground">{ c.Expertises }</span>
+	</label>
+}
+
+// originChoice é uma lista de seleção e não uma grade: são 35 origens, a escolha
+// é uma só, e trinta e cinco cartas afogariam a folha.
+templ originChoice(v forgeView) {
+	<div class="space-y-2">
+		<label for="origin" class={ classesDoRotulo("gold", "block") }>Origem</label>
+		<select
+			id="origin"
+			name="origin"
+			data-on:change={ forgeRedraw() }
+			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			<option value="">Escolha uma origem…</option>
+			for _, o := range v.Origins {
+				<option value={ o.Name } selected?={ o.Chosen }>{ o.Name }</option>
+			}
+		</select>
+		for _, o := range v.Origins {
+			if o.Chosen && o.Benefit != "" {
+				<p class="text-xs text-muted-foreground">
+					<span class="text-grimorio-gold">Benefícios:</span>
+					{ o.Benefit }
+					<span class="text-2xs">— dois deles se escolhem na ficha.</span>
+				</p>
+			}
+		}
+		@fieldRefusals(v.Errors["origin"])
+	</div>
+}
+
+// gearChoice é o Equipamento Inicial de p140, já estreitado pela classe. Ele só
+// aparece depois da classe escolhida porque antes disso não existe kit para
+// oferecer — e oferecer o errado é pior que não oferecer.
+templ gearChoice(g startingGear, erros map[string][]string) {
+	<fieldset class="space-y-3 border-t border-grimorio-iron pt-4">
+		@legendaDeSecao("gold", "") {
+			Equipamento inicial
+		}
+		<p class="text-xs text-muted-foreground">
+			Mochila, saco de dormir e traje de viajante vêm com todo mundo, mais T$ 4d6
+			rolados na hora (p140).
+		</p>
+		@itemSelect("weaponSimple", "Arma simples", g.SimpleWeapons, erros["weaponSimple"])
+		if len(g.MartialWeapons) > 0 {
+			@itemSelect("weaponMartial", "Arma marcial", g.MartialWeapons, erros["weaponMartial"])
+		}
+		if len(g.Armors) > 0 {
+			@itemSelect("armor", "Armadura", g.Armors, erros["armor"])
+		} else {
+			<p class="text-xs text-muted-foreground">Arcanistas começam sem armadura.</p>
+		}
+		if g.Shield != "" {
+			<label class="flex cursor-pointer items-center gap-2 text-sm text-foreground">
+				<input type="checkbox" name="shield" value="1" checked?={ g.ShieldChosen } class="size-4"/>
+				{ g.Shield }
+			</label>
+		}
+		if len(g.ToResolve) > 0 {
+			<div class="space-y-1 border-l-2 border-grimorio-iron pl-3">
+				<p class="text-2xs uppercase tracking-wider text-muted-foreground">
+					A origem ainda dá, e isto se escolhe na Mochila
+				</p>
+				for _, rotulo := range g.ToResolve {
+					<p class="text-xs text-muted-foreground">{ rotulo }</p>
+				}
+			</div>
+		}
+	</fieldset>
+}
+
+templ itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) {
+	<div class="space-y-1">
+		<label for={ nome } class="block text-sm text-foreground">{ rotulo }</label>
+		<select
+			id={ nome }
+			name={ nome }
+			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			<option value="">Escolha…</option>
+			for _, o := range opcoes {
+				<option value={ o.ID } selected?={ o.Chosen }>{ o.Label }</option>
+			}
+		</select>
+		@fieldRefusals(erros)
+	</div>
+}
+
+templ fieldRefusals(mensagens []string) {
+	if len(mensagens) > 0 {
+		<div role="alert">
+			for _, m := range mensagens {
+				<p class="text-sm text-destructive">{ m }</p>
+			}
+		</div>
+	}
+}

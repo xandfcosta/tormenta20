@@ -21,7 +21,7 @@ hospedeiro — um serviço só, sem proxy na frente (ALE-273).
   número não é repetido aqui de propósito (ver "Documentação").
 - **Mexeu em `.templ`?** `go tool templ generate`, e **leia a saída DELE**, não a
   do `go build`. **Classe CSS nova no piloto?**
-  `engine-go/scripts/build-piloto-css.sh`. As duas armadilhas — e as sete do
+  `engine-go/scripts/build-piloto-css.sh`. As duas armadilhas — e as nove do
   Datastar que não deixam erro para trás — estão explicadas no
   [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
 - **Antes de commitar:** `go test ./...`, `go vet ./...` e `gofmt` no
@@ -216,14 +216,15 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **30 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **32 guardas de
 varredura** no formato `TestToda…` / `TestTodo…` / `TestNenhum…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
 `.templ` existe na folha compilada, toda aba da ficha está portada, nenhum nó
 junta `data-show` com `data-attr:style`, nenhuma expressão indexa o sinal da
-lista, nenhum foco pede ao servidor sem guarda de teclado. Cada um nasceu de um
-defeito que tinha irmãos.
+lista, nenhum foco pede ao servidor sem guarda de teclado, todo item do kit
+inicial existe no catálogo, nenhuma concessão de origem com escolha nasce
+fixa. Cada um nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestToda\|func TestTodo\|func
 > TestNenhum" --include=*_test.go .` e estava em 22 por bastante tempo depois de
@@ -355,7 +356,7 @@ certa.
 - **`engine-go/`** (Go): [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — regenerar
   oráculo é ato deliberado, citação de página conferida, o gerador de tipos da
   fronteira, validação de schema dos catálogos, as armadilhas do `templ` e as
-  sete do Datastar que não deixam erro para trás, os dois defeitos silenciosos do
+  nove do Datastar que não deixam erro para trás, os dois defeitos silenciosos do
   `sqlc`, e por que a bancada copia um molde migrado.
 - **`frontend/`** (SolidJS) **não tem guia próprio, e é deliberado.** A SPA está
   sendo migrada para o Datastar e segura só a ficha e a sessão; um guia com
