@@ -1,0 +1,92 @@
+package ui
+
+// O DIÁLOGO DE CONVITE, que é de DUAS cenas.
+//
+// Ele morava no hub e veio para o kit quando o hub saiu do `api` (ALE-278): a
+// administração desenha o mesmo diálogo, e o compilador o apontou no instante em
+// que os dois deixaram de ser o mesmo pacote. Ele não sabe nada de domínio — só
+// desenha o link que outra pessoa cunhou.
+
+// conviteGerado é o remendo que volta do POST, e ele carrega o CAMINHO do
+// convite — nunca a URL inteira.
+//
+// A origem é do NAVEGADOR e não do servidor, e isso é conserto de um defeito
+// medido: com o `r.Host`, o link nascia apontando para a porta da API
+// (`localhost:3026`) porque o proxy do Vite reescreve o `Host` em
+// desenvolvimento. O link de convite existe para ser MANDADO para outra pessoa,
+// então um host errado é um link morto. É o mesmo padrão que o painel de
+// administração já usa para copiar convite.
+//
+// `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
+// "copiar" do teclado, e copiar é a única coisa que se faz com ele.
+templ MintedInvite(caminho string) {
+	<div id="convite-link" class="mt-3 space-y-2">
+		<label for="convite-url" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+			Link de convite
+		</label>
+		<div class="flex gap-2">
+			<input
+				id="convite-url"
+				readonly
+				data-caminho={ caminho }
+				data-init="el.value = location.origin + el.dataset.caminho"
+				class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 font-mono text-xs outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			/>
+			@Button(VariantSecondary, SizeDefault, "shrink-0", templ.Attributes{
+				"type":          "button",
+				"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copiado = true",
+			}) {
+				Copiar
+			}
+		</div>
+		<p class="text-xs text-hp-full" aria-live="polite" data-show="$copiado">Link copiado.</p>
+		<p class="text-xs text-muted-foreground">
+			Cada convite serve para UMA conta. Gere outro para o próximo jogador.
+		</p>
+	</div>
+}
+
+// dialogoDeConvite cunha o link de conta (ALE-120): o admin gera, entrega, e
+// quem recebe escolhe a própria senha — o admin nunca vê senha nenhuma.
+//
+// A ROTA é parâmetro porque o diálogo vive em duas telas e elas precisam de
+// remendos DIFERENTES (ALE-242): no Hub só volta o link; na administração volta
+// o link E o painel de convites, senão a contagem ao lado dele fica velha na
+// cara de quem acabou de cunhar. O diálogo é um só de propósito — duas cópias
+// divergiriam, e é a mesma razão pela qual o `mintAccountInvite` saiu do
+// manipulador HTTP.
+//
+// O link chega por remendo do servidor (`#convite-link`), então ele NÃO passa
+// por sinal: um token de uso único em estado de cliente viajaria de volta ao
+// servidor em toda requisição seguinte da página, que é a mesma razão pela qual
+// a senha ficou fora dos sinais na ALE-229.
+templ InviteDialog(rota string) {
+	<dialog
+		id="convidar"
+		data-ref="convidar"
+		aria-labelledby="convidar-titulo"
+		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="convidar-titulo" class="flex items-center gap-2 font-heading text-base">
+			@Icon("UserPlus", "size-4 text-grimorio-gold")
+			Convidar jogador
+		</h2>
+		<p class="mt-2 text-sm text-muted-foreground">
+			Gere um link e envie para quem vai entrar. Ele vale uma vez só, expira em 7 dias, e a pessoa escolhe a própria senha.
+		</p>
+		<div id="convite-link" class="mt-3"></div>
+		<div class="mt-4 flex justify-end gap-2">
+			<form method="dialog">
+				@Button(VariantSecondary, SizeDefault, "", templ.Attributes{"type": "submit"}) {
+					Fechar
+				}
+			</form>
+			@Button(VariantPrimary, SizeDefault, "", templ.Attributes{
+				"type": "button", "data-on:click": "@post('" + rota + "')",
+				"data-indicator:gerando": true, "data-attr:disabled": "$gerando",
+			}) {
+				Gerar convite
+			}
+		</div>
+	</dialog>
+}

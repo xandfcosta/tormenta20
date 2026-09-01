@@ -3,6 +3,7 @@ package api
 import "t20engine/tabuleiro"
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"sync"
 	"t20engine/aovivo"
 	"t20engine/plataforma"
+	"t20engine/web/hub"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -335,3 +337,28 @@ func (s *Server) Catalogs() *engine.Catalogs { return s.catalogs }
 // Ela é método porque a CHAVE do contexto é deste pacote: uma segunda chave com
 // o mesmo nome, declarada noutro pacote, não lê o mesmo valor.
 func (s *Server) CurrentUserID(r *http.Request) int64 { return currentUser(r).ID }
+
+// CurrentViewer traduz quem está pedindo para a língua do HUB (ALE-278).
+//
+// A tradução é o preço da fronteira, e ela é barata: quatro campos. O que ela
+// compra é o hub não conhecer o `AuthUser` — e portanto não importar este
+// pacote, que o importa de volta para montar rota.
+func (s *Server) CurrentViewer(r *http.Request) hub.Viewer {
+	eu := currentUser(r)
+	return hub.Viewer{ID: eu.ID, Email: eu.Email, Name: eu.Name, IsAdmin: eu.IsAdmin}
+}
+
+// MintAccountInvite e ExpiredSessionCookie são o que o hub pede da CASA: cunhar
+// convite e apagar a sessão dependem de configuração e de política, e nenhuma
+// das duas é da tela.
+func (s *Server) MintAccountInvite(ctx context.Context, byUserID int64) (sqlcgen.AccountInvite, error) {
+	return s.mintAccountInvite(ctx, byUserID)
+}
+
+func (s *Server) ExpiredSessionCookie() *http.Cookie { return s.sessionCookie("", -1) }
+
+// MesaRoute é o endereço de uma sessão ao vivo. Quem sabe onde cada cena está
+// montada é quem monta.
+func (s *Server) MesaRoute(campaignID, sessionID int64) string {
+	return rotaDaMesa(campaignID, sessionID)
+}

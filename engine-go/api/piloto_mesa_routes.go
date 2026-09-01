@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/web/hub"
 
 	"fmt"
 	"github.com/a-h/templ"
@@ -43,7 +44,7 @@ func (s *Server) WebRouter() http.Handler {
 	// O HUB (ALE-231): o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePagina)
-		s.HubRoutes(r)
+		hub.Routes(r, hub.New(s))
 		s.CampaignRoutes(r)
 		s.CharacterRoutes(r)
 		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
