@@ -1,5 +1,9 @@
 package api
 
+import (
+	"t20engine/creature"
+)
+
 // O VERBETE DO LIVRO VIRANDO BLOCO DO MESTRE (ALE-269, superfície 6b),
 // portado de `frontend/src/features/gm-tools/creature-from-monster.ts`.
 //
@@ -14,8 +18,8 @@ package api
 // copiaDoVerbete copia um verbete do livro para um bloco editável do mestre.
 //
 // @example copiaDoVerbete(ogro).SourceMonsterID // "ogro"
-func copiaDoVerbete(v verbete) CreatureBlock {
-	return CreatureBlock{
+func copiaDoVerbete(v verbete) creature.Block {
+	return creature.Block{
 		ND:         v.ND,
 		Tipo:       v.Tipo,
 		Size:       v.Size,
@@ -69,14 +73,14 @@ func ouZero(n *int) int {
 // bloco nasce para ser editado. Sem a cópia, mexer num ataque do NPC mexeria no
 // verbete que o bestiário desenha para a mesa inteira — e a fonte do livro
 // passaria a mentir para quem a consultasse depois.
-func copiaOsAtaques(de []CreatureAttack) []CreatureAttack {
-	fora := make([]CreatureAttack, len(de))
+func copiaOsAtaques(de []creature.Attack) []creature.Attack {
+	fora := make([]creature.Attack, len(de))
 	copy(fora, de)
 	return fora
 }
 
-func copiaAsPericias(de []CreatureSkill) []CreatureSkill {
-	fora := make([]CreatureSkill, len(de))
+func copiaAsPericias(de []creature.Skill) []creature.Skill {
+	fora := make([]creature.Skill, len(de))
 	copy(fora, de)
 	return fora
 }

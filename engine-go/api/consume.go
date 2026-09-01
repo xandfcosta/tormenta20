@@ -13,6 +13,7 @@ import (
 	"t20engine/catalog"
 	"t20engine/db"
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
 type consumeItemResult struct {
@@ -23,7 +24,7 @@ type consumeItemResult struct {
 
 type consumeResult struct {
 	Item      consumeItemResult `json:"item"`
-	Effect    *EffectDTO        `json:"effect"`
+	Effect    *sheet.EffectDTO  `json:"effect"`
 	HpCurrent int64             `json:"hpCurrent"`
 	MpCurrent int64             `json:"mpCurrent"`
 }
@@ -112,7 +113,7 @@ func (s *Server) consumeItemForCharacter(
 	q := s.queries.WithTx(tx)
 	now := plataforma.NowISO()
 
-	var effect *EffectDTO
+	var effect *sheet.EffectDTO
 	if wantsEffectRow(spec) {
 		eff, err := q.CreateActiveEffect(r.Context(), sqlcgen.CreateActiveEffectParams{
 			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
@@ -123,7 +124,7 @@ func (s *Server) consumeItemForCharacter(
 		if err != nil {
 			return doseUsada{}, err
 		}
-		effect = &EffectDTO{ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: eff.Modifiers, CreatedAt: eff.Createdat}
+		effect = &sheet.EffectDTO{ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: eff.Modifiers, CreatedAt: eff.Createdat}
 	}
 
 	removed := false
@@ -174,7 +175,7 @@ func writeOncePerDay(w http.ResponseWriter, name string) {
 	plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("%q already active for the day", name), plataforma.FieldErrorMap{"catalogId": {"Apenas uma porção por dia"}})
 }
 
-func findItemDTO(items []ItemDTO, itemID int64) *ItemDTO {
+func findItemDTO(items []sheet.ItemDTO, itemID int64) *sheet.ItemDTO {
 	for i := range items {
 		if items[i].ID == itemID {
 			return &items[i]

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"t20engine/sheet"
 )
 
 // AS REGRAS DE ESCOLHA de poder (ALE-272, fatia 8).
@@ -103,7 +104,7 @@ func osDeusesQue(deuses []deusDoLivro, aceita func(deusDoLivro) bool) []filterOp
 // ficha inteira válida. É mais estrito que "não acrescente além do limite" — uma
 // ficha que já esteja fora da conta não aceita escrita de escolha nenhuma até
 // ser arrumada — e é a decisão do dono nesta fatia.
-func aFichaComEscolhasValidas(dto CharacterDTO) error {
+func aFichaComEscolhasValidas(dto sheet.CharacterDTO) error {
 	if err := osPoderesEscolhidosCabem(dto); err != nil {
 		return err
 	}
@@ -119,7 +120,7 @@ func aFichaComEscolhasValidas(dto CharacterDTO) error {
 // níveis. E cada poder escolhido precisa existir — um poder de classe ELETIVO
 // de uma classe que o personagem tem, ou um poder geral. Automático não conta:
 // ele não ocupa vaga porque não foi escolhido.
-func osPoderesEscolhidosCabem(dto CharacterDTO) error {
+func osPoderesEscolhidosCabem(dto sheet.CharacterDTO) error {
 	escolhidos := asEscolhasGuardadas(dto.ClassPowers)
 	vagas := 0
 	classes := map[string]bool{}
@@ -164,7 +165,7 @@ func asVagasEscritas(vagas int) string {
 }
 
 // osBeneficiosDeOrigemCabem confere o teto de dois e a procedência.
-func osBeneficiosDeOrigemCabem(dto CharacterDTO) error {
+func osBeneficiosDeOrigemCabem(dto sheet.CharacterDTO) error {
 	escolhidos := asEscolhasGuardadas(dto.OriginChoices)
 	if len(escolhidos) > oLimiteDeBeneficiosDaOrigem {
 		return fmt.Errorf("a origem dá %d benefícios, e foram escolhidos %d",
@@ -187,7 +188,7 @@ func osBeneficiosDeOrigemCabem(dto CharacterDTO) error {
 }
 
 // asEscolhasDeClasseValem confere caminho e devoto contra as opções da classe.
-func asEscolhasDeClasseValem(dto CharacterDTO) error {
+func asEscolhasDeClasseValem(dto sheet.CharacterDTO) error {
 	escolhas := asEscolhasDeClasse(dto)
 	for _, classe := range dto.Classes {
 		blob := escolhas[classe.ClassName]
@@ -254,7 +255,7 @@ type pendencia struct {
 }
 
 // asPendenciasDaFicha são as escolhas que faltam, na ordem das abas.
-func (s *Server) asPendenciasDaFicha(dto CharacterDTO) []pendencia {
+func (s *Server) asPendenciasDaFicha(dto sheet.CharacterDTO) []pendencia {
 	fora := []pendencia{}
 	fora = append(fora, s.aPendenciaDoAtributoDeRaca(dto)...)
 	fora = append(fora, aPendenciaDaOrigem(dto)...)
@@ -269,7 +270,7 @@ func (s *Server) asPendenciasDaFicha(dto CharacterDTO) []pendencia {
 // atributo é proibido. Repetir as três regras aqui seria a asserção que se
 // re-deriva da implementação, com a garantia de divergir no dia em que uma raça
 // nova tiver uma quarta condição.
-func (s *Server) aPendenciaDoAtributoDeRaca(dto CharacterDTO) []pendencia {
+func (s *Server) aPendenciaDoAtributoDeRaca(dto sheet.CharacterDTO) []pendencia {
 	if s.catalogs == nil {
 		return nil
 	}
@@ -285,7 +286,7 @@ func (s *Server) aPendenciaDoAtributoDeRaca(dto CharacterDTO) []pendencia {
 	return fora
 }
 
-func aPendenciaDaOrigem(dto CharacterDTO) []pendencia {
+func aPendenciaDaOrigem(dto sheet.CharacterDTO) []pendencia {
 	origem, tem := origensDoLivro()[dto.Origin]
 	if !tem {
 		return nil
@@ -313,7 +314,7 @@ func aPendenciaDaOrigem(dto CharacterDTO) []pendencia {
 	}}
 }
 
-func asPendenciasDeClasse(dto CharacterDTO) []pendencia {
+func asPendenciasDeClasse(dto sheet.CharacterDTO) []pendencia {
 	escolhas := asEscolhasDeClasse(dto)
 	usadas := len(asEscolhasGuardadas(dto.ClassPowers))
 	fora := []pendencia{}

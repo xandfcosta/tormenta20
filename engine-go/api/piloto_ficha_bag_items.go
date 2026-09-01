@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"t20engine/sheet"
 )
 
 // OS DIÁLOGOS DA MOCHILA como dado (ALE-272, fatia 7).
@@ -94,7 +95,7 @@ type catalogItemRow struct {
 }
 
 // itemSheetsOf monta uma ficha por item da mochila.
-func itemSheetsOf(dto CharacterDTO, proficiencias map[string]bool) []itemSheet {
+func itemSheetsOf(dto sheet.CharacterDTO, proficiencias map[string]bool) []itemSheet {
 	fichas := make([]itemSheet, 0, len(dto.Items))
 	for _, item := range dto.Items {
 		fichas = append(fichas, itemSheetOf(item, proficiencias))
@@ -102,7 +103,7 @@ func itemSheetsOf(dto CharacterDTO, proficiencias map[string]bool) []itemSheet {
 	return fichas
 }
 
-func itemSheetOf(item ItemDTO, proficiencias map[string]bool) itemSheet {
+func itemSheetOf(item sheet.ItemDTO, proficiencias map[string]bool) itemSheet {
 	catalogo := itemDoCatalogo(item)
 	ficha := itemSheet{
 		ID: item.ID, Name: item.Name, Quantity: item.Quantity,
@@ -129,7 +130,7 @@ func itemSheetOf(item ItemDTO, proficiencias map[string]bool) itemSheet {
 }
 
 // oMaterialAplicado é o material como lista, para a comparação ser uma só.
-func oMaterialAplicado(item ItemDTO) []string {
+func oMaterialAplicado(item sheet.ItemDTO) []string {
 	if item.Material == nil || *item.Material == "" {
 		return nil
 	}
@@ -142,7 +143,7 @@ func oMaterialAplicado(item ItemDTO) []string {
 // Item custom não tem eixo no catálogo, então ele aceita os três: não há o que
 // saber sobre uma coisa que a pessoa inventou, e recusar por precaução tiraria
 // dela a única forma de equipar o que ela criou.
-func osLugaresAlcancaveis(item ItemDTO, catalogo *itemDoLivro) []equipChoice {
+func osLugaresAlcancaveis(item sheet.ItemDTO, catalogo *itemDoLivro) []equipChoice {
 	atual := equippedSlotOf(item)
 	fora := []equipChoice{}
 	for _, escolha := range osLugaresDoItem(catalogo) {
@@ -311,7 +312,7 @@ func aCategoriaEscrita(id string) string {
 }
 
 // asMelhoriasAplicadas são as sobreposições em vigor, com o que elas fazem.
-func asMelhoriasAplicadas(item ItemDTO) []overlayRow {
+func asMelhoriasAplicadas(item sheet.ItemDTO) []overlayRow {
 	linhas := []overlayRow{}
 	for _, entrada := range asMelhoriasOrdenadas(item) {
 		linhas = append(linhas, overlayRow{Nome: entrada.Name, Efeito: oResumoDaSobreposicao(entrada)})

@@ -11,6 +11,7 @@ import (
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
 // expertiseDef is one builtin perícia (name + keying attribute). Ordered as
@@ -244,7 +245,7 @@ func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, bo
 
 // healVitals recomputes the pools (clamp-only, matching healVitalsFromEngine) and
 // patches the aggregate + row.
-func (s *Server) HealVitals(r *http.Request, id int64, dto *CharacterDTO) error {
+func (s *Server) HealVitals(r *http.Request, id int64, dto *sheet.CharacterDTO) error {
 	if s.catalogs == nil || len(dto.Classes) == 0 {
 		return nil
 	}

@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"t20engine/sheet"
 )
 
 // O DIÁLOGO DE ESCOLHER PODERES como dado (ALE-272, fatia 8).
@@ -100,7 +101,7 @@ type pickerChoice struct {
 }
 
 // choicesPanelOf monta o diálogo.
-func (s *Server) choicesPanelOf(dto CharacterDTO, busca string) choicesPanel {
+func (s *Server) choicesPanelOf(dto sheet.CharacterDTO, busca string) choicesPanel {
 	panel := choicesPanel{Pendencias: s.asPendenciasDaFicha(dto)}
 	panel.Races = s.asEscolhasDeRaca(dto)
 	panel.Origin = aEscolhaDeOrigem(dto)
@@ -108,7 +109,7 @@ func (s *Server) choicesPanelOf(dto CharacterDTO, busca string) choicesPanel {
 	return panel
 }
 
-func (s *Server) asEscolhasDeRaca(dto CharacterDTO) []raceChoiceCard {
+func (s *Server) asEscolhasDeRaca(dto sheet.CharacterDTO) []raceChoiceCard {
 	cartoes := []raceChoiceCard{}
 	for _, r := range dto.Races {
 		cartao := raceChoiceCard{Race: r.Race, Variants: asVariantesDaRaca(dto, r.Race)}
@@ -123,7 +124,7 @@ func (s *Server) asEscolhasDeRaca(dto CharacterDTO) []raceChoiceCard {
 
 // oBonusDeAtributoDaRaca descreve a escolha de atributo, ou nil quando a raça
 // não pede nenhuma (as doze de bônus fixo).
-func (s *Server) oBonusDeAtributoDaRaca(dto CharacterDTO, nome string) *attributeChoice {
+func (s *Server) oBonusDeAtributoDaRaca(dto sheet.CharacterDTO, nome string) *attributeChoice {
 	mod := oModDeAtributoDaRaca(nome)
 	if mod == nil || mod.Kind == "fixed" {
 		return nil
@@ -160,7 +161,7 @@ func osAtributosQueCabem(proibido string) []filterOption {
 }
 
 // asVariantesDaRaca são as habilidades de raça que pedem uma escolha.
-func asVariantesDaRaca(dto CharacterDTO, nome string) []variantChoice {
+func asVariantesDaRaca(dto sheet.CharacterDTO, nome string) []variantChoice {
 	raca := aRacaComVariantes(nome)
 	if raca == nil {
 		return nil
@@ -186,7 +187,7 @@ func asVariantesDaRaca(dto CharacterDTO, nome string) []variantChoice {
 }
 
 // aEscolhaDeOrigem monta o cartão da origem.
-func aEscolhaDeOrigem(dto CharacterDTO) *originChoiceCard {
+func aEscolhaDeOrigem(dto sheet.CharacterDTO) *originChoiceCard {
 	origem, tem := origensDoLivro()[dto.Origin]
 	if !tem {
 		return nil
@@ -205,7 +206,7 @@ func aEscolhaDeOrigem(dto CharacterDTO) *originChoiceCard {
 }
 
 // asEscolhasDasClasses monta um cartão por classe da ficha.
-func asEscolhasDasClasses(dto CharacterDTO, busca string) []classChoiceCard {
+func asEscolhasDasClasses(dto sheet.CharacterDTO, busca string) []classChoiceCard {
 	escolhidos := asEscolhasGuardadas(dto.ClassPowers)
 	escolhas := asEscolhasDeClasse(dto)
 	cartoes := []classChoiceCard{}

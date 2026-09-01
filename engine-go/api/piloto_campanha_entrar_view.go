@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 )
 
 // A CARTA DE CONVITE como dado (ALE-249): entrar numa mesa.
@@ -80,7 +81,7 @@ func (s *Server) carregaCartaDeConvite(ctx context.Context, eu AuthUser, token s
 // subtituloDoHeroi é a linha de baixo da plaqueta: as classes com nível, ou o
 // nível sozinho para quem ainda não tem classe. É o `classLevelLine` da SPA com
 // o mesmo recuo.
-func subtituloDoHeroi(c CharacterDTO) string {
+func subtituloDoHeroi(c sheet.CharacterDTO) string {
 	if linha := classesDoHeroi(c); linha != "" {
 		return linha
 	}

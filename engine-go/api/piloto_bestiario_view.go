@@ -15,6 +15,7 @@ import (
 	"golang.org/x/text/language"
 
 	"t20engine/catalog"
+	"t20engine/creature"
 )
 
 // O BESTIÁRIO como dado (ALE-257).
@@ -78,13 +79,13 @@ type verbete struct {
 	Sabedoria    *int `json:"sabedoria"`
 	Carisma      *int `json:"carisma"`
 	// PM só existe em conjurador: um zero diria "tem mana e está sem".
-	PM               *int             `json:"pm,omitempty"`
-	Attacks          []CreatureAttack `json:"attacks"`
-	Skills           []CreatureSkill  `json:"skills"`
-	SpecialAbilities []string         `json:"specialAbilities"`
-	Equipamento      string           `json:"equipamento"`
-	Tesouro          string           `json:"tesouro"`
-	BookPage         int              `json:"bookPage"`
+	PM               *int              `json:"pm,omitempty"`
+	Attacks          []creature.Attack `json:"attacks"`
+	Skills           []creature.Skill  `json:"skills"`
+	SpecialAbilities []string          `json:"specialAbilities"`
+	Equipamento      string            `json:"equipamento"`
+	Tesouro          string            `json:"tesouro"`
+	BookPage         int               `json:"bookPage"`
 }
 
 // comSinal escreve o modificador como o livro, e o TRAVESSÃO quando ele não

@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"t20engine/web/ui"
+	"t20engine/creature"
 )
 
 // O EDITOR DE BLOCO desenhado (ALE-269).
@@ -227,7 +228,7 @@ templ oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) {
 // entram na lista de regiões da Mesa: o stream não sabe do rascunho de ninguém, e
 // um quadro dele apagaria as linhas em silêncio.
 
-templ osAtaquesDoRascunho(campanha, sessao int64, ataques []CreatureAttack) {
+templ osAtaquesDoRascunho(campanha, sessao int64, ataques []creature.Attack) {
 	<div id="npc-ataques" class="space-y-2">
 		if len(ataques) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhum ataque.</p>
@@ -248,7 +249,7 @@ templ osAtaquesDoRascunho(campanha, sessao int64, ataques []CreatureAttack) {
 	</div>
 }
 
-templ asPericiasDoRascunho(campanha, sessao int64, pericias []CreatureSkill) {
+templ asPericiasDoRascunho(campanha, sessao int64, pericias []creature.Skill) {
 	<div id="npc-pericias" class="space-y-2">
 		if len(pericias) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma perícia.</p>

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"t20engine/engine"
+	"t20engine/sheet"
 )
 
 // O ACERVO DE PODERES de um personagem (ALE-272, fatia 8).
@@ -35,7 +36,7 @@ type ownedPower struct {
 }
 
 // ownedPowersOf junta as cinco procedências, na ordem em que a tela as mostra.
-func ownedPowersOf(dto CharacterDTO) []ownedPower {
+func ownedPowersOf(dto sheet.CharacterDTO) []ownedPower {
 	fora := []ownedPower{}
 	fora = append(fora, asHabilidadesDeRaca(dto)...)
 	fora = append(fora, osBeneficiosDeOrigem(dto)...)
@@ -49,7 +50,7 @@ func ownedPowersOf(dto CharacterDTO) []ownedPower {
 // Quem lê o catálogo é o `racasDaTela` do dossiê — o MESMO `race-defs.json`, já
 // indexado por id E por nome, porque o personagem guarda a raça por um dos dois.
 // Um segundo leitor aqui seria uma terceira cópia da mesma decisão.
-func asHabilidadesDeRaca(dto CharacterDTO) []ownedPower {
+func asHabilidadesDeRaca(dto sheet.CharacterDTO) []ownedPower {
 	fora := []ownedPower{}
 	for _, r := range dto.Races {
 		raca, tem := racasDaTela()[r.Race]
@@ -71,7 +72,7 @@ func asHabilidadesDeRaca(dto CharacterDTO) []ownedPower {
 // A origem oferece mais benefícios do que o personagem leva (duas perícias e um
 // poder, de uma lista maior), então listar todos mostraria como possuído o que
 // ninguém escolheu.
-func osBeneficiosDeOrigem(dto CharacterDTO) []ownedPower {
+func osBeneficiosDeOrigem(dto sheet.CharacterDTO) []ownedPower {
 	origem, tem := origensDoLivro()[dto.Origin]
 	if !tem {
 		return nil
@@ -103,7 +104,7 @@ func osBeneficiosDeOrigem(dto CharacterDTO) []ownedPower {
 // escolhido, ou concedido por uma escolha de classe (o caminho do arcanista, o
 // deus do clérigo). Uma segunda leitura aqui daria uma tela que mostra um poder
 // que a ficha não soma — ou o contrário.
-func asHabilidadesAutomaticas(dto CharacterDTO) []ownedPower {
+func asHabilidadesAutomaticas(dto sheet.CharacterDTO) []ownedPower {
 	escolhas := asEscolhasDeClasse(dto)
 	fora := []ownedPower{}
 	for _, classe := range dto.Classes {
@@ -126,7 +127,7 @@ func asHabilidadesAutomaticas(dto CharacterDTO) []ownedPower {
 // A lista de ESCOLHIDOS entra vazia de propósito: quem escolheu já aparece em
 // `osPoderesEscolhidos`, e passá-la aqui listaria o mesmo poder duas vezes.
 func aPosseAutomatica(
-	poder poderDeClasseDoLivro, classe ClassDTO, escolhas map[string]engine.ClassChoiceSelections,
+	poder poderDeClasseDoLivro, classe sheet.ClassDTO, escolhas map[string]engine.ClassChoiceSelections,
 ) bool {
 	doMotor := &engine.ClassPower{
 		ID: poder.ID, ClassName: poder.ClassName, Name: poder.Name,
@@ -143,7 +144,7 @@ func aPosseAutomatica(
 // asEscolhasDeClasse lê o blob `classChoices` — o caminho do arcanista, o deus
 // do clérigo. Blob torto vira mapa vazio: a aba não pode deixar de abrir porque
 // uma linha do banco está errada.
-func asEscolhasDeClasse(dto CharacterDTO) map[string]engine.ClassChoiceSelections {
+func asEscolhasDeClasse(dto sheet.CharacterDTO) map[string]engine.ClassChoiceSelections {
 	escolhas := map[string]engine.ClassChoiceSelections{}
 	_ = json.Unmarshal([]byte(dto.ClassChoices), &escolhas)
 	return escolhas
@@ -151,7 +152,7 @@ func asEscolhasDeClasse(dto CharacterDTO) map[string]engine.ClassChoiceSelection
 
 // osPoderesEscolhidos são os ids da coluna `classPowers` — poder de classe,
 // poder geral ou poder da Tormenta, nessa ordem de busca.
-func osPoderesEscolhidos(dto CharacterDTO) []ownedPower {
+func osPoderesEscolhidos(dto sheet.CharacterDTO) []ownedPower {
 	var ids []string
 	if json.Unmarshal([]byte(dto.ClassPowers), &ids) != nil {
 		return nil

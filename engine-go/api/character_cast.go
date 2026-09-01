@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
 // spellBasePmCost is Tabela 4-1, "Custo de Magias" (livro p170).
@@ -79,7 +80,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 // Devolve o PM que sobrou e uma frase de recusa quando a regra barra — a frase é
 // para um humano ler numa tela, e não um `FieldErrorMap` para um cliente.
 func (s *Server) castSpellForCharacter(
-	r *http.Request, dto CharacterDTO, catalogSpellID string, augments []augmentPick,
+	r *http.Request, dto sheet.CharacterDTO, catalogSpellID string, augments []augmentPick,
 ) error {
 	spell, known := catalog.LookupSpell(catalogSpellID)
 	if !known {
@@ -119,7 +120,7 @@ func (s *Server) castSpellForCharacter(
 	})
 }
 
-func findSpell(spells []SpellDTO, catalogSpellID string) *SpellDTO {
+func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 	for i := range spells {
 		if spells[i].CatalogSpellID == catalogSpellID {
 			return &spells[i]
@@ -130,7 +131,7 @@ func findSpell(spells []SpellDTO, catalogSpellID string) *SpellDTO {
 
 // requiresPreparation ports the same helper: Clérigo/Druida always prepare, and
 // an Arcanista on the "mago" caminho does.
-func requiresPreparation(classes []ClassDTO, classChoicesRaw string) bool {
+func requiresPreparation(classes []sheet.ClassDTO, classChoicesRaw string) bool {
 	hasArcanista := false
 	for _, c := range classes {
 		if alwaysPrepareClasses[c.ClassName] {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"t20engine/sheet"
 )
 
 // A cena de PERSONAGENS como dado (ALE-239) — a segunda cena de seleção, e a
@@ -84,11 +85,11 @@ func (s *Server) carregaPersonagens(ctx context.Context, eu AuthUser, busca stri
 // camposDeBusca são os quatro que a SPA indexa: nome, classe primária, origem e
 // raças. Portados como estão — buscar por raça é o que faz "anao" achar o anão,
 // e esse é o caso que a regra de acento existe para servir.
-func camposDeBusca(c CharacterDTO) []string {
+func camposDeBusca(c sheet.CharacterDTO) []string {
 	return []string{c.Name, classePrimaria(c), c.Origin, racasEmLinha(c)}
 }
 
-func (s *Server) cartaoDoHeroi(c CharacterDTO) heroiCartao {
+func (s *Server) cartaoDoHeroi(c sheet.CharacterDTO) heroiCartao {
 	cartao := heroiCartao{
 		ID:        c.ID,
 		Nome:      c.Name,
@@ -127,7 +128,7 @@ func (s *Server) cartaoDoHeroi(c CharacterDTO) heroiCartao {
 // como se troca uma pela outra.
 //
 // `god` é opcional e some quando ausente, em vez de virar "Devoto de ".
-func linhaDoPalco(c CharacterDTO) string {
+func linhaDoPalco(c sheet.CharacterDTO) string {
 	partes := []string{}
 	if c.God != nil && *c.God != "" {
 		partes = append(partes, "Devoto de "+*c.God)
@@ -147,7 +148,7 @@ func linhaDoPalco(c CharacterDTO) string {
 
 // placaDoHeroi é o subtítulo da placa: "GUERREIRO 10 · ANÃO". A raça entra
 // junto, e não é enfeite — num elenco de dez, classe sozinha repete.
-func placaDoHeroi(c CharacterDTO) string {
+func placaDoHeroi(c sheet.CharacterDTO) string {
 	placa := strings.ToUpper(classeOuOrigem(c))
 	if raca := racaPrincipal(c); raca != "" {
 		placa += " · " + strings.ToUpper(raca)
@@ -157,21 +158,21 @@ func placaDoHeroi(c CharacterDTO) string {
 
 // classeOuOrigem: a classe primária com o nível, ou a origem para quem ainda
 // não tem classe. É o "cargo" do herói na lista.
-func classeOuOrigem(c CharacterDTO) string {
+func classeOuOrigem(c sheet.CharacterDTO) string {
 	if len(c.Classes) == 0 {
 		return c.Origin
 	}
 	return c.Classes[0].ClassName + " " + strconv.FormatInt(c.Classes[0].Level, 10)
 }
 
-func classePrimaria(c CharacterDTO) string {
+func classePrimaria(c sheet.CharacterDTO) string {
 	if len(c.Classes) == 0 {
 		return ""
 	}
 	return c.Classes[0].ClassName
 }
 
-func classesDoHeroi(c CharacterDTO) string {
+func classesDoHeroi(c sheet.CharacterDTO) string {
 	partes := make([]string, 0, len(c.Classes))
 	for _, cl := range c.Classes {
 		partes = append(partes, cl.ClassName+" "+strconv.FormatInt(cl.Level, 10))
@@ -179,7 +180,7 @@ func classesDoHeroi(c CharacterDTO) string {
 	return strings.Join(partes, " / ")
 }
 
-func racasEmLinha(c CharacterDTO) string {
+func racasEmLinha(c sheet.CharacterDTO) string {
 	partes := make([]string, 0, len(c.Races))
 	for _, r := range c.Races {
 		partes = append(partes, r.Race)
@@ -187,7 +188,7 @@ func racasEmLinha(c CharacterDTO) string {
 	return strings.Join(partes, ", ")
 }
 
-func racaPrincipal(c CharacterDTO) string {
+func racaPrincipal(c sheet.CharacterDTO) string {
 	if len(c.Races) == 0 {
 		return ""
 	}

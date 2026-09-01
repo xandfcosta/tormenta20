@@ -11,6 +11,7 @@ import (
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
 // restMultiplier is the T20 night-rest recovery factor per accommodation quality:
@@ -217,7 +218,7 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update effect")
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, EffectDTO{
+	plataforma.WriteJSON(w, http.StatusOK, sheet.EffectDTO{
 		ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: string(next), CreatedAt: eff.Createdat,
 	})
 }

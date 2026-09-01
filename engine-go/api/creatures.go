@@ -9,6 +9,7 @@ import (
 	"t20engine/plataforma"
 	"time"
 
+	"t20engine/creature"
 	"t20engine/db/sqlcgen"
 )
 
@@ -16,25 +17,25 @@ import (
 // numa coluna (é por onde se lista e se ordena) e o resto é o JSON do bloco —
 // ter o nome nos dois lugares criaria duas verdades.
 type creatureDTO struct {
-	ID         int64         `json:"id"`
-	CampaignID int64         `json:"campaignId"`
-	Name       string        `json:"name"`
-	Block      CreatureBlock `json:"block"`
-	CreatedAt  string        `json:"createdAt"`
-	UpdatedAt  string        `json:"updatedAt"`
+	ID         int64          `json:"id"`
+	CampaignID int64          `json:"campaignId"`
+	Name       string         `json:"name"`
+	Block      creature.Block `json:"block"`
+	CreatedAt  string         `json:"createdAt"`
+	UpdatedAt  string         `json:"updatedAt"`
 }
 
 type creatureInput struct {
-	Name  string        `json:"name"`
-	Block CreatureBlock `json:"block"`
+	Name  string         `json:"name"`
+	Block creature.Block `json:"block"`
 }
 
 func creatureToDTO(row sqlcgen.CampaignCreature) (creatureDTO, error) {
-	var block CreatureBlock
+	var block creature.Block
 	if err := json.Unmarshal([]byte(row.Block), &block); err != nil {
 		return creatureDTO{}, err
 	}
-	normalizeCreature(&block)
+	creature.Normalize(&block)
 	return creatureDTO{
 		ID: row.ID, CampaignID: row.Campaignid, Name: row.Name, Block: block,
 		CreatedAt: row.Createdat, UpdatedAt: row.Updatedat,
@@ -175,8 +176,8 @@ func decodeCreature(w http.ResponseWriter, r *http.Request) (creatureInput, bool
 		plataforma.WriteError(w, http.StatusBadRequest, "Body must be {name, block}")
 		return input, false
 	}
-	normalizeCreature(&input.Block)
-	if err := validateCreature(input.Name, &input.Block); err != nil {
+	creature.Normalize(&input.Block)
+	if err := creature.Validate(input.Name, &input.Block); err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return input, false
 	}

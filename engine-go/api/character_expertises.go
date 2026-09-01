@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
+	"t20engine/sheet"
 )
 
 // expertiseNames mirrors t20-data EXPERTISE_NAMES — the builtin perícias. A
@@ -50,8 +51,8 @@ func (s *Server) guardaOOficioNovo(ctx context.Context, characterID int64, nome 
 	return nil
 }
 
-func expertiseDTO(name, attribute string, trained, custom int64) ExpertiseDTO {
-	return ExpertiseDTO{Name: name, Attribute: attribute, Trained: trained != 0, Custom: custom != 0}
+func expertiseDTO(name, attribute string, trained, custom int64) sheet.ExpertiseDTO {
+	return sheet.ExpertiseDTO{Name: name, Attribute: attribute, Trained: trained != 0, Custom: custom != 0}
 }
 
 // handleAddExpertise ports addCustomExpertise: a user-named perícia (not a
