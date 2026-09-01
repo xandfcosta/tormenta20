@@ -2331,12 +2331,12 @@ var Ee = (e) => typeof e == "boolean" ? `${e}` : e === 0 ? "0" : e, De = Te, Oe 
 	};
 });
 //#endregion
-//#region src/shared/lib/utils.ts
+//#region api/piloto/src/lib/utils.ts
 function $(...e) {
 	return Ut(Te(e));
 }
 //#endregion
-//#region src/shared/ui/badge.tsx
+//#region api/piloto/src/ui/badge.tsx
 var Wt = /* @__PURE__ */ v("<span data-slot=badge>"), Gt = Oe("inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3", {
 	variants: { variant: {
 		default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
@@ -2363,7 +2363,7 @@ function Kt(e) {
 	})();
 }
 //#endregion
-//#region src/shared/ui/button.tsx
+//#region api/piloto/src/ui/button.tsx
 var qt = /* @__PURE__ */ v("<button data-slot=button>"), Jt = Oe("inline-flex shrink-0 items-center justify-center gap-2 rounded-sm text-sm font-medium whitespace-nowrap transition-all outline-none disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4", {
 	variants: {
 		variant: {
@@ -2419,7 +2419,7 @@ function Yt(e) {
 	})();
 }
 //#endregion
-//#region src/shared/ui/input.tsx
+//#region api/piloto/src/ui/input.tsx
 var Xt = /* @__PURE__ */ v("<input data-slot=input>");
 function Zt(e) {
 	let [n, r] = t(e, ["class"]);
@@ -2431,7 +2431,7 @@ function Zt(e) {
 	})();
 }
 //#endregion
-//#region src/shared/ui/framed-panel.tsx
+//#region api/piloto/src/ui/framed-panel.tsx
 var Qt = /* @__PURE__ */ v("<div data-slot=framed-panel>");
 function $t(e) {
 	let [n, r] = t(e, [
@@ -2452,7 +2452,7 @@ function $t(e) {
 	})();
 }
 //#endregion
-//#region src/shared/ui/section-label.tsx
+//#region api/piloto/src/ui/section-label.tsx
 var en = Oe("uppercase", {
 	variants: {
 		papel: {
@@ -2517,7 +2517,7 @@ function nn(e) {
 	}));
 }
 //#endregion
-//#region src/shared/ui/vital-bar.tsx
+//#region api/piloto/src/ui/vital-bar.tsx
 var rn = /* @__PURE__ */ v("<div><div role=progressbar aria-valuemin=0 class=\"h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted\"><div class=\"h-full rounded-full transition-[width]\"></div></div><span class=\"shrink-0 font-mono text-[13px] tabular-nums text-foreground\">/");
 function an(e) {
 	return e <= 25 ? "--hp-critical" : e <= 50 ? "--hp-hurt" : "--hp-full";

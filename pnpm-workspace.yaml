@@ -1,5 +1,4 @@
 packages:
-  - frontend
   - engine-go
   - e2e
 

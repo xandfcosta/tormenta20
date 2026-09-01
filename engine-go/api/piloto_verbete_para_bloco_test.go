@@ -7,19 +7,17 @@ import (
 	"testing"
 )
 
-// A PARIDADE DA CÓPIA COM O JS (ALE-269, superfície 6b).
+// O ORÁCULO DA CÓPIA DO VERBETE (ALE-269, superfície 6b).
 //
-// Enquanto as duas telas existirem, o mestre pode copiar o Ogro pela SPA numa
-// noite e pelo piloto na outra, e o bloco vai para a MESMA coluna do MESMO
-// banco. Duas cópias diferentes do mesmo verbete é a divergência mais cara
-// possível aqui, porque ela não aparece: os dois blocos são JSON válido.
+// Ele nasceu como PARIDADE: enquanto as duas telas existiam, o mestre podia
+// copiar o Ogro pela SPA numa noite e pelo piloto na outra, e o bloco ia para a
+// MESMA coluna do MESMO banco. Duas cópias diferentes do mesmo verbete é a
+// divergência mais cara possível aqui, porque ela não aparece — os dois blocos
+// são JSON válido. O esperado era MEDIDO rodando o `creature-from-monster.ts`.
 //
-// O esperado é MEDIDO rodando o `creature-from-monster.ts` de verdade:
-//
-//	node scripts/dump-verbete-oracle.ts
-//
-// Digitar os campos à mão em Go seria uma segunda transcrição da regra — e é a
-// segunda transcrição que diverge em silêncio, sempre.
+// Com a SPA apagada (ALE-272, fatia 10c) sobrou uma tela só, e o oráculo virou
+// LINHA DE BASE: ele acusa qualquer campo que mude sem ter sido pedido, e não
+// prova mais que dois lados concordam. O script que o gerava saiu junto.
 
 type oraculoDaCopia struct {
 	Casos []struct {
@@ -32,7 +30,7 @@ type oraculoDaCopia struct {
 func TestACopiaDoVerbeteCasaComOJS(t *testing.T) {
 	bruto, err := os.ReadFile("testdata/verbete-para-bloco-do-js.json")
 	if err != nil {
-		t.Fatalf("oráculo ausente (rode `node scripts/dump-verbete-oracle.ts`): %v", err)
+		t.Fatalf("oráculo ausente — ele é versionado e não se regenera mais: %v", err)
 	}
 	var oraculo oraculoDaCopia
 	if err := json.Unmarshal(bruto, &oraculo); err != nil {

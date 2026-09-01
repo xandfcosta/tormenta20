@@ -16,9 +16,6 @@ dist
 .env.*.local
 *.log
 
-frontend/dist
-frontend/.vite
-frontend/src/routeTree.gen.ts
 t20-book.pdf
 
 # Runtime SQLite data + backups (host-stored, never commit)

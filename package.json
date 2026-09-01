@@ -2,8 +2,7 @@
   "name": "tormenta20",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -n api,front -c green,cyan \"pnpm -F @tormenta20/engine-go dev\" \"pnpm -F frontend dev\"",
-    "dev:frontend": "pnpm --filter frontend run dev",
+    "dev": "pnpm -F @tormenta20/engine-go dev",
     "build": "pnpm -r run build",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
@@ -14,8 +13,6 @@
     "db:backup": "bash scripts/backup-db.sh"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.0",
-    "concurrently": "^9.1.0",
-    "vitest": "^4.1.8"
+    "@biomejs/biome": "^2.5.0"
   }
 }

@@ -44,6 +44,16 @@ var osEnderecosAntigos = []umEnderecoAntigo{
 	{"/campaigns/{id}", comSegmento("/piloto/campanhas/", "id", "tab")},
 	{"/characters", fixo("/piloto/personagens")},
 	{"/characters/{$}", fixo("/piloto/personagens")},
+	// As TRÊS últimas entraram na fatia 10c, com o `git rm` da SPA: enquanto ela
+	// existia, estes eram os endereços das telas que ainda viviam lá — a ficha,
+	// a forja e a sessão ao vivo. Desviá-los antes teria tornado a tela antiga
+	// inalcançável enquanto ela ainda era a única.
+	{"/characters/new", fixo("/piloto/personagens/nova")},
+	{"/characters/new/{passo}", fixo("/piloto/personagens/nova")},
+	{"/characters/{id}", comSegmento("/piloto/personagens/", "id", "tab")},
+	{"/campaigns/{id}/sessions/{sid}", func(r *http.Request) string {
+		return "/piloto/mesa/" + url.PathEscape(r.PathValue("id")) + "/" + url.PathEscape(r.PathValue("sid"))
+	}},
 	{"/gm", fixo("/piloto/mestre/bestiario")},
 	{"/gm/{$}", fixo("/piloto/mestre/bestiario")},
 	{"/gm/{tool}", comSegmento("/piloto/mestre/", "tool")},

@@ -76,11 +76,6 @@ type Config struct {
 	// funcionando — o processo segue falando HTTP para quem está na frente.
 	TLSCertFile string
 	TLSKeyFile  string
-	// StaticDir, when set, is the built frontend (frontend/dist) served by cmd/api in
-	// production: the server then owns the app + API + socket as a single binary and
-	// routes /api/* to the domain (no Vite to strip the prefix). Empty in dev, where
-	// Vite serves the front and proxies /api + /socket.io.
-	StaticDir string
 	// LivroPDF é o caminho do Tormenta 20 em PDF que o servidor entrega em
 	// `/piloto/livro`, e VAZIO é o padrão: sem ele o botão "abrir no livro"
 	// simplesmente não existe, e nada é servido.
@@ -127,7 +122,6 @@ func LoadConfig() (Config, error) {
 		CatalogPath:   env("CATALOG_PATH", "parity/_catalogs.json"),
 		TLSCertFile:   os.Getenv("TLS_CERT_FILE"),
 		TLSKeyFile:    os.Getenv("TLS_KEY_FILE"),
-		StaticDir:     env("STATIC_DIR", ""),
 		LivroPDF:      env("LIVRO_PDF", ""),
 		LivroAbertura: envInt("LIVRO_ABERTURA", 6),
 	}, nil

@@ -7,7 +7,6 @@
       "!**/dist",
       "!**/node_modules",
       "!**/coverage",
-      "!frontend/src/routeTree.gen.ts",
       "!backend/src/generated"
     ]
   },

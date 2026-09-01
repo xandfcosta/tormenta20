@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { ensurePowersFixture } from './support/character'
 import {
   expectColunasMonotonicas,
   expectNadaEscapa,
@@ -7,88 +6,22 @@ import {
 } from './support/geometry'
 
 /**
- * As listas virtualizadas do MESTRE — bestiário e catálogos.
+ * As listas do MESTRE — bestiário e catálogos, nas cenas do piloto.
  *
- * `VirtualList` mede as linhas para saber quais existem, e em jsdom todo
- * elemento mede zero: a lista renderiza NENHUMA linha e um teste de unidade
- * passa verde sobre a tela vazia. Foi assim que a ALE-84 entrou em produção com
- * a suíte inteira verde. Só um browser prova que a linha pintou — e que o
- * filtro TROCA o conjunto pintado, que é o outro modo de falha da
- * virtualização: ficar com o que pintou primeiro.
+ * O arquivo nasceu medindo a `VirtualList` da SPA: ela mede as linhas para
+ * saber quais existem, e em jsdom todo elemento mede zero — a lista renderiza
+ * NENHUMA linha e um teste de unidade passa verde sobre a tela vazia. Foi assim
+ * que a ALE-84 entrou em produção com a suíte inteira verde.
+ *
+ * Quatro casos foram embora com a SPA (ALE-272, fatia 10c): os que dirigiam a
+ * sessão dela e a ficha antiga. O que ficou mede as cenas do servidor, e a
+ * razão de serem e2e mudou de nome sem mudar de natureza — não é mais
+ * virtualização, é LEIAUTE REAL: coluna que some ao alargar a janela e faixa
+ * morta no tablet não existem em HTML nenhum.
  *
  * Só leitura: filtra e navega, nunca escreve.
  */
-test.describe('Listas virtualizadas do mestre', () => {
-  test('o bestiário da sessão pinta linhas e o filtro troca o conjunto', async ({ page }) => {
-    await page.goto('/campaigns/1/sessions/4')
-    // O bestiário é GAVETA desde a ALE-198: a cena do mestre não tem mais abas,
-    // e quem chama as consultas é o trilho da direita.
-    await page.getByRole('navigation', { name: 'Consultas do mestre' })
-      .getByRole('button', { name: 'Bestiário' })
-      .click()
-
-    const busca = page.getByRole('searchbox', { name: 'Buscar criatura' })
-    await expect(busca).toBeVisible()
-    // A linha só existe se a lista mediu e pintou — e a busca aparece ANTES
-    // disso. Contar no instante em que ela surge é uma corrida: o teste falhou
-    // duas vezes na suíte cheia com zero linhas, e o artefato mostrou a cena
-    // montada com a lista ainda vazia. Esperar a primeira linha não afrouxa a
-    // asserção, porque o que se promete é justamente que ela pinte.
-    const linhas = page.getByRole('button', { name: /ND / })
-    await expect(linhas.first()).toBeVisible()
-    const antes = await linhas.count()
-    expect(antes).toBeGreaterThan(0)
-
-    await busca.fill('ogro')
-    // Mais de um ogro no bestiário (o comum e o ancião) — `first()` de propósito.
-    // O `Abrir` na frente é o verbo da linha na SESSÃO (ALE-208): ela abre a
-    // criatura em vez de jogá-la na iniciativa, e o verbo entra como prefixo
-    // `sr-only` — o ND, o tipo e o PV continuam no nome, que é o que o `/ND /`
-    // acima ainda casa. No Montar encontro a mesma lista diz "Adicionar".
-    await expect(page.getByRole('button', { name: /^Abrir Ogro/ }).first()).toBeVisible()
-    expect(await linhas.count()).toBeLessThan(antes)
-  })
-
-  test('o catálogo da sessão pinta linhas e a busca as troca', async ({ page }) => {
-    await page.goto('/campaigns/1/sessions/4')
-    await page.getByRole('navigation', { name: 'Consultas do mestre' })
-      .getByRole('button', { name: 'Catálogos' })
-      .click()
-
-    const busca = page.getByRole('searchbox', { name: 'Buscar nos catálogos' })
-    await expect(busca).toBeVisible()
-
-    await busca.fill('espada')
-    await expect(page.getByText(/Espada/).first()).toBeVisible()
-
-    // O outro modo de falha: a lista guardar o que pintou primeiro. Depois de
-    // uma busca sem resultado, nada de "espada" pode sobreviver na tela.
-    await busca.fill('zzzzzz')
-    await expect(page.getByText(/Espada longa/)).toHaveCount(0)
-
-    // E o terceiro, que só o browser vê: a lista TERMINAR fora do cartão.
-    // O painel de aba é um bloco, então o `flex-1` do filho não limitava altura
-    // nenhuma e a lista descia até a borda da janela, 12px além do cartão —
-    // sem a página rolar, porque a cena inteira é `overflow-hidden`, e por isso
-    // "a cena do mestre não rola" ficava verde por cima (ALE-149).
-    await busca.fill('')
-    await expect(page.getByText('Abalado')).toBeVisible()
-    const vazamento = await page.evaluate(() => {
-      const rolante = [...document.querySelectorAll('*')].find((el) => {
-        const estilo = getComputedStyle(el)
-        return (
-          /(auto|scroll)/.test(estilo.overflowY) &&
-          el.scrollHeight > el.clientHeight + 4 &&
-          (el.textContent ?? '').includes('Abalado')
-        )
-      })
-      if (!rolante) throw new Error('não achei a lista de condições rolando')
-      const cartao = document.querySelector('[role="tablist"]')?.parentElement
-      if (!cartao) throw new Error('não achei o cartão do workspace')
-      return Math.round(rolante.getBoundingClientRect().bottom - cartao.getBoundingClientRect().bottom)
-    })
-    expect(vazamento, `a lista passou ${vazamento}px do fundo do cartão`).toBeLessThanOrEqual(0)
-  })
+test.describe('As listas do mestre', () => {
 
   test('a ferramenta Bestiário pinta a lista e abre a criatura escolhida', async ({ page }) => {
     // A ferramenta virou cena do SERVIDOR na ALE-264, e o teste foi REAPONTADO
@@ -122,118 +55,6 @@ test.describe('Listas virtualizadas do mestre', () => {
    * O herói é criado pela API na primeira rodada e REUSADO nas seguintes: o app
    * não apaga personagem, então criar um por rodada entulharia o elenco.
    */
-  test('o pool de poderes gerais da ficha pinta e filtra', async ({ page, request }) => {
-    const id = await ensurePowersFixture(request)
-    await page.goto(`/characters/${id}`)
-    await page.getByRole('tab', { name: /^Poderes/ }).click()
-    // A escolha de poderes saiu do painel e virou DIÁLOGO (ALE-217): o painel
-    // agora é só a lista da mesa, e o pool de gerais vive onde se escolhe.
-    await page.getByRole('button', { name: /^Escolher poderes/ }).click()
-    const escolher = page.getByRole('dialog')
-    await expect(escolher).toBeVisible()
-    // A aba e o CARTÃO da mesma fonte compartilham o prefixo ("Classe, 3
-    // escolhas pendentes" e "Classe: Guerreiro 6"); o `(,|$)` separa a aba.
-    await escolher.getByRole('button', { name: /^Classe(,|$)/ }).click()
-    // O card da classe ABRE SOZINHO quando há escolha pendente, e é por isso
-    // que o teste cria um Guerreiro de 6º com três vagas em aberto em vez de
-    // usar um personagem da seed, onde as vagas já estão gastas.
-
-    // `textbox`, não `searchbox`: este campo não declara `type="search"` como os
-    // irmãos dele (bestiário e loja) — o papel segue o elemento, não o rótulo.
-    const busca = escolher.getByRole('textbox', { name: 'Buscar poder geral' })
-    await expect(busca).toBeVisible()
-    // A linha do pool é um `div` com caixa de marcar e o nome em texto — não um
-    // botão por linha, como nas outras listas.
-    await expect(escolher.getByText('Ataque Poderoso', { exact: true })).toBeVisible()
-
-    await busca.fill('esquiva')
-    await expect(escolher.getByText(/Esquiva/).first()).toBeVisible()
-    // O modo de falha da virtualização: guardar o que pintou primeiro.
-    await expect(escolher.getByText('Ataque Poderoso', { exact: true })).toHaveCount(0)
-  })
-
-  /**
-   * Dentro da GAVETA a lista continua virtualizada (ALE-138).
-   *
-   * O terceiro modo de falha da virtualização, e o mais silencioso: a lista não
-   * quebra, ela só deixa de virtualizar. O corpo do `SidePanel` era um BLOCO
-   * com `overflow-y-auto`, então o `flex-1 min-h-0` da lista não tinha o que
-   * limitar e o contêiner de rolagem dela crescia até a altura do próprio
-   * conteúdo. Com `clientHeight === scrollHeight` o virtualizador conclui, com
-   * razão, que TUDO está visível — e pinta tudo. Medido antes do conserto na
-   * aba Poderes: 566 de 566 linhas no DOM, 3397 nós, contra 15 depois.
-   *
-   * Nada parecia quebrado porque a gaveta rolava: quem rolava era o corpo do
-   * painel, e a lista de dentro nunca tinha o que rolar. Por isso o guarda
-   * afirma o MECANISMO (a caixa de rolagem é menor que o conteúdo) junto com a
-   * consequência (poucas linhas pintadas) — só a segunda passaria verde se
-   * alguém trocasse a virtualização por uma fatia fixa.
-   *
-   * Por que e2e: em jsdom todo elemento mede zero, `clientHeight` e
-   * `scrollHeight` dão zero os dois, e NENHUMA linha renderiza. O teste de
-   * unidade passa verde tanto sobre a lista virtualizada quanto sobre as 566
-   * linhas — ele não consegue distinguir os dois casos.
-   */
-  test('a gaveta de Catálogos virtualiza a aba Poderes em vez de pintar as 566', async ({
-    page,
-  }) => {
-    await page.goto('/campaigns/1/sessions/4')
-    await page.getByRole('navigation', { name: 'Consultas do mestre' })
-      .getByRole('button', { name: 'Catálogos' })
-      .click()
-
-    await expect(page.getByRole('searchbox', { name: 'Buscar nos catálogos' })).toBeVisible()
-    await page.getByRole('tab', { name: 'Poderes' }).click()
-
-    const linhas = page.locator('[data-index]')
-    await expect(linhas.first()).toBeVisible()
-
-    const medida = await page.evaluate(() => {
-      const primeira = document.querySelector('[data-index]')
-      const rolante = primeira?.closest<HTMLElement>('.overflow-y-auto')
-      if (!rolante) throw new Error('não achei o contêiner de rolagem da lista')
-      const entradas = document.body.textContent?.match(/(\d+) entradas/)?.[1]
-      return {
-        entradas: Number(entradas ?? 0),
-        pintadas: document.querySelectorAll('[data-index]').length,
-        caixa: rolante.clientHeight,
-        conteudo: rolante.scrollHeight,
-      }
-    })
-
-    // Sem isto a asserção não prova nada: uma lista que COUBE pintaria tudo com
-    // razão. A aba Poderes tem centenas de entradas justamente por isso.
-    expect(medida.entradas, 'a aba Poderes veio vazia — não há o que virtualizar').toBeGreaterThan(
-      200,
-    )
-    expect(
-      medida.caixa,
-      `a caixa de rolagem tem ${medida.caixa}px para ${medida.conteudo}px de conteúdo — ` +
-        'nada limita a altura dela e o virtualizador acha que tudo está visível',
-    ).toBeLessThan(medida.conteudo)
-    expect(
-      medida.pintadas,
-      `${medida.pintadas} de ${medida.entradas} linhas no DOM — a lista parou de virtualizar`,
-    ).toBeLessThan(medida.entradas / 4)
-  })
-})
-
-/**
- * A lista do bestiário PREENCHE a coluna no tablet em pé (ALE-175).
- *
- * A lista tinha uma tampa de `45vh` cujo comentário dizia proteger "o resto da
- * ferramenta" de 80 linhas. Mas abaixo de `lg` o resto da ferramenta é o painel
- * de detalhe, que ali é `hidden`: a tampa protegia conteúdo que não existe
- * naquele formato. O preço eram 243px mortos em 768×1024 — um quarto da tela —
- * com a lista mostrando 459px de 5216 de conteúdo.
- *
- * O que se afirma é a FAIXA MORTA e não a altura da lista: altura é
- * consequência do formato, e prendê-la seria prender o número errado. O que a
- * cena promete é não deixar banda vazia embaixo do último elemento da coluna.
- *
- * Por que e2e: é caixa contra caixa em altura real. Em jsdom todo elemento mede
- * zero e a faixa morta dá zero em qualquer arranjo.
- */
 test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 })
   await page.goto('/piloto/mestre/bestiario')
@@ -399,4 +220,5 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
     if (largura === 1920) referencia = alcancaveis
     expect(alcancaveis, `a ${largura}px o trilho perdeu paradas`).toBe(referencia)
   }
+})
 })

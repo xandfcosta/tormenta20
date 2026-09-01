@@ -7,22 +7,20 @@ import (
 	"testing"
 )
 
-// A PARIDADE DO MARKDOWN COM O JS (ALE-269).
+// O ORÁCULO DO MARKDOWN (ALE-269).
 //
-// Este é o guarda que justifica o port ter sido escrito à mão em vez de o
-// projeto puxar um goldmark: enquanto a migração durar, as DUAS telas desenham a
-// MESMA nota do banco, e a gramática da SPA tem divergências deliberadas do
-// markdown padrão que uma biblioteca desfaria — a quebra de linha da ALE-122 é
-// a maior delas.
+// Ele nasceu como PARIDADE com o `markdown.ts` da SPA: as duas telas desenhavam
+// a mesma nota do banco, e a gramática tem divergências deliberadas do markdown
+// padrão que uma biblioteca desfaria — a quebra de linha da ALE-122 é a maior.
+// O esperado era MEDIDO rodando o TypeScript de verdade, e não digitado aqui,
+// para não ser uma segunda transcrição da gramática.
 //
-// O ESPERADO NÃO É DIGITADO AQUI, e essa é a diferença entre paridade e uma
-// segunda transcrição. Ele é MEDIDO rodando o `markdown.ts` de verdade:
-//
-//	node scripts/dump-markdown-oracle.ts
-//
-// Escrever as árvores à mão em Go seria reescrever a gramática pela segunda vez,
-// e a segunda transcrição é exatamente onde as duas telas passam a discordar em
-// silêncio — que é a família de defeito que este repositório mais paga caro.
+// Com a SPA apagada (ALE-272, fatia 10c) não há segundo lado: o script que
+// gerava o arquivo saiu, e o oráculo virou uma LINHA DE BASE congelada — ele
+// acusa qualquer árvore que mude sem ter sido pedido, e deixou de provar que
+// duas implementações concordam. É a mesma perda que o `genoracle` documenta no
+// `engine-go/CLAUDE.md`, e a mitigação é a mesma: o diff de um oráculo se
+// revisa contra o que se queria mudar, nunca se aceita porque "ficou verde".
 //
 // O oráculo é comparado como ÁRVORE e não como texto JSON: chave fora de ordem
 // ou campo omitido são detalhe de serialização, e um teste que os prendesse
@@ -48,7 +46,7 @@ func leOOraculoDoMarkdown(t *testing.T) oraculoDoMarkdown {
 	t.Helper()
 	bruto, err := os.ReadFile("testdata/markdown-do-js.json")
 	if err != nil {
-		t.Fatalf("oráculo ausente (rode `node scripts/dump-markdown-oracle.ts`): %v", err)
+		t.Fatalf("oráculo ausente — ele é versionado e não se regenera mais: %v", err)
 	}
 	var o oraculoDoMarkdown
 	if err := json.Unmarshal(bruto, &o); err != nil {

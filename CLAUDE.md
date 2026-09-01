@@ -2,12 +2,16 @@ Gerenciador de mesa e ficha de **Tormenta 20**. O que se LÊ é em português �
 tela, a documentação e os comentários falam a língua da mesa; o que se ESCREVE
 em código é em inglês. Ver "Idioma".
 
-São dois pacotes. `engine-go/` é o backend em Go — a API HTTP na :3001, o motor
-de regras, o mesmo motor compilado para WASM, e as cenas do piloto em `.templ`
-servidas com Datastar. `frontend/` é a SPA em SolidJS, que desde a virada para o
-Datastar segura só a ficha e a sessão. Um processo serve tudo em produção, e ele
-sobe por `docker compose up -d --build` com o banco em bind mount no
-hospedeiro — um serviço só, sem proxy na frente (ALE-273).
+São dois pacotes. `engine-go/` é o app: a API HTTP na :3001, o motor de regras,
+e as CENAS em `.templ` servidas com Datastar — mais a folha e as ilhas de JS
+delas, em `api/piloto/src`. `e2e/` é a suíte de Playwright, que dirige o app
+rodando. Um processo serve tudo, e ele sobe por `docker compose up -d --build`
+com o banco em bind mount no hospedeiro — um serviço só, sem proxy na frente
+(ALE-273).
+
+Houve uma SPA em SolidJS (`frontend/`) e um motor compilado para WASM que rodava
+no navegador. Os dois saíram na ALE-272: as cenas são renderizadas no servidor,
+e a regra tem um lugar só.
 
 ## Antes de mexer
 
@@ -25,7 +29,7 @@ hospedeiro — um serviço só, sem proxy na frente (ALE-273).
   Datastar que não deixam erro para trás — estão explicadas no
   [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
 - **Antes de commitar:** `go test ./...`, `go vet ./...` e `gofmt` no
-  `engine-go/`; `pnpm test` e `pnpm typecheck` no `frontend/`. Mexeu em gesto de
+  `engine-go/`, e `pnpm typecheck` lá também quando mexer nas ilhas de JS. Mexeu em gesto de
   ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e && npx playwright
   test` (~4 min, sobe o próprio servidor e o próprio banco).
 - **Releia a documentação que a sua mudança tocou** — o `.md` do pacote e o
@@ -359,14 +363,12 @@ certa.
   fronteira, validação de schema dos catálogos, as armadilhas do `templ` e as
   nove do Datastar que não deixam erro para trás, os dois defeitos silenciosos do
   `sqlc`, e por que a bancada copia um molde migrado.
-- **`frontend/`** (SolidJS) **não tem guia próprio, e é deliberado.** A SPA está
-  sendo migrada para o Datastar e segura só a ficha e a sessão; um guia com
-  camadas FSD, Kobalte e rotas TanStack descreveria com detalhe uma superfície
-  que está saindo, e todo token gasto lendo-o seria gasto aprendendo o que vai
-  ser apagado. Trabalhando sob `frontend/`, valem as regras deste arquivo.
+- **`e2e/`** (Playwright) **não tem guia próprio**: o que reger e2e está na
+  seção "Testes" deste arquivo, e é uma regra só — e2e é a faixa mais cara do
+  repositório e cada caso se justifica com um mecanismo que só um navegador tem.
 
-  > O que se perde ao apagá-lo, para ninguém redescobrir por acidente: as
-  > armadilhas de renderização do Solid, os contornos do Kobalte e os tokens de
-  > estilo. O `.wasm` NÃO está nessa lista — ele é artefato de build e os hooks
-  > `pretest`/`prebuild` do `frontend/package.json` rodam o
-  > `scripts/build-engine-wasm.sh` sozinhos.
+  > Aqui morava a entrada do `frontend/`, dizendo que a SPA não tinha guia
+  > próprio porque estava saindo. Ela saiu (ALE-272, fatia 10c), e com ela as
+  > armadilhas de renderização do Solid, os contornos do Kobalte e o `.wasm`.
+  > O que sobreviveu da SPA está em `engine-go/api/piloto/src`: a folha de
+  > tokens, seis componentes e o driver de teclado das cenas.
