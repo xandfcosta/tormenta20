@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"t20engine/book"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/sheet"
@@ -16,7 +17,7 @@ import (
 // ela está usando, e em que chip da grade ela cai.
 
 // itemDoCatalogo acha a entrada do livro de um item da ficha.
-func itemDoCatalogo(item sheet.ItemDTO) *itemDoLivro {
+func itemDoCatalogo(item sheet.ItemDTO) *book.Item {
 	if item.CatalogID == nil || *item.CatalogID == "" {
 		return nil
 	}
@@ -24,10 +25,10 @@ func itemDoCatalogo(item sheet.ItemDTO) *itemDoLivro {
 }
 
 // itemDoLivroPorID é a busca por id no acervo já ordenado.
-func itemDoLivroPorID(id string) *itemDoLivro {
-	for i, entrada := range catalogosDoLivro().Itens {
+func itemDoLivroPorID(id string) *book.Item {
+	for i, entrada := range book.Catalogs().Itens {
 		if entrada.ID == id {
-			return &catalogosDoLivro().Itens[i]
+			return &book.Catalogs().Itens[i]
 		}
 	}
 	return nil
@@ -46,12 +47,12 @@ func asSobreposicoesDoItem(item sheet.ItemDTO) []string {
 //
 // Id desconhecido é PULADO em vez de virar erro: a coluna guarda um blob de
 // texto, e uma linha torta não pode impedir a mochila inteira de abrir.
-func asSobreposicoesDoLivro(item sheet.ItemDTO) []itemDoLivro {
+func asSobreposicoesDoLivro(item sheet.ItemDTO) []book.Item {
 	ids := asMelhoriasGuardadas(item.Improvements)
 	if item.Material != nil && *item.Material != "" {
 		ids = append(ids, *item.Material)
 	}
-	fora := []itemDoLivro{}
+	fora := []book.Item{}
 	for _, id := range ids {
 		if entrada := itemDoLivroPorID(id); entrada != nil {
 			fora = append(fora, *entrada)
@@ -92,7 +93,7 @@ func oQueOItemConcede(item sheet.ItemDTO) []string {
 	return semRepetidos(crachas)
 }
 
-func aDefesaBaseDoItem(catalogo itemDoLivro) string {
+func aDefesaBaseDoItem(catalogo book.Item) string {
 	protecao := catalogo.Armor
 	if protecao == nil {
 		protecao = catalogo.Shield
@@ -144,7 +145,7 @@ func oCatalogoDoItem(item sqlcgen.GetItemRow) string {
 // oItemComoDoMotor traduz a entrada do livro para a forma que as validações do
 // motor esperam. Só os campos que elas leem — eixo, id e nome —, porque um
 // tradutor completo prometeria que os dois lados têm a mesma forma, e não têm.
-func oItemComoDoMotor(catalogo *itemDoLivro) *engine.CatalogItem {
+func oItemComoDoMotor(catalogo *book.Item) *engine.CatalogItem {
 	if catalogo == nil {
 		return nil
 	}
@@ -159,11 +160,11 @@ func oItemComoDoMotor(catalogo *itemDoLivro) *engine.CatalogItem {
 // Existe porque nem toda procedência cita o item por id: a linha "Itens" de uma
 // origem cita "Símbolo sagrado" por escrito (p85), e é o nome que tem de achar
 // a entrada do livro para a linha nascer com o preço e os espaços certos.
-func bookItemByName(nome string) *itemDoLivro {
+func bookItemByName(nome string) *book.Item {
 	procurado := strings.ToLower(strings.TrimSpace(nome))
-	for i, entrada := range catalogosDoLivro().Itens {
+	for i, entrada := range book.Catalogs().Itens {
 		if strings.ToLower(entrada.Name) == procurado {
-			return &catalogosDoLivro().Itens[i]
+			return &book.Catalogs().Itens[i]
 		}
 	}
 	return nil

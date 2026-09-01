@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"t20engine/book"
 )
 
 // OS FILTROS de cada catálogo (ALE-264).
@@ -82,13 +83,13 @@ func filtrosDaAba(aba string) []filtroDoAcervo {
 
 func opcoesDeEfeito() []opcaoDeFiltro {
 	usados := map[string]bool{}
-	for _, c := range catalogosDoLivro().Condicoes {
+	for _, c := range book.Catalogs().Condicoes {
 		for _, t := range c.Tags {
 			usados[t] = true
 		}
 	}
 	var fora []opcaoDeFiltro
-	for _, e := range tiposDeEfeito() {
+	for _, e := range book.EffectKinds() {
 		if usados[e.ID] {
 			fora = append(fora, opcaoDeFiltro{e.ID, e.Name})
 		}
@@ -98,7 +99,7 @@ func opcoesDeEfeito() []opcaoDeFiltro {
 
 func opcoesDeCirculo() []opcaoDeFiltro {
 	var fora []opcaoDeFiltro
-	for _, circulo := range valoresDistintos(catalogosDoLivro().Magias, func(m magiaDoLivro) string {
+	for _, circulo := range valoresDistintos(book.Catalogs().Magias, func(m book.Spell) string {
 		return strconv.Itoa(m.Circle)
 	}) {
 		fora = append(fora, opcaoDeFiltro{circulo, circulo + "º"})
@@ -108,10 +109,10 @@ func opcoesDeCirculo() []opcaoDeFiltro {
 
 func opcoesDeEscola() []opcaoDeFiltro {
 	var fora []opcaoDeFiltro
-	for _, escola := range valoresDistintos(catalogosDoLivro().Magias, func(m magiaDoLivro) string {
+	for _, escola := range valoresDistintos(book.Catalogs().Magias, func(m book.Spell) string {
 		return m.School
 	}) {
-		fora = append(fora, opcaoDeFiltro{escola, nomeDaEscola(escola)})
+		fora = append(fora, opcaoDeFiltro{escola, book.SchoolName(escola)})
 	}
 	return fora
 }
@@ -119,7 +120,7 @@ func opcoesDeEscola() []opcaoDeFiltro {
 func opcoesDeClasseDeMagia() []opcaoDeFiltro {
 	vistos := map[string]bool{}
 	var fora []opcaoDeFiltro
-	for _, m := range catalogosDoLivro().Magias {
+	for _, m := range book.Catalogs().Magias {
 		for _, c := range m.Classes {
 			if !vistos[c] {
 				vistos[c] = true
@@ -138,7 +139,7 @@ func opcoesDeClasseDeMagia() []opcaoDeFiltro {
 // deus. O filtro casa pelo COMEÇO — ver `poderCasa`.
 func opcoesDeFonteDePoder() []opcaoDeFiltro {
 	fora := []opcaoDeFiltro{{"Geral", "Geral"}, {"Divino", "Divino"}}
-	_, classes, _ := catalogosDoPersonagem()
+	_, classes, _ := book.CharacterCatalogs()
 	for _, c := range classes {
 		fora = append(fora, opcaoDeFiltro{c.Name, c.Name})
 	}
@@ -194,11 +195,11 @@ func valoresDistintos[T any](lista []T, de func(T) string) []string {
 // opcoesDeAtributo são os seis, na ordem da ficha e do livro — nunca alfabética.
 func opcoesDeAtributo() []opcaoDeFiltro {
 	usados := map[string]bool{}
-	for _, p := range periciasDoAcervo() {
+	for _, p := range book.Expertises() {
 		usados[p.Attribute] = true
 	}
 	var fora []opcaoDeFiltro
-	for _, a := range ordemDosAtributos {
+	for _, a := range book.AttributeOrder {
 		if usados[a.Chave] {
 			fora = append(fora, opcaoDeFiltro{a.Chave, a.Sigla})
 		}
@@ -206,7 +207,7 @@ func opcoesDeAtributo() []opcaoDeFiltro {
 	return fora
 }
 
-func periciaCasa(p periciaDoLivro, chave, valor string) bool {
+func periciaCasa(p book.Expertise, chave, valor string) bool {
 	switch chave {
 	case "atributo":
 		return p.Attribute == valor
@@ -220,14 +221,14 @@ func periciaCasa(p periciaDoLivro, chave, valor string) bool {
 	return true
 }
 
-func condicaoCasa(c condicaoDoLivro, chave, valor string) bool {
+func condicaoCasa(c book.Condition, chave, valor string) bool {
 	if chave == "efeito" {
 		return slices.Contains(c.Tags, valor)
 	}
 	return true
 }
 
-func magiaCasa(m magiaDoLivro, chave, valor string) bool {
+func magiaCasa(m book.Spell, chave, valor string) bool {
 	switch chave {
 	case "circulo":
 		return strconv.Itoa(m.Circle) == valor
@@ -241,28 +242,28 @@ func magiaCasa(m magiaDoLivro, chave, valor string) bool {
 
 // poderCasa pelo COMEÇO da fonte: ela é "Geral · combate" e "Divino · Khalmyr",
 // e o crachá diz "Geral" e "Divino". Para classe a fonte é o nome puro.
-func poderCasa(p poderDoLivro, chave, valor string) bool {
+func poderCasa(p book.Power, chave, valor string) bool {
 	if chave == "fonte" {
 		return p.Fonte == valor || strings.HasPrefix(p.Fonte, valor+" ·")
 	}
 	return true
 }
 
-func itemCasa(i itemDoLivro, chave, valor string) bool {
+func itemCasa(i book.Item, chave, valor string) bool {
 	if chave == "familia" {
 		return familiaDaCategoria(i.Category) == valor
 	}
 	return true
 }
 
-func deusCasa(d deusDoLivro, chave, valor string) bool {
+func deusCasa(d book.God, chave, valor string) bool {
 	if chave == "energia" {
 		return d.Energia == valor
 	}
 	return true
 }
 
-func racaCasa(r racaDoLivro, chave, valor string) bool {
+func racaCasa(r book.Race, chave, valor string) bool {
 	if chave == "linhagem" {
 		return r.Tier == valor
 	}

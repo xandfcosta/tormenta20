@@ -641,6 +641,42 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   guarda teria seguido verde medindo as cenas e ignorando o botão, o campo e a
   casca — os arquivos onde uma tinta errada aparece em TODA tela.
 
+## `book`: o catálogo TIPADO, lido por treze famílias
+
+A raça, a classe, a perícia, o deus, a condição, a magia, o poder, o item, a
+origem, o efeito e a escola de magia moram em `book` desde a ALE-278 — mais os
+leitores que os montam do `catalog` e o maquinário de ELOS, que transforma um
+texto em citação clicável consultando o catálogo de condições.
+
+Ele é a segunda camada compartilhada a sair, e a que de fato travava a divisão:
+a forja tentou sair primeiro e não conseguiu porque precisa de `racaDoLivro` e
+`classeDoLivro` para desenhar as cartas.
+
+**O guarda de fronteira dele é o mais importante da série, e a razão é
+aritmética:** treze famílias leem o livro, então quase todo pacote de cena que
+nascer vai importá-lo. No dia em que ele importar o `api`, todas as cenas
+alcançam HTTP de graça — com o guarda de cada uma continuando verde, porque cada
+guarda só olha os imports dele.
+
+### O defeito que a extração produziu, e como ele apareceu
+
+O `book` é FOLHA, então ele não pode importar o `dobra` do `busca.go` — a função
+que desacentua para comparação. Escrevi uma cópia de nove linhas, e escrevi
+ERRADO: chamei o `dobraSimples`, que é só `ToLower`, achando que ele desacentuava.
+
+O sintoma não parece o defeito. `KeyOfName("Atuação")` passou a devolver
+`"atuação"` em vez de `"atuacao"`, e a consequência foi a classe deixar de LIGAR
+a perícia que treina: um elo apontando para um endereço que não existe. Sem erro,
+sem panic, sem nada no log.
+
+Quem acusou foi um teste de CENA dois pacotes acima
+(`TestAClasseLigaAsPericiasQueTreina`). A regra passou a ter guarda onde ela
+mora, no próprio `book` — e ele nasceu vermelho por sabotagem.
+
+**A lição para as próximas extrações: função copiada por causa de fronteira é
+lugar de defeito silencioso.** Ela compila, tem o nome certo, e faz outra coisa.
+Quando copiar, copie o CORPO do original — não uma reescrita de memória.
+
 ## `sheet` e `creature`: forma de dado, fora do `api`
 
 O `CharacterDTO` e os seus seis irmãos moram em `sheet`; o bloco de criatura do

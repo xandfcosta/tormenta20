@@ -2,6 +2,7 @@ package api
 
 import (
 	"strings"
+	"t20engine/book"
 	"testing"
 )
 
@@ -47,7 +48,7 @@ func TestOTipoDeEfeitoDaCondicaoVirouElo(t *testing.T) {
 // elo que aponta para a página em que já se está é ruído com cara de saída, e
 // era o que a primeira varredura fazia.
 func TestACondicaoCitadaNaDescricaoVirouElo(t *testing.T) {
-	pedacos := comElosParaCondicoes("Desprevenido e imóvel; -2 em ataques", "Agarrado")
+	pedacos := book.WithConditionLinks("Desprevenido e imóvel; -2 em ataques", "Agarrado")
 	if len(pedacos) < 2 || pedacos[0].Texto != "Desprevenido" || pedacos[0].Aba != "condicoes" {
 		t.Fatalf("a citação não virou elo: %+v", pedacos)
 	}
@@ -55,7 +56,7 @@ func TestACondicaoCitadaNaDescricaoVirouElo(t *testing.T) {
 		t.Errorf("o resto da frase virou elo também: %+v", pedacos[1])
 	}
 
-	proprio := comElosParaCondicoes("Desprevenido e não pode fazer ações.", "Desprevenido")
+	proprio := book.WithConditionLinks("Desprevenido e não pode fazer ações.", "Desprevenido")
 	for _, p := range proprio {
 		if p.Aba != "" {
 			t.Errorf("a condição virou elo para si mesma: %+v", p)
@@ -81,7 +82,7 @@ func TestOEloRespeitaPalavraInteiraECaixa(t *testing.T) {
 	}
 	for _, caso := range casos {
 		temElo := false
-		for _, p := range comElosParaCondicoes(caso.texto, "") {
+		for _, p := range book.WithConditionLinks(caso.texto, "") {
 			if p.Aba != "" {
 				temElo = true
 			}
@@ -98,13 +99,13 @@ func TestOEloRespeitaPalavraInteiraECaixa(t *testing.T) {
 // PLURAL e a raça é "Elfo". Elo que aponta para o vazio é pior que texto puro:
 // ele promete uma página que não existe.
 func TestOsElosDoDeusSoApontamParaQuemTemVerbete(t *testing.T) {
-	if aba, id := eloDoDevoto("Elfos"); aba != "racas" || id != "elfo" {
+	if aba, id := book.DevoteeLink("Elfos"); aba != "racas" || id != "elfo" {
 		t.Errorf("“Elfos” devia levar à raça elfo, e levou a %q/%q", aba, id)
 	}
-	if aba, _ := eloDoDevoto("Bárbaros"); aba != "classes" {
+	if aba, _ := book.DevoteeLink("Bárbaros"); aba != "classes" {
 		t.Errorf("“Bárbaros” devia levar às classes, e levou a %q", aba)
 	}
-	if aba, _ := eloDoDevoto("Quaisquer"); aba != "" {
+	if aba, _ := book.DevoteeLink("Quaisquer"); aba != "" {
 		t.Errorf("“Quaisquer” virou elo para %q", aba)
 	}
 	if idDoPoder("Coragem Total") == "" {
@@ -122,13 +123,13 @@ func TestOsElosDoDeusSoApontamParaQuemTemVerbete(t *testing.T) {
 // passa pelo script.
 func TestTodaTagDeCondicaoTemTipoDeEfeito(t *testing.T) {
 	conhecidos := map[string]bool{}
-	for _, e := range tiposDeEfeito() {
+	for _, e := range book.EffectKinds() {
 		conhecidos[e.ID] = true
 	}
 	if len(conhecidos) < 15 {
 		t.Fatalf("só %d tipos de efeito — o catálogo não carregou", len(conhecidos))
 	}
-	for _, c := range catalogosDoLivro().Condicoes {
+	for _, c := range book.Catalogs().Condicoes {
 		for _, tag := range c.Tags {
 			if !conhecidos[tag] {
 				t.Errorf("a condição %q carrega o tipo %q, que não tem verbete", c.Name, tag)
@@ -208,7 +209,7 @@ func TestACaixaDoVerbeteTrazOCartaoInteiro(t *testing.T) {
 // os buracos. Os quatro casos abaixo são os que faltavam, cada um por um motivo
 // diferente do português — ou por não ser plural nenhum.
 func TestODevotoNoPluralAchaOVerbete(t *testing.T) {
-	racas, _, _ := catalogosDoPersonagem()
+	racas, _, _ := book.CharacterCatalogs()
 	nomePorID := map[string]string{}
 	for _, r := range racas {
 		nomePorID[r.ID] = r.Name
@@ -223,7 +224,7 @@ func TestODevotoNoPluralAchaOVerbete(t *testing.T) {
 		{"Elfos", "Elfo", "o caso simples continua valendo"},
 	}
 	for _, caso := range casos {
-		aba, id := eloDoDevoto(caso.devoto)
+		aba, id := book.DevoteeLink(caso.devoto)
 		if aba != "racas" || nomePorID[id] != caso.raca {
 			t.Errorf("%q levou a %q/%q, esperado a raça %q — %s",
 				caso.devoto, aba, id, caso.raca, caso.porque)
@@ -233,7 +234,7 @@ func TestODevotoNoPluralAchaOVerbete(t *testing.T) {
 	// O CONTROLE: o que não é verbete continua sem elo. Sem ele, uma regra
 	// frouxa demais passaria verde ligando tudo a qualquer coisa.
 	for _, naoEh := range []string{"Quaisquer", "Aventureiros (todas as classes)", "Qualquer duyshidakk"} {
-		if aba, _ := eloDoDevoto(naoEh); aba != "" {
+		if aba, _ := book.DevoteeLink(naoEh); aba != "" {
 			t.Errorf("%q virou elo para %q, e não é verbete de nada", naoEh, aba)
 		}
 	}
@@ -242,8 +243,8 @@ func TestODevotoNoPluralAchaOVerbete(t *testing.T) {
 // TestAReferenciaDePaginaNoTextoViraElo: o livro se cita, e o número levava a
 // lugar nenhum.
 func TestAReferenciaDePaginaNoTextoViraElo(t *testing.T) {
-	pedacos := comElosDoTexto("Reduz os PV do alvo. Efeitos deste tipo são subdivididos em tipos de dano (veja a página 230).")
-	var achou *trecho
+	pedacos := book.WithLinks("Reduz os PV do alvo. Efeitos deste tipo são subdivididos em tipos de dano (veja a página 230).")
+	var achou *book.Chunk
 	for i := range pedacos {
 		if pedacos[i].Pagina > 0 {
 			achou = &pedacos[i]
@@ -273,7 +274,7 @@ func TestAReferenciaDePaginaNoTextoViraElo(t *testing.T) {
 // TestUmNumeroSoltoNaoViraPagina: o controle da varredura.
 func TestUmNumeroSoltoNaoViraPagina(t *testing.T) {
 	for _, texto := range []string{"causa 3d6 de dano", "recebe +2 na Defesa e 230 de alcance", "20% de chance"} {
-		for _, p := range comElosDoTexto(texto) {
+		for _, p := range book.WithLinks(texto) {
 			if p.Pagina > 0 {
 				t.Errorf("%q: o número %d virou página", texto, p.Pagina)
 			}
@@ -320,7 +321,7 @@ func TestOsAprimoramentosAbremNaCaixa(t *testing.T) {
 // era invisível na tela — a palavra continuava lá, só não levava a lugar nenhum
 // —, e conferir só os relatados deixaria os outros dezessete no escuro.
 func TestTodoDeusLigaOsPoderesQueConcede(t *testing.T) {
-	_, _, deuses := catalogosDoPersonagem()
+	_, _, deuses := book.CharacterCatalogs()
 	if len(deuses) < 20 {
 		t.Fatalf("só %d deuses — o guarda mediria quase nada", len(deuses))
 	}
@@ -346,7 +347,7 @@ func TestTodoDeusLigaOsPoderesQueConcede(t *testing.T) {
 // verbete de nada — e prendê-los é o que faz o guarda acusar no dia em que um
 // quarto aparecer por um defeito de casamento de plural.
 func TestTodoDevotoQueEVerbeteViraElo(t *testing.T) {
-	_, _, deuses := catalogosDoPersonagem()
+	_, _, deuses := book.CharacterCatalogs()
 	semVerbete := map[string]bool{
 		"Quaisquer":                       true,
 		"Qualquer duyshidakk":             true,
@@ -354,7 +355,7 @@ func TestTodoDevotoQueEVerbeteViraElo(t *testing.T) {
 	}
 	for _, d := range deuses {
 		for _, devoto := range d.Devotos {
-			aba, _ := eloDoDevoto(devoto)
+			aba, _ := book.DevoteeLink(devoto)
 			if aba == "" && !semVerbete[devoto] {
 				t.Errorf("%s tem o devoto %q sem elo — plural que o casamento não pega?", d.Name, devoto)
 			}

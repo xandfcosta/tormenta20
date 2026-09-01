@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/book"
 	"t20engine/engine"
 	"t20engine/sheet"
 )
@@ -121,7 +122,7 @@ func trainingBonusFor(level int64) int {
 // sortedExpertises devolve as perícias na ordem da tela.
 func sortedExpertises(dto sheet.CharacterDTO) []sheet.ExpertiseDTO {
 	doLivro := map[string]int{}
-	for i, p := range periciasDoAcervo() {
+	for i, p := range book.Expertises() {
 		doLivro[p.Name] = i
 	}
 	ordenadas := append([]sheet.ExpertiseDTO(nil), dto.Expertises...)
@@ -210,7 +211,7 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 // Um ofício do jogador não está no catálogo e é sempre "só treinada": inventar
 // um saber e não tê-lo treinado não é um estado que signifique alguma coisa.
 func trainedOnlyByBook(name string) bool {
-	for _, p := range periciasDoAcervo() {
+	for _, p := range book.Expertises() {
 		if p.Name == name {
 			return p.SoTreinada
 		}

@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strings"
+	"t20engine/book"
 )
 
 // MELHORIA E MATERIAL: a regra de quem cabe em quem (ALE-272, fatia 7).
@@ -31,7 +32,7 @@ var asCategoriasSemSobreposicao = map[string]bool{
 	"improvement": true, "material": true, "animal": true, "vehicle": true,
 }
 
-func aceitaMelhoria(catalogo itemDoLivro) bool {
+func aceitaMelhoria(catalogo book.Item) bool {
 	return !asCategoriasSemSobreposicao[catalogo.Category]
 }
 
@@ -40,7 +41,7 @@ func aceitaMelhoria(catalogo itemDoLivro) bool {
 // Quatro famílias, e a última é o resto: arma, armadura, escudo e vestuário. É
 // a mesma tabela do `familyFor` do front, e ela é do CATÁLOGO — não do livro —,
 // então ela mora ao lado de quem a consome.
-func aFamiliaDoItem(catalogo itemDoLivro) string {
+func aFamiliaDoItem(catalogo book.Item) string {
 	switch {
 	case strings.HasPrefix(catalogo.Category, "weapon-"):
 		return "weapon"
@@ -57,7 +58,7 @@ func aFamiliaDoItem(catalogo itemDoLivro) string {
 // Sobreposição SEM `appliesTo` serve a qualquer um: o catálogo usa o campo para
 // restringir, e a ausência dele é "não restringe" — não "não serve a ninguém",
 // que faria uma melhoria nova nascer inalcançável.
-func aceitaAFamilia(sobreposicao itemDoLivro, familia string) bool {
+func aceitaAFamilia(sobreposicao book.Item, familia string) bool {
 	if len(sobreposicao.AppliesTo) == 0 {
 		return true
 	}
@@ -69,7 +70,7 @@ func aceitaAFamilia(sobreposicao itemDoLivro, familia string) bool {
 // Ela confere três coisas de cada id: que ele existe no catálogo, que ele é da
 // categoria certa (melhoria não entra no campo do material e vice-versa), e que
 // ele serve à família do item.
-func aMelhoriaCabeNoItem(catalogo *itemDoLivro, ids []string, categoria string) error {
+func aMelhoriaCabeNoItem(catalogo *book.Item, ids []string, categoria string) error {
 	if catalogo == nil {
 		return fmt.Errorf("um item custom não recebe melhoria: ele não tem família no catálogo")
 	}

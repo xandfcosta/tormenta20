@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/aovivo"
+	"t20engine/book"
 	"t20engine/catalog"
 )
 
@@ -30,7 +31,7 @@ import (
 // antes de procurar — e uma segunda cópia da tabela do livro é uma cópia que
 // desvia, que é exatamente o defeito que a ALE-122 pagou.
 func efeitoDaCondicao(id string) string {
-	for _, c := range catalogosDoLivro().Condicoes {
+	for _, c := range book.Catalogs().Condicoes {
 		if c.ID == id {
 			return c.Description
 		}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"strings"
+	"t20engine/book"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ import (
 // Rodar cem vezes é o que torna a asserção honesta: uma passada só teria 1/6 de
 // chance de pegar a ordem errada por acaso.
 func TestOsModificadoresSaemNaOrdemDoLivro(t *testing.T) {
-	elfo := atributoDeRaca{
+	elfo := book.RaceAttribute{
 		Kind: "fixed",
 		Mods: map[string]int{"intelligence": 2, "dexterity": 1, "constitution": -1},
 	}
@@ -32,7 +33,7 @@ func TestOsModificadoresSaemNaOrdemDoLivro(t *testing.T) {
 
 // TestAEscolhaLivreNaoViraTresAtributosInventados: as duas formas do livro.
 func TestAEscolhaLivreNaoViraTresAtributosInventados(t *testing.T) {
-	humano := atributoDeRaca{Kind: "floating", Count: 3, Value: 1}
+	humano := book.RaceAttribute{Kind: "floating", Count: 3, Value: 1}
 	if escrito := humano.Escrito(); escrito != "+1 em três atributos" {
 		t.Errorf("o humano escolhe onde põe os três +1, e a tela disse %q", escrito)
 	}

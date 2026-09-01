@@ -3,8 +3,8 @@ package api
 import (
 	"encoding/json"
 	"strings"
-	"sync"
 
+	"t20engine/book"
 	"t20engine/engine"
 	"t20engine/sheet"
 )
@@ -73,7 +73,7 @@ func asHabilidadesDeRaca(dto sheet.CharacterDTO) []ownedPower {
 // poder, de uma lista maior), então listar todos mostraria como possuído o que
 // ninguém escolheu.
 func osBeneficiosDeOrigem(dto sheet.CharacterDTO) []ownedPower {
-	origem, tem := origensDoLivro()[dto.Origin]
+	origem, tem := book.Origins()[dto.Origin]
 	if !tem {
 		return nil
 	}
@@ -108,7 +108,7 @@ func asHabilidadesAutomaticas(dto sheet.CharacterDTO) []ownedPower {
 	escolhas := asEscolhasDeClasse(dto)
 	fora := []ownedPower{}
 	for _, classe := range dto.Classes {
-		for _, poder := range poderesDeClasseDoLivro() {
+		for _, poder := range book.ClassPowers() {
 			if poder.ClassName != classe.ClassName || !aPosseAutomatica(poder, classe, escolhas) {
 				continue
 			}
@@ -118,7 +118,7 @@ func asHabilidadesAutomaticas(dto sheet.CharacterDTO) []ownedPower {
 			})
 		}
 	}
-	ordenaPorNome(fora, func(p ownedPower) string { return p.Name })
+	book.SortByName(fora, func(p ownedPower) string { return p.Name })
 	return fora
 }
 
@@ -127,7 +127,7 @@ func asHabilidadesAutomaticas(dto sheet.CharacterDTO) []ownedPower {
 // A lista de ESCOLHIDOS entra vazia de propósito: quem escolheu já aparece em
 // `osPoderesEscolhidos`, e passá-la aqui listaria o mesmo poder duas vezes.
 func aPosseAutomatica(
-	poder poderDeClasseDoLivro, classe sheet.ClassDTO, escolhas map[string]engine.ClassChoiceSelections,
+	poder book.ClassPower, classe sheet.ClassDTO, escolhas map[string]engine.ClassChoiceSelections,
 ) bool {
 	doMotor := &engine.ClassPower{
 		ID: poder.ID, ClassName: poder.ClassName, Name: poder.Name,
@@ -159,14 +159,14 @@ func osPoderesEscolhidos(dto sheet.CharacterDTO) []ownedPower {
 	}
 	fora := []ownedPower{}
 	for _, id := range ids {
-		if poder, tem := poderesDeClasseDoLivro()[id]; tem {
+		if poder, tem := book.ClassPowers()[id]; tem {
 			fora = append(fora, ownedPower{
 				ID: poder.ID, Name: poder.Name, Detail: poder.Description,
 				Source: "Classe · " + poder.ClassName, Page: poder.BookPage,
 			})
 			continue
 		}
-		if poder, tem := poderesGeraisDoLivro()[id]; tem {
+		if poder, tem := book.GeneralPowers()[id]; tem {
 			fora = append(fora, ownedPower{
 				ID: poder.ID, Name: poder.Name, Detail: poder.Description,
 				Source: aFonteDoPoderGeral(poder), Page: poder.BookPage,
@@ -178,7 +178,7 @@ func osPoderesEscolhidos(dto sheet.CharacterDTO) []ownedPower {
 
 // aFonteDoPoderGeral separa o poder da TORMENTA do poder geral comum: eles
 // moram no mesmo catálogo e a mesa os trata como coisas diferentes.
-func aFonteDoPoderGeral(poder poderGeralDoLivro) string {
+func aFonteDoPoderGeral(poder book.GeneralPower) string {
 	if poder.Kind == "tormenta" {
 		return "Poder da Tormenta"
 	}
@@ -187,108 +187,14 @@ func aFonteDoPoderGeral(poder poderGeralDoLivro) string {
 
 // ── os catálogos, lidos uma vez ──────────────────────────────────────────────
 
-type origemDoLivro struct {
-	ID       string              `json:"id"`
-	Name     string              `json:"name"`
-	Benefits []beneficioDeOrigem `json:"benefits"`
-	// PoderUnico é o poder exclusivo da origem, e ele NÃO está na lista de
-	// benefícios — é um campo à parte no catálogo. Ele conta como um dos dois
-	// que a pessoa leva (p85), e esquecê-lo torna o poder da origem inescolhível.
-	PoderUnico beneficioDeOrigem `json:"poderUnico"`
-	BookPage   int               `json:"bookPage"`
-}
-
-type beneficioDeOrigem struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-type poderDeClasseDoLivro struct {
-	ID          string `json:"id"`
-	ClassName   string `json:"className"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	// GrantedAtLevel e GrantedByChoice são o que a REGRA DE POSSE lê — o nível
-	// que concede, ou a escolha de classe que concede. Eles ficam com os campos
-	// de texto porque a pergunta "eu tenho este poder?" e a pergunta "o que ele
-	// faz?" são feitas na mesma linha da tela.
-	GrantedAtLevel  *int                 `json:"grantedAtLevel"`
-	GrantedByChoice *concessaoPorEscolha `json:"grantedByChoice"`
-	BookPage        int                  `json:"bookPage"`
-}
-
-type concessaoPorEscolha struct {
-	Field string `json:"field"`
-	Value string `json:"value"`
-}
-
-type poderGeralDoLivro struct {
-	ID          string `json:"id"`
-	Kind        string `json:"kind"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	BookPage    int    `json:"bookPage"`
-}
-
-var (
-	acervoDePoderesUmaVez sync.Once
-	origensPorNome        map[string]origemDoLivro
-	poderesDeClassePorID  map[string]poderDeClasseDoLivro
-	poderesGeraisPorID    map[string]poderGeralDoLivro
-)
-
-// osCatalogosDePoder lê os três catálogos UMA vez, indexados por id.
-//
-// Por id e não por lista porque toda pergunta desta aba é "quem é este id" — a
-// varredura linear que a Mochila faz custaria 462 comparações por poder numa
-// ficha de nível 20, que tem trinta e poucos.
-func osCatalogosDePoder() {
-	acervoDePoderesUmaVez.Do(func() {
-		origensPorNome = map[string]origemDoLivro{}
-		for _, o := range listaDoCatalogo[origemDoLivro]("origins") {
-			origensPorNome[o.Name] = o
-		}
-		poderesDeClassePorID = map[string]poderDeClasseDoLivro{}
-		for _, p := range listaDoCatalogo[poderDeClasseDoLivro]("class-powers") {
-			poderesDeClassePorID[p.ID] = p
-		}
-		poderesGeraisPorID = map[string]poderGeralDoLivro{}
-		for _, p := range listaDoCatalogo[poderGeralDoLivro]("general-powers") {
-			poderesGeraisPorID[p.ID] = p
-		}
-		for _, p := range listaDoCatalogo[poderGeralDoLivro]("tormenta-powers") {
-			p.Kind = "tormenta"
-			poderesGeraisPorID[p.ID] = p
-		}
-	})
-}
-
-func origensDoLivro() map[string]origemDoLivro {
-	osCatalogosDePoder()
-	return origensPorNome
-}
-
-func poderesDeClasseDoLivro() map[string]poderDeClasseDoLivro {
-	osCatalogosDePoder()
-	return poderesDeClassePorID
-}
-
-func poderesGeraisDoLivro() map[string]poderGeralDoLivro {
-	osCatalogosDePoder()
-	return poderesGeraisPorID
-}
-
-// ── o que a RAÇA pede escolher ───────────────────────────────────────────────
-
 // oModDeAtributoDaRaca é como a raça mexe nos atributos: fixo, distribuído ou
 // por ascendência. Nil quando a raça não está no catálogo.
 //
 // Ele vem do `races.json` — a vitrine do mestre —, que é o único catálogo que
 // carrega o `atributoMod`. O `race-defs.json` traz as habilidades com id e
 // texto; os dois são lidos por esta aba, cada um pelo que só ele tem.
-func oModDeAtributoDaRaca(nome string) *atributoDeRaca {
-	racas, _, _ := catalogosDoPersonagem()
+func oModDeAtributoDaRaca(nome string) *book.RaceAttribute {
+	racas, _, _ := book.CharacterCatalogs()
 	for i, r := range racas {
 		if r.Name == nome || r.ID == nome {
 			return &racas[i].AtributoMod
@@ -300,7 +206,7 @@ func oModDeAtributoDaRaca(nome string) *atributoDeRaca {
 // asAscendenciasDaRaca são as metades de uma raça que se escolhe na criação — o
 // suraggel é "aggelus" ou "sulfure".
 func asAscendenciasDaRaca(nome string) []filterOption {
-	racas, _, _ := catalogosDoPersonagem()
+	racas, _, _ := book.CharacterCatalogs()
 	for _, r := range racas {
 		if r.Name != nome && r.ID != nome {
 			continue
@@ -350,8 +256,8 @@ func aAscendenciaGuardada(blob string) string {
 // O catálogo guarda o poder único num campo à parte, e a ficha o trata como um
 // dos dois que a pessoa leva (p85) — a SPA já os juntava assim. Sem isso o poder
 // da origem não aparece em lugar nenhum e não dá para escolhê-lo.
-func osBeneficiosQueAOrigemOferece(origem origemDoLivro) []beneficioDeOrigem {
-	fora := append([]beneficioDeOrigem{}, origem.Benefits...)
+func osBeneficiosQueAOrigemOferece(origem book.Origin) []book.OriginBenefit {
+	fora := append([]book.OriginBenefit{}, origem.Benefits...)
 	if origem.PoderUnico.ID != "" {
 		fora = append(fora, origem.PoderUnico)
 	}

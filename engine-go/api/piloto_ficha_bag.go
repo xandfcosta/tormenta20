@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/book"
 	"t20engine/engine"
 	"t20engine/sheet"
 )
@@ -427,7 +428,7 @@ func comVirgula(valor float64) string {
 
 // asMelhoriasOrdenadas devolve as sobreposições do item ordenadas por nome,
 // para a ficha do item listá-las sempre na mesma ordem.
-func asMelhoriasOrdenadas(item sheet.ItemDTO) []itemDoLivro {
+func asMelhoriasOrdenadas(item sheet.ItemDTO) []book.Item {
 	entradas := asSobreposicoesDoLivro(item)
 	sort.SliceStable(entradas, func(a, b int) bool { return entradas[a].Name < entradas[b].Name })
 	return entradas

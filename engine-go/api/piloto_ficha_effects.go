@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"t20engine/book"
 	"t20engine/catalog"
 	"t20engine/engine"
 	"t20engine/sheet"
@@ -250,8 +251,8 @@ func activeCountOf(linhas []situationalRow) int {
 // Id desconhecido é DESCARTADO: o catálogo é a autoridade sobre o que é uma
 // condição, e um blob velho não pode injetar uma condição fantasma na ficha.
 func conditionRowsOf(dto sheet.CharacterDTO) []conditionRow {
-	porID := map[string]condicaoDoLivro{}
-	for _, c := range catalogosDoLivro().Condicoes {
+	porID := map[string]book.Condition{}
+	for _, c := range book.Catalogs().Condicoes {
 		porID[c.ID] = c
 	}
 	linhas := []conditionRow{}
@@ -283,7 +284,7 @@ func parseConditionBlob(bruto string) []string {
 func conditionOptionsFor(dto sheet.CharacterDTO) []pickerOption {
 	ligadas := toStringSet(parseConditionBlob(dto.ActiveConditions))
 	opcoes := []pickerOption{}
-	for _, c := range catalogosDoLivro().Condicoes {
+	for _, c := range book.Catalogs().Condicoes {
 		if ligadas[c.ID] {
 			continue
 		}
@@ -330,7 +331,7 @@ func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
 
 // effectDisplayName troca o id do catálogo pelo nome que a mesa lê.
 func effectDisplayName(catalogID string) string {
-	for _, m := range catalogosDoLivro().Magias {
+	for _, m := range book.Catalogs().Magias {
 		if m.ID == catalogID {
 			return m.Name
 		}
@@ -430,7 +431,7 @@ func oComplementoDoAlvo(t engine.ModifierTarget) string {
 // buffOptions são as magias com efeito aplicável.
 func buffOptions() []pickerOption {
 	opcoes := []pickerOption{}
-	for _, m := range catalogosDoLivro().Magias {
+	for _, m := range book.Catalogs().Magias {
 		spell, conhecida := catalog.LookupSpell(m.ID)
 		if !conhecida || spell.Buff == nil {
 			continue

@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"t20engine/book"
 	"t20engine/sheet"
 )
 
@@ -151,7 +152,7 @@ func (s *Server) oBonusDeAtributoDaRaca(dto sheet.CharacterDTO, nome string) *at
 // osAtributosQueCabem são os seis do livro, menos o proibido da raça.
 func osAtributosQueCabem(proibido string) []filterOption {
 	fora := []filterOption{}
-	for _, a := range ordemDosAtributos {
+	for _, a := range book.AttributeOrder {
 		if a.Chave == proibido {
 			continue
 		}
@@ -188,7 +189,7 @@ func asVariantesDaRaca(dto sheet.CharacterDTO, nome string) []variantChoice {
 
 // aEscolhaDeOrigem monta o cartão da origem.
 func aEscolhaDeOrigem(dto sheet.CharacterDTO) *originChoiceCard {
-	origem, tem := origensDoLivro()[dto.Origin]
+	origem, tem := book.Origins()[dto.Origin]
 	if !tem {
 		return nil
 	}
@@ -244,7 +245,7 @@ func oSeletorMarcado(opcoes []filterOption, escolhido string) *pickerChoice {
 func osPoderesQueDaParaEscolher(classe string, escolhidos []string, busca string) []powerChoice {
 	termo := foldAccents(strings.TrimSpace(busca))
 	fora := []powerChoice{}
-	for _, p := range poderesDeClasseDoLivro() {
+	for _, p := range book.ClassPowers() {
 		if p.ClassName != classe || p.GrantedAtLevel != nil || !casaComABusca(p.Name, termo) {
 			continue
 		}
@@ -253,7 +254,7 @@ func osPoderesQueDaParaEscolher(classe string, escolhidos []string, busca string
 			Chosen: contemTraco(escolhidos, p.ID),
 		})
 	}
-	for _, p := range poderesGeraisDoLivro() {
+	for _, p := range book.GeneralPowers() {
 		if !casaComABusca(p.Name, termo) {
 			continue
 		}
@@ -290,7 +291,7 @@ func aEscolhaDoAtributoEscrita(escolha attributeChoice) string {
 	texto := "Distribua +" + strconv.Itoa(escolha.Value) + " em " +
 		strconv.Itoa(escolha.Count) + " atributos diferentes"
 	if escolha.Exclude != "" {
-		return texto + " (exceto " + siglaDoAtributo(escolha.Exclude) + ")"
+		return texto + " (exceto " + book.AttributeAbbrev(escolha.Exclude) + ")"
 	}
 	return texto
 }

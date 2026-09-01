@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"t20engine/book"
 	"t20engine/sheet"
 )
 
@@ -178,7 +179,7 @@ func semRepetir(nomes []string) []string {
 // "Proficiências." de cada classe, p36–83 — e dado transcrito mora no catálogo,
 // onde a validação de schema o alcança.
 func asProficienciasPorClasse() map[string][]string {
-	_, classes, _ := catalogosDoPersonagem()
+	_, classes, _ := book.CharacterCatalogs()
 	tabela := make(map[string][]string, len(classes))
 	for _, c := range classes {
 		tabela[c.Name] = c.Proficiencias
