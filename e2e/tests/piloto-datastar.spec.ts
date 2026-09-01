@@ -732,11 +732,13 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
   })
 
   /**
-   * O ⏎ atravessa a FRONTEIRA entre os dois stacks: a cena é do servidor, a
-   * ficha ainda é da SPA. É a costura que a virada da ALE-239 criou, e nenhuma
-   * outra camada a vê — o guarda em Go conhece só o HTML de um lado.
+   * O ⏎ leva à FICHA, e desde a fatia 10 da ALE-272 a ficha é a do servidor: a
+   * costura entre os dois stacks que a ALE-239 criou deixou de existir. O caso
+   * fica porque a garantia é a mesma — a tecla que abre a ficha tem de abrir a
+   * ficha —, e nenhuma outra camada a vê: o guarda em Go conhece só o HTML de
+   * um lado.
    */
-  test('⏎ no trilho abre a ficha do herói em cena, que ainda é da SPA', async ({ page }) => {
+  test('⏎ no trilho abre a ficha do herói em cena', async ({ page }) => {
     await page.goto('/piloto/personagens')
     const primeiro = page.getByRole('option').first()
     await primeiro.focus()
@@ -744,7 +746,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
 
     await page.keyboard.press('Enter')
 
-    await expect(page).toHaveURL(/\/characters\/\d+$/)
+    await expect(page).toHaveURL(/\/piloto\/personagens\/\d+$/)
     await expect(page.getByRole('heading', { name: nome, level: 1 }).first()).toBeVisible()
   })
 
@@ -867,8 +869,9 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     await expectNoHorizontalOverflow(page, VIEWPORTS)
   })
 
-  // O endereço antigo é favorito e link de terceiros: ele não pode quebrar. É a
-  // promessa escrita em `routes/characters.index.tsx`, e ela vive na SPA.
+  // O endereço antigo é favorito e link de terceiros: ele não pode quebrar. A
+  // promessa vivia numa casca da SPA (`routes/characters.index.tsx`) e desceu
+  // para o Go na fatia 10 — na SPA ela morreria junto com o `git rm`.
   test('o endereço antigo /characters encaminha para a cena nova', async ({ page }) => {
     await page.goto('/characters')
     await expect(page).toHaveURL(/\/piloto\/personagens$/)

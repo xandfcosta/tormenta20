@@ -164,6 +164,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
+	view.MinhaFicha = s.aFichaDoJogadorNaMesa(r, view)
 	// A página é um retrato de agora, e o `escrevePagina` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
@@ -283,6 +284,29 @@ func (s *Server) corpoDaMesa(r *http.Request, view mesaView, campaignID, session
 		return mesa(view)
 	}
 	return palcoDoMestre(view, s.bestiarioDaMesaPara(r, campaignID, sessionID))
+}
+
+// aFichaDoJogadorNaMesa carrega a ficha que a superfície "Minha ficha" desenha.
+//
+// Só na CARGA FRIA e não no stream (ALE-272, fatia 10b): a ficha é sete painéis
+// computados, e ela muda pelos comandos DELA — que remendam o `#cena-ficha`
+// direto. Recomputá-la a cada tique da sessão seria pagar o preço mais caro da
+// página para descobrir que nada mudou.
+//
+// Falha em silêncio de propósito: uma ficha que não carrega tira a aba da tela,
+// e não derruba a sessão. Estar numa mesa é mais importante que ver a própria
+// ficha dentro dela, e o jogador continua tendo o elenco.
+func (s *Server) aFichaDoJogadorNaMesa(r *http.Request, view mesaView) *fichaView {
+	if view.Mestre != nil || view.Eu == nil {
+		return nil
+	}
+	ficha, _, err := s.carregaFicha(
+		r.Context(), currentUser(r), view.Eu.CharacterID, aAbaPedida(""), "", fichaSignals{})
+	if err != nil {
+		return nil
+	}
+	ficha.Embutida = true
+	return &ficha
 }
 
 // loadMesaView busca tudo o que a tela precisa e delega a DECISÃO ao

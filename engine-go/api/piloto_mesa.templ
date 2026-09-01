@@ -31,7 +31,16 @@ templ mesa(v mesaView) {
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@mesaCabecalho(v)
-		@oSeletorDeSuperficie()
+		@oSeletorDeSuperficie(v)
+		// MINHA FICHA (ALE-272, fatia 10b): a ficha do jogador dentro da sessão,
+		// como a SPA faz. Ela fica FORA de `regioesDaMesa` de propósito — o
+		// stream nunca a toca, e quem a mantém em dia são os comandos dela, que
+		// remendam o `#cena-ficha` por conta.
+		if v.MinhaFicha != nil {
+			<div data-show={ naSuperficie(superficieDaFicha) } class="flex min-h-0 flex-1 flex-col">
+				@cenaDaFicha(*v.MinhaFicha)
+			</div>
+		}
 		// A MESA: quem está na cena e em que ordem. Rola por dentro, nunca a
 		// página. A largura de leitura mora AQUI e não no `main`, que perdeu o
 		// `max-w-3xl` na ALE-269: uma coluna de 48rem é a medida certa para a fila
@@ -74,7 +83,7 @@ templ mesa(v mesaView) {
 // ficha é a última tela da migração — ela não existe em Datastar. A aba nasce
 // junto com ela. Uma terceira aba agora prometeria na tela o que o app ainda não
 // tem, e o jogador clicaria nela procurando a própria ficha.
-templ oSeletorDeSuperficie() {
+templ oSeletorDeSuperficie(v mesaView) {
 	// A MESMA largura de leitura da superfície Mesa, e não a linha inteira: com
 	// duas superfícies, ocupar 1920px daria dois botões de 780px cada — a razão
 	// do `flex-1` na SPA é o OPOSTO (lá são três abas que truncavam a ponto de
@@ -82,7 +91,7 @@ templ oSeletorDeSuperficie() {
 	// simétrico. Centrado, ele encabeça a coluna na Mesa e continua alcançável no
 	// Tabuleiro.
 	<div role="group" aria-label="O que ver na sessão" class="mx-auto flex w-full max-w-3xl shrink-0 gap-1 px-3 pt-2 sm:px-4">
-		for _, superficie := range asSuperficiesDoJogador {
+		for _, superficie := range asSuperficiesDe(v) {
 			<button
 				type="button"
 				data-attr:aria-pressed={ fmt.Sprintf("%s ? 'true' : 'false'", naSuperficie(superficie.ID)) }

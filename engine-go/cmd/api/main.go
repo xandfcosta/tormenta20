@@ -227,6 +227,12 @@ func buildMux(cfg plataforma.Config, srv *api.Server) *http.ServeMux {
 	mux.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/piloto/", http.StatusFound)
 	})
+	// OS ENDEREÇOS ANTIGOS descem para cá na ALE-272 (fatia 10). Eles eram
+	// cascas da SPA — `beforeLoad` que mandava para o piloto —, e nessa forma
+	// morriam junto com ela. Aqui em cima do `spaHandler` de propósito: o mux
+	// casa pelo padrão mais específico, então `/grimorio` desvia sem que a SPA
+	// chegue a ser servida.
+	api.MontaEnderecosAntigos(mux)
 	if cfg.StaticDir == "" {
 		// As FONTES só entram aqui, e não no caminho com `STATIC_DIR`: lá o
 		// `dist` da SPA já as serve, e sobrepor uma rota da raiz em produção

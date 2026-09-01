@@ -66,9 +66,6 @@ func TestOPainelDeProficienciasDizOQueAClasseConcede(t *testing.T) {
 	tela := f.pede(t, f.jogador, http.MethodGet,
 		fmt.Sprintf("/piloto/personagens/%d?tab=proficiencies", id), "").Body.String()
 
-	if strings.Contains(tela, "ainda vive na ficha antiga") {
-		t.Fatal("a aba de Proficiências ainda manda para a ficha velha: o painel não entrou na cena")
-	}
 	if !strings.Contains(tela, "Padrão: Guerreiro") {
 		t.Error("a etiqueta não diz de qual classe vem a proficiência")
 	}
@@ -281,13 +278,17 @@ func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
 	}
 }
 
-// VARREDURA: toda aba dada como PORTADA desenha um painel de verdade.
+// VARREDURA: toda aba da ficha desenha um painel de verdade.
 //
-// O par `oPainelJaPortado` + o `switch` do `oPainelDaFicha` é exatamente a forma
+// O par `asAbasDaFicha` + o `switch` do `oPainelDaFicha` é exatamente a forma
 // que a convenção da casa manda mecanizar: são duas listas que precisam andar
-// juntas, e o modo de errar é silencioso — um nome no mapa sem caso no switch
-// tira a aba do "vive na ficha antiga" e não põe nada no lugar. O jogador abre a
-// seção e vê uma tela em branco, que é pior do que o aviso honesto.
+// juntas, e o modo de errar é silencioso — um nome na lista sem caso no switch
+// abre a seção VAZIA. O jogador vê uma tela em branco, que é pior do que
+// qualquer aviso.
+//
+// Até a fatia 10 este guarda filtrava pelo placar `oPainelJaPortado`, porque
+// havia abas ainda não portadas. Sem o placar ele cobra TODAS — que é o que ele
+// sempre quis dizer.
 //
 // Ele falha nomeando A ABA que ficou vazia, que é a diferença entre "conserte
 // isto" e "procure". Cada fatia desta issue acrescenta um nome ao mapa e este
@@ -307,34 +308,28 @@ var oTituloDoPainel = map[string]string{
 	"abilities":     "Poderes",
 }
 
-func TestTodaAbaPortadaDesenhaAlgo(t *testing.T) {
+func TestTodaAbaDaFichaDesenhaAlgo(t *testing.T) {
 	f, id := oGuerreiro(t)
 
 	var visitadas int
 	for _, aba := range asAbasDaFicha() {
-		if !oPainelJaPortado(aba.Valor) {
-			continue
-		}
 		titulo, sabe := oTituloDoPainel[aba.Valor]
 		if !sabe {
-			t.Errorf("a aba %q foi marcada como portada e este guarda não sabe que título "+
-				"esperar — acrescente a linha ao mapa `oTituloDoPainel`", aba.Valor)
+			t.Errorf("a aba %q não tem título esperado neste guarda — acrescente a "+
+				"linha ao mapa `oTituloDoPainel`", aba.Valor)
 			continue
 		}
 		visitadas++
 		tela := f.pede(t, f.jogador, http.MethodGet,
 			fmt.Sprintf("/piloto/personagens/%d?tab=%s", id, aba.Valor), "").Body.String()
-		if strings.Contains(tela, "ainda vive na ficha antiga") {
-			t.Errorf("a aba %q está marcada como portada e ainda manda para a ficha velha", aba.Valor)
-		}
 		if !strings.Contains(tela, ">"+titulo+"</h2>") {
-			t.Errorf("a aba %q está marcada como portada e não desenhou painel nenhum", aba.Valor)
+			t.Errorf("a aba %q não desenhou painel nenhum", aba.Valor)
 		}
 	}
-	// CONTROLE: sem ele, um `oPainelJaPortado` que virasse vazio faria o laço não
+	// CONTROLE: sem ele, um `asAbasDaFicha` que virasse vazio faria o laço não
 	// rodar nenhuma vez e o guarda passar afirmando nada.
-	if visitadas == 0 {
-		t.Fatal("nenhuma aba portada foi visitada: o guarda mediu o vazio")
+	if visitadas != 7 {
+		t.Fatalf("%d abas visitadas, e a ficha tem sete: o guarda mediu outra coisa", visitadas)
 	}
 }
 

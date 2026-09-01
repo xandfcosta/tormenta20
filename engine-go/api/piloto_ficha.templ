@@ -29,7 +29,9 @@ templ cenaDaFicha(v fichaView) {
 
 templ ficha(v fichaView) {
 	<div class="flex min-h-0 flex-1 flex-col">
-		@aBarraDaFicha(v)
+		if !v.Embutida {
+			@aBarraDaFicha(v)
+		}
 		@asAbasDesenhadas(v)
 		@aRecusaDaRegra(v)
 		<div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -69,32 +71,62 @@ templ asAbasDesenhadas(v fichaView) {
 }
 
 templ aAbaDaFicha(v fichaView, aba abaDaFicha) {
-	<a
-		href={ templ.SafeURL(aRotaDaFicha(v.ID, aba.Valor)) }
-		if aba.Ativa {
-			aria-current="page"
-		}
-		class={ "inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-			templ.KV("border-grimorio-gold text-grimorio-gold", aba.Ativa),
-			templ.KV("border-transparent text-muted-foreground hover:border-grimorio-iron hover:text-foreground", !aba.Ativa) }
-	>
-		@icone(aba.Icone, "size-4")
-		{ aba.Rotulo }
-	</a>
+	if v.Embutida {
+		// DENTRO da sessão a aba é COMANDO e não link: um `<a href>` levaria o
+		// jogador para a ficha de página inteira e o tiraria da mesa no meio do
+		// combate. O endereço guardado continua sendo o da ficha solta — aqui o
+		// endereço é o da sessão.
+		<button
+			type="button"
+			data-on:click={ oGetDaAbaEmbutida(v, aba.Valor) }
+			if aba.Ativa {
+				aria-current="page"
+			}
+			class={ oVestidoDaAbaDaFicha(aba) }
+		>
+			@icone(aba.Icone, "size-4")
+			{ aba.Rotulo }
+		</button>
+	} else {
+		<a
+			href={ templ.SafeURL(aRotaDaFicha(v.ID, aba.Valor)) }
+			if aba.Ativa {
+				aria-current="page"
+			}
+			class={ oVestidoDaAbaDaFicha(aba) }
+		>
+			@icone(aba.Icone, "size-4")
+			{ aba.Rotulo }
+		</a>
+	}
+}
+
+// oVestidoDaAbaDaFicha é a mesma aparência nos dois desenhos da aba — link fora da
+// sessão, botão dentro dela. Escrita uma vez porque a diferença entre os dois é
+// para onde o clique vai, e não como a aba se parece.
+func oVestidoDaAbaDaFicha(aba abaDaFicha) string {
+	return juntar(
+		"inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		aTintaDaAbaDaFicha(aba.Ativa))
+}
+
+func aTintaDaAbaDaFicha(ativa bool) string {
+	if ativa {
+		return "border-grimorio-gold text-grimorio-gold"
+	}
+	return "border-transparent text-muted-foreground hover:border-grimorio-iron hover:text-foreground"
 }
 
 // oPainelDaFicha desenha a seção ativa.
 //
-// Enquanto o painel não foi portado, ele DIZ isso e leva para a ficha antiga.
-// Uma aba vazia seria lida como defeito — e mandar a pessoa procurar sozinha o
-// endereço velho é pior do que dar o link. Cada fatia desta issue troca uma
-// destas caixas por conteúdo de verdade; quando a última cair, este ramo e o
-// `aFichaAntiga` somem juntos.
+// Aqui morava o ramo "esta seção ainda vive na ficha antiga", com o link para a
+// SPA. Ele saiu na fatia 10 junto com a própria ficha antiga: as sete abas estão
+// portadas, então o ramo era código morto — e o `aFichaAntiga`, que o alimentava,
+// saiu com ele.
 templ oPainelDaFicha(v fichaView) {
-	// UM CASO POR PAINEL PORTADO, e a lista tem de andar junto com o
-	// `oPainelJaPortado`: um nome ali sem caso aqui abre a aba VAZIA — a aba
-	// para de mandar para a ficha antiga e não desenha nada no lugar. Os dois
-	// ficam presos pelo guarda `TestTodaAbaPortadaDesenhaAlgo`.
+	// UM CASO POR ABA, e a lista tem de andar junto com `asAbasDaFicha`: um
+	// nome lá sem caso aqui abre a aba VAZIA, e tela em branco é lida como
+	// defeito. O guarda `TestTodaAbaDaFichaDesenhaAlgo` prende os dois.
 	switch v.AbaAtiva {
 		case "proficiencies":
 			@oPainelDasProficiencias(v)
@@ -110,22 +142,6 @@ templ oPainelDaFicha(v fichaView) {
 			@bagPanelSection(v)
 		case "abilities":
 			@powersPanelSection(v)
-	}
-	for _, aba := range v.Abas {
-		if aba.Ativa && !aba.Portada {
-			<div class="m-auto flex max-w-md flex-col items-center gap-3 p-6 text-center">
-				@icone(aba.Icone, "size-7 text-muted-foreground")
-				<p class="text-sm text-muted-foreground">
-					{ "A seção " + aba.Rotulo + " ainda vive na ficha antiga." }
-				</p>
-				<a
-					href={ templ.SafeURL(aFichaAntiga(v.ID, aba.Valor)) }
-					class={ classesDoBotao(varSecundaria, tamPadrao, "") }
-				>
-					{ "Abrir " + aba.Rotulo + " na ficha antiga" }
-				</a>
-			</div>
-		}
 	}
 }
 

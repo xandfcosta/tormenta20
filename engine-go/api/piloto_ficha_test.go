@@ -181,31 +181,17 @@ func TestOEnderecoDasAbasDaFichaSobrevive(t *testing.T) {
 // lida como defeito, e mandar a pessoa procurar sozinha o endereço velho é pior
 // do que dar o link. Este guarda morre junto com a última fatia — quando não
 
-// TODA ABA DA FICHA ESTÁ PORTADA — e este guarda substitui o que media o
-// contrário (ALE-272, fatia 8).
+// Aqui moravam DOIS testes que a fatia 10 aposentou.
 //
-// Aqui morava o `TestAAbaAindaNaoPortadaLevaParaAFichaAntiga`, que abria uma aba
-// sem painel e afirmava que ela mandava para a ficha velha na MESMA seção. Ele
-// perdeu o alvo: com os Poderes portados não existe mais aba sem painel, e um
-// teste sem caso é um teste que passa sobre nada.
+// O `TestAAbaAindaNaoPortadaLevaParaAFichaAntiga` abria uma aba sem painel e
+// afirmava que ela mandava para a ficha velha; ele perdeu o alvo na fatia 8,
+// quando deixou de existir aba sem painel.
 //
-// O que ficou é a outra metade da mesma pergunta: o placar da migração diz que
-// as sete estão prontas. É ele que autoriza a próxima fatia a apagar a ficha
-// antiga — e enquanto uma aba faltar, esta linha vermelha diz qual.
-func TestTodaAbaDaFichaEstaPortada(t *testing.T) {
-	var faltando []string
-	for _, aba := range asAbasDaFicha() {
-		if !oPainelJaPortado(aba.Valor) {
-			faltando = append(faltando, aba.Valor)
-		}
-	}
-	if len(faltando) > 0 {
-		t.Errorf("ainda falta portar: %v — a ficha antiga não pode ser apagada", faltando)
-	}
-	if len(asAbasDaFicha()) != 7 {
-		t.Errorf("a ficha tem %d abas, e o porte foi desenhado para sete", len(asAbasDaFicha()))
-	}
-}
+// O `TestTodaAbaDaFichaEstaPortada` era o placar da migração — ele autorizava
+// esta fatia a apagar a ficha antiga, e cumpriu isso. O `oPainelJaPortado` que
+// ele lia não existe mais, porque "portada" deixou de ser uma pergunta. O que
+// segue valendo é `TestTodaAbaDaFichaDesenhaAlgo`, que cobra painel de TODA
+// aba — a mesma garantia, sem o placar.
 
 // A RECUSA VOLTA PELA CENA, e não por um status que o cliente descarta.
 //

@@ -255,9 +255,6 @@ func TestOPainelDeEfeitosDesenhaOsQuatroBlocos(t *testing.T) {
 	f, id := oCombatente(t)
 	tela := aTelaDosEfeitos(t, f, id)
 
-	if strings.Contains(tela, "ainda vive na ficha antiga") {
-		t.Fatal("a aba de Efeitos ainda manda para a ficha velha")
-	}
 	for _, esperado := range []string{"Condições (p394)", "Efeitos ativos", "Aplicar condição", "Aplicar magia"} {
 		if !strings.Contains(tela, esperado) {
 			t.Errorf("a tela não tem %q", esperado)

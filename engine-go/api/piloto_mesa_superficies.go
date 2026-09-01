@@ -13,14 +13,20 @@ import "fmt"
 // entre elas. É a mesma decisão da forma do mestre, do outro lado da mesa: o que
 // está na tela está inteiro.
 //
-// # Por que DUAS e não três
+// # A TERCEIRA nasceu quando a ficha nasceu
 //
-// A SPA tem "Minha ficha", "Mesa" e "Tabuleiro". A FICHA é a última tela da
-// migração e não existe em Datastar — decisão do dono: a aba nasce junto com ela.
-// Uma terceira aba hoje prometeria na tela o que o app não tem, e o jogador
-// clicaria nela procurando a própria ficha.
+// Por duas fatias havia só "Mesa" e "Tabuleiro", e o comentário que estava aqui
+// dizia por quê: a ficha era a última tela da migração e não existia em
+// Datastar — decisão do dono, "a aba nasce junto com ela". Ela nasceu na fatia
+// 8 e ganhou link na 10a; a aba entra agora, antes de a SPA ser apagada, para a
+// migração não tirar da mesa o que ela tinha.
+//
+// Ela só aparece para QUEM TEM personagem na sessão. O mestre não tem "minha
+// ficha" — ele vê a mesa inteira —, e um jogador sem personagem na campanha
+// clicaria numa aba vazia.
 
 const (
+	superficieDaFicha       = "ficha"
 	superficieDaMesa        = "mesa"
 	superficieDoTabuleiro   = "tabuleiro"
 	superficieQueAbrePadrao = superficieDaMesa
@@ -41,6 +47,25 @@ type superficieDoJogador struct {
 var asSuperficiesDoJogador = []superficieDoJogador{
 	{superficieDaMesa, "Mesa", "Users2"},
 	{superficieDoTabuleiro, "Tabuleiro", "LayoutGrid"},
+}
+
+// asSuperficiesDe são as superfícies que ESTE leitor recebe.
+//
+// A "Minha ficha" entra na frente das outras — é a ordem da SPA, e ela põe
+// primeiro o que é do jogador antes do que é da mesa —, mas ela não é a que
+// ABRE: quem entra na sessão quer saber de quem é a vez (decisão do dono, e o
+// `superficieQueAbrePadrao` continua na Mesa).
+func asSuperficiesDe(v mesaView) []superficieDoJogador {
+	if v.MinhaFicha == nil {
+		return asSuperficiesDoJogador
+	}
+	// "Ficha" e não "Minha ficha", que é o rótulo da SPA: com três superfícies o
+	// telefone dá ~124px por botão, e medido a 390px na bancada saía "MINHA
+	// FIC…". O comentário do seletor já contava que a SPA passou por isto — o
+	// `flex-1` dela nasceu de três abas truncando —, e encurtar o rótulo é o
+	// conserto que não depende da largura. A palavra é a do glossário.
+	comAFicha := []superficieDoJogador{{superficieDaFicha, "Ficha", "ScrollText"}}
+	return append(comAFicha, asSuperficiesDoJogador...)
 }
 
 // naSuperficie é a condição que mostra uma superfície — e o mesmo teste marca o

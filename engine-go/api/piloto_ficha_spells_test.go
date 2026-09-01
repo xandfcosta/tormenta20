@@ -160,9 +160,6 @@ func TestOPainelDeMagiasDesenhaOGrimorioEOCatalogo(t *testing.T) {
 	aMagia(t, f, id, "aprende/bola-de-fogo")
 	tela := aTelaDasMagias(t, f, id)
 
-	if strings.Contains(tela, "ainda vive na ficha antiga") {
-		t.Fatal("a aba de Magias ainda manda para a ficha velha")
-	}
 	for _, esperado := range []string{"Grimório", "1 aprendida", "Conjurar Bola de Fogo", "Aprender magia"} {
 		if !strings.Contains(tela, esperado) {
 			t.Errorf("a tela não tem %q", esperado)

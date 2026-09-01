@@ -103,7 +103,7 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
 			@retratoVizinho(anterior, "Anterior")
 			<a
-				href={ templ.SafeURL("/characters/" + strconv.FormatInt(h.ID, 10)) }
+				href={ templ.SafeURL("/piloto/personagens/" + strconv.FormatInt(h.ID, 10)) }
 				aria-label={ "Abrir ficha de " + h.Nome }
 				class="relative aspect-[3/4] w-44 overflow-hidden rounded-sm border-2 border-grimorio-iron outline-none transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
 				style={ "background: " + h.Gradiente }
@@ -128,7 +128,7 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 		@vitaisDoHeroi(h)
 		<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">{ h.Resumo }</p>
 		<div class="flex flex-wrap items-center justify-center gap-2">
-			<a href={ templ.SafeURL("/characters/" + strconv.FormatInt(h.ID, 10)) } class={ classesDoBotao(varPrimaria, tamGrande, "") }>
+			<a href={ templ.SafeURL("/piloto/personagens/" + strconv.FormatInt(h.ID, 10)) } class={ classesDoBotao(varPrimaria, tamGrande, "") }>
 				Abrir ficha
 				@tecla("⏎")
 			</a>
@@ -282,7 +282,7 @@ templ quadroDoFilme(h heroiCartao, i int) {
 		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", h.ID) }
 		data-on:focusin={ oGestoQueMoveOCursor(i, h.ID) }
 		data-on:click={ oGestoQueMoveOCursor(i, h.ID) }
-		data-on:keydown={ fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = '/characters/%d')", h.ID) }
+		data-on:keydown={ fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = '/piloto/personagens/%d')", h.ID) }
 		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-display text-xs text-white/85 outline-none transition-all hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:ring-1 aria-selected:ring-grimorio-gold"
 		style={ "background: " + h.Gradiente }
 	>

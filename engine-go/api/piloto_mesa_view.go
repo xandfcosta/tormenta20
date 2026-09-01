@@ -42,6 +42,16 @@ type mesaView struct {
 	Grupo       []mesaMembro
 	Fila        []mesaLinha
 	Eu          *mesaEu
+	// MinhaFicha é a ficha do personagem DESTE jogador, desenhada dentro da
+	// sessão (ALE-272, fatia 10b). Nil para o mestre e para quem não tem
+	// personagem na campanha — é a mesma trava do `Mestre`: o que a view não
+	// tem, a cena não desenha.
+	//
+	// Ela NÃO é região do stream, e isso é decisão: a ficha é cara de computar
+	// e muda pelos comandos DELA, não pelo que acontece na mesa. Pendurá-la em
+	// `regioesDaMesa` faria cada tique do stream recomputar sete painéis para
+	// descobrir que nada mudou.
+	MinhaFicha *fichaView
 	// Tabuleiro é o mapa da cena. `Aberto` falso é o estado normal — a maior
 	// parte de uma sessão não tem mapa —, e ele desenha a frase e nenhuma grade.
 	Tabuleiro tabuleiroView

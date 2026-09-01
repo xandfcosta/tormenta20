@@ -85,9 +85,6 @@ func TestOPainelDePericiasDizOsNumerosDoMotor(t *testing.T) {
 	f, id := oPericioso(t)
 	tela := aTelaDasPericias(t, f, id, "")
 
-	if strings.Contains(tela, "ainda vive na ficha antiga") {
-		t.Fatal("a aba de Perícias ainda manda para a ficha velha")
-	}
 	for _, esperado := range []string{"Detalhar Luta +7", "Detalhar Fortitude +4", "Detalhar Acrobacia +3"} {
 		if !strings.Contains(tela, `aria-label="`+esperado+`"`) {
 			t.Errorf("a tela não tem %q", esperado)
