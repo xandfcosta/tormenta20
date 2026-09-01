@@ -521,9 +521,10 @@ que faz alguém cortar teste ou subir o timeout em vez de consertar a bancada.
 
 Duas mudanças, as duas só no teste:
 
-1. **O molde** (`api/bancada_test.go`): o `TestMain` migra UM banco e cada teste
-   o copia. `db.Open` continua sendo o mesmo de produção, com o mesmo
-   `assertSchema` — o goose encontra a última versão e não tem o que fazer.
+1. **O molde** (`db/testdb`, extraído do `api` na ALE-281): o `TestMain` migra
+   UM banco e cada teste o copia. `db.Open` continua sendo o mesmo de produção,
+   com o mesmo `assertSchema` — o goose encontra a última versão e não tem o que
+   fazer.
 2. **`PRAGMA synchronous=OFF`** no banco de teste. Durabilidade é o que um banco
    que morre no fim do caso não tem o que proteger. Fica no helper e **nunca** no
    `db.Open`: em produção essa linha é perda de dados do mestre.
@@ -539,6 +540,28 @@ mas só para quem lembrar, e só na máquina de quem lembrou. Quando isto foi
 medido havia uma sessão vizinha rodando com o `TMPDIR` no prato girante sem saber
 que pagava quinze minutos por corrida. O molde tira o disco da conta em vez de
 pedir que alguém escolha o disco certo.
+
+**Ela virou PACOTE (`db/testdb`) na ALE-281, e o motivo é de forma.** Arquivo
+`_test.go` não exporta nada para fora do pacote, e o `api` está se dividindo em
+um pacote por cena (ALE-278) — a primeira cena a sair encontraria a bancada
+inalcançável e escreveria a própria, que é como um fixture nasce com catálogo
+vazio e desliga validação em silêncio. Cada pacote que usa declara uma linha:
+
+```go
+func TestMain(m *testing.M) { os.Exit(testdb.Run(m)) }
+```
+
+O que NÃO foi junto é a montagem do servidor: ela precisa do tipo `api.Server`, e
+um pacote de bancada que importasse o `api` seria importado de volta pelos testes
+dele — ciclo. O molde é a parte cara e a parte compartilhável; o fixture é de
+cada pacote.
+
+**O preço de dividir foi medido antes de dividir, com controle** (o mesmo `go
+test -run` que não casa com nada, num pacote SEM banco, para descontar a subida
+do processo): **248 ms por pacote**, ou ~3,7 s na corrida inteira com quinze. O
+número é maior que os 7,1 ms de "migrar do zero" da tabela acima porque ele
+inclui ligar um binário que carrega o SQLite e as migrações — a tabela mede o
+`fsync`, esta medição mede o pacote.
 
 ## Testes
 
