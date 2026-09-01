@@ -33,3 +33,16 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	}
 	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"status": "degraded", "degraded": degraded})
 }
+
+// SondaDeSaude é o `/health` na RAIZ, ao lado do `/api/health`.
+//
+// São dois endereços para a mesma resposta, e isso é deliberado: quem pergunta
+// da raiz não é o app, é a INFRAESTRUTURA — o `healthcheck` do compose, o
+// `-health` do próprio binário, um monitor externo —, e nenhum deles sabe que a
+// API mora sob um prefixo. Quando a API saiu da raiz (ALE-272, fatia 10c) o
+// `/health` foi junto sem que ninguém pensasse nele, e o sintoma foi o CI
+// esperando trinta segundos por uma sonda que respondia 404 num servidor que já
+// estava escutando — a mensagem dizia "o servidor não subiu".
+func (s *Server) SondaDeSaude() http.Handler {
+	return http.HandlerFunc(s.handleHealth)
+}

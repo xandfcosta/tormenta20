@@ -102,3 +102,32 @@ func TestOLiteralGanhaDoCuringaNoEnderecoAntigo(t *testing.T) {
 		}
 	}
 }
+
+// TestASaudeRespondeNaRaizEnaAPI: dois endereços para a mesma resposta, e o da
+// raiz é o que a infraestrutura conhece.
+//
+// Ele nasceu VERMELHO no CI: quando a API saiu da raiz (fatia 10c), a sonda de
+// prontidão ficou esperando trinta segundos por um `/health` que respondia 404
+// num servidor que já escutava — e a mensagem dizia "o servidor não subiu". O
+// `healthcheck` do compose bate no mesmo lugar, então em produção o contêiner
+// seria marcado insalubre sem nada de errado com ele.
+func TestASaudeRespondeNaRaizEnaAPI(t *testing.T) {
+	s := newTestServer(t)
+	mux := http.NewServeMux()
+	mux.Handle("/health", s.SondaDeSaude())
+	mux.Handle("/api/", http.StripPrefix("/api", s.Router()))
+
+	for _, caminho := range []string{"/health", "/api/health"} {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, caminho, nil))
+		if rec.Code != http.StatusOK {
+			t.Errorf("%s: status %d, esperado 200", caminho, rec.Code)
+		}
+		// O corpo diz `degraded` aqui porque o servidor de teste não prima
+		// catálogo, e isso é o comportamento certo (ALE-155): o que este caso
+		// afirma é que o ENDEREÇO responde, não que a mesa está inteira.
+		if !strings.Contains(rec.Body.String(), `"status"`) {
+			t.Errorf("%s: corpo %q não é a resposta da sonda", caminho, rec.Body.String())
+		}
+	}
+}
