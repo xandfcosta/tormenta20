@@ -79,7 +79,7 @@ func aMelhoriaCabeNoItem(catalogo *book.Item, ids []string, categoria string) er
 	}
 	familia := aFamiliaDoItem(*catalogo)
 	for _, id := range ids {
-		sobreposicao := itemDoLivroPorID(id)
+		sobreposicao := book.ItemByID(id)
 		if sobreposicao == nil || sobreposicao.Category != categoria {
 			return fmt.Errorf("%q não é uma %s do livro", id, oNomeDaCategoria(categoria))
 		}

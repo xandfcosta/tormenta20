@@ -55,11 +55,3 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	s.characterChanged(row.ID)
 	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
 }
-
-func toStringSet(xs []string) map[string]bool {
-	m := make(map[string]bool, len(xs))
-	for _, x := range xs {
-		m[x] = true
-	}
-	return m
-}

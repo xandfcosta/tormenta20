@@ -58,7 +58,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = tituloDaFolha("Folha em branco", "Abrir nova campanha").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.SheetTitle("Folha em branco", "Abrir nova campanha").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -156,73 +156,6 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = ui.TomeSheet().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-// tituloDaFolha é a cabeça iluminada de uma folha do tomo: sobrancelha pequena,
-// título em versalete DOURADO e centrado, e um filete dourado embaixo.
-//
-// Portado do `TomeHeading` depois de comparar as duas telas lado a lado — a
-// minha primeira versão saiu alinhada à esquerda, na cor do texto comum e sem
-// filete, o que já não era a mesma página do mesmo livro.
-//
-// A consulta por ALTURA não é enfeite: num telefone deitado (~390px) a
-// sobrancelha some e o título encolhe, senão o cabeçalho sozinho come metade da
-// tela e o formulário começa abaixo da dobra. É `max-height` e não `landscape`
-// AQUI de propósito, ao contrário da folha — o que importa para o cabeçalho é
-// quanta altura sobra, inclusive com o teclado virtual aberto.
-func tituloDaFolha(sobrancelha, titulo string) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<header class=\"space-y-3 text-center [@media(max-height:520px)]:space-y-1.5\"><p class=\"text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground [@media(max-height:520px)]:hidden\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(sobrancelha)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 73, Col: 16}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</p><h1 class=\"font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl [@media(max-height:520px)]:text-2xl\"><span aria-hidden=\"true\" class=\"mr-2 text-grimorio-gold/60\">✦</span> ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 77, Col: 11}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</h1><div aria-hidden=\"true\" class=\"h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent\"></div></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

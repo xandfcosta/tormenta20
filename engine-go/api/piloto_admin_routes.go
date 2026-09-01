@@ -95,7 +95,7 @@ func (s *Server) remendaPaineis(sse *datastar.ServerSentEventGenerator, r *http.
 		return
 	}
 	for _, painel := range paineis {
-		fragmento, err := renderFragmento(r.Context(), painel(view))
+		fragmento, err := ui.RenderFragment(r.Context(), painel(view))
 		if err != nil {
 			continue
 		}
@@ -132,7 +132,7 @@ func (s *Server) handleAdminPilotoRedefinir(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `resetGerado`.
-	fragmento, err := renderFragmento(r.Context(), resetGerado("/redefinir-senha?token="+url.QueryEscape(reset.Token)))
+	fragmento, err := ui.RenderFragment(r.Context(), resetGerado("/redefinir-senha?token="+url.QueryEscape(reset.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
 		return
@@ -154,7 +154,7 @@ func (s *Server) handleAdminPilotoConvite(w http.ResponseWriter, r *http.Request
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
 		return
 	}
-	fragmento, err := renderFragmento(r.Context(), conviteGerado("/register?convite="+url.QueryEscape(invite.Token)))
+	fragmento, err := ui.RenderFragment(r.Context(), conviteGerado("/register?convite="+url.QueryEscape(invite.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
 		return

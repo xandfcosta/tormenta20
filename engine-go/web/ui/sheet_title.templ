@@ -1,0 +1,26 @@
+package ui
+
+// tituloDaFolha é a cabeça iluminada de uma folha do tomo: sobrancelha pequena,
+// título em versalete DOURADO e centrado, e um filete dourado embaixo.
+//
+// Portado do `TomeHeading` depois de comparar as duas telas lado a lado — a
+// minha primeira versão saiu alinhada à esquerda, na cor do texto comum e sem
+// filete, o que já não era a mesma página do mesmo livro.
+//
+// A consulta por ALTURA não é enfeite: num telefone deitado (~390px) a
+// sobrancelha some e o título encolhe, senão o cabeçalho sozinho come metade da
+// tela e o formulário começa abaixo da dobra. É `max-height` e não `landscape`
+// AQUI de propósito, ao contrário da folha — o que importa para o cabeçalho é
+// quanta altura sobra, inclusive com o teclado virtual aberto.
+templ SheetTitle(sobrancelha, titulo string) {
+	<header class="space-y-3 text-center [@media(max-height:520px)]:space-y-1.5">
+		<p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground [@media(max-height:520px)]:hidden">
+			{ sobrancelha }
+		</p>
+		<h1 class="font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl [@media(max-height:520px)]:text-2xl">
+			<span aria-hidden="true" class="mr-2 text-grimorio-gold/60">✦</span>
+			{ titulo }
+		</h1>
+		<div aria-hidden="true" class="h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent"></div>
+	</header>
+}

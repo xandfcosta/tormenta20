@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 
 	"t20engine/db/sqlcgen"
 )
 
 // proficiencyCategories mirrors t20-data PROFICIENCY_CATEGORIES.
-var proficiencyCategories = toStringSet([]string{
+var proficiencyCategories = sheet.ToStringSet([]string{
 	"armas-simples", "armas-marciais", "armas-exoticas", "armas-de-fogo",
 	"armaduras-leves", "armaduras-pesadas", "escudos",
 })

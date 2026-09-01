@@ -2,7 +2,6 @@ package api
 
 import (
 	"bytes"
-	"context"
 	"embed"
 	"fmt"
 	"net/http"
@@ -58,14 +57,4 @@ func (s *Server) WritePage(
 	// nada e some sem erro.
 	w.WriteHeader(status)
 	_, _ = w.Write(buf.Bytes())
-}
-
-// renderFragmento devolve o HTML de um componente, para viajar num
-// `datastar-patch-elements`.
-func renderFragmento(ctx context.Context, c templ.Component) (string, error) {
-	var buf bytes.Buffer
-	if err := c.Render(ctx, &buf); err != nil {
-		return "", fmt.Errorf("render de fragmento do piloto: %w", err)
-	}
-	return buf.String(), nil
 }

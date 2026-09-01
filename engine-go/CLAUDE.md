@@ -641,6 +641,43 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   guarda teria seguido verde medindo as cenas e ignorando o botão, o campo e a
   casca — os arquivos onde uma tinta errada aparece em TODA tela.
 
+## `web/forge`: a primeira cena a sair, e o formato que as próximas seguem
+
+A forja tentou sair primeiro e não conseguiu — ela precisava de `racaDoLivro`,
+de `CharacterDTO` e do kit, e todos eram do `api`, que a importaria de volta para
+montar rota. Depois de três camadas fora (`sheet`, `book`, `web/ui`), ela saiu.
+
+**O formato é uma PORTA declarada pela cena.** `forge.Deps` está em `web/forge`,
+e o `*api.Server` a cumpre — a direção importa: quem escolhe o que atravessa a
+fronteira é o CONSUMIDOR, e não o objeto que tem tudo. O `api` monta com
+`forge.Routes(r, forge.New(s))`, e é nessa linha que o compilador cobra quando a
+porta deixa de ser cumprida.
+
+A medição que disse que isso ia dar certo: o `Server` tem 14 campos e 415
+métodos, mas cada cena toca **um a três campos**. A forja toca `queries` e
+`catalogs`, mais quatro métodos. A porta é fina porque o objeto é grande por
+acumulação, não por acoplamento.
+
+Duas decisões que vale copiar na próxima cena:
+
+- **A porta pede o MENOR tipo que resolve.** Ela devolve `CurrentUserID(r) int64`
+  e não o usuário inteiro, porque o tipo do usuário é do `api` — e uma porta que
+  devolve tipo do hospedeiro não é porta, é o hospedeiro com outro nome.
+- **Uma cópia, declarada.** O `oPassoDaURL` são sete linhas de parse que a ficha
+  também tem. Pô-lo na porta seria mais acoplamento que duplicação, e a cópia diz
+  isso no comentário dela.
+
+### O guarda de fronteira da cena pega o que o compilador não pega
+
+Importar o `api` de dentro da cena o COMPILADOR já recusa — é ciclo. O guarda
+existe para o resto, e ele provou o valor na primeira execução: `items.go`
+importava `t20engine/catalog` DIRETO, contornando a camada tipada. Nenhum ciclo,
+nenhum erro, só a divisão vazando por baixo.
+
+**A regra que aquele achado deixou: o destino de uma função é a DEPENDÊNCIA
+dela.** O índice de itens de origem lia catálogo, então era do livro — mesmo que
+só a forja o usasse.
+
 ## `book`: o catálogo TIPADO, lido por treze famílias
 
 A raça, a classe, a perícia, o deus, a condição, a magia, o poder, o item, a

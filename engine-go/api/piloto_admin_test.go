@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"t20engine/web/ui"
 	"testing"
 	"time"
 )
@@ -92,7 +93,7 @@ func TestPainelNaoOfereceApagarAPropriaConta(t *testing.T) {
 		{ID: 2, Nome: "Outro", Email: "outro@t.com", Posses: "-", Custo: "-", EhEu: false},
 	}}
 
-	html, err := renderFragmento(t.Context(), painelJogadores(view))
+	html, err := ui.RenderFragment(t.Context(), painelJogadores(view))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -112,7 +113,7 @@ func TestPainelNaoOfereceApagarAPropriaConta(t *testing.T) {
 // comportamento no navegador.
 func TestOBotaoDaLinhaAbreODialogoEmVezDeApagar(t *testing.T) {
 	view := adminView{Jogadores: []adminJogador{{ID: 2, Nome: "Outro", EhEu: false}}}
-	linha, err := renderFragmento(t.Context(), painelJogadores(view))
+	linha, err := ui.RenderFragment(t.Context(), painelJogadores(view))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -123,7 +124,7 @@ func TestOBotaoDaLinhaAbreODialogoEmVezDeApagar(t *testing.T) {
 		t.Error("o botão da linha não abre o diálogo")
 	}
 
-	dialogo, err := renderFragmento(t.Context(), dialogoConfirmar())
+	dialogo, err := ui.RenderFragment(t.Context(), dialogoConfirmar())
 	if err != nil {
 		t.Fatalf("render do diálogo: %v", err)
 	}
@@ -144,7 +145,7 @@ func TestRedefinirValeParaAPropriaContaTambem(t *testing.T) {
 		{ID: 2, Nome: "Outro", Email: "outro@t.com", EhEu: false},
 	}}
 
-	html, err := renderFragmento(t.Context(), painelJogadores(view))
+	html, err := ui.RenderFragment(t.Context(), painelJogadores(view))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -205,7 +206,7 @@ func TestCunharParaContaInexistenteDizQueEhInexistente(t *testing.T) {
 // isso no navegador; aqui se afirma que a limpeza está no marcador.
 func TestOBotaoDeRedefinirAbreODialogoELimpaOLinkAnterior(t *testing.T) {
 	view := adminView{Jogadores: []adminJogador{{ID: 2, Nome: "Outro", EhEu: false}}}
-	linha, err := renderFragmento(t.Context(), painelJogadores(view))
+	linha, err := ui.RenderFragment(t.Context(), painelJogadores(view))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -216,7 +217,7 @@ func TestOBotaoDeRedefinirAbreODialogoELimpaOLinkAnterior(t *testing.T) {
 		t.Error("abrir não limpa o link anterior — ele apareceria sob o nome errado")
 	}
 
-	dialogo, err := renderFragmento(t.Context(), dialogoRedefinir())
+	dialogo, err := ui.RenderFragment(t.Context(), dialogoRedefinir())
 	if err != nil {
 		t.Fatalf("render do diálogo: %v", err)
 	}
@@ -230,7 +231,7 @@ func TestOBotaoDeRedefinirAbreODialogoELimpaOLinkAnterior(t *testing.T) {
 // o proxy do Vite reescreve o `Host` em desenvolvimento — e link de redefinição
 // existe para ser MANDADO, então host errado é link morto.
 func TestORemendoDoResetNaoCarregaOrigem(t *testing.T) {
-	html, err := renderFragmento(t.Context(), resetGerado("/redefinir-senha?token=abc"))
+	html, err := ui.RenderFragment(t.Context(), resetGerado("/redefinir-senha?token=abc"))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}

@@ -168,7 +168,7 @@ func (s *Server) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheetV2,
 	// piloto o faz: todo uso anterior passou pelo `sheetFromDTO`, que computa a
 	// ficha base. Com Fúria ligada, a base mostraria o ataque de quem não está
 	// em Fúria e a ficha discordaria da Mesa.
-	active := toStringSet(dto.Conditionals)
+	active := sheet.ToStringSet(dto.Conditionals)
 	return s.catalogs.ComputeSheetV2(ec, active), s.catalogs.ComputeWeaponCards(ec, active), true
 }
 

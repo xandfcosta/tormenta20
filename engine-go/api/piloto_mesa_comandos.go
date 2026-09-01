@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -528,7 +529,7 @@ func (s *Server) respondeAoMestre(
 			if !pedidaOuTodas(regiao.ID, soAsRegioes) {
 				continue
 			}
-			if fragmento, err := renderFragmento(r.Context(), regiao.No); err == nil {
+			if fragmento, err := ui.RenderFragment(r.Context(), regiao.No); err == nil {
 				_ = sse.PatchElements(fragmento)
 			}
 		}

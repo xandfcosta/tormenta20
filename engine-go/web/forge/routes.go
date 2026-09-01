@@ -1,6 +1,7 @@
-package api
+package forge
 
 import (
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strconv"
 
@@ -16,8 +17,8 @@ import (
 // no navegador, e depois que ele nasce quem carrega é o banco.
 
 // handleForja desenha a folha em branco.
-func (s *Server) handleForja(w http.ResponseWriter, r *http.Request) {
-	s.escreveAForja(w, r, http.StatusOK, blankForgeSheet(forgeAnswers{}, nil))
+func (s Scene) handleForge(w http.ResponseWriter, r *http.Request) {
+	s.writeForge(w, r, http.StatusOK, blankForgeSheet(forgeAnswers{}, nil))
 }
 
 // handleForjaEsboco redesenha a folha com o que já foi respondido.
@@ -27,13 +28,13 @@ func (s *Server) handleForja(w http.ResponseWriter, r *http.Request) {
 // resposta é 200 com a cena inteira — inclusive quando há campo em branco —,
 // porque remendo de resposta que não é 2xx o Datastar DESCARTA, e a folha
 // ficaria parada sem uma palavra na tela.
-func (s *Server) handleForjaEsboco(w http.ResponseWriter, r *http.Request) {
-	folha, err := aForjaDoFormulario(r)
+func (s Scene) handleForgeDraft(w http.ResponseWriter, r *http.Request) {
+	folha, err := answersFromForm(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fragmento, err := renderFragmento(r.Context(), forgeBody(blankForgeSheet(folha, nil)))
+	fragmento, err := ui.RenderFragment(r.Context(), forgeBody(blankForgeSheet(folha, nil)))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -48,17 +49,17 @@ func (s *Server) handleForjaEsboco(w http.ResponseWriter, r *http.Request) {
 // seguro (e a recusa 200 do Datastar não se aplica) porque este caminho é o
 // `submit` de um formulário de verdade: quem desenha a resposta é o navegador,
 // não um remendo.
-func (s *Server) handleForjaPost(w http.ResponseWriter, r *http.Request) {
-	folha, err := aForjaDoFormulario(r)
+func (s Scene) handleForgePost(w http.ResponseWriter, r *http.Request) {
+	folha, err := answersFromForm(r)
 	if err != nil {
-		s.escreveAForja(w, r, http.StatusBadRequest, blankForgeSheet(forgeAnswers{}, nil))
+		s.writeForge(w, r, http.StatusBadRequest, blankForgeSheet(forgeAnswers{}, nil))
 		return
 	}
 	if erros := forgeRefusals(folha); len(erros) > 0 {
-		s.escreveAForja(w, r, http.StatusUnprocessableEntity, blankForgeSheet(folha, erros))
+		s.writeForge(w, r, http.StatusUnprocessableEntity, blankForgeSheet(folha, erros))
 		return
 	}
-	id, err := s.birth(r, currentUser(r).ID, folha)
+	id, err := s.birthHero(r, s.deps.CurrentUserID(r), folha)
 	if err != nil {
 		http.Error(w, "não foi possível forjar o herói", http.StatusInternalServerError)
 		return
@@ -74,7 +75,7 @@ func (s *Server) handleForjaPost(w http.ResponseWriter, r *http.Request) {
 // Serve os dois caminhos — o `submit` do navegador e o `@post` do Datastar com
 // `contentType: 'form'` — porque os dois mandam `application/x-www-form-urlencoded`.
 // É por isso que esta cena não tem sinal nenhum: o formulário É o estado.
-func aForjaDoFormulario(r *http.Request) (forgeAnswers, error) {
+func answersFromForm(r *http.Request) (forgeAnswers, error) {
 	if err := r.ParseForm(); err != nil {
 		return forgeAnswers{}, err
 	}
@@ -90,8 +91,8 @@ func aForjaDoFormulario(r *http.Request) (forgeAnswers, error) {
 	}, nil
 }
 
-func (s *Server) escreveAForja(w http.ResponseWriter, r *http.Request, status int, v forgeView) {
-	s.WritePage(w, r, status, ui.Page{
+func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v forgeView) {
+	s.deps.WritePage(w, r, status, ui.Page{
 		Titulo: "Forja · Tormenta 20",
 		// `cascaDensa`: o cabeçalho compacto com o "‹ Voltar", como a folha em
 		// branco da campanha. Sem ele a folha nasce sem saída visível.
@@ -99,4 +100,19 @@ func (s *Server) escreveAForja(w http.ResponseWriter, r *http.Request, status in
 		Voltar:       "/personagens",
 		VoltarRotulo: "Personagens",
 	}, forgeSheet(v))
+}
+
+// Routes monta a forja no roteador de quem a hospeda.
+//
+// Os endereços moram AQUI e não em quem monta (ALE-278): a cena é a dona do que
+// ela atende, e quem a hospeda escolhe só onde encaixá-la. As três primeiras
+// rotas são a folha em branco; as duas últimas vivem sob o id porque o herói JÁ
+// existe — o nascimento é o `POST /personagens/nova`, e daqui em diante tudo é
+// comando sobre uma linha do banco.
+func Routes(r chi.Router, s Scene) {
+	r.Get("/personagens/nova", s.handleForge)
+	r.Post("/personagens/nova", s.handleForgePost)
+	r.Post("/personagens/nova/esboco", s.handleForgeDraft)
+	r.Get("/personagens/{id}/atributos", s.handleAttributes)
+	r.Post("/personagens/{id}/atributos/{atributo}/{passo}", s.handleAttributeStep)
 }

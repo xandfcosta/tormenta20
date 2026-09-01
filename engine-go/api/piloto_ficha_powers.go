@@ -222,7 +222,7 @@ func (s *Server) asFlagsAtivas(dto sheet.CharacterDTO) map[string]bool {
 	if err != nil {
 		return fora
 	}
-	ligados := toStringSet(dto.Conditionals)
+	ligados := sheet.ToStringSet(dto.Conditionals)
 	for _, c := range engine.ComputeItemEffects(s.catalogs.ActiveItemsFor(ec)).Conditional {
 		if c.Flag != "" && ligados[engine.ConditionalID(c)] {
 			fora[c.Flag] = true

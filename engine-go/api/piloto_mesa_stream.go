@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/web/ui"
 
 	"crypto/sha256"
 	"github.com/a-h/templ"
@@ -260,7 +261,7 @@ func escreveMesa(ctx context.Context, sse *datastar.ServerSentEventGenerator, vi
 		anterior = digitais{}
 	}
 	for _, r := range regioesDaMesa(view) {
-		fragmento, err := renderFragmento(ctx, r.No)
+		fragmento, err := ui.RenderFragment(ctx, r.No)
 		if err != nil {
 			continue
 		}

@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"strings"
 
 	"t20engine/book"
 	"t20engine/db/sqlcgen"
@@ -21,17 +20,7 @@ func itemDoCatalogo(item sheet.ItemDTO) *book.Item {
 	if item.CatalogID == nil || *item.CatalogID == "" {
 		return nil
 	}
-	return itemDoLivroPorID(*item.CatalogID)
-}
-
-// itemDoLivroPorID é a busca por id no acervo já ordenado.
-func itemDoLivroPorID(id string) *book.Item {
-	for i, entrada := range book.Catalogs().Itens {
-		if entrada.ID == id {
-			return &book.Catalogs().Itens[i]
-		}
-	}
-	return nil
+	return book.ItemByID(*item.CatalogID)
 }
 
 // asSobreposicoesDoItem são os NOMES das melhorias e do material aplicados.
@@ -54,7 +43,7 @@ func asSobreposicoesDoLivro(item sheet.ItemDTO) []book.Item {
 	}
 	fora := []book.Item{}
 	for _, id := range ids {
-		if entrada := itemDoLivroPorID(id); entrada != nil {
+		if entrada := book.ItemByID(id); entrada != nil {
 			fora = append(fora, *entrada)
 		}
 	}
@@ -153,19 +142,4 @@ func oItemComoDoMotor(catalogo *book.Item) *engine.CatalogItem {
 		ID: catalogo.ID, Name: catalogo.Name, Category: catalogo.Category,
 		Equip: catalogo.Equip, Slots: catalogo.Slots,
 	}
-}
-
-// bookItemByName é a busca por NOME, sem diferenciar maiúsculas.
-//
-// Existe porque nem toda procedência cita o item por id: a linha "Itens" de uma
-// origem cita "Símbolo sagrado" por escrito (p85), e é o nome que tem de achar
-// a entrada do livro para a linha nascer com o preço e os espaços certos.
-func bookItemByName(nome string) *book.Item {
-	procurado := strings.ToLower(strings.TrimSpace(nome))
-	for i, entrada := range book.Catalogs().Itens {
-		if strings.ToLower(entrada.Name) == procurado {
-			return &book.Catalogs().Itens[i]
-		}
-	}
-	return nil
 }

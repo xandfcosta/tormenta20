@@ -17,7 +17,7 @@ import (
 
 // expertiseNames mirrors t20-data EXPERTISE_NAMES — the builtin perícias. A
 // custom expertise may not reuse one, and only these can be edited via PATCH.
-var expertiseNames = toStringSet([]string{
+var expertiseNames = sheet.ToStringSet([]string{
 	"Acrobacia", "Adestramento", "Atletismo", "Atuação", "Cavalgar", "Conhecimento",
 	"Cura", "Diplomacia", "Enganação", "Fortitude", "Furtividade", "Guerra",
 	"Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Ladinagem",
@@ -25,7 +25,7 @@ var expertiseNames = toStringSet([]string{
 	"Reflexos", "Religião", "Sobrevivência", "Vontade",
 })
 
-var attributeKeys = toStringSet([]string{
+var attributeKeys = sheet.ToStringSet([]string{
 	"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
 })
 

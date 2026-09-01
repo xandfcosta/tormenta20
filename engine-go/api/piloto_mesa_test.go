@@ -13,6 +13,7 @@ import (
 	"strings"
 	"t20engine/aovivo"
 	"t20engine/events"
+	"t20engine/web/ui"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -468,7 +469,7 @@ func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
 // que está descrita acima e é reproduzível em três linhas.
 func TestPreviaDoD20NaoMenteComOCampoVazio(t *testing.T) {
 	bonus := int64(8)
-	html, err := renderFragmento(t.Context(), mesa(mesaView{
+	html, err := ui.RenderFragment(t.Context(), mesa(mesaView{
 		CampaignID: 7, SessionID: 42, SceneActive: true,
 		Turn: mesaTurn{Kind: "idle"},
 		Eu:   &mesaEu{CharacterID: 1, Nome: "Samira", Bonus: bonus},

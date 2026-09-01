@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"t20engine/book"
 
 	"github.com/go-chi/chi/v5"
 
@@ -21,7 +22,7 @@ import (
 // livro, e deixar o navegador mandá-los abriria a porta para uma "Espada longa"
 // de 0 espaços.
 func addCatalogItem(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
-	catalogo := itemDoLivroPorID(chi.URLParam(r, "catalogo"))
+	catalogo := book.ItemByID(chi.URLParam(r, "catalogo"))
 	if catalogo == nil {
 		return fmt.Errorf("o item %q não existe no livro", chi.URLParam(r, "catalogo"))
 	}
@@ -102,7 +103,7 @@ func applyOverlays(s *Server, r *http.Request, row sqlcgen.Character, sinais fic
 	if err != nil {
 		return err
 	}
-	catalogo := itemDoLivroPorID(oCatalogoDoItem(item))
+	catalogo := book.ItemByID(oCatalogoDoItem(item))
 	if err := aMelhoriaCabeNoItem(catalogo, sinais.ItemMelhorias, "improvement"); err != nil {
 		return err
 	}
@@ -195,7 +196,7 @@ func equipItemFromSheet(s *Server, r *http.Request, row sqlcgen.Character, _ fic
 	// mostrou o preço, com um escudo sendo vestido num teste porque o catálogo
 	// do fixture está vazio. O `catalog.Resource` é `go:embed`: ele existe
 	// sempre que o binário existe.
-	if _, recusa := equipAxisError(oItemComoDoMotor(itemDoLivroPorID(oCatalogoDoItem(item))), slot); recusa != "" {
+	if _, recusa := equipAxisError(oItemComoDoMotor(book.ItemByID(oCatalogoDoItem(item))), slot); recusa != "" {
 		return fmt.Errorf("%s", recusa)
 	}
 	recusa, err := s.equipLimitCheck(r, row.ID, item.ID, slot)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -174,7 +175,7 @@ func (s *Server) respondeAsNotas(
 			CampaignID: campaignID, SessionID: sessionID,
 			Notas: texto, NotasBlocos: parseNota(texto),
 		})
-		if fragmento, err := renderFragmento(r.Context(), previa); err == nil {
+		if fragmento, err := ui.RenderFragment(r.Context(), previa); err == nil {
 			_ = sse.PatchElements(fragmento)
 		}
 	}

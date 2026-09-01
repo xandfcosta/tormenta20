@@ -140,7 +140,7 @@ func asProficienciasGuardadas(blob string) map[string]bool {
 //     algo mais pesado. Está aqui explícita para poder ser revista de propósito,
 //     e não redescoberta como defeito.
 func asFontesDeProficiencia(dto sheet.CharacterDTO) map[string][]string {
-	daClasse := asProficienciasPorClasse()
+	daClasse := book.ProficienciesByClass()
 	fontes := map[string][]string{aBaseDeTodoMundo: {aFonteDeTodoMundo}}
 	for _, cl := range dto.Classes {
 		concede := daClasse[cl.ClassName]
@@ -170,21 +170,6 @@ func semRepetir(nomes []string) []string {
 		unicos = append(unicos, nome)
 	}
 	return unicos
-}
-
-// asProficienciasPorClasse é a tabela do livro, lida do catálogo de classes.
-//
-// Ela sai de `catalog/data/classes.json` e não de um `map` escrito em Go pelo
-// mesmo motivo das perícias de classe: é DADO TRANSCRITO — a linha
-// "Proficiências." de cada classe, p36–83 — e dado transcrito mora no catálogo,
-// onde a validação de schema o alcança.
-func asProficienciasPorClasse() map[string][]string {
-	_, classes, _ := book.CharacterCatalogs()
-	tabela := make(map[string][]string, len(classes))
-	for _, c := range classes {
-		tabela[c.Name] = c.Proficiencias
-	}
-	return tabela
 }
 
 // oPadraoDaClasse é o alvo do "Restaurar padrão de classe": tudo o que as

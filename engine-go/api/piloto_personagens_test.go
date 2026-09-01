@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"t20engine/web/ui"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -103,7 +104,7 @@ func TestSemMotorADefesaViraTravessao(t *testing.T) {
 	if v.Herois[0].Defesa != "—" {
 		t.Errorf("Defesa = %q sem motor, queria travessão", v.Herois[0].Defesa)
 	}
-	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -158,7 +159,7 @@ func TestComElencoVazioAVagaDeCriarEhOQueSobra(t *testing.T) {
 	if v.TemAlgum {
 		t.Fatal("elenco vazio marcado como cheio")
 	}
-	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -178,7 +179,7 @@ func TestAVagaDeCriarEhPosicaoDeCursorENaoUmLinkSolto(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -267,7 +268,7 @@ func TestOsVizinhosLadeiamOPalcoComNomeLegivel(t *testing.T) {
 	}
 	primeiro, segundo := v.Herois[0].Nome, v.Herois[1].Nome
 
-	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -317,7 +318,7 @@ func TestAVagaDeCriarMostraOUltimoHeroiComoCaminhoDeVolta(t *testing.T) {
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -346,7 +347,7 @@ func TestHeroiUnicoNaoGanhaVizinhoInventado(t *testing.T) {
 	if peekDe(v.Herois, -1) != nil || peekDe(v.Herois, 1) != nil {
 		t.Fatal("peekDe inventou vizinho fora do trilho")
 	}
-	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}

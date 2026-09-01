@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/plataforma"
+	"t20engine/web/ui"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -180,7 +181,7 @@ func TestConviteMortoViraFraseENaoPaginaQuebrada(t *testing.T) {
 	if v.ConviteVale {
 		t.Fatal("convite inexistente foi dado como válido")
 	}
-	html, err := renderFragmento(t.Context(), campanhaEntrar(v))
+	html, err := ui.RenderFragment(t.Context(), campanhaEntrar(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}

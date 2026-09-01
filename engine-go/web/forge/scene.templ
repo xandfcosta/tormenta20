@@ -1,4 +1,4 @@
-package api
+package forge
 
 import (
 	"strconv"
@@ -33,7 +33,7 @@ templ forgeSheet(v forgeView) {
 // o `id`, que é por onde o remendo acha o lugar.
 templ forgeBody(v forgeView) {
 	<div id="forja" class="m-auto w-full max-w-3xl space-y-6">
-		@tituloDaFolha("Forja", "A folha em branco")
+		@ui.SheetTitle("Forja", "A folha em branco")
 		<form
 			method="post"
 			action="/personagens/nova"

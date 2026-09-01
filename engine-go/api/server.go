@@ -319,3 +319,19 @@ func (s *Server) Router() http.Handler {
 	})
 	return r
 }
+
+// Queries e Catalogs existem porque as CENAS pedem por eles (ALE-278).
+//
+// Elas não são getters por hábito: cada uma aparece numa porta declarada por uma
+// cena — `forge.Deps` é a primeira —, e o `Server` as cumpre. A diferença entre
+// isto e um objeto-deus com campos públicos é de direção: quem escolhe o que
+// atravessa a fronteira é o CONSUMIDOR, e o compilador cobra na linha que monta.
+func (s *Server) Queries() *sqlcgen.Queries { return s.queries }
+
+// Catalogs é o motor primado — o mesmo que o oráculo usa.
+func (s *Server) Catalogs() *engine.Catalogs { return s.catalogs }
+
+// CurrentUserID lê quem está pedindo do contexto que o `requirePagina` escreveu.
+// Ela é método porque a CHAVE do contexto é deste pacote: uma segunda chave com
+// o mesmo nome, declarada noutro pacote, não lê o mesmo valor.
+func (s *Server) CurrentUserID(r *http.Request) int64 { return currentUser(r).ID }
