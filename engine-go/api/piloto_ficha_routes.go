@@ -96,8 +96,21 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 	view, status, err := s.carregaFicha(
 		r.Context(), currentUser(r), id, aAbaPedida(r.URL.Query().Get("tab")),
 		sinaisDaPagina.aBusca(), sinaisDaPagina)
+	view.Embutida = pedidaDeDentroDaSessao(r)
 	if err != nil {
 		http.Error(w, err.Error(), status)
+		return
+	}
+	// A FICHA DENTRO DA SESSÃO responde só o pedaço (ALE-272, fatia 10b): quem
+	// pediu foi a aba "Minha ficha" da Mesa, e mandar a página inteira faria o
+	// Datastar remendar a cena da sessão com uma ficha de corpo inteiro.
+	if view.Embutida {
+		fragmento, err := renderFragmento(r.Context(), cenaDaFicha(view))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		_ = datastar.NewSSE(w, r).PatchElements(fragmento)
 		return
 	}
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
@@ -126,6 +139,13 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 			" poderbusca: '', poderdegraus: 0, poder: '', passivas: false," +
 			" fonte: 'raca', racaatributos: []}",
 	}, cenaDaFicha(view))
+}
+
+// pedidaDeDentroDaSessao diz se este pedido veio da superfície "Minha ficha" da
+// Mesa. A marca viaja na query pela mesma razão que o `?tab=`: o handler
+// descobre o que desenhar lendo a requisição, e sinal do cliente sumiria num F5.
+func pedidaDeDentroDaSessao(r *http.Request) bool {
+	return r.URL.Query().Get("embutida") == "1"
 }
 
 // comandoDaFicha é o gateway das mutações da ficha.
@@ -178,6 +198,7 @@ func (s *Server) comandoDaFicha(
 		}
 		view, status, err := s.carregaFicha(
 			r.Context(), currentUser(r), id, aAbaPedida(r.URL.Query().Get("tab")), sinais.aBusca(), sinais)
+		view.Embutida = pedidaDeDentroDaSessao(r)
 		if err != nil {
 			http.Error(w, err.Error(), status)
 			return

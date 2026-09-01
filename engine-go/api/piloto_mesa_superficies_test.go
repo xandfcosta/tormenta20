@@ -37,15 +37,16 @@ func TestOJogadorTemTodasAsRegioesUmaVezSo(t *testing.T) {
 	}
 }
 
-// TestOSeletorTemAsDuasSuperficiesENAOaFicha.
+// TestOSeletorTemAsTresSuperficies.
 //
-// Decisão do dono: a FICHA é a última tela da migração e a aba dela nasce junto
-// com ela. Uma terceira aba hoje prometeria na tela o que o app não tem, e o
-// jogador clicaria nela procurando a própria ficha.
+// Por duas fatias foram DUAS, e a asserção aqui era a negativa: a ficha era a
+// última tela da migração e a aba dela nasceria junto com ela (decisão do dono).
+// A ficha nasceu na fatia 8 e ganhou link na 10a; a aba entra na 10b, antes de a
+// SPA ser apagada, para a migração não tirar da mesa o que ela tinha.
 //
-// A asserção negativa é sobre o RÓTULO que o usuário leria, e não sobre um id
-// interno: é o rótulo que promete.
-func TestOSeletorTemAsDuasSuperficiesENaoAFicha(t *testing.T) {
+// A asserção é sobre o RÓTULO que o usuário leria, e não sobre um id interno: é
+// o rótulo que promete.
+func TestOSeletorTemAsTresSuperficies(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -54,13 +55,40 @@ func TestOSeletorTemAsDuasSuperficiesENaoAFicha(t *testing.T) {
 	if !strings.Contains(html, "O que ver na sessão") {
 		t.Fatal("o jogador não recebeu o seletor de superfícies")
 	}
-	for _, superficie := range asSuperficiesDoJogador {
-		if !strings.Contains(html, ">"+superficie.Rotulo+"<") {
-			t.Errorf("o seletor não oferece %q", superficie.Rotulo)
+	for _, rotulo := range []string{"Ficha", "Mesa", "Tabuleiro"} {
+		if !strings.Contains(html, ">"+rotulo+"<") {
+			t.Errorf("o seletor não oferece %q", rotulo)
 		}
 	}
-	if strings.Contains(html, "Minha ficha") {
-		t.Error("o seletor promete a ficha, que ainda não existe em Datastar")
+	// E a ficha chega DESENHADA, não prometida: a aba sem conteúdo atrás é
+	// exatamente o que a decisão do dono evitava enquanto ela não existia.
+	if !strings.Contains(html, `id="cena-ficha"`) {
+		t.Error("a aba Ficha está na tela e a ficha não veio junto")
+	}
+}
+
+// TestAFichaNaSessaoNaoNavegaParaForaDela.
+//
+// Dentro da sessão as abas da ficha são COMANDO e não link. Um `<a href>` ali
+// tiraria o jogador da mesa no meio do combate — e o modo de errar é silencioso,
+// porque o link funciona: ele leva para uma tela legítima, só que a errada.
+func TestAFichaNaSessaoNaoNavegaParaForaDela(t *testing.T) {
+	f := novoPiloto(t)
+	f.cena(t)
+
+	html := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+
+	dentroDaFicha := html[strings.Index(html, `id="cena-ficha"`):]
+	if i := strings.Index(dentroDaFicha, "Seções da ficha"); i >= 0 {
+		nav := dentroDaFicha[i : i+3000]
+		if strings.Contains(nav, `href="/piloto/personagens/`) {
+			t.Error("a fileira de abas da ficha embutida ainda tem link para fora da sessão")
+		}
+		if !strings.Contains(nav, "embutida=1") {
+			t.Error("a aba embutida não carrega a marca que a mantém dentro da sessão")
+		}
+	} else {
+		t.Fatal("não achei a fileira de abas dentro da ficha embutida")
 	}
 }
 

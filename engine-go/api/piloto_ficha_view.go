@@ -24,6 +24,15 @@ import (
 type fichaView struct {
 	ID   int64
 	Nome string
+	// Embutida diz que esta ficha está sendo desenhada DENTRO da sessão
+	// (ALE-272, fatia 10b), como a superfície "Minha ficha" da SPA.
+	//
+	// Ela muda duas coisas na tela, e as duas são sobre NAVEGAÇÃO: a barra com
+	// o "‹ Voltar" some (a sessão tem cabeçalho próprio, e voltar dali tiraria
+	// o jogador da mesa), e as abas deixam de ser links para virar comandos que
+	// remendam a ficha no lugar. Um `<a href>` ali levaria embora da sessão
+	// quem só queria trocar de seção.
+	Embutida bool
 	// Iniciais e Gradiente são o retrato derivado do nome, como no palco e no
 	// cartão da campanha: o app não guarda imagem de personagem.
 	Iniciais  string
@@ -356,7 +365,21 @@ func oDegrauDireto(v fichaView, passo int) string {
 // primeiro clique. Ver `TestNenhumComandoDaFichaPerdeAAba`, que varre os quatro
 // gestos nas sete abas.
 func oPostDaFicha(v fichaView, caminho string) string {
-	return fmt.Sprintf("@post('/piloto/personagens/%d%s?tab=%s')", v.ID, caminho, v.AbaAtiva)
+	return fmt.Sprintf("@post('%s')", aRotaDoComando(v, caminho))
+}
+
+// aRotaDoComando monta o endereço de um comando da ficha com o estado que a URL
+// carrega — a aba e, quando ela existe, a marca de EMBUTIDA.
+//
+// A marca viaja pelo mesmo motivo que a aba: o handler descobre o que desenhar
+// lendo a requisição, e um comando sem ela devolveria a ficha de página inteira
+// — com a barra do "‹ Voltar" e as abas navegando — dentro da sessão.
+func aRotaDoComando(v fichaView, caminho string) string {
+	rota := fmt.Sprintf("/piloto/personagens/%d%s?tab=%s", v.ID, caminho, v.AbaAtiva)
+	if v.Embutida {
+		rota += "&embutida=1"
+	}
+	return rota
 }
 
 // oGetDaFicha escreve o `@get` que REDESENHA a cena sem mutar nada — hoje só a
@@ -367,7 +390,13 @@ func oPostDaFicha(v fichaView, caminho string) string {
 // A varredura `TestNenhumComandoDaFichaPerdeAAba` olha só os `@post`, então este
 // caminho tem guarda própria — `TestOGetDaBuscaCarregaAAba`.
 func oGetDaFicha(v fichaView) string {
-	return fmt.Sprintf("@get('/piloto/personagens/%d?tab=%s')", v.ID, v.AbaAtiva)
+	return fmt.Sprintf("@get('%s')", aRotaDoComando(v, ""))
+}
+
+// oGetDaAbaEmbutida troca de seção SEM sair da sessão: o mesmo endereço da
+// ficha, pedido pelo Datastar, remendando o `#cena-ficha` no lugar.
+func oGetDaAbaEmbutida(v fichaView, aba string) string {
+	return fmt.Sprintf("@get('/piloto/personagens/%d?tab=%s&embutida=1')", v.ID, aba)
 }
 
 // oComandoDoAtributo escreve o `@post` que repõe a perícia noutro atributo.

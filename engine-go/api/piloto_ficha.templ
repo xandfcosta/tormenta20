@@ -29,7 +29,9 @@ templ cenaDaFicha(v fichaView) {
 
 templ ficha(v fichaView) {
 	<div class="flex min-h-0 flex-1 flex-col">
-		@aBarraDaFicha(v)
+		if !v.Embutida {
+			@aBarraDaFicha(v)
+		}
 		@asAbasDesenhadas(v)
 		@aRecusaDaRegra(v)
 		<div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -69,18 +71,50 @@ templ asAbasDesenhadas(v fichaView) {
 }
 
 templ aAbaDaFicha(v fichaView, aba abaDaFicha) {
-	<a
-		href={ templ.SafeURL(aRotaDaFicha(v.ID, aba.Valor)) }
-		if aba.Ativa {
-			aria-current="page"
-		}
-		class={ "inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-			templ.KV("border-grimorio-gold text-grimorio-gold", aba.Ativa),
-			templ.KV("border-transparent text-muted-foreground hover:border-grimorio-iron hover:text-foreground", !aba.Ativa) }
-	>
-		@icone(aba.Icone, "size-4")
-		{ aba.Rotulo }
-	</a>
+	if v.Embutida {
+		// DENTRO da sessão a aba é COMANDO e não link: um `<a href>` levaria o
+		// jogador para a ficha de página inteira e o tiraria da mesa no meio do
+		// combate. O endereço guardado continua sendo o da ficha solta — aqui o
+		// endereço é o da sessão.
+		<button
+			type="button"
+			data-on:click={ oGetDaAbaEmbutida(v, aba.Valor) }
+			if aba.Ativa {
+				aria-current="page"
+			}
+			class={ oVestidoDaAbaDaFicha(aba) }
+		>
+			@icone(aba.Icone, "size-4")
+			{ aba.Rotulo }
+		</button>
+	} else {
+		<a
+			href={ templ.SafeURL(aRotaDaFicha(v.ID, aba.Valor)) }
+			if aba.Ativa {
+				aria-current="page"
+			}
+			class={ oVestidoDaAbaDaFicha(aba) }
+		>
+			@icone(aba.Icone, "size-4")
+			{ aba.Rotulo }
+		</a>
+	}
+}
+
+// oVestidoDaAbaDaFicha é a mesma aparência nos dois desenhos da aba — link fora da
+// sessão, botão dentro dela. Escrita uma vez porque a diferença entre os dois é
+// para onde o clique vai, e não como a aba se parece.
+func oVestidoDaAbaDaFicha(aba abaDaFicha) string {
+	return juntar(
+		"inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		aTintaDaAbaDaFicha(aba.Ativa))
+}
+
+func aTintaDaAbaDaFicha(ativa bool) string {
+	if ativa {
+		return "border-grimorio-gold text-grimorio-gold"
+	}
+	return "border-transparent text-muted-foreground hover:border-grimorio-iron hover:text-foreground"
 }
 
 // oPainelDaFicha desenha a seção ativa.
