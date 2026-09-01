@@ -1,4 +1,4 @@
-package api
+package ui
 
 // A CASCA da cena, portada da `SceneShell` da SPA (ALE-219, agora em templ pela
 // ALE-227).
@@ -33,10 +33,19 @@ package api
 // uma string já renderizada com a anotação "confie em mim" — porque o
 // `html/template` não sabe invocar um sub-template por nome dinâmico. Render em
 // duas passadas era a saída, e cada passada era uma chance de escapar errado.
-type paginaPiloto struct {
+type Page struct {
+	// Asset monta o endereço VERSIONADO de um estático, e é injetado porque os
+	// arquivos são embutidos noutro pacote. Escrever o caminho à mão continua
+	// funcionando e é servido SEM cache — a página volta a piscar, em silêncio.
+	Asset func(arquivo string) string
+	// Overlays são os diálogos que vivem na casca e aparecem por cima de
+	// qualquer cena: o livro, o verbete, o buscador. A casca NÃO os conhece — ela
+	// só reserva o lugar —, porque os três leem catálogo e o pacote de
+	// apresentação não pode.
+	Overlays []templ.Component
 	// Titulo é sempre o do `<title>`. O que aparece na TELA depende da Forma.
 	Titulo string
-	Forma  formaDaCasca
+	Forma  ShellShape
 	// TituloVisivel e Voltar são da casca DENSA; Kicker é da casca TÍTULO.
 	TituloVisivel string
 	Voltar        string
@@ -71,23 +80,23 @@ type paginaPiloto struct {
 // formaDaCasca são as três posturas do `SceneShell` da SPA, e elas se excluem —
 // um campo em vez de dois títulos opcionais, porque "TituloVisivel vazio E
 // TituloDaCena cheio" é um estado que não deveria ser representável.
-type formaDaCasca string
+type ShellShape string
 
 const (
 	// cascaNua não desenha cabeçalho nenhum e não dá padding: a tela decide
 	// tudo. É o que a Mesa usa, porque a faixa AO VIVO dela já é o cabeçalho e
 	// duas fileiras de cromo tirariam o palco do combate.
-	cascaNua formaDaCasca = ""
+	ShellBare ShellShape = ""
 	// cascaDensa é o cabeçalho compacto das telas de conteúdo: voltar + título
 	// pequeno, `px-4 py-4`.
-	cascaDensa formaDaCasca = "densa"
+	ShellDense ShellShape = "densa"
 	// cascaTitulo é a TELA-TÍTULO — o nome do jogo em Cinzel grande e
 	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub, e é a
 	// da PORTA (ALE-229): quem está fora não tem para onde voltar.
-	cascaTitulo formaDaCasca = "titulo"
+	ShellTitled ShellShape = "titulo"
 )
 
-templ layout(p paginaPiloto, corpo templ.Component) {
+templ Layout(p Page, corpo templ.Component) {
 	<!DOCTYPE html>
 	<html lang="pt-BR">
 		<head>
@@ -95,13 +104,13 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 			<title>{ p.Titulo }</title>
 			<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
-			<link rel="stylesheet" href={ EstaticoDoPiloto("piloto.css") }/>
-			<script type="module" src={ EstaticoDoPiloto("datastar.js") }></script>
+			<link rel="stylesheet" href={ p.Asset("piloto.css") }/>
+			<script type="module" src={ p.Asset("datastar.js") }></script>
 			// `cena.js` é o teclado, os cues de áudio e o posicionamento do
 			// popover — compilado dos MESMOS fontes que a SPA usa (ALE-231), não
 			// de uma cópia. Vale para toda página do Datastar, e é `defer` por ser
 			// módulo: ele consulta o DOM ao carregar.
-			<script type="module" src={ EstaticoDoPiloto("cena.js") }></script>
+			<script type="module" src={ p.Asset("cena.js") }></script>
 			for _, modulo := range p.Scripts {
 				<script type="module" src={ modulo }></script>
 			}
@@ -123,9 +132,9 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			}
 			if !p.SemEstadoDeCliente {
 				if p.Init != "" {
-					data-init={ restauraOFocoDoTrilho + "; " + p.Init }
+					data-init={ RestoreRailFocus + "; " + p.Init }
 				} else {
-					data-init={ restauraOFocoDoTrilho }
+					data-init={ RestoreRailFocus }
 				}
 			}
 		>
@@ -147,14 +156,14 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			// para lugar nenhum.
 			<section
 				data-slot="scene-shell"
-				data-on:keydown__window={ atalhosDaCasca }
+				data-on:keydown__window={ ShellShortcuts }
 				if p.Voltar != "" {
 					data-voltar={ p.Voltar }
 				}
 				class="scene-grimorio relative flex h-dvh flex-col overflow-hidden"
 			>
 				<div aria-hidden="true" data-slot="background-texture" data-variant="stone" data-vignette="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
-				if p.Forma == cascaDensa {
+				if p.Forma == ShellDense {
 					<header
 						class="relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3"
 						style="padding-top: max(0.75rem, env(safe-area-inset-top))"
@@ -186,11 +195,11 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 				<div
 					data-slot="scene-content"
 					class={ "relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
-						templ.KV("px-4 py-4", p.Forma == cascaDensa),
-						templ.KV("px-5 py-14", p.Forma == cascaTitulo) }
+						templ.KV("px-4 py-4", p.Forma == ShellDense),
+						templ.KV("px-5 py-14", p.Forma == ShellTitled) }
 				>
-					if p.Forma == cascaTitulo {
-						@tituloDaCena(p.Titulo, p.Kicker)
+					if p.Forma == ShellTitled {
+						@SceneTitle(p.Titulo, p.Kicker)
 					}
 					@corpo
 				</div>
@@ -204,16 +213,16 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 				// requisição seguinte — o que faria a senha viajar de novo a cada
 				// pedido. É o que o `TestPortaNaoPoeNadaEmSinalDoDatastar` cobra.
 				if !p.SemEstadoDeCliente {
-					@buscadorDoLivro()
+					for _, sobreposicao := range p.Overlays {
+			@sobreposicao
+		}
 					// O livro por cima da cena (ALE-264). Nasce vazio: sem `src`
 					// no `<iframe>`, quem nunca abre o livro não paga um byte do
 					// pdf.js. Fora da porta pela mesma razão do buscador.
-					@oLivroEmDialogo()
-					// E a caixa do VERBETE citado por um elo. Mesma razão de
+								// E a caixa do VERBETE citado por um elo. Mesma razão de
 					// estar aqui: a cena dos catálogos é remendada a cada tecla
 					// da busca, e o diálogo perderia o conteúdo junto.
-					@oVerbeteEmDialogo()
-				}
+							}
 			</section>
 		</body>
 	</html>

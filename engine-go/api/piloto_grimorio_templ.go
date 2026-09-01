@@ -8,6 +8,8 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "t20engine/web/ui"
+
 // A FOLHA DE ESPECIFICAÇÃO do sistema de desenho (ALE-251, portada da ALE-173).
 //
 // Duas regras sustentam esta página, e as duas existem contra o mesmo
@@ -154,7 +156,7 @@ func secaoDaFolha(id, titulo string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 122, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 124, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -167,7 +169,7 @@ func secaoDaFolha(id, titulo string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(id + "-titulo")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 122, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 124, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -180,7 +182,7 @@ func secaoDaFolha(id, titulo string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(id + "-titulo")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 123, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 125, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -193,7 +195,7 @@ func secaoDaFolha(id, titulo string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 124, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 126, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -258,7 +260,7 @@ func blocoDaFolha(titulo, nota string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 136, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 138, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -266,7 +268,7 @@ func blocoDaFolha(titulo, nota string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = rotuloDeSecao("muted", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.SectionLabel("muted", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -278,7 +280,7 @@ func blocoDaFolha(titulo, nota string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(nota)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 139, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 141, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -358,7 +360,7 @@ func quadradoDeCor(a amostraDeCor) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(a.Token)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 154, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 156, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -382,7 +384,7 @@ func quadradoDeCor(a amostraDeCor) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nota)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 160, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 162, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -454,7 +456,7 @@ func cantoDeRaio(a amostraSimples) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 173, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 175, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -519,7 +521,7 @@ func linhaDeTexto(a amostraSimples) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 185, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 187, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -537,7 +539,7 @@ func linhaDeTexto(a amostraSimples) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(a.Uso)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 188, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 190, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -996,7 +998,7 @@ func grimorio() templ.Component {
 			var templ_7745c5c3_Var41 templ.SafeURL
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("#" + item.Nome))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 291, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 293, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -1009,7 +1011,7 @@ func grimorio() templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(item.Uso)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 293, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 295, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -1103,7 +1105,7 @@ func parDePecas(nome string, spa templ.Component, emTempl templ.Component) templ
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 332, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 334, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -1277,7 +1279,7 @@ func botaoDaSpa(variante, tamanho, texto string) templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue(variante)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 377, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 379, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 		if templ_7745c5c3_Err != nil {
@@ -1290,7 +1292,7 @@ func botaoDaSpa(variante, tamanho, texto string) templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(tamanho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 377, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 379, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 		if templ_7745c5c3_Err != nil {
@@ -1303,7 +1305,7 @@ func botaoDaSpa(variante, tamanho, texto string) templ.Component {
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(texto)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 377, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 379, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 		if templ_7745c5c3_Err != nil {
@@ -1345,7 +1347,7 @@ func chipDaSpa(variante string) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(variante)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 381, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 383, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 		if templ_7745c5c3_Err != nil {
@@ -1358,7 +1360,7 @@ func chipDaSpa(variante string) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(variante)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 381, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 383, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {
@@ -1425,7 +1427,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("default", botaoDaSpa("default", "default", "Abrir"), botaoTemplParaFolha(varPrimaria)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = parDePecas("default", botaoDaSpa("default", "default", "Abrir"), botaoTemplParaFolha(ui.VariantPrimary)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1433,7 +1435,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("secondary", botaoDaSpa("secondary", "default", "Abrir"), botaoTemplParaFolha(varSecundaria)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = parDePecas("secondary", botaoDaSpa("secondary", "default", "Abrir"), botaoTemplParaFolha(ui.VariantSecondary)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1441,7 +1443,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("destructive", botaoDaSpa("destructive", "default", "Abrir"), botaoTemplParaFolha(varDestrutiva)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = parDePecas("destructive", botaoDaSpa("destructive", "default", "Abrir"), botaoTemplParaFolha(ui.VariantDestructive)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1499,7 +1501,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("xs", botaoDaSpa("default", "xs", "xs"), botaoTemplNoTamanho(tamMinimo, "xs")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = parDePecas("xs", botaoDaSpa("default", "xs", "xs"), botaoTemplNoTamanho(ui.SizeTiny, "xs")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1507,7 +1509,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("sm", botaoDaSpa("default", "sm", "sm"), botaoTemplNoTamanho(tamPequeno, "sm")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = parDePecas("sm", botaoDaSpa("default", "sm", "sm"), botaoTemplNoTamanho(ui.SizeSmall, "sm")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1515,7 +1517,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("default", botaoDaSpa("default", "default", "default"), botaoTemplNoTamanho(tamPadrao, "default")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = parDePecas("default", botaoDaSpa("default", "default", "default"), botaoTemplNoTamanho(ui.SizeDefault, "default")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1523,7 +1525,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("lg", botaoDaSpa("default", "lg", "lg"), botaoTemplNoTamanho(tamGrande, "lg")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = parDePecas("lg", botaoDaSpa("default", "lg", "lg"), botaoTemplNoTamanho(ui.SizeLarge, "lg")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1724,7 +1726,7 @@ func barraDaSpa(tipo, rotulo, atual, max string) templ.Component {
 		var templ_7745c5c3_Var65 string
 		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue(tipo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 428, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 430, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 		if templ_7745c5c3_Err != nil {
@@ -1737,7 +1739,7 @@ func barraDaSpa(tipo, rotulo, atual, max string) templ.Component {
 		var templ_7745c5c3_Var66 string
 		templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 428, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 430, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 		if templ_7745c5c3_Err != nil {
@@ -1750,7 +1752,7 @@ func barraDaSpa(tipo, rotulo, atual, max string) templ.Component {
 		var templ_7745c5c3_Var67 string
 		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.ResolveAttributeValue(atual)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 428, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 430, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 		if templ_7745c5c3_Err != nil {
@@ -1763,7 +1765,7 @@ func barraDaSpa(tipo, rotulo, atual, max string) templ.Component {
 		var templ_7745c5c3_Var68 string
 		templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(max)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 428, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 430, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 		if templ_7745c5c3_Err != nil {
@@ -1778,7 +1780,7 @@ func barraDaSpa(tipo, rotulo, atual, max string) templ.Component {
 }
 
 // Os embrulhos do lado templ: a peça REAL, com o texto da amostra.
-func botaoTemplParaFolha(v variante) templ.Component {
+func botaoTemplParaFolha(v ui.Variant) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1817,7 +1819,7 @@ func botaoTemplParaFolha(v variante) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = botao(v, tamPadrao, "", templ.Attributes{"type": "button"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var70), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Button(v, ui.SizeDefault, "", templ.Attributes{"type": "button"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var70), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1825,7 +1827,7 @@ func botaoTemplParaFolha(v variante) templ.Component {
 	})
 }
 
-func botaoTemplNoTamanho(t tamanho, texto string) templ.Component {
+func botaoTemplNoTamanho(t ui.Size, texto string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1861,7 +1863,7 @@ func botaoTemplNoTamanho(t tamanho, texto string) templ.Component {
 			var templ_7745c5c3_Var73 string
 			templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(texto)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 441, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 443, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 			if templ_7745c5c3_Err != nil {
@@ -1869,7 +1871,7 @@ func botaoTemplNoTamanho(t tamanho, texto string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = botao(varPrimaria, t, "", templ.Attributes{"type": "button"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var72), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Button(ui.VariantPrimary, t, "", templ.Attributes{"type": "button"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var72), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1902,7 +1904,7 @@ func campoTemplParaFolha() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = campoDeTexto(campo{Nome: "amostra-campo", Label: "Nome do combatente"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.TextField(ui.Field{Nome: "amostra-campo", Label: "Nome do combatente"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1978,7 +1980,7 @@ func secaoDeFoco() templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = botao(varSecundaria, tamPadrao, "", templ.Attributes{"type": "button"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var78), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{"type": "button"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var78), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -2093,7 +2095,7 @@ func secaoDeMovimento() templ.Component {
 						var templ_7745c5c3_Var84 string
 						templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(d.Uso)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 494, Col: 14}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_grimorio.templ`, Line: 496, Col: 14}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 						if templ_7745c5c3_Err != nil {
@@ -2101,7 +2103,7 @@ func secaoDeMovimento() templ.Component {
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = botao(varSecundaria, tamPequeno, "", templ.Attributes{"type": "button", "data-disparar": d.Nome}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var83), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{"type": "button", "data-disparar": d.Nome}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var83), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

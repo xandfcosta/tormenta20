@@ -3,6 +3,7 @@ package api
 import (
 
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // A CARTA DE CONVITE desenhada (ALE-249): entrar numa mesa.
@@ -19,7 +20,7 @@ import (
 // comportamento que o navegador garante por comportamento que eu garanto.
 
 templ campanhaEntrar(v campanhaEntrarView) {
-	@folhaDoTomo() {
+	@ui.TomeSheet() {
 		// `m-auto` centra uma carta curta (convite morto, elenco vazio) em vez
 		// de deixá-la encalhada no topo de uma folha vazia; com elenco cheio as
 		// margens automáticas somem e ela preenche a página.
@@ -29,7 +30,7 @@ templ campanhaEntrar(v campanhaEntrarView) {
 				<input type="hidden" name="token" value={ v.Convite }/>
 				@cartaDoConvite(v)
 			} else {
-				@campoDeTexto(campo{
+				@ui.TextField(ui.Field{
 					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
 					Valor: v.NumeroDigitado, Obrigatorio: true,
 					Dica:  "O mestre da mesa envia esse número.",
@@ -51,9 +52,9 @@ templ campanhaEntrar(v campanhaEntrarView) {
 			// parede. Quem explica é a carta ("peça um novo link ao mestre") ou
 			// a caixa vazia ("crie um herói"), e as duas oferecem o passo certo.
 			<div class="flex justify-end gap-2">
-				<a href="/campanhas" class={ classesDoBotao(varSecundaria, tamPadrao, "") }>Cancelar</a>
+				<a href="/campanhas" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }>Cancelar</a>
 				if len(v.Herois) > 0 && (!v.TemConvite || v.ConviteVale) {
-					@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
 						Entrar na mesa
 					}
 				}
@@ -70,9 +71,9 @@ templ campanhaEntrar(v campanhaEntrarView) {
 // espera uma segunda requisição atrás de um esqueleto.
 templ cartaDoConvite(v campanhaEntrarView) {
 	<div class="flex items-start gap-3 rounded-none border border-grimorio-gold/40 bg-grimorio-panel p-4">
-		@icone("Mail", "mt-0.5 size-4 shrink-0 text-grimorio-gold")
+		@ui.Icon("Mail", "mt-0.5 size-4 shrink-0 text-grimorio-gold")
 		<div class="min-w-0 flex-1 space-y-1">
-			@rotuloDeSecao("muted", "") {
+			@ui.SectionLabel("muted", "") {
 				Convite
 			}
 			if v.ConviteVale {
@@ -93,7 +94,7 @@ templ cartaDoConvite(v campanhaEntrarView) {
 // que faz o leitor de tela anunciar a pergunta antes de cada opção.
 templ escolhaDoHeroi(v campanhaEntrarView) {
 	<fieldset class="space-y-3">
-		@legendaDeSecao("muted", "mb-3") {
+		@ui.SectionCaption("muted", "mb-3") {
 			Qual herói entra na mesa?
 		}
 		<div data-nav-region="content" data-nav-layout="grid" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -151,7 +152,7 @@ templ semHeroisParaSentar() {
 		<p class="text-sm text-muted-foreground">
 			Você ainda não tem heróis. Crie um antes de entrar numa mesa.
 		</p>
-		<a href="/personagens/nova" class={ classesDoBotao(varSecundaria, tamPequeno, "") }>Criar herói</a>
+		<a href="/personagens/nova" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }>Criar herói</a>
 	</div>
 }
 

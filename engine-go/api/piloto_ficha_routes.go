@@ -11,6 +11,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/plataforma"
+	"t20engine/web/ui"
 )
 
 // As rotas da FICHA no piloto (ALE-272, fatia 1).
@@ -113,10 +114,10 @@ func (s *Server) handleFicha(w http.ResponseWriter, r *http.Request) {
 		_ = datastar.NewSSE(w, r).PatchElements(fragmento)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo: view.Nome + " · Tormenta 20",
 		// `cascaNua`: a cena desenha o próprio cabeçalho, com a volta e o nome.
-		Forma: cascaNua,
+		Forma: ui.ShellBare,
 		// `detalhe` é a caixa do Combate cujo diálogo está aberto, e ele mora no
 		// <body> porque o <body> nunca é remendado: declarado dentro do painel, o
 		// `@post` do PV o redeclararia a cada toque e fecharia o diálogo que o

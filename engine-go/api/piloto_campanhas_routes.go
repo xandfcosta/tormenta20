@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
+	"t20engine/web/ui"
 )
 
 // A rota da cena de CAMPANHAS (ALE-234).
@@ -55,11 +56,11 @@ func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo: "Campanhas · Tormenta 20",
 		// `cascaNua`: esta cena desenha o próprio cabeçalho, porque ele carrega a
 		// busca e os filtros. A casca densa poria um segundo `<h1>` acima.
-		Forma: cascaNua,
+		Forma: ui.ShellBare,
 	}, cenaDeCampanhas(view))
 }
 
@@ -154,12 +155,12 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *Server) escreveFolhaNova(w http.ResponseWriter, r *http.Request, status int, v campanhaNovaView) {
-	s.escrevePagina(w, r, status, paginaPiloto{
+	s.escrevePagina(w, r, status, ui.Page{
 		Titulo: "Abrir nova campanha",
 		// `cascaDensa`: a tela da SPA usa o cabeçalho compacto com o "‹ Voltar",
 		// e sem ele a folha nasce sem saída visível — o Esc existe, mas atalho
 		// não é a única porta.
-		Forma:  cascaDensa,
+		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
 	}, campanhaNova(v))
 }
@@ -257,9 +258,9 @@ func (s *Server) escreveCarta(w http.ResponseWriter, r *http.Request, status int
 	if v.Erros == nil {
 		v.Erros = plataforma.FieldErrorMap{}
 	}
-	s.escrevePagina(w, r, status, paginaPiloto{
+	s.escrevePagina(w, r, status, ui.Page{
 		Titulo: "Entrar na mesa",
-		Forma:  cascaDensa,
+		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
 	}, campanhaEntrar(v))
 }
@@ -430,9 +431,9 @@ func donoDaCronica(w http.ResponseWriter, r *http.Request, s *Server) (int64, Au
 }
 
 func (s *Server) escrevePaginaDaCronica(w http.ResponseWriter, r *http.Request, status int, v cronicaView) {
-	s.escrevePagina(w, r, status, paginaPiloto{
+	s.escrevePagina(w, r, status, ui.Page{
 		Titulo: v.Nome,
-		Forma:  cascaDensa,
+		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
 		// O rótulo nomeia o destino em vez da seta genérica: daqui se volta
 		// para o livro, e "Campanhas" diz isso melhor que "Voltar".

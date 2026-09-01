@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"t20engine/web/ui"
 )
 
 // A rota da FOLHA DE ESPECIFICAÇÃO (ALE-251).
@@ -17,9 +18,9 @@ func (s *Server) rotasDoGrimorio(r chi.Router) {
 }
 
 func (s *Server) handleGrimorio(w http.ResponseWriter, r *http.Request) {
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Grimório",
-		Forma:         cascaDensa,
+		Forma:         ui.ShellDense,
 		TituloVisivel: "Grimório",
 		Voltar:        "/",
 		VoltarRotulo:  "Hub",

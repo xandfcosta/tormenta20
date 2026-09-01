@@ -10,6 +10,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
+	"t20engine/web/ui"
 )
 
 // A tela de administração do piloto (ALE-219, segunda superfície).
@@ -28,9 +29,9 @@ func (s *Server) handleAdminPiloto(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Administração",
-		Forma:         cascaDensa,
+		Forma:         ui.ShellDense,
 		TituloVisivel: "Administração",
 		Voltar:        "/",
 		// Sem `Init`: esta tela não abre stream nenhum. Os sinais existem só

@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O painel de PERÍCIAS desenhado (ALE-272, fatia 4).
 //
@@ -36,9 +39,9 @@ templ oPainelDePericias(v fichaView) {
 					type="button"
 					aria-label="Nova perícia"
 					data-on:click="$novapericia = ''; $novoatributo = 'intelligence'; $oficio = true"
-					class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+					class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 				>
-					@icone("Plus", "size-4")
+					@ui.Icon("Plus", "size-4")
 				</button>
 			</div>
 		</div>
@@ -67,7 +70,7 @@ templ oPainelDePericias(v fichaView) {
 // cena de campanhas.
 templ aBuscaDePericia(v fichaView) {
 	<div class="relative w-40 sm:w-56">
-		@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground")
+		@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground")
 		<input
 			type="search"
 			name="busca"
@@ -106,7 +109,7 @@ templ aLinhaDaPericia(v fichaView, linha expertiseRow) {
 				data-on:click={ oPostDaFicha(v, "/pericias/remove/"+linha.Command) }
 				class="inline-flex shrink-0 rounded-sm p-1 text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				@icone("Trash2", "size-3.5")
+				@ui.Icon("Trash2", "size-3.5")
 			</button>
 		}
 	</div>
@@ -148,7 +151,7 @@ templ aEstrelaDeSoTreinada(linha expertiseRow) {
 			templ.KV("text-warning-ink", linha.Locked),
 			templ.KV("text-muted-foreground", !linha.Locked) }
 	>
-		@icone("Star", "size-3")
+		@ui.Icon("Star", "size-3")
 	</span>
 }
 
@@ -184,7 +187,7 @@ templ oBotaoDeTreino(v fichaView, linha expertiseRow) {
 			templ.KV("border-grimorio-gold/60 text-grimorio-gold", linha.Trained),
 			templ.KV("border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40", !linha.Trained) }
 	>
-		@icone("Dumbbell", "size-3")
+		@ui.Icon("Dumbbell", "size-3")
 		Treino
 	</button>
 }
@@ -201,7 +204,7 @@ templ oDetalheDaPericia(linha expertiseRow) {
 					templ.KV("text-grimorio-gold", !linha.Locked) }
 			>
 				if linha.Locked {
-					@icone("Lock", "size-4 text-warning-ink")
+					@ui.Icon("Lock", "size-4 text-warning-ink")
 				}
 				{ linha.Total }
 			</span>
@@ -268,7 +271,7 @@ templ oDialogoDoOficio(v fichaView) {
 				<button
 					type="button"
 					data-on:click={ oPostDaFicha(v, "/pericias/nova") + "; $oficio = false" }
-					class={ classesDoBotao(varPrimaria, tamPadrao, "w-full") }
+					class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 				>Criar perícia</button>
 			</div>
 		</div>

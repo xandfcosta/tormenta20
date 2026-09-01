@@ -8,6 +8,8 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "t20engine/web/ui"
+
 // A PORTA desenhada (ALE-229): entrar, criar conta e redefinir senha.
 //
 // A decisão que governa este arquivo: aqui NÃO se usa sinal do Datastar.
@@ -72,7 +74,7 @@ func portaEmVolta(titulo, subtitulo string, rodape templ.Component) templ.Compon
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 27, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 29, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -90,7 +92,7 @@ func portaEmVolta(titulo, subtitulo string, rodape templ.Component) templ.Compon
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(subtitulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 29, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 31, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -111,7 +113,7 @@ func portaEmVolta(titulo, subtitulo string, rodape templ.Component) templ.Compon
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = molduraDePainel("space-y-5").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.PanelFrame("space-y-5").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -170,7 +172,7 @@ func avisoDoFormulario(aviso string) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(aviso)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 51, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 53, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -231,7 +233,7 @@ func paginaEntrar(v entrarView) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Destino)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 61, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 63, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 				if templ_7745c5c3_Err != nil {
@@ -242,14 +244,14 @@ func paginaEntrar(v entrarView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = campoDeTexto(campo{
+			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
 				Valor: v.Email, Erros: v.Erros["email"], Obrigatorio: true,
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = campoDeTexto(campo{
+			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "current-password",
 				Erros: v.Erros["senha"], Obrigatorio: true,
 			}).Render(ctx, templ_7745c5c3_Buffer)
@@ -278,7 +280,7 @@ func paginaEntrar(v entrarView) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -368,7 +370,7 @@ func paginaCriarConta(v criarContaView) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Convite)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 90, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 92, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -378,21 +380,21 @@ func paginaCriarConta(v criarContaView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = campoDeTexto(campo{
+			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
 				Valor: v.Email, Erros: v.Erros["email"], Obrigatorio: true,
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = campoDeTexto(campo{
+			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Nome: "nome", Label: "Nome (opcional)", Autocomplete: "name",
 				Valor: v.Nome, Erros: v.Erros["nome"], TamanhoMaximo: 80,
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = campoDeTexto(campo{
+			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "new-password",
 				Dica: "Ao menos 8 caracteres.", Erros: v.Erros["senha"],
 				Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
@@ -426,7 +428,7 @@ func paginaCriarConta(v criarContaView) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -515,7 +517,7 @@ func paginaRedefinir(v redefinirView) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Token)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 124, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 126, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 				if templ_7745c5c3_Err != nil {
@@ -525,7 +527,7 @@ func paginaRedefinir(v redefinirView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = campoDeTexto(campo{
+				templ_7745c5c3_Err = ui.TextField(ui.Field{
 					Nome: "senha", Label: "Nova senha", Tipo: "password", Autocomplete: "new-password",
 					Dica: "Ao menos 8 caracteres.", Erros: v.Erros["senha"],
 					Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
@@ -559,7 +561,7 @@ func paginaRedefinir(v redefinirView) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -575,7 +577,7 @@ func paginaRedefinir(v redefinirView) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(avisoLink)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 141, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 143, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -640,7 +642,7 @@ func confirmacaoDeSenha(erros []string) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("el.setCustomValidity(el.value === el.form.senha.value ? '' : '" + avisoConfere + "')")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 173, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 175, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
@@ -673,7 +675,7 @@ func confirmacaoDeSenha(erros []string) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 183, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_porta.templ`, Line: 185, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {

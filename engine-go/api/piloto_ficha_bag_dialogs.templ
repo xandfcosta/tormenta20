@@ -3,6 +3,7 @@ package api
 import (
 	"strconv"
 	"strings"
+	"t20engine/web/ui"
 )
 
 // OS DIÁLOGOS DA MOCHILA (ALE-272, fatia 7).
@@ -37,7 +38,7 @@ templ itemSheetDialog(v fichaView, ficha itemSheet) {
 						<button
 							type="button"
 							data-on:click={ oComandoDeEquipar(v, ficha, lugar) + "; $detalhe = ''" }
-							class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+							class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 						>{ lugar.Rotulo }</button>
 					}
 				</div>
@@ -67,7 +68,7 @@ templ itemSheetDialog(v fichaView, ficha itemSheet) {
 					aria-label={ "Melhorias de " + ficha.Name }
 					aria-haspopup="dialog"
 					data-on:click={ oGestoQueAbreAsMelhorias(ficha) }
-					class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+					class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 				>Melhorias</button>
 			}
 			<button
@@ -75,13 +76,13 @@ templ itemSheetDialog(v fichaView, ficha itemSheet) {
 				aria-label={ "Editar " + ficha.Name }
 				aria-haspopup="dialog"
 				data-on:click={ oGestoQueAbreAEdicao(ficha) }
-				class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>Editar</button>
 			<button
 				type="button"
 				aria-label={ "Remover " + ficha.Name }
 				data-on:click={ oPostDaFicha(v, "/itens/"+ficha.Command+"/remove") + "; $detalhe = ''" }
-				class={ classesDoBotao(varDestrutiva, tamPequeno, "ml-auto") }
+				class={ ui.ButtonClasses(ui.VariantDestructive, ui.SizeSmall, "ml-auto") }
 			>Remover</button>
 		</div>
 	}
@@ -113,7 +114,7 @@ templ consumeBlock(v fichaView, ficha itemSheet) {
 			type="button"
 			aria-label={ "Usar " + ficha.Name }
 			data-on:click={ oPostDaFicha(v, "/itens/"+ficha.Command+"/usa") + "; $detalhe = ''" }
-			class={ classesDoBotao(varPrimaria, tamPequeno, "w-full") }
+			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "w-full") }
 		>Usar</button>
 	</div>
 }
@@ -183,7 +184,7 @@ templ overlayDialog(v fichaView, ficha itemSheet) {
 		<button
 			type="button"
 			data-on:click={ oPostDaFicha(v, "/itens/"+ficha.Command+"/melhorias") + "; $detalhe = ''" }
-			class={ classesDoBotao(varPrimaria, tamPadrao, "w-full") }
+			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Aplicar</button>
 	}
 }
@@ -284,7 +285,7 @@ templ itemFormDialog(v fichaView, chave, titulo, botao, comando string) {
 		<button
 			type="button"
 			data-on:click={ comando + "; $detalhe = ''" }
-			class={ classesDoBotao(varPrimaria, tamPadrao, "w-full") }
+			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>{ botao }</button>
 	}
 }
@@ -297,9 +298,9 @@ templ bagAddButtons(v fichaView) {
 			aria-label="Adicionar do catálogo"
 			aria-haspopup="dialog"
 			data-on:click="$itemqtd = 1; $catalogobusca = ''; $catalogocategoria = ''; $detalhe = 'catalogo'"
-			class={ classesDoBotao(varSecundaria, tamPequeno, "gap-1") }
+			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
-			@icone("Plus", "size-3.5")
+			@ui.Icon("Plus", "size-3.5")
 			Catálogo
 		</button>
 		<button
@@ -307,9 +308,9 @@ templ bagAddButtons(v fichaView) {
 			aria-label="Adicionar item custom"
 			aria-haspopup="dialog"
 			data-on:click="$itemnome = ''; $itemqtd = 1; $itemespacos = 1; $detalhe = 'item-custom'"
-			class={ classesDoBotao(varSecundaria, tamPequeno, "gap-1") }
+			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
-			@icone("Plus", "size-3.5")
+			@ui.Icon("Plus", "size-3.5")
 			Custom
 		</button>
 	</div>

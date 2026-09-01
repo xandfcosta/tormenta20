@@ -11,6 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"strconv"
 	"strings"
+	"t20engine/web/ui"
 )
 
 // OS DIÁLOGOS DA MOCHILA (ALE-272, fatia 7).
@@ -69,7 +70,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(oPesoEscrito(ficha))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 27, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 28, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -95,7 +96,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				for _, lugar := range ficha.Equip {
-					var templ_7745c5c3_Var4 = []any{classesDoBotao(varSecundaria, tamPequeno, "")}
+					var templ_7745c5c3_Var4 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "")}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var4...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -107,7 +108,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(oComandoDeEquipar(v, ficha, lugar) + "; $detalhe = ''")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 39, Col: 77}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 40, Col: 77}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 					if templ_7745c5c3_Err != nil {
@@ -133,7 +134,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(lugar.Rotulo)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 41, Col: 21}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 42, Col: 21}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -186,7 +187,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(melhoria.Nome)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 57, Col: 68}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 58, Col: 68}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 					if templ_7745c5c3_Err != nil {
@@ -199,7 +200,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(melhoria.Efeito)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 58, Col: 64}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 59, Col: 64}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -220,7 +221,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if ficha.Overlayable {
-				var templ_7745c5c3_Var10 = []any{classesDoBotao(varSecundaria, tamPequeno, "")}
+				var templ_7745c5c3_Var10 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "")}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var10...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -232,7 +233,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("Melhorias de " + ficha.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 67, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 68, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 				if templ_7745c5c3_Err != nil {
@@ -245,7 +246,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGestoQueAbreAsMelhorias(ficha))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 69, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 70, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
@@ -269,7 +270,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			var templ_7745c5c3_Var14 = []any{classesDoBotao(varSecundaria, tamPequeno, "")}
+			var templ_7745c5c3_Var14 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -281,7 +282,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("Editar " + ficha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 75, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 76, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 			if templ_7745c5c3_Err != nil {
@@ -294,7 +295,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGestoQueAbreAEdicao(ficha))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 77, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 78, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -317,7 +318,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var18 = []any{classesDoBotao(varDestrutiva, tamPequeno, "ml-auto")}
+			var templ_7745c5c3_Var18 = []any{ui.ButtonClasses(ui.VariantDestructive, ui.SizeSmall, "ml-auto")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var18...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -329,7 +330,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("Remover " + ficha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 82, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 83, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 			if templ_7745c5c3_Err != nil {
@@ -342,7 +343,7 @@ func itemSheetDialog(v fichaView, ficha itemSheet) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/itens/"+ficha.Command+"/remove") + "; $detalhe = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 83, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 84, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 			if templ_7745c5c3_Err != nil {
@@ -420,7 +421,7 @@ func consumeBlock(v fichaView, ficha itemSheet) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs("Usar · " + ficha.Consumable.Escopo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 104, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 105, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -442,7 +443,7 @@ func consumeBlock(v fichaView, ficha itemSheet) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		var templ_7745c5c3_Var24 = []any{classesDoBotao(varPrimaria, tamPequeno, "w-full")}
+		var templ_7745c5c3_Var24 = []any{ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "w-full")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -454,7 +455,7 @@ func consumeBlock(v fichaView, ficha itemSheet) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("Usar " + ficha.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 114, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 115, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -467,7 +468,7 @@ func consumeBlock(v fichaView, ficha itemSheet) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/itens/"+ficha.Command+"/usa") + "; $detalhe = ''")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 115, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 116, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 		if templ_7745c5c3_Err != nil {
@@ -522,7 +523,7 @@ func rollField(sinal, rotulo string) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 123, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 124, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -535,7 +536,7 @@ func rollField(sinal, rotulo string) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 127, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 128, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -578,7 +579,7 @@ func bookBlock(ficha itemSheet) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(ficha.Book.Categoria + " · T$ " + ficha.Book.Preco + " · p" + strconv.Itoa(ficha.Book.Pagina))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 136, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 137, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -596,7 +597,7 @@ func bookBlock(ficha itemSheet) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(linha)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 138, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 139, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -665,7 +666,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(escolha.Ativa))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 156, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 157, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 				if templ_7745c5c3_Err != nil {
@@ -678,7 +679,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var37 string
 				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolha.Nome)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 157, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 158, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 				if templ_7745c5c3_Err != nil {
@@ -691,7 +692,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGestoQueAlternaAMelhoria(escolha))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 158, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 159, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 				if templ_7745c5c3_Err != nil {
@@ -704,7 +705,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSinalDaMelhoria(escolha))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 159, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 160, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 				if templ_7745c5c3_Err != nil {
@@ -717,7 +718,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var40 string
 				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(escolha.Nome)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 162, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 163, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
@@ -730,7 +731,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var41 string
 				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(escolha.Efeito)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 163, Col: 81}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 164, Col: 81}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 				if templ_7745c5c3_Err != nil {
@@ -743,7 +744,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var42 string
 				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs("T$ " + escolha.Preco)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 164, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 165, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
@@ -761,7 +762,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.ResolveAttributeValue("Material de " + ficha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 172, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 173, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 			if templ_7745c5c3_Err != nil {
@@ -779,7 +780,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var44 string
 				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolha.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 177, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 178, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 				if templ_7745c5c3_Err != nil {
@@ -802,7 +803,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 				var templ_7745c5c3_Var45 string
 				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(escolha.Nome + " · T$ " + escolha.Preco)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 178, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 179, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 				if templ_7745c5c3_Err != nil {
@@ -817,7 +818,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var46 = []any{classesDoBotao(varPrimaria, tamPadrao, "w-full")}
+			var templ_7745c5c3_Var46 = []any{ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var46...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -829,7 +830,7 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/itens/"+ficha.Command+"/melhorias") + "; $detalhe = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 185, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 186, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 			if templ_7745c5c3_Err != nil {
@@ -903,7 +904,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGetDaFicha(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 198, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 199, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {
@@ -916,7 +917,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Bag.CatalogSearch)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 199, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 200, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -929,7 +930,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue(oGetDaFicha(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 206, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 207, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 			if templ_7745c5c3_Err != nil {
@@ -947,7 +948,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var54 string
 				templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Valor)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 211, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 212, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 				if templ_7745c5c3_Err != nil {
@@ -970,7 +971,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 				var templ_7745c5c3_Var55 string
 				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 211, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 212, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 				if templ_7745c5c3_Err != nil {
@@ -1003,7 +1004,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 					var templ_7745c5c3_Var56 string
 					templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("Adicionar " + linha.Nome)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 232, Col: 44}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 233, Col: 44}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 					if templ_7745c5c3_Err != nil {
@@ -1016,7 +1017,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 					var templ_7745c5c3_Var57 string
 					templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPostDaFicha(v, "/itens/adiciona/"+linha.ID) + "; $detalhe = ''")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 233, Col: 86}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 234, Col: 86}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 					if templ_7745c5c3_Err != nil {
@@ -1029,7 +1030,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 					var templ_7745c5c3_Var58 string
 					templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Nome)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 236, Col: 72}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 237, Col: 72}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 					if templ_7745c5c3_Err != nil {
@@ -1042,7 +1043,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 					var templ_7745c5c3_Var59 string
 					templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Categoria)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 237, Col: 77}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 238, Col: 77}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 					if templ_7745c5c3_Err != nil {
@@ -1055,7 +1056,7 @@ func catalogAddDialog(v fichaView) templ.Component {
 					var templ_7745c5c3_Var60 string
 					templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs("esp " + linha.Espacos + " · T$ " + linha.Preco)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 239, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 240, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 					if templ_7745c5c3_Err != nil {
@@ -1121,7 +1122,7 @@ func itemFormDialog(v fichaView, chave, titulo, botao, comando string) templ.Com
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var63 = []any{classesDoBotao(varPrimaria, tamPadrao, "w-full")}
+			var templ_7745c5c3_Var63 = []any{ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var63...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1133,7 +1134,7 @@ func itemFormDialog(v fichaView, chave, titulo, botao, comando string) templ.Com
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(comando + "; $detalhe = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 286, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 287, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 			if templ_7745c5c3_Err != nil {
@@ -1159,7 +1160,7 @@ func itemFormDialog(v fichaView, chave, titulo, botao, comando string) templ.Com
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(botao)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 288, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 289, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 			if templ_7745c5c3_Err != nil {
@@ -1205,7 +1206,7 @@ func bagAddButtons(v fichaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var68 = []any{classesDoBotao(varSecundaria, tamPequeno, "gap-1")}
+		var templ_7745c5c3_Var68 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var68...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1227,7 +1228,7 @@ func bagAddButtons(v fichaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Plus", "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Plus", "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1235,7 +1236,7 @@ func bagAddButtons(v fichaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var70 = []any{classesDoBotao(varSecundaria, tamPequeno, "gap-1")}
+		var templ_7745c5c3_Var70 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var70...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1257,7 +1258,7 @@ func bagAddButtons(v fichaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = icone("Plus", "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.Icon("Plus", "size-3.5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

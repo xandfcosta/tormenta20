@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // A MESA DO MESTRE, e a primeira das quatro ferramentas (ALE-257).
 //
@@ -83,7 +86,7 @@ templ mesaDoMestre(atual string, cena templ.Component) {
 			// A legenda mora na CASCA e não em cada cena, pelo mesmo motivo do
 			// trilho: as quatro ferramentas do mestre passam por aqui, então uma
 			// declaração cobre as quatro e a quinta já nasce anunciada.
-			@legendaDoTeclado()
+			@ui.KeyboardLegend()
 		</div>
 	</div>
 }
@@ -138,7 +141,7 @@ templ trilhaDoMestre(atual string) {
 			for _, f := range secao.Paradas {
 				<a
 					href={ templ.SafeURL("/mestre/" + f.Slug) }
-					data-on:keydown={ marcaDeTrocaPorTeclado }
+					data-on:keydown={ ui.KeyboardSwapMark }
 					title={ f.Dica }
 					if f.Slug == atual {
 						aria-current="page"
@@ -147,7 +150,7 @@ templ trilhaDoMestre(atual string) {
 						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron px-3 py-2 text-left text-xs text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-full"
 					}
 				>
-					@icone(f.Icone, "size-4 shrink-0")
+					@ui.Icon(f.Icone, "size-4 shrink-0")
 					<span class="truncate font-heading uppercase tracking-[0.12em]">{ f.Rotulo }</span>
 				</a>
 			}
@@ -303,7 +306,7 @@ templ fichaEmDialogo(m verbete, livro enderecoDoLivro) {
 templ filtrosDoBestiario(v bestiarioView) {
 	<div data-nav-region="filtros" data-nav-layout="grid" class="space-y-2">
 		<div class="relative">
-			@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
+			@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 			<input
 				type="search"
 				name="busca"
@@ -325,7 +328,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 		// porque a tela já diz "Bestiário" logo acima — repetir "Tipo" ali só
 		// tira espaço de sete crachás que precisam caber numa linha.
 		<fieldset class="flex flex-wrap gap-1.5 border-0 p-0">
-			@legendaDeSecao("muted", "sr-only") {
+			@ui.SectionCaption("muted", "sr-only") {
 				Filtrar por tipo
 			}
 			for _, t := range tiposDeCriatura {
@@ -351,7 +354,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 // porque o número chega pela URL e qualquer um a edita à mão.
 templ caixaDeND(base, id, rotulo, sinal, valor string) {
 	<div class="space-y-1">
-		@rotuloDeSecao("muted", "block") {
+		@ui.SectionLabel("muted", "block") {
 			<label for={ "bestiario-" + id }>{ rotulo }</label>
 		}
 		<input
@@ -619,14 +622,14 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 // mestre que navega por regiões não consegue pular para Ataques (ALE-151).
 templ secaoDoBloco(titulo string) {
 	<section aria-label={ titulo }>
-		<h4 class={ classesDoRotulo("muted", "mb-1") }>{ titulo }</h4>
+		<h4 class={ ui.SectionLabelClasses("muted", "mb-1") }>{ titulo }</h4>
 		{ children... }
 	</section>
 }
 
 templ estatistica(rotulo, valor string) {
 	<div class="rounded-sm border border-grimorio-iron p-2 text-center">
-		@rotuloDeSecao("muted", "") {
+		@ui.SectionLabel("muted", "") {
 			{ rotulo }
 		}
 		<p class="text-sm font-semibold tabular-nums">{ valor }</p>

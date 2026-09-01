@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // O painel de EFEITOS desenhado (ALE-272, fatia 5).
@@ -68,9 +69,9 @@ templ bookConditionsBlock(v fichaView) {
 				type="button"
 				aria-label="Aplicar condição"
 				data-on:click="$condicao = true"
-				class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>
-				@icone("Plus", "size-4")
+				@ui.Icon("Plus", "size-4")
 			</button>
 		</div>
 		if len(v.Effects.Conditions) == 0 {
@@ -102,7 +103,7 @@ templ bookConditionRow(v fichaView, linha conditionRow) {
 			data-on:click={ oPostDaFicha(v, "/efeitos/condicao/"+linha.Command) }
 			class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("X", "size-3.5")
+			@ui.Icon("X", "size-3.5")
 		</button>
 	</li>
 }
@@ -130,7 +131,7 @@ templ stancesBlock(v fichaView) {
 							type="button"
 							aria-label={ "Encerrar " + linha.Name }
 							data-on:click={ oPostDaFicha(v, "/efeitos/postura/"+linha.Command) }
-							class={ classesDoBotao(varSecundaria, tamPequeno, "shrink-0") }
+							class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "shrink-0") }
 						>Encerrar</button>
 					</li>
 				}
@@ -148,9 +149,9 @@ templ appliedEffectsBlock(v fichaView) {
 				type="button"
 				aria-label="Aplicar magia"
 				data-on:click="$buff = true"
-				class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>
-				@icone("Plus", "size-4")
+				@ui.Icon("Plus", "size-4")
 			</button>
 		</div>
 		if len(v.Effects.Applied) == 0 {
@@ -173,7 +174,7 @@ templ appliedEffectsBlock(v fichaView) {
 							data-on:click={ oPostDaFicha(v, "/efeitos/encerra/"+linha.Command) }
 							class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>
-							@icone("X", "size-3.5")
+							@ui.Icon("X", "size-3.5")
 						</button>
 					</li>
 				}
@@ -211,7 +212,7 @@ templ alwaysOnList(v fichaView) {
 			<ul class="space-y-1">
 				for _, linha := range v.Effects.AlwaysOn {
 					<li class="flex items-center gap-2 rounded-sm border border-grimorio-iron bg-muted px-2 py-1.5">
-						@icone("Lock", "size-3.5 shrink-0 text-muted-foreground")
+						@ui.Icon("Lock", "size-3.5 shrink-0 text-muted-foreground")
 						<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ linha.Label }</span>
 						<span class="shrink-0 truncate text-2xs text-muted-foreground">{ linha.Source }</span>
 					</li>
@@ -237,9 +238,9 @@ templ situationalToggle(v fichaView, linha situationalRow) {
 			class="flex min-w-0 flex-1 items-center gap-2 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			if linha.Active {
-				@icone("Check", "size-3.5 shrink-0 text-bonus-ink")
+				@ui.Icon("Check", "size-3.5 shrink-0 text-bonus-ink")
 			} else {
-				@icone("X", "size-3.5 shrink-0 text-muted-foreground")
+				@ui.Icon("X", "size-3.5 shrink-0 text-muted-foreground")
 			}
 			<span class="min-w-0 flex-1">
 				<span class="block truncate text-sm text-foreground">{ linha.Label }</span>

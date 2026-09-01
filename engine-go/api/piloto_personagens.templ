@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // A cena de PERSONAGENS desenhada (ALE-239) — "palco + dossiê".
@@ -68,7 +69,7 @@ templ barraDePersonagens(v personagensView) {
 		if v.TemAlgum {
 			<span class="text-sm text-muted-foreground">{ fmt.Sprintf("%d de %d", len(v.Herois), v.Total) }</span>
 			<div class="relative ml-auto w-full sm:w-56 md:w-64">
-				@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
+				@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 				<input
 					type="search"
 					name="busca"
@@ -121,24 +122,24 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 		// e os cartões dançam ao percorrer o elenco (ALE-99).
 		<div class="palco-placa max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Nome }</h2>
-			@rotuloDeSecao("gold", "mt-1") {
+			@ui.SectionLabel("gold", "mt-1") {
 				{ h.Papel }
 			}
 		</div>
 		@vitaisDoHeroi(h)
 		<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">{ h.Resumo }</p>
 		<div class="flex flex-wrap items-center justify-center gap-2">
-			<a href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) } class={ classesDoBotao(varPrimaria, tamGrande, "") }>
+			<a href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) } class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }>
 				Abrir ficha
-				@tecla("⏎")
+				@ui.Key("⏎")
 			</a>
 			// O dossiê é do CLIENTE: ele já está desenhado, e abrir é revelar.
-			@botao(varSecundaria, tamPadrao, "", templ.Attributes{
+			@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{
 				"type": "button", "data-on:click": "$dossie = !$dossie",
 				"data-attr:aria-pressed": "$dossie",
 			}) {
 				Dossiê
-				@tecla("D")
+				@ui.Key("D")
 			}
 		</div>
 	</div>
@@ -184,7 +185,7 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 				aria-label="Forjar um novo herói"
 				class="flex aspect-[3/4] w-44 items-center justify-center rounded-sm border-2 border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
 			>
-				@icone("Plus", "size-16")
+				@ui.Icon("Plus", "size-16")
 			</a>
 			// À direita da vaga não há vizinho: ela é o fim do trilho. O
 			// espaçador entra do mesmo jeito, senão o retrato desliza para a
@@ -193,7 +194,7 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 		</div>
 		<div class="palco-placa max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Forjar um herói</h2>
-			@rotuloDeSecao("muted", "mt-1") {
+			@ui.SectionLabel("muted", "mt-1") {
 					Uma vaga vazia no grupo
 				}
 		</div>
@@ -212,9 +213,9 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 				Seu elenco está vazio. O primeiro herói começa aqui.
 			</p>
 		}
-		<a href="/personagens/nova" class={ classesDoBotao(varPrimaria, tamGrande, "") }>
+		<a href="/personagens/nova" class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }>
 			Abrir a Forja
-			@tecla("⏎")
+			@ui.Key("⏎")
 		</a>
 	</div>
 }
@@ -309,7 +310,7 @@ templ quadroDeCriar(temAlgum bool, indice int) {
 		}
 		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
 	>
-		@icone("Plus", "size-5")
+		@ui.Icon("Plus", "size-5")
 	</button>
 }
 
@@ -328,7 +329,7 @@ templ dossieDoHeroi(h heroiCartao) {
 	>
 		<div class="flex items-start justify-between gap-3">
 			<h2 class="font-heading text-lg tracking-wide text-grimorio-gold">{ h.Nome }</h2>
-			@botao(varSecundaria, tamMinimo, "", templ.Attributes{
+			@ui.Button(ui.VariantSecondary, ui.SizeTiny, "", templ.Attributes{
 				"type": "button", "data-on:click": "$dossie = false", "aria-label": "Fechar o dossiê",
 			}) {
 				✕
@@ -369,7 +370,7 @@ templ buscaSemHeroi() {
 	<div class="flex flex-1 items-center justify-center p-8">
 		<div class="max-w-md space-y-3 text-center">
 			<p class="text-sm text-muted-foreground">Nenhum herói combina com o que você buscou.</p>
-			@botao(varSecundaria, tamPequeno, "", templ.Attributes{
+			@ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{
 				"type": "button", "data-on:click": "$busca = ''; @get('/personagens')",
 			}) {
 				Limpar a busca
@@ -386,25 +387,3 @@ templ cenaDePersonagens(v personagensView) {
 	</div>
 }
 
-// tecla é a dica de atalho — o `Kbd` da SPA.
-//
-// Ela só é escrita onde a tecla FUNCIONA de verdade: uma dica que anuncia um
-// atalho morto é pior que dica nenhuma, porque ensina errado.
-//
-// A chamada tem de começar a LINHA. Escrita no meio de um texto
-// (`Abrir ficha @tecla("⏎")`), o templ a trata como texto literal e a página
-// mostra `@tecla("⏎")` na tela — medido. É a quarta restrição de sintaxe dele
-// que este porte encontra, depois das três de comentário dentro da lista de
-// atributos.
-//
-// Ela NÃO define cor, e isso é a coisa importante: herda a do que a contém, com
-// `opacity-70`. Eu tinha escrito `text-muted-foreground`, que é tinta de painel
-// ESCURO, e dentro do botão dourado deu 1,22:1 — o guarda de contraste pegou.
-// Uma dica de tecla aparece dentro de botões de cores diferentes, então cor
-// própria é cor errada em algum deles.
-//
-// E some abaixo de `xl`, como na SPA: a tecla não existe no toque, e anunciar
-// atalho para quem não tem teclado é ruído.
-templ tecla(rotulo string) {
-	<kbd class="ml-1 hidden text-3xs opacity-70 xl:inline">{ rotulo }</kbd>
-}

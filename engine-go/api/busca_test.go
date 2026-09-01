@@ -1,6 +1,8 @@
 package api
 
-import "testing"
+import (
+	"testing"
+)
 
 // A regra da busca (ALE-234), portada do `fuzzy-filter.ts` da SPA.
 //

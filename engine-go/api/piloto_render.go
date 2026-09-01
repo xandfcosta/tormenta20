@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
+	"t20engine/web/ui"
 )
 
 // Os ESTÁTICOS do piloto Datastar (ALE-219). Embutidos, como os catálogos: o
@@ -31,10 +32,17 @@ var pilotoFS embed.FS
 // sub-template por nome dinâmico. Agora quem compõe é o compilador, e não há
 // passada intermediária onde escapar errado.
 func (s *Server) escrevePagina(
-	w http.ResponseWriter, r *http.Request, status int, p paginaPiloto, corpo templ.Component,
+	w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component,
 ) {
 	var buf bytes.Buffer
-	if err := layout(p, corpo).Render(r.Context(), &buf); err != nil {
+	// A CASCA RECEBE o que ela não pode conhecer (ALE-278, fatia 4): o endereço
+	// dos estáticos, que são embutidos aqui, e as três sobreposições, que leem
+	// catálogo. Este é o único lugar do projeto que monta uma página, então é
+	// aqui que a injeção cabe — pôr os campos em cada `ui.Page{…}` seria repetir
+	// dezoito vezes o que não varia.
+	p.Asset = EstaticoDoPiloto
+	p.Overlays = []templ.Component{buscadorDoLivro(), oLivroEmDialogo(), oVerbeteEmDialogo()}
+	if err := ui.Layout(p, corpo).Render(r.Context(), &buf); err != nil {
 		// Em buffer e não direto no `w`: um erro no meio da renderização já
 		// teria mandado 200 e meia página, e o jogador veria uma tela cortada
 		// sem nenhum sinal de que faltou coisa.

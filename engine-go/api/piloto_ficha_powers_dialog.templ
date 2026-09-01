@@ -1,6 +1,9 @@
 package api
 
-import "strconv"
+import (
+	"strconv"
+	"t20engine/web/ui"
+)
 
 // O DIÁLOGO DE ESCOLHER PODERES (ALE-272, fatia 8).
 //
@@ -18,7 +21,7 @@ templ choicesButton(v fichaView) {
 		aria-label="Escolher poderes"
 		aria-haspopup="dialog"
 		data-on:click={ "$fonte = '" + aFonteDaPrimeiraPendencia(v) + "'; $detalhe = 'escolher-poderes'" }
-		class={ classesDoBotao(varSecundaria, tamPequeno, "shrink-0 gap-1") }
+		class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "shrink-0 gap-1") }
 	>
 		Escolher
 		if len(v.Choices.Pendencias) > 0 {
@@ -142,7 +145,7 @@ templ attributeChoiceBlock(v fichaView, escolha attributeChoice) {
 				type="button"
 				aria-label="Gravar a distribuição de atributos"
 				data-on:click={ oPostDaFicha(v, "/poderes/atributos") }
-				class={ classesDoBotao(varPrimaria, tamPequeno, "w-full") }
+				class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "w-full") }
 			>Gravar distribuição</button>
 		}
 	</div>

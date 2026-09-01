@@ -8,6 +8,8 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "t20engine/web/ui"
+
 // A FOLHA EM BRANCO (ALE-246): abrir uma campanha nova.
 //
 // Ela é a mesma folha do grimório que a crônica que se lê — mesmo couro, mesma
@@ -64,7 +66,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = campoDeTexto(campo{
+			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Nome: "name", Label: "Nome", Valor: v.Nome,
 				Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
 				Erros: v.Erros["name"],
@@ -72,7 +74,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = campoDeTextoLongo(campo{
+			templ_7745c5c3_Err = ui.TextArea(ui.Field{
 				Nome: "description", Label: "Descrição", Valor: v.Descricao,
 				TamanhoMaximo: descricaoDeCampanhaMax,
 				Erros:         v.Erros["description"],
@@ -88,7 +90,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(v.Aviso)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 43, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 45, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -103,7 +105,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var4 = []any{classesDoBotao(varSecundaria, tamPadrao, "")}
+			var templ_7745c5c3_Var4 = []any{ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var4...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -143,7 +145,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -153,7 +155,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = folhaDoTomo().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ui.TomeSheet().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -201,7 +203,7 @@ func tituloDaFolha(sobrancelha, titulo string) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(sobrancelha)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 71, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 73, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -214,7 +216,7 @@ func tituloDaFolha(sobrancelha, titulo string) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 75, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 77, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {

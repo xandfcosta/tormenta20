@@ -44,7 +44,17 @@ func TestTodaTintaDaCasaExisteNaFolha(t *testing.T) {
 	}
 	// O DENOMINADOR: um padrão que parasse de casar daria zero tintas e este
 	// guarda passaria verde afirmando nada.
-	if len(usadas) < 10 {
+	// O DENOMINADOR. Ele é o que separa "nenhuma tinta reprovou" de "não varri
+	// nada", e o piso subiu com o kit entrando na lista (ALE-278, fatia 4): um
+	// piso que o conjunto MENOR já satisfazia não denunciaria a perda do maior.
+	//
+	// MEDIDO, e o número desmente a intuição: são 21 tintas COM o kit na varredura
+	// e 21 SEM ele. Todo token que o kit escreve já é escrito por alguma cena
+	// também, então incluí-lo não comprou cobertura HOJE. Ele fica porque compra
+	// AMANHÃ: no dia em que o kit for o único lugar de um token — e ele é o lugar
+	// natural para isso, já que existe para as classes serem escritas uma vez —,
+	// sem esta linha o token nasceria sem medição.
+	if len(usadas) < 20 {
 		t.Fatalf("a varredura achou %d tintas da casa, e são dezenas: o padrão parou de casar", len(usadas))
 	}
 
@@ -66,10 +76,20 @@ func TestTodaTintaDaCasaExisteNaFolha(t *testing.T) {
 // que o scanner do Tailwind lê, e os `.go` do piloto, onde uma classe escrita
 // não passa pelo scanner e só existe se alguém a registrou no `@source inline`.
 // O gerado (`_templ.go`) fica de fora porque repete o `.templ` ao lado.
+//
+// O KIT ENTROU NA LISTA na ALE-278 (fatia 4), e a razão é a forma da falha desta
+// família: o kit saiu de `api/piloto_ui.templ` para `web/ui/kit.templ`, e o
+// padrão `piloto_*` deixou de casar com ele. O guarda teria continuado VERDE
+// medindo as cenas e ignorando o botão, o campo e a casca — que são justamente
+// os arquivos onde uma tinta errada aparece em TODA tela.
+//
+// É o mesmo defeito que o `CLAUDE.md` da raiz descreve como "um guarda só mede o
+// que ele VISITA", e desta vez o que sumiu da visita não foi uma cena esquecida:
+// foi um arquivo que mudou de nome.
 func osFontesDoPiloto(t *testing.T) []string {
 	t.Helper()
 	fora := []string{}
-	for _, padrao := range []string{"piloto_*.templ", "piloto_*.go"} {
+	for _, padrao := range []string{"piloto_*.templ", "piloto_*.go", "../web/ui/*.templ", "../web/ui/*.go"} {
 		achados, err := filepath.Glob(padrao)
 		if err != nil {
 			t.Fatalf("varrer %s: %v", padrao, err)

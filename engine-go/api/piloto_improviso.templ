@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O IMPROVISO (ALE-261) — as tabelas do Cap 6 e o esqueleto de masmorra.
 //
@@ -45,7 +48,7 @@ templ cenaDoImproviso(v improvisoView) {
 		<h2 id="mesa-improviso" class="font-heading text-lg tracking-wide text-foreground">Improviso</h2>
 		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
 			<div>
-				@rotuloDeSecao("muted", "mb-2") {
+				@ui.SectionLabel("muted", "mb-2") {
 					Tabelas do Cap 6
 				}
 				<div class="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -55,7 +58,7 @@ templ cenaDoImproviso(v improvisoView) {
 				</div>
 			</div>
 			<div class="border-t border-grimorio-iron pt-4">
-				@rotuloDeSecao("muted", "mb-2") {
+				@ui.SectionLabel("muted", "mb-2") {
 					Masmorra
 				}
 				<div class="grid items-start gap-3 sm:grid-cols-2">
@@ -91,7 +94,7 @@ templ tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) {
 			data-indicator={ "rolando" + id }
 			class="inline-flex min-h-11 items-center justify-center gap-1.5 self-start rounded-sm border border-grimorio-iron px-3 text-xs text-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("Dices", "size-4")
+			@ui.Icon("Dices", "size-4")
 			{ "Rolar " + dado }
 		</button>
 		if len(historico) > 0 {
@@ -121,7 +124,7 @@ templ tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) {
 			// acabou de pedir.
 			<div aria-live="polite" class="space-y-0.5">
 				<p class="flex items-baseline gap-2">
-					<span class="font-mono text-2xl leading-none tabular-nums text-grimorio-gold">{ inteiro(historico[0].Rolagem) }</span>
+					<span class="font-mono text-2xl leading-none tabular-nums text-grimorio-gold">{ ui.Int(historico[0].Rolagem) }</span>
 					<span class="text-sm text-foreground">{ historico[0].Texto }</span>
 				</p>
 				if historico[0].Detalhe != "" {
@@ -135,7 +138,7 @@ templ tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) {
 				<ul class="space-y-0.5 border-t border-grimorio-iron pt-1.5">
 					for _, s := range historico[1:] {
 						<li class="flex items-baseline gap-2 text-3xs text-muted-foreground">
-							<span class="w-5 shrink-0 text-right font-mono tabular-nums">{ inteiro(s.Rolagem) }</span>
+							<span class="w-5 shrink-0 text-right font-mono tabular-nums">{ ui.Int(s.Rolagem) }</span>
 							<span class="truncate">{ s.Texto }</span>
 						</li>
 					}
@@ -155,15 +158,15 @@ templ planejadorDeMasmorra(v improvisoView) {
 			<span class="text-3xs text-muted-foreground">p263</span>
 		</div>
 		<div class="space-y-1">
-			@rotuloDeSecao("muted", "block") {
+			@ui.SectionLabel("muted", "block") {
 				<label for="improviso-salas">Salas</label>
 			}
 			<input
 				id="improviso-salas"
 				type="number"
-				min={ inteiro(salasMinimo) }
-				max={ inteiro(salasMaximo) }
-				value={ inteiro(v.Salas) }
+				min={ ui.Int(salasMinimo) }
+				max={ ui.Int(salasMaximo) }
+				value={ ui.Int(v.Salas) }
 				data-bind:salas
 				data-on:input__debounce.300ms="@get('/mestre/improviso')"
 				aria-label="Número de salas da masmorra"
@@ -174,15 +177,15 @@ templ planejadorDeMasmorra(v improvisoView) {
 			// Acima do teto não é ERRO: é o livro recomendando parar. A tela diz
 			// isso em vez de esconder o resultado ou fingir um tamanho.
 			<p class="text-xs text-muted-foreground">
-				Acima do maior tamanho do livro. Ele recomenda parar aqui e quebrar em masmorras menores.
+				Acima do maior ui.Size do livro. Ele recomenda parar aqui e quebrar em masmorras menores.
 			</p>
 		} else if v.Tamanho != nil {
 			<dl class="space-y-1 text-xs">
 				@linhaDoEsqueleto("Tamanho", v.Tamanho.Label)
 				@linhaDoEsqueleto("Ritmo", nomeDoRitmo(v.Tamanho.Pacing))
-				@linhaDoEsqueleto("Ameaças a distribuir", inteiro(v.Ameacas))
+				@linhaDoEsqueleto("Ameaças a distribuir", ui.Int(v.Ameacas))
 				if v.Tamanho.MaxSecondaryObjectives > 0 {
-					@linhaDoEsqueleto("Objetivos secundários (até)", inteiro(v.Tamanho.MaxSecondaryObjectives))
+					@linhaDoEsqueleto("Objetivos secundários (até)", ui.Int(v.Tamanho.MaxSecondaryObjectives))
 				}
 			</dl>
 		}

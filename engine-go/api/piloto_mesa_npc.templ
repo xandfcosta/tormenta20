@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O PAINEL DO ELENCO (ALE-269, superfície 6b): os NPCs da campanha.
 //
@@ -30,7 +33,7 @@ templ mesaElencoDaCampanha(v mesaView) {
 				data-on:click="document.getElementById('elenco-da-campanha').close()"
 				class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				@icone("X", "size-4")
+				@ui.Icon("X", "size-4")
 			</button>
 		</div>
 		// A LISTA e o EDITOR trocam de lugar na MESMA janela (decisão do dono):
@@ -53,7 +56,7 @@ templ mesaElencoDaCampanha(v mesaView) {
 				data-on:click={ abreOEditor(v, 0) }
 				class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				@icone("Plus", "size-4")
+				@ui.Icon("Plus", "size-4")
 				NPC do zero
 			</button>
 		</div>
@@ -101,7 +104,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 				data-on:click={ abreOEditor(v, npc.ID) }
 				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				@icone("Pencil", "size-4")
+				@ui.Icon("Pencil", "size-4")
 			</button>
 			if npc.PV > 0 {
 				<button
@@ -109,7 +112,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 					data-on:click={ comandoDoNPC(v, npc, "na-fila") }
 					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>
-					@icone("Swords", "size-4")
+					@ui.Icon("Swords", "size-4")
 					Pôr na fila
 				</button>
 			}
@@ -119,7 +122,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 				data-on:click={ comandoDoNPC(v, npc, "apagar") }
 				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				@icone("Trash2", "size-4")
+				@ui.Icon("Trash2", "size-4")
 			</button>
 		</div>
 	</article>
@@ -134,7 +137,7 @@ templ oBotaoDoElenco(v mesaView) {
 		data-on:click="document.getElementById('elenco-da-campanha').showModal()"
 		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
 	>
-		@icone("Users2", "size-5")
+		@ui.Icon("Users2", "size-5")
 	</button>
 }
 
@@ -164,7 +167,7 @@ templ oGuardarNoElenco(v bestiarioView) {
 			data-on:click={ guardaNoElenco(v) }
 			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			@icone("Users2", "size-4")
+			@ui.Icon("Users2", "size-4")
 			Guardar
 		</button>
 	</div>

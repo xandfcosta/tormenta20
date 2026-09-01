@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/web/ui"
+
 // O HUB desenhado (ALE-231).
 //
 // Três coisas nesta tela respondem, cada uma, a uma pergunta que a migração
@@ -65,7 +67,7 @@ templ itemDoMenu(icone_, rotulo, destino string, temProximo bool) {
 		class="grimorio-menu-item group flex min-h-11 w-full items-center gap-3 rounded-none px-4 py-3 text-left font-heading text-lg tracking-wide text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
 		<span aria-hidden="true" class="text-sm text-grimorio-crimson-bright">▸</span>
-		@icone(icone_, "size-5 text-grimorio-gold")
+		@ui.Icon(icone_, "size-5 text-grimorio-gold")
 		<span class="flex-1">{ rotulo }</span>
 		if temProximo {
 			<span aria-hidden="true" class="text-sm text-grimorio-gold">►</span>
@@ -90,7 +92,7 @@ templ rodapeDoHub(v hubView) {
 				{ v.Inicial }
 			</span>
 			<span class="min-w-0 flex-1 truncate font-heading tracking-wide text-foreground">{ v.Nome }</span>
-			@icone("Settings", "size-4 text-muted-foreground transition-colors group-hover:text-grimorio-gold")
+			@ui.Icon("Settings", "size-4 text-muted-foreground transition-colors group-hover:text-grimorio-gold")
 		</button>
 		@menuDoJogador(v)
 	</footer>
@@ -115,8 +117,8 @@ templ menuDoJogador(v hubView) {
 		class="fixed m-0 w-56 border border-grimorio-iron bg-grimorio-panel-raised p-1.5 text-foreground shadow-lg"
 	>
 		<button type="button" data-on:click="$som = cena.som()" class={ classeDoItemRapido(false) }>
-			<span data-show="$som">@icone("Volume2", "size-4")</span>
-			<span data-show="!$som">@icone("VolumeX", "size-4")</span>
+			<span data-show="$som">@ui.Icon("Volume2", "size-4")</span>
+			<span data-show="!$som">@ui.Icon("VolumeX", "size-4")</span>
 			<span data-text="$som ? 'Som ligado' : 'Som desligado'"></span>
 		</button>
 		// O slider só existe com o som ligado: slider sobre o mudo é controle
@@ -146,8 +148,8 @@ templ menuDoJogador(v hubView) {
 			data-signals="{cheia: false}"
 			class={ classeDoItemRapido(false) }
 		>
-			<span data-show="!$cheia">@icone("Maximize", "size-4")</span>
-			<span data-show="$cheia">@icone("Minimize", "size-4")</span>
+			<span data-show="!$cheia">@ui.Icon("Maximize", "size-4")</span>
+			<span data-show="$cheia">@ui.Icon("Minimize", "size-4")</span>
 			<span data-text="$cheia ? 'Sair da tela cheia' : 'Tela cheia'"></span>
 		</button>
 		if v.EhAdmin {
@@ -158,11 +160,11 @@ templ menuDoJogador(v hubView) {
 				data-on:click="$convidar.showModal()"
 				class={ classeDoItemRapido(false) }
 			>
-				@icone("UserPlus", "size-4")
+				@ui.Icon("UserPlus", "size-4")
 				<span>Convidar jogador</span>
 			</button>
 			<a href="/admin" class={ classeDoItemRapido(false) }>
-				@icone("ShieldCheck", "size-4")
+				@ui.Icon("ShieldCheck", "size-4")
 				<span>Administração</span>
 			</a>
 		}
@@ -171,12 +173,12 @@ templ menuDoJogador(v hubView) {
 		// qual — a lista de garantias do `hub.test.tsx` foi conferida uma a uma, e
 		// este item era o único que eu tinha deixado cair sem perceber.
 		<button type="button" disabled class={ classeDoItemRapido(false) }>
-			@icone("Settings", "size-4")
+			@ui.Icon("Settings", "size-4")
 			<span>Configurações</span>
 		</button>
 		<form method="post" action="/sair">
 			<button type="submit" class={ classeDoItemRapido(true) }>
-				@icone("LogOut", "size-4")
+				@ui.Icon("LogOut", "size-4")
 				<span>Sair</span>
 			</button>
 		</form>
@@ -188,9 +190,9 @@ templ menuDoJogador(v hubView) {
 func classeDoItemRapido(perigo bool) string {
 	base := "flex w-full items-center gap-2.5 rounded-none px-2.5 py-2 text-left font-heading text-sm tracking-wide transition-colors hover:bg-accent focus-visible:bg-accent outline-none"
 	if perigo {
-		return juntar(base, "text-grimorio-crimson-bright")
+		return ui.Join(base, "text-grimorio-crimson-bright")
 	}
-	return juntar(base, "text-foreground")
+	return ui.Join(base, "text-foreground")
 }
 
 // dialogoDeConvite cunha o link de conta (ALE-120): o admin gera, entrega, e
@@ -215,7 +217,7 @@ templ dialogoDeConvite(rota string) {
 		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="convidar-titulo" class="flex items-center gap-2 font-heading text-base">
-			@icone("UserPlus", "size-4 text-grimorio-gold")
+			@ui.Icon("UserPlus", "size-4 text-grimorio-gold")
 			Convidar jogador
 		</h2>
 		<p class="mt-2 text-sm text-muted-foreground">
@@ -224,11 +226,11 @@ templ dialogoDeConvite(rota string) {
 		<div id="convite-link" class="mt-3"></div>
 		<div class="mt-4 flex justify-end gap-2">
 			<form method="dialog">
-				@botao(varSecundaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+				@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
 					Fechar
 				}
 			</form>
-			@botao(varPrimaria, tamPadrao, "", templ.Attributes{
+			@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{
 				"type": "button", "data-on:click": "@post('" + rota + "')",
 				"data-indicator:gerando": true, "data-attr:disabled": "$gerando",
 			}) {
@@ -263,7 +265,7 @@ templ conviteGerado(caminho string) {
 				data-init="el.value = location.origin + el.dataset.caminho"
 				class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 font-mono text-xs outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			/>
-			@botao(varSecundaria, tamPadrao, "shrink-0", templ.Attributes{
+			@ui.Button(ui.VariantSecondary, ui.SizeDefault, "shrink-0", templ.Attributes{
 				"type":          "button",
 				"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copiado = true",
 			}) {

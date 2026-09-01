@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strconv"
+	"t20engine/web/ui"
 )
 
 // A FICHA desenhada (ALE-272, fatia 1) — a casca, as sete abas e o crachá.
@@ -107,7 +108,7 @@ templ aAbaDaFicha(v fichaView, aba abaDaFicha) {
 			}
 			class={ oVestidoDaAbaDaFicha(aba) }
 		>
-			@icone(aba.Icone, "size-4")
+			@ui.Icon(aba.Icone, "size-4")
 			{ aba.Rotulo }
 		</button>
 	} else {
@@ -118,7 +119,7 @@ templ aAbaDaFicha(v fichaView, aba abaDaFicha) {
 			}
 			class={ oVestidoDaAbaDaFicha(aba) }
 		>
-			@icone(aba.Icone, "size-4")
+			@ui.Icon(aba.Icone, "size-4")
 			{ aba.Rotulo }
 		</a>
 	}
@@ -128,7 +129,7 @@ templ aAbaDaFicha(v fichaView, aba abaDaFicha) {
 // sessão, botão dentro dela. Escrita uma vez porque a diferença entre os dois é
 // para onde o clique vai, e não como a aba se parece.
 func oVestidoDaAbaDaFicha(aba abaDaFicha) string {
-	return juntar(
+	return ui.Join(
 		"inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 		aTintaDaAbaDaFicha(aba.Ativa))
 }
@@ -249,7 +250,7 @@ templ oDegrauDoNivel(v fichaView, passo int, rotulo, desenho string) {
 		}
 		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-grimorio-iron disabled:hover:text-muted-foreground"
 	>
-		@icone(desenho, "size-4")
+		@ui.Icon(desenho, "size-4")
 	</button>
 }
 

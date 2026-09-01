@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // OS CATÁLOGOS (ALE-258), segunda ferramenta da Mesa do Mestre.
 //
@@ -30,7 +33,7 @@ templ cenaDosCatalogos(v catalogosView) {
 			<p class="text-xs text-muted-foreground">{ contagemDoAcervo(v) }</p>
 		</div>
 		<div class="relative shrink-0">
-			@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
+			@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 			<input
 				type="search"
 				data-busca-da-cena
@@ -96,14 +99,14 @@ templ resultadosDoAcervo(v catalogosView) {
 	if v.Achados == 0 {
 		<p class="p-4 text-center text-xs text-muted-foreground">Nada nos catálogos casa com essa busca.</p>
 	} else {
-		@caixaRolavel("Resultados dos catálogos", "space-y-4 rounded-sm border border-grimorio-iron p-2") {
+		@ui.ScrollBox("Resultados dos catálogos", "space-y-4 rounded-sm border border-grimorio-iron p-2") {
 			for _, g := range v.Grupos {
 				<section aria-label={ g.Rotulo }>
 					if v.Buscando() {
 						// O cabeçalho de grupo só existe na busca unificada: sem
 						// termo há um catálogo só na tela, e nomeá-lo duas vezes
 						// (na aba e aqui) é repetição.
-						@rotuloDeSecao("gold", "mb-1.5") {
+						@ui.SectionLabel("gold", "mb-1.5") {
 							{ fmt.Sprintf("%s · %d", g.Rotulo, g.Quantos()) }
 						}
 					}

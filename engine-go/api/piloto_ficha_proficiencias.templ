@@ -1,6 +1,9 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
 
 // O painel de PROFICIÊNCIAS desenhado (ALE-272, fatia 2).
 //
@@ -28,7 +31,7 @@ templ oPainelDasProficiencias(v fichaView) {
 				type="button"
 				title="Marca exatamente o que as classes concedem e descarta os ajustes manuais"
 				data-on:click={ oComandoDoPadraoDeClasse(v) }
-				class={ classesDoBotao(varSecundaria, tamPequeno, "") }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>Restaurar padrão de classe</button>
 		</div>
 		<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
@@ -66,9 +69,9 @@ templ aLinhaDaProficiencia(v fichaView, linha proficienciaDaFicha) {
 			class="flex min-h-11 w-full items-center gap-2 rounded-sm px-2 text-left outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			if linha.Tem {
-				@icone("Check", "size-3.5 text-bonus-ink")
+				@ui.Icon("Check", "size-3.5 text-bonus-ink")
 			} else {
-				@icone("X", "size-3.5 text-muted-foreground")
+				@ui.Icon("X", "size-3.5 text-muted-foreground")
 			}
 			<span class={ templ.KV("text-foreground", linha.Tem), templ.KV("text-muted-foreground line-through", !linha.Tem) }>
 				{ linha.Rotulo }

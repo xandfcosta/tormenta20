@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"t20engine/web/ui"
 )
 
 // O piloto Datastar (ALE-219): a superfície "Mesa" do jogador renderizada pelo
@@ -167,7 +168,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 	view.MinhaFicha = s.aFichaDoJogadorNaMesa(r, view)
 	// A página é um retrato de agora, e o `escrevePagina` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: sinaisDaMesa(),
 		Init:   fmt.Sprintf("@get('/mesa/%d/%d/stream')", campaignID, sessionID),

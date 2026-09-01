@@ -11,6 +11,15 @@ código. Prosa e identificadores que já existem não ficam errados
 retroativamente — os renomes andam issue a issue, e a coluna "proibido" é o que
 impede o décimo segundo caso.
 
+**O kit de interface não está aqui, e é de propósito.** `Button`, `TextField`,
+`PanelFrame`, `ScrollBox` e a casca vivem em `web/ui` com nomes em inglês
+(ALE-278, fatia 4) porque nenhum deles é termo do DOMÍNIO — não há conceito da
+mesa por trás de um botão. Este glossário governa a linguagem do Tormenta 20 e
+do app; o vocabulário de widget segue a regra de idioma do `CLAUDE.md` e mais
+nada. O que continua aqui é o que a mesa fala: **elo**, **verbete**, **livro** —
+e o `eloParaOAcervo` segue com o nome dele porque ficou no `api`, junto do
+catálogo que ele consulta.
+
 **Como se lê uma linha:** o termo canônico é o que se escreve na tela; o
 identificador é como ele se chama no código; os proibidos são sinônimos que
 alguém já usou e que não voltam.
