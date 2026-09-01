@@ -165,7 +165,7 @@ func (s *Server) carregaAtributosDaForja(r *http.Request, recusa string) (attrib
 	if err != nil {
 		return attributesView{}, status, err
 	}
-	sheet, err := s.computeSheet(r.Context(), row)
+	sheet, err := s.ComputeSheet(r.Context(), row)
 	if err != nil {
 		return attributesView{}, http.StatusInternalServerError, err
 	}
@@ -218,7 +218,7 @@ func (s *Server) escreveOsAtributos(w http.ResponseWriter, r *http.Request, v at
 		_ = datastar.NewSSE(w, r).PatchElements(fragmento)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo:       "Atributos · Forja · Tormenta 20",
 		Forma:        ui.ShellDense,
 		Voltar:       "/personagens",

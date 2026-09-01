@@ -67,7 +67,7 @@ func togglePrepared(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSi
 // exatamente o defeito que a ALE-110 registrou: a redução de custo era exibida
 // num lugar e ignorada na hora de cobrar.
 func castSpellFromSheet(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}

@@ -13,12 +13,12 @@ import (
 // que mede. Ele não entra no `layout` de todas as páginas de propósito: canvas
 // e cálculo de contraste não têm o que fazer no caminho de quem só quer jogar.
 
-func (s *Server) rotasDoGrimorio(r chi.Router) {
+func (s *Server) GrimoireRoutes(r chi.Router) {
 	r.Get("/grimorio", s.handleGrimorio)
 }
 
 func (s *Server) handleGrimorio(w http.ResponseWriter, r *http.Request) {
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Grimório",
 		Forma:         ui.ShellDense,
 		TituloVisivel: "Grimório",

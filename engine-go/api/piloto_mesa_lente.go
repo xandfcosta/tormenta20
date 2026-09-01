@@ -98,7 +98,7 @@ func (l *asLentes) Apaga(sessionID int64) {
 	}
 }
 
-func (s *Server) rotasDaLente(r chi.Router) {
+func (s *Server) LensRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/lente",
 		s.comandoDoMestreNoTabuleiro(alternaALente))
 }

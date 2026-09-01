@@ -24,7 +24,7 @@ import (
 // estado de jogo — e a ordem importa: o PM primeiro, porque é ele que pode
 // faltar. Somar o uso antes deixaria um uso gasto por um poder que não saiu.
 func usePower(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals) error {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func usePower(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignals)
 // pagamento é registrado para sair não devolver PM — é o que a tabela
 // `character_stances` existe para lembrar (ALE-222).
 func enterStance(s *Server, r *http.Request, row sqlcgen.Character, sinais fichaSignals) error {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func pickRaceAttributes(s *Server, r *http.Request, row sqlcgen.Character, sinai
 	if err != nil {
 		return err
 	}
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
@@ -249,7 +249,7 @@ func pickRaceAscendencia(s *Server, r *http.Request, row sqlcgen.Character, _ fi
 func (s *Server) gravaAsEscolhas(
 	r *http.Request, row sqlcgen.Character, muda func(*CharacterDTO),
 ) error {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}

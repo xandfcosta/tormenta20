@@ -91,7 +91,7 @@ func aForjaDoFormulario(r *http.Request) (forgeAnswers, error) {
 }
 
 func (s *Server) escreveAForja(w http.ResponseWriter, r *http.Request, status int, v forgeView) {
-	s.escrevePagina(w, r, status, ui.Page{
+	s.WritePage(w, r, status, ui.Page{
 		Titulo: "Forja · Tormenta 20",
 		// `cascaDensa`: o cabeçalho compacto com o "‹ Voltar", como a folha em
 		// branco da campanha. Sem ele a folha nasce sem saída visível.

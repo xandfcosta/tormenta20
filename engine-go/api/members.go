@@ -80,7 +80,7 @@ func (s *Server) initiativeBonus(ctx context.Context, characterID int64) (int64,
 	if err != nil {
 		return 0, errors.New("Could not load character")
 	}
-	sheet, err := s.computeSheet(ctx, row)
+	sheet, err := s.ComputeSheet(ctx, row)
 	if err != nil {
 		return 0, errors.New("Could not compute sheet")
 	}

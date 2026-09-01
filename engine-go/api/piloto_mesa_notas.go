@@ -20,7 +20,7 @@ import (
 // postar na mão — o botão escondido é cortesia para quem não pode, nunca a
 // segurança.
 
-func (s *Server) rotasDasNotas(r chi.Router) {
+func (s *Server) NoteRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/notas"
 	r.Post(base, s.salvaANotaDaSessao)
 	r.Post(base+"/tarefa/{linha}/{estado}", s.alternaATarefa)

@@ -12,7 +12,7 @@ import (
 // rota serve a carga fria e o remendo da busca, e quem distingue é o cabeçalho
 // `datastar-request`.
 
-func (s *Server) rotasDePersonagens(r chi.Router) {
+func (s *Server) CharacterRoutes(r chi.Router) {
 	r.Get("/personagens", s.handlePersonagens)
 	// A forja mora aqui e não numa árvore própria porque ela é a porta de
 	// entrada DESTA cena: o elenco é de onde se abre a folha em branco.
@@ -43,7 +43,7 @@ func (s *Server) handlePersonagens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: "Personagens · Tormenta 20",
 		// `cascaNua`: a cena desenha o próprio cabeçalho, que carrega a busca.
 		Forma: ui.ShellBare,

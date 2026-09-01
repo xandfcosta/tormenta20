@@ -74,7 +74,7 @@ func TestDefesaDoPalcoEhAMesmaDaFicha(t *testing.T) {
 	if err != nil {
 		t.Fatalf("personagem: %v", err)
 	}
-	ficha, err := s.computeSheet(context.Background(), linha)
+	ficha, err := s.ComputeSheet(context.Background(), linha)
 	if err != nil {
 		t.Fatalf("ficha: %v", err)
 	}

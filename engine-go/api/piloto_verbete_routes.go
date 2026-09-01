@@ -16,7 +16,7 @@ import (
 // rotaDoVerbete é o endereço PÚBLICO, que é o que o `@get` do navegador pede.
 const rotaDoVerbete = "/verbete"
 
-func (s *Server) rotasDoVerbete(r chi.Router) {
+func (s *Server) EntryRoutes(r chi.Router) {
 	r.Get("/verbete", s.handleVerbeteDoElo)
 }
 

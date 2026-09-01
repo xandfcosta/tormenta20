@@ -34,7 +34,7 @@ func rotaDoBestiarioDaMesa(campaignID, sessionID int64) string {
 	return fmt.Sprintf("/mesa/%d/%d/bestiario", campaignID, sessionID)
 }
 
-func (s *Server) rotasDoBestiarioDaMesa(r chi.Router) {
+func (s *Server) TableBestiaryRoutes(r chi.Router) {
 	r.Get("/mesa/{campaignId}/{sessionId}/bestiario", s.handleBestiarioDaMesa)
 	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/tipo/{tipo}", s.handleTipoDoBestiarioDaMesa)
 	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/enviar", s.comandoDoMestre(mandaParaAMesa))

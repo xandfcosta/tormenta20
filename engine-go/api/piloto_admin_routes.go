@@ -29,7 +29,7 @@ func (s *Server) handleAdminPiloto(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Administração",
 		Forma:         ui.ShellDense,
 		TituloVisivel: "Administração",

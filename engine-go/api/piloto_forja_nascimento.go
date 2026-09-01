@@ -175,7 +175,7 @@ func (s *Server) birth(r *http.Request, ownerID int64, folha forgeAnswers) (int6
 	if err != nil {
 		return 0, err
 	}
-	id, err := s.insertCharacter(r, ownerID, corpo.Name, corpo, 1,
+	id, err := s.InsertCharacter(r, ownerID, corpo.Name, corpo, 1,
 		grantedProficiencies([]string{classe.Name}), toStringSet(corpo.TrainedExpertises))
 	if err != nil {
 		return 0, err
@@ -222,11 +222,11 @@ func (s *Server) fillPools(r *http.Request, id int64) error {
 	if err != nil {
 		return err
 	}
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
-	if err := s.healVitals(r, id, &dto); err != nil {
+	if err := s.HealVitals(r, id, &dto); err != nil {
 		return err
 	}
 	return s.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{

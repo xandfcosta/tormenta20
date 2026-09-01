@@ -22,7 +22,7 @@ import (
 // a própria tela de novo, com o status honesto (400/401/403), porque aí não há
 // nada de novo para onde navegar.
 
-func (s *Server) rotasDaPorta(r chi.Router) {
+func (s *Server) DoorRoutes(r chi.Router) {
 	r.Get("/entrar", s.handlePortaEntrar)
 	r.Post("/entrar", s.handlePortaEntrarSubmit)
 	r.Get("/criar-conta", s.handlePortaCriarConta)
@@ -232,7 +232,7 @@ func (s *Server) gravaNovaSenha(r *http.Request, token, senha string) bool {
 func (s *Server) escrevePorta(
 	w http.ResponseWriter, r *http.Request, status int, corpo templ.Component,
 ) {
-	s.escrevePagina(w, r, status, ui.Page{
+	s.WritePage(w, r, status, ui.Page{
 		// O `<title>` é o do JOGO e não o da tela: a porta é a tela-título, e o
 		// nome dela já está desenhado em Cinzel no meio da página.
 		Titulo: "Tormenta 20",

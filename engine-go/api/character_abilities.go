@@ -179,7 +179,7 @@ func compactJSON(raw json.RawMessage) string {
 func (s *Server) escolhaInvalidaDepoisDoPatch(
 	r *http.Request, row sqlcgen.Character, patch map[string]string,
 ) string {
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return ""
 	}

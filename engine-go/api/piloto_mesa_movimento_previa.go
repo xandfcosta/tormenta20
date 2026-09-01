@@ -31,7 +31,7 @@ import (
 // recalculadas sobre o TOTAL. É o que responde a pergunta de verdade — "se eu
 // soltar aqui, quanto gastei?" —, que uma perna medida sozinha não responde.
 
-func (s *Server) rotasDaPreviaDoMovimento(r chi.Router) {
+func (s *Server) MovePreviewRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
 	r.Post(base+"/previa/{x}/{y}", s.handlePreviaDoMovimento)
 }

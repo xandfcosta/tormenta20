@@ -38,7 +38,7 @@ func efeitoDaCondicao(id string) string {
 	return ""
 }
 
-func (s *Server) rotasDasCondicoes(r chi.Router) {
+func (s *Server) ConditionRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/initiative/{entryId}/condicao/{id}",
 		s.comandoDoMestre(alternaACondicao))
 }

@@ -215,7 +215,7 @@ func (s *Server) handleLeitorDoLivro(w http.ResponseWriter, r *http.Request) {
 	if v.Termo != "" {
 		titulo = v.Termo + " · Livro · Tormenta 20"
 	}
-	s.escrevePagina(w, r, http.StatusOK, ui.Page{
+	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: titulo,
 		Forma:  ui.ShellBare,
 		Voltar: v.Voltar,

@@ -233,7 +233,7 @@ func (s *Server) aAbaComOPuxao(ctx context.Context, sessionID, userID int64) (ab
 	return alvo, puxado, deOnde
 }
 
-func (s *Server) rotasDasAbas(r chi.Router) {
+func (s *Server) TabRoutes(r chi.Router) {
 	// A troca é de TODO MUNDO, e é a metade da issue que o jogador ganha: ele
 	// não fica preso ao que o mestre está olhando — quem está na cripta abre a
 	// aba da cripta porque quer.

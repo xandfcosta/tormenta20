@@ -161,7 +161,7 @@ func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 	granted := grantedProficiencies(classNames)
 	trained := toStringSet(body.TrainedExpertises)
 
-	id, err := s.insertCharacter(r, user.ID, name, body, totalLevel, granted, trained)
+	id, err := s.InsertCharacter(r, user.ID, name, body, totalLevel, granted, trained)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create character")
 		return
@@ -172,12 +172,12 @@ func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
-	dto, err := s.loadCharacter(r.Context(), row)
+	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
-	if err := s.healVitals(r, id, &dto); err != nil {
+	if err := s.HealVitals(r, id, &dto); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sync vitals")
 		return
 	}
@@ -185,7 +185,7 @@ func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 }
 
 // insertCharacter writes the character + all relations in one transaction.
-func (s *Server) insertCharacter(r *http.Request, ownerID int64, name string, body createCharacterBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {
+func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, body createCharacterBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {
 	tx, err := s.db.BeginTx(r.Context(), nil)
 	if err != nil {
 		return 0, err
@@ -244,7 +244,7 @@ func (s *Server) insertCharacter(r *http.Request, ownerID int64, name string, bo
 
 // healVitals recomputes the pools (clamp-only, matching healVitalsFromEngine) and
 // patches the aggregate + row.
-func (s *Server) healVitals(r *http.Request, id int64, dto *CharacterDTO) error {
+func (s *Server) HealVitals(r *http.Request, id int64, dto *CharacterDTO) error {
 	if s.catalogs == nil || len(dto.Classes) == 0 {
 		return nil
 	}
