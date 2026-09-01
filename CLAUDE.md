@@ -38,9 +38,18 @@ e a regra tem um lugar só.
 
 ## Estilo de código
 
-- Funções de 4 a 20 linhas; arquivos abaixo de 500. Passou, divida por
-  responsabilidade.
-- Uma coisa por função, uma responsabilidade por módulo.
+- **Uma função se divide quando tem mais de uma RAZÃO PARA MUDAR, nunca por
+  contagem de linhas.** Aqui morava "funções de 4 a 20 linhas", e ela foi tirada
+  por atrapalhar mais do que ajudava: uma tarefa que é uma coisa só, picada em
+  dez funções para caber no teto, obriga quem lê a remontar a sequência saltando
+  pelo arquivo — e cada nome inventado no caminho é um nome a mais que não
+  identifica nada. Um passo a passo linear e longo se lê de cima para baixo;
+  cinco chamadas com nome genérico, não.
+- **Arquivos abaixo de 500 linhas** — este teto fica, e por outro motivo: arquivo
+  é unidade de RESPONSABILIDADE e de conflito de merge, não de leitura.
+- Uma responsabilidade por módulo. Extrair continua sendo o certo quando o
+  pedaço tem sentido sozinho: quando ele tem OUTRO chamador, outro motivo para
+  mudar, ou quando dar nome a ele explica o que o corpo não explicava.
 - Retorno cedo em vez de `if` aninhado. No máximo dois níveis de indentação.
 - **Nomes específicos e únicos.** Nada de `data`, `handler`, `Manager`. Prefira
   nomes com menos de 5 ocorrências no `grep` — um nome que já existe em cinco
