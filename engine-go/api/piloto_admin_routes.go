@@ -154,7 +154,7 @@ func (s *Server) handleAdminPilotoConvite(w http.ResponseWriter, r *http.Request
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
 		return
 	}
-	fragmento, err := ui.RenderFragment(r.Context(), conviteGerado("/register?convite="+url.QueryEscape(invite.Token)))
+	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+url.QueryEscape(invite.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
 		return

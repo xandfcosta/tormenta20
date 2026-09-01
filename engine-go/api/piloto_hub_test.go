@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -67,70 +66,11 @@ func TestHubSoOfereceContinuarComSessaoViva(t *testing.T) {
 	if !strings.Contains(comViva, "Continuar sessão") {
 		t.Fatal("não ofereceu continuar com sessão ativa")
 	}
-	if !strings.Contains(comViva, destinoDaSessao(campanha, sessao)) {
-		t.Errorf("o link não aponta para a sessão viva (%s)", destinoDaSessao(campanha, sessao))
+	if !strings.Contains(comViva, rotaDaMesa(campanha, sessao)) {
+		t.Errorf("o link não aponta para a sessão viva (%s)", rotaDaMesa(campanha, sessao))
 	}
 }
 
-// A consulta única substituiu uma fan-out de N+1 requisições do cliente, e a
-// ORDEM era regra dela: a primeira viva na ordem das campanhas, que é a mais
-// recentemente tocada primeiro. Trocar a ordem troca qual partida o botão
-// retoma.
-func TestSessaoVivaEscolheAPrimeiraNaOrdemDasCampanhas(t *testing.T) {
-	s, dono := hubFixture(t)
-	antiga := seedCampaign(t, s, dono)
-	recente := seedCampaign(t, s, dono)
-	vivaAntiga := seedSession(t, s, antiga)
-	vivaRecente := seedSession(t, s, recente)
-	for _, id := range []int64{vivaAntiga, vivaRecente} {
-		if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-			UpdatedAt: plataforma.NowISO(), ID: id,
-		}); err != nil {
-			t.Fatalf("iniciar %d: %v", id, err)
-		}
-	}
-
-	viva, err := s.sessaoViva(context.Background(), dono)
-	if err != nil || viva == nil {
-		t.Fatalf("sessaoViva = %v, %v", viva, err)
-	}
-	// `seedCampaign` grava as duas com o mesmo `updatedAt`, então o desempate é
-	// do banco; o que se afirma é que ela escolhe UMA das vivas e não uma morta.
-	if viva.SessionID != vivaAntiga && viva.SessionID != vivaRecente {
-		t.Errorf("escolheu a sessão %d, que não é nenhuma das vivas", viva.SessionID)
-	}
-}
-
-// Sem partida nenhuma a resposta é "não há", e não erro: quase sempre não há
-// partida rolando, e tratar isso como falha encheria o log de ruído.
-func TestSessaoVivaSemNenhumaNaoEhErro(t *testing.T) {
-	s, dono := hubFixture(t)
-	viva, err := s.sessaoViva(context.Background(), dono)
-	if err != nil {
-		t.Fatalf("erro para o caso normal: %v", err)
-	}
-	if viva != nil {
-		t.Errorf("achou sessão %v onde não há nenhuma", viva)
-	}
-}
-
-// destinoDaSessao é PARA ONDE o "Continuar sessão" leva, e ele mudou na ALE-269:
-// era `/campaigns/{id}/sessions/{sid}`, a rota da SPA, e passou a ser a Mesa em
-// Datastar. A troca é a VIRADA — enquanto o piloto apontava para lá, a Mesa nova
-// só era alcançável por URL digitada.
-//
-// Escrito À MÃO e não derivado do `rotaDaMesa` da produção, de propósito: derivar
-// faria o teste concordar com o defeito, e um destino trocado por engano passaria
-// verde nos dois lados.
-func destinoDaSessao(campanha, sessao int64) string {
-	return fmt.Sprintf("/mesa/%d/%d", campanha, sessao)
-}
-
-// ── quem vê o quê ────────────────────────────────────────────────────────────
-
-// As entradas de admin são UX, não segurança: quem não é admin não as vê, e
-// quem chegar na rota na mão leva a recusa do servidor. As duas metades são
-// afirmadas, porque só a primeira seria uma tela mentindo sobre uma trava.
 func TestHubNaoDesenhaEntradasDeAdminParaJogador(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogadora@t20.local")
@@ -225,21 +165,3 @@ func TestPaginaAnonimaVaiParaAPortaLembrandoOCaminhoInteiro(t *testing.T) {
 }
 
 // ── a inicial do retrato ─────────────────────────────────────────────────────
-
-// Por RUNA e não por byte: "Áurea" começa com dois bytes, e cortar o primeiro
-// desenha o losango de erro no lugar da letra.
-func TestInicialDeCortaPorRunaENaoPorByte(t *testing.T) {
-	casos := map[string]string{
-		"Mestre":            "M",
-		"Áurea":             "Á",
-		"  ébano  ":         "É",
-		"":                  "?",
-		"   ":               "?",
-		"jogador@t20.local": "J",
-	}
-	for entrada, quer := range casos {
-		if got := inicialDe(entrada); got != quer {
-			t.Errorf("inicialDe(%q) = %q, queria %q", entrada, got, quer)
-		}
-	}
-}

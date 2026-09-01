@@ -1,4 +1,4 @@
-package api
+package hub
 
 import (
 	"context"
@@ -30,10 +30,14 @@ type hubView struct {
 type hubSessaoViva struct {
 	CampaignID int64
 	SessionID  int64
+	// Rota é PARA ONDE o "Continuar sessão" leva, resolvido por quem hospeda a
+	// cena (`Deps.MesaRoute`). Ela é campo da view e não uma chamada no
+	// template pela mesma razão da `Inicial` acima.
+	Rota string
 }
 
 // carregaHub monta a tela inteira.
-func (s *Server) carregaHub(ctx context.Context, eu AuthUser) (hubView, error) {
+func (s Scene) carregaHub(ctx context.Context, eu Viewer) (hubView, error) {
 	viva, err := s.sessaoViva(ctx, eu.ID)
 	if err != nil {
 		return hubView{}, err
@@ -56,20 +60,24 @@ func (s *Server) carregaHub(ctx context.Context, eu AuthUser) (hubView, error) {
 //
 // "Nenhuma linha" é resposta NORMAL e não erro: quase sempre não há partida
 // rolando.
-func (s *Server) sessaoViva(ctx context.Context, userID int64) (*hubSessaoViva, error) {
-	linha, err := s.queries.FirstLiveSessionForUser(ctx, userID)
+func (s Scene) sessaoViva(ctx context.Context, userID int64) (*hubSessaoViva, error) {
+	linha, err := s.deps.Queries().FirstLiveSessionForUser(ctx, userID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &hubSessaoViva{CampaignID: linha.Campaignid, SessionID: linha.Sessionid}, nil
+	return &hubSessaoViva{
+		CampaignID: linha.Campaignid,
+		SessionID:  linha.Sessionid,
+		Rota:       s.deps.MesaRoute(linha.Campaignid, linha.Sessionid),
+	}, nil
 }
 
 // nomeDeExibicao: o nome quando existe, senão o e-mail, senão "Aventureiro".
 // Mesma cadeia da SPA — quem entra por convite pode não ter dado nome nenhum.
-func nomeDeExibicao(eu AuthUser) string {
+func nomeDeExibicao(eu Viewer) string {
 	if eu.Name != nil && strings.TrimSpace(*eu.Name) != "" {
 		return strings.TrimSpace(*eu.Name)
 	}

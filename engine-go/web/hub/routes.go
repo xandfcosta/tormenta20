@@ -1,4 +1,4 @@
-package api
+package hub
 
 import (
 	"net/http"
@@ -11,19 +11,22 @@ import (
 // As rotas do HUB (ALE-231). Atrás de `requireAuth`: o menu principal é de quem
 // entrou, e quem não entrou é mandado à porta pelo próprio middleware.
 
-func (s *Server) HubRoutes(r chi.Router) {
+// Routes monta o hub no roteador de quem o hospeda.
+//
+// Os endereços moram AQUI (ALE-278): a cena é a dona do que ela atende.
+func Routes(r chi.Router, s Scene) {
 	r.Get("/", s.handleHub)
 	r.Post("/sair", s.handleHubSair)
 	r.Post("/convites", s.handleHubConvite)
 }
 
-func (s *Server) handleHub(w http.ResponseWriter, r *http.Request) {
-	view, err := s.carregaHub(r.Context(), currentUser(r))
+func (s Scene) handleHub(w http.ResponseWriter, r *http.Request) {
+	view, err := s.carregaHub(r.Context(), s.deps.CurrentViewer(r))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s.WritePage(w, r, http.StatusOK, ui.Page{
+	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: "Tormenta 20",
 		Forma:  ui.ShellTitled,
 		Kicker: "— Grimório de Arton —",
@@ -39,30 +42,37 @@ func (s *Server) handleHub(w http.ResponseWriter, r *http.Request) {
 // permite é navegação de topo por GET, e é por isso que nenhuma ação com efeito
 // pode viver num GET. Um `<a href="/sair">` seria dispensável por qualquer
 // imagem de terceiro.
-func (s *Server) handleHubSair(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, s.sessionCookie("", -1))
+func (s Scene) handleHubSair(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, s.deps.ExpiredSessionCookie())
 	http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 }
 
 // handleHubConvite cunha o link de conta e devolve o remendo com ele.
-func (s *Server) handleHubConvite(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleHubConvite(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
-	if !currentUser(r).IsAdmin {
+	if !s.deps.CurrentViewer(r).IsAdmin {
 		// A tela não oferece o botão para quem não é admin, mas a trava é aqui:
 		// a UI decide o que MOSTRAR, o servidor decide o que ACONTECE.
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": "Só quem administra pode convidar."})
 		return
 	}
-	invite, err := s.mintAccountInvite(r.Context(), currentUser(r).ID)
+	invite, err := s.deps.MintAccountInvite(r.Context(), s.deps.CurrentViewer(r).ID)
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `conviteGerado`.
-	fragmento, err := ui.RenderFragment(r.Context(), conviteGerado("/register?convite="+invite.Token))
+	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+invite.Token))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
 		return
 	}
 	_ = sse.PatchElements(fragmento)
 }
+
+// avisoInterno é a frase que a pessoa lê quando algo do servidor falhou.
+//
+// CÓPIA da porta de entrada, e consciente: é texto de tela, e cada cena é dona
+// do que ela escreve. Uma constante compartilhada obrigaria as duas a mudarem
+// juntas para sempre por causa de uma frase de dez palavras.
+const avisoInterno = "Não consegui completar agora. Tente de novo."
