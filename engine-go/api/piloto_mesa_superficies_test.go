@@ -1,6 +1,7 @@
 package api
 
 import (
+	stdhtml "html"
 	"net/http"
 	"strings"
 	"testing"
@@ -135,5 +136,44 @@ func TestASuperficieQueAbreEDerivadaENaoDigitada(t *testing.T) {
 	}
 	if !oferecida {
 		t.Errorf("a superfície padrão %q não está entre as oferecidas", superficieQueAbrePadrao)
+	}
+}
+
+// TestAFichaNaSessaoTemComoSaberQueMudou (ALE-275).
+//
+// A ficha embutida não é região do stream, então o que a mantém em dia é um par:
+// o servidor escreve `fichaversao` num sinal, e um ouvinte na cena repede a
+// ficha. As duas pontas estão em arquivos diferentes e nenhuma delas falha
+// sozinha de forma visível — sem o ouvinte, o sinal chega e ninguém escuta;
+// sem o filtro, o ouvinte dispara em qualquer remendo de sinal e a ficha é
+// repedida quando o mestre puxa alguém para o mapa.
+//
+// O e2e prova o comportamento com dois clientes; este guarda é a rede barata que
+// falha no commit em que uma das pontas some.
+func TestAFichaNaSessaoTemComoSaberQueMudou(t *testing.T) {
+	f := novoPiloto(t)
+	f.cena(t)
+
+	// DESESCAPADO: `data-signals` e `data-on-*` são valores DINÂMICOS de
+	// atributo, e o templ escapa a aspa simples deles (`&#39;`). Procurar a
+	// forma crua aqui daria um guarda que reprova o código certo.
+	cena := stdhtml.UnescapeString(f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String())
+
+	if !strings.Contains(cena, "fichaversao: ''") {
+		t.Error("o sinal `fichaversao` não foi declarado: o remendo do servidor não teria onde pousar")
+	}
+	if !strings.Contains(cena, `data-on-signal-patch=`) {
+		t.Fatal("a cena não tem o ouvinte que repede a ficha")
+	}
+	if !strings.Contains(cena, `data-on-signal-patch-filter="{include: /^fichaversao$/}"`) {
+		t.Error("o ouvinte está sem filtro: ele dispararia em QUALQUER remendo de sinal")
+	}
+	// A ABA viaja num sinal porque o servidor não a conhece daqui. Sem esta
+	// escrita, o repedido devolveria a ficha na aba padrão.
+	if !strings.Contains(cena, "$fichatab = ") {
+		t.Error("as abas da ficha embutida não guardam a seção aberta")
+	}
+	if !strings.Contains(cena, "' + $fichatab + '") {
+		t.Error("o repedido não lê a seção do sinal: ele devolveria a aba padrão")
 	}
 }

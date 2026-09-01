@@ -540,12 +540,12 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   cobra cada token da casa contra a folha compilada. A paleta mora no
   `@theme` do `api/piloto/src/index.css`; conferir lá antes de inventar o nome.
 
-## Datastar: nove armadilhas que não deixam erro para trás
+## Datastar: dez armadilhas que não deixam erro para trás
 
 As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na
-ALE-235, e as quatro últimas na ALE-272; nenhuma delas escreve uma linha no
-console — a oitava escreve UMA, e no lugar que ninguém olha. Estão aqui porque o
-sintoma de cada uma aponta para o lugar errado.
+ALE-235, quatro na ALE-272 e a última na ALE-275; nenhuma delas escreve uma linha
+no console — a oitava escreve UMA, e no lugar que ninguém olha. Estão aqui porque
+o sintoma de cada uma aponta para o lugar errado.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 
@@ -716,6 +716,37 @@ O conserto não é `novalidate`, que desligaria a validação nativa do `submit`
 também: é **o campo não ser `required` no HTML** e a recusa ser do servidor, que
 já é a autoridade. Vale a regra geral: **num formulário que também é remendado,
 validação nativa de campo brigará com o redesenho.**
+
+### `data-on-signal-patch` SEM filtro escuta o remendo dos OUTROS sinais
+
+O stream pode acordar um pedaço da tela escrevendo um sinal, e quem reage é o
+`data-on-signal-patch`. É assim que a ficha dentro da sessão se mantém em dia
+(ALE-275): ela não é região do stream — sete painéis computados a cada tique
+seria o gasto mais caro da página —, então o servidor manda um carimbo de uma
+linha e o CLIENTE repede a ficha.
+
+**A armadilha é que ele dispara em QUALQUER remendo de sinal**, e esta cena tem
+outro: o "mostrar à mesa" escreve `superficie` para levar o jogador ao mapa.
+Sem filtro, um puxão do mestre repediria a ficha — trabalho invisível, disparado
+por um gesto que não tem nada a ver, e que só aparece como tráfego.
+
+O filtro mora num atributo IRMÃO e não no valor:
+
+```
+data-on-signal-patch-filter="{include: /^fichaversao$/}"
+data-on-signal-patch="@get('/piloto/personagens/13?tab=' + $fichatab + '&embutida=1')"
+```
+
+**E o servidor precisa mandar UMA vez por mudança**, nunca por quadro — é a
+mesma regra do puxão, e pelo mesmo motivo: remendo de sinal não é idempotente. A
+memória do que já foi avisado é da CONEXÃO (`avisaQueAFichaMudou`).
+
+**A segunda metade é o que o desenho quase perdeu:** o servidor NÃO sabe em que
+aba a pessoa está, porque a aba viaja na query dos comandos da ficha e o stream
+abriu antes de qualquer clique. Quem a guarda é um sinal que o clique na aba
+escreve (`$fichatab`), e o repedido a concatena. Sem isso o remendo devolve a
+aba padrão e tira o jogador de onde ele estava — provado por sabotagem, e é a
+mesma família do `?tab=` perdido logo acima.
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 

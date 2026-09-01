@@ -24,6 +24,13 @@ import (
 type fichaView struct {
 	ID   int64
 	Nome string
+	// Versao é o `updatedAt` do personagem, e ela existe só para a ficha
+	// EMBUTIDA (ALE-275): o ouvinte que repede a ficha compara o carimbo que o
+	// stream mandou com o que já está na tela, e não pede nada quando são o
+	// mesmo. Sem isso, um gesto do próprio jogador produzia DOIS pedidos — o
+	// dele e o do aviso que a escrita dele acabou de provocar —, e a ficha era
+	// desenhada duas vezes por clique.
+	Versao string
 	// Embutida diz que esta ficha está sendo desenhada DENTRO da sessão
 	// (ALE-272, fatia 10b), como a superfície "Minha ficha" da SPA.
 	//
@@ -190,6 +197,7 @@ func (s *Server) carregaFicha(
 	v := fichaView{
 		ID:        dto.ID,
 		Nome:      dto.Name,
+		Versao:    row.Updatedat,
 		Iniciais:  cartao.Iniciais,
 		Gradiente: cartao.Gradiente,
 		Papel:     cartao.Papel,
@@ -395,8 +403,40 @@ func oGetDaFicha(v fichaView) string {
 
 // oGetDaAbaEmbutida troca de seção SEM sair da sessão: o mesmo endereço da
 // ficha, pedido pelo Datastar, remendando o `#cena-ficha` no lugar.
+//
+// Ele ESCREVE a aba num sinal antes de pedir, e o sinal é o que faz a ficha
+// sobreviver a um aviso do servidor (ALE-275): quando o mestre mexe no
+// personagem, quem repede a ficha é o cliente, e é daqui que ele sabe em que
+// seção a pessoa está. Sem isso o repedido devolveria a aba padrão e tiraria o
+// jogador de onde ele estava — a mesma família do `?tab=` perdido que o
+// `oPostDaFicha` já conserta.
+//
+// Dois comandos separados por `;` e NUNCA num ternário: sequência dentro de
+// ternário é erro de sintaxe que o Datastar engole, e o gesto inteiro vira nada.
 func oGetDaAbaEmbutida(v fichaView, aba string) string {
-	return fmt.Sprintf("@get('/piloto/personagens/%d?tab=%s&embutida=1')", v.ID, aba)
+	return fmt.Sprintf("$fichatab = %q; @get('/piloto/personagens/%d?tab=%s&embutida=1')",
+		aba, v.ID, aba)
+}
+
+// oRepedidoDaFicha é o comando que o AVISO do stream dispara: a mesma ficha, na
+// aba que o sinal guarda.
+//
+// A aba entra por CONCATENAÇÃO e não como texto fixo, porque quem a escolhe é
+// quem está olhando — este comando é escrito uma vez, no servidor, e serve para
+// as sete seções.
+func oRepedidoDaFicha(v fichaView) string {
+	// A GUARDA é a comparação com o que já está na tela, e ela existe por
+	// medição: sem ela, um gesto do próprio jogador saía como dois pedidos — o
+	// comando dele grava, o stream vê o `updatedAt` novo e manda o aviso, e o
+	// aviso repedia a ficha que o comando acabou de trazer. Medido na bancada:
+	// um clique em "Ferir 1 de PV" produzia um POST e um GET.
+	//
+	// A versão vem do DOM e não de um sinal porque quem a atualiza é o próprio
+	// remendo da ficha: um sinal teria de ser reescrito por fora, e é
+	// exatamente o tipo de segunda escrita que sai de sincronia.
+	return fmt.Sprintf(
+		"$fichaversao !== document.getElementById('cena-ficha').dataset.versao && "+
+			"@get('/piloto/personagens/%d?tab=' + $fichatab + '&embutida=1')", v.ID)
 }
 
 // oComandoDoAtributo escreve o `@post` que repõe a perícia noutro atributo.

@@ -37,6 +37,23 @@ templ mesa(v mesaView) {
 		// stream nunca a toca, e quem a mantém em dia são os comandos dela, que
 		// remendam o `#cena-ficha` por conta.
 		if v.MinhaFicha != nil {
+			// O OUVIDO DA FICHA (ALE-275): o stream avisa que o personagem mudou
+			// escrevendo `fichaversao`, e é o CLIENTE que repede a ficha — na aba
+			// em que a pessoa está, que só ele sabe.
+			//
+			// FORA do `#cena-ficha` de propósito: aquele nó é substituído a cada
+			// remendo da ficha, e um ouvinte que se apaga e renasce no meio do
+			// caminho pode perder o aviso que o fez nascer.
+			//
+			// O filtro é obrigatório: sem ele o ouvinte dispara em QUALQUER
+			// remendo de sinal, e o stream também escreve `superficie` quando o
+			// mestre puxa alguém para o mapa — a ficha seria repedida por causa
+			// de um gesto que não tem nada a ver com ela.
+			<div
+				data-on-signal-patch-filter="{include: /^fichaversao$/}"
+				data-on-signal-patch={ oRepedidoDaFicha(*v.MinhaFicha) }
+				class="hidden"
+			></div>
 			<div data-show={ naSuperficie(superficieDaFicha) } class="flex min-h-0 flex-1 flex-col">
 				@cenaDaFicha(*v.MinhaFicha)
 			</div>

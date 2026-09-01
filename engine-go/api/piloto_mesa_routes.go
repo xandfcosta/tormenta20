@@ -202,6 +202,14 @@ func sinaisDaMesa() string {
 		// MESA (decisão do dono) — quem entra na sessão quer saber de quem é a vez
 		// e quem está em cena, e o tabuleiro pode nem estar aberto.
 		fmt.Sprintf("superficie: '%s'", superficieQueAbrePadrao),
+		// A FICHA DENTRO DA SESSÃO (ALE-275). `fichatab` é a seção que a pessoa
+		// está olhando — quem a escreve é o clique na aba, e quem a lê é o
+		// repedido que o stream dispara; sem ela, um aviso do servidor
+		// redesenharia a ficha na aba padrão e tiraria o jogador de onde ele
+		// estava. `fichaversao` é o carimbo que o servidor empurra quando o
+		// personagem muda no banco, e ele nasce vazio porque a página já chega
+		// com a ficha de agora.
+		fmt.Sprintf("fichatab: '%s', fichaversao: ''", aAbaPedida("")),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
 		"ferramenta: '', marcadorescolhido: '', escolhidosdomapa: ''",
 		// O MENU DA PEÇA (ALE-206). `pecaescolhida` é qual menu está aberto e

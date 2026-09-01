@@ -22,7 +22,7 @@ import (
 // comandos substitui. O `id` é o que o morph do Datastar casa — sem ele o
 // remendo não teria onde pousar.
 templ cenaDaFicha(v fichaView) {
-	<div id="cena-ficha" class="flex min-h-0 flex-1 flex-col">
+	<div id="cena-ficha" data-versao={ v.Versao } class="flex min-h-0 flex-1 flex-col">
 		@ficha(v)
 	</div>
 }
