@@ -1,10 +1,11 @@
-package api
+package admin
 
 import (
 	"context"
 	"fmt"
 	"math"
 	"t20engine/plataforma"
+	"t20engine/web/ui"
 	"time"
 )
 
@@ -29,43 +30,43 @@ import (
 
 // adminView é a tela inteira.
 type adminView struct {
-	Jogadores []adminJogador
-	Convites  []adminConvite
-	Servidor  adminServidor
+	Players []playerRow
+	Invites []inviteRow
+	Machine serverInfo
 }
 
-type adminJogador struct {
+type playerRow struct {
 	ID    int64
-	Nome  string
+	Name  string
 	Email string
 	// Posses é a frase que a linha mostra ("admin · 2 mesas · 3 fichas"), e ela
 	// é montada aqui e não no template: é regra de pluralização, e regra em
 	// template é regra escondida onde ninguém a testa.
-	Posses string
+	Belongings string
 	// Custo é o que apagar levaria junto — a frase que o diálogo mostra ANTES
 	// de o dono confirmar.
-	Custo string
+	Cost string
 	// EhEu trava o apagar da própria conta. A trava de verdade é do servidor;
 	// esta só evita oferecer um botão que responderia erro.
-	EhEu bool
+	IsMe bool
 }
 
-type adminConvite struct {
-	Token  string
-	Rotulo string
-	Expira string
-	URL    string
+type inviteRow struct {
+	Token   string
+	Label   string
+	Expires string
+	URL     string
 }
 
-type adminServidor struct {
-	Ambiente     string
-	Banco        string
-	TamanhoBanco string
-	Conteudo     string
-	UltimoBackup string
+type serverInfo struct {
+	Environment  string
+	Database     string
+	DatabaseSize string
+	Contents     string
+	LastBackup   string
 }
 
-// carregaAdmin busca tudo o que a tela mostra.
+// loadAdmin busca tudo o que a tela mostra.
 //
 // Quatro leituras num só handler, e é isso que a tela quer: na SPA são quatro
 // queries que chegam em quatro instantes, com um esqueleto por cima enquanto
@@ -73,90 +74,83 @@ type adminServidor struct {
 // esqueleto deixa de ser necessário porque o estado "carregando" deixa de
 // existir. É a diferença mais visível entre os dois modelos, e ela vale
 // registrar como GANHO: três `Show` e um `SkeletonCardGrid` somem.
-func (s *Server) carregaAdmin(ctx context.Context, eu AuthUser) (adminView, error) {
-	linhas, err := s.queries.ListUsersWithCounts(ctx)
+func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
+	linhas, err := s.deps.Queries().ListUsersWithCounts(ctx)
 	if err != nil {
 		return adminView{}, err
 	}
-	jogadores := make([]adminJogador, 0, len(linhas))
+	jogadores := make([]playerRow, 0, len(linhas))
 	for _, u := range linhas {
 		nome := u.Email
 		if u.Name.Valid && u.Name.String != "" {
 			nome = u.Name.String
 		}
-		jogadores = append(jogadores, adminJogador{
-			ID: u.ID, Nome: nome, Email: u.Email,
-			Posses: posses(s.cfg.IsAdmin(u.Email), u.Campaigns, u.Characters),
-			Custo:  custoDeApagar(u.Campaigns, u.Characters),
-			EhEu:   u.ID == eu.ID,
+		jogadores = append(jogadores, playerRow{
+			ID: u.ID, Name: nome, Email: u.Email,
+			Belongings: belongings(s.deps.IsAdmin(u.Email), u.Campaigns, u.Characters),
+			Cost:       deletionCost(u.Campaigns, u.Characters),
+			IsMe:       u.ID == meID,
 		})
 	}
 
-	convites, err := s.queries.ListOpenAccountInvites(ctx, plataforma.NowISO())
+	convites, err := s.deps.Queries().ListOpenAccountInvites(ctx, plataforma.NowISO())
 	if err != nil {
 		return adminView{}, err
 	}
-	abertos := make([]adminConvite, 0, len(convites))
+	abertos := make([]inviteRow, 0, len(convites))
 	for _, c := range convites {
-		abertos = append(abertos, adminConvite{
-			Token:  c.Token,
-			Rotulo: "Link de convite " + primeiros(c.Token, 6),
-			Expira: expiraEm(c.Expiresat, time.Now()),
-			URL:    "/register?convite=" + c.Token,
+		abertos = append(abertos, inviteRow{
+			Token:   c.Token,
+			Label:   "Link de convite " + firstChars(c.Token, 6),
+			Expires: expiryLabel(c.Expiresat, time.Now()),
+			URL:     "/register?convite=" + c.Token,
 		})
 	}
 
-	contagem, err := s.queries.TableCounts(ctx)
+	contagem, err := s.deps.Queries().TableCounts(ctx)
 	if err != nil {
 		return adminView{}, err
 	}
-	servidor := adminServidor{
-		Ambiente:     string(s.cfg.AppEnv),
-		Banco:        s.cfg.DatabasePath,
-		TamanhoBanco: emBytes(fileSize(s.cfg.DatabasePath)),
-		Conteudo: fmt.Sprintf("%d contas · %d campanhas · %d fichas",
+	servidor := serverInfo{
+		Environment:  s.deps.Environment(),
+		Database:     s.deps.DatabasePath(),
+		DatabaseSize: inBytes(s.deps.DatabaseSize()),
+		Contents: fmt.Sprintf("%d contas · %d campanhas · %d fichas",
 			contagem.Users, contagem.Campaigns, contagem.Characters),
-		UltimoBackup: "Nenhum backup ainda.",
+		LastBackup: "Nenhum backup ainda.",
 	}
-	if lista := s.listBackups(); len(lista) > 0 {
-		servidor.UltimoBackup = fmt.Sprintf("Último: %s · %s", lista[0].Name, emBytes(lista[0].Size))
+	if nome, tamanho, ok := s.deps.LastBackup(); ok {
+		servidor.LastBackup = fmt.Sprintf("Último: %s · %s", nome, inBytes(tamanho))
 	}
 
-	return adminView{Jogadores: jogadores, Convites: abertos, Servidor: servidor}, nil
+	return adminView{Players: jogadores, Invites: abertos, Machine: servidor}, nil
 }
 
 // posses espelha o `belongings` do `players-panel.tsx`.
-func posses(admin bool, campanhas, fichas int64) string {
+func belongings(admin bool, campanhas, fichas int64) string {
 	frase := fmt.Sprintf("%s · %s",
-		plural(campanhas, "campanha", "campanhas"), plural(fichas, "ficha", "fichas"))
+		ui.Plural(campanhas, "campanha", "campanhas"), ui.Plural(fichas, "ficha", "fichas"))
 	if admin {
 		return "admin · " + frase
 	}
 	return frase
 }
 
-// custoDeApagar espelha o `deletionCost`: o diálogo diz o preço ANTES.
+// deletionCost espelha o `deletionCost`: o diálogo diz o preço ANTES.
 //
 // As campanhas passam para quem apaga, as fichas vão junto — é a decisão que o
 // `handleAdminDeleteUser` implementa, e a frase existe para que o dono a leia
 // antes de confirmar, e não descubra depois.
-func custoDeApagar(campanhas, fichas int64) string {
-	f := plural(fichas, "ficha", "fichas")
+func deletionCost(campanhas, fichas int64) string {
+	f := ui.Plural(fichas, "ficha", "fichas")
 	if campanhas == 0 {
 		return fmt.Sprintf("As %s vão junto. Não há campanhas para transferir.", f)
 	}
 	return fmt.Sprintf("As %s vão junto, e %s para você.", f,
-		plural(campanhas, "campanha passa", "campanhas passam"))
+		ui.Plural(campanhas, "campanha passa", "campanhas passam"))
 }
 
-func plural(n int64, um, muitos string) string {
-	if n == 1 {
-		return fmt.Sprintf("%d %s", n, um)
-	}
-	return fmt.Sprintf("%d %s", n, muitos)
-}
-
-func primeiros(s string, n int) string {
+func firstChars(s string, n int) string {
 	if len(s) <= n {
 		return s
 	}
@@ -164,7 +158,7 @@ func primeiros(s string, n int) string {
 }
 
 // emBytes é a mesma escada do `bytes()` do `server-panel.tsx`.
-func emBytes(n int64) string {
+func inBytes(n int64) string {
 	const k = 1024.0
 	switch {
 	case n < 1024:
@@ -189,18 +183,18 @@ func emBytes(n int64) string {
 // alguns segundos, tem de dizer "7 dias" e não "6". E abaixo de um dia a escala
 // vira HORAS, com piso em 1 — "0 horas" não diz se dá tempo de mandar a
 // mensagem.
-func expiraEm(iso string, agora time.Time) string {
+func expiryLabel(iso string, agora time.Time) string {
 	prazo, err := time.Parse(time.RFC3339, iso)
 	if err != nil {
 		return iso
 	}
 	restante := prazo.Sub(agora)
 	if dias := restante.Hours() / 24; dias >= 1 {
-		return plural(int64(math.Round(dias)), "dia", "dias")
+		return ui.Plural(int64(math.Round(dias)), "dia", "dias")
 	}
 	horas := int64(math.Round(restante.Hours()))
 	if horas < 1 {
 		horas = 1
 	}
-	return plural(horas, "hora", "horas")
+	return ui.Plural(horas, "hora", "horas")
 }

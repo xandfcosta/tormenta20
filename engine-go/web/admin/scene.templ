@@ -1,4 +1,4 @@
-package api
+package admin
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 // A tela de administração desenhada (ALE-219; em templ pela ALE-227).
 
-templ admin(v adminView) {
+templ adminScene(v adminView) {
 	<main class="w-full space-y-4">
 		// Uma coluna no telefone, duas a partir de lg com os jogadores — a lista
 		// que cresce — na maior. Mesma repartição da tela da SPA.
@@ -20,14 +20,14 @@ templ admin(v adminView) {
 		// obrigariam a cruzar borda para andar entre coisas que estão lado a
 		// lado na mesma tela.
 		<div data-nav-region="content" data-nav-layout="grid" class="grid w-full items-start gap-4 lg:grid-cols-[3fr_2fr]">
-			@painelJogadores(v)
+			@playersPanel(v)
 			<div class="flex flex-col gap-4">
-				@painelConvites(v)
-				@painelServidor(v)
+				@invitesPanel(v)
+				@serverPanel(v)
 			</div>
 		</div>
-		@dialogoConfirmar()
-		@dialogoRedefinir()
+		@confirmDialog()
+		@resetDialog()
 		// O MESMO componente do Hub, e não uma segunda cópia: cunhar convite é
 		// uma coisa só, e duas versões dela divergiriam sem ninguém notar — é a
 		// razão pela qual o `mintAccountInvite` saiu do manipulador HTTP. Fica
@@ -38,19 +38,19 @@ templ admin(v adminView) {
 	</main>
 }
 
-templ painelJogadores(v adminView) {
+templ playersPanel(v adminView) {
 	<section id="painel-jogadores" class="border border-grimorio-iron bg-grimorio-panel p-3">
 		<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">
-			Jogadores ({ fmt.Sprint(len(v.Jogadores)) })
+			Jogadores ({ fmt.Sprint(len(v.Players)) })
 		</h2>
 		<ul class="mt-3 divide-y divide-grimorio-iron/60">
-			for _, j := range v.Jogadores {
+			for _, j := range v.Players {
 				<li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
 					<span class="min-w-0 flex-1">
-						<span class="block truncate font-heading text-sm tracking-wide">{ j.Nome }</span>
+						<span class="block truncate font-heading text-sm tracking-wide">{ j.Name }</span>
 						<span class="block truncate text-xs text-muted-foreground">{ j.Email }</span>
 					</span>
-					<span class="text-xs text-muted-foreground">{ j.Posses }</span>
+					<span class="text-xs text-muted-foreground">{ j.Belongings }</span>
 					// Redefinir vale para TODA conta, inclusive a sua: o admin que
 					// esqueceu a própria senha usa a mesma porta. É só apagar que
 					// tem a guarda do `EhEu`, porque essa não tem volta.
@@ -62,14 +62,14 @@ templ painelJogadores(v adminView) {
 					<button
 						type="button"
 						data-id={ fmt.Sprint(j.ID) }
-						data-nome={ j.Nome }
+						data-nome={ j.Name }
 						data-on:click="$alvoId = el.dataset.id; $alvoNome = el.dataset.nome; $copiado = ''; document.getElementById('reset-link').innerHTML = ''; $redefinir.showModal()"
-						aria-label={ "Redefinir a senha de " + j.Nome }
+						aria-label={ "Redefinir a senha de " + j.Name }
 						class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 					>
 						@ui.Icon("KeyRound", "size-4")
 					</button>
-					if !j.EhEu {
+					if !j.IsMe {
 						// O nome e o custo viajam em `data-*` e NUNCA dentro da
 						// expressão. Interpolar o nome num `data-on:click` seria injetar
 						// texto de usuário em JavaScript: o escape é para contexto de
@@ -79,10 +79,10 @@ templ painelJogadores(v adminView) {
 						<button
 							type="button"
 							data-id={ fmt.Sprint(j.ID) }
-							data-nome={ j.Nome }
-							data-custo={ j.Custo }
+							data-nome={ j.Name }
+							data-custo={ j.Cost }
 							data-on:click="$alvoId = el.dataset.id; $alvoNome = el.dataset.nome; $alvoCusto = el.dataset.custo; $confirmar.showModal()"
-							aria-label={ "Apagar a conta de " + j.Nome }
+							aria-label={ "Apagar a conta de " + j.Name }
 							class="shrink-0 border border-destructive/60 bg-destructive px-2 py-1 text-xs font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 						>
 							Apagar
@@ -94,11 +94,11 @@ templ painelJogadores(v adminView) {
 	</section>
 }
 
-templ painelConvites(v adminView) {
+templ invitesPanel(v adminView) {
 	<section id="painel-convites" class="border border-grimorio-iron bg-grimorio-panel p-3">
 		<div class="flex items-center justify-between gap-2">
 			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">
-				Convites abertos ({ fmt.Sprint(len(v.Convites)) })
+				Convites abertos ({ fmt.Sprint(len(v.Invites)) })
 			</h2>
 			<button
 				type="button"
@@ -109,17 +109,17 @@ templ painelConvites(v adminView) {
 				Convidar
 			</button>
 		</div>
-		if len(v.Convites) == 0 {
+		if len(v.Invites) == 0 {
 			<p class="mt-3 text-sm text-muted-foreground">
 				Nenhum convite pendente. Todo mundo que foi convidado já entrou.
 			</p>
 		} else {
 			<ul class="mt-3 space-y-3">
-				for _, c := range v.Convites {
+				for _, c := range v.Invites {
 					<li class="flex items-center gap-2">
 						<span class="min-w-0 flex-1">
-							<span class="block truncate font-mono text-xs">{ c.Rotulo }</span>
-							<span class="block text-xs text-muted-foreground">Expira em { c.Expira }.</span>
+							<span class="block truncate font-mono text-xs">{ c.Label }</span>
+							<span class="block text-xs text-muted-foreground">Expira em { c.Expires }.</span>
 						</span>
 						// A área de transferência é API do NAVEGADOR — não há como o
 						// servidor copiar por ele. É o primeiro lugar do piloto onde a
@@ -130,7 +130,7 @@ templ painelConvites(v adminView) {
 							type="button"
 							data-url={ c.URL }
 							data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copiado = el.dataset.url"
-							aria-label={ "Copiar o " + c.Rotulo }
+							aria-label={ "Copiar o " + c.Label }
 							class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 						>
 							Copiar
@@ -146,25 +146,25 @@ templ painelConvites(v adminView) {
 	</section>
 }
 
-templ painelServidor(v adminView) {
+templ serverPanel(v adminView) {
 	<section id="painel-servidor" class="border border-grimorio-iron bg-grimorio-panel p-3">
 		<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">Servidor</h2>
 		<dl class="mt-3 space-y-1 text-sm">
 			<div class="flex justify-between gap-3">
 				<dt class="text-muted-foreground">Ambiente</dt>
-				<dd>{ v.Servidor.Ambiente }</dd>
+				<dd>{ v.Machine.Environment }</dd>
 			</div>
 			<div class="flex justify-between gap-3">
 				<dt class="shrink-0 text-muted-foreground">Banco</dt>
-				<dd class="truncate">{ v.Servidor.Banco } · { v.Servidor.TamanhoBanco }</dd>
+				<dd class="truncate">{ v.Machine.Database } · { v.Machine.DatabaseSize }</dd>
 			</div>
 			<div class="flex justify-between gap-3">
 				<dt class="shrink-0 text-muted-foreground">Conteúdo</dt>
-				<dd class="text-right">{ v.Servidor.Conteudo }</dd>
+				<dd class="text-right">{ v.Machine.Contents }</dd>
 			</div>
 		</dl>
 		<div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-			<p class="text-xs text-muted-foreground">{ v.Servidor.UltimoBackup }</p>
+			<p class="text-xs text-muted-foreground">{ v.Machine.LastBackup }</p>
 			// Sem stream nenhum nesta tela: quem redesenha é a RESPOSTA do POST, que
 			// volta com o remendo deste painel. É a diferença central entre as duas
 			// superfícies do piloto — a Mesa tinha um SSE aberto para isso.
@@ -199,7 +199,7 @@ templ painelServidor(v adminView) {
 // centraliza um `<dialog>` aberto por `showModal()`. Sem isso ele encosta no
 // canto superior esquerdo — o navegador estava certo e a folha de reset é que
 // tirou. Medido: apareceu no canto na primeira abertura.
-templ dialogoConfirmar() {
+templ confirmDialog() {
 	<dialog
 		id="confirmar"
 		data-ref="confirmar"
@@ -233,7 +233,7 @@ templ dialogoConfirmar() {
 	</dialog>
 }
 
-// dialogoRedefinir entrega o link de uso único que troca a senha de UMA conta
+// resetDialog entrega o link de uso único que troca a senha de UMA conta
 // (ALE-120): o admin gera e manda, e quem recebe escolhe a própria senha — o
 // admin nunca vê nem digita senha de ninguém.
 //
@@ -242,7 +242,7 @@ templ dialogoConfirmar() {
 // de volta ao servidor em toda requisição seguinte da página, e um token de uso
 // único que abre uma conta EXISTENTE é a última coisa que se quer nesse
 // caminho.
-templ dialogoRedefinir() {
+templ resetDialog() {
 	<dialog
 		id="redefinir"
 		data-ref="redefinir"
@@ -276,7 +276,7 @@ templ dialogoRedefinir() {
 	</dialog>
 }
 
-// resetGerado é o remendo que volta do POST, e carrega o CAMINHO — nunca a URL
+// mintedReset é o remendo que volta do POST, e carrega o CAMINHO — nunca a URL
 // inteira. A origem é do NAVEGADOR, e isso é conserto de um defeito medido: com
 // o `r.Host` o link nascia apontando para a porta da API, porque o proxy do
 // Vite reescreve o `Host` em desenvolvimento. Link de redefinição existe para
@@ -284,7 +284,7 @@ templ dialogoRedefinir() {
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.
-templ resetGerado(caminho string) {
+templ mintedReset(caminho string) {
 	<div id="reset-link" class="mt-3 space-y-2">
 		<label for="reset-url" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
 			Link de redefinição

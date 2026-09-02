@@ -325,7 +325,7 @@ func papelNaMesa(v cronicaView) string {
 
 // metaDaMesa é a linha de baixo: o tamanho do grupo e desde quando ela existe.
 func metaDaMesa(v cronicaView) string {
-	linha := plural(int64(v.TotalHerois), "herói", "heróis")
+	linha := ui.Plural(int64(v.TotalHerois), "herói", "heróis")
 	if v.CriadaEm != "" {
 		linha += " · Criada em " + v.CriadaEm
 	}
