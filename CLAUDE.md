@@ -56,6 +56,15 @@ e a regra tem um lugar só.
   lugares não identifica coisa nenhuma.
 - Tipos explícitos. Sem `any`, sem `Dict`, sem função sem tipo.
 - Sem lógica repetida: extraia para função ou módulo.
+- **Diante de duas opções que resolvem a tarefa igualmente bem hoje, escolha a
+  mais fácil de mudar depois.** Não é prever o futuro — é não pagar a mesma
+  decisão duas vezes. Menos lugares para editar, menos acoplamento, decisão
+  adiável em vez de decisão travada.
+- **Refatore de passagem, não só quando um renome esbarra em você.** Se a
+  tarefa já abriu o arquivo, aproveite para corrigir o que estiver tosco por
+  perto — nome ruim, duplicação, função que já devia ter sido dividida.
+  "Depois" costuma virar "nunca"; a limpeza incidental é mais barata que a
+  faxina separada.
 - **Mensagem de exceção carrega o valor ofensor e o formato esperado.** "Caminho
   inválido" não ajuda ninguém no meio de uma sessão; "o caminho começa em (3,1) e
   a peça está em (0,0)" ajuda.
@@ -217,9 +226,12 @@ foram olhados. Sem isso, "verde" e "não mediu" são a mesma cor.
   da tabela), nunca a tabela inteira.
 - Troque I/O externo (API, banco, sistema de arquivos) por classes dublê nomeadas, não por stub inline. Testes F.I.R.S.T: rápidos, independentes,
   repetíveis, auto-verificáveis, oportunos.
-- Escreva o teste primeiro quando você consegue enunciar o resultado esperado
-  primeiro; caçando defeito, reproduza no navegador ou num handler antes, depois
-  codifique.
+- **Teste nasce antes do código.** Sem o teto de linha por função (ver "Estilo
+  de código"), uma função pode ser o comportamento inteiro, e o teste que a
+  define cabe ser escrito primeiro — na camada que a seção já manda usar
+  (integração por padrão, unitário só pra regra). Caçando defeito, reproduza no
+  navegador ou num handler antes: o defeito reproduzido É o teste vermelho, e
+  ele nasce antes do conserto por definição.
 - **Ordem do corte: escreva o substituto, veja-o verde, DEPOIS apague.** Apagar
   primeiro abre uma janela cega.
 
@@ -357,6 +369,10 @@ identificadores em geral não cabe.
   "atualiza piloto_mesa_tabuleiro.templ" é o diff parafraseado.
 - Cite a issue do Linear. Varreu? Diga quantos eram. Provou o teste vermelho?
   Diga como.
+- **Commit pequeno e frequente bate commit grande e raro.** Se a mudança já se
+  divide em passos que fazem sentido sozinhos, divida — cada commit é uma
+  decisão revisável isoladamente, não um lote de tarefas diferentes
+  economizando revisão.
 - **Sem `Co-Authored-By` e sem rodapé de ferramenta.**
 
 ## Documentação
