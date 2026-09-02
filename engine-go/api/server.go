@@ -362,3 +362,8 @@ func (s *Server) ExpiredSessionCookie() *http.Cookie { return s.sessionCookie(""
 func (s *Server) MesaRoute(campaignID, sessionID int64) string {
 	return rotaDaMesa(campaignID, sessionID)
 }
+
+// Asset é o endereço versionado de um estático, para as cenas que carregam
+// bundle próprio. Ele já era injetado na casca (`ui.Page.Asset`); aqui ele vira
+// método porque uma cena inteira o pede.
+func (s *Server) Asset(arquivo string) string { return EstaticoDoPiloto(arquivo) }
