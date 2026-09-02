@@ -672,12 +672,22 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   com a cor HERDADA — o crachá de contagem dos Efeitos saiu dourado sobre
   dourado, 1,53:1, e atravessou uma fatia inteira (ALE-272). O
   `TestEveryHouseTintExistsInTheStylesheet` varre `piloto_*.templ`, `piloto_*.go` e
-  `web/ui/*` e cobra cada token da casa contra a folha compilada. A paleta mora
+  o `web/` INTEIRO, e cobra cada token contra a folha compilada. A paleta mora
   no `@theme` do `api/piloto/src/index.css`; conferir lá antes de inventar o nome.
-  **O `web/ui/*` entrou na ALE-278 e mostra a forma da falha desta família**: o
+  **O `web/` entrou na ALE-278 e mostra a forma da falha desta família**: o
   kit mudou de nome de arquivo, o padrão `piloto_*` deixou de casar com ele, e o
   guarda teria seguido verde medindo as cenas e ignorando o botão, o campo e a
-  casca — os arquivos onde uma tinta errada aparece em TODA tela.
+  casca — os arquivos onde uma tinta errada aparece em TODA tela. Ele é varrido
+  por caminhada e não por lista de pacotes desde que a terceira cena (`web/grimoire`)
+  caiu fora da lista enumerada: enumerar faria a PRÓXIMA cena nascer sem medição.
+  **E o que ele mede deixou de ser só a paleta `grimorio-*` na ALE-276**: os
+  PAPÉIS semânticos — `destructive`, `primary`, `muted`, `card`, `popover` e os
+  outros — não estavam em `asPaletasDaCasa`, então `text-destructive-foreground`
+  foi escrito em três sítios com o token nunca declarado, e o guarda passou por
+  cima. O botão "Excluir a sessão" herdou o `--foreground` do diálogo e saiu a
+  4,33:1. A varredura foi de 21 tintas para 43, e o piso do denominador subiu de
+  20 para 40 junto — um piso que o conjunto ANTIGO satisfazia não denunciaria a
+  volta dele.
 
 - **E a CLASSE DE ESCOPO não é uma tinta, então o guarda de tinta não a via.**
   `scene-grimorio` é a condição para os tokens existirem — o `@custom-variant
