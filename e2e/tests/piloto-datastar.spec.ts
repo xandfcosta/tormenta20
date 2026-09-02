@@ -130,7 +130,7 @@ test.describe('Administração (piloto Datastar)', () => {
   // navegador tenha, que é a única justificativa de e2e que o guia aceita.
   //
   // Quem prende que a rota existe e é do administrador é o Go
-  // (`piloto_admin_test.go`), e a decisão de o endereço VELHO responder 404 está
+  // (`web/admin/admin_test.go`), e a decisão de o endereço VELHO responder 404 está
   // em `TestTheOldPilotPrefixIsGone`.
 
   /**

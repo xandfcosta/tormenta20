@@ -881,6 +881,63 @@ só**. Foi a fronteira que a tornou visível: os unitários não compilavam mais
 cobrando isso de cada cena que sai, e a resposta é sempre a mesma — unitário onde
 a regra mora, integração onde a composição acontece.
 
+## `web/admin`: a MAIOR porta, e a armadilha que só o `.templ` tem
+
+A administração saiu na ALE-278 com **treze** métodos na porta — contra nove da
+porta de entrar, seis da forja e zero do buscador. O tamanho não é vício: esta
+cena é um painel de CONTROLE sobre serviços do servidor. Backup, cunhar convite,
+apagar conta e ler o tamanho do banco são coisas que o hospedeiro faz; a cena
+oferece o botão e desenha o resultado.
+
+O sinal de que a fronteira está no lugar é que nenhum dos treze desenha nada, e
+nenhum handler daqui toca banco fora do `Queries`.
+
+**Quatro assinaturas apertaram de uma vez**, pela regra da menor pergunta:
+`backupDatabase` devolvia o caminho do arquivo, `deleteAccount` devolvia a
+contagem de campanhas e um status HTTP, e `listBackups` devolvia a lista inteira
+de `backupDTO` — um tipo do hospedeiro que teria feito a tela depender da forma
+do JSON da API de backup. A cena descarta os três e pede `LastBackup() (nome,
+tamanho, ok)`.
+
+**E uma NÃO apertou, o que é a parte interessante.** As duas cunhagens devolvem a
+LINHA do banco e não o token, porque o `hub.Deps` já pedia `MintAccountInvite`
+com essa forma desde a extração dele. Encolher aqui obrigaria o `*Server` a ter
+dois métodos com o mesmo nome e formas diferentes — que o compilador recusa — ou
+um segundo nome para a mesma coisa, que é pior que a cena ler um campo. **Um
+contrato que já existe ganha da regra**, e a linha diz isso.
+
+### A armadilha do `.templ`: o texto da tela não tem aspas
+
+O renome que acompanha a mudança de pacote já tinha mordido em STRING na porta.
+Aqui ele mordeu de novo, num lugar que a proteção contra strings **não cobre**:
+num `.templ`, o texto que a pessoa lê fica solto entre as tags.
+
+`Convites` virou `Invites` e `Expira` virou `Expires` — e o resultado foi a tela
+dizendo "**Invites abertos (1)**" e "**Expires em 7 dias**". Três frases, todas
+visíveis, nenhuma delas dentro de aspas.
+
+Quem pegou foi um teste de composição que afirmava o conteúdo do painel
+remendado. Não foi sorte: é o que a seção "Testes" chama de integração, e é
+exatamente o defeito que ela existe para pegar.
+
+**A receita, depois de duas mordidas:** proteja comentário, proteja string, e
+depois DIFERENCIE o arquivo contra o original comparando os nós de TEXTO —
+`>…<` e o que vem entre eles. Um renome de pacote não deve mudar uma palavra do
+que a pessoa lê, então qualquer nó de texto que mudou é defeito, e a lista é
+curta o bastante para conferir a olho.
+
+### Duas funções encontradas hospedadas por acidente
+
+O compilador apontou as duas quando a cena saiu — é o ciclo funcionando como a
+ALE-254 descreve, dizendo que a fronteira estava no lugar errado.
+
+O `plural` morava na view da administração — o antigo `piloto_admin_view` — e
+a CRÔNICA já o usava de lá; virou
+`ui.Plural`. É a segunda vez nesta épica que uma função de apresentação aparece
+hospedada numa cena por acidente de história — a primeira foi o `NoticeInternal`
+da porta. **Vale esperar uma por cena daqui para frente**, e o sinal é sempre o
+mesmo: o build quebra em um arquivo que a fatia não ia tocar.
+
 ## `account`: a regra de conta, e a cópia que divergiu na FRASE
 
 O que é um e-mail, o que é uma senha aceitável, e a forma dos dois pedidos que

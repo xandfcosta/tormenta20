@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/web/admin"
 	"t20engine/web/door"
 	"t20engine/web/finder"
 	"t20engine/web/grimoire"
@@ -106,11 +107,7 @@ func (s *Server) WebRouter() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
 		r.Use(s.requireAdmin)
-		r.Get("/admin", s.handleAdminPiloto)
-		r.Post("/admin/usuarios/{id}/apagar", s.handleAdminPilotoApagar)
-		r.Post("/admin/backup", s.handleAdminPilotoBackup)
-		r.Post("/admin/usuarios/{id}/redefinir", s.handleAdminPilotoRedefinir)
-		r.Post("/admin/convites", s.handleAdminPilotoConvite)
+		admin.Routes(r, admin.New(s))
 	})
 	return r
 }
