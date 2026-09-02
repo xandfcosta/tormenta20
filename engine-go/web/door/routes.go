@@ -1,7 +1,6 @@
-package api
+package door
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 	"t20engine/account"
@@ -9,9 +8,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
-	"golang.org/x/crypto/bcrypt"
 
-	"t20engine/db"
 	"t20engine/web/ui"
 )
 
@@ -23,38 +20,42 @@ import (
 // a própria tela de novo, com o status honesto (400/401/403), porque aí não há
 // nada de novo para onde navegar.
 
-func (s *Server) DoorRoutes(r chi.Router) {
-	r.Get("/entrar", s.handlePortaEntrar)
-	r.Post("/entrar", s.handlePortaEntrarSubmit)
-	r.Get("/criar-conta", s.handlePortaCriarConta)
-	r.Post("/criar-conta", s.handlePortaCriarContaSubmit)
-	r.Get("/redefinir-senha", s.handlePortaRedefinir)
-	r.Post("/redefinir-senha", s.handlePortaRedefinirSubmit)
+// Routes monta a porta no roteador de quem a hospeda.
+//
+// Os endereços moram AQUI e não em quem monta (ALE-278): a cena é a dona do que
+// ela atende, e quem a hospeda escolhe só onde encaixá-la.
+func Routes(r chi.Router, s Scene) {
+	r.Get("/entrar", s.handleSignIn)
+	r.Post("/entrar", s.handleSignInSubmit)
+	r.Get("/criar-conta", s.handleSignUp)
+	r.Post("/criar-conta", s.handleSignUpSubmit)
+	r.Get("/redefinir-senha", s.handleReset)
+	r.Post("/redefinir-senha", s.handleResetSubmit)
 }
 
 // ── entrar ───────────────────────────────────────────────────────────────────
 
-func (s *Server) handlePortaEntrar(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleSignIn(w http.ResponseWriter, r *http.Request) {
 	// Quem já tem sessão não vê a porta. Era o `beforeLoad` da rota `/login`,
 	// isto é, autorização morando no cliente; aqui é o handler, e some junto a
 	// ida à rede que o guarda fazia para descobrir se havia sessão.
-	if destino, autenticado := s.jaEntrou(r); autenticado {
+	if destino, autenticado := s.alreadySignedIn(r); autenticado {
 		http.Redirect(w, r, destino, http.StatusSeeOther)
 		return
 	}
-	s.escrevePorta(w, r, http.StatusOK, paginaEntrar(entrarView{
-		Destino: destinoPedido(r.URL.Query().Get("redirect")),
+	s.writeDoor(w, r, http.StatusOK, signInPage(signInView{
+		Destination: requestedDestination(r.URL.Query().Get("redirect")),
 	}))
 }
 
-func (s *Server) handlePortaEntrarSubmit(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleSignInSubmit(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "formulário inválido", http.StatusBadRequest)
 		return
 	}
-	v := entrarView{
-		Email:   strings.TrimSpace(r.PostFormValue("email")),
-		Destino: destinoPedido(r.PostFormValue("destino")),
+	v := signInView{
+		Email:       strings.TrimSpace(r.PostFormValue("email")),
+		Destination: requestedDestination(r.PostFormValue("destino")),
 	}
 	senha := r.PostFormValue("senha")
 
@@ -62,26 +63,26 @@ func (s *Server) handlePortaEntrarSubmit(w http.ResponseWriter, r *http.Request)
 	// os nomes dos campos deste formulário. Uma segunda regra aqui seria uma
 	// porta mais frouxa que a outra, e a mais frouxa é a que passa a valer.
 	if fields := account.ValidateLogin(account.LoginBody{Email: v.Email, Password: senha}); len(fields) > 0 {
-		v.Erros = comNomesDoFormulario(fields)
-		s.escrevePorta(w, r, http.StatusBadRequest, paginaEntrar(v))
+		v.Errors = withFormFieldNames(fields)
+		s.writeDoor(w, r, http.StatusBadRequest, signInPage(v))
 		return
 	}
-	user, err := s.authenticate(r.Context(), v.Email, senha)
+	user, err := s.deps.Authenticate(r.Context(), v.Email, senha)
 	if err != nil {
-		v.Aviso = avisoCredenciais
-		s.escrevePorta(w, r, http.StatusUnauthorized, paginaEntrar(v))
+		v.Notice = noticeBadCredentials
+		s.writeDoor(w, r, http.StatusUnauthorized, signInPage(v))
 		return
 	}
-	if !s.issueSession(w, user) {
+	if !s.deps.IssueSession(w, user) {
 		return
 	}
-	http.Redirect(w, r, v.Destino, http.StatusSeeOther)
+	http.Redirect(w, r, v.Destination, http.StatusSeeOther)
 }
 
 // ── criar conta ──────────────────────────────────────────────────────────────
 
-func (s *Server) handlePortaCriarConta(w http.ResponseWriter, r *http.Request) {
-	if _, autenticado := s.jaEntrou(r); autenticado {
+func (s Scene) handleSignUp(w http.ResponseWriter, r *http.Request) {
+	if _, autenticado := s.alreadySignedIn(r); autenticado {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
@@ -94,98 +95,106 @@ func (s *Server) handlePortaCriarConta(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 		return
 	}
-	s.escrevePorta(w, r, http.StatusOK, paginaCriarConta(criarContaView{Convite: convite}))
+	s.writeDoor(w, r, http.StatusOK, signUpPage(signUpView{Invite: convite}))
 }
 
-func (s *Server) handlePortaCriarContaSubmit(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "formulário inválido", http.StatusBadRequest)
 		return
 	}
-	v := criarContaView{
-		Email:   plataforma.NormalizeEmail(r.PostFormValue("email")),
-		Nome:    strings.TrimSpace(r.PostFormValue("nome")),
-		Convite: r.PostFormValue("convite"),
+	v := signUpView{
+		Email:  plataforma.NormalizeEmail(r.PostFormValue("email")),
+		Name:   strings.TrimSpace(r.PostFormValue("nome")),
+		Invite: r.PostFormValue("convite"),
 	}
 	senha := r.PostFormValue("senha")
 	corpo := account.RegisterBody{
-		Email: v.Email, Password: senha, InviteToken: v.Convite,
-		Name: nomeOuNada(v.Nome),
+		Email: v.Email, Password: senha, InviteToken: v.Invite,
+		Name: nameOrNil(v.Name),
 	}
 
-	v.Erros = comNomesDoFormulario(account.ValidateRegister(corpo))
+	v.Errors = withFormFieldNames(account.ValidateRegister(corpo))
 	// A conferência de senha é do FORMULÁRIO e não da API — o `confirmar` não
 	// existe no corpo JSON. Ela roda no SERVIDOR e não só no `data-on:input`,
 	// senão a página deixaria de proteger contra o typo com JavaScript
 	// desligado, que é o que esta superfície ganhou ao não usar sinais.
 	if r.PostFormValue("confirmar") != senha {
-		v.Erros["confirmar"] = []string{avisoConfere}
+		v.Errors["confirmar"] = []string{noticePasswordMismatch}
 	}
-	if len(v.Erros) > 0 {
-		s.escrevePorta(w, r, http.StatusBadRequest, paginaCriarConta(v))
+	if len(v.Errors) > 0 {
+		s.writeDoor(w, r, http.StatusBadRequest, signUpPage(v))
 		return
 	}
 
-	user, err := s.createAccount(r.Context(), corpo)
+	user, err := s.deps.CreateAccount(r.Context(), corpo)
 	if err != nil {
-		aviso, status := recusaDoRegistro(err)
-		v.Aviso = aviso
-		s.escrevePorta(w, r, status, paginaCriarConta(v))
+		aviso, status := s.signUpRefusal(err)
+		v.Notice = aviso
+		s.writeDoor(w, r, status, signUpPage(v))
 		return
 	}
-	if !s.issueSession(w, user) {
+	if !s.deps.IssueSession(w, user) {
 		return
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// recusaDoRegistro traduz o erro do domínio na frase que o jogador lê e no
+// signUpRefusal traduz o erro do domínio na frase que o jogador lê e no
 // status honesto. As frases da API continuam em inglês e continuam sendo as da
 // API — quem lê JSON não é quem lê tela.
-func recusaDoRegistro(err error) (string, int) {
-	switch {
-	case db.IsUniqueViolation(err):
-		return avisoEmUso, http.StatusConflict
-	case errors.Is(err, errInviteRejected), errors.Is(err, errInviteSpent):
-		return avisoConvite, http.StatusForbidden
+// signUpRefusal escolhe a FRASE; quem classifica o erro é o hospedeiro.
+//
+// Ela lia os sentinelas `errInviteRejected` e `errInviteSpent` direto do `api`,
+// e é justamente esse tipo de alcance que a divisão existe para cortar. A
+// repartição ficou assim: o hospedeiro sabe distinguir os erros dele e devolve
+// um MOTIVO; a cena sabe o que o jogador lê. Nenhum dos dois faz o trabalho do
+// outro, e a voz da porta não vai morar no `api`.
+func (s Scene) signUpRefusal(err error) (string, int) {
+	motivo, status := s.deps.SignUpRefusal(err)
+	switch motivo {
+	case RefusalEmailTaken:
+		return noticeEmailTaken, status
+	case RefusalBadInvite:
+		return noticeBadInvite, status
 	default:
-		return avisoInterno, http.StatusInternalServerError
+		return ui.NoticeInternal, status
 	}
 }
 
 // ── redefinir senha ──────────────────────────────────────────────────────────
 
-func (s *Server) handlePortaRedefinir(w http.ResponseWriter, r *http.Request) {
-	s.escrevePorta(w, r, http.StatusOK,
-		paginaRedefinir(s.olhaOLink(r, r.URL.Query().Get("token"))))
+func (s Scene) handleReset(w http.ResponseWriter, r *http.Request) {
+	s.writeDoor(w, r, http.StatusOK,
+		resetPage(s.linkView(r, r.URL.Query().Get("token"))))
 }
 
-func (s *Server) handlePortaRedefinirSubmit(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleResetSubmit(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "formulário inválido", http.StatusBadRequest)
 		return
 	}
 	senha := r.PostFormValue("senha")
-	v := s.olhaOLink(r, r.PostFormValue("token"))
-	if !v.LinkVale {
-		s.escrevePorta(w, r, http.StatusForbidden, paginaRedefinir(v))
+	v := s.linkView(r, r.PostFormValue("token"))
+	if !v.LinkIsValid {
+		s.writeDoor(w, r, http.StatusForbidden, resetPage(v))
 		return
 	}
 
-	v.Erros = comNomesDoFormulario(account.ValidatePassword(senha))
+	v.Errors = withFormFieldNames(account.ValidatePassword(senha))
 	if r.PostFormValue("confirmar") != senha {
-		v.Erros["confirmar"] = []string{avisoConfere}
+		v.Errors["confirmar"] = []string{noticePasswordMismatch}
 	}
-	if len(v.Erros) > 0 {
-		s.escrevePorta(w, r, http.StatusBadRequest, paginaRedefinir(v))
+	if len(v.Errors) > 0 {
+		s.writeDoor(w, r, http.StatusBadRequest, resetPage(v))
 		return
 	}
 
-	if !s.gravaNovaSenha(r, v.Token, senha) {
+	if !s.saveNewPassword(r, v.Token, senha) {
 		// Perder a corrida pelo link é a MESMA resposta de link inválido: quem
 		// chegou depois não pode saber que houve um primeiro.
-		v.LinkVale = false
-		s.escrevePorta(w, r, http.StatusForbidden, paginaRedefinir(v))
+		v.LinkIsValid = false
+		s.writeDoor(w, r, http.StatusForbidden, resetPage(v))
 		return
 	}
 	// Sem sessão: quem redefiniu a senha entra com ela. Emitir cookie aqui
@@ -194,46 +203,40 @@ func (s *Server) handlePortaRedefinirSubmit(w http.ResponseWriter, r *http.Reque
 	http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 }
 
-// olhaOLink pergunta pelo link ANTES de o formulário existir. Um link vencido
+// linkView pergunta pelo link ANTES de o formulário existir. Um link vencido
 // dizer isso de cara é melhor que falhar no envio com a senha já digitada duas
 // vezes.
-func (s *Server) olhaOLink(r *http.Request, token string) redefinirView {
-	v := redefinirView{Token: token, Erros: plataforma.FieldErrorMap{}}
-	reset, ok := s.usableReset(r.Context(), token)
+func (s Scene) linkView(r *http.Request, token string) resetView {
+	v := resetView{Token: token, Errors: plataforma.FieldErrorMap{}}
+	email, ok := s.deps.ResetLinkOwner(r.Context(), token)
 	if !ok {
 		return v
 	}
-	user, err := s.queries.GetUserByID(r.Context(), reset.Userid)
-	if err != nil {
-		return v
-	}
-	v.LinkVale = true
-	v.EmailDaConta = user.Email
+	v.LinkIsValid = true
+	v.AccountEmail = email
 	return v
 }
 
-func (s *Server) gravaNovaSenha(r *http.Request, token, senha string) bool {
-	reset, ok := s.usableReset(r.Context(), token)
-	if !ok {
-		return false
-	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(senha), bcryptCost)
-	if err != nil {
-		return false
-	}
-	return s.applyReset(r.Context(), reset, string(hash)) == nil
+// saveNewPassword pede o caminho INTEIRO ao hospedeiro, de propósito.
+//
+// Ela gerava o hash aqui, com o `bcryptCost` do `api`. Isso obrigaria a porta a
+// carregar uma constante de custo criptográfico para a cena fazer trabalho que
+// não é dela — e o custo do bcrypt é decisão de segurança do servidor, não de
+// quem desenha o formulário.
+func (s Scene) saveNewPassword(r *http.Request, token, senha string) bool {
+	return s.deps.ResetPassword(r.Context(), token, senha)
 }
 
 // ── auxiliares da porta ──────────────────────────────────────────────────────
 
-// escrevePorta desenha uma tela da porta com o status que a resposta merece.
+// writeDoor desenha uma tela da porta com o status que a resposta merece.
 //
 // O status importa: um formulário recusado com 200 mente para tudo o que não é
 // um navegador — teste, log, monitoração —, e a tela é a mesma nos dois casos.
-func (s *Server) escrevePorta(
+func (s Scene) writeDoor(
 	w http.ResponseWriter, r *http.Request, status int, corpo templ.Component,
 ) {
-	s.WritePage(w, r, status, ui.Page{
+	s.deps.WritePage(w, r, status, ui.Page{
 		// O `<title>` é o do JOGO e não o da tela: a porta é a tela-título, e o
 		// nome dela já está desenhado em Cinzel no meio da página.
 		Titulo: "Tormenta 20",
@@ -248,33 +251,33 @@ func (s *Server) escrevePorta(
 	}, corpo)
 }
 
-// jaEntrou responde se o pedido já traz uma sessão válida, e para onde mandar
+// alreadySignedIn responde se o pedido já traz uma sessão válida, e para onde mandar
 // quem tem uma.
-func (s *Server) jaEntrou(r *http.Request) (string, bool) {
-	if _, err := s.sessionUser(r); err != nil {
+func (s Scene) alreadySignedIn(r *http.Request) (string, bool) {
+	if !s.deps.HasSession(r) {
 		return "", false
 	}
-	return destinoPedido(r.URL.Query().Get("redirect")), true
+	return requestedDestination(r.URL.Query().Get("redirect")), true
 }
 
-// destinoPedido só aceita caminho INTERNO. Um `?redirect=` que aceitasse
+// requestedDestination só aceita caminho INTERNO. Um `?redirect=` que aceitasse
 // `https://outro.site` transformaria a porta em redirecionamento aberto: o link
 // sai do nosso domínio, o jogador confia, e a página que recebe pode imitar
 // esta. Barra dupla é o caso que engana — `//outro.site` é protocol-relative e
 // o navegador o trata como absoluto.
-func destinoPedido(bruto string) string {
+func requestedDestination(bruto string) string {
 	if bruto == "" || !strings.HasPrefix(bruto, "/") || strings.HasPrefix(bruto, "//") {
 		return "/"
 	}
 	return bruto
 }
 
-// comNomesDoFormulario traduz as chaves do `plataforma.FieldErrorMap` da API (`password`)
+// withFormFieldNames traduz as chaves do `plataforma.FieldErrorMap` da API (`password`)
 // para os nomes dos campos DESTE formulário (`senha`).
 //
 // A tradução é aqui e não no validador porque o `plataforma.FieldErrorMap` é contrato de
 // fio da API JSON — renomear a chave lá quebraria o cliente que a lê.
-func comNomesDoFormulario(fields plataforma.FieldErrorMap) plataforma.FieldErrorMap {
+func withFormFieldNames(fields plataforma.FieldErrorMap) plataforma.FieldErrorMap {
 	out := plataforma.FieldErrorMap{}
 	nomes := map[string]string{"password": "senha", "name": "nome", "email": "email"}
 	for chave, msgs := range fields {
@@ -287,8 +290,8 @@ func comNomesDoFormulario(fields plataforma.FieldErrorMap) plataforma.FieldError
 	return out
 }
 
-// nomeOuNada: nome vazio é "sem nome", não a string vazia.
-func nomeOuNada(nome string) *string {
+// nameOrNil: nome vazio é "sem nome", não a string vazia.
+func nameOrNil(nome string) *string {
 	if nome == "" {
 		return nil
 	}

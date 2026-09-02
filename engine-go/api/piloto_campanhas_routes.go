@@ -116,7 +116,7 @@ func (s *Server) handleCampanhaNova(w http.ResponseWriter, r *http.Request) {
 // navegador não trata os dois igual no histórico.
 func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		s.escreveFolhaNova(w, r, http.StatusBadRequest, campanhaNovaView{Aviso: avisoInterno})
+		s.escreveFolhaNova(w, r, http.StatusBadRequest, campanhaNovaView{Aviso: ui.NoticeInternal})
 		return
 	}
 	v := campanhaNovaView{
@@ -144,7 +144,7 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 		Createdat: agora, Updatedat: agora,
 	})
 	if err != nil {
-		v.Aviso = avisoInterno
+		v.Aviso = ui.NoticeInternal
 		s.escreveFolhaNova(w, r, http.StatusInternalServerError, v)
 		return
 	}
@@ -184,7 +184,7 @@ func (s *Server) handleCampanhaEntrar(w http.ResponseWriter, r *http.Request) {
 // português no campo certo, que é trabalho de tela e não de regra.
 func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		s.escreveCarta(w, r, http.StatusBadRequest, campanhaEntrarView{Aviso: avisoInterno})
+		s.escreveCarta(w, r, http.StatusBadRequest, campanhaEntrarView{Aviso: ui.NoticeInternal})
 		return
 	}
 	eu := currentUser(r)
@@ -250,7 +250,7 @@ func recusaDeEntrada(err error) (plataforma.FieldErrorMap, string) {
 	case errors.Is(err, errAlreadyInCampaign):
 		return plataforma.FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
 	default:
-		return plataforma.FieldErrorMap{}, avisoInterno
+		return plataforma.FieldErrorMap{}, ui.NoticeInternal
 	}
 }
 
@@ -335,7 +335,7 @@ func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
 	set.Add("name = ?", nome)
 	set.Add("description = ?", nullableArg(descricao))
 	if err := set.execTouched(r.Context(), s.db, "UPDATE campaigns", id); err != nil {
-		http.Error(w, avisoInterno, http.StatusInternalServerError)
+		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
@@ -348,7 +348,7 @@ func (s *Server) handleCronicaExcluir(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
-		http.Error(w, avisoInterno, http.StatusInternalServerError)
+		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/campanhas", http.StatusSeeOther)
@@ -389,18 +389,18 @@ func (s *Server) handleCronicaAlternarRegra(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if err := s.saveIgnoredRules(r.Context(), id, normalizadas); err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
 		return
 	}
 
 	v, err := s.carregaCronica(r.Context(), eu, id, "config")
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
 		return
 	}
 	fragmento, err := ui.RenderFragment(r.Context(), regrasDaCronica(v))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
 		return
 	}
 	_ = sse.PatchElements(fragmento)
