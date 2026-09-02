@@ -28,7 +28,7 @@ import "t20engine/web/ui"
 // não entra na folha, e o quadrado sai TRANSPARENTE — o jeito mais silencioso
 // possível de quebrar uma página cujo trabalho é mostrar cores.
 
-type amostraDeCor struct {
+type colorSample struct {
 	Classe string
 	Token  string
 	Nota   string
@@ -37,14 +37,14 @@ type amostraDeCor struct {
 }
 
 // A pilha do escuro para o claro. Toda cena empilha nesta ordem.
-var superficies = []amostraDeCor{
+var surfaces = []colorSample{
 	{Classe: "bg-grimorio-bg", Token: "--grimorio-bg", Nota: "fundo da cena", Superficie: true},
 	{Classe: "bg-grimorio-bg-2", Token: "--grimorio-bg-2", Nota: "fundo elevado", Superficie: true},
 	{Classe: "bg-grimorio-panel", Token: "--grimorio-panel", Nota: "painel", Superficie: true},
 	{Classe: "bg-grimorio-panel-raised", Token: "--grimorio-panel-raised", Nota: "painel elevado", Superficie: true},
 }
 
-var acentos = []amostraDeCor{
+var accents = []colorSample{
 	{Classe: "bg-grimorio-gold", Token: "--grimorio-gold", Nota: "a VEZ e a AÇÃO (ALE-200)"},
 	{Classe: "bg-grimorio-iron", Token: "--grimorio-iron", Nota: "borda padrão"},
 	{Classe: "bg-grimorio-iron-light", Token: "--grimorio-iron-light", Nota: "borda em relevo"},
@@ -56,7 +56,7 @@ var acentos = []amostraDeCor{
 // Os papéis, cada um com o par bloco + tinta (ALE-173, P3). Ficam lado a lado
 // de propósito: é aqui que se vê que a cor de PREENCHER e a de ESCREVER não
 // podem ser a mesma — a de baixo passa de 4,5:1 e a de cima não.
-var papeis = []amostraDeCor{
+var roles = []colorSample{
 	{Classe: "bg-penalty", Token: "--penalty", Nota: "penalidade — bloco"},
 	{Classe: "bg-penalty-ink", Token: "--penalty-ink", Nota: "penalidade — tinta"},
 	{Classe: "bg-bonus", Token: "--bonus", Nota: "bônus — bloco"},
@@ -71,20 +71,20 @@ var papeis = []amostraDeCor{
 
 // A armadilha que meia seção existe para mostrar: `--hp-hurt` é âmbar em matiz
 // 70, a um fio do dourado em 85, e uma barra pintada com ele LÊ COMO CHEIA.
-var vitais = []amostraDeCor{
+var vitals = []colorSample{
 	{Classe: "bg-[var(--hp-full)]", Token: "--hp-full", Nota: "vida cheia"},
 	{Classe: "bg-[var(--hp-hurt)]", Token: "--hp-hurt", Nota: "ferido — LÊ como cheia"},
 	{Classe: "bg-[var(--hp-critical)]", Token: "--hp-critical", Nota: "crítico; use este p/ ruim"},
 	{Classe: "bg-[var(--mp-arcane)]", Token: "--mp-arcane", Nota: "mana"},
 }
 
-type amostraSimples struct {
+type simpleSample struct {
 	Classe string
 	Nome   string
 	Uso    string
 }
 
-var escalaDoRaio = []amostraSimples{
+var radiusScale = []simpleSample{
 	{Classe: "rounded-none", Nome: "rounded-none"},
 	{Classe: "rounded-sm", Nome: "rounded-sm"},
 	{Classe: "rounded-md", Nome: "rounded-md"},
@@ -97,19 +97,19 @@ var escalaDoRaio = []amostraSimples{
 // medida de um OBJETO. Uma capa de livro é fisicamente mais redonda que a
 // página dentro dela, e forçar as duas ao mesmo degrau desenharia um objeto que
 // não existe.
-var raiosDeObjeto = []amostraSimples{
+var objectRadii = []simpleSample{
 	{Classe: "grimorio-frame", Nome: "moldura"},
 	{Classe: "grimorio-leather", Nome: "capa do livro"},
 	{Classe: "rounded-[3px]", Nome: "peça do tabuleiro"},
 }
 
-var familias = []amostraSimples{
+var families = []simpleSample{
 	{Classe: "font-heading", Nome: "font-heading", Uso: "Cinzel — títulos e rótulos de seção"},
 	{Classe: "font-sans", Nome: "font-sans", Uso: "corpo de texto"},
 	{Classe: "font-mono", Nome: "font-mono", Uso: "números de jogo, com tabular-nums"},
 }
 
-var degrausDoShadcn = []amostraSimples{
+var shadcnSteps = []simpleSample{
 	{Classe: "text-2xl", Nome: "text-2xl"},
 	{Classe: "text-xl", Nome: "text-xl"},
 	{Classe: "text-lg", Nome: "text-lg"},
@@ -119,7 +119,7 @@ var degrausDoShadcn = []amostraSimples{
 }
 
 // Os três que a casa acrescentou ABAIXO do piso do shadcn (ALE-173).
-var degrausDaCasa = []amostraSimples{
+var houseSteps = []simpleSample{
 	{Classe: "text-2xs", Nome: "text-2xs", Uso: "rótulo de seção"},
 	{Classe: "text-3xs", Nome: "text-3xs", Uso: "rótulo de campo"},
 	{Classe: "text-4xs", Nome: "text-4xs", Uso: "crachá"},
@@ -127,8 +127,8 @@ var degrausDaCasa = []amostraSimples{
 
 // ── as primitivas da folha ───────────────────────────────────────────────────
 
-// secaoDaFolha: cabeçalho com âncora, para a trilha lateral pular até aqui.
-func secaoDaFolha(id, titulo string) templ.Component {
+// sheetSection: cabeçalho com âncora, para a trilha lateral pular até aqui.
+func sheetSection(id, titulo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -217,10 +217,10 @@ func secaoDaFolha(id, titulo string) templ.Component {
 	})
 }
 
-// blocoDaFolha: um grupo de amostras com o título curto e a explicação do que
+// sheetBlock: um grupo de amostras com o título curto e a explicação do que
 // ele PROVA. A nota não é enfeite — é o que separa uma paleta de uma folha de
 // especificação.
-func blocoDaFolha(titulo, nota string) templ.Component {
+func sheetBlock(titulo, nota string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -307,10 +307,10 @@ func blocoDaFolha(titulo, nota string) templ.Component {
 	})
 }
 
-// quadradoDeCor: o quadrado é pintado pela classe REAL e as duas legendas ficam
+// colorSwatch: o quadrado é pintado pela classe REAL e as duas legendas ficam
 // VAZIAS — a ilha as preenche com o que o navegador resolveu. Um valor escrito
 // aqui seria a transcrição que esta página existe para não fazer.
-func quadradoDeCor(a amostraDeCor) templ.Component {
+func colorSwatch(a colorSample) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -403,10 +403,10 @@ func quadradoDeCor(a amostraDeCor) templ.Component {
 	})
 }
 
-// cantoDeRaio: o canto desenhado pela classe, e ao lado o PIXEL que ela virou
+// radiusCorner: o canto desenhado pela classe, e ao lado o PIXEL que ela virou
 // dentro desta cena — que é a informação que ninguém consegue prever lendo o
 // código, porque a cena redefine o `--radius` (ALE-173).
-func cantoDeRaio(a amostraSimples) templ.Component {
+func radiusCorner(a simpleSample) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -470,8 +470,8 @@ func cantoDeRaio(a amostraSimples) templ.Component {
 	})
 }
 
-// linhaDeTexto: a frase desenhada pelo degrau, com o tamanho que ele resolveu.
-func linhaDeTexto(a amostraSimples) templ.Component {
+// textRow: a frase desenhada pelo degrau, com o tamanho que ele resolveu.
+func textRow(a simpleSample) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -559,7 +559,7 @@ func linhaDeTexto(a amostraSimples) templ.Component {
 }
 
 // ── as seções ────────────────────────────────────────────────────────────────
-func secaoDeCor() templ.Component {
+func colorSection() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -604,15 +604,15 @@ func secaoDeCor() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range superficies {
-					templ_7745c5c3_Err = quadradoDeCor(a).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range surfaces {
+					templ_7745c5c3_Err = colorSwatch(a).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Superfícies", "A pilha do escuro para o claro. Toda cena empilha nesta ordem: fundo, painel, painel elevado.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var26), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Superfícies", "A pilha do escuro para o claro. Toda cena empilha nesta ordem: fundo, painel, painel elevado.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var26), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -632,15 +632,15 @@ func secaoDeCor() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range acentos {
-					templ_7745c5c3_Err = quadradoDeCor(a).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range accents {
+					templ_7745c5c3_Err = colorSwatch(a).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Acentos", "Ouro é a vez E a ação: desde a ALE-200 ele preenche o botão principal, e o crimson ficou reservado para destruir. Antes os dois eram o MESMO matiz 25, separados por 0,09 de luminosidade — e no print do dono o botão rotineiro parecia mais perigoso que o que apaga. A razão ao lado é contra o painel: abaixo de 4.5:1 a cor não serve de texto pequeno, só de bloco — e é por isso que a cena alcança cores cruas do Tailwind quando precisa ESCREVER em vermelho ou roxo (ALE-173, P3).").Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Acentos", "Ouro é a vez E a ação: desde a ALE-200 ele preenche o botão principal, e o crimson ficou reservado para destruir. Antes os dois eram o MESMO matiz 25, separados por 0,09 de luminosidade — e no print do dono o botão rotineiro parecia mais perigoso que o que apaga. A razão ao lado é contra o painel: abaixo de 4.5:1 a cor não serve de texto pequeno, só de bloco — e é por isso que a cena alcança cores cruas do Tailwind quando precisa ESCREVER em vermelho ou roxo (ALE-173, P3).").Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -660,15 +660,15 @@ func secaoDeCor() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range papeis {
-					templ_7745c5c3_Err = quadradoDeCor(a).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range roles {
+					templ_7745c5c3_Err = colorSwatch(a).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Papéis — bloco e tinta", "A cor de preencher e a de escrever são duas. As de bloco ficam abaixo de 4.5:1 e por isso só servem de fundo, barra e borda; as de tinta ficam todas na mesma luminosidade do dourado, e é com elas que se ESCREVE. O aviso e o dourado são vizinhos de matiz (70 e 85) — estão aqui um perto do outro para essa proximidade ser julgada, não descoberta depois.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Papéis — bloco e tinta", "A cor de preencher e a de escrever são duas. As de bloco ficam abaixo de 4.5:1 e por isso só servem de fundo, barra e borda; as de tinta ficam todas na mesma luminosidade do dourado, e é com elas que se ESCREVE. O aviso e o dourado são vizinhos de matiz (70 e 85) — estão aqui um perto do outro para essa proximidade ser julgada, não descoberta depois.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var28), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -694,7 +694,7 @@ func secaoDeCor() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Tinta sobre pergaminho", "O livro de campanhas é creme, e a conta inverte: o que é legível no painel escuro pode não ser aqui. O crimson base rende 3,95:1 sobre este fundo — abaixo do mínimo de texto —, e por isso a superfície clara tem tinta própria. Ela NÃO é um ajuste no crimson base: aquele é o `--destructive`, medido com branco por cima, e mexer nele mudaria o botão que apaga por um motivo que não é dele.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Tinta sobre pergaminho", "O livro de campanhas é creme, e a conta inverte: o que é legível no painel escuro pode não ser aqui. O crimson base rende 3,95:1 sobre este fundo — abaixo do mínimo de texto —, e por isso a superfície clara tem tinta própria. Ela NÃO é um ajuste no crimson base: aquele é o `--destructive`, medido com branco por cima, e mexer nele mudaria o botão que apaga por um motivo que não é dele.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -714,21 +714,21 @@ func secaoDeCor() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range vitais {
-					templ_7745c5c3_Err = quadradoDeCor(a).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range vitals {
+					templ_7745c5c3_Err = colorSwatch(a).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Vitais", "O ferido e o dourado ficam lado a lado de propósito: eles são vizinhos de matiz (70 e 85), e é por isso que uma barra pintada de ferido lê como cheia.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Vitais", "O ferido e o dourado ficam lado a lado de propósito: eles são vizinhos de matiz (70 e 85), e é por isso que uma barra pintada de ferido lê como cheia.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = secaoDaFolha("cor", "Cor").Render(templ.WithChildren(ctx, templ_7745c5c3_Var25), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetSection("cor", "Cor").Render(templ.WithChildren(ctx, templ_7745c5c3_Var25), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -736,7 +736,7 @@ func secaoDeCor() templ.Component {
 	})
 }
 
-func secaoDeRaio() templ.Component {
+func radiusSection() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -781,15 +781,15 @@ func secaoDeRaio() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range escalaDoRaio {
-					templ_7745c5c3_Err = cantoDeRaio(a).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range radiusScale {
+					templ_7745c5c3_Err = radiusCorner(a).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("A escala", "Ferro forjado não tem canto macio: o padrão da cena é quadrado, e quadrado se escreve rounded-none. Os dois degraus de cima existem para o que QUISER ser mais macio.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("A escala", "Ferro forjado não tem canto macio: o padrão da cena é quadrado, e quadrado se escreve rounded-none. Os dois degraus de cima existem para o que QUISER ser mais macio.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -809,21 +809,21 @@ func secaoDeRaio() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range raiosDeObjeto {
-					templ_7745c5c3_Err = cantoDeRaio(a).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range objectRadii {
+					templ_7745c5c3_Err = radiusCorner(a).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Raios de objeto", "Estes vêm cravados no CSS de propósito e não são violação da escala — não os alinhe.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var34), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Raios de objeto", "Estes vêm cravados no CSS de propósito e não são violação da escala — não os alinhe.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var34), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = secaoDaFolha("raio", "Raio").Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetSection("raio", "Raio").Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -831,7 +831,7 @@ func secaoDeRaio() templ.Component {
 	})
 }
 
-func secaoDeTipografia() templ.Component {
+func typographySection() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -876,15 +876,15 @@ func secaoDeTipografia() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range familias {
-					templ_7745c5c3_Err = linhaDeTexto(amostraSimples{Classe: a.Classe + " text-base", Nome: a.Nome, Uso: a.Uso}).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range families {
+					templ_7745c5c3_Err = textRow(simpleSample{Classe: a.Classe + " text-base", Nome: a.Nome, Uso: a.Uso}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Famílias", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var37), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Famílias", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var37), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -904,15 +904,15 @@ func secaoDeTipografia() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range degrausDoShadcn {
-					templ_7745c5c3_Err = linhaDeTexto(a).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range shadcnSteps {
+					templ_7745c5c3_Err = textRow(a).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("A escala do shadcn", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("A escala do shadcn", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var38), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -932,21 +932,21 @@ func secaoDeTipografia() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				for _, a := range degrausDaCasa {
-					templ_7745c5c3_Err = linhaDeTexto(a).Render(ctx, templ_7745c5c3_Buffer)
+				for _, a := range houseSteps {
+					templ_7745c5c3_Err = textRow(a).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Abaixo do piso do shadcn", "O `text-xs` de 12px é o menor degrau que o shadcn tem, e ele foi pensado para formulário. A mesa é densa, então a casa acrescentou três abaixo — eram 321 valores arbitrários sem nome antes da ALE-173.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Abaixo do piso do shadcn", "O `text-xs` de 12px é o menor degrau que o shadcn tem, e ele foi pensado para formulário. A mesa é densa, então a casa acrescentou três abaixo — eram 321 valores arbitrários sem nome antes da ALE-173.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = secaoDaFolha("tipografia", "Tipografia").Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetSection("tipografia", "Tipografia").Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -956,7 +956,7 @@ func secaoDeTipografia() templ.Component {
 
 // ── a folha ──────────────────────────────────────────────────────────────────
 
-var trilhaDaFolha = []amostraSimples{
+var sheetTrail = []simpleSample{
 	{Nome: "cor", Uso: "Cor"},
 	{Nome: "raio", Uso: "Raio"},
 	{Nome: "tipografia", Uso: "Tipografia"},
@@ -965,7 +965,7 @@ var trilhaDaFolha = []amostraSimples{
 	{Nome: "movimento", Uso: "Movimento"},
 }
 
-func grimorio() templ.Component {
+func grimoire() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -990,7 +990,7 @@ func grimorio() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, item := range trilhaDaFolha {
+		for _, item := range sheetTrail {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1026,27 +1026,27 @@ func grimorio() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = secaoDeCor().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = colorSection().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = secaoDeRaio().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = radiusSection().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = secaoDeTipografia().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = typographySection().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = secaoDePecas().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = partsSection().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = secaoDeFoco().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = focusSection().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = secaoDeMovimento().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = motionSection().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1077,7 +1077,7 @@ func grimorio() templ.Component {
 //
 // O "sem par em templ" é INFORMAÇÃO e não buraco: ele diz o que ainda falta
 // portar, e some sozinho quando alguém portar.
-func parDePecas(nome string, spa templ.Component, emTempl templ.Component) templ.Component {
+func partPair(nome string, spa templ.Component, emTempl templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1133,7 +1133,7 @@ func parDePecas(nome string, spa templ.Component, emTempl templ.Component) templ
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = celulaMedida().Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = measuredCell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1156,7 +1156,7 @@ func parDePecas(nome string, spa templ.Component, emTempl templ.Component) templ
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = celulaMedida().Render(templ.WithChildren(ctx, templ_7745c5c3_Var46), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = measuredCell().Render(templ.WithChildren(ctx, templ_7745c5c3_Var46), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1174,11 +1174,11 @@ func parDePecas(nome string, spa templ.Component, emTempl templ.Component) templ
 	})
 }
 
-// celulaMedida põe a peça e, embaixo, o que o navegador resolveu para ela. É a
+// measuredCell põe a peça e, embaixo, o que o navegador resolveu para ela. É a
 // regra nº 1 da folha aplicada à comparação: sem a medida, duas peças parecidas
 // passam por iguais — e foi assim que a primeira versão desta seção deixou
 // passar um erro de 12px no `xs`.
-func celulaMedida() templ.Component {
+func measuredCell() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1215,7 +1215,7 @@ func celulaMedida() templ.Component {
 	})
 }
 
-func cabecalhoDasColunas() templ.Component {
+func columnHeader() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1251,7 +1251,7 @@ func cabecalhoDasColunas() templ.Component {
 // linha "xs" comparava um botão xs do servidor com um default da SPA. O
 // instrumento mentia — e instrumento que mente é pior que instrumento nenhum,
 // porque ele produz confiança em vez de dúvida.
-func botaoDaSpa(variante, tamanho, texto string) templ.Component {
+func solidButton(variante, tamanho, texto string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1319,7 +1319,7 @@ func botaoDaSpa(variante, tamanho, texto string) templ.Component {
 	})
 }
 
-func chipDaSpa(variante string) templ.Component {
+func solidChip(variante string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1374,7 +1374,7 @@ func chipDaSpa(variante string) templ.Component {
 	})
 }
 
-func secaoDePecas() templ.Component {
+func partsSection() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1419,7 +1419,7 @@ func secaoDePecas() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = cabecalhoDasColunas().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = columnHeader().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1427,7 +1427,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("default", botaoDaSpa("default", "default", "Abrir"), botaoTemplParaFolha(ui.VariantPrimary)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("default", solidButton("default", "default", "Abrir"), sheetButton(ui.VariantPrimary)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1435,7 +1435,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("secondary", botaoDaSpa("secondary", "default", "Abrir"), botaoTemplParaFolha(ui.VariantSecondary)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("secondary", solidButton("secondary", "default", "Abrir"), sheetButton(ui.VariantSecondary)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1443,7 +1443,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("destructive", botaoDaSpa("destructive", "default", "Abrir"), botaoTemplParaFolha(ui.VariantDestructive)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("destructive", solidButton("destructive", "default", "Abrir"), sheetButton(ui.VariantDestructive)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1451,7 +1451,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("outline", botaoDaSpa("outline", "default", "Abrir"), nil).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("outline", solidButton("outline", "default", "Abrir"), nil).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1459,7 +1459,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("ghost", botaoDaSpa("ghost", "default", "Abrir"), nil).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("ghost", solidButton("ghost", "default", "Abrir"), nil).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1467,13 +1467,13 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("link", botaoDaSpa("link", "default", "Abrir"), nil).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("link", solidButton("link", "default", "Abrir"), nil).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Botão — variantes", "As três do servidor são as que as cenas migradas pediram; as outras não faltam por descuido. E o `secondary` NÃO é par: o do servidor mede 2px a mais porque tem borda, e o da SPA não tem. Olhando quem o usa — Cancelar, Fechar, Convidar — ele está fazendo o papel do `outline` da SPA. O errado é o NOME, não a borda (ALE-250).").Render(templ.WithChildren(ctx, templ_7745c5c3_Var58), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Botão — variantes", "As três do servidor são as que as cenas migradas pediram; as outras não faltam por descuido. E o `secondary` NÃO é par: o do servidor mede 2px a mais porque tem borda, e o da SPA não tem. Olhando quem o usa — Cancelar, Fechar, Convidar — ele está fazendo o papel do `outline` da SPA. O errado é o NOME, não a borda (ALE-250).").Render(templ.WithChildren(ctx, templ_7745c5c3_Var58), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1493,7 +1493,7 @@ func secaoDePecas() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = cabecalhoDasColunas().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = columnHeader().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1501,7 +1501,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("xs", botaoDaSpa("default", "xs", "xs"), botaoTemplNoTamanho(ui.SizeTiny, "xs")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("xs", solidButton("default", "xs", "xs"), sheetButtonInSize(ui.SizeTiny, "xs")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1509,7 +1509,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("sm", botaoDaSpa("default", "sm", "sm"), botaoTemplNoTamanho(ui.SizeSmall, "sm")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("sm", solidButton("default", "sm", "sm"), sheetButtonInSize(ui.SizeSmall, "sm")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1517,7 +1517,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("default", botaoDaSpa("default", "default", "default"), botaoTemplNoTamanho(ui.SizeDefault, "default")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("default", solidButton("default", "default", "default"), sheetButtonInSize(ui.SizeDefault, "default")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1525,13 +1525,13 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("lg", botaoDaSpa("default", "lg", "lg"), botaoTemplNoTamanho(ui.SizeLarge, "lg")).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("lg", solidButton("default", "lg", "lg"), sheetButtonInSize(ui.SizeLarge, "lg")).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Botão — tamanhos", "Paridade completa, e agora medida: 24, 32, 36 e 40 nos dois lados. Vale dizer que a primeira versão desta seção parecia mostrar o contrário — ela não passava o tamanho ao elemento da SPA, e comparava um xs do servidor com um default da SPA. Instrumento que mente é pior que instrumento nenhum, porque produz confiança em vez de dúvida.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var59), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Botão — tamanhos", "Paridade completa, e agora medida: 24, 32, 36 e 40 nos dois lados. Vale dizer que a primeira versão desta seção parecia mostrar o contrário — ela não passava o tamanho ao elemento da SPA, e comparava um xs do servidor com um default da SPA. Instrumento que mente é pior que instrumento nenhum, porque produz confiança em vez de dúvida.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var59), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1551,19 +1551,19 @@ func secaoDePecas() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = cabecalhoDasColunas().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = columnHeader().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, v := range []string{"default", "secondary", "outline", "destructive"} {
-					templ_7745c5c3_Err = parDePecas(v, chipDaSpa(v), nil).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = partPair(v, solidChip(v), nil).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Chip", "O `Badge` tem seis variantes e quatro usos; a cena tem 17 chips escritos à mão (ALE-173, P6). Nenhum deles existe do lado do servidor ainda — e a coluna vazia é o registro disso.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var60), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Chip", "O `Badge` tem seis variantes e quatro usos; a cena tem 17 chips escritos à mão (ALE-173, P6). Nenhum deles existe do lado do servidor ainda — e a coluna vazia é o registro disso.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var60), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1583,7 +1583,7 @@ func secaoDePecas() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = cabecalhoDasColunas().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = columnHeader().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1591,13 +1591,13 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("input/campo", campoDaSpa(), campoTemplParaFolha()).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("input/campo", solidField(), sheetField()).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Campo", "O par não é exato e a diferença importa: a SPA tem um `Input` cru, e o servidor tem um CAMPO — rótulo, dica e erro no mesmo componente. Foi decisão da porta (ALE-229), porque campo sem rótulo associado é o defeito de acessibilidade que mais se repete.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var61), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Campo", "O par não é exato e a diferença importa: a SPA tem um `Input` cru, e o servidor tem um CAMPO — rótulo, dica e erro no mesmo componente. Foi decisão da porta (ALE-229), porque campo sem rótulo associado é o defeito de acessibilidade que mais se repete.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var61), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1617,7 +1617,7 @@ func secaoDePecas() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = cabecalhoDasColunas().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = columnHeader().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1625,7 +1625,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("hp cheio", barraDaSpa("hp", "Vida", "52", "57"), nil).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("hp cheio", solidBar("hp", "Vida", "52", "57"), nil).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1633,7 +1633,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("hp ferido", barraDaSpa("hp", "Vida", "24", "57"), nil).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("hp ferido", solidBar("hp", "Vida", "24", "57"), nil).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1641,7 +1641,7 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("hp crítico", barraDaSpa("hp", "Vida", "6", "57"), nil).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("hp crítico", solidBar("hp", "Vida", "6", "57"), nil).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1649,19 +1649,19 @@ func secaoDePecas() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = parDePecas("mp", barraDaSpa("mp", "Mana", "18", "30"), nil).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = partPair("mp", solidBar("mp", "Mana", "18", "30"), nil).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Barra vital", "Sem par do lado do servidor: a Mesa em Datastar desenha as barras à mão desde o piloto (ALE-219). É a peça mais óbvia a portar quando a ficha for migrada.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var62), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Barra vital", "Sem par do lado do servidor: a Mesa em Datastar desenha as barras à mão desde o piloto (ALE-219). É a peça mais óbvia a portar quando a ficha for migrada.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var62), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = secaoDaFolha("pecas", "Peças").Render(templ.WithChildren(ctx, templ_7745c5c3_Var57), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetSection("pecas", "Peças").Render(templ.WithChildren(ctx, templ_7745c5c3_Var57), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1669,7 +1669,7 @@ func secaoDePecas() templ.Component {
 	})
 }
 
-func campoDaSpa() templ.Component {
+func solidField() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1698,7 +1698,7 @@ func campoDaSpa() templ.Component {
 	})
 }
 
-func barraDaSpa(tipo, rotulo, atual, max string) templ.Component {
+func solidBar(tipo, rotulo, atual, max string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1780,7 +1780,7 @@ func barraDaSpa(tipo, rotulo, atual, max string) templ.Component {
 }
 
 // Os embrulhos do lado templ: a peça REAL, com o texto da amostra.
-func botaoTemplParaFolha(v ui.Variant) templ.Component {
+func sheetButton(v ui.Variant) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1827,7 +1827,7 @@ func botaoTemplParaFolha(v ui.Variant) templ.Component {
 	})
 }
 
-func botaoTemplNoTamanho(t ui.Size, texto string) templ.Component {
+func sheetButtonInSize(t ui.Size, texto string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1879,7 +1879,7 @@ func botaoTemplNoTamanho(t ui.Size, texto string) templ.Component {
 	})
 }
 
-func campoTemplParaFolha() templ.Component {
+func sheetField() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1917,7 +1917,7 @@ func campoTemplParaFolha() templ.Component {
 }
 
 // ── foco e movimento ─────────────────────────────────────────────────────────
-func secaoDeFoco() templ.Component {
+func focusSection() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1990,7 +1990,7 @@ func secaoDeFoco() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("Uma receita só", "Navegue com Tab: os quatro recebem o MESMO realce, e nenhum deles pede por ele. A regra é global e mora no index.css — era isso que faltava, porque um utilitário por peça nunca alcança quem não pediu, e 80 dos 84 botões do app não pediam (ALE-173, P4).").Render(templ.WithChildren(ctx, templ_7745c5c3_Var77), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Uma receita só", "Navegue com Tab: os quatro recebem o MESMO realce, e nenhum deles pede por ele. A regra é global e mora no index.css — era isso que faltava, porque um utilitário por peça nunca alcança quem não pediu, e 80 dos 84 botões do app não pediam (ALE-173, P4).").Render(templ.WithChildren(ctx, templ_7745c5c3_Var77), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -2016,13 +2016,13 @@ func secaoDeFoco() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("O cursor de navegação é OUTRA coisa", "Dentro de uma região de navegação, a seta move um cursor — e ele diz 'a tecla está AQUI' com o brilho dourado da casa, não com o contorno. São dois estados diferentes: um é 'o foco chegou', o outro é 'você está pilotando por aqui'.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var79), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("O cursor de navegação é OUTRA coisa", "Dentro de uma região de navegação, a seta move um cursor — e ele diz 'a tecla está AQUI' com o brilho dourado da casa, não com o contorno. São dois estados diferentes: um é 'o foco chegou', o outro é 'você está pilotando por aqui'.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var79), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = secaoDaFolha("foco", "Foco").Render(templ.WithChildren(ctx, templ_7745c5c3_Var76), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetSection("foco", "Foco").Render(templ.WithChildren(ctx, templ_7745c5c3_Var76), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2030,7 +2030,7 @@ func secaoDeFoco() templ.Component {
 	})
 }
 
-func secaoDeMovimento() templ.Component {
+func motionSection() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2079,7 +2079,7 @@ func secaoDeMovimento() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				for _, d := range []amostraSimples{{Nome: "ferir", Uso: "Ferir"}, {Nome: "curar", Uso: "Curar"}, {Nome: "vez", Uso: "Passar a vez"}} {
+				for _, d := range []simpleSample{{Nome: "ferir", Uso: "Ferir"}, {Nome: "curar", Uso: "Curar"}, {Nome: "vez", Uso: "Passar a vez"}} {
 					templ_7745c5c3_Var83 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 						templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 						templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -2114,13 +2114,13 @@ func secaoDeMovimento() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = blocoDaFolha("A linha da iniciativa", "Os mesmos disparos que a sessão usa, importados do MESMO módulo. Eles vão por diferença de VALOR e não por montagem: a lista remonta a cada sync, e animação de entrada tocaria em todas as linhas de uma vez.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var82), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("A linha da iniciativa", "Os mesmos disparos que a sessão usa, importados do MESMO módulo. Eles vão por diferença de VALOR e não por montagem: a lista remonta a cada sync, e animação de entrada tocaria em todas as linhas de uma vez.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var82), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = secaoDaFolha("movimento", "Movimento").Render(templ.WithChildren(ctx, templ_7745c5c3_Var81), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetSection("movimento", "Movimento").Render(templ.WithChildren(ctx, templ_7745c5c3_Var81), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

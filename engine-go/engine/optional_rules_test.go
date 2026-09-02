@@ -52,7 +52,7 @@ func TestLoadTurnedOffStillCountsTheSlots(t *testing.T) {
 		Items:        []CharacterItem{{Name: "Barril", Quantity: 1, Slots: 11}},
 		IgnoredRules: IgnoredRules{Carga: true},
 	}
-	got := cargaBreakdown(ch, 10)
+	got := loadBreakdownOf(ch, 10)
 
 	if got.Used != 13 {
 		t.Errorf("carga usada %v, want 13 (11 do barril + 2 milheiros) — desligar a regra não desliga a CONTA", got.Used)
@@ -78,7 +78,7 @@ func TestLoadTurnedOffStillCountsTheSlots(t *testing.T) {
 // desenho: um `Character{}` literal — num teste, num fixture, no oráculo —
 // calcula com as regras do livro sem ninguém lembrar de preencher nada.
 func TestZeroMeansEveryRuleInForce(t *testing.T) {
-	got := cargaBreakdown(Character{Items: []CharacterItem{{Quantity: 1, Slots: 11}}}, 10)
+	got := loadBreakdownOf(Character{Items: []CharacterItem{{Quantity: 1, Slots: 11}}}, 10)
 
 	if !got.Enforced {
 		t.Error("Character{} sem regras declaradas calculou com a carga DESLIGADA — o padrão vazou")

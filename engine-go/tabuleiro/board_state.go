@@ -351,8 +351,8 @@ func AddMarker(b *BoardState, m BoardMarker, newID func() string) error {
 	if abs(m.X) > boardCoordLimit || abs(m.Y) > boardCoordLimit {
 		return fmt.Errorf("marcador em (%d,%d) está além do limite de sanidade de %d quadrados", m.X, m.Y, boardCoordLimit)
 	}
-	if !CorDeMarcadorConhecida(m.Color) {
-		m.Color = CorPadraoDeMarcador()
+	if !KnownMarkerColor(m.Color) {
+		m.Color = DefaultMarkerColor()
 	}
 	m.Text = trimMarkerText(m.Text)
 	m.ID = newID()
@@ -381,7 +381,7 @@ func UpdateMarker(b *BoardState, markerID string, patch markerPatch) error {
 		if patch.Text != nil {
 			b.Markers[i].Text = trimMarkerText(*patch.Text)
 		}
-		if patch.Color != nil && CorDeMarcadorConhecida(*patch.Color) {
+		if patch.Color != nil && KnownMarkerColor(*patch.Color) {
 			b.Markers[i].Color = *patch.Color
 		}
 		if patch.Hidden != nil {
@@ -722,7 +722,7 @@ func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string
 		return nil, 0, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
 	if by.Role == "gm" {
-		return token, orcamentoDeDesenho(*token, st), nil
+		return token, drawingBudget(*token, st), nil
 	}
 	if !by.OwnsCharacter {
 		return nil, 0, fmt.Errorf("a peça %q não é sua", token.Label)
@@ -736,7 +736,7 @@ func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string
 	return token, speedOf(*token), nil
 }
 
-// orcamentoDeDesenho é o deslocamento da PEÇA, e não a permissão de quem move.
+// drawingBudget é o deslocamento da PEÇA, e não a permissão de quem move.
 //
 // O mestre recebia -1 aqui — "sem teto" —, e o número servia às duas coisas ao
 // mesmo tempo: a regra que barrava e o desenho das faixas. Com a trava fora do
@@ -748,7 +748,7 @@ func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string
 // FORA DE COMBATE continua -1, e isso não é exceção, é a mesma frase: sem vez
 // não há ação padrão para trocar por movimento (p233), então azul e vermelho
 // não querem dizer nada e desenhá-los inventaria um teto que a cena não tem.
-func orcamentoDeDesenho(token BoardToken, st *aovivo.SessionRuntimeState) int {
+func drawingBudget(token BoardToken, st *aovivo.SessionRuntimeState) int {
 	if st == nil || st.TurnIndex < 0 {
 		return -1
 	}
@@ -808,7 +808,7 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 	return nil
 }
 
-// ProposeMoveComParadas propõe pelas casas em que a pessoa CLICOU, e guarda a
+// ProposeMoveWithStops propõe pelas casas em que a pessoa CLICOU, e guarda a
 // lista junto (ALE-269, item 10).
 //
 // A primeira parada é onde a peça está; cada uma seguinte estende o caminho,
@@ -820,8 +820,8 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 // A validação inteira continua sendo a do `ProposeMove` — o orçamento, a vez, a
 // posse, a contiguidade. Esta função não afrouxa nada; ela só LEMBRA de onde o
 // caminho veio.
-func ProposeMoveComParadas(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover) error {
-	if err := ProposeMove(b, st, tokenID, engine.CaminhoPorParadas(paradas), by); err != nil {
+func ProposeMoveWithStops(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover) error {
+	if err := ProposeMove(b, st, tokenID, engine.PathThroughStops(paradas), by); err != nil {
 		return err
 	}
 	b.Pending.Stops = paradas
@@ -835,8 +835,8 @@ func ProposeMoveComParadas(b *BoardState, st *aovivo.SessionRuntimeState, tokenI
 // alternar faria a casa piscar entre brejo e chão limpo debaixo do dedo. Com o
 // valor explícito a mensagem é idempotente, que é o que um arraste precisa.
 // Quem apaga é a borracha, que manda `false`.
-func PaintTerrain(b *BoardState, square engine.Square, especie EspecieDeTerreno, ligado bool) {
-	lista := listaDaEspecie(b, especie)
+func PaintTerrain(b *BoardState, square engine.Square, especie TerrainKind, ligado bool) {
+	lista := listForKind(b, especie)
 	if lista == nil {
 		return // espécie que não existe não pinta nada, e não derruba a mesa
 	}
@@ -857,7 +857,7 @@ func PaintTerrain(b *BoardState, square engine.Square, especie EspecieDeTerreno,
 	b.Version++
 }
 
-// listaDaEspecie é o ÚNICO lugar que sabe qual lista guarda qual espécie.
+// listForKind é o ÚNICO lugar que sabe qual lista guarda qual espécie.
 //
 // Devolve ponteiro para o campo porque o pincel escreve nele. É o que segura a
 // repetição das quatro listas irmãs num ponto só: acrescentar uma quinta espécie
@@ -865,7 +865,7 @@ func PaintTerrain(b *BoardState, square engine.Square, especie EspecieDeTerreno,
 //
 // nil para espécie desconhecida, e o pincel trata: o id vem do cliente, e uma
 // espécie inventada não pode derrubar a mesa nem pintar a lista errada.
-func listaDaEspecie(b *BoardState, especie EspecieDeTerreno) *[]engine.Square {
+func listForKind(b *BoardState, especie TerrainKind) *[]engine.Square {
 	switch especie {
 	case TerrenoDificil:
 		return &b.Difficult
@@ -879,7 +879,7 @@ func listaDaEspecie(b *BoardState, especie EspecieDeTerreno) *[]engine.Square {
 	return nil
 }
 
-// LimpaACasa tira TODO terreno de um quadrado, seja qual for a espécie
+// ClearSquare tira TODO terreno de um quadrado, seja qual for a espécie
 // (ALE-203, decisão do dono).
 //
 // É o conserto do defeito que o dono relatou como "a borracha não funciona".
@@ -894,10 +894,10 @@ func listaDaEspecie(b *BoardState, especie EspecieDeTerreno) *[]engine.Square {
 //
 // Devolve se ALGUMA COISA saiu: quem chama usa para não subir a versão (e não
 // acordar a mesa) por um clique em chão limpo.
-func LimpaACasa(b *BoardState, square engine.Square) bool {
+func ClearSquare(b *BoardState, square engine.Square) bool {
 	limpou := false
-	for _, pincel := range EspeciesDeTerreno {
-		lista := listaDaEspecie(b, pincel.ID)
+	for _, pincel := range TerrainKinds {
+		lista := listForKind(b, pincel.ID)
 		if lista == nil {
 			continue
 		}
@@ -994,7 +994,7 @@ func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 	return nil
 }
 
-// VoltaAPeca põe a peça de volta onde ela estava antes do último pouso (ALE-206).
+// ReturnToken põe a peça de volta onde ela estava antes do último pouso (ALE-206).
 //
 // LIMPA o registro ao usar, e por isso o gesto só existe uma vez por movimento: um
 // "voltar" que continuasse disponível andaria para trás na cena com um botão que
@@ -1004,7 +1004,7 @@ func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 // Não confere a VEZ nem a posse, ao contrário do movimento: quem chama é o mestre
 // arrumando a cena (a rota é `comandoDoMestreNoTabuleiro`), e a peça já está onde
 // ele a pôs. Recusar por "não é a vez de Arwen" impediria justamente o conserto.
-func VoltaAPeca(b *BoardState, tokenID string) error {
+func ReturnToken(b *BoardState, tokenID string) error {
 	token := FindToken(b, tokenID)
 	if token == nil {
 		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
@@ -1041,7 +1041,7 @@ func pendingFor(b *BoardState, by Mover) (*PendingMove, error) {
 	return b.Pending, nil
 }
 
-// PodeMover responde "esta pessoa pode mover esta peça agora?" para a TELA.
+// CanMove responde "esta pessoa pode mover esta peça agora?" para a TELA.
 //
 // Envelope fino sobre o `assertMovable`, e a razão de existir é que a tela
 // precisa da MESMA resposta que a escrita — perguntar de outro jeito é como
@@ -1050,14 +1050,14 @@ func pendingFor(b *BoardState, by Mover) (*PendingMove, error) {
 //
 // Não devolve o porquê: quem só desenha não tem o que fazer com a frase, e a
 // frase certa é a que a RECUSA escreve, no instante em que ela acontece.
-func PodeMover(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) bool {
-	pode, _ := PodeMoverCom(b, st, tokenID, by)
+func CanMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) bool {
+	pode, _ := CanMoveWith(b, st, tokenID, by)
 	return pode
 }
 
-// PodeMoverCom devolve também o ORÇAMENTO, que é o que a tela precisa para
+// CanMoveWith devolve também o ORÇAMENTO, que é o que a tela precisa para
 // desenhar até onde dá para ir (-1 = sem teto).
-func PodeMoverCom(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) (bool, int) {
+func CanMoveWith(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) (bool, int) {
 	if b == nil {
 		return false, 0
 	}
@@ -1065,17 +1065,17 @@ func PodeMoverCom(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string,
 	return err == nil, orcamento
 }
 
-// QuadradosDe são as casas pintadas de uma espécie, para quem só LÊ.
+// SquaresOf são as casas pintadas de uma espécie, para quem só LÊ.
 //
 // Existe para o mapeamento espécie→lista continuar com um dono só: sem ela,
 // quem desenha refaz o `switch` do `listaDaEspecie` do lado de fora, e é a cópia
 // de fora que fica para trás quando a quinta espécie chegar. Devolve a fatia e
 // não o ponteiro justamente por ser leitura — o pincel é quem escreve.
-func QuadradosDe(b *BoardState, especie EspecieDeTerreno) []engine.Square {
+func SquaresOf(b *BoardState, especie TerrainKind) []engine.Square {
 	if b == nil {
 		return nil
 	}
-	if lista := listaDaEspecie(b, especie); lista != nil {
+	if lista := listForKind(b, especie); lista != nil {
 		return *lista
 	}
 	return nil

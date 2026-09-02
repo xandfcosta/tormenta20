@@ -20,22 +20,22 @@ import (
 // para alguém esquecer de escrever.
 func TestEachKindHasItsOwnList(t *testing.T) {
 	casa := engine.Square{X: 3, Y: 4}
-	for _, pincel := range EspeciesDeTerreno {
+	for _, pincel := range TerrainKinds {
 		b := &BoardState{}
 		PaintTerrain(b, casa, pincel.ID, true)
 
-		lista := listaDaEspecie(b, pincel.ID)
+		lista := listForKind(b, pincel.ID)
 		if lista == nil || len(*lista) != 1 || (*lista)[0] != casa {
 			t.Errorf("%s: pintar não pôs a casa na lista dela (%v)", pincel.ID, lista)
 			continue
 		}
 		// E NENHUMA outra recebeu nada. Sem esta metade, quatro ponteiros para o
 		// mesmo campo passariam verde no laço inteiro.
-		for _, outra := range EspeciesDeTerreno {
+		for _, outra := range TerrainKinds {
 			if outra.ID == pincel.ID {
 				continue
 			}
-			if vizinha := listaDaEspecie(b, outra.ID); len(*vizinha) != 0 {
+			if vizinha := listForKind(b, outra.ID); len(*vizinha) != 0 {
 				t.Errorf("pintar %s sujou a lista de %s: %v", pincel.ID, outra.ID, *vizinha)
 			}
 		}
@@ -46,13 +46,13 @@ func TestEachKindHasItsOwnList(t *testing.T) {
 // casa, e alternar faria ela piscar debaixo do dedo. Quem apaga é a borracha.
 func TestTheBrushIsIdempotentForEachKind(t *testing.T) {
 	casa := engine.Square{X: -2, Y: 7}
-	for _, pincel := range EspeciesDeTerreno {
+	for _, pincel := range TerrainKinds {
 		b := &BoardState{}
 		PaintTerrain(b, casa, pincel.ID, true)
 		versao := b.Version
 		PaintTerrain(b, casa, pincel.ID, true)
 
-		if lista := listaDaEspecie(b, pincel.ID); len(*lista) != 1 {
+		if lista := listForKind(b, pincel.ID); len(*lista) != 1 {
 			t.Errorf("%s: pintar duas vezes deixou %d casas", pincel.ID, len(*lista))
 		}
 		if b.Version != versao {
@@ -61,7 +61,7 @@ func TestTheBrushIsIdempotentForEachKind(t *testing.T) {
 		}
 
 		PaintTerrain(b, casa, pincel.ID, false)
-		if lista := listaDaEspecie(b, pincel.ID); len(*lista) != 0 {
+		if lista := listForKind(b, pincel.ID); len(*lista) != 0 {
 			t.Errorf("%s: a borracha não apagou (%v)", pincel.ID, *lista)
 		}
 	}
@@ -73,22 +73,22 @@ func TestTheBrushIsIdempotentForEachKind(t *testing.T) {
 // fio, e a resposta não pode ser nem pânico nem pintar a lista errada.
 func TestAnInventedKindPaintsNothingAndDoesNotCrash(t *testing.T) {
 	b := &BoardState{}
-	PaintTerrain(b, engine.Square{X: 1, Y: 1}, EspecieDeTerreno("lava"), true)
+	PaintTerrain(b, engine.Square{X: 1, Y: 1}, TerrainKind("lava"), true)
 
 	if b.Version != 0 {
 		t.Errorf("uma espécie inventada subiu a versão para %d", b.Version)
 	}
-	for _, pincel := range EspeciesDeTerreno {
-		if lista := listaDaEspecie(b, pincel.ID); len(*lista) != 0 {
+	for _, pincel := range TerrainKinds {
+		if lista := listForKind(b, pincel.ID); len(*lista) != 0 {
 			t.Errorf("a espécie inventada foi parar em %s: %v", pincel.ID, *lista)
 		}
 	}
 	// E o portão que a rota usa devolve o DIFÍCIL, que é o que o pincel sempre
 	// pintou — a compatibilidade com quem manda só `x`, `y` e `difficult`.
-	if e := EspecieConhecida("lava"); e != TerrenoDificil {
+	if e := KnownTerrainKind("lava"); e != TerrenoDificil {
 		t.Errorf("espécie inventada caiu em %q em vez do difícil", e)
 	}
-	if e := EspecieConhecida(""); e != TerrenoDificil {
+	if e := KnownTerrainKind(""); e != TerrenoDificil {
 		t.Errorf("espécie AUSENTE caiu em %q — a SPA manda o corpo antigo, sem `kind`", e)
 	}
 }
@@ -102,7 +102,7 @@ func TestAnInventedKindPaintsNothingAndDoesNotCrash(t *testing.T) {
 func TestTheStrokesSurviveTheArchive(t *testing.T) {
 	casa := engine.Square{X: 5, Y: -3}
 	original := &BoardState{Place: "Pântano"}
-	for _, pincel := range EspeciesDeTerreno {
+	for _, pincel := range TerrainKinds {
 		PaintTerrain(original, casa, pincel.ID, true)
 	}
 
@@ -115,8 +115,8 @@ func TestTheStrokesSurviveTheArchive(t *testing.T) {
 		t.Fatalf("reabrir: %v", err)
 	}
 
-	for _, pincel := range EspeciesDeTerreno {
-		lista := listaDaEspecie(&voltou, pincel.ID)
+	for _, pincel := range TerrainKinds {
+		lista := listForKind(&voltou, pincel.ID)
 		if lista == nil || len(*lista) != 1 || (*lista)[0] != casa {
 			t.Errorf("%s não sobreviveu ao acervo: %v", pincel.ID, lista)
 		}
@@ -132,7 +132,7 @@ func TestTheStrokesSurviveTheArchive(t *testing.T) {
 func TestOnlyDifficultTerrainCountsForMovement(t *testing.T) {
 	casa := engine.Square{X: 1, Y: 0}
 	b := &BoardState{}
-	for _, pincel := range EspeciesDeTerreno {
+	for _, pincel := range TerrainKinds {
 		if pincel.ID != TerrenoDificil {
 			PaintTerrain(b, casa, pincel.ID, true)
 		}

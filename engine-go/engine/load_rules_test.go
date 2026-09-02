@@ -32,7 +32,7 @@ func TestSafeLoadTheBookExampleWithStrength2(t *testing.T) {
 	}
 	for _, caso := range casos {
 		ch := Character{Items: []CharacterItem{{Quantity: 1, Slots: caso.espacos}}}
-		got := cargaBreakdown(ch, limite)
+		got := loadBreakdownOf(ch, limite)
 		if got.Overloaded != caso.sobrecarga {
 			t.Errorf("%v espaços: sobrecarregado=%v, want %v (%s)", caso.espacos, got.Overloaded, caso.sobrecarga, caso.nota)
 		}
@@ -40,7 +40,7 @@ func TestSafeLoadTheBookExampleWithStrength2(t *testing.T) {
 			t.Errorf("%v espaços: acima do teto=%v, want %v (%s)", caso.espacos, got.OverMax, caso.acimaDoTeto, caso.nota)
 		}
 	}
-	if got := cargaBreakdown(Character{}, limite).Max; got != 28 {
+	if got := loadBreakdownOf(Character{}, limite).Max; got != 28 {
 		t.Errorf("teto com Força 2 = %d, want 28 (o dobro, p141)", got)
 	}
 }
@@ -57,7 +57,7 @@ func TestLoadMultipliesQuantityByTheItemSlots(t *testing.T) {
 		{Name: "Poção de cura", Quantity: 2, Slots: 0.5},
 		{Name: "Montante", Quantity: 1, Slots: 2},
 	}}
-	if got := cargaBreakdown(ch, 14).Items; got != 3 {
+	if got := loadBreakdownOf(ch, 14).Items; got != 3 {
 		t.Errorf("duas poções (meio espaço cada) + um montante (2) = %v espaços, want 3", got)
 	}
 }
@@ -76,7 +76,7 @@ func TestMoneyLoadCountsWholeThousands(t *testing.T) {
 		3000: 3,
 	}
 	for tibar, want := range casos {
-		got := cargaBreakdown(Character{Tibar: tibar}, 14)
+		got := loadBreakdownOf(Character{Tibar: tibar}, 14)
 		if got.Coins != want {
 			t.Errorf("T$ %v ocupam %v espaços, want %v", tibar, got.Coins, want)
 		}

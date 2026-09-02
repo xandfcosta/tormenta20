@@ -20,7 +20,7 @@ import (
 // aPecaNoMapa põe uma peça e devolve o id dela.
 func aPecaNoMapa(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
 	t.Helper()
-	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
+	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"}, true)
 	if err != nil {
 		t.Fatalf("pôr a peça %q: %v", rotulo, err)
@@ -30,7 +30,7 @@ func aPecaNoMapa(t *testing.T, f pilotoFixture, rotulo string, x, y int) string 
 
 func oTabuleiroAgora(t *testing.T, f pilotoFixture) *tabuleiro.BoardState {
 	t.Helper()
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
 		t.Fatal("não há tabuleiro — o gesto não tinha onde acontecer")
 	}
@@ -83,7 +83,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	entryID := f.naFila(t)
-	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
+	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID}, true)
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)

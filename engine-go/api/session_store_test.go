@@ -120,7 +120,7 @@ func TestStoreRefreshCharacterMaxes(t *testing.T) {
 		t.Fatalf("Load: %v", err)
 	}
 	// Entry carries STALE maxes + a live current the refresh must not touch.
-	e := combatenteDeFicha("A", 12, charID)
+	e := sheetCombatant("A", 12, charID)
 	stale, cur := int64(1), int64(4)
 	e.HpMax, e.HpCurrent = &stale, &cur
 	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
@@ -152,7 +152,7 @@ func TestStoreRefreshClampsCurrentToNewMax(t *testing.T) {
 		t.Fatalf("Load: %v", err)
 	}
 	// A entrada carrega máximos ANTIGOS (maiores) e um atual acima do novo teto.
-	e := combatenteDeFicha("Encolheu", 12, charID)
+	e := sheetCombatant("Encolheu", 12, charID)
 	velhoHpMax, atualHp := int64(30), int64(9)
 	velhoMpMax, atualMp := int64(10), int64(7)
 	e.HpMax, e.HpCurrent = &velhoHpMax, &atualHp
@@ -223,7 +223,7 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 		t.Fatalf("Load: %v", err)
 	}
 	hp, hpm, mp, mpm := int64(20), int64(30), int64(5), int64(10)
-	e := combatenteDeFicha("A", 12, charID)
+	e := sheetCombatant("A", 12, charID)
 	e.HpCurrent, e.HpMax, e.MpCurrent, e.MpMax = &hp, &hpm, &mp, &mpm
 	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
 		t.Fatalf("Add: %v", err)
@@ -266,7 +266,7 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 		t.Fatalf("Load: %v", err)
 	}
 	hp, hpm := int64(20), int64(30)
-	e := combatenteDeFicha("A", 12, charID)
+	e := sheetCombatant("A", 12, charID)
 	e.HpCurrent, e.HpMax = &hp, &hpm
 	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
 		t.Fatalf("Add: %v", err)

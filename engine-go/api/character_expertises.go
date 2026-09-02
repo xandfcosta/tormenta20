@@ -29,13 +29,13 @@ var attributeKeys = sheet.ToStringSet([]string{
 	"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
 })
 
-// guardaOOficioNovo é a regra de quem pode virar ofício, e ela é a MESMA para a
+// saveNewCraft é a regra de quem pode virar ofício, e ela é a MESMA para a
 // API JSON e para a ficha em Datastar (ALE-272).
 //
 // Três recusas, e a do meio é a que importa: um ofício não pode ROUBAR o nome de
 // uma das 29 do livro, porque a ficha passaria a ter duas linhas com o mesmo
 // nome e a decomposição de uma cairia sobre a outra.
-func (s *Server) guardaOOficioNovo(ctx context.Context, characterID int64, nome string) error {
+func (s *Server) saveNewCraft(ctx context.Context, characterID int64, nome string) error {
 	if nome == "" {
 		return fmt.Errorf("dê um nome ao ofício")
 	}
@@ -74,7 +74,7 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 	// A REGRA DO NOME é UMA SÓ, e a extração é da ALE-272: a ficha em Datastar
 	// cria ofício pelo mesmo caminho, e duas validações divergiriam no dia em que
 	// uma regra nova chegasse — a esquecida aceitaria o que a outra recusa.
-	if err := s.guardaOOficioNovo(r.Context(), character.ID, name); err != nil {
+	if err := s.saveNewCraft(r.Context(), character.ID, name); err != nil {
 		fields["name"] = []string{err.Error()}
 	}
 	if !attributeKeys[body.Attribute] {

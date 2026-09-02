@@ -28,8 +28,8 @@ import (
 
 // ── como uma peça se PARECE ─────────────────────────────────────────────────
 
-// AparenciaDaPeca é o que o desenho precisa saber sobre uma peça.
-type AparenciaDaPeca struct {
+// TokenAppearance é o que o desenho precisa saber sobre uma peça.
+type TokenAppearance struct {
 	// Monograma tem SEMPRE duas letras. Não é o `initials` da casa, que devolve
 	// uma letra para nome de uma palavra: no retrato do herói uma letra grande
 	// funciona, mas no tabuleiro a peça é um disco cheio de vizinhos e um "O"
@@ -41,7 +41,7 @@ type AparenciaDaPeca struct {
 	Matiz int
 }
 
-// AparenciaDe traduz o rótulo da peça em como ela se desenha (ALE-179).
+// AppearanceOf traduz o rótulo da peça em como ela se desenha (ALE-179).
 //
 // A REGRA que isto carrega: a cor é da ESPÉCIE e o número é da INSTÂNCIA. Antes
 // o matiz vinha do rótulo inteiro, então "Zumbi 1" e "Zumbi 2" — a mesma
@@ -50,29 +50,29 @@ type AparenciaDaPeca struct {
 //
 // "Eu ataco o Zumbi 3" é a frase mais dita da noite, e ela passa a ter resposta
 // num relance — inclusive para quem não distingue matiz, porque o selo é TEXTO.
-func AparenciaDe(rotulo string) AparenciaDaPeca {
-	especie, numero := aovivo.Especie(rotulo)
-	a := AparenciaDaPeca{Monograma: monogramaDe(especie), Matiz: matizDe(especie)}
+func AppearanceOf(rotulo string) TokenAppearance {
+	especie, numero := aovivo.Species(rotulo)
+	a := TokenAppearance{Monograma: monogramOf(especie), Matiz: hueOf(especie)}
 	if numero > 0 {
 		a.Instancia = strconv.Itoa(numero)
 	}
 	return a
 }
 
-func monogramaDe(especie string) string {
+func monogramOf(especie string) string {
 	palavras := strings.Fields(especie)
 	if len(palavras) == 0 {
 		return "?"
 	}
 	if len(palavras) == 1 {
-		return strings.ToUpper(duasPrimeirasRunas(palavras[0]))
+		return strings.ToUpper(firstTwoRunes(palavras[0]))
 	}
-	return strings.ToUpper(primeiraRuna(palavras[0]) + primeiraRuna(palavras[1]))
+	return strings.ToUpper(firstRune(palavras[0]) + firstRune(palavras[1]))
 }
 
 // As letras saem por RUNA e não por byte: "Ácido" começa com dois bytes, e
 // cortar por índice devolveria meia letra.
-func duasPrimeirasRunas(s string) string {
+func firstTwoRunes(s string) string {
 	r := []rune(s)
 	if len(r) > 2 {
 		r = r[:2]
@@ -80,20 +80,20 @@ func duasPrimeirasRunas(s string) string {
 	return string(r)
 }
 
-func primeiraRuna(s string) string {
+func firstRune(s string) string {
 	for _, r := range s {
 		return string(r)
 	}
 	return ""
 }
 
-// matizDe é o mesmo hash de 31 do `hueFromName` da SPA, e ele tem de continuar
+// hueOf é o mesmo hash de 31 do `hueFromName` da SPA, e ele tem de continuar
 // sendo O MESMO: a peça do tabuleiro e o retrato do herói mostram a mesma
 // criatura, e duas fórmulas dariam duas cores para ela em duas telas.
 //
 // Percorre por RUNA e usa o ponto de código, como o `for ch of name` do
 // JavaScript — iterar bytes daria outro número em todo nome acentuado.
-func matizDe(nome string) int {
+func hueOf(nome string) int {
 	var hash uint32
 	for _, r := range nome {
 		hash = hash*31 + uint32(r)

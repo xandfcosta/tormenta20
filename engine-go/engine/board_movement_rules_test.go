@@ -256,7 +256,7 @@ func TestStraightCleanPathCountsNoDoubling(t *testing.T) {
 // outro teste com o mesmo nome.
 
 func TestThePathStartsAtTheOriginAndEndsAtTheDestination(t *testing.T) {
-	caminho := CaminhoEntre(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
+	caminho := PathBetween(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
 
 	if caminho[0] != (Square{X: 0, Y: 0}) {
 		t.Errorf("o caminho começa em %+v", caminho[0])
@@ -272,7 +272,7 @@ func TestThePathStartsAtTheOriginAndEndsAtTheDestination(t *testing.T) {
 // A DIAGONAL vem primeiro porque é o que o olho espera de quem corta caminho —
 // e o custo é o mesmo em L, que é a razão de a escolha poder ser estética.
 func TestTheDiagonalComesFirstAndCostsTheSameAsTheL(t *testing.T) {
-	diagonalPrimeiro := CaminhoEntre(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
+	diagonalPrimeiro := PathBetween(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
 	emL := []Square{{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}, {X: 3, Y: 0}, {X: 3, Y: 1}}
 
 	if segundo := diagonalPrimeiro[1]; segundo != (Square{X: 1, Y: 1}) {
@@ -289,7 +289,7 @@ func TestTheDiagonalComesFirstAndCostsTheSameAsTheL(t *testing.T) {
 // o `ProposeMove` recusar com "precisa de origem e destino", que é a mensagem
 // errada para quem só soltou a peça onde ela estava.
 func TestATokenThatDoesNotLeaveItsPlaceHasAOneSquarePath(t *testing.T) {
-	caminho := CaminhoEntre(Square{X: 2, Y: 2}, Square{X: 2, Y: 2})
+	caminho := PathBetween(Square{X: 2, Y: 2}, Square{X: 2, Y: 2})
 	if len(caminho) != 1 || caminho[0] != (Square{X: 2, Y: 2}) {
 		t.Errorf("o caminho parado ficou %+v", caminho)
 	}
@@ -298,7 +298,7 @@ func TestATokenThatDoesNotLeaveItsPlaceHasAOneSquarePath(t *testing.T) {
 // COORDENADA NEGATIVA é lugar legítimo: o plano não tem bordas, e um sinal
 // invertido faria o laço andar para longe do destino e nunca terminar.
 func TestThePathWalksIntoNegativeCoordinates(t *testing.T) {
-	caminho := CaminhoEntre(Square{X: 1, Y: 1}, Square{X: -2, Y: -3})
+	caminho := PathBetween(Square{X: 1, Y: 1}, Square{X: -2, Y: -3})
 	if fim := caminho[len(caminho)-1]; fim != (Square{X: -2, Y: -3}) {
 		t.Errorf("o caminho terminou em %+v", fim)
 	}
@@ -313,7 +313,7 @@ func TestThePathWalksIntoNegativeCoordinates(t *testing.T) {
 // começo do outro, e repeti-lo poria no meio do caminho um passo que não anda —
 // e o `PathCost` mede passo a passo.
 func TestTheStopsJoinWithoutRepeatingTheSquare(t *testing.T) {
-	caminho := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}, {X: 2, Y: 2}})
+	caminho := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}, {X: 2, Y: 2}})
 
 	quero := []Square{{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}, {X: 2, Y: 1}, {X: 2, Y: 2}}
 	if len(caminho) != len(quero) {
@@ -332,7 +332,7 @@ func TestTheStopsJoinWithoutRepeatingTheSquare(t *testing.T) {
 // Uma parada IGUAL à anterior não acrescenta nada: quem soltou a peça onde ela
 // já estava não gastou movimento.
 func TestARepeatedStopAddsNoStep(t *testing.T) {
-	caminho := CaminhoPorParadas([]Square{{X: 1, Y: 1}, {X: 1, Y: 1}, {X: 2, Y: 1}})
+	caminho := PathThroughStops([]Square{{X: 1, Y: 1}, {X: 1, Y: 1}, {X: 2, Y: 1}})
 	if len(caminho) != 2 {
 		t.Errorf("o caminho ficou %+v; a parada repetida virou passo", caminho)
 	}
@@ -346,8 +346,8 @@ func TestARepeatedStopAddsNoStep(t *testing.T) {
 // quatro diagonais. O caminho mais caro é legítimo, e antes das paradas ele era
 // IMPOSSÍVEL de expressar: o cliente desenhava a reta e pronto.
 func TestGoingAroundCostsMoreAndThatIsThePoint(t *testing.T) {
-	reto := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
-	contornando := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 2, Y: 2}, {X: 4, Y: 0}})
+	reto := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
+	contornando := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 2, Y: 2}, {X: 4, Y: 0}})
 
 	custoReto := PathCost(reto, MoveTerrain{}, -1).Squares
 	custoContorno := PathCost(contornando, MoveTerrain{}, -1).Squares
@@ -367,8 +367,8 @@ func TestInDifficultTerrainTheDetourCanCostLessThanTheStraightLine(t *testing.T)
 	// primeira versão deste teste desviou por (2,1) e saiu MAIS caro que a lama
 	// (8 contra 7), porque as diagonais custam 2 cada e eu tinha posto quatro
 	// delas. O caminho estava certo; o meu exemplo é que não evitava nada.
-	reto := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
-	desviando := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 1, Y: 1}, {X: 3, Y: 1}, {X: 4, Y: 0}})
+	reto := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
+	desviando := PathThroughStops([]Square{{X: 0, Y: 0}, {X: 1, Y: 1}, {X: 3, Y: 1}, {X: 4, Y: 0}})
 
 	custoReto := PathCost(reto, lama, -1).Squares
 	custoDesvio := PathCost(desviando, lama, -1).Squares
@@ -389,7 +389,7 @@ func TestInDifficultTerrainTheDetourCanCostLessThanTheStraightLine(t *testing.T)
 func TestTheReachShrinksAtEachStopAndHitsZeroAtTheEnd(t *testing.T) {
 	const orcamento = 6
 
-	alcance, segundo, restante := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}}, orcamento, MoveTerrain{})
+	alcance, segundo, restante := ReachFromStops([]Square{{X: 0, Y: 0}}, orcamento, MoveTerrain{})
 	if restante != orcamento {
 		t.Errorf("sem andar, sobravam %d de %d", restante, orcamento)
 	}
@@ -397,7 +397,7 @@ func TestTheReachShrinksAtEachStopAndHitsZeroAtTheEnd(t *testing.T) {
 		t.Fatal("com orçamento inteiro não havia para onde ir")
 	}
 
-	depois, _, restanteDepois := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}}, orcamento, MoveTerrain{})
+	depois, _, restanteDepois := ReachFromStops([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}}, orcamento, MoveTerrain{})
 	if restanteDepois != orcamento-2 {
 		t.Errorf("depois de andar 2, sobravam %d", restanteDepois)
 	}
@@ -407,7 +407,7 @@ func TestTheReachShrinksAtEachStopAndHitsZeroAtTheEnd(t *testing.T) {
 
 	// Gastou tudo: o alcance é VAZIO, e a tela diz "acabou" em vez de oferecer
 	// casas que o servidor recusaria.
-	fim, aindaSegundo, semSobra := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}, {X: 6, Y: 0}}, orcamento, MoveTerrain{})
+	fim, aindaSegundo, semSobra := ReachFromStops([]Square{{X: 0, Y: 0}, {X: 6, Y: 0}}, orcamento, MoveTerrain{})
 	if semSobra != 0 {
 		t.Errorf("depois de gastar tudo, sobravam %d", semSobra)
 	}

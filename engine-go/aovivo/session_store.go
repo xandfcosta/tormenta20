@@ -28,7 +28,7 @@ type SessionStore struct {
 	// PM de personagem, mas as REGRAS dessa escrita são de lá. Nulo é caminho
 	// normal em teste de regime puro — quem tem personagem na fila injeta o
 	// implementador.
-	ficha  VitaisDaFicha
+	ficha  SheetVitals
 	States map[int64]*SessionRuntimeState
 	Dirty  map[int64]bool
 	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
@@ -64,7 +64,7 @@ func (st *SessionStore) persistLock(sessionID int64) *sync.Mutex {
 
 // NewSessionStore recebe a PORTA da ficha por parâmetro (ALE-254) — injetada e
 // não importada, que é o que impede o regime de conhecer as regras da ficha.
-func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha VitaisDaFicha, bus *events.Bus) *SessionStore {
+func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha SheetVitals, bus *events.Bus) *SessionStore {
 	return &SessionStore{
 		States: map[int64]*SessionRuntimeState{},
 		Dirty:  map[int64]bool{},
@@ -93,7 +93,7 @@ func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha VitaisDaFich
 // e zeraria um contador que vivesse nele, e aí o hub descartaria todo quadro
 // seguinte por achá-los atrasados. O contador só reinicia com o processo, que é
 // quando o hub também esquece o que já mandou.
-func (st *SessionStore) proximaSeqLocked(sessionID int64) uint64 {
+func (st *SessionStore) nextSeqLocked(sessionID int64) uint64 {
 	st.seqs[sessionID]++
 	return st.seqs[sessionID]
 }
@@ -177,7 +177,7 @@ func (st *SessionStore) applyLocked(sessionID int64, fn func(*SessionRuntimeStat
 		return nil, err
 	}
 	clone := cloneState(s)
-	clone.Seq = st.proximaSeqLocked(sessionID)
+	clone.Seq = st.nextSeqLocked(sessionID)
 	return clone, nil
 }
 
@@ -235,7 +235,7 @@ func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, 
 		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
 			func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
 	}
-	hp, mp, err := st.ficha.AplicaAbsoluto(context.Background(), *charID, hpCurrent, mpCurrent)
+	hp, mp, err := st.ficha.ApplyAbsolute(context.Background(), *charID, hpCurrent, mpCurrent)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (st *SessionStore) DeltaVitals(sessionID int64, entryID string, hpDelta, mp
 		return st.apply(sessionID, vitalsEvent(sessionID, entryID, nil),
 			func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
 	}
-	hp, mp, err := st.ficha.AplicaDelta(context.Background(), *charID, hpDelta, mpDelta)
+	hp, mp, err := st.ficha.ApplyDelta(context.Background(), *charID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}

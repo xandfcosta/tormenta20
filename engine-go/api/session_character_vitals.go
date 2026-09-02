@@ -35,10 +35,10 @@ import (
 	"t20engine/db/sqlcgen"
 )
 
-// vitaisDaFicha é quem cumpre a porta. Guarda só o que precisa — as queries —
+// sheetVitals é quem cumpre a porta. Guarda só o que precisa — as queries —
 // em vez de um `*Server` inteiro: uma porta que recebesse o servidor não seria
 // porta, seria o acoplamento de antes com outro nome.
-type vitaisDaFicha struct{ q *sqlcgen.Queries }
+type sheetVitals struct{ q *sqlcgen.Queries }
 
 // applyDamagePlan runs the book's damage order — temporary pools first, biggest
 // first — persisting the drained pools and the new PV. Returns the plan so the
@@ -79,7 +79,7 @@ func applyDamagePlan(
 // applyCharacterDelta moves a character's PV/PM by a delta and persists it,
 // returning the values the tracker entry must mirror. Damage (negative PV) goes
 // through applyDamagePlan; healing and PM are clamped to the character's maxes.
-func (v vitaisDaFicha) AplicaDelta(
+func (v sheetVitals) ApplyDelta(
 	ctx context.Context, charID int64, hpDelta, mpDelta *int64,
 ) (*int64, *int64, error) {
 	row, err := v.q.GetCharacter(ctx, charID)
@@ -106,7 +106,7 @@ func (v vitaisDaFicha) AplicaDelta(
 // applyCharacterVitals sets absolute PV/PM on the character (the tracker's
 // "vitals-patch"). An absolute value is a statement about the total, not a hit,
 // so it does NOT drain temporary pools — that rule belongs to damage.
-func (v vitaisDaFicha) AplicaAbsoluto(
+func (v sheetVitals) ApplyAbsolute(
 	ctx context.Context, charID int64, hpCurrent, mpCurrent *int64,
 ) (*int64, *int64, error) {
 	row, err := v.q.GetCharacter(ctx, charID)
@@ -128,7 +128,7 @@ func (v vitaisDaFicha) AplicaAbsoluto(
 // entry to mirror — inclusive o que não foi escrito, senão o rastreador voltaria
 // a mostrar um número que a ficha não tem. `writeHp` é falso quando o plano de
 // dano já gravou o PV.
-func (v vitaisDaFicha) persistVitals(
+func (v sheetVitals) persistVitals(
 	ctx context.Context, charID, hp int64, writeHp bool, mp int64, writeMp bool,
 ) (*int64, *int64, error) {
 	if writeHp || writeMp {

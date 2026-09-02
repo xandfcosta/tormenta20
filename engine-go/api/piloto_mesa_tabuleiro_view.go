@@ -272,8 +272,8 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	// com duas espécies é sempre o mesmo — folhagens são difícil E camuflagem
 	// (p267), e uma ordem que variasse faria a mesma casa mudar de cara entre
 	// dois remendos.
-	for _, pincel := range tabuleiro.EspeciesDeTerreno {
-		for _, q := range tabuleiro.QuadradosDe(b, pincel.ID) {
+	for _, pincel := range tabuleiro.TerrainKinds {
+		for _, q := range tabuleiro.SquaresOf(b, pincel.ID) {
 			v.Terreno = append(v.Terreno, quadradoDeTerreno{
 				quadradoDoTabuleiro{X: q.X, Y: q.Y}, string(pincel.ID),
 			})
@@ -348,7 +348,7 @@ func aPecaPousaOndeFoiSolta(pecas []pecaDoTabuleiro, mov *movimentoView, mestre 
 }
 
 func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, saude map[string]int, naVez string) pecaDoTabuleiro {
-	a := tabuleiro.AparenciaDe(t.Label)
+	a := tabuleiro.AppearanceOf(t.Label)
 	pegada := t.Footprint
 	if pegada < 1 {
 		pegada = 1
@@ -445,10 +445,10 @@ func nomeDaPeca(p pecaDoTabuleiro) string {
 // A cor vem do banco, então é dado de cliente: fora da lista ela cai no padrão,
 // porque string livre daqui iria direto para o `style`.
 func corDeMarcador(c string) string {
-	if tabuleiro.CorDeMarcadorConhecida(c) {
+	if tabuleiro.KnownMarkerColor(c) {
 		return "var(--marcador-" + c + ")"
 	}
-	return "var(--marcador-" + tabuleiro.CorPadraoDeMarcador() + ")"
+	return "var(--marcador-" + tabuleiro.DefaultMarkerColor() + ")"
 }
 
 // ── o MOVIMENTO em curso (ALE-266) ───────────────────────────────────────────
@@ -626,7 +626,7 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 			if id := b.Tokens[i].CharacterID; id != nil {
 				dela.OwnsCharacter = meus[*id]
 			}
-			podeMover, orcamentoDela := tabuleiro.PodeMoverCom(b, st, b.Tokens[i].ID, dela)
+			podeMover, orcamentoDela := tabuleiro.CanMoveWith(b, st, b.Tokens[i].ID, dela)
 			if !podeMover {
 				continue
 			}
@@ -639,7 +639,7 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 	if alvo == "" {
 		return alcanceDoTabuleiro{}
 	}
-	dentro, segundo, restante := engine.AlcanceDaProximaParada(de, orcamento, terrenoDeMovimento(b))
+	dentro, segundo, restante := engine.ReachFromStops(de, orcamento, terrenoDeMovimento(b))
 	return alcanceDoTabuleiro{
 		Alvo: alvo, Rotulo: rotulo, Restante: restante,
 		Dentro: emCasasDaTela(dentro), Segundo: emCasasDaTela(segundo),

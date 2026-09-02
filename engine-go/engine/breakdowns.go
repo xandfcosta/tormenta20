@@ -107,7 +107,7 @@ type ComputedSheetV2 struct {
 // given active conditionals — the collection → resolution → breakdown pipeline.
 func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bool) ComputedSheetV2 {
 	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), activeConditionals)
-	carga := cargaBreakdown(ch, inventorySlotsTotal(ch, effects))
+	carga := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
 
 	attrs := make(map[string]AttributeBreakdown, len(AttributeKeys))
 	for _, a := range AttributeKeys {
@@ -220,7 +220,7 @@ func displacementBreakdown(ch Character, e ItemEffects, carga LoadBreakdown) Val
 	bonus := stat.Total
 	if carga.DisplacementPenalty != 0 {
 		bonus += carga.DisplacementPenalty
-		contribs = append(contribs, sobrecargaContrib(carga.DisplacementPenalty))
+		contribs = append(contribs, overloadContrib(carga.DisplacementPenalty))
 	}
 	return ValueBreakdown{
 		Base:          ch.Displacement,
@@ -230,10 +230,10 @@ func displacementBreakdown(ch Character, e ItemEffects, carga LoadBreakdown) Val
 	}
 }
 
-// sobrecargaContrib nomeia a fonte uma vez só — ela aparece no deslocamento e
+// overloadContrib nomeia a fonte uma vez só — ela aparece no deslocamento e
 // nas três perícias de penalidade de armadura, e duas grafias diferentes da
 // mesma penalidade leriam como duas penalidades.
-func sobrecargaContrib(amount int) BreakdownContribution {
+func overloadContrib(amount int) BreakdownContribution {
 	return BreakdownContribution{Source: "Sobrecarga (p141)", Amount: amount}
 }
 
@@ -303,7 +303,7 @@ func armorPenaltyContribs(e ItemEffects, carga LoadBreakdown) []BreakdownContrib
 		out = append(out, BreakdownContribution{Source: "Penalidade de armadura", Amount: item})
 	}
 	if carga.ArmorPenalty != 0 {
-		out = append(out, sobrecargaContrib(carga.ArmorPenalty))
+		out = append(out, overloadContrib(carga.ArmorPenalty))
 	}
 	return out
 }

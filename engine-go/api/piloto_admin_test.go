@@ -191,7 +191,7 @@ func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 
 	_, err := s.mintPasswordReset(context.Background(), 999999, dono)
-	if !errors.Is(err, errUsuarioInexistente) {
+	if !errors.Is(err, errUserNotFound) {
 		t.Errorf("erro = %v, queria errUsuarioInexistente", err)
 	}
 }

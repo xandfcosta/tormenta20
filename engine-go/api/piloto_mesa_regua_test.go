@@ -142,7 +142,7 @@ func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
 func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
-	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}, true); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}
@@ -318,7 +318,7 @@ func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 // prende: a quinta espécie nasce dentro da condição em vez de fora dela.
 func TestThePaintLayerOnlyLightsUpWithABrush(t *testing.T) {
 	condicao := oPincelEstaLigado()
-	for _, e := range tabuleiro.EspeciesDeTerreno {
+	for _, e := range tabuleiro.TerrainKinds {
 		if !strings.Contains(condicao, `"`+string(e.ID)+`"`) {
 			t.Errorf("a espécie %q ficou fora da condição da pintura: %s", e.ID, condicao)
 		}

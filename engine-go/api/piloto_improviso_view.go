@@ -158,7 +158,7 @@ func carregaImproviso(v improvisoView) improvisoView {
 		}
 	}
 	v.AcimaDoTeto = v.Tamanho == nil
-	if n, err := engine.AmeacasPlanejadas(v.Salas, masmorra.RoomsPerThreat); err == nil {
+	if n, err := engine.PlannedThreats(v.Salas, masmorra.RoomsPerThreat); err == nil {
 		v.Ameacas = n
 	}
 	return v
@@ -178,11 +178,11 @@ func empilha(historico []sorteio, novo sorteio) []sorteio {
 // rolaRuina: Tabela 6-4, d6, p272.
 func rolaRuina() (sorteio, error) {
 	t, _ := tabelasDoImproviso()
-	d, err := engine.RolaDado(6)
+	d, err := engine.RollDie(6)
 	if err != nil {
 		return sorteio{}, err
 	}
-	linha, err := engine.LinhaParaRolagem(t.Ruina, d.Valor, "ruina")
+	linha, err := engine.RowForRoll(t.Ruina, d.Valor, "ruina")
 	if err != nil {
 		return sorteio{}, err
 	}
@@ -205,11 +205,11 @@ func rolaRuina() (sorteio, error) {
 // "CD 0" diria que existe um teste trivial em vez de nenhum.
 func rolaPerseguicao() (sorteio, error) {
 	t, _ := tabelasDoImproviso()
-	d, err := engine.RolaDado(20)
+	d, err := engine.RollDie(20)
 	if err != nil {
 		return sorteio{}, err
 	}
-	linha, err := engine.LinhaParaRolagem(t.ChaseEvents, d.Valor, "chaseEvents")
+	linha, err := engine.RowForRoll(t.ChaseEvents, d.Valor, "chaseEvents")
 	if err != nil {
 		return sorteio{}, err
 	}
@@ -242,11 +242,11 @@ func nomeDoEvento(k string) string { return rotuloOuCru(rotuloDoEvento, k) }
 // mesma linha, e separá-las esconderia que elas são um par.
 func rolaRecompensa() (sorteio, error) {
 	t, _ := tabelasDoImproviso()
-	d, err := engine.RolaDado(6)
+	d, err := engine.RollDie(6)
 	if err != nil {
 		return sorteio{}, err
 	}
-	linha, err := engine.LinhaParaRolagem(t.RewardCastigo, d.Valor, "rewardCastigo")
+	linha, err := engine.RowForRoll(t.RewardCastigo, d.Valor, "rewardCastigo")
 	if err != nil {
 		return sorteio{}, err
 	}
@@ -260,11 +260,11 @@ func rolaRecompensa() (sorteio, error) {
 // rolaIdeia: Tabela 6-2, d20, p263.
 func rolaIdeia() (sorteio, error) {
 	_, m := tabelasDoImproviso()
-	d, err := engine.RolaDado(20)
+	d, err := engine.RollDie(20)
 	if err != nil {
 		return sorteio{}, err
 	}
-	linha, err := engine.LinhaParaRolagem(m.Ideas, d.Valor, "ideias de masmorra")
+	linha, err := engine.RowForRoll(m.Ideas, d.Valor, "ideias de masmorra")
 	if err != nil {
 		return sorteio{}, err
 	}

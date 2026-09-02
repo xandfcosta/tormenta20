@@ -123,28 +123,28 @@ func (s *Server) handleUpdateClassLevel(w http.ResponseWriter, r *http.Request) 
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"level": {msg}})
 		return
 	}
-	dto, classes, total, vitals, err := s.aplicaONivelDaClasse(r, row, body.ClassName, *body.Level)
+	dto, classes, total, vitals, err := s.applyClassLevel(r, row, body.ClassName, *body.Level)
 	if err != nil {
-		escreveAFalhaDoNivel(w, err)
+		writeLevelFailure(w, err)
 		return
 	}
 	_ = dto
 	plataforma.WriteJSON(w, http.StatusOK, classLevelResult{Level: total, Classes: classes, Vitals: vitals})
 }
 
-// erroDeClasseDoNivel separa a recusa de REGRA da falha de infraestrutura, para
+// classLevelError separa a recusa de REGRA da falha de infraestrutura, para
 // os dois chamadores traduzirem cada uma no idioma da própria tela — a API JSON
 // num erro de campo, o piloto numa frase no rodapé.
-type erroDeClasseDoNivel struct {
+type classLevelError struct {
 	Campo string
 	Frase string
 }
 
-func (e erroDeClasseDoNivel) Error() string { return e.Frase }
+func (e classLevelError) Error() string { return e.Frase }
 
-// escreveAFalhaDoNivel traduz a recusa para o formato da API JSON.
-func escreveAFalhaDoNivel(w http.ResponseWriter, err error) {
-	var recusa erroDeClasseDoNivel
+// writeLevelFailure traduz a recusa para o formato da API JSON.
+func writeLevelFailure(w http.ResponseWriter, err error) {
+	var recusa classLevelError
 	if errors.As(err, &recusa) {
 		plataforma.WriteFieldError(w, http.StatusBadRequest, recusa.Frase,
 			plataforma.FieldErrorMap{recusa.Campo: {recusa.Frase}})
@@ -153,7 +153,7 @@ func escreveAFalhaDoNivel(w http.ResponseWriter, err error) {
 	plataforma.WriteError(w, http.StatusInternalServerError, "Could not update class level")
 }
 
-// aplicaONivelDaClasse é A REGRA do degrau de nível, e ela é UMA para as duas
+// applyClassLevel é A REGRA do degrau de nível, e ela é UMA para as duas
 // telas (ALE-272).
 //
 // Ela estava dentro do handler JSON, e extraí-la é o que impede a ficha em
@@ -169,7 +169,7 @@ func escreveAFalhaDoNivel(w http.ResponseWriter, err error) {
 //   - os POOLS acompanham, porque PV e PM máximos derivam dos níveis de classe.
 //     Gravar o nível sem sincronizar deixa a ficha com o número novo e a vida
 //     velha, que é o defeito que ninguém liga ao botão que o causou.
-func (s *Server) aplicaONivelDaClasse(
+func (s *Server) applyClassLevel(
 	r *http.Request, row sqlcgen.Character, classe string, nivel int64,
 ) (sheet.CharacterDTO, []sheet.ClassDTO, int64, storedVitals, error) {
 	dto, err := s.LoadCharacter(r.Context(), row)
@@ -186,13 +186,13 @@ func (s *Server) aplicaONivelDaClasse(
 		total += dto.Classes[i].Level
 	}
 	if !achou {
-		return dto, nil, 0, storedVitals{}, erroDeClasseDoNivel{
+		return dto, nil, 0, storedVitals{}, classLevelError{
 			Campo: "className",
 			Frase: fmt.Sprintf("Character does not have class %q", classe),
 		}
 	}
 	if total > 20 {
-		return dto, nil, 0, storedVitals{}, erroDeClasseDoNivel{
+		return dto, nil, 0, storedVitals{}, classLevelError{
 			Campo: "level",
 			Frase: fmt.Sprintf("Total level %d exceeds 20", total),
 		}

@@ -259,7 +259,7 @@ func tabuleiroDaMesa(v tabuleiroView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = ui.Icon(oDesenhoDe(tabuleiro.EspecieDeTerreno(q.Especie)).Icone, "terreno-marca").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon(oDesenhoDe(tabuleiro.TerrainKind(q.Especie)).Icone, "terreno-marca").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -2835,7 +2835,7 @@ func acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, cor := range tabuleiro.CoresDeMarcador {
+		for _, cor := range tabuleiro.MarkerColors {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 215, "<button type=\"button\" aria-label=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2984,7 +2984,7 @@ func abrirTabuleiro(v tabuleiroView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, chao := range tabuleiro.ChoesDoLugar {
+		for _, chao := range tabuleiro.PlaceGrounds {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 226, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

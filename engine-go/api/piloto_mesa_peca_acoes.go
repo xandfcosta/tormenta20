@@ -99,7 +99,7 @@ func voltaAPecaParaOndeEstava(st *Server, c mesaComando) (*tabuleiro.BoardState,
 	if peca.DeOndeVeio == nil {
 		return nil, fmt.Errorf("%s não foi movida nesta cena: não há para onde voltar", peca.Label)
 	}
-	return st.boards.VoltaAPeca(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
+	return st.boards.ReturnToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
 }
 
 // sinaisDaPeca é o que o diálogo de editar manda.

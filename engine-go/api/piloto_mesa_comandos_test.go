@@ -68,16 +68,16 @@ func TestTheCounterAndTheAdvanceTellTheSameStory(t *testing.T) {
 	}
 	// Fora de combate o verbo é COMEÇAR, e o contador concorda dizendo que a
 	// rodada ainda é 0.
-	if montando.Avanco.Rotulo != "Começar: Arwen" {
-		t.Errorf("montando a ordem o botão diz %q", montando.Avanco.Rotulo)
+	if montando.Avanco.Label != "Começar: Arwen" {
+		t.Errorf("montando a ordem o botão diz %q", montando.Avanco.Label)
 	}
 
 	emCombate := mestreViewOf(estadoDe(true, 1, 0, fila...), nil, nil, true)
 	if emCombate.Contador != "Rodada 1 · Turno 1/2" {
 		t.Errorf("em combate o contador diz %q", emCombate.Contador)
 	}
-	if emCombate.Avanco.Rotulo != "Próximo: Ogro" {
-		t.Errorf("em combate o botão diz %q", emCombate.Avanco.Rotulo)
+	if emCombate.Avanco.Label != "Próximo: Ogro" {
+		t.Errorf("em combate o botão diz %q", emCombate.Avanco.Label)
 	}
 }
 
@@ -102,10 +102,10 @@ func TestVitalsFollowTheTrackerAndTheRole(t *testing.T) {
 // TestPresenceReachesTheScene: quem está com a aba aberta aparece marcado, e quem
 // não tem personagem ligado não vira "personagem 0 online".
 func TestPresenceReachesTheScene(t *testing.T) {
-	membros := []aovivo.MembroDaMesa{
-		{CharacterID: 10, DonoID: 1},
-		{CharacterID: 11, DonoID: 2},
-		{CharacterID: 12, DonoID: 0},
+	membros := []aovivo.TableMember{
+		{CharacterID: 10, OwnerID: 1},
+		{CharacterID: 11, OwnerID: 2},
+		{CharacterID: 12, OwnerID: 0},
 	}
 	v := mestreViewOf(estadoDe(true, 1, 0), membros, []int64{1}, true)
 	if len(v.Conectados) != 1 || !v.Conectados[10] {

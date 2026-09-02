@@ -125,11 +125,11 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 		Erros:     plataforma.FieldErrorMap{},
 	}
 	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campanha_regras.go`.
-	nome, err := nomeDeCampanha(v.Nome)
+	nome, err := campaignName(v.Nome)
 	if err != nil {
 		v.Erros["name"] = []string{"O nome é obrigatório e cabe em 120 caracteres."}
 	}
-	descricao, errDesc := descricaoDeCampanha(&v.Descricao)
+	descricao, errDesc := campaignDescription(&v.Descricao)
 	if errDesc != nil {
 		v.Erros["description"] = []string{"A descrição cabe em 2000 caracteres."}
 	}
@@ -218,7 +218,7 @@ func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request
 	}
 	v.EscolhidoID = heroiID
 
-	_, err = s.entrarNaMesa(r.Context(), pedidoDeEntrada{
+	_, err = s.joinTable(r.Context(), joinRequest{
 		CampanhaID: campanhaID, PersonagemID: heroiID,
 		Convite: token, Papel: "player", QuemPede: eu.ID,
 	})
@@ -310,8 +310,8 @@ func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
 	nomeBruto, descricaoBruta := r.PostFormValue("name"), r.PostFormValue("description")
 
 	// A MESMA regra da folha em branco e da rota JSON. Três telas, uma função.
-	nome, err := nomeDeCampanha(nomeBruto)
-	descricao, errDesc := descricaoDeCampanha(&descricaoBruta)
+	nome, err := campaignName(nomeBruto)
+	descricao, errDesc := campaignDescription(&descricaoBruta)
 	if err != nil || errDesc != nil {
 		v, erroAoLer := s.carregaCronica(r.Context(), eu, id, "config")
 		if erroAoLer != nil {
@@ -388,7 +388,7 @@ func (s *Server) handleCronicaAlternarRegra(w http.ResponseWriter, r *http.Reque
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": msg})
 		return
 	}
-	if err := s.gravaRegrasIgnoradas(r.Context(), id, normalizadas); err != nil {
+	if err := s.saveIgnoredRules(r.Context(), id, normalizadas); err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
 		return
 	}

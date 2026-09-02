@@ -300,7 +300,7 @@ func mudaONivel(s *Server, r *http.Request, row sqlcgen.Character, _ fichaSignal
 		if alvo < 1 {
 			return fmt.Errorf("%s está no nível 1: descer apagaria a classe", classe)
 		}
-		_, _, _, _, err := s.aplicaONivelDaClasse(r, row, classe, alvo)
+		_, _, _, _, err := s.applyClassLevel(r, row, classe, alvo)
 		return err
 	}
 	return fmt.Errorf("%s não é uma classe deste personagem", classe)

@@ -95,7 +95,7 @@ func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err er
 	if err != nil {
 		return "", status, err
 	}
-	passo, err := oPassoDaURL(r)
+	passo, err := stepFromURL(r)
 	if err != nil {
 		return "", http.StatusBadRequest, err
 	}
@@ -228,12 +228,12 @@ func (s Scene) writeAttributes(w http.ResponseWriter, r *http.Request, v attribu
 	}, attributesScene(v))
 }
 
-// oPassoDaURL aceita o sinal de menos: o passo é para os dois lados.
+// stepFromURL aceita o sinal de menos: o passo é para os dois lados.
 //
 // CÓPIA consciente do `piloto_ficha_routes.go`. A forja e a ficha leem o passo
 // de rotas diferentes, e pedi-lo pela porta seria pôr sete linhas de parse numa
 // interface — mais acoplamento que duplicação.
-func oPassoDaURL(r *http.Request) (int, error) {
+func stepFromURL(r *http.Request) (int, error) {
 	bruto := chi.URLParam(r, "passo")
 	passo, err := strconv.Atoi(bruto)
 	if err != nil || passo == 0 {

@@ -108,7 +108,7 @@ func aPreviaDoArrasto(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, t
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
 	dobras := append(asParadasEmCurso(b, tokenID, peca), destino)
-	_, orcamento := tabuleiro.PodeMoverCom(b, st, tokenID, quem)
+	_, orcamento := tabuleiro.CanMoveWith(b, st, tokenID, quem)
 	custos := osCustosDasPernas(dobras, terrenoDeMovimento(b))
 	cabe, segundo, alem := osFiosDoMovimento(dobras, custos, orcamento)
 	return map[string]any{

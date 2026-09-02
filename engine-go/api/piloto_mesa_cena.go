@@ -63,9 +63,9 @@ func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
+	especie := tabuleiro.KnownTerrainKind(chi.URLParam(c.R, "especie"))
 	ligado := c.R.URL.Query().Get("apagar") == ""
-	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
+	return st.boards.PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
 }
 
 // limpaOTerreno é a BORRACHA (ALE-203): o clique devolve a casa ao chão limpo,
@@ -83,7 +83,7 @@ func limpaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
-	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, c.TabuleiroID, traco)
+	return st.boards.ClearStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco)
 }
 
 // enchaORetangulo e limpaORetangulo são os irmãos de área dos dois de cima.
@@ -99,8 +99,8 @@ func enchaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
-	return st.boards.PintaOTraco(c.R.Context(), c.SessionID, c.TabuleiroID, casas, especie, true)
+	especie := tabuleiro.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	return st.boards.PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas, especie, true)
 }
 
 func limpaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
@@ -111,7 +111,7 @@ func limpaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
 	}
-	return st.boards.LimpaOTraco(c.R.Context(), c.SessionID, c.TabuleiroID, casas)
+	return st.boards.ClearStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas)
 }
 
 // oRetanguloDaURL lê os dois cantos e devolve as casas de dentro.
@@ -128,10 +128,10 @@ func oRetanguloDaURL(r *http.Request) ([]engine.Square, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !tabuleiro.RetanguloValido(de, ate) {
+	if !tabuleiro.ValidRectangle(de, ate) {
 		return nil, fmt.Errorf("o retângulo de %v até %v é grande demais para um gesto", de, ate)
 	}
-	return tabuleiro.CasasDoRetangulo(de, ate), nil
+	return tabuleiro.RectangleSquares(de, ate), nil
 }
 
 // tracoDaURL lê o segmento que o dedo percorreu e devolve as casas dele.
@@ -148,10 +148,10 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !tabuleiro.TracoValido(de, ate) {
+	if !tabuleiro.ValidStroke(de, ate) {
 		return nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
 	}
-	return tabuleiro.CasasDoTraco(de, ate), nil
+	return tabuleiro.StrokeSquares(de, ate), nil
 }
 
 // reabreOLugar traz uma cena guardada de volta para a mesa, NUMA ABA NOVA
@@ -172,7 +172,7 @@ func reabreOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	cena, err := st.boards.AbreOLugar(c.R.Context(), c.CampaignID, c.SessionID, id)
+	cena, err := st.boards.OpenPlace(c.R.Context(), c.CampaignID, c.SessionID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func (s *Server) aAbaComOLugar(ctx context.Context, campaignID, sessionID, place
 		if lugar.ID != placeID {
 			continue
 		}
-		for _, aberto := range s.boards.Abertos(ctx, sessionID) {
+		for _, aberto := range s.boards.OpenBoards(ctx, sessionID) {
 			if aberto.Place == lugar.Name {
 				return lugar.Name, aberto.ID
 			}
@@ -273,7 +273,7 @@ func abreOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	// O formulário volta ao zero, como o do combatente: sem isto o lugar fica no
 	// campo e a cena seguinte nasce com o nome da anterior.
 	c.Sinais["novolugar"] = ""
-	c.Sinais["novochao"] = tabuleiro.ChaoPadrao()
+	c.Sinais["novochao"] = tabuleiro.DefaultGround()
 	return b, nil
 }
 
@@ -295,7 +295,7 @@ func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error)
 	// olhando a que morreu cai na padrão sozinho, porque o `aAbaDe` confere a
 	// escolha contra o que existe. Apagar tudo aqui arrastaria de volta para a
 	// padrão gente que estava numa aba que continua aberta.
-	if len(st.boards.Abertos(c.R.Context(), c.SessionID)) == 0 {
+	if len(st.boards.OpenBoards(c.R.Context(), c.SessionID)) == 0 {
 		// A LENTE morre com a cena (ALE-193): "você está vendo como a mesa" sobre
 		// uma tela sem tabuleiro faria o mestre concluir que o mapa sumiu PARA OS
 		// JOGADORES — a resposta errada exatamente à pergunta que a lente existe
@@ -309,7 +309,7 @@ func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error)
 	// `nil` é a mensagem "esta sessão não tem tabuleiro", e ela só é VERDADE
 	// quando não sobrou nenhum. Sobrando, quem vai é a aba padrão — ver
 	// `publicaOQueSobrou`.
-	st.publicaOQueSobrou(c.R.Context(), c.SessionID)
+	st.publishWhatIsLeft(c.R.Context(), c.SessionID)
 	return nil, nil
 }
 
@@ -342,10 +342,10 @@ func cenaDosSinais(r *http.Request) (lugar, chao string, err error) {
 
 // chaoConhecido devolve o chão pedido se ele existe, ou o padrão.
 func chaoConhecido(pedido string) string {
-	for _, c := range tabuleiro.ChoesDoLugar {
+	for _, c := range tabuleiro.PlaceGrounds {
 		if c.ID == pedido {
 			return pedido
 		}
 	}
-	return tabuleiro.ChaoPadrao()
+	return tabuleiro.DefaultGround()
 }

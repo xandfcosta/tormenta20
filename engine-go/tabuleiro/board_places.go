@@ -145,7 +145,7 @@ func (bs *BoardStore) reopenLocked(ctx context.Context, sessionID int64, tabulei
 	if err != nil {
 		return nil, nil, err
 	}
-	cena, err := aCenaGuardada(row.State, row.Name)
+	cena, err := storedScene(row.State, row.Name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -154,9 +154,9 @@ func (bs *BoardStore) reopenLocked(ctx context.Context, sessionID int64, tabulei
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
-	aberto := bs.achaLocked(sessionID, tabuleiroID)
+	aberto := bs.findLocked(sessionID, tabuleiroID)
 	if aberto == nil {
-		b, err := bs.numaAbaNovaLocked(sessionID, &guardado)
+		b, err := bs.inNewTabLocked(sessionID, &guardado)
 		return b, events.BoardOpened{SessionID: sessionID}, err
 	}
 	if aberto.Version >= guardado.Version {
@@ -174,7 +174,7 @@ func (bs *BoardStore) reopenLocked(ctx context.Context, sessionID int64, tabulei
 	return cloneBoard(aberto), events.BoardChanged{SessionID: sessionID}, nil
 }
 
-// AbreOLugar põe um lugar guardado numa ABA NOVA, sem tocar no que já está na
+// OpenPlace põe um lugar guardado numa ABA NOVA, sem tocar no que já está na
 // mesa (ALE-205, fatia 3).
 //
 // É o que "Reabrir" passou a fazer, e a diferença com o `ShowPlace` é a issue
@@ -186,7 +186,7 @@ func (bs *BoardStore) reopenLocked(ctx context.Context, sessionID int64, tabulei
 // A posse é conferida como no `ShowPlace` e no `RemovePlace`, e pelo mesmo
 // motivo: o id vem do cliente, e sem a checagem um mestre puxaria para a própria
 // mesa a cena de OUTRA campanha.
-func (bs *BoardStore) AbreOLugar(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
+func (bs *BoardStore) OpenPlace(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
 	b, err := bs.openPlaceLocked(ctx, campaignID, sessionID, placeID)
 	if err != nil {
 		return nil, err
@@ -203,41 +203,41 @@ func (bs *BoardStore) openPlaceLocked(ctx context.Context, campaignID, sessionID
 	if row.Campaignid != campaignID {
 		return nil, errPlaceFromAnotherCampaign
 	}
-	cena, err := aCenaGuardada(row.State, row.Name)
+	cena, err := storedScene(row.State, row.Name)
 	if err != nil {
 		return nil, err
 	}
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
-	return bs.numaAbaNovaLocked(sessionID, cena)
+	return bs.inNewTabLocked(sessionID, cena)
 }
 
-// numaAbaNovaLocked acrescenta a cena como mais uma aba, com a trava na mão.
+// inNewTabLocked acrescenta a cena como mais uma aba, com a trava na mão.
 //
 // UM lugar só cunha id e sequência, e é por isso que ele existe: o `Reopen` sem
 // aba e o `AbreOLugar` fazem a mesma coisa, e duas cópias disso é como uma delas
 // esquece o teto — que é a diferença entre uma sessão com oito cenas e uma que
 // cresce sem limite carregando tudo em toda hidratação.
-func (bs *BoardStore) numaAbaNovaLocked(sessionID int64, cena *BoardState) (*BoardState, error) {
-	if len(bs.boards[sessionID]) >= tetoDeAbertos {
+func (bs *BoardStore) inNewTabLocked(sessionID int64, cena *BoardState) (*BoardState, error) {
+	if len(bs.boards[sessionID]) >= openBoardsCeiling {
 		return nil, fmt.Errorf(
 			"esta sessão já tem %d tabuleiros abertos (teto %d): feche um antes de abrir outro lugar",
-			len(bs.boards[sessionID]), tetoDeAbertos)
+			len(bs.boards[sessionID]), openBoardsCeiling)
 	}
 	cena.ID = bs.newID()
-	cena.Seq = bs.proximaSeqLocked(sessionID)
+	cena.Seq = bs.nextSeqLocked(sessionID)
 	bs.boards[sessionID] = append(bs.boards[sessionID], cena)
 	return cloneBoard(cena), nil
 }
 
-// aCenaGuardada desempacota o que o acervo guardou, pronto para entrar na mesa.
+// storedScene desempacota o que o acervo guardou, pronto para entrar na mesa.
 //
 // As três decisões que ela carrega estavam soltas no `Reopen`, e a segunda porta
 // de entrada (o `AbreOLugar`) precisava exatamente delas — copiadas, seria a
 // forma clássica de uma se esquecer: a cena reaberta por um caminho voltaria com
 // o movimento proposto da semana passada e a do outro não.
-func aCenaGuardada(blob, nome string) (*BoardState, error) {
+func storedScene(blob, nome string) (*BoardState, error) {
 	var cena BoardState
 	if err := json.Unmarshal([]byte(blob), &cena); err != nil {
 		return nil, err

@@ -149,7 +149,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						// `piloto_mesa_terreno_desenho.go` para o porquê dos
 						// cantos e de o ícone dizer a REGRA da espécie.
 						<div aria-hidden="true" class={ aClasseDaCasa(q.Especie) } style={ posicaoNoPlano(q.X, q.Y, 1) }>
-							@ui.Icon(oDesenhoDe(tabuleiro.EspecieDeTerreno(q.Especie)).Icone, "terreno-marca")
+							@ui.Icon(oDesenhoDe(tabuleiro.TerrainKind(q.Especie)).Icone, "terreno-marca")
 						</div>
 					}
 					// A TRILHA vem antes das peças e depois do chão: ela é rastro,
@@ -1086,7 +1086,7 @@ templ acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) {
 				@ui.Icon("EyeOff", "size-4")
 			}
 		</button>
-		for _, cor := range tabuleiro.CoresDeMarcador {
+		for _, cor := range tabuleiro.MarkerColors {
 			<button
 				type="button"
 				aria-label={ "Pintar o marcador " + m.Texto + " de " + cor.Rotulo }
@@ -1155,7 +1155,7 @@ templ abrirTabuleiro(v tabuleiroView) {
 			// A lista vem do `tabuleiro` e não é digitada aqui: ela já existia no
 			// CSS e na SPA, e uma terceira cópia à mão é como nasce a opção que a
 			// tela oferece e o navegador desenha em branco.
-			for _, chao := range tabuleiro.ChoesDoLugar {
+			for _, chao := range tabuleiro.PlaceGrounds {
 				<option value={ chao.ID }>{ chao.Rotulo }</option>
 			}
 		</select>
@@ -1817,7 +1817,7 @@ templ asCamadasDeClique(v tabuleiroView) {
 	// o dedo nunca chegava ao laço. Medido no navegador, e o sintoma é o gesto
 	// que simplesmente não acontece.
 	//
-	// O LAÇO só existe para o mestre, e a razão está no `tabuleiro.MoveOGrupo`:
+	// O LAÇO só existe para o mestre, e a razão está no `tabuleiro.MoveGroup`:
 	// um jogador tem uma peça, e o que o grupo dispensa (a regra de deslocamento)
 	// é justamente o que protege o turno dele.
 	//

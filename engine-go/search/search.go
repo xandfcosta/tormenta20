@@ -205,14 +205,14 @@ func isNearlyEqual(campo, alvo string) bool {
 }
 
 // buracoAte conta quantas letras foram PULADAS até casar o alvo inteiro, e
-// devolve `naoCasa` quando o alvo acaba sem casar.
+// devolve `noMatch` quando o alvo acaba sem casar.
 //
 // O sentinela é uma CONSTANTE, e isso é conserto de um vermelho: a primeira
 // versão devolvia `len(letras)+1`, que num resto de UMA letra é 2 — dentro da
 // folga. O efeito foi medido na sonda: "abal" casava com "Naja" (o último "a",
 // e nada depois), e a busca por nome devolvia 282 entradas em vez de uma.
 // Sentinela calculado a partir da entrada é sentinela que a entrada alcança.
-const naoCasa = 1 << 30
+const noMatch = 1 << 30
 
 func gapUntil(letras, procurado []rune) int {
 	buraco, i := 0, 0
@@ -229,7 +229,7 @@ func gapUntil(letras, procurado []rune) int {
 			break
 		}
 	}
-	return naoCasa
+	return noMatch
 }
 
 // comecaUmaPalavra procura o termo no COMEÇO de qualquer palavra.

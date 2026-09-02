@@ -26,16 +26,16 @@ type IgnoredRules struct {
 	Carga bool `json:"carga"`
 }
 
-// RuleCarga é o identificador de fio da regra de carga: o que a campanha grava
+// RuleLoad é o identificador de fio da regra de carga: o que a campanha grava
 // em `campaign_ignored_rules.rule` e o que a tela manda no PATCH. Escrito uma
 // vez para o banco, o handler e o motor não divergirem por erro de digitação.
-const RuleCarga = "carga"
+const RuleLoad = "carga"
 
 // KnownRules são os identificadores que ESTA versão do motor reconhece. Serve à
 // validação da escrita: ler um desconhecido é seguro (a regra fica em vigor),
 // mas GRAVAR um desconhecido encheria a tabela de lixo que ninguém consegue
 // desfazer pela tela.
-var KnownRules = []string{RuleCarga}
+var KnownRules = []string{RuleLoad}
 
 // IsKnownRule diz se o identificador é uma regra desta versão do motor.
 //
@@ -57,7 +57,7 @@ func IsKnownRule(rule string) bool {
 func IgnoredRulesFrom(rules []string) IgnoredRules {
 	var out IgnoredRules
 	for _, rule := range rules {
-		if rule == RuleCarga {
+		if rule == RuleLoad {
 			out.Carga = true
 		}
 	}

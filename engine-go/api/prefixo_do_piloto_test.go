@@ -82,7 +82,7 @@ func TestTheNewAddressesAnswer(t *testing.T) {
 // não serviria — o que se quer proibir é o VALOR em tempo de execução, e ele
 // pode ser montado por concatenação.
 func TestNoLegacyAddressMentionsThePilot(t *testing.T) {
-	for _, endereco := range osEnderecosAntigos {
+	for _, endereco := range legacyAddresses {
 		if strings.Contains(endereco.Padrao, "/piloto") {
 			t.Errorf("a tabela tem %q: o prefixo velho não é endereço, é 404", endereco.Padrao)
 		}

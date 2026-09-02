@@ -35,7 +35,7 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 	// A carta de arma resolve Luta/Pontaria, que a penalidade de armadura nunca
 	// alcança (p153) — a carga entra por completude, para esta chamada não
 	// depender de saber quais perícias ficam de fora.
-	carga := cargaBreakdown(ch, inventorySlotsTotal(ch, effects))
+	carga := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
 
 	cards := []WeaponCard{}
 	for _, it := range ch.Items {

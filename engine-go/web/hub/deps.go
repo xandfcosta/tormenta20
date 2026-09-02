@@ -47,13 +47,13 @@ type Deps interface {
 	// dele depende da configuração (domínio, `Secure`, `SameSite`), e essa
 	// decisão é do hospedeiro.
 	ExpiredSessionCookie() *http.Cookie
-	// MesaRoute é o endereço de uma sessão ao vivo.
+	// TableRoute é o endereço de uma sessão ao vivo.
 	//
 	// Ela entra pela porta e não é copiada, e a razão está escrita na função
 	// original: ela existe para os quatro lugares que apontam para a Mesa
 	// CONCORDAREM, e uma cópia aqui seria o quinto que diverge. Quem sabe onde
 	// cada cena está montada é o hospedeiro.
-	MesaRoute(campaignID, sessionID int64) string
+	TableRoute(campaignID, sessionID int64) string
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 }

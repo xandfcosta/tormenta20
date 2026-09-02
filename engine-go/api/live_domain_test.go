@@ -56,7 +56,7 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	// CI, no `TestTheRefusedCommandReachesTheGm` — que derruba uma tabela de
 	// propósito e por isso GARANTE a falha de persistência que abre a janela.
 	t.Cleanup(func() {
-		srv.EsperaOSegundoPlano()
+		srv.WaitForBackground()
 		_ = database.Close()
 	})
 	return srv

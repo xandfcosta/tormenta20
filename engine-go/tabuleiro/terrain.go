@@ -16,20 +16,20 @@ package tabuleiro
 // migração foi avisada para fazer a mesma separação do lado dela, que é o que
 // desfaz a dívida em vez de adiá-la.
 
-// EspecieDeTerreno é uma das quatro coisas que um quadrado FAZ (T20 p238,
+// TerrainKind é uma das quatro coisas que um quadrado FAZ (T20 p238,
 // Tabela 5-3). Ver GLOSSARIO.md: terreno é a família, não o chão do lugar.
-type EspecieDeTerreno string
+type TerrainKind string
 
 const (
-	TerrenoDificil    EspecieDeTerreno = "dificil"
-	TerrenoCobertura  EspecieDeTerreno = "cobertura"
-	TerrenoCamuflagem EspecieDeTerreno = "camuflagem"
-	TerrenoElevado    EspecieDeTerreno = "elevado"
+	TerrenoDificil    TerrainKind = "dificil"
+	TerrenoCobertura  TerrainKind = "cobertura"
+	TerrenoCamuflagem TerrainKind = "camuflagem"
+	TerrenoElevado    TerrainKind = "elevado"
 )
 
-// PincelDeTerreno é uma espécie pronta para a tela oferecer.
-type PincelDeTerreno struct {
-	ID     EspecieDeTerreno
+// TerrainBrush é uma espécie pronta para a tela oferecer.
+type TerrainBrush struct {
+	ID     TerrainKind
 	Rotulo string
 	// Efeito é a frase do LIVRO, e ela vai para a tela porque hoje é tudo o que
 	// acontece: só o DIFÍCIL é consumido por regra (entra no custo do
@@ -44,25 +44,25 @@ type PincelDeTerreno struct {
 	Efeito string
 }
 
-// EspeciesDeTerreno é o que o pincel oferece, na ordem em que a tela mostra.
+// TerrainKinds é o que o pincel oferece, na ordem em que a tela mostra.
 //
 // O DIFÍCIL vem primeiro porque é o único que a regra consome e o único que
 // existia antes — quem já usava o pincel encontra o de sempre no lugar de
 // sempre.
-var EspeciesDeTerreno = []PincelDeTerreno{
+var TerrainKinds = []TerrainBrush{
 	{TerrenoDificil, "Difícil", "entrar custa o dobro"},
 	{TerrenoCobertura, "Cobertura", "+5 na Defesa de quem está nela"},
 	{TerrenoCamuflagem, "Camuflagem", "20% de chance de falha contra quem está nela"},
 	{TerrenoElevado, "Elevado", "+2 no ataque de quem ataca de lá"},
 }
 
-// EspecieConhecida devolve a espécie pedida, ou o difícil.
+// KnownTerrainKind devolve a espécie pedida, ou o difícil.
 //
 // O padrão é o difícil e não um erro porque o id vem do cliente: uma espécie que
 // a tela não oferece só chega por posse do fio, e a resposta a isso é pintar o
 // que o pincel sempre pintou — não discutir.
-func EspecieConhecida(pedido string) EspecieDeTerreno {
-	for _, e := range EspeciesDeTerreno {
+func KnownTerrainKind(pedido string) TerrainKind {
+	for _, e := range TerrainKinds {
 		if string(e.ID) == pedido {
 			return e.ID
 		}

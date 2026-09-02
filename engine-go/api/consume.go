@@ -29,9 +29,9 @@ type consumeResult struct {
 	MpCurrent int64             `json:"mpCurrent"`
 }
 
-// errPorcaoDoDia é a recusa da porção diária, que a API JSON responde com um
+// errDailyPortion é a recusa da porção diária, que a API JSON responde com um
 // erro de CAMPO próprio — por isso ela é reconhecível em vez de virar texto.
-var errPorcaoDoDia = errors.New("apenas uma porção por dia")
+var errDailyPortion = errors.New("apenas uma porção por dia")
 
 // handleConsumeItem roll the instant
 // gain (clamped to max), create the scene/day effect (if any), decrement/Remove
@@ -53,7 +53,7 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resultado, err := s.consumeItemForCharacter(r, row, itemID, body.HpRolled, body.MpRolled)
-	if errors.Is(err, errPorcaoDoDia) {
+	if errors.Is(err, errDailyPortion) {
 		writeOncePerDay(w, resultado.Nome)
 		return
 	}
@@ -74,30 +74,30 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 // razão do `castSpellForCharacter` da fatia 6.
 func (s *Server) consumeItemForCharacter(
 	r *http.Request, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
-) (doseUsada, error) {
+) (doseUsed, error) {
 	dto, err := s.LoadCharacter(r.Context(), row)
 	if err != nil {
-		return doseUsada{}, err
+		return doseUsed{}, err
 	}
 	item := findItemDTO(dto.Items, itemID)
 	if item == nil {
-		return doseUsada{}, fmt.Errorf("o item %d não está nesta ficha", itemID)
+		return doseUsed{}, fmt.Errorf("o item %d não está nesta ficha", itemID)
 	}
 	if item.CatalogID == nil {
-		return doseUsada{}, fmt.Errorf("%q é um item custom e não tem o que usar", item.Name)
+		return doseUsed{}, fmt.Errorf("%q é um item custom e não tem o que usar", item.Name)
 	}
 	cat, known := catalog.LookupItem(*item.CatalogID)
 	if !known || cat.Consumable == nil {
-		return doseUsada{}, fmt.Errorf("%q não é um consumível", item.Name)
+		return doseUsed{}, fmt.Errorf("%q não é um consumível", item.Name)
 	}
 	if item.Quantity < 1 {
-		return doseUsada{}, fmt.Errorf("não sobrou nenhum uso de %q", item.Name)
+		return doseUsed{}, fmt.Errorf("não sobrou nenhum uso de %q", item.Name)
 	}
 	spec := cat.Consumable
 	if spec.OncePerDay {
 		for _, e := range dto.ActiveEffects {
 			if e.CatalogID == cat.ID {
-				return doseUsada{Nome: cat.Name}, errPorcaoDoDia
+				return doseUsed{Nome: cat.Name}, errDailyPortion
 			}
 		}
 	}
@@ -107,7 +107,7 @@ func (s *Server) consumeItemForCharacter(
 
 	tx, err := s.db.BeginTx(r.Context(), nil)
 	if err != nil {
-		return doseUsada{}, err
+		return doseUsed{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := s.queries.WithTx(tx)
@@ -119,10 +119,10 @@ func (s *Server) consumeItemForCharacter(
 			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
 		})
 		if db.IsUniqueViolation(err) {
-			return doseUsada{Nome: cat.Name}, errPorcaoDoDia
+			return doseUsed{Nome: cat.Name}, errDailyPortion
 		}
 		if err != nil {
-			return doseUsada{}, err
+			return doseUsed{}, err
 		}
 		effect = &sheet.EffectDTO{ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: eff.Modifiers, CreatedAt: eff.Createdat}
 	}
@@ -131,11 +131,11 @@ func (s *Server) consumeItemForCharacter(
 	newQty := item.Quantity - 1
 	if item.Quantity > 1 {
 		if err := q.SetItemQuantity(r.Context(), sqlcgen.SetItemQuantityParams{Quantity: newQty, ID: itemID}); err != nil {
-			return doseUsada{}, err
+			return doseUsed{}, err
 		}
 	} else {
 		if err := q.DeleteItem(r.Context(), itemID); err != nil {
-			return doseUsada{}, err
+			return doseUsed{}, err
 		}
 		removed, newQty = true, 0
 	}
@@ -149,13 +149,13 @@ func (s *Server) consumeItemForCharacter(
 			mpCurrent = min(row.Mpmax, row.Mpcurrent+int64(mpGain))
 		}
 		if err := q.SetVitalsCurrent(r.Context(), sqlcgen.SetVitalsCurrentParams{HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID}); err != nil {
-			return doseUsada{}, err
+			return doseUsed{}, err
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		return doseUsada{}, err
+		return doseUsed{}, err
 	}
-	return doseUsada{
+	return doseUsed{
 		Nome: cat.Name,
 		consumeResult: consumeResult{
 			Item: consumeItemResult{ID: itemID, Quantity: newQty, Removed: removed}, Effect: effect,
@@ -164,9 +164,9 @@ func (s *Server) consumeItemForCharacter(
 	}, nil
 }
 
-// doseUsada é o resultado da dose mais o NOME do item, que a recusa da porção
+// doseUsed é o resultado da dose mais o NOME do item, que a recusa da porção
 // diária precisa e o corpo da resposta JSON não carrega.
-type doseUsada struct {
+type doseUsed struct {
 	consumeResult
 	Nome string
 }

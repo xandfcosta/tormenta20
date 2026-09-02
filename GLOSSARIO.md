@@ -317,6 +317,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **monograma** | `monogram` | `TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal` |
 | **matiz** | `hue` | `TestTheNameHueMatchesTheJs` |
 | **sobrecarga** | `overload` | `TestOverloadPenalizesDisplacementAndArmorExpertises` |
+| **mesa** (as pessoas conectadas) | `table` | `TableMember`, `TableRoute`, `TestTheTableDoesNotLeakHiddenHp` |
 | **bolsa inicial** | `purse` (na frase) | `startingMoney` continua sendo o campo |
 
 **Três colisões que esta tabela ABRE, e que ficam registradas em vez de

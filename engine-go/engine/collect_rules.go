@@ -55,14 +55,14 @@ func originModifiers(origin *OriginDefinition, choiceSet map[string]bool) []Modi
 	return out
 }
 
-// resolveAtributoDeltas ports racas-attr.ts resolveAtributoMod: resolve a raça's
+// resolveAttributeDeltas ports racas-attr.ts resolveAtributoMod: resolve a raça's
 // atributoMod into an ORDERED list of attribute deltas (the order
 // raceAttributeMods emits them). Returns an error on invalid choices, mirroring
 // the TS throws (the caller swallows them into no mods, like derived.ts'
 // try/catch). Named apart from the MVP engine's map-returning resolveAtributoMod
 // (races.go), which serves the flattened CharacterInput.
-func resolveAtributoDeltas(raca *Raca, floatingPicks []string, ascendencia string) ([]attrDelta, error) {
-	mod := raca.AtributoMod
+func resolveAttributeDeltas(raca *RaceAttributeEntry, floatingPicks []string, ascendencia string) ([]attrDelta, error) {
+	mod := raca.AttributeMod
 	switch mod.Kind {
 	case "fixed":
 		return mod.Mods.pairs, nil
@@ -78,7 +78,7 @@ func resolveAtributoDeltas(raca *Raca, floatingPicks []string, ascendencia strin
 	}
 }
 
-func resolveFloating(raca *Raca, mod AtributoMod, picks []string) ([]attrDelta, error) {
+func resolveFloating(raca *RaceAttributeEntry, mod AttributeMod, picks []string) ([]attrDelta, error) {
 	if len(picks) != mod.Count {
 		return nil, fmt.Errorf(
 			"resolveAtributoMod: %s requires exactly %d floating picks, got %d",
@@ -114,12 +114,12 @@ func resolveFloating(raca *Raca, mod AtributoMod, picks []string) ([]attrDelta, 
 // Raça desconhecida conta como completa: não dá para cobrar escolha de uma raça
 // que o catálogo não tem.
 func (c *Catalogs) RaceAttributeChoiceIsComplete(raceName, choicesJSON string) bool {
-	raca := c.racaByName(raceName)
+	raca := c.raceEntryByName(raceName)
 	if raca == nil {
 		return true
 	}
 	escolha := parseRaceAttributeChoices(choicesJSON)
-	_, err := resolveAtributoDeltas(raca, escolha.floatingPicks, escolha.ascendencia)
+	_, err := resolveAttributeDeltas(raca, escolha.floatingPicks, escolha.ascendencia)
 	return err == nil
 }
 

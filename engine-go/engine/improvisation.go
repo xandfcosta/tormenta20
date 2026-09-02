@@ -21,47 +21,47 @@ import (
 // produção é o mesmo binário que serve a página, então a "ida ao servidor" é a
 // mesma ida que desenhou a tela.
 
-// Rolagem é o resultado de um dado, e ele viaja junto com a linha porque o
+// Roll é o resultado de um dado, e ele viaja junto com a linha porque o
 // mestre quer VER o número: "saiu 4" é parte da resposta, não detalhe de
 // implementação. Sem ele a tabela vira um oráculo que não se confere.
-type Rolagem struct {
+type Roll struct {
 	Valor int
 	Faces int
 }
 
-// RolaDado devolve 1..faces com aleatoriedade CRIPTOGRÁFICA.
+// RollDie devolve 1..faces com aleatoriedade CRIPTOGRÁFICA.
 //
 // `crypto/rand` e não `math/rand`, e a razão não é segurança — é que o
 // `math/rand` global do Go tem semente fixa por processo em versões antigas e
 // comportamento surpreendente sob concorrência. Um servidor que serve várias
 // mesas ao mesmo tempo não pode ter duas rolagens correlacionadas, e o custo
 // aqui é irrelevante: são dezenas de rolagens por sessão, não milhões.
-func RolaDado(faces int) (Rolagem, error) {
+func RollDie(faces int) (Roll, error) {
 	if faces < 2 {
-		return Rolagem{}, fmt.Errorf("dado precisa de pelo menos 2 faces, veio %d", faces)
+		return Roll{}, fmt.Errorf("dado precisa de pelo menos 2 faces, veio %d", faces)
 	}
 	n, err := rand.Int(rand.Reader, big.NewInt(int64(faces)))
 	if err != nil {
-		return Rolagem{}, fmt.Errorf("rolar d%d: %w", faces, err)
+		return Roll{}, fmt.Errorf("rolar d%d: %w", faces, err)
 	}
-	return Rolagem{Valor: int(n.Int64()) + 1, Faces: faces}, nil
+	return Roll{Valor: int(n.Int64()) + 1, Faces: faces}, nil
 }
 
 // ── as faixas ────────────────────────────────────────────────────────────────
 
-// FaixaDeRolagem é uma linha que cobre um intervalo de resultados — "1-2" na
+// RollRange é uma linha que cobre um intervalo de resultados — "1-2" na
 // tabela de ruínas.
-type FaixaDeRolagem interface {
+type RollRange interface {
 	Cobre(rolagem int) bool
 }
 
-// LinhaParaRolagem acha a linha que cobre a rolagem.
+// RowForRoll acha a linha que cobre a rolagem.
 //
 // Rolagem descoberta é ERRO e não silêncio, e essa é a decisão que importa: uma
 // tabela com buraco devolveria a linha errada ou nenhuma, e o mestre leria o
 // resultado de outra faixa como se fosse o dele. Melhor a tela dizer que a
 // tabela está incompleta.
-func LinhaParaRolagem[T FaixaDeRolagem](linhas []T, rolagem int, tabela string) (T, error) {
+func RowForRoll[T RollRange](linhas []T, rolagem int, tabela string) (T, error) {
 	var vazio T
 	for _, l := range linhas {
 		if l.Cobre(rolagem) {
@@ -80,10 +80,10 @@ func LinhaParaRolagem[T FaixaDeRolagem](linhas []T, rolagem int, tabela string) 
 // ele é dado transcrito do livro, e dado transcrito mora no catálogo, que é
 // onde a validação de schema o alcança.
 
-// AmeacasPlanejadas arredonda PARA CIMA: sete salas com uma ameaça a cada três
+// PlannedThreats arredonda PARA CIMA: sete salas com uma ameaça a cada três
 // dão três, não duas. Duas deixariam a última salinha sem nada, e a regra do
 // livro é uma cota mínima de tensão, não uma divisão exata.
-func AmeacasPlanejadas(salas, salasPorAmeaca int) (int, error) {
+func PlannedThreats(salas, salasPorAmeaca int) (int, error) {
 	if salas <= 0 {
 		return 0, fmt.Errorf("a masmorra precisa de pelo menos 1 sala, veio %d", salas)
 	}

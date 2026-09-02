@@ -81,7 +81,7 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 	//
 	// A conferência é sobre o RESULTADO — a ficha depois da escrita —, e por
 	// isso ela roda com o patch já aplicado sobre o DTO carregado.
-	if msg := s.escolhaInvalidaDepoisDoPatch(r, row, resp); msg != "" {
+	if msg := s.invalidChoiceAfterPatch(r, row, resp); msg != "" {
 		plataforma.WriteFieldError(w, http.StatusBadRequest, msg,
 			plataforma.FieldErrorMap{"classPowers": {msg}})
 		return
@@ -111,7 +111,7 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"proficiencies": {"proficiencies must be an array"}})
 		return
 	}
-	proficiencies, unknown, err := s.guardaAsProficiencias(r.Context(), row.ID, body.Proficiencies)
+	proficiencies, unknown, err := s.saveProficiencies(r.Context(), row.ID, body.Proficiencies)
 	if len(unknown) > 0 {
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"proficiencies": unknown})
 		return
@@ -123,7 +123,7 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"proficiencies": proficiencies})
 }
 
-// guardaAsProficiencias valida contra o catálogo, tira as repetidas e grava.
+// saveProficiencies valida contra o catálogo, tira as repetidas e grava.
 //
 // Extraída na ALE-272 (fatia 2) porque a ficha em Datastar passou a gravar
 // proficiencia pelo mesmo caminho, e a regra e uma so: o painel do piloto e o
@@ -133,7 +133,7 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 //
 // Devolve a lista de DESCONHECIDAS separada do erro porque as duas respostas sao
 // diferentes: categoria invalida e 422 com o campo, falha de banco e 500.
-func (s *Server) guardaAsProficiencias(
+func (s *Server) saveProficiencies(
 	ctx context.Context, id int64, categorias []string,
 ) (string, []string, error) {
 	var unknown []string
@@ -171,13 +171,13 @@ func compactJSON(raw json.RawMessage) string {
 	return string(b)
 }
 
-// escolhaInvalidaDepoisDoPatch aplica o patch sobre a ficha carregada e devolve
+// invalidChoiceAfterPatch aplica o patch sobre a ficha carregada e devolve
 // a frase da recusa, ou "" quando ela fica válida.
 //
 // Ele lê as colunas do `resp`, que é o que o handler já montou para devolver ao
 // cliente: um segundo mapeamento de nome de coluna daria duas listas para
 // manter iguais.
-func (s *Server) escolhaInvalidaDepoisDoPatch(
+func (s *Server) invalidChoiceAfterPatch(
 	r *http.Request, row sqlcgen.Character, patch map[string]string,
 ) string {
 	dto, err := s.LoadCharacter(r.Context(), row)

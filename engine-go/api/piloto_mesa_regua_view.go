@@ -40,8 +40,8 @@ const (
 // era verdade para toda ferramenta que ainda não existia. Uma lista escrita à mão
 // no `.templ` teria o mesmo defeito adiado — a espécie nova nasceria fora dela.
 func oPincelEstaLigado() string {
-	nomes := make([]string, 0, len(tabuleiro.EspeciesDeTerreno))
-	for _, e := range tabuleiro.EspeciesDeTerreno {
+	nomes := make([]string, 0, len(tabuleiro.TerrainKinds))
+	for _, e := range tabuleiro.TerrainKinds {
 		nomes = append(nomes, fmt.Sprintf("%q", string(e.ID)))
 	}
 	return fmt.Sprintf("[%s].includes($ferramenta)", strings.Join(nomes, ", "))

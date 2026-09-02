@@ -15,14 +15,14 @@ import "testing"
 func TestTheNextLetterSkipsTheUsedOnesInsteadOfCounting(t *testing.T) {
 	// "A" livre porque o mapa está vazio — o CONTROLE de que a função responde
 	// alguma coisa antes de eu afirmar o caso difícil.
-	if got := ProximaLetraDeMarcador(nil); got != "A" {
+	if got := NextMarkerLetter(nil); got != "A" {
 		t.Fatalf("mapa vazio devolveu %q, esperado \"A\"", got)
 	}
 
 	// A ARMADILHA: dois marcadores no mapa, mas o "B" foi apagado. Contar daria
 	// "C" e deixaria o "B" órfão para sempre; o certo é a primeira LIVRE.
 	mapa := []BoardMarker{{Text: "A"}, {Text: "C"}}
-	if got := ProximaLetraDeMarcador(mapa); got != "B" {
+	if got := NextMarkerLetter(mapa); got != "B" {
 		t.Errorf("com A e C no mapa saiu %q, esperado \"B\" — a regra está contando em vez de procurar", got)
 	}
 }
@@ -34,10 +34,10 @@ func TestWithTheLettersSpentTheLabelGivesUp(t *testing.T) {
 	}
 	// O CONTROLE: com 25 ainda há letra, senão "??" seria verdade sobre um laço
 	// que nunca entra.
-	if got := ProximaLetraDeMarcador(mapa[:25]); got != "Z" {
+	if got := NextMarkerLetter(mapa[:25]); got != "Z" {
 		t.Fatalf("com 25 usadas saiu %q, esperado \"Z\"", got)
 	}
-	if got := ProximaLetraDeMarcador(mapa); got != "??" {
+	if got := NextMarkerLetter(mapa); got != "??" {
 		t.Errorf("com as 26 usadas saiu %q, esperado \"??\"", got)
 	}
 }
@@ -50,20 +50,20 @@ func TestWithTheLettersSpentTheLabelGivesUp(t *testing.T) {
 // do mesmo lugar e não podem divergir — divergir foi exatamente o defeito, só
 // que entre o domínio e a tela.
 func TestTheColorPredicateFollowsTheList(t *testing.T) {
-	if len(CoresDeMarcador) == 0 {
+	if len(MarkerColors) == 0 {
 		t.Fatal("a lista está vazia — não há o que medir")
 	}
-	for _, c := range CoresDeMarcador {
-		if !CorDeMarcadorConhecida(c.ID) {
+	for _, c := range MarkerColors {
+		if !KnownMarkerColor(c.ID) {
 			t.Errorf("a cor %q está na lista e a função não a reconhece", c.ID)
 		}
 	}
 	for _, torta := range []string{"gold", "carmesim", "", "red"} {
-		if CorDeMarcadorConhecida(torta) {
+		if KnownMarkerColor(torta) {
 			t.Errorf("a cor %q passou pelo conjunto fechado", torta)
 		}
 	}
-	if !CorDeMarcadorConhecida(CorPadraoDeMarcador()) {
+	if !KnownMarkerColor(DefaultMarkerColor()) {
 		t.Error("o PADRÃO não está na lista — quem manda cor torta cairia numa cor que não existe")
 	}
 }

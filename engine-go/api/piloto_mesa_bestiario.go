@@ -157,8 +157,8 @@ func mandaParaAMesa(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, err
 	if m == nil {
 		return nil, fmt.Errorf("criatura %q não está no bestiário", envio.Criatura)
 	}
-	if err := aovivo.ValidaCombatenteNovo(aovivo.CombatenteNovo{
-		Rotulo: m.Name, Iniciativa: envio.Iniciativa, PV: envio.PV, Tipo: "npc",
+	if err := aovivo.ValidateCombatantDraft(aovivo.CombatantDraft{
+		Label: m.Name, Initiative: envio.Iniciativa, HP: envio.PV, Kind: "npc",
 	}); err != nil {
 		return nil, err
 	}

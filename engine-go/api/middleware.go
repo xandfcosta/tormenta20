@@ -60,7 +60,7 @@ func (s *Server) sessionUser(r *http.Request) (AuthUser, error) {
 	return s.authUser(user), nil
 }
 
-// requirePagina é o `requireAuth` das PÁGINAS: quem não tem sessão vai para a
+// requirePage é o `requireAuth` das PÁGINAS: quem não tem sessão vai para a
 // porta, lembrando para onde ia.
 //
 // A diferença não é cosmética. O `requireAuth` responde um JSON 401, que é a
@@ -70,7 +70,7 @@ func (s *Server) sessionUser(r *http.Request) (AuthUser, error) {
 //
 // Vale para TODA página do Datastar, e não só para o Hub — a Mesa e a
 // administração tinham a mesma aresta desde o piloto.
-func (s *Server) requirePagina(next http.Handler) http.Handler {
+func (s *Server) requirePage(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := s.sessionUser(r)
 		if err != nil {

@@ -235,7 +235,7 @@ func (s *Server) handleStartSession(w http.ResponseWriter, r *http.Request) {
 	// A DECISÃO mora no `sessao_ciclo.go` desde a ALE-269: a Mesa em Datastar
 	// precisa dela sem reescrevê-la, e duas telas decidindo por conta própria o
 	// que "iniciar" significa é como nasce a divergência que ninguém nota.
-	updated, err := s.IniciaASessao(r.Context(), sess)
+	updated, err := s.StartSession(r.Context(), sess)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not start session")
 		return
@@ -261,7 +261,7 @@ func (s *Server) handleEndSession(w http.ResponseWriter, r *http.Request) {
 	// A RECUSA do "planejada" continua sendo 400, e a mensagem mudou de língua
 	// junto com a extração — ela agora sai do `EncerraASessao`, que é quem
 	// conhece a regra. O status é o mesmo de antes.
-	updated, err := s.EncerraASessao(r.Context(), sess)
+	updated, err := s.EndSession(r.Context(), sess)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
@@ -284,7 +284,7 @@ func (s *Server) handleClearTracker(w http.ResponseWriter, r *http.Request) {
 	}
 	// A REGRA — incluindo o `Forget` do cache, sem o qual a fila velha continua
 	// servida — mora no `sessao_ciclo.go` desde a ALE-269.
-	if err := s.ReiniciaOCombate(r.Context(), sid); err != nil {
+	if err := s.RestartCombat(r.Context(), sid); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not clear tracker")
 		return
 	}

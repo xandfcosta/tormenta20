@@ -14,7 +14,7 @@ import (
 // marcadoresDoMapa lê o estado depois do gesto.
 func marcadoresDoMapa(t *testing.T, f pilotoFixture) []tabuleiro.BoardMarker {
 	t.Helper()
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
 		t.Fatal("não há tabuleiro — o gesto não tinha onde acontecer")
 	}
@@ -152,7 +152,7 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 		}
 	}
 	marcadores := marcadoresDoMapa(t, f)
-	if len(marcadores) != 1 || !marcadores[0].Hidden || marcadores[0].Color != tabuleiro.CorPadraoDeMarcador() {
+	if len(marcadores) != 1 || !marcadores[0].Hidden || marcadores[0].Color != tabuleiro.DefaultMarkerColor() {
 		t.Errorf("o mapa mudou apesar dos 403: %+v", marcadores)
 	}
 }

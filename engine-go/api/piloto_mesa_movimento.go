@@ -104,7 +104,7 @@ func (s *Server) paradasDaProposta(c mesaComando, tokenID string) ([]engine.Squa
 }
 
 func (s *Server) propoePorParadas(c mesaComando, tokenID string, paradas []engine.Square) (*tabuleiro.BoardState, error) {
-	return s.boards.ProposeMoveComParadas(c.R.Context(), c.SessionID, c.TabuleiroID,
+	return s.boards.ProposeMoveWithStops(c.R.Context(), c.SessionID, c.TabuleiroID,
 		s.sessions.GetState(c.SessionID), tokenID, paradas, s.quemMove(c), 0)
 }
 

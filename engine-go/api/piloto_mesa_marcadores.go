@@ -47,8 +47,8 @@ func marcaOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	}
 	return st.boards.AddMarker(c.R.Context(), c.SessionID, c.TabuleiroID, tabuleiro.BoardMarker{
 		X: casa.X, Y: casa.Y,
-		Text:  tabuleiro.ProximaLetraDeMarcador(b.Markers),
-		Color: tabuleiro.CorPadraoDeMarcador(),
+		Text:  tabuleiro.NextMarkerLetter(b.Markers),
+		Color: tabuleiro.DefaultMarkerColor(),
 		// ESCONDIDO ao nascer, e é a razão de o marcador existir.
 		Hidden: true,
 	})
@@ -65,7 +65,7 @@ func revelaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 		return nil, err
 	}
 	return st.boards.UpdateMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID,
-		tabuleiro.RevelacaoDeMarcador(!marcador.Hidden))
+		tabuleiro.MarkerReveal(!marcador.Hidden))
 }
 
 // pintaOMarcador troca a cor.
@@ -78,11 +78,11 @@ func pintaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	// A RECUSA é aqui e explícita, apesar de o `UpdateMarker` ignorar cor
 	// desconhecida: ignorar em silêncio é um clique que não faz nada e não diz
 	// nada, que o mestre lê como tela travada.
-	if !tabuleiro.CorDeMarcadorConhecida(cor) {
+	if !tabuleiro.KnownMarkerColor(cor) {
 		return nil, fmt.Errorf("a cor %q não existe; as do mapa são %s", cor, coresEmPortugues())
 	}
 	return st.boards.UpdateMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID,
-		tabuleiro.CorNovaDeMarcador(cor))
+		tabuleiro.NewMarkerColor(cor))
 }
 
 // apagaOMarcador tira o ponto do mapa.
@@ -118,7 +118,7 @@ func marcadorDaURL(st *Server, c mesaComando) (tabuleiro.BoardMarker, error) {
 // dizer o que era esperado, não só o que veio errado.
 func coresEmPortugues() string {
 	nomes := ""
-	for i, c := range tabuleiro.CoresDeMarcador {
+	for i, c := range tabuleiro.MarkerColors {
 		if i > 0 {
 			nomes += ", "
 		}

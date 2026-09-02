@@ -17,10 +17,10 @@ import (
 //
 // O endereço mora AQUI (ALE-278): a cena é a dona do que ela atende.
 func Routes(r chi.Router, s Scene) {
-	r.Get("/grimorio", s.handleGrimorio)
+	r.Get("/grimorio", s.handleGrimoire)
 }
 
-func (s Scene) handleGrimorio(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleGrimoire(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Grimório",
 		Forma:         ui.ShellDense,
@@ -31,5 +31,5 @@ func (s Scene) handleGrimorio(w http.ResponseWriter, r *http.Request) {
 			s.deps.Asset("grimorio.js"),
 			s.deps.Asset("pecas-solid.js"),
 		},
-	}, grimorio())
+	}, grimoire())
 }

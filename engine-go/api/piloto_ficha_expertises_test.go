@@ -260,7 +260,7 @@ func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 		{"Ferreiro", "já tem"},
 	}
 	for _, caso := range casos {
-		err := f.s.guardaOOficioNovo(context.Background(), id, caso.nome)
+		err := f.s.saveNewCraft(context.Background(), id, caso.nome)
 		if err == nil {
 			t.Errorf("o nome %q foi aceito", caso.nome)
 			continue
@@ -269,7 +269,7 @@ func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 			t.Errorf("o nome %q deu %q, e a mensagem devia falar de %q", caso.nome, err, caso.erro)
 		}
 	}
-	if err := f.s.guardaOOficioNovo(context.Background(), id, "Marinheiro"); err != nil {
+	if err := f.s.saveNewCraft(context.Background(), id, "Marinheiro"); err != nil {
 		t.Errorf("um nome legítimo foi recusado: %v", err)
 	}
 }

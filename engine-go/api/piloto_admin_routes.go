@@ -123,7 +123,7 @@ func (s *Server) handleAdminPilotoRedefinir(w http.ResponseWriter, r *http.Reque
 	}
 	sse := datastar.NewSSE(w, r)
 	reset, err := s.mintPasswordReset(r.Context(), id, currentUser(r).ID)
-	if errors.Is(err, errUsuarioInexistente) {
+	if errors.Is(err, errUserNotFound) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": "Essa conta não existe mais."})
 		return
 	}

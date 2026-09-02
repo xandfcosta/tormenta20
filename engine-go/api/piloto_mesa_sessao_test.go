@@ -47,7 +47,7 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 	// ENCERRADA: o verbo muda de PALAVRA, porque o gesto mudou de sentido —
 	// "Reabrir" e não "Iniciar", que é o que o servidor faz de verdade.
 	sess, _ := f.s.queries.GetSession(ctx, f.sessionID)
-	if _, err := f.s.EncerraASessao(ctx, sess); err != nil {
+	if _, err := f.s.EndSession(ctx, sess); err != nil {
 		t.Fatalf("encerrar: %v", err)
 	}
 	encerrada := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()

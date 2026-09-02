@@ -34,10 +34,10 @@ func npc(label string, init int) aovivo.InitiativeEntry {
 	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "npc"}
 }
 
-// contadorDeIds gera ids previsíveis ("e1", "e2", …) para os testes deste
+// idCounter gera ids previsíveis ("e1", "e2", …) para os testes deste
 // pacote. Andaime local: o irmão dele vive no `tabuleiro/` desde a ALE-254, e
 // teste não exporta para o vizinho.
-func contadorDeIds() func() string {
+func idCounter() func() string {
 	n := 0
 	return func() string {
 		n++
@@ -45,7 +45,7 @@ func contadorDeIds() func() string {
 	}
 }
 
-func combatenteDeFicha(label string, init int, charID int64) aovivo.InitiativeEntry {
+func sheetCombatant(label string, init int, charID int64) aovivo.InitiativeEntry {
 	c := charID
 	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
 }

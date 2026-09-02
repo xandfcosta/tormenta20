@@ -197,7 +197,7 @@ func oModDeAtributoDaRaca(nome string) *book.RaceAttribute {
 	racas, _, _ := book.CharacterCatalogs()
 	for i, r := range racas {
 		if r.Name == nome || r.ID == nome {
-			return &racas[i].AtributoMod
+			return &racas[i].AttributeMod
 		}
 	}
 	return nil

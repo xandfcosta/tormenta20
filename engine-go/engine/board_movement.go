@@ -215,17 +215,17 @@ func abs(v int) int {
 //
 //	ReachableSquares(Square{0, 0}, 2, MoveTerrain{}) // → 12 quadrados (o losango de raio 2)
 func ReachableSquares(from Square, budget int, terrain MoveTerrain) []Square {
-	return aoAlcanceAte(custoAteCadaCasa(from, budget, terrain), from, 0, budget)
+	return withinReach(costToEachSquare(from, budget, terrain), from, 0, budget)
 }
 
-// custoAteCadaCasa é o Dijkstra cru: cada casa alcançável e o que ela CUSTOU.
+// costToEachSquare é o Dijkstra cru: cada casa alcançável e o que ela CUSTOU.
 //
 // Separado do `ReachableSquares` porque o custo por casa é o que permite pintar
 // o alcance em FAIXAS (ALE-203): a mesma busca responde "até onde vou com uma
 // ação de movimento" e "até onde vou gastando a ação padrão também", e rodá-la
 // duas vezes para saber as duas coisas seria pagar o dobro por metade da
 // resposta — e abriria a porta para as duas contas divergirem.
-func custoAteCadaCasa(from Square, budget int, terrain MoveTerrain) map[Square]int {
+func costToEachSquare(from Square, budget int, terrain MoveTerrain) map[Square]int {
 	cost := map[Square]int{from: 0}
 	if budget <= 0 {
 		return cost
@@ -253,12 +253,12 @@ func custoAteCadaCasa(from Square, budget int, terrain MoveTerrain) map[Square]i
 	return cost
 }
 
-// aoAlcanceAte peneira as casas cujo custo cai na faixa `(minimo, maximo]`.
+// withinReach peneira as casas cujo custo cai na faixa `(minimo, maximo]`.
 //
 // A ponta de baixo é ABERTA e a de cima FECHADA, e é o que faz duas faixas
 // vizinhas cobrirem tudo sem pintar a mesma casa duas vezes: o ouro é
 // `(0, deslocamento]` e o azul é `(deslocamento, 2×deslocamento]`.
-func aoAlcanceAte(cost map[Square]int, from Square, minimo, maximo int) []Square {
+func withinReach(cost map[Square]int, from Square, minimo, maximo int) []Square {
 	out := make([]Square, 0, len(cost))
 	for square, c := range cost {
 		if square != from && c > minimo && c <= maximo {
@@ -284,8 +284,8 @@ func ReachableInBands(from Square, orcamento int, terrain MoveTerrain) (dentro, 
 	if orcamento <= 0 {
 		return []Square{}, []Square{}
 	}
-	cost := custoAteCadaCasa(from, 2*orcamento, terrain)
-	return aoAlcanceAte(cost, from, 0, orcamento), aoAlcanceAte(cost, from, orcamento, 2*orcamento)
+	cost := costToEachSquare(from, 2*orcamento, terrain)
+	return withinReach(cost, from, 0, orcamento), withinReach(cost, from, orcamento, 2*orcamento)
 }
 
 func neighbours(s Square) []Square {
@@ -313,7 +313,7 @@ func sortSquares(list []Square) {
 	})
 }
 
-// CaminhoEntre desenha por onde a peça anda de um quadrado a outro (ALE-264).
+// PathBetween desenha por onde a peça anda de um quadrado a outro (ALE-264).
 //
 // Isto é GEOMETRIA e não regra: quem COBRA o caminho é o `PathCost`, logo acima.
 // A distinção é a mesma da ALE-104 — uma segunda implementação da regra da
@@ -332,19 +332,19 @@ func sortSquares(list []Square) {
 // caminho do NAVEGADOR: a peça arrastada manda só o DESTINO, e o servidor diz
 // por onde ela passou e quanto custou. O cliente deixa de ter opinião sobre a
 // régua do livro.
-func CaminhoEntre(de, ate Square) []Square {
+func PathBetween(de, ate Square) []Square {
 	caminho := []Square{de}
 	x, y := de.X, de.Y
 	for x != ate.X || y != ate.Y {
-		x += sinalDe(ate.X - x)
-		y += sinalDe(ate.Y - y)
+		x += signOf(ate.X - x)
+		y += signOf(ate.Y - y)
 		caminho = append(caminho, Square{X: x, Y: y})
 	}
 	return caminho
 }
 
-// sinalDe é o `Math.sign` que o Go não tem. Devolve -1, 0 ou 1.
-func sinalDe(n int) int {
+// signOf é o `Math.sign` que o Go não tem. Devolve -1, 0 ou 1.
+func signOf(n int) int {
 	switch {
 	case n > 0:
 		return 1
@@ -354,7 +354,7 @@ func sinalDe(n int) int {
 	return 0
 }
 
-// CaminhoPorParadas costura os segmentos entre PARADAS consecutivas (ALE-266).
+// PathThroughStops costura os segmentos entre PARADAS consecutivas (ALE-266).
 //
 // O movimento não é um destino: é uma sequência de lugares onde a peça parou.
 // Só as paradas são guardadas, e o caminho entre duas consecutivas é desenhado
@@ -370,19 +370,19 @@ func sinalDe(n int) int {
 // Uma parada IGUAL à anterior (quem soltou a peça onde ela já estava) não
 // acrescenta nada, e isso cai fora sozinho: o `CaminhoEntre` devolve um quadrado
 // só e a emenda o descarta.
-func CaminhoPorParadas(paradas []Square) []Square {
+func PathThroughStops(paradas []Square) []Square {
 	if len(paradas) == 0 {
 		return nil
 	}
 	caminho := []Square{paradas[0]}
 	for i := 1; i < len(paradas); i++ {
-		trecho := CaminhoEntre(paradas[i-1], paradas[i])
+		trecho := PathBetween(paradas[i-1], paradas[i])
 		caminho = append(caminho, trecho[1:]...)
 	}
 	return caminho
 }
 
-// AlcanceDaProximaParada é o que a tela precisa mostrar ENQUANTO a pessoa monta
+// ReachFromStops é o que a tela precisa mostrar ENQUANTO a pessoa monta
 // o movimento: de onde ela está agora, até onde ainda dá para andar.
 //
 // Sem isto o defeito é o que o dono descreveu: a pessoa empilha paradas, o total
@@ -393,13 +393,13 @@ func CaminhoPorParadas(paradas []Square) []Square {
 // restante pode ser ZERO: aí o alcance é VAZIO — a tela diz "acabou" em vez de
 // oferecer casas que o servidor recusaria. Ele nunca inclui o quadrado onde a
 // peça está, porque ficar parado não é para onde se pode andar.
-func AlcanceDaProximaParada(paradas []Square, orcamento int, terreno MoveTerrain) (dentro, segundo []Square, restante int) {
+func ReachFromStops(paradas []Square, orcamento int, terreno MoveTerrain) (dentro, segundo []Square, restante int) {
 	if len(paradas) == 0 {
 		return nil, nil, orcamento
 	}
 	ultima := paradas[len(paradas)-1]
-	gasto := PathCost(CaminhoPorParadas(paradas), terreno, -1).Squares
-	restante = semNegativo(orcamento - gasto)
+	gasto := PathCost(PathThroughStops(paradas), terreno, -1).Squares
+	restante = atLeastZero(orcamento - gasto)
 	if orcamento < 0 {
 		return nil, nil, restante
 	}
@@ -408,13 +408,13 @@ func AlcanceDaProximaParada(paradas []Square, orcamento int, terreno MoveTerrain
 	// movimento, e o azul é o que sobra das duas juntas (p233). Quando o caminho
 	// já passou do deslocamento, o ouro seca e só o azul continua oferecendo
 	// casa — que é exatamente a leitura certa da cena.
-	cost := custoAteCadaCasa(ultima, semNegativo(2*orcamento-gasto), terreno)
-	return aoAlcanceAte(cost, ultima, 0, restante),
-		aoAlcanceAte(cost, ultima, restante, semNegativo(2*orcamento-gasto)),
+	cost := costToEachSquare(ultima, atLeastZero(2*orcamento-gasto), terreno)
+	return withinReach(cost, ultima, 0, restante),
+		withinReach(cost, ultima, restante, atLeastZero(2*orcamento-gasto)),
 		restante
 }
 
-func semNegativo(n int) int {
+func atLeastZero(n int) int {
 	if n < 0 {
 		return 0
 	}

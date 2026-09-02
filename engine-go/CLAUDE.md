@@ -679,6 +679,27 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   guarda teria seguido verde medindo as cenas e ignorando o botão, o campo e a
   casca — os arquivos onde uma tinta errada aparece em TODA tela.
 
+- **E a CLASSE DE ESCOPO não é uma tinta, então o guarda de tinta não a via.**
+  `scene-grimorio` é a condição para os tokens existirem — o `@custom-variant
+  dark` do `index.css` é `&:is(.dark *, .scene-grimorio, …)`. Sem ela, nenhum
+  token resolve e o app inteiro sai sem cor, sem contraste e com outro realce de
+  foco. Uma varredura de identificadores trocou `grimorio` por `grimoire` com
+  `\bgrimorio\b`, e **o hífen é fronteira de palavra**: `scene-grimorio` foi
+  junto (ALE-283). O `go build`, o `templ generate`, o `go vet`, a suíte Go
+  inteira e o próprio guarda de tinta ficaram VERDES; quem acusou foi o e2e, com
+  oito casos de leiaute e contraste. O `TestEveryScopeClassExistsInTheStylesheet`
+  fecha o buraco, e ele lê só o que está dentro de `class=` — a primeira versão
+  varria o arquivo inteiro e reprovava `scene-title`, `scene-shell` e
+  `scene-content`, que são valores de `data-slot` e não classes.
+
+  > **A lição maior é sobre renome em massa, e vale para a próxima varredura:**
+  > `\bnome\b` alcança muito mais que identificador Go. Numa entrada só de mapa,
+  > `grimorio` estragou TRÊS coisas de naturezas diferentes — os tokens da
+  > paleta, a ROTA `/grimorio` (endereço que alguém favorita) e o nome do arquivo
+  > `grimorio.js` no disco. Renome de símbolo Go se faz com `gopls rename`, que é
+  > semântico; troca textual fica só para o que o `gopls` não alcança — o
+  > componente `templ` —, e aí o alvo tem de ser um nome COMPOSTO e único.
+
 ## `web/forge`: a primeira cena a sair, e o formato que as próximas seguem
 
 A forja tentou sair primeiro e não conseguiu — ela precisava de `racaDoLivro`,

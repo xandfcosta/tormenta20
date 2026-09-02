@@ -53,11 +53,11 @@ func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
 // floating/ascendência choices) as `attribute` modifiers. Empty on incomplete
 // choices, matching the TS try/catch.
 func (c *Catalogs) raceAttributeMods(raceName string, choice raceAttrChoice) []Modifier {
-	raca := c.racaByName(raceName)
+	raca := c.raceEntryByName(raceName)
 	if raca == nil {
 		return []Modifier{}
 	}
-	deltas, err := resolveAtributoDeltas(raca, choice.floatingPicks, choice.ascendencia)
+	deltas, err := resolveAttributeDeltas(raca, choice.floatingPicks, choice.ascendencia)
 	if err != nil {
 		return []Modifier{}
 	}
@@ -89,7 +89,7 @@ func (c *Catalogs) deformidadeModifiers(raceName string, draft *deformidadeStore
 		}
 		out = append(out, Modifier{
 			Target:    ModifierTarget{K: "expertise", Name: n},
-			Amount:    deformidadePericiaBonus,
+			Amount:    deformidadeExpertiseBonus,
 			BonusType: "untyped",
 			Note:      "Deformidade",
 		})

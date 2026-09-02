@@ -26,26 +26,26 @@ import (
 // fora do formulário deixou de funcionar.
 
 const (
-	nomeDeCampanhaMax      = 120
-	descricaoDeCampanhaMax = 2000
+	maxCampaignNameLength        = 120
+	maxCampaignDescriptionLength = 2000
 )
 
 var (
-	errNomeDeCampanha      = errors.New("name must be between 1 and 120 characters")
-	errDescricaoDeCampanha = errors.New("description must be at most 2000 characters")
+	errCampaignName        = errors.New("name must be between 1 and 120 characters")
+	errCampaignDescription = errors.New("description must be at most 2000 characters")
 )
 
-// nomeDeCampanha apara e valida. O apara vem ANTES da medida, senão um nome de
+// campaignName apara e valida. O apara vem ANTES da medida, senão um nome de
 // puros espaços passa no `!= ""` e a crônica nasce sem título no livro.
-func nomeDeCampanha(bruto string) (string, error) {
+func campaignName(bruto string) (string, error) {
 	nome := strings.TrimSpace(bruto)
-	if nome == "" || len([]rune(nome)) > nomeDeCampanhaMax {
-		return "", errNomeDeCampanha
+	if nome == "" || len([]rune(nome)) > maxCampaignNameLength {
+		return "", errCampaignName
 	}
 	return nome, nil
 }
 
-// descricaoDeCampanha apara e valida, devolvendo NULL para texto vazio.
+// campaignDescription apara e valida, devolvendo NULL para texto vazio.
 //
 // Vazio é NULL e não string vazia nos dois caminhos (criar e editar), senão o
 // cliente lê `""` de um e `null` do outro para exatamente a mesma entrada.
@@ -53,12 +53,12 @@ func nomeDeCampanha(bruto string) (string, error) {
 // A medida é em RUNAS e não em bytes: "Coração" tem 7 caracteres para quem
 // escreve e 8 bytes para quem conta errado, e um limite que encolhe conforme os
 // acentos é um limite que mente.
-func descricaoDeCampanha(bruto *string) (sql.NullString, error) {
+func campaignDescription(bruto *string) (sql.NullString, error) {
 	if bruto == nil {
 		return sql.NullString{}, nil
 	}
-	if len([]rune(*bruto)) > descricaoDeCampanhaMax {
-		return sql.NullString{}, errDescricaoDeCampanha
+	if len([]rune(*bruto)) > maxCampaignDescriptionLength {
+		return sql.NullString{}, errCampaignDescription
 	}
 	return trimOrNull(bruto), nil
 }

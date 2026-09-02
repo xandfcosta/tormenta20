@@ -24,7 +24,7 @@ import (
 // peça, e o que o grupo dispensa (a regra de deslocamento) é exatamente o que
 // protege o turno dele.
 
-// PecasNoRetangulo são os ids das peças cujo CORPO toca o retângulo.
+// TokensInRectangle são os ids das peças cujo CORPO toca o retângulo.
 //
 // O corpo e não a âncora: uma Colossal ocupa 6×6 (p107), e marcá-la só quando o
 // laço pega a quina dela faria o mestre desenhar em volta do dragão e não pegar
@@ -32,9 +32,9 @@ import (
 //
 // Exemplo:
 //
-//	PecasNoRetangulo(b, engine.Square{}, engine.Square{X: 5, Y: 5})
+//	TokensInRectangle(b, engine.Square{}, engine.Square{X: 5, Y: 5})
 //	// → os ids das peças que aparecem no quadrado de (0,0) a (5,5)
-func PecasNoRetangulo(b *BoardState, de, ate engine.Square) []string {
+func TokensInRectangle(b *BoardState, de, ate engine.Square) []string {
 	if b == nil {
 		return nil
 	}
@@ -51,7 +51,7 @@ func PecasNoRetangulo(b *BoardState, de, ate engine.Square) []string {
 	return ids
 }
 
-// MoveOGrupo desloca as peças pelo MESMO delta, numa gravação só.
+// MoveGroup desloca as peças pelo MESMO delta, numa gravação só.
 //
 // Uma gravação porque o gesto é UM: seis `apply` fariam a mesa receber seis
 // quadros, cada um com metade da horda no lugar novo e metade no velho.
@@ -63,7 +63,7 @@ func PecasNoRetangulo(b *BoardState, de, ate engine.Square) []string {
 //
 // O `DeOndeVeio` é gravado como no pouso de uma peça só: o "voltar para onde
 // estava" do menu (ALE-206) tem de funcionar depois de um movimento de grupo.
-func MoveOGrupo(b *BoardState, ids []string, dx, dy int) error {
+func MoveGroup(b *BoardState, ids []string, dx, dy int) error {
 	if b == nil {
 		return fmt.Errorf("não há tabuleiro para mover o grupo")
 	}

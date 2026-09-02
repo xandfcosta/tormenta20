@@ -102,13 +102,13 @@ func Fresh(t *testing.T) string {
 			"Sem ele cada teste migraria do zero, que é o que a ALE-260 tirou da conta.")
 	}
 	destino := filepath.Join(t.TempDir(), "test.db")
-	if err := copia(molde, destino); err != nil {
+	if err := copyFile(molde, destino); err != nil {
 		t.Fatalf("copiar o molde do banco para %q: %v", destino, err)
 	}
 	return destino
 }
 
-func copia(de, para string) error {
+func copyFile(de, para string) error {
 	origem, err := os.Open(de)
 	if err != nil {
 		return fmt.Errorf("abrir %q: %w", de, err)

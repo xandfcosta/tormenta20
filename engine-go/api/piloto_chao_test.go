@@ -34,7 +34,7 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 		t.Fatalf("o CSS do piloto não tem nenhuma classe .chao-* — o guarda está lendo o arquivo errado (%d bytes)", len(folha))
 	}
 
-	for _, chao := range tabuleiro.ChoesDoLugar {
+	for _, chao := range tabuleiro.PlaceGrounds {
 		if !strings.Contains(folha, ".chao-"+chao.ID) {
 			t.Errorf("o chão %q (%s) é oferecido na tela e o CSS não sabe pintá-lo: falta .chao-%s",
 				chao.ID, chao.Rotulo, chao.ID)

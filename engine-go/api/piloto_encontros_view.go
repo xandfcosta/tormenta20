@@ -75,15 +75,15 @@ func (v encontrosView) ND() float64 {
 	return total
 }
 
-func (v encontrosView) Dificuldade() engine.Dificuldade {
-	return engine.DificuldadeDoEncontro(v.ND() - float64(v.Nivel))
+func (v encontrosView) Dificuldade() engine.Difficulty {
+	return engine.EncounterDifficulty(v.ND() - float64(v.Nivel))
 }
 
 // XPPorPersonagem assume VITÓRIA: o construtor planeja o combate, e planejar
 // perder não é o caso de uso. O desfecho existe na regra para quando a sessão
 // registrar o resultado.
 func (v encontrosView) XPPorPersonagem() int {
-	return engine.XPDoEncontro(v.ND(), v.Nivel, v.Grupo, engine.Vitoria)
+	return engine.EncounterXP(v.ND(), v.Nivel, v.Grupo, engine.Vitoria)
 }
 
 func (v encontrosView) Vazio() bool { return len(v.Linhas) == 0 }
@@ -112,7 +112,7 @@ func carregaEncontros(nivel, grupo int, linhas []linhaDoEncontro, busca string) 
 		v.Linhas = append(v.Linhas, grupoDoEncontro{
 			Verbete: m,
 			Qtd:     qtd,
-			ND:      engine.NDDeGrupo(m.ND, qtd),
+			ND:      engine.PartyChallengeLevel(m.ND, qtd),
 		})
 	}
 	// A busca do painel de adicionar só corre quando há termo: mostrar as 80
