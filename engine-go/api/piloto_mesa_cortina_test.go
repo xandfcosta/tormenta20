@@ -9,7 +9,7 @@ import (
 
 // Os guardas da CORTINA na Mesa (ALE-202, portada na ALE-269).
 //
-// O que estes casos protegem não é a regra — ela já está no `cortina_test.go` do
+// O que estes casos protegem não é a regra — ela já está no `curtain_test.go` do
 // `tabuleiro/` e num guarda da própria Mesa. É o GESTO: o servidor sabia correr
 // a cortina desde a ALE-202 e o piloto não tinha um botão que a ligasse, então a
 // feature esteve no ar e invisível. Guarda de regra não pega isso; guarda de
@@ -76,7 +76,7 @@ func TestThePlayerDoesNotDrawTheCurtain(t *testing.T) {
 // transmite"), e a ausência é deliberada — eu tinha escrito um e o cortei.
 //
 // Ele media a VERSÃO do tabuleiro, que é comportamento do `SetCurtain` e já tem
-// dono no `tabuleiro/cortina_test.go`. Sabotei a economia no comando daqui e o
+// dono no `tabuleiro/curtain_test.go`. Sabotei a economia no comando daqui e o
 // caso continuou VERDE: ele afirmava uma garantia que não segurava, o que é pior
 // que teste nenhum porque parece cobertura.
 //

@@ -414,7 +414,7 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
    * segundo lado para comparar.
    *
    * A garantia não ficou órfã — ela desceu para onde é mais barata e mais
-   * exata. Os sete casos de `busca_test.go` foram conferidos um a um rodando o
+   * exata. Os sete casos de `api/search_test.go` foram conferidos um a um rodando o
    * `match-sorter` de verdade, incluindo o que mais surpreende: "tauron" casa
    * "Segredos de Wynlla" por subsequência na sinopse, e a biblioteca faz igual.
    * Comparar duas telas era a forma cara de afirmar isso enquanto as duas

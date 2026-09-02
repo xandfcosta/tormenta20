@@ -16,7 +16,7 @@ import (
 // O CICLO DA SESSÃO na Mesa em Datastar (ALE-269, superfícies 3, 4 e 11).
 //
 // Iniciar, encerrar, renomear, reiniciar o combate e sair. A REGRA de cada um
-// mora no `sessao_ciclo.go` — aqui é só o caminho até ela.
+// mora no `session_lifecycle.go` — aqui é só o caminho até ela.
 //
 // EXCLUIR é o único que não passa por `@post`: ele NAVEGA para fora da sessão, e
 // um comando de Datastar responde com remendo, não com destino. Ele é um `form`

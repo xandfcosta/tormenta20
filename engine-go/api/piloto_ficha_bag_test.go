@@ -17,7 +17,7 @@ import (
 // O que eles prendem é a REGRA e a DECISÃO de tela: os dois tetos da p141, o
 // eixo de equipar, a conta do dinheiro, e o que a tira faz com um item que já
 // está fora do teto. Os números da carga não são reafirmados aqui — eles vêm do
-// motor e têm guarda de regra própria em `engine/carga_rules_test.go`.
+// motor e têm guarda de regra própria em `engine/load_rules_test.go`.
 
 // aTelaDaMochila é a aba desenhada.
 func aTelaDaMochila(t *testing.T, f pilotoFixture, id int64) string {

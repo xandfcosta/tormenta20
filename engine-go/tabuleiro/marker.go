@@ -3,7 +3,7 @@ package tabuleiro
 // O MARCADOR — o ponto apontado no mapa (ALE-195). Ver GLOSSARIO.md: ele nasce
 // ESCONDIDO, porque marcar a armadilha na frente da mesa entrega a armadilha.
 //
-// Este arquivo nasceu do mesmo defeito que criou o `chao.go`, e desta vez ele
+// Este arquivo nasceu do mesmo defeito que criou o `ground.go`, e desta vez ele
 // tinha chegado à tela: a lista de cores existia DUAS vezes e as duas discordavam
 // — a autoridade (`AddMarker`) aceita `ouro/carmim/azul/verde` em pt-BR, e o
 // piloto tinha escrito `gold/red/green/blue/violet` à mão, no view e no CSS.

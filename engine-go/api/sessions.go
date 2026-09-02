@@ -232,7 +232,7 @@ func (s *Server) handleStartSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	// A DECISÃO mora no `sessao_ciclo.go` desde a ALE-269: a Mesa em Datastar
+	// A DECISÃO mora no `session_lifecycle.go` desde a ALE-269: a Mesa em Datastar
 	// precisa dela sem reescrevê-la, e duas telas decidindo por conta própria o
 	// que "iniciar" significa é como nasce a divergência que ninguém nota.
 	updated, err := s.StartSession(r.Context(), sess)
@@ -283,7 +283,7 @@ func (s *Server) handleClearTracker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// A REGRA — incluindo o `Forget` do cache, sem o qual a fila velha continua
-	// servida — mora no `sessao_ciclo.go` desde a ALE-269.
+	// servida — mora no `session_lifecycle.go` desde a ALE-269.
 	if err := s.RestartCombat(r.Context(), sid); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not clear tracker")
 		return

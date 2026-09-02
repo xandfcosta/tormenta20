@@ -124,7 +124,7 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 		Descricao: r.PostFormValue("description"),
 		Erros:     plataforma.FieldErrorMap{},
 	}
-	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campanha_regras.go`.
+	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign_text_rules.go`.
 	nome, err := campaignName(v.Nome)
 	if err != nil {
 		v.Erros["name"] = []string{"O nome é obrigatório e cabe em 120 caracteres."}

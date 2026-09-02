@@ -14,7 +14,7 @@ import (
 
 // Os guardas do EDITOR DE BLOCO (ALE-269).
 //
-// A forma do bloco tem guarda em `creature_block.go` (a validação) e a cópia do
+// A forma do bloco tem guarda em `creature/block.go` (a validação) e a cópia do
 // livro tem o oráculo do `piloto_verbete_para_bloco`. O que se prende aqui é o
 // que só existe DESDE o editor: que o rascunho atravessa os gestos de forma sem
 // perder o que estava digitado, que a AUSÊNCIA de mana sobrevive à ida e à volta
