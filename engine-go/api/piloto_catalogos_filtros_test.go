@@ -3,6 +3,7 @@ package api
 import (
 	"strings"
 	"t20engine/book"
+	"t20engine/web/bookui"
 	"testing"
 )
 
@@ -77,7 +78,7 @@ func TestTheFilterAddsWithinAndMultipliesAcross(t *testing.T) {
 }
 
 func quantasMagias(filtros map[string][]string) int {
-	v := carregaCatalogos(criteriosDoAcervo{Aba: "magias", Filtros: filtros}, enderecoDoLivro{})
+	v := carregaCatalogos(criteriosDoAcervo{Aba: "magias", Filtros: filtros}, bookui.BookAddress{})
 	return v.Achados
 }
 

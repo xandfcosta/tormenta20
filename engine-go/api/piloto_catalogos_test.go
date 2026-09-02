@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/book"
+	"t20engine/web/bookui"
 	"testing"
 )
 
@@ -99,7 +100,7 @@ func TestAnAccentDoesNotSplitTheSearch(t *testing.T) {
 // digitado na aba Condições dizia "nada encontrado" com a magia existindo. A
 // aba é para NAVEGAR sem termo; com termo, o assunto é o acervo inteiro.
 func TestSearchingSweepsTheFourCatalogs(t *testing.T) {
-	v := carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: "condicoes"}, enderecoDoLivro{})
+	v := carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: "condicoes"}, bookui.BookAddress{})
 	if !v.Buscando() {
 		t.Fatal("a cena não se considerou em busca")
 	}
@@ -131,7 +132,7 @@ func TestWithoutASearchOnlyTheOpenTabShows(t *testing.T) {
 		{"itens", "Itens", len(a.Itens)},
 	} {
 		t.Run(caso.aba, func(t *testing.T) {
-			v := carregaCatalogos(criteriosDoAcervo{Aba: caso.aba}, enderecoDoLivro{})
+			v := carregaCatalogos(criteriosDoAcervo{Aba: caso.aba}, bookui.BookAddress{})
 			if len(v.Grupos) != 1 {
 				t.Fatalf("%d grupos, quero 1", len(v.Grupos))
 			}
@@ -148,7 +149,7 @@ func TestWithoutASearchOnlyTheOpenTabShows(t *testing.T) {
 // TestAnInventedTabFallsBackToTheFirst: o `?aba=` é endereço e alguém o digita errado
 // — cair em tela vazia leria como catálogo quebrado.
 func TestAnInventedTabFallsBackToTheFirst(t *testing.T) {
-	v := carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "grimorios-proibidos"}, enderecoDoLivro{})
+	v := carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "grimorios-proibidos"}, bookui.BookAddress{})
 	if v.Aba != "condicoes" {
 		t.Errorf("aba %q, quero cair em condicoes", v.Aba)
 	}
@@ -250,7 +251,7 @@ func TestTheSearchInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes?busca=fogo", "")
-	esperados := carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, enderecoDoLivro{}).Achados
+	esperados := carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, bookui.BookAddress{}).Achados
 	if esperados == 0 {
 		t.Fatal("buscar fogo não acha nada: o dado mudou e o teste perdeu o sentido")
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"strings"
 	"t20engine/book"
+	"t20engine/web/bookui"
 	"t20engine/web/routes"
 	"t20engine/web/ui"
 	"testing"
@@ -55,13 +56,13 @@ func cenasDoPiloto(t *testing.T) map[string]string {
 
 	ctx := context.Background()
 	monta("bestiario", func() (string, error) {
-		return ui.RenderFragment(ctx, cenaDoBestiario(carregaBestiarioDe(routes.MasterBestiary, enderecoDoLivro{}, "", nil, book.CRMin, book.CRMax, "")))
+		return ui.RenderFragment(ctx, cenaDoBestiario(carregaBestiarioDe(routes.MasterBestiary, bookui.BookAddress{}, "", nil, book.CRMin, book.CRMax, "")))
 	})
 	monta("catalogos", func() (string, error) {
-		return ui.RenderFragment(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "condicoes"}, enderecoDoLivro{})))
+		return ui.RenderFragment(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "condicoes"}, bookui.BookAddress{})))
 	})
 	monta("catalogos-busca", func() (string, error) {
-		return ui.RenderFragment(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, enderecoDoLivro{})))
+		return ui.RenderFragment(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, bookui.BookAddress{})))
 	})
 	monta("encontros", func() (string, error) {
 		v := carregaEncontros(3, 4, []linhaDoEncontro{{ID: "ogro", Qtd: 2}}, "ogro")

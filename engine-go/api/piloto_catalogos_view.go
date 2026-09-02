@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/search"
+	"t20engine/web/bookui"
 
 	"t20engine/book"
 )
@@ -141,7 +142,7 @@ type catalogosView struct {
 	// Livro é o endereço do PDF servido (ALE-264). Zero valor = não há livro
 	// configurado, e aí o cartão mostra a página em texto puro — que é o que o
 	// mestre com o livro de papel na mesa usa.
-	Livro enderecoDoLivro
+	Livro bookui.BookAddress
 	// Aba só importa quando NÃO se está buscando: com termo digitado a cena
 	// mostra os quatro catálogos agrupados, que é a decisão que a ALE-22
 	// registrou — a versão em React filtrava só a aba ativa, e "bola de fogo"
@@ -160,7 +161,7 @@ func (v catalogosView) Buscando() bool { return strings.TrimSpace(v.Busca) != ""
 
 // carregaCatalogos monta a cena: os quatro catálogos quando há busca, um só
 // quando não há.
-func carregaCatalogos(c criteriosDoAcervo, livro enderecoDoLivro) catalogosView {
+func carregaCatalogos(c criteriosDoAcervo, livro bookui.BookAddress) catalogosView {
 	v := catalogosView{
 		Busca: c.Busca, Aba: abaConhecida(c.Aba), Livro: livro, Entrada: c.Entrada,
 		Acesos: c.Filtros,

@@ -7,10 +7,10 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
+	"t20engine/web/bookui"
 	"t20engine/web/routes"
 
 	"t20engine/plataforma"
@@ -30,56 +30,28 @@ import (
 // `#page=N`, que é justamente o que faz o botão apontar para a página certa, e
 // cobraria um mapa página→arquivo para sempre.
 
-// enderecoDoLivro é o endereço público do livro e a ABERTURA do arquivo.
+// O ENDEREÇO DO LIVRO mora em `web/bookui` desde a ALE-278.
 //
-// Zero valor significa "não há livro", e é ele que as cenas recebem quando
-// `LIVRO_PDF` não está configurado — por isso `naPagina` devolve string vazia
-// em vez de um link quebrado.
-type enderecoDoLivro struct {
-	Base     string
-	Abertura int
-}
-
-// naPagina devolve o endereço que abre o livro na página IMPRESSA pedida, com o
-// verbete destacado.
-//
-//	v.Livro.naPagina(289, "Lobo") // → "/livro/ler?p=289&t=Lobo"
-//
-// Aponta para o LEITOR e não para o PDF cru, e a troca é medida: o visualizador
-// do Chrome obedece `#page=N` e IGNORA `#search=` — não há como pedir destaque
-// por URL —, e ainda transfere o arquivo inteiro para mostrar uma página (85 MiB
-// contados no loopback). O leitor da casa (`frontend/src/piloto/leitor.ts`)
-// resolve os dois: destaca o termo e pede faixas.
-//
-// A ABERTURA não entra aqui: quem soma é o leitor, que fala em página impressa
-// com quem lê e em página de arquivo com o pdf.js. Ver
-// `plataforma.Config.LivroAbertura` para a medição do 6.
-func (l enderecoDoLivro) naPagina(pagina int, termo string) string {
-	if l.Base == "" || pagina <= 0 {
-		return ""
-	}
-	endereco := rotaDoLeitor + "?p=" + strconv.Itoa(pagina)
-	if termo != "" {
-		endereco += "&t=" + url.QueryEscape(termo)
-	}
-	return endereco
-}
+// Ele é a assinatura de todos os componentes de lá — `PageSeal`, `Chunk`,
+// `CrossRef` recebem um `bookui.BookAddress` —, e é um tipo de VALOR com um
+// método que monta URL. Ficar aqui obrigaria o pacote de apresentação do livro
+// a importar a cena que serve o PDF.
 
 // livroServido é o que o servidor guarda: onde o arquivo está e como falar dele.
 type livroServido struct {
 	caminho  string
 	digito   string
-	endereco enderecoDoLivro
+	endereco bookui.BookAddress
 }
 
 // O endereço desta cena mora em `web/routes` desde a ALE-278, porque a Mesa o
 // cita. O comentário que estava aqui explicava o `StripPrefix` do `buildMux`, e
 // ele já era falso: o prefixo saiu na ALE-280.
 
-// rotaDoLeitor é o endereço PÚBLICO da cena que desenha o livro. Ela não é
-// versionada porque é uma página HTML servida com `no-store`; quem carrega
-// versão é o PDF que ela pede.
-const rotaDoLeitor = "/livro/ler"
+// O endereço do leitor mora em `web/routes` desde a ALE-278: o `bookui` o cita
+// para montar o selo de página, e endereço citado de outra cena é o critério de
+// entrada de lá. Ele não é versionado porque é uma página HTML servida com
+// `no-store`; quem carrega versão é o PDF que ela pede.
 
 // abreOLivro lê a configuração UMA vez, no boot.
 //
@@ -101,7 +73,7 @@ func abreOLivro(cfg plataforma.Config) livroServido {
 	return livroServido{
 		caminho: cfg.LivroPDF,
 		digito:  digito,
-		endereco: enderecoDoLivro{
+		endereco: bookui.BookAddress{
 			Base:     routes.Book + "?v=" + digito,
 			Abertura: cfg.LivroAbertura,
 		},

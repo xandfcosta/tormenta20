@@ -3,6 +3,7 @@ package api
 import (
 	"strings"
 	"t20engine/book"
+	"t20engine/web/bookui"
 	"testing"
 )
 
@@ -108,10 +109,10 @@ func TestTheGodLinksOnlyPointAtWhoHasAnEntry(t *testing.T) {
 	if aba, _ := book.DevoteeLink("Quaisquer"); aba != "" {
 		t.Errorf("“Quaisquer” virou elo para %q", aba)
 	}
-	if idDoPoder("Coragem Total") == "" {
+	if bookui.PowerID("Coragem Total") == "" {
 		t.Error("um poder concedido de verdade não foi reconhecido")
 	}
-	if idDoPoder("Poder Que Não Existe") != "" {
+	if bookui.PowerID("Poder Que Não Existe") != "" {
 		t.Error("um nome inventado passou por poder do acervo")
 	}
 }
@@ -329,7 +330,7 @@ func TestEveryGodLinksThePowersItGrants(t *testing.T) {
 	for _, d := range deuses {
 		for _, poder := range d.PoderesConcedidos {
 			concedidos++
-			if idDoPoder(poder) == "" {
+			if bookui.PowerID(poder) == "" {
 				t.Errorf("%s concede %q, que não tem verbete no acervo", d.Name, poder)
 			}
 		}

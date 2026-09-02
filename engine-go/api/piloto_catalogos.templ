@@ -1,6 +1,7 @@
 package api
 
 import (
+	"t20engine/web/bookui"
 	"fmt"
 	"t20engine/web/ui"
 	"t20engine/book"
@@ -174,17 +175,17 @@ templ cartaoDoAcervo() {
 	</div>
 }
 
-templ cartaoDeCondicao(c book.Condition, livro enderecoDoLivro) {
+templ cartaoDeCondicao(c book.Condition, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ c.Name }
-			@seloDaPagina(livro, c.BookPage, c.Name)
+			@bookui.PageSeal(livro, c.BookPage, c.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
 			// A descrição CITA outras condições ("Desprevenido e imóvel"), e são
 			// 11 citações nas 35 — a densidade que justifica varrer o texto.
 			for _, pedaco := range book.WithConditionLinks(c.Description, c.Name) {
-				@pedacoDoTexto(pedaco, livro)
+				@bookui.Chunk(pedaco, livro)
 			}
 			// O TIPO DE EFEITO fecha a descrição, em itálico, exatamente onde o
 			// livro o imprime: "Abalado. O personagem sofre –2 … *Medo.*".
@@ -198,7 +199,7 @@ templ cartaoDeCondicao(c book.Condition, livro enderecoDoLivro) {
 				// frase que acabou de terminar, e é o desenho que o mestre já
 				// conhece da página impressa.
 				<em>
-					@eloParaOAcervo("efeitos", t, book.EffectName(t)) {
+					@bookui.CrossRef("efeitos", t, book.EffectName(t)) {
 						{ book.EffectName(t) + "." }
 					}
 				</em>
@@ -207,7 +208,7 @@ templ cartaoDeCondicao(c book.Condition, livro enderecoDoLivro) {
 		if c.UpgradesTo != "" {
 			<p class="mt-1 text-xs text-muted-foreground">
 				Agrava para 
-				@eloParaOAcervo("condicoes", c.UpgradesTo, book.ConditionName(c.UpgradesTo)) {
+				@bookui.CrossRef("condicoes", c.UpgradesTo, book.ConditionName(c.UpgradesTo)) {
 					{ book.ConditionName(c.UpgradesTo) }
 				}
 			</p>
@@ -224,7 +225,7 @@ templ cartaoDeCondicao(c book.Condition, livro enderecoDoLivro) {
 //
 // "Treinada por" são só as classes que a treinam DE SAÍDA. Ver o comentário do
 // carregador: a piscina de escolha tem quase tudo em quase toda classe.
-templ cartaoDePericia(p book.Expertise, livro enderecoDoLivro) {
+templ cartaoDePericia(p book.Expertise, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ p.Name }
@@ -235,7 +236,7 @@ templ cartaoDePericia(p book.Expertise, livro enderecoDoLivro) {
 			if p.PenalidadeDeArmadura {
 				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">Penalidade de armadura</span>
 			}
-			@seloDaPagina(livro, p.BookPage, p.Name)
+			@bookui.PageSeal(livro, p.BookPage, p.Name)
 		</p>
 		if len(p.Classes) > 0 {
 			<p class="mt-1 text-xs text-muted-foreground">
@@ -244,7 +245,7 @@ templ cartaoDePericia(p book.Expertise, livro enderecoDoLivro) {
 					if i > 0 {
 						{ ", " }
 					}
-					@eloParaOAcervo("classes", book.KeyOfName(classe), classe) {
+					@bookui.CrossRef("classes", book.KeyOfName(classe), classe) {
 						{ classe }
 					}
 				}
@@ -258,18 +259,18 @@ templ cartaoDePericia(p book.Expertise, livro enderecoDoLivro) {
 // A ABREVIATURA fica ao lado do nome porque é o que as tabelas do livro imprimem
 // — quem lê "Evoc" numa ficha precisa poder achar aqui. Ilusão não tem, e o
 // crachá simplesmente não sai.
-templ cartaoDeEscola(e book.SpellSchool, livro enderecoDoLivro) {
+templ cartaoDeEscola(e book.SpellSchool, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ e.Name }
 			if e.Abrev != "" {
 				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ e.Abrev }</span>
 			}
-			@seloDaPagina(livro, e.BookPage, e.Name)
+			@bookui.PageSeal(livro, e.BookPage, e.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
 			for _, pedaco := range book.WithLinks(e.Description) {
-				@pedacoDoTexto(pedaco, livro)
+				@bookui.Chunk(pedaco, livro)
 			}
 		</p>
 	}
@@ -277,21 +278,21 @@ templ cartaoDeEscola(e book.SpellSchool, livro enderecoDoLivro) {
 
 // O cartão do TIPO DE EFEITO (ALE-264). Ele é o destino dos elos que saem das
 // condições, e o livro o define em uma frase na p228.
-templ cartaoDeEfeito(e book.EffectKind, livro enderecoDoLivro) {
+templ cartaoDeEfeito(e book.EffectKind, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ e.Name }
-			@seloDaPagina(livro, e.BookPage, e.Name)
+			@bookui.PageSeal(livro, e.BookPage, e.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
 			for _, pedaco := range book.WithLinks(e.Description) {
-				@pedacoDoTexto(pedaco, livro)
+				@bookui.Chunk(pedaco, livro)
 			}
 		</p>
 	}
 }
 
-templ cartaoDeMagia(m book.Spell, livro enderecoDoLivro) {
+templ cartaoDeMagia(m book.Spell, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ m.Name }
@@ -301,10 +302,10 @@ templ cartaoDeMagia(m book.Spell, livro enderecoDoLivro) {
 			// A ESCOLA passou a aparecer no cartão, e como ELO (ALE-264): ela
 			// decidia o filtro e não estava escrita em lugar nenhum — o mestre
 			// filtrava por evocação e as magias não diziam que eram de evocação.
-			@eloParaOAcervo("escolas", m.School, book.SchoolName(m.School)) {
+			@bookui.CrossRef("escolas", m.School, book.SchoolName(m.School)) {
 				{ book.SchoolName(m.School) }
 			}
-			@seloDaPagina(livro, m.BookPage, m.Name)
+			@bookui.PageSeal(livro, m.BookPage, m.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
 			<span>{ "Execução: " + book.CastingName(m.Execution) }</span>
@@ -316,7 +317,7 @@ templ cartaoDeMagia(m book.Spell, livro enderecoDoLivro) {
 		</p>
 		<p class="mt-1 text-muted-foreground">
 			for _, pedaco := range book.WithLinks(m.BaseEffect) {
-				@pedacoDoTexto(pedaco, livro)
+				@bookui.Chunk(pedaco, livro)
 			}
 		</p>
 		// Os APRIMORAMENTOS abrem numa caixa (ALE-264): eram uma CONTAGEM
@@ -327,34 +328,34 @@ templ cartaoDeMagia(m book.Spell, livro enderecoDoLivro) {
 			<button
 				type="button"
 				data-nav-skip
-				data-on:click={ abreOsAprimoramentos(m.ID) }
+				data-on:click={ bookui.OpensAugments(m.ID) }
 				class="mt-1 rounded-sm text-left text-xs text-muted-foreground underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>{ aprimoramentosEscritos(len(m.Augments)) }</button>
 		}
 	}
 }
 
-templ cartaoDePoder(p book.Power, livro enderecoDoLivro) {
+templ cartaoDePoder(p book.Power, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ p.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ p.Fonte }</span>
-			@seloDaPagina(livro, p.BookPage, p.Name)
+			@bookui.PageSeal(livro, p.BookPage, p.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
 			for _, pedaco := range book.WithLinks(p.Description) {
-				@pedacoDoTexto(pedaco, livro)
+				@bookui.Chunk(pedaco, livro)
 			}
 		</p>
 	}
 }
 
-templ cartaoDeItem(i book.Item, livro enderecoDoLivro) {
+templ cartaoDeItem(i book.Item, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ i.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ book.CategoryName(i.Category) }</span>
-			@seloDaPagina(livro, i.BookPage, i.Name)
+			@bookui.PageSeal(livro, i.BookPage, i.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ "Preço: " + precoEscrito(i.Price) }</span>
@@ -368,12 +369,12 @@ templ cartaoDeItem(i book.Item, livro enderecoDoLivro) {
 // O cartão da RAÇA diz o que muda numa ficha: os modificadores, o tamanho, o
 // deslocamento e a visão. As habilidades vêm com o resumo de uma linha que o
 // catálogo já guarda — o texto inteiro está no livro, a um clique de distância.
-templ cartaoDeRaca(r book.Race, livro enderecoDoLivro) {
+templ cartaoDeRaca(r book.Race, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ r.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ r.AttributeMod.Escrito() }</span>
-			@seloDaPagina(livro, r.BookPage, r.Name)
+			@bookui.PageSeal(livro, r.BookPage, r.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ book.TierName(r.Tier) }</span>
@@ -398,11 +399,11 @@ templ cartaoDeRaca(r book.Race, livro enderecoDoLivro) {
 // de `piloto_catalogos_do_personagem.go`. É pouco de propósito: o bloco da
 // classe é uma tabela de vinte níveis, e transcrevê-la à mão seria a fonte de
 // erro que esta issue inteira existe para evitar.
-templ cartaoDeClasse(c book.Class, livro enderecoDoLivro) {
+templ cartaoDeClasse(c book.Class, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ c.Name }
-			@seloDaPagina(livro, c.BookPage, c.Name)
+			@bookui.PageSeal(livro, c.BookPage, c.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ fmt.Sprintf("%d poderes de classe", c.Poderes) }</span>
@@ -416,7 +417,7 @@ templ cartaoDeClasse(c book.Class, livro enderecoDoLivro) {
 						if i > 0 {
 							{ ", " }
 						}
-						@eloParaOAcervo("pericias", book.KeyOfName(pericia), pericia) {
+						@bookui.CrossRef("pericias", book.KeyOfName(pericia), pericia) {
 							{ pericia }
 						}
 					}
@@ -432,7 +433,7 @@ templ cartaoDeClasse(c book.Class, livro enderecoDoLivro) {
 // O cartão do DEUS traz o que o mestre consulta na hora: o que o deus cobra dos
 // devotos e o que ele concede. O símbolo e a arma preferida entram porque são o
 // que aparece na cena — o clérigo saca a arma preferida, o símbolo está no altar.
-templ cartaoDeDeus(d book.God, livro enderecoDoLivro) {
+templ cartaoDeDeus(d book.God, livro bookui.BookAddress) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ d.Name }
@@ -440,7 +441,7 @@ templ cartaoDeDeus(d book.God, livro enderecoDoLivro) {
 			// vinte deuses do catálogo, então ele dizia a mesma coisa em todos —
 			// tinta gasta para não informar nada. Volta no dia em que o catálogo
 			// tiver um deus menor.
-			@seloDaPagina(livro, d.BookPage, d.Name)
+			@bookui.PageSeal(livro, d.BookPage, d.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">{ d.Portfolio }</p>
 		// Campo VAZIO não vira rótulo órfão: Lena e Marah não têm arma preferida
@@ -467,8 +468,8 @@ templ cartaoDeDeus(d book.God, livro enderecoDoLivro) {
 					if i > 0 {
 						{ ", " }
 					}
-					if id := idDoPoder(poder); id != "" {
-						@eloParaOAcervo("poderes", id, poder) {
+					if id := bookui.PowerID(poder); id != "" {
+						@bookui.CrossRef("poderes", id, poder) {
 							{ poder }
 						}
 					} else {
@@ -485,7 +486,7 @@ templ cartaoDeDeus(d book.God, livro enderecoDoLivro) {
 						{ ", " }
 					}
 					if aba, id := book.DevoteeLink(devoto); aba != "" {
-						@eloParaOAcervo(aba, id, devoto) {
+						@bookui.CrossRef(aba, id, devoto) {
 							{ devoto }
 						}
 					} else {
@@ -502,11 +503,11 @@ templ cartaoDeDeus(d book.God, livro enderecoDoLivro) {
 //
 // O mesmo id (`#verbete-do-elo`) porque é a mesma caixa — o que muda é o miolo,
 // e quem decide é a rota.
-templ osAprimoramentosDaMagia(m book.Spell, livro enderecoDoLivro) {
+templ osAprimoramentosDaMagia(m book.Spell, livro bookui.BookAddress) {
 	<div id="verbete-do-elo" class="space-y-2 pr-8">
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ m.Name }
-			@seloDaPagina(livro, m.BookPage, m.Name)
+			@bookui.PageSeal(livro, m.BookPage, m.Name)
 		</p>
 		<ul class="space-y-1.5">
 			for _, a := range m.Augments {
@@ -526,7 +527,7 @@ templ osAprimoramentosDaMagia(m book.Spell, livro enderecoDoLivro) {
 					<span class="text-muted-foreground">
 						<span class="mr-1 text-3xs uppercase tracking-widest opacity-70">{ book.AugmentKindName(a.Kind) }</span>
 						for _, pedaco := range book.WithLinks(a.Description) {
-							@pedacoDoTexto(pedaco, livro)
+							@bookui.Chunk(pedaco, livro)
 						}
 					</span>
 				</li>
@@ -539,7 +540,7 @@ templ osAprimoramentosDaMagia(m book.Spell, livro enderecoDoLivro) {
 //
 // Reusa os MESMOS cartões da aba — o verbete tem um desenho só, e um segundo
 // desenho "para a caixa" divergiria do primeiro na terceira issue.
-templ verbeteDoElo(g grupoDoAcervo, livro enderecoDoLivro) {
+templ verbeteDoElo(g grupoDoAcervo, livro bookui.BookAddress) {
 	<div id="verbete-do-elo" class="pr-8">
 		if g.Quantos() == 0 {
 			<p class="text-xs text-muted-foreground">Este book.Entry não está no acervo.</p>

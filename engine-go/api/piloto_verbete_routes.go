@@ -14,8 +14,9 @@ import (
 // mora nela, e amanhã um elo pode sair do bestiário ou da Mesa. Uma rota por
 // cena obrigaria cada uma a ter a sua cópia do mesmo handler.
 
-// rotaDoVerbete é o endereço PÚBLICO, que é o que o `@get` do navegador pede.
-const rotaDoVerbete = "/verbete"
+// O endereço deste verbete mora em `web/routes` desde a ALE-278, pela mesma
+// razão do leitor: o `bookui` o cita ao montar o botão que abre os
+// aprimoramentos por cima da cena.
 
 func (s *Server) EntryRoutes(r chi.Router) {
 	r.Get("/verbete", s.handleVerbeteDoElo)
