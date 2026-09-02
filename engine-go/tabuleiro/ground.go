@@ -2,10 +2,10 @@ package tabuleiro
 
 // O CHÃO DO LUGAR — a APARÊNCIA da cena (pedra, taverna, floresta, ermo, cripta,
 // papel). Ver GLOSSARIO.md: não é o TERRENO, que é o que o quadrado FAZ e mora
-// no `terreno.go`; um é como a cena se parece, o outro é quanto custa
+// no `terrain.go`; um é como a cena se parece, o outro é quanto custa
 // atravessá-la.
 //
-// Este arquivo nasceu junto com o `terreno.go`, e pelo MESMO motivo que a sessão
+// Este arquivo nasceu junto com o `terrain.go`, e pelo MESMO motivo que a sessão
 // da main deu ao criar aquele: domínio compartilhado não mora em arquivo de uma
 // tela. Isto vivia no fim do `vista.go`, que é maquinário de RENDERIZAÇÃO do
 // piloto — o servidor desenhando a moldura porque quem enquadra é o navegador.
@@ -29,7 +29,7 @@ type PlaceGround struct {
 // Ela vive aqui e não na tela porque JÁ EXISTIA duas vezes — em `.chao-*` no CSS
 // do piloto e no `TERRAIN_LABEL` da SPA —, e uma terceira cópia escrita à mão no
 // templ é como nasce a opção que a tela oferece e o CSS não sabe pintar. O
-// `chao_do_lugar_test.go` amarra esta lista ao CSS: acrescentar um chão aqui sem
+// `api/piloto_chao_test.go` amarra esta lista ao CSS: acrescentar um chão aqui sem
 // pintá-lo lá derruba o guarda.
 //
 // A ORDEM é a da SPA, e o primeiro é o padrão de quem não escolhe.

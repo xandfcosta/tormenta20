@@ -9,7 +9,7 @@ import (
 
 // O CICLO DA SESSÃO na Mesa (ALE-269, superfícies 3, 4 e 11).
 //
-// A regra tem guarda no `sessao_ciclo_test.go`. O que estes casos protegem é a
+// A regra tem guarda no `session_lifecycle_test.go`. O que estes casos protegem é a
 // AFORDÂNCIA: que a tela ofereça o verbo certo para cada estado, que o jogador
 // não receba nenhum, e que excluir leve o mestre para algum lugar.
 

@@ -18,7 +18,7 @@ import (
 // reading as before (ALE-120).
 func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	t.Helper()
-	// Copiado do molde já migrado, e não migrado do zero: ver `bancada_test.go`
+	// Copiado do molde já migrado, e não migrado do zero: ver o molde em `db/testdb`
 	// (ALE-260). São ~3.400 migrações a menos na suíte.
 	path := bancoDeTeste(t)
 	database, err := db.Open(path)

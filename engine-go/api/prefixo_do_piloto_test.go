@@ -17,7 +17,7 @@ import (
 //
 // Decisão do dono: CORTE SECO. O app nunca foi usado numa mesa real, não há
 // link de jogador a proteger, e um desvio a menos é uma exceção a menos no mux.
-// Os dezessete endereços da SPA em `enderecos_antigos.go` continuam desviando —
+// Os dezessete endereços da SPA em `legacy_addresses.go` continuam desviando —
 // aqueles foram publicados de verdade.
 //
 // # Por que este guarda existe

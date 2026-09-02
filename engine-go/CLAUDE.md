@@ -28,7 +28,7 @@ Duas consequências que o `git grep` não mostra e que já morderam uma vez:
   navegador a lê como o HOST `algo`. Quem denunciou foi um teste de cena; o
   compilador não tem como.
 
-E três entradas saíram de `enderecos_antigos.go` — `/admin`, `/grimorio` e
+E três entradas saíram de `legacy_addresses.go` — `/admin`, `/grimorio` e
 `/redefinir-senha` eram escritas iguais pela SPA e pelo piloto, então sem prefixo
 o desvio virou origem igual a destino. Isso não é linha inútil, é laço: o padrão
 literal ganha do `"/"` das cenas no `ServeMux`, e a tela nunca apareceria.
@@ -602,7 +602,7 @@ regra do repositório no `api` seria escolher um dono arbitrário — e o `api` 
 sendo dividido em um pacote por cena (ALE-278), então o guarda mudaria de casa
 junto com a próxima fatia.
 
-Dois moram lá hoje:
+Três moram lá hoje:
 
 - **`TestEveryTestNameIsEnglish`** varre todo `*_test.go` e recusa nome com
   palavra em português. Ele é o que impede o 774º — a regra de idioma sempre
@@ -612,6 +612,25 @@ Dois moram lá hoje:
 - **`TestNoCitationNamesAMissingTest`** recusa comentário ou `.md` que nomeie um
   teste inexistente. A varredura mediu **136** dessas antes de começar: um `.md`
   fica errado sem ninguém mexer nele, e nada no repositório acusava.
+- **`TestNoCitationNamesAMissingFile`** faz o mesmo para CAMINHO DE ARQUIVO, e
+  mediu **41** (ALE-285). A origem delas não foi a SPA: foram as varreduras de
+  idioma. A ALE-282 e a ALE-283 renomearam arquivos para inglês, a ALE-278 moveu
+  famílias inteiras de pacote, e os comentários que apontavam para eles ficaram
+  falando dos nomes velhos — "a regra mora no ..." apontando para quatro arquivos
+  que já se chamavam outra coisa.
+
+  Ele só olha `.go` e `.templ`, e essa restrição é o que o torna possível: com as
+  extensões todas ele acusa **325**, e a maioria esmagadora (181 `.ts`, 20 `.js`,
+  17 `.tsx`) é a PROCEDÊNCIA que esta casa valoriza — `api/auth.go` citando o
+  `auth-user.type.ts` do Nest diz de onde a regra veio e está certo. Um guarda com
+  325 exceções é um guarda que alguém apaga; com as extensões do stack VIVO ele
+  tem 41 defeitos e vinte lápides declaradas.
+
+  A primeira coisa que ele pegou foi a **própria docstring**, que nomeava os
+  arquivos mortos como exemplo. Declará-los teria resolvido e seria errado: a
+  lista é por nome-base, então perdoar um nome ali perdoaria também o próximo
+  comentário que voltasse a apontar para ele. A prosa passou a nomeá-los sem a
+  extensão.
 
 **A lista de marcadores tem uma fresta declarada**, e ela é deliberada: nome
 PRÓPRIO do livro passa. `TestBolaDeFogoWorkedExample` e

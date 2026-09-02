@@ -17,7 +17,7 @@ import (
 // uma: a ideia de masmorra em d20 é uma tabela do Cap 6 que aparecia nas duas, e
 // um lugar só é um lugar só para procurar.
 //
-// O dado rola no SERVIDOR (ver `engine/improviso.go`), e o HISTÓRICO viaja nos
+// O dado rola no SERVIDOR (ver `engine/improvisation.go`), e o HISTÓRICO viaja nos
 // sinais — mesma forma do rascunho do encontro (ALE-259), pela mesma razão: o
 // mestre rola várias vezes seguidas e cada rolagem não pode virar uma entrada no
 // histórico do navegador.

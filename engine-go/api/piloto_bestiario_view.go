@@ -143,7 +143,7 @@ func sinaisDoBestiario(v bestiarioView) string {
 	// evento de sinal mandado depois do conteúdo era desfeito por esta linha —
 	// o fio levava `{"fichaAberta":true}` e o diálogo continuava `display:none`.
 	//
-	// É o mesmo perigo que o `piloto_layout.templ` já tinha escrito ao pôr os
+	// É o mesmo perigo que o `web/ui/layout.templ` já tinha escrito ao pôr os
 	// sinais da página no `<body>`, que nunca é remendado. Aqui a saída não é
 	// mover: é o servidor redeclarar com o valor CERTO, e aí o conteúdo e o
 	// estado de aberto chegam no MESMO remendo — atômicos, sem janela em que um
