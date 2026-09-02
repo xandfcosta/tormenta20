@@ -359,12 +359,12 @@ templ cadastroDaCronica(v cronicaView) {
 		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/editar", v.ID)) } class="space-y-4">
 			@ui.TextField(ui.Field{
 				Nome: "name", Label: "Nome", Valor: v.Nome,
-				Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
+				Obrigatorio: true, TamanhoMaximo: maxCampaignNameLength,
 				Erros: v.Erros["name"],
 			})
 			@ui.TextArea(ui.Field{
 				Nome: "description", Label: "Descrição", Valor: v.Descricao,
-				TamanhoMaximo: descricaoDeCampanhaMax,
+				TamanhoMaximo: maxCampaignDescriptionLength,
 				Erros:         v.Erros["description"],
 			}, 6)
 			if v.Aviso != "" {

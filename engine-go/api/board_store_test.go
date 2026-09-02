@@ -29,14 +29,14 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
 	abre(t, s, sid, "Taverna do Javali", "taverna")
-	if _, err := s.boards.AddToken(ctx, sid, aAbaPadrao, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
-	s.boards.Persist(ctx, sid, aAbaPadrao)
+	s.boards.Persist(ctx, sid, defaultTab)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
 	frio := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{})
-	voltou := frio.Get(ctx, sid, aAbaPadrao)
+	voltou := frio.Get(ctx, sid, defaultTab)
 
 	if voltou == nil {
 		t.Fatal("o tabuleiro não voltou do banco")
@@ -61,10 +61,10 @@ func TestSessionWithoutBoardStaysWithout(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	if b := s.boards.Get(ctx, sid, aAbaPadrao); b != nil {
+	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
 		t.Errorf("sessão nova já veio com tabuleiro: %+v", b)
 	}
-	if _, err := s.boards.AddToken(ctx, sid, aAbaPadrao, tabuleiro.BoardToken{Label: "Ninguém"}, false); err == nil {
+	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ninguém"}, false); err == nil {
 		t.Error("pôs peça num tabuleiro que não existe")
 	}
 }
@@ -74,14 +74,14 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	abre(t, s, sid, "Cripta", "pedra")
-	s.boards.Persist(ctx, sid, aAbaPadrao)
+	s.boards.Persist(ctx, sid, defaultTab)
 
-	s.boards.Close(ctx, sid, aAbaPadrao)
+	s.boards.Close(ctx, sid, defaultTab)
 
-	if b := s.boards.Get(ctx, sid, aAbaPadrao); b != nil {
+	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
 		t.Error("o tabuleiro encerrado continua na memória")
 	}
-	if b := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{}).Get(ctx, sid, aAbaPadrao); b != nil {
+	if b := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{}).Get(ctx, sid, defaultTab); b != nil {
 		t.Error("o tabuleiro encerrado voltou do banco no próximo reinício")
 	}
 }
@@ -123,7 +123,7 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	// A PADRÃO continua sendo a mais antiga: quem não escolheu aba nenhuma não
 	// pode ser arrastado para a cena que o mestre acabou de abrir — ele pode
 	// estar montando a emboscada.
-	if padrao := s.boards.Get(ctx, sid, aAbaPadrao); padrao == nil || padrao.ID != taverna.ID {
+	if padrao := s.boards.Get(ctx, sid, defaultTab); padrao == nil || padrao.ID != taverna.ID {
 		t.Errorf("a aba padrão pulou para a cena recém-aberta: %+v", padrao)
 	}
 }
@@ -153,7 +153,7 @@ func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
 	frio := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{})
-	voltaram := frio.Abertos(ctx, sid)
+	voltaram := frio.OpenBoards(ctx, sid)
 
 	if len(voltaram) != 2 {
 		t.Fatalf("voltaram %d cenas do banco, esperado 2", len(voltaram))
@@ -223,7 +223,7 @@ func TestOpeningRefusesPastTheCeiling(t *testing.T) {
 	if !strings.Contains(err.Error(), "8") {
 		t.Errorf("a recusa não diz quantas cabem: %v", err)
 	}
-	if n := len(s.boards.Abertos(ctx, sid)); n != 8 {
+	if n := len(s.boards.OpenBoards(ctx, sid)); n != 8 {
 		t.Errorf("a sessão ficou com %d cenas abertas depois da recusa", n)
 	}
 }
@@ -256,19 +256,19 @@ func TestBoardPersistFailureIsReported(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	abre(t, s, sid, "Cripta", "pedra")
 
-	if Dirty, changed := s.boards.Persist(ctx, sid, aAbaPadrao); Dirty || changed {
+	if Dirty, changed := s.boards.Persist(ctx, sid, defaultTab); Dirty || changed {
 		t.Fatalf("gravação saudável já saiu como falha: Dirty=%v changed=%v", Dirty, changed)
 	}
 
 	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	Dirty, changed := s.boards.Persist(ctx, sid, aAbaPadrao)
+	Dirty, changed := s.boards.Persist(ctx, sid, defaultTab)
 	if !Dirty || !changed {
 		t.Fatalf("a tabela sumiu e ninguém avisou: Dirty=%v changed=%v", Dirty, changed)
 	}
 	// Segunda falha seguida: continua falhando, mas NÃO é notícia nova.
-	if _, changed := s.boards.Persist(ctx, sid, aAbaPadrao); changed {
+	if _, changed := s.boards.Persist(ctx, sid, defaultTab); changed {
 		t.Error("a mesa levou um aviso a cada gravação, e não só na transição")
 	}
 
@@ -278,7 +278,7 @@ func TestBoardPersistFailureIsReported(t *testing.T) {
 		PRIMARY KEY (sessionId, boardId))`); err != nil {
 		t.Fatalf("recriar a tabela: %v", err)
 	}
-	if Dirty, changed := s.boards.Persist(ctx, sid, aAbaPadrao); Dirty || !changed {
+	if Dirty, changed := s.boards.Persist(ctx, sid, defaultTab); Dirty || !changed {
 		t.Errorf("a recuperação não foi anunciada: Dirty=%v changed=%v", Dirty, changed)
 	}
 }
@@ -296,10 +296,10 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
 	abre(t, s, sid, "Cripta", "pedra")
-	if _, err := s.boards.AddToken(ctx, sid, aAbaPadrao, tabuleiro.BoardToken{Label: "Ogro", X: 1, Y: 1}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
-	s.boards.Persist(ctx, sid, aAbaPadrao)
+	s.boards.Persist(ctx, sid, defaultTab)
 
 	// Um servidor frio sobre o mesmo banco, e a leitura falha: é o disco
 	// piscando no primeiro acesso à sessão.
@@ -307,7 +307,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	if _, err := s.db.Exec("ALTER TABLE open_boards RENAME TO open_boards_escondida"); err != nil {
 		t.Fatalf("esconder a tabela: %v", err)
 	}
-	if vazio := frio.Get(ctx, sid, aAbaPadrao); vazio != nil {
+	if vazio := frio.Get(ctx, sid, defaultTab); vazio != nil {
 		t.Fatalf("leitura falhou e mesmo assim devolveu tabuleiro: %+v", vazio)
 	}
 
@@ -316,7 +316,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	if _, err := s.db.Exec("ALTER TABLE open_boards_escondida RENAME TO open_boards"); err != nil {
 		t.Fatalf("devolver a tabela: %v", err)
 	}
-	voltou := frio.Get(ctx, sid, aAbaPadrao)
+	voltou := frio.Get(ctx, sid, defaultTab)
 
 	if voltou == nil {
 		t.Fatal("a falha transiente ficou cacheada: a sessão perdeu o tabuleiro até o próximo reinício")
@@ -333,7 +333,7 @@ func TestNoBoardIsStillCached(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	if b := s.boards.Get(ctx, sid, aAbaPadrao); b != nil {
+	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
 		t.Fatalf("sessão nova veio com tabuleiro: %+v", b)
 	}
 	// Com a tabela fora do ar, uma segunda leitura só pode responder se estiver
@@ -341,7 +341,7 @@ func TestNoBoardIsStillCached(t *testing.T) {
 	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	if b := s.boards.Get(ctx, sid, aAbaPadrao); b != nil {
+	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
 		t.Errorf("a segunda leitura foi ao disco em vez de lembrar: %+v", b)
 	}
 }
@@ -354,12 +354,12 @@ func TestClosingReportsAFailedDelete(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	abre(t, s, sid, "Cripta", "pedra")
-	s.boards.Persist(ctx, sid, aAbaPadrao)
+	s.boards.Persist(ctx, sid, defaultTab)
 
 	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	Dirty, changed := s.boards.Close(ctx, sid, aAbaPadrao)
+	Dirty, changed := s.boards.Close(ctx, sid, defaultTab)
 
 	if !Dirty || !changed {
 		t.Fatalf("o encerramento falhou e ninguém soube: Dirty=%v changed=%v", Dirty, changed)

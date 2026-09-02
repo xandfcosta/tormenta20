@@ -314,21 +314,21 @@ func ItemFields(i Item) []string   { return []string{i.Name, i.Category} }
 // ── a busca unificada ────────────────────────────────────────────────────────
 
 func CastingName(e string) string {
-	if r, ok := rotuloDaExecucao[e]; ok {
+	if r, ok := executionLabel[e]; ok {
 		return r
 	}
 	return e
 }
 
 func RangeName(a string) string {
-	if r, ok := rotuloDoAlcance[a]; ok {
+	if r, ok := rangeLabel[a]; ok {
 		return r
 	}
 	return a
 }
 
 func CategoryName(c string) string {
-	if r, ok := rotuloDaCategoria[c]; ok {
+	if r, ok := categoryLabel[c]; ok {
 		return r
 	}
 	return c
@@ -399,7 +399,7 @@ func GodName(id string) string {
 	return id
 }
 
-var rotuloDaExecucao = map[string]string{
+var executionLabel = map[string]string{
 	"padrao":    "Padrão",
 	"movimento": "Movimento",
 	"completa":  "Completa",
@@ -407,7 +407,7 @@ var rotuloDaExecucao = map[string]string{
 	"reacao":    "Reação",
 }
 
-var rotuloDoAlcance = map[string]string{
+var rangeLabel = map[string]string{
 	"pessoal":   "Pessoal",
 	"toque":     "Toque",
 	"curto":     "Curto",
@@ -416,7 +416,7 @@ var rotuloDoAlcance = map[string]string{
 	"ilimitado": "Ilimitado",
 }
 
-var rotuloDaCategoria = map[string]string{
+var categoryLabel = map[string]string{
 	"weapon-simple":  "Arma simples",
 	"weapon-martial": "Arma marcial",
 	"weapon-exotic":  "Arma exótica",

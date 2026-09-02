@@ -204,12 +204,12 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	name, err := nomeDeCampanha(body.Name)
+	name, err := campaignName(body.Name)
 	if err != nil {
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {err.Error()}})
 		return
 	}
-	descricao, err := descricaoDeCampanha(body.Description)
+	descricao, err := campaignDescription(body.Description)
 	if err != nil {
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"description": {err.Error()}})
 		return
@@ -243,7 +243,7 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	var set setBuilder
 	if body.Name != nil {
-		name, err := nomeDeCampanha(*body.Name)
+		name, err := campaignName(*body.Name)
 		if err != nil {
 			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {err.Error()}})
 			return
@@ -254,7 +254,7 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 		// Mesma regra do criar, e agora literalmente a mesma FUNÇÃO: descrição
 		// de puros espaços vira NULL nos dois caminhos, senão o cliente lê ""
 		// de um e null do outro para a mesma entrada.
-		descricao, err := descricaoDeCampanha(body.Description)
+		descricao, err := campaignDescription(body.Description)
 		if err != nil {
 			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"description": {err.Error()}})
 			return

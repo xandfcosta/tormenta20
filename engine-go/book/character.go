@@ -24,7 +24,7 @@ type Race struct {
 	Deslocamento    int           `json:"deslocamento"`
 	VisaoNoEscuro   bool          `json:"visaoNoEscuro"`
 	VisaoNaPenumbra bool          `json:"visaoNaPenumbra"`
-	AtributoMod     RaceAttribute `json:"atributoMod"`
+	AttributeMod    RaceAttribute `json:"atributoMod"`
 	// Ascendencias são as metades de uma raça que se escolhe na criação — o
 	// suraggel é "aggelus" ou "sulfure". Elas importam aqui porque os DEUSES
 	// citam a ascendência e não a raça ("Devotos: Aggelus"), e sem isto o elo

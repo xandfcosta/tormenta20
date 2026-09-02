@@ -44,7 +44,7 @@ func (s *Server) WebRouter() http.Handler {
 	s.DoorRoutes(r)
 	// O HUB (ALE-231): o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
-		r.Use(s.requirePagina)
+		r.Use(s.requirePage)
 		hub.Routes(r, hub.New(s))
 		s.CampaignRoutes(r)
 		s.CharacterRoutes(r)
@@ -70,7 +70,7 @@ func (s *Server) WebRouter() http.Handler {
 		r.Get(rotaDoLivro+"/ler", s.handleLeitorDoLivro)
 	})
 	r.Group(func(r chi.Router) {
-		r.Use(s.requirePagina)
+		r.Use(s.requirePage)
 		r.Get("/mesa/{campaignId}/{sessionId}", s.handleMesaPage)
 		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleMesaStream)
 		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
@@ -97,7 +97,7 @@ func (s *Server) WebRouter() http.Handler {
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
 	// servidor recusaria.
 	r.Group(func(r chi.Router) {
-		r.Use(s.requirePagina)
+		r.Use(s.requirePage)
 		r.Use(s.requireAdmin)
 		r.Get("/admin", s.handleAdminPiloto)
 		r.Post("/admin/usuarios/{id}/apagar", s.handleAdminPilotoApagar)
@@ -200,7 +200,7 @@ func sinaisDaMesa() string {
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
-		fmt.Sprintf("novolugar: '', novochao: '%s'", tabuleiro.ChaoPadrao()),
+		fmt.Sprintf("novolugar: '', novochao: '%s'", tabuleiro.DefaultGround()),
 		// A SUPERFÍCIE do jogador (ALE-129): qual das duas ocupa a tela. Abre na
 		// MESA (decisão do dono) — quem entra na sessão quer saber de quem é a vez
 		// e quem está em cena, e o tabuleiro pode nem estar aberto.
@@ -377,7 +377,7 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// quem olha — e ela vem depois da lente de propósito: a lente é sobre a CENA
 	// que o mestre está vendo, não sobre quais cenas existem. Um mestre na lente
 	// que perdesse as abas não teria como sair da que está olhando.
-	view.Tabuleiro.Abas = asAbasDaMesa(s.boards.Abertos(ctx, sessionID), role, aba, campaignID, sessionID)
+	view.Tabuleiro.Abas = asAbasDaMesa(s.boards.OpenBoards(ctx, sessionID), role, aba, campaignID, sessionID)
 	// A TIRA DO PUXÃO vem depois da barra porque ela é feita DELA: os nomes já
 	// passaram pelo papel de quem olha, e ler o estado cru aqui contaria o nome
 	// de uma cena sob cortina a quem não pode sabê-lo.
@@ -387,7 +387,7 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
 	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
 	if role == "gm" {
-		view.Tabuleiro.Acervo = acervoDaCampanha(s.boards.Places(ctx, campaignID), s.boards.Abertos(ctx, sessionID))
+		view.Tabuleiro.Acervo = acervoDaCampanha(s.boards.Places(ctx, campaignID), s.boards.OpenBoards(ctx, sessionID))
 	}
 	// O rastreador só é MONTADO para o mestre. A trava não é a tela esconder o
 	// bloco: é a view não ter o que desenhar, pelo mesmo `role` que o
@@ -494,18 +494,18 @@ const mesaTick = 200 * time.Millisecond
 //
 // Roster indisponível não derruba a cena: a presença é enfeite ao lado dos
 // nomes, e a fila é o assunto da tela.
-func (s *Server) membrosEPresenca(ctx context.Context, campaignID, sessionID int64) ([]aovivo.MembroDaMesa, []int64) {
+func (s *Server) membrosEPresenca(ctx context.Context, campaignID, sessionID int64) ([]aovivo.TableMember, []int64) {
 	rows, err := s.queries.ListMembers(ctx, campaignID)
 	if err != nil {
 		return nil, nil
 	}
-	membros := make([]aovivo.MembroDaMesa, 0, len(rows))
+	membros := make([]aovivo.TableMember, 0, len(rows))
 	for _, m := range rows {
 		dono, err := s.queries.GetCharacterOwner(ctx, m.Characterid)
 		if err != nil {
 			continue
 		}
-		membros = append(membros, aovivo.MembroDaMesa{CharacterID: m.Characterid, DonoID: dono})
+		membros = append(membros, aovivo.TableMember{CharacterID: m.Characterid, OwnerID: dono})
 	}
 	var presentes []int64
 	for _, u := range s.presence.Roster(sessionID) {

@@ -147,7 +147,7 @@ func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 	if !strings.Contains(rec.Body.String(), "feche um antes") {
 		t.Error("a recusa não diz o que fazer para caber")
 	}
-	if n := len(f.s.boards.Abertos(context.Background(), f.sessionID)); n != 8 {
+	if n := len(f.s.boards.OpenBoards(context.Background(), f.sessionID)); n != 8 {
 		t.Errorf("a sessão passou do teto pela lista de lugares: %d cenas abertas", n)
 	}
 }

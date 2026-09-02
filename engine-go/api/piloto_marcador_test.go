@@ -37,11 +37,11 @@ func TestEveryMarkerColorCanBePainted(t *testing.T) {
 	}
 	// E o CONTROLE da lista: uma lista vazia faria o laço abaixo não rodar
 	// nenhuma vez e o teste passaria afirmando nada.
-	if len(tabuleiro.CoresDeMarcador) == 0 {
+	if len(tabuleiro.MarkerColors) == 0 {
 		t.Fatal("o domínio não oferece cor nenhuma — não há o que medir")
 	}
 
-	for _, cor := range tabuleiro.CoresDeMarcador {
+	for _, cor := range tabuleiro.MarkerColors {
 		if !strings.Contains(folha, "--marcador-"+cor.ID) {
 			t.Errorf("a cor %q (%s) é aceita pelo domínio e o CSS não sabe pintá-la: falta --marcador-%s",
 				cor.ID, cor.Rotulo, cor.ID)
@@ -59,7 +59,7 @@ func TestEveryMarkerColorCanBePainted(t *testing.T) {
 // fallback e, de quebra, prende que ele aponta para uma variável que EXISTE —
 // era exatamente aí que o defeito antigo morava.
 func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
-	padrao := corDeMarcador(tabuleiro.CorPadraoDeMarcador())
+	padrao := corDeMarcador(tabuleiro.DefaultMarkerColor())
 
 	for _, torta := range []string{"gold", "red", "'; background: url(x)", ""} {
 		if got := corDeMarcador(torta); got != padrao {
@@ -69,8 +69,8 @@ func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
 	// O CONTROLE: uma cor BOA não cai no padrão por acidente, senão o teste
 	// acima seria verdade sobre uma função que devolve sempre a mesma coisa.
 	outra := ""
-	for _, c := range tabuleiro.CoresDeMarcador {
-		if c.ID != tabuleiro.CorPadraoDeMarcador() {
+	for _, c := range tabuleiro.MarkerColors {
+		if c.ID != tabuleiro.DefaultMarkerColor() {
 			outra = c.ID
 			break
 		}

@@ -77,17 +77,17 @@ func (s *Server) deleteAccount(r *http.Request, id, callerID int64) (int64, int,
 		// same one. Deleting yourself would take your mesas nowhere.
 		return 0, http.StatusBadRequest, errors.New("You cannot delete your own account")
 	}
-	moved, err := s.deleteUserKeepingMesas(r, id, callerID)
+	moved, err := s.deleteUserKeepingCampaigns(r, id, callerID)
 	if err != nil {
 		return 0, http.StatusInternalServerError, errors.New("Could not delete user")
 	}
 	return moved, http.StatusOK, nil
 }
 
-// deleteUserKeepingMesas moves the campaigns and deletes the account in ONE
+// deleteUserKeepingCampaigns moves the campaigns and deletes the account in ONE
 // transaction: a half-done delete would leave mesas owned by a row that no
 // longer exists.
-func (s *Server) deleteUserKeepingMesas(r *http.Request, userID, newOwnerID int64) (int64, error) {
+func (s *Server) deleteUserKeepingCampaigns(r *http.Request, userID, newOwnerID int64) (int64, error) {
 	ctx := r.Context()
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.R
 		return
 	}
 	reset, err := s.mintPasswordReset(r.Context(), id, currentUser(r).ID)
-	if errors.Is(err, errUsuarioInexistente) {
+	if errors.Is(err, errUserNotFound) {
 		plataforma.WriteError(w, http.StatusNotFound, "User not found")
 		return
 	}
@@ -128,10 +128,10 @@ func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.R
 	plataforma.WriteJSON(w, http.StatusCreated, accountInviteDTO{Token: reset.Token, ExpiresAt: reset.Expiresat})
 }
 
-// errUsuarioInexistente separa "não existe" de "deu errado" para quem CHAMA
+// errUserNotFound separa "não existe" de "deu errado" para quem CHAMA
 // decidir o que dizer: a rota JSON responde 404, a cena do piloto desenha um
 // aviso. A regra não sabe qual é o transporte, e é esse o ponto.
-var errUsuarioInexistente = errors.New("usuário não existe")
+var errUserNotFound = errors.New("usuário não existe")
 
 // mintPasswordReset cunha o link de uso único que o admin entrega (ALE-120).
 //
@@ -147,7 +147,7 @@ var errUsuarioInexistente = errors.New("usuário não existe")
 // estranho.
 func (s *Server) mintPasswordReset(ctx context.Context, usuarioID, criadoPor int64) (sqlcgen.PasswordReset, error) {
 	if _, err := s.queries.GetUserByID(ctx, usuarioID); err != nil {
-		return sqlcgen.PasswordReset{}, errUsuarioInexistente
+		return sqlcgen.PasswordReset{}, errUserNotFound
 	}
 	now := time.Now()
 	return s.queries.CreatePasswordReset(ctx, sqlcgen.CreatePasswordResetParams{

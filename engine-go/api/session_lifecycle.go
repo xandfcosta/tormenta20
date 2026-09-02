@@ -20,7 +20,7 @@ import (
 // O que se extraiu é a DECISÃO, não a resposta: quem traduz o resultado em JSON
 // ou em remendo continua sendo cada tela.
 
-// IniciaASessao — "iniciar" significa TRÊS coisas conforme o estado, e é por
+// StartSession — "iniciar" significa TRÊS coisas conforme o estado, e é por
 // isso que ela merece função própria:
 //
 //   - já ativa → não faz nada, e não é erro. Clicar duas vezes é o gesto de
@@ -28,7 +28,7 @@ import (
 //   - encerrada → REABRE. A noite continuou, e obrigar a criar uma sessão nova
 //     perderia a fila e o tabuleiro dela.
 //   - planejada → começa do zero, carimbando o início.
-func (s *Server) IniciaASessao(ctx context.Context, sess sqlcgen.Session) (sqlcgen.Session, error) {
+func (s *Server) StartSession(ctx context.Context, sess sqlcgen.Session) (sqlcgen.Session, error) {
 	if sess.Status == "active" {
 		return sess, nil
 	}
@@ -41,13 +41,13 @@ func (s *Server) IniciaASessao(ctx context.Context, sess sqlcgen.Session) (sqlcg
 	})
 }
 
-// EncerraASessao recusa o que nunca começou.
+// EndSession recusa o que nunca começou.
 //
 // A recusa é deliberada e diferente do "já ativa" acima: encerrar uma sessão
 // planejada não é um clique repetido, é um gesto sobre a coisa errada — e
 // carimbar um fim numa noite que não teve início deixaria o histórico dizendo
 // que ela aconteceu.
-func (s *Server) EncerraASessao(ctx context.Context, sess sqlcgen.Session) (sqlcgen.Session, error) {
+func (s *Server) EndSession(ctx context.Context, sess sqlcgen.Session) (sqlcgen.Session, error) {
 	switch sess.Status {
 	case "planned":
 		return sess, fmt.Errorf("a sessão %d nunca foi iniciada; não há o que encerrar", sess.ID)
@@ -60,12 +60,12 @@ func (s *Server) EncerraASessao(ctx context.Context, sess sqlcgen.Session) (sqlc
 	})
 }
 
-// ReiniciaOCombate devolve a fila ao estado de quem acabou de abrir a sessão.
+// RestartCombat devolve a fila ao estado de quem acabou de abrir a sessão.
 //
 // É o gesto do combate que acabou e da mesa que vai começar outro na mesma
 // noite — a sessão continua ao vivo, o que some é a ordem e os turnos. Não
 // confundir com ENCERRAR, que tira a partida do ar.
-func (s *Server) ReiniciaOCombate(ctx context.Context, sessionID int64) error {
+func (s *Server) RestartCombat(ctx context.Context, sessionID int64) error {
 	if err := s.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
 		RuntimeState: defaultRuntimeState, UpdatedAt: plataforma.NowISO(), ID: sessionID,
 	}); err != nil {

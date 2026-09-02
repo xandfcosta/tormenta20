@@ -85,7 +85,7 @@ func asFerramentasDoMapa() []ferramentaDoMapa {
 	}
 	// Os PINCÉIS saem da lista de espécies e nunca de uma cópia escrita à mão: a
 	// quinta espécie nasce no trilho, com atalho, sem ninguém lembrar disto.
-	for _, pincel := range tabuleiro.EspeciesDeTerreno {
+	for _, pincel := range tabuleiro.TerrainKinds {
 		trilho = append(trilho, ferramentaDoMapa{
 			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
 			Icone: oDesenhoDe(pincel.ID).Icone,

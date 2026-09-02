@@ -372,7 +372,7 @@ templ cartaoDeRaca(r book.Race, livro enderecoDoLivro) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ r.Name }
-			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ r.AtributoMod.Escrito() }</span>
+			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ r.AttributeMod.Escrito() }</span>
 			@seloDaPagina(livro, r.BookPage, r.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">

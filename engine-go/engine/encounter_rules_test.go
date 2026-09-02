@@ -35,7 +35,7 @@ func TestThePartyChallengeLevelFollowsTheBook(t *testing.T) {
 		{"quantidade negativa", 3, -2, 0},
 	}
 	for _, c := range casos {
-		if got := NDDeGrupo(c.nd, c.qtd); math.Abs(got-c.quero) > 1e-9 {
+		if got := PartyChallengeLevel(c.nd, c.qtd); math.Abs(got-c.quero) > 1e-9 {
 			t.Errorf("%s: NDDeGrupo(%v, %d) = %v, quero %v", c.nome, c.nd, c.qtd, got, c.quero)
 		}
 	}
@@ -55,7 +55,7 @@ func TestThePartyChallengeLevelFollowsTheBook(t *testing.T) {
 // específico — se alguém trocar o arredondamento, o sintoma volta a ser
 // "Difícil" e é isso que tem de acusar.
 func TestAFractionalDifferenceDoesNotFallIntoHard(t *testing.T) {
-	d := DificuldadeDoEncontro(NDDeGrupo(0.25, 1) - 1)
+	d := EncounterDifficulty(PartyChallengeLevel(0.25, 1) - 1)
 	if d.Rotulo != "Fácil" {
 		t.Errorf("uma criatura de ND 1/4 contra grupo de nível 1 deu %q, quero Fácil", d.Rotulo)
 	}
@@ -80,7 +80,7 @@ func TestTheDifficultyBands(t *testing.T) {
 		9:    "Mortal",
 	}
 	for diferenca, quero := range casos {
-		if got := DificuldadeDoEncontro(diferenca).Rotulo; got != quero {
+		if got := EncounterDifficulty(diferenca).Rotulo; got != quero {
 			t.Errorf("diferença %v deu %q, quero %q", diferenca, got, quero)
 		}
 	}
@@ -89,38 +89,38 @@ func TestTheDifficultyBands(t *testing.T) {
 // TestAnIrrelevantChallengeIsWorthNoXp: cinco degraus abaixo do nível do grupo e o
 // combate não ensina nada (p326).
 func TestAnIrrelevantChallengeIsWorthNoXp(t *testing.T) {
-	if xp := XPDoEncontro(2, 7, 4, Vitoria); xp != 0 {
+	if xp := EncounterXP(2, 7, 4, Vitoria); xp != 0 {
 		t.Errorf("ND 2 contra grupo de nível 7 deu %d XP, quero 0", xp)
 	}
 	// A borda: exatamente cinco abaixo ainda é irrelevante; um pouco acima já
 	// vale. Prender as duas é o que impede o `<=` de virar `<`.
-	if xp := XPDoEncontro(2, 7, 4, Vitoria); xp != 0 {
+	if xp := EncounterXP(2, 7, 4, Vitoria); xp != 0 {
 		t.Errorf("a borda de cinco degraus deu %d, quero 0", xp)
 	}
-	if xp := XPDoEncontro(2.5, 7, 4, Vitoria); xp == 0 {
+	if xp := EncounterXP(2.5, 7, 4, Vitoria); xp == 0 {
 		t.Error("ND 2,5 contra nível 7 é menos de cinco degraus e devia valer XP")
 	}
 }
 
 func TestXpIsSplitAndDependsOnTheOutcome(t *testing.T) {
 	// ND 4, grupo de 4 no nível 3: base 4.000, dividida por quatro.
-	if xp := XPDoEncontro(4, 3, 4, Vitoria); xp != 1000 {
+	if xp := EncounterXP(4, 3, 4, Vitoria); xp != 1000 {
 		t.Errorf("vitória deu %d, quero 1000", xp)
 	}
-	if xp := XPDoEncontro(4, 3, 4, Empate); xp != 500 {
+	if xp := EncounterXP(4, 3, 4, Empate); xp != 500 {
 		t.Errorf("empate deu %d, quero metade", xp)
 	}
-	if xp := XPDoEncontro(4, 3, 4, Derrota); xp != 250 {
+	if xp := EncounterXP(4, 3, 4, Derrota); xp != 250 {
 		t.Errorf("derrota deu %d, quero um quarto", xp)
 	}
 	// Grupo vazio não recebe: dividir por zero seria +Inf virando um número na
 	// tela.
-	if xp := XPDoEncontro(4, 3, 0, Vitoria); xp != 0 {
+	if xp := EncounterXP(4, 3, 0, Vitoria); xp != 0 {
 		t.Errorf("grupo de zero deu %d, quero 0", xp)
 	}
 	// Desfecho desconhecido cai em vitória em vez de zerar o XP: o dado vem da
 	// URL, e um typo não pode apagar a recompensa da mesa.
-	if xp := XPDoEncontro(4, 3, 4, DesfechoDoEncontro("qualquer-coisa")); xp != 1000 {
+	if xp := EncounterXP(4, 3, 4, EncounterOutcome("qualquer-coisa")); xp != 1000 {
 		t.Errorf("desfecho desconhecido deu %d, quero cair em vitória", xp)
 	}
 }

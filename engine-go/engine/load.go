@@ -50,7 +50,7 @@ type LoadBreakdown struct {
 	DisplacementPenalty int  `json:"displacementPenalty"`
 }
 
-// cargaBreakdown resolve a carga contra um limite já calculado — quem calcula o
+// loadBreakdownOf resolve a carga contra um limite já calculado — quem calcula o
 // limite é `inventorySlotsTotal`, e ele entra por parâmetro para os dois lados
 // da conta não divergirem.
 //
@@ -58,8 +58,8 @@ type LoadBreakdown struct {
 // o mestre a ignorá-la "desde que os jogadores não abusem" (p141), e não dá para
 // vigiar abuso sem ver o número. O que o interruptor governa é a consequência.
 //
-// @example cargaBreakdown(ch, 18).Overloaded // true com 19 espaços na mochila
-func cargaBreakdown(ch Character, limit int) LoadBreakdown {
+// @example loadBreakdownOf(ch, 18).Overloaded // true com 19 espaços na mochila
+func loadBreakdownOf(ch Character, limit int) LoadBreakdown {
 	items := itemSlotsUsed(ch.Items)
 	coins := coinSlots(ch.Tibar)
 	used := items + coins

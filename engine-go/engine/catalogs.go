@@ -109,27 +109,27 @@ type GrantedPower struct {
 	Modifiers []Modifier `json:"modifiers"`
 }
 
-// Raca mirrors racas.ts Raca (only name + atributoMod are read here).
-type Raca struct {
-	Name        string      `json:"name"`
-	AtributoMod AtributoMod `json:"atributoMod"`
+// RaceAttributeEntry mirrors racas.ts RaceAttributeEntry (only name + atributoMod are read here).
+type RaceAttributeEntry struct {
+	Name         string       `json:"name"`
+	AttributeMod AttributeMod `json:"atributoMod"`
 }
 
-// AtributoMod is the racas.ts AtributoMod union flattened by `kind`. `Mods` and
+// AttributeMod is the racas.ts AttributeMod union flattened by `kind`. `Mods` and
 // `Variants` use orderedInts because raceAttributeMods emits one modifier per
 // entry in the SOURCE object's key order (Object.entries) — a plain map would
 // scramble it and break activeItems parity.
-type AtributoMod struct {
+type AttributeMod struct {
 	Kind     string                 `json:"kind"` // fixed | floating | subraca-gated
 	Mods     orderedInts            `json:"mods"`
 	Count    int                    `json:"count"`
 	Value    int                    `json:"value"`
 	Exclude  string                 `json:"exclude"`
-	Penalty  *AtributoPenalty       `json:"penalty"`
+	Penalty  *AttributePenalty      `json:"penalty"`
 	Variants map[string]orderedInts `json:"variants"`
 }
 
-type AtributoPenalty struct {
+type AttributePenalty struct {
 	Attribute string `json:"attribute"`
 	Value     int    `json:"value"`
 }
@@ -182,21 +182,21 @@ type Catalogs struct {
 	classPowers   []*ClassPower
 	generalByID   map[string]*GeneralPower
 	grantedByName map[string]*GrantedPower
-	racasByName   map[string]*Raca
+	racasByName   map[string]*RaceAttributeEntry
 	tormentaIDs   map[string]bool
 }
 
 // enginePayload is the JSON shape `cmd/genoracle` dumps to
 // engine-go/parity/_catalogs.json (mirrors ensureCatalogs' priming inputs).
 type enginePayload struct {
-	Items         []CatalogItem      `json:"items"`
-	Races         []RaceDefinition   `json:"races"`
-	Origins       []OriginDefinition `json:"origins"`
-	ClassPowers   []ClassPower       `json:"classPowers"`
-	GeneralPowers []GeneralPower     `json:"generalPowers"`
-	GrantedPowers []GrantedPower     `json:"grantedPowers"`
-	Racas         map[string]Raca    `json:"racas"`
-	TormentaIDs   []string           `json:"tormentaPowerIds"`
+	Items         []CatalogItem                 `json:"items"`
+	Races         []RaceDefinition              `json:"races"`
+	Origins       []OriginDefinition            `json:"origins"`
+	ClassPowers   []ClassPower                  `json:"classPowers"`
+	GeneralPowers []GeneralPower                `json:"generalPowers"`
+	GrantedPowers []GrantedPower                `json:"grantedPowers"`
+	Racas         map[string]RaceAttributeEntry `json:"racas"`
+	TormentaIDs   []string                      `json:"tormentaPowerIds"`
 }
 
 // PrimeEngineCatalogs ingests the fetched-catalog JSON (the same data the front
@@ -212,7 +212,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		racesByID:     make(map[string]*RaceDefinition, len(p.Races)),
 		generalByID:   make(map[string]*GeneralPower, len(p.GeneralPowers)),
 		grantedByName: make(map[string]*GrantedPower, len(p.GrantedPowers)),
-		racasByName:   make(map[string]*Raca, len(p.Racas)),
+		racasByName:   make(map[string]*RaceAttributeEntry, len(p.Racas)),
 		tormentaIDs:   make(map[string]bool, len(p.TormentaIDs)),
 	}
 	for i := range p.Items {
@@ -281,9 +281,9 @@ func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 	return nil
 }
 
-// racaByName finds a racas.ts Raca by name (derived.ts racaByName over
+// raceEntryByName finds a racas.ts Raca by name (derived.ts raceEntryByName over
 // racasList) — 17 racas, linear scan is cheap.
-func (c *Catalogs) racaByName(name string) *Raca { return c.racasByName[name] }
+func (c *Catalogs) raceEntryByName(name string) *RaceAttributeEntry { return c.racasByName[name] }
 
 // raceWithDeformidade returns the first name that owns Deformidade (Lefou p23) —
 // mirrors abilities-cache.raceWithDeformidade.

@@ -95,7 +95,7 @@ func TestParseConditionsNeitherDuplicatesNorBreaks(t *testing.T) {
 // criatura descreve o vilão, e ele não volta na semana seguinte ainda caído.
 func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
 	st := aovivo.EmptyRuntimeState()
-	id := contadorDeIds()
+	id := idCounter()
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
 
 	aplicadas := []string{"caido", "atordoado"}
@@ -292,7 +292,7 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 	}
 	// O Clérigo entra na FILA: sem ele lá, "quem não está na fila" seria todo
 	// mundo e o segundo teste não separaria nada.
-	if _, err := s.sessions.AddInitiativeEntry(sessionID, combatenteDeFicha("Clérigo", 14, charID)); err != nil {
+	if _, err := s.sessions.AddInitiativeEntry(sessionID, sheetCombatant("Clérigo", 14, charID)); err != nil {
 		t.Fatalf("pôr o Clérigo na fila: %v", err)
 	}
 	return endSceneFixture{

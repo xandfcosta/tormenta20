@@ -206,7 +206,7 @@ func (s *Server) aAbaDe(ctx context.Context, sessionID, userID int64) string {
 // tela morta: o mestre mostra a cripta, encerra a cripta, e quem foi trazido
 // volta para onde estava em vez de ficar olhando um tabuleiro que não existe.
 func (s *Server) aAbaComOPuxao(ctx context.Context, sessionID, userID int64) (aba string, puxado bool, deOnde string) {
-	abertos := s.boards.Abertos(ctx, sessionID)
+	abertos := s.boards.OpenBoards(ctx, sessionID)
 	aberta := func(id string) bool {
 		if id == "" {
 			return false
@@ -259,7 +259,7 @@ func mostraAMesaEstaAba(st *Server, c mesaComando) (*tabuleiro.BoardState, error
 	// Puxar para uma aba que não existe deixaria a mesa inteira caindo no padrão
 	// sem nada dizendo por quê. O id vem do caminho, então isto é a conferência
 	// de sempre: o que o cliente manda não é a verdade.
-	for _, aberto := range st.boards.Abertos(c.R.Context(), c.SessionID) {
+	for _, aberto := range st.boards.OpenBoards(c.R.Context(), c.SessionID) {
 		if aberto.ID == alvo {
 			st.abas.Puxa(c.SessionID, c.User.ID, alvo)
 			return nil, nil

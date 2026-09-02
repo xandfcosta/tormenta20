@@ -356,7 +356,7 @@ type mestreView struct {
 	Contador string
 	// Avanco é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
 	// em vez de o que faz (ALE-184).
-	Avanco aovivo.AlvoDoProximoTurno
+	Avanco aovivo.NextTurnTarget
 	// VeVitais decide se a fila mostra PV de NPC. A pergunta é sobre a FILA e
 	// não sobre o papel: numa fila só de PCs não há o que reservar.
 	VeVitais bool
@@ -370,15 +370,15 @@ type mestreView struct {
 
 func mestreViewOf(
 	st *aovivo.SessionRuntimeState,
-	membros []aovivo.MembroDaMesa,
+	membros []aovivo.TableMember,
 	presentes []int64,
 	ehMestre bool,
 ) mestreView {
 	return mestreView{
-		Contador:    aovivo.ContadorDoTurno(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
-		Avanco:      aovivo.ProximoTurno(st.Initiative, st.TurnIndex),
-		VeVitais:    aovivo.OMestreVeOsVitais(st.Initiative, ehMestre),
-		Conectados:  aovivo.PersonagensConectados(membros, presentes),
+		Contador:    aovivo.TurnCounter(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
+		Avanco:      aovivo.NextTurnButton(st.Initiative, st.TurnIndex),
+		VeVitais:    aovivo.GmSeesVitals(st.Initiative, ehMestre),
+		Conectados:  aovivo.ConnectedCharacters(membros, presentes),
 		PodeAvancar: st.SceneActive && len(st.Initiative) > 0,
 	}
 }

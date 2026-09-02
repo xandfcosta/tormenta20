@@ -84,19 +84,19 @@ func acrescentaCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeStat
 	if err != nil {
 		return nil, err
 	}
-	if err := aovivo.ValidaCombatenteNovo(novo); err != nil {
+	if err := aovivo.ValidateCombatantDraft(novo); err != nil {
 		return nil, err
 	}
 	entrada := map[string]any{
-		"label":      strings.TrimSpace(novo.Rotulo),
-		"initiative": novo.Iniciativa,
-		"type":       novo.Tipo,
+		"label":      strings.TrimSpace(novo.Label),
+		"initiative": novo.Initiative,
+		"type":       novo.Kind,
 	}
 	// PV ZERO fica de fora em vez de virar 0/0: "sem vida registrada" é a
 	// ausência do campo, e uma barra 0/0 diria que o capanga já está morto.
-	if novo.PV > 0 {
-		entrada["hpCurrent"] = novo.PV
-		entrada["hpMax"] = novo.PV
+	if novo.HP > 0 {
+		entrada["hpCurrent"] = novo.HP
+		entrada["hpMax"] = novo.HP
 	}
 	linha, err := st.materializeEntry(c.R.Context(), c.User.ID, c.CampaignID, entrada)
 	if err != nil {
@@ -125,7 +125,7 @@ func acrescentaCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeStat
 // intocado — o fio leva os dois e o servidor lê o errado. Foi exatamente isso
 // que aconteceu com a qualidade do descanso, e o navegador foi a única
 // testemunha.
-func combatenteDosSinais(r *http.Request) (aovivo.CombatenteNovo, error) {
+func combatenteDosSinais(r *http.Request) (aovivo.CombatantDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
 		Nome       string `json:"novonome"`
@@ -134,10 +134,10 @@ func combatenteDosSinais(r *http.Request) (aovivo.CombatenteNovo, error) {
 		Tipo       string `json:"novotipo"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
-		return aovivo.CombatenteNovo{}, fmt.Errorf("não entendi o combatente enviado: %v", err)
+		return aovivo.CombatantDraft{}, fmt.Errorf("não entendi o combatente enviado: %v", err)
 	}
-	return aovivo.CombatenteNovo{
-		Rotulo: sinais.Nome, Iniciativa: sinais.Iniciativa, PV: sinais.PV, Tipo: sinais.Tipo,
+	return aovivo.CombatantDraft{
+		Label: sinais.Nome, Initiative: sinais.Iniciativa, HP: sinais.PV, Kind: sinais.Tipo,
 	}, nil
 }
 
@@ -225,7 +225,7 @@ func editaOCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, e
 	if err != nil {
 		return nil, err
 	}
-	if err := aovivo.ValidaIniciativa(edicao.Iniciativa); err != nil {
+	if err := aovivo.ValidateInitiative(edicao.Iniciativa); err != nil {
 		return nil, err
 	}
 	antes := st.sessions.GetState(c.SessionID)

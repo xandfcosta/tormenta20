@@ -21,7 +21,7 @@ func TestTheInitialCutsByRuneAndNotByByte(t *testing.T) {
 		"jogador@t20.local": "J",
 	}
 	for entrada, quer := range casos {
-		if got := inicialDe(entrada); got != quer {
+		if got := initialOf(entrada); got != quer {
 			t.Errorf("inicialDe(%q) = %q, queria %q", entrada, got, quer)
 		}
 	}

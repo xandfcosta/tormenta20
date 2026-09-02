@@ -29,7 +29,7 @@ import (
 // que é exatamente o jeito de perder uma delas em silêncio. Trocar por structs
 // tipados é limpeza válida, depois, com os testes de tabuleiro no ar.
 
-// aAbaPadrao é o id vazio, e ele significa "o tabuleiro de quem não escolheu
+// defaultTab é o id vazio, e ele significa "o tabuleiro de quem não escolheu
 // nenhum" — o primeiro aberto da sessão (ALE-205, ver `BoardStore.achaLocked`).
 //
 // TODA rota deste arquivo o usa, e isso é uma afirmação sobre a TELA ANTIGA: a
@@ -39,7 +39,7 @@ import (
 // argumento esquecido.
 //
 // Ela some junto com a SPA no `git rm` da ALE-269.
-const aAbaPadrao = ""
+const defaultTab = ""
 
 // boardBody lê o corpo como mapa para os parsers do socket continuarem valendo.
 // Corpo ausente é mapa vazio: vários comandos não têm corpo nenhum.
@@ -84,7 +84,7 @@ func (s *Server) mutateBoardAndPublish(
 func (s *Server) publishBoardState(sessionID int64, board *tabuleiro.BoardState) {
 	if board != nil {
 		go s.persistBoardAndWarn(sessionID, board.ID)
-		if board.ID != s.boards.APadrao(context.Background(), sessionID) {
+		if board.ID != s.boards.DefaultBoardID(context.Background(), sessionID) {
 			return
 		}
 	}
@@ -99,7 +99,7 @@ func (s *Server) publishBoardState(sessionID int64, board *tabuleiro.BoardState)
 	s.sse.EmitOrdered(sessionID, "player", "board-state", ordem, tabuleiro.BoardForRole("player", board))
 }
 
-// publicaOQueSobrou é o quadro DEPOIS de fechar uma aba (ALE-205).
+// publishWhatIsLeft é o quadro DEPOIS de fechar uma aba (ALE-205).
 //
 // Fechar publicava `nil`, e `nil` é a frase "esta sessão não tem tabuleiro". Com
 // várias abas ela passou a poder ser MENTIRA: fechar a cripta com a taverna
@@ -109,8 +109,8 @@ func (s *Server) publishBoardState(sessionID int64, board *tabuleiro.BoardState)
 //
 // Então quem responde é o estado: sobrou aba, vai a PADRÃO; não sobrou, vai o
 // `nil` de sempre, que continua sendo a verdade.
-func (s *Server) publicaOQueSobrou(ctx context.Context, sessionID int64) {
-	s.publishBoardState(sessionID, s.boards.Get(ctx, sessionID, aAbaPadrao))
+func (s *Server) publishWhatIsLeft(ctx context.Context, sessionID int64) {
+	s.publishBoardState(sessionID, s.boards.Get(ctx, sessionID, defaultTab))
 }
 
 func (s *Server) persistBoardAndWarn(sessionID int64, tabuleiroID string) {
@@ -162,16 +162,16 @@ func (s *Server) handleBoardClose(w http.ResponseWriter, r *http.Request) {
 	if !ok || !requireGmRole(w, ctx) {
 		return
 	}
-	if atual := s.boards.Get(r.Context(), ctx.sessionID, aAbaPadrao); atual != nil {
+	if atual := s.boards.Get(r.Context(), ctx.sessionID, defaultTab); atual != nil {
 		if err := s.boards.Archive(r.Context(), ctx.campaignID, atual); err != nil {
 			log.Printf("session %d: falha ao arquivar o lugar (%v)", ctx.sessionID, err)
 		}
 	}
 	// Um DELETE que falha deixa o tabuleiro fantasma no banco (ALE-155).
-	if Dirty, changed := s.boards.Close(r.Context(), ctx.sessionID, aAbaPadrao); changed {
+	if Dirty, changed := s.boards.Close(r.Context(), ctx.sessionID, defaultTab); changed {
 		s.warnPersistenceOnBoard(ctx.sessionID, Dirty)
 	}
-	s.publicaOQueSobrou(r.Context(), ctx.sessionID)
+	s.publishWhatIsLeft(r.Context(), ctx.sessionID)
 	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"closed": true})
 }
 
@@ -180,7 +180,7 @@ func (s *Server) handleBoardGet(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, tabuleiro.BoardForRole(ctx.Role, s.boards.Get(r.Context(), ctx.sessionID, aAbaPadrao)))
+	plataforma.WriteJSON(w, http.StatusOK, tabuleiro.BoardForRole(ctx.Role, s.boards.Get(r.Context(), ctx.sessionID, defaultTab)))
 }
 
 // handleBoardAsPlayer devolve ao MESTRE a versão que a mesa vê — é o "espiar
@@ -205,7 +205,7 @@ func (s *Server) handleBoardCurtain(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusBadRequest, "curtained (bool) is required")
 		return
 	}
-	board, mudou, err := s.boards.SetCurtain(r.Context(), ctx.sessionID, aAbaPadrao, fechada)
+	board, mudou, err := s.boards.SetCurtain(r.Context(), ctx.sessionID, defaultTab, fechada)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
@@ -223,7 +223,7 @@ func (s *Server) handleBoardAsPlayer(w http.ResponseWriter, r *http.Request) {
 	if !ok || !requireGmRole(w, ctx) {
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, tabuleiro.BoardForRole("player", s.boards.Get(r.Context(), ctx.sessionID, aAbaPadrao)))
+	plataforma.WriteJSON(w, http.StatusOK, tabuleiro.BoardForRole("player", s.boards.Get(r.Context(), ctx.sessionID, defaultTab)))
 }
 
 // --- Peças -----------------------------------------------------------------
@@ -235,7 +235,7 @@ func (s *Server) handleBoardTokenAdd(w http.ResponseWriter, r *http.Request) {
 	}
 	token, temPosicao := tabuleiro.ParseBoardToken(body)
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.AddToken(r.Context(), ctx.sessionID, aAbaPadrao, token, temPosicao)
+		return s.boards.AddToken(r.Context(), ctx.sessionID, defaultTab, token, temPosicao)
 	})
 }
 
@@ -245,7 +245,7 @@ func (s *Server) handleBoardTokenRemove(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.RemoveToken(r.Context(), ctx.sessionID, aAbaPadrao, tokenID)
+		return s.boards.RemoveToken(r.Context(), ctx.sessionID, defaultTab, tokenID)
 	})
 }
 
@@ -261,7 +261,7 @@ func (s *Server) handleBoardTokenUpdate(w http.ResponseWriter, r *http.Request) 
 	}
 	patch := tabuleiro.ParseTokenPatch(body["patch"])
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.UpdateToken(r.Context(), ctx.sessionID, aAbaPadrao, tokenID, patch)
+		return s.boards.UpdateToken(r.Context(), ctx.sessionID, defaultTab, tokenID, patch)
 	})
 }
 
@@ -271,7 +271,7 @@ func (s *Server) handleBoardTokenDuplicate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.DuplicateToken(r.Context(), ctx.sessionID, aAbaPadrao, tokenID)
+		return s.boards.DuplicateToken(r.Context(), ctx.sessionID, defaultTab, tokenID)
 	})
 }
 
@@ -301,7 +301,7 @@ func (s *Server) handleBoardMarkerAdd(w http.ResponseWriter, r *http.Request) {
 		Hidden: escondido,
 	}
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.AddMarker(r.Context(), ctx.sessionID, aAbaPadrao, marker)
+		return s.boards.AddMarker(r.Context(), ctx.sessionID, defaultTab, marker)
 	})
 }
 
@@ -317,7 +317,7 @@ func (s *Server) handleBoardMarkerUpdate(w http.ResponseWriter, r *http.Request)
 	}
 	patch := tabuleiro.ParseMarkerPatch(body["patch"])
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.UpdateMarker(r.Context(), ctx.sessionID, aAbaPadrao, markerID, patch)
+		return s.boards.UpdateMarker(r.Context(), ctx.sessionID, defaultTab, markerID, patch)
 	})
 }
 
@@ -332,7 +332,7 @@ func (s *Server) handleBoardMarkerRemove(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.RemoveMarker(r.Context(), ctx.sessionID, aAbaPadrao, markerID)
+		return s.boards.RemoveMarker(r.Context(), ctx.sessionID, defaultTab, markerID)
 	})
 }
 
@@ -358,10 +358,10 @@ func (s *Server) handleBoardTerrainPaint(w http.ResponseWriter, r *http.Request)
 	// a SPA manda só `x`, `y` e `difficult`, e continua pintando exatamente o
 	// que pintava. O nome do campo do corpo continua `difficult` pelo mesmo
 	// motivo — renomeá-lo para `on` seria quebrar a SPA para ganhar uma palavra.
-	especie := tabuleiro.EspecieConhecida(plataforma.StringField(body, "kind"))
+	especie := tabuleiro.KnownTerrainKind(plataforma.StringField(body, "kind"))
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
 		return s.boards.PaintTerrain(
-			r.Context(), ctx.sessionID, aAbaPadrao, engine.Square{X: int(x), Y: int(y)}, especie, ligado,
+			r.Context(), ctx.sessionID, defaultTab, engine.Square{X: int(x), Y: int(y)}, especie, ligado,
 		)
 	})
 }
@@ -372,7 +372,7 @@ func (s *Server) handleBoardPopulate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	board, err := s.boards.Populate(
-		r.Context(), ctx.sessionID, aAbaPadrao,
+		r.Context(), ctx.sessionID, defaultTab,
 		s.sessions.GetState(ctx.sessionID), tabuleiro.ChosenEntries(body, "entryIds"),
 	)
 	if err != nil {
@@ -380,7 +380,7 @@ func (s *Server) handleBoardPopulate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if speeds := s.speedsForBoard(board); len(speeds) > 0 {
-		if withSpeeds, err := s.boards.SetSpeeds(r.Context(), ctx.sessionID, aAbaPadrao, speeds); err == nil {
+		if withSpeeds, err := s.boards.SetSpeeds(r.Context(), ctx.sessionID, defaultTab, speeds); err == nil {
 			board = withSpeeds
 		}
 	}
@@ -406,12 +406,12 @@ func (s *Server) handleBoardReopen(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	board, err := s.boards.ShowPlace(r.Context(), ctx.campaignID, ctx.sessionID, aAbaPadrao, placeID)
+	board, err := s.boards.ShowPlace(r.Context(), ctx.campaignID, ctx.sessionID, defaultTab, placeID)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if Dirty, changed := s.boards.Persist(r.Context(), ctx.sessionID, aAbaPadrao); changed {
+	if Dirty, changed := s.boards.Persist(r.Context(), ctx.sessionID, defaultTab); changed {
 		s.warnPersistenceOnBoard(ctx.sessionID, Dirty)
 	}
 	s.publishBoardState(ctx.sessionID, board)
@@ -488,7 +488,7 @@ func (s *Server) handleBoardMovePropose(w http.ResponseWriter, r *http.Request) 
 	}
 	by, speed := s.moverFor(ctx, tokenID)
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.ProposeMove(r.Context(), ctx.sessionID, aAbaPadrao,
+		return s.boards.ProposeMove(r.Context(), ctx.sessionID, defaultTab,
 			s.sessions.GetState(ctx.sessionID), tokenID, path, by, speed)
 	})
 }
@@ -503,9 +503,9 @@ func (s *Server) handleBoardMoveCommit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	version, _ := plataforma.IntField(body, "version")
-	by, _ := s.moverFor(ctx, pendingTokenOf(s.boards.Get(r.Context(), ctx.sessionID, aAbaPadrao)))
+	by, _ := s.moverFor(ctx, pendingTokenOf(s.boards.Get(r.Context(), ctx.sessionID, defaultTab)))
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.CommitMove(r.Context(), ctx.sessionID, aAbaPadrao,
+		return s.boards.CommitMove(r.Context(), ctx.sessionID, defaultTab,
 			s.sessions.GetState(ctx.sessionID), version, by)
 	})
 }
@@ -515,9 +515,9 @@ func (s *Server) handleBoardMoveCancel(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	by, _ := s.moverFor(ctx, pendingTokenOf(s.boards.Get(r.Context(), ctx.sessionID, aAbaPadrao)))
+	by, _ := s.moverFor(ctx, pendingTokenOf(s.boards.Get(r.Context(), ctx.sessionID, defaultTab)))
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
-		return s.boards.CancelMove(r.Context(), ctx.sessionID, aAbaPadrao, by)
+		return s.boards.CancelMove(r.Context(), ctx.sessionID, defaultTab, by)
 	})
 }
 

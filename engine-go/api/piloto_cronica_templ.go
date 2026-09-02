@@ -1352,7 +1352,7 @@ func cadastroDaCronica(v cronicaView) templ.Component {
 		}
 		templ_7745c5c3_Err = ui.TextField(ui.Field{
 			Nome: "name", Label: "Nome", Valor: v.Nome,
-			Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
+			Obrigatorio: true, TamanhoMaximo: maxCampaignNameLength,
 			Erros: v.Erros["name"],
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -1360,7 +1360,7 @@ func cadastroDaCronica(v cronicaView) templ.Component {
 		}
 		templ_7745c5c3_Err = ui.TextArea(ui.Field{
 			Nome: "description", Label: "Descrição", Valor: v.Descricao,
-			TamanhoMaximo: descricaoDeCampanhaMax,
+			TamanhoMaximo: maxCampaignDescriptionLength,
 			Erros:         v.Erros["description"],
 		}, 6).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

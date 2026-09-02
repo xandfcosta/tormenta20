@@ -10,7 +10,7 @@ import (
 // suíte da SPA já nomeava, porque as bordas não mudaram com o transporte.
 
 func TestEqualsComeOutEqualAndTheNumberStaysOutOfTheColor(t *testing.T) {
-	um, tres := AparenciaDe("Zumbi 1"), AparenciaDe("Zumbi 3")
+	um, tres := AppearanceOf("Zumbi 1"), AppearanceOf("Zumbi 3")
 
 	if um.Matiz != tres.Matiz {
 		t.Errorf("dois zumbis saíram em matizes diferentes: %d e %d", um.Matiz, tres.Matiz)
@@ -27,7 +27,7 @@ func TestEqualsComeOutEqualAndTheNumberStaysOutOfTheColor(t *testing.T) {
 // "Zumbi Putrefato 2" virava "ZP" e o número — a única coisa que distingue as
 // três peças na mesa — era justamente o que se perdia.
 func TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal(t *testing.T) {
-	p := AparenciaDe("Zumbi Putrefato 2")
+	p := AppearanceOf("Zumbi Putrefato 2")
 	if p.Monograma != "ZP" || p.Instancia != "2" {
 		t.Errorf("ficou %q + %q, queria ZP + 2", p.Monograma, p.Instancia)
 	}
@@ -36,7 +36,7 @@ func TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal(t *testing.T) {
 // DUAS letras mesmo em nome de uma palavra: no tabuleiro um "O" solto tem
 // metade da massa que a peça precisa para ser achada entre vinte vizinhas.
 func TestWithoutANumberThereIsNoSealAndTheMonogramStillHasTwoLetters(t *testing.T) {
-	p := AparenciaDe("Ogro")
+	p := AppearanceOf("Ogro")
 	if p.Instancia != "" {
 		t.Errorf("apareceu selo %q num nome sem número", p.Instancia)
 	}
@@ -48,7 +48,7 @@ func TestWithoutANumberThereIsNoSealAndTheMonogramStillHasTwoLetters(t *testing.
 // "Nv1" está no MEIO do nome e não é instância: separar por qualquer dígito
 // transformaria "Recruta Nv1 Simples" em outra espécie.
 func TestANumberInTheMiddleOfTheNameIsNotAnInstance(t *testing.T) {
-	p := AparenciaDe("Recruta Nv1 Simples")
+	p := AppearanceOf("Recruta Nv1 Simples")
 	if p.Instancia != "" {
 		t.Errorf("o Nv1 virou selo %q", p.Instancia)
 	}
@@ -58,7 +58,7 @@ func TestANumberInTheMiddleOfTheNameIsNotAnInstance(t *testing.T) {
 }
 
 func TestDifferentKindsStayDistinct(t *testing.T) {
-	if AparenciaDe("Zumbi 1").Matiz == AparenciaDe("Goblin 1").Matiz {
+	if AppearanceOf("Zumbi 1").Matiz == AppearanceOf("Goblin 1").Matiz {
 		t.Error("zumbi e goblin saíram no mesmo matiz — a cor deixou de dizer algo")
 	}
 }
@@ -89,7 +89,7 @@ func TestTheHueIsTheSameAsTheHeroPortrait(t *testing.T) {
 		"Goblin":   183,
 	}
 	for nome, quero := range casos {
-		if got := matizDe(nome); got != quero {
+		if got := hueOf(nome); got != quero {
 			t.Errorf("matiz de %q = %d, quero %d (rodado no hueFromName da SPA)", nome, got, quero)
 		}
 	}

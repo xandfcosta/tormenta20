@@ -107,7 +107,7 @@ func criaOOficio(s *Server, r *http.Request, row sqlcgen.Character, sinais ficha
 	if sinais.NovoAtributo != nil && attributeKeys[*sinais.NovoAtributo] {
 		atributo = *sinais.NovoAtributo
 	}
-	if err := s.guardaOOficioNovo(r.Context(), row.ID, nome); err != nil {
+	if err := s.saveNewCraft(r.Context(), row.ID, nome); err != nil {
 		return err
 	}
 	_, err := s.queries.CreateExpertise(r.Context(), sqlcgen.CreateExpertiseParams{
@@ -150,7 +150,7 @@ func restauraOPadraoDaClasse(s *Server, r *http.Request, row sqlcgen.Character, 
 // dispara se o servidor montar uma categoria que ele próprio não conhece — é o
 // guarda contra a tela e a validação divergirem, não contra o jogador.
 func (s *Server) gravaAsProficienciasDaFicha(r *http.Request, id int64, categorias []string) error {
-	_, desconhecidas, err := s.guardaAsProficiencias(r.Context(), id, categorias)
+	_, desconhecidas, err := s.saveProficiencies(r.Context(), id, categorias)
 	if len(desconhecidas) > 0 {
 		return fmt.Errorf("proficiência fora do catálogo: %s", strings.Join(desconhecidas, "; "))
 	}

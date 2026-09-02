@@ -38,7 +38,7 @@ import (
 // e ela lê a MESMA `PORT` que o servidor escuta — apontar para uma porta escrita
 // à mão daria uma sonda que reprova um servidor saudável no dia em que a porta
 // mudasse.
-func sondaDeSaude(cfg plataforma.Config) int {
+func healthProbe(cfg plataforma.Config) int {
 	cliente := &http.Client{Timeout: 3 * time.Second}
 	resp, err := cliente.Get(fmt.Sprintf("http://127.0.0.1:%s/health", cfg.Port))
 	if err != nil {
@@ -62,7 +62,7 @@ func main() {
 	// está de pé, e abrir o SQLite de novo aqui poria um segundo escritor no
 	// mesmo arquivo a cada 30 segundos.
 	if len(os.Args) > 1 && os.Args[1] == "-health" {
-		os.Exit(sondaDeSaude(cfg))
+		os.Exit(healthProbe(cfg))
 	}
 	// Fatal, not a warning: a production boot with a forgeable signing key is
 	// worse than no boot at all, and a warning scrolls away.
@@ -103,7 +103,7 @@ func main() {
 	// de acontecer antes dele. `log.Fatalf` acima pula os defers de qualquer
 	// forma, mas esse caminho é o de erro de listener — não há mesa no ar para
 	// perder.
-	srv.EsperaOSegundoPlano()
+	srv.WaitForBackground()
 }
 
 // httpServerFor monta o servidor com os timeouts da casa. Separado da `serve`
@@ -223,7 +223,7 @@ func buildMux(srv *api.Server) *http.ServeMux {
 	mux.Handle("/", srv.WebRouter())
 	// OS ENDEREÇOS ANTIGOS (ALE-272, fatia 10a). Eram cascas da SPA — um
 	// `beforeLoad` que mandava para o piloto — e nessa forma morreriam com ela.
-	api.MontaEnderecosAntigos(mux)
+	api.MountLegacyAddresses(mux)
 	// As FONTES que a folha pede por caminho absoluto (`/fonts/…`). Elas eram
 	// servidas pelo `dist` da SPA em produção, e é por isso que o binário sem
 	// SPA desenhava toda tela com uma serifada do sistema.
@@ -276,12 +276,12 @@ func lanURLs(cfg plataforma.Config) []string {
 	return urls
 }
 
-// tiposFora são as extensões que a tabela do `mime` do Go não conhece e que
+// extraMimeTypes são as extensões que a tabela do `mime` do Go não conhece e que
 // este servidor precisa acertar. Uma tabela nossa, e não `mime.AddExtensionType`
 // no boot, porque o `mime` também lê o `/etc/mime.types` do HOST: o mesmo
 // binário responderia diferente em duas máquinas, e o teste passaria verde na
 // que tem o arquivo (ALE-118).
-var tiposFora = map[string]string{
+var extraMimeTypes = map[string]string{
 	// Sem isto o manifest sai como `text/plain`, adivinhado pelo CONTEÚDO. O
 	// Chromium engole isso — medido: servido como `text/plain` ele mesmo assim
 	// parseia o manifest inteiro, sem erro. O tipo entra aqui porque é o que a
@@ -295,7 +295,7 @@ var tiposFora = map[string]string{
 // casa à do sistema.
 func contentTypeFor(file string) string {
 	ext := filepath.Ext(file)
-	if ctype, ok := tiposFora[ext]; ok {
+	if ctype, ok := extraMimeTypes[ext]; ok {
 		return ctype
 	}
 	return mime.TypeByExtension(ext)

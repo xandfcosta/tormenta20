@@ -16,15 +16,15 @@ package tabuleiro
 // outro lado, para as duas branches não inventarem dois arquivos para a mesma
 // coisa.
 
-// ChaoDoLugar é uma das aparências que o lugar pode ter. Ver GLOSSARIO.md: é o
+// PlaceGround é uma das aparências que o lugar pode ter. Ver GLOSSARIO.md: é o
 // CHÃO, e não o terreno difícil — um é como a cena se parece, o outro é quanto
 // custa atravessá-la.
-type ChaoDoLugar struct {
+type PlaceGround struct {
 	ID     string
 	Rotulo string
 }
 
-// ChoesDoLugar é a lista que o mestre escolhe ao abrir uma cena.
+// PlaceGrounds é a lista que o mestre escolhe ao abrir uma cena.
 //
 // Ela vive aqui e não na tela porque JÁ EXISTIA duas vezes — em `.chao-*` no CSS
 // do piloto e no `TERRAIN_LABEL` da SPA —, e uma terceira cópia escrita à mão no
@@ -33,7 +33,7 @@ type ChaoDoLugar struct {
 // pintá-lo lá derruba o guarda.
 //
 // A ORDEM é a da SPA, e o primeiro é o padrão de quem não escolhe.
-var ChoesDoLugar = []ChaoDoLugar{
+var PlaceGrounds = []PlaceGround{
 	{"pedra", "Pedra"},
 	{"taverna", "Taverna"},
 	{"floresta", "Floresta"},
@@ -42,5 +42,5 @@ var ChoesDoLugar = []ChaoDoLugar{
 	{"papel", "Papel"},
 }
 
-// ChaoPadrao é o que o servidor usa quando ninguém escolheu.
-func ChaoPadrao() string { return ChoesDoLugar[0].ID }
+// DefaultGround é o que o servidor usa quando ninguém escolheu.
+func DefaultGround() string { return PlaceGrounds[0].ID }

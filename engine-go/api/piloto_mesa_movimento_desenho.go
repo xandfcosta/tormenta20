@@ -91,7 +91,7 @@ func asPernasDoMovimento(dobras []engine.Square, custos []int) []pernaDoMoviment
 func osCustosDasPernas(dobras []engine.Square, terreno engine.MoveTerrain) []int {
 	custos := make([]int, 0, len(dobras))
 	for i := 1; i < len(dobras); i++ {
-		trecho := engine.CaminhoEntre(dobras[i-1], dobras[i])
+		trecho := engine.PathBetween(dobras[i-1], dobras[i])
 		custos = append(custos, engine.PathCost(trecho, terreno, -1).Squares)
 	}
 	return custos

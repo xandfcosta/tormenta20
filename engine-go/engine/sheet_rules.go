@@ -32,9 +32,9 @@ var classSpellcastingAttribute = map[string]string{
 	"Paladino":  "wisdom",
 }
 
-// arcanistaCaminhoAttribute — Caminho do Arcanista, livro p37: "Seu
+// arcanistaPathAttribute — Caminho do Arcanista, livro p37: "Seu
 // atributo-chave para lançar magias é definido pelo seu Caminho".
-var arcanistaCaminhoAttribute = map[string]string{
+var arcanistaPathAttribute = map[string]string{
 	"bruxo":      "intelligence",
 	"feiticeiro": "charisma",
 	"mago":       "intelligence",
@@ -61,7 +61,7 @@ func spellcastingAttributeFor(ch Character, className string) string {
 		return base
 	}
 	caminho := parseClassChoices(ch.ClassChoices)["Arcanista"].Caminho
-	if attr, ok := arcanistaCaminhoAttribute[caminho]; ok {
+	if attr, ok := arcanistaPathAttribute[caminho]; ok {
 		return attr
 	}
 	// Ficha ainda sem a escolha obrigatória do 1º nível: Inteligência, que é o

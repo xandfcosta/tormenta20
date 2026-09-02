@@ -241,7 +241,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	// rota e a cena do servidor precisam das mesmas, e enquanto elas viviam
 	// dentro deste handler a segunda tela teria de copiá-las. O que sobra aqui
 	// é a TRADUÇÃO de cada recusa para o status e a frase que o fio JSON usa.
-	m, err := s.entrarNaMesa(r.Context(), pedidoDeEntrada{
+	m, err := s.joinTable(r.Context(), joinRequest{
 		CampanhaID:   cid,
 		PersonagemID: *body.CharacterID,
 		Convite:      derefStr(body.InviteToken, ""),

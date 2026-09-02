@@ -20,12 +20,12 @@ import "context"
 // uma afirmação sobre o total e não drena pool nenhum. Uma porta só, com um
 // sinal de "é dano?", convidaria a confundir as duas — que foi o defeito que a
 // ALE-122 registrou.
-type VitaisDaFicha interface {
-	// AplicaDelta move PV/PM por uma diferença. Devolve os dois valores que a
+type SheetVitals interface {
+	// ApplyDelta move PV/PM por uma diferença. Devolve os dois valores que a
 	// entrada da fila deve espelhar, INCLUSIVE o que não mudou: espelhar só o
 	// que mudou faria o rastreador mostrar um número que a ficha não tem.
-	AplicaDelta(ctx context.Context, charID int64, hpDelta, mpDelta *int64) (*int64, *int64, error)
+	ApplyDelta(ctx context.Context, charID int64, hpDelta, mpDelta *int64) (*int64, *int64, error)
 
-	// AplicaAbsoluto grava PV/PM totais. Não drena pool temporário.
-	AplicaAbsoluto(ctx context.Context, charID int64, hpCurrent, mpCurrent *int64) (*int64, *int64, error)
+	// ApplyAbsolute grava PV/PM totais. Não drena pool temporário.
+	ApplyAbsolute(ctx context.Context, charID int64, hpCurrent, mpCurrent *int64) (*int64, *int64, error)
 }

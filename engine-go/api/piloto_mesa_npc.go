@@ -137,10 +137,10 @@ func poeONPCNaFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, erro
 	if err != nil {
 		return nil, err
 	}
-	novo := aovivo.CombatenteNovo{
-		Rotulo: linha.Name, Iniciativa: bloco.Iniciativa, PV: int64(bloco.HP), Tipo: "npc",
+	novo := aovivo.CombatantDraft{
+		Label: linha.Name, Initiative: bloco.Iniciativa, HP: int64(bloco.HP), Kind: "npc",
 	}
-	if err := aovivo.ValidaCombatenteNovo(novo); err != nil {
+	if err := aovivo.ValidateCombatantDraft(novo); err != nil {
 		return nil, err
 	}
 	// `creatureId` liga a LINHA ao bloco guardado, e é o que faz o olho da fila

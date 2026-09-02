@@ -97,15 +97,15 @@ func ParseOriginItem(entry string) OriginItemGrant {
 	if originChoiceEnd.MatchString(entry) {
 		lista := originChoiceEnd.ReplaceAllString(entry, "")
 		return OriginItemGrant{
-			Kind: OriginItemOneOf, Label: entry, Options: comInicialMaiuscula(originChoiceSep.Split(lista, -1)),
+			Kind: OriginItemOneOf, Label: entry, Options: withInitialCapital(originChoiceSep.Split(lista, -1)),
 		}
 	}
 	return OriginItemGrant{Kind: OriginItemFixed, Label: entry, Name: entry}
 }
 
-// comInicialMaiuscula arruma as alternativas de uma lista escrita em corrido —
+// withInitialCapital arruma as alternativas de uma lista escrita em corrido —
 // "cão de caça, cavalo, pônei ou trobo" vira quatro nomes próprios de item.
-func comInicialMaiuscula(partes []string) []string {
+func withInitialCapital(partes []string) []string {
 	saida := make([]string, 0, len(partes))
 	for _, parte := range partes {
 		parte = strings.TrimSpace(parte)

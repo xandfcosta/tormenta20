@@ -45,11 +45,11 @@ func hub(v hubView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = menuDoHub(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = hubMenu(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = rodapeDoHub(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = hubFooter(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -67,10 +67,10 @@ func hub(v hubView) templ.Component {
 	})
 }
 
-// menuDoHub é o menu principal. `data-nav-region` + `data-nav-layout` são o
+// hubMenu é o menu principal. `data-nav-region` + `data-nav-layout` são o
 // contrato com o driver de teclado — o menu declara a forma e nunca importa o
 // driver, exatamente como na SPA.
-func menuDoHub(v hubView) templ.Component {
+func hubMenu(v hubView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -95,15 +95,15 @@ func menuDoHub(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = itemDoMenu("Users2", "Meus Heróis", "/personagens", false).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = menuItem("Users2", "Meus Heróis", "/personagens", false).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = itemDoMenu("Scroll", "Campanhas", "/campanhas", false).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = menuItem("Scroll", "Campanhas", "/campanhas", false).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = itemDoMenu("Wand2", "Ferramentas do Mestre", "/mestre/bestiario", false).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = menuItem("Wand2", "Ferramentas do Mestre", "/mestre/bestiario", false).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -112,7 +112,7 @@ func menuDoHub(v hubView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = itemDoMenu("PlayCircle", "Continuar sessão",
+			templ_7745c5c3_Err = menuItem("PlayCircle", "Continuar sessão",
 				v.Viva.Rota, true).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -126,14 +126,14 @@ func menuDoHub(v hubView) templ.Component {
 	})
 }
 
-// itemDoMenu é um `<a>` de verdade e não um `<button>` com JavaScript: cada
+// menuItem é um `<a>` de verdade e não um `<button>` com JavaScript: cada
 // entrada é NAVEGAÇÃO, e um botão perderia o clique do meio, o "abrir em nova
 // aba" e o menu de contexto que o navegador já dá.
 //
 // Os `data-cue-*` são o gancho dos sons: o `cena.js` escuta por DELEGAÇÃO num
 // ouvinte só, porque o HTML pode ser remendado a qualquer tique e ouvinte preso
 // a nó morre no remendo.
-func itemDoMenu(icone_, rotulo, destino string, temProximo bool) templ.Component {
+func menuItem(icone_, rotulo, destino string, temProximo bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -206,8 +206,8 @@ func itemDoMenu(icone_, rotulo, destino string, temProximo bool) templ.Component
 	})
 }
 
-// rodapeDoHub é a tira de identidade, com o menu rápido do jogador.
-func rodapeDoHub(v hubView) templ.Component {
+// hubFooter é a tira de identidade, com o menu rápido do jogador.
+func hubFooter(v hubView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -279,7 +279,7 @@ func rodapeDoHub(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = menuDoJogador(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = playerMenu(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -291,7 +291,7 @@ func rodapeDoHub(v hubView) templ.Component {
 	})
 }
 
-// menuDoJogador é o popover NATIVO.
+// playerMenu é o popover NATIVO.
 //
 // O `position: fixed` com `margin: 0` é obrigatório: a top layer ignora o
 // contexto de posicionamento do pai, e o preflight do Tailwind não zera a
@@ -301,7 +301,7 @@ func rodapeDoHub(v hubView) templ.Component {
 // Os sinais aqui são estado de INTERAÇÃO (o rótulo do som, a visibilidade do
 // slider), não da aplicação — e nascem no `data-init` lendo a preferência deste
 // aparelho. Não há lampejo de rótulo errado porque o menu começa FECHADO.
-func menuDoJogador(v hubView) templ.Component {
+func playerMenu(v hubView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -326,7 +326,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var11 = []any{classeDoItemRapido(false)}
+		var templ_7745c5c3_Var11 = []any{quickItemClass(false)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var11...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -364,7 +364,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var13 = []any{classeDoItemRapido(false)}
+		var templ_7745c5c3_Var13 = []any{quickItemClass(false)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -407,7 +407,7 @@ func menuDoJogador(v hubView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var15 = []any{classeDoItemRapido(false)}
+			var templ_7745c5c3_Var15 = []any{quickItemClass(false)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -437,7 +437,7 @@ func menuDoJogador(v hubView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var17 = []any{classeDoItemRapido(false)}
+			var templ_7745c5c3_Var17 = []any{quickItemClass(false)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var17...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -468,7 +468,7 @@ func menuDoJogador(v hubView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		var templ_7745c5c3_Var19 = []any{classeDoItemRapido(false)}
+		var templ_7745c5c3_Var19 = []any{quickItemClass(false)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var19...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -498,7 +498,7 @@ func menuDoJogador(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var21 = []any{classeDoItemRapido(true)}
+		var templ_7745c5c3_Var21 = []any{quickItemClass(true)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var21...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -532,9 +532,9 @@ func menuDoJogador(v hubView) templ.Component {
 	})
 }
 
-// classeDoItemRapido: uma linha do menu rápido. Em função e não repetida sete
+// quickItemClass: uma linha do menu rápido. Em função e não repetida sete
 // vezes porque a lista de classes é longa e uma cópia divergente é invisível.
-func classeDoItemRapido(perigo bool) string {
+func quickItemClass(perigo bool) string {
 	base := "flex w-full items-center gap-2.5 rounded-none px-2.5 py-2 text-left font-heading text-sm tracking-wide transition-colors hover:bg-accent focus-visible:bg-accent outline-none"
 	if perigo {
 		return ui.Join(base, "text-grimorio-crimson-bright")

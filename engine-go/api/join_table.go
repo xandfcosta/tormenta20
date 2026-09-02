@@ -30,8 +30,8 @@ var (
 	errJaTemPersonagem       = errors.New("já tem personagem nesta campanha")
 )
 
-// pedidoDeEntrada é o que se precisa saber para deixar alguém sentar à mesa.
-type pedidoDeEntrada struct {
+// joinRequest é o que se precisa saber para deixar alguém sentar à mesa.
+type joinRequest struct {
 	CampanhaID   int64
 	PersonagemID int64
 	// Convite é dispensado para o DONO da campanha, que não precisa de convite
@@ -41,13 +41,13 @@ type pedidoDeEntrada struct {
 	QuemPede int64
 }
 
-// entrarNaMesa aplica as sete travas e faz o instantâneo.
+// joinTable aplica as sete travas e faz o instantâneo.
 //
 // A ORDEM importa e é a mesma do handler original: campanha, depois convite,
 // depois personagem. Checar o personagem antes do convite diria a um estranho
 // se um id de personagem existe — informação que ele não deveria conseguir
 // sondar sem estar convidado.
-func (s *Server) entrarNaMesa(ctx context.Context, p pedidoDeEntrada) (sqlcgen.CampaignMember, error) {
+func (s *Server) joinTable(ctx context.Context, p joinRequest) (sqlcgen.CampaignMember, error) {
 	c, err := s.queries.GetCampaign(ctx, p.CampanhaID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return sqlcgen.CampaignMember{}, errCampanhaInexistente

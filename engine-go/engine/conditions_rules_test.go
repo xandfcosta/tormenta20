@@ -219,7 +219,7 @@ func TestConditionPenaltiesOnOneSkillDoNotStackAcrossTargets(t *testing.T) {
 		vested := "vested"
 		e := ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}})
 		// Mochila vazia: este caso é sobre condições, e a sobrecarga não entra.
-		return expertiseBreakdown(ch, reflexos, e, cargaBreakdown(ch, 10)).ItemBonus
+		return expertiseBreakdown(ch, reflexos, e, loadBreakdownOf(ch, 10)).ItemBonus
 	}
 
 	if got := sheetFor("desprevenido"); got != -5 {

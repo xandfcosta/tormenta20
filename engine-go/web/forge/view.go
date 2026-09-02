@@ -139,7 +139,7 @@ func raceCardOf(raca book.Race, escolhida string) raceCard {
 		nomes = append(nomes, habilidade.Name)
 	}
 	return raceCard{
-		Name: raca.Name, Attributes: raca.AtributoMod.Escrito(),
+		Name: raca.Name, Attributes: raca.AttributeMod.Escrito(),
 		Size: raca.Tamanho, Displacement: raca.Deslocamento,
 		Abilities: strings.Join(nomes, ", "), Chosen: raca.Name == escolhida,
 	}

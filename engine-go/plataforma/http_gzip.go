@@ -62,15 +62,15 @@ func Gzip(next http.Handler) http.Handler {
 		// decide não comprimir: sem ele, um cache guardaria a resposta
 		// comprimida e a serviria a quem não aceita gzip.
 		w.Header().Add("Vary", "Accept-Encoding")
-		envelope := &escritorComGzip{ResponseWriter: w}
+		envelope := &gzipEnvelope{ResponseWriter: w}
 		defer envelope.Close()
 		next.ServeHTTP(envelope, r)
 	})
 }
 
-// escritorComGzip decide no PRIMEIRO write se vale comprimir, porque é só aí
+// gzipEnvelope decide no PRIMEIRO write se vale comprimir, porque é só aí
 // que o handler já escreveu o `Content-Type`.
-type escritorComGzip struct {
+type gzipEnvelope struct {
 	http.ResponseWriter
 	gz       *gzip.Writer
 	decidido bool
@@ -83,13 +83,13 @@ var poolDeGzip = sync.Pool{
 	New: func() any { return gzip.NewWriter(nil) },
 }
 
-func (e *escritorComGzip) WriteHeader(status int) {
+func (e *gzipEnvelope) WriteHeader(status int) {
 	e.decide(status)
 	e.ResponseWriter.WriteHeader(status)
 }
 
 // decide resolve, uma vez, se esta resposta vai comprimida.
-func (e *escritorComGzip) decide(status int) {
+func (e *gzipEnvelope) decide(status int) {
 	if e.decidido {
 		return
 	}
@@ -150,7 +150,7 @@ func vaiComprimir(h http.Header, status int) bool {
 // umMTU é o piso abaixo do qual comprimir só acrescenta bytes.
 const umMTU = 1400
 
-func (e *escritorComGzip) Write(b []byte) (int, error) {
+func (e *gzipEnvelope) Write(b []byte) (int, error) {
 	if !e.decidido {
 		// Handler que escreve sem chamar `WriteHeader`: o `net/http` assume 200,
 		// e a decisão tem de acontecer aqui, ANTES do primeiro byte.
@@ -168,7 +168,7 @@ func (e *escritorComGzip) Write(b []byte) (int, error) {
 // Invertida — ou ausente — o quadro do SSE fica preso no buffer do gzip e a Mesa
 // para de atualizar sem nada acusar. É a mesma família das armadilhas do
 // Datastar: nada falha, alguém só espera para sempre.
-func (e *escritorComGzip) Flush() {
+func (e *gzipEnvelope) Flush() {
 	// UM FLUSH COMPROMETE OS CABEÇALHOS, então a decisão tem de estar tomada
 	// aqui — e não só no `Write`.
 	//
@@ -196,11 +196,11 @@ func (e *escritorComGzip) Flush() {
 // Sem ele, um `rc.SetWriteDeadline` ou `rc.Hijack` chamado por qualquer camada
 // acima deste envelope responde `ErrNotSupported` — e a biblioteca que o chamou
 // decide que o ambiente não suporta fluxo, sem que nada aqui tenha errado.
-func (e *escritorComGzip) Unwrap() http.ResponseWriter {
+func (e *gzipEnvelope) Unwrap() http.ResponseWriter {
 	return e.ResponseWriter
 }
 
-func (e *escritorComGzip) Close() {
+func (e *gzipEnvelope) Close() {
 	e.uma.Do(func() {
 		if e.gz == nil {
 			return

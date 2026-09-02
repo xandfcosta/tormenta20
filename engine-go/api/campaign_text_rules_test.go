@@ -14,10 +14,10 @@ import (
 // O nome é aparado ANTES de medido, e é isso que faz um nome de puros espaços
 // ser recusado em vez de virar crônica sem título no livro.
 func TestACampaignNameIsTrimmedBeforeItIsMeasured(t *testing.T) {
-	if _, err := nomeDeCampanha("   "); !errors.Is(err, errNomeDeCampanha) {
+	if _, err := campaignName("   "); !errors.Is(err, errCampaignName) {
 		t.Error("nome de puros espaços passou — a crônica nasceria sem título")
 	}
-	nome, err := nomeDeCampanha("  A Queda de Tauron  ")
+	nome, err := campaignName("  A Queda de Tauron  ")
 	if err != nil {
 		t.Fatalf("nome válido recusado: %v", err)
 	}
@@ -32,17 +32,17 @@ func TestACampaignNameIsTrimmedBeforeItIsMeasured(t *testing.T) {
 func TestTheLimitsCountCharactersAndNotBytes(t *testing.T) {
 	// 120 runas acentuadas = 240 bytes. Se a conta fosse em bytes, este nome
 	// legítimo seria recusado.
-	nome := strings.Repeat("ç", nomeDeCampanhaMax)
-	if _, err := nomeDeCampanha(nome); err != nil {
-		t.Errorf("nome de %d caracteres acentuados recusado: %v", nomeDeCampanhaMax, err)
+	nome := strings.Repeat("ç", maxCampaignNameLength)
+	if _, err := campaignName(nome); err != nil {
+		t.Errorf("nome de %d caracteres acentuados recusado: %v", maxCampaignNameLength, err)
 	}
-	if _, err := nomeDeCampanha(nome + "ç"); !errors.Is(err, errNomeDeCampanha) {
+	if _, err := campaignName(nome + "ç"); !errors.Is(err, errCampaignName) {
 		t.Error("nome com uma runa a mais que o teto passou")
 	}
 
-	texto := strings.Repeat("ã", descricaoDeCampanhaMax)
-	if _, err := descricaoDeCampanha(&texto); err != nil {
-		t.Errorf("descrição de %d caracteres acentuados recusada: %v", descricaoDeCampanhaMax, err)
+	texto := strings.Repeat("ã", maxCampaignDescriptionLength)
+	if _, err := campaignDescription(&texto); err != nil {
+		t.Errorf("descrição de %d caracteres acentuados recusada: %v", maxCampaignDescriptionLength, err)
 	}
 }
 
@@ -50,8 +50,8 @@ func TestTheLimitsCountCharactersAndNotBytes(t *testing.T) {
 // o servidor aceitava qualquer tamanho. Com a tela virando do servidor, a regra
 // teria sumido junto com o formulário que a carregava.
 func TestTheDescriptionCeilingIsOnTheServerAndNotOnlyOnTheScreen(t *testing.T) {
-	longa := strings.Repeat("a", descricaoDeCampanhaMax+1)
-	if _, err := descricaoDeCampanha(&longa); !errors.Is(err, errDescricaoDeCampanha) {
+	longa := strings.Repeat("a", maxCampaignDescriptionLength+1)
+	if _, err := campaignDescription(&longa); !errors.Is(err, errCampaignDescription) {
 		t.Errorf("descrição de %d caracteres passou — o teto vivia só no cliente", len(longa))
 	}
 }
@@ -60,7 +60,7 @@ func TestTheDescriptionCeilingIsOnTheServerAndNotOnlyOnTheScreen(t *testing.T) {
 // editar. Sem isso o cliente lê "" de um e null do outro para a mesma entrada.
 func TestAnEmptyDescriptionIsNullAndNotAnEmptyString(t *testing.T) {
 	for _, entrada := range []string{"", "   ", "\n\t "} {
-		got, err := descricaoDeCampanha(&entrada)
+		got, err := campaignDescription(&entrada)
 		if err != nil {
 			t.Fatalf("descrição %q recusada: %v", entrada, err)
 		}
@@ -69,7 +69,7 @@ func TestAnEmptyDescriptionIsNullAndNotAnEmptyString(t *testing.T) {
 		}
 	}
 	// Ausente também é NULL, e é caso diferente de vazia: "não mandei o campo".
-	if got, _ := descricaoDeCampanha(nil); got.Valid {
+	if got, _ := campaignDescription(nil); got.Valid {
 		t.Error("descrição ausente virou valor")
 	}
 }

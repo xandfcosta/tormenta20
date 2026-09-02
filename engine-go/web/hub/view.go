@@ -24,10 +24,10 @@ type hubView struct {
 	EhAdmin bool
 	// Viva é a sessão que "Continuar sessão" retoma, ou nil. Uma consulta, não
 	// N+1 — ver `sessaoViva`.
-	Viva *hubSessaoViva
+	Viva *hubLiveSession
 }
 
-type hubSessaoViva struct {
+type hubLiveSession struct {
 	CampaignID int64
 	SessionID  int64
 	// Rota é PARA ONDE o "Continuar sessão" leva, resolvido por quem hospeda a
@@ -36,22 +36,22 @@ type hubSessaoViva struct {
 	Rota string
 }
 
-// carregaHub monta a tela inteira.
-func (s Scene) carregaHub(ctx context.Context, eu Viewer) (hubView, error) {
-	viva, err := s.sessaoViva(ctx, eu.ID)
+// loadHub monta a tela inteira.
+func (s Scene) loadHub(ctx context.Context, eu Viewer) (hubView, error) {
+	viva, err := s.liveSession(ctx, eu.ID)
 	if err != nil {
 		return hubView{}, err
 	}
-	nome := nomeDeExibicao(eu)
+	nome := displayName(eu)
 	return hubView{
 		Nome:    nome,
-		Inicial: inicialDe(nome),
+		Inicial: initialOf(nome),
 		EhAdmin: eu.IsAdmin,
 		Viva:    viva,
 	}, nil
 }
 
-// sessaoViva responde "há partida em andamento?" numa consulta só.
+// liveSession responde "há partida em andamento?" numa consulta só.
 //
 // Na SPA isto eram 62 linhas de cliente que abriam N+1 requisições — uma lista
 // de sessões por campanha —, e o arquivo dizia por quê: não existia rota que
@@ -60,7 +60,7 @@ func (s Scene) carregaHub(ctx context.Context, eu Viewer) (hubView, error) {
 //
 // "Nenhuma linha" é resposta NORMAL e não erro: quase sempre não há partida
 // rolando.
-func (s Scene) sessaoViva(ctx context.Context, userID int64) (*hubSessaoViva, error) {
+func (s Scene) liveSession(ctx context.Context, userID int64) (*hubLiveSession, error) {
 	linha, err := s.deps.Queries().FirstLiveSessionForUser(ctx, userID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -68,16 +68,16 @@ func (s Scene) sessaoViva(ctx context.Context, userID int64) (*hubSessaoViva, er
 	if err != nil {
 		return nil, err
 	}
-	return &hubSessaoViva{
+	return &hubLiveSession{
 		CampaignID: linha.Campaignid,
 		SessionID:  linha.Sessionid,
-		Rota:       s.deps.MesaRoute(linha.Campaignid, linha.Sessionid),
+		Rota:       s.deps.TableRoute(linha.Campaignid, linha.Sessionid),
 	}, nil
 }
 
-// nomeDeExibicao: o nome quando existe, senão o e-mail, senão "Aventureiro".
+// displayName: o nome quando existe, senão o e-mail, senão "Aventureiro".
 // Mesma cadeia da SPA — quem entra por convite pode não ter dado nome nenhum.
-func nomeDeExibicao(eu Viewer) string {
+func displayName(eu Viewer) string {
 	if eu.Name != nil && strings.TrimSpace(*eu.Name) != "" {
 		return strings.TrimSpace(*eu.Name)
 	}
@@ -87,11 +87,11 @@ func nomeDeExibicao(eu Viewer) string {
 	return "Aventureiro"
 }
 
-// inicialDe é a letra do retrato, em maiúscula.
+// initialOf é a letra do retrato, em maiúscula.
 //
 // Por runa e não por byte: "Ãurea" começa com dois bytes, e cortar o primeiro
 // produziria meio caractere — que o navegador desenha como o losango de erro.
-func inicialDe(nome string) string {
+func initialOf(nome string) string {
 	for _, r := range strings.TrimSpace(nome) {
 		return string(unicode.ToUpper(r))
 	}

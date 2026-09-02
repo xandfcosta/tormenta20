@@ -20,7 +20,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 
 	// O CONTROLE: não há tabuleiro antes. Sem ele, "o lugar é a Taverna" seria
 	// verdade também sobre uma cena que já estava aberta desde a fixture.
-	if f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao) != nil {
+	if f.s.boards.Get(context.Background(), f.sessionID, defaultTab) != nil {
 		t.Fatal("a sessão já nasceu com tabuleiro — o guarda mediria a cena errada")
 	}
 
@@ -29,7 +29,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
 		t.Fatal("o tabuleiro não abriu")
 	}
@@ -59,7 +59,7 @@ func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *test
 		`{"novolugar":"   ","novochao":"lava"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
 		t.Fatal("o tabuleiro não abriu")
 	}
@@ -82,7 +82,7 @@ func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu a cena: %d", rec.Code)
 	}
-	if f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao) != nil {
+	if f.s.boards.Get(context.Background(), f.sessionID, defaultTab) != nil {
 		t.Error("a cena do jogador abriu mesmo assim")
 	}
 
@@ -90,7 +90,7 @@ func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador encerrou a cena: %d", rec.Code)
 	}
-	if f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao) == nil {
+	if f.s.boards.Get(context.Background(), f.sessionID, defaultTab) == nil {
 		t.Error("a cena sumiu quando o jogador mandou encerrar")
 	}
 }
@@ -107,7 +107,7 @@ func TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive(t *testing.T) {
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
-	if f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao) != nil {
+	if f.s.boards.Get(context.Background(), f.sessionID, defaultTab) != nil {
 		t.Error("a cena continuou na mesa depois de encerrada")
 	}
 
@@ -244,7 +244,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 		t.Fatalf("reabrir deu %d", rec.Code)
 	}
 
-	abertos := f.s.boards.Abertos(ctx, f.sessionID)
+	abertos := f.s.boards.OpenBoards(ctx, f.sessionID)
 	if len(abertos) != 2 {
 		t.Fatalf("a sessão ficou com %d cenas abertas, esperado 2 (a cripta e a taverna)", len(abertos))
 	}
@@ -293,7 +293,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/remover", f.urlDaMesa(), guardados[0].ID), ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
-	if b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao); b == nil {
+	if b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab); b == nil {
 		t.Error("apagar um lugar do acervo derrubou a cena que estava na mesa")
 	} else if b.Place != "Cripta" {
 		t.Errorf("a cena da mesa virou %q", b.Place)

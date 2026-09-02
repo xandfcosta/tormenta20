@@ -43,22 +43,22 @@ func iguais(a, b []string) bool {
 func TestTheTurnStripIsCircular(t *testing.T) {
 	f := fila("Arwen", "Ogro", "Goblin")
 
-	if got := rotulos(TurnosAVista(f, 0, 3)); !iguais(got, []string{"Arwen", "Ogro", "Goblin"}) {
+	if got := rotulos(UpcomingTurns(f, 0, 3)); !iguais(got, []string{"Arwen", "Ogro", "Goblin"}) {
 		t.Errorf("do começo veio %v", got)
 	}
 	// A borda: no ÚLTIMO turno, a tira volta ao primeiro.
-	if got := rotulos(TurnosAVista(f, 2, 3)); !iguais(got, []string{"Goblin", "Arwen", "Ogro"}) {
+	if got := rotulos(UpcomingTurns(f, 2, 3)); !iguais(got, []string{"Goblin", "Arwen", "Ogro"}) {
 		t.Errorf("do último veio %v, quero a volta circular", got)
 	}
 	// Pedir mais que a fila não repete ninguém: a janela para no tamanho dela.
-	if got := TurnosAVista(f, 0, 10); len(got) != 3 {
+	if got := UpcomingTurns(f, 0, 10); len(got) != 3 {
 		t.Errorf("pedindo 10 de 3 vieram %d", len(got))
 	}
 	// Fora de combate não há vez de ninguém.
-	if got := TurnosAVista(f, -1, 3); len(got) != 0 {
+	if got := UpcomingTurns(f, -1, 3); len(got) != 0 {
 		t.Errorf("fora de combate vieram %d linhas", len(got))
 	}
-	if got := TurnosAVista(nil, 0, 3); len(got) != 0 {
+	if got := UpcomingTurns(nil, 0, 3); len(got) != 0 {
 		t.Errorf("fila vazia deu %d linhas", len(got))
 	}
 }
@@ -67,24 +67,24 @@ func TestTheTurnStripIsCircular(t *testing.T) {
 func TestTheButtonSaysWhereItGoes(t *testing.T) {
 	f := fila("Arwen", "Ogro")
 
-	if got := ProximoTurno(f, 0); got.Rotulo != "Próximo: Ogro" {
-		t.Errorf("no turno 0 o botão diz %q", got.Rotulo)
+	if got := NextTurnButton(f, 0); got.Label != "Próximo: Ogro" {
+		t.Errorf("no turno 0 o botão diz %q", got.Label)
 	}
 	// A volta é circular como na tira.
-	if got := ProximoTurno(f, 1); got.Rotulo != "Próximo: Arwen" {
-		t.Errorf("no último turno o botão diz %q", got.Rotulo)
+	if got := NextTurnButton(f, 1); got.Label != "Próximo: Arwen" {
+		t.Errorf("no último turno o botão diz %q", got.Label)
 	}
 	// FORA de combate o verbo muda: quem clica ali está COMEÇANDO, e
 	// "Próximo: Arwen" mentiria sobre uma rodada que ainda não existe.
-	if got := ProximoTurno(f, -1); got.Rotulo != "Começar: Arwen" {
-		t.Errorf("fora de combate o botão diz %q, quero o verbo de começar", got.Rotulo)
+	if got := NextTurnButton(f, -1); got.Label != "Começar: Arwen" {
+		t.Errorf("fora de combate o botão diz %q, quero o verbo de começar", got.Label)
 	}
 	// Fila vazia diz o MOTIVO de estar desligado, não o verbo que não acontece.
-	vazia := ProximoTurno(nil, -1)
-	if vazia.Rotulo != "Ninguém na fila" {
-		t.Errorf("fila vazia diz %q", vazia.Rotulo)
+	vazia := NextTurnButton(nil, -1)
+	if vazia.Label != "Ninguém na fila" {
+		t.Errorf("fila vazia diz %q", vazia.Label)
 	}
-	if vazia.Linha != nil {
+	if vazia.Entry != nil {
 		t.Error("fila vazia prometeu uma linha — seria inventá-la")
 	}
 }
@@ -108,7 +108,7 @@ func TestTheCounterHasFourStates(t *testing.T) {
 		{"o turno é 1-indexado na tela", true, 1, 0, 3, "Rodada 1 · Turno 1/3"},
 	}
 	for _, c := range casos {
-		got := ContadorDoTurno(c.cenaAtiva, c.rodada, c.turno, c.naFila)
+		got := TurnCounter(c.cenaAtiva, c.rodada, c.turno, c.naFila)
 		if got != c.quero {
 			t.Errorf("%s: %q, quero %q", c.nome, got, c.quero)
 		}
@@ -118,18 +118,18 @@ func TestTheCounterHasFourStates(t *testing.T) {
 // TestTheBridgeToThePersonIsTheOwner, e não o id do personagem: a ficha de um membro é
 // o SNAPSHOT da campanha (ALE-33).
 func TestTheBridgeToThePersonIsTheOwner(t *testing.T) {
-	membros := []MembroDaMesa{
-		{CharacterID: 10, DonoID: 1},
-		{CharacterID: 11, DonoID: 2},
-		{CharacterID: 12, DonoID: 1},
-		{CharacterID: 13, DonoID: 0}, // sem personagem ligado
+	membros := []TableMember{
+		{CharacterID: 10, OwnerID: 1},
+		{CharacterID: 11, OwnerID: 2},
+		{CharacterID: 12, OwnerID: 1},
+		{CharacterID: 13, OwnerID: 0}, // sem personagem ligado
 	}
-	meus := MeusPersonagens(membros, 1)
+	meus := MyCharacters(membros, 1)
 	if len(meus) != 2 || !meus[10] || !meus[12] {
 		t.Errorf("os meus vieram %v", meus)
 	}
 	// Sem usuário não há "meu" — e devolver tudo seria pior que devolver nada.
-	if got := MeusPersonagens(membros, 0); len(got) != 0 {
+	if got := MyCharacters(membros, 0); len(got) != 0 {
 		t.Errorf("sem usuário vieram %d personagens", len(got))
 	}
 }
@@ -139,12 +139,12 @@ func TestTheBridgeToThePersonIsTheOwner(t *testing.T) {
 // Não é que ele esteja offline: é que não há personagem para marcar, e um zero
 // na lista viraria "o personagem 0 está online" na tela.
 func TestAMemberWithoutACharacterDoesNotEnterPresence(t *testing.T) {
-	membros := []MembroDaMesa{
-		{CharacterID: 10, DonoID: 1},
-		{CharacterID: 11, DonoID: 2},
-		{CharacterID: 13, DonoID: 0},
+	membros := []TableMember{
+		{CharacterID: 10, OwnerID: 1},
+		{CharacterID: 11, OwnerID: 2},
+		{CharacterID: 13, OwnerID: 0},
 	}
-	conectados := PersonagensConectados(membros, []int64{1, 3})
+	conectados := ConnectedCharacters(membros, []int64{1, 3})
 	if len(conectados) != 1 || !conectados[10] {
 		t.Errorf("conectados vieram %v, quero só o 10", conectados)
 	}
@@ -152,7 +152,7 @@ func TestAMemberWithoutACharacterDoesNotEnterPresence(t *testing.T) {
 		t.Error("o personagem 0 entrou na presença")
 	}
 	// Ninguém online é lista vazia, não lista inteira.
-	if got := PersonagensConectados(membros, nil); len(got) != 0 {
+	if got := ConnectedCharacters(membros, nil); len(got) != 0 {
 		t.Errorf("sem ninguém online vieram %d", len(got))
 	}
 }
@@ -166,13 +166,13 @@ func TestTheGmEyeWatchesTheTrackerNotTheRole(t *testing.T) {
 	comNPC := []InitiativeEntry{{Label: "Arwen"}, {Label: "Ogro", HpMax: &pv}}
 	soPCs := []InitiativeEntry{{Label: "Arwen"}, {Label: "Bruna"}}
 
-	if !OMestreVeOsVitais(comNPC, true) {
+	if !GmSeesVitals(comNPC, true) {
 		t.Error("o mestre não vê os vitais numa fila que tem NPC")
 	}
-	if OMestreVeOsVitais(comNPC, false) {
+	if GmSeesVitals(comNPC, false) {
 		t.Error("o jogador viu os vitais do NPC")
 	}
-	if OMestreVeOsVitais(soPCs, true) {
+	if GmSeesVitals(soPCs, true) {
 		t.Error("numa fila só de PCs não há o que reservar, e a tela mudou de forma")
 	}
 }
@@ -183,30 +183,30 @@ func TestTheGmEyeWatchesTheTrackerNotTheRole(t *testing.T) {
 // viviam como atributos dos campos do formulário da SPA, que é UI — quem
 // postasse na mão passava por cima dos quatro.
 func TestValidatingANewCombatantPinsTheFourEdges(t *testing.T) {
-	bom := CombatenteNovo{Rotulo: "Ogro", Iniciativa: 12, PV: 45, Tipo: "npc"}
-	if err := ValidaCombatenteNovo(bom); err != nil {
+	bom := CombatantDraft{Label: "Ogro", Initiative: 12, HP: 45, Kind: "npc"}
+	if err := ValidateCombatantDraft(bom); err != nil {
 		t.Fatalf("o combatente bom foi recusado: %v — sem isto as recusas abaixo não provariam nada", err)
 	}
 	// PV zero é ESTADO VÁLIDO e não ausência: é "sem vida registrada", e o
 	// capanga anônimo depende dele.
-	if err := ValidaCombatenteNovo(CombatenteNovo{Rotulo: "Figurante", Iniciativa: 0, PV: 0, Tipo: "npc"}); err != nil {
+	if err := ValidateCombatantDraft(CombatantDraft{Label: "Figurante", Initiative: 0, HP: 0, Kind: "npc"}); err != nil {
 		t.Errorf("PV 0 foi recusado, e ele é o capanga sem vida rastreada: %v", err)
 	}
 
 	casos := []struct {
 		nome string
-		c    CombatenteNovo
+		c    CombatantDraft
 		cita string
 	}{
-		{"sem nome", CombatenteNovo{Rotulo: "   ", Iniciativa: 10, Tipo: "npc"}, "nome"},
-		{"nome comprido", CombatenteNovo{Rotulo: strings.Repeat("a", 61), Iniciativa: 10, Tipo: "npc"}, "61"},
-		{"iniciativa alta", CombatenteNovo{Rotulo: "Ogro", Iniciativa: 400, Tipo: "npc"}, "400"},
-		{"iniciativa baixa", CombatenteNovo{Rotulo: "Ogro", Iniciativa: -6, Tipo: "npc"}, "-6"},
-		{"PV demais", CombatenteNovo{Rotulo: "Ogro", Iniciativa: 10, PV: 1000, Tipo: "npc"}, "1000"},
-		{"tipo inventado", CombatenteNovo{Rotulo: "Ogro", Iniciativa: 10, Tipo: "dragão"}, "dragão"},
+		{"sem nome", CombatantDraft{Label: "   ", Initiative: 10, Kind: "npc"}, "nome"},
+		{"nome comprido", CombatantDraft{Label: strings.Repeat("a", 61), Initiative: 10, Kind: "npc"}, "61"},
+		{"iniciativa alta", CombatantDraft{Label: "Ogro", Initiative: 400, Kind: "npc"}, "400"},
+		{"iniciativa baixa", CombatantDraft{Label: "Ogro", Initiative: -6, Kind: "npc"}, "-6"},
+		{"PV demais", CombatantDraft{Label: "Ogro", Initiative: 10, HP: 1000, Kind: "npc"}, "1000"},
+		{"tipo inventado", CombatantDraft{Label: "Ogro", Initiative: 10, Kind: "dragão"}, "dragão"},
 	}
 	for _, c := range casos {
-		err := ValidaCombatenteNovo(c.c)
+		err := ValidateCombatantDraft(c.c)
 		if err == nil {
 			t.Errorf("%s: passou", c.nome)
 			continue
@@ -223,8 +223,8 @@ func TestValidatingANewCombatantPinsTheFourEdges(t *testing.T) {
 // mais de 60 bytes, e contar bytes recusaria um nome mais curto do que o que
 // deixa passar em ASCII.
 func TestTheNameLimitCountsLettersNotBytes(t *testing.T) {
-	acentuado := strings.Repeat("ã", MaxLetrasDoRotulo) // 60 letras, 120 bytes
-	if err := ValidaCombatenteNovo(CombatenteNovo{Rotulo: acentuado, Iniciativa: 10, Tipo: "npc"}); err != nil {
+	acentuado := strings.Repeat("ã", MaxLabelLetters) // 60 letras, 120 bytes
+	if err := ValidateCombatantDraft(CombatantDraft{Label: acentuado, Initiative: 10, Kind: "npc"}); err != nil {
 		t.Errorf("60 letras acentuadas foram recusadas: %v", err)
 	}
 }

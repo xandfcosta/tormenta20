@@ -66,13 +66,13 @@ type Server struct {
 	emSegundoPlano sync.WaitGroup
 }
 
-// EsperaOSegundoPlano bloqueia até o trabalho disparado por resposta terminar.
+// WaitForBackground bloqueia até o trabalho disparado por resposta terminar.
 //
 // Quem chama é o encerramento — o `Shutdown` de produção e o `Cleanup` do teste
 // —, sempre ANTES de fechar o banco. Sem isto o último estado de sessão da noite
 // pode não chegar ao disco, e o log da falha aparece depois de o processo já
 // estar indo embora.
-func (s *Server) EsperaOSegundoPlano() {
+func (s *Server) WaitForBackground() {
 	s.emSegundoPlano.Wait()
 }
 
@@ -162,7 +162,7 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		livro:    abreOLivro(cfg),
-		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, vitaisDaFicha{q: q}, bus),
+		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, sheetVitals{q: q}, bus),
 		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID, bus),
 		bus:      bus,
 		lentes:   novasLentes(),
@@ -357,9 +357,9 @@ func (s *Server) MintAccountInvite(ctx context.Context, byUserID int64) (sqlcgen
 
 func (s *Server) ExpiredSessionCookie() *http.Cookie { return s.sessionCookie("", -1) }
 
-// MesaRoute é o endereço de uma sessão ao vivo. Quem sabe onde cada cena está
+// TableRoute é o endereço de uma sessão ao vivo. Quem sabe onde cada cena está
 // montada é quem monta.
-func (s *Server) MesaRoute(campaignID, sessionID int64) string {
+func (s *Server) TableRoute(campaignID, sessionID int64) string {
 	return rotaDaMesa(campaignID, sessionID)
 }
 

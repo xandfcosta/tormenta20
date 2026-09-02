@@ -27,7 +27,7 @@ func TestTheStrokeHasNoGap(t *testing.T) {
 		{engine.Square{X: 2, Y: 2}, engine.Square{X: 2, Y: 2}},  // parado
 	}
 	for _, caso := range casos {
-		casas := CasasDoTraco(caso.de, caso.ate)
+		casas := StrokeSquares(caso.de, caso.ate)
 		if casas[0] != caso.de {
 			t.Errorf("%v→%v: o traço não começa na casa de origem (%v)", caso.de, caso.ate, casas[0])
 		}
@@ -52,7 +52,7 @@ func TestTheStrokeHasNoGap(t *testing.T) {
 // passo em UM eixo? não — ele aceita a diagonal), então este aqui é o que separa
 // os dois algoritmos: nenhum passo do traço mexe nos DOIS eixos ao mesmo tempo.
 func TestTheStrokeDoesNotGoDiagonalWhenItGrazes(t *testing.T) {
-	casas := CasasDoTraco(engine.Square{}, engine.Square{X: 2, Y: 1})
+	casas := StrokeSquares(engine.Square{}, engine.Square{X: 2, Y: 1})
 	for i := 1; i < len(casas); i++ {
 		dx, dy := abs(casas[i].X-casas[i-1].X), abs(casas[i].Y-casas[i-1].Y)
 		if dx == 1 && dy == 1 {
@@ -70,10 +70,10 @@ func TestTheStrokeDoesNotGoDiagonalWhenItGrazes(t *testing.T) {
 // TestAPossessedStrokeIsRefused: o teto existe contra o pedido forjado, não contra
 // o dedo. Num quadro de 16ms nenhum gesto atravessa cem casas.
 func TestAPossessedStrokeIsRefused(t *testing.T) {
-	if TracoValido(engine.Square{}, engine.Square{X: 9999999}) {
+	if ValidStroke(engine.Square{}, engine.Square{X: 9999999}) {
 		t.Error("um traço de dez milhões de casas foi aceito")
 	}
-	if !TracoValido(engine.Square{}, engine.Square{X: 9, Y: 4}) {
+	if !ValidStroke(engine.Square{}, engine.Square{X: 9, Y: 4}) {
 		t.Error("um traço de nove casas foi recusado — o teto está mordendo o gesto real")
 	}
 }
@@ -86,7 +86,7 @@ func TestAPossessedStrokeIsRefused(t *testing.T) {
 // que é a pior forma de falhar.
 func TestTheRectangleIsTheSameInAllFourDirections(t *testing.T) {
 	a, b := engine.Square{X: 0, Y: 0}, engine.Square{X: 2, Y: 1}
-	referencia := CasasDoRetangulo(a, b)
+	referencia := RectangleSquares(a, b)
 	if len(referencia) != 6 {
 		t.Fatalf("(0,0)→(2,1) deu %d casas, esperado 6 — o guarda mediria o vazio", len(referencia))
 	}
@@ -95,7 +95,7 @@ func TestTheRectangleIsTheSameInAllFourDirections(t *testing.T) {
 		{{X: 2, Y: 0}, {X: 0, Y: 1}},
 		{{X: 0, Y: 1}, {X: 2, Y: 0}},
 	} {
-		if outro := CasasDoRetangulo(par[0], par[1]); len(outro) != len(referencia) {
+		if outro := RectangleSquares(par[0], par[1]); len(outro) != len(referencia) {
 			t.Errorf("%v→%v deu %d casas, e %v→%v deu %d: a direção do arrasto mudou o retângulo",
 				par[0], par[1], len(outro), a, b, len(referencia))
 		}
@@ -105,10 +105,10 @@ func TestTheRectangleIsTheSameInAllFourDirections(t *testing.T) {
 // TestAForgedRectangleIsRefused: mil casas são 32×32, uma sala grande de
 // masmorra. Acima disso não saiu de dois cantos escolhidos por alguém.
 func TestAForgedRectangleIsRefused(t *testing.T) {
-	if RetanguloValido(engine.Square{}, engine.Square{X: 9999, Y: 9999}) {
+	if ValidRectangle(engine.Square{}, engine.Square{X: 9999, Y: 9999}) {
 		t.Error("um retângulo de cem milhões de casas foi aceito")
 	}
-	if !RetanguloValido(engine.Square{}, engine.Square{X: 20, Y: 20}) {
+	if !ValidRectangle(engine.Square{}, engine.Square{X: 20, Y: 20}) {
 		t.Error("um retângulo de 21×21 foi recusado — o teto está mordendo o gesto real")
 	}
 }

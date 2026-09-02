@@ -43,7 +43,7 @@ func iniciaAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, err
 	if err != nil {
 		return nil, fmt.Errorf("não deu para ler a sessão %d", c.SessionID)
 	}
-	if _, err := st.IniciaASessao(c.R.Context(), sess); err != nil {
+	if _, err := st.StartSession(c.R.Context(), sess); err != nil {
 		return nil, err
 	}
 	return st.sessions.GetState(c.SessionID), nil
@@ -54,7 +54,7 @@ func encerraAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, er
 	if err != nil {
 		return nil, fmt.Errorf("não deu para ler a sessão %d", c.SessionID)
 	}
-	if _, err := st.EncerraASessao(c.R.Context(), sess); err != nil {
+	if _, err := st.EndSession(c.R.Context(), sess); err != nil {
 		return nil, err
 	}
 	return st.sessions.GetState(c.SessionID), nil
@@ -92,7 +92,7 @@ func renomeiaAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, e
 // frase de cada um diz o que ACONTECE em vez de repetir o nome do botão:
 // "encerrar" tira a sessão do ar, "reiniciar" só apaga a ordem e os turnos.
 func reiniciaAFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
-	if err := st.ReiniciaOCombate(c.R.Context(), c.SessionID); err != nil {
+	if err := st.RestartCombat(c.R.Context(), c.SessionID); err != nil {
 		return nil, fmt.Errorf("não deu para reiniciar o combate: %v", err)
 	}
 	// O `Forget` da regra derrubou o cache; o `Load` traz a linha limpa de volta,

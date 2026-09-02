@@ -12,7 +12,7 @@ import (
 // junto a autenticação e o banco, que não têm nada a ver com desviar endereço.
 func muxComOsEnderecosAntigos() *http.ServeMux {
 	mux := http.NewServeMux()
-	MontaEnderecosAntigos(mux)
+	MountLegacyAddresses(mux)
 	return mux
 }
 
@@ -32,10 +32,10 @@ func oDesvioDe(t *testing.T, caminho string) (int, string) {
 func TestEveryLegacyAddressLandsOnAScene(t *testing.T) {
 	// Treze cascas da SPA na fatia 10a, mais os quatro endereços das telas que só
 	// morreram com ela na 10c — menos as três que a raiz absorveu na ALE-280.
-	if len(osEnderecosAntigos) < 14 {
-		t.Fatalf("%d endereços na tabela, e são pelo menos catorze", len(osEnderecosAntigos))
+	if len(legacyAddresses) < 14 {
+		t.Fatalf("%d endereços na tabela, e são pelo menos catorze", len(legacyAddresses))
 	}
-	for _, endereco := range osEnderecosAntigos {
+	for _, endereco := range legacyAddresses {
 		// O padrão vira um caminho de exemplo: `{id}` e `{tool}` recebem um
 		// valor, e `{$}` (fim exato) vira a barra que ele exige.
 		caminho := strings.NewReplacer(

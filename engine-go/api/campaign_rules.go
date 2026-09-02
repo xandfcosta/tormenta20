@@ -61,7 +61,7 @@ func (s *Server) handleReplaceCampaignRules(w http.ResponseWriter, r *http.Reque
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"ignoredRules": {msg}})
 		return
 	}
-	if err := s.gravaRegrasIgnoradas(r.Context(), id, wanted); err != nil {
+	if err := s.saveIgnoredRules(r.Context(), id, wanted); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update campaign rules")
 		return
 	}
@@ -88,14 +88,14 @@ func normalizeIgnoredRules(raw []string) ([]string, string) {
 	return out, ""
 }
 
-// gravaRegrasIgnoradas troca o conjunto INTEIRO: limpa e reinsere.
+// saveIgnoredRules troca o conjunto INTEIRO: limpa e reinsere.
 //
 // Extraída na ALE-255 porque a cena do servidor precisa do mesmo passo, e é
 // substituição e não delta de propósito — o conjunto é pequeno e fechado, e
 // mandar o estado final faz a operação ser idempotente. Um delta reenviado
 // alternaria a regra duas vezes, que é exatamente o que um clique repetido
 // numa conexão ruim produz.
-func (s *Server) gravaRegrasIgnoradas(ctx context.Context, campanhaID int64, regras []string) error {
+func (s *Server) saveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error {
 	if err := s.queries.ClearIgnoredRulesForCampaign(ctx, campanhaID); err != nil {
 		return err
 	}

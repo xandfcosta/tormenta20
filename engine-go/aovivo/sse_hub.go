@@ -39,10 +39,10 @@ type SSEConn struct {
 	Frames chan SSEFrame
 }
 
-// destino identifica um fluxo ordenado: os quadros de um mesmo evento para um
+// destination identifica um fluxo ordenado: os quadros de um mesmo evento para um
 // mesmo papel de uma mesma sessão chegam na ordem em que as mutações
 // aconteceram, e não na ordem em que as goroutines conseguiram emitir.
-type destino struct {
+type destination struct {
 	sessionID int64
 	role      string
 	event     string
@@ -55,13 +55,13 @@ type SSEHub struct {
 	conns map[int64]map[string]*SSEConn
 	// ultimaSeq guarda a maior ordem já emitida por destino, para reconhecer
 	// quadro atrasado. Ver `EmitOrdered`.
-	ultimaSeq map[destino]uint64
+	ultimaSeq map[destination]uint64
 }
 
 func NewSSEHub() *SSEHub {
 	return &SSEHub{
 		conns:     map[int64]map[string]*SSEConn{},
-		ultimaSeq: map[destino]uint64{},
+		ultimaSeq: map[destination]uint64{},
 	}
 }
 
@@ -168,7 +168,7 @@ func (h *SSEHub) EmitOrdered(sessionID int64, role, event string, Seq uint64, pa
 	if err != nil {
 		return
 	}
-	chave := destino{sessionID: sessionID, role: role, event: event}
+	chave := destination{sessionID: sessionID, role: role, event: event}
 
 	// A trava é UMA e cobre decidir E entregar. Decidir sob trava e entregar
 	// fora dela não conserta nada: outra goroutine se enfia entre as duas e

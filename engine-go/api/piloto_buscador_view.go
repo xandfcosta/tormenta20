@@ -284,7 +284,7 @@ func achadoDaPericia(p book.Expertise) achadoDoBuscador {
 func achadoDaRaca(r book.Race) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    r.Name,
-		Detalhe: book.TierName(r.Tier) + " · " + r.AtributoMod.Escrito(),
+		Detalhe: book.TierName(r.Tier) + " · " + r.AttributeMod.Escrito(),
 		Destino: destinoDaEntrada("racas", r.ID),
 		Pagina:  r.BookPage,
 	}

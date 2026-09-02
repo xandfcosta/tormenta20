@@ -28,13 +28,13 @@ func comHorda() *BoardState {
 func TestTheLassoCatchesTheTokenByItsBody(t *testing.T) {
 	b := comHorda()
 	// Um laço no MEIO do dragão, longe da âncora (10,10) que fica fora dele.
-	pegos := PecasNoRetangulo(b, engine.Square{X: 13, Y: 13}, engine.Square{X: 14, Y: 14})
+	pegos := TokensInRectangle(b, engine.Square{X: 13, Y: 13}, engine.Square{X: 14, Y: 14})
 	if len(pegos) != 1 || pegos[0] != "dragao" {
 		t.Errorf("o laço no meio do corpo pegou %v, esperado só o dragão", pegos)
 	}
 	// O CONTROLE: um laço FORA de tudo não pega nada. Sem ele, "pegou o dragão"
 	// seria verdade também para uma função que devolve tudo sempre.
-	if vazio := PecasNoRetangulo(b, engine.Square{X: 100, Y: 100}, engine.Square{X: 101, Y: 101}); len(vazio) != 0 {
+	if vazio := TokensInRectangle(b, engine.Square{X: 100, Y: 100}, engine.Square{X: 101, Y: 101}); len(vazio) != 0 {
 		t.Errorf("um laço em lugar nenhum pegou %v", vazio)
 	}
 }
@@ -61,7 +61,7 @@ func TestTheGroupMovesTogetherOrDoesNotMove(t *testing.T) {
 	// Rato em (1,1) e Ogro em (40,40), limite de 5000: com +4990 o rato cabe
 	// (4991) e o Ogro não (5030). Uma passada só moveria o rato e recusaria
 	// depois — metade do grupo andando, que é o pior estado possível.
-	if err := MoveOGrupo(b, []string{"rato", "dragao", "longe"}, 4990, 0); err == nil {
+	if err := MoveGroup(b, []string{"rato", "dragao", "longe"}, 4990, 0); err == nil {
 		t.Error("um delta que estoura para a última peça foi aceito")
 	}
 	for _, peca := range b.Tokens {
@@ -78,7 +78,7 @@ func TestTheGroupMovesTogetherOrDoesNotMove(t *testing.T) {
 // nada, ou pior: devolve a peça a um lugar de duas cenas atrás.
 func TestTheGroupMovesOnlyWhoWasMarkedAndRemembersWhereFrom(t *testing.T) {
 	b := comHorda()
-	if err := MoveOGrupo(b, []string{"rato", "dragao"}, 3, -2); err != nil {
+	if err := MoveGroup(b, []string{"rato", "dragao"}, 3, -2); err != nil {
 		t.Fatalf("mover o grupo deu %v", err)
 	}
 	porID := map[string]BoardToken{}
@@ -101,7 +101,7 @@ func TestTheGroupMovesOnlyWhoWasMarkedAndRemembersWhereFrom(t *testing.T) {
 // por causa disso é punir o mestre por uma corrida que não é dele.
 func TestTheGroupIgnoresATokenThatVanished(t *testing.T) {
 	b := comHorda()
-	if err := MoveOGrupo(b, []string{"rato", "fantasma"}, 1, 1); err != nil {
+	if err := MoveGroup(b, []string{"rato", "fantasma"}, 1, 1); err != nil {
 		t.Fatalf("um id que não existe derrubou o gesto: %v", err)
 	}
 	if b.Tokens[0].X != 2 {

@@ -38,9 +38,9 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 		t.Fatalf("o traço deu %d", rec.Code)
 	}
 
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
-	casas := tabuleiro.QuadradosDe(b, "dificil")
-	esperadas := tabuleiro.CasasDoTraco(engine.Square{X: 2, Y: 2}, engine.Square{X: 8, Y: 5})
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
+	casas := tabuleiro.SquaresOf(b, "dificil")
+	esperadas := tabuleiro.StrokeSquares(engine.Square{X: 2, Y: 2}, engine.Square{X: 8, Y: 5})
 	if len(casas) != len(esperadas) {
 		t.Errorf("o traço (2,2)→(8,5) pintou %d casas, esperado as %d do segmento: %v",
 			len(casas), len(esperadas), casas)
@@ -76,18 +76,18 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	}
 	// O CONTROLE: havia o que apagar. Sem ele, "sobrou zero" é verdade também
 	// sobre um tabuleiro em que nada foi pintado.
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
-	if len(tabuleiro.QuadradosDe(b, "cobertura")) < 7 {
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
+	if len(tabuleiro.SquaresOf(b, "cobertura")) < 7 {
 		t.Fatalf("o traço de pintura só fez %d casas — não há o que a borracha apagar",
-			len(tabuleiro.QuadradosDe(b, "cobertura")))
+			len(tabuleiro.SquaresOf(b, "cobertura")))
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
 		f.urlDaMesa()+"/tabuleiro/terreno/limpar/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
-	b = f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
-	if sobrou := tabuleiro.QuadradosDe(b, "cobertura"); len(sobrou) != 0 {
+	b = f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
+	if sobrou := tabuleiro.SquaresOf(b, "cobertura"); len(sobrou) != 0 {
 		t.Errorf("a borracha deixou %v pelo caminho", sobrou)
 	}
 }
@@ -106,8 +106,8 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 	if !strings.Contains(corpo, "longo demais") {
 		t.Errorf("o traço forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
-	if casas := tabuleiro.QuadradosDe(b, "dificil"); len(casas) != 0 {
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
+	if casas := tabuleiro.SquaresOf(b, "dificil"); len(casas) != 0 {
 		t.Errorf("o traço recusado pintou %d casas assim mesmo", len(casas))
 	}
 }
@@ -185,7 +185,7 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 // p267) mostraria uma só.
 func TestEveryKindHasADrawing(t *testing.T) {
 	cantos := map[string]string{}
-	for _, pincel := range tabuleiro.EspeciesDeTerreno {
+	for _, pincel := range tabuleiro.TerrainKinds {
 		d := oDesenhoDe(pincel.ID)
 		if d.Icone == "" || d.Canto == "" {
 			t.Errorf("a espécie %q tem desenho incompleto: %+v", pincel.ID, d)
@@ -236,9 +236,9 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 		f.urlDaMesa()+"/tabuleiro/terreno/dificil/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o retângulo deu %d", rec.Code)
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	// 3 colunas × 4 linhas = 12 casas, e as duas pontas incluídas.
-	if casas := tabuleiro.QuadradosDe(b, "dificil"); len(casas) != 12 {
+	if casas := tabuleiro.SquaresOf(b, "dificil"); len(casas) != 12 {
 		t.Errorf("(2,2)→(4,5) pintou %d casas, esperado as 12 do retângulo: %v", len(casas), casas)
 	}
 
@@ -246,8 +246,8 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 		f.urlDaMesa()+"/tabuleiro/terreno/limpar/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("limpar o retângulo deu %d", rec.Code)
 	}
-	b = f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
-	if sobrou := tabuleiro.QuadradosDe(b, "dificil"); len(sobrou) != 0 {
+	b = f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
+	if sobrou := tabuleiro.SquaresOf(b, "dificil"); len(sobrou) != 0 {
 		t.Errorf("a borracha em área deixou %v", sobrou)
 	}
 }
@@ -263,8 +263,8 @@ func TestAForgedRectangleIsRefusedByTheRoute(t *testing.T) {
 	if !strings.Contains(corpo, "grande demais") {
 		t.Errorf("o retângulo forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
-	b := f.s.boards.Get(context.Background(), f.sessionID, aAbaPadrao)
-	if casas := tabuleiro.QuadradosDe(b, "dificil"); len(casas) != 0 {
+	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
+	if casas := tabuleiro.SquaresOf(b, "dificil"); len(casas) != 0 {
 		t.Errorf("o retângulo recusado pintou %d casas assim mesmo", len(casas))
 	}
 }

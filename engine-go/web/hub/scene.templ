@@ -18,8 +18,8 @@ import "t20engine/web/ui"
 //     leitor de tela de graça, e melhores.
 
 templ hub(v hubView) {
-	@menuDoHub(v)
-	@rodapeDoHub(v)
+	@hubMenu(v)
+	@hubFooter(v)
 	if v.EhAdmin {
 		// O diálogo acompanha a ENTRADA que o abre. Desenhá-lo sempre punha o
 		// título "Convidar jogador" e um botão de cunhar no HTML de quem não
@@ -29,36 +29,36 @@ templ hub(v hubView) {
 	}
 }
 
-// menuDoHub é o menu principal. `data-nav-region` + `data-nav-layout` são o
+// hubMenu é o menu principal. `data-nav-region` + `data-nav-layout` são o
 // contrato com o driver de teclado — o menu declara a forma e nunca importa o
 // driver, exatamente como na SPA.
-templ menuDoHub(v hubView) {
+templ hubMenu(v hubView) {
 	<nav
 		aria-label="Menu principal"
 		data-nav-region="menu"
 		data-nav-layout="column"
 		class="mx-auto mt-10 flex w-full max-w-md flex-col gap-2.5"
 	>
-		@itemDoMenu("Users2", "Meus Heróis", "/personagens", false)
-		@itemDoMenu("Scroll", "Campanhas", "/campanhas", false)
-		@itemDoMenu("Wand2", "Ferramentas do Mestre", "/mestre/bestiario", false)
+		@menuItem("Users2", "Meus Heróis", "/personagens", false)
+		@menuItem("Scroll", "Campanhas", "/campanhas", false)
+		@menuItem("Wand2", "Ferramentas do Mestre", "/mestre/bestiario", false)
 		if v.Viva != nil {
 			// Só aparece com partida rolando — o "Continue" de um jogo. Mestre e
 			// jogador retomam a MESMA tela.
-			@itemDoMenu("PlayCircle", "Continuar sessão",
+			@menuItem("PlayCircle", "Continuar sessão",
 				v.Viva.Rota, true)
 		}
 	</nav>
 }
 
-// itemDoMenu é um `<a>` de verdade e não um `<button>` com JavaScript: cada
+// menuItem é um `<a>` de verdade e não um `<button>` com JavaScript: cada
 // entrada é NAVEGAÇÃO, e um botão perderia o clique do meio, o "abrir em nova
 // aba" e o menu de contexto que o navegador já dá.
 //
 // Os `data-cue-*` são o gancho dos sons: o `cena.js` escuta por DELEGAÇÃO num
 // ouvinte só, porque o HTML pode ser remendado a qualquer tique e ouvinte preso
 // a nó morre no remendo.
-templ itemDoMenu(icone_, rotulo, destino string, temProximo bool) {
+templ menuItem(icone_, rotulo, destino string, temProximo bool) {
 	<a
 		href={ templ.SafeURL(destino) }
 		data-nav-item
@@ -75,8 +75,8 @@ templ itemDoMenu(icone_, rotulo, destino string, temProximo bool) {
 	</a>
 }
 
-// rodapeDoHub é a tira de identidade, com o menu rápido do jogador.
-templ rodapeDoHub(v hubView) {
+// hubFooter é a tira de identidade, com o menu rápido do jogador.
+templ hubFooter(v hubView) {
 	<footer class="mx-auto mt-auto flex w-full max-w-md border-t border-grimorio-iron pt-4">
 		<button
 			type="button"
@@ -94,11 +94,11 @@ templ rodapeDoHub(v hubView) {
 			<span class="min-w-0 flex-1 truncate font-heading tracking-wide text-foreground">{ v.Nome }</span>
 			@ui.Icon("Settings", "size-4 text-muted-foreground transition-colors group-hover:text-grimorio-gold")
 		</button>
-		@menuDoJogador(v)
+		@playerMenu(v)
 	</footer>
 }
 
-// menuDoJogador é o popover NATIVO.
+// playerMenu é o popover NATIVO.
 //
 // O `position: fixed` com `margin: 0` é obrigatório: a top layer ignora o
 // contexto de posicionamento do pai, e o preflight do Tailwind não zera a
@@ -108,7 +108,7 @@ templ rodapeDoHub(v hubView) {
 // Os sinais aqui são estado de INTERAÇÃO (o rótulo do som, a visibilidade do
 // slider), não da aplicação — e nascem no `data-init` lendo a preferência deste
 // aparelho. Não há lampejo de rótulo errado porque o menu começa FECHADO.
-templ menuDoJogador(v hubView) {
+templ playerMenu(v hubView) {
 	<div
 		id="menu-do-jogador"
 		popover
@@ -116,7 +116,7 @@ templ menuDoJogador(v hubView) {
 		data-init="const p = cena.preferencias(); $som = p.som; $volume = p.volume"
 		class="fixed m-0 w-56 border border-grimorio-iron bg-grimorio-panel-raised p-1.5 text-foreground shadow-lg"
 	>
-		<button type="button" data-on:click="$som = cena.som()" class={ classeDoItemRapido(false) }>
+		<button type="button" data-on:click="$som = cena.som()" class={ quickItemClass(false) }>
 			<span data-show="$som">@ui.Icon("Volume2", "size-4")</span>
 			<span data-show="!$som">@ui.Icon("VolumeX", "size-4")</span>
 			<span data-text="$som ? 'Som ligado' : 'Som desligado'"></span>
@@ -146,7 +146,7 @@ templ menuDoJogador(v hubView) {
 			data-show="cena.temTelaCheia()"
 			data-on:click="$cheia = cena.telaCheia()"
 			data-signals="{cheia: false}"
-			class={ classeDoItemRapido(false) }
+			class={ quickItemClass(false) }
 		>
 			<span data-show="!$cheia">@ui.Icon("Maximize", "size-4")</span>
 			<span data-show="$cheia">@ui.Icon("Minimize", "size-4")</span>
@@ -158,12 +158,12 @@ templ menuDoJogador(v hubView) {
 			<button
 				type="button"
 				data-on:click="$convidar.showModal()"
-				class={ classeDoItemRapido(false) }
+				class={ quickItemClass(false) }
 			>
 				@ui.Icon("UserPlus", "size-4")
 				<span>Convidar jogador</span>
 			</button>
-			<a href="/admin" class={ classeDoItemRapido(false) }>
+			<a href="/admin" class={ quickItemClass(false) }>
 				@ui.Icon("ShieldCheck", "size-4")
 				<span>Administração</span>
 			</a>
@@ -172,12 +172,12 @@ templ menuDoJogador(v hubView) {
 		// ausente: ele diz que o lugar existe e ainda não abriu. Portado tal e
 		// qual — a lista de garantias do `hub.test.tsx` foi conferida uma a uma, e
 		// este item era o único que eu tinha deixado cair sem perceber.
-		<button type="button" disabled class={ classeDoItemRapido(false) }>
+		<button type="button" disabled class={ quickItemClass(false) }>
 			@ui.Icon("Settings", "size-4")
 			<span>Configurações</span>
 		</button>
 		<form method="post" action="/sair">
-			<button type="submit" class={ classeDoItemRapido(true) }>
+			<button type="submit" class={ quickItemClass(true) }>
 				@ui.Icon("LogOut", "size-4")
 				<span>Sair</span>
 			</button>
@@ -185,9 +185,9 @@ templ menuDoJogador(v hubView) {
 	</div>
 }
 
-// classeDoItemRapido: uma linha do menu rápido. Em função e não repetida sete
+// quickItemClass: uma linha do menu rápido. Em função e não repetida sete
 // vezes porque a lista de classes é longa e uma cópia divergente é invisível.
-func classeDoItemRapido(perigo bool) string {
+func quickItemClass(perigo bool) string {
 	base := "flex w-full items-center gap-2.5 rounded-none px-2.5 py-2 text-left font-heading text-sm tracking-wide transition-colors hover:bg-accent focus-visible:bg-accent outline-none"
 	if perigo {
 		return ui.Join(base, "text-grimorio-crimson-bright")

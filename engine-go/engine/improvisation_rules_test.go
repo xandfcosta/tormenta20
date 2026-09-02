@@ -15,7 +15,7 @@ func TestTheDieCoversEveryFaceAndNoneBeyondThem(t *testing.T) {
 		// 40× as faces dá margem folgada: a chance de uma face não sair em 240
 		// rolagens de d6 é de ordem 10^-19.
 		for i := 0; i < faces*40; i++ {
-			d, err := RolaDado(faces)
+			d, err := RollDie(faces)
 			if err != nil {
 				t.Fatalf("d%d: %v", faces, err)
 			}
@@ -39,7 +39,7 @@ func TestTheDieCoversEveryFaceAndNoneBeyondThem(t *testing.T) {
 // `rand.Int` com máximo zero entra em pânico. Recusar é dizer o que houve.
 func TestADieWithoutFacesIsRefused(t *testing.T) {
 	for _, faces := range []int{0, 1, -3} {
-		if _, err := RolaDado(faces); err == nil {
+		if _, err := RollDie(faces); err == nil {
 			t.Errorf("d%d foi aceito", faces)
 		}
 	}
@@ -53,7 +53,7 @@ func TestADieWithoutFacesIsRefused(t *testing.T) {
 func TestOneThreatEveryThreeRooms(t *testing.T) {
 	casos := map[int]int{1: 1, 3: 1, 4: 2, 6: 2, 7: 3, 9: 3, 10: 4, 50: 17}
 	for salas, quero := range casos {
-		got, err := AmeacasPlanejadas(salas, 3)
+		got, err := PlannedThreats(salas, 3)
 		if err != nil {
 			t.Fatalf("%d salas: %v", salas, err)
 		}
@@ -64,11 +64,11 @@ func TestOneThreatEveryThreeRooms(t *testing.T) {
 }
 
 func TestADungeonWithoutRoomsIsRefused(t *testing.T) {
-	if _, err := AmeacasPlanejadas(0, 3); err == nil {
+	if _, err := PlannedThreats(0, 3); err == nil {
 		t.Error("masmorra de zero salas foi aceita")
 	}
 	// Razão zero viria de catálogo torto e daria divisão por zero.
-	if _, err := AmeacasPlanejadas(6, 0); err == nil {
+	if _, err := PlannedThreats(6, 0); err == nil {
 		t.Error("zero salas por ameaça foi aceito")
 	}
 }
@@ -77,10 +77,10 @@ func TestADungeonWithoutRoomsIsRefused(t *testing.T) {
 // nenhuma, e o mestre leria o resultado de outra faixa como se fosse o dele.
 func TestAnUncoveredRollIsAnError(t *testing.T) {
 	linhas := []faixaDeTeste{{1, 2}, {5, 6}}
-	if _, err := LinhaParaRolagem(linhas, 1, "teste"); err != nil {
+	if _, err := RowForRoll(linhas, 1, "teste"); err != nil {
 		t.Errorf("a face 1 está coberta e deu erro: %v", err)
 	}
-	_, err := LinhaParaRolagem(linhas, 3, "teste")
+	_, err := RowForRoll(linhas, 3, "teste")
 	if err == nil {
 		t.Fatal("a face 3 não está coberta e passou")
 	}

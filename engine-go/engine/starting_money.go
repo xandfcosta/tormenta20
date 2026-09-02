@@ -84,7 +84,7 @@ func RollDiceNotation(notation string) (int, error) {
 	}
 	total := 0
 	for i := 0; i < quantidade; i++ {
-		rolagem, err := RolaDado(faces)
+		rolagem, err := RollDie(faces)
 		if err != nil {
 			return 0, fmt.Errorf("rolar %s: %w", notation, err)
 		}

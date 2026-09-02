@@ -54,7 +54,7 @@ type desenhoDaEspecie struct {
 // é APARÊNCIA e o domínio não tem por que conhecê-lo. O preço dessa separação é a
 // espécie nova poder nascer sem desenho — e é exatamente por isso que o guarda
 // existe e que o `oDesenhoDe` recusa em vez de devolver um branco.
-var oDesenhoDasEspecies = map[tabuleiro.EspecieDeTerreno]desenhoDaEspecie{
+var oDesenhoDasEspecies = map[tabuleiro.TerrainKind]desenhoDaEspecie{
 	tabuleiro.TerrenoDificil:    {Icone: "Waves", Canto: "noroeste"},
 	tabuleiro.TerrenoCobertura:  {Icone: "Shield", Canto: "nordeste"},
 	tabuleiro.TerrenoCamuflagem: {Icone: "EyeOff", Canto: "sudeste"},
@@ -67,7 +67,7 @@ var oDesenhoDasEspecies = map[tabuleiro.EspecieDeTerreno]desenhoDaEspecie{
 // não se distingue de nenhuma outra, e isso é indistinguível de "o pincel não
 // funcionou". O `TestEveryKindHasADrawing` faz o pânico acontecer na suíte e não
 // na mesa de alguém.
-func oDesenhoDe(especie tabuleiro.EspecieDeTerreno) desenhoDaEspecie {
+func oDesenhoDe(especie tabuleiro.TerrainKind) desenhoDaEspecie {
 	d, tem := oDesenhoDasEspecies[especie]
 	if !tem {
 		panic(fmt.Sprintf("a espécie de terreno %q não tem desenho: acrescente-a em oDesenhoDasEspecies", especie))
@@ -78,6 +78,6 @@ func oDesenhoDe(especie tabuleiro.EspecieDeTerreno) desenhoDaEspecie {
 // aClasseDaCasa é o que a casa pintada veste: a espécie (que traz a tinta) e o
 // canto do ícone.
 func aClasseDaCasa(especie string) string {
-	d := oDesenhoDe(tabuleiro.EspecieDeTerreno(especie))
+	d := oDesenhoDe(tabuleiro.TerrainKind(especie))
 	return "tabuleiro-terreno tabuleiro-" + especie + " terreno-canto-" + d.Canto
 }

@@ -16,7 +16,7 @@ import (
 // non-equipment ActiveItem (race/origin/class/effect). Read-only.
 var vestedWear = "vested"
 
-const deformidadePericiaBonus = 2 // deformidade.ts DEFORMIDADE_PERICIA_BONUS
+const deformidadeExpertiseBonus = 2 // deformidade.ts DEFORMIDADE_PERICIA_BONUS
 
 // homebrewVestedOK mirrors items/homebrew.ts HOMEBREW_VESTED_OK — esotéricos
 // that may be WORN and still grant their empunhado bonus (opt-in).
@@ -167,8 +167,8 @@ var (
 	indefesoMods = []Modifier{condDefense(-10), condFlag(autoFailReflexosFlag)}
 )
 
-// comPlus devolve os modificadores de uma condição citada mais os próprios.
-func comPlus(base []Modifier, extra ...Modifier) []Modifier {
+// withPlus devolve os modificadores de uma condição citada mais os próprios.
+func withPlus(base []Modifier, extra ...Modifier) []Modifier {
 	return append(append([]Modifier{}, base...), extra...)
 }
 
@@ -194,21 +194,21 @@ var conditionModifierTable = map[string][]Modifier{
 	// "INCONSCIENTE. O personagem fica indefeso e não pode fazer ações […]"
 	"inconsciente": indefesoMods,
 	// "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8."
-	"petrificado": comPlus(indefesoMods, condDamageReduction(8)),
+	"petrificado": withPlus(indefesoMods, condDamageReduction(8)),
 
 	// "FATIGADO. O personagem fica fraco e vulnerável."
-	"fatigado": comPlus(fracoMods, vulneravelMods...),
+	"fatigado": withPlus(fracoMods, vulneravelMods...),
 	// "EXAUSTO. O personagem fica debilitado, lento e vulnerável."
-	"exausto": comPlus(debilitadoMods, vulneravelMods...),
+	"exausto": withPlus(debilitadoMods, vulneravelMods...),
 	// "CEGO. O personagem fica desprevenido e lento […] e sofre −5 em testes de
 	// perícias baseadas em Força ou Destreza."
-	"cego": comPlus(desprevenidoMods, condByAttr("strength", -5), condByAttr("dexterity", -5)),
+	"cego": withPlus(desprevenidoMods, condByAttr("strength", -5), condByAttr("dexterity", -5)),
 	// "AGARRADO. O personagem fica desprevenido e imóvel, sofre −2 em testes de
 	// ataque […]"
-	"agarrado": comPlus(desprevenidoMods, condAttack(-2)),
+	"agarrado": withPlus(desprevenidoMods, condAttack(-2)),
 	// "ENREDADO. O personagem fica lento, vulnerável e sofre −2 em testes de
 	// ataque."
-	"enredado": comPlus(vulneravelMods, condAttack(-2)),
+	"enredado": withPlus(vulneravelMods, condAttack(-2)),
 
 	// "ALQUEBRADO. O custo em pontos de mana das habilidades do personagem
 	// aumenta em +1." Aumento, não redução — soma normalmente (p226).
