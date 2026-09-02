@@ -109,12 +109,12 @@ no banco nem tela para promover alguém, então virar admin exige editar o arqui
 na máquina que hospeda a mesa. Esses e-mails são também a única exceção ao
 convite — é assim que você cria a sua própria conta num banco vazio.
 
-O admin abre e edita **qualquer mesa** (as dos outros aparecem nas Campanhas
+O admin abre e edita **qualquer campanha** (as dos outros aparecem nas Campanhas
 marcadas com o dono) e tem a cena de **Administração** no menu do Hub: quem está
 na mesa e o que cada um tem, os convites em aberto, e o painel de servidor com
 backup. Duas ações sobre uma conta: gerar um **link de redefinição de senha** —
 você nunca digita nem vê a senha de ninguém — e **apagar**, que leva as fichas
-junto e passa as mesas dela para você.
+junto e passa as campanhas dela para você.
 
 **A stack de produção é um processo só.** O `cmd/api` serve as cenas, os
 estáticos (que viajam DENTRO do binário) e `/api/*` na mesma porta. Não há nginx
