@@ -53,7 +53,7 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	// tem nada a ver com o que ele mede.
 	//
 	// Só aparece sob CPU escassa: verde em 8 núcleos, vermelho nos 2 vCPUs do
-	// CI, no `TestOComandoRecusadoChegaAoMestre` — que derruba uma tabela de
+	// CI, no `TestTheRefusedCommandReachesTheGm` — que derruba uma tabela de
 	// propósito e por isso GARANTE a falha de persistência que abre a janela.
 	t.Cleanup(func() {
 		srv.EsperaOSegundoPlano()

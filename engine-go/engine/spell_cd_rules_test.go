@@ -72,7 +72,7 @@ func TestSamiraTheBookWorkedExample(t *testing.T) {
 // "Seu atributo-chave para lançar magias é definido pelo seu Caminho" (p37).
 // Mesmo personagem, mesmos atributos, muda só a escolha — se o motor ignorar o
 // caminho, os três dão o mesmo número.
-func TestArcanistaKeyAttributeFollowsTheCaminho(t *testing.T) {
+func TestArcanistaKeyAttributeFollowsThePath(t *testing.T) {
 	arcanista := func(caminho string) Character {
 		return Character{
 			Level:        10,

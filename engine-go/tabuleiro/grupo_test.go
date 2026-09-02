@@ -19,13 +19,13 @@ func comHorda() *BoardState {
 	}}
 }
 
-// TestOLacoPegaAPecaPELOCORPO.
+// TestTheLassoCatchesTheTokenByItsBody.
 //
 // A REGRA: uma Colossal ocupa 6×6 (p107), e o laço que toca QUALQUER casa do
 // corpo dela a marca. Marcar só pela âncora faria o mestre desenhar em volta do
 // dragão e não pegar o dragão — e ele concluiria que a ferramenta não funciona
 // com peça grande, que é meia verdade pior que nenhuma.
-func TestOLacoPegaAPecaPeloCorpo(t *testing.T) {
+func TestTheLassoCatchesTheTokenByItsBody(t *testing.T) {
 	b := comHorda()
 	// Um laço no MEIO do dragão, longe da âncora (10,10) que fica fora dele.
 	pegos := PecasNoRetangulo(b, engine.Square{X: 13, Y: 13}, engine.Square{X: 14, Y: 14})
@@ -39,13 +39,13 @@ func TestOLacoPegaAPecaPeloCorpo(t *testing.T) {
 	}
 }
 
-// TestOGrupoAndaJuntoOuNaoAnda.
+// TestTheGroupMovesTogetherOrDoesNotMove.
 //
 // A REGRA: coordenada absurda no meio da lista NÃO pode deixar metade do grupo
 // movida. É o pior estado possível porque PARECE que o gesto funcionou — o
 // mestre vê três zumbis andarem e três ficarem, e não tem como saber se foi
 // regra ou defeito.
-func TestOGrupoAndaJuntoOuNaoAnda(t *testing.T) {
+func TestTheGroupMovesTogetherOrDoesNotMove(t *testing.T) {
 	b := comHorda()
 	antes := map[string]engine.Square{}
 	for _, t := range b.Tokens {
@@ -71,12 +71,12 @@ func TestOGrupoAndaJuntoOuNaoAnda(t *testing.T) {
 	}
 }
 
-// TestOGrupoMoveSoQuemFoiMarcadoEGuardaDeOndeVeio.
+// TestTheGroupMovesOnlyWhoWasMarkedAndRemembersWhereFrom.
 //
 // O `DeOndeVeio` é o que faz o "voltar para onde estava" do menu (ALE-206)
 // funcionar depois de um movimento de grupo. Sem ele o verbo aparece e não faz
 // nada, ou pior: devolve a peça a um lugar de duas cenas atrás.
-func TestOGrupoMoveSoQuemFoiMarcadoEGuardaDeOndeVeio(t *testing.T) {
+func TestTheGroupMovesOnlyWhoWasMarkedAndRemembersWhereFrom(t *testing.T) {
 	b := comHorda()
 	if err := MoveOGrupo(b, []string{"rato", "dragao"}, 3, -2); err != nil {
 		t.Fatalf("mover o grupo deu %v", err)
@@ -96,10 +96,10 @@ func TestOGrupoMoveSoQuemFoiMarcadoEGuardaDeOndeVeio(t *testing.T) {
 	}
 }
 
-// TestOGrupoIgnoraAPecaQueSumiu: entre marcar e arrastar, o stream pode trazer a
+// TestTheGroupIgnoresATokenThatVanished: entre marcar e arrastar, o stream pode trazer a
 // remoção de uma delas por outra pessoa. Recusar o movimento das outras cinco
 // por causa disso é punir o mestre por uma corrida que não é dele.
-func TestOGrupoIgnoraAPecaQueSumiu(t *testing.T) {
+func TestTheGroupIgnoresATokenThatVanished(t *testing.T) {
 	b := comHorda()
 	if err := MoveOGrupo(b, []string{"rato", "fantasma"}, 1, 1); err != nil {
 		t.Fatalf("um id que não existe derrubou o gesto: %v", err)

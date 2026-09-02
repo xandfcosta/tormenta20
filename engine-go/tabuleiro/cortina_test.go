@@ -15,7 +15,7 @@ import (
 // Redigir peça por peça deixaria passar tudo que não está marcado como
 // escondido, que é exatamente a taverna que o mestre monta enquanto a mesa olha
 // a cripta — por isso a cortina vem ANTES da redação, e não dentro dela.
-func TestACortinaEscondeACenaInteiraDaMesa(t *testing.T) {
+func TestTheCurtainHidesTheWholeSceneFromTheTable(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
 	_ = AddToken(b, BoardToken{Label: "Taverneiro", X: 1, Y: 1}, id)
@@ -51,7 +51,7 @@ func TestACortinaEscondeACenaInteiraDaMesa(t *testing.T) {
 // A cortina ABERTA não muda nada: sem esta afirmação, um `BoardForRole` que
 // redigisse sempre passaria no teste de cima e esconderia o tabuleiro da mesa
 // para sempre. É o controle do outro teste, não um caso a mais.
-func TestSemCortinaAMesaContinuaVendoOTabuleiro(t *testing.T) {
+func TestWithoutTheCurtainTheTableKeepsSeeingTheBoard(t *testing.T) {
 	b := openBoard(t)
 	_ = AddToken(b, BoardToken{Label: "Taverneiro", X: 1, Y: 1}, boardCounter())
 
@@ -72,7 +72,7 @@ func TestSemCortinaAMesaContinuaVendoOTabuleiro(t *testing.T) {
 //
 // Isto se afirma no FIO e não no struct porque é o fio que o cliente lê; um
 // teste sobre o valor Go passaria verde com `nil` e `[]` indistintos.
-func TestACortinaNaoMandaListaNulaNoFio(t *testing.T) {
+func TestTheCurtainDoesNotSendANullListOnTheWire(t *testing.T) {
 	b := &BoardState{Version: 3, Curtained: true}
 
 	fio, err := json.Marshal(BoardForRole("player", b))

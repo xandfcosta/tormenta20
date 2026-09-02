@@ -48,7 +48,7 @@ type desenhoDaEspecie struct {
 }
 
 // oDesenhoDasEspecies é a tabela, e ela é conferida contra a lista do domínio
-// pelo `TestTodaEspecieTemDesenho`.
+// pelo `TestEveryKindHasADrawing`.
 //
 // Mapa e não campo no `tabuleiro.PincelDeTerreno`, porque nome de ícone do lucide
 // é APARÊNCIA e o domínio não tem por que conhecê-lo. O preço dessa separação é a
@@ -65,7 +65,7 @@ var oDesenhoDasEspecies = map[tabuleiro.EspecieDeTerreno]desenhoDaEspecie{
 //
 // Pânico e não um branco silencioso: uma espécie sem desenho pinta uma casa que
 // não se distingue de nenhuma outra, e isso é indistinguível de "o pincel não
-// funcionou". O `TestTodaEspecieTemDesenho` faz o pânico acontecer na suíte e não
+// funcionou". O `TestEveryKindHasADrawing` faz o pânico acontecer na suíte e não
 // na mesa de alguém.
 func oDesenhoDe(especie tabuleiro.EspecieDeTerreno) desenhoDaEspecie {
 	d, tem := oDesenhoDasEspecies[especie]

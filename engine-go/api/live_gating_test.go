@@ -178,7 +178,7 @@ func temPortaDoMestre(t *testing.T, fonte, handler string) bool {
 	return visita(handler)
 }
 
-func TestPortaDoMestreEmTodaRotaDaMesaAoVivo(t *testing.T) {
+func TestTheGmGateOnEveryLiveTableRoute(t *testing.T) {
 	fonte := fonteDosComandos(t)
 	rotas := rotasAoVivo(t)
 	if len(rotas) == 0 {
@@ -220,7 +220,7 @@ var saidaDeEstado = regexp.MustCompile(
 // tela: a RESPOSTA do próprio comando hidrata quem o mandou, inclusive jogador.
 // Foi exatamente por aí que ele vazou (ALE-122) — a redação existia e o ack
 // passava por fora dela. Com HTTP o buraco é o mesmo, só que se chama `plataforma.WriteJSON`.
-func TestEstadoSaiDoServidorFiltradoPorPapel(t *testing.T) {
+func TestStateLeavesTheServerFilteredByRole(t *testing.T) {
 	linhas := saidaDeEstado.FindAllString(fonteDosComandos(t), -1)
 	if len(linhas) == 0 {
 		t.Fatal("nenhuma saída de estado reconhecida — a forma mudou e este teste ficou cego")
@@ -245,7 +245,7 @@ func TestEstadoSaiDoServidorFiltradoPorPapel(t *testing.T) {
 // é "gm", então o mestre receberia a PRÓPRIA cena de volta: o botão acenderia,
 // a peça escondida continuaria na tela, e ele concluiria que a mesa está vendo
 // a emboscada. Um modo que mente sobre o segredo é pior que não ter modo.
-func TestVerComoJogadorRedigeParaAMesaENaoParaQuemPediu(t *testing.T) {
+func TestViewAsPlayerRedactsForTheTableAndNotForWhoAsked(t *testing.T) {
 	corpo := corpoDaFuncao(t, fonteDosComandos(t), "handleBoardAsPlayer")
 
 	if !strings.Contains(corpo, `tabuleiro.BoardForRole("player"`) {
@@ -297,7 +297,7 @@ func TestMoveHandlersResolveOwnershipOnTheServer(t *testing.T) {
 //
 // O que este teste ainda prende é o que a mudança poderia ter perdido sem
 // ninguém ver: que o fluxo está DENTRO do roteador, e não pendurado à parte.
-func TestOFluxoDeEventosMoraDentroDoRoteador(t *testing.T) {
+func TestTheEventStreamLivesInsideTheRouter(t *testing.T) {
 	s := newTestServer(t)
 	s.cfg.CORSOrigins = []string{"http://localhost:5173"}
 

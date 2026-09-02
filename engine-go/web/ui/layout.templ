@@ -52,7 +52,7 @@ type Page struct {
 	// SemEstadoDeCliente marca a superfície que não pode ter sinal NEM `data-init`
 	// — hoje só a PORTA. Um sinal é estado do cliente e o Datastar o serializa em
 	// TODA requisição seguinte, então qualquer estado ali faria a senha viajar de
-	// novo a cada pedido da página. É o que o `TestPortaNaoPoeNadaEmSinalDoDatastar`
+	// novo a cada pedido da página. É o que o `TestTheDoorPutsNothingInADatastarSignal`
 	// cobra, e ele me pegou: ao fazer o `data-init` da restauração de foco sair
 	// sempre, eu o pus também na porta, que não tem trilho para restaurar.
 	//
@@ -211,7 +211,7 @@ templ Layout(p Page, corpo templ.Component) {
 				// Não sai na PORTA: a caixa liga um sinal (`data-bind:buscador`),
 				// e sinal é estado de cliente que o Datastar serializa em toda
 				// requisição seguinte — o que faria a senha viajar de novo a cada
-				// pedido. É o que o `TestPortaNaoPoeNadaEmSinalDoDatastar` cobra.
+				// pedido. É o que o `TestTheDoorPutsNothingInADatastarSignal` cobra.
 				if !p.SemEstadoDeCliente {
 					for _, sobreposicao := range p.Overlays {
 			@sobreposicao

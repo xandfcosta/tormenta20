@@ -150,7 +150,7 @@ func aTintaDaAbaDaFicha(ativa bool) string {
 templ oPainelDaFicha(v fichaView) {
 	// UM CASO POR ABA, e a lista tem de andar junto com `asAbasDaFicha`: um
 	// nome lá sem caso aqui abre a aba VAZIA, e tela em branco é lida como
-	// defeito. O guarda `TestTodaAbaDaFichaDesenhaAlgo` prende os dois.
+	// defeito. O guarda `TestEverySheetTabDrawsSomething` prende os dois.
 	switch v.AbaAtiva {
 		case "proficiencies":
 			@oPainelDasProficiencias(v)

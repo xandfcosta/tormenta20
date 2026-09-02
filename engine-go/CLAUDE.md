@@ -186,7 +186,7 @@ se quer comprimir; e comprimir SEM repassar o `Flush` prende o quadro no buffer
 interno do `gzip.Writer`, e o fluxo AO VIVO da Mesa para de atualizar. Nada
 falha, nada loga, e o sintoma — "o tempo real quebrou" — não aponta para um
 middleware de compressão. Por isso o `Flush` esvazia o gzip ANTES de quem está
-embaixo, e `TestOFluxoAoVivoAtravessaOGzip` mede um quadro chegando com a
+embaixo, e `TestTheLiveStreamCrossesTheGzip` mede um quadro chegando com a
 conexão ainda aberta.
 
 **E há uma segunda metade, que custou 27 casos vermelhos no e2e com os
@@ -200,7 +200,7 @@ aplicados, e a busca não filtra, a seta não anda, o diálogo não abre.
 
 Os guardas unitários estavam verdes porque escreviam o cabeçalho ANTES de
 esvaziar, que não é o que a biblioteca faz. **Um envelope de resposta tem de
-decidir no `Flush` também**, e `TestOFlushAntesDoWriteJaDecideOEnvelope` repete a
+decidir no `Flush` também**, e `TestAFlushBeforeTheWriteAlreadyDecidesTheEnvelope` repete a
 ordem do Datastar de propósito. A regra geral, que vale para qualquer middleware
 que se escreva aqui: *quem esvazia compromete os cabeçalhos*.
 
@@ -390,7 +390,7 @@ Três coisas que este desenho pede, e uma que ele proíbe:
 - **`events/` não importa NADA do projeto.** Ele teve de entrar na lista de
   permitidos do `aovivo` e do `tabuleiro`, cujos guardas de fronteira avisam que
   acrescentar import à lista transforma a porta em enfeite. O que impede a porta
-  dos fundos é o `TestOVocabularioNaoImportaNinguem`: enquanto o vocabulário for
+  dos fundos é o `TestVocabularyImportsNothing`: enquanto o vocabulário for
   folha, depender dele não cria fronteira errada — e no dia em que alguém
   importar a ficha ali "para enriquecer o evento", os dois contextos passam a
   alcançar a ficha de graça com o guarda de lá verde.
@@ -586,6 +586,44 @@ As faixas, o vermelho antes de confiar e o que não merece teste estão no
   reverta. Foi assim que se descobriu que um teste de PV passava por acidente —
   em todos os casos a primeira classe também era a maior.
 
+  > **E às vezes não é preciso sabotar: a árvore de ONTEM é o caso vermelho.** Os
+  > dois guardas do `convention` foram provados assim — `git archive` do commit
+  > anterior, o guarda copiado por cima, `go test`. Deu 775 reprovados num e 128
+  > no outro. É melhor que sabotagem por dois motivos: o caso negativo é real e
+  > não inventado, e não há como a sabotagem sair inerte — que já enganou duas
+  > vezes nesta épica.
+
+## `convention`: os guardas que não são de pacote nenhum
+
+`convention/` (ALE-282) não tem código de produção. Ele existe porque duas frases
+do CLAUDE.md da raiz se contradizem quando a regra é sobre TODOS os pacotes:
+"regra mecanizável vira guarda" e "o guarda mora no pacote que a possui". Pôr uma
+regra do repositório no `api` seria escolher um dono arbitrário — e o `api` está
+sendo dividido em um pacote por cena (ALE-278), então o guarda mudaria de casa
+junto com a próxima fatia.
+
+Dois moram lá hoje:
+
+- **`TestEveryTestNameIsEnglish`** varre todo `*_test.go` e recusa nome com
+  palavra em português. Ele é o que impede o 774º — a regra de idioma sempre
+  disse "nome de teste" com todas as letras, e ainda assim 773 dos 1.051 casos
+  estavam em português, porque *convenção escrita e não varrida é aplicada
+  exatamente aos arquivos que alguém apontou*.
+- **`TestNoCitationNamesAMissingTest`** recusa comentário ou `.md` que nomeie um
+  teste inexistente. A varredura mediu **136** dessas antes de começar: um `.md`
+  fica errado sem ninguém mexer nele, e nada no repositório acusava.
+
+**A lista de marcadores tem uma fresta declarada**, e ela é deliberada: nome
+PRÓPRIO do livro passa. `TestBolaDeFogoWorkedExample` e
+`TestEspecializacaoEmArmadura` são o nome da magia e do poder, não prosa em
+português — a alternativa seria uma lista que cobra a tradução de um nome
+próprio, que é pior.
+
+**E a lápide continua valendo.** `// Aqui morava o TestX, que prendia…` é boa
+prática aqui: ela diz por que uma garantia SAIU, que é o que o `git log` esconde
+de quem lê o arquivo. O guarda só pede que ela seja DECLARADA em `tombstones` —
+apagar um teste é um ato, e o ato aparece numa linha.
+
 ## templ — as armadilhas que já custaram tempo
 
 As cenas do `piloto/` são `.templ` compiladas para `.go` por `go tool templ
@@ -633,7 +671,7 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   paleta, o Tailwind não emite regra para o que não conhece, e o elemento fica
   com a cor HERDADA — o crachá de contagem dos Efeitos saiu dourado sobre
   dourado, 1,53:1, e atravessou uma fatia inteira (ALE-272). O
-  `TestTodaTintaDaCasaExisteNaFolha` varre `piloto_*.templ`, `piloto_*.go` e
+  `TestEveryHouseTintExistsInTheStylesheet` varre `piloto_*.templ`, `piloto_*.go` e
   `web/ui/*` e cobra cada token da casa contra a folha compilada. A paleta mora
   no `@theme` do `api/piloto/src/index.css`; conferir lá antes de inventar o nome.
   **O `web/ui/*` entrou na ALE-278 e mostra a forma da falha desta família**: o
@@ -696,7 +734,7 @@ lista VAZIA, e o comentário diz por que isso importa mais aqui do que na média
 no dia em que o `search` alcançar catálogo, banco ou HTTP, o próximo que precisar
 do `Fold` vai copiar de novo — e a próxima cópia vai estar errada de outro jeito.
 
-A regra tem guarda nas DUAS camadas, e é deliberado: `search.TestFoldDropsAccents`
+A regra tem guarda nas DUAS camadas, e é deliberado: `search.TestFoldDropsAccentsAndCase`
 prende a função, `book.TestTheAddressKeyDropsAccents` prende o efeito no endereço.
 Foi exatamente entre as duas que a cópia divergiu.
 
@@ -745,7 +783,7 @@ a perícia que treina: um elo apontando para um endereço que não existe. Sem e
 sem panic, sem nada no log.
 
 Quem acusou foi um teste de CENA dois pacotes acima
-(`TestAClasseLigaAsPericiasQueTreina`). A regra passou a ter guarda onde ela
+(`TestTheClassLinksTheExpertisesItTrains`). A regra passou a ter guarda onde ela
 mora, no próprio `book` — e ele nasceu vermelho por sabotagem.
 
 **A lição para as próximas extrações: função copiada por causa de fronteira é
@@ -858,7 +896,7 @@ exceção, sem conseguir sequer navegar para fora — a ferramenta de medir some
 junto, e o que sobra é "o navegador travou", que não aponta para nada.
 
 **Quem ESCONDE é um nó, quem POSICIONA é outro.** O
-`TestNenhumNoTemDataShowEDataAttrStyleJuntos` varre o HTML servido e recusa a
+`TestNoNodeHasDataShowAndDataAttrStyleTogether` varre o HTML servido e recusa a
 combinação.
 
 ### O sinal é um PROXY: ler um índice que não existe o CRIA
@@ -870,7 +908,7 @@ servidor medindo zero.
 
 **Guardar o sinal numa constante NÃO resolve** (a constante continua sendo o
 proxy). O que resolve é COPIAR: `const lista = [...$reguapontos]`. O
-`TestNenhumaExpressaoIndexaOSinalDaLista` afirma a regra pelo que PODE vir
+`TestNoExpressionIndexesTheListSignal` afirma a regra pelo que PODE vir
 depois de `$lista` — `=` ou `]` —, e não por uma forma errada conhecida: a
 primeira versão dele procurava `$lista[` e passava verde sobre a segunda forma.
 
@@ -942,7 +980,7 @@ loga: o servidor desenhou uma cena perfeitamente válida, só que de outra seç�
 **O remédio é o servidor escrever o `?` no comando**, já que é ele quem sabe o
 estado ao renderizar o botão: uma função só monta todo `@post` da cena
 (`oPostDaFicha`), e um guarda de varredura lê o HTML de cada aba e falha se algum
-comando sair sem ele (`TestNenhumComandoDaFichaPerdeAAba`). Sinal do cliente
+comando sair sem ele (`TestNoSheetCommandLosesTheTab`). Sinal do cliente
 resolveria também, e é pior: some no F5, que é justamente o que o endereço na URL
 existe para sobreviver.
 
@@ -973,7 +1011,7 @@ afordância de TECLADO, e por isso ele pede `:focus-visible`
 (`el.matches(':focus-visible') && (…)`). Medido no navegador: o clique dá
 `false`, o Tab dá `true`, e o foco PROGRAMÁTICO do driver de setas também dá
 `true` — a prévia da seta fica inteira e o mouse deixa de mandar o pedido que só
-desfazia o dele. `TestNenhumFocoPedeAoServidorSemGuardaDeTeclado` varre a FONTE
+desfazia o dele. `TestNoFocusAsksTheServerWithoutAKeyboardGuard` varre a FONTE
 inteira, e não uma cena servida, porque enumerar cena por cena deixaria a
 próxima nascer sem medição.
 

@@ -12,7 +12,7 @@ import (
 //
 // Sem isso o port ficaria "parecido", e parecido aqui significa a mesma
 // campanha com duas capas diferentes nas duas telas.
-func TestMatizDoNomeCasaComOJS(t *testing.T) {
+func TestTheNameHueMatchesTheJs(t *testing.T) {
 	casos := map[string]int{
 		"Sombras de Valkaria": 181,
 		"Anão":                153,
@@ -28,7 +28,7 @@ func TestMatizDoNomeCasaComOJS(t *testing.T) {
 	}
 }
 
-func TestIniciaisCasaComOJS(t *testing.T) {
+func TestTheInitialsMatchTheJs(t *testing.T) {
 	casos := map[string]string{
 		"Sombras de Valkaria": "SD",
 		"Anão":                "A",
@@ -48,7 +48,7 @@ func TestIniciaisCasaComOJS(t *testing.T) {
 
 // O gradiente usa o MESMO matiz nas três paradas — se ele divergisse, a capa
 // sairia com um degradê de duas cores diferentes.
-func TestGradienteUsaOMesmoMatizNasTresParadas(t *testing.T) {
+func TestTheGradientUsesTheSameHueAtAllThreeStops(t *testing.T) {
 	g := gradienteDaCampanha("Sombras de Valkaria")
 	if strings.Count(g, "181") != 3 {
 		t.Errorf("o gradiente não repetiu o matiz nas três paradas: %s", g)
@@ -56,7 +56,7 @@ func TestGradienteUsaOMesmoMatizNasTresParadas(t *testing.T) {
 }
 
 // A mesa de outra pessoa diz DE QUEM ela é, não a postura de quem lê (ALE-120).
-func TestPapelDizDeQuemEhAMesaAlheia(t *testing.T) {
+func TestTheRoleSaysWhoseSomeoneElsesTableIs(t *testing.T) {
 	bruna := "Bruna"
 	if got := papelNaCampanha("gm", &bruna); got != "Mesa de Bruna" {
 		t.Errorf("papel = %q — a mesa alheia não pode dizer \"Mestrando\"", got)

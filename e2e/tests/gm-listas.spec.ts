@@ -196,7 +196,7 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
   const trilho = 'nav[aria-label="Ferramentas do mestre"]'
   await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
-  // A CONTAGEM saiu daqui e virou `TestOTrilhoTemUmaParadaPorCatalogo` no Go,
+  // A CONTAGEM saiu daqui e virou `TestTheRailHasOneStopPerCatalog` no Go,
   // por amostragem sobre `abasDoAcervo`. Ela estava escrita como o número onze,
   // e as duas paradas nascidas depois (escolas, perícias) só apareceram quando
   // ele ficou vermelho por um número velho — enumeração cobrando manutenção sem

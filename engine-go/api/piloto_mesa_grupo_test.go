@@ -15,12 +15,12 @@ import (
 // que só existe deste lado — quem PODE marcar, o que a resposta devolve, e os
 // dois gestos que a mesma camada precisa distinguir.
 
-// TestSoOMestreMarcaUmGrupo.
+// TestOnlyTheGmMarksAGroup.
 //
 // A trava é do SERVIDOR e não da tela: um jogador tem uma peça, e o que o grupo
 // dispensa — a regra de deslocamento do turno — é justamente o que protege o
 // turno dele. Esconder o gesto seria cortesia; a recusa é a fronteira.
-func TestSoOMestreMarcaUmGrupo(t *testing.T) {
+func TestOnlyTheGmMarksAGroup(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -35,12 +35,12 @@ func TestSoOMestreMarcaUmGrupo(t *testing.T) {
 	}
 }
 
-// TestMarcarNaoRemendaACena — o irmão do guarda da régua.
+// TestMarkingDoesNotPatchTheScene — o irmão do guarda da régua.
 //
 // Marcar não muda a cena de ninguém, e a resposta tem de ser do tamanho disso.
 // Uma marcação que devolvesse as regiões trocaria o mapa debaixo de quem está
 // arrastando — que é exatamente o gesto que acabou de acontecer.
-func TestMarcarNaoRemendaACena(t *testing.T) {
+func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -53,9 +53,9 @@ func TestMarcarNaoRemendaACena(t *testing.T) {
 	}
 }
 
-// TestOGrupoSemPecaMarcadaRecusaComFrase: o gesto que não tem sobre o que agir
+// TestAGroupWithNoMarkedTokenRefusesWithASentence: o gesto que não tem sobre o que agir
 // diz isso, em vez de gravar uma versão nova sem mudar nada.
-func TestOGrupoSemPecaMarcadaRecusaComFrase(t *testing.T) {
+func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -65,12 +65,12 @@ func TestOGrupoSemPecaMarcadaRecusaComFrase(t *testing.T) {
 	}
 }
 
-// TestOGrupoMoveTodasNumaResposta.
+// TestTheGroupMovesThemAllInOneResponse.
 //
 // Duas afirmações: as peças andam pelo delta, e a resposta é a do gesto contínuo
 // (só o mapa). A segunda importa porque mover um grupo é um arrasto, e devolver
 // a Mesa inteira no meio dele é o defeito de 353 KB que a fatia 3 mediu.
-func TestOGrupoMoveTodasNumaResposta(t *testing.T) {
+func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")
@@ -95,7 +95,7 @@ func TestOGrupoMoveTodasNumaResposta(t *testing.T) {
 	}
 }
 
-// TestACamadaDeRepousoServeAosDoisGestos.
+// TestTheRestingLayerServesBothGestures.
 //
 // UMA camada e não duas, e isto é conserto de um defeito medido: as duas se
 // mostravam com `$ferramenta === ”`, e a que vem DEPOIS no DOM cobria a outra —
@@ -105,7 +105,7 @@ func TestOGrupoMoveTodasNumaResposta(t *testing.T) {
 // depois de um `pointerdown` + `pointerup` no mesmo elemento INCLUSIVE quando o
 // dedo andou, e sem ele terminar um laço também moveria a peça da vez para onde
 // o laço terminou.
-func TestACamadaDeRepousoServeAosDoisGestos(t *testing.T) {
+func TestTheRestingLayerServesBothGestures(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")

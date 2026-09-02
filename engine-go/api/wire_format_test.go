@@ -29,7 +29,7 @@ import (
 //
 // Este guarda é o barato que pega a FAMÍLIA: um e2e da visão do mestre custaria
 // minutos e cobriria um caso; isto custa milissegundos e cobre toda tag futura.
-func TestAGrafiaDoFioEMinuscula(t *testing.T) {
+func TestTheWireSpellingIsLowercase(t *testing.T) {
 	t.Run("tags JSON", agrafiaDasTags)
 	t.Run("caminhos de rota", agrafiaDasRotas)
 }

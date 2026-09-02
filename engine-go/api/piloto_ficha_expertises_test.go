@@ -81,7 +81,7 @@ func oTreinoDe(t *testing.T, f pilotoFixture, id int64, nome string) (treinada b
 //	Luta      = 1 + 4 + 2 = +7
 //	Fortitude = 1 + 3     = +4
 //	Acrobacia = 1 + 2     = +3
-func TestOPainelDePericiasDizOsNumerosDoMotor(t *testing.T) {
+func TestTheExpertisesPanelSaysTheEngineNumbers(t *testing.T) {
 	f, id := oPericioso(t)
 	tela := aTelaDasPericias(t, f, id, "")
 
@@ -97,7 +97,7 @@ func TestOPainelDePericiasDizOsNumerosDoMotor(t *testing.T) {
 }
 
 // O TREINO POR NÍVEL tem três degraus, e o cabeçalho os diz.
-func TestOCabecalhoDizOTreinoDoNivel(t *testing.T) {
+func TestTheHeaderSaysTheTrainingForTheLevel(t *testing.T) {
 	casos := []struct {
 		nivel int64
 		quer  int
@@ -114,7 +114,7 @@ func TestOCabecalhoDizOTreinoDoNivel(t *testing.T) {
 // "Teste de Reflexos CD 20" é a consulta mais quente da mesa. Prender a ordem é
 // prender uma decisão de produto que uma reordenação alfabética inocente
 // desfaria sem ninguém notar.
-func TestAOrdemPoeAsResistenciasNaFrenteEOsOficiosNoFim(t *testing.T) {
+func TestTheOrderPutsSavesFirstAndCraftsLast(t *testing.T) {
 	f, id := oPericioso(t)
 	tela := aTelaDasPericias(t, f, id, "")
 
@@ -132,7 +132,7 @@ func TestAOrdemPoeAsResistenciasNaFrenteEOsOficiosNoFim(t *testing.T) {
 }
 
 // A BUSCA IGNORA ACENTO, porque ninguém digita "Atuação" com o til.
-func TestABuscaAchaSemAcentoESemCaixa(t *testing.T) {
+func TestTheSearchFindsWithoutAccentAndWithoutCase(t *testing.T) {
 	f, id := oPericioso(t)
 	for _, termo := range []string{"atuacao", "ATUACAO", "Atuação", "tuaç"} {
 		tela := aTelaDasPericias(t, f, id, termo)
@@ -151,11 +151,11 @@ func TestABuscaAchaSemAcentoESemCaixa(t *testing.T) {
 
 // O `@get` DA BUSCA CARREGA A ABA.
 //
-// A varredura `TestNenhumComandoDaFichaPerdeAAba` olha só os `@post`, então este
+// A varredura `TestNoSheetCommandLosesTheTab` olha só os `@post`, então este
 // caminho precisa de guarda próprio: sem o `?tab=`, digitar na busca devolveria
 // a ficha desenhada na PRIMEIRA aba — e a primeira aba É Perícias, o que faria o
 // defeito parecer funcionar até alguém buscar de outra seção.
-func TestOGetDaBuscaCarregaAAba(t *testing.T) {
+func TestTheSearchGetCarriesTheTab(t *testing.T) {
 	f, id := oPericioso(t)
 	tela := aTelaDasPericias(t, f, id, "")
 	if !strings.Contains(tela, "?tab=expertises&#39;)") {
@@ -164,7 +164,7 @@ func TestOGetDaBuscaCarregaAAba(t *testing.T) {
 }
 
 // O TREINO ALTERNA, e o comando manda a perícia e não o estado.
-func TestOTreinoAlternaNosDoisSentidos(t *testing.T) {
+func TestTrainingTogglesBothWays(t *testing.T) {
 	f, id := oPericioso(t)
 	if treinada, _ := oTreinoDe(t, f, id, "Acrobacia"); treinada {
 		t.Fatal("a Acrobacia começou treinada: o caso não mede a ida")
@@ -181,7 +181,7 @@ func TestOTreinoAlternaNosDoisSentidos(t *testing.T) {
 }
 
 // O ATRIBUTO TROCA, e um atributo inventado é recusado.
-func TestOAtributoTrocaESoAceitaOsSeis(t *testing.T) {
+func TestTheAttributeSwitchesAndOnlyAcceptsTheSix(t *testing.T) {
 	f, id := oPericioso(t)
 	aPericia(t, f, id, "atributo/"+url.PathEscape("Acrobacia")+"/strength")
 	if _, atributo := oTreinoDe(t, f, id, "Acrobacia"); atributo != "strength" {
@@ -204,7 +204,7 @@ func TestOAtributoTrocaESoAceitaOsSeis(t *testing.T) {
 // desenhava o botão de treino e o seletor em toda linha — nos ofícios os dois
 // davam 400. Promessa de tela que o servidor não cumpria, e ninguém tinha
 // notado porque nenhum teste mexia num ofício depois de criá-lo.
-func TestOOficioAceitaTreinoEAtributo(t *testing.T) {
+func TestACraftAcceptsTrainingAndAnAttribute(t *testing.T) {
 	f, id := oPericioso(t)
 
 	aPericia(t, f, id, "treino/Ferreiro")
@@ -222,7 +222,7 @@ func TestOOficioAceitaTreinoEAtributo(t *testing.T) {
 // A recusa é do SERVIDOR e não da tela: a ficha não desenha lixeira numa perícia
 // do livro, mas travar só na UI deixaria a regra sem fronteira — quem montar o
 // `@post` à mão apagaria a Fortitude.
-func TestOOficioNasceTreinadoESoEleSeRemove(t *testing.T) {
+func TestACraftIsBornTrainedAndOnlyItCanBeRemoved(t *testing.T) {
 	f, id := oPericioso(t)
 	if treinada, _ := oTreinoDe(t, f, id, "Ferreiro"); !treinada {
 		t.Error("o ofício não nasceu treinado")
@@ -249,7 +249,7 @@ func TestOOficioNasceTreinadoESoEleSeRemove(t *testing.T) {
 //
 // Um ofício não pode ROUBAR o nome de uma das 29: a ficha passaria a ter duas
 // linhas com o mesmo nome, e a decomposição de uma cairia sobre a outra.
-func TestOOficioNaoRoubaONomeDeUmaPericiaDoLivro(t *testing.T) {
+func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 	f, id := oPericioso(t)
 	casos := []struct {
 		nome string

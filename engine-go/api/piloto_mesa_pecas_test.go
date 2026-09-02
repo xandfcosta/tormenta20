@@ -33,13 +33,13 @@ func idsDaCena(t *testing.T, f pilotoFixture) (ficha, npc string) {
 	return ficha, npc
 }
 
-// TestPorNoMapaTrazSoQuemFoiEscolhido — o coração da ALE-204.
+// TestPopulateBringsOnlyWhoWasChosen — o coração da ALE-204.
 //
 // A fila inteira num clique punha no mapa o vilão montado para aparecer no
 // terceiro turno, e desfazer era peça por peça. O guarda tem CONTROLE: ele
 // afirma que o NPC estava na fila antes de afirmar que ele não chegou ao mapa —
 // senão "o ogro não veio" seria verdade sobre uma fila vazia.
-func TestPorNoMapaTrazSoQuemFoiEscolhido(t *testing.T) {
+func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")
@@ -61,13 +61,13 @@ func TestPorNoMapaTrazSoQuemFoiEscolhido(t *testing.T) {
 	}
 }
 
-// TestSemEscolhaOComandoRecusaEmVezDeTrazerTodos.
+// TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone.
 //
 // `EntrySelection` nil significa TODAS no `populateBoard`, e é exatamente o
 // padrão inseguro que a ALE-204 tirou do app. Um sinal perdido no caminho não
 // pode virar "traz todo mundo": a diferença entre recusar e trazer a fila
 // inteira é o vilão do terceiro turno aparecendo na tela da mesa.
-func TestSemEscolhaOComandoRecusaEmVezDeTrazerTodos(t *testing.T) {
+func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")
@@ -84,13 +84,13 @@ func TestSemEscolhaOComandoRecusaEmVezDeTrazerTodos(t *testing.T) {
 	}
 }
 
-// TestAPecaNasceComDeslocamento — a metade que se perde num porte apressado.
+// TestTheTokenIsBornWithADisplacement — a metade que se perde num porte apressado.
 //
 // O `Populate` cria a peça e o `SetSpeeds` grava o orçamento de movimento dela.
 // Sem o segundo a peça nasce no mapa sem deslocamento, o alcance não acende e o
 // jogador vê uma peça que não anda — um meio-recurso que ninguém reporta porque
 // parece regra. Provado VERMELHO tirando o `SetSpeeds` do `poeNoMapa`.
-func TestAPecaNasceComDeslocamento(t *testing.T) {
+func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")
@@ -107,7 +107,7 @@ func TestAPecaNasceComDeslocamento(t *testing.T) {
 	}
 }
 
-// TestODialogoDePorNoMapaNaoChegaAoJogador.
+// TestThePopulateDialogDoesNotReachThePlayer.
 //
 // A lista de candidatos é a fila INTEIRA, inclusive quem o mestre ainda não pôs
 // em cena. Ela é montada só quando `v.Mestre`, e este guarda prende isso onde
@@ -117,7 +117,7 @@ func TestAPecaNasceComDeslocamento(t *testing.T) {
 // O CONTROLE vem primeiro e é obrigatório: sem afirmar que o diálogo EXISTE na
 // página do mestre, "não achei no HTML do jogador" seria igualmente verdade se
 // eu tivesse errado o seletor, e o guarda passaria verde sobre nada.
-func TestODialogoDePorNoMapaNaoChegaAoJogador(t *testing.T) {
+func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")
@@ -133,12 +133,12 @@ func TestODialogoDePorNoMapaNaoChegaAoJogador(t *testing.T) {
 	}
 }
 
-// TestOJogadorNaoPoeNoMapa — a trava é do SERVIDOR e não do desenho.
+// TestThePlayerDoesNotPopulateTheMap — a trava é do SERVIDOR e não do desenho.
 //
 // O botão escondido é cortesia; quem postar na mão leva 403. É a mesma regra do
 // `comandoDoMestreNoTabuleiro`, afirmada aqui porque esta rota é nova e a trava
 // dela é uma linha de registro que alguém pode trocar sem perceber.
-func TestOJogadorNaoPoeNoMapa(t *testing.T) {
+func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")
@@ -155,12 +155,12 @@ func TestOJogadorNaoPoeNoMapa(t *testing.T) {
 	}
 }
 
-// TestOsCandidatosDizemQuemJaEstaNoMapa.
+// TestTheCandidatesSayWhoIsAlreadyOnTheMap.
 //
 // A linha de quem já tem peça continua aparecendo, marcada e travada. Esconder
 // faria o mestre procurar um nome que ele acabou de ver na fila; oferecer faria
 // um clique que o servidor ignora, que é pior — parece que não funcionou.
-func TestOsCandidatosDizemQuemJaEstaNoMapa(t *testing.T) {
+func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")
@@ -195,10 +195,10 @@ func TestOsCandidatosDizemQuemJaEstaNoMapa(t *testing.T) {
 	}
 }
 
-// TestAsEspeciesDeTerrenoNaoMudaramDeCasa é um controle de vizinhança: este
+// TestPopulateDoesNotPaintTerrain é um controle de vizinhança: este
 // arquivo mexe no mesmo `BoardState` que o pincel, e as peças novas nascem em
 // posições calculadas. Se pôr no mapa passasse a pintar chão, ninguém veria.
-func TestPorNoMapaNaoPintaTerreno(t *testing.T) {
+func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	f.abreTabuleiro(t, "pedra")

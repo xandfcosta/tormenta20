@@ -11,7 +11,7 @@ import (
 // nome: eles existem porque o domínio é pt-BR e ninguém digita "Anão" com til
 // no meio de uma sessão.
 
-func TestBuscaIgnoraAcento(t *testing.T) {
+func TestSearchIgnoresAccents(t *testing.T) {
 	casos := []struct {
 		campo, busca string
 		quer         bool
@@ -31,7 +31,7 @@ func TestBuscaIgnoraAcento(t *testing.T) {
 
 // A tolerância a typo é o que o comentário do original chama de "a parte que de
 // fato importava".
-func TestBuscaToleraLetraFaltando(t *testing.T) {
+func TestSearchToleratesAMissingLetter(t *testing.T) {
 	if !search.Matches([]string{"Necromante"}, "ncromante") {
 		t.Error("uma letra pulada derrubou a busca — é o typo que se comete digitando rápido")
 	}
@@ -43,7 +43,7 @@ func TestBuscaToleraLetraFaltando(t *testing.T) {
 // E ela é frouxa numa direção SÓ. Aceitar troca e transposição faria uma lista
 // de seis campanhas devolver a lista inteira quase sempre, e aí o filtro deixa
 // de filtrar.
-func TestBuscaNaoAceitaLetraTrocadaNemSobrando(t *testing.T) {
+func TestSearchAcceptsNeitherASwappedNorAnExtraLetter(t *testing.T) {
 	if search.Matches([]string{"Necromante"}, "nzcromante") {
 		t.Error("letra TROCADA passou: a busca ficou frouxa demais para filtrar")
 	}
@@ -67,7 +67,7 @@ func TestBuscaNaoAceitaLetraTrocadaNemSobrando(t *testing.T) {
 // Os sete casos deste arquivo foram conferidos assim, um a um, e o port
 // concorda com a biblioteca em todos — inclusive nos dois que RECUSAM
 // ("nzcromante", "anaox"), que são os que provam que ele não ficou frouxo.
-func TestBuscaDeUmaLetraCasaEmQualquerPosicao(t *testing.T) {
+func TestASingleLetterSearchMatchesAtAnyPosition(t *testing.T) {
 	for _, campo := range []string{"Anão", "Sombras"} {
 		if !search.Matches([]string{campo}, "a") {
 			t.Errorf("%q não casou com \"a\" — o match-sorter casa", campo)
@@ -78,7 +78,7 @@ func TestBuscaDeUmaLetraCasaEmQualquerPosicao(t *testing.T) {
 	}
 }
 
-func TestBuscaVaziaNaoFiltraNada(t *testing.T) {
+func TestAnEmptySearchFiltersNothing(t *testing.T) {
 	for _, busca := range []string{"", "   "} {
 		if !search.Matches([]string{"qualquer coisa"}, busca) {
 			t.Errorf("busca %q filtrou — não digitar não é filtrar", busca)
@@ -88,7 +88,7 @@ func TestBuscaVaziaNaoFiltraNada(t *testing.T) {
 
 // Vários campos: casa se QUALQUER um casar. Na cena das campanhas são o nome e
 // a sinopse.
-func TestBuscaOlhaTodosOsCampos(t *testing.T) {
+func TestSearchLooksAtEveryField(t *testing.T) {
 	campos := []string{"Sombras de Valkaria", "Uma campanha sobre a Tormenta"}
 	if !search.Matches(campos, "tormenta") {
 		t.Error("não achou pela sinopse")
@@ -112,7 +112,7 @@ func TestBuscaOlhaTodosOsCampos(t *testing.T) {
 // é frouxa nos DOIS lados, e apertar só o lado novo faria as duas telas
 // responderem coisas diferentes para a mesma busca — que é a divergência que
 // esta migração inteira existe para evitar. Se um dia apertar, aperta nos dois.
-func TestBuscaEhFrouxaSobreSinopseLongaComoNoOriginal(t *testing.T) {
+func TestSearchStaysLooseOverALongSynopsisAsItAlwaysDid(t *testing.T) {
 	wynlla := "Campanha de intriga arcana na Academia Arcana de Wynlla — segredos proibidos e um necromante à espreita."
 
 	if !search.Matches([]string{"Segredos de Wynlla", wynlla}, "tauron") {

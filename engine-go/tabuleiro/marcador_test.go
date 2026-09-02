@@ -12,7 +12,7 @@ import "testing"
 // O que se prende é a ARMADILHA e não a tabela: que ela pula o que já foi usado
 // (e não conta quantos existem) e o que acontece quando as 26 acabam.
 
-func TestAProximaLetraPulaAsUsadasEmVezDeContar(t *testing.T) {
+func TestTheNextLetterSkipsTheUsedOnesInsteadOfCounting(t *testing.T) {
 	// "A" livre porque o mapa está vazio — o CONTROLE de que a função responde
 	// alguma coisa antes de eu afirmar o caso difícil.
 	if got := ProximaLetraDeMarcador(nil); got != "A" {
@@ -27,7 +27,7 @@ func TestAProximaLetraPulaAsUsadasEmVezDeContar(t *testing.T) {
 	}
 }
 
-func TestEsgotadasAsLetrasORotuloDesiste(t *testing.T) {
+func TestWithTheLettersSpentTheLabelGivesUp(t *testing.T) {
 	var mapa []BoardMarker
 	for letra := 'A'; letra <= 'Z'; letra++ {
 		mapa = append(mapa, BoardMarker{Text: string(letra)})
@@ -42,14 +42,14 @@ func TestEsgotadasAsLetrasORotuloDesiste(t *testing.T) {
 	}
 }
 
-// TestOPredicadoDeCorSegueALista.
+// TestTheColorPredicateFollowsTheList.
 //
-// Ele NÃO repete o `TestACorDoMarcadorEDeUmConjuntoFechado`, que é dono do
+// Ele NÃO repete o `TestTheMarkerColorComesFromAClosedSet`, que é dono do
 // caminho da gravação (e cobre o patch, que é a porta dos fundos). O que se
 // prende aqui é o que a estrutura nova acrescenta: a lista e o predicado saíram
 // do mesmo lugar e não podem divergir — divergir foi exatamente o defeito, só
 // que entre o domínio e a tela.
-func TestOPredicadoDeCorSegueALista(t *testing.T) {
+func TestTheColorPredicateFollowsTheList(t *testing.T) {
 	if len(CoresDeMarcador) == 0 {
 		t.Fatal("a lista está vazia — não há o que medir")
 	}

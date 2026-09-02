@@ -59,7 +59,7 @@ func seedRaca(t *testing.T, s *Server, characterID int64, raca string) {
 // A Defesa do palco tem de ser a MESMA que a ficha mostra. Duas contas
 // diferentes para o mesmo número é o defeito que ninguém reporta: a pessoa vê
 // 18 na lista e 17 na ficha e conclui que o app é aproximado.
-func TestDefesaDoPalcoEhAMesmaDaFicha(t *testing.T) {
+func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	id := seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
 
@@ -89,7 +89,7 @@ func TestDefesaDoPalcoEhAMesmaDaFicha(t *testing.T) {
 // de omitir porque uma coluna que some faz o palco dançar ao trocar de herói
 // (ALE-99) — é o que a SPA faz, e eu tinha escrito "some" antes de comparar as
 // duas telas.
-func TestSemMotorADefesaViraTravessao(t *testing.T) {
+func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
 	s.catalogs = nil
@@ -121,7 +121,7 @@ func TestSemMotorADefesaViraTravessao(t *testing.T) {
 // Este é o dividendo da ALE-107 aparecendo: os textos vêm do catálogo EMBUTIDO.
 // O guarda é sobre o texto existir, não sobre qual é — o conteúdo é dado
 // transcrito e quem o valida é o schema, não um `expect` por verbete.
-func TestDossieTrazOsTextosDeRacaDoCatalogoEmbutido(t *testing.T) {
+func TestTheDossierCarriesTheRaceTextsFromTheEmbeddedCatalog(t *testing.T) {
 	if len(habilidadesDaRaca("Humano", 8)) == 0 {
 		t.Fatal("o catálogo embutido não devolveu habilidade nenhuma para Humano")
 	}
@@ -134,13 +134,13 @@ func TestDossieTrazOsTextosDeRacaDoCatalogoEmbutido(t *testing.T) {
 
 // Raça que não está no catálogo não derruba nada: o herói abre sem as linhas de
 // sabor. Um personagem antigo com raça renomeada é caso normal, não erro.
-func TestRacaDesconhecidaNaoDerrubaODossie(t *testing.T) {
+func TestAnUnknownRaceDoesNotBringTheDossierDown(t *testing.T) {
 	if got := habilidadesDaRaca("Não Existe", 8); got != nil {
 		t.Errorf("raça desconhecida devolveu %v", got)
 	}
 }
 
-func TestODossieRespeitaOLimite(t *testing.T) {
+func TestTheDossierRespectsTheLimit(t *testing.T) {
 	if got := len(habilidadesDaRaca("Humano", 1)); got != 1 {
 		t.Errorf("limite 1 devolveu %d", got)
 	}
@@ -150,7 +150,7 @@ func TestODossieRespeitaOLimite(t *testing.T) {
 
 // A vaga de criar existe COM O ELENCO VAZIO, e é ela que dá o que fazer. Uma
 // tela vazia que não oferece o primeiro passo é uma tela que não ajuda.
-func TestComElencoVazioAVagaDeCriarEhOQueSobra(t *testing.T) {
+func TestWithAnEmptyCastTheCreateSlotIsWhatIsLeft(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	v, err := s.carregaPersonagens(context.Background(), eu, "")
 	if err != nil {
@@ -171,7 +171,7 @@ func TestComElencoVazioAVagaDeCriarEhOQueSobra(t *testing.T) {
 // A vaga é POSIÇÃO DE CURSOR e não um link solto (ALE-98): ela declara
 // `role=option` e escreve o cursor no foco, como qualquer herói. Um `<a>` no
 // fim da fita pareceria igual e as setas o pulariam.
-func TestAVagaDeCriarEhPosicaoDeCursorENaoUmLinkSolto(t *testing.T) {
+func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
 
@@ -202,7 +202,7 @@ func TestAVagaDeCriarEhPosicaoDeCursorENaoUmLinkSolto(t *testing.T) {
 // classe são propositalmente disjuntos, e cada campo é buscado pelo termo que
 // só ELE contém; é isso que faz o teste morrer se algum sair de
 // `camposDeBusca`.
-func TestBuscaDePersonagemOlhaOsQuatroCampos(t *testing.T) {
+func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	id := seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedClasse(t, s, id, "Bárbaro", 5)
@@ -235,7 +235,7 @@ func TestBuscaDePersonagemOlhaOsQuatroCampos(t *testing.T) {
 
 // A contagem diz FILTRADOS de TOTAL. Dizer "3 de 3" com sete escondidos pela
 // busca esconde justamente o que a pessoa precisa saber para limpar o filtro.
-func TestAContagemDizFiltradosDeTotal(t *testing.T) {
+func TestTheCountSaysFilteredOutOfTotal(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
@@ -254,7 +254,7 @@ func TestAContagemDizFiltradosDeTotal(t *testing.T) {
 // O peek foi PORTADO na virada, e não reescrito: apagar a tela antiga levaria
 // junto os retratos apagados dos vizinhos se ninguém os trouxesse. Aqui se
 // afirma o que eles carregam de regra — o nome legível e o caminho de volta.
-func TestOsVizinhosLadeiamOPalcoComNomeLegivel(t *testing.T) {
+func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
@@ -309,7 +309,7 @@ func corpoDoBotao(t *testing.T, html, rotulo string) string {
 
 // A vaga de criar tem o ÚLTIMO herói à esquerda: é o caminho de volta para o
 // elenco, e sem ele quem anda até o fim do trilho fica sem pista de retorno.
-func TestAVagaDeCriarMostraOUltimoHeroiComoCaminhoDeVolta(t *testing.T) {
+func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
@@ -336,7 +336,7 @@ func TestAVagaDeCriarMostraOUltimoHeroiComoCaminhoDeVolta(t *testing.T) {
 // primeiro herói, família de defeito da ALE-99 — é garantia de LAYOUT, e layout
 // só existe num navegador: está no `piloto-datastar.spec.ts`. Aqui fica só o
 // que é verdade de dado.
-func TestHeroiUnicoNaoGanhaVizinhoInventado(t *testing.T) {
+func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 

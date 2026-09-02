@@ -35,7 +35,7 @@ var asRegioesDaMesa = []string{
 	"mesa-comandos",
 }
 
-// TestOPalcoDoMestreTemTodasAsRegioesUmaVezSo é o guarda central da virada de
+// TestTheGmStageHasEveryRegionExactlyOnce é o guarda central da virada de
 // forma: o mestre deixou de receber a coluna e passou a receber o palco, e o que
 // não pode mudar é QUE REGIÕES existem no documento dele.
 //
@@ -44,7 +44,7 @@ var asRegioesDaMesa = []string{
 // raízes com o mesmo id. O `PatchElements` acerta a primeira, a segunda envelhece
 // na tela, e as duas discordam sobre a mesma fila — que é exatamente o defeito
 // da ALE-122, agora em HTML.
-func TestOPalcoDoMestreTemTodasAsRegioesUmaVezSo(t *testing.T) {
+func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -58,7 +58,7 @@ func TestOPalcoDoMestreTemTodasAsRegioesUmaVezSo(t *testing.T) {
 	}
 }
 
-// TestAColunaDoJogadorNaoGanhouOTrilhoDoMestre é o outro lado, e o que ele
+// TestThePlayerColumnDidNotGetTheGmRail é o outro lado, e o que ele
 // afirma sobreviveu à forma do jogador (ALE-269) mesmo com o nome envelhecendo:
 // o jogador deixou de estar numa coluna e passou a ter duas SUPERFÍCIES, mas o
 // trilho continua não sendo dele.
@@ -66,7 +66,7 @@ func TestOPalcoDoMestreTemTodasAsRegioesUmaVezSo(t *testing.T) {
 // O trilho de 80px é do mestre, e mandá-lo ao jogador seria mandar a fila
 // inteira para quem o `redactForPlayers` acabou de esvaziá-la — a trava da
 // ALE-210 furada por leiaute.
-func TestAColunaDoJogadorNaoGanhouOTrilhoDoMestre(t *testing.T) {
+func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -82,14 +82,14 @@ func TestAColunaDoJogadorNaoGanhouOTrilhoDoMestre(t *testing.T) {
 	}
 }
 
-// TestOStreamSoManaARegiaoQueODocumentoTem prende as DUAS pontas juntas, que é
+// TestTheStreamOnlySendsTheRegionTheDocumentHas prende as DUAS pontas juntas, que é
 // onde a divergência nasce: a lista de regiões do stream e a página são escritas
 // em lugares diferentes e têm de concordar sobre quem existe.
 //
 // Discordar não dá erro em lugar nenhum — o remendo simplesmente não pousa —,
 // e por isso a guarda de papel do `regioesDaMesa` e o `if` que desenha o trilho
 // leem a MESMA `view`. Este teste é o que afirma que continuam lendo.
-func TestOStreamSoMandaARegiaoQueODocumentoTem(t *testing.T) {
+func TestTheStreamOnlySendsTheRegionTheDocumentHas(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 

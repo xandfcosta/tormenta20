@@ -21,13 +21,13 @@ func marcadoresDoMapa(t *testing.T, f pilotoFixture) []tabuleiro.BoardMarker {
 	return b.Markers
 }
 
-// TestOMarcadorNasceEscondidoEComALetraLivre — as duas garantias da ALE-195.
+// TestTheMarkerIsBornHiddenAndWithTheFreeLetter — as duas garantias da ALE-195.
 //
 // ESCONDIDO é a razão de o marcador existir: marcar a armadilha na frente da
 // mesa entrega a armadilha. E a LETRA vem do servidor, não da tela: na SPA era o
 // cliente que escolhia "A", "B", "C", e duas telas escolhendo por conta própria
 // é como nasce o segundo "C" no mesmo mapa.
-func TestOMarcadorNasceEscondidoEComALetraLivre(t *testing.T) {
+func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	base := f.urlDaMesa() + "/tabuleiro/marcadores"
@@ -58,11 +58,11 @@ func TestOMarcadorNasceEscondidoEComALetraLivre(t *testing.T) {
 	}
 }
 
-// TestRevelarAlternaEmVezDeSoRevelar.
+// TestRevealTogglesInsteadOfOnlyRevealing.
 //
 // O mestre que revelou cedo demais precisa poder esconder de volta, e um segundo
 // botão para desfazer o primeiro seria a mesma decisão em dois lugares.
-func TestRevelarAlternaEmVezDeSoRevelar(t *testing.T) {
+func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	base := f.urlDaMesa() + "/tabuleiro/marcadores"
@@ -85,13 +85,13 @@ func TestRevelarAlternaEmVezDeSoRevelar(t *testing.T) {
 	}
 }
 
-// TestACorForaDaListaERecusadaComFrase.
+// TestAColorOutsideTheListIsRefusedWithASentence.
 //
 // O `UpdateMarker` IGNORA cor desconhecida, e ignorar em silêncio é um clique
 // que não faz nada e não diz nada — o mestre lê como tela travada. A recusa
 // nomeia o valor recebido E o esperado, que é a regra da casa para mensagem de
 // erro.
-func TestACorForaDaListaERecusadaComFrase(t *testing.T) {
+func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	base := f.urlDaMesa() + "/tabuleiro/marcadores"
@@ -132,11 +132,11 @@ func TestACorForaDaListaERecusadaComFrase(t *testing.T) {
 	}
 }
 
-// TestOJogadorNaoMexeNosMarcadores — a trava é do servidor.
+// TestThePlayerDoesNotTouchTheMarkers — a trava é do servidor.
 //
 // Os três gestos numa varredura só: o botão escondido é cortesia, e cada rota
 // nova é uma linha de registro que alguém pode trocar sem perceber.
-func TestOJogadorNaoMexeNosMarcadores(t *testing.T) {
+func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	base := f.urlDaMesa() + "/tabuleiro/marcadores"
@@ -157,13 +157,13 @@ func TestOJogadorNaoMexeNosMarcadores(t *testing.T) {
 	}
 }
 
-// TestOMestreVeOEstadoDoMarcadorEAMesaNaoVeOEscondido.
+// TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne.
 //
 // Duas garantias que se parecem: a mesa não recebe o marcador escondido (isso o
 // `BoardForRole` já fazia), e o MESTRE precisa distinguir o que ele vê do que a
 // mesa vê — senão ele revela e a tela dele não muda, que é justamente a pergunta
 // que o gesto de revelar existe para responder.
-func TestOMestreVeOEstadoDoMarcadorEAMesaNaoVeOEscondido(t *testing.T) {
+func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	base := f.urlDaMesa() + "/tabuleiro/marcadores"
@@ -196,11 +196,11 @@ func TestOMestreVeOEstadoDoMarcadorEAMesaNaoVeOEscondido(t *testing.T) {
 	}
 }
 
-// TestApagarTiraOMarcadorDoMapa, e um id inventado RECUSA em vez de sumir.
+// TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused: apagar tira o marcador do mapa, e um id inventado RECUSA em vez de sumir.
 //
 // A recusa importa porque a alternativa é uma mutação que não acha ninguém e
 // responde 200: a tela diria que apagou algo que continua lá.
-func TestApagarTiraOMarcadorEIdInventadoRecusa(t *testing.T) {
+func TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	base := f.urlDaMesa() + "/tabuleiro/marcadores"

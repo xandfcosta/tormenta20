@@ -305,7 +305,7 @@ func regioesDaMesa(v mesaView) []regiaoDaMesa {
 		// REGIÃO PRÓPRIA, e ela nasceu de um guarda: o diálogo de pôr no mapa muda
 		// com a FILA (quem existe) e com o MAPA (quem já tem peça), então pendurá-lo
 		// em qualquer uma das duas faz a outra ser remendada de graça. Dentro do
-		// mapa, `TestUmaMudancaNaFilaNaoRemendaOMapa` acusou na hora — a peça
+		// mapa, `TestATrackerChangeDoesNotPatchTheMap` acusou na hora — a peça
 		// debaixo do dedo do mestre seria trocada no meio do arrasto.
 		{"mesa-por-no-mapa", mesaPorNoMapa(v)},
 		// O ACERVO é região pela MESMA razão, e ela foi medida (ALE-203): a lista

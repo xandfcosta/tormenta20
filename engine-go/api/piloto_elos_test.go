@@ -13,9 +13,9 @@ import (
 // montado a partir de dois catálogos diferentes, e um deles mudar de nome
 // quebraria o elo em silêncio — a palavra continuaria na tela, só que morta.
 
-// TestOTipoDeEfeitoDaCondicaoVirouElo: o caso que o dono pediu com todas as
+// TestTheConditionEffectTypeBecameALink: o caso que o dono pediu com todas as
 // letras — "a palavra Medo na página de catálogo é um link para mostrar o Medo".
-func TestOTipoDeEfeitoDaCondicaoVirouElo(t *testing.T) {
+func TestTheConditionEffectTypeBecameALink(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -42,12 +42,12 @@ func TestOTipoDeEfeitoDaCondicaoVirouElo(t *testing.T) {
 	}
 }
 
-// TestACondicaoCitadaNaDescricaoVirouElo, e o que ela NÃO faz.
+// TestTheConditionCitedInTheDescriptionBecameALink, e o que ela NÃO faz.
 //
 // O controle é a segunda metade: uma condição não vira elo para SI MESMA. Um
 // elo que aponta para a página em que já se está é ruído com cara de saída, e
 // era o que a primeira varredura fazia.
-func TestACondicaoCitadaNaDescricaoVirouElo(t *testing.T) {
+func TestTheConditionCitedInTheDescriptionBecameALink(t *testing.T) {
 	pedacos := book.WithConditionLinks("Desprevenido e imóvel; -2 em ataques", "Agarrado")
 	if len(pedacos) < 2 || pedacos[0].Texto != "Desprevenido" || pedacos[0].Aba != "condicoes" {
 		t.Fatalf("a citação não virou elo: %+v", pedacos)
@@ -64,12 +64,12 @@ func TestACondicaoCitadaNaDescricaoVirouElo(t *testing.T) {
 	}
 }
 
-// TestOEloRespeitaPalavraInteiraECaixa.
+// TestTheLinkRespectsWholeWordsAndCase.
 //
 // Duas regras numa: no texto do livro a condição vem com MAIÚSCULA ("fica
 // Abalado") e a palavra comum não ("um efeito de medo"). Casar sem caixa, ou
 // casar pedaço de palavra, encheria a tela de elos que não são citação.
-func TestOEloRespeitaPalavraInteiraECaixa(t *testing.T) {
+func TestTheLinkRespectsWholeWordsAndCase(t *testing.T) {
 	casos := []struct {
 		texto  string
 		espera bool
@@ -93,12 +93,12 @@ func TestOEloRespeitaPalavraInteiraECaixa(t *testing.T) {
 	}
 }
 
-// TestOsElosDoDeusSoApontamParaQuemTemVerbete.
+// TestTheGodLinksOnlyPointAtWhoHasAnEntry.
 //
 // "Quaisquer" é devoto de Aharadak e não é raça nem classe; "Elfos" vem no
 // PLURAL e a raça é "Elfo". Elo que aponta para o vazio é pior que texto puro:
 // ele promete uma página que não existe.
-func TestOsElosDoDeusSoApontamParaQuemTemVerbete(t *testing.T) {
+func TestTheGodLinksOnlyPointAtWhoHasAnEntry(t *testing.T) {
 	if aba, id := book.DevoteeLink("Elfos"); aba != "racas" || id != "elfo" {
 		t.Errorf("“Elfos” devia levar à raça elfo, e levou a %q/%q", aba, id)
 	}
@@ -116,12 +116,12 @@ func TestOsElosDoDeusSoApontamParaQuemTemVerbete(t *testing.T) {
 	}
 }
 
-// TestTodaTagDeCondicaoTemTipoDeEfeito: a rede não pode ter ponta solta.
+// TestEveryConditionTagHasAnEffectType: a rede não pode ter ponta solta.
 //
 // O `scripts/paginas-do-livro.py` já recusa gravar com tag órfã; este guarda
 // cobra o mesmo do lado de cá, porque quem edita `conditions.json` à mão não
 // passa pelo script.
-func TestTodaTagDeCondicaoTemTipoDeEfeito(t *testing.T) {
+func TestEveryConditionTagHasAnEffectType(t *testing.T) {
 	conhecidos := map[string]bool{}
 	for _, e := range book.EffectKinds() {
 		conhecidos[e.ID] = true
@@ -138,13 +138,13 @@ func TestTodaTagDeCondicaoTemTipoDeEfeito(t *testing.T) {
 	}
 }
 
-// TestOEloEnderecaUmVerbeteENaoUmaBusca (ALE-264).
+// TestTheLinkAddressesAnEntryAndNotASearch (ALE-264).
 //
 // PROVADO VERMELHO contra a primeira versão: o elo apontava para
 // `?aba=efeitos&busca=Medo`, e busca com termo faz a cena mostrar os OITO grupos
 // agrupados — quem clicava em "Medo" caía numa lista para procurar o que já
 // tinha escolhido. O dono viu e disse: "aparece na quarta seção da busca".
-func TestOEloEnderecaUmVerbeteENaoUmaBusca(t *testing.T) {
+func TestTheLinkAddressesAnEntryAndNotASearch(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -157,8 +157,8 @@ func TestOEloEnderecaUmVerbeteENaoUmaBusca(t *testing.T) {
 	}
 }
 
-// TestOEnderecoDeUmVerbeteMostraSoEle, e oferece a saída.
-func TestOEnderecoDeUmVerbeteMostraSoEle(t *testing.T) {
+// TestAnEntryAddressShowsOnlyThatEntry, e oferece a saída.
+func TestAnEntryAddressShowsOnlyThatEntry(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -178,8 +178,8 @@ func TestOEnderecoDeUmVerbeteMostraSoEle(t *testing.T) {
 	}
 }
 
-// TestACaixaDoVerbeteTrazOCartaoInteiro: o remendo que o elo pede.
-func TestACaixaDoVerbeteTrazOCartaoInteiro(t *testing.T) {
+// TestTheEntryBoxCarriesTheWholeCard: o remendo que o elo pede.
+func TestTheEntryBoxCarriesTheWholeCard(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -203,12 +203,12 @@ func TestACaixaDoVerbeteTrazOCartaoInteiro(t *testing.T) {
 	}
 }
 
-// TestODevotoNoPluralAchaOVerbete (ALE-264).
+// TestTheDevotoInThePluralFindsTheEntry (ALE-264).
 //
 // PROVADO VERMELHO: a primeira versão tentava só tirar "s" e "es", e o dono viu
 // os buracos. Os quatro casos abaixo são os que faltavam, cada um por um motivo
 // diferente do português — ou por não ser plural nenhum.
-func TestODevotoNoPluralAchaOVerbete(t *testing.T) {
+func TestTheDevotoInThePluralFindsTheEntry(t *testing.T) {
 	racas, _, _ := book.CharacterCatalogs()
 	nomePorID := map[string]string{}
 	for _, r := range racas {
@@ -240,9 +240,9 @@ func TestODevotoNoPluralAchaOVerbete(t *testing.T) {
 	}
 }
 
-// TestAReferenciaDePaginaNoTextoViraElo: o livro se cita, e o número levava a
+// TestAPageReferenceInTheTextBecomesALink: o livro se cita, e o número levava a
 // lugar nenhum.
-func TestAReferenciaDePaginaNoTextoViraElo(t *testing.T) {
+func TestAPageReferenceInTheTextBecomesALink(t *testing.T) {
 	pedacos := book.WithLinks("Reduz os PV do alvo. Efeitos deste tipo são subdivididos em tipos de dano (veja a página 230).")
 	var achou *book.Chunk
 	for i := range pedacos {
@@ -271,8 +271,8 @@ func TestAReferenciaDePaginaNoTextoViraElo(t *testing.T) {
 	}
 }
 
-// TestUmNumeroSoltoNaoViraPagina: o controle da varredura.
-func TestUmNumeroSoltoNaoViraPagina(t *testing.T) {
+// TestALooseNumberDoesNotBecomeAPage: o controle da varredura.
+func TestALooseNumberDoesNotBecomeAPage(t *testing.T) {
 	for _, texto := range []string{"causa 3d6 de dano", "recebe +2 na Defesa e 230 de alcance", "20% de chance"} {
 		for _, p := range book.WithLinks(texto) {
 			if p.Pagina > 0 {
@@ -282,8 +282,8 @@ func TestUmNumeroSoltoNaoViraPagina(t *testing.T) {
 	}
 }
 
-// TestOsAprimoramentosAbremNaCaixa: eram uma contagem que não se podia ler.
-func TestOsAprimoramentosAbremNaCaixa(t *testing.T) {
+// TestAugmentsOpenInTheBox: eram uma contagem que não se podia ler.
+func TestAugmentsOpenInTheBox(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -309,7 +309,7 @@ func TestOsAprimoramentosAbremNaCaixa(t *testing.T) {
 	}
 }
 
-// TestTodoDeusLigaOsPoderesQueConcede (ALE-264).
+// TestEveryGodLinksThePowersItGrants (ALE-264).
 //
 // PROVADO VERMELHO: o dono mandou três cartões — Valkaria, Wynna e Thwor — em
 // que a maior parte dos poderes concedidos era texto morto. A causa não estava
@@ -320,7 +320,7 @@ func TestOsAprimoramentosAbremNaCaixa(t *testing.T) {
 // AMOSTRAGEM sobre os VINTE deuses e não sobre os três que o dono viu: a lacuna
 // era invisível na tela — a palavra continuava lá, só não levava a lugar nenhum
 // —, e conferir só os relatados deixaria os outros dezessete no escuro.
-func TestTodoDeusLigaOsPoderesQueConcede(t *testing.T) {
+func TestEveryGodLinksThePowersItGrants(t *testing.T) {
 	_, _, deuses := book.CharacterCatalogs()
 	if len(deuses) < 20 {
 		t.Fatalf("só %d deuses — o guarda mediria quase nada", len(deuses))
@@ -341,12 +341,12 @@ func TestTodoDeusLigaOsPoderesQueConcede(t *testing.T) {
 	}
 }
 
-// TestTodoDevotoQueEVerbeteViraElo: o outro lado do cartão do deus.
+// TestEveryDevotoThatIsAnEntryBecomesALink: o outro lado do cartão do deus.
 //
 // Os três que ficam de fora estão NOMEADOS porque são exatamente os que não são
 // verbete de nada — e prendê-los é o que faz o guarda acusar no dia em que um
 // quarto aparecer por um defeito de casamento de plural.
-func TestTodoDevotoQueEVerbeteViraElo(t *testing.T) {
+func TestEveryDevotoThatIsAnEntryBecomesALink(t *testing.T) {
 	_, _, deuses := book.CharacterCatalogs()
 	semVerbete := map[string]bool{
 		"Quaisquer":                       true,

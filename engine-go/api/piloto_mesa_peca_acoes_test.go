@@ -37,14 +37,14 @@ func oTabuleiroAgora(t *testing.T, f pilotoFixture) *tabuleiro.BoardState {
 	return b
 }
 
-// TestESCONDERaPecaEOgestoQueFaltava — o buraco que esta fatia fecha.
+// TestHidingTheTokenIsTheGestureThatWasMissing — o buraco que esta fatia fecha.
 //
 // A capacidade estava no `BoardStore` desde a ALE-178 e não tinha rota nenhuma na
 // Mesa em Datastar: a mesma forma da cortina, no ar e invisível. E a ausência
 // dela deixava OUTRA superfície mentindo — "ver como jogador" (ALE-193) existe
 // para conferir a emboscada, e sem um gesto de esconder ela respondia sempre
 // "nenhuma peça escondida nesta cena".
-func TestEsconderAPecaEOGestoQueFaltava(t *testing.T) {
+func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
 	id := aPecaNoMapa(t, f, "Ogro", 4, 4)
@@ -74,12 +74,12 @@ func TestEsconderAPecaEOGestoQueFaltava(t *testing.T) {
 	}
 }
 
-// TestTirarDoMAPAnaoTiraDoCOMBATE — a separação que a cena promete.
+// TestTakingOffTheMapDoesNotTakeOutOfCombat — a separação que a cena promete.
 //
 // São duas perguntas diferentes — "ele saiu do mapa" e "ele saiu do combate" —, e
 // juntá-las faria o mestre perder o combatente ao arrumar a cena. É a mesma
 // separação que o elenco e a fila já têm (superfície 6b).
-func TestTirarDoMapaNaoTiraDoCombate(t *testing.T) {
+func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	entryID := f.naFila(t)
@@ -107,12 +107,12 @@ func TestTirarDoMapaNaoTiraDoCombate(t *testing.T) {
 	}
 }
 
-// TestVOLTARsoExisteOndeHaParaOnde.
+// TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo.
 //
 // Um botão que não faz nada é pior que nenhum, e aqui ele seria pior ainda:
 // "voltar para onde estava" numa peça que nunca se moveu promete desfazer algo
 // que ninguém lembra de ter feito.
-func TestVoltarSoExisteOndeHaParaOnde(t *testing.T) {
+func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	id := aPecaNoMapa(t, f, "Ogro", 1, 1)
@@ -157,13 +157,13 @@ func TestVoltarSoExisteOndeHaParaOnde(t *testing.T) {
 	}
 }
 
-// TestOVOLTARsobreviveAoRecarregar.
+// TestUndoSurvivesAReload.
 //
 // É a divergência DELIBERADA em relação à SPA: lá o desfazer do posicionamento
 // mora na memória da aba e morre no F5 (`ondeEstava`, em `board-region`). O gesto
 // que ele conserta — "arrastei o dragão para o lugar errado na frente de seis
 // pessoas" — é justamente o que se quer desfazer de qualquer tela.
-func TestOVoltarSobreviveAoRecarregar(t *testing.T) {
+func TestUndoSurvivesAReload(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	id := aPecaNoMapa(t, f, "Dragão", 2, 2)
@@ -181,12 +181,12 @@ func TestOVoltarSobreviveAoRecarregar(t *testing.T) {
 	}
 }
 
-// TestDuplicarNumeraNoSERVIDOR (ALE-192).
+// TestDuplicateNumbersOnTheServer (ALE-192).
 //
 // Duas telas escolhendo o número por conta própria é como nasce o segundo
 // "Zumbi 3" no mesmo mapa. E a cópia nasce AO LADO da original: quem duplica o
 // zumbi do canto espera o irmão dele ali, não na fileira de entrada.
-func TestDuplicarNumeraNoServidor(t *testing.T) {
+func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	id := aPecaNoMapa(t, f, "Zumbi", 3, 3)
@@ -208,12 +208,12 @@ func TestDuplicarNumeraNoServidor(t *testing.T) {
 	}
 }
 
-// TestEditarRecusaOTamanhoQueOLivroNaoTem.
+// TestEditingRefusesASizeTheBookDoesNotHave.
 //
 // O livro define 1, 2, 3 e 6 (T20 p107, Tab. 1-21) — não existe 4 nem 5. O
 // número vem do cliente, e uma peça de lado 4 mentiria sobre quem o gabarito pega
 // e sobre onde cabe passar.
-func TestEditarRecusaOTamanhoQueOLivroNaoTem(t *testing.T) {
+func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	id := aPecaNoMapa(t, f, "Ogro", 1, 1)
@@ -236,11 +236,11 @@ func TestEditarRecusaOTamanhoQueOLivroNaoTem(t *testing.T) {
 	}
 }
 
-// TestSoOMestreMexeNaPeca: a trava é do servidor, e não o menu escondido.
+// TestOnlyTheGmTouchesTheToken: a trava é do servidor, e não o menu escondido.
 //
 // O menu é do mestre porque quem monta a mesa é ele, e o botão que o jogador não
 // vê nunca foi prova de trava — quem postar na mão leva 403.
-func TestSoOMestreMexeNaPeca(t *testing.T) {
+func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	id := aPecaNoMapa(t, f, "Ogro", 1, 1)

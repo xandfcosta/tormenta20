@@ -4,12 +4,12 @@ import "testing"
 
 // As regras do improviso contra o livro (ALE-261).
 
-// TestODadoCobreTodasAsFacesENenhumaAMais.
+// TestTheDieCoversEveryFaceAndNoneBeyondThem.
 //
 // Aleatoriedade se testa pela FAIXA e pela cobertura, não por um valor
 // esperado: um gerador que devolvesse sempre 1 passaria num teste de "está
 // entre 1 e 6", e um que devolvesse 0 ou 7 quebraria a tabela em silêncio.
-func TestODadoCobreTodasAsFacesENenhumaAMais(t *testing.T) {
+func TestTheDieCoversEveryFaceAndNoneBeyondThem(t *testing.T) {
 	for _, faces := range []int{6, 20} {
 		vistas := map[int]int{}
 		// 40× as faces dá margem folgada: a chance de uma face não sair em 240
@@ -35,9 +35,9 @@ func TestODadoCobreTodasAsFacesENenhumaAMais(t *testing.T) {
 	}
 }
 
-// TestDadoSemFacesERecusado: um `RolaDado(0)` viria de um catálogo torto, e
+// TestADieWithoutFacesIsRefused: um `RolaDado(0)` viria de um catálogo torto, e
 // `rand.Int` com máximo zero entra em pânico. Recusar é dizer o que houve.
-func TestDadoSemFacesERecusado(t *testing.T) {
+func TestADieWithoutFacesIsRefused(t *testing.T) {
 	for _, faces := range []int{0, 1, -3} {
 		if _, err := RolaDado(faces); err == nil {
 			t.Errorf("d%d foi aceito", faces)
@@ -45,12 +45,12 @@ func TestDadoSemFacesERecusado(t *testing.T) {
 	}
 }
 
-// TestUmaAmeacaACadaTresSalas, arredondando PARA CIMA (p263).
+// TestOneThreatEveryThreeRooms, arredondando PARA CIMA (p263).
 //
 // O arredondamento é a regra e não um detalhe: sete salas com uma ameaça a cada
 // três dão TRÊS, não duas. Duas deixariam a última salinha sem nada, e a regra
 // do livro é cota mínima de tensão, não divisão exata.
-func TestUmaAmeacaACadaTresSalas(t *testing.T) {
+func TestOneThreatEveryThreeRooms(t *testing.T) {
 	casos := map[int]int{1: 1, 3: 1, 4: 2, 6: 2, 7: 3, 9: 3, 10: 4, 50: 17}
 	for salas, quero := range casos {
 		got, err := AmeacasPlanejadas(salas, 3)
@@ -63,7 +63,7 @@ func TestUmaAmeacaACadaTresSalas(t *testing.T) {
 	}
 }
 
-func TestMasmorraSemSalaERecusada(t *testing.T) {
+func TestADungeonWithoutRoomsIsRefused(t *testing.T) {
 	if _, err := AmeacasPlanejadas(0, 3); err == nil {
 		t.Error("masmorra de zero salas foi aceita")
 	}
@@ -73,9 +73,9 @@ func TestMasmorraSemSalaERecusada(t *testing.T) {
 	}
 }
 
-// TestRolagemDescobertaEErro: tabela com buraco devolveria a linha errada ou
+// TestAnUncoveredRollIsAnError: tabela com buraco devolveria a linha errada ou
 // nenhuma, e o mestre leria o resultado de outra faixa como se fosse o dele.
-func TestRolagemDescobertaEErro(t *testing.T) {
+func TestAnUncoveredRollIsAnError(t *testing.T) {
 	linhas := []faixaDeTeste{{1, 2}, {5, 6}}
 	if _, err := LinhaParaRolagem(linhas, 1, "teste"); err != nil {
 		t.Errorf("a face 1 está coberta e deu erro: %v", err)

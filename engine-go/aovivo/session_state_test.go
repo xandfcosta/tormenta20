@@ -439,7 +439,7 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 // este teste é a razão: rodada × tamanho da lista mente assim que a lista muda
 // no meio do combate — e mudar no meio é o normal numa mesa, porque capanga
 // morre e reforço chega.
-func TestTurnsTakenSobreviveAListaMudar(t *testing.T) {
+func TestTurnsTakenSurvivesTheListChanging(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
 	_ = AddEntry(st, npc("A", 30), id)
@@ -472,7 +472,7 @@ func TestTurnsTakenSobreviveAListaMudar(t *testing.T) {
 
 // Voltar o turno desconta: o contador diz o que JÁ aconteceu, e desfazer diz
 // que não aconteceu. Nunca abaixo de zero, senão o pré-combate ficaria devendo.
-func TestTurnsTakenVoltaComRewind(t *testing.T) {
+func TestTurnsTakenComesBackWithRewind(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
 	_ = AddEntry(st, npc("A", 30), id)
@@ -494,7 +494,7 @@ func TestTurnsTakenVoltaComRewind(t *testing.T) {
 
 // Reiniciar apaga o combate, e o contador vai junto — senão a rodada 1 do
 // combate seguinte nasceria dizendo "turno 14".
-func TestResetZeraOsTurnos(t *testing.T) {
+func TestResetClearsTheTurns(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
 	_ = AddEntry(st, npc("A", 30), id)
@@ -515,7 +515,7 @@ func TestResetZeraOsTurnos(t *testing.T) {
 //
 // Este teste não confere um campo: confere que NENHUM se perde na cópia, que é
 // a garantia que a lista-de-campos não dava.
-func TestCloneStatePreservaTodosOsCampos(t *testing.T) {
+func TestCloneStatePreservesEveryField(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
 	_ = AddEntry(st, npc("A", 30), id)
@@ -541,7 +541,7 @@ func TestCloneStatePreservaTodosOsCampos(t *testing.T) {
 // a ligação é uma correção da linha — sem isto o mestre teria de remover o
 // combatente e adicioná-lo de novo, perdendo PV e condições no caminho, que é
 // exatamente o atalho que a ALE-122 aboliu.
-func TestLigarBlocoDeCriaturaNaLinhaQueJaExiste(t *testing.T) {
+func TestLinkingACreatureBlockToAnEntryThatAlreadyExists(t *testing.T) {
 	st := EmptyRuntimeState()
 	id := counter()
 	_ = AddEntry(st, npc("Capanga", 12), id)
@@ -564,7 +564,7 @@ func TestLigarBlocoDeCriaturaNaLinhaQueJaExiste(t *testing.T) {
 // NENHUMA. É a trava do servidor, e ela mora em `RedactForPlayers` de propósito
 // — não mandar é diferente de não desenhar, e esta função é o gargalo pelo qual
 // os dois caminhos do estado passam (o broadcast por sala e o ack do get-state).
-func TestForaDeCenaAFilaNaoSaiParaAMesa(t *testing.T) {
+func TestOffSceneTheTrackerDoesNotReachTheTable(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
 	_ = AddEntry(st, npc("Ogro", 20), id)
@@ -599,7 +599,7 @@ func TestForaDeCenaAFilaNaoSaiParaAMesa(t *testing.T) {
 
 // Encerrar GUARDA a fila e zera a vez; quem esvazia é o reiniciar. Essa é a
 // única diferença entre os dois botões do ciclo, então ela é a asserção.
-func TestEncerrarGuardaAFilaEReiniciarEsvazia(t *testing.T) {
+func TestEndingKeepsTheTrackerAndRestartingEmptiesIt(t *testing.T) {
 	monta := func() *SessionRuntimeState {
 		st := cenaEmCurso()
 		id := counter()
@@ -633,7 +633,7 @@ func TestEncerrarGuardaAFilaEReiniciarEsvazia(t *testing.T) {
 // Sem cena o turno não anda. É a guarda que dá direção única ao estado — turno
 // só existe dentro de cena —, e é dela que `parseRuntimeBlob` tira o direito de
 // deduzir a cena de um turno em curso.
-func TestSemCenaOTurnoNaoAnda(t *testing.T) {
+func TestWithoutASceneTheTurnDoesNotAdvance(t *testing.T) {
 	st := EmptyRuntimeState()
 	_ = AddEntry(st, npc("Ogro", 20), counter())
 

@@ -71,7 +71,7 @@ func exigeDesenho(t *testing.T, casas []Square, quer []string) {
 // As três esferas DESENHADAS na figura: raio de 1,5m (1 quadrado), 3m (2) e 6m
 // (4). A esfera nasce na interseção de quatro quadrados, então não há casa
 // central — há quatro.
-func TestAsEsferasDaIlustracao(t *testing.T) {
+func TestTheSpheresFromTheIllustration(t *testing.T) {
 	quatro := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaSphere, Size: 1})
 	if len(quatro) != 4 {
 		t.Errorf("o raio de 1,5m cobriu %d casas, a figura mostra 4", len(quatro))
@@ -110,7 +110,7 @@ func TestAsEsferasDaIlustracao(t *testing.T) {
 
 // Os cones da figura, nas DUAS orientações que ela desenha. As contagens são
 // diferentes entre elas para o mesmo tamanho, e isso é da figura.
-func TestOsConesDaIlustracao(t *testing.T) {
+func TestTheConesFromTheIllustration(t *testing.T) {
 	direita := Square{X: 1, Y: 0}
 	casos := []struct {
 		nome  string
@@ -157,7 +157,7 @@ func TestOsConesDaIlustracao(t *testing.T) {
 }
 
 // A linha de 15m da figura: dez quadrados, um de largura (p225).
-func TestALinhaDaIlustracao(t *testing.T) {
+func TestTheLineFromTheIllustration(t *testing.T) {
 	linha := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaLine, Size: 10, Direction: Square{X: 1, Y: 0}})
 
 	if len(linha) != 10 {
@@ -171,7 +171,7 @@ func TestALinhaDaIlustracao(t *testing.T) {
 }
 
 // Os dois cubos da figura: 1,5m é uma casa, 3m é 2×2.
-func TestOsCubosDaIlustracao(t *testing.T) {
+func TestTheCubesFromTheIllustration(t *testing.T) {
 	um := AreaSquares(Square{X: 0, Y: 0}, Area{Kind: AreaSquare, Size: 1})
 	if len(um) != 1 {
 		t.Errorf("o cubo de 1,5m cobriu %d casas, a figura mostra 1", len(um))
@@ -186,7 +186,7 @@ func TestOsCubosDaIlustracao(t *testing.T) {
 // Tamanho zero ou negativo não desenha nada: é o estado em que a tela está
 // antes de a pessoa escolher, e devolver uma casa "de cortesia" faria o mapa
 // piscar um gabarito que ninguém pediu.
-func TestGabaritoSemTamanhoNaoDesenhaNada(t *testing.T) {
+func TestATemplateWithoutASizeDrawsNothing(t *testing.T) {
 	for _, area := range []Area{
 		{Kind: AreaSphere, Size: 0},
 		{Kind: AreaCone, Size: 3},                           // sem direção

@@ -14,8 +14,8 @@ import (
 // alcança: o mestre abre pelo diálogo, o lugar e o chão que ele escolheu chegam
 // ao tabuleiro, e encerrar tira a cena da mesa depois de arquivá-la.
 
-// TestOMestreABREaCenaPeloDialogo: o lugar e o chão vêm dos SINAIS.
-func TestOMestreAbreACenaPeloDialogo(t *testing.T) {
+// TestTheGmOpensTheSceneThroughTheDialog: o lugar e o chão vêm dos SINAIS.
+func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 	f := novoPiloto(t)
 
 	// O CONTROLE: não há tabuleiro antes. Sem ele, "o lugar é a Taverna" seria
@@ -47,12 +47,13 @@ func TestOMestreAbreACenaPeloDialogo(t *testing.T) {
 	}
 }
 
-// TestLugarEmBrancoVIRAcena, e chão desconhecido cai no padrão.
+// TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault:
+// lugar em branco VIRA cena, e chão desconhecido cai no padrão.
 //
 // Os dois defaults são a mesma decisão: o mestre que só quer a grade não deve
 // ser barrado por um campo, e um chão que a tela não oferece só chega por posse
 // do fio — a resposta a isso é desenhar pedra, não discutir.
-func TestLugarEmBrancoViraCenaEChaoDesconhecidoCaiNoPadrao(t *testing.T) {
+func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/abrir",
 		`{"novolugar":"   ","novochao":"lava"}`); rec.Code != http.StatusOK {
@@ -70,12 +71,12 @@ func TestLugarEmBrancoViraCenaEChaoDesconhecidoCaiNoPadrao(t *testing.T) {
 	}
 }
 
-// TestSOoMESTREmontaEdesmontaAcena: a trava é do servidor.
+// TestOnlyTheGmBuildsAndTearsDownTheScene: a trava é do servidor.
 //
 // O botão escondido é cortesia para quem não pode; quem postar na mão leva 403.
 // Este guarda é de HANDLER e não uma asserção de que o botão sumiu, porque a
 // fronteira de segurança é o servidor e a tela é UX.
-func TestSoOMestreMontaEDesmontaACena(t *testing.T) {
+func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/tabuleiro/abrir",
 		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusForbidden {
@@ -94,12 +95,12 @@ func TestSoOMestreMontaEDesmontaACena(t *testing.T) {
 	}
 }
 
-// TestEncerrarTIRAaCenaDaMesaEaGUARDAnoAcervo.
+// TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive.
 //
 // As duas metades juntas porque uma sem a outra não é o gesto: encerrar sem
 // arquivar perde a noite de trabalho, e arquivar sem tirar deixa a mesa presa
 // numa cena que já acabou.
-func TestEncerrarTiraACenaDaMesaEAGuardaNoAcervo(t *testing.T) {
+func TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "taverna")
 
@@ -122,13 +123,13 @@ func TestEncerrarTiraACenaDaMesaEAGuardaNoAcervo(t *testing.T) {
 	}
 }
 
-// TestACenaVAZIAdizCoisasDIFERENTESaosDois.
+// TestAnEmptySceneSaysDifferentThingsToEachOfThem.
 //
 // Não é a mesma frase com um botão a mais: o jogador não tem o que fazer além de
 // esperar, e o mestre tem. "O mestre abre quando a cena tiver lugar" DITO AO
 // PRÓPRIO MESTRE é a tela mandando ele fazer o que ela não deixa — que foi
 // exatamente o texto que o piloto carregou até esta fatia.
-func TestACenaVaziaDizCoisasDiferentesAosDois(t *testing.T) {
+func TestAnEmptySceneSaysDifferentThingsToEachOfThem(t *testing.T) {
 	f := novoPiloto(t)
 
 	// O CONTROLE: os dois chegam na cena vazia. Sem ele, "o jogador não vê
@@ -157,11 +158,11 @@ func TestACenaVaziaDizCoisasDiferentesAosDois(t *testing.T) {
 
 // Os guardas do ACERVO de lugares (ALE-264, item 4).
 
-// TestOAcervoLISTAoQueFoiEncerrado, com a contagem de peças.
+// TestTheArchiveListsWhatWasEnded, com a contagem de peças.
 //
 // A contagem é o que separa a cena montada da cena aberta e abandonada, e é por
 // ela que o mestre decide o que reabrir e o que apagar.
-func TestOAcervoListaOQueFoiEncerrado(t *testing.T) {
+func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 	f := novoPiloto(t)
 	f.noTabuleiro(t) // abre a Taverna e põe UMA peça
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
@@ -189,12 +190,12 @@ func TestOAcervoListaOQueFoiEncerrado(t *testing.T) {
 	}
 }
 
-// TestSemLugarGUARDADOnaoHAbotaoDeAcervo.
+// TestWithoutAStoredPlaceThereIsNoArchiveButton.
 //
 // Um botão que abre uma lista vazia ensina que o acervo não serve para nada. É a
 // metade que faz o guarda acima significar alguma coisa — sem ela, "o acervo
 // apareceu" seria verdade sobre um botão que aparece sempre.
-func TestSemLugarGuardadoNaoHaBotaoDeAcervo(t *testing.T) {
+func TestWithoutAStoredPlaceThereIsNoArchiveButton(t *testing.T) {
 	f := novoPiloto(t)
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
 	if !strings.Contains(tela, "Abrir tabuleiro") {
@@ -205,7 +206,7 @@ func TestSemLugarGuardadoNaoHaBotaoDeAcervo(t *testing.T) {
 	}
 }
 
-// TestReabrirACRESCENTAumaAbaEnaoTrocaNada (ALE-205, fatia 3).
+// TestReopeningAddsATabAndSwapsNothing (ALE-205, fatia 3).
 //
 // Aqui morava `TestReabrirTrocaACenaEGuardaAQueEstavaNaMesa`, que prendia a
 // regra da ALE-191: reabrir ARQUIVAVA a cena que estava na mesa e entrava no
@@ -216,7 +217,7 @@ func TestSemLugarGuardadoNaoHaBotaoDeAcervo(t *testing.T) {
 // Com abas, o problema que ele resolvia deixou de existir: nada é substituído,
 // então não há o que guardar antes. Um teste sobre a regra antiga ficaria verde
 // afirmando um mundo que não é este.
-func TestReabrirAcrescentaUmaAbaENaoTrocaNada(t *testing.T) {
+func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 	f.abreTabuleiro(t, "taverna") // "Taverna do Javali"
@@ -268,12 +269,12 @@ func TestReabrirAcrescentaUmaAbaENaoTrocaNada(t *testing.T) {
 	}
 }
 
-// TestApagarUmLugarNAOderrubaAcenaDaMesa.
+// TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable.
 //
 // O `removeOLugar` devolve o tabuleiro ATUAL e não nil, e é por isso: nil faria
 // o caminho publicar "não há tabuleiro" para a mesa inteira — o mestre limparia
 // o acervo e a mesa perderia a cena em que estava jogando.
-func TestApagarUmLugarNaoDerrubaACenaDaMesa(t *testing.T) {
+func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "taverna")
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
@@ -299,8 +300,8 @@ func TestApagarUmLugarNaoDerrubaACenaDaMesa(t *testing.T) {
 	}
 }
 
-// TestSOoMESTREmexeNoAcervo: a trava é do servidor.
-func TestSoOMestreMexeNoAcervo(t *testing.T) {
+// TestOnlyTheGmTouchesTheArchive: a trava é do servidor.
+func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "taverna")
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
@@ -324,12 +325,12 @@ func TestSoOMestreMexeNoAcervo(t *testing.T) {
 	}
 }
 
-// TestACenaVAZIAnoAcervoSeANUNCIAcomoTal.
+// TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch.
 //
 // "0 peças" descreve mal o que a linha é. Cena aberta e abandonada é justamente
 // o que o mestre procura quando abre o acervo para limpar, e a linha tem de
 // dizer isso em vez de fazer ele contar zeros.
-func TestACenaVaziaNoAcervoSeAnunciaComoTal(t *testing.T) {
+func TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/abrir",
 		`{"novolugar":"Sala esquecida","novochao":"pedra"}`); rec.Code != http.StatusOK {

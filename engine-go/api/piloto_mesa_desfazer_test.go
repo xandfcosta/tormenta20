@@ -26,7 +26,7 @@ func paradasDoTabuleiro(t *testing.T, f pilotoFixture) []engine.Square {
 	return b.Pending.Stops
 }
 
-// TestOCaminhoNaoDEIXAdescobrirAsParadas — a razão de o campo existir.
+// TestThePathDoesNotLetTheStopsBeUncovered — a razão de o campo existir.
 //
 // Este é o teste que justifica ter acrescentado estado ao provisório em vez de
 // deduzir a última perna do caminho, e ele mede a AMBIGUIDADE diretamente: um
@@ -35,7 +35,7 @@ func paradasDoTabuleiro(t *testing.T, f pilotoFixture) []engine.Square {
 //
 // Enquanto isso for verdade, "cortar o fim do caminho" é um palpite sobre o
 // movimento que a mesa está vendo — e a lista de paradas é a única resposta.
-func TestOCaminhoNaoDeixaDescobrirAsParadas(t *testing.T) {
+func TestThePathDoesNotLetTheStopsBeUncovered(t *testing.T) {
 	direto := engine.CaminhoPorParadas([]engine.Square{{X: 0, Y: 0}, {X: 2, Y: 2}})
 	comParada := engine.CaminhoPorParadas([]engine.Square{{X: 0, Y: 0}, {X: 1, Y: 1}, {X: 2, Y: 2}})
 	if len(direto) != len(comParada) {
@@ -48,13 +48,13 @@ func TestOCaminhoNaoDeixaDescobrirAsParadas(t *testing.T) {
 	}
 }
 
-// TestDesfazerTiraAUltimaPernaERecalculaOCusto.
+// TestUndoTakesTheLastLegAndRecomputesTheCost.
 //
 // Reconstruir pelas paradas que sobraram e não cortar o fim do caminho: o número
 // de quadrados de um trecho não se deduz das paradas sem redesenhá-lo. O CUSTO é
 // a asserção que importa — um desfazer que tirasse os quadrados e deixasse o
 // número velho faria a mesa confirmar um movimento por um preço que não é o dele.
-func TestDesfazerTiraAUltimaPernaERecalculaOCusto(t *testing.T) {
+func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
@@ -88,12 +88,12 @@ func TestDesfazerTiraAUltimaPernaERecalculaOCusto(t *testing.T) {
 	}
 }
 
-// TestDesfazerAULTIMAparadaCancelaOMovimento.
+// TestUndoingTheLastStopCancelsTheMove.
 //
 // Uma proposta sem perna nenhuma não é proposta: deixar um provisório de custo
 // zero na mesa seria oferecer um "Confirmar" que não move ninguém, e a peça
 // ficaria presa num estado que só o Cancelar resolveria.
-func TestDesfazerAUltimaParadaCancelaOMovimento(t *testing.T) {
+func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
@@ -113,11 +113,11 @@ func TestDesfazerAUltimaParadaCancelaOMovimento(t *testing.T) {
 	}
 }
 
-// TestSemPernaAdesfazerOBotaoNaoAparece.
+// TestWithNoLegToUndoTheButtonDoesNotAppear.
 //
 // Um botão que não faz nada é pior que nenhum, e com UMA perna desfazer já é
 // cancelar — que está ali do lado dizendo isso com a palavra certa.
-func TestSemPernaADesfazerOBotaoNaoAparece(t *testing.T) {
+func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
@@ -150,14 +150,14 @@ func TestSemPernaADesfazerOBotaoNaoAparece(t *testing.T) {
 	}
 }
 
-// TestAsParadasSobrevivemAoRecarregarDaPagina.
+// TestTheStopsSurviveAPageReload.
 //
 // É a divergência DELIBERADA em relação à SPA, e vale registrar: lá a lista mora
 // no navegador e o `board-region` documenta a consequência aceita — quem recarrega
 // no meio de uma proposta perde o desfazer de UMA. Aqui o estado é do servidor,
 // então recarregar não perde nada. A cena que se abre do zero é a mesma que já
 // estava aberta.
-func TestAsParadasSobrevivemAoRecarregarDaPagina(t *testing.T) {
+func TestTheStopsSurviveAPageReload(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
@@ -174,13 +174,13 @@ func TestAsParadasSobrevivemAoRecarregarDaPagina(t *testing.T) {
 	}
 }
 
-// TestAProposaDeOUTRAPessoaNaoEstendeAMinha.
+// TestSomeoneElsesProposalDoesNotExtendMine.
 //
 // Duas mãos empilhando pernas no mesmo movimento é o estado que o `ByUserID`
 // existe para evitar. Sem a conferência, o clique de um segundo jogador
 // continuaria o caminho que o primeiro está montando — e quem confirmasse
 // confirmaria um percurso que ninguém inteiro escolheu.
-func TestAPropostaDeOutraPessoaNaoEstendeAMinha(t *testing.T) {
+func TestSomeoneElsesProposalDoesNotExtendMine(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID

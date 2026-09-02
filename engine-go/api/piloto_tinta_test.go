@@ -27,7 +27,7 @@ import (
 // Ele varre a FONTE inteira — os `.templ` e os `.go` do piloto —, e não uma
 // cena servida: a varredura é o que faz a convenção valer para a próxima tela
 // também.
-func TestTodaTintaDaCasaExisteNaFolha(t *testing.T) {
+func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 	folha, err := os.ReadFile(filepath.Join("piloto", "static", "piloto.css"))
 	if err != nil {
 		t.Fatalf("ler a folha compilada: %v", err)

@@ -139,7 +139,7 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 // ordenava por um `openedAt` em milissegundos, e as duas cenas do teste abrem no
 // MESMO milissegundo: o empate caía no `boardId`, que é um UUID, e o reinício
 // devolvia as abas na ordem do sorteio. O contador não empata.
-func TestOsDoisTabuleirosVoltamDoBancoNaOrdem(t *testing.T) {
+func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
@@ -181,7 +181,7 @@ func TestOsDoisTabuleirosVoltamDoBancoNaOrdem(t *testing.T) {
 // com o número que a taverna já tem — e duas abas com o mesmo número é o empate
 // que esta coluna existe para não ter, com a ordem caindo no desempate do
 // SQLite.
-func TestFecharUmaAbaNaoFazAProximaEmpatar(t *testing.T) {
+func TestClosingATabDoesNotMakeTheNextOneTie(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))

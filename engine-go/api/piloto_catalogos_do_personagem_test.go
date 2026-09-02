@@ -8,7 +8,7 @@ import (
 
 // O guarda dos três catálogos DO PERSONAGEM (ALE-264).
 
-// TestOsModificadoresSaemNaOrdemDoLivro.
+// TestModifiersComeOutInTheBookOrder.
 //
 // O defeito que ele prende não é de conteúdo, é de DETERMINISMO: os
 // modificadores vêm num `map[string]int`, e a ordem de um mapa em Go é aleatória
@@ -18,7 +18,7 @@ import (
 //
 // Rodar cem vezes é o que torna a asserção honesta: uma passada só teria 1/6 de
 // chance de pegar a ordem errada por acaso.
-func TestOsModificadoresSaemNaOrdemDoLivro(t *testing.T) {
+func TestModifiersComeOutInTheBookOrder(t *testing.T) {
 	elfo := book.RaceAttribute{
 		Kind: "fixed",
 		Mods: map[string]int{"intelligence": 2, "dexterity": 1, "constitution": -1},
@@ -31,21 +31,21 @@ func TestOsModificadoresSaemNaOrdemDoLivro(t *testing.T) {
 	}
 }
 
-// TestAEscolhaLivreNaoViraTresAtributosInventados: as duas formas do livro.
-func TestAEscolhaLivreNaoViraTresAtributosInventados(t *testing.T) {
+// TestAFreeChoiceDoesNotBecomeThreeInventedAttributes: as duas formas do livro.
+func TestAFreeChoiceDoesNotBecomeThreeInventedAttributes(t *testing.T) {
 	humano := book.RaceAttribute{Kind: "floating", Count: 3, Value: 1}
 	if escrito := humano.Escrito(); escrito != "+1 em três atributos" {
 		t.Errorf("o humano escolhe onde põe os três +1, e a tela disse %q", escrito)
 	}
 }
 
-// TestAsTresAbasNovasDesenhamOQueASuaEntradaTem.
+// TestTheThreeNewTabsDrawWhatTheirEntryHas.
 //
 // INTEGRAÇÃO e não asserção de componente porque o que se protege é a
 // composição: catálogo novo (`classes.json`), tipo novo, aba nova e cartão novo
 // — quatro saltos, e a cena passaria a existir vazia se qualquer um falhasse,
 // sem erro nenhum.
-func TestAsTresAbasNovasDesenhamOQueASuaEntradaTem(t *testing.T) {
+func TestTheThreeNewTabsDrawWhatTheirEntryHas(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -65,11 +65,11 @@ func TestAsTresAbasNovasDesenhamOQueASuaEntradaTem(t *testing.T) {
 	}
 }
 
-// TestORotuloVazioNaoSaiSozinho: Lena e Marah não têm arma preferida no livro.
+// TestAnEmptyLabelDoesNotComeOutAlone: Lena e Marah não têm arma preferida no livro.
 //
 // Provado VERMELHO antes do conserto: a cena escrevia "Arma preferida:" seguido
 // de nada, que parece dado perdido em vez de ausência com significado.
-func TestORotuloVazioNaoSaiSozinho(t *testing.T) {
+func TestAnEmptyLabelDoesNotComeOutAlone(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -83,8 +83,8 @@ func TestORotuloVazioNaoSaiSozinho(t *testing.T) {
 	}
 }
 
-// TestABuscaUnificadaAlcancaOsTresNovos: a busca sem aba varre os SETE.
-func TestABuscaUnificadaAlcancaOsTresNovos(t *testing.T) {
+// TestTheUnifiedSearchReachesTheThreeNewOnes: a busca sem aba varre os SETE.
+func TestTheUnifiedSearchReachesTheThreeNewOnes(t *testing.T) {
 	v := carregaCatalogos(criteriosDoAcervo{Busca: "allihanna", Aba: ""}, enderecoDoLivro{})
 	if v.Achados == 0 {
 		t.Fatal("a busca unificada não achou a deusa Allihanna")

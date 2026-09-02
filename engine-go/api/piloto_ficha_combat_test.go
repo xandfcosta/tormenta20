@@ -85,7 +85,7 @@ func aTelaDoCombate(t *testing.T, f pilotoFixture, id int64) string {
 //	Fortitude = ½ nível 1 + Constituição 3     = +4
 //	Reflexos  = ½ nível 1 + Destreza 2         = +3
 //	Vontade   = ½ nível 1 + Sabedoria 1        = +2
-func TestOPainelDeCombateDizOsNumerosDoMotor(t *testing.T) {
+func TestTheCombatPanelSaysTheEngineNumbers(t *testing.T) {
 	f, id := oCombatente(t)
 	tela := aTelaDoCombate(t, f, id)
 
@@ -116,7 +116,7 @@ func TestOPainelDeCombateDizOsNumerosDoMotor(t *testing.T) {
 // diálogo mentiria, que é o defeito que ninguém vê até alguém somar.
 //
 // Os dois ramos importam: com Destreza aplicada e com ela bloqueada.
-func TestAsLinhasDaDefesaSomamOTotal(t *testing.T) {
+func TestTheDefenseRowsAddUpToTheTotal(t *testing.T) {
 	casos := []struct {
 		nome     string
 		aplicada bool
@@ -157,7 +157,7 @@ func TestAsLinhasDaDefesaSomamOTotal(t *testing.T) {
 // Sumir seria a resposta errada para a pergunta que o diálogo existe para
 // responder: quem veste armadura pesada quer ver POR QUE a Defesa não subiu com
 // a Destreza dele, e uma linha ausente não diz nada.
-func TestADestrezaBloqueadaSaiComoLinhaApagada(t *testing.T) {
+func TestBlockedDexterityComesOutAsADimmedRow(t *testing.T) {
 	sheet := engine.ComputedSheetV2{
 		Defense:    engine.DefenseBreakdown{Base: 10, Total: 10, VsMelee: 10, VsRanged: 10, DexApplied: false},
 		Attributes: map[string]engine.AttributeBreakdown{"dexterity": {Total: 3}},
@@ -184,7 +184,7 @@ func TestADestrezaBloqueadaSaiComoLinhaApagada(t *testing.T) {
 // mãos livres vê o texto de vazio, para a caixa não parecer quebrada, enquanto o
 // conjurador de mãos livres não vê o bloco — para ele o assunto é a tripla
 // mágica, e um "nenhuma arma empunhada" seria ruído sobre o que ele nunca teve.
-func TestOBlocoDeArmaSegueQuemEmpunhaEQuemConjura(t *testing.T) {
+func TestTheWeaponBlockFollowsWhoWieldsAndWhoCasts(t *testing.T) {
 	umaArma := []engine.WeaponCard{{Name: "Machado", Skill: "Luta", Damage: "1d12", CritRange: 20, CritMult: 3}}
 	casos := []struct {
 		nome        string
@@ -212,7 +212,7 @@ func TestOBlocoDeArmaSegueQuemEmpunhaEQuemConjura(t *testing.T) {
 }
 
 // A TRIPLA MÁGICA SÓ SAI PARA QUEM CONJURA POR CLASSE.
-func TestATriplaMagicaSoSaiParaQuemConjura(t *testing.T) {
+func TestTheSpellTripletOnlyShowsForWhoCasts(t *testing.T) {
 	if tiles := combatPanelFor(engine.ComputedSheetV2{}, nil, false).MagicTiles; len(tiles) != 0 {
 		t.Errorf("quem não conjura recebeu %d caixas mágicas", len(tiles))
 	}
@@ -236,7 +236,7 @@ func TestATriplaMagicaSoSaiParaQuemConjura(t *testing.T) {
 // condicional, que é a maioria delas.
 //
 // O efeito abaixo soma +3 em TODO ataque, e só quando ligado.
-func TestOsCondicionaisLigadosEntramNoAtaque(t *testing.T) {
+func TestActiveConditionalsEnterTheAttack(t *testing.T) {
 	f, id := oCombatente(t)
 	seedEfeitoCondicional(t, f.s, id, 3)
 

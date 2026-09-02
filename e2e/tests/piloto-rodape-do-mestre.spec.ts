@@ -232,7 +232,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
    * specs. Iniciar cena para medir o avanço deixaria estado ligado para os
    * outros — e encerrá-la expira os efeitos de duração cena das fichas do grupo,
    * que é um efeito colateral bem maior que o teste. O avanço tem guarda de fio
-   * no Go (`TestOComandoRemendaACenaNaHora`); o que falta a ele é só o navegador,
+   * no Go (`TestTheCommandPatchesTheSceneRightAway`); o que falta a ele é só o navegador,
    * e o mecanismo é o mesmo caminho de código.
    */
   test('o comando redesenha a cena mesmo com o stream cortado', async ({ page }) => {

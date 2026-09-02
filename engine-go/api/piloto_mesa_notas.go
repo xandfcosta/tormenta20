@@ -160,7 +160,7 @@ func primeiroErro(erros ...error) error {
 // acontece sobre o HTML da carga fria, que tem os ids certos — e a partir do
 // segundo a tela ficava muda, com o botão no lugar, o `aria-checked` desenhado e
 // nenhum erro em canto nenhum. O guarda que o prende é
-// `TestAPreviaRemendadaCarregaOsIdsDaMesa`.
+// `TestThePatchedPreviewCarriesTheTableIds`.
 func (s *Server) respondeAsNotas(
 	w http.ResponseWriter, r *http.Request,
 	campaignID, sessionID int64, texto string, recusa error,

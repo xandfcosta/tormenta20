@@ -76,7 +76,7 @@ func cenasDoPiloto(t *testing.T) map[string]string {
 	return fora
 }
 
-// TestONavegadorNaoPrecisaConsertarAMarcacao.
+// TestTheBrowserDoesNotHaveToFixTheMarkup.
 //
 // O sinal é o PARÁGRAFO VAZIO: quando o parser encontra conteúdo de fluxo
 // dentro de um `<p>`, ele fecha o parágrafo antes do intruso e o hoista — e
@@ -86,7 +86,7 @@ func cenasDoPiloto(t *testing.T) map[string]string {
 //
 // Provado VERMELHO pondo o `<h4>` de volta dentro do `@rotuloDeSecao`: acusa o
 // bestiário com 24 parágrafos vazios.
-func TestONavegadorNaoPrecisaConsertarAMarcacao(t *testing.T) {
+func TestTheBrowserDoesNotHaveToFixTheMarkup(t *testing.T) {
 	cenas := cenasDoPiloto(t)
 	if len(cenas) == 0 {
 		t.Fatal("nenhuma cena foi montada: o guarda não visitaria nada e o verde não valeria")
@@ -109,10 +109,10 @@ func TestONavegadorNaoPrecisaConsertarAMarcacao(t *testing.T) {
 	}
 }
 
-// TestOsCabecalhosNaoSaoFilhosDeParagrafo é o outro lado da mesma moeda, e ele
+// TestHeadingsAreNotChildrenOfAParagraph é o outro lado da mesma moeda, e ele
 // pega o caso em que o parser hoista SEM deixar casca — quando o `<p>` tinha
 // texto antes do cabeçalho, ele fica com o texto e o cabeçalho sai.
-func TestOsCabecalhosNaoSaoFilhosDeParagrafo(t *testing.T) {
+func TestHeadingsAreNotChildrenOfAParagraph(t *testing.T) {
 	for nome, marcacao := range cenasDoPiloto(t) {
 		t.Run(nome, func(t *testing.T) {
 			raiz, err := html.Parse(strings.NewReader(marcacao))

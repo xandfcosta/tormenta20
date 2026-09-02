@@ -36,7 +36,7 @@ func aFichaDe(t *testing.T, nome string, nivel int64) (pilotoFixture, int64) {
 // Eu não achei isso lendo o código: achei comparando com a SPA no navegador,
 // onde o degrau chama `PATCH /classes/level`. Por isso o caso prende as DUAS
 // metades: a soma bater, e o pool passar a dizer o que o livro diz.
-func TestODegrauDeNivelSobeAClasseENaoSoOTotal(t *testing.T) {
+func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	f, id := aFichaDe(t, "Arcanista Nv3", 3)
 	ctx := context.Background()
 	antes, err := f.s.queries.GetCharacter(ctx, id)
@@ -88,7 +88,7 @@ func TestODegrauDeNivelSobeAClasseENaoSoOTotal(t *testing.T) {
 // DESCER uma classe de nível 1 é recusado: levá-la a zero apagaria a classe, e
 // apagar classe é outra coisa — não tem gesto nesta tela e não pode acontecer
 // por acidente num botão de menos.
-func TestODegrauNaoApagaUmaClasseDeNivelUm(t *testing.T) {
+func TestTheLevelStepDoesNotEraseALevelOneClass(t *testing.T) {
 	f, id := aFichaDe(t, "Aprendiz", 1)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
@@ -109,7 +109,7 @@ func TestODegrauNaoApagaUmaClasseDeNivelUm(t *testing.T) {
 // e recusa fora da faixa, o que está certo para um cliente que calculou. Aqui o
 // gesto é "levou seis" — com 4 de PV o resultado é zero, e uma recusa faria o
 // mestre clicar quatro vezes de um em um para chegar no mesmo lugar.
-func TestOVitalPrendeEmZeroENoMaximo(t *testing.T) {
+func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
 	f, id := aFichaDe(t, "Alvo", 3)
 	ctx := context.Background()
 	url := fmt.Sprintf("/personagens/%d/vitais/pv/", id)
@@ -138,7 +138,7 @@ func TestOVitalPrendeEmZeroENoMaximo(t *testing.T) {
 
 // A FICHA É DO DONO. A trava é do servidor, e não da tela não oferecer o link:
 // quem digitar o endereço de outro personagem leva 403.
-func TestAFichaDeOutraPessoaNaoAbre(t *testing.T) {
+func TestSomeoneElsesSheetDoesNotOpen(t *testing.T) {
 	f, id := aFichaDe(t, "Segredo", 3)
 
 	rec := f.pede(t, f.mestre, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "")
@@ -161,7 +161,7 @@ func TestAFichaDeOutraPessoaNaoAbre(t *testing.T) {
 // (o valor sobreviveu de propósito ao renome Habilidades→Poderes), e os dois
 // nomes velhos da Mochila continuam chegando nela. Lixo cai na primeira aba, e
 // não numa tela em branco.
-func TestOEnderecoDasAbasDaFichaSobrevive(t *testing.T) {
+func TestTheSheetTabAddressSurvives(t *testing.T) {
 	for _, caso := range []struct{ pedido, esperado string }{
 		{"abilities", "abilities"},
 		{"inventory", "bag"},
@@ -190,7 +190,7 @@ func TestOEnderecoDasAbasDaFichaSobrevive(t *testing.T) {
 // O `TestTodaAbaDaFichaEstaPortada` era o placar da migração — ele autorizava
 // esta fatia a apagar a ficha antiga, e cumpriu isso. O `oPainelJaPortado` que
 // ele lia não existe mais, porque "portada" deixou de ser uma pergunta. O que
-// segue valendo é `TestTodaAbaDaFichaDesenhaAlgo`, que cobra painel de TODA
+// segue valendo é `TestEverySheetTabDrawsSomething`, que cobra painel de TODA
 // aba — a mesma garantia, sem o placar.
 
 // A RECUSA VOLTA PELA CENA, e não por um status que o cliente descarta.
@@ -203,7 +203,7 @@ func TestOEnderecoDasAbasDaFichaSobrevive(t *testing.T) {
 // Este guarda prende as TRÊS coisas que fazem a recusa chegar: o status que o
 // cliente aceita, a frase, e a cena INTEIRA junto — é ela que mostra o estado
 // que não mudou.
-func TestARecusaVoltaNaCenaEnaoNumStatusDeErro(t *testing.T) {
+func TestTheRefusalComesBackInTheSceneAndNotInAnErrorStatus(t *testing.T) {
 	f, id := aFichaDe(t, "Herói", 3)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,

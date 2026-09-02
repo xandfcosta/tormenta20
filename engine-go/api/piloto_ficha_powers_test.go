@@ -51,7 +51,7 @@ func oComandoDoPoder(t *testing.T, f pilotoFixture, id int64, caminho, corpo str
 }
 
 // O ACERVO junta as cinco procedências, e SÓ o que o personagem tem.
-func TestOAcervoJuntaAsCincoProcedencias(t *testing.T) {
+func TestTheCollectionJoinsTheFiveOrigins(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 	seedRaca(t, f.s, id, "Anão")
 	comEscolhas(t, f, id, `["class.barbaro.golpe-poderoso"]`, `["origin-batedor-pericia-Sobrevivência"]`)
@@ -99,7 +99,7 @@ func comEscolhas(t *testing.T, f pilotoFixture, id int64, poderes, origem string
 }
 
 // AS AÇÕES vêm em cima e ordenadas; as passivas ficam na outra seção.
-func TestAsAcoesVemOrdenadasEAsPassivasSeparadas(t *testing.T) {
+func TestActionsComeSortedAndPassivesComeApart(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 	tela := aTelaDosPoderes(t, f, id)
 
@@ -150,7 +150,7 @@ func oRecorteDasAcoes(tela string) string {
 // passivas (medido na ALE-217). Sumir com a seção faria a tela mudar de forma
 // por classe; e mandar às Magias quem não conjura seria mandá-lo a uma aba
 // vazia.
-func TestSemAcoesATelaExplicaSemMandarNinguemAoVazio(t *testing.T) {
+func TestWithoutActionsTheScreenExplainsInsteadOfShowingAVoid(t *testing.T) {
 	f, id := oCombatente(t)
 	if tela := aTelaDosPoderes(t, f, id); !strings.Contains(tela, "Suas habilidades são passivas") {
 		t.Error("o guerreiro sem ação não recebeu a frase que não manda a lugar nenhum")
@@ -163,7 +163,7 @@ func TestSemAcoesATelaExplicaSemMandarNinguemAoVazio(t *testing.T) {
 }
 
 // OS DEGRAUS da postura saem do nível NA CLASSE (p40).
-func TestOsDegrausDaPosturaSaemDoNivelNaClasse(t *testing.T) {
+func TestTheStanceStepsComeFromTheLevelInTheClass(t *testing.T) {
 	// A Fúria abre o primeiro degrau no 5º e ganha outro a cada 5 níveis.
 	semDegrau, id4 := oBarbaro(t, 4)
 	if tela := aTelaDosPoderes(t, semDegrau, id4); !strings.Contains(tela, "Ativar 2 PM") {
@@ -182,7 +182,7 @@ func TestOsDegrausDaPosturaSaemDoNivelNaClasse(t *testing.T) {
 }
 
 // ENTRAR NA POSTURA cobra o PM dos degraus e registra o que foi pago.
-func TestEntrarNaPosturaCobraOsDegrausERegistraOPagamento(t *testing.T) {
+func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 	f, id := oBarbaro(t, 10)
 
 	if recusa := oComandoDoPoder(t, f, id, "postura/furia/entra", `{"poderdegraus":2}`); recusa != "" {
@@ -206,7 +206,7 @@ func TestEntrarNaPosturaCobraOsDegrausERegistraOPagamento(t *testing.T) {
 }
 
 // MAIS DEGRAUS DO QUE O NÍVEL DÁ é recusado.
-func TestPosturaAcimaDoTetoDeDegrausERecusada(t *testing.T) {
+func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 
 	recusa := oComandoDoPoder(t, f, id, "postura/furia/entra", `{"poderdegraus":3}`)
@@ -219,7 +219,7 @@ func TestPosturaAcimaDoTetoDeDegrausERecusada(t *testing.T) {
 }
 
 // ENCERRAR não devolve PM — é o que a tabela de posturas existe para lembrar.
-func TestEncerrarAPosturaNaoDevolvePm(t *testing.T) {
+func TestEndingTheStanceGivesNoMpBack(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 	if recusa := oComandoDoPoder(t, f, id, "postura/furia/entra", `{"poderdegraus":0}`); recusa != "" {
 		t.Fatalf("entrar foi recusado: %q", recusa)
@@ -243,7 +243,7 @@ func TestEncerrarAPosturaNaoDevolvePm(t *testing.T) {
 }
 
 // USAR cobra o PM e soma o uso; o segundo uso do "1/cena" é recusado.
-func TestUsarCobraOPmESomaOUso(t *testing.T) {
+func TestUsingChargesTheMpAndCountsTheUse(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 	comEscolhas(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)
 
@@ -276,7 +276,7 @@ func TestUsarCobraOPmESomaOUso(t *testing.T) {
 // Medido na bancada: 33 das 411 ativações escrevem "variavel" no `pmCost`, e o
 // campo tipado como `int` deixava ZERO no lugar sem estourar — a Paródia
 // aparecia como "0 PM" com o botão ativo, e usá-la não cobrava nada.
-func TestOCustoVariavelNaoSeUsaPelaFicha(t *testing.T) {
+func TestAVariableCostCannotBeSpentFromTheSheet(t *testing.T) {
 	f, id := oBarbaro(t, 10)
 	comEscolhas(t, f, id, `["class.barbaro.vigor-primal"]`, `[]`)
 
@@ -300,7 +300,7 @@ func TestOCustoVariavelNaoSeUsaPelaFicha(t *testing.T) {
 // A Alma de Bronze (p41) dá PV temporários de nível + Força "enquanto a Fúria
 // durar". Deixá-los para trás daria PV que uma postura encerrada continua
 // pagando.
-func TestAConcessaoDaPosturaEntraESaiComEla(t *testing.T) {
+func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 
 	if recusa := oComandoDoPoder(t, f, id, "postura/furia/entra", `{"poderdegraus":0}`); recusa != "" {
@@ -332,7 +332,7 @@ func osEfeitosDe(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 }
 
 // A BUSCA achata as duas seções e ignora acento.
-func TestABuscaDosPoderesAchataEIgnoraAcento(t *testing.T) {
+func TestThePowerSearchFoldsAndIgnoresAccents(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 
 	tela := f.pede(t, f.jogador, http.MethodGet,

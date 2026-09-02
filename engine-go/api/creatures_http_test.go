@@ -31,7 +31,7 @@ func corpoCriatura(nome, bloco string) string {
 // tela: o bloco é informação do MESTRE, e o jogador continua vendo nome e barra
 // de PV pela iniciativa (decisão do dono na ALE-137). Esconder o botão é UX; o
 // limite é aqui.
-func TestCriaturaSoOMestreLeEEscreve(t *testing.T) {
+func TestOnlyTheGmReadsAndWritesACreature(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogador@t20.local")
@@ -60,7 +60,7 @@ func TestCriaturaSoOMestreLeEEscreve(t *testing.T) {
 // O bloco volta INTEIRO. Um campo que some no vai-e-vem é pior que um campo que
 // nunca existiu: o mestre digita o equipamento do vilão, a tela confirma, e a
 // informação se perde no caminho — que é exatamente a queixa que abriu a issue.
-func TestCriaturaVoltaComOBlocoInteiro(t *testing.T) {
+func TestACreatureComesBackWithItsWholeBlock(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")
 	campanha := seedCampaign(t, s, mestre)
@@ -94,7 +94,7 @@ func TestCriaturaVoltaComOBlocoInteiro(t *testing.T) {
 
 // PM é ponteiro porque a linha só existe em conjurador: o Bandido não tem, o
 // Centauro Xamã tem 20 (p290). Um zero fixo diria "tem mana e está sem".
-func TestCriaturaSemPMNaoInventaPM(t *testing.T) {
+func TestACreatureWithoutMpDoesNotInventMp(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")
 	campanha := seedCampaign(t, s, mestre)
@@ -120,7 +120,7 @@ func TestCriaturaSemPMNaoInventaPM(t *testing.T) {
 
 // Saber o id não basta: a criatura tem de ser DESTA campanha, senão o mestre de
 // uma mesa reescreve o vilão de outra.
-func TestCriaturaDeOutraCampanhaNaoSeAlcanca(t *testing.T) {
+func TestACreatureFromAnotherCampaignIsOutOfReach(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")
 	minha := seedCampaign(t, s, mestre)
@@ -140,7 +140,7 @@ func TestCriaturaDeOutraCampanhaNaoSeAlcanca(t *testing.T) {
 	}
 }
 
-func TestCriaturaRecusaBlocoImpossivel(t *testing.T) {
+func TestACreatureRefusesAnImpossibleBlock(t *testing.T) {
 	s := newTestServer(t)
 	mestre := seedUser(t, s, "mestre@t20.local")
 	campanha := seedCampaign(t, s, mestre)

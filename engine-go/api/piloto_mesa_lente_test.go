@@ -27,13 +27,13 @@ func comALenteLigada(t *testing.T, f pilotoFixture) string {
 	return f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
 }
 
-// TestALenteEsconderDoMestreOQueEstaEscondidoDaMesa — o caso que ela existe para
+// TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable — o caso que ela existe para
 // resolver.
 //
 // Antes dela, conferir a emboscada exigia dois navegadores com dois logins. O
 // que se afirma é que a peça escondida SAI da tela do mestre enquanto a lente
 // está ligada — e o controle positivo é a mesma tela sem a lente, onde ela está.
-func TestALenteEscondeDoMestreOQueEstaEscondidoDaMesa(t *testing.T) {
+func TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
@@ -60,12 +60,12 @@ func TestALenteEscondeDoMestreOQueEstaEscondidoDaMesa(t *testing.T) {
 	}
 }
 
-// TestALenteDizQUANTASsumiram.
+// TestTheLensSaysHowManyVanished.
 //
 // É a pergunta que trouxe o mestre até aqui — "a emboscada está mesmo
 // invisível?" —, e contar o que sobrou na tela não a responde: ele não sabe o
 // que não está vendo.
-func TestALenteDizQuantasSumiram(t *testing.T) {
+func TestTheLensSaysHowManyVanished(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
 	for _, id := range []string{"a", "b"} {
@@ -79,13 +79,13 @@ func TestALenteDizQuantasSumiram(t *testing.T) {
 	}
 }
 
-// TestAContagemDaLenteSAIdaDIFERENCA, e não de uma varredura por `Hidden`.
+// TestTheLensCountComesFromTheDifference, e não de uma varredura por `Hidden`.
 //
 // A CORTINA esvazia a cena inteira sem marcar peça nenhuma como escondida: uma
 // contagem por campo diria "nenhuma peça escondida" sobre um mapa que a mesa
 // simplesmente não vê. Comparar os dois retratos cobre tudo o que a redação tira,
 // inclusive o que ela vier a tirar depois.
-func TestAContagemDaLenteSaiDaDiferenca(t *testing.T) {
+func TestTheLensCountComesFromTheDifference(t *testing.T) {
 	doMestre := &tabuleiro.BoardState{
 		Curtained: true,
 		Tokens: []tabuleiro.BoardToken{
@@ -101,13 +101,13 @@ func TestAContagemDaLenteSaiDaDiferenca(t *testing.T) {
 	}
 }
 
-// TestALenteNaoTiraOSCONTROLESdoMestre.
+// TestTheLensDoesNotTakeTheGmControlsAway.
 //
 // "Ele confere a emboscada sem parar de montá-la": a lente é sobre a CENA e não
 // sobre as ferramentas. Se ela trocasse o papel de quem olha em vez de trocar só
 // o tabuleiro, o mestre perderia o pincel, o acervo e a própria saída — e ficaria
 // preso na vista da mesa.
-func TestALenteNaoTiraOsControlesDoMestre(t *testing.T) {
+func TestTheLensDoesNotTakeTheGmControlsAway(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := comALenteLigada(t, f)
@@ -119,12 +119,12 @@ func TestALenteNaoTiraOsControlesDoMestre(t *testing.T) {
 	}
 }
 
-// TestALenteMORREcomACena.
+// TestTheLensDiesWithTheScene.
 //
 // "Você está vendo a cena como a mesa" sobre uma tela sem tabuleiro faz o mestre
 // concluir que o mapa sumiu PARA OS JOGADORES — a resposta errada exatamente à
 // pergunta que a lente existe para responder.
-func TestALenteMorreComACena(t *testing.T) {
+func TestTheLensDiesWithTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	if !strings.Contains(comALenteLigada(t, f), "Voltar à vista do mestre") {
@@ -141,12 +141,12 @@ func TestALenteMorreComACena(t *testing.T) {
 	}
 }
 
-// TestALenteEDEQUEMaACENDEU.
+// TestTheLensBelongsToWhoeverLitIt.
 //
 // Ela é um modo de conferência de uma pessoa, e não um estado da mesa: acender a
 // do mestre não pode mudar nada do que o jogador vê — nem, o que seria pior,
 // revelar-lhe que alguém está conferindo.
-func TestALenteEDeQuemAAcendeu(t *testing.T) {
+func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
@@ -165,8 +165,8 @@ func TestALenteEDeQuemAAcendeu(t *testing.T) {
 	}
 }
 
-// TestSoOMestreAcendeALente: a trava é do servidor, e não o botão escondido.
-func TestSoOMestreAcendeALente(t *testing.T) {
+// TestOnlyTheGmLightsTheLens: a trava é do servidor, e não o botão escondido.
+func TestOnlyTheGmLightsTheLens(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	rec := f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/tabuleiro/lente", "")
@@ -175,12 +175,12 @@ func TestSoOMestreAcendeALente(t *testing.T) {
 	}
 }
 
-// TestAFraseDaLenteConcordaEmNumero.
+// TestTheLensSentenceAgreesInNumber.
 //
 // "1 peças escondidas" é o defeito que passa por todo teste que compara com um
 // `fmt.Sprintf` do mesmo jeito — o teste re-derivaria o erro. Os três casos são
 // escritos por extenso.
-func TestAFraseDaLenteConcordaEmNumero(t *testing.T) {
+func TestTheLensSentenceAgreesInNumber(t *testing.T) {
 	casos := map[int]string{
 		0: "Nenhuma peça escondida nesta cena.",
 		1: "1 peça escondida não aparece.",

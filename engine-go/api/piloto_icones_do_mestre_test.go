@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// TestOsIconesDaTrilhaDoMestreExistem cobre a chamada INDIRETA que o guarda
+// TestTheGmTrailIconsExist cobre a chamada INDIRETA que o guarda
 // acima não vê.
 //
 // A trilha percorre `ferramentasDoMestre` e passa `f.Icone` para o `@icone`, e
@@ -16,7 +16,7 @@ import (
 // buraco silencioso, agora numa tabela.
 //
 // Provado VERMELHO trocando `Skull` por `Skul` na tabela.
-func TestOsIconesDaTrilhaDoMestreExistem(t *testing.T) {
+func TestTheGmTrailIconsExist(t *testing.T) {
 	gerado, err := os.ReadFile(filepath.Join("..", "web", "ui", "icons.templ"))
 	if err != nil {
 		t.Fatalf("ler o gerado: %v", err)

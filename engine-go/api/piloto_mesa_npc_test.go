@@ -15,12 +15,12 @@ import (
 // O que se prende: quem pode mexer, o que a cópia guarda, e as duas separações
 // que a issue existe para manter — elenco não é fila, e campanha não é sessão.
 
-// TestGuardarOVerbeteCriaOBlocoDoMestre é o caminho principal, ponta a ponta.
+// TestStoringTheEntryCreatesTheGmBlock é o caminho principal, ponta a ponta.
 //
 // O bloco tem de nascer COM OS NÚMEROS DO LIVRO: guardar uma cópia vazia
 // obrigaria o mestre a redigitar o que ele acabou de ver na tela, que é o
 // oposto do gesto.
-func TestGuardarOVerbeteCriaOBlocoDoMestre(t *testing.T) {
+func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/do-verbete",
@@ -48,9 +48,9 @@ func TestGuardarOVerbeteCriaOBlocoDoMestre(t *testing.T) {
 	}
 }
 
-// TestONomeVazioCaiNoNomeDoLivro — guardar "Ogro" como "Ogro" é o caso comum, e
+// TestAnEmptyNameFallsBackToTheBookName — guardar "Ogro" como "Ogro" é o caso comum, e
 // obrigar a digitar faria o mestre repetir o que a tela já mostra.
-func TestONomeVazioCaiNoNomeDoLivro(t *testing.T) {
+func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/do-verbete", `{"criatura":"ogro","nomedonpc":"   "}`)
@@ -64,13 +64,13 @@ func TestONomeVazioCaiNoNomeDoLivro(t *testing.T) {
 	}
 }
 
-// TestOElencoEhDaCampanhaENaoDaSessao é a separação que a ALE-212 nomeia.
+// TestTheCastBelongsToTheCampaignAndNotToTheSession é a separação que a ALE-212 nomeia.
 //
 // "Os NPCs voltam semana que vem" só é verdade se eles não morrerem com a
 // sessão. Guardado numa sessão, o NPC tem de aparecer na OUTRA da mesma
 // campanha — e um guarda que olhasse só a sessão de origem passaria verde sobre
 // um elenco que se perde toda noite.
-func TestOElencoEhDaCampanhaENaoDaSessao(t *testing.T) {
+func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
 	f := novoPiloto(t)
 	outraSessao := seedSession(t, f.s, f.campaignID)
 
@@ -90,12 +90,12 @@ func TestOElencoEhDaCampanhaENaoDaSessao(t *testing.T) {
 	}
 }
 
-// TestOMestreNaoAlcancaOElencoDeOutraCampanha — o id vem do CAMINHO.
+// TestTheGmDoesNotReachAnotherCampaignsCast — o id vem do CAMINHO.
 //
 // O elenco guarda a PREPARAÇÃO da campanha, que é o material mais privado que o
 // mestre tem: o chefe da semana que vem está ali. Alcançar o de outra mesa é
 // pior que ver a fila dela.
-func TestOMestreNaoAlcancaOElencoDeOutraCampanha(t *testing.T) {
+func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	f := novoPiloto(t)
 	outraCampanha := seedCampaign(t, f.s, f.jogador)
 	agora := "2026-01-01T00:00:00.000Z"
@@ -119,12 +119,12 @@ func TestOMestreNaoAlcancaOElencoDeOutraCampanha(t *testing.T) {
 	}
 }
 
-// TestApagarDoElencoNaoTiraDaFila é a outra separação: elenco não é fila.
+// TestDeletingFromTheCastDoesNotRemoveFromTheTracker é a outra separação: elenco não é fila.
 //
 // Apagar o NPC do elenco e tirar a linha do combate respondem a duas perguntas
 // — "ele não volta mais" e "ele saiu desta cena". Juntá-las faria o mestre
 // perder o combatente EM CURSO ao arrumar a preparação, no meio da noite.
-func TestApagarDoElencoNaoTiraDaFila(t *testing.T) {
+func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 	f := novoPiloto(t)
 	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
 	npcs := f.elencoNoBanco(t)
@@ -144,8 +144,8 @@ func TestApagarDoElencoNaoTiraDaFila(t *testing.T) {
 	}
 }
 
-// TestOJogadorNaoMexeNoElencoDaCampanha — o papel, no servidor.
-func TestOJogadorNaoMexeNoElencoDaCampanha(t *testing.T) {
+// TestThePlayerDoesNotTouchTheCampaignCast — o papel, no servidor.
+func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)

@@ -40,7 +40,7 @@ func brejoEm(pares ...[2]int) engine.MoveTerrain {
 // da perna e, em terreno raso, essa fração cai no centro de (6,0) — que é onde a
 // peça também para. O resto é AZUL e não vermelho: 9 cabe em 12, ou seja, cabe
 // na segunda ação de movimento.
-func TestOOuroAcabaOndeAAcaoDeMovimentoAcaba(t *testing.T) {
+func TestTheGoldEndsWhereTheMoveActionEnds(t *testing.T) {
 	ouro, azul, vermelho := osFiosDoMovimento(quadrados([2]int{0, 0}, [2]int{9, 0}), []int{9}, 6)
 
 	if ouro != "M 0.5 0.5 L 6.5 0.5" {
@@ -58,7 +58,7 @@ func TestOOuroAcabaOndeAAcaoDeMovimentoAcaba(t *testing.T) {
 //
 // Vinte casas rasas com deslocamento de 6: o ouro vai até 6, o azul de 6 a 12, e
 // o que passa de 12 não cabe no turno — não há terceira ação de movimento.
-func TestOVermelhoComecaDepoisDasDuasAcoes(t *testing.T) {
+func TestTheRedStartsAfterBothActions(t *testing.T) {
 	ouro, azul, vermelho := osFiosDoMovimento(quadrados([2]int{0, 0}, [2]int{20, 0}), []int{20}, 6)
 
 	if ouro != "M 0.5 0.5 L 6.5 0.5" {
@@ -77,7 +77,7 @@ func TestOVermelhoComecaDepoisDasDuasAcoes(t *testing.T) {
 //
 // Sem ele, "achei ouro" não se distingue de "o ouro é o caminho inteiro sempre",
 // e as duas tesouras poderiam estar cortando em qualquer lugar.
-func TestOCaminhoQueCabeNaAcaoDeMovimentoEOuroPuro(t *testing.T) {
+func TestThePathThatFitsInTheMoveActionIsPureGold(t *testing.T) {
 	ouro, azul, vermelho := osFiosDoMovimento(quadrados([2]int{0, 0}, [2]int{3, 0}), []int{3}, 6)
 
 	if azul != "" || vermelho != "" {
@@ -93,7 +93,7 @@ func TestOCaminhoQueCabeNaAcaoDeMovimentoEOuroPuro(t *testing.T) {
 //
 // Oito cabe em doze, então o resto é azul: este é o caminho que antes era
 // RECUSADO pelo servidor, e hoje é um movimento legítimo que custa o turno todo.
-func TestADiagonalDoLivroDecideAPrimeiraVirada(t *testing.T) {
+func TestTheBookDiagonalDecidesTheFirstTurn(t *testing.T) {
 	ouro, azul, vermelho := osFiosDoMovimento(quadrados([2]int{0, 0}, [2]int{4, 4}), []int{8}, 6)
 
 	if ouro != "M 0.5 0.5 L 3.5 3.5" {
@@ -111,7 +111,7 @@ func TestADiagonalDoLivroDecideAPrimeiraVirada(t *testing.T) {
 //
 // Sem vez não há ação padrão para trocar por movimento, então azul e vermelho
 // não querem dizer nada: desenhá-los inventaria um teto que a cena não tem.
-func TestForaDeCombateASetaEInteiraDourada(t *testing.T) {
+func TestOutOfCombatTheArrowIsGoldAllTheWay(t *testing.T) {
 	ouro, azul, vermelho := osFiosDoMovimento(quadrados([2]int{0, 0}, [2]int{40, 0}), []int{40}, -1)
 
 	if azul != "" || vermelho != "" {
@@ -130,7 +130,7 @@ func TestForaDeCombateASetaEInteiraDourada(t *testing.T) {
 // que cortasse em cadeia — a segunda tesoura sobre o resto da primeira — teria
 // de traduzir o índice e é aqui que ela se perderia, com a linha continuando a
 // sair, só que com as cores no lugar errado.
-func TestAsDuasViradasNaMesmaPerna(t *testing.T) {
+func TestBothTurnsOnTheSameLeg(t *testing.T) {
 	ouro, azul, vermelho := osFiosDoMovimento(quadrados([2]int{0, 0}, [2]int{30, 0}), []int{30}, 6)
 
 	if ouro != "M 0.5 0.5 L 6.5 0.5" {
@@ -151,7 +151,7 @@ func TestAsDuasViradasNaMesmaPerna(t *testing.T) {
 // primeira perna, o azul atravessa a dobra em (8,0) e o vermelho fecha o resto.
 // É o caso que prova que `pontos[i1:i2]` traz as dobras do MIOLO — cortar só nas
 // pontas perderia a dobra e a seta azul viraria uma reta por cima do mapa.
-func TestNaPolilinhaOAzulAtravessaADobra(t *testing.T) {
+func TestOnThePolylineTheBlueCrossesTheBend(t *testing.T) {
 	ouro, azul, vermelho := osFiosDoMovimento(
 		quadrados([2]int{0, 0}, [2]int{8, 0}, [2]int{8, 8}), []int{8, 8}, 6)
 
@@ -180,7 +180,7 @@ func TestNaPolilinhaOAzulAtravessaADobra(t *testing.T) {
 // reta, e o que a reta representa é o número escrito nela. Cortá-la onde a peça
 // para poria 50% de dourado sob um rótulo que pede 67%, e as duas metades se
 // desmentiriam na mesma linha. Quem mostra as casas percorridas é a TRILHA.
-func TestOBrejoEncurtaODouradoPeloCusto(t *testing.T) {
+func TestTheMarshShortensTheGoldByCost(t *testing.T) {
 	ouro, _, _ := osFiosDoMovimento(quadrados([2]int{0, 0}, [2]int{6, 0}), []int{9}, 6)
 
 	if ouro != "M 0.5 0.5 L 4.5 0.5" {
@@ -192,7 +192,7 @@ func TestOBrejoEncurtaODouradoPeloCusto(t *testing.T) {
 //
 // Seis casas para o leste custam 6 e cabem num deslocamento de 6. Sem ele, "o
 // ouro parou em 4,5" não se distingue de "o ouro para sempre em dois terços".
-func TestSemBrejoAMesmaPernaCabeInteira(t *testing.T) {
+func TestWithoutTheMarshTheSameLegFitsWhole(t *testing.T) {
 	ouro, azul, _ := osFiosDoMovimento(quadrados([2]int{0, 0}, [2]int{6, 0}), []int{6}, 6)
 
 	if azul != "" {
@@ -210,7 +210,7 @@ func TestSemBrejoAMesmaPernaCabeInteira(t *testing.T) {
 // ("uma flecha não atravessa o brejo mais devagar"), diria 6,0m para a mesma
 // linha. A divergência é aceita porque o metro do rótulo precisa ser o mesmo
 // metro do deslocamento: é ele que explica onde cada cor começa.
-func TestORotuloDaPernaContaOCustoENaoAGeometria(t *testing.T) {
+func TestTheLegLabelCountsTheCostAndNotTheGeometry(t *testing.T) {
 	dobras := quadrados([2]int{0, 0}, [2]int{4, 0})
 	brejo := brejoEm([2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
 
@@ -231,7 +231,7 @@ func TestORotuloDaPernaContaOCustoENaoAGeometria(t *testing.T) {
 //
 // Sem isto, uma polilinha ganharia um número só — e o pedido é a distância
 // "entre paradas", que é justamente o que uma soma esconde.
-func TestCadaPernaGanhaOProprioRotulo(t *testing.T) {
+func TestEachLegGetsItsOwnLabel(t *testing.T) {
 	dobras := quadrados([2]int{0, 0}, [2]int{2, 0}, [2]int{2, 4})
 
 	pernas := asPernasDoMovimento(dobras, osCustosDasPernas(dobras, engine.MoveTerrain{}))
@@ -252,7 +252,7 @@ func TestCadaPernaGanhaOProprioRotulo(t *testing.T) {
 //
 // Ela é a mesma leitura das cores, em palavras — quem não distingue azul de
 // vermelho no mapa lê aqui.
-func TestORodapeNomeiaAsAcoesGastas(t *testing.T) {
+func TestTheFooterNamesTheActionsSpent(t *testing.T) {
 	casos := []struct {
 		custo, orcamento int
 		frase            string
@@ -277,7 +277,7 @@ func TestORodapeNomeiaAsAcoesGastas(t *testing.T) {
 // passou do deslocamento não descobriria o azul, que é a informação que muda a
 // decisão. Por isso o guarda prende as duas metades: que as três SAEM, e que
 // exatamente uma está acesa.
-func TestALegendaMostraAsTresFaixasEAcendeADaVez(t *testing.T) {
+func TestTheLegendShowsTheThreeBandsAndLightsTheCurrentOne(t *testing.T) {
 	casos := []struct {
 		custo, orcamento, acesa int
 	}{
@@ -310,7 +310,7 @@ func TestALegendaMostraAsTresFaixasEAcendeADaVez(t *testing.T) {
 //
 // Sem isto, as duas envelhecem separadas — e o pior sintoma possível é a tela
 // dizendo "gasta a ação principal" ao lado de uma bolinha que diz outra coisa.
-func TestALegendaAcesaEAFraseSaoOMesmoTexto(t *testing.T) {
+func TestTheLitLegendAndTheSentenceAreTheSameText(t *testing.T) {
 	m := &movimentoView{Custo: 8, Orcamento: 6}
 
 	for _, f := range aLegendaDoMovimento(m) {

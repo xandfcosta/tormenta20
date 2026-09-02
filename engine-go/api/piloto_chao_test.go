@@ -19,7 +19,7 @@ import (
 // Amostragem e não enumeração: o guarda percorre a LISTA, então o chão que
 // alguém acrescentar amanhã já nasce medido — não há uma entrada por caso aqui
 // para alguém esquecer de escrever.
-func TestTodoChaoOferecidoTemComoSerPintado(t *testing.T) {
+func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 	css, err := os.ReadFile("piloto/piloto.src.css")
 	if err != nil {
 		t.Fatalf("ler o CSS do piloto: %v", err)
@@ -45,7 +45,7 @@ func TestTodoChaoOferecidoTemComoSerPintado(t *testing.T) {
 	}
 }
 
-// TestAregraQueESCONDEoDialogoFICAforaDeCAMADA.
+// TestTheRuleThatHidesTheDialogStaysOutOfTheLayer.
 //
 // Guarda de CASCATA, e ele prende a COLOCAÇÃO porque é ela o defeito.
 //
@@ -64,7 +64,7 @@ func TestTodoChaoOferecidoTemComoSerPintado(t *testing.T) {
 // verdade só um navegador resolve, e um e2e para uma linha seria caro. O que ele
 // pega é a regressão exata e provável — alguém arrastar a regra de volta para
 // dentro do `@layer` numa arrumação, achando que camada é organização.
-func TestARegraQueEscondeODialogoFicaForaDeCamada(t *testing.T) {
+func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
 	folha, err := os.ReadFile("piloto/piloto.src.css")
 	if err != nil {
 		t.Fatalf("ler o CSS do piloto: %v", err)
@@ -92,7 +92,7 @@ func TestARegraQueEscondeODialogoFicaForaDeCamada(t *testing.T) {
 	}
 }
 
-// TestAsFontesDaFolhaExistem.
+// TestTheStylesheetFontsExist.
 //
 // Aqui morava o `TestAsFontesEmbutidasSaoAsMesmasDaSPA`, que comparava as woff2
 // embutidas com as da SPA byte a byte: `go:embed` não alcançava
@@ -103,7 +103,7 @@ func TestARegraQueEscondeODialogoFicaForaDeCamada(t *testing.T) {
 // fontes. O que sobra para prender é a presença — a folha pede `/fonts/…` por
 // caminho absoluto, e sem arquivo a Cinzel cai para uma serifada do sistema em
 // toda tela, que é um defeito de aparência que ninguém liga à causa.
-func TestAsFontesDaFolhaExistem(t *testing.T) {
+func TestTheStylesheetFontsExist(t *testing.T) {
 	fontes, err := os.ReadDir("piloto/static/fonts")
 	if err != nil {
 		t.Fatalf("ler as fontes embutidas: %v", err)

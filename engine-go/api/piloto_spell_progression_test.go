@@ -18,7 +18,7 @@ import (
 // viver. O que este caso prende é que a leitura FUNCIONA: um `classes.json` sem
 // o campo, ou um `Resource` que parasse de casar, daria um mapa vazio e o
 // portão de círculo aceitaria tudo em silêncio.
-func TestAProgressaoDeCirculoSaiDoCatalogo(t *testing.T) {
+func TestTheCircleProgressionComesFromTheCatalog(t *testing.T) {
 	prog := spellProgressions()
 	if len(prog) != 5 {
 		t.Fatalf("o catálogo ofereceu %d classes conjuradoras, quer 5", len(prog))
@@ -45,7 +45,7 @@ func TestAProgressaoDeCirculoSaiDoCatalogo(t *testing.T) {
 // Espiritual, p42) é conjurável por quem não tem classe de conjurador nenhuma —
 // no círculo dela, e só nele. Sem o piso, um bárbaro com Totem não conjuraria a
 // magia que o poder acabou de lhe dar.
-func TestOCirculoAlcancavelSobeComONivelETemPisoNaPropriaMagia(t *testing.T) {
+func TestTheReachableCircleRisesWithTheLevelAndHasAFloorInTheSpellItself(t *testing.T) {
 	casos := []struct {
 		nome    string
 		classes []sheet.ClassDTO
@@ -79,7 +79,7 @@ func TestOCirculoAlcancavelSobeComONivelETemPisoNaPropriaMagia(t *testing.T) {
 // 6 esse limite existia SÓ na interface: a tabela que o decide vivia no
 // TypeScript, então o `validateAugments` nem tinha como perguntar. Um pedido
 // montado à mão conjurava o que a regra não permite, e nada acusava.
-func TestOAprimoramentoAcimaDoCirculoERecusadoPeloServidor(t *testing.T) {
+func TestAnAugmentAboveTheCircleIsRefusedByTheServer(t *testing.T) {
 	magia, conhecida := catalog.LookupSpell("invisibilidade")
 	if !conhecida {
 		t.Fatal("a magia `invisibilidade` sumiu do catálogo — o caso mediria o vazio")

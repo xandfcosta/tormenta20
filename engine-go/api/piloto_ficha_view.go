@@ -371,7 +371,7 @@ func oDegrauDireto(v fichaView, passo int) string {
 // Este defeito foi ENTREGUE na fatia 1 e só apareceu na bancada da fatia 2: com
 // todas as abas mostrando o mesmo aviso de "ainda vive na ficha antiga", o salto
 // não tinha como ser visto. O primeiro painel portado o tornou visível no
-// primeiro clique. Ver `TestNenhumComandoDaFichaPerdeAAba`, que varre os quatro
+// primeiro clique. Ver `TestNoSheetCommandLosesTheTab`, que varre os quatro
 // gestos nas sete abas.
 func oPostDaFicha(v fichaView, caminho string) string {
 	return fmt.Sprintf("@post('%s')", aRotaDoComando(v, caminho))
@@ -396,8 +396,8 @@ func aRotaDoComando(v fichaView, caminho string) string {
 //
 // Ele carrega o `?tab=` pela MESMA razão que todo `@post` carrega: sem ele o
 // resolvedor não acha a aba na query e devolve a cena desenhada na primeira.
-// A varredura `TestNenhumComandoDaFichaPerdeAAba` olha só os `@post`, então este
-// caminho tem guarda própria — `TestOGetDaBuscaCarregaAAba`.
+// A varredura `TestNoSheetCommandLosesTheTab` olha só os `@post`, então este
+// caminho tem guarda própria — `TestTheSearchGetCarriesTheTab`.
 func oGetDaFicha(v fichaView) string {
 	return fmt.Sprintf("@get('%s')", aRotaDoComando(v, ""))
 }

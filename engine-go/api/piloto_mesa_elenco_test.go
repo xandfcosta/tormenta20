@@ -11,7 +11,7 @@ import (
 // O que se prende aqui é a TRAVA e o que ela impede, não o desenho: o id do
 // personagem viaja no CAMINHO, e caminho é digitável.
 
-// TestOMestreDeOutraCampanhaNaoPoeMeuPersonagemNaFila é a trava, e ela existe
+// TestTheGmDoesNotTrackWhoIsNotInTheCampaign é a trava, e ela existe
 // porque o id vem da URL.
 //
 // Sem a conferência contra o roster, o mestre de uma mesa poria na fila dele o
@@ -21,7 +21,7 @@ import (
 //
 // O guarda vale mais que "o botão não aparece": o botão é cortesia; isto é o
 // que responde a um `curl`.
-func TestOMestreNaoPoeNaFilaQuemNaoEhDaCampanha(t *testing.T) {
+func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 	f := novoPiloto(t)
 	// Um personagem que existe, mas de OUTRO dono e fora do roster desta mesa.
 	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", 3, 10, 10, 2, 4)
@@ -41,14 +41,14 @@ func TestOMestreNaoPoeNaFilaQuemNaoEhDaCampanha(t *testing.T) {
 	}
 }
 
-// TestOElencoPoeUmJogadorNaFila é o buraco que o "Adicionar grupo" não cobre:
+// TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet é o buraco que o "Adicionar grupo" não cobre:
 // ele traz o grupo INTEIRO, e a cena em que só um desce na cripta não tinha
 // gesto nenhum.
 //
 // A linha tem de nascer LIGADA À FICHA (`characterId`), que é a diferença entre
 // este caminho e o mestre digitar o nome à mão: sem o id ela fica fora do
 // descanso, sem PV de verdade e sem o fio de volta até a pessoa.
-func TestOElencoPoeUmJogadorNaFilaLigadoAFicha(t *testing.T) {
+func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre,
@@ -63,13 +63,13 @@ func TestOElencoPoeUmJogadorNaFilaLigadoAFicha(t *testing.T) {
 	}
 }
 
-// TestPorODuasVezesNaoDuplicaALinha.
+// TestAddingItTwiceDoesNotDuplicateTheEntry.
 //
 // O elenco esconde o botão de quem já está na fila, mas isso é UX: dois cliques
 // rápidos, duas abas, ou um remendo atrasado chegam ao servidor do mesmo jeito.
 // Quem garante é o `populateParty`, e este guarda é o que afirma que o caminho
 // novo passa por ele em vez de escrever direto.
-func TestPorODuasVezesNaoDuplicaALinha(t *testing.T) {
+func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 	f := novoPiloto(t)
 	rota := f.urlDaMesa() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
@@ -81,8 +81,8 @@ func TestPorODuasVezesNaoDuplicaALinha(t *testing.T) {
 	}
 }
 
-// TestOJogadorNaoPoeNinguemNaFila — o papel, no servidor.
-func TestOJogadorNaoPoeNinguemNaFila(t *testing.T) {
+// TestThePlayerPutsNobodyInTheTracker — o papel, no servidor.
+func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.jogador, "POST",
@@ -93,11 +93,11 @@ func TestOJogadorNaoPoeNinguemNaFila(t *testing.T) {
 	}
 }
 
-// TestOElencoDizQuemJaEstaNaFila prende a marca que decide o que a tela OFERECE.
+// TestTheCastSaysWhoIsAlreadyInTheTracker prende a marca que decide o que a tela OFERECE.
 //
 // Oferecer "pôr na iniciativa" a quem já está lá é desenhar um gesto que só
 // pode não fazer nada — a mesma regra que trava os verbos do ciclo da sessão.
-func TestOElencoDizQuemJaEstaNaFila(t *testing.T) {
+func TestTheCastSaysWhoIsAlreadyInTheTracker(t *testing.T) {
 	f := novoPiloto(t)
 	rota := f.urlDaMesa() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 

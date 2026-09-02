@@ -149,7 +149,7 @@ func TestReplaceCampaignRules(t *testing.T) {
 // Escolher "a primeira campanha" seria arbitrário e mudaria com a ordem das
 // linhas — e afrouxar uma regra por ordenação de banco é o pior desfecho dos
 // dois.
-func TestFichaEmDuasCampanhasSegueAMaisEstrita(t *testing.T) {
+func TestASheetInTwoCampaignsFollowsTheStrictestOne(t *testing.T) {
 	f := newRulesFixture(t)
 	f.Join(t, f.campaign)
 	f.Join(t, f.otherCamp)
@@ -169,7 +169,7 @@ func TestFichaEmDuasCampanhasSegueAMaisEstrita(t *testing.T) {
 // da ficha avulsa, e a conta que o resolve (`COUNT(DISTINCT) = COUNT(*)`) é
 // justamente a que responderia "0 = 0" e desligaria TUDO se estivesse escrita
 // sem o filtro — um zero contra zero é a armadilha desta consulta.
-func TestFichaSemCampanhaAplicaTodasAsRegras(t *testing.T) {
+func TestASheetWithoutACampaignAppliesEveryRule(t *testing.T) {
 	f := newRulesFixture(t)
 
 	if f.cargaIgnorada(t) {
@@ -180,7 +180,7 @@ func TestFichaSemCampanhaAplicaTodasAsRegras(t *testing.T) {
 // O detalhe da campanha carrega as regras porque é nele que elas se configuram:
 // uma segunda rota faria os interruptores piscarem de "tudo ligado" para o
 // estado real na primeira pintura.
-func TestDetalheDaCampanhaCarregaAsRegras(t *testing.T) {
+func TestTheCampaignDetailLoadsTheRules(t *testing.T) {
 	f := newRulesFixture(t)
 	f.putRules(t, f.owner, f.campaign, `{"ignoredRules":["carga"]}`)
 

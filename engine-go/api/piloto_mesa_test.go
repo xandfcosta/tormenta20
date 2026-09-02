@@ -170,7 +170,7 @@ func (f pilotoFixture) cena(t *testing.T) {
 // Provado VERMELHO trocando `aovivo.StateForRole(role, ...)` por `s.sessions.GetState(...)`
 // no `loadMesaView` — o HTML passou a carregar "12/130", os PV que o mestre
 // escondeu, para dentro da tela do jogador.
-func TestMesaNaoVazaPVOculto(t *testing.T) {
+func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -194,7 +194,7 @@ func TestMesaNaoVazaPVOculto(t *testing.T) {
 //
 // Provado VERMELHO com o mesmo desvio do teste acima: sem cena o HTML passou a
 // listar os dois combatentes que o mestre está montando às escondidas.
-func TestMesaForaDeCenaNaoMandaFila(t *testing.T) {
+func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 	f := novoPiloto(t)
 	// Fila CHEIA e cena DESLIGADA: é o mestre montando a briga antes de começar.
 	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
@@ -225,7 +225,7 @@ func TestMesaForaDeCenaNaoMandaFila(t *testing.T) {
 //
 // Provado VERMELHO devolvendo `http.Error` no lugar do patch de sinal: o corpo
 // virou texto solto que o Datastar descarta, e a tela não muda.
-func TestMesaRecusaD20ForaDaFaixaEDiz(t *testing.T) {
+func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -249,7 +249,7 @@ func TestMesaRecusaD20ForaDaFaixaEDiz(t *testing.T) {
 // então mandar d20=14 tem de gravar 17. Sem a perícia semeada o bônus seria
 // zero e 14 == 14 — o teste passaria verde sobre uma tela que somou sozinha,
 // que é exatamente o defeito que ele mira (a armadilha da ALE-213).
-func TestMesaRegistraIniciativaComTotalDoServidor(t *testing.T) {
+func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	bonus, err := f.s.initiativeBonus(context.Background(), f.charID)
@@ -282,7 +282,7 @@ func TestMesaRegistraIniciativaComTotalDoServidor(t *testing.T) {
 // A vez é MINHA quando a linha na vez é de um personagem meu — e é "de outro"
 // quando não é. Tradução literal do `playerTurnState` da SPA; duas escadas
 // divergiriam em silêncio.
-func TestMesaTurnOf(t *testing.T) {
+func TestTableTurnOf(t *testing.T) {
 	meu, alheio := int64(7), int64(9)
 	fila := []aovivo.InitiativeEntry{
 		{Label: "Ogro", Initiative: 19, Type: "npc"},
@@ -322,7 +322,7 @@ func TestMesaTurnOf(t *testing.T) {
 // Os LIMIARES da cor, e só eles: a tabela inteira de porcentagens seria a
 // implementação reescrita. 25 e 50 são os mesmos do `hpFillVar` da SPA, e é a
 // divergência entre os dois que este teste existe para tornar barulhenta.
-func TestHpTomDeNosLimiares(t *testing.T) {
+func TestHpToneAtTheThresholds(t *testing.T) {
 	casos := []struct {
 		pct int
 		tom string
@@ -350,7 +350,7 @@ func TestHpTomDeNosLimiares(t *testing.T) {
 // Servidor de verdade e `Accept-Encoding` escrito à mão de propósito: o
 // `http.Client` do Go põe o cabeçalho sozinho e descomprime por baixo do pano,
 // escondendo o `Content-Encoding` que este teste existe para ver.
-func TestMesaStreamComprime(t *testing.T) {
+func TestTheTableStreamCompresses(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	srv := httptest.NewServer(f.s.WebRouter())
@@ -423,7 +423,7 @@ func TestMesaStreamComprime(t *testing.T) {
 // compila. O que sobrou aqui para medir é que a notícia certa chega a quem
 // escuta — que abrir a cena publique `SceneStarted`, e não um sino genérico que
 // serviria igualmente para o encerramento.
-func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
+func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	f := novoPiloto(t)
 	sub, parar := f.s.bus.Subscribe(events.OfSession(f.sessionID))
 
@@ -467,7 +467,7 @@ func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
 // armadilha que a ALE-238 documenta: asserção que depende do estado do combate
 // mede o banco, não o app. A prova do comportamento foi a medição no navegador,
 // que está descrita acima e é reproduzível em três linhas.
-func TestPreviaDoD20NaoMenteComOCampoVazio(t *testing.T) {
+func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	bonus := int64(8)
 	html, err := ui.RenderFragment(t.Context(), mesa(mesaView{
 		CampaignID: 7, SessionID: 42, SceneActive: true,

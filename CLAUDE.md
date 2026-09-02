@@ -229,8 +229,8 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **33 guardas de
-varredura** no formato `TestToda…` / `TestTodo…` / `TestNenhum…` — toda espécie
+Este repositório já vive disso e nunca escreveu a regra: são **42 guardas de
+varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
 `.templ` existe na folha compilada, toda aba da ficha desenha painel, nenhum nó
@@ -240,22 +240,25 @@ inicial existe no catálogo, nenhuma concessão de origem com escolha nasce fixa
 todo endereço antigo leva ao piloto. Cada um nasceu de um defeito que tinha
 irmãos.
 
-> O número é conferido com `grep -rn "func TestToda\|func TestTodo\|func
-> TestNenhum\|func TestEvery\|func TestNo[A-Z]" --include=*_test.go .` e estava
-> em 22 por bastante tempo depois de já serem 27 — a família cresce a cada issue
-> e a linha não. Se ele divergir de novo, o certo é o `grep`.
+> O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
+> --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
+> — a família cresce a cada issue e a linha não. Se ele divergir de novo, o certo
+> é o `grep`.
 >
-> **As duas gramáticas no `grep` não são descuido.** Nome de teste passou a ser
-> escrito em inglês (decisão do dono, e é o que a seção "Idioma" já mandava), e a
-> varredura dos 1038 nomes antigos é issue própria. Enquanto ela não roda, um
-> guarda novo se chama `TestEvery…`/`TestNo…` e os 33 antigos continuam
-> `TestToda…` — um `grep` que só conhecesse a grafia antiga contaria menos do que
-> existe, e este arquivo já registra que subcontar essa família aconteceu.
+> **A gramática mudou na ALE-282**, junto com os outros 773 nomes: os prefixos
+> `…Toda`, `…Todo` e `…Nenhum` viraram `…Every` e `…No`. A regra de idioma
+> sempre disse "nome de teste" com todas as letras; o que faltava era a varredura,
+> e é por isso que a família tinha DUAS grafias escritas nesta mesma linha.
+>
+> Aqui morava "as duas gramáticas no `grep` não são descuido", explicando que a
+> varredura era issue própria e que até ela rodar as duas conviviam. **Ela rodou**,
+> e o parágrafo virou mentira sem ninguém mexer nele — que é exatamente o defeito
+> descrito na seção "Documentação", agora acontecido no arquivo que o descreve.
 
 - **Uma convenção só foi adotada depois de varrida.** Uma revisão nomeia um
   arquivo; a correção é *todo* arquivo com a mesma forma. Antes de fechar, rode a
   busca que acha os irmãos e diga no commit quantos eram.
-- **Se a regra é mecanizável com o que já roda, ela vira guarda** — um `TestToda…`
+- **Se a regra é mecanizável com o que já roda, ela vira guarda** — um `TestEvery…`/`TestNo…`
   no pacote que a possui, e não um parágrafo. Guarda de varredura falha com o
   nome do caso que faltou, que é a diferença entre "conserte isto" e "procure".
 - **Comentário não é correção.** Docstring explicando por que a violação está ali
@@ -322,7 +325,8 @@ cima.
 > Aqui morava "o código existente NÃO é varrido de uma vez", com o argumento de
 > que um renome em massa apagaria a procedência de cada linha no `git blame`. O
 > argumento continua verdadeiro para uma varredura de mil identificadores num
-> commit só, e é por isso que os nomes de TESTE têm issue própria (ALE-282). O que
+> commit só, e foi por isso que os nomes de TESTE tiveram issue própria — a
+> ALE-282, que **já rodou**: 773 nomes de uma vez, com guarda no fim. O que
 > ele não sustentava era a inércia: com "só o que a sua mudança ia tocar", uma
 > função como `escrevePagina` atravessou quatro fatias sendo lida em toda uma e
 > renomeada em nenhuma.
@@ -331,6 +335,13 @@ Na prática: quando uma fatia move ou reescreve um arquivo, os identificadores
 dele saem em inglês inteiros — não os do diff. **O nome que você CHAMA de fora e
 não vai tocar segue o que está lá**, porque renomear o chamado obriga a varrer
 todos os chamadores, e aí é a varredura em massa por outro caminho.
+
+**Nome de teste é a exceção que já foi varrida, e ela tem guarda**
+(`convention.TestEveryTestNameIsEnglish`). A varredura foi barata onde o resto não
+é, e o motivo é estrutural: um nome de teste **não tem chamador**. Renomear
+`escrevePagina` obriga a mexer em todo lugar que a chama; renomear um `TestX`
+mexe numa linha. É por isso que esta convenção coube num commit e a dos
+identificadores em geral não cabe.
 
 ## Commits
 

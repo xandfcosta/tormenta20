@@ -9,14 +9,14 @@ import "testing"
 // casos daquele arquivo pedem por HTTP e afirmam o que a pessoa vê — esses
 // ficaram lá.
 
-// TestOBuracoDoQuaseIgualCabeEmDuasLetras.
+// TestTheNearlyEqualGapFitsInTwoLetters.
 //
 // PROVADO VERMELHO: a primeira versão do `buracoAte` devolvia `len(letras)+1`
 // quando o alvo não casava, e num resto de UMA letra isso é 2 — dentro da folga.
 // O efeito medido: "abal" casava com "Naja" pelo último "a", e a busca por nome
 // devolvia 282 entradas em vez de uma. Sentinela calculado a partir da entrada é
 // sentinela que a entrada alcança.
-func TestOBuracoDoQuaseIgualCabeEmDuasLetras(t *testing.T) {
+func TestTheNearlyEqualGapFitsInTwoLetters(t *testing.T) {
 	if !isNearlyEqual("necromante", "ncromante") {
 		t.Error("uma letra pulada devia casar — é o typo que se comete de verdade")
 	}

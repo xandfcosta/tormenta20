@@ -38,7 +38,7 @@ func labelsOf(st *aovivo.SessionRuntimeState) []string {
 
 // O PRIMEIRO de cada espécie fica sem número: numerar desde o começo encheria a
 // fila de "1" que não distinguem nada quando há um só.
-func TestOPrimeiroNaoGanhaNumeroEOsSeguintesSim(t *testing.T) {
+func TestTheFirstOneGetsNoNumberAndTheNextOnesDo(t *testing.T) {
 	st := addNpcs(t, "Ogro", "Ogro", "Ogro")
 
 	got := labelsOf(st)
@@ -51,7 +51,7 @@ func TestOPrimeiroNaoGanhaNumeroEOsSeguintesSim(t *testing.T) {
 }
 
 // Espécies diferentes não disputam numeração.
-func TestEspeciesDiferentesNaoSeMisturam(t *testing.T) {
+func TestDifferentKindsDoNotMix(t *testing.T) {
 	st := addNpcs(t, "Ogro", "Goblin", "Ogro", "Goblin")
 
 	got := labelsOf(st)
@@ -66,7 +66,7 @@ func TestEspeciesDiferentesNaoSeMisturam(t *testing.T) {
 // O MENOR número livre, e não "o maior mais um": tirado o Ogro 2, o próximo
 // volta a ser o Ogro 2. Uma fila com "Ogro, Ogro 3, Ogro 7" faz o mestre
 // procurar os que não existem — a mesma razão escrita no `nextInstanceLabel`.
-func TestOBuracoEReaproveitado(t *testing.T) {
+func TestTheGapIsReused(t *testing.T) {
 	st := addNpcs(t, "Ogro", "Ogro", "Ogro")
 	if err := aovivo.RemoveEntry(st, st.Initiative[1].ID); err != nil {
 		t.Fatalf("remover: %v", err)
@@ -98,7 +98,7 @@ func TestOBuracoEReaproveitado(t *testing.T) {
 // O que este teste prende é que o rótulo VAZIO passa reto — quem cobra a
 // obrigatoriedade é quem materializa a linha, e inventar um número aqui
 // esconderia o erro dele.
-func TestRotuloVazioPassaReto(t *testing.T) {
+func TestAnEmptyLabelPassesStraightThrough(t *testing.T) {
 	st := &aovivo.SessionRuntimeState{TurnIndex: -1}
 	if err := aovivo.AddEntry(st, aovivo.InitiativeEntry{Label: "", Type: "npc"}, func() string { return "a" }); err != nil {
 		t.Fatalf("adicionar: %v", err)

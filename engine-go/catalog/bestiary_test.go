@@ -128,7 +128,7 @@ func TestBestiarySchema(t *testing.T) {
 // Prender o conjunto inteiro (e não só "existe algum nulo") é de propósito: o
 // risco real é alguém preencher um deles de volta com zero, e uma asserção
 // frouxa passaria verde com nove dos dez consertados.
-func TestBestiaryAtributoAusente(t *testing.T) {
+func TestBestiaryMissingAttribute(t *testing.T) {
 	semAtributo := map[string]string{
 		"zumbi":                 "inteligencia",
 		"esqueleto":             "inteligencia",

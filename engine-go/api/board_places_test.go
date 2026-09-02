@@ -34,7 +34,7 @@ func mesaComTaverna(t *testing.T) (*Server, int64, int64) {
 	return s, campanha, sessao
 }
 
-func TestEncerrarArquivaACenaEmVezDeDestruir(t *testing.T) {
+func TestEndingArchivesTheSceneInsteadOfDestroyingIt(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 
@@ -60,7 +60,7 @@ func TestEncerrarArquivaACenaEmVezDeDestruir(t *testing.T) {
 	}
 }
 
-func TestReabrirTrazAsPecasOndeEstavam(t *testing.T) {
+func TestReopeningBringsTheTokensBackWhereTheyWere(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
@@ -87,7 +87,7 @@ func TestReabrirTrazAsPecasOndeEstavam(t *testing.T) {
 
 // Encerrar a MESMA taverna de novo sobrescreve: quem reabre, move duas peças e
 // encerra espera UMA taverna, não uma pilha de tavernas quase iguais.
-func TestArquivarDuasVezesNaoEmpilhaOMesmoLugar(t *testing.T) {
+func TestArchivingTwiceDoesNotStackTheSamePlace(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 
@@ -112,7 +112,7 @@ func TestArquivarDuasVezesNaoEmpilhaOMesmoLugar(t *testing.T) {
 
 // O provisório é de uma cena que já acabou: a mesa que reabre a taverna não
 // deve nada a um movimento proposto na semana passada.
-func TestOProvisorioNaoVoltaComOLugar(t *testing.T) {
+func TestThePendingMoveDoesNotComeBackWithThePlace(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	board := s.boards.Get(ctx, sessao, aAbaPadrao)
@@ -134,7 +134,7 @@ func TestOProvisorioNaoVoltaComOLugar(t *testing.T) {
 
 // O id do lugar vem do cliente: sem conferir a crônica, um mestre apagaria a
 // cena de OUTRA mesa mandando um id que não é dele.
-func TestNaoSeApagaLugarDeOutraCronica(t *testing.T) {
+func TestAPlaceFromAnotherCampaignCannotBeDeleted(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
@@ -161,7 +161,7 @@ consertar isso mataria a taverna no clique que traz a cripta.
 */
 
 // A cena que estava na mesa vai para o acervo ANTES de sair de cena.
-func TestTrocarDeCenaGuardaAQueEstavaNaMesa(t *testing.T) {
+func TestSwitchingScenesArchivesTheOneOnTheTable(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	cripta := &tabuleiro.BoardState{Version: 1, Place: "Cripta do Necromante", Tokens: []tabuleiro.BoardToken{
@@ -190,7 +190,7 @@ func TestTrocarDeCenaGuardaAQueEstavaNaMesa(t *testing.T) {
 
 // O id do lugar vem do cliente: sem conferir a crônica, um mestre puxaria para
 // a própria mesa a cena de OUTRA campanha — a mesma posse que o apagar confere.
-func TestNaoSeMostraNaMesaACenaDeOutraCronica(t *testing.T) {
+func TestASceneFromAnotherCampaignCannotReachTheTable(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	outra := seedCampaign(t, s, seedUser(t, s, "vizinho@t.com"))
@@ -229,7 +229,7 @@ nada; o preço é conferir o que chega antes de virar acervo.
 
 // A cena montada volta inteira na próxima vez que o mestre a abrir — e a peça
 // nova, que nasceu sem id no cliente, ganha um.
-func TestMontarOLugarGuardaACenaComIdParaAPecaNova(t *testing.T) {
+func TestBuildingThePlaceStoresTheSceneWithAnIdForTheNewToken(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
@@ -267,7 +267,7 @@ func TestMontarOLugarGuardaACenaComIdParaAPecaNova(t *testing.T) {
 // O estado chega do cliente, então o que ele afirma é conferido: uma peça em
 // coordenada absurda estouraria a serialização e a tela de todo mundo quando a
 // cena chegasse à mesa — e o erro tem de dizer o valor ofensor.
-func TestCenaMontadaComCoordenadaAbsurdaERecusada(t *testing.T) {
+func TestASceneBuiltWithAnAbsurdCoordinateIsRefused(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, aAbaPadrao)); err != nil {
@@ -290,7 +290,7 @@ func TestCenaMontadaComCoordenadaAbsurdaERecusada(t *testing.T) {
 }
 
 // A mesma posse do apagar e do mostrar à mesa: o id vem do cliente.
-func TestNaoSeMontaOLugarDeOutraCronica(t *testing.T) {
+func TestAPlaceFromAnotherCampaignCannotBeBuilt(t *testing.T) {
 	s, campanha, _ := mesaComTaverna(t)
 	ctx := context.Background()
 	outra := seedCampaign(t, s, seedUser(t, s, "vizinha@t.com"))

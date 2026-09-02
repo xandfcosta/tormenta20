@@ -34,8 +34,8 @@ func asPortasParaASessao(campanha int64) []struct{ Nome, Caminho string } {
 	}
 }
 
-// TestTODASasPortasLevamAMesaEmDatastar.
-func TestTodasAsPortasLevamAMesaEmDatastar(t *testing.T) {
+// TestEveryDoorLeadsToTheDatastarTable.
+func TestEveryDoorLeadsToTheDatastarTable(t *testing.T) {
 	s, dono := hubFixture(t)
 	campanha := seedCampaign(t, s, dono)
 	sessao := seedSession(t, s, campanha)
@@ -67,13 +67,13 @@ func TestTodasAsPortasLevamAMesaEmDatastar(t *testing.T) {
 	}
 }
 
-// TestALinhaDaCRONICAtambemLeva.
+// TestTheCampaignRowLeadsThereToo.
 //
 // A crônica tem DOIS caminhos para a sessão e eles são diferentes: o botão
 // "Continuar a sessão" (só com uma viva) e a LINHA da linha do tempo (toda
 // sessão, viva ou não). O de cima cobre o primeiro; este cobre o segundo, que é o
 // único jeito de reabrir uma sessão encerrada.
-func TestALinhaDaCronicaTambemLeva(t *testing.T) {
+func TestTheCampaignRowLeadsThereToo(t *testing.T) {
 	s, dono := hubFixture(t)
 	campanha := seedCampaign(t, s, dono)
 	// Uma sessão PLANEJADA: sem `StartSessionFresh`, então não há "viva" e o

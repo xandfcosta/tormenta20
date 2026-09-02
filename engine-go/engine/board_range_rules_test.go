@@ -12,7 +12,7 @@ tela.
 */
 
 // As três faixas, nos números que o livro dá em quadrados (p224).
-func TestFaixasDeAlcanceNosLimitesDoLivro(t *testing.T) {
+func TestRangeBandsAtTheBookLimits(t *testing.T) {
 	casos := []struct {
 		squares int
 		quer    RangeBand
@@ -34,7 +34,7 @@ func TestFaixasDeAlcanceNosLimitesDoLivro(t *testing.T) {
 
 // A diagonal custa o DOBRO também para a régua (decisão de mesa sobre a p238):
 // quatro quadrados na diagonal são oito de distância, e não quatro.
-func TestADiagonalDobraNaRegua(t *testing.T) {
+func TestTheDiagonalDoublesOnTheRuler(t *testing.T) {
 	diagonal := Measure(Square{X: 0, Y: 0}, Square{X: 4, Y: 4})
 
 	if diagonal.Squares != 8 {
@@ -49,7 +49,7 @@ func TestADiagonalDobraNaRegua(t *testing.T) {
 
 // Metro é a unidade da conversa na mesa, e a conversão sai do motor para a tela
 // não ter uma segunda (p236: 1 quadrado = 1,5m).
-func TestAReguaDizMetrosJuntoComQuadrados(t *testing.T) {
+func TestTheRulerSaysMetresAlongsideSquares(t *testing.T) {
 	reta := Measure(Square{X: 0, Y: 0}, Square{X: 6, Y: 0})
 
 	if reta.Squares != 6 || reta.Metres != 9 {
@@ -61,7 +61,7 @@ func TestAReguaDizMetrosJuntoComQuadrados(t *testing.T) {
 }
 
 // Medir de A para B é medir de B para A: a régua não tem dono.
-func TestAReguaNaoTemDirecao(t *testing.T) {
+func TestTheRulerHasNoDirection(t *testing.T) {
 	ida := Measure(Square{X: -3, Y: 2}, Square{X: 5, Y: -4})
 	volta := Measure(Square{X: 5, Y: -4}, Square{X: -3, Y: 2})
 

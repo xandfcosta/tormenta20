@@ -23,7 +23,7 @@ func oEscolhido(t *testing.T, f pilotoFixture, id int64) string {
 }
 
 // AS VAGAS DE PODER são uma por nível a partir do 2º (p33).
-func TestAsVagasDePoderSaoUmaPorNivelAPartirDoSegundo(t *testing.T) {
+func TestPowerSlotsAreOnePerLevelFromTheSecondOn(t *testing.T) {
 	f, id := oBarbaro(t, 3)
 
 	// Duas vagas no 3º nível: a do 2º e a do 3º.
@@ -44,7 +44,7 @@ func TestAsVagasDePoderSaoUmaPorNivelAPartirDoSegundo(t *testing.T) {
 }
 
 // O NÍVEL 1 NÃO TEM VAGA: a primeira abre no 2º.
-func TestNoPrimeiroNivelNaoHaVagaDePoder(t *testing.T) {
+func TestAtTheFirstLevelThereIsNoPowerSlot(t *testing.T) {
 	f, id := oBarbaro(t, 1)
 
 	recusa := oComandoDoPoder(t, f, id, "escolhe/class.barbaro.golpe-poderoso", "")
@@ -54,7 +54,7 @@ func TestNoPrimeiroNivelNaoHaVagaDePoder(t *testing.T) {
 }
 
 // UM PODER DE OUTRA CLASSE não entra.
-func TestUmPoderDeOutraClasseNaoEntra(t *testing.T) {
+func TestAPowerFromAnotherClassDoesNotEnter(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 
 	recusa := oComandoDoPoder(t, f, id, "escolhe/class.bardo.lendas-e-historias", "")
@@ -69,7 +69,7 @@ func TestUmPoderDeOutraClasseNaoEntra(t *testing.T) {
 }
 
 // UM PODER AUTOMÁTICO não ocupa vaga — nem se alguém tentar escolhê-lo.
-func TestUmPoderAutomaticoNaoOcupaVaga(t *testing.T) {
+func TestAnAutomaticPowerTakesNoSlot(t *testing.T) {
 	f, id := oBarbaro(t, 5)
 
 	recusa := oComandoDoPoder(t, f, id, "escolhe/class.barbaro.furia", "")
@@ -79,7 +79,7 @@ func TestUmPoderAutomaticoNaoOcupaVaga(t *testing.T) {
 }
 
 // A ORIGEM DÁ DOIS BENEFÍCIOS, e o terceiro é recusado.
-func TestAOrigemDaDoisBeneficios(t *testing.T) {
+func TestTheOriginGivesTwoBenefits(t *testing.T) {
 	f, id := oBarbaro(t, 3)
 
 	for _, b := range []string{"pericia-Furtividade", "pericia-Percepção"} {
@@ -99,7 +99,7 @@ func TestAOrigemDaDoisBeneficios(t *testing.T) {
 // dos dois que a pessoa leva (p85). Medido na bancada: sem juntá-lo, o poder da
 // origem não aparecia em lugar nenhum e o servidor recusava quem tentasse
 // escolhê-lo.
-func TestOPoderUnicoDaOrigemEEscolhivel(t *testing.T) {
+func TestTheOnlyOriginPowerIsStillAChoice(t *testing.T) {
 	f, id := oBarbaro(t, 3)
 
 	if recusa := oComandoDoPoder(t, f, id, "origem/origin-batedor-unique", ""); recusa != "" {
@@ -117,7 +117,7 @@ func TestOPoderUnicoDaOrigemEEscolhivel(t *testing.T) {
 // O Amnésico é a única assim: "em vez de dois benefícios, recebe uma perícia e
 // um poder escolhidos pelo mestre" (p88). Cobrar dois dele daria uma pendência
 // que a pessoa não tem como resolver, para sempre.
-func TestUmaOrigemSemBeneficiosNaoCobraDois(t *testing.T) {
+func TestAnOriginWithoutBenefitsDoesNotDemandTwo(t *testing.T) {
 	f, id := oBarbaro(t, 1)
 	var set setBuilder
 	set.Add("origin = ?", "Amnésico")
@@ -135,7 +135,7 @@ func TestUmaOrigemSemBeneficiosNaoCobraDois(t *testing.T) {
 }
 
 // UM BENEFÍCIO DE OUTRA ORIGEM não entra.
-func TestUmBeneficioDeOutraOrigemNaoEntra(t *testing.T) {
+func TestABenefitFromAnotherOriginDoesNotEnter(t *testing.T) {
 	f, id := oBarbaro(t, 3)
 
 	recusa := oComandoDoPoder(t, f, id, "origem/origin-acolito-pericia-Cura", "")
@@ -145,7 +145,7 @@ func TestUmBeneficioDeOutraOrigemNaoEntra(t *testing.T) {
 }
 
 // O CAMINHO e o DEVOTO só aceitam o que a classe oferece.
-func TestOCaminhoEODevotoSoAceitamOQueAClasseOferece(t *testing.T) {
+func TestThePathAndTheDevotoOnlyAcceptWhatTheClassOffers(t *testing.T) {
 	f, id := oArcanista(t)
 
 	if recusa := oComandoDoPoder(t, f, id, "classe/Arcanista/caminho/mago", ""); recusa != "" {
@@ -162,7 +162,7 @@ func TestOCaminhoEODevotoSoAceitamOQueAClasseOferece(t *testing.T) {
 }
 
 // AS PENDÊNCIAS dizem o que ainda falta, e a contagem sai no crachá.
-func TestAsPendenciasDizemOQueFalta(t *testing.T) {
+func TestThePendenciesSayWhatIsMissing(t *testing.T) {
 	f, id := oBarbaro(t, 3)
 
 	tela := aTelaDosPoderes(t, f, id)
@@ -185,7 +185,7 @@ func TestAsPendenciasDizemOQueFalta(t *testing.T) {
 
 // A PENDÊNCIA DO ATRIBUTO DE RAÇA é a promessa da forja ("dá para criar assim e
 // terminar na ficha", ALE-169).
-func TestAPendenciaDoAtributoDeRacaApareceEFecha(t *testing.T) {
+func TestTheRaceAttributePendencyAppearsAndCloses(t *testing.T) {
 	f, id := oBarbaro(t, 1)
 	seedRaca(t, f.s, id, "Humano")
 
@@ -203,7 +203,7 @@ func TestAPendenciaDoAtributoDeRacaApareceEFecha(t *testing.T) {
 }
 
 // A DISTRIBUIÇÃO REPETIDA é recusada — o livro pede atributos DIFERENTES.
-func TestADistribuicaoRepetidaERecusada(t *testing.T) {
+func TestARepeatedDistributionIsRefused(t *testing.T) {
 	f, id := oBarbaro(t, 1)
 	seedRaca(t, f.s, id, "Humano")
 
@@ -221,7 +221,7 @@ func TestADistribuicaoRepetidaERecusada(t *testing.T) {
 }
 
 // O DIÁLOGO oferece o que cabe em cada aba.
-func TestODialogoOfereceOQueCabeEmCadaAba(t *testing.T) {
+func TestTheDialogOffersWhatFitsInEachTab(t *testing.T) {
 	f, id := oArcanista(t)
 	tela := aTelaDosPoderes(t, f, id)
 
@@ -246,7 +246,7 @@ func TestODialogoOfereceOQueCabeEmCadaAba(t *testing.T) {
 // `pede` monta o `WebRouter`, onde `/characters/...` não existe, e um 404
 // passaria por "recusou" sem que a regra tivesse rodado. Medido: escrito assim,
 // o teste continuava verde com a validação REMOVIDA.
-func TestAApiJsonRecusaAEscolhaForaDaRegra(t *testing.T) {
+func TestTheJsonApiRefusesAChoiceOutsideTheRule(t *testing.T) {
 	f, id := oBarbaro(t, 3)
 
 	corpo := `{"classPowers":["class.barbaro.golpe-poderoso","class.barbaro.frenesi","class.barbaro.brado-assustador"]}`

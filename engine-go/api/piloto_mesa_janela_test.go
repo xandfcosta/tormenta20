@@ -15,7 +15,7 @@ import (
 // conta sobre a JANELA — o ponto do clique mais a vista, dividido pelo zoom — e
 // ela aparece em cinco camadas de clique.
 
-// TestNenhumaCamadaLeOPontoSemSomarAJanela.
+// TestNoLayerReadsThePointWithoutAddingTheViewport.
 //
 // Este é o guarda da FAMÍLIA e não de um defeito: a conta do clique tinha CINCO
 // cópias, uma por camada, e o comentário de cada uma dizia que a repetição era
@@ -25,7 +25,7 @@ import (
 //
 // Ele varre o HTML SERVIDO e não o código: é a única forma de alcançar a camada
 // que alguém escrever amanhã sem ler nada disto.
-func TestNenhumaCamadaLeOPontoSemSomarAJanela(t *testing.T) {
+func TestNoLayerReadsThePointWithoutAddingTheViewport(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/abrir",
 		`{"novolugar":"Taverna do Javali","novochao":"taverna"}`); rec.Code != http.StatusOK {
@@ -55,7 +55,7 @@ func TestNenhumaCamadaLeOPontoSemSomarAJanela(t *testing.T) {
 	}
 }
 
-// TestOAtalhoNaoMudaQuandoUmaFerramentaDoMestreSomeDoTrilho.
+// TestTheShortcutDoesNotShiftWhenAGmToolLeavesTheRail.
 //
 // É a promessa que o cabeçalho do trilho faz: quem aprendeu `4 = gabarito`
 // mestrando continua com `4 = gabarito` jogando. Ela vale porque o número sai da
@@ -65,7 +65,7 @@ func TestNenhumaCamadaLeOPontoSemSomarAJanela(t *testing.T) {
 // mestre estão no FIM, então numerar depois do filtro daria o mesmo resultado — o
 // guarda passaria sobre a sabotagem, que é o pior tipo de verde. O que quebra a
 // promessa é uma ferramenta do mestre no MEIO, e é ela que este trilho tem.
-func TestOAtalhoNaoMudaQuandoUmaFerramentaDoMestreSomeDoTrilho(t *testing.T) {
+func TestTheShortcutDoesNotShiftWhenAGmToolLeavesTheRail(t *testing.T) {
 	trilho := numeraOTrilho([]ferramentaDoMapa{
 		{ID: "mover", Rotulo: "Mover"},
 		{ID: "pintar", Rotulo: "Pintar", SoMestre: true},
@@ -84,13 +84,13 @@ func TestOAtalhoNaoMudaQuandoUmaFerramentaDoMestreSomeDoTrilho(t *testing.T) {
 	}
 }
 
-// TestCadaFerramentaTemUmaTeclaSoDela.
+// TestEachToolHasAKeyOfItsOwn.
 //
 // Duas ferramentas com o mesmo número não dão erro: a segunda simplesmente nunca
 // liga, porque o `oTecladoDoTrilho` monta um ternário encadeado e o primeiro
 // ramo vence. Foi o defeito que os números escritos à mão convidavam, e é o
 // motivo de o `numeraOTrilho` existir.
-func TestCadaFerramentaTemUmaTeclaSoDela(t *testing.T) {
+func TestEachToolHasAKeyOfItsOwn(t *testing.T) {
 	vistas := map[string]string{}
 	for _, f := range asFerramentasDoMapa() {
 		if f.Atalho == "" {
@@ -104,13 +104,13 @@ func TestCadaFerramentaTemUmaTeclaSoDela(t *testing.T) {
 	}
 }
 
-// TestAMaoDeArrastarAVistaEDosDoisPapeis.
+// TestThePanHandBelongsToBothRoles.
 //
 // Sem moldura não há rolagem nativa, então arrastar a vista deixou de ser
 // conforto: é o único gesto de ponteiro que leva alguém ao outro lado do plano.
 // Um trilho de jogador sem a mão seria um jogador preso no enquadramento em que
 // a página abriu.
-func TestAMaoDeArrastarAVistaEDosDoisPapeis(t *testing.T) {
+func TestThePanHandBelongsToBothRoles(t *testing.T) {
 	for _, mestre := range []bool{true, false} {
 		achou := false
 		for _, f := range oTrilhoDe(mestre) {

@@ -9,7 +9,7 @@ import (
 // A regra: a cor é da ESPÉCIE e o número é da INSTÂNCIA. Os casos são os que a
 // suíte da SPA já nomeava, porque as bordas não mudaram com o transporte.
 
-func TestOsIguaisSaemIguaisEONumeroNaoEntraNaCor(t *testing.T) {
+func TestEqualsComeOutEqualAndTheNumberStaysOutOfTheColor(t *testing.T) {
 	um, tres := AparenciaDe("Zumbi 1"), AparenciaDe("Zumbi 3")
 
 	if um.Matiz != tres.Matiz {
@@ -26,7 +26,7 @@ func TestOsIguaisSaemIguaisEONumeroNaoEntraNaCor(t *testing.T) {
 // O monograma vem da ESPÉCIE. Ele comia as duas primeiras palavras, então
 // "Zumbi Putrefato 2" virava "ZP" e o número — a única coisa que distingue as
 // três peças na mesa — era justamente o que se perdia.
-func TestOMonogramaVemDaEspecieEONumeroViraSelo(t *testing.T) {
+func TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal(t *testing.T) {
 	p := AparenciaDe("Zumbi Putrefato 2")
 	if p.Monograma != "ZP" || p.Instancia != "2" {
 		t.Errorf("ficou %q + %q, queria ZP + 2", p.Monograma, p.Instancia)
@@ -35,7 +35,7 @@ func TestOMonogramaVemDaEspecieEONumeroViraSelo(t *testing.T) {
 
 // DUAS letras mesmo em nome de uma palavra: no tabuleiro um "O" solto tem
 // metade da massa que a peça precisa para ser achada entre vinte vizinhas.
-func TestSemNumeroNaoHaSeloEOMonogramaAindaTemDuasLetras(t *testing.T) {
+func TestWithoutANumberThereIsNoSealAndTheMonogramStillHasTwoLetters(t *testing.T) {
 	p := AparenciaDe("Ogro")
 	if p.Instancia != "" {
 		t.Errorf("apareceu selo %q num nome sem número", p.Instancia)
@@ -47,7 +47,7 @@ func TestSemNumeroNaoHaSeloEOMonogramaAindaTemDuasLetras(t *testing.T) {
 
 // "Nv1" está no MEIO do nome e não é instância: separar por qualquer dígito
 // transformaria "Recruta Nv1 Simples" em outra espécie.
-func TestNumeroNoMeioDoNomeNaoEInstancia(t *testing.T) {
+func TestANumberInTheMiddleOfTheNameIsNotAnInstance(t *testing.T) {
 	p := AparenciaDe("Recruta Nv1 Simples")
 	if p.Instancia != "" {
 		t.Errorf("o Nv1 virou selo %q", p.Instancia)
@@ -57,7 +57,7 @@ func TestNumeroNoMeioDoNomeNaoEInstancia(t *testing.T) {
 	}
 }
 
-func TestEspeciesDiferentesContinuamDistintas(t *testing.T) {
+func TestDifferentKindsStayDistinct(t *testing.T) {
 	if AparenciaDe("Zumbi 1").Matiz == AparenciaDe("Goblin 1").Matiz {
 		t.Error("zumbi e goblin saíram no mesmo matiz — a cor deixou de dizer algo")
 	}
@@ -79,7 +79,7 @@ func TestEspeciesDiferentesContinuamDistintas(t *testing.T) {
 // A doc do `hueFromName` diz `hueFromName('Thorvald') // => 214`, e ELA ESTÁ
 // ERRADA: rodado, o valor é 186. Foi este teste que descobriu, porque nada no
 // front afirma aquele exemplo. Avisada a sessão que cuida da SPA.
-func TestOMatizEOMesmoDoRetratoDaSPA(t *testing.T) {
+func TestTheHueIsTheSameAsTheHeroPortrait(t *testing.T) {
 	casos := map[string]int{
 		"Thorvald": 186,
 		"Ogro":     197,

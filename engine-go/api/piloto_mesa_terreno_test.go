@@ -12,10 +12,10 @@ import (
 
 // Os guardas do PINCEL de terreno na Mesa (ALE-264, item 5).
 
-// TestOPincelPINTAaEspecieQUEfoiPEDIDA, e só ela.
+// TestTheBrushPaintsTheKindItAskedFor, e só ela.
 //
 // Amostragem sobre `EspeciesDeTerreno`: a quinta espécie já nasce medida.
-func TestOPincelPintaAEspecieQuePediu(t *testing.T) {
+func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -39,13 +39,13 @@ func TestOPincelPintaAEspecieQuePediu(t *testing.T) {
 	}
 }
 
-// TestABORRACHAapagaSOaEspecieEscolhida.
+// TestTheEraserClearsOnlyTheChosenKind.
 //
 // É por isso que ela é um MODO e não uma espécie: numa casa com duas, uma
 // "espécie borracha" teria de decidir qual apagar, e a resposta certa — a que
 // está selecionada — já é o que o modo faz. Folhagens são difícil E camuflagem
 // (p267), então a casa com duas não é hipótese.
-func TestABorrachaApagaSoAEspecieEscolhida(t *testing.T) {
+func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	base := f.urlDaMesa() + "/tabuleiro/terreno"
@@ -68,12 +68,12 @@ func TestABorrachaApagaSoAEspecieEscolhida(t *testing.T) {
 	}
 }
 
-// TestAsQUATROespeciesSAOdesenhadasDISTINTAS.
+// TestTheFourKindsAreDrawnDistinctly.
 //
 // O guarda de leiaute que esta casa cobra: um traço pintado que não vira classe
 // própria some no desenho das outras, e o mestre lê a cena errada sem nada
 // estourar. Amostragem sobre a lista.
-func TestAsQuatroEspeciesSaoDesenhadasDistintas(t *testing.T) {
+func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	for i, pincel := range tabuleiro.EspeciesDeTerreno {
@@ -96,12 +96,12 @@ func TestAsQuatroEspeciesSaoDesenhadasDistintas(t *testing.T) {
 	}
 }
 
-// TestOTRILHOdizOEFEITOdeCadaEspecie.
+// TestTheRailSaysTheEffectOfEachKind.
 //
 // "Cobertura" sozinho não lembra ninguém de que são +5 na Defesa, e o mestre que
 // precisa da regra sai da mesa para procurá-la no livro. É a mesma razão de o
 // diálogo de abrir dizer que um quadrado são 1,5m.
-func TestOTrilhoDizOEfeitoDeCadaEspecie(t *testing.T) {
+func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
@@ -154,8 +154,8 @@ func TestOTrilhoDizOEfeitoDeCadaEspecie(t *testing.T) {
 	}
 }
 
-// TestSOoMESTREpinta: a trava é do servidor, e não o botão escondido.
-func TestSoOMestrePinta(t *testing.T) {
+// TestOnlyTheGmPaints: a trava é do servidor, e não o botão escondido.
+func TestOnlyTheGmPaints(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -169,11 +169,11 @@ func TestSoOMestrePinta(t *testing.T) {
 	}
 }
 
-// TestPintarSEMtabuleiroRECUSAcomFRASE.
+// TestPaintingWithoutABoardRefusesWithASentence.
 //
 // Não é 500 nem silêncio: pintar chão de uma cena que não está na mesa não tem
 // onde acontecer, e a recusa fala no `erroDoComando` do rodapé do mestre.
-func TestPintarSemTabuleiroRecusaComFrase(t *testing.T) {
+func TestPaintingWithoutABoardRefusesWithASentence(t *testing.T) {
 	f := novoPiloto(t)
 	corpo := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/terreno/dificil/1/1/ate/1/1", "").Body.String()
 	if !strings.Contains(corpo, "não há tabuleiro aberto") {

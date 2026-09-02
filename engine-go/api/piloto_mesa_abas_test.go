@@ -29,7 +29,7 @@ func (f pilotoFixture) abreSegunda(t *testing.T, nome string) *tabuleiro.BoardSt
 	return b
 }
 
-// TestNENHUMcomandoDaMesaAgeNaAbaPadrao — a varredura da convenção (ALE-205).
+// TestNoSceneCommandUsesTheDefaultTab — a varredura da convenção (ALE-205).
 //
 // A convenção que esta issue criou é uma frase: **o comando age na aba de quem
 // clicou**, e é ela que dispensou pôr o id do tabuleiro em vinte rotas. O
@@ -40,7 +40,7 @@ func (f pilotoFixture) abreSegunda(t *testing.T, nome string) *tabuleiro.BoardSt
 // Por isso ele varre em vez de conferir um caso: uma revisão nomeia um arquivo,
 // e a correção é TODO arquivo com a mesma forma. A `aAbaPadrao` é da tela ANTIGA
 // (`board_commands.go`, `board_rules.go`), que não tem abas, e some junto com ela.
-func TestNenhumComandoDoPilotoUsaAAbaPadrao(t *testing.T) {
+func TestNoSceneCommandUsesTheDefaultTab(t *testing.T) {
 	arquivos, err := filepath.Glob("piloto_*.go")
 	if err != nil {
 		t.Fatalf("listar os arquivos do piloto: %v", err)
@@ -77,7 +77,7 @@ func TestNenhumComandoDoPilotoUsaAAbaPadrao(t *testing.T) {
 // ocupando o que a ALE-203 acabou de ganhar de altura. E a ATIVA é o `<h2>` da
 // região: um `<h2>` por aba faria o leitor de tela anunciar três títulos para
 // uma região que desenha uma cena.
-func TestABarraDeAbasSoNasceComDuasCenas(t *testing.T) {
+func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -111,7 +111,7 @@ func TestABarraDeAbasSoNasceComDuasCenas(t *testing.T) {
 // porque QUER, e o mestre continua montando a taverna. Uma troca que viajasse
 // para a mesa faria cada clique de um jogador arrastar a tela dos outros cinco —
 // e no meio de um combate ninguém entenderia por que o mapa mudou.
-func TestTrocarDeAbaMudaSoATelaDeQuemClicou(t *testing.T) {
+func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra") // "Taverna do Javali", a primeira
 	cripta := f.abreSegunda(t, "Cripta")
@@ -141,7 +141,7 @@ func TestTrocarDeAbaMudaSoATelaDeQuemClicou(t *testing.T) {
 // pinta um tabuleiro que não se está olhando.** Sem ela, cada gesto do mestre
 // cairia na aba padrão — ele pintaria a cripta e o terreno apareceria na taverna
 // que a mesa está vendo, que é a emboscada vazando por outro caminho.
-func TestOGestoPousaNaAbaQueOMestreEstaOlhando(t *testing.T) {
+func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 	f := novoPiloto(t)
 	taverna := f.abreTabuleiro(t, "pedra")
 	cripta := f.abreSegunda(t, "Cripta")
@@ -167,7 +167,7 @@ func TestOGestoPousaNaAbaQueOMestreEstaOlhando(t *testing.T) {
 // um jogador a olha. Sem a conferência a cada leitura, a tela dele diria "esta
 // sessão não tem tabuleiro" com a taverna aberta na mesa ao lado — e ele não
 // teria como ligar uma coisa à outra.
-func TestFecharUmaAbaDevolveQuemEstavaNelaAPadrao(t *testing.T) {
+func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	cripta := f.abreSegunda(t, "Cripta")
@@ -200,7 +200,7 @@ func TestFecharUmaAbaDevolveQuemEstavaNelaAPadrao(t *testing.T) {
 // este guarda: a ficha existe e não pode dizer COMO A CENA SE CHAMA. "Cripta do
 // Rei Caolho" no HTML de quem não pode saber que há uma cripta é o vazamento que
 // não aparece na tela — só no ver-código-fonte.
-func TestAAbaSobCortinaNaoContaONomeDaCenaAoJogador(t *testing.T) {
+func TestATabUnderTheCurtainDoesNotTellThePlayerTheSceneName(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	emboscada := f.abreSegunda(t, "Cripta do Rei Caolho")

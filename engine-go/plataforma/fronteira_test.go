@@ -33,7 +33,7 @@ import (
 // A entrada vazia representa a stdlib inteira — ela não tem barra no caminho.
 var permitidos = map[string]bool{}
 
-func TestAPlataformaNaoAlcancaODominio(t *testing.T) {
+func TestThePlatformDoesNotReachTheDomain(t *testing.T) {
 	arquivos, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)

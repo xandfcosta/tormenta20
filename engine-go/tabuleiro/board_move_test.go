@@ -77,9 +77,9 @@ var (
 // seis quadrados de deslocamento (T20 p106: 9m) compram seis passos ortogonais.
 //
 // O que ele pode fazer é o desenho — quem o transforma em pouso é o mestre, e o
-// guarda disso é o `TestOJogadorDesenhaMasNaoPoeAPecaNoLugar`. Aqui o que se
+// guarda disso é o `TestThePlayerDrawsButDoesNotLandTheToken`. Aqui o que se
 // prende é a outra metade: que ele PODE desenhar, e que a medida sai certa.
-func TestJogadorDesenhaComAPropriaPecaNaPropriaVez(t *testing.T) {
+func TestAPlayerDrawsWithTheirOwnTokenOnTheirOwnTurn(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	err := ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}), jogadorDono)
@@ -115,7 +115,7 @@ func TestJogadorDesenhaComAPropriaPecaNaPropriaVez(t *testing.T) {
 // jogador chegava direto ao estado da cena e precisava de um guarda no servidor;
 // com o confirmar sendo do mestre, o guarda perdeu o objeto — e o deslocamento
 // virou desenho (as três faixas da seta), não recusa.
-func TestOJogadorDesenhaMasNaoPoeAPecaNoLugar(t *testing.T) {
+func TestThePlayerDrawsButDoesNotLandTheToken(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	if err := ProposeMove(b, st, "t1",
@@ -146,7 +146,7 @@ func TestOJogadorDesenhaMasNaoPoeAPecaNoLugar(t *testing.T) {
 // tabuleiro, mas a parte visual serve para todos"*. Quatro diagonais custam 8
 // (T20 p238) sobre um deslocamento de 6 — antes esta era a recusa, e agora é um
 // pouso com a seta contando a história em azul.
-func TestOMestrePousaAPecaAlemDoDeslocamento(t *testing.T) {
+func TestTheGmLandsTheTokenBeyondTheDisplacement(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	if err := ProposeMove(b, st, "t1",
@@ -170,11 +170,11 @@ func TestOMestrePousaAPecaAlemDoDeslocamento(t *testing.T) {
 	}
 }
 
-// TestOCONTROLE: o mestre pousando um caminho que CABE.
+// O CONTROLE: o mestre pousando um caminho que CABE.
 //
 // Sem ele, "o mestre pousou o caro" não se distingue de "o mestre pousa
 // qualquer coisa porque o confirmar deixou de conferir a vez e a posse".
-func TestOMestrePousaOCaminhoQueCabe(t *testing.T) {
+func TestTheGmLandsThePathThatFits(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	if err := ProposeMove(b, st, "t1",
@@ -190,7 +190,7 @@ func TestOMestrePousaOCaminhoQueCabe(t *testing.T) {
 }
 
 // A vez é do rastreador, não do tabuleiro: fora dela o jogador não anda.
-func TestJogadorNaoAndaForaDaPropriaVez(t *testing.T) {
+func TestAPlayerDoesNotMoveOutsideTheirOwnTurn(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	st.TurnIndex = 1 // a vez é do Ogro
 
@@ -200,7 +200,7 @@ func TestJogadorNaoAndaForaDaPropriaVez(t *testing.T) {
 }
 
 // A peça do vizinho não é da pessoa, mesmo estando na vez dela.
-func TestJogadorNaoMovePecaDeOutro(t *testing.T) {
+func TestAPlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	naoDono := Mover{UserID: 42, Role: "player", OwnsCharacter: false}
 
@@ -216,7 +216,7 @@ func TestJogadorNaoMovePecaDeOutro(t *testing.T) {
 // o que quiser no tabuleiro, mas a parte visual serve para todos"*. O orçamento
 // deixou de ser permissão e virou desenho, então mandá-lo como -1 aqui apagaria
 // da tela do mestre as três faixas que a mesa está lendo.
-func TestOMestreMoveSemLimiteMasVeODeslocamentoDaPeca(t *testing.T) {
+func TestTheGmMovesWithoutALimitButSeesTheTokenDisplacement(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	longe := caminho([2]int{9, 9}, [2]int{10, 10}, [2]int{11, 11}, [2]int{12, 12},
@@ -236,7 +236,7 @@ func TestOMestreMoveSemLimiteMasVeODeslocamentoDaPeca(t *testing.T) {
 
 // Fora de combate não existe vez nem deslocamento de turno: a cena da taverna
 // também tem posição, e ali cada um anda com a própria peça.
-func TestForaDeCombateCadaUmAndaComASua(t *testing.T) {
+func TestOutOfCombatEachOneMovesTheirOwn(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	st.TurnIndex = -1
 
@@ -252,7 +252,7 @@ func TestForaDeCombateCadaUmAndaComASua(t *testing.T) {
 // A versão é o que impede o commit de ser escrito sobre outra cena: dois
 // clientes na mesma peça, o mestre arrastando enquanto o jogador confirma, e o
 // broadcast atrasado que chega depois da re-hidratação.
-func TestCommitSobreTabuleiroMudadoERecusado(t *testing.T) {
+func TestACommitOnAChangedBoardIsRefused(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
 	vista := b.Version
@@ -275,7 +275,7 @@ func TestCommitSobreTabuleiroMudadoERecusado(t *testing.T) {
 // O mestre confirma pelo jogador — é ele quem toca a mesa quando o jogador
 // travou ou caiu da rede. O contrário não vale: um jogador não decide o
 // provisório de outro.
-func TestMestreConfirmaPeloJogadorEOContrarioNao(t *testing.T) {
+func TestTheGmConfirmsForThePlayerAndNotTheOtherWayAround(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
 
@@ -290,7 +290,7 @@ func TestMestreConfirmaPeloJogadorEOContrarioNao(t *testing.T) {
 
 // Peça escondida some inteira da cópia do jogador — e o provisório dela também,
 // senão um caminho desenhado saindo do nada entregaria a emboscada.
-func TestProvisorioDePecaEscondidaNaoVazaParaOJogador(t *testing.T) {
+func TestAPendingMoveOfAHiddenTokenDoesNotLeakToThePlayer(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	_ = UpdateToken(b, "t2", tokenPatch{Hidden: boolPtr(true)})
 	_ = ProposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), mestre)
@@ -311,7 +311,7 @@ func TestProvisorioDePecaEscondidaNaoVazaParaOJogador(t *testing.T) {
 
 // A peça removida leva o provisório junto: um movimento para quem não está mais
 // no tabuleiro nunca poderia ser confirmado e ficaria pendurado no estado.
-func TestRemoverAPecaLevaOProvisorioJunto(t *testing.T) {
+func TestRemovingTheTokenTakesThePendingMoveWithIt(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
 
@@ -324,7 +324,7 @@ func TestRemoverAPecaLevaOProvisorioJunto(t *testing.T) {
 
 // O caminho tem de começar onde a peça está: um caminho que nasce em outro
 // lugar é um cliente desatualizado, e aceitá-lo teleportaria a peça.
-func TestCaminhoTemDeComecarNaPeca(t *testing.T) {
+func TestThePathMustStartAtTheToken(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
 	if err := ProposeMove(b, st, "t1", caminho([2]int{5, 5}, [2]int{6, 5}), jogadorDono); err == nil {
@@ -443,7 +443,7 @@ func TestLoosePiecesDoNotStack(t *testing.T) {
 // onde ela pode se perder: até esta fatia o estado nem tinha onde guardar o
 // chão, e o `ProposeMove` chamava a régua com um mapa VAZIO — o mestre pintava
 // o brejo e a peça o atravessava como se fosse pedra lisa.
-func TestOTerrenoPintadoEncareceOCaminho(t *testing.T) {
+func TestPaintedTerrainMakesThePathCostMore(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	// Quatro passos ortogonais custam 4 de 6 — cabe com folga.
 	reto := caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
@@ -470,7 +470,7 @@ func TestOTerrenoPintadoEncareceOCaminho(t *testing.T) {
 // Quem apaga é a BORRACHA, mandando `false` — e pintar duas vezes a mesma casa
 // tem de ser inofensivo, porque o pincel pinta arrastando e o arraste passa
 // pela mesma casa várias vezes. Alternar faria a casa piscar debaixo do dedo.
-func TestPintarEApagarSaoExplicitosEIdempotentes(t *testing.T) {
+func TestPaintingAndErasingAreExplicitAndIdempotent(t *testing.T) {
 	b, _ := mesaEmCombate(t)
 	casa := engine.Square{X: 2, Y: 0}
 
@@ -502,7 +502,7 @@ func TestPintarEApagarSaoExplicitosEIdempotentes(t *testing.T) {
 // a tela NOMEAR a regra do livro em vez de refazer a aritmética em JavaScript —
 // uma segunda implementação livre para divergir do motor é a classe de defeito
 // que a ALE-104 apagou.
-func TestProvisorioCarregaAContaQueProduziuOCusto(t *testing.T) {
+func TestThePendingMoveCarriesTheArithmeticThatProducedTheCost(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	b.Difficult = []engine.Square{{X: 1, Y: 0}}
 

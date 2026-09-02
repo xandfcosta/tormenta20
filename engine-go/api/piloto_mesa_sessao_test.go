@@ -13,13 +13,13 @@ import (
 // AFORDÂNCIA: que a tela ofereça o verbo certo para cada estado, que o jogador
 // não receba nenhum, e que excluir leve o mestre para algum lugar.
 
-// TestATelaOfereceOVerboDoESTADO, e só ele.
+// TestTheScreenOffersTheVerbForTheState, e só ele.
 //
 // O servidor recusa encerrar o que nunca começou, e um botão que existe para
 // levar recusa é um erro desenhado. Por isso a tela é travada pelo estado — e
 // não é redundância com o guarda do servidor: são camadas diferentes da mesma
 // decisão, e esta é a que o mestre vê.
-func TestATelaOfereceOVerboDoEstado(t *testing.T) {
+func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 
@@ -56,10 +56,10 @@ func TestATelaOfereceOVerboDoEstado(t *testing.T) {
 	}
 }
 
-// TestOJogadorNaoTemOCicloMasTemASaida.
+// TestThePlayerHasNoLifecycleButHasTheWayOut.
 //
 // Sair não é do mestre: quem entrou numa mesa precisa poder sair dela.
-func TestOJogadorNaoTemOCicloMasTemASaida(t *testing.T) {
+func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 	f := novoPiloto(t)
 	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
 
@@ -82,11 +82,11 @@ func TestOJogadorNaoTemOCicloMasTemASaida(t *testing.T) {
 	}
 }
 
-// TestOTituloSalvaEPodeFicarEmBranco.
+// TestTheTitleSavesAndMayStayBlank.
 //
 // Vazio é legítimo: a identidade da sessão é o NÚMERO, e o título é o apelido da
 // noite. Obrigar a um faria o mestre inventar texto para poder salvar.
-func TestOTituloSalvaEPodeFicarEmBranco(t *testing.T) {
+func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 
@@ -103,12 +103,12 @@ func TestOTituloSalvaEPodeFicarEmBranco(t *testing.T) {
 	}
 }
 
-// TestReiniciarPelaTelaEsvaziaAFilaAoVivo.
+// TestRestartingFromTheScreenEmptiesTheLiveTracker.
 //
 // O guarda da regra já cobre o `Forget`; este cobre o CAMINHO — que o comando da
 // Mesa recarrega a fila depois, senão o `GetState` recria um estado vazio sem
 // passar pelo banco e a próxima carga fria discordaria desta.
-func TestReiniciarPelaTelaEsvaziaAFilaAoVivo(t *testing.T) {
+func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	if n := len(f.s.sessions.GetState(f.sessionID).Initiative); n < 2 {
@@ -124,11 +124,11 @@ func TestReiniciarPelaTelaEsvaziaAFilaAoVivo(t *testing.T) {
 	}
 }
 
-// TestExcluirApagaEMandaOMestreParaACronica.
+// TestDeletingErasesAndSendsTheGmToTheCampaign.
 //
 // O destino importa: voltar para a mesa apagada seria mandar o mestre para uma
 // porta que não existe mais.
-func TestExcluirApagaEMandaOMestreParaACronica(t *testing.T) {
+func TestDeletingErasesAndSendsTheGmToTheCampaign(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 

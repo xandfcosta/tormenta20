@@ -60,7 +60,7 @@ func (f cenaFixture) eu(t *testing.T) AuthUser {
 // A busca é do SERVIDOR nesta cena, e a regra é a mesma do `casaBusca`. Este
 // guarda é a costura: que a cena de fato APLICA a regra, sobre o nome E a
 // sinopse, que são os dois campos que a SPA indexa.
-func TestCenaFiltraPelaBuscaNoNomeENaSinopse(t *testing.T) {
+func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 	f.campanha(t, "Segredos de Wynlla", "Uma trama sobre a Tormenta")
@@ -85,7 +85,7 @@ func TestCenaFiltraPelaBuscaNoNomeENaSinopse(t *testing.T) {
 // O cursor tem de nascer numa campanha que EXISTE na lista filtrada. Se ele
 // ficasse na primeira da lista COMPLETA, uma busca que a filtrasse fora
 // deixaria o palco vazio com o trilho cheio — e a tela pareceria quebrada.
-func TestCursorNasceNaPrimeiraDaListaFILTRADA(t *testing.T) {
+func TestTheCursorIsBornOnTheFirstOfTheFilteredList(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 	segunda := f.campanha(t, "Segredos de Wynlla", "")
@@ -101,7 +101,7 @@ func TestCursorNasceNaPrimeiraDaListaFILTRADA(t *testing.T) {
 
 // Buscar e não achar nada é DIFERENTE de não ter campanha nenhuma: uma pede
 // para limpar o filtro, a outra para criar a primeira.
-func TestCenaDistingueListaVaziaDeBuscaSemResultado(t *testing.T) {
+func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 	vazia := novaCena(t)
 	semNada, err := vazia.s.carregaCampanhas(context.Background(), vazia.eu(t), "", "todas")
 	if err != nil {
@@ -127,7 +127,7 @@ func TestCenaDistingueListaVaziaDeBuscaSemResultado(t *testing.T) {
 // A consulta única substituiu uma fan-out de N+1 (a SEGUNDA da migração), e o
 // que ela tem de acertar é ATRIBUIR a sessão à campanha certa: trocar duas
 // faria o "Continuar" levar para a mesa errada.
-func TestSessaoVivaVaiParaACampanhaCerta(t *testing.T) {
+func TestALiveSessionGoesToTheRightCampaign(t *testing.T) {
 	f := novaCena(t)
 	parada := f.campanha(t, "A Queda de Tauron", "")
 	rolando := f.campanha(t, "Segredos de Wynlla", "")
@@ -162,7 +162,7 @@ func TestSessaoVivaVaiParaACampanhaCerta(t *testing.T) {
 // Um valor de papel que não existe — vindo de uma URL editada à mão — vira
 // "todas". Esconder a lista inteira por causa de um parâmetro estranho é a
 // tela mentindo sobre o que a pessoa tem.
-func TestPapelInvalidoNaURLNaoEscondeALista(t *testing.T) {
+func TestAnInvalidRoleInTheUrlDoesNotHideTheList(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 
@@ -177,7 +177,7 @@ func TestPapelInvalidoNaURLNaoEscondeALista(t *testing.T) {
 	}
 }
 
-func TestFiltroDePapelSeparaMestrandoDeJogando(t *testing.T) {
+func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 
@@ -202,7 +202,7 @@ func TestFiltroDePapelSeparaMestrandoDeJogando(t *testing.T) {
 
 // A carga fria devolve a PÁGINA; o pedido do Datastar devolve o REMENDO. Uma
 // rota só serve os dois, e quem distingue é o cabeçalho que o cliente põe.
-func TestCenaRespondePaginaOuRemendoConformeQuemPergunta(t *testing.T) {
+func TestTheSceneAnswersPageOrPatchDependingOnWhoAsks(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 	tok, err := f.s.signToken(sqlcgen.User{ID: f.dono, Email: "mestre@t20.local"})

@@ -90,7 +90,7 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 // A recíproca da dedução acima, e é ela que impede o remendo de virar mentira:
 // blob antigo SEM turno em curso não inventa cena nenhuma. Uma sessão que
 // terminou o combate na semana passada reabre fora de cena, que é o certo.
-func TestBlobSemTurnoNaoInventaCena(t *testing.T) {
+func TestABlobWithoutATurnInventsNoScene(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))

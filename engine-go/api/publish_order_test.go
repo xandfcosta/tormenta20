@@ -43,7 +43,7 @@ import (
 // então basta emitir na ordem certa para o navegador receber na ordem certa.
 // Pedir ao cliente que descarte quadro velho exigiria versão no fio e uma
 // segunda cópia da regra em cada tela que escuta.
-func TestOQuadroSegueAOrdemDaMutacao(t *testing.T) {
+func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
 	const sessionID = int64(7)
 	// Repetição porque a corrida é de agendamento: uma passada só não a
 	// visita. Sem o conserto isto fica vermelho em poucas dezenas.

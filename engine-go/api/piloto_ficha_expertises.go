@@ -107,7 +107,7 @@ func expertisePanelFor(dto sheet.CharacterDTO, sheet engine.ComputedSheetV2, sea
 // Ele é reescrito aqui porque o motor o guarda minúsculo e o cabeçalho precisa
 // do número para DIZER a regra antes de a pessoa abrir um diálogo. A regra em si
 // tem teste no `engine`, com a página; aqui é o mesmo degrau, e
-// `TestOCabecalhoDizOTreinoDoNivel` prende os três.
+// `TestTheHeaderSaysTheTrainingForTheLevel` prende os três.
 func trainingBonusFor(level int64) int {
 	switch {
 	case level >= 15:

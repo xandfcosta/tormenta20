@@ -70,7 +70,7 @@ func oGrimorioDe(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 }
 
 // APRENDER, PREPARAR E ESQUECER, nessa ordem.
-func TestAMagiaEntraNoGrimorioPreparaESai(t *testing.T) {
+func TestASpellEntersTheSpellbookIsPreparedAndLeaves(t *testing.T) {
 	f, id := oArcanista(t)
 
 	if got := aMagia(t, f, id, "aprende/bola-de-fogo"); got != http.StatusOK {
@@ -101,7 +101,7 @@ func existe(m map[string]bool, chave string) bool {
 }
 
 // UMA MAGIA INVENTADA NÃO ENTRA no grimório.
-func TestUmaMagiaInventadaNaoEntraNoGrimorio(t *testing.T) {
+func TestAnInventedSpellDoesNotEnterTheSpellbook(t *testing.T) {
 	f, id := oArcanista(t)
 	if aRecusaDaMagia(t, f, id, "aprende/bola-de-neve-magica") == "" {
 		t.Error("uma magia que não existe foi aprendida sem uma palavra na tela")
@@ -112,7 +112,7 @@ func TestUmaMagiaInventadaNaoEntraNoGrimorio(t *testing.T) {
 }
 
 // CONJURAR COBRA O PM, e a conta é a do servidor.
-func TestConjurarCobraOPm(t *testing.T) {
+func TestCastingChargesTheMp(t *testing.T) {
 	f, id := oArcanista(t)
 	aMagia(t, f, id, "aprende/bola-de-fogo")
 
@@ -137,7 +137,7 @@ func oPmDe(t *testing.T, f pilotoFixture, id int64) int64 {
 }
 
 // SEM PM, A CONJURAÇÃO É RECUSADA e nada é cobrado.
-func TestSemPmAConjuracaoERecusada(t *testing.T) {
+func TestWithoutMpTheCastIsRefused(t *testing.T) {
 	f, id := oArcanista(t)
 	aMagia(t, f, id, "aprende/bola-de-fogo")
 	if err := f.s.queries.SetMpCurrent(context.Background(), sqlcgen.SetMpCurrentParams{
@@ -155,7 +155,7 @@ func TestSemPmAConjuracaoERecusada(t *testing.T) {
 }
 
 // O PAINEL CHEGA NA TELA, com o grimório e o catálogo.
-func TestOPainelDeMagiasDesenhaOGrimorioEOCatalogo(t *testing.T) {
+func TestTheSpellsPanelDrawsTheSpellbookAndTheCatalog(t *testing.T) {
 	f, id := oArcanista(t)
 	aMagia(t, f, id, "aprende/bola-de-fogo")
 	tela := aTelaDasMagias(t, f, id)
@@ -176,7 +176,7 @@ func TestOPainelDeMagiasDesenhaOGrimorioEOCatalogo(t *testing.T) {
 }
 
 // QUEM NÃO CONJURA não recebe o botão nem o catálogo do Capítulo 4.
-func TestQuemNaoConjuraNaoRecebeOCatalogo(t *testing.T) {
+func TestWhoDoesNotCastDoesNotGetTheCatalog(t *testing.T) {
 	f, id := oCombatente(t)
 	tela := aTelaDasMagias(t, f, id)
 
@@ -196,7 +196,7 @@ func TestQuemNaoConjuraNaoRecebeOCatalogo(t *testing.T) {
 // O Totem Espiritual do bárbaro (livro p42) escolhe um animal e cada animal
 // ensina uma magia. Ela não mora no grimório — não se aprende nem se esquece —,
 // e sem este bloco o jogador do bárbaro não teria onde ler o efeito dela.
-func TestAMagiaConcedidaPorPoderApareceParaQuemNaoConjura(t *testing.T) {
+func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 	f := novoPiloto(t)
 	id, err := f.s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Totemista", Origin: "Batedor", Level: 3,
@@ -232,7 +232,7 @@ func TestAMagiaConcedidaPorPoderApareceParaQuemNaoConjura(t *testing.T) {
 // Some-lo faria a lista parecer menor do que o livro diz que é; e a fronteira
 // não é o cadeado — o servidor recusa o mesmo pedido, com guarda próprio em
 // `piloto_spell_progression_test.go`.
-func TestOAprimoramentoForaDeAlcanceApareceTrancado(t *testing.T) {
+func TestAnAugmentOutOfReachShowsLocked(t *testing.T) {
 	// Nível 5 abre o 2º círculo; a Invisibilidade tem aprimoramento de 3º.
 	f := novoPiloto(t)
 	id := seedCharacterAtLevel(t, f.s, f.jogador, "Aprendiz", 5, 20, 20, 20, 20)

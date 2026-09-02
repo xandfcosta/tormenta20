@@ -12,9 +12,9 @@ import (
 // eles — e o fato de que cada catálogo oferece os seus. Um filtro que some da
 // cena não estoura nada: a lista continua desenhando, só que inteira.
 
-// TestCadaCatalogoOfereceOsFiltrosDele: AMOSTRAGEM sobre as abas, para o
+// TestEachCatalogOffersItsOwnFilters: AMOSTRAGEM sobre as abas, para o
 // catálogo que entrar amanhã nascer medido.
-func TestCadaCatalogoOfereceOsFiltrosDele(t *testing.T) {
+func TestEachCatalogOffersItsOwnFilters(t *testing.T) {
 	esperado := map[string][]string{
 		"condicoes": {"efeito"},
 		"magias":    {"circulo", "escola", "classe"},
@@ -48,13 +48,13 @@ func TestCadaCatalogoOfereceOsFiltrosDele(t *testing.T) {
 	}
 }
 
-// TestOFiltroSomaDentroEMultiplicaEntre: a regra de combinação.
+// TestTheFilterAddsWithinAndMultipliesAcross: a regra de combinação.
 //
 // Medido na tela: 198 magias, 39 no 3º círculo, 6 no 3º círculo E da escola de
 // evocação. Os números ficam presos porque são o que separa "filtrou" de
 // "filtrou do jeito certo" — um E virando OU daria 39 + as evocações todas, que
 // também é uma lista plausível.
-func TestOFiltroSomaDentroEMultiplicaEntre(t *testing.T) {
+func TestTheFilterAddsWithinAndMultipliesAcross(t *testing.T) {
 	todas := len(book.Catalogs().Magias)
 	if todas != 198 {
 		t.Fatalf("%d magias no catálogo — os números abaixo perderam o sentido", todas)
@@ -81,8 +81,8 @@ func quantasMagias(filtros map[string][]string) int {
 	return v.Achados
 }
 
-// TestOFiltroEUmEndereco: `?circulo=3` abre a cena já filtrada.
-func TestOFiltroEUmEndereco(t *testing.T) {
+// TestTheFilterIsAnAddress: `?circulo=3` abre a cena já filtrada.
+func TestTheFilterIsAnAddress(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -97,12 +97,12 @@ func TestOFiltroEUmEndereco(t *testing.T) {
 	}
 }
 
-// TestOFiltroDeOutraAbaNaoEntra: `?circulo=3` nas condições não filtra nada.
+// TestAFilterFromAnotherTabDoesNotApply: `?circulo=3` nas condições não filtra nada.
 //
 // Aceitá-lo faria a cena carregar um estado que ela não sabe desenhar — filtro
 // aplicado sem crachá para desligá-lo, e a pessoa presa numa lista curta sem
 // entender.
-func TestOFiltroDeOutraAbaNaoEntra(t *testing.T) {
+func TestAFilterFromAnotherTabDoesNotApply(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -112,10 +112,10 @@ func TestOFiltroDeOutraAbaNaoEntra(t *testing.T) {
 	}
 }
 
-// TestABuscaEsconde OsFiltros — com termo digitado a cena responde outra
+// TestSearchHidesTheFilters — com termo digitado a cena responde outra
 // pergunta, e um crachá de círculo sobre uma lista com itens e condições diria
 // que ele filtra o que não filtra.
-func TestABuscaEscondeOsFiltros(t *testing.T) {
+func TestSearchHidesTheFilters(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -130,13 +130,13 @@ func TestABuscaEscondeOsFiltros(t *testing.T) {
 	}
 }
 
-// TestAsRacasExoticasDizemQueSaoExoticas.
+// TestExoticRacesSayTheyAreExotic.
 //
 // PROVADO VERMELHO: o código procurava `exotica` e o dado guarda `extra`, então
 // o `else` devolvia "Comum" para as DEZESSETE — inclusive as nove exóticas. Só
 // apareceu ao medir o dado para montar o filtro; na tela era um rótulo plausível
 // em todo cartão.
-func TestAsRacasExoticasDizemQueSaoExoticas(t *testing.T) {
+func TestExoticRacesSayTheyAreExotic(t *testing.T) {
 	racas, _, _ := book.CharacterCatalogs()
 	contagem := map[string]int{}
 	for _, r := range racas {
@@ -147,13 +147,13 @@ func TestAsRacasExoticasDizemQueSaoExoticas(t *testing.T) {
 	}
 }
 
-// TestAEscolaDaMagiaTemVerbeteEViraElo (ALE-264).
+// TestTheSpellSchoolHasAnEntryAndBecomesALink (ALE-264).
 //
 // O filtro de escola nasceu antes do catálogo, e por duas horas o app teve DUAS
 // listas das mesmas oito escolas: uma tabela de rótulos no código e o dado das
 // magias. Pior: a escola decidia o filtro e não estava escrita em cartão nenhum
 // — o mestre filtrava por evocação e as magias não diziam que eram de evocação.
-func TestAEscolaDaMagiaTemVerbeteEViraElo(t *testing.T) {
+func TestTheSpellSchoolHasAnEntryAndBecomesALink(t *testing.T) {
 	escolas := book.SpellSchools()
 	if len(escolas) != 8 {
 		t.Fatalf("%d escolas de magia — o livro tem 8", len(escolas))
@@ -174,8 +174,8 @@ func TestAEscolaDaMagiaTemVerbeteEViraElo(t *testing.T) {
 	}
 }
 
-// TestOCartaoDaMagiaDizEDeixaAbrirAEscola: o elo, ponta a ponta.
-func TestOCartaoDaMagiaDizEDeixaAbrirAEscola(t *testing.T) {
+// TestTheSpellCardTellsAndLetsYouOpenTheSchool: o elo, ponta a ponta.
+func TestTheSpellCardTellsAndLetsYouOpenTheSchool(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -197,7 +197,7 @@ func TestOCartaoDaMagiaDizEDeixaAbrirAEscola(t *testing.T) {
 	}
 }
 
-// TestAPericiaTrazOQueOLivroImprimeAoLadoDoNome (ALE-264).
+// TestTheExpertiseCarriesWhatTheBookPrintsBesideTheName (ALE-264).
 //
 // As perícias existiam como lista de NOME e ATRIBUTO dentro do `options.json` —
 // sem página, sem as duas regras da Tabela 2-1 e sem lugar para um elo apontar.
@@ -205,7 +205,7 @@ func TestOCartaoDaMagiaDizEDeixaAbrirAEscola(t *testing.T) {
 // O CONTROLE que vale mais que os números: o atributo do catálogo novo é
 // comparado com o do `options.json`, que é o que o motor usa para ROLAR. As duas
 // fontes concordarem é o que diz que a leitura da tabela do livro está certa.
-func TestAPericiaTrazOQueOLivroImprimeAoLadoDoNome(t *testing.T) {
+func TestTheExpertiseCarriesWhatTheBookPrintsBesideTheName(t *testing.T) {
 	pericias := book.Expertises()
 	if len(pericias) != 29 {
 		t.Fatalf("%d perícias — o livro tem 29", len(pericias))
@@ -240,8 +240,8 @@ func TestAPericiaTrazOQueOLivroImprimeAoLadoDoNome(t *testing.T) {
 	}
 }
 
-// TestAClasseLigaAsPericiasQueTreina: citação sem destino é texto morto.
-func TestAClasseLigaAsPericiasQueTreina(t *testing.T) {
+// TestTheClassLinksTheExpertisesItTrains: citação sem destino é texto morto.
+func TestTheClassLinksTheExpertisesItTrains(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 

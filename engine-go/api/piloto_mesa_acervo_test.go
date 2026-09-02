@@ -36,7 +36,7 @@ func (f pilotoFixture) guardaOLugar(t *testing.T, nome string) int64 {
 // Reabrir o que já está aberto criaria uma SEGUNDA aba da mesma cena, e as duas
 // seriam duas verdades sobre onde as peças estão — com a que fechasse por último
 // apagando a outra no acervo, porque o `Archive` sobrescreve pelo nome.
-func TestOAcervoDizQualCenaEstaNaMesa(t *testing.T) {
+func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "taverna") // "Taverna do Javali"
 	f.guardaOLugar(t, "Taverna do Javali")
@@ -92,7 +92,7 @@ func aLinhaDoAcervo(t *testing.T, tela, marca string) string {
 // o mesmo nome. O mestre veria a taverna que ele apagou ontem reaparecer
 // sozinha — e desfazer sozinho o trabalho de quem estava limpando o acervo é a
 // pior forma de um botão mentir.
-func TestNaoSeApagaDoAcervoAcenaQueEstaNaMesa(t *testing.T) {
+func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "taverna")
 	id := f.guardaOLugar(t, "Taverna do Javali")
@@ -130,7 +130,7 @@ func TestNaoSeApagaDoAcervoAcenaQueEstaNaMesa(t *testing.T) {
 // É a porta que faltava: o teto vive no `Open`, e o acervo entrou por outro
 // caminho. Sem ele, um mestre com oito cenas abertas passaria da nona pela lista
 // de lugares — que é justamente onde há 148 botões para clicar.
-func TestReabrirRespeitaOTetoDeAbertos(t *testing.T) {
+func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "taverna")
 	id := f.guardaOLugar(t, "Taverna do Javali")

@@ -25,9 +25,9 @@ import (
 // tabela — escapa inteira. Esse é o regime de ENUMERAÇÃO de que fala o
 // CLAUDE.md: o guarda cobre por amostragem enquanto as chamadas forem
 // literais, e no dia em que uma vira indireta ela precisa trazer o próprio
-// guarda. O `TestOsIconesDaTrilhaDoMestreExistem`, logo abaixo, é esse guarda
+// guarda. O `TestTheGmTrailIconsExist`, logo abaixo, é esse guarda
 // para a primeira indireta que apareceu.
-func TestTodoIconePedidoExisteNoGerado(t *testing.T) {
+func TestEveryRequestedIconExistsInTheGeneratedFile(t *testing.T) {
 	gerado, err := os.ReadFile("icons.templ")
 	if err != nil {
 		t.Fatalf("ler o gerado: %v", err)

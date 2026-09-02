@@ -16,7 +16,7 @@ import (
 //
 // O exemplo trabalhado do próprio livro é o caso deste teste: ele separa
 // "ultrapassar" de "chegar em", que é a leitura que a frase deixa em aberto.
-func TestCargaSeguraExemploDoLivroForca2(t *testing.T) {
+func TestSafeLoadTheBookExampleWithStrength2(t *testing.T) {
 	limite := 14 // 10 + 2×2, o número que o livro escreve para Força 2.
 	casos := []struct {
 		espacos     float64
@@ -52,7 +52,7 @@ func TestCargaSeguraExemploDoLivroForca2(t *testing.T) {
 // A linha de inventário guarda QUANTIDADE e ESPAÇO separados, então a soma é
 // quantidade × espaço — e o caso de meio espaço é o único em que somar as
 // linhas em vez de multiplicar passaria despercebido.
-func TestCargaMultiplicaQuantidadePeloEspacoDoItem(t *testing.T) {
+func TestLoadMultipliesQuantityByTheItemSlots(t *testing.T) {
 	ch := Character{Items: []CharacterItem{
 		{Name: "Poção de cura", Quantity: 2, Slots: 0.5},
 		{Name: "Montante", Quantity: 1, Slots: 2},
@@ -67,7 +67,7 @@ func TestCargaMultiplicaQuantidadePeloEspacoDoItem(t *testing.T) {
 // O milheiro é COMPLETO: 999 moedas não fecham o primeiro e não ocupam nada.
 // Sem esta leitura o dinheiro ou não pesa nunca, ou pesa um espaço inteiro por
 // um punhado de tibares.
-func TestCargaDoDinheiroContaMilheirosCompletos(t *testing.T) {
+func TestMoneyLoadCountsWholeThousands(t *testing.T) {
 	casos := map[float64]float64{
 		0:    0,
 		999:  0,
@@ -94,7 +94,7 @@ func TestCargaDoDinheiroContaMilheirosCompletos(t *testing.T) {
 // p141: "sofre penalidade de armadura –5 e seu deslocamento é reduzido em –3m".
 // p153: a penalidade de armadura vale em "testes de Acrobacia, Furtividade e
 // Ladinagem".
-func TestSobrecargaPenalizaDeslocamentoEPericiasDeArmadura(t *testing.T) {
+func TestOverloadPenalizesDisplacementAndArmorExpertises(t *testing.T) {
 	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "parity")))
 	pericias := []CharacterExpertise{
 		{Name: "Furtividade", Attribute: "dexterity"},

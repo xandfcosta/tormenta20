@@ -25,8 +25,8 @@ func sessaoDoBanco(t *testing.T, f pilotoFixture) (status string, comeco bool) {
 	return s.Status, s.Startedat.Valid
 }
 
-// TestIniciarSignificaTresCoisas — é por isto que a regra merece função própria.
-func TestIniciarSignificaTresCoisas(t *testing.T) {
+// TestStartingMeansThreeThings — é por isto que a regra merece função própria.
+func TestStartingMeansThreeThings(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 
@@ -73,13 +73,13 @@ func TestIniciarSignificaTresCoisas(t *testing.T) {
 	}
 }
 
-// TestEncerrarUmaSessaoQueNuncaComecouERecusado.
+// TestEndingASessionThatNeverStartedIsRefused.
 //
 // A recusa é DIFERENTE do "já ativa" do caso acima, e a diferença é o ponto:
 // encerrar uma planejada não é um clique repetido, é um gesto sobre a coisa
 // errada. Carimbar um fim numa noite que não teve início deixaria o histórico
 // dizendo que ela aconteceu.
-func TestEncerrarUmaSessaoQueNuncaComecouERecusado(t *testing.T) {
+func TestEndingASessionThatNeverStartedIsRefused(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 	sess, err := f.s.queries.GetSession(ctx, f.sessionID)
@@ -115,12 +115,12 @@ func TestEncerrarUmaSessaoQueNuncaComecouERecusado(t *testing.T) {
 	}
 }
 
-// TestReiniciarOCombateEsvaziaAFilaESoIsso.
+// TestRestartingCombatEmptiesTheTrackerAndNothingElse.
 //
 // Reiniciar NÃO é encerrar: a sessão continua ao vivo, o que some é a ordem e
 // os turnos. Os dois verbos morando na mesma tela, um do lado do outro, é
 // exatamente onde a confusão custaria a noite de alguém.
-func TestReiniciarOCombateEsvaziaAFilaESoIsso(t *testing.T) {
+func TestRestartingCombatEmptiesTheTrackerAndNothingElse(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 	f.cena(t)
