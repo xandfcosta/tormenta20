@@ -1,6 +1,7 @@
 package api
 
 import (
+	"t20engine/web/routes"
 	"t20engine/book"
 	"fmt"
 	"net/url"
@@ -148,7 +149,7 @@ templ seloDaPagina(livro enderecoDoLivro, pagina int, termo string) {
 // "Medo" caía numa lista de oito grupos com o verbete no quinto.
 templ eloParaOAcervo(aba, id, nome string) {
 	<a
-		href={ templ.SafeURL(destinoDaEntrada(aba, id)) }
+		href={ templ.SafeURL(routes.MasterEntry(aba, id)) }
 		data-aba={ aba }
 		data-entrada={ id }
 		data-on:click={ abreOVerbetePorCima }

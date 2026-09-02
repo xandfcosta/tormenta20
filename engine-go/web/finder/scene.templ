@@ -1,4 +1,4 @@
-package api
+package finder
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ import "strconv"
 // só o `#buscador-achados` de dentro é —, e essa divisão importa: o
 // `data-bind:buscador` do campo vive fora do que o servidor troca, então o que
 // a pessoa está digitando nunca é redeclarado por baixo dela.
-templ buscadorDoLivro() {
+templ Dialog() {
 	<dialog
 		id="buscador"
 		data-preserve-attr="open"
@@ -44,14 +44,14 @@ templ buscadorDoLivro() {
 				id="buscador-campo"
 				type="text"
 				data-bind:buscador
-				data-on:input__debounce.200ms={ "@get('" + rotaDoBuscador + "')" }
+				data-on:input__debounce.200ms={ "@get('" + finderRoute + "')" }
 				autocomplete="off"
 				placeholder="Buscar no livro"
 				aria-label="Buscar no livro"
 				class="min-h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 			/>
 		</div>
-		@achadosDoBuscador(buscadorView{})
+		@finderResults(finderView{})
 		<p aria-hidden="true" class="flex items-center justify-end gap-1 border-t border-grimorio-iron px-3 py-1.5 text-3xs text-muted-foreground">
 			@ui.Key("↑↓")
 			{ " navegar" }
@@ -63,12 +63,12 @@ templ buscadorDoLivro() {
 	</dialog>
 }
 
-// achadosDoBuscador é o único pedaço REMENDADO, e por isso tem id próprio.
+// finderResults é o único pedaço REMENDADO, e por isso tem id próprio.
 //
 // `aria-live="polite"` porque a lista muda sem gesto nenhum de quem lê: o
 // resultado chega 200ms depois da tecla, e sem o anúncio quem usa leitor de tela
 // digita no escuro.
-templ achadosDoBuscador(v buscadorView) {
+templ finderResults(v finderView) {
 	<div id="buscador-achados" aria-live="polite" class="max-h-[60vh] overflow-y-auto p-2">
 		if !v.Buscando() {
 			<p class="px-2 py-8 text-center text-xs text-muted-foreground">
@@ -80,7 +80,7 @@ templ achadosDoBuscador(v buscadorView) {
 			</p>
 		} else {
 			// O AVISO da segunda passada: sem ele, uma lista em que o termo não
-			// aparece em nome nenhum parece a lista errada. Ver `buscaNoLivro`.
+			// aparece em nome nenhum parece a lista errada. Ver `searchTheBook`.
 			if v.PeloTexto {
 				<p class="px-2 pt-2 text-3xs text-muted-foreground">
 					{ "Nenhum nome casa — estes mencionam “" + v.Busca + "” no texto da regra." }

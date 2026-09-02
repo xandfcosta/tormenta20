@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"t20engine/book"
+	"t20engine/web/routes"
 	"testing"
 )
 
@@ -368,7 +369,7 @@ func TestTheBestiaryBaseHasNoDefault(t *testing.T) {
 // literal por um campo, e este guarda prende que o campo chegou preenchido.
 func TestTheGmSceneTalksToTheGmRoute(t *testing.T) {
 	v := (&Server{}).carregaBestiario(criteriosDoBestiario{NDMax: 20})
-	if v.Base != rotaDoBestiarioDoMestre {
+	if v.Base != routes.MasterBestiary {
 		t.Errorf("a cena do mestre nasceu com Base %q", v.Base)
 	}
 }

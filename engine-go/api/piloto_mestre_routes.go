@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/book"
+	"t20engine/web/routes"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -410,9 +411,9 @@ func criteriosDoPedidoDoAcervo(r *http.Request) criteriosDoAcervo {
 	return c
 }
 
-// rotaDoBestiarioDoMestre é a base da CENA do mestre. O painel da Mesa tem a
-// sua, e as duas dividem o mesmo desenho — ver `bestiarioView.Base`.
-const rotaDoBestiarioDoMestre = "/mestre/bestiario"
+// O endereço desta cena mora em `web/routes` desde a ALE-278: o buscador linka
+// para ela, e depois de virar pacote ele não alcança mais uma constante daqui.
+// O critério de entrada de lá é estreito — só endereço citado de OUTRA cena.
 
 // handleBestiario serve os DOIS casos numa rota, como a cena de campanhas: a
 // carga fria devolve a página inteira e o Datastar recebe só o remendo da cena.
@@ -588,7 +589,7 @@ func apertaND(n, padrao float64) float64 {
 // carregaBestiario com os critérios já lidos. Envelope fino sobre a função da
 // camada de dados, para o handler não repetir a ordem dos cinco argumentos.
 func (s *Server) carregaBestiario(c criteriosDoBestiario) bestiarioView {
-	v := carregaBestiarioDe(rotaDoBestiarioDoMestre, s.livro.endereco, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
+	v := carregaBestiarioDe(routes.MasterBestiary, s.livro.endereco, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
 	v.Abrir = c.Abrir
 	return v
 }

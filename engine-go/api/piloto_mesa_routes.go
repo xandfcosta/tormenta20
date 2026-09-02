@@ -3,8 +3,10 @@ package api
 import (
 	"context"
 	"t20engine/web/door"
+	"t20engine/web/finder"
 	"t20engine/web/grimoire"
 	"t20engine/web/hub"
+	"t20engine/web/routes"
 
 	"fmt"
 	"github.com/a-h/templ"
@@ -59,7 +61,8 @@ func (s *Server) WebRouter() http.Handler {
 		// O BUSCADOR (ALE-264) fica no grupo do Hub e não no do mestre: a caixa
 		// abre em QUALQUER cena, inclusive na Mesa, e a rota tem de existir onde
 		// quer que o ⌃K seja apertado.
-		s.BookSearchRoutes(r)
+		// O buscador não recebe nada: ele é a primeira cena sem porta (ALE-278).
+		finder.Routes(r)
 		// O VERBETE citado por um elo (ALE-264), na casca pelo mesmo motivo do
 		// buscador: a caixa abre em qualquer cena.
 		s.EntryRoutes(r)
@@ -67,11 +70,11 @@ func (s *Server) WebRouter() http.Handler {
 		// os estáticos: os estáticos são o bundle do Datastar, e isto é um
 		// arquivo do dono da mesa. Sem `LIVRO_PDF` a rota devolve 404 — o botão
 		// que a levaria também não é desenhado.
-		r.Handle(rotaDoLivro, s.LivroDoPiloto())
+		r.Handle(routes.Book, s.LivroDoPiloto())
 		// O LEITOR é uma PÁGINA e o `/livro` é o arquivo. Rotas irmãs de
 		// propósito: quem quiser o PDF cru (imprimir, buscar no visualizador do
 		// navegador) tem o endereço de sempre.
-		r.Get(rotaDoLivro+"/ler", s.handleLeitorDoLivro)
+		r.Get(routes.Book+"/ler", s.handleLeitorDoLivro)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)

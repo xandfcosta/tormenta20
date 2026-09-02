@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"t20engine/web/routes"
 
 	"t20engine/plataforma"
 	"t20engine/web/ui"
@@ -71,9 +72,9 @@ type livroServido struct {
 	endereco enderecoDoLivro
 }
 
-// rotaDoLivro é o caminho DENTRO do piloto; o público leva o `/` na frente
-// porque é isso que o navegador pede (o `buildMux` monta com `StripPrefix`).
-const rotaDoLivro = "/livro"
+// O endereço desta cena mora em `web/routes` desde a ALE-278, porque a Mesa o
+// cita. O comentário que estava aqui explicava o `StripPrefix` do `buildMux`, e
+// ele já era falso: o prefixo saiu na ALE-280.
 
 // rotaDoLeitor é o endereço PÚBLICO da cena que desenha o livro. Ela não é
 // versionada porque é uma página HTML servida com `no-store`; quem carrega
@@ -101,7 +102,7 @@ func abreOLivro(cfg plataforma.Config) livroServido {
 		caminho: cfg.LivroPDF,
 		digito:  digito,
 		endereco: enderecoDoLivro{
-			Base:     rotaDoLivro + "?v=" + digito,
+			Base:     routes.Book + "?v=" + digito,
 			Abertura: cfg.LivroAbertura,
 		},
 	}

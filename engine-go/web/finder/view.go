@@ -1,4 +1,4 @@
-package api
+package finder
 
 import (
 	"cmp"
@@ -8,6 +8,7 @@ import (
 	"strings"
 	"t20engine/book"
 	"t20engine/search"
+	"t20engine/web/routes"
 )
 
 // O BUSCADOR DO LIVRO (ALE-264): ⌃K abre uma caixa que procura nas 1.072
@@ -27,15 +28,15 @@ import (
 // era uma BUSCA pelo nome, e cair numa lista de oito grupos para achar o que se
 // escolheu é o oposto de escolher.
 
-// achadosPorGrupo corta cada grupo, e o corte é DITO na tela ("+12").
+// hitsByGroup corta cada grupo, e o corte é DITO na tela ("+12").
 //
 // Seis porque a lista inteira tem de caber sem rolagem numa janela de laptop
 // com cinco grupos possíveis. Corte silencioso seria pior que corte nenhum:
 // quem não vê o que ficou de fora conclui que não existe.
-const achadosPorGrupo = 6
+const hitsByGroup = 6
 
-// achadoDoBuscador é uma linha do resultado.
-type achadoDoBuscador struct {
+// finderHit é uma linha do resultado.
+type finderHit struct {
 	Nome    string
 	Detalhe string
 	Destino string
@@ -49,10 +50,10 @@ type achadoDoBuscador struct {
 	ponto int
 }
 
-// grupoDoBuscador é um catálogo com o que sobrou, já cortado.
-type grupoDoBuscador struct {
+// finderGroup é um catálogo com o que sobrou, já cortado.
+type finderGroup struct {
 	Rotulo  string
-	Achados []achadoDoBuscador
+	Achados []finderHit
 	// Total é antes do corte — é ele que escreve o "+12".
 	Total int
 	// Mais é para onde o "+12" leva: a cena da ferramenta com a MESMA busca.
@@ -60,11 +61,11 @@ type grupoDoBuscador struct {
 	Mais string
 }
 
-func (g grupoDoBuscador) Cortados() int { return g.Total - len(g.Achados) }
+func (g finderGroup) Cortados() int { return g.Total - len(g.Achados) }
 
-type buscadorView struct {
+type finderView struct {
 	Busca  string
-	Grupos []grupoDoBuscador
+	Grupos []finderGroup
 	// Achados é o total ANTES dos cortes de grupo.
 	Achados int
 	// PeloTexto diz que estes achados vieram da segunda passada — nenhum NOME
@@ -73,16 +74,16 @@ type buscadorView struct {
 	PeloTexto bool
 }
 
-func (v buscadorView) Buscando() bool { return strings.TrimSpace(v.Busca) != "" }
+func (v finderView) Buscando() bool { return strings.TrimSpace(v.Busca) != "" }
 
-// buscaNoLivro monta o resultado do ⌃K.
+// searchTheBook monta o resultado do ⌃K.
 //
 // A ORDEM DOS GRUPOS é a do acervo e tem razão registrada lá: condição primeiro
 // porque é a consulta mais frequente no meio do combate, criatura em seguida
 // porque é a segunda, e os três do PERSONAGEM no fim — raça, classe e deus são
 // consulta de criação de ficha, não de mesa com o combate em curso.
-func buscaNoLivro(busca string) buscadorView {
-	v := montaAchados(busca, pelosNomes)
+func searchTheBook(busca string) finderView {
+	v := buildHits(busca, pelosNomes)
 	if v.Achados > 0 || !v.Buscando() {
 		return v
 	}
@@ -94,37 +95,37 @@ func buscaNoLivro(busca string) buscadorView {
 	// Então o corpo da regra só entra quando NOME nenhum casou. Quem digita
 	// "abal" procura o verbete; quem digita "chance de falha" não sabe o nome, e
 	// é para essa pessoa que a passada existe.
-	v = montaAchados(busca, tambemPeloTexto)
+	v = buildHits(busca, tambemPeloTexto)
 	v.PeloTexto = v.Achados > 0
 	return v
 }
 
 // pelosNomes e tambemPeloTexto nomeiam as duas passadas. Um booleano cru na
-// chamada (`grupoBuscado(..., true)`) não diz nada de dentro do `grupoBuscado`.
+// chamada (`foundGroup(..., true)`) não diz nada de dentro do `foundGroup`.
 const (
 	pelosNomes      = false
 	tambemPeloTexto = true
 )
 
-func montaAchados(busca string, peloTexto bool) buscadorView {
-	v := buscadorView{Busca: busca}
+func buildHits(busca string, peloTexto bool) finderView {
+	v := finderView{Busca: busca}
 	if !v.Buscando() {
 		return v
 	}
 	a := book.Catalogs()
 	racas, classes, deuses := book.CharacterCatalogs()
-	for _, g := range []grupoDoBuscador{
-		grupoBuscado("Condições", a.Condicoes, busca, peloTexto, destinoNoAcervo("condicoes", busca), book.ConditionFields, achadoDaCondicao),
-		grupoBuscado("Criaturas", book.Creatures(), busca, peloTexto, destinoNoBestiario(busca), camposDoVerbete, achadoDoVerbete),
-		grupoBuscado("Magias", a.Magias, busca, peloTexto, destinoNoAcervo("magias", busca), book.SpellFields, achadoDaMagia),
-		grupoBuscado("Poderes", a.Poderes, busca, peloTexto, destinoNoAcervo("poderes", busca), book.PowerFields, achadoDoPoder),
-		grupoBuscado("Itens", a.Itens, busca, peloTexto, destinoNoAcervo("itens", busca), book.ItemFields, achadoDoItem),
-		grupoBuscado("Efeitos", book.EffectKinds(), busca, peloTexto, destinoNoAcervo("efeitos", busca), book.EffectFields, achadoDoEfeito),
-		grupoBuscado("Escolas", book.SpellSchools(), busca, peloTexto, destinoNoAcervo("escolas", busca), book.SchoolFields, achadoDaEscola),
-		grupoBuscado("Perícias", book.Expertises(), busca, peloTexto, destinoNoAcervo("pericias", busca), book.ExpertiseFields, achadoDaPericia),
-		grupoBuscado("Raças", racas, busca, peloTexto, destinoNoAcervo("racas", busca), book.RaceFields, achadoDaRaca),
-		grupoBuscado("Classes", classes, busca, peloTexto, destinoNoAcervo("classes", busca), book.ClassFields, achadoDaClasse),
-		grupoBuscado("Deuses", deuses, busca, peloTexto, destinoNoAcervo("deuses", busca), book.GodFields, achadoDoDeus),
+	for _, g := range []finderGroup{
+		foundGroup("Condições", a.Condicoes, busca, peloTexto, routes.MasterSearch("condicoes", busca), book.ConditionFields, conditionHit),
+		foundGroup("Criaturas", book.Creatures(), busca, peloTexto, routes.MasterBestiarySearch(busca), entryFields, entryHit),
+		foundGroup("Magias", a.Magias, busca, peloTexto, routes.MasterSearch("magias", busca), book.SpellFields, spellHit),
+		foundGroup("Poderes", a.Poderes, busca, peloTexto, routes.MasterSearch("poderes", busca), book.PowerFields, powerHit),
+		foundGroup("Itens", a.Itens, busca, peloTexto, routes.MasterSearch("itens", busca), book.ItemFields, itemHit),
+		foundGroup("Efeitos", book.EffectKinds(), busca, peloTexto, routes.MasterSearch("efeitos", busca), book.EffectFields, effectHit),
+		foundGroup("Escolas", book.SpellSchools(), busca, peloTexto, routes.MasterSearch("escolas", busca), book.SchoolFields, schoolHit),
+		foundGroup("Perícias", book.Expertises(), busca, peloTexto, routes.MasterSearch("pericias", busca), book.ExpertiseFields, expertiseHit),
+		foundGroup("Raças", racas, busca, peloTexto, routes.MasterSearch("racas", busca), book.RaceFields, raceHit),
+		foundGroup("Classes", classes, busca, peloTexto, routes.MasterSearch("classes", busca), book.ClassFields, classHit),
+		foundGroup("Deuses", deuses, busca, peloTexto, routes.MasterSearch("deuses", busca), book.GodFields, deityHit),
 	} {
 		if g.Total == 0 {
 			continue
@@ -132,11 +133,11 @@ func montaAchados(busca string, peloTexto bool) buscadorView {
 		v.Achados += g.Total
 		v.Grupos = append(v.Grupos, g)
 	}
-	ordenaPorRelevancia(v.Grupos)
+	sortByRelevance(v.Grupos)
 	return v
 }
 
-// ordenaPorRelevancia põe na frente o grupo que tem o MELHOR achado.
+// sortByRelevance põe na frente o grupo que tem o MELHOR achado.
 //
 // O defeito foi visto pelo dono na tela: digitando "medo", o verbete "Medo" —
 // nome inteiro, a pontuação máxima — aparecia no SEXTO grupo, abaixo de
@@ -146,31 +147,31 @@ func montaAchados(busca string, peloTexto bool) buscadorView {
 //
 // Estável, então a ordem da fileira continua valendo no EMPATE: dois grupos com
 // achados igualmente bons saem na ordem de sempre.
-func ordenaPorRelevancia(grupos []grupoDoBuscador) {
-	slices.SortStableFunc(grupos, func(a, b grupoDoBuscador) int {
+func sortByRelevance(grupos []finderGroup) {
+	slices.SortStableFunc(grupos, func(a, b finderGroup) int {
 		return cmp.Compare(b.melhorPonto(), a.melhorPonto())
 	})
 }
 
 // melhorPonto é a nota do primeiro achado — a lista já vem ordenada pelo
-// `melhorPrimeiro`, então o primeiro é o melhor.
-func (g grupoDoBuscador) melhorPonto() int {
+// `bestFirst`, então o primeiro é o melhor.
+func (g finderGroup) melhorPonto() int {
 	if len(g.Achados) == 0 {
 		return 0
 	}
 	return g.Achados[0].ponto
 }
 
-// grupoBuscado pontua, ordena e corta um catálogo.
+// foundGroup pontua, ordena e corta um catálogo.
 //
 // `campos` é a MESMA função que a cena dos catálogos usa para filtrar, e reusá-la
 // é o que faz as duas superfícies concordarem sobre o que é buscável — uma
 // segunda lista de campos aqui divergiria no dia em que alguém acrescentasse um.
-func grupoBuscado[T any](
+func foundGroup[T any](
 	rotulo string, lista []T, busca string, peloTexto bool, mais string,
-	campos func(T) []string, comoAchado func(T) achadoDoBuscador,
-) grupoDoBuscador {
-	g := grupoDoBuscador{Rotulo: rotulo, Mais: mais}
+	campos func(T) []string, comoAchado func(T) finderHit,
+) finderGroup {
+	g := finderGroup{Rotulo: rotulo, Mais: mais}
 	for _, e := range lista {
 		// A linha é montada ANTES de saber se ela passa, e é deliberado: pegar o
 		// nome de `campos(e)[0]` seria depender de uma ordem que nada garante, e
@@ -188,20 +189,20 @@ func grupoBuscado[T any](
 		g.Achados = append(g.Achados, a)
 	}
 	g.Total = len(g.Achados)
-	slices.SortStableFunc(g.Achados, melhorPrimeiro)
-	if len(g.Achados) > achadosPorGrupo {
-		g.Achados = g.Achados[:achadosPorGrupo]
+	slices.SortStableFunc(g.Achados, bestFirst)
+	if len(g.Achados) > hitsByGroup {
+		g.Achados = g.Achados[:hitsByGroup]
 	}
 	return g
 }
 
-// melhorPrimeiro: pontuação alta na frente e, empatados, o nome mais CURTO.
+// bestFirst: pontuação alta na frente e, empatados, o nome mais CURTO.
 //
 // O desempate por tamanho não é estético: com "fogo", "Bola de Fogo" e
 // "Explosão de Fogo Congelante" pontuam igual, e o nome curto é o que a pessoa
 // tem mais chance de estar procurando. O terceiro critério é o nome, para a
 // ordem não depender da ordem de leitura do catálogo.
-func melhorPrimeiro(a, b achadoDoBuscador) int {
+func bestFirst(a, b finderHit) int {
 	if d := cmp.Compare(b.ponto, a.ponto); d != 0 {
 		return d
 	}
@@ -213,133 +214,124 @@ func melhorPrimeiro(a, b achadoDoBuscador) int {
 
 // ── de cada catálogo para uma linha ──────────────────────────────────────────
 
-// camposDoVerbete é o irmão dos `camposDaX` do acervo, e o bestiário não tinha
+// entryFields é o irmão dos `camposDaX` do acervo, e o bestiário não tinha
 // um: a cena dele filtra por nome e tipo em `filtraCriaturas`. Aqui ele precisa
-// existir para o verbete passar pelo mesmo `grupoBuscado` que os outros quatro.
-func camposDoVerbete(m book.Entry) []string {
+// existir para o verbete passar pelo mesmo `foundGroup` que os outros quatro.
+func entryFields(m book.Entry) []string {
 	return append([]string{m.Name, book.TypeName(m.Tipo)}, m.SpecialAbilities...)
 }
 
-func achadoDaCondicao(c book.Condition) achadoDoBuscador {
+func conditionHit(c book.Condition) finderHit {
 	detalhe := "Condição"
 	if c.UpgradesTo != "" {
 		detalhe = "Condição · agrava para " + book.ConditionName(c.UpgradesTo)
 	}
-	return achadoDoBuscador{Nome: c.Name, Detalhe: detalhe, Destino: destinoDaEntrada("condicoes", c.ID), Pagina: c.BookPage}
+	return finderHit{Nome: c.Name, Detalhe: detalhe, Destino: routes.MasterEntry("condicoes", c.ID), Pagina: c.BookPage}
 }
 
-func achadoDaMagia(m book.Spell) achadoDoBuscador {
-	return achadoDoBuscador{
+func spellHit(m book.Spell) finderHit {
+	return finderHit{
 		Nome:    m.Name,
 		Detalhe: fmt.Sprintf("%dº círculo · %s", m.Circle, book.CastingName(m.Execution)),
-		Destino: destinoDaEntrada("magias", m.ID),
+		Destino: routes.MasterEntry("magias", m.ID),
 		Pagina:  m.BookPage,
 	}
 }
 
-func achadoDoPoder(p book.Power) achadoDoBuscador {
-	return achadoDoBuscador{Nome: p.Name, Detalhe: p.Fonte, Destino: destinoDaEntrada("poderes", p.ID), Pagina: p.BookPage}
+func powerHit(p book.Power) finderHit {
+	return finderHit{Nome: p.Name, Detalhe: p.Fonte, Destino: routes.MasterEntry("poderes", p.ID), Pagina: p.BookPage}
 }
 
-func achadoDoItem(i book.Item) achadoDoBuscador {
-	return achadoDoBuscador{
+func itemHit(i book.Item) finderHit {
+	return finderHit{
 		Nome:    i.Name,
 		Detalhe: book.CategoryName(i.Category),
-		Destino: destinoDaEntrada("itens", i.ID),
+		Destino: routes.MasterEntry("itens", i.ID),
 		Pagina:  i.BookPage,
 	}
 }
 
-func achadoDoEfeito(e book.EffectKind) achadoDoBuscador {
-	return achadoDoBuscador{
+func effectHit(e book.EffectKind) finderHit {
+	return finderHit{
 		Nome:    e.Name,
 		Detalhe: "Tipo de efeito",
-		Destino: destinoDaEntrada("efeitos", e.ID),
+		Destino: routes.MasterEntry("efeitos", e.ID),
 		Pagina:  e.BookPage,
 	}
 }
 
-func achadoDaEscola(e book.SpellSchool) achadoDoBuscador {
-	return achadoDoBuscador{
+func schoolHit(e book.SpellSchool) finderHit {
+	return finderHit{
 		Nome:    e.Name,
 		Detalhe: "Escola de magia",
-		Destino: destinoDaEntrada("escolas", e.ID),
+		Destino: routes.MasterEntry("escolas", e.ID),
 		Pagina:  e.BookPage,
 	}
 }
 
-func achadoDaPericia(p book.Expertise) achadoDoBuscador {
+func expertiseHit(p book.Expertise) finderHit {
 	detalhe := "Perícia · " + book.AttributeAbbrev(p.Attribute)
 	if p.SoTreinada {
 		detalhe += " · só treinada"
 	}
-	return achadoDoBuscador{
+	return finderHit{
 		Nome:    p.Name,
 		Detalhe: detalhe,
-		Destino: destinoDaEntrada("pericias", p.ID),
+		Destino: routes.MasterEntry("pericias", p.ID),
 		Pagina:  p.BookPage,
 	}
 }
 
-func achadoDaRaca(r book.Race) achadoDoBuscador {
-	return achadoDoBuscador{
+func raceHit(r book.Race) finderHit {
+	return finderHit{
 		Nome:    r.Name,
 		Detalhe: book.TierName(r.Tier) + " · " + r.AttributeMod.Escrito(),
-		Destino: destinoDaEntrada("racas", r.ID),
+		Destino: routes.MasterEntry("racas", r.ID),
 		Pagina:  r.BookPage,
 	}
 }
 
-func achadoDaClasse(c book.Class) achadoDoBuscador {
-	return achadoDoBuscador{
+func classHit(c book.Class) finderHit {
+	return finderHit{
 		Nome:    c.Name,
 		Detalhe: fmt.Sprintf("Classe · %d poderes", c.Poderes),
-		Destino: destinoDaEntrada("classes", c.ID),
+		Destino: routes.MasterEntry("classes", c.ID),
 		Pagina:  c.BookPage,
 	}
 }
 
-func achadoDoDeus(d book.God) achadoDoBuscador {
-	return achadoDoBuscador{
+func deityHit(d book.God) finderHit {
+	return finderHit{
 		Nome:    d.Name,
 		Detalhe: d.Portfolio,
-		Destino: destinoDaEntrada("deuses", d.ID),
+		Destino: routes.MasterEntry("deuses", d.ID),
 		Pagina:  d.BookPage,
 	}
 }
 
-func achadoDoVerbete(m book.Entry) achadoDoBuscador {
-	return achadoDoBuscador{
+func entryHit(m book.Entry) finderHit {
+	return finderHit{
 		Nome:    m.Name,
 		Detalhe: fmt.Sprintf("ND %s · %s", book.CRWritten(m.ND), book.TypeName(m.Tipo)),
-		Destino: rotaDoBestiarioDoMestre + "?criatura=" + url.QueryEscape(m.ID),
+		Destino: routes.MasterBestiary + "?criatura=" + url.QueryEscape(m.ID),
 		Pagina:  m.BookPage,
 	}
 }
 
-// destinoNoAcervo leva à cena dos catálogos com a entrada já filtrada.
+// collectionDestination leva à cena dos catálogos com a entrada já filtrada.
 //
 // Pelo NOME e não por um id na URL, e é escolha e não preguiça: a cena não tem
 // endereço para uma entrada só — ela tem `?aba=` e `?busca=`, que já são
 // endereços recarregáveis. Buscar pelo nome exato deixa a entrada sozinha na
 // lista, que é o que a pessoa pediu, sem inventar um terceiro estado de cena
 // que precisaria ser mantido junto.
-func destinoNoAcervo(aba, nome string) string {
-	return "/mestre/" + aba + "?busca=" + url.QueryEscape(nome)
-}
 
-// destinoDaEntrada é o endereço de UM verbete: a aba dele, mostrando só ele.
+// entryDestination é o endereço de UM verbete: a aba dele, mostrando só ele.
 //
-// Diferente do `destinoNoAcervo`, que faz uma BUSCA. A diferença apareceu na
+// Diferente do `collectionDestination`, que faz uma BUSCA. A diferença apareceu na
 // tela: clicar no elo "Medo" caía numa busca por "medo" nos oito catálogos, com
 // o verbete procurado espremido no quinto grupo. Quem clica num conceito pediu o
 // conceito.
-func destinoDaEntrada(aba, id string) string {
-	return "/mestre/" + aba + "?entrada=" + url.QueryEscape(id)
-}
 
-// destinoNoBestiario leva à cena do bestiário filtrada. Serve tanto para o "+12"
-// (com o termo digitado) quanto para o que o `achadoDoVerbete` faz com o id.
-func destinoNoBestiario(busca string) string {
-	return rotaDoBestiarioDoMestre + "?busca=" + url.QueryEscape(busca)
-}
+// bestiaryDestination leva à cena do bestiário filtrada. Serve tanto para o "+12"
+// (com o termo digitado) quanto para o que o `entryHit` faz com o id.
