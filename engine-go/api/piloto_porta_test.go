@@ -228,8 +228,12 @@ func TestTheDoorSaysValidationRefusalsInPortuguese(t *testing.T) {
 	}, "")
 
 	corpo := rec.Body.String()
-	if !strings.Contains(corpo, msgEmailInvalido) {
-		t.Errorf("não achei %q na tela", msgEmailInvalido)
+	// A frase escrita À MÃO, e não a constante do `account`: importar o valor de
+	// quem está sendo testado faz o teste andar junto com o defeito — trocar o
+	// texto lá passaria aqui, e é justamente o texto que o jogador lê.
+	const esperada = "E-mail inválido"
+	if !strings.Contains(corpo, esperada) {
+		t.Errorf("não achei %q na tela", esperada)
 	}
 	if strings.Contains(corpo, "must be an email") {
 		t.Error("a frase em inglês do class-validator vazou para a tela")

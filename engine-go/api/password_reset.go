@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"t20engine/account"
 	"t20engine/plataforma"
 	"time"
 
@@ -52,7 +53,7 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	if fields := ValidatePassword(body.Password); len(fields) > 0 {
+	if fields := account.ValidatePassword(body.Password); len(fields) > 0 {
 		plataforma.WriteValidationError(w, fields)
 		return
 	}

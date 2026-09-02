@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"t20engine/account"
 	"t20engine/plataforma"
 
 	"github.com/a-h/templ"
@@ -60,7 +61,7 @@ func (s *Server) handlePortaEntrarSubmit(w http.ResponseWriter, r *http.Request)
 	// A MESMA validação da API (`validateLogin`), com as chaves traduzidas para
 	// os nomes dos campos deste formulário. Uma segunda regra aqui seria uma
 	// porta mais frouxa que a outra, e a mais frouxa é a que passa a valer.
-	if fields := validateLogin(loginBody{Email: v.Email, Password: senha}); len(fields) > 0 {
+	if fields := account.ValidateLogin(account.LoginBody{Email: v.Email, Password: senha}); len(fields) > 0 {
 		v.Erros = comNomesDoFormulario(fields)
 		s.escrevePorta(w, r, http.StatusBadRequest, paginaEntrar(v))
 		return
@@ -107,12 +108,12 @@ func (s *Server) handlePortaCriarContaSubmit(w http.ResponseWriter, r *http.Requ
 		Convite: r.PostFormValue("convite"),
 	}
 	senha := r.PostFormValue("senha")
-	corpo := registerBody{
+	corpo := account.RegisterBody{
 		Email: v.Email, Password: senha, InviteToken: v.Convite,
 		Name: nomeOuNada(v.Nome),
 	}
 
-	v.Erros = comNomesDoFormulario(validateRegister(corpo))
+	v.Erros = comNomesDoFormulario(account.ValidateRegister(corpo))
 	// A conferência de senha é do FORMULÁRIO e não da API — o `confirmar` não
 	// existe no corpo JSON. Ela roda no SERVIDOR e não só no `data-on:input`,
 	// senão a página deixaria de proteger contra o typo com JavaScript
@@ -171,7 +172,7 @@ func (s *Server) handlePortaRedefinirSubmit(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	v.Erros = comNomesDoFormulario(validatePassword(senha))
+	v.Erros = comNomesDoFormulario(account.ValidatePassword(senha))
 	if r.PostFormValue("confirmar") != senha {
 		v.Erros["confirmar"] = []string{avisoConfere}
 	}

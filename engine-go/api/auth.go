@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"t20engine/account"
 	"t20engine/plataforma"
 	"time"
 
@@ -37,31 +38,20 @@ func (s *Server) authUser(u sqlcgen.User) AuthUser {
 	return out
 }
 
-type registerBody struct {
-	Email    string  `json:"email"`
-	Password string  `json:"password"`
-	Name     *string `json:"name"`
-	// InviteToken is the single-use link the admin handed the player. Required
-	// for everyone but the ADMIN_EMAILS addresses (ALE-120).
-	InviteToken string `json:"inviteToken"`
-}
-
-type loginBody struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
+// A FORMA dos dois pedidos mora no `account` desde a ALE-278, junto com as
+// validações que a lê. Aqui ficou o handler.
 
 // handleRegister creates a user (bcrypt), issues the session cookie, returns the
 // AuthUser. 201 on success; 409 on a duplicate email; 403 without a usable
 // invite. Since ALE-119 the app answers on the LAN, so registration is no longer
 // open — see registrationInvite.
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
-	var body registerBody
+	var body account.RegisterBody
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	body.Email = plataforma.NormalizeEmail(body.Email)
-	if fields := validateRegister(body); len(fields) > 0 {
+	if fields := account.ValidateRegister(body); len(fields) > 0 {
 		plataforma.WriteValidationError(w, fields)
 		return
 	}
@@ -85,7 +75,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 // whichever transport reached it first — and it only shows up when a second
 // one arrives (ALE-229). Worth naming: it is not a coincidence, it is what a
 // codebase with exactly one transport looks like.
-func (s *Server) createAccount(ctx context.Context, body registerBody) (sqlcgen.User, error) {
+func (s *Server) createAccount(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error) {
 	invite, err := s.registrationInvite(ctx, body.Email, body.InviteToken)
 	if err != nil {
 		return sqlcgen.User{}, err
@@ -137,11 +127,11 @@ func writeRegisterError(w http.ResponseWriter, err error, email string) {
 
 // handleLogin validates credentials, issues the cookie, returns AuthUser (200).
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
-	var body loginBody
+	var body account.LoginBody
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	if fields := validateLogin(body); len(fields) > 0 {
+	if fields := account.ValidateLogin(body); len(fields) > 0 {
 		plataforma.WriteValidationError(w, fields)
 		return
 	}

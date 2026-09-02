@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"t20engine/account"
 	"t20engine/plataforma"
 	"testing"
 	"time"
@@ -21,7 +22,7 @@ const adminEmail = "dono@t20.local"
 
 // registerBodyJSON is the wire shape a browser would post.
 func registerBodyJSON(email, token string) string {
-	body, _ := json.Marshal(registerBody{Email: email, Password: "senha-da-mesa", InviteToken: token})
+	body, _ := json.Marshal(account.RegisterBody{Email: email, Password: "senha-da-mesa", InviteToken: token})
 	return string(body)
 }
 
