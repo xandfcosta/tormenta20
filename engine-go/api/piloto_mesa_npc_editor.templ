@@ -72,7 +72,7 @@ templ oEditorDeBloco(v mesaView) {
 			role="alert"
 			data-show="$erroDoRascunho !== ''"
 			data-text="$erroDoRascunho"
-			class="shrink-0 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs text-destructive"
+			class="shrink-0 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs text-destructive-ink"
 		></p>
 		<div class="flex shrink-0 items-center justify-end gap-2 border-t border-grimorio-iron pt-3">
 			<button
@@ -387,7 +387,7 @@ templ oBotaoDeTirarLinha(campanha, sessao int64, lista string, indice int, oQue 
 		aria-label={ "Tirar " + oQue }
 		title={ "Tirar " + oQue }
 		data-on:click={ comandoDaLista(campanha, sessao, lista, indice) }
-		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
 		@ui.Icon("Trash2", "size-4")
 	</button>

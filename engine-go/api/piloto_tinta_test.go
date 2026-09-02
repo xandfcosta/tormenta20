@@ -55,7 +55,13 @@ func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 	// AMANHÃ: no dia em que o kit for o único lugar de um token — e ele é o lugar
 	// natural para isso, já que existe para as classes serem escritas uma vez —,
 	// sem esta linha o token nasceria sem medição.
-	if len(usadas) < 20 {
+	//
+	// O PISO SUBIU DE 20 PARA 40 na ALE-276, quando os papéis semânticos entraram
+	// em `asPaletasDaCasa`: a varredura foi de 21 tintas para 43. O piso é o
+	// mesmo argumento do parágrafo acima levado a sério — 20 é um número que o
+	// conjunto ANTIGO satisfazia, e deixá-lo ali faria a volta acidental da lista
+	// curta passar verde. O piso mede o conjunto de HOJE.
+	if len(usadas) < 40 {
 		t.Fatalf("a varredura achou %d tintas da casa, e são dezenas: o padrão parou de casar", len(usadas))
 	}
 
@@ -147,7 +153,28 @@ func semOsComentarios(fonte string) string {
 // asPaletasDaCasa são os prefixos de token DESTE projeto. A paleta embutida do
 // Tailwind fica de fora de propósito: ela existe sempre, e incluí-la só traria
 // o ruído das variantes sem prender defeito nenhum.
-var asPaletasDaCasa = []string{"grimorio", "arcane", "penalty", "hp", "mp", "terreno"}
+//
+// OS PAPÉIS SEMÂNTICOS ENTRARAM NA ALE-276, e a ausência deles era um buraco do
+// mesmo formato que o do kit: `text-destructive-foreground` foi escrito em três
+// sítios e o token NUNCA existiu na paleta. Este guarda passou por cima porque
+// `destructive` não estava nesta lista — ele media `grimorio-*` e os quatro
+// papéis de `-ink`, e a família semântica inteira (`primary`, `muted`, `card`,
+// `popover`, `destructive`…) estava fora da varredura.
+//
+// O sintoma foi o de sempre: o botão "Excluir a sessão" herdou o `--foreground`
+// do diálogo, saiu com tinta de pergaminho sobre crimson a 4,33:1, e nada
+// falhou — nem o `templ generate`, nem o `go build`, nem este guarda. Quem
+// acusou foi um caso de e2e que ainda não existia.
+//
+// A lista é a dos `--color-*` que o `@theme` do `index.css` declara, menos o
+// que a paleta embutida do Tailwind já cobre. Token semântico novo entra aqui
+// junto com a linha do `@theme` — as duas metades do mesmo ato.
+var asPaletasDaCasa = []string{
+	"grimorio", "arcane", "penalty", "hp", "mp", "terreno",
+	"accent", "background", "bonus", "border", "card", "destructive",
+	"foreground", "input", "marker", "muted", "popover", "primary",
+	"ring", "secondary", "warning",
+}
 
 var oUtilitarioDeCor = regexp.MustCompile(
 	`\b(?:text|bg|border|ring|outline|fill|stroke|decoration|shadow|from|via|to)-([a-z]+(?:-[a-z0-9]+)*)`)

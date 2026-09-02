@@ -351,7 +351,7 @@ func configDaSessao(v mesaView) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<button type=\"button\" data-on:click=\"document.getElementById('config-da-sessao').close(); document.getElementById('excluir-a-sessao').showModal()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Excluir</button>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<button type=\"button\" data-on:click=\"document.getElementById('config-da-sessao').close(); document.getElementById('excluir-a-sessao').showModal()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive-ink outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Excluir</button>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -398,14 +398,14 @@ func confirmaExcluirSessao(v mesaView) templ.Component {
 			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<dialog id=\"excluir-a-sessao\" data-preserve-attr=\"open\" aria-labelledby=\"excluir-a-sessao-titulo\" class=\"scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-destructive bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"excluir-a-sessao-titulo\" class=\"font-heading text-lg tracking-wide text-destructive\">Excluir a sessão ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<dialog id=\"excluir-a-sessao\" data-preserve-attr=\"open\" aria-labelledby=\"excluir-a-sessao-titulo\" class=\"scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-destructive bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"excluir-a-sessao-titulo\" class=\"font-heading text-lg tracking-wide text-destructive-ink\">Excluir a sessão ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(v.SessionNum))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 166, Col: 139}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 166, Col: 143}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {

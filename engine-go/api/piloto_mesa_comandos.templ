@@ -39,7 +39,7 @@ templ controlesDoMestre(v mesaView, r mestreView) {
 			data-show="$erroDoComando != ''"
 			data-text="$erroDoComando"
 			aria-live="assertive"
-			class="order-last w-full text-xs text-destructive"
+			class="order-last w-full text-xs text-destructive-ink"
 		></p>
 		<div class="ml-auto flex flex-wrap items-center gap-2">
 			@passoDoTurno(v, "previous-turn", "Turno anterior", "‹", r.PodeAvancar)
@@ -237,7 +237,7 @@ templ encerrarCena(v mesaView) {
 	<button
 		type="button"
 		data-on:click={ comandoDaMesa(v, "POST", "scene/end") }
-		class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>Encerrar cena</button>
 }
 

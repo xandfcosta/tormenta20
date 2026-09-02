@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 import { expectDentroDaJanela } from './support/geometry'
-import { textoComContrasteBaixo } from './support/contraste'
+import { medeOContraste, textoComContrasteBaixo } from './support/contraste'
 
 /**
  * As DUAS telas do piloto Datastar (ALE-219): a Mesa do jogador e a
@@ -39,6 +39,63 @@ test.describe('Mesa do jogador (piloto Datastar)', () => {
     await expect(page.getByRole('heading', { name: 'Iniciativa', exact: true })).toBeVisible()
 
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na Mesa').toEqual([])
+  })
+})
+
+/**
+ * A MESMA cena, medida pelo OUTRO papel (ALE-276).
+ *
+ * O caso acima entra com `.auth/player.json`, e por isso mediu METADE da Mesa
+ * durante toda a vida dele. Não é uma cena esquecida numa lista — é a segunda
+ * forma de "um guarda só mede o que VISITA" que o CLAUDE.md descreve: a tela
+ * RAMIFICA pelo dado, e percorrer a navegação não é cobertura. O diálogo de
+ * configuração da sessão nasce dentro de um `if v.Mestre != nil`, então para o
+ * jogador ele não existe no HTML, e o guarda passou por cima dele desde sempre.
+ *
+ * # O QUARTO texto da issue não mora aqui, e isso é para saber
+ *
+ * A ALE-276 lista quatro reprovados; este caso mede TRÊS. O que falta é o
+ * `Encerrar` do diálogo "Encerrar o tabuleiro?", que só existe no HTML quando
+ * há tabuleiro aberto — a mesma família de novo, um degrau abaixo: a cena
+ * ramifica pelo dado, e a sessão 4 não tem tabuleiro. Ele foi consertado pelo
+ * TOKEN e não por este caso, e não vale abrir um tabuleiro aqui só para
+ * remedi-lo: ele usa exatamente o par de tinta que o "Excluir a sessão" já
+ * prende três linhas abaixo, e uma regra se prende UMA vez. Quem o segura na
+ * camada barata é o `TestEveryHouseTintExistsInTheStylesheet`, que varre a
+ * FONTE e não depende de estado nenhum do banco.
+ *
+ * # O clique é CONTROLE, e não o que torna o texto mensurável
+ *
+ * O medidor já conta o diálogo FECHADO — ele olha o `display` do PRÓPRIO nó, e
+ * um filho de um `<dialog>` fechado tem o `display` dele. Abrir não muda o
+ * denominador (medido na ficha, ALE-272: 809 antes e 809 depois do clique). O
+ * clique está aqui para provar que a superfície do mestre EXISTE nesta página:
+ * sem ele, o dia em que o botão sumisse deixaria este caso VERDE medindo a Mesa
+ * do jogador com outro login, que é exatamente o defeito que a issue veio
+ * consertar.
+ *
+ * O denominador é a outra metade do controle, e é para isso que o medidor
+ * devolve `medidos`: "nada reprovou" e "não medi nada" são a mesma cor no
+ * terminal.
+ */
+test.describe('Mesa do mestre (piloto Datastar)', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
+    await page.goto('/mesa/1/4')
+    // A âncora é a região que só o MESTRE tem, e não o `<h2> Iniciativa` do
+    // caso do jogador: a Mesa do mestre é o trilho da ALE-211, onde a fila é um
+    // `nav` recolhido com um botão no lugar do título. Ancorar no que os dois
+    // papéis compartilham teria escondido de novo a metade que este caso veio
+    // medir.
+    await expect(page.getByRole('region', { name: 'Controles do mestre' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Configurações da sessão' }).click()
+    await expect(page.getByRole('heading', { name: /^Sessão \d/ })).toBeVisible()
+
+    const { falhas, medidos } = await medeOContraste(page)
+    expect(medidos, 'o medidor não achou texto na Mesa do mestre').toBeGreaterThan(100)
+    expect(falhas, 'texto abaixo do AA na Mesa do mestre').toEqual([])
   })
 })
 

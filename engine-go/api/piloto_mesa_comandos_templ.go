@@ -54,7 +54,7 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p><p data-show=\"$erroDoComando != ''\" data-text=\"$erroDoComando\" aria-live=\"assertive\" class=\"order-last w-full text-xs text-destructive\"></p><div class=\"ml-auto flex flex-wrap items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p><p data-show=\"$erroDoComando != ''\" data-text=\"$erroDoComando\" aria-live=\"assertive\" class=\"order-last w-full text-xs text-destructive-ink\"></p><div class=\"ml-auto flex flex-wrap items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -468,7 +468,7 @@ func encerrarCena(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Encerrar cena</button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Encerrar cena</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

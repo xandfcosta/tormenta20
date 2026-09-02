@@ -368,7 +368,7 @@ templ cadastroDaCronica(v cronicaView) {
 				Erros:         v.Erros["description"],
 			}, 6)
 			if v.Aviso != "" {
-				<p class="text-sm text-destructive">{ v.Aviso }</p>
+				<p class="text-sm text-destructive-ink">{ v.Aviso }</p>
 			}
 			<div class="flex justify-end">
 				@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
@@ -404,7 +404,7 @@ templ regrasDaCronica(v cronicaView) {
 				@interruptorDaRegra(v, regra)
 			</div>
 		}
-		<p class="text-sm text-destructive" data-show="$erroDaRegra != ''" data-text="$erroDaRegra"></p>
+		<p class="text-sm text-destructive-ink" data-show="$erroDaRegra != ''" data-text="$erroDaRegra"></p>
 	</section>
 }
 

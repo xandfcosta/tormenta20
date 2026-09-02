@@ -888,7 +888,7 @@ func oEstadoDoSalvamento() templ.Component {
 			templ_7745c5c3_Var29 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<span aria-live=\"polite\" data-text=\"$notassalvando ? 'Salvando…' : ($notas === $notassalvas ? 'Salvo' : 'Não salvo')\" data-class=\"{'text-destructive': $erroDasNotas != '', 'text-muted-foreground': $erroDasNotas == ''}\" class=\"text-xs\"></span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<span aria-live=\"polite\" data-text=\"$notassalvando ? 'Salvando…' : ($notas === $notassalvas ? 'Salvo' : 'Não salvo')\" data-class=\"{'text-destructive-ink': $erroDasNotas != '', 'text-muted-foreground': $erroDasNotas == ''}\" class=\"text-xs\"></span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

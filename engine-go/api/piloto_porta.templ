@@ -50,7 +50,7 @@ templ portaEmVolta(titulo, subtitulo string, rodape templ.Component) {
 // mover o foco: quem não vê a tela não teria como saber que a tentativa falhou.
 templ avisoDoFormulario(aviso string) {
 	if aviso != "" {
-		<p role="alert" class="text-sm text-destructive">{ aviso }</p>
+		<p role="alert" class="text-sm text-destructive-ink">{ aviso }</p>
 	}
 }
 
@@ -182,7 +182,7 @@ templ confirmacaoDeSenha(erros []string) {
 		if len(erros) > 0 {
 			<div id="confirmar-erro">
 				for _, e := range erros {
-					<p class="text-sm text-destructive">{ e }</p>
+					<p class="text-sm text-destructive-ink">{ e }</p>
 				}
 			</div>
 		}

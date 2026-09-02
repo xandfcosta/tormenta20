@@ -131,6 +131,42 @@
    * Em `0.67` a tinta rende 5,21:1 e 4,58:1: o invariante passa a valer nas duas
    * superfícies, que é o que a regra sempre disse. */
   --destructive: var(--grimorio-crimson);
+  /* AS DUAS METADES QUE FALTAVAM AO PAPEL (ALE-276).
+   *
+   * `--destructive` era o único dos papéis semânticos com a cor de PREENCHER e
+   * nenhuma das duas de ESCREVER — nem a tinta para o painel, nem a tinta para
+   * escrever sobre o próprio preenchimento. As duas ausências viraram defeito
+   * de tela, e cada uma falhou de um jeito diferente:
+   *
+   * `text-destructive` escrevia com a cor de BLOCO, e ela reprova nas TRÊS
+   * superfícies escuras — medido no navegador: 3,22:1 sobre o `--grimorio-panel`,
+   * 2,84:1 sobre o `--grimorio-panel-raised` e 3,69:1 sobre o `--grimorio-bg`.
+   * É o inverso exato da regra que o `--grimorio-crimson-bright` já declara
+   * ("o crimson é o BLOCO, o crimson-bright é a TINTA") e que o
+   * `piloto_ficha_combat.templ` já tinha consertado em UM arquivo, com a razão
+   * escrita no comentário. Os outros 34 sítios ficaram: convenção escrita e não
+   * varrida vale para os arquivos que alguém apontou.
+   *
+   * A tinta nova passa nas três, e a do meio é a que importa — é o painel mais
+   * claro que derrubou a regra da ALE-231, quando ela tinha sido verificada
+   * contra um painel só.
+   *
+   * `text-destructive-foreground` era pior, porque não era cor nenhuma: o token
+   * NUNCA existiu neste arquivo. O Tailwind não emite regra para o que não
+   * conhece, então os três sítios herdavam o `--foreground` do diálogo e o
+   * "Excluir a sessão" saía com tinta de pergaminho sobre crimson, a 4,33:1.
+   * É a armadilha do `text-grimorio-ink` outra vez, e desta vez num token
+   * SEMÂNTICO, que é onde o guarda de tinta não olhava.
+   *
+   * `-ink` e não `-text`, e não reaproveitar `penalty-ink`: a cor é a mesma
+   * hoje, e os conceitos não são. Penalidade é um número da ficha, destrutivo é
+   * o que apaga coisa — um nome por conceito, e o dia em que um dos dois mudar
+   * de tom custa uma linha em vez de uma varredura de 34.
+   *
+   * E as duas não se substituem: a tinta do painel sobre o preenchimento dá
+   * 2,36:1. Uma é para escrever AO LADO do bloco, a outra DENTRO dele. */
+  --destructive-ink: oklch(0.76 0.13 25); /* 7,62 no painel, 6,70 no raised */
+  --destructive-foreground: oklch(0.97 0.01 85); /* 4,90:1 sobre o crimson */
   --border: var(--grimorio-iron);
   --input: var(--grimorio-iron);
   --ring: var(--grimorio-gold);
@@ -370,6 +406,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-ink: var(--destructive-ink);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

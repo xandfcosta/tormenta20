@@ -110,7 +110,7 @@ func oEditorDeBloco(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><p role=\"alert\" data-show=\"$erroDoRascunho !== ''\" data-text=\"$erroDoRascunho\" class=\"shrink-0 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs text-destructive\"></p><div class=\"flex shrink-0 items-center justify-end gap-2 border-t border-grimorio-iron pt-3\"><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><p role=\"alert\" data-show=\"$erroDoRascunho !== ''\" data-text=\"$erroDoRascunho\" class=\"shrink-0 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs text-destructive-ink\"></p><div class=\"flex shrink-0 items-center justify-end gap-2 border-t border-grimorio-iron pt-3\"><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1665,7 +1665,7 @@ func oBotaoDeTirarLinha(campanha, sessao int64, lista string, indice int, oQue s
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -93,7 +93,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 			if npc.Resumo != "" {
 				<p class="truncate text-xs text-muted-foreground">{ npc.Resumo }</p>
 			} else {
-				<p class="text-xs text-destructive">O bloco deste NPC está ilegível — dá para apagar.</p>
+				<p class="text-xs text-destructive-ink">O bloco deste NPC está ilegível — dá para apagar.</p>
 			}
 		</div>
 		<div class="flex shrink-0 items-center gap-1.5">
@@ -120,7 +120,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 				type="button"
 				aria-label={ "Apagar " + npc.Nome + " do elenco" }
 				data-on:click={ comandoDoNPC(v, npc, "apagar") }
-				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("Trash2", "size-4")
 			</button>

@@ -134,7 +134,7 @@ templ TextField(c Field) {
 		if len(c.Erros) > 0 {
 			<div id={ c.Nome + "-erro" }>
 				for _, e := range c.Erros {
-					<p class="text-sm text-destructive">{ e }</p>
+					<p class="text-sm text-destructive-ink">{ e }</p>
 				}
 			</div>
 		}
@@ -207,7 +207,7 @@ templ TextArea(c Field, linhas int) {
 		if len(c.Erros) > 0 {
 			<div id={ c.Nome + "-erro" }>
 				for _, e := range c.Erros {
-					<p class="text-sm text-destructive">{ e }</p>
+					<p class="text-sm text-destructive-ink">{ e }</p>
 				}
 			</div>
 		}
