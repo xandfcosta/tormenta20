@@ -1,4 +1,4 @@
-package api
+package grimoire
 
 import (
 	"net/http"
@@ -13,20 +13,23 @@ import (
 // que mede. Ele não entra no `layout` de todas as páginas de propósito: canvas
 // e cálculo de contraste não têm o que fazer no caminho de quem só quer jogar.
 
-func (s *Server) GrimoireRoutes(r chi.Router) {
+// Routes monta o grimório no roteador de quem o hospeda.
+//
+// O endereço mora AQUI (ALE-278): a cena é a dona do que ela atende.
+func Routes(r chi.Router, s Scene) {
 	r.Get("/grimorio", s.handleGrimorio)
 }
 
-func (s *Server) handleGrimorio(w http.ResponseWriter, r *http.Request) {
-	s.WritePage(w, r, http.StatusOK, ui.Page{
+func (s Scene) handleGrimorio(w http.ResponseWriter, r *http.Request) {
+	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo:        "Grimório",
 		Forma:         ui.ShellDense,
 		TituloVisivel: "Grimório",
 		Voltar:        "/",
 		VoltarRotulo:  "Hub",
 		Scripts: []string{
-			EstaticoDoPiloto("grimorio.js"),
-			EstaticoDoPiloto("pecas-solid.js"),
+			s.deps.Asset("grimorio.js"),
+			s.deps.Asset("pecas-solid.js"),
 		},
 	}, grimorio())
 }

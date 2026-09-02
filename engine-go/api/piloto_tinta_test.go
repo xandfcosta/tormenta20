@@ -1,6 +1,7 @@
 package api
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -89,17 +90,38 @@ func TestTodaTintaDaCasaExisteNaFolha(t *testing.T) {
 func osFontesDoPiloto(t *testing.T) []string {
 	t.Helper()
 	fora := []string{}
-	for _, padrao := range []string{"piloto_*.templ", "piloto_*.go", "../web/ui/*.templ", "../web/ui/*.go"} {
-		achados, err := filepath.Glob(padrao)
-		if err != nil {
-			t.Fatalf("varrer %s: %v", padrao, err)
+	interessa := func(caminho string) bool {
+		if strings.HasSuffix(caminho, "_test.go") || strings.HasSuffix(caminho, "_templ.go") {
+			return false
 		}
-		for _, caminho := range achados {
-			if strings.HasSuffix(caminho, "_test.go") || strings.HasSuffix(caminho, "_templ.go") {
-				continue
-			}
+		return strings.HasSuffix(caminho, ".templ") || strings.HasSuffix(caminho, ".go")
+	}
+
+	achados, err := filepath.Glob("piloto_*.templ")
+	if err == nil {
+		outros, _ := filepath.Glob("piloto_*.go")
+		achados = append(achados, outros...)
+	}
+	for _, caminho := range achados {
+		if interessa(caminho) {
 			fora = append(fora, caminho)
 		}
+	}
+
+	// O `web/` INTEIRO, e não um pacote por linha. A terceira cena a sair
+	// (`web/grimoire`) caiu fora da lista enumerada e o denominador acusou na
+	// hora — 21 tintas viraram 13, porque a folha de especificação é onde mais
+	// tinta da casa é escrita. Enumerar faria a PRÓXIMA cena nascer sem medição.
+	if err := filepath.WalkDir("../web", func(caminho string, entrada fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !entrada.IsDir() && interessa(caminho) {
+			fora = append(fora, caminho)
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("varrer o web/: %v", err)
 	}
 	if len(fora) == 0 {
 		t.Fatal("nenhuma fonte do piloto encontrada: este guarda mediria o vazio")

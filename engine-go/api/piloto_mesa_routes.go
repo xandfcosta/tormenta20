@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/web/grimoire"
 	"t20engine/web/hub"
 
 	"fmt"
@@ -49,7 +50,7 @@ func (s *Server) WebRouter() http.Handler {
 		s.CharacterRoutes(r)
 		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
 		s.SheetRoutes(r)
-		s.GrimoireRoutes(r)
+		grimoire.Routes(r, grimoire.New(s))
 		s.GMToolRoutes(r)
 		// O BUSCADOR (ALE-264) fica no grupo do Hub e não no do mestre: a caixa
 		// abre em QUALQUER cena, inclusive na Mesa, e a rota tem de existir onde
