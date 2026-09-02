@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"t20engine/search"
 	"t20engine/sheet"
 )
 
@@ -70,7 +71,7 @@ func (s *Server) carregaPersonagens(ctx context.Context, eu AuthUser, busca stri
 
 	v := personagensView{Busca: busca, Total: len(elenco), TemAlgum: len(elenco) > 0}
 	for _, c := range elenco {
-		if !casaBusca(camposDeBusca(c), busca) {
+		if !search.Matches(camposDeBusca(c), busca) {
 			continue
 		}
 		v.Herois = append(v.Herois, s.cartaoDoHeroi(c))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"net/http"
+	"t20engine/book"
 	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -89,7 +90,7 @@ func (s *Server) handleBestiarioDaMesa(w http.ResponseWriter, r *http.Request) {
 // o mestre quer a linha entrando com uma rolagem, e ajusta se rolou nos dados de
 // verdade em cima da mesa. Rolar no SERVIDOR e não na página é o mesmo princípio
 // do d20 do jogador (ALE-213) — a página não faz conta que vale.
-func rascunhoDoVerbete(m verbete) map[string]any {
+func rascunhoDoVerbete(m book.Entry) map[string]any {
 	return map[string]any{
 		"pvdoverbete":     m.HP,
 		"inidoverbete":    rand.IntN(20) + 1,
@@ -152,7 +153,7 @@ func mandaParaAMesa(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, err
 	if err != nil {
 		return nil, err
 	}
-	m := verbetePorID(envio.Criatura)
+	m := book.EntryByID(envio.Criatura)
 	if m == nil {
 		return nil, fmt.Errorf("criatura %q não está no bestiário", envio.Criatura)
 	}

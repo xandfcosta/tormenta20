@@ -1,6 +1,7 @@
 package api
 
 import (
+	"t20engine/search"
 	"testing"
 )
 
@@ -22,7 +23,7 @@ func TestBuscaIgnoraAcento(t *testing.T) {
 		{"Anão", "elfo", false},
 	}
 	for _, c := range casos {
-		if got := casaBusca([]string{c.campo}, c.busca); got != c.quer {
+		if got := search.Matches([]string{c.campo}, c.busca); got != c.quer {
 			t.Errorf("casaBusca(%q, %q) = %v, queria %v", c.campo, c.busca, got, c.quer)
 		}
 	}
@@ -31,10 +32,10 @@ func TestBuscaIgnoraAcento(t *testing.T) {
 // A tolerância a typo é o que o comentário do original chama de "a parte que de
 // fato importava".
 func TestBuscaToleraLetraFaltando(t *testing.T) {
-	if !casaBusca([]string{"Necromante"}, "ncromante") {
+	if !search.Matches([]string{"Necromante"}, "ncromante") {
 		t.Error("uma letra pulada derrubou a busca — é o typo que se comete digitando rápido")
 	}
-	if !casaBusca([]string{"Sombras de Valkaria"}, "valkria") {
+	if !search.Matches([]string{"Sombras de Valkaria"}, "valkria") {
 		t.Error("typo no meio da palavra derrubou a busca")
 	}
 }
@@ -43,10 +44,10 @@ func TestBuscaToleraLetraFaltando(t *testing.T) {
 // de seis campanhas devolver a lista inteira quase sempre, e aí o filtro deixa
 // de filtrar.
 func TestBuscaNaoAceitaLetraTrocadaNemSobrando(t *testing.T) {
-	if casaBusca([]string{"Necromante"}, "nzcromante") {
+	if search.Matches([]string{"Necromante"}, "nzcromante") {
 		t.Error("letra TROCADA passou: a busca ficou frouxa demais para filtrar")
 	}
-	if casaBusca([]string{"Anão"}, "anaox") {
+	if search.Matches([]string{"Anão"}, "anaox") {
 		t.Error("letra SOBRANDO passou")
 	}
 }
@@ -68,18 +69,18 @@ func TestBuscaNaoAceitaLetraTrocadaNemSobrando(t *testing.T) {
 // ("nzcromante", "anaox"), que são os que provam que ele não ficou frouxo.
 func TestBuscaDeUmaLetraCasaEmQualquerPosicao(t *testing.T) {
 	for _, campo := range []string{"Anão", "Sombras"} {
-		if !casaBusca([]string{campo}, "a") {
+		if !search.Matches([]string{campo}, "a") {
 			t.Errorf("%q não casou com \"a\" — o match-sorter casa", campo)
 		}
 	}
-	if casaBusca([]string{"Sombras"}, "z") {
+	if search.Matches([]string{"Sombras"}, "z") {
 		t.Error(`"z" casou com "Sombras"`)
 	}
 }
 
 func TestBuscaVaziaNaoFiltraNada(t *testing.T) {
 	for _, busca := range []string{"", "   "} {
-		if !casaBusca([]string{"qualquer coisa"}, busca) {
+		if !search.Matches([]string{"qualquer coisa"}, busca) {
 			t.Errorf("busca %q filtrou — não digitar não é filtrar", busca)
 		}
 	}
@@ -89,10 +90,10 @@ func TestBuscaVaziaNaoFiltraNada(t *testing.T) {
 // a sinopse.
 func TestBuscaOlhaTodosOsCampos(t *testing.T) {
 	campos := []string{"Sombras de Valkaria", "Uma campanha sobre a Tormenta"}
-	if !casaBusca(campos, "tormenta") {
+	if !search.Matches(campos, "tormenta") {
 		t.Error("não achou pela sinopse")
 	}
-	if casaBusca(campos, "dragão") {
+	if search.Matches(campos, "dragão") {
 		t.Error("casou com o que não está em campo nenhum")
 	}
 }
@@ -114,19 +115,19 @@ func TestBuscaOlhaTodosOsCampos(t *testing.T) {
 func TestBuscaEhFrouxaSobreSinopseLongaComoNoOriginal(t *testing.T) {
 	wynlla := "Campanha de intriga arcana na Academia Arcana de Wynlla — segredos proibidos e um necromante à espreita."
 
-	if !casaBusca([]string{"Segredos de Wynlla", wynlla}, "tauron") {
+	if !search.Matches([]string{"Segredos de Wynlla", wynlla}, "tauron") {
 		t.Error("o port ficou MAIS restrito que o match-sorter — as duas telas passariam a discordar")
 	}
 	// O nome curto sozinho não casa: é a sinopse que abre a porta.
-	if casaBusca([]string{"Segredos de Wynlla"}, "tauron") {
+	if search.Matches([]string{"Segredos de Wynlla"}, "tauron") {
 		t.Error(`"tauron" casou com o NOME "Segredos de Wynlla"`)
 	}
 	// E o caso legítimo continua legítimo.
-	if !casaBusca([]string{"A Queda de Tauron"}, "tauron") {
+	if !search.Matches([]string{"A Queda de Tauron"}, "tauron") {
 		t.Error("a campanha que tem Tauron no nome não casou")
 	}
 	// Palavras coladas: o match-sorter aceita, e o port também.
-	if !casaBusca([]string{"A Queda de Tauron"}, "quedatauron") {
+	if !search.Matches([]string{"A Queda de Tauron"}, "quedatauron") {
 		t.Error("palavras coladas não casaram — o match-sorter casa")
 	}
 }

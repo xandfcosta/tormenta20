@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"t20engine/search"
 )
 
 // A cena de CAMPANHAS como dado (ALE-234) — a primeira cena de SELEÇÃO da
@@ -68,7 +69,7 @@ func (s *Server) carregaCampanhas(ctx context.Context, eu AuthUser, busca, papel
 			continue
 		}
 		// Os MESMOS campos que a SPA indexa: nome e sinopse.
-		if !casaBusca([]string{c.Name, valorOuVazio(c.Description)}, busca) {
+		if !search.Matches([]string{c.Name, valorOuVazio(c.Description)}, busca) {
 			continue
 		}
 		v.Campanhas = append(v.Campanhas, cartaoDaCampanha(c, vivas))

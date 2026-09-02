@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"strings"
+	"t20engine/book"
 	"t20engine/web/ui"
 	"testing"
 
@@ -53,7 +54,7 @@ func cenasDoPiloto(t *testing.T) map[string]string {
 
 	ctx := context.Background()
 	monta("bestiario", func() (string, error) {
-		return ui.RenderFragment(ctx, cenaDoBestiario(carregaBestiarioDe(rotaDoBestiarioDoMestre, enderecoDoLivro{}, "", nil, ndMinimo, ndMaximo, "")))
+		return ui.RenderFragment(ctx, cenaDoBestiario(carregaBestiarioDe(rotaDoBestiarioDoMestre, enderecoDoLivro{}, "", nil, book.CRMin, book.CRMax, "")))
 	})
 	monta("catalogos", func() (string, error) {
 		return ui.RenderFragment(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "condicoes"}, enderecoDoLivro{})))

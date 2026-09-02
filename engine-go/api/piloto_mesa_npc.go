@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"t20engine/book"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -62,7 +63,7 @@ func guardaOVerbeteNoElenco(st *Server, c mesaComando) (*aovivo.SessionRuntimeSt
 	if err := datastar.ReadSignals(c.R, &sinais); err != nil {
 		return nil, fmt.Errorf("não entendi o pedido: %v", err)
 	}
-	v := verbetePorID(sinais.Criatura)
+	v := book.EntryByID(sinais.Criatura)
 	if v == nil {
 		return nil, fmt.Errorf("criatura %q não está no bestiário", sinais.Criatura)
 	}
@@ -215,8 +216,8 @@ func resumoDoBloco(b creature.Block) string {
 	// rótulos faria o mesmo Ogro ser "Humanoide" numa tela e "humanoid" na
 	// outra — e o mestre não teria como saber qual das duas está certa.
 	partes := []string{
-		"ND " + ndEscrito(b.ND),
-		nomeDoTipo(b.Tipo) + " " + nomeDoTamanho(b.Size),
+		"ND " + book.CRWritten(b.ND),
+		book.TypeName(b.Tipo) + " " + book.SizeName(b.Size),
 		"PV " + strconv.Itoa(b.HP),
 		"Defesa " + strconv.Itoa(b.Defesa),
 	}

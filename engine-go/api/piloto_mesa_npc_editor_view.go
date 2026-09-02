@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"t20engine/book"
 
 	"github.com/a-h/templ"
 	"t20engine/creature"
@@ -184,8 +185,8 @@ const oTituloDoEditor = "$rascunho.nome || 'NPC sem nome'"
 // asOpcoesDoTipo e asOpcoesDoTamanho são as listas do livro, com os rótulos que o
 // bestiário já usa — um segundo par faria o mesmo Ogro ser "Humanoide" numa tela
 // e "humanoid" na outra.
-func asOpcoesDoTipo() []opcaoDoBloco    { return opcoesDe(creatureTiposNaOrdem, nomeDoTipo) }
-func asOpcoesDoTamanho() []opcaoDoBloco { return opcoesDe(creatureSizesNaOrdem, nomeDoTamanho) }
+func asOpcoesDoTipo() []opcaoDoBloco    { return opcoesDe(creatureTiposNaOrdem, book.TypeName) }
+func asOpcoesDoTamanho() []opcaoDoBloco { return opcoesDe(creatureSizesNaOrdem, book.SizeName) }
 
 type opcaoDoBloco struct {
 	Valor  string
@@ -266,7 +267,7 @@ const oPlaceholderDaHabilidade = "Faro apurado. Recebe +2 em testes de Percepç�
 // não tem ordem, e uma lista de opções que se reordena a cada abertura é uma
 // lista que ninguém consegue usar. Reusar a `tiposDeCriatura` do bestiário é o
 // que faz o mestre encontrar "Morto-vivo" no mesmo lugar nas duas telas.
-var creatureTiposNaOrdem = tiposDeCriatura
+var creatureTiposNaOrdem = book.CreatureTypes
 
 // Os TAMANHOS na ordem do livro — do menor para o maior, que é a única ordem que
 // alguém procura.

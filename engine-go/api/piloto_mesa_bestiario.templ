@@ -1,6 +1,7 @@
 package api
 
 import (
+	"t20engine/book"
 	"fmt"
 	"t20engine/web/ui"
 )
@@ -106,7 +107,7 @@ templ bestiarioDaMesa(v bestiarioView) {
 // Os campos são ligados a SINAIS e nunca recebem `value` do servidor: entrada em
 // curso é do teclado de quem digita. Quem os semeia do bloco do livro é o
 // servidor, e SÓ ao abrir outra criatura — ver `rascunhoDoVerbete`.
-templ ajusteDoVerbete(v bestiarioView, m verbete) {
+templ ajusteDoVerbete(v bestiarioView, m book.Entry) {
 	<div class="flex shrink-0 flex-wrap items-end gap-3 border-t border-grimorio-iron pt-3">
 		@campoDoAjuste("ajuste-pv", "PV", "pvdoverbete", "1", "999")
 		@campoDoAjuste("ajuste-ini", "Iniciativa", "inidoverbete", "-5", "40")

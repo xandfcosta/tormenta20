@@ -678,6 +678,32 @@ nenhum erro, só a divisão vazando por baixo.
 dela.** O índice de itens de origem lia catálogo, então era do livro — mesmo que
 só a forja o usasse.
 
+## `search`: a busca vira pacote, e a cópia que quebrou o acento morre
+
+O casamento e a pontuação de busca são 271 linhas puras — `strings`, `unicode` e
+a normalização de acento — que moravam no `api` por história e não por
+dependência. Elas viraram `search` na ALE-278.
+
+**O que decidiu não foi a pureza, foi o histórico.** Quando o catálogo tipado
+saiu para o `book`, ele precisou do `Fold` (que desacentua) e não podia importar
+o `api`. Escrevi uma cópia de nove linhas e escrevi ERRADO — chamei a função que
+só faz `ToLower` —, e `book.KeyOfName("Atuação")` passou a devolver "atuação" com
+acento: a classe deixou de ligar a perícia que treina, sem erro, sem panic, sem
+log.
+
+Um pacote apaga a cópia E a razão de haver duas. O guarda de fronteira dele tem
+lista VAZIA, e o comentário diz por que isso importa mais aqui do que na média:
+no dia em que o `search` alcançar catálogo, banco ou HTTP, o próximo que precisar
+do `Fold` vai copiar de novo — e a próxima cópia vai estar errada de outro jeito.
+
+A regra tem guarda nas DUAS camadas, e é deliberado: `search.TestFoldDropsAccents`
+prende a função, `book.TestTheAddressKeyDropsAccents` prende o efeito no endereço.
+Foi exatamente entre as duas que a cópia divergiu.
+
+> Provar o guarda custou TRÊS sabotagens, e as duas primeiras foram inertes — uma
+> não achou a linha, a outra virou erro de compilação ("declared and not used").
+> Verde depois de sabotar só significa alguma coisa quando a sabotagem CHEGOU.
+
 ## `book`: o catálogo TIPADO, lido por treze famílias
 
 A raça, a classe, a perícia, o deus, a condição, a magia, o poder, o item, a
@@ -688,6 +714,18 @@ texto em citação clicável consultando o catálogo de condições.
 Ele é a segunda camada compartilhada a sair, e a que de fato travava a divisão:
 a forja tentou sair primeiro e não conseguiu porque precisa de `racaDoLivro` e
 `classeDoLivro` para desenhar as cartas.
+
+**O BESTIÁRIO chegou depois, e o atraso foi um defeito de FERRAMENTA.** O extrator
+que separava as declarações tratava o parêntese de um bloco `var ( … )` como se
+fosse RECEPTOR de método, e engolia a declaração seguinte — que era justamente o
+carregador das criaturas. Ninguém percebeu porque o resultado foi um pacote que
+compilava com uma coisa a menos, e só apareceu quando o buscador tentou sair e
+esbarrou no verbete.
+
+A lição é sobre a ferramenta e não sobre o bestiário: **um extrator que erra por
+omissão produz um resultado que compila.** O que o teria pego na hora é o que o
+guarda de tinta faz — contar quantos itens saíram e comparar com quantos foram
+pedidos.
 
 **O guarda de fronteira dele é o mais importante da série, e a razão é
 aritmética:** treze famílias leem o livro, então quase todo pacote de cena que

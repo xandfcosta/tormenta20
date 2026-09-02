@@ -2053,7 +2053,7 @@ func verbeteDoElo(g grupoDoAcervo, livro enderecoDoLivro) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if g.Quantos() == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "<p class=\"text-xs text-muted-foreground\">Este verbete não está no acervo.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "<p class=\"text-xs text-muted-foreground\">Este book.Entry não está no acervo.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

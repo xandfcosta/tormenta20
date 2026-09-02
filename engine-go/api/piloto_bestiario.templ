@@ -252,7 +252,7 @@ templ cenaDoBestiario(v bestiarioView) {
 // O Esc e o clique fora fecham, porque diálogo sem saída é tela travada — e o
 // botão de fechar existe além dos dois, para quem navega por teclado não
 // depender de descobrir o Esc.
-templ fichaEmDialogo(m verbete, livro enderecoDoLivro) {
+templ fichaEmDialogo(m book.Entry, livro enderecoDoLivro) {
 	<div
 		class="mesa-ficha-em-dialogo fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
 		data-show="$fichaAberta"
@@ -332,7 +332,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 			@ui.SectionCaption("muted", "sr-only") {
 				Filtrar por tipo
 			}
-			for _, t := range tiposDeCriatura {
+			for _, t := range book.CreatureTypes {
 				<button
 					type="button"
 					aria-pressed={ boolTexto(v.tipoAceso(t)) }
@@ -342,7 +342,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 					} else {
 						class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					}
-				>{ nomeDoTipo(t) }</button>
+				>{ book.TypeName(t) }</button>
 			}
 		</fieldset>
 	</div>
@@ -444,9 +444,9 @@ templ listaDeVerbetes(v bestiarioView) {
 					>
 						<p class="flex flex-wrap items-baseline gap-x-1.5 text-xs font-semibold">
 							{ m.Name }
-							<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + ndEscrito(m.ND) }</span>
+							<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + book.CRWritten(m.ND) }</span>
 							<span class="text-3xs font-normal text-muted-foreground">
-								{ nomeDoTipo(m.Tipo) + " · " + nomeDoTamanho(m.Size) }
+								{ book.TypeName(m.Tipo) + " · " + book.SizeName(m.Size) }
 							</span>
 						</p>
 						<p class="font-mono text-3xs text-muted-foreground">
@@ -472,7 +472,7 @@ templ listaDeVerbetes(v bestiarioView) {
 //
 // A medida é limitada (`max-w-4xl`) porque isto é dado mais prosa: a 1920 as
 // caixas de atributo esticavam para ~220px cada para segurar dois caracteres.
-templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
+templ blocoDoVerbete(m book.Entry, livro enderecoDoLivro) {
 	// O TETO de 56rem saiu do bloco inteiro e virou teto da COLUNA dos números.
 	// O comentário que ele carregava continua certo — a 1920 as caixas de
 	// atributo esticavam para ~220px para segurar dois caracteres — mas a cura
@@ -488,9 +488,9 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 		<div class="space-y-0.5">
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
-				{ fmt.Sprintf("ND %s · %s · %s · ", ndEscrito(m.ND), nomeDoTipo(m.Tipo), nomeDoTamanho(m.Size)) }
+				{ fmt.Sprintf("ND %s · %s · %s · ", book.CRWritten(m.ND), book.TypeName(m.Tipo), book.SizeName(m.Size)) }
 				@seloDaPagina(livro, m.BookPage, m.Name)
-				{ fmt.Sprintf(" · XP %d", xpDoND(m.ND)) }
+				{ fmt.Sprintf(" · XP %d", book.XPForCR(m.ND)) }
 			</p>
 		</div>
 		// DUAS COLUNAS quando o bloco tem largura: os NÚMEROS de um lado e o
@@ -519,12 +519,12 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 				</div>
 				@secaoDoBloco("Atributos") {
 					<div class="bloco-atributos grid gap-1">
-						@estatistica("For", comSinal(m.Forca))
-						@estatistica("Des", comSinal(m.Destreza))
-						@estatistica("Con", comSinal(m.Constituicao))
-						@estatistica("Int", comSinal(m.Inteligencia))
-						@estatistica("Sab", comSinal(m.Sabedoria))
-						@estatistica("Car", comSinal(m.Carisma))
+						@estatistica("For", book.WithSignPtr(m.Forca))
+						@estatistica("Des", book.WithSignPtr(m.Destreza))
+						@estatistica("Con", book.WithSignPtr(m.Constituicao))
+						@estatistica("Int", book.WithSignPtr(m.Inteligencia))
+						@estatistica("Sab", book.WithSignPtr(m.Sabedoria))
+						@estatistica("Car", book.WithSignPtr(m.Carisma))
 					</div>
 				}
 				@secaoDoBloco("Resistências") {

@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 	"regexp"
 	"slices"
 	"strconv"
@@ -15,7 +12,7 @@ import (
 	"sync"
 	"t20engine/catalog"
 	"t20engine/engine"
-	"unicode"
+	"t20engine/search"
 )
 
 type Condition struct {
@@ -299,7 +296,7 @@ func DivinePowers() []Power {
 // chaveDoNome transforma um nome em chave de endereço: sem acento, minúsculo,
 // espaços viram hífen. É a mesma forma dos ids que os catálogos já usam.
 func KeyOfName(nome string) string {
-	return strings.ReplaceAll(dobra(nome), " ", "-")
+	return strings.ReplaceAll(search.Fold(nome), " ", "-")
 }
 
 // ── o que cada catálogo busca ────────────────────────────────────────────────
@@ -435,26 +432,6 @@ var rotuloDaCategoria = map[string]string{
 	"material":       "Material",
 	"animal":         "Animal",
 	"vehicle":        "Veículo",
-}
-
-// combina é a transformação que dobra acento: decompõe em base + marca e joga
-// as marcas fora. Construída UMA vez porque ela é cara de montar e não tem
-// estado.
-var combina = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-
-// dobra normaliza para comparação: minúsculas e SEM ACENTO.
-//
-// Cópia consciente do `busca.go` do `api`: o `book` é folha e não o importa. A
-// primeira versão desta cópia chamava o `fold` (que é só `ToLower`) achando que
-// ele desacentuava — e o efeito foi `KeyOfName("Atuação")` devolver "atuação",
-// com a classe deixando de ligar a perícia que treina. Sem erro nenhum: um elo
-// para um endereço que não existe.
-func dobra(s string) string {
-	limpo, _, err := transform.String(combina, s)
-	if err != nil {
-		return strings.ToLower(s)
-	}
-	return strings.ToLower(limpo)
 }
 
 // comSinalInt escreve o modificador como o livro: "+2", "-1".

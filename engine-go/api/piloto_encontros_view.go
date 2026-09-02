@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"t20engine/book"
 
 	"t20engine/engine"
 )
@@ -34,7 +35,7 @@ type linhaDoEncontro struct {
 
 // grupoDoEncontro é a linha já resolvida, com o ND que ela vale.
 type grupoDoEncontro struct {
-	Verbete verbete
+	Verbete book.Entry
 	Qtd     int
 	ND      float64
 }
@@ -61,7 +62,7 @@ type encontrosView struct {
 	// Busca e Achados são do painel de adicionar criatura, que reusa o filtro
 	// do bestiário — o mestre que aprendeu a buscar lá não reaprende aqui.
 	Busca   string
-	Achados []verbete
+	Achados []book.Entry
 }
 
 // ND do encontro é a SOMA dos grupos. O livro cala sobre composição mista,
@@ -98,8 +99,8 @@ func carregaEncontros(nivel, grupo int, linhas []linhaDoEncontro, busca string) 
 		Grupo: aperta(grupo, grupoMinimo, grupoMaximo, grupoPadrao),
 		Busca: busca,
 	}
-	porID := map[string]verbete{}
-	for _, m := range criaturasDoLivro() {
+	porID := map[string]book.Entry{}
+	for _, m := range book.Creatures() {
 		porID[m.ID] = m
 	}
 	for _, l := range linhas {
@@ -118,8 +119,8 @@ func carregaEncontros(nivel, grupo int, linhas []linhaDoEncontro, busca string) 
 	// criaturas abaixo do encontro empurraria a conta para fora da tela, e a
 	// conta é o assunto desta ferramenta (ALE-170).
 	if strings.TrimSpace(busca) != "" {
-		v.Achados = filtraCriaturas(criaturasDoLivro(), filtroDeCriaturas{
-			Busca: busca, NDMin: ndMinimo, NDMax: ndMaximo,
+		v.Achados = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
+			Busca: busca, NDMin: book.CRMin, NDMax: book.CRMax,
 		})
 	}
 	return v
@@ -243,7 +244,7 @@ func sinaisDosEncontros(v encontrosView) string {
 // ndArredondado é o que a tela mostra: duas casas, porque o log2 da regra da
 // dobra produz dízima e "ND 4.999999999999999" não é um número que se lê.
 func ndArredondado(nd float64) string {
-	return ndEscrito(math.Round(nd*100) / 100)
+	return book.CRWritten(math.Round(nd*100) / 100)
 }
 
 // A cor da dificuldade sai do TOM, nunca do rótulo: o texto é o que o leitor de

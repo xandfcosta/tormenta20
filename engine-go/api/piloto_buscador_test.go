@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"t20engine/search"
 	"testing"
 )
 
@@ -32,28 +33,9 @@ func TestOVerbeteCertoVemPrimeiro(t *testing.T) {
 		{"Naja", "abal", 0},
 	}
 	for _, c := range escada {
-		if ponto := pontuaBusca(c.nome, c.busca); ponto != c.esperado {
+		if ponto := search.Score(c.nome, c.busca); ponto != c.esperado {
 			t.Errorf("pontuaBusca(%q, %q) = %d, esperado %d", c.nome, c.busca, ponto, c.esperado)
 		}
-	}
-}
-
-// TestOBuracoDoQuaseIgualCabeEmDuasLetras.
-//
-// PROVADO VERMELHO: a primeira versão do `buracoAte` devolvia `len(letras)+1`
-// quando o alvo não casava, e num resto de UMA letra isso é 2 — dentro da folga.
-// O efeito medido: "abal" casava com "Naja" pelo último "a", e a busca por nome
-// devolvia 282 entradas em vez de uma. Sentinela calculado a partir da entrada é
-// sentinela que a entrada alcança.
-func TestOBuracoDoQuaseIgualCabeEmDuasLetras(t *testing.T) {
-	if !ehQuaseIgual("necromante", "ncromante") {
-		t.Error("uma letra pulada devia casar — é o typo que se comete de verdade")
-	}
-	if ehQuaseIgual("naja", "abal") {
-		t.Error("“abal” casou com “naja”: o buraco não está sendo contado")
-	}
-	if ehQuaseIgual("dragao venerave", "dv") {
-		t.Error("duas letras distantes casaram um nome inteiro")
 	}
 }
 

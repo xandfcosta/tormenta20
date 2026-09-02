@@ -1,6 +1,7 @@
 package api
 
 import (
+	"t20engine/book"
 	"t20engine/creature"
 )
 
@@ -18,7 +19,7 @@ import (
 // copiaDoVerbete copia um verbete do livro para um bloco editável do mestre.
 //
 // @example copiaDoVerbete(ogro).SourceMonsterID // "ogro"
-func copiaDoVerbete(v verbete) creature.Block {
+func copiaDoVerbete(v book.Entry) creature.Block {
 	return creature.Block{
 		ND:         v.ND,
 		Tipo:       v.Tipo,
