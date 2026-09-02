@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"t20engine/book"
+	"t20engine/search"
 )
 
 // O BUSCADOR DO LIVRO (ALE-264): ⌃K abre uma caixa que procura nas 1.072
@@ -114,7 +115,7 @@ func montaAchados(busca string, peloTexto bool) buscadorView {
 	racas, classes, deuses := book.CharacterCatalogs()
 	for _, g := range []grupoDoBuscador{
 		grupoBuscado("Condições", a.Condicoes, busca, peloTexto, destinoNoAcervo("condicoes", busca), book.ConditionFields, achadoDaCondicao),
-		grupoBuscado("Criaturas", criaturasDoLivro(), busca, peloTexto, destinoNoBestiario(busca), camposDoVerbete, achadoDoVerbete),
+		grupoBuscado("Criaturas", book.Creatures(), busca, peloTexto, destinoNoBestiario(busca), camposDoVerbete, achadoDoVerbete),
 		grupoBuscado("Magias", a.Magias, busca, peloTexto, destinoNoAcervo("magias", busca), book.SpellFields, achadoDaMagia),
 		grupoBuscado("Poderes", a.Poderes, busca, peloTexto, destinoNoAcervo("poderes", busca), book.PowerFields, achadoDoPoder),
 		grupoBuscado("Itens", a.Itens, busca, peloTexto, destinoNoAcervo("itens", busca), book.ItemFields, achadoDoItem),
@@ -177,9 +178,9 @@ func grupoBuscado[T any](
 		// medir a descrição — em silêncio, com a lista continuando a sair. São
 		// 1.072 structs por tecla digitada, com 200ms de debounce na frente.
 		a := comoAchado(e)
-		a.ponto = pontuaBusca(a.Nome, busca)
+		a.ponto = search.Score(a.Nome, busca)
 		if a.ponto == 0 && peloTexto {
-			a.ponto = pontuaTexto(campos(e), busca)
+			a.ponto = search.ScoreText(campos(e), busca)
 		}
 		if a.ponto == 0 {
 			continue
@@ -215,8 +216,8 @@ func melhorPrimeiro(a, b achadoDoBuscador) int {
 // camposDoVerbete é o irmão dos `camposDaX` do acervo, e o bestiário não tinha
 // um: a cena dele filtra por nome e tipo em `filtraCriaturas`. Aqui ele precisa
 // existir para o verbete passar pelo mesmo `grupoBuscado` que os outros quatro.
-func camposDoVerbete(m verbete) []string {
-	return append([]string{m.Name, nomeDoTipo(m.Tipo)}, m.SpecialAbilities...)
+func camposDoVerbete(m book.Entry) []string {
+	return append([]string{m.Name, book.TypeName(m.Tipo)}, m.SpecialAbilities...)
 }
 
 func achadoDaCondicao(c book.Condition) achadoDoBuscador {
@@ -307,10 +308,10 @@ func achadoDoDeus(d book.God) achadoDoBuscador {
 	}
 }
 
-func achadoDoVerbete(m verbete) achadoDoBuscador {
+func achadoDoVerbete(m book.Entry) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    m.Name,
-		Detalhe: fmt.Sprintf("ND %s · %s", ndEscrito(m.ND), nomeDoTipo(m.Tipo)),
+		Detalhe: fmt.Sprintf("ND %s · %s", book.CRWritten(m.ND), book.TypeName(m.Tipo)),
 		Destino: rotaDoBestiarioDoMestre + "?criatura=" + url.QueryEscape(m.ID),
 		Pagina:  m.BookPage,
 	}

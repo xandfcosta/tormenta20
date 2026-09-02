@@ -542,7 +542,7 @@ templ osAprimoramentosDaMagia(m book.Spell, livro enderecoDoLivro) {
 templ verbeteDoElo(g grupoDoAcervo, livro enderecoDoLivro) {
 	<div id="verbete-do-elo" class="pr-8">
 		if g.Quantos() == 0 {
-			<p class="text-xs text-muted-foreground">Este verbete não está no acervo.</p>
+			<p class="text-xs text-muted-foreground">Este book.Entry não está no acervo.</p>
 		}
 		for _, c := range g.Condicoes {
 			@cartaoDeCondicao(c, livro)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"reflect"
+	"t20engine/book"
 	"t20engine/creature"
 	"testing"
 )
@@ -41,7 +42,7 @@ func TestACopiaDoVerbeteCasaComOJS(t *testing.T) {
 	if len(oraculo.Casos) == 0 {
 		t.Fatal("o oráculo está vazio — o laço abaixo não compararia nada")
 	}
-	livro := criaturasDoLivro()
+	livro := book.Creatures()
 	if len(livro) == 0 {
 		t.Fatal("o bestiário do Go veio vazio — não há de onde copiar")
 	}
@@ -74,7 +75,7 @@ func TestACopiaDoVerbeteCasaComOJS(t *testing.T) {
 // `reflect.DeepEqual` não pega isto: duas fatias que compartilham memória são
 // profundamente iguais. Só a MUTAÇÃO revela.
 func TestACopiaNaoCompartilhaFatiaComOCatalogo(t *testing.T) {
-	livro := criaturasDoLivro()
+	livro := book.Creatures()
 	v := escolhidoOuPrimeiro(livro, "ogro")
 	if v == nil || len(v.Attacks) == 0 {
 		t.Skip("o ogro do catálogo não tem ataque para mexer")

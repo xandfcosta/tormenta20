@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"t20engine/book"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -509,7 +510,7 @@ func criteriosDoPedido(r *http.Request) criteriosDoBestiario {
 		// "cliquei numa linha" de "digitei uma letra".
 		Abrir: q.Get("abrir") != "",
 	}
-	c.NDMin, c.NDMax = faixaDeND(q.Get("nd-min"), q.Get("nd-max"))
+	c.NDMin, c.NDMax = book.CRRange(q.Get("nd-min"), q.Get("nd-max"))
 
 	sinais := struct {
 		Busca    *string   `json:"busca"`
@@ -557,7 +558,7 @@ func tiposDaURL(bruto string) []string {
 func tiposConhecidos(brutos []string) []string {
 	var fora []string
 	for _, t := range brutos {
-		if t = strings.TrimSpace(t); slices.Contains(tiposDeCriatura, t) && !slices.Contains(fora, t) {
+		if t = strings.TrimSpace(t); slices.Contains(book.CreatureTypes, t) && !slices.Contains(fora, t) {
 			fora = append(fora, t)
 		}
 	}
@@ -569,16 +570,16 @@ func tiposConhecidos(brutos []string) []string {
 func faixaDeNDNumerica(min, max *float64, padraoMin, padraoMax float64) (float64, float64) {
 	saiMin, saiMax := padraoMin, padraoMax
 	if min != nil {
-		saiMin = apertaND(*min, ndMinimo)
+		saiMin = apertaND(*min, book.CRMin)
 	}
 	if max != nil {
-		saiMax = apertaND(*max, ndMaximo)
+		saiMax = apertaND(*max, book.CRMax)
 	}
 	return saiMin, saiMax
 }
 
 func apertaND(n, padrao float64) float64 {
-	if n < ndMinimo || n > ndMaximo {
+	if n < book.CRMin || n > book.CRMax {
 		return padrao
 	}
 	return n

@@ -1,4 +1,19 @@
-package api
+// Package search é o casamento e a pontuação de busca do app.
+//
+// São 271 linhas puras — `strings`, `unicode` e a normalização de acento — que
+// moravam no `api` por história e não por dependência.
+//
+// # Por que virou pacote, e não ficou onde estava
+//
+// Quando o catálogo tipado saiu para o `book` (ALE-278), ele precisou do `Fold`
+// — que desacentua — e não podia importar o `api`. Escrevi uma CÓPIA de nove
+// linhas e escrevi errado: chamei a função que só faz `ToLower`. O efeito foi
+// `book.KeyOfName("Atuação")` devolver "atuação" com acento, e a classe deixar
+// de ligar a perícia que treina — um elo para um endereço que não existe, sem
+// erro, sem panic, sem log.
+//
+// Um pacote apaga a cópia E a razão de haver duas.
+package search
 
 import (
 	"strings"
@@ -29,13 +44,13 @@ import (
 // combina é a transformação que dobra acento: decompõe em base + marca e joga
 // as marcas fora. Construída UMA vez porque ela é cara de montar e não tem
 // estado.
-var combina = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+var combining = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 
 // dobra normaliza para comparação: minúsculas e sem acento.
 //
 // "Anão" e "anao" viram a mesma coisa, que é o ponto.
-func dobra(s string) string {
-	limpo, _, err := transform.String(combina, s)
+func Fold(s string) string {
+	limpo, _, err := transform.String(combining, s)
 	if err != nil {
 		// A transformação só falha em entrada mal formada; comparar o original
 		// é pior que nada, mas é melhor que a busca inteira parar de funcionar.
@@ -47,13 +62,13 @@ func dobra(s string) string {
 // casaBusca responde se ALGUM dos campos casa com o que foi digitado.
 //
 // Busca vazia casa com tudo: não digitar não é filtrar.
-func casaBusca(campos []string, busca string) bool {
-	alvo := dobra(strings.TrimSpace(busca))
+func Matches(campos []string, busca string) bool {
+	alvo := Fold(strings.TrimSpace(busca))
 	if alvo == "" {
 		return true
 	}
 	for _, campo := range campos {
-		if casaUmCampo(dobra(campo), alvo) {
+		if matchesField(Fold(campo), alvo) {
 			return true
 		}
 	}
@@ -61,11 +76,11 @@ func casaBusca(campos []string, busca string) bool {
 }
 
 // casaUmCampo aplica as duas regras, da mais barata para a mais cara.
-func casaUmCampo(campo, alvo string) bool {
+func matchesField(campo, alvo string) bool {
 	if strings.Contains(campo, alvo) {
 		return true
 	}
-	return ehSubsequencia(campo, alvo)
+	return isSubsequence(campo, alvo)
 }
 
 // ehSubsequencia é a tolerância a typo, e ela é DELIBERADAMENTE frouxa numa
@@ -79,7 +94,7 @@ func casaUmCampo(campo, alvo string) bool {
 //
 // A busca de UMA letra exige prefixo: com subsequência, "a" casaria com
 // qualquer nome que tenha um "a" em qualquer lugar, que é a lista toda.
-func ehSubsequencia(campo, alvo string) bool {
+func isSubsequence(campo, alvo string) bool {
 	if len([]rune(alvo)) < 2 {
 		return strings.HasPrefix(campo, alvo)
 	}
@@ -121,19 +136,19 @@ func ehSubsequencia(campo, alvo string) bool {
 // não acha "Bola de Fogo" — medido: o nome não começa com a frase, não a contém,
 // e pular o "de " estoura a folga do quase-igual. Digitar duas palavras de um
 // nome é como se procura o que se lembra pela metade.
-func pontuaBusca(nome, busca string) int {
-	alvo := dobra(strings.TrimSpace(busca))
+func Score(nome, busca string) int {
+	alvo := Fold(strings.TrimSpace(busca))
 	if alvo == "" {
 		return 0
 	}
-	campo := dobra(nome)
+	campo := Fold(nome)
 	termos := strings.Fields(alvo)
 	if len(termos) == 1 {
-		return pontuaTermo(campo, alvo)
+		return scoreTerm(campo, alvo)
 	}
 	soma := 0
 	for _, termo := range termos {
-		ponto := pontuaTermo(campo, termo)
+		ponto := scoreTerm(campo, termo)
 		if ponto == 0 {
 			return 0
 		}
@@ -143,17 +158,17 @@ func pontuaBusca(nome, busca string) int {
 }
 
 // pontuaTermo é a escada, do casamento mais forte para o mais fraco.
-func pontuaTermo(campo, termo string) int {
+func scoreTerm(campo, termo string) int {
 	switch {
 	case campo == termo:
 		return 100
 	case strings.HasPrefix(campo, termo):
 		return 80
-	case comecaUmaPalavra(campo, termo):
+	case startsAWord(campo, termo):
 		return 60
 	case strings.Contains(campo, termo):
 		return 40
-	case ehQuaseIgual(campo, termo):
+	case isNearlyEqual(campo, termo):
 		return 20
 	}
 	return 0
@@ -172,7 +187,7 @@ func pontuaTermo(campo, termo string) int {
 // continua achando "Necromante" (uma letra pulada), e "abal" para de achar
 // "Capitão-Baluarte" (seis). É a diferença entre corrigir um dedo torto e
 // aceitar qualquer coisa.
-func ehQuaseIgual(campo, alvo string) bool {
+func isNearlyEqual(campo, alvo string) bool {
 	letras := []rune(campo)
 	procurado := []rune(alvo)
 	if len(procurado) < 2 {
@@ -182,7 +197,7 @@ func ehQuaseIgual(campo, alvo string) bool {
 		if letras[inicio] != procurado[0] {
 			continue
 		}
-		if buracoAte(letras[inicio:], procurado) <= 2 {
+		if gapUntil(letras[inicio:], procurado) <= 2 {
 			return true
 		}
 	}
@@ -199,7 +214,7 @@ func ehQuaseIgual(campo, alvo string) bool {
 // Sentinela calculado a partir da entrada é sentinela que a entrada alcança.
 const naoCasa = 1 << 30
 
-func buracoAte(letras, procurado []rune) int {
+func gapUntil(letras, procurado []rune) int {
 	buraco, i := 0, 0
 	for _, r := range letras {
 		if r == procurado[i] {
@@ -228,7 +243,7 @@ func buracoAte(letras, procurado []rune) int {
 // colada em pontuação ("(abalado", "abalado,"), e cortar só no espaço deixaria
 // esses casos de fora. A letra anterior é decodificada como RUNA porque o
 // domínio é pt-BR — um byte solto no meio de "ção" não é letra nenhuma.
-func comecaUmaPalavra(campo, alvo string) bool {
+func startsAWord(campo, alvo string) bool {
 	de := 0
 	for {
 		onde := strings.Index(campo[de:], alvo)
@@ -256,14 +271,14 @@ func comecaUmaPalavra(campo, alvo string) bool {
 //
 // Todos os termos, e cada um abrindo uma PALAVRA. "Contém" cru aqui é o que
 // fazia "abal" achar "trabalho".
-func pontuaTexto(textos []string, busca string) int {
-	alvo := dobra(strings.TrimSpace(busca))
+func ScoreText(textos []string, busca string) int {
+	alvo := Fold(strings.TrimSpace(busca))
 	if len([]rune(alvo)) < 3 {
 		return 0
 	}
-	junto := dobra(strings.Join(textos, " "))
+	junto := Fold(strings.Join(textos, " "))
 	for _, termo := range strings.Fields(alvo) {
-		if !comecaUmaPalavra(junto, termo) {
+		if !startsAWord(junto, termo) {
 			return 0
 		}
 	}

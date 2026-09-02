@@ -29,6 +29,11 @@ var permitidos = map[string]bool{
 	"t20engine/engine": true,
 	// O bloco de criatura é forma de dado e já é folha (ver o guarda de lá).
 	"t20engine/creature": true,
+	// A busca é FOLHA também, e ela entrou aqui apagando uma cópia: o `Fold`
+	// que desacentua morava em dois lugares porque o livro não podia importar o
+	// `api`, e a segunda cópia estava errada (ver `search`). Um import de um
+	// pacote sem dependência nenhuma não alarga fronteira de ninguém.
+	"t20engine/search": true,
 }
 
 func TestTheBookKnowsNoHTTPAndNoScreen(t *testing.T) {

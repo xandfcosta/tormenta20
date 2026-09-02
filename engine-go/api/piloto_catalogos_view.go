@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"t20engine/search"
 
 	"t20engine/book"
 )
@@ -39,11 +40,11 @@ import (
 // O que as duas compartilham é a `dobra`: acento não separa "ilusão" de
 // "ilusao", porque ninguém digita til numa busca apressada.
 func casaTodosOsTermos(campos []string, busca string) bool {
-	alvo := dobra(strings.TrimSpace(busca))
+	alvo := search.Fold(strings.TrimSpace(busca))
 	if alvo == "" {
 		return true
 	}
-	palheiro := dobra(strings.Join(campos, " "))
+	palheiro := search.Fold(strings.Join(campos, " "))
 	for _, termo := range strings.Fields(alvo) {
 		if !strings.Contains(palheiro, termo) {
 			return false
