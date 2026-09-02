@@ -1,4 +1,4 @@
-package api
+package door
 
 import (
 	"t20engine/plataforma"
@@ -14,38 +14,38 @@ import (
 // senha ao navegador é mandar de volta o que ele mandou, e depois de uma recusa
 // redigitá-la é o comportamento que qualquer pessoa espera.
 
-// entrarView é a tela de login.
-type entrarView struct {
+// signInView é a tela de login.
+type signInView struct {
 	Email string
 	// Destino é o `?redirect=` que o guarda de rota da SPA carregava: quem foi
 	// mandado para a porta volta para onde estava. Ele viaja em campo OCULTO e
 	// não na URL do POST para o formulário ser o dono do próprio contexto.
-	Destino string
-	Erros   plataforma.FieldErrorMap
+	Destination string
+	Errors      plataforma.FieldErrorMap
 	// Aviso é a recusa do formulário inteiro, quando nenhum campo é o dono do
 	// problema — "E-mail ou senha incorretos" não é culpa de um dos dois.
-	Aviso string
+	Notice string
 }
 
-// criarContaView é o registro, que só existe com um convite na mão.
-type criarContaView struct {
-	Email   string
-	Nome    string
-	Convite string
-	Erros   plataforma.FieldErrorMap
-	Aviso   string
+// signUpView é o registro, que só existe com um convite na mão.
+type signUpView struct {
+	Email  string
+	Name   string
+	Invite string
+	Errors plataforma.FieldErrorMap
+	Notice string
 }
 
-// redefinirView é a outra ponta do link que o admin gera (ALE-120).
-type redefinirView struct {
+// resetView é a outra ponta do link que o admin gera (ALE-120).
+type resetView struct {
 	Token string
-	// EmailDaConta é a ÚNICA coisa que esta rota anônima revela, e é o que diz
+	// AccountEmail é a ÚNICA coisa que esta rota anônima revela, e é o que diz
 	// ao jogador que ele está redefinindo a conta certa. Vazio quando o link não
 	// vale — e aí não há formulário para mostrar.
-	EmailDaConta string
-	LinkVale     bool
-	Erros        plataforma.FieldErrorMap
-	Aviso        string
+	AccountEmail string
+	LinkIsValid  bool
+	Errors       plataforma.FieldErrorMap
+	Notice       string
 }
 
 // As frases da porta. Ficam juntas porque são a VOZ da tela — o servidor
@@ -54,15 +54,14 @@ type redefinirView struct {
 const (
 	// A mesma resposta para "não existe conta" e "senha errada": distinguir os
 	// dois entrega a quem sonda a lista de quem tem conta aqui.
-	avisoCredenciais = "E-mail ou senha incorretos."
+	noticeBadCredentials = "E-mail ou senha incorretos."
 	// O servidor recusa convite inexistente, gasto e vencido com o mesmo 403,
 	// pelo mesmo motivo. O jogador lê isto em vez do inglês da API.
-	avisoConvite = "Convite inválido ou expirado. Peça um link novo a quem administra a mesa."
-	avisoLink    = "Este link não vale mais — ele serve uma vez só e expira em 24 horas. Peça outro a quem administra a mesa."
-	avisoEmUso   = "Já existe uma conta com este e-mail."
-	avisoInterno = "Não consegui completar agora. Tente de novo."
+	noticeBadInvite  = "Convite inválido ou expirado. Peça um link novo a quem administra a mesa."
+	noticeDeadLink   = "Este link não vale mais — ele serve uma vez só e expira em 24 horas. Peça outro a quem administra a mesa."
+	noticeEmailTaken = "Já existe uma conta com este e-mail."
 	// A confirmação de senha é do FORMULÁRIO e não da API: o `confirmar` não
 	// existe no corpo JSON, existe para pegar o typo antes de uma senha que o
 	// jogador não consegue reproduzir virar a senha da conta.
-	avisoConfere = "As senhas não conferem"
+	noticePasswordMismatch = "As senhas não conferem"
 )

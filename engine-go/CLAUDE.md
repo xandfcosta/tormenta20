@@ -766,6 +766,95 @@ nenhum erro, só a divisão vazando por baixo.
 dela.** O índice de itens de origem lia catálogo, então era do livro — mesmo que
 só a forja o usasse.
 
+## `web/door`: a segunda cena, e as três coisas que a porta ensinou
+
+A porta saiu depois da forja, do hub e do grimório, e ela é a primeira cuja
+extração DOEU — a forja "não vazava nenhum símbolo", e esta alcançava o `bcrypt`,
+o `db` e dois sentinelas de erro do `api`. As três saíram, e nenhuma por regra de
+estilo:
+
+- **O `bcrypt` não atravessa.** A cena gerava o hash da senha nova com o
+  `bcryptCost` do `api`, o que a obrigaria a receber uma constante de custo
+  criptográfico por uma porta, para fazer trabalho que não é dela. O
+  `ResetPassword` faz o caminho inteiro do outro lado; a cena pergunta se deu
+  certo.
+- **Duas perguntas em sequência viram uma.** A cena chamava `usableReset` e
+  depois `GetUserByID`, carregando a linha do banco no meio só para ter o
+  `Userid`. O que a tela mostra é o e-mail — então a porta pede
+  `ResetLinkOwner(ctx, token) (email, ok)`, e a linha não atravessa.
+- **Quem CLASSIFICA o erro é o hospedeiro; quem escolhe a FRASE é a cena.** Os
+  sentinelas de convite recusado e convite gasto são valores do `api`. Se a cena
+  os lesse, alcançaria o hospedeiro; se o `api` devolvesse a frase pronta, a voz
+  da porta passaria a morar nele. O meio-termo é um `RefusalMotive` declarado
+  pela CENA: o hospedeiro diz qual dos três casos é, a cena diz o que o jogador
+  lê.
+
+**E a lição que vale para as onze cenas que faltam: a porta pede a PERGUNTA, não
+o objeto.** `HasSession(r) bool` no lugar de `sessionUser(r) (AuthUser, error)`,
+pelo mesmo motivo que a forja pede `CurrentUserID` e não o usuário — o tipo do
+usuário é do `api`, e uma porta que devolve tipo do hospedeiro não é porta.
+
+### O renome que acompanha a mudança de pacote tem duas armadilhas, e as duas morderam
+
+Arquivo que se move sai com os identificadores em inglês inteiros, e a troca é
+textual porque o `gopls rename` não alcança componente `templ`. Duas coisas
+quebraram, as duas em silêncio para o compilador:
+
+- **A troca entrou em STRING.** `Convite` virou `Invite` dentro da frase que o
+  jogador lê ("Invite inválido ou expirado"), e `Nome` virou `Name` num rótulo de
+  formulário. É a família do "diálogo Int" da fatia 4, com o comentário protegido
+  e a string não. **Pule comentário E string**, e depois varra as strings
+  procurando as palavras que você acabou de introduzir.
+- **A troca entrou em campo do KIT.** `ui.Field{Nome: …, Erros: …}` virou
+  `ui.Field{Name: …, Errors: …}` — nomes do `web/ui`, que esta fatia não ia
+  tocar. Esse o compilador pega, e é a regra do CLAUDE.md da raiz acontecendo: o
+  nome que você CHAMA de fora segue o que está lá.
+
+E o guarda de citação da ALE-285 pegou o terceiro caso no primeiro renome real
+depois de existir: um comentário do `web/ui` citava o antigo `piloto_porta_view`,
+que tinha acabado de virar `web/door/view.go`. Ele pegou o QUARTO logo em
+seguida — esta seção, quando ela escreveu o nome morto por extenso.
+
+### Os guardas funcionais da cena ficam no HOSPEDEIRO
+
+O `web/door` tem dois testes: o de fronteira e o do redirecionamento aberto (que
+é regra da cena e usa função não exportada). Todo o resto — treze casos que
+montam um `api.Server` de verdade e dirigem o roteador de verdade — ficou em
+`api/door_test.go`, que é o que a forja já tinha feito com o
+`api/piloto_forja_test.go`.
+
+Não é indecisão: um pacote de cena que hospedasse esses casos teria de importar o
+`api`, que importa a cena de volta. **A cena sai; a bancada que a exercita
+fica.** E as frases que os casos afirmam passam a ser escritas à mão, porque as
+constantes da cena são inalcançáveis dali — o que é sorte, já que importar o
+valor de quem está sendo testado faz o teste andar junto com o defeito.
+
+## `account`: a regra de conta, e a cópia que divergiu na FRASE
+
+O que é um e-mail, o que é uma senha aceitável, e a forma dos dois pedidos que
+criam sessão. Ele saiu do `api` junto com a porta (ALE-278), e o motivo não foi
+arrumação: eram DUAS cópias da mesma regra, e elas já tinham divergido.
+
+O `api` tinha `validateRegister`/`validateLogin`/`validatePassword` com as
+mensagens em pt-BR, e `ValidateRegister`/`ValidateLogin`/`ValidatePassword` com
+as mesmas regras em inglês. **Não era código morto esperando limpeza**: a
+`ValidatePassword` inglesa era chamada pela rota JSON que redefine a senha, e a
+portuguesa pela tela da porta. A mesma regra recusava com dois textos, e um deles
+na língua que a regra de idioma proíbe para o que um humano lê.
+
+As outras duas grafias inglesas eram dívida de verdade — a `ValidateLogin` sem
+chamador nenhum, a `ValidateRegister` com exatamente um: um teste, que afirmava
+as frases inglesas. **Mudar o mínimo da senha na cópia viva deixava aquele teste
+VERDE**, porque ele prendia a outra.
+
+É a mesma forma do `search` e pelo mesmo motivo declarado lá — função pura
+hospedada em pacote grande vira cópia na mão de quem não pode importar o pacote.
+A diferença é onde a cópia errou: lá foi na conta, aqui na frase. As duas
+compilam, e nenhuma das duas aparece num diff.
+
+Ele NÃO vai para `plataforma` de propósito: aquele pacote é infraestrutura sem
+domínio, e "a senha precisa ter ao menos 8 caracteres" é regra de PRODUTO.
+
 ## `search`: a busca vira pacote, e a cópia que quebrou o acento morre
 
 O casamento e a pontuação de busca são 271 linhas puras — `strings`, `unicode` e

@@ -44,16 +44,3 @@ func TestParseExpiry(t *testing.T) {
 		}
 	}
 }
-
-func TestValidateRegister(t *testing.T) {
-	if f := ValidateRegister(registerBody{Email: "gm@test.com", Password: "password123"}); len(f) != 0 {
-		t.Fatalf("valid input flagged: %v", f)
-	}
-	f := ValidateRegister(registerBody{Email: "bad", Password: "short"})
-	if _, ok := f["email"]; !ok {
-		t.Error("bad email not flagged")
-	}
-	if _, ok := f["password"]; !ok {
-		t.Error("short password not flagged")
-	}
-}

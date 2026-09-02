@@ -128,13 +128,13 @@ func (s *Server) handleAdminPilotoRedefinir(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `resetGerado`.
 	fragmento, err := ui.RenderFragment(r.Context(), resetGerado("/redefinir-senha?token="+url.QueryEscape(reset.Token)))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
 		return
 	}
 	_ = sse.PatchElements(fragmento)
@@ -151,12 +151,12 @@ func (s *Server) handleAdminPilotoConvite(w http.ResponseWriter, r *http.Request
 	sse := datastar.NewSSE(w, r)
 	invite, err := s.mintAccountInvite(r.Context(), currentUser(r).ID)
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
 		return
 	}
 	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+url.QueryEscape(invite.Token)))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": avisoInterno})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
 		return
 	}
 	_ = sse.PatchElements(fragmento)

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/web/door"
 	"t20engine/web/grimoire"
 	"t20engine/web/hub"
 
@@ -41,7 +42,10 @@ func (s *Server) WebRouter() http.Handler {
 	// tem de vir ANTES dos grupos com `requireAuth` — não por ordem de casamento
 	// (o chi casa por rota, não por ordem), mas porque ficar dentro do grupo a
 	// tornaria inalcançável para exatamente quem precisa dela.
-	s.DoorRoutes(r)
+	// `door.New(s)` passa o `*Server` como a porta que a cena declarou — a
+	// interface está em `web/door`, e é nesta linha que o compilador cobra
+	// quando ela deixa de ser cumprida.
+	door.Routes(r, door.New(s))
 	// O HUB (ALE-231): o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
