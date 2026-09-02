@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/book"
+	"t20engine/web/bookui"
 )
 
 // O BESTIÁRIO como dado (ALE-257).
@@ -44,7 +45,7 @@ type bestiarioView struct {
 	// desenha o botão. Ele vem pedido no construtor, ao lado da Base, pela mesma
 	// razão que ela — são os dois endereços de que a cena depende, e um deles
 	// esquecido some em silêncio.
-	Livro     enderecoDoLivro
+	Livro     bookui.BookAddress
 	Verbetes  []book.Entry
 	Total     int
 	Escolhido *book.Entry
@@ -84,7 +85,7 @@ func escolhidoOuPrimeiro(lista []book.Entry, id string) *book.Entry {
 // teste de outra pasta montou a cena sem ele. Construtor que consegue produzir
 // valor inválido é o próprio defeito — pedir aqui torna o esquecimento
 // impossível em vez de detectável.
-func carregaBestiarioDe(base string, livro enderecoDoLivro, busca string, tipos []string, ndMin, ndMax float64, escolhido string) bestiarioView {
+func carregaBestiarioDe(base string, livro bookui.BookAddress, busca string, tipos []string, ndMin, ndMax float64, escolhido string) bestiarioView {
 	todos := book.Creatures()
 	lista := book.FilterCreatures(todos, book.CreatureFilter{Busca: busca, Tipos: tipos, NDMin: ndMin, NDMax: ndMax})
 	return bestiarioView{

@@ -50,6 +50,20 @@ const MasterBestiary = "/mestre/bestiario"
 // `//livro`, que o navegador lê como o HOST `livro`.
 const Book = "/livro"
 
+// Reader é a cena que DESENHA o livro, uma página por vez, com o termo
+// destacado (ALE-264).
+//
+// Ela entrou aqui na ALE-278 e é o caso que mostra o critério funcionando: era
+// endereço INTERNO da família do livro — só o `piloto_livro.go` o citava —, e
+// deixou de ser no instante em que o `bookui` virou pacote. Não é o
+// visualizador do navegador, que fica a um clique de distância: ver o verbete
+// **leitor** no GLOSSARIO.
+const Reader = "/livro/ler"
+
+// Entry é a rota que devolve UM verbete como fragmento, para a caixa que o
+// mostra por cima da cena sem tirar a pessoa da regra que ela lia.
+const Entry = "/verbete"
+
 // masterRail é o prefixo do trilho do mestre, e ele existe para as três funções
 // abaixo não o escreverem à mão.
 //

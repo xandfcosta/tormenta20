@@ -1,6 +1,7 @@
 package api
 
 import (
+	"t20engine/web/bookui"
 	"fmt"
 	"t20engine/web/ui"
 	"t20engine/book"
@@ -252,7 +253,7 @@ templ cenaDoBestiario(v bestiarioView) {
 // O Esc e o clique fora fecham, porque diálogo sem saída é tela travada — e o
 // botão de fechar existe além dos dois, para quem navega por teclado não
 // depender de descobrir o Esc.
-templ fichaEmDialogo(m book.Entry, livro enderecoDoLivro) {
+templ fichaEmDialogo(m book.Entry, livro bookui.BookAddress) {
 	<div
 		class="mesa-ficha-em-dialogo fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
 		data-show="$fichaAberta"
@@ -472,7 +473,7 @@ templ listaDeVerbetes(v bestiarioView) {
 //
 // A medida é limitada (`max-w-4xl`) porque isto é dado mais prosa: a 1920 as
 // caixas de atributo esticavam para ~220px cada para segurar dois caracteres.
-templ blocoDoVerbete(m book.Entry, livro enderecoDoLivro) {
+templ blocoDoVerbete(m book.Entry, livro bookui.BookAddress) {
 	// O TETO de 56rem saiu do bloco inteiro e virou teto da COLUNA dos números.
 	// O comentário que ele carregava continua certo — a 1920 as caixas de
 	// atributo esticavam para ~220px para segurar dois caracteres — mas a cura
@@ -489,7 +490,7 @@ templ blocoDoVerbete(m book.Entry, livro enderecoDoLivro) {
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
 				{ fmt.Sprintf("ND %s · %s · %s · ", book.CRWritten(m.ND), book.TypeName(m.Tipo), book.SizeName(m.Size)) }
-				@seloDaPagina(livro, m.BookPage, m.Name)
+				@bookui.PageSeal(livro, m.BookPage, m.Name)
 				{ fmt.Sprintf(" · XP %d", book.XPForCR(m.ND)) }
 			</p>
 		</div>
@@ -559,7 +560,7 @@ templ blocoDoVerbete(m book.Entry, livro enderecoDoLivro) {
 							for _, h := range m.SpecialAbilities {
 								<li>
 									for _, pedaco := range book.WithLinks(h) {
-										@pedacoDoTexto(pedaco, livro)
+										@bookui.Chunk(pedaco, livro)
 									}
 								</li>
 							}
@@ -576,7 +577,7 @@ templ blocoDoVerbete(m book.Entry, livro enderecoDoLivro) {
 								// A perícia da criatura leva ao verbete dela: o
 								// mestre lê "Furtividade +5" e pode querer saber
 								// se ela sofre penalidade de armadura.
-								@eloParaOAcervo("pericias", book.KeyOfName(p.Name), p.Name) {
+								@bookui.CrossRef("pericias", book.KeyOfName(p.Name), p.Name) {
 									{ p.Name }
 								}
 								{ " " }
@@ -599,7 +600,7 @@ templ blocoDoVerbete(m book.Entry, livro enderecoDoLivro) {
 					@secaoDoBloco("Equipamento") {
 						<p class="text-xs">
 							for _, pedaco := range book.WithLinks(m.Equipamento) {
-								@pedacoDoTexto(pedaco, livro)
+								@bookui.Chunk(pedaco, livro)
 							}
 						</p>
 					}
@@ -608,7 +609,7 @@ templ blocoDoVerbete(m book.Entry, livro enderecoDoLivro) {
 					@secaoDoBloco("Tesouro") {
 						<p class="text-xs">
 							for _, pedaco := range book.WithLinks(m.Tesouro) {
-								@pedacoDoTexto(pedaco, livro)
+								@bookui.Chunk(pedaco, livro)
 							}
 						</p>
 					}

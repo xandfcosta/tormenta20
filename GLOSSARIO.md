@@ -321,6 +321,8 @@ teste foi o primeiro lugar onde ele precisou existir.
 |---|---|---|
 | **fila** (de iniciativa) | `tracker` | já estava na seção B; a varredura só a usou |
 | **buscador do livro** | `finder` | `web/finder` (ALE-278) — e NÃO `search`, que é o casamento e a pontuação, nem `busca`, que é o filtro da cena |
+| **elo** | `crossref` | `web/bookui` (ALE-278). **Não `link`**, que a seção A já proíbe: o elo anda DENTRO do acervo e o botão do livro SAI para o PDF, e chamar os dois de link apagaria a distinção que a linha do verbete existe para fazer |
+| **a interface que sabe do livro** | `bookui` | `web/bookui` (ALE-278) — o kit que conhece o domínio, ao lado do `web/ui`, que não pode conhecer |
 | **acervo** (cenas guardadas) | `archive` | `TestTheArchiveSaysWhichSceneIsOnTheTable` |
 | **acervo** (de poderes, de catálogo) | `collection` | `TestTheCollectionJoinsTheFiveOrigins` |
 | **cortina** | `curtain` | `curtained` já existia no fio |

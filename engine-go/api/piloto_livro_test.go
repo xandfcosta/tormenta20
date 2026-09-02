@@ -28,15 +28,6 @@ import (
 // livroDeMentira grava um arquivo com conteúdo conhecido e devolve o caminho.
 // O conteúdo importa em UM lugar só (a marca de linearizado); para a rota, o que
 // importa é que ele exista e tenha bytes contáveis.
-func livroDeMentira(t *testing.T, conteudo string) string {
-	t.Helper()
-	caminho := filepath.Join(t.TempDir(), "livro.pdf")
-	if err := os.WriteFile(caminho, []byte(conteudo), 0o600); err != nil {
-		t.Fatalf("gravar o livro de mentira: %v", err)
-	}
-	return caminho
-}
-
 func servidorComLivro(t *testing.T, s *Server, conteudo string) *Server {
 	t.Helper()
 	s.livro = abreOLivro(plataforma.Config{LivroPDF: livroDeMentira(t, conteudo), LivroAbertura: 6})
@@ -46,41 +37,15 @@ func servidorComLivro(t *testing.T, s *Server, conteudo string) *Server {
 	return s
 }
 
-// TestTheButtonOpensTheReaderAtThePrintedPageWithTheTerm.
-//
-// O endereço mudou na segunda fatia desta issue: ele apontava para o PDF cru com
-// `#page=N`, e passou a apontar para o LEITOR da casa. A troca é medida — o
-// visualizador do Chrome ignora `#search=` (não há destaque possível por URL) e
-// transfere o arquivo inteiro; o leitor destaca o termo e custou 1 MiB contra
-// 85 MiB, contados na interface de loopback.
-func TestTheButtonOpensTheReaderAtThePrintedPageWithTheTerm(t *testing.T) {
-	livro := enderecoDoLivro{Base: "/livro?v=abc", Abertura: 6}
-	if got := livro.naPagina(289, "Lobo"); got != "/livro/ler?p=289&t=Lobo" {
-		t.Errorf("o botão do Lobo aponta para %q", got)
+func livroDeMentira(t *testing.T, conteudo string) string {
+	t.Helper()
+	caminho := filepath.Join(t.TempDir(), "livro.pdf")
+	if err := os.WriteFile(caminho, []byte(conteudo), 0o600); err != nil {
+		t.Fatalf("gravar o livro de mentira: %v", err)
 	}
-	// O termo vai ESCAPADO: "Bola de Fogo" tem espaço, e nome de verbete com
-	// "&" quebraria a consulta inteira.
-	if got := livro.naPagina(180, "Bola de Fogo"); got != "/livro/ler?p=180&t=Bola+de+Fogo" {
-		t.Errorf("o termo não foi escapado: %q", got)
-	}
-	// A ABERTURA não entra no endereço: quem soma é o leitor, que fala em página
-	// impressa com quem lê e em página de arquivo com o pdf.js.
-	if got := livro.naPagina(289, ""); got != "/livro/ler?p=289" {
-		t.Errorf("sem termo o endereço devia ser só a página, e foi %q", got)
-	}
+	return caminho
 }
 
-// TestWithoutAConfiguredBookThereIsNoAddress: o zero valor não produz link quebrado.
-func TestWithoutAConfiguredBookThereIsNoAddress(t *testing.T) {
-	if got := (enderecoDoLivro{}).naPagina(289, "Lobo"); got != "" {
-		t.Errorf("sem livro o endereço devia ser vazio, e foi %q", got)
-	}
-	if got := (enderecoDoLivro{Base: "/livro"}).naPagina(0, "Lobo"); got != "" {
-		t.Errorf("criatura sem página no livro devia ficar sem endereço, e ficou %q", got)
-	}
-}
-
-// TestAMissingBookDoesNotBringTheServerDown: configurar errado degrada, não quebra.
 func TestAMissingBookDoesNotBringTheServerDown(t *testing.T) {
 	l := abreOLivro(plataforma.Config{LivroPDF: filepath.Join(t.TempDir(), "nao-existe.pdf")})
 	if l.caminho != "" || l.endereco.Base != "" {

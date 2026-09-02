@@ -3,6 +3,7 @@ package api
 import (
 	"strings"
 	"t20engine/book"
+	"t20engine/web/bookui"
 	"testing"
 )
 
@@ -85,7 +86,7 @@ func TestAnEmptyLabelDoesNotComeOutAlone(t *testing.T) {
 
 // TestTheUnifiedSearchReachesTheThreeNewOnes: a busca sem aba varre os SETE.
 func TestTheUnifiedSearchReachesTheThreeNewOnes(t *testing.T) {
-	v := carregaCatalogos(criteriosDoAcervo{Busca: "allihanna", Aba: ""}, enderecoDoLivro{})
+	v := carregaCatalogos(criteriosDoAcervo{Busca: "allihanna", Aba: ""}, bookui.BookAddress{})
 	if v.Achados == 0 {
 		t.Fatal("a busca unificada não achou a deusa Allihanna")
 	}

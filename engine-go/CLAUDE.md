@@ -881,6 +881,63 @@ só**. Foi a fronteira que a tornou visível: os unitários não compilavam mais
 cobrando isso de cada cena que sai, e a resposta é sempre a mesma — unitário onde
 a regra mora, integração onde a composição acontece.
 
+## `web/bookui`: a decisão que a fatia 4 adiou, cobrada pela fatia do mestre
+
+O livro e os elos — desenhar um verbete, transformar um texto em citação
+clicável, o selo "p289" que abre o leitor — saíram do `api` na ALE-278, 245
+linhas em dois arquivos.
+
+**Eles já eram puros.** Importavam `book`, `web/ui` e `web/routes` e mais nada,
+então o movimento foi um `git mv`. O que custou não foi a extração: foi ela ter
+sido ADIADA.
+
+### A dívida tinha nome e endereço
+
+A fatia 4 escreveu, ao criar o `web/ui`, que o livro e os elos ficavam para trás
+*"porque o `trecho` que eles desenham nasce de uma consulta ao catálogo de
+efeitos e de escolas de magia; levá-los faria o pacote de apresentação importar
+catálogo, que é o contrário do que a divisão existe para conseguir"*.
+
+A razão estava certa e a conclusão faltava uma opção. Não era escolher entre o
+kit e o `api` — era o pacote do MEIO: um que sabe do livro e não sabe de HTTP.
+Enquanto ele não existiu, os cinco símbolos ficaram no hospedeiro, e **o trilho
+do mestre não podia sair**, porque lê todos os cinco. O verbete, pelo mesmo
+motivo.
+
+A lição não é sobre este pacote: **uma camada adiada não fica parada, ela vira o
+bloqueio da próxima fatia.** E o preço não apareceu no dia em que foi adiada; ele
+apareceu quando alguém foi extrair outra coisa e descobriu que não dava.
+
+### O critério do `web/routes` funcionou sozinho, e é a prova dele
+
+O `/livro/ler` e o `/verbete` estavam marcados como endereço INTERNO na fatia do
+buscador — cada um era citado só pelos arquivos da própria família, e por isso
+ficaram com o dono.
+
+Nesta fatia os dois passaram a ser citados de fora, no MESMO instante em que o
+`bookui` virou pacote, e entraram. Ninguém precisou decidir de novo: o critério
+("só entra endereço que uma cena cita de OUTRA") reclassificou os dois sozinho.
+É o que se espera de um critério escrito em vez de um julgamento repetido.
+
+### O tipo do endereço foi junto, e vale saber por quê
+
+O `enderecoDoLivro` — `Base`, `Abertura`, e o método que monta o endereço do
+leitor — morava na cena que SERVE o PDF. Ele é a assinatura de todos os
+componentes daqui (`PageSeal`, `Chunk`, `CrossRef` recebem um), então deixá-lo lá
+faria o pacote de apresentação do livro importar a cena que serve o arquivo.
+
+Os dois casos de teste que prendem a REGRA do endereço foram junto — livro não
+configurado não produz link, e o termo entra escapado. O resto do
+`piloto_livro_test.go` ficou no `api`, porque serve o PDF de verdade por HTTP:
+outra camada, outra pergunta. **Quarta vez seguida que a fronteira separa um
+arquivo de teste que misturava duas.**
+
+### `elo` não vira `link`, e o glossário já dizia
+
+A seção A proíbe `link` como identificador para `elo`, e a razão é que o elo anda
+DENTRO do acervo enquanto o botão do livro SAI para o PDF. A grafia inglesa não
+existia; foi escrita antes do código, como a regra manda: **`elo` → `crossref`**.
+
 ## `web/admin`: a MAIOR porta, e a armadilha que só o `.templ` tem
 
 A administração saiu na ALE-278 com **treze** métodos na porta — contra nove da
