@@ -43,7 +43,7 @@ func pedeCom(t *testing.T, h http.Handler, accept string) *http.Response {
 }
 
 // A CENA VIAJA COMPRIMIDA, e o corpo continua sendo o mesmo depois de inflado.
-func TestACenaRenderizadaViajaComprimida(t *testing.T) {
+func TestTheRenderedSceneTravelsCompressed(t *testing.T) {
 	corpo := strings.Repeat("<div class=\"caixa\">Defesa 22</div>", 400)
 	resp := pedeCom(t, aCena(corpo), "gzip")
 
@@ -76,7 +76,7 @@ func TestACenaRenderizadaViajaComprimida(t *testing.T) {
 //
 // O `q=0` é o caso que ninguém lembra de tratar, e um `strings.Contains` o leria
 // como aceitação — a mesma armadilha que a ALE-159 registrou do outro lado.
-func TestQuemNaoAceitaGzipRecebeCru(t *testing.T) {
+func TestWhoeverDoesNotAcceptGzipGetsItRaw(t *testing.T) {
 	// GRANDE de propósito: com um corpo curto este caso passaria pelo corte de
 	// TAMANHO em vez de pela negociação, e continuaria verde no dia em que a
 	// leitura do `Accept-Encoding` quebrasse. Um teste que pode passar por dois
@@ -107,7 +107,7 @@ func TestQuemNaoAceitaGzipRecebeCru(t *testing.T) {
 // errado — provado sabotando, a primeira versão deste teste ficou VERDE com a
 // regra do `Content-Encoding` apagada. O `index.html.gz` da SPA é exatamente
 // isto: comprimível pelo tipo, e já comprimido.
-func TestOQueJaVemComprimidoPassaIntacto(t *testing.T) {
+func TestWhatArrivesCompressedPassesThroughIntact(t *testing.T) {
 	jaComprimido := "\x1f\x8b conteudo ja em gzip"
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -137,7 +137,7 @@ func TestOQueJaVemComprimidoPassaIntacto(t *testing.T) {
 //
 // O caso escreve UM quadro, esvazia, e exige que ele chegue inflado ANTES de o
 // handler retornar. Sem o `Flush` atravessando, ele estoura no tempo.
-func TestOFluxoAoVivoAtravessaOGzip(t *testing.T) {
+func TestTheLiveStreamCrossesTheGzip(t *testing.T) {
 	quadroEscrito := make(chan struct{})
 	segura := make(chan struct{})
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -209,7 +209,7 @@ func TestOFluxoAoVivoAtravessaOGzip(t *testing.T) {
 // ser aplicados — busca que não filtra, seta que não anda, diálogo que não abre.
 // Custou 27 casos vermelhos no e2e, e os guardas unitários daqui estavam TODOS
 // verdes porque escreviam o cabeçalho antes de esvaziar.
-func TestOFlushAntesDoWriteJaDecideOEnvelope(t *testing.T) {
+func TestAFlushBeforeTheWriteAlreadyDecidesTheEnvelope(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// A ORDEM É A DO DATASTAR, e ela é o caso inteiro.
 		w.Header().Set("Content-Type", "text/event-stream")
@@ -239,7 +239,7 @@ func TestOFlushAntesDoWriteJaDecideOEnvelope(t *testing.T) {
 }
 
 // A REGRA de quem comprime, exercitada direto.
-func TestSoOsTiposQueValemSaoComprimidos(t *testing.T) {
+func TestOnlyTheTypesWorthItAreCompressed(t *testing.T) {
 	casos := []struct {
 		tipo string
 		quer bool

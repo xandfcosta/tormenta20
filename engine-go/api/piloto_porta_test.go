@@ -88,7 +88,7 @@ func temCookieDeSessao(f portaFixture, rec *httptest.ResponseRecorder) bool {
 
 // A recusa é a metade que importa: uma porta que devolve 200 e uma tela sem
 // aviso deixa o jogador achando que entrou.
-func TestPortaRecusaSenhaErradaSemAbrirSessao(t *testing.T) {
+func TestTheDoorRefusesAWrongPasswordWithoutOpeningASession(t *testing.T) {
 	f := novaPorta(t)
 	rec := f.bate(t, "/entrar", url.Values{
 		"email": {f.email}, "senha": {"não é essa"},
@@ -107,7 +107,7 @@ func TestPortaRecusaSenhaErradaSemAbrirSessao(t *testing.T) {
 
 // E-mail que não existe e senha errada respondem a MESMA coisa: distinguir os
 // dois entrega a quem sonda a lista de quem tem conta na mesa.
-func TestPortaNaoDistingueContaInexistenteDeSenhaErrada(t *testing.T) {
+func TestTheDoorDoesNotTellAMissingAccountFromAWrongPassword(t *testing.T) {
 	f := novaPorta(t)
 	inexistente := f.bate(t, "/entrar", url.Values{
 		"email": {"ninguem@t20.local"}, "senha": {"seja o que for"},
@@ -124,7 +124,7 @@ func TestPortaNaoDistingueContaInexistenteDeSenhaErrada(t *testing.T) {
 	}
 }
 
-func TestPortaEntraEMandaParaODestino(t *testing.T) {
+func TestTheDoorSignsInAndSendsToTheDestination(t *testing.T) {
 	f := novaPorta(t)
 	rec := f.bate(t, "/entrar", url.Values{
 		"email": {f.email}, "senha": {f.senha}, "destino": {"/campaigns/7"},
@@ -144,7 +144,7 @@ func TestPortaEntraEMandaParaODestino(t *testing.T) {
 // O `?redirect=` da SPA vira campo oculto aqui, e um destino EXTERNO
 // transformaria a porta em redirecionamento aberto: o link sai do nosso
 // domínio, o jogador confia nele, e a página que recebe pode imitar esta.
-func TestDestinoPedidoSoAceitaCaminhoInterno(t *testing.T) {
+func TestTheRequestedDestinationOnlyAcceptsAnInternalPath(t *testing.T) {
 	casos := map[string]string{
 		"/campaigns/7":        "/campaigns/7",
 		"":                    "/",
@@ -159,7 +159,7 @@ func TestDestinoPedidoSoAceitaCaminhoInterno(t *testing.T) {
 	}
 }
 
-func TestPortaMandaQuemJaTemSessaoEmboraDaTelaDeEntrar(t *testing.T) {
+func TestTheDoorSendsWhoAlreadyHasASessionAwayFromTheSignInScreen(t *testing.T) {
 	f := novaPorta(t)
 	rec := f.bate(t, "/entrar", nil, f.sessao(t))
 	if rec.Code != http.StatusSeeOther {
@@ -171,7 +171,7 @@ func TestPortaMandaQuemJaTemSessaoEmboraDaTelaDeEntrar(t *testing.T) {
 
 // A porta já era fechada (o servidor responde 403), mas a TELA ficava aberta e
 // parecia um cadastro comum (ALE-120).
-func TestPortaNaoAbreCriarContaSemConvite(t *testing.T) {
+func TestTheDoorDoesNotOpenSignUpWithoutAnInvite(t *testing.T) {
 	f := novaPorta(t)
 	rec := f.bate(t, "/criar-conta", nil, "")
 	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/entrar" {
@@ -179,7 +179,7 @@ func TestPortaNaoAbreCriarContaSemConvite(t *testing.T) {
 	}
 }
 
-func TestPortaRecusaConviteInvalidoEmPortugues(t *testing.T) {
+func TestTheDoorRefusesAnInvalidInviteInPortuguese(t *testing.T) {
 	f := novaPorta(t)
 	rec := f.bate(t, "/criar-conta", url.Values{
 		"convite": {"não-existe"}, "email": {"nova@t20.local"},
@@ -201,7 +201,7 @@ func TestPortaRecusaConviteInvalidoEmPortugues(t *testing.T) {
 // O `confirmar` não existe no corpo JSON da API — ele é do formulário. Conferir
 // no SERVIDOR e não só no `data-on:input` é o que mantém a proteção contra o
 // typo com JavaScript desligado.
-func TestPortaRecusaSenhasQueNaoConferemNoServidor(t *testing.T) {
+func TestTheDoorRefusesPasswordsThatDoNotMatchOnTheServer(t *testing.T) {
 	f := novaPorta(t, "dono@t20.local")
 	rec := f.bate(t, "/criar-conta", url.Values{
 		"convite": {"tanto-faz"}, "email": {"dono@t20.local"},
@@ -221,7 +221,7 @@ func TestPortaRecusaSenhasQueNaoConferemNoServidor(t *testing.T) {
 
 // A mensagem do validador é a que o jogador lê, e ela era em INGLÊS: a SPA
 // escondia isso validando com Zod antes de chamar.
-func TestPortaDizAsRecusasDeValidacaoEmPortugues(t *testing.T) {
+func TestTheDoorSaysValidationRefusalsInPortuguese(t *testing.T) {
 	f := novaPorta(t)
 	rec := f.bate(t, "/entrar", url.Values{
 		"email": {"isto-não-é-e-mail"}, "senha": {"x"},
@@ -257,7 +257,7 @@ func (f portaFixture) semeiaLink(t *testing.T, validade time.Duration) string {
 
 // Perguntar pelo link ANTES de desenhar o formulário é o ponto da tela: falhar
 // no envio com a senha já digitada duas vezes é pior.
-func TestPortaNaoMostraFormularioComLinkVencido(t *testing.T) {
+func TestTheDoorShowsNoFormWithAnExpiredLink(t *testing.T) {
 	f := novaPorta(t)
 	token := f.semeiaLink(t, -time.Hour)
 
@@ -272,7 +272,7 @@ func TestPortaNaoMostraFormularioComLinkVencido(t *testing.T) {
 	}
 }
 
-func TestPortaTrocaASenhaEDevolveAoLogin(t *testing.T) {
+func TestTheDoorChangesThePasswordAndSendsBackToSignIn(t *testing.T) {
 	f := novaPorta(t)
 	token := f.semeiaLink(t, time.Hour)
 	nova := "outra senha boa"
@@ -303,7 +303,7 @@ func TestPortaTrocaASenhaEDevolveAoLogin(t *testing.T) {
 // O guarda que justifica a decisão de projeto desta superfície: um sinal é
 // estado do cliente e o Datastar o serializa em toda requisição seguinte, então
 // uma senha em `data-bind` viajaria de novo a cada pedido da página.
-func TestPortaNaoPoeNadaEmSinalDoDatastar(t *testing.T) {
+func TestTheDoorPutsNothingInADatastarSignal(t *testing.T) {
 	f := novaPorta(t)
 	for _, caminho := range []string{"/entrar", "/criar-conta?convite=x", "/redefinir-senha"} {
 		corpo := f.bate(t, caminho, nil, "").Body.String()

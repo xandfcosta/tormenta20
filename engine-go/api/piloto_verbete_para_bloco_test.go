@@ -29,7 +29,7 @@ type oraculoDaCopia struct {
 	} `json:"casos"`
 }
 
-func TestACopiaDoVerbeteCasaComOJS(t *testing.T) {
+func TestTheEntryCopyMatchesTheJs(t *testing.T) {
 	bruto, err := os.ReadFile("testdata/verbete-para-bloco-do-js.json")
 	if err != nil {
 		t.Fatalf("oráculo ausente — ele é versionado e não se regenera mais: %v", err)
@@ -64,7 +64,7 @@ func TestACopiaDoVerbeteCasaComOJS(t *testing.T) {
 	}
 }
 
-// TestACopiaNaoCOMPARTILHA fatia com o catálogo.
+// TestTheCopyDoesNotShareASliceWithTheCatalog.
 //
 // O catálogo é EMBUTIDO e servido à mesa inteira; o bloco nasce para ser
 // editado. Se os dois dividissem o mesmo array, o mestre mexer no ataque do seu
@@ -74,7 +74,7 @@ func TestACopiaDoVerbeteCasaComOJS(t *testing.T) {
 //
 // `reflect.DeepEqual` não pega isto: duas fatias que compartilham memória são
 // profundamente iguais. Só a MUTAÇÃO revela.
-func TestACopiaNaoCompartilhaFatiaComOCatalogo(t *testing.T) {
+func TestTheCopyDoesNotShareASliceWithTheCatalog(t *testing.T) {
 	livro := book.Creatures()
 	v := escolhidoOuPrimeiro(livro, "ogro")
 	if v == nil || len(v.Attacks) == 0 {

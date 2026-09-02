@@ -66,9 +66,9 @@ func TestEveryLegacyAddressLandsOnAScene(t *testing.T) {
 	}
 }
 
-// TestOEnderecoAntigoLevaOQueOFazValer: o parâmetro de busca é metade do
+// TestTheLegacyAddressCarriesWhatMakesItWork: o parâmetro de busca é metade do
 // endereço em quatro deles — um convite sem token é uma tela de erro.
-func TestOEnderecoAntigoLevaOQueOFazValer(t *testing.T) {
+func TestTheLegacyAddressCarriesWhatMakesItWork(t *testing.T) {
 	casos := []struct{ de, para string }{
 		{"/campaigns/join?token=abc-123", "/campanhas/entrar?token=abc-123"},
 		{"/join/abc-123", "/campanhas/entrar?token=abc-123"},
@@ -97,11 +97,11 @@ func TestOEnderecoAntigoLevaOQueOFazValer(t *testing.T) {
 	}
 }
 
-// TestOLiteralGanhaDoCuringaNoEnderecoAntigo: `/campaigns/new` e
+// TestTheLiteralBeatsTheWildcardInALegacyAddress: `/campaigns/new` e
 // `/campaigns/join` são irmãos de `/campaigns/{id}` no mesmo mux, e casar pelo
 // curinga mandaria quem clica em "nova campanha" para a crônica de uma campanha
 // chamada "new".
-func TestOLiteralGanhaDoCuringaNoEnderecoAntigo(t *testing.T) {
+func TestTheLiteralBeatsTheWildcardInALegacyAddress(t *testing.T) {
 	casos := map[string]string{
 		"/campaigns/new":  "/campanhas/nova",
 		"/campaigns/join": "/campanhas/entrar",
@@ -114,7 +114,7 @@ func TestOLiteralGanhaDoCuringaNoEnderecoAntigo(t *testing.T) {
 	}
 }
 
-// TestASaudeRespondeNaRaizEnaAPI: dois endereços para a mesma resposta, e o da
+// TestHealthAnswersAtTheRootAndUnderTheApi: dois endereços para a mesma resposta, e o da
 // raiz é o que a infraestrutura conhece.
 //
 // Ele nasceu VERMELHO no CI: quando a API saiu da raiz (fatia 10c), a sonda de
@@ -122,7 +122,7 @@ func TestOLiteralGanhaDoCuringaNoEnderecoAntigo(t *testing.T) {
 // num servidor que já escutava — e a mensagem dizia "o servidor não subiu". O
 // `healthcheck` do compose bate no mesmo lugar, então em produção o contêiner
 // seria marcado insalubre sem nada de errado com ele.
-func TestASaudeRespondeNaRaizEnaAPI(t *testing.T) {
+func TestHealthAnswersAtTheRootAndUnderTheApi(t *testing.T) {
 	s := newTestServer(t)
 	mux := http.NewServeMux()
 	mux.Handle("/health", s.HealthProbe())

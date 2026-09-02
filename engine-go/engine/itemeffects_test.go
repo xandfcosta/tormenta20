@@ -59,7 +59,7 @@ func TestTargetKeyComposition(t *testing.T) {
 // chave da Defesa geral, as duas competiriam pelo maior e uma sumiria — que é o
 // oposto do que o livro manda. Era o único braço do `switch` com regra atrás, e
 // o único que o teste anterior não cobria.
-func TestDefesaDirecionalNaoCompeteComAGeral(t *testing.T) {
+func TestDirectionalDefenseDoesNotCompeteWithTheGeneralOne(t *testing.T) {
 	geral := targetKey(ModifierTarget{K: "defense"})
 	todos := targetKey(ModifierTarget{K: "defense", Scope: "all"})
 	corpoACorpo := targetKey(ModifierTarget{K: "defense", Scope: "melee"})

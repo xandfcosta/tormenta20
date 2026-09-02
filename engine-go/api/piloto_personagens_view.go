@@ -273,7 +273,7 @@ func oPalcoQueEntra(id int64) string {
 // os dois retratos vizinhos e a vaga de criar —, e cada um deles precisa
 // escrever também o SENTIDO e o índice. Escrito à mão cinco vezes, o sexto é o
 // que esquece: o palco entraria pelo lado errado, sem erro em lugar nenhum, e
-// só quem conhecesse a animação notaria. O `TestTodoGestoQueMoveOCursorDizOSentido`
+// só quem conhecesse a animação notaria. O `TestEveryGestureThatMovesTheCursorSaysTheDirection`
 // varre a cena e recusa um `$cursor =` que não venha daqui.
 //
 // # Ele é IDEMPOTENTE, e isso foi medido no navegador

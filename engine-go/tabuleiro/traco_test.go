@@ -12,13 +12,13 @@ import (
 // tem buraco**. Um muro de taverna com um quadrado vazio no meio é uma passagem
 // que o mestre não desenhou, e ela só aparece na hora em que alguém atravessa.
 
-// TestOTracoNaoTemBuraco.
+// TestTheStrokeHasNoGap.
 //
 // Casas VIZINHAS de ponta a ponta, no sentido do rei do xadrez: cada casa do
 // traço encosta na anterior. É o invariante, e não uma lista esperada escrita à
 // mão — uma lista à mão seria a implementação copiada, e ela passaria verde com
 // as duas erradas do mesmo jeito.
-func TestOTracoNaoTemBuraco(t *testing.T) {
+func TestTheStrokeHasNoGap(t *testing.T) {
 	casos := []struct{ de, ate engine.Square }{
 		{engine.Square{}, engine.Square{X: 9, Y: 4}},            // quase horizontal
 		{engine.Square{}, engine.Square{X: 4, Y: 9}},            // quase vertical
@@ -44,14 +44,14 @@ func TestOTracoNaoTemBuraco(t *testing.T) {
 	}
 }
 
-// TestOTracoNaoAndaNaDiagonalQuandoRoCA.
+// TestTheStrokeDoesNotGoDiagonalWhenItGrazes.
 //
 // O CASO que motivou a supercobertura: num traço quase horizontal, o Bresenham
 // clássico troca de linha ANDANDO NA DIAGONAL, e a casa roçada não entra. O
 // guarda acima já recusaria o pulo diagonal (ele exige `dx+dy` de exatamente um
 // passo em UM eixo? não — ele aceita a diagonal), então este aqui é o que separa
 // os dois algoritmos: nenhum passo do traço mexe nos DOIS eixos ao mesmo tempo.
-func TestOTracoNaoAndaNaDiagonalQuandoRoca(t *testing.T) {
+func TestTheStrokeDoesNotGoDiagonalWhenItGrazes(t *testing.T) {
 	casas := CasasDoTraco(engine.Square{}, engine.Square{X: 2, Y: 1})
 	for i := 1; i < len(casas); i++ {
 		dx, dy := abs(casas[i].X-casas[i-1].X), abs(casas[i].Y-casas[i-1].Y)
@@ -67,9 +67,9 @@ func TestOTracoNaoAndaNaDiagonalQuandoRoca(t *testing.T) {
 	}
 }
 
-// TestOTracoPossuidoERecusado: o teto existe contra o pedido forjado, não contra
+// TestAPossessedStrokeIsRefused: o teto existe contra o pedido forjado, não contra
 // o dedo. Num quadro de 16ms nenhum gesto atravessa cem casas.
-func TestOTracoPossuidoERecusado(t *testing.T) {
+func TestAPossessedStrokeIsRefused(t *testing.T) {
 	if TracoValido(engine.Square{}, engine.Square{X: 9999999}) {
 		t.Error("um traço de dez milhões de casas foi aceito")
 	}
@@ -78,13 +78,13 @@ func TestOTracoPossuidoERecusado(t *testing.T) {
 	}
 }
 
-// TestORetanguloEOMesmoNasQuatroDirecoes.
+// TestTheRectangleIsTheSameInAllFourDirections.
 //
 // A REGRA: arrastar da direita para a esquerda, ou de baixo para cima, desenha o
 // MESMO retângulo — porque é o que o dedo faz. Sem o `min`/`max` um arrasto "para
 // trás" devolveria vazio, e a pessoa concluiria que a ferramenta falha às vezes,
 // que é a pior forma de falhar.
-func TestORetanguloEOMesmoNasQuatroDirecoes(t *testing.T) {
+func TestTheRectangleIsTheSameInAllFourDirections(t *testing.T) {
 	a, b := engine.Square{X: 0, Y: 0}, engine.Square{X: 2, Y: 1}
 	referencia := CasasDoRetangulo(a, b)
 	if len(referencia) != 6 {
@@ -102,9 +102,9 @@ func TestORetanguloEOMesmoNasQuatroDirecoes(t *testing.T) {
 	}
 }
 
-// TestORetanguloForjadoERecusado: mil casas são 32×32, uma sala grande de
+// TestAForgedRectangleIsRefused: mil casas são 32×32, uma sala grande de
 // masmorra. Acima disso não saiu de dois cantos escolhidos por alguém.
-func TestORetanguloForjadoERecusado(t *testing.T) {
+func TestAForgedRectangleIsRefused(t *testing.T) {
 	if RetanguloValido(engine.Square{}, engine.Square{X: 9999, Y: 9999}) {
 		t.Error("um retângulo de cem milhões de casas foi aceito")
 	}

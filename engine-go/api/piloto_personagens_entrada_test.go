@@ -36,7 +36,7 @@ func aCenaComTresHerois(t *testing.T) (pilotoFixture, int64) {
 //
 // O guarda falha com o TRECHO ofensor, que é a diferença entre "conserte isto" e
 // "procure".
-func TestTodoGestoQueMoveOCursorDizOSentido(t *testing.T) {
+func TestEveryGestureThatMovesTheCursorSaysTheDirection(t *testing.T) {
 	f, quem := aCenaComTresHerois(t)
 	tela := f.pede(t, quem, http.MethodGet, "/personagens", "").Body.String()
 
@@ -70,7 +70,7 @@ func TestTodoGestoQueMoveOCursorDizOSentido(t *testing.T) {
 // NÃO move o foco: só o gesto de verdade dispara os dois eventos. É a mesma
 // família do evento sintético que o guia do pacote registra — a sonda que não
 // reproduz o gesto mede outra coisa.
-func TestOGestoDoCursorNaoRecalculaOSentidoDuasVezes(t *testing.T) {
+func TestTheCursorGestureDoesNotRecomputeTheDirectionTwice(t *testing.T) {
 	// A guarda tem de estar na expressão, e ela é o que torna a segunda passagem
 	// um nada. Sem `if`, rodar duas vezes é o defeito.
 	gesto := oGestoQueMoveOCursor(3, 16)
@@ -93,7 +93,7 @@ func TestOGestoDoCursorNaoRecalculaOSentidoDuasVezes(t *testing.T) {
 // descendentes `.palco-retrato` e `.palco-placa`. Um porte que renomeasse uma
 // delas deixaria a animação viva e sem alvo — e o sintoma seria "metade do palco
 // entra", que ninguém liga a um seletor de CSS.
-func TestOPalcoTemAsDuasPartesQueAnimam(t *testing.T) {
+func TestTheStageHasTheTwoPartsThatAnimate(t *testing.T) {
 	f, quem := aCenaComTresHerois(t)
 	tela := f.pede(t, quem, http.MethodGet, "/personagens", "").Body.String()
 

@@ -15,7 +15,7 @@ import (
 // e uma lista assim envelhece: ao entrar o `creatureId` (ALE-137) o cliente
 // passou a mandá-lo e o servidor a descartá-lo em silêncio, com tudo
 // compilando. Este teste percorre os campos em vez de conferir um.
-func TestParseEntryPatchNaoPerdeCampo(t *testing.T) {
+func TestParseEntryPatchLosesNoField(t *testing.T) {
 	patch := parseEntryPatch(map[string]any{
 		"label":       "Chefe bandido",
 		"initiative":  float64(17),
@@ -61,7 +61,7 @@ func TestParseEntryPatchNaoPerdeCampo(t *testing.T) {
 // Condição em NPC (ALE-122, destravada pela ALE-137). A lista vem do CATÁLOGO
 // e não de uma cópia escrita aqui: a cópia anterior desviou do livro — faltava
 // `enfeitiçado`, e aplicá-la dava 400 para todo mundo.
-func TestParseConditionsFiltraPeloCatalogo(t *testing.T) {
+func TestParseConditionsFiltersByTheCatalog(t *testing.T) {
 	// Repare no ç: `enfeitiçado` é o ÚNICO dos 35 ids do catálogo com acento —
 	// todos os outros são normalizados ("caido", não "caído"). É o mesmo id que
 	// já derrubou a aplicação com 400 quando a API tinha a lista à mão, e a
@@ -80,7 +80,7 @@ func TestParseConditionsFiltraPeloCatalogo(t *testing.T) {
 
 // Id desconhecido derruba um item, não a aplicação inteira: no meio do combate
 // o mestre perderia as outras condições junto.
-func TestParseConditionsNaoDuplicaNemQuebra(t *testing.T) {
+func TestParseConditionsNeitherDuplicatesNorBreaks(t *testing.T) {
 	list := parseConditions([]any{"caido", "caido", 42, nil, ""})
 
 	if len(list) != 1 || list[0] != "caido" {
@@ -93,7 +93,7 @@ func TestParseConditionsNaoDuplicaNemQuebra(t *testing.T) {
 
 // A condição é estado de COMBATE e mora na linha, como os PV atuais: o bloco de
 // criatura descreve o vilão, e ele não volta na semana seguinte ainda caído.
-func TestCondicaoEntraESaiDaLinha(t *testing.T) {
+func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
 	st := aovivo.EmptyRuntimeState()
 	id := contadorDeIds()
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
@@ -126,7 +126,7 @@ func TestCondicaoEntraESaiDaLinha(t *testing.T) {
 // O nível 8 é o que torna o teste honesto. Metade do nível entra em toda
 // perícia — regra do motor, provada em `engine/` —, então o bônus é 4 e o 17
 // NÃO pode ter vindo do cliente, que mandou 13.
-func TestIniciativaDoJogadorEhSomadaPeloServidor(t *testing.T) {
+func TestThePlayerInitiativeIsSummedByTheServer(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
 	entry, err := f.srv.selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
@@ -145,7 +145,7 @@ func TestIniciativaDoJogadorEhSomadaPeloServidor(t *testing.T) {
 // Um d20 é um d20. Fora de 1..20 o servidor recusa em vez de gravar: o campo é
 // DIGITADO pelo jogador (é para isso que ele existe), e um dedo escorregando no
 // teclado põe 133 na frente da fila inteira.
-func TestD20ForaDaFaixaEhRecusado(t *testing.T) {
+func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
 	for _, d20 := range []int64{0, -3, 21, 100} {
@@ -164,7 +164,7 @@ func TestD20ForaDaFaixaEhRecusado(t *testing.T) {
 // O "self" do `initiative-self` é o que separa este caminho dos outros, que são
 // todos do mestre: sem porta de papel, quem o guarda é o `resolveCombatant`, e
 // ele recusa quem não é dono do personagem.
-func TestRegistrarIniciativaDeOutroEhRecusado(t *testing.T) {
+func TestRecordingSomeoneElsesInitiativeIsRefused(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
 	_, err := f.srv.selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
@@ -231,7 +231,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 // gesto inteiro; o `onSceneEnd` acima só carrega transporte e autorização. E
 // afirma os DOIS lados: o de cena sai, o de dia FICA. Limpar demais aqui
 // apagaria a bênção que o grupo comprou para o dia todo, e ninguém veria.
-func TestEncerrarCenaExpiraOsEfeitosDeCenaDoGrupo(t *testing.T) {
+func TestEndingTheSceneExpiresThePartySceneEffects(t *testing.T) {
 	f := newEndSceneFixture(t)
 
 	state, err := f.srv.endSceneForTable(f.gm, f.campaignID, f.sessionID)
@@ -250,7 +250,7 @@ func TestEncerrarCenaExpiraOsEfeitosDeCenaDoGrupo(t *testing.T) {
 // E alcança TODA a ficha do grupo, não só quem está na fila: a bênção foi
 // lançada na cena e a cena acabou para os cinco, inclusive para quem o mestre
 // nunca chegou a pôr no rastreador.
-func TestEncerrarCenaAlcancaQuemNaoEstaNaFila(t *testing.T) {
+func TestEndingTheSceneReachesWhoIsNotInTheTracker(t *testing.T) {
 	f := newEndSceneFixture(t)
 	ausente := seedCharacter(t, f.srv, f.player, "Ladino de fora", 10, 10, 2, 2)
 	seedMember(t, f.srv, f.campaignID, ausente, "player")
@@ -304,7 +304,7 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 // Não alcançar as fichas do grupo ABORTA o gesto inteiro: a cena continua
 // ligada. Desligá-la assim mesmo devolveria o defeito da ALE-220 com o botão
 // parecendo ter funcionado — fila zerada na tela e as bênçãos vivas na ficha.
-func TestEncerrarCenaNaoDesligaACenaSeNaoAlcancouAsFichas(t *testing.T) {
+func TestEndingTheSceneDoesNotTurnItOffIfItDidNotReachTheSheets(t *testing.T) {
 	f := newEndSceneFixture(t)
 	if _, err := f.srv.db.Exec("DROP TABLE campaign_members"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)

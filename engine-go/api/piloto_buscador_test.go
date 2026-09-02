@@ -19,8 +19,8 @@ import (
 // Três dos casos abaixo nasceram VERMELHOS contra o código escrito, e estão
 // anotados um a um.
 
-// TestOVerbeteCertoVemPrimeiro: a escada de pontuação, do nome inteiro ao typo.
-func TestOVerbeteCertoVemPrimeiro(t *testing.T) {
+// TestTheRightEntryComesFirst: a escada de pontuação, do nome inteiro ao typo.
+func TestTheRightEntryComesFirst(t *testing.T) {
 	escada := []struct {
 		nome, busca string
 		esperado    int
@@ -39,12 +39,12 @@ func TestOVerbeteCertoVemPrimeiro(t *testing.T) {
 	}
 }
 
-// TestDoisTermosAchamONomeInteiro.
+// TestTwoTermsFindTheWholeName.
 //
 // PROVADO VERMELHO com a versão de um termo só: "bola fogo" devolvia ZERO —
 // o nome não começa com a frase, não a contém, e pular o "de " estoura a folga
 // do quase-igual. Digitar duas palavras do que se lembra é o gesto normal.
-func TestDoisTermosAchamONomeInteiro(t *testing.T) {
+func TestTwoTermsFindTheWholeName(t *testing.T) {
 	v := buscaNoLivro("bola fogo")
 	if !temOAchado(v, "Bola de Fogo") {
 		t.Errorf("“bola fogo” não achou “Bola de Fogo” — %d achados", v.Achados)
@@ -54,7 +54,7 @@ func TestDoisTermosAchamONomeInteiro(t *testing.T) {
 	}
 }
 
-// TestOCorpoDaRegraSoEntraQuandoNomeNenhumCasa.
+// TestTheRuleBodyOnlyEntersWhenNoNameMatches.
 //
 // PROVADO VERMELHO com o corpo valendo sempre: "abal" devolvia 282 entradas —
 // 139 poderes cujo texto diz "Abalado" — e a condição "Abalado", que era o que
@@ -62,7 +62,7 @@ func TestDoisTermosAchamONomeInteiro(t *testing.T) {
 //
 // O controle é o segundo caso: quem NÃO sabe o nome ("chance de falha") continua
 // achando, e a tela diz que aquilo é menção e não nome.
-func TestOCorpoDaRegraSoEntraQuandoNomeNenhumCasa(t *testing.T) {
+func TestTheRuleBodyOnlyEntersWhenNoNameMatches(t *testing.T) {
 	porNome := buscaNoLivro("abal")
 	if porNome.PeloTexto {
 		t.Fatal("houve casamento de nome e a busca caiu na segunda passada mesmo assim")
@@ -83,8 +83,8 @@ func TestOCorpoDaRegraSoEntraQuandoNomeNenhumCasa(t *testing.T) {
 	}
 }
 
-// TestOCorteDizQuantoSobrouETemSaida: corte silencioso ensina que não existe.
-func TestOCorteDizQuantoSobrouETemSaida(t *testing.T) {
+// TestTheCutoffSaysHowMuchIsLeftAndOffersAWayOut: corte silencioso ensina que não existe.
+func TestTheCutoffSaysHowMuchIsLeftAndOffersAWayOut(t *testing.T) {
 	v := buscaNoLivro("arma")
 	poderes := grupoChamado(v, "Poderes")
 	if poderes == nil {
@@ -101,9 +101,9 @@ func TestOCorteDizQuantoSobrouETemSaida(t *testing.T) {
 	}
 }
 
-// TestOAchadoSabeParaOndeLevar: cada linha é um endereço, e eles diferem por
+// TestAHitKnowsWhereToLead: cada linha é um endereço, e eles diferem por
 // ferramenta — criatura vai ao bestiário, o resto ao acervo.
-func TestOAchadoSabeParaOndeLevar(t *testing.T) {
+func TestAHitKnowsWhereToLead(t *testing.T) {
 	criatura := primeiroDoGrupo(t, buscaNoLivro("lobo"), "Criaturas")
 	if !strings.HasPrefix(criatura.Destino, rotaDoBestiarioDoMestre+"?criatura=") {
 		t.Errorf("a criatura leva para %q", criatura.Destino)
@@ -117,12 +117,12 @@ func TestOAchadoSabeParaOndeLevar(t *testing.T) {
 	}
 }
 
-// TestARotaDoBuscadorLeOSinal: o caminho que o navegador usa de verdade.
+// TestTheFinderRouteReadsTheSignal: o caminho que o navegador usa de verdade.
 //
 // Pelo SINAL e não por `?busca=`: é assim que o `@get` do Datastar manda o que
 // foi digitado, e a URL é só o caminho de quem abre o endereço à mão. Um guarda
 // que só medisse a URL passaria verde com o sinal quebrado.
-func TestARotaDoBuscadorLeOSinal(t *testing.T) {
+func TestTheFinderRouteReadsTheSignal(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -138,15 +138,15 @@ func TestARotaDoBuscadorLeOSinal(t *testing.T) {
 	}
 }
 
-// TestAPortaNaoDesenhaOBuscador.
+// TestTheDoorDoesNotDrawTheFinder.
 //
 // A caixa liga um sinal, e sinal é estado de cliente que viaja em TODA
 // requisição seguinte — na porta, junto com a senha. O
-// `TestPortaNaoPoeNadaEmSinalDoDatastar` cobra a regra geral; este cobra que
+// `TestTheDoorPutsNothingInADatastarSignal` cobra a regra geral; este cobra que
 // esta caixa em particular ficou de fora.
 //
 // O controle é o segundo caso: a MESMA casca, numa tela com sessão, desenha.
-func TestAPortaNaoDesenhaOBuscador(t *testing.T) {
+func TestTheDoorDoesNotDrawTheFinder(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -212,14 +212,14 @@ func temOAchado(v buscadorView, nome string) bool {
 	return false
 }
 
-// TestOMelhorAchadoVemNoPrimeiroGrupo (ALE-264).
+// TestTheBestHitComesInTheFirstGroup (ALE-264).
 //
 // PROVADO VERMELHO contra a ordem fixa: os grupos saíam na ordem da FILEIRA DE
 // ABAS, e o dono viu o efeito — digitando "medo", o verbete "Medo" (nome
 // inteiro, nota máxima) aparecia no sexto grupo, abaixo de criaturas que só têm
 // a palavra no nome. A ordem da fileira é a certa para NAVEGAR e a errada para
 // BUSCAR.
-func TestOMelhorAchadoVemNoPrimeiroGrupo(t *testing.T) {
+func TestTheBestHitComesInTheFirstGroup(t *testing.T) {
 	casos := []struct{ termo, grupo, achado string }{
 		{"medo", "Efeitos", "Medo"},
 		{"abal", "Condições", "Abalado"},
@@ -239,12 +239,12 @@ func TestOMelhorAchadoVemNoPrimeiroGrupo(t *testing.T) {
 	}
 }
 
-// TestOEmpateMantemAOrdemDaFileira: a ordenação é ESTÁVEL.
+// TestATieKeepsTheOrderOfTheRow: a ordenação é ESTÁVEL.
 //
 // A ordem das abas tem razão registrada — condição primeiro porque é a consulta
 // do combate — e ela continua valendo quando dois grupos têm achados igualmente
 // bons. Sem estabilidade, a mesma busca poderia sair em ordens diferentes.
-func TestOEmpateMantemAOrdemDaFileira(t *testing.T) {
+func TestATieKeepsTheOrderOfTheRow(t *testing.T) {
 	grupos := []grupoDoBuscador{
 		{Rotulo: "Condições", Achados: []achadoDoBuscador{{Nome: "a", ponto: 40}}},
 		{Rotulo: "Magias", Achados: []achadoDoBuscador{{Nome: "b", ponto: 40}}},

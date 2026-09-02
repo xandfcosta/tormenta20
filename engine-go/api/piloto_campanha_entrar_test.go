@@ -63,7 +63,7 @@ func seedCampanha(t *testing.T, s *Server, dono int64, nome, convite string) int
 }
 
 // O DONO entra na própria mesa sem convite, e sai daqui para a crônica com 303.
-func TestODonoEntraNaPropriaMesaSemConvite(t *testing.T) {
+func TestTheOwnerEntersTheirOwnTableWithoutAnInvite(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
@@ -86,7 +86,7 @@ func TestODonoEntraNaPropriaMesaSemConvite(t *testing.T) {
 
 // Mesa de OUTRA pessoa sem convite é recusada, e a frase diz o que fazer —
 // pedir o link — em vez de \"não foi possível entrar\".
-func TestSemConviteAMesaDeOutroEhRecusadaComOProximoPasso(t *testing.T) {
+func TestWithoutAnInviteSomeoneElsesTableIsRefusedWithTheNextStep(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
@@ -108,7 +108,7 @@ func TestSemConviteAMesaDeOutroEhRecusadaComOProximoPasso(t *testing.T) {
 
 // COM o convite certo, a mesma pessoa entra. É o par do teste acima: sem ele,
 // aquele passaria numa tela que recusasse todo mundo.
-func TestComOConviteCertoOVisitanteEntra(t *testing.T) {
+func TestWithTheRightInviteTheVisitorEnters(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
@@ -128,7 +128,7 @@ func TestComOConviteCertoOVisitanteEntra(t *testing.T) {
 // O id vem do CONVITE quando há um, e o campo de número nem aparece. Um número
 // digitado junto não pode virar uma segunda fonte para a mesma coisa — senão o
 // convite de uma mesa serviria de senha para entrar em OUTRA.
-func TestComConviteONumeroDigitadoEhIgnorado(t *testing.T) {
+func TestWithAnInviteTheTypedNumberIsIgnored(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
@@ -152,7 +152,7 @@ func TestComConviteONumeroDigitadoEhIgnorado(t *testing.T) {
 
 // A carta resolve o convite NO SERVIDOR: o nome da mesa já vem na primeira
 // resposta, e não há estado de \"carregando\" para existir.
-func TestACartaJaVemComONomeDaMesa(t *testing.T) {
+func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
@@ -170,7 +170,7 @@ func TestACartaJaVemComONomeDaMesa(t *testing.T) {
 // Convite morto é uma RESPOSTA e não um erro de página: a carta diz isso em voz
 // alta, para a pessoa pedir outro link em vez de olhar um botão que não envia
 // (ALE-80).
-func TestConviteMortoViraFraseENaoPaginaQuebrada(t *testing.T) {
+func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	s := newTestServer(t)
 	visitante := seedUser(t, s, "visitante@t20.local")
 

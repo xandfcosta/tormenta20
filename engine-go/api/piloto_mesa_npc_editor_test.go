@@ -89,7 +89,7 @@ func npcNoBanco(t *testing.T, f pilotoFixture, nome string) creature.Block {
 	return creature.Block{}
 }
 
-// TestOGestoDeFORMAnaoGravaEnaoPerdeODigitado — o coração desta superfície.
+// TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped — o coração desta superfície.
 //
 // Acrescentar um ataque PRECISA do servidor (Datastar não tem laço no cliente),
 // e é aí que mora o risco: se o gesto gravasse, "Cancelar desfaz de verdade"
@@ -98,7 +98,7 @@ func npcNoBanco(t *testing.T, f pilotoFixture, nome string) creature.Block {
 //
 // Este caso afirma as duas metades de uma vez: o banco continua vazio E o nome
 // volta na resposta.
-func TestOGestoDeFormaNaoGravaENaoPerdeODigitado(t *testing.T) {
+func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	f := novoPiloto(t)
 
 	resposta := f.posta(t, f.mestre,
@@ -126,12 +126,12 @@ func TestOGestoDeFormaNaoGravaENaoPerdeODigitado(t *testing.T) {
 	}
 }
 
-// TestTirarUmaLinhaTiraAQUELAlinha.
+// TestRemovingARowRemovesThatRow.
 //
 // Índice fora por um é a classe de erro clássica desta operação, e o sintoma na
 // mesa é o pior possível: o mestre clica no lixo do terceiro ataque e some o
 // segundo, que ele acabou de escrever.
-func TestTirarUmaLinhaTiraAquelaLinha(t *testing.T) {
+func TestRemovingARowRemovesThatRow(t *testing.T) {
 	f := novoPiloto(t)
 	tres := `"attacks":[{"name":"Clava"},{"name":"Mordida"},{"name":"Cauda"}],"skills":[],"specialAbilities":[]`
 	resposta := f.posta(t, f.mestre,
@@ -148,12 +148,12 @@ func TestTirarUmaLinhaTiraAquelaLinha(t *testing.T) {
 	}
 }
 
-// TestUmaLinhaQueNaoExisteRecusaEmVezDeEstourar.
+// TestARowThatDoesNotExistRefusesInsteadOfBlowingUp.
 //
 // O índice vem do BOTÃO, e o botão pode ser de uma tela velha — outra aba já
 // tirou a linha. Um `panic` aqui derrubaria a resposta inteira; a recusa com o
 // número diz o que aconteceu.
-func TestUmaLinhaQueNaoExisteRecusaEmVezDeEstourar(t *testing.T) {
+func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 	f := novoPiloto(t)
 	resposta := f.posta(t, f.mestre,
 		f.urlDaMesa()+"/elenco/npc/rascunho/"+listaDeAtaques+"/7/remover",
@@ -163,7 +163,7 @@ func TestUmaLinhaQueNaoExisteRecusaEmVezDeEstourar(t *testing.T) {
 	}
 }
 
-// TestAAUSENCIAdeManaSobreviveAoFormulario.
+// TestTheAbsenceOfManaSurvivesTheForm.
 //
 // A linha de PM só existe em quem conjura — o Centauro Xamã tem 20 PM (p290), o
 // Bandido não tem linha nenhuma —, e um zero ali diria "tem mana e está sem", que
@@ -171,7 +171,7 @@ func TestUmaLinhaQueNaoExisteRecusaEmVezDeEstourar(t *testing.T) {
 //
 // O formulário não sabe digitar "ausente": ele guarda um número e um interruptor.
 // Este caso prende a tradução nos DOIS sentidos, porque é onde ela se perde.
-func TestAAusenciaDeManaSobreviveAoFormulario(t *testing.T) {
+func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
 	f := novoPiloto(t)
 	base := f.urlDaMesa() + "/elenco/npc/rascunho/salvar"
 
@@ -191,7 +191,7 @@ func TestAAusenciaDeManaSobreviveAoFormulario(t *testing.T) {
 	}
 }
 
-// TestOFormularioNaoNasceComAPalavraUNDEFINED.
+// TestTheFormIsNotBornWithTheWordUndefined.
 //
 // Medido no navegador antes de virar teste: campo opcional com `omitempty` sai
 // AUSENTE do sinal, e um `data-bind` para um caminho ausente escreve a palavra
@@ -199,7 +199,7 @@ func TestAAusenciaDeManaSobreviveAoFormulario(t *testing.T) {
 //
 // O guarda é sobre o que o servidor MANDA: os campos opcionais têm de estar lá,
 // com valor vazio, e não faltando.
-func TestOFormularioNaoNasceComAPalavraUndefined(t *testing.T) {
+func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 	f := novoPiloto(t)
 	comOpcionaisVazios := `"attacks":[{"name":"Clava","attackBonus":7,"damage":"1d6+3"}],` +
 		`"skills":[{"name":"Furtividade","bonus":5}],"specialAbilities":[]`
@@ -215,7 +215,7 @@ func TestOFormularioNaoNasceComAPalavraUndefined(t *testing.T) {
 	}
 }
 
-// TestSalvarSemNomeFalaDENTROdoEditor.
+// TestSavingWithoutANameSpeaksInsideTheEditor.
 //
 // A recusa do `comandoDoMestre` sai por padrão no `erroDoComando`, que é o rodapé
 // do mestre — e o editor é um DIÁLOGO por cima dele. Medido no navegador: salvar
@@ -224,7 +224,7 @@ func TestOFormularioNaoNasceComAPalavraUndefined(t *testing.T) {
 // E a frase é em PORTUGUÊS: ela era inglesa enquanto o formulário sempre foi
 // português, e "creature name is required" ao lado de uma caixa escrita "Nome"
 // manda o mestre procurar um campo que não existe.
-func TestSalvarSemNomeFalaDentroDoEditor(t *testing.T) {
+func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 	f := novoPiloto(t)
 	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/rascunho/salvar",
 		oRascunhoNoCorpo(`"id":0,"nome":"","conjura":false,"bloco":{`+blocoMinimo+`}`))
@@ -237,13 +237,13 @@ func TestSalvarSemNomeFalaDentroDoEditor(t *testing.T) {
 	}
 }
 
-// TestOEditorNaoAlcancaOElencoDeOUTRAcampanha — a trava que mais importa.
+// TestTheEditorDoesNotReachAnotherCampaignsCast — a trava que mais importa.
 //
 // O id vem do RASCUNHO, que vem do navegador: sem a conferência de campanha, o
 // mestre de uma mesa reescreveria a preparação de outra. É a mesma trava que o
 // `oNPCDaCampanha` já fazia para o caminho, e o editor tinha de reusá-la em vez
 // de confiar no número que chegou.
-func TestOEditorNaoAlcancaOElencoDeOutraCampanha(t *testing.T) {
+func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	f := novoPiloto(t)
 	// Um NPC guardado numa campanha VIZINHA do mesmo mestre.
 	vizinha := seedCampaign(t, f.s, f.mestre)
@@ -272,8 +272,8 @@ func TestOEditorNaoAlcancaOElencoDeOutraCampanha(t *testing.T) {
 	}
 }
 
-// TestSoOMestreMexeNoElenco: a trava é do servidor, e não o botão escondido.
-func TestSoOMestreMexeNoElenco(t *testing.T) {
+// TestOnlyTheGmTouchesTheCast: a trava é do servidor, e não o botão escondido.
+func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 	f := novoPiloto(t)
 	for _, caminho := range []string{
 		"/elenco/npc/novo",
@@ -288,12 +288,12 @@ func TestSoOMestreMexeNoElenco(t *testing.T) {
 	}
 }
 
-// TestCriarDoZeroEEditarSaoOMESMOformulario.
+// TestCreatingFromScratchAndEditingAreTheSameForm.
 //
 // Dois caminhos com duas telas seriam duas telas para envelhecer, e o defeito
 // apareceria como "criar do zero não tem a aba de perícias". A prova é que os
 // dois abrem devolvendo a MESMA forma de rascunho — o que muda é a semente.
-func TestCriarDoZeroEEditarSaoOMesmoFormulario(t *testing.T) {
+func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
 	f := novoPiloto(t)
 	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/rascunho/salvar",
 		oRascunhoNoCorpo(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))

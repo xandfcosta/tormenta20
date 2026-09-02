@@ -18,7 +18,7 @@ test.describe('Detalhe da campanha', () => {
   // Aqui a garantia está partida em duas, cada metade na camada que a sustenta:
   //   - a SEÇÃO É ENDEREÇO (link, URL, e o botão voltar) tem e2e próprio em
   //     `piloto-datastar.spec.ts` — histórico é do navegador e jsdom não o tem;
-  //   - o ROSTER desenhado é `TestOMestreVemPrimeiroNoElenco`, em
+  //   - o ROSTER desenhado é `TestTheGmComesFirstInTheCast`, em
   //     `api/piloto_cronica_test.go`, que é a camada mais barata que o sustenta.
 })
 
@@ -33,8 +33,8 @@ test.describe('Detalhe da campanha', () => {
  * servidor, e com ela foram embora o `entities/campaign/join-target.test.ts` e o
  * `features/campaign-join/hero-picker.test.tsx`. Quem responde agora é o
  * `api/piloto_campanha_entrar_test.go` — a resolução do alvo em
- * `TestSemConviteAMesaDeOutroEhRecusadaComOProximoPasso` e o convite morto em
- * `TestConviteMortoViraFraseENaoPaginaQuebrada` —, mais a
+ * `TestWithoutAnInviteSomeoneElsesTableIsRefusedWithTheNextStep` e o convite morto em
+ * `TestADeadInviteBecomesASentenceAndNotABrokenPage` —, mais a
  * `A carta de convite (piloto Datastar)` no `piloto-datastar.spec.ts` para o que
  * só o browser vê. A prévia do convite continua em
  * (`entities/queries.test.ts`), esse sobreviveu, e a

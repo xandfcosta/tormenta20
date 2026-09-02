@@ -20,10 +20,10 @@ var (
 	ladino    = []string{}
 )
 
-// TestOKitInicialSegueAsProficiencias — p140.
+// TestTheStartingKitFollowsTheProficiencies — p140.
 //
 // O kit é um só; o que a classe muda são a arma marcial, a brunea e o escudo.
-func TestOKitInicialSegueAsProficiencias(t *testing.T) {
+func TestTheStartingKitFollowsTheProficiencies(t *testing.T) {
 	casos := []struct {
 		nome          string
 		classe        string
@@ -97,13 +97,13 @@ func TestOKitInicialSegueAsProficiencias(t *testing.T) {
 	}
 }
 
-// TestABruneaEscolhaENaoTroca — p140, e é a divergência que o porte corrigiu.
+// TestTheBruneaIsAChoiceAndNotASwap — p140, e é a divergência que o porte corrigiu.
 //
 // "Se você tiver proficiência com armaduras pesadas, em vez disso PODE começar
 // com uma brunea": quem usa pesadas escolhe entre QUATRO. O
 // `class-starting-kits.ts` devolvia `armor: 'brunea'` e apagava as três leves,
 // de modo que um guerreiro que quisesse gibão de peles não tinha como pedir.
-func TestABruneaEscolhaENaoTroca(t *testing.T) {
+func TestTheBruneaIsAChoiceAndNotASwap(t *testing.T) {
 	kit := StartingKitFor("Guerreiro", guerreiro)
 	if len(kit.Armors) != 4 {
 		t.Fatalf("%d armaduras à escolha, esperado 4: %v", len(kit.Armors), kit.Armors)
@@ -113,10 +113,10 @@ func TestABruneaEscolhaENaoTroca(t *testing.T) {
 	}
 }
 
-// TestTodoItemDoKitInicialExisteNoCatalogo é guarda de varredura: o kit concede
+// TestEveryStartingKitItemExistsInTheCatalog é guarda de varredura: o kit concede
 // por ID, e um ID que não casa não estoura — ele concede NADA, em silêncio, e o
 // herói nasce sem mochila sem ninguém ver.
-func TestTodoItemDoKitInicialExisteNoCatalogo(t *testing.T) {
+func TestEveryStartingKitItemExistsInTheCatalog(t *testing.T) {
 	bruto, ok := catalog.Resource("items")
 	if !ok {
 		t.Fatal("catálogo de itens ausente")

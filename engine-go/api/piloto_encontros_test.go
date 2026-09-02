@@ -17,13 +17,13 @@ func encontroDe(t *testing.T, linhas []linhaDoEncontro) encontrosView {
 	return carregaEncontros(nivelPadrao, grupoPadrao, linhas, "")
 }
 
-// TestAMesmaCriaturaSOBEAContagem, e não vira uma segunda linha.
+// TestTheSameCreatureRaisesTheCount, e não vira uma segunda linha.
 //
 // Duas linhas do mesmo verbete calculariam cada uma o próprio ND de grupo, e a
 // regra da dobra (p282) só significa alguma coisa sobre UM grupo: dois grupos
 // de dois ogros valeriam MENOS que um grupo de quatro, que é o oposto da regra.
 // É por isso que este guarda mede o ND e não só a contagem de linhas.
-func TestAMesmaCriaturaSobeAContagem(t *testing.T) {
+func TestTheSameCreatureRaisesTheCount(t *testing.T) {
 	linhas := []linhaDoEncontro{}
 	for i := 0; i < 4; i++ {
 		linhas = acrescenta(linhas, "ogro")
@@ -45,10 +45,10 @@ func TestAMesmaCriaturaSobeAContagem(t *testing.T) {
 	}
 }
 
-// TestOUltimoTiradoLEVAALinha: um grupo de zero criaturas não é um grupo, e
+// TestTheLastOneRemovedTakesTheRow: um grupo de zero criaturas não é um grupo, e
 // deixar a linha com 0 mostraria "ND 0" numa linha que ainda parece parte do
 // encontro.
-func TestOUltimoTiradoLevaALinha(t *testing.T) {
+func TestTheLastOneRemovedTakesTheRow(t *testing.T) {
 	linhas := []linhaDoEncontro{{ID: "ogro", Qtd: 2}}
 	linhas = diminui(linhas, "ogro")
 	if len(linhas) != 1 || linhas[0].Qtd != 1 {
@@ -60,9 +60,9 @@ func TestOUltimoTiradoLevaALinha(t *testing.T) {
 	}
 }
 
-// TestOVerbeteQueSumiuNaoVIRALinhaVazia. Um id velho colado numa URL
+// TestAnEntryThatVanishedDoesNotBecomeAnEmptyRow. Um id velho colado numa URL
 // renderizaria uma linha sem nome com quantidade viva.
-func TestOVerbeteQueSumiuNaoViraLinhaVazia(t *testing.T) {
+func TestAnEntryThatVanishedDoesNotBecomeAnEmptyRow(t *testing.T) {
 	v := encontroDe(t, []linhaDoEncontro{
 		{ID: "ogro", Qtd: 1},
 		{ID: "dragao-de-papel-machê", Qtd: 3},
@@ -75,12 +75,12 @@ func TestOVerbeteQueSumiuNaoViraLinhaVazia(t *testing.T) {
 	}
 }
 
-// TestOLinkCopiadoREABREOEncontro é o ciclo inteiro: montar, copiar, colar.
+// TestTheCopiedLinkReopensTheEncounter é o ciclo inteiro: montar, copiar, colar.
 //
 // Ele existe porque o formato do link é escrito num lugar e lido em outro, e é
 // exatamente aí que um `:` vira `-` e o encontro chega vazio do outro lado sem
 // nenhum erro.
-func TestOLinkCopiadoReabreOEncontro(t *testing.T) {
+func TestTheCopiedLinkReopensTheEncounter(t *testing.T) {
 	original := carregaEncontros(5, 3, []linhaDoEncontro{
 		{ID: "ogro", Qtd: 2}, {ID: "goblin-salteador", Qtd: 4},
 	}, "")
@@ -115,9 +115,9 @@ func TestOLinkCopiadoReabreOEncontro(t *testing.T) {
 	}
 }
 
-// TestOLinkTortoNaoCustaOEncontroInteiro: ele chega por chat, e um caractere a
+// TestACrookedLinkDoesNotCostTheWholeEncounter: ele chega por chat, e um caractere a
 // mais não pode zerar o que veio junto.
-func TestOLinkTortoNaoCustaOEncontroInteiro(t *testing.T) {
+func TestACrookedLinkDoesNotCostTheWholeEncounter(t *testing.T) {
 	linhas := linhasDaURL("ogro:2,lixo,goblin-salteador:x,,cascavel:3")
 	if len(linhas) != 2 {
 		t.Fatalf("%d linhas de duas boas: %+v", len(linhas), linhas)
@@ -127,9 +127,9 @@ func TestOLinkTortoNaoCustaOEncontroInteiro(t *testing.T) {
 	}
 }
 
-// TestONivelEOTamanhoAbsurdosCaemNoPadrao. Os dois vêm da URL, que qualquer um
+// TestAnAbsurdLevelAndSizeFallBackToTheDefault. Os dois vêm da URL, que qualquer um
 // edita à mão, e um nível 999 mudaria a dificuldade sem mudar o encontro.
-func TestONivelEOTamanhoAbsurdosCaemNoPadrao(t *testing.T) {
+func TestAnAbsurdLevelAndSizeFallBackToTheDefault(t *testing.T) {
 	v := carregaEncontros(999, -3, nil, "")
 	if v.Nivel != nivelPadrao || v.Grupo != grupoPadrao {
 		t.Errorf("nível %d e grupo %d, quero os padrões %d e %d",
@@ -137,10 +137,10 @@ func TestONivelEOTamanhoAbsurdosCaemNoPadrao(t *testing.T) {
 	}
 }
 
-// TestOPainelDeBuscaSoAparaceComTermo: mostrar as 80 criaturas abaixo da
+// TestTheSearchPanelOnlyShowsWithATerm: mostrar as 80 criaturas abaixo da
 // composição empurraria o VEREDITO para fora da tela, e o veredito é o assunto
 // da ferramenta (ALE-170).
-func TestOPainelDeBuscaSoApareceComTermo(t *testing.T) {
+func TestTheSearchPanelOnlyShowsWithATerm(t *testing.T) {
 	if got := carregaEncontros(1, 4, nil, "").Achados; len(got) != 0 {
 		t.Errorf("sem termo vieram %d criaturas", len(got))
 	}
@@ -151,9 +151,9 @@ func TestOPainelDeBuscaSoApareceComTermo(t *testing.T) {
 
 // ── pelo fio ─────────────────────────────────────────────────────────────────
 
-// TestOGestoDeAcrescentarDevolveRemendo, e não uma página: recarregar no meio
+// TestTheAddGestureReturnsAPatch, e não uma página: recarregar no meio
 // da montagem perderia o rascunho, que só vive nos sinais.
-func TestOGestoDeAcrescentarDevolveRemendo(t *testing.T) {
+func TestTheAddGestureReturnsAPatch(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -169,8 +169,8 @@ func TestOGestoDeAcrescentarDevolveRemendo(t *testing.T) {
 	}
 }
 
-// TestOEncontroDaURLValeNaCargaFria — é o link colado no chat abrindo montado.
-func TestOEncontroDaURLValeNaCargaFria(t *testing.T) {
+// TestTheEncounterInTheUrlHoldsOnAColdLoad — é o link colado no chat abrindo montado.
+func TestTheEncounterInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 

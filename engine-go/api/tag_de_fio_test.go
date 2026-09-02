@@ -62,7 +62,7 @@ var pacotesDeFio = []string{".", "../aovivo", "../tabuleiro", "../plataforma"}
 // Fica no mesmo arquivo que o guarda das tags de propósito: é a mesma família
 // (rename que varre uma STRING junto) e a mesma resposta (conserte a string,
 // não o guarda). Separá-los faria parecer que são dois problemas.
-func TestRotaDeFioComecaEmMinuscula(t *testing.T) {
+func TestAWireRouteStartsLowercase(t *testing.T) {
 	rota := regexp.MustCompile(`r\.(?:Get|Post|Put|Patch|Delete|Route)\("(/[^"]*)"`)
 
 	arquivos, err := filepath.Glob("*.go")
@@ -109,7 +109,7 @@ func TestRotaDeFioComecaEmMinuscula(t *testing.T) {
 	}
 }
 
-func TestTagDeFioComecaEmMinuscula(t *testing.T) {
+func TestAWireTagStartsLowercase(t *testing.T) {
 	tag := regexp.MustCompile(`json:"([^",]+)`)
 
 	visitados, achadas := 0, 0

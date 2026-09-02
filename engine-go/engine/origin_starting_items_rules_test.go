@@ -9,9 +9,9 @@ import (
 	"t20engine/catalog"
 )
 
-// TestAsConcessoesDeOrigemSaoClassificadas — as frases são as do livro (p85–95),
+// TestOriginGrantsAreClassified — as frases são as do livro (p85–95),
 // copiadas de `origens.json` na mão.
-func TestAsConcessoesDeOrigemSaoClassificadas(t *testing.T) {
+func TestOriginGrantsAreClassified(t *testing.T) {
 	casos := []struct {
 		frase    string
 		kind     OriginItemKind
@@ -80,7 +80,7 @@ func TestAsConcessoesDeOrigemSaoClassificadas(t *testing.T) {
 	}
 }
 
-// TestNenhumaConcessaoDeOrigemComEscolhaNasceFixa é guarda de varredura sobre o
+// TestNoOriginGrantWithAChoiceIsBornFixed é guarda de varredura sobre o
 // catálogo inteiro.
 //
 // O tipo `fixed` é o que vira ITEM na Mochila. Uma frase de escolha classificada
@@ -88,7 +88,7 @@ func TestAsConcessoesDeOrigemSaoClassificadas(t *testing.T) {
 // carga, e é o tipo de defeito que só aparece quando um jogador olha a mochila
 // dele. Como o classificador é por FORMA, uma origem nova com uma forma nova
 // falha aqui em vez de nascer errada.
-func TestNenhumaConcessaoDeOrigemComEscolhaNasceFixa(t *testing.T) {
+func TestNoOriginGrantWithAChoiceIsBornFixed(t *testing.T) {
 	bruto, ok := catalog.Resource("origens")
 	if !ok {
 		t.Fatal("catálogo de origens ausente")

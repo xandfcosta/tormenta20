@@ -12,7 +12,7 @@ import (
 )
 
 // O guarda da COR do marcador (ALE-264): a lista que o domínio aceita e o CSS
-// que a pinta têm de andar juntas. Irmão do `TestTodoChaoOferecidoTemComoSerPintado`,
+// que a pinta têm de andar juntas. Irmão do `TestEveryOfferedGroundCanBePainted`,
 // e ele existe porque o defeito dele JÁ TINHA ACONTECIDO aqui.
 //
 // A autoridade sempre aceitou `ouro/carmim/azul/verde`; o piloto tinha escrito
@@ -22,7 +22,7 @@ import (
 //
 // Amostragem e não enumeração: o guarda percorre a LISTA, então a quinta cor já
 // nasce medida.
-func TestTodaCorDeMarcadorTemComoSerPintada(t *testing.T) {
+func TestEveryMarkerColorCanBePainted(t *testing.T) {
 	css, err := os.ReadFile("piloto/piloto.src.css")
 	if err != nil {
 		t.Fatalf("ler o CSS do piloto: %v", err)
@@ -52,13 +52,13 @@ func TestTodaCorDeMarcadorTemComoSerPintada(t *testing.T) {
 	}
 }
 
-// TestCorDeMarcadorDesconhecidaCaiNoPadrao — o caminho do dado torto.
+// TestAnUnknownMarkerColorFallsBackToTheDefault — o caminho do dado torto.
 //
 // A cor vem do banco, logo é dado de CLIENTE: ela entra num `style`, e string
 // livre daqui seria injeção de CSS no estado da mesa. Este guarda prende o
 // fallback e, de quebra, prende que ele aponta para uma variável que EXISTE —
 // era exatamente aí que o defeito antigo morava.
-func TestCorDeMarcadorDesconhecidaCaiNoPadrao(t *testing.T) {
+func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
 	padrao := corDeMarcador(tabuleiro.CorPadraoDeMarcador())
 
 	for _, torta := range []string{"gold", "red", "'; background: url(x)", ""} {
@@ -90,7 +90,7 @@ func TestCorDeMarcadorDesconhecidaCaiNoPadrao(t *testing.T) {
 // justamente o que envelhece sozinho: que o padrão da PÁGINA e o padrão do
 // CÓDIGO são o mesmo número, e que os limites que a tela oferece são os que as
 // expressões cobram. O resto é da fatia do e2e do tabuleiro.
-func TestOZoomNasceNoPadraoERespeitaOsLimites(t *testing.T) {
+func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()

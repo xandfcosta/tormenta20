@@ -28,7 +28,7 @@ import (
 // pura, e montar um painel para afirmar arredondamento sempre foi mais caro do
 // que a garantia pedia. Estes quatro ficam MAIS baratos depois da migração.
 
-func TestExpiraEm(t *testing.T) {
+func TestExpiresIn(t *testing.T) {
 	agora := time.Date(2026, 8, 23, 12, 0, 0, 0, time.UTC)
 	em := func(d time.Duration) string { return agora.Add(d).Format(time.RFC3339) }
 
@@ -59,7 +59,7 @@ func TestExpiraEm(t *testing.T) {
 // frase do custo. Eram integração; viram unitário pelo mesmo motivo: são
 // pluralização, e pluralização é função pura.
 
-func TestPossesEComoSeLeem(t *testing.T) {
+func TestHoldingsAndHowTheyRead(t *testing.T) {
 	if got := posses(false, 2, 1); got != "2 campanhas · 1 ficha" {
 		t.Errorf("posses = %q", got)
 	}
@@ -70,7 +70,7 @@ func TestPossesEComoSeLeem(t *testing.T) {
 
 // O aviso tem de dizer o preço DESTA conta: um texto genérico não distingue
 // apagar uma conta vazia de apagar a do jogador que mestra duas campanhas.
-func TestCustoDeApagarDizOPrecoDaConta(t *testing.T) {
+func TestTheDeleteCostNamesThePriceOfTheAccount(t *testing.T) {
 	comCampanhas := custoDeApagar(2, 3)
 	if !strings.Contains(comCampanhas, "3 fichas") || !strings.Contains(comCampanhas, "2 campanhas passam") {
 		t.Errorf("custo = %q — precisa dizer o que se perde E para onde vão as campanhas", comCampanhas)
@@ -87,7 +87,7 @@ func TestCustoDeApagarDizOPrecoDaConta(t *testing.T) {
 // barato — não precisa de navegador, e afirma o mesmo resultado que o teste de
 // integração afirmava.
 
-func TestPainelNaoOfereceApagarAPropriaConta(t *testing.T) {
+func TestThePanelDoesNotOfferDeletingYourOwnAccount(t *testing.T) {
 	view := adminView{Jogadores: []adminJogador{
 		{ID: 1, Nome: "Dono", Email: "dono@t.com", Posses: "admin", Custo: "-", EhEu: true},
 		{ID: 2, Nome: "Outro", Email: "outro@t.com", Posses: "-", Custo: "-", EhEu: false},
@@ -111,7 +111,7 @@ func TestPainelNaoOfereceApagarAPropriaConta(t *testing.T) {
 // propriedade do MARCADOR: o botão da linha só abre o diálogo, e quem posta é o
 // botão de dentro dele. Afirmar isso aqui é barato; o e2e irmão prova o
 // comportamento no navegador.
-func TestOBotaoDaLinhaAbreODialogoEmVezDeApagar(t *testing.T) {
+func TestTheRowButtonOpensTheDialogInsteadOfDeleting(t *testing.T) {
 	view := adminView{Jogadores: []adminJogador{{ID: 2, Nome: "Outro", EhEu: false}}}
 	linha, err := ui.RenderFragment(t.Context(), painelJogadores(view))
 	if err != nil {
@@ -139,7 +139,7 @@ func TestOBotaoDaLinhaAbreODialogoEmVezDeApagar(t *testing.T) {
 // ele se separa do Apagar, que tem a guarda do `EhEu`. O admin que esqueceu a
 // própria senha usa esta mesma porta; sem isto ele fica de fora da única saída
 // que o app oferece.
-func TestRedefinirValeParaAPropriaContaTambem(t *testing.T) {
+func TestResettingWorksForYourOwnAccountToo(t *testing.T) {
 	view := adminView{Jogadores: []adminJogador{
 		{ID: 1, Nome: "Dono", Email: "dono@t.com", EhEu: true},
 		{ID: 2, Nome: "Outro", Email: "outro@t.com", EhEu: false},
@@ -164,7 +164,7 @@ func TestRedefinirValeParaAPropriaContaTambem(t *testing.T) {
 // O prazo é 24h e não os 7 dias do convite, e a diferença é de RISCO: o convite
 // abre uma conta que ainda não existe; este abre uma que já existe e tem fichas
 // dentro. Um link esquecido numa conversa vale mais para um estranho.
-func TestOLinkDeRedefinicaoValeVinteEQuatroHoras(t *testing.T) {
+func TestTheResetLinkLastsTwentyFourHours(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 
@@ -186,7 +186,7 @@ func TestOLinkDeRedefinicaoValeVinteEQuatroHoras(t *testing.T) {
 // Conta inexistente devolve um erro NOMEADO, e não um erro qualquer: é o que
 // deixa quem chama escolher a resposta. A rota JSON traduz para 404, a cena do
 // piloto para um aviso na tela — e nenhuma das duas repete a consulta.
-func TestCunharParaContaInexistenteDizQueEhInexistente(t *testing.T) {
+func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 
@@ -204,7 +204,7 @@ func TestCunharParaContaInexistenteDizQueEhInexistente(t *testing.T) {
 // link da Ana, fechar, e abrir a caixa da Bia mostraria o link da ANA sob o
 // nome da BIA — link de redefinição entregue à pessoa errada. O e2e irmão prova
 // isso no navegador; aqui se afirma que a limpeza está no marcador.
-func TestOBotaoDeRedefinirAbreODialogoELimpaOLinkAnterior(t *testing.T) {
+func TestTheResetButtonOpensTheDialogAndClearsThePreviousLink(t *testing.T) {
 	view := adminView{Jogadores: []adminJogador{{ID: 2, Nome: "Outro", EhEu: false}}}
 	linha, err := ui.RenderFragment(t.Context(), painelJogadores(view))
 	if err != nil {
@@ -230,7 +230,7 @@ func TestOBotaoDeRedefinirAbreODialogoELimpaOLinkAnterior(t *testing.T) {
 // navegador. Com o `r.Host`, o link nasce apontando para a porta da API porque
 // o proxy do Vite reescreve o `Host` em desenvolvimento — e link de redefinição
 // existe para ser MANDADO, então host errado é link morto.
-func TestORemendoDoResetNaoCarregaOrigem(t *testing.T) {
+func TestTheResetPatchCarriesNoOrigin(t *testing.T) {
 	html, err := ui.RenderFragment(t.Context(), resetGerado("/redefinir-senha?token=abc"))
 	if err != nil {
 		t.Fatalf("render: %v", err)
@@ -254,7 +254,7 @@ func TestORemendoDoResetNaoCarregaOrigem(t *testing.T) {
 // a TELA não sabe revogar, então um e2e desta garantia deixaria lixo permanente
 // no banco de desenvolvimento a cada corrida — que é a família de problema da
 // ALE-238. Aqui o banco é descartável.
-func TestCunharPelaAdministracaoRemendaOPainelTambem(t *testing.T) {
+func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	chefe := seedUser(t, s, "chefe@t20.local")
 
@@ -274,7 +274,7 @@ func TestCunharPelaAdministracaoRemendaOPainelTambem(t *testing.T) {
 
 // A trava é do SERVIDOR: quem não administra não cunha, mesmo postando na mão.
 // A tela nem oferece o botão, mas isso é UX — a fronteira é aqui.
-func TestQuemNaoAdministraNaoAlcancaARotaDeConvite(t *testing.T) {
+func TestANonAdminDoesNotReachTheInviteRoute(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	seedUser(t, s, "chefe@t20.local")
 	qualquerUm := seedUser(t, s, "outro@t20.local")

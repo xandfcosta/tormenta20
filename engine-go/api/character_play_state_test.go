@@ -53,7 +53,7 @@ func (f playFixture) usos(t *testing.T) map[string]int64 {
 
 // O uso SOMA. É a razão de o corpo mandar "gastei mais um" em vez do total:
 // dois cliques rápidos com o total gravariam o mesmo número e perderiam um uso.
-func TestUsoDePoderSoma(t *testing.T) {
+func TestPowerUsesAddUp(t *testing.T) {
 	f := novoPlayState(t)
 
 	f.gasta(t, "furia", "day")
@@ -67,7 +67,7 @@ func TestUsoDePoderSoma(t *testing.T) {
 
 // As duas contas do MESMO poder são independentes: um "1/cena" gasto três vezes
 // no dia soma 3 no dia e 1 na cena. É por isso que o escopo entra na chave.
-func TestUsoDePoderSeparaCenaDeDia(t *testing.T) {
+func TestPowerUsesKeepSceneApartFromDay(t *testing.T) {
 	f := novoPlayState(t)
 
 	f.gasta(t, "furia", "scene")
@@ -85,7 +85,7 @@ func TestUsoDePoderSeparaCenaDeDia(t *testing.T) {
 // O descanso de CENA leva os "1/cena" e as posturas, e a segunda metade é a que
 // importa: ele NÃO pode levar os "1/dia". Um teste que só afirmasse "limpou"
 // passaria verde com um `DELETE` sem `WHERE scope`.
-func TestDescansoDeCenaLimpaSoOQueEDaCena(t *testing.T) {
+func TestASceneRestClearsOnlyWhatBelongsToTheScene(t *testing.T) {
 	f := novoPlayState(t)
 	ctx := context.Background()
 	f.gasta(t, "furia", "scene")
@@ -120,7 +120,7 @@ func TestDescansoDeCenaLimpaSoOQueEDaCena(t *testing.T) {
 }
 
 // O descanso de DIA leva os dois escopos.
-func TestDescansoDeDiaLimpaOsDoisEscopos(t *testing.T) {
+func TestADayRestClearsBothScopes(t *testing.T) {
 	f := novoPlayState(t)
 	f.gasta(t, "furia", "scene")
 	f.gasta(t, "milagre", "day")
@@ -137,7 +137,7 @@ func TestDescansoDeDiaLimpaOsDoisEscopos(t *testing.T) {
 
 // O situacional é um CONJUNTO substituído inteiro, como o irmão das condições do
 // livro. As duas metades: o que entrou entrou, e o que não veio no corpo saiu.
-func TestSituacionaisSubstituemOConjunto(t *testing.T) {
+func TestConditionalsReplaceTheWholeSet(t *testing.T) {
 	f := novoPlayState(t)
 	url := "/characters/" + id64(f.heroi) + "/conditionals"
 
@@ -160,7 +160,7 @@ func TestSituacionaisSubstituemOConjunto(t *testing.T) {
 // Situacional HOMEBREW passa. Não há catálogo fechado aqui, e recusar um id
 // desconhecido no meio do combate seria pior que ignorá-lo: o motor não casa
 // modificador nenhum com ele e o efeito é nada.
-func TestSituacionalHomebrewNaoERecusado(t *testing.T) {
+func TestAHomebrewConditionalIsNotRefused(t *testing.T) {
 	f := novoPlayState(t)
 	rec := authed(t, f.s, f.dono, http.MethodPatch, "/characters/"+id64(f.heroi)+"/conditionals",
 		`{"conditionals":["bencao-caseira-do-mestre"]}`)
@@ -171,7 +171,7 @@ func TestSituacionalHomebrewNaoERecusado(t *testing.T) {
 
 // A ficha carrega o estado de jogo junto. Sem isto ela abriria com a Fúria
 // desligada e a ligaria um instante depois, piscando os números que ela muda.
-func TestFichaTrazOEstadoDeJogoJunto(t *testing.T) {
+func TestTheSheetCarriesThePlayStateWithIt(t *testing.T) {
 	f := novoPlayState(t)
 	f.gasta(t, "furia", "day")
 	if rec := authed(t, f.s, f.dono, http.MethodPatch, "/characters/"+id64(f.heroi)+"/conditionals", `{"conditionals":["furia"]}`); rec.Code != http.StatusOK {

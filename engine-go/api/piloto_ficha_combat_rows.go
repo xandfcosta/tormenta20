@@ -30,7 +30,7 @@ func defenseRows(sheet engine.ComputedSheetV2) []breakdownRow {
 // DIFERENTES, e confundi-las conta a Destreza duas vezes: o motor soma 10 + a
 // Destreza num campo só, enquanto o diálogo mostra o 10 numa linha e a Destreza
 // na seguinte. Somar as linhas tem de dar o total, e é isso que
-// `TestAsLinhasDaDefesaSomamOTotal` prende — a subtração é exata porque o
+// `TestTheDefenseRowsAddUpToTheTotal` prende — a subtração é exata porque o
 // `effectiveAttribute` da defesa e o `Total` do atributo são a mesma expressão.
 func dexInDefense(sheet engine.ComputedSheetV2) int {
 	if !sheet.Defense.DexApplied {

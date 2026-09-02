@@ -30,12 +30,12 @@ func (f pilotoFixture) noTabuleiro(t *testing.T) string {
 	return posto.Tokens[len(posto.Tokens)-1].ID
 }
 
-// TestAsParadasSeACUMULAMemVezDeSeSubstituirem — o coração desta fatia.
+// TestTheStopsAccumulateInsteadOfReplacingEachOther — o coração desta fatia.
 //
 // Uma parada por clique, e o caminho ESTENDE. Se cada clique recomeçasse do
 // lugar da peça, o contorno seria impossível de expressar — que é exatamente o
 // defeito da SPA que a ALE-266 abriu.
-func TestAsParadasSeAcumulamEmVezDeSeSubstituirem(t *testing.T) {
+func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
@@ -66,10 +66,10 @@ func TestAsParadasSeAcumulamEmVezDeSeSubstituirem(t *testing.T) {
 	}
 }
 
-// TestOMovimentoSoPousaNoCONFIRMAR: a peça não anda enquanto o movimento é
+// TestTheMoveOnlyLandsOnConfirm: a peça não anda enquanto o movimento é
 // proposta. É o que deixa a pessoa contornar em vários cliques sem a mesa ver a
 // peça pulando de casa em casa.
-func TestOMovimentoSoPousaNoConfirmar(t *testing.T) {
+func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
@@ -97,7 +97,7 @@ func TestOMovimentoSoPousaNoConfirmar(t *testing.T) {
 }
 
 // E CANCELAR não mexe na peça: ela volta a poder ser movida de onde estava.
-func TestCancelarNaoMexeNaPeca(t *testing.T) {
+func TestCancelDoesNotTouchTheToken(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
@@ -118,13 +118,13 @@ func TestCancelarNaoMexeNaPeca(t *testing.T) {
 	}
 }
 
-// TestOJogadorNaoMoveAPecaDeOUTREM — a autorização é do `tabuleiro`, e a recusa
+// TestThePlayerDoesNotMoveSomeoneElsesToken — a autorização é do `tabuleiro`, e a recusa
 // vem com a FRASE que a regra escreve.
 //
 // Não é 403: quem chega aqui é da mesa e podia estar movendo a própria peça. A
 // diferença importa porque a frase é o que a pessoa lê — "a peça não é sua" diz
 // o que fazer, e "proibido" não.
-func TestOJogadorNaoMoveAPecaDeOutrem(t *testing.T) {
+func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
@@ -144,12 +144,12 @@ func TestOJogadorNaoMoveAPecaDeOutrem(t *testing.T) {
 	}
 }
 
-// TestOAlcanceSOapareceQuandoHaOrcamento.
+// TestTheReachOnlyShowsWhenThereIsABudget.
 //
 // Quem tem teto é o jogador NA VEZ dele. O mestre move sem orçamento (-1), e
 // desenhar alcance para ele seria inventar um limite que a regra não põe — foi
 // isto que fez a casa alcançável deixar de ser o alvo do clique e virar pintura.
-func TestOAlcanceSoApareceQuandoHaOrcamento(t *testing.T) {
+func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	f := novoPiloto(t)
 	f.noTabuleiro(t)
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
@@ -192,7 +192,7 @@ func TestOAlcanceSoApareceQuandoHaOrcamento(t *testing.T) {
 // de "o alcance é desenhado sempre", e a regra que o dono escolheu — sem vez não
 // há ação padrão para trocar, então não há teto a desenhar — não estaria sendo
 // medida por ninguém.
-func TestForaDeCombateNinguemVeAlcance(t *testing.T) {
+func TestOutOfCombatNobodySeesReach(t *testing.T) {
 	f := novoPiloto(t)
 	f.noTabuleiro(t)
 
@@ -207,7 +207,7 @@ func TestForaDeCombateNinguemVeAlcance(t *testing.T) {
 	}
 }
 
-// TestARecusaDeUmaParadaFALAnoTabuleiro.
+// TestARefusedStopSpeaksOnTheBoard.
 //
 // O arrasto (ALE-264) quebrou a invariante em que este arquivo se apoiava: com
 // CLIQUE só se acerta casa oferecida, mas soltar acontece onde o dedo estiver,
@@ -224,7 +224,7 @@ func TestForaDeCombateNinguemVeAlcance(t *testing.T) {
 //
 // Prende as DUAS metades, porque uma sem a outra não é o conserto: que a frase
 // sai no sinal certo, e que a região do tabuleiro tem onde acendê-la.
-func TestARecusaDeUmaParadaFalaNoTabuleiro(t *testing.T) {
+func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
@@ -272,7 +272,7 @@ func TestARecusaDeUmaParadaFalaNoTabuleiro(t *testing.T) {
 	}
 }
 
-// TestOQueSOBRAdoDeslocamentoAparecePorEscrito.
+// TestWhatIsLeftOfTheDisplacementAppearsInWriting.
 //
 // A realimentação que o dono pediu por nome: sem ela a pessoa empilha paradas
 // que no fim somam mais do que ela anda, e descobre no bloqueio sem saber o que
@@ -281,7 +281,7 @@ func TestARecusaDeUmaParadaFalaNoTabuleiro(t *testing.T) {
 // Guarda também a CONTA, que estava sem dono: `Alcance` e `Restante` são os dois
 // valores de UMA chamada de `AlcanceDaProximaParada`, e enquanto ninguém
 // afirmava o segundo dava para movê-lo de lugar sem nenhum teste piscar.
-func TestOQueSobraDoDeslocamentoAparecePorEscrito(t *testing.T) {
+func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
@@ -323,7 +323,7 @@ func (f pilotoFixture) naVezDoJogador(t *testing.T) {
 	}
 }
 
-// TestASetaSaiEmDuasCoresQuandoOCaminhoEstoura (ALE-203, item 13).
+// TestTheArrowComesOutInTwoColorsWhenThePathOverruns (ALE-203, item 13).
 //
 // A COMPOSIÇÃO, que é o que nenhum dos guardas de unidade alcança: que o caminho
 // caro chega até o HTML do JOGADOR com o trecho vermelho desenhado, com a ponta
@@ -333,7 +333,7 @@ func (f pilotoFixture) naVezDoJogador(t *testing.T) {
 // desenho só existe se o `ProposeMove` tiver ACEITADO o caminho caro. Chamar o
 // `osFiosDoMovimento` direto provaria a aritmética sobre uma proposta que a cena
 // talvez recusasse.
-func TestASetaSaiEmDuasCoresQuandoOCaminhoEstoura(t *testing.T) {
+func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	f.naVezDoJogador(t)
@@ -382,13 +382,13 @@ func TestASetaSaiEmDuasCoresQuandoOCaminhoEstoura(t *testing.T) {
 	}
 }
 
-// TestOControleDaSetaDeDuasCores: o caminho que CABE sai inteiro dourado.
+// TestTheControlForTheTwoColorArrow: o caminho que CABE sai inteiro dourado.
 //
 // Sem ele, "a tela tem `tabuleiro-movimento-alem`" não se distingue de "a tela
 // tem sempre", e o vermelho poderia aparecer em todo movimento sem nenhum guarda
 // reclamar. O mesmo jogador, na mesma vez, com um caminho que o deslocamento
 // paga.
-func TestOControleDaSetaDeDuasCores(t *testing.T) {
+func TestTheControlForTheTwoColorArrow(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiro(t)
 	f.naVezDoJogador(t)

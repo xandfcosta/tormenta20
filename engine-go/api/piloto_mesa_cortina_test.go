@@ -15,7 +15,7 @@ import (
 // feature esteve no ar e invisível. Guarda de regra não pega isso; guarda de
 // afordância pega.
 
-func TestOMestreTemComoCorrerACortina(t *testing.T) {
+func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -47,11 +47,11 @@ func TestOMestreTemComoCorrerACortina(t *testing.T) {
 	}
 }
 
-// TestOJogadorNaoCorreACortina — a trava é do servidor.
+// TestThePlayerDoesNotDrawTheCurtain — a trava é do servidor.
 //
 // Ela é o ponto INTEIRO desta feature: a cortina existe para o jogador não ver o
 // que o mestre está montando, e um jogador que a abre pela mão vê a emboscada.
-func TestOJogadorNaoCorreACortina(t *testing.T) {
+func TestThePlayerDoesNotDrawTheCurtain(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	base := f.urlDaMesa() + "/tabuleiro/cortina"

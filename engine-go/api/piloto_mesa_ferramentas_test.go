@@ -18,12 +18,12 @@ import (
 // botões e o TECLADO concordam sobre quais ferramentas existem, e que a borracha
 // deixou de apagar a coisa errada.
 
-// TestOTecladoEOTRILHOconcordamSobreQuemExiste.
+// TestTheKeyboardAndTheRailAgreeOnWhatExists.
 //
 // Os dois saem do mesmo `oTrilhoDe`, e este guarda existe porque a alternativa —
 // uma tabela de teclas escrita à mão — falharia em silêncio dos dois jeitos: uma
 // tecla que liga uma ferramenta sem botão, e um botão que a tecla não alcança.
-func TestOTecladoEOTrilhoConcordamSobreQuemExiste(t *testing.T) {
+func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
 	for _, papel := range []struct {
 		Nome   string
 		Mestre bool
@@ -46,12 +46,12 @@ func TestOTecladoEOTrilhoConcordamSobreQuemExiste(t *testing.T) {
 	}
 }
 
-// TestOAtalhoEFIXOporFerramenta.
+// TestTheShortcutIsFixedPerTool.
 //
 // Numerar por POSIÇÃO faria a mesma ferramenta trocar de tecla entre os dois
 // papéis — o trilho do jogador tem três entradas e o do mestre tem nove. Quem
 // aprendeu `3 = gabarito` mestrando tem de continuar com `3 = gabarito` jogando.
-func TestOAtalhoEFixoPorFerramenta(t *testing.T) {
+func TestTheShortcutIsFixedPerTool(t *testing.T) {
 	doMestre := map[string]string{}
 	for _, f := range oTrilhoDe(true) {
 		doMestre[f.ID] = f.Atalho
@@ -73,12 +73,12 @@ func TestOAtalhoEFixoPorFerramenta(t *testing.T) {
 	}
 }
 
-// TestOAtalhoNaoROUBAaTeclaDeQuemEscreve.
+// TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping.
 //
 // Sem a guarda, digitar "5" no PV de um combatente trocaria a ferramenta do mapa
 // atrás do formulário. Já aconteceu com o `-` do zoom, e é por isso que a guarda
 // é uma constante compartilhada em vez de três cópias.
-func TestOAtalhoNaoRoubaATeclaDeQuemEscreve(t *testing.T) {
+func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
 	teclado := oTecladoDoTrilho(true)
 	for _, alvo := range []string{"INPUT", "TEXTAREA", "SELECT"} {
 		if !strings.Contains(teclado, alvo) {
@@ -100,7 +100,7 @@ func TestOAtalhoNaoRoubaATeclaDeQuemEscreve(t *testing.T) {
 	}
 }
 
-// TestABORRACHAlimpaACasaInteira — o conserto do defeito que o dono achou.
+// TestTheEraserClearsTheWholeSquare — o conserto do defeito que o dono achou.
 //
 // Ela era um MODO que invertia o pincel selecionado: com `Cobertura` na mão,
 // clicar num quadrado de `Difícil` mandava `terreno/cobertura/…?apagar=1`,
@@ -108,7 +108,7 @@ func TestOAtalhoNaoRoubaATeclaDeQuemEscreve(t *testing.T) {
 // bancada, clique a clique, antes de virar este teste.
 //
 // Agora a rota não tem espécie no caminho — não há como errar qual.
-func TestABorrachaLimpaACasaInteira(t *testing.T) {
+func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	casa := f.urlDaMesa() + "/tabuleiro/terreno"
@@ -136,7 +136,7 @@ func TestABorrachaLimpaACasaInteira(t *testing.T) {
 	}
 }
 
-// TestABorrachaNaoDependeDoPincelSELECIONADO.
+// TestTheEraserDoesNotDependOnTheSelectedBrush.
 //
 // É a metade do defeito que um teste de "limpa a casa" sozinho não pegaria: a
 // rota antiga funcionava perfeitamente quando o pincel na mão era o certo. O que
@@ -145,7 +145,7 @@ func TestABorrachaLimpaACasaInteira(t *testing.T) {
 //
 // Aqui isso vira uma afirmação sobre a FORMA da rota: se a espécie voltar para o
 // caminho, este teste cai.
-func TestABorrachaNaoDependeDoPincelSelecionado(t *testing.T) {
+func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
@@ -162,13 +162,13 @@ func TestABorrachaNaoDependeDoPincelSelecionado(t *testing.T) {
 	}
 }
 
-// TestLimparUmaCasaLIMPAdevolveFalso.
+// TestClearingAnAlreadyCleanSquareReturnsFalse.
 //
 // A versão do tabuleiro é o que acorda a mesa inteira pelo stream. Subir por um
 // clique em chão limpo mandaria um quadro para seis pessoas para dizer que nada
 // mudou — e o `escreveMesa` compara o HTML depois, mas o trabalho de renderizar
 // nove regiões já teria acontecido.
-func TestLimparUmaCasaLimpaDevolveFalso(t *testing.T) {
+func TestClearingAnAlreadyCleanSquareReturnsFalse(t *testing.T) {
 	b := &tabuleiro.BoardState{}
 	if tabuleiro.LimpaACasa(b, engine.Square{X: 1, Y: 1}) {
 		t.Error("limpar chão limpo disse que mudou alguma coisa")
@@ -185,13 +185,13 @@ func TestLimparUmaCasaLimpaDevolveFalso(t *testing.T) {
 	}
 }
 
-// TestOTrilhoDoJogadorNaoTemOQueEleNaoPode.
+// TestThePlayerRailLacksWhatThePlayerCannotDo.
 //
 // A trava de verdade é do servidor (`comandoDoMestreNoTabuleiro`); isto é a
 // cortesia de não oferecer o que seria recusado. Mas ela também é o que impede um
 // gesto MUDO: a camada de pintura não existe na cena do jogador, então uma
 // ferramenta oferecida a ele seria um modo que liga e não faz nada.
-func TestOTrilhoDoJogadorNaoTemOQueEleNaoPode(t *testing.T) {
+func TestThePlayerRailLacksWhatThePlayerCannotDo(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()

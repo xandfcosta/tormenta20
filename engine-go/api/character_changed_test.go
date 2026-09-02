@@ -28,9 +28,9 @@ import (
 // QUEBRADO. Agora o hub é campo do `Server`, não há nulo a tolerar, e o que se
 // prende é o que a mesa recebe.
 
-// TestAFichaQueMudouChegaNaMesa exercita o caminho inteiro contra o hub de
+// TestTheSheetThatChangedReachesTheTable exercita o caminho inteiro contra o hub de
 // verdade — o mesmo que o handler usa.
-func TestAFichaQueMudouChegaNaMesa(t *testing.T) {
+func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	s := &Server{
 		// O barramento é OBRIGATÓRIO, e um `Server` montado à mão sem ele
@@ -60,7 +60,7 @@ func TestAFichaQueMudouChegaNaMesa(t *testing.T) {
 
 // Mesa que NÃO tem o personagem não recebe nada. O recorte é o que impede uma
 // ficha salva de mandar toda a casa refazer busca.
-func TestMesaSemOPersonagemNaoRecebe(t *testing.T) {
+func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	s := &Server{
 		// O barramento é OBRIGATÓRIO, e um `Server` montado à mão sem ele
@@ -89,7 +89,7 @@ func TestMesaSemOPersonagemNaoRecebe(t *testing.T) {
 // Avisar mesa que não tem aquele combatente seria mandar todo cliente da casa
 // refazer busca a cada ficha salva — e a sala é o recorte natural de quem pode
 // estar olhando.
-func TestSoAsSessoesVivasComOPersonagem(t *testing.T) {
+func TestOnlyTheLiveSessionsHoldingTheCharacter(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
 		1: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
@@ -113,7 +113,7 @@ func TestSoAsSessoesVivasComOPersonagem(t *testing.T) {
 // O mesmo personagem DUAS vezes na fila (o mestre pôs a ficha e o jogador
 // entrou sozinho) avisa a sessão UMA vez. Avisar duas faria o cliente refazer a
 // mesma busca duas vezes por escrita.
-func TestSessaoRepetidaAvisaUmaVez(t *testing.T) {
+func TestARepeatedSessionIsAnnouncedOnce(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
 		1: {Initiative: []aovivo.InitiativeEntry{
@@ -140,7 +140,7 @@ func TestSessaoRepetidaAvisaUmaVez(t *testing.T) {
 // Cobrir esse caso exigiria achar a mesa pela CAMPANHA do personagem, o que é
 // uma leitura de banco a cada escrita de ficha. Não foi feito, e a troca está
 // escrita aqui para quem for decidir de novo.
-func TestForaDeMesaNaoAvisaNinguem(t *testing.T) {
+func TestOffTableNobodyIsAnnouncedTo(t *testing.T) {
 	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
 		1: {Initiative: []aovivo.InitiativeEntry{{ID: "a"}}},
 	}}

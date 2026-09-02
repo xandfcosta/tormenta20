@@ -52,7 +52,7 @@ var permitidos = map[string]bool{
 	"t20engine/events": true,
 }
 
-func TestORegimeNaoConheceOsOutrosContextos(t *testing.T) {
+func TestTheLiveRuntimeDoesNotKnowTheOtherContexts(t *testing.T) {
 	arquivos, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("ler o pacote: %v", err)

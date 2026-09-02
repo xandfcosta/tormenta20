@@ -11,7 +11,7 @@ import "testing"
 
 // Por RUNA e não por byte: "Áurea" começa com dois bytes, e cortar o primeiro
 // desenha o losango de erro no lugar da letra.
-func TestInicialDeCortaPorRunaENaoPorByte(t *testing.T) {
+func TestTheInitialCutsByRuneAndNotByByte(t *testing.T) {
 	casos := map[string]string{
 		"Mestre":            "M",
 		"Áurea":             "Á",

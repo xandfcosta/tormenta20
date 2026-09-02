@@ -139,7 +139,7 @@ func (h *SSEHub) entregaLocked(sessionID int64, role string, frame SSEFrame) {
 // `setState(next)` com o estado inteiro — o quadro velho vence, e a entrada que
 // só existia no quadro novo some da tela do mestre e da mesa.
 //
-// Foi medido: `TestOQuadroSegueAOrdemDaMutacao` reproduz sob `-race` em algumas
+// Foi medido: `TestTheFrameFollowsTheOrderOfTheMutation` reproduz sob `-race` em algumas
 // dezenas de tentativas, e é a assinatura #1 da ALE-238 ("uma condição some no
 // meio de três").
 //

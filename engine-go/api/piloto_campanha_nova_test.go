@@ -35,7 +35,7 @@ func postaFolhaNova(t *testing.T, s *Server, userID int64, nome, descricao strin
 // A RECUSA NÃO PODE COMER O TEXTO. Um nome de 121 caracteres devolvendo a folha
 // vazia levaria junto a descrição inteira — que é o campo caro de reescrever, e
 // o único que alguém digita por minutos.
-func TestARecusaDevolveOQueFoiDigitado(t *testing.T) {
+func TestTheRefusalGivesBackWhatWasTyped(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	const texto = "A caravana parte de Valkaria ao amanhecer."
@@ -57,7 +57,7 @@ func TestARecusaDevolveOQueFoiDigitado(t *testing.T) {
 // O caminho feliz vai para a crônica recém-aberta, e com 303. O `See Other` é o
 // que garante que o navegador siga com GET: com 302, recarregar a página de
 // destino reenviaria o formulário e abriria uma segunda campanha igual.
-func TestAbrirCampanhaLevaAElaComVerHistoricoLimpo(t *testing.T) {
+func TestOpeningACampaignLandsOnItWithACleanHistoryView(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 
@@ -86,7 +86,7 @@ func TestAbrirCampanhaLevaAElaComVerHistoricoLimpo(t *testing.T) {
 // A folha usa a MESMA regra da rota JSON, e o caso que prova isso é o do teto
 // da descrição: ele não existia no servidor antes desta fatia, e é o que a
 // virada teria apagado ao levar o formulário da SPA embora.
-func TestAFolhaRecusaDescricaoAcimaDoTeto(t *testing.T) {
+func TestTheFormRefusesADescriptionAboveTheCeiling(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 

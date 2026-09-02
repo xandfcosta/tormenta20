@@ -39,7 +39,7 @@ func pedeNaCronica(t *testing.T, s *Server, userID int64, metodo, caminho, corpo
 // CRESCENTE, e a primeira versão desta cena pegava as três primeiras — que são
 // as mais ANTIGAS. O defeito não aparece numa mesa com três sessões, só numa
 // que já jogou bastante, e a tela não tem como avisar que está mentindo.
-func TestAsSessoesVemDaMaisNovaParaAMaisVelha(t *testing.T) {
+func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
@@ -65,7 +65,7 @@ func TestAsSessoesVemDaMaisNovaParaAMaisVelha(t *testing.T) {
 
 // O MESTRE VEM PRIMEIRO no elenco. É a regra do `sortRoster` da SPA, e ela é o
 // que faz o grupo se ler como grupo em vez de fila.
-func TestOMestreVemPrimeiroNoElenco(t *testing.T) {
+func TestTheGmComesFirstInTheCast(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
@@ -91,7 +91,7 @@ func TestOMestreVemPrimeiroNoElenco(t *testing.T) {
 // `?tab=config` na URL de um JOGADOR cai para a visão geral: a aba não existe
 // no trilho dele, e desenhar a seção sem o trilho seria tela pela metade. A
 // trava de verdade é das rotas de escrita, que respondem 403.
-func TestJogadorPedindoConfigCaiParaAVisaoGeral(t *testing.T) {
+func TestAPlayerAskingForConfigFallsBackToTheOverview(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
@@ -113,7 +113,7 @@ func TestJogadorPedindoConfigCaiParaAVisaoGeral(t *testing.T) {
 
 // AS TRÊS AÇÕES SÃO DE MESTRE, e a trava é do servidor. A tela não mostra a aba
 // para o jogador, mas isso é UX — quem postar na mão leva 403.
-func TestAsAcoesDaCronicaSaoDoMestre(t *testing.T) {
+func TestTheCampaignActionsBelongToTheGm(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	visitante := seedUser(t, s, "visitante@t20.local")
@@ -138,7 +138,7 @@ func TestAsAcoesDaCronicaSaoDoMestre(t *testing.T) {
 // A recusa do cadastro DEVOLVE O QUE FOI DIGITADO, e não o que está no banco:
 // a pessoa está olhando para o próprio texto, e devolver o antigo apagaria a
 // edição dela na cara.
-func TestARecusaDoCadastroDevolveOTextoDigitado(t *testing.T) {
+func TestTheSignUpRefusalGivesBackTheTypedText(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "Nome antigo", "")
@@ -166,7 +166,7 @@ func TestARecusaDoCadastroDevolveOTextoDigitado(t *testing.T) {
 
 // O interruptor ALTERNA, e o remendo volta com o estado novo. O conjunto
 // guardado é o das regras DESLIGADAS — o padrão do livro é a regra valer.
-func TestOInterruptorAlternaAValeENaoOContrario(t *testing.T) {
+func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")

@@ -56,7 +56,7 @@ func lerQuadro(t *testing.T, leitor *bufio.Reader) string {
 // Um handler que montasse a resposta e devolvesse no fim passaria por qualquer
 // asserção sobre o corpo e falharia na mesa: o mestre viraria o turno e a tela
 // do jogador só saberia quando a conexão caísse.
-func TestOQuadroChegaComARequisicaoAINDAABERTA(t *testing.T) {
+func TestTheFrameArrivesWithTheRequestStillOpen(t *testing.T) {
 	hub := aovivo.NewSSEHub()
 	conn := hub.Add(7, "c1", "gm")
 
@@ -88,7 +88,7 @@ func TestOQuadroChegaComARequisicaoAINDAABERTA(t *testing.T) {
 // A batida atravessa intermediário que fecha conexão ociosa. Ela é COMENTÁRIO
 // SSE (começa com `:`), então o cliente a ignora — mandar um evento de verdade
 // faria o `EventSource` acordar o app por nada.
-func TestABatidaEComentarioENaoEvento(t *testing.T) {
+func TestTheHeartbeatIsACommentAndNotAnEvent(t *testing.T) {
 	hub := aovivo.NewSSEHub()
 	conn := hub.Add(7, "c1", "gm")
 	servidor := httptest.NewServer(fluxoDeTeste(conn, 30*time.Millisecond))

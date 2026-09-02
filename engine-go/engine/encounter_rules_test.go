@@ -11,7 +11,7 @@ import (
 // armadilhas que a SPA já pagou. Não é uma transcrição de tabela: é o
 // comportamento nas bordas, que é o que quebra.
 
-func TestNDDeGrupoSegueOLivro(t *testing.T) {
+func TestThePartyChallengeLevelFollowsTheBook(t *testing.T) {
 	casos := []struct {
 		nome  string
 		nd    float64
@@ -41,7 +41,7 @@ func TestNDDeGrupoSegueOLivro(t *testing.T) {
 	}
 }
 
-// TestADiferencaFracionariaNaoCaiEmDificil é a ALE-25, e é a razão de a
+// TestAFractionalDifferenceDoesNotFallIntoHard é a ALE-25, e é a razão de a
 // diferença ser arredondada ANTES de escolher a faixa.
 //
 // Uma criatura de ND 1/4 contra um grupo de nível 1 dá diferença −0,75, que
@@ -54,7 +54,7 @@ func TestNDDeGrupoSegueOLivro(t *testing.T) {
 // registrado porque o que o teste protege é a FAIXA CALMA, não um rótulo
 // específico — se alguém trocar o arredondamento, o sintoma volta a ser
 // "Difícil" e é isso que tem de acusar.
-func TestADiferencaFracionariaNaoCaiEmDificil(t *testing.T) {
+func TestAFractionalDifferenceDoesNotFallIntoHard(t *testing.T) {
 	d := DificuldadeDoEncontro(NDDeGrupo(0.25, 1) - 1)
 	if d.Rotulo != "Fácil" {
 		t.Errorf("uma criatura de ND 1/4 contra grupo de nível 1 deu %q, quero Fácil", d.Rotulo)
@@ -65,7 +65,7 @@ func TestADiferencaFracionariaNaoCaiEmDificil(t *testing.T) {
 	}
 }
 
-func TestAsFaixasDeDificuldade(t *testing.T) {
+func TestTheDifficultyBands(t *testing.T) {
 	casos := map[float64]string{
 		-5:   "Trivial",
 		-3:   "Trivial",
@@ -86,9 +86,9 @@ func TestAsFaixasDeDificuldade(t *testing.T) {
 	}
 }
 
-// TestODesafioIrrelevanteNaoValeXP: cinco degraus abaixo do nível do grupo e o
+// TestAnIrrelevantChallengeIsWorthNoXp: cinco degraus abaixo do nível do grupo e o
 // combate não ensina nada (p326).
-func TestODesafioIrrelevanteNaoValeXP(t *testing.T) {
+func TestAnIrrelevantChallengeIsWorthNoXp(t *testing.T) {
 	if xp := XPDoEncontro(2, 7, 4, Vitoria); xp != 0 {
 		t.Errorf("ND 2 contra grupo de nível 7 deu %d XP, quero 0", xp)
 	}
@@ -102,7 +102,7 @@ func TestODesafioIrrelevanteNaoValeXP(t *testing.T) {
 	}
 }
 
-func TestOXPSeDivideEDependeDoDesfecho(t *testing.T) {
+func TestXpIsSplitAndDependsOnTheOutcome(t *testing.T) {
 	// ND 4, grupo de 4 no nível 3: base 4.000, dividida por quatro.
 	if xp := XPDoEncontro(4, 3, 4, Vitoria); xp != 1000 {
 		t.Errorf("vitória deu %d, quero 1000", xp)

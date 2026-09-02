@@ -21,12 +21,12 @@ import (
 // LISTA de quem o gabarito pega obedece à redação por papel, e que medir NÃO
 // remenda a cena.
 
-// TestAFraseDaReguaDizAFaixaDoLivro.
+// TestTheRulerSentenceSaysTheBookRangeBand.
 //
 // A faixa é o que a régua tem de mais útil: "10,5m" obriga o jogador a lembrar
 // que curto são 9m, enquanto "alcance médio" já é a resposta. E o "além" não é
 // uma faixa com nome — ele é a ausência de uma —, então a frase dele é outra.
-func TestAFraseDaReguaDizAFaixaDoLivro(t *testing.T) {
+func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
 	casos := []struct {
 		de, ate  engine.Square
 		esperado string
@@ -50,7 +50,7 @@ func TestAFraseDaReguaDizAFaixaDoLivro(t *testing.T) {
 	}
 }
 
-// TestADirecaoTemZonaMorta.
+// TestTheTemplateDirectionHasADeadZone.
 //
 // Sem a zona morta, um pixel de diferença no clique trocaria a forma inteira do
 // gabarito debaixo do dedo: um clique quase em linha viraria diagonal e o cone
@@ -59,7 +59,7 @@ func TestAFraseDaReguaDizAFaixaDoLivro(t *testing.T) {
 // O livro desenha o cone em DUAS orientações (p225) e não numa terceira, então
 // a direção só pode sair ortogonal ou diagonal — nunca um passo com um eixo
 // parado que não seja um dos dois.
-func TestADirecaoDoGabaritoTemZonaMorta(t *testing.T) {
+func TestTheTemplateDirectionHasADeadZone(t *testing.T) {
 	origem := engine.Square{X: 5, Y: 5}
 	casos := []struct {
 		mira     engine.Square
@@ -85,13 +85,13 @@ func TestADirecaoDoGabaritoTemZonaMorta(t *testing.T) {
 	}
 }
 
-// TestOCaminhoDoGabaritoUsaACoordenadaDoPlano.
+// TestTheTemplatePathUsesThePlaneCoordinate.
 //
 // Com sinal, e é isso que faz o desenho caber num sinal em vez de num remendo: o
 // `transform` do grupo — que o servidor redesenha — é quem tira a quina da
 // moldura. Se o caminho já viesse relativo à moldura, uma moldura que crescesse
 // deslocaria o gabarito sem que nada mudasse na tela.
-func TestOCaminhoDoGabaritoUsaACoordenadaDoPlano(t *testing.T) {
+func TestTheTemplatePathUsesThePlaneCoordinate(t *testing.T) {
 	lido := caminhoDasCasas([]engine.Square{{X: -1, Y: 2}, {X: 0, Y: 2}})
 	const esperado = "M -1 2 h 1 v 1 h -1 Z M 0 2 h 1 v 1 h -1 Z"
 	if lido != esperado {
@@ -102,11 +102,11 @@ func TestOCaminhoDoGabaritoUsaACoordenadaDoPlano(t *testing.T) {
 	}
 }
 
-// TestOGabaritoPegaAPecaGrandePeloCORPO.
+// TestTheTemplateCatchesTheLargeTokenByItsBody.
 //
 // Uma Colossal ocupa 6×6 (p107), e exigir que ela caiba inteira na área deixaria
 // o dragão de fora do próprio incêndio. Basta UM quadrado do corpo cair dentro.
-func TestOGabaritoPegaAPecaGrandePeloCorpo(t *testing.T) {
+func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
 	b := &tabuleiro.BoardState{Tokens: []tabuleiro.BoardToken{
 		{ID: "dragao", Label: "Dragão", X: 10, Y: 10, Footprint: 6},
 		{ID: "rato", Label: "Rato", X: 30, Y: 30},
@@ -130,7 +130,7 @@ func TestOGabaritoPegaAPecaGrandePeloCorpo(t *testing.T) {
 	}
 }
 
-// TestOGabaritoDoJogadorNaoContaAPecaEscondida — o guarda que mais importa.
+// TestThePlayerTemplateDoesNotCountTheHiddenToken — o guarda que mais importa.
 //
 // Esconder a peça é o gesto com que o mestre guarda a emboscada. Um gabarito que
 // respondesse "Pega 2 peças: Arwen, Ogro" entregaria a emboscada pela porta dos
@@ -139,7 +139,7 @@ func TestOGabaritoPegaAPecaGrandePeloCorpo(t *testing.T) {
 //
 // A trava é passar pelo mesmo `BoardForRole` do resto da Mesa, e não uma segunda
 // decisão sobre quem vê o quê.
-func TestOGabaritoDoJogadorNaoContaAPecaEscondida(t *testing.T) {
+func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
@@ -162,7 +162,7 @@ func TestOGabaritoDoJogadorNaoContaAPecaEscondida(t *testing.T) {
 	}
 }
 
-// TestMedirNaoRemendaACena.
+// TestMeasuringDoesNotPatchTheScene.
 //
 // A régua não muda a cena, e a resposta dela tem de ser do tamanho disso. Uma
 // medição que devolvesse as nove regiões trocaria o mapa debaixo de quem está
@@ -171,7 +171,7 @@ func TestOGabaritoDoJogadorNaoContaAPecaEscondida(t *testing.T) {
 //
 // Provado VERMELHO trocando o `escreveSinais` pelo `respondeAoMestre`: a
 // resposta passou a trazer `mesa-tabuleiro` e este teste acusou.
-func TestMedirNaoRemendaACena(t *testing.T) {
+func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -187,12 +187,12 @@ func TestMedirNaoRemendaACena(t *testing.T) {
 	}
 }
 
-// TestOGabaritoRecusaFormaQueOLivroNaoTem.
+// TestTheTemplateRefusesAShapeTheBookDoesNotHave.
 //
 // O id vem do CLIENTE, e uma forma inventada não pode virar um desenho — nem
 // cair calada na esfera, que desenharia uma área que ninguém pediu no lugar de
 // dizer que o pedido está errado.
-func TestOGabaritoRecusaFormaQueOLivroNaoTem(t *testing.T) {
+func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/gabarito/piramide/2/0/0/0/0", "")
@@ -206,13 +206,13 @@ func TestOGabaritoRecusaFormaQueOLivroNaoTem(t *testing.T) {
 	}
 }
 
-// TestQuemNaoEstaNaMesaNaoMedeACenaDela.
+// TestWhoIsNotAtTheTableDoesNotMeasureItsScene.
 //
 // Medir é de todo mundo que joga — "dá para acertar daqui?" é pergunta de quem
 // ataca —, e por isso a rota não exige o papel de mestre. A trava que sobra é a
 // de sempre, e ela é do SERVIDOR: o gabarito devolve os NOMES das peças, então
 // uma rota aberta seria a lista do bestiário da cena para quem tiver a URL.
-func TestQuemNaoEstaNaMesaNaoMedeACenaDela(t *testing.T) {
+func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	estranho := seedUser(t, f.s, "estranho@t.com")
@@ -223,12 +223,12 @@ func TestQuemNaoEstaNaMesaNaoMedeACenaDela(t *testing.T) {
 	}
 }
 
-// TestOTamanhoDoGabaritoTravaEmVezDeRecusar.
+// TestTheTemplateSizeClampsInsteadOfRefusing.
 //
 // O número vem de uma caixa que a pessoa está DIGITANDO, e apagar o conteúdo
 // dela passa por zero e por vazio no caminho. Recusar com uma frase acenderia um
 // erro no meio da digitação; travar desenha o menor gabarito e segue.
-func TestOTamanhoDoGabaritoTravaEmVezDeRecusar(t *testing.T) {
+func TestTheTemplateSizeClampsInsteadOfRefusing(t *testing.T) {
 	casos := map[string]int{
 		"":     1,
 		"0":    1,
@@ -248,7 +248,7 @@ func TestOTamanhoDoGabaritoTravaEmVezDeRecusar(t *testing.T) {
 	}
 }
 
-// TestOTrilhoOfereceAReguaAoJOGADOR.
+// TestTheRailOffersTheRulerToThePlayer.
 //
 // Antes desta fatia o trilho inteiro era do mestre, porque só ele tinha modo —
 // pintar e marcar. A régua é de quem ataca, e a cena do jogador não desenhava
@@ -257,7 +257,7 @@ func TestOTamanhoDoGabaritoTravaEmVezDeRecusar(t *testing.T) {
 // E o que continua sendo do mestre segue sendo: o pincel de terreno pinta a
 // cena, e a trava de verdade é a rota (o `comandoDoMestreNoTabuleiro`) — isto
 // aqui é a cortesia de não oferecer o que seria recusado.
-func TestOTrilhoOfereceAReguaAoJogador(t *testing.T) {
+func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -277,13 +277,13 @@ func TestOTrilhoOfereceAReguaAoJogador(t *testing.T) {
 	}
 }
 
-// TestOCentroDaCenaEnquadraOCorpoDaPecaGrande (ALE-269, item 9).
+// TestTheSceneCenterFramesTheLargeTokenBody (ALE-269, item 9).
 //
 // Num plano sem bordas, "voltar ao começo" não significa nada — o gesto tem de
 // achar o GRUPO. E o corpo entra na conta e não só a âncora: uma Colossal ocupa
 // 6×6 (p107), e enquadrar pela quina dela deixaria metade do dragão fora da
 // janela justamente na cena em que ele é o motivo de olhar.
-func TestOCentroDaCenaEnquadraOCorpoDaPecaGrande(t *testing.T) {
+func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 	// Um rato em (0,0) e um dragão cuja âncora é (10,10) e cujo corpo vai até
 	// (15,15): o centro pelo corpo é 7, pela âncora seria 5.
 	v := tabuleiroView{Pecas: []pecaDoTabuleiro{
@@ -307,7 +307,7 @@ func TestOCentroDaCenaEnquadraOCorpoDaPecaGrande(t *testing.T) {
 	}
 }
 
-// TestACamadaDePinturaSoAcendeComPincel.
+// TestThePaintLayerOnlyLightsUpWithABrush.
 //
 // A pergunta antiga era `$ferramenta != ” && != 'marcador'`, e ela era VERDADE
 // para toda ferramenta que ainda não existia: com a régua ligada, a camada de
@@ -316,7 +316,7 @@ func TestOCentroDaCenaEnquadraOCorpoDaPecaGrande(t *testing.T) {
 //
 // A lista sai das espécies e nunca de um literal, e é isso que este guarda
 // prende: a quinta espécie nasce dentro da condição em vez de fora dela.
-func TestACamadaDePinturaSoAcendeComPincel(t *testing.T) {
+func TestThePaintLayerOnlyLightsUpWithABrush(t *testing.T) {
 	condicao := oPincelEstaLigado()
 	for _, e := range tabuleiro.EspeciesDeTerreno {
 		if !strings.Contains(condicao, `"`+string(e.ID)+`"`) {

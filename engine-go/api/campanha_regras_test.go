@@ -13,7 +13,7 @@ import (
 
 // O nome é aparado ANTES de medido, e é isso que faz um nome de puros espaços
 // ser recusado em vez de virar crônica sem título no livro.
-func TestNomeDeCampanhaEhAparadoAntesDeMedido(t *testing.T) {
+func TestACampaignNameIsTrimmedBeforeItIsMeasured(t *testing.T) {
 	if _, err := nomeDeCampanha("   "); !errors.Is(err, errNomeDeCampanha) {
 		t.Error("nome de puros espaços passou — a crônica nasceria sem título")
 	}
@@ -29,7 +29,7 @@ func TestNomeDeCampanhaEhAparadoAntesDeMedido(t *testing.T) {
 // A medida é em RUNAS e não em bytes. Um limite que encolhe conforme os acentos
 // é um limite que mente: "Coração" tem 7 caracteres para quem escreve e 8 bytes
 // para quem conta errado.
-func TestOsLimitesContamCARACTERESENaoBytes(t *testing.T) {
+func TestTheLimitsCountCharactersAndNotBytes(t *testing.T) {
 	// 120 runas acentuadas = 240 bytes. Se a conta fosse em bytes, este nome
 	// legítimo seria recusado.
 	nome := strings.Repeat("ç", nomeDeCampanhaMax)
@@ -49,7 +49,7 @@ func TestOsLimitesContamCARACTERESENaoBytes(t *testing.T) {
 // A LACUNA QUE ESTA FATIA FECHOU: o teto de 2000 do texto existia só na SPA, e
 // o servidor aceitava qualquer tamanho. Com a tela virando do servidor, a regra
 // teria sumido junto com o formulário que a carregava.
-func TestADescricaoTemTetoNoSERVIDOREnaoSoNaTela(t *testing.T) {
+func TestTheDescriptionCeilingIsOnTheServerAndNotOnlyOnTheScreen(t *testing.T) {
 	longa := strings.Repeat("a", descricaoDeCampanhaMax+1)
 	if _, err := descricaoDeCampanha(&longa); !errors.Is(err, errDescricaoDeCampanha) {
 		t.Errorf("descrição de %d caracteres passou — o teto vivia só no cliente", len(longa))
@@ -58,7 +58,7 @@ func TestADescricaoTemTetoNoSERVIDOREnaoSoNaTela(t *testing.T) {
 
 // Descrição vazia (ou de puros espaços) é NULL nos DOIS caminhos, criar e
 // editar. Sem isso o cliente lê "" de um e null do outro para a mesma entrada.
-func TestDescricaoVaziaEhNuloENaoStringVazia(t *testing.T) {
+func TestAnEmptyDescriptionIsNullAndNotAnEmptyString(t *testing.T) {
 	for _, entrada := range []string{"", "   ", "\n\t "} {
 		got, err := descricaoDeCampanha(&entrada)
 		if err != nil {

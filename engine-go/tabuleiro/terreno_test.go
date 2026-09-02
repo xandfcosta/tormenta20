@@ -13,12 +13,12 @@ import (
 // uma não mexe nas outras. É a garantia que um mapa com chave de string não
 // daria — lá `"elevated"` contra `"elevado"` viraria lista vazia em silêncio.
 
-// TestCadaEspecieTemAPROPRIAlista.
+// TestEachKindHasItsOwnList.
 //
 // Amostragem e não enumeração: percorre `EspeciesDeTerreno`, então a quinta
 // espécie que alguém acrescentar já nasce medida, e não há uma entrada por caso
 // para alguém esquecer de escrever.
-func TestCadaEspecieTemAPropriaLista(t *testing.T) {
+func TestEachKindHasItsOwnList(t *testing.T) {
 	casa := engine.Square{X: 3, Y: 4}
 	for _, pincel := range EspeciesDeTerreno {
 		b := &BoardState{}
@@ -42,9 +42,9 @@ func TestCadaEspecieTemAPropriaLista(t *testing.T) {
 	}
 }
 
-// TestOPincelEIDEMPOTENTEemCadaEspecie: o arraste passa duas vezes pela mesma
+// TestTheBrushIsIdempotentForEachKind: o arraste passa duas vezes pela mesma
 // casa, e alternar faria ela piscar debaixo do dedo. Quem apaga é a borracha.
-func TestOPincelEIdempotenteEmCadaEspecie(t *testing.T) {
+func TestTheBrushIsIdempotentForEachKind(t *testing.T) {
 	casa := engine.Square{X: -2, Y: 7}
 	for _, pincel := range EspeciesDeTerreno {
 		b := &BoardState{}
@@ -67,11 +67,11 @@ func TestOPincelEIdempotenteEmCadaEspecie(t *testing.T) {
 	}
 }
 
-// TestEspecieINVENTADAnaoPintaNadaEnaoDerruba.
+// TestAnInventedKindPaintsNothingAndDoesNotCrash.
 //
 // O id vem do CLIENTE. Uma espécie que a tela não oferece só chega por posse do
 // fio, e a resposta não pode ser nem pânico nem pintar a lista errada.
-func TestEspecieInventadaNaoPintaNadaENaoDerruba(t *testing.T) {
+func TestAnInventedKindPaintsNothingAndDoesNotCrash(t *testing.T) {
 	b := &BoardState{}
 	PaintTerrain(b, engine.Square{X: 1, Y: 1}, EspecieDeTerreno("lava"), true)
 
@@ -93,13 +93,13 @@ func TestEspecieInventadaNaoPintaNadaENaoDerruba(t *testing.T) {
 	}
 }
 
-// TestOsTracosSOBREVIVEMaoAcervo.
+// TestTheStrokesSurviveTheArchive.
 //
 // O Lugar guardado é `json.Marshal` do estado inteiro, e reabrir é `Unmarshal`.
 // Uma espécie sem tag JSON, ou com tag repetida, sumiria na ida e volta — e o
 // sintoma seria a taverna reabrindo parecendo certa, com o pântano virando chão
 // liso. Perder dado sem estourar é o defeito que este guarda existe para pegar.
-func TestOsTracosSobrevivemAoAcervo(t *testing.T) {
+func TestTheStrokesSurviveTheArchive(t *testing.T) {
 	casa := engine.Square{X: 5, Y: -3}
 	original := &BoardState{Place: "Pântano"}
 	for _, pincel := range EspeciesDeTerreno {
@@ -123,13 +123,13 @@ func TestOsTracosSobrevivemAoAcervo(t *testing.T) {
 	}
 }
 
-// TestSOoDIFICILentraNaContaDoMovimento.
+// TestOnlyDifficultTerrainCountsForMovement.
 //
 // A assimetria que a forma de quatro listas existe para deixar à vista: o
 // difícil alimenta o MOTOR, os outros três alimentam o olho. Cobertura no
 // caminho não pode encarecer o passo — seria inventar uma regra que o livro não
 // tem, e ela apareceria como a peça andando menos sem explicação.
-func TestSoODificilEntraNaContaDoMovimento(t *testing.T) {
+func TestOnlyDifficultTerrainCountsForMovement(t *testing.T) {
 	casa := engine.Square{X: 1, Y: 0}
 	b := &BoardState{}
 	for _, pincel := range EspeciesDeTerreno {

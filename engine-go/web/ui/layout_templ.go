@@ -60,7 +60,7 @@ type Page struct {
 	// SemEstadoDeCliente marca a superfície que não pode ter sinal NEM `data-init`
 	// — hoje só a PORTA. Um sinal é estado do cliente e o Datastar o serializa em
 	// TODA requisição seguinte, então qualquer estado ali faria a senha viajar de
-	// novo a cada pedido da página. É o que o `TestPortaNaoPoeNadaEmSinalDoDatastar`
+	// novo a cada pedido da página. É o que o `TestTheDoorPutsNothingInADatastarSignal`
 	// cobra, e ele me pegou: ao fazer o `data-init` da restauração de foco sair
 	// sempre, eu o pus também na porta, que não tem trilho para restaurar.
 	//

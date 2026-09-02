@@ -60,7 +60,7 @@ func gravaNaMao(t *testing.T, f pilotoFixture, id int64, blob string) {
 // escudos — e não sabe usar armas exóticas, que nenhuma classe concede. A tela
 // tem de dizer as duas coisas: o que a classe deu, com o nome da classe, e o que
 // ela não deu.
-func TestOPainelDeProficienciasDizOQueAClasseConcede(t *testing.T) {
+func TestTheProficienciesPanelSaysWhatTheClassGrants(t *testing.T) {
 	f, id := oGuerreiro(t)
 
 	tela := f.pede(t, f.jogador, http.MethodGet,
@@ -92,7 +92,7 @@ func TestOPainelDeProficienciasDizOQueAClasseConcede(t *testing.T) {
 //
 // Este caso existe para a decisão ser REVISTA de propósito e não redescoberta
 // como defeito: se alguém decidir seguir o livro à risca, é aqui que ele quebra.
-func TestArmaduraPesadaConcedeALeve(t *testing.T) {
+func TestHeavyArmorGrantsTheLightOne(t *testing.T) {
 	f, id := oGuerreiro(t)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
@@ -116,7 +116,7 @@ func TestArmaduraPesadaConcedeALeve(t *testing.T) {
 // proficiência acrescentada na mão SAI, e uma concedida pela classe que foi
 // tirada na mão VOLTA. Um caso só numa direção passaria por igual se o restaurar
 // fizesse união em vez de substituição.
-func TestRestaurarOPadraoDescartaOAjusteManual(t *testing.T) {
+func TestRestoringTheDefaultDiscardsTheManualAdjustment(t *testing.T) {
 	f, id := oGuerreiro(t)
 	// Exóticas nenhuma classe concede; marciais o guerreiro concede e aqui está
 	// AUSENTE — os dois lados do erro, num blob só.
@@ -142,7 +142,7 @@ func TestRestaurarOPadraoDescartaOAjusteManual(t *testing.T) {
 // O comando manda a CATEGORIA e não o estado desejado, e é o servidor que decide
 // o novo valor: mandar "ligada" perderia para o clique repetido e para a mesma
 // ficha aberta em dois aparelhos.
-func TestAlternarLigaEDesligaAProficiencia(t *testing.T) {
+func TestTogglingTurnsTheProficiencyOnAndOff(t *testing.T) {
 	f, id := oGuerreiro(t)
 	gravaNaMao(t, f, id, `["armas-marciais"]`)
 	rota := fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-marciais", id)
@@ -167,7 +167,7 @@ func TestAlternarLigaEDesligaAProficiencia(t *testing.T) {
 // A rota tem a categoria no CAMINHO, então qualquer coisa chega até o handler.
 // Recusar sem gravar é o que impede um endereço digitado de pôr lixo na coluna —
 // e o lixo seria silencioso, porque o leitor do blob ignora o que não conhece.
-func TestUmaProficienciaForaDoCatalogoNaoGrava(t *testing.T) {
+func TestAProficiencyOutsideTheCatalogIsNotSaved(t *testing.T) {
 	f, id := oGuerreiro(t)
 	gravaNaMao(t, f, id, `["armas-marciais"]`)
 
@@ -199,7 +199,7 @@ func TestUmaProficienciaForaDoCatalogoNaoGrava(t *testing.T) {
 // um parâmetro que não sabe preencher** — é isso que força a varredura: a fatia
 // que acrescentar `{item}` ou `{magia}` tem de vir aqui dizer com que valor se
 // preenche, e nesse mesmo instante a rota nova passa a ser conferida.
-func TestNenhumaEscritaDaFichaAceitaEstranho(t *testing.T) {
+func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 	f, id := oGuerreiro(t)
 	// Valores plausíveis por parâmetro. O 403 tem de vir ANTES de qualquer
 	// validação de conteúdo, então o valor só precisa existir — mas um valor
@@ -308,7 +308,7 @@ var oTituloDoPainel = map[string]string{
 	"abilities":     "Poderes",
 }
 
-func TestTodaAbaDaFichaDesenhaAlgo(t *testing.T) {
+func TestEverySheetTabDrawsSomething(t *testing.T) {
 	f, id := oGuerreiro(t)
 
 	var visitadas int
@@ -350,7 +350,7 @@ func TestTodaAbaDaFichaDesenhaAlgo(t *testing.T) {
 // Ele varre as SETE abas e falha nomeando o comando que saiu sem o `?tab=`. É
 // mecanizável com o que já roda, então virou guarda em vez de parágrafo — e cada
 // fatia nova ganha a cobertura de graça, porque o que ele lê é o HTML.
-func TestNenhumComandoDaFichaPerdeAAba(t *testing.T) {
+func TestNoSheetCommandLosesTheTab(t *testing.T) {
 	f, id := oGuerreiro(t)
 	// Multiclasse: é o que faz o diálogo do degrau existir, e os comandos DELE
 	// são os mais fáceis de esquecer — moram noutro templ.

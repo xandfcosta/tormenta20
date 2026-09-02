@@ -23,7 +23,7 @@ func condicoesDaLinha(t *testing.T, f pilotoFixture, entryID string) []string {
 	return nil
 }
 
-// TestOCrachaDizAPalavraDoLivroENaoOId — o defeito que estava na tela.
+// TestTheBadgeSaysTheBookWordAndNotTheId — o defeito que estava na tela.
 //
 // O crachá desenhava o `id` cru e o `uppercase` do CSS disfarçava: 31 das 35
 // condições saem iguais em maiúsculas, e as outras quatro apareciam como CAIDO,
@@ -33,7 +33,7 @@ func condicoesDaLinha(t *testing.T, f pilotoFixture, entryID string) []string {
 //
 // A escolha da condição é DELIBERADA: `caido` é uma das quatro em que id e nome
 // divergem. Uma que coincidisse passaria verde sobre o defeito.
-func TestOCrachaDizAPalavraDoLivroENaoOId(t *testing.T) {
+func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	_, npc := idsDaCena(t, f)
@@ -70,12 +70,12 @@ func TestOCrachaDizAPalavraDoLivroENaoOId(t *testing.T) {
 	}
 }
 
-// TestAlternarLigaEDesligaACondicao.
+// TestTogglingTurnsTheConditionOnAndOff.
 //
 // O clique carrega a INTENÇÃO ("mexe nesta") e não o conjunto: quem monta a
 // lista nova é o servidor, lendo a atual. Uma tela que mandasse o conjunto
 // inteiro apagaria a condição que outro remendo acabou de acrescentar.
-func TestAlternarLigaEDesligaACondicao(t *testing.T) {
+func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	_, npc := idsDaCena(t, f)
@@ -104,13 +104,13 @@ func TestAlternarLigaEDesligaACondicao(t *testing.T) {
 	}
 }
 
-// TestOConjuntoNovoVoltaNoSinal.
+// TestTheNewSetComesBackInTheSignal.
 //
 // Sem isto o diálogo aberto MENTE: os crachás dele são pintados a partir do
 // sinal que a abertura escreveu, e depois de um clique aquele sinal descreve o
 // estado de antes. O mestre aplicaria "abalado", veria o crachá apagado, e
 // clicaria de novo — tirando o que acabou de pôr.
-func TestOConjuntoNovoVoltaNoSinal(t *testing.T) {
+func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	_, npc := idsDaCena(t, f)
@@ -122,12 +122,12 @@ func TestOConjuntoNovoVoltaNoSinal(t *testing.T) {
 	}
 }
 
-// TestCondicaoInventadaERecusadaComAPagina.
+// TestAnInventedConditionIsRefusedWithThePage.
 //
 // A validação é do CATÁLOGO e não de uma lista escrita aqui: a API já teve 34
 // ids ao lado das 35 do catálogo, e a que faltava — `enfeitiçado` — dava 400 ao
 // ser aplicada (ALE-122). Uma cópia da tabela do livro é uma cópia que desvia.
-func TestCondicaoInventadaERecusadaComAPagina(t *testing.T) {
+func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	_, npc := idsDaCena(t, f)
@@ -153,8 +153,8 @@ func TestCondicaoInventadaERecusadaComAPagina(t *testing.T) {
 	}
 }
 
-// TestOJogadorNaoAplicaCondicao — a trava é do servidor.
-func TestOJogadorNaoAplicaCondicao(t *testing.T) {
+// TestThePlayerDoesNotApplyAConditionButton — a trava é do servidor.
+func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 	_, npc := idsDaCena(t, f)
@@ -170,11 +170,11 @@ func TestOJogadorNaoAplicaCondicao(t *testing.T) {
 	}
 }
 
-// TestODialogoOfereceAsTRINTAECINCOdoLivro, por AMOSTRAGEM sobre o catálogo.
+// TestTheDialogOffersTheCatalogConditions, por AMOSTRAGEM sobre o catálogo.
 //
 // A condição que entrar no livro amanhã já nasce oferecida — não há uma lista
 // aqui para alguém esquecer de atualizar.
-func TestODialogoOfereceAsCondicoesDoCatalogo(t *testing.T) {
+func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 

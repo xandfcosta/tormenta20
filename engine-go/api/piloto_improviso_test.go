@@ -13,14 +13,14 @@ import (
 // da linha do livro para a tela — que é onde um campo trocado passa por dado
 // plausível.
 
-// TestTodaFaceDoDadoAcertaUmaLinha, nas quatro tabelas.
+// TestEveryDieFaceHitsARow, nas quatro tabelas.
 //
 // É a única forma honesta de testar tabela de rolagem: em vez de repetir a
 // tabela num `expect` por linha — que é a transcrição que o guia proíbe —,
 // percorre TODAS as faces e exige que cada uma caia em alguma linha. Tabela com
 // buraco é o defeito real aqui, e ele é invisível até alguém rolar o número que
 // falta no meio de uma sessão.
-func TestTodaFaceDoDadoAcertaUmaLinha(t *testing.T) {
+func TestEveryDieFaceHitsARow(t *testing.T) {
 	tab, masmorra := tabelasDoImproviso()
 	if len(tab.Ruina) == 0 || len(tab.ChaseEvents) == 0 || len(masmorra.Ideas) == 0 {
 		t.Fatal("tabelas vazias: o catálogo não carregou, e verde aqui não valeria nada")
@@ -60,12 +60,12 @@ func (e erroDeFace) Error() string {
 }
 func errFaceSemLinha(f int) error { return erroDeFace(f) }
 
-// TestOTipoDoEventoENAOOExemplo prende a manchete da perseguição.
+// TestTheEventTypeAndNotTheExample prende a manchete da perseguição.
 //
 // A primeira versão punha o EXEMPLO em cima e perdia o tipo inteiro; a rolagem 4
 // saía como "4 —", porque na faixa "nenhum evento" o exemplo do livro é um
 // travessão. Só apareceu ao olhar a captura de tela.
-func TestOTipoDoEventoENaoOExemplo(t *testing.T) {
+func TestTheEventTypeAndNotTheExample(t *testing.T) {
 	tab, _ := tabelasDoImproviso()
 	vistos := map[string]bool{}
 	// 200 rolagens visitam as três faixas com folga; o que se mede é o FORMATO
@@ -87,8 +87,8 @@ func TestOTipoDoEventoENaoOExemplo(t *testing.T) {
 	}
 }
 
-// TestOHistoricoGuardaCincoEJogaOSextoFora.
-func TestOHistoricoGuardaCincoEJogaOSextoFora(t *testing.T) {
+// TestTheHistoryKeepsFiveAndThrowsTheSixthAway.
+func TestTheHistoryKeepsFiveAndThrowsTheSixthAway(t *testing.T) {
 	var h []sorteio
 	for i := 1; i <= 8; i++ {
 		h = empilha(h, sorteio{Rolagem: i, Texto: "linha"})
@@ -106,9 +106,9 @@ func TestOHistoricoGuardaCincoEJogaOSextoFora(t *testing.T) {
 	}
 }
 
-// TestOEsqueletoDaMasmorraSegueOLivro: uma ameaça a cada três salas (p263),
+// TestTheDungeonSkeletonFollowsTheBook: uma ameaça a cada três salas (p263),
 // arredondando PARA CIMA — sete salas dão três ameaças, não duas.
-func TestOEsqueletoDaMasmorraSegueOLivro(t *testing.T) {
+func TestTheDungeonSkeletonFollowsTheBook(t *testing.T) {
 	casos := map[int]struct {
 		ameacas int
 		tamanho string
@@ -133,9 +133,9 @@ func TestOEsqueletoDaMasmorraSegueOLivro(t *testing.T) {
 	}
 }
 
-// TestAcimaDoTetoNaoEErro: o livro recomenda parar, e a tela diz isso em vez de
+// TestAboveTheCeilingIsNotAnError: o livro recomenda parar, e a tela diz isso em vez de
 // esconder o campo ou fingir um tamanho.
-func TestAcimaDoTetoNaoEErro(t *testing.T) {
+func TestAboveTheCeilingIsNotAnError(t *testing.T) {
 	v := carregaImproviso(improvisoView{Salas: 120})
 	if !v.AcimaDoTeto {
 		t.Fatal("120 salas não foram marcadas como acima do teto")
@@ -152,8 +152,8 @@ func TestAcimaDoTetoNaoEErro(t *testing.T) {
 
 // ── pelo fio ─────────────────────────────────────────────────────────────────
 
-// TestRolarDevolveRemendoEEmpilha.
-func TestRolarDevolveRemendoEEmpilha(t *testing.T) {
+// TestRollingReturnsAPatchAndStacks.
+func TestRollingReturnsAPatchAndStacks(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -172,10 +172,10 @@ func TestRolarDevolveRemendoEEmpilha(t *testing.T) {
 	}
 }
 
-// TestTabelaInventadaERecusada: a rota é montada a partir da própria lista,
+// TestAnInventedTableIsRefused: a rota é montada a partir da própria lista,
 // então nome errado só chega por URL digitada à mão — e devolver a cena intacta
 // faria parecer que o botão não funciona.
-func TestTabelaInventadaERecusada(t *testing.T) {
+func TestAnInventedTableIsRefused(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -188,7 +188,7 @@ func TestTabelaInventadaERecusada(t *testing.T) {
 	}
 }
 
-// TestOTrilhoOfereceTodasAsParadas — e cada uma responde.
+// TestTheRailOffersEveryStop — e cada uma responde.
 //
 // É o guarda da VIRADA: a `/gm` só pode ser apagada quando as ferramentas
 // estiverem de pé, e "de pé" é responder 200, não existir no trilho.
@@ -198,7 +198,7 @@ func TestTabelaInventadaERecusada(t *testing.T) {
 // próprias. São 13 — duas ferramentas e ONZE catálogos, os últimos a chegar
 // sendo as escolas de magia e as perícias. O número fica preso porque uma parada
 // que perde a rota some do trilho sem erro nenhum.
-func TestOTrilhoOfereceTodasAsParadas(t *testing.T) {
+func TestTheRailOffersEveryStop(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -223,7 +223,7 @@ func TestOTrilhoOfereceTodasAsParadas(t *testing.T) {
 	}
 }
 
-// TestOsSlugsDaTrilhaSaoUnicos — a rota resolve por eles.
+// TestTheTrailSlugsAreUnique — a rota resolve por eles.
 //
 // Herdado do `gm-tools.test.ts` da SPA, apagado na virada da ALE-264 — o
 // original se lê com
@@ -231,7 +231,7 @@ func TestOTrilhoOfereceTodasAsParadas(t *testing.T) {
 // quebra compilação nem teste nenhum: as duas entradas viram links para o mesmo
 // endereço, e a segunda ferramenta fica inalcançável — com o trilho mostrando
 // as duas, o que é pior que faltar uma.
-func TestOsSlugsDaTrilhaSaoUnicos(t *testing.T) {
+func TestTheTrailSlugsAreUnique(t *testing.T) {
 	vistos := map[string]string{}
 	for _, f := range ferramentasDoMestre {
 		if antes, repetido := vistos[f.Slug]; repetido {
@@ -245,7 +245,7 @@ func TestOsSlugsDaTrilhaSaoUnicos(t *testing.T) {
 	}
 }
 
-// TestLimparZeraSOAquelaTabela.
+// TestClearingResetsOnlyThatTable.
 //
 // Esta feature quase se perdeu no porte: a SPA tem um botão "Limpar" por tabela
 // e a minha primeira versão rolava e acumulava sem como zerar. O que a
@@ -257,7 +257,7 @@ func TestOsSlugsDaTrilhaSaoUnicos(t *testing.T) {
 //
 // O guarda mede o ISOLAMENTO e não só o zeramento: limpar a ruína não pode
 // levar junto o evento de perseguição que o mestre acabou de tirar.
-func TestLimparZeraSoAquelaTabela(t *testing.T) {
+func TestClearingResetsOnlyThatTable(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -278,8 +278,8 @@ func TestLimparZeraSoAquelaTabela(t *testing.T) {
 	}
 }
 
-// TestLimparTabelaInventadaERecusado, como a rolagem.
-func TestLimparTabelaInventadaERecusado(t *testing.T) {
+// TestClearingAnInventedTableIsRefused, como a rolagem.
+func TestClearingAnInventedTableIsRefused(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/tarot/limpar", `{}`)

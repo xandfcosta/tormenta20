@@ -46,7 +46,7 @@ func fluxoDaFicha(t *testing.T, f pilotoFixture, alvo string) string {
 	return rec.Body.String()
 }
 
-// TestAfichaNASCEabertaNOmesmoREMENDOdoConteudo.
+// TestTheEntryCardIsBornOpenInTheSamePatchAsItsContent.
 //
 // A garantia é de ATOMICIDADE e não de ordem, e a diferença foi medida: a
 // primeira versão do conserto mandava um EVENTO DE SINAL depois do conteúdo, e
@@ -55,7 +55,7 @@ func fluxoDaFicha(t *testing.T, f pilotoFixture, alvo string) string {
 // cima. O fio levava `{"fichaAberta":true}` e o diálogo continuava
 // `display:none`. Com o servidor redeclarando o valor CERTO, o conteúdo e o
 // estado de aberto chegam juntos e não existe janela entre eles.
-func TestAFichaNasceAbertaNoMesmoRemendoDoConteudo(t *testing.T) {
+func TestTheEntryCardIsBornOpenInTheSamePatchAsItsContent(t *testing.T) {
 	f := novoPiloto(t)
 	corpo := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
 
@@ -74,14 +74,14 @@ func TestAFichaNasceAbertaNoMesmoRemendoDoConteudo(t *testing.T) {
 	}
 }
 
-// TestBUSCAeFILTROnaoABREMaFicha.
+// TestSearchAndFilterDoNotOpenTheEntryCard.
 //
 // A metade que faz a de cima significar alguma coisa. A MESMA rota serve a
 // busca e os filtros de tipo, e os dois mandam os sinais TODOS — inclusive o
 // `criatura` já escolhido. Se a decisão de abrir viesse de um sinal em vez da
 // URL, digitar uma letra na busca abriria a ficha por cima da lista, a cada
 // tecla.
-func TestBuscaEFiltroNaoAbremAFicha(t *testing.T) {
+func TestSearchAndFilterDoNotOpenTheEntryCard(t *testing.T) {
 	f := novoPiloto(t)
 
 	// O CONTROLE: com `abrir` o sinal SAI. Sem ele, "não abriu" seria verdade
@@ -97,13 +97,13 @@ func TestBuscaEFiltroNaoAbremAFicha(t *testing.T) {
 	}
 }
 
-// TestOcliqueNAlinhaNAOabreAfichaSOZINHO.
+// TestClickingTheRowDoesNotOpenTheEntryCardOnItsOwn.
 //
 // A regressão silenciosa deste conserto: devolver `$fichaAberta = true` à
 // expressão do clique faz a ficha voltar a abrir antes do conteúdo, e nada
 // estoura — o defeito reaparece como um quadro piscando, que é o que ninguém
 // atribui a um commit.
-func TestOCliqueNaLinhaNaoAbreAFichaSozinho(t *testing.T) {
+func TestClickingTheRowDoesNotOpenTheEntryCardOnItsOwn(t *testing.T) {
 	f := novoPiloto(t)
 	tela := f.pede(t, f.mestre, http.MethodGet, "/mestre/bestiario", "").Body.String()
 
@@ -118,7 +118,7 @@ func TestOCliqueNaLinhaNaoAbreAFichaSozinho(t *testing.T) {
 	}
 }
 
-// TestNenhumFocoPedeAoServidorSemGuardaDeTeclado — a VARREDURA de um defeito
+// TestNoFocusAsksTheServerWithoutAKeyboardGuard — a VARREDURA de um defeito
 // que só aparece em máquina carregada, e que o CI pegou duas vezes seguidas
 // enquanto a bancada passava verde (ALE-272).
 //
@@ -142,7 +142,7 @@ func TestOCliqueNaLinhaNaoAbreAFichaSozinho(t *testing.T) {
 // da ALE-252 é que um guarda só mede o que ele VISITA, e enumerar cena por cena
 // deixaria a próxima nascer sem medição, em silêncio. Como a regra cabe num
 // atributo só, a fonte inteira é alcançável de uma vez.
-func TestNenhumFocoPedeAoServidorSemGuardaDeTeclado(t *testing.T) {
+func TestNoFocusAsksTheServerWithoutAKeyboardGuard(t *testing.T) {
 	fontes, err := filepath.Glob("*.templ")
 	if err != nil || len(fontes) == 0 {
 		t.Fatalf("não achei os .templ do pacote (%v) — o guarda mediria o vazio", err)

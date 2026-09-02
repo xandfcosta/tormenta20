@@ -13,12 +13,12 @@ import (
 // o que só existe por ser DENTRO da mesa — a trava do papel, o envio para a
 // fila, e a regra de quem é dono do rascunho.
 
-// TestMandarParaAMesaPoeUmaLinhaPorCOPIA.
+// TestSendingToTheTablePutsOneRowPerCopy.
 //
 // Uma entrada por cópia, e quem numera os repetidos é o SERVIDOR (ALE-192): a
 // tela não pode adivinhar um número que outro cliente acabou de usar. Todas
 // entram com a MESMA iniciativa — é o que a mesa faz com um bando.
-func TestMandarParaAMesaPoeUmaLinhaPorCopia(t *testing.T) {
+func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/bestiario/enviar",
@@ -56,7 +56,7 @@ func TestMandarParaAMesaPoeUmaLinhaPorCopia(t *testing.T) {
 // Ele não é regra do livro — é o que impede a fila de encher e o mestre ter de
 // desfazer linha por linha. E o `min`/`max` do campo não é a trava: digitar
 // passa direto pelo spinner (ALE-236).
-func TestOTetoDeCopiasERecusadoNoServidor(t *testing.T) {
+func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/bestiario/enviar",
@@ -72,7 +72,7 @@ func TestOTetoDeCopiasERecusadoNoServidor(t *testing.T) {
 // Criatura que o livro não tem é recusada com o id na frase: ali um id
 // desconhecido só chega por adulteração, e engolir em silêncio poria uma linha
 // sem bloco na fila.
-func TestUmaCriaturaInventadaERecusada(t *testing.T) {
+func TestAnInventedCreatureIsRefused(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/bestiario/enviar",
@@ -85,7 +85,7 @@ func TestUmaCriaturaInventadaERecusada(t *testing.T) {
 	}
 }
 
-// TestOPainelSemeiaORascunhoSOaoAbrirOUTRAcriatura.
+// TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens.
 //
 // O painel é o DONO do rascunho: PV, iniciativa e quantas nascem do bloco do
 // livro a cada criatura ABERTA. Sem isso, o PV que o mestre baixou para um ogro
@@ -94,7 +94,7 @@ func TestUmaCriaturaInventadaERecusada(t *testing.T) {
 // A outra metade é a que quase ninguém escreve e é a que importa: FILTRAR não
 // pode semear. Se semeasse, cada tecla da busca apagaria o PV que o mestre
 // acabou de ajustar.
-func TestOPainelSemeiaORascunhoSoAoAbrirOutraCriatura(t *testing.T) {
+func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	f := novoPiloto(t)
 	painel := f.urlDaMesa() + "/bestiario"
 
@@ -125,11 +125,11 @@ func TestOPainelSemeiaORascunhoSoAoAbrirOutraCriatura(t *testing.T) {
 	}
 }
 
-// TestOBestiarioDaMesaEDoMESTRE, nas duas metades (ALE-144).
+// TestTheTableBestiaryBelongsToTheGm, nas duas metades (ALE-144).
 //
 // A lista diz o PV e a defesa de cada bicho — é exatamente o que o olho da linha
 // esconde da mesa —, então a trava é do painel INTEIRO e não só do enviar.
-func TestOBestiarioDaMesaEDoMestre(t *testing.T) {
+func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 	f := novoPiloto(t)
 
 	rotas := []struct{ metodo, caminho, corpo string }{

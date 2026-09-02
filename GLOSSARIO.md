@@ -271,3 +271,64 @@ A regra, daqui para frente (a completa está em
 
 Termo novo, ou conceito que ainda não está aqui: **escreva a linha antes de
 escrever o código.** Nomear depois é como este arquivo nasceu.
+
+---
+
+## G. As grafias inglesas que a ALE-282 assentou
+
+A varredura dos nomes de teste traduziu 773 nomes de uma vez, e vinte e poucos
+termos da mesa **não tinham grafia inglesa nenhuma** — nem na coluna "no código",
+nem em nenhum identificador do repositório. Traduzir na hora, e duas vezes, é
+como um conceito vira dois (`place` e `location` para o mesmo `lugar`), então a
+escolha ficou escrita aqui.
+
+**Isto não é um renome pedido.** A coluna "no código" das seções acima continua
+sendo o passivo: `cortina`, `lente`, `traco` seguem com o nome que têm nos
+arquivos onde já estão. O que a tabela abaixo governa é o nome NOVO — e o nome de
+teste foi o primeiro lugar onde ele precisou existir.
+
+| termo | grafia inglesa | onde ela já aparece |
+|---|---|---|
+| **fila** (de iniciativa) | `tracker` | já estava na seção B; a varredura só a usou |
+| **acervo** (cenas guardadas) | `archive` | `TestTheArchiveSaysWhichSceneIsOnTheTable` |
+| **acervo** (de poderes, de catálogo) | `collection` | `TestTheCollectionJoinsTheFiveOrigins` |
+| **cortina** | `curtain` | `curtained` já existia no fio |
+| **lente** | `lens` | `TestTheLensSaysHowManyVanished` |
+| **palco** | `stage` | `TestTheStageHasTheTwoPartsThatAnimate` |
+| **trilho** | `rail` | `TestTheRailOffersEveryStop` |
+| **trilha** | `trail` | `TestTheTrailSlugsAreUnique` |
+| **régua** | `ruler` | `TestTheRulerHasNoDirection` |
+| **gabarito** | `template` | `TestTheTemplateRefusesAShapeTheBookDoesNotHave` |
+| **traço** | `stroke` | `TestTheStrokeHasNoGap` |
+| **pincel** | `brush` | `TestTheBrushIsIdempotentForEachKind` |
+| **borracha** | `eraser` | `TestTheEraserClearsTheWholeSquare` |
+| **fantasma** | `ghost` | `TestTheGhostMarksTheOriginWithTheTokenMonogram` |
+| **seta** (do movimento) | `arrow` | `TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge` |
+| **janela** (do mapa) | `viewport` | `TestNoLayerReadsThePointWithoutAddingTheViewport` |
+| **chão** | `ground` | `TestEveryOfferedGroundCanBePainted` |
+| **espécie** (de terreno) | `kind` | `AreaKind` já usava `Kind` |
+| **ferramenta** (do mapa) | `tool` | `TestEachToolHasAKeyOfItsOwn` |
+| **mostrar à mesa** / puxão | `pull` | `TestThePullReachesWhoNeverChoseATab` |
+| **perna** (do caminho) | `leg` | `TestEachLegGetsItsOwnLabel` |
+| **laço** | `lasso` | `TestTheLassoCatchesTheTokenByItsBody` |
+| **porta** (a cena de entrar) | `door` | `TestTheDoorRefusesAWrongPasswordWithoutOpeningASession` |
+| **crachá** | `badge` | `TestTheTypeBadgeTogglesWithoutNavigating` |
+| **dossiê** | `dossier` | `TestTheDossierRespectsTheLimit` |
+| **monograma** | `monogram` | `TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal` |
+| **matiz** | `hue` | `TestTheNameHueMatchesTheJs` |
+| **sobrecarga** | `overload` | `TestOverloadPenalizesDisplacementAndArmorExpertises` |
+| **bolsa inicial** | `purse` (na frase) | `startingMoney` continua sendo o campo |
+
+**Três colisões que esta tabela ABRE, e que ficam registradas em vez de
+resolvidas por palpite:**
+
+- **`door` e `port`** são a mesma palavra em português. A cena de entrar é
+  `door`; a interface que uma cena declara para o hospedeiro (ALE-278) é `port`.
+  Quem escrever "porta" num comentário diz de qual está falando.
+- **`arrow` e `wire`** são os dois `fio` — a seta do movimento tem `Fio` no
+  código (seção C) e o formato de fio do SSE também. A varredura usou `arrow`
+  para o desenho e `wire` para o protocolo.
+- **`archive` e `collection`** são os dois `acervo`, e a colisão é anterior a
+  esta issue: o acervo de CENAS guardadas e o acervo de PODERES não têm nada em
+  comum além da palavra. Se um dia um deles for renomeado na tela, é o segundo —
+  "acervo" é a palavra da mesa para o primeiro.

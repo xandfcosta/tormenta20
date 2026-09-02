@@ -37,14 +37,14 @@ func aFolhaPreenchida() url.Values {
 	}
 }
 
-// TestTodaRacaEClasseDoLivroTemCartaNaForja é guarda de varredura: a folha não
+// TestEveryBookRaceAndClassHasACardInTheForge é guarda de varredura: a folha não
 // pode ter lista escrita à mão.
 //
 // O regime é AMOSTRAGEM e não enumeração — a folha desenha o que o catálogo
 // tem, então uma raça nova aparece sozinha. O que este guarda pega é a
 // regressão contrária: alguém trocar o catálogo por uma lista curta "só das
 // principais", que é como as cartas costumam começar.
-func TestTodaRacaEClasseDoLivroTemCartaNaForja(t *testing.T) {
+func TestEveryBookRaceAndClassHasACardInTheForge(t *testing.T) {
 	f := novoPiloto(t)
 	corpo := f.pede(t, f.jogador, http.MethodGet, "/personagens/nova", "").Body.String()
 
@@ -65,9 +65,9 @@ func TestTodaRacaEClasseDoLivroTemCartaNaForja(t *testing.T) {
 	}
 }
 
-// TestAFolhaSoOfereceEquipamentoDepoisDaClasse: o kit de p140 se conhece pela
+// TestTheFormOnlyOffersEquipmentAfterTheClass: o kit de p140 se conhece pela
 // classe, e antes dela a seção não existe.
-func TestAFolhaSoOfereceEquipamentoDepoisDaClasse(t *testing.T) {
+func TestTheFormOnlyOffersEquipmentAfterTheClass(t *testing.T) {
 	f := novoPiloto(t)
 	vazia := f.pede(t, f.jogador, http.MethodGet, "/personagens/nova", "").Body.String()
 	if strings.Contains(vazia, "Equipamento inicial") {
@@ -81,9 +81,9 @@ func TestAFolhaSoOfereceEquipamentoDepoisDaClasse(t *testing.T) {
 	}
 }
 
-// TestOEquipamentoOferecidoSegueAClasse — p140, e é o mesmo par de casos do
+// TestTheOfferedEquipmentFollowsTheClass — p140, e é o mesmo par de casos do
 // teste de regra do motor, agora atravessando a cena.
-func TestOEquipamentoOferecidoSegueAClasse(t *testing.T) {
+func TestTheOfferedEquipmentFollowsTheClass(t *testing.T) {
 	f := novoPiloto(t)
 	casos := []struct {
 		classe   string
@@ -121,9 +121,9 @@ func TestOEquipamentoOferecidoSegueAClasse(t *testing.T) {
 	}
 }
 
-// TestAForjaRecusaOQueOKitNaoOferece: a tela esconde, o servidor RECUSA. É a
+// TestTheForgeRefusesWhatTheKitDoesNotOffer: a tela esconde, o servidor RECUSA. É a
 // fronteira que a rota JSON de criar personagem deixou aberta por escrito.
-func TestAForjaRecusaOQueOKitNaoOferece(t *testing.T) {
+func TestTheForgeRefusesWhatTheKitDoesNotOffer(t *testing.T) {
 	f := novoPiloto(t)
 	casos := []struct {
 		nome   string
@@ -179,9 +179,9 @@ func TestAForjaRecusaOQueOKitNaoOferece(t *testing.T) {
 	}
 }
 
-// TestARecusaDevolveOQueFoiRespondido: a folha volta preenchida. Redigitar o
+// TestTheRefusalGivesBackWhatWasAnswered: a folha volta preenchida. Redigitar o
 // que estava certo é o castigo que a campanha nova já evitava (ALE-246).
-func TestARecusaDevolveOQueFoiRespondido(t *testing.T) {
+func TestTheRefusalGivesBackWhatWasAnswered(t *testing.T) {
 	f := novoPiloto(t)
 	campos := aFolhaPreenchida()
 	campos.Set("origin", "Pirata Espacial")
@@ -198,8 +198,8 @@ func TestARecusaDevolveOQueFoiRespondido(t *testing.T) {
 	}
 }
 
-// TestOHeroiNasceVestidoEComBolsa é o teste do NASCIMENTO inteiro (p140).
-func TestOHeroiNasceVestidoEComBolsa(t *testing.T) {
+// TestTheHeroIsBornDressedAndWithAPurse é o teste do NASCIMENTO inteiro (p140).
+func TestTheHeroIsBornDressedAndWithAPurse(t *testing.T) {
 	f := novoPiloto(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	if rec.Code != http.StatusSeeOther {
@@ -263,9 +263,9 @@ func TestOHeroiNasceVestidoEComBolsa(t *testing.T) {
 	}
 }
 
-// TestOHeroiNasceComOQueAClasseTreinaEUsa: as perícias FIXAS da classe e as
+// TestTheHeroIsBornWithWhatTheClassTrainsAndUses: as perícias FIXAS da classe e as
 // proficiências dela. O que se ESCOLHE não nasce escolhido — vira pendência.
-func TestOHeroiNasceComOQueAClasseTreinaEUsa(t *testing.T) {
+func TestTheHeroIsBornWithWhatTheClassTrainsAndUses(t *testing.T) {
 	f := novoPiloto(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
@@ -299,8 +299,8 @@ func TestOHeroiNasceComOQueAClasseTreinaEUsa(t *testing.T) {
 	}
 }
 
-// TestACompraDePontosDaForjaRecusaOQueOLivroProibe — p17, Tabela 1-1.
-func TestACompraDePontosDaForjaRecusaOQueOLivroProibe(t *testing.T) {
+// TestTheForgePointBuyRefusesWhatTheBookForbids — p17, Tabela 1-1.
+func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
 	f := novoPiloto(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
@@ -339,9 +339,9 @@ func TestACompraDePontosDaForjaRecusaOQueOLivroProibe(t *testing.T) {
 	}
 }
 
-// TestOsAtributosDaForjaSaoDoDono: a posse é conferida como em toda rota de
+// TestTheForgeAttributesBelongToTheOwner: a posse é conferida como em toda rota de
 // personagem.
-func TestOsAtributosDaForjaSaoDoDono(t *testing.T) {
+func TestTheForgeAttributesBelongToTheOwner(t *testing.T) {
 	f := novoPiloto(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
@@ -383,9 +383,9 @@ func quantosHerois(t *testing.T, f pilotoFixture) int {
 	return len(lista)
 }
 
-// TestAFolhaEmBrancoPedeAEscolhaEmVezDeAcusarValorVazio: "não escolheu" e
+// TestTheBlankFormAsksForTheChoiceInsteadOfBlamingAnEmptyValue: "não escolheu" e
 // "escolheu o que não existe" chegam no mesmo campo e não são a mesma coisa.
-func TestAFolhaEmBrancoPedeAEscolhaEmVezDeAcusarValorVazio(t *testing.T) {
+func TestTheBlankFormAsksForTheChoiceInsteadOfBlamingAnEmptyValue(t *testing.T) {
 	f := novoPiloto(t)
 	campos := url.Values{"name": {"Sem escolhas"}}
 

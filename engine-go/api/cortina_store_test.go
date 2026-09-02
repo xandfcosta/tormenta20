@@ -14,7 +14,7 @@ import (
 // volta com o tabuleiro aberto e a mesa vê a emboscada montada — o modo de falha
 // mais caro desta issue, porque acontece em silêncio e o mestre acha que está
 // escondido.
-func TestACortinaVoltaDoBanco(t *testing.T) {
+func TestTheCurtainComesBackFromTheDatabase(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
@@ -43,7 +43,7 @@ func TestACortinaVoltaDoBanco(t *testing.T) {
 // estritamente menor —, então versão repetida passa. Tirei o bump, subi o
 // servidor e o e2e de dois clientes seguiu verde. O guarda continua valendo pelo
 // primeiro motivo; a consequência dramática é que era invenção minha.
-func TestFecharACortinaAvancaAVersaoDoQuadro(t *testing.T) {
+func TestClosingTheCurtainAdvancesTheBoardVersion(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))

@@ -36,11 +36,11 @@ func iguais(a, b []string) bool {
 	return true
 }
 
-// TestATiraDaVezEhCircular é a ALE-179, e a borda é o ÚLTIMO da fila.
+// TestTheTurnStripIsCircular é a ALE-179, e a borda é o ÚLTIMO da fila.
 //
 // Cortar no fim deixaria a tira vazia justamente no turno em que saber "quem vem
 // depois" mais importa — o último antes de virar a rodada.
-func TestATiraDaVezEhCircular(t *testing.T) {
+func TestTheTurnStripIsCircular(t *testing.T) {
 	f := fila("Arwen", "Ogro", "Goblin")
 
 	if got := rotulos(TurnosAVista(f, 0, 3)); !iguais(got, []string{"Arwen", "Ogro", "Goblin"}) {
@@ -63,8 +63,8 @@ func TestATiraDaVezEhCircular(t *testing.T) {
 	}
 }
 
-// TestOBotaoDizParaOndeVai é a ALE-184: o mestre lia "▶" e contava a lista.
-func TestOBotaoDizParaOndeVai(t *testing.T) {
+// TestTheButtonSaysWhereItGoes é a ALE-184: o mestre lia "▶" e contava a lista.
+func TestTheButtonSaysWhereItGoes(t *testing.T) {
 	f := fila("Arwen", "Ogro")
 
 	if got := ProximoTurno(f, 0); got.Rotulo != "Próximo: Ogro" {
@@ -89,9 +89,9 @@ func TestOBotaoDizParaOndeVai(t *testing.T) {
 	}
 }
 
-// TestOContadorTemQUATROEstados, e a ordem entre eles é regra: a cena existe
+// TestTheCounterHasFourStates, e a ordem entre eles é regra: a cena existe
 // antes da fila, e a fila existe antes do turno (ALE-210).
-func TestOContadorTemQuatroEstados(t *testing.T) {
+func TestTheCounterHasFourStates(t *testing.T) {
 	casos := []struct {
 		nome      string
 		cenaAtiva bool
@@ -115,9 +115,9 @@ func TestOContadorTemQuatroEstados(t *testing.T) {
 	}
 }
 
-// TestAPonteAteAPessoaEhODono, e não o id do personagem: a ficha de um membro é
+// TestTheBridgeToThePersonIsTheOwner, e não o id do personagem: a ficha de um membro é
 // o SNAPSHOT da campanha (ALE-33).
-func TestAPonteAteAPessoaEhODono(t *testing.T) {
+func TestTheBridgeToThePersonIsTheOwner(t *testing.T) {
 	membros := []MembroDaMesa{
 		{CharacterID: 10, DonoID: 1},
 		{CharacterID: 11, DonoID: 2},
@@ -134,11 +134,11 @@ func TestAPonteAteAPessoaEhODono(t *testing.T) {
 	}
 }
 
-// TestMembroSemPersonagemNaoEntraNaPresenca.
+// TestAMemberWithoutACharacterDoesNotEnterPresence.
 //
 // Não é que ele esteja offline: é que não há personagem para marcar, e um zero
 // na lista viraria "o personagem 0 está online" na tela.
-func TestMembroSemPersonagemNaoEntraNaPresenca(t *testing.T) {
+func TestAMemberWithoutACharacterDoesNotEnterPresence(t *testing.T) {
 	membros := []MembroDaMesa{
 		{CharacterID: 10, DonoID: 1},
 		{CharacterID: 11, DonoID: 2},
@@ -157,11 +157,11 @@ func TestMembroSemPersonagemNaoEntraNaPresenca(t *testing.T) {
 	}
 }
 
-// TestOOlhoDoMestreOlhaAFilaENaoOPapel.
+// TestTheGmEyeWatchesTheTrackerNotTheRole.
 //
 // Numa fila só de PCs não há vitais para reservar, e a tela não deve mudar de
 // forma por causa de um papel que ali não muda nada.
-func TestOOlhoDoMestreOlhaAFilaENaoOPapel(t *testing.T) {
+func TestTheGmEyeWatchesTheTrackerNotTheRole(t *testing.T) {
 	pv := int64(30)
 	comNPC := []InitiativeEntry{{Label: "Arwen"}, {Label: "Ogro", HpMax: &pv}}
 	soPCs := []InitiativeEntry{{Label: "Arwen"}, {Label: "Bruna"}}
@@ -177,12 +177,12 @@ func TestOOlhoDoMestreOlhaAFilaENaoOPapel(t *testing.T) {
 	}
 }
 
-// TestValidaCombatenteNovoPrendeAsQuatroBordas.
+// TestValidatingANewCombatantPinsTheFourEdges.
 //
 // Uma por campo, e cada uma é a que a tela sozinha não segurava: os limites
 // viviam como atributos dos campos do formulário da SPA, que é UI — quem
 // postasse na mão passava por cima dos quatro.
-func TestValidaCombatenteNovoPrendeAsQuatroBordas(t *testing.T) {
+func TestValidatingANewCombatantPinsTheFourEdges(t *testing.T) {
 	bom := CombatenteNovo{Rotulo: "Ogro", Iniciativa: 12, PV: 45, Tipo: "npc"}
 	if err := ValidaCombatenteNovo(bom); err != nil {
 		t.Fatalf("o combatente bom foi recusado: %v — sem isto as recusas abaixo não provariam nada", err)
@@ -222,7 +222,7 @@ func TestValidaCombatenteNovoPrendeAsQuatroBordas(t *testing.T) {
 // O limite do nome conta RUNAS e não bytes: um nome de 60 letras acentuadas tem
 // mais de 60 bytes, e contar bytes recusaria um nome mais curto do que o que
 // deixa passar em ASCII.
-func TestOLimiteDoNomeContaLetrasENaoBytes(t *testing.T) {
+func TestTheNameLimitCountsLettersNotBytes(t *testing.T) {
 	acentuado := strings.Repeat("ã", MaxLetrasDoRotulo) // 60 letras, 120 bytes
 	if err := ValidaCombatenteNovo(CombatenteNovo{Rotulo: acentuado, Iniciativa: 10, Tipo: "npc"}); err != nil {
 		t.Errorf("60 letras acentuadas foram recusadas: %v", err)

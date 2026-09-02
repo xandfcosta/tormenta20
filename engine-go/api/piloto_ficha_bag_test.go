@@ -60,7 +60,7 @@ func oEquipadoDe(t *testing.T, f pilotoFixture, itemID int64) string {
 }
 
 // A TIRA desenha os dois tetos do livro, e as posições vazias junto.
-func TestATiraMostraOsDoisTetosDaP141(t *testing.T) {
+func TestTheStripShowsTheTwoCeilingsFromPage141(t *testing.T) {
 	f, id := oCombatente(t)
 	semeiaItem(t, f, id, "espada-longa", "Espada longa", "wielded")
 	semeiaItem(t, f, id, "armadura-couro", "Armadura de couro", "vested")
@@ -95,7 +95,7 @@ func TestATiraMostraOsDoisTetosDaP141(t *testing.T) {
 // aparecia em lugar nenhum. Nem na tira, nem na grade do guardado, porque ele
 // está equipado. Medido na bancada contra a tela antiga: o Escudo leve do Thal
 // existia no banco e não existia na tela.
-func TestOItemAcimaDoTetoNaoSomeDaTela(t *testing.T) {
+func TestAnItemAboveTheCeilingDoesNotVanishFromTheScreen(t *testing.T) {
 	f, id := oCombatente(t)
 	semeiaItem(t, f, id, "espada-longa", "Espada longa", "wielded")
 	semeiaItem(t, f, id, "adaga", "Adaga", "wielded")
@@ -116,7 +116,7 @@ func TestOItemAcimaDoTetoNaoSomeDaTela(t *testing.T) {
 }
 
 // GUARDAR tira da mão e devolve à grade.
-func TestGuardarTiraDaMaoEPoeNaGrade(t *testing.T) {
+func TestStowingTakesItFromTheHandAndPutsItInTheGrid(t *testing.T) {
 	f, id := oCombatente(t)
 	item := semeiaItem(t, f, id, "espada-longa", "Espada longa", "wielded")
 
@@ -132,7 +132,7 @@ func TestGuardarTiraDaMaoEPoeNaGrade(t *testing.T) {
 }
 
 // EQUIPAR respeita o EIXO do item: um escudo não se veste.
-func TestEquiparRespeitaOEixoDoItem(t *testing.T) {
+func TestEquippingRespectsTheItemAxis(t *testing.T) {
 	f, id := oCombatente(t)
 	item := semeiaItem(t, f, id, "escudo-leve", "Escudo leve", "")
 
@@ -153,7 +153,7 @@ func TestEquiparRespeitaOEixoDoItem(t *testing.T) {
 }
 
 // EQUIPAR respeita o TETO de duas mãos (p141), e a recusa chega à TELA.
-func TestEquiparRespeitaOTetoDeDuasMaos(t *testing.T) {
+func TestEquippingRespectsTheTwoHandCeiling(t *testing.T) {
 	f, id := oCombatente(t)
 	semeiaItem(t, f, id, "espada-longa", "Espada longa", "wielded")
 	semeiaItem(t, f, id, "adaga", "Adaga", "wielded")
@@ -176,7 +176,7 @@ func TestEquiparRespeitaOTetoDeDuasMaos(t *testing.T) {
 // A posse do PERSONAGEM já é do `comandoDaFicha`; a do ITEM é o que falta. Sem
 // ela o id de outra ficha passaria — o `UPDATE` é por id, e afetar zero linhas
 // não é erro que alguém veja.
-func TestOItemDeOutraFichaNaoSeMexe(t *testing.T) {
+func TestAnItemFromAnotherSheetCannotBeMoved(t *testing.T) {
 	f, minha := oCombatente(t)
 	outra := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", 1, 10, 10, 0, 0)
 	alheio := semeiaItem(t, f, outra, "espada-longa", "Espada longa", "wielded")
@@ -190,7 +190,7 @@ func TestOItemDeOutraFichaNaoSeMexe(t *testing.T) {
 }
 
 // O DINHEIRO: os três modos, o piso e o arredondamento.
-func TestODinheiroRecebeGastaECorrige(t *testing.T) {
+func TestMoneyIsReceivedSpentAndCorrected(t *testing.T) {
 	f, id := oCombatente(t)
 	if err := f.s.queries.SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
 		Tibar: 35.7, UpdatedAt: plataforma.NowISO(), ID: id,
@@ -236,7 +236,7 @@ func TestODinheiroRecebeGastaECorrige(t *testing.T) {
 //
 // Saldo negativo viraria carga de moeda NEGATIVA, que COMPRARIA espaço na
 // mochila em vez de ocupar (ALE-215). Por isso o piso é zero, e não um aviso.
-func TestODinheiroNaoFicaNegativo(t *testing.T) {
+func TestMoneyNeverGoesNegative(t *testing.T) {
 	f, id := oCombatente(t)
 	if err := f.s.queries.SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
 		Tibar: 50, UpdatedAt: plataforma.NowISO(), ID: id,
@@ -270,7 +270,7 @@ func oTibarDe(t *testing.T, f pilotoFixture, id int64) float64 {
 }
 
 // A BUSCA da grade ignora acento, e o CHIP filtra por categoria.
-func TestAGradeFiltraPorBuscaEPorCategoria(t *testing.T) {
+func TestTheGridFiltersBySearchAndByCategory(t *testing.T) {
 	f, id := oCombatente(t)
 	semeiaItem(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 	semeiaItem(t, f, id, "espada-longa", "Espada longa", "")

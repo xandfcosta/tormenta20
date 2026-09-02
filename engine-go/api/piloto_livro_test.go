@@ -46,14 +46,14 @@ func servidorComLivro(t *testing.T, s *Server, conteudo string) *Server {
 	return s
 }
 
-// TestOBotaoAbreOLeitorNaPaginaImpressaComOTermo.
+// TestTheButtonOpensTheReaderAtThePrintedPageWithTheTerm.
 //
 // O endereço mudou na segunda fatia desta issue: ele apontava para o PDF cru com
 // `#page=N`, e passou a apontar para o LEITOR da casa. A troca é medida — o
 // visualizador do Chrome ignora `#search=` (não há destaque possível por URL) e
 // transfere o arquivo inteiro; o leitor destaca o termo e custou 1 MiB contra
 // 85 MiB, contados na interface de loopback.
-func TestOBotaoAbreOLeitorNaPaginaImpressaComOTermo(t *testing.T) {
+func TestTheButtonOpensTheReaderAtThePrintedPageWithTheTerm(t *testing.T) {
 	livro := enderecoDoLivro{Base: "/livro?v=abc", Abertura: 6}
 	if got := livro.naPagina(289, "Lobo"); got != "/livro/ler?p=289&t=Lobo" {
 		t.Errorf("o botão do Lobo aponta para %q", got)
@@ -70,8 +70,8 @@ func TestOBotaoAbreOLeitorNaPaginaImpressaComOTermo(t *testing.T) {
 	}
 }
 
-// TestSemLivroConfiguradoNaoHaEndereco: o zero valor não produz link quebrado.
-func TestSemLivroConfiguradoNaoHaEndereco(t *testing.T) {
+// TestWithoutAConfiguredBookThereIsNoAddress: o zero valor não produz link quebrado.
+func TestWithoutAConfiguredBookThereIsNoAddress(t *testing.T) {
 	if got := (enderecoDoLivro{}).naPagina(289, "Lobo"); got != "" {
 		t.Errorf("sem livro o endereço devia ser vazio, e foi %q", got)
 	}
@@ -80,19 +80,19 @@ func TestSemLivroConfiguradoNaoHaEndereco(t *testing.T) {
 	}
 }
 
-// TestOLivroAusenteNaoDerrubaOServidor: configurar errado degrada, não quebra.
-func TestOLivroAusenteNaoDerrubaOServidor(t *testing.T) {
+// TestAMissingBookDoesNotBringTheServerDown: configurar errado degrada, não quebra.
+func TestAMissingBookDoesNotBringTheServerDown(t *testing.T) {
 	l := abreOLivro(plataforma.Config{LivroPDF: filepath.Join(t.TempDir(), "nao-existe.pdf")})
 	if l.caminho != "" || l.endereco.Base != "" {
 		t.Errorf("um caminho inexistente virou livro servido: %+v", l)
 	}
 }
 
-// TestALinearizacaoEReconhecidaNoComecoDoArquivo: os dois lados da marca.
+// TestLinearizationIsRecognizedAtTheStartOfTheFile: os dois lados da marca.
 //
 // A marca vive no PRIMEIRO objeto do arquivo por definição da especificação —
 // procurá-la no arquivo inteiro seria ler 89 MB no boot para responder um aviso.
-func TestALinearizacaoEReconhecidaNoComecoDoArquivo(t *testing.T) {
+func TestLinearizationIsRecognizedAtTheStartOfTheFile(t *testing.T) {
 	if !ehLinearizado([]byte("%PDF-1.6\n1 0 obj\n<< /Linearized 1 /L 78622788 >>")) {
 		t.Error("um PDF linearizado foi lido como não linearizado — o aviso sairia sempre")
 	}
@@ -101,13 +101,13 @@ func TestALinearizacaoEReconhecidaNoComecoDoArquivo(t *testing.T) {
 	}
 }
 
-// TestARotaDoLivroEntregaFaixas: é o que faz o navegador pedir só a página.
+// TestTheBookRouteServesRanges: é o que faz o navegador pedir só a página.
 //
 // `Range` é a metade do arranjo que a linearização usa; sem ele o visualizador
 // baixa o arquivo inteiro por mais linearizado que ele esteja. O controle é o
 // pedido INTEIRO logo abaixo: ele prova que a rota serve e que o 206 do outro
 // caso é recorte e não erro.
-func TestARotaDoLivroEntregaFaixas(t *testing.T) {
+func TestTheBookRouteServesRanges(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "0123456789abcdef")
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -128,12 +128,12 @@ func TestARotaDoLivroEntregaFaixas(t *testing.T) {
 	}
 }
 
-// TestOLivroSaiComCachePRIVADO: ele passa pelo `requirePagina`.
+// TestTheBookLeavesWithAPrivateCache: ele passa pelo `requirePagina`.
 //
 // `public` autorizaria um cache compartilhado a guardar a resposta de quem
 // entrou e reentregá-la a quem não entrou. A folha e as fontes são `public` de
 // propósito — elas saem sem sessão.
-func TestOLivroSaiComCachePrivado(t *testing.T) {
+func TestTheBookLeavesWithAPrivateCache(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -144,8 +144,8 @@ func TestOLivroSaiComCachePrivado(t *testing.T) {
 	}
 }
 
-// TestOLivroNaoSaiSemSessao: a rota está atrás da mesma porta do resto.
-func TestOLivroNaoSaiSemSessao(t *testing.T) {
+// TestTheBookDoesNotLeaveWithoutASession: a rota está atrás da mesma porta do resto.
+func TestTheBookDoesNotLeaveWithoutASession(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 
 	req := httptest.NewRequest(http.MethodGet, "/livro?v="+s.livro.digito, nil)
@@ -156,8 +156,8 @@ func TestOLivroNaoSaiSemSessao(t *testing.T) {
 	}
 }
 
-// TestSemConfiguracaoARotaDoLivroDa404: nada é servido por acidente.
-func TestSemConfiguracaoARotaDoLivroDa404(t *testing.T) {
+// TestWithoutConfigurationTheBookRouteGives404: nada é servido por acidente.
+func TestWithoutConfigurationTheBookRouteGives404(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -186,7 +186,7 @@ func pedeOLivro(t *testing.T, s *Server, userID int64, faixa string) *httptest.R
 	return rec
 }
 
-// TestACenaDoBestiarioAbreOLivroNaPaginaDaCriatura: o botão, ponta a ponta.
+// TestTheBestiarySceneOpensTheBookAtTheCreaturePage: o botão, ponta a ponta.
 //
 // É INTEGRAÇÃO e não asserção de componente porque o que se quer proteger é a
 // composição — o endereço nasce na configuração, atravessa o `Server`, a view e
@@ -196,7 +196,7 @@ func pedeOLivro(t *testing.T, s *Server, userID int64, faixa string) *httptest.R
 // O controle é o segundo caso: sem livro configurado a MESMA cena não traz
 // `#page=` nenhum, então este guarda mede presença contra ausência e não contra
 // uma string que estaria lá de qualquer jeito.
-func TestACenaDoBestiarioAbreOLivroNaPaginaDaCriatura(t *testing.T) {
+func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -223,7 +223,7 @@ func TestACenaDoBestiarioAbreOLivroNaPaginaDaCriatura(t *testing.T) {
 	}
 }
 
-// TestALeituraDoLivroCarregaOQueACenaPrecisa (ALE-264).
+// TestTheBookReaderLoadsWhatTheSceneNeeds (ALE-264).
 //
 // O leitor é JavaScript: o pdf.js lê o PDF, desenha o canvas e posiciona as
 // marcas. Nada disso cabe num teste de handler, e é o `e2e/tests/piloto-leitor.spec.ts`
@@ -231,7 +231,7 @@ func TestACenaDoBestiarioAbreOLivroNaPaginaDaCriatura(t *testing.T) {
 // servidor escreve no `<div id="leitor">`. Errar um deles quebra o leitor em
 // silêncio: sem `data-abertura` ele abre seis páginas antes, sem `data-worker` o
 // pdf.js cai no modo sem worker e trava a aba.
-func TestALeituraDoLivroCarregaOQueACenaPrecisa(t *testing.T) {
+func TestTheBookReaderLoadsWhatTheSceneNeeds(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -256,8 +256,8 @@ func TestALeituraDoLivroCarregaOQueACenaPrecisa(t *testing.T) {
 	}
 }
 
-// TestSemLivroNaoHaLeitor: a cena não existe sem o arquivo, como a rota do PDF.
-func TestSemLivroNaoHaLeitor(t *testing.T) {
+// TestWithoutABookThereIsNoReader: a cena não existe sem o arquivo, como a rota do PDF.
+func TestWithoutABookThereIsNoReader(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -266,8 +266,8 @@ func TestSemLivroNaoHaLeitor(t *testing.T) {
 	}
 }
 
-// TestAPaginaDoLeitorRecusaLixo: o endereço é compartilhável e se digita à mão.
-func TestAPaginaDoLeitorRecusaLixo(t *testing.T) {
+// TestTheReaderPageRefusesGarbage: o endereço é compartilhável e se digita à mão.
+func TestTheReaderPageRefusesGarbage(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 

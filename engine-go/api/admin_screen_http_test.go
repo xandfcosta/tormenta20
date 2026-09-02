@@ -70,7 +70,7 @@ func TestAdminUserListCountsWhatEachAccountOwns(t *testing.T) {
 }
 
 // A decisão do dono: a crônica sobrevive à saída do jogador.
-func TestDeletingAnAccountMovesItsMesasToTheAdmin(t *testing.T) {
+func TestDeletingAnAccountMovesItsCampaignsToTheAdmin(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	admin := seedUser(t, s, adminEmail)
 	player := seedUser(t, s, "jogador@t20.local")

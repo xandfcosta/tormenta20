@@ -19,12 +19,12 @@ import (
 // composição — o total é a soma das pernas —, o formato do rótulo, e a família de
 // armadilha que esta superfície descobriu no Datastar.
 
-// TestOTotalEASomaDasPernas.
+// TestTheTotalIsTheSumOfTheLegs.
 //
 // A polilinha mede um CAMINHO, e o caminho é a soma dos trechos. Com DUAS
 // paradas ela é uma reta e o total é a régua de sempre, que é o caso que não
 // pode ter mudado.
-func TestOTotalEASomaDasPernas(t *testing.T) {
+func TestTheTotalIsTheSumOfTheLegs(t *testing.T) {
 	reta := aLeituraDaPolilinha([]engine.Square{{}, {X: 3}})
 	if reta["reguatexto"] != leituraDaRegua(engine.Measure(engine.Square{}, engine.Square{X: 3})) {
 		t.Errorf("a régua de duas paradas deixou de ser a régua de sempre: %q", reta["reguatexto"])
@@ -40,12 +40,12 @@ func TestOTotalEASomaDasPernas(t *testing.T) {
 	}
 }
 
-// TestORotuloDaPernaVemEmMetros — pedido do dono, e ele é sobre a UNIDADE.
+// TestTheLegLabelComesInMetres — pedido do dono, e ele é sobre a UNIDADE.
 //
 // Sobre a linha cabe uma unidade só, e a que a mesa fala em voz alta é o metro:
 // "ele está a nove metros" é a frase do turno, e "seis quadrados" obriga a
 // converter de cabeça. A frase do TOTAL continua trazendo as duas, porque lá cabe.
-func TestORotuloDaPernaVemEmMetros(t *testing.T) {
+func TestTheLegLabelComesInMetres(t *testing.T) {
 	leitura := aLeituraDaPolilinha([]engine.Square{{}, {X: 6}})
 	rotulos := leitura["reguarotulos"].([]string)
 	if len(rotulos) != 1 || rotulos[0] != "9,0m" {
@@ -60,19 +60,19 @@ func TestORotuloDaPernaVemEmMetros(t *testing.T) {
 	}
 }
 
-// TestAPernaDeZeroNaoTemRotulo.
+// TestAZeroLengthLegHasNoLabel.
 //
 // O instante logo depois de um clique tem a MIRA em cima da parada que acabou de
 // nascer. Um "0,0m" piscando sob o dedo é ruído sobre o gesto que a pessoa está
 // fazendo, e o vazio é o que apaga o nó (ver `oRotuloExiste`).
-func TestAPernaDeZeroNaoTemRotulo(t *testing.T) {
+func TestAZeroLengthLegHasNoLabel(t *testing.T) {
 	leitura := aLeituraDaPolilinha([]engine.Square{{X: 4, Y: 4}, {X: 4, Y: 4}})
 	if rotulos := leitura["reguarotulos"].([]string); len(rotulos) != 1 || rotulos[0] != "" {
 		t.Errorf("a perna de zero saiu %v, esperado um rótulo VAZIO", rotulos)
 	}
 }
 
-// TestNenhumaExpressaoIndexaOSinalDaLista — o guarda da FAMÍLIA, e ele existe
+// TestNoExpressionIndexesTheListSignal — o guarda da FAMÍLIA, e ele existe
 // porque a armadilha custou duas rodadas na bancada.
 //
 // O sinal do Datastar é um PROXY REATIVO: ler um índice que não existe o CRIA.
@@ -88,7 +88,7 @@ func TestAPernaDeZeroNaoTemRotulo(t *testing.T) {
 //
 // Ele varre o HTML SERVIDO e não o código, que é a única forma de alcançar a
 // expressão que alguém escrever amanhã sem ler nada disto.
-func TestNenhumaExpressaoIndexaOSinalDaLista(t *testing.T) {
+func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
@@ -124,7 +124,7 @@ func TestNenhumaExpressaoIndexaOSinalDaLista(t *testing.T) {
 	}
 }
 
-// TestATelaLigaOsQuatroGestosDaRegua.
+// TestTheScreenWiresTheFourRulerGestures.
 //
 // Uma afirmação sobre a FORMA do que a página serve, e é o único jeito de
 // alcançar os quatro de uma vez: clique acrescenta, duplo clique congela, botão
@@ -133,7 +133,7 @@ func TestNenhumaExpressaoIndexaOSinalDaLista(t *testing.T) {
 // O `evt.button !== 0` entra na lista porque ele é conserto de um defeito
 // medido: sem ele, o clique sintético que acompanha o botão direito nasce com
 // `offsetX` zero e a régua renasce na ORIGEM do plano no mesmo gesto que a apagou.
-func TestATelaLigaOsQuatroGestosDaRegua(t *testing.T) {
+func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
@@ -151,9 +151,9 @@ func TestATelaLigaOsQuatroGestosDaRegua(t *testing.T) {
 	}
 }
 
-// TestAReguaForjadaERecusada: o teto de paradas é o tamanho da RESERVA de nós no
+// TestAForgedRulerIsRefused: o teto de paradas é o tamanho da RESERVA de nós no
 // `.templ`, e uma polilinha maior teria pernas medidas que ninguém desenha.
-func TestAReguaForjadaERecusada(t *testing.T) {
+func TestAForgedRulerIsRefused(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -168,7 +168,7 @@ func TestAReguaForjadaERecusada(t *testing.T) {
 	}
 }
 
-// TestAEsferaNasceNaIntersecao — REGRA DO LIVRO, não escolha de tela.
+// TestTheSphereIsBornAtTheIntersection — REGRA DO LIVRO, não escolha de tela.
 //
 // p225, conferido no PDF p231:
 //
@@ -183,7 +183,7 @@ func TestAReguaForjadaERecusada(t *testing.T) {
 //
 // O guarda prende as DUAS pontas — a regra e o gesto — porque separadas elas já
 // divergiram uma vez.
-func TestAEsferaNasceNaIntersecao(t *testing.T) {
+func TestTheSphereIsBornAtTheIntersection(t *testing.T) {
 	if !aFormaNasceNaIntersecao(engine.AreaSphere) {
 		t.Error("a esfera deixou de nascer na interseção (p225)")
 	}

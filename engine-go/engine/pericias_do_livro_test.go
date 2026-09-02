@@ -7,7 +7,7 @@ import (
 	"t20engine/catalog"
 )
 
-// TestAPenalidadeDeArmaduraConcordaComOLivro (ALE-264).
+// TestTheArmorPenaltyAgreesWithTheBook (ALE-264).
 //
 // O motor tem as três perícias de penalidade de armadura escritas à mão desde o
 // porte do `derived.ts`. O catálogo de perícias, que nasceu agora, traz a MESMA
@@ -20,7 +20,7 @@ import (
 //
 // Vive em `engine/` e não em `api/` porque o dono da regra é o motor: é ele que
 // aplica a penalidade no cálculo.
-func TestAPenalidadeDeArmaduraConcordaComOLivro(t *testing.T) {
+func TestTheArmorPenaltyAgreesWithTheBook(t *testing.T) {
 	bruto, ok := catalog.Resource("pericias")
 	if !ok {
 		t.Fatal("catálogo de perícias ausente")

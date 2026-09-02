@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-// TestABolsaInicialSegueATabela31 — Tabela 3-1: Dinheiro Inicial (p140).
+// TestTheStartingPurseFollowsTable31 — Tabela 3-1: Dinheiro Inicial (p140).
 //
 // Os números são escritos na mão, colhidos do livro: as três pontas da tabela
 // mais uma linha do meio de cada coluna impressa.
-func TestABolsaInicialSegueATabela31(t *testing.T) {
+func TestTheStartingPurseFollowsTable31(t *testing.T) {
 	casos := []struct {
 		nivel int
 		tibar int
@@ -32,9 +32,9 @@ func TestABolsaInicialSegueATabela31(t *testing.T) {
 	}
 }
 
-// TestOPrimeiroNivelNaoTemValorDeTabela: a linha "1º 4d6" é a única sem número,
+// TestTheFirstLevelHasNoTableValue: a linha "1º 4d6" é a única sem número,
 // e pedi-la em vez de rolar tem de doer.
-func TestOPrimeiroNivelNaoTemValorDeTabela(t *testing.T) {
+func TestTheFirstLevelHasNoTableValue(t *testing.T) {
 	_, err := StartingMoneyForLevel(1)
 	if err == nil {
 		t.Fatal("o 1º nível devolveu valor de tabela; ele rola 4d6")
@@ -44,9 +44,9 @@ func TestOPrimeiroNivelNaoTemValorDeTabela(t *testing.T) {
 	}
 }
 
-// TestNivelForaDaTabelaDizOValorOfensor: 0 e 21 não existem no livro, e a
+// TestALevelOutsideTheTableNamesTheOffendingValue: 0 e 21 não existem no livro, e a
 // mensagem carrega o número que chegou.
-func TestNivelForaDaTabelaDizOValorOfensor(t *testing.T) {
+func TestALevelOutsideTheTableNamesTheOffendingValue(t *testing.T) {
 	for _, nivel := range []int{0, 21, -3} {
 		_, err := StartingMoneyForLevel(nivel)
 		if err == nil {
@@ -59,10 +59,10 @@ func TestNivelForaDaTabelaDizOValorOfensor(t *testing.T) {
 	}
 }
 
-// TestARolagemDaBolsaCabeEmQuatroD6: 4d6 vai de 4 a 24, e cada ponta é
+// TestThePurseRollFitsInFourD6: 4d6 vai de 4 a 24, e cada ponta é
 // alcançável. Roda o bastante para que uma soma de três dados (mínimo 3) ou de
 // cinco (máximo 30) apareça.
-func TestARolagemDaBolsaCabeEmQuatroD6(t *testing.T) {
+func TestThePurseRollFitsInFourD6(t *testing.T) {
 	vistos := map[int]bool{}
 	for i := 0; i < 400; i++ {
 		tibar, err := RollStartingMoney()

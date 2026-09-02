@@ -1150,7 +1150,7 @@ test.describe('O construtor de encontros (piloto Datastar)', () => {
 
   /**
    * O LINK COPIADO reabre o encontro. A ida está prendida em Go
-   * (`TestOLinkCopiadoReabreOEncontro`); o que só o browser vê é o `data-url`
+   * (`TestTheCopiedLinkReopensTheEncounter`); o que só o browser vê é o `data-url`
    * que o botão carrega chegando ao endereço certo depois de uma navegação de
    * verdade — que é o que alguém faz ao colar no chat da mesa.
    */

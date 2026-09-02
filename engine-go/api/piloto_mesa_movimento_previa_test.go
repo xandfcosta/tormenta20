@@ -15,13 +15,13 @@ import (
 // ela NÃO MUTA a cena. Uma prévia que gravasse trocaria a peça debaixo do dedo
 // de quem está arrastando.
 
-// TestAPreviaDesenhaSemMexerNaCena.
+// TestThePreviewDrawsWithoutTouchingTheScene.
 //
 // As duas metades num caso só porque são a mesma decisão: a prévia é uma
 // PERGUNTA. Se ela respondesse gravando, o arrasto viraria uma sequência de
 // propostas — uma por casa atravessada — e o "Desfazer parada" ficaria sem
 // sentido.
-func TestAPreviaDesenhaSemMexerNaCena(t *testing.T) {
+func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 4, 2)
 	f.naVezDoJogador(t)
@@ -61,7 +61,7 @@ func TestAPreviaDesenhaSemMexerNaCena(t *testing.T) {
 // Decisão do dono ("o caminho todo + a perna viva"), e é ela que faz a leitura
 // responder à pergunta do gesto: "se eu soltar aqui, quanto GASTEI?" — que uma
 // perna medida sozinha não responde.
-func TestAPreviaEstendeOCaminhoJaDesenhado(t *testing.T) {
+func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 0, 0)
 	f.naVezDoJogador(t)
@@ -87,7 +87,7 @@ func TestAPreviaEstendeOCaminhoJaDesenhado(t *testing.T) {
 // O CONTROLE está no caso acima (um caminho que cabe sai de uma cor só), então
 // aqui basta o caro: quinze quadrados sobre um deslocamento de seis passam das
 // duas ações e têm de acender as três.
-func TestAPreviaPintaAsTresFaixas(t *testing.T) {
+func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 0, 0)
 	f.naVezDoJogador(t)
@@ -109,7 +109,7 @@ func TestAPreviaPintaAsTresFaixas(t *testing.T) {
 //
 // O CONTROLE do guarda acima: sem vez não há ação de movimento a gastar, e as
 // três cores diriam respeito a um teto que a cena não tem.
-func TestForaDeCombateAPreviaMedeSemFaixas(t *testing.T) {
+func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 0, 0)
 

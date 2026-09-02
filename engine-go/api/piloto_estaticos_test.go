@@ -32,11 +32,11 @@ func pedeEstatico(t *testing.T, alvo string, cabecalhos map[string]string) *http
 	return rec
 }
 
-// TestOEnderecoVERSIONADOnaoVolta: um ano e `immutable`.
+// TestTheVersionedAddressDoesNotComeBack: um ano e `immutable`.
 //
 // É o caminho que TIRA a ida à rede, e é ele que conserta o clarão — revalidar
 // ainda atrasaria a primeira pintura, porque a folha bloqueia a renderização.
-func TestOEnderecoVersionadoNaoVolta(t *testing.T) {
+func TestTheVersionedAddressDoesNotComeBack(t *testing.T) {
 	rec := pedeEstatico(t, "/static/piloto.css?v="+versaoDosEstaticos, nil)
 
 	cache := rec.Header().Get("Cache-Control")
@@ -51,12 +51,12 @@ func TestOEnderecoVersionadoNaoVolta(t *testing.T) {
 	}
 }
 
-// TestOEnderecoSEMversaoNAOeEterno.
+// TestTheUnversionedAddressIsNotEternal.
 //
 // A outra metade, e ela é deliberadamente o pior caso: um endereço sem versão
 // pode ter sido guardado antes de um deploy, e servi-lo como eterno prenderia a
 // pessoa numa folha velha sem nenhum gesto que a resgate — nem recarregar.
-func TestOEnderecoSemVersaoNaoEEterno(t *testing.T) {
+func TestTheUnversionedAddressIsNotEternal(t *testing.T) {
 	rec := pedeEstatico(t, "/static/piloto.css", nil)
 
 	if cache := rec.Header().Get("Cache-Control"); strings.Contains(cache, "immutable") {
@@ -69,13 +69,13 @@ func TestOEnderecoSemVersaoNaoEEterno(t *testing.T) {
 	}
 }
 
-// TestQuemJAtemAfolhaRECEBE304.
+// TestWhoeverAlreadyHasTheStylesheetGets304.
 //
 // É o que o `embed` não podia dar sozinho: arquivo embutido tem modtime ZERO, e
 // o `http.ServeContent` não emite `Last-Modified` de um tempo nulo nem inventa
 // `ETag`. O `http.FileServer` estava certo; o sistema de arquivos por baixo é
 // que não tinha o que datar.
-func TestQuemJaTemAFolhaRecebe304(t *testing.T) {
+func TestWhoeverAlreadyHasTheStylesheetGets304(t *testing.T) {
 	rec := pedeEstatico(t, "/static/piloto.css",
 		map[string]string{"If-None-Match": `"` + versaoDosEstaticos + `"`})
 
@@ -96,12 +96,12 @@ func TestQuemJaTemAFolhaRecebe304(t *testing.T) {
 	}
 }
 
-// TestODIGITOeESTAVELentreLeituras.
+// TestTheDigestIsStableBetweenReads.
 //
 // Ele decide invalidação de cache: se variasse entre dois boots do MESMO
 // binário, todo reinício jogaria fora o cache de todo mundo — e o clarão
 // voltaria uma vez por deploy sem ninguém entender por quê.
-func TestODigitoEEstavelEntreLeituras(t *testing.T) {
+func TestTheDigestIsStableBetweenReads(t *testing.T) {
 	if a, b := digitoDosEstaticos(), digitoDosEstaticos(); a != b {
 		t.Errorf("o dígito mudou entre duas leituras: %q e %q", a, b)
 	}
@@ -115,13 +115,13 @@ func TestODigitoEEstavelEntreLeituras(t *testing.T) {
 	}
 }
 
-// TestTODOenderecoEstaticoDaPaginaEVERSIONADO.
+// TestEveryStaticAddressOnThePageIsVersioned.
 //
 // A regressão silenciosa desta fatia: caminho cru continua funcionando, e é
 // servido SEM cache. A página que escrever um à mão volta a piscar, sozinha, e
 // ninguém liga uma coisa à outra — o sintoma aparece em UMA tela e a causa está
 // noutro arquivo.
-func TestTodoEnderecoEstaticoDaPaginaEVersionado(t *testing.T) {
+func TestEveryStaticAddressOnThePageIsVersioned(t *testing.T) {
 	f := novoPiloto(t)
 	tela := f.pede(t, f.mestre, http.MethodGet, "/", "").Body.String()
 

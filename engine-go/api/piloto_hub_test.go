@@ -46,7 +46,7 @@ func pedeHub(t *testing.T, s *Server, userID int64, metodo, caminho string) *htt
 
 // A entrada só existe com partida rolando — é o "Continue" de um jogo, e um
 // item que leva a uma sessão encerrada é pior que item nenhum.
-func TestHubSoOfereceContinuarComSessaoViva(t *testing.T) {
+func TestTheHubOnlyOffersResumeWithALiveSession(t *testing.T) {
 	s, dono := hubFixture(t)
 	campanha := seedCampaign(t, s, dono)
 	sessao := seedSession(t, s, campanha)
@@ -71,7 +71,7 @@ func TestHubSoOfereceContinuarComSessaoViva(t *testing.T) {
 	}
 }
 
-func TestHubNaoDesenhaEntradasDeAdminParaJogador(t *testing.T) {
+func TestTheHubDrawsNoAdminEntriesForAPlayer(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogadora@t20.local")
 
@@ -83,7 +83,7 @@ func TestHubNaoDesenhaEntradasDeAdminParaJogador(t *testing.T) {
 	}
 }
 
-func TestHubRecusaConviteDeQuemNaoEhAdmin(t *testing.T) {
+func TestTheHubRefusesAnInviteFromANonAdmin(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogadora@t20.local")
 
@@ -101,7 +101,7 @@ func TestHubRecusaConviteDeQuemNaoEhAdmin(t *testing.T) {
 	}
 }
 
-func TestHubDesenhaEntradasDeAdminParaAdmin(t *testing.T) {
+func TestTheHubDrawsAdminEntriesForAnAdmin(t *testing.T) {
 	s, dono := hubFixture(t, "mestre@t20.local")
 	corpo := pedeHub(t, s, dono, http.MethodGet, "/").Body.String()
 	for _, entrada := range []string{"Convidar jogador", "Administração"} {
@@ -117,7 +117,7 @@ func TestHubDesenhaEntradasDeAdminParaAdmin(t *testing.T) {
 // `SameSite=Lax`, que NÃO viaja em POST cross-site — mas viaja em navegação de
 // topo por GET. Um `<a href="/sair">` seria disparável por qualquer
 // imagem de terceiro, e o jogador seria deslogado no meio da mesa.
-func TestSairNaoAtendeGET(t *testing.T) {
+func TestSignOutDoesNotAnswerGet(t *testing.T) {
 	s, dono := hubFixture(t)
 	rec := pedeHub(t, s, dono, http.MethodGet, "/sair")
 	if rec.Code != http.StatusMethodNotAllowed && rec.Code != http.StatusNotFound {
@@ -125,7 +125,7 @@ func TestSairNaoAtendeGET(t *testing.T) {
 	}
 }
 
-func TestSairApagaOCookieEDevolveAPorta(t *testing.T) {
+func TestSignOutClearsTheCookieAndGivesBackTheDoor(t *testing.T) {
 	s, dono := hubFixture(t)
 	rec := pedeHub(t, s, dono, http.MethodPost, "/sair")
 
@@ -150,7 +150,7 @@ func TestSairApagaOCookieEDevolveAPorta(t *testing.T) {
 // `{"statusCode":401}` numa tela branca. E o destino tem de trazer o prefixo:
 // o roteador é montado com `StripPrefix`, então quem lesse `URL.Path` mandaria
 // o jogador de volta para `/mesa/1/4` e ele cairia num 404 depois de entrar.
-func TestPaginaAnonimaVaiParaAPortaLembrandoOCaminhoInteiro(t *testing.T) {
+func TestAnAnonymousPageGoesToTheDoorRememberingTheWholePath(t *testing.T) {
 	s, _ := hubFixture(t)
 	req := httptest.NewRequest(http.MethodGet, "/mesa/1/4", nil)
 	rec := httptest.NewRecorder()

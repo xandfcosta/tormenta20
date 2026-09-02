@@ -11,12 +11,12 @@ import (
 // (`piloto_markdown_test.go`). O que se prende AQUI é o que só a composição
 // mostra: quem pode escrever, o que chega ao banco, e o que a resposta redesenha.
 
-// TestOJogadorNaoEscreveNasNotasDoMestre é a trava, e ela é do SERVIDOR.
+// TestThePlayerDoesNotWriteInTheGmNotes é a trava, e ela é do SERVIDOR.
 //
 // O botão que não aparece é cortesia para quem não pode; a segurança é o 403.
 // Um guarda que só afirmasse "o jogador não vê o painel" mediria UX e deixaria a
 // rota aberta para quem postasse na mão.
-func TestOJogadorNaoEscreveNasNotasDoMestre(t *testing.T) {
+func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/notas", `{"notas":"eu escrevi isto"}`)
@@ -31,9 +31,9 @@ func TestOJogadorNaoEscreveNasNotasDoMestre(t *testing.T) {
 	}
 }
 
-// TestASalvaguardaDaNotaChegaAoBanco é o caminho feliz, ponta a ponta pelo
+// TestTheNoteAutosaveReachesTheDatabase é o caminho feliz, ponta a ponta pelo
 // roteador de verdade.
-func TestASalvaguardaDaNotaChegaAoBanco(t *testing.T) {
+func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/notas", `{"notas":"# Cena 1\nO ogro fugiu"}`)
@@ -43,13 +43,13 @@ func TestASalvaguardaDaNotaChegaAoBanco(t *testing.T) {
 	}
 }
 
-// TestANotaNaoEhAparadaNoMeioDaDigitacao.
+// TestTheNoteIsNotTrimmedMidTyping.
 //
 // O handler JSON da SPA passa o texto por `trimOrNull` porque salva UMA vez, ao
 // fechar. Este salva a cada 1,2 s de pausa, e aparar aqui comeria a linha em
 // branco que o mestre acabou de abrir para escrever o próximo parágrafo — o
 // cursor pularia para o fim da frase anterior no meio da noite.
-func TestANotaNaoEhAparadaNoMeioDaDigitacao(t *testing.T) {
+func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/notas", `{"notas":"a cena acabou\n\n"}`)
@@ -59,12 +59,12 @@ func TestANotaNaoEhAparadaNoMeioDaDigitacao(t *testing.T) {
 	}
 }
 
-// TestOQuadrinhoDaTarefaReescreveANota é o gesto que faz o checkbox valer.
+// TestTheTaskCheckboxRewritesTheNote é o gesto que faz o checkbox valer.
 //
 // O estado do quadrinho mora NA NOTA, não ao lado dela: sem esta reescrita o
 // controle seria enfeite e a marcação não sobreviveria a um F5. A linha viaja no
 // CAMINHO, como os outros verbos de linha da Mesa.
-func TestOQuadrinhoDaTarefaReescreveANota(t *testing.T) {
+func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 	f := novoPiloto(t)
 	nota := `{"notas":"- [ ] pagar o taverneiro\n- [x] dar o XP"}`
 
@@ -86,9 +86,9 @@ func TestOQuadrinhoDaTarefaReescreveANota(t *testing.T) {
 	}
 }
 
-// TestODesmarcarVoltaOQuadrinho — o par do de cima. Sem ele o guarda mediria um
+// TestUncheckingBringsTheCheckboxBack — o par do de cima. Sem ele o guarda mediria um
 // interruptor de mão única e chamaria de alternância.
-func TestODesmarcarVoltaOQuadrinho(t *testing.T) {
+func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre, f.urlDaMesa()+"/notas/tarefa/0/desmarcar", `{"notas":"- [x] dar o XP"}`)
@@ -98,14 +98,14 @@ func TestODesmarcarVoltaOQuadrinho(t *testing.T) {
 	}
 }
 
-// TestALinhaDeForaNaoDerrubaOHandler.
+// TestAnOutOfRangeLineDoesNotBringTheHandlerDown.
 //
 // A linha vem de um CLIQUE, e o cliente pode estar um remendo atrás do
 // servidor — a nota mudou noutra aba e a tela ainda mostra a lista antiga. Isso
 // é caminho NORMAL, não ataque: a resposta certa é devolver a nota intacta, e a
 // errada é um `index out of range` derrubando o handler que estava salvando o
 // texto de alguém.
-func TestALinhaDeForaNaoDerrubaOHandler(t *testing.T) {
+func TestAnOutOfRangeLineDoesNotBringTheHandlerDown(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/notas/tarefa/99/marcar", `{"notas":"- [ ] a"}`)
@@ -132,7 +132,7 @@ func (f pilotoFixture) notaNoBanco(t *testing.T) string {
 	return sess.Notes.String
 }
 
-// TestAPreviaRemendadaCarregaOsIdsDaMesa prende um defeito MEDIDO no navegador.
+// TestThePatchedPreviewCarriesTheTableIds prende um defeito MEDIDO no navegador.
 //
 // A prévia da resposta era montada a partir de uma `mesaView` SINTÉTICA, criada
 // só com o texto — e uma struct nova nasce com `CampaignID` e `SessionID` em
@@ -147,7 +147,7 @@ func (f pilotoFixture) notaNoBanco(t *testing.T) string {
 //
 // Um guarda que só afirmasse "a resposta traz a prévia" passaria verde sobre
 // isto: o fragmento ESTAVA lá, e estava errado por dentro.
-func TestAPreviaRemendadaCarregaOsIdsDaMesa(t *testing.T) {
+func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 	f := novoPiloto(t)
 
 	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/notas", `{"notas":"- [ ] pagar o taverneiro"}`)

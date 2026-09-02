@@ -146,7 +146,7 @@ func TestFootprintFollowsTheSizeTable(t *testing.T) {
 // O alcance é um LOSANGO, não um quadrado — e essa é a consequência VISÍVEL da
 // diagonal dobrada (T20 p238): com 6 quadrados de deslocamento (9m, p106)
 // dá para andar 6 em linha reta e só 3 na diagonal.
-func TestAlcanceEUmLosangoPorCausaDaDiagonal(t *testing.T) {
+func TestReachIsADiamondBecauseOfTheDiagonal(t *testing.T) {
 	reach := ReachableSquares(Square{X: 0, Y: 0}, 6, MoveTerrain{})
 
 	dentro := map[Square]bool{}
@@ -175,7 +175,7 @@ func TestAlcanceEUmLosangoPorCausaDaDiagonal(t *testing.T) {
 
 // Sem orçamento não há casas acesas: fora de combate a régua mede, mas não há
 // limite para desenhar, e uma busca sem teto não termina num plano infinito.
-func TestSemOrcamentoNaoHaAlcanceParaAcender(t *testing.T) {
+func TestWithoutABudgetThereAreNoSquaresToLight(t *testing.T) {
 	if got := ReachableSquares(Square{X: 2, Y: 2}, -1, MoveTerrain{}); len(got) != 0 {
 		t.Errorf("orçamento negativo devolveu %d casas, esperava nenhuma", len(got))
 	}
@@ -183,7 +183,7 @@ func TestSemOrcamentoNaoHaAlcanceParaAcender(t *testing.T) {
 
 // Terreno difícil encolhe o alcance pela mesma conta do passo (p238): 3m por
 // quadrado, ou seja, o dobro.
-func TestTerrenoDificilEncolheOAlcance(t *testing.T) {
+func TestDifficultTerrainShrinksTheReach(t *testing.T) {
 	lama := MoveTerrain{Difficult: map[Square]bool{{X: 1, Y: 0}: true, {X: 2, Y: 0}: true}}
 
 	reach := ReachableSquares(Square{X: 0, Y: 0}, 4, MoveTerrain{})
@@ -255,7 +255,7 @@ func TestStraightCleanPathCountsNoDoubling(t *testing.T) {
 // bordas não mudaram com a linguagem, e reescrevê-las de cabeça seria escrever
 // outro teste com o mesmo nome.
 
-func TestOCaminhoComecaNaOrigemETerminaNoDestino(t *testing.T) {
+func TestThePathStartsAtTheOriginAndEndsAtTheDestination(t *testing.T) {
 	caminho := CaminhoEntre(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
 
 	if caminho[0] != (Square{X: 0, Y: 0}) {
@@ -271,7 +271,7 @@ func TestOCaminhoComecaNaOrigemETerminaNoDestino(t *testing.T) {
 
 // A DIAGONAL vem primeiro porque é o que o olho espera de quem corta caminho —
 // e o custo é o mesmo em L, que é a razão de a escolha poder ser estética.
-func TestADiagonalVemPrimeiroECustaOMesmoQueOL(t *testing.T) {
+func TestTheDiagonalComesFirstAndCostsTheSameAsTheL(t *testing.T) {
 	diagonalPrimeiro := CaminhoEntre(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
 	emL := []Square{{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}, {X: 3, Y: 0}, {X: 3, Y: 1}}
 
@@ -288,7 +288,7 @@ func TestADiagonalVemPrimeiroECustaOMesmoQueOL(t *testing.T) {
 // A peça que não sai do lugar tem caminho de UM quadrado. Zero quadrados faria
 // o `ProposeMove` recusar com "precisa de origem e destino", que é a mensagem
 // errada para quem só soltou a peça onde ela estava.
-func TestAPecaQueNaoSaiDoLugarTemCaminhoDeUmQuadrado(t *testing.T) {
+func TestATokenThatDoesNotLeaveItsPlaceHasAOneSquarePath(t *testing.T) {
 	caminho := CaminhoEntre(Square{X: 2, Y: 2}, Square{X: 2, Y: 2})
 	if len(caminho) != 1 || caminho[0] != (Square{X: 2, Y: 2}) {
 		t.Errorf("o caminho parado ficou %+v", caminho)
@@ -297,7 +297,7 @@ func TestAPecaQueNaoSaiDoLugarTemCaminhoDeUmQuadrado(t *testing.T) {
 
 // COORDENADA NEGATIVA é lugar legítimo: o plano não tem bordas, e um sinal
 // invertido faria o laço andar para longe do destino e nunca terminar.
-func TestOCaminhoAndaParaONegativo(t *testing.T) {
+func TestThePathWalksIntoNegativeCoordinates(t *testing.T) {
 	caminho := CaminhoEntre(Square{X: 1, Y: 1}, Square{X: -2, Y: -3})
 	if fim := caminho[len(caminho)-1]; fim != (Square{X: -2, Y: -3}) {
 		t.Errorf("o caminho terminou em %+v", fim)
@@ -312,7 +312,7 @@ func TestOCaminhoAndaParaONegativo(t *testing.T) {
 // A EMENDA não repete o quadrado da parada: ele é o fim de um segmento e o
 // começo do outro, e repeti-lo poria no meio do caminho um passo que não anda —
 // e o `PathCost` mede passo a passo.
-func TestAsParadasSeEmendamSemRepetirOQuadrado(t *testing.T) {
+func TestTheStopsJoinWithoutRepeatingTheSquare(t *testing.T) {
 	caminho := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}, {X: 2, Y: 2}})
 
 	quero := []Square{{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}, {X: 2, Y: 1}, {X: 2, Y: 2}}
@@ -331,7 +331,7 @@ func TestAsParadasSeEmendamSemRepetirOQuadrado(t *testing.T) {
 
 // Uma parada IGUAL à anterior não acrescenta nada: quem soltou a peça onde ela
 // já estava não gastou movimento.
-func TestUmaParadaRepetidaNaoAcrescentaPasso(t *testing.T) {
+func TestARepeatedStopAddsNoStep(t *testing.T) {
 	caminho := CaminhoPorParadas([]Square{{X: 1, Y: 1}, {X: 1, Y: 1}, {X: 2, Y: 1}})
 	if len(caminho) != 2 {
 		t.Errorf("o caminho ficou %+v; a parada repetida virou passo", caminho)
@@ -345,7 +345,7 @@ func TestUmaParadaRepetidaNaoAcrescentaPasso(t *testing.T) {
 // contorno que alguém faria para não passar ao lado de um inimigo — são 8, pelas
 // quatro diagonais. O caminho mais caro é legítimo, e antes das paradas ele era
 // IMPOSSÍVEL de expressar: o cliente desenhava a reta e pronto.
-func TestOContornoCustaMaisEIssoEOPonto(t *testing.T) {
+func TestGoingAroundCostsMoreAndThatIsThePoint(t *testing.T) {
 	reto := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
 	contornando := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 2, Y: 2}, {X: 4, Y: 0}})
 
@@ -359,7 +359,7 @@ func TestOContornoCustaMaisEIssoEOPonto(t *testing.T) {
 // E COM TERRENO DIFÍCIL o desvio pode custar MENOS que a reta — que é a
 // desigualdade que o `board-path.ts` da SPA dizia não existir enquanto o terreno
 // difícil não chegasse. Chegou.
-func TestComTerrenoDificilODesvioPodeCustarMenosQueAReta(t *testing.T) {
+func TestInDifficultTerrainTheDetourCanCostLessThanTheStraightLine(t *testing.T) {
 	// Lama exatamente sobre a reta de (0,0) a (4,0).
 	lama := MoveTerrain{Difficult: map[Square]bool{{X: 1, Y: 0}: true, {X: 2, Y: 0}: true, {X: 3, Y: 0}: true}}
 
@@ -386,7 +386,7 @@ func TestComTerrenoDificilODesvioPodeCustarMenosQueAReta(t *testing.T) {
 //
 // Sem ele a pessoa empilha paradas, o total passa do deslocamento, e ela não
 // sabe o que desfazer para corrigir.
-func TestOAlcanceEncolheAcadaParadaEZeraNoFim(t *testing.T) {
+func TestTheReachShrinksAtEachStopAndHitsZeroAtTheEnd(t *testing.T) {
 	const orcamento = 6
 
 	alcance, segundo, restante := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}}, orcamento, MoveTerrain{})
@@ -438,7 +438,7 @@ func TestOAlcanceEncolheAcadaParadaEZeraNoFim(t *testing.T) {
 // É o que faz o mapa não pintar a mesma casa de duas cores, e é a garantia que a
 // leitura pedida pelo dono depende: "até onde vou com uma ação" e "até onde vou
 // gastando as duas" só são duas perguntas se as respostas não se sobrepõem.
-func TestAsDuasFaixasDoAlcanceNaoSeSobrepoem(t *testing.T) {
+func TestTheTwoReachBandsDoNotOverlap(t *testing.T) {
 	const orcamento = 4
 
 	dentro, segundo := ReachableInBands(Square{}, orcamento, MoveTerrain{})

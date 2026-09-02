@@ -52,7 +52,7 @@ func asCondicoesDe(t *testing.T, f pilotoFixture, id int64) []string {
 // contra corpo a corpo e +5 contra à distância —, então medir o total mediria
 // justamente onde a regra não aparece, e daria "22 → 22" com cara de "não
 // funcionou". O guarda olha as linhas DIRECIONAIS.
-func TestACondicaoEntraSaiEMoveOsNumeros(t *testing.T) {
+func TestAConditionEntersLeavesAndMovesTheNumbers(t *testing.T) {
 	f, id := oCombatente(t)
 
 	aba := aTelaDoCombate(t, f, id)
@@ -86,7 +86,7 @@ func TestACondicaoEntraSaiEMoveOsNumeros(t *testing.T) {
 //
 // A autoridade é o CATÁLOGO, e não uma lista escrita na tela: um blob com uma
 // condição fantasma injetaria na ficha um efeito que o livro não tem.
-func TestUmaCondicaoInventadaERecusada(t *testing.T) {
+func TestAnInventedConditionIsRefused(t *testing.T) {
 	f, id := oCombatente(t)
 	if recusa := aRecusaDaCena(oEfeito(t, f, id, "condicao/entediado").Body); recusa == "" {
 		t.Error("uma condição que não existe foi aceita sem uma palavra na tela")
@@ -103,7 +103,7 @@ func TestUmaCondicaoInventadaERecusada(t *testing.T) {
 // tela dizendo que discordam. O `handleUpdateConditions` da API JSON é o único
 // outro lugar que avisa — se a ficha em Datastar não avisasse, o porte teria
 // REGREDIDO o conserto sem que nenhum teste percebesse.
-func TestACondicaoAvisaAMesaAoVivo(t *testing.T) {
+func TestAConditionAnnouncesItselfToTheLiveTable(t *testing.T) {
 	// O guarda lê a FONTE do handler, e não um evento no fio: montar uma sessão
 	// viva com este personagem na fila para ouvir um SSE é caro, e o que se quer
 	// prender é que a CHAMADA não some — que é como a ALE-245 foi perdida da
@@ -126,7 +126,7 @@ func TestACondicaoAvisaAMesaAoVivo(t *testing.T) {
 // comando faz antes, um `@post` montado à mão encerraria o efeito de OUTRO
 // personagem — e o 403 do `comandoDaFicha` não pega, porque a ficha do caminho é
 // a do dono.
-func TestOEfeitoDeOutraFichaNaoSeEncerra(t *testing.T) {
+func TestAnEffectFromAnotherSheetCannotBeEnded(t *testing.T) {
 	f, meu := oCombatente(t)
 	outro := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", 1, 10, 10, 0, 0)
 	alheio, err := f.s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
@@ -152,7 +152,7 @@ func TestOEfeitoDeOutraFichaNaoSeEncerra(t *testing.T) {
 // no `activations.json` como `kind: "stance"`. Derivar a flag do último pedaço
 // do id acertaria as duas de hoje e erraria calado na terceira — por isso ela sai
 // do `condition.flag` dos modificadores do poder.
-func TestAsPosturasSaemDoCatalogoComAFlagDoPoder(t *testing.T) {
+func TestStancesComeFromTheCatalogWithThePowerFlag(t *testing.T) {
 	posturas := stancesFromCatalog()
 	if len(posturas) < 2 {
 		t.Fatalf("o catálogo ofereceu %d posturas, e são pelo menos 2 (Fúria e Inspiração): "+
@@ -184,7 +184,7 @@ func chavesDe(m map[string]stanceOfBook) []string {
 // Entrar numa postura custa PM, e este painel não tem como cobrar. Deixá-la na
 // lista de situação daria um interruptor que liga a Fúria DE GRAÇA — e o PM não
 // seria cobrado em lugar nenhum, porque quem cobra é o gesto do outro painel.
-func TestAPosturaNaoApareceNaListaDeSituacao(t *testing.T) {
+func TestAStanceDoesNotShowInTheConditionalList(t *testing.T) {
 	oferecidos := []engine.ConditionalEffect{
 		{Source: "Fúria", Note: "Em Fúria", Amount: 2, BonusType: "morale", Flag: "furia",
 			Target: engine.ModifierTarget{K: "attack", Scope: "all"}},
@@ -205,7 +205,7 @@ func TestAPosturaNaoApareceNaListaDeSituacao(t *testing.T) {
 //
 // Um item caseiro com três modificadores é uma coisa na mesa; como três linhas, a
 // pessoa deixaria metade do efeito ligado.
-func TestOsModificadoresQueDividemFlagViramUmInterruptor(t *testing.T) {
+func TestModifiersSharingAFlagBecomeOneSwitch(t *testing.T) {
 	oferecidos := []engine.ConditionalEffect{
 		{Source: "Manto Caseiro", Note: "com o manto vestido", Amount: 2, Flag: "homebrew-manto",
 			Target: engine.ModifierTarget{K: "defense"}},
@@ -251,7 +251,7 @@ func recorteDaFuncao(t *testing.T, fonte, cabecalho string) string {
 }
 
 // O PAINEL CHEGA NA TELA.
-func TestOPainelDeEfeitosDesenhaOsQuatroBlocos(t *testing.T) {
+func TestTheEffectsPanelDrawsTheFourBlocks(t *testing.T) {
 	f, id := oCombatente(t)
 	tela := aTelaDosEfeitos(t, f, id)
 

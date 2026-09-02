@@ -239,7 +239,7 @@ func (s *Server) LivroDoPiloto() http.Handler {
 	// e essa ordem é conserto de um vermelho: um dígito VAZIO fazia
 	// `strings.Contains(ifNoneMatch, "")` responder verdadeiro, e a rota
 	// devolvia 304 para todo mundo em vez de 404. Visto no
-	// `TestSemConfiguracaoARotaDoLivroDa404`, que nasceu vermelho por isso.
+	// `TestWithoutConfigurationTheBookRouteGives404`, que nasceu vermelho por isso.
 	if s.livro.caminho == "" {
 		return http.NotFoundHandler()
 	}

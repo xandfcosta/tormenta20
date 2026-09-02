@@ -23,7 +23,7 @@ import (
 // O guarda é grep, como o dos ícones, e cobre a mesma classe de defeito: uma
 // peça que nasce errada sem ninguém reclamar. Quem precisa da receita num
 // cabeçalho usa `classesDoRotulo` no próprio elemento.
-func TestNadaDeConteudoDeFluxoDentroDeRotuloDeSecao(t *testing.T) {
+func TestNoFlowContentInsideASectionLabel(t *testing.T) {
 	arquivos, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("listar: %v", err)

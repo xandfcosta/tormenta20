@@ -31,12 +31,12 @@ func (f pilotoFixture) abreTabuleiro(t *testing.T, terreno string) *tabuleiro.Bo
 	return b
 }
 
-// TestSemTabuleiroACenaDizQueNaoHaMapaENaoDesenhaGrade.
+// TestWithoutABoardTheSceneSaysThereIsNoMap.
 //
 // "Não há tabuleiro" e "há um vazio" são estados diferentes, e o primeiro é o
 // normal — a maior parte de uma sessão não tem mapa. Desenhar uma grade vazia
 // diria que o mestre abriu uma cena que ele não abriu.
-func TestSemTabuleiroACenaDizQueNaoHaMapa(t *testing.T) {
+func TestWithoutABoardTheSceneSaysThereIsNoMap(t *testing.T) {
 	f := novoPiloto(t)
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
 
@@ -48,14 +48,14 @@ func TestSemTabuleiroACenaDizQueNaoHaMapa(t *testing.T) {
 	}
 }
 
-// TestAPecaEscondidaNaoCHEGAaoJogador — o guarda que mais importa desta fatia.
+// TestTheHiddenTokenDoesNotReachThePlayer — o guarda que mais importa desta fatia.
 //
 // Esconder a peça é o gesto com que o mestre guarda a emboscada, e a trava não
 // pode ser CSS: uma peça meio-apagada no HTML do jogador entrega a posição do
 // ogro para quem abrir o inspetor. Quem a tira é o `BoardForRole`, o mesmo
 // gargalo por papel que a fila usa — e este teste afirma que a cena passa por
 // ele em vez de decidir por conta própria.
-func TestAPecaEscondidaNaoChegaAoJogador(t *testing.T) {
+func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
@@ -83,13 +83,13 @@ func TestAPecaEscondidaNaoChegaAoJogador(t *testing.T) {
 	}
 }
 
-// TestAPecaDaVezAcendeComOMesmoDouradoDaFila.
+// TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker.
 //
 // O anel é o MESMO sinal que a linha da fila usa, e ligá-lo pelo `entryId` é o
 // que garante isso: derivar "quem está na vez" no tabuleiro seria a segunda
 // cópia da regra, e é assim que duas telas passam a apontar combatentes
 // diferentes (ALE-122).
-func TestAPecaDaVezAcendeComOMesmoDouradoDaFila(t *testing.T) {
+func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.naFila(t)
 	f.abreTabuleiro(t, "pedra")
@@ -121,12 +121,12 @@ func TestAPecaDaVezAcendeComOMesmoDouradoDaFila(t *testing.T) {
 	}
 }
 
-// TestUmTerrenoInventadoNaoVIRAclasseSolta.
+// TestAnInventedTerrainFallsBackToTheDefaultGround.
 //
 // O terreno vem do BANCO, então é dado do cliente. Uma classe `chao-<qualquer>`
 // não existiria na folha e o chão sairia transparente — o que se parece com
 // defeito de CSS e manda procurar no lugar errado.
-func TestUmTerrenoInventadoCaiNoChaoPadrao(t *testing.T) {
+func TestAnInventedTerrainFallsBackToTheDefaultGround(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "vulcão-de-neon")
 
@@ -141,7 +141,7 @@ func TestUmTerrenoInventadoCaiNoChaoPadrao(t *testing.T) {
 
 // ── o aviso do tabuleiro (ALE-264) ───────────────────────────────────────────
 
-// TestOTabuleiroAVISAquemEscutaAcadaMudanca.
+// TestTheBoardTellsItsListenersOnEveryChange.
 //
 // O stream da Mesa assinava só o store da SESSÃO, e o tabuleiro é outro: mover
 // uma peça não acordava ninguém, e a mudança só chegava no batimento de reserva
@@ -155,7 +155,7 @@ func TestUmTerrenoInventadoCaiNoChaoPadrao(t *testing.T) {
 // Desde a ALE-279 o caso afirma QUAL evento chegou, e não só que algo chegou. É
 // a diferença que o barramento comprou: com `chan struct{}` abrir e fechar eram
 // o mesmo sino, então trocar um pelo outro no código passava verde aqui.
-func TestOTabuleiroAvisaQuemEscutaAcadaMudanca(t *testing.T) {
+func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 	f := novoPiloto(t)
 	bs := f.s.boards
 	ctx := context.Background()
@@ -200,7 +200,7 @@ func TestOTabuleiroAvisaQuemEscutaAcadaMudanca(t *testing.T) {
 // E uma mutação RECUSADA não avisa: "mudou" tem de significar mudou, senão o
 // stream relê e o hash o faz calar — trabalho para nada a cada erro de quem
 // clica.
-func TestUmaMutacaoRecusadaNaoAvisa(t *testing.T) {
+func TestARefusedMutationTellsNobody(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 	const sessao = int64(2)
@@ -223,7 +223,7 @@ func TestUmaMutacaoRecusadaNaoAvisa(t *testing.T) {
 // barramento, e a baixa é medida onde ela mora, em `events.TestUnsubscribeRemovesTheListener`.
 // Uma regra, uma camada.
 
-// TestMoverUmaPecaCHEGAaoStreamSemEsperarOBatimento.
+// TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat.
 //
 // Este é o teste que a MEDIÇÃO pediu, e ele nasceu porque o guarda de unidade
 // não bastou: os testes acima provam que o store AVISA, e mesmo assim o
@@ -234,7 +234,7 @@ func TestUmaMutacaoRecusadaNaoAvisa(t *testing.T) {
 // Ele abre um stream de VERDADE por HTTP, move uma peça, e exige o quadro em bem
 // menos que o batimento. O limite é 400ms: folgado para um round-trip local, e
 // menos da metade do batimento, então um verde aqui não pode ser o relógio.
-func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
+func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	// O id vem do SERVIDOR (`bs.newID`), não do que eu passo: dois clientes
@@ -323,7 +323,7 @@ func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
 	}
 }
 
-// TestUmaMudancaNaFILAnaoRemendaOMAPA — o guarda que as REGIÕES existem para dar
+// TestATrackerChangeDoesNotPatchTheMap — o guarda que as REGIÕES existem para dar
 // (ALE-264).
 //
 // A cena era um fragmento só, e o stream remendava o `<main id="mesa">` inteiro
@@ -334,7 +334,7 @@ func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
 //
 // Este teste mede a separação onde ela importa: mexer na FILA manda o quadro da
 // fila e NÃO manda o do mapa.
-func TestUmaMudancaNaFilaNaoRemendaOMapa(t *testing.T) {
+func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,
@@ -420,7 +420,7 @@ func TestUmaMudancaNaFilaNaoRemendaOMapa(t *testing.T) {
 	}
 }
 
-// TestACortinaEsconde ACENA e NAO parece um tabuleiro vazio (ALE-202).
+// TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard: a cortina esconde a cena e não parece um tabuleiro vazio (ALE-202).
 //
 // A cortina chegou pela `main` e a Mesa em Datastar desenharia uma GRADE VAZIA
 // no lugar dela — o que é justamente a tela do "o mestre ainda não abriu um
@@ -430,7 +430,7 @@ func TestUmaMudancaNaFilaNaoRemendaOMapa(t *testing.T) {
 // O nome do lugar não pode aparecer, e a razão está no glossário: "Covil do
 // Dragão" já conta a cena que a cortina existe para esconder. Quem o apaga é o
 // `BoardForRole`; o que se prende aqui é que a cena não o reintroduz.
-func TestACortinaEscondeACenaENaoPareceTabuleiroVazio(t *testing.T) {
+func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "cripta")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, aAbaPadrao,

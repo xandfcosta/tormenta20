@@ -26,10 +26,10 @@ import (
 // em branco ou a contracapa.
 const ultimaDeConteudo = 395
 
-// TestNenhumaPaginaAponta ParaOIndice varre TODO catálogo embutido por
+// TestNoPageFallsOutsideTheContent varre TODO catálogo embutido por
 // AMOSTRAGEM: quem passar a ter `bookPage` amanhã nasce medido, sem entrada
 // nova aqui.
-func TestNenhumaPaginaCaiForaDoConteudo(t *testing.T) {
+func TestNoPageFallsOutsideTheContent(t *testing.T) {
 	arquivos, err := fs.Glob(files, "data/*.json")
 	if err != nil {
 		t.Fatalf("listar catálogos: %v", err)
@@ -61,9 +61,9 @@ func TestNenhumaPaginaCaiForaDoConteudo(t *testing.T) {
 	}
 }
 
-// TestTodaCondicaoSabeSuaPagina: as 35 estão na mesma lista do apêndice, então
+// TestEveryConditionKnowsItsPage: as 35 estão na mesma lista do apêndice, então
 // "algumas sem página" é defeito e não lacuna do livro.
-func TestTodaCondicaoSabeSuaPagina(t *testing.T) {
+func TestEveryConditionKnowsItsPage(t *testing.T) {
 	bruto, ok := Resource("conditions")
 	if !ok {
 		t.Fatal("catálogo de condições ausente")
@@ -129,9 +129,9 @@ func entradasComNome(t *testing.T, arquivo string, bruto []byte) []entradaComPag
 	return nil
 }
 
-// TestTodaClasseSabeSuaPagina: o catálogo de classes nasceu na ALE-264 com três
+// TestEveryClassKnowsItsPage: o catálogo de classes nasceu na ALE-264 com três
 // campos, e a PÁGINA é o motivo dele existir — sem ela, ele não teria por quê.
-func TestTodaClasseSabeSuaPagina(t *testing.T) {
+func TestEveryClassKnowsItsPage(t *testing.T) {
 	bruto, ok := Resource("classes")
 	if !ok {
 		t.Fatal("catálogo de classes ausente — a aba nasce vazia e nada estoura")
@@ -153,7 +153,7 @@ func TestTodaClasseSabeSuaPagina(t *testing.T) {
 	}
 }
 
-// TestOsTresBlocosQueAbremUmaPaginaAdiante (ALE-264).
+// TestTheThreeBlocksThatOpenOnePageLater (ALE-264).
 //
 // A TRAP da tabela, e não a tabela inteira: estas três criaturas tinham no
 // catálogo a página que as CITA, não a que abre o bloco delas. A p289 fala de
@@ -163,7 +163,7 @@ func TestTodaClasseSabeSuaPagina(t *testing.T) {
 // Quem consertou foi a assinatura `<nome> nd <valor>`, que é como o livro
 // imprime o começo de todo bloco. Fica preso aqui porque uma regeneração
 // desatenta do catálogo os traria de volta em silêncio.
-func TestOsTresBlocosQueAbremUmaPaginaAdiante(t *testing.T) {
+func TestTheThreeBlocksThatOpenOnePageLater(t *testing.T) {
 	bruto, ok := Resource("bestiary")
 	if !ok {
 		t.Fatal("bestiário ausente")
@@ -192,7 +192,7 @@ func TestOsTresBlocosQueAbremUmaPaginaAdiante(t *testing.T) {
 	}
 }
 
-// TestNenhumVerbeteExtraidoTrazSujeiraDaPagina (ALE-264).
+// TestNoExtractedEntryCarriesPageDirt (ALE-264).
 //
 // Os tipos de efeito e as escolas de magia são EXTRAÍDOS do PDF pelo
 // `scripts/paginas-do-livro.py`, e as duas formas de sujeira que o extrator já
@@ -205,7 +205,7 @@ func TestOsTresBlocosQueAbremUmaPaginaAdiante(t *testing.T) {
 //
 // Este teste não tem o livro — ele mora fora do repositório. O que ele mede é a
 // FORMA do que foi extraído, que é o que sobrevive sem o PDF na mão.
-func TestNenhumVerbeteExtraidoTrazSujeiraDaPagina(t *testing.T) {
+func TestNoExtractedEntryCarriesPageDirt(t *testing.T) {
 	for _, recurso := range []string{"tipos-de-efeito", "escolas-de-magia"} {
 		bruto, ok := Resource(recurso)
 		if !ok {

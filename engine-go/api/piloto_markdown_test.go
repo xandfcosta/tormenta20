@@ -61,7 +61,7 @@ func leOOraculoDoMarkdown(t *testing.T) oraculoDoMarkdown {
 	return o
 }
 
-func TestOMarkdownDaNotaCasaComOJS(t *testing.T) {
+func TestTheNoteMarkdownMatchesTheJs(t *testing.T) {
 	oraculo := leOOraculoDoMarkdown(t)
 	for _, caso := range oraculo.Arvores {
 		t.Run(caso.Nota, func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestOMarkdownDaNotaCasaComOJS(t *testing.T) {
 	}
 }
 
-func TestAlternarTarefaCasaComOJS(t *testing.T) {
+func TestTogglingATaskMatchesTheJs(t *testing.T) {
 	oraculo := leOOraculoDoMarkdown(t)
 	for _, caso := range oraculo.Alterna {
 		t.Run(caso.Nota, func(t *testing.T) {
@@ -100,7 +100,7 @@ func TestAlternarTarefaCasaComOJS(t *testing.T) {
 // errada é entrar em pânico e derrubar o handler que estava salvando o texto de
 // alguém. O JS devolve `undefined` do array e cai no mesmo lugar; em Go isso é
 // um `index out of range`, e por isso a guarda existe e é testada.
-func TestAlternarTarefaNaoEntraEmPanicoComLinhaDeFora(t *testing.T) {
+func TestTogglingATaskDoesNotPanicOnAnOutOfRangeLine(t *testing.T) {
 	nota := "- [ ] dar XP"
 	for _, linha := range []int{-1, 1, 99} {
 		if got := alternaTarefa(nota, linha, true); got != nota {

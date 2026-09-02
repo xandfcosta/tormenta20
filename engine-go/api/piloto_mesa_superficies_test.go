@@ -14,7 +14,7 @@ import (
 // superfícies que ocupam a tela, com um seletor ancorado no topo. O que se prende
 // aqui é o que a mudança de forma pode quebrar em silêncio.
 
-// TestOJogadorTemTODASasRegioesUmaVezSo — o espelho do guarda do palco do mestre,
+// TestThePlayerHasEveryRegionExactlyOnce — o espelho do guarda do palco do mestre,
 // e ele importa mais depois desta fatia.
 //
 // As superfícies são `data-show`, e `data-show` é `display:none` e NÃO remoção:
@@ -25,7 +25,7 @@ import (
 // "Uma vez só" é a metade que pega o erro provável: mover uma região para uma
 // superfície e esquecer de tirá-la da outra deixa DUAS raízes com o mesmo id, o
 // remendo acerta a primeira e a segunda envelhece na tela.
-func TestOJogadorTemTodasAsRegioesUmaVezSo(t *testing.T) {
+func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -39,7 +39,7 @@ func TestOJogadorTemTodasAsRegioesUmaVezSo(t *testing.T) {
 	}
 }
 
-// TestOSeletorTemAsTresSuperficies.
+// TestTheSelectorHasTheThreeSurfaces.
 //
 // Por duas fatias foram DUAS, e a asserção aqui era a negativa: a ficha era a
 // última tela da migração e a aba dela nasceria junto com ela (decisão do dono).
@@ -48,7 +48,7 @@ func TestOJogadorTemTodasAsRegioesUmaVezSo(t *testing.T) {
 //
 // A asserção é sobre o RÓTULO que o usuário leria, e não sobre um id interno: é
 // o rótulo que promete.
-func TestOSeletorTemAsTresSuperficies(t *testing.T) {
+func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -69,12 +69,12 @@ func TestOSeletorTemAsTresSuperficies(t *testing.T) {
 	}
 }
 
-// TestAFichaNaSessaoNaoNavegaParaForaDela.
+// TestTheSheetInTheSessionDoesNotNavigateOutOfIt.
 //
 // Dentro da sessão as abas da ficha são COMANDO e não link. Um `<a href>` ali
 // tiraria o jogador da mesa no meio do combate — e o modo de errar é silencioso,
 // porque o link funciona: ele leva para uma tela legítima, só que a errada.
-func TestAFichaNaSessaoNaoNavegaParaForaDela(t *testing.T) {
+func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -125,12 +125,12 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 	}
 }
 
-// TestOMestreNaoRecebeOSeletor.
+// TestTheGmDoesNotGetTheSelector.
 //
 // Ele tem o PALCO — faixa, trilhos e tabuleiro ao mesmo tempo —, e é essa a
 // diferença entre as duas formas. Um seletor na tela dele esconderia atrás de uma
 // aba o que a forma do mestre existe para mostrar junto.
-func TestOMestreNaoRecebeOSeletor(t *testing.T) {
+func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
@@ -146,14 +146,14 @@ func TestOMestreNaoRecebeOSeletor(t *testing.T) {
 	}
 }
 
-// TestASuperficieQueAbreEDERIVADAenaoDIGITADA.
+// TestTheOpeningSurfaceIsDerivedAndNotTyped.
 //
 // O padrão é a MESA (decisão do dono), e ele é escrito num lugar só: a página
 // semeia o sinal a partir da mesma constante que a lista de superfícies usa.
 // Digitar 'mesa' no `data-signals` seria a segunda cópia, e a que fica para trás
 // no dia em que o padrão mudar — a cena nasceria com um sinal e o botão marcando
 // outro.
-func TestASuperficieQueAbreEDerivadaENaoDigitada(t *testing.T) {
+func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 	f := novoPiloto(t)
 	html := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
 
@@ -171,7 +171,7 @@ func TestASuperficieQueAbreEDerivadaENaoDigitada(t *testing.T) {
 	}
 }
 
-// TestAFichaNaSessaoTemComoSaberQueMudou (ALE-275).
+// TestTheSheetInTheSessionHasAWayToKnowItChanged (ALE-275).
 //
 // A ficha embutida não é região do stream, então o que a mantém em dia é um par:
 // o servidor escreve `fichaversao` num sinal, e um ouvinte na cena repede a
@@ -182,7 +182,7 @@ func TestASuperficieQueAbreEDerivadaENaoDigitada(t *testing.T) {
 //
 // O e2e prova o comportamento com dois clientes; este guarda é a rede barata que
 // falha no commit em que uma das pontas some.
-func TestAFichaNaSessaoTemComoSaberQueMudou(t *testing.T) {
+func TestTheSheetInTheSessionHasAWayToKnowItChanged(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 

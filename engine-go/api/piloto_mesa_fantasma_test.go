@@ -74,7 +74,7 @@ func oElementoCom(t *testing.T, tela, atributo, trecho string) map[string]string
 	}
 }
 
-// TestAPecaEDesenhadaOndeFoiSolta — o coração do item 4.
+// TestTheTokenIsDrawnWhereItWasDropped — o coração do item 4.
 //
 // O dono descreveu o defeito como "ela volta para o início do movimento": o
 // gesto acabava se desfazendo aos olhos de quem arrastou, e o que marcava o
@@ -82,7 +82,7 @@ func oElementoCom(t *testing.T, tela, atributo, trecho string) map[string]string
 //
 // O CONTROLE vem antes: sem ele, "achei a peça em 3,1" não distingue "a peça
 // andou" de "eu procurei a coisa errada e casei com outro nó".
-func TestAPecaEDesenhadaOndeFoiSolta(t *testing.T) {
+func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 4, 2)
 	f.naVezDoJogador(t)
@@ -96,7 +96,7 @@ func TestAPecaEDesenhadaOndeFoiSolta(t *testing.T) {
 
 	// O JOGADOR desenha, e é pelos olhos DELE que se lê: para quem pede, o
 	// destino é o fato — a peça sólida vai para lá. Para o mestre é o contrário,
-	// e o guarda disso é o `TestParaOMestreAPecaFicaEOFantasmaVai`.
+	// e o guarda disso é o `TestForTheGmTheTokenStaysAndTheGhostGoes`.
 	if rec := f.pede(t, f.jogador, http.MethodPost,
 		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
@@ -125,11 +125,11 @@ func TestAPecaEDesenhadaOndeFoiSolta(t *testing.T) {
 	}
 }
 
-// TestOFantasmaMarcaAOrigemComOMonogramaDaPeca.
+// TestTheGhostMarksTheOriginWithTheTokenMonogram.
 //
 // Ele é a peça e não um disco genérico: com três zumbis em campo, uma sombra
 // anônima na casa não responde qual deles está a caminho.
-func TestOFantasmaMarcaAOrigemComOMonogramaDaPeca(t *testing.T) {
+func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 4, 2)
 
@@ -176,7 +176,7 @@ func TestOFantasmaMarcaAOrigemComOMonogramaDaPeca(t *testing.T) {
 //
 // O guarda é o PAR: a mesma proposta lida pelos dois papéis, senão "achei a peça
 // em 4,2" não se distingue de "a proposta não chegou".
-func TestParaOMestreAPecaFicaEOFantasmaVai(t *testing.T) {
+func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 4, 2)
 
@@ -198,12 +198,12 @@ func TestParaOMestreAPecaFicaEOFantasmaVai(t *testing.T) {
 	}
 }
 
-// TestASetaDobraNasParadasEParaNaBordaDoDestino.
+// TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge.
 //
 // Duas afirmações num caso só porque elas são a MESMA decisão vista de dois
 // lados: a seta é o GESTO (dobra onde a pessoa clicou) e não a trilha (que dobra
 // em cada casa), e ela para antes do centro para apontar a peça em vez de riscá-la.
-func TestASetaDobraNasParadasEParaNaBordaDoDestino(t *testing.T) {
+func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 0, 0)
 	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
@@ -232,13 +232,13 @@ func TestASetaDobraNasParadasEParaNaBordaDoDestino(t *testing.T) {
 	}
 }
 
-// TestOFioSemParadasLigaAsDuasPontasDoCaminho.
+// TestTheArrowWithoutStopsJoinsBothEndsOfThePath.
 //
 // `Stops` NULO é valor legítimo: o `ProposeMove` deixa o caminho pronto sem
 // passar por paradas. Deduzir as dobras do `Path` não é possível — um trecho
 // legítimo já dobra sozinho, porque a diagonal vem primeiro —, então a seta vira
 // a reta entre o começo e o fim.
-func TestOFioSemParadasLigaAsDuasPontasDoCaminho(t *testing.T) {
+func TestTheArrowWithoutStopsJoinsBothEndsOfThePath(t *testing.T) {
 	semParadas := &tabuleiro.PendingMove{
 		Path: []engine.Square{{}, {X: 1}, {X: 2}, {X: 3}},
 	}
@@ -259,7 +259,7 @@ func TestOFioSemParadasLigaAsDuasPontasDoCaminho(t *testing.T) {
 	}
 }
 
-// TestTodaClassePosicionadaPorColLinTemCaixa — o guarda da FAMÍLIA de um defeito
+// TestEveryClassPositionedByColAndRowHasABox — o guarda da FAMÍLIA de um defeito
 // que o CSS não denuncia.
 //
 // `posicaoNoPlano` escreve `--col`/`--lin`/`--pegada` no `style`, e quem os
@@ -277,10 +277,10 @@ func TestOFioSemParadasLigaAsDuasPontasDoCaminho(t *testing.T) {
 //
 // Ele cruza as duas pontas: o HTML SERVIDO diz quem é posicionado por `--col`, e
 // a FOLHA COMPILADA diz quem recebe caixa. É a mesma forma do
-// `TestNenhumaCamadaLeOPontoSemSomarAJanela`, e é por AMOSTRAGEM: quem escrever
+// `TestNoLayerReadsThePointWithoutAddingTheViewport`, e é por AMOSTRAGEM: quem escrever
 // a classe nova amanhã cai aqui sem acrescentar uma linha, porque a pergunta é
 // sobre o `--col` e não sobre um nome.
-func TestTodaClassePosicionadaPorColLinTemCaixa(t *testing.T) {
+func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 4, 2)
 	// A cena precisa ter as três famílias no ar, senão o guarda mede o que
@@ -375,7 +375,7 @@ func temAlgumaClasse(lista string, procuradas map[string]bool) bool {
 	return false
 }
 
-// TestNenhumElementoRepeteUmAtributo — o guarda da FAMÍLIA, e ele não é sobre o
+// TestNoElementRepeatsAnAttribute — o guarda da FAMÍLIA, e ele não é sobre o
 // movimento.
 //
 // O templ NÃO aceita `else if` numa lista de atributos: ele fecha o primeiro
@@ -386,8 +386,8 @@ func temAlgumaClasse(lista string, procuradas map[string]bool) bool {
 //
 // Ele varre o HTML SERVIDO e não o código, que é a única forma de alcançar quem
 // escrever `else if` num atributo amanhã sem ler nada disto. É o mesmo molde do
-// `TestNenhumaCamadaLeOPontoSemSomarAJanela`.
-func TestNenhumElementoRepeteUmAtributo(t *testing.T) {
+// `TestNoLayerReadsThePointWithoutAddingTheViewport`.
+func TestNoElementRepeatsAnAttribute(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.noTabuleiroEm(t, 4, 2)
 	if rec := f.pede(t, f.mestre, http.MethodPost,

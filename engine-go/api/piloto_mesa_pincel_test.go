@@ -19,7 +19,7 @@ import (
 // SEGMENTO numa gravação só, que a resposta não devolve a Mesa inteira, e que a
 // tela liga os gestos que fazem o traço acontecer.
 
-// TestOTracoPintaOSegmentoInteiro.
+// TestTheStrokePaintsTheWholeSegment.
 //
 // O caso mede o SEGMENTO, e não o número de gravações. Eu tinha escrito uma
 // segunda asserção sobre a `Version` do tabuleiro — "uma versão a mais, senão a
@@ -28,7 +28,7 @@ import (
 // `apply` só. Quem garante a gravação única é a estrutura (`PintaOTraco` chama
 // `apply` uma vez, e o `comandoDoTabuleiro` publica uma vez), não um contador —
 // e um teste que afirma o contrário fica vermelho sobre um app correto.
-func TestOTracoPintaOSegmentoInteiro(t *testing.T) {
+func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -64,10 +64,10 @@ func contem(casas []engine.Square, alvo engine.Square) bool {
 	return false
 }
 
-// TestOTracoDaBorrachaApagaOSegmentoInteiro: o irmão do de cima, e ele existe
+// TestTheEraserStrokeClearsTheWholeSegment: o irmão do de cima, e ele existe
 // porque as duas rotas são caminhos diferentes — a da borracha não tem espécie,
 // e foi justamente ela que ficou para trás na primeira versão desta superfície.
-func TestOTracoDaBorrachaApagaOSegmentoInteiro(t *testing.T) {
+func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -92,12 +92,12 @@ func TestOTracoDaBorrachaApagaOSegmentoInteiro(t *testing.T) {
 	}
 }
 
-// TestOTracoForjadoERecusado.
+// TestAForgedStrokeIsRefused.
 //
 // O teto é do domínio e a recusa chega como FRASE, não como 500: um traço de dez
 // milhões de casas só vem de um pedido montado à mão, e a resposta certa é dizer
 // o que houve.
-func TestOTracoForjadoERecusado(t *testing.T) {
+func TestAForgedStrokeIsRefused(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -112,7 +112,7 @@ func TestOTracoForjadoERecusado(t *testing.T) {
 	}
 }
 
-// TestOPincelNaoDevolveAMesaInteira — o guarda dos 353 KB.
+// TestTheBrushDoesNotReturnTheWholeTable — o guarda dos 353 KB.
 //
 // Medido no navegador antes do conserto: uma casa pintada devolvia **353 KB**,
 // porque o `respondeAoMestre` repinta TODAS as regiões. Num gesto de clique isso
@@ -122,7 +122,7 @@ func TestOTracoForjadoERecusado(t *testing.T) {
 // A asserção nomeia as duas metades: a região do mapa TEM de vir (senão o traço
 // não aparece) e a do acervo NÃO pode (é a maior da Mesa, com 147 lugares, e ela
 // não muda quando alguém pinta uma casa).
-func TestOPincelNaoDevolveAMesaInteira(t *testing.T) {
+func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -139,7 +139,7 @@ func TestOPincelNaoDevolveAMesaInteira(t *testing.T) {
 	}
 }
 
-// TestATelaLigaOTracoEOBotaoDireito.
+// TestTheScreenWiresTheStrokeToTheRightButton.
 //
 // Uma afirmação sobre a FORMA do que a página serve, e é o único jeito de
 // alcançar os três gestos de uma vez: `pointerdown`/`pointermove`/`pointerup` na
@@ -149,7 +149,7 @@ func TestOPincelNaoDevolveAMesaInteira(t *testing.T) {
 // Se algum deles voltar a ser um `data-on:click`, o traço morre em silêncio — a
 // tela continua pintando um quadrado por clique, que é exatamente o estado que o
 // dono relatou.
-func TestATelaLigaOTracoEOBotaoDireito(t *testing.T) {
+func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
@@ -172,7 +172,7 @@ func TestATelaLigaOTracoEOBotaoDireito(t *testing.T) {
 	}
 }
 
-// TestTodaEspecieTemDesenho.
+// TestEveryKindHasADrawing.
 //
 // O guarda que paga o preço de o desenho morar fora do domínio: `oDesenhoDe`
 // entra em pânico numa espécie sem entrada, e este caso faz o pânico acontecer
@@ -183,7 +183,7 @@ func TestATelaLigaOTracoEOBotaoDireito(t *testing.T) {
 // E ele afirma também que os CANTOS são distintos: duas espécies no mesmo canto
 // desenham uma por cima da outra, e a casa com folhagens (difícil E camuflagem,
 // p267) mostraria uma só.
-func TestTodaEspecieTemDesenho(t *testing.T) {
+func TestEveryKindHasADrawing(t *testing.T) {
 	cantos := map[string]string{}
 	for _, pincel := range tabuleiro.EspeciesDeTerreno {
 		d := oDesenhoDe(pincel.ID)
@@ -198,9 +198,9 @@ func TestTodaEspecieTemDesenho(t *testing.T) {
 	}
 }
 
-// TestACasaPintadaTrazOIconeDaEspecie: a ponta que só o HTML servido responde —
+// TestThePaintedSquareCarriesTheKindIcon: a ponta que só o HTML servido responde —
 // o ícone chega à casa, e o trilho mostra o MESMO.
-func TestACasaPintadaTrazOIconeDaEspecie(t *testing.T) {
+func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -222,13 +222,13 @@ func TestACasaPintadaTrazOIconeDaEspecie(t *testing.T) {
 	}
 }
 
-// TestORetanguloEncheAAreaInteira (ALE-203, item 10).
+// TestTheRectangleFillsTheWholeArea (ALE-203, item 10).
 //
 // A rota do retângulo é IRMÃ da do traço e chama a mesma gravação — o que muda é
 // quais casas o par de cantos nomeia. O guarda mede as duas pontas que só esta
 // camada responde: a área inteira pintada, e a borracha usando o caminho SEM
 // espécie (o conserto da fatia 1, que não pode se perder numa rota nova).
-func TestORetanguloEncheAAreaInteira(t *testing.T) {
+func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -252,9 +252,9 @@ func TestORetanguloEncheAAreaInteira(t *testing.T) {
 	}
 }
 
-// TestORetanguloForjadoERecusadoPelaRota: o teto é do domínio e a recusa chega
+// TestAForgedRectangleIsRefusedByTheRoute: o teto é do domínio e a recusa chega
 // como FRASE. Mil casas são 32×32 — uma sala grande de masmorra.
-func TestORetanguloForjadoERecusadoPelaRota(t *testing.T) {
+func TestAForgedRectangleIsRefusedByTheRoute(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
@@ -269,12 +269,12 @@ func TestORetanguloForjadoERecusadoPelaRota(t *testing.T) {
 	}
 }
 
-// TestATelaLigaOShiftDoRetangulo.
+// TestTheScreenWiresTheRectangleShift.
 //
 // O `Shift` é o que separa o TRAÇO do RETÂNGULO, e a decisão acontece no
 // `pointerdown` para valer o gesto inteiro: soltar a tecla no meio do arrasto não
 // pode trocar o que ele está fazendo, porque o dedo já está a caminho de um canto.
-func TestATelaLigaOShiftDoRetangulo(t *testing.T) {
+func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
@@ -286,7 +286,7 @@ func TestATelaLigaOShiftDoRetangulo(t *testing.T) {
 	}
 }
 
-// TestNenhumNoTemDataShowEDataAttrStyleJuntos — o guarda de um defeito que
+// TestNoNodeHasDataShowAndDataAttrStyleTogether — o guarda de um defeito que
 // CONGELA A ABA, e que não deixa erro nenhum para trás.
 //
 // Os dois escrevem no MESMO lugar: o `data-show` põe `el.style.display` e o
@@ -300,7 +300,7 @@ func TestATelaLigaOShiftDoRetangulo(t *testing.T) {
 // que não aponta para lugar nenhum.
 //
 // O conserto é sempre o mesmo: quem ESCONDE é um nó, quem POSICIONA é outro.
-func TestNenhumNoTemDataShowEDataAttrStyleJuntos(t *testing.T) {
+func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()

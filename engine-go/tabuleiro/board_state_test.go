@@ -147,7 +147,7 @@ func tabuleiroCom(labels ...string) *BoardState {
 	return b
 }
 
-func TestACopiaGanhaOProximoNumeroLivre(t *testing.T) {
+func TestTheCopyGetsTheNextFreeNumber(t *testing.T) {
 	casos := []struct {
 		nome    string
 		cena    []string
@@ -184,7 +184,7 @@ func TestACopiaGanhaOProximoNumeroLivre(t *testing.T) {
 }
 
 // A cópia é uma PEÇA NOVA: ela leva o corpo e deixa o vínculo para trás.
-func TestACopiaLevaOCorpoENaoOVinculo(t *testing.T) {
+func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	entrada := "e7"
 	var personagem int64 = 42
@@ -212,7 +212,7 @@ func TestACopiaLevaOCorpoENaoOVinculo(t *testing.T) {
 
 // Ao LADO, e não em cima nem na fileira de entrada: quem duplica o zumbi do
 // canto do mapa espera o irmão dele ali do lado.
-func TestACopiaNasceAoLadoENaoEmCima(t *testing.T) {
+func TestTheCopyIsBornBesideAndNotOnTop(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	b.Tokens[0].X, b.Tokens[0].Y = 30, 12
 
@@ -248,7 +248,7 @@ alvo. O marcador aponta e mais nada.
 
 // Ele nasce ESCONDIDO e some inteiro da cópia do jogador — a mesma redação da
 // peça, e não uma segunda política.
-func TestOMarcadorEscondidoSomeParaOJogador(t *testing.T) {
+func TestTheHiddenMarkerVanishesForThePlayer(t *testing.T) {
 	b := newBoard("t1", "Cripta", "cripta")
 	if err := AddMarker(b, BoardMarker{X: 2, Y: 3, Text: "1A", Color: "carmim", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
@@ -269,7 +269,7 @@ func TestOMarcadorEscondidoSomeParaOJogador(t *testing.T) {
 
 // O rótulo tem DUAS letras, cortadas em runas: "Ê2A" não pode virar meio
 // caractere na tela.
-func TestOMarcadorCabeEmDuasLetras(t *testing.T) {
+func TestTheMarkerFitsInTwoLetters(t *testing.T) {
 	b := newBoard("t1", "Cripta", "cripta")
 	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "Ê2A", Color: "azul"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
@@ -282,7 +282,7 @@ func TestOMarcadorCabeEmDuasLetras(t *testing.T) {
 
 // A cor vem de um conjunto FECHADO: ela vira classe na tela, e aceitar qualquer
 // string deixaria o cliente escrever CSS no estado da mesa.
-func TestACorDoMarcadorEDeUmConjuntoFechado(t *testing.T) {
+func TestTheMarkerColorComesFromAClosedSet(t *testing.T) {
 	b := newBoard("t1", "Cripta", "cripta")
 	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "X", Color: "url(javascript:alert(1))"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
@@ -302,7 +302,7 @@ func TestACorDoMarcadorEDeUmConjuntoFechado(t *testing.T) {
 }
 
 // Revelar é o gesto seguinte a marcar, e é o que a mesa vê mudar.
-func TestRevelarOMarcadorOEntregaAMesa(t *testing.T) {
+func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
 	b := newBoard("t1", "Cripta", "cripta")
 	if err := AddMarker(b, BoardMarker{X: 1, Y: 1, Text: "A", Color: "ouro", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)

@@ -19,7 +19,7 @@ func recebe(t *testing.T, conn *SSEConn) string {
 	}
 }
 
-func TestOQuadroSaiNoFormatoDoFio(t *testing.T) {
+func TestTheFrameLeavesInTheWireFormat(t *testing.T) {
 	h := NewSSEHub()
 	conn := h.Add(7, "c1", "gm")
 
@@ -41,7 +41,7 @@ func TestOQuadroSaiNoFormatoDoFio(t *testing.T) {
 // O ESTADO SAI DUAS VEZES, e o recorte é por papel (ALE-122): inteiro para o
 // mestre, redigido para os jogadores. Um hub que ignorasse o papel entregaria a
 // fila inteira à mesa e passaria por todo teste que só conta mensagens.
-func TestOPapelRecortaODestinatario(t *testing.T) {
+func TestTheRoleNarrowsTheRecipient(t *testing.T) {
 	h := NewSSEHub()
 	mestre := h.Add(7, "c1", "gm")
 	jogador := h.Add(7, "c2", "player")
@@ -56,7 +56,7 @@ func TestOPapelRecortaODestinatario(t *testing.T) {
 	}
 }
 
-func TestPapelVazioVaiParaTodos(t *testing.T) {
+func TestAnEmptyRoleGoesToEveryone(t *testing.T) {
 	h := NewSSEHub()
 	mestre := h.Add(7, "c1", "gm")
 	jogador := h.Add(7, "c2", "player")
@@ -69,7 +69,7 @@ func TestPapelVazioVaiParaTodos(t *testing.T) {
 }
 
 // Sessão vizinha não escuta a sala alheia.
-func TestOutraSessaoNaoRecebe(t *testing.T) {
+func TestAnotherSessionDoesNotReceive(t *testing.T) {
 	h := NewSSEHub()
 	deOutraMesa := h.Add(8, "c1", "gm")
 
@@ -88,7 +88,7 @@ func TestOutraSessaoNaoRecebe(t *testing.T) {
 // pararia de transmitir por causa de um navegador. O quadro se perde de
 // propósito: quem perdeu reconecta e busca o estado por HTTP, que é o mesmo
 // caminho da primeira carga.
-func TestLeitorLentoNaoBloqueiaOBroadcast(t *testing.T) {
+func TestASlowReaderDoesNotBlockTheBroadcast(t *testing.T) {
 	h := NewSSEHub()
 	lento := h.Add(7, "c1", "gm")
 	rapido := h.Add(7, "c2", "gm")
@@ -107,7 +107,7 @@ func TestLeitorLentoNaoBloqueiaOBroadcast(t *testing.T) {
 	}
 }
 
-func TestSairFechaAFilaESomeDaSala(t *testing.T) {
+func TestLeavingClosesTheQueueAndVanishesFromTheRoom(t *testing.T) {
 	h := NewSSEHub()
 	conn := h.Add(7, "c1", "gm")
 
@@ -125,7 +125,7 @@ func TestSairFechaAFilaESomeDaSala(t *testing.T) {
 
 // Sair duas vezes acontece de verdade: o cliente manda `Leave` e a conexão cai
 // logo depois. A segunda não pode entrar em pânico fechando canal fechado.
-func TestSairDuasVezesNaoDerruba(t *testing.T) {
+func TestLeavingTwiceDoesNotCrash(t *testing.T) {
 	h := NewSSEHub()
 	h.Add(7, "c1", "gm")
 

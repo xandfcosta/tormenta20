@@ -10,7 +10,7 @@ import (
 
 // Os guardas dos CATÁLOGOS (ALE-258).
 
-// TestTodoValorDoLivroTemRotulo é o guarda GENÉRICO que a fatia do bestiário me
+// TestEveryBookValueHasALabel é o guarda GENÉRICO que a fatia do bestiário me
 // ensinou a escrever, e é a resposta certa ao defeito de lá.
 //
 // Naquela fatia um `sed` trocou a chave de um mapa de rótulos e 27 criaturas
@@ -23,7 +23,7 @@ import (
 // de magia nova, e não depende de alguém lembrar de acrescentar um caso.
 //
 // Provado VERMELHO removendo a linha "catalyst" do `rotuloDaCategoria`.
-func TestTodoValorDoLivroTemRotulo(t *testing.T) {
+func TestEveryBookValueHasALabel(t *testing.T) {
 	a := book.Catalogs()
 	if len(a.Magias) == 0 || len(a.Itens) == 0 {
 		t.Fatal("catálogo vazio: não há o que medir, e verde aqui não valeria nada")
@@ -55,9 +55,9 @@ func TestTodoValorDoLivroTemRotulo(t *testing.T) {
 	cobra("categoria", categorias, book.CategoryName)
 }
 
-// TestABuscaExigeTODOSOsTermos: "luz cur" só casa com o que carrega as duas
+// TestTheSearchRequiresEveryTerm: "luz cur" só casa com o que carrega as duas
 // coisas. É a regra que separa esta busca da das outras cenas.
-func TestABuscaExigeTODOSOsTermos(t *testing.T) {
+func TestTheSearchRequiresEveryTerm(t *testing.T) {
 	campos := []string{"Curar Ferimentos", "Restaura pontos de vida ao toque."}
 	casos := []struct {
 		busca string
@@ -83,8 +83,8 @@ func TestABuscaExigeTODOSOsTermos(t *testing.T) {
 	}
 }
 
-// TestOAcentoNaoSeparaNaBusca: ninguém digita til no meio da sessão.
-func TestOAcentoNaoSeparaNaBusca(t *testing.T) {
+// TestAnAccentDoesNotSplitTheSearch: ninguém digita til no meio da sessão.
+func TestAnAccentDoesNotSplitTheSearch(t *testing.T) {
 	campos := []string{"Ilusão Lacerante", "Cria uma imagem que fere."}
 	for _, busca := range []string{"ilusao", "Ilusão", "ILUSAO", "imagem"} {
 		if !casaTodosOsTermos(campos, busca) {
@@ -93,12 +93,12 @@ func TestOAcentoNaoSeparaNaBusca(t *testing.T) {
 	}
 }
 
-// TestBuscarVarreOsQUATROCatalogos, e não só a aba aberta.
+// TestSearchingSweepsTheFourCatalogs, e não só a aba aberta.
 //
 // É a ALE-22: a versão em React filtrava só a aba ativa, então "bola de fogo"
 // digitado na aba Condições dizia "nada encontrado" com a magia existindo. A
 // aba é para NAVEGAR sem termo; com termo, o assunto é o acervo inteiro.
-func TestBuscarVarreOsQuatroCatalogos(t *testing.T) {
+func TestSearchingSweepsTheFourCatalogs(t *testing.T) {
 	v := carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: "condicoes"}, enderecoDoLivro{})
 	if !v.Buscando() {
 		t.Fatal("a cena não se considerou em busca")
@@ -117,8 +117,8 @@ func TestBuscarVarreOsQuatroCatalogos(t *testing.T) {
 	}
 }
 
-// TestSemBuscaMostraSoAAbaAberta: sem termo a cena é um catálogo por vez.
-func TestSemBuscaMostraSoAAbaAberta(t *testing.T) {
+// TestWithoutASearchOnlyTheOpenTabShows: sem termo a cena é um catálogo por vez.
+func TestWithoutASearchOnlyTheOpenTabShows(t *testing.T) {
 	a := book.Catalogs()
 	for _, caso := range []struct {
 		aba     string
@@ -145,9 +145,9 @@ func TestSemBuscaMostraSoAAbaAberta(t *testing.T) {
 	}
 }
 
-// TestAbaInventadaCaiNaPrimeira: o `?aba=` é endereço e alguém o digita errado
+// TestAnInventedTabFallsBackToTheFirst: o `?aba=` é endereço e alguém o digita errado
 // — cair em tela vazia leria como catálogo quebrado.
-func TestAbaInventadaCaiNaPrimeira(t *testing.T) {
+func TestAnInventedTabFallsBackToTheFirst(t *testing.T) {
 	v := carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "grimorios-proibidos"}, enderecoDoLivro{})
 	if v.Aba != "condicoes" {
 		t.Errorf("aba %q, quero cair em condicoes", v.Aba)
@@ -157,12 +157,12 @@ func TestAbaInventadaCaiNaPrimeira(t *testing.T) {
 	}
 }
 
-// TestOsPoderesVemDosTRESCatalogos achatados, com a fonte preservada.
+// TestPowersComeFromTheThreeCatalogs achatados, com a fonte preservada.
 //
 // O achatamento é o ponto da ferramenta — o livro espalha poder por três
 // lugares e o mestre quer uma lista só —, e o que ele não pode perder é DE ONDE
 // veio. Sem a fonte, "Ataque Poderoso" não diz se é poder de classe ou geral.
-func TestOsPoderesVemDosTresCatalogos(t *testing.T) {
+func TestPowersComeFromTheThreeCatalogs(t *testing.T) {
 	fontes := map[string]int{}
 	for _, p := range book.Catalogs().Poderes {
 		switch {
@@ -197,12 +197,12 @@ func TestOsPoderesVemDosTresCatalogos(t *testing.T) {
 
 // ── a cena pelo fio ──────────────────────────────────────────────────────────
 
-// TestACenaDeUmCatalogoDesenhaOCatalogoInteiro.
+// TestACatalogSceneDrawsTheWholeCatalog.
 //
 // O endereço mudou na ALE-264: cada catálogo virou uma parada do trilho e ganhou
 // cena própria (`/mestre/condicoes`). Este guarda passou a pedir a cena
-// direto — quem cobra o endereço VELHO é o `TestOEnderecoVelhoDoAcervoRedireciona`.
-func TestACenaDeUmCatalogoDesenhaOCatalogoInteiro(t *testing.T) {
+// direto — quem cobra o endereço VELHO é o `TestTheOldCollectionAddressRedirects`.
+func TestACatalogSceneDrawsTheWholeCatalog(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -225,9 +225,9 @@ func TestACenaDeUmCatalogoDesenhaOCatalogoInteiro(t *testing.T) {
 	}
 }
 
-// TestOAcervoInteiroSaiNaAbaDePoderes: a decisão do dono foi mandar TUDO, sem
+// TestTheWholeCollectionComesOutInThePowersTab: a decisão do dono foi mandar TUDO, sem
 // teto nem paginação. Se alguém puser um `[:60]` aqui um dia, este guarda cai.
-func TestOAcervoInteiroSaiNaAbaDePoderes(t *testing.T) {
+func TestTheWholeCollectionComesOutInThePowersTab(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -243,9 +243,9 @@ func TestOAcervoInteiroSaiNaAbaDePoderes(t *testing.T) {
 	}
 }
 
-// TestABuscaNaURLValeNaCargaFria: `?busca=` é endereço, e um link colado no chat
+// TestTheSearchInTheUrlHoldsOnAColdLoad: `?busca=` é endereço, e um link colado no chat
 // da mesa tem de abrir já filtrado.
-func TestABuscaNaURLValeNaCargaFria(t *testing.T) {
+func TestTheSearchInTheUrlHoldsOnAColdLoad(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -259,7 +259,7 @@ func TestABuscaNaURLValeNaCargaFria(t *testing.T) {
 	}
 }
 
-// TestBuscarVarreOsOitoCatalogosDeQualquerCena.
+// TestSearchingSweepsTheEightCatalogsFromAnyScene.
 //
 // Este guarda cobrava a FILEIRA DE ABAS, que sumiu na ALE-264 — cada catálogo
 // virou uma parada do trilho, e ter as duas coisas seria o mesmo estado
@@ -267,7 +267,7 @@ func TestABuscaNaURLValeNaCargaFria(t *testing.T) {
 // cobra agora: com termo digitado a busca varre os OITO catálogos, não só o da
 // cena. É a ALE-22 — "bola de fogo" digitado em Condições dizia "nada
 // encontrado" com a magia existindo.
-func TestBuscarVarreOsOitoCatalogosDeQualquerCena(t *testing.T) {
+func TestSearchingSweepsTheEightCatalogsFromAnyScene(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -283,9 +283,9 @@ func TestBuscarVarreOsOitoCatalogosDeQualquerCena(t *testing.T) {
 	}
 }
 
-// TestOEnderecoVelhoDoAcervoRedireciona: `?aba=` foi o único endereço por duas
+// TestTheOldCollectionAddressRedirects: `?aba=` foi o único endereço por duas
 // fatias desta issue, e pode estar colado no chat de alguma mesa.
-func TestOEnderecoVelhoDoAcervoRedireciona(t *testing.T) {
+func TestTheOldCollectionAddressRedirects(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
@@ -304,7 +304,7 @@ func TestOEnderecoVelhoDoAcervoRedireciona(t *testing.T) {
 	}
 }
 
-// TestTodaAbaDoAcervoOfereceOLivro (ALE-264).
+// TestEveryCollectionTabOffersTheBook (ALE-264).
 //
 // AMOSTRAGEM e não enumeração: o teste percorre `abasDoAcervo`, então a aba que
 // entrar amanhã já nasce medida. Foi a lição da ALE-252 — guarda que nomeia cada
@@ -313,7 +313,7 @@ func TestOEnderecoVelhoDoAcervoRedireciona(t *testing.T) {
 // O CONTROLE é a segunda metade: sem livro configurado, a mesma cena não pode
 // trazer link nenhum. Sem ele, "achei `#page=`" seria verdade sobre um endereço
 // que a cena escreve de qualquer jeito.
-func TestTodaAbaDoAcervoOfereceOLivro(t *testing.T) {
+func TestEveryCollectionTabOffersTheBook(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 

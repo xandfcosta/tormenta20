@@ -32,7 +32,7 @@ func oItemDaFichaPorNome(t *testing.T, f pilotoFixture, id int64, nome string) s
 }
 
 // A FICHA DO ITEM oferece os lugares ALCANÇÁVEIS, e só eles.
-func TestAFichaDoItemOfereceOsLugaresAlcancaveis(t *testing.T) {
+func TestTheItemCardOffersTheReachablePlaces(t *testing.T) {
 	f, id := oCombatente(t)
 	semeiaItem(t, f, id, "adaga", "Adaga", "")
 	semeiaItem(t, f, id, "montante", "Montante", "")
@@ -77,7 +77,7 @@ func oFichaDoItemNaTela(tela, nome string) string {
 //
 // Deixar o cliente mandá-los abriria a porta para uma "Espada longa" de zero
 // espaços, que é carga de graça na mochila.
-func TestAdicionarDoCatalogoUsaOsNumerosDoLivro(t *testing.T) {
+func TestAddingFromTheCatalogUsesTheBookNumbers(t *testing.T) {
 	f, id := oCombatente(t)
 
 	if recusa := oComandoDaMochila(t, f, id, "itens/adiciona/espada-longa"); recusa != "" {
@@ -96,7 +96,7 @@ func TestAdicionarDoCatalogoUsaOsNumerosDoLivro(t *testing.T) {
 }
 
 // UM ITEM INVENTADO não entra pelo catálogo.
-func TestUmItemInventadoNaoEntraPeloCatalogo(t *testing.T) {
+func TestAnInventedItemDoesNotEnterThroughTheCatalog(t *testing.T) {
 	f, id := oCombatente(t)
 
 	if recusa := oComandoDaMochila(t, f, id, "itens/adiciona/espada-de-luz"); recusa == "" {
@@ -112,7 +112,7 @@ func TestUmItemInventadoNaoEntraPeloCatalogo(t *testing.T) {
 }
 
 // O ITEM CUSTOM exige nome, e os espaços são múltiplos de meio (p141).
-func TestOItemCustomExigeNomeEEspacosDeMeioEmMeio(t *testing.T) {
+func TestACustomItemRequiresANameAndHalfStepSlots(t *testing.T) {
 	f, id := oCombatente(t)
 
 	if recusa := oItemCustom(t, f, id, `{"itemnome":"  ","itemqtd":1,"itemespacos":1}`); recusa == "" {
@@ -137,7 +137,7 @@ func oItemCustom(t *testing.T, f pilotoFixture, id int64, corpo string) string {
 }
 
 // EDITAR muda os três campos, e REMOVER tira da ficha.
-func TestEditarERemoverUmItem(t *testing.T) {
+func TestEditingAndRemovingAnItem(t *testing.T) {
 	f, id := oCombatente(t)
 	item := semeiaItem(t, f, id, "", "Lembrança", "")
 
@@ -164,7 +164,7 @@ func TestEditarERemoverUmItem(t *testing.T) {
 }
 
 // USAR gasta a dose e aplica o que a MESA rolou, preso no máximo.
-func TestUsarGastaADoseEAplicaARolagemDaMesa(t *testing.T) {
+func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 	f := novoPiloto(t)
 	id := seedCharacterAtLevel(t, f.s, f.jogador, "Ferido", 3, 10, 30, 0, 0)
 	item := semeiaItem(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
@@ -190,7 +190,7 @@ func TestUsarGastaADoseEAplicaARolagemDaMesa(t *testing.T) {
 }
 
 // A CURA NÃO PASSA DO MÁXIMO, e é o motor que prende.
-func TestUsarNaoPassaDoPvMaximo(t *testing.T) {
+func TestUsingDoesNotGoPastMaximumHp(t *testing.T) {
 	f := novoPiloto(t)
 	id := seedCharacterAtLevel(t, f.s, f.jogador, "Quase cheio", 3, 28, 30, 0, 0)
 	item := semeiaItem(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
@@ -208,7 +208,7 @@ func TestUsarNaoPassaDoPvMaximo(t *testing.T) {
 }
 
 // O QUE NÃO É CONSUMÍVEL não se usa.
-func TestOQueNaoEConsumivelNaoSeUsa(t *testing.T) {
+func TestWhatIsNotConsumableCannotBeUsed(t *testing.T) {
 	f, id := oCombatente(t)
 	item := semeiaItem(t, f, id, "espada-longa", "Espada longa", "")
 
@@ -233,7 +233,7 @@ func oUso(t *testing.T, f pilotoFixture, id, item int64, corpo string) string {
 // `appliesTo` e não o lia, e o próprio `handleAddItem` registra a dívida em
 // comentário. Filtro de tela não recusa nada — um pedido montado à mão punha
 // corda de arco num escudo, e o servidor gravava.
-func TestAMelhoriaQueNaoCabeERecusadaPeloServidor(t *testing.T) {
+func TestAnImprovementThatDoesNotFitIsRefusedByTheServer(t *testing.T) {
 	f, id := oCombatente(t)
 	escudo := semeiaItem(t, f, id, "escudo-leve", "Escudo leve", "")
 
@@ -264,7 +264,7 @@ func TestAMelhoriaQueNaoCabeERecusadaPeloServidor(t *testing.T) {
 // asserção: ele é quem esconde o BOTÃO na tela, e é o que segura uma
 // sobreposição futura que chegue sem `appliesTo` — que, pela regra de "sem
 // restrição serve a todos", entraria numa poção.
-func TestUmConsumivelNaoRecebeMelhoria(t *testing.T) {
+func TestAConsumableTakesNoImprovement(t *testing.T) {
 	f, id := oCombatente(t)
 	balsamo := semeiaItem(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
@@ -279,7 +279,7 @@ func TestUmConsumivelNaoRecebeMelhoria(t *testing.T) {
 }
 
 // UMA MELHORIA INVENTADA não entra.
-func TestUmaMelhoriaInventadaNaoEntra(t *testing.T) {
+func TestAnInventedImprovementDoesNotEnter(t *testing.T) {
 	f, id := oCombatente(t)
 	espada := semeiaItem(t, f, id, "espada-longa", "Espada longa", "")
 
@@ -292,7 +292,7 @@ func TestUmaMelhoriaInventadaNaoEntra(t *testing.T) {
 }
 
 // O DIÁLOGO só oferece o que cabe na família do item.
-func TestODialogoDeMelhoriasSoOfereceOQueCabe(t *testing.T) {
+func TestTheImprovementsDialogOnlyOffersWhatFits(t *testing.T) {
 	f, id := oCombatente(t)
 	semeiaItem(t, f, id, "espada-longa", "Espada longa", "")
 	tela := aTelaDaMochila(t, f, id)

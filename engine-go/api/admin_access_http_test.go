@@ -31,7 +31,7 @@ func seedMesa(t *testing.T) mesaFixture {
 	return f
 }
 
-func TestAdminReachesAnotherPlayersMesa(t *testing.T) {
+func TestAdminReachesAnotherPlayersCampaign(t *testing.T) {
 	f := seedMesa(t)
 	campaign := "/campaigns/" + id64(f.campaignID)
 
@@ -120,7 +120,7 @@ func TestAStrangerStillReachesNothing(t *testing.T) {
 	}
 }
 
-func TestTheAdminListSeesEveryMesaAndSaysWhoseItIs(t *testing.T) {
+func TestTheAdminListSeesEveryCampaignAndSaysWhoseItIs(t *testing.T) {
 	f := seedMesa(t)
 
 	rec := authed(t, f.server, f.admin, http.MethodGet, "/campaigns", "")

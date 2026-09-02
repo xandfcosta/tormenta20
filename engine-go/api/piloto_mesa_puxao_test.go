@@ -23,7 +23,7 @@ import (
 // sobre o mapa passaria por cima justamente de quem nunca mexeu em nada — que na
 // mesa é a maioria. Por isso o puxão é um contador da SESSÃO, e o zero de quem
 // nunca apareceu é menor que qualquer puxão.
-func TestOPuxaoAlcancaQuemNuncaEscolheuAba(t *testing.T) {
+func TestThePullReachesWhoNeverChoseATab(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra") // a padrão, onde o jogador está sem ter escolhido
 	cripta := f.abreSegunda(t, "Cripta")
@@ -60,7 +60,7 @@ func TestOPuxaoAlcancaQuemNuncaEscolheuAba(t *testing.T) {
 // do stream não pode devolvê-lo à cena do mestre. Uma trava disfarçada seria o
 // pior dos dois mundos: a tela oferece o gesto de voltar e o servidor o desfaz,
 // e a pessoa clica três vezes achando que o clique não pegou.
-func TestDepoisDoPuxaoOJogadorVoltaAEscolher(t *testing.T) {
+func TestAfterThePullThePlayerChoosesAgain(t *testing.T) {
 	f := novoPiloto(t)
 	taverna := f.abreTabuleiro(t, "pedra")
 	cripta := f.abreSegunda(t, "Cripta")
@@ -83,7 +83,7 @@ func TestDepoisDoPuxaoOJogadorVoltaAEscolher(t *testing.T) {
 //
 // Ela é o ponto desta fatia: "parem tudo e olhem isto" é do mestre. Um jogador
 // que puxasse tiraria dos outros cinco exatamente o que a fatia 1 lhes deu.
-func TestOJogadorNaoMostraNadaAMesa(t *testing.T) {
+func TestThePlayerShowsNothingToTheTable(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	cripta := f.abreSegunda(t, "Cripta")
@@ -115,7 +115,7 @@ func TestOJogadorNaoMostraNadaAMesa(t *testing.T) {
 // jogador na padrão, "voltar para a escolha dele" e "cair na padrão" dão a MESMA
 // tela, e a sabotagem que arranca a queda passou VERDE. Duas quedas diferentes
 // só se distinguem quando a escolha da pessoa não é a padrão.
-func TestOPuxaoParaUmaCenaEncerradaDevolveAAbaDeQuemOlha(t *testing.T) {
+func TestAPullToAnEndedSceneGivesBackTheViewersOwnTab(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra") // "Taverna do Javali", a PADRÃO
 	ponte := f.abreSegunda(t, "Ponte de Corda")
@@ -153,7 +153,7 @@ func TestOPuxaoParaUmaCenaEncerradaDevolveAAbaDeQuemOlha(t *testing.T) {
 // para essa mesma aba não muda cena nenhuma para ele — e sem a tira e sem o
 // empurrão de superfície, "parem tudo e olhem isto" não faria absolutamente nada
 // na tela de quem nunca tocou em nada.
-func TestOPuxaoParaAAbaEmQueOJogadorJaEstaAindaOAvisa(t *testing.T) {
+func TestAPullToTheTabThePlayerIsAlreadyOnStillTellsThem(t *testing.T) {
 	f := novoPiloto(t)
 	taverna := f.abreTabuleiro(t, "pedra") // a padrão, onde o jogador já está
 	f.abreSegunda(t, "Cripta")
@@ -187,7 +187,7 @@ func TestOPuxaoParaAAbaEmQueOJogadorJaEstaAindaOAvisa(t *testing.T) {
 //
 // Mede o FIO, e não o estado: o que este caso prende é quantas vezes o remendo
 // de sinal SAI, que é a coisa que a pessoa sente.
-func TestASuperficieEEmpurradaUmaVezPorPuxao(t *testing.T) {
+func TestTheSurfaceIsPushedOncePerPull(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 	cripta := f.abreSegunda(t, "Cripta")

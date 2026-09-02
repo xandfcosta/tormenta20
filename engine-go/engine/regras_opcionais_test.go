@@ -18,7 +18,7 @@ import (
 // só do rótulo da mochila. Roda por `ComputeSheetV2` pela mesma razão do teste
 // irmão da sobrecarga: o defeito que ele mira não é a conta, é ela chegar (ou
 // deixar de chegar) ao deslocamento e às perícias.
-func TestCargaDesligadaNaoPenalizaDeslocamentoNemPericias(t *testing.T) {
+func TestLoadTurnedOffPenalizesNeitherDisplacementNorExpertises(t *testing.T) {
 	catalogs := primeFromDump(t, filepath.Clean(filepath.Join(mustWd(t), "..", "parity")))
 	pericias := []CharacterExpertise{{Name: "Furtividade", Attribute: "dexterity"}}
 	// Força 0 ⇒ limite 10; onze espaços ultrapassam com folga.
@@ -46,7 +46,7 @@ func TestCargaDesligadaNaoPenalizaDeslocamentoNemPericias(t *testing.T) {
 // A metade que sobrevive: os espaços continuam contados. O livro condiciona o
 // desligamento a "desde que os jogadores não abusem", e quem vigia abuso precisa
 // do número na tela.
-func TestCargaDesligadaAindaCONTAOsEspacos(t *testing.T) {
+func TestLoadTurnedOffStillCountsTheSlots(t *testing.T) {
 	ch := Character{
 		Tibar:        2000,
 		Items:        []CharacterItem{{Name: "Barril", Quantity: 1, Slots: 11}},
@@ -77,7 +77,7 @@ func TestCargaDesligadaAindaCONTAOsEspacos(t *testing.T) {
 // O valor zero da struct significa TUDO EM VIGOR, e isso é a proteção do
 // desenho: um `Character{}` literal — num teste, num fixture, no oráculo —
 // calcula com as regras do livro sem ninguém lembrar de preencher nada.
-func TestValorZeroSignificaTodasAsRegrasEmVigor(t *testing.T) {
+func TestZeroMeansEveryRuleInForce(t *testing.T) {
 	got := cargaBreakdown(Character{Items: []CharacterItem{{Quantity: 1, Slots: 11}}}, 10)
 
 	if !got.Enforced {
@@ -92,7 +92,7 @@ func TestValorZeroSignificaTodasAsRegrasEmVigor(t *testing.T) {
 // seguro: a lista vive no banco e sobrevive a um rollback do servidor, então uma
 // regra do futuro não pode derrubar a ficha nem — pior — afrouxar uma regra por
 // acidente. Ela simplesmente continua em vigor.
-func TestRegraDesconhecidaNaLeituraNaoDesligaNada(t *testing.T) {
+func TestAnUnknownRuleOnReadTurnsNothingOff(t *testing.T) {
 	got := IgnoredRulesFrom([]string{"carga", "custo-de-vida-do-futuro"})
 
 	if !got.Carga {

@@ -153,7 +153,7 @@ func listaDeIDs(ids []string) string { return strings.Join(ids, ",") }
 // o botão mora na região do MAPA, e id de combatente é dado da FILA. Embutido
 // ali, qualquer mudança na fila mudaria o HTML do mapa e o remendo trocaria a
 // peça debaixo do dedo do mestre no meio do arrasto — foi exatamente isso que o
-// `TestUmaMudancaNaFilaNaoRemendaOMapa` acusou na primeira versão.
+// `TestATrackerChangeDoesNotPatchTheMap` acusou na primeira versão.
 const fichasDoDialogo = "[...document.querySelectorAll('#por-no-mapa [data-ficha]')]" +
 	".map((e) => e.dataset.id).join(',')"
 
