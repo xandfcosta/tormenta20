@@ -137,7 +137,7 @@ templ configDaSessao(v mesaView) {
 				<button
 					type="button"
 					data-on:click="document.getElementById('config-da-sessao').close(); document.getElementById('excluir-a-sessao').showModal()"
-					class="inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive-ink outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>Excluir</button>
 			}
 		</div>
@@ -163,7 +163,7 @@ templ confirmaExcluirSessao(v mesaView) {
 		aria-labelledby="excluir-a-sessao-titulo"
 		class="scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-destructive bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="excluir-a-sessao-titulo" class="font-heading text-lg tracking-wide text-destructive">Excluir a sessão { fmt.Sprint(v.SessionNum) }?</h2>
+		<h2 id="excluir-a-sessao-titulo" class="font-heading text-lg tracking-wide text-destructive-ink">Excluir a sessão { fmt.Sprint(v.SessionNum) }?</h2>
 		<p class="mt-2 text-sm text-muted-foreground">
 			A fila, o tabuleiro e o histórico desta noite vão junto. As fichas e a campanha ficam como estão. Não dá para desfazer.
 		</p>

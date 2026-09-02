@@ -285,7 +285,7 @@ templ mesaTabuleiro(v mesaView) {
 			data-show="$erroDoMovimento != ''"
 			data-text="$erroDoMovimento"
 			aria-live="assertive"
-			class="px-1 pt-1 text-xs text-destructive"
+			class="px-1 pt-1 text-xs text-destructive-ink"
 		></p>
 	</div>
 }
@@ -509,7 +509,7 @@ templ mesaRegistrar(v mesaView) {
 		>
 			Registrar
 		</button>
-		<p class="text-xs text-destructive" data-show="$erro != ''" data-text="$erro"></p>
+		<p class="text-xs text-destructive-ink" data-show="$erro != ''" data-text="$erro"></p>
 	</section>
 }
 
@@ -635,7 +635,7 @@ templ verbosDaLinha(v mesaView, l mesaLinha) {
 			aria-label={ "Remover " + l.Rotulo + " da fila" }
 			title={ "Remover " + l.Rotulo + " da fila" }
 			data-on:click={ comandoDaLinha(v, l, "remove") }
-			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			@ui.Icon("Trash2", "size-4")
 		</button>

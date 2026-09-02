@@ -132,7 +132,7 @@ templ aComposicao(v encontrosView) {
 							type="button"
 							aria-label={ "Remover " + l.Verbete.Name + " do encontro" }
 							data-on:click={ fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Verbete.ID) }
-							class="flex size-11 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="flex size-11 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>✕</button>
 					</div>
 				</li>

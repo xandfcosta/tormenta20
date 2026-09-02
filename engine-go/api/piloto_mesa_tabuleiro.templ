@@ -428,7 +428,7 @@ templ osVerbosDaCena(v tabuleiroView) {
 				aria-label="Encerrar o tabuleiro"
 				title="Encerrar o tabuleiro"
 				data-on:click="document.getElementById('encerrar-tabuleiro').showModal()"
-				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("X", "size-4")
 			</button>
@@ -809,7 +809,7 @@ templ oMovimentoProposto(v tabuleiroView) {
 			<button
 				type="button"
 				data-on:click={ comandoDoMovimento(v, "cancelar") }
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			// CONFIRMAR é do MESTRE, e só dele: quem muda o estado do tabuleiro é
 			// quem toca a cena. O desenho do jogador é sempre visual — ele conta à
@@ -1102,7 +1102,7 @@ templ acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) {
 			aria-label={ "Apagar o marcador " + m.Texto }
 			title="Apagar"
 			data-on:click={ escolheOMarcador("") + "; " + comandoDoMarcador(v, m.ID, "remover") }
-			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-muted-foreground outline-none hover:border hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-muted-foreground outline-none hover:border hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>
 			@ui.Icon("X", "size-4")
 		</button>
@@ -1300,7 +1300,7 @@ templ oAcervoDeLugares(v tabuleiroView) {
 							aria-label={ "Apagar " + l.Nome }
 							title={ "Apagar " + l.Nome + " do acervo" }
 							data-on:click={ comandoDoLugar(v, l.ID, "remover") }
-							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>
 							@ui.Icon("Trash2", "size-4")
 						</button>

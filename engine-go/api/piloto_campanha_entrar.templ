@@ -43,7 +43,7 @@ templ campanhaEntrar(v campanhaEntrarView) {
 				@escolhaDoHeroi(v)
 			}
 			if v.Aviso != "" {
-				<p class="text-sm text-destructive">{ v.Aviso }</p>
+				<p class="text-sm text-destructive-ink">{ v.Aviso }</p>
 			}
 			// O botão SOME quando não há o que enviar — convite morto ou elenco
 			// vazio —, em vez de ficar desabilitado como na SPA. Divergência
@@ -81,7 +81,7 @@ templ cartaDoConvite(v campanhaEntrarView) {
 					Você foi convidado para <span class="font-semibold text-grimorio-gold">{ v.NomeDaCampanha }</span>.
 				</p>
 			} else {
-				<p class="text-sm text-destructive">
+				<p class="text-sm text-destructive-ink">
 					Convite inválido ou expirado. Peça um novo link ao mestre.
 				</p>
 			}
@@ -104,7 +104,7 @@ templ escolhaDoHeroi(v campanhaEntrarView) {
 		</div>
 		if len(v.Erros["characterId"]) > 0 {
 			for _, e := range v.Erros["characterId"] {
-				<p class="text-sm text-destructive">{ e }</p>
+				<p class="text-sm text-destructive-ink">{ e }</p>
 			}
 		}
 	</fieldset>

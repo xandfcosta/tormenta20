@@ -28,7 +28,7 @@ templ attributesBody(v attributesView) {
 		</p>
 		@pointCount(v)
 		if v.Refusal != "" {
-			<p role="alert" class="text-center text-sm text-destructive">{ v.Refusal }</p>
+			<p role="alert" class="text-center text-sm text-destructive-ink">{ v.Refusal }</p>
 		}
 		<div data-nav-region="content" data-nav-layout="column" class="space-y-2">
 			for _, linha := range v.Rows {
