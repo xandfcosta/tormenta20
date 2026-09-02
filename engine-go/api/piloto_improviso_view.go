@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"sync"
 
-	"t20engine/catalog"
+	"t20engine/book"
 	"t20engine/engine"
 )
 
@@ -21,87 +20,6 @@ import (
 // sinais — mesma forma do rascunho do encontro (ALE-259), pela mesma razão: o
 // mestre rola várias vezes seguidas e cada rolagem não pode virar uma entrada no
 // histórico do navegador.
-
-// ── as tabelas, lidas uma vez ────────────────────────────────────────────────
-
-type linhaDeRuina struct {
-	RollMin int    `json:"rollMin"`
-	RollMax int    `json:"rollMax"`
-	Outcome string `json:"outcome"`
-	Label   string `json:"label"`
-}
-
-func (l linhaDeRuina) Cobre(r int) bool { return r >= l.RollMin && r <= l.RollMax }
-
-type linhaDePerseguicao struct {
-	RollMin int     `json:"rollMin"`
-	RollMax int     `json:"rollMax"`
-	Kind    string  `json:"kind"`
-	Test    *string `json:"test"`
-	CD      *int    `json:"cd"`
-	Example string  `json:"example"`
-}
-
-func (l linhaDePerseguicao) Cobre(r int) bool { return r >= l.RollMin && r <= l.RollMax }
-
-// linhaDeRecompensa é a única das três que casa por valor EXATO e não por
-// faixa: a tabela de recompensa/castigo tem uma linha por face do d6.
-type linhaDeRecompensa struct {
-	Roll    int    `json:"roll"`
-	Reward  string `json:"reward"`
-	Castigo string `json:"castigo"`
-}
-
-func (l linhaDeRecompensa) Cobre(r int) bool { return l.Roll == r }
-
-type ideiaDeMasmorra struct {
-	Roll  int    `json:"roll"`
-	Label string `json:"label"`
-}
-
-func (i ideiaDeMasmorra) Cobre(r int) bool { return i.Roll == r }
-
-type tamanhoDeMasmorra struct {
-	Size                   string `json:"size"`
-	Label                  string `json:"label"`
-	MinRooms               int    `json:"minRooms"`
-	MaxRooms               int    `json:"maxRooms"`
-	Pacing                 string `json:"pacing"`
-	MaxSecondaryObjectives int    `json:"maxSecondaryObjectives"`
-}
-
-type tabelasDoMestre struct {
-	Ruina         []linhaDeRuina       `json:"ruina"`
-	ChaseEvents   []linhaDePerseguicao `json:"chaseEvents"`
-	RewardCastigo []linhaDeRecompensa  `json:"rewardCastigo"`
-	RewardLabels  map[string]string    `json:"rewardLabels"`
-	CastigoLabels map[string]string    `json:"castigoLabels"`
-}
-
-type desenhoDeMasmorra struct {
-	Sizes          []string            `json:"sizes"`
-	SizeTable      []tamanhoDeMasmorra `json:"sizeTable"`
-	RoomsPerThreat int                 `json:"roomsPerThreat"`
-	Ideas          []ideiaDeMasmorra   `json:"ideas"`
-}
-
-var (
-	improvisoUmaVez sync.Once
-	tabelasCap6     tabelasDoMestre
-	masmorras       desenhoDeMasmorra
-)
-
-func tabelasDoImproviso() (tabelasDoMestre, desenhoDeMasmorra) {
-	improvisoUmaVez.Do(func() {
-		if bruto, ok := catalog.Resource("gm-tables"); ok {
-			_ = json.Unmarshal(bruto, &tabelasCap6)
-		}
-		if bruto, ok := catalog.Resource("dungeon-design"); ok {
-			_ = json.Unmarshal(bruto, &masmorras)
-		}
-	})
-	return tabelasCap6, masmorras
-}
 
 // ── o que a tela guarda ──────────────────────────────────────────────────────
 
@@ -131,7 +49,7 @@ type improvisoView struct {
 	Ideias      []sorteio
 	// A masmorra não é sorteio: é uma conta sobre o número de salas.
 	Salas   int
-	Tamanho *tamanhoDeMasmorra
+	Tamanho *book.DungeonSize
 	Ameacas int
 	// AcimaDoTeto diz que o número de salas passou do maior tamanho do livro.
 	// Não é erro: é o livro recomendando parar, e a tela diz isso em vez de
@@ -147,7 +65,7 @@ const (
 
 // carregaImproviso monta a cena a partir dos históricos que vieram nos sinais.
 func carregaImproviso(v improvisoView) improvisoView {
-	_, masmorra := tabelasDoImproviso()
+	_, masmorra := book.ImprovTables()
 	v.Salas = aperta(v.Salas, salasMinimo, salasMaximo, salasPadrao)
 
 	for i := range masmorra.SizeTable {
@@ -177,7 +95,7 @@ func empilha(historico []sorteio, novo sorteio) []sorteio {
 
 // rolaRuina: Tabela 6-4, d6, p272.
 func rolaRuina() (sorteio, error) {
-	t, _ := tabelasDoImproviso()
+	t, _ := book.ImprovTables()
 	d, err := engine.RollDie(6)
 	if err != nil {
 		return sorteio{}, err
@@ -204,7 +122,7 @@ func rolaRuina() (sorteio, error) {
 // O `nil` do teste é significativo: na faixa 1-6 não há o que rolar, e um
 // "CD 0" diria que existe um teste trivial em vez de nenhum.
 func rolaPerseguicao() (sorteio, error) {
-	t, _ := tabelasDoImproviso()
+	t, _ := book.ImprovTables()
 	d, err := engine.RollDie(20)
 	if err != nil {
 		return sorteio{}, err
@@ -241,7 +159,7 @@ func nomeDoEvento(k string) string { return rotuloOuCru(rotuloDoEvento, k) }
 // rolaRecompensa devolve as DUAS pontas: a tabela dá recompensa e castigo na
 // mesma linha, e separá-las esconderia que elas são um par.
 func rolaRecompensa() (sorteio, error) {
-	t, _ := tabelasDoImproviso()
+	t, _ := book.ImprovTables()
 	d, err := engine.RollDie(6)
 	if err != nil {
 		return sorteio{}, err
@@ -259,7 +177,7 @@ func rolaRecompensa() (sorteio, error) {
 
 // rolaIdeia: Tabela 6-2, d20, p263.
 func rolaIdeia() (sorteio, error) {
-	_, m := tabelasDoImproviso()
+	_, m := book.ImprovTables()
 	d, err := engine.RollDie(20)
 	if err != nil {
 		return sorteio{}, err

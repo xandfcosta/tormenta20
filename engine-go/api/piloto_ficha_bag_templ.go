@@ -1075,9 +1075,9 @@ func bagFilters(v fichaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var51 string
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(chip.Ativo))
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(chip.Ativo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag.templ`, Line: 271, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag.templ`, Line: 271, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {

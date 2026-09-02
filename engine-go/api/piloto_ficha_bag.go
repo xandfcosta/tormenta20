@@ -370,8 +370,8 @@ func loadMeterOf(sheet engine.ComputedSheetV2) loadMeter {
 		Overloaded:          carga.Overloaded,
 		OverMax:             carga.OverMax,
 		Enforced:            carga.Enforced,
-		ArmorPenalty:        comSinalInt(carga.ArmorPenalty),
-		DisplacementPenalty: comSinalInt(carga.DisplacementPenalty),
+		ArmorPenalty:        book.WithSign(carga.ArmorPenalty),
+		DisplacementPenalty: book.WithSign(carga.DisplacementPenalty),
 		LimitLabel:          oRotuloDoLimite(carga.Limit, sheet.Attributes["strength"].Total),
 	}
 }
@@ -392,7 +392,7 @@ func aLarguraDaBarra(usado float64, limite int) int {
 // resolvido — e não a notação "10 + 2×|FOR|", que manda a pessoa fazer a conta
 // de cabeça para conferir o número que já está do lado.
 func oRotuloDoLimite(limite, forca int) string {
-	return "limite " + strconv.Itoa(limite) + " · 10 + 2×For " + comSinalInt(forca)
+	return "limite " + strconv.Itoa(limite) + " · 10 + 2×For " + book.WithSign(forca)
 }
 
 // moneyLineOf escreve o dinheiro e o espaço que ele ocupa.

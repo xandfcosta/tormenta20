@@ -51,7 +51,7 @@ func TestTheEmDashSurvivesTheParse(t *testing.T) {
 			"o campo virou `int` e `null` virou zero", semInteligencia, semForca)
 	}
 	if got := book.WithSignPtr(nil); got != "—" {
-		t.Errorf("comSinal(nil) = %q, quero o travessão %q", got, "—")
+		t.Errorf("book.WithSignPtr(nil) = %q, quero o travessão %q", got, "—")
 	}
 }
 

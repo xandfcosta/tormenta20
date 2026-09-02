@@ -434,7 +434,8 @@ var categoryLabel = map[string]string{
 	"vehicle":        "Veículo",
 }
 
-// comSinalInt escreve o modificador como o livro: "+2", "-1".
+// WithSign escreve o modificador como o livro: "+2", "-1". O irmão que aceita
+// ausência é o `WithSignPtr`, no `bestiary.go`.
 func WithSign(n int) string {
 	if n >= 0 {
 		return "+" + strconv.Itoa(n)

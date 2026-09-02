@@ -664,9 +664,9 @@ func overlayDialog(v fichaView, ficha itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var36 string
-				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(escolha.Ativa))
+				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(escolha.Ativa))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 157, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_bag_dialogs.templ`, Line: 157, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 				if templ_7745c5c3_Err != nil {

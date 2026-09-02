@@ -112,16 +112,6 @@ func ndNaCaixa(nd float64) string {
 	return strconv.FormatFloat(nd, 'g', -1, 64)
 }
 
-// comSinalInt é o irmão do `comSinal` para os campos que NÃO podem ser
-// travessão: iniciativa, percepção e as três resistências existem em todas as
-// criaturas do livro.
-func comSinalInt(n int) string {
-	if n >= 0 {
-		return "+" + strconv.Itoa(n)
-	}
-	return strconv.Itoa(n)
-}
-
 // sinaisDoBestiario: o estado da tela que o Datastar mantém no cliente.
 //
 // São só os quatro CRITÉRIOS mais a criatura aberta — nada de lista, nada de

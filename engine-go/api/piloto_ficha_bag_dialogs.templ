@@ -154,7 +154,7 @@ templ overlayDialog(v fichaView, ficha itemSheet) {
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ boolTexto(escolha.Ativa) }
+					aria-checked={ ui.AriaBool(escolha.Ativa) }
 					aria-label={ escolha.Nome }
 					data-on:click={ oGestoQueAlternaAMelhoria(escolha) }
 					data-attr:data-escolhida={ oSinalDaMelhoria(escolha) }

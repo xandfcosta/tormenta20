@@ -52,7 +52,7 @@ func RollDie(faces int) (Roll, error) {
 // RollRange é uma linha que cobre um intervalo de resultados — "1-2" na
 // tabela de ruínas.
 type RollRange interface {
-	Cobre(rolagem int) bool
+	Covers(rolagem int) bool
 }
 
 // RowForRoll acha a linha que cobre a rolagem.
@@ -64,7 +64,7 @@ type RollRange interface {
 func RowForRoll[T RollRange](linhas []T, rolagem int, tabela string) (T, error) {
 	var vazio T
 	for _, l := range linhas {
-		if l.Cobre(rolagem) {
+		if l.Covers(rolagem) {
 			return l, nil
 		}
 	}

@@ -3,6 +3,7 @@ package api
 import (
 	"strconv"
 
+	"t20engine/book"
 	"t20engine/engine"
 	"t20engine/sheet"
 )
@@ -229,7 +230,7 @@ func defenseTile(sheet engine.ComputedSheetV2) statTile {
 func attackTile(key, label, title string, ex engine.ExpertiseBreakdown, all engine.TotalContribs) statTile {
 	return statTile{
 		Key: key, Label: label, Title: title, Icon: iconForAttack(key),
-		Value: comSinalInt(ex.Total + all.Total),
+		Value: book.WithSign(ex.Total + all.Total),
 		Rows:  expertiseRows(ex, &all),
 	}
 }
@@ -252,7 +253,7 @@ func saveTiles(sheet engine.ComputedSheetV2) []statTile {
 		ex := expertiseOrZero(sheet, save.Name, save.Attribute)
 		tiles = append(tiles, statTile{
 			Key: "save-" + save.Abbr, Label: shortSaveLabel(save.Name), Title: save.Name,
-			Icon: "ShieldCheck", Value: comSinalInt(ex.Total), Rows: expertiseRows(ex, nil),
+			Icon: "ShieldCheck", Value: book.WithSign(ex.Total), Rows: expertiseRows(ex, nil),
 		})
 	}
 	return tiles
@@ -272,7 +273,7 @@ func attributeTiles(sheet engine.ComputedSheetV2) []attributeTile {
 	for _, key := range engine.AttributeKeys {
 		tiles = append(tiles, attributeTile{
 			Abbr:  attributeAbbr[key],
-			Value: comSinalInt(sheet.Attributes[key].Total),
+			Value: book.WithSign(sheet.Attributes[key].Total),
 		})
 	}
 	return tiles
@@ -289,7 +290,7 @@ func magicTiles(sheet engine.ComputedSheetV2, caster bool) []statTile {
 		{Key: "spell-dc", Label: "CD Magia", Title: "CD dos testes de resistência das suas magias",
 			Icon: "Sparkles", Magic: true, Value: strconv.Itoa(spellDcTotal(sheet)), Rows: spellDcRows(sheet)},
 		{Key: "pm-cost", Label: "Custo PM", Title: "Modificador de custo de PM", Icon: "Sparkles",
-			Magic: true, Value: comSinalInt(sheet.PmCostMod.Total), Rows: pmCostRows(sheet)},
+			Magic: true, Value: book.WithSign(sheet.PmCostMod.Total), Rows: pmCostRows(sheet)},
 	}
 }
 
@@ -312,7 +313,7 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			Key:        "weapon-" + strconv.Itoa(i),
 			Name:       card.Name,
 			Skill:      card.Skill,
-			Attack:     comSinalInt(card.Attack),
+			Attack:     book.WithSign(card.Attack),
 			Damage:     damageLabel(card),
 			Crit:       critLabel(card),
 			AttackRows: attackRows,
@@ -328,7 +329,7 @@ func damageLabel(card engine.WeaponCard) string {
 	if card.DamageBonus == 0 {
 		return card.Damage
 	}
-	return card.Damage + comSinalInt(card.DamageBonus)
+	return card.Damage + book.WithSign(card.DamageBonus)
 }
 
 // critLabel é "19-20/x3". Margem 20 se escreve sozinha, e não como "20-20".

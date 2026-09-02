@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strings"
+	"t20engine/book"
 	"t20engine/web/ui"
 	"testing"
 )
@@ -21,7 +22,7 @@ import (
 // buraco é o defeito real aqui, e ele é invisível até alguém rolar o número que
 // falta no meio de uma sessão.
 func TestEveryDieFaceHitsARow(t *testing.T) {
-	tab, masmorra := tabelasDoImproviso()
+	tab, masmorra := book.ImprovTables()
 	if len(tab.Ruina) == 0 || len(tab.ChaseEvents) == 0 || len(masmorra.Ideas) == 0 {
 		t.Fatal("tabelas vazias: o catálogo não carregou, e verde aqui não valeria nada")
 	}
@@ -43,10 +44,10 @@ func TestEveryDieFaceHitsARow(t *testing.T) {
 	}
 }
 
-func linhaOuErro[T interface{ Cobre(int) bool }](linhas []T, face int) (T, error) {
+func linhaOuErro[T interface{ Covers(int) bool }](linhas []T, face int) (T, error) {
 	var vazio T
 	for _, l := range linhas {
-		if l.Cobre(face) {
+		if l.Covers(face) {
 			return l, nil
 		}
 	}
@@ -66,7 +67,7 @@ func errFaceSemLinha(f int) error { return erroDeFace(f) }
 // saía como "4 —", porque na faixa "nenhum evento" o exemplo do livro é um
 // travessão. Só apareceu ao olhar a captura de tela.
 func TestTheEventTypeAndNotTheExample(t *testing.T) {
-	tab, _ := tabelasDoImproviso()
+	tab, _ := book.ImprovTables()
 	vistos := map[string]bool{}
 	// 200 rolagens visitam as três faixas com folga; o que se mede é o FORMATO
 	// da resposta, não o sorteio.

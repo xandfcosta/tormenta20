@@ -93,7 +93,7 @@ func TestAnUncoveredRollIsAnError(t *testing.T) {
 
 type faixaDeTeste struct{ min, max int }
 
-func (f faixaDeTeste) Cobre(r int) bool { return r >= f.min && r <= f.max }
+func (f faixaDeTeste) Covers(r int) bool { return r >= f.min && r <= f.max }
 
 func contem(s, sub string) bool {
 	for i := 0; i+len(sub) <= len(s); i++ {

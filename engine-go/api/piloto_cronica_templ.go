@@ -1563,9 +1563,9 @@ func interruptorDaRegra(v cronicaView, regra regraOpcional) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var65 string
-		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(v.RegraEmVigor(regra.ID)))
+		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(v.RegraEmVigor(regra.ID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 419, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 419, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 		if templ_7745c5c3_Err != nil {
@@ -1640,13 +1640,6 @@ func interruptorDaRegra(v cronicaView, regra regraOpcional) templ.Component {
 		}
 		return nil
 	})
-}
-
-func boolTexto(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
 }
 
 // A zona de perigo é selada em crimson porque excluir é irreversível, e o texto
@@ -1754,7 +1747,7 @@ func dialogoDeExclusao(v cronicaView) templ.Component {
 		var templ_7745c5c3_Var74 string
 		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(v.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 479, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 473, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 		if templ_7745c5c3_Err != nil {
@@ -1793,7 +1786,7 @@ func dialogoDeExclusao(v cronicaView) templ.Component {
 		var templ_7745c5c3_Var76 templ.SafeURL
 		templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/campanhas/%d/excluir", v.ID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 492, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_cronica.templ`, Line: 486, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 		if templ_7745c5c3_Err != nil {

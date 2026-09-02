@@ -336,7 +336,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 			for _, t := range book.CreatureTypes {
 				<button
 					type="button"
-					aria-pressed={ boolTexto(v.tipoAceso(t)) }
+					aria-pressed={ ui.AriaBool(v.tipoAceso(t)) }
 					data-on:click={ fmt.Sprintf("@post('%s/tipo/%s')", v.bestiarioBase(), t) }
 					if v.tipoAceso(t) {
 						class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -509,8 +509,8 @@ templ blocoDoVerbete(m book.Entry, livro bookui.BookAddress) {
 				// (p289), e o mestre rola as duas antes de qualquer outra coisa
 				// no combate.
 				<div class="grid grid-cols-2 gap-2">
-					@estatistica("Iniciativa", comSinalInt(m.Iniciativa))
-					@estatistica("Percepção", comSinalInt(m.Percepcao))
+					@estatistica("Iniciativa", book.WithSign(m.Iniciativa))
+					@estatistica("Percepção", book.WithSign(m.Percepcao))
 					@estatistica("PV", fmt.Sprintf("%d", m.HP))
 					@estatistica("Defesa", fmt.Sprintf("%d", m.Defesa))
 					@estatistica("Deslocamento", m.Deslocamento)
@@ -530,9 +530,9 @@ templ blocoDoVerbete(m book.Entry, livro bookui.BookAddress) {
 				}
 				@secaoDoBloco("Resistências") {
 					<div class="grid grid-cols-3 gap-1">
-						@estatistica("Fortitude", comSinalInt(m.Fortitude))
-						@estatistica("Reflexos", comSinalInt(m.Reflexos))
-						@estatistica("Vontade", comSinalInt(m.Vontade))
+						@estatistica("Fortitude", book.WithSign(m.Fortitude))
+						@estatistica("Reflexos", book.WithSign(m.Reflexos))
+						@estatistica("Vontade", book.WithSign(m.Vontade))
 					</div>
 				}
 			</div>
@@ -544,7 +544,7 @@ templ blocoDoVerbete(m book.Entry, livro bookui.BookAddress) {
 								<div class="rounded-sm border border-grimorio-iron p-2">
 									<p class="text-xs font-semibold">
 										{ a.Name + " " }
-										<span class="font-mono text-muted-foreground">{ comSinalInt(a.AttackBonus) + " · " + a.Damage }</span>
+										<span class="font-mono text-muted-foreground">{ book.WithSign(a.AttackBonus) + " · " + a.Damage }</span>
 									</p>
 									if a.Special != "" {
 										<p class="text-2xs text-muted-foreground">{ a.Special }</p>
@@ -581,7 +581,7 @@ templ blocoDoVerbete(m book.Entry, livro bookui.BookAddress) {
 									{ p.Name }
 								}
 								{ " " }
-								<span class="font-mono">{ comSinalInt(p.Bonus) }</span>
+								<span class="font-mono">{ book.WithSign(p.Bonus) }</span>
 								if p.Nota != "" {
 									<span class="text-muted-foreground">{ " (" + p.Nota + ")" }</span>
 								}

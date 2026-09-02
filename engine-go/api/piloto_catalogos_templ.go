@@ -1492,8 +1492,8 @@ func cartaoDeRaca(r book.Race, livro bookui.BookAddress) templ.Component {
 	})
 }
 
-// O cartão da CLASSE mostra só o que se DERIVA do repositório — ver o cabeçalho
-// de `piloto_catalogos_do_personagem.go`. É pouco de propósito: o bloco da
+// O cartão da CLASSE mostra só o que se DERIVA do repositório, cujos leitores
+// moram em `book/character.go`. É pouco de propósito: o bloco da
 // classe é uma tabela de vinte níveis, e transcrevê-la à mão seria a fonte de
 // erro que esta issue inteira existe para evitar.
 func cartaoDeClasse(c book.Class, livro bookui.BookAddress) templ.Component {
@@ -2185,9 +2185,9 @@ func filtrosDoAcervo(v catalogosView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var99 string
-				templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(v.crachaAceso(f.Chave, o.Valor)))
+				templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(v.crachaAceso(f.Chave, o.Valor)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_catalogos.templ`, Line: 597, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_catalogos.templ`, Line: 597, Col: 65}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var99)
 				if templ_7745c5c3_Err != nil {

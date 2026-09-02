@@ -395,8 +395,8 @@ templ cartaoDeRaca(r book.Race, livro bookui.BookAddress) {
 	}
 }
 
-// O cartão da CLASSE mostra só o que se DERIVA do repositório — ver o cabeçalho
-// de `piloto_catalogos_do_personagem.go`. É pouco de propósito: o bloco da
+// O cartão da CLASSE mostra só o que se DERIVA do repositório, cujos leitores
+// moram em `book/character.go`. É pouco de propósito: o bloco da
 // classe é uma tabela de vinte níveis, e transcrevê-la à mão seria a fonte de
 // erro que esta issue inteira existe para evitar.
 templ cartaoDeClasse(c book.Class, livro bookui.BookAddress) {
@@ -594,7 +594,7 @@ templ filtrosDoAcervo(v catalogosView) {
 					// `aria-pressed=""` não anuncia estado nenhum.
 					<button
 						type="button"
-						aria-pressed={ boolTexto(v.crachaAceso(f.Chave, o.Valor)) }
+						aria-pressed={ ui.AriaBool(v.crachaAceso(f.Chave, o.Valor)) }
 						data-on:click={ alternaOCracha(v.Aba, f.Chave, o.Valor) }
 						if v.crachaAceso(f.Chave, o.Valor) {
 							class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

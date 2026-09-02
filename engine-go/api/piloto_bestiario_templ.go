@@ -580,9 +580,9 @@ func filtrosDoBestiario(v bestiarioView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var18 string
-			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(v.tipoAceso(t)))
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(v.tipoAceso(t)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 339, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 339, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 			if templ_7745c5c3_Err != nil {
@@ -1041,11 +1041,11 @@ func blocoDoVerbete(m book.Entry, livro bookui.BookAddress) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = estatistica("Iniciativa", comSinalInt(m.Iniciativa)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = estatistica("Iniciativa", book.WithSign(m.Iniciativa)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = estatistica("Percepção", comSinalInt(m.Percepcao)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = estatistica("Percepção", book.WithSign(m.Percepcao)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1137,15 +1137,15 @@ func blocoDoVerbete(m book.Entry, livro bookui.BookAddress) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = estatistica("Fortitude", comSinalInt(m.Fortitude)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = estatistica("Fortitude", book.WithSign(m.Fortitude)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = estatistica("Reflexos", comSinalInt(m.Reflexos)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = estatistica("Reflexos", book.WithSign(m.Reflexos)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = estatistica("Vontade", comSinalInt(m.Vontade)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = estatistica("Vontade", book.WithSign(m.Vontade)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1199,9 +1199,9 @@ func blocoDoVerbete(m book.Entry, livro bookui.BookAddress) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var46 string
-					templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(comSinalInt(a.AttackBonus) + " · " + a.Damage)
+					templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(book.WithSign(a.AttackBonus) + " · " + a.Damage)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 547, Col: 104}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 547, Col: 106}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 					if templ_7745c5c3_Err != nil {
@@ -1368,9 +1368,9 @@ func blocoDoVerbete(m book.Entry, livro bookui.BookAddress) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var54 string
-					templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(comSinalInt(p.Bonus))
+					templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(book.WithSign(p.Bonus))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 584, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 584, Col: 56}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 					if templ_7745c5c3_Err != nil {

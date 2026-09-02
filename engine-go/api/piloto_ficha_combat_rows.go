@@ -1,6 +1,9 @@
 package api
 
-import "t20engine/engine"
+import (
+	"t20engine/book"
+	"t20engine/engine"
+)
 
 // As LINHAS dos diálogos de decomposição (ALE-272, fatia 3).
 //
@@ -17,7 +20,7 @@ import "t20engine/engine"
 // existe para responder: "por que minha Defesa está baixa?".
 func defenseRows(sheet engine.ComputedSheetV2) []breakdownRow {
 	rows := []breakdownRow{
-		{Label: "Base", Value: comSinalInt(sheet.Defense.Base - dexInDefense(sheet))},
+		{Label: "Base", Value: book.WithSign(sheet.Defense.Base - dexInDefense(sheet))},
 		dexterityRow(sheet),
 	}
 	rows = append(rows, rowsFromContributions(sheet.Defense.Contributions)...)
@@ -43,7 +46,7 @@ func dexterityRow(sheet engine.ComputedSheetV2) breakdownRow {
 	if !sheet.Defense.DexApplied {
 		return breakdownRow{Label: "Destreza (bloqueada por armadura pesada)", Value: "+0", Muted: true}
 	}
-	return breakdownRow{Label: "Destreza", Value: comSinalInt(sheet.Attributes["dexterity"].Total)}
+	return breakdownRow{Label: "Destreza", Value: book.WithSign(sheet.Attributes["dexterity"].Total)}
 }
 
 // directionalDefenseRows são as duas Defesas DIRECIONAIS, e elas só aparecem
@@ -55,8 +58,8 @@ func directionalDefenseRows(sheet engine.ComputedSheetV2) []breakdownRow {
 		return nil
 	}
 	return []breakdownRow{
-		{Label: "Contra corpo a corpo", Value: comSinalInt(d.VsMelee - d.Total)},
-		{Label: "Contra ataques à distância", Value: comSinalInt(d.VsRanged - d.Total)},
+		{Label: "Contra corpo a corpo", Value: book.WithSign(d.VsMelee - d.Total)},
+		{Label: "Contra ataques à distância", Value: book.WithSign(d.VsRanged - d.Total)},
 	}
 }
 
@@ -67,11 +70,11 @@ func directionalDefenseRows(sheet engine.ComputedSheetV2) []breakdownRow {
 // propósito: ele já chega pela perícia, e somá-lo de novo o contaria duas vezes.
 func expertiseRows(ex engine.ExpertiseBreakdown, all *engine.TotalContribs) []breakdownRow {
 	rows := []breakdownRow{
-		{Label: "½ nível", Value: comSinalInt(ex.HalfLevel)},
-		{Label: attributeAbbr[ex.Attribute], Value: comSinalInt(ex.AttrValue)},
+		{Label: "½ nível", Value: book.WithSign(ex.HalfLevel)},
+		{Label: attributeAbbr[ex.Attribute], Value: book.WithSign(ex.AttrValue)},
 	}
 	if ex.Training != 0 {
-		rows = append(rows, breakdownRow{Label: "Treino", Value: comSinalInt(ex.Training)})
+		rows = append(rows, breakdownRow{Label: "Treino", Value: book.WithSign(ex.Training)})
 	}
 	rows = append(rows, rowsFromContributions(ex.ItemContributions)...)
 	if all != nil {
@@ -87,14 +90,14 @@ func expertiseRows(ex engine.ExpertiseBreakdown, all *engine.TotalContribs) []br
 func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 	attack = expertiseRows(card.Expertise, &card.AttackAll)
 	if card.Skill == "Luta" {
-		damage = append(damage, breakdownRow{Label: "FOR", Value: comSinalInt(card.StrDamage)})
+		damage = append(damage, breakdownRow{Label: "FOR", Value: book.WithSign(card.StrDamage)})
 	}
 	return attack, append(damage, rowsFromContributions(card.DamageAll.Contributions)...)
 }
 
 // pmLimitRows é o teto de PM por magia.
 func pmLimitRows(sheet engine.ComputedSheetV2) []breakdownRow {
-	rows := []breakdownRow{{Label: "Nível de conjurador", Value: comSinalInt(sheet.PmLimit.Base)}}
+	rows := []breakdownRow{{Label: "Nível de conjurador", Value: book.WithSign(sheet.PmLimit.Base)}}
 	return append(rows, rowsFromContributions(sheet.PmLimit.Contributions)...)
 }
 
@@ -107,7 +110,7 @@ func spellDcRows(sheet engine.ComputedSheetV2) []breakdownRow {
 	if sheet.BestBaseSpellCd != nil {
 		base = *sheet.BestBaseSpellCd
 	}
-	rows := []breakdownRow{{Label: "CD base (nível + atributo-chave)", Value: comSinalInt(base)}}
+	rows := []breakdownRow{{Label: "CD base (nível + atributo-chave)", Value: book.WithSign(base)}}
 	if sheet.SpellDCBonus.Total == 0 {
 		return append(rows, breakdownRow{Label: "Sem bônus de itens", Value: "+0", Muted: true})
 	}
@@ -126,7 +129,7 @@ func pmCostRows(sheet engine.ComputedSheetV2) []breakdownRow {
 func rowsFromContributions(contributions []engine.BreakdownContribution) []breakdownRow {
 	rows := make([]breakdownRow, 0, len(contributions))
 	for _, c := range contributions {
-		rows = append(rows, breakdownRow{Label: c.Source, Value: comSinalInt(c.Amount), Note: c.Note})
+		rows = append(rows, breakdownRow{Label: c.Source, Value: book.WithSign(c.Amount), Note: c.Note})
 	}
 	return rows
 }
@@ -136,7 +139,7 @@ func rowsFromContributions(contributions []engine.BreakdownContribution) []break
 func rowsFromSourceAmounts(sources []engine.SourceAmount) []breakdownRow {
 	rows := make([]breakdownRow, 0, len(sources))
 	for _, s := range sources {
-		rows = append(rows, breakdownRow{Label: s.Source, Value: comSinalInt(s.Amount)})
+		rows = append(rows, breakdownRow{Label: s.Source, Value: book.WithSign(s.Amount)})
 	}
 	return rows
 }
