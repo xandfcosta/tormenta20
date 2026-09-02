@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"net/http"
+	"t20engine/web/finder"
 
 	"github.com/a-h/templ"
 	"t20engine/web/ui"
@@ -40,7 +41,7 @@ func (s *Server) WritePage(
 	// aqui que a injeção cabe — pôr os campos em cada `ui.Page{…}` seria repetir
 	// dezoito vezes o que não varia.
 	p.Asset = EstaticoDoPiloto
-	p.Overlays = []templ.Component{buscadorDoLivro(), oLivroEmDialogo(), oVerbeteEmDialogo()}
+	p.Overlays = []templ.Component{finder.Dialog(), oLivroEmDialogo(), oVerbeteEmDialogo()}
 	if err := ui.Layout(p, corpo).Render(r.Context(), &buf); err != nil {
 		// Em buffer e não direto no `w`: um erro no meio da renderização já
 		// teria mandado 200 e meia página, e o jogador veria uma tela cortada

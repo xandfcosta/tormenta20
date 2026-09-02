@@ -12,7 +12,7 @@ import { expect, test } from '@playwright/test'
  * página, e um evento sintético provou que o ouvinte estava certo o tempo todo.
  *
  * O que ele NÃO precisa medir aqui: o ranqueamento e o corte, que são regra e
- * moram em `piloto_buscador_test.go` — a camada mais barata que os segura.
+ * moram em `web/finder/finder_test.go` — a camada mais barata que os segura.
  */
 test.use({ storageState: '.auth/user.json' })
 

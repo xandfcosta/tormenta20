@@ -829,6 +829,58 @@ fica.** E as frases que os casos afirmam passam a ser escritas à mão, porque a
 constantes da cena são inalcançáveis dali — o que é sorte, já que importar o
 valor de quem está sendo testado faz o teste andar junto com o defeito.
 
+## `web/finder` e `web/routes`: a cena SEM porta, e onde moram os endereços
+
+O buscador do livro saiu na ALE-278, e ele é o caso oposto ao da porta: **ele não
+declara `Deps` nenhuma.** A forja declara seis dependências, a porta nove, o
+buscador zero — ele lê o livro embutido pelo `book`, pontua com o `search`,
+desenha com o `web/ui` e linka pelo `web/routes`, quatro pacotes que já eram
+folha. Não há banco, não há sessão, não há casca a montar.
+
+Por isso o `Routes` dele recebe só o roteador, e não existe `Scene`. **Uma
+interface vazia declarada por simetria seria cerimônia pura**: o que dá valor à
+porta é ela DIZER o que a cena alcança do hospedeiro, e aqui a resposta é nada.
+
+### `web/routes`: os endereços que uma cena cita de OUTRA
+
+Ele nasceu porque o buscador monta o link do resultado com `/mestre/bestiario`,
+que era constante do trilho do mestre — e depois de virar pacote ele não alcança
+mais. A alternativa óbvia, escrever a string do lado de lá, é a que quebra em
+silêncio, e a ALE-280 acabou de mudar endereços.
+
+**O critério de entrada é estreito de propósito: só entra endereço que uma cena
+cita de OUTRA.** Medido na entrada, das cinco constantes de rota do `api` só duas
+eram citadas de fora da própria família — `/mestre/bestiario` e `/livro`. O
+`/buscador` e o `/livro/ler` ficaram com o dono, porque trazê-los não compra nada
+e transforma o pacote no lugar onde tudo cabe.
+
+Ele também levou os três CONSTRUTORES de endereço do buscador, e aí a mudança
+pagou sozinha: duas das três funções montavam `"/mestre/" + aba + …` à mão
+enquanto a terceira usava a constante do bestiário — **três grafias do mesmo
+prefixo em quatro linhas**, invisíveis porque as três moravam juntas.
+
+E ele não é o mapa de rotas do app: quem registra rota é cada cena, no `Routes`
+dela. Uma cena pode atender vinte rotas e não aparecer ali nenhuma vez.
+
+> O guarda de fronteira dele permite a biblioteca PADRÃO e recusa só
+> `t20engine/*`. A primeira versão recusava tudo, e isso empurraria o
+> `url.QueryEscape` para cada chamador — que é como um endereço sai sem escapar
+> em UM lugar e ninguém vê.
+
+### O teste que era de duas camadas num arquivo só
+
+O teste do buscador — o antigo `piloto_buscador` do `api` — misturava sete
+casos da REGRA de ranqueamento
+(funções puras: qual achado vem primeiro, o corte, o empate) com dois que
+precisam do servidor montado. Na extração ele se dividiu pela camada — os sete
+foram para `web/finder`, os dois ficaram em `api/finder_test.go`.
+
+Vale a pena notar que **a mistura não incomodava enquanto tudo era um pacote
+só**. Foi a fronteira que a tornou visível: os unitários não compilavam mais no
+`api`, e os de HTTP não compilavam no `finder`. A divisão em pacotes está
+cobrando isso de cada cena que sai, e a resposta é sempre a mesma — unitário onde
+a regra mora, integração onde a composição acontece.
+
 ## `account`: a regra de conta, e a cópia que divergiu na FRASE
 
 O que é um e-mail, o que é uma senha aceitável, e a forma dos dois pedidos que

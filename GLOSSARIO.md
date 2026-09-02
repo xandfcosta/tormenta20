@@ -320,6 +320,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | termo | grafia inglesa | onde ela já aparece |
 |---|---|---|
 | **fila** (de iniciativa) | `tracker` | já estava na seção B; a varredura só a usou |
+| **buscador do livro** | `finder` | `web/finder` (ALE-278) — e NÃO `search`, que é o casamento e a pontuação, nem `busca`, que é o filtro da cena |
 | **acervo** (cenas guardadas) | `archive` | `TestTheArchiveSaysWhichSceneIsOnTheTable` |
 | **acervo** (de poderes, de catálogo) | `collection` | `TestTheCollectionJoinsTheFiveOrigins` |
 | **cortina** | `curtain` | `curtained` já existia no fio |
