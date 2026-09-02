@@ -69,7 +69,7 @@ alguém já usou e que não voltam.
 | **leitor** | `leitor` | ~~visualizador~~, ~~viewer~~ | A cena que abre o PDF do livro na página do verbete e o DESTACA (ALE-264). **Não é o visualizador do navegador**, que continua a um clique de distância ("abrir fora") — a distinção importa porque os dois existem lado a lado: o leitor mostra uma página por vez com o termo marcado, o visualizador tem busca, miniaturas e impressão. Ele existe por medição: o Chrome ignora `#search=` e transfere o arquivo inteiro (85 MiB) para abrir uma página; o leitor destaca e custou 1 MiB. |
 | **página do livro** | `BookPage` | ~~folha~~ | O número IMPRESSO no rodapé, que é o que o catálogo grava e o que a ficha mostra ("p289"). **Não é a página do ARQUIVO**, que é a que `#page=N` conta — ver `abertura` abaixo. |
 | **abertura** | `LivroAbertura` | ~~offset~~, ~~deslocamento~~ | Quantas páginas o arquivo tem ANTES da página impressa 1: 6 no PDF da casa, medido pelo rodapé. `deslocamento` está proibido porque em T20 é o quanto uma criatura anda. |
-| **tela cheia** | `shared/lib/fullscreen.ts` | ~~fullscreen~~ (na tela) | O gesto do menu do Hub que estica a janela ATUAL pela Fullscreen API. Some quando a aba fecha, e o iPhone não o tem. Continua sendo a saída de quem não instalou (ALE-118). |
+| **tela cheia** | `api/piloto/src/cena.ts` | ~~fullscreen~~ (na tela) | O gesto do menu do Hub que estica a janela ATUAL pela Fullscreen API. Some quando a aba fecha, e o iPhone não o tem. Continua sendo a saída de quem não instalou (ALE-118). |
 
 ## B. O combate
 
@@ -116,7 +116,7 @@ alguém já usou e que não voltam.
 |---|---|---|---|
 | **verbete** | `MonsterID` | — | A entrada IMUTÁVEL do bestiário do livro. Por extensão, qualquer entrada de catálogo que o mestre CONSULTA — a condição, a magia, o tipo de efeito. A ALE-264 desfez a divisão que separava o bestiário dos outros: "o bestiário conta como catálogo", e o trilho passou a ter uma seção **Ferramentas** (o que o mestre FAZ: encontros, improviso) e uma **Catálogos** (o que ele consulta, nove). |
 | **bloco de criatura** | `CreatureID` | — | O bloco EDITÁVEL que o mestre escreveu, e que pertence à campanha (ALE-137). Uma linha tem verbete ou bloco, nunca os dois. |
-| **NPC** | `type: 'npc'` | ~~PC~~ | O PAPEL de uma linha na fila: não é ficha de jogador. Ortogonal a verbete/bloco. **Na tela o par é `Ficha` / `NPC`** — decisão do dono, 2026-08-24, ao tirar o `PC` proibido dos DOIS apps. O oposto de NPC na fila é **ficha** e não "personagem": é a pergunta que a tabela de colisões faz do `type === 'character'` (linha abaixo), e "Personagem" não caberia no selo de uma linha de 390px. Cuidado ao mexer: `Ficha` é 2,5× mais largo que o `PC` que estava lá, e esse selo JÁ transbordou uma vez (`initiative-card.tsx:428`) — os guardas de transbordo do `session.spec.ts` são obrigatórios. |
+| **NPC** | `type: 'npc'` | ~~PC~~ | O PAPEL de uma linha na fila: não é ficha de jogador. Ortogonal a verbete/bloco. **Na tela o par é `Ficha` / `NPC`** — decisão do dono, 2026-08-24, ao tirar o `PC` proibido dos DOIS apps. O oposto de NPC na fila é **ficha** e não "personagem": é a pergunta que a tabela de colisões faz do `type === 'character'` (linha abaixo), e "Personagem" não caberia no selo de uma linha de 390px. Cuidado ao mexer: `Ficha` é 2,5× mais largo que o `PC` que estava lá, e esse selo JÁ transbordou uma vez, na SPA — os guardas de transbordo do `piloto-transbordo.spec.ts` são obrigatórios. **O endereço mudou duas vezes** (ALE-284): a linha citava o `initiative-card.tsx:428`, que morreu com a SPA, e mandava obedecer um `session.spec.ts` que não existe mais — quem obedecesse procuraria a garantia num arquivo apagado. |
 | **criatura** | — | — | O guarda-chuva ("Adicionar criatura", "Buscar criatura"). Use quando as três acima não importam. |
 
 ---
@@ -151,28 +151,52 @@ com o nome da cena aberta; `BoardPlace{id, name, …}` é o lugar guardado, e o
 rótulo dele chama-se `name`. Mesmo dado, dois campos com nomes diferentes. E
 "Marcar um lugar" (`BoardMarker`) usa a palavra num terceiro sentido.
 
-**C3 — `RestScope` mente na metade dos usos.** `applyEffect(entryId, spellId,
-scope?: RestScope)` (`realtime.ts:256`): ali `scope` é *duração de magia*, regra
-do livro, e não escopo de descanso. Conserto óbvio e sem UX: um `EffectScope`
-próprio.
+**C3 — RESOLVIDA pela morte da SPA, e não por conserto (ALE-284).** Aqui morava
+"`RestScope` mente na metade dos usos", sobre a assinatura
+`applyEffect(entryId, spellId, scope?: RestScope)` do `realtime.ts`, onde `scope`
+era *duração de magia* e não escopo de descanso. **`RestScope` tem hoje ZERO
+ocorrências no repositório**: o tipo saiu inteiro com a SPA (ALE-272), e o
+`applyEffect` que sobreviveu é um handler Go de outra forma. A linha fica como
+lápide porque uma colisão que some sem decisão é a que mais tenta voltar — se um
+dia um `scope` de duração e um de descanso se encontrarem de novo, é um
+`EffectScope` próprio, que era o conserto já escolhido.
 
-**C4 — quatro predicados vestidos de "jogador".** Eles respondem a **perguntas
-diferentes** e por isso não se unificam; o que falta é o nome dizer qual:
+**C4 — TRÊS predicados vestidos de "jogador", e eram quatro.** Eles respondem a
+**perguntas diferentes** e por isso não se unificam; o que falta é o nome dizer
+qual:
 
 | Predicado | Pergunta que responde | Onde |
 |---|---|---|
-| `entry.type === 'character'` | esta linha é ficha ou é NPC? | `board_state.go:423`, `populate-dialog.tsx:18` |
-| `member.role === 'player'` | a PESSOA dona é jogador ou mestre? | `cast-panel.tsx:54`, `listPlayerCombatants` |
-| `myCharacterIds.has(id)` | é meu? | `tracker-rules.ts` (`myCharacterIdsOf`) |
-| `token.kind === 'character'` | esta peça se desenha como PC? | `board-view.tsx:571` |
+| `entry.Type == "character"` | esta linha é ficha ou é NPC? | `board_state.go:468`, `piloto_mesa_pecas.go:61`, `piloto_mesa_view.go:281` |
+| `member.role === 'player'` | a PESSOA dona é jogador ou mestre? | `listPlayerCombatants` |
+| "é meu?" | o personagem é de quem está olhando? | `mesaRoster`, em `piloto_mesa_routes.go` |
+
+**O QUARTO se juntou ao primeiro, e é preciso dizer como** (ALE-284): ele era
+`token.kind === 'character'`, "esta peça se desenha como PC?", e vivia no
+`board-view.tsx`. O campo continua no fio — `BoardToken.Kind` é `"character" |
+"npc" | "object"` —, escrito em `board_body.go` e, ao pôr no mapa, a partir do
+próprio `entry.Type`, que é o PRIMEIRO predicado. **Medido: nada em produção o
+LÊ**, só teste. Ou seja, não é que a pergunta tenha sido respondida; é que quem a
+fazia morreu e o campo ficou. Quem for desenhar a peça de novo decide se a
+pergunta volta a ser dela ou se `Kind` é redundante com `Type`.
 
 Decisão do dono, 2026-08-22 (ALE-204): o atalho "trazer os jogadores" usa
 `type === 'character'`, porque é o **mesmo** predicado com que o servidor escolhe
 o lado do mapa — o atalho põe as peças exatamente na fileira do grupo. O efeito
 colateral é conhecido e aceito: um PC do mestre que esteja na fila vem junto.
 
-**C5 — o README ainda usa três palavras para campanha.** "as dos outros aparecem
-nas **Crônicas**", "abre e edita qualquer **mesa**". Sai no próximo passe.
+**C5 — RESOLVIDA (ALE-284).** Aqui morava "o README ainda usa três palavras para
+campanha", citando "as dos outros aparecem nas **Crônicas**" e "abre e edita
+qualquer **mesa**". As duas saíram — a primeira num passe anterior que não
+atualizou esta linha, a segunda nesta issue, junto com "passa as **mesas** dela
+para você". O README continua usando `mesa` oito vezes, e todas são a metonímia
+que a seção A permite: a mesa na LAN, quem senta à mesa, a mesa no ar. Nenhuma é
+entidade.
+
+> O número das colisões NÃO é reaproveitado quando uma sai. `C1`, `C4`, `C6`,
+> `C7` e `C8` são citados por número de dentro do código (`sheet/play_state.go`,
+> `piloto_mesa_pecas.go`, `vitals_rules.go`) e do README — renumerar quebraria
+> cinco referências em silêncio, que é o defeito que esta issue veio consertar.
 
 **C6 — `condition` e `conditional` são conceitos DIFERENTES a uma letra de
 distância.** A **condição** é do livro (p394-395): Caído, Atordoado, Cego. Ela
@@ -243,9 +267,15 @@ criaria a terceira acepção da palavra que a linha existe para impedir.
 ## F. A costura PT/EN
 
 O domínio é pt-BR e o código era misto — e isso não estava escrito em lugar
-nenhum, que é a raiz de metade desta lista. Em `board-region.tsx` convivem
-`selectedToken` e `linhasNoMapa`, e `board` e `cena` denotam o mesmo tipo no
-mesmo arquivo.
+nenhum, que é a raiz de metade desta lista.
+
+O exemplo que abria esta seção era o `board-region.tsx`, onde conviviam
+`selectedToken` e `linhasNoMapa`. **Ele morreu com a SPA e a frase ficou**
+(ALE-284), o que é a própria costura falhando: o arquivo que ilustrava a mistura
+sumiu e ninguém releu a linha que o citava. O exemplo vivo é o
+`piloto_mesa_tabuleiro_view.go`, e a mistura lá não é entre arquivos — é dentro
+de um identificador só: `tabuleiroView`, `pecaDoTabuleiro`, `movimentoView` e
+`tabuleiroViewOf` colam raiz portuguesa em sufixo inglês, na mesma linha.
 
 A regra, daqui para frente (a completa está em
 [CLAUDE.md § Idioma](CLAUDE.md#idioma); aqui fica o que é do glossário):
