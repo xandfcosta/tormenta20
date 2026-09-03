@@ -1,4 +1,4 @@
-package api
+package campaigns
 
 import (
 	"t20engine/campaign"
@@ -17,7 +17,7 @@ import (
 // JavaScript desligado. Sinal aqui só serviria para reimplementar o que o
 // navegador já faz.
 
-templ campanhaNova(v campanhaNovaView) {
+templ newBody(v newView) {
 	@ui.TomeSheet() {
 		// `m-auto`: uma folha em branco segura pouco, então o formulário fica no
 		// MEIO da página em vez de se agarrar ao topo de um retângulo vazio

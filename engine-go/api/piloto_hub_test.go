@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"t20engine/plataforma"
+	"t20engine/web/routes"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -66,8 +67,8 @@ func TestTheHubOnlyOffersResumeWithALiveSession(t *testing.T) {
 	if !strings.Contains(comViva, "Continuar sessão") {
 		t.Fatal("não ofereceu continuar com sessão ativa")
 	}
-	if !strings.Contains(comViva, rotaDaMesa(campanha, sessao)) {
-		t.Errorf("o link não aponta para a sessão viva (%s)", rotaDaMesa(campanha, sessao))
+	if !strings.Contains(comViva, routes.Table(campanha, sessao)) {
+		t.Errorf("o link não aponta para a sessão viva (%s)", routes.Table(campanha, sessao))
 	}
 }
 

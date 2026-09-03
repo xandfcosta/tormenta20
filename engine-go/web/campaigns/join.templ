@@ -1,4 +1,4 @@
-package api
+package campaigns
 
 import (
 
@@ -19,7 +19,7 @@ import (
 // e o valor que viaja no POST. Reimplementar isso com sinal seria trocar
 // comportamento que o navegador garante por comportamento que eu garanto.
 
-templ campanhaEntrar(v campanhaEntrarView) {
+templ JoinBody(v joinView) {
 	@ui.TomeSheet() {
 		// `m-auto` centra uma carta curta (convite morto, elenco vazio) em vez
 		// de deixá-la encalhada no topo de uma folha vazia; com elenco cheio as
@@ -28,7 +28,7 @@ templ campanhaEntrar(v campanhaEntrarView) {
 			@ui.SheetTitle("Carta de convite", "Entrar na mesa")
 			if v.TemConvite {
 				<input type="hidden" name="token" value={ v.Convite }/>
-				@cartaDoConvite(v)
+				@inviteLetter(v)
 			} else {
 				@ui.TextField(ui.Field{
 					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
@@ -38,9 +38,9 @@ templ campanhaEntrar(v campanhaEntrarView) {
 				})
 			}
 			if len(v.Herois) == 0 {
-				@semHeroisParaSentar()
+				@noHeroesToSeat()
 			} else {
-				@escolhaDoHeroi(v)
+				@heroChoice(v)
 			}
 			if v.Aviso != "" {
 				<p class="text-sm text-destructive-ink">{ v.Aviso }</p>
@@ -63,13 +63,13 @@ templ campanhaEntrar(v campanhaEntrarView) {
 	}
 }
 
-// cartaDoConvite diz PARA QUAL mesa a pessoa foi chamada, antes de ela
+// inviteLetter diz PARA QUAL mesa a pessoa foi chamada, antes de ela
 // comprometer um herói com ela.
 //
 // Não há estado de "carregando" aqui, e a ausência é o ganho da cena: o convite
 // é resolvido no servidor antes de a página existir. Na SPA a tela monta e
 // espera uma segunda requisição atrás de um esqueleto.
-templ cartaDoConvite(v campanhaEntrarView) {
+templ inviteLetter(v joinView) {
 	<div class="flex items-start gap-3 rounded-none border border-grimorio-gold/40 bg-grimorio-panel p-4">
 		@ui.Icon("Mail", "mt-0.5 size-4 shrink-0 text-grimorio-gold")
 		<div class="min-w-0 flex-1 space-y-1">
@@ -89,17 +89,17 @@ templ cartaDoConvite(v campanhaEntrarView) {
 	</div>
 }
 
-// escolhaDoHeroi é um grupo de RÁDIOS, e o `fieldset`/`legend` não é enfeite: é
+// heroChoice é um grupo de RÁDIOS, e o `fieldset`/`legend` não é enfeite: é
 // o elemento certo para um conjunto de escolhas dentro de um formulário, e é o
 // que faz o leitor de tela anunciar a pergunta antes de cada opção.
-templ escolhaDoHeroi(v campanhaEntrarView) {
+templ heroChoice(v joinView) {
 	<fieldset class="space-y-3">
 		@ui.SectionCaption("muted", "mb-3") {
 			Qual herói entra na mesa?
 		}
 		<div data-nav-region="content" data-nav-layout="grid" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 			for _, h := range v.Herois {
-				@plaquetaDoHeroi(h, h.ID == v.EscolhidoID)
+				@heroPlate(h, h.ID == v.EscolhidoID)
 			}
 		</div>
 		if len(v.Erros["characterId"]) > 0 {
@@ -110,7 +110,7 @@ templ escolhaDoHeroi(v campanhaEntrarView) {
 	</fieldset>
 }
 
-// plaquetaDoHeroi: o rádio é INVISÍVEL mas real, e o rótulo inteiro é a área de
+// heroPlate: o rádio é INVISÍVEL mas real, e o rótulo inteiro é a área de
 // clique. `peer-checked` pinta a borda dourada e `peer-focus-visible` desenha o
 // anel — assim o estado visual segue o estado REAL do controle, e não uma
 // segunda cópia dele guardada em algum lugar.
@@ -123,7 +123,7 @@ templ escolhaDoHeroi(v campanhaEntrarView) {
 // diz por que não envia — a mesma queixa que a ALE-80 registrou sobre esta
 // tela. O servidor recusa de novo, porque `required` não sobrevive a um POST
 // feito na mão.
-templ plaquetaDoHeroi(h heroiDaCarta, marcado bool) {
+templ heroPlate(h joinHero, marcado bool) {
 	<label class="flex cursor-pointer items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring">
 		<input
 			type="radio"
@@ -147,7 +147,7 @@ templ plaquetaDoHeroi(h heroiDaCarta, marcado bool) {
 
 // Sem herói não se senta à mesa. A tela oferece a saída em vez de só constatar
 // o vazio — tela vazia que não dá o primeiro passo é tela que não ajuda.
-templ semHeroisParaSentar() {
+templ noHeroesToSeat() {
 	<div class="flex flex-col items-center gap-3 rounded-none border border-dashed border-grimorio-iron px-4 py-10 text-center">
 		<p class="text-sm text-muted-foreground">
 			Você ainda não tem heróis. Crie um antes de entrar numa mesa.

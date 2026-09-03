@@ -2,13 +2,11 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"sort"
+	"t20engine/campaign"
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
-	"t20engine/engine"
 )
 
 // As regras opcionais da campanha (ALE-221).
@@ -56,7 +54,7 @@ func (s *Server) handleReplaceCampaignRules(w http.ResponseWriter, r *http.Reque
 	if _, ok := s.ownedCampaign(w, r, id); !ok {
 		return
 	}
-	wanted, msg := normalizeIgnoredRules(body.IgnoredRules)
+	wanted, msg := campaign.NormalizeIgnoredRules(body.IgnoredRules)
 	if msg != "" {
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"ignoredRules": {msg}})
 		return
@@ -68,25 +66,8 @@ func (s *Server) handleReplaceCampaignRules(w http.ResponseWriter, r *http.Reque
 	plataforma.WriteJSON(w, http.StatusOK, campaignRulesDTO{IgnoredRules: wanted})
 }
 
-// normalizeIgnoredRules ordena, tira repetidos e recusa o que o motor não
-// conhece. A recusa nomeia o valor e o que era esperado, que é a regra da casa
-// para mensagem de exceção — "invalid rule" mandaria o mestre adivinhar.
-func normalizeIgnoredRules(raw []string) ([]string, string) {
-	seen := map[string]bool{}
-	out := []string{}
-	for _, rule := range raw {
-		if !engine.IsKnownRule(rule) {
-			return nil, fmt.Sprintf("unknown rule %q — expected one of %v", rule, engine.KnownRules)
-		}
-		if seen[rule] {
-			continue
-		}
-		seen[rule] = true
-		out = append(out, rule)
-	}
-	sort.Strings(out)
-	return out, ""
-}
+// A normalização das regras opcionais mora em `campaign` desde a ALE-278: ela é
+// pura (só pergunta ao motor se a regra existe) e a cena precisa dela.
 
 // saveIgnoredRules troca o conjunto INTEIRO: limpa e reinsere.
 //

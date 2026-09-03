@@ -1,6 +1,6 @@
-package api
+package campaigns
 
-// papelNaCampanha ficou aqui quando o resto do arquivo virou `web/ui/identity.go`
+// roleLabel ficou aqui quando o resto do arquivo virou `web/ui/identity.go`
 // (ALE-278).
 //
 // Os três companheiros dele — o matiz, o gradiente e o monograma — são função de
@@ -9,14 +9,14 @@ package api
 // campanha, e o kit de apresentação não pode conhecer isso. Ele é lido por um
 // arquivo só, o da cena de campanhas, e vai junto quando ela sair.
 
-// papelNaCampanha é o `roleLabel`: a POSTURA de quem olha.
+// roleLabel é o `roleLabel`: a POSTURA de quem olha.
 //
 // Uma mesa que é de OUTRA pessoa — que só um admin chega a ver listada — diz de
 // quem ela é em vez da postura. O servidor entrega o papel `gm` ali, e escrever
 // "Mestrando" faria parecer que a mesa é de quem está lendo (ALE-120).
-func papelNaCampanha(papel string, dono *string) string {
-	if dono != nil && *dono != "" {
-		return "Mesa de " + *dono
+func roleLabel(papel, dono string) string {
+	if dono != "" {
+		return "Mesa de " + dono
 	}
 	if papel == "gm" {
 		return "Mestrando"

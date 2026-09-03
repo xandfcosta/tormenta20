@@ -1,4 +1,4 @@
-package api
+package campaigns
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 // monta, dispara `GET /invites/{token}` e mostra um esqueleto enquanto espera;
 // aqui o nome da campanha já vem na primeira resposta. Some o estado de
 // "carregando" inteiro — não porque foi escondido, porque não existe.
-type campanhaEntrarView struct {
+type joinView struct {
 	Convite     string
 	TemConvite  bool
 	ConviteVale bool
@@ -32,14 +32,14 @@ type campanhaEntrarView struct {
 	CampanhaID     int64
 	// NumeroDigitado volta preenchido numa recusa, como todo campo desta casa.
 	NumeroDigitado string
-	Herois         []heroiDaCarta
+	Herois         []joinHero
 	EscolhidoID    int64
 	Erros          plataforma.FieldErrorMap
 	Aviso          string
 }
 
-// heroiDaCarta é uma plaqueta escolhível: o mínimo para reconhecer o herói.
-type heroiDaCarta struct {
+// joinHero é uma plaqueta escolhível: o mínimo para reconhecer o herói.
+type joinHero struct {
 	ID        int64
 	Nome      string
 	Subtitulo string
@@ -47,32 +47,32 @@ type heroiDaCarta struct {
 	Gradiente string
 }
 
-func (s *Server) carregaCartaDeConvite(ctx context.Context, eu AuthUser, token string) (campanhaEntrarView, error) {
-	v := campanhaEntrarView{Convite: token, TemConvite: token != "", Erros: plataforma.FieldErrorMap{}}
+func (s Scene) LoadJoin(ctx context.Context, euID int64, token string) (joinView, error) {
+	v := joinView{Convite: token, TemConvite: token != "", Erros: plataforma.FieldErrorMap{}}
 
 	if v.TemConvite {
 		// Convite morto NÃO é erro da página: é uma resposta, e a carta diz
 		// isso em voz alta para a pessoa pedir outro link em vez de ficar
 		// olhando um botão que não envia (ALE-80).
-		c, err := s.queries.GetCampaignByToken(ctx, sql.NullString{String: token, Valid: true})
+		c, err := s.deps.Queries().GetCampaignByToken(ctx, sql.NullString{String: token, Valid: true})
 		switch {
 		case err == nil:
 			v.ConviteVale, v.NomeDaCampanha, v.CampanhaID = true, c.Name, c.ID
 		case errors.Is(err, sql.ErrNoRows):
 			// deixa `ConviteVale` falso — a carta mostra a recusa
 		default:
-			return campanhaEntrarView{}, err
+			return joinView{}, err
 		}
 	}
 
-	elenco, err := s.characterList(ctx, eu.ID)
+	elenco, err := s.deps.CharacterList(ctx, euID)
 	if err != nil {
-		return campanhaEntrarView{}, err
+		return joinView{}, err
 	}
 	for _, c := range elenco {
-		v.Herois = append(v.Herois, heroiDaCarta{
+		v.Herois = append(v.Herois, joinHero{
 			ID: c.ID, Nome: c.Name,
-			Subtitulo: subtituloDoHeroi(c),
+			Subtitulo: heroSubtitle(c),
 			Iniciais:  ui.Monogram(c.Name),
 			Gradiente: ui.NameGradient(c.Name),
 		})
@@ -80,10 +80,10 @@ func (s *Server) carregaCartaDeConvite(ctx context.Context, eu AuthUser, token s
 	return v, nil
 }
 
-// subtituloDoHeroi é a linha de baixo da plaqueta: as classes com nível, ou o
+// heroSubtitle é a linha de baixo da plaqueta: as classes com nível, ou o
 // nível sozinho para quem ainda não tem classe. É o `classLevelLine` da SPA com
 // o mesmo recuo.
-func subtituloDoHeroi(c sheet.CharacterDTO) string {
+func heroSubtitle(c sheet.CharacterDTO) string {
 	if linha := characters.ClassesOf(c); linha != "" {
 		return linha
 	}

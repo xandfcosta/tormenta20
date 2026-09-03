@@ -1,4 +1,4 @@
-package api
+package campaigns
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 // e um debounce de 250ms. No servidor não há o que espelhar: o parâmetro de
 // consulta É o estado, e ele chega junto com o pedido.
 
-type cronicaView struct {
+type oneView struct {
 	ID        int64
 	Nome      string
 	Descricao string
@@ -39,9 +39,9 @@ type cronicaView struct {
 	DonoOutro string
 
 	Aba     string
-	Abas    []abaDaCronica
-	Herois  []heroiNaMesa
-	Sessoes []sessaoNaCronica
+	Abas    []oneTab
+	Herois  []heroAtTable
+	Sessoes []sessionRow
 
 	// Os três sinetes da visão geral, contados aqui e não na tela: a tela que
 	// conta é a tela que discorda de si mesma quando alguém muda o filtro de um
@@ -65,20 +65,20 @@ type cronicaView struct {
 	Aviso string
 }
 
-type abaDaCronica struct {
+type oneTab struct {
 	ID     string
 	Rotulo string
 	Ativa  bool
 }
 
-type heroiNaMesa struct {
+type heroAtTable struct {
 	Nome      string
 	Papel     string
 	Iniciais  string
 	Gradiente string
 }
 
-type sessaoNaCronica struct {
+type sessionRow struct {
 	ID     int64
 	Numero int64
 	Titulo string
@@ -87,19 +87,19 @@ type sessaoNaCronica struct {
 	Viva   bool
 }
 
-// abasDaCronica: a de configuração só existe para quem mestra.
+// oneTabs: a de configuração só existe para quem mestra.
 //
 // `?tab=config` na URL de um jogador CAI para a visão geral em vez de mostrar
 // uma seção que o trilho dele não tem. A trava de verdade é do servidor em cada
 // rota; isto evita a tela meio desenhada.
-func abasDaCronica(ehMestre bool, pedida string) []abaDaCronica {
-	todas := []abaDaCronica{
+func oneTabs(ehMestre bool, pedida string) []oneTab {
+	todas := []oneTab{
 		{ID: "visao", Rotulo: "Visão geral"},
 		{ID: "sessoes", Rotulo: "Sessões"},
 		{ID: "membros", Rotulo: "Membros"},
 	}
 	if ehMestre {
-		todas = append(todas, abaDaCronica{ID: "config", Rotulo: "Config"})
+		todas = append(todas, oneTab{ID: "config", Rotulo: "Config"})
 	}
 	escolhida := "visao"
 	for _, a := range todas {
@@ -114,19 +114,19 @@ func abasDaCronica(ehMestre bool, pedida string) []abaDaCronica {
 }
 
 // RegraEmVigor: o conjunto guardado é o das DESLIGADAS.
-func (v cronicaView) RegraEmVigor(id string) bool {
+func (v oneView) RegraEmVigor(id string) bool {
 	return !slices.Contains(v.RegrasIgnoradas, id)
 }
 
-// regraOpcional é o verbete que a tela mostra. O texto vive no servidor porque
+// optionalRule é o verbete que a tela mostra. O texto vive no servidor porque
 // ele cita a PÁGINA do livro, e página citada é dado de regra, não de layout.
-type regraOpcional struct {
+type optionalRule struct {
 	ID        string
 	Titulo    string
 	Descricao string
 }
 
-var regrasOpcionais = []regraOpcional{
+var optionalRules = []optionalRule{
 	{
 		ID:     "carga",
 		Titulo: "Limites de carga",
@@ -135,7 +135,7 @@ var regrasOpcionais = []regraOpcional{
 	},
 }
 
-func (v cronicaView) AbaAtiva() string {
+func (v oneView) AbaAtiva() string {
 	for _, a := range v.Abas {
 		if a.Ativa {
 			return a.ID
@@ -144,36 +144,40 @@ func (v cronicaView) AbaAtiva() string {
 	return "visao"
 }
 
-func (s *Server) carregaCronica(ctx context.Context, eu AuthUser, id int64, aba string) (cronicaView, error) {
-	c, err := s.queries.GetCampaign(ctx, id)
+func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, aba string) (oneView, error) {
+	c, err := s.deps.Queries().GetCampaign(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
-		return cronicaView{}, errCampanhaInexistente
+		return oneView{}, errNoSuchCampaign
 	}
 	if err != nil {
-		return cronicaView{}, err
+		return oneView{}, err
 	}
 	// A MESMA regra de acesso da rota JSON e do gateway do socket (ALE-120):
 	// dono é "gm", quem tem personagem na mesa é "player", e o resto não entra.
-	papel, _, err := s.roleIn(ctx, eu, c)
+	papel, _, err := s.deps.RoleIn(ctx, euID, c)
 	if err != nil {
-		return cronicaView{}, err
+		return oneView{}, err
 	}
 
-	v := cronicaView{
+	v := oneView{
 		ID: c.ID, Nome: c.Name, Descricao: c.Description.String,
 		EhMestre:        papel == "gm",
-		CriadaEm:        dataCurta(c.Createdat),
-		RegrasIgnoradas: s.ignoredRulesOf(ctx, c.ID),
+		CriadaEm:        shortDate(c.Createdat),
+		RegrasIgnoradas: s.deps.IgnoredRules(ctx, c.ID),
 		Erros:           plataforma.FieldErrorMap{},
 	}
-	if eu.IsAdmin && c.Ownerid != eu.ID {
-		v.DonoOutro = s.ownerNames(ctx, []sqlcgen.Campaign{c}, eu.ID)[c.Ownerid]
+	// O nome do DONO só aparece numa campanha que não é de quem está olhando, o
+	// que hoje quer dizer um admin. A pergunta "sou admin?" chega por parâmetro
+	// e não pelo usuário inteiro, pela mesma razão de sempre: o tipo do usuário
+	// é do hospedeiro.
+	if admin && c.Ownerid != euID {
+		v.DonoOutro = s.deps.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
 	}
-	v.Abas = abasDaCronica(v.EhMestre, aba)
+	v.Abas = oneTabs(v.EhMestre, aba)
 
-	membros, err := s.queries.ListMembers(ctx, id)
+	membros, err := s.deps.Queries().ListMembers(ctx, id)
 	if err != nil {
-		return cronicaView{}, err
+		return oneView{}, err
 	}
 	// O MESTRE PRIMEIRO, e o resto na ordem que veio. É a regra do `sortRoster`
 	// da SPA, portada: numa mesa de seis, quem mestra ser o primeiro da lista é
@@ -191,16 +195,16 @@ func (s *Server) carregaCronica(ctx context.Context, eu AuthUser, id int64, aba 
 		if m.Role == "player" {
 			v.TotalHerois++
 		}
-		nome := nomeDoMembro(m.Charname, m.Characterid)
-		v.Herois = append(v.Herois, heroiNaMesa{
+		nome := memberName(m.Charname, m.Characterid)
+		v.Herois = append(v.Herois, heroAtTable{
 			Nome: nome, Papel: m.Role,
 			Iniciais: ui.Monogram(nome), Gradiente: ui.NameGradient(nome),
 		})
 	}
 
-	sessoes, err := s.queries.ListSessions(ctx, id)
+	sessoes, err := s.deps.Queries().ListSessions(ctx, id)
 	if err != nil {
-		return cronicaView{}, err
+		return oneView{}, err
 	}
 	v.TotalSessoes = len(sessoes)
 	// DA MAIS NOVA PARA A MAIS VELHA. O `ListSessions` ordena por número
@@ -218,30 +222,30 @@ func (s *Server) carregaCronica(ctx context.Context, eu AuthUser, id int64, aba 
 		if viva {
 			v.SessaoVivaID, v.NumeroDaSessaoViva = sess.ID, sess.Sessionnumber
 		}
-		v.Sessoes = append(v.Sessoes, sessaoNaCronica{
+		v.Sessoes = append(v.Sessoes, sessionRow{
 			ID: sess.ID, Numero: sess.Sessionnumber,
 			Titulo: sess.Title.String,
-			Data:   dataCurta(sess.Createdat),
-			Estado: estadoLegivel(sess.Status), Viva: viva,
+			Data:   shortDate(sess.Createdat),
+			Estado: readableState(sess.Status), Viva: viva,
 		})
 	}
 	return v, nil
 }
 
-// nomeDoMembro: personagem sem nome vira "Personagem N" e não linha em branco.
+// memberName: personagem sem nome vira "Personagem N" e não linha em branco.
 // Um membro invisível na lista é pior que um nome feio — ele some da contagem
 // que o olho faz.
-func nomeDoMembro(nome string, id int64) string {
+func memberName(nome string, id int64) string {
 	if nome != "" {
 		return nome
 	}
 	return "Personagem " + strconv.FormatInt(id, 10)
 }
 
-// dataCurta corta o carimbo ISO em dd/mm/aaaa. A data importa na crônica
+// shortDate corta o carimbo ISO em dd/mm/aaaa. A data importa na crônica
 // porque a lista de sessões é uma LINHA DO TEMPO — sem ela, "Sessão 4" não diz
 // se foi ontem ou em março.
-func dataCurta(iso string) string {
+func shortDate(iso string) string {
 	t, err := time.Parse(time.RFC3339, iso)
 	if err != nil {
 		return ""
@@ -249,7 +253,7 @@ func dataCurta(iso string) string {
 	return t.Format("02/01/2006")
 }
 
-func estadoLegivel(status string) string {
+func readableState(status string) string {
 	switch status {
 	case "active":
 		return "Ao vivo"

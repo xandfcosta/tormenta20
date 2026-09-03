@@ -34,7 +34,10 @@
 // os endereços ANTIGOS, publicados pela SPA, e o desvio de cada um.
 package routes
 
-import "net/url"
+import (
+	"fmt"
+	"net/url"
+)
 
 // MasterBestiary é a base da cena do bestiário no trilho do mestre.
 //
@@ -93,4 +96,22 @@ func MasterSearch(tab, term string) string {
 // MasterBestiarySearch procura no bestiário do mestre.
 func MasterBestiarySearch(term string) string {
 	return MasterBestiary + "?busca=" + url.QueryEscape(term)
+}
+
+// Table é PARA ONDE se entra numa sessão: a Mesa em Datastar.
+//
+// Ela mora aqui desde a ALE-278, quando a cena das campanhas virou pacote e
+// deixou de alcançar uma função do `api`. **Terceira vez que o critério de
+// entrada deste pacote reclassifica sozinho** — "só entra endereço que uma cena
+// cita de OUTRA" —, depois do `/livro` e do `/verbete`: o Hub, o cartão da
+// campanha e duas linhas da campanha aberta a citam, e nenhum deles é da Mesa.
+//
+// UMA função e não quatro `Sprintf`, e a razão vale para os dois sentidos: hoje
+// ela é o que faz os quatro caminhos concordarem, e no dia em que a tela antiga
+// da SPA for apagada ela é o único lugar que precisa ser lido para saber quem
+// manda para onde.
+//
+//	routes.Table(1, 4) // "/mesa/1/4"
+func Table(campanhaID, sessaoID int64) string {
+	return fmt.Sprintf("/mesa/%d/%d", campanhaID, sessaoID)
 }

@@ -7,10 +7,10 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"t20engine/plataforma"
-	"testing"
-
 	"t20engine/db/sqlcgen"
+	"t20engine/plataforma"
+	"t20engine/web/campaigns"
+	"testing"
 )
 
 // Os guardas da CRÔNICA (ALE-255).
@@ -47,7 +47,7 @@ func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 		seedSessao(t, s, campanha, int64(i))
 	}
 
-	v, err := s.carregaCronica(context.Background(), s.authUserPorID(t, dono), campanha, "")
+	v, err := campaigns.New(s).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestTheGmComesFirstInTheCast(t *testing.T) {
 	seedMember(t, s, campanha, jogador, "player")
 	seedMember(t, s, campanha, mestre, "gm")
 
-	v, err := s.carregaCronica(context.Background(), s.authUserPorID(t, dono), campanha, "")
+	v, err := campaigns.New(s).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestAPlayerAskingForConfigFallsBackToTheOverview(t *testing.T) {
 	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
 	seedMember(t, s, campanha, heroi, "player")
 
-	v, err := s.carregaCronica(context.Background(), s.authUserPorID(t, visitante), campanha, "config")
+	v, err := campaigns.New(s).LoadOne(context.Background(), visitante, s.ehAdmin(t, visitante), campanha, "config")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 	rota := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/regras/carga"
 
 	// Nasce EM VIGOR: nenhuma linha no banco significa "a regra vale".
-	v, _ := s.carregaCronica(context.Background(), s.authUserPorID(t, dono), campanha, "config")
+	v, _ := campaigns.New(s).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
 	if !v.RegraEmVigor("carga") {
 		t.Fatal("a regra nasceu desligada — o padrão do livro é ela valer")
 	}
@@ -181,7 +181,7 @@ func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 	if rec := pedeNaCronica(t, s, dono, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar respondeu %d", rec.Code)
 	}
-	v, _ = s.carregaCronica(context.Background(), s.authUserPorID(t, dono), campanha, "config")
+	v, _ = campaigns.New(s).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
 	if v.RegraEmVigor("carga") {
 		t.Error("a regra continua em vigor depois de alternada")
 	}
@@ -189,7 +189,7 @@ func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 	if rec := pedeNaCronica(t, s, dono, http.MethodPost, rota, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar de volta respondeu %d", rec.Code)
 	}
-	v, _ = s.carregaCronica(context.Background(), s.authUserPorID(t, dono), campanha, "config")
+	v, _ = campaigns.New(s).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "config")
 	if !v.RegraEmVigor("carga") {
 		t.Error("a regra não voltou a valer")
 	}

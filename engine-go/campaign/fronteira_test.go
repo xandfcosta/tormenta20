@@ -25,7 +25,14 @@ import (
 // versão anterior do `Description` devolvia `sql.NullString`, então a regra de
 // produto carregava o tipo do banco. Quem grava é que traduz vazio para NULL.
 var permitidos = map[string]bool{
-	"t20engine/plataforma": true, // o mapa de erro por campo, e nada mais
+	"t20engine/plataforma": true, // o mapa de erro por campo
+	// O `engine` entrou com o `NormalizeIgnoredRules` (ALE-278), e ele é a
+	// exceção que a lista curta suporta: a pergunta "esta regra opcional existe?"
+	// é de domínio para domínio, o `engine` é folha, e não há ciclo nem HTTP no
+	// caminho. A alternativa era o chamador passar a lista de regras conhecidas —
+	// o que faria cada tela carregar um dado que ela não usa para nada além de
+	// repassar.
+	"t20engine/engine": true,
 }
 
 // recusadosDaPadrao são pacotes da BIBLIOTECA PADRÃO que este pacote não pode

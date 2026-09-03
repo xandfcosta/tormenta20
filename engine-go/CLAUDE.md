@@ -1305,6 +1305,83 @@ sem caminho de arquivo atravessando a fronteira, não há o que ler. A observaç
 está no próprio guarda, porque um leitor que confie nele para isso vai se
 enganar.
 
+## `web/campaigns`: a porta mais LARGA, e o SQL que a cena montava
+
+A nona cena saiu na ALE-278: quatro telas com um endereço cada — a lista, a
+campanha aberta, a folha em branco e a carta de entrar —, e **onze** métodos na
+porta, contra treze da administração e dois do trilho do mestre.
+
+O tamanho não é vício nem virtude: é o que a cena É. O trilho do mestre desenha
+o livro embutido e não toca banco; esta é a tela onde uma campanha nasce, muda
+de nome, ganha membro e é apagada. **Três das quatro telas ESCREVEM.**
+
+### Duas coisas foram recusadas, e as duas já tinham precedente
+
+**O `campaignListDTO` não atravessa.** A cena o consumia direto, e ele é a
+resposta de `GET /campaigns` — tag `json:` em cada campo, nome do fio. É letra
+por letra o que a administração recusou com o `backupDTO`. A cena declara o
+`ListRow`, e o hospedeiro MAPEIA do `campaignList` que já existe: o outro erro
+possível aqui era duplicar a consulta do lado da cena, que é a família de
+defeito que esta épica mais encontrou.
+
+**O SQL não atravessa.** A cena montava `setBuilder` + `execTouched` +
+`"UPDATE campaigns"` à mão. **Cena que compõe SQL é cena com o banco dentro**, e
+o remédio é a PERGUNTA: o `SaveText` existe porque quem sabe o nome da coluna,
+que vazio é NULL e que a linha tem um `updatedAt` a tocar é o hospedeiro.
+
+O `Queries` continua na porta, e a concessão é a mesma da forja e da
+administração — o sinal de que ela está no lugar é nenhum handler tocar banco
+fora dele.
+
+### `IsAdmin` colidiu, e a colisão ensina o inverso do `MintAccountInvite`
+
+O `*Server` já tinha `IsAdmin(email string) bool`, que a administração pede e
+que olha a CONFIGURAÇÃO. A cena precisa de outra coisa: "quem está pedindo
+AGORA é admin?". Dois métodos de mesmo nome e formas diferentes o compilador
+recusa.
+
+Onde o hub fez a administração ceder — mesmo contrato, mesma pergunta —, aqui o
+certo foi um nome novo (`RequesterIsAdmin`), **porque a pergunta é outra**. A
+regra completa fica sendo: um contrato que já existe ganha quando é a mesma
+pergunta; quando só a cara é a mesma, forçar um nome só junta duas coisas
+diferentes.
+
+### O `JoinRefusal`, e a cena colapsando duas travas em uma
+
+O hospedeiro tem sete sentinelas para as sete travas do `joinTable`; o
+`JoinRefusal` da cena tem SEIS valores. A diferença é decisão da tela: "personagem
+não existe" e "personagem é de outra pessoa" viram a mesma frase — "Escolha um
+herói seu" — e distinguir diria a um estranho se um id existe.
+
+É a porta de entrar acontecendo de novo, com a granularidade escolhida pelo lado
+que escreve a frase.
+
+### O guarda que reprovou a SI MESMO, uma fatia depois de eu escrever a regra
+
+Escrevi neste guarda uma lista de recusa da biblioteca padrão com `os` e
+`path/filepath`, por precaução. Ela reprovou o próprio arquivo do guarda, que
+importa `os` para ler o diretório.
+
+O guarda do `campaign`, escrito HORAS antes, tem a frase "lista de perigo
+imaginado envelhece; lista de defeito acontecido, não" — e eu a violei na fatia
+seguinte. A lista saiu, e a ausência dela ficou registrada no arquivo com o
+motivo. Vale a pena notar o contraste: lá a recusa de `database/sql` era uma
+tentação MEDIDA; aqui o `database/sql` é legítimo, porque esta cena grava.
+
+### O SEGUNDO guarda que media o próprio diretório
+
+`TestNoFlowContentInsideASectionLabel` varria `os.ReadDir(".")` no `api`. Quando
+as campanhas mudaram de pacote sobraram **ZERO** usos de `@ui.SectionLabel` lá —
+os oito arquivos que usam o componente estão todos em `web/*`.
+
+E aqui está a diferença que vale guardar, porque ela julga a regra do
+denominador: **o guarda do foco não tinha piso e teria passado verde medindo
+metade; este tinha `visitados == 0` e falhou ALTO no instante em que deixou de
+medir.** O controle não é enfeite — é o que transforma "não mediu" em vermelho.
+
+Ele foi para o `convention/` caminhando a árvore, e ganhou o segundo piso (o de
+arquivos LIDOS), porque a caminhada pode encolher sem zerar.
+
 ## `campaign`: a mesma regra recusando com DUAS frases
 
 O que é um nome válido e o que é uma descrição válida saíram do `api` na

@@ -168,7 +168,7 @@ type mesaLinha struct {
 	Oculto    bool
 	Condicoes []string
 	// Iniciais é o monograma do trilho de 80px (ALE-269). Nasce na view e não
-	// no template pela convenção da casa — `piloto_campanhas_view.go` faz o
+	// no template pela convenção da casa — `web/campaigns/list_view.go` faz o
 	// mesmo —, e porque duas letras NÃO são um nome: quem desenha o retrato
 	// precisa do rótulo inteiro ao lado, no `aria-label`.
 	Iniciais string

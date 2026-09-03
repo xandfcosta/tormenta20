@@ -1,6 +1,7 @@
-package api
+package campaigns
 
 import (
+	"t20engine/web/routes"
 	"fmt"
 	"strconv"
 	"t20engine/web/ui"
@@ -23,21 +24,21 @@ import (
 // a própria SPA usa no telefone e sob `prefers-reduced-motion`. A folha
 // atravessando a lombada tem issue própria (ALE-235), por decisão do dono.
 
-// cenaDeCampanhas embrulha a cena num elemento com `id`, e é ele que o remendo
+// SceneBody embrulha a cena num elemento com `id`, e é ele que o remendo
 // da busca substitui. O `id` é o que o morph do Datastar casa — sem ele o
 // remendo não teria onde pousar.
-templ cenaDeCampanhas(v campanhasView) {
+templ SceneBody(v listView) {
 	<div id="cena-campanhas" class="flex min-h-0 flex-1 flex-col">
-		@campanhas(v)
+		@listBody(v)
 	</div>
 }
 
-templ campanhas(v campanhasView) {
-	@barraDeCampanhas(v)
+templ listBody(v listView) {
+	@listBar(v)
 	if !v.TemAlguma {
-		@vazioDeCampanhas()
+		@emptyList()
 	} else if v.FiltrouTudo {
-		@buscaSemResultado(v)
+		@searchWithoutResult(v)
 	} else {
 		// PALCO em cima, LISTA embaixo — a mesma forma da cena de personagens,
 		// por decisão do dono. O trilho era uma COLUNA de 14rem ao lado, e o
@@ -60,22 +61,22 @@ templ campanhas(v campanhasView) {
 			<div class="flex min-h-0 flex-1 overflow-y-auto px-4 py-2">
 				<div class="m-auto w-full max-w-7xl">
 					for _, c := range v.Campanhas {
-						@livroDaCampanha(c)
+						@campaignBook(c)
 					}
 				</div>
 			</div>
-			@trilhoDeCampanhas(v)
+			@campaignRail(v)
 		</div>
 	}
 }
 
-// barraDeCampanhas é a fileira do cabeçalho: busca, filtro de papel e as duas
+// listBar é a fileira do cabeçalho: busca, filtro de papel e as duas
 // portas de entrada.
 //
 // A busca e o filtro viajam na URL (`@get` com os sinais), então a tela
 // filtrada é um endereço que se guarda e se recarrega — coisa que o estado de
 // componente da SPA não dava.
-templ barraDeCampanhas(v campanhasView) {
+templ listBar(v listView) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
 		data-signals={ fmt.Sprintf("{busca: %q, papel: %q, cursor: %d}", v.Busca, v.Papel, v.CursorID) }
@@ -103,7 +104,7 @@ templ barraDeCampanhas(v campanhasView) {
 					class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
 				/>
 			</div>
-			@filtroDePapel(v)
+			@roleFilter(v)
 		}
 		<div class="ml-auto flex gap-2 sm:ml-0">
 			<a href="/campanhas/entrar" aria-label="Entrar em campanha" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }>
@@ -118,23 +119,23 @@ templ barraDeCampanhas(v campanhasView) {
 	</div>
 }
 
-templ filtroDePapel(v campanhasView) {
+templ roleFilter(v listView) {
 	// `fieldset` + `legend` em `sr-only` porque é um conjunto de escolhas
 	// exclusivas, e é o que o `useSemanticElements` da casa pede (ALE-224).
 	<fieldset class="flex items-center gap-1">
 		<legend class="sr-only">Filtrar por papel</legend>
-		@chipDePapel(v, "todas", "Todas")
-		@chipDePapel(v, "gm", "Mestrando")
-		@chipDePapel(v, "player", "Jogando")
+		@roleChip(v, "todas", "Todas")
+		@roleChip(v, "gm", "Mestrando")
+		@roleChip(v, "player", "Jogando")
 	</fieldset>
 }
 
-// chipDePapel é `aria-pressed` e não `data-selected`: um botão que fica ligado
+// roleChip é `aria-pressed` e não `data-selected`: um botão que fica ligado
 // é um alternador, e é isso que o leitor de tela precisa ouvir.
-templ chipDePapel(v campanhasView, valor, rotulo string) {
+templ roleChip(v listView, valor, rotulo string) {
 	<button
 		type="button"
-		aria-pressed={ boolStr(v.Papel == valor) }
+		aria-pressed={ boolText(v.Papel == valor) }
 		data-on:click={ fmt.Sprintf("$papel = %q; @get('/campanhas')", valor) }
 		class={ "h-8 rounded-sm px-3 text-sm font-medium outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
 			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Papel == valor),
@@ -146,22 +147,22 @@ templ chipDePapel(v campanhasView, valor, rotulo string) {
 
 // ── o livro ──────────────────────────────────────────────────────────────────
 
-// livroDaCampanha é a crônica em foco como um tomo aberto: capa de couro com
+// campaignBook é a crônica em foco como um tomo aberto: capa de couro com
 // duas folhas separadas pela lombada. A da esquerda é a ilustração (o emblema
 // de matiz, até haver arte de verdade); a da direita é a informação e a ação.
 //
 // Todos os livros são desenhados e o `data-show` escolhe um. É o que faz ←/→
 // não custar requisição.
-templ livroDaCampanha(c campanhaCartao) {
+templ campaignBook(c campaignCard) {
 	<div data-show={ fmt.Sprintf("$cursor == %d", c.ID) } class="grimorio-book w-full p-2.5 sm:p-3">
 		<div class="grimorio-book-pages flex flex-col overflow-hidden sm:min-h-[26rem] sm:flex-row sm:items-stretch lg:min-h-[32rem] xl:min-h-[36rem]">
-			@folhaDaArte(c)
-			@folhaDaInformacao(c)
+			@artPage(c)
+			@infoPage(c)
 		</div>
 	</div>
 }
 
-templ folhaDaArte(c campanhaCartao) {
+templ artPage(c campaignCard) {
 	<div class="grimorio-parchment-bg flex shrink-0 items-center justify-center p-0 sm:w-1/2 sm:p-4 lg:p-7 xl:p-10">
 		<div
 			class="relative aspect-[16/10] w-full overflow-hidden rounded-none border border-[color:var(--grimorio-parchment-ink)]/35 sm:aspect-auto sm:h-full"
@@ -178,9 +179,9 @@ templ folhaDaArte(c campanhaCartao) {
 	</div>
 }
 
-// folhaDaInformacao é pergaminho com tinta escura. O apagado aqui é OPACIDADE e
+// infoPage é pergaminho com tinta escura. O apagado aqui é OPACIDADE e
 // não os tokens escuros da cena — eles sumiriam sobre o creme.
-templ folhaDaInformacao(c campanhaCartao) {
+templ infoPage(c campaignCard) {
 	<div class="grimorio-parchment-bg flex flex-1 flex-col justify-center gap-4 p-6 sm:p-8 lg:p-12 xl:p-16">
 		<p class="flex items-center gap-2 text-2xs font-semibold uppercase tracking-[0.22em] opacity-70">
 			<span>{ c.Papel }</span>
@@ -211,28 +212,28 @@ templ folhaDaInformacao(c campanhaCartao) {
 				</div>
 			</div>
 		}
-		@acoesDaCampanha(c)
+		@campaignActions(c)
 	</div>
 }
 
-// acoesDaCampanha: "Abrir campanha" fica SEMPRE na primeira posição e no mesmo
+// campaignActions: "Abrir campanha" fica SEMPRE na primeira posição e no mesmo
 // tamanho.
 //
 // A regra vem da ALE-96 e da ALE-78: a cena pinta antes de saber se há sessão
 // viva, e um botão que muda de lugar quando o dado chega some debaixo do
 // cursor. Ao vivo ele só troca de preenchimento, cedendo o destaque para
 // "Continuar a sessão", que ENTRA à direita em vez de empurrar.
-templ acoesDaCampanha(c campanhaCartao) {
+templ campaignActions(c campaignCard) {
 	<div class="flex flex-wrap items-center gap-2 pt-1">
 		<a
 			href={ templ.SafeURL("/campanhas/" + strconv.FormatInt(c.ID, 10)) }
-			class={ ui.ButtonClasses(seAoVivo(c, ui.VariantSecondary, ui.VariantPrimary), ui.SizeLarge, "") }
+			class={ ui.ButtonClasses(ifLive(c, ui.VariantSecondary, ui.VariantPrimary), ui.SizeLarge, "") }
 		>
 			Abrir campanha
 		</a>
 		if c.AoVivo {
 			<a
-				href={ templ.SafeURL(rotaDaMesa(c.ID, c.SessaoID)) }
+				href={ templ.SafeURL(routes.Table(c.ID, c.SessaoID)) }
 				class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }
 			>
 				Continuar a sessão
@@ -242,7 +243,7 @@ templ acoesDaCampanha(c campanhaCartao) {
 	</div>
 }
 
-func seAoVivo(c campanhaCartao, aoVivo, parado ui.Variant) ui.Variant {
+func ifLive(c campaignCard, aoVivo, parado ui.Variant) ui.Variant {
 	if c.AoVivo {
 		return aoVivo
 	}
@@ -251,7 +252,7 @@ func seAoVivo(c campanhaCartao, aoVivo, parado ui.Variant) ui.Variant {
 
 // ── o trilho ─────────────────────────────────────────────────────────────────
 
-// trilhoDeCampanhas são os marcadores. `data-nav-region` + `data-nav-layout`
+// campaignRail são os marcadores. `data-nav-region` + `data-nav-layout`
 // são o contrato com o driver de teclado, e o `focusin` de cada marcador é o
 // que faz o cursor seguir o foco.
 //
@@ -273,7 +274,7 @@ func seAoVivo(c campanhaCartao, aoVivo, parado ui.Variant) ui.Variant {
 // O que muda com a posição é a GRAMÁTICA: `row` e `horizontal`, porque agora a
 // seta que anda na lista é a lateral. Declarar `column` numa tira deitada faria
 // a seta para baixo procurar um vizinho que está ao lado.
-templ trilhoDeCampanhas(v campanhasView) {
+templ campaignRail(v listView) {
 	<div
 		role="listbox"
 		aria-label="Campanhas"
@@ -283,12 +284,12 @@ templ trilhoDeCampanhas(v campanhasView) {
 		class="flex shrink-0 items-center gap-2 overflow-x-auto border-t border-grimorio-iron px-4 py-3"
 	>
 		for _, c := range v.Campanhas {
-			@marcadorDaCampanha(c)
+			@campaignMarker(c)
 		}
 	</div>
 }
 
-templ marcadorDaCampanha(c campanhaCartao) {
+templ campaignMarker(c campaignCard) {
 	<button
 		type="button"
 		role="option"
@@ -321,7 +322,7 @@ templ marcadorDaCampanha(c campanhaCartao) {
 
 // ── os vazios ────────────────────────────────────────────────────────────────
 
-templ vazioDeCampanhas() {
+templ emptyList() {
 	<div class="flex flex-1 items-center justify-center p-8">
 		<div class="max-w-md space-y-3 text-center">
 			<h2 class="font-heading text-lg tracking-wide">Nenhuma campanha ainda</h2>
@@ -332,7 +333,7 @@ templ vazioDeCampanhas() {
 	</div>
 }
 
-templ buscaSemResultado(v campanhasView) {
+templ searchWithoutResult(v listView) {
 	<div class="flex flex-1 items-center justify-center p-8">
 		<div class="max-w-md space-y-3 text-center">
 			<p class="text-sm text-muted-foreground">Nenhuma campanha combina com o que você buscou.</p>
@@ -346,7 +347,7 @@ templ buscaSemResultado(v campanhasView) {
 	</div>
 }
 
-func boolStr(b bool) string {
+func boolText(b bool) string {
 	if b {
 		return "true"
 	}
