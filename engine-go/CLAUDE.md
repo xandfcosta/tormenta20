@@ -679,6 +679,24 @@ todo descoberto errando — está aqui para ninguém redescobrir:
 - **Valor CONSTANTE de atributo sai literal; só o DINÂMICO é escapado.** Uma
   aspa simples num literal fica aspa simples; a mesma string vinda de variável
   vira `&#39;`. Importa quando se afirma HTML em teste.
+- **NUNCA passe formatador em arquivo GERADO** (ALE-278). `goimports -w web/x/*.go`
+  alcança os `_templ.go` e junta no bloco de imports os dois de runtime que o
+  `templ generate` emite SOLTOS no topo. São doze linhas sem uma de
+  comportamento, e a CI reprova em "Fail if the generated templates were stale"
+  com a suíte local INTEIRA verde.
+  **Gerado reformatado é gerado desencontrado por definição**, e é a metade
+  desta armadilha que o item acima NÃO cobre: lá o `_templ.go` está ATRASADO e
+  `templ generate` conserta; aqui ele está em dia no conteúdo e diferente na
+  FORMA, então regenerar e compilar não denuncia nada. Só o `git diff` DEPOIS de
+  regenerar:
+
+  ```
+  go tool templ generate && git diff --quiet -- 'engine-go/**/*_templ.go'
+  ```
+
+  Esse é o passo da CI, e ele tem de entrar no roteiro de toda fatia que mover
+  arquivo de pacote — porque mover pacote é exatamente quando o `goimports` é
+  preciso. Se ele for, restrinja o alvo: `_templ.go` só se corrige regerando.
 - **Regenerar não basta: o servidor precisa REINICIAR.** O `go run ./cmd/api`
   compila uma vez, então depois do `templ generate` o processo continua servindo
   o HTML antigo. Isto já produziu uma medição de layout inteira contra a página
