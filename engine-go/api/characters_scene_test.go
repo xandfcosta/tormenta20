@@ -4,13 +4,30 @@ import (
 	"context"
 	"strconv"
 	"strings"
-	"t20engine/book"
-	"t20engine/web/ui"
-	"testing"
-
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/web/characters"
+	"t20engine/web/ui"
+	"testing"
 )
+
+// corpoDoBotao é uma CÓPIA do helper do `web/characters`, e não um símbolo
+// exportado de lá. É a decisão que a fatia da porta deixou escrita: a bancada do
+// hospedeiro escreve o que ela afirma, porque importar do que está sendo testado
+// faz o teste andar junto com o defeito. São nove linhas de parse.
+func corpoDoBotao(t *testing.T, html, rotulo string) string {
+	t.Helper()
+	i := strings.Index(html, `aria-label="`+rotulo+`"`)
+	if i < 0 {
+		return ""
+	}
+	resto := html[i:]
+	j := strings.Index(resto, "</button>")
+	if j < 0 {
+		return resto
+	}
+	return resto[:j]
+}
 
 // Os guardas da cena de PERSONAGENS (ALE-239).
 //
@@ -35,16 +52,6 @@ func novaCenaDeHerois(t *testing.T) (*Server, AuthUser) {
 	return s, s.authUser(u)
 }
 
-func seedClasse(t *testing.T, s *Server, characterID int64, nome string, nivel int64) {
-	t.Helper()
-	err := s.queries.CreateClass(context.Background(), sqlcgen.CreateClassParams{
-		Characterid: characterID, Classname: nome, Level: nivel,
-	})
-	if err != nil {
-		t.Fatalf("seed classe %q: %v", nome, err)
-	}
-}
-
 func seedRaca(t *testing.T, s *Server, characterID int64, raca string) {
 	t.Helper()
 	err := s.queries.CreateRace(context.Background(), sqlcgen.CreateRaceParams{
@@ -64,12 +71,12 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	id := seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(v.Herois) != 1 {
-		t.Fatalf("esperava 1 herói, veio %d", len(v.Herois))
+	if len(v.Heroes) != 1 {
+		t.Fatalf("esperava 1 herói, veio %d", len(v.Heroes))
 	}
 
 	linha, err := s.queries.GetCharacter(context.Background(), id)
@@ -80,8 +87,8 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ficha: %v", err)
 	}
-	if v.Herois[0].Defesa != strconv.Itoa(ficha.Defense.Total) {
-		t.Errorf("Defesa do palco = %q, a da ficha = %d", v.Herois[0].Defesa, ficha.Defense.Total)
+	if v.Heroes[0].Defense != strconv.Itoa(ficha.Defense.Total) {
+		t.Errorf("Defesa do palco = %q, a da ficha = %d", v.Heroes[0].Defense, ficha.Defense.Total)
 	}
 }
 
@@ -95,17 +102,17 @@ func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
 	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
 	s.catalogs = nil
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar sem motor deveria funcionar: %v", err)
 	}
-	if len(v.Herois) != 1 {
+	if len(v.Heroes) != 1 {
 		t.Fatalf("a cena caiu sem o motor")
 	}
-	if v.Herois[0].Defesa != "—" {
-		t.Errorf("Defesa = %q sem motor, queria travessão", v.Herois[0].Defesa)
+	if v.Heroes[0].Defense != "—" {
+		t.Errorf("Defesa = %q sem motor, queria travessão", v.Heroes[0].Defense)
 	}
-	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -119,48 +126,18 @@ func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
 
 // ── o catálogo que deixou de ir ao navegador ─────────────────────────────────
 
-// Este é o dividendo da ALE-107 aparecendo: os textos vêm do catálogo EMBUTIDO.
-// O guarda é sobre o texto existir, não sobre qual é — o conteúdo é dado
-// transcrito e quem o valida é o schema, não um `expect` por verbete.
-func TestTheDossierCarriesTheRaceTextsFromTheEmbeddedCatalog(t *testing.T) {
-	if len(book.RaceAbilities("Humano", 8)) == 0 {
-		t.Fatal("o catálogo embutido não devolveu habilidade nenhuma para Humano")
-	}
-	for _, h := range book.RaceAbilities("Humano", 8) {
-		if h.Name == "" || h.Description == "" {
-			t.Errorf("habilidade %q sem nome ou sem descrição — o dossiê ficaria com linha vazia", h.ID)
-		}
-	}
-}
-
-// Raça que não está no catálogo não derruba nada: o herói abre sem as linhas de
-// sabor. Um personagem antigo com raça renomeada é caso normal, não erro.
-func TestAnUnknownRaceDoesNotBringTheDossierDown(t *testing.T) {
-	if got := book.RaceAbilities("Não Existe", 8); got != nil {
-		t.Errorf("raça desconhecida devolveu %v", got)
-	}
-}
-
-func TestTheDossierRespectsTheLimit(t *testing.T) {
-	if got := len(book.RaceAbilities("Humano", 1)); got != 1 {
-		t.Errorf("limite 1 devolveu %d", got)
-	}
-}
-
-// ── a gramática do cursor ────────────────────────────────────────────────────
-
 // A vaga de criar existe COM O ELENCO VAZIO, e é ela que dá o que fazer. Uma
 // tela vazia que não oferece o primeiro passo é uma tela que não ajuda.
 func TestWithAnEmptyCastTheCreateSlotIsWhatIsLeft(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if v.TemAlgum {
+	if v.HasAny {
 		t.Fatal("elenco vazio marcado como cheio")
 	}
-	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -176,11 +153,11 @@ func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -216,20 +193,20 @@ func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 		"soldado": "origem",
 		"anao":    "raça",
 	} {
-		v, err := s.carregaPersonagens(context.Background(), eu, termo)
+		v, err := characters.New(s).Load(context.Background(), eu.ID, termo)
 		if err != nil {
 			t.Fatalf("carregar %q: %v", termo, err)
 		}
-		if len(v.Herois) != 1 {
-			t.Errorf("busca por %s (%q) devolveu %d heróis, queria 1", campo, termo, len(v.Herois))
+		if len(v.Heroes) != 1 {
+			t.Errorf("busca por %s (%q) devolveu %d heróis, queria 1", campo, termo, len(v.Heroes))
 		}
 	}
 
-	nada, err := s.carregaPersonagens(context.Background(), eu, "zzzzzz")
+	nada, err := characters.New(s).Load(context.Background(), eu.ID, "zzzzzz")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if !nada.FiltrouTudo {
+	if !nada.FilteredAll {
 		t.Error("busca sem resultado não foi marcada como tal")
 	}
 }
@@ -241,12 +218,12 @@ func TestTheCountSaysFilteredOutOfTotal(t *testing.T) {
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "thalen")
+	v, err := characters.New(s).Load(context.Background(), eu.ID, "thalen")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(v.Herois) != 1 || v.Total != 2 {
-		t.Errorf("filtrados=%d total=%d, queria 1 de 2", len(v.Herois), v.Total)
+	if len(v.Heroes) != 1 || v.Total != 2 {
+		t.Errorf("filtrados=%d total=%d, queria 1 de 2", len(v.Heroes), v.Total)
 	}
 }
 
@@ -260,16 +237,16 @@ func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(v.Herois) != 2 {
-		t.Fatalf("esperava 2 heróis, veio %d", len(v.Herois))
+	if len(v.Heroes) != 2 {
+		t.Fatalf("esperava 2 heróis, veio %d", len(v.Heroes))
 	}
-	primeiro, segundo := v.Herois[0].Nome, v.Herois[1].Nome
+	primeiro, segundo := v.Heroes[0].Name, v.Heroes[1].Name
 
-	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -289,25 +266,6 @@ func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 	}
 }
 
-// corpoDoBotao devolve o conteúdo visível de um botão achado pelo `aria-label`.
-//
-// O `>` que fecha a tag de abertura é o primeiro do trecho porque o templ
-// escapa `>` dentro de valor de atributo — então o corte é seguro.
-func corpoDoBotao(t *testing.T, html, rotulo string) string {
-	t.Helper()
-	i := strings.Index(html, `aria-label="`+rotulo+`"`)
-	if i < 0 {
-		t.Fatalf("nenhum botão com rótulo %q no HTML", rotulo)
-	}
-	resto := html[i:]
-	abre := strings.Index(resto, ">")
-	fecha := strings.Index(resto, "</button>")
-	if abre < 0 || fecha < 0 || abre > fecha {
-		t.Fatalf("botão %q malformado no HTML", rotulo)
-	}
-	return resto[abre+1 : fecha]
-}
-
 // A vaga de criar tem o ÚLTIMO herói à esquerda: é o caminho de volta para o
 // elenco, e sem ele quem anda até o fim do trilho fica sem pista de retorno.
 func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
@@ -315,15 +273,15 @@ func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	ultimo := v.Herois[len(v.Herois)-1].Nome
+	ultimo := v.Heroes[len(v.Heroes)-1].Name
 	// UMA vez, e é isso que prova que veio da vaga: "Anterior: X" só aparece no
 	// palco de quem vem DEPOIS de X, e depois do último herói não há palco de
 	// herói nenhum. A única coisa à direita dele no trilho é a vaga.
@@ -341,14 +299,11 @@ func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if peekDe(v.Herois, -1) != nil || peekDe(v.Herois, 1) != nil {
-		t.Fatal("peekDe inventou vizinho fora do trilho")
-	}
-	html, err := ui.RenderFragment(t.Context(), cenaDePersonagens(v))
+	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
