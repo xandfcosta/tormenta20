@@ -85,16 +85,18 @@ type Entry struct {
 	BookPage         int               `json:"bookPage"`
 }
 
-// comSinal escreve o modificador como o livro, e o TRAVESSÃO quando ele não
+// WithSignPtr escreve o modificador como o livro, e o TRAVESSÃO quando ele não
 // existe. Ver o comentário de `verbete`: ausência não é zero (ALE-151).
+//
+// O caso presente delega ao `WithSign` do `catalogs.go` em vez de repetir as
+// três linhas dele. Não é economia: é que a mesma função já existia TRÊS vezes
+// neste repositório — aqui, lá, e como `comSinalInt` na view do bestiário — e a
+// ficha chamava duas delas, às vezes no mesmo arquivo (ALE-278).
 func WithSignPtr(n *int) string {
 	if n == nil {
 		return "—"
 	}
-	if *n >= 0 {
-		return "+" + strconv.Itoa(*n)
-	}
-	return strconv.Itoa(*n)
+	return WithSign(*n)
 }
 
 var (

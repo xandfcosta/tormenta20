@@ -376,9 +376,9 @@ func raceChoicesBlock(v fichaView) templ.Component {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var19 string
-						templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(o.Ativo))
+						templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(o.Ativo))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 94, Col: 42}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 94, Col: 44}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 						if templ_7745c5c3_Err != nil {
@@ -516,9 +516,9 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var27 string
-				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(contemTraco(escolha.Chosen, o.Valor)))
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 123, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 123, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 				if templ_7745c5c3_Err != nil {
@@ -596,9 +596,9 @@ func attributeChoiceBlock(v fichaView, escolha attributeChoice) templ.Component 
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var32 string
-				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(contemTraco(escolha.Chosen, o.Valor)))
+				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 136, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 136, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 				if templ_7745c5c3_Err != nil {
@@ -778,9 +778,9 @@ func originChoicesBlock(v fichaView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var44 string
-				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(o.Ativo))
+				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(o.Ativo))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 170, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 170, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 				if templ_7745c5c3_Err != nil {
@@ -973,9 +973,9 @@ func classChoicesBlock(v fichaView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var56 string
-				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(poder.Chosen))
+				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(poder.Chosen))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 210, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 210, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 				if templ_7745c5c3_Err != nil {
@@ -1123,9 +1123,9 @@ func classPicker(v fichaView, classe, escolha, rotulo string, seletor pickerChoi
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var66 string
-			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(o.Ativo))
+			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(o.Ativo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 236, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ficha_powers_dialog.templ`, Line: 236, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 			if templ_7745c5c3_Err != nil {

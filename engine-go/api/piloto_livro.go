@@ -220,3 +220,12 @@ func (s *Server) LivroDoPiloto() http.Handler {
 		http.ServeFile(w, r, s.livro.caminho)
 	}))
 }
+
+// BookAddress cumpre a porta da Mesa do Mestre (`master.Deps`, ALE-278).
+//
+// Invólucro fino de um campo, e é assim que o `api` cumpre toda porta de cena
+// desde a forja: quem escolhe o que atravessa a fronteira é o CONSUMIDOR, e o
+// hospedeiro se dobra ao que ele pediu. A cena não recebe a `Config` nem o
+// `livroServido` — ela recebe o endereço pronto, que é a única coisa que os
+// componentes do livro precisam saber.
+func (s *Server) BookAddress() bookui.BookAddress { return s.livro.endereco }

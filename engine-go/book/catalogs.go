@@ -336,7 +336,7 @@ func CategoryName(c string) string {
 
 // ── o que a cena precisa escrever ────────────────────────────────────────────
 
-// nomeDaCondicao resolve o id de uma condição no nome que se lê.
+// ConditionName resolve o id de uma condição no nome que se lê.
 //
 // DIVERGÊNCIA DELIBERADA do original, e por isso escrita: a SPA imprime o
 // `upgradesTo` cru, então a linha sai "Agrava para apavorado" em caixa baixa. O
@@ -434,7 +434,8 @@ var categoryLabel = map[string]string{
 	"vehicle":        "Veículo",
 }
 
-// comSinalInt escreve o modificador como o livro: "+2", "-1".
+// WithSign escreve o modificador como o livro: "+2", "-1". O irmão que aceita
+// ausência é o `WithSignPtr`, no `bestiary.go`.
 func WithSign(n int) string {
 	if n >= 0 {
 		return "+" + strconv.Itoa(n)

@@ -602,7 +602,7 @@ regra do repositório no `api` seria escolher um dono arbitrário — e o `api` 
 sendo dividido em um pacote por cena (ALE-278), então o guarda mudaria de casa
 junto com a próxima fatia.
 
-Três moram lá hoje:
+Quatro moram lá hoje:
 
 - **`TestEveryTestNameIsEnglish`** varre todo `*_test.go` e recusa nome com
   palavra em português. Ele é o que impede o 774º — a regra de idioma sempre
@@ -631,6 +631,14 @@ Três moram lá hoje:
   lista é por nome-base, então perdoar um nome ali perdoaria também o próximo
   comentário que voltasse a apontar para ele. A prosa passou a nomeá-los sem a
   extensão.
+
+- **`TestNoFocusAsksTheServerWithoutAKeyboardGuard`** chegou na ALE-278, e não
+  por ser regra de repositório desde sempre: ele já existia dentro da cena do
+  bestiário, e foi a divisão em pacotes que o obrigou a mudar de casa. A
+  história inteira está em "Dois pedidos de UM gesto", mais abaixo; o que
+  interessa aqui é a forma, porque ela vale para o próximo: **um guarda que
+  varre `.` mede o diretório em que ele por acaso mora**, e mover o arquivo
+  encolhe a varredura sem mudar uma linha do guarda nem acender nada.
 
 **A lista de marcadores tem uma fresta declarada**, e ela é deliberada: nome
 PRÓPRIO do livro passa. `TestBolaDeFogoWorkedExample` e
@@ -995,6 +1003,164 @@ hospedada numa cena por acidente de história — a primeira foi o `NoticeIntern
 da porta. **Vale esperar uma por cena daqui para frente**, e o sinal é sempre o
 mesmo: o build quebra em um arquivo que a fatia não ia tocar.
 
+## `web/master`: a MAIOR cena, com a MENOR porta
+
+A Mesa do Mestre saiu na ALE-278 — treze arquivos, ~3.900 linhas, trinta rotas:
+o trilho, os nove catálogos, o bestiário, os encontros e o improviso. E o
+VERBETE, que foi junto.
+
+**Ela tem DOIS métodos na porta**, contra treze da administração, nove da porta
+de entrar e seis da forja. O contraste com a administração é o que ensina, e não
+o número: aquela é um painel de CONTROLE sobre serviços do servidor, então tudo
+que ela faz é do hospedeiro. Esta desenha o LIVRO, que é `go:embed`, igual para
+todo mundo e sem uma linha de banco. Medido nos doze arquivos de produção, o
+`*Server` era alcançado em exatamente dois lugares: o `WritePage` de cada
+handler e o `s.livro.endereco`. **A porta é fina quando a cena não precisa do
+servidor, não quando alguém foi disciplinado.**
+
+### O verbete não é cena própria, e a medição é que disse
+
+O `/verbete` tinha rota no hospedeiro porque a caixa que um elo abre pertence à
+CASCA — ela aparece em qualquer cena. Isso continua verdade, e mesmo assim ele
+foi para cá: o handler dele lê `groupForEntry`, `knownTab`, `CrossRefEntry` e
+`SpellAugments`, que são o desenho do acervo. Ele é uma rota fina sobre a cena
+dos catálogos, filtrada a uma entrada.
+
+Isto corrige o que ficou escrito na fatia do `web/bookui`: **o verbete não estava
+destravado.** O `bookui` levou os primitivos — `Chunk`, `CrossRef`, `PageSeal`,
+`BookAddress` —, não o agrupamento por aba, e a nota daquela fatia leu o
+destravamento do trilho como se valesse para os dois. Quem desfez foi medir o
+que ele LÊ em vez de reler a nota.
+
+### O bestiário é lido pela Mesa, e por isso ele exporta
+
+Nove símbolos saem daqui para o `api`: a Mesa tem um painel de bestiário que é o
+MESMO desenho da cena do mestre, parametrizado pelo endereço (`BestiaryView.Base`).
+Isso é cena alcançando o miolo de outra, e é o preço aceito — a alternativa era
+um segundo desenho da mesma criatura mantido em dois lugares. A direção continua
+legal: o `api` importa `web/master`, nunca o contrário.
+
+### `catalog.Resource` direto: o mesmo achado da forja, três fatias depois
+
+O `improviso` lia `catalog.Resource("gm-tables")` e `("dungeon-design")` sem
+passar pelo `book` — sem ciclo, sem erro, só a divisão vazando por baixo. É
+letra por letra o que o guarda da forja pegou no primeiro dia com o `items.go`.
+As sete formas foram para `book/gm_tables.go` pela regra que aquele achado
+deixou: **o destino de uma função é a DEPENDÊNCIA dela.**
+
+O guarda daqui nomeia esse caso na mensagem de erro, porque a lista de
+permitidos tem seis leitores do livro e o caminho curto para o sétimo é chamar
+o catálogo direto.
+
+### Os arquivos, e o que a mudança de casa cobrou de arrumação
+
+O `routes.go` chegou com 600 linhas e QUATRO famílias de handler que não se
+chamam. Ele virou cinco: o registro das trinta rotas continua num lugar só — é
+ele que o `api` chama, e espalhá-lo daria à cena quatro portas de entrada —, e
+os handlers foram para `bestiary_routes.go`, `collection_routes.go`,
+`encounters_routes.go` e `improv_routes.go`. Arquivo é unidade de
+RESPONSABILIDADE e de conflito de merge, não de leitura.
+
+O que NÃO coube: `bestiary.templ` (639) e `collection.templ` (609) seguem acima
+do teto. Dividir componente `templ` é mais invasivo que mover função, e ficou
+para quem tiver razão para abrir esses arquivos.
+
+Um arquivo saiu inteiro de passagem: `piloto_catalogos_do_personagem.go` estava
+com `package api` e um `import ()` e nada mais — vazio desde que o `book` levou
+as 330 linhas dele (`4260797d`), três fatias antes.
+
+### O renome mordeu num lugar novo: o `@componente(...)` PARECE nó de texto
+
+A receita das duas fatias anteriores — proteja comentário, proteja string,
+depois DIFERENCIE os nós de texto — foi seguida, e ainda assim escapou coisa. A
+máscara que protege texto num `.templ` procura o que está entre `>` e `<` sem
+`{`/`}` no meio, e três formas passam por esse funil sem serem texto:
+
+- **`@componente(atual)` sozinho numa linha** entre duas tags. Vinte e sete
+  chamadas ficaram para trás, e quem acusou foi o compilador — a declaração
+  tinha sido renomeada, então todo uso sobrevivente virou símbolo indefinido.
+- **Uma linha com chamada e strings**, como `@crBox(v.Base(), "nd-min", …)`: as
+  strings viram marcas sem chave, e o que sobra passa a caber no funil.
+- **Texto dentro de bloco de FILHOS**, `@ui.SectionLabel(…) { Dificuldade }`.
+  Este é o inverso dos dois: é texto de verdade e a máscara NÃO o protegeu,
+  porque ele é delimitado por chaves e não por tags. `Dificuldade` virou
+  `Difficulty` na tela.
+
+As três lições, em ordem de valor: **o compilador é rede COMPLETA para o
+identificador** (declaração renomeada ⇒ uso sobrevivente não compila), e por
+isso nenhuma das duas primeiras chegou perto de sair; **para o TEXTO não há
+rede nenhuma** além do diff, então o diff é obrigatório; e **um diff de nós de
+texto que usa a mesma máscara do renomeador herda o ponto cego dela** — o
+primeiro que rodei disse "0 alterados" sobre regiões que ele também escondia.
+O que achou o `Dificuldade` foi a definição ESTRITA: é prosa a linha sem `@`,
+sem parênteses, sem `=` e sem chaves.
+
+### Os comentários ficam falando dos nomes velhos, e nenhum guarda pega
+
+O renome saiu do corpo do código e **não** dos comentários — de propósito, porque
+comentário é o que o renomeador tem de proteger. A consequência é que toda
+docstring passou a nomear uma função que não existe: `// handleImproviso desenha
+a cena…` em cima de `handleImprov`. Foram **105** num pacote só.
+
+Isso não é o guarda da ALE-285: ele prende citação de TESTE e de CAMINHO DE
+ARQUIVO, e um nome de função não é nem um nem outro. Não há rede aqui.
+
+O que achou foi uma sonda de duas linhas que vale repetir na próxima fatia:
+**colete tudo que o repositório DECLARA, depois procure nos comentários os
+tokens que parecem identificador e não estão na lista.** Ela é barata, e o
+resultado veio com o passivo junto — dez citações mortas ANTERIORES a esta
+fatia, apontando para nomes que outras extrações já tinham trocado
+(`casaBusca`→`search.Matches`, `dobra`→`search.Fold`,
+`NDDeGrupo`→`PartyChallengeLevel`, `requirePagina`→`requirePage`,
+`rotuloDeSecao`→`ui.SectionLabel`, e a docstring do próprio `ConditionName` no
+`book`, que ainda se chamava `nomeDaCondicao`).
+
+Duas ressalvas para quem for repetir. A sonda só pode trocar automaticamente o
+que **não pode ser prosa**: `filtra`, `aperta`, `empilha` e `sorteio` viraram
+nomes ingleses no código e continuam sendo palavras portuguesas no comentário
+ao lado — trocá-las corromperia a frase. O filtro é camelCase ou inicial
+maiúscula. E o RUÍDO é grande: tag HTML (`fieldset`, `h4`), nome de pacote
+(`book`, `api`), variável de ambiente (`LIVRO_PDF`) e componente da SPA morta
+(`VirtualList`, `DialogHeader`) casam com o padrão e não são defeito — o último
+grupo é a procedência que esta casa valoriza.
+
+### O teste se dividiu pela quinta vez, e um caso mudou de camada de verdade
+
+38 casos puros ficaram, 30 de composição voltaram para o `api`. Quatro estavam
+no meio: liam o miolo da cena E subiam um `Server`. Eles ficaram aqui dirigindo
+as rotas do PRÓPRIO pacote (`Routes` num `chi` com o dublê), porque a composição
+que eles provam é a da cena — rota, handler, componente —, e não a do
+hospedeiro. Ao hospedeiro cabe a outra pergunta, que é se a cena está montada e
+atrás do login.
+
+**O dublê da porta precisa RENDERIZAR.** O primeiro `WritePage` do dublê não
+fazia nada, e onze subcasos reprovaram dizendo "a cena não desenha o próprio
+nome" com a cena inteira: a resposta saía 200 com corpo vazio e todo
+`strings.Contains` passou a medir a ausência da casca. Dublê que não escreve
+nada é pior que dublê nenhum, porque ele responde 200.
+
+### Dois casos derivavam o esperado do código sob teste, e a fronteira os expôs
+
+`TestTheSearchInTheUrlHoldsOnAColdLoad` chamava `loadCollection` com os mesmos
+critérios da página e afirmava que a página continha o número devolvido por ela.
+`TestTheEncounterInTheUrlHoldsOnAColdLoad` fazia o mesmo com
+`loadEncounters(...).Difficulty()`. Nos dois, um erro na conta sairia dos DOIS
+lados e o guarda ficaria verde — é o que o CLAUDE.md da raiz proíbe com todas as
+letras.
+
+Nenhum dos dois foi escrito com má-fé, e é por isso que vale registrar COMO
+apareceram: enquanto tudo era um pacote só, chamar a função ao lado era
+gratuito. **A fronteira não consertou nada sozinha; ela tornou visível uma
+escolha que não parecia escolha** — a mesma coisa que ela fez com os arquivos de
+teste que misturavam camadas.
+
+Os dois passaram a afirmar valor escrito à mão. O do encontro traz a conta do
+livro no comentário: ogro ND 4, dois deles → 4 + 2·log2(2) = ND 6 (p282); 6
+menos o nível 3 dá diferença 3, acima da faixa "Difícil" → **Mortal** (p281). O
+primeiro palpite foi "Desafiador", que não é sequer um dos cinco rótulos que a
+tabela produz — a prova de que escrever à mão só vale lendo a REGRA, e não
+chutando.
+
 ## `account`: a regra de conta, e a cópia que divergiu na FRASE
 
 O que é um e-mail, o que é uma senha aceitável, e a forma dos dois pedidos que
@@ -1319,6 +1485,18 @@ afordância de TECLADO, e por isso ele pede `:focus-visible`
 desfazia o dele. `TestNoFocusAsksTheServerWithoutAKeyboardGuard` varre a FONTE
 inteira, e não uma cena servida, porque enumerar cena por cena deixaria a
 próxima nascer sem medição.
+
+**E "a fonte inteira" precisou ser defendida na ALE-278**, porque ele quase
+deixou de ser verdade sem ninguém mexer numa linha dele. O guarda morava no
+pacote do bestiário e varria `*.templ` do PRÓPRIO diretório — o que era a fonte
+inteira enquanto todas as cenas eram um pacote só. Quando o bestiário virou
+`web/master`, mudá-lo de casa junto o teria deixado medindo QUATRO arquivos e
+ignorando três (campanhas, o tabuleiro da mesa e personagens), com o terminal
+dizendo verde: dos quatro `.templ` com `data-on:focus`, um foi com ele e três
+ficaram. Ele foi para o `convention/` e passou a CAMINHAR a árvore, que é o
+mesmo conserto que o guarda de tinta levou — e ganhou um piso de arquivos
+VISITADOS, porque o denominador antigo (`achados > 0`) teria passado verde na
+mudança: havia um foco com `@get` no diretório novo, e ele bastava.
 
 ### Resposta que não é 2xx: o remendo é DESCARTADO e a recusa some
 

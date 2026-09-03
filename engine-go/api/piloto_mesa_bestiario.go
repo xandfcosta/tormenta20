@@ -5,6 +5,7 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"t20engine/book"
+	"t20engine/web/master"
 	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -43,10 +44,10 @@ func (s *Server) TableBestiaryRoutes(r chi.Router) {
 }
 
 // bestiarioDaMesaPara monta a view do painel para esta mesa.
-func (s *Server) bestiarioDaMesaPara(r *http.Request, campaignID, sessionID int64) bestiarioView {
-	c := criteriosDoPedido(r)
-	v := carregaBestiarioDe(rotaDoBestiarioDaMesa(campaignID, sessionID), s.livro.endereco, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
-	v.Abrir = c.Abrir
+func (s *Server) bestiarioDaMesaPara(r *http.Request, campaignID, sessionID int64) master.BestiaryView {
+	c := master.BestiaryCriteriaFromRequest(r)
+	v := master.LoadBestiaryFrom(rotaDoBestiarioDaMesa(campaignID, sessionID), s.livro.endereco, c.Term, c.Types, c.CRMin, c.CRMax, c.Chosen)
+	v.Open = c.Open
 	return v
 }
 
@@ -79,8 +80,8 @@ func (s *Server) handleBestiarioDaMesa(w http.ResponseWriter, r *http.Request) {
 	// A comparação com o `rascunhode` é o que separa "abriu outra criatura" de
 	// "digitou na busca": só a primeira semeia. Sem ela, filtrar apagaria o PV
 	// que o mestre acabou de ajustar.
-	if v.Escolhido != nil && rascunho != v.Escolhido.ID {
-		_ = sse.MarshalAndPatchSignals(rascunhoDoVerbete(*v.Escolhido))
+	if v.Chosen != nil && rascunho != v.Chosen.ID {
+		_ = sse.MarshalAndPatchSignals(rascunhoDoVerbete(*v.Chosen))
 	}
 }
 
@@ -119,16 +120,16 @@ func (s *Server) handleTipoDoBestiarioDaMesa(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
-	criterios := criteriosDoPedido(r)
-	tipos, err := alternaOTipo(criterios.Tipos, chi.URLParam(r, "tipo"))
+	criterios := master.BestiaryCriteriaFromRequest(r)
+	tipos, err := master.ToggleType(criterios.Types, chi.URLParam(r, "tipo"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	criterios.Tipos = tipos
-	v := carregaBestiarioDe(
+	criterios.Types = tipos
+	v := master.LoadBestiaryFrom(
 		rotaDoBestiarioDaMesa(campaignID, sessionID), s.livro.endereco,
-		criterios.Busca, criterios.Tipos, criterios.NDMin, criterios.NDMax, criterios.Escolhida,
+		criterios.Term, criterios.Types, criterios.CRMin, criterios.CRMax, criterios.Chosen,
 	)
 
 	sse := datastar.NewSSE(w, r)
@@ -137,7 +138,7 @@ func (s *Server) handleTipoDoBestiarioDaMesa(w http.ResponseWriter, r *http.Requ
 	}
 	// O sinal volta porque o crachá é a ÚNICA coisa que muda a lista sem passar
 	// por um campo ligado: sem isto, a próxima busca mandaria os tipos velhos.
-	_ = sse.MarshalAndPatchSignals(map[string]any{"tipos": criterios.Tipos})
+	_ = sse.MarshalAndPatchSignals(map[string]any{"tipos": criterios.Types})
 }
 
 // mandaParaAMesa põe N cópias do verbete na fila.

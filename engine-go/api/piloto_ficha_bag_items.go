@@ -264,7 +264,7 @@ func oQueOLivroDiz(catalogo book.Item) *bookInfo {
 }
 
 func aLinhaDaProtecao(protecao book.Armor, ehArmadura bool) string {
-	linha := "Defesa " + comSinalInt(protecao.Defense) + " · penalidade " + strconv.Itoa(protecao.Penalty)
+	linha := "Defesa " + book.WithSign(protecao.Defense) + " · penalidade " + strconv.Itoa(protecao.Penalty)
 	if !ehArmadura {
 		return linha
 	}

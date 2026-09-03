@@ -91,7 +91,7 @@ templ raceChoicesBlock(v fichaView) {
 								<button
 									type="button"
 									role="switch"
-									aria-checked={ boolTexto(o.Ativo) }
+									aria-checked={ ui.AriaBool(o.Ativo) }
 									aria-label={ o.Rotulo }
 									data-on:click={ oPostDaFicha(v, "/poderes/variante/"+o.Valor) }
 									class={ oChipDaEscolha(o.Ativo) }
@@ -120,7 +120,7 @@ templ attributeChoiceBlock(v fichaView, escolha attributeChoice) {
 					<button
 						type="button"
 						role="switch"
-						aria-checked={ boolTexto(contemTraco(escolha.Chosen, o.Valor)) }
+						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)) }
 						aria-label={ o.Rotulo }
 						data-on:click={ oPostDaFicha(v, "/poderes/ascendencia/"+o.Valor) }
 						class={ oChipDaEscolha(contemTraco(escolha.Chosen, o.Valor)) }
@@ -133,7 +133,7 @@ templ attributeChoiceBlock(v fichaView, escolha attributeChoice) {
 					<button
 						type="button"
 						role="switch"
-						aria-checked={ boolTexto(contemTraco(escolha.Chosen, o.Valor)) }
+						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)) }
 						aria-label={ o.Rotulo }
 						data-on:click={ oGestoQueAlternaOAtributo(o.Valor) }
 						data-attr:data-escolhido={ "$racaatributos.includes('" + o.Valor + "')" }
@@ -167,7 +167,7 @@ templ originChoicesBlock(v fichaView) {
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ boolTexto(o.Ativo) }
+					aria-checked={ ui.AriaBool(o.Ativo) }
 					aria-label={ o.Rotulo }
 					data-on:click={ oPostDaFicha(v, "/poderes/origem/"+o.Valor) }
 					class={ oChipDaEscolha(o.Ativo) + " block w-full text-left" }
@@ -207,7 +207,7 @@ templ classChoicesBlock(v fichaView) {
 					<button
 						type="button"
 						role="switch"
-						aria-checked={ boolTexto(poder.Chosen) }
+						aria-checked={ ui.AriaBool(poder.Chosen) }
 						aria-label={ poder.Name }
 						data-on:click={ oPostDaFicha(v, "/poderes/escolhe/"+poder.ID) }
 						class={ "flex w-full items-baseline gap-2 rounded-sm border px-2 py-1 text-left text-xs outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
@@ -233,7 +233,7 @@ templ classPicker(v fichaView, classe, escolha, rotulo string, seletor pickerCho
 				<button
 					type="button"
 					role="switch"
-					aria-checked={ boolTexto(o.Ativo) }
+					aria-checked={ ui.AriaBool(o.Ativo) }
 					aria-label={ o.Rotulo }
 					data-on:click={ oComandoDaEscolhaDeClasse(v, classe, escolha, o.Valor) }
 					class={ oChipDaEscolha(o.Ativo) }

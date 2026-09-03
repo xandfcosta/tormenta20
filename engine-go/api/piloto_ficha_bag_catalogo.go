@@ -95,7 +95,7 @@ func aDefesaBaseDoItem(catalogo book.Item) string {
 			return ""
 		}
 	}
-	return "Defesa " + comSinalInt(protecao.Defense)
+	return "Defesa " + book.WithSign(protecao.Defense)
 }
 
 // oCrachaDoModificador escreve o que um modificador de item concede.
@@ -107,7 +107,7 @@ func oCrachaDoModificador(m engine.Modifier) string {
 	if m.Target.K == "flag" || m.Amount == 0 {
 		return rotulo
 	}
-	return rotulo + " " + comSinalInt(m.Amount)
+	return rotulo + " " + book.WithSign(m.Amount)
 }
 
 func semRepetidos(lista []string) []string {

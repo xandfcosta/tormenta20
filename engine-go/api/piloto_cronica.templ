@@ -416,7 +416,7 @@ templ interruptorDaRegra(v cronicaView, regra regraOpcional) {
 	<button
 		type="button"
 		role="switch"
-		aria-checked={ boolTexto(v.RegraEmVigor(regra.ID)) }
+		aria-checked={ ui.AriaBool(v.RegraEmVigor(regra.ID)) }
 		aria-label={ regra.Titulo }
 		data-indicator:salvando
 		data-attr:disabled="$salvando"
@@ -434,12 +434,6 @@ templ interruptorDaRegra(v cronicaView, regra regraOpcional) {
 	</button>
 }
 
-func boolTexto(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
-}
 
 // A zona de perigo é selada em crimson porque excluir é irreversível, e o texto
 // diz o PREÇO — "todas as sessões e membros" — em vez de um genérico "não pode

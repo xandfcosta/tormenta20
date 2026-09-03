@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"t20engine/web/master"
 	"t20engine/web/ui"
 )
 
@@ -150,7 +151,7 @@ templ oBotaoDoElenco(v mesaView) {
 // O NOME É OPCIONAL, e o campo diz isso no `placeholder` em vez de numa nota:
 // guardar "Ogro" como "Ogro" é o caso comum, e o servidor cai no nome do livro
 // quando o campo vem vazio.
-templ oGuardarNoElenco(v bestiarioView) {
+templ oGuardarNoElenco(v master.BestiaryView) {
 	<div class="flex flex-wrap items-end gap-2 border-t border-grimorio-iron pt-3">
 		<div class="min-w-0 flex-1 space-y-1">
 			<label for="nome-do-npc" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Guardar no elenco</label>

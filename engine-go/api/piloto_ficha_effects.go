@@ -359,7 +359,7 @@ func modifierRowsOf(bruto string) []breakdownRow {
 	linhas := make([]breakdownRow, 0, len(mods))
 	for _, m := range mods {
 		linhas = append(linhas, breakdownRow{
-			Label: targetLabel(m.Target), Value: comSinalInt(m.Amount), Note: m.Note,
+			Label: targetLabel(m.Target), Value: book.WithSign(m.Amount), Note: m.Note,
 		})
 	}
 	return linhas
@@ -481,7 +481,7 @@ func situationalRowsOf(offered []engine.ConditionalEffect, ativos map[string]boo
 		id := engine.ConditionalID(c)
 		linhas = append(linhas, situationalRow{
 			Key: id, Label: conditionalLabel(c), Source: c.Source, Active: ativos[id],
-			Modifiers: []breakdownRow{{Label: targetLabel(c.Target), Value: comSinalInt(c.Amount)}},
+			Modifiers: []breakdownRow{{Label: targetLabel(c.Target), Value: book.WithSign(c.Amount)}},
 			Command:   id,
 		})
 	}
@@ -495,7 +495,7 @@ func situationalRowsOf(offered []engine.ConditionalEffect, ativos map[string]boo
 		}
 		for _, c := range grupo {
 			linha.Modifiers = append(linha.Modifiers, breakdownRow{
-				Label: targetLabel(c.Target), Value: comSinalInt(c.Amount),
+				Label: targetLabel(c.Target), Value: book.WithSign(c.Amount),
 			})
 		}
 		linhas = append(linhas, linha)

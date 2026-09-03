@@ -25,6 +25,14 @@ import (
 var arquivosAusentesDePROPOSITO = map[string]bool{
 	".env.production": true,
 
+	// APAGADO VAZIO na ALE-278. Quando o `book` levou as 330 linhas deste
+	// arquivo (`4260797d`), sobrou nele `package api` e um `import ()` — e ele
+	// atravessou três fatias assim, porque um arquivo vazio não quebra nada e
+	// não aparece em diff nenhum. O `engine-go/CLAUDE.md` o nomeia para contar
+	// isso, que é justamente o caso de lápide que esta lista existe para deixar
+	// explícito.
+	"piloto_catalogos_do_personagem.go": true,
+
 	// O SOCKET.IO (ALE-253). Quatro arquivos que o gateway levou embora, e os
 	// quatro são citados por quem ficou explicando o que SOBROU deles: o corte
 	// foi pelo receptor, e dizer isso exige nomear o que foi cortado.

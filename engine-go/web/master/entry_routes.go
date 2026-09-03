@@ -1,0 +1,58 @@
+package master
+
+import (
+	"net/http"
+
+	"t20engine/web/routes"
+	"t20engine/web/ui"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/starfederation/datastar-go/datastar"
+)
+
+// A rota do VERBETE CITADO (ALE-264): o conteúdo da caixa que um elo abre.
+//
+// Fora de `/mestre/catalogos` de propósito, e o endereço é da CASCA: o diálogo
+// mora nela, e amanhã um elo pode sair do bestiário ou da Mesa. Uma rota por
+// cena obrigaria cada uma a ter a sua cópia do mesmo handler.
+
+// O endereço deste verbete mora em `web/routes` desde a ALE-278, pela mesma
+// razão do leitor: o `bookui` o cita ao montar o botão que abre os
+// aprimoramentos por cima da cena.
+
+// entryRoutes é chamada pelo `Routes` do trilho, e não montada pelo `api`.
+//
+// O VERBETE tinha rota própria no hospedeiro porque a caixa dele abre em
+// QUALQUER cena e o endereço é da casca. Isso não mudou — o que mudou é quem
+// registra: ele lê o desenho do acervo (`groupForEntry`, `CrossRefEntry`), que
+// é deste pacote, então uma rota registrada de fora obrigaria o `api` a
+// alcançar o miolo da cena para montar uma linha.
+func (s Scene) entryRoutes(r chi.Router) {
+	r.Get(routes.Entry, s.handleCrossRefEntry)
+}
+
+// handleCrossRefEntry devolve SÓ o miolo da caixa.
+//
+// Os parâmetros são os mesmos do endereço da cena (`aba`, `entrada`), e isso não
+// é coincidência: o elo manda a consulta do próprio `href` para cá. Um segundo
+// formato faria o link e o remendo poderem discordar sobre o que mostrar.
+func (s Scene) handleCrossRefEntry(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	grupo := groupForEntry(knownTab(q.Get("aba")), q.Get("entrada"))
+
+	// `parte` pede um PEDAÇO do verbete em vez do cartão inteiro — hoje só os
+	// aprimoramentos da magia. Parâmetro e não segunda rota porque o que muda é
+	// o miolo da mesma caixa: duas rotas obrigariam o cliente a saber qual
+	// chamar, e o dia em que houver um terceiro pedaço seriam três.
+	miolo := CrossRefEntry(grupo, s.deps.BookAddress())
+	if q.Get("parte") == "aprimoramentos" && len(grupo.Magias) == 1 {
+		miolo = SpellAugments(grupo.Magias[0], s.deps.BookAddress())
+	}
+
+	sse := datastar.NewSSE(w, r)
+	fragmento, err := ui.RenderFragment(r.Context(), miolo)
+	if err != nil {
+		return
+	}
+	_ = sse.PatchElements(fragmento)
+}

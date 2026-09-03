@@ -268,7 +268,7 @@ templ bagFilters(v fichaView) {
 			for _, chip := range v.Bag.Categories {
 				<button
 					type="button"
-					aria-pressed={ boolTexto(chip.Ativo) }
+					aria-pressed={ ui.AriaBool(chip.Ativo) }
 					data-on:click={ "$itemcategoria = '" + chip.Valor + "'; " + oGetDaFicha(v) }
 					class={ "rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 						templ.KV("border-grimorio-gold/60 bg-accent text-grimorio-gold", chip.Ativo),

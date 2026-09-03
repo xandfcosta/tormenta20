@@ -323,6 +323,10 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **buscador do livro** | `finder` | `web/finder` (ALE-278) — e NÃO `search`, que é o casamento e a pontuação, nem `busca`, que é o filtro da cena |
 | **elo** | `crossref` | `web/bookui` (ALE-278). **Não `link`**, que a seção A já proíbe: o elo anda DENTRO do acervo e o botão do livro SAI para o PDF, e chamar os dois de link apagaria a distinção que a linha do verbete existe para fazer |
 | **a interface que sabe do livro** | `bookui` | `web/bookui` (ALE-278) — o kit que conhece o domínio, ao lado do `web/ui`, que não pode conhecer |
+| **a Mesa do Mestre** (o trilho e as paradas dele) | `master` | `web/master` (ALE-278). A grafia **já existia e já tinha uma rival**: `routes.MasterBestiary` de um lado e `GMToolRoutes` do outro, duas palavras para a mesma tela — que é exatamente como um conceito vira dois. `master` ganha porque é a que está no ENDEREÇO, e endereço é o que alguém cola no chat da mesa. O `gm` da seção A continua valendo para o PAPEL (`role === 'gm'`): o mestre é uma pessoa, a Mesa do Mestre é uma tela |
+| **encontro** | `encounter` | `web/master` (ALE-278) — a ferramenta que monta o grupo de criaturas e diz o ND que ele resulta |
+| **improviso** | `improv` | `web/master` (ALE-278) — as quatro tabelas que o mestre rola na hora: ruína, perseguição, recompensa e ideias. Não `improvisation`, que é comprido sem comprar precisão |
+| **verbete** | `entry` | `routes.Entry` já usava. Ele traduz também **entrada**, e isso NÃO é colisão nova: `?entrada=<id>` é o endereço de UM verbete, então as duas palavras são o mesmo conceito visto do lado do dado e do lado do endereço |
 | **acervo** (cenas guardadas) | `archive` | `TestTheArchiveSaysWhichSceneIsOnTheTable` |
 | **acervo** (de poderes, de catálogo) | `collection` | `TestTheCollectionJoinsTheFiveOrigins` |
 | **cortina** | `curtain` | `curtained` já existia no fio |

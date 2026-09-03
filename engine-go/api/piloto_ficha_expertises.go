@@ -88,7 +88,7 @@ var theSaveNames = map[string]bool{"Fortitude": true, "Reflexos": true, "Vontade
 // expertisePanelFor monta a aba inteira.
 func expertisePanelFor(dto sheet.CharacterDTO, sheet engine.ComputedSheetV2, search string) expertisePanel {
 	panel := expertisePanel{
-		TrainingBonus: comSinalInt(trainingBonusFor(dto.Level)),
+		TrainingBonus: book.WithSign(trainingBonusFor(dto.Level)),
 		HalfLevel:     strconv.FormatInt(dto.Level/2, 10),
 		Search:        search,
 		Attributes:    attributeOptions(sheet),
@@ -180,7 +180,7 @@ func attributeOptions(sheet engine.ComputedSheetV2) []attributeOption {
 	for _, key := range engine.AttributeKeys {
 		opcoes = append(opcoes, attributeOption{
 			Key:   key,
-			Label: attributeAbbr[key] + " " + comSinalInt(sheet.Attributes[key].Total),
+			Label: attributeAbbr[key] + " " + book.WithSign(sheet.Attributes[key].Total),
 		})
 	}
 	return opcoes
@@ -195,7 +195,7 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 		Name:        entry.Name,
 		Command:     url.PathEscape(entry.Name),
 		Attribute:   entry.Attribute,
-		Total:       comSinalInt(quebra.Total),
+		Total:       book.WithSign(quebra.Total),
 		Trained:     entry.Trained,
 		TrainedOnly: soTreinada,
 		Locked:      soTreinada && !entry.Trained,
@@ -240,14 +240,14 @@ func autoFails(sheet engine.ComputedSheetV2, name string) bool {
 // saiu a quarta.
 func expertiseBreakdownRows(ex engine.ExpertiseBreakdown) []breakdownRow {
 	linhas := []breakdownRow{
-		{Label: "½ nível", Value: comSinalInt(ex.HalfLevel)},
-		{Label: "Atributo (" + attributeAbbr[ex.Attribute] + ")", Value: comSinalInt(ex.AttrValue)},
-		{Label: "Treino", Value: comSinalInt(ex.Training)},
-		{Label: "Outros", Value: comSinalInt(ex.ItemBonus)},
+		{Label: "½ nível", Value: book.WithSign(ex.HalfLevel)},
+		{Label: "Atributo (" + attributeAbbr[ex.Attribute] + ")", Value: book.WithSign(ex.AttrValue)},
+		{Label: "Treino", Value: book.WithSign(ex.Training)},
+		{Label: "Outros", Value: book.WithSign(ex.ItemBonus)},
 	}
 	for _, c := range ex.ItemContributions {
 		linhas = append(linhas, breakdownRow{
-			Label: c.Source, Value: comSinalInt(c.Amount), Note: c.Note, Indented: true,
+			Label: c.Source, Value: book.WithSign(c.Amount), Note: c.Note, Indented: true,
 		})
 	}
 	return linhas
