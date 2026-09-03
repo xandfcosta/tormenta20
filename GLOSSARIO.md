@@ -329,6 +329,8 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **verbete** | `entry` | `routes.Entry` já usava. Ele traduz também **entrada**, e isso NÃO é colisão nova: `?entrada=<id>` é o endereço de UM verbete, então as duas palavras são o mesmo conceito visto do lado do dado e do lado do endereço |
 | **a cena que lista os personagens** | `characters` | `web/characters` (ALE-278) — o PLURAL, porque a cena é a lista de quem uma pessoa tem. A do singular é a ficha, logo abaixo |
 | **a ficha** (a cena, não o dado) | `web/sheet` | `web/sheet` (ALE-278) — a cena de `/personagens/{id}`. **Ela colide de propósito com o pacote `sheet`**, que é a FORMA do dado (`CharacterDTO`, `Compute`), e a colisão está registrada abaixo. Decisão do dono, 2026-09-03: a palavra da mesa ganha, e quem importar os dois escreve o apelido |
+| **leitor** (a cena que abre o PDF) | `reader` | `web/reader` (ALE-278), e `routes.Reader` já usava. **Não é o visualizador do navegador** — a linha da seção A faz essa distinção e ela continua valendo |
+| **abertura** | `opening` | `web/reader` (ALE-278). O `bookui.BookAddress.Abertura` fica com o nome que tem: renomeá-lo move todo chamador, e a regra do §F diz que o nome CHAMADO segue o que está lá. Então uma linha do leitor cola os dois (`Opening: livro.Abertura`), o que é a costura acontecendo à vista em vez de escondida |
 | **acervo** (cenas guardadas) | `archive` | `TestTheArchiveSaysWhichSceneIsOnTheTable` |
 | **acervo** (de poderes, de catálogo) | `collection` | `TestTheCollectionJoinsTheFiveOrigins` |
 | **cortina** | `curtain` | `curtained` já existia no fio |

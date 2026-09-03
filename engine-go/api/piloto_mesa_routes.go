@@ -10,6 +10,7 @@ import (
 	"t20engine/web/grimoire"
 	"t20engine/web/hub"
 	"t20engine/web/master"
+	"t20engine/web/reader"
 	"t20engine/web/routes"
 
 	"fmt"
@@ -82,8 +83,10 @@ func (s *Server) WebRouter() http.Handler {
 		r.Handle(routes.Book, s.LivroDoPiloto())
 		// O LEITOR é uma PÁGINA e o `/livro` é o arquivo. Rotas irmãs de
 		// propósito: quem quiser o PDF cru (imprimir, buscar no visualizador do
-		// navegador) tem o endereço de sempre.
-		r.Get(routes.Book+"/ler", s.handleLeitorDoLivro)
+		// navegador) tem o endereço de sempre. Desde a ALE-278 a página é um
+		// pacote e o arquivo continua aqui — a divisão é por dependência: quem
+		// serve o arquivo lê a configuração e o disco.
+		reader.Routes(r, reader.New(s))
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
