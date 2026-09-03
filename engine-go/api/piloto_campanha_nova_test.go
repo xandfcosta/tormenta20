@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"t20engine/campaign"
 	"testing"
 )
 
@@ -90,7 +91,7 @@ func TestTheFormRefusesADescriptionAboveTheCeiling(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 
-	rec := postaFolhaNova(t, s, dono, "Nome bom", strings.Repeat("a", maxCampaignDescriptionLength+1))
+	rec := postaFolhaNova(t, s, dono, "Nome bom", strings.Repeat("a", campaign.MaxDescriptionLength+1))
 
 	if rec.Code != http.StatusUnprocessableEntity {
 		t.Errorf("status = %d, queria 422 — o teto de 2000 vivia só na tela da SPA", rec.Code)

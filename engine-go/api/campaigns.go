@@ -8,11 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"t20engine/campaign"
 	"t20engine/plataforma"
 
-	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
 	"t20engine/sheet"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // CampaignDTO is the base campaign row (create/update responses).
@@ -204,16 +206,16 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	name, err := campaignName(body.Name)
-	if err != nil {
-		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {err.Error()}})
+	// As DUAS recusas de uma vez, e em pt-BR: até a ALE-278 esta rota respondia
+	// `err.Error()`, que era a frase inglesa herdada do NestJS, enquanto a cena
+	// escrevia a portuguesa dela. Duas frases para uma regra é o que o `account`
+	// desfez nesta mesma épica.
+	name, descricaoTexto, erros := campaign.ValidateText(body.Name, body.Description)
+	if len(erros) > 0 {
+		plataforma.WriteValidationError(w, erros)
 		return
 	}
-	descricao, err := campaignDescription(body.Description)
-	if err != nil {
-		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"description": {err.Error()}})
-		return
-	}
+	descricao := trimOrNull(&descricaoTexto)
 	now := plataforma.NowISO()
 	c, err := s.queries.CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
 		Ownerid: currentUser(r).ID, Name: name, Description: descricao,
@@ -243,9 +245,9 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	var set setBuilder
 	if body.Name != nil {
-		name, err := campaignName(*body.Name)
-		if err != nil {
-			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {err.Error()}})
+		name, erros := campaign.Name(*body.Name)
+		if len(erros) > 0 {
+			plataforma.WriteValidationError(w, erros)
 			return
 		}
 		set.Add("name = ?", name)
@@ -254,12 +256,14 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 		// Mesma regra do criar, e agora literalmente a mesma FUNÇÃO: descrição
 		// de puros espaços vira NULL nos dois caminhos, senão o cliente lê ""
 		// de um e null do outro para a mesma entrada.
-		descricao, err := campaignDescription(body.Description)
-		if err != nil {
-			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"description": {err.Error()}})
+		texto, erros := campaign.Description(body.Description)
+		if len(erros) > 0 {
+			plataforma.WriteValidationError(w, erros)
 			return
 		}
-		set.Add("description = ?", nullableArg(descricao))
+		// Quem GRAVA é que traduz vazio para NULL: a regra devolve texto, para
+		// não carregar `database/sql` (ALE-278).
+		set.Add("description = ?", nullableArg(trimOrNull(&texto)))
 	}
 	if set.empty() {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")

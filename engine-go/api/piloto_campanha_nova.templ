@@ -1,6 +1,9 @@
 package api
 
-import "t20engine/web/ui"
+import (
+	"t20engine/campaign"
+	"t20engine/web/ui"
+)
 
 // A FOLHA EM BRANCO (ALE-246): abrir uma campanha nova.
 //
@@ -33,12 +36,12 @@ templ campanhaNova(v campanhaNovaView) {
 			<form method="post" action="/campanhas/nova" data-nav-region="content" data-nav-layout="column" class="space-y-4">
 				@ui.TextField(ui.Field{
 					Nome: "name", Label: "Nome", Valor: v.Nome,
-					Obrigatorio: true, TamanhoMaximo: maxCampaignNameLength,
+					Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
 					Erros: v.Erros["name"],
 				})
 				@ui.TextArea(ui.Field{
 					Nome: "description", Label: "Descrição", Valor: v.Descricao,
-					TamanhoMaximo: maxCampaignDescriptionLength,
+					TamanhoMaximo: campaign.MaxDescriptionLength,
 					Erros:         v.Erros["description"],
 				}, 6)
 				if v.Aviso != "" {

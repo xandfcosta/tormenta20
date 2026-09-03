@@ -8,13 +8,15 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"t20engine/campaign"
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 
+	"t20engine/web/ui"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
-	"t20engine/web/ui"
 )
 
 // A rota da cena de CAMPANHAS (ALE-234).
@@ -124,14 +126,11 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 		Descricao: r.PostFormValue("description"),
 		Erros:     plataforma.FieldErrorMap{},
 	}
-	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign_text_rules.go`.
-	nome, err := campaignName(v.Nome)
-	if err != nil {
-		v.Erros["name"] = []string{"O nome é obrigatório e cabe em 120 caracteres."}
-	}
-	descricao, errDesc := campaignDescription(&v.Descricao)
-	if errDesc != nil {
-		v.Erros["description"] = []string{"A descrição cabe em 2000 caracteres."}
+	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign/rules.go`.
+	nome, descricaoTexto, erros := campaign.ValidateText(v.Nome, &v.Descricao)
+	descricao := trimOrNull(&descricaoTexto)
+	for campo, frases := range erros {
+		v.Erros[campo] = frases
 	}
 	if len(v.Erros) > 0 {
 		s.escreveFolhaNova(w, r, http.StatusUnprocessableEntity, v)
@@ -309,10 +308,12 @@ func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
 	}
 	nomeBruto, descricaoBruta := r.PostFormValue("name"), r.PostFormValue("description")
 
-	// A MESMA regra da folha em branco e da rota JSON. Três telas, uma função.
-	nome, err := campaignName(nomeBruto)
-	descricao, errDesc := campaignDescription(&descricaoBruta)
-	if err != nil || errDesc != nil {
+	// A MESMA regra da folha em branco e da rota JSON. Três telas, uma função —
+	// e desde a ALE-278 uma FRASE também: as mensagens moram no `campaign`,
+	// porque quem lê é o mestre e não o programa.
+	nome, descricaoTexto, erros := campaign.ValidateText(nomeBruto, &descricaoBruta)
+	descricao := trimOrNull(&descricaoTexto)
+	if len(erros) > 0 {
 		v, erroAoLer := s.carregaCronica(r.Context(), eu, id, "config")
 		if erroAoLer != nil {
 			http.Error(w, erroAoLer.Error(), http.StatusInternalServerError)
@@ -321,11 +322,8 @@ func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
 		// O que a pessoa digitou vence o que está no banco: ela está olhando
 		// para o próprio texto, e devolver o antigo apagaria a edição dela.
 		v.Nome, v.Descricao = nomeBruto, descricaoBruta
-		if err != nil {
-			v.Erros["name"] = []string{"O nome é obrigatório e cabe em 120 caracteres."}
-		}
-		if errDesc != nil {
-			v.Erros["description"] = []string{"A descrição cabe em 2000 caracteres."}
+		for campo, frases := range erros {
+			v.Erros[campo] = frases
 		}
 		s.escrevePaginaDaCronica(w, r, http.StatusUnprocessableEntity, v)
 		return

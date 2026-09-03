@@ -8,7 +8,10 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "t20engine/web/ui"
+import (
+	"t20engine/campaign"
+	"t20engine/web/ui"
+)
 
 // A FOLHA EM BRANCO (ALE-246): abrir uma campanha nova.
 //
@@ -68,7 +71,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 			}
 			templ_7745c5c3_Err = ui.TextField(ui.Field{
 				Nome: "name", Label: "Nome", Valor: v.Nome,
-				Obrigatorio: true, TamanhoMaximo: maxCampaignNameLength,
+				Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
 				Erros: v.Erros["name"],
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -76,7 +79,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 			}
 			templ_7745c5c3_Err = ui.TextArea(ui.Field{
 				Nome: "description", Label: "Descrição", Valor: v.Descricao,
-				TamanhoMaximo: maxCampaignDescriptionLength,
+				TamanhoMaximo: campaign.MaxDescriptionLength,
 				Erros:         v.Erros["description"],
 			}, 6).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
@@ -90,7 +93,7 @@ func campanhaNova(v campanhaNovaView) templ.Component {
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(v.Aviso)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 45, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanha_nova.templ`, Line: 48, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
