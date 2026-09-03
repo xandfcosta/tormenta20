@@ -1,9 +1,12 @@
 package campaign
 
 import (
+	"fmt"
+	"sort"
 	"strings"
 	"unicode/utf8"
 
+	"t20engine/engine"
 	"t20engine/plataforma"
 )
 
@@ -111,4 +114,37 @@ func ValidateText(nomeBruto string, descricaoBruta *string) (string, string, pla
 		return nome, descricao, nil
 	}
 	return nome, descricao, erros
+}
+
+// AS REGRAS OPCIONAIS: o que o mestre DESLIGOU na campanha (ALE-221).
+//
+// O nome do campo diz o que está DESLIGADO e isso é proposital: valor zero
+// significa "tudo em vigor", que é o padrão do livro. Ver o GLOSSARIO, verbete
+// **regra opcional**.
+
+// NormalizeIgnoredRules ordena, tira repetidos e recusa o que o motor não
+// conhece.
+//
+// A recusa NOMEIA o valor ofensor e a lista esperada, que é a regra da casa para
+// mensagem de erro — "regra inválida" mandaria o mestre adivinhar qual das
+// dezenas ele digitou errado.
+//
+// **A frase era em INGLÊS** ("unknown rule %q — expected one of %v") e ela chega
+// na tela: a cena a manda para o navegador no sinal `erroDaRegra`. Traduzida na
+// extração, pelo mesmo motivo que as duas mensagens acima — quem lê é o mestre.
+func NormalizeIgnoredRules(brutas []string) ([]string, string) {
+	vistas := map[string]bool{}
+	fora := []string{}
+	for _, regra := range brutas {
+		if !engine.IsKnownRule(regra) {
+			return nil, fmt.Sprintf("regra desconhecida %q — esperava uma de %v", regra, engine.KnownRules)
+		}
+		if vistas[regra] {
+			continue
+		}
+		vistas[regra] = true
+		fora = append(fora, regra)
+	}
+	sort.Strings(fora)
+	return fora, ""
 }

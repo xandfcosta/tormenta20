@@ -1,4 +1,4 @@
-package api
+package campaigns
 
 import (
 	"errors"
@@ -26,21 +26,22 @@ import (
 // sinais do Datastar — devolve só o remendo da cena. Quem distingue os dois é o
 // cabeçalho `datastar-request`, que o cliente põe.
 
-func (s *Server) CampaignRoutes(r chi.Router) {
-	r.Get("/campanhas", s.handleCampanhas)
-	r.Get("/campanhas/nova", s.handleCampanhaNova)
-	r.Post("/campanhas/nova", s.handleCampanhaNovaPost)
-	r.Get("/campanhas/entrar", s.handleCampanhaEntrar)
-	r.Post("/campanhas/entrar", s.handleCampanhaEntrarPost)
-	r.Get("/campanhas/{id}", s.handleCronica)
-	r.Post("/campanhas/{id}/editar", s.handleCronicaEditar)
-	r.Post("/campanhas/{id}/excluir", s.handleCronicaExcluir)
-	r.Post("/campanhas/{id}/regras/{regra}", s.handleCronicaAlternarRegra)
+// Routes registra os endereços das quatro telas desta cena.
+func Routes(r chi.Router, s Scene) {
+	r.Get("/campanhas", s.handleList)
+	r.Get("/campanhas/nova", s.handleNew)
+	r.Post("/campanhas/nova", s.handleNewPost)
+	r.Get("/campanhas/entrar", s.handleJoin)
+	r.Post("/campanhas/entrar", s.handleJoinPost)
+	r.Get("/campanhas/{id}", s.handleOne)
+	r.Post("/campanhas/{id}/editar", s.handleEdit)
+	r.Post("/campanhas/{id}/excluir", s.handleDelete)
+	r.Post("/campanhas/{id}/regras/{regra}", s.handleToggleRule)
 }
 
-func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
-	busca, papel := filtroDoPedido(r)
-	view, err := s.carregaCampanhas(r.Context(), currentUser(r), busca, papel)
+func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
+	busca, papel := filterFromRequest(r)
+	view, err := s.LoadList(r.Context(), s.deps.CurrentUserID(r), s.deps.RequesterIsAdmin(r), busca, papel)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -50,7 +51,7 @@ func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
 	// barra também muda — o chip de papel aceso e o texto da busca.
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
-		fragmento, err := ui.RenderFragment(r.Context(), cenaDeCampanhas(view))
+		fragmento, err := ui.RenderFragment(r.Context(), SceneBody(view))
 		if err != nil {
 			return
 		}
@@ -58,21 +59,21 @@ func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.WritePage(w, r, http.StatusOK, ui.Page{
+	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: "Campanhas · Tormenta 20",
 		// `cascaNua`: esta cena desenha o próprio cabeçalho, porque ele carrega a
 		// busca e os filtros. A casca densa poria um segundo `<h1>` acima.
 		Forma: ui.ShellBare,
-	}, cenaDeCampanhas(view))
+	}, SceneBody(view))
 }
 
-// filtroDoPedido lê a busca e o papel, venham de onde vierem.
+// filterFromRequest lê a busca e o papel, venham de onde vierem.
 //
 // Da URL na carga fria (`?busca=...`), e dos SINAIS quando o Datastar chama —
 // ele os manda no `?datastar=` como JSON. Ler os dois no mesmo lugar é o que
 // deixa a tela filtrada ser um endereço que se guarda: recarregar `?busca=anao`
 // devolve exatamente o que estava.
-func filtroDoPedido(r *http.Request) (busca, papel string) {
+func filterFromRequest(r *http.Request) (busca, papel string) {
 	q := r.URL.Query()
 	busca, papel = q.Get("busca"), q.Get("papel")
 	sinais := struct {
@@ -87,9 +88,9 @@ func filtroDoPedido(r *http.Request) (busca, papel string) {
 	return busca, papel
 }
 
-// urlDeCampanhas monta o endereço que a cena representa, para o histórico do
+// listURL monta o endereço que a cena representa, para o histórico do
 // navegador acompanhar a busca.
-func urlDeCampanhas(busca, papel string) string {
+func listURL(busca, papel string) string {
 	q := url.Values{}
 	if busca != "" {
 		q.Set("busca", busca)
@@ -105,46 +106,45 @@ func urlDeCampanhas(busca, papel string) string {
 
 // ── a folha em branco: abrir campanha (ALE-246) ──────────────────────────────
 
-// handleCampanhaNova desenha o formulário vazio.
-func (s *Server) handleCampanhaNova(w http.ResponseWriter, r *http.Request) {
-	s.escreveFolhaNova(w, r, http.StatusOK, campanhaNovaView{})
+// handleNew desenha o formulário vazio.
+func (s Scene) handleNew(w http.ResponseWriter, r *http.Request) {
+	s.writeNewPage(w, r, http.StatusOK, newView{})
 }
 
-// handleCampanhaNovaPost cria e vai para a crônica recém-aberta.
+// handleNewPost cria e vai para a crônica recém-aberta.
 //
 // A recusa REDESENHA a folha com o que foi digitado e o erro no campo — não
 // redireciona. Redirecionar perderia o texto, e a descrição é o campo caro de
 // reescrever. Status 422 e não 200 porque a resposta É uma recusa, e o
 // navegador não trata os dois igual no histórico.
-func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		s.escreveFolhaNova(w, r, http.StatusBadRequest, campanhaNovaView{Aviso: ui.NoticeInternal})
+		s.writeNewPage(w, r, http.StatusBadRequest, newView{Aviso: ui.NoticeInternal})
 		return
 	}
-	v := campanhaNovaView{
+	v := newView{
 		Nome:      r.PostFormValue("name"),
 		Descricao: r.PostFormValue("description"),
 		Erros:     plataforma.FieldErrorMap{},
 	}
 	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign/rules.go`.
 	nome, descricaoTexto, erros := campaign.ValidateText(v.Nome, &v.Descricao)
-	descricao := trimOrNull(&descricaoTexto)
 	for campo, frases := range erros {
 		v.Erros[campo] = frases
 	}
 	if len(v.Erros) > 0 {
-		s.escreveFolhaNova(w, r, http.StatusUnprocessableEntity, v)
+		s.writeNewPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
 
 	agora := plataforma.NowISO()
-	c, err := s.queries.CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
-		Ownerid: currentUser(r).ID, Name: nome, Description: descricao,
+	c, err := s.deps.Queries().CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
+		Ownerid: s.deps.CurrentUserID(r), Name: nome, Description: trimOrNull(descricaoTexto),
 		Createdat: agora, Updatedat: agora,
 	})
 	if err != nil {
 		v.Aviso = ui.NoticeInternal
-		s.escreveFolhaNova(w, r, http.StatusInternalServerError, v)
+		s.writeNewPage(w, r, http.StatusInternalServerError, v)
 		return
 	}
 	// 303 e não 302: depois de um POST, o `See Other` é o que garante que o
@@ -153,42 +153,42 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(c.ID, 10), http.StatusSeeOther)
 }
 
-func (s *Server) escreveFolhaNova(w http.ResponseWriter, r *http.Request, status int, v campanhaNovaView) {
-	s.WritePage(w, r, status, ui.Page{
+func (s Scene) writeNewPage(w http.ResponseWriter, r *http.Request, status int, v newView) {
+	s.deps.WritePage(w, r, status, ui.Page{
 		Titulo: "Abrir nova campanha",
 		// `cascaDensa`: a tela da SPA usa o cabeçalho compacto com o "‹ Voltar",
 		// e sem ele a folha nasce sem saída visível — o Esc existe, mas atalho
 		// não é a única porta.
 		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
-	}, campanhaNova(v))
+	}, newBody(v))
 }
 
 // ── a carta de convite: entrar na mesa (ALE-249) ─────────────────────────────
 
-// handleCampanhaEntrar desenha a carta, com o convite JÁ RESOLVIDO.
-func (s *Server) handleCampanhaEntrar(w http.ResponseWriter, r *http.Request) {
-	v, err := s.carregaCartaDeConvite(r.Context(), currentUser(r), r.URL.Query().Get("token"))
+// handleJoin desenha a carta, com o convite JÁ RESOLVIDO.
+func (s Scene) handleJoin(w http.ResponseWriter, r *http.Request) {
+	v, err := s.LoadJoin(r.Context(), s.deps.CurrentUserID(r), r.URL.Query().Get("token"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s.escreveCarta(w, r, http.StatusOK, v)
+	s.writeJoinPage(w, r, http.StatusOK, v)
 }
 
-// handleCampanhaEntrarPost senta o herói à mesa.
+// handleJoinPost senta o herói à mesa.
 //
 // As sete travas são do `entrarNaMesa` e não daqui — a mesma função que a rota
 // JSON usa. O que este manipulador faz é TRADUZIR cada recusa para uma frase em
 // português no campo certo, que é trabalho de tela e não de regra.
-func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		s.escreveCarta(w, r, http.StatusBadRequest, campanhaEntrarView{Aviso: ui.NoticeInternal})
+		s.writeJoinPage(w, r, http.StatusBadRequest, joinView{Aviso: ui.NoticeInternal})
 		return
 	}
-	eu := currentUser(r)
+	eu := s.deps.CurrentUserID(r)
 	token := r.PostFormValue("token")
-	v, err := s.carregaCartaDeConvite(r.Context(), eu, token)
+	v, err := s.LoadJoin(r.Context(), eu, token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -203,7 +203,7 @@ func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request
 		n, erroNum := strconv.ParseInt(strings.TrimSpace(v.NumeroDigitado), 10, 64)
 		if erroNum != nil || n <= 0 {
 			v.Erros["campaignId"] = []string{"Informe o número da campanha."}
-			s.escreveCarta(w, r, http.StatusUnprocessableEntity, v)
+			s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 			return
 		}
 		campanhaID = n
@@ -212,18 +212,14 @@ func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request
 	heroiID, erroHeroi := strconv.ParseInt(r.PostFormValue("characterId"), 10, 64)
 	if erroHeroi != nil {
 		v.Erros["characterId"] = []string{"Escolha o herói que entra na mesa."}
-		s.escreveCarta(w, r, http.StatusUnprocessableEntity, v)
+		s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
 	v.EscolhidoID = heroiID
 
-	_, err = s.joinTable(r.Context(), joinRequest{
-		CampanhaID: campanhaID, PersonagemID: heroiID,
-		Convite: token, Papel: "player", QuemPede: eu.ID,
-	})
-	if err != nil {
-		v.Erros, v.Aviso = recusaDeEntrada(err)
-		s.escreveCarta(w, r, http.StatusUnprocessableEntity, v)
+	if recusa := s.deps.Join(r.Context(), campanhaID, heroiID, s.deps.CurrentUserID(r), token); recusa != JoinOK {
+		v.Erros, v.Aviso = joinRefusalPhrase(recusa)
+		s.writeJoinPage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
 	// 303, como a folha em branco: depois de um POST, recarregar a crônica não
@@ -231,54 +227,59 @@ func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
 }
 
-// recusaDeEntrada traduz cada erro da regra para a frase que a pessoa lê.
+// joinRefusalPhrase traduz cada MOTIVO de recusa na frase que a pessoa lê.
 //
 // Uma frase por recusa, e não um "não foi possível entrar" para tudo: cada uma
 // destas tem uma AÇÃO diferente do outro lado — pedir link novo, conferir o
 // número, escolher outro herói, ou nada, porque já está lá dentro.
-func recusaDeEntrada(err error) (plataforma.FieldErrorMap, string) {
-	switch {
-	case errors.Is(err, errCampanhaInexistente):
+//
+// Ela recebia o ERRO do hospedeiro e passou a receber o `JoinRefusal` desta cena
+// (ALE-278). O que a tela diz não mudou; o que mudou é que os sentinelas de erro
+// deixaram de atravessar a fronteira. Quem classifica é o hospedeiro, quem
+// escolhe a frase é a cena — a decisão que a porta de entrar deixou escrita.
+func joinRefusalPhrase(recusa JoinRefusal) (plataforma.FieldErrorMap, string) {
+	switch recusa {
+	case JoinNoSuchCampaign:
 		return plataforma.FieldErrorMap{"campaignId": {"Não existe campanha com esse número."}}, ""
-	case errors.Is(err, errConviteExigido):
+	case JoinNeedsInvite:
 		return plataforma.FieldErrorMap{}, "Esta mesa é fechada. Peça um link de convite ao mestre."
-	case errors.Is(err, errPersonagemInexistente), errors.Is(err, errPersonagemDeOutro):
+	case JoinNotYourHero:
 		return plataforma.FieldErrorMap{"characterId": {"Escolha um herói seu."}}, ""
-	case errors.Is(err, errJaTemPersonagem):
+	case JoinAlreadyHasHero:
 		return plataforma.FieldErrorMap{"characterId": {"Você já tem um herói nesta mesa."}}, ""
-	case errors.Is(err, errAlreadyInCampaign):
+	case JoinHeroAlreadyThere:
 		return plataforma.FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
 	default:
 		return plataforma.FieldErrorMap{}, ui.NoticeInternal
 	}
 }
 
-func (s *Server) escreveCarta(w http.ResponseWriter, r *http.Request, status int, v campanhaEntrarView) {
+func (s Scene) writeJoinPage(w http.ResponseWriter, r *http.Request, status int, v joinView) {
 	if v.Erros == nil {
 		v.Erros = plataforma.FieldErrorMap{}
 	}
-	s.WritePage(w, r, status, ui.Page{
+	s.deps.WritePage(w, r, status, ui.Page{
 		Titulo: "Entrar na mesa",
 		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
-	}, campanhaEntrar(v))
+	}, JoinBody(v))
 }
 
 // ── a crônica: a página de uma campanha (ALE-255) ────────────────────────────
 
-// handleCronica desenha a crônica inteira, com a aba escolhida pelo `?tab=`.
+// handleOne desenha a crônica inteira, com a aba escolhida pelo `?tab=`.
 //
 // UMA resposta, e não três: a tela da SPA dispara consultas separadas para
 // campanha, sessões e membros, cada uma com o próprio estado de carregando —
 // e a visão geral mostra números que só existem depois que as três voltam.
-func (s *Server) handleCronica(w http.ResponseWriter, r *http.Request) {
+func (s Scene) handleOne(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "id inválido", http.StatusBadRequest)
 		return
 	}
-	v, err := s.carregaCronica(r.Context(), currentUser(r), id, r.URL.Query().Get("tab"))
-	if errors.Is(err, errCampanhaInexistente) {
+	v, err := s.LoadOne(r.Context(), s.deps.CurrentUserID(r), s.deps.RequesterIsAdmin(r), id, r.URL.Query().Get("tab"))
+	if errors.Is(err, errNoSuchCampaign) {
 		http.Error(w, "Campanha não encontrada", http.StatusNotFound)
 		return
 	}
@@ -288,17 +289,17 @@ func (s *Server) handleCronica(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
-	s.escrevePaginaDaCronica(w, r, http.StatusOK, v)
+	s.writeOnePage(w, r, http.StatusOK, v)
 }
 
 // ── as ações da crônica (ALE-255) ────────────────────────────────────────────
 
-// handleCronicaEditar grava nome e descrição.
+// handleEdit grava nome e descrição.
 //
 // A recusa REDESENHA a aba de configuração com o que foi digitado, como a folha
 // em branco — e pela mesma razão: a descrição é o campo caro de reescrever.
-func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
-	id, eu, ok := donoDaCronica(w, r, s)
+func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
+	id, eu, ok := s.ownerOrRefuse(w, r)
 	if !ok {
 		return
 	}
@@ -312,9 +313,8 @@ func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
 	// e desde a ALE-278 uma FRASE também: as mensagens moram no `campaign`,
 	// porque quem lê é o mestre e não o programa.
 	nome, descricaoTexto, erros := campaign.ValidateText(nomeBruto, &descricaoBruta)
-	descricao := trimOrNull(&descricaoTexto)
 	if len(erros) > 0 {
-		v, erroAoLer := s.carregaCronica(r.Context(), eu, id, "config")
+		v, erroAoLer := s.LoadOne(r.Context(), eu, s.deps.RequesterIsAdmin(r), id, "config")
 		if erroAoLer != nil {
 			http.Error(w, erroAoLer.Error(), http.StatusInternalServerError)
 			return
@@ -325,49 +325,52 @@ func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
 		for campo, frases := range erros {
 			v.Erros[campo] = frases
 		}
-		s.escrevePaginaDaCronica(w, r, http.StatusUnprocessableEntity, v)
+		s.writeOnePage(w, r, http.StatusUnprocessableEntity, v)
 		return
 	}
 
-	var set setBuilder
-	set.Add("name = ?", nome)
-	set.Add("description = ?", nullableArg(descricao))
-	if err := set.execTouched(r.Context(), s.db, "UPDATE campaigns", id); err != nil {
+	// A GRAVAÇÃO é uma pergunta e não um SQL montado aqui (ALE-278).
+	//
+	// Esta cena compunha `setBuilder` + `execTouched` + `"UPDATE campaigns"` à
+	// mão, e cena que compõe SQL é cena com o banco dentro. O hospedeiro sabe
+	// que a coluna se chama `description`, que vazio é NULL e que a linha tem um
+	// `updatedAt` a tocar; a cena sabe que o mestre renomeou a mesa.
+	if err := s.deps.SaveText(r.Context(), id, nome, descricaoTexto); err != nil {
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
 }
 
-// handleCronicaExcluir apaga a crônica e devolve ao livro.
-func (s *Server) handleCronicaExcluir(w http.ResponseWriter, r *http.Request) {
-	id, _, ok := donoDaCronica(w, r, s)
+// handleDelete apaga a crônica e devolve ao livro.
+func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
+	id, _, ok := s.ownerOrRefuse(w, r)
 	if !ok {
 		return
 	}
-	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
+	if err := s.deps.Queries().DeleteCampaign(r.Context(), id); err != nil {
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, "/campanhas", http.StatusSeeOther)
 }
 
-// handleCronicaAlternarRegra liga ou desliga UMA regra opcional e devolve só o
+// handleToggleRule liga ou desliga UMA regra opcional e devolve só o
 // painel dela.
 //
 // Remendo e não navegação, e essa é a diferença desta ação para as outras duas:
 // alternar um interruptor no meio de uma lista de ajustes e recarregar a página
 // perderia a posição de quem está lendo. Excluir e salvar LEVAM embora a
 // página, então lá o formulário de verdade é o certo.
-func (s *Server) handleCronicaAlternarRegra(w http.ResponseWriter, r *http.Request) {
-	id, eu, ok := donoDaCronica(w, r, s)
+func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
+	id, eu, ok := s.ownerOrRefuse(w, r)
 	if !ok {
 		return
 	}
 	regra := chi.URLParam(r, "regra")
 	sse := datastar.NewSSE(w, r)
 
-	atuais := s.ignoredRulesOf(r.Context(), id)
+	atuais := s.deps.IgnoredRules(r.Context(), id)
 	var desejadas []string
 	if slices.Contains(atuais, regra) {
 		// Estava DESLIGADA: religar é tirá-la do conjunto de exceções.
@@ -381,22 +384,22 @@ func (s *Server) handleCronicaAlternarRegra(w http.ResponseWriter, r *http.Reque
 	}
 	// A validação é a MESMA da rota JSON: regra que o motor não conhece é
 	// recusada mesmo vindo de um caminho de tela.
-	normalizadas, msg := normalizeIgnoredRules(desejadas)
+	normalizadas, msg := campaign.NormalizeIgnoredRules(desejadas)
 	if msg != "" {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": msg})
 		return
 	}
-	if err := s.saveIgnoredRules(r.Context(), id, normalizadas); err != nil {
+	if err := s.deps.SaveIgnoredRules(r.Context(), id, normalizadas); err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
 		return
 	}
 
-	v, err := s.carregaCronica(r.Context(), eu, id, "config")
+	v, err := s.LoadOne(r.Context(), eu, s.deps.RequesterIsAdmin(r), id, "config")
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
 		return
 	}
-	fragmento, err := ui.RenderFragment(r.Context(), regrasDaCronica(v))
+	fragmento, err := ui.RenderFragment(r.Context(), rulesPanel(v))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
 		return
@@ -405,31 +408,31 @@ func (s *Server) handleCronicaAlternarRegra(w http.ResponseWriter, r *http.Reque
 	_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ""})
 }
 
-// donoDaCronica resolve o id e exige que quem pede seja o DONO.
+// ownerOrRefuse resolve o id e exige que quem pede seja o DONO.
 //
 // As três ações desta aba são de mestre, e a trava é aqui e não na tela: a tela
 // não mostra a aba para jogador, mas isso é UX — quem postar na mão leva 403.
-func donoDaCronica(w http.ResponseWriter, r *http.Request, s *Server) (int64, AuthUser, bool) {
+func (s Scene) ownerOrRefuse(w http.ResponseWriter, r *http.Request) (int64, int64, bool) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "id inválido", http.StatusBadRequest)
-		return 0, AuthUser{}, false
+		return 0, 0, false
 	}
-	eu := currentUser(r)
-	c, err := s.queries.GetCampaign(r.Context(), id)
+	eu := s.deps.CurrentUserID(r)
+	c, err := s.deps.Queries().GetCampaign(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Campanha não encontrada", http.StatusNotFound)
-		return 0, AuthUser{}, false
+		return 0, 0, false
 	}
-	if c.Ownerid != eu.ID {
+	if c.Ownerid != eu {
 		http.Error(w, "Só quem mestra pode mudar a crônica.", http.StatusForbidden)
-		return 0, AuthUser{}, false
+		return 0, 0, false
 	}
 	return id, eu, true
 }
 
-func (s *Server) escrevePaginaDaCronica(w http.ResponseWriter, r *http.Request, status int, v cronicaView) {
-	s.WritePage(w, r, status, ui.Page{
+func (s Scene) writeOnePage(w http.ResponseWriter, r *http.Request, status int, v oneView) {
+	s.deps.WritePage(w, r, status, ui.Page{
 		Titulo: v.Nome,
 		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
@@ -440,5 +443,5 @@ func (s *Server) escrevePaginaDaCronica(w http.ResponseWriter, r *http.Request, 
 		// interruptor. Nada de estado da aplicação: a aba vem da URL e o resto
 		// vem desenhado.
 		Sinais: "{erroDaRegra: ''}",
-	}, cronica(v))
+	}, oneBody(v))
 }

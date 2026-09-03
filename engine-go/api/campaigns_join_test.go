@@ -2,18 +2,28 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
 	"strings"
+	"t20engine/db/sqlcgen"
 	"t20engine/plataforma"
+	"t20engine/web/campaigns"
 	"t20engine/web/ui"
 	"testing"
-
-	"t20engine/db/sqlcgen"
 )
+
+// Os guardas da CARTA DE CONVITE (ALE-249).
+//
+// O caminho feliz mora AQUI e não no navegador de propósito: entrar numa mesa
+// grava um membro e uma CÓPIA do personagem (ALE-33), e a tela não sabe
+// desfazer isso. Um e2e do caminho feliz deixaria lixo permanente no banco de
+// desenvolvimento a cada corrida — a família de problema da ALE-238. Aqui o
+// banco é descartável.
+//
+// O que fica no navegador é só o que só ele testemunha: a recusa NATIVA do
+// grupo de rádios sem escolha.
 
 // Os guardas da CARTA DE CONVITE (ALE-249).
 //
@@ -158,7 +168,7 @@ func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 	visitante := seedUser(t, s, "visitante@t20.local")
 	seedCampanha(t, s, dono, "A Queda de Tauron", "o-token-certo")
 
-	v, err := s.carregaCartaDeConvite(context.Background(), s.authUserPorID(t, visitante), "o-token-certo")
+	v, err := campaigns.New(s).LoadJoin(context.Background(), visitante, "o-token-certo")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -174,14 +184,14 @@ func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	s := newTestServer(t)
 	visitante := seedUser(t, s, "visitante@t20.local")
 
-	v, err := s.carregaCartaDeConvite(context.Background(), s.authUserPorID(t, visitante), "nao-existe")
+	v, err := campaigns.New(s).LoadJoin(context.Background(), visitante, "nao-existe")
 	if err != nil {
 		t.Fatalf("convite morto derrubou a carta: %v", err)
 	}
 	if v.ConviteVale {
 		t.Fatal("convite inexistente foi dado como válido")
 	}
-	html, err := ui.RenderFragment(t.Context(), campanhaEntrar(v))
+	html, err := ui.RenderFragment(t.Context(), campaigns.JoinBody(v))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
@@ -202,4 +212,17 @@ func (s *Server) authUserPorID(t *testing.T, id int64) AuthUser {
 	return s.authUser(u)
 }
 
-var _ = sql.ErrNoRows
+// ehAdmin responde a pergunta que a cena faz por parâmetro, para a bancada não
+// ter de montar um `AuthUser` só para ler um booleano.
+//
+// Ela olha a MESMA configuração que o `currentUser` olha, e não um valor
+// inventado: um seed que por acaso caia na lista de administradores tem de
+// mudar o que a lista mostra aqui também, senão o guarda mede outra coisa.
+func (s *Server) ehAdmin(t *testing.T, id int64) bool {
+	t.Helper()
+	u, err := s.queries.GetUserByID(context.Background(), id)
+	if err != nil {
+		t.Fatalf("usuário: %v", err)
+	}
+	return s.authUser(u).IsAdmin
+}

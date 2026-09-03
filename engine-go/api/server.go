@@ -1,7 +1,5 @@
 package api
 
-import "t20engine/tabuleiro"
-
 import (
 	"context"
 	"database/sql"
@@ -10,15 +8,17 @@ import (
 	"strings"
 	"sync"
 	"t20engine/aovivo"
+	"t20engine/db/sqlcgen"
+	"t20engine/engine"
+	"t20engine/events"
 	"t20engine/plataforma"
+	"t20engine/tabuleiro"
 	"t20engine/web/hub"
+	"t20engine/web/routes"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"t20engine/db/sqlcgen"
-	"t20engine/engine"
-	"t20engine/events"
 )
 
 // Server holds the API dependencies (config, DB handle, typed queries, primed
@@ -360,7 +360,7 @@ func (s *Server) ExpiredSessionCookie() *http.Cookie { return s.sessionCookie(""
 // TableRoute é o endereço de uma sessão ao vivo. Quem sabe onde cada cena está
 // montada é quem monta.
 func (s *Server) TableRoute(campaignID, sessionID int64) string {
-	return rotaDaMesa(campaignID, sessionID)
+	return routes.Table(campaignID, sessionID)
 }
 
 // Asset é o endereço versionado de um estático, para as cenas que carregam

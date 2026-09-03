@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"t20engine/web/admin"
+	"t20engine/web/campaigns"
 	"t20engine/web/characters"
 	"t20engine/web/door"
 	"t20engine/web/finder"
@@ -14,7 +15,6 @@ import (
 	"t20engine/web/routes"
 
 	"fmt"
-	"github.com/a-h/templ"
 	"io/fs"
 	"net/http"
 	"strconv"
@@ -23,8 +23,11 @@ import (
 	"t20engine/tabuleiro"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/a-h/templ"
+
 	"t20engine/web/ui"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // O piloto Datastar (ALE-219): a superfície "Mesa" do jogador renderizada pelo
@@ -57,7 +60,7 @@ func (s *Server) WebRouter() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
 		hub.Routes(r, hub.New(s))
-		s.CampaignRoutes(r)
+		campaigns.Routes(r, campaigns.New(s))
 		// PERSONAGENS (ALE-278) e a FORJA, irmãs no mesmo endereço: o elenco é de
 		// onde se abre a folha em branco. Elas eram montadas UMA DENTRO DA OUTRA
 		// e isso era organização, não dependência — o `chi` não liga para quem
@@ -132,27 +135,9 @@ func pilotoStaticHandler() http.Handler {
 	return comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub)))
 }
 
-// rotaDaMesa é PARA ONDE se entra numa sessão, e desde a ALE-269 ela é a Mesa em
-// Datastar.
-//
-// Era `/campaigns/{id}/sessions/{sid}` — a rota da SPA — em quatro lugares: o
-// Hub, o cartão da campanha e duas linhas da crônica. Enquanto o piloto apontava
-// para lá, a Mesa nova só era alcançável por URL digitada, e é por isso que
-// trocar estes quatro `href` É a virada: a partir daqui, entrar numa sessão é
-// entrar nela.
-//
-// UMA função e não quatro `Sprintf`, e a razão vale para os dois sentidos: hoje
-// ela é o que faz os quatro caminhos concordarem, e no dia do `git rm` ela é o
-// único lugar que precisa ser lido para saber quem manda para onde.
-//
-// A tela antiga continua de pé e alcançável por URL (decisão do dono): apagar a
-// `SessionTrackerPage` é fatia própria, depois de uma sessão de verdade rodar na
-// Mesa nova. Enquanto isso, voltar atrás é um `git revert` deste commit.
-//
-// @example rotaDaMesa(1, 4) // "/mesa/1/4"
-func rotaDaMesa(campanhaID, sessaoID int64) string {
-	return fmt.Sprintf("/mesa/%d/%d", campanhaID, sessaoID)
-}
+// O endereço da Mesa mora em `web/routes` desde a ALE-278 (`routes.Table`): a
+// cena das campanhas o cita, e depois de virar pacote ela não alcança mais uma
+// função daqui. É o critério de lá reclassificando pela terceira vez.
 
 // mesaParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
 // resposta é uma frase e não um JSON: quem está do outro lado é um navegador

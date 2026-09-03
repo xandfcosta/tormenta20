@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"t20engine/plataforma"
-	"testing"
-
 	"t20engine/db/sqlcgen"
+	"t20engine/plataforma"
+	"t20engine/web/campaigns"
+	"testing"
 )
 
 // Os guardas da cena de CAMPANHAS (ALE-234).
@@ -29,6 +29,24 @@ func novaCena(t *testing.T, admins ...string) cenaFixture {
 	return cenaFixture{s: s, dono: seedUser(t, s, "mestre@t20.local")}
 }
 
+func (f cenaFixture) eu(t *testing.T) AuthUser {
+	t.Helper()
+	u, err := f.s.queries.GetUserByID(context.Background(), f.dono)
+	if err != nil {
+		t.Fatalf("usuário: %v", err)
+	}
+	return f.s.authUser(u)
+}
+
+// ── a lista ──────────────────────────────────────────────────────────────────
+
+// Os guardas da cena de CAMPANHAS (ALE-234).
+//
+// O que se protege é o que o SERVIDOR decide: quem entra na lista, qual
+// campanha aparece ao vivo, e que o cursor nasce numa que existe. O desenho é
+// do e2e — ele mede contraste e o cursor andando, que são as coisas que só o
+// navegador testemunha.
+
 func (f cenaFixture) campanha(t *testing.T, nome, sinopse string) int64 {
 	t.Helper()
 	c, err := f.s.queries.CreateCampaign(context.Background(), sqlcgen.CreateCampaignParams{
@@ -46,17 +64,6 @@ func (f cenaFixture) campanha(t *testing.T, nome, sinopse string) int64 {
 	return c.ID
 }
 
-func (f cenaFixture) eu(t *testing.T) AuthUser {
-	t.Helper()
-	u, err := f.s.queries.GetUserByID(context.Background(), f.dono)
-	if err != nil {
-		t.Fatalf("usuário: %v", err)
-	}
-	return f.s.authUser(u)
-}
-
-// ── a lista ──────────────────────────────────────────────────────────────────
-
 // A busca é do SERVIDOR nesta cena, e a regra é a mesma do `casaBusca`. Este
 // guarda é a costura: que a cena de fato APLICA a regra, sobre o nome E a
 // sinopse, que são os dois campos que a SPA indexa.
@@ -65,7 +72,7 @@ func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 	f.campanha(t, "A Queda de Tauron", "")
 	f.campanha(t, "Segredos de Wynlla", "Uma trama sobre a Tormenta")
 
-	porNome, err := f.s.carregaCampanhas(context.Background(), f.eu(t), "queda", "todas")
+	porNome, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "queda", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -73,7 +80,7 @@ func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 		t.Errorf("busca por nome devolveu %d resultados", len(porNome.Campanhas))
 	}
 
-	porSinopse, err := f.s.carregaCampanhas(context.Background(), f.eu(t), "tormenta", "todas")
+	porSinopse, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "tormenta", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -90,7 +97,7 @@ func TestTheCursorIsBornOnTheFirstOfTheFilteredList(t *testing.T) {
 	f.campanha(t, "A Queda de Tauron", "")
 	segunda := f.campanha(t, "Segredos de Wynlla", "")
 
-	v, err := f.s.carregaCampanhas(context.Background(), f.eu(t), "wynlla", "todas")
+	v, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "wynlla", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -103,7 +110,7 @@ func TestTheCursorIsBornOnTheFirstOfTheFilteredList(t *testing.T) {
 // para limpar o filtro, a outra para criar a primeira.
 func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 	vazia := novaCena(t)
-	semNada, err := vazia.s.carregaCampanhas(context.Background(), vazia.eu(t), "", "todas")
+	semNada, err := campaigns.New(vazia.s).LoadList(context.Background(), vazia.eu(t).ID, vazia.eu(t).IsAdmin, "", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -113,7 +120,7 @@ func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
-	semResultado, err := f.s.carregaCampanhas(context.Background(), f.eu(t), "zzzzz", "todas")
+	semResultado, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "zzzzz", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -142,7 +149,7 @@ func TestALiveSessionGoesToTheRightCampaign(t *testing.T) {
 		t.Fatalf("iniciar: %v", err)
 	}
 
-	v, err := f.s.carregaCampanhas(context.Background(), f.eu(t), "", "todas")
+	v, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -167,7 +174,7 @@ func TestAnInvalidRoleInTheUrlDoesNotHideTheList(t *testing.T) {
 	f.campanha(t, "A Queda de Tauron", "")
 
 	for _, papel := range []string{"", "mestre", "GM", "'; drop table"} {
-		v, err := f.s.carregaCampanhas(context.Background(), f.eu(t), "", papel)
+		v, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", papel)
 		if err != nil {
 			t.Fatalf("carregar: %v", err)
 		}
@@ -181,7 +188,7 @@ func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 
-	mestrando, err := f.s.carregaCampanhas(context.Background(), f.eu(t), "", "gm")
+	mestrando, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "gm")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -189,7 +196,7 @@ func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 		t.Errorf("mestrando devolveu %d — o dono mestra a própria mesa", len(mestrando.Campanhas))
 	}
 
-	jogando, err := f.s.carregaCampanhas(context.Background(), f.eu(t), "", "player")
+	jogando, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "player")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}

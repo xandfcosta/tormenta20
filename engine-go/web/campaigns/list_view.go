@@ -1,4 +1,4 @@
-package api
+package campaigns
 
 import (
 	"context"
@@ -23,18 +23,18 @@ import (
 // índice e o primeiro/último a serem do cliente também, e aí a cena viraria
 // ilha por acidente.
 
-type campanhasView struct {
+type listView struct {
 	Busca string
 	// Papel é "todas" | "gm" | "player". Fica na URL junto com a busca para a
 	// tela filtrada ser um endereço que se guarda e se recarrega.
 	Papel       string
-	Campanhas   []campanhaCartao
+	Campanhas   []campaignCard
 	CursorID    int64
 	TemAlguma   bool
 	FiltrouTudo bool
 }
 
-type campanhaCartao struct {
+type campaignCard struct {
 	ID       int64
 	Nome     string
 	Sinopse  string
@@ -44,36 +44,36 @@ type campanhaCartao struct {
 	Gradiente string
 	AoVivo    bool
 	SessaoID  int64
-	Meu       *campanhaMeuPersonagem
+	Meu       *myCharacter
 }
 
-type campanhaMeuPersonagem struct {
+type myCharacter struct {
 	Nome     string
 	Classes  string
 	Iniciais string
 }
 
-// carregaCampanhas monta a cena.
-func (s *Server) carregaCampanhas(ctx context.Context, eu AuthUser, busca, papel string) (campanhasView, error) {
-	lista, err := s.campaignList(ctx, eu)
+// LoadList monta a cena.
+func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, busca, papel string) (listView, error) {
+	lista, err := s.deps.List(ctx, euID, admin)
 	if err != nil {
-		return campanhasView{}, err
+		return listView{}, err
 	}
-	vivas, err := s.sessoesVivas(ctx, eu.ID)
+	vivas, err := s.liveSessions(ctx, euID)
 	if err != nil {
-		return campanhasView{}, err
+		return listView{}, err
 	}
 
-	v := campanhasView{Busca: busca, Papel: papelValido(papel), TemAlguma: len(lista) > 0}
+	v := listView{Busca: busca, Papel: knownRole(papel), TemAlguma: len(lista) > 0}
 	for _, c := range lista {
-		if !passaNoPapel(c.Role, v.Papel) {
+		if !passesRole(c.Role, v.Papel) {
 			continue
 		}
 		// Os MESMOS campos que a SPA indexa: nome e sinopse.
-		if !search.Matches([]string{c.Name, valorOuVazio(c.Description)}, busca) {
+		if !search.Matches([]string{c.Name, c.Description}, busca) {
 			continue
 		}
-		v.Campanhas = append(v.Campanhas, cartaoDaCampanha(c, vivas))
+		v.Campanhas = append(v.Campanhas, cardOf(c, vivas))
 	}
 	v.FiltrouTudo = v.TemAlguma && len(v.Campanhas) == 0
 	if len(v.Campanhas) > 0 {
@@ -85,12 +85,12 @@ func (s *Server) carregaCampanhas(ctx context.Context, eu AuthUser, busca, papel
 	return v, nil
 }
 
-func cartaoDaCampanha(c campaignListDTO, vivas map[int64]int64) campanhaCartao {
-	cartao := campanhaCartao{
+func cardOf(c ListRow, vivas map[int64]int64) campaignCard {
+	cartao := campaignCard{
 		ID:        c.ID,
 		Nome:      c.Name,
-		Sinopse:   valorOuVazio(c.Description),
-		Papel:     papelNaCampanha(c.Role, c.OwnerName),
+		Sinopse:   c.Description,
+		Papel:     roleLabel(c.Role, c.OwnerName),
 		Iniciais:  ui.Monogram(c.Name),
 		Gradiente: ui.NameGradient(c.Name),
 	}
@@ -98,23 +98,23 @@ func cartaoDaCampanha(c campaignListDTO, vivas map[int64]int64) campanhaCartao {
 		cartao.AoVivo, cartao.SessaoID = true, sid
 	}
 	if c.Character != nil {
-		cartao.Meu = &campanhaMeuPersonagem{
+		cartao.Meu = &myCharacter{
 			Nome:     c.Character.Name,
-			Classes:  classesEmLinha(c.Character),
+			Classes:  classesInLine(c.Character),
 			Iniciais: ui.Monogram(c.Character.Name),
 		}
 	}
 	return cartao
 }
 
-// sessoesVivas responde, numa consulta só, quais campanhas têm partida rolando.
+// liveSessions responde, numa consulta só, quais campanhas têm partida rolando.
 //
 // Era o `createActiveSessionByCampaign`: N+1 requisições do cliente, uma por
 // campanha. É a SEGUNDA fan-out idêntica que a migração encontra — a primeira
 // era a do Hub (ALE-231) —, e duas telas com o mesmo remendo são o sinal de que
 // o buraco estava na API.
-func (s *Server) sessoesVivas(ctx context.Context, userID int64) (map[int64]int64, error) {
-	linhas, err := s.queries.LiveSessionsForUser(ctx, userID)
+func (s Scene) liveSessions(ctx context.Context, userID int64) (map[int64]int64, error) {
+	linhas, err := s.deps.Queries().LiveSessionsForUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -123,14 +123,14 @@ func (s *Server) sessoesVivas(ctx context.Context, userID int64) (map[int64]int6
 		// O sqlc tipa o `MIN(s.id)` de um GROUP BY como `interface{}`, porque
 		// agregação pode devolver NULL. Aqui nunca devolve — o grupo só existe
 		// se houver linha —, mas o tipo é o que é.
-		if id, ok := comoInt64(l.Sessionid); ok {
+		if id, ok := asInt64(l.Sessionid); ok {
 			vivas[l.Campaignid] = id
 		}
 	}
 	return vivas, nil
 }
 
-func comoInt64(v any) (int64, bool) {
+func asInt64(v any) (int64, bool) {
 	switch n := v.(type) {
 	case int64:
 		return n, true
@@ -142,9 +142,9 @@ func comoInt64(v any) (int64, bool) {
 	return 0, false
 }
 
-// classesEmLinha: "Arcanista 5 / Guerreiro 2", como a SPA escreve. Sem classe
+// classesInLine: "Arcanista 5 / Guerreiro 2", como a SPA escreve. Sem classe
 // nenhuma cai no nível, que é o que sobra para dizer.
-func classesEmLinha(c *campaignCharacterDTO) string {
+func classesInLine(c *RowCharacter) string {
 	partes := make([]string, 0, len(c.Classes))
 	for _, cl := range c.Classes {
 		partes = append(partes, cl.ClassName+" "+strconv.FormatInt(cl.Level, 10))
@@ -155,16 +155,16 @@ func classesEmLinha(c *campaignCharacterDTO) string {
 	return strings.Join(partes, " / ")
 }
 
-// papelValido fecha o filtro nos três valores que existem: qualquer outra coisa
+// knownRole fecha o filtro nos três valores que existem: qualquer outra coisa
 // na URL vira "todas" em vez de esconder a lista inteira.
-func papelValido(papel string) string {
+func knownRole(papel string) string {
 	if papel == "gm" || papel == "player" {
 		return papel
 	}
 	return "todas"
 }
 
-func passaNoPapel(papelDaCampanha, filtro string) bool {
+func passesRole(papelDaCampanha, filtro string) bool {
 	if filtro == "todas" {
 		return true
 	}
@@ -174,7 +174,7 @@ func passaNoPapel(papelDaCampanha, filtro string) bool {
 	return papelDaCampanha == filtro
 }
 
-func valorOuVazio(p *string) string {
+func valueOrEmpty(p *string) string {
 	if p == nil {
 		return ""
 	}

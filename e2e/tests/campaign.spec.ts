@@ -19,7 +19,7 @@ test.describe('Detalhe da campanha', () => {
   //   - a SEÇÃO É ENDEREÇO (link, URL, e o botão voltar) tem e2e próprio em
   //     `piloto-datastar.spec.ts` — histórico é do navegador e jsdom não o tem;
   //   - o ROSTER desenhado é `TestTheGmComesFirstInTheCast`, em
-  //     `api/piloto_cronica_test.go`, que é a camada mais barata que o sustenta.
+  //     `api/campaigns_one_test.go`, que é a camada mais barata que o sustenta.
 })
 
 /**
@@ -32,7 +32,7 @@ test.describe('Detalhe da campanha', () => {
  * escreveu não existem mais nesta branch: a carta de convite virou cena do
  * servidor, e com ela foram embora o `entities/campaign/join-target.test.ts` e o
  * `features/campaign-join/hero-picker.test.tsx`. Quem responde agora é o
- * `api/piloto_campanha_entrar_test.go` — a resolução do alvo em
+ * `api/campaigns_join_test.go` — a resolução do alvo em
  * `TestWithoutAnInviteSomeoneElsesTableIsRefusedWithTheNextStep` e o convite morto em
  * `TestADeadInviteBecomesASentenceAndNotABrokenPage` —, mais a
  * `A carta de convite (piloto Datastar)` no `piloto-datastar.spec.ts` para o que
