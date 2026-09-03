@@ -92,19 +92,19 @@ func (s *Server) applyPool(w http.ResponseWriter, r *http.Request, id int64, sou
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load effects")
 		return
 	}
-	plan := planPoolSupremacy(parseTempHpPools(rows), catalogID, scope, amount)
-	if plan.superseded {
+	plan := sheet.PlanPoolSupremacy(sheet.ParseTempHpPools(rows), catalogID, scope, amount)
+	if plan.Superseded {
 		_ = tx.Commit()
-		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"superseded": true, "keptEffectId": plan.keptEffectID, "keptAmount": plan.keptAmount})
+		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"superseded": true, "keptEffectId": plan.KeptEffectID, "keptAmount": plan.KeptAmount})
 		return
 	}
-	for _, z := range plan.zeroWrites {
-		if err := q.UpdateEffectModifiers(r.Context(), sqlcgen.UpdateEffectModifiersParams{Modifiers: z.modifiers, ID: z.effectID}); err != nil {
+	for _, z := range plan.ZeroWrites {
+		if err := q.UpdateEffectModifiers(r.Context(), sqlcgen.UpdateEffectModifiersParams{Modifiers: z.Modifiers, ID: z.EffectID}); err != nil {
 			plataforma.WriteError(w, http.StatusInternalServerError, "Could not displace pool")
 			return
 		}
 	}
-	for _, delID := range plan.deleteIDs {
+	for _, delID := range plan.DeleteIDs {
 		if err := q.DeleteEffectByID(r.Context(), delID); err != nil {
 			plataforma.WriteError(w, http.StatusInternalServerError, "Could not displace pool")
 			return
@@ -123,7 +123,7 @@ func (s *Server) applyPool(w http.ResponseWriter, r *http.Request, id int64, sou
 	}
 	plataforma.WriteJSON(w, http.StatusOK, map[string]any{
 		"effect":    effectDTOFromUpsert(eff),
-		"displaced": plan.displaced,
+		"displaced": plan.Displaced,
 	})
 }
 

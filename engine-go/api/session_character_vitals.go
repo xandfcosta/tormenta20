@@ -1,6 +1,12 @@
 package api
 
-import "t20engine/aovivo"
+import (
+	"context"
+	"t20engine/aovivo"
+	"t20engine/db/sqlcgen"
+	"t20engine/plataforma"
+	"t20engine/sheet"
+)
 
 // O PV do rastreador É o PV da ficha (ALE-122) — e agora atravessa uma PORTA.
 //
@@ -28,13 +34,6 @@ import "t20engine/aovivo"
 // `POST /characters/{id}/damage` e a entrada da iniciativa espelha o que foi
 // gravado. NPC continua vivendo só no rastreador — não há ficha atrás dele.
 
-import (
-	"context"
-	"t20engine/plataforma"
-
-	"t20engine/db/sqlcgen"
-)
-
 // sheetVitals é quem cumpre a porta. Guarda só o que precisa — as queries —
 // em vez de um `*Server` inteiro: uma porta que recebesse o servidor não seria
 // porta, seria o acoplamento de antes com outro nome.
@@ -48,29 +47,29 @@ type sheetVitals struct{ q *sqlcgen.Queries }
 // digitada na sessão e a mesma pancada digitada na ficha não podem discordar.
 func applyDamagePlan(
 	ctx context.Context, q *sqlcgen.Queries, row sqlcgen.Character, amount int,
-) (damagePlan, error) {
+) (sheet.DamagePlan, error) {
 	effects, err := q.ListActiveEffectsByCharacter(ctx, row.ID)
 	if err != nil {
-		return damagePlan{}, err
+		return sheet.DamagePlan{}, err
 	}
-	plan := planDamage(parseTempHpPools(effects), int(row.Hpcurrent), amount)
-	for _, u := range plan.updates {
+	plan := sheet.PlanDamage(sheet.ParseTempHpPools(effects), int(row.Hpcurrent), amount)
+	for _, u := range plan.Updates {
 		if err := q.UpdateEffectModifiers(ctx, sqlcgen.UpdateEffectModifiersParams{
-			Modifiers: u.modifiers, ID: u.effectID,
+			Modifiers: u.Modifiers, ID: u.EffectID,
 		}); err != nil {
-			return damagePlan{}, err
+			return sheet.DamagePlan{}, err
 		}
 	}
-	for _, delID := range plan.deleteIDs {
+	for _, delID := range plan.DeleteIDs {
 		if err := q.DeleteEffectByID(ctx, delID); err != nil {
-			return damagePlan{}, err
+			return sheet.DamagePlan{}, err
 		}
 	}
-	if plan.hpCurrent != int(row.Hpcurrent) {
+	if plan.HpCurrent != int(row.Hpcurrent) {
 		if err := q.SetHpCurrent(ctx, sqlcgen.SetHpCurrentParams{
-			HpCurrent: int64(plan.hpCurrent), UpdatedAt: plataforma.NowISO(), ID: row.ID,
+			HpCurrent: int64(plan.HpCurrent), UpdatedAt: plataforma.NowISO(), ID: row.ID,
 		}); err != nil {
-			return damagePlan{}, err
+			return sheet.DamagePlan{}, err
 		}
 	}
 	return plan, nil
@@ -92,7 +91,7 @@ func (v sheetVitals) ApplyDelta(
 		if err != nil {
 			return nil, nil, err
 		}
-		hp = int64(plan.hpCurrent) // já persistido pelo plano
+		hp = int64(plan.HpCurrent) // já persistido pelo plano
 	} else if hpDelta != nil {
 		hp, healed = aovivo.ClampVital(row.Hpcurrent+*hpDelta, &row.Hpmax), true
 	}

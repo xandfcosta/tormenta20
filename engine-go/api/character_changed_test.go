@@ -1,12 +1,9 @@
 package api
 
 import (
+	"strings"
 	"t20engine/aovivo"
 	"t20engine/events"
-)
-
-import (
-	"strings"
 	"testing"
 )
 

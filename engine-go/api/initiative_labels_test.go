@@ -1,8 +1,9 @@
 package api
 
-import "t20engine/aovivo"
-
-import "testing"
+import (
+	"t20engine/aovivo"
+	"testing"
+)
 
 // O REPETIDO NA FILA GANHA NÚMERO (ALE-208).
 //
