@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/search"
+	"t20engine/web/ui"
 )
 
 // A cena de CAMPANHAS como dado (ALE-234) — a primeira cena de SELEÇÃO da
@@ -39,7 +40,7 @@ type campanhaCartao struct {
 	Sinopse  string
 	Papel    string
 	Iniciais string
-	// Gradiente é a capa derivada do nome — ver `piloto_identidade.go`.
+	// Gradiente é a capa derivada do nome — ver `ui.NameGradient`.
 	Gradiente string
 	AoVivo    bool
 	SessaoID  int64
@@ -90,8 +91,8 @@ func cartaoDaCampanha(c campaignListDTO, vivas map[int64]int64) campanhaCartao {
 		Nome:      c.Name,
 		Sinopse:   valorOuVazio(c.Description),
 		Papel:     papelNaCampanha(c.Role, c.OwnerName),
-		Iniciais:  iniciais(c.Name),
-		Gradiente: gradienteDaCampanha(c.Name),
+		Iniciais:  ui.Monogram(c.Name),
+		Gradiente: ui.NameGradient(c.Name),
 	}
 	if sid, ok := vivas[c.ID]; ok {
 		cartao.AoVivo, cartao.SessaoID = true, sid
@@ -100,7 +101,7 @@ func cartaoDaCampanha(c campaignListDTO, vivas map[int64]int64) campanhaCartao {
 		cartao.Meu = &campanhaMeuPersonagem{
 			Nome:     c.Character.Name,
 			Classes:  classesEmLinha(c.Character),
-			Iniciais: iniciais(c.Character.Name),
+			Iniciais: ui.Monogram(c.Character.Name),
 		}
 	}
 	return cartao

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"t20engine/aovivo"
+	"t20engine/web/ui"
 )
 
 // A Mesa do jogador como DADO — o piloto Datastar (ALE-219).
@@ -283,7 +284,7 @@ func mesaFilaDe(st *aovivo.SessionRuntimeState, meus map[int64]bool) []mesaLinha
 			NaVez:      i == st.TurnIndex,
 			Oculto:     e.HpHidden != nil && *e.HpHidden,
 			Condicoes:  e.Conditions,
-			Iniciais:   iniciais(e.Label),
+			Iniciais:   ui.Monogram(e.Label),
 		}
 		// O `HpMax` nil depois da redação é como o servidor DIZ "isto não é seu
 		// para ver". Desenhar barra aqui inventaria um número.

@@ -3,8 +3,10 @@ package api
 import (
 	"context"
 	"t20engine/web/admin"
+	"t20engine/web/characters"
 	"t20engine/web/door"
 	"t20engine/web/finder"
+	"t20engine/web/forge"
 	"t20engine/web/grimoire"
 	"t20engine/web/hub"
 	"t20engine/web/master"
@@ -55,7 +57,12 @@ func (s *Server) WebRouter() http.Handler {
 		r.Use(s.requirePage)
 		hub.Routes(r, hub.New(s))
 		s.CampaignRoutes(r)
-		s.CharacterRoutes(r)
+		// PERSONAGENS (ALE-278) e a FORJA, irmãs no mesmo endereço: o elenco é de
+		// onde se abre a folha em branco. Elas eram montadas UMA DENTRO DA OUTRA
+		// e isso era organização, não dependência — o `chi` não liga para quem
+		// registra o quê, e a linha subiu para cá quando a lista virou pacote.
+		characters.Routes(r, characters.New(s))
+		forge.Routes(r, forge.New(s))
 		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
 		s.SheetRoutes(r)
 		grimoire.Routes(r, grimoire.New(s))
@@ -453,7 +460,7 @@ func (s *Server) mesaRoster(ctx context.Context, user AuthUser, campaignID int64
 		grupo = append(grupo, mesaMembro{
 			CharacterID: m.Characterid,
 			Nome:        m.Charname,
-			Iniciais:    iniciais(m.Charname),
+			Iniciais:    ui.Monogram(m.Charname),
 			Defesa:      s.defesaDoMembro(ctx, m.Characterid),
 			Nivel:       m.Charlevel,
 			Classes:     s.mesaClasses(ctx, m.Characterid),

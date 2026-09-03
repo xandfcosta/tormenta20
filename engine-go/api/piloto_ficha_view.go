@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 	"t20engine/sheet"
+	"t20engine/web/characters"
 )
 
 // A FICHA como dado (ALE-272, fatia 1) — a casca, as abas e o crachá.
@@ -194,17 +195,17 @@ func (s *Server) carregaFicha(
 	if err != nil {
 		return fichaView{}, 500, err
 	}
-	cartao := s.cartaoDoHeroi(dto)
+	cartao := characters.HeroCardOf(s.catalogs, dto)
 	v := fichaView{
 		ID:        dto.ID,
 		Nome:      dto.Name,
 		Versao:    row.Updatedat,
-		Iniciais:  cartao.Iniciais,
-		Gradiente: cartao.Gradiente,
-		Papel:     cartao.Papel,
-		Resumo:    cartao.Resumo,
+		Iniciais:  cartao.Monogram,
+		Gradiente: cartao.Gradient,
+		Papel:     cartao.Role,
+		Resumo:    cartao.Summary,
 		Nivel:     dto.Level,
-		Defesa:    cartao.Defesa,
+		Defesa:    cartao.Defense,
 		PV:        oVital(dto.HpCurrent, dto.HpMax),
 		PM:        oVital(dto.MpCurrent, dto.MpMax),
 		SemMana:   dto.MpMax == 0,

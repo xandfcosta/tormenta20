@@ -1179,6 +1179,93 @@ primeiro palpite foi "Desafiador", que não é sequer um dos cinco rótulos que 
 tabela produz — a prova de que escrever à mão só vale lendo a REGRA, e não
 chutando.
 
+## `web/characters`: a lista, e a PORTA que o teste do hospedeiro obrigou a abrir
+
+A cena de `/personagens` saiu na ALE-278: três arquivos, ~750 linhas, TRÊS
+métodos na porta. Ela lista os heróis de quem está olhando, e a forja — que
+nasce um herói — continua irmã dela no mesmo endereço, montada ao lado no
+roteador do `api`.
+
+**A montagem de uma cena dentro da outra era organização, não dependência.** O
+`CharacterRoutes` chamava `forge.Routes(r, forge.New(s))`, e isso parecia
+acoplamento até ser medido: o `chi` não liga para quem registra o quê. A linha
+subiu para o roteador e as duas cenas ficaram lado a lado, sem uma conhecer a
+outra.
+
+### Duas camadas saíram antes, e as duas pagam fatias adiante
+
+- **A identidade visual** (`ui.NameHue`, `ui.NameGradient`, `ui.Monogram`) era
+  lida por CINCO famílias do `api`. O arquivo original tinha quatro funções e só
+  três foram: o `papelNaCampanha` decide entre "Mestrando", "Jogando" e "Mesa de
+  X", que é regra de quem é o quê numa campanha — o kit não pode saber disso.
+  **A linha divisória dentro de um arquivo é a mesma que entre arquivos.**
+  E um nome MENTIA: `gradienteDaCampanha` é chamado com o nome do PERSONAGEM
+  desde a ALE-239.
+- **As habilidades de raça** viraram `book/race_traits.go`. O arquivo lia
+  `catalog.Resource("race-defs")` DIRETO — o terceiro caso desta família, depois
+  do `items.go` da forja e do improviso do trilho do mestre. Ele era lido por
+  personagens E pela ficha, então não era de nenhuma das duas: era do livro.
+
+### O que a porta NÃO pede, e por que o menor não é o mais estreito
+
+O `sheetFromDTO` do hospedeiro esteve na lista e saiu depois de medido: ele é um
+invólucro de UMA linha sobre `sheet.Compute(catalogs, dto)`, e a cena já tem o
+`Catalogs()`. Pedir os dois é pedir a mesma coisa duas vezes.
+
+É a regra da menor pergunta com uma nuance que as portas anteriores não tinham
+mostrado: **o menor não é o mais estreito, é o que não se repete.** A porta da
+administração aprendeu que um contrato que já existe ganha da regra; esta
+aprendeu que uma dependência que já foi concedida também.
+
+E o `HeroCardOf` deixou de ser método por isso: de tudo que a `Deps` oferece ele
+usa só o motor, e como a FICHA reaproveita quatro campos do cartão, mantê-lo
+método obrigaria o hospedeiro a montar uma `Scene` inteira para pedir um cartão.
+
+### O teste do hospedeiro obrigou a cena a exportar a montagem, e vale saber por quê
+
+Nove casos precisam de banco DE VERDADE: eles prendem o caminho BANCO → PALCO —
+personagens gravados saem na lista, com a contagem, os vizinhos e a Defesa que a
+ficha mostra. Este pacote não pode provar isso: não tem banco, e importar o
+`db/testdb` junto com um `*api.Server` seria o ciclo que a divisão existe para
+evitar.
+
+Então `Load` e `SceneBody` são exportados, e o comentário de cada um diz que o
+consumidor de hoje é uma BANCADA. **Isso não é abrir o pacote para o teste** — é
+a fronteira ficando onde ela pode ficar: a cena diz como montar a si mesma, o
+hospedeiro prova que o que está no banco chega até lá. Mesma direção do
+`master.LoadBestiaryFrom`, que a Mesa lê de fora pelo mesmo motivo.
+
+O que NÃO foi exportado, e é o contraste que importa: o `corpoDoBotao`, um
+parser de nove linhas que a bancada usa. Ele foi COPIADO, pela regra que a fatia
+da porta deixou escrita — importar do que está sendo testado faz o teste andar
+junto com o defeito.
+
+### Um caso afirmava duas camadas e se dividiu em duas
+
+`TestALoneHeroGetsNoInventedNeighbor` prendia que o `peekAt` devolve nulo fora
+do trilho **e** que o HTML do herói único não desenha um "Próximo". A segunda é
+o que a pessoa vê e ficou no hospedeiro; a primeira é aritmética de índice e
+virou `TestNoNeighborIsInventedOutsideTheRail` aqui — sem banco, sem servidor, e
+com o controle que faltava (o índice VÁLIDO acha, senão um `peekAt` que
+devolvesse nulo sempre passaria nas duas asserções).
+
+### ~170 citações mortas herdadas, e este é o lugar de registrar o número
+
+A sonda de citação de SÍMBOLO que a fatia do trilho do mestre inventou foi
+rodada nos três pacotes que esta fatia tocou. As 22 desta fatia foram
+consertadas. As outras são passivo de extrações ANTERIORES, e são muitas:
+**~130 no `book`** (a extração dele renomeou tudo e as docstrings ficaram
+falando de `catalogosDoLivro`, `filtraCriaturas`, `chaveDoNome`, `poderDoLivro`…)
+e **~40 no `web/ui`** (`classesDoBotao`, `rotuloDeSecao`, `cascaNua`,
+`molduraDePainel`…).
+
+Nenhuma delas é pega por guarda: o `TestNoCitationNamesAMissingTest` prende
+nome de TESTE e o `TestNoCitationNamesAMissingFile` prende CAMINHO DE ARQUIVO —
+nome de função não é nem um nem outro. Ficam registradas aqui com o número
+medido, porque **contar é o que transforma "tem umas dessas" em trabalho que
+alguém pode fechar**, e é o mesmo caminho que os 136 e os 41 dos outros dois
+guardas seguiram antes de virar varredura.
+
 ## `account`: a regra de conta, e a cópia que divergiu na FRASE
 
 O que é um e-mail, o que é uma senha aceitável, e a forma dos dois pedidos que

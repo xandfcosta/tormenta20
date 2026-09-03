@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"t20engine/plataforma"
 	"t20engine/sheet"
+	"t20engine/web/characters"
+	"t20engine/web/ui"
 )
 
 // A CARTA DE CONVITE como dado (ALE-249): entrar numa mesa.
@@ -71,8 +73,8 @@ func (s *Server) carregaCartaDeConvite(ctx context.Context, eu AuthUser, token s
 		v.Herois = append(v.Herois, heroiDaCarta{
 			ID: c.ID, Nome: c.Name,
 			Subtitulo: subtituloDoHeroi(c),
-			Iniciais:  iniciais(c.Name),
-			Gradiente: gradienteDaCampanha(c.Name),
+			Iniciais:  ui.Monogram(c.Name),
+			Gradiente: ui.NameGradient(c.Name),
 		})
 	}
 	return v, nil
@@ -82,7 +84,7 @@ func (s *Server) carregaCartaDeConvite(ctx context.Context, eu AuthUser, token s
 // nível sozinho para quem ainda não tem classe. É o `classLevelLine` da SPA com
 // o mesmo recuo.
 func subtituloDoHeroi(c sheet.CharacterDTO) string {
-	if linha := classesDoHeroi(c); linha != "" {
+	if linha := characters.ClassesOf(c); linha != "" {
 		return linha
 	}
 	return "Nv " + strconv.FormatInt(c.Level, 10)

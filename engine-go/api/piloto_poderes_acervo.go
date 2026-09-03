@@ -53,14 +53,14 @@ func ownedPowersOf(dto sheet.CharacterDTO) []ownedPower {
 func asHabilidadesDeRaca(dto sheet.CharacterDTO) []ownedPower {
 	fora := []ownedPower{}
 	for _, r := range dto.Races {
-		raca, tem := racasDaTela()[r.Race]
+		raca, tem := book.RaceTraitsByKey()[r.Race]
 		if !tem {
 			continue
 		}
-		for _, hab := range raca.Habilidades {
+		for _, hab := range raca.Abilities {
 			fora = append(fora, ownedPower{
-				ID: hab.ID, Name: hab.Nome, Detail: hab.Descricao,
-				Source: "Raça · " + raca.Nome,
+				ID: hab.ID, Name: hab.Name, Detail: hab.Description,
+				Source: "Raça · " + raca.Name,
 			})
 		}
 	}
@@ -222,8 +222,8 @@ func asAscendenciasDaRaca(nome string) []filterOption {
 
 // aRacaComVariantes é a entrada do `race-defs.json`, que é a que tem as
 // variantes de habilidade.
-func aRacaComVariantes(nome string) *racaParaTela {
-	if raca, tem := racasDaTela()[nome]; tem {
+func aRacaComVariantes(nome string) *book.RaceForScreen {
+	if raca, tem := book.RaceTraitsByKey()[nome]; tem {
 		return &raca
 	}
 	return nil

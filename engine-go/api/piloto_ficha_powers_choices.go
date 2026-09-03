@@ -169,18 +169,18 @@ func asVariantesDaRaca(dto sheet.CharacterDTO, nome string) []variantChoice {
 	}
 	escolhidas := asEscolhasGuardadas(dto.RaceAbilityChoices)
 	fora := []variantChoice{}
-	for _, hab := range raca.Habilidades {
-		if len(hab.Variantes) == 0 {
+	for _, hab := range raca.Abilities {
+		if len(hab.Variants) == 0 {
 			continue
 		}
-		escolha := variantChoice{AbilityID: hab.ID, Name: hab.Nome}
-		for _, v := range hab.Variantes {
+		escolha := variantChoice{AbilityID: hab.ID, Name: hab.Name}
+		for _, v := range hab.Variants {
 			ativa := contemTraco(escolhidas, v.ID)
 			if ativa {
 				escolha.Chosen = v.ID
 			}
 			escolha.Options = append(escolha.Options,
-				filterOption{Valor: v.ID, Rotulo: v.Nome, Ativo: ativa})
+				filterOption{Valor: v.ID, Rotulo: v.Name, Ativo: ativa})
 		}
 		fora = append(fora, escolha)
 	}

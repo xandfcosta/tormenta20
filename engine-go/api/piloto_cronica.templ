@@ -51,8 +51,8 @@ templ cabecalhoDaCronica(v cronicaView) {
 		<span
 			aria-hidden="true"
 			class="flex size-12 shrink-0 items-center justify-center rounded-sm font-display text-sm text-white/85"
-			style={ "background: " + gradienteDaCampanha(v.Nome) }
-		>{ iniciais(v.Nome) }</span>
+			style={ "background: " + ui.NameGradient(v.Nome) }
+		>{ ui.Monogram(v.Nome) }</span>
 		<div class="min-w-0 flex-1">
 			// O PAPEL vem ACIMA do nome, como sobrancelha, e não misturado na
 			// linha de baixo: ele responde "o que eu sou nesta mesa", que é a

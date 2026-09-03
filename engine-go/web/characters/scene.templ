@@ -1,4 +1,4 @@
-package api
+package characters
 
 import (
 	"fmt"
@@ -22,40 +22,40 @@ import (
 // replica ("a mesma animação, já concluída, no mesmo nó").
 //
 // Nenhuma das saídas que a issue previa foi necessária: nem morph, nem reflow
-// forçado, nem id que muda a cada troca. Ver `oPalcoQueEntra` e a folha.
+// forçado, nem id que muda a cada troca. Ver `theEnteringStage` e a folha.
 //
 // O que continua na ALE-235 é a VIRADA DE PÁGINA do livro de campanhas: lá a
 // folha carrega a arte dos DOIS lados, e desenhar isso exigiria copiar conteúdo
 // que só o servidor tem — outro problema, não este.
 
-templ personagens(v personagensView) {
-	@barraDePersonagens(v)
-	if !v.TemAlgum {
-		@palcoDeCriar(true, nil)
-		@filmeDePersonagens(v)
-	} else if v.FiltrouTudo {
-		@buscaSemHeroi()
+templ charactersBody(v View) {
+	@charactersBar(v)
+	if !v.HasAny {
+		@createStage(true, nil)
+		@characterFilm(v)
+	} else if v.FilteredAll {
+		@searchWithoutHero()
 	} else {
 		<div class="flex min-h-0 flex-1 flex-col">
 			<div class="relative flex min-h-0 flex-1 items-center justify-center">
-				for i, h := range v.Herois {
-					@palcoDoHeroi(h, peekDe(v.Herois, i-1), peekDe(v.Herois, i+1))
+				for i, h := range v.Heroes {
+					@heroStage(h, peekAt(v.Heroes, i-1), peekAt(v.Heroes, i+1))
 				}
 				// A vaga de criar é um palco como os outros, e o cursor pousa
 				// nela: `$cursor == 0` é a posição dela, porque nenhum id de
 				// personagem é zero. O vizinho da esquerda é o ÚLTIMO herói,
 				// que é o caminho de volta para o elenco.
-				@palcoDeCriar(false, peekDe(v.Herois, len(v.Herois)-1))
+				@createStage(false, peekAt(v.Heroes, len(v.Heroes)-1))
 			</div>
-			@filmeDePersonagens(v)
+			@characterFilm(v)
 		</div>
-		for _, h := range v.Herois {
-			@dossieDoHeroi(h)
+		for _, h := range v.Heroes {
+			@heroDossier(h)
 		}
 	}
 }
 
-templ barraDePersonagens(v personagensView) {
+templ charactersBar(v View) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
 		data-signals={ fmt.Sprintf("{busca: %q, cursor: %d, dossie: false, sentido: 1, indice: 0}", v.Busca, v.CursorID) }
@@ -66,8 +66,8 @@ templ barraDePersonagens(v personagensView) {
 			class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>‹ Voltar</a>
 		<h1 class="font-heading text-xl tracking-wide text-foreground">Personagens</h1>
-		if v.TemAlgum {
-			<span class="text-sm text-muted-foreground">{ fmt.Sprintf("%d de %d", len(v.Herois), v.Total) }</span>
+		if v.HasAny {
+			<span class="text-sm text-muted-foreground">{ fmt.Sprintf("%d de %d", len(v.Heroes), v.Total) }</span>
 			<div class="relative ml-auto w-full sm:w-56 md:w-64">
 				@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 				<input
@@ -88,10 +88,10 @@ templ barraDePersonagens(v personagensView) {
 
 // ── o palco ──────────────────────────────────────────────────────────────────
 
-templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
+templ heroStage(h HeroCard, anterior, proximo *neighbor) {
 	<div
 		data-show={ fmt.Sprintf("$cursor == %d", h.ID) }
-		data-class={ oPalcoQueEntra(h.ID) }
+		data-class={ theEnteringStage(h.ID) }
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
 	>
 		// A lavagem de luz no matiz do herói. Decorativa, e por isso fora da
@@ -99,35 +99,35 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 		<div
 			aria-hidden="true"
 			class="pointer-events-none absolute inset-0 -z-10"
-			style={ "background: " + lavagemDoHeroi(h) }
+			style={ "background: " + heroWash(h) }
 		></div>
 		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
-			@retratoVizinho(anterior, "Anterior")
+			@neighborPortrait(anterior, "Anterior")
 			<a
 				href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) }
-				aria-label={ "Abrir ficha de " + h.Nome }
+				aria-label={ "Abrir ficha de " + h.Name }
 				class="relative aspect-[3/4] w-44 overflow-hidden rounded-sm border-2 border-grimorio-iron outline-none transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
-				style={ "background: " + h.Gradiente }
+				style={ "background: " + h.Gradient }
 			>
 				<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-[7rem] leading-none text-white/20 sm:text-[9rem]">
-					{ h.Iniciais }
+					{ h.Monogram }
 				</span>
 				<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
 			</a>
-			@retratoVizinho(proximo, "Próximo")
+			@neighborPortrait(proximo, "Próximo")
 		</div>
 		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
 		// que quebra em duas linhas empurra a fileira do retrato 20px para cima
 		// e os cartões dançam ao percorrer o elenco (ALE-99).
 		<div class="palco-placa max-w-2xl px-4 text-center">
-			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Nome }</h2>
+			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Name }</h2>
 			@ui.SectionLabel("gold", "mt-1") {
-				{ h.Papel }
+				{ h.Role }
 			}
 		</div>
-		@vitaisDoHeroi(h)
-		<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">{ h.Resumo }</p>
+		@heroVitals(h)
+		<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">{ h.Summary }</p>
 		<div class="flex flex-wrap items-center justify-center gap-2">
 			<a href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) } class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }>
 				Abrir ficha
@@ -145,7 +145,7 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 	</div>
 }
 
-// vitaisDoHeroi: DEF, PV e PM — nesta ordem, que é a da SPA.
+// heroVitals: DEF, PV e PM — nesta ordem, que é a da SPA.
 //
 // A Defesa vem PRIMEIRO e nunca some: quando não há motor ela é um travessão.
 // Uma coluna que aparece e desaparece faz o palco dançar ao trocar de herói, e
@@ -153,33 +153,33 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 //
 // PV e PM levam as cores da casa; o PM fica apagado quando o máximo é zero,
 // porque quem não tem mana não tem por que ler um "0/0" em destaque.
-templ vitaisDoHeroi(h heroiCartao) {
+templ heroVitals(h HeroCard) {
 	<dl class="flex items-center justify-center gap-5 text-sm">
-		@umVital("DEF", h.Defesa, "", false)
-		@umVital("PV", h.PV, "text-[color:var(--hp-full)]", false)
-		@umVital("PM", h.PM, "text-[color:var(--mp-arcane)]", h.SemMana)
+		@oneVital("DEF", h.Defense, "", false)
+		@oneVital("PV", h.PV, "text-[color:var(--hp-full)]", false)
+		@oneVital("PM", h.PM, "text-[color:var(--mp-arcane)]", h.NoMana)
 	</dl>
 }
 
-templ umVital(rotulo, valor, tom string, apagado bool) {
+templ oneVital(rotulo, valor, tom string, apagado bool) {
 	<div class={ "flex items-baseline gap-1.5", templ.KV("opacity-50", apagado) }>
 		<dt class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{ rotulo }</dt>
 		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ valor }</dd>
 	</div>
 }
 
-// palcoDeCriar é a vaga do fim — e ela existe TAMBÉM com o elenco vazio, porque
+// createStage é a vaga do fim — e ela existe TAMBÉM com o elenco vazio, porque
 // aí ela é a única coisa que dá o que fazer.
-templ palcoDeCriar(sozinha bool, anterior *vizinho) {
+templ createStage(sozinha bool, anterior *neighbor) {
 	<div
 		if !sozinha {
 			data-show="$cursor == 0"
-			data-class={ oPalcoQueEntra(0) }
+			data-class={ theEnteringStage(0) }
 		}
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
 	>
 		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
-			@retratoVizinho(anterior, "Anterior")
+			@neighborPortrait(anterior, "Anterior")
 			<a
 				href="/personagens/nova"
 				aria-label="Forjar um novo herói"
@@ -190,7 +190,7 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 			// À direita da vaga não há vizinho: ela é o fim do trilho. O
 			// espaçador entra do mesmo jeito, senão o retrato desliza para a
 			// direita ao chegar aqui.
-			@retratoVizinho(nil, "Próximo")
+			@neighborPortrait(nil, "Próximo")
 		</div>
 		<div class="palco-placa max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Forjar um herói</h2>
@@ -202,7 +202,7 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 		// essas duas fileiras invisíveis a coluna centralizada puxa o retrato
 		// 70px para cima ao chegar aqui, e o palco DANÇA na última posição do
 		// trilho (ALE-99). Medido: 70px, com o retrato do herói em y=152 e o da
-		// vaga em y=222. Elas espelham a escala de `vitaisDoHeroi` e da linha de
+		// vaga em y=222. Elas espelham a escala de `heroVitals` e da linha de
 		// resumo — mudou lá, muda aqui.
 		<div aria-hidden="true" class="invisible flex items-center justify-center gap-5 text-sm">
 			<span class="font-mono text-lg font-semibold tabular-nums">0</span>
@@ -220,7 +220,7 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 	</div>
 }
 
-// retratoVizinho é o retrato apagado de quem está ao lado — clicá-lo anda o
+// neighborPortrait é o retrato apagado de quem está ao lado — clicá-lo anda o
 // cursor para lá.
 //
 // O NOME fica sempre visível, e isso é regra e não estilo: a versão original
@@ -229,25 +229,25 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 // iniciais não dizem quem vem a seguir.
 //
 // Vizinho nulo vira ESPAÇADOR da mesma largura, nunca elemento ausente — ver
-// `peekDe`.
-templ retratoVizinho(vz *vizinho, lado string) {
+// `peekAt`.
+templ neighborPortrait(vz *neighbor, lado string) {
 	if vz == nil {
 		<div class="w-20 shrink-0 sm:w-28 lg:w-32" aria-hidden="true"></div>
 	} else {
 		<button
 			type="button"
-			title={ vz.Nome }
-			aria-label={ lado + ": " + vz.Nome }
+			title={ vz.Name }
+			aria-label={ lado + ": " + vz.Name }
 			data-cue-hover
-			data-on:click={ oGestoQueMoveOCursor(vz.Indice, vz.ID) }
+			data-on:click={ theCursorGesture(vz.Index, vz.ID) }
 			class="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-sm border border-grimorio-iron opacity-50 outline-none transition-all hover:opacity-80 focus-visible:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-28 lg:w-32"
-			style={ "background: " + vz.Gradiente }
+			style={ "background: " + vz.Gradient }
 		>
 			<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-4xl text-white/20 sm:text-5xl">
-				{ vz.Iniciais }
+				{ vz.Monogram }
 			</span>
 			<span class="absolute inset-x-0 bottom-0 line-clamp-2 bg-black/60 px-1 py-0.5 text-center text-3xs leading-tight text-white">
-				{ vz.Nome }
+				{ vz.Name }
 			</span>
 		</button>
 	}
@@ -255,9 +255,9 @@ templ retratoVizinho(vz *vizinho, lado string) {
 
 // ── o filme ──────────────────────────────────────────────────────────────────
 
-// filmeDePersonagens é o índice: um salto direto para qualquer herói, que é o
+// characterFilm é o índice: um salto direto para qualquer herói, que é o
 // que salva um elenco longo do "aperta a seta trinta vezes".
-templ filmeDePersonagens(v personagensView) {
+templ characterFilm(v View) {
 	<div
 		role="listbox"
 		aria-label="Personagens"
@@ -266,28 +266,28 @@ templ filmeDePersonagens(v personagensView) {
 		data-nav-layout="row"
 		class="flex shrink-0 items-center gap-2 overflow-x-auto border-t border-grimorio-iron px-4 py-3"
 	>
-		for i, h := range v.Herois {
-			@quadroDoFilme(h, i)
+		for i, h := range v.Heroes {
+			@filmFrame(h, i)
 		}
-		@quadroDeCriar(v.TemAlgum, len(v.Herois))
+		@createFrame(v.HasAny, len(v.Heroes))
 	</div>
 }
 
-templ quadroDoFilme(h heroiCartao, i int) {
+templ filmFrame(h HeroCard, i int) {
 	<button
 		type="button"
 		role="option"
 		data-nav-item
 		data-cue-hover
-		aria-label={ h.Nome + " · " + h.Papel }
+		aria-label={ h.Name + " · " + h.Role }
 		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", h.ID) }
-		data-on:focusin={ oGestoQueMoveOCursor(i, h.ID) }
-		data-on:click={ oGestoQueMoveOCursor(i, h.ID) }
+		data-on:focusin={ theCursorGesture(i, h.ID) }
+		data-on:click={ theCursorGesture(i, h.ID) }
 		data-on:keydown={ fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = '/personagens/%d')", h.ID) }
 		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-display text-xs text-white/85 outline-none transition-all hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:ring-1 aria-selected:ring-grimorio-gold"
-		style={ "background: " + h.Gradiente }
+		style={ "background: " + h.Gradient }
 	>
-		{ h.Iniciais }
+		{ h.Monogram }
 	</button>
 }
 
@@ -295,7 +295,7 @@ templ quadroDoFilme(h heroiCartao, i int) {
 // do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
 // que abriu tudo até ali não faz nada. (E é a QUINTA vez que um comentário
 // dentro da lista de atributos derruba o `templ generate` — ele não aceita.)
-templ quadroDeCriar(temAlgum bool, indice int) {
+templ createFrame(temAlgum bool, indice int) {
 	<button
 		type="button"
 		role="option"
@@ -305,8 +305,8 @@ templ quadroDeCriar(temAlgum bool, indice int) {
 		data-on:keydown="evt.key === 'Enter' && (evt.preventDefault(), location.href = '/personagens/nova')"
 		if temAlgum {
 			data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
-			data-on:focusin={ oGestoQueMoveOCursor(indice, 0) }
-			data-on:click={ oGestoQueMoveOCursor(indice, 0) }
+			data-on:focusin={ theCursorGesture(indice, 0) }
+			data-on:click={ theCursorGesture(indice, 0) }
 		}
 		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
 	>
@@ -316,19 +316,19 @@ templ quadroDeCriar(temAlgum bool, indice int) {
 
 // ── o dossiê ─────────────────────────────────────────────────────────────────
 
-// dossieDoHeroi é a gaveta de detalhe. Ela é desenhada para todos e revelada
+// heroDossier é a gaveta de detalhe. Ela é desenhada para todos e revelada
 // pelo par cursor+`$dossie`: abrir não pede nada ao servidor.
 //
-// As habilidades de raça vêm do catálogo EMBUTIDO (ver `piloto_racas.go`) — na
+// As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) — na
 // SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
-templ dossieDoHeroi(h heroiCartao) {
+templ heroDossier(h HeroCard) {
 	<aside
 		data-show={ fmt.Sprintf("$dossie && $cursor == %d", h.ID) }
-		aria-label={ "Dossiê de " + h.Nome }
+		aria-label={ "Dossiê de " + h.Name }
 		class="fixed inset-y-0 right-0 z-20 w-full max-w-sm overflow-y-auto border-l border-grimorio-iron bg-grimorio-panel-raised p-5 shadow-2xl"
 	>
 		<div class="flex items-start justify-between gap-3">
-			<h2 class="font-heading text-lg tracking-wide text-grimorio-gold">{ h.Nome }</h2>
+			<h2 class="font-heading text-lg tracking-wide text-grimorio-gold">{ h.Name }</h2>
 			@ui.Button(ui.VariantSecondary, ui.SizeTiny, "", templ.Attributes{
 				"type": "button", "data-on:click": "$dossie = false", "aria-label": "Fechar o dossiê",
 			}) {
@@ -336,20 +336,20 @@ templ dossieDoHeroi(h heroiCartao) {
 			}
 		</div>
 		<dl class="mt-4 space-y-2 text-sm">
-			@linhaDoDossie("Raça", h.Raca)
-			@linhaDoDossie("Origem", h.Origem)
-			@linhaDoDossie("Classes", h.Classes)
-			@linhaDoDossie("Nível", strconv.FormatInt(h.Nivel, 10))
+			@dossierRow("Raça", h.Race)
+			@dossierRow("Origem", h.Origin)
+			@dossierRow("Classes", h.Classes)
+			@dossierRow("Nível", strconv.FormatInt(h.Level, 10))
 		</dl>
-		if len(h.Dossie) > 0 {
+		if len(h.Dossier) > 0 {
 			<h3 class="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-				Habilidades de { h.Raca }
+				Habilidades de { h.Race }
 			</h3>
 			<ul class="mt-2 space-y-3">
-				for _, hab := range h.Dossie {
+				for _, hab := range h.Dossier {
 					<li>
-						<p class="font-heading text-sm tracking-wide text-foreground">{ hab.Nome }</p>
-						<p class="text-xs leading-relaxed text-muted-foreground">{ hab.Descricao }</p>
+						<p class="font-heading text-sm tracking-wide text-foreground">{ hab.Name }</p>
+						<p class="text-xs leading-relaxed text-muted-foreground">{ hab.Description }</p>
 					</li>
 				}
 			</ul>
@@ -357,7 +357,7 @@ templ dossieDoHeroi(h heroiCartao) {
 	</aside>
 }
 
-templ linhaDoDossie(rotulo, valor string) {
+templ dossierRow(rotulo, valor string) {
 	if valor != "" {
 		<div class="flex justify-between gap-3">
 			<dt class="shrink-0 text-muted-foreground">{ rotulo }</dt>
@@ -366,7 +366,7 @@ templ linhaDoDossie(rotulo, valor string) {
 	}
 }
 
-templ buscaSemHeroi() {
+templ searchWithoutHero() {
 	<div class="flex flex-1 items-center justify-center p-8">
 		<div class="max-w-md space-y-3 text-center">
 			<p class="text-sm text-muted-foreground">Nenhum herói combina com o que você buscou.</p>
@@ -379,11 +379,11 @@ templ buscaSemHeroi() {
 	</div>
 }
 
-// cenaDePersonagens embrulha a cena no elemento que o remendo da busca
+// SceneBody embrulha a cena no elemento que o remendo da busca
 // substitui — o `id` é o que o morph casa.
-templ cenaDePersonagens(v personagensView) {
+templ SceneBody(v View) {
 	<div id="cena-personagens" class="flex min-h-0 flex-1 flex-col">
-		@personagens(v)
+		@charactersBody(v)
 	</div>
 }
 

@@ -4,8 +4,21 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"t20engine/db/sqlcgen"
 	"testing"
 )
+
+// seedClasse voltou para cá quando a cena de personagens virou pacote
+// (ALE-278): ele monta a bancada com um `*Server`, que é tipo do hospedeiro.
+func seedClasse(t *testing.T, s *Server, characterID int64, nome string, nivel int64) {
+	t.Helper()
+	err := s.queries.CreateClass(context.Background(), sqlcgen.CreateClassParams{
+		Characterid: characterID, Classname: nome, Level: nivel,
+	})
+	if err != nil {
+		t.Fatalf("seed classe %q: %v", nome, err)
+	}
+}
 
 // A escolha de atributo da raça pelo PATCH de habilidades (ALE-169).
 //
