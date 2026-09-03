@@ -5,12 +5,12 @@ package master
 
 //lint:file-ignore SA4006 This context is only used if a nested component is present.
 
+import "github.com/a-h/templ"
+import templruntime "github.com/a-h/templ/runtime"
+
 import (
 	"fmt"
 	"t20engine/web/ui"
-
-	"github.com/a-h/templ"
-	templruntime "github.com/a-h/templ/runtime"
 )
 
 // O IMPROVISO (ALE-261) — as tabelas do Cap 6 e o esqueleto de masmorra.
