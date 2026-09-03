@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strings"
+	"t20engine/web/master"
 )
 
 // As expressões que o Datastar executa para o elenco de NPCs (ALE-269, 6b).
@@ -30,7 +31,7 @@ func comandoDoNPC(v mesaView, npc npcDoElenco, acao string) string {
 // ids soltos: ela já carrega a campanha e a sessão, e derivar daqui é o que
 // impede este botão de apontar para a mesa 0/0 — o defeito que a prévia das
 // notas teve por nascer de uma view sintética.
-func guardaNoElenco(v bestiarioView) string {
-	base := strings.TrimSuffix(v.bestiarioBase(), "/bestiario")
+func guardaNoElenco(v master.BestiaryView) string {
+	base := strings.TrimSuffix(v.BestiaryBase(), "/bestiario")
 	return fmt.Sprintf("@post('%s/elenco/npc/do-verbete'); $nomedonpc = ''", base)
 }

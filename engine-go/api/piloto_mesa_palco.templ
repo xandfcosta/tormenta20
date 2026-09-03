@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"t20engine/web/master"
 	"t20engine/web/ui"
 )
 
@@ -32,7 +33,7 @@ import (
 // continuam no RODAPÉ em vez de subirem para a faixa do turno. A gaveta da
 // ALE-263 é ancorada em `bottom-full` porque nasce no pé, e mover a fileira
 // mudaria uma regra de leiaute JÁ MEDIDA para caber numa semelhança de desenho.
-templ palcoDoMestre(v mesaView, b bestiarioView) {
+templ palcoDoMestre(v mesaView, b master.BestiaryView) {
 	<main
 		id="mesa"
 		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`"

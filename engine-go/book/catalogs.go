@@ -336,7 +336,7 @@ func CategoryName(c string) string {
 
 // ── o que a cena precisa escrever ────────────────────────────────────────────
 
-// nomeDaCondicao resolve o id de uma condição no nome que se lê.
+// ConditionName resolve o id de uma condição no nome que se lê.
 //
 // DIVERGÊNCIA DELIBERADA do original, e por isso escrita: a SPA imprime o
 // `upgradesTo` cru, então a linha sai "Agrava para apavorado" em caixa baixa. O

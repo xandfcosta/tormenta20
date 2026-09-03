@@ -59,7 +59,7 @@ func Fold(s string) string {
 	return strings.ToLower(limpo)
 }
 
-// casaBusca responde se ALGUM dos campos casa com o que foi digitado.
+// Matches responde se ALGUM dos campos casa com o que foi digitado.
 //
 // Busca vazia casa com tudo: não digitar não é filtrar.
 func Matches(campos []string, busca string) bool {

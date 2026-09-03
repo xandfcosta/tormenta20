@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/book"
+	"t20engine/web/master"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -71,7 +72,7 @@ func guardaOVerbeteNoElenco(st *Server, c mesaComando) (*aovivo.SessionRuntimeSt
 	if nome == "" {
 		nome = v.Name
 	}
-	bloco := copiaDoVerbete(*v)
+	bloco := master.CopyOfEntry(*v)
 	if err := creature.Validate(nome, &bloco); err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ import (
 	"t20engine/web/finder"
 	"t20engine/web/grimoire"
 	"t20engine/web/hub"
+	"t20engine/web/master"
 	"t20engine/web/routes"
 
 	"fmt"
@@ -58,15 +59,15 @@ func (s *Server) WebRouter() http.Handler {
 		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
 		s.SheetRoutes(r)
 		grimoire.Routes(r, grimoire.New(s))
-		s.GMToolRoutes(r)
+		// A MESA DO MESTRE (ALE-278): o trilho, os nove catálogos, o bestiário,
+		// os encontros e o improviso — mais o VERBETE, que sai junto porque ele
+		// é uma rota fina sobre o desenho do acervo e não uma cena própria.
+		master.Routes(r, master.New(s))
 		// O BUSCADOR (ALE-264) fica no grupo do Hub e não no do mestre: a caixa
 		// abre em QUALQUER cena, inclusive na Mesa, e a rota tem de existir onde
 		// quer que o ⌃K seja apertado.
 		// O buscador não recebe nada: ele é a primeira cena sem porta (ALE-278).
 		finder.Routes(r)
-		// O VERBETE citado por um elo (ALE-264), na casca pelo mesmo motivo do
-		// buscador: a caixa abre em qualquer cena.
-		s.EntryRoutes(r)
 		// O LIVRO (ALE-264) é servido para quem ENTROU e não anonimamente como
 		// os estáticos: os estáticos são o bundle do Datastar, e isto é um
 		// arquivo do dono da mesa. Sem `LIVRO_PDF` a rota devolve 404 — o botão
