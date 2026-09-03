@@ -319,7 +319,7 @@ templ quadroDeCriar(temAlgum bool, indice int) {
 // dossieDoHeroi é a gaveta de detalhe. Ela é desenhada para todos e revelada
 // pelo par cursor+`$dossie`: abrir não pede nada ao servidor.
 //
-// As habilidades de raça vêm do catálogo EMBUTIDO (ver `piloto_racas.go`) — na
+// As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) — na
 // SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
 templ dossieDoHeroi(h heroiCartao) {
 	<aside
@@ -348,8 +348,8 @@ templ dossieDoHeroi(h heroiCartao) {
 			<ul class="mt-2 space-y-3">
 				for _, hab := range h.Dossie {
 					<li>
-						<p class="font-heading text-sm tracking-wide text-foreground">{ hab.Nome }</p>
-						<p class="text-xs leading-relaxed text-muted-foreground">{ hab.Descricao }</p>
+						<p class="font-heading text-sm tracking-wide text-foreground">{ hab.Name }</p>
+						<p class="text-xs leading-relaxed text-muted-foreground">{ hab.Description }</p>
 					</li>
 				}
 			</ul>

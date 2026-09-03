@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"t20engine/book"
 	"t20engine/web/ui"
 	"testing"
 
@@ -122,11 +123,11 @@ func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
 // O guarda é sobre o texto existir, não sobre qual é — o conteúdo é dado
 // transcrito e quem o valida é o schema, não um `expect` por verbete.
 func TestTheDossierCarriesTheRaceTextsFromTheEmbeddedCatalog(t *testing.T) {
-	if len(habilidadesDaRaca("Humano", 8)) == 0 {
+	if len(book.RaceAbilities("Humano", 8)) == 0 {
 		t.Fatal("o catálogo embutido não devolveu habilidade nenhuma para Humano")
 	}
-	for _, h := range habilidadesDaRaca("Humano", 8) {
-		if h.Nome == "" || h.Descricao == "" {
+	for _, h := range book.RaceAbilities("Humano", 8) {
+		if h.Name == "" || h.Description == "" {
 			t.Errorf("habilidade %q sem nome ou sem descrição — o dossiê ficaria com linha vazia", h.ID)
 		}
 	}
@@ -135,13 +136,13 @@ func TestTheDossierCarriesTheRaceTextsFromTheEmbeddedCatalog(t *testing.T) {
 // Raça que não está no catálogo não derruba nada: o herói abre sem as linhas de
 // sabor. Um personagem antigo com raça renomeada é caso normal, não erro.
 func TestAnUnknownRaceDoesNotBringTheDossierDown(t *testing.T) {
-	if got := habilidadesDaRaca("Não Existe", 8); got != nil {
+	if got := book.RaceAbilities("Não Existe", 8); got != nil {
 		t.Errorf("raça desconhecida devolveu %v", got)
 	}
 }
 
 func TestTheDossierRespectsTheLimit(t *testing.T) {
-	if got := len(habilidadesDaRaca("Humano", 1)); got != 1 {
+	if got := len(book.RaceAbilities("Humano", 1)); got != 1 {
 		t.Errorf("limite 1 devolveu %d", got)
 	}
 }

@@ -622,9 +622,9 @@ func folhaDaInformacao(c campanhaCartao) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var26 string
-			templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + gradienteDaCampanha(c.Meu.Nome))
+			templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + ui.NameGradient(c.Meu.Nome))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 206, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 206, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {

@@ -1,4 +1,4 @@
-package api
+package book
 
 import (
 	"encoding/json"
@@ -29,58 +29,58 @@ import (
 // pendente suspendia o route match e reanimava a cena inteira (ALE-95).
 
 // habilidadeDeRaca é o que o dossiê mostra: nome e uma linha.
-type habilidadeDeRaca struct {
-	ID        string      `json:"id"`
-	Nome      string      `json:"name"`
-	Descricao string      `json:"description"`
-	Variantes []aVariante `json:"variants"`
+type RaceAbility struct {
+	ID          string           `json:"id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	Variants    []AbilityVariant `json:"variants"`
 }
 
-type racaParaTela struct {
-	ID          string             `json:"id"`
-	Nome        string             `json:"name"`
-	Habilidades []habilidadeDeRaca `json:"abilities"`
+type RaceForScreen struct {
+	ID        string        `json:"id"`
+	Name      string        `json:"name"`
+	Abilities []RaceAbility `json:"abilities"`
 }
 
 // aVariante é uma opção de uma habilidade que se escolhe — a Resistência
 // Elemental do qareen tem seis, a Herança Divina do suraggel tem duas.
-type aVariante struct {
+type AbilityVariant struct {
 	ID   string `json:"id"`
-	Nome string `json:"name"`
+	Name string `json:"name"`
 }
 
 // Lido UMA vez: o conteúdo vem de `go:embed` e não muda enquanto o binário for
 // o mesmo. É a mesma decisão do `writeCatalogJSON`, que comprime uma vez em vez
 // de por requisição.
 var (
-	racasUmaVez sync.Once
-	racasPorID  map[string]racaParaTela
+	raceTraitsOnce sync.Once
+	raceTraitsByID map[string]RaceForScreen
 )
 
-func racasDaTela() map[string]racaParaTela {
-	racasUmaVez.Do(func() {
-		racasPorID = map[string]racaParaTela{}
-		bruto, ok := catalog.Resource("race-defs")
+func RaceTraitsByKey() map[string]RaceForScreen {
+	raceTraitsOnce.Do(func() {
+		raceTraitsByID = map[string]RaceForScreen{}
+		raw, ok := catalog.Resource("race-defs")
 		if !ok {
 			// Catálogo ausente é caso NORMAL de degradação: o dossiê fica sem a
 			// lista de habilidades e o resto da cena continua de pé. Derrubar a
 			// tela inteira por causa de quatro linhas de texto seria pior.
 			return
 		}
-		var lista []racaParaTela
-		if err := json.Unmarshal(bruto, &lista); err != nil {
+		var list []RaceForScreen
+		if err := json.Unmarshal(raw, &list); err != nil {
 			return
 		}
-		for _, r := range lista {
+		for _, r := range list {
 			// Por ID E por NOME, porque o personagem guarda a raça por um dos
 			// dois — o `raceAbilityBlurbs` da SPA procura pelos dois pelo mesmo
 			// motivo, e no `race-defs.json` de hoje eles coincidem ("Humano"),
 			// mas coincidir não é o mesmo que ser garantido.
-			racasPorID[r.ID] = r
-			racasPorID[r.Nome] = r
+			raceTraitsByID[r.ID] = r
+			raceTraitsByID[r.Name] = r
 		}
 	})
-	return racasPorID
+	return raceTraitsByID
 }
 
 // habilidadesDaRaca são as primeiras `limite` habilidades da raça, para o
@@ -88,13 +88,13 @@ func racasDaTela() map[string]racaParaTela {
 //
 // Raça desconhecida devolve lista vazia, não erro: um personagem com raça
 // que saiu do catálogo continua abrindo, só sem as linhas de sabor.
-func habilidadesDaRaca(nomeDaRaca string, limite int) []habilidadeDeRaca {
-	raca, ok := racasDaTela()[nomeDaRaca]
+func RaceAbilities(raceKey string, limit int) []RaceAbility {
+	race, ok := RaceTraitsByKey()[raceKey]
 	if !ok {
 		return nil
 	}
-	if len(raca.Habilidades) > limite {
-		return raca.Habilidades[:limite]
+	if len(race.Abilities) > limit {
+		return race.Abilities[:limit]
 	}
-	return raca.Habilidades
+	return race.Abilities
 }

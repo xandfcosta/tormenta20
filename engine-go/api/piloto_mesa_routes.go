@@ -453,7 +453,7 @@ func (s *Server) mesaRoster(ctx context.Context, user AuthUser, campaignID int64
 		grupo = append(grupo, mesaMembro{
 			CharacterID: m.Characterid,
 			Nome:        m.Charname,
-			Iniciais:    iniciais(m.Charname),
+			Iniciais:    ui.Monogram(m.Charname),
 			Defesa:      s.defesaDoMembro(ctx, m.Characterid),
 			Nivel:       m.Charlevel,
 			Classes:     s.mesaClasses(ctx, m.Characterid),

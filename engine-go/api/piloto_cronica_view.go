@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"t20engine/plataforma"
+	"t20engine/web/ui"
 	"time"
 
 	"t20engine/db/sqlcgen"
@@ -193,7 +194,7 @@ func (s *Server) carregaCronica(ctx context.Context, eu AuthUser, id int64, aba 
 		nome := nomeDoMembro(m.Charname, m.Characterid)
 		v.Herois = append(v.Herois, heroiNaMesa{
 			Nome: nome, Papel: m.Role,
-			Iniciais: iniciais(nome), Gradiente: gradienteDaCampanha(nome),
+			Iniciais: ui.Monogram(nome), Gradiente: ui.NameGradient(nome),
 		})
 	}
 

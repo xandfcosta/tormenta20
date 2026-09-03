@@ -1141,7 +1141,7 @@ func quadroDeCriar(temAlgum bool, indice int) templ.Component {
 // dossieDoHeroi é a gaveta de detalhe. Ela é desenhada para todos e revelada
 // pelo par cursor+`$dossie`: abrir não pede nada ao servidor.
 //
-// As habilidades de raça vêm do catálogo EMBUTIDO (ver `piloto_racas.go`) — na
+// As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) — na
 // SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
 func dossieDoHeroi(h heroiCartao) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -1279,7 +1279,7 @@ func dossieDoHeroi(h heroiCartao) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var60 string
-				templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(hab.Nome)
+				templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(hab.Name)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_personagens.templ`, Line: 351, Col: 78}
 				}
@@ -1292,9 +1292,9 @@ func dossieDoHeroi(h heroiCartao) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var61 string
-				templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(hab.Descricao)
+				templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(hab.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_personagens.templ`, Line: 352, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_personagens.templ`, Line: 352, Col: 80}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 				if templ_7745c5c3_Err != nil {

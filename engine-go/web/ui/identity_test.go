@@ -1,4 +1,4 @@
-package api
+package ui
 
 import (
 	"strings"
@@ -22,8 +22,8 @@ func TestTheNameHueMatchesTheJs(t *testing.T) {
 		"Mesa do Mestre":      351,
 	}
 	for nome, quer := range casos {
-		if got := matizDoNome(nome); got != quer {
-			t.Errorf("matizDoNome(%q) = %d, o JS dá %d", nome, got, quer)
+		if got := NameHue(nome); got != quer {
+			t.Errorf("NameHue(%q) = %d, o JS dá %d", nome, got, quer)
 		}
 	}
 }
@@ -40,8 +40,8 @@ func TestTheInitialsMatchTheJs(t *testing.T) {
 		"":                    "?",
 	}
 	for nome, quer := range casos {
-		if got := iniciais(nome); got != quer {
-			t.Errorf("iniciais(%q) = %q, queria %q", nome, got, quer)
+		if got := Monogram(nome); got != quer {
+			t.Errorf("Monogram(%q) = %q, queria %q", nome, got, quer)
 		}
 	}
 }
@@ -49,26 +49,8 @@ func TestTheInitialsMatchTheJs(t *testing.T) {
 // O gradiente usa o MESMO matiz nas três paradas — se ele divergisse, a capa
 // sairia com um degradê de duas cores diferentes.
 func TestTheGradientUsesTheSameHueAtAllThreeStops(t *testing.T) {
-	g := gradienteDaCampanha("Sombras de Valkaria")
+	g := NameGradient("Sombras de Valkaria")
 	if strings.Count(g, "181") != 3 {
 		t.Errorf("o gradiente não repetiu o matiz nas três paradas: %s", g)
-	}
-}
-
-// A mesa de outra pessoa diz DE QUEM ela é, não a postura de quem lê (ALE-120).
-func TestTheRoleSaysWhoseSomeoneElsesTableIs(t *testing.T) {
-	bruna := "Bruna"
-	if got := papelNaCampanha("gm", &bruna); got != "Mesa de Bruna" {
-		t.Errorf("papel = %q — a mesa alheia não pode dizer \"Mestrando\"", got)
-	}
-	if got := papelNaCampanha("gm", nil); got != "Mestrando" {
-		t.Errorf("papel = %q", got)
-	}
-	if got := papelNaCampanha("player", nil); got != "Jogando" {
-		t.Errorf("papel = %q", got)
-	}
-	vazio := ""
-	if got := papelNaCampanha("player", &vazio); got != "Jogando" {
-		t.Errorf("dono vazio virou %q em vez da postura", got)
 	}
 }

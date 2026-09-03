@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"t20engine/plataforma"
 	"t20engine/sheet"
+	"t20engine/web/ui"
 )
 
 // A CARTA DE CONVITE como dado (ALE-249): entrar numa mesa.
@@ -71,8 +72,8 @@ func (s *Server) carregaCartaDeConvite(ctx context.Context, eu AuthUser, token s
 		v.Herois = append(v.Herois, heroiDaCarta{
 			ID: c.ID, Nome: c.Name,
 			Subtitulo: subtituloDoHeroi(c),
-			Iniciais:  iniciais(c.Name),
-			Gradiente: gradienteDaCampanha(c.Name),
+			Iniciais:  ui.Monogram(c.Name),
+			Gradiente: ui.NameGradient(c.Name),
 		})
 	}
 	return v, nil

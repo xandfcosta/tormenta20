@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"t20engine/book"
 	"t20engine/search"
 	"t20engine/sheet"
+	"t20engine/web/ui"
 )
 
 // A cena de PERSONAGENS como dado (ALE-239) — a segunda cena de seleção, e a
@@ -60,7 +62,7 @@ type heroiCartao struct {
 	Raca    string
 	Origem  string
 	Classes string
-	Dossie  []habilidadeDeRaca
+	Dossie  []book.RaceAbility
 }
 
 func (s *Server) carregaPersonagens(ctx context.Context, eu AuthUser, busca string) (personagensView, error) {
@@ -94,8 +96,8 @@ func (s *Server) cartaoDoHeroi(c sheet.CharacterDTO) heroiCartao {
 	cartao := heroiCartao{
 		ID:        c.ID,
 		Nome:      c.Name,
-		Iniciais:  iniciais(c.Name),
-		Gradiente: gradienteDaCampanha(c.Name),
+		Iniciais:  ui.Monogram(c.Name),
+		Gradiente: ui.NameGradient(c.Name),
 		Papel:     placaDoHeroi(c),
 		Resumo:    linhaDoPalco(c),
 		Nivel:     c.Level,
@@ -116,7 +118,7 @@ func (s *Server) cartaoDoHeroi(c sheet.CharacterDTO) heroiCartao {
 			cartao.Defesa = strconv.Itoa(ficha.Defense.Total)
 		}
 	}
-	cartao.Dossie = habilidadesDaRaca(cartao.Raca, 8)
+	cartao.Dossie = book.RaceAbilities(cartao.Raca, 8)
 	return cartao
 }
 
@@ -204,7 +206,7 @@ func vital(atual, max int64) string {
 // parecer iluminado em vez de listado. Decorativo, e por isso o elemento que o
 // usa é `aria-hidden`.
 func lavagemDoHeroi(h heroiCartao) string {
-	m := matizDoNome(h.Nome)
+	m := ui.NameHue(h.Nome)
 	return "radial-gradient(ellipse 60% 50% at 50% 42%, oklch(0.55 0.15 " +
 		strconv.Itoa(m) + " / 0.14), transparent 70%)"
 }
