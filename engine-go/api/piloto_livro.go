@@ -8,13 +8,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"t20engine/web/bookui"
 	"t20engine/web/routes"
 
 	"t20engine/plataforma"
-	"t20engine/web/ui"
 )
 
 // O LIVRO servido pela mesa (ALE-264): o Tormenta 20 em PDF, entregue pelo
@@ -52,6 +50,16 @@ type livroServido struct {
 // para montar o selo de página, e endereço citado de outra cena é o critério de
 // entrada de lá. Ele não é versionado porque é uma página HTML servida com
 // `no-store`; quem carrega versão é o PDF que ela pede.
+
+// A CENA do leitor saiu para `web/reader` na ALE-278, e este arquivo ficou com
+// a outra metade: ler a configuração no boot, cunhar o dígito de cache, avisar
+// sobre linearização e SERVIR o arquivo com faixas.
+//
+// A divisão não é por tamanho, é a de sempre — dependência. O que ficou lê
+// `plataforma.Config`, chama `os.Stat` e devolve um `http.Handler` sobre um
+// arquivo do disco do dono da mesa; nada disso é cena, e uma cena que
+// recebesse a `Config` para saber onde o PDF está teria o hospedeiro dentro
+// dela. O que saiu desenha uma página e não toca o disco.
 
 // abreOLivro lê a configuração UMA vez, no boot.
 //
@@ -131,72 +139,6 @@ func avisaSeNaoLinearizado(caminho string) {
 // ehLinearizado procura a marca do PDF linearizado no começo do arquivo.
 func ehLinearizado(cabeca []byte) bool {
 	return strings.Contains(string(cabeca), "/Linearized")
-}
-
-// ── a cena do leitor ─────────────────────────────────────────────────────────
-
-// leitorView é o que a cena precisa saber: onde está o PDF, em que página abrir,
-// o que destacar e para onde voltar.
-type leitorView struct {
-	PDF      string
-	Pagina   int
-	Abertura int
-	Termo    string
-	Voltar   string
-	// EmDialogo diz que esta cena está dentro do `<iframe>` do diálogo que a
-	// casca desenha, e não numa aba própria. A diferença na tela é o link de
-	// VOLTAR: dentro do diálogo ele levaria o iframe para a cena anterior, com a
-	// mesa aparecendo miniaturizada dentro de uma caixa — quem fecha é o ✕ do
-	// diálogo, que é do lado de fora.
-	EmDialogo bool
-}
-
-// carregaOLeitor lê a URL e recusa o que não faz sentido.
-//
-// A página vem da URL porque este endereço é COMPARTILHÁVEL: o mestre manda
-// "olha na p289" no chat da mesa, e o link tem de abrir lá. Página fora do livro
-// cai na primeira em vez de derrubar a cena — endereço se digita à mão.
-func (s *Server) carregaOLeitor(r *http.Request) leitorView {
-	pagina, err := strconv.Atoi(r.URL.Query().Get("p"))
-	if err != nil || pagina <= 0 {
-		pagina = 1
-	}
-	voltar := r.Referer()
-	if voltar == "" || !strings.HasPrefix(voltar, "/") {
-		// Referer de outro site (ou nenhum) não vira link de voltar: seria um
-		// endereço de terceiro na nossa barra. O Hub é o destino de quem chegou
-		// por um link colado.
-		voltar = "/"
-	}
-	return leitorView{
-		PDF:       s.livro.endereco.Base,
-		Pagina:    pagina,
-		Abertura:  s.livro.endereco.Abertura,
-		Termo:     r.URL.Query().Get("t"),
-		Voltar:    voltar,
-		EmDialogo: r.URL.Query().Get("dialogo") != "",
-	}
-}
-
-func (s *Server) handleLeitorDoLivro(w http.ResponseWriter, r *http.Request) {
-	if s.livro.caminho == "" {
-		http.NotFound(w, r)
-		return
-	}
-	v := s.carregaOLeitor(r)
-	titulo := "Livro · Tormenta 20"
-	if v.Termo != "" {
-		titulo = v.Termo + " · Livro · Tormenta 20"
-	}
-	s.WritePage(w, r, http.StatusOK, ui.Page{
-		Titulo: titulo,
-		Forma:  ui.ShellBare,
-		Voltar: v.Voltar,
-		// O módulo do leitor só entra AQUI: são 540 KB de pdf.js, e mandá-los em
-		// toda cena seria pôr um visualizador de PDF no caminho de quem abriu a
-		// ficha de um personagem.
-		Scripts: []string{EstaticoDoPiloto("leitor.js")},
-	}, leitorDoLivro(v))
 }
 
 // LivroDoPiloto serve o PDF configurado, com faixas.

@@ -1266,6 +1266,86 @@ medido, porque **contar é o que transforma "tem umas dessas" em trabalho que
 alguém pode fechar**, e é o mesmo caminho que os 136 e os 41 dos outros dois
 guardas seguiram antes de virar varredura.
 
+## `web/reader`: o arquivo que tinha DUAS responsabilidades
+
+O leitor saiu na ALE-278, e é a primeira extração em que um arquivo se dividiu
+porque fazia duas coisas — não porque era grande.
+
+O `piloto_livro.go` lia `LIVRO_PDF` no boot, cunhava o dígito de cache, avisava
+sobre linearização e SERVIA o arquivo com faixas; e desenhava a página que abre
+esse arquivo numa página, com o termo destacado. **A divisão é a de sempre:
+dependência.** O que ficou chama `os.Stat` e devolve um `http.Handler` sobre um
+arquivo do disco do dono da mesa. O que saiu desenha uma página e não sabe onde
+o arquivo está — só o endereço dele.
+
+### A pergunta que o VALOR já responde
+
+"Há livro configurado?" não entrou na porta. Sem `LIVRO_PDF` o hospedeiro não
+monta endereço nenhum, então `BookAddress().Base == ""` diz isso.
+
+É a regra da menor pergunta chegando ao limite dela, e vale ter as três nuances
+lado a lado, porque foram descobertas em fatias seguidas:
+
+- a administração: **um contrato que já existe** ganha da regra;
+- personagens: o menor não é o mais estreito, é **o que não se repete**;
+- o leitor: às vezes a menor pergunta é **nenhuma**.
+
+### E o `templ` não alcança a porta
+
+O `.templ` do leitor chamava `EstaticoDoPiloto` direto para o worker do pdf.js.
+Um componente não tem acesso ao `s.deps`, então o endereço passou a viajar no
+VIEW. É a decisão do `ui.Page.Asset` outra vez: **a casca recebe o que ela não
+pode conhecer**, e vale para qualquer valor que um componente precise e só o
+hospedeiro saiba.
+
+### O guarda NÃO recusa a biblioteca padrão, e isso está escrito nele
+
+Um `os.ReadFile` aqui passaria pelo guarda de fronteira. O que segura é a porta:
+sem caminho de arquivo atravessando a fronteira, não há o que ler. A observação
+está no próprio guarda, porque um leitor que confie nele para isso vai se
+enganar.
+
+## `campaign`: a mesma regra recusando com DUAS frases
+
+O que é um nome válido e o que é uma descrição válida saíram do `api` na
+ALE-278, com a forma exata do `account` — e pelo mesmo defeito, que vale
+registrar porque agora ele tem DOIS casos e um padrão.
+
+A cena escrevia "O nome é obrigatório e cabe em 120 caracteres." e a rota JSON
+respondia `err.Error()`, que era a frase inglesa herdada do NestJS. Duas frases
+para uma regra é o que quebra quando alguém mexe no limite: uma das duas fica
+para trás, e é sempre a que ninguém está olhando.
+
+**O padrão, agora com dois casos:** quando uma regra de produto tem um consumidor
+de TELA e um de API, a frase divide antes da conta. No `account` a divergência
+era a mesma (inglês na rota JSON, português na porta); aqui é idêntica. O que os
+dois pacotes fazem é a mensagem morar COM a regra, em pt-BR, porque quem lê é
+uma pessoa.
+
+### A extração desfez um vazamento de TIPO
+
+O `campaignDescription` devolvia `sql.NullString`. Uma regra de produto
+carregando o tipo do banco é a fronteira no lugar errado, e o conserto é o que
+também torna os dois caminhos iguais: a regra devolve TEXTO, quem grava traduz
+vazio para NULL.
+
+### O guarda afirmava uma garantia que ele não tinha
+
+Escrevi na docstring dele que "`database/sql` é a tentação NOMEADA aqui".
+Sabotei com `var _ = sql.NullString{}`: o build passou **e o guarda passou** —
+ele só olhava `t20engine/*`, e `database/sql` é biblioteca padrão.
+
+É literalmente o **comentário não é correção** do CLAUDE.md acontecendo dentro
+de um guarda. Ele ganhou uma lista de recusa da biblioteca padrão com UMA
+entrada, e a razão de ser uma só está escrita: esta é a tentação MEDIDA — a
+versão anterior devolvia `sql.NullString` de verdade. **Lista de perigo
+imaginado envelhece; lista de defeito acontecido, não.**
+
+> A lição de instrumento é a mais transferível daqui: um guarda de fronteira que
+> filtra por PREFIXO do módulo é cego para tudo que não tem esse prefixo. Se a
+> prosa dele nomear uma tentação de fora do módulo, ela precisa de uma segunda
+> lista — ou a prosa está mentindo.
+
 ## `account`: a regra de conta, e a cópia que divergiu na FRASE
 
 O que é um e-mail, o que é uma senha aceitável, e a forma dos dois pedidos que
