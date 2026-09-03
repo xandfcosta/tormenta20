@@ -1,16 +1,15 @@
 package api
 
-import "t20engine/aovivo"
-
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	"sync"
-	"t20engine/plataforma"
-	"testing"
-
+	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
+	"t20engine/plataforma"
+	"t20engine/sheet"
+	"testing"
 )
 
 func seedSession(t *testing.T, s *Server, campaignID int64) int64 {
@@ -283,8 +282,8 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 		t.Errorf("PV = %d, esperado 17 (o pool de 5 absorveu antes)", row.Hpcurrent)
 	}
 	rows, _ := s.queries.ListActiveEffectsByCharacter(ctx, charID)
-	if len(parseTempHpPools(rows)) != 0 {
-		t.Errorf("o pool tinha de ter sido gasto, sobrou %+v", parseTempHpPools(rows))
+	if len(sheet.ParseTempHpPools(rows)) != 0 {
+		t.Errorf("o pool tinha de ter sido gasto, sobrou %+v", sheet.ParseTempHpPools(rows))
 	}
 }
 

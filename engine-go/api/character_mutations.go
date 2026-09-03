@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 
 	"t20engine/db/sqlcgen"
 )
@@ -87,9 +88,9 @@ func nullInt(p *int64) sql.NullInt64 {
 }
 
 type applyDamageResult struct {
-	HpCurrent       int           `json:"hpCurrent"`
-	TempHpRemaining int           `json:"tempHpRemaining"`
-	Drained         []damageDrain `json:"drained"`
+	HpCurrent       int                 `json:"hpCurrent"`
+	TempHpRemaining int                 `json:"tempHpRemaining"`
+	Drained         []sheet.DamageDrain `json:"drained"`
 }
 
 // handleApplyDamage temp-first damage
@@ -127,7 +128,7 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	plataforma.WriteJSON(w, http.StatusOK, applyDamageResult{
-		HpCurrent: plan.hpCurrent, TempHpRemaining: plan.tempHpRemaining, Drained: plan.drained,
+		HpCurrent: plan.HpCurrent, TempHpRemaining: plan.TempHpRemaining, Drained: plan.Drained,
 	})
 }
 

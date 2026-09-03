@@ -6,6 +6,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 )
 
 // AS CONCESSÕES DE UMA POSTURA (ALE-272, fatia 8).
@@ -128,20 +129,20 @@ func (s *Server) gravaAReservaDePv(
 	if err != nil {
 		return err
 	}
-	plano := planPoolSupremacy(parseTempHpPools(efeitos), powerID, scope, quanto)
+	plano := sheet.PlanPoolSupremacy(sheet.ParseTempHpPools(efeitos), powerID, scope, quanto)
 	// SUPERADA: já existe reserva maior, e nada é escrito. Não é erro — é a
 	// regra do livro dizendo que esta não vale.
-	if plano.superseded {
+	if plano.Superseded {
 		return tx.Commit()
 	}
-	for _, z := range plano.zeroWrites {
+	for _, z := range plano.ZeroWrites {
 		if err := q.UpdateEffectModifiers(r.Context(), sqlcgen.UpdateEffectModifiersParams{
-			Modifiers: z.modifiers, ID: z.effectID,
+			Modifiers: z.Modifiers, ID: z.EffectID,
 		}); err != nil {
 			return err
 		}
 	}
-	for _, apagar := range plano.deleteIDs {
+	for _, apagar := range plano.DeleteIDs {
 		if err := q.DeleteEffectByID(r.Context(), apagar); err != nil {
 			return err
 		}

@@ -194,7 +194,7 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 	}
 	idx := -1
 	for i, m := range mods {
-		if isTempHpModifier(m) {
+		if sheet.IsTempHpModifier(m) {
 			idx = i
 			break
 		}
@@ -203,7 +203,7 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusBadRequest, "Active effect has no temp HP to adjust")
 		return
 	}
-	amount := max(0, toInt(mods[idx]["amount"])+int(*body.TempHpDelta))
+	amount := max(0, sheet.ToInt(mods[idx]["amount"])+int(*body.TempHpDelta))
 	if amount == 0 {
 		if err := s.queries.DeleteEffectByID(r.Context(), effectID); err != nil {
 			plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove effect")

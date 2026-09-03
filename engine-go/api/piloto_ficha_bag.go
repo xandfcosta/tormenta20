@@ -187,10 +187,10 @@ func equippedSlotOf(item sheet.ItemDTO) string {
 // Quatro sempre, mesmo com um item só: o teto do livro é a informação, e uma
 // tira que crescesse com o uso esconderia justamente quanto ainda cabe.
 func comQuatroPosicoes(cards []*equippedCard) []*equippedCard {
-	for len(cards) < vestedLimit {
+	for len(cards) < sheet.VestedLimit {
 		cards = append(cards, nil)
 	}
-	return cards[:vestedLimit]
+	return cards[:sheet.VestedLimit]
 }
 
 func handsUsedIn(hands handSlots) int {

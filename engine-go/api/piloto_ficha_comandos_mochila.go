@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/book"
+	"t20engine/sheet"
 
 	"github.com/go-chi/chi/v5"
 
@@ -154,7 +155,7 @@ func oItemCustomPedido(sinais fichaSignals) (string, int64, float64, error) {
 	if sinais.ItemEspacos != nil {
 		espacos = *sinais.ItemEspacos
 	}
-	if espacos < 0 || slotsNotMultiple(espacos) {
+	if espacos < 0 || sheet.SlotsNotMultiple(espacos) {
 		return "", 0, 0, fmt.Errorf("os espaços (%v) têm de ser múltiplos de 0,5", espacos)
 	}
 	return nome, quantidade, espacos, nil
@@ -196,7 +197,7 @@ func equipItemFromSheet(s *Server, r *http.Request, row sqlcgen.Character, _ fic
 	// mostrou o preço, com um escudo sendo vestido num teste porque o catálogo
 	// do fixture está vazio. O `catalog.Resource` é `go:embed`: ele existe
 	// sempre que o binário existe.
-	if _, recusa := equipAxisError(oItemComoDoMotor(book.ItemByID(oCatalogoDoItem(item))), slot); recusa != "" {
+	if _, recusa := sheet.EquipAxisError(oItemComoDoMotor(book.ItemByID(oCatalogoDoItem(item))), slot); recusa != "" {
 		return fmt.Errorf("%s", recusa)
 	}
 	recusa, err := s.equipLimitCheck(r, row.ID, item.ID, slot)

@@ -75,7 +75,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case slots == nil:
 		fields["slots"] = []string{"Slots is required for custom items"}
-	case slotsNotMultiple(*slots):
+	case sheet.SlotsNotMultiple(*slots):
 		fields["slots"] = []string{"Slots must be a multiple of 0.5"}
 	}
 	if len(fields) > 0 {
@@ -84,7 +84,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.Equipped != nil && *body.Equipped != "" {
-		if top, fieldMsg := equipAxisError(catalog, *body.Equipped); top != "" {
+		if top, fieldMsg := sheet.EquipAxisError(catalog, *body.Equipped); top != "" {
 			writeAxisError(w, top, fieldMsg)
 			return
 		}
@@ -166,7 +166,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 	if v, has := raw["slots"]; has {
 		var sl float64
-		if json.Unmarshal(v, &sl) != nil || slotsNotMultiple(sl) {
+		if json.Unmarshal(v, &sl) != nil || sheet.SlotsNotMultiple(sl) {
 			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"slots": {"Slots must be a multiple of 0.5"}})
 			return
 		}
@@ -183,7 +183,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			if item.Catalogid.Valid && s.catalogs != nil {
 				catalog = s.catalogs.Item(item.Catalogid.String)
 			}
-			if top, fieldMsg := equipAxisError(catalog, *eq); top != "" {
+			if top, fieldMsg := sheet.EquipAxisError(catalog, *eq); top != "" {
 				writeAxisError(w, top, fieldMsg)
 				return
 			}
@@ -284,7 +284,7 @@ func (s *Server) equipLimitCheck(r *http.Request, charID, excludeItemID int64, i
 		}
 		others = append(others, e.Equipped.String)
 	}
-	return equipLimitError(others, incoming), nil
+	return sheet.EquipLimitError(others, incoming), nil
 }
 
 // writeAxisError emits the equip-axis BadRequest: a custom top message + the
