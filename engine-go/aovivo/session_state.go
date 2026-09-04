@@ -414,17 +414,17 @@ func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
 // precisa dizer coisas diferentes nos dois casos (ALE-210). Por isso só marcamos
 // o pool que EXISTE — senão a mesa leria "PV ocultos pelo mestre" de um
 // combatente que nunca teve PV.
-func hideIfSecret(escolha *bool, visibleByDefault bool, atual, max **int64, marca **bool) {
-	visivel := visibleByDefault
-	if escolha != nil {
-		visivel = !*escolha
+func hideIfSecret(choice *bool, visibleByDefault bool, current, max **int64, mark **bool) {
+	visible := visibleByDefault
+	if choice != nil {
+		visible = !*choice
 	}
-	if visivel || *max == nil {
+	if visible || *max == nil {
 		return
 	}
-	*atual, *max = nil, nil
-	escondido := true
-	*marca = &escondido
+	*current, *max = nil, nil
+	hidden := true
+	*mark = &hidden
 }
 
 // StateForRole é o que UM socket pode ver. Existe porque o broadcast não é o

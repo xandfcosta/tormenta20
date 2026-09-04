@@ -646,9 +646,9 @@ templ tableRowTracker(v View, l tableRow) {
 templ rowVerbs(v View, l tableRow) {
 	<div class="flex shrink-0 items-center gap-1">
 		if l.PV != nil {
-			@vitalStep(v, l, "heal", "+", "Curar")
-			@vitalStep(v, l, "harm", "−", "Ferir")
-			@rowEye(v, l)
+			@vitalStep(v, l, "hp", "heal", "+", "Curar")
+			@vitalStep(v, l, "hp", "harm", "−", "Ferir")
+			@rowEye(v, l, "hp")
 		} else {
 			@vagaDeVerbo()
 			@vagaDeVerbo()
@@ -689,14 +689,14 @@ templ vagaDeVerbo() {
 // número nunca viaja como dado. O `title` conta os dois passos porque atalho que
 // ninguém descobre não existe, e o nome acessível traz o do combatente: numa
 // fila de nove, "Ferir" sozinho não diz quem.
-templ vitalStep(v View, l tableRow, verbo, sinal, rotulo string) {
+templ vitalStep(v View, l tableRow, pool, verb, sign, label string) {
 	<button
 		type="button"
-		aria-label={ rotulo + " " + l.Rotulo }
-		title={ rotulo + " " + l.Rotulo + " — clique 1, Shift+clique 5" }
-		data-on:click={ rowVital(v, l, verbo) }
+		aria-label={ label + " " + l.Rotulo }
+		title={ label + " " + l.Rotulo + " — clique 1, Shift+clique 5" }
+		data-on:click={ rowVital(v, l, pool, verb) }
 		class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-	>{ sinal }</button>
+	>{ sign }</button>
 }
 
 // rowEye esconde os PV deste combatente DOS JOGADORES.
@@ -704,7 +704,7 @@ templ vitalStep(v View, l tableRow, verbo, sinal, rotulo string) {
 // `aria-pressed` porque é um estado que fica, não uma ação que passa. E o
 // `title` diz de quem se esconde: o ícone sozinho não conta que o segredo é dos
 // jogadores e não do mestre (ALE-133).
-templ rowEye(v View, l tableRow) {
+templ rowEye(v View, l tableRow, pool string) {
 	<button
 		type="button"
 		aria-pressed={ fmt.Sprint(l.Oculto) }
@@ -715,7 +715,7 @@ templ rowEye(v View, l tableRow) {
 			aria-label={ "Ocultar os PV de " + l.Rotulo }
 			title={ "Ocultar os PV de " + l.Rotulo + " dos jogadores" }
 		}
-		data-on:click={ rowCommand(v, l, "vitals/hidden") }
+		data-on:click={ rowCommand(v, l, "vitals/"+pool+"/hidden") }
 		class={ "flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 			templ.KV("text-grimorio-gold", l.Oculto), templ.KV("text-muted-foreground", !l.Oculto) }
 	>

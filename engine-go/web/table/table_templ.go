@@ -1435,7 +1435,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if l.PV != nil {
-			templ_7745c5c3_Err = vitalStep(v, l, "heal", "+", "Curar").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = vitalStep(v, l, "hp", "heal", "+", "Curar").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1443,7 +1443,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = vitalStep(v, l, "harm", "−", "Ferir").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = vitalStep(v, l, "hp", "harm", "−", "Ferir").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1451,7 +1451,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = rowEye(v, l).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = rowEye(v, l, "hp").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1615,7 +1615,7 @@ func vagaDeVerbo() templ.Component {
 // número nunca viaja como dado. O `title` conta os dois passos porque atalho que
 // ninguém descobre não existe, e o nome acessível traz o do combatente: numa
 // fila de nove, "Ferir" sozinho não diz quem.
-func vitalStep(v View, l tableRow, verbo, sinal, rotulo string) templ.Component {
+func vitalStep(v View, l tableRow, pool, verb, sign, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1641,9 +1641,9 @@ func vitalStep(v View, l tableRow, verbo, sinal, rotulo string) templ.Component 
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var62 string
-		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo + " " + l.Rotulo)
+		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(label + " " + l.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 695, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 695, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 		if templ_7745c5c3_Err != nil {
@@ -1654,9 +1654,9 @@ func vitalStep(v View, l tableRow, verbo, sinal, rotulo string) templ.Component 
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var63 string
-		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo + " " + l.Rotulo + " — clique 1, Shift+clique 5")
+		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue(label + " " + l.Rotulo + " — clique 1, Shift+clique 5")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 696, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 696, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 		if templ_7745c5c3_Err != nil {
@@ -1667,9 +1667,9 @@ func vitalStep(v View, l tableRow, verbo, sinal, rotulo string) templ.Component 
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var64 string
-		templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowVital(v, l, verbo))
+		templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowVital(v, l, pool, verb))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 697, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 697, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 		if templ_7745c5c3_Err != nil {
@@ -1680,9 +1680,9 @@ func vitalStep(v View, l tableRow, verbo, sinal, rotulo string) templ.Component 
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var65 string
-		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(sinal)
+		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(sign)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 699, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 699, Col: 8}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 		if templ_7745c5c3_Err != nil {
@@ -1701,7 +1701,7 @@ func vitalStep(v View, l tableRow, verbo, sinal, rotulo string) templ.Component 
 // `aria-pressed` porque é um estado que fica, não uma ação que passa. E o
 // `title` diz de quem se esconde: o ícone sozinho não conta que o segredo é dos
 // jogadores e não do mestre (ALE-133).
-func rowEye(v View, l tableRow) templ.Component {
+func rowEye(v View, l tableRow, pool string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1813,9 +1813,9 @@ func rowEye(v View, l tableRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var73 string
-		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowCommand(v, l, "vitals/hidden"))
+		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowCommand(v, l, "vitals/"+pool+"/hidden"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 718, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 718, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var73)
 		if templ_7745c5c3_Err != nil {

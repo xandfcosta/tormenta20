@@ -431,8 +431,8 @@ func rowCommand(v View, l tableRow, acao string) string {
 // O `@post` recebe uma expressão como ARGUMENTO, e não é um `@post` dentro de
 // cada braço de um ternário: a chamada é uma só, e o que varia é a string. Assim
 // o que o Datastar precisa reescrever é uma ação, não duas dentro de um desvio.
-func rowVital(v View, l tableRow, verbo string) string {
-	base := fmt.Sprintf("/mesa/%d/%d/initiative/%s/vitals/%s/", v.CampaignID, v.SessionID, l.ID, verbo)
+func rowVital(v View, l tableRow, pool, verb string) string {
+	base := fmt.Sprintf("/mesa/%d/%d/initiative/%s/vitals/%s/%s/", v.CampaignID, v.SessionID, l.ID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }
 

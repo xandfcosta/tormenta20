@@ -317,16 +317,16 @@ func TestRedactForPlayers(t *testing.T) {
 	id := counter()
 	_ = AddEntry(st, npc("Ogro", 12), id)
 	_ = AddEntry(st, npc("Bandido", 8), id)
-	oculto, aberto := int64(120), int64(130)
-	sim, nao := true, false
-	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &oculto, &aberto
-	st.Initiative[0].HpHidden = &sim
-	st.Initiative[1].HpCurrent, st.Initiative[1].HpMax = &oculto, &aberto
+	hpCurrent, hpMax := int64(120), int64(130)
+	hidden, revealed := true, false
+	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &hpCurrent, &hpMax
+	st.Initiative[0].HpHidden = &hidden
+	st.Initiative[1].HpCurrent, st.Initiative[1].HpMax = &hpCurrent, &hpMax
 	// O `nao` EXPLÍCITO é o que mudou na ALE-211: o Bandido é NPC, e desde
 	// aquela issue o PV de NPC nasce escondido. "Linha aberta" deixou de ser o
 	// padrão e passou a ser uma escolha do mestre — o guarda do padrão novo é o
 	// `TestTheTableSeesThePartyHpAndNothingElseByDefault`, abaixo.
-	st.Initiative[1].HpHidden = &nao
+	st.Initiative[1].HpHidden = &revealed
 
 	redigido := RedactForPlayers(st)
 
@@ -362,27 +362,27 @@ func TestTheTableSeesThePartyHpAndNothingElseByDefault(t *testing.T) {
 	id := counter()
 	_ = AddEntry(st, charEntry("Arwen", 18, 7), id)
 	_ = AddEntry(st, npc("Ogro", 12), id)
-	pv, pm := int64(32), int64(12)
+	hp, mp := int64(32), int64(12)
 	for i := range st.Initiative {
-		st.Initiative[i].HpCurrent, st.Initiative[i].HpMax = &pv, &pv
-		st.Initiative[i].MpCurrent, st.Initiative[i].MpMax = &pm, &pm
+		st.Initiative[i].HpCurrent, st.Initiative[i].HpMax = &hp, &hp
+		st.Initiative[i].MpCurrent, st.Initiative[i].MpMax = &mp, &mp
 	}
 
-	mesa := RedactForPlayers(st)
-	arwen, ogro := mesa.Initiative[0], mesa.Initiative[1]
+	table := RedactForPlayers(st)
+	party, npcRow := table.Initiative[0], table.Initiative[1]
 
-	if arwen.HpMax == nil {
+	if party.HpMax == nil {
 		t.Error("a mesa perdeu o PV do próprio grupo — é justamente o que ela vê por padrão")
 	}
-	if ogro.HpMax != nil {
-		t.Errorf("o PV do NPC vazou sem o mestre revelar: %+v", ogro)
+	if npcRow.HpMax != nil {
+		t.Errorf("o PV do NPC vazou sem o mestre revelar: %+v", npcRow)
 	}
-	if arwen.MpMax != nil || ogro.MpMax != nil {
+	if party.MpMax != nil || npcRow.MpMax != nil {
 		t.Error("o PM vazou: ele é do mestre até ele decidir o contrário, e vale para o grupo também")
 	}
 	// A MARCA sobrevive, senão "sem barra" e "escondido" viram a mesma coisa na
 	// tela do jogador — e a segunda é informação (ALE-210).
-	if ogro.HpHidden == nil || !*ogro.HpHidden {
+	if npcRow.HpHidden == nil || !*npcRow.HpHidden {
 		t.Error("o NPC oculto chegou sem a marca: a tela não teria como dizer que existe PV ali")
 	}
 }
@@ -391,23 +391,23 @@ func TestTheTableSeesThePartyHpAndNothingElseByDefault(t *testing.T) {
 func TestTheGmRevealsAPoolLineByLine(t *testing.T) {
 	st := cenaEmCurso()
 	_ = AddEntry(st, npc("Ogro", 12), counter())
-	pv, pm, nao := int64(130), int64(20), false
-	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &pv, &pv
-	st.Initiative[0].MpCurrent, st.Initiative[0].MpMax = &pm, &pm
-	st.Initiative[0].HpHidden, st.Initiative[0].MpHidden = &nao, &nao
+	hp, mp, revealed := int64(130), int64(20), false
+	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &hp, &hp
+	st.Initiative[0].MpCurrent, st.Initiative[0].MpMax = &mp, &mp
+	st.Initiative[0].HpHidden, st.Initiative[0].MpHidden = &revealed, &revealed
 
-	ogro := RedactForPlayers(st).Initiative[0]
+	npcRow := RedactForPlayers(st).Initiative[0]
 
-	if ogro.HpMax == nil || *ogro.HpMax != 130 {
-		t.Errorf("o mestre revelou o PV e a mesa não viu: %+v", ogro)
+	if npcRow.HpMax == nil || *npcRow.HpMax != 130 {
+		t.Errorf("o mestre revelou o PV e a mesa não viu: %+v", npcRow)
 	}
-	if ogro.MpMax == nil || *ogro.MpMax != 20 {
-		t.Errorf("o mestre revelou o PM e a mesa não viu: %+v", ogro)
+	if npcRow.MpMax == nil || *npcRow.MpMax != 20 {
+		t.Errorf("o mestre revelou o PM e a mesa não viu: %+v", npcRow)
 	}
 	// O CONTROLE: o mestre continua vendo tudo, sempre. A redação não é para ele,
 	// e um `RedactForPlayers` que zerasse os dois lados passaria nas asserções de
 	// esconder e reprovaria só aqui.
-	if paraMestre := StateForRole("gm", st); paraMestre.Initiative[0].MpMax == nil {
+	if forGm := StateForRole("gm", st); forGm.Initiative[0].MpMax == nil {
 		t.Error("o mestre perdeu o PM, que é dele por direito")
 	}
 }
