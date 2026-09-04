@@ -867,7 +867,7 @@ templ planToken(v BoardView, p boardToken) {
 		}
 		if p.PV != nil {
 			<span aria-hidden="true" class="tabuleiro-vida">
-				<span class={ "tabuleiro-vida-cheia", hpTomDe(*p.PV) } style={ fmt.Sprintf("width:%d%%", *p.PV) }></span>
+				<span class={ "tabuleiro-vida-cheia", hpToneOf(*p.PV) } style={ fmt.Sprintf("width:%d%%", *p.PV) }></span>
 			</span>
 		}
 	</button>

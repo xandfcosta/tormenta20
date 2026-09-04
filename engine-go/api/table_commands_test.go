@@ -906,3 +906,45 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 		t.Error("o crachá voltou a dizer PC, que o GLOSSARIO proíbe")
 	}
 }
+
+// A LINHA da fila desenha UM POOL POR BARRA, com os verbos de cada um ao lado —
+// e cada papel lê o que a redação lhe deixou (ALE-211).
+//
+// O caso mede os dois lados no mesmo estado, e é isso que o torna honesto:
+// afirmar só o do mestre não distingue "o jogador não vê o PM" de "o PM não foi
+// desenhado para ninguém", e afirmar só o do jogador passaria verde sobre uma
+// fila que não desenha nada.
+func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
+	f := novoPiloto(t)
+	f.tracker(t)
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+
+	doMestre := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+	// O verbo mora ao lado da barra que ele mexe, e o nome acessível é o que
+	// prova isso: dois olhos na mesma linha, cada um dizendo de qual pool é.
+	for _, rotulo := range []string{"Ocultar os PV de ", "Ocultar os PM de "} {
+		if !strings.Contains(doMestre, rotulo) {
+			t.Errorf("o mestre não recebeu o olho %q — o verbo não diz de qual pool fala", rotulo)
+		}
+	}
+	if !strings.Contains(doMestre, "/vitals/mp/harm/") {
+		t.Error("o mestre não recebeu o gesto de gastar mana na fila")
+	}
+
+	doJogador := f.pede(t, f.jogador, "GET", f.tableUrl(), "").Body.String()
+	// O PV do GRUPO é o que a mesa vê por padrão, e o personagem desta bancada é
+	// justamente do jogador que está pedindo.
+	if !strings.Contains(doJogador, "PV ") {
+		t.Error("a mesa perdeu o PV do próprio grupo")
+	}
+	if !strings.Contains(doJogador, "PM ocultos pelo mestre") {
+		t.Error("a mesa não foi avisada de que existe PM escondido: 'sem barra' e 'escondido' viraram a mesma coisa")
+	}
+	// E o jogador não recebe verbo nenhum — a trava é o 403, mas o HTML também
+	// não os tem, e as duas coisas se medem juntas (ALE-144).
+	if strings.Contains(doJogador, "/vitals/mp/harm/") || strings.Contains(doJogador, "Ocultar os PM de ") {
+		t.Error("os verbos do mana vazaram para o HTML do jogador")
+	}
+}
