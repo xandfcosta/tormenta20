@@ -211,3 +211,34 @@ func toolStyling(id string) string {
 func shortcutName(f mapTool) string {
 	return fmt.Sprintf("%s (tecla %s)", f.Rotulo, f.Atalho)
 }
+
+// piecesFootprints são os tamanhos que a Tabela 1-21 produz (T20 p107).
+//
+// Quatro e não uma faixa: 4 e 5 não são tamanho de criatura nenhuma. A tira
+// desenha botões por isso — um campo numérico convidaria a digitar o que o
+// servidor vai recusar, e recusa que se descobre clicando é pior que a escolha
+// não existir.
+var piecesFootprints = []struct {
+	Lados  int
+	Lado   string
+	Rotulo string
+}{
+	{1, "1×1", "Médio"},
+	{2, "2×2", "Grande"},
+	{3, "3×3", "Enorme"},
+	{6, "6×6", "Colossal"},
+}
+
+// piecesLooks são as duas aparências que a peça avulsa pode ter.
+//
+// `character` fica de fora de propósito, e o servidor recusa: a peça de ficha
+// nasce ligada a um personagem pelo `Populate`, e uma "ficha" desenhada à mão
+// seria uma peça que PARECE de jogador sem ninguém atrás dela.
+var piecesLooks = []struct {
+	ID     string
+	Rotulo string
+	Dica   string
+}{
+	{"object", "Objeto", "Objeto: a porta, o baú, o barril — cenário que ocupa casa"},
+	{"npc", "NPC", "NPC: a criatura que está no mapa e ainda não entrou na fila"},
+}

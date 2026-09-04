@@ -1133,6 +1133,32 @@ func pickTool(qual string) string {
 // uma ferramenta que a tela liga e o mapa nunca escuta.
 const MarkTool = "marcador"
 
+// NewPieceTool é o valor do sinal quando o clique CRIA uma peça avulsa
+// (ALE-291).
+//
+// Ela é ferramenta pela divisa que o trilho já desenha — "ferramenta muda o que
+// o CLIQUE faz, ação acontece uma vez e acaba" — e mesmo assim NÃO entra na
+// fileira numerada. O `railKeys` tem dez dígitos e o comentário do `numberRail`
+// defende esse teto por escrito: a décima primeira "não ganha uma letra
+// sorteada — ela pede outra ideia". A ideia é esta: um modo ao lado do trilho,
+// que é valor do MESMO sinal `$ferramenta` e por isso continua excluindo as
+// outras por construção.
+//
+// Sem atalho de tecla, então, e de propósito. O botão é focável e é o caminho
+// de teclado; inventar uma letra seria exatamente o que o comentário recusa.
+const NewPieceTool = "peca-nova"
+
+// clickedSquareNewPiece cria a peça avulsa NA CASA CLICADA.
+//
+// A posição viaja no CAMINHO pela razão do `quadradoDoCaminho`: coordenada
+// negativa é lugar legítimo, e o valor tem de ser o do clique que aconteceu.
+func clickedSquareNewPiece(v BoardView) string {
+	return fmt.Sprintf(
+		"@post('/mesa/%d/%d/tabuleiro/pecas/nova/' + (%s) + '/' + (%s))",
+		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
+	)
+}
+
 // clickedPointMarking põe um marcador na casa que o dedo acertou.
 //
 // Mesma aritmética da pintura — o ponto do clique dividido pelo tamanho da casa,

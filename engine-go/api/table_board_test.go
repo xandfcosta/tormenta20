@@ -9,6 +9,7 @@ import (
 	"strings"
 	"t20engine/events"
 	"t20engine/tabuleiro"
+	"t20engine/web/table"
 	"testing"
 	"time"
 )
@@ -473,7 +474,7 @@ func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
 	f.seedOpenBoard(t, "cripta")
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/nova/-3/7",
-		`{"pecanome":"  Porta da cripta  ","pecatamanho":1,"pecaaparencia":"object"}`)
+		`{"novapecanome":"  Porta da cripta  ","novapecatamanho":1,"novapecaaparencia":"object"}`)
 
 	mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(mapa.Tokens) != 1 {
@@ -510,9 +511,9 @@ func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	casos := []struct{ nome, sinais, espera string }{
-		{"sem nome", `{"pecanome":"   ","pecatamanho":1,"pecaaparencia":"object"}`, "dê um nome"},
-		{"tamanho de nada", `{"pecanome":"Carroça","pecatamanho":4,"pecaaparencia":"object"}`, "p107"},
-		{"ficha solta", `{"pecanome":"Falso herói","pecatamanho":1,"pecaaparencia":"character"}`, "aparência"},
+		{"sem nome", `{"novapecanome":"   ","novapecatamanho":1,"novapecaaparencia":"object"}`, "dê um nome"},
+		{"tamanho de nada", `{"novapecanome":"Carroça","novapecatamanho":4,"novapecaaparencia":"object"}`, "p107"},
+		{"ficha solta", `{"novapecanome":"Falso herói","novapecatamanho":1,"novapecaaparencia":"character"}`, "aparência"},
 	}
 	for _, caso := range casos {
 		t.Run(caso.nome, func(t *testing.T) {
@@ -539,12 +540,57 @@ func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
 	f.seedOpenBoard(t, "cripta")
 
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/pecas/nova/1/1",
-		`{"pecanome":"Porta","pecatamanho":1,"pecaaparencia":"object"}`)
+		`{"novapecanome":"Porta","novapecatamanho":1,"novapecaaparencia":"object"}`)
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça e levou %d, queria 403", rec.Code)
 	}
 	if mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(mapa.Tokens) != 0 {
 		t.Errorf("a recusa deixou %d peças no mapa", len(mapa.Tokens))
+	}
+}
+
+// O MODO da peça avulsa é do MESTRE, e ele aparece FORA da fileira numerada
+// (ALE-291).
+//
+// As duas metades se medem juntas: o botão sem a tira seria um modo que liga e
+// não diz o que vai criar, e a tira sem o botão seria um formulário sem gesto.
+//
+// E o caso afirma que ele NÃO ganhou número, que é a decisão de desenho desta
+// fatia: o `railKeys` tem dez dígitos e o `numberRail` estoura na décima
+// primeira de propósito. Um dia alguém vai querer dar uma tecla a este modo —
+// que ele mude este caso junto, em vez de a gramática dos dez virar dez-e-meio
+// em silêncio.
+func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+
+	doMestre := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+	for _, pedaco := range []string{
+		"Nova peça — o clique escolhe a casa",       // o botão do modo
+		"Nova peça — escolha a casa onde ela nasce", // a camada de clique
+		"novapecanome", // a tira
+		"Colossal",     // o tamanho do livro (p107)
+	} {
+		if !strings.Contains(doMestre, pedaco) {
+			t.Errorf("o mestre não recebeu %q", pedaco)
+		}
+	}
+	// As dez ferramentas continuam sendo dez, e o modo não entrou na conta.
+	if n := len(table.MapTools()); n != 10 {
+		t.Errorf("o trilho numerado ficou com %d ferramentas — a gramática dos dez dígitos quebrou", n)
+	}
+
+	// O QUE NÃO PODE VAZAR É A AFORDÂNCIA, e não o sinal.
+	//
+	// A primeira versão deste caso cobrava também a ausência de `novapecanome`, e
+	// ela reprovou: a lista de sinais é da PÁGINA e sai igual para os dois
+	// papéis, como já acontece com `pecaescolhida`, `rascunhode` e os outros do
+	// mestre. Um sinal sem escritor é inerte; o que conta é não haver botão nem
+	// camada de clique — e a trava de verdade é o 403 do handler, medido no caso
+	// vizinho (ALE-144).
+	doJogador := f.pede(t, f.jogador, "GET", f.tableUrl(), "").Body.String()
+	if strings.Contains(doJogador, "Nova peça") {
+		t.Error("o gesto de criar peça vazou para o HTML do jogador")
 	}
 }

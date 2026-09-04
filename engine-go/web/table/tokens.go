@@ -259,9 +259,9 @@ type loosePieceDraft struct {
 func loosePieceSignals(r *http.Request) (loosePieceDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Nome      string `json:"pecanome"`
-		Tamanho   int    `json:"pecatamanho"`
-		Aparencia string `json:"pecaaparencia"`
+		Nome      string `json:"novapecanome"`
+		Tamanho   int    `json:"novapecatamanho"`
+		Aparencia string `json:"novapecaaparencia"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return loosePieceDraft{}, fmt.Errorf("não entendi a peça: %v", err)
