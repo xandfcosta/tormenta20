@@ -463,6 +463,32 @@ func rowCommand(v View, l tableRow, acao string) string {
 // O `@post` recebe uma expressão como ARGUMENTO, e não é um `@post` dentro de
 // cada braço de um ternário: a chamada é uma só, e o que varia é a string. Assim
 // o que o Datastar precisa reescrever é uma ação, não duas dentro de um desvio.
+// healVerb e harmVerb dão a CADA pool o verbo da mesa, e não é enfeite: com os
+// dois passos na mesma linha, "Ferir Arwen" duas vezes são dois controles com o
+// mesmo nome acessível e destinos diferentes — quem usa leitor de tela ouve a
+// mesma frase e tira mana achando que tira vida.
+//
+// Quem acusou foi o e2e do transbordo a 390px, que procura o botão por nome e
+// esbarrou em dois. Ele não veio medir isto; veio medir leiaute — e é o segundo
+// caso desta sessão em que um guarda pega o defeito do vizinho por afirmar algo
+// preciso o bastante para quebrar quando a premissa muda.
+//
+// A frase é a da mesa: PV se fere e se cura, PM se gasta e se recupera. O "de"
+// mora no verbo do mana porque "Gastar PM Arwen" não é português.
+func healVerb(pool string) string {
+	if pool == "mp" {
+		return "Recuperar PM de"
+	}
+	return "Curar"
+}
+
+func harmVerb(pool string) string {
+	if pool == "mp" {
+		return "Gastar PM de"
+	}
+	return "Ferir"
+}
+
 func rowVital(v View, l tableRow, pool, verb string) string {
 	base := fmt.Sprintf("/mesa/%d/%d/initiative/%s/vitals/%s/%s/", v.CampaignID, v.SessionID, l.ID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)

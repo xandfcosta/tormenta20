@@ -1594,7 +1594,7 @@ func trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) templ.Comp
 				}
 			}
 			if v.Mestre != nil {
-				templ_7745c5c3_Err = vitalStep(v, l, pool, "heal", "+", "Curar").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = vitalStep(v, l, pool, "heal", "+", healVerb(pool)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1602,7 +1602,7 @@ func trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) templ.Comp
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = vitalStep(v, l, pool, "harm", "−", "Ferir").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = vitalStep(v, l, pool, "harm", "−", harmVerb(pool)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

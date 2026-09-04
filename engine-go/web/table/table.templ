@@ -684,8 +684,8 @@ templ trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) {
 				@barra(rotulo, *b)
 			}
 			if v.Mestre != nil {
-				@vitalStep(v, l, pool, "heal", "+", "Curar")
-				@vitalStep(v, l, pool, "harm", "−", "Ferir")
+				@vitalStep(v, l, pool, "heal", "+", healVerb(pool))
+				@vitalStep(v, l, pool, "harm", "−", harmVerb(pool))
 				@rowEye(v, l, pool, rotulo, b.Hidden)
 			}
 		</div>
