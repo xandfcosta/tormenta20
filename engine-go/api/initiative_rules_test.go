@@ -203,7 +203,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 	intruder := seedUser(t, s, "intruso@t.com")
 	campaignID := seedCampaign(t, s, gm)
 	charID := seedCharacterAtLevel(t, s, player, "Arcanista", 8, 20, 30, 5, 10)
-	seedMember(t, s, campaignID, charID, "player")
+	seedMember(t, s, campaignID, charID)
 	if _, err := s.queries.CreateExpertise(ctx, sqlcgen.CreateExpertiseParams{
 		Characterid: charID, Name: "Iniciativa", Attribute: "dexterity", Trained: 0, Custom: 0,
 	}); err != nil {
@@ -212,7 +212,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 	// Intruso na MESMA mesa: recusar alguém de fora seria recusar pela membresia,
 	// e a regra que este teste mira é a POSSE do personagem.
 	intruderChar := seedCharacter(t, s, intruder, "Colega", 20, 30, 5, 10)
-	seedMember(t, s, campaignID, intruderChar, "player")
+	seedMember(t, s, campaignID, intruderChar)
 
 	return selfInitiativeFixture{
 		srv: s, campaignID: campaignID,
@@ -253,7 +253,7 @@ func TestEndingTheSceneExpiresThePartySceneEffects(t *testing.T) {
 func TestEndingTheSceneReachesWhoIsNotInTheTracker(t *testing.T) {
 	f := newEndSceneFixture(t)
 	ausente := seedCharacter(t, f.srv, f.player, "Ladino de fora", 10, 10, 2, 2)
-	seedMember(t, f.srv, f.campaignID, ausente, "player")
+	seedMember(t, f.srv, f.campaignID, ausente)
 	seedEffect(t, f.srv, ausente, "bencao", "scene")
 
 	if _, err := f.srv.tableRules().endSceneForTable(f.gm, f.campaignID, f.sessionID); err != nil {
@@ -282,7 +282,7 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 	campaignID := seedCampaign(t, s, gmID)
 	sessionID := seedSession(t, s, campaignID)
 	charID := seedCharacter(t, s, player, "Clérigo", 10, 10, 5, 5)
-	seedMember(t, s, campaignID, charID, "player")
+	seedMember(t, s, campaignID, charID)
 	seedEffect(t, s, charID, "bencao", "scene")
 	seedEffect(t, s, charID, "heroismo", "day")
 

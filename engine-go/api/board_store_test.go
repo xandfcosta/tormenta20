@@ -421,7 +421,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	campaignID := seedCampaign(t, s, gm)
 	sid := seedSession(t, s, campaignID)
 	heroi := seedCharacter(t, s, gm, "Tanque", 10, 20, 2, 5)
-	seedMember(t, s, campaignID, heroi, "player")
+	seedMember(t, s, campaignID, heroi)
 	user := AuthUser{ID: gm, Email: "gm@t.com"}
 
 	done, total, err := s.tableRules().restParty(user, campaignID, sid, "scene", "normal")

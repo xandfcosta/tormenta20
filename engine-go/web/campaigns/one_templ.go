@@ -923,7 +923,7 @@ func heroRow(h heroAtTable) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if h.Papel == "gm" {
+		if h.EhMestre {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "    <span aria-label=\"mestre da mesa\" class=\"shrink-0 text-grimorio-gold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

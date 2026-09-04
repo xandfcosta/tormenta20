@@ -254,7 +254,7 @@ templ heroRow(h heroAtTable) {
 			style={ "background: " + h.Gradiente }
 		>{ h.Iniciais }</span>
 		<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ h.Nome }</span>
-		if h.Papel == "gm" {
+		if h.EhMestre {
 			// COROA e não a palavra "mestre": o crachá de texto compete com o
 			// nome pela mesma largura, e numa lista de seis ele empurra os
 			// nomes para o truncamento. O ícone é `aria-hidden` e quem o

@@ -67,7 +67,7 @@ func clearedScopes(t *testing.T, rec *httptest.ResponseRecorder) []string {
 func seedLiveSession(t *testing.T, s *Server, gmID, charID int64) int64 {
 	t.Helper()
 	campaign := seedCampaign(t, s, gmID)
-	seedMember(t, s, campaign, charID, "player")
+	seedMember(t, s, campaign, charID)
 	sid := seedSession(t, s, campaign)
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
 		StartedAt: sql.NullString{String: plataforma.NowISO(), Valid: true}, UpdatedAt: plataforma.NowISO(), ID: sid,
@@ -179,7 +179,7 @@ func TestEndSceneRouteRefusedWithNoRunningSession(t *testing.T) {
 	char := seedCharacter(t, s, ownerID, "PC", 10, 10, 5, 5)
 	seedEffect(t, s, char, "buff-a", "scene")
 	campaign := seedCampaign(t, s, gmID)
-	seedMember(t, s, campaign, char, "player")
+	seedMember(t, s, campaign, char)
 	sid := seedSession(t, s, campaign)
 	if _, err := s.queries.EndSession(context.Background(), sqlcgen.EndSessionParams{
 		EndedAt: sql.NullString{String: plataforma.NowISO(), Valid: true}, UpdatedAt: plataforma.NowISO(), ID: sid,
@@ -214,7 +214,7 @@ func TestEndSceneRouteRefusesGmWhoseLiveSessionIsAnotherCampaign(t *testing.T) {
 
 	// Campanha A: o personagem está nela, e ela NÃO tem sessão rodando.
 	quieta := seedCampaign(t, s, gmID)
-	seedMember(t, s, quieta, char, "player")
+	seedMember(t, s, quieta, char)
 	// Campanha B: o mesmo mestre, sessão rodando, e o personagem NÃO está nela.
 	outroPc := seedCharacter(t, s, ownerID, "Outro", 10, 10, 5, 5)
 	seedLiveSession(t, s, gmID, outroPc)

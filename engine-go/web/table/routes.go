@@ -377,12 +377,19 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 				eu = &tableMe{CharacterID: m.Characterid, Nome: m.Charname}
 			}
 		}
-		// O filtro de PAPEL é o mesmo do "Adicionar grupo" no servidor
-		// (ALE-212): o mestre costuma ter um PC próprio no roster, e listá-lo
-		// aqui faria duas telas discordarem sobre quem é o grupo.
-		if m.Role != "player" {
-			continue
-		}
+		// Aqui morava um filtro de PAPEL, e ele NUNCA excluiu ninguém.
+		//
+		// A intenção estava escrita (ALE-212): "o mestre costuma ter um PC
+		// próprio no roster, e listá-lo aqui faria duas telas discordarem sobre
+		// quem é o grupo". Mas a condição era `m.Role != "player"` sobre uma
+		// coluna que valia `'player'` em toda linha — então o PC do mestre
+		// sempre entrou no grupo, e as duas telas concordam desde sempre, pela
+		// razão errada.
+		//
+		// O filtro sai com a coluna (ALE-287) em vez de virar
+		// `m.Charownerid != c.Ownerid`, e isso é deliberado: tornar a condição
+		// verdadeira MUDARIA o que a mesa mostra hoje, e essa é decisão de
+		// produto — não de quem apaga uma coluna morta.
 		grupo = append(grupo, Member{
 			CharacterID: m.Characterid,
 			Nome:        m.Charname,

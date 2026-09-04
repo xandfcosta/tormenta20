@@ -461,29 +461,22 @@ func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (CreateI
 }
 
 const createMember = `-- name: CreateMember :one
-INSERT INTO campaign_members (campaignId, characterId, role, addedAt) VALUES (?, ?, ?, ?) RETURNING id, campaignid, characterid, role, addedat
+INSERT INTO campaign_members (campaignId, characterId, addedAt) VALUES (?, ?, ?) RETURNING id, campaignid, characterid, addedat
 `
 
 type CreateMemberParams struct {
 	Campaignid  int64  `json:"campaignid"`
 	Characterid int64  `json:"characterid"`
-	Role        string `json:"role"`
 	Addedat     string `json:"addedat"`
 }
 
 func (q *Queries) CreateMember(ctx context.Context, arg CreateMemberParams) (CampaignMember, error) {
-	row := q.db.QueryRowContext(ctx, createMember,
-		arg.Campaignid,
-		arg.Characterid,
-		arg.Role,
-		arg.Addedat,
-	)
+	row := q.db.QueryRowContext(ctx, createMember, arg.Campaignid, arg.Characterid, arg.Addedat)
 	var i CampaignMember
 	err := row.Scan(
 		&i.ID,
 		&i.Campaignid,
 		&i.Characterid,
-		&i.Role,
 		&i.Addedat,
 	)
 	return i, err
@@ -1126,23 +1119,6 @@ func (q *Queries) GetItem(ctx context.Context, id int64) (GetItemRow, error) {
 	return i, err
 }
 
-const getMember = `-- name: GetMember :one
-SELECT id, campaignid, characterid, role, addedat FROM campaign_members WHERE id = ? LIMIT 1
-`
-
-func (q *Queries) GetMember(ctx context.Context, id int64) (CampaignMember, error) {
-	row := q.db.QueryRowContext(ctx, getMember, id)
-	var i CampaignMember
-	err := row.Scan(
-		&i.ID,
-		&i.Campaignid,
-		&i.Characterid,
-		&i.Role,
-		&i.Addedat,
-	)
-	return i, err
-}
-
 const getMemberOwners = `-- name: GetMemberOwners :one
 SELECT m.id, m.campaignId, c.ownerId AS campaignOwner, ch.ownerId AS characterOwner
 FROM campaign_members m JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
@@ -1277,7 +1253,7 @@ func (q *Queries) HasLiveSessionForCharacter(ctx context.Context, characterid in
 const hasPlayerPc = `-- name: HasPlayerPc :one
 SELECT EXISTS (
   SELECT 1 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
-  WHERE m.campaignId = ? AND m.role = 'player' AND ch.ownerId = ?
+  WHERE m.campaignId = ? AND ch.ownerId = ?
 ) AS hasPc
 `
 
@@ -1286,6 +1262,9 @@ type HasPlayerPcParams struct {
 	Ownerid    int64 `json:"ownerid"`
 }
 
+// UMA pessoa, UM personagem por mesa (ALE-156).
+// O `m.role = 'player'` saiu com a coluna na ALE-287 e nao muda nada: ela era
+// sempre 'player', entao a clausula nunca excluiu uma linha sequer.
 func (q *Queries) HasPlayerPc(ctx context.Context, arg HasPlayerPcParams) (bool, error) {
 	row := q.db.QueryRowContext(ctx, hasPlayerPc, arg.Campaignid, arg.Ownerid)
 	var haspc bool
@@ -1541,7 +1520,7 @@ func (q *Queries) ListCampaignPlaces(ctx context.Context, campaignid int64) ([]C
 }
 
 const listCampaignsForCharacter = `-- name: ListCampaignsForCharacter :many
-SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
+SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt
 FROM campaign_members m
 JOIN campaigns c ON c.id = m.campaignId
@@ -1553,7 +1532,6 @@ type ListCampaignsForCharacterRow struct {
 	ID                  int64          `json:"id"`
 	Campaignid          int64          `json:"campaignid"`
 	Characterid         int64          `json:"characterid"`
-	Role                string         `json:"role"`
 	Addedat             string         `json:"addedat"`
 	Campaignname        string         `json:"campaignname"`
 	Campaigndescription sql.NullString `json:"campaigndescription"`
@@ -1573,7 +1551,6 @@ func (q *Queries) ListCampaignsForCharacter(ctx context.Context, characterid int
 			&i.ID,
 			&i.Campaignid,
 			&i.Characterid,
-			&i.Role,
 			&i.Addedat,
 			&i.Campaignname,
 			&i.Campaigndescription,
@@ -2095,7 +2072,8 @@ func (q *Queries) ListItemsByCharacter(ctx context.Context, characterid int64) (
 
 const listMembers = `-- name: ListMembers :many
 
-SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
+SELECT m.id, m.campaignId, m.characterId, m.addedAt,
+       ch.ownerId AS charOwnerId,
        ch.name AS charName, ch.level AS charLevel,
        ch.hpCurrent AS charHpCurrent, ch.hpMax AS charHpMax,
        ch.mpCurrent AS charMpCurrent, ch.mpMax AS charMpMax
@@ -2107,8 +2085,8 @@ type ListMembersRow struct {
 	ID            int64  `json:"id"`
 	Campaignid    int64  `json:"campaignid"`
 	Characterid   int64  `json:"characterid"`
-	Role          string `json:"role"`
 	Addedat       string `json:"addedat"`
+	Charownerid   int64  `json:"charownerid"`
 	Charname      string `json:"charname"`
 	Charlevel     int64  `json:"charlevel"`
 	Charhpcurrent int64  `json:"charhpcurrent"`
@@ -2118,6 +2096,9 @@ type ListMembersRow struct {
 }
 
 // campaign members (B.4)
+// O ownerId do PERSONAGEM entra na ALE-287, e ele substitui a coluna `role`.
+// Quem mestra e o DONO da campanha, e essa e a mesma verdade que o `roleIn`
+// usa para autorizar -- ver a razao no `one_view.go`.
 func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMembersRow, error) {
 	rows, err := q.db.QueryContext(ctx, listMembers, campaignid)
 	if err != nil {
@@ -2131,8 +2112,8 @@ func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMemb
 			&i.ID,
 			&i.Campaignid,
 			&i.Characterid,
-			&i.Role,
 			&i.Addedat,
+			&i.Charownerid,
 			&i.Charname,
 			&i.Charlevel,
 			&i.Charhpcurrent,
@@ -2784,28 +2765,6 @@ type SetItemQuantityParams struct {
 func (q *Queries) SetItemQuantity(ctx context.Context, arg SetItemQuantityParams) error {
 	_, err := q.db.ExecContext(ctx, setItemQuantity, arg.Quantity, arg.ID)
 	return err
-}
-
-const setMemberRole = `-- name: SetMemberRole :one
-UPDATE campaign_members SET role = ?1 WHERE id = ?2 RETURNING id, campaignid, characterid, role, addedat
-`
-
-type SetMemberRoleParams struct {
-	Role string `json:"role"`
-	ID   int64  `json:"id"`
-}
-
-func (q *Queries) SetMemberRole(ctx context.Context, arg SetMemberRoleParams) (CampaignMember, error) {
-	row := q.db.QueryRowContext(ctx, setMemberRole, arg.Role, arg.ID)
-	var i CampaignMember
-	err := row.Scan(
-		&i.ID,
-		&i.Campaignid,
-		&i.Characterid,
-		&i.Role,
-		&i.Addedat,
-	)
-	return i, err
 }
 
 const setMpCurrent = `-- name: SetMpCurrent :exec

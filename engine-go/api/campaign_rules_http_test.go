@@ -44,7 +44,7 @@ func newRulesFixture(t *testing.T) rulesFixture {
 func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 	t.Helper()
 	if _, err := f.s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: f.pc, Role: "player", Addedat: plataforma.NowISO(),
+		Campaignid: campaignID, Characterid: f.pc, Addedat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("entrar na campanha %d: %v", campaignID, err)
 	}

@@ -1756,6 +1756,73 @@ anteriores a cada vez.
 > apontando para a porta errada atrás de proxy, e link de convite existe para ser
 > mandado a outra pessoa — host errado é link morto.
 
+## A coluna que não decidia nada (ALE-287)
+
+`campaign_members.role` valia `'player'` em **toda linha que a produção
+escreveu**: o único escritor fixava a string, e o `SetMemberRole` nunca teve
+chamador. E a autorização **nunca a leu** — o `roleIn` decide por "é o dono da
+campanha?", então escrever `'gm'` ali não mudaria nada do que a pessoa pode
+fazer.
+
+Ela era lida em quatro lugares, e os quatro estavam DESLIGADOS sem ninguém
+saber:
+
+| onde | o que devia fazer | o que fazia |
+| --- | --- | --- |
+| ordenação do elenco | o mestre primeiro | `a.Role == b.Role` sempre verdadeiro → ordem de entrada |
+| `heroRow` | coroa ao lado do mestre | nunca desenhada |
+| `tableRoster` | tirar o PC do mestre do grupo | nunca tirou ninguém |
+| `listPlayerCombatants` | o mesmo, no popular-iniciativa | idem |
+
+### Dois testes VERDES sobre comportamento que não existia
+
+O `seedMember` da bancada recebia um papel e escrevia `"gm"` — **um estado que só
+ela sabia produzir**. Dois casos passavam por causa disso: o
+`TestTheGmComesFirstInTheCast`, que afirmava uma ordenação que a produção nunca
+fez, e o `TestListMemberHelpers`, que esperava 2 combatentes onde a produção
+sempre devolveu 3.
+
+É a mesma família do convite desta mesma issue, e as duas moravam no mesmo
+arquivo de fixture: **quando a bancada escreve o que a produção não escreve, o
+verde é sobre a bancada.** O sinal de alerta é uma fixture com um parâmetro que
+nenhum caminho de produção sabe variar.
+
+### O que substituiu
+
+A coluna saiu, e a coroa e a ordenação passaram a perguntar `ch.ownerId ==
+campaigns.ownerId` — a **mesma verdade** que o `roleIn` usa para autorizar. Uma
+regra, uma camada: a tela e a autorização não podem mais divergir sobre quem
+mestra.
+
+Os dois filtros de grupo (`tableRoster` e `listPlayerCombatants`) saíram **sem
+virar a condição verdadeira**, e isso é deliberado: tornar real um filtro que
+nunca filtrou MUDARIA o que a mesa mostra, e isso é decisão de produto, não de
+quem apaga uma coluna morta.
+
+### O `DROP COLUMN` passou pelo sqlc — e é a exceção da família
+
+O guia avisa que `ALTER TABLE … ADD COLUMN` de um arquivo de migração NOVO não
+entra no catálogo do sqlc (v1.31.1), e que trocar chave primária também não.
+**O `DROP COLUMN` entra**: o `Role` sumiu do `models.go` e das consultas na
+primeira geração. Medido nesta issue, no mesmo sqlc.
+
+O que exigiu cuidado foi outra coisa: um `SELECT *` teria continuado a pedir a
+coluna. Aqui não houve porque as três consultas que a tocavam de perto —
+`GetMember` (`SELECT *`), `AddMember` e `SetMemberRole` — tinham **zero
+chamadores** e saíram junto, pela regra da ALE-277.
+
+### E o `seed.sql` é gerado, mas foi editado à mão
+
+O `cmd/seed` dirige a aplicação por HTTP (`/auth/register`, `POST /characters`,
+`/characters/{id}/spells`…), e a ALE-277 apagou **todas** essas rotas: o gerador
+não roda. O `seed.sql` commitado continua válido como SQL, então o app e o e2e
+semeiam normalmente — o que não dá para fazer é REGERAR.
+
+Por isso as nove linhas de `campaign_members` foram editadas no arquivo, e o
+gerador foi corrigido junto para quando ele voltar a rodar. Conferido que a
+regra derivada reproduz o mesmo desenho: na campanha 1, o único membro cujo
+personagem é do dono é justamente o que estava marcado `'gm'`.
+
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 
 Ele tinha **89 métodos exportados**, e todos existiam por um motivo só: cumprir

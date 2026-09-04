@@ -658,15 +658,15 @@ INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared",
 INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (41, 15, 'voz-divina', 0, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (42, 15, 'tempestade-divina', 0, '2026-01-01T00:00:00.000Z');
 
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (1, 1, 1, 'gm', '2026-07-01T12:00:00.000Z');
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (2, 1, 13, 'player', '2026-07-01T12:00:00.000Z');
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (3, 1, 14, 'player', '2026-07-01T12:00:00.000Z');
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (4, 1, 15, 'player', '2026-07-01T12:00:00.000Z');
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (5, 1, 10, 'player', '2026-07-01T12:00:00.000Z');
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (6, 5, 1, 'player', '2026-07-01T12:00:00.000Z');
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (7, 5, 2, 'player', '2026-07-01T12:00:00.000Z');
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (8, 5, 3, 'player', '2026-07-01T12:00:00.000Z');
-INSERT INTO campaign_members ("id", "campaignId", "characterId", "role", "addedAt") VALUES (9, 6, 8, 'player', '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (1, 1, 1, '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (2, 1, 13, '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (3, 1, 14, '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (4, 1, 15, '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (5, 1, 10, '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (6, 5, 1, '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (7, 5, 2, '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (8, 5, 3, '2026-07-01T12:00:00.000Z');
+INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (9, 6, 8, '2026-07-01T12:00:00.000Z');
 
 INSERT INTO sessions ("id", "campaignId", "title", "sessionNumber", "notes", "status", "startedAt", "endedAt", "createdAt", "updatedAt", "runtimeState") VALUES (1, 1, 'A emboscada na ponte', 1, NULL, 'ended', '2026-07-11T19:00:00.000Z', '2026-07-11T23:10:00.000Z', '2026-07-11T19:00:00.000Z', '2026-07-11T19:00:00.000Z', '{"initiative":[],"round":0,"turnIndex":-1}');
 INSERT INTO sessions ("id", "campaignId", "title", "sessionNumber", "notes", "status", "startedAt", "endedAt", "createdAt", "updatedAt", "runtimeState") VALUES (2, 1, 'O covil do necromante', 2, NULL, 'ended', '2026-07-25T19:00:00.000Z', '2026-07-25T23:40:00.000Z', '2026-07-25T19:00:00.000Z', '2026-07-25T19:00:00.000Z', '{"initiative":[],"round":0,"turnIndex":-1}');

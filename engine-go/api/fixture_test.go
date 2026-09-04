@@ -68,7 +68,7 @@ func novoPiloto(t *testing.T) pilotoFixture {
 	campaignID := seedCampaign(t, s, mestre)
 	sessionID := seedSession(t, s, campaignID)
 	charID := seedCharacterAtLevel(t, s, jogador, "Arcanista", 8, 20, 30, 5, 10)
-	seedMember(t, s, campaignID, charID, "player")
+	seedMember(t, s, campaignID, charID)
 	if _, err := s.queries.CreateExpertise(context.Background(), sqlcgen.CreateExpertiseParams{
 		Characterid: charID, Name: "Iniciativa", Attribute: "dexterity", Trained: 0, Custom: 0,
 	}); err != nil {
