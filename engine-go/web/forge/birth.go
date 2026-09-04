@@ -73,7 +73,7 @@ func forgeRefusals(folha forgeAnswers) plataforma.FieldErrorMap {
 	return erros
 }
 
-// aRecusaDaEscolha separa "não escolheu" de "escolheu o que não existe".
+// choiceRefusal separa "não escolheu" de "escolheu o que não existe".
 //
 // As duas voltam no mesmo campo e não dizem a mesma coisa: em branco é um passo
 // que falta, e um valor desconhecido só chega por POST feito na mão ou por
@@ -165,7 +165,7 @@ func classByName(nome string) *book.Class {
 	return nil
 }
 
-// oNascimento cria o herói da folha e devolve o id dele.
+// birthHero cria o herói da folha e devolve o id dele.
 //
 // Assume a folha JÁ conferida por `forgeRefusals` — quem chama recusa antes.
 func (s Scene) birthHero(r *http.Request, ownerID int64, folha forgeAnswers) (int64, error) {

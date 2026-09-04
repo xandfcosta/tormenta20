@@ -324,7 +324,7 @@ func aprendidasEscrito(n int) string {
 	return strconv.Itoa(n) + " aprendidas"
 }
 
-// oSinalDoAprimoramento é o sinal que guarda a pilha de um aprimoramento.
+// augmentSignal é o sinal que guarda a pilha de um aprimoramento.
 //
 // São SEIS, reaproveitados por todas as magias, e não um por magia: só um
 // diálogo abre por vez, e seis é o máximo do catálogo (Conjurar Monstro). Um
@@ -334,7 +334,7 @@ func augmentSignal(indice int) string {
 	return "$aug" + strconv.Itoa(indice)
 }
 
-// oGestoQueAbreOConjurar ZERA as pilhas antes de abrir.
+// thatOpensCastGesture ZERA as pilhas antes de abrir.
 //
 // Quem TROCA de item limpa, e não quem gera — a regra do "remendo em nó
 // compartilhado" do guia do Go. Sem isto, a pilha escolhida numa magia
@@ -348,7 +348,7 @@ func thatOpensCastGesture(magia learnedSpellRow) string {
 	return limpeza + "$detalhe = 'conjura-" + magia.Command + "'"
 }
 
-// aPreviaDoCusto é a expressão que soma o custo na tela.
+// costPreview é a expressão que soma o custo na tela.
 //
 // Ela é PRÉVIA e não decisão: quem recusa é o servidor, com a regra inteira — o
 // teto da p224, a redução de custo por item e o PM disponível. Escrever a regra

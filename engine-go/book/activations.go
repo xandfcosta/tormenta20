@@ -48,7 +48,7 @@ type Activation struct {
 	BookPage     int              `json:"bookPage"`
 }
 
-// escalaDaAtivacao é a postura que sobe de degrau com o nível.
+// ActivationScale é a postura que sobe de degrau com o nível.
 type ActivationScale struct {
 	BasePm          int    `json:"basePm"`
 	StepPm          int    `json:"stepPm"`
@@ -57,7 +57,7 @@ type ActivationScale struct {
 	StepEveryLevels int    `json:"stepEveryLevels"`
 }
 
-// concessaoDoPoder é o que a ativação APLICA na ficha — o único caso hoje é a
+// PowerGrant é o que a ativação APLICA na ficha — o único caso hoje é a
 // reserva de PV temporários da Alma de Bronze.
 type PowerGrant struct {
 	Kind      string `json:"kind"`
@@ -92,7 +92,7 @@ func Activations() []Activation {
 	return lista
 }
 
-// aAtivacaoDe acha a ativação de um poder pelo ID e, se falhar, pelo NOME.
+// ActivationOf acha a ativação de um poder pelo ID e, se falhar, pelo NOME.
 //
 // A queda para o nome não é preguiça: os poderes de classe seguem a convenção
 // `class.<classe>.<slug>` e casam por id, mas as habilidades de raça e os
@@ -118,7 +118,7 @@ func ActivationOf(id, nome string) *Activation {
 	return nil
 }
 
-// semOSufixoDoDegrau tira o " +N" do fim de "Inspiração +2".
+// suffixStepSem tira o " +N" do fim de "Inspiração +2".
 func suffixStepSem(nome string) string {
 	if len(nome) < 4 {
 		return nome

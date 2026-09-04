@@ -25,7 +25,7 @@ import (
 
 // ── o LIMITE de usos ─────────────────────────────────────────────────────────
 
-// oEscopoCobrado é "scene", "day" ou "" — e "" quer dizer que o limite existe
+// chargedScope é "scene", "day" ou "" — e "" quer dizer que o limite existe
 // no livro e a ficha NÃO o cobra.
 func chargedScope(spec book.Activation) string {
 	switch string(spec.Uses) {
@@ -37,7 +37,7 @@ func chargedScope(spec book.Activation) string {
 	return ""
 }
 
-// oCrachaDoLimite é o que a tela escreve do limite: "1/cena", "3/dia", ou "".
+// limitBadge é o que a tela escreve do limite: "1/cena", "3/dia", ou "".
 func limitBadge(spec book.Activation) string {
 	cru := string(spec.Uses)
 	switch cru {
@@ -57,13 +57,13 @@ func limitBadge(spec book.Activation) string {
 	return ""
 }
 
-// ehCustoVariavel diz se o PM do poder não é um número — "PM variável" na tela,
+// costVariableEh diz se o PM do poder não é um número — "PM variável" na tela,
 // e o servidor recusa cobrar por ele: quem sabe o total é a mesa.
 func costVariableEh(spec book.Activation) bool {
 	return activationPm(spec) < 0
 }
 
-// oPmDaAtivacao é o custo em PM, ou -1 quando ele é variável.
+// activationPm é o custo em PM, ou -1 quando ele é variável.
 //
 // Menos um e não zero: zero é um custo LEGÍTIMO (a maioria das passivas), e
 // confundir os dois é o que faria um poder de graça ser tratado como negociado
@@ -78,7 +78,7 @@ func activationPm(spec book.Activation) int {
 
 // ── a DECISÃO de usar ────────────────────────────────────────────────────────
 
-// aDecisaoDoUso responde se o poder pode ser usado AGORA, e por que não.
+// useDecision responde se o poder pode ser usado AGORA, e por que não.
 //
 // A ordem das recusas é a da tela antiga, e ela importa: a razão mostrada é a
 // PRIMEIRA que barra, então "requer Fúria" aparece antes de "PM insuficiente"
@@ -107,7 +107,7 @@ func useDecision(spec book.Activation, contexto useContext) (bool, string) {
 	return true, ""
 }
 
-// contextoDoUso é o que a decisão precisa saber da ficha AGORA.
+// useContext é o que a decisão precisa saber da ficha AGORA.
 type useContext struct {
 	PmAtual     int
 	UsadoNaCena int
@@ -117,7 +117,7 @@ type useContext struct {
 
 // ── a POSTURA de degraus ─────────────────────────────────────────────────────
 
-// osDegrausDoNivel são os degraus EXTRAS que o nível na classe concede.
+// levelSteps são os degraus EXTRAS que o nível na classe concede.
 //
 // O nível é o da CLASSE e não o do personagem (p40): um bárbaro 5/ladino 5 tem
 // a Fúria de um bárbaro de nível 5, e não a de um personagem de nível 10.
@@ -128,7 +128,7 @@ func levelSteps(escala book.ActivationScale, nivelNaClasse int) int {
 	return 1 + (nivelNaClasse-escala.FirstStepLevel)/escala.StepEveryLevels
 }
 
-// oCustoDaPostura é o que entrar custa com os degraus escolhidos.
+// stanceCost é o que entrar custa com os degraus escolhidos.
 func stanceCost(spec book.Activation, degraus int) int {
 	if spec.Scaling == nil {
 		return activationPm(spec)
@@ -136,7 +136,7 @@ func stanceCost(spec book.Activation, degraus int) int {
 	return spec.Scaling.BasePm + degraus*spec.Scaling.StepPm
 }
 
-// aDecisaoDaPostura responde se dá para entrar na postura com esses degraus.
+// stanceDecision responde se dá para entrar na postura com esses degraus.
 func stanceDecision(spec book.Activation, degraus, maximo, pmAtual int) (bool, string) {
 	if degraus < 0 || degraus > maximo {
 		return false, "o nível permite até " + strconv.Itoa(maximo) + " degraus"

@@ -55,7 +55,7 @@ var (
 	poderesGeraisPorID    map[string]GeneralPower
 )
 
-// osCatalogosDePoder lê os três catálogos UMA vez, indexados por id.
+// PowerCatalogs lê os três catálogos UMA vez, indexados por id.
 //
 // Por id e não por lista porque toda pergunta desta aba é "quem é este id" — a
 // varredura linear que a Mochila faz custaria 462 comparações por poder numa

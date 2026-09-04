@@ -10,7 +10,7 @@ import (
 // ignora acento, os quatro gestos de escrita e a fronteira de cada um. Os
 // NÚMEROS são do motor e já têm o oráculo de paridade.
 
-// oPericioso é uma ficha com perícias de verdade e um ofício inventado.
+// TestTheHeaderSaysTheTrainingForTheLevel é uma ficha com perícias de verdade e um ofício inventado.
 // O TREINO POR NÍVEL tem três degraus, e o cabeçalho os diz.
 func TestTheHeaderSaysTheTrainingForTheLevel(t *testing.T) {
 	casos := []struct {

@@ -37,7 +37,7 @@ func expertiseScreen(t *testing.T, f pilotoFixture, id int64, busca string) stri
 	return f.pede(t, f.jogador, http.MethodGet, alvo, "").Body.String()
 }
 
-// aPericia manda um dos gestos e devolve a tela redesenhada.
+// expertiseAt manda um dos gestos e devolve a tela redesenhada.
 func expertiseAt(t *testing.T, f pilotoFixture, id int64, caminho string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/pericias/%s?tab=expertises", id, caminho)
@@ -48,7 +48,7 @@ func expertiseAt(t *testing.T, f pilotoFixture, id int64, caminho string) string
 	return expertiseScreen(t, f, id, "")
 }
 
-// oTreinoDe lê o que o BANCO guarda, que é a única fonte da verdade do gesto.
+// training lê o que o BANCO guarda, que é a única fonte da verdade do gesto.
 func training(t *testing.T, f pilotoFixture, id int64, nome string) (treinada bool, atributo string) {
 	t.Helper()
 	todas, err := f.s.Queries().ListExpertisesByCharacter(context.Background(), id)

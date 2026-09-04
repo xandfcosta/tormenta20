@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-// efeitoDoLivro é um tipo de efeito — a família que a condição carrega no rodapé.
+// EffectKind é um tipo de efeito — a família que a condição carrega no rodapé.
 type EffectKind struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -12,7 +12,7 @@ type EffectKind struct {
 	BookPage    int    `json:"bookPage"`
 }
 
-// nomeDoEfeito resolve o id que a condição guarda (`tags: ["medo"]`) no nome que
+// EffectName resolve o id que a condição guarda (`tags: ["medo"]`) no nome que
 // se lê. Id desconhecido volta como veio: a tag é dado, e dado envelhece — some
 // o elo, não o rótulo.
 func EffectName(id string) string {
@@ -28,7 +28,7 @@ func EffectFields(e EffectKind) []string { return []string{e.Name, e.Description
 
 // ── escola de magia ──────────────────────────────────────────────────────────
 
-// escolaDeMagia é a família de uma magia (T20 p172). Ela mora aqui, ao lado do
+// SpellSchool é a família de uma magia (T20 p172). Ela mora aqui, ao lado do
 // tipo de efeito, porque nasceu pela mesma razão: a magia a CITA, e citação sem
 // destino é texto morto. E as duas coisas se tocam — o livro diz que "escolas de
 // magia contam como tipos de efeitos".
@@ -42,7 +42,7 @@ type SpellSchool struct {
 	BookPage int    `json:"bookPage"`
 }
 
-// nomeDaEscola resolve o id que a magia guarda ("evocacao") no nome que se lê.
+// SchoolName resolve o id que a magia guarda ("evocacao") no nome que se lê.
 //
 // Sai do CATÁLOGO e não de uma tabela no código, e isso é o conserto de uma
 // duplicação que eu mesmo criei duas horas antes: escrevi as oito à mão para

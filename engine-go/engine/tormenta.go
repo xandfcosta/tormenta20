@@ -44,7 +44,7 @@ func tormentaCarismaLoss(in *CharacterInput) int {
 	return carismaLossFromPowers(count)
 }
 
-// expertiseNameToSkillID mirrors deformidade.ts: NFD-strip + lowercase, then
+// expertiseToSkill mirrors deformidade.ts: NFD-strip + lowercase, then
 // match against skillIndex. The bundled table covers the accented PT names.
 var expertiseToSkill = map[string]string{
 	"acrobacia": "acrobacia", "adestramento": "adestramento", "atletismo": "atletismo",

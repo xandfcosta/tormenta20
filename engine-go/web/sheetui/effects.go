@@ -113,7 +113,7 @@ type alwaysOnRow struct {
 
 // ── as posturas, lidas do catálogo ───────────────────────────────────────────
 
-// stanceByFlag é a postura de cada flag: `furia` → Fúria, 2 PM, p40.
+// stanceOfBook é a postura de cada flag: `furia` → Fúria, 2 PM, p40.
 type stanceOfBook struct {
 	Flag string
 	Name string
@@ -153,7 +153,7 @@ func stancesFromCatalog() map[string]stanceOfBook {
 	return stancesByFlag
 }
 
-// degrauDaPostura acha o sufixo do DEGRAU quando a postura não declara a flag no
+// stanceStep acha o sufixo do DEGRAU quando a postura não declara a flag no
 // poder de id exato.
 //
 // O catálogo trata as duas posturas de formas DIFERENTES, e isso é achado desta
@@ -373,7 +373,7 @@ func targetLabel(t engine.ModifierTarget) string {
 	return nome
 }
 
-// oComplementoDoAlvo é o que vem entre parênteses depois do alvo.
+// targetComplement é o que vem entre parênteses depois do alvo.
 //
 // O escopo `this` NÃO vira texto: o crachá está desenhado no próprio item, e
 // "Ataque (deste item)" repete em palavras o que a posição já diz. Os outros
@@ -524,7 +524,7 @@ func conditionalLabel(c engine.ConditionalEffect) string {
 	return targetLabel(c.Target)
 }
 
-// osEfeitosAtivosEscrito é a linha que o leitor de tela ouve no lugar da pílula
+// activeWrittenEffects é a linha que o leitor de tela ouve no lugar da pílula
 // de contagem, com o singular certo. Um "1" solto é lido como "1", e o número
 // sozinho não diz de quê.
 func activeWrittenEffects(n int) string {

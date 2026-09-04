@@ -118,7 +118,7 @@ func Creatures() []Entry {
 	return bestiario
 }
 
-// filtroDeCriaturas são os quatro critérios da tela.
+// CreatureFilter são os quatro critérios da tela.
 type CreatureFilter struct {
 	Busca string
 	// Tipos VAZIO significa TODOS, e não nenhum. É a convenção da tela: sem
@@ -134,7 +134,7 @@ const (
 	CRMax = 20.0
 )
 
-// filtraCriaturas aplica os critérios e ORDENA por ND e depois por nome.
+// FilterCreatures aplica os critérios e ORDENA por ND e depois por nome.
 //
 // A ordem é regra e não apresentação: o mestre procura por desafio, e uma lista
 // alfabética o faria ler 80 linhas para achar as de ND 3.
@@ -259,7 +259,7 @@ func SizeName(t string) string {
 	return t
 }
 
-// xpDoND é o XP de tesouro derivado do ND.
+// XPForCR é o XP de tesouro derivado do ND.
 //
 // Portado do `xpForNd` da SPA, que cita Cap 8 p326 — a página é herdada dali e
 // eu NÃO a reconferi contra o livro nesta fatia, o que fica dito porque o guia
@@ -271,7 +271,7 @@ func XPForCR(nd float64) int {
 
 // ── a cena ───────────────────────────────────────────────────────────────────
 
-// verbetePorID acha a criatura do livro, ou nil.
+// EntryByID acha a criatura do livro, ou nil.
 //
 // Nil e não erro: quem chama decide o que dizer. O painel da Mesa recusa a
 // entrada com o id na frase, porque ali um id desconhecido só chega por adulteração.

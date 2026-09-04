@@ -87,7 +87,7 @@ func ProficiencyKeys() []string {
 	return chaves
 }
 
-// asProficienciasPorClasse é a tabela do livro, lida do catálogo de classes.
+// ProficienciesByClass é a tabela do livro, lida do catálogo de classes.
 //
 // Ela sai de `catalog/data/classes.json` e não de um `map` escrito em Go pelo
 // mesmo motivo das perícias de classe: é DADO TRANSCRITO — a linha

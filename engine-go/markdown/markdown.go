@@ -25,7 +25,7 @@ import (
 // árvore com a que o JS produz, a partir de um oráculo gerado por
 // `api/testdata/markdown-do-js.json`, que hoje é linha de base congelada.
 
-// mdSpan é um trecho de uma linha. `Href` só existe em `elo`.
+// Span é um trecho de uma linha. `Href` só existe em `elo`.
 //
 // As etiquetas JSON são as do TS de propósito: é o que deixa o teste comparar
 // as duas árvores sem uma terceira tradução no meio.
@@ -35,7 +35,7 @@ type Span struct {
 	Href string `json:"href,omitempty"`
 }
 
-// mdTarefa é o estado de um `- [ ]`, com a LINHA de origem junto.
+// Task é o estado de um `- [ ]`, com a LINHA de origem junto.
 //
 // A linha não é enfeite: é ela que deixa o clique no quadrinho reescrever o
 // texto do mestre. Sem ela o controle seria decorativo e o estado moraria fora
@@ -50,7 +50,7 @@ type Item struct {
 	Tarefa *Task  `json:"task,omitempty"`
 }
 
-// mdBloco é um bloco da nota. `Kind` diz qual dos campos vale — uma struct só
+// Block é um bloco da nota. `Kind` diz qual dos campos vale — uma struct só
 // em vez de uma interface porque quem consome é um `switch` de template, e uma
 // hierarquia de tipos aqui compraria indireção sem comprar nada.
 type Block struct {
@@ -74,9 +74,9 @@ var (
 	mdHTTP     = regexp.MustCompile(`(?i)^https?://`)
 )
 
-// parseNota traduz o texto da nota na árvore que a tela desenha.
+// Parse traduz o texto da nota na árvore que a tela desenha.
 //
-// @example parseNota("# Cena 1\n- Ogro **fugiu**")
+// @example Parse("# Cena 1\n- Ogro **fugiu**")
 func Parse(fonte string) []Block {
 	blocos := []Block{}
 	var paragrafo []string
@@ -105,7 +105,7 @@ func Parse(fonte string) []Block {
 	return blocos
 }
 
-// blocoDeUmaLinha resolve os três blocos que cabem numa linha só. Falso devolve
+// oneLineBlock resolve os três blocos que cabem numa linha só. Falso devolve
 // a decisão a quem chamou — lista precisa de várias linhas, e o resto é texto.
 func oneLineBlock(linha string) (Block, bool) {
 	if m := mdTitulo.FindStringSubmatch(linha); m != nil {
@@ -120,7 +120,7 @@ func oneLineBlock(linha string) (Block, bool) {
 	return Block{}, false
 }
 
-// fechaParagrafo despeja as linhas acumuladas num bloco.
+// closeParagraph despeja as linhas acumuladas num bloco.
 //
 // CADA LINHA DIGITADA É UMA LINHA NA TELA (ALE-122). Numa nota de mesa a quebra
 // é intencional, e juntá-las como o markdown padrão manda transformava trinta
@@ -137,7 +137,7 @@ func closeParagraph(blocos []Block, paragrafo []string) ([]Block, []string) {
 	return append(blocos, Block{Kind: "paragraph", Linhas: linhas}), nil
 }
 
-// colheALista junta as linhas seguidas de uma lista num bloco só e devolve o
+// gatherList junta as linhas seguidas de uma lista num bloco só e devolve o
 // índice da ÚLTIMA consumida — itens soltos viravam um bloco por linha, e a
 // marcação de lista se perdia.
 func gatherList(linhas []string, inicio int) (Block, int) {
@@ -171,7 +171,7 @@ func listItem(linha string, indice int, texto string) Item {
 	}
 }
 
-// parseTrechos quebra uma linha nos trechos marcados, deixando o resto como
+// parseSpans quebra uma linha nos trechos marcados, deixando o resto como
 // texto.
 func parseSpans(texto string) []Span {
 	spans := []Span{}
@@ -193,7 +193,7 @@ func parseSpans(texto string) []Span {
 	return joinTexts(spans)
 }
 
-// juntaOsTextos cola textos vizinhos.
+// joinTexts cola textos vizinhos.
 //
 // Um trecho RECUSADO — um link que não é http, um parêntese fechando cedo — sai
 // partido em dois pedaços de texto, e o que o mestre escreveu tem de voltar
@@ -223,7 +223,7 @@ func markedSpan(token string) Span {
 	return Span{Kind: "em", Text: token[1 : len(token)-1]}
 }
 
-// trechoDeElo aceita SÓ http(s). Um `javascript:` vira TEXTO e não um link
+// linkSpan aceita SÓ http(s). Um `javascript:` vira TEXTO e não um link
 // morto: quem escreveu vê o que escreveu, e nada navegável sai daqui.
 func linkSpan(token string) Span {
 	m := mdElo.FindStringSubmatch(token)
@@ -233,14 +233,14 @@ func linkSpan(token string) Span {
 	return Span{Kind: "link", Text: m[1], Href: m[2]}
 }
 
-// alternaTarefa marca ou desmarca a tarefa da linha, devolvendo o texto novo —
+// ToggleTask marca ou desmarca a tarefa da linha, devolvendo o texto novo —
 // o estado do quadrinho mora NA NOTA, e não ao lado dela.
 //
 // Linha que não é tarefa, ou fora da faixa, devolve a fonte INTACTA: o pedido
 // veio de um clique numa tela que pode estar um remendo atrás, e reescrever por
 // palpite estragaria a nota de quem está digitando.
 //
-// @example alternaTarefa("- [ ] dar XP", 0, true) // "- [x] dar XP"
+// @example ToggleTask("- [ ] dar XP", 0, true) // "- [x] dar XP"
 func ToggleTask(fonte string, linha int, marcada bool) string {
 	linhas := strings.Split(strings.ReplaceAll(fonte, "\r\n", "\n"), "\n")
 	if linha < 0 || linha >= len(linhas) {
@@ -262,5 +262,5 @@ func ToggleTask(fonte string, linha int, marcada bool) string {
 	return strings.Join(linhas, "\n")
 }
 
-// mdQuadrinho é só o `[ ]`/`[x]`, para a troca não tocar no resto da linha.
+// checkbox é só o `[ ]`/`[x]`, para a troca não tocar no resto da linha.
 var checkbox = regexp.MustCompile(`\[[ xX]\]`)

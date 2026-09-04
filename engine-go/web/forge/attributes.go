@@ -29,7 +29,7 @@ import (
 // nada: ela pergunta se o espalhamento resultante tem reclamação e, se tiver,
 // não grava.
 
-// asLabelsDosAtributos são os nomes que a pessoa lê. Ficam aqui porque o motor
+// attributeLabels são os nomes que a pessoa lê. Ficam aqui porque o motor
 // fala `strength`, que é identificador e não texto de tela.
 var attributeLabels = map[string]string{
 	"strength": "Força", "dexterity": "Destreza", "constitution": "Constituição",
@@ -61,7 +61,7 @@ type attributeRow struct {
 	CanLower bool
 }
 
-// handleForjaAtributos desenha a distribuição.
+// handleAttributes desenha a distribuição.
 func (s Scene) handleAttributes(w http.ResponseWriter, r *http.Request) {
 	v, status, err := s.loadAttributes(r, "")
 	if err != nil {
@@ -71,7 +71,7 @@ func (s Scene) handleAttributes(w http.ResponseWriter, r *http.Request) {
 	s.writeAttributes(w, r, v)
 }
 
-// handleForjaAtributoPasso soma o passo a um atributo e redesenha.
+// handleAttributeStep soma o passo a um atributo e redesenha.
 //
 // O passo vai no CAMINHO e não num sinal, como o do vital na ficha: o valor é
 // do botão que foi clicado, e doze botões não disputam um sinal só.
@@ -89,7 +89,7 @@ func (s Scene) handleAttributeStep(w http.ResponseWriter, r *http.Request) {
 	s.writeAttributes(w, r, v)
 }
 
-// mexeNoAtributo grava o espalhamento novo, ou devolve a frase da recusa.
+// stepAttribute grava o espalhamento novo, ou devolve a frase da recusa.
 func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err error) {
 	row, status, err := s.heroOfTheForge(r)
 	if err != nil {
@@ -118,7 +118,7 @@ func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err er
 	return "", http.StatusOK, s.fillPools(r, row.ID)
 }
 
-// aRecusaDaCompra traduz o aviso do motor para a frase que a cena mostra.
+// purchaseRefusal traduz o aviso do motor para a frase que a cena mostra.
 //
 // O motor escreve para quem depura ("compra de pontos: 14 pontos gastos excedem
 // o limite de 10"); a cena fala com quem está criando um herói.
@@ -126,7 +126,7 @@ func purchaseRefusal(aviso string) string {
 	return "Não cabe na compra de pontos (p17): " + aviso
 }
 
-// oEspalhamentoDoHeroi lê os seis atributos base da linha do banco.
+// heroSpread lê os seis atributos base da linha do banco.
 func heroSpread(row sqlcgen.Character) map[string]int {
 	return map[string]int{
 		"strength": int(row.Strength), "dexterity": int(row.Dexterity),
@@ -144,7 +144,7 @@ func (s Scene) saveAttributes(ctx context.Context, id int64, espalhamento map[st
 	})
 }
 
-// oHeroiDaForja acha o herói e confere a POSSE — o mesmo gargalo da ficha:
+// heroOfTheForge acha o herói e confere a POSSE — o mesmo gargalo da ficha:
 // quem não é dono não distribui atributo nenhum.
 func (s Scene) heroOfTheForge(r *http.Request) (sqlcgen.Character, int, error) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
@@ -161,7 +161,7 @@ func (s Scene) heroOfTheForge(r *http.Request) (sqlcgen.Character, int, error) {
 	return row, http.StatusOK, nil
 }
 
-// carregaAtributosDaForja monta a cena a partir do que está gravado.
+// loadAttributes monta a cena a partir do que está gravado.
 func (s Scene) loadAttributes(r *http.Request, recusa string) (attributesView, int, error) {
 	row, status, err := s.heroOfTheForge(r)
 	if err != nil {
@@ -183,7 +183,7 @@ func (s Scene) loadAttributes(r *http.Request, recusa string) (attributesView, i
 	return v, http.StatusOK, nil
 }
 
-// aLinhaDoAtributo monta uma das seis linhas, já dizendo se cada botão cabe.
+// attributeRowOf monta uma das seis linhas, já dizendo se cada botão cabe.
 //
 // Os dois botões são desligados pela MESMA regra que recusaria o clique — a
 // pergunta é feita ao motor com o espalhamento hipotético. Travar na tela é
@@ -200,7 +200,7 @@ func attributeRowOf(
 	}
 }
 
-// oPassoCabe pergunta ao motor se o espalhamento continuaria legal com o passo.
+// stepFits pergunta ao motor se o espalhamento continuaria legal com o passo.
 func stepFits(chave string, espalhamento map[string]int, passo int) bool {
 	hipotese := make(map[string]int, len(espalhamento))
 	for k, v := range espalhamento {

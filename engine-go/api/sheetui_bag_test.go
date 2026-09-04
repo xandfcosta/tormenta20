@@ -17,14 +17,14 @@ func bagScreen(t *testing.T, f pilotoFixture, id int64) string {
 		fmt.Sprintf("/personagens/%d?tab=bag", id), "").Body.String()
 }
 
-// oComandoDaMochila dispara um gesto e devolve a recusa, ou "".
+// bagCommand dispara um gesto e devolve a recusa, ou "".
 func bagCommand(t *testing.T, f pilotoFixture, id int64, caminho string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/%s?tab=bag", id, caminho)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String())
 }
 
-// semeiaItem põe um item na ficha e devolve o id.
+// itemSemeia põe um item na ficha e devolve o id.
 func itemSemeia(t *testing.T, f pilotoFixture, id int64, catalogo, nome string, equipado string) int64 {
 	t.Helper()
 	item, err := f.s.Queries().CreateItem(context.Background(), sqlcgen.CreateItemParams{
@@ -39,7 +39,7 @@ func itemSemeia(t *testing.T, f pilotoFixture, id int64, catalogo, nome string, 
 	return item.ID
 }
 
-// oEquipadoDe lê a coluna direto do banco — o teste não pergunta à tela o que
+// equipped lê a coluna direto do banco — o teste não pergunta à tela o que
 // aconteceu no banco.
 func equipped(t *testing.T, f pilotoFixture, itemID int64) string {
 	t.Helper()

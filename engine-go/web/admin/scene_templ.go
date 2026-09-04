@@ -500,7 +500,7 @@ func serverPanel(v adminView) templ.Component {
 	})
 }
 
-// adminConfirmar é o DESTRUTIVO, e a pergunta que esta superfície existe para
+// confirmDialog é o DESTRUTIVO, e a pergunta que esta superfície existe para
 // responder: confirmação acessível SEM Kobalte.
 //
 // A resposta é o `<dialog>` nativo com `showModal()`, e ele entrega de graça o

@@ -116,7 +116,7 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, sinais Signa
 	return s.deps.SaveItemOverlays(r.Context(), item.ID, sinais.ItemMelhorias, sinais.ItemMaterial)
 }
 
-// aQuantidadePedida lê a quantidade, com as mesmas bordas da API JSON.
+// askedQuantity lê a quantidade, com as mesmas bordas da API JSON.
 func askedQuantity(sinais Signals) (int64, error) {
 	if sinais.ItemQtd == nil {
 		return 1, nil
@@ -127,7 +127,7 @@ func askedQuantity(sinais Signals) (int64, error) {
 	return *sinais.ItemQtd, nil
 }
 
-// oItemCustomPedido lê nome, quantidade e espaços, com as bordas do formulário.
+// customRequestItem lê nome, quantidade e espaços, com as bordas do formulário.
 //
 // Os ESPAÇOS são múltiplos de meio porque é assim que o livro conta carga
 // (p141) — e essa é a mesma borda que a API JSON cobra, `sheet.SlotsNotMultiple`.
@@ -215,12 +215,12 @@ func saveEquipped(r *http.Request, s Scene, itemID int64, valor sql.NullString) 
 	return s.deps.SaveEquipped(r.Context(), itemID, valor)
 }
 
-// ehSlotDeEquipar aceita só os três lugares do livro.
+// slotEquipEh aceita só os três lugares do livro.
 func slotEquipEh(slot string) bool {
 	return slot == "vested" || slot == "wielded" || slot == "wielded2"
 }
 
-// oItemDaFicha lê o item do caminho e CONFERE que ele é desta ficha.
+// sheetItem lê o item do caminho e CONFERE que ele é desta ficha.
 //
 // A posse do personagem já foi conferida pelo `sheetCommand`; o que falta é a
 // do item, e sem ela um id de outra ficha passaria — a consulta é por id e o

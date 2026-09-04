@@ -75,7 +75,7 @@ func Matches(campos []string, busca string) bool {
 	return false
 }
 
-// casaUmCampo aplica as duas regras, da mais barata para a mais cara.
+// matchesField aplica as duas regras, da mais barata para a mais cara.
 func matchesField(campo, alvo string) bool {
 	if strings.Contains(campo, alvo) {
 		return true
@@ -83,7 +83,7 @@ func matchesField(campo, alvo string) bool {
 	return isSubsequence(campo, alvo)
 }
 
-// ehSubsequencia é a tolerância a typo, e ela é DELIBERADAMENTE frouxa numa
+// isSubsequence é a tolerância a typo, e ela é DELIBERADAMENTE frouxa numa
 // direção só: aceita letras faltando ("ncromante" acha "Necromante"), não
 // aceita letras trocadas nem sobrando.
 //
@@ -157,7 +157,7 @@ func Score(nome, busca string) int {
 	return soma / len(termos)
 }
 
-// pontuaTermo é a escada, do casamento mais forte para o mais fraco.
+// scoreTerm é a escada, do casamento mais forte para o mais fraco.
 func scoreTerm(campo, termo string) int {
 	switch {
 	case campo == termo:
@@ -174,7 +174,7 @@ func scoreTerm(campo, termo string) int {
 	return 0
 }
 
-// ehQuaseIgual é a tolerância a typo APERTADA, e ela existe porque a frouxa não
+// isNearlyEqual é a tolerância a typo APERTADA, e ela existe porque a frouxa não
 // serve aqui.
 //
 // O `ehSubsequencia` aceita letras faltando em qualquer lugar, e o comentário
@@ -204,7 +204,7 @@ func isNearlyEqual(campo, alvo string) bool {
 	return false
 }
 
-// buracoAte conta quantas letras foram PULADAS até casar o alvo inteiro, e
+// noMatch conta quantas letras foram PULADAS até casar o alvo inteiro, e
 // devolve `noMatch` quando o alvo acaba sem casar.
 //
 // O sentinela é uma CONSTANTE, e isso é conserto de um vermelho: a primeira
@@ -232,7 +232,7 @@ func gapUntil(letras, procurado []rune) int {
 	return noMatch
 }
 
-// comecaUmaPalavra procura o termo no COMEÇO de qualquer palavra.
+// startsAWord procura o termo no COMEÇO de qualquer palavra.
 //
 // É o que põe "Bola de Fogo" acima de "Explosão de Fogo Congelante" quando se
 // digita "fogo": as duas contêm o termo, mas numa ele abre a palavra. E é o que
@@ -259,7 +259,7 @@ func startsAWord(campo, alvo string) bool {
 	}
 }
 
-// pontuaTexto é o último recurso: o termo aparece no CORPO da regra.
+// ScoreText é o último recurso: o termo aparece no CORPO da regra.
 //
 // Dez é deliberadamente baixo e sem graus: achar "camuflagem" no efeito de uma
 // magia é um acerto de verdade, e ainda assim vale menos que qualquer casamento

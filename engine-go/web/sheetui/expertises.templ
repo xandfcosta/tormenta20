@@ -23,7 +23,7 @@ import (
 // resolvedor cai na primeira aba. É a sexta armadilha do Datastar, e aqui ela
 // morderia um GET, que o guarda de varredura dos comandos não olha.
 
-// oPainelDePericias é a seção inteira.
+// expertisePanelBody é a seção inteira.
 templ expertisePanelBody(v View) {
 	<section class="flex min-h-0 flex-1 flex-col">
 		<div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
@@ -63,7 +63,7 @@ templ expertisePanelBody(v View) {
 	@craftDialog(v)
 }
 
-// aBuscaDePericia é o campo que filtra a lista.
+// expertiseTerm é o campo que filtra a lista.
 //
 // O `__debounce` não é afinação: sem ele isto é uma requisição POR TECLA. 250ms
 // é o que separa "ainda digitando" de "parou de digitar", e é o mesmo número da
@@ -84,7 +84,7 @@ templ expertiseTerm(v View) {
 	</div>
 }
 
-// aLinhaDaPericia é uma perícia: o número, o nome, o atributo e o treino.
+// expertiseRowBody é uma perícia: o número, o nome, o atributo e o treino.
 templ expertiseRowBody(v View, linha expertiseRow) {
 	<div
 		class={ "flex min-w-0 items-center gap-2 rounded-none border border-grimorio-iron p-1.5 transition-colors hover:border-grimorio-gold/50",
@@ -115,7 +115,7 @@ templ expertiseRowBody(v View, linha expertiseRow) {
 	</div>
 }
 
-// oTotalDaPericia é o número, e ele ABRE a decomposição.
+// expertiseTotal é o número, e ele ABRE a decomposição.
 //
 // A FALHA AUTOMÁTICA não tem número para mostrar (p394): o traço carrega o
 // sentido no desenho e o rótulo acessível o diz por extenso. A composição
@@ -140,7 +140,7 @@ templ expertiseTotal(linha expertiseRow) {
 	</button>
 }
 
-// aEstrelaDeSoTreinada marca a perícia que o livro fecha sem treinamento (p115).
+// onlyTrainedStar marca a perícia que o livro fecha sem treinamento (p115).
 //
 // Ela é um `<span>` com `title`, e não um botão com dica: um botão que não faz
 // nada é uma parada muda para quem navega por teclado, e seriam nove delas.
@@ -155,7 +155,7 @@ templ onlyTrainedStar(linha expertiseRow) {
 	</span>
 }
 
-// oSeletorDeAtributo escolhe com QUAL atributo a perícia rola.
+// attributePicker escolhe com QUAL atributo a perícia rola.
 //
 // As opções mostram o modificador FINAL — raça e itens já dentro —, porque um
 // valor cru aqui faria a linha discordar do próprio total.
@@ -175,7 +175,7 @@ templ attributePicker(v View, linha expertiseRow) {
 	</select>
 }
 
-// oBotaoDeTreino liga e desliga o treino.
+// trainingButton liga e desliga o treino.
 templ trainingButton(v View, linha expertiseRow) {
 	<button
 		type="button"
@@ -192,7 +192,7 @@ templ trainingButton(v View, linha expertiseRow) {
 	</button>
 }
 
-// oDetalheDaPericia é a decomposição de UMA perícia.
+// expertiseDetail é a decomposição de UMA perícia.
 templ expertiseDetail(linha expertiseRow) {
 	@overlay(linha.Key, linha.Name, "Scroll", false) {
 		@breakdownRows(linha.Rows)
@@ -212,7 +212,7 @@ templ expertiseDetail(linha expertiseRow) {
 	}
 }
 
-// oDialogoDoOficio cria uma perícia que o livro não tem.
+// craftDialog cria uma perícia que o livro não tem.
 //
 // A TELA DIZ "nova perícia", e NUNCA "ofício" — a palavra é da SPA e é a certa:
 // **Ofício É uma das 29 do livro** (p115), e chamar a perícia inventada de

@@ -28,7 +28,7 @@ import (
 // nada, e some junto o `settledQuery` que existia porque ler o catálogo ainda
 // pendente suspendia o route match e reanimava a cena inteira (ALE-95).
 
-// habilidadeDeRaca é o que o dossiê mostra: nome e uma linha.
+// RaceAbility é o que o dossiê mostra: nome e uma linha.
 type RaceAbility struct {
 	ID          string           `json:"id"`
 	Name        string           `json:"name"`
@@ -42,7 +42,7 @@ type RaceForScreen struct {
 	Abilities []RaceAbility `json:"abilities"`
 }
 
-// aVariante é uma opção de uma habilidade que se escolhe — a Resistência
+// AbilityVariant é uma opção de uma habilidade que se escolhe — a Resistência
 // Elemental do qareen tem seis, a Herança Divina do suraggel tem duas.
 type AbilityVariant struct {
 	ID   string `json:"id"`
@@ -83,7 +83,7 @@ func RaceTraitsByKey() map[string]RaceForScreen {
 	return raceTraitsByID
 }
 
-// habilidadesDaRaca são as primeiras `limite` habilidades da raça, para o
+// RaceAbilities são as primeiras `limite` habilidades da raça, para o
 // dossiê.
 //
 // Raça desconhecida devolve lista vazia, não erro: um personagem com raça

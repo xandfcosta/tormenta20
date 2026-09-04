@@ -8,7 +8,7 @@ package ui
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// tituloDaFolha é a cabeça iluminada de uma folha do tomo: sobrancelha pequena,
+// SheetTitle é a cabeça iluminada de uma folha do tomo: sobrancelha pequena,
 // título em versalete DOURADO e centrado, e um filete dourado embaixo.
 //
 // Portado do `TomeHeading` depois de comparar as duas telas lado a lado — a

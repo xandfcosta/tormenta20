@@ -1180,7 +1180,7 @@ func itemFormDialog(v View, chave, titulo, botao, comando string) templ.Componen
 	})
 }
 
-// osBotoesDeAdicionar são os dois gestos do cabeçalho: catálogo e item custom.
+// bagAddButtons são os dois gestos do cabeçalho: catálogo e item custom.
 func bagAddButtons(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1270,12 +1270,12 @@ func bagAddButtons(v View) templ.Component {
 	})
 }
 
-// oPesoEscrito é "2 × 0,5 espaço = 1", que é o que a carga conta.
+// writtenWeight é "2 × 0,5 espaço = 1", que é o que a carga conta.
 func writtenWeight(ficha itemSheet) string {
 	return strconv.FormatInt(ficha.Quantity, 10) + " × " + ficha.Slots + " espaço = " + ficha.Total
 }
 
-// oComandoDeEquipar escreve o `@post` do lugar escolhido — guardar tem rota
+// equipCommand escreve o `@post` do lugar escolhido — guardar tem rota
 // própria, porque guardar não passa por teto nenhum.
 func equipCommand(v View, ficha itemSheet, lugar equipChoice) string {
 	if lugar.Slot == "" {
@@ -1284,12 +1284,12 @@ func equipCommand(v View, ficha itemSheet, lugar equipChoice) string {
 	return sheetPost(v, "/itens/"+ficha.Command+"/equipa/"+lugar.Slot)
 }
 
-// oSinalDaMelhoria é a expressão que diz se a melhoria está escolhida AGORA.
+// improvementSignal é a expressão que diz se a melhoria está escolhida AGORA.
 func improvementSignal(escolha overlayChoice) string {
 	return "$itemmelhorias.includes('" + escolha.ID + "')"
 }
 
-// oGestoQueAlternaAMelhoria liga ou desliga uma melhoria na lista do sinal.
+// thatTogglesImprovementGesture liga ou desliga uma melhoria na lista do sinal.
 //
 // A lista é COPIADA antes de ser mexida (`[...$itemmelhorias]`): o sinal é um
 // proxy, e escrever dentro dele item a item é a armadilha que o guia do Go
@@ -1300,7 +1300,7 @@ func thatTogglesImprovementGesture(escolha overlayChoice) string {
 		"$itemmelhorias = escolhidas"
 }
 
-// oGestoQueAbreAsMelhorias carrega o que o item JÁ tem antes de abrir.
+// thatOpensTheImprovementsGesture carrega o que o item JÁ tem antes de abrir.
 //
 // Quem TROCA de item limpa: sem isto, as melhorias marcadas numa espada
 // apareceriam marcadas na armadura aberta em seguida — e o botão Aplicar
@@ -1311,7 +1311,7 @@ func thatOpensTheImprovementsGesture(ficha itemSheet) string {
 		"; $detalhe = 'melhorias-" + ficha.Command + "'"
 }
 
-// oGestoQueAbreAEdicao põe os valores atuais no formulário.
+// thatOpensEditGesture põe os valores atuais no formulário.
 func thatOpensEditGesture(ficha itemSheet) string {
 	return "$itemnome = " + strconv.Quote(ficha.Name) +
 		"; $itemqtd = " + strconv.FormatInt(ficha.Quantity, 10) +

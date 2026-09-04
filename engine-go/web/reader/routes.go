@@ -45,7 +45,7 @@ type readerView struct {
 	InDialog bool
 }
 
-// carregaOLeitor lê a URL e recusa o que não faz sentido.
+// readerFromRequest lê a URL e recusa o que não faz sentido.
 //
 // A página vem da URL porque este endereço é COMPARTILHÁVEL: o mestre manda
 // "olha na p289" no chat da mesa, e o link tem de abrir lá. Página fora do livro

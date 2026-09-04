@@ -15,7 +15,7 @@ import (
 // cada bloco. Os NÚMEROS em si são do motor e já têm o oráculo de paridade —
 // repetir aqui a ficha inteira seria a mesma tabela escrita duas vezes.
 
-// oCombatente é uma ficha com atributos e perícias de VERDADE.
+// TestTheDefenseRowsAddUpToTheTotal é uma ficha com atributos e perícias de VERDADE.
 //
 // O `seedCharacterAtLevel` deixa todo atributo em zero, e sobre zeros um painel
 // de combate inteiro fica indistinguível de um painel vazio: "+0" em toda caixa
@@ -144,7 +144,7 @@ func TestTheSpellTripletOnlyShowsForWhoCasts(t *testing.T) {
 	}
 }
 
-// valorDaLinha lê o "+5" de uma linha de volta para inteiro.
+// rowValue lê o "+5" de uma linha de volta para inteiro.
 func rowValue(t *testing.T, texto string) int {
 	t.Helper()
 	var n int

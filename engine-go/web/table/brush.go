@@ -97,7 +97,7 @@ func followsBrush(v BoardView) string {
 // verdade.
 var wideBrush = fmt.Sprintf("$%s = ''", brushSignal)
 
-// squareActsBrush é o corpo compartilhado: traduz o ponto, sai se a casa é a
+// brushActsOnSquare é o corpo compartilhado: traduz o ponto, sai se a casa é a
 // mesma de antes, e manda o TRAÇO daquela até esta.
 //
 // O SEGMENTO e não o ponto, e isso é conserto de um defeito medido: entre dois

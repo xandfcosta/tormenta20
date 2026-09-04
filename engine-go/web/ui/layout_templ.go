@@ -33,7 +33,7 @@ import templruntime "github.com/a-h/templ/runtime"
 // sozinha, e é o que faz duas telas individualmente corretas parecerem de dois
 // aplicativos.
 
-// paginaPiloto é o que a casca precisa saber para montar o `<head>` e o
+// Page é o que a casca precisa saber para montar o `<head>` e o
 // `<body>` em volta de um corpo.
 //
 // O corpo NÃO viaja aqui: ele entra como `templ.Component`, e é essa a
@@ -85,7 +85,7 @@ type Page struct {
 	VoltarRotulo string
 }
 
-// formaDaCasca são as três posturas do `SceneShell` da SPA, e elas se excluem —
+// ShellShape são as três posturas do `SceneShell` da SPA, e elas se excluem —
 // um campo em vez de dois títulos opcionais, porque "TituloVisivel vazio E
 // TituloDaCena cheio" é um estado que não deveria ser representável.
 type ShellShape string

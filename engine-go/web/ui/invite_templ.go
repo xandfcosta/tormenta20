@@ -15,7 +15,7 @@ import templruntime "github.com/a-h/templ/runtime"
 // que os dois deixaram de ser o mesmo pacote. Ele não sabe nada de domínio — só
 // desenha o link que outra pessoa cunhou.
 
-// conviteGerado é o remendo que volta do POST, e ele carrega o CAMINHO do
+// MintedInvite é o remendo que volta do POST, e ele carrega o CAMINHO do
 // convite — nunca a URL inteira.
 //
 // A origem é do NAVEGADOR e não do servidor, e isso é conserto de um defeito
@@ -98,7 +98,7 @@ func MintedInvite(caminho string) templ.Component {
 	})
 }
 
-// dialogoDeConvite cunha o link de conta (ALE-120): o admin gera, entrega, e
+// InviteDialog cunha o link de conta (ALE-120): o admin gera, entrega, e
 // quem recebe escolhe a própria senha — o admin nunca vê senha nenhuma.
 //
 // A ROTA é parâmetro porque o diálogo vive em duas telas e elas precisam de

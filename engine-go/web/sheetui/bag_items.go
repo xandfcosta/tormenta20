@@ -130,7 +130,7 @@ func itemSheetOf(item sheet.ItemDTO, proficiencias map[string]bool) itemSheet {
 	return ficha
 }
 
-// oMaterialAplicado é o material como lista, para a comparação ser uma só.
+// appliedMaterial é o material como lista, para a comparação ser uma só.
 func appliedMaterial(item sheet.ItemDTO) []string {
 	if item.Material == nil || *item.Material == "" {
 		return nil
@@ -138,7 +138,7 @@ func appliedMaterial(item sheet.ItemDTO) []string {
 	return []string{*item.Material}
 }
 
-// osLugaresAlcancaveis são os estados de equipar que fazem sentido, MENOS o
+// reachablePlaces são os estados de equipar que fazem sentido, MENOS o
 // atual — oferecer "Guardar" a um item já guardado é um botão que não faz nada.
 //
 // Item custom não tem eixo no catálogo, então ele aceita os três: não há o que
@@ -155,7 +155,7 @@ func reachablePlaces(item sheet.ItemDTO, catalogo *book.Item) []equipChoice {
 	return fora
 }
 
-// osLugaresDoItem lê o EIXO do livro — `vested`, `wielded` ou `either` — e
+// itemPlaces lê o EIXO do livro — `vested`, `wielded` ou `either` — e
 // devolve o que cabe, incluindo o guardar.
 //
 // As duas mãos só aparecem quando são OBRIGATÓRIAS (`hands: 2`) ou quando
@@ -201,7 +201,7 @@ func contemTraco(tracos []string, alvo string) bool {
 	return false
 }
 
-// oUsoDoConsumivel descreve a dose, ou nil quando o item não se usa.
+// consumableUse descreve a dose, ou nil quando o item não se usa.
 func consumableUse(catalogo book.Item) *consumeChoice {
 	if catalogo.Consumable == nil {
 		return nil
@@ -225,7 +225,7 @@ func writtenScope(escopo string) string {
 	return escopo
 }
 
-// aRolagemQuePedeNumero é o dado que a MESA rola, ou "" quando o ganho é fixo.
+// rollThatAsksANumber é o dado que a MESA rola, ou "" quando o ganho é fixo.
 //
 // Ganho fixo não pergunta nada: perguntar o resultado de um dado que não existe
 // é pedir que a pessoa invente um número.
@@ -236,7 +236,7 @@ func rollThatAsksANumber(ganho *book.GainRoll) string {
 	return ganho.Dice
 }
 
-// oQueOLivroDiz é o bloco de referência da ficha do item.
+// thatSaysBook é o bloco de referência da ficha do item.
 func thatSaysBook(catalogo book.Item) *bookInfo {
 	info := &bookInfo{
 		Categoria: writtenCategory(catalogo.Category),
@@ -274,7 +274,7 @@ func protectionRow(protecao book.Armor, ehArmadura bool) string {
 	return linha + " · leve"
 }
 
-// osTiposDeDanoEscritos é o pt-BR do tipo de dano da arma.
+// damageWrittenKinds é o pt-BR do tipo de dano da arma.
 //
 // O catálogo guarda a CHAVE sem acento (`perfuracao`), como todo id deste
 // projeto; quem lê a ficha lê a palavra do livro. Sem esta tabela a tela
@@ -292,7 +292,7 @@ func damageWrittenKind(tipo string) string {
 	return tipo
 }
 
-// asCategoriasEscritas é o pt-BR de cada categoria do catálogo.
+// writtenCategories é o pt-BR de cada categoria do catálogo.
 //
 // Uma categoria sem tradução cai no próprio id, que é feio e VISÍVEL — melhor
 // que sumir da tela, que é o que uma queda para vazio faria.
@@ -312,7 +312,7 @@ func writtenCategory(id string) string {
 	return id
 }
 
-// asMelhoriasAplicadas são as sobreposições em vigor, com o que elas fazem.
+// appliedImprovements são as sobreposições em vigor, com o que elas fazem.
 func appliedImprovements(item sheet.ItemDTO) []overlayRow {
 	linhas := []overlayRow{}
 	for _, entrada := range sortedImprovements(item) {
@@ -321,7 +321,7 @@ func appliedImprovements(item sheet.ItemDTO) []overlayRow {
 	return linhas
 }
 
-// oResumoDaSobreposicao junta as notas do catálogo numa linha, SEM repetir.
+// overlaySummary junta as notas do catálogo numa linha, SEM repetir.
 //
 // A Equilibrada carrega quatro modificadores de manobra que dividem a mesma
 // nota "+2 em manobras"; juntá-las cruas escrevia a frase quatro vezes.
@@ -338,7 +338,7 @@ func overlaySummary(entrada book.Item) string {
 	return "sem efeito mecânico"
 }
 
-// asSobreposicoesQueCabem são as melhorias (ou materiais) da FAMÍLIA do item.
+// thatFitOverlays são as melhorias (ou materiais) da FAMÍLIA do item.
 //
 // O filtro é o `appliesTo` do catálogo, e ele é a mesma regra que o servidor
 // cobra ao gravar (`fitsItemImprovement`): a lista mostra o que cabe, e quem
@@ -387,7 +387,7 @@ func catalogItemRowsOf(busca, categoria string) []catalogItemRow {
 	return linhas
 }
 
-// asCategoriasDoCatalogo são as opções do seletor do diálogo de adicionar,
+// catalogCategories são as opções do seletor do diálogo de adicionar,
 // lidas do próprio catálogo — uma lista escrita à mão envelheceria calada.
 func catalogCategories(ativa string) []filterOption {
 	vistas := map[string]bool{}

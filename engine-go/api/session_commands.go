@@ -489,7 +489,7 @@ func (s *Server) characterOfEntry(sessionID int64, entryID string) (int64, error
 	return *entry.CharacterID, nil
 }
 
-// persistSettleAndWarn persiste e avisa a mesa SÓ quando o sinal de sujeira
+// persistSessionAndWarn persiste e avisa a mesa SÓ quando o sinal de sujeira
 // vira — primeira falha, ou uma tentativa que se recuperou. Espelha o
 // `persistAndWarn` do gateway; quem é dono do sinal é o store.
 func (s *Server) persistSessionAndWarn(sessionID int64) {

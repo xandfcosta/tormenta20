@@ -25,7 +25,7 @@ import (
 // A lista estava aqui, e mais duas vezes no `api` — ver o comentário de lá, que
 // conta como as três transcrições conviveram sem ninguém notar.
 
-// aBaseDeTodoMundo é a proficiência que ninguém precisa ganhar.
+// everyoneStartsWith é a proficiência que ninguém precisa ganhar.
 //
 // p142: *"Armas Simples. […] Todos os personagens sabem usar armas simples."*
 // Ela aparece na lista mesmo assim, e marcada, porque a lista é a resposta à
@@ -33,11 +33,11 @@ import (
 // o jogador a saber a regra de cor.
 const everyoneStartsWith = "armas-simples"
 
-// aFonteDeTodoMundo é o que a etiqueta diz quando a proficiência não vem de
+// everyoneSourceLabel é o que a etiqueta diz quando a proficiência não vem de
 // classe nenhuma.
 const everyoneSourceLabel = "Todas as classes"
 
-// proficienciaDaFicha é uma linha do painel.
+// sheetProficiency é uma linha do painel.
 type sheetProficiency struct {
 	Chave  string
 	Rotulo string
@@ -52,13 +52,13 @@ type sheetProficiency struct {
 	Fontes []string
 }
 
-// grupoDeProficiencias é um dos dois blocos do painel.
+// proficiencyGroup é um dos dois blocos do painel.
 type proficiencyGroup struct {
 	Titulo string
 	Linhas []sheetProficiency
 }
 
-// oPainelDeProficiencias monta as sete linhas nos dois grupos.
+// proficiencyGroupsOf monta as sete linhas nos dois grupos.
 func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 	tem := savedProficiencies(dto.Proficiencies)
 	fontes := proficiencySources(dto)
@@ -81,7 +81,7 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 	return []proficiencyGroup{*porGrupo[book.WeaponGroup], *porGrupo[book.ArmorGroup]}
 }
 
-// asProficienciasGuardadas lê o blob da coluna `proficiencies`.
+// savedProficiencies lê o blob da coluna `proficiencies`.
 //
 // Blob CORROMPIDO vira conjunto VAZIO, e não erro: a coluna é um `string[]` cru
 // e a ficha inteira não pode deixar de abrir porque uma linha do banco está
@@ -92,7 +92,7 @@ func savedProficiencies(blob string) map[string]bool {
 	return sheet.ToStringSet(sheet.UnmarshalStrings(blob))
 }
 
-// asFontesDeProficiencia diz, por categoria, QUAIS classes a concedem.
+// proficiencySources diz, por categoria, QUAIS classes a concedem.
 //
 // # As duas linhas de base
 //
@@ -125,7 +125,7 @@ func proficiencySources(dto sheet.CharacterDTO) map[string][]string {
 	return fontes
 }
 
-// semRepetir tira o nome duplicado de quem tem a mesma classe duas vezes —
+// repetirSem tira o nome duplicado de quem tem a mesma classe duas vezes —
 // impossível hoje, e a etiqueta "Padrão: Guerreiro, Guerreiro" seria o sintoma.
 func repetirSem(nomes []string) []string {
 	visto := map[string]bool{}
@@ -140,7 +140,7 @@ func repetirSem(nomes []string) []string {
 	return unicos
 }
 
-// oPadraoDaClasse é o alvo do "Restaurar padrão de classe": tudo o que as
+// classDefault é o alvo do "Restaurar padrão de classe": tudo o que as
 // classes concedem, e nada do que foi acrescentado na mão.
 func classDefault(dto sheet.CharacterDTO) []string {
 	fontes := proficiencySources(dto)
@@ -153,7 +153,7 @@ func classDefault(dto sheet.CharacterDTO) []string {
 	return padrao
 }
 
-// aTrocaDaProficiencia devolve o conjunto DEPOIS de ligar ou desligar uma.
+// proficiencySwap devolve o conjunto DEPOIS de ligar ou desligar uma.
 //
 // A saída sai na ordem do catálogo e não na de chegada: o blob é lido por
 // pessoa numa revisão de banco, e uma ordem estável faz o diff de duas gravações
@@ -179,12 +179,12 @@ func proficiencySwap(dto sheet.CharacterDTO, chave string) ([]string, error) {
 // execuções" — o que resolvia a instabilidade de percorrer um `map` e trocava a
 // escala de dificuldade da p142 por uma ordem que não diz nada.
 
-// aEtiquetaDaFonte é o `title` da etiqueta "classe": "Padrão: Guerreiro, Nobre".
+// sourceTag é o `title` da etiqueta "classe": "Padrão: Guerreiro, Nobre".
 func sourceTag(linha sheetProficiency) string {
 	return "Padrão: " + strings.Join(linha.Fontes, ", ")
 }
 
-// oRotuloDaTroca é o nome acessível do botão de cada linha.
+// swapLabel é o nome acessível do botão de cada linha.
 //
 // O VERBO diz o que o clique FAZ, e não o estado atual: um leitor de tela lê o
 // botão para decidir se aperta, e "Armas marciais" sozinho não diz se apertar

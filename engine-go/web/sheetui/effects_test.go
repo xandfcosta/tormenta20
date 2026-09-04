@@ -130,7 +130,7 @@ func lerFonte(t *testing.T, nome string) string {
 	return string(bruto)
 }
 
-// recorteDaFuncao devolve o corpo de uma função, do cabeçalho até a chave que a
+// functionSlice devolve o corpo de uma função, do cabeçalho até a chave que a
 // fecha na coluna zero.
 func functionSlice(t *testing.T, fonte, cabecalho string) string {
 	t.Helper()

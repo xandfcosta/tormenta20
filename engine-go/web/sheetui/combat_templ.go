@@ -34,7 +34,7 @@ import "t20engine/web/ui"
 // declarado aqui dentro, o `@post` do PV redeclararia `detalhe` a cada toque —
 // a mesma família do `fichaAberta` do bestiário.
 
-// oPainelDeCombate é a seção inteira.
+// combatPanel é a seção inteira.
 func combatPanel(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -157,7 +157,7 @@ func combatPanel(v View) templ.Component {
 // `index.css`: `bg-penalty` para o bloco, `text-penalty-ink` para a letra. A
 // borda continua `destructive`, porque borda não é texto e não entra na conta.
 
-// aCaixaDeCombate é uma caixa com número, e ela é um BOTÃO porque abre coisa.
+// combatBox é uma caixa com número, e ela é um BOTÃO porque abre coisa.
 //
 // O `aria-label` repete rótulo e valor porque o leitor de tela leria "Defesa" e
 // "22" como dois textos soltos de um botão sem nome — e um botão chamado "22"
@@ -358,7 +358,7 @@ func combatBox(tile statTile) templ.Component {
 	})
 }
 
-// aCaixaDeAtributo é um dos seis quadrados. Ela NÃO abre nada, e por isso é um
+// attributeBox é um dos seis quadrados. Ela NÃO abre nada, e por isso é um
 // `<div>`: um botão que não faz nada é uma promessa quebrada para quem navega
 // por teclado, que pararia em seis paradas mudas.
 func attributeBox(attr attributeTile) templ.Component {
@@ -416,7 +416,7 @@ func attributeBox(attr attributeTile) templ.Component {
 	})
 }
 
-// osCartoesDeArma são as armas empunhadas, ou o texto de que não há nenhuma.
+// weaponCards são as armas empunhadas, ou o texto de que não há nenhuma.
 //
 // O texto de vazio existe para a caixa não PARECER quebrada: um marcial de mãos
 // livres veria um buraco entre os atributos e o fim da aba, e buraco em tela de
@@ -592,7 +592,7 @@ func weaponCard(arma weaponTile) templ.Component {
 	})
 }
 
-// oDetalheDaCaixa é a decomposição de UMA caixa, escondida até o sinal apontar
+// boxDetail é a decomposição de UMA caixa, escondida até o sinal apontar
 // para ela.
 func boxDetail(tile statTile) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -757,7 +757,7 @@ func boxDetail(tile statTile) templ.Component {
 	})
 }
 
-// oDetalheDaArma são as DUAS contas de uma arma, cada uma sob o próprio rótulo.
+// weaponDetail são as DUAS contas de uma arma, cada uma sob o próprio rótulo.
 //
 // Não há caixa de "Total" aqui, e a ausência é a da SPA: uma arma não tem um
 // número só — tem o ataque e tem o dano, e um total entre os dois não
@@ -858,7 +858,7 @@ func weaponDetail(arma weaponTile) templ.Component {
 	})
 }
 
-// aSobreposicao é a moldura de todo diálogo desta aba.
+// overlay é a moldura de todo diálogo desta aba.
 //
 // O Esc e o clique FORA fecham, e há botão de fechar além dos dois: diálogo sem
 // saída é tela travada, e quem navega por teclado não deve depender de descobrir
@@ -999,7 +999,7 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 	})
 }
 
-// iconeDoDetalhe existe só para o comentário do `@icone` não morar na lista de
+// detailIcon existe só para o comentário do `@icone` não morar na lista de
 // atributos de um elemento, que é a armadilha do templ que já custou oito
 // rodadas.
 func detailIcon(nome string) templ.Component {
@@ -1031,7 +1031,7 @@ func detailIcon(nome string) templ.Component {
 	})
 }
 
-// asLinhasDaDecomposicao é a lista de "de onde veio, e quanto".
+// breakdownRows é a lista de "de onde veio, e quanto".
 func breakdownRows(rows []breakdownRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

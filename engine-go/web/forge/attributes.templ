@@ -48,7 +48,7 @@ templ attributesBody(v attributesView) {
 	</div>
 }
 
-// aContagemDosPontos é o placar do orçamento. Ele fica ACIMA das linhas porque
+// pointCount é o placar do orçamento. Ele fica ACIMA das linhas porque
 // é o que decide o próximo clique.
 templ pointCount(v attributesView) {
 	<p class="text-center font-display text-lg text-grimorio-gold">
@@ -96,7 +96,7 @@ func buttonFits(linha attributeRow, passo int) bool {
 	return linha.CanLower
 }
 
-// oPostDoAtributo monta o comando. Ele não carrega estado nenhum na URL — esta
+// attributePost monta o comando. Ele não carrega estado nenhum na URL — esta
 // cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
 // `oPostDaFicha`.
 func attributePost(id int64, chave string, passo int) string {

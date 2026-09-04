@@ -103,7 +103,7 @@ type View struct {
 	Recusa string
 }
 
-// classeDaFicha é uma classe do personagem, com o que o degrau precisa saber.
+// sheetClass é uma classe do personagem, com o que o degrau precisa saber.
 type sheetClass struct {
 	Nome  string
 	Nivel int64
@@ -123,7 +123,7 @@ type sheetVital struct {
 	Porcento int
 }
 
-// abaDaFicha é uma das sete seções da ficha.
+// Tab é uma das sete seções da ficha.
 type Tab struct {
 	// Valor é o que vai na URL, e ele é o MESMO da SPA — ver `Tabs`.
 	Valor  string
@@ -132,7 +132,7 @@ type Tab struct {
 	Ativa  bool
 }
 
-// asAbasDaFicha são as sete seções, na ORDEM da SPA.
+// Tabs são as sete seções, na ORDEM da SPA.
 //
 // # Os valores são endereço guardado, e não se "arrumam"
 //
@@ -156,7 +156,7 @@ func Tabs() []Tab {
 	}
 }
 
-// aAbaPedida resolve o que veio na URL contra as sete que existem.
+// AskedTab resolve o que veio na URL contra as sete que existem.
 //
 // DUAS traduções de endereço antigo, herdadas do `resolveSheetTab` da SPA:
 // `inventory` e `equipment` viram `bag`. Elas existem porque a Mochila já se
@@ -176,7 +176,7 @@ func AskedTab(bruto string) string {
 	return Tabs()[0].Valor
 }
 
-// carregaFicha busca o personagem e computa a ficha.
+// Load busca o personagem e computa a ficha.
 //
 // A POSSE é conferida como em toda rota de personagem: quem não é dono não
 // abre. O `characterOwnedBy` é o mesmo gargalo que a API JSON usa — a cena não
@@ -246,7 +246,7 @@ func (s Scene) Load(
 	return v, 200, nil
 }
 
-// oVital monta a barra de PV ou PM.
+// vital monta a barra de PV ou PM.
 //
 // A FRAÇÃO é o que a mesa fala em voz alta ("doze de vinte"), e a porcentagem é
 // só a largura da barra. Máximo ZERO não vira divisão por zero nem barra cheia:
@@ -267,13 +267,13 @@ func vital(atual, max int64) sheetVital {
 	return v
 }
 
-// aRotaDaFicha é PARA ONDE se abre uma ficha no piloto.
+// sheetRoute é PARA ONDE se abre uma ficha no piloto.
 //
 // Uma função e não um `Sprintf` espalhado, pela mesma razão do `routes.Table`: no
 // dia da virada ela é o único lugar que precisa ser lido para saber quem manda
 // para onde.
 //
-// @example aRotaDaFicha(7, "bag") // "/personagens/7?tab=bag"
+// @example sheetRoute(7, "bag") // "/personagens/7?tab=bag"
 func sheetRoute(id int64, aba string) string {
 	if aba == "" {
 		return fmt.Sprintf("/personagens/%d", id)
@@ -281,7 +281,7 @@ func sheetRoute(id int64, aba string) string {
 	return fmt.Sprintf("/personagens/%d?tab=%s", id, aba)
 }
 
-// oVitalNaRota traduz o rótulo da tela para o pedaço da URL.
+// routeVital traduz o rótulo da tela para o pedaço da URL.
 //
 // Duas palavras para a mesma coisa é o que o GLOSSARIO chama de colisão, e aqui
 // ela é deliberada e contida: a TELA diz "PV" porque é o que a mesa fala, e a
@@ -293,7 +293,7 @@ func routeVital(rotulo string) string {
 	return "pv"
 }
 
-// oSinalDoPasso escreve o rótulo do botão: "+5", "−1".
+// stepSignal escreve o rótulo do botão: "+5", "−1".
 //
 // O MENOS É O SINAL TIPOGRÁFICO (U+2212) e não o hífen: no mesmo tamanho de
 // fonte o hífen fica mais curto e mais alto que o traço do "+", e a fileira dos
@@ -306,7 +306,7 @@ func stepSignal(passo int) string {
 	return "+" + strconv.Itoa(passo)
 }
 
-// oRotuloDoPasso é o nome acessível: "Curar 5 de PV", "Ferir 1 de PV".
+// stepLabel é o nome acessível: "Curar 5 de PV", "Ferir 1 de PV".
 //
 // O VERBO muda com o sinal em vez de "mais 5 PV", porque é o verbo que a mesa
 // usa — e um leitor de tela lendo "menos cinco pê vê" obriga quem ouve a
@@ -320,7 +320,7 @@ func stepLabel(rotulo string, passo int) string {
 	return fmt.Sprintf("%s %d de %s", verbo, passo, rotulo)
 }
 
-// asClassesDoDegrau monta as classes com a elegibilidade de cada uma.
+// stepClasses monta as classes com a elegibilidade de cada uma.
 //
 // A REGRA É A DA SPA, e o comentário dela diz por que existe: *"a single-class
 // character steps straight; a multiclass one is ASKED which class takes the
@@ -348,7 +348,7 @@ func stepClasses(dto sheet.CharacterDTO) []sheetClass {
 	return classes
 }
 
-// asQuePodem filtra as classes elegíveis para um sentido do degrau.
+// thatCan filtra as classes elegíveis para um sentido do degrau.
 func thatCan(classes []sheetClass, passo int) []sheetClass {
 	elegiveis := make([]sheetClass, 0, len(classes))
 	for _, cl := range classes {
@@ -359,7 +359,7 @@ func thatCan(classes []sheetClass, passo int) []sheetClass {
 	return elegiveis
 }
 
-// oDegrauDireto é o comando de quem só tem UMA classe elegível — o caso comum.
+// directStep é o comando de quem só tem UMA classe elegível — o caso comum.
 //
 // Vazio quando há mais de uma: aí o gesto abre a escolha, porque adivinhar qual
 // classe recebe o nível é o defeito que a SPA nomeia.
@@ -371,7 +371,7 @@ func directStep(v View, passo int) string {
 	return stepCommand(v, elegiveis[0].Nome, passo)
 }
 
-// oPostDaFicha escreve o `@post` de um gesto da ficha, CARREGANDO A ABA ABERTA.
+// sheetPost escreve o `@post` de um gesto da ficha, CARREGANDO A ABA ABERTA.
 //
 // # O `?tab=` não é decoração
 //
@@ -389,7 +389,7 @@ func sheetPost(v View, caminho string) string {
 	return fmt.Sprintf("@post('%s')", commandRoute(v, caminho))
 }
 
-// aRotaDoComando monta o endereço de um comando da ficha com o estado que a URL
+// commandRoute monta o endereço de um comando da ficha com o estado que a URL
 // carrega — a aba e, quando ela existe, a marca de EMBUTIDA.
 //
 // A marca viaja pelo mesmo motivo que a aba: o handler descobre o que desenhar
@@ -403,7 +403,7 @@ func commandRoute(v View, caminho string) string {
 	return rota
 }
 
-// oGetDaFicha escreve o `@get` que REDESENHA a cena sem mutar nada — hoje só a
+// sheetGet escreve o `@get` que REDESENHA a cena sem mutar nada — hoje só a
 // busca das Perícias.
 //
 // Ele carrega o `?tab=` pela MESMA razão que todo `@post` carrega: sem ele o
@@ -414,7 +414,7 @@ func sheetGet(v View) string {
 	return fmt.Sprintf("@get('%s')", commandRoute(v, ""))
 }
 
-// oGetDaAbaEmbutida troca de seção SEM sair da sessão: o mesmo endereço da
+// tabEmbeddedGet troca de seção SEM sair da sessão: o mesmo endereço da
 // ficha, pedido pelo Datastar, remendando o `#cena-ficha` no lugar.
 //
 // Ele ESCREVE a aba num sinal antes de pedir, e o sinal é o que faz a ficha
@@ -452,7 +452,7 @@ func SheetRefetch(v View) string {
 			"@get('/personagens/%d?tab=' + $fichatab + '&embutida=1')", v.ID)
 }
 
-// oComandoDoAtributo escreve o `@post` que repõe a perícia noutro atributo.
+// attributeCommand escreve o `@post` que repõe a perícia noutro atributo.
 //
 // O valor escolhido entra por CONCATENAÇÃO no meio da expressão, e não como
 // texto fixo: são seis opções por linha e 29 linhas, e desenhar um comando por
@@ -463,7 +463,7 @@ func attributeCommand(v View, comando string) string {
 		v.ID, comando, v.AbaAtiva)
 }
 
-// oRotuloDoTotal é o nome acessível do número de uma perícia.
+// totalLabel é o nome acessível do número de uma perícia.
 //
 // A falha automática não diz um número, porque não há um: ela diz o que
 // aconteceu. Um botão chamado "—" não informa nada a quem usa leitor de tela.
@@ -474,7 +474,7 @@ func totalLabel(linha expertiseRow) string {
 	return "Detalhar " + linha.Name + " " + linha.Total
 }
 
-// oComandoDoDegrau escreve o `@post` de subir ou descer uma classe.
+// stepCommand escreve o `@post` de subir ou descer uma classe.
 //
 // A CLASSE VAI NO CAMINHO, codificada: nome de classe é do catálogo e não tem
 // espaço hoje, mas escrever a rota assumindo isso é o tipo de suposição que
@@ -483,22 +483,22 @@ func stepCommand(v View, classe string, passo int) string {
 	return sheetPost(v, fmt.Sprintf("/nivel/%s/%d", url.PathEscape(classe), passo))
 }
 
-// oComandoDoVital escreve o `@post` de um passo de PV ou PM.
+// vitalCommand escreve o `@post` de um passo de PV ou PM.
 func vitalCommand(v View, rotulo string, passo int) string {
 	return sheetPost(v, fmt.Sprintf("/vitais/%s/%d", routeVital(rotulo), passo))
 }
 
-// oComandoDaProficiencia escreve o `@post` de ligar ou desligar uma categoria.
+// proficiencyCommand escreve o `@post` de ligar ou desligar uma categoria.
 func proficiencyCommand(v View, chave string) string {
 	return sheetPost(v, "/proficiencias/alterna/"+chave)
 }
 
-// oComandoDoPadraoDeClasse escreve o `@post` do "Restaurar padrão de classe".
+// defaultClassCommand escreve o `@post` do "Restaurar padrão de classe".
 func defaultClassCommand(v View) string {
 	return sheetPost(v, "/proficiencias/padrao")
 }
 
-// oDialogoDoDegrau é o id do diálogo de escolher a classe, por sentido.
+// stepDialog é o id do diálogo de escolher a classe, por sentido.
 //
 // DOIS diálogos e não um, porque as listas são diferentes: subir oferece as que
 // cabem no teto, descer oferece as que têm nível de sobra. Um diálogo só teria
