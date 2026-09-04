@@ -10,6 +10,7 @@ import (
 
 	"t20engine/engine"
 	"t20engine/tabuleiro"
+	"t20engine/web/ui"
 )
 
 // A RÉGUA e o GABARITO da mesa em Datastar (ALE-269, superfície 8).
@@ -299,7 +300,7 @@ func takesTemplateWho(b *tabuleiro.BoardState, casas []engine.Square) string {
 	if len(nomes) == 0 {
 		return "Ninguém dentro."
 	}
-	return fmt.Sprintf("Pega %s: %s", portugueseTokens(len(nomes)), strings.Join(nomes, ", "))
+	return fmt.Sprintf("Pega %s: %s", ui.TokenCount(len(nomes)), strings.Join(nomes, ", "))
 }
 
 func tokenTakes(dentro map[engine.Square]bool, t *tabuleiro.BoardToken) bool {

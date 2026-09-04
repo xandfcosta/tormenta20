@@ -241,7 +241,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **44 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **46 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -249,13 +249,18 @@ posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
 junta `data-show` com `data-attr:style`, nenhuma expressão indexa o sinal da
 lista, nenhum foco pede ao servidor sem guarda de teclado, todo item do kit
 inicial existe no catálogo, nenhuma concessão de origem com escolha nasce fixa,
-todo endereço antigo leva ao piloto. Cada um nasceu de um defeito que tinha
-irmãos.
+todo endereço antigo leva ao piloto, nenhum gesto do tabuleiro escreve o próprio
+endereço. Cada um nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
 > — a família cresce a cada issue e a linha não. Se ele divergir de novo, o certo
 > é o `grep`.
+>
+> **Ele divergiu de novo, e da forma prevista**: a ALE-292 encontrou 45 onde a
+> linha dizia 44, sem que ninguém tivesse mexido nela. É a terceira vez, e a
+> lição não é "atualizar com mais cuidado" — é que um número escrito à mão sobre
+> uma família que cresce ENVELHECE, e o `grep` é a fonte.
 >
 > **Ele DESCEU pela primeira vez na ALE-277**, de 46 para 44, e vale saber por
 > quê: os dois que saíram varriam as rotas de `/characters` do `Router()` da API

@@ -34,7 +34,12 @@ import (
 //
 // SAÍDA DO PILOTO: apagar `api/mesa*`, a linha do `buildMux` e a entrada do
 // proxy no `vite.config.ts`.
-// Routes registra as vinte rotas da Mesa (ALE-278).
+// Routes registra as rotas da Mesa (ALE-278) e as do RASCUNHO DE LUGAR (ALE-292).
+//
+// Aqui dizia "as vinte rotas", e o número já não batia quando a ALE-292 chegou —
+// são 85 registros hoje. Ele saiu em vez de ser corrigido: uma contagem escrita
+// à mão sobre uma lista que cresce a cada fatia envelhece sem ninguém mexer
+// nela, e o `grep` é a fonte.
 //
 // Elas moravam dentro do `WebRouter` — o roteador do app INTEIRO —, que também
 // vivia neste arquivo por acidente de história: a Mesa foi a primeira cena do
@@ -67,6 +72,10 @@ func Routes(r chi.Router, s Scene) {
 	s.CastRoutes(r)
 	s.RoutesNpc(r)
 	s.RoutesEditorNpc(r)
+	// O RASCUNHO DE LUGAR (ALE-292) entra por aqui apesar de o endereço dele ser
+	// `/campanhas/…`: quem o desenha é o TABULEIRO, que é desta cena, e montá-lo
+	// no grupo das campanhas exigiria que aquele pacote alcançasse este.
+	s.DraftRoutes(r)
 }
 
 // O endereço da Mesa mora em `web/routes` desde a ALE-278 (`routes.Table`): a

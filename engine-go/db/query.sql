@@ -410,6 +410,20 @@ ON CONFLICT(sessionId, boardId) DO UPDATE SET state = excluded.state, updatedAt 
 -- name: DeleteOpenBoard :exec
 DELETE FROM open_boards WHERE sessionId = ? AND boardId = ?;
 
+-- O RASCUNHO DE LUGAR precisa saber se a cena esta aberta em ALGUMA mesa da
+-- campanha (ALE-292), e nao so na sessao ativa: uma sessao encerrada guarda os
+-- tabuleiros dela, e reabri-la os traz de volta -- fechar um deles depois chama
+-- o `Archive`, que sobrescreve o lugar de mesmo nome e apaga o rascunho.
+--
+-- Uma consulta e nao um laco pelas sessoes: um acervo de campanha longa tem
+-- dezenas delas, e perguntar sessao por sessao seria dezenas de idas ao disco
+-- para desenhar uma lista.
+-- name: ListOpenBoardsOfCampaign :many
+SELECT b.sessionId, b.boardId, b.state
+FROM open_boards b
+JOIN sessions s ON s.id = b.sessionId
+WHERE s.campaignId = ?;
+
 -- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt

@@ -73,7 +73,14 @@ templ boardTable(v BoardView) {
 			class="flex min-h-0 flex-1 flex-col space-y-1.5"
 		>
 			if v.Mestre {
-				@endBoardButton(v)
+				// ENCERRAR e ABRIR OUTRO são gestos da SESSÃO, e por isso ficam
+				// fora do rascunho (ALE-292): não há mesa para encerrar nem aba
+				// para acrescentar quando o que está na tela é uma cena do acervo.
+				// O diálogo de editar peça FICA — ele é sobre a peça, e o rascunho
+				// é feito de peças.
+				if !v.Rascunho {
+					@endBoardButton(v)
+				}
 				// UM diálogo de editar para TODAS as peças, semeado pelo gesto que o
 				// abre. Ele mora aqui, fora do plano, porque um `<dialog>` dentro do
 				// mapa herdaria o `--quadrado` e o empilhamento das camadas.
@@ -85,7 +92,9 @@ templ boardTable(v BoardView) {
 				// faria a issue nascer INVISÍVEL — o servidor sabendo guardar oito
 				// cenas e o mestre sem um gesto que abrisse a segunda, que é a forma
 				// exata do defeito que a cortina e o menu da peça já tiveram.
-				@openBoardButton(v)
+				if !v.Rascunho {
+					@openBoardButton(v)
+				}
 			}
 			// A CENA é a JANELA sobre um plano infinito (ALE-203, decisão do dono),
 			// e tudo o que não é o mapa flutua POR CIMA dela: o trilho, os avisos e
@@ -390,7 +399,12 @@ templ showIsTable(aba boardTab) {
 templ sceneVerbs(v BoardView) {
 	<div class="tabuleiro-verbos-da-cena">
 		@planFraming(v)
-		if v.Mestre {
+		// O ENQUADRAMENTO é o único verbo que atravessa para o rascunho: ele é
+		// sobre a JANELA, que é de quem olha, e montar uma cripta grande pede
+		// afastar tanto quanto jogar nela. Os outros seis são da SESSÃO —
+		// cortina, lente, pôr na fila, abrir outro, acervo e encerrar — e cada um
+		// deles precisa de uma mesa do outro lado (ALE-292).
+		if v.Mestre && !v.Rascunho {
 			// O acervo alcançável COM cena na mesa (ALE-191): trocar da taverna
 			// para a cripta sem encerrar primeiro.
 			@curtainButton(v)
@@ -1261,9 +1275,9 @@ templ placesCollection(v BoardView) {
 								// agora aparecia no meio dos outros sem nada que o
 								// distinguisse.
 								@ui.Icon("LayoutGrid", "mr-1 inline size-3")
-								{ "nesta mesa agora · " + portugueseTokens(l.Pecas) }
+								{ "nesta mesa agora · " + ui.TokenCount(l.Pecas) }
 							} else {
-								{ fmt.Sprintf("%s · %s", portugueseTokens(l.Pecas), l.Quando) }
+								{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Pecas), l.Quando) }
 							}
 						</span>
 					</span>

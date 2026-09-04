@@ -1379,6 +1379,14 @@ A nona cena saiu na ALE-278: quatro telas com um endereço cada — a lista, a
 campanha aberta, a folha em branco e a carta de entrar —, e **onze** métodos na
 porta, contra treze da administração e dois do trilho do mestre.
 
+> A porta cresceu para dezenove na ALE-292, e o que entrou tem uma forma que
+> vale registrar: o ACERVO DE LUGARES atravessa como **três perguntas**
+> (`Places`, `NewPlace`, `RemovePlace`) mais a lista de chãos, e não como o
+> `BoardStore`. Ele é o vocabulário do domínio AO VIVO, e esta cena não é ao
+> vivo — ela lista, cria e apaga um lugar, e quem MONTA a cena guardada é o
+> tabuleiro, no endereço vizinho. É a mesma linha que o `ListRow` desenha, com o
+> `PlaceRow` fazendo o mesmo papel.
+
 O tamanho não é vício nem virtude: é o que a cena É. O trilho do mestre desenha
 o livro embutido e não toca banco; esta é a tela onde uma campanha nasce, muda
 de nome, ganha membro e é apagada. **Três das quatro telas ESCREVEM.**
@@ -1599,6 +1607,12 @@ ocorrências vale mais.
 A Mesa saiu na ALE-278 e fechou a fila: **47 arquivos de produção, ~14.300
 linhas, vinte rotas** e **trinta e um** métodos na porta — contra dezoito da
 ficha, treze da administração e dois do trilho do mestre.
+
+> Os números são os do DIA DA MUDANÇA e não se atualizam sozinhos: na ALE-292 o
+> pacote já tinha 38 arquivos de produção, 85 registros de rota e 33 métodos na
+> porta. Eles ficam aqui porque o que a seção afirma é a COMPARAÇÃO — a cena mais
+> larga da série contra o trilho de dois métodos —, e essa continua verdadeira.
+> Confira com `grep -c` antes de citar qualquer um deles.
 
 **Com ela o `api` ficou sem uma única cena.** Ele era 188 arquivos e 105 mil
 linhas quando a épica começou; hoje são **50 arquivos de produção e 9.303
@@ -2032,12 +2046,14 @@ pô-la na fileira do grupo diria que ela é aliada.
 
 O sinal de "capacidade esperando gesto" é a família que a cortina (ALE-202) e a
 presença (ALE-287) já tinham desenhado: **a camada de baixo inteira no ar, com
-teste, e nenhuma rota chegando nela.** Duas apareceram aqui — a peça avulsa
-(ALE-291, **entregue** — ver a seção seguinte, cujo desfecho contraria o que
-esta linha previa), em que o `ParseBoardToken`, hoje apagado, não tinha *nenhum*
-chamador nem de teste; e
-o rascunho de lugar (ALE-292), cujas docstrings carregam a decisão de protocolo
-inteira sobre um botão que não existe.
+teste, e nenhuma rota chegando nela.** Duas apareceram aqui, e **as duas foram entregues** — a peça avulsa
+(ALE-291) e o rascunho de lugar (ALE-292). As duas seções seguintes contam os
+desfechos, e eles contrariam o que esta linha previa: em nenhum dos dois casos o
+andaime guardado serviu.
+
+Na peça avulsa era o `ParseBoardToken`, que não tinha *nenhum* chamador nem de
+teste. No rascunho eram as docstrings do `PlaceScene` e do `SavePlaceScene`,
+carregando a decisão de protocolo inteira sobre um botão que não existia.
 
 ### Um teste que dirige uma porta morta afirma o OPOSTO do produto
 
@@ -2133,6 +2149,78 @@ O `TestNoTableSignalIsDeclaredTwice` varre os ~40 sinais da cena com denominador
 É a mesma forma que o GLOSSARIO já registra na linha do `buscador`, que se chama
 assim para não colidir com o `busca` das cenas — e agora ela é mecanizada.
 
+
+## O RACIOCÍNIO guardado envelhece como o código guardado (ALE-292)
+
+O rascunho de lugar era a segunda das capacidades no ar que a ALE-289 achou:
+`PlaceScene` e `SavePlaceScene`, com cinco casos de teste em cima e zero
+chamadores de produção, esperando desde a ALE-191.
+
+O que elas guardavam não era só código — era uma DECISÃO DE PROTOCOLO, escrita
+com todas as letras na docstring do `SavePlaceScene`: *"este é o ÚNICO lugar do
+tabuleiro onde um estado inteiro chega pelo cliente… o rascunho não tem
+concorrência, não tem broadcast e não tem vez, então um handler por gesto seria
+protocolo para nada."*
+
+**O gesto chegou e não usou nada disso.** Quando o dono escolheu o desenho — a
+superfície do tabuleiro apontada para o acervo —, a resposta ficou óbvia por
+outro caminho: o rascunho passou a ter um handler por gesto porque ele já
+tinha quinze deles, os da Mesa. Reusá-los custou menos que inventar um
+protocolo próprio, e o estado inteiro não chega do cliente em lugar nenhum.
+
+É a lição da ALE-291 acontecendo de novo, num material diferente. Lá o andaime
+guardado era código; aqui era um ARGUMENTO — e ele é pior, porque código morto o
+`grep` acha e um parágrafo bem escrito ninguém contesta. **A docstring estava
+certa quando foi escrita, continuou plausível por duas épicas, e estava errada
+no dia em que alguém foi implementá-la.**
+
+O que a conferência (`sanitizeScene`) protege MUDOU junto, e isso está escrito
+lá: ela deixou de ser a fronteira contra um cliente quebrado e passou a ser o
+guarda contra uma mutação pura que produza coordenada absurda.
+
+### As DUAS fontes de "este lugar está numa mesa"
+
+A trava que impede montar o rascunho de um lugar aberto numa mesa precisou ler
+**a memória e o disco**, e nenhuma das duas bastou — as duas reprovaram um caso
+antes de virar par:
+
+- só a MEMÓRIA não vê o tabuleiro aberto ontem, numa sessão que este processo
+  nunca hidratou. Depois de um `docker compose up` o mapa está vazio.
+- só o BANCO não vê o que acabou de ser aberto: a gravação é assíncrona (ver o
+  `persistBoardAndWarn`), e entre o `Open` e o `Persist` a tabela não sabe dele.
+
+E ela varre TODA sessão da campanha, não a ativa. A primeira versão perguntava
+"qual é a sessão ativa" e tinha um buraco silencioso: uma sessão ENCERRADA
+guarda os tabuleiros dela — o `EndSession` não toca em `open_boards` — e reabri-la
+os traz de volta. Fechar um deles depois chamaria o `Archive` sobre um lugar
+montado semanas antes.
+
+**A leitura tem de usar a MESMA varredura que a trava**, e por isso o
+`PlacesOnATable` é irmão do `refusesIfOnATable`: a lista escreve "nesta mesa
+agora" ao lado do lugar, e duas varreduras diferentes seriam a tela oferecendo
+"Montar" num lugar que o servidor recusa — o clique que não faz nada e não diz
+nada. As duas erram para lados opostos de propósito: a trava recusa quando não
+consegue conferir (o custo é uma frase), a lista segue sem a marca (o custo
+seria a tela não abrir).
+
+### Uma cena nova ganha o guarda de contraste NO MESMO commit
+
+O regime daquela lista é ENUMERAÇÃO, e a seção "Um guarda só mede o que ele
+VISITA" do guia da raiz explica o preço. As duas cenas do rascunho entraram
+junto, e a primeira execução **reprovou** — `--marcador-carmim` era
+`--hp-critical`, a cor de PREENCHER a barra de PV, e a letra do marcador
+desenhada com ela dá 4,11:1 sobre o mapa.
+
+O defeito é anterior à issue e nunca tinha sido visto porque **nenhum guarda
+visitava um mapa COM marcador**. Medi as quatro cores; só o carmim reprova. E o
+conserto não foi escolha de gosto: a folha do piloto já ensina a divisão duas
+seções acima — *o crimson é o BLOCO e o claro é a tinta que escreve e contorna*
+—, e o `--destructive-ink` existe exatamente para isso.
+
+A cena que o guarda visita mora no GERADOR da seed e não no `seed.sql`, que é
+despejo — e na campanha 4, porque as mesas do e2e são todas da campanha 1 e um
+lugar a mais lá mudaria a contagem do acervo debaixo de specs que não falam
+disto.
 
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 

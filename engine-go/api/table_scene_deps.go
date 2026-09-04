@@ -82,6 +82,21 @@ func (h tableHost) SessionForCaller(
 	return h.rules.campaign.sessionForCaller(ctx, AuthUser{ID: userID}, campaignID, sessionID)
 }
 
+// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR (ALE-292).
+//
+// O `loadOwnedCampaign` é a MESMA porta que renomear, apagar, convidar e abrir
+// sessão já atravessam: só o dono passa, com o desvio do admin. Montar o acervo
+// da campanha é da mesma família — não é um gesto de mesa, é um gesto de dono.
+//
+// Ela não pergunta mais nada: a outra trava do rascunho — o lugar que está
+// aberto numa mesa — é do domínio, e o `EditPlace` a resolve contra todas as
+// sessões da campanha.
+func (h tableHost) PlaceDraftCampaign(
+	ctx context.Context, userID, campaignID int64,
+) (sqlcgen.Campaign, int, error) {
+	return h.rules.campaign.loadOwnedCampaign(ctx, AuthUser{ID: userID}, campaignID)
+}
+
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
 
 // StartSessionForTable e EndSessionForTable abrem e encerram a partida e

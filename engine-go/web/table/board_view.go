@@ -7,6 +7,7 @@ import (
 	"t20engine/aovivo"
 	"t20engine/engine"
 	"t20engine/tabuleiro"
+	"t20engine/web/routes"
 )
 
 // O TABULEIRO como dado (ALE-263) — a fatia que se OLHA.
@@ -96,6 +97,30 @@ type BoardView struct {
 	// CampaignID e SessionID moram aqui porque o tabuleiro escreve as próprias
 	// rotas, como a `View` faz com as dela.
 	CampaignID, SessionID int64
+	// Base é ONDE os gestos deste tabuleiro postam, sem barra no fim (ALE-292).
+	//
+	// Ela existe porque o mesmo desenho serve a DUAS superfícies: a cena que a
+	// mesa está jogando (`/mesa/…/tabuleiro`) e o RASCUNHO de um lugar do
+	// acervo (`/campanhas/…/lugares/…/tabuleiro`), que o mestre monta fora da
+	// sessão. Sem ela, cada uma das vinte e cinco chamadas teria de escolher o
+	// caminho, e a que alguém esquecesse postaria na mesa o gesto do rascunho.
+	//
+	// Escrita SÓ pelo `tableBoardBase` e pelo `placeDraftBase`.
+	Base string
+	// Rascunho é a cena sendo montada NO ACERVO, fora da sessão (ALE-292).
+	//
+	// Ela é um MODO e não a ausência de sessão, e a diferença importa: `SessionID
+	// == 0` também acontece por engano, e um desenho que decidisse por ele
+	// atenderia a um estado inválido como se fosse um recurso. Aqui o modo é
+	// declarado por quem monta a view, e o que ele governa é o que NÃO existe
+	// fora da sessão — cortina, lente, abas, acervo, encerrar, pôr na fila — mais
+	// o significado do arrasto.
+	//
+	// O ARRASTO é a diferença que se sente: na mesa ele PROPÕE um movimento, com
+	// custo e vez, e alguém confirma; no rascunho ele põe a peça onde ela foi
+	// solta e acabou. Não há vez para gastar nem mesa para avisar, e uma proposta
+	// pendurada num rascunho seria um movimento que ninguém pode confirmar.
+	Rascunho bool
 	// Mestre é quem MONTA e DESMONTA a cena. Sai do mesmo `quem.Role` que a
 	// redação usa, e não de um parâmetro novo: duas fontes para o papel é como
 	// nasce a tela que esconde o botão de quem pode e o mostra para quem não.
@@ -253,7 +278,10 @@ func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude 
 	// nenhum — o mesmo estado que o jogador vê, que é justamente o que as duas
 	// telas não podem ter em comum.
 	if b == nil {
-		return BoardView{Mestre: quem.Role == "gm", CampaignID: campaignID, SessionID: sessionID}
+		return BoardView{
+			Mestre: quem.Role == "gm", CampaignID: campaignID, SessionID: sessionID,
+			Base: tableBoardBase(campaignID, sessionID),
+		}
 	}
 	// A CORTINA sai antes de tudo: o que chega aqui já veio vazio do
 	// `BoardForRole`, sem peça, sem terreno e sem o nome do lugar — "Covil do
@@ -265,7 +293,10 @@ func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude 
 	// quem está montando a cena. A primeira versão disto não olhava o papel e o
 	// guarda acusou — "o mestre perdeu a própria cena com a cortina fechada".
 	if b.Curtained && quem.Role != "gm" {
-		return BoardView{Aberto: true, Cortina: true, CampaignID: campaignID, SessionID: sessionID}
+		return BoardView{
+			Aberto: true, Cortina: true, CampaignID: campaignID, SessionID: sessionID,
+			Base: tableBoardBase(campaignID, sessionID),
+		}
 	}
 	v := BoardView{
 		Aberto: true, AvisoDaCortina: b.Curtained,
@@ -293,6 +324,7 @@ func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude 
 		}
 	}
 	v.CampaignID, v.SessionID = campaignID, sessionID
+	v.Base = tableBoardBase(campaignID, sessionID)
 	v.Mestre = quem.Role == "gm"
 	if v.Mestre {
 		v.Candidatos = MapCandidates(b, st)
@@ -812,7 +844,7 @@ func endForEnd(m *moveView, eOFim bool, cor string) string {
 
 // moveCommand escreve a chamada de confirmar ou cancelar.
 func moveCommand(v BoardView, acao string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/%s/%s')", v.CampaignID, v.SessionID, v.Movimento.TokenID, acao)
+	return fmt.Sprintf("@post('%s/%s/%s')", v.Base, v.Movimento.TokenID, acao)
 }
 
 // clickedPointStop traduz o PONTO do clique em quadrado do plano.
@@ -827,8 +859,8 @@ func moveCommand(v BoardView, acao string) string {
 // pode ser NEGATIVO.
 func clickedPointStop(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('/mesa/%d/%d/tabuleiro/%s/parada/' + (%s) + '/' + (%s))",
-		v.CampaignID, v.SessionID, v.AlvoDoMovimento, clicouEmX, clicouEmY,
+		"@post('%s/%s/parada/' + (%s) + '/' + (%s))",
+		v.Base, v.AlvoDoMovimento, clicouEmX, clicouEmY,
 	)
 }
 
@@ -893,8 +925,8 @@ func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 			"const cx = %d + Math.round($arrastox / $quadrado), cy = %d + Math.round($arrastoy / $quadrado); "+
 			"if (cx === $previax && cy === $previay) return; "+
 			"$previax = cx; $previay = cy; "+
-			"@post('/mesa/%d/%d/tabuleiro/%s/previa/' + cx + '/' + cy)",
-		p.X, p.Y, v.CampaignID, v.SessionID, p.ID)
+			"@post('%s/%s/previa/' + cx + '/' + cy)",
+		p.X, p.Y, v.Base, p.ID)
 }
 
 // erasePreview limpa a seta viva. Vai no `pointerup`, junto do que solta.
@@ -933,12 +965,11 @@ const erasePreview = "$previafiocabe = ''; $previafiosegundo = ''; $previafioale
 //
 // MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
 func dropFor(v BoardView, quem string, x, y int) string {
-	parada := fmt.Sprintf("'/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
-		v.CampaignID, v.SessionID, v.AlvoDoMovimento, x, y)
+	parada := fmt.Sprintf("'%s/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
+		v.Base, v.AlvoDoMovimento, x, y)
 	destino := "@post(" + parada + ")"
 	if quem == "peca" && v.Mestre && v.AlvoDoMovimento != "" {
-		grupo := fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy)",
-			v.CampaignID, v.SessionID)
+		grupo := fmt.Sprintf("@post('%s/grupo/mover/' + dx + '/' + dy)", v.Base)
 		destino = fmt.Sprintf("%s ? %s : %s", markedIsToken(v.AlvoDoMovimento), grupo, destino)
 	}
 	return fmt.Sprintf(
@@ -1000,7 +1031,10 @@ func tokenReceivesGesture(v BoardView, id string) bool {
 
 // takeToken escolhe entre começar o arrasto DA PEÇA e o DO GRUPO.
 func takeToken(v BoardView, id string) string {
-	if v.ArrastaAPeca == id {
+	// No RASCUNHO toda peça se arrasta sozinha: não há grupo marcado nem alvo do
+	// turno, e a única coisa que o mestre quer fazer com uma peça guardada é
+	// mudá-la de lugar.
+	if v.Rascunho || v.ArrastaAPeca == id {
 		return pegaParaArrastar("peca")
 	}
 	return partyTakes(id)
@@ -1014,10 +1048,34 @@ func takeToken(v BoardView, id string) string {
 // o fim do caminho — é o que faz a próxima parada contar do lugar onde a peça
 // está (ALE-203, item 4).
 func dropToken(v BoardView, p boardToken) string {
+	if v.Rascunho {
+		return draftMoveDrop(v, p)
+	}
 	if v.ArrastaAPeca == p.ID {
 		return erasePreview + "; " + dropFor(v, "peca", p.X, p.Y)
 	}
 	return dropParty(v)
+}
+
+// draftMoveDrop põe a peça ONDE ELA FOI SOLTA, e acabou (ALE-292).
+//
+// O arrasto da mesa manda uma PARADA e o servidor devolve uma proposta com
+// custo, para alguém confirmar. Aqui não há vez para gastar nem mesa para
+// avisar: a peça vai para a casa e a cena guardada muda.
+//
+// A aritmética é a mesma do `dropFor` — o deslocamento em pixels dividido pelo
+// tamanho da casa, arredondado para o quadrado mais PRÓXIMO — e ela é repetida
+// em vez de extraída porque o que muda entre as duas é justamente o resto: o
+// destino, o desvio para o grupo e a prévia. Um helper comum guardaria três
+// linhas e faria as duas mudarem juntas no dia em que uma delas precisar de
+// outro arredondamento.
+func draftMoveDrop(v BoardView, p boardToken) string {
+	return fmt.Sprintf(
+		"if ($arrastando === 'peca') { "+
+			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
+			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
+			"if (dx || dy) @post('%s/pecas/%s/mover/' + (%d + dx) + '/' + (%d + dy)) }",
+		v.Base, p.ID, p.X, p.Y)
 }
 
 // followToken é o par do `takeToken` no `pointermove`: a peça que se
@@ -1027,7 +1085,11 @@ func dropToken(v BoardView, p boardToken) string {
 // UMA peça, e o gesto do grupo move várias sem regra de deslocamento nenhuma —
 // pedir prévia ali desenharia a seta de uma peça sobre o arrasto de todas.
 func followToken(v BoardView, p boardToken) string {
-	if v.ArrastaAPeca == p.ID {
+	// A PRÉVIA fica de fora do rascunho, e não por economia: ela pergunta ao
+	// servidor quanto o caminho CUSTA, e custo de deslocamento é conta de turno.
+	// Fora da sessão não há turno, então a seta desenharia um orçamento que não
+	// existe — a peça só está sendo posta no lugar.
+	if !v.Rascunho && v.ArrastaAPeca == p.ID {
 		return fingerFollowsWithPreview(v, p)
 	}
 	return followsFinger("peca")
@@ -1044,7 +1106,7 @@ func estaArrastando(quem string) string {
 // da PEÇA no caminho, e este não tem peça nenhuma — abrir acontece justamente
 // quando não há tabuleiro.
 func sceneBoardCommand(v BoardView, acao string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/%s')", v.CampaignID, v.SessionID, acao)
+	return fmt.Sprintf("@post('%s/%s')", v.Base, acao)
 }
 
 // campaignCollection traduz os lugares guardados para a tela.
@@ -1082,8 +1144,7 @@ func diaDe(iso string) string {
 
 // placeCommand escreve a chamada de reabrir ou apagar um lugar do acervo.
 func placeCommand(v BoardView, placeID int64, acao string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/lugares/%d/%s')",
-		v.CampaignID, v.SessionID, placeID, acao)
+	return fmt.Sprintf("@post('%s/lugares/%d/%s')", v.Base, placeID, acao)
 }
 
 // tabCommand escreve a troca de aba a partir do acervo (ALE-205, fatia 3).
@@ -1092,26 +1153,36 @@ func placeCommand(v BoardView, placeID int64, acao string) string {
 // se quer aqui é literalmente ir até a aba que já existe, e uma segunda porta
 // para isso seria uma segunda regra sobre o que significa escolher uma cena.
 func tabCommand(v BoardView, tabuleiroID string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/aba/%s')",
-		v.CampaignID, v.SessionID, tabuleiroID)
+	return fmt.Sprintf("@post('%s/aba/%s')", v.Base, tabuleiroID)
 }
 
-// portugueseTokens concorda o número com o substantivo.
+// ── ONDE O TABULEIRO POSTA (ALE-292) ─────────────────────────────────────────
 //
-// Existe porque "1 peças" apareceu na tela na primeira medição, e essa é a
-// classe de erro que passa por todo teste que compara com `fmt.Sprintf` do mesmo
-// jeito — o teste re-derivaria o defeito. O caso do ZERO é escrito por extenso
-// porque "0 peças" descreve mal o que a linha é: cena aberta e abandonada, que é
-// justamente o que o mestre está procurando quando abre o acervo para limpar.
-func portugueseTokens(n int) string {
-	switch n {
-	case 0:
-		return "cena vazia"
-	case 1:
-		return "1 peça"
-	default:
-		return fmt.Sprintf("%d peças", n)
-	}
+// As vinte e cinco chamadas do tabuleiro escreviam `/mesa/%d/%d/tabuleiro` à
+// mão, cada uma com o par `v.CampaignID, v.SessionID` no fim do `Sprintf`.
+// Enquanto houve uma superfície só isso foi barato; com o RASCUNHO DE LUGAR são
+// duas, e o mesmo gesto (pintar, pôr peça, marcar) posta em endereços
+// diferentes conforme o que está sendo montado — a mesa de sábado ou o acervo
+// da campanha.
+//
+// Por isso o prefixo virou DADO da `BoardView` (`Base`) e não continua sendo
+// literal: quem monta a view decide para onde os gestos dela vão, e nenhum
+// desenho precisa saber que existe mais de um destino. As duas funções abaixo
+// são os únicos lugares do pacote onde o caminho do tabuleiro é escrito, e é
+// isso que o `TestNoBoardRouteIsHandwritten` varre.
+
+// tableBoardBase é o tabuleiro DA MESA: a cena que a sessão está jogando.
+func tableBoardBase(campaignID, sessionID int64) string {
+	return fmt.Sprintf("/mesa/%d/%d/tabuleiro", campaignID, sessionID)
+}
+
+// placeDraftBase é o tabuleiro do RASCUNHO: a cena que o mestre monta no acervo
+// da campanha, fora da sessão (ALE-292).
+//
+// Sem sessão no caminho de propósito — o rascunho é do ACERVO e sobrevive a
+// qualquer sessão, que é a diferença que a issue nomeia entre ele e a cortina.
+func placeDraftBase(campaignID, placeID int64) string {
+	return routes.PlaceDraft(campaignID, placeID) + "/tabuleiro"
 }
 
 // ── o PINCEL de terreno (ALE-264, item 5) ────────────────────────────────────
@@ -1168,8 +1239,8 @@ const NewPieceTool = "peca-nova"
 // negativa é lugar legítimo, e o valor tem de ser o do clique que aconteceu.
 func clickedSquareNewPiece(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('/mesa/%d/%d/tabuleiro/pecas/nova/' + (%s) + '/' + (%s))",
-		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
+		"@post('%s/pecas/nova/' + (%s) + '/' + (%s))",
+		v.Base, clicouEmX, clicouEmY,
 	)
 }
 
@@ -1181,15 +1252,14 @@ func clickedSquareNewPiece(v BoardView) string {
 // rotas mudarem juntas no dia em que uma delas precisar do canto e não do centro.
 func clickedPointMarking(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('/mesa/%d/%d/tabuleiro/marcadores/novo/' + (%s) + '/' + (%s))",
-		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
+		"@post('%s/marcadores/novo/' + (%s) + '/' + (%s))",
+		v.Base, clicouEmX, clicouEmY,
 	)
 }
 
 // markerCommand escreve o gesto sobre um marcador que já existe.
 func markerCommand(v BoardView, id, acao string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/marcadores/%s/%s')",
-		v.CampaignID, v.SessionID, id, acao)
+	return fmt.Sprintf("@post('%s/marcadores/%s/%s')", v.Base, id, acao)
 }
 
 // markerName é o que o leitor de tela anuncia, e ele DIZ o estado.
@@ -1226,8 +1296,7 @@ func pickMarker(id string) string {
 
 // curtainCommand escreve o gesto que fecha ou abre (ALE-202, ALE-269).
 func curtainCommand(v BoardView, estado string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/cortina/%s')",
-		v.CampaignID, v.SessionID, estado)
+	return fmt.Sprintf("@post('%s/cortina/%s')", v.Base, estado)
 }
 
 // curtainTarget é para onde o botão do cabeçalho leva.

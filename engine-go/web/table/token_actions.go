@@ -222,8 +222,7 @@ const closeMenuToken = "$pecaescolhida = ''"
 
 // tokenCommand escreve o gesto de um verbo do menu.
 func tokenCommand(v BoardView, id, acao string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/pecas/%s/%s')",
-		v.CampaignID, v.SessionID, id, acao)
+	return fmt.Sprintf("@post('%s/pecas/%s/%s')", v.Base, id, acao)
 }
 
 // openEditToken semeia o formulário com o que a peça É hoje, e só então abre.
@@ -251,8 +250,8 @@ func openEditToken(p boardToken) string {
 func saveEditToken(v BoardView) string {
 	return fmt.Sprintf(
 		"document.getElementById('editar-peca').close(); "+
-			"@post('/mesa/%d/%d/tabuleiro/pecas/' + $pecaeditada + '/editar')",
-		v.CampaignID, v.SessionID)
+			"@post('%s/pecas/' + $pecaeditada + '/editar')",
+		v.Base)
 }
 
 // visibilityName diz o VERBO que o clique executa, e não o estado atual.

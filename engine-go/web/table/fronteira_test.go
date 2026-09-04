@@ -26,6 +26,13 @@ import (
 // vocabulário do domínio ao vivo, não o hospedeiro com outro nome. Embrulhá-los
 // método a método daria oitenta entradas na porta e nenhuma fronteira a mais.
 //
+// **O `web/routes` entrou na ALE-292**, e é a última das cinco cenas a
+// importá-lo. Ele não é concessão: é o pacote que não importa NADA, e o guarda
+// dele (`TestTheAddressesImportNothing`) é quem garante que a permissão daqui
+// não vira uma porta para o resto do projeto. Esta cena passou a citá-lo porque
+// o rascunho de lugar mora num endereço da CAMPANHA, e ele é citado dos dois
+// lados — a crônica leva ao rascunho, e o rascunho volta para a crônica.
+//
 // **O `web/master` e o `web/sheetui` são cena lendo cena**, e as duas são
 // concessões declaradas: o bestiário da Mesa é o MESMO desenho da cena do
 // mestre, parametrizado pelo endereço, e a ficha embutida é o MESMO painel da
@@ -51,6 +58,7 @@ var permitidos = map[string]bool{
 	"t20engine/tabuleiro":   true, // o mapa: peça, marcador, terreno, lugar
 	"t20engine/web/bookui":  true, // o endereço do livro que o bestiário linka
 	"t20engine/web/master":  true, // o MESMO desenho do bestiário do mestre
+	"t20engine/web/routes":  true, // os endereços que ela cita da campanha (ALE-292)
 	"t20engine/web/sheetui": true, // o MESMO painel da ficha, embutido (ALE-275)
 	"t20engine/web/ui":      true, // o kit, a casca e a identidade visual
 }

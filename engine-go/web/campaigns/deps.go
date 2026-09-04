@@ -102,8 +102,61 @@ type Deps interface {
 	// que a porta de entrar deixou escrita (ALE-278). Os sentinelas de erro são
 	// valores do `api`; se a cena os lesse, alcançaria o hospedeiro.
 	Join(ctx context.Context, campanhaID, heroiID, quemPede int64, convite string) JoinRefusal
+	// ── o ACERVO DE LUGARES (ALE-292) ─────────────────────────────────────────
+	//
+	// Três perguntas e não o `BoardStore` inteiro, e é a mesma linha que o
+	// `ListRow` desenha: o store é o vocabulário do domínio AO VIVO, e esta cena
+	// não é ao vivo. Ela lista, cria e apaga — e a montagem, que é onde o
+	// tabuleiro de verdade entra, acontece em OUTRA cena.
+
+	// Places são os lugares guardados da campanha, na forma que esta tela
+	// desenha, já dizendo qual deles está numa mesa agora.
+	Places(ctx context.Context, campanhaID int64) []PlaceRow
+	// NewPlace devolve o lugar em que o mestre vai montar a cena, criando-o
+	// vazio quando ele ainda não existe. Nome repetido leva ÀQUELE lugar: o nome
+	// é a identidade do lugar dentro da campanha.
+	NewPlace(ctx context.Context, campanhaID int64, nome, chao string) (int64, error)
+	// RemovePlace tira o lugar do acervo.
+	RemovePlace(ctx context.Context, campanhaID, lugarID int64) error
+	// Grounds são as aparências que um lugar pode ter — pedra, taverna, cripta.
+	//
+	// Vêm pela porta e não de uma lista escrita aqui porque elas são do
+	// tabuleiro: uma cópia nesta cena ofereceria um chão que o servidor não
+	// conhece no dia em que a sexta aparência nascer.
+	Grounds() []GroundOption
+
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
+}
+
+// PlaceRow é um lugar do acervo, na forma que esta tela desenha.
+//
+// Ela existe pela mesma razão que o `ListRow`: o `tabuleiro.Place` é a forma do
+// domínio ao vivo, com tag `json:` nos campos porque ele viaja no fio da mesa —
+// e uma tela que o lesse passaria a depender do formato de um protocolo que ela
+// não fala.
+type PlaceRow struct {
+	ID   int64
+	Nome string
+	// Pecas é a CONTAGEM, e ela é o que separa a cena montada da cena aberta e
+	// abandonada: "Cripta · 9 peças" é uma noite de trabalho, "cena vazia" é
+	// lixo que o mestre quer apagar.
+	Pecas int
+	// Quando é a última mudança, já legível.
+	Quando string
+	// NaMesaID é a SESSÃO que mostra este lugar agora, ou zero.
+	//
+	// Ela decide os dois gestos da linha: o lugar que está numa mesa não se
+	// monta nem se apaga — o `Archive` da aba que encerrasse desfaria os dois —,
+	// e o que sobra é ir até ele. As duas travas de verdade são do servidor;
+	// isto é a cortesia de não oferecer o gesto que ele vai recusar.
+	NaMesaID int64
+}
+
+// GroundOption é uma aparência de lugar, para o formulário do lugar novo.
+type GroundOption struct {
+	ID     string
+	Rotulo string
 }
 
 // ListRow é uma campanha na LISTA, na forma que esta cena precisa.

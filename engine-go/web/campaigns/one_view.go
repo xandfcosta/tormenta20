@@ -57,6 +57,15 @@ type oneView struct {
 	// porque é o que separa uma crônica de anos de uma aberta ontem.
 	CriadaEm string
 
+	// Lugares é o ACERVO da campanha (ALE-292), e ele só é carregado na aba dele.
+	//
+	// Sob demanda e não sempre: uma crônica longa tem dezenas de lugares, e a
+	// visão geral não mostra nenhum — buscá-los a cada abertura da página seria
+	// ler o acervo para desenhar três sinetes.
+	Lugares []PlaceRow
+	// Chaos são as aparências oferecidas ao lugar NOVO.
+	Chaos []GroundOption
+
 	// RegrasIgnoradas é o conjunto DESLIGADO, e não o ligado: o padrão do livro
 	// é a regra valer, então guardar as exceções é guardar o que alguém
 	// decidiu — e uma regra nova nasce em vigor sem migração de dados.
@@ -109,6 +118,11 @@ func oneTabs(ehMestre bool, pedida string) []oneTab {
 		{ID: "membros", Rotulo: "Membros"},
 	}
 	if ehMestre {
+		// LUGARES antes de CONFIG, e a ordem é a do uso: preparar a próxima cena
+		// é trabalho de toda semana, e configurar a mesa acontece uma vez. Config
+		// fecha o trilho porque é o que se procura quando já se sabe o que
+		// procurar (ALE-292).
+		todas = append(todas, oneTab{ID: "lugares", Rotulo: "Lugares"})
 		todas = append(todas, oneTab{ID: "config", Rotulo: "Config"})
 	}
 	escolhida := "visao"
@@ -192,6 +206,13 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		if token := s.deps.InviteLink(ctx, c.ID); token != "" {
 			v.LinkDoConvite = "/campanhas/entrar?token=" + url.QueryEscape(token)
 		}
+	}
+	// O ACERVO é lido só na ABA dele, e pela mesma regra do link acima: não
+	// desenhar é UX, não carregar é a decisão. Uma crônica de dois anos tem
+	// dezenas de lugares, e nenhuma outra aba mostra um.
+	if v.EhMestre && v.AbaAtiva() == "lugares" {
+		v.Lugares = s.deps.Places(ctx, c.ID)
+		v.Chaos = s.deps.Grounds()
 	}
 
 	membros, err := s.deps.Queries().ListMembers(ctx, id)

@@ -134,7 +134,7 @@ var saveRuler = fmt.Sprintf("$reguafase = %d; $reguapontos = []; $reguarotulos =
 // dois lugares para esquecer de mandar, e o sintoma seria a régua que desenha
 // certo e mede errado.
 func repatchRuler(v BoardView) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/regua')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('%s/regua')", v.Base)
 }
 
 // clickedPointTemplate põe o gabarito, e aponta quando a forma pede.
@@ -200,9 +200,9 @@ func templateFollowsPointer(v BoardView) string {
 // sintoma seria um gabarito que ignora o número que a pessoa acabou de digitar.
 func repatchTemplate(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('/mesa/%d/%d/tabuleiro/gabarito/' + $gabarito + '/' + $gabaritotamanho"+
+		"@post('%s/gabarito/' + $gabarito + '/' + $gabaritotamanho"+
 			" + '/' + $gabaritox + '/' + $gabaritoy + '/' + $gabaritomirax + '/' + $gabaritomiray)",
-		v.CampaignID, v.SessionID,
+		v.Base,
 	)
 }
 

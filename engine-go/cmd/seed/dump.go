@@ -18,6 +18,10 @@ var chronicleDateTables = map[string]bool{
 	"campaigns":        true,
 	"campaign_members": true,
 	"sessions":         true,
+	// O acervo de LUGARES entra pela mesma razão que as três acima (ALE-292): a
+	// data dele é dado de demonstração fixo, e não um carimbo que o relógio
+	// produziu — normalizá-la faria o despejo mudar a cada regeneração.
+	"campaign_places": true,
 }
 
 // devPasswordHash is a fixed bcrypt hash of the dev password (seed-data.json's
@@ -41,6 +45,8 @@ var dumpTables = []string{
 	"character_spells",
 	"campaign_members",
 	"sessions",
+	// Depois de `campaigns`, que é o pai dele pela FK (ALE-292).
+	"campaign_places",
 	"active_effects",
 }
 

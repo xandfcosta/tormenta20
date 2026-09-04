@@ -85,13 +85,12 @@ func dropTerrainRect(v BoardView) string {
 		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
 			"$%s = ''; "+
 			"return $ferramenta === %q "+
-			"? @post('/mesa/%d/%d/tabuleiro/terreno/limpar/retangulo/' + de + '/' + ate) "+
-			": @post('/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/retangulo/' + de + '/' + ate)",
+			"? @post('%s/terreno/limpar/retangulo/' + de + '/' + ate) "+
+			": @post('%s/terreno/' + $ferramenta + '/retangulo/' + de + '/' + ate)",
 		sinalDoRetangulo, retanguloDeTerreno, sinalDoRetanguloDe,
 		sinalDoRetangulo,
 		EraserTool,
-		v.CampaignID, v.SessionID,
-		v.CampaignID, v.SessionID,
+		v.Base, v.Base,
 	)
 }
 
@@ -131,10 +130,10 @@ func dropTokensRect(v BoardView) string {
 	return fmt.Sprintf(
 		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
 			"$%s = ''; if (de === ate) return; $%s = true; "+
-			"return @post('/mesa/%d/%d/tabuleiro/marcar-area/' + de + '/' + ate)",
+			"return @post('%s/marcar-area/' + de + '/' + ate)",
 		sinalDoRetangulo, retanguloDePecas, sinalDoRetanguloDe,
 		sinalDoRetangulo, sinalDoCliqueEngolido,
-		v.CampaignID, v.SessionID,
+		v.Base,
 	)
 }
 
@@ -190,8 +189,8 @@ func dropParty(v BoardView) string {
 		"if ($arrastando === 'peca') { "+
 			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
 			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
-			"if (dx || dy) @post('/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy) }",
-		v.CampaignID, v.SessionID,
+			"if (dx || dy) @post('%s/grupo/mover/' + dx + '/' + dy) }",
+		v.Base,
 	)
 }
 

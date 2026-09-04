@@ -166,7 +166,7 @@ func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 	if !strings.Contains(tela, "Lugares da campanha · 1") {
 		t.Errorf("o acervo não apareceu com a cena encerrada")
 	}
-	// LITERAL e nunca `portugueseTokens(1)`: o esperado derivado da produção
+	// LITERAL e nunca `ui.TokenCount(1)`: o esperado derivado da produção
 	// afirmaria o defeito junto com a regra, e foi assim que "1 peças" chegou à
 	// tela na primeira medição.
 	if !strings.Contains(tela, "1 peça") {

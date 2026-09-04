@@ -401,7 +401,15 @@ html {
        cinco, então todo marcador caía no dourado — em silêncio, que é a marca
        desta família. O `piloto_marcador_test.go` amarra esta lista à de lá. */
     --marcador-ouro: var(--grimorio-gold);
-    --marcador-carmim: var(--hp-critical);
+    /* O carmim é a TINTA e não o bloco (ALE-292). Ele era `--hp-critical`, que é
+       a cor de PREENCHER a barra de PV — e a letra do marcador desenhada com ela
+       dava 4,11:1 sobre o mapa, abaixo dos 4,5 do AA. As outras três passam.
+       Trocar pelo `--destructive-ink` é aplicar a divisão que esta folha JÁ
+       ensina duas seções acima: o crimson é o BLOCO, o claro é a tinta que
+       escreve e contorna.
+       Ninguém tinha medido porque nenhum guarda visitava um mapa COM marcador —
+       o primeiro que visitou (o do rascunho de lugar) reprovou na estreia. */
+    --marcador-carmim: var(--destructive-ink);
     --marcador-azul: var(--mp-arcane);
     --marcador-verde: var(--hp-full);
   }

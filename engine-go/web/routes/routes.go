@@ -115,3 +115,38 @@ func MasterBestiarySearch(term string) string {
 func Table(campanhaID, sessaoID int64) string {
 	return fmt.Sprintf("/mesa/%d/%d", campanhaID, sessaoID)
 }
+
+// PlaceDraft é PARA ONDE se entra num RASCUNHO DE LUGAR (ALE-292): a cena que o
+// mestre monta no acervo da campanha, fora da sessão.
+//
+// O endereço é da CAMPANHA e não da mesa, e isso é a issue: o lugar é do acervo
+// e sobrevive a qualquer sessão — montar a cripta na quinta-feira não pode
+// depender de haver uma partida rolando. É a diferença que o GLOSSARIO desenha
+// entre o rascunho e a cortina.
+//
+// Ela entra aqui pelo critério de sempre: a cena da campanha a cita para levar
+// ao rascunho, e a cena do rascunho a cita para escrever onde os gestos postam.
+// Duas cenas, um endereço.
+//
+//	routes.PlaceDraft(12, 7) // "/campanhas/12/lugares/7"
+func PlaceDraft(campanhaID, lugarID int64) string {
+	return fmt.Sprintf("/campanhas/%d/lugares/%d", campanhaID, lugarID)
+}
+
+// CampaignTab é a crônica aberta numa seção: `/campanhas/12?tab=lugares`.
+//
+// A ABA é endereço e não estado do navegador — decisão que a cena da campanha já
+// carrega —, e é por isso que ela cabe numa função em vez de num sinal: o link
+// volta no histórico, abre em nova aba e é o que alguém cola no chat da mesa.
+//
+// Ela subiu para cá quando o RASCUNHO passou a citá-la (ALE-292): o "voltar" da
+// cena do rascunho leva para a aba dos lugares, e ele é de OUTRO pacote. Aba
+// vazia devolve a crônica sem query, que é a visão geral.
+//
+//	routes.CampaignTab(12, "lugares") // "/campanhas/12?tab=lugares"
+func CampaignTab(campanhaID int64, aba string) string {
+	if aba == "" {
+		return fmt.Sprintf("/campanhas/%d", campanhaID)
+	}
+	return fmt.Sprintf("/campanhas/%d?tab=%s", campanhaID, url.QueryEscape(aba))
+}
