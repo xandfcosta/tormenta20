@@ -100,10 +100,17 @@ const SUPERFICIES_COM_TINTA = [
       // dourada do modo, o nome da peça sobre o chão de cripta, e o terreno
       // difícil por baixo dela.
       //
-      // A cena vem da SEMENTE e não de um clique: criar o lugar aqui deixaria
-      // uma linha para trás no banco compartilhado da corrida, e o guarda de
-      // contraste não é lugar para escrever.
-      await page.goto('/campanhas/4/lugares/1')
+      // A cena vem da SEMENTE e não de um clique de criação: criar o lugar aqui
+      // deixaria uma linha para trás no banco compartilhado da corrida, e o
+      // guarda de contraste não é lugar para escrever.
+      //
+      // MAS O CAMINHO É NAVEGADO, e não um id no endereço. O id era `lugares/1`
+      // e virou `lugares/4` no dia em que a seed ganhou o acervo da campanha 1
+      // (ALE-271) — um id de AUTOINCREMENT numa fixture compartilhada é um
+      // acoplamento que quebra por uma mudança sem relação nenhuma, e o erro
+      // ("heading não encontrado") não aponta para a causa.
+      await page.goto('/campanhas/4?tab=lugares')
+      await page.getByRole('link', { name: 'Montar' }).first().click()
       // O NÍVEL importa: o nome do lugar aparece DUAS vezes na tela — no `<h1>`
       // da moldura e no `<h2>` da cena, que é o mesmo desenho da Mesa. Sem o
       // nível o seletor casa com os dois e estoura em `strict mode`.

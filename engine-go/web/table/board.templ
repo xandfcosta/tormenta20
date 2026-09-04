@@ -1231,12 +1231,32 @@ templ endBoardButton(v BoardView) {
 templ botaoDoAcervo(v BoardView) {
 	<button
 		type="button"
+		aria-label={ collectionLabel(v) }
+		title={ collectionLabel(v) }
 		data-on:click="document.getElementById('acervo-de-lugares').showModal()"
-		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3"
 	>
 		@ui.Icon("Library", "size-4")
-		{ fmt.Sprintf("Lugares da campanha · %d", len(v.Acervo)) }
+		// AS PALAVRAS SAEM NO TELEFONE, a CONTAGEM fica (ALE-271).
+		//
+		// Este é o único item do painel com texto e contagem, e sozinho ele mede
+		// 144px: era ele que empurrava "Centralizar" e "Afastar" para fora de uma
+		// janela de 390. O que a frase carrega de informação é o NÚMERO — o ícone
+		// de biblioteca já diz do que se trata —, então o número é o que fica.
+		//
+		// O nome ACESSÍVEL não encolhe junto: ele está no `aria-label`, com a
+		// frase inteira. Esconder texto por CSS o tira da árvore de acessibilidade
+		// (`display:none` não é `sr-only`), e um botão que vira "3" para quem usa
+		// leitor de tela é pior que um botão largo.
+		<span class="hidden sm:inline">Lugares da campanha ·</span>
+		{ fmt.Sprint(len(v.Acervo)) }
 	</button>
+}
+
+// collectionLabel é a frase inteira, e ela é o nome acessível do botão em toda
+// largura — o que encolhe é só o que se VÊ.
+func collectionLabel(v BoardView) string {
+	return fmt.Sprintf("Lugares da campanha · %d", len(v.Acervo))
 }
 
 // O ACERVO de cenas guardadas (ALE-124, fatia 5).
@@ -1579,7 +1599,10 @@ templ planFraming(v BoardView) {
 		// saber da cena: num plano sem bordas, achar o grupo é a pergunta que se
 		// faz primeiro, e aproximar é o ajuste que vem depois de achar.
 		@centerer(v)
-		<span aria-hidden="true" class="mx-0.5 h-5 w-px bg-grimorio-iron"></span>
+		// O VINCO separa "achar" de "aproximar", e ele é DECORATIVO — no telefone
+		// quem separa é o espaço. Ele vale 9px com as margens, e foram os últimos
+		// que faltavam para o painel caber a 390 (ALE-271).
+		<span aria-hidden="true" class="mx-0.5 hidden h-5 w-px bg-grimorio-iron sm:inline-block"></span>
 		<button
 			type="button"
 			aria-label="Afastar o mapa"
@@ -1594,12 +1617,30 @@ templ planFraming(v BoardView) {
 		// mestre é "cabe o deslocamento inteiro?" (6 quadrados, p106), e uma
 		// porcentagem obriga a converter de cabeça. `aria-live` porque ele é a
 		// única resposta ao clique para quem não vê o mapa mudar.
+		// O MOSTRADOR SAI DA LARGURA NO TELEFONE, e NÃO da tela de quem escuta
+		// (ALE-271, decisão do dono).
+		//
+		// Ele media 56px — `min-w-14` mais o " px" no texto — e era o item mais
+		// gordo do grupo. Encolher os dois rótulos do painel resolveu o caso de um
+		// acervo pequeno; com 148 lugares o número de três dígitos trazia o
+		// estouro de volta, e esses 32px são o que dá folga de verdade.
+		//
+		// `sr-only` e NUNCA `hidden`, e a diferença é a issue toda: o comentário
+		// acima registra que ele é `aria-live` porque é a única resposta ao clique
+		// para quem não vê o mapa mudar. `display:none` o tiraria da árvore de
+		// acessibilidade junto com a largura — o `sr-only` tira só os pixels.
+		//
+		// A UNIDADE virou irmão em vez de ficar no `data-text` porque o `data-text`
+		// substitui o conteúdo inteiro do nó: um `<span>` dentro dele seria apagado
+		// no primeiro zoom. É a mesma armadilha do `data-attr:style`, que substitui
+		// o atributo inteiro.
 		<output
 			aria-live="polite"
 			aria-label="Tamanho do quadrado"
-			data-text="$quadrado + ' px'"
-			class="min-w-14 text-center text-xs tabular-nums text-muted-foreground"
+			data-text="$quadrado"
+			class="sr-only text-right text-xs tabular-nums text-muted-foreground sm:not-sr-only sm:min-w-8"
 		></output>
+		<span aria-hidden="true" class="hidden text-xs text-muted-foreground sm:inline">px</span>
 		<button
 			type="button"
 			aria-label="Aproximar o mapa"

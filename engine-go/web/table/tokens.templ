@@ -1,5 +1,7 @@
 package table
 
+import "t20engine/web/ui"
+
 // O gesto de PÔR NO MAPA (ALE-264, item 5). A regra e as expressões estão em
 // `tokens.go`; aqui é só o desenho.
 
@@ -16,11 +18,23 @@ templ botaoDePorNoMapa(v BoardView) {
 	if v.Mestre {
 		<button
 			type="button"
+			aria-label="Pôr no mapa"
 			title="Escolher quem vem para o mapa. Clique direito põe só as fichas."
 			data-on:click={ openMap() }
 			data-on:contextmenu={ sheetsShortcut(v) }
-			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>Pôr no mapa</button>
+			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3"
+		>
+			// O ÍCONE aparece e o texto sai no telefone (ALE-271). Ele não existia
+			// — este botão era só palavra —, e a alternativa era ele sumir da tela
+			// estreita: um gesto que só existe no desktop é um gesto que a mesa
+			// jogada no sofá não tem.
+			//
+			// `UserPlus` e não `Users2`: o que ele faz é TRAZER alguém para o mapa,
+			// e o `Users2` já é o grupo no trilho do mestre — dois desenhos iguais
+			// para coisas diferentes é como se aprende a errar o clique.
+			@ui.Icon("UserPlus", "size-4")
+			<span class="hidden sm:inline">Pôr no mapa</span>
+		</button>
 	}
 }
 
