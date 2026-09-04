@@ -36,14 +36,32 @@ var expertisesList = []expertiseDef{
 // o painel da ficha. Duas cópias da mesma transcrição não divergiram por sorte,
 // e a que ficou é a que a validação de schema alcança.
 
-// insertCharacter writes the character + all relations in one transaction.
-func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, body sheet.CreateBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {
-	tx, err := s.db.BeginTx(r.Context(), nil)
+// A FORJA é a primeira cena com adaptador PRÓPRIO (ALE-278, fatia 6).
+//
+// `forgeHost` cumpre a `forge.Deps` sem o `*Server` no meio: das seis
+// assinaturas que a forja pede, quatro são do núcleo e duas — estas — precisam
+// só de mais uma coisa, a transação. Por isso o adaptador é o núcleo mais um
+// `*sql.DB`, e não o servidor inteiro.
+//
+// A escolha da forja como primeira não é gosto: a medição de acoplamento da
+// ALE-278 dizia que ela **não vaza nenhum símbolo**, e por isso ela foi também
+// a primeira cena a virar pacote. A mesma propriedade a faz a primeira a largar
+// o servidor.
+type forgeHost struct {
+	sceneCore
+	db *sql.DB
+}
+
+func (s *Server) forgeHost() forgeHost { return forgeHost{sceneCore: s.sceneCore(), db: s.db} }
+
+// InsertCharacter writes the character + all relations in one transaction.
+func (h forgeHost) InsertCharacter(r *http.Request, ownerID int64, name string, body sheet.CreateBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {
+	tx, err := h.db.BeginTx(r.Context(), nil)
 	if err != nil {
 		return 0, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	q := s.queries.WithTx(tx)
+	q := h.queries.WithTx(tx)
 	now := plataforma.NowISO()
 
 	id, err := q.CreateCharacter(r.Context(), sqlcgen.CreateCharacterParams{
@@ -96,15 +114,15 @@ func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, bo
 
 // healVitals recomputes the pools (clamp-only, matching healVitalsFromEngine) and
 // patches the aggregate + row.
-func (s *Server) HealVitals(r *http.Request, id int64, dto *sheet.CharacterDTO) error {
-	if s.catalogs == nil || len(dto.Classes) == 0 {
+func (h forgeHost) HealVitals(r *http.Request, id int64, dto *sheet.CharacterDTO) error {
+	if h.catalogs == nil || len(dto.Classes) == 0 {
 		return nil
 	}
 	ec, err := sheet.EngineCharacterFrom(*dto)
 	if err != nil {
 		return err
 	}
-	pools := s.catalogs.VitalsForCharacter(ec)
+	pools := h.catalogs.VitalsForCharacter(ec)
 	stored := storedVitals{HpMax: dto.HpMax, HpCurrent: dto.HpCurrent, MpMax: dto.MpMax, MpCurrent: dto.MpCurrent}
 	next := storedVitals{
 		HpMax: int64(pools.PvMax), HpCurrent: clampCurrent(stored.HpCurrent, int64(pools.PvMax)),
@@ -113,7 +131,7 @@ func (s *Server) HealVitals(r *http.Request, id int64, dto *sheet.CharacterDTO) 
 	if next == stored {
 		return nil
 	}
-	if err := s.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
+	if err := h.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
 		HpMax: next.HpMax, HpCurrent: next.HpCurrent, MpMax: next.MpMax, MpCurrent: next.MpCurrent,
 		UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {

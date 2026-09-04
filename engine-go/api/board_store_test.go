@@ -462,7 +462,7 @@ func TestBackupPruningKeepsTheNewest(t *testing.T) {
 	base := time.Date(2026, 8, 18, 3, 0, 0, 0, time.UTC)
 	nomes := []string{}
 	for i := 0; i < 3; i++ {
-		nome, err := s.backupDatabase(ctx, base.Add(time.Duration(i)*time.Hour))
+		nome, err := s.adminHost().backupDatabase(ctx, base.Add(time.Duration(i)*time.Hour))
 		if err != nil {
 			t.Fatalf("backup %d: %v", i, err)
 		}
@@ -471,7 +471,7 @@ func TestBackupPruningKeepsTheNewest(t *testing.T) {
 
 	s.pruneBackups()
 
-	restantes := s.listBackups()
+	restantes := s.adminHost().listBackups()
 	if len(restantes) != 2 {
 		t.Fatalf("sobraram %d backups, esperava 2: %+v", len(restantes), restantes)
 	}
@@ -496,7 +496,7 @@ func TestBackupPruningIgnoresStrangers(t *testing.T) {
 
 	base := time.Date(2026, 8, 18, 3, 0, 0, 0, time.UTC)
 	for i := 0; i < 2; i++ {
-		if _, err := s.backupDatabase(context.Background(), base.Add(time.Duration(i)*time.Hour)); err != nil {
+		if _, err := s.adminHost().backupDatabase(context.Background(), base.Add(time.Duration(i)*time.Hour)); err != nil {
 			t.Fatalf("backup %d: %v", i, err)
 		}
 	}
@@ -522,7 +522,7 @@ func TestBackupSchedulerStaysOffWhenDisabled(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("o agendador ficou girando com o backup desligado")
 	}
-	if n := len(s.listBackups()); n != 0 {
+	if n := len(s.adminHost().listBackups()); n != 0 {
 		t.Errorf("fez %d backups com o automático desligado", n)
 	}
 }

@@ -140,7 +140,7 @@ func (s *Server) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sign session")
 		return false
 	}
-	http.SetCookie(w, s.sessionCookie(token, int(sessionTTL.Seconds())))
+	http.SetCookie(w, sessionCookie(s.cfg, token, int(sessionTTL.Seconds())))
 	return true
 }
 
@@ -181,14 +181,17 @@ func (s *Server) verifyToken(tokenStr string) (int64, error) {
 	return int64(sub), nil
 }
 
-func (s *Server) sessionCookie(value string, maxAge int) *http.Cookie {
+// Ela recebe a CONFIGURAÇÃO em vez de pendurar no `*Server` (ALE-278, fatia 6):
+// o hub pede o biscoito expirado pela porta dele, e uma função que só precisa
+// de dois campos não tem razão para exigir um servidor inteiro.
+func sessionCookie(cfg plataforma.Config, value string, maxAge int) *http.Cookie {
 	return &http.Cookie{
-		Name:     s.cfg.CookieName,
+		Name:     cfg.CookieName,
 		Value:    value,
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   s.cfg.CookieSecure,
+		Secure:   cfg.CookieSecure,
 		SameSite: http.SameSiteLaxMode,
 	}
 }

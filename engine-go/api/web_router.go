@@ -52,14 +52,14 @@ func (s *Server) WebRouter() http.Handler {
 	// O HUB (ALE-231): o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
-		hub.Routes(r, hub.New(s))
+		hub.Routes(r, hub.New(s.hubHost()))
 		campaigns.Routes(r, campaigns.New(s))
 		// PERSONAGENS (ALE-278) e a FORJA, irmãs no mesmo endereço: o elenco é de
 		// onde se abre a folha em branco. Elas eram montadas UMA DENTRO DA OUTRA
 		// e isso era organização, não dependência — o `chi` não liga para quem
 		// registra o quê, e a linha subiu para cá quando a lista virou pacote.
 		characters.Routes(r, characters.New(s.sceneCore()))
-		forge.Routes(r, forge.New(s))
+		forge.Routes(r, forge.New(s.forgeHost()))
 		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
 		sheetui.Routes(r, sheetui.New(s))
 		grimoire.Routes(r, grimoire.New(s.sceneCore()))
@@ -99,7 +99,7 @@ func (s *Server) WebRouter() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
 		r.Use(s.requireAdmin)
-		admin.Routes(r, admin.New(s))
+		admin.Routes(r, admin.New(s.adminHost()))
 	})
 	return r
 }

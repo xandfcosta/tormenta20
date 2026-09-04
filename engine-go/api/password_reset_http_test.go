@@ -21,7 +21,7 @@ import (
 // `mintPasswordReset`.
 func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 	t.Helper()
-	reset, err := s.mintPasswordReset(context.Background(), UserID, adminID)
+	reset, err := s.adminHost().mintPasswordReset(context.Background(), UserID, adminID)
 	if err != nil {
 		t.Fatalf("gerar link: %v", err)
 	}

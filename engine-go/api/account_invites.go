@@ -41,9 +41,9 @@ type accountInviteDTO struct {
 // HTTP) e do trio da porta (ALE-229). Já não é anedota: é o que uma base com
 // exatamente um transporte parece por dentro, e o segundo transporte é o que
 // torna isso visível.
-func (s *Server) mintAccountInvite(ctx context.Context, criadoPor int64) (sqlcgen.AccountInvite, error) {
+func mintAccountInvite(ctx context.Context, q *sqlcgen.Queries, criadoPor int64) (sqlcgen.AccountInvite, error) {
 	now := time.Now()
-	return s.queries.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
+	return q.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
 		Token:     generateInviteToken(),
 		Createdby: criadoPor,
 		Createdat: plataforma.IsoAt(now),

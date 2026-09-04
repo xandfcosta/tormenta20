@@ -48,7 +48,7 @@ func (s *Server) IsAdminRequester(ctx context.Context, userID int64) bool {
 	if err != nil {
 		return false
 	}
-	return s.IsAdmin(u.Email)
+	return s.cfg.IsAdmin(u.Email)
 }
 
 // SessionForCaller é a trava de acesso à mesa.
