@@ -178,13 +178,13 @@ logo abaixo, com o controle que ele não tinha.
 func TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
-	outra := seedCampaign(t, s, seedUser(t, s, "vizinho-openplace@t.com"))
-	if err := s.boards.Archive(ctx, outra, &tabuleiro.BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
+	neighbourCampaign := seedCampaign(t, s, seedUser(t, s, "vizinho-openplace@t.com"))
+	if err := s.boards.Archive(ctx, neighbourCampaign, &tabuleiro.BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
 		t.Fatalf("guardar a cena da outra mesa: %v", err)
 	}
-	alheia := s.boards.Places(ctx, outra)[0]
+	theirPlace := s.boards.Places(ctx, neighbourCampaign)[0]
 
-	if _, err := s.boards.OpenPlace(ctx, campanha, sessao, alheia.ID); err == nil {
+	if _, err := s.boards.OpenPlace(ctx, campanha, sessao, theirPlace.ID); err == nil {
 		t.Fatal("abriu na mesa a cena de outra crônica")
 	}
 	if naMesa := s.boards.Get(ctx, sessao, defaultTab); naMesa == nil || naMesa.Place != "Taverna do Javali" {
@@ -196,8 +196,8 @@ func TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace(t *testing
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
 		t.Fatalf("arquivar a taverna: %v", err)
 	}
-	minha := placeNamed(t, s.boards.Places(ctx, campanha), "Taverna do Javali")
-	if _, err := s.boards.OpenPlace(ctx, campanha, sessao, minha.ID); err != nil {
+	myPlace := placeNamed(t, s.boards.Places(ctx, campanha), "Taverna do Javali")
+	if _, err := s.boards.OpenPlace(ctx, campanha, sessao, myPlace.ID); err != nil {
 		t.Fatalf("o lugar da PRÓPRIA crônica foi recusado: %v", err)
 	}
 }
