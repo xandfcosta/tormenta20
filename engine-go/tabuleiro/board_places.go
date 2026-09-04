@@ -210,13 +210,28 @@ func (bs *BoardStore) PlaceScene(ctx context.Context, campaignID, placeID int64)
 
 // SavePlaceScene grava a cena que o mestre montou, sem tocar na mesa.
 //
-// Este é o ÚNICO lugar do tabuleiro onde um estado inteiro chega pelo cliente —
-// nos outros o cliente manda a intenção ("mova esta peça") e o servidor produz o
-// estado. É deliberado: o rascunho não tem concorrência (só o mestre o vê),
-// não tem broadcast e não tem vez, então um handler por gesto seria protocolo
-// para nada. O preço é este: o que chega tem de ser CONFERIDO antes de virar
-// acervo, senão um cliente quebrado guarda lixo que só aparece quando a cena
-// chega à mesa.
+// Quem a chama é o `EditPlace` (ALE-292), depois de aplicar UM gesto à cena que
+// ele acabou de ler. Ela continua sendo o único lugar por onde o acervo é
+// escrito, e é por isso que a conferência mora aqui.
+//
+// # O que esta docstring dizia, e por que deixou de ser verdade
+//
+// Ela dizia: *"este é o ÚNICO lugar do tabuleiro onde um estado inteiro chega
+// pelo cliente… o rascunho não tem concorrência, não tem broadcast e não tem
+// vez, então um handler por gesto seria protocolo para nada."* O raciocínio
+// estava escrito desde a ALE-191 e nunca foi exercido — a função passou duas
+// épicas com zero chamadores de produção.
+//
+// Quando o gesto finalmente chegou, ele veio pelo outro caminho: o rascunho é a
+// MESMA superfície do tabuleiro apontada para o acervo, então ele já tem um
+// handler por gesto, e reusá-los custou menos que inventar um protocolo só
+// dele. O estado inteiro NÃO chega mais pelo cliente em lugar nenhum.
+//
+// A CONFERÊNCIA fica, e ela não virou enfeite: ela deixou de ser a fronteira
+// contra um cliente quebrado e passou a ser o guarda contra uma mutação pura
+// que produza coordenada absurda ou estoure o teto de peças — as puras não
+// sabem de nenhum dos dois. Sem ela, o lixo só apareceria quando a cena
+// chegasse à mesa.
 func (bs *BoardStore) SavePlaceScene(ctx context.Context, campaignID, placeID int64, cena *BoardState) error {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {

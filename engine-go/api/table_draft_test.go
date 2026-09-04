@@ -127,7 +127,7 @@ func TestADraftGestureChangesTheArchivedScene(t *testing.T) {
 //
 // O que ele veria não é um detalhe: a cripta de sábado, com a emboscada
 // posicionada e os marcadores que ainda não foram revelados.
-func TestNoStrangerReachesThePlaceDraft(t *testing.T) {
+func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
 	f := novoPiloto(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
 

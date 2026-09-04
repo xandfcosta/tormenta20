@@ -216,12 +216,17 @@ func placeNamed(t *testing.T, lugares []tabuleiro.Place, nome string) tabuleiro.
 }
 
 /*
-Montar o lugar sem pôr nada na table (ALE-191, fatia 2).
+Montar o lugar sem pôr nada na mesa (ALE-191, fatia 2).
 
-É o único ponto do tabuleiro onde o estado inteiro chega pelo CLIENTE — nos
-outros ele manda a intenção e o servidor produz o estado. O rascunho não tem
-concorrência, broadcast nem vez, então um handler por gesto seria protocolo para
-nada; o preço é conferir o que chega antes de virar acervo.
+As duas portas de baixo — ler a cena guardada e gravá-la — são o que o
+`EditPlace` usa para aplicar um gesto do rascunho (ALE-292).
+
+Aqui morava a afirmação de que este era "o único ponto do tabuleiro onde o
+estado inteiro chega pelo CLIENTE", com o argumento de que um handler por gesto
+seria protocolo para nada. Ela caducou quando o gesto chegou: o rascunho é a
+MESMA superfície do tabuleiro apontada para o acervo, e ele já tem um handler
+por gesto. A conferência do `SavePlaceScene` continua valendo — ver a docstring
+dele para o que ela protege agora.
 */
 
 // A cena montada volta inteira na próxima vez que o mestre a abrir — e a peça
