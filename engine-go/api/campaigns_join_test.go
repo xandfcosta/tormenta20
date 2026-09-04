@@ -42,7 +42,7 @@ func postaCarta(t *testing.T, s *Server, userID int64, form url.Values) *httptes
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	token, err := s.signToken(u)
+	token, err := s.accountRules().signToken(u)
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}
@@ -209,7 +209,7 @@ func (s *Server) authUserPorID(t *testing.T, id int64) AuthUser {
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	return s.authUser(u)
+	return s.accountRules().authUser(u)
 }
 
 // ehAdmin responde a pergunta que a cena faz por parâmetro, para a bancada não
@@ -224,5 +224,5 @@ func (s *Server) ehAdmin(t *testing.T, id int64) bool {
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	return s.authUser(u).IsAdmin
+	return s.accountRules().authUser(u).IsAdmin
 }

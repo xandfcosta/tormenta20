@@ -32,7 +32,7 @@ func pedeHub(t *testing.T, s *Server, userID int64, metodo, caminho string) *htt
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	tok, err := s.signToken(user)
+	tok, err := s.accountRules().signToken(user)
 	if err != nil {
 		t.Fatalf("assinar: %v", err)
 	}

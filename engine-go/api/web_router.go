@@ -48,7 +48,7 @@ func (s *Server) WebRouter() http.Handler {
 	// `door.New(s)` passa o `Scene` como a porta que a cena declarou — a
 	// interface está em `web/door`, e é nesta linha que o compilador cobra
 	// quando ela deixa de ser cumprida.
-	door.Routes(r, door.New(s))
+	door.Routes(r, door.New(s.doorHost()))
 	// O HUB (ALE-231): o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)

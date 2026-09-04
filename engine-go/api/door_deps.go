@@ -13,6 +13,27 @@ import (
 	"t20engine/web/door"
 )
 
+// A PORTA, com adaptador próprio (ALE-278, fatia 6).
+//
+// `doorHost` é o núcleo mais as REGRAS DE CONTA E SESSÃO — e não o `*Server`.
+// Ele é o adaptador que mais ganhou com a divisão: das nove assinaturas que a
+// porta pede, sete são autenticação, cadastro e redefinição de senha, e todas
+// as sete vivem agora num tipo que diz o que elas são (`accountRules`) em vez
+// de num tipo que diz onde elas estavam.
+// As regras vêm por CAMPO e não embutidas, e o compilador é que decidiu: as
+// duas partes carregam um `queries`, então embutir as duas deixa `h.queries`
+// ambíguo. A ambiguidade é um sintoma honesto — são dois caminhos para a mesma
+// conexão —, e nomear o campo é o que faz cada chamada dizer de qual das duas
+// coisas ela está falando.
+type doorHost struct {
+	sceneCore
+	accounts accountRules
+}
+
+func (s *Server) doorHost() doorHost {
+	return doorHost{sceneCore: s.sceneCore(), accounts: s.accountRules()}
+}
+
 // O QUE O HOSPEDEIRO DEVE À CENA DA PORTA (ALE-278).
 //
 // A `door.Deps` é declarada lá, no consumidor — é isso que a torna uma porta e
@@ -29,21 +50,21 @@ import (
 // tela de login. Devolver o `AuthUser` obrigaria a cena a conhecer um tipo do
 // `api` — e ela não pode importar o `api`, que a importa de volta para montar
 // rota.
-func (s *Server) HasSession(r *http.Request) bool {
-	_, err := s.sessionUser(r)
+func (h doorHost) HasSession(r *http.Request) bool {
+	_, err := h.accounts.sessionUser(r)
 	return err == nil
 }
 
-func (s *Server) Authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
-	return s.authenticate(ctx, email, password)
+func (h doorHost) Authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
+	return h.accounts.authenticate(ctx, email, password)
 }
 
-func (s *Server) CreateAccount(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error) {
-	return s.createAccount(ctx, body)
+func (h doorHost) CreateAccount(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error) {
+	return h.accounts.createAccount(ctx, body)
 }
 
-func (s *Server) IssueSession(w http.ResponseWriter, user sqlcgen.User) bool {
-	return s.issueSession(w, user)
+func (h doorHost) IssueSession(w http.ResponseWriter, user sqlcgen.User) bool {
+	return h.accounts.issueSession(w, user)
 }
 
 // ResetLinkOwner junta as duas perguntas que a cena fazia em sequência — o link
@@ -53,12 +74,12 @@ func (s *Server) IssueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 // `sqlcgen.PasswordReset` no meio só para ter o `Userid`. A linha do banco não
 // interessa à tela: o que ela mostra é o e-mail, para quem clicou saber que está
 // mudando a conta certa.
-func (s *Server) ResetLinkOwner(ctx context.Context, token string) (string, bool) {
-	reset, ok := s.usableReset(ctx, token)
+func (h doorHost) ResetLinkOwner(ctx context.Context, token string) (string, bool) {
+	reset, ok := h.accounts.usableReset(ctx, token)
 	if !ok {
 		return "", false
 	}
-	user, err := s.queries.GetUserByID(ctx, reset.Userid)
+	user, err := h.queries.GetUserByID(ctx, reset.Userid)
 	if err != nil {
 		return "", false
 	}
@@ -71,8 +92,8 @@ func (s *Server) ResetLinkOwner(ctx context.Context, token string) (string, bool
 // porta a carregar uma constante de custo criptográfico para a tela fazer
 // trabalho que não é dela — e o custo do bcrypt é decisão de segurança do
 // servidor, não de quem desenha o formulário.
-func (s *Server) ResetPassword(ctx context.Context, token, password string) bool {
-	reset, ok := s.usableReset(ctx, token)
+func (h doorHost) ResetPassword(ctx context.Context, token, password string) bool {
+	reset, ok := h.accounts.usableReset(ctx, token)
 	if !ok {
 		return false
 	}
@@ -80,7 +101,7 @@ func (s *Server) ResetPassword(ctx context.Context, token, password string) bool
 	if err != nil {
 		return false
 	}
-	return s.applyReset(ctx, reset, string(hash)) == nil
+	return h.accounts.applyReset(ctx, reset, string(hash)) == nil
 }
 
 // SignUpRefusal CLASSIFICA o erro; quem escolhe a frase é a cena.
@@ -90,7 +111,7 @@ func (s *Server) ResetPassword(ctx context.Context, token, password string) bool
 // hospedeiro sabe o que os erros dele significam, a cena sabe o que o jogador
 // lê. O motivo devolvido é um tipo da CENA, porque o vocabulário de recusa é
 // dela; se ele fosse daqui, a voz da porta passaria a morar no `api`.
-func (s *Server) SignUpRefusal(err error) (door.RefusalMotive, int) {
+func (h doorHost) SignUpRefusal(err error) (door.RefusalMotive, int) {
 	switch {
 	case db.IsUniqueViolation(err):
 		return door.RefusalEmailTaken, http.StatusConflict

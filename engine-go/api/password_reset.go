@@ -27,14 +27,14 @@ type resetPasswordBody struct {
 // applyReset writes the new hash and spends the link in ONE transaction, and
 // the spend is conditional — two people racing the same link cannot both set a
 // password on the account.
-func (s *Server) applyReset(ctx context.Context, Reset sqlcgen.PasswordReset, hash string) error {
-	tx, err := s.db.BeginTx(ctx, nil)
+func (a accountRules) applyReset(ctx context.Context, Reset sqlcgen.PasswordReset, hash string) error {
+	tx, err := a.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	q := s.queries.WithTx(tx)
+	q := a.queries.WithTx(tx)
 	spent, err := q.SpendPasswordReset(ctx, sqlcgen.SpendPasswordResetParams{
 		Usedat: plataforma.NullString(ptrTo(plataforma.NowISO())), ID: Reset.ID,
 	})
@@ -64,11 +64,11 @@ func writeResetError(w http.ResponseWriter, err error) {
 
 // usableReset loads a link that can still be spent: it exists, nobody used it,
 // and it has not expired.
-func (s *Server) usableReset(ctx context.Context, token string) (sqlcgen.PasswordReset, bool) {
+func (a accountRules) usableReset(ctx context.Context, token string) (sqlcgen.PasswordReset, bool) {
 	if token == "" {
 		return sqlcgen.PasswordReset{}, false
 	}
-	Reset, err := s.queries.GetPasswordReset(ctx, token)
+	Reset, err := a.queries.GetPasswordReset(ctx, token)
 	if err != nil || Reset.Usedat.Valid {
 		return sqlcgen.PasswordReset{}, false
 	}

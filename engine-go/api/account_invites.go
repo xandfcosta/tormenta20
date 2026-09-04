@@ -53,11 +53,11 @@ func mintAccountInvite(ctx context.Context, q *sqlcgen.Queries, criadoPor int64)
 
 // usableInvite loads an invite that can still be spent: it exists, nobody used
 // it, and it has not expired.
-func (s *Server) usableInvite(ctx context.Context, token string) (sqlcgen.AccountInvite, bool) {
+func (a accountRules) usableInvite(ctx context.Context, token string) (sqlcgen.AccountInvite, bool) {
 	if token == "" {
 		return sqlcgen.AccountInvite{}, false
 	}
-	invite, err := s.queries.GetAccountInvite(ctx, token)
+	invite, err := a.queries.GetAccountInvite(ctx, token)
 	if err != nil || invite.Usedat.Valid {
 		return sqlcgen.AccountInvite{}, false
 	}
@@ -79,16 +79,16 @@ var errInviteSpent = errors.New("invite already spent")
 // account is rolled back with it (ALE-120).
 //
 // invite is nil when an ADMIN_EMAILS address bootstraps its own account.
-func (s *Server) createUser(
+func (a accountRules) createUser(
 	ctx context.Context, params sqlcgen.CreateUserParams, invite *sqlcgen.AccountInvite,
 ) (sqlcgen.User, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := a.db.BeginTx(ctx, nil)
 	if err != nil {
 		return sqlcgen.User{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	q := s.queries.WithTx(tx)
+	q := a.queries.WithTx(tx)
 	user, err := q.CreateUser(ctx, params)
 	if err != nil {
 		return sqlcgen.User{}, err

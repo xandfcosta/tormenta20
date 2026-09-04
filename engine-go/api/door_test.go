@@ -68,7 +68,7 @@ func (f doorFixture) sessao(t *testing.T) string {
 	if err != nil {
 		t.Fatalf("conta sumiu: %v", err)
 	}
-	tok, err := f.s.signToken(user)
+	tok, err := f.s.accountRules().signToken(user)
 	if err != nil {
 		t.Fatalf("assinar: %v", err)
 	}
@@ -294,11 +294,11 @@ func TestTheDoorChangesThePasswordAndSendsBackToSignIn(t *testing.T) {
 	if hasSessionCookie(f, rec) {
 		t.Error("o link de redefinição abriu sessão")
 	}
-	if _, err := f.s.authenticate(context.Background(), f.email, nova); err != nil {
+	if _, err := f.s.accountRules().authenticate(context.Background(), f.email, nova); err != nil {
 		t.Errorf("a senha nova não vale: %v", err)
 	}
 	// Uso único: o mesmo link de novo não vale mais.
-	if _, ok := f.s.usableReset(context.Background(), token); ok {
+	if _, ok := f.s.accountRules().usableReset(context.Background(), token); ok {
 		t.Error("o link continua utilizável depois de gasto")
 	}
 }

@@ -49,7 +49,7 @@ func novaCenaDeHerois(t *testing.T) (*Server, AuthUser) {
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	return s, s.authUser(u)
+	return s, s.accountRules().authUser(u)
 }
 
 func seedRaca(t *testing.T, s *Server, characterID int64, raca string) {

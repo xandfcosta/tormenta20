@@ -35,7 +35,7 @@ func (f cenaFixture) eu(t *testing.T) AuthUser {
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	return f.s.authUser(u)
+	return f.s.accountRules().authUser(u)
 }
 
 // ── a lista ──────────────────────────────────────────────────────────────────
@@ -212,7 +212,7 @@ func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 func TestTheSceneAnswersPageOrPatchDependingOnWhoAsks(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
-	tok, err := f.s.signToken(sqlcgen.User{ID: f.dono, Email: "mestre@t20.local"})
+	tok, err := f.s.accountRules().signToken(sqlcgen.User{ID: f.dono, Email: "mestre@t20.local"})
 	if err != nil {
 		t.Fatalf("assinar: %v", err)
 	}
