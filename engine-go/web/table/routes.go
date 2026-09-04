@@ -342,7 +342,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	}
 	if role == "gm" {
 		membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
-		r := ofViewGm(st, membros, presentes, true)
+		r := ofViewGm(st, membros, presentes, true, s.deps.SaveFailed(sessionID))
 		// A presença é escrita nos cartões DEPOIS de o papel ser resolvido, e é
 		// isso que a mantém fora da tela do jogador sem uma segunda decisão na
 		// cena: quem não é mestre não chega aqui, e lá o campo continua nil.
@@ -382,14 +382,17 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		// A intenção estava escrita (ALE-212): "o mestre costuma ter um PC
 		// próprio no roster, e listá-lo aqui faria duas telas discordarem sobre
 		// quem é o grupo". Mas a condição era `m.Role != "player"` sobre uma
-		// coluna que valia `'player'` em toda linha — então o PC do mestre
-		// sempre entrou no grupo, e as duas telas concordam desde sempre, pela
-		// razão errada.
+		// coluna que valia `'player'` em toda linha, então ela nunca excluiu
+		// nada — e a coluna saiu na ALE-287.
 		//
-		// O filtro sai com a coluna (ALE-287) em vez de virar
-		// `m.Charownerid != c.Ownerid`, e isso é deliberado: tornar a condição
-		// verdadeira MUDARIA o que a mesa mostra hoje, e essa é decisão de
-		// produto — não de quem apaga uma coluna morta.
+		// **Ele não volta, e a razão é do dono da mesa:** o mestre NÃO tem
+		// personagem próprio. O que ele tem é um elenco de NPCs que entram na
+		// história ou não — e essa decisão é por CENA, tomada na hora de pôr a
+		// linha na fila. NPC nem é membro da campanha: ele entra na iniciativa
+		// por `label` e `initiative`, sem `characterId` (ver `materializeEntry`).
+		//
+		// Ou seja: `campaign_members` só tem personagem de jogador, e o grupo é
+		// o grupo. Não havia o que filtrar.
 		grupo = append(grupo, Member{
 			CharacterID: m.Characterid,
 			Nome:        m.Charname,

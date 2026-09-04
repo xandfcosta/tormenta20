@@ -312,6 +312,20 @@ func parseRuntimeBlob(blob string) *SessionRuntimeState {
 //
 // Serialized so overlapping persists for one session write in order: whichever runs last
 // snapshots the newest state, so the DB converges to the latest instead of a stale capture.
+
+// SaveFailed diz se a última gravação do estado desta sessão falhou.
+//
+// ESTADO e não notícia, e a diferença é o que faz o aviso servir: ele vale
+// enquanto durar, então quem abre a aba dez minutos depois da primeira falha
+// merece vê-lo. Um evento perdido é um evento que não existiu (ALE-288). O irmão dele é o `BoardStore.SaveFailed`.
+//
+// Sob a trava porque o `Dirty` é escrito pelo `Persist`, que roda em goroutine.
+func (st *SessionStore) SaveFailed(sessionID int64) bool {
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
+	return st.Dirty[sessionID]
+}
+
 func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
 	pm := st.persistLock(sessionID)
 	pm.Lock()

@@ -163,6 +163,7 @@ templ tableHeader(v View) {
 			// `aria-live` é obrigatório aqui e não é enfeite: num app de morph a vez
 			// muda sem navegação nenhuma, então quem não vê a tela não tem OUTRO
 			// sinal de que chegou a vez dele. Na SPA o aviso chega por toast.
+			@savingWarning(v)
 			@sessionVerbs(v)
 			<div class="flex items-center gap-2 text-sm" aria-live="polite">
 				if v.Turn.Kind != "idle" {
@@ -178,6 +179,40 @@ templ tableHeader(v View) {
 				}
 			</div>
 		</div>
+}
+
+// A GRAVAÇÃO FALHANDO, no cabeçalho e só para o mestre (ALE-288).
+//
+// A mesa roda de MEMÓRIA e escreve no disco a cada mutação. Quando a escrita
+// falha, os stores marcam a sessão e SEGUEM servindo da memória: a tela fica
+// certa, o combate anda, e o disco não tem nada. Foi um dia inteiro assim uma
+// vez (ALE-154), com cada falha numa linha de log que ninguém lê.
+//
+// No CABEÇALHO e não num canto: ele fica ao lado do "Ao vivo", que é a promessa
+// que este aviso desmente. Um alarme escondido num rodapé que rola é um alarme
+// que chega tarde.
+//
+// `role="alert"` e não `aria-live="polite"`: o "polite" ao lado espera a leitura
+// terminar, o que está certo para "chegou a sua vez" e errado para isto. E o
+// texto diz O QUE FAZER, porque quem lê é o mestre no meio de uma sessão e a
+// única ação útil é parar antes de perder mais.
+//
+// A TINTA é a combinação que o `npc_editor.templ` já usa — `destructive/60` na
+// borda, `destructive/10` no fundo, `destructive-ink` no texto —, e copiar em
+// vez de inventar uma variante é deliberado: o medidor de contraste só mede o
+// que ele VISITA, e este aviso só aparece com o disco falhando. Nenhum caminho
+// do e2e o desenha, então uma tinta nova aqui nasceria sem medição. A paleta
+// anota o par como 7,62:1 no painel.
+templ savingWarning(v View) {
+	if v.Mestre != nil && v.Mestre.GravacaoFalhando {
+		<p
+			role="alert"
+			class="flex shrink-0 items-center gap-1.5 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs font-semibold text-destructive-ink"
+		>
+			@ui.Icon("TriangleAlert", "size-3.5 shrink-0")
+			<span>A mesa não está sendo salva — encerre e chame o dono do servidor.</span>
+		</p>
+	}
 }
 
 // Registrar iniciativa — a ÚNICA mutação desta superfície (ALE-213). Some fora de
