@@ -207,6 +207,39 @@ func TestASceneFromAnotherCampaignCannotReachTheTable(t *testing.T) {
 	}
 }
 
+// O id do lugar vem do cliente, e o `OpenPlace` é a porta VIVA: sem conferir a
+// crônica, um mestre puxaria para a própria mesa a cena de OUTRA campanha.
+//
+// Ele existe porque a regra estava presa só no `ShowPlace`, que nenhuma rota
+// chama desde a ALE-205 — o verde era sobre a porta MORTA, e apagá-la como
+// código morto levaria junto a única prova da regra (ALE-289).
+func TestNoSceneFromAnotherCampaignReachesTheTableThroughOpenPlace(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	outra := seedCampaign(t, s, seedUser(t, s, "vizinho-openplace@t.com"))
+	if err := s.boards.Archive(ctx, outra, &tabuleiro.BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
+		t.Fatalf("guardar a cena da outra mesa: %v", err)
+	}
+	alheia := s.boards.Places(ctx, outra)[0]
+
+	if _, err := s.boards.OpenPlace(ctx, campanha, sessao, alheia.ID); err == nil {
+		t.Fatal("abriu na mesa a cena de outra crônica")
+	}
+	if naMesa := s.boards.Get(ctx, sessao, defaultTab); naMesa == nil || naMesa.Place != "Taverna do Javali" {
+		t.Errorf("a recusa mexeu na cena que estava na mesa: %+v", naMesa)
+	}
+
+	// O CONTROLE, e sem ele o guarda não vale nada: um `OpenPlace` que recusasse
+	// TODO lugar passaria nas asserções acima. O da própria crônica tem de abrir.
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
+		t.Fatalf("arquivar a taverna: %v", err)
+	}
+	minha := placeNamed(t, s.boards.Places(ctx, campanha), "Taverna do Javali")
+	if _, err := s.boards.OpenPlace(ctx, campanha, sessao, minha.ID); err != nil {
+		t.Fatalf("o lugar da PRÓPRIA crônica foi recusado: %v", err)
+	}
+}
+
 func placeNamed(t *testing.T, lugares []tabuleiro.Place, nome string) tabuleiro.Place {
 	t.Helper()
 	for _, lugar := range lugares {
