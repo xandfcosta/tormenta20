@@ -205,3 +205,93 @@ func sheetsShortcut(v BoardView) string {
 	return "evt.preventDefault(); $escolhidosdomapa = " + dialogSheets +
 		"; $escolhidosdomapa && (" + mapCommand(v) + ")"
 }
+
+// A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril.
+//
+// O GLOSSARIO promete, na linha de `peça`, que "uma peça pode existir sem linha
+// na fila (a porta, o baú)". A promessa estava sem caminho nenhum: a única rota
+// que criava peça era o `poeNoMapa`, e o `populateBoard` por baixo dela ITERA A
+// INICIATIVA — só nascia peça para quem já era combatente. O mestre não tinha
+// como pôr uma porta no mapa.
+//
+// É a família da cortina (ALE-202) e da presença (ALE-287): a capacidade
+// inteira no ar, com teste, e nenhum caminho até ela.
+//
+// A POSIÇÃO VEM DO CAMINHO e não de um sinal, pela razão que o
+// `quadradoDoCaminho` já registra: coordenada negativa é lugar legítimo num
+// plano sem bordas, e o valor é o do CLIQUE que aconteceu — não o de um estado
+// que outro gesto poderia ter mexido entre a escolha e o envio.
+func newLoosePiece(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
+		return nil, errors.New("não há tabuleiro aberto para pôr uma peça")
+	}
+	casa, err := quadradoDoCaminho(c.R, "x", "y")
+	if err != nil {
+		return nil, err
+	}
+	desenho, err := loosePieceSignals(c.R)
+	if err != nil {
+		return nil, err
+	}
+	return st.deps.Boards().AddToken(c.R.Context(), c.SessionID, c.TabuleiroID, tabuleiro.BoardToken{
+		Label: desenho.Nome, Kind: desenho.Aparencia, Footprint: desenho.Tamanho,
+		X: casa.X, Y: casa.Y,
+	})
+}
+
+// loosePieceDraft é o que o mestre escolhe na tira: o nome, o tamanho e a
+// aparência.
+type loosePieceDraft struct {
+	Nome      string
+	Tamanho   int
+	Aparencia string
+}
+
+// loosePieceSignals lê a tira e RECUSA o que não serve.
+//
+// O nome é obrigatório porque a peça inteira se identifica por ele: o monograma
+// sai dele, o `aria-label` sai dele, e "eu ataco o quê?" não tem resposta sem
+// ele. Uma peça sem nome nasceria muda no mapa e no leitor de tela.
+//
+// O tamanho é o do livro (p107, Tab. 1-21): 1 é Médio, 2 é Grande, 3 é Enorme, 6
+// é Colossal. Fora dessa lista não é tamanho de criatura nenhuma, e um 40
+// digitado encheria a tela de uma peça só.
+func loosePieceSignals(r *http.Request) (loosePieceDraft, error) {
+	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
+	var sinais struct {
+		Nome      string `json:"novapecanome"`
+		Tamanho   int    `json:"novapecatamanho"`
+		Aparencia string `json:"novapecaaparencia"`
+	}
+	if err := datastar.ReadSignals(r, &sinais); err != nil {
+		return loosePieceDraft{}, fmt.Errorf("não entendi a peça: %v", err)
+	}
+	nome := strings.TrimSpace(sinais.Nome)
+	if nome == "" {
+		return loosePieceDraft{}, errors.New("dê um nome à peça: é ele que aparece no mapa e no leitor de tela")
+	}
+	if !footprintsDaCasa[sinais.Tamanho] {
+		return loosePieceDraft{}, fmt.Errorf(
+			"tamanho %d não é de criatura nenhuma; o livro tem 1 (Médio), 2 (Grande), 3 (Enorme) e 6 (Colossal), p107",
+			sinais.Tamanho)
+	}
+	if !aparenciasDaPeca[sinais.Aparencia] {
+		return loosePieceDraft{}, fmt.Errorf(
+			"aparência %q não existe; a peça avulsa nasce como 'object' ou como 'npc'", sinais.Aparencia)
+	}
+	return loosePieceDraft{Nome: nome, Tamanho: sinais.Tamanho, Aparencia: sinais.Aparencia}, nil
+}
+
+// footprintsDaCasa são os lados que a Tabela 1-21 produz (p107).
+//
+// Lista e não faixa: 4 e 5 não são tamanho de nada, e aceitá-los desenharia uma
+// peça que o livro não tem. O `FootprintForSize` do motor produz exatamente
+// estes quatro.
+var footprintsDaCasa = map[int]bool{1: true, 2: true, 3: true, 6: true}
+
+// aparenciasDaPeca são as duas que a peça avulsa pode ter.
+//
+// `character` fica de FORA de propósito: a peça de ficha nasce ligada a um
+// personagem pelo `Populate`, e deixar o mestre desenhar uma "ficha" solta
+// criaria uma peça que PARECE de jogador e não tem ninguém atrás dela.
+var aparenciasDaPeca = map[string]bool{"object": true, "npc": true}

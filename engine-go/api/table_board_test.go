@@ -9,6 +9,7 @@ import (
 	"strings"
 	"t20engine/events"
 	"t20engine/tabuleiro"
+	"t20engine/web/table"
 	"testing"
 	"time"
 )
@@ -50,11 +51,11 @@ func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}, true); err != nil {
+		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "avista", Label: "Arwen", X: 1, Y: 1}, true); err != nil {
+		tabuleiro.BoardToken{ID: "avista", Label: "Arwen", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça à vista: %v", err)
 	}
 
@@ -85,7 +86,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 	entryID := f.tracker(t)
 	f.seedOpenBoard(t, "pedra")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}, true); err != nil {
+		tabuleiro.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
@@ -178,7 +179,7 @@ func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 	avisou("abrir o tabuleiro", events.BoardOpened{})
 
 	drenar()
-	if _, err := bs.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}, true); err != nil {
+	if _, err := bs.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	avisou("pôr uma peça (pelo apply)", events.BoardChanged{})
@@ -199,7 +200,7 @@ func TestARefusedMutationTellsNobody(t *testing.T) {
 	sub, parar := f.s.tableHost().Bus().Subscribe(events.OfSession(sessao))
 	defer parar()
 	// SEM tabuleiro aberto: o `apply` recusa antes de mexer em nada.
-	if _, err := f.s.tableHost().Boards().AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}, true); err == nil {
+	if _, err := f.s.tableHost().Boards().AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}); err == nil {
 		t.Fatal("pôr peça sem tabuleiro devia recusar; sem a recusa este teste não mede nada")
 	}
 	select {
@@ -233,7 +234,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 	// estado devolvido em vez de assumido — a primeira versão deste teste
 	// assumiu "p" e morreu em `peça "p" não está no tabuleiro`.
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true)
+		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
@@ -329,7 +330,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true); err != nil {
+		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 
@@ -425,7 +426,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Dragão", X: 3, Y: 3}, true); err != nil {
+		tabuleiro.BoardToken{Label: "Dragão", X: 3, Y: 3}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	if _, _, err := f.s.tableHost().Boards().SetCurtain(context.Background(), f.sessionID, defaultTab, true); err != nil {
@@ -455,5 +456,173 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	// aberta ou fechada, e ele narra a taverna para uma mesa que vê um aviso.
 	if !strings.Contains(doMestre, "a mesa não vê esta cena") {
 		t.Error("o mestre não foi avisado de que a cortina está fechada")
+	}
+}
+
+// A PEÇA AVULSA NASCE ONDE O MESTRE CLICOU (ALE-291).
+//
+// O GLOSSARIO promete que "uma peça pode existir sem linha na fila (a porta, o
+// baú)", e até aqui não havia caminho: a única rota que criava peça era o
+// `poeNoMapa`, cujo `populateBoard` itera a INICIATIVA — só nascia peça para
+// quem já era combatente.
+//
+// A asserção é sobre a CASA e não só sobre a existência: uma peça que nasce no
+// lugar errado é pior que nenhuma, porque o mestre põe a porta e ela aparece do
+// outro lado da cripta.
+func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/nova/-3/7",
+		`{"novapecanome":"  Porta da cripta  ","novapecatamanho":1,"novapecaaparencia":"object"}`)
+
+	mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	if len(mapa.Tokens) != 1 {
+		t.Fatalf("o mapa ficou com %d peças; a resposta foi:\n%s", len(mapa.Tokens), firstRows(corpo, 6))
+	}
+	peca := mapa.Tokens[0]
+	// COORDENADA NEGATIVA é lugar legítimo — o plano não tem bordas —, e é por
+	// isso que ela viaja no caminho. O -3 está aqui de propósito.
+	if peca.X != -3 || peca.Y != 7 {
+		t.Errorf("a peça nasceu em (%d,%d) e o clique foi em (-3,7)", peca.X, peca.Y)
+	}
+	// O nome vai APARADO, como o do combatente: espaço sobrando não deve
+	// produzir uma peça que ordena e se lê diferente do que o mestre digitou.
+	if peca.Label != "Porta da cripta" {
+		t.Errorf("o rótulo ficou %q", peca.Label)
+	}
+	if peca.Kind != "object" {
+		t.Errorf("a aparência ficou %q", peca.Kind)
+	}
+	// E ela NÃO tem linha na fila: é isso que a distingue do `poeNoMapa`, e é a
+	// promessa do glossário.
+	if peca.EntryID != nil {
+		t.Errorf("a peça avulsa nasceu ligada à fila: %v", *peca.EntryID)
+	}
+}
+
+// A TIRA RECUSA o que não desenha peça nenhuma, e a recusa nomeia o valor.
+//
+// Os três casos são de naturezas diferentes de propósito: o nome vazio é o que
+// deixaria a peça muda no mapa e no leitor de tela; o tamanho fora da Tabela
+// 1-21 (p107) desenharia uma criatura que o livro não tem; e a aparência
+// `character` é a que criaria uma peça que PARECE de jogador sem ninguém atrás.
+func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+	casos := []struct{ nome, sinais, espera string }{
+		{"sem nome", `{"novapecanome":"   ","novapecatamanho":1,"novapecaaparencia":"object"}`, "dê um nome"},
+		{"tamanho de nada", `{"novapecanome":"Carroça","novapecatamanho":4,"novapecaaparencia":"object"}`, "p107"},
+		{"ficha solta", `{"novapecanome":"Falso herói","novapecatamanho":1,"novapecaaparencia":"character"}`, "aparência"},
+	}
+	for _, caso := range casos {
+		t.Run(caso.nome, func(t *testing.T) {
+			corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/nova/1/1", caso.sinais)
+			if !strings.Contains(corpo, caso.espera) {
+				t.Errorf("a recusa não citou %q; a resposta foi:\n%s", caso.espera, firstRows(corpo, 6))
+			}
+		})
+	}
+	// O CONTROLE: nenhuma das três recusas pode ter escrito. Sem ele, uma recusa
+	// que já tivesse criado a peça passaria pelas asserções acima.
+	if mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(mapa.Tokens) != 0 {
+		t.Errorf("as recusas deixaram %d peças no mapa", len(mapa.Tokens))
+	}
+}
+
+// PÔR PEÇA É DO MESTRE, e a trava é o servidor.
+//
+// Esconder o botão do jogador é UX; quem impede é o handler. O caso posta na
+// mão, como quem abre o console — é o que a ALE-144 registrou ao tirar três
+// asserções de AUSÊNCIA da suíte: botão ausente nunca foi prova de trava.
+func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+
+	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/pecas/nova/1/1",
+		`{"novapecanome":"Porta","novapecatamanho":1,"novapecaaparencia":"object"}`)
+
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("o jogador pôs peça e levou %d, queria 403", rec.Code)
+	}
+	if mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(mapa.Tokens) != 0 {
+		t.Errorf("a recusa deixou %d peças no mapa", len(mapa.Tokens))
+	}
+}
+
+// O MODO da peça avulsa é do MESTRE, e ele aparece FORA da fileira numerada
+// (ALE-291).
+//
+// As duas metades se medem juntas: o botão sem a tira seria um modo que liga e
+// não diz o que vai criar, e a tira sem o botão seria um formulário sem gesto.
+//
+// E o caso afirma que ele NÃO ganhou número, que é a decisão de desenho desta
+// fatia: o `railKeys` tem dez dígitos e o `numberRail` estoura na décima
+// primeira de propósito. Um dia alguém vai querer dar uma tecla a este modo —
+// que ele mude este caso junto, em vez de a gramática dos dez virar dez-e-meio
+// em silêncio.
+func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+
+	doMestre := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+	for _, pedaco := range []string{
+		"Nova peça — o clique escolhe a casa",       // o botão do modo
+		"Nova peça — escolha a casa onde ela nasce", // a camada de clique
+		"novapecanome", // a tira
+		"Colossal",     // o tamanho do livro (p107)
+	} {
+		if !strings.Contains(doMestre, pedaco) {
+			t.Errorf("o mestre não recebeu %q", pedaco)
+		}
+	}
+	// As dez ferramentas continuam sendo dez, e o modo não entrou na conta.
+	if n := len(table.MapTools()); n != 10 {
+		t.Errorf("o trilho numerado ficou com %d ferramentas — a gramática dos dez dígitos quebrou", n)
+	}
+
+	// O QUE NÃO PODE VAZAR É A AFORDÂNCIA, e não o sinal.
+	//
+	// A primeira versão deste caso cobrava também a ausência de `novapecanome`, e
+	// ela reprovou: a lista de sinais é da PÁGINA e sai igual para os dois
+	// papéis, como já acontece com `pecaescolhida`, `rascunhode` e os outros do
+	// mestre. Um sinal sem escritor é inerte; o que conta é não haver botão nem
+	// camada de clique — e a trava de verdade é o 403 do handler, medido no caso
+	// vizinho (ALE-144).
+	doJogador := f.pede(t, f.jogador, "GET", f.tableUrl(), "").Body.String()
+	if strings.Contains(doJogador, "Nova peça") {
+		t.Error("o gesto de criar peça vazou para o HTML do jogador")
+	}
+}
+
+// A PEÇA DE CENÁRIO SE DESENHA DIFERENTE, e é aqui que o `Kind` ganha leitor
+// (ALE-291).
+//
+// O campo existe no fio desde sempre e o `engine-go/CLAUDE.md` registrava que
+// NADA em produção o lia — ele sobreviveu à morte do `board-view.tsx` da SPA,
+// que era quem fazia a pergunta. Esta fatia devolve a pergunta a alguém.
+//
+// A distinção é a FORMA e não a cor: redondo é criatura em toda mesa de VTT, e
+// tinta nova entraria na conta do medidor de contraste — onde uma variante que
+// só aparece com cenário no mapa nasceria sem medição.
+func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+	base := f.tableUrl() + "/tabuleiro/pecas/nova/"
+	f.posta(t, f.mestre, base+"1/1", `{"novapecanome":"Porta","novapecatamanho":1,"novapecaaparencia":"object"}`)
+	f.posta(t, f.mestre, base+"5/5", `{"novapecanome":"Lobo","novapecatamanho":1,"novapecaaparencia":"npc"}`)
+
+	html := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+
+	// O CONTROLE vem primeiro: as duas peças TÊM de estar no mapa, senão o resto
+	// mede a ausência das duas e passa verde dizendo nada.
+	for _, nome := range []string{"Porta", "Lobo"} {
+		if !strings.Contains(html, nome) {
+			t.Fatalf("a peça %q não chegou ao mapa", nome)
+		}
+	}
+	// UMA classe de objeto e só uma: a porta a tem, o lobo não.
+	if n := strings.Count(html, "tabuleiro-peca-objeto"); n != 1 {
+		t.Errorf("a classe de cenário aparece %d vezes; a porta a tem e o lobo não", n)
 	}
 }

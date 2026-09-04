@@ -28,7 +28,7 @@ func mesaComTaverna(t *testing.T) (*Server, int64, int64) {
 	ctx := context.Background()
 
 	s.boards.Open(ctx, sessao, "Taverna do Javali", "taverna")
-	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	return s, campanha, sessao
@@ -94,7 +94,7 @@ func TestArchivingTwiceDoesNotStackTheSamePlace(t *testing.T) {
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{Label: "Bandido", X: 9, Y: 9}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{Label: "Bandido", X: 9, Y: 9}); err != nil {
 		t.Fatalf("segunda peça: %v", err)
 	}
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {

@@ -153,6 +153,12 @@ func tableSignalsExpr() string {
 		// o diálogo FECHA o menu, e um sinal só faria o gesto de abrir apagar o
 		// alvo do gesto de salvar.
 		"pecaescolhida: '', pecaeditada: '', pecanome: '', pecatamanho: 1",
+		// A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril. Os nomes levam
+		// `nova` porque `pecanome` e `pecatamanho` JÁ SÃO do diálogo de EDITAR
+		// peça, logo acima, e vivem no mesmo documento: reusá-los faria o gesto
+		// de criar escrever no alvo do gesto de salvar, que é o defeito que a
+		// linha do `buscador` no GLOSSARIO existe para impedir.
+		"novapecanome: '', novapecatamanho: 1, novapecaaparencia: 'object'",
 		// A FILA e os verbos da linha.
 		"qualidadedodescanso: 'normal', formdecombatente: false",
 		"linhadacondicao: '', condicoesdalinha: '', rotulodalinha: ''",

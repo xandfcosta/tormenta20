@@ -1,7 +1,6 @@
 package tabuleiro
 
 import (
-	"fmt"
 	"t20engine/aovivo"
 	"testing"
 
@@ -413,36 +412,16 @@ func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
 	}
 }
 
-// Duas peças avulsas criadas seguidas não nascem uma em cima da outra — o
-// defeito que o "+ Peça" da ALE-178 traria com a posição fixa em (0,0).
-func TestLoosePiecesDoNotStack(t *testing.T) {
-	b := newBoard("t1", "Cripta", "pedra")
-	tokens := boardCounter()
+/*
+Aqui morava o TestLoosePiecesDoNotStack, que prendia o `nextFreeSpot`: três
+peças avulsas criadas seguidas não podiam nascer na mesma casa (ALE-166).
 
-	for _, nome := range []string{"Porta", "Baú", "Barril"} {
-		spot := nextFreeSpot(b)
-		if err := AddToken(b, BoardToken{Label: nome, Kind: "object", X: spot.x, Y: spot.y}, tokens); err != nil {
-			t.Fatalf("criar %s: %v", nome, err)
-		}
-	}
-
-	vistos := map[string]bool{}
-	for _, token := range b.Tokens {
-		chave := fmt.Sprintf("%d,%d", token.X, token.Y)
-		if vistos[chave] {
-			t.Errorf("duas peças no mesmo quadrado %s", chave)
-		}
-		vistos[chave] = true
-	}
-}
-
-// O terreno que o mestre PINTA chega à régua (ALE-124, fatia 4).
-//
-// A conta do dobro é do motor e está provada contra a p238 em
-// `engine/board_movement_rules_test.go`. O que se prova AQUI é a ligação, que é
-// onde ela pode se perder: até esta fatia o estado nem tinha onde guardar o
-// chão, e o `ProposeMove` chamava a régua com um mapa VAZIO — o mestre pintava
-// o brejo e a peça o atravessava como se fosse pedra lisa.
+A regra saiu com a causa dela (ALE-291). O "+ Peça" da ALE-178 não tinha onde
+pôr a peça, então ela nascia num lugar combinado; o gesto que chegou POSICIONA,
+e o `TestALoosePieceIsBornOnTheSquareTheGmClicked` afirma coisa mais forte —
+não que duas não se empilhem, mas que cada uma nasce EXATAMENTE onde o mestre
+clicou, inclusive em coordenada negativa.
+*/
 func TestPaintedTerrainMakesThePathCostMore(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	// Quatro passos ortogonais custam 4 de 6 — cabe com folga.

@@ -66,7 +66,16 @@ var tombstones = map[string]bool{
 	//
 	// O segundo prendia uma regra VIVA (a posse do lugar) na porta errada, e por
 	// isso mudou de casa em vez de morrer.
-	"TestSwitchingScenesArchivesTheOneOnTheTable":      true,
+	"TestSwitchingScenesArchivesTheOneOnTheTable": true,
+
+	// A REGRA QUE SAIU COM A CAUSA (ALE-291). Ele prendia o `nextFreeSpot`, que
+	// foi apagado junto: três
+	// peças avulsas criadas seguidas não podiam nascer na mesma casa (ALE-166).
+	// A regra existia porque o "+ Peça" não tinha ONDE pôr a peça; o gesto que
+	// chegou posiciona, e o guarda que o substitui afirma coisa mais forte — não
+	// que duas não se empilhem, mas que cada uma nasce exatamente onde o mestre
+	// clicou.
+	"TestLoosePiecesDoNotStack":                        true,
 	"TestASceneFromAnotherCampaignCannotReachTheTable": true,
 }
 

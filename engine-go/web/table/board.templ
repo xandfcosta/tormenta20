@@ -857,6 +857,7 @@ templ planToken(v BoardView, p boardToken) {
 		}
 		class={ "tabuleiro-peca",
 			templ.KV("tabuleiro-peca-na-vez", p.NaVez),
+			templ.KV("tabuleiro-peca-objeto", p.IsObject),
 			templ.KV("tabuleiro-peca-oculta", p.Oculta) }
 	>
 		<span class="tabuleiro-monograma">{ p.Monograma }</span>
@@ -1503,6 +1504,28 @@ templ toolsRail(v BoardView) {
 			}
 			@railTool(f)
 		}
+		// A PEÇA AVULSA (ALE-291) fica FORA da fileira numerada, atrás do próprio
+		// vinco. Ela é ferramenta pela divisa desta seção — muda o que o clique
+		// faz — e mesmo assim não é uma décima primeira entrada: o `railKeys` tem
+		// dez dígitos e o `numberRail` estoura na décima primeira de propósito.
+		//
+		// O sinal é o MESMO (`$ferramenta`), então ela exclui as outras por
+		// construção, como todas. O que ela não tem é número, e o `NewPieceTool`
+		// registra por quê.
+		if v.Mestre {
+			<span aria-hidden="true" class="tabuleiro-trilho-vinco"></span>
+			<button
+				type="button"
+				title="Nova peça: a porta, o baú, o barril — o clique escolhe a casa"
+				aria-label="Nova peça — o clique escolhe a casa"
+				data-attr:aria-pressed={ onIsTool(NewPieceTool) + " ? 'true' : 'false'" }
+				data-class={ toolStyling(NewPieceTool) }
+				data-on:click={ pickTool(NewPieceTool) }
+				class="tabuleiro-ferramenta"
+			>
+				@ui.Icon("PackagePlus", "size-4")
+			</button>
+		}
 	</nav>
 }
 
@@ -1774,6 +1797,15 @@ templ clickLayers(v BoardView) {
 			data-on:click={ clickedPointMarking(v) }
 			class="tabuleiro-casas"
 		></button>
+		// A camada da PEÇA AVULSA é irmã da de marcar, e pelo mesmo desenho: o
+		// clique numa casa é o gesto inteiro, e a casa vai no caminho.
+		<button
+			type="button"
+			data-show={ onIsTool(NewPieceTool) }
+			aria-label="Nova peça — escolha a casa onde ela nasce"
+			data-on:click={ clickedSquareNewPiece(v) }
+			class="tabuleiro-casas"
+		></button>
 	}
 	// A camada de MEDIR é dos dois papéis, e por isso ela sai do
 	// bloco do mestre. O `data-show` do movimento passou a valer
@@ -1964,4 +1996,60 @@ templ previewReading() {
 		@ui.Icon("MapPin", "size-4 text-grimorio-gold")
 		<span data-text="$previatexto" class="font-mono tabular-nums text-grimorio-gold"></span>
 	</p>
+}
+
+// newPieceBar é a tira da PEÇA AVULSA: o que ela vai ser, antes de o clique
+// dizer onde ela nasce (ALE-291).
+//
+// Ela é irmã da `templateBar` e pelo mesmo desenho: a ferramenta ligada traz a
+// tira com as escolhas dela, e o clique no mapa é o gesto que fecha. Um diálogo
+// no lugar da tira exigiria fechá-lo para poder clicar no mapa — e aí a escolha
+// e o clique ficariam em dois tempos, com o mestre lendo o nome que digitou
+// dentro de uma caixa que sumiu.
+//
+// A FRASE de como sair está na tira porque o modo não tem número: quem não vê o
+// atalho no botão precisa que a tira conte o resto do gesto.
+templ newPieceBar(v BoardView) {
+	<div
+		role="status"
+		data-show={ onIsTool(NewPieceTool) }
+		class="tabuleiro-ajudante gap-1.5"
+	>
+		<label class="flex items-center gap-1.5 text-xs">
+			<span class="uppercase tracking-widest text-muted-foreground">Nova peça</span>
+			<input
+				type="text"
+				data-bind="novapecanome"
+				placeholder="Porta da cripta"
+				aria-label="Nome da peça"
+				class="min-h-11 w-40 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			/>
+		</label>
+		// O TAMANHO é o do livro (p107, Tab. 1-21), e os quatro são os lados que
+		// ela produz. Botões e não um campo numérico: 4 e 5 não são tamanho de
+		// nada, e um campo livre convidaria a digitá-los para o servidor recusar.
+		for _, t := range piecesFootprints {
+			<button
+				type="button"
+				title={ t.Rotulo + ": " + t.Lado + " (p107)" }
+				aria-label={ "Tamanho " + t.Rotulo }
+				data-attr:aria-pressed={ fmt.Sprintf("$novapecatamanho === %d ? 'true' : 'false'", t.Lados) }
+				data-class={ fmt.Sprintf("{'pincel-ligado': $novapecatamanho === %d}", t.Lados) }
+				data-on:click={ fmt.Sprintf("$novapecatamanho = %d", t.Lados) }
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>{ t.Lado }</button>
+		}
+		for _, a := range piecesLooks {
+			<button
+				type="button"
+				title={ a.Dica }
+				aria-label={ "Aparência: " + a.Rotulo }
+				data-attr:aria-pressed={ fmt.Sprintf("$novapecaaparencia === %q ? 'true' : 'false'", a.ID) }
+				data-class={ fmt.Sprintf("{'pincel-ligado': $novapecaaparencia === %q}", a.ID) }
+				data-on:click={ fmt.Sprintf("$novapecaaparencia = %q", a.ID) }
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>{ a.Rotulo }</button>
+		}
+		<span class="text-xs text-muted-foreground">clique numa casa para pôr</span>
+	</div>
 }

@@ -518,21 +518,19 @@ func hasTokenForEntry(b *BoardState, entryID string) bool {
 
 type boardSpot struct{ x, y int }
 
-// nextFreeSpot devolve o primeiro quadrado vazio de uma fileira que começa na
-// origem e cresce para a direita, quebrando a cada dez quadrados. Num plano sem
-// bordas não existe "varrer a grade": existe um lugar combinado onde a peça
-// nova aparece, e a origem é ele — o mestre acha o grupo em "Centralizar".
+// Aqui morava o `nextFreeSpot`, que punha a peça sem posição no primeiro
+// quadrado vazio da fileira de entrada (ALE-166).
 //
-// Não precisa de offset: cada peça entra antes da busca seguinte, então a
-// varredura já enxerga quem acabou de chegar.
-func nextFreeSpot(b *BoardState) boardSpot {
-	for i := 0; ; i++ {
-		spot := boardSpot{x: i % boardRowWidth, y: i / boardRowWidth}
-		if !occupied(b, spot.x, spot.y) {
-			return spot
-		}
-	}
-}
+// Ele existia porque o "+ Peça" da ALE-178 não tinha onde pôr a peça: ela
+// nascia num lugar combinado e o mestre arrastava. Sem ele, duas peças criadas
+// seguidas ficavam UMA EM CIMA DA OUTRA.
+//
+// O gesto que chegou na ALE-291 POSICIONA — o clique numa casa diz onde a peça
+// nasce, e a coordenada viaja no caminho —, então a regra ficou sem o problema
+// que resolvia. Ela NÃO é redundante com o `clusterSpot` logo abaixo, e vale
+// dizer para ninguém confundir de novo: aquele põe COMBATENTE em dois lados a
+// seis quadrados (o alcance curto, p224), e este punha CENÁRIO, que não tem
+// lado — uma porta na fileira do grupo diria que ela é aliada.
 
 // boardRowWidth é o comprimento da fileira em que as peças novas nascem. Dez
 // quadrados são 15m: cabe numa tela e é a largura de uma sala.

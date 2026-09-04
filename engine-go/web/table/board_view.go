@@ -193,6 +193,19 @@ type boardToken struct {
 	// Oculta é a peça que o mestre escondeu da mesa. Ela só existe na view dele:
 	// o `BoardForRole` já a tirou da do jogador.
 	Oculta bool
+	// IsObject desenha a peça QUADRADA em vez de redonda (ALE-291).
+	//
+	// A forma e não a cor, e a escolha tem duas razões que se somam. A primeira é
+	// de leitura: redondo é criatura em toda mesa de VTT, e uma porta redonda
+	// pede tradução. A segunda é de medição — tinta nova entra na conta do
+	// medidor de contraste, e uma variante que só aparece com uma peça de
+	// cenário no mapa nasceria SEM medição, que é a família que o
+	// `engine-go/CLAUDE.md` cataloga em "um guarda só mede o que ele VISITA".
+	//
+	// O nome sai em inglês porque o conceito é NOVO: a regra de idioma manda o
+	// identificador novo em inglês, e os vizinhos em português desta struct são
+	// passivo, não alvo.
+	IsObject bool
 }
 
 type boardMarker struct {
@@ -360,6 +373,7 @@ func boardTokenOf(t *tabuleiro.BoardToken, saude map[string]int, naVez string) b
 		Monograma: a.Monograma, Instancia: a.Instancia, Matiz: a.Matiz,
 		Oculta:     t.Hidden,
 		DeOndeVeio: t.DeOndeVeio,
+		IsObject:   t.Kind == "object",
 	}
 	if t.EntryID != nil {
 		p.NaVez = naVez != "" && *t.EntryID == naVez
@@ -1132,6 +1146,32 @@ func pickTool(qual string) string {
 // `data-show`: escrita à mão, a quinta ocorrência é a que erra a letra e vira
 // uma ferramenta que a tela liga e o mapa nunca escuta.
 const MarkTool = "marcador"
+
+// NewPieceTool é o valor do sinal quando o clique CRIA uma peça avulsa
+// (ALE-291).
+//
+// Ela é ferramenta pela divisa que o trilho já desenha — "ferramenta muda o que
+// o CLIQUE faz, ação acontece uma vez e acaba" — e mesmo assim NÃO entra na
+// fileira numerada. O `railKeys` tem dez dígitos e o comentário do `numberRail`
+// defende esse teto por escrito: a décima primeira "não ganha uma letra
+// sorteada — ela pede outra ideia". A ideia é esta: um modo ao lado do trilho,
+// que é valor do MESMO sinal `$ferramenta` e por isso continua excluindo as
+// outras por construção.
+//
+// Sem atalho de tecla, então, e de propósito. O botão é focável e é o caminho
+// de teclado; inventar uma letra seria exatamente o que o comentário recusa.
+const NewPieceTool = "peca-nova"
+
+// clickedSquareNewPiece cria a peça avulsa NA CASA CLICADA.
+//
+// A posição viaja no CAMINHO pela razão do `quadradoDoCaminho`: coordenada
+// negativa é lugar legítimo, e o valor tem de ser o do clique que aconteceu.
+func clickedSquareNewPiece(v BoardView) string {
+	return fmt.Sprintf(
+		"@post('/mesa/%d/%d/tabuleiro/pecas/nova/' + (%s) + '/' + (%s))",
+		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
+	)
+}
 
 // clickedPointMarking põe um marcador na casa que o dedo acertou.
 //

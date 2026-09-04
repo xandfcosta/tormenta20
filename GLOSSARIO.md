@@ -172,14 +172,21 @@ qual:
 | `member.role === 'player'` | a PESSOA dona é jogador ou mestre? | `listPlayerCombatants` |
 | "é meu?" | o personagem é de quem está olhando? | `mesaRoster`, em `routes.go` |
 
-**O QUARTO se juntou ao primeiro, e é preciso dizer como** (ALE-284): ele era
-`token.kind === 'character'`, "esta peça se desenha como PC?", e vivia no
-`board-view.tsx`. O campo continua no fio — `BoardToken.Kind` é `"character" |
-"npc" | "object"` —, escrito em `board_body.go` e, ao pôr no mapa, a partir do
-próprio `entry.Type`, que é o PRIMEIRO predicado. **Medido: nada em produção o
-LÊ**, só teste. Ou seja, não é que a pergunta tenha sido respondida; é que quem a
-fazia morreu e o campo ficou. Quem for desenhar a peça de novo decide se a
-pergunta volta a ser dela ou se `Kind` é redundante com `Type`.
+**O QUARTO se juntou ao primeiro e voltou a se separar** (ALE-284, ALE-291), e a
+volta é a parte que importa. Ele era `token.kind === 'character'`, "esta peça se
+desenha como PC?", e vivia no `board-view.tsx`.
+
+Entre a ALE-284 e a ALE-291 o campo esteve MUDO: continuava no fio
+(`BoardToken.Kind` é `"character" | "npc" | "object"`), era escrito ao pôr no
+mapa a partir do próprio `entry.Type` — que é o PRIMEIRO predicado —, e **nada em
+produção o lia**. Não era a pergunta respondida; era quem a fazia tendo morrido
+com a SPA, e o campo ficando.
+
+**A pergunta voltou a ter dono na ALE-291**, quando a peça AVULSA ganhou gesto: o
+`Kind` decide a FORMA — cenário se desenha quadrado, criatura redonda —, e é ele
+que o mestre escolhe na tira ao criar a porta ou o lobo. Ele deixou de ser
+redundante com o `Type` no dia em que passou a existir peça que não tem linha na
+fila, e portanto não tem `Type` nenhum de onde derivar.
 
 Decisão do dono, 2026-08-22 (ALE-204): o atalho "trazer os jogadores" usa
 `type === 'character'`, porque é o **mesmo** predicado com que o servidor escolhe

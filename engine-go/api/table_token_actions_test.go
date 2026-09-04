@@ -13,7 +13,7 @@ import (
 func mapToken(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
 	t.Helper()
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"}, true)
+		tabuleiro.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"})
 	if err != nil {
 		t.Fatalf("pôr a peça %q: %v", rotulo, err)
 	}
@@ -76,7 +76,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID}, true)
+		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}

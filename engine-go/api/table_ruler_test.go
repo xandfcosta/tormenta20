@@ -21,7 +21,7 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}, true); err != nil {
+		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}
 
