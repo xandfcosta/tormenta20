@@ -346,12 +346,11 @@ func tableTabs(abertos []*tabuleiro.BoardState, papel, ativa string, campaignID,
 			Nome:    tabName(daMesa, i),
 			Ativa:   activeTabIs(daMesa.ID, ativa, i),
 			Cortina: daMesa.Curtained,
-			Comando: fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/aba/%s')",
-				campaignID, sessionID, daMesa.ID),
+			Comando: fmt.Sprintf("@post('%s/aba/%s')", tableBoardBase(campaignID, sessionID), daMesa.ID),
 		}
 		if ficha.Ativa && papel == "gm" {
-			ficha.MostraAMesa = fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/aba/%s/mostrar')",
-				campaignID, sessionID, daMesa.ID)
+			ficha.MostraAMesa = fmt.Sprintf("@post('%s/aba/%s/mostrar')",
+				tableBoardBase(campaignID, sessionID), daMesa.ID)
 		}
 		barra = append(barra, ficha)
 	}

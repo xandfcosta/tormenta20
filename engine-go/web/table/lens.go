@@ -137,7 +137,7 @@ func seesTableHowScene(doMestre *tabuleiro.BoardState) (daMesa *tabuleiro.BoardS
 
 // lensCommand escreve o gesto que acende ou apaga.
 func lensCommand(v BoardView) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/lente')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('%s/lente')", v.Base)
 }
 
 // lensPhrase diz o modo E o número, e nunca só o modo.

@@ -122,14 +122,13 @@ func brushActsOnSquare(v BoardView) string {
 			"const de = $%s === '' ? casa : $%s; $%s = casa; "+
 			"const traco = de + '/ate/' + casa; "+
 			"return $%s === %q "+
-			"? @post('/mesa/%d/%d/tabuleiro/terreno/limpar/' + traco) "+
-			": @post('/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + traco) })()",
+			"? @post('%s/terreno/limpar/' + traco) "+
+			": @post('%s/terreno/' + $ferramenta + '/' + traco) })()",
 		clicouEmX, clicouEmY,
 		squareLastSignal,
 		squareLastSignal, squareLastSignal, squareLastSignal,
 		brushSignal, pincelApaga,
-		v.CampaignID, v.SessionID,
-		v.CampaignID, v.SessionID,
+		v.Base, v.Base,
 	)
 }
 
