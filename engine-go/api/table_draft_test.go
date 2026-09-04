@@ -260,3 +260,130 @@ func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
 		t.Error("o rascunho ficou com um movimento PROPOSTO, que ninguém pode confirmar")
 	}
 }
+
+/*
+MEDIR o rascunho (ALE-293).
+
+A régua e o gabarito eram DESENHADAS no rascunho desde a ALE-292 — elas não são
+só-do-mestre, e o trilho inteiro veio junto com o tabuleiro — e as rotas não
+existiam lá. O gesto oferecido que o servidor não atende é o pior defeito desta
+casa: 404, tela que não muda, e nada explicando por quê.
+
+As duas continuam sendo LEITURA. O que se prende aqui é que elas medem a cena
+GUARDADA, que a resposta não mexe no acervo, e que um estranho não as alcança.
+*/
+
+// A régua mede no rascunho, e a resposta é só SINAL.
+func TestTheRulerMeasuresInsideTheDraft(t *testing.T) {
+	f := novoPiloto(t)
+	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+
+	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/regua",
+		`{"reguapontos":[[0,0],[3,0]],"reguafase":2}`)
+
+	if !strings.Contains(resposta, "reguatexto") {
+		t.Fatalf("a régua não devolveu leitura: %s", resposta)
+	}
+	// TRÊS quadrados de 1,5m são 4,5m (T20 p238). O número é escrito na mão e
+	// nunca derivado do `engine.Measure`: um esperado calculado afirmaria o
+	// defeito junto com a regra.
+	if !strings.Contains(resposta, "4,5m") {
+		t.Errorf("a leitura não diz 4,5m: %s", resposta)
+	}
+	// Ela NÃO remenda a cena: uma medição que devolvesse o mapa trocaria a peça
+	// debaixo do dedo de quem está arrastando a régua.
+	if strings.Contains(resposta, "rascunho-tabuleiro") {
+		t.Errorf("a régua redesenhou o mapa: %s", resposta)
+	}
+}
+
+// O gabarito conta a peça ESCONDIDA no rascunho, e isso é o desenho e não um
+// vazamento.
+//
+// Na Mesa a redação por papel existe porque quem pergunta "quem o cone pega?"
+// não pode descobrir por aí a peça que a cortina esconde DELE. Aqui não há outro
+// papel: é o mestre montando a emboscada, e a pergunta que ele veio fazer é se a
+// bola de fogo pega o assassino que a mesa ainda não vê. Redigir aqui esconderia
+// dele a própria resposta.
+func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing.T) {
+	f := novoPiloto(t)
+	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	if _, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
+		func(b *tabuleiro.BoardState) error {
+			return tabuleiro.AddToken(b, tabuleiro.BoardToken{
+				Label: "Assassino emboscado", X: 4, Y: 4, Footprint: 1, Hidden: true,
+			}, f.s.tableHost().Boards().NewID)
+		}); err != nil {
+		t.Fatalf("semear a emboscada: %v", err)
+	}
+
+	// Um quadrado de lado 1 exatamente em cima dela.
+	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito/quadrado/1/4/4/4/4", "")
+
+	if !strings.Contains(resposta, "Assassino emboscado") {
+		t.Errorf("o mestre não viu a própria peça escondida no rascunho: %s", resposta)
+	}
+	if !strings.Contains(resposta, "gabaritopath") {
+		t.Errorf("o gabarito não devolveu o desenho: %s", resposta)
+	}
+	// O ACERVO não muda: medir não é comandar, e um `EditPlace` aqui gravaria a
+	// cada movimento do dedo.
+	cena, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, lugar)
+	if len(cena.Tokens) != 1 || cena.Tokens[0].X != 4 {
+		t.Errorf("medir mexeu no acervo: %+v", cena.Tokens)
+	}
+}
+
+// O cone SEM MIRA pede a mira em vez de apontar para um lado inventado.
+//
+// É a mesma decisão da Mesa, e ela precisa de caso próprio porque é o ramo que
+// sai ANTES de o gabarito ser calculado — um gêmeo que esquecesse essa saída
+// desenharia um cone apontando para onde o servidor achou melhor.
+func TestTheDraftConeWithoutAimAsksForIt(t *testing.T) {
+	f := novoPiloto(t)
+	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+
+	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito/cone/6/0/0/0/0", "")
+
+	if !strings.Contains(resposta, "Clique de novo para apontar") {
+		t.Errorf("o cone sem mira não pediu a mira: %s", resposta)
+	}
+}
+
+// E um estranho não MEDE o rascunho.
+//
+// Caso próprio, e não coberto pelo dos gestos: a régua e o gabarito não passam
+// pelo `draftCommand`, então a trava delas é escrita à parte — é exatamente aí
+// que ela pode ser esquecida. O gabarito devolve os NOMES das peças, então uma
+// rota aberta entregaria a emboscada por sinal, que é mais fácil de ler que o
+// DOM.
+func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
+	f := novoPiloto(t)
+	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	if _, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
+		func(b *tabuleiro.BoardState) error {
+			return tabuleiro.AddToken(b, tabuleiro.BoardToken{
+				Label: "Assassino emboscado", X: 4, Y: 4, Footprint: 1, Hidden: true,
+			}, f.s.tableHost().Boards().NewID)
+		}); err != nil {
+		t.Fatalf("semear a emboscada: %v", err)
+	}
+
+	for _, caminho := range []string{
+		f.draftUrl(lugar) + "/tabuleiro/regua",
+		f.draftUrl(lugar) + "/tabuleiro/gabarito/quadrado/1/4/4/4/4",
+	} {
+		resposta := f.posta(t, f.jogador, caminho, `{"reguapontos":[[0,0],[3,0]],"reguafase":2}`)
+		if strings.Contains(resposta, "Assassino emboscado") {
+			t.Errorf("%s entregou a emboscada ao jogador: %s", caminho, resposta)
+		}
+		if strings.Contains(resposta, "datastar") {
+			t.Errorf("%s foi atendido para o jogador: %s", caminho, resposta)
+		}
+	}
+	// CONTROLE: o MESTRE mede as duas. Sem ele, uma rota que respondesse 404
+	// para todo mundo passaria por "a trava funcionou".
+	if r := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito/quadrado/1/4/4/4/4", ""); !strings.Contains(r, "Assassino emboscado") {
+		t.Fatalf("o mestre também não mediu — o guarda mediu uma rota morta: %s", r)
+	}
+}

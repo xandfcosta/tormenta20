@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	datastar "github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/engine"
 	"t20engine/tabuleiro"
 	"t20engine/web/ui"
 )
@@ -53,6 +54,97 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	r.Post(base+"/marcadores/{id}/revelar", s.draftCommand(draftRevealsMarker))
 	r.Post(base+"/marcadores/{id}/cor/{cor}", s.draftCommand(draftPaintsMarker))
 	r.Post(base+"/marcadores/{id}/remover", s.draftCommand(draftErasesMarker))
+	// MEDIR não é comandar, e por isso as duas de baixo NÃO passam pelo
+	// `draftCommand`: elas não mutam nada e respondem só com sinais. Um
+	// `EditPlace` aqui gravaria o acervo a cada movimento do dedo sobre a régua.
+	r.Post(base+"/regua", s.handleDraftRuler)
+	r.Post(base+"/gabarito/{tipo}/{tamanho}/{x}/{y}/{mx}/{my}", s.handleDraftTemplate)
+}
+
+// ── MEDIR o rascunho (ALE-293) ───────────────────────────────────────────────
+//
+// A régua e o gabarito são desenhadas no rascunho desde a ALE-292, porque elas
+// não são `SoMestre` e o trilho inteiro veio junto com o `boardTable`. As rotas
+// não vieram, e o resultado era o pior defeito desta casa: **o gesto oferecido
+// que o servidor não atende** — 404, tela que não muda, e nada explicando por
+// quê. Quem varre isso agora é o `TestEveryDraftToolHasARoute`.
+//
+// E elas PERTENCEM aqui, o que eu tinha julgado errado. O argumento de deixá-las
+// de fora era que medem "dá para acertar daqui?", pergunta de combate. Decisão
+// do dono: *"cabe a bola de fogo nesta sala?"* é pergunta de PREPARAÇÃO — é
+// montando a cripta que se decide o tamanho dela.
+
+// handleDraftRuler é o gêmeo mais fino do arquivo: ele não olha o tabuleiro.
+//
+// A régua lê as paradas dos SINAIS e devolve a leitura de cada perna mais o
+// total, e nada disso depende de o mapa ser a mesa ou o acervo. O que muda em
+// relação ao da Mesa é só a trava — e ela muda de natureza, que é a razão de o
+// gêmeo existir em vez de a rota ser registrada duas vezes.
+func (s Scene) handleDraftRuler(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.draftGm(w, r); !ok {
+		return
+	}
+	paradas, err := rulerStops(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	writeSignals(w, r, polylineReading(paradas))
+}
+
+// handleDraftTemplate desenha a área e diz quem ela pega (T20 p225).
+//
+// A cena vem do `PlaceScene` e NÃO passa pelo `BoardForRole`, ao contrário da
+// Mesa. Lá a redação por papel existe porque quem pergunta "quem o cone pega?"
+// não pode descobrir por aí a peça que a cortina esconde DELE; aqui não há
+// outro papel — o rascunho é privativo por construção, e quem não mestra a
+// campanha não chega até esta linha (`draftGm`).
+//
+// A peça ESCONDIDA entra na conta de propósito, e é a consequência que vale
+// dizer: montando a emboscada, o mestre pergunta se a bola de fogo pega o
+// assassino que a mesa ainda não vê. Redigir aqui esconderia dele a resposta que
+// ele veio buscar.
+func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
+	c, ok := s.draftGm(w, r)
+	if !ok {
+		return
+	}
+	tipo, err := urlTemplate(chi.URLParam(r, "tipo"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	origem, erroOrigem := quadradoDoCaminho(r, "x", "y")
+	mira, erroMira := quadradoDoCaminho(r, "mx", "my")
+	if erroOrigem != nil || erroMira != nil {
+		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
+		return
+	}
+	// A MIRA ainda não foi dada quando ela é a própria origem: o cone e a linha
+	// precisam apontar para algum lado, e escolher um pelo servidor seria
+	// inventar a decisão que falta.
+	if pointsTemplate(tipo) && mira == origem {
+		writeSignals(w, r, map[string]any{
+			"gabaritopath": "", "gabaritotexto": "Clique de novo para apontar.",
+		})
+		return
+	}
+	casas := engine.AreaSquares(origem, engine.Area{
+		Kind: tipo, Size: templateSize(chi.URLParam(r, "tamanho")),
+		Direction: templateDirection(origem, mira),
+	})
+	// A cena pode ter sumido entre desenhar a tela e medir — outro navegador do
+	// mestre pode ter apagado o lugar. O desenho sai de qualquer jeito; o que
+	// falta é a lista de quem ele pega, e "ninguém" é a resposta honesta para um
+	// mapa que não existe mais.
+	cena, err := s.deps.Boards().PlaceScene(r.Context(), c.CampaignID, c.PlaceID)
+	if err != nil {
+		cena = nil
+	}
+	writeSignals(w, r, map[string]any{
+		"gabaritopath":  squaresPath(casas),
+		"gabaritotexto": takesTemplateWho(cena, casas),
+	})
 }
 
 // handleDraftPage desenha a cena guardada, pronta para montar.

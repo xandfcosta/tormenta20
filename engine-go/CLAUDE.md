@@ -2203,6 +2203,33 @@ nada. As duas erram para lados opostos de propósito: a trava recusa quando não
 consegue conferir (o custo é uma frase), a lista segue sem a marca (o custo
 seria a tela não abrir).
 
+### Reusar a tela inteira traz os GESTOS dela junto, e eles precisam de rota
+
+Corolário cobrado uma fatia depois, na ALE-293. O rascunho reusa o `boardTable`,
+e com ele o TRILHO inteiro: a régua e o gabarito não são `SoMestre`, então o
+`forVisible` as desenha — numeradas, com atalho de teclado, sem ninguém as ter
+escolhido para aquela tela. **As rotas não vieram junto**, e o resultado é a pior
+forma desta casa: o gesto oferecido que o servidor não atende. 404, tela que não
+muda, nada explicando por quê.
+
+O que separa isto do "esqueci uma rota" comum é que **eu tinha decidido deixá-las
+de fora**, e a decisão não chegou à tela: eu escondi os VERBOS da cena (cortina,
+lente, encerrar) com o `v.Rascunho` e não olhei o trilho, que é outra lista. Uma
+decisão de produto aplicada a metade das superfícies é indistinguível de um
+esquecimento — e o teste que eu escrevi para a ALE-292 media os verbos, então
+ficou verde por cima do buraco.
+
+O guarda que fecha isso varre o trilho DE VERDADE (`MapTools`) contra o roteador
+DE VERDADE, e falha com o nome da ferramenta. Uma lista escrita à mão dos dois
+lados concordaria consigo mesma para sempre.
+
+> E a decisão de produto estava errada, o que é a outra metade: eu argumentei que
+> régua e gabarito medem "dá para acertar daqui?", pergunta de combate. Decisão
+> do dono: *"cabe a bola de fogo nesta sala?"* é pergunta de PREPARAÇÃO. Quando o
+> argumento para excluir algo é uma leitura do que a ferramenta SIGNIFICA,
+> pergunte — foi a bifurcação que eu resolvi sozinho depois de ter perguntado as
+> outras quatro.
+
 ### Uma cena nova ganha o guarda de contraste NO MESMO commit
 
 O regime daquela lista é ENUMERAÇÃO, e a seção "Um guarda só mede o que ele
