@@ -301,3 +301,164 @@ func TestAPlaceFromAnotherCampaignCannotBeBuilt(t *testing.T) {
 		t.Error("escreveu na cena de outra crônica")
 	}
 }
+
+/*
+O RASCUNHO DE LUGAR (ALE-292): montar a próxima cena FORA da sessão.
+
+A capacidade estava no ar desde a ALE-191 — `PlaceScene` e `SavePlaceScene`, com
+teste em cima — e sem um único caminho até ela. A decisão do dono é que o
+rascunho convive com a CORTINA e não a substitui: a cortina é durante a sessão,
+com a mesa presente; o rascunho é na quinta-feira, sem ninguém conectado.
+
+O gesto do rascunho é o MESMO gesto do tabuleiro vivo, apontado para o acervo em
+vez de para a mesa. Por isso ele não ganhou um protocolo próprio: cada gesto lê
+a cena guardada, aplica a MESMA função pura que a mesa aplica, e grava de volta.
+*/
+
+// O gesto do rascunho muda o acervo e NÃO toca na mesa — que é a issue inteira.
+func TestEditingThePlaceDraftChangesTheArchiveAndNotTheTable(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
+		t.Fatalf("guardar a taverna: %v", err)
+	}
+	lugar := s.boards.Places(ctx, campanha)[0]
+
+	cena, err := s.boards.EditPlace(ctx, campanha, 0, lugar.ID, func(b *tabuleiro.BoardState) error {
+		return tabuleiro.AddToken(b, tabuleiro.BoardToken{
+			Label: "Necromante", X: 4, Y: 4, Footprint: 2,
+		}, func() string { return "peca-nova" })
+	})
+	if err != nil {
+		t.Fatalf("montar o rascunho: %v", err)
+	}
+	if len(cena.Tokens) != 2 {
+		t.Fatalf("o rascunho voltou com %d peças, esperado 2: %+v", len(cena.Tokens), cena.Tokens)
+	}
+
+	// GRAVOU: a próxima abertura acha a peça, e não só a resposta deste gesto.
+	volta, err := s.boards.PlaceScene(ctx, campanha, lugar.ID)
+	if err != nil {
+		t.Fatalf("reabrir o rascunho: %v", err)
+	}
+	if len(volta.Tokens) != 2 {
+		t.Errorf("o gesto não ficou gravado: %+v", volta.Tokens)
+	}
+	// E a MESA continua com a peça que ela tinha: preparar não é jogar.
+	if naMesa := s.boards.Get(ctx, sessao, defaultTab); naMesa == nil || len(naMesa.Tokens) != 1 {
+		t.Errorf("montar o rascunho mexeu na cena que está na mesa: %+v", naMesa)
+	}
+}
+
+// A conferência do `SavePlaceScene` continua valendo pelo caminho do gesto: uma
+// mutação que produzisse coordenada absurda é recusada, e o acervo não muda.
+func TestAPlaceDraftGestureThatProducesAnAbsurdCoordinateIsRefused(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
+		t.Fatalf("guardar a taverna: %v", err)
+	}
+	lugar := s.boards.Places(ctx, campanha)[0]
+
+	_, err := s.boards.EditPlace(ctx, campanha, 0, lugar.ID, func(b *tabuleiro.BoardState) error {
+		b.Tokens[0].X = 9_000_000
+		return nil
+	})
+
+	if err == nil {
+		t.Fatal("o gesto do rascunho gravou uma peça fora do limite de sanidade")
+	}
+	if !strings.Contains(err.Error(), "9000000") {
+		t.Errorf("o erro não diz o valor ofensor: %v", err)
+	}
+	if volta, _ := s.boards.PlaceScene(ctx, campanha, lugar.ID); volta.Tokens[0].X != 3 {
+		t.Errorf("a recusa deixou o acervo mexido: a peça está em x=%d", volta.Tokens[0].X)
+	}
+}
+
+// O lugar ABERTO numa mesa ao vivo NÃO se monta: seriam duas verdades sobre onde
+// as peças estão, e o `Archive` da aba que encerrasse apagaria o rascunho em
+// silêncio. Mesma decisão que o acervo já toma com o apagar.
+func TestThePlaceOpenOnALiveTableRefusesTheDraft(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	// A taverna vai para o acervo E CONTINUA na mesa — que é o estado normal de
+	// uma sessão em andamento, não um arranjo do teste.
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
+		t.Fatalf("guardar a taverna: %v", err)
+	}
+	lugar := s.boards.Places(ctx, campanha)[0]
+
+	_, err := s.boards.EditPlace(ctx, campanha, sessao, lugar.ID, func(b *tabuleiro.BoardState) error {
+		b.Tokens = nil
+		return nil
+	})
+
+	if err == nil {
+		t.Fatal("montou o rascunho de um lugar que está numa mesa ao vivo")
+	}
+	if !strings.Contains(err.Error(), "Taverna do Javali") {
+		t.Errorf("o erro não diz QUAL lugar está na mesa: %v", err)
+	}
+	// CONTROLE: sem sessão viva o mesmo gesto passa. Sem isto, uma recusa por
+	// qualquer outro motivo passaria por "o guarda funcionou".
+	if _, err := s.boards.EditPlace(ctx, campanha, 0, lugar.ID, func(b *tabuleiro.BoardState) error {
+		b.Tokens = nil
+		return nil
+	}); err != nil {
+		t.Fatalf("o mesmo gesto foi recusado sem mesa viva: %v", err)
+	}
+}
+
+// O lugar NOVO nasce vazio, com o chão escolhido, e já aparece no acervo — é o
+// caso da issue: preparar a cripta sem ter jogado ela antes.
+func TestANewPlaceIsBornEmptyWithTheChosenGround(t *testing.T) {
+	s, campanha, _ := mesaComTaverna(t)
+	ctx := context.Background()
+
+	lugar, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "cripta")
+	if err != nil {
+		t.Fatalf("criar o lugar: %v", err)
+	}
+	if lugar.Tokens != 0 {
+		t.Errorf("o lugar novo nasceu com %d peças", lugar.Tokens)
+	}
+	cena, err := s.boards.PlaceScene(ctx, campanha, lugar.ID)
+	if err != nil {
+		t.Fatalf("abrir o lugar novo: %v", err)
+	}
+	if cena.Terrain != "cripta" {
+		t.Errorf("o chão escolhido não ficou: %q", cena.Terrain)
+	}
+	if len(s.boards.Places(ctx, campanha)) != 1 {
+		t.Errorf("o lugar novo não entrou no acervo: %+v", s.boards.Places(ctx, campanha))
+	}
+}
+
+// O NOME é a identidade do lugar na campanha (ver o `Archive`): pedir um lugar
+// novo com o nome de um que já existe leva ÀQUELE, e não cria um segundo quase
+// igual. É a mesma conta que encerrar a taverna duas vezes faz.
+func TestANewPlaceWithAnExistingNameOpensThatOne(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
+		t.Fatalf("guardar a taverna: %v", err)
+	}
+	guardada := s.boards.Places(ctx, campanha)[0]
+
+	lugar, err := s.boards.NewPlace(ctx, campanha, "Taverna do Javali", "cripta")
+	if err != nil {
+		t.Fatalf("pedir o lugar de nome repetido: %v", err)
+	}
+	if lugar.ID != guardada.ID {
+		t.Errorf("nasceu um segundo lugar (%d) com o nome do primeiro (%d)", lugar.ID, guardada.ID)
+	}
+	if len(s.boards.Places(ctx, campanha)) != 1 {
+		t.Errorf("o acervo ficou com dois lugares de mesmo nome: %+v", s.boards.Places(ctx, campanha))
+	}
+	// E a cena guardada NÃO foi zerada pelo pedido: a peça continua lá.
+	cena, _ := s.boards.PlaceScene(ctx, campanha, lugar.ID)
+	if len(cena.Tokens) != 1 {
+		t.Errorf("pedir o nome repetido apagou a cena guardada: %+v", cena.Tokens)
+	}
+}
