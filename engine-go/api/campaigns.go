@@ -63,7 +63,7 @@ func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 }
 
 func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
-	out, err := s.campaignList(r.Context(), currentUser(r))
+	out, err := s.campaignRules().campaignList(r.Context(), currentUser(r))
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
@@ -80,12 +80,12 @@ func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 // (ALE-229) e do `mintAccountInvite` (ALE-231). Não é descuido de ninguém: é o
 // que uma base com exatamente um transporte parece por dentro, e o segundo
 // transporte é o que torna isso visível (ALE-234).
-func (s *Server) campaignList(ctx context.Context, user AuthUser) ([]campaignListDTO, error) {
-	rows, err := s.visibleCampaigns(ctx, user)
+func (rules campaignRules) campaignList(ctx context.Context, user AuthUser) ([]campaignListDTO, error) {
+	rows, err := rules.visibleCampaigns(ctx, user)
 	if err != nil {
 		return nil, err
 	}
-	owners := s.ownerNames(ctx, rows, user.ID)
+	owners := rules.ownerNames(ctx, rows, user.ID)
 	out := make([]campaignListDTO, 0, len(rows))
 	for _, c := range rows {
 		item := campaignListDTO{CampaignDTO: campaignScalars(c), Role: "player"}
@@ -100,9 +100,9 @@ func (s *Server) campaignList(ctx context.Context, user AuthUser) ([]campaignLis
 			name := owners[c.Ownerid]
 			item.Role, item.OwnerName = "gm", &name
 		}
-		char, err := s.queries.CallerCharacterInCampaign(ctx, sqlcgen.CallerCharacterInCampaignParams{Campaignid: c.ID, Ownerid: user.ID})
+		char, err := rules.queries.CallerCharacterInCampaign(ctx, sqlcgen.CallerCharacterInCampaignParams{Campaignid: c.ID, Ownerid: user.ID})
 		if err == nil {
-			classes, _ := s.queries.ListClassesByCharacter(ctx, char.ID)
+			classes, _ := rules.queries.ListClassesByCharacter(ctx, char.ID)
 			cc := &campaignCharacterDTO{ID: char.ID, Name: char.Name, Level: char.Level, Classes: []sheet.ClassDTO{}}
 			for _, cl := range classes {
 				cc.Classes = append(cc.Classes, sheet.ClassDTO{ClassName: cl.Classname, Level: cl.Level})
@@ -117,16 +117,16 @@ func (s *Server) campaignList(ctx context.Context, user AuthUser) ([]campaignLis
 // visibleCampaigns is what the caller may see listed: their own plus the ones
 // they play in — and, for the admin, every mesa in the table (ALE-120). Without
 // this the admin could reach another's mesa only by typing its URL.
-func (s *Server) visibleCampaigns(ctx context.Context, user AuthUser) ([]sqlcgen.Campaign, error) {
+func (rules campaignRules) visibleCampaigns(ctx context.Context, user AuthUser) ([]sqlcgen.Campaign, error) {
 	if user.IsAdmin {
-		return s.queries.ListAllCampaigns(ctx)
+		return rules.queries.ListAllCampaigns(ctx)
 	}
-	return s.queries.ListCampaignsForUser(ctx, user.ID)
+	return rules.queries.ListCampaignsForUser(ctx, user.ID)
 }
 
 // ownerNames labels the mesas the caller does not own, in ONE query — the list
 // is short but an N+1 here would grow with the table.
-func (s *Server) ownerNames(ctx context.Context, rows []sqlcgen.Campaign, callerID int64) map[int64]string {
+func (rules campaignRules) ownerNames(ctx context.Context, rows []sqlcgen.Campaign, callerID int64) map[int64]string {
 	var ids []int64
 	for _, c := range rows {
 		if c.Ownerid != callerID {
@@ -137,7 +137,7 @@ func (s *Server) ownerNames(ctx context.Context, rows []sqlcgen.Campaign, caller
 	if len(ids) == 0 {
 		return names
 	}
-	users, err := s.queries.ListUsersByIDs(ctx, ids)
+	users, err := rules.queries.ListUsersByIDs(ctx, ids)
 	if err != nil {
 		return names
 	}
@@ -191,7 +191,7 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if _, ok := s.ownedCampaign(w, r, id); !ok {
+	if _, ok := s.campaignRules().ownedCampaign(w, r, id); !ok {
 		return
 	}
 	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
@@ -228,24 +228,24 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 // por usuário da presença. O gateway morreu na ALE-253 e a presença deixou de
 // ter quem a alimentasse quando a SPA saiu (ALE-272) — o argumento é o mesmo
 // sem eles, e citá-los apontava para dois lugares que não decidem mais nada.
-func (s *Server) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
-	c, err := s.queries.GetCampaign(ctx, campaignID)
+func (rules campaignRules) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
+	c, err := rules.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
 	}
 	if err != nil {
 		return "", http.StatusInternalServerError, errors.New("Could not load campaign")
 	}
-	return s.roleIn(ctx, user, c)
+	return rules.roleIn(ctx, user, c)
 }
 
 // roleIn is the same rule over a campaign the caller ALREADY loaded, so a
 // handler that needs both the row and the role does not read it twice.
-func (s *Server) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) (string, int, error) {
+func (rules campaignRules) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) (string, int, error) {
 	if c.Ownerid == user.ID || user.IsAdmin {
 		return "gm", http.StatusOK, nil
 	}
-	isMember, _ := s.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{Campaignid: c.ID, Ownerid: user.ID})
+	isMember, _ := rules.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{Campaignid: c.ID, Ownerid: user.ID})
 	if !isMember {
 		return "", http.StatusForbidden, fmt.Errorf("Campaign %d is not accessible", c.ID)
 	}
@@ -256,8 +256,8 @@ func (s *Server) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) 
 // alone passes; everyone else gets Forbidden. This ONE function is the gate for six
 // call sites (rename/delete, invite, members, sessions), which is why the admin
 // bypass costs a single condition here (ALE-120).
-func (s *Server) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64) (sqlcgen.Campaign, int, error) {
-	c, err := s.queries.GetCampaign(ctx, id)
+func (rules campaignRules) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64) (sqlcgen.Campaign, int, error) {
+	c, err := rules.queries.GetCampaign(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return c, http.StatusNotFound, fmt.Errorf("Campaign %d not found", id)
 	}
@@ -270,8 +270,8 @@ func (s *Server) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64)
 	return c, http.StatusOK, nil
 }
 
-func (s *Server) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64) (sqlcgen.Campaign, bool) {
-	c, status, err := s.loadOwnedCampaign(r.Context(), currentUser(r), id)
+func (rules campaignRules) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64) (sqlcgen.Campaign, bool) {
+	c, status, err := rules.loadOwnedCampaign(r.Context(), currentUser(r), id)
 	if err != nil {
 		plataforma.WriteError(w, status, err.Error())
 		return c, false

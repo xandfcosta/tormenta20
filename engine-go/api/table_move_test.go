@@ -12,7 +12,7 @@ func (f pilotoFixture) onBoard(t *testing.T) string {
 	t.Helper()
 	f.seedOpenBoard(t, "pedra")
 	entryID := f.tracker(t)
-	posto, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID, CharacterID: &f.charID}, true)
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -35,7 +35,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 	if rec := f.pede(t, f.mestre, "POST", base+"/parada/2/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("primeira parada deu %d", rec.Code)
 	}
-	primeiro := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
+	primeiro := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
 	if primeiro == nil || len(primeiro.Path) != 3 {
 		t.Fatalf("o primeiro caminho ficou %+v", primeiro)
 	}
@@ -43,7 +43,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 	if rec := f.pede(t, f.mestre, "POST", base+"/parada/2/2", ""); rec.Code != http.StatusOK {
 		t.Fatalf("segunda parada deu %d", rec.Code)
 	}
-	depois := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
+	depois := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
 	if depois == nil {
 		t.Fatal("o movimento sumiu na segunda parada")
 	}
@@ -64,7 +64,7 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 	onde := func() (int, int) {
-		p := tabuleiro.FindToken(f.s.Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
+		p := tabuleiro.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
 		return p.X, p.Y
 	}
 
@@ -81,7 +81,7 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 	if x, y := onde(); x != 3 || y != 1 {
 		t.Errorf("depois de confirmar a peça está em %d,%d", x, y)
 	}
-	if f.s.Boards().Get(context.Background(), f.sessionID, defaultTab).Pending != nil {
+	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending != nil {
 		t.Error("o movimento continuou pendente depois de confirmado")
 	}
 }
@@ -99,7 +99,7 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 		t.Fatalf("cancelar deu %d", rec.Code)
 	}
 
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b.Pending != nil {
 		t.Error("o cancelamento não limpou a proposta")
 	}
@@ -117,7 +117,7 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
-	posto, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Ogro", X: 5, Y: 5}, true)
 	if err != nil {
 		t.Fatalf("pôr o Ogro: %v", err)
@@ -129,7 +129,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	if !strings.Contains(corpo, "não é sua") {
 		t.Errorf("a recusa não explica de quem é a peça; sinais = %s", trechoDeSinais(corpo))
 	}
-	if f.s.Boards().Get(context.Background(), f.sessionID, defaultTab).Pending != nil {
+	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending != nil {
 		t.Error("o movimento recusado virou proposta mesmo assim")
 	}
 }

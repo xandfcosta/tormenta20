@@ -29,7 +29,7 @@ func authed(t *testing.T, s *Server, UserID int64, method, path, body string) *h
 	if err != nil {
 		t.Fatalf("usuário %d não existe: %v", UserID, err)
 	}
-	token, err := s.signToken(user)
+	token, err := s.accountRules().signToken(user)
 	if err != nil {
 		t.Fatalf("assinar token: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestRequireAuthRejectsMissingAndBrokenCredentials(t *testing.T) {
 		if err != nil {
 			t.Fatalf("carregar usuário: %v", err)
 		}
-		token, err := s.signToken(user)
+		token, err := s.accountRules().signToken(user)
 		if err != nil {
 			t.Fatalf("assinar: %v", err)
 		}

@@ -42,7 +42,7 @@ func postaCarta(t *testing.T, s *Server, userID int64, form url.Values) *httptes
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	token, err := s.signToken(u)
+	token, err := s.accountRules().signToken(u)
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}
@@ -168,7 +168,7 @@ func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 	visitante := seedUser(t, s, "visitante@t20.local")
 	seedCampanha(t, s, dono, "A Queda de Tauron", "o-token-certo")
 
-	v, err := campaigns.New(s).LoadJoin(context.Background(), visitante, "o-token-certo")
+	v, err := campaigns.New(s.campaignsHost()).LoadJoin(context.Background(), visitante, "o-token-certo")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -184,7 +184,7 @@ func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	s := newTestServer(t)
 	visitante := seedUser(t, s, "visitante@t20.local")
 
-	v, err := campaigns.New(s).LoadJoin(context.Background(), visitante, "nao-existe")
+	v, err := campaigns.New(s.campaignsHost()).LoadJoin(context.Background(), visitante, "nao-existe")
 	if err != nil {
 		t.Fatalf("convite morto derrubou a carta: %v", err)
 	}
@@ -209,7 +209,7 @@ func (s *Server) authUserPorID(t *testing.T, id int64) AuthUser {
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	return s.authUser(u)
+	return s.accountRules().authUser(u)
 }
 
 // ehAdmin responde a pergunta que a cena faz por parâmetro, para a bancada não
@@ -224,5 +224,5 @@ func (s *Server) ehAdmin(t *testing.T, id int64) bool {
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	return s.authUser(u).IsAdmin
+	return s.accountRules().authUser(u).IsAdmin
 }

@@ -38,7 +38,7 @@ func TestStartingMeansThreeThings(t *testing.T) {
 	if sess.Status != "planned" {
 		t.Fatalf("a bancada não nasce planejada (%q) — o resto do caso não mede o que diz", sess.Status)
 	}
-	if _, err := f.s.StartSession(ctx, sess); err != nil {
+	if _, err := f.s.tableRules().StartSession(ctx, sess); err != nil {
 		t.Fatalf("iniciar: %v", err)
 	}
 	status, temComeco := sessaoDoBanco(t, f)
@@ -49,7 +49,7 @@ func TestStartingMeansThreeThings(t *testing.T) {
 	// 2. JÁ ATIVA não faz nada, e NÃO é erro: clicar duas vezes é o gesto de
 	//    quem não viu a tela mudar, e recusar seria punir a dúvida.
 	ativa, _ := f.s.queries.GetSession(ctx, f.sessionID)
-	if _, err := f.s.StartSession(ctx, ativa); err != nil {
+	if _, err := f.s.tableRules().StartSession(ctx, ativa); err != nil {
 		t.Errorf("iniciar uma sessão já ativa deu erro: %v", err)
 	}
 	if status, _ := sessaoDoBanco(t, f); status != "active" {
@@ -58,14 +58,14 @@ func TestStartingMeansThreeThings(t *testing.T) {
 
 	// 3. ENCERRADA REABRE. A noite continuou, e obrigar a criar uma sessão nova
 	//    perderia a fila e o tabuleiro dela.
-	if _, err := f.s.EndSession(ctx, ativa); err != nil {
+	if _, err := f.s.tableRules().EndSession(ctx, ativa); err != nil {
 		t.Fatalf("encerrar: %v", err)
 	}
 	encerrada, _ := f.s.queries.GetSession(ctx, f.sessionID)
 	if encerrada.Status != "ended" {
 		t.Fatalf("encerrar não encerrou: %q", encerrada.Status)
 	}
-	if _, err := f.s.StartSession(ctx, encerrada); err != nil {
+	if _, err := f.s.tableRules().StartSession(ctx, encerrada); err != nil {
 		t.Fatalf("reabrir: %v", err)
 	}
 	if status, _ := sessaoDoBanco(t, f); status != "active" {
@@ -87,7 +87,7 @@ func TestEndingASessionThatNeverStartedIsRefused(t *testing.T) {
 		t.Fatalf("ler a sessão: %v", err)
 	}
 
-	_, err = f.s.EndSession(ctx, sess)
+	_, err = f.s.tableRules().EndSession(ctx, sess)
 
 	if err == nil {
 		t.Fatal("encerrar uma sessão nunca iniciada passou")
@@ -102,15 +102,15 @@ func TestEndingASessionThatNeverStartedIsRefused(t *testing.T) {
 
 	// E ENCERRAR DUAS VEZES não é erro, pela mesma razão que iniciar duas vezes
 	// não é: o segundo clique é de quem não viu a tela mudar.
-	if _, err := f.s.StartSession(ctx, sess); err != nil {
+	if _, err := f.s.tableRules().StartSession(ctx, sess); err != nil {
 		t.Fatalf("iniciar: %v", err)
 	}
 	ativa, _ := f.s.queries.GetSession(ctx, f.sessionID)
-	if _, err := f.s.EndSession(ctx, ativa); err != nil {
+	if _, err := f.s.tableRules().EndSession(ctx, ativa); err != nil {
 		t.Fatalf("encerrar: %v", err)
 	}
 	encerrada, _ := f.s.queries.GetSession(ctx, f.sessionID)
-	if _, err := f.s.EndSession(ctx, encerrada); err != nil {
+	if _, err := f.s.tableRules().EndSession(ctx, encerrada); err != nil {
 		t.Errorf("encerrar de novo deu erro: %v", err)
 	}
 }
@@ -130,7 +130,7 @@ func TestRestartingCombatEmptiesTheTrackerAndNothingElse(t *testing.T) {
 		t.Fatalf("a cena montou %d combatentes — não há o que reiniciar", n)
 	}
 
-	if err := f.s.RestartCombat(ctx, f.sessionID); err != nil {
+	if err := f.s.tableRules().RestartCombat(ctx, f.sessionID); err != nil {
 		t.Fatalf("reiniciar: %v", err)
 	}
 

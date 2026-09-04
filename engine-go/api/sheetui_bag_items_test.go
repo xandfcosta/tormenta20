@@ -44,7 +44,7 @@ func TestAnInventedItemDoesNotEnterThroughTheCatalog(t *testing.T) {
 	if recusa := bagCommand(t, f, id, "itens/adiciona/espada-de-luz"); recusa == "" {
 		t.Error("um item que não existe no livro foi aceito")
 	}
-	itens, err := f.s.Queries().ListItemsByCharacter(context.Background(), id)
+	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestTheImprovementsDialogOnlyOffersWhatFits(t *testing.T) {
 
 func sheetNameItem(t *testing.T, f pilotoFixture, id int64, nome string) sqlcgen.ListItemsByCharacterRow {
 	t.Helper()
-	itens, err := f.s.Queries().ListItemsByCharacter(context.Background(), id)
+	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar os itens: %v", err)
 	}
@@ -152,7 +152,7 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 	if recusa := bagCommand(t, f, id, fmt.Sprintf("itens/%d/remove", item)); recusa != "" {
 		t.Fatalf("remover foi recusado: %q", recusa)
 	}
-	itens, err := f.s.Queries().ListItemsByCharacter(context.Background(), id)
+	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
@@ -170,7 +170,7 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 	if recusa := use(t, f, id, item, `{"itemrolagempv":7}`); recusa != "" {
 		t.Fatalf("usar foi recusado: %q", recusa)
 	}
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
@@ -178,7 +178,7 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 		t.Errorf("o PV ficou %d, quer 17 (10 + os 7 que a mesa rolou)", row.Hpcurrent)
 	}
 	// A DOSE FOI GASTA: era uma só, então a linha sai da ficha.
-	itens, err := f.s.Queries().ListItemsByCharacter(context.Background(), id)
+	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestUsingDoesNotGoPastMaximumHp(t *testing.T) {
 	if recusa := use(t, f, id, item, `{"itemrolagempv":8}`); recusa != "" {
 		t.Fatalf("usar foi recusado: %q", recusa)
 	}
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
@@ -213,7 +213,7 @@ func TestWhatIsNotConsumableCannotBeUsed(t *testing.T) {
 	if recusa := use(t, f, id, item, "{}"); !strings.Contains(recusa, "consumível") {
 		t.Errorf("a recusa não diz o motivo: %q", recusa)
 	}
-	if _, err := f.s.Queries().GetItem(context.Background(), item); err != nil {
+	if _, err := f.s.sceneCore().Queries().GetItem(context.Background(), item); err != nil {
 		t.Error("a espada foi consumida assim mesmo")
 	}
 }
@@ -297,7 +297,7 @@ func improvements(t *testing.T, f pilotoFixture, id, item int64, corpo string) s
 
 func itemImprovements(t *testing.T, f pilotoFixture, item int64) string {
 	t.Helper()
-	row, err := f.s.Queries().GetItem(context.Background(), item)
+	row, err := f.s.sceneCore().Queries().GetItem(context.Background(), item)
 	if err != nil {
 		t.Fatalf("ler o item: %v", err)
 	}

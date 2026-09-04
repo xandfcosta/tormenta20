@@ -25,7 +25,7 @@ func TestTheResetLinkLastsTwentyFourHours(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 
 	antes := time.Now()
-	reset, err := s.mintPasswordReset(context.Background(), dono, dono)
+	reset, err := s.adminHost().mintPasswordReset(context.Background(), dono, dono)
 	if err != nil {
 		t.Fatalf("cunhar: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 
-	_, err := s.mintPasswordReset(context.Background(), 999999, dono)
+	_, err := s.adminHost().mintPasswordReset(context.Background(), 999999, dono)
 	if !errors.Is(err, errUserNotFound) {
 		t.Errorf("erro = %v, queria errUsuarioInexistente", err)
 	}
@@ -125,7 +125,7 @@ func pedeNoPiloto(t *testing.T, s *Server, userID int64, metodo, caminho string)
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	token, err := s.signToken(u)
+	token, err := s.accountRules().signToken(u)
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}

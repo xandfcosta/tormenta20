@@ -19,21 +19,21 @@ import (
 // efeito nenhum, e a bênção de duração "cena" sobrevivia ao fim da cena. A
 // ALE-220 fechou isso pelo lado de lá: encerrar a cena agora percorre o grupo e
 // chama ESTE caminho para cada ficha.
-func (s *Server) clearScenePlayState(ctx context.Context, id int64) error {
-	if err := s.queries.ClearCharacterPowerUsesByScope(ctx, sqlcgen.ClearCharacterPowerUsesByScopeParams{
+func (tr tableRules) clearScenePlayState(ctx context.Context, id int64) error {
+	if err := tr.queries.ClearCharacterPowerUsesByScope(ctx, sqlcgen.ClearCharacterPowerUsesByScopeParams{
 		Characterid: id, Scope: "scene",
 	}); err != nil {
 		return err
 	}
-	return s.queries.ClearCharacterStances(ctx, id)
+	return tr.queries.ClearCharacterStances(ctx, id)
 }
 
 // clearDayPlayState é o DESCANSO DE DIA: leva o da cena e mais os usos "1/dia".
-func (s *Server) clearDayPlayState(ctx context.Context, id int64) error {
-	if err := s.clearScenePlayState(ctx, id); err != nil {
+func (tr tableRules) clearDayPlayState(ctx context.Context, id int64) error {
+	if err := tr.clearScenePlayState(ctx, id); err != nil {
 		return err
 	}
-	return s.queries.ClearCharacterPowerUsesByScope(ctx, sqlcgen.ClearCharacterPowerUsesByScopeParams{
+	return tr.queries.ClearCharacterPowerUsesByScope(ctx, sqlcgen.ClearCharacterPowerUsesByScopeParams{
 		Characterid: id, Scope: "day",
 	})
 }

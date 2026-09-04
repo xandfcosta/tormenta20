@@ -20,7 +20,7 @@ func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 	}
 	// O CONTROLE do erro: uma recusa que já tivesse ESCRITO seria pior que
 	// nenhuma, e o status sozinho não diria.
-	for _, l := range f.s.Sessions().GetState(f.sessionID).Initiative {
+	for _, l := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if l.CharacterID != nil && *l.CharacterID == forasteiro {
 			t.Fatal("o forasteiro entrou na fila apesar da recusa")
 		}
@@ -40,7 +40,7 @@ func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 	f.posta(t, f.mestre,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
 
-	fila := f.s.Sessions().GetState(f.sessionID).Initiative
+	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
 	if len(fila) != 1 {
 		t.Fatalf("a fila tem %d linhas, queria 1", len(fila))
 	}
@@ -62,7 +62,7 @@ func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 	f.posta(t, f.mestre, rota, "{}")
 	f.posta(t, f.mestre, rota, "{}")
 
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 1 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
 		t.Errorf("dois cliques deram %d linhas", n)
 	}
 }

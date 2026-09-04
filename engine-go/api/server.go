@@ -101,14 +101,14 @@ func (s *Server) WaitForBackground() {
 // A busca é por sessão VIVA e só as que têm o personagem na fila: avisar mesa
 // que não tem aquele combatente mandaria todo cliente da casa refazer busca a
 // cada ficha salva.
-func (s *Server) characterChanged(characterID int64) {
+func (sr sheetRules) characterChanged(characterID int64) {
 	// O AVISO PARA AS CENAS DO SERVIDOR (ALE-275, no barramento desde a ALE-279).
 	// Ele é por PERSONAGEM e não por sessão: quem escuta é o stream da Mesa de
 	// quem tem essa ficha aberta, e a busca por sessão viva abaixo responde outra
 	// pergunta — a do hub SSE, que fala com a sala inteira.
-	s.bus.Publish(events.CharacterChanged{CharacterID: characterID})
-	for _, sessionID := range s.sessions.LiveSessionsWithCharacter(characterID) {
-		s.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
+	sr.bus.Publish(events.CharacterChanged{CharacterID: characterID})
+	for _, sessionID := range sr.sessions.LiveSessionsWithCharacter(characterID) {
+		sr.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
 	}
 }
 
@@ -180,8 +180,36 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 	//
 	// O DONO continua sendo a cena; o servidor só guarda a instância, como
 	// guarda um store.
-	srv.tableScene = table.New(srv)
+	srv.primeCatalogs(catalogs)
 	return srv
+}
+
+// primeCatalogs troca o motor e RECONSTRÓI a cena da Mesa.
+//
+// As duas coisas andam juntas, e é por isso que elas têm um nome: desde a fatia
+// 6 o adaptador da Mesa COPIA o `*engine.Catalogs` quando é montado, e a cena
+// da Mesa é montada uma vez só (ver acima). Trocar o campo sem reconstruir
+// deixa a Mesa com o motor de antes.
+//
+// Isso não é hipótese — foi medido. A bancada de teste prima os catálogos
+// DEPOIS do `NewServer`, e sete casos da Mesa passaram a estourar com nulo
+// dentro do motor: o painel do combatente pedia a ficha computada a um
+// `*Catalogs` que nunca tinha chegado à cena. Em produção o motor chega pelo
+// construtor e nunca muda, então o defeito só existia no teste — mas a
+// invariante é a mesma nos dois, e um campo que exige um segundo passo é um
+// campo que alguém vai trocar sozinho.
+func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
+	s.catalogs = catalogs
+	s.tableScene = table.New(s.tableHost())
+}
+
+// sceneCore monta o núcleo que as cenas compartilham (ALE-278, fatia 6).
+//
+// Ele é montado por chamada e não guardado num campo: são três ponteiros
+// copiados, e um campo daria ao `*Server` mais uma coisa para manter
+// consistente com ele mesmo.
+func (s *Server) sceneCore() sceneCore {
+	return sceneCore{queries: s.queries, catalogs: s.catalogs, livro: s.livro.endereco}
 }
 
 // Router builds the HTTP handler: shared middleware + domain routes. Routes carry
@@ -264,28 +292,25 @@ func (s *Server) Router() http.Handler {
 	return r
 }
 
-// Queries e Catalogs existem porque as CENAS pedem por eles (ALE-278).
+// O HUB, com adaptador próprio (ALE-278, fatia 6).
 //
-// Elas não são getters por hábito: cada uma aparece numa porta declarada por uma
-// cena — `forge.Deps` é a primeira —, e o `Server` as cumpre. A diferença entre
-// isto e um objeto-deus com campos públicos é de direção: quem escolhe o que
-// atravessa a fronteira é o CONSUMIDOR, e o compilador cobra na linha que monta.
-func (s *Server) Queries() *sqlcgen.Queries { return s.queries }
+// Das seis assinaturas que ele pede, duas são do núcleo e quatro estão aqui. O
+// que o adaptador carrega além do núcleo é a CONFIGURAÇÃO, e só ela: cunhar
+// convite já é função de pacote sobre as consultas, e as outras duas não leem
+// estado nenhum.
+type hubHost struct {
+	sceneCore
+	cfg plataforma.Config
+}
 
-// Catalogs é o motor primado — o mesmo que o oráculo usa.
-func (s *Server) Catalogs() *engine.Catalogs { return s.catalogs }
-
-// CurrentUserID lê quem está pedindo do contexto que o `requirePage` escreveu.
-// Ela é método porque a CHAVE do contexto é deste pacote: uma segunda chave com
-// o mesmo nome, declarada noutro pacote, não lê o mesmo valor.
-func (s *Server) CurrentUserID(r *http.Request) int64 { return currentUser(r).ID }
+func (s *Server) hubHost() hubHost { return hubHost{sceneCore: s.sceneCore(), cfg: s.cfg} }
 
 // CurrentViewer traduz quem está pedindo para a língua do HUB (ALE-278).
 //
 // A tradução é o preço da fronteira, e ela é barata: quatro campos. O que ela
 // compra é o hub não conhecer o `AuthUser` — e portanto não importar este
 // pacote, que o importa de volta para montar rota.
-func (s *Server) CurrentViewer(r *http.Request) hub.Viewer {
+func (h hubHost) CurrentViewer(r *http.Request) hub.Viewer {
 	eu := currentUser(r)
 	return hub.Viewer{ID: eu.ID, Email: eu.Email, Name: eu.Name, IsAdmin: eu.IsAdmin}
 }
@@ -293,19 +318,18 @@ func (s *Server) CurrentViewer(r *http.Request) hub.Viewer {
 // MintAccountInvite e ExpiredSessionCookie são o que o hub pede da CASA: cunhar
 // convite e apagar a sessão dependem de configuração e de política, e nenhuma
 // das duas é da tela.
-func (s *Server) MintAccountInvite(ctx context.Context, byUserID int64) (sqlcgen.AccountInvite, error) {
-	return s.mintAccountInvite(ctx, byUserID)
+func (h hubHost) MintAccountInvite(ctx context.Context, byUserID int64) (sqlcgen.AccountInvite, error) {
+	return mintAccountInvite(ctx, h.queries, byUserID)
 }
 
-func (s *Server) ExpiredSessionCookie() *http.Cookie { return s.sessionCookie("", -1) }
+func (h hubHost) ExpiredSessionCookie() *http.Cookie { return sessionCookie(h.cfg, "", -1) }
 
 // TableRoute é o endereço de uma sessão ao vivo. Quem sabe onde cada cena está
 // montada é quem monta.
-func (s *Server) TableRoute(campaignID, sessionID int64) string {
+func (h hubHost) TableRoute(campaignID, sessionID int64) string {
 	return routes.Table(campaignID, sessionID)
 }
 
 // Asset é o endereço versionado de um estático, para as cenas que carregam
 // bundle próprio. Ele já era injetado na casca (`ui.Page.Asset`); aqui ele vira
 // método porque uma cena inteira o pede.
-func (s *Server) Asset(arquivo string) string { return EstaticoDoPiloto(arquivo) }

@@ -24,7 +24,7 @@ func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 		}
 	}
 
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	for i, pincel := range tabuleiro.TerrainKinds {
 		casas := tabuleiro.SquaresOf(b, pincel.ID)
 		if len(casas) != 1 || casas[0].X != i {
@@ -53,7 +53,7 @@ func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if n := len(tabuleiro.SquaresOf(b, tabuleiro.TerrenoCamuflagem)); n != 0 {
 		t.Errorf("a camuflagem não foi apagada (%d casas)", n)
 	}
@@ -157,7 +157,7 @@ func TestOnlyTheGmPaints(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pintou o chão: %d", rec.Code)
 	}
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if n := len(tabuleiro.SquaresOf(b, tabuleiro.TerrenoDificil)); n != 0 {
 		t.Errorf("a pintura do jogador entrou mesmo assim (%d casas)", n)
 	}

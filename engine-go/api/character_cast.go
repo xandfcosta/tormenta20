@@ -27,7 +27,7 @@ type castResult struct {
 //
 // Devolve o PM que sobrou e uma frase de recusa quando a regra barra — a frase é
 // para um humano ler numa tela, e não um `FieldErrorMap` para um cliente.
-func (s *Server) castSpellForCharacter(
+func (sr sheetRules) castSpellForCharacter(
 	r *http.Request, dto sheet.CharacterDTO, catalogSpellID string, augments []sheet.AugmentPick,
 ) error {
 	spell, known := catalog.LookupSpell(catalogSpellID)
@@ -51,9 +51,9 @@ func (s *Server) castSpellForCharacter(
 		return err
 	}
 	basePm := sheet.SpellBasePmCost[spell.Circle]
-	totalPm := s.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
-	minPm := s.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
-	limit := s.catalogs.SpellPmLimitFor(ec, spell.Classes)
+	totalPm := sr.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
+	minPm := sr.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
+	limit := sr.catalogs.SpellPmLimitFor(ec, spell.Classes)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}
@@ -63,7 +63,7 @@ func (s *Server) castSpellForCharacter(
 	if totalPm == 0 {
 		return nil
 	}
-	return s.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
+	return sr.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
 		MpCurrent: dto.MpCurrent - int64(totalPm), UpdatedAt: plataforma.NowISO(), ID: dto.ID,
 	})
 }

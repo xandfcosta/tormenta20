@@ -25,32 +25,32 @@ type restedVitals struct {
 
 // EndScene expires the character's scene-scoped effects (owner-or-GM authorized first).
 // Transport-agnostic — the WS session-rest handler calls this per member character.
-func (s *Server) EndScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
-	if _, status, err := s.authorizedCharacter(ctx, user, characterID); err != nil {
+func (tr tableRules) EndScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
+	if _, status, err := tr.authorizedCharacter(ctx, user, characterID); err != nil {
 		return status, err
 	}
-	if err := s.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{Characterid: characterID, Scope: "scene"}); err != nil {
+	if err := tr.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{Characterid: characterID, Scope: "scene"}); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
 	}
 	// Os usos "1/cena" e as posturas vao junto (ALE-222). Aqui e nao no
 	// `EndScene` da SESSAO: este e o caminho que ja limpa a ficha, e e por onde
 	// os dois transportes passam. Desde a ALE-220 o `EndScene` da sessao
 	// tambem chega ate aqui, uma ficha por vez, pelo `expirePartyScene`.
-	if err := s.clearScenePlayState(ctx, characterID); err != nil {
+	if err := tr.clearScenePlayState(ctx, characterID); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear the play state")
 	}
 	return http.StatusOK, nil
 }
 
 // endDay expires both scene- and day-scoped effects.
-func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (int, error) {
-	if _, status, err := s.authorizedCharacter(ctx, user, characterID); err != nil {
+func (tr tableRules) endDay(ctx context.Context, user AuthUser, characterID int64) (int, error) {
+	if _, status, err := tr.authorizedCharacter(ctx, user, characterID); err != nil {
 		return status, err
 	}
-	if err := s.queries.DeleteSceneAndDayEffects(ctx, characterID); err != nil {
+	if err := tr.queries.DeleteSceneAndDayEffects(ctx, characterID); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
 	}
-	if err := s.clearDayPlayState(ctx, characterID); err != nil {
+	if err := tr.clearDayPlayState(ctx, characterID); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear the play state")
 	}
 	return http.StatusOK, nil
@@ -73,7 +73,7 @@ func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (
 // e o mestre da mesa" e aprenderia que a mesa esta rodando hoje.
 func (s *Server) assertGmAtLiveTable(w http.ResponseWriter, r *http.Request, id int64) bool {
 	user := currentUser(r)
-	if _, status, err := s.authorizedCharacter(r.Context(), user, id); err != nil {
+	if _, status, err := s.tableRules().authorizedCharacter(r.Context(), user, id); err != nil {
 		plataforma.WriteError(w, status, err.Error())
 		return false
 	}
@@ -119,20 +119,20 @@ func (s *Server) clearEffectScopes(
 // ending their scene, as opposed to the GM's session-wide rest that reaches
 // EndScene through the WS gateway.
 func (s *Server) handleEndScene(w http.ResponseWriter, r *http.Request) {
-	s.clearEffectScopes(w, r, s.EndScene, []string{"scene"})
+	s.clearEffectScopes(w, r, s.tableRules().EndScene, []string{"scene"})
 }
 
 // handleEndDay ends the day, which also ends the running scene (book rest
 // semantics) — hence both scopes in the delta.
 func (s *Server) handleEndDay(w http.ResponseWriter, r *http.Request) {
-	s.clearEffectScopes(w, r, s.endDay, []string{"scene", "day"})
+	s.clearEffectScopes(w, r, s.tableRules().endDay, []string{"scene", "day"})
 }
 
 // restVitals applies the T20 night-rest recovery: PV/PM each gain floor(level × factor),
 // clamped to their max, then persists. Returns the new current values so the gateway can
 // mirror them onto the live tracker.
-func (s *Server) restVitals(ctx context.Context, user AuthUser, characterID int64, condition string) (restedVitals, int, error) {
-	row, status, err := s.authorizedCharacter(ctx, user, characterID)
+func (tr tableRules) restVitals(ctx context.Context, user AuthUser, characterID int64, condition string) (restedVitals, int, error) {
+	row, status, err := tr.authorizedCharacter(ctx, user, characterID)
 	if err != nil {
 		return restedVitals{}, status, err
 	}
@@ -145,7 +145,7 @@ func (s *Server) restVitals(ctx context.Context, user AuthUser, characterID int6
 		hpCurrent: min(row.Hpmax, row.Hpcurrent+gain),
 		mpCurrent: min(row.Mpmax, row.Mpcurrent+gain),
 	}
-	if err := s.queries.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
+	if err := tr.queries.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
 		HpCurrent: next.hpCurrent, MpCurrent: next.mpCurrent, UpdatedAt: plataforma.NowISO(), ID: characterID,
 	}); err != nil {
 		return restedVitals{}, http.StatusInternalServerError, errors.New("Could not update vitals")

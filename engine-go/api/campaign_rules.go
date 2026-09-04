@@ -23,12 +23,12 @@ type campaignRulesDTO struct {
 
 // ignoredRulesOf lê o conjunto de uma campanha. Devolve fatia vazia e nunca
 // nula: `null` e `[]` chegam diferentes no JSON e a tela teria de tratar os dois.
-func (s *Server) ignoredRulesOf(ctx context.Context, campaignID int64) []string {
-	rules, err := s.queries.ListIgnoredRulesForCampaign(ctx, campaignID)
-	if err != nil || rules == nil {
+func (rules campaignRules) ignoredRulesOf(ctx context.Context, campaignID int64) []string {
+	ignoradas, err := rules.queries.ListIgnoredRulesForCampaign(ctx, campaignID)
+	if err != nil || ignoradas == nil {
 		return []string{}
 	}
-	return rules
+	return ignoradas
 }
 
 // A normalização das regras opcionais mora em `campaign` desde a ALE-278: ela é
@@ -41,13 +41,13 @@ func (s *Server) ignoredRulesOf(ctx context.Context, campaignID int64) []string 
 // mandar o estado final faz a operação ser idempotente. Um delta reenviado
 // alternaria a regra duas vezes, que é exatamente o que um clique repetido
 // numa conexão ruim produz.
-func (s *Server) saveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error {
-	if err := s.queries.ClearIgnoredRulesForCampaign(ctx, campanhaID); err != nil {
+func (rules campaignRules) saveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error {
+	if err := rules.queries.ClearIgnoredRulesForCampaign(ctx, campanhaID); err != nil {
 		return err
 	}
 	agora := plataforma.NowISO()
 	for _, regra := range regras {
-		if err := s.queries.IgnoreRuleInCampaign(ctx, sqlcgen.IgnoreRuleInCampaignParams{
+		if err := rules.queries.IgnoreRuleInCampaign(ctx, sqlcgen.IgnoreRuleInCampaignParams{
 			Campaignid: campanhaID, Rule: regra, Updatedat: agora,
 		}); err != nil {
 			return err

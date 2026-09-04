@@ -13,7 +13,25 @@ import (
 	"t20engine/web/table"
 )
 
-// O `*Server` cumprindo a porta da MESA (`table.Deps`, ALE-278).
+// A MESA, com adaptador próprio — a ÚLTIMA cena a largar o servidor
+// (ALE-278, fatia 6).
+//
+// Trinta e uma assinaturas, a maior porta do projeto. O adaptador é o núcleo
+// mais um `tableRules`, e o `tableRules` toca quase todos os campos do
+// `*Server` — o que está certo, e a razão está escrita lá: a Mesa É a mesa ao
+// vivo, e a mesa ao vivo é o que aqueles stores guardam. O que ela NÃO tem é o
+// livro, os trincos por personagem, a espera do desligamento e os métodos das
+// outras dez cenas.
+type tableHost struct {
+	sceneCore
+	rules tableRules
+}
+
+func (s *Server) tableHost() tableHost {
+	return tableHost{sceneCore: s.sceneCore(), rules: s.tableRules()}
+}
+
+// O adaptador cumprindo a porta da MESA (`table.Deps`, ALE-278).
 //
 // É a porta mais larga da série, e o arquivo é o lugar de dizer por quê: esta é
 // a única cena que MOVIMENTA estado ao vivo. As outras leem o banco e desenham;
@@ -30,11 +48,17 @@ import (
 // Embrulhá-los método a método daria oitenta entradas na porta e nenhuma
 // fronteira a mais — é a mesma concessão do `Queries`, e ela tem o mesmo sinal
 // de estar no lugar.
-func (s *Server) Boards() *tabuleiro.BoardStore      { return s.boards }
-func (s *Server) Sessions() *aovivo.SessionStore     { return s.sessions }
-func (s *Server) Presence() *aovivo.PresenceRegistry { return s.presence }
-func (s *Server) SSE() *aovivo.SSEHub                { return s.sse }
-func (s *Server) Bus() *events.Bus                   { return s.bus }
+func (h tableHost) Boards() *tabuleiro.BoardStore      { return h.rules.boards }
+func (h tableHost) Sessions() *aovivo.SessionStore     { return h.rules.sessions }
+func (h tableHost) Presence() *aovivo.PresenceRegistry { return h.rules.presence }
+func (h tableHost) SSE() *aovivo.SSEHub                { return h.rules.sse }
+
+// CharacterChanged avisa que uma ficha da mesa mexeu. A regra é da FICHA e a
+// Mesa a pede emprestada, que é o que o campo `sheet` do `tableRules` diz.
+func (h tableHost) CharacterChanged(characterID int64) {
+	h.rules.sheet.characterChanged(characterID)
+}
+func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 
 // IsAdminRequester diz se quem pede administra.
 //
@@ -43,19 +67,19 @@ func (s *Server) Bus() *events.Bus                   { return s.bus }
 // colisão que a cena das campanhas registrou, e a regra que ela deixou: um
 // contrato que já existe ganha quando é a MESMA pergunta; quando só a cara é a
 // mesma, forçar um nome só junta duas coisas diferentes.
-func (s *Server) IsAdminRequester(ctx context.Context, userID int64) bool {
-	u, err := s.queries.GetUserByID(ctx, userID)
+func (h tableHost) IsAdminRequester(ctx context.Context, userID int64) bool {
+	u, err := h.rules.queries.GetUserByID(ctx, userID)
 	if err != nil {
 		return false
 	}
-	return s.IsAdmin(u.Email)
+	return h.rules.cfg.isAdmin(u.Email)
 }
 
 // SessionForCaller é a trava de acesso à mesa.
-func (s *Server) SessionForCaller(
+func (h tableHost) SessionForCaller(
 	ctx context.Context, userID, campaignID, sessionID int64,
 ) (sqlcgen.Session, string, int, error) {
-	return s.sessionForCaller(ctx, AuthUser{ID: userID}, campaignID, sessionID)
+	return h.rules.campaign.sessionForCaller(ctx, AuthUser{ID: userID}, campaignID, sessionID)
 }
 
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
@@ -66,62 +90,62 @@ func (s *Server) SessionForCaller(
 // A leitura da linha mora aqui e não na cena: ela existia lá só para ser
 // passada de volta ao hospedeiro, que é a forma "duas perguntas em sequência
 // viram uma" que a porta de entrar deixou escrita.
-func (s *Server) StartSessionForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
-	sess, err := s.queries.GetSession(ctx, sessionID)
+func (h tableHost) StartSessionForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+	sess, err := h.rules.queries.GetSession(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := s.StartSession(ctx, sess); err != nil {
+	if _, err := h.rules.StartSession(ctx, sess); err != nil {
 		return nil, err
 	}
-	return s.sessions.GetState(sessionID), nil
+	return h.rules.sessions.GetState(sessionID), nil
 }
 
-func (s *Server) EndSessionForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
-	sess, err := s.queries.GetSession(ctx, sessionID)
+func (h tableHost) EndSessionForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+	sess, err := h.rules.queries.GetSession(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := s.EndSession(ctx, sess); err != nil {
+	if _, err := h.rules.EndSession(ctx, sess); err != nil {
 		return nil, err
 	}
-	return s.sessions.GetState(sessionID), nil
+	return h.rules.sessions.GetState(sessionID), nil
 }
 
-func (s *Server) EndSceneForTable(userID, campaignID, sessionID int64) (*aovivo.SessionRuntimeState, error) {
-	return s.endSceneForTable(AuthUser{ID: userID}, campaignID, sessionID)
+func (h tableHost) EndSceneForTable(userID, campaignID, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+	return h.rules.endSceneForTable(AuthUser{ID: userID}, campaignID, sessionID)
 }
 
-func (s *Server) RestartCombatForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
-	if err := s.RestartCombat(ctx, sessionID); err != nil {
+func (h tableHost) RestartCombatForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+	if err := h.rules.RestartCombat(ctx, sessionID); err != nil {
 		return nil, err
 	}
-	return s.sessions.GetState(sessionID), nil
+	return h.rules.sessions.GetState(sessionID), nil
 }
 
-func (s *Server) RestParty(
+func (h tableHost) RestParty(
 	userID, campaignID, sessionID int64, escopo, condicao string,
 ) (int, int, error) {
-	return s.restParty(AuthUser{ID: userID}, campaignID, sessionID, escopo, condicao)
+	return h.rules.restParty(AuthUser{ID: userID}, campaignID, sessionID, escopo, condicao)
 }
 
-func (s *Server) SelfInitiativeEntry(
+func (h tableHost) SelfInitiativeEntry(
 	userID, campaignID, characterID, d20 int64,
 ) (aovivo.InitiativeEntry, error) {
-	return s.selfInitiativeEntry(userID, campaignID, characterID, d20)
+	return h.rules.selfInitiativeEntry(userID, campaignID, characterID, d20)
 }
 
-func (s *Server) MaterializeEntry(
+func (h tableHost) MaterializeEntry(
 	ctx context.Context, userID, campaignID int64, pedido map[string]any,
 ) (aovivo.InitiativeEntry, error) {
-	return s.materializeEntry(ctx, userID, campaignID, pedido)
+	return h.rules.materializeEntry(ctx, userID, campaignID, pedido)
 }
 
 // PlayerCombatants traduz o `combatant` do hospedeiro na forma que a CENA
 // declarou — os campos daqui são minúsculos, e tipo não exportado não atravessa
 // fronteira nenhuma.
-func (s *Server) PlayerCombatants(ctx context.Context, campaignID int64) ([]table.Combatant, error) {
-	linhas, err := s.listPlayerCombatants(ctx, campaignID)
+func (h tableHost) PlayerCombatants(ctx context.Context, campaignID int64) ([]table.Combatant, error) {
+	linhas, err := h.rules.listPlayerCombatants(ctx, campaignID)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +160,7 @@ func (s *Server) PlayerCombatants(ctx context.Context, campaignID int64) ([]tabl
 	return fora, nil
 }
 
-func (s *Server) PopulateParty(sessionID int64, quem []table.Combatant) (*aovivo.SessionRuntimeState, error) {
+func (h tableHost) PopulateParty(sessionID int64, quem []table.Combatant) (*aovivo.SessionRuntimeState, error) {
 	linhas := make([]combatant, 0, len(quem))
 	for _, c := range quem {
 		linhas = append(linhas, combatant{
@@ -145,33 +169,33 @@ func (s *Server) PopulateParty(sessionID int64, quem []table.Combatant) (*aovivo
 			mpCurrent: c.MpCurrent, mpMax: c.MpMax,
 		})
 	}
-	return s.populateParty(sessionID, linhas)
+	return h.rules.populateParty(sessionID, linhas)
 }
 
-func (s *Server) InitiativeBonus(ctx context.Context, characterID int64) (int64, error) {
-	return s.initiativeBonus(ctx, characterID)
+func (h tableHost) InitiativeBonus(ctx context.Context, characterID int64) (int64, error) {
+	return h.rules.initiativeBonus(ctx, characterID)
 }
 
-func (s *Server) ComputedSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
-	return s.ComputeSheet(ctx, row)
+func (h tableHost) ComputedSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
+	return h.rules.sheet.ComputeSheet(ctx, row)
 }
 
-func (s *Server) SpeedsForBoard(board *tabuleiro.BoardState) map[string]int {
-	return s.speedsForBoard(board)
+func (h tableHost) SpeedsForBoard(board *tabuleiro.BoardState) map[string]int {
+	return h.rules.speedsForBoard(board)
 }
 
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────
 
-func (s *Server) PublishSessionState(sessionID int64, estado *aovivo.SessionRuntimeState) {
-	s.publishSessionState(sessionID, estado)
+func (h tableHost) PublishSessionState(sessionID int64, estado *aovivo.SessionRuntimeState) {
+	h.rules.publishSessionState(sessionID, estado)
 }
 
-func (s *Server) PublishBoardState(sessionID int64, board *tabuleiro.BoardState) {
-	s.publishBoardState(sessionID, board)
+func (h tableHost) PublishBoardState(sessionID int64, board *tabuleiro.BoardState) {
+	h.rules.publishBoardState(sessionID, board)
 }
 
-func (s *Server) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
-	s.publishWhatIsLeft(ctx, sessionID)
+func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
+	h.rules.publishWhatIsLeft(ctx, sessionID)
 }
 
 // ── as DUAS escritas que a cena montava em SQL ───────────────────────────────
@@ -182,10 +206,10 @@ func (s *Server) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 // dentro, e a resposta é a PERGUNTA: quem sabe o nome da coluna, que vazio é
 // NULL e que a linha tem um `updatedAt` a carimbar é o hospedeiro.
 
-func (s *Server) SaveSessionTitle(ctx context.Context, sessionID int64, titulo string) error {
+func (h tableHost) SaveSessionTitle(ctx context.Context, sessionID int64, titulo string) error {
 	var set setBuilder
 	set.Add("title = ?", nullableArg(trimOrNull(&titulo)))
-	return set.execTouched(ctx, s.db, "UPDATE sessions", sessionID)
+	return set.execTouched(ctx, h.rules.db, "UPDATE sessions", sessionID)
 }
 
 // SaveNotes grava as notas do mestre, e ela NÃO apara o texto.
@@ -194,14 +218,14 @@ func (s *Server) SaveSessionTitle(ctx context.Context, sessionID int64, titulo s
 // em branco que o mestre acabou de abrir para escrever o próximo parágrafo. O
 // handler JSON apara porque salva UMA vez, ao fechar; este salva no meio da
 // digitação. Vazio continua virando NULL.
-func (s *Server) SaveNotes(ctx context.Context, sessionID int64, texto string) error {
+func (h tableHost) SaveNotes(ctx context.Context, sessionID int64, texto string) error {
 	var set setBuilder
 	if texto == "" {
 		set.Add("notes = ?", nil)
 	} else {
 		set.Add("notes = ?", texto)
 	}
-	return set.execTouched(ctx, s.db, "UPDATE sessions", sessionID)
+	return set.execTouched(ctx, h.rules.db, "UPDATE sessions", sessionID)
 }
 
 // ── a casca e a ficha embutida ───────────────────────────────────────────────
@@ -218,8 +242,8 @@ func (s *Server) SaveNotes(ctx context.Context, sessionID int64, texto string) e
 // não usa — só para desenhar um painel. Nulo é caminho normal, e a falha é
 // silenciosa de propósito: estar numa mesa é mais importante que ver a própria
 // ficha dentro dela.
-func (s *Server) PlayerSheet(r *http.Request, characterID int64) *sheetui.View {
-	ficha, _, err := sheetui.New(s).Load(
+func (h tableHost) PlayerSheet(r *http.Request, characterID int64) *sheetui.View {
+	ficha, _, err := sheetui.New(h.rules.sheetScene).Load(
 		r.Context(), currentUser(r).ID, characterID, sheetui.AskedTab(""), "", sheetui.Signals{})
 	if err != nil {
 		return nil

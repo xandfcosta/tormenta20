@@ -43,13 +43,13 @@ func novaCenaDeHerois(t *testing.T) (*Server, AuthUser) {
 	if err != nil {
 		t.Fatalf("preparar catálogo: %v", err)
 	}
-	s.catalogs = catalogos
+	s.primeCatalogs(catalogos)
 	dono := seedUser(t, s, "jogadora@t20.local")
 	u, err := s.queries.GetUserByID(context.Background(), dono)
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	return s, s.authUser(u)
+	return s, s.accountRules().authUser(u)
 }
 
 func seedRaca(t *testing.T, s *Server, characterID int64, raca string) {
@@ -71,7 +71,7 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	id := seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
 
-	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -83,7 +83,7 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	if err != nil {
 		t.Fatalf("personagem: %v", err)
 	}
-	ficha, err := s.ComputeSheet(context.Background(), linha)
+	ficha, err := s.sheetRules().ComputeSheet(context.Background(), linha)
 	if err != nil {
 		t.Fatalf("ficha: %v", err)
 	}
@@ -100,9 +100,9 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
-	s.catalogs = nil
+	s.primeCatalogs(nil)
 
-	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar sem motor deveria funcionar: %v", err)
 	}
@@ -130,7 +130,7 @@ func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
 // tela vazia que não oferece o primeiro passo é uma tela que não ajuda.
 func TestWithAnEmptyCastTheCreateSlotIsWhatIsLeft(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -153,7 +153,7 @@ func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
 
-	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -193,7 +193,7 @@ func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 		"soldado": "origem",
 		"anao":    "raça",
 	} {
-		v, err := characters.New(s).Load(context.Background(), eu.ID, termo)
+		v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, termo)
 		if err != nil {
 			t.Fatalf("carregar %q: %v", termo, err)
 		}
@@ -202,7 +202,7 @@ func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 		}
 	}
 
-	nada, err := characters.New(s).Load(context.Background(), eu.ID, "zzzzzz")
+	nada, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "zzzzzz")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -218,7 +218,7 @@ func TestTheCountSaysFilteredOutOfTotal(t *testing.T) {
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
 
-	v, err := characters.New(s).Load(context.Background(), eu.ID, "thalen")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "thalen")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -237,7 +237,7 @@ func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
 
-	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -273,7 +273,7 @@ func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
 
-	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -299,7 +299,7 @@ func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
 
-	v, err := characters.New(s).Load(context.Background(), eu.ID, "")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}

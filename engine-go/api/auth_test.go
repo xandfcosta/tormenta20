@@ -24,8 +24,8 @@ func testServer(secret string) *Server {
 // coisa que ninguém descobre olhando.
 
 func TestVerifyRejectsWrongSecret(t *testing.T) {
-	tok, _ := testServer("real").signToken(sqlcgen.User{ID: 1, Email: "x@y.com"})
-	if _, err := testServer("forged").verifyToken(tok); err == nil {
+	tok, _ := testServer("real").accountRules().signToken(sqlcgen.User{ID: 1, Email: "x@y.com"})
+	if _, err := testServer("forged").accountRules().verifyToken(tok); err == nil {
 		t.Fatal("verify accepted a token signed with a different secret")
 	}
 }

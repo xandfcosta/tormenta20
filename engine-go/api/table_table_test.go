@@ -39,7 +39,7 @@ func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 	f := novoPiloto(t)
 	// Fila CHEIA e cena DESLIGADA: é o mestre montando a briga antes de começar.
-	if _, err := f.s.Sessions().AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
+	if _, err := f.s.tableHost().Sessions().AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
 		Label: "Chefe secreto", Initiative: 22, Type: "npc",
 	}); err != nil {
 		t.Fatalf("semear chefe: %v", err)
@@ -94,7 +94,7 @@ func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	bonus, err := f.s.InitiativeBonus(context.Background(), f.charID)
+	bonus, err := f.s.tableHost().InitiativeBonus(context.Background(), f.charID)
 	if err != nil {
 		t.Fatalf("bônus: %v", err)
 	}
@@ -108,7 +108,7 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", resposta)
 	}
 
-	estado := f.s.Sessions().GetState(f.sessionID)
+	estado := f.s.tableHost().Sessions().GetState(f.sessionID)
 	for i := range estado.Initiative {
 		e := &estado.Initiative[i]
 		if e.CharacterID != nil && *e.CharacterID == f.charID {
@@ -205,9 +205,9 @@ func TestTheTableStreamCompresses(t *testing.T) {
 // serviria igualmente para o encerramento.
 func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	f := novoPiloto(t)
-	sub, parar := f.s.Bus().Subscribe(events.OfSession(f.sessionID))
+	sub, parar := f.s.tableHost().Bus().Subscribe(events.OfSession(f.sessionID))
 
-	if _, err := f.s.Sessions().StartScene(f.sessionID); err != nil {
+	if _, err := f.s.tableHost().Sessions().StartScene(f.sessionID); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	select {
@@ -223,7 +223,7 @@ func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 	// um canal para sempre, e o `Publish` passa a percorrer uma lista que só
 	// cresce escrevendo em canais que ninguém lê.
 	parar()
-	if _, err := f.s.Sessions().EndScene(f.sessionID); err != nil {
+	if _, err := f.s.tableHost().Sessions().EndScene(f.sessionID); err != nil {
 		t.Fatalf("encerrar cena: %v", err)
 	}
 	select {

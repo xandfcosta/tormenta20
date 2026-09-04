@@ -11,7 +11,7 @@ import (
 // speedsForBoard mede o deslocamento das peças de personagem que ainda não têm
 // um. Só as que faltam: recomputar a ficha de todo mundo a cada "trazer o grupo"
 // seria pagar caro por um número que não muda sozinho.
-func (s *Server) speedsForBoard(board *tabuleiro.BoardState) map[string]int {
+func (tr tableRules) speedsForBoard(board *tabuleiro.BoardState) map[string]int {
 	speeds := map[string]int{}
 	if board == nil {
 		return speeds
@@ -20,7 +20,7 @@ func (s *Server) speedsForBoard(board *tabuleiro.BoardState) map[string]int {
 		if token.CharacterID == nil || token.SpeedSquares > 0 {
 			continue
 		}
-		if squares := s.speedSquaresFor(*token.CharacterID); squares > 0 {
+		if squares := tr.speedSquaresFor(*token.CharacterID); squares > 0 {
 			speeds[token.ID] = squares
 		}
 	}
@@ -28,12 +28,12 @@ func (s *Server) speedsForBoard(board *tabuleiro.BoardState) map[string]int {
 }
 
 // speedSquaresFor calcula o orçamento em quadrados a partir da ficha computada.
-func (s *Server) speedSquaresFor(characterID int64) int {
-	row, err := s.queries.GetCharacter(context.Background(), characterID)
+func (tr tableRules) speedSquaresFor(characterID int64) int {
+	row, err := tr.queries.GetCharacter(context.Background(), characterID)
 	if err != nil {
 		return 0
 	}
-	sheet, err := s.ComputeSheet(context.Background(), row)
+	sheet, err := tr.sheet.ComputeSheet(context.Background(), row)
 	if err != nil {
 		log.Printf("board: ficha do personagem %d não computada (%v)", characterID, err)
 		return 0

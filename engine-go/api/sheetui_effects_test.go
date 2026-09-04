@@ -26,7 +26,7 @@ func effect(t *testing.T, f pilotoFixture, id int64, caminho string) *responseRe
 
 func conditions(t *testing.T, f pilotoFixture, id int64) []string {
 	t.Helper()
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
@@ -93,7 +93,7 @@ func TestAnInventedConditionIsRefused(t *testing.T) {
 func TestAnEffectFromAnotherSheetCannotBeEnded(t *testing.T) {
 	f, meu := fighterFixture(t)
 	outro := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", 1, 10, 10, 0, 0)
-	alheio, err := f.s.Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
+	alheio, err := f.s.sceneCore().Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
 		Characterid: outro, Catalogid: "armadura-arcana", Scope: "scene",
 		Modifiers: "[]", Createdat: plataforma.NowISO(),
 	})
@@ -105,7 +105,7 @@ func TestAnEffectFromAnotherSheetCannotBeEnded(t *testing.T) {
 	if recusa := sceneRefusal(rec.Body); recusa == "" {
 		t.Error("encerrei o efeito de outro personagem pela minha ficha")
 	}
-	if _, err := f.s.Queries().GetActiveEffectMeta(context.Background(), alheio.ID); err != nil {
+	if _, err := f.s.sceneCore().Queries().GetActiveEffectMeta(context.Background(), alheio.ID); err != nil {
 		t.Error("o efeito alheio foi apagado assim mesmo")
 	}
 }

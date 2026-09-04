@@ -108,12 +108,12 @@ func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body
 	if err != nil {
 		t.Fatalf("ler personagem %d: %v", characterID, err)
 	}
-	dto, err := s.LoadCharacter(context.Background(), row)
+	dto, err := s.sheetRules().LoadCharacter(context.Background(), row)
 	if err != nil {
 		t.Fatalf("montar a ficha %d: %v", characterID, err)
 	}
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
-	return s.castSpellForCharacter(req, dto, spellID, corpo.Augments)
+	return s.sheetRules().castSpellForCharacter(req, dto, spellID, corpo.Augments)
 }
 
 func mpOf(t *testing.T, s *Server, characterID int64) int64 {

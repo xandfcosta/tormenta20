@@ -18,7 +18,7 @@ const userCtxKey ctxKey = iota
 // see TestRequireAuthRejectsMissingAndBrokenCredentials.
 func (s *Server) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := s.sessionUser(r)
+		user, err := s.accountRules().sessionUser(r)
 		if err != nil {
 			plataforma.WriteError(w, http.StatusUnauthorized, err.Error())
 			return
@@ -44,20 +44,20 @@ var (
 // middleware could only answer by refusing the request. Same shape as
 // `deleteAccount` and `authenticate`: the rule was welded to the one transport
 // that had needed it.
-func (s *Server) sessionUser(r *http.Request) (AuthUser, error) {
-	token := s.extractToken(r)
+func (a accountRules) sessionUser(r *http.Request) (AuthUser, error) {
+	token := a.extractToken(r)
 	if token == "" {
 		return AuthUser{}, errNoSession
 	}
-	sub, err := s.verifyToken(token)
+	sub, err := a.verifyToken(token)
 	if err != nil {
 		return AuthUser{}, errNoSession
 	}
-	user, err := s.queries.GetUserByID(r.Context(), sub)
+	user, err := a.queries.GetUserByID(r.Context(), sub)
 	if err != nil {
 		return AuthUser{}, errUserGone
 	}
-	return s.authUser(user), nil
+	return a.authUser(user), nil
 }
 
 // requirePage é o `requireAuth` das PÁGINAS: quem não tem sessão vai para a
@@ -72,7 +72,7 @@ func (s *Server) sessionUser(r *http.Request) (AuthUser, error) {
 // administração tinham a mesma aresta desde o piloto.
 func (s *Server) requirePage(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := s.sessionUser(r)
+		user, err := s.accountRules().sessionUser(r)
 		if err != nil {
 			http.Redirect(w, r, "/entrar?redirect="+url.QueryEscape(alvoOriginal(r)), http.StatusSeeOther)
 			return
@@ -116,8 +116,8 @@ func (s *Server) requireAdmin(next http.Handler) http.Handler {
 
 // extractToken reads the JWT from the session cookie, falling back to the
 // Authorization: Bearer header, in that order.
-func (s *Server) extractToken(r *http.Request) string {
-	if c, err := r.Cookie(s.cfg.CookieName); err == nil && c.Value != "" {
+func (a accountRules) extractToken(r *http.Request) string {
+	if c, err := r.Cookie(a.cfg.CookieName); err == nil && c.Value != "" {
 		return c.Value
 	}
 	return extractBearer(r.Header.Get("Authorization"))

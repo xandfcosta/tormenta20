@@ -21,7 +21,7 @@ import (
 // `mintPasswordReset`.
 func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 	t.Helper()
-	reset, err := s.mintPasswordReset(context.Background(), UserID, adminID)
+	reset, err := s.adminHost().mintPasswordReset(context.Background(), UserID, adminID)
 	if err != nil {
 		t.Fatalf("gerar link: %v", err)
 	}
@@ -31,7 +31,7 @@ func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 // trocaASenha é o gesto que a PORTA faz: um token e uma senha nova.
 func trocaASenha(t *testing.T, s *Server, token, senha string) bool {
 	t.Helper()
-	return s.ResetPassword(context.Background(), token, senha)
+	return s.doorHost().ResetPassword(context.Background(), token, senha)
 }
 
 func passwordOf(t *testing.T, s *Server, UserID int64) string {
@@ -123,11 +123,11 @@ func TestResolvingAResetLinkNamesTheAccount(t *testing.T) {
 	// A PERGUNTA da porta, e não a rota JSON: `ResetLinkOwner` é o que a cena
 	// chama para escrever "você está trocando a senha de fulano" antes do
 	// formulário.
-	email, achou := s.ResetLinkOwner(context.Background(), token)
+	email, achou := s.doorHost().ResetLinkOwner(context.Background(), token)
 	if !achou || email != "jogador@t20.local" {
 		t.Errorf("dono do link = %q (achou=%v), esperado a conta do link", email, achou)
 	}
-	if _, achou := s.ResetLinkOwner(context.Background(), "nao-existe"); achou {
+	if _, achou := s.doorHost().ResetLinkOwner(context.Background(), "nao-existe"); achou {
 		t.Error("um link inventado devolveu dono")
 	}
 }

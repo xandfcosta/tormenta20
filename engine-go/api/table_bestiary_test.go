@@ -15,7 +15,7 @@ func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 		t.Fatalf("mandar para a mesa deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
 	}
 
-	fila := f.s.Sessions().GetState(f.sessionID).Initiative
+	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
 	if len(fila) != 3 {
 		t.Fatalf("a fila ficou com %d combatentes, queria 3", len(fila))
 	}
@@ -52,7 +52,7 @@ func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "99") {
 		t.Errorf("a recusa não citou o valor ofensivo; sinais = %s", corpo)
 	}
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 0 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("entraram %d combatentes apesar da recusa", n)
 	}
 }
@@ -68,7 +68,7 @@ func TestAnInventedCreatureIsRefused(t *testing.T) {
 	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "grifo-de-neon") {
 		t.Errorf("a recusa não citou a criatura; sinais = %s", corpo)
 	}
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 0 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("entraram %d combatentes apesar da recusa", n)
 	}
 }

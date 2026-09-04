@@ -81,7 +81,7 @@ func askTheFinder(t *testing.T, s *Server, userID int64, sinais string) string {
 	if err != nil {
 		t.Fatalf("usuário: %v", err)
 	}
-	token, err := s.signToken(u)
+	token, err := s.accountRules().signToken(u)
 	if err != nil {
 		t.Fatalf("token: %v", err)
 	}

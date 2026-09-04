@@ -51,18 +51,18 @@ func memberScalars(m sqlcgen.CampaignMember) memberDTO {
 // precisa saber sobre um personagem — e transport-agnostic pela mesma razão.
 //
 // @example bonus, err := s.initiativeBonus(ctx, 7) // 8, para o Arcanista Nv9
-func (s *Server) initiativeBonus(ctx context.Context, characterID int64) (int64, error) {
-	if s.catalogs == nil {
+func (tr tableRules) initiativeBonus(ctx context.Context, characterID int64) (int64, error) {
+	if tr.catalogs == nil {
 		return 0, errors.New("Rules catalog not loaded")
 	}
-	row, err := s.queries.GetCharacter(ctx, characterID)
+	row, err := tr.queries.GetCharacter(ctx, characterID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return 0, fmt.Errorf("Character %d not found", characterID)
 	}
 	if err != nil {
 		return 0, errors.New("Could not load character")
 	}
-	sheet, err := s.ComputeSheet(ctx, row)
+	sheet, err := tr.sheet.ComputeSheet(ctx, row)
 	if err != nil {
 		return 0, errors.New("Could not compute sheet")
 	}
@@ -99,22 +99,22 @@ type combatant struct {
 // be either the character's owner or the campaign GM (owner). Transport-agnostic (the WS
 // gateway maps status→WsException). — same
 // check order (character → campaign → membership → authorization).
-func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, characterID int64) (combatant, int, error) {
-	ch, err := s.queries.GetCharacter(ctx, characterID)
+func (tr tableRules) resolveCombatant(ctx context.Context, callerID, campaignID, characterID int64) (combatant, int, error) {
+	ch, err := tr.queries.GetCharacter(ctx, characterID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return combatant{}, http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
 	}
 	if err != nil {
 		return combatant{}, http.StatusInternalServerError, errors.New("Could not load character")
 	}
-	camp, err := s.queries.GetCampaign(ctx, campaignID)
+	camp, err := tr.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return combatant{}, http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
 	}
 	if err != nil {
 		return combatant{}, http.StatusInternalServerError, errors.New("Could not load campaign")
 	}
-	isMember, err := s.queries.IsCharacterMember(ctx, sqlcgen.IsCharacterMemberParams{Campaignid: campaignID, Characterid: characterID})
+	isMember, err := tr.queries.IsCharacterMember(ctx, sqlcgen.IsCharacterMemberParams{Campaignid: campaignID, Characterid: characterID})
 	if err != nil {
 		return combatant{}, http.StatusInternalServerError, errors.New("Could not check membership")
 	}
@@ -133,8 +133,8 @@ func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, cha
 
 // listPlayerCombatants returns every player character in the campaign with live vitals —
 // the GM's one-shot "populate tracker".
-func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]combatant, error) {
-	rows, err := s.queries.ListMembers(ctx, campaignID)
+func (tr tableRules) listPlayerCombatants(ctx context.Context, campaignID int64) ([]combatant, error) {
+	rows, err := tr.queries.ListMembers(ctx, campaignID)
 	if err != nil {
 		return nil, err
 	}
@@ -153,8 +153,8 @@ func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]
 
 // listMemberCharacterIds returns the character id of every member (any role) — the set a
 // session-wide rest iterates over.
-func (s *Server) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {
-	rows, err := s.queries.ListMembers(ctx, campaignID)
+func (tr tableRules) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {
+	rows, err := tr.queries.ListMembers(ctx, campaignID)
 	if err != nil {
 		return nil, err
 	}
@@ -176,8 +176,8 @@ func (s *Server) listMemberCharacterIds(ctx context.Context, campaignID int64) (
 //
 // A cópia existe porque a ficha da mesa é um instantâneo (ALE-33): editar
 // durante a sessão não pode vazar para as outras campanhas.
-func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, role string) (sqlcgen.CampaignMember, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
+func (rules campaignRules) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, role string) (sqlcgen.CampaignMember, error) {
+	tx, err := rules.db.BeginTx(ctx, nil)
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
@@ -193,7 +193,7 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID
 	//
 	// É a mesma forma do commit de movimento no tabuleiro, que reconfere a vez:
 	// entre decidir e escrever, a mesa pode ter mudado.
-	if err := assertCanJoin(ctx, s.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, role); err != nil {
+	if err := assertCanJoin(ctx, rules.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, role); err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
 
@@ -201,7 +201,7 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
-	member, err := s.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
+	member, err := rules.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
 		Campaignid: campaignID, Characterid: copyID, Role: role, Addedat: plataforma.NowISO(),
 	})
 	if err != nil {

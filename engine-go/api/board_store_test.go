@@ -389,7 +389,7 @@ func TestHealthReportsADegradedBoot(t *testing.T) {
 
 	// Com catálogo, volta a "ok". Isto prova o ANÚNCIO, não que o catálogo
 	// esteja correto — quem prova isso é a validação de schema do `catalog`.
-	s.catalogs = &engine.Catalogs{}
+	s.primeCatalogs(&engine.Catalogs{})
 	if saudavel := healthBody(t, s); saudavel["status"] != "ok" {
 		t.Fatalf("servidor inteiro respondeu %v", saudavel)
 	}
@@ -424,7 +424,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	seedMember(t, s, campaignID, heroi, "player")
 	user := AuthUser{ID: gm, Email: "gm@t.com"}
 
-	done, total, err := s.restParty(user, campaignID, sid, "scene", "normal")
+	done, total, err := s.tableRules().restParty(user, campaignID, sid, "scene", "normal")
 	if err != nil || total != 1 || done != 1 {
 		t.Fatalf("descanso saudável deu done=%d total=%d err=%v", done, total, err)
 	}
@@ -433,7 +433,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	if _, err := s.db.Exec("DROP TABLE active_effects"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	done, total, err = s.restParty(user, campaignID, sid, "scene", "normal")
+	done, total, err = s.tableRules().restParty(user, campaignID, sid, "scene", "normal")
 
 	if err != nil {
 		t.Fatalf("uma ficha que falha não pode derrubar o descanso inteiro: %v", err)
@@ -462,7 +462,7 @@ func TestBackupPruningKeepsTheNewest(t *testing.T) {
 	base := time.Date(2026, 8, 18, 3, 0, 0, 0, time.UTC)
 	nomes := []string{}
 	for i := 0; i < 3; i++ {
-		nome, err := s.backupDatabase(ctx, base.Add(time.Duration(i)*time.Hour))
+		nome, err := s.adminHost().backupDatabase(ctx, base.Add(time.Duration(i)*time.Hour))
 		if err != nil {
 			t.Fatalf("backup %d: %v", i, err)
 		}
@@ -471,7 +471,7 @@ func TestBackupPruningKeepsTheNewest(t *testing.T) {
 
 	s.pruneBackups()
 
-	restantes := s.listBackups()
+	restantes := s.adminHost().listBackups()
 	if len(restantes) != 2 {
 		t.Fatalf("sobraram %d backups, esperava 2: %+v", len(restantes), restantes)
 	}
@@ -496,7 +496,7 @@ func TestBackupPruningIgnoresStrangers(t *testing.T) {
 
 	base := time.Date(2026, 8, 18, 3, 0, 0, 0, time.UTC)
 	for i := 0; i < 2; i++ {
-		if _, err := s.backupDatabase(context.Background(), base.Add(time.Duration(i)*time.Hour)); err != nil {
+		if _, err := s.adminHost().backupDatabase(context.Background(), base.Add(time.Duration(i)*time.Hour)); err != nil {
 			t.Fatalf("backup %d: %v", i, err)
 		}
 	}
@@ -522,7 +522,7 @@ func TestBackupSchedulerStaysOffWhenDisabled(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("o agendador ficou girando com o backup desligado")
 	}
-	if n := len(s.listBackups()); n != 0 {
+	if n := len(s.adminHost().listBackups()); n != 0 {
 		t.Errorf("fez %d backups com o automático desligado", n)
 	}
 }

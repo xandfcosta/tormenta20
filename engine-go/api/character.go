@@ -40,7 +40,7 @@ func (s *Server) characterList(ctx context.Context, ownerID int64) ([]sheet.Char
 	}
 	out := make([]sheet.CharacterDTO, 0, len(rows))
 	for _, row := range rows {
-		dto, err := s.LoadCharacter(ctx, row)
+		dto, err := s.sheetRules().LoadCharacter(ctx, row)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +65,7 @@ func (s *Server) characterFor(w http.ResponseWriter, r *http.Request) (sqlcgen.C
 	if !ok {
 		return sqlcgen.Character{}, false
 	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
+	row, status, err := s.tableRules().authorizedCharacter(r.Context(), currentUser(r), id)
 	if err != nil {
 		plataforma.WriteError(w, status, err.Error())
 		return sqlcgen.Character{}, false
@@ -75,8 +75,8 @@ func (s *Server) characterFor(w http.ResponseWriter, r *http.Request) (sqlcgen.C
 
 // authorizedCharacter loads a character and enforces the read/mutation guard
 // (owner or campaign GM). Returns the row, or an HTTP status + error to emit.
-func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int64) (sqlcgen.Character, int, error) {
-	row, err := s.queries.GetCharacter(ctx, id)
+func (tr tableRules) authorizedCharacter(ctx context.Context, user AuthUser, id int64) (sqlcgen.Character, int, error) {
+	row, err := tr.queries.GetCharacter(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, http.StatusNotFound, fmt.Errorf("Character %d not found", id)
 	}
@@ -88,7 +88,7 @@ func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int6
 	if row.Ownerid == user.ID || user.IsAdmin {
 		return row, http.StatusOK, nil
 	}
-	isGm, err := s.queries.IsCampaignGmForCharacter(ctx, sqlcgen.IsCampaignGmForCharacterParams{
+	isGm, err := tr.queries.IsCampaignGmForCharacter(ctx, sqlcgen.IsCampaignGmForCharacterParams{
 		Characterid: id,
 		Ownerid:     user.ID,
 	})
@@ -103,8 +103,8 @@ func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int6
 
 // assertCharacterOwner is the strict owner-only check
 // the WS vitals gate uses: a player may edit only a character they own. Transport-agnostic.
-func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
-	owner, err := s.queries.GetCharacterOwner(ctx, characterID)
+func (tr tableRules) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
+	owner, err := tr.queries.GetCharacterOwner(ctx, characterID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
 	}
@@ -134,17 +134,10 @@ func intParam(w http.ResponseWriter, r *http.Request, name string) (int64, bool)
 // se passa o que o `Server` tem na mão. Eles somem quando cada cena receber as
 // dependências dela por construtor.
 
-func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.CharacterDTO, error) {
-	return sheet.Load(ctx, s.queries, c)
+func (sr sheetRules) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.CharacterDTO, error) {
+	return sheet.Load(ctx, sr.queries, c)
 }
 
-func (s *Server) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
-	return sheet.LoadAndCompute(ctx, s.queries, s.catalogs, row)
-}
-
-// CharacterList cumpre a porta da cena de personagens (`characters.Deps`,
-// ALE-278). Invólucro de uma linha sobre o método não exportado, como os outros
-// que as cenas pedem — quem escolhe o que atravessa a fronteira é o consumidor.
-func (s *Server) CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error) {
-	return s.characterList(ctx, ownerID)
+func (sr sheetRules) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
+	return sheet.LoadAndCompute(ctx, sr.queries, sr.catalogs, row)
 }

@@ -29,7 +29,7 @@ const adminEmail = "dono@t20.local"
 // registra chama a REGRA do cadastro, sem passar por transporte nenhum.
 func registra(t *testing.T, s *Server, email, token string) error {
 	t.Helper()
-	_, err := s.createAccount(context.Background(),
+	_, err := s.accountRules().createAccount(context.Background(),
 		account.RegisterBody{Email: email, Password: "senha-da-mesa", InviteToken: token})
 	return err
 }
@@ -37,7 +37,7 @@ func registra(t *testing.T, s *Server, email, token string) error {
 // inviteFrom cunha um convite pela REGRA e devolve o token.
 func inviteFrom(t *testing.T, s *Server, adminID int64) string {
 	t.Helper()
-	convite, err := s.mintAccountInvite(context.Background(), adminID)
+	convite, err := mintAccountInvite(context.Background(), s.queries, adminID)
 	if err != nil {
 		t.Fatalf("cunhar convite: %v", err)
 	}
@@ -112,7 +112,7 @@ func TestConcurrentRegistrationsSpendTheInviteOnce(t *testing.T) {
 		go func() {
 			email := "corrida" + strconv.Itoa(i) + "@t20.local"
 			<-start
-			_, err := s.createAccount(context.Background(),
+			_, err := s.accountRules().createAccount(context.Background(),
 				account.RegisterBody{Email: email, Password: "senha-da-mesa", InviteToken: token})
 			erros <- err
 		}()

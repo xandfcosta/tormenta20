@@ -47,8 +47,8 @@ type joinRequest struct {
 // depois personagem. Checar o personagem antes do convite diria a um estranho
 // se um id de personagem existe — informação que ele não deveria conseguir
 // sondar sem estar convidado.
-func (s *Server) joinTable(ctx context.Context, p joinRequest) (sqlcgen.CampaignMember, error) {
-	c, err := s.queries.GetCampaign(ctx, p.CampanhaID)
+func (rules campaignRules) joinTable(ctx context.Context, p joinRequest) (sqlcgen.CampaignMember, error) {
+	c, err := rules.queries.GetCampaign(ctx, p.CampanhaID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return sqlcgen.CampaignMember{}, errCampanhaInexistente
 	}
@@ -62,7 +62,7 @@ func (s *Server) joinTable(ctx context.Context, p joinRequest) (sqlcgen.Campaign
 		}
 	}
 
-	dono, err := s.queries.GetCharacterOwner(ctx, p.PersonagemID)
+	dono, err := rules.queries.GetCharacterOwner(ctx, p.PersonagemID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return sqlcgen.CampaignMember{}, errPersonagemInexistente
 	}
@@ -86,7 +86,7 @@ func (s *Server) joinTable(ctx context.Context, p joinRequest) (sqlcgen.Campaign
 	// entrar". Checagem de autorização ou de unicidade nunca descarta erro: na
 	// dúvida, NEGA. O `return err` aqui é o que garante isso.
 	if papel == "player" {
-		temPc, err := s.queries.HasPlayerPc(ctx, sqlcgen.HasPlayerPcParams{
+		temPc, err := rules.queries.HasPlayerPc(ctx, sqlcgen.HasPlayerPcParams{
 			Campaignid: p.CampanhaID, Ownerid: p.QuemPede,
 		})
 		if err != nil {
@@ -100,7 +100,7 @@ func (s *Server) joinTable(ctx context.Context, p joinRequest) (sqlcgen.Campaign
 	// Modelo de INSTANTÂNEO (ALE-33): o personagem do elenco é um molde, e a
 	// mesa guarda uma CÓPIA dele. A deduplicação é por "este molde já foi
 	// copiado aqui" e não por participação do molde — o molde nunca é membro.
-	temCopia, err := s.campaignHasCopyOf(ctx, p.PersonagemID, p.CampanhaID)
+	temCopia, err := rules.campaignHasCopyOf(ctx, p.PersonagemID, p.CampanhaID)
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
@@ -111,5 +111,5 @@ func (s *Server) joinTable(ctx context.Context, p joinRequest) (sqlcgen.Campaign
 	// O `joinCampaign` pode devolver `errAlreadyInCampaign` por conta própria:
 	// é a corrida perdida para um pedido simultâneo, e o desfecho é o mesmo da
 	// checagem de fora — não um erro interno que culparia o servidor.
-	return s.joinCampaign(ctx, p.PersonagemID, p.CampanhaID, p.QuemPede, papel)
+	return rules.joinCampaign(ctx, p.PersonagemID, p.CampanhaID, p.QuemPede, papel)
 }

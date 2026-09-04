@@ -30,8 +30,8 @@ type AuthUser struct {
 	IsAdmin bool `json:"isAdmin"`
 }
 
-func (s *Server) authUser(u sqlcgen.User) AuthUser {
-	out := AuthUser{ID: u.ID, Email: u.Email, IsAdmin: s.cfg.IsAdmin(u.Email)}
+func (a accountRules) authUser(u sqlcgen.User) AuthUser {
+	out := AuthUser{ID: u.ID, Email: u.Email, IsAdmin: a.cfg.IsAdmin(u.Email)}
 	if u.Name.Valid {
 		out.Name = &u.Name.String
 	}
@@ -50,7 +50,7 @@ func (s *Server) authUser(u sqlcgen.User) AuthUser {
 // whichever transport reached it first — and it only shows up when a second
 // one arrives (ALE-229). Worth naming: it is not a coincidence, it is what a
 // codebase with exactly one transport looks like.
-func (s *Server) createAccount(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error) {
+func (a accountRules) createAccount(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error) {
 	// A normalização é da REGRA, e não de quem a chama (ALE-277).
 	//
 	// Ela morava no `handleRegister`, apagado com a rota JSON, e a porta em
@@ -61,7 +61,7 @@ func (s *Server) createAccount(ctx context.Context, body account.RegisterBody) (
 	// com `dono@`, e com direito a dispensar convite: dois administradores onde
 	// só devia caber um (ALE-120). É idempotente para quem já normaliza.
 	body.Email = plataforma.NormalizeEmail(body.Email)
-	invite, err := s.registrationInvite(ctx, body.Email, body.InviteToken)
+	invite, err := a.registrationInvite(ctx, body.Email, body.InviteToken)
 	if err != nil {
 		return sqlcgen.User{}, err
 	}
@@ -70,7 +70,7 @@ func (s *Server) createAccount(ctx context.Context, body account.RegisterBody) (
 		return sqlcgen.User{}, err
 	}
 	now := plataforma.NowISO()
-	return s.createUser(ctx, sqlcgen.CreateUserParams{
+	return a.createUser(ctx, sqlcgen.CreateUserParams{
 		Email:        body.Email,
 		Name:         plataforma.NullString(body.Name),
 		Passwordhash: string(hash),
@@ -86,13 +86,13 @@ var errInviteRejected = errors.New(inviteRejected)
 // ADMIN_EMAILS addresses are the exception, and the only one: the owner must be
 // able to create their own account on a fresh machine, and "first to register
 // wins the crown" would hand that to whoever opens the page first (ALE-120).
-func (s *Server) registrationInvite(
+func (a accountRules) registrationInvite(
 	ctx context.Context, email, token string,
 ) (*sqlcgen.AccountInvite, error) {
-	if s.cfg.IsAdmin(email) {
+	if a.cfg.IsAdmin(email) {
 		return nil, nil
 	}
-	invite, ok := s.usableInvite(ctx, token)
+	invite, ok := a.usableInvite(ctx, token)
 	if !ok {
 		return nil, errInviteRejected
 	}
@@ -121,8 +121,8 @@ var errBadCredentials = errors.New("invalid credentials")
 // The bcrypt comparison runs even when the e-mail is unknown would be the next
 // hardening step (it does not today, and that is a timing oracle worth an issue
 // of its own); what matters here is that BOTH paths answer the same error.
-func (s *Server) authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
-	user, err := s.queries.GetUserByEmail(ctx, plataforma.NormalizeEmail(email))
+func (a accountRules) authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
+	user, err := a.queries.GetUserByEmail(ctx, plataforma.NormalizeEmail(email))
 	if err != nil {
 		return sqlcgen.User{}, errBadCredentials
 	}
@@ -134,13 +134,13 @@ func (s *Server) authenticate(ctx context.Context, email, password string) (sqlc
 
 // issueSession signs a JWT for the user and sets the session cookie. Returns
 // false (after writing a 500) if signing fails.
-func (s *Server) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
-	token, err := s.signToken(user)
+func (a accountRules) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
+	token, err := a.signToken(user)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sign session")
 		return false
 	}
-	http.SetCookie(w, s.sessionCookie(token, int(sessionTTL.Seconds())))
+	http.SetCookie(w, sessionCookie(a.cfg, token, int(sessionTTL.Seconds())))
 	return true
 }
 
@@ -149,23 +149,23 @@ const sessionTTL = 7 * 24 * time.Hour
 // signToken: HS256 over {sub, email} with the
 // configured expiry. `sub` is a NUMBER (not a string), which is the shape every
 // across the cutover (and vice versa).
-func (s *Server) signToken(user sqlcgen.User) (string, error) {
+func (a accountRules) signToken(user sqlcgen.User) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   user.ID,
 		"email": user.Email,
 		"iat":   time.Now().Unix(),
-		"exp":   time.Now().Add(parseExpiry(s.cfg.JWTExpiresIn)).Unix(),
+		"exp":   time.Now().Add(parseExpiry(a.cfg.JWTExpiresIn)).Unix(),
 	}
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(s.cfg.JWTSecret))
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(a.cfg.JWTSecret))
 }
 
 // verifyToken checks the HS256 signature + expiry and returns the user id (sub).
-func (s *Server) verifyToken(tokenStr string) (int64, error) {
+func (a accountRules) verifyToken(tokenStr string) (int64, error) {
 	tok, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return []byte(s.cfg.JWTSecret), nil
+		return []byte(a.cfg.JWTSecret), nil
 	})
 	if err != nil || !tok.Valid {
 		return 0, errors.New("invalid token")
@@ -181,14 +181,17 @@ func (s *Server) verifyToken(tokenStr string) (int64, error) {
 	return int64(sub), nil
 }
 
-func (s *Server) sessionCookie(value string, maxAge int) *http.Cookie {
+// Ela recebe a CONFIGURAÇÃO em vez de pendurar no `*Server` (ALE-278, fatia 6):
+// o hub pede o biscoito expirado pela porta dele, e uma função que só precisa
+// de dois campos não tem razão para exigir um servidor inteiro.
+func sessionCookie(cfg plataforma.Config, value string, maxAge int) *http.Cookie {
 	return &http.Cookie{
-		Name:     s.cfg.CookieName,
+		Name:     cfg.CookieName,
 		Value:    value,
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   s.cfg.CookieSecure,
+		Secure:   cfg.CookieSecure,
 		SameSite: http.SameSiteLaxMode,
 	}
 }

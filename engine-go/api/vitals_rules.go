@@ -24,11 +24,11 @@ import (
 // assertVitalsEditableFor é a REGRA, e ela mudou de dono junto com o transporte
 // (ALE-253): o mestre edita qualquer combatente, o jogador só o personagem
 // dele, e NPC é do mestre porque não há ficha atrás para conferir dono.
-func (s *Server) assertVitalsEditableFor(ctx context.Context, live liveCtx, entryID string) error {
+func (tr tableRules) assertVitalsEditableFor(ctx context.Context, live liveCtx, entryID string) error {
 	if live.Role == "gm" {
 		return nil
 	}
-	state := s.sessions.GetState(live.sessionID)
+	state := tr.sessions.GetState(live.sessionID)
 	idx := aovivo.FindEntryIndex(state, entryID)
 	if idx < 0 {
 		return errors.New("Entry " + entryID + " not found")
@@ -37,7 +37,7 @@ func (s *Server) assertVitalsEditableFor(ctx context.Context, live liveCtx, entr
 	if entry.CharacterID == nil {
 		return errors.New("Only the GM can edit NPC vitals")
 	}
-	_, err := s.assertCharacterOwner(ctx, live.UserID, *entry.CharacterID)
+	_, err := tr.assertCharacterOwner(ctx, live.UserID, *entry.CharacterID)
 	return err
 }
 
@@ -50,16 +50,16 @@ func (s *Server) assertVitalsEditableFor(ctx context.Context, live liveCtx, entr
 // modo que o mestre lia "descansou" enquanto duas de cinco fichas não tinham
 // descansado. Best-effort é sobre continuar apesar da falha, não sobre esconder
 // que ela houve.
-func (s *Server) restParty(user AuthUser, campaignID, sessionID int64, scope, condition string) (done, total int, err error) {
+func (tr tableRules) restParty(user AuthUser, campaignID, sessionID int64, scope, condition string) (done, total int, err error) {
 	if scope != "day" {
-		return s.expirePartyScene(user, campaignID, sessionID)
+		return tr.expirePartyScene(user, campaignID, sessionID)
 	}
-	charIDs, err := s.listMemberCharacterIds(context.Background(), campaignID)
+	charIDs, err := tr.listMemberCharacterIds(context.Background(), campaignID)
 	if err != nil {
 		return 0, 0, err
 	}
 	for _, cid := range charIDs {
-		if s.restCharacterDay(user, sessionID, cid, condition) {
+		if tr.restCharacterDay(user, sessionID, cid, condition) {
 			done++
 		}
 	}
@@ -74,13 +74,13 @@ func (s *Server) restParty(user AuthUser, campaignID, sessionID int64, scope, co
 // "Encerrar cena" do mestre e a "Recuperar · cena" agora chamam ESTE helper.
 // Antes só a Recuperação passava por aqui, e encerrar a cena deixava a bênção
 // de duração "cena" viva na ficha — a colisão C1 do glossário.
-func (s *Server) expirePartyScene(user AuthUser, campaignID, sessionID int64) (done, total int, err error) {
-	charIDs, err := s.listMemberCharacterIds(context.Background(), campaignID)
+func (tr tableRules) expirePartyScene(user AuthUser, campaignID, sessionID int64) (done, total int, err error) {
+	charIDs, err := tr.listMemberCharacterIds(context.Background(), campaignID)
 	if err != nil {
 		return 0, 0, err
 	}
 	for _, cid := range charIDs {
-		if _, e := s.EndScene(context.Background(), user, cid); e != nil {
+		if _, e := tr.EndScene(context.Background(), user, cid); e != nil {
 			log.Printf("session %d: encerrar cena do personagem %d falhou (%v)", sessionID, cid, e)
 			continue
 		}
@@ -92,28 +92,28 @@ func (s *Server) expirePartyScene(user AuthUser, campaignID, sessionID int64) (d
 // restCharacterDay encerra o dia de UMA ficha, cura e espelha os vitais no
 // rastreador. Devolve se a ficha inteira deu certo — meia ficha descansada não
 // conta, senão o ack diz "5 de 5" com dois PV que não foram gravados.
-func (s *Server) restCharacterDay(user AuthUser, sessionID, characterID int64, condition string) bool {
+func (tr tableRules) restCharacterDay(user AuthUser, sessionID, characterID int64, condition string) bool {
 	ctx := context.Background()
-	if _, err := s.endDay(ctx, user, characterID); err != nil {
+	if _, err := tr.endDay(ctx, user, characterID); err != nil {
 		log.Printf("session %d: encerrar dia do personagem %d falhou (%v)", sessionID, characterID, err)
 		return false
 	}
-	vitals, _, err := s.restVitals(ctx, user, characterID, condition)
+	vitals, _, err := tr.restVitals(ctx, user, characterID, condition)
 	if err != nil {
 		log.Printf("session %d: descanso do personagem %d falhou (%v)", sessionID, characterID, err)
 		return false
 	}
-	s.mirrorVitalsToTracker(sessionID, characterID, vitals)
+	tr.mirrorVitalsToTracker(sessionID, characterID, vitals)
 	return true
 }
 
 // mirrorVitalsToTracker copies freshly-persisted PV/PM onto the matching live tracker entry
 // (if the character is in the current initiative) so bars update without a reload.
-func (s *Server) mirrorVitalsToTracker(sessionID, characterID int64, vitals restedVitals) {
-	for _, e := range s.sessions.GetState(sessionID).Initiative {
+func (tr tableRules) mirrorVitalsToTracker(sessionID, characterID int64, vitals restedVitals) {
+	for _, e := range tr.sessions.GetState(sessionID).Initiative {
 		if e.CharacterID != nil && *e.CharacterID == characterID {
 			hp, mp := vitals.hpCurrent, vitals.mpCurrent
-			_, _ = s.sessions.PatchVitals(sessionID, e.ID, &hp, &mp)
+			_, _ = tr.sessions.PatchVitals(sessionID, e.ID, &hp, &mp)
 			return
 		}
 	}

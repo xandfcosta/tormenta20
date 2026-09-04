@@ -13,7 +13,7 @@ import (
 func arcanista(t *testing.T) (pilotoFixture, int64) {
 	t.Helper()
 	f := novoPiloto(t)
-	id, err := f.s.Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
+	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Conjuradora", Origin: "Charlatão", Level: 9,
 		HpMax: 40, HpCurrent: 40, MpMax: 40, MpCurrent: 40,
 		Strength: 0, Dexterity: 2, Constitution: 2, Intelligence: 4, Wisdom: 1, Charisma: 1,
@@ -50,7 +50,7 @@ func spellRefusal(t *testing.T, f pilotoFixture, id int64, caminho string) strin
 
 func spellbook(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 	t.Helper()
-	linhas, err := f.s.Queries().ListSpellsByCharacter(context.Background(), id)
+	linhas, err := f.s.sceneCore().Queries().ListSpellsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o grimório: %v", err)
 	}
@@ -116,7 +116,7 @@ func TestCastingChargesTheMp(t *testing.T) {
 
 func pm(t *testing.T, f pilotoFixture, id int64) int64 {
 	t.Helper()
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
@@ -127,7 +127,7 @@ func pm(t *testing.T, f pilotoFixture, id int64) int64 {
 func TestWithoutMpTheCastIsRefused(t *testing.T) {
 	f, id := arcanista(t)
 	spell(t, f, id, "aprende/bola-de-fogo")
-	if err := f.s.Queries().SetMpCurrent(context.Background(), sqlcgen.SetMpCurrentParams{
+	if err := f.s.sceneCore().Queries().SetMpCurrent(context.Background(), sqlcgen.SetMpCurrentParams{
 		MpCurrent: 1, UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("zerar o PM: %v", err)
@@ -185,7 +185,7 @@ func TestWhoDoesNotCastDoesNotGetTheCatalog(t *testing.T) {
 // e sem este bloco o jogador do bárbaro não teria onde ler o efeito dela.
 func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 	f := novoPiloto(t)
-	id, err := f.s.Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
+	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Totemista", Origin: "Batedor", Level: 3,
 		HpMax: 30, HpCurrent: 30, MpMax: 0, MpCurrent: 0,
 		Strength: 4, Dexterity: 1, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,

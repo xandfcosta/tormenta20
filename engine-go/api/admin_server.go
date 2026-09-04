@@ -40,15 +40,15 @@ type backupDTO struct {
 // live yields an OLD database and no error to say so (ALE-119 measured exactly
 // that). VACUUM INTO reads a coherent snapshot of both parts, and being built
 // into the driver means the host needs no sqlite3 binary.
-func (s *Server) backupDatabase(ctx context.Context, at time.Time) (string, error) {
-	if err := os.MkdirAll(s.cfg.BackupDir, 0o755); err != nil {
-		return "", fmt.Errorf("create backup dir %q: %w", s.cfg.BackupDir, err)
+func (h adminHost) backupDatabase(ctx context.Context, at time.Time) (string, error) {
+	if err := os.MkdirAll(h.cfg.BackupDir, 0o755); err != nil {
+		return "", fmt.Errorf("create backup dir %q: %w", h.cfg.BackupDir, err)
 	}
-	name := fmt.Sprintf("t20-%s-%s.db", s.cfg.AppEnv, at.Format("20060102-150405"))
-	path := filepath.Join(s.cfg.BackupDir, name)
+	name := fmt.Sprintf("t20-%s-%s.db", h.cfg.AppEnv, at.Format("20060102-150405"))
+	path := filepath.Join(h.cfg.BackupDir, name)
 	// VACUUM INTO refuses to overwrite, which is the behaviour we want: two
 	// backups in the same second must not silently become one.
-	if _, err := s.db.ExecContext(ctx, "VACUUM INTO ?", path); err != nil {
+	if _, err := h.db.ExecContext(ctx, "VACUUM INTO ?", path); err != nil {
 		return "", err
 	}
 	return name, nil
@@ -56,8 +56,8 @@ func (s *Server) backupDatabase(ctx context.Context, at time.Time) (string, erro
 
 // listBackups reads the directory instead of a table: the files are the truth,
 // and one dropped in by the CLI script has to show up here too.
-func (s *Server) listBackups() []backupDTO {
-	entries, err := os.ReadDir(s.cfg.BackupDir)
+func (h adminHost) listBackups() []backupDTO {
+	entries, err := os.ReadDir(h.cfg.BackupDir)
 	if err != nil {
 		return []backupDTO{}
 	}
@@ -106,7 +106,7 @@ func (s *Server) ScheduleBackups(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case at := <-ticker.C:
-			name, err := s.backupDatabase(ctx, at)
+			name, err := s.adminHost().backupDatabase(ctx, at)
 			if err != nil {
 				// Best-effort de propósito: a mesa não pode parar porque o
 				// disco encheu. Mas o erro é DITO, não engolido (ALE-155).
@@ -125,7 +125,7 @@ func (s *Server) ScheduleBackups(ctx context.Context) {
 // de administração usa, que já filtra por extensão `.db` no diretório
 // configurado. Um arquivo qualquer largado ali não é candidato a ser apagado.
 func (s *Server) pruneBackups() {
-	backups := s.listBackups() // mais novo primeiro
+	backups := s.adminHost().listBackups() // mais novo primeiro
 	if len(backups) <= s.cfg.BackupKeep {
 		return
 	}

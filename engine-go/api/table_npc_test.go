@@ -118,13 +118,13 @@ func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 	}
 	rota := f.tableUrl() + "/elenco/npc/" + strconv.FormatInt(npcs[0].ID, 10)
 	f.posta(t, f.mestre, rota+"/na-fila", "{}")
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 1 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
 		t.Fatalf("o NPC não entrou na fila (%d linhas) — o resto do teste mediria nada", n)
 	}
 
 	f.posta(t, f.mestre, rota+"/apagar", "{}")
 
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 1 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
 		t.Errorf("apagar do elenco tirou o combatente da cena: a fila tem %d linhas", n)
 	}
 }

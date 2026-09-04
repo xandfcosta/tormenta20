@@ -28,15 +28,15 @@ import (
 //   - encerrada → REABRE. A noite continuou, e obrigar a criar uma sessão nova
 //     perderia a fila e o tabuleiro dela.
 //   - planejada → começa do zero, carimbando o início.
-func (s *Server) StartSession(ctx context.Context, sess sqlcgen.Session) (sqlcgen.Session, error) {
+func (tr tableRules) StartSession(ctx context.Context, sess sqlcgen.Session) (sqlcgen.Session, error) {
 	if sess.Status == "active" {
 		return sess, nil
 	}
 	agora := plataforma.NowISO()
 	if sess.Status == "ended" {
-		return s.queries.ReopenSession(ctx, sqlcgen.ReopenSessionParams{UpdatedAt: agora, ID: sess.ID})
+		return tr.queries.ReopenSession(ctx, sqlcgen.ReopenSessionParams{UpdatedAt: agora, ID: sess.ID})
 	}
-	return s.queries.StartSessionFresh(ctx, sqlcgen.StartSessionFreshParams{
+	return tr.queries.StartSessionFresh(ctx, sqlcgen.StartSessionFreshParams{
 		StartedAt: sql.NullString{String: agora, Valid: true}, UpdatedAt: agora, ID: sess.ID,
 	})
 }
@@ -47,7 +47,7 @@ func (s *Server) StartSession(ctx context.Context, sess sqlcgen.Session) (sqlcge
 // planejada não é um clique repetido, é um gesto sobre a coisa errada — e
 // carimbar um fim numa noite que não teve início deixaria o histórico dizendo
 // que ela aconteceu.
-func (s *Server) EndSession(ctx context.Context, sess sqlcgen.Session) (sqlcgen.Session, error) {
+func (tr tableRules) EndSession(ctx context.Context, sess sqlcgen.Session) (sqlcgen.Session, error) {
 	switch sess.Status {
 	case "planned":
 		return sess, fmt.Errorf("a sessão %d nunca foi iniciada; não há o que encerrar", sess.ID)
@@ -55,7 +55,7 @@ func (s *Server) EndSession(ctx context.Context, sess sqlcgen.Session) (sqlcgen.
 		return sess, nil
 	}
 	agora := plataforma.NowISO()
-	return s.queries.EndSession(ctx, sqlcgen.EndSessionParams{
+	return tr.queries.EndSession(ctx, sqlcgen.EndSessionParams{
 		EndedAt: sql.NullString{String: agora, Valid: true}, UpdatedAt: agora, ID: sess.ID,
 	})
 }
@@ -65,8 +65,8 @@ func (s *Server) EndSession(ctx context.Context, sess sqlcgen.Session) (sqlcgen.
 // É o gesto do combate que acabou e da mesa que vai começar outro na mesma
 // noite — a sessão continua ao vivo, o que some é a ordem e os turnos. Não
 // confundir com ENCERRAR, que tira a partida do ar.
-func (s *Server) RestartCombat(ctx context.Context, sessionID int64) error {
-	if err := s.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
+func (tr tableRules) RestartCombat(ctx context.Context, sessionID int64) error {
+	if err := tr.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
 		RuntimeState: defaultRuntimeState, UpdatedAt: plataforma.NowISO(), ID: sessionID,
 	}); err != nil {
 		return err
@@ -81,6 +81,6 @@ func (s *Server) RestartCombat(ctx context.Context, sessionID int64) error {
 	// O guarda que eu tinha escrito não pegou porque media o BANCO, que já
 	// estava vazio antes do reset: a fila nunca tinha chegado lá. Foi a
 	// sabotagem que denunciou os dois.
-	s.sessions.Forget(sessionID)
+	tr.sessions.Forget(sessionID)
 	return nil
 }

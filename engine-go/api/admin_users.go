@@ -36,13 +36,13 @@ type adminUserDTO struct {
 // the HTTP handler — the SECOND time the pilot hit that shape, after
 // `selfInitiativeEntry`, which was welded to the socket gateway. Two surfaces,
 // two rules pinned to whichever transport reached them first.
-func (s *Server) deleteAccount(r *http.Request, id, callerID int64) (int64, int, error) {
+func (h adminHost) deleteAccount(r *http.Request, id, callerID int64) (int64, int, error) {
 	if id == callerID {
 		// Not paranoia: the admin list shows your own row, and the menu is the
 		// same one. Deleting yourself would take your mesas nowhere.
 		return 0, http.StatusBadRequest, errors.New("You cannot delete your own account")
 	}
-	moved, err := s.deleteUserKeepingCampaigns(r, id, callerID)
+	moved, err := h.deleteUserKeepingCampaigns(r, id, callerID)
 	if err != nil {
 		return 0, http.StatusInternalServerError, errors.New("Could not delete user")
 	}
@@ -52,15 +52,15 @@ func (s *Server) deleteAccount(r *http.Request, id, callerID int64) (int64, int,
 // deleteUserKeepingCampaigns moves the campaigns and deletes the account in ONE
 // transaction: a half-done delete would leave mesas owned by a row that no
 // longer exists.
-func (s *Server) deleteUserKeepingCampaigns(r *http.Request, userID, newOwnerID int64) (int64, error) {
+func (h adminHost) deleteUserKeepingCampaigns(r *http.Request, userID, newOwnerID int64) (int64, error) {
 	ctx := r.Context()
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := h.db.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, err
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	q := s.queries.WithTx(tx)
+	q := h.queries.WithTx(tx)
 	moved, err := q.TransferCampaigns(ctx, sqlcgen.TransferCampaignsParams{
 		NewOwnerId: newOwnerID, UpdatedAt: plataforma.NowISO(), OldOwnerId: userID,
 	})
@@ -90,12 +90,12 @@ var errUserNotFound = errors.New("usuário não existe")
 // convite abre uma conta que ainda NÃO existe, este abre uma que já existe e
 // tem fichas dentro. Um link esquecido numa conversa vale mais para um
 // estranho.
-func (s *Server) mintPasswordReset(ctx context.Context, usuarioID, criadoPor int64) (sqlcgen.PasswordReset, error) {
-	if _, err := s.queries.GetUserByID(ctx, usuarioID); err != nil {
+func (h adminHost) mintPasswordReset(ctx context.Context, usuarioID, criadoPor int64) (sqlcgen.PasswordReset, error) {
+	if _, err := h.queries.GetUserByID(ctx, usuarioID); err != nil {
 		return sqlcgen.PasswordReset{}, errUserNotFound
 	}
 	now := time.Now()
-	return s.queries.CreatePasswordReset(ctx, sqlcgen.CreatePasswordResetParams{
+	return h.queries.CreatePasswordReset(ctx, sqlcgen.CreatePasswordResetParams{
 		Token:     generateInviteToken(),
 		Userid:    usuarioID,
 		Createdby: criadoPor,

@@ -13,7 +13,7 @@ func (f pilotoFixture) savePlace(t *testing.T, nome string) int64 {
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
-	for _, l := range f.s.Boards().Places(context.Background(), f.campaignID) {
+	for _, l := range f.s.tableHost().Boards().Places(context.Background(), f.campaignID) {
 		if l.Name == nome {
 			return l.ID
 		}
@@ -81,7 +81,7 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 		t.Error("a recusa não diz o que fazer para conseguir apagar")
 	}
 	achou := false
-	for _, l := range f.s.Boards().Places(context.Background(), f.campaignID) {
+	for _, l := range f.s.tableHost().Boards().Places(context.Background(), f.campaignID) {
 		if l.ID == id {
 			achou = true
 		}
@@ -118,7 +118,7 @@ func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 	if !strings.Contains(rec.Body.String(), "feche um antes") {
 		t.Error("a recusa não diz o que fazer para caber")
 	}
-	if n := len(f.s.Boards().OpenBoards(context.Background(), f.sessionID)); n != 8 {
+	if n := len(f.s.tableHost().Boards().OpenBoards(context.Background(), f.sessionID)); n != 8 {
 		t.Errorf("a sessão passou do teto pela lista de lugares: %d cenas abertas", n)
 	}
 }

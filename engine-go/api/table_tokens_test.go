@@ -11,7 +11,7 @@ import (
 
 func sceneIds(t *testing.T, f pilotoFixture) (ficha, npc string) {
 	t.Helper()
-	for _, e := range f.s.Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		switch e.Type {
 		case "character":
 			ficha = e.ID
@@ -39,7 +39,7 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
@@ -66,7 +66,7 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":""}`)
 
-	if b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
+	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
 	}
 	// E a recusa FALA: um comando que não faz nada e não diz nada é lido como
@@ -90,7 +90,7 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 1", len(b.Tokens))
 	}
@@ -142,7 +142,7 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça no mapa: %d", rec.Code)
 	}
-	if b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
+	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
 		t.Errorf("o mapa mudou apesar do 403 (%d peças)", len(b.Tokens))
 	}
 }
@@ -160,8 +160,8 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
-	candidatos := table.MapCandidates(b, f.s.Sessions().GetState(f.sessionID))
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	candidatos := table.MapCandidates(b, f.s.tableHost().Sessions().GetState(f.sessionID))
 	if len(candidatos) != 2 {
 		t.Fatalf("a fila tem 2 combatentes e o diálogo ofereceu %d", len(candidatos))
 	}
@@ -198,7 +198,7 @@ func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	for _, especie := range tabuleiro.TerrainKinds {
 		if casas := tabuleiro.SquaresOf(b, especie.ID); len(casas) != 0 {
 			t.Errorf("pôr no mapa pintou %s em %v", especie.ID, casas)

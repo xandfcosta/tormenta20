@@ -62,7 +62,7 @@ func sheetOf(t *testing.T, nome string, nivel int64) (pilotoFixture, int64) {
 func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	f, id := sheetOf(t, "Arcanista Nv3", 3)
 	ctx := context.Background()
-	antes, err := f.s.Queries().GetCharacter(ctx, id)
+	antes, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
@@ -73,11 +73,11 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 		t.Fatalf("subir de nível deu %d: %s", rec.Code, rec.Body.String())
 	}
 
-	depois, err := f.s.Queries().GetCharacter(ctx, id)
+	depois, err := f.s.sceneCore().Queries().GetCharacter(ctx, id)
 	if err != nil {
 		t.Fatalf("reler: %v", err)
 	}
-	classes, err := f.s.Queries().ListClassesByCharacter(ctx, id)
+	classes, err := f.s.sceneCore().Queries().ListClassesByCharacter(ctx, id)
 	if err != nil {
 		t.Fatalf("ler as classes: %v", err)
 	}
@@ -143,7 +143,7 @@ func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
 			t.Fatalf("ferir deu %d", rec.Code)
 		}
 	}
-	ferido, _ := f.s.Queries().GetCharacter(ctx, id)
+	ferido, _ := f.s.sceneCore().Queries().GetCharacter(ctx, id)
 	if ferido.Hpcurrent != 0 {
 		t.Errorf("o PV foi para %d: o passo tinha de prender em zero", ferido.Hpcurrent)
 	}
@@ -153,7 +153,7 @@ func TestTheVitalClampsAtZeroAndAtTheMaximum(t *testing.T) {
 	for i := 0; i < 6; i++ {
 		f.pede(t, f.jogador, http.MethodPost, url+"5", "")
 	}
-	curado, _ := f.s.Queries().GetCharacter(ctx, id)
+	curado, _ := f.s.sceneCore().Queries().GetCharacter(ctx, id)
 	if curado.Hpcurrent != curado.Hpmax {
 		t.Errorf("o PV parou em %d com máximo %d", curado.Hpcurrent, curado.Hpmax)
 	}

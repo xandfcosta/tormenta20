@@ -14,7 +14,7 @@ func (f pilotoFixture) onBoardAt(t *testing.T, x, y int) string {
 	t.Helper()
 	f.seedOpenBoard(t, "pedra")
 	entryID := f.tracker(t)
-	posto, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Arcanista", X: x, Y: y, EntryID: &entryID, CharacterID: &f.charID}, true)
 	if err != nil {
 		t.Fatalf("pôr a peça em %d,%d: %v", x, y, err)
@@ -67,7 +67,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	// E a METADE QUE NÃO PODE TER MUDADO: a peça continua GRAVADA em 4,2. Sem
 	// esta asserção o guarda acima passaria verde sobre uma peça que ANDOU sem
 	// confirmação, que é pior que o defeito que ele conserta.
-	gravada := tabuleiro.FindToken(f.s.Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
+	gravada := tabuleiro.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
 	if gravada.X != 4 || gravada.Y != 2 {
 		t.Errorf("a peça ANDOU na proposta, para %d,%d — o desenho virou gravação", gravada.X, gravada.Y)
 	}

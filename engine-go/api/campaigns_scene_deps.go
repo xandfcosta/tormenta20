@@ -9,12 +9,29 @@ import (
 	"t20engine/web/campaigns"
 )
 
-// O `*Server` cumprindo a porta das CAMPANHAS (`campaigns.Deps`, ALE-278).
+// A CENA DE CAMPANHAS e o adaptador que cumpre a porta dela (`campaigns.Deps`,
+// ALE-278).
 //
 // Os onze métodos moram num arquivo próprio, e não espalhados pelos arquivos de
 // domínio, porque juntos eles são UMA coisa: a tradução entre o vocabulário da
 // cena e o do hospedeiro. Ler os onze de uma vez é o que mostra se a fronteira
 // está no lugar — e o sinal de que está é nenhum deles desenhar nada.
+//
+// # Quem os cumpre deixou de ser o `*Server` (fatia 6)
+//
+// Das doze assinaturas que a porta pede, quatro são do núcleo e OITO são regra
+// de campanha — listar as mesas de quem olha, dizer o papel de cada um, entrar
+// numa mesa, guardar as regras ignoradas. Por isso o adaptador é o núcleo mais
+// um `campaignRules`: o que esta cena precisa da casa é exatamente "as regras
+// de quem é dono do quê", e não um servidor.
+type campaignsHost struct {
+	sceneCore
+	rules campaignRules
+}
+
+func (s *Server) campaignsHost() campaignsHost {
+	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules()}
+}
 
 // List traduz o `campaignList` para a forma que a CENA declarou.
 //
@@ -26,8 +43,8 @@ import (
 // O mapeamento é aqui e a CONSULTA continua uma só: duplicá-la do lado da cena
 // seria trocar um acoplamento por uma cópia, e cópia de consulta é a família de
 // defeito que esta épica mais encontrou.
-func (s *Server) List(ctx context.Context, userID int64, admin bool) ([]campaigns.ListRow, error) {
-	linhas, err := s.campaignList(ctx, AuthUser{ID: userID, IsAdmin: admin})
+func (h campaignsHost) List(ctx context.Context, userID int64, admin bool) ([]campaigns.ListRow, error) {
+	linhas, err := h.rules.campaignList(ctx, AuthUser{ID: userID, IsAdmin: admin})
 	if err != nil {
 		return nil, err
 	}
@@ -52,23 +69,23 @@ func (s *Server) List(ctx context.Context, userID int64, admin bool) ([]campaign
 }
 
 // RoleIn é o papel de quem pede numa campanha, e quantos membros ela tem.
-func (s *Server) RoleIn(ctx context.Context, userID int64, c sqlcgen.Campaign) (string, int, error) {
-	return s.roleIn(ctx, AuthUser{ID: userID}, c)
+func (h campaignsHost) RoleIn(ctx context.Context, userID int64, c sqlcgen.Campaign) (string, int, error) {
+	return h.rules.roleIn(ctx, AuthUser{ID: userID}, c)
 }
 
 // OwnerNames traduz o dono de cada campanha em nome, para a lista do admin.
-func (s *Server) OwnerNames(ctx context.Context, cs []sqlcgen.Campaign, quemPede int64) map[int64]string {
-	return s.ownerNames(ctx, cs, quemPede)
+func (h campaignsHost) OwnerNames(ctx context.Context, cs []sqlcgen.Campaign, quemPede int64) map[int64]string {
+	return h.rules.ownerNames(ctx, cs, quemPede)
 }
 
 // IgnoredRules são as regras que o mestre DESLIGOU nesta campanha.
-func (s *Server) IgnoredRules(ctx context.Context, campanhaID int64) []string {
-	return s.ignoredRulesOf(ctx, campanhaID)
+func (h campaignsHost) IgnoredRules(ctx context.Context, campanhaID int64) []string {
+	return h.rules.ignoredRulesOf(ctx, campanhaID)
 }
 
 // SaveIgnoredRules troca o conjunto INTEIRO, e é idempotente de propósito.
-func (s *Server) SaveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error {
-	return s.saveIgnoredRules(ctx, campanhaID, regras)
+func (h campaignsHost) SaveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error {
+	return h.rules.saveIgnoredRules(ctx, campanhaID, regras)
 }
 
 // SaveText grava o nome e a descrição da campanha.
@@ -77,11 +94,11 @@ func (s *Server) SaveIgnoredRules(ctx context.Context, campanhaID int64, regras 
 // `"UPDATE campaigns"` à mão. Cena que compõe SQL é cena com o banco dentro, e
 // o que atravessa a fronteira agora é a PERGUNTA — o hospedeiro é que sabe o
 // nome da coluna, que vazio é NULL e que a linha tem um `updatedAt` a tocar.
-func (s *Server) SaveText(ctx context.Context, campanhaID int64, nome, descricao string) error {
+func (h campaignsHost) SaveText(ctx context.Context, campanhaID int64, nome, descricao string) error {
 	var set setBuilder
 	set.Add("name = ?", nome)
 	set.Add("description = ?", nullableArg(trimOrNull(&descricao)))
-	return set.execTouched(ctx, s.db, "UPDATE campaigns", campanhaID)
+	return set.execTouched(ctx, h.rules.db, "UPDATE campaigns", campanhaID)
 }
 
 // Join senta alguém à mesa e devolve o MOTIVO da recusa, não o erro.
@@ -94,8 +111,8 @@ func (s *Server) SaveText(ctx context.Context, campanhaID int64, nome, descricao
 //
 // Quem CLASSIFICA é o hospedeiro, quem escolhe a FRASE é a cena: a decisão que a
 // porta de entrar deixou escrita (ALE-278).
-func (s *Server) Join(ctx context.Context, campanhaID, heroiID, quemPede int64, convite string) campaigns.JoinRefusal {
-	_, err := s.joinTable(ctx, joinRequest{
+func (h campaignsHost) Join(ctx context.Context, campanhaID, heroiID, quemPede int64, convite string) campaigns.JoinRefusal {
+	_, err := h.rules.joinTable(ctx, joinRequest{
 		CampanhaID: campanhaID, PersonagemID: heroiID,
 		Convite: convite, Papel: "player", QuemPede: quemPede,
 	})
@@ -124,4 +141,4 @@ func (s *Server) Join(ctx context.Context, campanhaID, heroiID, quemPede int64, 
 // com a mesma cara, e o compilador recusaria as duas com o mesmo nome. É o
 // contrário do caso do `MintAccountInvite`: lá um contrato existente ganhou
 // porque era a MESMA pergunta; aqui ele não ganha porque não é.
-func (s *Server) RequesterIsAdmin(r *http.Request) bool { return currentUser(r).IsAdmin }
+func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUser(r).IsAdmin }

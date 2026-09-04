@@ -10,7 +10,7 @@ import (
 
 func mapMarkers(t *testing.T, f pilotoFixture) []tabuleiro.BoardMarker {
 	t.Helper()
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
 		t.Fatal("não há tabuleiro — o gesto não tinha onde acontecer")
 	}

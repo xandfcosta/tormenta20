@@ -12,7 +12,7 @@ import (
 
 func seedOficio(t *testing.T, s *Server, id int64, nome, atributo string) {
 	t.Helper()
-	_, err := s.Queries().CreateExpertise(context.Background(), sqlcgen.CreateExpertiseParams{
+	_, err := s.sceneCore().Queries().CreateExpertise(context.Background(), sqlcgen.CreateExpertiseParams{
 		Characterid: id, Name: nome, Attribute: atributo, Trained: 1, Custom: 1,
 	})
 	if err != nil {
@@ -51,7 +51,7 @@ func expertiseAt(t *testing.T, f pilotoFixture, id int64, caminho string) string
 // training lê o que o BANCO guarda, que é a única fonte da verdade do gesto.
 func training(t *testing.T, f pilotoFixture, id int64, nome string) (treinada bool, atributo string) {
 	t.Helper()
-	todas, err := f.s.Queries().ListExpertisesByCharacter(context.Background(), id)
+	todas, err := f.s.sceneCore().Queries().ListExpertisesByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler as perícias: %v", err)
 	}
@@ -207,7 +207,7 @@ func TestACraftIsBornTrainedAndOnlyItCanBeRemoved(t *testing.T) {
 	}
 
 	expertiseAt(t, f, id, "remove/Ferreiro")
-	todas, _ := f.s.Queries().ListExpertisesByCharacter(context.Background(), id)
+	todas, _ := f.s.sceneCore().Queries().ListExpertisesByCharacter(context.Background(), id)
 	for _, e := range todas {
 		if e.Name == "Ferreiro" {
 			t.Fatal("o ofício sobreviveu ao remover")
@@ -238,7 +238,7 @@ func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 		{"Ferreiro", "já tem"},
 	}
 	for _, caso := range casos {
-		err := f.s.SaveNewCraft(context.Background(), id, caso.nome)
+		err := f.s.sheetHost().SaveNewCraft(context.Background(), id, caso.nome)
 		if err == nil {
 			t.Errorf("o nome %q foi aceito", caso.nome)
 			continue
@@ -247,7 +247,7 @@ func TestACraftDoesNotStealTheNameOfABookExpertise(t *testing.T) {
 			t.Errorf("o nome %q deu %q, e a mensagem devia falar de %q", caso.nome, err, caso.erro)
 		}
 	}
-	if err := f.s.SaveNewCraft(context.Background(), id, "Marinheiro"); err != nil {
+	if err := f.s.sheetHost().SaveNewCraft(context.Background(), id, "Marinheiro"); err != nil {
 		t.Errorf("um nome legítimo foi recusado: %v", err)
 	}
 }

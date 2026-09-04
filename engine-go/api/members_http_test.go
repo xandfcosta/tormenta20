@@ -146,7 +146,7 @@ func TestJoiningStillWorks(t *testing.T) {
 // código HTTP, e a cena traduz em FRASE.
 func (f memberFixture) addMember(t *testing.T, caller, campaignID, characterID int64) error {
 	t.Helper()
-	_, err := f.s.joinTable(context.Background(), joinRequest{
+	_, err := f.s.campaignRules().joinTable(context.Background(), joinRequest{
 		CampanhaID: campaignID, PersonagemID: characterID,
 		Papel: "player", QuemPede: caller,
 	})

@@ -61,7 +61,7 @@ func novoPiloto(t *testing.T) pilotoFixture {
 	if err != nil {
 		t.Fatalf("preparar catálogo: %v", err)
 	}
-	s.catalogs = catalogs
+	s.primeCatalogs(catalogs)
 
 	mestre := seedUser(t, s, "mestre@t.com")
 	jogador := seedUser(t, s, "jogador@t.com")
@@ -90,7 +90,7 @@ func (f pilotoFixture) token(t *testing.T, userID int64) string {
 	if err != nil {
 		t.Fatalf("usuário %d não existe: %v", userID, err)
 	}
-	tok, err := f.s.signToken(user)
+	tok, err := f.s.accountRules().signToken(user)
 	if err != nil {
 		t.Fatalf("assinar token: %v", err)
 	}

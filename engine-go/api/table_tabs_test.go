@@ -10,7 +10,7 @@ import (
 
 func (f pilotoFixture) openSecond(t *testing.T, nome string) *tabuleiro.BoardState {
 	t.Helper()
-	b, err := f.s.Boards().Open(context.Background(), f.sessionID, nome, "pedra")
+	b, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, nome, "pedra")
 	if err != nil {
 		t.Fatalf("abrir %q: %v", nome, err)
 	}
@@ -99,10 +99,10 @@ func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
 
-	if n := len(f.s.Boards().Get(ctx, f.sessionID, cripta.ID).Difficult); n != 1 {
+	if n := len(f.s.tableHost().Boards().Get(ctx, f.sessionID, cripta.ID).Difficult); n != 1 {
 		t.Errorf("a cripta — a aba aberta — recebeu %d casas de terreno, esperado 1", n)
 	}
-	if n := len(f.s.Boards().Get(ctx, f.sessionID, taverna.ID).Difficult); n != 0 {
+	if n := len(f.s.tableHost().Boards().Get(ctx, f.sessionID, taverna.ID).Difficult); n != 0 {
 		t.Errorf("a taverna, que ninguém estava olhando, recebeu %d casas de terreno", n)
 	}
 }

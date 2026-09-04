@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func TestDeletingAnAccountMovesItsCampaignsToTheAdmin(t *testing.T) {
 	// A REGRA direto, e não a rota: `DELETE /admin/users/{id}` saiu na ALE-277,
 	// e o que este caso prende é para onde vão as MESAS de quem some — que é
 	// decisão de produto e não de transporte.
-	movidas, _, err := s.deleteAccount(httptest.NewRequest(http.MethodDelete, "/", nil), player, admin)
+	movidas, _, err := s.adminHost().deleteAccount(httptest.NewRequest(http.MethodDelete, "/", nil), player, admin)
 	if err != nil {
 		t.Fatalf("apagar a conta falhou: %v", err)
 	}
@@ -61,11 +62,34 @@ func TestTheBackupIsADatabaseThatOpens(t *testing.T) {
 
 	// A REGRA direto: o que este caso prende é que a cópia ABRE como banco, e
 	// isso nunca foi do transporte.
-	name, err := s.backupDatabase(context.Background(), time.Now())
+	name, err := s.adminHost().backupDatabase(context.Background(), time.Now())
 	if err != nil {
 		t.Fatalf("o backup falhou: %v", err)
 	}
 	name = filepath.Base(name)
+	// O NOME CARREGA A DATA, e isso é do operador e não da máquina: quem procura
+	// "o backup de antes do descanso" acha pelo carimbo, e a poda depende dos
+	// nomes serem distintos por segundo.
+	//
+	// A asserção nasceu de um defeito acontecido (ALE-278, fatia 6): uma
+	// substituição de `s.` por `h.` acertou o `%s.db` do `fmt.Sprintf` e o
+	// carimbo virou `%!h(string=…)`. Quem acusou foi o `go vet`, e não um teste
+	// — todos usavam o nome DEVOLVIDO e nenhum olhava para ele.
+	//
+	// **Este caso não protege contra AQUELE defeito**, e vale dizer por quê: o
+	// `vet` roda dentro do `go test`, então o verbo errado nem compila a suíte.
+	// O que ele protege é a família que o `vet` ACEITA — trocar o layout da
+	// data. Sabotado com `time.RFC3339`, o nome sai
+	// `t20--2026-09-04T10:36:07-03:00.db`: dois-pontos em nome de arquivo, e a
+	// poda, que ordena por nome, deixa de ordenar por tempo.
+	//
+	// O AMBIENTE é opcional no padrão de propósito: a bancada não configura
+	// `APP_ENV`, e o nome sai com dois traços seguidos. O que se prende aqui é o
+	// CARIMBO, que é o que a poda usa e o que a pessoa lê — inventar uma
+	// exigência sobre o ambiente seria prender o que ninguém prometeu.
+	if !regexp.MustCompile(`^t20-[a-z]*-\d{8}-\d{6}\.db$`).MatchString(name) {
+		t.Errorf("o backup se chama %q, e não `t20-<ambiente>-<data>-<hora>.db`", name)
+	}
 	copyPath := filepath.Join(s.cfg.BackupDir, name)
 	if _, err := os.Stat(copyPath); err != nil {
 		t.Fatalf("o backup não está no disco: %v", err)
@@ -74,7 +98,7 @@ func TestTheBackupIsADatabaseThatOpens(t *testing.T) {
 		t.Errorf("a cópia tem %d contas, esperado a conta semeada", got)
 	}
 
-	if backups := s.listBackups(); len(backups) != 1 {
+	if backups := s.adminHost().listBackups(); len(backups) != 1 {
 		t.Errorf("a listagem não devolveu o backup recém-criado: %+v", backups)
 	}
 }

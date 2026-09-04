@@ -166,7 +166,7 @@ func TestTheDialogOffersWhatFitsInEachTab(t *testing.T) {
 }
 func chosen(t *testing.T, f pilotoFixture, id int64) string {
 	t.Helper()
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
@@ -222,7 +222,7 @@ func TestARepeatedDistributionIsRefused(t *testing.T) {
 	if recusa := powerCommand(t, f, id, "atributos", corpo); !strings.Contains(recusa, "distintos") {
 		t.Errorf("três vezes o mesmo atributo foi aceito: %q", recusa)
 	}
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}

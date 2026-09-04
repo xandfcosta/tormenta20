@@ -91,28 +91,28 @@ func TestAssertVitalsEditable(t *testing.T) {
 
 	t.Run("o mestre edita qualquer combatente", func(t *testing.T) {
 		for _, entry := range []string{f.pcEntry, f.otherPc, f.npcEntry} {
-			if err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.gmUser, "gm"), entry); err != nil {
+			if err := f.srv.tableRules().assertVitalsEditableFor(context.Background(), f.ctx(f.gmUser, "gm"), entry); err != nil {
 				t.Errorf("mestre em %q: %v", entry, err)
 			}
 		}
 	})
 
 	t.Run("o jogador edita o próprio personagem", func(t *testing.T) {
-		if err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.pcEntry); err != nil {
+		if err := f.srv.tableRules().assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.pcEntry); err != nil {
 			t.Errorf("jogador no próprio PC: %v", err)
 		}
 	})
 
 	// O caso que dói na mesa: um jogador tirando PV do personagem de outro.
 	t.Run("o jogador não edita o personagem de outro", func(t *testing.T) {
-		err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.otherPc)
+		err := f.srv.tableRules().assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.otherPc)
 		if err == nil {
 			t.Fatal("jogador editou o PC de outro jogador")
 		}
 	})
 
 	t.Run("o jogador não edita NPC", func(t *testing.T) {
-		err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.npcEntry)
+		err := f.srv.tableRules().assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.npcEntry)
 		if err == nil || !strings.Contains(err.Error(), "NPC") {
 			t.Fatalf("err=%v, queria recusa citando NPC", err)
 		}
@@ -121,7 +121,7 @@ func TestAssertVitalsEditable(t *testing.T) {
 	// A mensagem carrega o id recusado: sem ele, o mestre lê "não encontrado" e
 	// não sabe qual linha o cliente pediu.
 	t.Run("entrada inexistente é recusada nomeando o id", func(t *testing.T) {
-		err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), "e-fantasma")
+		err := f.srv.tableRules().assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), "e-fantasma")
 		if err == nil || !strings.Contains(err.Error(), "e-fantasma") {
 			t.Fatalf("err=%v, queria recusa citando e-fantasma", err)
 		}
@@ -149,7 +149,7 @@ func TestSessionForCallerRejectsForeignSession(t *testing.T) {
 		t.Fatalf("seed foreign session: %v", err)
 	}
 
-	_, Role, status, err := s.sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
+	_, Role, status, err := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
 	if err == nil || status == 200 {
 		t.Fatalf("status=%d Role=%q err=%v — a sessão de outra mesa foi aceita", status, Role, err)
 	}

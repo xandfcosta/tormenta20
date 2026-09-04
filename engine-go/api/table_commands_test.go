@@ -225,7 +225,7 @@ func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/populate", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
 	}
-	fila := f.s.Sessions().GetState(f.sessionID).Initiative
+	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
 	if len(fila) != 1 || fila[0].CharacterID == nil || *fila[0].CharacterID != f.charID {
 		t.Fatalf("a fila ficou %+v, queria só o personagem %d", fila, f.charID)
 	}
@@ -233,7 +233,7 @@ func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/populate", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o segundo clique deu %d", rec.Code)
 	}
-	if depois := f.s.Sessions().GetState(f.sessionID).Initiative; len(depois) != 1 {
+	if depois := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(depois) != 1 {
 		t.Errorf("o segundo clique deixou %d combatentes na fila, queria 1", len(depois))
 	}
 }
@@ -334,7 +334,7 @@ func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 	// A diferença para o "Encerrar cena": a cena continua LIGADA. Recuperar ao
 	// fim de uma luta não acaba a cena, e confundir os dois tiraria a fila da
 	// mesa no meio do combate.
-	if !f.s.Sessions().GetState(f.sessionID).SceneActive {
+	if !f.s.tableHost().Sessions().GetState(f.sessionID).SceneActive {
 		t.Error("a recuperação de cena desligou a cena")
 	}
 }
@@ -347,7 +347,7 @@ func (f pilotoFixture) tracker(t *testing.T) string {
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/populate", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
 	}
-	for _, e := range f.s.Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if e.CharacterID != nil && *e.CharacterID == f.charID {
 			return e.ID
 		}
@@ -384,7 +384,7 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 	}
 	// E a linha espelha, senão a fila mostraria o número velho ao lado da ficha
 	// certa, que é a ALE-122 pelo outro lado.
-	for _, e := range f.s.Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if e.ID == entryID && (e.HpCurrent == nil || *e.HpCurrent != 15) {
 			t.Errorf("a linha não espelhou a ficha: %v", e.HpCurrent)
 		}
@@ -425,7 +425,7 @@ func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
 	olho := f.tableUrl() + "/initiative/" + entryID + "/vitals/hidden"
 
 	oculto := func() bool {
-		for _, e := range f.s.Sessions().GetState(f.sessionID).Initiative {
+		for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 			if e.ID == entryID {
 				return e.HpHidden != nil && *e.HpHidden
 			}
@@ -484,14 +484,14 @@ func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.tracker(t)
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 1 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
 		t.Fatalf("a fila começou com %d, queria 1", n)
 	}
 
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/"+entryID+"/remove", ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 0 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("a fila ficou com %d combatentes", n)
 	}
 }
@@ -521,7 +521,7 @@ func TestTheGmSeesWhoIsAtTheTableAndThePlayerDoesNot(t *testing.T) {
 		t.Error("alguém apareceu na mesa sem ter entrado")
 	}
 
-	f.s.Presence().Join(f.sessionID, "conn-do-jogador", aovivo.PresenceUser{
+	f.s.tableHost().Presence().Join(f.sessionID, "conn-do-jogador", aovivo.PresenceUser{
 		UserID: f.jogador, Name: "Jogador", Role: "player",
 	})
 
@@ -559,7 +559,7 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d: %s", rec.Code, rec.Body.String())
 	}
-	fila := f.s.Sessions().GetState(f.sessionID).Initiative
+	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
 	if len(fila) != 1 {
 		t.Fatalf("a fila ficou com %d combatentes", len(fila))
 	}
@@ -580,7 +580,7 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar sem PV deu %d", rec.Code)
 	}
-	for _, e := range f.s.Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if e.Label == "Figurante" && e.HpMax != nil {
 			t.Errorf("PV 0 virou barra %v — o capanga sem vida rastreada apareceu morto", *e.HpMax)
 		}
@@ -600,7 +600,7 @@ func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
 	if corpo := rec.Body.String(); !strings.Contains(corpo, "400") {
 		t.Errorf("a recusa não citou a iniciativa ofensiva; corpo = %q", corpo)
 	}
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 0 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("o combatente recusado entrou na fila mesmo assim (%d na fila)", n)
 	}
 }
@@ -669,7 +669,7 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.tracker(t)
 	// O CONTROLE do que a issue descreve: o grupo entra com iniciativa ZERO.
-	if fila := f.s.Sessions().GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
+	if fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
 		t.Fatalf("o grupo entrou com iniciativa %d; o teste mede o conserto do zero", fila[0].Initiative)
 	}
 
@@ -679,7 +679,7 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 		t.Fatalf("editar deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
 	}
 
-	fila := f.s.Sessions().GetState(f.sessionID).Initiative
+	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
 	if len(fila) != 1 || fila[0].ID != entryID {
 		t.Fatalf("a linha não sobreviveu à edição: %+v", fila)
 	}
@@ -714,7 +714,7 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "41") {
 		t.Errorf("a recusa não citou a iniciativa ofensiva; sinais = %s", corpo)
 	}
-	if fila := f.s.Sessions().GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
+	if fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
 		t.Errorf("a iniciativa recusada foi gravada mesmo assim (%d)", fila[0].Initiative)
 	}
 }
@@ -730,7 +730,7 @@ func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
 		`{"novonome":"Figurante","novainiciativa":5,"novopv":0,"novotipo":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d", rec.Code)
 	}
-	entryID := f.s.Sessions().GetState(f.sessionID).Initiative[0].ID
+	entryID := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative[0].ID
 
 	// A página manda PV, como mandaria se estivesse defasada.
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/"+entryID+"/edit",
@@ -738,7 +738,7 @@ func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
 		t.Fatalf("editar deu %d", rec.Code)
 	}
 
-	linha := f.s.Sessions().GetState(f.sessionID).Initiative[0]
+	linha := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative[0]
 	if linha.Initiative != 9 {
 		t.Errorf("a iniciativa não foi corrigida: %d", linha.Initiative)
 	}
