@@ -1,17 +1,15 @@
 package api
 
-import "t20engine/aovivo"
-
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/aovivo"
 	"t20engine/book"
-	"t20engine/plataforma"
-
 	"t20engine/db/sqlcgen"
+	"t20engine/plataforma"
 	"t20engine/sheet"
 )
 
@@ -126,17 +124,17 @@ func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, bo
 	now := plataforma.NowISO()
 
 	id, err := q.CreateCharacter(r.Context(), sqlcgen.CreateCharacterParams{
-		OwnerId: ownerID, Name: name, Origin: body.Origin, God: nullString(body.God),
+		OwnerId: ownerID, Name: name, Origin: body.Origin, God: plataforma.NullString(body.God),
 		GodPower: derefStr(body.GodPower, ""), Tibar: derefF64(body.Tibar, 0), Level: totalLevel,
 		HpMax: body.HpMax, HpCurrent: body.HpCurrent, MpMax: body.MpMax, MpCurrent: body.MpCurrent,
 		Strength: body.Strength, Dexterity: body.Dexterity, Constitution: body.Constitution,
 		Intelligence: body.Intelligence, Wisdom: body.Wisdom, Charisma: body.Charisma,
 		Size: body.Size, Displacement: body.Displacement,
-		Proficiencies:        marshalStrings(&granted),
+		Proficiencies:        sheet.MarshalStrings(&granted),
 		RaceAttributeChoices: compactOrDefault(body.RaceAttributeChoices, "{}"),
 		SecondaryRaceChoices: compactOrDefault(body.SecondaryRaceChoices, "[]"),
-		OriginChoices:        marshalStrings(body.OriginChoices),
-		ClassPowers:          marshalStrings(body.ClassPowers),
+		OriginChoices:        sheet.MarshalStrings(body.OriginChoices),
+		ClassPowers:          sheet.MarshalStrings(body.ClassPowers),
 		ClassChoices:         compactOrDefault(body.ClassChoices, "{}"),
 		PowerChoices:         compactOrDefault(body.PowerChoices, "{}"),
 		CreatedAt:            now, UpdatedAt: now,
@@ -163,9 +161,9 @@ func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, bo
 	}
 	for _, it := range body.Items {
 		if _, err := q.CreateItem(r.Context(), sqlcgen.CreateItemParams{
-			Characterid: id, Catalogid: nullString(it.CatalogID), Name: derefStr(it.Name, ""),
+			Characterid: id, Catalogid: plataforma.NullString(it.CatalogID), Name: derefStr(it.Name, ""),
 			Quantity: aovivo.DerefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
-			Equipped: nullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
+			Equipped: plataforma.NullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
 		}); err != nil {
 			return 0, err
 		}

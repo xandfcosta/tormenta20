@@ -3,8 +3,6 @@ package book
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/text/collate"
-	"golang.org/x/text/language"
 	"regexp"
 	"slices"
 	"strconv"
@@ -13,6 +11,9 @@ import (
 	"t20engine/catalog"
 	"t20engine/engine"
 	"t20engine/search"
+
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
 type Condition struct {

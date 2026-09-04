@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"t20engine/aovivo"
+	"t20engine/web/sheetui"
 	"t20engine/web/ui"
 )
 
@@ -52,7 +53,7 @@ type mesaView struct {
 	// e muda pelos comandos DELA, não pelo que acontece na mesa. Pendurá-la em
 	// `regioesDaMesa` faria cada tique do stream recomputar sete painéis para
 	// descobrir que nada mudou.
-	MinhaFicha *fichaView
+	MinhaFicha *sheetui.View
 	// Tabuleiro é o mapa da cena. `Aberto` falso é o estado normal — a maior
 	// parte de uma sessão não tem mapa —, e ele desenha a frase e nenhuma grade.
 	Tabuleiro tabuleiroView

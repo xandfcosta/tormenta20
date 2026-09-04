@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 )
 
@@ -107,6 +108,26 @@ func EquipLimitError(otherEquipped []string, incoming string) string {
 		return fmt.Sprintf("Limite de %d mãos atingido", handsLimit)
 	}
 	return ""
+}
+
+// EquipLimitErrorOver é o `EquipLimitError` sobre as LINHAS do banco, com o
+// item que está sendo trocado fora da conta (`excludeItemID`, 0 = nenhum).
+//
+// Ela existe desde a ALE-278 porque o laço que filtra as linhas estava escrito
+// duas vezes — na rota JSON e na aba Mochila da ficha —, e as duas versões
+// precisam pular exatamente as mesmas duas coisas: o próprio item e a coluna
+// nula. Um filtro repetido é um filtro que diverge; este decide QUAIS itens
+// entram na conta dos tetos, que é a parte da regra que o `EquipLimitError`
+// sozinho não vê.
+func EquipLimitErrorOver(equipped []sqlcgen.ListEquippedItemsRow, excludeItemID int64, incoming string) string {
+	others := make([]string, 0, len(equipped))
+	for _, e := range equipped {
+		if e.ID == excludeItemID || !e.Equipped.Valid {
+			continue
+		}
+		others = append(others, e.Equipped.String)
+	}
+	return EquipLimitError(others, incoming)
 }
 
 // SlotsNotMultiple diz se o espaço NÃO é um múltiplo finito de 0,5.

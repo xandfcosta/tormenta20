@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"t20engine/web/ui"
 	"t20engine/book"
+	"t20engine/web/sheetui"
 )
 
 // A Mesa do jogador desenhada (ALE-219; em templ pela ALE-227). Nenhuma REGRA
@@ -55,11 +56,11 @@ templ mesa(v mesaView) {
 			// de um gesto que não tem nada a ver com ela.
 			<div
 				data-on-signal-patch-filter="{include: /^fichaversao$/}"
-				data-on-signal-patch={ sheetRefetch(*v.MinhaFicha) }
+				data-on-signal-patch={ sheetui.SheetRefetch(*v.MinhaFicha) }
 				class="hidden"
 			></div>
 			<div data-show={ naSuperficie(superficieDaFicha) } class="flex min-h-0 flex-1 flex-col">
-				@cenaDaFicha(*v.MinhaFicha)
+				@sheetui.SceneBody(*v.MinhaFicha)
 			</div>
 		}
 		// A MESA: quem está na cena e em que ordem. Rola por dentro, nunca a

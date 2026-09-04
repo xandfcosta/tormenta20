@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"net/http"
 	"strings"
@@ -10,10 +9,11 @@ import (
 	"t20engine/plataforma"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 	"t20engine/db"
 	"t20engine/db/sqlcgen"
+
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const bcryptCost = 12
@@ -87,7 +87,7 @@ func (s *Server) createAccount(ctx context.Context, body account.RegisterBody) (
 	now := plataforma.NowISO()
 	return s.createUser(ctx, sqlcgen.CreateUserParams{
 		Email:        body.Email,
-		Name:         nullString(body.Name),
+		Name:         plataforma.NullString(body.Name),
 		Passwordhash: string(hash),
 		Createdat:    now,
 		Updatedat:    now,
@@ -261,13 +261,6 @@ func parseExpiry(s string) time.Duration {
 	default:
 		return sessionTTL
 	}
-}
-
-func nullString(s *string) sql.NullString {
-	if s == nil {
-		return sql.NullString{}
-	}
-	return sql.NullString{String: *s, Valid: true}
 }
 
 func extractBearer(h string) string {

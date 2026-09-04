@@ -57,7 +57,7 @@ alguém já usou e que não voltam.
 | **forja** | `forge` | ~~criação~~, ~~assistente~~, ~~wizard~~ | A cena onde um personagem NASCE: nome, raça, classe, origem, o equipamento inicial e os atributos. Ela é curta de propósito (decisão do dono, ALE-272): dá o que a ficha não sabe dar e para por aí — poderes, benefícios de origem, treino de perícia e escolhas de raça se terminam na ficha, que é o que a **pendência** aponta. O herói nasce ao fim da primeira tela e já é personagem de verdade; **incompleto não é inválido**. |
 | **kit inicial** | `startingKit` | ~~equipamento de classe~~, ~~inventário inicial~~ | O equipamento com que o herói nasce (p140). É UM só para todas as classes — o livro não tem lista por classe —, parametrizado pelas proficiências dela: mochila, saco de dormir e traje de viajante para todo mundo; uma arma simples; uma marcial se a classe for proficiente; armadura leve à escolha, brunea se ela usa pesadas, nenhuma para o arcanista; escudo leve se ela usa escudo. Vem JUNTO com a **bolsa inicial**, e não no lugar dela. |
 | **bolsa inicial** | `startingMoney` | ~~ouro inicial~~, ~~verba~~ | Os tibares com que o herói nasce (Tabela 3-1, p140): no nível 1 são **T$ 4d6**, rolados no nascimento; do 2º ao 20º é um valor fixo da tabela. Depois disso quem mexe é a Mochila — ver **tibar**. |
-| **proficiência** | `proficiencies` | ~~treinamento~~, ~~habilitação~~ | Saber usar uma categoria de arma, armadura ou escudo. São SETE — armas simples, marciais, exóticas e de fogo (T20 p142), armaduras leves e pesadas, e escudos (p148) — e a classe concede as dela numa linha só ("Proficiências. Armas marciais e escudos.", p36–83). **Não confundir com perícia**: perícia se ROLA e tem graus de treinamento; proficiência se TEM ou não se tem, e o que falta vira PENALIDADE (−5 no ataque, p142; a penalidade da armadura nas perícias de Força e Destreza, p148). **Quem sabe usar armadura pesada sabe usar a leve, e isso o livro NÃO diz** — é decisão de produto, e está escrita e presa por teste em `piloto_ficha_proficiencias.go`. |
+| **proficiência** | `proficiencies` | ~~treinamento~~, ~~habilitação~~ | Saber usar uma categoria de arma, armadura ou escudo. São SETE — armas simples, marciais, exóticas e de fogo (T20 p142), armaduras leves e pesadas, e escudos (p148) — e a classe concede as dela numa linha só ("Proficiências. Armas marciais e escudos.", p36–83). **Não confundir com perícia**: perícia se ROLA e tem graus de treinamento; proficiência se TEM ou não se tem, e o que falta vira PENALIDADE (−5 no ataque, p142; a penalidade da armadura nas perícias de Força e Destreza, p148). **Quem sabe usar armadura pesada sabe usar a leve, e isso o livro NÃO diz** — é decisão de produto, e está escrita e presa por teste em `web/sheetui/proficiencias.go`. |
 | **escola de magia** | `escolas-de-magia` | ~~tipo de magia~~, ~~classe de magia~~ | A família de uma magia — **Abjuração**, **Evocação**, **Ilusão** (T20 p172, oito). O livro imprime a abreviatura ao lado ("Abjuração (Abjur)") e as tabelas dele usam a forma curta. Ganhou catálogo na ALE-264: a magia guardava `school: "evocacao"`, isso decidia o filtro, e o nome não aparecia em cartão nenhum. **Escola conta como tipo de efeito** — é o livro que diz —, então as duas famílias se tocam. |
 | **grimório** | `spellbook` | ~~livro de magias~~, ~~repertório~~ | As magias que a ficha SABE. É o título da aba Magias, e a palavra vem do livro. **Colide com a identidade visual do app** (`scene-grimorio`, "Grimório de Arton") e com as abas de catálogo do mestre — ver a colisão C8. |
 | **magia preparada** | `prepared` | ~~memorizada~~, ~~equipada~~ | A magia que o conjurador escolheu para hoje, e o interruptor só existe para quem PREPARA: Clérigo, Druida e o Arcanista do caminho mago (p171). Para os outros a magia se conjura direto, e um botão de preparar seria um controle que não significa nada. |
@@ -328,8 +328,8 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **improviso** | `improv` | `web/master` (ALE-278) — as quatro tabelas que o mestre rola na hora: ruína, perseguição, recompensa e ideias. Não `improvisation`, que é comprido sem comprar precisão |
 | **verbete** | `entry` | `routes.Entry` já usava. Ele traduz também **entrada**, e isso NÃO é colisão nova: `?entrada=<id>` é o endereço de UM verbete, então as duas palavras são o mesmo conceito visto do lado do dado e do lado do endereço |
 | **a cena que lista os personagens** | `characters` | `web/characters` (ALE-278) — o PLURAL, porque a cena é a lista de quem uma pessoa tem. A do singular é a ficha, logo abaixo |
-| **a ficha** (a cena, não o dado) | `web/sheet` | `web/sheet` (ALE-278) — a cena de `/personagens/{id}`. **Ela colide de propósito com o pacote `sheet`**, que é a FORMA do dado (`CharacterDTO`, `Compute`), e a colisão está registrada abaixo. Decisão do dono, 2026-09-03: a palavra da mesa ganha, e quem importar os dois escreve o apelido |
-| **a cena das campanhas** | `campaigns` | `web/campaigns` (ALE-278) — o PLURAL, como o `web/characters`, e ela cobre a lista, a campanha aberta, a folha em branco e a carta de entrar. **O plural é o que evita o apelido**: as regras de campanha são o pacote `campaign` (singular), e a cena o importa sem ambiguidade. Onde o `web/sheet` escolheu colidir e apelidar, aqui o plural resolveu de graça |
+| **a ficha** (a cena, não o dado) | `sheetui` | `web/sheetui` (ALE-278) — a cena de `/personagens/{id}`. O sufixo existe porque `sheet` já é a FORMA do dado (`CharacterDTO`, `Compute`), e a cena o lê 148 vezes em 20 arquivos: sem o sufixo, cada um desses arquivos carregaria um apelido. Ver a colisão registrada abaixo |
+| **a cena das campanhas** | `campaigns` | `web/campaigns` (ALE-278) — o PLURAL, como o `web/characters`, e ela cobre a lista, a campanha aberta, a folha em branco e a carta de entrar. **O plural é o que evita o apelido**: as regras de campanha são o pacote `campaign` (singular), e a cena o importa sem ambiguidade. É o mesmo problema que o `sheetui` resolve com sufixo — quando a cena e a camada falam do mesmo conceito, uma das duas precisa de outra palavra |
 | **leitor** (a cena que abre o PDF) | `reader` | `web/reader` (ALE-278), e `routes.Reader` já usava. **Não é o visualizador do navegador** — a linha da seção A faz essa distinção e ela continua valendo |
 | **abertura** | `opening` | `web/reader` (ALE-278). O `bookui.BookAddress.Abertura` fica com o nome que tem: renomeá-lo move todo chamador, e a regra do §F diz que o nome CHAMADO segue o que está lá. Então uma linha do leitor cola os dois (`Opening: livro.Abertura`), o que é a costura acontecendo à vista em vez de escondida |
 | **acervo** (cenas guardadas) | `archive` | `TestTheArchiveSaysWhichSceneIsOnTheTable` |
@@ -371,14 +371,21 @@ resolvidas por palpite:**
 - **`arrow` e `wire`** são os dois `fio` — a seta do movimento tem `Fio` no
   código (seção C) e o formato de fio do SSE também. A varredura usou `arrow`
   para o desenho e `wire` para o protocolo.
-- **`sheet` é o DADO e `web/sheet` é a CENA**, e isto foi escolhido sabendo o
-  preço (decisão do dono, 2026-09-03): todo arquivo que importe os dois precisa
-  de apelido (`sheetui "t20engine/web/sheet"`). As alternativas eram um nome
-  comprido (`web/charactersheet`) ou um sinônimo que abriria OUTRA colisão
-  (`roster` ao lado do `cast` do elenco) — e trocar a palavra da mesa para
-  poupar um apelido é o que este glossário existe para impedir. Onde os dois se
-  encontram, quem manda é o caminho: `sheet.CharacterDTO` é dado, `sheetui.…` é
-  tela.
+- **`sheet` é o DADO e `sheetui` é a CENA.** A primeira versão desta linha dizia
+  que a cena se chamaria `web/sheet` e que "quem importar os dois escreve o
+  apelido" — decisão tomada com uma estimativa errada de ONDE os dois se
+  encontram.
+  **Medido depois:** a cena lê o pacote de dado **148 vezes em 20 arquivos**. O
+  encontro é DENTRO da cena, não nas duas linhas do `api` que montam a rota, e
+  o apelido teria caído em vinte arquivos com um nome (`data.`) que não está
+  neste glossário.
+  Com o número na mesa, o sufixo entrega a mesma grafia nas chamadas
+  (`sheetui.Routes`) sem apelido nenhum e sem pasta divergindo do pacote. **A
+  palavra da mesa não foi trocada** — `ficha` continua sendo `sheet`; o que
+  ganhou sufixo foi a TELA, que é a camada, e não o conceito.
+  A lição, para a próxima colisão: **conte os usos antes de escolher onde o
+  apelido dói.** O `web/campaigns` tinha resolvido isso de graça com o plural, e
+  aqui o plural não servia porque a ficha é uma.
 - **`archive` e `collection`** são os dois `acervo`, e a colisão é anterior a
   esta issue: o acervo de CENAS guardadas e o acervo de PODERES não têm nada em
   comum além da palavra. Se um dia um deles for renomeado na tela, é o segundo —

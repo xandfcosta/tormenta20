@@ -1,27 +1,19 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"t20engine/plataforma"
 
-	"github.com/go-chi/chi/v5"
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
 	"t20engine/sheet"
+
+	"github.com/go-chi/chi/v5"
 )
 
-// spellBasePmCost is Tabela 4-1, "Custo de Magias" (livro p170).
-var spellBasePmCost = map[int]int{0: 0, 1: 1, 2: 3, 3: 6, 4: 10, 5: 15}
-
-// alwaysPrepareClasses mirrors ALWAYS_PREPARE_CLASSES.
-var alwaysPrepareClasses = map[string]bool{"Clérigo": true, "Druida": true}
-
-type augmentPick struct {
-	AugmentIndex int `json:"augmentIndex"`
-	Stacks       int `json:"stacks"`
-}
+// O `AugmentPick` mora no `sheet` desde a ALE-278: a cena o lê dos sinais e
+// este arquivo o consome ao cobrar o PM.
 
 type castResult struct {
 	MpCurrent        int64   `json:"mpCurrent"`
@@ -39,7 +31,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 	}
 	catalogSpellID := chi.URLParam(r, "catalogSpellId")
 	var body struct {
-		Augments []augmentPick `json:"augments"`
+		Augments []sheet.AugmentPick `json:"augments"`
 	}
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
@@ -80,7 +72,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 // Devolve o PM que sobrou e uma frase de recusa quando a regra barra — a frase é
 // para um humano ler numa tela, e não um `FieldErrorMap` para um cliente.
 func (s *Server) castSpellForCharacter(
-	r *http.Request, dto sheet.CharacterDTO, catalogSpellID string, augments []augmentPick,
+	r *http.Request, dto sheet.CharacterDTO, catalogSpellID string, augments []sheet.AugmentPick,
 ) error {
 	spell, known := catalog.LookupSpell(catalogSpellID)
 	if !known {
@@ -90,11 +82,11 @@ func (s *Server) castSpellForCharacter(
 	if learned == nil {
 		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
 	}
-	if requiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
+	if sheet.RequiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
 		return fmt.Errorf("prepare a magia antes de conjurá-la")
 	}
 	augmentPm, augErr := validateAugments(spell, augments,
-		highestCastableCircle(dto.Classes, spell.Circle))
+		sheet.HighestCastableCircle(dto.Classes, spell.Circle))
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
@@ -102,7 +94,7 @@ func (s *Server) castSpellForCharacter(
 	if err != nil {
 		return err
 	}
-	basePm := spellBasePmCost[spell.Circle]
+	basePm := sheet.SpellBasePmCost[spell.Circle]
 	totalPm := s.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
 	minPm := s.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
 	limit := s.catalogs.SpellPmLimitFor(ec, spell.Classes)
@@ -129,28 +121,6 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 	return nil
 }
 
-// requiresPreparation ports the same helper: Clérigo/Druida always prepare, and
-// an Arcanista on the "mago" caminho does.
-func requiresPreparation(classes []sheet.ClassDTO, classChoicesRaw string) bool {
-	hasArcanista := false
-	for _, c := range classes {
-		if alwaysPrepareClasses[c.ClassName] {
-			return true
-		}
-		if c.ClassName == "Arcanista" {
-			hasArcanista = true
-		}
-	}
-	if !hasArcanista {
-		return false
-	}
-	var choices map[string]struct {
-		Caminho string `json:"caminho"`
-	}
-	_ = json.Unmarshal([]byte(classChoicesRaw), &choices)
-	return choices["Arcanista"].Caminho == "mago"
-}
-
 // validateAugments confere os aprimoramentos escolhidos e devolve o PM deles,
 // ou a frase da recusa.
 //
@@ -159,7 +129,7 @@ func requiresPreparation(classes []sheet.ClassDTO, classChoicesRaw string) bool 
 // esse limite existia só na tela. A tabela que o decide vivia só no TypeScript,
 // então o servidor nem tinha como perguntar — e um pedido montado à mão
 // conjurava o que a regra não permite. Travar na UI é UX; a fronteira é aqui.
-func validateAugments(spell catalog.Spell, picks []augmentPick, castableCircle int) (int, string) {
+func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, castableCircle int) (int, string) {
 	if len(picks) == 0 {
 		return 0, ""
 	}

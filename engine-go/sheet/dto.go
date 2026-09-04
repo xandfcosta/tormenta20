@@ -1,6 +1,7 @@
 package sheet
 
 import (
+	"encoding/json"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/plataforma"
@@ -149,4 +150,52 @@ func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 		PowerUses:     []PowerUseDTO{},
 		Stances:       []StanceDTO{},
 	}
+}
+
+// MarshalStrings codifica uma lista de strings em JSON, normalizando o NULO
+// (ausente, ou `null` no JSON) para `"[]"` em vez do `"null"` do Go.
+//
+// A normalização é o ponto: a coluna guarda o que o `JSON.stringify` do
+// navegador produziria, e `null` ali faria o cliente ler ausência onde há lista
+// vazia. Ela veio do `api` na ALE-278 porque a cena da ficha e o hospedeiro
+// gravam a mesma coluna — é a forma do DADO, e é aqui que a forma mora.
+func MarshalStrings(p *[]string) string {
+	if p == nil {
+		return "[]"
+	}
+	b, err := json.Marshal(*p)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
+}
+
+// UnmarshalStrings é o caminho de VOLTA do `MarshalStrings`: a coluna de blob
+// virando a lista de ids.
+//
+// Blob TORTO vira lista vazia, e não erro: essas colunas são `string[]` cru, e a
+// ficha inteira não pode deixar de abrir porque uma linha do banco está errada.
+// Sem nada escolhido é um estado legítimo — um arcanista de nível 1 chega perto
+// disso —, então a degradação é para um estado que a tela sabe desenhar.
+//
+// Ela nasceu na ALE-278 apagando TRÊS cópias deste corpo — as escolhas de poder,
+// as condições ativas e as proficiências, cada uma com o mesmo `Unmarshal` e o
+// mesmo `return nil`. A ida e a volta ficam juntas pelo mesmo motivo que as do
+// `plataforma.NullToPtr`: separadas, elas divergem.
+func UnmarshalStrings(blob string) []string {
+	var ids []string
+	if json.Unmarshal([]byte(blob), &ids) != nil {
+		return nil
+	}
+	return ids
+}
+
+// AugmentPick é um aprimoramento escolhido ao conjurar, e quantas vezes.
+//
+// Ele atravessa a fronteira porque a CENA o lê dos sinais do Datastar e o
+// HOSPEDEIRO o consome ao cobrar o PM — a mesma forma nos dois lados, e uma
+// segunda declaração seria a cópia que diverge.
+type AugmentPick struct {
+	AugmentIndex int `json:"augmentIndex"`
+	Stacks       int `json:"stacks"`
 }

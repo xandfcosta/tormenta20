@@ -230,7 +230,7 @@ func (s Scene) writeAttributes(w http.ResponseWriter, r *http.Request, v attribu
 
 // stepFromURL aceita o sinal de menos: o passo é para os dois lados.
 //
-// CÓPIA consciente do `piloto_ficha_routes.go`. A forja e a ficha leem o passo
+// CÓPIA consciente do `routes.go` da ficha. A forja e a ficha leem o passo
 // de rotas diferentes, e pedi-lo pela porta seria pôr sete linhas de parse numa
 // interface — mais acoplamento que duplicação.
 func stepFromURL(r *http.Request) (int, error) {

@@ -317,7 +317,7 @@ func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
 	if recusado.Code != http.StatusOK {
 		t.Fatalf("a recusa veio em %d — o Datastar descarta remendo que não é 2xx", recusado.Code)
 	}
-	if frase := aRecusaDaCena(recusado.Body.String()); !strings.Contains(frase, "compra de pontos") {
+	if frase := sceneRefusal(recusado.Body.String()); !strings.Contains(frase, "compra de pontos") {
 		t.Errorf("a cena não disse por que recusou: %q", frase)
 	}
 
