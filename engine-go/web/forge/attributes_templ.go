@@ -396,7 +396,7 @@ func buttonFits(linha attributeRow, passo int) bool {
 
 // attributePost monta o comando. Ele não carrega estado nenhum na URL — esta
 // cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
-// `oPostDaFicha`.
+// `sheetPost`.
 func attributePost(id int64, chave string, passo int) string {
 	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, chave, passo)
 }

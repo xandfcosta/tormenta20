@@ -142,7 +142,7 @@ func escolhidosDosSinais(r *http.Request) (tabuleiro.EntrySelection, error) {
 
 // ---------------------------------------------------------------------------
 // As expressões que o navegador roda. Elas moram aqui e não no `.templ` para o
-// desenho ficar legível — é a mesma divisão do `escolheOPincel`.
+// desenho ficar legível — é a mesma divisão do `takesBrush`.
 
 // listaDeIDs escreve os ids do jeito que o sinal os guarda.
 func listaDeIDs(ids []string) string { return strings.Join(ids, ",") }

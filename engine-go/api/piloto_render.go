@@ -27,7 +27,7 @@ var pilotoFS embed.FS
 // WritePage renderiza uma tela inteira do piloto direto na resposta.
 //
 // O corpo entra como `templ.Component` e não como HTML já renderizado. É a
-// diferença que a ALE-227 comprou: antes eram DUAS passadas — `renderFragmento`
+// diferença que a ALE-227 comprou: antes eram DUAS passadas — `ui.RenderFragment`
 // devolvia uma string, ela virava `template.HTML` (a anotação "confie em mim")
 // e só então entrava no layout — porque o `html/template` não sabe invocar um
 // sub-template por nome dinâmico. Agora quem compõe é o compilador, e não há

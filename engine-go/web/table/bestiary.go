@@ -113,7 +113,7 @@ func signalsDraft(r *http.Request) string {
 
 // handleKindBestiaryTable liga ou desliga um crachá de tipo.
 //
-// Espelha o `handleBestiarioTipo` da cena do mestre; o que muda é o que ele
+// Espelha o `handleBestiaryType` da cena do mestre; o que muda é o que ele
 // remenda. Não dá para reusar aquele porque ele responde com a cena inteira.
 func (s Scene) handleKindBestiaryTable(w http.ResponseWriter, r *http.Request) {
 	campaignID, sessionID, ok := s.tableGmOrRefusal(w, r)

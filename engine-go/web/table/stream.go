@@ -150,7 +150,7 @@ func PushForMap(s Scene, sse *datastar.ServerSentEventGenerator, sessionID, user
 // readerInterests diz o que este stream quer receber: a mesa, sempre; a
 // ficha, só de quem tem uma aqui.
 //
-// Uma LISTA e não um canal nulo. Aqui morava o `assinaAFichaDoLeitor`, que
+// Uma LISTA e não um canal nulo. Aqui morava o `readerInterests`, que
 // devolvia `nil` para o mestre porque um canal nulo num `select` nunca dispara —
 // era o truque certo para a forma antiga, e ele deixou de ser necessário: não
 // pedir o interesse é dizer a mesma coisa sem precisar que o leitor conheça o

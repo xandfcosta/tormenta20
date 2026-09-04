@@ -34,7 +34,7 @@ import "t20engine/web/ui"
 //
 // `data-nav-skip` porque o painel da ficha é uma REGIÃO de layout `column` com
 // UM item, e é isso que faz a vertical ROLAR o bloco em vez de andar (ver o
-// comentário da região em `cenaDoBestiario`). O driver de teclado coleta
+// comentário da região em `bestiaryScene`). O driver de teclado coleta
 // `a[href]`, então sem esta marca um segundo item nasceria aqui e a seta para
 // baixo passaria a saltar para o link em vez de rolar a ficha. O Tab continua
 // chegando, que é o caminho certo para um atalho de saída. Nos catálogos vale o

@@ -308,7 +308,7 @@ func endBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	}
 	// `nil` é a mensagem "esta sessão não tem tabuleiro", e ela só é VERDADE
 	// quando não sobrou nenhum. Sobrando, quem vai é a aba padrão — ver
-	// `publicaOQueSobrou`.
+	// `PublishWhatIsLeft`.
 	st.deps.PublishWhatIsLeft(c.R.Context(), c.SessionID)
 	return nil, nil
 }

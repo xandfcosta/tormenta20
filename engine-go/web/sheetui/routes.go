@@ -151,7 +151,7 @@ func insideSessionAsked(r *http.Request) bool {
 
 // sheetCommand é o gateway das mutações da ficha.
 //
-// Ele existe pela mesma razão do `comandoDoTabuleiro`: resolver a posse, mutar e
+// Ele existe pela mesma razão do `boardCommand`: resolver a posse, mutar e
 // redesenhar são três passos que toda mutação da ficha faz, e escrevê-los em
 // cada handler é como um deles esquece de redesenhar — a pessoa clica, o banco
 // muda e a tela fica igual.

@@ -12,7 +12,7 @@ import (
 
 // itemScreenSheet acha um item pelo nome, para o teste não guardar ids.
 // A FICHA DO ITEM oferece os lugares ALCANÇÁVEIS, e só eles.
-// oFichaDoItemNaTela recorta o diálogo de UM item pelo rótulo dele.
+// itemScreenSheet recorta o diálogo de UM item pelo rótulo dele.
 func itemScreenSheet(tela, nome string) string {
 	inicio := strings.Index(tela, `aria-label="`+nome+`"`)
 	if inicio < 0 {

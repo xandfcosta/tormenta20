@@ -259,7 +259,7 @@ func (s *Server) handleEndSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// A RECUSA do "planejada" continua sendo 400, e a mensagem mudou de língua
-	// junto com a extração — ela agora sai do `EncerraASessao`, que é quem
+	// junto com a extração — ela agora sai do `EndSession`, que é quem
 	// conhece a regra. O status é o mesmo de antes.
 	updated, err := s.EndSession(r.Context(), sess)
 	if err != nil {

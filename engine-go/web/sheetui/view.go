@@ -158,7 +158,7 @@ func Tabs() []Tab {
 
 // AskedTab resolve o que veio na URL contra as sete que existem.
 //
-// DUAS traduções de endereço antigo, herdadas do `resolveSheetTab` da SPA:
+// DUAS traduções de endereço antigo, herdadas do `AskedTab` da SPA:
 // `inventory` e `equipment` viram `bag`. Elas existem porque a Mochila já se
 // chamou assim, e um favorito daquela época não pode cair numa aba que não
 // existe — cair no padrão seria abrir a ficha noutra seção sem dizer por quê.
@@ -179,7 +179,7 @@ func AskedTab(bruto string) string {
 // Load busca o personagem e computa a ficha.
 //
 // A POSSE é conferida como em toda rota de personagem: quem não é dono não
-// abre. O `characterOwnedBy` é o mesmo gargalo que a API JSON usa — a cena não
+// abre. O `characterFor` é o mesmo gargalo que a API JSON usa — a cena não
 // ganha uma segunda regra sobre quem pode ver a ficha de quem.
 // Load monta a ficha de um personagem para desenhar.
 //

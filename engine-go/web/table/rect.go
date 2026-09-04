@@ -103,7 +103,7 @@ func openIsLasso() string {
 // lassoStyle põe o retângulo na tela, em QUADRADOS do plano.
 //
 // `min` e `+1` porque o retângulo inclui as duas casas das pontas e o dedo pode
-// arrastar para qualquer lado — a mesma regra que o `CasasDoRetangulo` aplica do
+// arrastar para qualquer lado — a mesma regra que o `RectangleSquares` aplica do
 // lado do servidor, e é de propósito que as duas existam: esta desenha o que
 // aquela vai fazer, e uma promessa que não bate com o resultado é pior que não
 // desenhar nada.

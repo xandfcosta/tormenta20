@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 // SheetTitle é a cabeça iluminada de uma folha do tomo: sobrancelha pequena,
 // título em versalete DOURADO e centrado, e um filete dourado embaixo.
 //
-// Portado do `TomeHeading` depois de comparar as duas telas lado a lado — a
+// Portado do `ui.SheetTitle` depois de comparar as duas telas lado a lado — a
 // minha primeira versão saiu alinhada à esquerda, na cor do texto comum e sem
 // filete, o que já não era a mesma página do mesmo livro.
 //

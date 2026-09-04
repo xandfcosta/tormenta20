@@ -138,7 +138,7 @@ func Button(v Variant, t Size, extra string, attrs templ.Attributes) templ.Compo
 }
 
 // campo é um input rotulado com as mensagens de validação embaixo — a forma que
-// TODO campo de formulário deste app tem (`TextField` + `FieldFrame`).
+// TODO campo de formulário deste app tem (`TextField` + `PanelFrame`).
 //
 // O `Nome` é o `id` E o `name`, porque é ele que liga o `<label for>` ao
 // controle; um rótulo sem controle é o defeito que essa amarração previne.
@@ -547,7 +547,7 @@ func SceneTitle(titulo, kicker string) templ.Component {
 	})
 }
 
-// TextArea é o irmão do `campoDeTexto` para texto de vários parágrafos
+// TextArea é o irmão do `ui.TextField` para texto de vários parágrafos
 // (ALE-246). Mesma gramática de rótulo, erro e dica — o que muda é só o
 // elemento e a altura.
 //
@@ -777,7 +777,7 @@ func TextArea(c Field, linhas int) templ.Component {
 }
 
 // TomeSheet é uma FOLHA do grimório aberta: a capa de couro segurando uma
-// página que preenche a cena (ALE-246, portado do `TomePage`).
+// página que preenche a cena (ALE-246, portado do `ui.TomeSheet`).
 //
 // Toda cena de campanha é página do mesmo livro — a crônica que se lê, a folha
 // em branco que se escreve, e a carta de convite enfiada nela.
@@ -900,7 +900,7 @@ func SectionLabel(tom string, extra string) templ.Component {
 }
 
 // SectionLabelClasses é a mesma receita para quem precisa dela no PRÓPRIO elemento —
-// um `<h4>`, um `<caption>`, um `<summary>`. Mesma forma do `classesDoBotao`.
+// um `<h4>`, um `<caption>`, um `<summary>`. Mesma forma do `ui.ButtonClasses`.
 func SectionLabelClasses(tom, extra string) string {
 	return Join("text-2xs font-semibold uppercase tracking-[0.16em] "+SectionLabelTone(tom), extra)
 }

@@ -62,7 +62,7 @@ func handleFinder(w http.ResponseWriter, r *http.Request) {
 // finderTerm lê o que foi digitado: do SINAL quando o Datastar chama, da
 // URL quando alguém abre o endereço à mão.
 //
-// Ponteiro para separar "não veio" de "veio vazio", como o `criteriosDoAcervo`:
+// Ponteiro para separar "não veio" de "veio vazio", como o `finderTerm`:
 // apagar a busca é gesto legítimo, e tratá-lo como ausência ressuscitaria o
 // termo anterior.
 func finderTerm(r *http.Request) string {

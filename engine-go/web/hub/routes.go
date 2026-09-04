@@ -61,7 +61,7 @@ func (s Scene) handleHubInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": internalNotice})
 		return
 	}
-	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `conviteGerado`.
+	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `ui.MintedInvite`.
 	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+invite.Token))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": internalNotice})

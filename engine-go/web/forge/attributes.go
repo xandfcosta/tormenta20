@@ -187,7 +187,7 @@ func (s Scene) loadAttributes(r *http.Request, recusa string) (attributesView, i
 //
 // Os dois botões são desligados pela MESMA regra que recusaria o clique — a
 // pergunta é feita ao motor com o espalhamento hipotético. Travar na tela é
-// conveniência; quem recusa de verdade é o servidor, no `mexeNoAtributo`.
+// conveniência; quem recusa de verdade é o servidor, no `stepAttribute`.
 func attributeRowOf(
 	chave string, espalhamento map[string]int, sheet engine.ComputedSheetV2, gasto int,
 ) attributeRow {

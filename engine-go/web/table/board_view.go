@@ -584,7 +584,7 @@ func moveTerrain(b *tabuleiro.BoardState) engine.MoveTerrain {
 // cancela antes de pegar outra.
 //
 // A pergunta é respondida pelo `tabuleiro` e não aqui: quem sabe se é a vez, se
-// a peça é sua e quanto sobra de deslocamento é o `PodeMover`, que é o mesmo
+// a peça é sua e quanto sobra de deslocamento é o `tabuleiro.CanMove`, que é o mesmo
 // `assertMovable` que a escrita usa. Perguntar de outro jeito na TELA é como
 // nasce um botão que existe e o servidor recusa.
 //

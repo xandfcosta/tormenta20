@@ -144,7 +144,7 @@ func automaticOwnership(
 // chosenPowers lê o blob `classChoices` — o caminho do arcanista, o deus
 // do clérigo. Blob torto vira mapa vazio: a aba não pode deixar de abrir porque
 // uma linha do banco está errada.
-// osPoderesEscolhidos são os ids da coluna `classPowers` — poder de classe,
+// chosenPowers são os ids da coluna `classPowers` — poder de classe,
 // poder geral ou poder da Tormenta, nessa ordem de busca.
 func chosenPowers(dto sheet.CharacterDTO) []ownedPower {
 	var ids []string
@@ -245,7 +245,7 @@ func savedAncestry(blob string) string {
 	return escolha.Ascendencia
 }
 
-// osBeneficiosQueAOrigemOferece são os benefícios MAIS o poder único.
+// sheet.OriginBenefitsOf são os benefícios MAIS o poder único.
 //
 // O catálogo guarda o poder único num campo à parte, e a ficha o trata como um
 // dos dois que a pessoa leva (p85) — a SPA já os juntava assim. Sem isso o poder
