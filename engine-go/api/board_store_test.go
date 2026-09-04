@@ -29,7 +29,7 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
 	abre(t, s, sid, "Taverna do Javali", "taverna")
-	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	s.boards.Persist(ctx, sid, defaultTab)
@@ -64,7 +64,7 @@ func TestSessionWithoutBoardStaysWithout(t *testing.T) {
 	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
 		t.Errorf("sessão nova já veio com tabuleiro: %+v", b)
 	}
-	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ninguém"}, false); err == nil {
+	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ninguém"}); err == nil {
 		t.Error("pôs peça num tabuleiro que não existe")
 	}
 }
@@ -101,7 +101,7 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	taverna := abre(t, s, sid, "Taverna", "taverna")
-	if _, err := s.boards.AddToken(ctx, sid, taverna.ID, tabuleiro.BoardToken{Label: "Bandido"}, false); err != nil {
+	if _, err := s.boards.AddToken(ctx, sid, taverna.ID, tabuleiro.BoardToken{Label: "Bandido"}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
 
@@ -145,7 +145,7 @@ func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	taverna := abre(t, s, sid, "Taverna", "taverna")
 	cripta := abre(t, s, sid, "Cripta", "pedra")
-	if _, err := s.boards.AddToken(ctx, sid, cripta.ID, tabuleiro.BoardToken{Label: "Ogro", X: 7, Y: 7}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sid, cripta.ID, tabuleiro.BoardToken{Label: "Ogro", X: 7, Y: 7}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
 	s.boards.Persist(ctx, sid, taverna.ID)
@@ -296,7 +296,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
 	abre(t, s, sid, "Cripta", "pedra")
-	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 1, Y: 1}, true); err != nil {
+	if _, err := s.boards.AddToken(ctx, sid, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	s.boards.Persist(ctx, sid, defaultTab)

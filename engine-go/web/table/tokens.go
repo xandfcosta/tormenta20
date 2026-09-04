@@ -236,7 +236,7 @@ func newLoosePiece(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	return st.deps.Boards().AddToken(c.R.Context(), c.SessionID, c.TabuleiroID, tabuleiro.BoardToken{
 		Label: desenho.Nome, Kind: desenho.Aparencia, Footprint: desenho.Tamanho,
 		X: casa.X, Y: casa.Y,
-	}, true)
+	})
 }
 
 // loosePieceDraft é o que o mestre escolhe na tira: o nome, o tamanho e a

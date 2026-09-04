@@ -349,15 +349,21 @@ func (bs *BoardStore) applyLocked(
 	return cloneBoard(b), nil
 }
 
-// AddToken põe a peça no tabuleiro. Sem posição declarada, ela nasce no
-// primeiro quadrado livre da fileira de entrada — senão duas peças criadas
-// seguidas ficariam uma em cima da outra (ALE-166).
-func (bs *BoardStore) AddToken(ctx context.Context, sessionID int64, tabuleiroID string, t BoardToken, temPosicao bool) (*BoardState, error) {
+// AddToken põe a peça no tabuleiro, NA CASA que ela traz.
+//
+// Aqui morava um `temPosicao bool` e, atrás dele, o `nextFreeSpot`: sem posição
+// declarada a peça nascia no primeiro quadrado livre da fileira de entrada,
+// senão duas criadas seguidas ficariam uma em cima da outra (ALE-166). Os dois
+// saíram na ALE-291, e o motivo é que a CAUSA saiu.
+//
+// A regra existia porque o "+ Peça" da ALE-178 não tinha onde pôr a peça — ela
+// nascia e o mestre arrastava. O gesto que finalmente chegou POSICIONA: o modo
+// liga, o clique numa casa diz onde, e a coordenada viaja no caminho. Com
+// posição sempre declarada, o ramo sem posição deixou de ter como acontecer, e
+// um parâmetro que só um valor alcança é um parâmetro que mente sobre a escolha
+// que oferece.
+func (bs *BoardStore) AddToken(ctx context.Context, sessionID int64, tabuleiroID string, t BoardToken) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
-		if !temPosicao {
-			spot := nextFreeSpot(b)
-			t.X, t.Y = spot.x, spot.y
-		}
 		return AddToken(b, t, bs.newID)
 	})
 }

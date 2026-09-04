@@ -9,37 +9,19 @@ import "t20engine/plataforma"
 // jogo. A linha do glossário sobre `plataforma` diz exatamente isto — se um
 // conceito do jogo entrar lá, a fronteira está errada.
 
-// ParseBoardToken lê a peça do corpo da mensagem. Posição ausente vira o
-// primeiro quadrado livre da fileira de entrada — antes era (0,0) fixo, e com o
-// "+ Peça" da ALE-178 duas peças criadas seguidas nasciam UMA EM CIMA DA OUTRA
-// (ALE-166).
-func ParseBoardToken(body map[string]any) (BoardToken, bool) {
-	token := BoardToken{
-		Label: plataforma.StringField(body, "label"),
-		Kind:  plataforma.StringField(body, "kind"),
-	}
-	x, temX := plataforma.IntField(body, "x")
-	y, temY := plataforma.IntField(body, "y")
-	if temX {
-		token.X = int(x)
-	}
-	if temY {
-		token.Y = int(y)
-	}
-	if footprint, ok := plataforma.IntField(body, "footprint"); ok {
-		token.Footprint = int(footprint)
-	}
-	if entryID := plataforma.StringField(body, "entryId"); entryID != "" {
-		token.EntryID = &entryID
-	}
-	if characterID, ok := plataforma.IntField(body, "characterId"); ok {
-		token.CharacterID = &characterID
-	}
-	if hidden, ok := body["hidden"].(bool); ok {
-		token.Hidden = hidden
-	}
-	return token, temX && temY
-}
+// Aqui morava o `ParseBoardToken`, que lia a peça do CORPO da mensagem — e que
+// nunca teve chamador, nem de produção nem de teste (ALE-291).
+//
+// Ele foi escrito para o "+ Peça" da ALE-178, e o gesto não veio. Quando ele
+// finalmente chegou, veio com outra forma: a posição vai no CAMINHO e não no
+// corpo, pela razão que o `quadradoDoCaminho` registra — coordenada negativa é
+// lugar legítimo, e o valor tem de ser o do clique que aconteceu, não o de um
+// estado que outro gesto poderia ter mexido. O resto (nome, tamanho, aparência)
+// chega pelos sinais da tira, já tipado.
+//
+// Ressuscitá-lo exigiria montar um `map[string]any` sintético só para tornar a
+// devolver os mesmos campos — cerimônia sobre uma função escrita para um pedido
+// que este desenho não faz.
 
 // ParseTokenPatch lê só os campos PRESENTES: ausente é "não mexa", não "zere".
 func ParseTokenPatch(raw any) tokenPatch {

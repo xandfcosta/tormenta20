@@ -13,7 +13,7 @@ func (f pilotoFixture) onBoard(t *testing.T) string {
 	f.seedOpenBoard(t, "pedra")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID, CharacterID: &f.charID}, true)
+		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID, CharacterID: &f.charID})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
@@ -118,7 +118,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Ogro", X: 5, Y: 5}, true)
+		tabuleiro.BoardToken{Label: "Ogro", X: 5, Y: 5})
 	if err != nil {
 		t.Fatalf("pôr o Ogro: %v", err)
 	}

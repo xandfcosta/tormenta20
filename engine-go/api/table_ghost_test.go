@@ -15,7 +15,7 @@ func (f pilotoFixture) onBoardAt(t *testing.T, x, y int) string {
 	f.seedOpenBoard(t, "pedra")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Arcanista", X: x, Y: y, EntryID: &entryID, CharacterID: &f.charID}, true)
+		tabuleiro.BoardToken{Label: "Arcanista", X: x, Y: y, EntryID: &entryID, CharacterID: &f.charID})
 	if err != nil {
 		t.Fatalf("pôr a peça em %d,%d: %v", x, y, err)
 	}

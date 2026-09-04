@@ -51,11 +51,11 @@ func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}, true); err != nil {
+		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "avista", Label: "Arwen", X: 1, Y: 1}, true); err != nil {
+		tabuleiro.BoardToken{ID: "avista", Label: "Arwen", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça à vista: %v", err)
 	}
 
@@ -86,7 +86,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 	entryID := f.tracker(t)
 	f.seedOpenBoard(t, "pedra")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}, true); err != nil {
+		tabuleiro.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
@@ -179,7 +179,7 @@ func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 	avisou("abrir o tabuleiro", events.BoardOpened{})
 
 	drenar()
-	if _, err := bs.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}, true); err != nil {
+	if _, err := bs.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	avisou("pôr uma peça (pelo apply)", events.BoardChanged{})
@@ -200,7 +200,7 @@ func TestARefusedMutationTellsNobody(t *testing.T) {
 	sub, parar := f.s.tableHost().Bus().Subscribe(events.OfSession(sessao))
 	defer parar()
 	// SEM tabuleiro aberto: o `apply` recusa antes de mexer em nada.
-	if _, err := f.s.tableHost().Boards().AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}, true); err == nil {
+	if _, err := f.s.tableHost().Boards().AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}); err == nil {
 		t.Fatal("pôr peça sem tabuleiro devia recusar; sem a recusa este teste não mede nada")
 	}
 	select {
@@ -234,7 +234,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 	// estado devolvido em vez de assumido — a primeira versão deste teste
 	// assumiu "p" e morreu em `peça "p" não está no tabuleiro`.
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true)
+		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
@@ -330,7 +330,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true); err != nil {
+		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 
@@ -426,7 +426,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Dragão", X: 3, Y: 3}, true); err != nil {
+		tabuleiro.BoardToken{Label: "Dragão", X: 3, Y: 3}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	if _, _, err := f.s.tableHost().Boards().SetCurtain(context.Background(), f.sessionID, defaultTab, true); err != nil {
