@@ -35,7 +35,7 @@ import (
 //
 // Os campos são PONTEIROS para separar "não veio" de "veio vazio". Apagar a
 // busca é gesto legítimo, e tratá-lo como ausência ressuscitaria o termo
-// anterior — é a mesma decisão do `termoDoBuscador`.
+// anterior — é a mesma decisão do `finderTerm`.
 type Signals struct {
 	Busca *string `json:"busca"`
 	// NovaPericia e NovoAtributo são os dois campos do diálogo de ofício novo.

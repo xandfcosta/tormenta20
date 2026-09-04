@@ -101,7 +101,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view.MinhaFicha = s.tablePlayerSheet(r, view)
-	// A página é um retrato de agora, e o `escrevePagina` já a manda `no-store`:
+	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),

@@ -120,7 +120,7 @@ const followsView = "$arrastandoavista && ($vistax = $vistainix - evt.clientX, "
 
 const dropView = "$arrastandoavista = false"
 
-// viewportMoveWheel: a roda ROLA o plano, e `Ctrl+roda` amplia.
+// wheelMovesViewport: a roda ROLA o plano, e `Ctrl+roda` amplia.
 //
 // É a mesma divisão de antes, quando havia rolagem nativa — a roda percorria o
 // mapa e o `Ctrl` ampliava (convenção de mapa). O que muda é que agora a roda

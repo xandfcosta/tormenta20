@@ -87,7 +87,7 @@ func TestTheSearchIsAnAddress(t *testing.T) {
 
 // TestAnInventedTypeIsRefusedByTheGesture: no POST a recusa é DURA, porque ali
 // alguém está agindo. Na URL o tipo desconhecido é só descartado — ver
-// `tiposConhecidos`.
+// `creatureTiposNaOrdem`.
 func TestAnInventedTypeIsRefusedByTheGesture(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")

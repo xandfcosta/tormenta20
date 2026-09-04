@@ -11,7 +11,7 @@ import "testing"
 
 // TestTheNearlyEqualGapFitsInTwoLetters.
 //
-// PROVADO VERMELHO: a primeira versão do `buracoAte` devolvia `len(letras)+1`
+// PROVADO VERMELHO: a primeira versão do `noMatch` devolvia `len(letras)+1`
 // quando o alvo não casava, e num resto de UMA letra isso é 2 — dentro da folga.
 // O efeito medido: "abal" casava com "Naja" pelo último "a", e a busca por nome
 // devolvia 282 entradas em vez de uma. Sentinela calculado a partir da entrada é

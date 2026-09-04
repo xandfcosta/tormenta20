@@ -32,7 +32,7 @@ func (s Scene) RoutesNote(r chi.Router) {
 //
 // O NOME DO SINAL É TODO MINÚSCULO porque ele é usado como CHAVE de atributo
 // (`data-bind:notas`), e o analisador de HTML minuscula chave — um
-// `data-bind:notasDaSessao` chegaria como `notasdasessao` e ligaria um sinal
+// `data-bind:notesSignals` chegaria como `notasdasessao` e ligaria um sinal
 // NOVO, com o servidor lendo o antigo para sempre vazio. Já custou uma sessão
 // inteira no descanso de dia.
 type notesSignals struct {

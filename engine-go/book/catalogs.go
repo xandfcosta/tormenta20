@@ -39,7 +39,7 @@ type SpellAugment struct {
 	Description string `json:"description"`
 }
 
-// nomeDoTipoDeAprimoramento: o livro separa o que AUMENTA um efeito do que o
+// AugmentKindName: o livro separa o que AUMENTA um efeito do que o
 // MUDA, e a diferença importa na hora de gastar mana.
 func AugmentKindName(kind string) string {
 	if kind == "aumenta" {
@@ -368,12 +368,12 @@ var (
 	acervo       GMCatalogs
 )
 
-// nomeDoDeus resolve o id que o poder divino guarda ("lin-wu") no nome que se lê.
+// GodName resolve o id que o poder divino guarda ("lin-wu") no nome que se lê.
 //
-// Lê o catálogo DIRETO e não pelo `catalogosDoPersonagem`, e isto é conserto de
+// Lê o catálogo DIRETO e não pelo `CharacterCatalogs`, e isto é conserto de
 // um DEADLOCK que pendurou a suíte inteira sem erro nenhum: aquele carregador
-// tem um `sync.Once` que chama o `poderesAchatados` para contar os poderes de
-// cada classe, e o `poderesAchatados` chamava de volta o `catalogosDoPersonagem`
+// tem um `sync.Once` que chama o `FlattenedPowers` para contar os poderes de
+// cada classe, e o `FlattenedPowers` chamava de volta o `CharacterCatalogs`
 // daqui. `Once` reentrante trava para sempre — não é pânico, não é teste
 // vermelho: é o processo parado.
 //
@@ -452,7 +452,7 @@ func WithSign(n int) string {
 // morto — o mestre lia "Medo" e tinha de ir procurar o que era.
 //
 // O elo leva para a MESMA cena com a entrada filtrada
-// (`destinoNoAcervo`), que é o endereço que o buscador já usa. Nenhuma
+// (`routes.MasterSearch`), que é o endereço que o buscador já usa. Nenhuma
 // superfície nova: a entrada aparece sozinha na aba dela, e o botão do livro
 // está ao lado se a pessoa quiser o texto completo.
 //

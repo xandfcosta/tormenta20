@@ -33,7 +33,7 @@ func (s Scene) MarkerRoutes(r chi.Router) {
 
 // marcaOLugar põe um marcador novo na casa clicada.
 //
-// A LETRA vem do motor (`ProximaLetraDeMarcador`) e não da tela: na SPA era o
+// A LETRA vem do motor (`NextMarkerLetter`) e não da tela: na SPA era o
 // cliente que escolhia "A", "B", "C" e mandava pronto, e duas telas escolhendo
 // letra por conta própria é como nasce o segundo "C" no mesmo mapa.
 func marcaOLugar(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {

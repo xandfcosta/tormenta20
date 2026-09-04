@@ -168,7 +168,7 @@ func responseDraft(t *testing.T, resposta string) map[string]any {
 // parâmetro `datastar` com o JSON inteiro.
 //
 // A primeira versão deste teste usava query params soltos (`?criatura=zumbi`), e
-// eles NÃO são a mesma coisa: o `criteriosDoPedido` lê os dois, mas o
+// eles NÃO são a mesma coisa: o `master.BestiaryCriteriaFromRequest` lê os dois, mas o
 // `rascunhode` só existe como sinal — então o teste mandava um pedido que o
 // navegador nunca manda, e o painel semeava por não achar o rascunho. O teste
 // acusou o código por um defeito que era dele.

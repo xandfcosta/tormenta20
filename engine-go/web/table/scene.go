@@ -33,7 +33,7 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	r.Post(base+"/lugares/{placeId}/remover", s.gmBoardCommand(removeOLugar))
 	// O TRAÇO e não o ponto (ALE-203): as duas rotas recebem de ONDE ATÉ ONDE o
 	// dedo andou desde o aviso anterior do ponteiro. Um clique parado manda o
-	// mesmo par duas vezes, que é um traço de uma casa. Ver `tabuleiro.CasasDoTraco`.
+	// mesmo par duas vezes, que é um traço de uma casa. Ver `tabuleiro.StrokeSquares`.
 	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.gmContinuousCommand(paintTerrain))
 	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.gmContinuousCommand(clearTerrain))
 	// O RETÂNGULO (ALE-203, item 10): os mesmos dois cantos, outra FORMA. Rota
@@ -88,7 +88,7 @@ func clearTerrain(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 
 // fillRect e clearRect são os irmãos de área dos dois de cima.
 //
-// Eles chamam as MESMAS gravações (`PintaOTraco`, `LimpaOTraco`) — o nome fala em
+// Eles chamam as MESMAS gravações (`PaintStroke`, `ClearStroke`) — o nome fala em
 // traço porque foi ele que as pediu primeiro, e o que elas recebem sempre foi uma
 // lista de casas. Quem escolhe a forma é a rota.
 func fillRect(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
@@ -308,7 +308,7 @@ func endBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	}
 	// `nil` é a mensagem "esta sessão não tem tabuleiro", e ela só é VERDADE
 	// quando não sobrou nenhum. Sobrando, quem vai é a aba padrão — ver
-	// `publicaOQueSobrou`.
+	// `PublishWhatIsLeft`.
 	st.deps.PublishWhatIsLeft(c.R.Context(), c.SessionID)
 	return nil, nil
 }

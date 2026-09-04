@@ -86,7 +86,7 @@ func moveLegs(dobras []engine.Square, custos []int) []moveLeg {
 // orçamento é o `cutSpeed`, logo abaixo.
 //
 // A soma destes números é o custo total do movimento porque o
-// `engine.CaminhoPorParadas` concatena exatamente estes trechos, descartando a
+// `engine.PathThroughStops` concatena exatamente estes trechos, descartando a
 // emenda — a mesma decomposição, medida pela mesma função.
 func legsCosts(dobras []engine.Square, terreno engine.MoveTerrain) []int {
 	custos := make([]int, 0, len(dobras))

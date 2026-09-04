@@ -12,7 +12,7 @@ import (
 // motor e têm guarda de regra própria em `engine/load_rules_test.go`.
 
 // screenSaved é a aba desenhada.
-// oGuardadoDaTela recorta só a GRADE, e o recorte não é preciosismo: o nome de
+// screenSaved recorta só a GRADE, e o recorte não é preciosismo: o nome de
 // um item aparece também nos crachás da tira e em CADA diálogo de ficha de
 // item, que são desenhados logo depois do painel. Procurar na tela inteira
 // acharia justamente o que o filtro escondeu, e o teste passaria dizendo o

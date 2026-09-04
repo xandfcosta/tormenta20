@@ -1313,7 +1313,7 @@ func configTab(v oneView) templ.Component {
 }
 
 // O cadastro é o MESMO formulário da folha em branco, com outro verbo. Os dois
-// gravam pela mesma regra (`nomeDeCampanha` / `descricaoDeCampanha`), então
+// gravam pela mesma regra (`campaign.Name` / `campaign.Description`), então
 // "salvar" e "abrir" não podem discordar sobre o que é um nome válido.
 func campaignForm(v oneView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {

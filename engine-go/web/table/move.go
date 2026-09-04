@@ -64,7 +64,7 @@ func paraNoQuadrado(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 //
 // Reconstrói pelas paradas que sobraram em vez de cortar o fim do caminho: o
 // número de quadrados de um trecho não se deduz das paradas sem redesenhá-lo, e
-// redesenhar é o que o `CaminhoPorParadas` faz de graça.
+// redesenhar é o que o `PathThroughStops` faz de graça.
 func undoLastStop(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	tokenID := chi.URLParam(c.R, "tokenId")
 	paradas, err := st.paradasDaProposta(c, tokenID)

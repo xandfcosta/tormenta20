@@ -68,7 +68,7 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 
 // whoDragsInPreview monta o `Mover` de quem pergunta.
 //
-// O ORÇAMENTO da prévia sai do mesmo `PodeMoverCom` que o desenho usa, então
+// O ORÇAMENTO da prévia sai do mesmo `tabuleiro.CanMoveWith` que o desenho usa, então
 // quem não pode mover aquela peça recebe uma prévia sem faixas — e não uma
 // prévia mentindo o deslocamento de uma peça que não é dele.
 //

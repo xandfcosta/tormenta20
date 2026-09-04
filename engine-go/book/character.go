@@ -155,7 +155,7 @@ func ExpertiseFields(p Expertise) []string {
 
 // ── divindade ────────────────────────────────────────────────────────────────
 
-// deusDoLivro: o nome do tipo é `deus` porque é a palavra do livro e do dado
+// God: o nome do tipo é `deus` porque é a palavra do livro e do dado
 // (`deuses.json`, `paladinoEligible`), e não "divindade" — uma palavra por
 // conceito.
 type God struct {
@@ -234,7 +234,7 @@ func GodFields(d God) []string {
 }
 
 // TierName escreve o `tier` da raça. Fica com a palavra do DADO no
-// identificador, como `nomeDaCategoria` e `nomeDoTipo`, em vez de inventar uma
+// identificador, como `TierName` e `TypeName`, em vez de inventar uma
 // palavra nova em português para um conceito que a tela mostra só como
 // "Comum"/"Exótica" — o livro tem a seção "Raças Exóticas" e nada além disso.
 //
@@ -310,7 +310,7 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 // outra. Condição, magia, poder e item são consulta de MESA — o mestre abre no
 // meio do combate. Raça, classe e deus são consulta de CRIAÇÃO, e é por isso que
 // entram no fim da fileira de abas: a ordem das abas segue a frequência da
-// consulta, que é a razão registrada em `abasDoAcervo` desde a ALE-258.
+// consulta, que é a razão registrada em `collectionTabs` desde a ALE-258.
 //
 // A CLASSE é o caso especial e vale dizer o que ela NÃO tem: o catálogo dela
 // nasceu nesta issue com três campos — id, nome e página — porque ela existia só

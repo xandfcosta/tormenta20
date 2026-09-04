@@ -265,7 +265,7 @@ const abilityPlaceholder = "Faro apurado. Recebe +2 em testes de Percepção bas
 
 // Os TIPOS na ordem do trilho do bestiário, e não a do mapa de validação: mapa
 // não tem ordem, e uma lista de opções que se reordena a cada abertura é uma
-// lista que ninguém consegue usar. Reusar a `tiposDeCriatura` do bestiário é o
+// lista que ninguém consegue usar. Reusar a `creatureTiposNaOrdem` do bestiário é o
 // que faz o mestre encontrar "Morto-vivo" no mesmo lugar nas duas telas.
 var creatureTiposNaOrdem = book.CreatureTypes
 

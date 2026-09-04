@@ -108,7 +108,7 @@ type Member struct {
 	CharacterID int64
 	Nome        string
 	// Iniciais é o monograma do ELENCO no trilho do mestre (ALE-269) — a vaga
-	// do `CastRail` da SPA. O jogador continua lendo o nome inteiro no cartão.
+	// do `gmCast` da SPA. O jogador continua lendo o nome inteiro no cartão.
 	Iniciais string
 	Nivel    int64
 	Classes  string

@@ -35,7 +35,7 @@ var expertisesList = []expertiseDef{
 
 // classProficiencies eram as proficiências de cada classe escritas à mão aqui.
 // Elas saíram na ALE-272: a MESMA tabela já vinha do catálogo (`classes.json`,
-// a linha "Proficiências." de p36–83), lida por `asProficienciasPorClasse` para
+// a linha "Proficiências." de p36–83), lida por `book.ProficienciesByClass` para
 // o painel da ficha. Duas cópias da mesma transcrição não divergiram por sorte,
 // e a que ficou é a que a validação de schema alcança.
 

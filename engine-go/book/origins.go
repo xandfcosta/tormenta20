@@ -17,7 +17,7 @@ import (
 //
 // Lê `origens` e não `origins`: são dois arquivos sobre as mesmas 35 origens,
 // com campos diferentes — `origins` tem os benefícios (que a aba de Poderes já
-// usa, em `origensDoLivro`) e `origens` tem os itens e as perícias. Ler o
+// usa, em `Origins`) e `origens` tem os itens e as perícias. Ler o
 // arquivo errado devolve mapa vazio em silêncio, que é a razão de o guarda de
 // varredura afirmar o denominador.
 var (

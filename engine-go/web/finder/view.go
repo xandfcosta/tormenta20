@@ -16,7 +16,7 @@ import (
 // —, sem tirar a mão do teclado e sem saber em qual ferramenta a coisa mora.
 //
 // A busca não é nova: o servidor já varre os quatro catálogos em
-// `carregaCatalogos` e o bestiário em `carregaBestiarioDe`. O que este arquivo
+// `book.Catalogs` e o bestiário em `book.Creatures`. O que este arquivo
 // acrescenta é RANQUEAR (ver `pontuaBusca`) e dar um DESTINO a cada achado —
 // porque aqui a lista é curta e cada linha tem de saber para onde levar.
 //
@@ -175,7 +175,7 @@ func foundGroup[T any](
 	for _, e := range lista {
 		// A linha é montada ANTES de saber se ela passa, e é deliberado: pegar o
 		// nome de `campos(e)[0]` seria depender de uma ordem que nada garante, e
-		// no dia em que um `camposDaX` mudasse de ordem a pontuação passaria a
+		// no dia em que um `entryFields` mudasse de ordem a pontuação passaria a
 		// medir a descrição — em silêncio, com a lista continuando a sair. São
 		// 1.072 structs por tecla digitada, com 200ms de debounce na frente.
 		a := comoAchado(e)
@@ -214,8 +214,8 @@ func bestFirst(a, b finderHit) int {
 
 // ── de cada catálogo para uma linha ──────────────────────────────────────────
 
-// entryFields é o irmão dos `camposDaX` do acervo, e o bestiário não tinha
-// um: a cena dele filtra por nome e tipo em `filtraCriaturas`. Aqui ele precisa
+// entryFields é o irmão dos `entryFields` do acervo, e o bestiário não tinha
+// um: a cena dele filtra por nome e tipo em `book.FilterCreatures`. Aqui ele precisa
 // existir para o verbete passar pelo mesmo `foundGroup` que os outros quatro.
 func entryFields(m book.Entry) []string {
 	return append([]string{m.Name, book.TypeName(m.Tipo)}, m.SpecialAbilities...)
@@ -318,7 +318,7 @@ func entryHit(m book.Entry) finderHit {
 	}
 }
 
-// collectionDestination leva à cena dos catálogos com a entrada já filtrada.
+// routes.MasterSearch leva à cena dos catálogos com a entrada já filtrada.
 //
 // Pelo NOME e não por um id na URL, e é escolha e não preguiça: a cena não tem
 // endereço para uma entrada só — ela tem `?aba=` e `?busca=`, que já são
@@ -326,12 +326,12 @@ func entryHit(m book.Entry) finderHit {
 // lista, que é o que a pessoa pediu, sem inventar um terceiro estado de cena
 // que precisaria ser mantido junto.
 
-// entryDestination é o endereço de UM verbete: a aba dele, mostrando só ele.
+// routes.MasterEntry é o endereço de UM verbete: a aba dele, mostrando só ele.
 //
-// Diferente do `collectionDestination`, que faz uma BUSCA. A diferença apareceu na
+// Diferente do `routes.MasterSearch`, que faz uma BUSCA. A diferença apareceu na
 // tela: clicar no elo "Medo" caía numa busca por "medo" nos oito catálogos, com
 // o verbete procurado espremido no quinto grupo. Quem clica num conceito pediu o
 // conceito.
 
-// bestiaryDestination leva à cena do bestiário filtrada. Serve tanto para o "+12"
+// routes.MasterBestiarySearch leva à cena do bestiário filtrada. Serve tanto para o "+12"
 // (com o termo digitado) quanto para o que o `entryHit` faz com o id.

@@ -22,7 +22,7 @@ import (
 // algo da FICHA. Ele já precisa: o deslocamento da peça sai da ficha computada,
 // e hoje isso atravessa o `Server` porque o handler ainda mora em `api/`. Quando
 // o contexto `ficha` nascer, a tentação será importá-lo daqui — e a resposta
-// certa é uma PORTA declarada neste pacote, como `aovivo.VitaisDaFicha` fez.
+// certa é uma PORTA declarada neste pacote, como `aovivo.aovivo.SheetVitals` fez.
 // A mensagem de falha diz isso, porque uma lista que cresce em silêncio é uma
 // fronteira que deixou de existir sem ninguém notar.
 

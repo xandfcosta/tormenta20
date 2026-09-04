@@ -422,7 +422,7 @@ func (bs *BoardStore) PaintTerrain(
 	return bs.PaintStroke(ctx, sessionID, tabuleiroID, []engine.Square{square}, especie, ligado)
 }
 
-// PaintStroke pinta o segmento inteiro numa gravação só — ver `LimpaOTraco`.
+// PaintStroke pinta o segmento inteiro numa gravação só — ver `ClearStroke`.
 func (bs *BoardStore) PaintStroke(
 	ctx context.Context, sessionID int64, tabuleiroID string, traco []engine.Square, especie TerrainKind, ligado bool,
 ) (*BoardState, error) {
@@ -583,7 +583,7 @@ func (bs *BoardStore) SetCurtain(ctx context.Context, sessionID int64, tabuleiro
 
 // MoveGroup desloca as peças marcadas pelo mesmo delta (ALE-203, item 10).
 //
-// Uma transação para o grupo inteiro, pelo mesmo motivo do `PintaOTraco`: o
+// Uma transação para o grupo inteiro, pelo mesmo motivo do `PaintStroke`: o
 // gesto é UM, e uma gravação por peça faria a mesa ver a horda chegar pela
 // metade.
 func (bs *BoardStore) MoveGroup(

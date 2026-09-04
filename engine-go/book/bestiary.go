@@ -91,7 +91,7 @@ type Entry struct {
 //
 // O caso presente delega ao `WithSign` do `catalogs.go` em vez de repetir as
 // três linhas dele. Não é economia: é que a mesma função já existia TRÊS vezes
-// neste repositório — aqui, lá, e como `comSinalInt` na view do bestiário — e a
+// neste repositório — aqui, lá, e como `WithSignPtr` na view do bestiário — e a
 // ficha chamava duas delas, às vezes no mesmo arquivo (ALE-278).
 func WithSignPtr(n *int) string {
 	if n == nil {
@@ -112,7 +112,7 @@ func Creatures() []Entry {
 			return
 		}
 		// Catálogo ausente é degradação NORMAL: a ferramenta abre vazia em vez
-		// de derrubar a Mesa inteira. É a mesma decisão do `racasDaTela`.
+		// de derrubar a Mesa inteira. É a mesma decisão do `RaceTraitsByKey`.
 		_ = json.Unmarshal(bruto, &bestiario)
 	})
 	return bestiario

@@ -21,7 +21,7 @@ import (
 // O `ClassPower` do motor é um subconjunto deliberado: ele carrega o que a
 // derivação lê — id, classe, nível, modificadores — e não a descrição. Quem
 // tem o texto é o catálogo cru, que a vitrine do mestre já lê
-// (`poderesAchatados`). Então a POSSE é pergunta do motor e o TEXTO é do
+// (`FlattenedPowers`). Então a POSSE é pergunta do motor e o TEXTO é do
 // catálogo; misturar as duas fontes numa struct só é o que este arquivo faz.
 
 // ownedPower é um poder que o personagem TEM, pronto para a tela.
@@ -47,7 +47,7 @@ func ownedPowersOf(dto sheet.CharacterDTO) []ownedPower {
 
 // raceAbilities são as habilidades de cada raça da ficha.
 //
-// Quem lê o catálogo é o `racasDaTela` do dossiê — o MESMO `race-defs.json`, já
+// Quem lê o catálogo é o `RaceTraitsByKey` do dossiê — o MESMO `race-defs.json`, já
 // indexado por id E por nome, porque o personagem guarda a raça por um dos dois.
 // Um segundo leitor aqui seria uma terceira cópia da mesma decisão.
 func raceAbilities(dto sheet.CharacterDTO) []ownedPower {
@@ -144,7 +144,7 @@ func automaticOwnership(
 // chosenPowers lê o blob `classChoices` — o caminho do arcanista, o deus
 // do clérigo. Blob torto vira mapa vazio: a aba não pode deixar de abrir porque
 // uma linha do banco está errada.
-// osPoderesEscolhidos são os ids da coluna `classPowers` — poder de classe,
+// chosenPowers são os ids da coluna `classPowers` — poder de classe,
 // poder geral ou poder da Tormenta, nessa ordem de busca.
 func chosenPowers(dto sheet.CharacterDTO) []ownedPower {
 	var ids []string
@@ -245,7 +245,7 @@ func savedAncestry(blob string) string {
 	return escolha.Ascendencia
 }
 
-// osBeneficiosQueAOrigemOferece são os benefícios MAIS o poder único.
+// sheet.OriginBenefitsOf são os benefícios MAIS o poder único.
 //
 // O catálogo guarda o poder único num campo à parte, e a ficha o trata como um
 // dos dois que a pessoa leva (p85) — a SPA já os juntava assim. Sem isso o poder

@@ -77,7 +77,7 @@ func (s Scene) handleBackup(w http.ResponseWriter, r *http.Request) {
 
 // adminPanel é um painel da tela como FUNÇÃO, e não como nome.
 //
-// Era `renderFragmento("admin-jogadores", view)` até a ALE-227: uma string que
+// Era `ui.RenderFragment("admin-jogadores", view)` até a ALE-227: uma string que
 // só erra em runtime, e que exigia dois testes existindo apenas para afirmar
 // que os nomes ainda casavam. Agora um painel que sumisse não compila.
 type adminPanel func(adminView) templ.Component

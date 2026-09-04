@@ -56,7 +56,7 @@ type Page struct {
 	// cobra, e ele me pegou: ao fazer o `data-init` da restauração de foco sair
 	// sempre, eu o pus também na porta, que não tem trilho para restaurar.
 	//
-	// Campo EXPLÍCITO e não inferido da forma da casca: `cascaTitulo` descreve o
+	// Campo EXPLÍCITO e não inferido da forma da casca: `ui.ShellTitled` descreve o
 	// desenho, e amarrar uma regra de segurança a um nome de leiaute é a regra
 	// sumindo no dia em que alguém usar a mesma casca noutra tela.
 	SemEstadoDeCliente bool
@@ -83,14 +83,14 @@ type Page struct {
 type ShellShape string
 
 const (
-	// cascaNua não desenha cabeçalho nenhum e não dá padding: a tela decide
+	// ui.ShellBare não desenha cabeçalho nenhum e não dá padding: a tela decide
 	// tudo. É o que a Mesa usa, porque a faixa AO VIVO dela já é o cabeçalho e
 	// duas fileiras de cromo tirariam o palco do combate.
 	ShellBare ShellShape = ""
-	// cascaDensa é o cabeçalho compacto das telas de conteúdo: voltar + título
+	// ui.ShellDense é o cabeçalho compacto das telas de conteúdo: voltar + título
 	// pequeno, `px-4 py-4`.
 	ShellDense ShellShape = "densa"
-	// cascaTitulo é a TELA-TÍTULO — o nome do jogo em Cinzel grande e
+	// ui.ShellTitled é a TELA-TÍTULO — o nome do jogo em Cinzel grande e
 	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub, e é a
 	// da PORTA (ALE-229): quem está fora não tem para onde voltar.
 	ShellTitled ShellShape = "titulo"

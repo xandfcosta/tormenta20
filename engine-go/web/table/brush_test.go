@@ -9,7 +9,7 @@ import (
 
 // Os guardas do GESTO CONTÍNUO do pincel (ALE-203, itens 8 e 9 do dono).
 //
-// A aritmética do traço não é medida aqui: `tabuleiro.CasasDoTraco` tem guarda
+// A aritmética do traço não é medida aqui: `tabuleiro.StrokeSquares` tem guarda
 // próprio, e ele prende a regra ("o traço não tem buraco") no lugar mais barato.
 // O que se prende deste lado é o que só existe deste lado — que a rota pinta o
 // SEGMENTO numa gravação só, que a resposta não devolve a Mesa inteira, e que a
@@ -21,7 +21,7 @@ import (
 // segunda asserção sobre a `Version` do tabuleiro — "uma versão a mais, senão a
 // mesa recebe um quadro por casa" — e ela media a coisa errada: o `PaintTerrain`
 // sobe a versão POR CASA, então um traço de dez casas sobe dez, dentro de um
-// `apply` só. Quem garante a gravação única é a estrutura (`PintaOTraco` chama
+// `apply` só. Quem garante a gravação única é a estrutura (`PaintStroke` chama
 // `apply` uma vez, e o `boardCommand` publica uma vez), não um contador —
 // e um teste que afirma o contrário fica vermelho sobre um app correto.
 func contem(casas []engine.Square, alvo engine.Square) bool {

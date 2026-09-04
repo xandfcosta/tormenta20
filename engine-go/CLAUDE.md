@@ -607,7 +607,10 @@ regra do repositório no `api` seria escolher um dono arbitrário — e o `api` 
 sendo dividido em um pacote por cena (ALE-278), então o guarda mudaria de casa
 junto com a próxima fatia.
 
-Quatro moram lá hoje:
+OITO moram lá hoje, e a lista cresceu por duas razões diferentes — vale saber
+qual é qual. Três nasceram lá porque a regra é do REPOSITÓRIO e não de um
+pacote; três MUDARAM de casa porque mediam o próprio diretório e encolheram
+quando uma cena virou pacote; e as duas últimas são a família das citações.
 
 - **`TestEveryTestNameIsEnglish`** varre todo `*_test.go` e recusa nome com
   palavra em português. Ele é o que impede o 774º — a regra de idioma sempre
@@ -636,6 +639,27 @@ Quatro moram lá hoje:
   lista é por nome-base, então perdoar um nome ali perdoaria também o próximo
   comentário que voltasse a apontar para ele. A prosa passou a nomeá-los sem a
   extensão.
+
+- **`TestNoCitationNamesAMissingSymbol`** (ALE-286) fecha a TERCEIRA forma da
+  família: o comentário que nomeia uma FUNÇÃO que sumiu. Ele mediu **466**, e o
+  que o torna possível é o ruído ser resolvido por REGRA — cinco naturezas
+  colhidas mecanicamente (chave de fio, chave de catálogo, literal de string, a
+  API CHAMADA em qualquer `.X(`, e os identificadores do `.ts`) mais dois
+  julgamentos (a CAIXA, que identifica procedência, e a procedência DECLARADA no
+  bloco). Uma sonda ingênua acusa 1.371; com as regras, 122.
+
+  A lista de lápides dele tem 66 nomes e quatro grupos, e o grupo que ensina é o
+  do NOME HIPOTÉTICO: `detalheAberto` nunca existiu — ele é o exemplo do que
+  aconteceria se alguém escrevesse um sinal em camelCase, e um guarda que o
+  proibisse tiraria do repositório justamente a explicação que impede o defeito.
+
+- **`TestEveryMarkerColorCanBePainted`** e **`TestNoSceneCommandUsesTheDefaultTab`**
+  chegaram na ALE-278, pela mesma razão do de baixo e no mesmo dia: o primeiro
+  lia `piloto/piloto.src.css`, um caminho relativo ao `api`; o segundo varria
+  `piloto_*.go` do próprio diretório. Quando a Mesa virou `web/table`, o arquivo
+  sumiu debaixo de um e o glob deixou de casar para o outro. **Os dois falharam
+  ALTO porque os dois tinham piso** — e o irmão do foco, que não tinha, teria
+  passado verde medindo metade.
 
 - **`TestNoFocusAsksTheServerWithoutAKeyboardGuard`** chegou na ALE-278, e não
   por ser regra de repositório desde sempre: ele já existia dentro da cena do
@@ -1125,8 +1149,10 @@ comentário é o que o renomeador tem de proteger. A consequência é que toda
 docstring passou a nomear uma função que não existe: `// handleImproviso desenha
 a cena…` em cima de `handleImprov`. Foram **105** num pacote só.
 
-Isso não é o guarda da ALE-285: ele prende citação de TESTE e de CAMINHO DE
-ARQUIVO, e um nome de função não é nem um nem outro. Não há rede aqui.
+Isso não era o guarda da ALE-285: ele prende citação de TESTE e de CAMINHO DE
+ARQUIVO, e um nome de função não é nem um nem outro. **A rede existe desde a
+ALE-286** — o `TestNoCitationNamesAMissingSymbol` —, e a sonda de duas linhas
+abaixo foi o que a tornou possível.
 
 O que achou foi uma sonda de duas linhas que vale repetir na próxima fatia:
 **colete tudo que o repositório DECLARA, depois procure nos comentários os
@@ -1254,7 +1280,7 @@ virou `TestNoNeighborIsInventedOutsideTheRail` aqui — sem banco, sem servidor,
 com o controle que faltava (o índice VÁLIDO acha, senão um `peekAt` que
 devolvesse nulo sempre passaria nas duas asserções).
 
-### ~170 citações mortas herdadas, e este é o lugar de registrar o número
+### ~170 citações mortas herdadas, contadas aqui e fechadas na ALE-286
 
 A sonda de citação de SÍMBOLO que a fatia do trilho do mestre inventou foi
 rodada nos três pacotes que esta fatia tocou. As 22 desta fatia foram
@@ -1264,12 +1290,16 @@ falando de `catalogosDoLivro`, `filtraCriaturas`, `chaveDoNome`, `poderDoLivro`�
 e **~40 no `web/ui`** (`classesDoBotao`, `rotuloDeSecao`, `cascaNua`,
 `molduraDePainel`…).
 
-Nenhuma delas é pega por guarda: o `TestNoCitationNamesAMissingTest` prende
-nome de TESTE e o `TestNoCitationNamesAMissingFile` prende CAMINHO DE ARQUIVO —
-nome de função não é nem um nem outro. Ficam registradas aqui com o número
-medido, porque **contar é o que transforma "tem umas dessas" em trabalho que
-alguém pode fechar**, e é o mesmo caminho que os 136 e os 41 dos outros dois
-guardas seguiram antes de virar varredura.
+Nenhuma delas era pega por guarda quando isto foi escrito, e o parágrafo dizia
+por quê: nome de função não é nome de teste nem caminho de arquivo. **Ele
+cumpriu o que a linha final prometia** — contar transformou "tem umas dessas" em
+trabalho que alguém pôde fechar, e a ALE-286 fechou: 466 medidas, 466
+consertadas, e um guarda no ar.
+
+O número aqui envelheceu para MENOS e para MAIS ao mesmo tempo, e vale dizer as
+duas: eram ~170 quando a sonda rodou em três pacotes, e viraram 466 quando ela
+rodou na árvore inteira depois de mais três fatias renomearem coisas. **Uma
+medição parcial não é um número menor: é um número de outra pergunta.**
 
 ## `web/reader`: o arquivo que tinha DUAS responsabilidades
 

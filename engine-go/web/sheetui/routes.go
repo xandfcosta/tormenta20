@@ -116,7 +116,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: view.Nome + " · Tormenta 20",
-		// `cascaNua`: a cena desenha o próprio cabeçalho, com a volta e o nome.
+		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
 		Forma: ui.ShellBare,
 		// `detalhe` é a caixa do Combate cujo diálogo está aberto, e ele mora no
 		// <body> porque o <body> nunca é remendado: declarado dentro do painel, o
@@ -151,7 +151,7 @@ func insideSessionAsked(r *http.Request) bool {
 
 // sheetCommand é o gateway das mutações da ficha.
 //
-// Ele existe pela mesma razão do `comandoDoTabuleiro`: resolver a posse, mutar e
+// Ele existe pela mesma razão do `boardCommand`: resolver a posse, mutar e
 // redesenhar são três passos que toda mutação da ficha faz, e escrevê-los em
 // cada handler é como um deles esquece de redesenhar — a pessoa clica, o banco
 // muda e a tela fica igual.

@@ -22,7 +22,7 @@ import (
 //
 // O kit é a casa certa porque nada aqui sabe do DOMÍNIO: são três funções de
 // `string` para `string`. O que ficou para trás na mudança foi justamente a
-// quarta função do arquivo original, o `papelNaCampanha` — "Mestrando",
+// quarta função do arquivo original, o `roleLabel` — "Mestrando",
 // "Jogando", "Mesa de X" é regra de quem é o quê numa campanha, e o kit não
 // pode saber disso.
 
@@ -49,7 +49,7 @@ func NameHue(nome string) int {
 // claridade e o croma que a SPA usa para EMBLEMA (o retrato de personagem é um
 // fio mais claro, e essa diferença é deliberada lá).
 //
-// Ele se chamava `gradienteDaCampanha` e o nome MENTIA: o cartão do herói o
+// Ele se chamava `NameGradient` e o nome MENTIA: o cartão do herói o
 // chama com o nome do personagem desde a ALE-239. O que ele deriva é um nome,
 // qualquer nome — que é o que o nome novo diz.
 func NameGradient(nome string) string {

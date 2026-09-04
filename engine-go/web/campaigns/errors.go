@@ -19,7 +19,7 @@ var errNoSuchCampaign = errors.New("campanha não existe")
 // que o `api` também tem.
 //
 // Pô-la na porta seria mais acoplamento que duplicação — é a mesma decisão do
-// `oPassoDaURL` da forja, e pelo mesmo motivo: a alternativa é um método na
+// `stepFromURL` da forja, e pelo mesmo motivo: a alternativa é um método na
 // interface para converter uma string.
 //
 // Ela mora aqui e não no `campaign` porque o pacote de REGRA não pode carregar

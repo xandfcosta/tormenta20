@@ -10,7 +10,7 @@ import (
 
 // O PV do rastreador É o PV da ficha (ALE-122) — e agora atravessa uma PORTA.
 //
-// Este arquivo implementa `aovivo.VitaisDaFicha` (ALE-254). Os três métodos
+// Este arquivo implementa `aovivo.aovivo.SheetVitals` (ALE-254). Os três métodos
 // eram do `sessionStore`, e o compilador apontou o problema quando o regime
 // virou pacote: eles usam `applyDamagePlan` e `aovivo.ClampVital`, que são regras da
 // FICHA. Um pacote do regime não pode conhecê-las.

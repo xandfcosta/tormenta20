@@ -25,8 +25,8 @@ import (
 
 // conditionEffect é o que o crachá diz ao passar o mouse.
 //
-// A lista e o NOME não moram aqui: `catalogosDoLivro().Condicoes` já é lida do
-// catálogo e já vem ordenada por um collator pt-BR, e o `nomeDaCondicao` já
+// A lista e o NOME não moram aqui: `book.Catalogs().Condicoes` já é lida do
+// catálogo e já vem ordenada por um collator pt-BR, e o `book.ConditionName` já
 // resolve id → palavra do livro. Eu tinha escrito as três de novo neste arquivo
 // antes de procurar — e uma segunda cópia da tabela do livro é uma cópia que
 // desvia, que é exatamente o defeito que a ALE-122 pagou.
@@ -56,7 +56,7 @@ func toggleCondition(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error
 	entryID := chi.URLParam(c.R, "entryId")
 	id := chi.URLParam(c.R, "id")
 	// A VALIDAÇÃO é do catálogo e não de uma lista daqui, pela razão do
-	// `CondicoesDoLivro`. Sem ela, um id inventado entraria na linha e a tela o
+	// `book.Catalogs`. Sem ela, um id inventado entraria na linha e a tela o
 	// desenharia como se fosse condição do livro.
 	if !catalog.IsCondition(id) {
 		return nil, fmt.Errorf("%q não é uma condição do livro (p394-395)", id)

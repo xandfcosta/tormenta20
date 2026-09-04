@@ -34,7 +34,7 @@ import "t20engine/web/ui"
 //
 // `data-nav-skip` porque o painel da ficha é uma REGIÃO de layout `column` com
 // UM item, e é isso que faz a vertical ROLAR o bloco em vez de andar (ver o
-// comentário da região em `cenaDoBestiario`). O driver de teclado coleta
+// comentário da região em `bestiaryScene`). O driver de teclado coleta
 // `a[href]`, então sem esta marca um segundo item nasceria aqui e a seta para
 // baixo passaria a saltar para o link em vez de rolar a ficha. O Tab continua
 // chegando, que é o caminho certo para um atalho de saída. Nos catálogos vale o
@@ -43,7 +43,7 @@ import "t20engine/web/ui"
 // O clique abre o livro POR CIMA da cena, num diálogo — a mesa continua atrás,
 // com a fila da iniciativa onde estava. E ele continua sendo um `<a href>` de
 // verdade: o `target="_blank"` é o que sobra para o clique do meio, o Ctrl e o
-// "abrir em nova aba", que o `abreOLivroPorCima` deixa passar de propósito.
+// "abrir em nova aba", que o `pageLink` deixa passar de propósito.
 //
 // O `termo` é o que o leitor DESTACA na página. Vem de quem chama e não do
 // número: é o nome do verbete, e é ele que o olho procura ao chegar.
@@ -539,7 +539,7 @@ func EntryDialog() templ.Component {
 
 // openEntryOver mostra o verbete do elo numa caixa sobre a cena.
 //
-// Mesma forma do `abreOLivroPorCima`: deixa passar o clique modificado, e o
+// Mesma forma do `pageLink`: deixa passar o clique modificado, e o
 // `href` cuida desses. A diferença é que aqui o conteúdo vem por REMENDO do
 // Datastar e não por iframe — é um cartão de texto, não um visualizador de PDF
 // de 1,8 MB, e um documento inteiro para desenhar três linhas seria caro por

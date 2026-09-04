@@ -85,7 +85,7 @@ func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha SheetVitals,
 // o contador em silêncio — e é a cópia que vai para o socket e para o banco, de
 // modo que o valor certo existia só na memória do servidor. Assim, campo novo
 // vem junto sem ninguém precisar lembrar.
-// proximaSeq devolve a ordem da próxima mutação desta sessão. Chamada SEMPRE
+// nextSeqLocked devolve a ordem da próxima mutação desta sessão. Chamada SEMPRE
 // com `st.Mu` seguro, que é o que faz a numeração coincidir com a ordem real
 // das mutações.
 //
