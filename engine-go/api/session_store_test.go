@@ -186,7 +186,7 @@ func TestStoreDirtyOnPersistFailure(t *testing.T) {
 		t.Error("Persist after DB Close should report Dirty")
 	}
 	if !store.SaveFailed(sid) {
-		t.Error("IsDirty should be true after a failed Persist")
+		t.Error("SaveFailed should be true after a failed Persist")
 	}
 }
 

@@ -166,7 +166,7 @@ porque a porta morta ainda respondia. É a forma mais cara desta família — o
 teste não avisa que envelheceu, ele mente com cara de cobertura (ALE-289).
 
 O SEGUNDO prendia uma regra VIVA na porta errada, e por isso mudou de casa em
-vez de morrer: virou o TestNoSceneFromAnotherCampaignReachesTheTableThroughOpenPlace,
+vez de morrer: virou o TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace,
 logo abaixo, com o controle que ele não tinha.
 */
 // O id do lugar vem do cliente, e o `OpenPlace` é a porta VIVA: sem conferir a
@@ -175,7 +175,7 @@ logo abaixo, com o controle que ele não tinha.
 // Ele existe porque a regra estava presa só no `ShowPlace`, que nenhuma rota
 // chama desde a ALE-205 — o verde era sobre a porta MORTA, e apagá-la como
 // código morto levaria junto a única prova da regra (ALE-289).
-func TestNoSceneFromAnotherCampaignReachesTheTableThroughOpenPlace(t *testing.T) {
+func TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	outra := seedCampaign(t, s, seedUser(t, s, "vizinho-openplace@t.com"))
