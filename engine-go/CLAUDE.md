@@ -1756,6 +1756,51 @@ anteriores a cada vez.
 > apontando para a porta errada atrás de proxy, e link de convite existe para ser
 > mandado a outra pessoa — host errado é link morto.
 
+## A presença que nunca acendeu (ALE-287)
+
+A Mesa desenha um anel por carta do elenco dizendo quem está com a aba aberta, e
+ele ficava CINZA para sempre. Quem preenchia o registro era o handshake da rota
+`/events` da SPA, apagada na ALE-277 por não ter consumidor: **ninguém em
+produção chamava `PresenceRegistry.Join` desde a ALE-272.**
+
+Cinza quer dizer "fora da mesa", então a tela dizia "todos fora" com cara de
+medição — e o mestre agia sobre isso.
+
+O registro passou a acontecer no fluxo próprio da Mesa
+(`web/table/stream.go`), e ele é o lugar certo por três coisas que já tem e uma
+rota nova teria de recriar: QUEM pede, EM QUE sessão, e o `r.Context()` que o
+servidor cancela quando a aba fecha — a saída, que é a metade difícil. O papel
+sai do `view.Mestre` (nil para o jogador), a mesma leitura que já decidiu o que
+desenhar. Sem evento novo: o `writeTable` só manda bytes quando o HTML muda, e o
+batimento de 1s leva a mudança às outras abas.
+
+### O guarda do DESENHO existia e passava
+
+`TestTheGmSeesWhoIsAtTheTableAndThePlayerDoesNot` já media o anel aceso, o
+apagado, e que o jogador não recebe presença nenhuma — **chamando `Join` ele
+mesmo**. Arranjo que a produção não sabia produzir: a terceira ocorrência da
+mesma forma nesta issue, depois do token de convite e da coluna `role`.
+
+> A regra que sai daí: **quando o arranjo de um teste usa uma porta que nenhum
+> caminho de produção usa, o verde é sobre o arranjo.** Vale procurar por
+> fixture que escreve coluna à mão, que chama método de store direto, ou que
+> aceita um parâmetro cujo valor a produção nunca varia.
+
+### Um teste cujo modo de falha era TRAVAR
+
+O caso novo abre o `/stream` num `httptest.NewServer` de verdade. A primeira
+versão criava o `context.WithCancel` e só chamava `fechar()` no fim — então
+qualquer `t.Fatalf` no meio pulava o cancelamento, o stream ficava aberto, e o
+`srv.Close()` do defer esperava por ele para sempre.
+
+Descoberto sabotando o `Join`: o veredito veio como `panic: test timed out after
+1m0s` apontando para a linha do `Fatalf`, e não como a frase que o teste
+escreveu. Com `defer fechar()` logo depois do `WithCancel`, a mesma sabotagem
+reprova em **0,01s** dizendo "o elenco presente = [], queria só o jogador 2".
+
+É a família do `finally` que engole o erro de verdade (ALE-245), com outra
+roupa: **limpeza que espera não pode falar mais alto que o defeito.**
+
 ## A coluna que não decidia nada (ALE-287)
 
 `campaign_members.role` valia `'player'` em **toda linha que a produção
