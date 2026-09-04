@@ -2033,7 +2033,9 @@ pô-la na fileira do grupo diria que ela é aliada.
 O sinal de "capacidade esperando gesto" é a família que a cortina (ALE-202) e a
 presença (ALE-287) já tinham desenhado: **a camada de baixo inteira no ar, com
 teste, e nenhuma rota chegando nela.** Duas apareceram aqui — a peça avulsa
-(ALE-291), em que o `ParseBoardToken` não tem *nenhum* chamador, nem de teste; e
+(ALE-291, **entregue** — ver a seção seguinte, cujo desfecho contraria o que
+esta linha previa), em que o `ParseBoardToken`, hoje apagado, não tinha *nenhum*
+chamador nem de teste; e
 o rascunho de lugar (ALE-292), cujas docstrings carregam a decisão de protocolo
 inteira sobre um botão que não existe.
 
@@ -2079,6 +2081,58 @@ abaixo. **O `go build` ficou verde e a suíte inteira também** — o que sobrou
 um bloco de comentário começando no meio de uma frase, e comentário não compila.
 Quem denunciou foi o `git diff`. *Corte de bloco se confere no diff, nunca no
 verde.*
+
+## A capacidade esperando gesto pode NÃO precisar do que a esperava (ALE-291)
+
+A peça AVULSA — a porta, o baú, o barril — era a mais clara das duas capacidades
+no ar que a ALE-289 achou. O GLOSSARIO promete, na linha de `peça`, que "uma peça
+pode existir sem linha na fila", e não havia caminho: a única rota que criava
+peça era o `poeNoMapa`, cujo `populateBoard` itera a INICIATIVA.
+
+Três coisas esperavam o gesto, e a ALE-289 mandou não apagá-las por isso: o
+parser do corpo, o `nextFreeSpot` (ALE-166) e o parâmetro que era o único caminho
+até ele. **O gesto chegou e não precisou de nenhuma das três.**
+
+O desenho que o dono escolheu POSICIONA: o modo liga, o clique numa casa diz onde
+a peça nasce. Com isso o `nextFreeSpot` perdeu o problema que resolvia — ele
+existia porque o "+ Peça" da ALE-178 não tinha ONDE pôr a peça, então ela nascia
+num lugar combinado e duas criadas seguidas se empilhavam. O parâmetro virou um
+valor só, e o parser foi escrito para um pedido que este desenho não faz: a
+posição vai no CAMINHO, pela razão do `quadradoDoCaminho`.
+
+**A regra que sai daqui é a segunda metade da regra da ALE-289.** Lá ficou escrito
+que órfão pode ser dívida OU capacidade esperando gesto, e que o que separa os
+dois é ler o que a coisa FAZ. O que faltava dizer é o desfecho: *quando o gesto
+chega, ele pode chegar com outra forma — e aí o andaime que o esperava vira
+dívida no mesmo ato.* Guardar código por causa de uma feature futura só se paga
+se a feature vier no formato previsto, e o formato é justamente o que ainda não
+foi decidido.
+
+### O trilho tem dez teclas, e a décima primeira ferramenta não ganha uma letra
+
+O `numberRail` estoura com onze de propósito, e o comentário dele diz que a
+décima primeira "pede outra ideia (submenu, ferramenta que troca de modo)". O
+modo da peça avulsa É uma ferramenta pela divisa que o trilho desenha —
+*ferramenta muda o que o CLIQUE faz, ação acontece uma vez e acaba* — e mesmo
+assim ficou FORA da fileira numerada, atrás do próprio vinco: mesmo sinal
+`$ferramenta` (então a exclusão continua por construção), sem atalho.
+
+Há um guarda afirmando que as ferramentas numeradas continuam sendo DEZ. Ele
+existe para que dar uma tecla a este modo um dia seja uma mudança visível, e não
+a gramática virando dez-e-meio em silêncio.
+
+### Um quase-acidente de SINAL virou guarda
+
+A peça avulsa ia usar `pecanome` e `pecatamanho`. Os dois já eram do diálogo de
+EDITAR peça (ALE-206), declarados quatro linhas acima na mesma função, e vivem no
+mesmo documento — o gesto de criar passaria a escrever no alvo do gesto de
+salvar, sem erro em lugar nenhum, porque o segundo `data-signals` simplesmente
+vence.
+
+O `TestNoTableSignalIsDeclaredTwice` varre os ~40 sinais da cena com denominador.
+É a mesma forma que o GLOSSARIO já registra na linha do `buscador`, que se chama
+assim para não colidir com o `busca` das cenas — e agora ela é mecanizada.
+
 
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 
