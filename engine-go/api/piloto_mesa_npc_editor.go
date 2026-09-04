@@ -43,89 +43,89 @@ import (
 //
 // Isso NÃO é gravar: o banco não é tocado. É o servidor emprestando as mãos para
 // uma mudança de forma que o navegador não sabe fazer sozinho — e é por isso que
-// estes caminhos não passam pelo `comandoDoMestre`, que redesenha a Mesa
-// inteira. O único que grava é o `salvaORascunho`.
+// estes caminhos não passam pelo `gmCommand`, que redesenha a Mesa
+// inteira. O único que grava é o `saveDraft`.
 
-func (s *Server) NPCEditorRoutes(r chi.Router) {
+func (s *Server) RoutesEditorNpc(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/elenco/npc"
-	r.Post(base+"/{npcId}/editar", s.abreORascunho)
-	r.Post(base+"/novo", s.abreORascunho)
-	r.Post(base+"/rascunho/{lista}/nova", s.mexeNaLista(acrescentaNaLista))
-	r.Post(base+"/rascunho/{lista}/{indice}/remover", s.mexeNaLista(tiraDaLista))
-	r.Post(base+"/rascunho/salvar", s.comandoDoMestre(salvaORascunho))
+	r.Post(base+"/{npcId}/editar", s.openDraft)
+	r.Post(base+"/novo", s.openDraft)
+	r.Post(base+"/rascunho/{lista}/nova", s.moveList(addList))
+	r.Post(base+"/rascunho/{lista}/{indice}/remover", s.moveList(tiraDaLista))
+	r.Post(base+"/rascunho/salvar", s.gmCommand(saveDraft))
 }
 
-// rascunhoDoNPC é o formulário aberto, e não o bloco guardado.
+// npcDraft é o formulário aberto, e não o bloco guardado.
 //
 // A diferença tem duas linhas e as duas importam. `ID` zero quer dizer NOVO — é
 // o que separa criar de editar sem um segundo sinal para o modo. E `Conjura` é
 // booleano enquanto o `CreatureBlock.PM` é PONTEIRO: um formulário não sabe
 // digitar "ausente", então a caixa guarda um número e o interruptor diz se ele
-// conta. Quem traduz de volta é o `blocoDoRascunho`, num lugar só.
-type rascunhoDoNPC struct {
+// conta. Quem traduz de volta é o `draftBlock`, num lugar só.
+type npcDraft struct {
 	ID      int64          `json:"id"`
 	Nome    string         `json:"nome"`
 	Conjura bool           `json:"conjura"`
 	Bloco   creature.Block `json:"bloco"`
 }
 
-// oRascunhoDaPagina lê o rascunho que veio nos sinais.
+// pageDraft lê o rascunho que veio nos sinais.
 //
 // Datastar manda TODOS os sinais da página em cada `@post`, então o formulário
 // não precisa ser um `<form>` nem juntar campo por campo: ele chega inteiro, com
 // a última tecla incluída. É isso que faz "acrescentar um ataque" não perder o
 // que estava sendo digitado nos outros campos.
-func oRascunhoDaPagina(r *http.Request) (rascunhoDoNPC, error) {
+func pageDraft(r *http.Request) (npcDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Rascunho rascunhoDoNPC `json:"rascunho"`
+		Rascunho npcDraft `json:"rascunho"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
-		return rascunhoDoNPC{}, fmt.Errorf("não entendi o formulário: %v", err)
+		return npcDraft{}, fmt.Errorf("não entendi o formulário: %v", err)
 	}
 	return sinais.Rascunho, nil
 }
 
-// abreORascunho serve os dois caminhos, e é de propósito que seja um só.
+// openDraft serve os dois caminhos, e é de propósito que seja um só.
 //
 // Com `npcId` no caminho, a semente é o bloco guardado; sem ele, o bloco em
 // branco. Dois handlers seriam dois lugares para o formulário nascer diferente —
 // e o defeito apareceria como "criar do zero não tem a aba de perícias".
-func (s *Server) abreORascunho(w http.ResponseWriter, r *http.Request) {
-	c, ok := s.oMestreDaMesa(w, r)
+func (s *Server) openDraft(w http.ResponseWriter, r *http.Request) {
+	c, ok := s.tableGm(w, r)
 	if !ok {
 		return
 	}
 	rascunho := paraOFormulario(0, "", blocoEmBranco())
 	if chi.URLParam(r, "npcId") != "" {
-		linha, bloco, err := s.oNPCDaCampanha(c)
+		linha, bloco, err := s.campaignNpc(c)
 		if err != nil {
-			escreveSinais(w, r, map[string]any{"erroDoComando": err.Error()})
+			writeSignals(w, r, map[string]any{"erroDoComando": err.Error()})
 			return
 		}
 		rascunho = paraOFormulario(linha.ID, linha.Name, bloco)
 	}
-	s.respondeAoRascunho(w, r, c, rascunho)
+	s.respondDraft(w, r, c, rascunho)
 }
 
-// mexeNaLista é o corpo dos quatro gestos de forma — acrescentar e tirar, em
+// moveList é o corpo dos quatro gestos de forma — acrescentar e tirar, em
 // ataques, perícias e habilidades.
 //
 // Um handler e não seis: os seis fazem a MESMA coisa (ler o rascunho, mexer numa
 // lista, devolver o rascunho e as linhas), e seis cópias dariam seis lugares para
 // alguém esquecer de devolver o fragmento — com o sintoma de a linha nova só
 // aparecer no próximo clique.
-func (s *Server) mexeNaLista(
-	mexer func(*rascunhoDoNPC, string, int) error,
+func (s *Server) moveList(
+	mexer func(*npcDraft, string, int) error,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c, ok := s.oMestreDaMesa(w, r)
+		c, ok := s.tableGm(w, r)
 		if !ok {
 			return
 		}
-		rascunho, err := oRascunhoDaPagina(r)
+		rascunho, err := pageDraft(r)
 		if err != nil {
-			escreveSinais(w, r, map[string]any{"erroDoRascunho": err.Error()})
+			writeSignals(w, r, map[string]any{"erroDoRascunho": err.Error()})
 			return
 		}
 		// O índice é opcional: acrescentar não tem um. `-1` e não zero, porque
@@ -138,20 +138,20 @@ func (s *Server) mexeNaLista(
 			}
 		}
 		if err := mexer(&rascunho, chi.URLParam(r, "lista"), indice); err != nil {
-			escreveSinais(w, r, map[string]any{"erroDoRascunho": err.Error()})
+			writeSignals(w, r, map[string]any{"erroDoRascunho": err.Error()})
 			return
 		}
-		s.respondeAoRascunho(w, r, c, rascunho)
+		s.respondDraft(w, r, c, rascunho)
 	}
 }
 
-// acrescentaNaLista põe uma linha VAZIA no fim.
+// addList põe uma linha VAZIA no fim.
 //
 // Vazia e não preenchida com um exemplo: um "Clava +7" de mentira que o mestre
 // esquecesse de trocar viraria um ataque de verdade na mesa. O `validateCreature`
 // recusa ataque sem nome, então a linha em branco não chega ao banco — ela é uma
 // pergunta, não um dado.
-func acrescentaNaLista(rascunho *rascunhoDoNPC, lista string, _ int) error {
+func addList(rascunho *npcDraft, lista string, _ int) error {
 	switch lista {
 	case listaDeAtaques:
 		rascunho.Bloco.Attacks = append(rascunho.Bloco.Attacks, creature.Attack{})
@@ -167,18 +167,18 @@ func acrescentaNaLista(rascunho *rascunhoDoNPC, lista string, _ int) error {
 }
 
 // tiraDaLista remove UMA linha pelo índice.
-func tiraDaLista(rascunho *rascunhoDoNPC, lista string, indice int) error {
+func tiraDaLista(rascunho *npcDraft, lista string, indice int) error {
 	switch lista {
 	case listaDeAtaques:
-		fora, err := semOItem(rascunho.Bloco.Attacks, indice)
+		fora, err := itemWithout(rascunho.Bloco.Attacks, indice)
 		rascunho.Bloco.Attacks = fora
 		return err
 	case listaDePericias:
-		fora, err := semOItem(rascunho.Bloco.Skills, indice)
+		fora, err := itemWithout(rascunho.Bloco.Skills, indice)
 		rascunho.Bloco.Skills = fora
 		return err
 	case listaDeHabilidades:
-		fora, err := semOItem(rascunho.Bloco.SpecialAbilities, indice)
+		fora, err := itemWithout(rascunho.Bloco.SpecialAbilities, indice)
 		rascunho.Bloco.SpecialAbilities = fora
 		return err
 	default:
@@ -187,13 +187,13 @@ func tiraDaLista(rascunho *rascunhoDoNPC, lista string, indice int) error {
 	}
 }
 
-// semOItem devolve a fatia sem a posição pedida, ou a mesma fatia e um erro.
+// itemWithout devolve a fatia sem a posição pedida, ou a mesma fatia e um erro.
 //
 // FATIA NOVA e nunca o `append(s[:i], s[i+1:]...)` no lugar: aquele escreve por
 // cima da memória de quem chamou, e aqui quem chamou é o rascunho que ainda pode
 // ser recusado no passo seguinte. Um índice fora da faixa é o botão de uma linha
 // que outra aba já apagou — recusa com o número, não estoura.
-func semOItem[T any](itens []T, indice int) ([]T, error) {
+func itemWithout[T any](itens []T, indice int) ([]T, error) {
 	if indice < 0 || indice >= len(itens) {
 		return itens, fmt.Errorf("a linha %d não existe: a lista tem %d", indice+1, len(itens))
 	}
@@ -202,25 +202,25 @@ func semOItem[T any](itens []T, indice int) ([]T, error) {
 	return append(fora, itens[indice+1:]...), nil
 }
 
-// salvaORascunho é o ÚNICO caminho desta tela que toca o banco.
+// saveDraft é o ÚNICO caminho desta tela que toca o banco.
 //
 // Cria quando o rascunho não tem id e atualiza quando tem, e a escolha é do
 // próprio rascunho e não de uma rota diferente: o formulário é o mesmo, e uma
 // segunda rota seria um segundo lugar para validar.
 //
-// Passa pelo `comandoDoMestre` — ao contrário dos gestos de forma — porque aqui
+// Passa pelo `gmCommand` — ao contrário dos gestos de forma — porque aqui
 // a CENA muda: a lista do elenco ganha ou perde uma linha, e ela é uma região
 // que precisa ser redesenhada.
-func salvaORascunho(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func saveDraft(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	// A RECUSA VAI PARA O EDITOR, e não para o `erroDoComando` do rodapé — que é
-	// a saída normal do `comandoDoMestre`. É o mesmo argumento do
+	// a saída normal do `gmCommand`. É o mesmo argumento do
 	// `erroDoMovimento`: quem lê a frase está com o formulário aberto POR CIMA do
 	// rodapé, e uma recusa escrita atrás do diálogo é uma recusa que ninguém lê.
 	// Medido no navegador antes de virar isto: "salvar sem nome" não dizia nada.
 	//
 	// Por isso o erro é devolvido como SINAL e a função sai sem erro: o comando
 	// não falhou, ele recusou — e quem tinha de saber já soube.
-	if err := st.tentaGravarORascunho(c); err != nil {
+	if err := st.triesSaveDraft(c); err != nil {
 		c.Sinais["erroDoRascunho"] = err.Error()
 		return st.sessions.GetState(c.SessionID), nil
 	}
@@ -231,23 +231,23 @@ func salvaORascunho(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, err
 	c.Sinais["rascunhoaberto"] = false
 	c.Sinais["erroDoRascunho"] = ""
 	// O ELENCO NÃO É ESTADO DE SESSÃO — guardar um NPC não muda a fila nem o
-	// mapa. O estado volta mesmo assim porque é dele que o `comandoDoMestre`
+	// mapa. O estado volta mesmo assim porque é dele que o `gmCommand`
 	// redesenha as regiões, e sem isso a lista só mostraria a mudança no F5.
 	return st.sessions.GetState(c.SessionID), nil
 }
 
-// tentaGravarORascunho é o caminho inteiro do salvar, do sinal ao banco.
+// triesSaveDraft é o caminho inteiro do salvar, do sinal ao banco.
 //
-// Separado do `salvaORascunho` para que TODA recusa saia por um lugar só — o
+// Separado do `saveDraft` para que TODA recusa saia por um lugar só — o
 // `erroDoRascunho` do editor. Com as validações espalhadas em `return nil, err`,
 // cada uma teria de lembrar de escrever no sinal certo, e a que esquecesse
 // falaria atrás do diálogo.
-func (s *Server) tentaGravarORascunho(c mesaComando) error {
-	rascunho, err := oRascunhoDaPagina(c.R)
+func (s *Server) triesSaveDraft(c commandCtx) error {
+	rascunho, err := pageDraft(c.R)
 	if err != nil {
 		return err
 	}
-	bloco := blocoDoRascunho(rascunho)
+	bloco := draftBlock(rascunho)
 	if err := creature.Validate(rascunho.Nome, &bloco); err != nil {
 		return err
 	}
@@ -259,7 +259,7 @@ func (s *Server) tentaGravarORascunho(c mesaComando) error {
 	return s.gravaOBloco(c, rascunho, string(blob))
 }
 
-func (s *Server) gravaOBloco(c mesaComando, rascunho rascunhoDoNPC, blob string) error {
+func (s *Server) gravaOBloco(c commandCtx, rascunho npcDraft, blob string) error {
 	agora := plataforma.NowISO()
 	if rascunho.ID == 0 {
 		_, err := s.queries.CreateCampaignCreature(c.R.Context(), sqlcgen.CreateCampaignCreatureParams{
@@ -271,11 +271,11 @@ func (s *Server) gravaOBloco(c mesaComando, rascunho rascunhoDoNPC, blob string)
 		}
 		return nil
 	}
-	// A CONFERÊNCIA de campanha é a mesma do `oNPCDaCampanha`, e ela é a trava:
+	// A CONFERÊNCIA de campanha é a mesma do `campaignNpc`, e ela é a trava:
 	// o id vem do rascunho, que vem do navegador, e sem ela o mestre de uma mesa
 	// reescreveria o elenco de outra — que é o material mais privado que um
 	// mestre tem.
-	if _, _, err := s.oNPCDaCampanhaPorID(c, rascunho.ID); err != nil {
+	if _, _, err := s.idCampaignNpc(c, rascunho.ID); err != nil {
 		return err
 	}
 	if _, err := s.queries.UpdateCampaignCreature(c.R.Context(), sqlcgen.UpdateCampaignCreatureParams{
@@ -287,7 +287,7 @@ func (s *Server) gravaOBloco(c mesaComando, rascunho rascunhoDoNPC, blob string)
 }
 
 // paraOFormulario traduz o modelo para o formulário, e é a metade que faltava do
-// `blocoDoRascunho`.
+// `draftBlock`.
 //
 // Ela existe por causa do PM e de uma armadilha que só aparece na tela: o bloco
 // guarda a AUSÊNCIA de mana (o Bandido não tem a linha), e um ponteiro nulo vira
@@ -295,7 +295,7 @@ func (s *Server) gravaOBloco(c mesaComando, rascunho rascunhoDoNPC, blob string)
 // nasceria com a palavra escrita dentro no instante em que o mestre marcasse
 // "Conjura". O formulário guarda sempre um número; quem diz se ele conta é o
 // interruptor.
-func paraOFormulario(id int64, nome string, bloco creature.Block) rascunhoDoNPC {
+func paraOFormulario(id int64, nome string, bloco creature.Block) npcDraft {
 	conjura := bloco.PM != nil
 	if bloco.PM == nil {
 		zero := 0
@@ -305,17 +305,17 @@ func paraOFormulario(id int64, nome string, bloco creature.Block) rascunhoDoNPC 
 	// numa lista ausente estoura a expressão do contador da aba, e o número some
 	// sem erro em lugar nenhum.
 	creature.Normalize(&bloco)
-	return rascunhoDoNPC{ID: id, Nome: nome, Conjura: conjura, Bloco: bloco}
+	return npcDraft{ID: id, Nome: nome, Conjura: conjura, Bloco: bloco}
 }
 
-// blocoDoRascunho traduz o formulário de volta para o modelo.
+// draftBlock traduz o formulário de volta para o modelo.
 //
 // A única tradução é o PM, e ela é a razão de o rascunho não ser o bloco: o
 // livro escreve a linha de mana só em quem conjura (o Centauro Xamã tem 20 PM,
 // p290; o Bandido não tem linha nenhuma), e um zero ali diria "tem mana e está
 // sem" — que é outro estado. O formulário guarda um número e um interruptor; o
 // bloco guarda a AUSÊNCIA.
-func blocoDoRascunho(rascunho rascunhoDoNPC) creature.Block {
+func draftBlock(rascunho npcDraft) creature.Block {
 	bloco := rascunho.Bloco
 	if !rascunho.Conjura {
 		bloco.PM = nil
@@ -328,14 +328,14 @@ func blocoDoRascunho(rascunho rascunhoDoNPC) creature.Block {
 	return bloco
 }
 
-// respondeAoRascunho devolve o rascunho E as linhas redesenhadas.
+// respondDraft devolve o rascunho E as linhas redesenhadas.
 //
 // AS DUAS COISAS, sempre. Só os sinais deixaria a lista com o número de linhas
 // antigo — o ataque existiria no rascunho e não na tela. Só o HTML deixaria a
 // linha nova ligada a um caminho de sinal que não existe, e ela nasceria muda.
-func (s *Server) respondeAoRascunho(w http.ResponseWriter, r *http.Request, c mesaComando, rascunho rascunhoDoNPC) {
+func (s *Server) respondDraft(w http.ResponseWriter, r *http.Request, c commandCtx, rascunho npcDraft) {
 	sse := datastar.NewSSE(w, r)
-	for _, fragmento := range asListasDoRascunho(c, rascunho) {
+	for _, fragmento := range draftLists(c, rascunho) {
 		if html, err := ui.RenderFragment(r.Context(), fragmento); err == nil {
 			_ = sse.PatchElements(html)
 		}
@@ -350,24 +350,24 @@ func (s *Server) respondeAoRascunho(w http.ResponseWriter, r *http.Request, c me
 	})
 }
 
-// oMestreDaMesa é a leitura de acesso dos caminhos do rascunho.
+// tableGm é a leitura de acesso dos caminhos do rascunho.
 //
 // A trava é do SERVIDOR e não do botão escondido, como no resto da Mesa: o
 // elenco é a preparação da campanha, e quem postar na mão leva 403.
-func (s *Server) oMestreDaMesa(w http.ResponseWriter, r *http.Request) (mesaComando, bool) {
-	campaignID, sessionID, ok := mesaParams(w, r)
+func (s *Server) tableGm(w http.ResponseWriter, r *http.Request) (commandCtx, bool) {
+	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
-		return mesaComando{}, false
+		return commandCtx{}, false
 	}
 	user := currentUser(r)
 	_, papel, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
 	if err != nil {
 		http.Error(w, err.Error(), status)
-		return mesaComando{}, false
+		return commandCtx{}, false
 	}
 	if papel != "gm" {
 		http.Error(w, "só o mestre monta o elenco", http.StatusForbidden)
-		return mesaComando{}, false
+		return commandCtx{}, false
 	}
-	return mesaComando{R: r, User: user, CampaignID: campaignID, SessionID: sessionID}, true
+	return commandCtx{R: r, User: user, CampaignID: campaignID, SessionID: sessionID}, true
 }

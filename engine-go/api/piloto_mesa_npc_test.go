@@ -23,10 +23,10 @@ import (
 func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/do-verbete",
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete",
 		`{"criatura":"ogro","nomedonpc":"Ogro Capitão"}`)
 
-	npcs := f.elencoNoBanco(t)
+	npcs := f.dbCast(t)
 	if len(npcs) != 1 {
 		t.Fatalf("o elenco tem %d NPCs, queria 1", len(npcs))
 	}
@@ -53,9 +53,9 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/do-verbete", `{"criatura":"ogro","nomedonpc":"   "}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"criatura":"ogro","nomedonpc":"   "}`)
 
-	npcs := f.elencoNoBanco(t)
+	npcs := f.dbCast(t)
 	if len(npcs) != 1 || npcs[0].Name == "" {
 		t.Fatalf("o NPC não nasceu com o nome do livro: %+v", npcs)
 	}
@@ -74,14 +74,14 @@ func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
 	f := novoPiloto(t)
 	outraSessao := seedSession(t, f.s, f.campaignID)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
 
 	// A view da OUTRA sessão da mesma campanha tem de enxergar o mesmo NPC.
 	user, err := f.s.queries.GetUserByID(t.Context(), f.mestre)
 	if err != nil {
 		t.Fatalf("mestre: %v", err)
 	}
-	view, _, err := f.s.loadMesaView(t.Context(), AuthUser{ID: user.ID}, f.campaignID, outraSessao)
+	view, _, err := f.s.loadTableView(t.Context(), AuthUser{ID: user.ID}, f.campaignID, outraSessao)
 	if err != nil {
 		t.Fatalf("montar a view da outra sessão: %v", err)
 	}
@@ -108,10 +108,10 @@ func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	}
 
 	corpo := f.posta(t, f.mestre,
-		f.urlDaMesa()+"/elenco/npc/"+strconv.FormatInt(alheio.ID, 10)+"/apagar", "{}")
+		f.tableUrl()+"/elenco/npc/"+strconv.FormatInt(alheio.ID, 10)+"/apagar", "{}")
 
 	if !strings.Contains(corpo, "não é desta campanha") {
-		t.Errorf("a recusa não veio: %s", primeirasLinhas(corpo, 5))
+		t.Errorf("a recusa não veio: %s", firstRows(corpo, 5))
 	}
 	// O CONTROLE: recusar DEPOIS de apagar seria pior que não recusar.
 	if _, err := f.s.queries.GetCampaignCreature(t.Context(), alheio.ID); err != nil {
@@ -126,12 +126,12 @@ func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 // perder o combatente EM CURSO ao arrumar a preparação, no meio da noite.
 func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 	f := novoPiloto(t)
-	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
-	npcs := f.elencoNoBanco(t)
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
+	npcs := f.dbCast(t)
 	if len(npcs) != 1 {
 		t.Fatalf("o NPC não foi guardado")
 	}
-	rota := f.urlDaMesa() + "/elenco/npc/" + strconv.FormatInt(npcs[0].ID, 10)
+	rota := f.tableUrl() + "/elenco/npc/" + strconv.FormatInt(npcs[0].ID, 10)
 	f.posta(t, f.mestre, rota+"/na-fila", "{}")
 	if n := len(f.s.sessions.GetState(f.sessionID).Initiative); n != 1 {
 		t.Fatalf("o NPC não entrou na fila (%d linhas) — o resto do teste mediria nada", n)
@@ -148,17 +148,17 @@ func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
+	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador guardou NPC no elenco do mestre: %d", rec.Code)
 	}
-	if npcs := f.elencoNoBanco(t); len(npcs) != 0 {
+	if npcs := f.dbCast(t); len(npcs) != 0 {
 		t.Error("a recusa veio depois da escrita")
 	}
 }
 
-func (f pilotoFixture) elencoNoBanco(t *testing.T) []sqlcgen.CampaignCreature {
+func (f pilotoFixture) dbCast(t *testing.T) []sqlcgen.CampaignCreature {
 	t.Helper()
 	linhas, err := f.s.queries.ListCampaignCreatures(t.Context(), f.campaignID)
 	if err != nil {

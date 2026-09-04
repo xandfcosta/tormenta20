@@ -41,7 +41,7 @@ import (
 // continuam no RODAPÉ em vez de subirem para a faixa do turno. A gaveta da
 // ALE-263 é ancorada em `bottom-full` porque nasce no pé, e mover a fileira
 // mudaria uma regra de leiaute JÁ MEDIDA para caber numa semelhança de desenho.
-func palcoDoMestre(v mesaView, b master.BestiaryView) templ.Component {
+func gmStage(v tableView, b master.BestiaryView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -66,7 +66,7 @@ func palcoDoMestre(v mesaView, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaCabecalho(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableHeader(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -74,19 +74,19 @@ func palcoDoMestre(v mesaView, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = trilhoDaEsquerda(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = leftRail(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaTabuleiro(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableBoard(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaNotas(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableNotes(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = trilhoDasConsultas(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = queriesRail(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -94,7 +94,7 @@ func palcoDoMestre(v mesaView, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaComandos(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableCommands(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -102,19 +102,19 @@ func palcoDoMestre(v mesaView, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaPorNoMapa(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableMap(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaAcervoDeLugares(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableCollectionPlaces(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaConfigDaSessao(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableConfigSession(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaElencoDaCampanha(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableCastCampaign(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -122,7 +122,7 @@ func palcoDoMestre(v mesaView, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = bestiarioDaMesa(b).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableBestiary(b).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -136,7 +136,7 @@ func palcoDoMestre(v mesaView, b master.BestiaryView) templ.Component {
 // navegador. `display:none` tira o trilho da árvore acessível de verdade — a
 // ressalva da SPA contra esconder por CSS era sobre nós que continuam expostos,
 // e este não continua.
-func trilhoDaEsquerda(v mesaView) templ.Component {
+func leftRail(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -161,11 +161,11 @@ func trilhoDaEsquerda(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaTrilhoDaFila(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableRailTracker(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaGrupo(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableParty(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -190,7 +190,7 @@ func trilhoDaEsquerda(v mesaView) templ.Component {
 // RECORTAR sem saber onde cortar, rolar é o erro menor: uma barra de rolagem
 // atrapalha, um `overflow-hidden` mudo ESCONDE combatente e faz o trilho mentir
 // sobre quem ainda vai jogar. A janela volta quando houver uma medida honesta.
-func mesaTrilhoDaFila(v mesaView) templ.Component {
+func tableRailTracker(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -270,7 +270,7 @@ func mesaTrilhoDaFila(v mesaView) templ.Component {
 // ordem e as condições. Na SPA ele abre o painel do combatente, que esta tela
 // ainda não tem — e mandar o clique para lugar nenhum seria pior que mandá-lo
 // para onde o gesto se completa.
-func retratoDaFila(l mesaLinha) templ.Component {
+func retratoDaFila(l tableRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -452,7 +452,7 @@ func retratoDaFila(l mesaLinha) templ.Component {
 // UMA lista nas duas larguras, trocando por classe: coluna à direita do mapa a
 // partir de 1024, fileira ACIMA dele abaixo disso (`order-first`). Duas árvores
 // num condicional é como um trilho e o gêmeo de telefone divergem.
-func trilhoDasConsultas(v mesaView) templ.Component {
+func queriesRail(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -503,11 +503,11 @@ func trilhoDasConsultas(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oBotaoDasNotas().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = notesButton().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oBotaoDoElenco(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = castButton(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -540,7 +540,7 @@ func trilhoDasConsultas(v mesaView) templ.Component {
 //
 // A vaga de REGISTRAR entra aqui, e não no trilho: ela é do mestre que também
 // joga, é sobre a fila, e é onde a fila está.
-func gavetaDaFila(v mesaView) templ.Component {
+func gavetaDaFila(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -573,11 +573,11 @@ func gavetaDaFila(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaRegistrarRegiao(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableRegisterRegion(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaFila(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableTracker(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

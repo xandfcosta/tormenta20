@@ -19,8 +19,8 @@ import (
 // Toda a família de defeito desta issue mora aí: um gesto de uma pessoa mexendo
 // na tela das outras, ou um comando pousando na cena errada.
 
-// abreSegunda põe outra cena na mesa e devolve as duas, na ordem de abertura.
-func (f pilotoFixture) abreSegunda(t *testing.T, nome string) *tabuleiro.BoardState {
+// openSecond põe outra cena na mesa e devolve as duas, na ordem de abertura.
+func (f pilotoFixture) openSecond(t *testing.T, nome string) *tabuleiro.BoardState {
 	t.Helper()
 	b, err := f.s.boards.Open(context.Background(), f.sessionID, nome, "pedra")
 	if err != nil {
@@ -79,15 +79,15 @@ func TestNoSceneCommandUsesTheDefaultTab(t *testing.T) {
 // uma região que desenha uma cena.
 func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
-	uma := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	uma := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(uma, "tabuleiro-aba") {
 		t.Error("com uma cena aberta a barra de abas apareceu — é ficha só, sobre o mapa")
 	}
 
-	f.abreSegunda(t, "Cripta")
-	duas := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.openSecond(t, "Cripta")
+	duas := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(duas, "Ver o tabuleiro Cripta") {
 		t.Fatal("com duas cenas abertas não há como chegar à segunda")
@@ -113,15 +113,15 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 // e no meio de um combate ninguém entenderia por que o mapa mudou.
 func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra") // "Taverna do Javali", a primeira
-	cripta := f.abreSegunda(t, "Cripta")
+	f.seedOpenBoard(t, "pedra") // "Taverna do Javali", a primeira
+	cripta := f.openSecond(t, "Cripta")
 
-	rec := f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID, "")
+	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o jogador não conseguiu trocar de aba: %d", rec.Code)
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "Ver o tabuleiro Taverna do Javali") {
 		t.Error("o jogador trocou para a cripta e a taverna deixou de ser alcançável")
 	}
@@ -129,7 +129,7 @@ func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 		t.Error("a tela do jogador não seguiu a aba que ele escolheu")
 	}
 
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "Taverna do Javali</h2>") {
 		t.Error("o clique do jogador arrastou a tela do mestre junto")
 	}
@@ -143,12 +143,12 @@ func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 // que a mesa está vendo, que é a emboscada vazando por outro caminho.
 func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 	f := novoPiloto(t)
-	taverna := f.abreTabuleiro(t, "pedra")
-	cripta := f.abreSegunda(t, "Cripta")
+	taverna := f.seedOpenBoard(t, "pedra")
+	cripta := f.openSecond(t, "Cripta")
 	ctx := context.Background()
 
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID, "")
-	rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/terreno/dificil/2/3/ate/2/3", "")
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
+	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/terreno/dificil/2/3/ate/2/3", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
@@ -169,17 +169,17 @@ func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 // teria como ligar uma coisa à outra.
 func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	cripta := f.abreSegunda(t, "Cripta")
-	f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID, "")
+	f.seedOpenBoard(t, "pedra")
+	cripta := f.openSecond(t, "Cripta")
+	f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
 
 	// O mestre entra na cripta e a encerra.
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID, "")
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	// A frase é a DO JOGADOR, copiada do `.templ`. Duas correções aqui, e as
 	// duas eram o mesmo erro: eu tinha escrito uma paráfrase minha ("não há
 	// tabuleiro"), que não existe na página; e depois a frase do MESTRE, que o
@@ -202,14 +202,14 @@ func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 // não aparece na tela — só no ver-código-fonte.
 func TestATabUnderTheCurtainDoesNotTellThePlayerTheSceneName(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	emboscada := f.abreSegunda(t, "Cripta do Rei Caolho")
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+emboscada.ID, "")
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/cortina/fechar", ""); rec.Code != http.StatusOK {
+	f.seedOpenBoard(t, "pedra")
+	emboscada := f.openSecond(t, "Cripta do Rei Caolho")
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+emboscada.ID, "")
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/cortina/fechar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("fechar a cortina deu %d", rec.Code)
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(doJogador, "Rei Caolho") {
 		t.Fatal("o nome da cena sob cortina saiu no HTML do jogador")
@@ -219,7 +219,7 @@ func TestATabUnderTheCurtainDoesNotTellThePlayerTheSceneName(t *testing.T) {
 		t.Error("a aba sob cortina sumiu da barra do jogador em vez de se chamar pela posição")
 	}
 	// Para o mestre a cortina não é sobre ele: o nome continua na barra dele.
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "Rei Caolho") {
 		t.Error("o mestre perdeu o nome da própria cena por causa da cortina dele")
 	}

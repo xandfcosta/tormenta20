@@ -39,22 +39,22 @@ const (
 	retanguloDePecas   = "pecas"
 )
 
-// osSinaisDoRetangulo entram na semente da Mesa.
+// rectSignals entram na semente da Mesa.
 //
 // O canto de ORIGEM guarda-se como `"x/y"` pelo mesmo motivo do `$ultimacasa`: é
 // o formato do CAMINHO, e converter na hora de montar a rota foi exatamente onde
 // a vírgula produziu um 404 mudo.
-var osSinaisDoRetangulo = fmt.Sprintf(
+var rectSignals = fmt.Sprintf(
 	"%s: '', %s: '', retangulodex: 0, retangulodey: 0, retanguloatex: 0, retanguloatey: 0",
 	sinalDoRetangulo, sinalDoRetanguloDe)
 
-// oRetanguloPega abre o laço no canto em que o dedo desceu.
+// takesRect abre o laço no canto em que o dedo desceu.
 //
 // Guarda o canto DUAS vezes — como texto de caminho e como par de números — e
 // isso não é redundância: o texto vai para a rota no fim, e os números desenham o
 // laço a cada quadro. Derivar um do outro na expressão custaria um `split` por
 // movimento do ponteiro.
-func oRetanguloPega(modo string) string {
+func takesRect(modo string) string {
 	return fmt.Sprintf(
 		"evt.preventDefault(); const cx = %s, cy = %s; "+
 			"$%s = %q; $%s = cx + '/' + cy; "+
@@ -64,23 +64,23 @@ func oRetanguloPega(modo string) string {
 	)
 }
 
-// oRetanguloSegue leva o canto oposto atrás do dedo.
+// followsRect leva o canto oposto atrás do dedo.
 //
 // NÃO fala com o servidor: o laço é geometria, e o resultado só é pedido quando o
 // dedo solta. É a diferença para o pincel — lá cada casa cruzada é uma ação, aqui
 // o gesto inteiro é UMA.
-func oRetanguloSegue(modo string) string {
+func followsRect(modo string) string {
 	return fmt.Sprintf(
 		"$%s === %q && ($retanguloatex = %s, $retanguloatey = %s)",
 		sinalDoRetangulo, modo, clicouEmX, clicouEmY,
 	)
 }
 
-// oRetanguloDeTerrenoSolta fecha o laço e manda encher.
+// dropTerrainRect fecha o laço e manda encher.
 //
 // O `$ferramenta` escolhe a rota: a borracha tem caminho sem espécie, que é o
 // conserto que a fatia 1 fez e que não pode se perder aqui.
-func oRetanguloDeTerrenoSolta(v tabuleiroView) string {
+func dropTerrainRect(v boardView) string {
 	return fmt.Sprintf(
 		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
 			"$%s = ''; "+
@@ -89,25 +89,25 @@ func oRetanguloDeTerrenoSolta(v tabuleiroView) string {
 			": @post('/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/retangulo/' + de + '/' + ate)",
 		sinalDoRetangulo, retanguloDeTerreno, sinalDoRetanguloDe,
 		sinalDoRetangulo,
-		FerramentaDaBorracha,
+		EraserTool,
 		v.CampaignID, v.SessionID,
 		v.CampaignID, v.SessionID,
 	)
 }
 
-// oLacoEstaAberto mostra o desenho do laço.
-func oLacoEstaAberto() string {
+// openIsLasso mostra o desenho do laço.
+func openIsLasso() string {
 	return fmt.Sprintf("$%s !== ''", sinalDoRetangulo)
 }
 
-// oEstiloDoLaco põe o retângulo na tela, em QUADRADOS do plano.
+// lassoStyle põe o retângulo na tela, em QUADRADOS do plano.
 //
 // `min` e `+1` porque o retângulo inclui as duas casas das pontas e o dedo pode
 // arrastar para qualquer lado — a mesma regra que o `CasasDoRetangulo` aplica do
 // lado do servidor, e é de propósito que as duas existam: esta desenha o que
 // aquela vai fazer, e uma promessa que não bate com o resultado é pior que não
 // desenhar nada.
-const oEstiloDoLaco = "`left: ${Math.min($retangulodex, $retanguloatex) * $quadrado}px; " +
+const lassoStyle = "`left: ${Math.min($retangulodex, $retanguloatex) * $quadrado}px; " +
 	"top: ${Math.min($retangulodey, $retanguloatey) * $quadrado}px; " +
 	"width: ${(Math.abs($retanguloatex - $retangulodex) + 1) * $quadrado}px; " +
 	"height: ${(Math.abs($retanguloatey - $retangulodey) + 1) * $quadrado}px`"
@@ -121,13 +121,13 @@ const oEstiloDoLaco = "`left: ${Math.min($retangulodex, $retanguloatex) * $quadr
 // junto, sem ninguém ter pedido.
 const sinalDoCliqueEngolido = "engoleoclique"
 
-// oRetanguloDePecasSolta fecha o laço e pergunta ao servidor quem ele pegou.
+// dropTokensRect fecha o laço e pergunta ao servidor quem ele pegou.
 //
 // Só PERGUNTA: marcar não muta a cena, e a resposta é do tamanho de um sinal.
 //
 // O laço que NÃO ANDOU (mesmo canto nas duas pontas) é um clique, não um laço, e
 // segue o caminho do clique — é assim que a mesma camada serve aos dois gestos.
-func oRetanguloDePecasSolta(v tabuleiroView) string {
+func dropTokensRect(v boardView) string {
 	return fmt.Sprintf(
 		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
 			"$%s = ''; if (de === ate) return; $%s = true; "+
@@ -138,32 +138,32 @@ func oRetanguloDePecasSolta(v tabuleiroView) string {
 	)
 }
 
-// aPecaEstaMarcada é a pergunta que acende o anel, e ela é feita UMA VEZ POR
+// markedIsToken é a pergunta que acende o anel, e ela é feita UMA VEZ POR
 // PEÇA na cena.
 //
 // `,id,` com vírgulas nas pontas e não um `includes(id)` cru: sem elas, marcar a
 // peça `abc` acenderia também a `abcd`. É a armadilha clássica de lista em
 // string, e ela aparece exatamente no dia em que dois ids compartilham prefixo.
-func aPecaEstaMarcada(id string) string {
-	return fmt.Sprintf("(',' + $%s + ',').includes(%q)", sinalDasPecasMarcadas, ","+id+",")
+func markedIsToken(id string) string {
+	return fmt.Sprintf("(',' + $%s + ',').includes(%q)", markedTokensSignal, ","+id+",")
 }
 
-// aFraseDoGrupo é o que a barra diz, com o plural certo.
+// partyPhrase é o que a barra diz, com o plural certo.
 //
 // A frase INTEIRA numa expressão só, e não um número num `data-text` ao lado de
 // um texto fixo: "1 peças marcadas" apareceu na tela na primeira medição, e a
 // única forma de a palavra acompanhar o número é ela estar na mesma conta.
-var aFraseDoGrupo = fmt.Sprintf(
+var partyPhrase = fmt.Sprintf(
 	"(() => { const n = $%s.split(',').filter(Boolean).length; "+
 		"return n + (n === 1 ? ' peça marcada' : ' peças marcadas') "+
 		"+ ' · arraste qualquer uma para mover o grupo' })()",
-	sinalDasPecasMarcadas)
+	markedTokensSignal)
 
-// haGrupoMarcado mostra a barra do grupo.
-var haGrupoMarcado = fmt.Sprintf("$%s !== ''", sinalDasPecasMarcadas)
+// hasMarkedParty mostra a barra do grupo.
+var hasMarkedParty = fmt.Sprintf("$%s !== ''", markedTokensSignal)
 
-// largaOGrupo desmarca tudo.
-var largaOGrupo = fmt.Sprintf("$%s = ''", sinalDasPecasMarcadas)
+// unmarkParty desmarca tudo.
+var unmarkParty = fmt.Sprintf("$%s = ''", markedTokensSignal)
 
 // ── ARRASTAR O GRUPO ─────────────────────────────────────────────────────────
 //
@@ -171,21 +171,21 @@ var largaOGrupo = fmt.Sprintf("$%s = ''", sinalDasPecasMarcadas)
 // É o gesto que todo editor faz e o motivo inteiro de marcar: chegou uma horda
 // de seis zumbis e reposicioná-los hoje custa seis arrastos.
 
-// pegaOGrupo começa o arrasto, e SÓ se a peça estiver marcada.
+// partyTakes começa o arrasto, e SÓ se a peça estiver marcada.
 //
 // Sem a guarda, arrastar uma peça qualquer com um grupo marcado em outro canto
 // do mapa moveria o grupo distante — o gesto agiria sobre o que a pessoa não
 // está olhando, que é a pior classe de surpresa num tabuleiro.
-func pegaOGrupo(id string) string {
-	return fmt.Sprintf("if (!(%s)) return; %s", aPecaEstaMarcada(id), pegaParaArrastar("peca"))
+func partyTakes(id string) string {
+	return fmt.Sprintf("if (!(%s)) return; %s", markedIsToken(id), pegaParaArrastar("peca"))
 }
 
-// soltaOGrupo converte o deslocamento em QUADRADOS e move todas.
+// dropParty converte o deslocamento em QUADRADOS e move todas.
 //
 // O arredondamento é o mesmo do arrasto de uma peça só (para o quadrado mais
 // próximo, e não para baixo), porque o gesto é o mesmo gesto — o que muda é
 // quantas peças ele leva.
-func soltaOGrupo(v tabuleiroView) string {
+func dropParty(v boardView) string {
 	return fmt.Sprintf(
 		"if ($arrastando === 'peca') { "+
 			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
@@ -195,20 +195,20 @@ func soltaOGrupo(v tabuleiroView) string {
 	)
 }
 
-// oVestidoDaPeca junta as duas marcas que a peça pode vestir.
+// tokenStyling junta as duas marcas que a peça pode vestir.
 //
 // UM `data-class` só porque atributo repetido não existe: o navegador guarda o
 // primeiro e descarta o segundo, e a marca do grupo nasceria morta — é a mesma
 // armadilha do `data-on:keydown__window` duplicado que a fatia 2 registrou.
-func oVestidoDaPeca(id string, arrastavel bool) string {
-	marcada := fmt.Sprintf("'tabuleiro-peca-marcada': %s", aPecaEstaMarcada(id))
+func tokenStyling(id string, arrastavel bool) string {
+	marcada := fmt.Sprintf("'tabuleiro-peca-marcada': %s", markedIsToken(id))
 	if !arrastavel {
 		return "{" + marcada + "}"
 	}
 	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === 'peca', %s}", marcada)
 }
 
-// oGestoDoPincel decide entre TRAÇO e RETÂNGULO no `pointerdown`.
+// brushGesture decide entre TRAÇO e RETÂNGULO no `pointerdown`.
 //
 // A decisão é no `pointerdown` e vale para o gesto inteiro, como o modo do
 // pincel: soltar o `Shift` no meio do arrasto não pode trocar o que o gesto está
@@ -221,16 +221,16 @@ func oVestidoDaPeca(id string, arrastavel bool) string {
 // inteiro virou nada — não só o retângulo: o pincel à mão livre, que funcionava,
 // parou junto. Medido: o `pointerdown` chegava ao elemento e nenhuma requisição
 // saía, sem uma linha no console.
-func oGestoDoPincel(v tabuleiroView, modoFixo string) string {
+func brushGesture(v boardView, modoFixo string) string {
 	return fmt.Sprintf("if (evt.shiftKey) { %s } else { %s }",
-		oRetanguloPega(retanguloDeTerreno), oPincelPega(v, modoFixo))
+		takesRect(retanguloDeTerreno), takesBrush(v, modoFixo))
 }
 
-// oNomeDaCamadaDeRepouso diz os dois gestos que ela aceita.
+// restLayerName diz os dois gestos que ela aceita.
 //
 // O nome acessível é onde o gesto de ARRASTO fica descoberto: ele não tem ícone
 // nem botão, e quem navega por teclado não tem outro lugar para achá-lo.
-func oNomeDaCamadaDeRepouso(v tabuleiroView) string {
+func restLayerName(v boardView) string {
 	if v.AlvoDoMovimento == "" {
 		return "Marcar peças — arraste um retângulo em volta delas"
 	}
@@ -240,15 +240,15 @@ func oNomeDaCamadaDeRepouso(v tabuleiroView) string {
 	return "Mover " + v.RotuloDoAlvo + " — escolha a casa, ou arraste para marcar um grupo"
 }
 
-// oCliqueEmRepouso é o clique da camada, com o ENGOLE na frente.
+// clickRest é o clique da camada, com o ENGOLE na frente.
 //
 // Sem alvo de movimento não há o que o clique faça, e a expressão fica só com o
 // engole — que continua precisando existir, porque o `click` vem do mesmo jeito
 // depois de um laço.
-func oCliqueEmRepouso(v tabuleiroView) string {
+func clickRest(v boardView) string {
 	engole := fmt.Sprintf("if ($%s) { $%s = false; return }", sinalDoCliqueEngolido, sinalDoCliqueEngolido)
 	if v.AlvoDoMovimento == "" {
 		return engole
 	}
-	return engole + "; " + paradaNoPontoClicado(v)
+	return engole + "; " + clickedPointStop(v)
 }

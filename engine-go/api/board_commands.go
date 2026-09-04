@@ -436,12 +436,12 @@ func (s *Server) handleBoardPlaceScene(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	cena, err := s.boards.PlaceScene(r.Context(), ctx.campaignID, placeID)
+	scene, err := s.boards.PlaceScene(r.Context(), ctx.campaignID, placeID)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, "não consegui abrir o lugar para montar")
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, tabuleiro.BoardForRole(ctx.Role, cena))
+	plataforma.WriteJSON(w, http.StatusOK, tabuleiro.BoardForRole(ctx.Role, scene))
 }
 
 func (s *Server) handleBoardPlaceSave(w http.ResponseWriter, r *http.Request) {
@@ -453,12 +453,12 @@ func (s *Server) handleBoardPlaceSave(w http.ResponseWriter, r *http.Request) {
 	if !temID {
 		return
 	}
-	cena, err := tabuleiro.ParseScene(body["scene"])
+	scene, err := tabuleiro.ParseScene(body["scene"])
 	if err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if err := s.boards.SavePlaceScene(r.Context(), ctx.campaignID, placeID, cena); err != nil {
+	if err := s.boards.SavePlaceScene(r.Context(), ctx.campaignID, placeID, scene); err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}

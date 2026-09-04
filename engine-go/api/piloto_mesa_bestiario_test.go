@@ -21,7 +21,7 @@ import (
 func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/bestiario/enviar",
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"criatura":"goblin-salteador","pvdoverbete":4,"inidoverbete":13,"copiasdoverbete":3}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("mandar para a mesa deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
@@ -59,7 +59,7 @@ func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/bestiario/enviar",
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"criatura":"goblin-salteador","pvdoverbete":4,"inidoverbete":13,"copiasdoverbete":99}`)
 	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "99") {
 		t.Errorf("a recusa não citou o valor ofensivo; sinais = %s", corpo)
@@ -75,7 +75,7 @@ func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 func TestAnInventedCreatureIsRefused(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/bestiario/enviar",
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"criatura":"grifo-de-neon","pvdoverbete":10,"inidoverbete":10,"copiasdoverbete":1}`)
 	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "grifo-de-neon") {
 		t.Errorf("a recusa não citou a criatura; sinais = %s", corpo)
@@ -96,10 +96,10 @@ func TestAnInventedCreatureIsRefused(t *testing.T) {
 // acabou de ajustar.
 func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	f := novoPiloto(t)
-	painel := f.urlDaMesa() + "/bestiario"
+	painel := f.tableUrl() + "/bestiario"
 
 	// Primeira abertura: o rascunho na tela não é de ninguém ainda.
-	abriu := f.pede(t, f.mestre, http.MethodGet, painel+comSinais(`{"criatura":"zumbi","rascunhode":""}`), "").Body.String()
+	abriu := f.pede(t, f.mestre, http.MethodGet, painel+signals(`{"criatura":"zumbi","rascunhode":""}`), "").Body.String()
 	if !strings.Contains(trechoDeSinais(abriu), `"pvdoverbete":20`) {
 		t.Errorf("abrir o Zumbi não semeou o PV do livro (20); sinais = %s", trechoDeSinais(abriu))
 	}
@@ -110,7 +110,7 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	// Segunda visita à MESMA criatura, agora com o rascunho já sendo dela: é o
 	// que acontece a cada tecla da busca, e não pode semear nada.
 	dinovo := f.pede(t, f.mestre, http.MethodGet,
-		painel+comSinais(`{"criatura":"zumbi","busca":"zu","rascunhode":"zumbi"}`), "").Body.String()
+		painel+signals(`{"criatura":"zumbi","busca":"zu","rascunhode":"zumbi"}`), "").Body.String()
 	// O CONTROLE: o painel FOI redesenhado, senão "não semeou" seria só "não
 	// respondeu".
 	if !strings.Contains(dinovo, "bestiario-da-mesa") {
@@ -138,13 +138,13 @@ func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 		{"POST", "/bestiario/enviar", `{"criatura":"zumbi","pvdoverbete":20,"inidoverbete":10,"copiasdoverbete":1}`},
 	}
 	for _, rota := range rotas {
-		rec := f.pede(t, f.jogador, rota.metodo, f.urlDaMesa()+rota.caminho, rota.corpo)
+		rec := f.pede(t, f.jogador, rota.metodo, f.tableUrl()+rota.caminho, rota.corpo)
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador chamou %q e levou %d, quero 403", rota.caminho, rec.Code)
 		}
 	}
 
-	html := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(html, "Iniciativa") {
 		t.Fatal("o jogador não viu a cena; a ausência abaixo não provaria nada")
 	}
@@ -156,12 +156,12 @@ func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 			t.Errorf("o HTML do jogador veio com %q", marca)
 		}
 	}
-	if doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String(); !strings.Contains(doMestre, "bestiario-da-mesa") {
+	if doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(doMestre, "bestiario-da-mesa") {
 		t.Error("o mestre não recebeu o painel")
 	}
 }
 
-// comSinais escreve os sinais do jeito que o Datastar os manda num GET: um
+// signals escreve os sinais do jeito que o Datastar os manda num GET: um
 // parâmetro `datastar` com o JSON inteiro.
 //
 // A primeira versão deste teste usava query params soltos (`?criatura=zumbi`), e
@@ -169,6 +169,6 @@ func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 // `rascunhode` só existe como sinal — então o teste mandava um pedido que o
 // navegador nunca manda, e o painel semeava por não achar o rascunho. O teste
 // acusou o código por um defeito que era dele.
-func comSinais(json string) string {
+func signals(json string) string {
 	return "?datastar=" + url.QueryEscape(json)
 }

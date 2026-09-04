@@ -32,32 +32,32 @@ import (
 // estado de TELA e não da sessão, e um remendo da mesa o apagaria a cada turno
 // que alguém avançasse.
 
-// rotaDoBestiarioDaMesa é a base das rotas do painel, montada por mesa.
-func rotaDoBestiarioDaMesa(campaignID, sessionID int64) string {
+// tableBestiaryRoute é a base das rotas do painel, montada por mesa.
+func tableBestiaryRoute(campaignID, sessionID int64) string {
 	return fmt.Sprintf("/mesa/%d/%d/bestiario", campaignID, sessionID)
 }
 
 func (s *Server) TableBestiaryRoutes(r chi.Router) {
-	r.Get("/mesa/{campaignId}/{sessionId}/bestiario", s.handleBestiarioDaMesa)
-	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/tipo/{tipo}", s.handleTipoDoBestiarioDaMesa)
-	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/enviar", s.comandoDoMestre(mandaParaAMesa))
+	r.Get("/mesa/{campaignId}/{sessionId}/bestiario", s.handleBestiaryTable)
+	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/tipo/{tipo}", s.handleKindBestiaryTable)
+	r.Post("/mesa/{campaignId}/{sessionId}/bestiario/enviar", s.gmCommand(sendsForTable))
 }
 
-// bestiarioDaMesaPara monta a view do painel para esta mesa.
-func (s *Server) bestiarioDaMesaPara(r *http.Request, campaignID, sessionID int64) master.BestiaryView {
+// forTableBestiary monta a view do painel para esta mesa.
+func (s *Server) forTableBestiary(r *http.Request, campaignID, sessionID int64) master.BestiaryView {
 	c := master.BestiaryCriteriaFromRequest(r)
-	v := master.LoadBestiaryFrom(rotaDoBestiarioDaMesa(campaignID, sessionID), s.livro.endereco, c.Term, c.Types, c.CRMin, c.CRMax, c.Chosen)
+	v := master.LoadBestiaryFrom(tableBestiaryRoute(campaignID, sessionID), s.livro.endereco, c.Term, c.Types, c.CRMin, c.CRMax, c.Chosen)
 	v.Open = c.Open
 	return v
 }
 
-// handleBestiarioDaMesa redesenha o PAINEL e mais nada.
+// handleBestiaryTable redesenha o PAINEL e mais nada.
 //
 // Remendar o `#mesa` junto seria redesenhar a fila inteira a cada tecla da
 // busca — e pior, apagaria o que o mestre está digitando, porque o campo vive
 // dentro do painel.
-func (s *Server) handleBestiarioDaMesa(w http.ResponseWriter, r *http.Request) {
-	campaignID, sessionID, ok := s.mesaDoMestreOuRecusa(w, r)
+func (s *Server) handleBestiaryTable(w http.ResponseWriter, r *http.Request) {
+	campaignID, sessionID, ok := s.tableGmOrRefusal(w, r)
 	if !ok {
 		return
 	}
@@ -65,11 +65,11 @@ func (s *Server) handleBestiarioDaMesa(w http.ResponseWriter, r *http.Request) {
 	// eles vêm da query string e reler é barato — mas a ordem continua sendo a
 	// regra, e ela já custou um defeito que só apareceu no navegador (ver o
 	// comentário do `piloto_mesa_action.go`).
-	rascunho := rascunhoDosSinais(r)
-	v := s.bestiarioDaMesaPara(r, campaignID, sessionID)
+	rascunho := signalsDraft(r)
+	v := s.forTableBestiary(r, campaignID, sessionID)
 
 	sse := datastar.NewSSE(w, r)
-	if fragmento, err := ui.RenderFragment(r.Context(), bestiarioDaMesa(v)); err == nil {
+	if fragmento, err := ui.RenderFragment(r.Context(), tableBestiary(v)); err == nil {
 		_ = sse.PatchElements(fragmento)
 	}
 	// O PAINEL É O DONO DO RASCUNHO: os campos de PV, iniciativa e quantas
@@ -81,17 +81,17 @@ func (s *Server) handleBestiarioDaMesa(w http.ResponseWriter, r *http.Request) {
 	// "digitou na busca": só a primeira semeia. Sem ela, filtrar apagaria o PV
 	// que o mestre acabou de ajustar.
 	if v.Chosen != nil && rascunho != v.Chosen.ID {
-		_ = sse.MarshalAndPatchSignals(rascunhoDoVerbete(*v.Chosen))
+		_ = sse.MarshalAndPatchSignals(entryDraft(*v.Chosen))
 	}
 }
 
-// rascunhoDoVerbete são os três campos do ajuste, nascidos do livro.
+// entryDraft são os três campos do ajuste, nascidos do livro.
 //
 // A INICIATIVA é um d20 ROLADO e não o bônus da criatura, e é o que a SPA faz:
 // o mestre quer a linha entrando com uma rolagem, e ajusta se rolou nos dados de
 // verdade em cima da mesa. Rolar no SERVIDOR e não na página é o mesmo princípio
 // do d20 do jogador (ALE-213) — a página não faz conta que vale.
-func rascunhoDoVerbete(m book.Entry) map[string]any {
+func entryDraft(m book.Entry) map[string]any {
 	return map[string]any{
 		"pvdoverbete":     m.HP,
 		"inidoverbete":    rand.IntN(20) + 1,
@@ -100,8 +100,8 @@ func rascunhoDoVerbete(m book.Entry) map[string]any {
 	}
 }
 
-// rascunhoDosSinais lê de QUAL criatura o rascunho na tela é.
-func rascunhoDosSinais(r *http.Request) string {
+// signalsDraft lê de QUAL criatura o rascunho na tela é.
+func signalsDraft(r *http.Request) string {
 	var sinais struct {
 		De string `json:"rascunhode"`
 	}
@@ -111,12 +111,12 @@ func rascunhoDosSinais(r *http.Request) string {
 	return sinais.De
 }
 
-// handleTipoDoBestiarioDaMesa liga ou desliga um crachá de tipo.
+// handleKindBestiaryTable liga ou desliga um crachá de tipo.
 //
 // Espelha o `handleBestiarioTipo` da cena do mestre; o que muda é o que ele
 // remenda. Não dá para reusar aquele porque ele responde com a cena inteira.
-func (s *Server) handleTipoDoBestiarioDaMesa(w http.ResponseWriter, r *http.Request) {
-	campaignID, sessionID, ok := s.mesaDoMestreOuRecusa(w, r)
+func (s *Server) handleKindBestiaryTable(w http.ResponseWriter, r *http.Request) {
+	campaignID, sessionID, ok := s.tableGmOrRefusal(w, r)
 	if !ok {
 		return
 	}
@@ -128,12 +128,12 @@ func (s *Server) handleTipoDoBestiarioDaMesa(w http.ResponseWriter, r *http.Requ
 	}
 	criterios.Types = tipos
 	v := master.LoadBestiaryFrom(
-		rotaDoBestiarioDaMesa(campaignID, sessionID), s.livro.endereco,
+		tableBestiaryRoute(campaignID, sessionID), s.livro.endereco,
 		criterios.Term, criterios.Types, criterios.CRMin, criterios.CRMax, criterios.Chosen,
 	)
 
 	sse := datastar.NewSSE(w, r)
-	if fragmento, err := ui.RenderFragment(r.Context(), bestiarioDaMesa(v)); err == nil {
+	if fragmento, err := ui.RenderFragment(r.Context(), tableBestiary(v)); err == nil {
 		_ = sse.PatchElements(fragmento)
 	}
 	// O sinal volta porque o crachá é a ÚNICA coisa que muda a lista sem passar
@@ -141,7 +141,7 @@ func (s *Server) handleTipoDoBestiarioDaMesa(w http.ResponseWriter, r *http.Requ
 	_ = sse.MarshalAndPatchSignals(map[string]any{"tipos": criterios.Types})
 }
 
-// mandaParaAMesa põe N cópias do verbete na fila.
+// sendsForTable põe N cópias do verbete na fila.
 //
 // UMA ENTRADA POR CÓPIA, e quem numera os repetidos é o SERVIDOR (ALE-192): a
 // tela não pode adivinhar um número que outro cliente acabou de usar. Todas
@@ -149,7 +149,7 @@ func (s *Server) handleTipoDoBestiarioDaMesa(w http.ResponseWriter, r *http.Requ
 //
 // O `monsterId` viaja junto porque é ele que liga a linha ao verbete do livro, e
 // é o que faz o painel do combatente mostrar o bloco depois.
-func mandaParaAMesa(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func sendsForTable(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	envio, err := envioDosSinais(c.R)
 	if err != nil {
 		return nil, err
@@ -177,7 +177,7 @@ func mandaParaAMesa(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, err
 			return estado, err
 		}
 		// O parcial volta junto com o erro: quatro goblins que entraram são o
-		// estado da mesa, e o `comandoDoMestre` o transmite (ALE-155).
+		// estado da mesa, e o `gmCommand` o transmite (ALE-155).
 		if estado, err = st.sessions.AddInitiativeEntry(c.SessionID, linha); err != nil {
 			return estado, err
 		}
@@ -216,10 +216,10 @@ func envioDosSinais(r *http.Request) (envioDoVerbete, error) {
 	}, nil
 }
 
-// mesaDoMestreOuRecusa resolve a mesa e exige o papel, para as rotas do painel
-// que NÃO passam pelo `comandoDoMestre` — as que só leem.
-func (s *Server) mesaDoMestreOuRecusa(w http.ResponseWriter, r *http.Request) (int64, int64, bool) {
-	campaignID, sessionID, ok := mesaParams(w, r)
+// tableGmOrRefusal resolve a mesa e exige o papel, para as rotas do painel
+// que NÃO passam pelo `gmCommand` — as que só leem.
+func (s *Server) tableGmOrRefusal(w http.ResponseWriter, r *http.Request) (int64, int64, bool) {
+	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
 		return 0, 0, false
 	}

@@ -25,10 +25,10 @@ func (s *Server) MarkerRoutes(r chi.Router) {
 	// O `novo` estático antes das coordenadas separa a criação dos gestos sobre
 	// um marcador que já existe — sem ele, `{x}` e `{id}` disputariam a mesma
 	// posição do caminho.
-	r.Post(base+"/novo/{x}/{y}", s.comandoDoMestreNoTabuleiro(marcaOLugar))
-	r.Post(base+"/{id}/revelar", s.comandoDoMestreNoTabuleiro(revelaOMarcador))
-	r.Post(base+"/{id}/cor/{cor}", s.comandoDoMestreNoTabuleiro(pintaOMarcador))
-	r.Post(base+"/{id}/remover", s.comandoDoMestreNoTabuleiro(apagaOMarcador))
+	r.Post(base+"/novo/{x}/{y}", s.gmBoardCommand(marcaOLugar))
+	r.Post(base+"/{id}/revelar", s.gmBoardCommand(revealMarker))
+	r.Post(base+"/{id}/cor/{cor}", s.gmBoardCommand(paintMarker))
+	r.Post(base+"/{id}/remover", s.gmBoardCommand(eraseMarker))
 }
 
 // marcaOLugar põe um marcador novo na casa clicada.
@@ -36,7 +36,7 @@ func (s *Server) MarkerRoutes(r chi.Router) {
 // A LETRA vem do motor (`ProximaLetraDeMarcador`) e não da tela: na SPA era o
 // cliente que escolhia "A", "B", "C" e mandava pronto, e duas telas escolhendo
 // letra por conta própria é como nasce o segundo "C" no mesmo mapa.
-func marcaOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func marcaOLugar(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	casa, err := quadradoDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -54,13 +54,13 @@ func marcaOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	})
 }
 
-// revelaOMarcador alterna entre mostrar e esconder.
+// revealMarker alterna entre mostrar e esconder.
 //
 // ALTERNA e não "revela", apesar do nome do gesto: o mestre que revelou cedo
 // demais precisa poder esconder de volta, e um segundo botão para desfazer o
 // primeiro seria a mesma decisão em dois lugares.
-func revelaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	marcador, err := marcadorDaURL(st, c)
+func revealMarker(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	marcador, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
 	}
@@ -68,9 +68,9 @@ func revelaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 		tabuleiro.MarkerReveal(!marcador.Hidden))
 }
 
-// pintaOMarcador troca a cor.
-func pintaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	marcador, err := marcadorDaURL(st, c)
+// paintMarker troca a cor.
+func paintMarker(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	marcador, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
 	}
@@ -85,22 +85,22 @@ func pintaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 		tabuleiro.NewMarkerColor(cor))
 }
 
-// apagaOMarcador tira o ponto do mapa.
-func apagaOMarcador(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	marcador, err := marcadorDaURL(st, c)
+// eraseMarker tira o ponto do mapa.
+func eraseMarker(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	marcador, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
 	}
 	return st.boards.RemoveMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID)
 }
 
-// marcadorDaURL acha o marcador que o gesto aponta.
+// urlMarker acha o marcador que o gesto aponta.
 //
 // Ele DEVOLVE O MARCADOR e não só o id porque os três gestos precisam do estado
 // atual — revelar alterna, e alternar sem ler é escrever `true` por cima de
 // `true`. E achar aqui é o que faz um id inventado virar recusa com frase em vez
 // de mutação silenciosa que não acha ninguém.
-func marcadorDaURL(st *Server, c mesaComando) (tabuleiro.BoardMarker, error) {
+func urlMarker(st *Server, c commandCtx) (tabuleiro.BoardMarker, error) {
 	id := chi.URLParam(c.R, "id")
 	b := st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {

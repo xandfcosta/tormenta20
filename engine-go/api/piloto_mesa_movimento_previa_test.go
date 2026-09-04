@@ -23,9 +23,9 @@ import (
 // sentido.
 func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 4, 2)
-	f.naVezDoJogador(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoardAt(t, 4, 2)
+	f.turnPlayer(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	rec := f.pede(t, f.jogador, http.MethodPost, base+"/previa/9/2", "")
 	if rec.Code != http.StatusOK {
@@ -47,7 +47,7 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 	}
 
 	// E A CENA NÃO MUDOU: nem a peça andou, nem nasceu proposta.
-	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(tela, "tabuleiro-peca-fantasma") {
 		t.Error("a prévia deixou uma proposta na cena: arrastar viraria uma proposta por casa")
 	}
@@ -63,9 +63,9 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 // perna medida sozinha não responde.
 func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 0, 0)
-	f.naVezDoJogador(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoardAt(t, 0, 0)
+	f.turnPlayer(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/parada/3/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a primeira parada deu %d", rec.Code)
@@ -89,11 +89,11 @@ func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
 // duas ações e têm de acender as três.
 func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 0, 0)
-	f.naVezDoJogador(t)
+	tokenID := f.onBoardAt(t, 0, 0)
+	f.turnPlayer(t)
 
 	sinais := trechoDeSinais(f.pede(t, f.jogador, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/previa/15/0", "").Body.String())
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa/15/0", "").Body.String())
 
 	for _, fio := range []string{"previafiocabe", "previafiosegundo", "previafioalem"} {
 		if strings.Contains(sinais, `"`+fio+`":""`) {
@@ -111,10 +111,10 @@ func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 // três cores diriam respeito a um teto que a cena não tem.
 func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 0, 0)
+	tokenID := f.onBoardAt(t, 0, 0)
 
 	sinais := trechoDeSinais(f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/previa/15/0", "").Body.String())
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa/15/0", "").Body.String())
 
 	if !strings.Contains(sinais, `"previafiosegundo":""`) || !strings.Contains(sinais, `"previafioalem":""`) {
 		t.Errorf("fora de combate a prévia pintou faixa de ação; sinais = %s", sinais)

@@ -20,7 +20,7 @@ import templruntime "github.com/a-h/templ/runtime"
 //
 // O `title` conta o gesto direito porque um gesto que ninguém descobre é o mesmo
 // que não existir — e ele nunca é o único caminho: o diálogo faz o mesmo.
-func botaoDePorNoMapa(v tabuleiroView) templ.Component {
+func botaoDePorNoMapa(v boardView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -47,9 +47,9 @@ func botaoDePorNoMapa(v tabuleiroView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreOPorNoMapa())
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(openMap())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_pecas.templ`, Line: 20, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_pecas.templ`, Line: 20, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -60,9 +60,9 @@ func botaoDePorNoMapa(v tabuleiroView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(atalhoDasFichas(v))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetsShortcut(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_pecas.templ`, Line: 21, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_pecas.templ`, Line: 21, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -77,13 +77,13 @@ func botaoDePorNoMapa(v tabuleiroView) templ.Component {
 	})
 }
 
-// mesaPorNoMapa é a REGIÃO do diálogo — ver a razão em `regioesDaMesa`.
+// tableMap é a REGIÃO do diálogo — ver a razão em `tableRegions`.
 //
 // O `<div>` existe SEMPRE, inclusive para o jogador e inclusive sem tabuleiro
 // aberto: região que some do HTML é região que o remendo não acha, e a cena
 // voltaria a precisar de uma recarga para o diálogo existir. O que a porta do
 // mestre esconde é o CONTEÚDO.
-func mesaPorNoMapa(v mesaView) templ.Component {
+func tableMap(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -126,7 +126,7 @@ func mesaPorNoMapa(v mesaView) templ.Component {
 // seleção: é o gesto que o mestre já aprendeu nos filtros do bestiário e do
 // acervo, e o estado mora num sinal — a cena é remendada a cada mudança de
 // qualquer um na mesa, e entrada em curso presa ao DOM seria apagada no meio.
-func poeNoMapaDialogo(v tabuleiroView) templ.Component {
+func poeNoMapaDialogo(v boardView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -229,9 +229,9 @@ func poeNoMapaDialogo(v tabuleiroView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var10 string
-				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(alternaNoMapa(cand.ID))
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleMap(cand.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_pecas.templ`, Line: 75, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_pecas.templ`, Line: 75, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 				if templ_7745c5c3_Err != nil {
@@ -276,9 +276,9 @@ func poeNoMapaDialogo(v tabuleiroView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('por-no-mapa').close(); " + comandoDePorNoMapa(v))
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('por-no-mapa').close(); " + mapCommand(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_pecas.templ`, Line: 104, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_pecas.templ`, Line: 104, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {

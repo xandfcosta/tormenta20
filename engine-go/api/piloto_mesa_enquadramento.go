@@ -39,13 +39,13 @@ const (
 	passoDoZoom    = 8
 )
 
-// ampliaOPlano soma um passo ao zoom, preso aos limites.
+// zoomPlan soma um passo ao zoom, preso aos limites.
 //
 // O passo é EXPRESSÃO e não número desde a ALE-203: a roda decide o sinal dele
 // já no navegador (`deltaY < 0 ? ...`), e ela precisava dos mesmos limites que os
 // botões. Escritos à mão lá, seriam a segunda cópia dos tetos — e a que
 // divergiria no dia em que o zoom máximo mudasse.
-func ampliaOPlano(passo string) string {
+func zoomPlan(passo string) string {
 	return fmt.Sprintf("$quadrado = Math.min(%d, Math.max(%d, $quadrado + (%s)))",
 		quadradoMaximo, quadradoMinimo, passo)
 }
@@ -58,7 +58,7 @@ func zoomNoLimite(delta int) string {
 	return fmt.Sprintf("$quadrado >= %d", quadradoMaximo)
 }
 
-// ampliaAncorado muda o zoom SEM tirar de baixo do ponto o quadrado que estava
+// zoomAnchored muda o zoom SEM tirar de baixo do ponto o quadrado que estava
 // lá (ALE-203).
 //
 // Sem âncora o zoom acontece a partir da QUINA da janela, e num plano infinito
@@ -70,31 +70,31 @@ func zoomNoLimite(delta int) string {
 // A conta é a de sempre nesta família de ferramentas: guarde o ponto do plano
 // que está sob a âncora, mude a escala, e reescreva a janela para que aquele
 // mesmo ponto do plano volte para a mesma âncora. Os dois `const` vêm ANTES do
-// `ampliaOPlano` porque leem `$quadrado`.
-func ampliaAncorado(passo, pixelX, pixelY string) string {
-	x, y := oPontoNoPlano(pixelX, pixelY)
+// `zoomPlan` porque leem `$quadrado`.
+func zoomAnchored(passo, pixelX, pixelY string) string {
+	x, y := planPoint(pixelX, pixelY)
 	return fmt.Sprintf("const ancorax = %s, ancoray = %s; %s; $%s = ancorax * $quadrado - (%s); $%s = ancoray * $quadrado - (%s)",
-		x, y, ampliaOPlano(passo), sinalDaVistaX, pixelX, sinalDaVistaY, pixelY)
+		x, y, zoomPlan(passo), sinalDaVistaX, pixelX, sinalDaVistaY, pixelY)
 }
 
-// ampliaPeloMeioDaCena é o zoom SEM ponteiro: os botões e as teclas.
+// zoomMidScene é o zoom SEM ponteiro: os botões e as teclas.
 //
 // A âncora é o MEIO da janela porque é ali que está o que a pessoa escolheu
 // olhar. A quina seria o mesmo defeito do parágrafo acima, só que sem ninguém
 // para culpar pelo lugar do dedo.
-func ampliaPeloMeioDaCena(passo string) string {
+func zoomMidScene(passo string) string {
 	return fmt.Sprintf("const janela = document.getElementById(%q).getBoundingClientRect(); %s",
-		idDaCena, ampliaAncorado(passo, "janela.width / 2", "janela.height / 2"))
+		sceneId, zoomAnchored(passo, "janela.width / 2", "janela.height / 2"))
 }
 
 // zoomPeloTeclado: `+` e `-`, as mesmas teclas da SPA.
 //
 // A guarda de alvo de digitação é a mesma do atalho da barra: sem ela, digitar
 // um "-" no nome de um combatente reenquadraria o tabuleiro atrás do formulário.
-var zoomPeloTeclado = semAlvoDeDigitacao +
+var zoomPeloTeclado = typingTargetWithout +
 	fmt.Sprintf("(evt.key === '+' || evt.key === '=' ? (() => { %s })() : "+
 		"evt.key === '-' ? (() => { %s })() : null)",
-		ampliaPeloMeioDaCena(oPasso(passoDoZoom)), ampliaPeloMeioDaCena(oPasso(-passoDoZoom)))
+		zoomMidScene(step(passoDoZoom)), zoomMidScene(step(-passoDoZoom)))
 
 // ── CENTRALIZAR NAS PEÇAS (ALE-269, item 9) ──────────────────────────────────
 //
@@ -110,7 +110,7 @@ var zoomPeloTeclado = semAlvoDeDigitacao +
 // quadrados cabem na tela é coisa que só o dedo sabe. O que vem do servidor é o
 // ALVO em quadrados, e ele vem porque só o servidor sabe onde as peças estão.
 
-// centralizaNasPecas põe o grupo no meio da tela.
+// centerTokens põe o grupo no meio da tela.
 //
 // Ela ROLAVA o palco, e o palco deixou de rolar: sem moldura não há caixa com fim
 // para o navegador prender a rolagem. O que se move agora é a JANELA, que é um
@@ -121,12 +121,12 @@ var zoomPeloTeclado = semAlvoDeDigitacao +
 // `smooth` (no `scrollTo` ou no CSS) a rolagem não acontecia, o `scrollTop`
 // ficava em ZERO e não havia erro em lugar nenhum. Um botão que anima e não
 // chega é pior que um botão que salta.
-func centralizaNasPecas(v tabuleiroView) string {
-	x, y := oCentroDaCena(v)
-	return centralizaAJanelaEm(x, y)
+func centerTokens(v boardView) string {
+	x, y := centerScene(v)
+	return centerViewport(x, y)
 }
 
-// oCentroDaCena é a caixa que contém todas as peças, em quadrados do PLANO.
+// centerScene é a caixa que contém todas as peças, em quadrados do PLANO.
 //
 // O corpo da peça entra na conta e não só a âncora dela: uma Colossal ocupa 6×6
 // (p107), e centralizar pela quina deixaria metade do dragão fora da janela.
@@ -135,7 +135,7 @@ func centralizaNasPecas(v tabuleiroView) string {
 // moldura era o que estava desenhado, e agora não há nada desenhado além do que
 // existe. Num plano infinito e vazio, o (0,0) é o único lugar sobre o qual duas
 // pessoas concordam.
-func oCentroDaCena(v tabuleiroView) (x, y int) {
+func centerScene(v boardView) (x, y int) {
 	if len(v.Pecas) == 0 {
 		return 0, 0
 	}
@@ -150,18 +150,18 @@ func oCentroDaCena(v tabuleiroView) (x, y int) {
 	return (menorX + maiorX) / 2, (menorY + maiorY) / 2
 }
 
-// oAlvoDoCentralizar é o que o botão PROMETE, e ele muda com a cena.
+// centerTarget é o que o botão PROMETE, e ele muda com a cena.
 //
 // Duas frases porque são dois alvos: com peças na mesa o gesto acha o grupo, e
 // numa cena vazia ele devolve a janela ao meio do mapa. Uma frase só mentiria
 // numa das duas — e "Centralizar nas peças" numa cena sem peça nenhuma é
 // exatamente o tipo de rótulo que ensina que o botão está quebrado.
-func oAlvoDoCentralizar(v tabuleiroView) string {
+func centerTarget(v boardView) string {
 	if len(v.Pecas) == 0 {
 		return "Centralizar o mapa"
 	}
 	return "Centralizar nas peças"
 }
 
-// oPasso escreve um passo de zoom como número em JavaScript.
-func oPasso(delta int) string { return strconv.Itoa(delta) }
+// step escreve um passo de zoom como número em JavaScript.
+func step(delta int) string { return strconv.Itoa(delta) }

@@ -34,14 +34,14 @@ import (
 
 func (s *Server) MoveRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
-	r.Post(base+"/parada/{x}/{y}", s.comandoDaMesa(paraNoQuadrado))
-	r.Post(base+"/desfazer-parada", s.comandoDaMesa(desfazAUltimaParada))
-	r.Post(base+"/confirmar", s.comandoDaMesa(confirmaOMovimento))
-	r.Post(base+"/cancelar", s.comandoDaMesa(cancelaOMovimento))
+	r.Post(base+"/parada/{x}/{y}", s.tableCommand(paraNoQuadrado))
+	r.Post(base+"/desfazer-parada", s.tableCommand(undoLastStop))
+	r.Post(base+"/confirmar", s.tableCommand(confirmMove))
+	r.Post(base+"/cancelar", s.tableCommand(cancelMove))
 }
 
 // paraNoQuadrado acrescenta uma parada ao movimento — ou começa um.
-func paraNoQuadrado(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func paraNoQuadrado(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	destino, err := quadradoDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func paraNoQuadrado(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	return st.propoePorParadas(c, tokenID, append(paradas, destino))
 }
 
-// desfazAUltimaParada corrige a última perna sem jogar a rota inteira fora
+// undoLastStop corrige a última perna sem jogar a rota inteira fora
 // (ALE-266, portado na ALE-269).
 //
 // É a ordem do arrependimento: primeiro se tira a perna errada, e só depois se
@@ -65,7 +65,7 @@ func paraNoQuadrado(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 // Reconstrói pelas paradas que sobraram em vez de cortar o fim do caminho: o
 // número de quadrados de um trecho não se deduz das paradas sem redesenhá-lo, e
 // redesenhar é o que o `CaminhoPorParadas` faz de graça.
-func desfazAUltimaParada(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func undoLastStop(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	tokenID := chi.URLParam(c.R, "tokenId")
 	paradas, err := st.paradasDaProposta(c, tokenID)
 	if err != nil {
@@ -75,7 +75,7 @@ func desfazAUltimaParada(st *Server, c mesaComando) (*tabuleiro.BoardState, erro
 		return nil, fmt.Errorf("não há parada a desfazer em %q", tokenID)
 	}
 	if paradas = paradas[:len(paradas)-1]; len(paradas) < 2 {
-		return cancelaOMovimento(st, c)
+		return cancelMove(st, c)
 	}
 	return st.propoePorParadas(c, tokenID, paradas)
 }
@@ -85,7 +85,7 @@ func desfazAUltimaParada(st *Server, c mesaComando) (*tabuleiro.BoardState, erro
 // A proposta de OUTRA pessoa não conta: duas mãos empilhando pernas no mesmo
 // movimento é o estado que o `ByUserID` existe para evitar, e sem esta conferência
 // um segundo jogador estenderia o caminho que o primeiro está montando.
-func (s *Server) paradasDaProposta(c mesaComando, tokenID string) ([]engine.Square, error) {
+func (s *Server) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square, error) {
 	b := s.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
@@ -103,22 +103,22 @@ func (s *Server) paradasDaProposta(c mesaComando, tokenID string) ([]engine.Squa
 	return []engine.Square{{X: peca.X, Y: peca.Y}}, nil
 }
 
-func (s *Server) propoePorParadas(c mesaComando, tokenID string, paradas []engine.Square) (*tabuleiro.BoardState, error) {
+func (s *Server) propoePorParadas(c commandCtx, tokenID string, paradas []engine.Square) (*tabuleiro.BoardState, error) {
 	return s.boards.ProposeMoveWithStops(c.R.Context(), c.SessionID, c.TabuleiroID,
-		s.sessions.GetState(c.SessionID), tokenID, paradas, s.quemMove(c), 0)
+		s.sessions.GetState(c.SessionID), tokenID, paradas, s.moveWho(c), 0)
 }
 
-func confirmaOMovimento(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func confirmMove(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	// Versão ZERO: o `CommitMove` só compara quando ela é positiva, e aqui quem
 	// confirma acabou de ver a cena que o servidor desenhou — não há uma versão
 	// vinda do cliente para conferir contra. A trava contra a mesa ter mudado
 	// continua sendo a REVALIDAÇÃO da vez, que o `CommitMove` faz de novo.
 	return st.boards.CommitMove(c.R.Context(), c.SessionID, c.TabuleiroID,
-		st.sessions.GetState(c.SessionID), 0, st.quemMove(c))
+		st.sessions.GetState(c.SessionID), 0, st.moveWho(c))
 }
 
-func cancelaOMovimento(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	return st.boards.CancelMove(c.R.Context(), c.SessionID, c.TabuleiroID, st.quemMove(c))
+func cancelMove(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	return st.boards.CancelMove(c.R.Context(), c.SessionID, c.TabuleiroID, st.moveWho(c))
 }
 
 // quadradoDaURL lê o destino do CAMINHO e não de um sinal.
@@ -137,12 +137,12 @@ func quadradoDaURL(r *http.Request) (engine.Square, error) {
 	return engine.Square{X: x, Y: y}, nil
 }
 
-// segundoQuadradoDaURL é o FIM do traço do pincel (ALE-203).
+// urlSquareSecond é o FIM do traço do pincel (ALE-203).
 //
 // Nomes próprios (`x2`, `y2`) e não um `quadradoDaURL` com prefixo: o chi lê por
 // nome, e um helper que recebesse o prefixo seria uma indireção a mais para ler
 // dois parâmetros.
-func segundoQuadradoDaURL(r *http.Request) (engine.Square, error) {
+func urlSquareSecond(r *http.Request) (engine.Square, error) {
 	x, errX := intDoCaminho(chi.URLParam(r, "x2"))
 	y, errY := intDoCaminho(chi.URLParam(r, "y2"))
 	if errX != nil || errY != nil {
@@ -152,13 +152,13 @@ func segundoQuadradoDaURL(r *http.Request) (engine.Square, error) {
 	return engine.Square{X: x, Y: y}, nil
 }
 
-// quemMove resolve a POSSE contra o banco, e nunca contra o cliente.
+// moveWho resolve a POSSE contra o banco, e nunca contra o cliente.
 //
 // O `Mover.OwnsCharacter` é o que separa "a peça é sua" de "você disse que é": a
 // peça aponta para um personagem, e quem responde de quem ele é são as fichas da
-// campanha — o mesmo caminho que o `mesaRoster` usa para saber quais são os MEUS
+// campanha — o mesmo caminho que o `tableRoster` usa para saber quais são os MEUS
 // (ALE-33).
-func (s *Server) quemMove(c mesaComando) tabuleiro.Mover {
+func (s *Server) moveWho(c commandCtx) tabuleiro.Mover {
 	_, papel, _, err := s.sessionForCaller(c.R.Context(), c.User, c.CampaignID, c.SessionID)
 	if err != nil {
 		papel = "player"
@@ -167,7 +167,7 @@ func (s *Server) quemMove(c mesaComando) tabuleiro.Mover {
 	if papel == "gm" {
 		return quem
 	}
-	_, meus, _ := s.mesaRoster(c.R.Context(), c.User, c.CampaignID)
+	_, meus, _ := s.tableRoster(c.R.Context(), c.User, c.CampaignID)
 	b := s.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if peca := tabuleiro.FindToken(b, chi.URLParam(c.R, "tokenId")); peca != nil && peca.CharacterID != nil {
 		quem.OwnsCharacter = meus[*peca.CharacterID]
@@ -175,20 +175,20 @@ func (s *Server) quemMove(c mesaComando) tabuleiro.Mover {
 	return quem
 }
 
-// comandoDaMesa é o irmão do `comandoDoMestre` para o que o JOGADOR também faz.
+// tableCommand é o irmão do `gmCommand` para o que o JOGADOR também faz.
 //
 // Mover não é do mestre: o jogador anda com a própria peça, e quem decide isso é
 // o `assertMovable` do `tabuleiro` — três regras que já existem e que este
 // caminho não pode reescrever. Por isso ele NÃO exige papel: a recusa vem da
 // regra, com a frase que ela escreve ("não é a vez de Arwen"), e não de um 403
 // que diria a coisa errada.
-func (s *Server) comandoDaMesa(
-	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
+func (s *Server) tableCommand(
+	mutar func(*Server, commandCtx) (*tabuleiro.BoardState, error),
 ) http.HandlerFunc {
-	return s.comandoDoTabuleiro(mutar, false)
+	return s.boardCommand(mutar, false)
 }
 
-// comandoDoMestreNoTabuleiro é abrir e encerrar a cena: mutação de TABULEIRO,
+// gmBoardCommand é abrir e encerrar a cena: mutação de TABULEIRO,
 // mas só o mestre monta e desmonta a mesa.
 //
 // As duas diferenças andam JUNTAS e por isso são um parâmetro só. Quem pode agir
@@ -196,16 +196,16 @@ func (s *Server) comandoDaMesa(
 // que é a superfície que ele tem na tela; comando que o jogador também emite
 // fala no TABULEIRO, porque jogador não renderiza rodapé nenhum — foi assim que
 // uma recusa de movimento ficou muda por meia sessão.
-func (s *Server) comandoDoMestreNoTabuleiro(
-	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
+func (s *Server) gmBoardCommand(
+	mutar func(*Server, commandCtx) (*tabuleiro.BoardState, error),
 ) http.HandlerFunc {
-	return s.comandoDoTabuleiro(mutar, true)
+	return s.boardCommand(mutar, true)
 }
 
-// comandoContinuoDoMestre é o irmão do de cima para o gesto que se REPETE
+// gmContinuousCommand é o irmão do de cima para o gesto que se REPETE
 // enquanto o dedo está no botão (ALE-203): pintar e apagar terreno arrastando.
 //
-// A diferença é o TAMANHO DA RESPOSTA, e ela é medida: o `respondeAoMestre`
+// A diferença é o TAMANHO DA RESPOSTA, e ela é medida: o `respondGm`
 // repinta TODAS as regiões da Mesa, e um clique de pintura devolvia **353 KB**.
 // O comentário dele explicava por que isso era seguro — "ninguém está no meio de
 // um arrasto no instante em que pediu outra coisa" — e essa frase deixa de valer
@@ -216,22 +216,22 @@ func (s *Server) comandoDoMestreNoTabuleiro(
 // A resposta fica no `mesa-tabuleiro` porque terreno não aparece em mais lugar
 // nenhum. Quem precisar de outra região não usa este atalho — é uma lista
 // explícita, não um padrão.
-func (s *Server) comandoContinuoDoMestre(
-	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
+func (s *Server) gmContinuousCommand(
+	mutar func(*Server, commandCtx) (*tabuleiro.BoardState, error),
 ) http.HandlerFunc {
-	return s.comandoDoTabuleiro(mutar, true, "mesa-tabuleiro")
+	return s.boardCommand(mutar, true, "mesa-tabuleiro")
 }
 
-// comandoDoTabuleiro é o corpo dos dois. Separá-los em duas cópias seria repetir
+// boardCommand é o corpo dos dois. Separá-los em duas cópias seria repetir
 // resolver a mesa, mutar, publicar e redesenhar — e é numa delas que alguém
 // esquece de publicar e a mesa fica vendo a cena velha.
-func (s *Server) comandoDoTabuleiro(
-	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
+func (s *Server) boardCommand(
+	mutar func(*Server, commandCtx) (*tabuleiro.BoardState, error),
 	soODoMestre bool,
 	soAsRegioes ...string,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		campaignID, sessionID, ok := mesaParams(w, r)
+		campaignID, sessionID, ok := tableParams(w, r)
 		if !ok {
 			return
 		}
@@ -248,21 +248,21 @@ func (s *Server) comandoDoTabuleiro(
 			return
 		}
 		sinais := map[string]any{}
-		estado, err := mutar(s, mesaComando{
+		estado, err := mutar(s, commandCtx{
 			R: r, User: user, CampaignID: campaignID, SessionID: sessionID,
 			// A ABA de quem clicou (ALE-205), resolvida aqui e uma vez só: é ela
 			// que diz em QUAL tabuleiro o gesto acontece. Resolver dentro de cada
 			// mutação seria a mesma pergunta escrita vinte vezes, e a vigésima
 			// primeira é a que esquece.
-			TabuleiroID: s.aAbaDe(r.Context(), sessionID, user.ID),
+			TabuleiroID: s.chosenTabOf(r.Context(), sessionID, user.ID),
 			Sinais:      sinais,
 		})
 		if estado != nil {
 			s.publishBoardState(sessionID, estado)
 		}
 		if soODoMestre {
-			// O `respondeAoMestre` escreve o `erroDoComando` do rodapé sozinho.
-			s.respondeAoMestre(w, r, user, campaignID, sessionID, err, sinais, soAsRegioes...)
+			// O `respondGm` escreve o `erroDoComando` do rodapé sozinho.
+			s.respondGm(w, r, user, campaignID, sessionID, err, sinais, soAsRegioes...)
 			return
 		}
 		// A recusa vai para `erroDoMovimento` e NÃO para o `erroDoComando` do
@@ -275,7 +275,7 @@ func (s *Server) comandoDoTabuleiro(
 			frase = err.Error()
 		}
 		sinais["erroDoMovimento"] = frase
-		s.respondeAoMestre(w, r, user, campaignID, sessionID, nil, sinais)
+		s.respondGm(w, r, user, campaignID, sessionID, nil, sinais)
 	}
 }
 

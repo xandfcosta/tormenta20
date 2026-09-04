@@ -11,12 +11,12 @@ import (
 // Elas moram num arquivo à parte do `piloto_mesa_npc.go` pela regra da casa: lá
 // estão as ROTAS e o que decide, aqui está o que a tela dispara.
 
-func comandoDoNPC(v mesaView, npc npcDoElenco, acao string) string {
+func npcCommand(v tableView, npc castNpc, acao string) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/%d/%s')",
 		v.CampaignID, v.SessionID, npc.ID, acao)
 }
 
-// guardaNoElenco LIMPA o campo do nome depois de postar, e isso não é
+// saveToCastPost LIMPA o campo do nome depois de postar, e isso não é
 // arrumação: o painel do bestiário é UM só para os 80 verbetes, e o campo do
 // nome é um nó COMPARTILHADO por todos eles.
 //
@@ -31,7 +31,7 @@ func comandoDoNPC(v mesaView, npc npcDoElenco, acao string) string {
 // ids soltos: ela já carrega a campanha e a sessão, e derivar daqui é o que
 // impede este botão de apontar para a mesa 0/0 — o defeito que a prévia das
 // notas teve por nascer de uma view sintética.
-func guardaNoElenco(v master.BestiaryView) string {
+func saveToCastPost(v master.BestiaryView) string {
 	base := strings.TrimSuffix(v.BestiaryBase(), "/bestiario")
 	return fmt.Sprintf("@post('%s/elenco/npc/do-verbete'); $nomedonpc = ''", base)
 }

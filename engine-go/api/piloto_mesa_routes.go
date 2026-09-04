@@ -95,9 +95,9 @@ func (s *Server) WebRouter() http.Handler {
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
-		r.Get("/mesa/{campaignId}/{sessionId}", s.handleMesaPage)
-		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleMesaStream)
-		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
+		r.Get("/mesa/{campaignId}/{sessionId}", s.handleTablePage)
+		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleTableStream)
+		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleTableInitiative)
 		s.TableCommandRoutes(r)
 		s.TableBestiaryRoutes(r)
 		s.MoveRoutes(r)
@@ -111,11 +111,11 @@ func (s *Server) WebRouter() http.Handler {
 		s.LensRoutes(r)
 		s.TokenActionRoutes(r)
 		s.ConditionRoutes(r)
-		s.SessionRoutes(r)
-		s.NoteRoutes(r)
+		s.RoutesSession(r)
+		s.RoutesNote(r)
 		s.CastRoutes(r)
-		s.NPCRoutes(r)
-		s.NPCEditorRoutes(r)
+		s.RoutesNpc(r)
+		s.RoutesEditorNpc(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -141,10 +141,10 @@ func pilotoStaticHandler() http.Handler {
 // cena das campanhas o cita, e depois de virar pacote ela não alcança mais uma
 // função daqui. É o critério de lá reclassificando pela terceira vez.
 
-// mesaParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
+// tableParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
 // resposta é uma frase e não um JSON: quem está do outro lado é um navegador
 // mostrando uma página.
-func mesaParams(w http.ResponseWriter, r *http.Request) (campaignID, sessionID int64, ok bool) {
+func tableParams(w http.ResponseWriter, r *http.Request) (campaignID, sessionID int64, ok bool) {
 	campaignID, err1 := strconv.ParseInt(chi.URLParam(r, "campaignId"), 10, 64)
 	sessionID, err2 := strconv.ParseInt(chi.URLParam(r, "sessionId"), 10, 64)
 	if err1 != nil || err2 != nil {
@@ -154,32 +154,32 @@ func mesaParams(w http.ResponseWriter, r *http.Request) (campaignID, sessionID i
 	return campaignID, sessionID, true
 }
 
-// handleMesaPage é a carga fria: o documento inteiro, já com a fila desenhada.
+// handleTablePage é a carga fria: o documento inteiro, já com a fila desenhada.
 //
 // Renderizar o estado JÁ na primeira resposta (em vez de mandar uma casca que
 // espera o primeiro tique do SSE) é o que faz a página não piscar vazia — e é
 // a mesma lição do `settledQuery` na SPA, um andar acima (ALE-96).
-func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
-	campaignID, sessionID, ok := mesaParams(w, r)
+func (s *Server) handleTablePage(w http.ResponseWriter, r *http.Request) {
+	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
 		return
 	}
-	view, status, err := s.loadMesaView(r.Context(), currentUser(r), campaignID, sessionID)
+	view, status, err := s.loadTableView(r.Context(), currentUser(r), campaignID, sessionID)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	view.MinhaFicha = s.aFichaDoJogadorNaMesa(r, view)
+	view.MinhaFicha = s.tablePlayerSheet(r, view)
 	// A página é um retrato de agora, e o `escrevePagina` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
 	s.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
-		Sinais: sinaisDaMesa(),
+		Sinais: tableSignalsExpr(),
 		Init:   fmt.Sprintf("@get('/mesa/%d/%d/stream')", campaignID, sessionID),
-	}, s.corpoDaMesa(r, view, campaignID, sessionID))
+	}, s.tableBody(r, view, campaignID, sessionID))
 }
 
-// sinaisDaMesa é o estado que mora no NAVEGADOR, agrupado por superfície.
+// tableSignalsExpr é o estado que mora no NAVEGADOR, agrupado por superfície.
 //
 // Ele era uma linha só de mil e duzentos caracteres, e a régua a empurrou para
 // mil e quinhentos — a essa altura ninguém mais lia o que estava lá dentro, e
@@ -190,7 +190,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 // `data-signals`): o HTML minuscula a chave, e um `data-bind="gabaritoTamanho"`
 // liga um sinal NOVO, vazio, ao lado do que se queria. Os que só vivem dentro de
 // expressão (`$erroDoComando`) mantêm a caixa.
-func sinaisDaMesa() string {
+func tableSignalsExpr() string {
 	return "{" + strings.Join([]string{
 		// `erro` e `erroDoComando` são DOIS sinais e não um. Um só faria a
 		// recusa de "Adicionar grupo" acender a frase vermelha dentro da caixa
@@ -235,47 +235,47 @@ func sinaisDaMesa() string {
 		// até o primeiro `@post`. A semente é a mesma do "criar do zero", vinda
 		// do `blocoEmBranco` — escrevê-la aqui à mão seria o segundo branco.
 		fmt.Sprintf("rascunhoaberto: false, rascunhoaba: %q, erroDoRascunho: '', rascunho: %s",
-			abaDosNumeros, oRascunhoEmBranco()),
+			abaDosNumeros, blankDraft()),
 		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
 		fmt.Sprintf("quadrado: %d", quadradoPadrao),
 		"arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0",
 		// A JANELA sobre o plano infinito (ALE-203): ela substituiu a rolagem
 		// nativa, que precisava de uma caixa com fim para ter até onde rolar.
-		osSinaisDaJanela,
+		viewportSignals,
 		// O TRAÇO do pincel e da borracha (ALE-203): o modo em curso e a última
 		// casa que ele já mandou.
-		osSinaisDoPincel,
+		brushSignals,
 		// O LAÇO do retângulo (ALE-203, item 10): o modo em curso e os dois cantos.
-		osSinaisDoRetangulo,
+		rectSignals,
 		// AS PEÇAS MARCADAS pelo laço (ALE-203, item 10): ids separados por
-		// vírgula, numa string só. Ver `sinalDasPecasMarcadas` para por que não é
+		// vírgula, numa string só. Ver `markedTokensSignal` para por que não é
 		// uma lista.
-		fmt.Sprintf("%s: '', %s: false", sinalDasPecasMarcadas, sinalDoCliqueEngolido),
+		fmt.Sprintf("%s: '', %s: false", markedTokensSignal, sinalDoCliqueEngolido),
 		// A RÉGUA: as PARADAS em coordenada do PLANO (podem ser negativas), a mira
 		// sob o ponteiro, a fase da máquina, os rótulos de cada perna e a frase do
 		// total — as duas últimas escritas pelo servidor.
-		osSinaisDaRegua,
+		rulerSignals,
 		// A PRÉVIA DO ARRASTO: as três faixas da seta viva, os rótulos de cada
 		// perna e a frase do custo, todos escritos pelo servidor a cada casa que o
 		// dedo atravessa. Ver `piloto_mesa_movimento_previa.go`.
-		osSinaisDaPrevia,
+		previewSignals,
 		// O GABARITO nasce na PRIMEIRA forma da lista, e ela é derivada e não
 		// digitada pelo mesmo motivo do chão: a página que escreve 'esfera' à mão
 		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a
 		// barra marcando uma forma e o mapa desenhando outra. `aponta: false`
 		// acompanha, porque a esfera vai para todos os lados (p225).
 		fmt.Sprintf("gabarito: '%s', gabaritoaponta: %t, gabaritonaintersecao: %t, gabaritotamanho: 2",
-			string(asFormasDoLivro[0]), apontaOGabarito(asFormasDoLivro[0]),
-			aFormaNasceNaIntersecao(asFormasDoLivro[0])),
+			string(bookShapes[0]), pointsTemplate(bookShapes[0]),
+			shapeStartsAtIntersection(bookShapes[0])),
 		"gabaritox: 0, gabaritoy: 0, gabaritomirax: 0, gabaritomiray: 0, gabaritofase: 0",
-		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", aDicaDoGabaritoVazio),
+		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", emptyTemplateHint),
 		// As NOTAS da sessão.
 		"notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false",
 		"notassalvando: false, erroDasNotas: ''",
 	}, ", ") + "}"
 }
 
-// corpoDaMesa escolhe QUAL DAS DUAS FORMAS a página desenha (ALE-269).
+// tableBody escolhe QUAL DAS DUAS FORMAS a página desenha (ALE-269).
 //
 // O jogador recebe a coluna — uma superfície que rola, com Grupo, mapa e fila
 // empilhados. O mestre recebe o PALCO: trilhos nas bordas e o tabuleiro no
@@ -292,14 +292,14 @@ func sinaisDaMesa() string {
 // para todo mundo e escondê-lo por CSS entregaria as 80 criaturas com PV e
 // defesa a quem abrisse o inspetor — e esconder PV de NPC é literalmente o que o
 // olho da linha faz.
-func (s *Server) corpoDaMesa(r *http.Request, view mesaView, campaignID, sessionID int64) templ.Component {
+func (s *Server) tableBody(r *http.Request, view tableView, campaignID, sessionID int64) templ.Component {
 	if view.Mestre == nil {
-		return mesa(view)
+		return table(view)
 	}
-	return palcoDoMestre(view, s.bestiarioDaMesaPara(r, campaignID, sessionID))
+	return gmStage(view, s.forTableBestiary(r, campaignID, sessionID))
 }
 
-// aFichaDoJogadorNaMesa carrega a ficha que a superfície "Minha ficha" desenha.
+// tablePlayerSheet carrega a ficha que a superfície "Minha ficha" desenha.
 //
 // Só na CARGA FRIA e não no stream (ALE-272, fatia 10b): a ficha é sete painéis
 // computados, e ela muda pelos comandos DELA — que remendam o `#cena-ficha`
@@ -309,7 +309,7 @@ func (s *Server) corpoDaMesa(r *http.Request, view mesaView, campaignID, session
 // Falha em silêncio de propósito: uma ficha que não carrega tira a aba da tela,
 // e não derruba a sessão. Estar numa mesa é mais importante que ver a própria
 // ficha dentro dela, e o jogador continua tendo o elenco.
-func (s *Server) aFichaDoJogadorNaMesa(r *http.Request, view mesaView) *sheetui.View {
+func (s *Server) tablePlayerSheet(r *http.Request, view tableView) *sheetui.View {
 	if view.Mestre != nil || view.Eu == nil {
 		return nil
 	}
@@ -322,24 +322,24 @@ func (s *Server) aFichaDoJogadorNaMesa(r *http.Request, view mesaView) *sheetui.
 	return &ficha
 }
 
-// loadMesaView busca tudo o que a tela precisa e delega a DECISÃO ao
-// `mesaViewOf`. Impuro aqui, puro lá.
-func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, sessionID int64) (mesaView, int, error) {
+// loadTableView busca tudo o que a tela precisa e delega a DECISÃO ao
+// `tableViewOf`. Impuro aqui, puro lá.
+func (s *Server) loadTableView(ctx context.Context, user AuthUser, campaignID, sessionID int64) (tableView, int, error) {
 	sess, role, status, err := s.sessionForCaller(ctx, user, campaignID, sessionID)
 	if err != nil {
-		return mesaView{}, status, err
+		return tableView{}, status, err
 	}
 	// Hidrata do banco na primeira leitura, como o `onGetState` faz — sem isto
 	// um servidor recém-subido serve fila vazia para um combate em andamento.
 	if _, err := s.sessions.Load(ctx, sessionID); err != nil {
-		return mesaView{}, http.StatusInternalServerError, err
+		return tableView{}, http.StatusInternalServerError, err
 	}
 	// `stateForRole` e não `redactForPlayers` direto: é o mesmo gargalo que o
 	// socket usa (ALE-122/ALE-210), e papel desconhecido cai em jogador. O
 	// piloto não ganha uma segunda decisão sobre quem vê o quê.
 	st := aovivo.StateForRole(role, s.sessions.RefreshCharacterMaxes(ctx, sessionID))
-	grupo, meus, eu := s.mesaRoster(ctx, user, campaignID)
-	view := mesaViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu)
+	grupo, meus, eu := s.tableRoster(ctx, user, campaignID)
+	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu)
 	// O CICLO da sessão chega à tela (ALE-269): sem o estado, os verbos teriam de
 	// ser oferecidos todos, e "encerrar" numa sessão que nunca começou é o gesto
 	// que o servidor recusa — oferecer o que será recusado é desenhar um erro.
@@ -359,19 +359,19 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// A ABA que ESTA pessoa está olhando (ALE-205), e não "o tabuleiro da
 	// sessão", que deixou de existir como coisa única. Ela é resolvida contra os
 	// abertos, então a aba que o mestre fechou não deixa ninguém numa tela morta.
-	aba, puxado, deOnde := s.aAbaComOPuxao(ctx, sessionID, user.ID)
-	cena := tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID, aba))
+	aba, puxado, deOnde := s.pullTab(ctx, sessionID, user.ID)
+	scene := tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID, aba))
 	// A LENTE DO MESTRE (ALE-193): com ela ligada, o que se desenha é a cena
 	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `quemOlha` continua
 	// dizendo "mestre", porque a lente é sobre o que ele vê e não sobre o que ele
 	// pode: ele confere a emboscada sem parar de montá-la.
 	escondidas := 0
-	naLente := role == "gm" && s.lentes.Ligada(sessionID, user.ID)
+	naLente := role == "gm" && s.lentes.On(sessionID, user.ID)
 	if naLente {
-		cena, escondidas = aCenaComoAMesaVe(cena)
+		scene, escondidas = seesTableHowScene(scene)
 	}
-	view.Tabuleiro = tabuleiroViewOf(
-		cena, st, saudeDaFila(st), combatenteDaVez(st), quemOlha, meus, campaignID, sessionID,
+	view.Tabuleiro = boardViewOf(
+		scene, st, saudeDaFila(st), turnCombatant(st), quemOlha, meus, campaignID, sessionID,
 	)
 	view.Tabuleiro.Lente = naLente
 	view.Tabuleiro.PecasEscondidas = escondidas
@@ -379,34 +379,34 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// quem olha — e ela vem depois da lente de propósito: a lente é sobre a CENA
 	// que o mestre está vendo, não sobre quais cenas existem. Um mestre na lente
 	// que perdesse as abas não teria como sair da que está olhando.
-	view.Tabuleiro.Abas = asAbasDaMesa(s.boards.OpenBoards(ctx, sessionID), role, aba, campaignID, sessionID)
+	view.Tabuleiro.Abas = tableTabs(s.boards.OpenBoards(ctx, sessionID), role, aba, campaignID, sessionID)
 	// A TIRA DO PUXÃO vem depois da barra porque ela é feita DELA: os nomes já
 	// passaram pelo papel de quem olha, e ler o estado cru aqui contaria o nome
 	// de uma cena sob cortina a quem não pode sabê-lo.
 	if puxado {
-		view.Tabuleiro.Puxado = aTiraDoPuxao(view.Tabuleiro.Abas, deOnde)
+		view.Tabuleiro.Puxado = removePull(view.Tabuleiro.Abas, deOnde)
 	}
 	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
 	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
 	if role == "gm" {
-		view.Tabuleiro.Acervo = acervoDaCampanha(s.boards.Places(ctx, campaignID), s.boards.OpenBoards(ctx, sessionID))
+		view.Tabuleiro.Acervo = campaignCollection(s.boards.Places(ctx, campaignID), s.boards.OpenBoards(ctx, sessionID))
 	}
 	// O rastreador só é MONTADO para o mestre. A trava não é a tela esconder o
 	// bloco: é a view não ter o que desenhar, pelo mesmo `role` que o
 	// `stateForRole` já usou para redigir o estado.
 	// AS NOTAS são do mestre e chegam JÁ EM ÁRVORE (ALE-269). Elas não entram no
-	// `mesaViewOf` porque não vêm do estado ao vivo: moram na linha da sessão,
+	// `tableViewOf` porque não vêm do estado ao vivo: moram na linha da sessão,
 	// que é o mesmo lugar do título e do ciclo.
 	if role == "gm" && sess.Notes.Valid {
 		view.Notas = sess.Notes.String
 		view.NotasBlocos = markdown.Parse(sess.Notes.String)
 	}
 	if role == "gm" {
-		view.NPCs = s.oElencoDaCampanha(ctx, campaignID)
+		view.NPCs = s.campaignCast(ctx, campaignID)
 	}
 	if role == "gm" {
 		membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
-		r := mestreViewOf(st, membros, presentes, true)
+		r := ofViewGm(st, membros, presentes, true)
 		// A presença é escrita nos cartões DEPOIS de o papel ser resolvido, e é
 		// isso que a mantém fora da tela do jogador sem uma segunda decisão na
 		// cena: quem não é mestre não chega aqui, e lá o campo continua nil.
@@ -416,7 +416,7 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	return view, http.StatusOK, nil
 }
 
-// mesaRoster traduz o roster da campanha nas três coisas que a tela quer: os
+// tableRoster traduz o roster da campanha nas três coisas que a tela quer: os
 // cartões do Grupo, o conjunto dos MEUS personagens, e qual deles registra
 // iniciativa.
 //
@@ -424,21 +424,21 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 // personagem: a ficha de um membro é o SNAPSHOT da campanha (ALE-33), então o
 // dono registrado é o único fio de volta até a pessoa. Mesmo caminho do
 // `myCharacterIdsOf` na SPA, pelo mesmo motivo.
-func (s *Server) mesaRoster(ctx context.Context, user AuthUser, campaignID int64) ([]mesaMembro, map[int64]bool, *mesaEu) {
+func (s *Server) tableRoster(ctx context.Context, user AuthUser, campaignID int64) ([]tableMember, map[int64]bool, *tableMe) {
 	rows, err := s.queries.ListMembers(ctx, campaignID)
 	if err != nil {
 		// Roster indisponível não derruba a fila: a iniciativa é o assunto da
 		// tela, e o Grupo é o cartão ao lado.
 		return nil, map[int64]bool{}, nil
 	}
-	grupo := make([]mesaMembro, 0, len(rows))
+	grupo := make([]tableMember, 0, len(rows))
 	meus := make(map[int64]bool, len(rows))
-	var eu *mesaEu
+	var eu *tableMe
 	for _, m := range rows {
 		if dono, err := s.queries.GetCharacterOwner(ctx, m.Characterid); err == nil && dono == user.ID {
 			meus[m.Characterid] = true
 			if eu == nil {
-				eu = &mesaEu{CharacterID: m.Characterid, Nome: m.Charname}
+				eu = &tableMe{CharacterID: m.Characterid, Nome: m.Charname}
 			}
 		}
 		// O filtro de PAPEL é o mesmo do "Adicionar grupo" no servidor
@@ -447,15 +447,15 @@ func (s *Server) mesaRoster(ctx context.Context, user AuthUser, campaignID int64
 		if m.Role != "player" {
 			continue
 		}
-		grupo = append(grupo, mesaMembro{
+		grupo = append(grupo, tableMember{
 			CharacterID: m.Characterid,
 			Nome:        m.Charname,
 			Iniciais:    ui.Monogram(m.Charname),
-			Defesa:      s.defesaDoMembro(ctx, m.Characterid),
+			Defesa:      s.memberDefense(ctx, m.Characterid),
 			Nivel:       m.Charlevel,
-			Classes:     s.mesaClasses(ctx, m.Characterid),
-			PV:          mesaBarraDe(m.Charhpcurrent, m.Charhpmax, false),
-			PM:          mesaBarraDe(m.Charmpcurrent, m.Charmpmax, true),
+			Classes:     s.tableClasses(ctx, m.Characterid),
+			PV:          tableBarOf(m.Charhpcurrent, m.Charhpmax, false),
+			PM:          tableBarOf(m.Charmpcurrent, m.Charmpmax, true),
 		})
 	}
 	if eu != nil {
@@ -468,8 +468,8 @@ func (s *Server) mesaRoster(ctx context.Context, user AuthUser, campaignID int64
 	return grupo, meus, eu
 }
 
-// mesaClasses monta "Guerreiro 3 / Ladino 2".
-func (s *Server) mesaClasses(ctx context.Context, characterID int64) string {
+// tableClasses monta "Guerreiro 3 / Ladino 2".
+func (s *Server) tableClasses(ctx context.Context, characterID int64) string {
 	classes, err := s.queries.ListClassesByCharacter(ctx, characterID)
 	if err != nil || len(classes) == 0 {
 		return ""
@@ -484,13 +484,13 @@ func (s *Server) mesaClasses(ctx context.Context, characterID int64) string {
 	return out
 }
 
-// mesaTick é a cadência do stream. 200ms é a medida que a comunidade do
+// tableTick é a cadência do stream. 200ms é a medida que a comunidade do
 // Datastar pratica (o Game of Life multiplayer do Anders Murphy re-renderiza o
 // <main> inteiro nessa cadência), e ela é folgada para uma mesa de RPG: o que
 // muda é um turno por vez, não um quadro por vez.
 //
-// Só sai byte quando o HTML MUDA — ver `handleMesaStream`.
-const mesaTick = 200 * time.Millisecond
+// Só sai byte quando o HTML MUDA — ver `handleTableStream`.
+const tableTick = 200 * time.Millisecond
 
 // membrosEPresenca junta o que as regras de presença precisam.
 //
@@ -516,12 +516,12 @@ func (s *Server) membrosEPresenca(ctx context.Context, campaignID, sessionID int
 	return membros, presentes
 }
 
-// defesaDoMembro pergunta ao MOTOR, que é a mesma `ComputeSheetV2` da ficha.
+// memberDefense pergunta ao MOTOR, que é a mesma `ComputeSheetV2` da ficha.
 //
 // Travessão quando o motor não está de pé: a cena inteira não pode cair por
 // causa de um número, e um zero seria pior — Defesa 0 é um valor plausível, e o
 // mestre agiria sobre ele. É a mesma escolha que o cartão de personagem faz.
-func (s *Server) defesaDoMembro(ctx context.Context, characterID int64) string {
+func (s *Server) memberDefense(ctx context.Context, characterID int64) string {
 	if s.catalogs == nil {
 		return "—"
 	}

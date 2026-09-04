@@ -25,13 +25,13 @@ import (
 // paradas ela é uma reta e o total é a régua de sempre, que é o caso que não
 // pode ter mudado.
 func TestTheTotalIsTheSumOfTheLegs(t *testing.T) {
-	reta := aLeituraDaPolilinha([]engine.Square{{}, {X: 3}})
-	if reta["reguatexto"] != leituraDaRegua(engine.Measure(engine.Square{}, engine.Square{X: 3})) {
+	reta := polylineReading([]engine.Square{{}, {X: 3}})
+	if reta["reguatexto"] != rulerReading(engine.Measure(engine.Square{}, engine.Square{X: 3})) {
 		t.Errorf("a régua de duas paradas deixou de ser a régua de sempre: %q", reta["reguatexto"])
 	}
 
 	// Três paradas: 3 + 4 = 7 quadrados de caminho.
-	caminho := aLeituraDaPolilinha([]engine.Square{{}, {X: 3}, {X: 3, Y: 4}})
+	caminho := polylineReading([]engine.Square{{}, {X: 3}, {X: 3, Y: 4}})
 	if !strings.HasPrefix(caminho["reguatexto"].(string), "7 quadrados") {
 		t.Errorf("o total de 3+4 pernas saiu %q, esperado 7 quadrados", caminho["reguatexto"])
 	}
@@ -46,7 +46,7 @@ func TestTheTotalIsTheSumOfTheLegs(t *testing.T) {
 // "ele está a nove metros" é a frase do turno, e "seis quadrados" obriga a
 // converter de cabeça. A frase do TOTAL continua trazendo as duas, porque lá cabe.
 func TestTheLegLabelComesInMetres(t *testing.T) {
-	leitura := aLeituraDaPolilinha([]engine.Square{{}, {X: 6}})
+	leitura := polylineReading([]engine.Square{{}, {X: 6}})
 	rotulos := leitura["reguarotulos"].([]string)
 	if len(rotulos) != 1 || rotulos[0] != "9,0m" {
 		t.Errorf("a perna de 6 quadrados saiu %v, esperado [\"9,0m\"] — 6 × 1,5m (p236)", rotulos)
@@ -64,9 +64,9 @@ func TestTheLegLabelComesInMetres(t *testing.T) {
 //
 // O instante logo depois de um clique tem a MIRA em cima da parada que acabou de
 // nascer. Um "0,0m" piscando sob o dedo é ruído sobre o gesto que a pessoa está
-// fazendo, e o vazio é o que apaga o nó (ver `oRotuloExiste`).
+// fazendo, e o vazio é o que apaga o nó (ver `existsLabel`).
 func TestAZeroLengthLegHasNoLabel(t *testing.T) {
-	leitura := aLeituraDaPolilinha([]engine.Square{{X: 4, Y: 4}, {X: 4, Y: 4}})
+	leitura := polylineReading([]engine.Square{{X: 4, Y: 4}, {X: 4, Y: 4}})
 	if rotulos := leitura["reguarotulos"].([]string); len(rotulos) != 1 || rotulos[0] != "" {
 		t.Errorf("a perna de zero saiu %v, esperado um rótulo VAZIO", rotulos)
 	}
@@ -90,8 +90,8 @@ func TestAZeroLengthLegHasNoLabel(t *testing.T) {
 // expressão que alguém escrever amanhã sem ler nada disto.
 func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: as expressões da régua ESTÃO na página. Sem ele, não achar
 	// `$reguapontos[` seria verdade também sobre uma cena que não desenhou régua
@@ -135,8 +135,8 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 // `offsetX` zero e a régua renasce na ORIGEM do plano no mesmo gesto que a apagou.
 func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, pedaco := range []string{
 		"data-on:dblclick",
@@ -155,13 +155,13 @@ func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 // `.templ`, e uma polilinha maior teria pernas medidas que ninguém desenha.
 func TestAForgedRulerIsRefused(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
-	pontos := make([]string, 0, oMaximoDeParadas+2)
-	for i := range oMaximoDeParadas + 2 {
+	pontos := make([]string, 0, stopsMax+2)
+	for i := range stopsMax + 2 {
 		pontos = append(pontos, "["+string(rune('0'+i%10))+",0]")
 	}
-	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/regua",
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/regua",
 		`{"reguapontos":[`+strings.Join(pontos, ",")+`],"reguafase":2}`)
 	if !strings.Contains(corpo, "teto") {
 		t.Errorf("uma régua com %d paradas não foi recusada: %q", len(pontos), corpo)
@@ -184,18 +184,18 @@ func TestAForgedRulerIsRefused(t *testing.T) {
 // O guarda prende as DUAS pontas — a regra e o gesto — porque separadas elas já
 // divergiram uma vez.
 func TestTheSphereIsBornAtTheIntersection(t *testing.T) {
-	if !aFormaNasceNaIntersecao(engine.AreaSphere) {
+	if !shapeStartsAtIntersection(engine.AreaSphere) {
 		t.Error("a esfera deixou de nascer na interseção (p225)")
 	}
 	for _, outra := range []engine.AreaKind{engine.AreaSquare, engine.AreaCone, engine.AreaLine} {
-		if aFormaNasceNaIntersecao(outra) {
+		if shapeStartsAtIntersection(outra) {
 			t.Errorf("%q passou a nascer na interseção, e o livro só diz isso da esfera (p225)", outra)
 		}
 	}
 
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "Math.round((evt.offsetX") {
 		t.Error("a tela não arredonda o clique para o canto: com `floor` a esfera cai " +
 			"meio quadrado longe do dedo, e o defeito é silencioso")

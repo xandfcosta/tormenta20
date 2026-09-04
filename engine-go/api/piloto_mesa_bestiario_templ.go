@@ -21,7 +21,7 @@ import (
 // é para isso que a `master.BestiaryView.Base` existe. O que este arquivo acrescenta
 // é o invólucro e o gesto que a cena de lá não tem: mandar para a fila.
 
-// bestiarioDaMesa é o painel inteiro, e ele é a raiz que as rotas remendam.
+// tableBestiary é o painel inteiro, e ele é a raiz que as rotas remendam.
 //
 // O `data-signals` fica AQUI, na raiz remendada, e por isso ele reinicializa a
 // cada remendo — de propósito: `busca`, `tipos` e `criatura` são o que o
@@ -55,7 +55,7 @@ import (
 // Eu não vi na minha própria conferência porque cliquei por JavaScript, e
 // `element.click()` NÃO faz teste de acerto — ele dispara no elemento mesmo com
 // outra coisa por cima. Foi o clique de verdade do Playwright que acusou.
-func bestiarioDaMesa(v master.BestiaryView) templ.Component {
+func tableBestiary(v master.BestiaryView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -142,7 +142,7 @@ func bestiarioDaMesa(v master.BestiaryView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Chosen != nil {
-			templ_7745c5c3_Err = ajusteDoVerbete(v, *v.Chosen).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = adjustEntry(v, *v.Chosen).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -163,7 +163,7 @@ func bestiarioDaMesa(v master.BestiaryView) templ.Component {
 	})
 }
 
-// ajusteDoVerbete é PV, iniciativa e quantas, antes de a criatura entrar.
+// adjustEntry é PV, iniciativa e quantas, antes de a criatura entrar.
 //
 // Ele existe porque o que entrava sem ele era quase sempre errado (ALE-208): o
 // mestre quer o ogro com menos PV, ou a iniciativa que ele acabou de rolar nos
@@ -171,8 +171,8 @@ func bestiarioDaMesa(v master.BestiaryView) templ.Component {
 //
 // Os campos são ligados a SINAIS e nunca recebem `value` do servidor: entrada em
 // curso é do teclado de quem digita. Quem os semeia do bloco do livro é o
-// servidor, e SÓ ao abrir outra criatura — ver `rascunhoDoVerbete`.
-func ajusteDoVerbete(v master.BestiaryView, m book.Entry) templ.Component {
+// servidor, e SÓ ao abrir outra criatura — ver `entryDraft`.
+func adjustEntry(v master.BestiaryView, m book.Entry) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -235,11 +235,11 @@ func ajusteDoVerbete(v master.BestiaryView, m book.Entry) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " para a mesa</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, " para a table</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oGuardarNoElenco(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = saveToCastButton(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

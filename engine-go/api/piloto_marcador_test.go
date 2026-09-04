@@ -59,10 +59,10 @@ func TestEveryMarkerColorCanBePainted(t *testing.T) {
 // fallback e, de quebra, prende que ele aponta para uma variável que EXISTE —
 // era exatamente aí que o defeito antigo morava.
 func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
-	padrao := corDeMarcador(tabuleiro.DefaultMarkerColor())
+	padrao := markerColor(tabuleiro.DefaultMarkerColor())
 
 	for _, torta := range []string{"gold", "red", "'; background: url(x)", ""} {
-		if got := corDeMarcador(torta); got != padrao {
+		if got := markerColor(torta); got != padrao {
 			t.Errorf("a cor %q devolveu %q em vez do padrão %q", torta, got, padrao)
 		}
 	}
@@ -78,7 +78,7 @@ func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
 	if outra == "" {
 		t.Fatal("só há uma cor — o controle não tem como distinguir nada")
 	}
-	if corDeMarcador(outra) == padrao {
+	if markerColor(outra) == padrao {
 		t.Errorf("a cor %q devolveu o padrão: a função não distingue cor nenhuma", outra)
 	}
 }
@@ -92,8 +92,8 @@ func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
 // expressões cobram. O resto é da fatia do e2e do tabuleiro.
 func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: os controles estão na página. Sem isto, as buscas abaixo
 	// falhariam por motivo errado e "não achei o limite" leria como "o limite
@@ -132,11 +132,11 @@ func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	// depender do mestre para aproximar no telefone não é enquadramento, é
 	// pedido. Vale para o centralizar pela mesma razão — achar o grupo num plano
 	// sem bordas é problema de quem está olhando, não de quem montou a cena.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "Enquadrar o mapa") {
 		t.Error("o jogador não recebeu os controles de enquadramento")
 	}
-	if !strings.Contains(doJogador, oAlvoDoCentralizar(tabuleiroView{})) {
+	if !strings.Contains(doJogador, centerTarget(boardView{})) {
 		t.Error("o jogador não recebeu o centralizar")
 	}
 }

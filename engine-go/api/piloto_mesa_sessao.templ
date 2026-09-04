@@ -14,14 +14,14 @@ import (
 //
 // Os dois no cabeçalho porque são as duas coisas que se faz com a SESSÃO, e não
 // dentro dela: o resto da tela é sobre a cena, a fila e o mapa.
-templ verbosDaSessao(v mesaView) {
+templ sessionVerbs(v tableView) {
 	<span class="ml-auto flex shrink-0 items-center gap-1">
 		if v.Mestre != nil {
 			<button
 				type="button"
 				aria-label="Configurações da sessão"
 				title="Configurações da sessão"
-				data-on:click={ abreAConfigDaSessao(v) }
+				data-on:click={ openConfigSession(v) }
 				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 			@ui.Icon("Settings2", "size-4")
@@ -30,7 +30,7 @@ templ verbosDaSessao(v mesaView) {
 		// SAIR é um link e não um botão: ele navega, e navegação é do navegador.
 		// Assim o ctrl+clique e o "abrir em nova aba" continuam valendo.
 		<a
-			href={ templ.SafeURL(aCronicaDaCampanha(v)) }
+			href={ templ.SafeURL(campaignChronicle(v)) }
 			title="Sair da sessão e voltar para a crônica da campanha"
 			class="inline-flex min-h-8 items-center rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>Sair da sessão</a>
@@ -48,21 +48,21 @@ templ verbosDaSessao(v mesaView) {
 // Os verbos são travados pelo ESTADO: iniciar só aparece no que ainda não
 // começou, encerrar só no que está no ar. O servidor recusa o resto, e oferecer
 // o que será recusado é desenhar um erro.
-// mesaConfigDaSessao é a REGIÃO do diálogo, pela mesma razão do `mesa-por-no-mapa`:
+// tableConfigSession é a REGIÃO do diálogo, pela mesma razão do `mesa-por-no-mapa`:
 // ele muda com o CICLO da sessão, que não é o ritmo do mapa nem o da fila.
 // Pendurado no cabeçalho, ele seria redesenhado a cada troca de turno.
 //
 // O `<div>` existe sempre, inclusive para o jogador: região que some do HTML é
 // região que o remendo não acha. Quem a porta do mestre esconde é o CONTEÚDO.
-templ mesaConfigDaSessao(v mesaView) {
+templ tableConfigSession(v tableView) {
 	<div id="mesa-config-da-sessao">
 		if v.Mestre != nil {
-			@configDaSessao(v)
+			@sessionConfig(v)
 		}
 	</div>
 }
 
-templ configDaSessao(v mesaView) {
+templ sessionConfig(v tableView) {
 	<dialog
 		id="config-da-sessao"
 		data-preserve-attr="open"
@@ -71,7 +71,7 @@ templ configDaSessao(v mesaView) {
 	>
 		<h2 id="config-da-sessao-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
 			Sessão { fmt.Sprint(v.SessionNum) }
-			<span class="ml-2 text-xs font-normal uppercase tracking-widest text-muted-foreground">{ oCicloEmPortugues(v.Status) }</span>
+			<span class="ml-2 text-xs font-normal uppercase tracking-widest text-muted-foreground">{ portugueseCycle(v.Status) }</span>
 		</h2>
 		<div class="mt-3 space-y-1 divide-y divide-grimorio-iron/60">
 			<div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 py-3">
@@ -93,15 +93,15 @@ templ configDaSessao(v mesaView) {
 				</div>
 				<button
 					type="button"
-					data-on:click={ comandoDaSessao(v, "titulo") }
+					data-on:click={ sessionCommand(v, "titulo") }
 					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>Salvar</button>
 			</div>
 			if v.Status != "active" {
-				@linhaDeAjuste("Iniciar sessão", "A mesa passa a ver a partida ao vivo.") {
+				@adjustRow("Iniciar sessão", "A mesa passa a ver a partida ao vivo.") {
 					<button
 						type="button"
-						data-on:click={ comandoDaSessao(v, "iniciar") }
+						data-on:click={ sessionCommand(v, "iniciar") }
 						class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					>
 						if v.Status == "ended" {
@@ -113,10 +113,10 @@ templ configDaSessao(v mesaView) {
 				}
 			}
 			if v.Status == "active" {
-				@linhaDeAjuste("Encerrar sessão", "A partida sai do ar para a mesa. A campanha e as fichas ficam como estão.") {
+				@adjustRow("Encerrar sessão", "A partida sai do ar para a mesa. A campanha e as fichas ficam como estão.") {
 					<button
 						type="button"
-						data-on:click={ "document.getElementById('config-da-sessao').close(); " + comandoDaSessao(v, "encerrar") }
+						data-on:click={ "document.getElementById('config-da-sessao').close(); " + sessionCommand(v, "encerrar") }
 						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					>Encerrar</button>
 				}
@@ -124,16 +124,16 @@ templ configDaSessao(v mesaView) {
 			// REINICIAR fica ao lado de ENCERRAR de propósito, e é por isso que as
 			// duas frases dizem o que ACONTECE: os dois verbos se parecem e fazem
 			// coisas diferentes, e é aqui que a confusão custaria a noite de alguém.
-			@linhaDeAjuste("Reiniciar o combate", "Esvazia a fila e os turnos. A partida CONTINUA no ar.") {
+			@adjustRow("Reiniciar o combate", "Esvazia a fila e os turnos. A partida CONTINUA no ar.") {
 				<button
 					type="button"
-					data-on:click={ comandoDaSessao(v, "reiniciar") }
+					data-on:click={ sessionCommand(v, "reiniciar") }
 					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>Reiniciar</button>
 			}
 			// EXCLUIR é `form` e não `@post`: ele navega para fora da sessão, e um
 			// comando de Datastar responde com remendo, que não tem destino.
-			@linhaDeAjuste("Excluir sessão", "Apaga a sessão e o histórico dela. Não dá para desfazer.") {
+			@adjustRow("Excluir sessão", "Apaga a sessão e o histórico dela. Não dá para desfazer.") {
 				<button
 					type="button"
 					data-on:click="document.getElementById('config-da-sessao').close(); document.getElementById('excluir-a-sessao').showModal()"
@@ -149,14 +149,14 @@ templ configDaSessao(v mesaView) {
 			>Fechar</button>
 		</div>
 	</dialog>
-	@confirmaExcluirSessao(v)
+	@confirmDeleteSession(v)
 }
 
 // A CONFIRMAÇÃO de excluir, onde o vermelho pertence.
 //
 // Ela é um `form` de verdade porque o destino é outra página: o servidor apaga e
 // redireciona para a crônica. Datastar não entra aqui.
-templ confirmaExcluirSessao(v mesaView) {
+templ confirmDeleteSession(v tableView) {
 	<dialog
 		id="excluir-a-sessao"
 		data-preserve-attr="open"
@@ -181,9 +181,9 @@ templ confirmaExcluirSessao(v mesaView) {
 	</dialog>
 }
 
-// linhaDeAjuste: uma decisão por linha — o nome, o que ela faz numa frase, e o
+// adjustRow: uma decisão por linha — o nome, o que ela faz numa frase, e o
 // botão à direita. A frase não é enfeite: é ela que deixa o botão ser curto.
-templ linhaDeAjuste(nome, frase string) {
+templ adjustRow(nome, frase string) {
 	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
 		<div class="min-w-0 flex-1">
 			<p class="text-sm text-foreground">{ nome }</p>

@@ -15,11 +15,11 @@ import (
 // porque o `ShowPlace` arquivava a cena atual antes de trocar, e ela voltava
 // para a lista como qualquer outra.
 
-// guardaOLugar encerra a cena aberta, o que a manda para o acervo, e devolve o
+// savePlace encerra a cena aberta, o que a manda para o acervo, e devolve o
 // id dela.
-func (f pilotoFixture) guardaOLugar(t *testing.T, nome string) int64 {
+func (f pilotoFixture) savePlace(t *testing.T, nome string) int64 {
 	t.Helper()
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	for _, l := range f.s.boards.Places(context.Background(), f.campaignID) {
@@ -38,12 +38,12 @@ func (f pilotoFixture) guardaOLugar(t *testing.T, nome string) int64 {
 // apagando a outra no acervo, porque o `Archive` sobrescreve pelo nome.
 func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "taverna") // "Taverna do Javali"
-	f.guardaOLugar(t, "Taverna do Javali")
+	f.seedOpenBoard(t, "taverna") // "Taverna do Javali"
+	f.savePlace(t, "Taverna do Javali")
 	// Ela volta para a mesa, agora numa aba.
-	taverna := f.abreSegunda(t, "Taverna do Javali")
+	taverna := f.openSecond(t, "Taverna do Javali")
 
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(tela, "nesta mesa agora") {
 		t.Fatal("o acervo não distingue a cena que está na mesa das 147 que não estão")
@@ -52,7 +52,7 @@ func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 	// também escreve `tabuleiro/aba/<id>` (no gesto de mostrar à mesa), então uma
 	// busca solta acharia a rota certa no lugar errado e passaria verde sobre uma
 	// lista que não leva a lugar nenhum.
-	linha := aLinhaDoAcervo(t, tela, "nesta mesa agora")
+	linha := collectionRow(t, tela, "nesta mesa agora")
 	// O gesto que sobra é IR até ela, pela mesma rota que a barra de abas usa.
 	if !strings.Contains(linha, "/tabuleiro/aba/"+taverna.ID) {
 		t.Error("a linha da cena aberta não leva à aba dela")
@@ -65,13 +65,13 @@ func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 	}
 }
 
-// aLinhaDoAcervo recorta o `<li>` que contém uma marca, e FALHA quando não acha.
+// collectionRow recorta o `<li>` que contém uma marca, e FALHA quando não acha.
 //
 // Falhar em vez de devolver vazio é o que separa este helper de um instrumento
 // mudo: uma busca que não acha nada faria toda asserção seguinte passar sobre
 // uma string vazia — o `strings.Contains(vazio, x)` é falso, e "não contém" é
 // exatamente o que a maioria dos guardas daqui afirma.
-func aLinhaDoAcervo(t *testing.T, tela, marca string) string {
+func collectionRow(t *testing.T, tela, marca string) string {
 	t.Helper()
 	pos := strings.Index(tela, marca)
 	if pos < 0 {
@@ -94,15 +94,15 @@ func aLinhaDoAcervo(t *testing.T, tela, marca string) string {
 // pior forma de um botão mentir.
 func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "taverna")
-	id := f.guardaOLugar(t, "Taverna do Javali")
-	f.abreSegunda(t, "Taverna do Javali")
+	f.seedOpenBoard(t, "taverna")
+	id := f.savePlace(t, "Taverna do Javali")
+	f.openSecond(t, "Taverna do Javali")
 
 	rec := f.pede(t, f.mestre, http.MethodPost,
-		fmt.Sprintf("%s/tabuleiro/lugares/%d/remover", f.urlDaMesa(), id), "")
+		fmt.Sprintf("%s/tabuleiro/lugares/%d/remover", f.tableUrl(), id), "")
 
 	// A recusa é 200 com a frase no rodapé do mestre: é o caminho do
-	// `comandoDoMestreNoTabuleiro`, e o que se prende é o EFEITO.
+	// `gmBoardCommand`, e o que se prende é o EFEITO.
 	if rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
@@ -119,7 +119,7 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 		t.Error("o lugar aberto foi apagado do acervo: ele voltaria sozinho ao encerrar a aba")
 	}
 	// E a lixeira nem é oferecida — cortesia, não a trava.
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(tela, "Apagar Taverna do Javali") {
 		t.Error("a lista ofereceu a lixeira para a cena que está na mesa")
 	}
@@ -132,14 +132,14 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 // de lugares — que é justamente onde há 148 botões para clicar.
 func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "taverna")
-	id := f.guardaOLugar(t, "Taverna do Javali")
+	f.seedOpenBoard(t, "taverna")
+	id := f.savePlace(t, "Taverna do Javali")
 	for i := 0; i < 8; i++ {
-		f.abreSegunda(t, fmt.Sprintf("Cena %d", i))
+		f.openSecond(t, fmt.Sprintf("Cena %d", i))
 	}
 
 	rec := f.pede(t, f.mestre, http.MethodPost,
-		fmt.Sprintf("%s/tabuleiro/lugares/%d/reabrir", f.urlDaMesa(), id), "")
+		fmt.Sprintf("%s/tabuleiro/lugares/%d/reabrir", f.tableUrl(), id), "")
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("reabrir deu %d", rec.Code)

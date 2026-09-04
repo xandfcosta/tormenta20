@@ -27,30 +27,30 @@ import (
 // botão é UX; a trava é aqui.
 
 func (s *Server) TableCommandRoutes(r chi.Router) {
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/next-turn", s.comandoDoMestre(
-		func(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+	r.Post("/mesa/{campaignId}/{sessionId}/initiative/next-turn", s.gmCommand(
+		func(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 			return st.sessions.NextTurn(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/previous-turn", s.comandoDoMestre(
-		func(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+	r.Post("/mesa/{campaignId}/{sessionId}/initiative/previous-turn", s.gmCommand(
+		func(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 			return st.sessions.PreviousTurn(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/scene/start", s.comandoDoMestre(
-		func(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+	r.Post("/mesa/{campaignId}/{sessionId}/scene/start", s.gmCommand(
+		func(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 			return st.sessions.StartScene(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/scene/end", s.comandoDoMestre(encerraACena))
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/populate", s.comandoDoMestre(trazOGrupo))
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/add", s.comandoDoMestre(acrescentaCombatente))
+	r.Post("/mesa/{campaignId}/{sessionId}/scene/end", s.gmCommand(endScene))
+	r.Post("/mesa/{campaignId}/{sessionId}/initiative/populate", s.gmCommand(bringParty))
+	r.Post("/mesa/{campaignId}/{sessionId}/initiative/add", s.gmCommand(addCombatant))
 	// DOIS caminhos e não um `/rest` com o escopo no corpo, que é a forma da API
 	// JSON: aqui o VERBO é o caminho, como em `scene/start` e `scene/end`. A
 	// gramática desta superfície já foi escolhida, e misturar as duas faria a
 	// próxima pessoa ter de descobrir qual vale onde.
-	r.Post("/mesa/{campaignId}/{sessionId}/rest/scene", s.comandoDoMestre(descansaOGrupo("scene")))
-	r.Post("/mesa/{campaignId}/{sessionId}/rest/day", s.comandoDoMestre(descansaOGrupo("day")))
+	r.Post("/mesa/{campaignId}/{sessionId}/rest/scene", s.gmCommand(restParty("scene")))
+	r.Post("/mesa/{campaignId}/{sessionId}/rest/day", s.gmCommand(restParty("day")))
 	// O QUE O MESTRE MEXE EM CADA LINHA. O `entryId` vem do caminho como os
 	// outros dois ids, e a autorização é a mesma dos comandos da mesa: o
-	// `comandoDoMestre` já barra quem não é mestre.
+	// `gmCommand` já barra quem não é mestre.
 	//
 	// Mais restrito que a API JSON de propósito. Lá o `assertVitalsEditableFor`
 	// deixa o jogador mexer nos vitais do PRÓPRIO personagem, porque lá existe a
@@ -58,15 +58,15 @@ func (s *Server) TableCommandRoutes(r chi.Router) {
 	// registrar iniciativa (ALE-213), e uma segunda regra de escrita seria uma
 	// porta que nenhuma tela usa.
 	r.Route("/mesa/{campaignId}/{sessionId}/initiative/{entryId}", func(r chi.Router) {
-		r.Post("/vitals/harm/{passo}", s.comandoDoMestre(mexeNosVitais(-1)))
-		r.Post("/vitals/heal/{passo}", s.comandoDoMestre(mexeNosVitais(+1)))
-		r.Post("/vitals/hidden", s.comandoDoMestre(alternaOOlho))
-		r.Post("/edit", s.comandoDoMestre(editaOCombatente))
-		r.Post("/remove", s.comandoDoMestre(tiraDaFila))
+		r.Post("/vitals/harm/{passo}", s.gmCommand(moveVitals(-1)))
+		r.Post("/vitals/heal/{passo}", s.gmCommand(moveVitals(+1)))
+		r.Post("/vitals/hidden", s.gmCommand(toggleEye))
+		r.Post("/edit", s.gmCommand(editaOCombatente))
+		r.Post("/remove", s.gmCommand(tiraDaFila))
 	})
 }
 
-// acrescentaCombatente é o capanga digitado na hora: nome, iniciativa, PV e se é
+// addCombatant é o capanga digitado na hora: nome, iniciativa, PV e se é
 // PC ou NPC.
 //
 // A VALIDAÇÃO é do `aovivo` e não daqui, e essa é a extração de sempre: os
@@ -79,8 +79,8 @@ func (s *Server) TableCommandRoutes(r chi.Router) {
 // API já usa: sem `characterId` ele cai no NPC, e o PV só entra quando foi
 // digitado. Escrever a montagem aqui seria a segunda cópia da mesma regra, que é
 // como a ALE-122 começou.
-func acrescentaCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
-	novo, err := combatenteDosSinais(c.R)
+func addCombatant(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+	novo, err := signalsCombatant(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func acrescentaCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeStat
 	return estado, nil
 }
 
-// combatenteDosSinais lê o formulário da página.
+// signalsCombatant lê o formulário da página.
 //
 // TODOS OS NOMES SÃO MINÚSCULOS, e isso é obrigatório e não estilo: eles são
 // chaves de `data-bind:`, e nome de atributo é minusculado pelo analisador de
@@ -125,7 +125,7 @@ func acrescentaCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeStat
 // intocado — o fio leva os dois e o servidor lê o errado. Foi exatamente isso
 // que aconteceu com a qualidade do descanso, e o navegador foi a única
 // testemunha.
-func combatenteDosSinais(r *http.Request) (aovivo.CombatantDraft, error) {
+func signalsCombatant(r *http.Request) (aovivo.CombatantDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
 		Nome       string `json:"novonome"`
@@ -141,7 +141,7 @@ func combatenteDosSinais(r *http.Request) (aovivo.CombatantDraft, error) {
 	}, nil
 }
 
-// mexeNosVitais é o dano e a cura de UMA linha, e o PASSO vem do CAMINHO.
+// moveVitals é o dano e a cura de UMA linha, e o PASSO vem do CAMINHO.
 //
 // Não é um número que a página manda, e a escolha é a lição desta fatia: sinal é
 // a superfície onde a página e o servidor discordam em silêncio — o
@@ -156,10 +156,10 @@ func combatenteDosSinais(r *http.Request) (aovivo.CombatantDraft, error) {
 // Quem sabe somar é o store: com personagem atrás da linha quem manda é a FICHA
 // (o dano drena PV temporários) e a entrada espelha o resultado (ALE-122). O
 // piloto não tem uma segunda conta.
-func mexeNosVitais(sinal int64) func(*Server, mesaComando) (*aovivo.SessionRuntimeState, error) {
-	return func(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func moveVitals(sinal int64) func(*Server, commandCtx) (*aovivo.SessionRuntimeState, error) {
+	return func(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 		bruto := chi.URLParam(c.R, "passo")
-		passo, ok := passosDoVital[bruto]
+		passo, ok := vitalSteps[bruto]
 		if !ok {
 			return nil, fmt.Errorf("passo %q não existe; a tela oferece 1 (clique) e 5 (Shift+clique)", bruto)
 		}
@@ -179,20 +179,20 @@ func mexeNosVitais(sinal int64) func(*Server, mesaComando) (*aovivo.SessionRunti
 	}
 }
 
-// passosDoVital são os DOIS que a tela oferece: o clique e o Shift+clique.
+// vitalSteps são os DOIS que a tela oferece: o clique e o Shift+clique.
 //
 // Espelham o `STEP`/`SHIFT_STEP` da SPA, e serem os mesmos números importa pelo
 // motivo de sempre nesta migração — duas escadas diferentes fariam as duas telas
 // chamarem de "um golpe" coisas diferentes.
-var passosDoVital = map[string]int64{"1": 1, "5": 5}
+var vitalSteps = map[string]int64{"1": 1, "5": 5}
 
-// alternaOOlho esconde e revela os PV de uma linha para os JOGADORES.
+// toggleEye esconde e revela os PV de uma linha para os JOGADORES.
 //
 // O servidor lê o estado atual e o INVERTE, em vez de a página mandar o valor
 // que ela quer. Dois mestres na mesma mesa — ou a mesma aba com o remendo
 // atrasado — mandariam "esconder" duas vezes, e a segunda desfaria a primeira
 // sem ninguém ter pedido. Quem sabe o estado é quem o guarda.
-func alternaOOlho(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func toggleEye(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
 	estado := st.sessions.GetState(c.SessionID)
 	i := aovivo.FindEntryIndex(estado, entryID)
@@ -219,7 +219,7 @@ func alternaOOlho(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error
 //
 // A ordem também importa: a iniciativa primeiro, porque ela REORDENA a fila, e
 // os vitais depois, pelo id — que não muda com a reordenação.
-func editaOCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func editaOCombatente(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
 	edicao, err := edicaoDosSinais(c.R)
 	if err != nil {
@@ -274,11 +274,11 @@ func edicaoDosSinais(r *http.Request) (struct {
 // tiraDaFila remove o combatente. Sem confirmação, como na SPA: o gesto é do
 // meio do combate, e a fila é remontável — o que não é remontável (encerrar a
 // cena) é que ganhou dois verbos distintos em vez de um interruptor.
-func tiraDaFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func tiraDaFila(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	return st.sessions.RemoveInitiativeEntry(c.SessionID, chi.URLParam(c.R, "entryId"))
 }
 
-// descansaOGrupo é a RECUPERAÇÃO (T20 p105): devolve PV e PM ao grupo inteiro.
+// restParty é a RECUPERAÇÃO (T20 p105): devolve PV e PM ao grupo inteiro.
 //
 // Os dois escopos dividem o corpo porque só diferem em duas coisas — a
 // qualidade, que só o de dia usa, e o que o `restParty` faz lá dentro. Duas
@@ -287,11 +287,11 @@ func tiraDaFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) 
 // O aviso é obrigatório e não é o `session-state`: o que muda no descanso é a
 // FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem estivesse
 // com a ficha aberta na SPA continuaria vendo o PV de antes até recarregar.
-func descansaOGrupo(escopo string) func(*Server, mesaComando) (*aovivo.SessionRuntimeState, error) {
-	return func(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func restParty(escopo string) func(*Server, commandCtx) (*aovivo.SessionRuntimeState, error) {
+	return func(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 		qualidade := "normal"
 		if escopo == "day" {
-			lida, err := qualidadeDoDescanso(c.R)
+			lida, err := restQuality(c.R)
 			if err != nil {
 				return nil, err
 			}
@@ -317,7 +317,7 @@ func descansaOGrupo(escopo string) func(*Server, mesaComando) (*aovivo.SessionRu
 	}
 }
 
-// qualidadesDoDescanso são as quatro do livro (T20 p105), e a lista existe aqui
+// restQualities são as quatro do livro (T20 p105), e a lista existe aqui
 // para RECUSAR o que não é uma delas.
 //
 // O `restMultiplier` do motor cai em "normal" quando não reconhece a palavra, e
@@ -325,16 +325,16 @@ func descansaOGrupo(escopo string) func(*Server, mesaComando) (*aovivo.SessionRu
 // "normal" enquanto o mestre pediu "luxuosa", e ninguém veria a diferença — um
 // número plausível no lugar do certo é o desfecho que esta migração mais paga
 // para evitar.
-var qualidadesDoDescanso = map[string]bool{"ruim": true, "normal": true, "confortavel": true, "luxuosa": true}
+var restQualities = map[string]bool{"ruim": true, "normal": true, "confortavel": true, "luxuosa": true}
 
-// qualidadeDoDescanso lê o sinal da página.
+// restQuality lê o sinal da página.
 //
 // Lê ANTES do `NewSSE`, obrigatoriamente: o SDK assume a resposta e fecha o
 // corpo do pedido, e um `ReadSignals` depois dele encontra o corpo fechado. Isso
-// é garantido pela ordem no `comandoDoMestre`, que chama a mutação primeiro — e
+// é garantido pela ordem no `gmCommand`, que chama a mutação primeiro — e
 // a armadilha está registrada no `piloto_mesa_action.go`, onde ela passou VERDE
 // em teste de handler e falhou no navegador.
-func qualidadeDoDescanso(r *http.Request) (string, error) {
+func restQuality(r *http.Request) (string, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `plataforma.DecodeJSON`
 	var sinais struct {
 		Qualidade string `json:"qualidadedodescanso"`
@@ -342,13 +342,13 @@ func qualidadeDoDescanso(r *http.Request) (string, error) {
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return "", fmt.Errorf("não entendi a qualidade do descanso: %v", err)
 	}
-	if !qualidadesDoDescanso[sinais.Qualidade] {
+	if !restQualities[sinais.Qualidade] {
 		return "", fmt.Errorf("qualidade %q não existe; o livro tem ruim, normal, confortavel e luxuosa (p105)", sinais.Qualidade)
 	}
 	return sinais.Qualidade, nil
 }
 
-// trazOGrupo põe na fila cada personagem do grupo que ainda não está lá.
+// bringParty põe na fila cada personagem do grupo que ainda não está lá.
 //
 // É idempotente — o `populateParty` pula quem já está —, e é por isso que o
 // botão continua clicável em vez de apagar depois do primeiro uso: o mestre que
@@ -357,7 +357,7 @@ func qualidadeDoDescanso(r *http.Request) (string, error) {
 // O filtro de PAPEL é do `listPlayerCombatants`, e não daqui: o mestre costuma
 // ter um PC próprio no roster, e uma segunda opinião sobre quem é o grupo faria
 // esta tela discordar da SPA sobre a mesma pergunta (ALE-212).
-func trazOGrupo(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func bringParty(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	combatentes, err := st.listPlayerCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
@@ -365,7 +365,7 @@ func trazOGrupo(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) 
 	// O erro vem JUNTO com o estado parcial de propósito: pôr quatro dos cinco e
 	// tropeçar no quinto deixou a mesa com quatro combatentes novos, e é esse o
 	// estado que as outras telas precisam receber. Quem transmite o parcial é o
-	// `comandoDoMestre` — ver o comentário lá.
+	// `gmCommand` — ver o comentário lá.
 	estado, err := st.populateParty(c.SessionID, combatentes)
 	if estado == nil {
 		estado = st.sessions.GetState(c.SessionID)
@@ -373,14 +373,14 @@ func trazOGrupo(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) 
 	return estado, err
 }
 
-// mesaComando é o que a mutação de um comando do mestre recebe.
+// commandCtx é o que a mutação de um comando do mestre recebe.
 //
 // Os quatro primeiros só precisavam do id da SESSÃO, e a assinatura era um
 // `int64` — foi essa economia que deixou passar o defeito que este arquivo
 // acabou de consertar: `encerrar cena` precisa da CAMPANHA, porque é de lá que
 // vem o grupo cujas fichas expiram, e não tendo como recebê-la ela chamou o
 // helper que não precisa dela e faz menos.
-type mesaComando struct {
+type commandCtx struct {
 	R          *http.Request
 	User       AuthUser
 	CampaignID int64
@@ -389,7 +389,7 @@ type mesaComando struct {
 	// está olhando (ALE-205).
 	//
 	// Ela não vem do caminho nem de um sinal da página: o gateway a resolve no
-	// servidor, pelo `asAbasEscolhidas`, e é essa escolha que mantém as vinte
+	// servidor, pelo `chosenTabs`, e é essa escolha que mantém as vinte
 	// rotas do tabuleiro sem um id a mais na URL. A afirmação que ela faz é de
 	// domínio, e é forte: **não se pinta um tabuleiro que não se está olhando.**
 	// Uma aba no caminho deixaria essa porta aberta sem nenhum gesto que a
@@ -415,7 +415,7 @@ type mesaComando struct {
 	Sinais map[string]any
 }
 
-// encerraACena é o gesto INTEIRO, e a razão de ser função nomeada em vez de um
+// endScene é o gesto INTEIRO, e a razão de ser função nomeada em vez de um
 // literal na lista acima é que ela faz duas coisas que as outras três não fazem.
 //
 // A primeira é a REGRESSÃO da ALE-220, reaberta por este piloto: `EndScene` do
@@ -429,7 +429,7 @@ type mesaComando struct {
 // A segunda é o aviso: as fichas não estão no estado do rastreador, então sem o
 // `session-rest` o efeito morto e o "usado 1/cena" ficariam na tela da SPA até
 // alguém recarregar.
-func encerraACena(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func endScene(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	estado, err := st.endSceneForTable(c.User, c.CampaignID, c.SessionID)
 	if err != nil {
 		return nil, err
@@ -440,17 +440,17 @@ func encerraACena(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error
 	return estado, nil
 }
 
-// comandoDoMestre é o caminho único dos quatro comandos.
+// gmCommand é o caminho único dos quatro comandos.
 //
 // Eles só diferem na MUTAÇÃO, e o resto — resolver a mesa, exigir o papel,
 // publicar para a SPA, redesenhar a cena — é idêntico. Sem o parâmetro seriam
 // quatro cópias, e é numa delas que alguém esquece de publicar e a mesa fica
 // vendo o turno velho.
-func (s *Server) comandoDoMestre(
-	mutar func(*Server, mesaComando) (*aovivo.SessionRuntimeState, error),
+func (s *Server) gmCommand(
+	mutar func(*Server, commandCtx) (*aovivo.SessionRuntimeState, error),
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		campaignID, sessionID, ok := mesaParams(w, r)
+		campaignID, sessionID, ok := tableParams(w, r)
 		if !ok {
 			return
 		}
@@ -468,7 +468,7 @@ func (s *Server) comandoDoMestre(
 		}
 
 		sinais := map[string]any{}
-		estado, err := mutar(s, mesaComando{
+		estado, err := mutar(s, commandCtx{
 			R: r, User: user, CampaignID: campaignID, SessionID: sessionID, Sinais: sinais,
 		})
 		// O que POUSOU se transmite mesmo quando a chamada devolveu erro, e o
@@ -483,11 +483,11 @@ func (s *Server) comandoDoMestre(
 		if estado != nil {
 			s.publishSessionState(sessionID, estado)
 		}
-		s.respondeAoMestre(w, r, user, campaignID, sessionID, err, sinais)
+		s.respondGm(w, r, user, campaignID, sessionID, err, sinais)
 	}
 }
 
-// respondeAoMestre devolve a cena remendada E a frase da recusa — as duas
+// respondGm devolve a cena remendada E a frase da recusa — as duas
 // sempre, e as duas por SSE.
 //
 // Os comandos respondiam `http.Error`, e isso era um beco: o Datastar não
@@ -505,13 +505,13 @@ func (s *Server) comandoDoMestre(
 // o faria calar — o remendo aqui é o que torna o botão mais clicado da sessão
 // instantâneo. E ele vale também na recusa: redesenhar mostra que a cena
 // continua ABERTA, que é a verdade que o mestre precisa ver ao lado da frase.
-func (s *Server) respondeAoMestre(
+func (s *Server) respondGm(
 	w http.ResponseWriter, r *http.Request,
 	user AuthUser, campaignID, sessionID int64, recusa error, sinais map[string]any,
 	soAsRegioes ...string,
 ) {
 	sse := datastar.NewSSE(w, r)
-	if view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID); err == nil {
+	if view, _, err := s.loadTableView(r.Context(), user, campaignID, sessionID); err == nil {
 		// Por PADRÃO manda TODAS as regiões e não só as que mudaram, ao contrário
 		// do stream: aqui não há digital anterior para comparar — este caminho
 		// responde a um pedido, não mantém uma conexão.
@@ -525,7 +525,7 @@ func (s *Server) respondeAoMestre(
 		// Falhar ao redesenhar não desfaz a mutação, que já aconteceu e já foi
 		// transmitida; o stream corrige no próximo tique. Por isso é best-effort e
 		// a frase sai de qualquer jeito.
-		for _, regiao := range regioesDaMesa(view) {
+		for _, regiao := range tableRegions(view) {
 			if !pedidaOuTodas(regiao.ID, soAsRegioes) {
 				continue
 			}

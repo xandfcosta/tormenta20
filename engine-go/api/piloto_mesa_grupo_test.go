@@ -22,15 +22,15 @@ import (
 // turno dele. Esconder o gesto seria cortesia; a recusa é a fronteira.
 func TestOnlyTheGmMarksAGroup(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
-	rec := f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/tabuleiro/marcar-area/0/0/9/9", "")
+	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", "")
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador marcou um grupo e recebeu %d, esperado 403", rec.Code)
 	}
 	// O CONTROLE: o mestre PODE. Sem ele, um 403 para todo mundo passaria igual.
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/marcar-area/0/0/9/9", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", ""); rec.Code != http.StatusOK {
 		t.Errorf("o mestre não conseguiu marcar: %d", rec.Code)
 	}
 }
@@ -42,10 +42,10 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 // arrastando — que é exatamente o gesto que acabou de acontecer.
 func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
-	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/marcar-area/0/0/9/9", "{}")
-	if !strings.Contains(resposta, sinalDasPecasMarcadas) {
+	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", "{}")
+	if !strings.Contains(resposta, markedTokensSignal) {
 		t.Fatalf("a marcação não voltou: %s", resposta)
 	}
 	if strings.Contains(resposta, "datastar-patch-elements") {
@@ -57,9 +57,9 @@ func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 // diz isso, em vez de gravar uma versão nova sem mudar nada.
 func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
-	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/grupo/mover/1/1", `{"pecasmarcadas":""}`)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/1/1", `{"pecasmarcadas":""}`)
 	if !strings.Contains(corpo, "não há peça marcada") {
 		t.Errorf("mover um grupo vazio não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
@@ -72,17 +72,17 @@ func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 // a Mesa inteira no meio dele é o defeito de 353 KB que a fatia 3 mediu.
 func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
-	ficha, _ := idsDaCena(t, f)
-	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	ficha, _ := sceneIds(t, f)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) == 0 {
 		t.Fatal("a peça não entrou no mapa — o guarda mediria o vazio")
 	}
 	antes := b.Tokens[0]
-	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/grupo/mover/3/-2",
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/3/-2",
 		`{"pecasmarcadas":"`+antes.ID+`"}`)
 
 	b = f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
@@ -107,14 +107,14 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 // o laço terminou.
 func TestTheRestingLayerServesBothGestures(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
 	// COM PEÇA no mapa: a marca do grupo é vestida pela peça, e num tabuleiro
 	// vazio a classe não aparece — o guarda acusaria a ausência dela sobre uma
 	// cena que só não tem peça nenhuma.
-	ficha, _ := idsDaCena(t, f)
-	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	ficha, _ := sceneIds(t, f)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O valor é CONSTANTE no `.templ`, então ele sai LITERAL no HTML — só o
 	// dinâmico é escapado. A primeira versão deste guarda procurava a forma

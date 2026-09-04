@@ -26,14 +26,14 @@ import (
 // mesa recebe um quadro por casa" — e ela media a coisa errada: o `PaintTerrain`
 // sobe a versão POR CASA, então um traço de dez casas sobe dez, dentro de um
 // `apply` só. Quem garante a gravação única é a estrutura (`PintaOTraco` chama
-// `apply` uma vez, e o `comandoDoTabuleiro` publica uma vez), não um contador —
+// `apply` uma vez, e o `boardCommand` publica uma vez), não um contador —
 // e um teste que afirma o contrário fica vermelho sobre um app correto.
 func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
 	rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/dificil/2/2/ate/8/5", "")
+		f.tableUrl()+"/tabuleiro/terreno/dificil/2/2/ate/8/5", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o traço deu %d", rec.Code)
 	}
@@ -69,9 +69,9 @@ func contem(casas []engine.Square, alvo engine.Square) bool {
 // e foi justamente ela que ficou para trás na primeira versão desta superfície.
 func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/cobertura/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/cobertura/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
 	// O CONTROLE: havia o que apagar. Sem ele, "sobrou zero" é verdade também
@@ -83,7 +83,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/limpar/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/limpar/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 	b = f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
@@ -99,10 +99,10 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 // o que houve.
 func TestAForgedStrokeIsRefused(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/dificil/0/0/ate/9999999/0", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno/dificil/0/0/ate/9999999/0", "").Body.String()
 	if !strings.Contains(corpo, "longo demais") {
 		t.Errorf("o traço forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
@@ -115,7 +115,7 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 // TestTheBrushDoesNotReturnTheWholeTable — o guarda dos 353 KB.
 //
 // Medido no navegador antes do conserto: uma casa pintada devolvia **353 KB**,
-// porque o `respondeAoMestre` repinta TODAS as regiões. Num gesto de clique isso
+// porque o `respondGm` repinta TODAS as regiões. Num gesto de clique isso
 // era caro; num gesto CONTÍNUO é proibitivo — um traço de vinte casas mandaria
 // sete megabytes, e o mestre está arrastando o dedo enquanto isso chega.
 //
@@ -124,10 +124,10 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 // não muda quando alguém pinta uma casa).
 func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/dificil/1/1/ate/1/1", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno/dificil/1/1/ate/1/1", "").Body.String()
 
 	if !strings.Contains(corpo, `id="mesa-tabuleiro"`) {
 		t.Error("a resposta do pincel não traz o mapa — a casa pintada não apareceria")
@@ -151,8 +151,8 @@ func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 // dono relatou.
 func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, pedaco := range []string{
 		"data-on:pointerdown",
@@ -174,7 +174,7 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 
 // TestEveryKindHasADrawing.
 //
-// O guarda que paga o preço de o desenho morar fora do domínio: `oDesenhoDe`
+// O guarda que paga o preço de o desenho morar fora do domínio: `drawing`
 // entra em pânico numa espécie sem entrada, e este caso faz o pânico acontecer
 // na suíte em vez de na mesa. Sem ele, a quinta espécie nasceria com uma casa
 // que não se distingue de nenhuma outra — indistinguível de "o pincel não
@@ -186,7 +186,7 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 func TestEveryKindHasADrawing(t *testing.T) {
 	cantos := map[string]string{}
 	for _, pincel := range tabuleiro.TerrainKinds {
-		d := oDesenhoDe(pincel.ID)
+		d := drawing(pincel.ID)
 		if d.Icone == "" || d.Canto == "" {
 			t.Errorf("a espécie %q tem desenho incompleto: %+v", pincel.ID, d)
 		}
@@ -202,14 +202,14 @@ func TestEveryKindHasADrawing(t *testing.T) {
 // o ícone chega à casa, e o trilho mostra o MESMO.
 func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/camuflagem/3/3/ate/3/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/camuflagem/3/3/ate/3/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	d := oDesenhoDe(tabuleiro.TerrenoCamuflagem)
+	d := drawing(tabuleiro.TerrenoCamuflagem)
 	if !strings.Contains(tela, "terreno-canto-"+d.Canto) {
 		t.Errorf("a casa de camuflagem não veste o canto %q", d.Canto)
 	}
@@ -230,10 +230,10 @@ func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 // espécie (o conserto da fatia 1, que não pode se perder numa rota nova).
 func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/dificil/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/dificil/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o retângulo deu %d", rec.Code)
 	}
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
@@ -243,7 +243,7 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/limpar/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/limpar/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("limpar o retângulo deu %d", rec.Code)
 	}
 	b = f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
@@ -256,10 +256,10 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 // como FRASE. Mil casas são 32×32 — uma sala grande de masmorra.
 func TestAForgedRectangleIsRefusedByTheRoute(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/dificil/retangulo/0/0/999/999", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno/dificil/retangulo/0/0/999/999", "").Body.String()
 	if !strings.Contains(corpo, "grande demais") {
 		t.Errorf("o retângulo forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
@@ -276,8 +276,8 @@ func TestAForgedRectangleIsRefusedByTheRoute(t *testing.T) {
 // pode trocar o que ele está fazendo, porque o dedo já está a caminho de um canto.
 func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, pedaco := range []string{"evt.shiftKey", "/retangulo/", "tabuleiro-laco"} {
 		if !strings.Contains(tela, pedaco) {
@@ -302,8 +302,8 @@ func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 // O conserto é sempre o mesmo: quem ESCONDE é um nó, quem POSICIONA é outro.
 func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: as duas diretivas existem na cena, em nós diferentes. Sem ele,
 	// não achar a combinação seria verdade também sobre uma página vazia.

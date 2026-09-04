@@ -25,16 +25,16 @@ import (
 // nunca apareceu é menor que qualquer puxão.
 func TestThePullReachesWhoNeverChoseATab(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra") // a padrão, onde o jogador está sem ter escolhido
-	cripta := f.abreSegunda(t, "Cripta")
+	f.seedOpenBoard(t, "pedra") // a padrão, onde o jogador está sem ter escolhido
+	cripta := f.openSecond(t, "Cripta")
 
 	// O mestre vai até a cripta e a mostra à mesa.
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID, "")
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", ""); rec.Code != http.StatusOK {
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("mostrar à mesa deu %d", rec.Code)
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(doJogador, "Cripta</h2>") {
 		t.Fatal("o jogador que nunca escolheu aba não foi trazido: o puxão não alcança quem está na padrão")
@@ -48,7 +48,7 @@ func TestThePullReachesWhoNeverChoseATab(t *testing.T) {
 		t.Error("a tira do puxão não oferece o caminho de volta")
 	}
 	// O MESTRE não lê a tira: ele acabou de fazer o gesto.
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(doMestre, "O mestre trouxe a mesa para") {
 		t.Error("a cena contou ao mestre o que ele mesmo acabou de fazer")
 	}
@@ -62,15 +62,15 @@ func TestThePullReachesWhoNeverChoseATab(t *testing.T) {
 // e a pessoa clica três vezes achando que o clique não pegou.
 func TestAfterThePullThePlayerChoosesAgain(t *testing.T) {
 	f := novoPiloto(t)
-	taverna := f.abreTabuleiro(t, "pedra")
-	cripta := f.abreSegunda(t, "Cripta")
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID, "")
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
+	taverna := f.seedOpenBoard(t, "pedra")
+	cripta := f.openSecond(t, "Cripta")
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
 
 	// Ele usa a saída da tira e volta para a taverna.
-	f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+taverna.ID, "")
+	f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+taverna.ID, "")
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "Taverna do Javali</h2>") {
 		t.Fatal("o puxão trouxe o jogador de volta depois de ele escolher: virou trava")
 	}
@@ -85,21 +85,21 @@ func TestAfterThePullThePlayerChoosesAgain(t *testing.T) {
 // que puxasse tiraria dos outros cinco exatamente o que a fatia 1 lhes deu.
 func TestThePlayerShowsNothingToTheTable(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	cripta := f.abreSegunda(t, "Cripta")
+	f.seedOpenBoard(t, "pedra")
+	cripta := f.openSecond(t, "Cripta")
 
-	rec := f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
+	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("o jogador puxou a mesa: %d", rec.Code)
 	}
 	// E a mesa não se moveu: o 403 não pode ter deixado rastro.
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "Taverna do Javali</h2>") {
 		t.Error("a tela do mestre saiu do lugar apesar do 403")
 	}
 	// O gesto nem aparece para ele: cortesia, não a trava.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(doJogador, "à mesa") {
 		t.Error("o jogador recebeu o botão de mostrar à mesa")
 	}
@@ -117,24 +117,24 @@ func TestThePlayerShowsNothingToTheTable(t *testing.T) {
 // só se distinguem quando a escolha da pessoa não é a padrão.
 func TestAPullToAnEndedSceneGivesBackTheViewersOwnTab(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra") // "Taverna do Javali", a PADRÃO
-	ponte := f.abreSegunda(t, "Ponte de Corda")
-	cripta := f.abreSegunda(t, "Cripta")
+	f.seedOpenBoard(t, "pedra") // "Taverna do Javali", a PADRÃO
+	ponte := f.openSecond(t, "Ponte de Corda")
+	cripta := f.openSecond(t, "Cripta")
 	// O jogador escolheu a ponte — é dela que ele foi tirado.
-	f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+ponte.ID, "")
+	f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+ponte.ID, "")
 
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID, "")
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
-	if puxado := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String(); !strings.Contains(puxado, "Cripta</h2>") {
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
+	if puxado := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(puxado, "Cripta</h2>") {
 		t.Fatal("o jogador não chegou a ser puxado: o resto do caso não mede nada")
 	}
 
 	// O mestre está na cripta e a encerra.
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(doJogador, "O mestre ainda não abriu um tabuleiro") {
 		t.Fatal("o jogador ficou sem mapa porque a cena para onde ele foi PUXADO acabou")
 	}
@@ -155,14 +155,14 @@ func TestAPullToAnEndedSceneGivesBackTheViewersOwnTab(t *testing.T) {
 // na tela de quem nunca tocou em nada.
 func TestAPullToTheTabThePlayerIsAlreadyOnStillTellsThem(t *testing.T) {
 	f := novoPiloto(t)
-	taverna := f.abreTabuleiro(t, "pedra") // a padrão, onde o jogador já está
-	f.abreSegunda(t, "Cripta")
+	taverna := f.seedOpenBoard(t, "pedra") // a padrão, onde o jogador já está
+	f.openSecond(t, "Cripta")
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+taverna.ID+"/mostrar", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+taverna.ID+"/mostrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("mostrar à mesa deu %d", rec.Code)
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "O mestre trouxe a mesa para Taverna do Javali") {
 		t.Fatal("a tela do jogador trocou de superfície sem nada dizer por quê")
 	}
@@ -189,17 +189,17 @@ func TestAPullToTheTabThePlayerIsAlreadyOnStillTellsThem(t *testing.T) {
 // de sinal SAI, que é a coisa que a pessoa sente.
 func TestTheSurfaceIsPushedOncePerPull(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	cripta := f.abreSegunda(t, "Cripta")
-	f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
+	f.seedOpenBoard(t, "pedra")
+	cripta := f.openSecond(t, "Cripta")
+	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
 
 	fio := httptest.NewRecorder()
 	sse := datastar.NewSSE(fio, httptest.NewRequest(http.MethodGet, "/", nil))
 
 	// O primeiro quadro empurra; os dois seguintes, não.
-	empurrado := empurraParaOMapa(f.s, sse, f.sessionID, f.jogador, 0)
-	empurrado = empurraParaOMapa(f.s, sse, f.sessionID, f.jogador, empurrado)
-	empurraParaOMapa(f.s, sse, f.sessionID, f.jogador, empurrado)
+	empurrado := pushForMap(f.s, sse, f.sessionID, f.jogador, 0)
+	empurrado = pushForMap(f.s, sse, f.sessionID, f.jogador, empurrado)
+	pushForMap(f.s, sse, f.sessionID, f.jogador, empurrado)
 
 	if n := strings.Count(fio.Body.String(), superficieDoTabuleiro); n != 1 {
 		t.Fatalf("o stream empurrou a superfície %d vezes num puxão só: é uma trava, não um empurrão", n)
@@ -209,9 +209,9 @@ func TestTheSurfaceIsPushedOncePerPull(t *testing.T) {
 	}
 
 	// E DEPOIS de a pessoa escolher, não há mais o que empurrar.
-	f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/tabuleiro/aba/"+cripta.ID, "")
+	f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
 	segundoFio := httptest.NewRecorder()
-	empurraParaOMapa(f.s, datastar.NewSSE(segundoFio, httptest.NewRequest(http.MethodGet, "/", nil)), f.sessionID, f.jogador, 0)
+	pushForMap(f.s, datastar.NewSSE(segundoFio, httptest.NewRequest(http.MethodGet, "/", nil)), f.sessionID, f.jogador, 0)
 	if strings.Contains(segundoFio.Body.String(), superficieDoTabuleiro) {
 		t.Error("uma conexão nova levou o empurrão de um puxão que a pessoa já tinha consumido")
 	}

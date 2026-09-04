@@ -11,8 +11,8 @@ import (
 
 // Os guardas dos MARCADORES na Mesa (ALE-264, item 5).
 
-// marcadoresDoMapa lê o estado depois do gesto.
-func marcadoresDoMapa(t *testing.T, f pilotoFixture) []tabuleiro.BoardMarker {
+// mapMarkers lê o estado depois do gesto.
+func mapMarkers(t *testing.T, f pilotoFixture) []tabuleiro.BoardMarker {
 	t.Helper()
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
@@ -29,8 +29,8 @@ func marcadoresDoMapa(t *testing.T, f pilotoFixture) []tabuleiro.BoardMarker {
 // é como nasce o segundo "C" no mesmo mapa.
 func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	base := f.urlDaMesa() + "/tabuleiro/marcadores"
+	f.seedOpenBoard(t, "pedra")
+	base := f.tableUrl() + "/tabuleiro/marcadores"
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/2/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
@@ -39,7 +39,7 @@ func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 		t.Fatalf("marcar o segundo deu %d", rec.Code)
 	}
 
-	marcadores := marcadoresDoMapa(t, f)
+	marcadores := mapMarkers(t, f)
 	if len(marcadores) != 2 {
 		t.Fatalf("o mapa ficou com %d marcadores, esperado 2", len(marcadores))
 	}
@@ -64,23 +64,23 @@ func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 // botão para desfazer o primeiro seria a mesma decisão em dois lugares.
 func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	base := f.urlDaMesa() + "/tabuleiro/marcadores"
+	f.seedOpenBoard(t, "pedra")
+	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
-	id := marcadoresDoMapa(t, f)[0].ID
+	id := mapMarkers(t, f)[0].ID
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("revelar deu %d", rec.Code)
 	}
-	if marcadoresDoMapa(t, f)[0].Hidden {
+	if mapMarkers(t, f)[0].Hidden {
 		t.Fatal("revelar não revelou — e sem isto o resto não mede nada")
 	}
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder de volta deu %d", rec.Code)
 	}
-	if !marcadoresDoMapa(t, f)[0].Hidden {
+	if !mapMarkers(t, f)[0].Hidden {
 		t.Error("o gesto não esconde de volta: quem revelou cedo demais fica sem saída")
 	}
 }
@@ -93,13 +93,13 @@ func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 // erro.
 func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	base := f.urlDaMesa() + "/tabuleiro/marcadores"
+	f.seedOpenBoard(t, "pedra")
+	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
-	id := marcadoresDoMapa(t, f)[0].ID
-	corAntes := marcadoresDoMapa(t, f)[0].Color
+	id := mapMarkers(t, f)[0].ID
+	corAntes := mapMarkers(t, f)[0].Color
 
 	corpo := f.posta(t, f.mestre, base+"/"+id+"/cor/gold", "")
 
@@ -118,7 +118,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	if !strings.Contains(corpo, "as do mapa são") {
 		t.Errorf("a recusa não disse qual era a forma esperada; resposta: %.400s", corpo)
 	}
-	if depois := marcadoresDoMapa(t, f)[0].Color; depois != corAntes {
+	if depois := mapMarkers(t, f)[0].Color; depois != corAntes {
 		t.Errorf("a cor mudou para %q apesar da recusa", depois)
 	}
 
@@ -127,7 +127,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/"+id+"/cor/carmim", ""); rec.Code != http.StatusOK {
 		t.Fatalf("pintar de carmim deu %d", rec.Code)
 	}
-	if got := marcadoresDoMapa(t, f)[0].Color; got != "carmim" {
+	if got := mapMarkers(t, f)[0].Color; got != "carmim" {
 		t.Errorf("a cor boa não entrou: ficou %q", got)
 	}
 }
@@ -138,12 +138,12 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 // nova é uma linha de registro que alguém pode trocar sem perceber.
 func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	base := f.urlDaMesa() + "/tabuleiro/marcadores"
+	f.seedOpenBoard(t, "pedra")
+	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
-	id := marcadoresDoMapa(t, f)[0].ID
+	id := mapMarkers(t, f)[0].ID
 
 	for _, gesto := range []string{"novo/7/7", id + "/revelar", id + "/cor/azul", id + "/remover"} {
 		rec := f.pede(t, f.jogador, http.MethodPost, base+"/"+gesto, "")
@@ -151,7 +151,7 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 			t.Errorf("o jogador passou em %q: %d", gesto, rec.Code)
 		}
 	}
-	marcadores := marcadoresDoMapa(t, f)
+	marcadores := mapMarkers(t, f)
 	if len(marcadores) != 1 || !marcadores[0].Hidden || marcadores[0].Color != tabuleiro.DefaultMarkerColor() {
 		t.Errorf("o mapa mudou apesar dos 403: %+v", marcadores)
 	}
@@ -165,13 +165,13 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 // que o gesto de revelar existe para responder.
 func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	base := f.urlDaMesa() + "/tabuleiro/marcadores"
+	f.seedOpenBoard(t, "pedra")
+	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "escondido da mesa") {
 		t.Fatal("a tela do mestre não diz que o marcador está escondido — ele revela e nada muda para ele")
 	}
@@ -181,16 +181,16 @@ func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) 
 		t.Fatal("o marcador não apareceu nem para o mestre — o guarda está medindo a tela errada")
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(doJogador, "Marcador A") {
 		t.Error("o marcador ESCONDIDO chegou ao HTML do jogador")
 	}
 
-	id := marcadoresDoMapa(t, f)[0].ID
+	id := mapMarkers(t, f)[0].ID
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/"+id+"/revelar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("revelar deu %d", rec.Code)
 	}
-	revelado := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	revelado := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(revelado, "Marcador A") {
 		t.Error("revelado, o marcador continua sem chegar à mesa")
 	}
@@ -202,25 +202,25 @@ func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) 
 // responde 200: a tela diria que apagou algo que continua lá.
 func TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	base := f.urlDaMesa() + "/tabuleiro/marcadores"
+	f.seedOpenBoard(t, "pedra")
+	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
-	id := marcadoresDoMapa(t, f)[0].ID
+	id := mapMarkers(t, f)[0].ID
 
 	corpo := f.posta(t, f.mestre, base+"/nao-existe/remover", "")
 	if !strings.Contains(corpo, "nao-existe") {
 		t.Errorf("a recusa não nomeou o id inventado; resposta: %.200s", corpo)
 	}
-	if len(marcadoresDoMapa(t, f)) != 1 {
+	if len(mapMarkers(t, f)) != 1 {
 		t.Fatal("o id inventado mexeu no mapa")
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/"+id+"/remover", ""); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
-	if n := len(marcadoresDoMapa(t, f)); n != 0 {
+	if n := len(mapMarkers(t, f)); n != 0 {
 		t.Errorf("o marcador continua no mapa (%d)", n)
 	}
 }

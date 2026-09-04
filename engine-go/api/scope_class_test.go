@@ -35,7 +35,7 @@ func TestEveryScopeClassExistsInTheStylesheet(t *testing.T) {
 	// Só o que está DENTRO de `class=`, e a primeira versão deste guarda errou
 	// justamente aí: procurando `scene-…` no arquivo inteiro, ela reprovou
 	// `scene-title`, `scene-shell` e `scene-content`, que são valores de
-	// `data-slot` — ganchos que o `cena.ts` e o e2e consultam, e que não têm por
+	// `data-slot` — ganchos que o `scene.ts` e o e2e consultam, e que não têm por
 	// que existir na folha. Guarda que reprova o que está certo é guarda que
 	// alguém desliga.
 	atributoDeClasse := regexp.MustCompile(`class="([^"]*)"`)

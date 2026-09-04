@@ -20,7 +20,7 @@ import (
 
 // TestTheKeyboardAndTheRailAgreeOnWhatExists.
 //
-// Os dois saem do mesmo `oTrilhoDe`, e este guarda existe porque a alternativa —
+// Os dois saem do mesmo `rail`, e este guarda existe porque a alternativa —
 // uma tabela de teclas escrita à mão — falharia em silêncio dos dois jeitos: uma
 // tecla que liga uma ferramenta sem botão, e um botão que a tecla não alcança.
 func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
@@ -28,8 +28,8 @@ func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
 		Nome   string
 		Mestre bool
 	}{{"o mestre", true}, {"o jogador", false}} {
-		teclado := oTecladoDoTrilho(papel.Mestre)
-		for _, f := range oTrilhoDe(papel.Mestre) {
+		teclado := railKeyboard(papel.Mestre)
+		for _, f := range rail(papel.Mestre) {
 			if !strings.Contains(teclado, `evt.key === "`+f.Atalho+`"`) {
 				t.Errorf("%s tem o botão %q e não tem a tecla %s", papel.Nome, f.Rotulo, f.Atalho)
 			}
@@ -38,8 +38,8 @@ func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
 	// E o inverso: o jogador NÃO pode ter a tecla de uma ferramenta do mestre.
 	// Uma tecla que liga o pincel na tela de quem não pinta deixaria o clique
 	// mudo — a camada não existe lá, e o gesto simplesmente não faria nada.
-	doJogador := oTecladoDoTrilho(false)
-	for _, f := range asFerramentasDoMapa() {
+	doJogador := railKeyboard(false)
+	for _, f := range mapTools() {
 		if f.SoMestre && strings.Contains(doJogador, `$ferramenta = "`+f.ID+`"`) {
 			t.Errorf("o jogador tem a tecla de %q, que é do mestre", f.Rotulo)
 		}
@@ -53,10 +53,10 @@ func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
 // aprendeu `3 = gabarito` mestrando tem de continuar com `3 = gabarito` jogando.
 func TestTheShortcutIsFixedPerTool(t *testing.T) {
 	doMestre := map[string]string{}
-	for _, f := range oTrilhoDe(true) {
+	for _, f := range rail(true) {
 		doMestre[f.ID] = f.Atalho
 	}
-	for _, f := range oTrilhoDe(false) {
+	for _, f := range rail(false) {
 		if doMestre[f.ID] != f.Atalho {
 			t.Errorf("%q é a tecla %s para o jogador e %s para o mestre",
 				f.Rotulo, f.Atalho, doMestre[f.ID])
@@ -65,7 +65,7 @@ func TestTheShortcutIsFixedPerTool(t *testing.T) {
 	// E nenhuma tecla serve a duas ferramentas: a segunda ganharia a disputa no
 	// `?:` encadeado e a primeira ficaria inalcançável, sem erro nenhum.
 	vistas := map[string]string{}
-	for _, f := range asFerramentasDoMapa() {
+	for _, f := range mapTools() {
 		if antes, repetida := vistas[f.Atalho]; repetida {
 			t.Errorf("a tecla %s serve a %q e a %q", f.Atalho, antes, f.Rotulo)
 		}
@@ -79,7 +79,7 @@ func TestTheShortcutIsFixedPerTool(t *testing.T) {
 // atrás do formulário. Já aconteceu com o `-` do zoom, e é por isso que a guarda
 // é uma constante compartilhada em vez de três cópias.
 func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
-	teclado := oTecladoDoTrilho(true)
+	teclado := railKeyboard(true)
 	for _, alvo := range []string{"INPUT", "TEXTAREA", "SELECT"} {
 		if !strings.Contains(teclado, alvo) {
 			t.Errorf("o atalho não se protege de %s", alvo)
@@ -110,8 +110,8 @@ func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
 // Agora a rota não tem espécie no caminho — não há como errar qual.
 func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	casa := f.urlDaMesa() + "/tabuleiro/terreno"
+	f.seedOpenBoard(t, "pedra")
+	casa := f.tableUrl() + "/tabuleiro/terreno"
 
 	// Três espécies EMPILHADAS na mesma casa: é o caso que o modo antigo não
 	// sabia resolver, porque ele tinha de escolher uma.
@@ -147,8 +147,8 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 // caminho, este teste cai.
 func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(tela, "tabuleiro/terreno/limpar/") {
 		t.Error("a borracha não usa a rota sem espécie")
@@ -166,7 +166,7 @@ func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 //
 // A versão do tabuleiro é o que acorda a mesa inteira pelo stream. Subir por um
 // clique em chão limpo mandaria um quadro para seis pessoas para dizer que nada
-// mudou — e o `escreveMesa` compara o HTML depois, mas o trabalho de renderizar
+// mudou — e o `writeTable` compara o HTML depois, mas o trabalho de renderizar
 // nove regiões já teria acontecido.
 func TestClearingAnAlreadyCleanSquareReturnsFalse(t *testing.T) {
 	b := &tabuleiro.BoardState{}
@@ -187,19 +187,19 @@ func TestClearingAnAlreadyCleanSquareReturnsFalse(t *testing.T) {
 
 // TestThePlayerRailLacksWhatThePlayerCannotDo.
 //
-// A trava de verdade é do servidor (`comandoDoMestreNoTabuleiro`); isto é a
+// A trava de verdade é do servidor (`gmBoardCommand`); isto é a
 // cortesia de não oferecer o que seria recusado. Mas ela também é o que impede um
 // gesto MUDO: a camada de pintura não existe na cena do jogador, então uma
 // ferramenta oferecida a ele seria um modo que liga e não faz nada.
 func TestThePlayerRailLacksWhatThePlayerCannotDo(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	f.seedOpenBoard(t, "pedra")
+	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(tela, "Régua (tecla ") {
 		t.Fatal("o jogador não recebeu o trilho — a página não é o que este teste pensa que é")
 	}
-	for _, f := range asFerramentasDoMapa() {
+	for _, f := range mapTools() {
 		if f.SoMestre && strings.Contains(tela, f.Rotulo+" (tecla ") {
 			t.Errorf("o jogador recebeu %q, que é do mestre", f.Rotulo)
 		}

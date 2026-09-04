@@ -17,7 +17,7 @@ import (
 
 // A Mesa do jogador desenhada (ALE-219; em templ pela ALE-227). Nenhuma REGRA
 // aqui: o que decide mora em `piloto_mesa_view.go`, onde se testa sem HTML.
-func mesa(v mesaView) templ.Component {
+func table(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -42,11 +42,11 @@ func mesa(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaCabecalho(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableHeader(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oSeletorDeSuperficie(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = surfaceSelector(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -69,9 +69,9 @@ func mesa(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(naSuperficie(superficieDaFicha))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(surface(superficieDaFicha))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 62, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 62, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -95,9 +95,9 @@ func mesa(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(naSuperficie(superficieDaMesa))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(surface(superficieDaMesa))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 71, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 71, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -107,15 +107,15 @@ func mesa(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaRegistrarRegiao(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableRegisterRegion(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaGrupo(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableParty(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaFila(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableTracker(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -124,9 +124,9 @@ func mesa(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(naSuperficie(superficieDoTabuleiro))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(surface(superficieDoTabuleiro))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 79, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 79, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -136,7 +136,7 @@ func mesa(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaTabuleiro(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableBoard(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -144,19 +144,19 @@ func mesa(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaPorNoMapa(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableMap(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaAcervoDeLugares(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableCollectionPlaces(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaConfigDaSessao(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableConfigSession(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaComandos(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableCommands(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -181,7 +181,7 @@ func mesa(v mesaView) templ.Component {
 // ficha é a última tela da migração — ela não existe em Datastar. A aba nasce
 // junto com ela. Uma terceira aba agora prometeria na tela o que o app ainda não
 // tem, e o jogador clicaria nela procurando a própria ficha.
-func oSeletorDeSuperficie(v mesaView) templ.Component {
+func surfaceSelector(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -206,15 +206,15 @@ func oSeletorDeSuperficie(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, superficie := range asSuperficiesDe(v) {
+		for _, superficie := range surfaces(v) {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<button type=\"button\" data-attr:aria-pressed=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%s ? 'true' : 'false'", naSuperficie(superficie.ID)))
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%s ? 'true' : 'false'", surface(superficie.ID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 119, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 119, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -225,9 +225,9 @@ func oSeletorDeSuperficie(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(oVestidoDaSuperficie(superficie.ID))
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(surfaceStyling(superficie.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 120, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 120, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 			if templ_7745c5c3_Err != nil {
@@ -238,9 +238,9 @@ func oSeletorDeSuperficie(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolheASuperficie(superficie.ID))
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickSurface(superficie.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 121, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 121, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -295,9 +295,9 @@ func oSeletorDeSuperficie(v mesaView) templ.Component {
 // A raiz existe SEMPRE, com o condicional por dentro. Uma região que some leva o
 // id junto, e o remendo seguinte não acha onde pousar — o vazio precisa de casca.
 
-// mesaCabecalho é a faixa AO VIVO (ALE-30). Acende em DOURADO na vez do jogador,
+// tableHeader é a faixa AO VIVO (ALE-30). Acende em DOURADO na vez do jogador,
 // porque dourado é o que já diz "a vez" na iniciativa e no tabuleiro (ALE-200).
-func mesaCabecalho(v mesaView) templ.Component {
+func tableHeader(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -355,7 +355,7 @@ func mesaCabecalho(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = verbosDaSessao(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sessionVerbs(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -423,7 +423,7 @@ func mesaCabecalho(v mesaView) templ.Component {
 // Registrar iniciativa — a ÚNICA mutação desta superfície (ALE-213). Some fora de
 // cena pelo mesmo motivo da SPA: gravaria o combatente na fila do mestre sem
 // mudar nada na tela de quem clicou.
-func mesaRegistrarRegiao(v mesaView) templ.Component {
+func tableRegisterRegion(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -449,7 +449,7 @@ func mesaRegistrarRegiao(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.SceneActive && v.Eu != nil {
-			templ_7745c5c3_Err = mesaRegistrar(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = tableRegister(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -464,7 +464,7 @@ func mesaRegistrarRegiao(v mesaView) templ.Component {
 
 // Grupo — como todo mundo está, que é pergunta diferente de "quem age quando".
 // Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
-func mesaGrupo(v mesaView) templ.Component {
+func tableParty(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -508,12 +508,12 @@ func mesaGrupo(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Mestre != nil {
-			templ_7745c5c3_Err = oElencoDoMestre(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gmCast(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = grupoEmCartoes(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = cardsParty(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -529,7 +529,7 @@ func mesaGrupo(v mesaView) templ.Component {
 // O GRUPO em cartões: a superfície do JOGADOR, como sempre foi.
 //
 // Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
-func grupoEmCartoes(v mesaView) templ.Component {
+func cardsParty(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -704,7 +704,7 @@ func grupoEmCartoes(v mesaView) templ.Component {
 // é `flex: 1` e recorta com `overflow: hidden`, e um `flex: 1` só sabe até onde
 // crescer se o ancestral repassar a altura. Sem elas a janela nasceria com a
 // altura do nada.
-func mesaTabuleiro(v mesaView) templ.Component {
+func tableBoard(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -729,7 +729,7 @@ func mesaTabuleiro(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = tabuleiroDaMesa(v.Tabuleiro).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = boardTable(v.Tabuleiro).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -743,7 +743,7 @@ func mesaTabuleiro(v mesaView) templ.Component {
 
 // Iniciativa — LEITURA para o jogador (ALE-213); o mestre ganha aqui o que MONTA
 // a fila. O diálogo de editar vem junto porque é dela que ele fala.
-func mesaFila(v mesaView) templ.Component {
+func tableTracker(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -773,7 +773,7 @@ func mesaFila(v mesaView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = adicionarGrupo(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = addParty(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -826,7 +826,7 @@ func mesaFila(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, l := range v.Fila {
-				templ_7745c5c3_Err = mesaLinhaDaFila(v, l).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = tableRowTracker(v, l).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -871,7 +871,7 @@ func mesaFila(v mesaView) templ.Component {
 // A lista vem do CATÁLOGO e já chega ordenada em pt-BR. Uma segunda tabela do
 // livro escrita aqui é uma tabela que desvia: a API já teve 34 ids ao lado das
 // 35 do catálogo, e a que faltava dava 400 ao ser aplicada.
-func condicoesDoCombatente(v mesaView) templ.Component {
+func condicoesDoCombatente(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -915,9 +915,9 @@ func condicoesDoCombatente(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var33 string
-			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(condicaoLigada(c.ID) + " ? 'true' : 'false'")
+			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(onCondition(c.ID) + " ? 'true' : 'false'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 406, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 406, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -928,9 +928,9 @@ func condicoesDoCombatente(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var34 string
-			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'pincel-ligado': " + condicaoLigada(c.ID) + "}")
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'pincel-ligado': " + onCondition(c.ID) + "}")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 407, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 407, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -941,9 +941,9 @@ func condicoesDoCombatente(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var35 string
-			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(alternaACondicaoDaLinha(v, c.ID))
+			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleConditionRow(v, c.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 408, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 408, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -978,7 +978,7 @@ func condicoesDoCombatente(v mesaView) templ.Component {
 // Os comandos do mestre. A raiz existe para todo mundo e o CONTEÚDO é que é do
 // mestre — a trava continua sendo a view não ter o que desenhar, e o jogador
 // recebe uma casca vazia em vez de um id que some e leva o remendo junto.
-func mesaComandos(v mesaView) templ.Component {
+func tableCommands(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1004,7 +1004,7 @@ func mesaComandos(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Mestre != nil {
-			templ_7745c5c3_Err = controlesDoMestre(v, *v.Mestre).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = gmControls(v, *v.Mestre).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1017,8 +1017,8 @@ func mesaComandos(v mesaView) templ.Component {
 	})
 }
 
-// mesaRegistrar é o único caminho de escrita da superfície.
-func mesaRegistrar(v mesaView) templ.Component {
+// tableRegister é o único caminho de escrita da superfície.
+func tableRegister(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1122,7 +1122,7 @@ func mesaRegistrar(v mesaView) templ.Component {
 	})
 }
 
-func mesaLinhaDaFila(v mesaView, l mesaLinha) templ.Component {
+func tableRowTracker(v tableView, l tableRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1178,7 +1178,7 @@ func mesaLinhaDaFila(v mesaView, l mesaLinha) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Mestre != nil {
-			templ_7745c5c3_Err = oNumeroEditavel(v, l).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberEditable(v, l).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1281,9 +1281,9 @@ func mesaLinhaDaFila(v mesaView, l mesaLinha) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var50 string
-				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue(efeitoDaCondicao(c))
+				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue(conditionEffect(c))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 584, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 584, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 				if templ_7745c5c3_Err != nil {
@@ -1317,7 +1317,7 @@ func mesaLinhaDaFila(v mesaView, l mesaLinha) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Mestre != nil {
-			templ_7745c5c3_Err = verbosDaLinha(v, l).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = rowVerbs(v, l).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1330,7 +1330,7 @@ func mesaLinhaDaFila(v mesaView, l mesaLinha) templ.Component {
 	})
 }
 
-// verbosDaLinha é o que o MESTRE faz com um combatente: ferir, curar, esconder
+// rowVerbs é o que o MESTRE faz com um combatente: ferir, curar, esconder
 // os PV da mesa, e tirar da fila.
 //
 // CADA VERBO TEM O SEU LUGAR, reservado pela lista inteira (ALE-141). Sem isso o
@@ -1344,7 +1344,7 @@ func mesaLinhaDaFila(v mesaView, l mesaLinha) templ.Component {
 //
 // A ordem é a do HUD e é deliberada: o `−` vem DEPOIS do `+` para um polegar
 // apressado não curar quando queria machucar.
-func verbosDaLinha(v mesaView, l mesaLinha) templ.Component {
+func rowVerbs(v tableView, l tableRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1370,7 +1370,7 @@ func verbosDaLinha(v mesaView, l mesaLinha) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if l.PV != nil {
-			templ_7745c5c3_Err = passoDoVital(v, l, "heal", "+", "Curar").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = vitalStep(v, l, "heal", "+", "Curar").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1378,7 +1378,7 @@ func verbosDaLinha(v mesaView, l mesaLinha) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = passoDoVital(v, l, "harm", "−", "Ferir").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = vitalStep(v, l, "harm", "−", "Ferir").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1386,7 +1386,7 @@ func verbosDaLinha(v mesaView, l mesaLinha) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = oOlhoDaLinha(v, l).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = rowEye(v, l).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1443,9 +1443,9 @@ func verbosDaLinha(v mesaView, l mesaLinha) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var55 string
-		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreAsCondicoes(l))
+		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(openConditions(l))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 629, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 629, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {
@@ -1490,9 +1490,9 @@ func verbosDaLinha(v mesaView, l mesaLinha) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var58 string
-		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaLinha(v, l, "remove"))
+		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowCommand(v, l, "remove"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 638, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 638, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 		if templ_7745c5c3_Err != nil {
@@ -1544,13 +1544,13 @@ func vagaDeVerbo() templ.Component {
 	})
 }
 
-// passoDoVital: clique tira ou devolve 1, Shift+clique 5.
+// vitalStep: clique tira ou devolve 1, Shift+clique 5.
 //
 // Os dois passos são DUAS ROTAS, e o `evt.shiftKey` só escolhe QUAL delas — o
 // número nunca viaja como dado. O `title` conta os dois passos porque atalho que
 // ninguém descobre não existe, e o nome acessível traz o do combatente: numa
 // fila de nove, "Ferir" sozinho não diz quem.
-func passoDoVital(v mesaView, l mesaLinha, verbo, sinal, rotulo string) templ.Component {
+func vitalStep(v tableView, l tableRow, verbo, sinal, rotulo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1602,9 +1602,9 @@ func passoDoVital(v mesaView, l mesaLinha, verbo, sinal, rotulo string) templ.Co
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var63 string
-		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue(vitalDaLinha(v, l, verbo))
+		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowVital(v, l, verbo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 662, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 662, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 		if templ_7745c5c3_Err != nil {
@@ -1631,12 +1631,12 @@ func passoDoVital(v mesaView, l mesaLinha, verbo, sinal, rotulo string) templ.Co
 	})
 }
 
-// oOlhoDaLinha esconde os PV deste combatente DOS JOGADORES.
+// rowEye esconde os PV deste combatente DOS JOGADORES.
 //
 // `aria-pressed` porque é um estado que fica, não uma ação que passa. E o
 // `title` diz de quem se esconde: o ícone sozinho não conta que o segredo é dos
 // jogadores e não do mestre (ALE-133).
-func oOlhoDaLinha(v mesaView, l mesaLinha) templ.Component {
+func rowEye(v tableView, l tableRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1748,9 +1748,9 @@ func oOlhoDaLinha(v mesaView, l mesaLinha) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var72 string
-		templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaLinha(v, l, "vitals/hidden"))
+		templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowCommand(v, l, "vitals/hidden"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 683, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 683, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
 		if templ_7745c5c3_Err != nil {
@@ -1795,7 +1795,7 @@ func oOlhoDaLinha(v mesaView, l mesaLinha) templ.Component {
 // barra tem o mesmo contrato de acessibilidade da `VitalBar` da SPA: um
 // `progressbar` de verdade, porque "um pouco de verde" não é resposta para quem
 // não vê a tela — e é o que o e2e consegue ler.
-func barra(rotulo string, b mesaBarra) templ.Component {
+func barra(rotulo string, b tableBar) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1937,12 +1937,12 @@ func barra(rotulo string, b mesaBarra) templ.Component {
 	})
 }
 
-// adicionarGrupo traz os personagens do grupo para a fila.
+// addParty traz os personagens do grupo para a fila.
 //
 // Continua clicável DEPOIS do primeiro uso porque `populateParty` é idempotente:
 // o mestre que aceitou um jogador atrasado clica de novo e leva só o que
 // faltava. Apagá-lo faria a segunda pergunta parecer respondida.
-func adicionarGrupo(v mesaView) templ.Component {
+func addParty(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1968,9 +1968,9 @@ func adicionarGrupo(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var85 string
-		templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "initiative/populate"))
+		templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "initiative/populate"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 725, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 725, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var85)
 		if templ_7745c5c3_Err != nil {
@@ -2000,7 +2000,7 @@ func adicionarGrupo(v mesaView) templ.Component {
 //
 // O `Escape` fecha, porque é o gesto que todo mundo tenta primeiro num
 // formulário aberto por engano e o gatilho que o abriu fica longe (ALE-136).
-func formDeCombatente(v mesaView) templ.Component {
+func formDeCombatente(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2037,11 +2037,11 @@ func formDeCombatente(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oTipoDoCombatente("character", "Ficha").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = combatantKind("character", "Ficha").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oTipoDoCombatente("npc", "NPC").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = combatantKind("npc", "NPC").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2176,7 +2176,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 // O `aria-pressed` sai como STRING e não como booleano — ver o comentário do
 // `aria-expanded` lá em cima: o `data-attr` daria `aria-pressed=""`, que é
 // inválido e não anuncia estado nenhum.
-func oTipoDoCombatente(tipo, rotulo string) templ.Component {
+func combatantKind(tipo, rotulo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2257,7 +2257,7 @@ func oTipoDoCombatente(tipo, rotulo string) templ.Component {
 	})
 }
 
-// oNumeroEditavel: para o mestre, a INICIATIVA é botão.
+// numberEditable: para o mestre, a INICIATIVA é botão.
 //
 // É o gesto que a ALE-122 nomeou e deixou sem saída — "Adicionar grupo" entra
 // com 0 e não havia como consertar, então a única saída era remover e
@@ -2267,7 +2267,7 @@ func oTipoDoCombatente(tipo, rotulo string) templ.Component {
 // não busca nada, e sem a semeadura ele abriria com o que sobrou da linha
 // anterior. É a tradução do `setValue(props.current)` da SPA, que tem um
 // comentário dizendo exatamente isto.
-func oNumeroEditavel(v mesaView, l mesaLinha) templ.Component {
+func numberEditable(v tableView, l tableRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2325,9 +2325,9 @@ func oNumeroEditavel(v mesaView, l mesaLinha) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var104 string
-		templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreAEdicao(v, l))
+		templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.ResolveAttributeValue(openEdit(v, l))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 827, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 827, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var104)
 		if templ_7745c5c3_Err != nil {
@@ -2377,7 +2377,7 @@ func oNumeroEditavel(v mesaView, l mesaLinha) templ.Component {
 // medido: a fileira de verbos já leva quatro alvos de 36px numa linha de 390px,
 // e um quinto não cabe. O ± continua sendo o caminho descoberto para o dano de
 // 1 e 5; este é o caminho do valor exato, que na SPA custava seis cliques.
-func editarCombatente(v mesaView) templ.Component {
+func editarCombatente(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2403,9 +2403,9 @@ func editarCombatente(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var108 string
-		templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.ResolveAttributeValue(salvaAEdicao(v))
+		templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveEdit(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 892, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa.templ`, Line: 892, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var108)
 		if templ_7745c5c3_Err != nil {

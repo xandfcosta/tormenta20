@@ -11,12 +11,12 @@ import (
 /*
 Lugares da crônica (ALE-124, fatia 5).
 
-Até esta fatia, encerrar o tabuleiro DESTRUÍA a cena: o `Close` apagava a linha
+Até esta fatia, encerrar o tabuleiro DESTRUÍA a scene: o `Close` apagava a linha
 e a taverna que o mestre montou peça por peça morria junto. A épica prometia o
 contrário — "encerrar ARQUIVA, e devolve o tabuleiro à lista de Lugares da
 crônica" —, e era a única promessa que o código contradizia.
 
-O que se prova aqui é o ciclo que a mesa vive: montar, encerrar, voltar semana
+O que se prova aqui é o ciclo que a table vive: montar, encerrar, voltar semana
 que vem e achar tudo onde estava.
 */
 
@@ -152,10 +152,10 @@ func TestAPlaceFromAnotherCampaignCannotBeDeleted(t *testing.T) {
 }
 
 /*
-Trocar de cena com a mesa jogando (ALE-191).
+Trocar de scene com a table jogando (ALE-191).
 
-Até aqui a lista de Lugares só aparecia na cena VAZIA, então "mostrar outro
-lugar à mesa" era um caminho que a tela não abria — e o `Reopen`, por baixo,
+Até aqui a lista de Lugares só aparecia na scene VAZIA, então "mostrar outro
+lugar à table" era um caminho que a tela não abria — e o `Reopen`, por baixo,
 trocava o tabuleiro vivo sem guardar o que estava nele. Abrir o caminho sem
 consertar isso mataria a taverna no clique que traz a cripta.
 */
@@ -219,7 +219,7 @@ func placeNamed(t *testing.T, lugares []tabuleiro.Place, nome string) tabuleiro.
 }
 
 /*
-Montar o lugar sem pôr nada na mesa (ALE-191, fatia 2).
+Montar o lugar sem pôr nada na table (ALE-191, fatia 2).
 
 É o único ponto do tabuleiro onde o estado inteiro chega pelo CLIENTE — nos
 outros ele manda a intenção e o servidor produz o estado. O rascunho não tem

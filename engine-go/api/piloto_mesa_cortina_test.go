@@ -17,14 +17,14 @@ import (
 
 func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "Fechar a cortina") {
 		t.Fatal("o mestre não tem gesto para fechar a cortina — a feature volta a ser invisível")
 	}
 
-	base := f.urlDaMesa() + "/tabuleiro/cortina"
+	base := f.tableUrl() + "/tabuleiro/cortina"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("fechar deu %d", rec.Code)
 	}
@@ -34,7 +34,7 @@ func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 
 	// Fechada, a tela do mestre oferece o CAMINHO DE VOLTA — e em dois lugares,
 	// porque a tira de aviso é onde ele percebe e o cabeçalho é onde ele procura.
-	fechada := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	fechada := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if n := strings.Count(fechada, "Abrir a cortina"); n < 2 {
 		t.Errorf("com a cortina fechada há %d caminhos de volta, esperado 2 (a tira e o cabeçalho)", n)
 	}
@@ -53,8 +53,8 @@ func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 // que o mestre está montando, e um jogador que a abre pela mão vê a emboscada.
 func TestThePlayerDoesNotDrawTheCurtain(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	base := f.urlDaMesa() + "/tabuleiro/cortina"
+	f.seedOpenBoard(t, "pedra")
+	base := f.tableUrl() + "/tabuleiro/cortina"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("fechar deu %d", rec.Code)
 	}
@@ -66,7 +66,7 @@ func TestThePlayerDoesNotDrawTheCurtain(t *testing.T) {
 		t.Error("a cortina abriu apesar do 403")
 	}
 	// E o gesto nem aparece para ele: cortesia, não a trava.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(doJogador, "Fechar a cortina") {
 		t.Error("o jogador recebeu o botão da cortina")
 	}

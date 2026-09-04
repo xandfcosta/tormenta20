@@ -24,7 +24,7 @@ import (
 // densidades, como na SPA: o trilho esquerdo mostra os jogadores recolhidos em
 // retratos, e este painel mostra o elenco inteiro — os jogadores e os NPCs. Não
 // é a colisão que o GLOSSARIO proíbe; é a mesma coisa de perto e de longe.
-func mesaElencoDaCampanha(v mesaView) templ.Component {
+func tableCastCampaign(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -57,7 +57,7 @@ func mesaElencoDaCampanha(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaListaDeNPCs(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableListNpCs(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -66,9 +66,9 @@ func mesaElencoDaCampanha(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreOEditor(v, 0))
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(openEditor(v, 0))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 57, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 57, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -86,7 +86,7 @@ func mesaElencoDaCampanha(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oEditorDeBloco(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = blockEditor(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -101,7 +101,7 @@ func mesaElencoDaCampanha(v mesaView) templ.Component {
 // A LISTA é região própria (`mesa-npcs`): ela muda quando o mestre guarda ou
 // apaga um NPC, que é um ritmo completamente diferente do da fila e do mapa.
 // Pendurá-la em qualquer um dos dois faria o outro ser remendado de graça.
-func mesaListaDeNPCs(v mesaView) templ.Component {
+func tableListNpCs(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -133,7 +133,7 @@ func mesaListaDeNPCs(v mesaView) templ.Component {
 			}
 		} else {
 			for _, npc := range v.NPCs {
-				templ_7745c5c3_Err = umNPCDoElenco(v, npc).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = castNpcCard(v, npc).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -147,7 +147,7 @@ func mesaListaDeNPCs(v mesaView) templ.Component {
 	})
 }
 
-func umNPCDoElenco(v mesaView, npc npcDoElenco) templ.Component {
+func castNpcCard(v tableView, npc castNpc) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -250,9 +250,9 @@ func umNPCDoElenco(v mesaView, npc npcDoElenco) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreOEditor(v, npc.ID))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(openEditor(v, npc.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 105, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 105, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -276,9 +276,9 @@ func umNPCDoElenco(v mesaView, npc npcDoElenco) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDoNPC(v, npc, "na-fila"))
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(npcCommand(v, npc, "na-fila"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 113, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 113, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {
@@ -315,9 +315,9 @@ func umNPCDoElenco(v mesaView, npc npcDoElenco) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDoNPC(v, npc, "apagar"))
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(npcCommand(v, npc, "apagar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 123, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 123, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -340,7 +340,7 @@ func umNPCDoElenco(v mesaView, npc npcDoElenco) templ.Component {
 }
 
 // O botão que chama o elenco, no trilho das consultas.
-func oBotaoDoElenco(v mesaView) templ.Component {
+func castButton(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -399,7 +399,7 @@ func oBotaoDoElenco(v mesaView) templ.Component {
 // O NOME É OPCIONAL, e o campo diz isso no `placeholder` em vez de numa nota:
 // guardar "Ogro" como "Ogro" é o caso comum, e o servidor cai no nome do livro
 // quando o campo vem vazio.
-func oGuardarNoElenco(v master.BestiaryView) templ.Component {
+func saveToCastButton(v master.BestiaryView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -425,7 +425,7 @@ func oGuardarNoElenco(v master.BestiaryView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(guardaNoElenco(v))
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveToCastPost(v))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc.templ`, Line: 168, Col: 36}
 		}

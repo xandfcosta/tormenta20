@@ -38,10 +38,10 @@ import (
 // São DOIS avisos desde a ALE-264, e o segundo nasceu de uma medição: o
 // tabuleiro é outro store, então mover uma peça não acordava ninguém e a
 // mudança só chegava no batimento — 1310ms, cronometrados no navegador.
-const mesaBatimento = time.Second
+const tableHeartbeat = time.Second
 
-func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
-	campaignID, sessionID, ok := mesaParams(w, r)
+func (s *Server) handleTableStream(w http.ResponseWriter, r *http.Request) {
+	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
 		return
 	}
@@ -49,7 +49,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	// Uma primeira leitura ANTES de abrir o stream: sem acesso, o jogador merece
 	// um 403 legível e não um stream que abre e nunca manda nada. Precisa vir
 	// antes do `NewSSE`, que já escreve os cabeçalhos.
-	view, status, err := s.loadMesaView(r.Context(), user, campaignID, sessionID)
+	view, status, err := s.loadTableView(r.Context(), user, campaignID, sessionID)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
@@ -72,10 +72,10 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	defer parar()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
-	ultimo := escreveMesa(r.Context(), sse, view, nil)
-	// O PUXÃO já empurrado NESTA conexão (ALE-205, fatia 2). Ver `empurraParaOMapa`.
+	ultimo := writeTable(r.Context(), sse, view, nil)
+	// O PUXÃO já empurrado NESTA conexão (ALE-205, fatia 2). Ver `pushForMap`.
 	var puxaoEmpurrado int64
-	puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
+	puxaoEmpurrado = pushForMap(s, sse, sessionID, user.ID, puxaoEmpurrado)
 	// A ficha do jogador SEMEADA e não empurrada: o valor de agora entra como
 	// "já avisado" para o primeiro AVISO não disparar um repedido do que a
 	// página acabou de desenhar — e o primeiro aviso pode chegar no mesmo
@@ -83,7 +83,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	sheetAnnounced := sheetVersion(s, r.Context(), view)
 	sheetTouched := false
 
-	batimento := time.NewTicker(mesaBatimento)
+	batimento := time.NewTicker(tableHeartbeat)
 	defer batimento.Stop()
 	for {
 		select {
@@ -98,15 +98,15 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 			sheetTouched = sheetTouched || sheetChanged(ev)
 		case <-batimento.C:
 		}
-		view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID)
+		view, _, err := s.loadTableView(r.Context(), user, campaignID, sessionID)
 		if err != nil {
 			// Um erro passageiro (banco ocupado) não derruba o stream: o próximo
 			// ciclo tenta de novo, e a tela continua no último estado bom em vez
 			// de piscar.
 			continue
 		}
-		ultimo = escreveMesa(r.Context(), sse, view, ultimo)
-		puxaoEmpurrado = empurraParaOMapa(s, sse, sessionID, user.ID, puxaoEmpurrado)
+		ultimo = writeTable(r.Context(), sse, view, ultimo)
+		puxaoEmpurrado = pushForMap(s, sse, sessionID, user.ID, puxaoEmpurrado)
 		if sheetTouched {
 			sheetAnnounced = announceSheetChange(s, r.Context(), sse, view, sheetAnnounced)
 			sheetTouched = false
@@ -114,7 +114,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// empurraParaOMapa leva quem foi puxado para a superfície do TABULEIRO, UMA vez
+// pushForMap leva quem foi puxado para a superfície do TABULEIRO, UMA vez
 // por puxão (ALE-205, fatia 2).
 //
 // Sem isto o "parem tudo e olhem isto" falha justamente no caso mais comum, e
@@ -133,8 +133,8 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 // A SUPERFÍCIE é sinal do navegador — é o cliente que decide o que aparece —,
 // então o que vai daqui é um remendo de SINAL e não de HTML. É o único lugar
 // desta cena em que o servidor escreve num sinal pelo stream.
-func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, sessionID, userID, jaEmpurrado int64) int64 {
-	seq := s.abas.PuxaoEmCurso(sessionID, userID)
+func pushForMap(s *Server, sse *datastar.ServerSentEventGenerator, sessionID, userID, jaEmpurrado int64) int64 {
+	seq := s.abas.PullProgress(sessionID, userID)
 	if seq == 0 || seq == jaEmpurrado {
 		return jaEmpurrado
 	}
@@ -155,7 +155,7 @@ func empurraParaOMapa(s *Server, sse *datastar.ServerSentEventGenerator, session
 // era o truque certo para a forma antiga, e ele deixou de ser necessário: não
 // pedir o interesse é dizer a mesma coisa sem precisar que o leitor conheça o
 // truque.
-func readerInterests(view mesaView) []events.Interest {
+func readerInterests(view tableView) []events.Interest {
 	interesses := []events.Interest{events.OfSession(view.SessionID)}
 	if view.Mestre == nil && view.Eu != nil {
 		interesses = append(interesses, events.OfCharacter(view.Eu.CharacterID))
@@ -185,7 +185,7 @@ func sheetChanged(ev events.Event) bool {
 // # Por que um AVISO e não a ficha remendada
 //
 // A ficha é sete painéis computados e ela NÃO é região do stream (ver
-// `mesaView.MinhaFicha`): pendurá-la em `regioesDaMesa` faria cada tique
+// `tableView.MinhaFicha`): pendurá-la em `tableRegions` faria cada tique
 // recomputá-la para descobrir que nada mudou, e o tabuleiro sozinho produz um
 // aviso por quadrado arrastado. O que vai daqui é um SINAL de uma linha; quem
 // repede a ficha é o cliente, e ele repede na ABA em que a pessoa está — coisa
@@ -210,7 +210,7 @@ func sheetChanged(ev events.Event) bool {
 // dois outros canais para provar que essa é a forma da casa.
 func announceSheetChange(
 	s *Server, ctx context.Context, sse *datastar.ServerSentEventGenerator,
-	view mesaView, jaAvisada string,
+	view tableView, jaAvisada string,
 ) string {
 	versao := sheetVersion(s, ctx, view)
 	if versao == "" || versao == jaAvisada {
@@ -233,7 +233,7 @@ func announceSheetChange(
 // carimba. O que ele NÃO pega são as tabelas filhas (perícias, itens, magias),
 // e isso é aceitável porque elas só mudam pelas mãos do próprio dono, que já
 // está remendando a ficha ao mexer nelas.
-func sheetVersion(s *Server, ctx context.Context, view mesaView) string {
+func sheetVersion(s *Server, ctx context.Context, view tableView) string {
 	if view.Mestre != nil || view.Eu == nil {
 		return ""
 	}
@@ -244,7 +244,7 @@ func sheetVersion(s *Server, ctx context.Context, view mesaView) string {
 	return row.Updatedat
 }
 
-// escreveMesa manda o fragmento SÓ quando o HTML mudou, e devolve a impressão
+// writeTable manda o fragmento SÓ quando o HTML mudou, e devolve a impressão
 // digital do que foi mandado.
 //
 // O hash continua sendo o árbitro mesmo com o aviso do store, e de propósito: o
@@ -256,11 +256,11 @@ func sheetVersion(s *Server, ctx context.Context, view mesaView) string {
 // `refreshCharacterMaxes` devolve struct nova a cada leitura, então igualdade de
 // estado mandaria tudo sempre; e comparar campo a campo seria a lista que
 // envelhece — o defeito que o `cloneState` documenta ter tido com o `TurnsTaken`.
-func escreveMesa(ctx context.Context, sse *datastar.ServerSentEventGenerator, view mesaView, anterior digitais) digitais {
+func writeTable(ctx context.Context, sse *datastar.ServerSentEventGenerator, view tableView, anterior digitais) digitais {
 	if anterior == nil {
 		anterior = digitais{}
 	}
-	for _, r := range regioesDaMesa(view) {
+	for _, r := range tableRegions(view) {
 		fragmento, err := ui.RenderFragment(ctx, r.No)
 		if err != nil {
 			continue
@@ -284,38 +284,38 @@ func escreveMesa(ctx context.Context, sse *datastar.ServerSentEventGenerator, vi
 // conexão, porque cada uma chegou num momento e viu coisas diferentes.
 type digitais map[string][32]byte
 
-// regiaoDaMesa é um pedaço da cena que muda por conta própria (ALE-264).
-type regiaoDaMesa struct {
+// tableRegion é um pedaço da cena que muda por conta própria (ALE-264).
+type tableRegion struct {
 	ID string
 	No templ.Component
 }
 
-// regioesDaMesa é a lista, e a ORDEM é a da tela.
+// tableRegions é a lista, e a ORDEM é a da tela.
 //
 // O corte é por QUEM MUDA a região, não por assunto: o cabeçalho e os comandos
 // mudam com o turno, o grupo muda com a ficha, o mapa muda com o tabuleiro, a
 // fila muda com a fila. Cortar por assunto juntaria coisas que mudam em ritmos
 // diferentes, e a região só é útil enquanto ela é a unidade de mudança.
-func regioesDaMesa(v mesaView) []regiaoDaMesa {
-	regioes := []regiaoDaMesa{
-		{"mesa-cabecalho", mesaCabecalho(v)},
-		{"mesa-registrar", mesaRegistrarRegiao(v)},
-		{"mesa-grupo", mesaGrupo(v)},
-		{"mesa-tabuleiro", mesaTabuleiro(v)},
+func tableRegions(v tableView) []tableRegion {
+	regioes := []tableRegion{
+		{"mesa-cabecalho", tableHeader(v)},
+		{"mesa-registrar", tableRegisterRegion(v)},
+		{"mesa-grupo", tableParty(v)},
+		{"mesa-tabuleiro", tableBoard(v)},
 		// REGIÃO PRÓPRIA, e ela nasceu de um guarda: o diálogo de pôr no mapa muda
 		// com a FILA (quem existe) e com o MAPA (quem já tem peça), então pendurá-lo
 		// em qualquer uma das duas faz a outra ser remendada de graça. Dentro do
 		// mapa, `TestATrackerChangeDoesNotPatchTheMap` acusou na hora — a peça
 		// debaixo do dedo do mestre seria trocada no meio do arrasto.
-		{"mesa-por-no-mapa", mesaPorNoMapa(v)},
+		{"mesa-por-no-mapa", tableMap(v)},
 		// O ACERVO é região pela MESMA razão, e ela foi medida (ALE-203): a lista
 		// de 147 lugares guardados era 236 dos 282 KB da região do tabuleiro, e
 		// ela muda duas vezes por sessão enquanto o mapa muda a cada peça que
-		// anda. Ver `mesaAcervoDeLugares`.
-		{"mesa-acervo", mesaAcervoDeLugares(v)},
-		{"mesa-config-da-sessao", mesaConfigDaSessao(v)},
-		{"mesa-fila", mesaFila(v)},
-		{"mesa-comandos", mesaComandos(v)},
+		// anda. Ver `tableCollectionPlaces`.
+		{"mesa-acervo", tableCollectionPlaces(v)},
+		{"mesa-config-da-sessao", tableConfigSession(v)},
+		{"mesa-fila", tableTracker(v)},
+		{"mesa-comandos", tableCommands(v)},
 	}
 	// O TRILHO DA FILA só existe no palco do mestre (ALE-269), e por isso ele
 	// entra na lista pela MESMA condição que o desenha. Mandar um remendo para
@@ -323,8 +323,8 @@ func regioesDaMesa(v mesaView) []regiaoDaMesa {
 	// página não podem discordar sobre quais regiões existem, o que só se
 	// garante fazendo as duas perguntarem à mesma `view`.
 	if v.Mestre != nil {
-		regioes = append(regioes, regiaoDaMesa{"mesa-trilho-fila", mesaTrilhoDaFila(v)})
-		regioes = append(regioes, regiaoDaMesa{"mesa-npcs", mesaListaDeNPCs(v)})
+		regioes = append(regioes, tableRegion{"mesa-trilho-fila", tableRailTracker(v)})
+		regioes = append(regioes, tableRegion{"mesa-npcs", tableListNpCs(v)})
 	}
 	return regioes
 }

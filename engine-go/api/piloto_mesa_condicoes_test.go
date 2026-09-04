@@ -11,8 +11,8 @@ import (
 
 // Os guardas das CONDIÇÕES na Mesa (ALE-122, portadas na ALE-269).
 
-// condicoesDaLinha lê o que a fila guarda para um combatente.
-func condicoesDaLinha(t *testing.T, f pilotoFixture, entryID string) []string {
+// rowConditions lê o que a fila guarda para um combatente.
+func rowConditions(t *testing.T, f pilotoFixture, entryID string) []string {
 	t.Helper()
 	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
 		if e.ID == entryID {
@@ -35,15 +35,15 @@ func condicoesDaLinha(t *testing.T, f pilotoFixture, entryID string) []string {
 // divergem. Uma que coincidisse passaria verde sobre o defeito.
 func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	_, npc := idsDaCena(t, f)
+	f.scene(t)
+	_, npc := sceneIds(t, f)
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/initiative/"+npc+"/condicao/caido", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/initiative/"+npc+"/condicao/caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar deu %d", rec.Code)
 	}
 
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O SELETOR É O CRACHÁ (`</li>`) e não a palavra solta, e esta linha custou
 	// uma sabotagem: procurar "Caído" na página passava VERDE com o crachá
@@ -60,12 +60,12 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 	// cabeça "O personagem cai no chão" e o guarda ficou vermelho contra a
 	// descrição de verdade. Esperado escrito à mão sobre dado que existe é
 	// convite a testar a minha memória em vez do app.
-	if !strings.Contains(tela, efeitoDaCondicao("caido")) {
+	if !strings.Contains(tela, conditionEffect("caido")) {
 		t.Error("o crachá não carrega o efeito da condição")
 	}
 	// O CONTROLE: o efeito não é string vazia, senão a asserção acima é
 	// verdadeira sobre qualquer página.
-	if efeitoDaCondicao("caido") == "" {
+	if conditionEffect("caido") == "" {
 		t.Fatal("o catálogo não tem efeito para `caido` — o guarda acima não mede nada")
 	}
 }
@@ -77,28 +77,28 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 // inteiro apagaria a condição que outro remendo acabou de acrescentar.
 func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	_, npc := idsDaCena(t, f)
-	base := f.urlDaMesa() + "/initiative/" + npc + "/condicao/"
+	f.scene(t)
+	_, npc := sceneIds(t, f)
+	base := f.tableUrl() + "/initiative/" + npc + "/condicao/"
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ligar deu %d", rec.Code)
 	}
-	if c := condicoesDaLinha(t, f, npc); len(c) != 1 || c[0] != "abalado" {
+	if c := rowConditions(t, f, npc); len(c) != 1 || c[0] != "abalado" {
 		t.Fatalf("depois de ligar a linha tem %v", c)
 	}
 	// Uma SEGUNDA condição não substitui a primeira.
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ligar a segunda deu %d", rec.Code)
 	}
-	if c := condicoesDaLinha(t, f, npc); len(c) != 2 {
+	if c := rowConditions(t, f, npc); len(c) != 2 {
 		t.Errorf("a segunda condição substituiu a primeira: %v", c)
 	}
 	// E o mesmo clique DESLIGA, sem tocar na vizinha.
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("desligar deu %d", rec.Code)
 	}
-	c := condicoesDaLinha(t, f, npc)
+	c := rowConditions(t, f, npc)
 	if len(c) != 1 || c[0] != "caido" {
 		t.Errorf("desligar levou a vizinha junto: %v", c)
 	}
@@ -112,10 +112,10 @@ func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
 // clicaria de novo — tirando o que acabou de pôr.
 func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	_, npc := idsDaCena(t, f)
+	f.scene(t)
+	_, npc := sceneIds(t, f)
 
-	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/initiative/"+npc+"/condicao/abalado", "")
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/initiative/"+npc+"/condicao/abalado", "")
 
 	if !strings.Contains(corpo, `"condicoesdalinha":"abalado"`) {
 		t.Errorf("o conjunto novo não voltou no sinal; resposta: %.300s", corpo)
@@ -129,15 +129,15 @@ func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 // ser aplicada (ALE-122). Uma cópia da tabela do livro é uma cópia que desvia.
 func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	_, npc := idsDaCena(t, f)
+	f.scene(t)
+	_, npc := sceneIds(t, f)
 
-	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/initiative/"+npc+"/condicao/maldicao-inventada", "")
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/initiative/"+npc+"/condicao/maldicao-inventada", "")
 
 	if !strings.Contains(corpo, "p394-395") {
 		t.Errorf("a recusa não cita a página da tabela; resposta: %.300s", corpo)
 	}
-	if c := condicoesDaLinha(t, f, npc); len(c) != 0 {
+	if c := rowConditions(t, f, npc); len(c) != 0 {
 		t.Errorf("a condição inventada entrou na linha: %v", c)
 	}
 
@@ -148,7 +148,7 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 		t.Fatal("o catálogo não tem `enfeitiçado` — o controle está medindo outra coisa")
 	}
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/initiative/"+npc+"/condicao/enfeitiçado", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/initiative/"+npc+"/condicao/enfeitiçado", ""); rec.Code != http.StatusOK {
 		t.Errorf("a condição do livro foi recusada: %d", rec.Code)
 	}
 }
@@ -156,16 +156,16 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 // TestThePlayerDoesNotApplyAConditionButton — a trava é do servidor.
 func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	_, npc := idsDaCena(t, f)
+	f.scene(t)
+	_, npc := sceneIds(t, f)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		f.urlDaMesa()+"/initiative/"+npc+"/condicao/abalado", "")
+		f.tableUrl()+"/initiative/"+npc+"/condicao/abalado", "")
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador aplicou condição: %d", rec.Code)
 	}
-	if c := condicoesDaLinha(t, f, npc); len(c) != 0 {
+	if c := rowConditions(t, f, npc); len(c) != 0 {
 		t.Errorf("a condição entrou apesar do 403: %v", c)
 	}
 }
@@ -176,9 +176,9 @@ func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 // aqui para alguém esquecer de atualizar.
 func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	condicoes := book.Catalogs().Condicoes
 	if len(condicoes) == 0 {

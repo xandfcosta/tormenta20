@@ -29,12 +29,12 @@ import "fmt"
 // começa com o esquerdo e ganha o direito no meio: relendo, o traço trocaria de
 // mão sozinho; guardando, ele faz até o fim o que foi pedido no começo.
 
-// sinalDoPincel é o modo do gesto em curso: vazio (parado), `pintar` ou
+// brushSignal é o modo do gesto em curso: vazio (parado), `pintar` ou
 // `apagar`. Um sinal só e o valor É o modo, como o `$ferramenta` — assim não
 // existe o estado impossível "apagando e pintando".
-const sinalDoPincel = "pincelando"
+const brushSignal = "pincelando"
 
-// sinalDaUltimaCasa é a casa que o gesto JÁ mandou, no formato do CAMINHO
+// squareLastSignal é a casa que o gesto JÁ mandou, no formato do CAMINHO
 // (`"x/y"`).
 //
 // String e não dois números porque ela tem DUAS perguntas a responder e as duas
@@ -47,17 +47,17 @@ const sinalDoPincel = "pincelando"
 // lugar nenhum — nem no console. O sintoma era o pincel não pintar, sem uma linha
 // de erro para seguir. Guardar já no formato de destino tira a conversão do
 // caminho, e com ela o lugar onde o erro cabia.
-const sinalDaUltimaCasa = "ultimacasa"
+const squareLastSignal = "ultimacasa"
 
 const (
 	pincelPinta = "pintar"
 	pincelApaga = "apagar"
 )
 
-// osSinaisDoPincel entram na semente da Mesa.
-var osSinaisDoPincel = fmt.Sprintf("%s: '', %s: ''", sinalDoPincel, sinalDaUltimaCasa)
+// brushSignals entram na semente da Mesa.
+var brushSignals = fmt.Sprintf("%s: '', %s: ''", brushSignal, squareLastSignal)
 
-// oPincelPega começa o traço na casa clicada.
+// takesBrush começa o traço na casa clicada.
 //
 // `modoFixo` vazio quer dizer "o botão decide" — é a camada de PINTAR, onde o
 // direito apaga. A camada da borracha passa `pincelApaga` porque lá os dois
@@ -72,7 +72,7 @@ var osSinaisDoPincel = fmt.Sprintf("%s: '', %s: ''", sinalDoPincel, sinalDaUltim
 // no meio da expressão essa exceção engoliria a pintura da primeira casa — o
 // gesto começaria mudo. Por último, o pior que acontece é o traço perder a
 // captura e terminar quando o dedo sai do elemento.
-func oPincelPega(v tabuleiroView, modoFixo string) string {
+func takesBrush(v boardView, modoFixo string) string {
 	modo := fmt.Sprintf("evt.button === 2 ? %q : %q", pincelApaga, pincelPinta)
 	if modoFixo != "" {
 		modo = fmt.Sprintf("%q", modoFixo)
@@ -80,24 +80,24 @@ func oPincelPega(v tabuleiroView, modoFixo string) string {
 	return fmt.Sprintf(
 		"evt.preventDefault(); $%s = %s; $%s = ''; %s; "+
 			"evt.currentTarget.setPointerCapture(evt.pointerId)",
-		sinalDoPincel, modo, sinalDaUltimaCasa, oPincelAgeNaCasa(v),
+		brushSignal, modo, squareLastSignal, brushActsOnSquare(v),
 	)
 }
 
-// oPincelSegue continua o traço, e só quando o dedo TROCA de casa.
-func oPincelSegue(v tabuleiroView) string {
-	return fmt.Sprintf("$%s !== '' && (%s)", sinalDoPincel, oPincelAgeNaCasa(v))
+// followsBrush continua o traço, e só quando o dedo TROCA de casa.
+func followsBrush(v boardView) string {
+	return fmt.Sprintf("$%s !== '' && (%s)", brushSignal, brushActsOnSquare(v))
 }
 
-// oPincelLarga encerra o traço. Quem apaga a memória é o `pointerdown` do gesto
+// wideBrush encerra o traço. Quem apaga a memória é o `pointerdown` do gesto
 // SEGUINTE, e por uma razão que só apareceu com o traço: se o `pointerup`
 // limpasse, o `$ultimacasa` ficaria vazio entre os gestos — e ficaria vazio
 // também depois de um `pointercancel` no meio do traço, com o gesto ainda em
 // curso. Limpar na abertura é o único instante em que "não há traço anterior" é
 // verdade.
-var oPincelLarga = fmt.Sprintf("$%s = ''", sinalDoPincel)
+var wideBrush = fmt.Sprintf("$%s = ''", brushSignal)
 
-// oPincelAgeNaCasa é o corpo compartilhado: traduz o ponto, sai se a casa é a
+// squareActsBrush é o corpo compartilhado: traduz o ponto, sai se a casa é a
 // mesma de antes, e manda o TRAÇO daquela até esta.
 //
 // O SEGMENTO e não o ponto, e isso é conserto de um defeito medido: entre dois
@@ -115,7 +115,7 @@ var oPincelLarga = fmt.Sprintf("$%s = ''", sinalDoPincel)
 // mesma coisa — a diferença é só quem decide o modo. Duas cópias dariam duas
 // rotas para atualizar no dia em que o caminho mudar, e a esquecida seria a do
 // arrasto, que é a que ninguém testa clicando.
-func oPincelAgeNaCasa(v tabuleiroView) string {
+func brushActsOnSquare(v boardView) string {
 	return fmt.Sprintf(
 		"(() => { const cx = %s, cy = %s, casa = cx + '/' + cy; "+
 			"if (casa === $%s) return; "+
@@ -125,20 +125,20 @@ func oPincelAgeNaCasa(v tabuleiroView) string {
 			"? @post('/mesa/%d/%d/tabuleiro/terreno/limpar/' + traco) "+
 			": @post('/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + traco) })()",
 		clicouEmX, clicouEmY,
-		sinalDaUltimaCasa,
-		sinalDaUltimaCasa, sinalDaUltimaCasa, sinalDaUltimaCasa,
-		sinalDoPincel, pincelApaga,
+		squareLastSignal,
+		squareLastSignal, squareLastSignal, squareLastSignal,
+		brushSignal, pincelApaga,
 		v.CampaignID, v.SessionID,
 		v.CampaignID, v.SessionID,
 	)
 }
 
-// aBorrachaPega é o traço da BORRACHA: os dois botões apagam.
+// takesEraser é o traço da BORRACHA: os dois botões apagam.
 //
 // Ela usa a rota sem espécie (`terreno/limpar`), então o `$ferramenta` não entra
 // na conta — que é exatamente o conserto do defeito que o dono relatou como "a
 // borracha não funciona".
-func aBorrachaPega(v tabuleiroView) string { return oPincelPega(v, pincelApaga) }
+func takesEraser(v boardView) string { return takesBrush(v, pincelApaga) }
 
 // prendeOMenuDoNavegador é o `contextmenu` das camadas que usam o botão direito.
 //

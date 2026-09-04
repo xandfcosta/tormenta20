@@ -22,18 +22,18 @@ import (
 // redesenha são só as três LISTAS, porque Datastar não tem laço no cliente e uma
 // lista de tamanho variável só existe como HTML que alguém escreveu.
 
-templ oEditorDeBloco(v mesaView) {
+templ blockEditor(v tableView) {
 	<div data-show="$rascunhoaberto" class="flex min-h-0 flex-1 flex-col gap-3">
 		<div class="flex shrink-0 items-center gap-2">
 			<button
 				type="button"
-				data-on:click={ fechaOEditor }
+				data-on:click={ closeEditor }
 				class="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-sm border border-grimorio-iron px-2 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("ChevronRight", "size-4 rotate-180")
 				Voltar ao elenco
 			</button>
-			<h3 data-text={ oTituloDoEditor } class="min-w-0 flex-1 truncate font-heading text-base tracking-wide text-grimorio-gold"></h3>
+			<h3 data-text={ editorTitle } class="min-w-0 flex-1 truncate font-heading text-base tracking-wide text-grimorio-gold"></h3>
 		</div>
 		// O NOME fica FORA das abas, e é o único campo que fica: ele não é um
 		// número do bloco, é como o NPC se chama na mesa — e uma aba que o
@@ -55,14 +55,14 @@ templ oEditorDeBloco(v mesaView) {
 			/>
 		</div>
 		<div role="tablist" aria-label="Partes do bloco" class="flex shrink-0 flex-wrap gap-1 border-b border-grimorio-iron">
-			for _, aba := range asAbasDoEditor {
-				@aAbaDoEditor(aba)
+			for _, aba := range editorTabs {
+				@editorTabLink(aba)
 			}
 		</div>
 		<div class="min-h-0 flex-1 overflow-y-auto pr-1">
-			@osNumerosDoBloco()
-			@aAbaDosAtaques(v)
-			@aAbaDasPosses(v)
+			@blockNumbers()
+			@attacksTab(v)
+			@ownedTab(v)
 		</div>
 		// A RECUSA fica junto dos botões e não no rodapé do mestre, pelo mesmo
 		// motivo do `erroDoMovimento`: quem lê está com o formulário aberto, e uma
@@ -77,7 +77,7 @@ templ oEditorDeBloco(v mesaView) {
 		<div class="flex shrink-0 items-center justify-end gap-2 border-t border-grimorio-iron pt-3">
 			<button
 				type="button"
-				data-on:click={ fechaOEditor }
+				data-on:click={ closeEditor }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			<button
@@ -89,75 +89,75 @@ templ oEditorDeBloco(v mesaView) {
 	</div>
 }
 
-// aAbaDoEditor é um botão da fileira. `aria-selected` e `role="tab"` porque é o
+// editorTabLink é um botão da fileira. `aria-selected` e `role="tab"` porque é o
 // que um leitor de tela precisa para dizer "aba 2 de 3, selecionada" — e o valor
 // sai como STRING, que é a armadilha do `data-attr` com booleano.
 //
 // O CONTADOR ao lado do nome não é enfeite: com o conteúdo escondido atrás de
 // abas, "Ataques" sozinho não distingue um bloco com três ataques de um sem
 // nenhum. Ele devolve o que as abas tiram.
-templ aAbaDoEditor(aba abaDoEditor) {
+templ editorTabLink(aba editorTab) {
 	<button
 		type="button"
 		role="tab"
-		data-attr:aria-selected={ fmt.Sprintf("%s ? 'true' : 'false'", naAba(aba.ID)) }
-		data-class={ oVestidoDaAba(aba.ID) }
-		data-on:click={ escolheAAba(aba.ID) }
+		data-attr:aria-selected={ fmt.Sprintf("%s ? 'true' : 'false'", onTabExpr(aba.ID)) }
+		data-class={ tabStyling(aba.ID) }
+		data-on:click={ pickTab(aba.ID) }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-t-sm border border-transparent px-3 text-sm outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
 		{ aba.Rotulo }
-		if oResumoDaAba(aba.ID) != "" {
+		if tabSummary(aba.ID) != "" {
 			<span
-				data-text={ oResumoDaAba(aba.ID) }
+				data-text={ tabSummary(aba.ID) }
 				class="rounded-sm bg-grimorio-iron/60 px-1.5 text-2xs tabular-nums"
 			></span>
 		}
 	</button>
 }
 
-// osNumerosDoBloco são os ~25 campos escalares, na ordem em que o LIVRO imprime
+// blockNumbers são os ~25 campos escalares, na ordem em que o LIVRO imprime
 // o bloco (p289): identidade, iniciativa e percepção, defesa e resistências,
 // vida e mana, deslocamento, atributos.
 //
 // A ordem é do livro porque é dele que o mestre está copiando: quem tem a página
 // aberta ao lado lê de cima para baixo, e uma ordem "melhor" o obrigaria a
 // procurar cada campo.
-templ osNumerosDoBloco() {
-	<div role="tabpanel" data-show={ naAba(abaDosNumeros) } class="space-y-4">
-		@umaSecaoDoBloco("Identidade") {
-			@umNumeroDoBloco("nd", "ND", 0, 30)
-			@umaEscolhaDoBloco("tipo", "Tipo", asOpcoesDoTipo())
-			@umaEscolhaDoBloco("size", "Tamanho", asOpcoesDoTamanho())
-			@umTextoDoBloco("deslocamento", "Deslocamento", "9m (6q)")
+templ blockNumbers() {
+	<div role="tabpanel" data-show={ onTabExpr(abaDosNumeros) } class="space-y-4">
+		@blockSection("Identidade") {
+			@numberBlock("nd", "ND", 0, 30)
+			@blockChoice("tipo", "Tipo", kindOptions())
+			@blockChoice("size", "Tamanho", sizeOptions())
+			@blockText("deslocamento", "Deslocamento", "9m (6q)")
 		}
-		@umaSecaoDoBloco("Combate") {
-			@umNumeroDoBloco("iniciativa", "Iniciativa", -20, 60)
-			@umNumeroDoBloco("percepcao", "Percepção", -20, 60)
-			@umNumeroDoBloco("defesa", "Defesa", 0, 60)
-			@umNumeroDoBloco("hp", "Pontos de Vida", 1, 9999)
-			@oManaDoBloco()
+		@blockSection("Combate") {
+			@numberBlock("iniciativa", "Iniciativa", -20, 60)
+			@numberBlock("percepcao", "Percepção", -20, 60)
+			@numberBlock("defesa", "Defesa", 0, 60)
+			@numberBlock("hp", "Pontos de Vida", 1, 9999)
+			@blockMana()
 		}
-		@umaSecaoDoBloco("Resistências") {
-			@umNumeroDoBloco("fortitude", "Fortitude", -20, 60)
-			@umNumeroDoBloco("reflexos", "Reflexos", -20, 60)
-			@umNumeroDoBloco("vontade", "Vontade", -20, 60)
+		@blockSection("Resistências") {
+			@numberBlock("fortitude", "Fortitude", -20, 60)
+			@numberBlock("reflexos", "Reflexos", -20, 60)
+			@numberBlock("vontade", "Vontade", -20, 60)
 		}
-		@umaSecaoDoBloco("Atributos") {
-			@umNumeroDoBloco("forca", "For", -5, 20)
-			@umNumeroDoBloco("destreza", "Des", -5, 20)
-			@umNumeroDoBloco("constituicao", "Con", -5, 20)
-			@umNumeroDoBloco("inteligencia", "Int", -5, 20)
-			@umNumeroDoBloco("sabedoria", "Sab", -5, 20)
-			@umNumeroDoBloco("carisma", "Car", -5, 20)
+		@blockSection("Atributos") {
+			@numberBlock("forca", "For", -5, 20)
+			@numberBlock("destreza", "Des", -5, 20)
+			@numberBlock("constituicao", "Con", -5, 20)
+			@numberBlock("inteligencia", "Int", -5, 20)
+			@numberBlock("sabedoria", "Sab", -5, 20)
+			@numberBlock("carisma", "Car", -5, 20)
 		}
 	</div>
 }
 
-// oManaDoBloco é o único campo com interruptor, e a razão é do LIVRO: a linha de
+// blockMana é o único campo com interruptor, e a razão é do LIVRO: a linha de
 // PM só existe em quem conjura (o Centauro Xamã tem 20 PM, p290; o Bandido não
 // tem linha nenhuma). Um zero fixo diria "tem mana e está sem", que é outro
 // estado — e é o estado errado na hora em que o mestre for gastar.
-templ oManaDoBloco() {
+templ blockMana() {
 	<div class="space-y-1">
 		<label for="npc-pm" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Pontos de Mana</label>
 		<div class="flex items-center gap-2">
@@ -171,49 +171,49 @@ templ oManaDoBloco() {
 				min="0"
 				max="999"
 				data-show="$rascunho.conjura"
-				data-bind={ oCampoDoRascunho("pm") }
+				data-bind={ draftField("pm") }
 				class="h-11 w-24 rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			/>
 		</div>
 	</div>
 }
 
-// aAbaDosAtaques é a lista que o servidor redesenha. O `+ Ataque` manda o
+// attacksTab é a lista que o servidor redesenha. O `+ Ataque` manda o
 // rascunho INTEIRO e recebe de volta o rascunho com uma linha a mais — é assim
 // que nada do que estava sendo digitado se perde.
-templ aAbaDosAtaques(v mesaView) {
-	<div role="tabpanel" data-show={ naAba(abaDosAtaques) } class="space-y-2">
-		@oCabecalhoDaLista(v, listaDeAtaques, "Ataques", "Ataque")
-		@osAtaquesDoRascunho(v.CampaignID, v.SessionID, nil)
+templ attacksTab(v tableView) {
+	<div role="tabpanel" data-show={ onTabExpr(abaDosAtaques) } class="space-y-2">
+		@listHeader(v, listaDeAtaques, "Ataques", "Ataque")
+		@draftAttacks(v.CampaignID, v.SessionID, nil)
 		<p class="text-2xs text-muted-foreground">
 			O livro escreve a linha como "Corpo a Corpo: Clava +7 (1d6+3)" (p289). A nota entre parênteses vai em <span class="text-foreground">Efeito</span>.
 		</p>
 	</div>
 }
 
-templ aAbaDasPosses(v mesaView) {
-	<div role="tabpanel" data-show={ naAba(abaDasPosses) } class="space-y-4">
+templ ownedTab(v tableView) {
+	<div role="tabpanel" data-show={ onTabExpr(abaDasPosses) } class="space-y-4">
 		<div class="space-y-2">
-			@oCabecalhoDaLista(v, listaDePericias, "Perícias", "Perícia")
-			@asPericiasDoRascunho(v.CampaignID, v.SessionID, nil)
+			@listHeader(v, listaDePericias, "Perícias", "Perícia")
+			@draftExpertises(v.CampaignID, v.SessionID, nil)
 		</div>
 		<div class="space-y-2">
-			@oCabecalhoDaLista(v, listaDeHabilidades, "Habilidades especiais", "Habilidade")
-			@asHabilidadesDoRascunho(v.CampaignID, v.SessionID, nil)
+			@listHeader(v, listaDeHabilidades, "Habilidades especiais", "Habilidade")
+			@draftAbilities(v.CampaignID, v.SessionID, nil)
 		</div>
-		@umaSecaoDoBloco("Posses") {
-			@umTextoDoBloco("equipment", "Equipamento", "Clava, couro batido")
-			@umTextoDoBloco("treasure", "Tesouro", "Metade")
+		@blockSection("Posses") {
+			@blockText("equipment", "Equipamento", "Clava, couro batido")
+			@blockText("treasure", "Tesouro", "Metade")
 		}
 	</div>
 }
 
-templ oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) {
+templ listHeader(v tableView, lista, titulo, oQue string) {
 	<div class="flex items-center justify-between gap-2">
 		<h4 class="text-xs font-bold uppercase tracking-widest text-grimorio-gold">{ titulo }</h4>
 		<button
 			type="button"
-			data-on:click={ comandoDaLista(v.CampaignID, v.SessionID, lista, -1) }
+			data-on:click={ listCommand(v.CampaignID, v.SessionID, lista, -1) }
 			class="inline-flex min-h-9 items-center gap-1 rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			@ui.Icon("Plus", "size-3.5")
@@ -228,52 +228,52 @@ templ oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) {
 // entram na lista de regiões da Mesa: o stream não sabe do rascunho de ninguém, e
 // um quadro dele apagaria as linhas em silêncio.
 
-templ osAtaquesDoRascunho(campanha, sessao int64, ataques []creature.Attack) {
+templ draftAttacks(campanha, sessao int64, ataques []creature.Attack) {
 	<div id="npc-ataques" class="space-y-2">
 		if len(ataques) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhum ataque.</p>
 		}
 		for i, ataque := range ataques {
 			<div class="flex flex-wrap items-end gap-2 border border-grimorio-iron bg-card/40 p-2">
-				@aCaixaDaLinha(oCampoDaLinha(listaDeAtaques, i, "name"), "Nome", "Clava", "min-w-36 flex-1")
-				@oNumeroDaLinha(oCampoDaLinha(listaDeAtaques, i, "attackBonus"), "Ataque", -20, 60)
-				@aCaixaDaLinha(oCampoDaLinha(listaDeAtaques, i, "damage"), "Dano", "1d6+3", "w-28")
-				@aCaixaDaLinha(oCampoDaLinha(listaDeAtaques, i, "special"), "Efeito", "mais agarrar", "w-36")
+				@rowBox(rowField(listaDeAtaques, i, "name"), "Nome", "Clava", "min-w-36 flex-1")
+				@numberRow(rowField(listaDeAtaques, i, "attackBonus"), "Ataque", -20, 60)
+				@rowBox(rowField(listaDeAtaques, i, "damage"), "Dano", "1d6+3", "w-28")
+				@rowBox(rowField(listaDeAtaques, i, "special"), "Efeito", "mais agarrar", "w-36")
 				<label class="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
-					<input type="checkbox" data-bind={ oCampoDaLinha(listaDeAtaques, i, "ranged") } class="size-4 accent-grimorio-gold"/>
+					<input type="checkbox" data-bind={ rowField(listaDeAtaques, i, "ranged") } class="size-4 accent-grimorio-gold"/>
 					À distância
 				</label>
-				@oBotaoDeTirarLinha(campanha, sessao, listaDeAtaques, i, nomeDoAtaque(ataque, i))
+				@removeRowButton(campanha, sessao, listaDeAtaques, i, attackName(ataque, i))
 			</div>
 		}
 	</div>
 }
 
-templ asPericiasDoRascunho(campanha, sessao int64, pericias []creature.Skill) {
+templ draftExpertises(campanha, sessao int64, pericias []creature.Skill) {
 	<div id="npc-pericias" class="space-y-2">
 		if len(pericias) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma perícia.</p>
 		}
 		for i, pericia := range pericias {
 			<div class="flex flex-wrap items-end gap-2">
-				@aCaixaDaLinha(oCampoDaLinha(listaDePericias, i, "name"), "Perícia", "Furtividade", "min-w-36 flex-1")
-				@oNumeroDaLinha(oCampoDaLinha(listaDePericias, i, "bonus"), "Bônus", -20, 60)
+				@rowBox(rowField(listaDePericias, i, "name"), "Perícia", "Furtividade", "min-w-36 flex-1")
+				@numberRow(rowField(listaDePericias, i, "bonus"), "Bônus", -20, 60)
 				// A NOTA é o bônus CONDICIONAL entre parênteses depois do número
 				// — "Furtividade +4 (+14 em pântanos)" na Hidra (p306). O outro
 				// parêntese, o de `Ofício (armeiro)`, vem ANTES do número e faz
 				// parte do NOME: por isso são dois campos e não um.
-				@aCaixaDaLinha(oCampoDaLinha(listaDePericias, i, "nota"), "Nota", "+14 em pântanos", "w-40")
-				@oBotaoDeTirarLinha(campanha, sessao, listaDePericias, i, nomeDaPericia(pericia, i))
+				@rowBox(rowField(listaDePericias, i, "nota"), "Nota", "+14 em pântanos", "w-40")
+				@removeRowButton(campanha, sessao, listaDePericias, i, expertiseName(pericia, i))
 			</div>
 		}
 	</div>
 }
 
-// asHabilidadesDoRascunho: uma lista de FRASES, e por isso `<textarea>` e não
+// draftAbilities: uma lista de FRASES, e por isso `<textarea>` e não
 // `<input>` — o livro escreve habilidade especial em prosa ("Faro apurado.
 // Recebe +2 em testes de Percepção baseados em olfato", p289), e uma caixa de uma
 // linha faria o mestre resumir o que ele vai precisar ler em voz alta.
-templ asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) {
+templ draftAbilities(campanha, sessao int64, habilidades []string) {
 	<div id="npc-habilidades" class="space-y-2">
 		if len(habilidades) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma habilidade especial.</p>
@@ -283,11 +283,11 @@ templ asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) {
 				<textarea
 					rows="2"
 					aria-label={ fmt.Sprintf("Habilidade especial %d", i+1) }
-					data-bind={ oCampoDaLinha(listaDeHabilidades, i, "") }
-					placeholder={ oPlaceholderDaHabilidade }
+					data-bind={ rowField(listaDeHabilidades, i, "") }
+					placeholder={ abilityPlaceholder }
 					class="min-w-0 flex-1 rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 				></textarea>
-				@oBotaoDeTirarLinha(campanha, sessao, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1))
+				@removeRowButton(campanha, sessao, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1))
 			</div>
 		}
 	</div>
@@ -295,7 +295,7 @@ templ asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) {
 
 // ── as peças pequenas ────────────────────────────────────────────────────────
 
-templ umaSecaoDoBloco(titulo string) {
+templ blockSection(titulo string) {
 	<section class="space-y-2">
 		<h4 class="text-xs font-bold uppercase tracking-widest text-grimorio-gold">{ titulo }</h4>
 		<div class="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
@@ -304,7 +304,7 @@ templ umaSecaoDoBloco(titulo string) {
 	</section>
 }
 
-templ umNumeroDoBloco(campo, rotulo string, minimo, maximo int) {
+templ numberBlock(campo, rotulo string, minimo, maximo int) {
 	<div class="space-y-1">
 		<label for={ "npc-" + campo } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
 		<input
@@ -312,34 +312,34 @@ templ umNumeroDoBloco(campo, rotulo string, minimo, maximo int) {
 			type="number"
 			min={ fmt.Sprint(minimo) }
 			max={ fmt.Sprint(maximo) }
-			data-bind={ oCampoDoRascunho(campo) }
+			data-bind={ draftField(campo) }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		/>
 	</div>
 }
 
-templ umTextoDoBloco(campo, rotulo, dica string) {
+templ blockText(campo, rotulo, dica string) {
 	<div class="col-span-2 space-y-1 sm:col-span-3">
 		<label for={ "npc-" + campo } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
 		<input
 			id={ "npc-" + campo }
 			type="text"
-			data-bind={ oCampoDoRascunho(campo) }
+			data-bind={ draftField(campo) }
 			placeholder={ dica }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		/>
 	</div>
 }
 
-// umaEscolhaDoBloco é um `<select>` de verdade, e não um trilho de botões: são
+// blockChoice é um `<select>` de verdade, e não um trilho de botões: são
 // sete tipos e seis tamanhos, a escolha é rara (uma vez por NPC) e o `<select>`
 // nativo já traz teclado, busca por letra e o menu do sistema no telefone.
-templ umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) {
+templ blockChoice(campo, rotulo string, opcoes []blockOption) {
 	<div class="space-y-1">
 		<label for={ "npc-" + campo } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
 		<select
 			id={ "npc-" + campo }
-			data-bind={ oCampoDoRascunho(campo) }
+			data-bind={ draftField(campo) }
 			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>
 			for _, opcao := range opcoes {
@@ -349,7 +349,7 @@ templ umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) {
 	</div>
 }
 
-templ aCaixaDaLinha(caminho, rotulo, dica, largura string) {
+templ rowBox(caminho, rotulo, dica, largura string) {
 	<div class={ "space-y-1", largura }>
 		<span class="block text-2xs uppercase tracking-widest text-muted-foreground">{ rotulo }</span>
 		<input
@@ -362,7 +362,7 @@ templ aCaixaDaLinha(caminho, rotulo, dica, largura string) {
 	</div>
 }
 
-templ oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) {
+templ numberRow(caminho, rotulo string, minimo, maximo int) {
 	<div class="w-24 space-y-1">
 		<span class="block text-2xs uppercase tracking-widest text-muted-foreground">{ rotulo }</span>
 		<input
@@ -376,17 +376,17 @@ templ oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) {
 	</div>
 }
 
-// oBotaoDeTirarLinha diz O QUE vai sair no nome acessível, e não "remover".
+// rowRemoveButton diz O QUE vai sair no nome acessível, e não "remover".
 //
 // Com cinco ataques na tela, cinco botões chamados "Remover" são cinco botões
 // idênticos para quem navega por leitor de tela — e o que se apaga por engano é
 // justamente o que se acabou de escrever.
-templ oBotaoDeTirarLinha(campanha, sessao int64, lista string, indice int, oQue string) {
+templ removeRowButton(campanha, sessao int64, lista string, indice int, oQue string) {
 	<button
 		type="button"
 		aria-label={ "Tirar " + oQue }
 		title={ "Tirar " + oQue }
-		data-on:click={ comandoDaLista(campanha, sessao, lista, indice) }
+		data-on:click={ listCommand(campanha, sessao, lista, indice) }
 		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
 		@ui.Icon("Trash2", "size-4")

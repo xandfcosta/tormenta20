@@ -46,21 +46,21 @@ import (
 
 func (s *Server) TokenActionRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/pecas/{tokenId}"
-	r.Post(base+"/visibilidade", s.comandoDoMestreNoTabuleiro(alternaAVisibilidade))
-	r.Post(base+"/duplicar", s.comandoDoMestreNoTabuleiro(duplicaAPeca))
-	r.Post(base+"/voltar", s.comandoDoMestreNoTabuleiro(voltaAPecaParaOndeEstava))
-	r.Post(base+"/editar", s.comandoDoMestreNoTabuleiro(editaAPeca))
-	r.Post(base+"/remover", s.comandoDoMestreNoTabuleiro(removeAPeca))
+	r.Post(base+"/visibilidade", s.gmBoardCommand(toggleVisibility))
+	r.Post(base+"/duplicar", s.gmBoardCommand(duplicatesToken))
+	r.Post(base+"/voltar", s.gmBoardCommand(wasWhereForTokenBack))
+	r.Post(base+"/editar", s.gmBoardCommand(editsToken))
+	r.Post(base+"/remover", s.gmBoardCommand(removesToken))
 }
 
-// alternaAVisibilidade é o gesto da EMBOSCADA.
+// toggleVisibility é o gesto da EMBOSCADA.
 //
 // ALTERNA e não recebe o estado desejado, ao contrário do pincel de terreno: é UM
 // estado com dois lados e um botão com `aria-pressed`. Mandar o valor da tela
 // faria dois cliques rápidos com a resposta atrasada apagarem um ao outro — e
 // aqui o resultado desse empate é a emboscada aparecendo para a mesa.
-func alternaAVisibilidade(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	peca, err := st.aPecaDoTabuleiro(c)
+func toggleVisibility(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
@@ -68,21 +68,21 @@ func alternaAVisibilidade(st *Server, c mesaComando) (*tabuleiro.BoardState, err
 		tabuleiro.ParseTokenPatch(map[string]any{"hidden": !peca.Hidden}))
 }
 
-// duplicaAPeca é "mais um zumbi" (ALE-192), a operação mais repetida ao montar
+// duplicatesToken é "mais um zumbi" (ALE-192), a operação mais repetida ao montar
 // encontro.
 //
 // A cópia nasce AO LADO da original e com o número seguinte no nome, e o servidor
 // é quem numera — duas telas escolhendo por conta própria é como nasce o segundo
 // "Zumbi 3" no mesmo mapa.
-func duplicaAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	peca, err := st.aPecaDoTabuleiro(c)
+func duplicatesToken(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
 	return st.boards.DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
 }
 
-// voltaAPecaParaOndeEstava desfaz o último pouso (ALE-206).
+// wasWhereForTokenBack desfaz o último pouso (ALE-206).
 //
 // "Arrastei o dragão para o lugar errado na frente de seis pessoas" é o gesto que
 // ela conserta, e é por isso que a memória mora na PEÇA e não na tela: quem
@@ -91,8 +91,8 @@ func duplicaAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 // UMA vez e não uma pilha: voltar limpa o registro, então o botão some depois de
 // usado. Um "voltar" que continuasse disponível andaria para trás na cena sem
 // dizer até onde vai.
-func voltaAPecaParaOndeEstava(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	peca, err := st.aPecaDoTabuleiro(c)
+func wasWhereForTokenBack(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
@@ -102,28 +102,28 @@ func voltaAPecaParaOndeEstava(st *Server, c mesaComando) (*tabuleiro.BoardState,
 	return st.boards.ReturnToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
 }
 
-// sinaisDaPeca é o que o diálogo de editar manda.
+// tokenSignals é o que o diálogo de editar manda.
 //
 // Nomes TODOS MINÚSCULOS porque viram chave de atributo, e o analisador de HTML
 // minuscula chave — um `data-bind:pecaTamanho` chega como `pecatamanho` e liga um
 // sinal NOVO, com o servidor lendo o antigo para sempre vazio.
-type sinaisDaPeca struct {
+type tokenSignals struct {
 	Nome    string `json:"pecanome"`
 	Tamanho int    `json:"pecatamanho"`
 }
 
-// editaAPeca muda o NOME e o TAMANHO.
+// editsToken muda o NOME e o TAMANHO.
 //
 // Os dois juntos porque são a mesma pergunta — "o que é esta peça?" —, e porque o
 // tamanho é o que decide quantos quadrados ela ocupa (T20 p107, Tab. 1-21): uma
 // peça Grande desenhada em 1×1 mente sobre quem o gabarito pega e sobre onde cabe
 // passar.
-func editaAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	peca, err := st.aPecaDoTabuleiro(c)
+func editsToken(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
-	var sinais sinaisDaPeca
+	var sinais tokenSignals
 	if err := datastar.ReadSignals(c.R, &sinais); err != nil {
 		return nil, fmt.Errorf("não entendi o formulário da peça: %v", err)
 	}
@@ -131,33 +131,33 @@ func editaAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	if nome == "" {
 		return nil, fmt.Errorf("a peça precisa de um nome")
 	}
-	if !tamanhoDePeca(sinais.Tamanho) {
+	if !tokenSize(sinais.Tamanho) {
 		return nil, fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", sinais.Tamanho)
 	}
 	return st.boards.UpdateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID,
 		tabuleiro.ParseTokenPatch(map[string]any{"label": nome, "footprint": sinais.Tamanho}))
 }
 
-// removeAPeca tira a peça do tabuleiro, e SÓ do tabuleiro.
+// removesToken tira a peça do tabuleiro, e SÓ do tabuleiro.
 //
 // A linha da iniciativa fica: são dois gestos porque respondem a duas perguntas —
 // "ele saiu do mapa" e "ele saiu do combate" —, e juntá-los faria o mestre perder
 // o combatente ao arrumar a cena. É a mesma separação que o elenco e a fila já
 // têm (superfície 6b).
-func removeAPeca(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	peca, err := st.aPecaDoTabuleiro(c)
+func removesToken(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
 	return st.boards.RemoveToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
 }
 
-// aPecaDoTabuleiro lê a peça pelo id do CAMINHO, e recusa a que não existe.
+// tokenOfCommand lê a peça pelo id do CAMINHO, e recusa a que não existe.
 //
 // Sem a leitura, cada verbo teria de tratar "a peça sumiu" por conta própria — e
 // ela some de verdade: outra aba do mestre pode ter removido a mesma peça meio
 // segundo antes. A frase diz o id porque é ele que o botão carregava.
-func (s *Server) aPecaDoTabuleiro(c mesaComando) (*tabuleiro.BoardToken, error) {
+func (s *Server) tokenOfCommand(c commandCtx) (*tabuleiro.BoardToken, error) {
 	b := s.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
@@ -170,13 +170,13 @@ func (s *Server) aPecaDoTabuleiro(c mesaComando) (*tabuleiro.BoardToken, error) 
 	return peca, nil
 }
 
-// osTamanhosDaPeca são os lados que o livro define (T20 p107, Tab. 1-21).
+// tokenSizes são os lados que o livro define (T20 p107, Tab. 1-21).
 //
 // NÃO existe 4 nem 5, e é por isso que isto é uma lista fechada e não um campo de
 // número: Minúsculo, Pequeno e Médio ocupam 1; Grande 2; Enorme 3; Colossal 6.
 // Um seletor com os números do livro impede a peça de lado 4 que nenhuma criatura
 // tem.
-var osTamanhosDaPeca = []struct {
+var tokenSizes = []struct {
 	Lado   int
 	Rotulo string
 }{
@@ -186,8 +186,8 @@ var osTamanhosDaPeca = []struct {
 	{6, "Colossal · 6×6"},
 }
 
-func tamanhoDePeca(lado int) bool {
-	for _, t := range osTamanhosDaPeca {
+func tokenSize(lado int) bool {
+	for _, t := range tokenSizes {
 		if t.Lado == lado {
 			return true
 		}
@@ -197,49 +197,49 @@ func tamanhoDePeca(lado int) bool {
 
 // ── as expressões da tela ────────────────────────────────────────────────────
 
-// aPecaEscolhida é o teste que abre o menu de UMA peça.
+// chosenToken é o teste que abre o menu de UMA peça.
 //
 // UM SINAL com o id dentro, e não um booleano por peça: com dez zumbis no mapa,
 // dez sinais dariam dez lugares onde dois menus podem estar abertos ao mesmo
 // tempo. Com o id, a exclusão é por construção — a mesma escolha do `$ferramenta`
 // e do `$marcadorescolhido`.
-func aPecaEscolhida(id string) string {
+func chosenToken(id string) string {
 	return fmt.Sprintf("$pecaescolhida === %q", id)
 }
 
-// abreOMenuDaPeca é o clique DIREITO.
+// openMenuToken é o clique DIREITO.
 //
 // `preventDefault` porque o menu do navegador cobriria o nosso; e o gesto NUNCA é
 // o único caminho — a issue pede isso e a peça continua tendo o clique esquerdo
 // para mover, o teclado para focar e o `Enter` para abrir o mesmo menu.
-func abreOMenuDaPeca(id string) string {
+func openMenuToken(id string) string {
 	return fmt.Sprintf("evt.preventDefault(); $pecaescolhida = %q", id)
 }
 
-// fechaOMenuDaPeca é a saída, e ela existe em três lugares: o ✕ do menu, a tecla
+// closeMenuToken é a saída, e ela existe em três lugares: o ✕ do menu, a tecla
 // Esc e o gesto que abre OUTRA peça (que é o mesmo sinal recebendo outro id).
-const fechaOMenuDaPeca = "$pecaescolhida = ''"
+const closeMenuToken = "$pecaescolhida = ''"
 
-// comandoDaPeca escreve o gesto de um verbo do menu.
-func comandoDaPeca(v tabuleiroView, id, acao string) string {
+// tokenCommand escreve o gesto de um verbo do menu.
+func tokenCommand(v boardView, id, acao string) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/pecas/%s/%s')",
 		v.CampaignID, v.SessionID, id, acao)
 }
 
-// abreAEdicaoDaPeca semeia o formulário com o que a peça É hoje, e só então abre.
+// openEditToken semeia o formulário com o que a peça É hoje, e só então abre.
 //
 // Semear no GESTO e não no HTML é a regra da casa para nó COMPARTILHADO: o
 // diálogo de editar é UM só para todas as peças, e quem troca de peça é quem tem
 // de limpar o que a anterior deixou. Sem isto, abrir o Ogro depois do Zumbi
 // mostraria o nome do Zumbi sobre o Ogro — o defeito do link de redefinição de
 // senha, de novo.
-func abreAEdicaoDaPeca(p pecaDoTabuleiro) string {
+func openEditToken(p boardToken) string {
 	return fmt.Sprintf("$pecaeditada = %q; $pecanome = %q; $pecatamanho = %d; %s; "+
 		"document.getElementById('editar-peca').showModal()",
-		p.ID, p.Rotulo, p.Pegada, fechaOMenuDaPeca)
+		p.ID, p.Rotulo, p.Pegada, closeMenuToken)
 }
 
-// salvaAEdicaoDaPeca manda o formulário para a peça que o gesto de abrir marcou.
+// saveEditToken manda o formulário para a peça que o gesto de abrir marcou.
 //
 // O id vem de `$pecaeditada` e não de `$pecaescolhida`, e os dois existem por
 // isso: abrir o diálogo FECHA o menu — senão ele ficaria aceso atrás do modal —,
@@ -248,26 +248,26 @@ func abreAEdicaoDaPeca(p pecaDoTabuleiro) string {
 // a cena, o de encerrar, o do acervo. A recusa cai no `erroDoComando` do rodapé
 // do mestre, e ela só é legível com o modal fora do caminho: uma frase escrita
 // atrás de um `<dialog>` aberto é uma frase que ninguém lê.
-func salvaAEdicaoDaPeca(v tabuleiroView) string {
+func saveEditToken(v boardView) string {
 	return fmt.Sprintf(
 		"document.getElementById('editar-peca').close(); "+
 			"@post('/mesa/%d/%d/tabuleiro/pecas/' + $pecaeditada + '/editar')",
 		v.CampaignID, v.SessionID)
 }
 
-// oNomeDaVisibilidade diz o VERBO que o clique executa, e não o estado atual.
+// visibilityName diz o VERBO que o clique executa, e não o estado atual.
 //
 // "Esconder" numa peça visível e "Mostrar" numa escondida: nome acessível de
 // botão é o que ele FAZ. O estado quem carrega é o `aria-pressed`.
-func oNomeDaVisibilidade(p pecaDoTabuleiro) string {
+func visibilityName(p boardToken) string {
 	if p.Oculta {
 		return "Mostrar " + p.Rotulo + " à mesa"
 	}
 	return "Esconder " + p.Rotulo + " da mesa"
 }
 
-// oQuadradoDaPeca é onde ela estava, para a frase do "voltar" dizer o destino.
-func oQuadradoDaPeca(q *engine.Square) string {
+// tokenSquare é onde ela estava, para a frase do "voltar" dizer o destino.
+func tokenSquare(q *engine.Square) string {
 	if q == nil {
 		return ""
 	}

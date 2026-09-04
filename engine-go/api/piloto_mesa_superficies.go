@@ -32,64 +32,64 @@ const (
 	superficieQueAbrePadrao = superficieDaMesa
 )
 
-type superficieDoJogador struct {
+type playerSurface struct {
 	ID     string
 	Rotulo string
 	Icone  string
 }
 
-// asSuperficiesDoJogador, na ordem em que aparecem.
+// playerSurfaces, na ordem em que aparecem.
 //
 // A MESA primeiro porque é ela que abre (decisão do dono): quem entra na sessão
 // quer saber de quem é a vez e quem está em cena, e o tabuleiro pode nem estar
 // aberto. Os ÍCONES são os mesmos que a `PlayerSurfaceSwitch` da SPA importa do
 // lucide, para quem aprendeu um lado reconhecer o outro.
-var asSuperficiesDoJogador = []superficieDoJogador{
+var playerSurfaces = []playerSurface{
 	{superficieDaMesa, "Mesa", "Users2"},
 	{superficieDoTabuleiro, "Tabuleiro", "LayoutGrid"},
 }
 
-// asSuperficiesDe são as superfícies que ESTE leitor recebe.
+// surfaces são as superfícies que ESTE leitor recebe.
 //
 // A "Minha ficha" entra na frente das outras — é a ordem da SPA, e ela põe
 // primeiro o que é do jogador antes do que é da mesa —, mas ela não é a que
 // ABRE: quem entra na sessão quer saber de quem é a vez (decisão do dono, e o
 // `superficieQueAbrePadrao` continua na Mesa).
-func asSuperficiesDe(v mesaView) []superficieDoJogador {
+func surfaces(v tableView) []playerSurface {
 	if v.MinhaFicha == nil {
-		return asSuperficiesDoJogador
+		return playerSurfaces
 	}
 	// "Ficha" e não "Minha ficha", que é o rótulo da SPA: com três superfícies o
 	// telefone dá ~124px por botão, e medido a 390px na bancada saía "MINHA
 	// FIC…". O comentário do seletor já contava que a SPA passou por isto — o
 	// `flex-1` dela nasceu de três abas truncando —, e encurtar o rótulo é o
 	// conserto que não depende da largura. A palavra é a do glossário.
-	comAFicha := []superficieDoJogador{{superficieDaFicha, "Ficha", "ScrollText"}}
-	return append(comAFicha, asSuperficiesDoJogador...)
+	comAFicha := []playerSurface{{superficieDaFicha, "Ficha", "ScrollText"}}
+	return append(comAFicha, playerSurfaces...)
 }
 
-// naSuperficie é a condição que mostra uma superfície — e o mesmo teste marca o
+// surface é a condição que mostra uma superfície — e o mesmo teste marca o
 // botão dela. Escrita aqui e não no `.templ` porque o id do botão tem de casar
 // com o do painel, e dois literais divergem no dia em que alguém renomear um.
-func naSuperficie(qual string) string {
+func surface(qual string) string {
 	return fmt.Sprintf("$superficie === %q", qual)
 }
 
-// escolheASuperficie liga a pedida. Não desliga ao reclicar, ao contrário do
+// pickSurface liga a pedida. Não desliga ao reclicar, ao contrário do
 // trilho de ferramentas do mapa: uma superfície desligada não deixaria nada na
 // tela.
-func escolheASuperficie(qual string) string {
+func pickSurface(qual string) string {
 	return fmt.Sprintf("$superficie = %q", qual)
 }
 
-// oVestidoDaSuperficie liga UMA das duas aparências, e nunca deixa as duas.
+// surfaceStyling liga UMA das duas aparências, e nunca deixa as duas.
 //
 // Os dois lados no `data-class` pela mesma armadilha de CASCATA que a aba do
 // editor de bloco documenta: a marca de escolhida mora em `@layer components` e
 // as cores do Tailwind são utilidades, que vivem numa camada POSTERIOR — camada
 // vence especificidade, e o dourado perderia para o cinza sem nada acusar.
-func oVestidoDaSuperficie(qual string) string {
+func surfaceStyling(qual string) string {
 	return fmt.Sprintf(
 		"{'superficie-escolhida': %s, 'border-grimorio-iron': !(%s), 'text-muted-foreground': !(%s)}",
-		naSuperficie(qual), naSuperficie(qual), naSuperficie(qual))
+		surface(qual), surface(qual), surface(qual))
 }

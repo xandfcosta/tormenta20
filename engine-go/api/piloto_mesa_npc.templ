@@ -16,7 +16,7 @@ import (
 // densidades, como na SPA: o trilho esquerdo mostra os jogadores recolhidos em
 // retratos, e este painel mostra o elenco inteiro — os jogadores e os NPCs. Não
 // é a colisão que o GLOSSARIO proíbe; é a mesma coisa de perto e de longe.
-templ mesaElencoDaCampanha(v mesaView) {
+templ tableCastCampaign(v tableView) {
 	<dialog
 		id="elenco-da-campanha"
 		data-preserve-attr="open"
@@ -43,7 +43,7 @@ templ mesaElencoDaCampanha(v mesaView) {
 		// ao devolver o rascunho semeado — o editor nunca aparece antes de ter
 		// conteúdo.
 		<div data-show="!$rascunhoaberto" class="min-h-0 flex-1 overflow-y-auto">
-			@mesaListaDeNPCs(v)
+			@tableListNpCs(v)
 		</div>
 		<div data-show="!$rascunhoaberto" class="shrink-0 space-y-2 border-t border-grimorio-iron pt-3">
 			<p class="text-xs text-muted-foreground">
@@ -54,21 +54,21 @@ templ mesaElencoDaCampanha(v mesaView) {
 			// botão em cima faria a exceção parecer o caminho.
 			<button
 				type="button"
-				data-on:click={ abreOEditor(v, 0) }
+				data-on:click={ openEditor(v, 0) }
 				class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("Plus", "size-4")
 				NPC do zero
 			</button>
 		</div>
-		@oEditorDeBloco(v)
+		@blockEditor(v)
 	</dialog>
 }
 
 // A LISTA é região própria (`mesa-npcs`): ela muda quando o mestre guarda ou
 // apaga um NPC, que é um ritmo completamente diferente do da fila e do mapa.
 // Pendurá-la em qualquer um dos dois faria o outro ser remendado de graça.
-templ mesaListaDeNPCs(v mesaView) {
+templ tableListNpCs(v tableView) {
 	<div id="mesa-npcs" class="space-y-2">
 		if len(v.NPCs) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-6 text-center text-sm text-muted-foreground">
@@ -76,13 +76,13 @@ templ mesaListaDeNPCs(v mesaView) {
 			</p>
 		} else {
 			for _, npc := range v.NPCs {
-				@umNPCDoElenco(v, npc)
+				@castNpcCard(v, npc)
 			}
 		}
 	</div>
 }
 
-templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
+templ castNpcCard(v tableView, npc castNpc) {
 	<article class="flex flex-wrap items-center gap-x-3 gap-y-2 border border-grimorio-iron bg-card/60 p-3">
 		<div class="min-w-0 flex-1">
 			<p class="flex flex-wrap items-baseline gap-x-2">
@@ -102,7 +102,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 				type="button"
 				aria-label={ "Editar o bloco de " + npc.Nome }
 				title="Editar o bloco — os números, os ataques e as perícias"
-				data-on:click={ abreOEditor(v, npc.ID) }
+				data-on:click={ openEditor(v, npc.ID) }
 				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("Pencil", "size-4")
@@ -110,7 +110,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 			if npc.PV > 0 {
 				<button
 					type="button"
-					data-on:click={ comandoDoNPC(v, npc, "na-fila") }
+					data-on:click={ npcCommand(v, npc, "na-fila") }
 					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>
 					@ui.Icon("Swords", "size-4")
@@ -120,7 +120,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 			<button
 				type="button"
 				aria-label={ "Apagar " + npc.Nome + " do elenco" }
-				data-on:click={ comandoDoNPC(v, npc, "apagar") }
+				data-on:click={ npcCommand(v, npc, "apagar") }
 				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("Trash2", "size-4")
@@ -130,7 +130,7 @@ templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
 }
 
 // O botão que chama o elenco, no trilho das consultas.
-templ oBotaoDoElenco(v mesaView) {
+templ castButton(v tableView) {
 	<button
 		type="button"
 		aria-label={ fmt.Sprintf("Elenco da campanha · %d NPCs guardados", len(v.NPCs)) }
@@ -151,7 +151,7 @@ templ oBotaoDoElenco(v mesaView) {
 // O NOME É OPCIONAL, e o campo diz isso no `placeholder` em vez de numa nota:
 // guardar "Ogro" como "Ogro" é o caso comum, e o servidor cai no nome do livro
 // quando o campo vem vazio.
-templ oGuardarNoElenco(v master.BestiaryView) {
+templ saveToCastButton(v master.BestiaryView) {
 	<div class="flex flex-wrap items-end gap-2 border-t border-grimorio-iron pt-3">
 		<div class="min-w-0 flex-1 space-y-1">
 			<label for="nome-do-npc" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Guardar no elenco</label>
@@ -165,7 +165,7 @@ templ oGuardarNoElenco(v master.BestiaryView) {
 		</div>
 		<button
 			type="button"
-			data-on:click={ guardaNoElenco(v) }
+			data-on:click={ saveToCastPost(v) }
 			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			@ui.Icon("Users2", "size-4")

@@ -38,8 +38,8 @@ func TestTheOldPilotPrefixIsGone(t *testing.T) {
 		"/", "/campanhas", "/personagens", "/grimorio", "/admin",
 		"/mestre/bestiario", "/entrar", "/criar-conta", "/mesa/1/4",
 	}
-	for _, cena := range cenas {
-		antigo := "/piloto" + cena
+	for _, scene := range cenas {
+		antigo := "/piloto" + scene
 		rec := httptest.NewRecorder()
 		roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, antigo, nil))
 
@@ -64,14 +64,14 @@ func TestTheNewAddressesAnswer(t *testing.T) {
 	s := newTestServer(t)
 	roteador := s.WebRouter()
 
-	for _, cena := range []string{"/", "/entrar", "/criar-conta"} {
+	for _, scene := range []string{"/", "/entrar", "/criar-conta"} {
 		rec := httptest.NewRecorder()
-		roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, cena, nil))
+		roteador.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, scene, nil))
 
 		// Anônimo: a porta responde 200 e o resto manda para ela com 303. O que
 		// não pode acontecer é 404.
 		if rec.Code == http.StatusNotFound {
-			t.Errorf("%s deu 404 — o controle deste arquivo caiu, e o guarda de cima passou a medir nada", cena)
+			t.Errorf("%s deu 404 — o controle deste arquivo caiu, e o guarda de cima passou a medir nada", scene)
 		}
 	}
 }

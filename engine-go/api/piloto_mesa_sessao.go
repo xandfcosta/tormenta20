@@ -23,23 +23,23 @@ import (
 // que termina em `http.Redirect`, que é o mesmo padrão das ações destrutivas da
 // cena de campanhas.
 
-func (s *Server) SessionRoutes(r chi.Router) {
+func (s *Server) RoutesSession(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/sessao"
-	r.Post(base+"/iniciar", s.comandoDoMestre(iniciaAPartida))
-	r.Post(base+"/encerrar", s.comandoDoMestre(encerraAPartida))
-	r.Post(base+"/titulo", s.comandoDoMestre(renomeiaAPartida))
-	r.Post(base+"/reiniciar", s.comandoDoMestre(reiniciaAFila))
+	r.Post(base+"/iniciar", s.gmCommand(iniciaAPartida))
+	r.Post(base+"/encerrar", s.gmCommand(encerraAPartida))
+	r.Post(base+"/titulo", s.gmCommand(renameStart))
+	r.Post(base+"/reiniciar", s.gmCommand(reiniciaAFila))
 	// O `form` de excluir, fora do fluxo de comandos: ele navega.
 	r.Post(base+"/excluir", s.excluiAPartida)
 }
 
-// aSessaoDoComando relê a linha, que é onde o ciclo mora.
-func aSessaoDoComando(st *Server, c mesaComando) (sqlcgen.Session, error) {
+// commandSession relê a linha, que é onde o ciclo mora.
+func commandSession(st *Server, c commandCtx) (sqlcgen.Session, error) {
 	return st.queries.GetSession(c.R.Context(), c.SessionID)
 }
 
-func iniciaAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
-	sess, err := aSessaoDoComando(st, c)
+func iniciaAPartida(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+	sess, err := commandSession(st, c)
 	if err != nil {
 		return nil, fmt.Errorf("não deu para ler a sessão %d", c.SessionID)
 	}
@@ -49,8 +49,8 @@ func iniciaAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, err
 	return st.sessions.GetState(c.SessionID), nil
 }
 
-func encerraAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
-	sess, err := aSessaoDoComando(st, c)
+func encerraAPartida(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+	sess, err := commandSession(st, c)
 	if err != nil {
 		return nil, fmt.Errorf("não deu para ler a sessão %d", c.SessionID)
 	}
@@ -60,12 +60,12 @@ func encerraAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, er
 	return st.sessions.GetState(c.SessionID), nil
 }
 
-// renomeiaAPartida troca o título.
+// renameStart troca o título.
 //
 // Título VAZIO é legítimo e vira nulo: a sessão tem NÚMERO, que é a identidade
 // dela, e o título é o apelido da noite. Obrigar a um faria o mestre inventar
 // texto para poder salvar.
-func renomeiaAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func renameStart(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	var sinais struct {
 		Titulo string `json:"titulodasessao"`
 	}
@@ -91,7 +91,7 @@ func renomeiaAPartida(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, e
 // Os dois verbos moram na mesma tela, um perto do outro, e é por isso que a
 // frase de cada um diz o que ACONTECE em vez de repetir o nome do botão:
 // "encerrar" tira a sessão do ar, "reiniciar" só apaga a ordem e os turnos.
-func reiniciaAFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func reiniciaAFila(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	if err := st.RestartCombat(c.R.Context(), c.SessionID); err != nil {
 		return nil, fmt.Errorf("não deu para reiniciar o combate: %v", err)
 	}
@@ -111,7 +111,7 @@ func reiniciaAFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, erro
 // que é de onde se entra numa sessão — voltar para a mesa apagada seria mandar
 // o mestre para uma porta que não existe mais.
 func (s *Server) excluiAPartida(w http.ResponseWriter, r *http.Request) {
-	campaignID, sessionID, ok := mesaParams(w, r)
+	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
 		return
 	}

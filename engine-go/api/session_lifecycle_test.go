@@ -123,7 +123,7 @@ func TestEndingASessionThatNeverStartedIsRefused(t *testing.T) {
 func TestRestartingCombatEmptiesTheTrackerAndNothingElse(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
-	f.cena(t)
+	f.scene(t)
 
 	// O CONTROLE: há fila para esvaziar, e a sessão está ao vivo.
 	if n := len(f.s.sessions.GetState(f.sessionID).Initiative); n < 2 {

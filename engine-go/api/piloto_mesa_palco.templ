@@ -33,27 +33,27 @@ import (
 // continuam no RODAPÉ em vez de subirem para a faixa do turno. A gaveta da
 // ALE-263 é ancorada em `bottom-full` porque nasce no pé, e mover a fileira
 // mudaria uma regra de leiaute JÁ MEDIDA para caber numa semelhança de desenho.
-templ palcoDoMestre(v mesaView, b master.BestiaryView) {
+templ gmStage(v tableView, b master.BestiaryView) {
 	<main
 		id="mesa"
 		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`"
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
-		@mesaCabecalho(v)
+		@tableHeader(v)
 		<div class="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row">
-			@trilhoDaEsquerda(v)
-			@mesaTabuleiro(v)
-			@mesaNotas(v)
-			@trilhoDasConsultas(v)
+			@leftRail(v)
+			@tableBoard(v)
+			@tableNotes(v)
+			@queriesRail(v)
 		</div>
-		@mesaComandos(v)
+		@tableCommands(v)
 		@gavetaDaFila(v)
-		@mesaPorNoMapa(v)
-		@mesaAcervoDeLugares(v)
-		@mesaConfigDaSessao(v)
-		@mesaElencoDaCampanha(v)
+		@tableMap(v)
+		@tableCollectionPlaces(v)
+		@tableConfigSession(v)
+		@tableCastCampaign(v)
 	</main>
-	@bestiarioDaMesa(b)
+	@tableBestiary(b)
 }
 
 // O TRILHO DA ESQUERDA: quem age quando, e quem está na mesa.
@@ -62,10 +62,10 @@ templ palcoDoMestre(v mesaView, b master.BestiaryView) {
 // navegador. `display:none` tira o trilho da árvore acessível de verdade — a
 // ressalva da SPA contra esconder por CSS era sobre nós que continuam expostos,
 // e este não continua.
-templ trilhoDaEsquerda(v mesaView) {
+templ leftRail(v tableView) {
 	<div class="hidden w-20 shrink-0 flex-col gap-2 lg:flex">
-		@mesaTrilhoDaFila(v)
-		@mesaGrupo(v)
+		@tableRailTracker(v)
+		@tableParty(v)
 	</div>
 }
 
@@ -82,7 +82,7 @@ templ trilhoDaEsquerda(v mesaView) {
 // RECORTAR sem saber onde cortar, rolar é o erro menor: uma barra de rolagem
 // atrapalha, um `overflow-hidden` mudo ESCONDE combatente e faz o trilho mentir
 // sobre quem ainda vai jogar. A janela volta quando houver uma medida honesta.
-templ mesaTrilhoDaFila(v mesaView) {
+templ tableRailTracker(v tableView) {
 	<nav
 		id="mesa-trilho-fila"
 		aria-label="Fila do combate"
@@ -121,7 +121,7 @@ templ mesaTrilhoDaFila(v mesaView) {
 // ordem e as condições. Na SPA ele abre o painel do combatente, que esta tela
 // ainda não tem — e mandar o clique para lugar nenhum seria pior que mandá-lo
 // para onde o gesto se completa.
-templ retratoDaFila(l mesaLinha) {
+templ retratoDaFila(l tableRow) {
 	<button
 		type="button"
 		title={ rotuloDoRetrato(l) }
@@ -160,7 +160,7 @@ templ retratoDaFila(l mesaLinha) {
 // UMA lista nas duas larguras, trocando por classe: coluna à direita do mapa a
 // partir de 1024, fileira ACIMA dele abaixo disso (`order-first`). Duas árvores
 // num condicional é como um trilho e o gêmeo de telefone divergem.
-templ trilhoDasConsultas(v mesaView) {
+templ queriesRail(v tableView) {
 	<nav
 		aria-label="Consultas do mestre"
 		class="order-first flex shrink-0 gap-1 overflow-x-auto border border-grimorio-iron bg-grimorio-panel p-1 lg:order-last lg:w-14 lg:flex-col lg:overflow-x-visible"
@@ -171,8 +171,8 @@ templ trilhoDasConsultas(v mesaView) {
 			data-on:click="document.getElementById('gaveta-da-fila').showModal()"
 			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"
 		>Iniciativa · { fmt.Sprint(len(v.Fila)) }</button>
-		@oBotaoDasNotas()
-		@oBotaoDoElenco(v)
+		@notesButton()
+		@castButton(v)
 		<button
 			type="button"
 			aria-label="Abrir o bestiário"
@@ -198,7 +198,7 @@ templ trilhoDasConsultas(v mesaView) {
 //
 // A vaga de REGISTRAR entra aqui, e não no trilho: ela é do mestre que também
 // joga, é sobre a fila, e é onde a fila está.
-templ gavetaDaFila(v mesaView) {
+templ gavetaDaFila(v tableView) {
 	<dialog
 		id="gaveta-da-fila"
 		data-preserve-attr="open"
@@ -218,8 +218,8 @@ templ gavetaDaFila(v mesaView) {
 		</button>
 			</div>
 			<div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-				@mesaRegistrarRegiao(v)
-				@mesaFila(v)
+				@tableRegisterRegion(v)
+				@tableTracker(v)
 			</div>
 		</div>
 	</dialog>

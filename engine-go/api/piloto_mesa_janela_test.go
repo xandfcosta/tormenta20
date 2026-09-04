@@ -27,11 +27,11 @@ import (
 // que alguém escrever amanhã sem ler nada disto.
 func TestNoLayerReadsThePointWithoutAddingTheViewport(t *testing.T) {
 	f := novoPiloto(t)
-	if rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/abrir",
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
 		`{"novolugar":"Taverna do Javali","novochao":"taverna"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE vem primeiro: sem ele, "não achei nenhuma leitura crua" é
 	// indistinguível de "não achei leitura nenhuma" — e as duas passariam verde.
@@ -66,13 +66,13 @@ func TestNoLayerReadsThePointWithoutAddingTheViewport(t *testing.T) {
 // guarda passaria sobre a sabotagem, que é o pior tipo de verde. O que quebra a
 // promessa é uma ferramenta do mestre no MEIO, e é ela que este trilho tem.
 func TestTheShortcutDoesNotShiftWhenAGmToolLeavesTheRail(t *testing.T) {
-	trilho := numeraOTrilho([]ferramentaDoMapa{
+	trilho := numberRail([]mapTool{
 		{ID: "mover", Rotulo: "Mover"},
 		{ID: "pintar", Rotulo: "Pintar", SoMestre: true},
 		{ID: "regua", Rotulo: "Régua"},
 	})
-	doMestre := asVisiveisPara(true, trilho)
-	doJogador := asVisiveisPara(false, trilho)
+	doMestre := forVisible(true, trilho)
+	doJogador := forVisible(false, trilho)
 
 	// O CONTROLE: os dois trilhos têm de DIFERIR, senão não há filtro medindo.
 	if len(doMestre) == len(doJogador) {
@@ -87,12 +87,12 @@ func TestTheShortcutDoesNotShiftWhenAGmToolLeavesTheRail(t *testing.T) {
 // TestEachToolHasAKeyOfItsOwn.
 //
 // Duas ferramentas com o mesmo número não dão erro: a segunda simplesmente nunca
-// liga, porque o `oTecladoDoTrilho` monta um ternário encadeado e o primeiro
+// liga, porque o `railKeyboard` monta um ternário encadeado e o primeiro
 // ramo vence. Foi o defeito que os números escritos à mão convidavam, e é o
-// motivo de o `numeraOTrilho` existir.
+// motivo de o `numberRail` existir.
 func TestEachToolHasAKeyOfItsOwn(t *testing.T) {
 	vistas := map[string]string{}
-	for _, f := range asFerramentasDoMapa() {
+	for _, f := range mapTools() {
 		if f.Atalho == "" {
 			t.Errorf("a ferramenta %q nasceu sem atalho", f.Rotulo)
 			continue
@@ -113,8 +113,8 @@ func TestEachToolHasAKeyOfItsOwn(t *testing.T) {
 func TestThePanHandBelongsToBothRoles(t *testing.T) {
 	for _, mestre := range []bool{true, false} {
 		achou := false
-		for _, f := range oTrilhoDe(mestre) {
-			achou = achou || f.ID == FerramentaDaVista
+		for _, f := range rail(mestre) {
+			achou = achou || f.ID == ViewTool
 		}
 		if !achou {
 			t.Errorf("mestre=%v não tem a mão de arrastar a vista, e sem ela não há como percorrer o plano", mestre)

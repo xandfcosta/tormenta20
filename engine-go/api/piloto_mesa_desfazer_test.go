@@ -16,8 +16,8 @@ import (
 // esta fatia — que as PARADAS são lembradas, que desfazer tira exatamente a
 // última e recalcula o custo, e que a última parada de todas vira cancelar.
 
-// paradasDoTabuleiro lê as paradas guardadas no provisório.
-func paradasDoTabuleiro(t *testing.T, f pilotoFixture) []engine.Square {
+// boardStops lê as paradas guardadas no provisório.
+func boardStops(t *testing.T, f pilotoFixture) []engine.Square {
 	t.Helper()
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil || b.Pending == nil {
@@ -56,8 +56,8 @@ func TestThePathDoesNotLetTheStopsBeUncovered(t *testing.T) {
 // número velho faria a mesa confirmar um movimento por um preço que não é o dele.
 func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoard(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	// (0,0) → (2,0) são 2 quadrados; a segunda perna até (2,2) soma mais 2.
 	for _, casa := range []string{"/parada/2/0", "/parada/2/2"} {
@@ -83,7 +83,7 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 	if fim := depois.Path[len(depois.Path)-1]; fim != (engine.Square{X: 2}) {
 		t.Errorf("o caminho terminou em %v, esperado a primeira parada (2,0)", fim)
 	}
-	if paradas := paradasDoTabuleiro(t, f); len(paradas) != 2 {
+	if paradas := boardStops(t, f); len(paradas) != 2 {
 		t.Errorf("sobraram %d paradas, esperado 2 (a origem e a primeira)", len(paradas))
 	}
 }
@@ -95,8 +95,8 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 // ficaria presa num estado que só o Cancelar resolveria.
 func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoard(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
@@ -119,13 +119,13 @@ func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
 // cancelar — que está ali do lado dizendo isso com a palavra certa.
 func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoard(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
-	comUma := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	comUma := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: a faixa do movimento ESTÁ na tela. Sem ele, não achar o botão
 	// seria verdade também numa tela sem movimento proposto nenhum — e a
 	// asserção de ausência passaria verde sobre nada.
@@ -139,7 +139,7 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/2", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a segunda parada deu %d", rec.Code)
 	}
-	comDuas := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	comDuas := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(comDuas, "Desfazer parada") {
 		t.Error("com duas pernas o botão não apareceu")
 	}
@@ -159,8 +159,8 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 // estava aberta.
 func TestTheStopsSurviveAPageReload(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoard(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 	for _, casa := range []string{"/parada/2/0", "/parada/2/2"} {
 		if rec := f.pede(t, f.mestre, http.MethodPost, base+casa, ""); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", casa, rec.Code)
@@ -168,7 +168,7 @@ func TestTheStopsSurviveAPageReload(t *testing.T) {
 	}
 
 	// Uma carga fria, como quem apertou F5: nada do navegador anterior viaja.
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "Desfazer parada") {
 		t.Error("a página recarregada perdeu o desfazer — as paradas não sobreviveram")
 	}
@@ -182,8 +182,8 @@ func TestTheStopsSurviveAPageReload(t *testing.T) {
 // confirmaria um percurso que ninguém inteiro escolheu.
 func TestSomeoneElsesProposalDoesNotExtendMine(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoard(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada do mestre deu %d", rec.Code)
@@ -194,7 +194,7 @@ func TestSomeoneElsesProposalDoesNotExtendMine(t *testing.T) {
 	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/parada/0/2", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada do jogador deu %d", rec.Code)
 	}
-	paradas := paradasDoTabuleiro(t, f)
+	paradas := boardStops(t, f)
 	if len(paradas) != 2 {
 		t.Fatalf("o jogador herdou as paradas do mestre: %v", paradas)
 	}

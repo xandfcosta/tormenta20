@@ -35,14 +35,14 @@ import (
 //   - a PRÉVIA é região (`mesa-notas-previa`) e é remendada pela resposta do
 //     próprio salvamento.
 //
-// E as notas NÃO entram no `regioesDaMesa`: elas são de um leitor só — o mestre
+// E as notas NÃO entram no `tableRegions`: elas são de um leitor só — o mestre
 // — e nada fora desta aba as muda. Pendurá-las no stream faria o tique de 200ms
 // disputar com o teclado dele por nada.
-templ mesaNotas(v mesaView) {
+templ tableNotes(v tableView) {
 	<section
 		id="mesa-notas"
 		aria-label="Notas da sessão"
-		data-init={ semeiaAsNotas(v) }
+		data-init={ seedNotes(v) }
 		data-show="$notasabertas"
 		style="display:none"
 		class="notas-coluna fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:w-[clamp(22rem,40%,44rem)] lg:shrink-0"
@@ -50,8 +50,8 @@ templ mesaNotas(v mesaView) {
 		<div class="flex shrink-0 flex-wrap items-center justify-between gap-2">
 			<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Notas</h2>
 			<div class="flex items-center gap-2">
-				@aFaixaDeModos()
-				@oEstadoDoSalvamento()
+				@modesRange()
+				@autosaveState()
 				<button
 					type="button"
 					aria-label="Fechar as notas"
@@ -62,7 +62,7 @@ templ mesaNotas(v mesaView) {
 		</button>
 			</div>
 		</div>
-		@oCorpoDasNotas(v)
+		@notesBody(v)
 	</section>
 }
 
@@ -75,7 +75,7 @@ templ mesaNotas(v mesaView) {
 // do modo — ver o que se escreve e o que sai, ao mesmo tempo — sem que a faixa
 // precise anunciar um modo diferente do que está acontecendo. Quem decide onde
 // cabem duas colunas é a consulta de contêiner na folha, que é quem sabe.
-templ oCorpoDasNotas(v mesaView) {
+templ notesBody(v tableView) {
 	<div
 		data-class="{'notas-duplo': $notasmodo === 'duplo'}"
 		class="notas-arranjo grid min-h-0 flex-1 gap-2"
@@ -83,14 +83,14 @@ templ oCorpoDasNotas(v mesaView) {
 		<textarea
 			data-bind:notas
 			data-show="$notasmodo != 'ler'"
-			data-on:input__debounce.1200ms={ salvaAsNotas(v) }
+			data-on:input__debounce.1200ms={ saveNotes(v) }
 			data-indicator:notassalvando
 			aria-label="Notas da sessão"
 			placeholder={ "# Cena 1\n- O ogro **fugiu** pela ponte\n> \"voltarei\", ele disse" }
 			class="field-sizing-fixed h-full min-h-0 w-full resize-none rounded-sm border border-input bg-background p-2 font-mono text-xs outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>{ v.Notas }</textarea>
 		<div data-show="$notasmodo != 'escrever'" class="min-h-0 overflow-y-auto rounded-sm border border-grimorio-iron p-3">
-			@mesaNotasPrevia(v)
+			@tableNotesPreview(v)
 		</div>
 	</div>
 }
@@ -99,41 +99,41 @@ templ oCorpoDasNotas(v mesaView) {
 //
 // A raiz existe SEMPRE, inclusive com a nota vazia: região que some leva o id
 // junto, e o remendo seguinte não acha onde pousar.
-templ mesaNotasPrevia(v mesaView) {
+templ tableNotesPreview(v tableView) {
 	<div id="mesa-notas-previa" class="space-y-2 text-sm">
 		if len(v.NotasBlocos) == 0 {
 			<p class="text-sm text-muted-foreground">Nenhuma nota ainda.</p>
 		} else {
 			for _, b := range v.NotasBlocos {
-				@blocoDaNota(v, b)
+				@noteBlock(v, b)
 			}
 		}
 	</div>
 }
 
-// blocoDaNota desenha UM bloco da árvore.
+// noteBlock desenha UM bloco da árvore.
 //
 // Elementos e não HTML: o parser devolve dados, e é o templ que monta os nós —
 // então não existe `innerHTML` no caminho e o texto do mestre é escapado de
 // graça. É por isso que este port dispensa sanitizador.
-templ blocoDaNota(v mesaView, b markdown.Block) {
+templ noteBlock(v tableView, b markdown.Block) {
 	switch b.Kind {
 		case "heading":
-			@tituloDaNota(b)
+			@noteTitle(b)
 		case "paragraph":
 			<p class="whitespace-pre-wrap">
 				for i, linha := range b.Linhas {
 					if i > 0 {
 						<br/>
 					}
-					@trechosDaNota(linha)
+					@noteSpans(linha)
 				}
 			</p>
 		case "list":
-			@listaDaNota(v, b)
+			@noteList(v, b)
 		case "quote":
 			<blockquote class="border-l-2 border-grimorio-gold/50 pl-3 text-muted-foreground">
-				@trechosDaNota(b.Spans)
+				@noteSpans(b.Spans)
 			</blockquote>
 		case "rule":
 			<hr class="border-grimorio-iron"/>
@@ -142,19 +142,19 @@ templ blocoDaNota(v mesaView, b markdown.Block) {
 
 // O título da nota começa em `h2`: o `h1` é da página, e uma nota não abre o
 // documento. Três níveis, que é o que a gramática conhece.
-templ tituloDaNota(b markdown.Block) {
+templ noteTitle(b markdown.Block) {
 	switch b.Nivel {
 		case 1:
 			<h2 class="font-heading text-base tracking-wide text-grimorio-gold">
-				@trechosDaNota(b.Spans)
+				@noteSpans(b.Spans)
 			</h2>
 		case 2:
 			<h3 class="font-heading text-sm tracking-wide text-grimorio-gold">
-				@trechosDaNota(b.Spans)
+				@noteSpans(b.Spans)
 			</h3>
 		default:
 			<h4 class="text-sm font-semibold text-foreground">
-				@trechosDaNota(b.Spans)
+				@noteSpans(b.Spans)
 			</h4>
 	}
 }
@@ -164,12 +164,12 @@ templ tituloDaNota(b markdown.Block) {
 // O clique carrega a LINHA de origem no caminho, e é isso que faz o quadrinho
 // reescrever a nota em vez de guardar estado ao lado dela. Um checkbox que não
 // reescrevesse o texto seria enfeite, e o estado não sobreviveria a um F5.
-templ listaDaNota(v mesaView, b markdown.Block) {
+templ noteList(v tableView, b markdown.Block) {
 	if b.Ordenada {
 		<ol class="list-decimal space-y-0.5 pl-5">
 			for _, it := range b.Itens {
 				<li>
-					@itemDaNota(v, it)
+					@noteItem(v, it)
 				</li>
 			}
 		</ol>
@@ -180,20 +180,20 @@ templ listaDaNota(v mesaView, b markdown.Block) {
 					if it.Tarefa == nil {
 						<span aria-hidden="true" class="select-none text-muted-foreground">•</span>
 					}
-					@itemDaNota(v, it)
+					@noteItem(v, it)
 				</li>
 			}
 		</ul>
 	}
 }
 
-templ itemDaNota(v mesaView, it markdown.Item) {
+templ noteItem(v tableView, it markdown.Item) {
 	if it.Tarefa != nil {
 		<button
 			type="button"
 			role="checkbox"
-			aria-checked={ seMarcada(it.Tarefa.Marcada) }
-			data-on:click={ alternaATarefaDaNota(v, *it.Tarefa) }
+			aria-checked={ marked(it.Tarefa.Marcada) }
+			data-on:click={ toggleTaskNote(v, *it.Tarefa) }
 			class="flex min-h-6 items-start gap-1.5 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			if it.Tarefa.Marcada {
@@ -202,19 +202,19 @@ templ itemDaNota(v mesaView, it markdown.Item) {
 				@ui.Icon("Square", "size-4 shrink-0 text-muted-foreground")
 			}
 			<span class={ templ.KV("text-muted-foreground line-through", it.Tarefa.Marcada) }>
-				@trechosDaNota(it.Spans)
+				@noteSpans(it.Spans)
 			</span>
 		</button>
 	} else {
 		<span>
-			@trechosDaNota(it.Spans)
+			@noteSpans(it.Spans)
 		</span>
 	}
 }
 
 // Os trechos de uma linha. O `default` é texto puro, que é a falha certa desta
 // gramática: o que ela não conhece aparece como foi escrito, nunca some.
-templ trechosDaNota(spans []markdown.Span) {
+templ noteSpans(spans []markdown.Span) {
 	for _, s := range spans {
 		switch s.Kind {
 			case "strong":
@@ -246,15 +246,15 @@ templ trechosDaNota(spans []markdown.Span) {
 // `fieldset` e não `div role="group"`: o elemento nativo já É o grupo. Ele
 // precisa de `min-w-0` porque o padrão do navegador é `min-content` e ele se
 // recusa a encolher dentro de um flex.
-templ aFaixaDeModos() {
+templ modesRange() {
 	<fieldset class="flex min-w-0 shrink-0 gap-1" aria-label="Modo de visualização das notas">
-		@oModoDasNotas("escrever", "Escrever")
-		@oModoDasNotas("ler", "Ler")
-		@oModoDasNotas("duplo", "Lado a lado")
+		@notesMode("escrever", "Escrever")
+		@notesMode("ler", "Ler")
+		@notesMode("duplo", "Lado a lado")
 	</fieldset>
 }
 
-templ oModoDasNotas(valor, rotulo string) {
+templ notesMode(valor, rotulo string) {
 	<button
 		type="button"
 		data-attr:aria-pressed={ fmt.Sprintf("$notasmodo === '%s' ? 'true' : 'false'", valor) }
@@ -272,7 +272,7 @@ templ oModoDasNotas(valor, rotulo string) {
 //
 // `$notassalvas` é escrito pelo SERVIDOR quando a gravação dá certo — é a
 // resposta que afirma "isto está no banco", e não o cliente supondo.
-templ oEstadoDoSalvamento() {
+templ autosaveState() {
 	<span
 		aria-live="polite"
 		data-text="$notassalvando ? 'Salvando…' : ($notas === $notassalvas ? 'Salvo' : 'Não salvo')"
@@ -285,7 +285,7 @@ templ oEstadoDoSalvamento() {
 //
 // Ele ALTERNA em vez de só abrir, porque a coluna empurra o mapa: quem a abriu
 // precisa do mesmo gesto para devolver a largura ao tabuleiro.
-templ oBotaoDasNotas() {
+templ notesButton() {
 	<button
 		type="button"
 		aria-label="Notas da sessão"

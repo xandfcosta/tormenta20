@@ -27,11 +27,11 @@ import (
 // remendo acerta a primeira e a segunda envelhece na tela.
 func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	html := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	for _, id := range asRegioesDaMesa {
+	for _, id := range tableRegionNames {
 		marca := `id="` + id + `"`
 		if n := strings.Count(html, marca); n != 1 {
 			t.Errorf("a região %q aparece %d vezes na cena do jogador, e o remendo precisa de exatamente 1", id, n)
@@ -50,9 +50,9 @@ func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 // o rótulo que promete.
 func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	html := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(html, "O que ver na sessão") {
 		t.Fatal("o jogador não recebeu o seletor de superfícies")
@@ -76,9 +76,9 @@ func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
 // porque o link funciona: ele leva para uma tela legítima, só que a errada.
 func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	html := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	dentroDaFicha := html[strings.Index(html, `id="cena-ficha"`):]
 	if i := strings.Index(dentroDaFicha, "Seções da ficha"); i >= 0 {
@@ -105,9 +105,9 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 // com a volta, senão "não achei a volta" seria verde num HTML vazio.
 func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	naMesa := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	naMesa := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	embutida := naMesa[strings.Index(naMesa, `id="cena-ficha"`):]
 	cabecalho, _, _ := strings.Cut(embutida, "Seções da ficha")
 
@@ -132,9 +132,9 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 // aba o que a forma do mestre existe para mostrar junto.
 func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	html := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	html := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: a cena do mestre chegou inteira. Sem ele, "não achei o seletor"
 	// seria verdade também num 403 ou numa página vazia.
@@ -155,7 +155,7 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 // outro.
 func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 	f := novoPiloto(t)
-	html := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(html, `superficie: &#39;`+superficieQueAbrePadrao+`&#39;`) {
 		t.Errorf("a página não semeia a superfície padrão (%q)", superficieQueAbrePadrao)
@@ -163,7 +163,7 @@ func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 	// E a superfície padrão precisa EXISTIR na lista: um padrão que não é
 	// oferecido abriria a sessão com as duas abas apagadas e a tela vazia.
 	oferecida := false
-	for _, s := range asSuperficiesDoJogador {
+	for _, s := range playerSurfaces {
 		oferecida = oferecida || s.ID == superficieQueAbrePadrao
 	}
 	if !oferecida {
@@ -184,28 +184,28 @@ func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 // falha no commit em que uma das pontas some.
 func TestTheSheetInTheSessionHasAWayToKnowItChanged(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
 	// DESESCAPADO: `data-signals` e `data-on-*` são valores DINÂMICOS de
 	// atributo, e o templ escapa a aspa simples deles (`&#39;`). Procurar a
 	// forma crua aqui daria um guarda que reprova o código certo.
-	cena := stdhtml.UnescapeString(f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String())
+	scene := stdhtml.UnescapeString(f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String())
 
-	if !strings.Contains(cena, "fichaversao: ''") {
+	if !strings.Contains(scene, "fichaversao: ''") {
 		t.Error("o sinal `fichaversao` não foi declarado: o remendo do servidor não teria onde pousar")
 	}
-	if !strings.Contains(cena, `data-on-signal-patch=`) {
+	if !strings.Contains(scene, `data-on-signal-patch=`) {
 		t.Fatal("a cena não tem o ouvinte que repede a ficha")
 	}
-	if !strings.Contains(cena, `data-on-signal-patch-filter="{include: /^fichaversao$/}"`) {
+	if !strings.Contains(scene, `data-on-signal-patch-filter="{include: /^fichaversao$/}"`) {
 		t.Error("o ouvinte está sem filtro: ele dispararia em QUALQUER remendo de sinal")
 	}
 	// A ABA viaja num sinal porque o servidor não a conhece daqui. Sem esta
 	// escrita, o repedido devolveria a ficha na aba padrão.
-	if !strings.Contains(cena, "$fichatab = ") {
+	if !strings.Contains(scene, "$fichatab = ") {
 		t.Error("as abas da ficha embutida não guardam a seção aberta")
 	}
-	if !strings.Contains(cena, "' + $fichatab + '") {
+	if !strings.Contains(scene, "' + $fichatab + '") {
 		t.Error("o repedido não lê a seção do sinal: ele devolveria a aba padrão")
 	}
 }

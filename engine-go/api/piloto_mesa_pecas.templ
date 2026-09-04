@@ -12,25 +12,25 @@ package api
 //
 // O `title` conta o gesto direito porque um gesto que ninguém descobre é o mesmo
 // que não existir — e ele nunca é o único caminho: o diálogo faz o mesmo.
-templ botaoDePorNoMapa(v tabuleiroView) {
+templ botaoDePorNoMapa(v boardView) {
 	if v.Mestre {
 		<button
 			type="button"
 			title="Escolher quem vem para o mapa. Clique direito põe só as fichas."
-			data-on:click={ abreOPorNoMapa() }
-			data-on:contextmenu={ atalhoDasFichas(v) }
+			data-on:click={ openMap() }
+			data-on:contextmenu={ sheetsShortcut(v) }
 			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>Pôr no mapa</button>
 	}
 }
 
-// mesaPorNoMapa é a REGIÃO do diálogo — ver a razão em `regioesDaMesa`.
+// tableMap é a REGIÃO do diálogo — ver a razão em `tableRegions`.
 //
 // O `<div>` existe SEMPRE, inclusive para o jogador e inclusive sem tabuleiro
 // aberto: região que some do HTML é região que o remendo não acha, e a cena
 // voltaria a precisar de uma recarga para o diálogo existir. O que a porta do
 // mestre esconde é o CONTEÚDO.
-templ mesaPorNoMapa(v mesaView) {
+templ tableMap(v tableView) {
 	<div id="mesa-por-no-mapa">
 		if v.Tabuleiro.Mestre {
 			@poeNoMapaDialogo(v.Tabuleiro)
@@ -42,7 +42,7 @@ templ mesaPorNoMapa(v mesaView) {
 // seleção: é o gesto que o mestre já aprendeu nos filtros do bestiário e do
 // acervo, e o estado mora num sinal — a cena é remendada a cada mudança de
 // qualquer um na mesa, e entrada em curso presa ao DOM seria apagada no meio.
-templ poeNoMapaDialogo(v tabuleiroView) {
+templ poeNoMapaDialogo(v boardView) {
 	<dialog
 		id="por-no-mapa"
 		data-preserve-attr="open"
@@ -72,7 +72,7 @@ templ poeNoMapaDialogo(v tabuleiroView) {
 							data-ficha?={ cand.Ficha }
 							data-attr:aria-pressed={ estaEscolhido(cand.ID) + " ? 'true' : 'false'" }
 							data-class={ "{'pincel-ligado': " + estaEscolhido(cand.ID) + "}" }
-							data-on:click={ alternaNoMapa(cand.ID) }
+							data-on:click={ toggleMap(cand.ID) }
 							class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>
 							{ cand.Nome }
@@ -101,7 +101,7 @@ templ poeNoMapaDialogo(v tabuleiroView) {
 			<button
 				type="button"
 				data-attr:disabled="$escolhidosdomapa === ''"
-				data-on:click={ "document.getElementById('por-no-mapa').close(); " + comandoDePorNoMapa(v) }
+				data-on:click={ "document.getElementById('por-no-mapa').close(); " + mapCommand(v) }
 				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 			>Pôr no mapa</button>
 		</div>

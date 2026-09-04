@@ -35,32 +35,32 @@ import (
 //
 // Criar do zero é a exceção, e é o mesmo formulário com a semente em branco.
 
-func (s *Server) NPCRoutes(r chi.Router) {
+func (s *Server) RoutesNpc(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/elenco/npc"
-	r.Post(base+"/do-verbete", s.comandoDoMestre(guardaOVerbeteNoElenco))
-	r.Post(base+"/{npcId}/na-fila", s.comandoDoMestre(poeONPCNaFila))
-	r.Post(base+"/{npcId}/apagar", s.comandoDoMestre(apagaONPC))
+	r.Post(base+"/do-verbete", s.gmCommand(saveEntryCast))
+	r.Post(base+"/{npcId}/na-fila", s.gmCommand(putNpcTracker))
+	r.Post(base+"/{npcId}/apagar", s.gmCommand(eraseNpc))
 }
 
-// sinaisDoNPC é o que o painel manda ao guardar uma cópia.
+// npcSignals é o que o painel manda ao guardar uma cópia.
 //
 // Nomes TODOS MINÚSCULOS porque viram chave de atributo (`data-bind:...`), e o
 // analisador de HTML minuscula chave — um `data-bind:nomeDoNpc` chega como
 // `nomedonpc` e liga um sinal NOVO, com o servidor lendo o antigo para sempre
 // vazio.
-type sinaisDoNPC struct {
+type npcSignals struct {
 	Criatura string `json:"criatura"`
 	Nome     string `json:"nomedonpc"`
 }
 
-// guardaOVerbeteNoElenco copia um verbete do livro para o elenco da campanha.
+// saveEntryCast copia um verbete do livro para o elenco da campanha.
 //
 // O NOME PODE VIR VAZIO, e aí é o do livro: guardar "Ogro" como "Ogro" é o caso
 // mais comum, e obrigar a digitar um nome faria o mestre repetir o que a tela
 // já mostra. Quem quiser "Ogro Capitão" escreve.
-func guardaOVerbeteNoElenco(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func saveEntryCast(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	c.R.Body = http.MaxBytesReader(nil, c.R.Body, 1<<20)
-	var sinais sinaisDoNPC
+	var sinais npcSignals
 	if err := datastar.ReadSignals(c.R, &sinais); err != nil {
 		return nil, fmt.Errorf("não entendi o pedido: %v", err)
 	}
@@ -90,30 +90,30 @@ func guardaOVerbeteNoElenco(st *Server, c mesaComando) (*aovivo.SessionRuntimeSt
 	}
 	// O ELENCO NÃO É ESTADO DE SESSÃO: guardar um NPC não muda a fila nem o
 	// mapa. Devolver o estado mesmo assim é o que faz a cena ser redesenhada
-	// com a lista nova — o `comandoDoMestre` remenda todas as regiões a partir
+	// com a lista nova — o `gmCommand` remenda todas as regiões a partir
 	// dele, e sem isso o painel só mostraria o NPC no próximo F5.
 	return st.sessions.GetState(c.SessionID), nil
 }
 
-// oNPCDaCampanha lê o NPC conferindo que ele é DESTA campanha.
+// campaignNpc lê o NPC conferindo que ele é DESTA campanha.
 //
 // A conferência não é zelo: o id vem do CAMINHO, e caminho é digitável. Sem
 // ela, o mestre de uma mesa alcançaria o elenco de outra — e o elenco guarda a
 // preparação da campanha, que é o material mais privado que o mestre tem.
-func (s *Server) oNPCDaCampanha(c mesaComando) (sqlcgen.CampaignCreature, creature.Block, error) {
+func (s *Server) campaignNpc(c commandCtx) (sqlcgen.CampaignCreature, creature.Block, error) {
 	id, err := strconv.ParseInt(chi.URLParam(c.R, "npcId"), 10, 64)
 	if err != nil {
 		return sqlcgen.CampaignCreature{}, creature.Block{}, fmt.Errorf("npc inválido: %q", chi.URLParam(c.R, "npcId"))
 	}
-	return s.oNPCDaCampanhaPorID(c, id)
+	return s.idCampaignNpc(c, id)
 }
 
-// oNPCDaCampanhaPorID é o mesmo com o id já lido, para quem não o tem no caminho.
+// idCampaignNpc é o mesmo com o id já lido, para quem não o tem no caminho.
 //
 // O editor precisa dele porque lá o id vem do RASCUNHO — o formulário sabe quem
 // está editando —, e a conferência de campanha tem de ser a MESMA. Duas cópias
 // dariam duas travas, e a que envelhecesse seria a de menos uso.
-func (s *Server) oNPCDaCampanhaPorID(c mesaComando, id int64) (sqlcgen.CampaignCreature, creature.Block, error) {
+func (s *Server) idCampaignNpc(c commandCtx, id int64) (sqlcgen.CampaignCreature, creature.Block, error) {
 	var bloco creature.Block
 	linha, err := s.queries.GetCampaignCreature(c.R.Context(), id)
 	if err != nil {
@@ -128,13 +128,13 @@ func (s *Server) oNPCDaCampanhaPorID(c mesaComando, id int64) (sqlcgen.CampaignC
 	return linha, bloco, nil
 }
 
-// poeONPCNaFila traz um NPC guardado para o combate.
+// putNpcTracker traz um NPC guardado para o combate.
 //
 // Os PV vêm do BLOCO e não de um campo da tela: o bloco é a ficha daquele NPC, e
 // digitar o PV de novo ao trazê-lo seria pedir duas vezes o mesmo número — com
 // a segunda podendo discordar da primeira.
-func poeONPCNaFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
-	linha, bloco, err := st.oNPCDaCampanha(c)
+func putNpcTracker(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+	linha, bloco, err := st.campaignNpc(c)
 	if err != nil {
 		return nil, err
 	}
@@ -157,14 +157,14 @@ func poeONPCNaFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, erro
 	return st.sessions.AddInitiativeEntry(c.SessionID, entrada)
 }
 
-// apagaONPC tira o NPC do elenco da campanha.
+// eraseNpc tira o NPC do elenco da campanha.
 //
 // Não mexe na FILA: uma linha já posta continua na cena. Apagar o NPC do elenco
 // e a linha do combate são dois gestos porque respondem a duas perguntas — "ele
 // não volta mais" e "ele saiu desta cena" —, e juntá-los faria o mestre perder
 // o combatente em curso ao arrumar a preparação.
-func apagaONPC(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
-	linha, _, err := st.oNPCDaCampanha(c)
+func eraseNpc(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+	linha, _, err := st.campaignNpc(c)
 	if err != nil {
 		return nil, err
 	}
@@ -174,8 +174,8 @@ func apagaONPC(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
 	return st.sessions.GetState(c.SessionID), nil
 }
 
-// npcDoElenco é um NPC guardado, já com o que a lista mostra.
-type npcDoElenco struct {
+// castNpc é um NPC guardado, já com o que a lista mostra.
+type castNpc struct {
 	ID   int64
 	Nome string
 	// Resumo é a linha do livro: "ND 3 · Humanoide Médio · PV 30 · Defesa 15".
@@ -187,19 +187,19 @@ type npcDoElenco struct {
 	PV      int
 }
 
-// oElencoDaCampanha lê os NPCs guardados.
+// campaignCast lê os NPCs guardados.
 //
 // Um bloco ilegível NÃO derruba a lista: ele entra com o resumo vazio, porque
 // perder o elenco inteiro por causa de um JSON estragado seria trocar um
 // problema pequeno por um grande — e o mestre precisa poder APAGAR o estragado.
-func (s *Server) oElencoDaCampanha(ctx context.Context, campaignID int64) []npcDoElenco {
+func (s *Server) campaignCast(ctx context.Context, campaignID int64) []castNpc {
 	linhas, err := s.queries.ListCampaignCreatures(ctx, campaignID)
 	if err != nil {
 		return nil
 	}
-	fora := make([]npcDoElenco, 0, len(linhas))
+	fora := make([]castNpc, 0, len(linhas))
 	for _, l := range linhas {
-		npc := npcDoElenco{ID: l.ID, Nome: l.Name}
+		npc := castNpc{ID: l.ID, Nome: l.Name}
 		var bloco creature.Block
 		if err := json.Unmarshal([]byte(l.Block), &bloco); err == nil {
 			npc.Resumo = resumoDoBloco(bloco)

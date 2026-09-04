@@ -19,7 +19,7 @@ import (
 // tinha tudo — `BoardStore.Populate` existe, é idempotente e tem guarda próprio
 // (`board_populate_test.go`).
 //
-// O NOME não é `trazOGrupo` porque esse já existe neste pacote e leva o grupo
+// O NOME não é `bringParty` porque esse já existe neste pacote e leva o grupo
 // para a FILA. Mesmo verbo, destinos diferentes: é a colisão que a linha do
 // glossário nasceu para prender.
 
@@ -65,12 +65,12 @@ func candidatosAoMapa(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState) [
 	return lista
 }
 
-// fichasForaDoMapa são os ids que o atalho e a abertura do diálogo escolhem.
+// mapOutsideSheets são os ids que o atalho e a abertura do diálogo escolhem.
 //
 // Devolve uma LISTA e não um conjunto porque ela vai virar texto numa expressão
 // do navegador — e a ordem estável é o que faz duas aberturas seguidas do
 // diálogo desenharem a mesma coisa.
-func fichasForaDoMapa(candidatos []candidatoAoMapa) []string {
+func mapOutsideSheets(candidatos []candidatoAoMapa) []string {
 	var ids []string
 	for _, c := range candidatos {
 		if c.Ficha && !c.NoMapa {
@@ -87,7 +87,7 @@ func fichasForaDoMapa(candidatos []candidatoAoMapa) []string {
 // Sem o segundo a peça nasce no mapa sem deslocamento, o alcance não acende e o
 // jogador vê uma peça que não anda — um meio-recurso que ninguém reporta porque
 // parece regra. É o que o `handleBoardPopulate` da SPA já fazia.
-func poeNoMapa(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func poeNoMapa(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	escolhidos, err := escolhidosDosSinais(c.R)
 	if err != nil {
 		return nil, err
@@ -147,33 +147,33 @@ func escolhidosDosSinais(r *http.Request) (tabuleiro.EntrySelection, error) {
 // listaDeIDs escreve os ids do jeito que o sinal os guarda.
 func listaDeIDs(ids []string) string { return strings.Join(ids, ",") }
 
-// fichasDoDialogo lê no DOM os ids das fichas que ainda não têm peça.
+// dialogSheets lê no DOM os ids das fichas que ainda não têm peça.
 //
 // LER O DIÁLOGO em vez de escrever os ids no botão não é preferência de estilo:
 // o botão mora na região do MAPA, e id de combatente é dado da FILA. Embutido
 // ali, qualquer mudança na fila mudaria o HTML do mapa e o remendo trocaria a
 // peça debaixo do dedo do mestre no meio do arrasto — foi exatamente isso que o
 // `TestATrackerChangeDoesNotPatchTheMap` acusou na primeira versão.
-const fichasDoDialogo = "[...document.querySelectorAll('#por-no-mapa [data-ficha]')]" +
+const dialogSheets = "[...document.querySelectorAll('#por-no-mapa [data-ficha]')]" +
 	".map((e) => e.dataset.id).join(',')"
 
-// abreOPorNoMapa recomeça a escolha no padrão SEGURO e abre o diálogo.
+// openMap recomeça a escolha no padrão SEGURO e abre o diálogo.
 //
 // Cada abertura reescreve o sinal em vez de continuar de onde parou, e isso não
 // é limpeza: o rascunho da vez anterior pode ter o vilão marcado, e um diálogo
 // que lembra a escolha de dois minutos atrás põe a emboscada no mapa com um
 // clique em "Pôr no mapa" que o mestre acha que está confirmando outra coisa.
-func abreOPorNoMapa() string {
-	return "$escolhidosdomapa = " + fichasDoDialogo +
+func openMap() string {
+	return "$escolhidosdomapa = " + dialogSheets +
 		"; document.getElementById('por-no-mapa').showModal()"
 }
 
-// alternaNoMapa liga ou desliga um id na escolha.
+// toggleMap liga ou desliga um id na escolha.
 //
 // O `filter(Boolean)` é o que impede a vírgula solta: sem ele, desmarcar o único
 // escolhido deixaria a string `""` virar `[""]` ao voltar, e o servidor receberia
 // um id vazio.
-func alternaNoMapa(id string) string {
+func toggleMap(id string) string {
 	return fmt.Sprintf(
 		"$escolhidosdomapa = ($escolhidosdomapa.split(',').filter(Boolean).includes(%q)"+
 			" ? $escolhidosdomapa.split(',').filter((v) => v && v !== %q)"+
@@ -187,12 +187,12 @@ func estaEscolhido(id string) string {
 	return fmt.Sprintf("$escolhidosdomapa.split(',').includes(%q)", id)
 }
 
-// comandoDePorNoMapa posta a escolha.
-func comandoDePorNoMapa(v tabuleiroView) string {
-	return comandoDoTabuleiroDaCena(v, "pecas")
+// mapCommand posta a escolha.
+func mapCommand(v boardView) string {
+	return sceneBoardCommand(v, "pecas")
 }
 
-// atalhoDasFichas é o clique DIREITO: põe só as fichas, sem diálogo (ALE-204).
+// sheetsShortcut é o clique DIREITO: põe só as fichas, sem diálogo (ALE-204).
 //
 // O gesto nunca é o único caminho — abrir o diálogo e confirmar faz exatamente
 // isto, porque a abertura marca as mesmas fichas. O `preventDefault` é pelo menu
@@ -201,7 +201,7 @@ func comandoDePorNoMapa(v tabuleiroView) string {
 // Sem ficha fora do mapa ele NÃO posta: o servidor recusaria com "escolha ao
 // menos um", e uma recusa no rodapé em resposta a um clique direito parece
 // defeito. Silêncio é a resposta certa para "não há o que trazer".
-func atalhoDasFichas(v tabuleiroView) string {
-	return "evt.preventDefault(); $escolhidosdomapa = " + fichasDoDialogo +
-		"; $escolhidosdomapa && (" + comandoDePorNoMapa(v) + ")"
+func sheetsShortcut(v boardView) string {
+	return "evt.preventDefault(); $escolhidosdomapa = " + dialogSheets +
+		"; $escolhidosdomapa && (" + mapCommand(v) + ")"
 }

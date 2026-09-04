@@ -37,23 +37,23 @@ import (
 // consequência de o modo morar no servidor, e o caso ("o mestre com duas abas da
 // mesma mesa") não é o que a lente existe para servir.
 
-// asLentes guarda quem está vendo a cena como a mesa.
+// lenses guarda quem está vendo a cena como a mesa.
 //
 // Tipo próprio e não um `sync.Map` solto no `Server` porque a chave é composta e
 // a regra de leitura tem um caso ("não sou mestre, não há lente") que precisa
 // morar junto do dado.
-type asLentes struct {
+type lenses struct {
 	mu     sync.RWMutex
-	ligada map[chaveDaLente]bool
+	ligada map[lensKey]bool
 }
 
-type chaveDaLente struct {
+type lensKey struct {
 	SessionID int64
 	UserID    int64
 }
 
-func novasLentes() *asLentes {
-	return &asLentes{ligada: map[chaveDaLente]bool{}}
+func newLenses() *lenses {
+	return &lenses{ligada: map[lensKey]bool{}}
 }
 
 // Alterna liga ou desliga, e devolve como ficou.
@@ -62,10 +62,10 @@ func novasLentes() *asLentes {
 // botão é UM, com `aria-pressed`, e mandar o valor faria a tela ser a fonte da
 // verdade de um estado que é do servidor — dois cliques rápidos com a resposta
 // atrasada apagariam um ao outro.
-func (l *asLentes) Alterna(sessionID, userID int64) bool {
+func (l *lenses) Toggle(sessionID, userID int64) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	chave := chaveDaLente{SessionID: sessionID, UserID: userID}
+	chave := lensKey{SessionID: sessionID, UserID: userID}
 	if l.ligada[chave] {
 		// APAGA a entrada em vez de gravar `false`: o mapa vive enquanto o
 		// processo viver, e uma sessão que acumulasse um `false` por pessoa nunca
@@ -77,10 +77,10 @@ func (l *asLentes) Alterna(sessionID, userID int64) bool {
 	return true
 }
 
-func (l *asLentes) Ligada(sessionID, userID int64) bool {
+func (l *lenses) On(sessionID, userID int64) bool {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	return l.ligada[chaveDaLente{SessionID: sessionID, UserID: userID}]
+	return l.ligada[lensKey{SessionID: sessionID, UserID: userID}]
 }
 
 // Apaga desliga a lente de todo mundo naquela sessão.
@@ -88,7 +88,7 @@ func (l *asLentes) Ligada(sessionID, userID int64) bool {
 // Chamado quando a CENA ACABA: uma lente ligada sobre um tabuleiro que não
 // existe mais mostraria "você está vendo como a mesa" sobre uma tela vazia, e o
 // mestre concluiria que o próprio mapa sumiu para os jogadores.
-func (l *asLentes) Apaga(sessionID int64) {
+func (l *lenses) Erase(sessionID int64) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	for chave := range l.ligada {
@@ -100,20 +100,20 @@ func (l *asLentes) Apaga(sessionID int64) {
 
 func (s *Server) LensRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/lente",
-		s.comandoDoMestreNoTabuleiro(alternaALente))
+		s.gmBoardCommand(toggleLens))
 }
 
-// alternaALente acende ou apaga a lente de quem clicou.
+// toggleLens acende ou apaga a lente de quem clicou.
 //
 // Devolve o tabuleiro SEM MUDÁ-LO — a lente não é mutação da cena, e publicá-la
 // acordaria a mesa inteira para um modo que é de uma pessoa só. O que redesenha
 // a tela de quem clicou é a resposta do próprio comando.
-func alternaALente(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	st.lentes.Alterna(c.SessionID, c.User.ID)
+func toggleLens(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	st.lentes.Toggle(c.SessionID, c.User.ID)
 	return nil, nil
 }
 
-// aCenaComoAMesaVe devolve o tabuleiro redigido quando a lente está ligada.
+// seesTableHowScene devolve o tabuleiro redigido quando a lente está ligada.
 //
 // Devolve TAMBÉM quantas peças sumiram, porque essa é a pergunta que trouxe o
 // mestre até aqui — "a emboscada está mesmo invisível?". Contar o que sobrou na
@@ -123,7 +123,7 @@ func alternaALente(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 // assim ela cobre tudo o que a redação tira, inclusive o que ela vier a tirar
 // depois — a cortina esvazia a cena inteira, e uma contagem por campo diria zero
 // escondidas sobre um mapa que a mesa não vê.
-func aCenaComoAMesaVe(doMestre *tabuleiro.BoardState) (daMesa *tabuleiro.BoardState, escondidas int) {
+func seesTableHowScene(doMestre *tabuleiro.BoardState) (daMesa *tabuleiro.BoardState, escondidas int) {
 	daMesa = tabuleiro.BoardForRole("player", doMestre)
 	if doMestre == nil {
 		return daMesa, 0
@@ -135,18 +135,18 @@ func aCenaComoAMesaVe(doMestre *tabuleiro.BoardState) (daMesa *tabuleiro.BoardSt
 	return daMesa, len(doMestre.Tokens) - vistas
 }
 
-// comandoDaLente escreve o gesto que acende ou apaga.
-func comandoDaLente(v tabuleiroView) string {
+// lensCommand escreve o gesto que acende ou apaga.
+func lensCommand(v boardView) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/lente')", v.CampaignID, v.SessionID)
 }
 
-// aFraseDaLente diz o modo E o número, e nunca só o modo.
+// lensPhrase diz o modo E o número, e nunca só o modo.
 //
 // Um modo que se esquece é pior que nenhum: o mestre que não percebe que está na
 // vista da mesa não vê a peça que ele mesmo escondeu, e vai concluir que ela
 // sumiu. Por isso a tira é PERSISTENTE, nomeia o modo em texto e carrega a
 // própria saída.
-func aFraseDaLente(escondidas int) string {
+func lensPhrase(escondidas int) string {
 	switch {
 	case escondidas <= 0:
 		return "Você está vendo a cena como a mesa. Nenhuma peça escondida nesta cena."

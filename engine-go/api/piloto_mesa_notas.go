@@ -18,42 +18,42 @@ import (
 // as duas rotas que escrevem. A GRAMÁTICA do markdown mora no
 // `markdown/markdown.go`, que é um port com paridade medida contra o JS.
 //
-// AS NOTAS SÃO DO MESTRE. A trava é o `comandoDoMestre`, que devolve 403 a quem
+// AS NOTAS SÃO DO MESTRE. A trava é o `gmCommand`, que devolve 403 a quem
 // postar na mão — o botão escondido é cortesia para quem não pode, nunca a
 // segurança.
 
-func (s *Server) NoteRoutes(r chi.Router) {
+func (s *Server) RoutesNote(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/notas"
-	r.Post(base, s.salvaANotaDaSessao)
-	r.Post(base+"/tarefa/{linha}/{estado}", s.alternaATarefa)
+	r.Post(base, s.saveNoteSession)
+	r.Post(base+"/tarefa/{linha}/{estado}", s.toggleTask)
 }
 
-// sinaisDasNotas é o que a página manda: o texto em curso.
+// notesSignals é o que a página manda: o texto em curso.
 //
 // O NOME DO SINAL É TODO MINÚSCULO porque ele é usado como CHAVE de atributo
 // (`data-bind:notas`), e o analisador de HTML minuscula chave — um
 // `data-bind:notasDaSessao` chegaria como `notasdasessao` e ligaria um sinal
 // NOVO, com o servidor lendo o antigo para sempre vazio. Já custou uma sessão
 // inteira no descanso de dia.
-type sinaisDasNotas struct {
+type notesSignals struct {
 	Notas string `json:"notas"`
 }
 
-// leAsNotasDoCliente pega o texto que está na tela de quem pediu.
+// readsNotesClient pega o texto que está na tela de quem pediu.
 //
 // É o RASCUNHO e não a linha do banco, e a escolha é deliberada: quem clicou
 // está olhando o que digitou, e um comando que operasse sobre a versão salva
 // desfaria as últimas palavras dele sem aviso.
-func leAsNotasDoCliente(r *http.Request) (string, error) {
+func readsNotesClient(r *http.Request) (string, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	var sinais sinaisDasNotas
+	var sinais notesSignals
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return "", fmt.Errorf("não entendi as notas enviadas: %v", err)
 	}
 	return sinais.Notas, nil
 }
 
-// gravaANota escreve a coluna `notes` pelo MESMO `setBuilder` do handler JSON.
+// saveNote escreve a coluna `notes` pelo MESMO `setBuilder` do handler JSON.
 //
 // Uma segunda forma de gravar a mesma coluna divergiria no dia em que o
 // `execTouched` mudar — é ele quem carimba o `updatedAt`. Mesmo argumento que o
@@ -63,7 +63,7 @@ func leAsNotasDoCliente(r *http.Request) (string, error) {
 // texto a cada 1,2s comeria a linha em branco que o mestre acabou de abrir para
 // escrever o próximo parágrafo. O handler JSON apara porque salva UMA vez, ao
 // fechar; este salva no meio da digitação.
-func (s *Server) gravaANota(r *http.Request, sessionID int64, texto string) error {
+func (s *Server) saveNote(r *http.Request, sessionID int64, texto string) error {
 	var set setBuilder
 	if texto == "" {
 		set.Add("notes = ?", nil)
@@ -76,39 +76,39 @@ func (s *Server) gravaANota(r *http.Request, sessionID int64, texto string) erro
 	return nil
 }
 
-func (s *Server) salvaANotaDaSessao(w http.ResponseWriter, r *http.Request) {
-	s.comandoDasNotas(w, r, func(texto string) (string, error) { return texto, nil })
+func (s *Server) saveNoteSession(w http.ResponseWriter, r *http.Request) {
+	s.notesCommand(w, r, func(texto string) (string, error) { return texto, nil })
 }
 
-// alternaATarefa marca ou desmarca o quadrinho de UMA linha.
+// toggleTask marca ou desmarca o quadrinho de UMA linha.
 //
 // A linha viaja no CAMINHO e não num sinal, como os outros verbos de linha da
 // Mesa: o alvo é o que o clique carrega, e um sinal compartilhado por todos os
 // quadrinhos seria um lugar a mais para o item errado sobreviver à troca.
-func (s *Server) alternaATarefa(w http.ResponseWriter, r *http.Request) {
+func (s *Server) toggleTask(w http.ResponseWriter, r *http.Request) {
 	linha, err := strconv.Atoi(chi.URLParam(r, "linha"))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("linha inválida: %q", chi.URLParam(r, "linha")), http.StatusBadRequest)
 		return
 	}
 	marcada := chi.URLParam(r, "estado") == "marcar"
-	s.comandoDasNotas(w, r, func(texto string) (string, error) {
+	s.notesCommand(w, r, func(texto string) (string, error) {
 		return markdown.ToggleTask(texto, linha, marcada), nil
 	})
 }
 
-// comandoDasNotas é o tronco das duas rotas: autoriza, transforma, grava e
+// notesCommand é o tronco das duas rotas: autoriza, transforma, grava e
 // redesenha a PRÉVIA.
 //
 // Ele redesenha SÓ a prévia, e nunca a caixa de texto — ver o comentário longo
 // no `.templ`. O sinal `notas` sai junto porque a alternância de tarefa REESCREVE
 // o texto, e é por ele que a caixa se atualiza sem o nó ser trocado: `data-bind`
 // reflete o valor sem mexer no cursor de quem digita.
-func (s *Server) comandoDasNotas(
+func (s *Server) notesCommand(
 	w http.ResponseWriter, r *http.Request,
 	transforma func(string) (string, error),
 ) {
-	campaignID, sessionID, ok := mesaParams(w, r)
+	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
 		return
 	}
@@ -126,15 +126,15 @@ func (s *Server) comandoDasNotas(
 	// do pedido, então um `ReadSignals` depois dele encontra o corpo fechado.
 	// A ordem inversa passa VERDE em teste de handler e falha no servidor de
 	// verdade — o `httptest.NewRequest` não reproduz esse ciclo de vida.
-	texto, erroDeLeitura := leAsNotasDoCliente(r)
+	texto, erroDeLeitura := readsNotesClient(r)
 	novo, erroDaRegra := texto, error(nil)
 	if erroDeLeitura == nil {
 		novo, erroDaRegra = transforma(texto)
 	}
 	if erroDeLeitura == nil && erroDaRegra == nil {
-		erroDaRegra = s.gravaANota(r, sessionID, novo)
+		erroDaRegra = s.saveNote(r, sessionID, novo)
 	}
-	s.respondeAsNotas(w, r, campaignID, sessionID, novo, primeiroErro(erroDeLeitura, erroDaRegra))
+	s.respondNotes(w, r, campaignID, sessionID, novo, primeiroErro(erroDeLeitura, erroDaRegra))
 }
 
 func primeiroErro(erros ...error) error {
@@ -146,14 +146,14 @@ func primeiroErro(erros ...error) error {
 	return nil
 }
 
-// respondeAsNotas devolve a prévia e o estado do salvamento.
+// respondNotes devolve a prévia e o estado do salvamento.
 //
 // `notassalvas` é escrito SÓ no acerto, e é ele que faz a faixa dizer "Salvo".
 // Escrevê-lo no erro também faria a tela afirmar que está no banco o que o
 // banco recusou — a mentira mais cara que esta superfície pode contar, porque o
 // mestre fecha a aba confiando nela.
 // OS IDS VIAJAM PARA A PRÉVIA, e esta linha existe por um defeito MEDIDO no
-// navegador: a `mesaView` sintética nascia com `CampaignID` e `SessionID` ZERO,
+// navegador: a `tableView` sintética nascia com `CampaignID` e `SessionID` ZERO,
 // e cada quadrinho do fragmento remendado saía apontando para
 // `/mesa/0/0/notas/tarefa/N/marcar`.
 //
@@ -162,7 +162,7 @@ func primeiroErro(erros ...error) error {
 // segundo a tela ficava muda, com o botão no lugar, o `aria-checked` desenhado e
 // nenhum erro em canto nenhum. O guarda que o prende é
 // `TestThePatchedPreviewCarriesTheTableIds`.
-func (s *Server) respondeAsNotas(
+func (s *Server) respondNotes(
 	w http.ResponseWriter, r *http.Request,
 	campaignID, sessionID int64, texto string, recusa error,
 ) {
@@ -172,7 +172,7 @@ func (s *Server) respondeAsNotas(
 		sinais["erroDasNotas"] = recusa.Error()
 	} else {
 		sinais["notassalvas"] = texto
-		previa := mesaNotasPrevia(mesaView{
+		previa := tableNotesPreview(tableView{
 			CampaignID: campaignID, SessionID: sessionID,
 			Notas: texto, NotasBlocos: markdown.Parse(texto),
 		})
@@ -185,7 +185,7 @@ func (s *Server) respondeAsNotas(
 
 // ── as expressões que o Datastar executa ────────────────────────────────────
 
-// semeiaAsNotas põe na página o que o servidor sabe, UMA vez.
+// seedNotes põe na página o que o servidor sabe, UMA vez.
 //
 // O modo vem do `localStorage` com a MESMA chave da SPA, para a escolha do
 // mestre atravessar as duas telas enquanto as duas existirem.
@@ -193,30 +193,30 @@ func (s *Server) respondeAsNotas(
 // O texto é serializado por `json.Marshal` e não concatenado à mão: uma aspa ou
 // uma quebra de linha na nota fecharia a expressão e derrubaria a página
 // inteira — e nota de mesa é feita de aspas e quebras de linha.
-func semeiaAsNotas(v mesaView) string {
+func seedNotes(v tableView) string {
 	texto, err := json.Marshal(v.Notas)
 	if err != nil {
 		texto = []byte(`""`)
 	}
 	return fmt.Sprintf(
 		"$notas = %s; $notassalvas = %s; $notasmodo = localStorage.getItem('%s') || 'duplo'",
-		texto, texto, chaveDoModoDasNotas,
+		texto, texto, notesModeKey,
 	)
 }
 
-// chaveDoModoDasNotas é a MESMA do `notes-view.ts`. Duas chaves fariam o mestre
+// notesModeKey é a MESMA do `notes-view.ts`. Duas chaves fariam o mestre
 // reescolher o arranjo ao trocar de tela.
-const chaveDoModoDasNotas = "t20:notas-view"
+const notesModeKey = "t20:notas-view"
 
 func escolheOModo(valor string) string {
-	return fmt.Sprintf("$notasmodo = '%s'; localStorage.setItem('%s', '%s')", valor, chaveDoModoDasNotas, valor)
+	return fmt.Sprintf("$notasmodo = '%s'; localStorage.setItem('%s', '%s')", valor, notesModeKey, valor)
 }
 
-func salvaAsNotas(v mesaView) string {
+func saveNotes(v tableView) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/notas')", v.CampaignID, v.SessionID)
 }
 
-func alternaATarefaDaNota(v mesaView, t markdown.Task) string {
+func toggleTaskNote(v tableView, t markdown.Task) string {
 	estado := "marcar"
 	if t.Marcada {
 		estado = "desmarcar"
@@ -225,11 +225,11 @@ func alternaATarefaDaNota(v mesaView, t markdown.Task) string {
 		v.CampaignID, v.SessionID, t.Linha, estado)
 }
 
-// seMarcada devolve a STRING e não o booleano, e isso é conserto de defeito
+// marked devolve a STRING e não o booleano, e isso é conserto de defeito
 // MEDIDO: o `data-attr` do Datastar trata valor booleano como ATRIBUTO
 // BOOLEANO, e um `aria-checked=""` não anuncia estado nenhum. Aqui o valor é
 // escrito direto no HTML, mas a palavra é a mesma pela mesma razão.
-func seMarcada(marcada bool) string {
+func marked(marcada bool) string {
 	if marcada {
 		return "true"
 	}

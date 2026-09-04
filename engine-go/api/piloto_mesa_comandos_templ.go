@@ -20,7 +20,7 @@ import "t20engine/web/ui"
 // Quem decide se eles aparecem é o PAPEL, resolvido no servidor pelo mesmo
 // `stateForRole` que o resto da casa usa. Esconder no cliente seria UX; a trava
 // é a redação do estado, que o jogador nunca recebe.
-func controlesDoMestre(v mesaView, r mestreView) templ.Component {
+func gmControls(v tableView, r viewGm) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -58,7 +58,7 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = passoDoTurno(v, "previous-turn", "Turno anterior", "‹", r.PodeAvancar).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = turnStep(v, "previous-turn", "Turno anterior", "‹", r.PodeAvancar).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -72,9 +72,9 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "initiative/next-turn"))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "initiative/next-turn"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 51, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 51, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -108,7 +108,7 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if !v.SceneActive {
-			templ_7745c5c3_Err = iniciarCena(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = startScene(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -118,12 +118,12 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.SceneActive {
-			templ_7745c5c3_Err = encerrarCena(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = endSceneButton(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = aRecuperacao(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = rest(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -131,7 +131,7 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gavetaDaMesa(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableDrawer(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -139,7 +139,7 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = descansoDeDia(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = restDay(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -151,7 +151,7 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 	})
 }
 
-// gavetaDaMesa é o rodapé do mestre quando o palco é baixo (ALE-263).
+// tableDrawer é o rodapé do mestre quando o palco é baixo (ALE-263).
 //
 // `<details>` e não um popover com JavaScript: abrir e fechar é o que o elemento
 // JÁ faz, e ele leva de graça o teclado, o foco e o "fechar com Escape" que uma
@@ -160,7 +160,7 @@ func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 // Quem a mostra e a esconde é a consulta de contêiner na folha, e não uma classe
 // aqui: a decisão é sobre a ALTURA MEDIDA do palco, e essa medida o servidor não
 // tem — é a tradução do `palcoBaixo` que a ALE-265 deixou anotada.
-func gavetaDaMesa(v mesaView) templ.Component {
+func tableDrawer(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -194,12 +194,12 @@ func gavetaDaMesa(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.SceneActive {
-			templ_7745c5c3_Err = encerrarCena(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = endSceneButton(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = aRecuperacao(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = rest(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -211,7 +211,7 @@ func gavetaDaMesa(v mesaView) templ.Component {
 	})
 }
 
-// aRecuperacao é o par do livro (T20 p105): devolve PV e PM ao grupo.
+// rest é o par do livro (T20 p105): devolve PV e PM ao grupo.
 //
 // A palavra da SEÇÃO é "recuperação" porque diz o que ela DEVOLVE, e a das AÇÕES
 // é "descanso" porque é a do livro — a distinção é do GLOSSARIO e a SPA já a
@@ -222,7 +222,7 @@ func gavetaDaMesa(v mesaView) templ.Component {
 // da qualidade, que é o que a p105 usa para calcular quanto volta, e só por isso
 // abre o diálogo — cobrar dois passos pelo que tem um seria cobrar por um dado
 // que o motor não usa.
-func aRecuperacao(v mesaView) templ.Component {
+func rest(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -248,9 +248,9 @@ func aRecuperacao(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "rest/scene"))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "rest/scene"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 123, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 123, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -280,7 +280,7 @@ func aRecuperacao(v mesaView) templ.Component {
 	})
 }
 
-// descansoDeDia pergunta a QUALIDADE antes de descansar (T20 p105).
+// restDay pergunta a QUALIDADE antes de descansar (T20 p105).
 //
 // `data-preserve-attr="open"` não é enfeite e sem ele o diálogo é inútil: a cena
 // inteira é remendada a cada mudança, o `open` do `showModal()` só existe no DOM
@@ -296,7 +296,7 @@ func aRecuperacao(v mesaView) templ.Component {
 // elemento, e a centralização do `<dialog>` modal é justamente a `margin: auto`
 // que o navegador aplica sobre `inset: 0`. Sem ele o diálogo nasce grudado no
 // canto superior esquerdo — medido, `top: 0, left: 0` numa janela de 1916×907.
-func descansoDeDia(v mesaView) templ.Component {
+func restDay(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -322,9 +322,9 @@ func descansoDeDia(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('descanso-de-dia').close(); " + comandoDaMesa(v, "POST", "rest/day"))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('descanso-de-dia').close(); " + tableCommand(v, "POST", "rest/day"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 202, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 202, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -338,9 +338,9 @@ func descansoDeDia(v mesaView) templ.Component {
 	})
 }
 
-// passoDoTurno é o voltar. Ele existe porque errar o avanço é o engano mais
+// turnStep é o voltar. Ele existe porque errar o avanço é o engano mais
 // comum da mesa, e sem ele o conserto é remontar a ordem inteira.
-func passoDoTurno(v mesaView, rota, rotulo, sinal string, ligado bool) templ.Component {
+func turnStep(v tableView, rota, rotulo, sinal string, ligado bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -384,9 +384,9 @@ func passoDoTurno(v mesaView, rota, rotulo, sinal string, ligado bool) templ.Com
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "initiative/"+rota))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "initiative/"+rota))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 216, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 216, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -434,7 +434,7 @@ func passoDoTurno(v mesaView, rota, rotulo, sinal string, ligado bool) templ.Com
 // INICIAR fica na fileira em qualquer altura de palco, e o ENCERRAR desce para a
 // gaveta quando o palco é baixo. Quem escolhe entre eles continua sendo a cena,
 // e continua sendo uma vaga só — nenhum deles aparece com o outro.
-func encerrarCena(v mesaView) templ.Component {
+func endSceneButton(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -460,9 +460,9 @@ func encerrarCena(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "scene/end"))
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "scene/end"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 239, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 239, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -476,7 +476,7 @@ func encerrarCena(v mesaView) templ.Component {
 	})
 }
 
-func iniciarCena(v mesaView) templ.Component {
+func startScene(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -502,9 +502,9 @@ func iniciarCena(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "scene/start"))
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "scene/start"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 247, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 247, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {

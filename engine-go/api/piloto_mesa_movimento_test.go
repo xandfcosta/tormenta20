@@ -16,12 +16,12 @@ import (
 // aqui é a COMPOSIÇÃO: que a cena pergunta a coisa certa, e que as paradas se
 // ACUMULAM em vez de se substituírem.
 
-// noTabuleiro abre um tabuleiro com uma peça do personagem do jogador, e devolve
+// onBoard abre um tabuleiro com uma peça do personagem do jogador, e devolve
 // o id dela.
-func (f pilotoFixture) noTabuleiro(t *testing.T) string {
+func (f pilotoFixture) onBoard(t *testing.T) string {
 	t.Helper()
-	f.abreTabuleiro(t, "pedra")
-	entryID := f.naFila(t)
+	f.seedOpenBoard(t, "pedra")
+	entryID := f.tracker(t)
 	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID, CharacterID: &f.charID}, true)
 	if err != nil {
@@ -37,8 +37,8 @@ func (f pilotoFixture) noTabuleiro(t *testing.T) string {
 // defeito da SPA que a ALE-266 abriu.
 func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoard(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	// O mestre move sem orçamento, então ele serve para medir o acúmulo sem a
 	// regra da vez entrar no meio.
@@ -71,8 +71,8 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 // peça pulando de casa em casa.
 func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoard(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 	onde := func() (int, int) {
 		p := tabuleiro.FindToken(f.s.boards.Get(context.Background(), f.sessionID, defaultTab), tokenID)
 		return p.X, p.Y
@@ -99,8 +99,8 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 // E CANCELAR não mexe na peça: ela volta a poder ser movida de onde estava.
 func TestCancelDoesNotTouchTheToken(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoard(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	if rec := f.pede(t, f.mestre, "POST", base+"/parada/4/4", ""); rec.Code != http.StatusOK {
 		t.Fatalf("propor deu %d", rec.Code)
@@ -126,7 +126,7 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 // o que fazer, e "proibido" não.
 func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Ogro", X: 5, Y: 5}, true)
 	if err != nil {
@@ -135,7 +135,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	ogro := posto.Tokens[len(posto.Tokens)-1].ID
 
 	corpo := f.pede(t, f.jogador, "POST",
-		f.urlDaMesa()+"/tabuleiro/"+ogro+"/parada/6/5", "").Body.String()
+		f.tableUrl()+"/tabuleiro/"+ogro+"/parada/6/5", "").Body.String()
 	if !strings.Contains(corpo, "não é sua") {
 		t.Errorf("a recusa não explica de quem é a peça; sinais = %s", trechoDeSinais(corpo))
 	}
@@ -151,17 +151,17 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 // isto que fez a casa alcançável deixar de ser o alvo do clique e virar pintura.
 func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	f := novoPiloto(t)
-	f.noTabuleiro(t)
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+	f.onBoard(t)
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 
 	// O CONTROLE: o jogador vê o tabuleiro. Sem isto, "não achei alcance" seria
 	// verdade também numa cena sem mapa.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "tabuleiro-plano") {
 		t.Fatal("o jogador não viu o tabuleiro")
 	}
@@ -180,7 +180,7 @@ func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	// mas a parte visual serve para todos"). Ele não é barrado por ele — a trava
 	// saiu do servidor —, e esconder as faixas dele tiraria da pessoa que decide
 	// exatamente o que a mesa está lendo.
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "tabuleiro-alcance-segundo") {
 		t.Error("o mestre não viu as faixas de alcance da peça que ele move")
 	}
@@ -194,10 +194,10 @@ func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 // medida por ninguém.
 func TestOutOfCombatNobodySeesReach(t *testing.T) {
 	f := novoPiloto(t)
-	f.noTabuleiro(t)
+	f.onBoard(t)
 
 	for quem, quemChama := range map[string]int64{"jogador": f.jogador, "mestre": f.mestre} {
-		tela := f.pede(t, quemChama, http.MethodGet, f.urlDaMesa(), "").Body.String()
+		tela := f.pede(t, quemChama, http.MethodGet, f.tableUrl(), "").Body.String()
 		if !strings.Contains(tela, "tabuleiro-plano") {
 			t.Fatalf("o %s não viu o tabuleiro: a ausência abaixo não é evidência", quem)
 		}
@@ -226,19 +226,19 @@ func TestOutOfCombatNobodySeesReach(t *testing.T) {
 // sai no sinal certo, e que a região do tabuleiro tem onde acendê-la.
 func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+	tokenID := f.onBoard(t)
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	// O CANAL: a região do tabuleiro tem o elemento ligado ao sinal. Sem esta
 	// asserção, "a frase saiu" seria verdade sobre uma tela que não a mostra —
 	// que é exatamente o defeito que este guarda existe para pegar.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "$erroDoMovimento") {
 		t.Fatal("o tabuleiro do jogador não tem onde acender a recusa de uma parada")
 	}
@@ -283,19 +283,19 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 // afirmava o segundo dava para movê-lo de lugar sem nenhum teste piscar.
 func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+	tokenID := f.onBoard(t)
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 
 	// Duas casas em linha reta custam 2 do deslocamento padrão de 6 (T20 p106).
-	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/2/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/2/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: a frase do movimento está na tela. Sem ele, não achar "sobram"
 	// seria verdade também numa tela sem movimento proposto nenhum.
@@ -310,15 +310,15 @@ func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	}
 }
 
-// naVezDoJogador põe a cena em combate e passa a vez para o jogador, que é a
+// turnPlayer põe a cena em combate e passa a vez para o jogador, que é a
 // única condição em que existe DESLOCAMENTO para estourar: o mestre tem
 // orçamento -1 e nunca vê vermelho.
-func (f pilotoFixture) naVezDoJogador(t *testing.T) {
+func (f pilotoFixture) turnPlayer(t *testing.T) {
 	t.Helper()
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 }
@@ -331,18 +331,18 @@ func (f pilotoFixture) naVezDoJogador(t *testing.T) {
 //
 // Vale pela porta de verdade — a parada, o mesmo POST que o dedo faz — porque o
 // desenho só existe se o `ProposeMove` tiver ACEITADO o caminho caro. Chamar o
-// `osFiosDoMovimento` direto provaria a aritmética sobre uma proposta que a cena
+// `moveWires` direto provaria a aritmética sobre uma proposta que a cena
 // talvez recusasse.
 func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	f.naVezDoJogador(t)
+	tokenID := f.onBoard(t)
+	f.turnPlayer(t)
 
 	// O deslocamento padrão são 6 quadrados (T20 p106); nove para o leste custam 9.
-	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/9/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/9/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada cara deu %d: sem provisório não há seta para pintar", rec.Code)
 	}
-	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(tela, "tabuleiro-movimento-segundo") {
 		t.Error("o caminho passou da ação de movimento e a seta saiu inteira dourada")
@@ -390,13 +390,13 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 // paga.
 func TestTheControlForTheTwoColorArrow(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiro(t)
-	f.naVezDoJogador(t)
+	tokenID := f.onBoard(t)
+	f.turnPlayer(t)
 
-	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/4/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/4/0", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada que cabe deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(tela, "tabuleiro-movimento-alem") {
 		t.Error("quatro quadrados sobre um deslocamento de seis pintaram vermelho")

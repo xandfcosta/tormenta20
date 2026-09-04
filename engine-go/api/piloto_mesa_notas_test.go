@@ -19,14 +19,14 @@ import (
 func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/notas", `{"notas":"eu escrevi isto"}`)
+	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/notas", `{"notas":"eu escrevi isto"}`)
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador escreveu nas notas do mestre: %d", rec.Code)
 	}
 	// O CONTROLE do 403: se a nota tivesse sido gravada, o status sozinho não
 	// contaria — já houve rota que recusava DEPOIS de escrever.
-	if nota := f.notaNoBanco(t); nota != "" {
+	if nota := f.dbNote(t); nota != "" {
 		t.Errorf("a recusa veio depois da escrita: o banco tem %q", nota)
 	}
 }
@@ -36,9 +36,9 @@ func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/notas", `{"notas":"# Cena 1\nO ogro fugiu"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notas":"# Cena 1\nO ogro fugiu"}`)
 
-	if got := f.notaNoBanco(t); got != "# Cena 1\nO ogro fugiu" {
+	if got := f.dbNote(t); got != "# Cena 1\nO ogro fugiu" {
 		t.Errorf("a nota no banco é %q", got)
 	}
 }
@@ -52,9 +52,9 @@ func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/notas", `{"notas":"a cena acabou\n\n"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notas":"a cena acabou\n\n"}`)
 
-	if got := f.notaNoBanco(t); got != "a cena acabou\n\n" {
+	if got := f.dbNote(t); got != "a cena acabou\n\n" {
 		t.Errorf("a nota foi aparada: %q", got)
 	}
 }
@@ -68,9 +68,9 @@ func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 	f := novoPiloto(t)
 	nota := `{"notas":"- [ ] pagar o taverneiro\n- [x] dar o XP"}`
 
-	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/notas/tarefa/0/marcar", nota)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/notas/tarefa/0/marcar", nota)
 
-	if got := f.notaNoBanco(t); got != "- [x] pagar o taverneiro\n- [x] dar o XP" {
+	if got := f.dbNote(t); got != "- [x] pagar o taverneiro\n- [x] dar o XP" {
 		t.Errorf("o quadrinho não reescreveu a nota: %q", got)
 	}
 	// A RESPOSTA redesenha a prévia, e é por ela que a tela do mestre muda: sem
@@ -91,9 +91,9 @@ func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/notas/tarefa/0/desmarcar", `{"notas":"- [x] dar o XP"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/notas/tarefa/0/desmarcar", `{"notas":"- [x] dar o XP"}`)
 
-	if got := f.notaNoBanco(t); got != "- [ ] dar o XP" {
+	if got := f.dbNote(t); got != "- [ ] dar o XP" {
 		t.Errorf("desmarcar não voltou o quadrinho: %q", got)
 	}
 }
@@ -108,19 +108,19 @@ func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 func TestAnOutOfRangeLineDoesNotBringTheHandlerDown(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/notas/tarefa/99/marcar", `{"notas":"- [ ] a"}`)
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/notas/tarefa/99/marcar", `{"notas":"- [ ] a"}`)
 
 	if rec.Code >= 500 {
 		t.Fatalf("uma linha fora da faixa derrubou o handler: %d", rec.Code)
 	}
-	if got := f.notaNoBanco(t); got != "- [ ] a" {
+	if got := f.dbNote(t); got != "- [ ] a" {
 		t.Errorf("a nota foi mexida por um clique fora da faixa: %q", got)
 	}
 }
 
-// notaNoBanco lê a coluna direto, que é o único lugar que decide se a nota
+// dbNote lê a coluna direto, que é o único lugar que decide se a nota
 // existe. Ler a resposta do próprio handler seria perguntar ao acusado.
-func (f pilotoFixture) notaNoBanco(t *testing.T) string {
+func (f pilotoFixture) dbNote(t *testing.T) string {
 	t.Helper()
 	sess, err := f.s.queries.GetSession(t.Context(), f.sessionID)
 	if err != nil {
@@ -134,7 +134,7 @@ func (f pilotoFixture) notaNoBanco(t *testing.T) string {
 
 // TestThePatchedPreviewCarriesTheTableIds prende um defeito MEDIDO no navegador.
 //
-// A prévia da resposta era montada a partir de uma `mesaView` SINTÉTICA, criada
+// A prévia da resposta era montada a partir de uma `tableView` SINTÉTICA, criada
 // só com o texto — e uma struct nova nasce com `CampaignID` e `SessionID` em
 // ZERO. Cada quadrinho do fragmento saía apontando para
 // `/mesa/0/0/notas/tarefa/N/marcar`.
@@ -150,14 +150,14 @@ func (f pilotoFixture) notaNoBanco(t *testing.T) string {
 func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 	f := novoPiloto(t)
 
-	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/notas", `{"notas":"- [ ] pagar o taverneiro"}`)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notas":"- [ ] pagar o taverneiro"}`)
 
 	// O CONTROLE: a prévia tem de trazer um quadrinho, senão não há caminho
 	// nenhum para conferir e o teste passaria dizendo nada.
 	if !strings.Contains(corpo, "notas/tarefa/") {
 		t.Fatal("a prévia não trouxe quadrinho de tarefa — não há rota para conferir")
 	}
-	esperado := f.urlDaMesa() + "/notas/tarefa/0/marcar"
+	esperado := f.tableUrl() + "/notas/tarefa/0/marcar"
 	if !strings.Contains(corpo, esperado) {
 		t.Errorf("o quadrinho remendado não aponta para %s", esperado)
 	}

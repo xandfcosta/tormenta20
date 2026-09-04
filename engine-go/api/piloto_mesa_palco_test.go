@@ -15,15 +15,15 @@ import (
 // de defeito mais cara deste repositório.
 //
 // Estes três casos foram vistos VERMELHOS antes de valerem:
-//   - tirar `@mesaTrilhoDaFila` do palco → o primeiro falha
-//   - pendurar `@mesaFila` no palco E na gaveta → o segundo falha, dizendo 2
+//   - tirar `@tableRailTracker` do palco → o primeiro falha
+//   - pendurar `@tableTracker` no palco E na gaveta → o segundo falha, dizendo 2
 //   - listar `mesa-trilho-fila` sem a guarda de papel → o terceiro falha
 
-// asRegioesDaMesa são os ids que o stream remenda. A lista é a mesma do
-// `regioesDaMesa`, escrita aqui de novo DE PROPÓSITO: derivá-la da produção
+// tableRegionNames são os ids que o stream remenda. A lista é a mesma do
+// `tableRegions`, escrita aqui de novo DE PROPÓSITO: derivá-la da produção
 // faria o teste concordar com o defeito: uma região removida sumiria dos dois
 // lados e o guarda ficaria verde sobre nada.
-var asRegioesDaMesa = []string{
+var tableRegionNames = []string{
 	"mesa-cabecalho",
 	"mesa-registrar",
 	"mesa-grupo",
@@ -46,11 +46,11 @@ var asRegioesDaMesa = []string{
 // da ALE-122, agora em HTML.
 func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	html := f.pede(t, f.mestre, "GET", f.urlDaMesa(), "").Body.String()
+	html := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
 
-	for _, id := range append(asRegioesDaMesa, "mesa-trilho-fila") {
+	for _, id := range append(tableRegionNames, "mesa-trilho-fila") {
 		marca := `id="` + id + `"`
 		if n := strings.Count(html, marca); n != 1 {
 			t.Errorf("a região %q aparece %d vezes no palco do mestre, e o remendo precisa de exatamente 1", id, n)
@@ -68,9 +68,9 @@ func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 // ALE-210 furada por leiaute.
 func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	html := f.pede(t, f.jogador, "GET", f.urlDaMesa(), "").Body.String()
+	html := f.pede(t, f.jogador, "GET", f.tableUrl(), "").Body.String()
 
 	// O CONTROLE primeiro: sem ele, "não achei o trilho" seria verdade também
 	// numa página que voltou vazia, num 403, ou num id que alguém renomeou.
@@ -87,11 +87,11 @@ func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 // em lugares diferentes e têm de concordar sobre quem existe.
 //
 // Discordar não dá erro em lugar nenhum — o remendo simplesmente não pousa —,
-// e por isso a guarda de papel do `regioesDaMesa` e o `if` que desenha o trilho
+// e por isso a guarda de papel do `tableRegions` e o `if` que desenha o trilho
 // leem a MESMA `view`. Este teste é o que afirma que continuam lendo.
 func TestTheStreamOnlySendsTheRegionTheDocumentHas(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
 	paraOMestre := idsDasRegioes(t, f, f.mestre)
 	paraOJogador := idsDasRegioes(t, f, f.jogador)
@@ -104,7 +104,7 @@ func TestTheStreamOnlySendsTheRegionTheDocumentHas(t *testing.T) {
 	}
 }
 
-// idsDasRegioes pergunta ao MESMO `regioesDaMesa` da produção quais regiões o
+// idsDasRegioes pergunta ao MESMO `tableRegions` da produção quais regiões o
 // stream mandaria para aquele papel, montando a view pelo caminho de sempre.
 func idsDasRegioes(t *testing.T, f pilotoFixture, userID int64) map[string]bool {
 	t.Helper()
@@ -112,12 +112,12 @@ func idsDasRegioes(t *testing.T, f pilotoFixture, userID int64) map[string]bool 
 	if err != nil {
 		t.Fatalf("usuário %d não existe: %v", userID, err)
 	}
-	view, _, err := f.s.loadMesaView(t.Context(), AuthUser{ID: user.ID}, f.campaignID, f.sessionID)
+	view, _, err := f.s.loadTableView(t.Context(), AuthUser{ID: user.ID}, f.campaignID, f.sessionID)
 	if err != nil {
 		t.Fatalf("montar a view: %v", err)
 	}
 	ids := map[string]bool{}
-	for _, r := range regioesDaMesa(view) {
+	for _, r := range tableRegions(view) {
 		ids[r.ID] = true
 	}
 	return ids

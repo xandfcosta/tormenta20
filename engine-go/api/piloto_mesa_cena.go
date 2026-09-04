@@ -27,25 +27,25 @@ import (
 
 func (s *Server) SceneRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
-	r.Post(base+"/abrir", s.comandoDoMestreNoTabuleiro(abreOTabuleiro))
-	r.Post(base+"/encerrar", s.comandoDoMestreNoTabuleiro(encerraOTabuleiro))
-	r.Post(base+"/lugares/{placeId}/reabrir", s.comandoDoMestreNoTabuleiro(reabreOLugar))
-	r.Post(base+"/lugares/{placeId}/remover", s.comandoDoMestreNoTabuleiro(removeOLugar))
+	r.Post(base+"/abrir", s.gmBoardCommand(openBoard))
+	r.Post(base+"/encerrar", s.gmBoardCommand(endBoard))
+	r.Post(base+"/lugares/{placeId}/reabrir", s.gmBoardCommand(reopenPlace))
+	r.Post(base+"/lugares/{placeId}/remover", s.gmBoardCommand(removeOLugar))
 	// O TRAÇO e não o ponto (ALE-203): as duas rotas recebem de ONDE ATÉ ONDE o
 	// dedo andou desde o aviso anterior do ponteiro. Um clique parado manda o
 	// mesmo par duas vezes, que é um traço de uma casa. Ver `tabuleiro.CasasDoTraco`.
-	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.comandoContinuoDoMestre(pintaOTerreno))
-	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.comandoContinuoDoMestre(limpaOTerreno))
+	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.gmContinuousCommand(paintTerrain))
+	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.gmContinuousCommand(clearTerrain))
 	// O RETÂNGULO (ALE-203, item 10): os mesmos dois cantos, outra FORMA. Rota
 	// própria e não uma query na de cima porque o que muda é o que o par de
 	// cantos NOMEIA — a linha entre eles ou tudo o que cabe dentro —, e isso é o
 	// significado do pedido, não um modo dele.
-	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.comandoContinuoDoMestre(enchaORetangulo))
-	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.comandoContinuoDoMestre(limpaORetangulo))
-	r.Post(base+"/pecas", s.comandoDoMestreNoTabuleiro(poeNoMapa))
+	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.gmContinuousCommand(fillRect))
+	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.gmContinuousCommand(clearRect))
+	r.Post(base+"/pecas", s.gmBoardCommand(poeNoMapa))
 }
 
-// pintaOTerreno liga ou desliga uma espécie numa casa (T20 p238).
+// paintTerrain liga ou desliga uma espécie numa casa (T20 p238).
 //
 // A espécie e o quadrado vêm do CAMINHO, e o APAGAR vem da query. A divisão não
 // é arbitrária: caminho é o que identifica a casa que o clique acertou — e é a
@@ -55,7 +55,7 @@ func (s *Server) SceneRoutes(r chi.Router) {
 // Idempotente de propósito, e o `PaintTerrain` é quem garante: o pincel pinta
 // ARRASTANDO e o arraste passa duas vezes pela mesma casa. Alternar faria a casa
 // piscar entre brejo e chão limpo debaixo do dedo.
-func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func paintTerrain(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	traco, err := tracoDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -68,14 +68,14 @@ func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	return st.boards.PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
 }
 
-// limpaOTerreno é a BORRACHA (ALE-203): o clique devolve a casa ao chão limpo,
+// clearTerrain é a BORRACHA (ALE-203): o clique devolve a casa ao chão limpo,
 // seja qual for o terreno nela.
 //
 // ROTA PRÓPRIA e não `?apagar=1` na rota de pintar, e a diferença é o que
 // conserta o defeito: aquela precisa de uma ESPÉCIE no caminho, e era justamente
 // a espécie que fazia a borracha apagar a coisa errada em silêncio. Sem espécie
 // no caminho, não há como errar qual.
-func limpaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func clearTerrain(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	traco, err := tracoDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -86,13 +86,13 @@ func limpaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	return st.boards.ClearStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco)
 }
 
-// enchaORetangulo e limpaORetangulo são os irmãos de área dos dois de cima.
+// fillRect e clearRect são os irmãos de área dos dois de cima.
 //
 // Eles chamam as MESMAS gravações (`PintaOTraco`, `LimpaOTraco`) — o nome fala em
 // traço porque foi ele que as pediu primeiro, e o que elas recebem sempre foi uma
 // lista de casas. Quem escolhe a forma é a rota.
-func enchaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	casas, err := oRetanguloDaURL(c.R)
+func fillRect(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	casas, err := urlRect(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +103,8 @@ func enchaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	return st.boards.PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas, especie, true)
 }
 
-func limpaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	casas, err := oRetanguloDaURL(c.R)
+func clearRect(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	casas, err := urlRect(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -114,17 +114,17 @@ func limpaORetangulo(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	return st.boards.ClearStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas)
 }
 
-// oRetanguloDaURL lê os dois cantos e devolve as casas de dentro.
+// urlRect lê os dois cantos e devolve as casas de dentro.
 //
 // A RECUSA vem do domínio (`tabuleiro.RetanguloValido`) e o teto dele é maior que
 // o do traço, pela razão escrita lá: o retângulo é um gesto DELIBERADO de dois
 // cantos, e o traço é um quadro de 16ms.
-func oRetanguloDaURL(r *http.Request) ([]engine.Square, error) {
+func urlRect(r *http.Request) ([]engine.Square, error) {
 	de, err := quadradoDaURL(r)
 	if err != nil {
 		return nil, err
 	}
-	ate, err := segundoQuadradoDaURL(r)
+	ate, err := urlSquareSecond(r)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 	if err != nil {
 		return nil, err
 	}
-	ate, err := segundoQuadradoDaURL(r)
+	ate, err := urlSquareSecond(r)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 	return tabuleiro.StrokeSquares(de, ate), nil
 }
 
-// reabreOLugar traz uma cena guardada de volta para a mesa, NUMA ABA NOVA
+// reopenPlace traz uma cena guardada de volta para a mesa, NUMA ABA NOVA
 // (ALE-205, fatia 3).
 //
 // Era `ShowPlace`, que arquivava a cena atual e entrava no lugar dela — a saída
@@ -167,26 +167,26 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 // de escolher aquele lugar numa lista, e deixá-lo na cena anterior faria o gesto
 // parecer que não aconteceu. A MESA não é levada junto — isso é o "mostrar à
 // mesa", que é gesto próprio desde a fatia 2.
-func reabreOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func reopenPlace(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	id, err := lugarDaURL(c.R)
 	if err != nil {
 		return nil, err
 	}
-	cena, err := st.boards.OpenPlace(c.R.Context(), c.CampaignID, c.SessionID, id)
+	scene, err := st.boards.OpenPlace(c.R.Context(), c.CampaignID, c.SessionID, id)
 	if err != nil {
 		return nil, err
 	}
-	st.abas.Escolhe(c.SessionID, c.User.ID, cena.ID)
-	return cena, nil
+	st.abas.Escolhe(c.SessionID, c.User.ID, scene.ID)
+	return scene, nil
 }
 
 // removeOLugar apaga uma cena do acervo, e ela não volta.
 //
 // Devolve o tabuleiro ATUAL e não nil: apagar um lugar guardado não mexe na cena
-// que está na mesa, e devolver nil faria o `comandoDoTabuleiro` publicar "não há
+// que está na mesa, e devolver nil faria o `boardCommand` publicar "não há
 // tabuleiro" para a mesa inteira — o mestre limparia o acervo e a mesa perderia
 // a cena em que estava jogando.
-func removeOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func removeOLugar(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	id, err := lugarDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -199,7 +199,7 @@ func removeOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	//
 	// A recusa é do SERVIDOR e não da tela: a lista já não oferece a lixeira ao
 	// que está aberto, mas quem postar na mão passaria por cima.
-	if nome, aba := st.aAbaComOLugar(c.R.Context(), c.CampaignID, c.SessionID, id); aba != "" {
+	if nome, aba := st.placeTab(c.R.Context(), c.CampaignID, c.SessionID, id); aba != "" {
 		return nil, fmt.Errorf(
 			"%q está aberta numa aba: encerre a cena antes de apagá-la do acervo", nome)
 	}
@@ -209,7 +209,7 @@ func removeOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	return st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID), nil
 }
 
-// aAbaComOLugar diz em qual aba um lugar guardado está aberto, e como ele se
+// placeTab diz em qual aba um lugar guardado está aberto, e como ele se
 // chama. Aba vazia é "não está na mesa".
 //
 // A JUNÇÃO É PELO NOME, e não por um id do lugar guardado dentro do tabuleiro.
@@ -222,7 +222,7 @@ func removeOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 // A consequência, dita para ninguém a redescobrir: uma cena ABERTA do zero com o
 // nome de um lugar guardado é tratada como aquele lugar. É a mesma conta que o
 // arquivamento fará quando ela fechar.
-func (s *Server) aAbaComOLugar(ctx context.Context, campaignID, sessionID, placeID int64) (nome, tabuleiroID string) {
+func (s *Server) placeTab(ctx context.Context, campaignID, sessionID, placeID int64) (nome, tabuleiroID string) {
 	for _, lugar := range s.boards.Places(ctx, campaignID) {
 		if lugar.ID != placeID {
 			continue
@@ -248,7 +248,7 @@ func lugarDaURL(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-// abreOTabuleiro monta a cena com o lugar e o chão que o mestre escolheu.
+// openBoard monta a cena com o lugar e o chão que o mestre escolheu.
 //
 // Desde a ALE-205 ela ACRESCENTA uma aba em vez de substituir a cena que estava
 // na mesa: é a issue inteira, e o caso de uso é o grupo que se separou — mostrar
@@ -260,8 +260,8 @@ func lugarDaURL(r *http.Request) (int64, error) {
 // ele procuraria na tela uma taverna que nasceu na aba ao lado. É escolha de
 // quem clicou e de mais ninguém: a mesa não é puxada, porque a aba padrão
 // continua sendo a mais antiga.
-func abreOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
-	lugar, chao, err := cenaDosSinais(c.R)
+func openBoard(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
+	lugar, chao, err := signalsScene(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -277,12 +277,12 @@ func abreOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	return b, nil
 }
 
-// encerraOTabuleiro arquiva e tira a cena da mesa.
+// endBoard arquiva e tira a cena da mesa.
 //
 // A falha ao ARQUIVAR não impede o encerrar, e a ordem é a do `handleBoardClose`
 // de propósito: o mestre mandou tirar a cena da mesa, e recusar isso porque o
 // acervo falhou deixaria a mesa presa numa cena que já acabou.
-func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func endBoard(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	if atual := st.boards.Get(c.R.Context(), c.SessionID, c.TabuleiroID); atual != nil {
 		if err := st.boards.Archive(c.R.Context(), c.CampaignID, atual); err != nil {
 			log.Printf("session %d: falha ao arquivar o lugar (%v)", c.SessionID, err)
@@ -292,7 +292,7 @@ func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error)
 	// AS ESCOLHAS DE ABA morrem com a ÚLTIMA cena, e não com esta (ALE-205).
 	//
 	// Fechar uma aba com outras abertas não é o fim do tabuleiro: quem estava
-	// olhando a que morreu cai na padrão sozinho, porque o `aAbaDe` confere a
+	// olhando a que morreu cai na padrão sozinho, porque o `chosenTabOf` confere a
 	// escolha contra o que existe. Apagar tudo aqui arrastaria de volta para a
 	// padrão gente que estava numa aba que continua aberta.
 	if len(st.boards.OpenBoards(c.R.Context(), c.SessionID)) == 0 {
@@ -303,8 +303,8 @@ func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error)
 		//
 		// Com abas ela sobrevive ao fechamento de UMA, e isso está certo: a lente
 		// é sobre "o que a mesa vê", e a mesa continua vendo as outras.
-		st.lentes.Apaga(c.SessionID)
-		st.abas.Apaga(c.SessionID)
+		st.lentes.Erase(c.SessionID)
+		st.abas.Erase(c.SessionID)
 	}
 	// `nil` é a mensagem "esta sessão não tem tabuleiro", e ela só é VERDADE
 	// quando não sobrou nenhum. Sobrando, quem vai é a aba padrão — ver
@@ -313,7 +313,7 @@ func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error)
 	return nil, nil
 }
 
-// cenaDosSinais lê o diálogo de abrir.
+// signalsScene lê o diálogo de abrir.
 //
 // TODOS OS NOMES SÃO MINÚSCULOS porque são chaves de `data-bind:`, e nome de
 // atributo é minusculado pelo analisador de HTML — um `data-bind:novoChao` liga
@@ -324,7 +324,7 @@ func encerraOTabuleiro(st *Server, c mesaComando) (*tabuleiro.BoardState, error)
 // desconhecido cai no padrão em vez de recusar, porque um valor que a tela não
 // oferece só chega por posse do fio, e a resposta a isso é desenhar pedra e não
 // discutir.
-func cenaDosSinais(r *http.Request) (lugar, chao string, err error) {
+func signalsScene(r *http.Request) (lugar, chao string, err error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
 		Lugar string `json:"novolugar"`

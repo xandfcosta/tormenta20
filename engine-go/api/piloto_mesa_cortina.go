@@ -18,27 +18,27 @@ import (
 // da SPA com o piloto. É a razão de aquele levantamento existir.
 
 func (s *Server) CurtainRoutes(r chi.Router) {
-	// O ESTADO no caminho, e não um alternar: ver o comentário do `correACortina`.
+	// O ESTADO no caminho, e não um alternar: ver o comentário do `runsCurtain`.
 	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/cortina/{estado}",
-		s.comandoDoMestreNoTabuleiro(correACortina))
+		s.gmBoardCommand(runsCurtain))
 }
 
-// correACortina fecha ou abre, conforme o pedido do caminho.
+// runsCurtain fecha ou abre, conforme o pedido do caminho.
 //
 // O DESTINO vem na URL e não é um alternar cego, e a diferença aparece nos dois
 // caminhos que a tela oferece: o botão do cabeçalho alterna, mas a tira de aviso
 // só ABRE. Um alternar cego faria a tira fechar a cortina de novo se ela
 // chegasse a ser desenhada com a cortina já aberta — e ela é justamente o que o
 // mestre clica com pressa, no meio da cena.
-func correACortina(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func runsCurtain(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	fechada := chi.URLParam(c.R, "estado") == "fechar"
 	board, mudou, err := st.boards.SetCurtain(c.R.Context(), c.SessionID, c.TabuleiroID, fechada)
 	if err != nil {
 		return board, err
 	}
 	// SEM MUDANÇA NÃO SE PUBLICA, e devolver nil é como se diz isso aqui: quem
-	// transmite é o `comandoDoTabuleiro`, e ele só o faz com estado em mãos. O
-	// mestre continua recebendo o redesenho dele — o `respondeAoMestre` roda de
+	// transmite é o `boardCommand`, e ele só o faz com estado em mãos. O
+	// mestre continua recebendo o redesenho dele — o `respondGm` roda de
 	// qualquer jeito, porque a resposta É a confirmação do gesto.
 	//
 	// É a mesma escolha do `handleBoardCurtain` da SPA. Publicar um quadro que

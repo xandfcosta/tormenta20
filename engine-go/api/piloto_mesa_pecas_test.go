@@ -16,8 +16,8 @@ import (
 // SDK do Datastar fecha. Um guarda de escolha escrito com o `pede` passaria
 // verde sobre um comando que não lê nada — está no cabeçalho do helper.
 
-// idsDaCena devolve os ids da fila que a `cena` semeia, pelo rótulo.
-func idsDaCena(t *testing.T, f pilotoFixture) (ficha, npc string) {
+// sceneIds devolve os ids da fila que a `scene` semeia, pelo rótulo.
+func sceneIds(t *testing.T, f pilotoFixture) (ficha, npc string) {
 	t.Helper()
 	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
 		switch e.Type {
@@ -41,11 +41,11 @@ func idsDaCena(t *testing.T, f pilotoFixture) (ficha, npc string) {
 // senão "o ogro não veio" seria verdade sobre uma fila vazia.
 func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
-	ficha, npc := idsDaCena(t, f)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	ficha, npc := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) != 1 {
@@ -69,10 +69,10 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 // inteira é o vilão do terceiro turno aparecendo na tela da mesa.
 func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
 
-	corpo := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":""}`)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":""}`)
 
 	if b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
@@ -92,11 +92,11 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 // parece regra. Provado VERMELHO tirando o `SetSpeeds` do `poeNoMapa`.
 func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
-	ficha, _ := idsDaCena(t, f)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	ficha, _ := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) != 1 {
@@ -119,15 +119,15 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 // eu tivesse errado o seletor, e o guarda passaria verde sobre nada.
 func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
 
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, `id="por-no-mapa"`) {
 		t.Fatal("o diálogo não está na página do MESTRE — o controle falhou, e sem ele o resto não mede nada")
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(doJogador, `id="por-no-mapa"`) {
 		t.Error("o diálogo do mestre foi para o HTML do jogador, com a fila inteira dentro")
 	}
@@ -136,16 +136,16 @@ func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 // TestThePlayerDoesNotPopulateTheMap — a trava é do SERVIDOR e não do desenho.
 //
 // O botão escondido é cortesia; quem postar na mão leva 403. É a mesma regra do
-// `comandoDoMestreNoTabuleiro`, afirmada aqui porque esta rota é nova e a trava
+// `gmBoardCommand`, afirmada aqui porque esta rota é nova e a trava
 // dela é uma linha de registro que alguém pode trocar sem perceber.
 func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
-	ficha, _ := idsDaCena(t, f)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	ficha, _ := sceneIds(t, f)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+		f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça no mapa: %d", rec.Code)
@@ -162,11 +162,11 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 // um clique que o servidor ignora, que é pior — parece que não funcionou.
 func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
-	ficha, npc := idsDaCena(t, f)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	ficha, npc := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	candidatos := candidatosAoMapa(b, f.s.sessions.GetState(f.sessionID))
@@ -190,7 +190,7 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	}
 	// O atalho do clique direito escolhe as FICHAS que faltam, e agora não falta
 	// nenhuma: sem isto ele reenviaria a mesma ficha a cada clique.
-	if ids := fichasForaDoMapa(candidatos); len(ids) != 0 {
+	if ids := mapOutsideSheets(candidatos); len(ids) != 0 {
 		t.Errorf("o atalho ainda ofereceria %v, que já está no mapa", ids)
 	}
 }
@@ -200,11 +200,11 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 // posições calculadas. Se pôr no mapa passasse a pintar chão, ninguém veria.
 func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
-	f.abreTabuleiro(t, "pedra")
-	ficha, _ := idsDaCena(t, f)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	ficha, _ := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	for _, especie := range tabuleiro.TerrainKinds {

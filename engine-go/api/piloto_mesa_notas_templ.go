@@ -43,10 +43,10 @@ import (
 //   - a PRÉVIA é região (`mesa-notas-previa`) e é remendada pela resposta do
 //     próprio salvamento.
 //
-// E as notas NÃO entram no `regioesDaMesa`: elas são de um leitor só — o mestre
+// E as notas NÃO entram no `tableRegions`: elas são de um leitor só — o mestre
 // — e nada fora desta aba as muda. Pendurá-las no stream faria o tique de 200ms
 // disputar com o teclado dele por nada.
-func mesaNotas(v mesaView) templ.Component {
+func tableNotes(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -72,9 +72,9 @@ func mesaNotas(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(semeiaAsNotas(v))
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(seedNotes(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_notas.templ`, Line: 45, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_notas.templ`, Line: 45, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -84,11 +84,11 @@ func mesaNotas(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = aFaixaDeModos().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = modesRange().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oEstadoDoSalvamento().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = autosaveState().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -104,7 +104,7 @@ func mesaNotas(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oCorpoDasNotas(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = notesBody(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -125,7 +125,7 @@ func mesaNotas(v mesaView) templ.Component {
 // do modo — ver o que se escreve e o que sai, ao mesmo tempo — sem que a faixa
 // precise anunciar um modo diferente do que está acontecendo. Quem decide onde
 // cabem duas colunas é a consulta de contêiner na folha, que é quem sabe.
-func oCorpoDasNotas(v mesaView) templ.Component {
+func notesBody(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -151,9 +151,9 @@ func oCorpoDasNotas(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(salvaAsNotas(v))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveNotes(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_notas.templ`, Line: 86, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_notas.templ`, Line: 86, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -189,7 +189,7 @@ func oCorpoDasNotas(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = mesaNotasPrevia(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = tableNotesPreview(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -205,7 +205,7 @@ func oCorpoDasNotas(v mesaView) templ.Component {
 //
 // A raiz existe SEMPRE, inclusive com a nota vazia: região que some leva o id
 // junto, e o remendo seguinte não acha onde pousar.
-func mesaNotasPrevia(v mesaView) templ.Component {
+func tableNotesPreview(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -237,7 +237,7 @@ func mesaNotasPrevia(v mesaView) templ.Component {
 			}
 		} else {
 			for _, b := range v.NotasBlocos {
-				templ_7745c5c3_Err = blocoDaNota(v, b).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = noteBlock(v, b).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -251,12 +251,12 @@ func mesaNotasPrevia(v mesaView) templ.Component {
 	})
 }
 
-// blocoDaNota desenha UM bloco da árvore.
+// noteBlock desenha UM bloco da árvore.
 //
 // Elementos e não HTML: o parser devolve dados, e é o templ que monta os nós —
 // então não existe `innerHTML` no caminho e o texto do mestre é escapado de
 // graça. É por isso que este port dispensa sanitizador.
-func blocoDaNota(v mesaView, b markdown.Block) templ.Component {
+func noteBlock(v tableView, b markdown.Block) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -279,7 +279,7 @@ func blocoDaNota(v mesaView, b markdown.Block) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch b.Kind {
 		case "heading":
-			templ_7745c5c3_Err = tituloDaNota(b).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = noteTitle(b).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -299,7 +299,7 @@ func blocoDaNota(v mesaView, b markdown.Block) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = trechosDaNota(linha).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = noteSpans(linha).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -309,7 +309,7 @@ func blocoDaNota(v mesaView, b markdown.Block) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "list":
-			templ_7745c5c3_Err = listaDaNota(v, b).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = noteList(v, b).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -318,7 +318,7 @@ func blocoDaNota(v mesaView, b markdown.Block) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = trechosDaNota(b.Spans).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = noteSpans(b.Spans).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -338,7 +338,7 @@ func blocoDaNota(v mesaView, b markdown.Block) templ.Component {
 
 // O título da nota começa em `h2`: o `h1` é da página, e uma nota não abre o
 // documento. Três níveis, que é o que a gramática conhece.
-func tituloDaNota(b markdown.Block) templ.Component {
+func noteTitle(b markdown.Block) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -365,7 +365,7 @@ func tituloDaNota(b markdown.Block) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = trechosDaNota(b.Spans).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = noteSpans(b.Spans).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -378,7 +378,7 @@ func tituloDaNota(b markdown.Block) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = trechosDaNota(b.Spans).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = noteSpans(b.Spans).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -391,7 +391,7 @@ func tituloDaNota(b markdown.Block) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = trechosDaNota(b.Spans).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = noteSpans(b.Spans).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -409,7 +409,7 @@ func tituloDaNota(b markdown.Block) templ.Component {
 // O clique carrega a LINHA de origem no caminho, e é isso que faz o quadrinho
 // reescrever a nota em vez de guardar estado ao lado dela. Um checkbox que não
 // reescrevesse o texto seria enfeite, e o estado não sobreviveria a um F5.
-func listaDaNota(v mesaView, b markdown.Block) templ.Component {
+func noteList(v tableView, b markdown.Block) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -440,7 +440,7 @@ func listaDaNota(v mesaView, b markdown.Block) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = itemDaNota(v, it).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = noteItem(v, it).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -469,7 +469,7 @@ func listaDaNota(v mesaView, b markdown.Block) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = itemDaNota(v, it).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = noteItem(v, it).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -487,7 +487,7 @@ func listaDaNota(v mesaView, b markdown.Block) templ.Component {
 	})
 }
 
-func itemDaNota(v mesaView, it markdown.Item) templ.Component {
+func noteItem(v tableView, it markdown.Item) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -514,9 +514,9 @@ func itemDaNota(v mesaView, it markdown.Item) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(seMarcada(it.Tarefa.Marcada))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(marked(it.Tarefa.Marcada))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_notas.templ`, Line: 195, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_notas.templ`, Line: 195, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -527,9 +527,9 @@ func itemDaNota(v mesaView, it markdown.Item) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(alternaATarefaDaNota(v, *it.Tarefa))
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleTaskNote(v, *it.Tarefa))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_notas.templ`, Line: 196, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_notas.templ`, Line: 196, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -572,7 +572,7 @@ func itemDaNota(v mesaView, it markdown.Item) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = trechosDaNota(it.Spans).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = noteSpans(it.Spans).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -585,7 +585,7 @@ func itemDaNota(v mesaView, it markdown.Item) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = trechosDaNota(it.Spans).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = noteSpans(it.Spans).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -600,7 +600,7 @@ func itemDaNota(v mesaView, it markdown.Item) templ.Component {
 
 // Os trechos de uma linha. O `default` é texto puro, que é a falha certa desta
 // gramática: o que ela não conhece aparece como foi escrito, nunca some.
-func trechosDaNota(spans []markdown.Span) templ.Component {
+func noteSpans(spans []markdown.Span) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -734,7 +734,7 @@ func trechosDaNota(spans []markdown.Span) templ.Component {
 // `fieldset` e não `div role="group"`: o elemento nativo já É o grupo. Ele
 // precisa de `min-w-0` porque o padrão do navegador é `min-content` e ele se
 // recusa a encolher dentro de um flex.
-func aFaixaDeModos() templ.Component {
+func modesRange() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -759,15 +759,15 @@ func aFaixaDeModos() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oModoDasNotas("escrever", "Escrever").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = notesMode("escrever", "Escrever").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oModoDasNotas("ler", "Ler").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = notesMode("ler", "Ler").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oModoDasNotas("duplo", "Lado a lado").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = notesMode("duplo", "Lado a lado").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -779,7 +779,7 @@ func aFaixaDeModos() templ.Component {
 	})
 }
 
-func oModoDasNotas(valor, rotulo string) templ.Component {
+func notesMode(valor, rotulo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -868,7 +868,7 @@ func oModoDasNotas(valor, rotulo string) templ.Component {
 //
 // `$notassalvas` é escrito pelo SERVIDOR quando a gravação dá certo — é a
 // resposta que afirma "isto está no banco", e não o cliente supondo.
-func oEstadoDoSalvamento() templ.Component {
+func autosaveState() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -901,7 +901,7 @@ func oEstadoDoSalvamento() templ.Component {
 //
 // Ele ALTERNA em vez de só abrir, porque a coluna empurra o mapa: quem a abriu
 // precisa do mesmo gesto para devolver a largura ao tabuleiro.
-func oBotaoDasNotas() templ.Component {
+func notesButton() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

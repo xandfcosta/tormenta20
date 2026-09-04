@@ -29,7 +29,7 @@ import (
 // pedaços de `$rascunho`, e sinal sobrevive a qualquer remendo. O que o servidor
 // redesenha são só as três LISTAS, porque Datastar não tem laço no cliente e uma
 // lista de tamanho variável só existe como HTML que alguém escreveu.
-func oEditorDeBloco(v mesaView) templ.Component {
+func blockEditor(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -55,9 +55,9 @@ func oEditorDeBloco(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(fechaOEditor)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(closeEditor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 30, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 30, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -76,9 +76,9 @@ func oEditorDeBloco(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(oTituloDoEditor)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(editorTitle)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 36, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 36, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -88,8 +88,8 @@ func oEditorDeBloco(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, aba := range asAbasDoEditor {
-			templ_7745c5c3_Err = aAbaDoEditor(aba).Render(ctx, templ_7745c5c3_Buffer)
+		for _, aba := range editorTabs {
+			templ_7745c5c3_Err = editorTabLink(aba).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -98,15 +98,15 @@ func oEditorDeBloco(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = osNumerosDoBloco().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = blockNumbers().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = aAbaDosAtaques(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = attacksTab(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = aAbaDasPosses(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ownedTab(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -115,9 +115,9 @@ func oEditorDeBloco(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(fechaOEditor)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(closeEditor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 80, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 80, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -144,14 +144,14 @@ func oEditorDeBloco(v mesaView) templ.Component {
 	})
 }
 
-// aAbaDoEditor é um botão da fileira. `aria-selected` e `role="tab"` porque é o
+// editorTabLink é um botão da fileira. `aria-selected` e `role="tab"` porque é o
 // que um leitor de tela precisa para dizer "aba 2 de 3, selecionada" — e o valor
 // sai como STRING, que é a armadilha do `data-attr` com booleano.
 //
 // O CONTADOR ao lado do nome não é enfeite: com o conteúdo escondido atrás de
 // abas, "Ataques" sozinho não distingue um bloco com três ataques de um sem
 // nenhum. Ele devolve o que as abas tiram.
-func aAbaDoEditor(aba abaDoEditor) templ.Component {
+func editorTabLink(aba editorTab) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -177,9 +177,9 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%s ? 'true' : 'false'", naAba(aba.ID)))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%s ? 'true' : 'false'", onTabExpr(aba.ID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 103, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 103, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -190,9 +190,9 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(oVestidoDaAba(aba.ID))
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(tabStyling(aba.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 104, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 104, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -203,9 +203,9 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolheAAba(aba.ID))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickTab(aba.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 105, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 105, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -228,15 +228,15 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if oResumoDaAba(aba.ID) != "" {
+		if tabSummary(aba.ID) != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<span data-text=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(oResumoDaAba(aba.ID))
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(tabSummary(aba.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 111, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 111, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -255,14 +255,14 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 	})
 }
 
-// osNumerosDoBloco são os ~25 campos escalares, na ordem em que o LIVRO imprime
+// blockNumbers são os ~25 campos escalares, na ordem em que o LIVRO imprime
 // o bloco (p289): identidade, iniciativa e percepção, defesa e resistências,
 // vida e mana, deslocamento, atributos.
 //
 // A ordem é do livro porque é dele que o mestre está copiando: quem tem a página
 // aberta ao lado lê de cima para baixo, e uma ordem "melhor" o obrigaria a
 // procurar cada campo.
-func osNumerosDoBloco() templ.Component {
+func blockNumbers() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -288,9 +288,9 @@ func osNumerosDoBloco() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(naAba(abaDosNumeros))
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(onTabExpr(abaDosNumeros))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 126, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 126, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -312,7 +312,7 @@ func osNumerosDoBloco() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = umNumeroDoBloco("nd", "ND", 0, 30).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("nd", "ND", 0, 30).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -320,7 +320,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umaEscolhaDoBloco("tipo", "Tipo", asOpcoesDoTipo()).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = blockChoice("tipo", "Tipo", kindOptions()).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -328,7 +328,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umaEscolhaDoBloco("size", "Tamanho", asOpcoesDoTamanho()).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = blockChoice("size", "Tamanho", sizeOptions()).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -336,13 +336,13 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umTextoDoBloco("deslocamento", "Deslocamento", "9m (6q)").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = blockText("deslocamento", "Deslocamento", "9m (6q)").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = umaSecaoDoBloco("Identidade").Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = blockSection("Identidade").Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -358,7 +358,7 @@ func osNumerosDoBloco() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = umNumeroDoBloco("iniciativa", "Iniciativa", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("iniciativa", "Iniciativa", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -366,7 +366,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("percepcao", "Percepção", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("percepcao", "Percepção", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -374,7 +374,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("defesa", "Defesa", 0, 60).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("defesa", "Defesa", 0, 60).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -382,7 +382,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("hp", "Pontos de Vida", 1, 9999).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("hp", "Pontos de Vida", 1, 9999).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -390,13 +390,13 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = oManaDoBloco().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = blockMana().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = umaSecaoDoBloco("Combate").Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = blockSection("Combate").Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -412,7 +412,7 @@ func osNumerosDoBloco() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = umNumeroDoBloco("fortitude", "Fortitude", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("fortitude", "Fortitude", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -420,7 +420,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("reflexos", "Reflexos", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("reflexos", "Reflexos", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -428,13 +428,13 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("vontade", "Vontade", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("vontade", "Vontade", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = umaSecaoDoBloco("Resistências").Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = blockSection("Resistências").Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -450,7 +450,7 @@ func osNumerosDoBloco() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = umNumeroDoBloco("forca", "For", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("forca", "For", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -458,7 +458,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("destreza", "Des", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("destreza", "Des", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -466,7 +466,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("constituicao", "Con", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("constituicao", "Con", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -474,7 +474,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("inteligencia", "Int", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("inteligencia", "Int", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -482,7 +482,7 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("sabedoria", "Sab", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("sabedoria", "Sab", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -490,13 +490,13 @@ func osNumerosDoBloco() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umNumeroDoBloco("carisma", "Car", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberBlock("carisma", "Car", -5, 20).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = umaSecaoDoBloco("Atributos").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = blockSection("Atributos").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -508,11 +508,11 @@ func osNumerosDoBloco() templ.Component {
 	})
 }
 
-// oManaDoBloco é o único campo com interruptor, e a razão é do LIVRO: a linha de
+// blockMana é o único campo com interruptor, e a razão é do LIVRO: a linha de
 // PM só existe em quem conjura (o Centauro Xamã tem 20 PM, p290; o Bandido não
 // tem linha nenhuma). Um zero fixo diria "tem mana e está sem", que é outro
 // estado — e é o estado errado na hora em que o mestre for gastar.
-func oManaDoBloco() templ.Component {
+func blockMana() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -538,9 +538,9 @@ func oManaDoBloco() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDoRascunho("pm"))
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(draftField("pm"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 174, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 174, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -554,10 +554,10 @@ func oManaDoBloco() templ.Component {
 	})
 }
 
-// aAbaDosAtaques é a lista que o servidor redesenha. O `+ Ataque` manda o
+// attacksTab é a lista que o servidor redesenha. O `+ Ataque` manda o
 // rascunho INTEIRO e recebe de volta o rascunho com uma linha a mais — é assim
 // que nada do que estava sendo digitado se perde.
-func aAbaDosAtaques(v mesaView) templ.Component {
+func attacksTab(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -583,9 +583,9 @@ func aAbaDosAtaques(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(naAba(abaDosAtaques))
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(onTabExpr(abaDosAtaques))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 185, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 185, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -595,11 +595,11 @@ func aAbaDosAtaques(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oCabecalhoDaLista(v, listaDeAtaques, "Ataques", "Ataque").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = listHeader(v, listaDeAtaques, "Ataques", "Ataque").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = osAtaquesDoRascunho(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = draftAttacks(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -611,7 +611,7 @@ func aAbaDosAtaques(v mesaView) templ.Component {
 	})
 }
 
-func aAbaDasPosses(v mesaView) templ.Component {
+func ownedTab(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -637,9 +637,9 @@ func aAbaDasPosses(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var23 string
-		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(naAba(abaDasPosses))
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(onTabExpr(abaDasPosses))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 195, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 195, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
@@ -649,11 +649,11 @@ func aAbaDasPosses(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oCabecalhoDaLista(v, listaDePericias, "Perícias", "Perícia").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = listHeader(v, listaDePericias, "Perícias", "Perícia").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = asPericiasDoRascunho(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = draftExpertises(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -661,11 +661,11 @@ func aAbaDasPosses(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = oCabecalhoDaLista(v, listaDeHabilidades, "Habilidades especiais", "Habilidade").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = listHeader(v, listaDeHabilidades, "Habilidades especiais", "Habilidade").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = asHabilidadesDoRascunho(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = draftAbilities(v.CampaignID, v.SessionID, nil).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -685,7 +685,7 @@ func aAbaDasPosses(v mesaView) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = umTextoDoBloco("equipment", "Equipamento", "Clava, couro batido").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = blockText("equipment", "Equipamento", "Clava, couro batido").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -693,13 +693,13 @@ func aAbaDasPosses(v mesaView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = umTextoDoBloco("treasure", "Tesouro", "Metade").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = blockText("treasure", "Tesouro", "Metade").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = umaSecaoDoBloco("Posses").Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = blockSection("Posses").Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -711,7 +711,7 @@ func aAbaDasPosses(v mesaView) templ.Component {
 	})
 }
 
-func oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) templ.Component {
+func listHeader(v tableView, lista, titulo, oQue string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -750,9 +750,9 @@ func oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var27 string
-		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaLista(v.CampaignID, v.SessionID, lista, -1))
+		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(listCommand(v.CampaignID, v.SessionID, lista, -1))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 216, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 216, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -788,7 +788,7 @@ func oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) templ.Component {
 // Cada uma é um nó com id próprio, e o id é como o remendo a encontra. Elas NÃO
 // entram na lista de regiões da Mesa: o stream não sabe do rascunho de ninguém, e
 // um quadro dele apagaria as linhas em silêncio.
-func osAtaquesDoRascunho(campanha, sessao int64, ataques []creature.Attack) templ.Component {
+func draftAttacks(campanha, sessao int64, ataques []creature.Attack) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -824,19 +824,19 @@ func osAtaquesDoRascunho(campanha, sessao int64, ataques []creature.Attack) temp
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = aCaixaDaLinha(oCampoDaLinha(listaDeAtaques, i, "name"), "Nome", "Clava", "min-w-36 flex-1").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = rowBox(rowField(listaDeAtaques, i, "name"), "Nome", "Clava", "min-w-36 flex-1").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = oNumeroDaLinha(oCampoDaLinha(listaDeAtaques, i, "attackBonus"), "Ataque", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberRow(rowField(listaDeAtaques, i, "attackBonus"), "Ataque", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = aCaixaDaLinha(oCampoDaLinha(listaDeAtaques, i, "damage"), "Dano", "1d6+3", "w-28").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = rowBox(rowField(listaDeAtaques, i, "damage"), "Dano", "1d6+3", "w-28").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = aCaixaDaLinha(oCampoDaLinha(listaDeAtaques, i, "special"), "Efeito", "mais agarrar", "w-36").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = rowBox(rowField(listaDeAtaques, i, "special"), "Efeito", "mais agarrar", "w-36").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -845,9 +845,9 @@ func osAtaquesDoRascunho(campanha, sessao int64, ataques []creature.Attack) temp
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var30 string
-			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDaLinha(listaDeAtaques, i, "ranged"))
+			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowField(listaDeAtaques, i, "ranged"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 243, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 243, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -857,7 +857,7 @@ func osAtaquesDoRascunho(campanha, sessao int64, ataques []creature.Attack) temp
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = oBotaoDeTirarLinha(campanha, sessao, listaDeAtaques, i, nomeDoAtaque(ataque, i)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = removeRowButton(campanha, sessao, listaDeAtaques, i, attackName(ataque, i)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -874,7 +874,7 @@ func osAtaquesDoRascunho(campanha, sessao int64, ataques []creature.Attack) temp
 	})
 }
 
-func asPericiasDoRascunho(campanha, sessao int64, pericias []creature.Skill) templ.Component {
+func draftExpertises(campanha, sessao int64, pericias []creature.Skill) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -910,19 +910,19 @@ func asPericiasDoRascunho(campanha, sessao int64, pericias []creature.Skill) tem
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = aCaixaDaLinha(oCampoDaLinha(listaDePericias, i, "name"), "Perícia", "Furtividade", "min-w-36 flex-1").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = rowBox(rowField(listaDePericias, i, "name"), "Perícia", "Furtividade", "min-w-36 flex-1").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = oNumeroDaLinha(oCampoDaLinha(listaDePericias, i, "bonus"), "Bônus", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = numberRow(rowField(listaDePericias, i, "bonus"), "Bônus", -20, 60).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = aCaixaDaLinha(oCampoDaLinha(listaDePericias, i, "nota"), "Nota", "+14 em pântanos", "w-40").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = rowBox(rowField(listaDePericias, i, "nota"), "Nota", "+14 em pântanos", "w-40").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = oBotaoDeTirarLinha(campanha, sessao, listaDePericias, i, nomeDaPericia(pericia, i)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = removeRowButton(campanha, sessao, listaDePericias, i, expertiseName(pericia, i)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -939,11 +939,11 @@ func asPericiasDoRascunho(campanha, sessao int64, pericias []creature.Skill) tem
 	})
 }
 
-// asHabilidadesDoRascunho: uma lista de FRASES, e por isso `<textarea>` e não
+// draftAbilities: uma lista de FRASES, e por isso `<textarea>` e não
 // `<input>` — o livro escreve habilidade especial em prosa ("Faro apurado.
 // Recebe +2 em testes de Percepção baseados em olfato", p289), e uma caixa de uma
 // linha faria o mestre resumir o que ele vai precisar ler em voz alta.
-func asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) templ.Component {
+func draftAbilities(campanha, sessao int64, habilidades []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -993,9 +993,9 @@ func asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) templ
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var34 string
-			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDaLinha(listaDeHabilidades, i, ""))
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowField(listaDeHabilidades, i, ""))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 286, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 286, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -1006,9 +1006,9 @@ func asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) templ
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var35 string
-			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPlaceholderDaHabilidade)
+			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(abilityPlaceholder)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 287, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 287, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -1018,7 +1018,7 @@ func asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) templ
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = oBotaoDeTirarLinha(campanha, sessao, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = removeRowButton(campanha, sessao, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1036,7 +1036,7 @@ func asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) templ
 }
 
 // ── as peças pequenas ────────────────────────────────────────────────────────
-func umaSecaoDoBloco(titulo string) templ.Component {
+func blockSection(titulo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1086,7 +1086,7 @@ func umaSecaoDoBloco(titulo string) templ.Component {
 	})
 }
 
-func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
+func numberBlock(campo, rotulo string, minimo, maximo int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1177,9 +1177,9 @@ func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var44 string
-		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDoRascunho(campo))
+		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(draftField(campo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 315, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 315, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 		if templ_7745c5c3_Err != nil {
@@ -1193,7 +1193,7 @@ func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
 	})
 }
 
-func umTextoDoBloco(campo, rotulo, dica string) templ.Component {
+func blockText(campo, rotulo, dica string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1258,9 +1258,9 @@ func umTextoDoBloco(campo, rotulo, dica string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var49 string
-		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDoRascunho(campo))
+		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.ResolveAttributeValue(draftField(campo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 327, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 327, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 		if templ_7745c5c3_Err != nil {
@@ -1287,10 +1287,10 @@ func umTextoDoBloco(campo, rotulo, dica string) templ.Component {
 	})
 }
 
-// umaEscolhaDoBloco é um `<select>` de verdade, e não um trilho de botões: são
+// blockChoice é um `<select>` de verdade, e não um trilho de botões: são
 // sete tipos e seis tamanhos, a escolha é rara (uma vez por NPC) e o `<select>`
 // nativo já traz teclado, busca por letra e o menu do sistema no telefone.
-func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Component {
+func blockChoice(campo, rotulo string, opcoes []blockOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1355,9 +1355,9 @@ func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Compon
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var55 string
-		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDoRascunho(campo))
+		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(draftField(campo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 342, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 342, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {
@@ -1407,7 +1407,7 @@ func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Compon
 	})
 }
 
-func aCaixaDaLinha(caminho, rotulo, dica, largura string) templ.Component {
+func rowBox(caminho, rotulo, dica, largura string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1506,7 +1506,7 @@ func aCaixaDaLinha(caminho, rotulo, dica, largura string) templ.Component {
 	})
 }
 
-func oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) templ.Component {
+func numberRow(caminho, rotulo string, minimo, maximo int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1600,12 +1600,12 @@ func oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) templ.Component 
 	})
 }
 
-// oBotaoDeTirarLinha diz O QUE vai sair no nome acessível, e não "remover".
+// rowRemoveButton diz O QUE vai sair no nome acessível, e não "remover".
 //
 // Com cinco ataques na tela, cinco botões chamados "Remover" são cinco botões
 // idênticos para quem navega por leitor de tela — e o que se apaga por engano é
 // justamente o que se acabou de escrever.
-func oBotaoDeTirarLinha(campanha, sessao int64, lista string, indice int, oQue string) templ.Component {
+func removeRowButton(campanha, sessao int64, lista string, indice int, oQue string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1657,9 +1657,9 @@ func oBotaoDeTirarLinha(campanha, sessao int64, lista string, indice int, oQue s
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var74 string
-		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaLista(campanha, sessao, lista, indice))
+		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue(listCommand(campanha, sessao, lista, indice))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 389, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 389, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 		if templ_7745c5c3_Err != nil {

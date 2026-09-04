@@ -17,8 +17,8 @@ import (
 // servidor, e sobretudo as duas SEPARAÇÕES que a cena promete: tirar do mapa não
 // é tirar do combate, e o "voltar" só existe onde há para onde.
 
-// aPecaNoMapa põe uma peça e devolve o id dela.
-func aPecaNoMapa(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
+// mapToken põe uma peça e devolve o id dela.
+func mapToken(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
 	t.Helper()
 	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"}, true)
@@ -28,7 +28,7 @@ func aPecaNoMapa(t *testing.T, f pilotoFixture, rotulo string, x, y int) string 
 	return posto.Tokens[len(posto.Tokens)-1].ID
 }
 
-func oTabuleiroAgora(t *testing.T, f pilotoFixture) *tabuleiro.BoardState {
+func nowBoard(t *testing.T, f pilotoFixture) *tabuleiro.BoardState {
 	t.Helper()
 	b := f.s.boards.Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
@@ -46,19 +46,19 @@ func oTabuleiroAgora(t *testing.T, f pilotoFixture) *tabuleiro.BoardState {
 // "nenhuma peça escondida nesta cena".
 func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "cripta")
-	id := aPecaNoMapa(t, f, "Ogro", 4, 4)
-	base := f.urlDaMesa() + "/tabuleiro/pecas/" + id
+	f.seedOpenBoard(t, "cripta")
+	id := mapToken(t, f, "Ogro", 4, 4)
+	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder deu %d", rec.Code)
 	}
-	if !tabuleiro.FindToken(oTabuleiroAgora(t, f), id).Hidden {
+	if !tabuleiro.FindToken(nowBoard(t, f), id).Hidden {
 		t.Fatal("a peça não foi escondida")
 	}
 	// A MESA deixa de vê-la, que é o ponto inteiro: a trava é o `BoardForRole`, e
 	// este caso afirma que o gesto passa por ele em vez de só pintar diferente.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(doJogador, "Ogro") {
 		t.Error("a peça escondida continuou na tela do jogador")
 	}
@@ -69,7 +69,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
 		t.Fatalf("mostrar deu %d", rec.Code)
 	}
-	if tabuleiro.FindToken(oTabuleiroAgora(t, f), id).Hidden {
+	if tabuleiro.FindToken(nowBoard(t, f), id).Hidden {
 		t.Error("mostrar não devolveu a peça à mesa")
 	}
 }
@@ -81,8 +81,8 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 // separação que o elenco e a fila já têm (superfície 6b).
 func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	entryID := f.naFila(t)
+	f.seedOpenBoard(t, "pedra")
+	entryID := f.tracker(t)
 	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID}, true)
 	if err != nil {
@@ -91,18 +91,18 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	id := posto.Tokens[len(posto.Tokens)-1].ID
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/pecas/"+id+"/remover", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/remover", ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
-	if tabuleiro.FindToken(oTabuleiroAgora(t, f), id) != nil {
+	if tabuleiro.FindToken(nowBoard(t, f), id) != nil {
 		t.Error("a peça continuou no tabuleiro")
 	}
 	// A LINHA fica: quem estava no combate continua no combate.
-	naFila := false
+	tracker := false
 	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
-		naFila = naFila || e.ID == entryID
+		tracker = tracker || e.ID == entryID
 	}
-	if !naFila {
+	if !tracker {
 		t.Error("tirar a peça do mapa tirou o combatente da fila")
 	}
 }
@@ -114,9 +114,9 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 // que ninguém lembra de ter feito.
 func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	id := aPecaNoMapa(t, f, "Ogro", 1, 1)
-	base := f.urlDaMesa() + "/tabuleiro/pecas/" + id
+	f.seedOpenBoard(t, "pedra")
+	id := mapToken(t, f, "Ogro", 1, 1)
+	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
 	// Sem movimento nenhum: o servidor recusa E a tela não desenha o verbo.
 	rec := f.pede(t, f.mestre, http.MethodPost, base+"/voltar", "")
@@ -126,26 +126,26 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	if !strings.Contains(rec.Body.String(), "não há para onde voltar") {
 		t.Errorf("voltar sem movimento não recusou:\n%s", rec.Body.String())
 	}
-	if tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String(); strings.Contains(tela, "Voltar Ogro para") {
+	if tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(tela, "Voltar Ogro para") {
 		t.Error("a tela ofereceu voltar numa peça que não se moveu")
 	}
 
 	// Agora com um movimento CONFIRMADO: o mestre move sem orçamento.
-	mover := f.urlDaMesa() + "/tabuleiro/" + id
+	mover := f.tableUrl() + "/tabuleiro/" + id
 	if rec := f.pede(t, f.mestre, http.MethodPost, mover+"/parada/5/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, http.MethodPost, mover+"/confirmar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("confirmar deu %d", rec.Code)
 	}
-	if peca := tabuleiro.FindToken(oTabuleiroAgora(t, f), id); peca.X != 5 {
+	if peca := tabuleiro.FindToken(nowBoard(t, f), id); peca.X != 5 {
 		t.Fatalf("a peça não andou: está em (%d,%d)", peca.X, peca.Y)
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/voltar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("voltar deu %d", rec.Code)
 	}
-	peca := tabuleiro.FindToken(oTabuleiroAgora(t, f), id)
+	peca := tabuleiro.FindToken(nowBoard(t, f), id)
 	if peca.X != 1 || peca.Y != 1 {
 		t.Errorf("a peça voltou para (%d,%d), esperado (1,1)", peca.X, peca.Y)
 	}
@@ -165,9 +165,9 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 // pessoas" — é justamente o que se quer desfazer de qualquer tela.
 func TestUndoSurvivesAReload(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	id := aPecaNoMapa(t, f, "Dragão", 2, 2)
-	mover := f.urlDaMesa() + "/tabuleiro/" + id
+	f.seedOpenBoard(t, "pedra")
+	id := mapToken(t, f, "Dragão", 2, 2)
+	mover := f.tableUrl() + "/tabuleiro/" + id
 	for _, passo := range []string{"/parada/8/8", "/confirmar"} {
 		if rec := f.pede(t, f.mestre, http.MethodPost, mover+passo, ""); rec.Code != http.StatusOK {
 			t.Fatalf("%s deu %d", passo, rec.Code)
@@ -175,7 +175,7 @@ func TestUndoSurvivesAReload(t *testing.T) {
 	}
 
 	// Uma carga fria, como quem apertou F5: nada do navegador anterior viaja.
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "Voltar Dragão para "+coordenada(2, 2)) {
 		t.Error("a página recarregada perdeu o voltar — ele não sobreviveu ao F5")
 	}
@@ -188,14 +188,14 @@ func TestUndoSurvivesAReload(t *testing.T) {
 // zumbi do canto espera o irmão dele ali, não na fileira de entrada.
 func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	id := aPecaNoMapa(t, f, "Zumbi", 3, 3)
+	f.seedOpenBoard(t, "pedra")
+	id := mapToken(t, f, "Zumbi", 3, 3)
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/pecas/"+id+"/duplicar", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar deu %d", rec.Code)
 	}
-	b := oTabuleiroAgora(t, f)
+	b := nowBoard(t, f)
 	if len(b.Tokens) != 2 {
 		t.Fatalf("o mapa ficou com %d peças, esperado 2", len(b.Tokens))
 	}
@@ -215,9 +215,9 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 // e sobre onde cabe passar.
 func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	id := aPecaNoMapa(t, f, "Ogro", 1, 1)
-	base := f.urlDaMesa() + "/tabuleiro/pecas/" + id + "/editar"
+	f.seedOpenBoard(t, "pedra")
+	id := mapToken(t, f, "Ogro", 1, 1)
+	base := f.tableUrl() + "/tabuleiro/pecas/" + id + "/editar"
 
 	recusa := f.posta(t, f.mestre, base, `{"pecanome":"Ogro","pecatamanho":4}`)
 	if !strings.Contains(recusa, "1, 2, 3 ou 6") {
@@ -230,7 +230,7 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	// E o caso positivo, sem o qual as duas recusas acima seriam verdade também
 	// numa rota que recusa tudo.
 	f.posta(t, f.mestre, base, `{"pecanome":"Ogro Capitão","pecatamanho":2}`)
-	peca := tabuleiro.FindToken(oTabuleiroAgora(t, f), id)
+	peca := tabuleiro.FindToken(nowBoard(t, f), id)
 	if peca.Label != "Ogro Capitão" || peca.Footprint != 2 {
 		t.Errorf("a edição válida não pegou: %q, lado %d", peca.Label, peca.Footprint)
 	}
@@ -242,9 +242,9 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 // vê nunca foi prova de trava — quem postar na mão leva 403.
 func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	id := aPecaNoMapa(t, f, "Ogro", 1, 1)
-	base := f.urlDaMesa() + "/tabuleiro/pecas/" + id
+	f.seedOpenBoard(t, "pedra")
+	id := mapToken(t, f, "Ogro", 1, 1)
+	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
 	for _, verbo := range []string{"/visibilidade", "/duplicar", "/voltar", "/remover"} {
 		if rec := f.pede(t, f.jogador, http.MethodPost, base+verbo, ""); rec.Code != http.StatusForbidden {
@@ -252,7 +252,7 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 		}
 	}
 	// E o MENU não é desenhado para ele — cortesia, não trava.
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "Ogro") {
 		t.Fatal("o jogador não viu nem a peça — a página não é o que este teste pensa que é")
 	}

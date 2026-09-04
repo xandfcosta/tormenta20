@@ -11,7 +11,7 @@ import (
 
 // O TABULEIRO como dado (ALE-263) — a fatia que se OLHA.
 //
-// Puro de propósito, como a `mesaView`: o handler busca, este arquivo decide, o
+// Puro de propósito, como a `tableView`: o handler busca, este arquivo decide, o
 // template só desenha.
 //
 // Nenhuma regra NOVA nasce aqui. A moldura e a aparência da peça moram no
@@ -19,8 +19,8 @@ import (
 // gargalo por papel que o `StateForRole` é para a fila. Um piloto que
 // reescrevesse a redação mediria a reescrita.
 
-// tabuleiroView é o tabuleiro de uma mesa, pronto para desenhar.
-type tabuleiroView struct {
+// boardView é o tabuleiro de uma mesa, pronto para desenhar.
+type boardView struct {
 	// Aberto separa "não há tabuleiro" de "há um vazio": o primeiro é a cena
 	// antes de o mestre abrir, e ele NÃO desenha grade nenhuma.
 	Aberto bool
@@ -47,8 +47,8 @@ type tabuleiroView struct {
 	// O que isso conserta, medido: a moldura CRESCIA ao pintar perto da borda, e
 	// `X0` mudava — o mesmo ponto da tela virava outro quadrado entre dois
 	// cliques. Foi uma das duas causas de "apaguei e não apagou".
-	Pecas      []pecaDoTabuleiro
-	Marcadores []marcadorDoTabuleiro
+	Pecas      []boardToken
+	Marcadores []boardMarker
 	// Candidatos é a fila oferecida ao diálogo "Pôr no mapa", e ela é DO MESTRE:
 	// a lista traz todo combatente, inclusive o assassino que ainda não entrou em
 	// cena. Preenchê-la para o jogador escreveria no HTML dele os nomes que a
@@ -63,9 +63,9 @@ type tabuleiroView struct {
 	// ficar à vista; aqui todas fazem a MESMA coisa — viram um `<div>` com uma
 	// classe —, e quatro laços idênticos no templ seriam a repetição sem a razão
 	// que a justifica do outro lado.
-	Terreno []quadradoDeTerreno
+	Terreno []terrainSquare
 	// Movimento é o proposto e ainda não confirmado, ou nil.
-	Movimento *movimentoView
+	Movimento *moveView
 	// AlvoDoMovimento é a peça que o clique numa casa vai mover: a que já tem
 	// movimento proposto, ou a que quem olha pode COMEÇAR a mover agora. Vazio
 	// quando não há o que mover — e aí a camada de casas nem existe, porque um
@@ -75,7 +75,7 @@ type tabuleiroView struct {
 	// Alcance são as casas que a peça alcança com a AÇÃO DE MOVIMENTO, para
 	// PINTAR na cor de "cabe na ação de movimento". Vazio fora de combate: sem vez não há ação de movimento, não
 	// há teto, e desenhar um seria inventá-lo.
-	Alcance []quadradoDoTabuleiro
+	Alcance []boardSquare
 	// AlcanceSegundo são as casas que ela só alcança gastando também a AÇÃO
 	// PADRÃO (T20 p233), pintadas na segunda cor.
 	//
@@ -83,18 +83,18 @@ type tabuleiroView struct {
 	// "dá para chegar?" e sim "chegar aí me custa o turno inteiro?" — e essa é a
 	// diferença entre as duas cores. O que passa das duas ações não é desenhado:
 	// não há terceira ação de movimento para gastar.
-	AlcanceSegundo []quadradoDoTabuleiro
+	AlcanceSegundo []boardSquare
 	// Fantasma é a peça DESENHADA na origem do movimento proposto, ou nil.
 	//
 	// Ela é a peça inteira e não um marcador genérico porque é o monograma e o
 	// selo que dizem QUEM saiu dali: com três zumbis em campo, um disco vazio na
 	// casa não responde qual deles está a caminho.
-	Fantasma *pecaDoTabuleiro
+	Fantasma *boardToken
 	// ArrastaAPeca liga o gesto na PEÇA. Com proposta aberta ela é a mesma peça,
-	// desenhada no fim do caminho — ver `aPecaPousaOndeFoiSolta`.
+	// desenhada no fim do caminho — ver `dropWasWhereLandsToken`.
 	ArrastaAPeca string
 	// CampaignID e SessionID moram aqui porque o tabuleiro escreve as próprias
-	// rotas, como a `mesaView` faz com as dela.
+	// rotas, como a `tableView` faz com as dela.
 	CampaignID, SessionID int64
 	// Mestre é quem MONTA e DESMONTA a cena. Sai do mesmo `quem.Role` que a
 	// redação usa, e não de um parâmetro novo: duas fontes para o papel é como
@@ -110,13 +110,13 @@ type tabuleiroView struct {
 	PecasEscondidas int
 	// Abas são os tabuleiros ABERTOS da sessão (ALE-205), e a barra só existe a
 	// partir de dois: com um só não há o que trocar, e a tira de fichas seria
-	// enfeite ocupando mapa. Ver `asAbasDaMesa`.
-	Abas []abaDoTabuleiro
+	// enfeite ocupando mapa. Ver `tableTabs`.
+	Abas []boardTab
 	// Puxado é a tira "o mestre trouxe você para cá", ou nil (ALE-205, fatia 2).
 	//
 	// É o único aviso desta cena que fala de uma mudança que quem lê NÃO fez: a
-	// cortina e a lente são modos que o dono da tela ligou. Ver `aTiraDoPuxao`.
-	Puxado *oPuxaoNaTela
+	// cortina e a lente são modos que o dono da tela ligou. Ver `removePull`.
+	Puxado *pullScreen
 	// Acervo são os LUGARES guardados da campanha (ALE-124, fatia 5). Só o
 	// mestre tem — a mesa não escolhe onde joga.
 	//
@@ -148,8 +148,8 @@ type lugarDoAcervo struct {
 	AbertaEm string
 }
 
-// pecaDoTabuleiro é uma peça posicionada e já com a aparência resolvida.
-type pecaDoTabuleiro struct {
+// boardToken é uma peça posicionada e já com a aparência resolvida.
+type boardToken struct {
 	ID     string
 	Rotulo string
 	// X e Y são o lugar no PLANO, com sinal: é de onde o arrasto conta o
@@ -195,7 +195,7 @@ type pecaDoTabuleiro struct {
 	Oculta bool
 }
 
-type marcadorDoTabuleiro struct {
+type boardMarker struct {
 	ID    string
 	Texto string
 	Cor   string
@@ -211,36 +211,36 @@ type marcadorDoTabuleiro struct {
 	Escondido bool
 }
 
-// quadradoDeTerreno é uma casa pintada que sabe de que espécie é. A espécie vai
+// terrainSquare é uma casa pintada que sabe de que espécie é. A espécie vai
 // como STRING porque o que a tela faz com ela é virar nome de classe.
-type quadradoDeTerreno struct {
-	quadradoDoTabuleiro
+type terrainSquare struct {
+	boardSquare
 	Especie string
 }
 
-// quadradoDoTabuleiro é uma casa, em coordenada ABSOLUTA do plano.
+// boardSquare é uma casa, em coordenada ABSOLUTA do plano.
 //
 // Ela tinha `Col`/`Lin` — o lugar dentro da moldura — e a moldura saiu na
 // ALE-203. Agora há um par de números só, e ele é o mesmo que o servidor guarda:
 // nada precisa ser traduzido para desenhar, e nada se desloca quando a cena
 // cresce.
-type quadradoDoTabuleiro struct {
+type boardSquare struct {
 	X, Y int
 }
 
-// tabuleiroViewOf monta o tabuleiro a partir do estado JÁ REDIGIDO.
+// boardViewOf monta o tabuleiro a partir do estado JÁ REDIGIDO.
 //
 // A saúde chega de fora, num mapa por `entryId`, porque ela não é do tabuleiro:
 // é da FILA, e o tabuleiro só a mostra. Derivá-la aqui seria a segunda conta de
 // PV do app, que é como a ALE-122 começou.
-func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude map[string]int, naVez string, quem tabuleiro.Mover, meus map[int64]bool, campaignID, sessionID int64) tabuleiroView {
+func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude map[string]int, naVez string, quem tabuleiro.Mover, meus map[int64]bool, campaignID, sessionID int64) boardView {
 	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que
 	// sai o "Abrir tabuleiro", e um botão sem rota não é botão. A primeira
 	// versão devolvia o zero e o mestre via a moldura tracejada sem gesto
 	// nenhum — o mesmo estado que o jogador vê, que é justamente o que as duas
 	// telas não podem ter em comum.
 	if b == nil {
-		return tabuleiroView{Mestre: quem.Role == "gm", CampaignID: campaignID, SessionID: sessionID}
+		return boardView{Mestre: quem.Role == "gm", CampaignID: campaignID, SessionID: sessionID}
 	}
 	// A CORTINA sai antes de tudo: o que chega aqui já veio vazio do
 	// `BoardForRole`, sem peça, sem terreno e sem o nome do lugar — "Covil do
@@ -252,18 +252,18 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	// quem está montando a cena. A primeira versão disto não olhava o papel e o
 	// guarda acusou — "o mestre perdeu a própria cena com a cortina fechada".
 	if b.Curtained && quem.Role != "gm" {
-		return tabuleiroView{Aberto: true, Cortina: true, CampaignID: campaignID, SessionID: sessionID}
+		return boardView{Aberto: true, Cortina: true, CampaignID: campaignID, SessionID: sessionID}
 	}
-	v := tabuleiroView{
+	v := boardView{
 		Aberto: true, AvisoDaCortina: b.Curtained,
 		Lugar: b.Place, Chao: chaoConhecido(b.Terrain),
 	}
 	for i := range b.Tokens {
-		v.Pecas = append(v.Pecas, pecaDoTabuleiroDe(&b.Tokens[i], saude, naVez))
+		v.Pecas = append(v.Pecas, boardTokenOf(&b.Tokens[i], saude, naVez))
 	}
 	for i := range b.Markers {
 		m := &b.Markers[i]
-		v.Marcadores = append(v.Marcadores, marcadorDoTabuleiro{
+		v.Marcadores = append(v.Marcadores, boardMarker{
 			ID: m.ID, Texto: m.Text, Cor: m.Color, Escondido: m.Hidden,
 			X: m.X, Y: m.Y, Onde: coordenada(m.X, m.Y),
 		})
@@ -274,8 +274,8 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	// dois remendos.
 	for _, pincel := range tabuleiro.TerrainKinds {
 		for _, q := range tabuleiro.SquaresOf(b, pincel.ID) {
-			v.Terreno = append(v.Terreno, quadradoDeTerreno{
-				quadradoDoTabuleiro{X: q.X, Y: q.Y}, string(pincel.ID),
+			v.Terreno = append(v.Terreno, terrainSquare{
+				boardSquare{X: q.X, Y: q.Y}, string(pincel.ID),
 			})
 		}
 	}
@@ -284,8 +284,8 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	if v.Mestre {
 		v.Candidatos = candidatosAoMapa(b, st)
 	}
-	v.Movimento = movimentoDoTabuleiro(b, quem)
-	alcance := oAlvoEOAlcance(b, st, quem, meus)
+	v.Movimento = moveBoard(b, quem)
+	alcance := reachAndTarget(b, st, quem, meus)
 	v.AlvoDoMovimento, v.RotuloDoAlvo = alcance.Alvo, alcance.Rotulo
 	v.Alcance, v.AlcanceSegundo = alcance.Dentro, alcance.Segundo
 	if v.Movimento != nil && v.Movimento.Meu {
@@ -294,12 +294,12 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	// A PEÇA POUSA ONDE FOI SOLTA (ALE-203, item 4) e por isso ela é a única
 	// coisa que se arrasta: o losango de destino sumiu junto, porque com a peça
 	// no fim do caminho ele era um segundo alvo em cima do primeiro.
-	v.Fantasma = aPecaPousaOndeFoiSolta(v.Pecas, v.Movimento, v.Mestre)
+	v.Fantasma = dropWasWhereLandsToken(v.Pecas, v.Movimento, v.Mestre)
 	v.ArrastaAPeca = v.AlvoDoMovimento
 	return v
 }
 
-// aPecaPousaOndeFoiSolta leva a peça proposta para o FIM do caminho e devolve o
+// dropWasWhereLandsToken leva a peça proposta para o FIM do caminho e devolve o
 // FANTASMA que fica na origem, ou nil quando não há movimento.
 //
 // As palavras do dono: *"ao soltar a peça, ela vai ser renderizada no lugar que
@@ -314,7 +314,7 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 // da casa gravada é o fantasma, e ele é uma peça à parte.
 //
 // O que se ARRASTA é a peça no fim do caminho, e é por isso que o deslocamento
-// continua contando do lugar certo sem ninguém somar nada: o `soltaEPara` recebe
+// continua contando do lugar certo sem ninguém somar nada: o `dropFor` recebe
 // o `X`/`Y` desenhado.
 //
 // PARA O MESTRE É O CONTRÁRIO, e é decisão do dono: a peça SÓLIDA fica onde ela
@@ -323,7 +323,7 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 // destino é o fato; o mestre está olhando a cena que ele ainda não mudou, e para
 // ele o fato é onde a peça está. Quem confirma vê o mundo como ele é; quem pede
 // vê o mundo como ele quer.
-func aPecaPousaOndeFoiSolta(pecas []pecaDoTabuleiro, mov *movimentoView, mestre bool) *pecaDoTabuleiro {
+func dropWasWhereLandsToken(pecas []boardToken, mov *moveView, mestre bool) *boardToken {
 	if mov == nil {
 		return nil
 	}
@@ -347,13 +347,13 @@ func aPecaPousaOndeFoiSolta(pecas []pecaDoTabuleiro, mov *movimentoView, mestre 
 	return nil
 }
 
-func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, saude map[string]int, naVez string) pecaDoTabuleiro {
+func boardTokenOf(t *tabuleiro.BoardToken, saude map[string]int, naVez string) boardToken {
 	a := tabuleiro.AppearanceOf(t.Label)
 	pegada := t.Footprint
 	if pegada < 1 {
 		pegada = 1
 	}
-	p := pecaDoTabuleiro{
+	p := boardToken{
 		ID: t.ID, Rotulo: t.Label,
 		X: t.X, Y: t.Y, Onde: coordenada(t.X, t.Y),
 		Pegada:    pegada,
@@ -391,14 +391,14 @@ func saudeDaFila(st *aovivo.SessionRuntimeState) map[string]int {
 		if e.HpMax == nil || *e.HpMax <= 0 {
 			continue
 		}
-		saude[e.ID] = mesaBarraDe(aovivo.DerefOr(e.HpCurrent, 0), *e.HpMax, false).Pct
+		saude[e.ID] = tableBarOf(aovivo.DerefOr(e.HpCurrent, 0), *e.HpMax, false).Pct
 	}
 	return saude
 }
 
-// combatenteDaVez é o `entryId` de quem está na vez, ou vazio fora de combate.
+// turnCombatant é o `entryId` de quem está na vez, ou vazio fora de combate.
 // A peça acende com o MESMO dourado da linha, porque é o mesmo fato.
-func combatenteDaVez(st *aovivo.SessionRuntimeState) string {
+func turnCombatant(st *aovivo.SessionRuntimeState) string {
 	if st == nil || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return ""
 	}
@@ -416,8 +416,8 @@ func posicaoNoPlano(col, lin, pegada int) string {
 	return fmt.Sprintf("--col:%d; --lin:%d; --pegada:%d;", col, lin, pegada)
 }
 
-// nomeDaPeca é o que o leitor de tela recebe: QUEM e ONDE.
-func nomeDaPeca(p pecaDoTabuleiro) string {
+// tokenName é o que o leitor de tela recebe: QUEM e ONDE.
+func tokenName(p boardToken) string {
 	nome := p.Rotulo + " em " + p.Onde
 	// A PARADA PROPOSTA na frase, porque a peça está desenhada nela: sem esta
 	// linha o leitor de tela ouviria a peça já no destino e concluiria que o
@@ -434,7 +434,7 @@ func nomeDaPeca(p pecaDoTabuleiro) string {
 	return nome
 }
 
-// corDeMarcador traduz a cor guardada para a variável que pinta.
+// markerColor traduz a cor guardada para a variável que pinta.
 //
 // A lista vem do `tabuleiro` e NÃO é escrita aqui, e esta função é a prova de
 // por quê: ela mantinha um conjunto próprio em inglês — `gold/red/green/blue/
@@ -444,7 +444,7 @@ func nomeDaPeca(p pecaDoTabuleiro) string {
 //
 // A cor vem do banco, então é dado de cliente: fora da lista ela cai no padrão,
 // porque string livre daqui iria direto para o `style`.
-func corDeMarcador(c string) string {
+func markerColor(c string) string {
 	if tabuleiro.KnownMarkerColor(c) {
 		return "var(--marcador-" + c + ")"
 	}
@@ -462,12 +462,12 @@ func corDeMarcador(c string) string {
 // Foi essa observação que apagou metade do desenho que eu ia fazer: eu ia
 // guardar as paradas num sinal do cliente, com o problema de sumirem num F5.
 
-// movimentoView é o movimento proposto, do ponto de vista de quem olha.
-type movimentoView struct {
+// moveView é o movimento proposto, do ponto de vista de quem olha.
+type moveView struct {
 	TokenID string
 	Rotulo  string
 	// Trilha são as casas por onde a peça passa, já em coordenada da tela.
-	Trilha []quadradoDoTabuleiro
+	Trilha []boardSquare
 	Custo  int
 	// Orcamento -1 é "sem orçamento": o mestre move qualquer peça a qualquer
 	// hora, e fora de combate cada um anda com a sua. Nesses casos não há
@@ -481,17 +481,17 @@ type movimentoView struct {
 	// elas viram um pingo na trilha, e é ele que faz o "Desfazer parada" ter o
 	// que desfazer aos olhos de quem clica. As duas pontas ficam de fora porque
 	// já têm desenho próprio — a origem é o FANTASMA e o fim é a PEÇA.
-	Paradas []quadradoDoTabuleiro
+	Paradas []boardSquare
 	// PodeDesfazer é ter mais de UMA perna. Com uma só, desfazer é cancelar — e o
 	// Cancelar está ali do lado, dizendo isso com a palavra certa.
 	PodeDesfazer bool
 	// Origem é a casa de onde a peça SAIU, e ela existe porque a peça deixou de
 	// ficar lá: desde a ALE-203 (item 4) a peça é desenhada onde foi SOLTA, e
 	// quem marca o começo do movimento é o fantasma nesta casa.
-	Origem quadradoDoTabuleiro
+	Origem boardSquare
 	// Fim é a casa onde a peça pousa, que é o fim do caminho. É dela que o
 	// arrasto da próxima parada conta o deslocamento — a peça está lá.
-	Fim quadradoDoTabuleiro
+	Fim boardSquare
 	// Fio é o `d` da seta que liga o fantasma à peça, dobrando nas paradas. Vem
 	// pronto do servidor porque o caminho é dele; ver
 	// `piloto_mesa_movimento_desenho.go` para por que ela dobra na PARADA e não
@@ -510,14 +510,14 @@ type movimentoView struct {
 	// Pernas são os rótulos em metros, um por trecho entre duas paradas. Eles
 	// contam o CUSTO da perna e não a distância geométrica dela, para que o metro
 	// do rótulo seja o mesmo metro que decide onde o `FioAlem` começa.
-	Pernas []pernaDoMovimento
+	Pernas []moveLeg
 }
 
-// movimentoDoTabuleiro monta o movimento em curso, ou nil quando não há.
+// moveBoard monta o movimento em curso, ou nil quando não há.
 //
 // O ALCANCE só é desenhado para quem PODE decidir: oferecer casas clicáveis a
 // quem não vai poder confirmar é convidar para um beco.
-func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover) *movimentoView {
+func moveBoard(b *tabuleiro.BoardState, m tabuleiro.Mover) *moveView {
 	if b == nil || b.Pending == nil {
 		return nil
 	}
@@ -526,34 +526,34 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover) *movimento
 	if peca == nil {
 		return nil
 	}
-	v := &movimentoView{
+	v := &moveView{
 		TokenID: p.TokenID, Rotulo: peca.Label, Custo: p.Cost, Orcamento: p.Budget,
 		Meu: m.Role == "gm" || p.ByUserID == m.UserID,
 	}
 	for _, q := range p.Path {
-		v.Trilha = append(v.Trilha, quadradoDoTabuleiro{X: q.X, Y: q.Y})
+		v.Trilha = append(v.Trilha, boardSquare{X: q.X, Y: q.Y})
 	}
 	// As duas PONTAS do caminho, que desde a ALE-203 (item 4) têm desenho de
 	// peça: o fantasma sai da origem e a peça pousa no fim.
 	if len(p.Path) > 0 {
 		inicio, fim := p.Path[0], p.Path[len(p.Path)-1]
-		v.Origem = quadradoDoTabuleiro{X: inicio.X, Y: inicio.Y}
-		v.Fim = quadradoDoTabuleiro{X: fim.X, Y: fim.Y}
+		v.Origem = boardSquare{X: inicio.X, Y: inicio.Y}
+		v.Fim = boardSquare{X: fim.X, Y: fim.Y}
 	}
 	// A SETA, os RÓTULOS em metros e a divisão dourado/vermelho saem das MESMAS
 	// dobras e do MESMO terreno (ALE-203, item 13): é o que faz o número escrito
 	// sobre a linha explicar a cor dela em vez de contradizê-la.
-	dobras := asDobrasDoMovimento(p)
-	custos := osCustosDasPernas(dobras, terrenoDeMovimento(b))
-	v.Fio, v.FioSegundo, v.FioAlem = osFiosDoMovimento(dobras, custos, p.Budget)
-	v.Pernas = asPernasDoMovimento(dobras, custos)
+	dobras := moveFolds(p)
+	custos := legsCosts(dobras, moveTerrain(b))
+	v.Fio, v.FioSegundo, v.FioAlem = moveWires(dobras, custos, p.Budget)
+	v.Pernas = moveLegs(dobras, custos)
 	// As paradas INTERMEDIÁRIAS: a última é onde a peça pousou e a primeira é de
 	// onde ela saiu — as duas já são um disco na tela, e marcá-las de novo
 	// contaria a mesma coisa duas vezes.
 	if len(p.Stops) > 2 {
 		v.PodeDesfazer = true
 		for _, q := range p.Stops[1 : len(p.Stops)-1] {
-			v.Paradas = append(v.Paradas, quadradoDoTabuleiro{X: q.X, Y: q.Y})
+			v.Paradas = append(v.Paradas, boardSquare{X: q.X, Y: q.Y})
 		}
 	}
 	// O `Restante` é preenchido pelo chamador: ele sai da MESMA chamada que
@@ -561,12 +561,12 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover) *movimento
 	return v
 }
 
-// terrenoDeMovimento traduz o terreno difícil do tabuleiro para o motor.
+// moveTerrain traduz o terreno difícil do tabuleiro para o motor.
 //
 // Existe porque o `moveTerrainOf` do pacote `tabuleiro` é privado, e duplicar a
 // TRADUÇÃO é barato — duplicar a REGRA não seria. Se um dia ela virar três
 // linhas, ela sobe para lá.
-func terrenoDeMovimento(b *tabuleiro.BoardState) engine.MoveTerrain {
+func moveTerrain(b *tabuleiro.BoardState) engine.MoveTerrain {
 	if len(b.Difficult) == 0 {
 		return engine.MoveTerrain{}
 	}
@@ -597,9 +597,9 @@ func terrenoDeMovimento(b *tabuleiro.BoardState) engine.MoveTerrain {
 // argumentos, cada sítio jogando fora a metade que não usava — e duas contas da
 // mesma regra é como este repositório já mostrou dois números diferentes para o
 // mesmo combatente em duas telas (ALE-122).
-func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool) alcanceDoTabuleiro {
+func reachAndTarget(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool) boardReach {
 	if b == nil {
-		return alcanceDoTabuleiro{}
+		return boardReach{}
 	}
 	var alvo, rotulo string
 	// COM movimento em curso o alvo é a peça dele, e o alcance sai do fim do
@@ -620,7 +620,7 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 			// o jogador NA VEZ dele não ver alcance nenhum — a tela dizia que ele
 			// não podia mover a própria peça, e só o guarda acusou.
 			//
-			// Quem responde é o `meus`, montado contra o banco pelo `mesaRoster`:
+			// Quem responde é o `meus`, montado contra o banco pelo `tableRoster`:
 			// a ponte até a pessoa é o DONO do personagem (ALE-33).
 			dela := quem
 			if id := b.Tokens[i].CharacterID; id != nil {
@@ -637,38 +637,38 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 		}
 	}
 	if alvo == "" {
-		return alcanceDoTabuleiro{}
+		return boardReach{}
 	}
-	dentro, segundo, restante := engine.ReachFromStops(de, orcamento, terrenoDeMovimento(b))
-	return alcanceDoTabuleiro{
+	dentro, segundo, restante := engine.ReachFromStops(de, orcamento, moveTerrain(b))
+	return boardReach{
 		Alvo: alvo, Rotulo: rotulo, Restante: restante,
-		Dentro: emCasasDaTela(dentro), Segundo: emCasasDaTela(segundo),
+		Dentro: screenSquares(dentro), Segundo: screenSquares(segundo),
 	}
 }
 
-// alcanceDoTabuleiro junta o que sai de UMA pergunta: qual peça o clique move, e
+// boardReach junta o que sai de UMA pergunta: qual peça o clique move, e
 // até onde ela vai com cada uma das duas ações de movimento (T20 p233).
 //
 // Struct e não seis valores de retorno porque as partes só fazem sentido juntas
 // — o `Restante` é medido a partir do mesmo caminho que produz as faixas —, e
 // porque a lista de retornos já tinha passado de quatro.
-type alcanceDoTabuleiro struct {
+type boardReach struct {
 	Alvo     string
 	Rotulo   string
-	Dentro   []quadradoDoTabuleiro
-	Segundo  []quadradoDoTabuleiro
+	Dentro   []boardSquare
+	Segundo  []boardSquare
 	Restante int
 }
 
-func emCasasDaTela(casas []engine.Square) []quadradoDoTabuleiro {
-	out := make([]quadradoDoTabuleiro, 0, len(casas))
+func screenSquares(casas []engine.Square) []boardSquare {
+	out := make([]boardSquare, 0, len(casas))
 	for _, q := range casas {
-		out = append(out, quadradoDoTabuleiro{X: q.X, Y: q.Y})
+		out = append(out, boardSquare{X: q.X, Y: q.Y})
 	}
 	return out
 }
 
-// oSaldoDoMovimento diz o que SOBRA — ou o que passou (ALE-203, item 13).
+// moveBalance diz o que SOBRA — ou o que passou (ALE-203, item 13).
 //
 // O rodapé dizia "sobram %d" sempre, e desde que o caminho caro passou a ser
 // aceito esse número parava em ZERO: o `AlcanceDaProximaParada` trava o restante
@@ -682,8 +682,8 @@ func emCasasDaTela(casas []engine.Square) []quadradoDoTabuleiro {
 // para a mesma grandeza obrigariam a converter de cabeça justamente na conta que
 // decide o próximo clique.
 //
-// @example oSaldoDoMovimento(&movimentoView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
-func oSaldoDoMovimento(m *movimentoView) string {
+// @example moveBalance(&moveView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
+func moveBalance(m *moveView) string {
 	if m.Custo <= m.Orcamento {
 		return fmt.Sprintf("sobram %d", m.Restante)
 	}
@@ -695,7 +695,7 @@ func oSaldoDoMovimento(m *movimentoView) string {
 	return ""
 }
 
-// asAcoesGastas nomeia o que o caminho CUSTA em ações do turno (T20 p233).
+// spentActions nomeia o que o caminho CUSTA em ações do turno (T20 p233).
 //
 // É a pergunta que o dono pôs em primeiro lugar — *"eles poderão ver o quanto a
 // peça deles pode mover e se eles precisam gastar a ação de movimento e a ação
@@ -705,18 +705,18 @@ func oSaldoDoMovimento(m *movimentoView) string {
 // A frase é a MESMA leitura das cores da seta, em palavras: quem não distingue o
 // azul do vermelho no mapa lê aqui, e quem lê o mapa confirma aqui.
 //
-// @example asAcoesGastas(&movimentoView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
-func asAcoesGastas(m *movimentoView) string {
-	return asTresFaixas[aFaixaDoCusto(m)].Texto
+// @example spentActions(&moveView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
+func spentActions(m *moveView) string {
+	return rangesThree[costRange(m)].Texto
 }
 
-// faixaDoMovimento é uma linha da LEGENDA das cores, no rodapé do movimento.
+// moveRange é uma linha da LEGENDA das cores, no rodapé do movimento.
 //
 // Ela existe porque as três cores não se explicavam: o dono reparou que "não tem
 // um modo do usuário saber o que as cores indicam". Um mapa que ensina a regra
 // pela cor só ensina se disser o que a cor quer dizer — senão ele pede que a
 // mesa adivinhe, e adivinhar cor é pior que não ter cor.
-type faixaDoMovimento struct {
+type moveRange struct {
 	Classe string
 	Texto  string
 	// Ativa é a faixa em que o caminho INTEIRO cai, e é a que fica acesa. As
@@ -725,24 +725,24 @@ type faixaDoMovimento struct {
 	Ativa bool
 }
 
-// asTresFaixas são as faixas na ordem em que se gastam, e a ÚNICA lista delas.
+// rangesThree são as faixas na ordem em que se gastam, e a ÚNICA lista delas.
 //
-// O texto daqui é o mesmo que o `asAcoesGastas` devolve, de propósito: a legenda
+// O texto daqui é o mesmo que o `spentActions` devolve, de propósito: a legenda
 // e a frase do rodapé são a mesma leitura, e duas listas divergiriam no dia em
 // que alguém reescrevesse uma — com a tela dizendo "gasta a ação principal" ao
 // lado de uma bolinha que diz outra coisa.
-var asTresFaixas = []faixaDoMovimento{
+var rangesThree = []moveRange{
 	{Classe: "tabuleiro-faixa-cabe", Texto: "ação de movimento"},
 	{Classe: "tabuleiro-faixa-segundo", Texto: "ação de movimento + ação principal"},
 	{Classe: "tabuleiro-faixa-alem", Texto: "não cabe no turno"},
 }
 
-// aFaixaDoCusto diz em qual das três faixas o caminho INTEIRO cai (T20 p233).
+// costRange diz em qual das três faixas o caminho INTEIRO cai (T20 p233).
 //
-// É o índice em `asTresFaixas`, e é a mesma conta que parte a seta — o que muda é
+// É o índice em `rangesThree`, e é a mesma conta que parte a seta — o que muda é
 // a granularidade: a seta corta perna a perna, e isto olha o total. Por isso a
 // legenda acesa concorda com a cor da PONTA da seta, que é onde o caminho acaba.
-func aFaixaDoCusto(m *movimentoView) int {
+func costRange(m *moveView) int {
 	switch {
 	case m.Custo <= m.Orcamento:
 		return 0
@@ -753,55 +753,55 @@ func aFaixaDoCusto(m *movimentoView) int {
 	}
 }
 
-// aLegendaDoMovimento monta as três linhas, com a da vez acesa.
-func aLegendaDoMovimento(m *movimentoView) []faixaDoMovimento {
-	ativa := aFaixaDoCusto(m)
-	legenda := make([]faixaDoMovimento, 0, len(asTresFaixas))
-	for i, f := range asTresFaixas {
+// moveLegend monta as três linhas, com a da vez acesa.
+func moveLegend(m *moveView) []moveRange {
+	ativa := costRange(m)
+	legenda := make([]moveRange, 0, len(rangesThree))
+	for i, f := range rangesThree {
 		f.Ativa = i == ativa
 		legenda = append(legenda, f)
 	}
 	return legenda
 }
 
-// aPontaDoFioQueCabe é a ponta da seta, ou `none` quando ela não é dele.
+// endWireFits é a ponta da seta, ou `none` quando ela não é dele.
 //
 // A seta tem UMA ponta e ela vai no FIM do caminho. Havendo faixa depois desta,
 // o dourado termina no MEIO do plano — no ponto em que a ação de movimento
 // acabou —, e uma ponta ali apontaria para o nada e pareceria um segundo
 // destino.
-func aPontaDoFioQueCabe(m *movimentoView) string {
-	return aPontaSeForOFim(m, m.FioSegundo == "" && m.FioAlem == "", "movimento")
+func endWireFits(m *moveView) string {
+	return endForEnd(m, m.FioSegundo == "" && m.FioAlem == "", "movimento")
 }
 
-// aPontaDoFioSegundo e aPontaDoFioAlem completam a regra: a ponta vai em quem
+// endWireSecond e endWireBeyond completam a regra: a ponta vai em quem
 // TERMINA o caminho, e cada faixa a carrega na cor dela.
-func aPontaDoFioSegundo(m *movimentoView) string {
-	return aPontaSeForOFim(m, m.FioAlem == "", "segundo")
+func endWireSecond(m *moveView) string {
+	return endForEnd(m, m.FioAlem == "", "segundo")
 }
 
-func aPontaDoFioAlem(m *movimentoView) string {
-	return aPontaSeForOFim(m, true, "alem")
+func endWireBeyond(m *moveView) string {
+	return endForEnd(m, true, "alem")
 }
 
-// aPontaSeForOFim devolve a ponta da cor pedida, ou `none`.
+// endForEnd devolve a ponta da cor pedida, ou `none`.
 //
 // `none` e não atributo ausente: `marker-end` é escrito pela mesma linha do
 // `.templ` nos dois casos, e o templ não aceita `else if` numa lista de
 // atributos — os DOIS ramos sairiam e o navegador guardaria o primeiro.
-func aPontaSeForOFim(m *movimentoView, eOFim bool, cor string) string {
+func endForEnd(m *moveView, eOFim bool, cor string) string {
 	if !eOFim {
 		return "none"
 	}
 	return "url(#tabuleiro-ponta-do-" + cor + ")"
 }
 
-// comandoDoMovimento escreve a chamada de confirmar ou cancelar.
-func comandoDoMovimento(v tabuleiroView, acao string) string {
+// moveCommand escreve a chamada de confirmar ou cancelar.
+func moveCommand(v boardView, acao string) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/%s/%s')", v.CampaignID, v.SessionID, v.Movimento.TokenID, acao)
 }
 
-// paradaNoPontoClicado traduz o PONTO do clique em quadrado do plano.
+// clickedPointStop traduz o PONTO do clique em quadrado do plano.
 //
 // A conta é do cliente e não do servidor porque ela é sobre PIXELS: o servidor
 // não sabe o zoom, que é do navegador desde que o enquadramento saiu do HTML.
@@ -811,7 +811,7 @@ func comandoDoMovimento(v tabuleiroView, acao string) string {
 // `offsetX/offsetY` são relativos à camada, que cobre o plano inteiro; a origem
 // da moldura entra somada porque o quadrado 0 da tela é o `X0` do plano, e ele
 // pode ser NEGATIVO.
-func paradaNoPontoClicado(v tabuleiroView) string {
+func clickedPointStop(v boardView) string {
 	return fmt.Sprintf(
 		"@post('/mesa/%d/%d/tabuleiro/%s/parada/' + (%s) + '/' + (%s))",
 		v.CampaignID, v.SessionID, v.AlvoDoMovimento, clicouEmX, clicouEmY,
@@ -840,8 +840,8 @@ func paradaNoPontoClicado(v tabuleiroView) string {
 // guarda o ponto de partida.
 //
 // NÃO chama `setPointerCapture`, e a ausência é deliberada. Quem faz o gesto
-// sobreviver ao dedo sair de cima do elemento aqui é a JANELA: `segueODedo` e
-// `soltaEPara` entram como `pointermove__window`/`pointerup__window`, e a
+// sobreviver ao dedo sair de cima do elemento aqui é a JANELA: `followsFinger` e
+// `dropFor` entram como `pointermove__window`/`pointerup__window`, e a
 // janela recebe o evento com ou sem captura. Captura seria redundante e é a
 // única chamada da expressão que LANÇA — `NotFoundError` quando o `pointerId`
 // não é de um ponteiro ativo. E uma expressão Datastar que lança aborta a
@@ -854,25 +854,25 @@ func pegaParaArrastar(quem string) string {
 			"$arrastox = 0; $arrastoy = 0", quem)
 }
 
-// segueODedo escreve o `pointermove`. Só mexe nos sinais se for ESTE que está
+// followsFinger escreve o `pointermove`. Só mexe nos sinais se for ESTE que está
 // sendo arrastado: os dois alvos escutam a mesma janela.
-func segueODedo(quem string) string {
+func followsFinger(quem string) string {
 	return fmt.Sprintf(
 		"$arrastando === '%s' && ($arrastox = evt.clientX - $arrastoinix, $arrastoy = evt.clientY - $arrastoiniy)", quem)
 }
 
-// oDedoSegueComPrevia é o `segueODedo` da PEÇA, com a seta viva por cima.
+// previewFollowsFinger é o `followsFinger` da PEÇA, com a seta viva por cima.
 //
 // Ele pede a prévia ao servidor SÓ QUANDO O QUADRADO MUDA, e não a cada pixel:
-// é a mesma trava do `aReguaSegueOPonteiro`, e ela transforma "um pedido por
+// é a mesma trava do `rulerFollowsPointer`, e ela transforma "um pedido por
 // evento de ponteiro" em "um pedido por casa atravessada". Sem ela, um arrasto
 // de dois segundos abriria centenas de requisições para desenhar a mesma linha.
 //
-// A conta do quadrado é a MESMA do `soltaEPara` (`Math.round` do deslocamento
+// A conta do quadrado é a MESMA do `dropFor` (`Math.round` do deslocamento
 // pelo `--quadrado`), e tem de ser: se a prévia arredondasse diferente do
 // soltar, a pessoa leria um custo e receberia outro — o defeito mais caro que
 // esta tela pode ter, porque ele só aparece depois da decisão.
-func oDedoSegueComPrevia(v tabuleiroView, p pecaDoTabuleiro) string {
+func fingerFollowsWithPreview(v boardView, p boardToken) string {
 	return fmt.Sprintf(
 		"if ($arrastando !== 'peca') return; "+
 			"$arrastox = evt.clientX - $arrastoinix; $arrastoy = evt.clientY - $arrastoiniy; "+
@@ -883,7 +883,7 @@ func oDedoSegueComPrevia(v tabuleiroView, p pecaDoTabuleiro) string {
 		p.X, p.Y, v.CampaignID, v.SessionID, p.ID)
 }
 
-// apagaAPrevia limpa a seta viva. Vai no `pointerup`, junto do que solta.
+// erasePreview limpa a seta viva. Vai no `pointerup`, junto do que solta.
 //
 // QUEM LIMPA É QUEM TERMINA O GESTO, e não quem começa o próximo: um desenho de
 // prévia que sobrevivesse ao soltar ficaria por cima da seta de verdade, com o
@@ -894,10 +894,10 @@ func oDedoSegueComPrevia(v tabuleiroView, p pecaDoTabuleiro) string {
 // O `$previax` volta para um valor IMPOSSÍVEL e não para zero: zero é uma casa
 // legítima do plano, e o próximo arrasto que começasse nela não pediria prévia
 // nenhuma — a trava do "só quando o quadrado muda" o engoliria em silêncio.
-const apagaAPrevia = "$previafiocabe = ''; $previafiosegundo = ''; $previafioalem = ''; " +
+const erasePreview = "$previafiocabe = ''; $previafiosegundo = ''; $previafioalem = ''; " +
 	"$previarotulos = []; $previatexto = ''; $previax = null; $previay = null"
 
-// soltaEPara escreve o `pointerup`: converte o deslocamento em QUADRADOS e
+// dropFor escreve o `pointerup`: converte o deslocamento em QUADRADOS e
 // propõe a parada.
 //
 // O arredondamento é para o quadrado mais próximo e não para baixo: quem solta a
@@ -918,14 +918,14 @@ const apagaAPrevia = "$previafiocabe = ''; $previafiosegundo = ''; $previafioale
 // navegador: marcar o Bandido e arrastá-lo abria a barra de "14 quadrados".
 //
 // MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
-func soltaEPara(v tabuleiroView, quem string, x, y int) string {
+func dropFor(v boardView, quem string, x, y int) string {
 	parada := fmt.Sprintf("'/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
 		v.CampaignID, v.SessionID, v.AlvoDoMovimento, x, y)
 	destino := "@post(" + parada + ")"
 	if quem == "peca" && v.Mestre && v.AlvoDoMovimento != "" {
 		grupo := fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/grupo/mover/' + dx + '/' + dy)",
 			v.CampaignID, v.SessionID)
-		destino = fmt.Sprintf("%s ? %s : %s", aPecaEstaMarcada(v.AlvoDoMovimento), grupo, destino)
+		destino = fmt.Sprintf("%s ? %s : %s", markedIsToken(v.AlvoDoMovimento), grupo, destino)
 	}
 	return fmt.Sprintf(
 		"if ($arrastando === '%s') { "+
@@ -955,7 +955,7 @@ func soltaEPara(v tabuleiroView, quem string, x, y int) string {
 //	if v.ArrastaAPeca == p.ID {
 //	    data-on:pointerdown={ pegaParaArrastar("peca") }
 //	} else if v.Mestre {
-//	    data-on:pointerdown={ pegaOGrupo(p.ID) }
+//	    data-on:pointerdown={ partyTakes(p.ID) }
 //	}
 //
 // **O templ NÃO aceita `else if` numa lista de atributos.** Ele fecha o primeiro
@@ -965,58 +965,58 @@ func soltaEPara(v tabuleiroView, quem string, x, y int) string {
 //
 // Nada estourava: atributo repetido não existe no DOM, o navegador guarda o
 // PRIMEIRO e descarta o resto em silêncio. O ramo do grupo estava morto em toda
-// peça que era alvo do movimento, e só não se percebeu porque o `soltaEPara` já
+// peça que era alvo do movimento, e só não se percebeu porque o `dropFor` já
 // escolhe o grupo por conta própria quando a peça está marcada — a decisão certa
 // chegava pelo outro caminho. O aviso já estava escrito duas linhas abaixo, no
-// `oVestidoDaPeca`: *"UM `data-class` só porque atributo repetido não existe"*.
+// `tokenStyling`: *"UM `data-class` só porque atributo repetido não existe"*.
 //
 // A escolha volta para o Go, onde `else if` é `else if`, e o elemento passa a ter
 // UMA lista de atributos. É a mesma forma que a fatia 1 desta issue usou para as
 // ferramentas: **exclusão por CONSTRUÇÃO**, e não por dois blocos que se
 // prometem exclusivos.
 
-// aPecaRecebeOGesto diz se ela escuta o ponteiro.
+// gestureReceivesToken diz se ela escuta o ponteiro.
 //
 // O mestre entra sempre porque marcar é gesto dele: uma peça que não é alvo do
-// movimento ainda pode estar num grupo marcado, e o `pegaOGrupo` é quem checa a
+// movimento ainda pode estar num grupo marcado, e o `partyTakes` é quem checa a
 // marca. Para o jogador só a peça dele responde.
-func aPecaRecebeOGesto(v tabuleiroView, id string) bool {
+func tokenReceivesGesture(v boardView, id string) bool {
 	return v.ArrastaAPeca == id || v.Mestre
 }
 
-// oPegarDaPeca escolhe entre começar o arrasto DA PEÇA e o DO GRUPO.
-func oPegarDaPeca(v tabuleiroView, id string) string {
+// takeToken escolhe entre começar o arrasto DA PEÇA e o DO GRUPO.
+func takeToken(v boardView, id string) string {
 	if v.ArrastaAPeca == id {
 		return pegaParaArrastar("peca")
 	}
-	return pegaOGrupo(id)
+	return partyTakes(id)
 }
 
-// oSoltarDaPeca é o par do `oPegarDaPeca`, e os dois têm de concordar: um
+// dropToken é o par do `takeToken`, e os dois têm de concordar: um
 // `pointerdown` de grupo com um `pointerup` de parada proporia o movimento de
 // uma peça que a pessoa nem estava movendo.
 //
 // As coordenadas são as DESENHADAS (`p.X`/`p.Y`), que com movimento proposto são
 // o fim do caminho — é o que faz a próxima parada contar do lugar onde a peça
 // está (ALE-203, item 4).
-func oSoltarDaPeca(v tabuleiroView, p pecaDoTabuleiro) string {
+func dropToken(v boardView, p boardToken) string {
 	if v.ArrastaAPeca == p.ID {
-		return apagaAPrevia + "; " + soltaEPara(v, "peca", p.X, p.Y)
+		return erasePreview + "; " + dropFor(v, "peca", p.X, p.Y)
 	}
-	return soltaOGrupo(v)
+	return dropParty(v)
 }
 
-// oSeguirDaPeca é o par do `oPegarDaPeca` no `pointermove`: a peça que se
+// followToken é o par do `takeToken` no `pointermove`: a peça que se
 // arrasta ganha a PRÉVIA, e o grupo continua só empurrando pixels.
 //
 // A divisa é a mesma dos outros dois, e ela tem de ser: a prévia mede o custo de
 // UMA peça, e o gesto do grupo move várias sem regra de deslocamento nenhuma —
 // pedir prévia ali desenharia a seta de uma peça sobre o arrasto de todas.
-func oSeguirDaPeca(v tabuleiroView, p pecaDoTabuleiro) string {
+func followToken(v boardView, p boardToken) string {
 	if v.ArrastaAPeca == p.ID {
-		return oDedoSegueComPrevia(v, p)
+		return fingerFollowsWithPreview(v, p)
 	}
-	return segueODedo("peca")
+	return followsFinger("peca")
 }
 
 // estaArrastando marca o elemento que o CSS deve deslocar.
@@ -1024,22 +1024,22 @@ func estaArrastando(quem string) string {
 	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === '%s'}", quem)
 }
 
-// comandoDoTabuleiroDaCena escreve a chamada de abrir ou encerrar.
+// sceneBoardCommand escreve a chamada de abrir ou encerrar.
 //
-// Irmão do `comandoDoMovimento` e separado dele de propósito: aquele leva o id
+// Irmão do `moveCommand` e separado dele de propósito: aquele leva o id
 // da PEÇA no caminho, e este não tem peça nenhuma — abrir acontece justamente
 // quando não há tabuleiro.
-func comandoDoTabuleiroDaCena(v tabuleiroView, acao string) string {
+func sceneBoardCommand(v boardView, acao string) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/%s')", v.CampaignID, v.SessionID, acao)
 }
 
-// acervoDaCampanha traduz os lugares guardados para a tela.
+// campaignCollection traduz os lugares guardados para a tela.
 //
 // A DATA é encurtada para o dia: o acervo responde "quando joguei isto?", e a
 // hora não ajuda a escolher entre a taverna de ontem e a cripta de março. O
 // formato vem do banco em ISO, e cortar no `T` é mais honesto que reformatar —
 // não inventa fuso que o servidor não guardou.
-func acervoDaCampanha(lugares []tabuleiro.Place, abertos []*tabuleiro.BoardState) []lugarDoAcervo {
+func campaignCollection(lugares []tabuleiro.Place, abertos []*tabuleiro.BoardState) []lugarDoAcervo {
 	// O índice é montado UMA vez: com 148 lugares e oito abas, comparar cada
 	// linha com cada aba é a lista inteira multiplicada pelo número de cenas
 	// abertas, a cada carga da página e a cada quadro do stream.
@@ -1052,7 +1052,7 @@ func acervoDaCampanha(lugares []tabuleiro.Place, abertos []*tabuleiro.BoardState
 		acervo = append(acervo, lugarDoAcervo{
 			ID: l.ID, Nome: l.Name, Pecas: l.Tokens, Quando: diaDe(l.UpdatedAt),
 			// Pelo NOME, que é a identidade que o `Archive` já dá ao lugar — ver
-			// `aAbaComOLugar`, onde o argumento inteiro está escrito.
+			// `placeTab`, onde o argumento inteiro está escrito.
 			AbertaEm: naMesa[l.Name],
 		})
 	}
@@ -1066,30 +1066,30 @@ func diaDe(iso string) string {
 	return iso
 }
 
-// comandoDoLugar escreve a chamada de reabrir ou apagar um lugar do acervo.
-func comandoDoLugar(v tabuleiroView, placeID int64, acao string) string {
+// placeCommand escreve a chamada de reabrir ou apagar um lugar do acervo.
+func placeCommand(v boardView, placeID int64, acao string) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/lugares/%d/%s')",
 		v.CampaignID, v.SessionID, placeID, acao)
 }
 
-// comandoDaAba escreve a troca de aba a partir do acervo (ALE-205, fatia 3).
+// tabCommand escreve a troca de aba a partir do acervo (ALE-205, fatia 3).
 //
 // A MESMA rota que a barra de abas usa, e não uma "reabrir que só troca": o que
 // se quer aqui é literalmente ir até a aba que já existe, e uma segunda porta
 // para isso seria uma segunda regra sobre o que significa escolher uma cena.
-func comandoDaAba(v tabuleiroView, tabuleiroID string) string {
+func tabCommand(v boardView, tabuleiroID string) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/aba/%s')",
 		v.CampaignID, v.SessionID, tabuleiroID)
 }
 
-// pecasEmPortugues concorda o número com o substantivo.
+// portugueseTokens concorda o número com o substantivo.
 //
 // Existe porque "1 peças" apareceu na tela na primeira medição, e essa é a
 // classe de erro que passa por todo teste que compara com `fmt.Sprintf` do mesmo
 // jeito — o teste re-derivaria o defeito. O caso do ZERO é escrito por extenso
 // porque "0 peças" descreve mal o que a linha é: cena aberta e abandonada, que é
 // justamente o que o mestre está procurando quando abre o acervo para limpar.
-func pecasEmPortugues(n int) string {
+func portugueseTokens(n int) string {
 	switch n {
 	case 0:
 		return "cena vazia"
@@ -1111,7 +1111,7 @@ func pecasEmPortugues(n int) string {
 // Vazio é o pincel guardado, e aí o clique volta a mover a peça. É a mesma
 // superfície disputada por dois gestos, e quem arbitra é o sinal.
 
-// escolheAFerramenta liga uma ferramenta, ou a DESliga se ela já estava.
+// pickTool liga uma ferramenta, ou a DESliga se ela já estava.
 //
 // Clicar de novo na ferramenta ativa guarda o pincel, que é o gesto que devolve
 // o clique ao movimento sem precisar de mais um botão "nenhum".
@@ -1122,42 +1122,42 @@ func pecasEmPortugues(n int) string {
 // acrescentar a sexta. É a mesma conclusão a que a ALE-203 chegou na SPA, onde
 // cinco sinais soltos deixavam pincel e régua ligados ao mesmo tempo, com um
 // roubando o clique do outro.
-func escolheAFerramenta(qual string) string {
+func pickTool(qual string) string {
 	return fmt.Sprintf("$ferramenta = ($ferramenta === %q ? '' : %q)", qual, qual)
 }
 
-// FerramentaDeMarcar é o valor do sinal quando o clique MARCA.
+// MarkTool é o valor do sinal quando o clique MARCA.
 //
 // Constante e não string solta porque ela aparece em quatro expressões e num
 // `data-show`: escrita à mão, a quinta ocorrência é a que erra a letra e vira
 // uma ferramenta que a tela liga e o mapa nunca escuta.
-const FerramentaDeMarcar = "marcador"
+const MarkTool = "marcador"
 
-// marcacaoNoPontoClicado põe um marcador na casa que o dedo acertou.
+// clickedPointMarking põe um marcador na casa que o dedo acertou.
 //
 // Mesma aritmética da pintura — o ponto do clique dividido pelo tamanho da casa,
 // mais a origem da moldura —, e ela é repetida porque o DESTINO é outro. Extrair
 // a conta para um helper compartilhado economizaria uma linha e faria as duas
 // rotas mudarem juntas no dia em que uma delas precisar do canto e não do centro.
-func marcacaoNoPontoClicado(v tabuleiroView) string {
+func clickedPointMarking(v boardView) string {
 	return fmt.Sprintf(
 		"@post('/mesa/%d/%d/tabuleiro/marcadores/novo/' + (%s) + '/' + (%s))",
 		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
 	)
 }
 
-// comandoDoMarcador escreve o gesto sobre um marcador que já existe.
-func comandoDoMarcador(v tabuleiroView, id, acao string) string {
+// markerCommand escreve o gesto sobre um marcador que já existe.
+func markerCommand(v boardView, id, acao string) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/marcadores/%s/%s')",
 		v.CampaignID, v.SessionID, id, acao)
 }
 
-// nomeDoMarcador é o que o leitor de tela anuncia, e ele DIZ o estado.
+// markerName é o que o leitor de tela anuncia, e ele DIZ o estado.
 //
 // "Marcador A em 3, 2" não conta a única coisa que o mestre precisa saber antes
 // de clicar: se a mesa já está vendo aquilo. O estado entra no nome porque é
 // aqui que ele muda o que a pessoa vai fazer.
-func nomeDoMarcador(m marcadorDoTabuleiro) string {
+func markerName(m boardMarker) string {
 	estado := "visível para a mesa"
 	if m.Escondido {
 		estado = "escondido da mesa"
@@ -1165,37 +1165,37 @@ func nomeDoMarcador(m marcadorDoTabuleiro) string {
 	return fmt.Sprintf("Marcador %s em %s, %s", m.Texto, m.Onde, estado)
 }
 
-// marcadorEscolhido é a pergunta que mostra as ações de UM marcador.
-func marcadorEscolhido(id string) string {
+// chosenMarker é a pergunta que mostra as ações de UM marcador.
+func chosenMarker(id string) string {
 	return fmt.Sprintf("$marcadorescolhido === %q", id)
 }
 
-// escolheOMarcador abre as ações, ou as fecha se já estavam abertas.
+// pickMarker abre as ações, ou as fecha se já estavam abertas.
 //
 // Clicar de novo no mesmo marcador FECHA, que é o gesto que sai de lá sem
 // precisar de um botão "fechar" — o mesmo padrão do trilho de ferramentas.
 // Passar "" fecha sem abrir outro, e é o que o apagar usa: as ações de um
 // marcador que deixou de existir ficariam penduradas na tela até o próximo
 // clique.
-func escolheOMarcador(id string) string {
+func pickMarker(id string) string {
 	if id == "" {
 		return "$marcadorescolhido = ''"
 	}
 	return fmt.Sprintf("$marcadorescolhido = ($marcadorescolhido === %q ? '' : %q)", id, id)
 }
 
-// comandoDaCortina escreve o gesto que fecha ou abre (ALE-202, ALE-269).
-func comandoDaCortina(v tabuleiroView, estado string) string {
+// curtainCommand escreve o gesto que fecha ou abre (ALE-202, ALE-269).
+func curtainCommand(v boardView, estado string) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/tabuleiro/cortina/%s')",
 		v.CampaignID, v.SessionID, estado)
 }
 
-// destinoDaCortina é para onde o botão do cabeçalho leva.
+// curtainTarget é para onde o botão do cabeçalho leva.
 //
 // O botão ALTERNA e a tira só ABRE, e são dois destinos e não um alternar cego —
-// a razão está no `correACortina`. Aqui é só a tradução do estado atual para o
+// a razão está no `runsCurtain`. Aqui é só a tradução do estado atual para o
 // verbo que falta.
-func destinoDaCortina(fechada bool) string {
+func curtainTarget(fechada bool) string {
 	if fechada {
 		return "abrir"
 	}

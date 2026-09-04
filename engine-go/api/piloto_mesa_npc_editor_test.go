@@ -21,25 +21,25 @@ import (
 // pelo formulário, que a recusa fala DENTRO do editor, e que o id do rascunho não
 // alcança o elenco de outra campanha.
 
-// oRascunhoNoCorpo monta o corpo de sinais que o navegador mandaria.
+// bodyDraft monta o corpo de sinais que o navegador mandaria.
 //
-// Escrito como TEXTO e não `json.Marshal` de um `rascunhoDoNPC`: marshalar a
+// Escrito como TEXTO e não `json.Marshal` de um `npcDraft`: marshalar a
 // struct faria o teste mandar exatamente o que o servidor espera, e um campo
 // renomeado passaria verde nos dois lados. Aqui o teste fala a língua do FIO.
-func oRascunhoNoCorpo(dentro string) string {
+func bodyDraft(dentro string) string {
 	return `{"rascunho":{` + dentro + `}}`
 }
 
 const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":10,` +
 	`"deslocamento":"9m (6q)","attacks":[],"skills":[],"specialAbilities":[]`
 
-// oRascunhoDaResposta extrai o rascunho do quadro de sinais do SSE.
+// responseDraft extrai o rascunho do quadro de sinais do SSE.
 //
 // Ler a CHAVE e não procurar o texto solto na resposta, e isto custou uma
 // sabotagem para descobrir: `Contains(resposta, "Ogro Capitão")` passa verde com
 // o sinal renomeado, porque o nome continua no corpo — ligado a coisa nenhuma. O
 // que a tela precisa é do valor sob `rascunho`, e é isso que se afirma.
-func oRascunhoDaResposta(t *testing.T, resposta string) map[string]any {
+func responseDraft(t *testing.T, resposta string) map[string]any {
 	t.Helper()
 	const marca = "data: signals "
 	i := strings.Index(resposta, marca)
@@ -62,11 +62,11 @@ func oRascunhoDaResposta(t *testing.T, resposta string) map[string]any {
 	return sinais.Rascunho
 }
 
-// npcNoBanco lê o bloco guardado pelo nome, para as asserções não dependerem do
+// dbNpc lê o bloco guardado pelo nome, para as asserções não dependerem do
 // id que o banco escolheu.
-func npcNoBanco(t *testing.T, f pilotoFixture, nome string) creature.Block {
+func dbNpc(t *testing.T, f pilotoFixture, nome string) creature.Block {
 	t.Helper()
-	for _, npc := range f.s.oElencoDaCampanha(context.Background(), f.campaignID) {
+	for _, npc := range f.s.campaignCast(context.Background(), f.campaignID) {
 		if npc.Nome != nome {
 			continue
 		}
@@ -102,10 +102,10 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	f := novoPiloto(t)
 
 	resposta := f.posta(t, f.mestre,
-		f.urlDaMesa()+"/elenco/npc/rascunho/"+listaDeAtaques+"/nova",
-		oRascunhoNoCorpo(`"id":0,"nome":"Ogro Capitão","conjura":false,"bloco":{`+blocoMinimo+`}`))
+		f.tableUrl()+"/elenco/npc/rascunho/"+listaDeAtaques+"/nova",
+		bodyDraft(`"id":0,"nome":"Ogro Capitão","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
-	if elenco := f.s.oElencoDaCampanha(context.Background(), f.campaignID); len(elenco) != 0 {
+	if elenco := f.s.campaignCast(context.Background(), f.campaignID); len(elenco) != 0 {
 		t.Errorf("acrescentar um ataque GRAVOU no elenco: %+v", elenco)
 	}
 	// O nome volta DENTRO de `rascunho`, e a asserção lê a chave em vez de
@@ -113,7 +113,7 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	// `Contains(resposta, "Ogro Capitão")` e passou verde com o sinal renomeado
 	// para `naoerascunho` — o texto estava lá, ligado a coisa nenhuma, e o teste
 	// não sabia a diferença.
-	if nome := oRascunhoDaResposta(t, resposta)["nome"]; nome != "Ogro Capitão" {
+	if nome := responseDraft(t, resposta)["nome"]; nome != "Ogro Capitão" {
 		t.Errorf("o rascunho voltou com nome %v, esperado o que estava sendo digitado:\n%s", nome, resposta)
 	}
 	// A LINHA nova volta como HTML, e não só como sinal: um `data-bind` para uma
@@ -121,7 +121,7 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	if !strings.Contains(resposta, `id="npc-ataques"`) {
 		t.Errorf("a lista de ataques não foi redesenhada:\n%s", resposta)
 	}
-	if !strings.Contains(resposta, oCampoDaLinha(listaDeAtaques, 0, "name")) {
+	if !strings.Contains(resposta, rowField(listaDeAtaques, 0, "name")) {
 		t.Errorf("a linha nova não tem onde escrever o nome:\n%s", resposta)
 	}
 }
@@ -135,8 +135,8 @@ func TestRemovingARowRemovesThatRow(t *testing.T) {
 	f := novoPiloto(t)
 	tres := `"attacks":[{"name":"Clava"},{"name":"Mordida"},{"name":"Cauda"}],"skills":[],"specialAbilities":[]`
 	resposta := f.posta(t, f.mestre,
-		f.urlDaMesa()+"/elenco/npc/rascunho/"+listaDeAtaques+"/1/remover",
-		oRascunhoNoCorpo(`"id":0,"nome":"Hidra","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+tres+`}`))
+		f.tableUrl()+"/elenco/npc/rascunho/"+listaDeAtaques+"/1/remover",
+		bodyDraft(`"id":0,"nome":"Hidra","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+tres+`}`))
 
 	if strings.Contains(resposta, "Mordida") {
 		t.Errorf("a linha do meio sobreviveu ao remover:\n%s", resposta)
@@ -156,8 +156,8 @@ func TestRemovingARowRemovesThatRow(t *testing.T) {
 func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 	f := novoPiloto(t)
 	resposta := f.posta(t, f.mestre,
-		f.urlDaMesa()+"/elenco/npc/rascunho/"+listaDeAtaques+"/7/remover",
-		oRascunhoNoCorpo(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
+		f.tableUrl()+"/elenco/npc/rascunho/"+listaDeAtaques+"/7/remover",
+		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
 	if !strings.Contains(resposta, "erroDoRascunho") {
 		t.Errorf("a linha inexistente não recusou:\n%s", resposta)
 	}
@@ -173,19 +173,19 @@ func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 // Este caso prende a tradução nos DOIS sentidos, porque é onde ela se perde.
 func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
 	f := novoPiloto(t)
-	base := f.urlDaMesa() + "/elenco/npc/rascunho/salvar"
+	base := f.tableUrl() + "/elenco/npc/rascunho/salvar"
 
 	// Sem conjurar: o número no formulário é ignorado e o bloco fica SEM a linha.
 	f.posta(t, f.mestre, base,
-		oRascunhoNoCorpo(`"id":0,"nome":"Bandido","conjura":false,"bloco":{`+blocoMinimo+`,"pm":7}`))
-	if pm := npcNoBanco(t, f, "Bandido").PM; pm != nil {
+		bodyDraft(`"id":0,"nome":"Bandido","conjura":false,"bloco":{`+blocoMinimo+`,"pm":7}`))
+	if pm := dbNpc(t, f, "Bandido").PM; pm != nil {
 		t.Errorf("o Bandido guardou %d PM sem conjurar — a ausência virou número", *pm)
 	}
 
 	// Conjurando: o número atravessa.
 	f.posta(t, f.mestre, base,
-		oRascunhoNoCorpo(`"id":0,"nome":"Centauro Xamã","conjura":true,"bloco":{`+blocoMinimo+`,"pm":20}`))
-	pm := npcNoBanco(t, f, "Centauro Xamã").PM
+		bodyDraft(`"id":0,"nome":"Centauro Xamã","conjura":true,"bloco":{`+blocoMinimo+`,"pm":20}`))
+	pm := dbNpc(t, f, "Centauro Xamã").PM
 	if pm == nil || *pm != 20 {
 		t.Errorf("o Centauro Xamã guardou %v PM, esperado 20", pm)
 	}
@@ -203,11 +203,11 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 	f := novoPiloto(t)
 	comOpcionaisVazios := `"attacks":[{"name":"Clava","attackBonus":7,"damage":"1d6+3"}],` +
 		`"skills":[{"name":"Furtividade","bonus":5}],"specialAbilities":[]`
-	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/rascunho/salvar",
-		oRascunhoNoCorpo(`"id":0,"nome":"Ogro","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+comOpcionaisVazios+`}`))
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{"nd":1,"tipo":"monstro","size":"grande","hp":10,"defesa":10,"deslocamento":"9m",`+comOpcionaisVazios+`}`))
 
-	id := oIDDoNPC(t, f, "Ogro")
-	aberto := f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/"+id+"/editar", "{}")
+	id := npcId(t, f, "Ogro")
+	aberto := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/"+id+"/editar", "{}")
 	for _, campo := range []string{`"special"`, `"nota"`, `"pm"`} {
 		if !strings.Contains(aberto, campo) {
 			t.Errorf("o campo %s não veio no rascunho — a caixa dele nasceria escrita \"undefined\":\n%s", campo, aberto)
@@ -217,7 +217,7 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 
 // TestSavingWithoutANameSpeaksInsideTheEditor.
 //
-// A recusa do `comandoDoMestre` sai por padrão no `erroDoComando`, que é o rodapé
+// A recusa do `gmCommand` sai por padrão no `erroDoComando`, que é o rodapé
 // do mestre — e o editor é um DIÁLOGO por cima dele. Medido no navegador: salvar
 // sem nome não dizia absolutamente nada, porque a frase estava atrás do painel.
 //
@@ -226,13 +226,13 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 // manda o mestre procurar um campo que não existe.
 func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 	f := novoPiloto(t)
-	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/rascunho/salvar",
-		oRascunhoNoCorpo(`"id":0,"nome":"","conjura":false,"bloco":{`+blocoMinimo+`}`))
+	resposta := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+		bodyDraft(`"id":0,"nome":"","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
 	if !strings.Contains(resposta, "erroDoRascunho") || !strings.Contains(resposta, "precisa de um nome") {
 		t.Errorf("a recusa não falou no editor:\n%s", resposta)
 	}
-	if elenco := f.s.oElencoDaCampanha(context.Background(), f.campaignID); len(elenco) != 0 {
+	if elenco := f.s.campaignCast(context.Background(), f.campaignID); len(elenco) != 0 {
 		t.Errorf("o NPC sem nome foi gravado assim mesmo: %+v", elenco)
 	}
 }
@@ -241,7 +241,7 @@ func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 //
 // O id vem do RASCUNHO, que vem do navegador: sem a conferência de campanha, o
 // mestre de uma mesa reescreveria a preparação de outra. É a mesma trava que o
-// `oNPCDaCampanha` já fazia para o caminho, e o editor tinha de reusá-la em vez
+// `campaignNpc` já fazia para o caminho, e o editor tinha de reusá-la em vez
 // de confiar no número que chegou.
 func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	f := novoPiloto(t)
@@ -257,8 +257,8 @@ func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 		t.Fatalf("semear o NPC vizinho: %v", err)
 	}
 
-	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/rascunho/salvar",
-		oRascunhoNoCorpo(`"id":`+strconv.FormatInt(linha.ID, 10)+`,"nome":"Sequestrado","conjura":false,"bloco":{`+blocoMinimo+`}`))
+	resposta := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+		bodyDraft(`"id":`+strconv.FormatInt(linha.ID, 10)+`,"nome":"Sequestrado","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
 	if !strings.Contains(resposta, "não é desta campanha") {
 		t.Errorf("o editor aceitou reescrever o elenco da vizinha:\n%s", resposta)
@@ -280,8 +280,8 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 		"/elenco/npc/rascunho/" + listaDeAtaques + "/nova",
 		"/elenco/npc/rascunho/salvar",
 	} {
-		rec := f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+caminho,
-			oRascunhoNoCorpo(`"id":0,"nome":"Intruso","conjura":false,"bloco":{`+blocoMinimo+`}`))
+		rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+caminho,
+			bodyDraft(`"id":0,"nome":"Intruso","conjura":false,"bloco":{`+blocoMinimo+`}`))
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador alcançou %s: %d", caminho, rec.Code)
 		}
@@ -295,11 +295,11 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 // dois abrem devolvendo a MESMA forma de rascunho — o que muda é a semente.
 func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
 	f := novoPiloto(t)
-	f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/rascunho/salvar",
-		oRascunhoNoCorpo(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
+		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
-	doZero := f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/novo", "{}")
-	daCopia := f.posta(t, f.mestre, f.urlDaMesa()+"/elenco/npc/"+oIDDoNPC(t, f, "Ogro")+"/editar", "{}")
+	doZero := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/novo", "{}")
+	daCopia := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/"+npcId(t, f, "Ogro")+"/editar", "{}")
 
 	for _, campo := range []string{`"nd"`, `"tipo"`, `"size"`, `"attacks"`, `"skills"`, `"specialAbilities"`, `"conjura"`} {
 		if !strings.Contains(doZero, campo) {
@@ -318,11 +318,11 @@ func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
 	}
 }
 
-// oIDDoNPC acha o id pelo nome, para o teste não depender do número que o banco
+// npcId acha o id pelo nome, para o teste não depender do número que o banco
 // escolheu.
-func oIDDoNPC(t *testing.T, f pilotoFixture, nome string) string {
+func npcId(t *testing.T, f pilotoFixture, nome string) string {
 	t.Helper()
-	for _, npc := range f.s.oElencoDaCampanha(context.Background(), f.campaignID) {
+	for _, npc := range f.s.campaignCast(context.Background(), f.campaignID) {
 		if npc.Nome == nome {
 			return strconv.FormatInt(npc.ID, 10)
 		}

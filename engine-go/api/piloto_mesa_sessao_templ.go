@@ -22,7 +22,7 @@ import (
 //
 // Os dois no cabeçalho porque são as duas coisas que se faz com a SESSÃO, e não
 // dentro dela: o resto da tela é sobre a cena, a fila e o mapa.
-func verbosDaSessao(v mesaView) templ.Component {
+func sessionVerbs(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -53,9 +53,9 @@ func verbosDaSessao(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreAConfigDaSessao(v))
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(openConfigSession(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 24, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 24, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -79,9 +79,9 @@ func verbosDaSessao(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 templ.SafeURL
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(aCronicaDaCampanha(v)))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(campaignChronicle(v)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 33, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 33, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -106,13 +106,13 @@ func verbosDaSessao(v mesaView) templ.Component {
 // Os verbos são travados pelo ESTADO: iniciar só aparece no que ainda não
 // começou, encerrar só no que está no ar. O servidor recusa o resto, e oferecer
 // o que será recusado é desenhar um erro.
-// mesaConfigDaSessao é a REGIÃO do diálogo, pela mesma razão do `mesa-por-no-mapa`:
+// tableConfigSession é a REGIÃO do diálogo, pela mesma razão do `mesa-por-no-mapa`:
 // ele muda com o CICLO da sessão, que não é o ritmo do mapa nem o da fila.
 // Pendurado no cabeçalho, ele seria redesenhado a cada troca de turno.
 //
 // O `<div>` existe sempre, inclusive para o jogador: região que some do HTML é
 // região que o remendo não acha. Quem a porta do mestre esconde é o CONTEÚDO.
-func mesaConfigDaSessao(v mesaView) templ.Component {
+func tableConfigSession(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -138,7 +138,7 @@ func mesaConfigDaSessao(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Mestre != nil {
-			templ_7745c5c3_Err = configDaSessao(v).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sessionConfig(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -151,7 +151,7 @@ func mesaConfigDaSessao(v mesaView) templ.Component {
 	})
 }
 
-func configDaSessao(v mesaView) templ.Component {
+func sessionConfig(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -190,9 +190,9 @@ func configDaSessao(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(oCicloEmPortugues(v.Status))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(portugueseCycle(v.Status))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 74, Col: 119}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 74, Col: 117}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -203,9 +203,9 @@ func configDaSessao(v mesaView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaSessao(v, "titulo"))
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(sessionCommand(v, "titulo"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 96, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 96, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -233,9 +233,9 @@ func configDaSessao(v mesaView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var10 string
-				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaSessao(v, "iniciar"))
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(sessionCommand(v, "iniciar"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 104, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 104, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 				if templ_7745c5c3_Err != nil {
@@ -262,7 +262,7 @@ func configDaSessao(v mesaView) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = linhaDeAjuste("Iniciar sessão", "A mesa passa a ver a partida ao vivo.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = adjustRow("Iniciar sessão", "A mesa passa a ver a partida ao vivo.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -285,9 +285,9 @@ func configDaSessao(v mesaView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var12 string
-				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('config-da-sessao').close(); " + comandoDaSessao(v, "encerrar"))
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('config-da-sessao').close(); " + sessionCommand(v, "encerrar"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 119, Col: 110}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 119, Col: 109}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
@@ -299,7 +299,7 @@ func configDaSessao(v mesaView) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = linhaDeAjuste("Encerrar sessão", "A partida sai do ar para a mesa. A campanha e as fichas ficam como estão.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = adjustRow("Encerrar sessão", "A partida sai do ar para a mesa. A campanha e as fichas ficam como estão.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -321,9 +321,9 @@ func configDaSessao(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaSessao(v, "reiniciar"))
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(sessionCommand(v, "reiniciar"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 130, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_sessao.templ`, Line: 130, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -335,7 +335,7 @@ func configDaSessao(v mesaView) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = linhaDeAjuste("Reiniciar o combate", "Esvazia a fila e os turnos. A partida CONTINUA no ar.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = adjustRow("Reiniciar o combate", "Esvazia a fila e os turnos. A partida CONTINUA no ar.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -357,7 +357,7 @@ func configDaSessao(v mesaView) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = linhaDeAjuste("Excluir sessão", "Apaga a sessão e o histórico dela. Não dá para desfazer.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = adjustRow("Excluir sessão", "Apaga a sessão e o histórico dela. Não dá para desfazer.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -365,7 +365,7 @@ func configDaSessao(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = confirmaExcluirSessao(v).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = confirmDeleteSession(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -377,7 +377,7 @@ func configDaSessao(v mesaView) templ.Component {
 //
 // Ela é um `form` de verdade porque o destino é outra página: o servidor apaga e
 // redireciona para a crônica. Datastar não entra aqui.
-func confirmaExcluirSessao(v mesaView) templ.Component {
+func confirmDeleteSession(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -432,9 +432,9 @@ func confirmaExcluirSessao(v mesaView) templ.Component {
 	})
 }
 
-// linhaDeAjuste: uma decisão por linha — o nome, o que ela faz numa frase, e o
+// adjustRow: uma decisão por linha — o nome, o que ela faz numa frase, e o
 // botão à direita. A frase não é enfeite: é ela que deixa o botão ser curto.
-func linhaDeAjuste(nome, frase string) templ.Component {
+func adjustRow(nome, frase string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

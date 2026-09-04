@@ -27,8 +27,8 @@ import (
 // com `4 = gabarito` jogando, e os números que o jogador não tem simplesmente
 // não fazem nada.
 
-// ferramentaDoMapa é uma entrada do trilho.
-type ferramentaDoMapa struct {
+// mapTool é uma entrada do trilho.
+type mapTool struct {
 	// ID é o valor que o sinal `$ferramenta` guarda. Vazio é MOVER, que é o
 	// estado de repouso da cena.
 	ID string
@@ -50,7 +50,7 @@ type ferramentaDoMapa struct {
 	Matiz string
 }
 
-// FerramentaDaBorracha é o valor do sinal quando o clique LIMPA a casa.
+// EraserTool é o valor do sinal quando o clique LIMPA a casa.
 //
 // Ela era um modo (`$apagando`) que invertia o pincel selecionado, e isso
 // produziu o defeito que o dono relatou como "a borracha não funciona": com
@@ -59,91 +59,91 @@ type ferramentaDoMapa struct {
 //
 // Agora ela é FERRAMENTA e limpa a casa inteira (decisão do dono): o pincel na
 // mão não importa, e não existe mais o caso em que o gesto não faz nada.
-const FerramentaDaBorracha = "borracha"
+const EraserTool = "borracha"
 
-// asFerramentasDoMapa é o trilho inteiro, na ordem em que ele desenha.
+// mapTools é o trilho inteiro, na ordem em que ele desenha.
 //
 // A ordem é a do USO e não a do alfabeto: mover primeiro porque é o repouso e o
 // retorno de toda outra; medir e mirar em seguida, que são de TODO MUNDO — "dá
 // para acertar daqui?" é pergunta de quem ataca; e as do mestre por último,
 // agrupadas, com a borracha fechando porque ela é o desfazer das quatro acima.
-func asFerramentasDoMapa() []ferramentaDoMapa {
-	trilho := []ferramentaDoMapa{
+func mapTools() []mapTool {
+	trilho := []mapTool{
 		{ID: "", Rotulo: "Mover a peça", Icone: "MousePointer2",
 			Dica: "Mover a peça: o clique escolhe a casa para onde ela vai"},
 		// A MÃO é a SEGUNDA e não a última, e ela é de TODO MUNDO: sem moldura
 		// não há rolagem nativa, então arrastar a vista deixou de ser conforto e
 		// virou o único jeito de chegar ao outro lado do plano (ALE-203).
-		{ID: FerramentaDaVista, Rotulo: "Arrastar a vista", Icone: "Hand",
+		{ID: ViewTool, Rotulo: "Arrastar a vista", Icone: "Hand",
 			Dica: "Arrastar a vista: o clique e o arrasto percorrem o plano, que não tem bordas"},
 		{ID: FerramentaDaRegua, Rotulo: "Régua", Icone: "Ruler",
 			Dica: "Régua: mede a distância e diz a faixa de alcance do livro (p224)"},
 		{ID: FerramentaDoGabarito, Rotulo: "Gabarito", Icone: "Radar",
 			Dica: "Gabarito de área: a esfera, o cone, a linha e o quadrado (p225), e quem eles pegam"},
-		{ID: FerramentaDeMarcar, Rotulo: "Marcar", Icone: "MapPin", SoMestre: true,
+		{ID: MarkTool, Rotulo: "Marcar", Icone: "MapPin", SoMestre: true,
 			Dica: "Marcar um lugar: o clique põe um ponto ESCONDIDO no mapa, para revelar quando quiser"},
 	}
 	// Os PINCÉIS saem da lista de espécies e nunca de uma cópia escrita à mão: a
 	// quinta espécie nasce no trilho, com atalho, sem ninguém lembrar disto.
 	for _, pincel := range tabuleiro.TerrainKinds {
-		trilho = append(trilho, ferramentaDoMapa{
+		trilho = append(trilho, mapTool{
 			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
-			Icone: oDesenhoDe(pincel.ID).Icone,
+			Icone: drawing(pincel.ID).Icone,
 			Dica:  pincel.Rotulo + ": " + pincel.Efeito + " (p238)",
 			Matiz: "pincel-matiz tabuleiro-matiz-" + string(pincel.ID),
 		})
 	}
-	trilho = append(trilho, ferramentaDoMapa{
-		ID: FerramentaDaBorracha, Rotulo: "Borracha", Icone: "Eraser", SoMestre: true,
+	trilho = append(trilho, mapTool{
+		ID: EraserTool, Rotulo: "Borracha", Icone: "Eraser", SoMestre: true,
 		Dica: "Borracha: o clique limpa a casa inteira, seja qual for o terreno nela",
 	})
-	return numeraOTrilho(trilho)
+	return numberRail(trilho)
 }
 
-// asTeclasDoTrilho é a fileira de números do teclado, na ordem em que a mão a
+// railKeys é a fileira de números do teclado, na ordem em que a mão a
 // percorre: as nove digitais e o zero fechando, que é onde a borracha cai.
 //
 // DEZ é o teto desta gramática, e ele está escrito aqui de propósito: a décima
 // primeira ferramenta não ganha uma letra sorteada — ela pede outra ideia
-// (submenu, ferramenta que troca de modo), e o `numeraOTrilho` faz o problema
+// (submenu, ferramenta que troca de modo), e o `numberRail` faz o problema
 // aparecer em vez de nascer sem atalho em silêncio.
-var asTeclasDoTrilho = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
+var railKeys = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
 
-// numeraOTrilho escreve o atalho de cada ferramenta a partir da posição dela.
+// numberRail escreve o atalho de cada ferramenta a partir da posição dela.
 //
 // Os números eram digitados à mão em cada linha, e a mão errou na primeira
 // oportunidade: pôr a vista em segundo lugar teria exigido renumerar as seis
 // abaixo, e uma esquecida daria duas ferramentas com a mesma tecla — a segunda
 // simplesmente nunca ligaria, sem erro nenhum.
-func numeraOTrilho(trilho []ferramentaDoMapa) []ferramentaDoMapa {
-	if len(trilho) > len(asTeclasDoTrilho) {
+func numberRail(trilho []mapTool) []mapTool {
+	if len(trilho) > len(railKeys) {
 		panic(fmt.Sprintf("o trilho tem %d ferramentas e só há %d teclas: %v",
-			len(trilho), len(asTeclasDoTrilho), asTeclasDoTrilho))
+			len(trilho), len(railKeys), railKeys))
 	}
 	for i := range trilho {
-		trilho[i].Atalho = asTeclasDoTrilho[i]
+		trilho[i].Atalho = railKeys[i]
 	}
 	return trilho
 }
 
-// oTrilhoDe devolve as ferramentas que aquele papel realmente tem.
+// rail devolve as ferramentas que aquele papel realmente tem.
 //
 // Filtrar AQUI e não no `.templ` é o que faz o atalho de teclado e o botão
 // concordarem sobre quem existe: os dois leem esta função. Escritos em dois
 // lugares, o jogador ganharia uma tecla que liga uma ferramenta sem botão.
-func oTrilhoDe(mestre bool) []ferramentaDoMapa {
-	return asVisiveisPara(mestre, asFerramentasDoMapa())
+func rail(mestre bool) []mapTool {
+	return forVisible(mestre, mapTools())
 }
 
-// asVisiveisPara é o filtro, e ele recebe o trilho em vez de buscá-lo.
+// forVisible é o filtro, e ele recebe o trilho em vez de buscá-lo.
 //
 // Separado por causa do GUARDA: a promessa do número fixo só é interessante
 // quando uma ferramenta SÓ DO MESTRE vem ANTES de uma compartilhada — hoje todas
 // as do mestre estão no fim, e um teste sobre o trilho real passaria mesmo com a
 // numeração feita depois do filtro. Com o trilho como parâmetro, o guarda monta
 // o caso que importa em vez de esperar que a ordem real o produza um dia.
-func asVisiveisPara(mestre bool, trilho []ferramentaDoMapa) []ferramentaDoMapa {
-	fora := make([]ferramentaDoMapa, 0, len(trilho))
+func forVisible(mestre bool, trilho []mapTool) []mapTool {
+	fora := make([]mapTool, 0, len(trilho))
 	for _, f := range trilho {
 		if mestre || !f.SoMestre {
 			fora = append(fora, f)
@@ -152,7 +152,7 @@ func asVisiveisPara(mestre bool, trilho []ferramentaDoMapa) []ferramentaDoMapa {
 	return fora
 }
 
-// oTecladoDoTrilho liga as ferramentas às teclas numéricas.
+// railKeyboard liga as ferramentas às teclas numéricas.
 //
 // A GUARDA DE ALVO DE DIGITAÇÃO é a mesma do zoom e do atalho da barra, e ela
 // não é zelo: sem ela, digitar "5" no PV de um combatente trocaria a ferramenta
@@ -160,9 +160,9 @@ func asVisiveisPara(mestre bool, trilho []ferramentaDoMapa) []ferramentaDoMapa {
 //
 // Montado a partir do MESMO trilho que desenha os botões: uma tabela escrita à
 // mão aqui seria a segunda verdade sobre qual tecla liga o quê.
-func oTecladoDoTrilho(mestre bool) string {
+func railKeyboard(mestre bool) string {
 	var casos []string
-	for _, f := range oTrilhoDe(mestre) {
+	for _, f := range rail(mestre) {
 		casos = append(casos, fmt.Sprintf("evt.key === %q ? ($ferramenta = %q)", f.Atalho, f.ID))
 	}
 	// ESC NÃO ENTRA AQUI, e isto é medido e não escolhido.
@@ -175,39 +175,39 @@ func oTecladoDoTrilho(mestre bool) string {
 	//
 	// A saída para quem ligou a régua sem querer é a TECLA 1, que é a ferramenta
 	// de repouso — ou clicar de novo na que está acesa, que o
-	// `escolheAFerramenta` já desliga. Escrever um ramo de Escape aqui seria uma
+	// `pickTool` já desliga. Escrever um ramo de Escape aqui seria uma
 	// promessa que a tela não cumpre.
 	casos = append(casos, "null")
-	return semAlvoDeDigitacao + "(" + strings.Join(casos, " : ") + ")"
+	return typingTargetWithout + "(" + strings.Join(casos, " : ") + ")"
 }
 
-// semAlvoDeDigitacao é o prefixo que impede um atalho de roubar a tecla de quem
+// typingTargetWithout é o prefixo que impede um atalho de roubar a tecla de quem
 // está escrevendo. Extraído porque três atalhos do tabuleiro o repetiam, e o
 // quarto é sempre o que esquece.
-const semAlvoDeDigitacao = `!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && ` +
+const typingTargetWithout = `!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && ` +
 	`!document.activeElement?.isContentEditable && `
 
-// aFerramentaEstaLigada é o teste que marca o botão e mostra a camada dela.
-func aFerramentaEstaLigada(id string) string {
+// onIsTool é o teste que marca o botão e mostra a camada dela.
+func onIsTool(id string) string {
 	return fmt.Sprintf("$ferramenta === %q", id)
 }
 
-// oVestidoDaFerramenta liga UMA das duas aparências, e nunca deixa as duas.
+// toolStyling liga UMA das duas aparências, e nunca deixa as duas.
 //
 // Os dois lados no `data-class` pela armadilha de CASCATA que o editor de bloco
 // documenta: a marca de ligada mora em `@layer components` e as cores do
 // Tailwind são utilidades, numa camada POSTERIOR — camada vence especificidade,
 // e o dourado perderia para o cinza sem nada acusar.
-func oVestidoDaFerramenta(id string) string {
+func toolStyling(id string) string {
 	return fmt.Sprintf("{'pincel-ligado': %s, 'text-muted-foreground': !(%s)}",
-		aFerramentaEstaLigada(id), aFerramentaEstaLigada(id))
+		onIsTool(id), onIsTool(id))
 }
 
-// oNomeComAtalho é o que o leitor de tela e o `title` recebem.
+// shortcutName é o que o leitor de tela e o `title` recebem.
 //
 // A tecla vai no NOME ACESSÍVEL e não só no `title`: um atalho que só existe no
 // balão do mouse é um atalho que quem navega por teclado nunca descobre — e é
 // justamente essa pessoa que mais o usaria.
-func oNomeComAtalho(f ferramentaDoMapa) string {
+func shortcutName(f mapTool) string {
 	return fmt.Sprintf("%s (tecla %s)", f.Rotulo, f.Atalho)
 }

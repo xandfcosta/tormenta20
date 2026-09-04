@@ -23,14 +23,14 @@ import (
 // motor as lê para mexer nos números. A linha da fila é o caminho do NPC, que
 // ficha não tem.
 
-// efeitoDaCondicao é o que o crachá diz ao passar o mouse.
+// conditionEffect é o que o crachá diz ao passar o mouse.
 //
 // A lista e o NOME não moram aqui: `catalogosDoLivro().Condicoes` já é lida do
 // catálogo e já vem ordenada por um collator pt-BR, e o `nomeDaCondicao` já
 // resolve id → palavra do livro. Eu tinha escrito as três de novo neste arquivo
 // antes de procurar — e uma segunda cópia da tabela do livro é uma cópia que
 // desvia, que é exatamente o defeito que a ALE-122 pagou.
-func efeitoDaCondicao(id string) string {
+func conditionEffect(id string) string {
 	for _, c := range book.Catalogs().Condicoes {
 		if c.ID == id {
 			return c.Description
@@ -41,10 +41,10 @@ func efeitoDaCondicao(id string) string {
 
 func (s *Server) ConditionRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/initiative/{entryId}/condicao/{id}",
-		s.comandoDoMestre(alternaACondicao))
+		s.gmCommand(toggleCondition))
 }
 
-// alternaACondicao liga ou desliga uma condição na linha.
+// toggleCondition liga ou desliga uma condição na linha.
 //
 // ALTERNA no servidor, e o conjunto final é montado AQUI — o `EntryPatch`
 // substitui a lista inteira, e a SPA manda o conjunto pronto porque a tela dela
@@ -52,7 +52,7 @@ func (s *Server) ConditionRoutes(r chi.Router) {
 // que lê a lista atual e devolve a nova: o clique carrega a intenção, não o
 // estado, e uma tela que mandasse o conjunto inteiro apagaria a condição que
 // outro remendo acabou de acrescentar.
-func alternaACondicao(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+func toggleCondition(st *Server, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
 	id := chi.URLParam(c.R, "id")
 	// A VALIDAÇÃO é do catálogo e não de uma lista daqui, pela razão do

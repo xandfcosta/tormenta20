@@ -27,10 +27,10 @@ func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", 3, 10, 10, 2, 4)
 
 	corpo := f.posta(t, f.mestre,
-		f.urlDaMesa()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/na-fila", "{}")
+		f.tableUrl()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/na-fila", "{}")
 
 	if !strings.Contains(corpo, "não é jogador desta campanha") {
-		t.Errorf("a recusa não veio; a resposta foi:\n%s", primeirasLinhas(corpo, 6))
+		t.Errorf("a recusa não veio; a resposta foi:\n%s", firstRows(corpo, 6))
 	}
 	// O CONTROLE do erro: uma recusa que já tivesse ESCRITO seria pior que
 	// nenhuma, e o status sozinho não diria.
@@ -52,7 +52,7 @@ func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre,
-		f.urlDaMesa()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
+		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
 
 	fila := f.s.sessions.GetState(f.sessionID).Initiative
 	if len(fila) != 1 {
@@ -71,7 +71,7 @@ func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 // novo passa por ele em vez de escrever direto.
 func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 	f := novoPiloto(t)
-	rota := f.urlDaMesa() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
+	rota := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
 	f.posta(t, f.mestre, rota, "{}")
 	f.posta(t, f.mestre, rota, "{}")
@@ -86,7 +86,7 @@ func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.jogador, "POST",
-		f.urlDaMesa()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
+		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador montou a fila do mestre: %d", rec.Code)
@@ -99,29 +99,29 @@ func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 // pode não fazer nada — a mesma regra que trava os verbos do ciclo da sessão.
 func TestTheCastSaysWhoIsAlreadyInTheTracker(t *testing.T) {
 	f := novoPiloto(t)
-	rota := f.urlDaMesa() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
+	rota := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
-	antes := f.membroDoElenco(t, f.charID)
+	antes := f.castMember(t, f.charID)
 	if antes.NaFila {
 		t.Fatal("o personagem já nasceu marcado como na fila — o teste mediria nada")
 	}
 	f.posta(t, f.mestre, rota, "{}")
 
-	if depois := f.membroDoElenco(t, f.charID); !depois.NaFila {
+	if depois := f.castMember(t, f.charID); !depois.NaFila {
 		t.Error("pôs na fila e o elenco não soube: o botão continuaria oferecendo o gesto")
 	}
 }
 
-// membroDoElenco monta a view pelo caminho de sempre e devolve um cartão do
+// castMember monta a view pelo caminho de sempre e devolve um cartão do
 // Grupo. Perguntar à view e não ao banco é deliberado: é a view que a tela
 // desenha, e é nela que a marca precisa chegar.
-func (f pilotoFixture) membroDoElenco(t *testing.T, characterID int64) mesaMembro {
+func (f pilotoFixture) castMember(t *testing.T, characterID int64) tableMember {
 	t.Helper()
 	user, err := f.s.queries.GetUserByID(t.Context(), f.mestre)
 	if err != nil {
 		t.Fatalf("mestre %d não existe: %v", f.mestre, err)
 	}
-	view, _, err := f.s.loadMesaView(t.Context(), AuthUser{ID: user.ID}, f.campaignID, f.sessionID)
+	view, _, err := f.s.loadTableView(t.Context(), AuthUser{ID: user.ID}, f.campaignID, f.sessionID)
 	if err != nil {
 		t.Fatalf("montar a view: %v", err)
 	}
@@ -131,10 +131,10 @@ func (f pilotoFixture) membroDoElenco(t *testing.T, characterID int64) mesaMembr
 		}
 	}
 	t.Fatalf("o personagem %d não está no elenco da view", characterID)
-	return mesaMembro{}
+	return tableMember{}
 }
 
-func primeirasLinhas(s string, n int) string {
+func firstRows(s string, n int) string {
 	linhas := strings.Split(s, "\n")
 	if len(linhas) > n {
 		linhas = linhas[:n]

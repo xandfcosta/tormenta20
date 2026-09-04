@@ -13,7 +13,7 @@ import (
 // é para isso que a `master.BestiaryView.Base` existe. O que este arquivo acrescenta
 // é o invólucro e o gesto que a cena de lá não tem: mandar para a fila.
 
-// bestiarioDaMesa é o painel inteiro, e ele é a raiz que as rotas remendam.
+// tableBestiary é o painel inteiro, e ele é a raiz que as rotas remendam.
 //
 // O `data-signals` fica AQUI, na raiz remendada, e por isso ele reinicializa a
 // cada remendo — de propósito: `busca`, `tipos` e `criatura` são o que o
@@ -47,7 +47,7 @@ import (
 // Eu não vi na minha própria conferência porque cliquei por JavaScript, e
 // `element.click()` NÃO faz teste de acerto — ele dispara no elemento mesmo com
 // outra coisa por cima. Foi o clique de verdade do Playwright que acusou.
-templ bestiarioDaMesa(v master.BestiaryView) {
+templ tableBestiary(v master.BestiaryView) {
 	<dialog
 		id="bestiario-da-mesa"
 		data-preserve-attr="open"
@@ -87,7 +87,7 @@ templ bestiarioDaMesa(v master.BestiaryView) {
 		// que o mestre veio usar quando não veio só ler (ALE-208): clicar na
 		// lista ABRE a criatura, e mandar para a mesa é o gesto seguinte.
 		if v.Chosen != nil {
-			@ajusteDoVerbete(v, *v.Chosen)
+			@adjustEntry(v, *v.Chosen)
 			// A MESMA ficha da cena do mestre, para a largura em que o painel ao
 			// lado não cabe: abaixo de 50rem de contêiner o `.mesa-painel` é
 			// `display:none`, e sem isto o mestre no telefone escolheria a
@@ -99,7 +99,7 @@ templ bestiarioDaMesa(v master.BestiaryView) {
 	</dialog>
 }
 
-// ajusteDoVerbete é PV, iniciativa e quantas, antes de a criatura entrar.
+// adjustEntry é PV, iniciativa e quantas, antes de a criatura entrar.
 //
 // Ele existe porque o que entrava sem ele era quase sempre errado (ALE-208): o
 // mestre quer o ogro com menos PV, ou a iniciativa que ele acabou de rolar nos
@@ -107,8 +107,8 @@ templ bestiarioDaMesa(v master.BestiaryView) {
 //
 // Os campos são ligados a SINAIS e nunca recebem `value` do servidor: entrada em
 // curso é do teclado de quem digita. Quem os semeia do bloco do livro é o
-// servidor, e SÓ ao abrir outra criatura — ver `rascunhoDoVerbete`.
-templ ajusteDoVerbete(v master.BestiaryView, m book.Entry) {
+// servidor, e SÓ ao abrir outra criatura — ver `entryDraft`.
+templ adjustEntry(v master.BestiaryView, m book.Entry) {
 	<div class="flex shrink-0 flex-wrap items-end gap-3 border-t border-grimorio-iron pt-3">
 		@campoDoAjuste("ajuste-pv", "PV", "pvdoverbete", "1", "999")
 		@campoDoAjuste("ajuste-ini", "Iniciativa", "inidoverbete", "-5", "40")
@@ -120,10 +120,10 @@ templ ajusteDoVerbete(v master.BestiaryView, m book.Entry) {
 			data-on:click={ fmt.Sprintf("@post('%s/enviar')", v.BestiaryBase()) }
 			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 		>
-			Mandar { m.Name } para a mesa
+			Mandar { m.Name } para a table
 		</button>
 	</div>
-	@oGuardarNoElenco(v)
+	@saveToCastButton(v)
 }
 
 templ campoDoAjuste(id, rotulo, sinal, min, max string) {

@@ -36,22 +36,22 @@ const (
 	sinalDaVistaX = "vistax"
 	sinalDaVistaY = "vistay"
 	// sinalDoArrastoDaVista diz se o dedo está segurando o plano. Ele existe
-	// para o CURSOR (a mão fechada) e não para a conta: o `segueAVista` já o lê
+	// para o CURSOR (a mão fechada) e não para a conta: o `followsView` já o lê
 	// como guarda, e o `data-class` da camada o lê para trocar o desenho.
 	sinalDoArrastoDaVista = "arrastandoavista"
 )
 
-// estiloDaCena leva a janela e o zoom do sinal para o CSS.
+// sceneStyle leva a janela e o zoom do sinal para o CSS.
 //
 // Vai na CENA — a caixa que não rola e que o remendo não substitui — e desce por
 // herança até o plano e a grade. No plano ele seria apagado pelo primeiro quadro
 // do SSE, que é a mesma razão pela qual as variáveis do arrasto moram no `#mesa`.
-const estiloDaCena = "`--quadrado: ${$quadrado}px; --vista-x: ${$vistax}px; --vista-y: ${$vistay}px`"
+const sceneStyle = "`--quadrado: ${$quadrado}px; --vista-x: ${$vistax}px; --vista-y: ${$vistay}px`"
 
 // oQuadradoClicado traduz o PONTO do clique em quadrado do plano.
 //
 // UM helper e não uma cópia por camada, e isto INVERTE a decisão anterior. O
-// comentário que estava no `marcacaoNoPontoClicado` dizia que extrair a conta
+// comentário que estava no `clickedPointMarking` dizia que extrair a conta
 // "faria as duas rotas mudarem juntas no dia em que uma delas precisar do canto e
 // não do centro" — e o dia em que TODAS mudaram juntas chegou primeiro: sem
 // moldura, a conta ganhou a janela dentro dela, e havia cinco cópias para
@@ -88,9 +88,9 @@ const (
 	clicouNoCantoY = "Math.round((evt.offsetY + $vistay) / $quadrado)"
 )
 
-// oPontoNoPlano é o mesmo para um ponto qualquer da janela, e não só do clique —
+// planPoint é o mesmo para um ponto qualquer da janela, e não só do clique —
 // o arrasto da vista precisa dele para o zoom ancorado.
-func oPontoNoPlano(pixelX, pixelY string) (x, y string) {
+func planPoint(pixelX, pixelY string) (x, y string) {
 	return fmt.Sprintf("((%s) + $vistax) / $quadrado", pixelX),
 		fmt.Sprintf("((%s) + $vistay) / $quadrado", pixelY)
 }
@@ -102,57 +102,57 @@ func oPontoNoPlano(pixelX, pixelY string) (x, y string) {
 // arrasto, que é o gesto que a issue pedia desde o começo ("movimento livre") e
 // que o dono cobrou.
 
-// FerramentaDaVista é o valor do sinal quando o arrasto move a JANELA.
-const FerramentaDaVista = "vista"
+// ViewTool é o valor do sinal quando o arrasto move a JANELA.
+const ViewTool = "vista"
 
 // pegaAVista guarda de onde o dedo saiu. Em PIXELS da janela, não do plano: o
 // que se mede é o deslocamento do dedo, e ele não depende do zoom.
 const pegaAVista = "$arrastandoavista = true; $vistainix = evt.clientX + $vistax; " +
 	"$vistainiy = evt.clientY + $vistay; evt.currentTarget.setPointerCapture(evt.pointerId)"
 
-// segueAVista move a janela junto com o dedo.
+// followsView move a janela junto com o dedo.
 //
 // A janela anda ao CONTRÁRIO do dedo: arrastar para a direita traz o conteúdo da
 // esquerda, que é como todo mapa se comporta. Por isso o sinal é
 // `início - atual` e não o inverso.
-const segueAVista = "$arrastandoavista && ($vistax = $vistainix - evt.clientX, " +
+const followsView = "$arrastandoavista && ($vistax = $vistainix - evt.clientX, " +
 	"$vistay = $vistainiy - evt.clientY)"
 
-const soltaAVista = "$arrastandoavista = false"
+const dropView = "$arrastandoavista = false"
 
-// aRodaMoveAJanela: a roda ROLA o plano, e `Ctrl+roda` amplia.
+// viewportMoveWheel: a roda ROLA o plano, e `Ctrl+roda` amplia.
 //
 // É a mesma divisão de antes, quando havia rolagem nativa — a roda percorria o
 // mapa e o `Ctrl` ampliava (convenção de mapa). O que muda é que agora a roda
 // escreve na janela em vez de o navegador rolar uma caixa, e por isso ela precisa
 // do `preventDefault`: sem ele, a página inteira rolaria atrás do tabuleiro.
-var aRodaMoveAJanela = fmt.Sprintf(
+var wheelMovesViewport = fmt.Sprintf(
 	"evt.preventDefault(); if (evt.ctrlKey) { const janela = evt.currentTarget.getBoundingClientRect(); %s } "+
 		"else { $%s += evt.deltaX; $%s += evt.deltaY }",
-	ampliaAncorado("evt.deltaY < 0 ? "+oPasso(passoDoZoom)+" : "+oPasso(-passoDoZoom),
+	zoomAnchored("evt.deltaY < 0 ? "+step(passoDoZoom)+" : "+step(-passoDoZoom),
 		"evt.clientX - janela.left", "evt.clientY - janela.top"),
 	sinalDaVistaX, sinalDaVistaY)
 
-// centralizaAJanelaEm põe um quadrado do plano no meio da tela.
+// centerViewport põe um quadrado do plano no meio da tela.
 //
 // Ela substitui o `scrollTo` do centralizar: sem caixa que rola, o que se move é
 // a janela. E ela é PURA aritmética no cliente — nada vai ao servidor, como todo
 // o resto do enquadramento.
-func centralizaAJanelaEm(x, y int) string {
+func centerViewport(x, y int) string {
 	return fmt.Sprintf(
 		"const cena = document.getElementById(%q); "+
 			"$vistax = (%d + 0.5) * $quadrado - cena.clientWidth / 2; "+
 			"$vistay = (%d + 0.5) * $quadrado - cena.clientHeight / 2",
-		idDaCena, x, y)
+		sceneId, x, y)
 }
 
-// idDaCena é como o centralizar acha a janela para medir.
+// sceneId é como o centralizar acha a janela para medir.
 //
 // A CENA e não o palco: o palco deixou de existir como caixa que rola, e quem
 // tem o tamanho da janela agora é a caixa que ancora os overlays.
-const idDaCena = "tabuleiro-cena"
+const sceneId = "tabuleiro-cena"
 
-// aJanelaSegueOFoco devolve o que a ROLAGEM NATIVA fazia de graça, e sem ele
+// focusFollowsViewport devolve o que a ROLAGEM NATIVA fazia de graça, e sem ele
 // esta fatia teria embutido uma regressão de teclado.
 //
 // MEDIDO, e vermelho antes de escrito: com a peça em (-2039,-1268) e a janela em
@@ -169,7 +169,7 @@ const idDaCena = "tabuleiro-cena"
 //
 // `alvo.width &&` pula o que não tem caixa: um alvo de tamanho zero daria uma
 // conta sobre um retângulo em lugar nenhum.
-const aJanelaSegueOFoco = "const janela = evt.currentTarget.getBoundingClientRect(), " +
+const viewportFollowsFocus = "const janela = evt.currentTarget.getBoundingClientRect(), " +
 	"alvo = evt.target.getBoundingClientRect(); alvo.width && (" +
 	"$vistax += Math.max(0, alvo.right - janela.right) - Math.max(0, janela.left - alvo.left), " +
 	"$vistay += Math.max(0, alvo.bottom - janela.bottom) - Math.max(0, janela.top - alvo.top))"
@@ -184,15 +184,15 @@ const aJanelaSegueOFoco = "const janela = evt.currentTarget.getBoundingClientRec
 // cru na janela, um `ArrowRight` não chega — e o `-` do zoom chega, que é o
 // controle positivo do próprio canal.
 //
-// Então quem percorre o plano pelo teclado é o FOCO, com o `aJanelaSegueOFoco`
+// Então quem percorre o plano pelo teclado é o FOCO, com o `viewportFollowsFocus`
 // acima: a gramática move o foco entre as peças, e a janela vai atrás. Escrever
 // um ramo de seta aqui seria uma promessa que a tela não cumpre.
 
-// osSinaisDaJanela são o estado do enquadramento no navegador.
+// viewportSignals são o estado do enquadramento no navegador.
 //
 // A janela nasce em ZERO, e isso quer dizer "o quadrado (0,0) do plano está na
 // quina de cima da tela". É um lugar arbitrário num plano sem bordas — e é por
 // isso que a cena CENTRALIZA nas peças ao abrir, em vez de deixar o mestre
 // procurar o próprio grupo.
-var osSinaisDaJanela = fmt.Sprintf("%s: 0, %s: 0, %s: false, vistainix: 0, vistainiy: 0",
+var viewportSignals = fmt.Sprintf("%s: 0, %s: 0, %s: false, vistainix: 0, vistainiy: 0",
 	sinalDaVistaX, sinalDaVistaY, sinalDoArrastoDaVista)

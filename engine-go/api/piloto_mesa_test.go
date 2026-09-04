@@ -107,7 +107,7 @@ func (f pilotoFixture) pede(t *testing.T, userID int64, method, path, body strin
 	return rec
 }
 
-func (f pilotoFixture) urlDaMesa() string {
+func (f pilotoFixture) tableUrl() string {
 	return "/mesa/" + strconv.FormatInt(f.campaignID, 10) + "/" + strconv.FormatInt(f.sessionID, 10)
 }
 
@@ -144,7 +144,7 @@ func (f pilotoFixture) posta(t *testing.T, userID int64, caminho, corpo string) 
 }
 
 // cena põe a sessão em cena com um ogro de PV OCULTOS e o PC do jogador.
-func (f pilotoFixture) cena(t *testing.T) {
+func (f pilotoFixture) scene(t *testing.T) {
 	t.Helper()
 	oculto := true
 	pv, pvMax := int64(12), int64(130)
@@ -168,13 +168,13 @@ func (f pilotoFixture) cena(t *testing.T) {
 // própria leitura: a PÁGINA obedece à mesma redação que o socket.
 //
 // Provado VERMELHO trocando `aovivo.StateForRole(role, ...)` por `s.sessions.GetState(...)`
-// no `loadMesaView` — o HTML passou a carregar "12/130", os PV que o mestre
+// no `loadTableView` — o HTML passou a carregar "12/130", os PV que o mestre
 // escondeu, para dentro da tela do jogador.
 func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	corpo := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(corpo, "Ogro cansado") {
 		t.Fatal("o ogro sumiu da fila do jogador — ele deve ver QUEM está lá")
@@ -203,7 +203,7 @@ func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 		t.Fatalf("semear chefe: %v", err)
 	}
 
-	corpo := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(corpo, "Chefe secreto") {
 		t.Error("a fila de fora de cena vazou para o jogador")
@@ -213,7 +213,7 @@ func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 	}
 	// O mestre, na MESMA página, continua vendo o que montou — sem esta metade
 	// o teste passaria com um `redactForPlayers` aplicado a todo mundo.
-	corpoDoMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	corpoDoMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(corpoDoMestre, "Chefe secreto") {
 		t.Error("o mestre perdeu a própria fila — a redação está pegando o papel errado")
 	}
@@ -227,9 +227,9 @@ func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 // virou texto solto que o Datastar descarta, e a tela não muda.
 func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 
-	corpo := f.posta(t, f.jogador, f.urlDaMesa()+"/iniciativa", `{"d20":47}`)
+	corpo := f.posta(t, f.jogador, f.tableUrl()+"/iniciativa", `{"d20":47}`)
 
 	if !strings.HasPrefix(corpo, "event: datastar-patch-signals") {
 		t.Fatalf("a recusa não saiu como evento do Datastar, saiu como:\n%s", corpo)
@@ -251,7 +251,7 @@ func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 // que é exatamente o defeito que ele mira (a armadilha da ALE-213).
 func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 	bonus, err := f.s.initiativeBonus(context.Background(), f.charID)
 	if err != nil {
 		t.Fatalf("bônus: %v", err)
@@ -262,7 +262,7 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 
 	// O corpo é conferido, e não só o código: com a ordem trocada o servidor
 	// devolve 200 com um erro DENTRO do sinal, e "deu 200" não é resposta.
-	if resposta := f.posta(t, f.jogador, f.urlDaMesa()+"/iniciativa", `{"d20":14}`); !strings.Contains(resposta, `{"erro":""}`) {
+	if resposta := f.posta(t, f.jogador, f.tableUrl()+"/iniciativa", `{"d20":14}`); !strings.Contains(resposta, `{"erro":""}`) {
 		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", resposta)
 	}
 
@@ -303,14 +303,14 @@ func TestTableTurnOf(t *testing.T) {
 	}
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
-			got := mesaTurnOf(&aovivo.SessionRuntimeState{Initiative: fila, TurnIndex: c.turnIndex}, meus)
+			got := tableTurnOf(&aovivo.SessionRuntimeState{Initiative: fila, TurnIndex: c.turnIndex}, meus)
 			if got.Kind != c.kind || got.Label != c.label {
 				t.Errorf("veio {%s %q}, queria {%s %q}", got.Kind, got.Label, c.kind, c.label)
 			}
 		})
 	}
 	// O personagem alheio não acende a faixa de ninguém.
-	outro := mesaTurnOf(&aovivo.SessionRuntimeState{
+	outro := tableTurnOf(&aovivo.SessionRuntimeState{
 		Initiative: []aovivo.InitiativeEntry{{Label: "Colega", Type: "character", CharacterID: &alheio}},
 		TurnIndex:  0,
 	}, meus)
@@ -352,11 +352,11 @@ func TestHpToneAtTheThresholds(t *testing.T) {
 // escondendo o `Content-Encoding` que este teste existe para ver.
 func TestTheTableStreamCompresses(t *testing.T) {
 	f := novoPiloto(t)
-	f.cena(t)
+	f.scene(t)
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
 
-	req, err := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)
+	req, err := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/stream", nil)
 	if err != nil {
 		t.Fatalf("montar pedido: %v", err)
 	}
@@ -469,10 +469,10 @@ func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
 // que está descrita acima e é reproduzível em três linhas.
 func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	bonus := int64(8)
-	html, err := ui.RenderFragment(t.Context(), mesa(mesaView{
+	html, err := ui.RenderFragment(t.Context(), table(tableView{
 		CampaignID: 7, SessionID: 42, SceneActive: true,
-		Turn: mesaTurn{Kind: "idle"},
-		Eu:   &mesaEu{CharacterID: 1, Nome: "Samira", Bonus: bonus},
+		Turn: tableTurn{Kind: "idle"},
+		Eu:   &tableMe{CharacterID: 1, Nome: "Samira", Bonus: bonus},
 	}))
 	if err != nil {
 		t.Fatalf("render: %v", err)

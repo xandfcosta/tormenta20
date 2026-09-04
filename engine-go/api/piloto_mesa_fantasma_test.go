@@ -27,15 +27,15 @@ import (
 // gravar seria a peça andando sem confirmação, e gravar sem desenhar é o defeito
 // que o dono relatou.
 
-// noTabuleiroEm põe a peça do jogador numa casa escolhida, e devolve o id dela.
+// onBoardAt põe a peça do jogador numa casa escolhida, e devolve o id dela.
 //
-// Irmã da `noTabuleiro`, que sempre põe em 0,0: aqui a origem precisa ser um
+// Irmã da `onBoard`, que sempre põe em 0,0: aqui a origem precisa ser um
 // número que não se confunda com "não preenchido" — com a peça em 0,0 um
 // fantasma desenhado na quina do plano por engano passaria despercebido.
-func (f pilotoFixture) noTabuleiroEm(t *testing.T, x, y int) string {
+func (f pilotoFixture) onBoardAt(t *testing.T, x, y int) string {
 	t.Helper()
-	f.abreTabuleiro(t, "pedra")
-	entryID := f.naFila(t)
+	f.seedOpenBoard(t, "pedra")
+	entryID := f.tracker(t)
 	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Arcanista", X: x, Y: y, EntryID: &entryID, CharacterID: &f.charID}, true)
 	if err != nil {
@@ -44,14 +44,14 @@ func (f pilotoFixture) noTabuleiroEm(t *testing.T, x, y int) string {
 	return posto.Tokens[len(posto.Tokens)-1].ID
 }
 
-// oElementoCom acha o primeiro elemento cujo atributo `atributo` contém `trecho`,
+// element acha o primeiro elemento cujo atributo `atributo` contém `trecho`,
 // e devolve os atributos dele.
 //
 // Um parser de HTML de verdade e não uma expressão regular, e a razão é o guarda
 // do fim deste arquivo: as expressões do Datastar carregam `<`, `>` e aspas
 // dentro dos valores, e um `<[^>]*>` corta um elemento no meio de um `data-on:`
 // sem avisar — a busca devolveria menos e a ausência viraria conclusão.
-func oElementoCom(t *testing.T, tela, atributo, trecho string) map[string]string {
+func element(t *testing.T, tela, atributo, trecho string) map[string]string {
 	t.Helper()
 	z := html.NewTokenizer(strings.NewReader(tela))
 	for {
@@ -84,11 +84,11 @@ func oElementoCom(t *testing.T, tela, atributo, trecho string) map[string]string
 // andou" de "eu procurei a coisa errada e casei com outro nó".
 func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 4, 2)
-	f.naVezDoJogador(t)
+	tokenID := f.onBoardAt(t, 4, 2)
+	f.turnPlayer(t)
 
-	antes := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
-	if peca := oElementoCom(t, antes, "aria-label", "Arcanista em 4, 2"); peca == nil {
+	antes := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	if peca := element(t, antes, "aria-label", "Arcanista em 4, 2"); peca == nil {
 		t.Fatal("a peça não está em 4,2 ANTES da proposta: o canal não está aberto e o que vem abaixo não é evidência")
 	} else if !strings.Contains(peca["style"], "--col:4; --lin:2;") {
 		t.Fatalf("a peça parada está desenhada em %q", peca["style"])
@@ -98,12 +98,12 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	// destino é o fato — a peça sólida vai para lá. Para o mestre é o contrário,
 	// e o guarda disso é o `TestForTheGmTheTokenStaysAndTheGhostGoes`.
 	if rec := f.pede(t, f.jogador, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	depois := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	depois := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	peca := oElementoCom(t, depois, "aria-label", "Arcanista em 7, 3")
+	peca := element(t, depois, "aria-label", "Arcanista em 7, 3")
 	if peca == nil {
 		t.Fatal("a peça não é desenhada onde foi solta: ela voltou para a origem, que é o defeito do dono")
 	}
@@ -131,20 +131,20 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 // anônima na casa não responde qual deles está a caminho.
 func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 4, 2)
+	tokenID := f.onBoardAt(t, 4, 2)
 
-	semMovimento := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	semMovimento := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(semMovimento, "tabuleiro-peca-fantasma") {
 		t.Fatal("há fantasma SEM movimento proposto: ele estaria marcando um começo que não existe")
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	fantasma := oElementoCom(t, tela, "class", "tabuleiro-peca-fantasma")
+	fantasma := element(t, tela, "class", "tabuleiro-peca-fantasma")
 	if fantasma == nil {
 		t.Fatal("a origem do movimento não tem fantasma: o começo do caminho não está marcado em lugar nenhum")
 	}
@@ -159,7 +159,7 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	// E o leitor de tela não perde de onde ela saiu: quem conta é o nome da PEÇA,
 	// porque o fantasma é `aria-hidden` para não anunciar o mesmo combatente duas
 	// vezes na mesma cena.
-	peca := oElementoCom(t, tela, "aria-label", "Arcanista em 7, 3")
+	peca := element(t, tela, "aria-label", "Arcanista em 7, 3")
 	if peca == nil || !strings.Contains(peca["aria-label"], "saiu de 4, 2") {
 		t.Fatalf("o nome da peça não diz de onde ela saiu: %+v", peca)
 	}
@@ -178,18 +178,18 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 // em 4,2" não se distingue de "a proposta não chegou".
 func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 4, 2)
+	tokenID := f.onBoardAt(t, 4, 2)
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if peca := oElementoCom(t, tela, "aria-label", "Arcanista em 4, 2"); peca == nil {
+	if peca := element(t, tela, "aria-label", "Arcanista em 4, 2"); peca == nil {
 		t.Error("a peça do mestre saiu da casa dela numa proposta que ele ainda não confirmou")
 	}
-	fantasma := oElementoCom(t, tela, "class", "tabuleiro-peca-fantasma")
+	fantasma := element(t, tela, "class", "tabuleiro-peca-fantasma")
 	if fantasma == nil {
 		t.Fatal("o mestre não vê fantasma nenhum: o destino proposto não está marcado")
 	}
@@ -205,17 +205,17 @@ func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 // em cada casa), e ela para antes do centro para apontar a peça em vez de riscá-la.
 func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 0, 0)
-	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+	tokenID := f.onBoardAt(t, 0, 0)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	for _, parada := range []string{"/parada/3/0", "/parada/3/4"} {
 		if rec := f.pede(t, f.mestre, http.MethodPost, base+parada, ""); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", parada, rec.Code)
 		}
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	fio := oElementoCom(t, tela, "class", "tabuleiro-movimento-fio")
+	fio := element(t, tela, "class", "tabuleiro-movimento-fio")
 	if fio == nil {
 		t.Fatal("o movimento não tem seta")
 	}
@@ -242,19 +242,19 @@ func TestTheArrowWithoutStopsJoinsBothEndsOfThePath(t *testing.T) {
 	semParadas := &tabuleiro.PendingMove{
 		Path: []engine.Square{{}, {X: 1}, {X: 2}, {X: 3}},
 	}
-	dobras := asDobrasDoMovimento(semParadas)
+	dobras := moveFolds(semParadas)
 	if len(dobras) != 2 || dobras[0] != (engine.Square{}) || dobras[1] != (engine.Square{X: 3}) {
 		t.Fatalf("as dobras de um caminho sem paradas saíram %+v", dobras)
 	}
 	// A perna anda 3 e a ponta recua meio quadrado: de 0,5 até 3,0. Sem orçamento
 	// (-1) ela sai inteira de dourado — o vermelho do item 13 tem guarda próprio
 	// em `piloto_mesa_movimento_desenho_test.go`.
-	if fio, _, _ := osFiosDoMovimento(dobras, []int{3}, -1); fio != "M 0.5 0.5 L 3 0.5" {
+	if fio, _, _ := moveWires(dobras, []int{3}, -1); fio != "M 0.5 0.5 L 3 0.5" {
 		t.Errorf("a seta reta saiu %q", fio)
 	}
 	// E com uma dobra só não há o que ligar: `d` vazio é o jeito de o `<path>`
 	// não desenhar sem um `data-show` a mais, que é a combinação que congela a aba.
-	if fio, azul, alem := osFiosDoMovimento([]engine.Square{{}}, nil, -1); fio != "" || azul != "" || alem != "" {
+	if fio, azul, alem := moveWires([]engine.Square{{}}, nil, -1); fio != "" || azul != "" || alem != "" {
 		t.Errorf("uma dobra só desenhou %q, %q e %q", fio, azul, alem)
 	}
 }
@@ -282,22 +282,22 @@ func TestTheArrowWithoutStopsJoinsBothEndsOfThePath(t *testing.T) {
 // sobre o `--col` e não sobre um nome.
 func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 4, 2)
+	tokenID := f.onBoardAt(t, 4, 2)
 	// A cena precisa ter as três famílias no ar, senão o guarda mede o que
 	// sobrou: terreno pintado, movimento proposto (trilha e paradas) e alcance.
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/terreno/dificil/5/2/ate/5/2", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/dificil/5/2/ate/5/2", ""); rec.Code != http.StatusOK {
 		t.Fatalf("pintar terreno deu %d", rec.Code)
 	}
 	for _, parada := range []string{"/parada/7/3", "/parada/7/6"} {
 		if rec := f.pede(t, f.mestre, http.MethodPost,
-			f.urlDaMesa()+"/tabuleiro/"+tokenID+parada, ""); rec.Code != http.StatusOK {
+			f.tableUrl()+"/tabuleiro/"+tokenID+parada, ""); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", parada, rec.Code)
 		}
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	comCaixa := asClassesQueRecebemCaixa(t)
+	comCaixa := classesThatReceiveBox(t)
 	if len(comCaixa) < 3 {
 		t.Fatalf("a folha só dá caixa a %d classes: o canal não está aberto e o silêncio abaixo não é evidência", len(comCaixa))
 	}
@@ -336,13 +336,13 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	}
 }
 
-// asClassesQueRecebemCaixa lê a folha COMPILADA e devolve as classes de toda
+// boxReceiveClasses lê a folha COMPILADA e devolve as classes de toda
 // regra que resolve o `--col` em pixels.
 //
 // A folha compilada e não a fonte, porque é ela que o navegador recebe: uma
 // classe que o scanner do Tailwind não viu não existe na folha, e é justamente
 // esse o modo de falhar que não dá erro (ver o `engine-go/CLAUDE.md`).
-func asClassesQueRecebemCaixa(t *testing.T) map[string]bool {
+func classesThatReceiveBox(t *testing.T) map[string]bool {
 	t.Helper()
 	folha, err := os.ReadFile("piloto/static/piloto.css")
 	if err != nil {
@@ -389,12 +389,12 @@ func temAlgumaClasse(lista string, procuradas map[string]bool) bool {
 // `TestNoLayerReadsThePointWithoutAddingTheViewport`.
 func TestNoElementRepeatsAnAttribute(t *testing.T) {
 	f := novoPiloto(t)
-	tokenID := f.noTabuleiroEm(t, 4, 2)
+	tokenID := f.onBoardAt(t, 4, 2)
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
-	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	z := html.NewTokenizer(strings.NewReader(tela))
 	elementos := 0

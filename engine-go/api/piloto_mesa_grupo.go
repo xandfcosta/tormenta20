@@ -35,7 +35,7 @@ import (
 func (s *Server) PartyRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
 	r.Post(base+"/marcar-area/{x}/{y}/{x2}/{y2}", s.handleMarcarArea)
-	r.Post(base+"/grupo/mover/{dx}/{dy}", s.comandoContinuoDoMestre(moveOGrupoDaMesa))
+	r.Post(base+"/grupo/mover/{dx}/{dy}", s.gmContinuousCommand(movePartyTable))
 }
 
 // handleMarcarArea devolve os ids das peças dentro do laço.
@@ -45,7 +45,7 @@ func (s *Server) PartyRoutes(r chi.Router) {
 // do jogador, mas aparece na do mestre, e a redação por papel tem de continuar
 // com um dono só.
 func (s *Server) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
-	papel, sessionID, tabuleiroID, ok := s.quemMedeAMesa(w, r)
+	papel, sessionID, tabuleiroID, ok := s.whoMeasuresTheTable(w, r)
 	if !ok {
 		return
 	}
@@ -54,31 +54,31 @@ func (s *Server) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	de, err1 := quadradoDaURL(r)
-	ate, err2 := segundoQuadradoDaURL(r)
+	ate, err2 := urlSquareSecond(r)
 	if err1 != nil || err2 != nil {
 		http.Error(w, "os cantos do laço precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}
 	b := s.boards.Get(r.Context(), sessionID, tabuleiroID)
 	ids := tabuleiro.TokensInRectangle(b, de, ate)
-	escreveSinais(w, r, map[string]any{
-		sinalDasPecasMarcadas: strings.Join(ids, ","),
+	writeSignals(w, r, map[string]any{
+		markedTokensSignal: strings.Join(ids, ","),
 	})
 }
 
-// moveOGrupoDaMesa desloca as peças marcadas pelo delta do arrasto.
+// movePartyTable desloca as peças marcadas pelo delta do arrasto.
 //
 // A LISTA vem dos SINAIS e o DELTA vem do caminho, e a divisão é a mesma do
 // resto: o caminho carrega o que o gesto ACABOU de decidir (quantos quadrados o
 // dedo andou), e o sinal carrega o estado que já estava lá (quem foi marcado).
-func moveOGrupoDaMesa(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+func movePartyTable(st *Server, c commandCtx) (*tabuleiro.BoardState, error) {
 	dx, errX := intDoCaminho(chi.URLParam(c.R, "dx"))
 	dy, errY := intDoCaminho(chi.URLParam(c.R, "dy"))
 	if errX != nil || errY != nil {
 		return nil, fmt.Errorf("o deslocamento (%q,%q) não é um par de números",
 			chi.URLParam(c.R, "dx"), chi.URLParam(c.R, "dy"))
 	}
-	ids, err := asPecasMarcadas(c.R)
+	ids, err := markedTokens(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -88,20 +88,20 @@ func moveOGrupoDaMesa(st *Server, c mesaComando) (*tabuleiro.BoardState, error) 
 	return st.boards.MoveGroup(c.R.Context(), c.SessionID, c.TabuleiroID, ids, dx, dy)
 }
 
-// sinalDasPecasMarcadas guarda os ids marcados, separados por vírgula.
+// markedTokensSignal guarda os ids marcados, separados por vírgula.
 //
 // UMA string e não uma lista, ao contrário das paradas da régua, e a razão é o
 // PROXY do Datastar: lista de sinal cria índice ao ser lida, e aqui a tela
 // precisa perguntar "esta peça está marcada?" uma vez POR PEÇA. Com string, a
 // pergunta é um `includes` sobre um valor só.
-const sinalDasPecasMarcadas = "pecasmarcadas"
+const markedTokensSignal = "pecasmarcadas"
 
-// oMaximoDeMarcadas é o teto do grupo, e ele é o teto da MESA: 50 combatentes
+// markedMax é o teto do grupo, e ele é o teto da MESA: 50 combatentes
 // (`aovivo`). Uma lista maior que isso não saiu de um laço sobre este tabuleiro.
-const oMaximoDeMarcadas = 50
+const markedMax = 50
 
-// asPecasMarcadas lê os ids do sinal.
-func asPecasMarcadas(r *http.Request) ([]string, error) {
+// markedTokens lê os ids do sinal.
+func markedTokens(r *http.Request) ([]string, error) {
 	var sinais struct {
 		Marcadas string `json:"pecasmarcadas"`
 	}
@@ -114,8 +114,8 @@ func asPecasMarcadas(r *http.Request) ([]string, error) {
 			ids = append(ids, id)
 		}
 	}
-	if len(ids) > oMaximoDeMarcadas {
-		return nil, fmt.Errorf("o grupo tem %d peças e a mesa cabe %d", len(ids), oMaximoDeMarcadas)
+	if len(ids) > markedMax {
+		return nil, fmt.Errorf("o grupo tem %d peças e a mesa cabe %d", len(ids), markedMax)
 	}
 	return ids, nil
 }

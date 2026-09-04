@@ -44,7 +44,7 @@ func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
 		{engine.Square{}, engine.Square{X: 3, Y: 3}, "6 quadrados (9,0m) · alcance curto"},
 	}
 	for _, c := range casos {
-		if lido := leituraDaRegua(engine.Measure(c.de, c.ate)); lido != c.esperado {
+		if lido := rulerReading(engine.Measure(c.de, c.ate)); lido != c.esperado {
 			t.Errorf("de %v a %v a régua disse %q, esperado %q", c.de, c.ate, lido, c.esperado)
 		}
 	}
@@ -79,7 +79,7 @@ func TestTheTemplateDirectionHasADeadZone(t *testing.T) {
 		{origem, engine.Square{X: 1}, "mira parada não é direção"},
 	}
 	for _, c := range casos {
-		if lido := direcaoDoGabarito(origem, c.mira); lido != c.esperado {
+		if lido := templateDirection(origem, c.mira); lido != c.esperado {
 			t.Errorf("%s: mira %v deu %v, esperado %v", c.porque, c.mira, lido, c.esperado)
 		}
 	}
@@ -92,12 +92,12 @@ func TestTheTemplateDirectionHasADeadZone(t *testing.T) {
 // moldura. Se o caminho já viesse relativo à moldura, uma moldura que crescesse
 // deslocaria o gabarito sem que nada mudasse na tela.
 func TestTheTemplatePathUsesThePlaneCoordinate(t *testing.T) {
-	lido := caminhoDasCasas([]engine.Square{{X: -1, Y: 2}, {X: 0, Y: 2}})
+	lido := squaresPath([]engine.Square{{X: -1, Y: 2}, {X: 0, Y: 2}})
 	const esperado = "M -1 2 h 1 v 1 h -1 Z M 0 2 h 1 v 1 h -1 Z"
 	if lido != esperado {
 		t.Errorf("o caminho saiu %q, esperado %q", lido, esperado)
 	}
-	if caminhoDasCasas(nil) != "" {
+	if squaresPath(nil) != "" {
 		t.Error("área vazia devolveu caminho — o `data-show` do desenho depende do vazio")
 	}
 }
@@ -113,19 +113,19 @@ func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
 	}}
 	// Uma casa só, na quina de baixo do corpo do dragão: a âncora dele é (10,10)
 	// e o corpo vai até (15,15).
-	dentro := quemOGabaritoPega(b, []engine.Square{{X: 15, Y: 15}})
+	dentro := takesTemplateWho(b, []engine.Square{{X: 15, Y: 15}})
 	if !strings.Contains(dentro, "Dragão") {
 		t.Errorf("a área pegou %q — o corpo da peça grande ficou de fora", dentro)
 	}
 	if strings.Contains(dentro, "Rato") {
 		t.Errorf("a área pegou %q — quem está longe entrou", dentro)
 	}
-	if fora := quemOGabaritoPega(b, []engine.Square{{X: 100, Y: 100}}); fora != "Ninguém dentro." {
+	if fora := takesTemplateWho(b, []engine.Square{{X: 100, Y: 100}}); fora != "Ninguém dentro." {
 		t.Errorf("área sem ninguém disse %q", fora)
 	}
 	// A frase VAZIA é a dica, e não "0 peças": antes do primeiro clique não há
 	// área nenhuma, e dizer que ela não pega ninguém descreveria mal o estado.
-	if vazio := quemOGabaritoPega(b, nil); !strings.Contains(vazio, "Clique") {
+	if vazio := takesTemplateWho(b, nil); !strings.Contains(vazio, "Clique") {
 		t.Errorf("sem gabarito posto a barra disse %q, esperado a dica do clique", vazio)
 	}
 }
@@ -141,14 +141,14 @@ func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
 // decisão sobre quem vê o quê.
 func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "cripta")
+	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}, true); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}
 
 	// Um quadrado de lado 1 exatamente em cima dela.
-	caminho := f.urlDaMesa() + "/tabuleiro/gabarito/quadrado/1/4/4/4/4"
+	caminho := f.tableUrl() + "/tabuleiro/gabarito/quadrado/1/4/4/4/4"
 	doMestre := f.posta(t, f.mestre, caminho, "")
 	if !strings.Contains(doMestre, "Ogro emboscado") {
 		t.Fatalf("o MESTRE não viu a própria peça: %s\n— sem o caso positivo o resto não mede nada", doMestre)
@@ -169,15 +169,15 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 // medindo — a peça sob o dedo de quem arrasta some e volta —, que é o mesmo
 // defeito que a região `mesa-por-no-mapa` já existe para evitar.
 //
-// Provado VERMELHO trocando o `escreveSinais` pelo `respondeAoMestre`: a
+// Provado VERMELHO trocando o `writeSignals` pelo `respondGm`: a
 // resposta passou a trazer `mesa-tabuleiro` e este teste acusou.
 func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
 	// As paradas vêm nos SINAIS desde a ALE-203: com número variável de pernas,
 	// um caminho com as pontas dentro seria uma rota que muda de forma.
-	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/regua",
+	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/regua",
 		`{"reguapontos":[[0,0],[3,0]],"reguafase":2}`)
 	if !strings.Contains(resposta, "reguatexto") {
 		t.Fatalf("a medida não voltou: %s", resposta)
@@ -194,8 +194,8 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 // dizer que o pedido está errado.
 func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
-	rec := f.pede(t, f.mestre, http.MethodPost, f.urlDaMesa()+"/tabuleiro/gabarito/piramide/2/0/0/0/0", "")
+	f.seedOpenBoard(t, "pedra")
+	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito/piramide/2/0/0/0/0", "")
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("forma inventada deu %d, esperado 400", rec.Code)
 	}
@@ -214,10 +214,10 @@ func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 // uma rota aberta seria a lista do bestiário da cena para quem tiver a URL.
 func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 	estranho := seedUser(t, f.s, "estranho@t.com")
 
-	rec := f.pede(t, estranho, http.MethodPost, f.urlDaMesa()+"/tabuleiro/regua/0/0/3/0", "")
+	rec := f.pede(t, estranho, http.MethodPost, f.tableUrl()+"/tabuleiro/regua/0/0/3/0", "")
 	if rec.Code == http.StatusOK {
 		t.Errorf("quem não está na mesa mediu a cena dela: %s", rec.Body.String())
 	}
@@ -242,7 +242,7 @@ func TestTheTemplateSizeClampsInsteadOfRefusing(t *testing.T) {
 		"  7 ": 7,
 	}
 	for bruto, esperado := range casos {
-		if lido := tamanhoDoGabarito(bruto); lido != esperado {
+		if lido := templateSize(bruto); lido != esperado {
 			t.Errorf("tamanho %q virou %d, esperado %d", bruto, lido, esperado)
 		}
 	}
@@ -255,13 +255,13 @@ func TestTheTemplateSizeClampsInsteadOfRefusing(t *testing.T) {
 // trilho nenhum: a ferramenta existiria e não teria onde ser ligada.
 //
 // E o que continua sendo do mestre segue sendo: o pincel de terreno pinta a
-// cena, e a trava de verdade é a rota (o `comandoDoMestreNoTabuleiro`) — isto
+// cena, e a trava de verdade é a rota (o `gmBoardCommand`) — isto
 // aqui é a cortesia de não oferecer o que seria recusado.
 func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 
-	corpo := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	for _, esperado := range []string{"Régua", "Gabarito", "Mover a peça"} {
 		if !strings.Contains(corpo, esperado) {
 			t.Errorf("a cena do jogador não ofereceu %q", esperado)
@@ -271,7 +271,7 @@ func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
 		t.Error("o pincel do mestre apareceu na cena do jogador")
 	}
 
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "Borracha") {
 		t.Error("o mestre perdeu o pincel — sem o caso positivo o de cima não mede nada")
 	}
@@ -286,24 +286,24 @@ func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
 func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 	// Um rato em (0,0) e um dragão cuja âncora é (10,10) e cujo corpo vai até
 	// (15,15): o centro pelo corpo é 7, pela âncora seria 5.
-	v := tabuleiroView{Pecas: []pecaDoTabuleiro{
+	v := boardView{Pecas: []boardToken{
 		{X: 0, Y: 0, Pegada: 1},
 		{X: 10, Y: 10, Pegada: 6},
 	}}
-	if x, y := oCentroDaCena(v); x != 7 || y != 7 {
+	if x, y := centerScene(v); x != 7 || y != 7 {
 		t.Errorf("o centro saiu (%d,%d), esperado (7,7) — o corpo da peça grande ficou fora da conta", x, y)
 	}
 	// SEM PEÇA o alvo é a ORIGEM do plano (ALE-203). Era o meio da MOLDURA, e a
 	// moldura saiu: num plano infinito e vazio, o (0,0) é o único lugar sobre o
 	// qual duas pessoas concordam.
-	vazia := tabuleiroView{}
-	if x, y := oCentroDaCena(vazia); x != 0 || y != 0 {
+	vazia := boardView{}
+	if x, y := centerScene(vazia); x != 0 || y != 0 {
 		t.Errorf("a cena vazia mirou (%d,%d), esperado a origem do plano (0,0)", x, y)
 	}
 	// E o RÓTULO acompanha: "nas peças" numa cena sem peça nenhuma ensina que o
 	// botão está quebrado.
-	if oAlvoDoCentralizar(vazia) == oAlvoDoCentralizar(v) {
-		t.Errorf("o rótulo não distingue cena com peça de cena vazia: %q", oAlvoDoCentralizar(v))
+	if centerTarget(vazia) == centerTarget(v) {
+		t.Errorf("o rótulo não distingue cena com peça de cena vazia: %q", centerTarget(v))
 	}
 }
 
@@ -317,13 +317,13 @@ func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 // A lista sai das espécies e nunca de um literal, e é isso que este guarda
 // prende: a quinta espécie nasce dentro da condição em vez de fora dela.
 func TestThePaintLayerOnlyLightsUpWithABrush(t *testing.T) {
-	condicao := oPincelEstaLigado()
+	condicao := onIsBrush()
 	for _, e := range tabuleiro.TerrainKinds {
 		if !strings.Contains(condicao, `"`+string(e.ID)+`"`) {
 			t.Errorf("a espécie %q ficou fora da condição da pintura: %s", e.ID, condicao)
 		}
 	}
-	for _, fora := range []string{FerramentaDaRegua, FerramentaDoGabarito, FerramentaDeMarcar} {
+	for _, fora := range []string{FerramentaDaRegua, FerramentaDoGabarito, MarkTool} {
 		if strings.Contains(condicao, `"`+fora+`"`) {
 			t.Errorf("a ferramenta %q entrou na condição da pintura: %s", fora, condicao)
 		}

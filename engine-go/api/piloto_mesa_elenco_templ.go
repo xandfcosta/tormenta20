@@ -39,12 +39,12 @@ import (
 // dado do item ANTERIOR sob o nome do próximo. Com um diálogo por pessoa não há
 // o que limpar, porque não há o que sobreviver à troca.
 
-// oElencoDoMestre é o segundo bloco do trilho esquerdo — a vaga do `CastRail`.
+// gmCast é o segundo bloco do trilho esquerdo — a vaga do `CastRail`.
 //
 // Ele ROLA, e a fila acima dele não: a assimetria é deliberada. A posição na
 // fila CARREGA significado (acima já agiu, abaixo ainda vai) e rolar
 // embaralharia isso; o elenco é lista sem ordem própria.
-func oElencoDoMestre(v mesaView) templ.Component {
+func gmCast(v tableView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -71,7 +71,7 @@ func oElencoDoMestre(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, m := range v.Grupo {
-				templ_7745c5c3_Err = oRetratoDoElenco(v, m).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = castPortrait(v, m).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -81,7 +81,7 @@ func oElencoDoMestre(v mesaView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, m := range v.Grupo {
-				templ_7745c5c3_Err = aFichaDoElenco(v, m).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = castSheet(v, m).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -96,7 +96,7 @@ func oElencoDoMestre(v mesaView) templ.Component {
 // O NOME INTEIRO viaja no `aria-label` e no `title`, com a presença junto,
 // porque duas letras não são um nome e cor não existe para quem usa leitor de
 // tela (ALE-212).
-func oRetratoDoElenco(v mesaView, m mesaMembro) templ.Component {
+func castPortrait(v tableView, m tableMember) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -122,9 +122,9 @@ func oRetratoDoElenco(v mesaView, m mesaMembro) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotuloDoElenco(m))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(castLabel(m))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 63, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 63, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -135,9 +135,9 @@ func oRetratoDoElenco(v mesaView, m mesaMembro) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotuloDoElenco(m))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(castLabel(m))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 64, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 64, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -148,9 +148,9 @@ func oRetratoDoElenco(v mesaView, m mesaMembro) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreAFichaDoElenco(m))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(openSheetCast(m))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 65, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 65, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -208,7 +208,7 @@ func oRetratoDoElenco(v mesaView, m mesaMembro) templ.Component {
 }
 
 // A ficha do elenco: quem é, como está, e o caminho para o combate.
-func aFichaDoElenco(v mesaView, m mesaMembro) templ.Component {
+func castSheet(v tableView, m tableMember) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -318,9 +318,9 @@ func aFichaDoElenco(v mesaView, m mesaMembro) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(fechaAFichaDoElenco(m))
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(closeSheetCast(m))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 101, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 101, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -421,9 +421,9 @@ func aFichaDoElenco(v mesaView, m mesaMembro) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var21 string
-			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(fechaAFichaDoElenco(m) + " " + poeNaFila(v, m))
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(closeSheetCast(m) + " " + poeNaFila(v, m))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 132, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_elenco.templ`, Line: 132, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 			if templ_7745c5c3_Err != nil {

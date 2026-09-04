@@ -21,8 +21,8 @@ import (
 // O que se prende aqui é a COMPOSIÇÃO — que a cena pergunta a coisa certa a cada
 // regra, e sobretudo que a REDAÇÃO POR PAPEL alcança o mapa.
 
-// abreTabuleiro põe um tabuleiro na mesa com uma peça, e devolve o id dela.
-func (f pilotoFixture) abreTabuleiro(t *testing.T, terreno string) *tabuleiro.BoardState {
+// seedOpenBoard põe um tabuleiro na mesa com uma peça, e devolve o id dela.
+func (f pilotoFixture) seedOpenBoard(t *testing.T, terreno string) *tabuleiro.BoardState {
 	t.Helper()
 	b, err := f.s.boards.Open(context.Background(), f.sessionID, "Taverna do Javali", terreno)
 	if err != nil {
@@ -38,7 +38,7 @@ func (f pilotoFixture) abreTabuleiro(t *testing.T, terreno string) *tabuleiro.Bo
 // diria que o mestre abriu uma cena que ele não abriu.
 func TestWithoutABoardTheSceneSaysThereIsNoMap(t *testing.T) {
 	f := novoPiloto(t)
-	corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(corpo, "Nenhum tabuleiro aberto") {
 		t.Error("a cena não disse que não há mapa")
@@ -57,7 +57,7 @@ func TestWithoutABoardTheSceneSaysThereIsNoMap(t *testing.T) {
 // ele em vez de decidir por conta própria.
 func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "cripta")
+	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}, true); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
@@ -67,12 +67,12 @@ func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 		t.Fatalf("pôr a peça à vista: %v", err)
 	}
 
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "Ogro em") {
 		t.Error("o mestre não viu a própria peça escondida")
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: o jogador está vendo o tabuleiro. Sem ele, "não achei o Ogro"
 	// seria verdade também numa cena sem mapa nenhum.
 	if !strings.Contains(doJogador, "Arwen em") {
@@ -91,28 +91,28 @@ func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 // diferentes (ALE-122).
 func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 	f := novoPiloto(t)
-	entryID := f.naFila(t)
-	f.abreTabuleiro(t, "pedra")
+	entryID := f.tracker(t)
+	f.seedOpenBoard(t, "pedra")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
 	// FORA de combate ninguém está na vez, mesmo com a cena aberta e a fila
 	// montada — é o `TurnIndex` negativo, e a peça não pode acender por estar
 	// no mapa.
-	antes := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	antes := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(antes, "tabuleiro-peca-na-vez") {
 		t.Error("a peça acendeu antes de o combate começar")
 	}
 
-	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
-	depois := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	depois := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(depois, "tabuleiro-peca-na-vez") {
 		t.Error("chegou a vez do combatente e a peça dele não acendeu")
 	}
@@ -128,9 +128,9 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 // defeito de CSS e manda procurar no lugar errado.
 func TestAnInventedTerrainFallsBackToTheDefaultGround(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "vulcão-de-neon")
+	f.seedOpenBoard(t, "vulcão-de-neon")
 
-	corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(corpo, "chao-pedra") {
 		t.Error("o terreno inventado não caiu no chão padrão")
 	}
@@ -236,7 +236,7 @@ func TestARefusedMutationTellsNobody(t *testing.T) {
 // menos da metade do batimento, então um verde aqui não pode ser o relógio.
 func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 	// O id vem do SERVIDOR (`bs.newID`), não do que eu passo: dois clientes
 	// criando ao mesmo tempo não podem inventar o mesmo. Por isso ele é lido do
 	// estado devolvido em vez de assumido — a primeira versão deste teste
@@ -250,7 +250,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
-	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)
+	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/stream", nil)
 	if erroDoPedido != nil {
 		t.Fatalf("montar pedido: %v", erroDoPedido)
 	}
@@ -318,7 +318,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 				return
 			}
 		case <-limite:
-			t.Fatalf("a peça não chegou em 400ms — a tela está esperando o batimento de %v", mesaBatimento)
+			t.Fatalf("a peça não chegou em 400ms — a tela está esperando o batimento de %v", tableHeartbeat)
 		}
 	}
 }
@@ -336,7 +336,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 // fila e NÃO manda o do mapa.
 func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "pedra")
+	f.seedOpenBoard(t, "pedra")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -344,7 +344,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
-	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)
+	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/stream", nil)
 	if erroDoPedido != nil {
 		t.Fatalf("montar pedido: %v", erroDoPedido)
 	}
@@ -432,7 +432,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 // `BoardForRole`; o que se prende aqui é que a cena não o reintroduz.
 func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	f := novoPiloto(t)
-	f.abreTabuleiro(t, "cripta")
+	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Dragão", X: 3, Y: 3}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -441,7 +441,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 		t.Fatalf("fechar a cortina: %v", err)
 	}
 
-	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "O mestre está montando a cena") {
 		t.Error("a mesa não viu a cortina")
 	}
@@ -456,7 +456,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 
 	// O CONTROLE: o mestre continua vendo a cena inteira, senão "a mesa não viu"
 	// seria verdade também num tabuleiro que ninguém abriu.
-	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, "Dragão") || !strings.Contains(doMestre, "tabuleiro-plano") {
 		t.Error("o mestre perdeu a própria cena com a cortina fechada")
 	}
