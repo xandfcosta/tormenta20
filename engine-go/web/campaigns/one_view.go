@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net/url"
 	"slices"
 	"strconv"
 	"t20engine/plataforma"
@@ -60,6 +61,10 @@ type oneView struct {
 	// é a regra valer, então guardar as exceções é guardar o que alguém
 	// decidiu — e uma regra nova nasce em vigor sem migração de dados.
 	RegrasIgnoradas []string
+	// LinkDoConvite é o CAMINHO do convite desta mesa, ou "" quando ela não tem
+	// um (ALE-287). Caminho e não URL: quem prefixa a origem é o navegador — ver
+	// a razão medida em `ui.MintedInvite`.
+	LinkDoConvite string
 	// Erros e Aviso servem à aba de configuração, que é a única com formulário.
 	Erros plataforma.FieldErrorMap
 	Aviso string
@@ -174,6 +179,15 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		v.DonoOutro = s.deps.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
 	}
 	v.Abas = oneTabs(v.EhMestre, aba)
+	// O LINK só é LIDO para quem mestra, e essa é a fronteira desta tela: a aba
+	// de configuração não existe para o jogador, mas "não desenhar" é UX — não
+	// carregar é a regra. Um jogador que forjasse `?tab=config` receberia a
+	// visão geral (ver `oneTabs`), e mesmo assim o link não teria sido lido.
+	if v.EhMestre {
+		if token := s.deps.InviteLink(ctx, c.ID); token != "" {
+			v.LinkDoConvite = "/campanhas/entrar?token=" + url.QueryEscape(token)
+		}
+	}
 
 	membros, err := s.deps.Queries().ListMembers(ctx, id)
 	if err != nil {

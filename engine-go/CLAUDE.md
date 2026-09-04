@@ -1709,6 +1709,53 @@ sabotagem nunca chegou. **Verde depois de sabotar só significa alguma coisa
 quando a sabotagem CHEGOU** — e a terceira, com `campaign.Name`, reprovou o
 guarda como devia.
 
+## A mesa que não aceitava ninguém (ALE-287)
+
+O `CreateCampaign` gerado pelo sqlc não escreve o `inviteToken`, então **toda
+mesa aberta pela tela nascia com a coluna nula**. E o `joinTable` recusa quem
+não é o dono já no `!c.Invitetoken.Valid`, antes de olhar o que a pessoa
+digitou. As duas coisas juntas: a mesa não aceitava ninguém, e as únicas em que
+alguém entrava eram as seis da `seed.sql`, com `seedtoken-0N` escrito à mão.
+
+Não era funcionalidade faltando — era defeito entregue, e ele sobreviveu à
+migração inteira da SPA para o Datastar.
+
+### Por que a suíte passava por cima
+
+A bancada semeia campanha com o token DADO (`seedCampanha(t, s, dono, nome,
+convite)`), e todos os casos de entrar usavam essa porta. **O teste fornecia o
+que a produção nunca fornecia.** É a família do "esperado calculado" com o
+arranjo no lugar do valor: um dado de fixture que o código sob teste não sabe
+produzir esconde exatamente o defeito de quem deveria produzi-lo.
+
+O caso que fecha isso (`TestACampaignBornOnScreenLetsAPlayerIn`) chama a mesma
+função que a cena chama, com os mesmos parâmetros e mais nada.
+
+### A forma do conserto
+
+Cunhar mora no `campaignRules.createCampaign` e não no `INSERT`, e é isso que
+faz os DOIS caminhos passarem por ele — a cena de campanhas e a rota JSON que a
+suíte de e2e usa como fixture. É `UPDATE` depois do `INSERT` e não coluna com
+`DEFAULT` porque o token é `crypto/rand`, e SQLite não tem de onde tirar isso.
+
+**Não há migração de dados, e a razão vale saber:** as mesas abertas antes desta
+issue continuam sem link, e quem as conserta é o botão `Gerar link` da própria
+tela. Um `UPDATE` varrendo o banco escreveria token para mesas que o dono talvez
+nem use, e o botão custa uma linha e resolve na hora em que alguém precisa.
+
+### Dois convites, duas VIDAS — e a nota virou parâmetro
+
+O `ui.MintedInvite` é o mesmo widget para os dois, e por um tempo ele trazia a
+frase do convite de CONTA colada: *"Cada convite serve para UMA conta."* O de
+campanha vale enquanto o mestre não gerar outro. Escrever a frase errada embaixo
+de um link reutilizável faria o mestre gerar um por jogador — e derrubar o dos
+anteriores a cada vez.
+
+> O que o componente já trazia de lição e continua valendo: **o link carrega o
+> CAMINHO, e quem prefixa a origem é o navegador**. Com `r.Host` o link nascia
+> apontando para a porta errada atrás de proxy, e link de convite existe para ser
+> mandado a outra pessoa — host errado é link morto.
+
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 
 Ele tinha **89 métodos exportados**, e todos existiam por um motivo só: cumprir

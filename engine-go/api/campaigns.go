@@ -175,7 +175,7 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	descricao := trimOrNull(&descricaoTexto)
 	now := plataforma.NowISO()
-	c, err := s.queries.CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
+	c, err := s.campaignRules().createCampaign(r.Context(), sqlcgen.CreateCampaignParams{
 		Ownerid: currentUser(r).ID, Name: name, Description: descricao,
 		Createdat: now, Updatedat: now,
 	})

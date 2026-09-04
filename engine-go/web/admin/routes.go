@@ -153,7 +153,8 @@ func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
 		return
 	}
-	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+url.QueryEscape(invite.Token)))
+	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+url.QueryEscape(invite.Token),
+		"Cada convite serve para UMA conta. Gere outro para o próximo jogador."))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
 		return

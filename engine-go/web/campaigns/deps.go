@@ -37,9 +37,9 @@ import (
 // administração, e o sinal de que ela está no lugar é nenhum handler daqui
 // tocar banco fora dele.
 type Deps interface {
-	// Queries é o banco. Sete consultas desta cena passam por ele: a campanha,
-	// a campanha por token de convite, os membros, as sessões, as sessões vivas,
-	// criar e apagar.
+	// Queries é o banco. Seis consultas desta cena passam por ele: a campanha,
+	// a campanha por token de convite, os membros, as sessões, as sessões vivas
+	// e apagar. CRIAR saiu na ALE-287 e virou `OpenTable` — ver lá.
 	Queries() *sqlcgen.Queries
 	// CurrentUserID é quem está pedindo, pelo ID e não pelo usuário inteiro.
 	CurrentUserID(r *http.Request) int64
@@ -68,6 +68,28 @@ type Deps interface {
 	// que o mestre DESLIGOU). Elas gravam, então são do hospedeiro.
 	IgnoredRules(ctx context.Context, campanhaID int64) []string
 	SaveIgnoredRules(ctx context.Context, campanhaID int64, regras []string) error
+	// OpenTable abre a mesa, e ela nasce com LINK DE CONVITE (ALE-287).
+	//
+	// A cena chamava o `CreateCampaign` do `Queries` direto, e a mesa nascia com
+	// a coluna do convite nula — o que a fazia recusar todo mundo menos o dono,
+	// porque o `joinTable` barra em `!Invitetoken.Valid` antes de olhar o que
+	// foi digitado. Cunhar é decisão do hospedeiro (é `crypto/rand` e é a
+	// política de quem entra), e a cena só precisa da mesa aberta.
+	// A descrição atravessa como STRING e não como `sql.NullString`: vazio quer
+	// dizer "sem descrição" e quem traduz isso para NULO é o hospedeiro. É a
+	// mesma forma do `SaveText` ao lado, e a razão é a que o parágrafo de cima
+	// dá — tipo de banco na porta é banco dentro da cena.
+	OpenTable(ctx context.Context, donoID int64, nome, descricao string) (id int64, err error)
+	// InviteLink é o link da mesa, ou "" quando ela não tem um.
+	//
+	// Vazio é estado NORMAL: toda campanha aberta antes da ALE-287 nasceu sem
+	// link, e o que a tela faz com isso é oferecer o botão de gerar em vez de
+	// mostrar um endereço quebrado.
+	InviteLink(ctx context.Context, campanhaID int64) string
+	// RotateInvite cunha um link novo e derruba o anterior. É o mesmo gesto
+	// para a mesa antiga que nunca teve link e para o mestre que quer cortar
+	// quem já tem o link na mão — por isso um nome só.
+	RotateInvite(ctx context.Context, campanhaID int64) (string, error)
 	// SaveText grava o nome e a descrição, e substitui o SQL que a cena montava.
 	//
 	// Descrição VAZIA é NULL, e a tradução é do hospedeiro de propósito: a regra
