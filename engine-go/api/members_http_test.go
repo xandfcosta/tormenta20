@@ -247,7 +247,7 @@ func copiesOf(t *testing.T, s *Server, sourceID int64) int {
 // quase certo que apareça, e o teste continua determinístico quando não existe.
 func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	f := newMemberFixture(t)
-	mesa := seedCampaign(t, f.s, f.owner)
+	table := seedCampaign(t, f.s, f.owner)
 	heroi := seedCharacter(t, f.s, f.owner, "Herói Disputado", 10, 10, 0, 0)
 
 	const pedidos = 8
@@ -257,7 +257,7 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()
-			codigos[n] = f.addMember(t, f.owner, mesa, heroi)
+			codigos[n] = f.addMember(t, f.owner, table, heroi)
 		}(i)
 	}
 	wg.Wait()
@@ -271,7 +271,7 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	if criados != 1 {
 		t.Errorf("%d pedidos simultâneos criaram %d membros (códigos %v), esperava 1", pedidos, criados, codigos)
 	}
-	if n := membersOf(t, f.s, mesa); n != 1 {
+	if n := membersOf(t, f.s, table); n != 1 {
 		t.Errorf("a mesa ficou com %d membros", n)
 	}
 	// E nenhuma cópia sobrando: o pedido que perde a corrida desfaz o clone.
@@ -314,9 +314,9 @@ func TestAnOversizedBodyIsRefusedBySize(t *testing.T) {
 func TestANormalBodyStillPasses(t *testing.T) {
 	f := newMemberFixture(t)
 	heroi := seedCharacter(t, f.s, f.owner, "Herói Comum", 10, 10, 0, 0)
-	mesa := seedCampaign(t, f.s, f.owner)
+	table := seedCampaign(t, f.s, f.owner)
 
-	if code := f.addMember(t, f.owner, mesa, heroi); code != http.StatusCreated {
+	if code := f.addMember(t, f.owner, table, heroi); code != http.StatusCreated {
 		t.Errorf("corpo normal respondeu %d", code)
 	}
 }

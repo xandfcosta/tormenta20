@@ -35,7 +35,7 @@ import (
 //
 // Um só porque eles mudam juntos: são embutidos no mesmo binário, e um deploy
 // que mexe na folha e no script publica os dois. Dígito por arquivo daria três
-// invalidações independentes para ganhar nada — e a folha e o `cena.js` saem do
+// invalidações independentes para ganhar nada — e a folha e o `scene.js` saem do
 // mesmo build.
 var versaoDosEstaticos = digitoDosEstaticos()
 

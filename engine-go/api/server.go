@@ -15,6 +15,7 @@ import (
 	"t20engine/tabuleiro"
 	"t20engine/web/hub"
 	"t20engine/web/routes"
+	"t20engine/web/table"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -39,16 +40,17 @@ type Server struct {
 	// barramento substituiu.
 	bus   *events.Bus
 	livro livroServido // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
-	// lentes é quem está vendo a cena COMO A MESA (ALE-193, ALE-269). Mora aqui
-	// e não num sinal do navegador porque o stream não pergunta nada a ninguém:
-	// um modo em `data-show` seria desfeito pelo primeiro quadro do SSE, com a
-	// peça escondida voltando sozinha à tela do mestre no meio da conferência.
-	lentes *asLentes
-	// abas é qual tabuleiro cada pessoa está olhando (ALE-205). Mora aqui pelo
-	// MESMO motivo da lente, e o arquivo dela explica o argumento inteiro: o
-	// stream desenha, e o que ele desenha não pode depender de um sinal que ele
-	// não enxerga.
-	abas *asAbasEscolhidas
+	// tableScene é a cena da Mesa, montada uma vez (ALE-278). Ver o construtor.
+	tableScene table.Scene
+	// Aqui moravam a LENTE (ALE-193, ALE-269) e as ABAS ESCOLHIDAS (ALE-205),
+	// e elas foram para a `table.Scene` na ALE-278.
+	//
+	// O argumento delas não mudou: as duas moram no SERVIDOR e não num sinal do
+	// navegador porque o stream não pergunta nada a ninguém — um modo em
+	// `data-show` seria desfeito pelo primeiro quadro do SSE. O que mudou foi o
+	// DONO: a pergunta "quem está vendo como a mesa vê" e "que tabuleiro cada um
+	// está olhando" só existe numa tela, e um campo do `*Server` dizia o
+	// contrário. Por isso a cena é montada UMA vez, no registro das rotas.
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.
@@ -157,7 +159,7 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 	// é o ponto: um por store devolveria o problema que a issue veio resolver,
 	// que é quem escuta ter de juntar as peças de novo.
 	bus := &events.Bus{}
-	return &Server{
+	srv := &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
@@ -165,11 +167,21 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, sheetVitals{q: q}, bus),
 		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID, bus),
 		bus:      bus,
-		lentes:   novasLentes(),
-		abas:     novasAbas(),
 		presence: aovivo.NewPresenceRegistry(),
 		sse:      aovivo.NewSSEHub(),
 	}
+	// A CENA DA MESA é montada UMA vez, e o servidor a guarda.
+	//
+	// Ela tem estado — a LENTE (quem está vendo como a mesa vê) e a ABA que cada
+	// pessoa escolheu —, e um `table.New` por requisição daria um estado novo a
+	// cada pedido: metade da mesa não veria a lente da outra metade, e o gesto de
+	// mostrar à mesa nunca chegaria. Isso não é hipótese — foi o que oito testes
+	// acusaram quando o estado saiu daqui e virou campo da cena (ALE-278).
+	//
+	// O DONO continua sendo a cena; o servidor só guarda a instância, como
+	// guarda um store.
+	srv.tableScene = table.New(srv)
+	return srv
 }
 
 // Router builds the HTTP handler: shared middleware + domain routes. Routes carry

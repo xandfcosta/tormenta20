@@ -288,11 +288,11 @@ func TestAugmentsOpenInTheBox(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	cena := pedeNoMestre(t, s, eu, "GET", "/mestre/magias?entrada=bola-de-fogo", "").Body.String()
-	if !strings.Contains(cena, "aprimoramentos disponíveis") {
+	scene := pedeNoMestre(t, s, eu, "GET", "/mestre/magias?entrada=bola-de-fogo", "").Body.String()
+	if !strings.Contains(scene, "aprimoramentos disponíveis") {
 		t.Fatal("o cartão não oferece os aprimoramentos")
 	}
-	if !strings.Contains(cena, "parte=aprimoramentos") {
+	if !strings.Contains(scene, "parte=aprimoramentos") {
 		t.Error("o botão não pede a parte dos aprimoramentos")
 	}
 

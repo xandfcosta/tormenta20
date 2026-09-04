@@ -7,6 +7,11 @@ valem; o que está aqui estende ou sobrepõe.
 em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
 `api/piloto/src`, e o kit de apresentação em `web/ui`. Um processo serve tudo.
 
+**Cada cena é um pacote em `web/`** desde a ALE-278, e a última saiu com a Mesa:
+o `api` era 188 arquivos e 105 mil linhas quando a divisão começou, e hoje são
+50 arquivos de produção, 9.303 linhas e **nenhum `.templ`**. O que sobrou lá é a
+API JSON, a composição do roteador e as regras que as duas pontas usam.
+
 Ele já foi só o backend, com uma SPA em SolidJS ao lado e o mesmo motor
 compilado para WASM rodando no navegador. Os dois saíram na ALE-272: não há
 `STATIC_DIR`, não há `dist` para servir, e a regra tem um lugar só.
@@ -815,7 +820,7 @@ estilo:
   pela CENA: o hospedeiro diz qual dos três casos é, a cena diz o que o jogador
   lê.
 
-**E a lição que vale para as onze cenas que faltam: a porta pede a PERGUNTA, não
+**E a lição que valeu para as dez cenas seguintes: a porta pede a PERGUNTA, não
 o objeto.** `HasSession(r) bool` no lugar de `sessionUser(r) (AuthUser, error)`,
 pelo mesmo motivo que a forja pede `CurrentUserID` e não o usuário — o tipo do
 usuário é do `api`, e uma porta que devolve tipo do hospedeiro não é porta.
@@ -1523,6 +1528,118 @@ traiçoeiro: ele compila enquanto ninguém precisar do pacote naquele arquivo.
 **Um símbolo de teste que volta para um pacote de 20 mil linhas encontra um
 espaço de nomes que a cena não tinha**, e é onde o `grep` de menos de cinco
 ocorrências vale mais.
+
+## `web/table`: a ÚLTIMA cena, e o roteador que morava dentro dela
+
+A Mesa saiu na ALE-278 e fechou a fila: **47 arquivos de produção, ~14.300
+linhas, vinte rotas** e **trinta e um** métodos na porta — contra dezoito da
+ficha, treze da administração e dois do trilho do mestre.
+
+**Com ela o `api` ficou sem uma única cena.** Ele era 188 arquivos e 105 mil
+linhas quando a épica começou; hoje são **50 arquivos de produção e 9.303
+linhas**, e **nenhum `.templ`**. O que sobrou é a API JSON e a composição.
+
+### A porta mais larga não é indisciplina: é o que a cena É
+
+O contraste que ensina continua sendo com o trilho do mestre, que tem DOIS
+métodos. Aquele desenha o livro embutido e não toca banco. Esta é a única cena
+que **movimenta estado ao vivo** — abre e encerra cena, move peça, pinta
+terreno, mede distância, vira turno e empurra tudo para quem está olhando, por
+dois stores em memória, um hub de SSE e um barramento.
+
+Os quatro stores atravessam INTEIROS (`Boards`, `Sessions`, `Presence`, `SSE`,
+`Bus`), e é a mesma concessão do `Queries`: são tipos de OUTROS pacotes, o
+vocabulário do domínio ao vivo, não o hospedeiro com outro nome. Embrulhá-los
+método a método daria oitenta entradas e nenhuma fronteira a mais.
+
+### O ROTEADOR DO APP morava no arquivo de rotas da Mesa
+
+O `WebRouter` — o mux que monta porta, hub, campanhas, personagens, forja,
+ficha, grimório, mestre, buscador, livro, leitor e administração — estava dentro
+de `piloto_mesa_routes`. Não era desenho: a Mesa foi a primeira cena do
+piloto, o mux nasceu no arquivo dela, e as onze cenas seguintes foram sendo
+penduradas ali por dez fatias.
+
+**Se ele tivesse ido junto, o `api` ficaria sem saber montar o app.** É a mesma
+forma do guarda que media o próprio diretório: um símbolo que mora no arquivo
+errado só aparece quando o arquivo se move.
+
+E o corte teve uma metade que a compilação não pega: o grupo do `requirePage`
+ficou de fora, a cena foi montada anônima, e **cinquenta casos ficaram
+vermelhos de uma vez** dizendo coisas sem relação ("a cena não disse que não há
+mapa"). Quem decide que a cena está atrás do login é o hospedeiro; a linha que
+faz isso é um `r.Group` de três linhas, e ela não estava em lugar nenhum do
+diff.
+
+### A BANCADA do repositório inteiro também morava lá
+
+`pilotoFixture`, `novoPiloto`, `.pede()`, `.posta()` e `.scene()` são lidos por
+**49 arquivos de teste** do `api`, e viviam em `piloto_mesa_test`. Era a
+fatia 2 desta épica acontecendo pela metade: o molde do BANCO virou pacote
+(`db/testdb`) antes da primeira cena sair; esta bancada ficou onde estava porque
+o tipo `api.Server` a prende ali — um pacote de bancada que o importasse seria
+importado de volta pelos testes dele.
+
+Ela virou `api/fixture_test.go` antes do `git mv`. O que a mudança conserta é o
+nome: pelo prefixo, a bancada do repositório teria ido para `web/table`.
+
+### O estado que era CAMPO do `*Server` e é da cena
+
+A LENTE (quem está vendo como a mesa vê) e as ABAS ESCOLHIDAS (que tabuleiro
+cada um está olhando) eram campos do `Server`. O argumento delas não mudou —
+moram no servidor e não num sinal do navegador porque o stream não pergunta nada
+a ninguém —, mas o DONO é a cena: a pergunta só existe nesta tela.
+
+**E aí veio a única armadilha de desenho da fatia.** Com o estado na `Scene`, um
+`table.New(deps)` por requisição dá um estado NOVO a cada pedido: metade da mesa
+não veria a lente da outra metade. O `WebRouter` chamava `New` uma vez e estava
+certo; os TESTES chamavam de novo, e oito casos de lente e de puxão ficaram
+vermelhos. O servidor passou a guardar UMA instância (`s.tableScene`), como
+guarda um store — o dono continua sendo a cena.
+
+### TRÊS guardas mediam o diretório e quebraram, e é a terceira vez nesta épica
+
+- **`TestEveryMarkerColorCanBePainted`** lia `piloto/piloto.src.css`, um caminho
+  relativo ao `api`. Foi para o `convention/` lendo pela raiz. O irmão dele — o
+  FALLBACK da cor — ficou na cena: aquilo é regra de uma função, isto é
+  convenção do repositório.
+- **`TestNoSceneCommandUsesTheDefaultTab`** varria `piloto_*.go` do próprio
+  diretório e passou a achar ZERO. Foi para o `convention/` caminhando a árvore.
+- **`TestAWireTagStartsLowercase`** ENUMERAVA quatro pacotes, e a Mesa saiu da
+  lista: a contagem caiu abaixo do piso. Ele passou a caminhar a árvore, que é o
+  que restaura a amostragem — *enumerar é remendo, e o pacote novo tem de nascer
+  medido.*
+
+**Os três falharam ALTO, e os três tinham piso.** É a diferença que a fatia das
+campanhas já tinha registrado: o guarda do foco não tinha denominador e teria
+passado verde medindo metade.
+
+### O renome veio ANTES do movimento, e isso é método
+
+536 identificadores saíram em inglês num commit próprio, com o pacote ainda
+compilando — **o compilador é rede COMPLETA para identificador**, e ele só é
+rede enquanto declaração e uso estão no mesmo lugar. O diff do movimento ficou
+sendo estrutura pura; o do renome, nome puro.
+
+O que o compilador NÃO pega ficou registrado na fatia do renome, e vale repetir
+a parte nova: **a sonda de prosa do `.templ` tem ponto cego em linha com
+atributo.** `<p class="…">O mestre está montando a cena.</p>` passou pela
+definição estrita (linha sem `@`, sem parênteses, sem `=` e sem chaves), e
+`cena` virou `scene` na tela. Quem denunciou foram dois testes de composição que
+afirmam a frase. **O reparo certo é por NÓ DE TEXTO (`>…<`), não por linha.**
+
+### O guarda nasceu vermelho, e a primeira sabotagem saiu INERTE
+
+Sabotei com `database/sql` e o guarda passou — porque ele filtra por prefixo do
+módulo e é cego para a biblioteca padrão, que é exatamente a tentação que a
+prosa dele nomeia. É letra por letra o achado do guarda do `campaign`, e o
+remédio é o mesmo: uma lista de RECUSA com **uma** entrada, a medida.
+
+A segunda sabotagem também saiu inerte, por outro motivo e igualmente
+instrutivo: `campaign.ValidateName` não existe, então o build quebrou e a
+sabotagem nunca chegou. **Verde depois de sabotar só significa alguma coisa
+quando a sabotagem CHEGOU** — e a terceira, com `campaign.Name`, reprovou o
+guarda como devia.
 
 ## `campaign`: a mesma regra recusando com DUAS frases
 

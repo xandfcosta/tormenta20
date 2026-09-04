@@ -23,7 +23,7 @@ import (
 //
 // O que entrou no lugar é a divisão que o Excalidraw usa: o servidor manda o que
 // EXISTE em coordenada absoluta, e o NAVEGADOR recorta com uma janela que nunca
-// vai ao servidor (`api/piloto_mesa_janela.go`). O infinito parou de precisar de
+// vai ao servidor (`web/table/viewport.go`). O infinito parou de precisar de
 // um retângulo que o contivesse.
 
 // ── como uma peça se PARECE ─────────────────────────────────────────────────

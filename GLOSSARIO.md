@@ -167,9 +167,9 @@ qual:
 
 | Predicado | Pergunta que responde | Onde |
 |---|---|---|
-| `entry.Type == "character"` | esta linha é ficha ou é NPC? | `board_state.go:468`, `piloto_mesa_pecas.go:61`, `piloto_mesa_view.go:281` |
+| `entry.Type == "character"` | esta linha é ficha ou é NPC? | `board_state.go:468`, `tokens.go:61`, `view.go:281` |
 | `member.role === 'player'` | a PESSOA dona é jogador ou mestre? | `listPlayerCombatants` |
-| "é meu?" | o personagem é de quem está olhando? | `mesaRoster`, em `piloto_mesa_routes.go` |
+| "é meu?" | o personagem é de quem está olhando? | `mesaRoster`, em `routes.go` |
 
 **O QUARTO se juntou ao primeiro, e é preciso dizer como** (ALE-284): ele era
 `token.kind === 'character'`, "esta peça se desenha como PC?", e vivia no
@@ -195,7 +195,7 @@ entidade.
 
 > O número das colisões NÃO é reaproveitado quando uma sai. `C1`, `C4`, `C6`,
 > `C7` e `C8` são citados por número de dentro do código (`sheet/play_state.go`,
-> `piloto_mesa_pecas.go`, `vitals_rules.go`) e do README — renumerar quebraria
+> `tokens.go`, `vitals_rules.go`) e do README — renumerar quebraria
 > cinco referências em silêncio, que é o defeito que esta issue veio consertar.
 
 **C6 — `condition` e `conditional` são conceitos DIFERENTES a uma letra de
@@ -273,7 +273,7 @@ O exemplo que abria esta seção era o `board-region.tsx`, onde conviviam
 `selectedToken` e `linhasNoMapa`. **Ele morreu com a SPA e a frase ficou**
 (ALE-284), o que é a própria costura falhando: o arquivo que ilustrava a mistura
 sumiu e ninguém releu a linha que o citava. O exemplo vivo é o
-`piloto_mesa_tabuleiro_view.go`, e a mistura lá não é entre arquivos — é dentro
+`board_view.go`, e a mistura lá não é entre arquivos — é dentro
 de um identificador só: `tabuleiroView`, `pecaDoTabuleiro`, `movimentoView` e
 `tabuleiroViewOf` colam raiz portuguesa em sufixo inglês, na mesma linha.
 
@@ -330,6 +330,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **a cena que lista os personagens** | `characters` | `web/characters` (ALE-278) — o PLURAL, porque a cena é a lista de quem uma pessoa tem. A do singular é a ficha, logo abaixo |
 | **a ficha** (a cena, não o dado) | `sheetui` | `web/sheetui` (ALE-278) — a cena de `/personagens/{id}`. O sufixo existe porque `sheet` já é a FORMA do dado (`CharacterDTO`, `Compute`), e a cena o lê 148 vezes em 20 arquivos: sem o sufixo, cada um desses arquivos carregaria um apelido. Ver a colisão registrada abaixo |
 | **a cena das campanhas** | `campaigns` | `web/campaigns` (ALE-278) — o PLURAL, como o `web/characters`, e ela cobre a lista, a campanha aberta, a folha em branco e a carta de entrar. **O plural é o que evita o apelido**: as regras de campanha são o pacote `campaign` (singular), e a cena o importa sem ambiguidade. É o mesmo problema que o `sheetui` resolve com sufixo — quando a cena e a camada falam do mesmo conceito, uma das duas precisa de outra palavra |
+| **a Mesa** (a cena) | `table` | `web/table` (ALE-278) — a cena de `/mesa/{campanha}/{sessao}`: o palco, a fila, o elenco, as notas, a cortina e o tabuleiro inteiro. **O nome não foi escolhido agora**: `routes.Table` já monta este endereço desde que o `web/routes` nasceu, e `joinTable` já é "sentar à mesa" no hospedeiro — a palavra inglesa estava assentada e o que faltava era o pacote. Ela NÃO precisa de sufixo como o `sheetui`, porque não há uma camada `table` de dado para colidir: o estado ao vivo é `aovivo` e o mapa é `tabuleiro`. **Cuidado com a outra acepção**: `table` de banco de dados aparece só no `cmd/seed`, que é outro pacote e não é domínio |
 | **leitor** (a cena que abre o PDF) | `reader` | `web/reader` (ALE-278), e `routes.Reader` já usava. **Não é o visualizador do navegador** — a linha da seção A faz essa distinção e ela continua valendo |
 | **abertura** | `opening` | `web/reader` (ALE-278). O `bookui.BookAddress.Abertura` fica com o nome que tem: renomeá-lo move todo chamador, e a regra do §F diz que o nome CHAMADO segue o que está lá. Então uma linha do leitor cola os dois (`Opening: livro.Abertura`), o que é a costura acontecendo à vista em vez de escondida |
 | **acervo** (cenas guardadas) | `archive` | `TestTheArchiveSaysWhichSceneIsOnTheTable` |

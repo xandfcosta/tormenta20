@@ -1,6 +1,7 @@
 package api
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -40,12 +41,18 @@ import (
 // JSON, evento SSE e rota HTTP — e o cliente foi escrito contra a grafia
 // minúscula. Trocar a caixa quebra cliente e migração, e o ganho é zero.
 //
-// COBRE OS QUATRO PACOTES, e isso foi correção da sessão da migração Datastar:
-// a primeira versão varria só o `api/`, e `aovivo/` e `tabuleiro/` sozinhos têm
-// 75 tags — o estado inteiro da sessão e o tabuleiro inteiro, que são fio puro.
-// Um guarda que cobre o pacote onde o defeito apareceu, e não a família onde
-// ele pode aparecer, é enumeração disfarçada de amostragem.
-var pacotesDeFio = []string{".", "../aovivo", "../tabuleiro", "../plataforma"}
+// ELE CAMINHA A ÁRVORE, e não uma lista de pacotes (ALE-278).
+//
+// A versão anterior enumerava quatro — `api`, `aovivo`, `tabuleiro`,
+// `plataforma` —, e isso já era a correção de uma que varria só o `api`. A
+// enumeração quebrou do jeito previsto: quando a Mesa virou `web/table` as tags
+// dela saíram da lista, a contagem caiu abaixo do piso e o guarda falhou ALTO.
+// Foi sorte de o piso existir; sem ele, o guarda teria seguido verde medindo
+// menos.
+//
+// **Enumerar é remendo, e o que restaura a amostragem é a caminhada.** A tag
+// JSON é contrato com o cliente em qualquer pacote que a escreva, e o pacote
+// novo nasce medido.
 
 // A ROTA TAMBÉM É FIO, E TAMBÉM COMEÇA EM MINÚSCULA.
 //
@@ -113,10 +120,20 @@ func TestAWireTagStartsLowercase(t *testing.T) {
 	tag := regexp.MustCompile(`json:"([^",]+)`)
 
 	visitados, achadas := 0, 0
-	for _, pacote := range pacotesDeFio {
-		arquivos, err := filepath.Glob(filepath.Join(pacote, "*.go"))
+	{
+		var arquivos []string
+		raiz, err := os.Getwd()
 		if err != nil {
-			t.Fatalf("listar %s: %v", pacote, err)
+			t.Fatalf("achar a raiz: %v", err)
+		}
+		if err := filepath.WalkDir(filepath.Dir(raiz), func(caminho string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") {
+				return err
+			}
+			arquivos = append(arquivos, caminho)
+			return nil
+		}); err != nil {
+			t.Fatalf("caminhar a árvore: %v", err)
 		}
 		for _, nome := range arquivos {
 			bruto, err := os.ReadFile(nome)

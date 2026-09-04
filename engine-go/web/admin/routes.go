@@ -166,7 +166,7 @@ func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 //
 // Os endereços moram AQUI e não em quem monta (ALE-278): a cena é a dona do que
 // ela atende. Antes desta fatia as cinco linhas estavam soltas no
-// `piloto_mesa_routes.go`, entre as rotas de outras três cenas — esta é a
+// `routes.go`, entre as rotas de outras três cenas — esta é a
 // primeira que sai sem nem ter um `Routes` próprio para mover.
 func Routes(r chi.Router, s Scene) {
 	r.Get("/admin", s.handleAdmin)
