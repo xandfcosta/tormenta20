@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"t20engine/aovivo"
+	"t20engine/markdown"
 	"t20engine/web/sheetui"
 	"t20engine/web/ui"
 )
@@ -69,7 +70,7 @@ type mesaView struct {
 	// NotasBlocos é a mesma nota já em ÁRVORE, para o templ montar elementos em
 	// vez de cuspir HTML. Nasce aqui e não no template porque parsear em
 	// template é regra escondida onde ninguém a testa.
-	NotasBlocos []mdBloco
+	NotasBlocos []markdown.Block
 	// NPCs é o elenco da CAMPANHA (ALE-269, superfície 6b) — o taverneiro que
 	// não briga e o chefe da semana que vem. Do mestre, como as notas: a view do
 	// jogador não o tem, e por isso não há o que a tela dele esconder.

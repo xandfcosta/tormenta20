@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/markdown"
 	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -15,7 +16,7 @@ import (
 //
 // O desenho mora no `.templ`; aqui ficam as expressões que o Datastar executa e
 // as duas rotas que escrevem. A GRAMÁTICA do markdown mora no
-// `piloto_markdown.go`, que é um port com paridade medida contra o JS.
+// `markdown/markdown.go`, que é um port com paridade medida contra o JS.
 //
 // AS NOTAS SÃO DO MESTRE. A trava é o `comandoDoMestre`, que devolve 403 a quem
 // postar na mão — o botão escondido é cortesia para quem não pode, nunca a
@@ -92,7 +93,7 @@ func (s *Server) alternaATarefa(w http.ResponseWriter, r *http.Request) {
 	}
 	marcada := chi.URLParam(r, "estado") == "marcar"
 	s.comandoDasNotas(w, r, func(texto string) (string, error) {
-		return alternaTarefa(texto, linha, marcada), nil
+		return markdown.ToggleTask(texto, linha, marcada), nil
 	})
 }
 
@@ -173,7 +174,7 @@ func (s *Server) respondeAsNotas(
 		sinais["notassalvas"] = texto
 		previa := mesaNotasPrevia(mesaView{
 			CampaignID: campaignID, SessionID: sessionID,
-			Notas: texto, NotasBlocos: parseNota(texto),
+			Notas: texto, NotasBlocos: markdown.Parse(texto),
 		})
 		if fragmento, err := ui.RenderFragment(r.Context(), previa); err == nil {
 			_ = sse.PatchElements(fragmento)
@@ -215,7 +216,7 @@ func salvaAsNotas(v mesaView) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/notas')", v.CampaignID, v.SessionID)
 }
 
-func alternaATarefaDaNota(v mesaView, t mdTarefa) string {
+func alternaATarefaDaNota(v mesaView, t markdown.Task) string {
 	estado := "marcar"
 	if t.Marcada {
 		estado = "desmarcar"

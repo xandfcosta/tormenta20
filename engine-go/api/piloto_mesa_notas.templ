@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"t20engine/web/ui"
+	"t20engine/markdown"
 )
 
 // AS NOTAS DA SESSÃO (ALE-269, superfície 5), portadas da `session-notes.tsx`.
@@ -115,7 +116,7 @@ templ mesaNotasPrevia(v mesaView) {
 // Elementos e não HTML: o parser devolve dados, e é o templ que monta os nós —
 // então não existe `innerHTML` no caminho e o texto do mestre é escapado de
 // graça. É por isso que este port dispensa sanitizador.
-templ blocoDaNota(v mesaView, b mdBloco) {
+templ blocoDaNota(v mesaView, b markdown.Block) {
 	switch b.Kind {
 		case "heading":
 			@tituloDaNota(b)
@@ -141,7 +142,7 @@ templ blocoDaNota(v mesaView, b mdBloco) {
 
 // O título da nota começa em `h2`: o `h1` é da página, e uma nota não abre o
 // documento. Três níveis, que é o que a gramática conhece.
-templ tituloDaNota(b mdBloco) {
+templ tituloDaNota(b markdown.Block) {
 	switch b.Nivel {
 		case 1:
 			<h2 class="font-heading text-base tracking-wide text-grimorio-gold">
@@ -163,7 +164,7 @@ templ tituloDaNota(b mdBloco) {
 // O clique carrega a LINHA de origem no caminho, e é isso que faz o quadrinho
 // reescrever a nota em vez de guardar estado ao lado dela. Um checkbox que não
 // reescrevesse o texto seria enfeite, e o estado não sobreviveria a um F5.
-templ listaDaNota(v mesaView, b mdBloco) {
+templ listaDaNota(v mesaView, b markdown.Block) {
 	if b.Ordenada {
 		<ol class="list-decimal space-y-0.5 pl-5">
 			for _, it := range b.Itens {
@@ -186,7 +187,7 @@ templ listaDaNota(v mesaView, b mdBloco) {
 	}
 }
 
-templ itemDaNota(v mesaView, it mdItem) {
+templ itemDaNota(v mesaView, it markdown.Item) {
 	if it.Tarefa != nil {
 		<button
 			type="button"
@@ -213,7 +214,7 @@ templ itemDaNota(v mesaView, it mdItem) {
 
 // Os trechos de uma linha. O `default` é texto puro, que é a falha certa desta
 // gramática: o que ela não conhece aparece como foi escrito, nunca some.
-templ trechosDaNota(spans []mdSpan) {
+templ trechosDaNota(spans []markdown.Span) {
 	for _, s := range spans {
 		switch s.Kind {
 			case "strong":

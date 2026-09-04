@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"t20engine/markdown"
 	"t20engine/web/admin"
 	"t20engine/web/campaigns"
 	"t20engine/web/characters"
@@ -398,7 +399,7 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// que é o mesmo lugar do título e do ciclo.
 	if role == "gm" && sess.Notes.Valid {
 		view.Notas = sess.Notes.String
-		view.NotasBlocos = parseNota(sess.Notes.String)
+		view.NotasBlocos = markdown.Parse(sess.Notes.String)
 	}
 	if role == "gm" {
 		view.NPCs = s.oElencoDaCampanha(ctx, campaignID)

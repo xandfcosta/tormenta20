@@ -1,4 +1,4 @@
-package api
+package markdown
 
 import (
 	"regexp"
@@ -21,7 +21,7 @@ import (
 // de um parser CommonMark junta linhas soltas num parágrafo só, que é
 // exatamente o defeito que a ALE-122 consertou aqui.
 //
-// A paridade é MEDIDA e não afirmada: `piloto_markdown_test.go` compara esta
+// A paridade é MEDIDA e não afirmada: `markdown/markdown_test.go` compara esta
 // árvore com a que o JS produz, a partir de um oráculo gerado por
 // `api/testdata/markdown-do-js.json`, que hoje é linha de base congelada.
 
@@ -29,7 +29,7 @@ import (
 //
 // As etiquetas JSON são as do TS de propósito: é o que deixa o teste comparar
 // as duas árvores sem uma terceira tradução no meio.
-type mdSpan struct {
+type Span struct {
 	Kind string `json:"kind"`
 	Text string `json:"text"`
 	Href string `json:"href,omitempty"`
@@ -40,26 +40,26 @@ type mdSpan struct {
 // A linha não é enfeite: é ela que deixa o clique no quadrinho reescrever o
 // texto do mestre. Sem ela o controle seria decorativo e o estado moraria fora
 // da nota, que é onde ele não sobrevive a um F5.
-type mdTarefa struct {
+type Task struct {
 	Marcada bool `json:"checked"`
 	Linha   int  `json:"line"`
 }
 
-type mdItem struct {
-	Spans  []mdSpan  `json:"spans"`
-	Tarefa *mdTarefa `json:"task,omitempty"`
+type Item struct {
+	Spans  []Span `json:"spans"`
+	Tarefa *Task  `json:"task,omitempty"`
 }
 
 // mdBloco é um bloco da nota. `Kind` diz qual dos campos vale — uma struct só
 // em vez de uma interface porque quem consome é um `switch` de template, e uma
 // hierarquia de tipos aqui compraria indireção sem comprar nada.
-type mdBloco struct {
-	Kind     string     `json:"kind"`
-	Nivel    int        `json:"level,omitempty"`
-	Ordenada bool       `json:"ordered"`
-	Spans    []mdSpan   `json:"spans,omitempty"`
-	Linhas   [][]mdSpan `json:"lines,omitempty"`
-	Itens    []mdItem   `json:"items,omitempty"`
+type Block struct {
+	Kind     string   `json:"kind"`
+	Nivel    int      `json:"level,omitempty"`
+	Ordenada bool     `json:"ordered"`
+	Spans    []Span   `json:"spans,omitempty"`
+	Linhas   [][]Span `json:"lines,omitempty"`
+	Itens    []Item   `json:"items,omitempty"`
 }
 
 var (
@@ -77,47 +77,47 @@ var (
 // parseNota traduz o texto da nota na árvore que a tela desenha.
 //
 // @example parseNota("# Cena 1\n- Ogro **fugiu**")
-func parseNota(fonte string) []mdBloco {
-	blocos := []mdBloco{}
+func Parse(fonte string) []Block {
+	blocos := []Block{}
 	var paragrafo []string
 	linhas := strings.Split(strings.ReplaceAll(fonte, "\r\n", "\n"), "\n")
 	for i := 0; i < len(linhas); i++ {
 		linha := strings.TrimSpace(linhas[i])
 		if linha == "" {
-			blocos, paragrafo = fechaParagrafo(blocos, paragrafo)
+			blocos, paragrafo = closeParagraph(blocos, paragrafo)
 			continue
 		}
-		if bloco, ok := blocoDeUmaLinha(linha); ok {
-			blocos, paragrafo = fechaParagrafo(blocos, paragrafo)
+		if bloco, ok := oneLineBlock(linha); ok {
+			blocos, paragrafo = closeParagraph(blocos, paragrafo)
 			blocos = append(blocos, bloco)
 			continue
 		}
 		if mdItemRe.MatchString(linha) || mdOrdenada.MatchString(linha) {
-			blocos, paragrafo = fechaParagrafo(blocos, paragrafo)
-			var lista mdBloco
-			lista, i = colheALista(linhas, i)
+			blocos, paragrafo = closeParagraph(blocos, paragrafo)
+			var lista Block
+			lista, i = gatherList(linhas, i)
 			blocos = append(blocos, lista)
 			continue
 		}
 		paragrafo = append(paragrafo, linha)
 	}
-	blocos, _ = fechaParagrafo(blocos, paragrafo)
+	blocos, _ = closeParagraph(blocos, paragrafo)
 	return blocos
 }
 
 // blocoDeUmaLinha resolve os três blocos que cabem numa linha só. Falso devolve
 // a decisão a quem chamou — lista precisa de várias linhas, e o resto é texto.
-func blocoDeUmaLinha(linha string) (mdBloco, bool) {
+func oneLineBlock(linha string) (Block, bool) {
 	if m := mdTitulo.FindStringSubmatch(linha); m != nil {
-		return mdBloco{Kind: "heading", Nivel: len(m[1]), Spans: parseTrechos(m[2])}, true
+		return Block{Kind: "heading", Nivel: len(m[1]), Spans: parseSpans(m[2])}, true
 	}
 	if mdRegua.MatchString(linha) {
-		return mdBloco{Kind: "rule"}, true
+		return Block{Kind: "rule"}, true
 	}
 	if m := mdCitacao.FindStringSubmatch(linha); m != nil {
-		return mdBloco{Kind: "quote", Spans: parseTrechos(m[1])}, true
+		return Block{Kind: "quote", Spans: parseSpans(m[1])}, true
 	}
-	return mdBloco{}, false
+	return Block{}, false
 }
 
 // fechaParagrafo despeja as linhas acumuladas num bloco.
@@ -126,23 +126,23 @@ func blocoDeUmaLinha(linha string) (mdBloco, bool) {
 // é intencional, e juntá-las como o markdown padrão manda transformava trinta
 // linhas de anotação num parágrafo só. É a divergência que faz este port existir
 // em vez de uma dependência.
-func fechaParagrafo(blocos []mdBloco, paragrafo []string) ([]mdBloco, []string) {
+func closeParagraph(blocos []Block, paragrafo []string) ([]Block, []string) {
 	if len(paragrafo) == 0 {
 		return blocos, paragrafo
 	}
-	linhas := make([][]mdSpan, 0, len(paragrafo))
+	linhas := make([][]Span, 0, len(paragrafo))
 	for _, l := range paragrafo {
-		linhas = append(linhas, parseTrechos(l))
+		linhas = append(linhas, parseSpans(l))
 	}
-	return append(blocos, mdBloco{Kind: "paragraph", Linhas: linhas}), nil
+	return append(blocos, Block{Kind: "paragraph", Linhas: linhas}), nil
 }
 
 // colheALista junta as linhas seguidas de uma lista num bloco só e devolve o
 // índice da ÚLTIMA consumida — itens soltos viravam um bloco por linha, e a
 // marcação de lista se perdia.
-func colheALista(linhas []string, inicio int) (mdBloco, int) {
+func gatherList(linhas []string, inicio int) (Block, int) {
 	ordenada := mdOrdenada.MatchString(strings.TrimSpace(linhas[inicio]))
-	itens := []mdItem{}
+	itens := []Item{}
 	i := inicio
 	for ; i < len(linhas); i++ {
 		linha := strings.TrimSpace(linhas[i])
@@ -154,27 +154,27 @@ func colheALista(linhas []string, inicio int) (mdBloco, int) {
 		if m == nil {
 			break
 		}
-		itens = append(itens, itemDaLista(linha, i, m[1]))
+		itens = append(itens, listItem(linha, i, m[1]))
 	}
-	return mdBloco{Kind: "list", Ordenada: ordenada, Itens: itens}, i - 1
+	return Block{Kind: "list", Ordenada: ordenada, Itens: itens}, i - 1
 }
 
 // itemDaLista: `- [ ] dar XP` é um item com ESTADO; qualquer outro é comum.
-func itemDaLista(linha string, indice int, texto string) mdItem {
+func listItem(linha string, indice int, texto string) Item {
 	m := mdTarefaRe.FindStringSubmatch(linha)
 	if m == nil {
-		return mdItem{Spans: parseTrechos(texto)}
+		return Item{Spans: parseSpans(texto)}
 	}
-	return mdItem{
-		Spans:  parseTrechos(m[2]),
-		Tarefa: &mdTarefa{Marcada: strings.EqualFold(m[1], "x"), Linha: indice},
+	return Item{
+		Spans:  parseSpans(m[2]),
+		Tarefa: &Task{Marcada: strings.EqualFold(m[1], "x"), Linha: indice},
 	}
 }
 
 // parseTrechos quebra uma linha nos trechos marcados, deixando o resto como
 // texto.
-func parseTrechos(texto string) []mdSpan {
-	spans := []mdSpan{}
+func parseSpans(texto string) []Span {
+	spans := []Span{}
 	resto := texto
 	for len(resto) > 0 {
 		pos := mdMarca.FindStringIndex(resto)
@@ -182,15 +182,15 @@ func parseTrechos(texto string) []mdSpan {
 			break
 		}
 		if pos[0] > 0 {
-			spans = append(spans, mdSpan{Kind: "text", Text: resto[:pos[0]]})
+			spans = append(spans, Span{Kind: "text", Text: resto[:pos[0]]})
 		}
-		spans = append(spans, trechoMarcado(resto[pos[0]:pos[1]]))
+		spans = append(spans, markedSpan(resto[pos[0]:pos[1]]))
 		resto = resto[pos[1]:]
 	}
 	if len(resto) > 0 {
-		spans = append(spans, mdSpan{Kind: "text", Text: resto})
+		spans = append(spans, Span{Kind: "text", Text: resto})
 	}
-	return juntaOsTextos(spans)
+	return joinTexts(spans)
 }
 
 // juntaOsTextos cola textos vizinhos.
@@ -198,8 +198,8 @@ func parseTrechos(texto string) []mdSpan {
 // Um trecho RECUSADO — um link que não é http, um parêntese fechando cedo — sai
 // partido em dois pedaços de texto, e o que o mestre escreveu tem de voltar
 // inteiro. Nunca comer o que foi escrito é a regra desta gramática.
-func juntaOsTextos(spans []mdSpan) []mdSpan {
-	fora := []mdSpan{}
+func joinTexts(spans []Span) []Span {
+	fora := []Span{}
 	for _, s := range spans {
 		ultimo := len(fora) - 1
 		if s.Kind == "text" && ultimo >= 0 && fora[ultimo].Kind == "text" {
@@ -211,26 +211,26 @@ func juntaOsTextos(spans []mdSpan) []mdSpan {
 	return fora
 }
 
-func trechoMarcado(token string) mdSpan {
+func markedSpan(token string) Span {
 	switch {
 	case strings.HasPrefix(token, "`"):
-		return mdSpan{Kind: "code", Text: token[1 : len(token)-1]}
+		return Span{Kind: "code", Text: token[1 : len(token)-1]}
 	case strings.HasPrefix(token, "**"):
-		return mdSpan{Kind: "strong", Text: token[2 : len(token)-2]}
+		return Span{Kind: "strong", Text: token[2 : len(token)-2]}
 	case strings.HasPrefix(token, "["):
-		return trechoDeElo(token)
+		return linkSpan(token)
 	}
-	return mdSpan{Kind: "em", Text: token[1 : len(token)-1]}
+	return Span{Kind: "em", Text: token[1 : len(token)-1]}
 }
 
 // trechoDeElo aceita SÓ http(s). Um `javascript:` vira TEXTO e não um link
 // morto: quem escreveu vê o que escreveu, e nada navegável sai daqui.
-func trechoDeElo(token string) mdSpan {
+func linkSpan(token string) Span {
 	m := mdElo.FindStringSubmatch(token)
 	if m == nil || m[1] == "" || m[2] == "" || !mdHTTP.MatchString(m[2]) {
-		return mdSpan{Kind: "text", Text: token}
+		return Span{Kind: "text", Text: token}
 	}
-	return mdSpan{Kind: "link", Text: m[1], Href: m[2]}
+	return Span{Kind: "link", Text: m[1], Href: m[2]}
 }
 
 // alternaTarefa marca ou desmarca a tarefa da linha, devolvendo o texto novo —
@@ -241,7 +241,7 @@ func trechoDeElo(token string) mdSpan {
 // palpite estragaria a nota de quem está digitando.
 //
 // @example alternaTarefa("- [ ] dar XP", 0, true) // "- [x] dar XP"
-func alternaTarefa(fonte string, linha int, marcada bool) string {
+func ToggleTask(fonte string, linha int, marcada bool) string {
 	linhas := strings.Split(strings.ReplaceAll(fonte, "\r\n", "\n"), "\n")
 	if linha < 0 || linha >= len(linhas) {
 		return fonte
@@ -257,10 +257,10 @@ func alternaTarefa(fonte string, linha int, marcada bool) string {
 	// a bandeira `g`. Um `ReplaceAll` aqui reescreveria também um `[x]` que o
 	// mestre tenha escrito no MEIO do texto do item — divergência silenciosa
 	// entre as duas telas sobre a mesma nota.
-	pos := mdQuadrinho.FindStringIndex(linhas[linha])
+	pos := checkbox.FindStringIndex(linhas[linha])
 	linhas[linha] = linhas[linha][:pos[0]] + novo + linhas[linha][pos[1]:]
 	return strings.Join(linhas, "\n")
 }
 
 // mdQuadrinho é só o `[ ]`/`[x]`, para a troca não tocar no resto da linha.
-var mdQuadrinho = regexp.MustCompile(`\[[ xX]\]`)
+var checkbox = regexp.MustCompile(`\[[ xX]\]`)

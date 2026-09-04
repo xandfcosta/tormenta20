@@ -1,4 +1,4 @@
-package api
+package markdown
 
 import (
 	"encoding/json"
@@ -29,9 +29,9 @@ import (
 // oraculoDoMarkdown é a forma do arquivo gerado pelo script.
 type oraculoDoMarkdown struct {
 	Arvores []struct {
-		Nota   string    `json:"nota"`
-		Fonte  string    `json:"fonte"`
-		Blocos []mdBloco `json:"blocos"`
+		Nota   string  `json:"nota"`
+		Fonte  string  `json:"fonte"`
+		Blocos []Block `json:"blocos"`
 	} `json:"arvores"`
 	Alterna []struct {
 		Nota    string `json:"nota"`
@@ -65,7 +65,7 @@ func TestTheNoteMarkdownMatchesTheJs(t *testing.T) {
 	oraculo := leOOraculoDoMarkdown(t)
 	for _, caso := range oraculo.Arvores {
 		t.Run(caso.Nota, func(t *testing.T) {
-			meu := parseNota(caso.Fonte)
+			meu := Parse(caso.Fonte)
 			if reflect.DeepEqual(meu, caso.Blocos) {
 				return
 			}
@@ -83,8 +83,8 @@ func TestTogglingATaskMatchesTheJs(t *testing.T) {
 	oraculo := leOOraculoDoMarkdown(t)
 	for _, caso := range oraculo.Alterna {
 		t.Run(caso.Nota, func(t *testing.T) {
-			if got := alternaTarefa(caso.Fonte, caso.Linha, caso.Marcada); got != caso.Saida {
-				t.Errorf("alternaTarefa(%q, %d, %v) = %q, o JS dá %q",
+			if got := ToggleTask(caso.Fonte, caso.Linha, caso.Marcada); got != caso.Saida {
+				t.Errorf("ToggleTask(%q, %d, %v) = %q, o JS dá %q",
 					caso.Fonte, caso.Linha, caso.Marcada, got, caso.Saida)
 			}
 		})
@@ -94,7 +94,7 @@ func TestTogglingATaskMatchesTheJs(t *testing.T) {
 // O oráculo cobre a gramática; o que ele NÃO cobre é o que nenhuma das duas
 // telas escreveu ainda — e é aqui que este port pode quebrar sozinho.
 //
-// `alternaTarefa` recebe uma LINHA vinda de um clique do navegador, e o cliente
+// `ToggleTask` recebe uma LINHA vinda de um clique do navegador, e o cliente
 // pode estar um remendo atrás do servidor. Um índice negativo, ou além do fim,
 // é caminho NORMAL e não erro: a resposta certa é devolver a nota intacta, e a
 // errada é entrar em pânico e derrubar o handler que estava salvando o texto de
@@ -103,7 +103,7 @@ func TestTogglingATaskMatchesTheJs(t *testing.T) {
 func TestTogglingATaskDoesNotPanicOnAnOutOfRangeLine(t *testing.T) {
 	nota := "- [ ] dar XP"
 	for _, linha := range []int{-1, 1, 99} {
-		if got := alternaTarefa(nota, linha, true); got != nota {
+		if got := ToggleTask(nota, linha, true); got != nota {
 			t.Errorf("linha %d mexeu na nota: %q", linha, got)
 		}
 	}

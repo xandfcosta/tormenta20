@@ -8,7 +8,7 @@ import (
 // AS NOTAS DA SESSÃO (ALE-269, superfície 5) — os guardas do caminho.
 //
 // A GRAMÁTICA já tem os dela, com paridade medida contra o JS
-// (`piloto_markdown_test.go`). O que se prende AQUI é o que só a composição
+// (`markdown/markdown_test.go`). O que se prende AQUI é o que só a composição
 // mostra: quem pode escrever, o que chega ao banco, e o que a resposta redesenha.
 
 // TestThePlayerDoesNotWriteInTheGmNotes é a trava, e ela é do SERVIDOR.
