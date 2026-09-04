@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"net/http"
 	"strconv"
 	"strings"
 	"t20engine/web/table"
@@ -114,4 +116,116 @@ func (f pilotoFixture) castMember(t *testing.T, characterID int64) table.Member 
 	}
 	t.Fatalf("o personagem %d não está no elenco da view", characterID)
 	return table.Member{}
+}
+
+// O ELENCO FERE E CURA QUEM NÃO ESTÁ NA FILA, que é o buraco desta fatia
+// (ALE-211).
+//
+// As rotas de vital da fila são por `entryId`, e o elenco existe justamente
+// para quem NÃO tem linha na iniciativa — o mestre curando a Arwen entre duas
+// brigas é o caso comum, não a exceção. Antes disto o único caminho era pôr o
+// herói na fila só para poder mexer nele, e tirar depois.
+//
+// A asserção é sobre a FICHA, e não sobre a fila: escrever só na entrada
+// compilaria, deixaria o painel com um número plausível, e a ficha do jogador
+// continuaria com o PV de antes (ALE-122).
+func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
+	f := novoPiloto(t)
+	ctx := context.Background()
+
+	// O CONTROLE: o herói NÃO está na fila. Sem ele o caso mediria o caminho da
+	// fila com outra URL, que é o que ele existe para não fazer.
+	if fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; len(fila) != 0 {
+		t.Fatalf("a bancada já pôs %d na fila — o caso mediria o outro caminho", len(fila))
+	}
+	antes, err := f.s.queries.GetCharacter(ctx, f.charID)
+	if err != nil {
+		t.Fatalf("ler a ficha: %v", err)
+	}
+
+	// O STATUS NÃO BASTA, e descobri isso sabotando: numa cena servida a recusa
+	// é CONTEÚDO e volta 200, com a frase no `erroDoComando` do rodapé. Um
+	// caso que olhasse só o código e a ficha passaria verde sobre um gesto que
+	// escreveu a ficha e reprovou depois — que é exatamente a forma que a
+	// sabotagem produziu.
+	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitals/"
+	for _, caminho := range []string{"hp/harm/5", "mp/harm/1"} {
+		rec := f.pede(t, f.mestre, "POST", base+caminho, "")
+		if rec.Code != http.StatusOK {
+			t.Fatalf("%s deu %d: %s", caminho, rec.Code, rec.Body.String())
+		}
+		if corpo := rec.Body.String(); strings.Contains(corpo, "erroDoComando") &&
+			!strings.Contains(corpo, `"erroDoComando":""`) {
+			t.Fatalf("%s foi recusado apesar do 200: %s", caminho, firstRows(corpo, 6))
+		}
+	}
+
+	depois, err := f.s.queries.GetCharacter(ctx, f.charID)
+	if err != nil {
+		t.Fatalf("reler a ficha: %v", err)
+	}
+	if depois.Hpcurrent != antes.Hpcurrent-5 {
+		t.Errorf("a ficha ficou com %d PV; %d-5 = %d", depois.Hpcurrent, antes.Hpcurrent, antes.Hpcurrent-5)
+	}
+	if depois.Mpcurrent != antes.Mpcurrent-1 {
+		t.Errorf("a ficha ficou com %d PM; %d-1 = %d", depois.Mpcurrent, antes.Mpcurrent, antes.Mpcurrent-1)
+	}
+}
+
+// A MESMA TRAVA do "pôr na fila" vale para ferir, e é por isso que ela virou
+// função (ALE-211).
+//
+// O id vem do CAMINHO, e o caminho é digitável: sem a conferência contra o
+// roster, o mestre de uma mesa feriria o personagem de OUTRA campanha — que é
+// pior que pô-lo na fila, porque escreve na ficha de um estranho.
+func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
+	f := novoPiloto(t)
+	ctx := context.Background()
+	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", 3, 10, 10, 2, 4)
+	antes, err := f.s.queries.GetCharacter(ctx, forasteiro)
+	if err != nil {
+		t.Fatalf("ler a ficha do forasteiro: %v", err)
+	}
+
+	corpo := f.posta(t, f.mestre,
+		f.tableUrl()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/vitals/hp/harm/5", "")
+
+	if !strings.Contains(corpo, "não é jogador desta campanha") {
+		t.Errorf("a recusa não veio; a resposta foi:\n%s", firstRows(corpo, 6))
+	}
+	// O CONTROLE do erro: uma recusa que já tivesse ESCRITO seria pior que
+	// nenhuma, e a frase sozinha não diria.
+	depois, err := f.s.queries.GetCharacter(ctx, forasteiro)
+	if err != nil {
+		t.Fatalf("reler a ficha do forasteiro: %v", err)
+	}
+	if depois.Hpcurrent != antes.Hpcurrent {
+		t.Errorf("a recusa feriu mesmo assim: %d virou %d", antes.Hpcurrent, depois.Hpcurrent)
+	}
+}
+
+// COM linha na fila, ela ESPELHA o que o elenco fez — senão as duas telas
+// mostram números diferentes do mesmo herói, que é a ALE-122 literal.
+func TestTheCastVitalsMirrorIntoTheTrackerWhenThereIsALine(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.tracker(t)
+
+	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitals/"
+	if rec := f.pede(t, f.mestre, "POST", base+"hp/harm/5", ""); rec.Code != http.StatusOK {
+		t.Fatalf("ferir pelo elenco deu %d", rec.Code)
+	}
+
+	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("reler a ficha: %v", err)
+	}
+	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
+		if e.ID != entryID {
+			continue
+		}
+		if e.HpCurrent == nil || *e.HpCurrent != ficha.Hpcurrent {
+			t.Errorf("a fila ficou com %v e a ficha com %d — as duas telas divergiram",
+				e.HpCurrent, ficha.Hpcurrent)
+		}
+	}
 }

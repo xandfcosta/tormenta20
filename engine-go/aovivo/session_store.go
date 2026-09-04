@@ -243,6 +243,47 @@ func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, 
 		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
+// DeltaCharacterVitals move os vitais de um PERSONAGEM, esteja ele na fila ou
+// não (ALE-211).
+//
+// O irmão dele, o `DeltaVitals`, entra pela ENTRADA da fila, e é o caminho do
+// COMBATE. Este entra pelo personagem, e é o caminho do ELENCO — onde metade da
+// gente não tem linha na iniciativa durante a maior parte da sessão, que é a
+// razão de o elenco existir separado da fila.
+//
+// Quem manda é a FICHA nos dois, e é isso que impede as duas telas de divergirem
+// sobre o mesmo herói (ALE-122). A fila ESPELHA quando existe linha; quando não
+// existe, não há o que espelhar e a ficha é a única a mudar — devolver o estado
+// como está é a resposta certa, e não um erro, porque "não está na fila" é o
+// caso comum aqui e não uma falha.
+func (st *SessionStore) DeltaCharacterVitals(sessionID, characterID int64, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
+	hp, mp, err := st.ficha.ApplyDelta(context.Background(), characterID, hpDelta, mpDelta)
+	if err != nil {
+		return nil, err
+	}
+	entryID := st.entryIDForCharacter(sessionID, characterID)
+	if entryID == "" {
+		return st.GetState(sessionID), nil
+	}
+	return st.apply(sessionID, vitalsEvent(sessionID, entryID, &characterID),
+		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
+}
+
+// entryIDForCharacter é o inverso do `CharacterIDOf`, e devolve "" para quem não
+// está na fila.
+//
+// Vazio e não erro: no elenco, estar FORA da iniciativa é o estado normal — o
+// mestre cura a Arwen entre duas brigas —, e tratar isso como falha faria o
+// gesto recusar exatamente o caso que ele veio atender.
+func (st *SessionStore) entryIDForCharacter(sessionID, characterID int64) string {
+	for _, e := range st.GetState(sessionID).Initiative {
+		if e.CharacterID != nil && *e.CharacterID == characterID {
+			return e.ID
+		}
+	}
+	return ""
+}
+
 // DeltaVitals move os vitais de uma entrada. Se há personagem atrás dela, quem
 // manda é a FICHA: o delta é aplicado na linha do personagem (dano drenando PV
 // temporários, como o endpoint de dano) e a entrada espelha o resultado
