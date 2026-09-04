@@ -12,15 +12,11 @@ import (
 	"t20engine/engine"
 	"t20engine/events"
 	"t20engine/plataforma"
-	"t20engine/sheet"
 	"t20engine/tabuleiro"
-	"t20engine/web/bookui"
 	"t20engine/web/hub"
 	"t20engine/web/routes"
 	"t20engine/web/table"
-	"t20engine/web/ui"
 
-	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -105,14 +101,14 @@ func (s *Server) WaitForBackground() {
 // A busca é por sessão VIVA e só as que têm o personagem na fila: avisar mesa
 // que não tem aquele combatente mandaria todo cliente da casa refazer busca a
 // cada ficha salva.
-func (s *Server) characterChanged(characterID int64) {
+func (sr sheetRules) characterChanged(characterID int64) {
 	// O AVISO PARA AS CENAS DO SERVIDOR (ALE-275, no barramento desde a ALE-279).
 	// Ele é por PERSONAGEM e não por sessão: quem escuta é o stream da Mesa de
 	// quem tem essa ficha aberta, e a busca por sessão viva abaixo responde outra
 	// pergunta — a do hub SSE, que fala com a sala inteira.
-	s.bus.Publish(events.CharacterChanged{CharacterID: characterID})
-	for _, sessionID := range s.sessions.LiveSessionsWithCharacter(characterID) {
-		s.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
+	sr.bus.Publish(events.CharacterChanged{CharacterID: characterID})
+	for _, sessionID := range sr.sessions.LiveSessionsWithCharacter(characterID) {
+		sr.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
 	}
 }
 
@@ -184,35 +180,27 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 	//
 	// O DONO continua sendo a cena; o servidor só guarda a instância, como
 	// guarda um store.
-	srv.tableScene = table.New(srv)
+	srv.primeCatalogs(catalogs)
 	return srv
 }
 
-// A PONTE das cenas ainda não convertidas (ALE-278, fatia 6).
+// primeCatalogs troca o motor e RECONSTRÓI a cena da Mesa.
 //
-// As nove assinaturas compartilhadas moram no `sceneCore` desde esta fatia, e
-// quatro cenas — grimório, mestre, leitor e personagens — já o recebem direto.
-// As outras sete continuam recebendo o `*Server`, porque a porta delas pede
-// coisas que ainda não têm adaptador próprio, e um `*Server` sem `Queries` não
-// cumpre porta nenhuma.
+// As duas coisas andam juntas, e é por isso que elas têm um nome: desde a fatia
+// 6 o adaptador da Mesa COPIA o `*engine.Catalogs` quando é montado, e a cena
+// da Mesa é montada uma vez só (ver acima). Trocar o campo sem reconstruir
+// deixa a Mesa com o motor de antes.
 //
-// Estes cinco delegam para o núcleo em vez de repetir o corpo, e é essa a
-// diferença entre uma ponte e uma segunda implementação: quando a última cena
-// tiver adaptador, apagar este bloco não muda comportamento de nada. **A ordem
-// é a da casa** — escrever o substituto, vê-lo verde, DEPOIS apagar; começar
-// pelo apagar abriria uma janela em que sete cenas não compilam.
-func (s *Server) Queries() *sqlcgen.Queries           { return s.sceneCore().Queries() }
-func (s *Server) Catalogs() *engine.Catalogs          { return s.sceneCore().Catalogs() }
-func (s *Server) BookAddress() bookui.BookAddress     { return s.sceneCore().BookAddress() }
-func (s *Server) Asset(arquivo string) string         { return s.sceneCore().Asset(arquivo) }
-func (s *Server) CurrentUserID(r *http.Request) int64 { return s.sceneCore().CurrentUserID(r) }
-func (s *Server) WritePage(
-	w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component,
-) {
-	s.sceneCore().WritePage(w, r, status, p, corpo)
-}
-func (s *Server) CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error) {
-	return s.sceneCore().CharacterList(ctx, ownerID)
+// Isso não é hipótese — foi medido. A bancada de teste prima os catálogos
+// DEPOIS do `NewServer`, e sete casos da Mesa passaram a estourar com nulo
+// dentro do motor: o painel do combatente pedia a ficha computada a um
+// `*Catalogs` que nunca tinha chegado à cena. Em produção o motor chega pelo
+// construtor e nunca muda, então o defeito só existia no teste — mas a
+// invariante é a mesma nos dois, e um campo que exige um segundo passo é um
+// campo que alguém vai trocar sozinho.
+func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
+	s.catalogs = catalogs
+	s.tableScene = table.New(s.tableHost())
 }
 
 // sceneCore monta o núcleo que as cenas compartilham (ALE-278, fatia 6).

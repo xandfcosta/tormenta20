@@ -35,7 +35,7 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 	// ENCERRADA: o verbo muda de PALAVRA, porque o gesto mudou de sentido —
 	// "Reabrir" e não "Iniciar", que é o que o servidor faz de verdade.
 	sess, _ := f.s.queries.GetSession(ctx, f.sessionID)
-	if _, err := f.s.EndSession(ctx, sess); err != nil {
+	if _, err := f.s.tableRules().EndSession(ctx, sess); err != nil {
 		t.Fatalf("encerrar: %v", err)
 	}
 	encerrada := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -99,7 +99,7 @@ func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n < 2 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n < 2 {
 		t.Fatalf("a cena montou %d combatentes — não há o que reiniciar", n)
 	}
 
@@ -107,7 +107,7 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 		t.Fatalf("reiniciar deu %d", rec.Code)
 	}
 
-	if n := len(f.s.Sessions().GetState(f.sessionID).Initiative); n != 0 {
+	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 0 {
 		t.Errorf("a fila ao vivo continua com %d combatentes", n)
 	}
 }

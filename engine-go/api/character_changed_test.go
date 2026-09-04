@@ -42,7 +42,7 @@ func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 	}
 	conn := s.sse.Add(7, "c1", "player")
 
-	s.characterChanged(14)
+	s.sheetRules().characterChanged(14)
 
 	select {
 	case frame := <-conn.Frames:
@@ -72,7 +72,7 @@ func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 	}
 	conn := s.sse.Add(7, "c1", "player")
 
-	s.characterChanged(14)
+	s.sheetRules().characterChanged(14)
 
 	select {
 	case frame := <-conn.Frames:

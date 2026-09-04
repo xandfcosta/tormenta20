@@ -21,7 +21,7 @@ import (
 //
 // Devolve a lista de DESCONHECIDAS separada do erro porque as duas respostas sao
 // diferentes: categoria invalida e 422 com o campo, falha de banco e 500.
-func (s *Server) saveProficiencies(
+func (sr sheetRules) saveProficiencies(
 	ctx context.Context, id int64, categorias []string,
 ) (string, []string, error) {
 	var unknown []string
@@ -40,7 +40,7 @@ func (s *Server) saveProficiencies(
 		return "", unknown, nil
 	}
 	proficiencies := sheet.MarshalStrings(&dedup)
-	if err := s.queries.SetProficiencies(ctx, sqlcgen.SetProficienciesParams{
+	if err := sr.queries.SetProficiencies(ctx, sqlcgen.SetProficienciesParams{
 		Proficiencies: proficiencies, UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {
 		return "", nil, err

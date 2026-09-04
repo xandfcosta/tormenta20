@@ -13,7 +13,7 @@ import (
 func barbaro(t *testing.T, nivel int64) (pilotoFixture, int64) {
 	t.Helper()
 	f := novoPiloto(t)
-	id, err := f.s.Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
+	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Furioso", Origin: "Batedor", Level: nivel,
 		HpMax: 60, HpCurrent: 60, MpMax: 20, MpCurrent: 20,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
@@ -155,7 +155,7 @@ func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 	if pm := pm(t, f, id); pm != 16 {
 		t.Errorf("o PM ficou %d, quer 16 (20 − 2 de base − 2 degraus de 1)", pm)
 	}
-	posturas, err := f.s.Queries().ListCharacterStances(context.Background(), id)
+	posturas, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler as posturas: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestEndingTheStanceGivesNoMpBack(t *testing.T) {
 	if depois := pm(t, f, id); depois != antes {
 		t.Errorf("encerrar devolveu PM: %d → %d", antes, depois)
 	}
-	posturas, err := f.s.Queries().ListCharacterStances(context.Background(), id)
+	posturas, err := f.s.sceneCore().Queries().ListCharacterStances(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler as posturas: %v", err)
 	}
@@ -216,7 +216,7 @@ func TestUsingChargesTheMpAndCountsTheUse(t *testing.T) {
 	if pm := pm(t, f, id); pm != 19 {
 		t.Errorf("o PM ficou %d, quer 19 (20 − 1)", pm)
 	}
-	usos, err := f.s.Queries().ListCharacterPowerUses(context.Background(), id)
+	usos, err := f.s.sceneCore().Queries().ListCharacterPowerUses(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler os usos: %v", err)
 	}
@@ -283,7 +283,7 @@ func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 
 func effects(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 	t.Helper()
-	linhas, err := f.s.Queries().ListActiveEffectsByCharacter(context.Background(), id)
+	linhas, err := f.s.sceneCore().Queries().ListActiveEffectsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler os efeitos: %v", err)
 	}

@@ -177,7 +177,7 @@ func TestResolveCombatant(t *testing.T) {
 	loose := seedCharacter(t, s, player, "Solto", 5, 5, 0, 0) // not a member
 
 	t.Run("owner resolves with vitals", func(t *testing.T) {
-		got, status, err := s.resolveCombatant(ctx, player, campaignID, pc)
+		got, status, err := s.tableRules().resolveCombatant(ctx, player, campaignID, pc)
 		if err != nil || status != 200 {
 			t.Fatalf("status=%d err=%v", status, err)
 		}
@@ -187,22 +187,22 @@ func TestResolveCombatant(t *testing.T) {
 		}
 	})
 	t.Run("gm resolves another player's pc", func(t *testing.T) {
-		if _, status, err := s.resolveCombatant(ctx, gm, campaignID, pc); status != 200 || err != nil {
+		if _, status, err := s.tableRules().resolveCombatant(ctx, gm, campaignID, pc); status != 200 || err != nil {
 			t.Errorf("gm should resolve: status=%d err=%v", status, err)
 		}
 	})
 	t.Run("stranger forbidden", func(t *testing.T) {
-		if _, status, _ := s.resolveCombatant(ctx, stranger, campaignID, pc); status != 403 {
+		if _, status, _ := s.tableRules().resolveCombatant(ctx, stranger, campaignID, pc); status != 403 {
 			t.Errorf("status=%d, want 403", status)
 		}
 	})
 	t.Run("non-member character is bad request", func(t *testing.T) {
-		if _, status, _ := s.resolveCombatant(ctx, player, campaignID, loose); status != 400 {
+		if _, status, _ := s.tableRules().resolveCombatant(ctx, player, campaignID, loose); status != 400 {
 			t.Errorf("status=%d, want 400", status)
 		}
 	})
 	t.Run("missing character 404", func(t *testing.T) {
-		if _, status, _ := s.resolveCombatant(ctx, gm, campaignID, 999999); status != 404 {
+		if _, status, _ := s.tableRules().resolveCombatant(ctx, gm, campaignID, 999999); status != 404 {
 			t.Errorf("status=%d, want 404", status)
 		}
 	})
@@ -274,7 +274,7 @@ func TestEndSceneEndDay(t *testing.T) {
 	t.Run("EndScene removes only scene effects", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-a", "scene")
 		seedEffect(t, s, char, "buff-b", "day")
-		if status, err := s.EndScene(ctx, gm, char); status != 200 || err != nil {
+		if status, err := s.tableRules().EndScene(ctx, gm, char); status != 200 || err != nil {
 			t.Fatalf("status=%d err=%v", status, err)
 		}
 		if got := effectScopes(t, s, char); len(got) != 1 || got[0] != "day" {
@@ -283,7 +283,7 @@ func TestEndSceneEndDay(t *testing.T) {
 	})
 	t.Run("endDay removes scene and day", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-a", "scene") // re-Add the scene one
-		if status, err := s.endDay(ctx, gm, char); status != 200 || err != nil {
+		if status, err := s.tableRules().endDay(ctx, gm, char); status != 200 || err != nil {
 			t.Fatalf("status=%d err=%v", status, err)
 		}
 		if got := effectScopes(t, s, char); len(got) != 0 {
@@ -292,7 +292,7 @@ func TestEndSceneEndDay(t *testing.T) {
 	})
 	t.Run("stranger forbidden, effects untouched", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-c", "scene")
-		if status, _ := s.EndScene(ctx, stranger, char); status != 403 {
+		if status, _ := s.tableRules().EndScene(ctx, stranger, char); status != 403 {
 			t.Errorf("status=%d, want 403", status)
 		}
 		if got := effectScopes(t, s, char); len(got) != 1 {
@@ -311,21 +311,21 @@ func TestRestVitals(t *testing.T) {
 	// Level-1 characters: gain = floor(1 × mult) → ruim 0, normal 1, confortavel 2, luxuosa 3.
 	t.Run("luxuosa gains 3, clamped to max", func(t *testing.T) {
 		char := seedCharacter(t, s, gmID, "Ferido", 5, 20, 2, 8)
-		got, status, err := s.restVitals(ctx, gm, char, "luxuosa")
+		got, status, err := s.tableRules().restVitals(ctx, gm, char, "luxuosa")
 		if err != nil || status != 200 || got.hpCurrent != 8 || got.mpCurrent != 5 {
 			t.Fatalf("got %+v status=%d err=%v, want hp=8 mp=5", got, status, err)
 		}
 	})
 	t.Run("gain clamps at max", func(t *testing.T) {
 		char := seedCharacter(t, s, gmID, "QuaseCheio", 19, 20, 8, 8)
-		got, _, _ := s.restVitals(ctx, gm, char, "luxuosa")
+		got, _, _ := s.tableRules().restVitals(ctx, gm, char, "luxuosa")
 		if got.hpCurrent != 20 || got.mpCurrent != 8 {
 			t.Errorf("got %+v, want hp=20 mp=8 (clamped)", got)
 		}
 	})
 	t.Run("ruim gains nothing at level 1", func(t *testing.T) {
 		char := seedCharacter(t, s, gmID, "Pobre", 5, 20, 2, 8)
-		got, _, _ := s.restVitals(ctx, gm, char, "ruim")
+		got, _, _ := s.tableRules().restVitals(ctx, gm, char, "ruim")
 		if got.hpCurrent != 5 || got.mpCurrent != 2 {
 			t.Errorf("got %+v, want unchanged 5/2", got)
 		}
@@ -339,13 +339,13 @@ func TestRestVitals(t *testing.T) {
 	t.Run("Helior, 7º nível: estalagem devolve 7, relento devolve 3 (p106)", func(t *testing.T) {
 		char := seedCharacterAtLevel(t, s, gmID, "Helior", 7, 1, 40, 1, 40)
 
-		normal, _, _ := s.restVitals(ctx, gm, char, "normal")
+		normal, _, _ := s.tableRules().restVitals(ctx, gm, char, "normal")
 		if normal.hpCurrent != 8 || normal.mpCurrent != 8 {
 			t.Errorf("estalagem: %+v, queria 1+7 em PV e PM", normal)
 		}
 
 		ferido := seedCharacterAtLevel(t, s, gmID, "Helior ao relento", 7, 1, 40, 1, 40)
-		ruim, _, _ := s.restVitals(ctx, gm, ferido, "ruim")
+		ruim, _, _ := s.tableRules().restVitals(ctx, gm, ferido, "ruim")
 		if ruim.hpCurrent != 4 || ruim.mpCurrent != 4 {
 			t.Errorf("relento: %+v, queria 1+3 em PV e PM (metade de 7 = 3, não 4)", ruim)
 		}
@@ -353,7 +353,7 @@ func TestRestVitals(t *testing.T) {
 
 	t.Run("unknown condition falls back to normal (gain 1)", func(t *testing.T) {
 		char := seedCharacter(t, s, gmID, "Default", 5, 20, 2, 8)
-		got, _, _ := s.restVitals(ctx, gm, char, "bogus")
+		got, _, _ := s.tableRules().restVitals(ctx, gm, char, "bogus")
 		if got.hpCurrent != 6 || got.mpCurrent != 3 {
 			t.Errorf("got %+v, want 6/3", got)
 		}
@@ -374,7 +374,7 @@ func TestListMemberHelpers(t *testing.T) {
 	seedMember(t, s, campaignID, pcB, "player")
 	seedMember(t, s, campaignID, npc, "gm")
 
-	players, err := s.listPlayerCombatants(ctx, campaignID)
+	players, err := s.tableRules().listPlayerCombatants(ctx, campaignID)
 	if err != nil || len(players) != 2 {
 		t.Fatalf("players=%d err=%v, want 2", len(players), err)
 	}
@@ -382,7 +382,7 @@ func TestListMemberHelpers(t *testing.T) {
 		t.Errorf("unexpected players: %+v", players)
 	}
 
-	ids, err := s.listMemberCharacterIds(ctx, campaignID)
+	ids, err := s.tableRules().listMemberCharacterIds(ctx, campaignID)
 	if err != nil || len(ids) != 3 {
 		t.Fatalf("ids=%v err=%v, want 3 (players + gm entry)", ids, err)
 	}

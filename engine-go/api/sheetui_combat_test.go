@@ -18,7 +18,7 @@ func seedPericia(t *testing.T, s *Server, id int64, nome, atributo string, trein
 	if treinada {
 		treino = 1
 	}
-	_, err := s.Queries().CreateExpertise(context.Background(), sqlcgen.CreateExpertiseParams{
+	_, err := s.sceneCore().Queries().CreateExpertise(context.Background(), sqlcgen.CreateExpertiseParams{
 		Characterid: id, Name: nome, Attribute: atributo, Trained: treino, Custom: 0,
 	})
 	if err != nil {
@@ -33,7 +33,7 @@ func seedEfeitoCondicional(t *testing.T, s *Server, id int64, quanto int) {
 	mods := fmt.Sprintf(
 		`[{"target":{"k":"attack","scope":"all"},"amount":%d,"bonusType":"untyped",`+
 			`"condition":{"c":"context","note":"enquanto estiver em Fúria"}}]`, quanto)
-	_, err := s.Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
+	_, err := s.sceneCore().Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
 		Characterid: id, Catalogid: "furia", Scope: "scene",
 		Modifiers: mods, Createdat: plataforma.NowISO(),
 	})
@@ -44,7 +44,7 @@ func seedEfeitoCondicional(t *testing.T, s *Server, id int64, quanto int) {
 func fighterFixture(t *testing.T) (pilotoFixture, int64) {
 	t.Helper()
 	f := novoPiloto(t)
-	id, err := f.s.Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
+	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Combatente", Origin: "Soldado", Level: 3,
 		HpMax: 30, HpCurrent: 30, MpMax: 0, MpCurrent: 0,
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
@@ -153,11 +153,11 @@ func TestActiveConditionalsEnterTheAttack(t *testing.T) {
 // condicionais, que é a conclusão errada.
 func ligaOCondicional(t *testing.T, f pilotoFixture, id int64) {
 	t.Helper()
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
-	dto, err := f.s.LoadCharacter(context.Background(), row)
+	dto, err := f.s.sheetRules().LoadCharacter(context.Background(), row)
 	if err != nil {
 		t.Fatalf("carregar o personagem: %v", err)
 	}
@@ -165,12 +165,12 @@ func ligaOCondicional(t *testing.T, f pilotoFixture, id int64) {
 	if err != nil {
 		t.Fatalf("converter para o motor: %v", err)
 	}
-	oferecidos := engine.ComputeItemEffects(f.s.Catalogs().ActiveItemsFor(ec)).Conditional
+	oferecidos := engine.ComputeItemEffects(f.s.sceneCore().Catalogs().ActiveItemsFor(ec)).Conditional
 	if len(oferecidos) != 1 {
 		t.Fatalf("o motor ofereceu %d condicionais e o caso precisa de exatamente 1: "+
 			"o efeito semeado não virou um opt-in, e ligar nada mediria o vazio", len(oferecidos))
 	}
-	err = f.s.Queries().AddCharacterConditional(context.Background(), sqlcgen.AddCharacterConditionalParams{
+	err = f.s.sceneCore().Queries().AddCharacterConditional(context.Background(), sqlcgen.AddCharacterConditionalParams{
 		Characterid: id, Conditionalid: engine.ConditionalID(oferecidos[0]),
 	})
 	if err != nil {

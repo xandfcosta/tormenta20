@@ -53,6 +53,6 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	//
 	// DEPOIS da escrita, nunca antes: avisar sobre algo que ainda pode falhar
 	// faria a mesa buscar o estado velho e acreditar nele.
-	s.characterChanged(row.ID)
+	s.sheetRules().characterChanged(row.ID)
 	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
 }

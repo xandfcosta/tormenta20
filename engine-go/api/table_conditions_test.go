@@ -10,7 +10,7 @@ import (
 
 func rowConditions(t *testing.T, f pilotoFixture, entryID string) []string {
 	t.Helper()
-	for _, e := range f.s.Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if e.ID == entryID {
 			return e.Conditions
 		}

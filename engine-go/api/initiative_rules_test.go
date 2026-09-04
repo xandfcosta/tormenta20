@@ -129,7 +129,7 @@ func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
 func TestThePlayerInitiativeIsSummedByTheServer(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
-	entry, err := f.srv.selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
+	entry, err := f.srv.tableRules().selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
 	if err != nil {
 		t.Fatalf("registrar: %v", err)
 	}
@@ -149,13 +149,13 @@ func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
 	for _, d20 := range []int64{0, -3, 21, 100} {
-		if _, err := f.srv.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err == nil {
+		if _, err := f.srv.tableRules().selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err == nil {
 			t.Errorf("d20 %d passou", d20)
 		}
 	}
 	// E a fronteira dos dois lados vale: 1 e 20 são dados de verdade.
 	for _, d20 := range []int64{1, 20} {
-		if _, err := f.srv.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err != nil {
+		if _, err := f.srv.tableRules().selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err != nil {
 			t.Errorf("d20 %d recusado: %v", d20, err)
 		}
 	}
@@ -167,7 +167,7 @@ func TestAD20OutsideTheRangeIsRefused(t *testing.T) {
 func TestRecordingSomeoneElsesInitiativeIsRefused(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
-	_, err := f.srv.selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
+	_, err := f.srv.tableRules().selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
 
 	if err == nil {
 		t.Fatal("um jogador registrou a iniciativa do personagem de outro")
@@ -196,7 +196,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 	if err != nil {
 		t.Fatalf("preparar catálogo: %v", err)
 	}
-	s.catalogs = catalogs
+	s.primeCatalogs(catalogs)
 
 	gm := seedUser(t, s, "mestre@t.com")
 	player := seedUser(t, s, "jogador@t.com")
@@ -234,7 +234,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 func TestEndingTheSceneExpiresThePartySceneEffects(t *testing.T) {
 	f := newEndSceneFixture(t)
 
-	state, err := f.srv.endSceneForTable(f.gm, f.campaignID, f.sessionID)
+	state, err := f.srv.tableRules().endSceneForTable(f.gm, f.campaignID, f.sessionID)
 	if err != nil {
 		t.Fatalf("encerrar a cena: %v", err)
 	}
@@ -256,7 +256,7 @@ func TestEndingTheSceneReachesWhoIsNotInTheTracker(t *testing.T) {
 	seedMember(t, f.srv, f.campaignID, ausente, "player")
 	seedEffect(t, f.srv, ausente, "bencao", "scene")
 
-	if _, err := f.srv.endSceneForTable(f.gm, f.campaignID, f.sessionID); err != nil {
+	if _, err := f.srv.tableRules().endSceneForTable(f.gm, f.campaignID, f.sessionID); err != nil {
 		t.Fatalf("encerrar a cena: %v", err)
 	}
 
@@ -310,7 +310,7 @@ func TestEndingTheSceneDoesNotTurnItOffIfItDidNotReachTheSheets(t *testing.T) {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
 
-	if _, err := f.srv.endSceneForTable(f.gm, f.campaignID, f.sessionID); err == nil {
+	if _, err := f.srv.tableRules().endSceneForTable(f.gm, f.campaignID, f.sessionID); err == nil {
 		t.Fatal("encerrou sem ter conseguido alcançar as fichas do grupo")
 	}
 

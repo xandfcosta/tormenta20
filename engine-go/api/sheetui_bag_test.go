@@ -27,7 +27,7 @@ func bagCommand(t *testing.T, f pilotoFixture, id int64, caminho string) string 
 // itemSemeia põe um item na ficha e devolve o id.
 func itemSemeia(t *testing.T, f pilotoFixture, id int64, catalogo, nome string, equipado string) int64 {
 	t.Helper()
-	item, err := f.s.Queries().CreateItem(context.Background(), sqlcgen.CreateItemParams{
+	item, err := f.s.sceneCore().Queries().CreateItem(context.Background(), sqlcgen.CreateItemParams{
 		Characterid: id, Catalogid: sql.NullString{String: catalogo, Valid: catalogo != ""},
 		Name: nome, Quantity: 1, Slots: 1,
 		Equipped:     sql.NullString{String: equipado, Valid: equipado != ""},
@@ -43,7 +43,7 @@ func itemSemeia(t *testing.T, f pilotoFixture, id int64, catalogo, nome string, 
 // aconteceu no banco.
 func equipped(t *testing.T, f pilotoFixture, itemID int64) string {
 	t.Helper()
-	item, err := f.s.Queries().GetItem(context.Background(), itemID)
+	item, err := f.s.sceneCore().Queries().GetItem(context.Background(), itemID)
 	if err != nil {
 		t.Fatalf("ler o item %d: %v", itemID, err)
 	}
@@ -183,7 +183,7 @@ func TestAnItemFromAnotherSheetCannotBeMoved(t *testing.T) {
 // O DINHEIRO: os três modos, o piso e o arredondamento.
 func TestMoneyIsReceivedSpentAndCorrected(t *testing.T) {
 	f, id := fighterFixture(t)
-	if err := f.s.Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
+	if err := f.s.sceneCore().Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
 		Tibar: 35.7, UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("semear o dinheiro: %v", err)
@@ -203,7 +203,7 @@ func TestMoneyIsReceivedSpentAndCorrected(t *testing.T) {
 
 	// E RECEBER tem a mesma armadilha do outro lado: 0,1 + 0,2 dá
 	// 0,30000000000000004.
-	if err := f.s.Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
+	if err := f.s.sceneCore().Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
 		Tibar: 0.1, UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("semear o dinheiro: %v", err)
@@ -229,7 +229,7 @@ func TestMoneyIsReceivedSpentAndCorrected(t *testing.T) {
 // mochila em vez de ocupar (ALE-215). Por isso o piso é zero, e não um aviso.
 func TestMoneyNeverGoesNegative(t *testing.T) {
 	f, id := fighterFixture(t)
-	if err := f.s.Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
+	if err := f.s.sceneCore().Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
 		Tibar: 50, UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("semear o dinheiro: %v", err)
@@ -253,7 +253,7 @@ func money(t *testing.T, f pilotoFixture, id int64, modo string, valor float64) 
 
 func tibar(t *testing.T, f pilotoFixture, id int64) float64 {
 	t.Helper()
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}

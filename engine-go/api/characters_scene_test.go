@@ -43,7 +43,7 @@ func novaCenaDeHerois(t *testing.T) (*Server, AuthUser) {
 	if err != nil {
 		t.Fatalf("preparar catálogo: %v", err)
 	}
-	s.catalogs = catalogos
+	s.primeCatalogs(catalogos)
 	dono := seedUser(t, s, "jogadora@t20.local")
 	u, err := s.queries.GetUserByID(context.Background(), dono)
 	if err != nil {
@@ -83,7 +83,7 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	if err != nil {
 		t.Fatalf("personagem: %v", err)
 	}
-	ficha, err := s.ComputeSheet(context.Background(), linha)
+	ficha, err := s.sheetRules().ComputeSheet(context.Background(), linha)
 	if err != nil {
 		t.Fatalf("ficha: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 func TestWithoutTheEngineTheDefenseBecomesAnEmDash(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
-	s.catalogs = nil
+	s.primeCatalogs(nil)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {

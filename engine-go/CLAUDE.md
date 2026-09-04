@@ -12,6 +12,11 @@ o `api` era 188 arquivos e 105 mil linhas quando a divisão começou, e hoje sã
 36 arquivos de produção e **nenhum `.templ`**. O que sobrou lá é a composição do
 roteador, as portas que cada cena pede, e as regras que não são de tela nenhuma.
 
+**E o `*Server` deixou de ser porta** (fatia 6): ele tinha 89 métodos
+exportados para cumprir a união das onze portas e hoje tem OITO. Cada cena
+recebe um adaptador com o que ela pede, e as regras ganharam quatro tipos com
+nome do que decidem — conta, campanha, ficha e mesa ao vivo.
+
 **A "API JSON" não sobrou.** Ela saiu na ALE-277: das 76 rotas do `Router()`
 ficaram SETE, e dos 113 manipuladores ficaram nove. O resto não tinha
 consumidor — nem cena, nem e2e, nem `fetch` de ilha — desde que a SPA foi
@@ -1703,6 +1708,77 @@ instrutivo: `campaign.ValidateName` não existe, então o build quebrou e a
 sabotagem nunca chegou. **Verde depois de sabotar só significa alguma coisa
 quando a sabotagem CHEGOU** — e a terceira, com `campaign.Name`, reprovou o
 guarda como devia.
+
+## O `*Server` deixou de ser porta (ALE-278, fatia 6)
+
+Ele tinha **89 métodos exportados**, e todos existiam por um motivo só: cumprir
+a UNIÃO das portas das onze cenas. Hoje tem **oito**, e eles são o que um
+servidor deve expor — os dois roteadores, a sonda de saúde, os estáticos, o
+agendador de backup e a espera do desligamento.
+
+A medição que decidiu a divisão: das 76 assinaturas pedidas pelas portas,
+**67 têm exatamente UMA cena pedindo**. Uma união que ninguém precisa como
+união é objeto-deus com nome de servidor.
+
+### A repartição, e o critério dela
+
+**Um núcleo** (`sceneCore`, 7 métodos) com o que quase toda cena pede:
+`WritePage` (11 das 11), `Queries` (7), `CurrentUserID` (6), `Catalogs` (4),
+`BookAddress` (3), `Asset` e `CharacterList`. O corte é por CONTAGEM: duas
+cenas pedindo a mesma coisa não sobem para o núcleo — o `MintAccountInvite` é
+uma linha repetida no adaptador do hub e no da administração, e isso custa
+menos que uma assinatura que nove cenas carregam sem usar.
+
+**Quatro tipos de REGRA**, nomeados pelo que decidem e não por onde estavam:
+
+| tipo | o que decide | carrega |
+| --- | --- | --- |
+| `accountRules` (13) | quem entra, quem se cadastra, quem troca a senha | cfg, db, queries |
+| `campaignRules` (14) | de quem é esta mesa, quem pode entrar nela | db, queries |
+| `sheetRules` (12) | o que muda numa ficha, e quem precisa saber | db, queries, catalogs, bus, sessions, sse |
+| `tableRules` (32) | a iniciativa, o descanso, quem anda quanto, o que a mesa vê | quase tudo |
+
+**Sete adaptadores de cena**, cada um "o núcleo mais o que aquela cena precisa":
+`forgeHost` (núcleo + `db`), `hubHost` (+ cfg), `adminHost` (+ cfg + db),
+`doorHost` (+ `accountRules`), `campaignsHost` (+ `campaignRules`), `sheetHost`
+(+ `sheetRules`) e `tableHost` (+ `tableRules`). As outras quatro cenas —
+grimório, mestre, leitor e personagens — recebem o núcleo puro.
+
+> **O `tableRules` toca quase todo campo do `*Server`, e isso não é a divisão
+> falhando.** A Mesa É a mesa ao vivo, e a mesa ao vivo é o que aqueles stores
+> guardam. A diferença entre isto e receber o servidor não é o tamanho da lista,
+> é o que ela NÃO tem: o livro, os trincos por personagem, a espera do
+> desligamento e os métodos das outras dez cenas. Aqui está escrito de que a
+> mesa depende; no `*Server` estava escrito "de tudo".
+
+### A ordem, e por que ela não é negociável
+
+Escrever o substituto, vê-lo verde, DEPOIS apagar. O núcleo entrou com uma
+PONTE de sete linhas no `*Server` delegando para ele, e a ponte só saiu quando a
+última cena tinha adaptador. Começar pelo apagar deixaria sete cenas sem
+compilar — e um refactor que não compila no meio não tem como ser dividido em
+commits revisáveis.
+
+### Quatro armadilhas medidas, e três foram do compilador
+
+1. **Recortar função de UMA LINHA procurando `}` na coluna zero come as
+   vizinhas.** `func … { return s.queries }` não tem `}` sozinho, então o
+   recorte engoliu quatro declarações abaixo. O `go build` denunciou; num
+   arquivo de teste teria passado.
+2. **Receptor colide com variável existente.** `c` para `campaignRules` esbarrou
+   nos nove `c` que já eram `sqlcgen.Campaign`, e `rules` esbarrou numa variável
+   LOCAL chamada `rules` dentro do próprio corpo que ia mudar de dono.
+3. **`s.` dentro de uma string de formato.** A troca de `s.` por `h.` acertou o
+   `%s.db` de um `fmt.Sprintf` e o nome do backup virou
+   `t20-dev-%!h(string=…).db`. Quem pegou foi o `go vet`, não um teste — os
+   quatro casos de backup usavam o nome devolvido e nenhum olhava para ele.
+4. **A que o compilador NÃO pega, e é a que importa:** o adaptador COPIA o
+   `*engine.Catalogs` quando é montado, e a cena da Mesa é montada uma vez no
+   construtor. A bancada prima os catálogos DEPOIS do `NewServer`, então sete
+   casos da Mesa passaram a estourar com nulo dentro do motor. Em produção o
+   motor chega pelo construtor e nunca muda, mas a invariante é a mesma —
+   **trocar o motor e reconstruir a cena são um gesto só**, e agora ele tem
+   nome: `primeCatalogs`.
 
 ## A API JSON saiu, e o que ela levou junto (ALE-277)
 

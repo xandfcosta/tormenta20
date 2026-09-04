@@ -26,11 +26,11 @@ func onLens(t *testing.T, f pilotoFixture) string {
 func TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
-	if _, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}, true); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}
-	if _, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{ID: "visivel", Label: "Taverneiro", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("pôr a peça visível: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestTheLensSaysHowManyVanished(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	for _, id := range []string{"a", "b"} {
-		if _, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+		if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 			tabuleiro.BoardToken{ID: id, Label: "Emboscado " + id, X: 4, Y: 4, Hidden: true}, true); err != nil {
 			t.Fatalf("pôr a peça %q: %v", id, err)
 		}
@@ -117,7 +117,7 @@ func TestTheLensDiesWithTheScene(t *testing.T) {
 func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
-	if _, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{ID: "visivel", Label: "Taverneiro", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}

@@ -64,7 +64,7 @@ func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
 				if err != nil {
 					return
 				}
-				s.publishSessionState(sessionID, estado)
+				s.tableRules().publishSessionState(sessionID, estado)
 			}(nome)
 		}
 		wg.Wait()

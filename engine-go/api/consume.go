@@ -41,10 +41,10 @@ var errDailyPortion = errors.New("apenas uma porção por dia")
 // passou a usar item: reescrever a regra lá daria DUAS respostas para "posso
 // beber esta poção?", e elas divergiriam no dia em que uma mudasse. É a mesma
 // razão do `castSpellForCharacter` da fatia 6.
-func (s *Server) consumeItemForCharacter(
+func (sr sheetRules) consumeItemForCharacter(
 	r *http.Request, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
 ) (doseUsed, error) {
-	dto, err := s.LoadCharacter(r.Context(), row)
+	dto, err := sr.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return doseUsed{}, err
 	}
@@ -74,12 +74,12 @@ func (s *Server) consumeItemForCharacter(
 	hpGain, hasHp := rollGain(hpRolled, spec.Instant, true)
 	mpGain, hasMp := rollGain(mpRolled, spec.Instant, false)
 
-	tx, err := s.db.BeginTx(r.Context(), nil)
+	tx, err := sr.db.BeginTx(r.Context(), nil)
 	if err != nil {
 		return doseUsed{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	q := s.queries.WithTx(tx)
+	q := sr.queries.WithTx(tx)
 	now := plataforma.NowISO()
 
 	var effect *sheet.EffectDTO

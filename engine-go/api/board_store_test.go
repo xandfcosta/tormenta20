@@ -389,7 +389,7 @@ func TestHealthReportsADegradedBoot(t *testing.T) {
 
 	// Com catálogo, volta a "ok". Isto prova o ANÚNCIO, não que o catálogo
 	// esteja correto — quem prova isso é a validação de schema do `catalog`.
-	s.catalogs = &engine.Catalogs{}
+	s.primeCatalogs(&engine.Catalogs{})
 	if saudavel := healthBody(t, s); saudavel["status"] != "ok" {
 		t.Fatalf("servidor inteiro respondeu %v", saudavel)
 	}
@@ -424,7 +424,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	seedMember(t, s, campaignID, heroi, "player")
 	user := AuthUser{ID: gm, Email: "gm@t.com"}
 
-	done, total, err := s.restParty(user, campaignID, sid, "scene", "normal")
+	done, total, err := s.tableRules().restParty(user, campaignID, sid, "scene", "normal")
 	if err != nil || total != 1 || done != 1 {
 		t.Fatalf("descanso saudável deu done=%d total=%d err=%v", done, total, err)
 	}
@@ -433,7 +433,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	if _, err := s.db.Exec("DROP TABLE active_effects"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	done, total, err = s.restParty(user, campaignID, sid, "scene", "normal")
+	done, total, err = s.tableRules().restParty(user, campaignID, sid, "scene", "normal")
 
 	if err != nil {
 		t.Fatalf("uma ficha que falha não pode derrubar o descanso inteiro: %v", err)

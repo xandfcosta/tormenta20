@@ -61,7 +61,7 @@ func novoPiloto(t *testing.T) pilotoFixture {
 	if err != nil {
 		t.Fatalf("preparar catálogo: %v", err)
 	}
-	s.catalogs = catalogs
+	s.primeCatalogs(catalogs)
 
 	mestre := seedUser(t, s, "mestre@t.com")
 	jogador := seedUser(t, s, "jogador@t.com")

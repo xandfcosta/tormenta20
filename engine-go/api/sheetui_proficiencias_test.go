@@ -27,7 +27,7 @@ func guerreiro(t *testing.T) (pilotoFixture, int64) {
 // saved lê o blob da coluna, que é a única fonte da verdade do painel.
 func saved(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 	t.Helper()
-	row, err := f.s.Queries().GetCharacter(context.Background(), id)
+	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
@@ -37,7 +37,7 @@ func saved(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 // saveHand põe um estado que só um ajuste manual produziria.
 func saveHand(t *testing.T, f pilotoFixture, id int64, blob string) {
 	t.Helper()
-	err := f.s.Queries().SetProficiencies(context.Background(), sqlcgen.SetProficienciesParams{
+	err := f.s.sceneCore().Queries().SetProficiencies(context.Background(), sqlcgen.SetProficienciesParams{
 		Proficiencies: blob, UpdatedAt: plataforma.NowISO(), ID: id,
 	})
 	if err != nil {

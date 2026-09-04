@@ -47,10 +47,10 @@ const defaultTab = ""
 // A GRAVAÇÃO acontece sempre, e é essa a divisão: quem não vê a aba não precisa
 // do quadro, mas o disco precisa de todas. Trocar as duas de lugar seria perder
 // em silêncio a cena de quem não está na aba padrão, que é a ALE-154 outra vez.
-func (s *Server) publishBoardState(sessionID int64, board *tabuleiro.BoardState) {
+func (tr tableRules) publishBoardState(sessionID int64, board *tabuleiro.BoardState) {
 	if board != nil {
-		go s.persistBoardAndWarn(sessionID, board.ID)
-		if board.ID != s.boards.DefaultBoardID(context.Background(), sessionID) {
+		go tr.persistBoardAndWarn(sessionID, board.ID)
+		if board.ID != tr.boards.DefaultBoardID(context.Background(), sessionID) {
 			return
 		}
 	}
@@ -61,8 +61,8 @@ func (s *Server) publishBoardState(sessionID int64, board *tabuleiro.BoardState)
 	if board != nil {
 		ordem = uint64(board.Version)
 	}
-	s.sse.EmitOrdered(sessionID, "gm", "board-state", ordem, board)
-	s.sse.EmitOrdered(sessionID, "player", "board-state", ordem, tabuleiro.BoardForRole("player", board))
+	tr.sse.EmitOrdered(sessionID, "gm", "board-state", ordem, board)
+	tr.sse.EmitOrdered(sessionID, "player", "board-state", ordem, tabuleiro.BoardForRole("player", board))
 }
 
 // publishWhatIsLeft é o quadro DEPOIS de fechar uma aba (ALE-205).
@@ -75,18 +75,18 @@ func (s *Server) publishBoardState(sessionID int64, board *tabuleiro.BoardState)
 //
 // Então quem responde é o estado: sobrou aba, vai a PADRÃO; não sobrou, vai o
 // `nil` de sempre, que continua sendo a verdade.
-func (s *Server) publishWhatIsLeft(ctx context.Context, sessionID int64) {
-	s.publishBoardState(sessionID, s.boards.Get(ctx, sessionID, defaultTab))
+func (tr tableRules) publishWhatIsLeft(ctx context.Context, sessionID int64) {
+	tr.publishBoardState(sessionID, tr.boards.Get(ctx, sessionID, defaultTab))
 }
 
-func (s *Server) persistBoardAndWarn(sessionID int64, tabuleiroID string) {
-	if Dirty, changed := s.boards.Persist(context.Background(), sessionID, tabuleiroID); changed {
-		s.warnPersistenceOnBoard(sessionID, Dirty)
+func (tr tableRules) persistBoardAndWarn(sessionID int64, tabuleiroID string) {
+	if Dirty, changed := tr.boards.Persist(context.Background(), sessionID, tabuleiroID); changed {
+		tr.warnPersistenceOnBoard(sessionID, Dirty)
 	}
 }
 
-func (s *Server) warnPersistenceOnBoard(sessionID int64, Dirty bool) {
-	s.sse.Emit(sessionID, "", "persistence-warning", map[string]any{
+func (tr tableRules) warnPersistenceOnBoard(sessionID int64, Dirty bool) {
+	tr.sse.Emit(sessionID, "", "persistence-warning", map[string]any{
 		"sessionId": sessionID, "Dirty": Dirty,
 	})
 }
@@ -102,25 +102,25 @@ type liveCtx struct {
 
 // publishSessionState transmite o estado às duas salas por papel e persiste.
 // Espelha o `emitSessionState` do gateway.
-func (s *Server) publishSessionState(sessionID int64, state *aovivo.SessionRuntimeState) {
-	s.sse.EmitOrdered(sessionID, "gm", "session-state", state.Seq, state)
-	s.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, aovivo.RedactForPlayers(state))
-	s.emSegundoPlano.Add(1)
+func (tr tableRules) publishSessionState(sessionID int64, state *aovivo.SessionRuntimeState) {
+	tr.sse.EmitOrdered(sessionID, "gm", "session-state", state.Seq, state)
+	tr.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, aovivo.RedactForPlayers(state))
+	tr.emSegundoPlano.Add(1)
 	go func() {
-		defer s.emSegundoPlano.Done()
-		s.persistSessionAndWarn(sessionID)
+		defer tr.emSegundoPlano.Done()
+		tr.persistSessionAndWarn(sessionID)
 	}()
 }
 
 // persistSessionAndWarn persiste e avisa a mesa SÓ quando o sinal de sujeira
 // vira — primeira falha, ou uma tentativa que se recuperou. Espelha o
 // `persistAndWarn` do gateway; quem é dono do sinal é o store.
-func (s *Server) persistSessionAndWarn(sessionID int64) {
-	Dirty, changed := s.sessions.Persist(context.Background(), sessionID)
+func (tr tableRules) persistSessionAndWarn(sessionID int64) {
+	Dirty, changed := tr.sessions.Persist(context.Background(), sessionID)
 	if !changed {
 		return
 	}
-	s.sse.Emit(sessionID, "", "persistence-warning", map[string]any{
+	tr.sse.Emit(sessionID, "", "persistence-warning", map[string]any{
 		"sessionId": sessionID, "Dirty": Dirty,
 	})
 }

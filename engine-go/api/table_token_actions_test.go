@@ -12,7 +12,7 @@ import (
 
 func mapToken(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
 	t.Helper()
-	posto, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"}, true)
 	if err != nil {
 		t.Fatalf("pôr a peça %q: %v", rotulo, err)
@@ -22,7 +22,7 @@ func mapToken(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
 
 func nowBoard(t *testing.T, f pilotoFixture) *tabuleiro.BoardState {
 	t.Helper()
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
 		t.Fatal("não há tabuleiro — o gesto não tinha onde acontecer")
 	}
@@ -75,7 +75,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 	entryID := f.tracker(t)
-	posto, err := f.s.Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID}, true)
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -91,7 +91,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	}
 	// A LINHA fica: quem estava no combate continua no combate.
 	tracker := false
-	for _, e := range f.s.Sessions().GetState(f.sessionID).Initiative {
+	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		tracker = tracker || e.ID == entryID
 	}
 	if !tracker {

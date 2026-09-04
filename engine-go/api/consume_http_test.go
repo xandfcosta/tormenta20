@@ -46,7 +46,7 @@ func consumeItem(t *testing.T, s *Server, charID, itemID int64, pv, pm *int64) (
 		t.Fatalf("ler personagem %d: %v", charID, err)
 	}
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
-	return s.consumeItemForCharacter(req, row, itemID, pv, pm)
+	return s.sheetRules().consumeItemForCharacter(req, row, itemID, pv, pm)
 }
 
 func itemQuantity(t *testing.T, s *Server, itemID int64) (int64, bool) {
@@ -219,7 +219,7 @@ func TestConsumeAllowsThePortionAgainAfterTheDayEnds(t *testing.T) {
 	// marcador do consumível, e a rota carrega uma autorização que não é assunto
 	// dele — desde a ALE-223 ela pede um MESTRE em sessão viva, e montar uma
 	// mesa aqui só para encerrar um dia mediria a regra errada.
-	if status, err := s.endDay(context.Background(), AuthUser{ID: owner}, char); err != nil {
+	if status, err := s.tableRules().endDay(context.Background(), AuthUser{ID: owner}, char); err != nil {
 		t.Fatalf("encerrar o dia falhou: %d (%v)", status, err)
 	}
 

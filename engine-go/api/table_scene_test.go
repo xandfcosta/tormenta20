@@ -13,7 +13,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 
 	// O CONTROLE: não há tabuleiro antes. Sem ele, "o lugar é a Taverna" seria
 	// verdade também sobre uma cena que já estava aberta desde a fixture.
-	if f.s.Boards().Get(context.Background(), f.sessionID, defaultTab) != nil {
+	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab) != nil {
 		t.Fatal("a sessão já nasceu com tabuleiro — o guarda mediria a cena errada")
 	}
 
@@ -22,7 +22,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
 		t.Fatal("o tabuleiro não abriu")
 	}
@@ -52,7 +52,7 @@ func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *test
 		`{"novolugar":"   ","novochao":"lava"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
 		t.Fatal("o tabuleiro não abriu")
 	}
@@ -75,7 +75,7 @@ func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu a cena: %d", rec.Code)
 	}
-	if f.s.Boards().Get(context.Background(), f.sessionID, defaultTab) != nil {
+	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab) != nil {
 		t.Error("a cena do jogador abriu mesmo assim")
 	}
 
@@ -83,7 +83,7 @@ func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador encerrou a cena: %d", rec.Code)
 	}
-	if f.s.Boards().Get(context.Background(), f.sessionID, defaultTab) == nil {
+	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab) == nil {
 		t.Error("a cena sumiu quando o jogador mandou encerrar")
 	}
 }
@@ -100,11 +100,11 @@ func TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive(t *testing.T) {
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
-	if f.s.Boards().Get(context.Background(), f.sessionID, defaultTab) != nil {
+	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab) != nil {
 		t.Error("a cena continuou na mesa depois de encerrada")
 	}
 
-	lugares := f.s.Boards().Places(context.Background(), f.campaignID)
+	lugares := f.s.tableHost().Boards().Places(context.Background(), f.campaignID)
 	achou := false
 	for _, l := range lugares {
 		if l.Name == "Taverna do Javali" {
@@ -223,7 +223,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	}
 
 	taverna := int64(0)
-	for _, l := range f.s.Boards().Places(ctx, f.campaignID) {
+	for _, l := range f.s.tableHost().Boards().Places(ctx, f.campaignID) {
 		if l.Name == "Taverna do Javali" {
 			taverna = l.ID
 		}
@@ -237,7 +237,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 		t.Fatalf("reabrir deu %d", rec.Code)
 	}
 
-	abertos := f.s.Boards().OpenBoards(ctx, f.sessionID)
+	abertos := f.s.tableHost().Boards().OpenBoards(ctx, f.sessionID)
 	if len(abertos) != 2 {
 		t.Fatalf("a sessão ficou com %d cenas abertas, esperado 2 (a cripta e a taverna)", len(abertos))
 	}
@@ -249,7 +249,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	}
 	// E ela NÃO foi arquivada, porque não foi tirada de lugar nenhum: a cripta
 	// no acervo com a cripta na mesa seriam duas verdades sobre a mesma cena.
-	for _, l := range f.s.Boards().Places(ctx, f.campaignID) {
+	for _, l := range f.s.tableHost().Boards().Places(ctx, f.campaignID) {
 		if l.Name == "Cripta" {
 			t.Error("a cena que continua aberta foi arquivada: o acervo passou a ter uma cópia dela")
 		}
@@ -277,7 +277,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir a cripta deu %d", rec.Code)
 	}
-	guardados := f.s.Boards().Places(context.Background(), f.campaignID)
+	guardados := f.s.tableHost().Boards().Places(context.Background(), f.campaignID)
 	if len(guardados) == 0 {
 		t.Fatal("o acervo está vazio — o guarda não teria o que apagar")
 	}
@@ -286,7 +286,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 		fmt.Sprintf("%s/tabuleiro/lugares/%d/remover", f.tableUrl(), guardados[0].ID), ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
-	if b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab); b == nil {
+	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); b == nil {
 		t.Error("apagar um lugar do acervo derrubou a cena que estava na mesa")
 	} else if b.Place != "Cripta" {
 		t.Errorf("a cena da mesa virou %q", b.Place)
@@ -300,7 +300,7 @@ func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
-	guardados := f.s.Boards().Places(context.Background(), f.campaignID)
+	guardados := f.s.tableHost().Boards().Places(context.Background(), f.campaignID)
 	if len(guardados) == 0 {
 		t.Fatal("o acervo está vazio — o guarda mediria uma rota sem alvo")
 	}
@@ -313,7 +313,7 @@ func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 			t.Errorf("o jogador conseguiu %s um lugar: %d", acao, rec.Code)
 		}
 	}
-	if len(f.s.Boards().Places(context.Background(), f.campaignID)) != len(guardados) {
+	if len(f.s.tableHost().Boards().Places(context.Background(), f.campaignID)) != len(guardados) {
 		t.Error("o acervo mudou de tamanho com o jogador mexendo nele")
 	}
 }

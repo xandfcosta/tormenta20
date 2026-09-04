@@ -73,7 +73,7 @@ func (f rulesFixture) cargaIgnorada(t *testing.T) bool {
 	if err != nil {
 		t.Fatalf("ler ficha: %v", err)
 	}
-	dto, err := f.s.LoadCharacter(context.Background(), row)
+	dto, err := f.s.sheetRules().LoadCharacter(context.Background(), row)
 	if err != nil {
 		t.Fatalf("carregar ficha: %v", err)
 	}

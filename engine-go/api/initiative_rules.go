@@ -42,18 +42,18 @@ import (
 // inteiro e esta função não mudou uma linha. (Reposto na nona puxada, pela
 // segunda vez — o comentário se perde toda vez que a função muda de arquivo, e
 // sem ele o `*Server` parece escolha de estilo.)
-func (s *Server) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (aovivo.InitiativeEntry, error) {
+func (tr tableRules) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (aovivo.InitiativeEntry, error) {
 	if d20 < 1 || d20 > 20 {
 		return aovivo.InitiativeEntry{}, fmt.Errorf("d20 must be an integer from 1 to 20, got %d", d20)
 	}
-	bonus, err := s.initiativeBonus(context.Background(), charID)
+	bonus, err := tr.initiativeBonus(context.Background(), charID)
 	if err != nil {
 		return aovivo.InitiativeEntry{}, err
 	}
 	// Um payload NOVO e não o corpo recebido: escrever no mapa do cliente faria a
 	// mensagem se reescrever a si mesma, e um `initiative` que ele tenha mandado
 	// junto venceria a conta do servidor.
-	return s.materializeEntry(context.Background(), callerID, campaignID, map[string]any{
+	return tr.materializeEntry(context.Background(), callerID, campaignID, map[string]any{
 		"characterId": charID, "initiative": d20 + bonus,
 	})
 }
@@ -66,19 +66,19 @@ func (s *Server) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (a
 // mestre com a fila zerada e as bênçãos vivas — o defeito da ALE-220 outra vez,
 // agora com o botão parecendo ter funcionado. Falha aqui é falha do gesto
 // inteiro, e o mestre clica de novo.
-func (s *Server) endSceneForTable(user AuthUser, campaignID, sessionID int64) (*aovivo.SessionRuntimeState, error) {
-	if _, _, err := s.expirePartyScene(user, campaignID, sessionID); err != nil {
+func (tr tableRules) endSceneForTable(user AuthUser, campaignID, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+	if _, _, err := tr.expirePartyScene(user, campaignID, sessionID); err != nil {
 		return nil, errors.New("Could not Load campaign members")
 	}
-	return s.sessions.EndScene(sessionID)
+	return tr.sessions.EndScene(sessionID)
 }
 
 // populateParty adds each not-yet-present player combatant at initiative 0 with live vitals,
 // returning the latest state and the first Add error (with the partial state so the caller
 // can still broadcast what landed).
-func (s *Server) populateParty(sessionID int64, combatants []combatant) (*aovivo.SessionRuntimeState, error) {
+func (tr tableRules) populateParty(sessionID int64, combatants []combatant) (*aovivo.SessionRuntimeState, error) {
 	existing := map[int64]bool{}
-	for _, e := range s.sessions.GetState(sessionID).Initiative {
+	for _, e := range tr.sessions.GetState(sessionID).Initiative {
 		if e.CharacterID != nil {
 			existing[*e.CharacterID] = true
 		}
@@ -89,7 +89,7 @@ func (s *Server) populateParty(sessionID int64, combatants []combatant) (*aovivo
 			continue
 		}
 		cid, hpc, hpm, mpc, mpm := c.characterID, c.hpCurrent, c.hpMax, c.mpCurrent, c.mpMax
-		st, err := s.sessions.AddInitiativeEntry(sessionID, aovivo.InitiativeEntry{
+		st, err := tr.sessions.AddInitiativeEntry(sessionID, aovivo.InitiativeEntry{
 			Label: c.name, Initiative: 0, Type: "character", CharacterID: &cid,
 			HpCurrent: &hpc, HpMax: &hpm, MpCurrent: &mpc, MpMax: &mpm,
 		})
@@ -104,11 +104,11 @@ func (s *Server) populateParty(sessionID int64, combatants []combatant) (*aovivo
 // materializeEntry resolves an initiative payload into a concrete entry — an NPC (label +
 // initiative) or a character (name/vitals pulled via resolveCombatant, with optional client
 // overrides).
-func (s *Server) materializeEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (aovivo.InitiativeEntry, error) {
+func (tr tableRules) materializeEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (aovivo.InitiativeEntry, error) {
 	if _, hasChar := plataforma.IntField(input, "characterId"); !hasChar {
 		return materializeNpcEntry(input)
 	}
-	return s.materializeCharacterEntry(ctx, callerID, campaignID, input)
+	return tr.materializeCharacterEntry(ctx, callerID, campaignID, input)
 }
 
 func materializeNpcEntry(input map[string]any) (aovivo.InitiativeEntry, error) {
@@ -151,13 +151,13 @@ func materializeNpcEntry(input map[string]any) (aovivo.InitiativeEntry, error) {
 	return entry, nil
 }
 
-func (s *Server) materializeCharacterEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (aovivo.InitiativeEntry, error) {
+func (tr tableRules) materializeCharacterEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (aovivo.InitiativeEntry, error) {
 	charID, _ := plataforma.IntField(input, "characterId")
 	initiative, hasInit := plataforma.IntField(input, "initiative")
 	if !hasInit {
 		return aovivo.InitiativeEntry{}, errors.New("entry.initiative is required")
 	}
-	stats, _, err := s.resolveCombatant(ctx, callerID, campaignID, charID)
+	stats, _, err := tr.resolveCombatant(ctx, callerID, campaignID, charID)
 	if err != nil {
 		return aovivo.InitiativeEntry{}, err
 	}

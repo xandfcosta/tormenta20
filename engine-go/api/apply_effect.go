@@ -27,18 +27,18 @@ const manualTempHpCatalogID = "manual-temp-hp"
 // temporários de mais de uma fonte, considere apenas o maior valor" (p256).
 // Poça SUPERADA não é erro — é a regra dizendo que esta não vale —, e por isso
 // ela volta com o plano e sem efeito.
-func (s *Server) applyPoolTx(
+func (sr sheetRules) applyPoolTx(
 	ctx context.Context, id int64, source, catalogID, scope string, amount int, note string,
 ) (sheet.PoolPlan, sheet.EffectDTO, error) {
 	mods := []map[string]any{{"target": map[string]any{"k": "tempHp"}, "amount": amount, "bonusType": "untyped", "note": note}}
 	modJSON, _ := json.Marshal(mods)
 
-	tx, err := s.db.BeginTx(ctx, nil)
+	tx, err := sr.db.BeginTx(ctx, nil)
 	if err != nil {
 		return sheet.PoolPlan{}, sheet.EffectDTO{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	q := s.queries.WithTx(tx)
+	q := sr.queries.WithTx(tx)
 
 	rows, err := q.ListActiveEffectsByCharacter(ctx, id)
 	if err != nil {
@@ -74,7 +74,7 @@ func (s *Server) applyPoolTx(
 // carry a buff block; upsert its modifiers under (character, spell, scope). Used by the
 // HTTP handler and — via the same core — the WS `apply-effect` gateway handler (B.6).
 // Returns the effect + an HTTP-ish status the caller maps to its transport.
-func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID string, scopeOverride *string) (sheet.EffectDTO, int, error) {
+func (sr sheetRules) applySpellBuffEffect(ctx context.Context, charID int64, spellID string, scopeOverride *string) (sheet.EffectDTO, int, error) {
 	spell, known := catalog.LookupSpell(spellID)
 	if !known || spell.Buff == nil {
 		return sheet.EffectDTO{}, http.StatusBadRequest, plataforma.NewFieldError(
@@ -84,7 +84,7 @@ func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID
 		)
 	}
 	scope := derefStr(scopeOverride, spell.Buff.DefaultScope)
-	eff, err := s.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+	eff, err := sr.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
 		Characterid: charID, Source: "spell", Catalogid: spellID, Scope: scope, Modifiers: string(spell.Buff.Modifiers), Createdat: plataforma.NowISO(),
 	})
 	if err != nil {
@@ -110,11 +110,11 @@ func resolvePowerGrant(w http.ResponseWriter, powerID string) (*catalog.Activati
 
 // powerTempHpAmount computes a temp-HP power's magnitude: character level + the attribute's
 // computed total (mirrors tempHpModifier), reusing the already-loaded row.
-func (s *Server) powerTempHpAmount(r *http.Request, row sqlcgen.Character, attribute string) (int, bool) {
-	if s.catalogs == nil {
+func (sr sheetRules) powerTempHpAmount(r *http.Request, row sqlcgen.Character, attribute string) (int, bool) {
+	if sr.catalogs == nil {
 		return 0, false
 	}
-	sheet, err := s.ComputeSheet(r.Context(), row)
+	sheet, err := sr.ComputeSheet(r.Context(), row)
 	if err != nil {
 		return 0, false
 	}

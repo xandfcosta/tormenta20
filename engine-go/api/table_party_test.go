@@ -64,7 +64,7 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	ficha, _ := sceneIds(t, f)
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
-	b := f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) == 0 {
 		t.Fatal("a peça não entrou no mapa — o guarda mediria o vazio")
 	}
@@ -72,7 +72,7 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/3/-2",
 		`{"pecasmarcadas":"`+antes.ID+`"}`)
 
-	b = f.s.Boards().Get(context.Background(), f.sessionID, defaultTab)
+	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b.Tokens[0].X != antes.X+3 || b.Tokens[0].Y != antes.Y-2 {
 		t.Errorf("a peça de %s foi para (%d,%d), esperado (%d,%d)",
 			ficha, b.Tokens[0].X, b.Tokens[0].Y, antes.X+3, antes.Y-2)
