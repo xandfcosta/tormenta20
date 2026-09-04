@@ -374,6 +374,8 @@ func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	// ANTES de apagar — ver a razão da ordem na porta (ALE-270).
+	s.deps.CampaignDeleted(r.Context(), id)
 	if err := s.deps.Queries().DeleteCampaign(r.Context(), id); err != nil {
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return

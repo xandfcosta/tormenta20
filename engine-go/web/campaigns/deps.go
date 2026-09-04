@@ -125,6 +125,18 @@ type Deps interface {
 	// conhece no dia em que a sexta aparência nascer.
 	Grounds() []GroundOption
 
+	// CampaignDeleted avisa que a campanha (e as sessões dela) deixaram de
+	// existir (ALE-270).
+	//
+	// Chamada ANTES do `DeleteCampaign`, porque apagar leva as sessões por
+	// cascata e depois não há como perguntar quais eram. Sem ela, o tabuleiro de
+	// cada sessão da campanha continuava no mapa em memória do servidor batendo
+	// na chave estrangeira, e a mesa se declarava suja para sempre.
+	//
+	// É do hospedeiro porque são dois stores do domínio ao vivo, e esta cena não
+	// é ao vivo — ela só sabe que a campanha acabou.
+	CampaignDeleted(ctx context.Context, campanhaID int64)
+
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 }

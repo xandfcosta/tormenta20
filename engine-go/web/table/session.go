@@ -120,8 +120,13 @@ func (s Scene) excluiAPartida(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "não deu para apagar a sessão", http.StatusInternalServerError)
 		return
 	}
-	// O cache da fila morre junto: sem isto a sessão apagada continuaria
-	// respondendo em memória até o processo reiniciar.
-	s.deps.Sessions().Forget(sessionID)
+	// O ESTADO EM MEMÓRIA morre junto — a fila E o tabuleiro (ALE-270).
+	//
+	// Aqui estava só o `Sessions().Forget(sessionID)`, e o comentário dele dizia
+	// a verdade sobre metade do problema: sem ele a sessão apagada continuaria
+	// respondendo em memória. O que ele não alcançava era o tabuleiro, que ficava
+	// no mapa do `BoardStore` batendo na chave estrangeira a cada gravação e
+	// deixando a mesa marcada como suja para sempre.
+	s.deps.SessionDeleted(sessionID)
 	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campaignID, 10), http.StatusSeeOther)
 }

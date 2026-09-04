@@ -301,7 +301,20 @@ func (bs *BoardStore) Close(ctx context.Context, sessionID int64, tabuleiroID st
 	bs.Mu.Unlock()
 	bs.bus.Publish(events.BoardClosed{SessionID: sessionID})
 
-	err := bs.q.DeleteOpenBoard(ctx, sqlcgen.DeleteOpenBoardParams{
+	// SEM CANCELAMENTO (ALE-270): o `ctx` que chega aqui é o da REQUISIÇÃO, e ele
+	// morre quando quem clicou vai embora — a aba fechada, o telefone bloqueado,
+	// a rede caindo entre o clique e a resposta. A linha ficava no banco, o
+	// `Dirty` acendia, e não havia quem tentasse de novo: `board delete failed
+	// (context canceled)` foi medido numa corrida de e2e.
+	//
+	// **Limpeza que depende de o cliente esperar não é limpeza.** O tabuleiro já
+	// saiu da memória três linhas acima; deixar a linha no banco faria a próxima
+	// hidratação trazer de volta uma cena que o mestre encerrou.
+	//
+	// `WithoutCancel` e não `context.Background()`: os valores do contexto
+	// (prazo do servidor, rastros) continuam valendo — o que se descarta é o
+	// cancelamento, que é a única coisa que pertence ao cliente.
+	err := bs.q.DeleteOpenBoard(context.WithoutCancel(ctx), sqlcgen.DeleteOpenBoardParams{
 		Sessionid: sessionID, Boardid: fechado,
 	})
 
@@ -317,6 +330,44 @@ func (bs *BoardStore) Close(ctx context.Context, sessionID int64, tabuleiroID st
 	}
 	delete(bs.Dirty, sessionID)
 	return Dirty, changed
+}
+
+// SessionDeleted é o FIM DA VIDA dos tabuleiros de uma sessão (ALE-270).
+//
+// Ela não é o `Close`, e a diferença é a issue inteira. O `Close` é o mestre
+// ENCERRANDO uma cena: a linha sai do banco, o tabuleiro sai da memória, e uma
+// falha de disco ali é notícia — a mesa precisa saber que parou de gravar.
+// Aqui a SESSÃO deixou de existir, e com ela deixou de existir qualquer motivo
+// para gravar o que quer que seja.
+//
+// # O que acontecia sem ela
+//
+// O mapa em memória sobrevivia à sessão, e o `Persist` seguinte batia na chave
+// estrangeira de `open_boards`. A partir daí o `Dirty` acendia e NUNCA saía —
+// só um `Persist` bem-sucedido o apaga, e nenhum ia suceder. Um alarme
+// construído na ALE-154 para gritar "PARE, não estou gravando" passava a gritar
+// por um tabuleiro que ninguém queria gravar, sobre a tela de uma sessão VIVA,
+// e sem nada que o mestre pudesse fazer. É a ALE-154 ao contrário: lá a
+// gravação falhava em silêncio, aqui ela avisa sobre o nada — e um alarme que
+// toca sozinho é como se aprende a ignorar o alarme.
+//
+// # A MARCA sai junto, e é o oposto do que o `SessionStore.Forget` faz
+//
+// Lá o `Dirty` fica de propósito, e o comentário dele explica: apagá-lo
+// engoliria a recuperação suja→saudável, porque a sessão continua existindo e o
+// próximo `Persist` ainda tem de avisar que voltou. Aqui não há próximo
+// `Persist`. **A premissa daquele argumento é a sessão continuar viva**, e é
+// exatamente ela que esta porta desmente.
+//
+// Não toca no BANCO: a linha de `open_boards` some por CASCATA quando a sessão
+// é apagada (migração 00010). Apagá-la aqui seria a segunda verdade sobre quem
+// limpa, e a que roda depois falharia por não achar nada.
+func (bs *BoardStore) SessionDeleted(sessionID int64) {
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	delete(bs.boards, sessionID)
+	delete(bs.loaded, sessionID)
+	delete(bs.Dirty, sessionID)
 }
 
 // apply roda uma mutação pura sobre UM tabuleiro, sob a trava, e devolve o

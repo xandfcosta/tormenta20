@@ -194,6 +194,10 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.campaignRules().ownedCampaign(w, r, id); !ok {
 		return
 	}
+	// ANTES de apagar (ALE-270): a campanha leva as sessões por cascata, e depois
+	// disso não há mais como perguntar quais eram — o estado em memória delas
+	// ficaria batendo na chave estrangeira até o processo reiniciar.
+	s.CampaignDeleted(r.Context(), id)
 	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete campaign")
 		return

@@ -409,6 +409,24 @@ func (st *SessionStore) Forget(sessionID int64) {
 	delete(st.States, sessionID)
 }
 
+// SessionDeleted é o `Forget` de uma sessão que deixou de EXISTIR (ALE-270), e
+// a diferença entre os dois é uma linha: esta apaga o `Dirty` também.
+//
+// O argumento do `Forget` acima — *"não limpa o Dirty: isso engoliria a
+// recuperação suja→saudável"* — depende de haver um próximo `Persist` que
+// avise que voltou a gravar. Com a sessão apagada não há: a marca ficaria
+// acesa até o processo reiniciar, sobre uma mesa que ninguém quer gravar.
+//
+// **A premissa de um comentário certo pode deixar de valer sem ninguém mexer
+// nele**, e foi o que aconteceu aqui. Ele não estava errado; ele estava
+// respondendo a outra pergunta.
+func (st *SessionStore) SessionDeleted(sessionID int64) {
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
+	delete(st.States, sessionID)
+	delete(st.Dirty, sessionID)
+}
+
 // RefreshCharacterMaxes refreshes hpMax/mpMax on every entry carrying a characterId from
 // the DB rows (ceilings only; current untouched) so a mid-session level-up isn't capped at
 // the stale max. Best-effort: a DB blip logs and returns the current

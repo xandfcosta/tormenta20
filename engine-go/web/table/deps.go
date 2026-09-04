@@ -127,6 +127,18 @@ type Deps interface {
 	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
 	SpeedsForBoard(board *tabuleiro.BoardState) map[string]int
 
+	// SessionDeleted avisa que a sessão deixou de EXISTIR (ALE-270).
+	//
+	// Ela não é o `Sessions().Forget`, que a cena chamava aqui e que esvazia só o
+	// cache da fila. O tabuleiro daquela sessão continuava no mapa em memória do
+	// `BoardStore`, e a gravação seguinte batia na chave estrangeira — acendendo
+	// um `Dirty` que nunca mais sai, porque só um `Persist` bem-sucedido o apaga.
+	//
+	// É do HOSPEDEIRO porque são DOIS stores, e nenhum conhece o outro: quem sabe
+	// que os dois têm de ser avisados juntos é quem os montou. A cena chamando os
+	// dois na mão seria a terceira cópia da mesma sequência.
+	SessionDeleted(sessionID int64)
+
 	// PUBLICAR é do hospedeiro: ele conhece o hub e o barramento, e a cena só
 	// sabe QUANDO alguma coisa mudou.
 	PublishSessionState(sessionID int64, estado *aovivo.SessionRuntimeState)
