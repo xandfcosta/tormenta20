@@ -165,20 +165,91 @@ templ tableHeader(v View) {
 			// sinal de que chegou a vez dele. Na SPA o aviso chega por toast.
 			@savingWarning(v)
 			@sessionVerbs(v)
-			<div class="flex items-center gap-2 text-sm" aria-live="polite">
+			<div class="flex min-w-0 items-center gap-2 text-sm" aria-live="polite">
 				if v.Turn.Kind != "idle" {
-					<span class="text-muted-foreground">Rodada { fmt.Sprint(v.Round) }</span>
+					<span class="shrink-0 text-muted-foreground">Rodada { fmt.Sprint(v.Round) }</span>
 				}
 				switch v.Turn.Kind {
 					case "mine":
-						<span class="flex animate-pulse items-center gap-1 bg-primary px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-foreground">Sua vez</span>
-					case "other":
-						<span class="truncate text-muted-foreground">· Vez de { v.Turn.Label }</span>
-					default:
+						<span class="flex shrink-0 animate-pulse items-center gap-1 bg-primary px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-foreground">Sua vez</span>
+					case "idle":
 						<span class="truncate text-muted-foreground">Aguardando iniciativa</span>
 				}
+				// A FAIXA DE QUEM VEM DEPOIS (ALE-290) ocupa o lugar do "Vez de
+				// Fulano", que dizia só metade: quem está na vez AGORA, e nada
+				// sobre quem o mestre chama em seguida. No último da rodada, ela
+				// dá a volta — que é o turno em que a pergunta mais importa.
+				//
+				// Ela convive com o "Sua vez" em vez de substituí-lo: aquele é um
+				// ALERTA para quem não está olhando a tela, e esta é uma leitura.
+				@turnStrip(v)
 			</div>
 		</div>
+}
+
+// A FAIXA: agora › depois › depois, com a volta da rodada marcada (ALE-290).
+//
+// UMA LINHA e não uma tira própria: o cabeçalho já existe, já é `aria-live`, e
+// uma faixa nova custaria altura numa tela que reparte altura entre o mapa, a
+// fila e a ficha. A decisão do dono foi essa, com o mockup na mão.
+//
+// A SETA é `aria-hidden` e a ordem é dita pela LISTA: um `<ol>` já anuncia
+// "item 1 de 3" em leitor de tela, e o `›` desenhado seria lido como "sinal de
+// maior" no meio de cada nome.
+templ turnStrip(v View) {
+	if len(v.Proximos) > 0 {
+		<ol class="flex min-w-0 items-center gap-1.5 text-sm">
+			for i, p := range v.Proximos {
+				if i > 0 {
+					<li aria-hidden="true" class="shrink-0 text-muted-foreground/50">›</li>
+				}
+				// A VIRADA DA RODADA é desenhada ANTES de quem a começa, porque é
+				// ali que ela acontece. O símbolo tem `title` e nome acessível:
+				// um `⟲` mudo seria enfeite para quem enxerga e nada para quem não.
+				if p.ViraARodada {
+					<li
+						title={ fmt.Sprintf("Daqui começa a rodada %d", v.Round+1) }
+						class="shrink-0 text-sm text-grimorio-gold"
+					>
+						<span aria-hidden="true">⟲</span>
+						<span class="sr-only">{ fmt.Sprintf("começa a rodada %d:", v.Round+1) }</span>
+					</li>
+				}
+				<li class={ turnStripInk(p) }>{ turnStripName(p) }</li>
+			}
+		</ol>
+	}
+}
+
+// turnStripName escreve "você" no lugar do próprio nome — quando ele é UM.
+//
+// É o que faz a faixa responder a pergunta de quem olha — "quanto falta para
+// mim?" — sem procurar o próprio personagem entre três nomes. Com dois meus na
+// faixa a palavra deixa de responder e passa a atrapalhar ("você › Tanque ›
+// você"), e aí o nome volta; quem decide isso é o `DizVoce`, que enxerga a faixa
+// inteira. Aqui só se escreve o que ele já decidiu.
+func turnStripName(p turnAhead) string {
+	if p.DizVoce {
+		return "você"
+	}
+	return p.Rotulo
+}
+
+// turnStripInk: a da VEZ é a que se lê primeiro, a minha é dourada, o resto é
+// discreto.
+//
+// UM `class` só e não três condicionais empilhadas, pela armadilha que o
+// `tokenStyling` do tabuleiro já registra: atributo repetido não existe no
+// templ, e o segundo some sem erro.
+func turnStripInk(p turnAhead) string {
+	switch {
+	case p.Agora:
+		return "min-w-0 truncate font-semibold text-foreground"
+	case p.Meu:
+		return "min-w-0 truncate text-grimorio-gold"
+	default:
+		return "min-w-0 truncate text-muted-foreground"
+	}
 }
 
 // A GRAVAÇÃO FALHANDO, no cabeçalho e só para o mestre (ALE-288).

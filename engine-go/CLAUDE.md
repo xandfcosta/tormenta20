@@ -2249,6 +2249,37 @@ despejo — e na campanha 4, porque as mesas do e2e são todas da campanha 1 e u
 lugar a mais lá mudaria a contagem do acervo debaixo de specs que não falam
 disto.
 
+## A bancada semeia UM por pessoa, e a seed leva vários (ALE-290)
+
+A faixa de quem vem depois escrevia "você" em toda linha de quem estava olhando.
+Passou em cinco casos de unidade e em três de integração; no NAVEGADOR saiu
+assim:
+
+    Rodada 1 · SUA VEZ  você › Tanque Placas Nv10 › ⟲ você
+
+Duas linhas dizendo "você", e a pergunta que a faixa existe para responder —
+*quanto falta para MIM* — sem resposta.
+
+**Nenhum teste podia pegar isso, e a razão é do FIXTURE:** o `novoPiloto` semeia
+um personagem por pessoa, então o caso "dois meus na mesma janela" não existe na
+bancada. A `seed.sql` leva vários por dono, e foi ela que o mostrou — na primeira
+vez que a tela foi aberta de verdade.
+
+É a família do "esperado calculado" pelo outro lado: lá o arranjo mente sobre o
+VALOR, aqui ele mente sobre a FORMA do mundo. Um fixture com um personagem por
+pessoa é um mundo onde `meus` nunca tem dois — e todo raciocínio construído em
+cima dele herda a premissa sem dizer.
+
+**O que fica:** quando uma decisão depende da CARDINALIDADE de uma coleção do
+usuário (um personagem, uma campanha, uma aba), pergunte se a bancada consegue
+produzir mais de um. Se não consegue, o caso plural não está sendo testado —
+esteja ele escrito ou não.
+
+> O conserto foi decisão do dono: "você" só quando é UM; com dois, o nome volta,
+> e a cor dourada continua marcando os dois. A regra é *desambiguar quando
+> precisa*, e ela mora no `turnStripOf`, que é quem enxerga a faixa inteira — uma
+> linha sozinha não tem como saber se é a única.
+
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 
 Ele tinha **89 métodos exportados**, e todos existiam por um motivo só: cumprir
