@@ -708,3 +708,39 @@ func singular(nome string) []string {
 func fold(s string) string {
 	return strings.ToLower(s)
 }
+
+// DefenseLabel é a Defesa como a TELA a diz, e ela é uma só porque duas telas
+// montando a frase por conta é o defeito da ALE-122 (ALE-274).
+//
+// # O que a regra faz
+//
+// O Caído dá −5 na Defesa contra ataques corpo a corpo e +5 contra ataques à
+// distância (T20 p394), então um personagem caído não tem "a Defesa": tem duas.
+// O motor calcula as duas e mantém o `Total` intacto, que é a leitura certa do
+// livro — a Defesa DELE continua sendo o total, e os ±5 se aplicam contra cada
+// tipo de ataque.
+//
+// # Por que o total SAI quando elas divergem
+//
+// Decisão do dono, 2026-09-04. Na mesa a pergunta é "acerta?", e a resposta
+// nunca é o total enquanto o alvo está caído — nenhum ataque testa contra ele.
+// Mostrar 22 em destaque é mostrar, com confiança, o único número que não
+// responde a pergunta que está sendo feita.
+//
+// O total não some do app: ele continua no diálogo de decomposição, com as duas
+// linhas que dizem de onde os ±5 vêm.
+//
+// # E ela é UMA função porque a divergência é o defeito
+//
+// A ficha e o diálogo do elenco mostram o mesmo herói, e a ALE-122 já pagou o
+// preço de duas telas mostrando 52/95 e 57/95 do mesmo combatente. Uma frase
+// montada em dois lugares diverge no dia em que uma delas ganhar um caso.
+func DefenseLabel(d engine.DefenseBreakdown) string {
+	if d.VsMelee == d.Total && d.VsRanged == d.Total {
+		return strconv.Itoa(d.Total)
+	}
+	// As abreviaturas são as que a ficha já usa nos ataques ("Atq CaC", "Atq
+	// Dist"): duas grafias para o mesmo par fariam a mesma tela chamar corpo a
+	// corpo de duas coisas.
+	return strconv.Itoa(d.VsMelee) + " CaC · " + strconv.Itoa(d.VsRanged) + " Dist"
+}

@@ -212,7 +212,10 @@ func defenseAndAttackTiles(sheet engine.ComputedSheetV2) []statTile {
 func defenseTile(sheet engine.ComputedSheetV2) statTile {
 	tile := statTile{
 		Key: "defense", Label: "Defesa", Title: "Defesa", Icon: "Shield",
-		Value: strconv.Itoa(sheet.Defense.Total),
+		// A Defesa vira DUAS quando algo é direcional — hoje só o Caído (p394).
+		// A frase mora no `book` porque o diálogo do elenco da Mesa mostra a
+		// mesma coisa, e duas telas montando-a por conta divergem (ALE-274).
+		Value: book.DefenseLabel(sheet.Defense),
 		Rows:  defenseRows(sheet),
 	}
 	rd := sheet.DamageReduction

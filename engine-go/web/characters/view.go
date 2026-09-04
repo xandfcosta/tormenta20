@@ -59,11 +59,27 @@ type HeroCard struct {
 	// do mesmo tamanho — uma coluna que some faz o palco dançar ao trocar de
 	// herói, que é o defeito da ALE-99.
 	Defense string
-	NoMana  bool
-	Race    string
-	Origin  string
-	Classes string
-	Dossier []book.RaceAbility
+	// DefenseVs é a MESMA Defesa dita para quem vai resolver um ataque: um
+	// número quando nada é direcional, e os dois quando algo é — hoje só o Caído
+	// (p394, ALE-274).
+	//
+	// DOIS campos e não um, e a razão é que os dois consumidores fazem perguntas
+	// diferentes. A LISTA de heróis mostra o `Defense`: ela é catálogo fora da
+	// sessão, ninguém está resolvendo ataque ali, e um par de números onde se
+	// compara heróis é ruído. O crachá da FICHA mostra o `DefenseVs`, porque ele
+	// existe justamente para responder "acerta?" — está escrito no comentário
+	// dele, e é a pergunta cuja resposta nunca é o total enquanto o alvo está
+	// caído.
+	//
+	// A frase dos dois sai da MESMA função (`book.DefenseLabel`), então elas não
+	// podem divergir sobre o que os números significam; o que difere é qual das
+	// duas perguntas cada tela faz.
+	DefenseVs string
+	NoMana    bool
+	Race      string
+	Origin    string
+	Classes   string
+	Dossier   []book.RaceAbility
 }
 
 // Load monta a cena para um dono. Ela é EXPORTADA, e vale dizer por quê,
@@ -130,9 +146,11 @@ func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 	// simplesmente não mostra Defesa; a cena inteira não pode cair por causa de
 	// um número.
 	cartao.Defense = "—"
+	cartao.DefenseVs = "—"
 	if catalogos != nil {
 		if ficha, err := sheet.Compute(catalogos, c); err == nil {
 			cartao.Defense = strconv.Itoa(ficha.Defense.Total)
+			cartao.DefenseVs = book.DefenseLabel(ficha.Defense)
 		}
 	}
 	cartao.Dossier = book.RaceAbilities(cartao.Race, 8)

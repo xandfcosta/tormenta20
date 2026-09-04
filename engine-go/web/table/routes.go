@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/aovivo"
+	"t20engine/book"
 	"t20engine/tabuleiro"
 	"time"
 
@@ -485,5 +486,8 @@ func (s Scene) memberDefense(ctx context.Context, characterID int64) string {
 	if err != nil {
 		return "—"
 	}
-	return strconv.Itoa(ficha.Defense.Total)
+	// A MESMA frase da ficha, e da mesma função: o mestre confere aqui a Defesa
+	// de um jogador para decidir se o ataque acerta, e com o alvo caído o total
+	// é o único número que não responde essa pergunta (ALE-274).
+	return book.DefenseLabel(ficha.Defense)
 }

@@ -216,7 +216,7 @@ func (s Scene) Load(
 		Papel:     cartao.Role,
 		Resumo:    cartao.Summary,
 		Nivel:     dto.Level,
-		Defesa:    cartao.Defense,
+		Defesa:    cartao.DefenseVs,
 		PV:        vital(dto.HpCurrent, dto.HpMax),
 		PM:        vital(dto.MpCurrent, dto.MpMax),
 		SemMana:   dto.MpMax == 0,
