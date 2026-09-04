@@ -141,10 +141,3 @@ func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.
 func (s *Server) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
 	return sheet.LoadAndCompute(ctx, s.queries, s.catalogs, row)
 }
-
-// CharacterList cumpre a porta da cena de personagens (`characters.Deps`,
-// ALE-278). Invólucro de uma linha sobre o método não exportado, como os outros
-// que as cenas pedem — quem escolhe o que atravessa a fronteira é o consumidor.
-func (s *Server) CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error) {
-	return s.characterList(ctx, ownerID)
-}

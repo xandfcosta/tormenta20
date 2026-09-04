@@ -170,4 +170,3 @@ func (s *Server) LivroDoPiloto() http.Handler {
 // hospedeiro se dobra ao que ele pediu. A cena não recebe a `Config` nem o
 // `livroServido` — ela recebe o endereço pronto, que é a única coisa que os
 // componentes do livro precisam saber.
-func (s *Server) BookAddress() bookui.BookAddress { return s.livro.endereco }

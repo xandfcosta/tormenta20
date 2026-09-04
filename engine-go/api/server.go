@@ -12,11 +12,15 @@ import (
 	"t20engine/engine"
 	"t20engine/events"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 	"t20engine/tabuleiro"
+	"t20engine/web/bookui"
 	"t20engine/web/hub"
 	"t20engine/web/routes"
 	"t20engine/web/table"
+	"t20engine/web/ui"
 
+	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -184,6 +188,42 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 	return srv
 }
 
+// A PONTE das cenas ainda não convertidas (ALE-278, fatia 6).
+//
+// As nove assinaturas compartilhadas moram no `sceneCore` desde esta fatia, e
+// quatro cenas — grimório, mestre, leitor e personagens — já o recebem direto.
+// As outras sete continuam recebendo o `*Server`, porque a porta delas pede
+// coisas que ainda não têm adaptador próprio, e um `*Server` sem `Queries` não
+// cumpre porta nenhuma.
+//
+// Estes cinco delegam para o núcleo em vez de repetir o corpo, e é essa a
+// diferença entre uma ponte e uma segunda implementação: quando a última cena
+// tiver adaptador, apagar este bloco não muda comportamento de nada. **A ordem
+// é a da casa** — escrever o substituto, vê-lo verde, DEPOIS apagar; começar
+// pelo apagar abriria uma janela em que sete cenas não compilam.
+func (s *Server) Queries() *sqlcgen.Queries           { return s.sceneCore().Queries() }
+func (s *Server) Catalogs() *engine.Catalogs          { return s.sceneCore().Catalogs() }
+func (s *Server) BookAddress() bookui.BookAddress     { return s.sceneCore().BookAddress() }
+func (s *Server) Asset(arquivo string) string         { return s.sceneCore().Asset(arquivo) }
+func (s *Server) CurrentUserID(r *http.Request) int64 { return s.sceneCore().CurrentUserID(r) }
+func (s *Server) WritePage(
+	w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component,
+) {
+	s.sceneCore().WritePage(w, r, status, p, corpo)
+}
+func (s *Server) CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error) {
+	return s.sceneCore().CharacterList(ctx, ownerID)
+}
+
+// sceneCore monta o núcleo que as cenas compartilham (ALE-278, fatia 6).
+//
+// Ele é montado por chamada e não guardado num campo: são três ponteiros
+// copiados, e um campo daria ao `*Server` mais uma coisa para manter
+// consistente com ele mesmo.
+func (s *Server) sceneCore() sceneCore {
+	return sceneCore{queries: s.queries, catalogs: s.catalogs, livro: s.livro.endereco}
+}
+
 // Router builds the HTTP handler: shared middleware + domain routes. Routes carry
 // NO /api prefix — in dev the Vite proxy strips it, and in production cmd/api
 // mounts this under http.StripPrefix("/api") while serving the SPA itself.
@@ -264,22 +304,6 @@ func (s *Server) Router() http.Handler {
 	return r
 }
 
-// Queries e Catalogs existem porque as CENAS pedem por eles (ALE-278).
-//
-// Elas não são getters por hábito: cada uma aparece numa porta declarada por uma
-// cena — `forge.Deps` é a primeira —, e o `Server` as cumpre. A diferença entre
-// isto e um objeto-deus com campos públicos é de direção: quem escolhe o que
-// atravessa a fronteira é o CONSUMIDOR, e o compilador cobra na linha que monta.
-func (s *Server) Queries() *sqlcgen.Queries { return s.queries }
-
-// Catalogs é o motor primado — o mesmo que o oráculo usa.
-func (s *Server) Catalogs() *engine.Catalogs { return s.catalogs }
-
-// CurrentUserID lê quem está pedindo do contexto que o `requirePage` escreveu.
-// Ela é método porque a CHAVE do contexto é deste pacote: uma segunda chave com
-// o mesmo nome, declarada noutro pacote, não lê o mesmo valor.
-func (s *Server) CurrentUserID(r *http.Request) int64 { return currentUser(r).ID }
-
 // CurrentViewer traduz quem está pedindo para a língua do HUB (ALE-278).
 //
 // A tradução é o preço da fronteira, e ela é barata: quatro campos. O que ela
@@ -308,4 +332,3 @@ func (s *Server) TableRoute(campaignID, sessionID int64) string {
 // Asset é o endereço versionado de um estático, para as cenas que carregam
 // bundle próprio. Ele já era injetado na casca (`ui.Page.Asset`); aqui ele vira
 // método porque uma cena inteira o pede.
-func (s *Server) Asset(arquivo string) string { return EstaticoDoPiloto(arquivo) }

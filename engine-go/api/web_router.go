@@ -33,6 +33,11 @@ import (
 
 func (s *Server) WebRouter() http.Handler {
 	r := chi.NewRouter()
+	// QUATRO cenas já não recebem o `*Server` (ALE-278, fatia 6): o grimório, a
+	// Mesa do Mestre, o leitor e os personagens são cumpridos INTEIRAMENTE pelo
+	// `sceneCore`. Elas não pedem nada que só o servidor saiba — desenham o
+	// livro, a folha de especificação e o elenco —, e por isso são as primeiras
+	// a trocar. As outras sete ainda recebem o `s`, que atende pela ponte.
 	// Os estáticos são anônimos: são o bundle do Datastar e a folha de estilo,
 	// e exigir sessão para eles só quebraria o cache.
 	r.Handle("/static/*", http.StripPrefix("/static/", pilotoStaticHandler()))
@@ -53,15 +58,15 @@ func (s *Server) WebRouter() http.Handler {
 		// onde se abre a folha em branco. Elas eram montadas UMA DENTRO DA OUTRA
 		// e isso era organização, não dependência — o `chi` não liga para quem
 		// registra o quê, e a linha subiu para cá quando a lista virou pacote.
-		characters.Routes(r, characters.New(s))
+		characters.Routes(r, characters.New(s.sceneCore()))
 		forge.Routes(r, forge.New(s))
 		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
 		sheetui.Routes(r, sheetui.New(s))
-		grimoire.Routes(r, grimoire.New(s))
+		grimoire.Routes(r, grimoire.New(s.sceneCore()))
 		// A MESA DO MESTRE (ALE-278): o trilho, os nove catálogos, o bestiário,
 		// os encontros e o improviso — mais o VERBETE, que sai junto porque ele
 		// é uma rota fina sobre o desenho do acervo e não uma cena própria.
-		master.Routes(r, master.New(s))
+		master.Routes(r, master.New(s.sceneCore()))
 		// O BUSCADOR (ALE-264) fica no grupo do Hub e não no do mestre: a caixa
 		// abre em QUALQUER cena, inclusive na Mesa, e a rota tem de existir onde
 		// quer que o ⌃K seja apertado.
@@ -77,7 +82,7 @@ func (s *Server) WebRouter() http.Handler {
 		// navegador) tem o endereço de sempre. Desde a ALE-278 a página é um
 		// pacote e o arquivo continua aqui — a divisão é por dependência: quem
 		// serve o arquivo lê a configuração e o disco.
-		reader.Routes(r, reader.New(s))
+		reader.Routes(r, reader.New(s.sceneCore()))
 	})
 	// A MESA (ALE-278) é montada pelo pacote dela, DENTRO do grupo que exige
 	// sessão: quem decide que a cena está atrás do login é o hospedeiro, e não
