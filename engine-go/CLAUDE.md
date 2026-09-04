@@ -1856,17 +1856,70 @@ coluna. Aqui não houve porque as três consultas que a tocavam de perto —
 `GetMember` (`SELECT *`), `AddMember` e `SetMemberRole` — tinham **zero
 chamadores** e saíram junto, pela regra da ALE-277.
 
-### E o `seed.sql` é gerado, mas foi editado à mão
+### E o `seed.sql` foi editado à mão, porque o gerador estava quebrado
 
-O `cmd/seed` dirige a aplicação por HTTP (`/auth/register`, `POST /characters`,
-`/characters/{id}/spells`…), e a ALE-277 apagou **todas** essas rotas: o gerador
-não roda. O `seed.sql` commitado continua válido como SQL, então o app e o e2e
-semeiam normalmente — o que não dá para fazer é REGERAR.
+As nove linhas de `campaign_members` foram editadas no arquivo em vez de
+regeradas: o `cmd/seed` dirigia a aplicação por HTTP e a ALE-277 tinha apagado
+todas as rotas que ele usava. **O gerador voltou logo depois** — ver a seção
+seguinte —, e a primeira coisa que ele fez foi confirmar a edição: o arquivo que
+ele escreve é BYTE A BYTE o commitado.
 
-Por isso as nove linhas de `campaign_members` foram editadas no arquivo, e o
-gerador foi corrigido junto para quando ele voltar a rodar. Conferido que a
-regra derivada reproduz o mesmo desenho: na campanha 1, o único membro cujo
-personagem é do dono é justamente o que estava marcado `'gm'`.
+## O gerador da seed, e o consumidor que a varredura não vê
+
+O `cmd/seed` monta o conjunto de desenvolvimento e despeja `seed.sql`. Ele
+dirigia os manipuladores HTTP em processo, e a ALE-277 apagou as **sete rotas**
+que ele usava por não terem consumidor: `/auth/register`, `POST /characters`,
+`GET /characters/{id}`, `/characters/{id}/vitals`, `/characters/{id}/spells`,
+`…/spells/{id}/prepared` e `…/items/{id}/consume`. **O gerador parou de rodar e
+nada acusou.**
+
+### A forma que a varredura de órfãs não alcança
+
+A varredura da ALE-277 procurava `s.handleX` — SÍMBOLO. O gerador chama por
+CAMINHO EM STRING (`c.do(http.MethodPost, "/characters", …)`), e nenhum `grep`
+por identificador chega perto disso. O e2e foi encontrado porque alguém foi
+olhar o diretório `e2e/` de propósito; o `cmd/seed` não foi olhado.
+
+**A lição é sobre a busca, não sobre o gerador:** quando se apaga uma ROTA, a
+varredura tem de ser pelo ENDEREÇO também, e ela alcança lugares que a de
+símbolo não alcança — `.ts` de teste, script de shell, `curl` em `.md`, e um
+`cmd/` do próprio módulo.
+
+### O conserto não podia ser "aponte para as cenas"
+
+A resposta óbvia não serve: **a forja cria personagem de nível 1 com kit
+inicial**, e o elenco da seed tem heróis de nível 8 a 10 com atributos, itens e
+magias escolhidos. Escrever uma ficha inteira de uma vez era capacidade que só a
+rota JSON tinha, e apagá-la levou junto o único caminho.
+
+Então o gerador virou mais um CONSUMIDOR com porta declarada, como as onze
+cenas: `casaDaSeed` mora no `cmd/seed` (quem escolhe o que atravessa é o
+consumidor) e o `api.Seeder` a cumpre. Cada método do adaptador é um invólucro
+sobre regra que já existe — nenhuma linha de regra mora nele, e é isso que
+mantém de pé a promessa do cabeçalho do gerador: *os hashes, os vitais
+computados e o leque normalizado vêm do mesmo código que o app roda.*
+
+De passagem, três funções deixaram de pedir `*http.Request` e passaram a pedir
+`context.Context` — `InsertCharacter`, `HealVitals` e `consumeItemForCharacter`
+só liam o `r.Context()` dele. Exigir a requisição inteira obriga o chamador a
+ter uma, e **foi exatamente o gerador que denunciou**, por ser o primeiro
+chamador sem requisição.
+
+### O guarda mede o programa INTEIRO terminando
+
+`TestTheSeedGeneratorStillWritesTheCommittedFile` RODA o gerador num arquivo
+temporário e compara com o `seed.sql` do repositório. É a única forma que pega
+esta família: o defeito não era de compilação nem de asserção — era o programa
+não terminar.
+
+Ele custa ~1,8s e paga duas coisas de uma vez, porque comparar byte a byte
+também prende que o gerador é **determinístico**: as datas são constantes e o
+despejo normaliza carimbos de propósito, então um `time.Now()` que entre no
+caminho reprova na primeira corrida.
+
+E ele foi provado com a árvore de ONTEM em vez de sabotagem — `git archive` do
+merge anterior, o guarda copiado por cima, `go test`. Reprovou com "o gerador
+não rodou: exit status 1", que é o defeito real.
 
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 

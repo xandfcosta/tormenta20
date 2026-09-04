@@ -46,7 +46,7 @@ func consumeItem(t *testing.T, s *Server, charID, itemID int64, pv, pm *int64) (
 		t.Fatalf("ler personagem %d: %v", charID, err)
 	}
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
-	return s.sheetRules().consumeItemForCharacter(req, row, itemID, pv, pm)
+	return s.sheetRules().consumeItemForCharacter(req.Context(), row, itemID, pv, pm)
 }
 
 func itemQuantity(t *testing.T, s *Server, itemID int64) (int64, bool) {

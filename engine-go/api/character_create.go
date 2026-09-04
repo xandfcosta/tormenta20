@@ -1,9 +1,9 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
-	"net/http"
 	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
 	"t20engine/plataforma"
@@ -55,8 +55,8 @@ type forgeHost struct {
 func (s *Server) forgeHost() forgeHost { return forgeHost{sceneCore: s.sceneCore(), db: s.db} }
 
 // InsertCharacter writes the character + all relations in one transaction.
-func (h forgeHost) InsertCharacter(r *http.Request, ownerID int64, name string, body sheet.CreateBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {
-	tx, err := h.db.BeginTx(r.Context(), nil)
+func (h forgeHost) InsertCharacter(ctx context.Context, ownerID int64, name string, body sheet.CreateBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {
+	tx, err := h.db.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -64,7 +64,7 @@ func (h forgeHost) InsertCharacter(r *http.Request, ownerID int64, name string, 
 	q := h.queries.WithTx(tx)
 	now := plataforma.NowISO()
 
-	id, err := q.CreateCharacter(r.Context(), sqlcgen.CreateCharacterParams{
+	id, err := q.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: name, Origin: body.Origin, God: plataforma.NullString(body.God),
 		GodPower: derefStr(body.GodPower, ""), Tibar: derefF64(body.Tibar, 0), Level: totalLevel,
 		HpMax: body.HpMax, HpCurrent: body.HpCurrent, MpMax: body.MpMax, MpCurrent: body.MpCurrent,
@@ -84,24 +84,24 @@ func (h forgeHost) InsertCharacter(r *http.Request, ownerID int64, name string, 
 		return 0, err
 	}
 	for _, race := range body.Races {
-		if err := q.CreateRace(r.Context(), sqlcgen.CreateRaceParams{Characterid: id, Race: race}); err != nil {
+		if err := q.CreateRace(ctx, sqlcgen.CreateRaceParams{Characterid: id, Race: race}); err != nil {
 			return 0, err
 		}
 	}
 	for _, c := range body.Classes {
-		if err := q.CreateClass(r.Context(), sqlcgen.CreateClassParams{Characterid: id, Classname: c.ClassName, Level: c.Level}); err != nil {
+		if err := q.CreateClass(ctx, sqlcgen.CreateClassParams{Characterid: id, Classname: c.ClassName, Level: c.Level}); err != nil {
 			return 0, err
 		}
 	}
 	for _, ex := range expertisesList {
-		if _, err := q.CreateExpertise(r.Context(), sqlcgen.CreateExpertiseParams{
+		if _, err := q.CreateExpertise(ctx, sqlcgen.CreateExpertiseParams{
 			Characterid: id, Name: ex.name, Attribute: ex.attribute, Trained: boolToInt(trained[ex.name]), Custom: 0,
 		}); err != nil {
 			return 0, err
 		}
 	}
 	for _, it := range body.Items {
-		if _, err := q.CreateItem(r.Context(), sqlcgen.CreateItemParams{
+		if _, err := q.CreateItem(ctx, sqlcgen.CreateItemParams{
 			Characterid: id, Catalogid: plataforma.NullString(it.CatalogID), Name: derefStr(it.Name, ""),
 			Quantity: aovivo.DerefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
 			Equipped: plataforma.NullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
@@ -114,7 +114,7 @@ func (h forgeHost) InsertCharacter(r *http.Request, ownerID int64, name string, 
 
 // healVitals recomputes the pools (clamp-only, matching healVitalsFromEngine) and
 // patches the aggregate + row.
-func (h forgeHost) HealVitals(r *http.Request, id int64, dto *sheet.CharacterDTO) error {
+func (h forgeHost) HealVitals(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
 	if h.catalogs == nil || len(dto.Classes) == 0 {
 		return nil
 	}
@@ -131,7 +131,7 @@ func (h forgeHost) HealVitals(r *http.Request, id int64, dto *sheet.CharacterDTO
 	if next == stored {
 		return nil
 	}
-	if err := h.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
+	if err := h.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
 		HpMax: next.HpMax, HpCurrent: next.HpCurrent, MpMax: next.MpMax, MpCurrent: next.MpCurrent,
 		UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -42,9 +43,9 @@ var errDailyPortion = errors.New("apenas uma porção por dia")
 // beber esta poção?", e elas divergiriam no dia em que uma mudasse. É a mesma
 // razão do `castSpellForCharacter` da fatia 6.
 func (sr sheetRules) consumeItemForCharacter(
-	r *http.Request, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
+	ctx context.Context, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
 ) (doseUsed, error) {
-	dto, err := sr.LoadCharacter(r.Context(), row)
+	dto, err := sr.LoadCharacter(ctx, row)
 	if err != nil {
 		return doseUsed{}, err
 	}
@@ -74,7 +75,7 @@ func (sr sheetRules) consumeItemForCharacter(
 	hpGain, hasHp := rollGain(hpRolled, spec.Instant, true)
 	mpGain, hasMp := rollGain(mpRolled, spec.Instant, false)
 
-	tx, err := sr.db.BeginTx(r.Context(), nil)
+	tx, err := sr.db.BeginTx(ctx, nil)
 	if err != nil {
 		return doseUsed{}, err
 	}
@@ -84,7 +85,7 @@ func (sr sheetRules) consumeItemForCharacter(
 
 	var effect *sheet.EffectDTO
 	if wantsEffectRow(spec) {
-		eff, err := q.CreateActiveEffect(r.Context(), sqlcgen.CreateActiveEffectParams{
+		eff, err := q.CreateActiveEffect(ctx, sqlcgen.CreateActiveEffectParams{
 			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
 		})
 		if db.IsUniqueViolation(err) {
@@ -99,11 +100,11 @@ func (sr sheetRules) consumeItemForCharacter(
 	removed := false
 	newQty := item.Quantity - 1
 	if item.Quantity > 1 {
-		if err := q.SetItemQuantity(r.Context(), sqlcgen.SetItemQuantityParams{Quantity: newQty, ID: itemID}); err != nil {
+		if err := q.SetItemQuantity(ctx, sqlcgen.SetItemQuantityParams{Quantity: newQty, ID: itemID}); err != nil {
 			return doseUsed{}, err
 		}
 	} else {
-		if err := q.DeleteItem(r.Context(), itemID); err != nil {
+		if err := q.DeleteItem(ctx, itemID); err != nil {
 			return doseUsed{}, err
 		}
 		removed, newQty = true, 0
@@ -117,7 +118,7 @@ func (sr sheetRules) consumeItemForCharacter(
 		if hasMp {
 			mpCurrent = min(row.Mpmax, row.Mpcurrent+int64(mpGain))
 		}
-		if err := q.SetVitalsCurrent(r.Context(), sqlcgen.SetVitalsCurrentParams{HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID}); err != nil {
+		if err := q.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID}); err != nil {
 			return doseUsed{}, err
 		}
 	}

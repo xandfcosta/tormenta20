@@ -74,7 +74,7 @@ func (h sheetHost) CastSpell(
 func (h sheetHost) ConsumeItem(
 	r *http.Request, row sqlcgen.Character, itemID int64, pvRolado, pmRolado *int64,
 ) error {
-	_, err := h.rules.consumeItemForCharacter(r, row, itemID, pvRolado, pmRolado)
+	_, err := h.rules.consumeItemForCharacter(r.Context(), row, itemID, pvRolado, pmRolado)
 	return err
 }
 

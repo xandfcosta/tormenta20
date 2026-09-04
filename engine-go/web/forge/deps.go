@@ -1,6 +1,7 @@
 package forge
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -39,12 +40,15 @@ type Deps interface {
 	// InsertCharacter faz nascer o herói. Ela fica no `api` porque a criação de
 	// personagem é um caminho compartilhado — a forja é uma porta de entrada
 	// dela, não a dona.
+	// As duas recebem CONTEXTO e não o `*http.Request` (ALE-287): elas só liam
+	// o `r.Context()` dele, e pedir a requisição inteira obrigava quem chama a
+	// ter uma — o que o gerador da seed não tem, e foi ele que denunciou.
 	InsertCharacter(
-		r *http.Request, ownerID int64, name string, body sheet.CreateBody,
+		ctx context.Context, ownerID int64, name string, body sheet.CreateBody,
 		totalLevel int64, granted []string, trained map[string]bool,
 	) (int64, error)
 	// HealVitals enche PV e PM depois do nascimento.
-	HealVitals(r *http.Request, id int64, dto *sheet.CharacterDTO) error
+	HealVitals(ctx context.Context, id int64, dto *sheet.CharacterDTO) error
 	// WritePage é a montagem da casca: ela injeta os estáticos e as
 	// sobreposições que a cena não pode conhecer (ver `web/ui`).
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)

@@ -2,26 +2,29 @@
 // dataset (3 accounts, the diverse test roster, demo chronicles) that applies
 // instantly with `sqlite3 data/t20-dev.db < seed.sql`, no API server (ALE-57).
 //
-// It builds the data by driving the REAL HTTP handlers IN-PROCESS (httptest, no
-// network) into a throwaway migrated DB — so bcrypt hashes, engine-computed
-// vitals and the normalized fan-out come from the same code the API runs, never
-// hand-maintained — then dumps that DB to SQL. The roster lives in the embedded
-// seed-data.json (readable source of truth). Regenerate after roster/rule/
-// chronicle changes:
+// Ele monta o dado chamando as REGRAS do app num banco migrado descartável — os
+// hashes de bcrypt, os vitais computados pelo motor e o leque normalizado vêm do
+// mesmo código que o servidor roda, nunca mantidos à mão — e despeja o banco em
+// SQL. O elenco mora no `seed-data.json` embutido, que é a fonte legível.
+//
+// Ele dirigia os MANIPULADORES HTTP em processo até a ALE-287, e as sete rotas
+// que ele usava foram apagadas na ALE-277 por não terem consumidor: o gerador
+// parou de rodar sem que nada acusasse, e a varredura de órfãs não o viu porque
+// ele chamava por CAMINHO EM STRING. Hoje ele pede pela `api.Seeder`, a porta
+// declarada logo abaixo — a mesma forma das onze cenas.
+//
+// Regenerate after roster/rule/chronicle changes:
 //
 //	go run ./cmd/seed            # writes ./seed.sql (from the engine-go dir)
 package main
 
 import (
-	"bytes"
+	"context"
 	"database/sql"
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 
@@ -30,6 +33,7 @@ import (
 	"t20engine/db"
 	"t20engine/engine"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 )
 
 //go:embed seed-data.json
@@ -59,6 +63,21 @@ type seedSpell struct {
 	Prepared bool   `json:"prepared"`
 }
 
+// casaDaSeed é o que este gerador pede do app.
+//
+// Declarada AQUI e não no `api`, como as portas das cenas: quem escolhe o que
+// atravessa a fronteira é o consumidor. O `api.Seeder` a cumpre, e é na linha
+// que monta (`srv.Seeder()`) que o compilador cobra quando ela deixa de ser
+// cumprida.
+type casaDaSeed interface {
+	CreateAccount(ctx context.Context, email, nome, senha string) error
+	CreateCharacter(ctx context.Context, donoID int64, corpo sheet.CreateBody) (int64, error)
+	Character(ctx context.Context, id int64) (sheet.CharacterDTO, error)
+	LearnSpell(ctx context.Context, id int64, catalogo string, preparada bool) error
+	SetHp(ctx context.Context, id, atual int64) error
+	ConsumeItem(ctx context.Context, id, itemID int64) error
+}
+
 // standardTrained is TRAINED_EXPERTISES — every non-simple
 // character trains these, giving the skill list real totals. Simple PCs train none.
 var standardTrained = []string{
@@ -78,12 +97,12 @@ func main() {
 	if err := json.Unmarshal(seedData, &sf); err != nil {
 		log.Fatalf("seed-data.json: %v", err)
 	}
-	handler, database, cleanup := freshServer(seedEmails(sf))
+	casa, database, cleanup := freshServer(seedEmails(sf))
 	defer cleanup()
 	total, seeded := 0, 0
 	for _, u := range sf.Users {
 		total += len(u.Characters)
-		seeded += seedUserCharacters(handler, sf.Password, u)
+		seeded += seedUserCharacters(casa, database, sf.Password, u)
 	}
 	if err := seedChronicles(database); err != nil {
 		log.Fatalf("chronicles: %v", err)
@@ -111,9 +130,9 @@ func seedEmails(sf seedFile) []string {
 	return emails
 }
 
-// freshServer boots the real API against a throwaway migrated SQLite DB and
-// returns its in-process handler plus the DB (for the chronicle seed + dump).
-func freshServer(adminEmails []string) (http.Handler, *sql.DB, func()) {
+// freshServer sobe o app de verdade sobre um SQLite migrado descartável e
+// devolve a PORTA dele mais o banco (para as crônicas e para o despejo).
+func freshServer(adminEmails []string) (casaDaSeed, *sql.DB, func()) {
 	dir, err := os.MkdirTemp("", "seedgen")
 	if err != nil {
 		log.Fatalf("tempdir: %v", err)
@@ -145,51 +164,25 @@ func freshServer(adminEmails []string) (http.Handler, *sql.DB, func()) {
 		_ = database.Close()
 		_ = os.RemoveAll(dir)
 	}
-	return srv.Router(), database, cleanup
+	return srv.Seeder(), database, cleanup
 }
 
-// ── in-process HTTP client (no network) ──────────────────────────────────────
+// ── semeando pelas REGRAS ──────────────────────────────────────────────────────
 
-// client drives the API handler directly via httptest, tracking the session
-// cookie between calls so an authenticated flow works exactly as over the wire.
-type client struct {
-	h       http.Handler
-	cookies map[string]*http.Cookie
-}
-
-func newClient(h http.Handler) *client {
-	return &client{h: h, cookies: map[string]*http.Cookie{}}
-}
-
-func (c *client) do(method, path string, body []byte) (int, []byte) {
-	var r io.Reader
-	if body != nil {
-		r = bytes.NewReader(body)
+func seedUserCharacters(casa casaDaSeed, database *sql.DB, password string, u seedUser) int {
+	ctx := context.Background()
+	if err := casa.CreateAccount(ctx, u.Email, u.Name, password); err != nil {
+		log.Printf("conta %s: %v", u.Email, err)
+		return 0
 	}
-	req := httptest.NewRequest(method, path, r)
-	req.Header.Set("Content-Type", "application/json")
-	for _, ck := range c.cookies {
-		req.AddCookie(ck)
-	}
-	rec := httptest.NewRecorder()
-	c.h.ServeHTTP(rec, req)
-	for _, ck := range rec.Result().Cookies() {
-		c.cookies[ck.Name] = ck
-	}
-	return rec.Code, rec.Body.Bytes()
-}
-
-// ── seeding via the real handlers ────────────────────────────────────────────
-
-func seedUserCharacters(h http.Handler, password string, u seedUser) int {
-	c := newClient(h)
-	if err := authenticate(c, u.Email, u.Name, password); err != nil {
-		log.Printf("auth %s: %v", u.Email, err)
+	donoID, err := userID(database, u.Email)
+	if err != nil {
+		log.Printf("conta %s: %v", u.Email, err)
 		return 0
 	}
 	seeded := 0
 	for _, ch := range u.Characters {
-		if err := seedCharacterRow(c, ch); err != nil {
+		if err := seedCharacterRow(ctx, casa, donoID, ch); err != nil {
 			log.Printf("%s: %v", u.Email, err)
 			continue
 		}
@@ -198,23 +191,27 @@ func seedUserCharacters(h http.Handler, password string, u seedUser) int {
 	return seeded
 }
 
-func seedCharacterRow(c *client, ch seedCharacter) error {
-	body, err := enrichCreate(ch)
+func seedCharacterRow(ctx context.Context, casa casaDaSeed, donoID int64, ch seedCharacter) error {
+	bruto, err := enrichCreate(ch)
 	if err != nil {
 		return err
 	}
-	id, err := createCharacter(c, body)
+	var corpo sheet.CreateBody
+	if err := json.Unmarshal(bruto, &corpo); err != nil {
+		return fmt.Errorf("corpo de criação: %w", err)
+	}
+	id, err := casa.CreateCharacter(ctx, donoID, corpo)
 	if err != nil {
 		return err
 	}
 	for _, sp := range ch.Spells {
-		if err := learnSpell(c, id, sp); err != nil {
-			log.Printf("character %d spell %q: %v", id, sp.ID, err)
+		if err := casa.LearnSpell(ctx, id, sp.ID, sp.Prepared); err != nil {
+			log.Printf("personagem %d, magia %q: %v", id, sp.ID, err)
 		}
 	}
 	if ch.HpFraction != nil || ch.SceneEffect {
-		if err := enrichLiveState(c, id, ch); err != nil {
-			log.Printf("character %d live-state: %v", id, err)
+		if err := enrichLiveState(ctx, casa, id, ch); err != nil {
+			log.Printf("personagem %d, estado de jogo: %v", id, err)
 		}
 	}
 	return nil
@@ -273,100 +270,32 @@ func resolveItemMetadata(obj map[string]json.RawMessage) error {
 	return nil
 }
 
-func enrichLiveState(c *client, id int64, ch seedCharacter) error {
-	char, err := getCharacter(c, id)
+func enrichLiveState(ctx context.Context, casa casaDaSeed, id int64, ch seedCharacter) error {
+	ficha, err := casa.Character(ctx, id)
 	if err != nil {
 		return err
 	}
 	if ch.HpFraction != nil {
-		hp := int64(float64(char.HpMax)**ch.HpFraction + 0.5)
-		if err := patchVitals(c, id, hp); err != nil {
+		// O PV MÁXIMO é o que o motor calculou, e por isso ele é lido de volta:
+		// o corpo de criação manda 9999 nos quatro vitais justamente para a cura
+		// aparar para o número certo.
+		pv := int64(float64(ficha.HpMax)**ch.HpFraction + 0.5)
+		if err := casa.SetHp(ctx, id, pv); err != nil {
 			return err
 		}
 	}
 	if ch.SceneEffect {
-		return applySceneEffect(c, id, char.Items)
+		return applySceneEffect(ctx, casa, id, ficha.Items)
 	}
 	return nil
 }
 
-type charItem struct {
-	ID        int64   `json:"id"`
-	CatalogID *string `json:"catalogId"`
-}
-
-type characterState struct {
-	HpMax int64      `json:"hpMax"`
-	Items []charItem `json:"items"`
-}
-
-func getCharacter(c *client, id int64) (characterState, error) {
-	var out characterState
-	status, body := c.do(http.MethodGet, fmt.Sprintf("/characters/%d", id), nil)
-	if status != http.StatusOK {
-		return out, fmt.Errorf("get character status %d: %s", status, body)
-	}
-	return out, json.Unmarshal(body, &out)
-}
-
-func patchVitals(c *client, id, hpCurrent int64) error {
-	status, body := c.do(http.MethodPatch, fmt.Sprintf("/characters/%d/vitals", id), mustJSON(map[string]int64{"hpCurrent": hpCurrent}))
-	if status != http.StatusOK {
-		return fmt.Errorf("patch vitals status %d: %s", status, body)
-	}
-	return nil
-}
-
-func applySceneEffect(c *client, id int64, items []charItem) error {
-	for _, it := range items {
+func applySceneEffect(ctx context.Context, casa casaDaSeed, id int64, itens []sheet.ItemDTO) error {
+	for _, it := range itens {
 		if it.CatalogID == nil || *it.CatalogID != sceneConsumable {
 			continue
 		}
-		status, body := c.do(http.MethodPost, fmt.Sprintf("/characters/%d/items/%d/consume", id, it.ID), []byte("{}"))
-		if status != http.StatusOK {
-			return fmt.Errorf("consume status %d: %s", status, body)
-		}
-		return nil
+		return casa.ConsumeItem(ctx, id, it.ID)
 	}
 	return nil
-}
-
-func authenticate(c *client, email, name, password string) error {
-	status, body := c.do(http.MethodPost, "/auth/register", mustJSON(map[string]string{"email": email, "password": password, "name": name}))
-	if status == http.StatusCreated {
-		return nil
-	}
-	return fmt.Errorf("register status %d: %s", status, body)
-}
-
-func createCharacter(c *client, createBody json.RawMessage) (int64, error) {
-	status, body := c.do(http.MethodPost, "/characters", createBody)
-	if status != http.StatusCreated {
-		return 0, fmt.Errorf("create status %d: %s", status, body)
-	}
-	var out struct {
-		ID int64 `json:"id"`
-	}
-	if err := json.Unmarshal(body, &out); err != nil {
-		return 0, err
-	}
-	return out.ID, nil
-}
-
-func learnSpell(c *client, id int64, sp seedSpell) error {
-	if s, b := c.do(http.MethodPost, fmt.Sprintf("/characters/%d/spells", id), mustJSON(map[string]string{"catalogSpellId": sp.ID})); s != http.StatusCreated && s != http.StatusConflict {
-		return fmt.Errorf("learn status %d: %s", s, b)
-	}
-	if !sp.Prepared {
-		return nil
-	}
-	if s, b := c.do(http.MethodPatch, fmt.Sprintf("/characters/%d/spells/%s/prepared", id, sp.ID), mustJSON(map[string]bool{"prepared": true})); s != http.StatusOK {
-		return fmt.Errorf("prepare status %d: %s", s, b)
-	}
-	return nil
-}
-
-func mustJSON(v any) []byte {
-	b, _ := json.Marshal(v)
-	return b
 }
