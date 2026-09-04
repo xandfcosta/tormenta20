@@ -72,7 +72,7 @@ func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 	f.campanha(t, "A Queda de Tauron", "")
 	f.campanha(t, "Segredos de Wynlla", "Uma trama sobre a Tormenta")
 
-	porNome, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "queda", "todas")
+	porNome, err := campaigns.New(f.s.campaignsHost()).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "queda", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -80,7 +80,7 @@ func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 		t.Errorf("busca por nome devolveu %d resultados", len(porNome.Campanhas))
 	}
 
-	porSinopse, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "tormenta", "todas")
+	porSinopse, err := campaigns.New(f.s.campaignsHost()).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "tormenta", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -97,7 +97,7 @@ func TestTheCursorIsBornOnTheFirstOfTheFilteredList(t *testing.T) {
 	f.campanha(t, "A Queda de Tauron", "")
 	segunda := f.campanha(t, "Segredos de Wynlla", "")
 
-	v, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "wynlla", "todas")
+	v, err := campaigns.New(f.s.campaignsHost()).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "wynlla", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestTheCursorIsBornOnTheFirstOfTheFilteredList(t *testing.T) {
 // para limpar o filtro, a outra para criar a primeira.
 func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 	vazia := novaCena(t)
-	semNada, err := campaigns.New(vazia.s).LoadList(context.Background(), vazia.eu(t).ID, vazia.eu(t).IsAdmin, "", "todas")
+	semNada, err := campaigns.New(vazia.s.campaignsHost()).LoadList(context.Background(), vazia.eu(t).ID, vazia.eu(t).IsAdmin, "", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -120,7 +120,7 @@ func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
 
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
-	semResultado, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "zzzzz", "todas")
+	semResultado, err := campaigns.New(f.s.campaignsHost()).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "zzzzz", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -149,7 +149,7 @@ func TestALiveSessionGoesToTheRightCampaign(t *testing.T) {
 		t.Fatalf("iniciar: %v", err)
 	}
 
-	v, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "todas")
+	v, err := campaigns.New(f.s.campaignsHost()).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "todas")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -174,7 +174,7 @@ func TestAnInvalidRoleInTheUrlDoesNotHideTheList(t *testing.T) {
 	f.campanha(t, "A Queda de Tauron", "")
 
 	for _, papel := range []string{"", "mestre", "GM", "'; drop table"} {
-		v, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", papel)
+		v, err := campaigns.New(f.s.campaignsHost()).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", papel)
 		if err != nil {
 			t.Fatalf("carregar: %v", err)
 		}
@@ -188,7 +188,7 @@ func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 	f := novaCena(t)
 	f.campanha(t, "A Queda de Tauron", "")
 
-	mestrando, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "gm")
+	mestrando, err := campaigns.New(f.s.campaignsHost()).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "gm")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestTheRoleFilterSeparatesRunningFromPlaying(t *testing.T) {
 		t.Errorf("mestrando devolveu %d — o dono mestra a própria mesa", len(mestrando.Campanhas))
 	}
 
-	jogando, err := campaigns.New(f.s).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "player")
+	jogando, err := campaigns.New(f.s.campaignsHost()).LoadList(context.Background(), f.dono, f.s.ehAdmin(t, f.dono), "", "player")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}

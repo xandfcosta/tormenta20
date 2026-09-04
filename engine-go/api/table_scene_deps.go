@@ -55,7 +55,7 @@ func (s *Server) IsAdminRequester(ctx context.Context, userID int64) bool {
 func (s *Server) SessionForCaller(
 	ctx context.Context, userID, campaignID, sessionID int64,
 ) (sqlcgen.Session, string, int, error) {
-	return s.sessionForCaller(ctx, AuthUser{ID: userID}, campaignID, sessionID)
+	return s.campaignRules().sessionForCaller(ctx, AuthUser{ID: userID}, campaignID, sessionID)
 }
 
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────

@@ -149,7 +149,7 @@ func TestSessionForCallerRejectsForeignSession(t *testing.T) {
 		t.Fatalf("seed foreign session: %v", err)
 	}
 
-	_, Role, status, err := s.sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
+	_, Role, status, err := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
 	if err == nil || status == 200 {
 		t.Fatalf("status=%d Role=%q err=%v — a sessão de outra mesa foi aceita", status, Role, err)
 	}

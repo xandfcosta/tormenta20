@@ -53,7 +53,7 @@ func (s *Server) WebRouter() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
 		hub.Routes(r, hub.New(s.hubHost()))
-		campaigns.Routes(r, campaigns.New(s))
+		campaigns.Routes(r, campaigns.New(s.campaignsHost()))
 		// PERSONAGENS (ALE-278) e a FORJA, irmãs no mesmo endereço: o elenco é de
 		// onde se abre a folha em branco. Elas eram montadas UMA DENTRO DA OUTRA
 		// e isso era organização, não dependência — o `chi` não liga para quem

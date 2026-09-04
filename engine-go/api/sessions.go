@@ -42,8 +42,8 @@ func sessionDTO(s sqlcgen.Session) SessionDTO {
 // "a sessão é desta campanha" morar num lugar só. O `ownedSession` foi apagado
 // com as rotas JSON na ALE-277; o `sessionForCaller` ficou, e é por ele que as
 // cenas passam.
-func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionID int64) (sqlcgen.Session, int, error) {
-	sess, err := s.queries.GetSession(ctx, sessionID)
+func (rules campaignRules) loadSessionInCampaign(ctx context.Context, campaignID, sessionID int64) (sqlcgen.Session, int, error) {
+	sess, err := rules.queries.GetSession(ctx, sessionID)
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && sess.Campaignid != campaignID) {
 		return sqlcgen.Session{}, http.StatusNotFound, fmt.Errorf("Session %d not found", sessionID)
 	}
@@ -57,12 +57,12 @@ func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionI
 // session-scoped message: resolve the caller's Role (gm/player) then Load the session and
 // assert it belongs to the campaign. — the Role is
 // stashed on socket.data for per-action GM gating. Transport-agnostic (WS maps status/err).
-func (s *Server) sessionForCaller(ctx context.Context, user AuthUser, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
-	Role, status, err := s.resolveRole(ctx, user, campaignID)
+func (rules campaignRules) sessionForCaller(ctx context.Context, user AuthUser, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
+	Role, status, err := rules.resolveRole(ctx, user, campaignID)
 	if err != nil {
 		return sqlcgen.Session{}, "", status, err
 	}
-	sess, status, err := s.loadSessionInCampaign(ctx, campaignID, sessionID)
+	sess, status, err := rules.loadSessionInCampaign(ctx, campaignID, sessionID)
 	if err != nil {
 		return sqlcgen.Session{}, "", status, err
 	}
@@ -82,7 +82,7 @@ func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	if _, ok := s.ownedCampaign(w, r, cid); !ok {
+	if _, ok := s.campaignRules().ownedCampaign(w, r, cid); !ok {
 		return
 	}
 	if body.SessionNumber == nil || *body.SessionNumber < 1 {

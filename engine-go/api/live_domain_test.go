@@ -155,12 +155,12 @@ func TestResolveRole(t *testing.T) {
 		{"admin is gm anywhere", AuthUser{ID: stranger, IsAdmin: true}, "gm", 200},
 	}
 	for _, c := range cases {
-		Role, status, err := s.resolveRole(ctx, c.caller, campaignID)
+		Role, status, err := s.campaignRules().resolveRole(ctx, c.caller, campaignID)
 		if Role != c.wantRole || status != c.wantStatus {
 			t.Errorf("%s: Role=%q status=%d err=%v, want Role=%q status=%d", c.name, Role, status, err, c.wantRole, c.wantStatus)
 		}
 	}
-	if _, status, _ := s.resolveRole(ctx, AuthUser{ID: gm}, 999999); status != 404 {
+	if _, status, _ := s.campaignRules().resolveRole(ctx, AuthUser{ID: gm}, 999999); status != 404 {
 		t.Errorf("missing campaign: status=%d, want 404", status)
 	}
 }
@@ -223,18 +223,18 @@ func TestSessionForCaller(t *testing.T) {
 	}
 
 	t.Run("gm gets session + Role", func(t *testing.T) {
-		got, Role, status, err := s.sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
+		got, Role, status, err := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
 		if err != nil || status != 200 || Role != "gm" || got.ID != sess.ID {
 			t.Errorf("status=%d Role=%q id=%d err=%v", status, Role, got.ID, err)
 		}
 	})
 	t.Run("stranger forbidden before session Load", func(t *testing.T) {
-		if _, _, status, _ := s.sessionForCaller(ctx, AuthUser{ID: stranger}, campaignID, sess.ID); status != 403 {
+		if _, _, status, _ := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: stranger}, campaignID, sess.ID); status != 403 {
 			t.Errorf("status=%d, want 403", status)
 		}
 	})
 	t.Run("missing session 404", func(t *testing.T) {
-		if _, _, status, _ := s.sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, 999999); status != 404 {
+		if _, _, status, _ := s.campaignRules().sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, 999999); status != 404 {
 			t.Errorf("status=%d, want 404", status)
 		}
 	})

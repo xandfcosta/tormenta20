@@ -73,9 +73,9 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 
 // campaignHasCopyOf reports whether `sourceID` was already snapshotted into
 // `campaignID` — the snapshot-model dedupe (a template joins a mesa once).
-func (s *Server) campaignHasCopyOf(ctx context.Context, sourceID, campaignID int64) (bool, error) {
+func (rules campaignRules) campaignHasCopyOf(ctx context.Context, sourceID, campaignID int64) (bool, error) {
 	var exists bool
-	err := s.db.QueryRowContext(ctx,
+	err := rules.db.QueryRowContext(ctx,
 		`SELECT EXISTS(SELECT 1 FROM characters WHERE sourceCharacterId = ? AND campaignId = ?)`,
 		sourceID, campaignID).Scan(&exists)
 	return exists, err

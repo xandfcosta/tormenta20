@@ -62,7 +62,7 @@ func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 // camada.
 func (f rulesFixture) putRules(t *testing.T, campaignID int64, regras ...string) error {
 	t.Helper()
-	return f.s.saveIgnoredRules(context.Background(), campaignID, regras)
+	return f.s.campaignRules().saveIgnoredRules(context.Background(), campaignID, regras)
 }
 
 // cargaIgnorada pergunta ao CARREGAMENTO da ficha, e não à tabela: é o que o

@@ -176,8 +176,8 @@ func (s *Server) listMemberCharacterIds(ctx context.Context, campaignID int64) (
 //
 // A cópia existe porque a ficha da mesa é um instantâneo (ALE-33): editar
 // durante a sessão não pode vazar para as outras campanhas.
-func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, role string) (sqlcgen.CampaignMember, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
+func (rules campaignRules) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, role string) (sqlcgen.CampaignMember, error) {
+	tx, err := rules.db.BeginTx(ctx, nil)
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
@@ -193,7 +193,7 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID
 	//
 	// É a mesma forma do commit de movimento no tabuleiro, que reconfere a vez:
 	// entre decidir e escrever, a mesa pode ter mudado.
-	if err := assertCanJoin(ctx, s.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, role); err != nil {
+	if err := assertCanJoin(ctx, rules.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, role); err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
 
@@ -201,7 +201,7 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
-	member, err := s.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
+	member, err := rules.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
 		Campaignid: campaignID, Characterid: copyID, Role: role, Addedat: plataforma.NowISO(),
 	})
 	if err != nil {

@@ -168,7 +168,7 @@ func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 	visitante := seedUser(t, s, "visitante@t20.local")
 	seedCampanha(t, s, dono, "A Queda de Tauron", "o-token-certo")
 
-	v, err := campaigns.New(s).LoadJoin(context.Background(), visitante, "o-token-certo")
+	v, err := campaigns.New(s.campaignsHost()).LoadJoin(context.Background(), visitante, "o-token-certo")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -184,7 +184,7 @@ func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	s := newTestServer(t)
 	visitante := seedUser(t, s, "visitante@t20.local")
 
-	v, err := campaigns.New(s).LoadJoin(context.Background(), visitante, "nao-existe")
+	v, err := campaigns.New(s.campaignsHost()).LoadJoin(context.Background(), visitante, "nao-existe")
 	if err != nil {
 		t.Fatalf("convite morto derrubou a carta: %v", err)
 	}
