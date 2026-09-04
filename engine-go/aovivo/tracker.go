@@ -110,23 +110,18 @@ type TableMember struct {
 	OwnerID int64
 }
 
-// MyCharacters são os personagens de quem está olhando.
+// Aqui morava o `MyCharacters`, que montava "quais personagens são de quem está
+// olhando" a partir de uma lista de membros já carregada (ALE-289).
 //
-// A ponte é o DONO do personagem e não o id dele: a ficha de um membro é o
-// SNAPSHOT da campanha (ALE-33), então o dono registrado é o único fio de volta
-// até a pessoa.
-func MyCharacters(membros []TableMember, usuarioID int64) map[int64]bool {
-	meus := map[int64]bool{}
-	if usuarioID == 0 {
-		return meus
-	}
-	for _, m := range membros {
-		if m.OwnerID == usuarioID {
-			meus[m.CharacterID] = true
-		}
-	}
-	return meus
-}
+// Ele ficou sem chamador de produção: quem responde essa pergunta hoje é o
+// `tableRoster` da cena da Mesa, que a resolve contra o BANCO enquanto monta o
+// elenco — outra entrada, mesmo conceito.
+//
+// A regra da ALE-33 não saiu com ele. Ela continua presa, e num lugar melhor:
+// `TestTheReachOnlyShowsWhenThereIsABudget` a exercita pelo caminho inteiro,
+// e foi ele que acusou o defeito que a docstring do `reachAndTarget` registra —
+// o jogador na vez dele sem ver alcance nenhum, porque a POSSE é por peça e o
+// caminho de leitura não a resolvia.
 
 // ConnectedCharacters são os personagens de quem está com a aba aberta agora.
 //

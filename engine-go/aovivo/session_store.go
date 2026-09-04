@@ -358,12 +358,6 @@ func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, ch
 	return Dirty, changed
 }
 
-func (st *SessionStore) IsDirty(sessionID int64) bool {
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	return st.Dirty[sessionID]
-}
-
 // Forget drops a session's in-memory tracker (e.g. on clear-tracker). It does NOT clear
 // the Dirty flag: that would swallow the Dirty→healthy recovery — a session left Dirty
 // must still Emit persistence-warning{Dirty:false} on the next successful Persist. The

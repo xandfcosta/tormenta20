@@ -196,31 +196,25 @@ func abs(v int) int {
 	return v
 }
 
-// ReachableSquares devolve todo quadrado que a criatura ALCANÇA com o orçamento
-// dado, partindo de `from` (T20 p238).
+// Aqui moravam o `ReachableSquares` e o `ReachableInBands` — as duas perguntas
+// "até onde dá para andar" que o `ReachFromStops` absorveu (ALE-289).
 //
-// Existe para a tela poder ACENDER as casas alcançáveis em vez de fazer a mesa
-// contar quadrado — e mora aqui, e não no cliente, porque a conta é a mesma
-// regra do livro: quem escrevesse uma cópia em TS acabaria com duas verdades
-// sobre a diagonal, que foi exatamente o que a ALE-104 apagou.
+// A primeira devolvia UMA faixa a partir de um ponto; a segunda partia o alcance
+// nas duas ações de movimento do turno (p233). O `ReachFromStops` faz as duas
+// coisas a partir do CAMINHO já percorrido, que é o que as paradas da ALE-266
+// exigiram: as faixas encolhem enquanto a pessoa empilha paradas, e o gasto sai
+// da mesma chamada que as casas — a razão inteira de ele existir é que pedir as
+// duas coisas em duas chamadas já tinha produzido dois números para a mesma
+// regra neste repositório.
 //
-// O resultado NÃO é um quadrado de lado `budget`: como a diagonal custa o
-// dobro, o alcance é um LOSANGO — com 6 quadrados de deslocamento dá para
-// andar 6 em linha reta e só 3 na diagonal. É a forma que ensina a regra sem
-// ninguém explicar.
-//
-// Dijkstra e não um losango calculado de cabeça: o terreno difícil (fatia do
-// mapa) muda o custo por casa, e a busca já vai estar pronta para ele. A área
-// é limitada pelo orçamento, então o custo é O(budget²).
-//
-//	ReachableSquares(Square{0, 0}, 2, MoveTerrain{}) // → 12 quadrados (o losango de raio 2)
-func ReachableSquares(from Square, budget int, terrain MoveTerrain) []Square {
-	return withinReach(costToEachSquare(from, budget, terrain), from, 0, budget)
-}
-
+// As duas ficaram no ar com ZERO chamadores de produção. O que as prendia mudou
+// de porta e continua aqui: o LOSANGO da diagonal dobrada, o orçamento negativo
+// que não acende nada, o terreno difícil que encolhe o alcance, e as duas faixas
+// disjuntas. Esta última ganhou de quebra o que não tinha — os números escritos
+// à MÃO a partir da regra, em vez de uma segunda chamada à implementação.
 // costToEachSquare é o Dijkstra cru: cada casa alcançável e o que ela CUSTOU.
 //
-// Separado do `ReachableSquares` porque o custo por casa é o que permite pintar
+// Separado da função que devolve só as casas porque o custo por casa é o que permite pintar
 // o alcance em FAIXAS (ALE-203): a mesma busca responde "até onde vou com uma
 // ação de movimento" e "até onde vou gastando a ação padrão também", e rodá-la
 // duas vezes para saber as duas coisas seria pagar o dobro por metade da
@@ -267,25 +261,6 @@ func withinReach(cost map[Square]int, from Square, minimo, maximo int) []Square 
 	}
 	sortSquares(out)
 	return out
-}
-
-// ReachableInBands parte o alcance nas DUAS ações de movimento de um turno
-// (T20 p233: "Você pode trocar sua ação padrão por uma ação de movimento, para
-// fazer duas ações de movimento, mas não pode fazer o inverso").
-//
-// `dentro` é o que a criatura alcança com a ação de movimento; `segundo` é o que
-// ela só alcança gastando a ação padrão também. Não há terceira faixa porque não
-// há terceira ação — o que passa de `2×orcamento` simplesmente não é alcançável
-// no turno, e por isso não é desenhado.
-//
-// Um orçamento não-positivo devolve as duas vazias: fora de combate não há vez
-// nem ação padrão para trocar, e pintar faixas ali inventaria um teto.
-func ReachableInBands(from Square, orcamento int, terrain MoveTerrain) (dentro, segundo []Square) {
-	if orcamento <= 0 {
-		return []Square{}, []Square{}
-	}
-	cost := costToEachSquare(from, 2*orcamento, terrain)
-	return withinReach(cost, from, 0, orcamento), withinReach(cost, from, orcamento, 2*orcamento)
 }
 
 func neighbours(s Square) []Square {

@@ -147,7 +147,7 @@ func TestFootprintFollowsTheSizeTable(t *testing.T) {
 // diagonal dobrada (T20 p238): com 6 quadrados de deslocamento (9m, p106)
 // dá para andar 6 em linha reta e só 3 na diagonal.
 func TestReachIsADiamondBecauseOfTheDiagonal(t *testing.T) {
-	reach := ReachableSquares(Square{X: 0, Y: 0}, 6, MoveTerrain{})
+	reach, _, _ := ReachFromStops([]Square{{X: 0, Y: 0}}, 6, MoveTerrain{})
 
 	dentro := map[Square]bool{}
 	for _, s := range reach {
@@ -176,7 +176,7 @@ func TestReachIsADiamondBecauseOfTheDiagonal(t *testing.T) {
 // Sem orçamento não há casas acesas: fora de combate a régua mede, mas não há
 // limite para desenhar, e uma busca sem teto não termina num plano infinito.
 func TestWithoutABudgetThereAreNoSquaresToLight(t *testing.T) {
-	if got := ReachableSquares(Square{X: 2, Y: 2}, -1, MoveTerrain{}); len(got) != 0 {
+	if got, _, _ := ReachFromStops([]Square{{X: 2, Y: 2}}, -1, MoveTerrain{}); len(got) != 0 {
 		t.Errorf("orçamento negativo devolveu %d casas, esperava nenhuma", len(got))
 	}
 }
@@ -186,8 +186,8 @@ func TestWithoutABudgetThereAreNoSquaresToLight(t *testing.T) {
 func TestDifficultTerrainShrinksTheReach(t *testing.T) {
 	lama := MoveTerrain{Difficult: map[Square]bool{{X: 1, Y: 0}: true, {X: 2, Y: 0}: true}}
 
-	reach := ReachableSquares(Square{X: 0, Y: 0}, 4, MoveTerrain{})
-	naLama := ReachableSquares(Square{X: 0, Y: 0}, 4, lama)
+	reach, _, _ := ReachFromStops([]Square{{X: 0, Y: 0}}, 4, MoveTerrain{})
+	naLama, _, _ := ReachFromStops([]Square{{X: 0, Y: 0}}, 4, lama)
 
 	if len(naLama) >= len(reach) {
 		t.Errorf("a lama não encolheu o alcance: %d contra %d", len(naLama), len(reach))
@@ -441,7 +441,7 @@ func TestTheReachShrinksAtEachStopAndHitsZeroAtTheEnd(t *testing.T) {
 func TestTheTwoReachBandsDoNotOverlap(t *testing.T) {
 	const orcamento = 4
 
-	dentro, segundo := ReachableInBands(Square{}, orcamento, MoveTerrain{})
+	dentro, segundo, _ := ReachFromStops([]Square{{}}, orcamento, MoveTerrain{})
 
 	na := map[Square]bool{}
 	for _, q := range dentro {
@@ -452,13 +452,25 @@ func TestTheTwoReachBandsDoNotOverlap(t *testing.T) {
 			t.Errorf("a casa %+v foi pintada nas duas faixas", q)
 		}
 	}
-	// A de dentro é EXATAMENTE o alcance de uma ação, e a de fora acrescenta o
-	// que a segunda alcança: as duas juntas são o alcance de 2×.
-	if len(dentro) != len(ReachableSquares(Square{}, orcamento, MoveTerrain{})) {
-		t.Errorf("a faixa de dentro tem %d casas e o alcance de uma ação tem %d",
-			len(dentro), len(ReachableSquares(Square{}, orcamento, MoveTerrain{})))
+	// OS NÚMEROS SÃO ESCRITOS À MÃO, e antes eles saíam de uma segunda chamada à
+	// implementação — o `ReachableSquares`, apagado na ALE-289. Comparar duas
+	// funções da mesma casa é o "esperado calculado" que o CLAUDE.md proíbe: um
+	// erro na conta sairia dos DOIS lados e o guarda ficaria verde.
+	//
+	// A conta vem da REGRA. Com a diagonal custando o dobro (T20 p238), um passo
+	// diagonal (2) vale dois ortogonais (1+1), então o custo até (dx,dy) é
+	// |dx|+|dy| — o alcance é um losango de Manhattan. As casas com |x|+|y| ≤ B
+	// são 2B²+2B+1, e tirando a origem (que não é destino) sobram 2B²+2B.
+	//
+	//	B=4 → 2·16+8  =  40 casas com UMA ação de movimento
+	//	B=8 → 2·64+16 = 144 casas com as DUAS (p233)
+	const umaAcao, duasAcoes = 40, 144
+	if len(dentro) != umaAcao {
+		t.Errorf("a faixa de dentro tem %d casas, e o losango de raio %d tem %d",
+			len(dentro), orcamento, umaAcao)
 	}
-	if soma, dobro := len(dentro)+len(segundo), len(ReachableSquares(Square{}, 2*orcamento, MoveTerrain{})); soma != dobro {
-		t.Errorf("as duas faixas somam %d casas e o alcance de duas ações tem %d", soma, dobro)
+	if soma := len(dentro) + len(segundo); soma != duasAcoes {
+		t.Errorf("as duas faixas somam %d casas, e o losango de raio %d tem %d",
+			soma, 2*orcamento, duasAcoes)
 	}
 }
