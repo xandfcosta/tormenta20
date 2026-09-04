@@ -2,12 +2,13 @@ package api
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 	"testing"
 
 	"t20engine/db"
@@ -84,10 +85,35 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 	return id
 }
 
-func castSpell(t *testing.T, s *Server, UserID, characterID int64, spellID, body string) *httptest.ResponseRecorder {
+// castSpell chama a REGRA direto, e não uma rota.
+//
+// Ela batia em `POST /characters/{id}/spells/{id}/cast`, que saiu na ALE-277
+// junto com as outras sessenta e nove rotas sem consumidor. O que estes cinco
+// casos prendem nunca foi o transporte: é o teto de PM da p171, o empilhamento
+// de aprimoramento da p224 e a ressalva do custo mínimo. **Teste de regra vive
+// junto da regra**, e o caminho até ela é o mesmo que a cena da ficha usa —
+// `castSpellForCharacter`, pelo `CastSpell` da porta.
+//
+// Devolve ERRO em vez de status: a recusa aqui é uma frase para uma pessoa, e
+// era o handler que a traduzia em 400.
+func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body string) error {
 	t.Helper()
-	path := fmt.Sprintf("/characters/%d/spells/%s/cast", characterID, spellID)
-	return authed(t, s, UserID, http.MethodPost, path, body)
+	var corpo struct {
+		Augments []sheet.AugmentPick `json:"augments"`
+	}
+	if err := json.Unmarshal([]byte(body), &corpo); err != nil {
+		t.Fatalf("corpo do caso inválido: %v", err)
+	}
+	row, err := s.queries.GetCharacter(context.Background(), characterID)
+	if err != nil {
+		t.Fatalf("ler personagem %d: %v", characterID, err)
+	}
+	dto, err := s.LoadCharacter(context.Background(), row)
+	if err != nil {
+		t.Fatalf("montar a ficha %d: %v", characterID, err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	return s.castSpellForCharacter(req, dto, spellID, corpo.Augments)
 }
 
 func mpOf(t *testing.T, s *Server, characterID int64) int64 {
@@ -119,9 +145,8 @@ func TestBolaDeFogoWorkedExample(t *testing.T) {
 	char := seedCaster(t, s, owner, "Arcanista", 11, 40, "bola-de-fogo")
 
 	t.Run("quatro acúmulos gastam exatamente os 11 PM do teto", func(t *testing.T) {
-		rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":4}]}`)
-		if rec.Code != http.StatusOK {
-			t.Fatalf("conjurar devolveu %d: %s", rec.Code, rec.Body.String())
+		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":4}]}`); err != nil {
+			t.Fatalf("conjurar devolveu %v", err)
 		}
 		if got := mpOf(t, s, char); got != 29 {
 			t.Errorf("PM restante = %d, want 29 (40 − 11)", got)
@@ -130,9 +155,8 @@ func TestBolaDeFogoWorkedExample(t *testing.T) {
 
 	t.Run("um acúmulo a mais estoura o teto e nada é gasto", func(t *testing.T) {
 		antes := mpOf(t, s, char)
-		rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":5}]}`)
-		if rec.Code != http.StatusBadRequest {
-			t.Fatalf("13 PM com teto 11 devolveu %d, want 400", rec.Code)
+		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":5}]}`); err == nil {
+			t.Fatal("13 PM com teto 11 devolveu — e não foi recusado")
 		}
 		if depois := mpOf(t, s, char); depois != antes {
 			t.Errorf("PM foi de %d para %d — a recusa cobrou mesmo assim", antes, depois)
@@ -150,9 +174,8 @@ func TestAugmentStackingRules(t *testing.T) {
 
 	t.Run("o aprimoramento que AUMENTA acumula", func(t *testing.T) {
 		antes := mpOf(t, s, char)
-		rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":3}]}`)
-		if rec.Code != http.StatusOK {
-			t.Fatalf("devolveu %d: %s", rec.Code, rec.Body.String())
+		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":3}]}`); err != nil {
+			t.Fatalf("devolveu %v", err)
 		}
 		// 3 de base + 3 × 2 = 9.
 		if got := antes - mpOf(t, s, char); got != 9 {
@@ -162,16 +185,15 @@ func TestAugmentStackingRules(t *testing.T) {
 
 	// O índice 1 da Bola de Fogo é a esfera flamejante, um "muda".
 	t.Run("o aprimoramento que MUDA não acumula", func(t *testing.T) {
-		rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":1,"stacks":2}]}`)
-		if rec.Code != http.StatusBadRequest {
-			t.Fatalf("dois acúmulos de um 'muda' devolveram %d, want 400", rec.Code)
+		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":1,"stacks":2}]}`); err == nil {
+			t.Fatal("dois acúmulos de um 'muda' devolveram — e não foi recusado")
 		}
 	})
 
 	t.Run("o mesmo aprimoramento duas vezes na lista é recusado", func(t *testing.T) {
 		body := `{"augments":[{"augmentIndex":0,"stacks":1},{"augmentIndex":0,"stacks":1}]}`
-		if rec := castSpell(t, s, owner, char, "bola-de-fogo", body); rec.Code != http.StatusBadRequest {
-			t.Fatalf("índice repetido devolveu %d, want 400", rec.Code)
+		if err := castSpell(t, s, owner, char, "bola-de-fogo", body); err == nil {
+			t.Fatal("índice repetido devolveu — e não foi recusado")
 		}
 	})
 }
@@ -192,9 +214,8 @@ func TestMinimumCostIsAlwaysAllowed(t *testing.T) {
 	char := seedCaster(t, s, owner, "Bárbaro", 2, 20, "bola-de-fogo")
 
 	t.Run("o custo base passa mesmo acima do teto", func(t *testing.T) {
-		rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`)
-		if rec.Code != http.StatusOK {
-			t.Fatalf("custo mínimo devolveu %d: %s", rec.Code, rec.Body.String())
+		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`); err != nil {
+			t.Fatalf("custo mínimo devolveu %v", err)
 		}
 		if got := mpOf(t, s, char); got != 17 {
 			t.Errorf("PM restante = %d, want 17 (20 − 3)", got)
@@ -205,9 +226,8 @@ func TestMinimumCostIsAlwaysAllowed(t *testing.T) {
 	// continua barrado.
 	t.Run("um aprimoramento acima do mínimo continua barrado", func(t *testing.T) {
 		antes := mpOf(t, s, char)
-		rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":1}]}`)
-		if rec.Code != http.StatusBadRequest {
-			t.Fatalf("devolveu %d, want 400", rec.Code)
+		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[{"augmentIndex":0,"stacks":1}]}`); err == nil {
+			t.Fatal("devolveu — e não foi recusado")
 		}
 		if depois := mpOf(t, s, char); depois != antes {
 			t.Errorf("PM foi de %d para %d numa recusa", antes, depois)
@@ -222,9 +242,8 @@ func TestCastRefusedWithoutEnoughPm(t *testing.T) {
 	owner := seedUser(t, s, "sempm@t20.local")
 	char := seedCaster(t, s, owner, "Arcanista", 11, 2, "bola-de-fogo")
 
-	rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`)
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("3 PM com 2 no bolso devolveu %d, want 400", rec.Code)
+	if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`); err == nil {
+		t.Fatal("3 PM com 2 no bolso devolveu — e não foi recusado")
 	}
 	if got := mpOf(t, s, char); got != 2 {
 		t.Errorf("PM = %d, want 2 — cobrou numa recusa", got)
@@ -246,9 +265,8 @@ func TestPmCostReductionIsAppliedAndFloored(t *testing.T) {
 
 	t.Run("a redução sai do custo (3 PM de base − 2)", func(t *testing.T) {
 		antes := mpOf(t, s, char)
-		rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`)
-		if rec.Code != http.StatusOK {
-			t.Fatalf("devolveu %d: %s", rec.Code, rec.Body.String())
+		if err := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`); err != nil {
+			t.Fatalf("devolveu %v", err)
 		}
 		if gasto := antes - mpOf(t, s, char); gasto != 1 {
 			t.Errorf("gastou %d PM, want 1 (3 de base − 2 da Força da Natureza)", gasto)
@@ -264,9 +282,8 @@ func TestPmCostReductionIsAppliedAndFloored(t *testing.T) {
 			t.Fatalf("semear magia: %v", err)
 		}
 		antes := mpOf(t, s, char)
-		rec := castSpell(t, s, owner, char, "luz", `{"augments":[]}`)
-		if rec.Code != http.StatusOK {
-			t.Fatalf("devolveu %d: %s", rec.Code, rec.Body.String())
+		if err := castSpell(t, s, owner, char, "luz", `{"augments":[]}`); err != nil {
+			t.Fatalf("devolveu %v", err)
 		}
 		if gasto := antes - mpOf(t, s, char); gasto != 1 {
 			t.Errorf("gastou %d PM, want 1 — o piso da p226 não segurou", gasto)

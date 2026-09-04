@@ -9,8 +9,16 @@ em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
 
 **Cada cena é um pacote em `web/`** desde a ALE-278, e a última saiu com a Mesa:
 o `api` era 188 arquivos e 105 mil linhas quando a divisão começou, e hoje são
-50 arquivos de produção, 9.303 linhas e **nenhum `.templ`**. O que sobrou lá é a
-API JSON, a composição do roteador e as regras que as duas pontas usam.
+36 arquivos de produção e **nenhum `.templ`**. O que sobrou lá é a composição do
+roteador, as portas que cada cena pede, e as regras que não são de tela nenhuma.
+
+**A "API JSON" não sobrou.** Ela saiu na ALE-277: das 76 rotas do `Router()`
+ficaram SETE, e dos 113 manipuladores ficaram nove. O resto não tinha
+consumidor — nem cena, nem e2e, nem `fetch` de ilha — desde que a SPA foi
+apagada (ALE-272), e um handler sem chamador não quebra compilação, não aparece
+em diff e ainda cobra revisão a cada renome. O que ficou é o que alguma coisa
+de fato chama: `/health`, o CRUD de campanha que a lista consome, a criação de
+sessão, a lista de personagens e o `PATCH` de condições.
 
 Ele já foi só o backend, com uma SPA em SolidJS ao lado e o mesmo motor
 compilado para WASM rodando no navegador. Os dois saíram na ALE-272: não há
@@ -326,13 +334,32 @@ manual e poda os mais antigos. Zero em qualquer um dos dois desliga. A poda só
 alcança o que a listagem reconhece como backup — arquivo estranho na pasta não é
 candidato.
 
-## O tempo real é SSE, e é uma rota como as outras
+## O tempo real é SSE, e o canal MUDOU de dono
 
-`GET /campaigns/{campaignId}/sessions/{id}/events` devolve `text/event-stream` e
-fica aberto; tudo que SOBE é `POST`/`PATCH`/`DELETE` numa rota própria
-(`mountLiveRoutes`). Era socket.io até a ALE-253, e a troca não foi de
-biblioteca: as 37 mensagens que subiam pelo socket eram TODAS mutação, e mutação
-é uma requisição. Bidirecional não era requisito, era hábito.
+Era socket.io até a ALE-253, e a troca não foi de biblioteca: as 37 mensagens que
+subiam pelo socket eram TODAS mutação, e mutação é uma requisição. Bidirecional
+não era requisito, era hábito. O que desceu virou
+`GET /campaigns/{campaignId}/sessions/{id}/events`, um `text/event-stream` que
+fica aberto; o que subia virou uma rota por comando (`mountLiveRoutes`).
+
+**As duas pontas dessa troca saíram na ALE-277**, e o parágrafo acima fica porque
+o argumento continua sendo o certo — o que mudou é quem o exerce. A Mesa em
+Datastar tem fluxo PRÓPRIO (`/mesa/{campanha}/{sessao}/stream`, em
+`web/table/stream.go`), ele assina o `events.Bus` e não o `SSEHub`, e os comandos
+dela são rotas da CENA. Nenhuma linha do que este arquivo descrevia como "a rota
+de eventos" existe.
+
+> **E o `SSEHub` ficou sem ouvinte.** Medido na ALE-277: em produção ninguém
+> chama `SSEHub.Add` — só testes —, porque a única rota que abria conexão era a
+> `/events`. Quem EMITE continua lá (o `live_publish.go`, o `session-rest` da
+> Mesa, o `character-changed` do servidor), e emitir para zero ouvinte não
+> estoura nada. Não foi apagado nesta issue por uma razão específica: o
+> `publishBoardState` e o `publishSessionState` fazem DUAS coisas, e a segunda é
+> GRAVAR — desmontar o hub sem separar a persistência primeiro trocaria uma
+> emissão inútil por uma escrita perdida. A mesma medição vale para a
+> `PresenceRegistry`: a Mesa LÊ o elenco (`Presence().Roster`), e quem o
+> preenchia era o handshake da `/events`, então a lista está vazia desde a
+> ALE-272.
 
 Três coisas sumiram junto, e todas eram exceção:
 
@@ -408,13 +435,17 @@ porque não é de ninguém.
 
 ## Catálogos
 
-O catálogo viaja COMPRIMIDO (`writeCatalogJSON`, ALE-159): `spells` sozinho são
+O catálogo viajava COMPRIMIDO (`writeCatalogJSON`, ALE-159): `spells` sozinho são
 179 KB crus e 40 KB em gzip. Isso importava quando a SPA os buscava por HTTP
-(ALE-107) e eles entravam em toda carga fria; hoje as cenas leem o embutido
-direto, e a rota `GET /catalog/:nome` está entre as que perderam consumidor com
-a SPA. Comprimido UMA vez e guardado, não por requisição — o conteúdo vem de
-`go:embed` e não muda enquanto o binário for o mesmo. A leitura do `Accept-Encoding` é a do `plataforma.AcceptsEncoding`, uma
-só, para o tratamento de `q=0` não divergir em duas cópias.
+(ALE-107) e eles entravam em toda carga fria. **Hoje as cenas leem o embutido
+direto**, e a rota `GET /catalog/:nome` foi apagada na ALE-277 com o
+`api/catalog.go` inteiro, por ter perdido o consumidor junto com a SPA — o
+`plataforma.AcceptsEncoding` ficou, porque quem serve arquivo estático ainda lê
+`Accept-Encoding`.
+
+O que a decisão de então deixou e continua valendo é o outro lado dela: ler UMA
+vez e guardar, não por requisição, porque o conteúdo vem de `go:embed` e não muda
+enquanto o binário for o mesmo. É o que o `race_traits.go` faz com `sync.Once`.
 
 `catalog/data/*.json` é embutido no binário. **Este é o único lugar onde
 catálogo é autorado** — mudar uma magia é editar um arquivo só, e a cena, o
@@ -1446,8 +1477,10 @@ escritas, `Commit`. Viraram três perguntas:
 **A terceira pagou sozinha**, e é o achado que vale repetir: a transação que a
 cena montava era a MESMA do `applyPool` da rota JSON, escrita de novo. Duas
 transações sobre a mesma regra divergem no dia em que uma das duas ganhar um
-passo. Agora as duas passam pelo `applyPoolTx`, e o handler HTTP ficou sendo a
-casca que traduz o resultado em resposta.
+passo. As duas passaram pelo `applyPoolTx`, e o handler HTTP virou a casca que
+traduz o resultado em resposta — e então a ALE-277 apagou o handler, porque
+ninguém o chamava. Sobrou uma chamadora, e a extração continua sendo a certa: o
+que a justifica não é o número de chamadores, é a regra ter UM lugar.
 
 ### A porta ENCOLHEU em dois lugares, e as razões são opostas
 
@@ -1670,6 +1703,73 @@ instrutivo: `campaign.ValidateName` não existe, então o build quebrou e a
 sabotagem nunca chegou. **Verde depois de sabotar só significa alguma coisa
 quando a sabotagem CHEGOU** — e a terceira, com `campaign.Name`, reprovou o
 guarda como devia.
+
+## A API JSON saiu, e o que ela levou junto (ALE-277)
+
+Das **76 rotas** do `Router()` sobraram **sete**; dos **113 manipuladores**,
+nove; dos **315 métodos** de `*Server`, 182. O `api` foi de 164 arquivos `.go` e
+31 mil linhas para 150 e 25 mil. Nada disso é limpeza de estilo: **nenhum dos
+apagados tinha chamador** — nem cena, nem spec de Playwright, nem `fetch` de
+ilha — desde que a SPA foi apagada na ALE-272.
+
+As sete que ficaram são as que alguma coisa de fato chama: `/health`, o CRUD de
+campanha, a criação de sessão, a lista de personagens e o `PATCH` de condições.
+
+### Por que isso não apareceu antes
+
+Um handler sem chamador **não quebra compilação**. O Go reclama de import e de
+variável local sem uso, e não de método sem uso — então 104 manipuladores
+atravessaram onze fatias da ALE-278 sendo lidos, renomeados e movidos de arquivo
+por gente que os tomava por código vivo. O mesmo vale para os 133 métodos de
+`*Server` que só eles chamavam: cada um se defendia por um chamador que também
+não tinha chamador.
+
+**A busca que os acha é uma linha**, e ela é o que vale guardar deste parágrafo:
+
+```
+for m in $(grep -rho "func (s \*Server) handle[A-Za-z]*" api/ | sed 's/.*) //'); do
+  n=$(grep -rn "s\.$m\b" --include=*.go . | grep -cv "func (s \*Server) $m")
+  [ "$n" = 0 ] && echo "ORFAO $m"
+done
+```
+
+Ela roda em segundos e teve de rodar TRÊS vezes: apagar os manipuladores órfãos
+revelou 16 métodos órfãos, apagar esses 15 revelou mais três. Órfão é
+transitivo, e uma passada só mede a primeira camada.
+
+### O que o teste da rota apagada vira
+
+Sessenta e dois casos ficaram vermelhos, e a regra que os separou não é "manter
+ou apagar", é **de quem era a garantia**:
+
+- **Regra** — o caso passa a chamar a REGRA (`s.createAccount`, `s.joinTable`,
+  `s.castSpellForCharacter`), sem transporte nenhum. É a maioria, e é o teste
+  ficando mais barato: some o roteador, some o JSON, some o código HTTP.
+- **Contrato de rota** (o 409 do e-mail repetido, o 413 do corpo grande) — morre
+  com a rota, e deixa LÁPIDE dizendo onde a garantia está agora. As lápides
+  entram no `tombstones` do `convention/`, que é o que torna o ato explícito.
+- **Regra que só aquele teste guardava** — muda de PACOTE, para o dono da regra:
+  o bloco impossível de criatura foi para `creature/block_test.go`, a regra
+  desconhecida para `campaign/rules_test.go`.
+
+Uma armadilha específica: `newTestServer` + `sendRaw` dirigem o `Router()`, que
+é a API. **Cena se testa pelo `WebRouter()`** — um caso repontado para um
+endereço de cena pelo helper errado responde 404, e 404 se parece com "a rota
+não existe" justamente quando ela existe.
+
+### O que ficou sem gesto, e não foi apagado
+
+Três capacidades perderam a porta e NÃO foram removidas, porque a coluna e a
+consulta são o lugar onde elas voltam a morar quando alguma cena oferecer o
+gesto. Elas estão anotadas para que a próxima pessoa não as descubra como
+"funcionalidade quebrada":
+
+- **Promover jogador a mestre.** O `PATCH /campaigns/{id}/members/{id}` era o
+  único caminho, e nenhuma cena oferece o botão.
+- **Rotacionar o convite da campanha.** Nada chama `SetInviteToken` fora da
+  seed: a carta de convite RESOLVE um token, e ninguém cunha um.
+- **O elenco presente na sala.** A Mesa lê `Presence().Roster`, e quem preenchia
+  era o handshake da `/events`.
 
 ## `campaign`: a mesma regra recusando com DUAS frases
 

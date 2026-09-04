@@ -1,12 +1,11 @@
 package api
 
-import "t20engine/aovivo"
-
 import (
 	"context"
 	"errors"
 	"fmt"
 	"strings"
+	"t20engine/aovivo"
 	"t20engine/catalog"
 	"t20engine/plataforma"
 )
@@ -16,9 +15,14 @@ import (
 // Este arquivo é o que SOBROU de `realtime_initiative.go` quando o socket.io foi
 // apagado (ALE-253). O corte foi pelo receptor: o que era `(g *realtimeGateway)`
 // era transporte e morreu junto; o que está aqui é aplicação, e não mudou uma
-// linha ao mudar de vizinho. As rotas HTTP em `session_commands.go` e
-// `board_commands.go` chamam exatamente as mesmas funções que os eventos
-// chamavam.
+// linha ao mudar de vizinho.
+//
+// Aqui morava "as rotas HTTP em `session_commands.go` e `board_commands.go`
+// chamam exatamente as mesmas funções que os eventos chamavam". Os dois
+// arquivos saíram na ALE-277 com os 36 manipuladores deles, que não tinham um
+// chamador desde que as cenas em Datastar passaram a mutar o estado pela porta
+// própria. A frase continua valendo com outro sujeito: quem chama estas funções
+// hoje é a cena da Mesa, e elas continuam sem saber por onde o pedido entrou.
 
 // selfInitiativeEntry monta a linha de quem registra a PRÓPRIA iniciativa:
 // confere o d20, pergunta o bônus ao motor e soma.

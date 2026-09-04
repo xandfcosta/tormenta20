@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"net/http"
 	"strings"
 	"testing"
 )
@@ -232,27 +231,10 @@ func TestARepeatedDistributionIsRefused(t *testing.T) {
 	}
 }
 
-// A API JSON tem a MESMA fronteira, e ela era a porta que estava aberta.
+// Aqui morava o TestTheJsonApiRefusesAChoiceOutsideTheRule, que provava que a
+// rota `PATCH /characters/{id}/abilities` recusava três poderes em duas vagas.
+// Ela saiu na ALE-277 com as outras sem consumidor.
 //
-// O pedido vai pelo roteador da API — `authed`, e não o `pede` do piloto: o
-// `pede` monta o `WebRouter`, onde `/characters/...` não existe, e um 404
-// passaria por "recusou" sem que a regra tivesse rodado. Medido: escrito assim,
-// o teste continuava verde com a validação REMOVIDA.
-func TestTheJsonApiRefusesAChoiceOutsideTheRule(t *testing.T) {
-	f, id := barbaro(t, 3)
-
-	corpo := `{"classPowers":["class.barbaro.golpe-poderoso","class.barbaro.frenesi","class.barbaro.brado-assustador"]}`
-	rec := authed(t, f.s, f.jogador, http.MethodPatch, abilitiesPath(id), corpo)
-	if rec.Code == http.StatusOK {
-		t.Fatalf("a API JSON aceitou três poderes em duas vagas: %s", rec.Body.String())
-	}
-	if !strings.Contains(rec.Body.String(), "2 vagas") {
-		t.Errorf("a recusa não diz quantas vagas existem: %s", rec.Body.String())
-	}
-	// CONTROLE: a mesma escrita com DOIS poderes passa — sem ele, um 404 ou um
-	// 403 de rota errada leria como "a regra funcionou".
-	cabe := `{"classPowers":["class.barbaro.golpe-poderoso","class.barbaro.frenesi"]}`
-	if rec := authed(t, f.s, f.jogador, http.MethodPatch, abilitiesPath(id), cabe); rec.Code != http.StatusOK {
-		t.Fatalf("dois poderes em duas vagas foram recusados: %d %s", rec.Code, rec.Body.String())
-	}
-}
+// A REGRA não saiu: ela é `sheet.WithChoicesValid`, e quem a prende agora é o
+// comando da cena da ficha, que a chama pelo mesmo caminho. Uma regra, uma
+// camada — e a camada que sobrou é a que a mesa usa.

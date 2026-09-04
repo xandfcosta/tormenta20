@@ -2,10 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
-	"strconv"
-	"strings"
 	"t20engine/plataforma"
 	"testing"
 
@@ -54,11 +50,19 @@ func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 	}
 }
 
-func (f rulesFixture) putRules(t *testing.T, caller, campaignID int64, body string) (int, string) {
+// putRules chama a REGRA direto, e não a rota.
+//
+// Ela batia em `PUT /campaigns/{id}/rules`, que saiu na ALE-277 com as outras
+// sem consumidor. O que estes casos prendem nunca foi o transporte: é a mais
+// ESTRITA vencendo entre duas mesas, e a ficha avulsa aplicando tudo. A cena das
+// campanhas grava pelo mesmo `saveIgnoredRules`, pela porta.
+//
+// O `caller` sai da assinatura junto com a rota: a AUTORIZAÇÃO era do handler, e
+// a cena tem a dela (`RequesterIsAdmin` e o dono da campanha). Uma regra, uma
+// camada.
+func (f rulesFixture) putRules(t *testing.T, campaignID int64, regras ...string) error {
 	t.Helper()
-	path := "/campaigns/" + strconv.FormatInt(campaignID, 10) + "/rules"
-	res := authed(t, f.s, caller, http.MethodPut, path, body)
-	return res.Code, res.Body.String()
+	return f.s.saveIgnoredRules(context.Background(), campaignID, regras)
 }
 
 // cargaIgnorada pergunta ao CARREGAMENTO da ficha, e não à tabela: é o que o
@@ -84,10 +88,8 @@ func TestReplaceCampaignRules(t *testing.T) {
 			t.Fatal("a carga já nascia desligada — o padrão do livro é ela EM VIGOR")
 		}
 
-		code, body := f.putRules(t, f.owner, f.campaign, `{"ignoredRules":["carga"]}`)
-
-		if code != http.StatusOK {
-			t.Fatalf("code=%d body=%s, queria 200", code, body)
+		if err := f.putRules(t, f.campaign, "carga"); err != nil {
+			t.Fatalf("desligar a carga falhou: %v", err)
 		}
 		if !f.cargaIgnorada(t) {
 			t.Error("a campanha desligou a carga e a ficha continuou aplicando")
@@ -98,50 +100,24 @@ func TestReplaceCampaignRules(t *testing.T) {
 	t.Run("mandar a lista vazia religa tudo", func(t *testing.T) {
 		f := newRulesFixture(t)
 		f.Join(t, f.campaign)
-		f.putRules(t, f.owner, f.campaign, `{"ignoredRules":["carga"]}`)
+		f.putRules(t, f.campaign, "carga")
 
-		if code, body := f.putRules(t, f.owner, f.campaign, `{"ignoredRules":[]}`); code != http.StatusOK {
-			t.Fatalf("code=%d body=%s, queria 200", code, body)
+		if err := f.putRules(t, f.campaign); err != nil {
+			t.Fatalf("religar tudo falhou: %v", err)
 		}
 		if f.cargaIgnorada(t) {
 			t.Error("a lista vazia não religou a carga")
 		}
 	})
 
-	// A chave é do MESTRE. Um jogador que pudesse desligar a carga tiraria a
-	// penalidade da própria ficha no meio da sessão.
-	t.Run("o jogador não desliga regra nenhuma", func(t *testing.T) {
-		f := newRulesFixture(t)
-		f.Join(t, f.campaign)
+	// Aqui morava o subcaso "o jogador não desliga regra nenhuma". Ele provava a
+	// AUTORIZAÇÃO do handler, que saiu com a rota na ALE-277 — e a garantia
+	// continua onde ela é usada: a cena das campanhas só desenha os
+	// interruptores para o dono, e o comando dela confere. Uma regra, uma camada.
 
-		code, _ := f.putRules(t, f.player, f.campaign, `{"ignoredRules":["carga"]}`)
-
-		if code == http.StatusOK {
-			t.Fatal("o jogador conseguiu mexer nas regras da mesa")
-		}
-		if f.cargaIgnorada(t) {
-			t.Errorf("a recusa devolveu %d mas GRAVOU mesmo assim", code)
-		}
-	})
-
-	// Identificador que o motor não implementa não entra no banco: ele ficaria lá
-	// sem interruptor na tela que o desfizesse. A mensagem nomeia o valor e o que
-	// se esperava, que é a regra da casa para exceção.
-	t.Run("regra desconhecida é recusada nomeando o valor", func(t *testing.T) {
-		f := newRulesFixture(t)
-
-		code, body := f.putRules(t, f.owner, f.campaign, `{"ignoredRules":["munição"]}`)
-
-		if code != http.StatusBadRequest {
-			t.Fatalf("code=%d, queria 400 — body=%s", code, body)
-		}
-		if !strings.Contains(body, "munição") || !strings.Contains(body, "carga") {
-			t.Errorf("a mensagem não nomeia o valor recusado nem o esperado: %s", body)
-		}
-		if got := f.s.ignoredRulesOf(context.Background(), f.campaign); len(got) != 0 {
-			t.Errorf("gravou %v apesar do 400", got)
-		}
-	})
+	// Aqui morava o subcaso "regra desconhecida é recusada nomeando o valor". Ele
+	// media o 400 de uma rota JSON que saiu na ALE-277, e a garantia desceu para
+	// onde a regra MORA: `campaign.TestAnUnknownRuleIsRefusedNamingTheValue`.
 }
 
 // A ficha pode pertencer a mais de uma campanha, e as duas podem discordar. A
@@ -154,12 +130,12 @@ func TestASheetInTwoCampaignsFollowsTheStrictestOne(t *testing.T) {
 	f.Join(t, f.campaign)
 	f.Join(t, f.otherCamp)
 
-	f.putRules(t, f.owner, f.campaign, `{"ignoredRules":["carga"]}`)
+	f.putRules(t, f.campaign, "carga")
 	if f.cargaIgnorada(t) {
 		t.Error("uma campanha desligou e a ficha parou de aplicar — a outra mesa ainda usa a regra")
 	}
 
-	f.putRules(t, f.otherOwner, f.otherCamp, `{"ignoredRules":["carga"]}`)
+	f.putRules(t, f.otherCamp, "carga")
 	if !f.cargaIgnorada(t) {
 		t.Error("as DUAS campanhas desligaram e a ficha continuou aplicando")
 	}
@@ -177,22 +153,7 @@ func TestASheetWithoutACampaignAppliesEveryRule(t *testing.T) {
 	}
 }
 
-// O detalhe da campanha carrega as regras porque é nele que elas se configuram:
-// uma segunda rota faria os interruptores piscarem de "tudo ligado" para o
-// estado real na primeira pintura.
-func TestTheCampaignDetailLoadsTheRules(t *testing.T) {
-	f := newRulesFixture(t)
-	f.putRules(t, f.owner, f.campaign, `{"ignoredRules":["carga"]}`)
-
-	res := authed(t, f.s, f.owner, http.MethodGet, "/campaigns/"+strconv.FormatInt(f.campaign, 10), "")
-
-	var got struct {
-		IgnoredRules []string `json:"ignoredRules"`
-	}
-	if err := json.Unmarshal(res.Body.Bytes(), &got); err != nil {
-		t.Fatalf("ler o detalhe: %v — body=%s", err, res.Body.String())
-	}
-	if len(got.IgnoredRules) != 1 || got.IgnoredRules[0] != "carga" {
-		t.Errorf("ignoredRules=%v, queria [carga]", got.IgnoredRules)
-	}
-}
+// Aqui morava o TestTheCampaignDetailLoadsTheRules, que lia as regras pelo
+// `GET /campaigns/{id}` — rota que saiu na ALE-277. A garantia é da cena das
+// campanhas, que desenha os interruptores no estado real na primeira pintura, e
+// ela tem guarda lá.

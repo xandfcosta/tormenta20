@@ -45,7 +45,7 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	}
 	srv := NewServer(cfg, database, nil)
 	// ESPERAR ANTES DE FECHAR. A persistência do estado da sessão roda em
-	// goroutine (`session_commands.go`), e fechar o banco debaixo dela produz
+	// goroutine (`live_publish.go`), e fechar o banco debaixo dela produz
 	// dois sintomas que não se parecem com a causa: um `Persist failed (sql:
 	// database is closed)` no log, e — pior — um `TempDir RemoveAll cleanup:
 	// directory not empty`, porque o SQLite recria `-wal`/`-shm` depois do

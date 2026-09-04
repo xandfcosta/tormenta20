@@ -167,3 +167,20 @@ func (f pilotoFixture) scene(t *testing.T) {
 		t.Fatalf("semear PC: %v", err)
 	}
 }
+
+// seedClasse põe uma classe na ficha, e ela é a bancada de SEIS arquivos.
+//
+// Morava no `character_race_choices_http_test`, que saiu na ALE-277 com a rota
+// que ele provava — e levaria junto a semente de meia dúzia de casos que não
+// têm nada a ver com raça. É a mesma forma da bancada que morava no arquivo da
+// Mesa: um ajudante compartilhado hospedado no arquivo de UM caso só aparece
+// quando esse caso morre.
+func seedClasse(t *testing.T, s *Server, characterID int64, nome string, nivel int64) {
+	t.Helper()
+	err := s.queries.CreateClass(context.Background(), sqlcgen.CreateClassParams{
+		Characterid: characterID, Classname: nome, Level: nivel,
+	})
+	if err != nil {
+		t.Fatalf("seed classe %q: %v", nome, err)
+	}
+}

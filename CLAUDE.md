@@ -241,7 +241,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **46 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **44 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -256,6 +256,14 @@ irmãos.
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
 > — a família cresce a cada issue e a linha não. Se ele divergir de novo, o certo
 > é o `grep`.
+>
+> **Ele DESCEU pela primeira vez na ALE-277**, de 46 para 44, e vale saber por
+> quê: os dois que saíram varriam as rotas de `/characters` do `Router()` da API
+> JSON cobrando 403 de cada uma, e as rotas foram apagadas por não terem
+> consumidor. A invariante não morreu — o `TestNoSheetWriteAcceptsAStranger` faz
+> a mesma varredura no roteador das CENAS, que é onde a ficha se escreve hoje.
+> Um guarda de varredura vale o que vale o terreno que ele varre, e o terreno
+> pode sumir.
 >
 > **A gramática mudou na ALE-282**, junto com os outros 773 nomes: os prefixos
 > `…Toda`, `…Todo` e `…Nenhum` viraram `…Every` e `…No`. A regra de idioma

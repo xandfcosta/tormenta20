@@ -279,9 +279,10 @@ func openBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 
 // endBoard arquiva e tira a cena da mesa.
 //
-// A falha ao ARQUIVAR não impede o encerrar, e a ordem é a do `handleBoardClose`
-// de propósito: o mestre mandou tirar a cena da mesa, e recusar isso porque o
-// acervo falhou deixaria a mesa presa numa cena que já acabou.
+// A falha ao ARQUIVAR não impede o encerrar, e a ordem era a do
+// `handleBoardClose` de propósito — ele foi apagado na ALE-277, e o motivo
+// sobreviveu a ele: o mestre mandou tirar a cena da mesa, e recusar isso porque
+// o acervo falhou deixaria a mesa presa numa cena que já acabou.
 func endBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	if atual := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID); atual != nil {
 		if err := st.deps.Boards().Archive(c.R.Context(), c.CampaignID, atual); err != nil {

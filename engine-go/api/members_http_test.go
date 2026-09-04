@@ -2,9 +2,7 @@ package api
 
 import (
 	"context"
-	"net/http"
-	"strconv"
-	"strings"
+	"errors"
 	"sync"
 	"t20engine/plataforma"
 	"testing"
@@ -61,80 +59,19 @@ func newMemberFixture(t *testing.T) memberFixture {
 	}
 }
 
-func (f memberFixture) roleOf(t *testing.T, memberID int64) string {
-	t.Helper()
-	m, err := f.s.queries.GetMember(context.Background(), memberID)
-	if err != nil {
-		t.Fatalf("ler membro %d: %v", memberID, err)
-	}
-	return m.Role
-}
-
-func (f memberFixture) patchRole(t *testing.T, caller, campaignID, memberID int64, Role string) int {
-	t.Helper()
-	path := "/campaigns/" + strconv.FormatInt(campaignID, 10) + "/members/" + strconv.FormatInt(memberID, 10)
-	return authed(t, f.s, caller, http.MethodPatch, path, `{"role":"`+Role+`"}`).Code
-}
-
-func TestUpdateMemberRole(t *testing.T) {
-	t.Run("o dono promove um membro a mestre", func(t *testing.T) {
-		f := newMemberFixture(t)
-		if code := f.patchRole(t, f.owner, f.campaignID, f.memberID, "gm"); code != http.StatusOK {
-			t.Fatalf("code=%d, queria 200", code)
-		}
-		if got := f.roleOf(t, f.memberID); got != "gm" {
-			t.Errorf("papel=%q, queria gm", got)
-		}
-	})
-
-	// A escalação de privilégio: o próprio jogador se promovendo na mesa de outro.
-	t.Run("o jogador não se promove", func(t *testing.T) {
-		f := newMemberFixture(t)
-		code := f.patchRole(t, f.player, f.campaignID, f.memberID, "gm")
-		if code == http.StatusOK {
-			t.Fatal("o jogador conseguiu se promover")
-		}
-		if got := f.roleOf(t, f.memberID); got != "player" {
-			t.Errorf("papel=%q — a recusa devolveu %d mas GRAVOU mesmo assim", got, code)
-		}
-	})
-
-	// O membro existe, mas é de outra mesa: o id sozinho não pode bastar.
-	t.Run("membro de outra mesa é 404 e não muda", func(t *testing.T) {
-		f := newMemberFixture(t)
-		if code := f.patchRole(t, f.owner, f.campaignID, f.otherMemID, "gm"); code != http.StatusNotFound {
-			t.Errorf("code=%d, queria 404", code)
-		}
-		if got := f.roleOf(t, f.otherMemID); got != "player" {
-			t.Errorf("papel do vizinho=%q — mudou o membro de outra mesa", got)
-		}
-	})
-
-	t.Run("papel fora da lista é recusado", func(t *testing.T) {
-		f := newMemberFixture(t)
-		if code := f.patchRole(t, f.owner, f.campaignID, f.memberID, "admin"); code == http.StatusOK {
-			t.Fatal("papel inventado foi aceito")
-		}
-		if got := f.roleOf(t, f.memberID); got != "player" {
-			t.Errorf("papel=%q, queria player intacto", got)
-		}
-	})
-}
-
-// Com o banco com problema, entrar na mesa não escreve nada e responde 500.
+// Aqui morava o TestUpdateMemberRole, e ele merece uma linha porque o que saiu
+// não foi só um teste.
 //
-// HONESTIDADE SOBRE O QUE ESTE TESTE NÃO PROVA: ele não isola o `hasPc, _ :=`
-// que a ALE-156 corrigiu. A trava consulta `campaign_members` e `characters`,
-// exatamente as duas tabelas que a escrita também usa, então qualquer falha que
-// derrube a checagem derruba a inserção junto — e o desfecho (500, nada
-// escrito) fica igual com e sem a correção. Isolar exigiria um seam de injeção
-// de falha por query, e trocar `*sqlcgen.Queries` por interface no servidor
-// inteiro é caro demais para provar um ramo de quatro linhas.
+// `PATCH /campaigns/{id}/members/{id}` era o ÚNICO caminho para promover um
+// jogador a mestre, e nenhuma cena em Datastar oferece o gesto — medido antes de
+// apagar. Ou seja: a capacidade já estava inalcançável desde que a SPA morreu
+// (ALE-272), e a rota só sobrevivia porque ninguém tinha ido conferir. Apagá-la
+// não tirou nada de quem usa o app; o que ela tirou foi a ILUSÃO de que a
+// funcionalidade existia.
 //
-// O que ele protege, e que vale: sob falha de banco, ninguém entra na mesa. Foi
-// o SILÊNCIO que a auditoria achou lendo — `false` significando "pode entrar" —
-// e a regra que fica escrita é: checagem de autorização ou de unicidade nunca
-// descarta erro; na dúvida, nega.
+// Se ela voltar a ser desejada, volta como GESTO na cena das campanhas, com a
+// regra no `joinTable` que já sabe o que é um papel válido.
+
 func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 	f := newMemberFixture(t)
 	outroHeroi := seedCharacter(t, f.s, f.owner, "Segundo Herói", 10, 10, 0, 0)
@@ -145,13 +82,13 @@ func TestADatabaseErrorClosesTheUniquenessGate(t *testing.T) {
 	if _, err := f.s.db.Exec("ALTER TABLE campaign_members RENAME TO campaign_members_fora"); err != nil {
 		t.Fatalf("esconder a tabela: %v", err)
 	}
-	code := f.addMember(t, f.owner, f.campaignID, outroHeroi)
+	err := f.addMember(t, f.owner, f.campaignID, outroHeroi)
 	if _, err := f.s.db.Exec("ALTER TABLE campaign_members_fora RENAME TO campaign_members"); err != nil {
 		t.Fatalf("devolver a tabela: %v", err)
 	}
 
-	if code != http.StatusInternalServerError {
-		t.Errorf("erro de banco respondeu %d — a trava tem de FECHAR, não abrir", code)
+	if err == nil {
+		t.Error("erro de banco passou — a trava tem de FECHAR, não abrir")
 	}
 	if depois := membersOf(t, f.s, f.campaignID); depois != antes {
 		t.Errorf("entrou membro apesar do erro: %d → %d. O status importa menos que a escrita", antes, depois)
@@ -171,10 +108,10 @@ func TestAFailedJoinLeavesNoOrphanSnapshot(t *testing.T) {
 	if _, err := f.s.db.Exec("DROP TABLE campaign_members"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	code := f.addMember(t, f.owner, f.campaignID, heroi)
+	err := f.addMember(t, f.owner, f.campaignID, heroi)
 
-	if code != http.StatusInternalServerError {
-		t.Errorf("respondeu %d numa falha de escrita", code)
+	if err == nil {
+		t.Error("a escrita falhou e o `joinTable` disse que deu certo")
 	}
 	if copias := copiesOf(t, f.s, heroi); copias != copiasAntes {
 		t.Errorf("sobrou cópia órfã: %d → %d. O herói fica impedido de entrar para sempre", copiasAntes, copias)
@@ -188,8 +125,8 @@ func TestJoiningStillWorks(t *testing.T) {
 	heroi := seedCharacter(t, f.s, f.owner, "Quarto Herói", 10, 10, 0, 0)
 	outraMesa := seedCampaign(t, f.s, f.owner)
 
-	if code := f.addMember(t, f.owner, outraMesa, heroi); code != http.StatusCreated {
-		t.Fatalf("entrada legítima respondeu %d", code)
+	if err := f.addMember(t, f.owner, outraMesa, heroi); err != nil {
+		t.Fatalf("entrada legítima foi recusada: %v", err)
 	}
 	// E a cópia de mesa nasceu junto: é ela que entra, não o original (ALE-33).
 	if copias := copiesOf(t, f.s, heroi); copias != 1 {
@@ -197,11 +134,23 @@ func TestJoiningStillWorks(t *testing.T) {
 	}
 }
 
-func (f memberFixture) addMember(t *testing.T, caller, campaignID, characterID int64) int {
+// addMember chama a REGRA direto, e não a rota.
+//
+// Ela batia em `POST /campaigns/{id}/members`, que saiu na ALE-277 com as outras
+// sem consumidor. O que estes casos prendem é a TRAVA DE UNICIDADE do
+// `joinTable` — a decisão do `_txlock=immediate` da ALE-156, que é o que faz
+// dois pedidos simultâneos criarem UM membro em vez de um 500. Isso nunca foi
+// do transporte, e a cena das campanhas grava pelo mesmo `joinTable`, pela porta.
+//
+// Devolve ERRO em vez de status: era o handler que traduzia cada sentinela em
+// código HTTP, e a cena traduz em FRASE.
+func (f memberFixture) addMember(t *testing.T, caller, campaignID, characterID int64) error {
 	t.Helper()
-	path := "/campaigns/" + strconv.FormatInt(campaignID, 10) + "/members"
-	body := `{"characterId":` + strconv.FormatInt(characterID, 10) + `,"role":"player"}`
-	return authed(t, f.s, caller, http.MethodPost, path, body).Code
+	_, err := f.s.joinTable(context.Background(), joinRequest{
+		CampanhaID: campaignID, PersonagemID: characterID,
+		Papel: "player", QuemPede: caller,
+	})
+	return err
 }
 
 func membersOf(t *testing.T, s *Server, campaignID int64) int {
@@ -252,24 +201,24 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 
 	const pedidos = 8
 	var wg sync.WaitGroup
-	codigos := make([]int, pedidos)
+	erros := make([]error, pedidos)
 	for i := 0; i < pedidos; i++ {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()
-			codigos[n] = f.addMember(t, f.owner, table, heroi)
+			erros[n] = f.addMember(t, f.owner, table, heroi)
 		}(i)
 	}
 	wg.Wait()
 
 	criados := 0
-	for _, code := range codigos {
-		if code == http.StatusCreated {
+	for _, err := range erros {
+		if err == nil {
 			criados++
 		}
 	}
 	if criados != 1 {
-		t.Errorf("%d pedidos simultâneos criaram %d membros (códigos %v), esperava 1", pedidos, criados, codigos)
+		t.Errorf("%d pedidos simultâneos criaram %d membros (erros %v), esperava 1", pedidos, criados, erros)
 	}
 	if n := membersOf(t, f.s, table); n != 1 {
 		t.Errorf("a mesa ficou com %d membros", n)
@@ -278,45 +227,27 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 	if copias := copiesOf(t, f.s, heroi); copias != 1 {
 		t.Errorf("sobraram %d cópias do herói, esperava 1", copias)
 	}
-	// Quem perde a corrida merece a resposta CERTA: 409 diz "alguém chegou
-	// antes"; 500 diria "o servidor quebrou", que é falso e manda o jogador
-	// tentar de novo achando que o app está com defeito.
-	for _, code := range codigos {
-		if code == http.StatusInternalServerError {
-			t.Errorf("um perdedor recebeu 500 em vez de 409 (códigos %v)", codigos)
+	// Quem perde a corrida merece uma RECUSA, e não um erro de banco. O handler
+	// traduzia os sentinelas em 409 e o resto em 500; com a rota fora (ALE-277)
+	// o que se afirma são os sentinelas.
+	//
+	// São DOIS, e não um, porque a corrida se perde em dois lugares: quem chega
+	// atrasado na checagem de fora leva `errJaTemPersonagem`, e quem passa por
+	// ela e perde a releitura DENTRO da transação leva `errAlreadyInCampaign` —
+	// que é a trava dupla da ALE-156 funcionando, e não um descuido. Prender só
+	// o primeiro fazia este teste reprovar em três de dez corridas.
+	for _, err := range erros {
+		if err != nil && !errors.Is(err, errJaTemPersonagem) && !errors.Is(err, errAlreadyInCampaign) {
+			t.Errorf("um perdedor recebeu um erro que não é recusa nenhuma: %v", err)
 			break
 		}
 	}
 }
 
-// Corpo grande demais tem resposta PRÓPRIA (ALE-157).
+// Aqui moravam o TestAnOversizedBodyIsRefusedBySize e o TestANormalBodyStillPasses,
+// sobre o teto de 1 MB do corpo e o 413 próprio (ALE-157). Eles dirigiam
+// `POST /campaigns/{id}/members`, que saiu na ALE-277.
 //
-// Sem teto, o `plataforma.DecodeJSON` lia o que viesse e um corpo sem fim segurava memória
-// e goroutine. E o 413 importa tanto quanto o teto: dizer "JSON inválido" para
-// um JSON perfeitamente válido mandaria quem escreveu o cliente procurar
-// defeito de sintaxe onde o problema é tamanho.
-func TestAnOversizedBodyIsRefusedBySize(t *testing.T) {
-	f := newMemberFixture(t)
-	gigante := `{"characterId":1,"role":"player","lixo":"` + strings.Repeat("a", 2<<20) + `"}`
-
-	rec := authed(t, f.s, f.owner, http.MethodPost,
-		"/campaigns/"+strconv.FormatInt(f.campaignID, 10)+"/members", gigante)
-
-	if rec.Code != http.StatusRequestEntityTooLarge {
-		t.Fatalf("corpo de 2 MB respondeu %d, esperava 413", rec.Code)
-	}
-	if !strings.Contains(rec.Body.String(), "corpo da requisição") {
-		t.Errorf("a mensagem não explica que o problema é TAMANHO: %s", rec.Body.String())
-	}
-}
-
-// E um corpo normal continua passando — o teto não pode estreitar o uso real.
-func TestANormalBodyStillPasses(t *testing.T) {
-	f := newMemberFixture(t)
-	heroi := seedCharacter(t, f.s, f.owner, "Herói Comum", 10, 10, 0, 0)
-	table := seedCampaign(t, f.s, f.owner)
-
-	if code := f.addMember(t, f.owner, table, heroi); code != http.StatusCreated {
-		t.Errorf("corpo normal respondeu %d", code)
-	}
-}
+// A garantia não é da rota e sim do `plataforma.DecodeJSON`, que continua no ar
+// e é chamado por todo comando de cena — o teto e a mensagem são de lá, e é lá
+// que eles devem ser presos se alguém quiser um guarda deles.

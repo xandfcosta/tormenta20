@@ -11,12 +11,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"t20engine/account"
 	"t20engine/plataforma"
 	"time"
-
-	"github.com/go-chi/chi/v5"
-	"golang.org/x/crypto/bcrypt"
 
 	"t20engine/db/sqlcgen"
 )
@@ -26,52 +22,6 @@ const resetRejected = "Reset link is invalid or expired"
 type resetPasswordBody struct {
 	Token    string `json:"token"`
 	Password string `json:"password"`
-}
-
-// handleResolvePasswordReset: GET /password-resets/{token} — the screen asks
-// before showing the form, so an expired link says so instead of failing on
-// submit with a password already typed twice.
-func (s *Server) handleResolvePasswordReset(w http.ResponseWriter, r *http.Request) {
-	Reset, ok := s.usableReset(r.Context(), chi.URLParam(r, "token"))
-	if !ok {
-		plataforma.WriteError(w, http.StatusNotFound, resetRejected)
-		return
-	}
-	user, err := s.queries.GetUserByID(r.Context(), Reset.Userid)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusNotFound, resetRejected)
-		return
-	}
-	// The e-mail is the ONE thing this anonymous route reveals, and it is what
-	// tells the player they are resetting the right account.
-	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"email": user.Email})
-}
-
-// handleResetPassword: POST /auth/Reset-password.
-func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
-	var body resetPasswordBody
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	if fields := account.ValidatePassword(body.Password); len(fields) > 0 {
-		plataforma.WriteValidationError(w, fields)
-		return
-	}
-	Reset, ok := s.usableReset(r.Context(), body.Token)
-	if !ok {
-		plataforma.WriteError(w, http.StatusForbidden, resetRejected)
-		return
-	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcryptCost)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not hash password")
-		return
-	}
-	if err := s.applyReset(r.Context(), Reset, string(hash)); err != nil {
-		writeResetError(w, err)
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
 }
 
 // applyReset writes the new hash and spends the link in ONE transaction, and

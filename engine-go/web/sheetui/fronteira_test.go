@@ -21,7 +21,8 @@ import (
 // escritas, `Commit`. Cena que compõe SQL é cena com o banco dentro. As quatro
 // viraram `SaveItemOverlays`, `SaveChoices` e `ApplyPowerTempHp`, e a última
 // desfez de quebra uma transação escrita DUAS vezes: o `applyPool` da rota JSON
-// tinha a mesma sequência.
+// tinha a mesma sequência. (A rota foi apagada na ALE-277 e o `applyPool` com
+// ela — o que sobrou é a cópia única, aqui.)
 //
 // O `Queries` continua permitido — as sete abas leem e escrevem a mesma linha de
 // personagem, e é a concessão da forja, da administração e das campanhas. O

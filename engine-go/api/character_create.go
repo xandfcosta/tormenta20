@@ -3,11 +3,8 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
 	"t20engine/aovivo"
-	"t20engine/book"
 	"t20engine/db/sqlcgen"
 	"t20engine/plataforma"
 	"t20engine/sheet"
@@ -38,80 +35,6 @@ var expertisesList = []expertiseDef{
 // a linha "Proficiências." de p36–83), lida por `book.ProficienciesByClass` para
 // o painel da ficha. Duas cópias da mesma transcrição não divergiram por sorte,
 // e a que ficou é a que a validação de schema alcança.
-
-// handleCreateCharacter validate (assertCharacterRules
-// + presence), seed the aggregate (character + races + classes + all expertises +
-// items) with the class-default proficiencies, then heal vitals from the engine.
-// NOTE: catalog @IsIn checks (races/origin/god/size) + classChoices sanitize are
-// deferred — the frontend pre-validates.
-func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
-	var body sheet.CreateBody
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	user := currentUser(r)
-
-	fields := plataforma.FieldErrorMap{}
-	name := strings.TrimSpace(body.Name)
-	if name == "" {
-		fields["name"] = []string{"name must be longer than or equal to 1 characters"}
-	}
-	if len(body.Races) == 0 {
-		fields["races"] = []string{"races must contain at least 1 elements"}
-	}
-	if len(body.Classes) == 0 {
-		fields["classes"] = []string{"classes must contain at least 1 elements"}
-	}
-	if body.HpCurrent > body.HpMax {
-		fields["hpCurrent"] = []string{"HP current cannot exceed HP max"}
-	}
-	if body.MpCurrent > body.MpMax {
-		fields["mpCurrent"] = []string{"MP current cannot exceed MP max"}
-	}
-	seen := map[string]bool{}
-	for i, c := range body.Classes {
-		if seen[c.ClassName] {
-			fields[fmt.Sprintf("classes.%d.className", i)] = []string{
-				fmt.Sprintf("Class %q already added — combine levels in one entry instead", c.ClassName)}
-		}
-		seen[c.ClassName] = true
-	}
-	if len(fields) > 0 {
-		plataforma.WriteValidationError(w, fields)
-		return
-	}
-
-	var totalLevel int64
-	classNames := make([]string, len(body.Classes))
-	for i, c := range body.Classes {
-		totalLevel += c.Level
-		classNames[i] = c.ClassName
-	}
-	granted := book.GrantedProficiencies(classNames)
-	trained := sheet.ToStringSet(body.TrainedExpertises)
-
-	id, err := s.InsertCharacter(r, user.ID, name, body, totalLevel, granted, trained)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create character")
-		return
-	}
-
-	row, err := s.queries.GetCharacter(r.Context(), id)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
-		return
-	}
-	dto, err := s.LoadCharacter(r.Context(), row)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
-		return
-	}
-	if err := s.HealVitals(r, id, &dto); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sync vitals")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusCreated, dto)
-}
 
 // insertCharacter writes the character + all relations in one transaction.
 func (s *Server) InsertCharacter(r *http.Request, ownerID int64, name string, body sheet.CreateBody, totalLevel int64, granted []string, trained map[string]bool) (int64, error) {

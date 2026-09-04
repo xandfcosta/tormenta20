@@ -72,9 +72,26 @@ import (
 func TestAWireRouteStartsLowercase(t *testing.T) {
 	rota := regexp.MustCompile(`r\.(?:Get|Post|Put|Patch|Delete|Route)\("(/[^"]*)"`)
 
-	arquivos, err := filepath.Glob("*.go")
-	if err != nil {
-		t.Fatalf("listar o pacote: %v", err)
+	// ELE TAMBÉM CAMINHA A ÁRVORE desde a ALE-277, e pela razão que o irmão de
+	// baixo já tinha pago: ele varria o `api`, e o `api` tinha as rotas. Quando
+	// as sessenta e nove sem consumidor saíram, sobraram SETE — e o piso de 40
+	// derrubou o guarda, que é o que um piso existe para fazer. As rotas do app
+	// moram nos `web/*/routes.go` desde a ALE-278; é lá que a grafia importa.
+	var arquivos []string
+	{
+		raiz, err := os.Getwd()
+		if err != nil {
+			t.Fatalf("achar a raiz: %v", err)
+		}
+		if err := filepath.WalkDir(filepath.Dir(raiz), func(caminho string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") {
+				return err
+			}
+			arquivos = append(arquivos, caminho)
+			return nil
+		}); err != nil {
+			t.Fatalf("caminhar a árvore: %v", err)
+		}
 	}
 
 	visitadas := 0
@@ -111,7 +128,7 @@ func TestAWireRouteStartsLowercase(t *testing.T) {
 		}
 	}
 
-	if visitadas < 40 {
+	if visitadas < 100 {
 		t.Fatalf("guarda cego: só %d rotas reconhecidas — o padrão parou de casar", visitadas)
 	}
 }

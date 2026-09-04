@@ -28,41 +28,6 @@ type adminUserDTO struct {
 	CreatedAt  string  `json:"createdAt"`
 }
 
-// handleAdminListUsers: GET /admin/users — every account with what it owns, so
-// the screen can say what deleting one would cost before it happens.
-func (s *Server) handleAdminListUsers(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.queries.ListUsersWithCounts(r.Context())
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list users")
-		return
-	}
-	out := make([]adminUserDTO, 0, len(rows))
-	for _, u := range rows {
-		out = append(out, adminUserDTO{
-			ID: u.ID, Email: u.Email, Name: plataforma.NullToPtr(u.Name), IsAdmin: s.cfg.IsAdmin(u.Email),
-			Campaigns: u.Campaigns, Characters: u.Characters, CreatedAt: u.Createdat,
-		})
-	}
-	plataforma.WriteJSON(w, http.StatusOK, out)
-}
-
-// handleAdminDeleteUser: DELETE /admin/users/{id}. The mesas the account owns
-// move to the CALLER before it goes, so the chronicle survives the player
-// leaving the table — the decision the owner made when this was designed.
-// Their characters do go with them (the rows point at the account).
-func (s *Server) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	moved, status, err := s.deleteAccount(r, id, currentUser(r).ID)
-	if err != nil {
-		plataforma.WriteError(w, status, err.Error())
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"id": id, "transferredCampaigns": moved})
-}
-
 // deleteAccount is the RULE behind the delete: you cannot remove your own
 // account, and the campaigns move to whoever removes it.
 //
@@ -108,26 +73,6 @@ func (s *Server) deleteUserKeepingCampaigns(r *http.Request, userID, newOwnerID 
 	return moved, tx.Commit()
 }
 
-// handleAdminCreatePasswordReset: POST /admin/users/{id}/password-reset. The
-// admin never sees or types a password — they hand over a single-use link and
-// the player picks their own.
-func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	reset, err := s.mintPasswordReset(r.Context(), id, currentUser(r).ID)
-	if errors.Is(err, errUserNotFound) {
-		plataforma.WriteError(w, http.StatusNotFound, "User not found")
-		return
-	}
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create reset link")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusCreated, accountInviteDTO{Token: reset.Token, ExpiresAt: reset.Expiresat})
-}
-
 // errUserNotFound separa "não existe" de "deu errado" para quem CHAMA
 // decidir o que dizer: a rota JSON responde 404, a cena do piloto desenha um
 // aviso. A regra não sabe qual é o transporte, e é esse o ponto.
@@ -157,19 +102,4 @@ func (s *Server) mintPasswordReset(ctx context.Context, usuarioID, criadoPor int
 		Createdat: plataforma.IsoAt(now),
 		Expiresat: plataforma.IsoAt(now.Add(passwordResetTTL)),
 	})
-}
-
-// handleAdminListInvites: GET /admin/invites — the links already handed out and
-// still good, so the admin can copy one again instead of minting a second.
-func (s *Server) handleAdminListInvites(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.queries.ListOpenAccountInvites(r.Context(), plataforma.NowISO())
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list invites")
-		return
-	}
-	out := make([]accountInviteDTO, 0, len(rows))
-	for _, i := range rows {
-		out = append(out, accountInviteDTO{Token: i.Token, ExpiresAt: i.Expiresat})
-	}
-	plataforma.WriteJSON(w, http.StatusOK, out)
 }

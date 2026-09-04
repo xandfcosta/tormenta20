@@ -50,8 +50,9 @@ type AbilityVariant struct {
 }
 
 // Lido UMA vez: o conteúdo vem de `go:embed` e não muda enquanto o binário for
-// o mesmo. É a mesma decisão do `writeCatalogJSON`, que comprime uma vez em vez
-// de por requisição.
+// o mesmo. Era a mesma decisão do `writeCatalogJSON`, que comprimia uma vez em
+// vez de por requisição — ele foi apagado com o `api/catalog.go` na ALE-277, e
+// a decisão continua valendo por si: o custo é de carga, não de pedido.
 var (
 	raceTraitsOnce sync.Once
 	raceTraitsByID map[string]RaceForScreen

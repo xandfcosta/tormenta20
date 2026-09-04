@@ -33,37 +33,6 @@ type consumeResult struct {
 // erro de CAMPO próprio — por isso ela é reconhecível em vez de virar texto.
 var errDailyPortion = errors.New("apenas uma porção por dia")
 
-// handleConsumeItem roll the instant
-// gain (clamped to max), create the scene/day effect (if any), decrement/Remove
-// the item — all in one transaction. hpRolled/mpRolled override the dice.
-func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
-	row, ok := s.characterFor(w, r)
-	if !ok {
-		return
-	}
-	itemID, ok := intParam(w, r, "itemId")
-	if !ok {
-		return
-	}
-	var body struct {
-		HpRolled *int64 `json:"hpRolled"`
-		MpRolled *int64 `json:"mpRolled"`
-	}
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	resultado, err := s.consumeItemForCharacter(r, row, itemID, body.HpRolled, body.MpRolled)
-	if errors.Is(err, errDailyPortion) {
-		writeOncePerDay(w, resultado.Nome)
-		return
-	}
-	if err != nil {
-		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, resultado.consumeResult)
-}
-
 // consumeItemForCharacter é a dose INTEIRA, sem HTTP: a rolagem imediata presa
 // no máximo, a linha de efeito de cena ou dia, e a baixa do item — tudo numa
 // transação.

@@ -13,8 +13,6 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/sheet"
-
-	"github.com/go-chi/chi/v5"
 )
 
 // CampaignDTO is the base campaign row (create/update responses).
@@ -158,46 +156,6 @@ func displayName(name sql.NullString, email string) string {
 	return email
 }
 
-// handleGetCampaign: owner → gm, member → player, else 403.
-//
-// It used to inline a COPY of resolveRole, which is how the same rule ended up
-// with two implementations — and why granting the admin access looked like it
-// needed a fourth edit. It calls the rule now (ALE-120).
-func (s *Server) handleGetCampaign(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	c, err := s.queries.GetCampaign(r.Context(), id)
-	if errors.Is(err, sql.ErrNoRows) {
-		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", id))
-		return
-	}
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load campaign")
-		return
-	}
-	user := currentUser(r)
-	role, status, err := s.roleIn(r.Context(), user, c)
-	if err != nil {
-		plataforma.WriteError(w, status, err.Error())
-		return
-	}
-	out := campaignDetailDTO{
-		CampaignDTO:  campaignScalars(c),
-		Role:         role,
-		IgnoredRules: s.ignoredRulesOf(r.Context(), c.ID),
-	}
-	// IsAdmin, not merely "not the owner": a PLAYER is also a non-owner here, and
-	// marking their mesa would replace their "Jogando" with "Mesa de Fulano" —
-	// which is exactly what the e2e caught when this condition was looser.
-	if user.IsAdmin && c.Ownerid != user.ID {
-		name := s.ownerNames(r.Context(), []sqlcgen.Campaign{c}, user.ID)[c.Ownerid]
-		out.OwnerName = &name
-	}
-	plataforma.WriteJSON(w, http.StatusOK, out)
-}
-
 func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Name        string  `json:"name"`
@@ -228,55 +186,6 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	plataforma.WriteJSON(w, http.StatusCreated, campaignScalars(c))
 }
 
-func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	var body struct {
-		Name        *string `json:"name"`
-		Description *string `json:"description"`
-	}
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	if _, ok := s.ownedCampaign(w, r, id); !ok {
-		return
-	}
-	var set setBuilder
-	if body.Name != nil {
-		name, erros := campaign.Name(*body.Name)
-		if len(erros) > 0 {
-			plataforma.WriteValidationError(w, erros)
-			return
-		}
-		set.Add("name = ?", name)
-	}
-	if body.Description != nil {
-		// Mesma regra do criar, e agora literalmente a mesma FUNÇÃO: descrição
-		// de puros espaços vira NULL nos dois caminhos, senão o cliente lê ""
-		// de um e null do outro para a mesma entrada.
-		texto, erros := campaign.Description(body.Description)
-		if len(erros) > 0 {
-			plataforma.WriteValidationError(w, erros)
-			return
-		}
-		// Quem GRAVA é que traduz vazio para NULL: a regra devolve texto, para
-		// não carregar `database/sql` (ALE-278).
-		set.Add("description = ?", nullableArg(trimOrNull(&texto)))
-	}
-	if set.empty() {
-		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
-		return
-	}
-	if err := set.execTouched(r.Context(), s.db, "UPDATE campaigns", id); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update campaign")
-		return
-	}
-	c, _ := s.queries.GetCampaign(r.Context(), id)
-	plataforma.WriteJSON(w, http.StatusOK, campaignScalars(c))
-}
-
 func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	id, ok := intParam(w, r, "id")
 	if !ok {
@@ -292,63 +201,33 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
 }
 
-// handleRotateInvite ports rotateInviteToken (owner-only): {campaignId, token}.
-func (s *Server) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	if _, ok := s.ownedCampaign(w, r, id); !ok {
-		return
-	}
-	row, err := s.queries.SetInviteToken(r.Context(), sqlcgen.SetInviteTokenParams{
-		InviteToken: sql.NullString{String: generateInviteToken(), Valid: true}, UpdatedAt: plataforma.NowISO(), ID: id,
-	})
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not rotate invite")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"campaignId": row.ID, "token": row.Invitetoken.String})
-}
-
-// handleResolveInvite resolves a shared token to {campaignId, campaignName}
-// (public). The frontend's CampaignInvitePreview expects camelCase keys —
-// returning {id, name} left the join form with an undefined campaignId, so the
-// "Entrar" button stayed disabled forever (ALE-18). Mirrors handleRotateInvite,
-// which already returns campaignId.
+// Aqui morava o `handleResolveInvite`, que resolvia o token compartilhado de
+// uma mesa em {campaignId, campaignName} para a tela de entrar da SPA. Ele e o
+// `invites_test.go` saíram na ALE-277, e as duas garantias dele estão presas
+// onde a pessoa hoje as vive, em `campaigns_join_test.go`: a carta de convite
+// resolve o token NO SERVIDOR e traz o nome da mesa na primeira pintura, e o
+// convite morto avisa que morreu em vez de oferecer um botão que não abre nada.
 //
-// An unknown or rotated token is a 404. It used to answer 200 with a `null`
-// body, which made a dead invite arrive at the client as a SUCCESS carrying no
-// campaign — indistinguishable from one still loading, so the join screen sat
-// there with a disabled button and no explanation (ALE-80). A missing thing is
-// a 404; only a genuine lookup failure is a 500.
-func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
-	token := chi.URLParam(r, "token")
-	if token == "" {
-		plataforma.WriteError(w, http.StatusNotFound, "Invite not found")
-		return
-	}
-	c, err := s.queries.GetCampaignByToken(r.Context(), sql.NullString{String: token, Valid: true})
-	if errors.Is(err, sql.ErrNoRows) {
-		plataforma.WriteError(w, http.StatusNotFound, "Invite not found")
-		return
-	}
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not resolve invite")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"campaignId": c.ID, "campaignName": c.Name})
-}
+// O caso do token ROTACIONADO não veio junto, e não por descuido: nada no app
+// rotaciona convite de campanha desde que a SPA saiu. O `SetInviteToken` fica —
+// a coluna e a consulta são o lugar onde a capacidade volta a morar quando
+// alguma cena oferecer o gesto —, mas hoje o único token que existe é o da
+// seed, e um teste sobre trocar o que não se troca mede a si mesmo.
 
 // resolveRole is the campaign-access domain rule,
 // transport-agnostic so both the HTTP handlers and the WS gateway can gate on it: the
 // owner is the "gm"; a user who owns a member character is a "player"; anyone else is
 // forbidden. Returns the role + an HTTP-ish status the caller maps to its transport.
 // The admin enters ANY mesa as "gm" (ALE-120): the role already exists, carries
-// the tools they came to use, and nothing in the engine assumes a single GM —
-// presence de-duplicates per user and `requireGm` gates by role, not identity.
-// Two GMs can therefore drive initiative at once; that is the accepted cost of
-// letting the table's owner fix a player's mesa mid-session.
+// the tools they came to use, and nothing in the engine assumes a single GM:
+// esta função devolve um PAPEL, e quem barra barra por papel, não por
+// identidade. Two GMs can therefore drive initiative at once; that is the
+// accepted cost of letting the table's owner fix a player's mesa mid-session.
+//
+// A frase original citava o `requireGm` do gateway de socket e a deduplicação
+// por usuário da presença. O gateway morreu na ALE-253 e a presença deixou de
+// ter quem a alimentasse quando a SPA saiu (ALE-272) — o argumento é o mesmo
+// sem eles, e citá-los apontava para dois lugares que não decidem mais nada.
 func (s *Server) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
 	c, err := s.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {

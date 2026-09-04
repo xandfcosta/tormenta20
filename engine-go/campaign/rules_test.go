@@ -74,3 +74,32 @@ func TestAnEmptyDescriptionIsNullAndNotAnEmptyString(t *testing.T) {
 		t.Error("descrição ausente virou valor")
 	}
 }
+
+// A REGRA INVENTADA É RECUSADA, e a mensagem nomeia o valor e o esperado.
+//
+// Identificador que o motor não implementa não entra no banco: ele ficaria lá
+// sem interruptor na tela que o desfizesse.
+//
+// Ela veio do `api/campaign_rules_http_test.go` na ALE-277. Lá ela media o 400
+// de uma rota JSON; a rota saiu com as outras sem consumidor, e a garantia
+// desceu para onde a regra MORA — que é onde a cena das campanhas também a
+// chama, no comando que grava os interruptores.
+func TestAnUnknownRuleIsRefusedNamingTheValue(t *testing.T) {
+	aceitas, msg := NormalizeIgnoredRules([]string{"munição"})
+
+	if msg == "" {
+		t.Fatal("a regra inventada foi aceita")
+	}
+	if !strings.Contains(msg, "munição") {
+		t.Errorf("a mensagem não nomeia o valor recusado: %q", msg)
+	}
+	if !strings.Contains(msg, "carga") {
+		t.Errorf("a mensagem não nomeia o que se esperava: %q", msg)
+	}
+	// CONTROLE: uma regra BOA passa. Sem ele, a asserção acima seria verdadeira
+	// sobre uma função que recusa tudo.
+	if _, msg := NormalizeIgnoredRules([]string{"carga"}); msg != "" {
+		t.Errorf("a `carga` é uma regra do catálogo e foi recusada: %q", msg)
+	}
+	_ = aceitas
+}

@@ -1,13 +1,11 @@
 package api
 
-import "t20engine/tabuleiro"
-
 import (
 	"context"
 	"log"
-	"t20engine/plataforma"
-
 	"t20engine/engine"
+	"t20engine/plataforma"
+	"t20engine/tabuleiro"
 )
 
 // speedsForBoard mede o deslocamento das peças de personagem que ainda não têm
@@ -27,31 +25,6 @@ func (s *Server) speedsForBoard(board *tabuleiro.BoardState) map[string]int {
 		}
 	}
 	return speeds
-}
-
-// moverFor resolve, contra o BANCO, as duas coisas que o cliente não pode
-// afirmar sobre si: se a peça é de um personagem dele, e quanto ela anda.
-//
-// O deslocamento sai do MOTOR (`sheet.Displacement.Total`), não da coluna crua:
-// a armadura pesada tira metros, e o número da mesa tem de ser o mesmo que o
-// jogador lê na própria ficha. Falha de banco devolve orçamento zero, que a
-// peça traduz para o padrão do livro — a mesa não para porque o disco piscou.
-func (s *Server) moverFor(ctx liveCtx, tokenID string) (tabuleiro.Mover, int) {
-	by := tabuleiro.Mover{UserID: ctx.UserID, Role: ctx.Role}
-	if by.Role == "gm" || tokenID == "" {
-		return by, 0
-	}
-	token := tabuleiro.FindToken(s.boards.Get(context.Background(), ctx.sessionID, defaultTab), tokenID)
-	if token == nil || token.CharacterID == nil {
-		return by, 0
-	}
-	owner, err := s.queries.GetCharacterOwner(context.Background(), *token.CharacterID)
-	if err != nil {
-		log.Printf("board: dono do personagem %d não resolvido (%v)", *token.CharacterID, err)
-		return by, 0
-	}
-	by.OwnsCharacter = owner == ctx.UserID
-	return by, s.speedSquaresFor(*token.CharacterID)
 }
 
 // speedSquaresFor calcula o orçamento em quadrados a partir da ficha computada.

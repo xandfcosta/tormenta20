@@ -41,31 +41,6 @@ func (s *Server) authUser(u sqlcgen.User) AuthUser {
 // A FORMA dos dois pedidos mora no `account` desde a ALE-278, junto com as
 // validações que a lê. Aqui ficou o handler.
 
-// handleRegister creates a user (bcrypt), issues the session cookie, returns the
-// AuthUser. 201 on success; 409 on a duplicate email; 403 without a usable
-// invite. Since ALE-119 the app answers on the LAN, so registration is no longer
-// open — see registrationInvite.
-func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
-	var body account.RegisterBody
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	body.Email = plataforma.NormalizeEmail(body.Email)
-	if fields := account.ValidateRegister(body); len(fields) > 0 {
-		plataforma.WriteValidationError(w, fields)
-		return
-	}
-	user, err := s.createAccount(r.Context(), body)
-	if err != nil {
-		writeRegisterError(w, err, body.Email)
-		return
-	}
-	if !s.issueSession(w, user) {
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusCreated, s.authUser(user))
-}
-
 // createAccount is the RULE behind registration: resolve the invite this
 // address has to spend, hash, and write the row.
 //
@@ -76,6 +51,16 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 // one arrives (ALE-229). Worth naming: it is not a coincidence, it is what a
 // codebase with exactly one transport looks like.
 func (s *Server) createAccount(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error) {
+	// A normalização é da REGRA, e não de quem a chama (ALE-277).
+	//
+	// Ela morava no `handleRegister`, apagado com a rota JSON, e a porta em
+	// Datastar a repetia — das duas cópias sobrou a de cima, e uma garantia que
+	// mora no transporte é uma garantia que o próximo transporte esquece. O `IsAdmin` do
+	// `ADMIN_EMAILS` já compara normalizado, então um chamador que esquecesse a
+	// linha escreveria `DONO@` como uma SEGUNDA linha em `users`, sem colidir
+	// com `dono@`, e com direito a dispensar convite: dois administradores onde
+	// só devia caber um (ALE-120). É idempotente para quem já normaliza.
+	body.Email = plataforma.NormalizeEmail(body.Email)
 	invite, err := s.registrationInvite(ctx, body.Email, body.InviteToken)
 	if err != nil {
 		return sqlcgen.User{}, err
@@ -125,27 +110,6 @@ func writeRegisterError(w http.ResponseWriter, err error, email string) {
 	}
 }
 
-// handleLogin validates credentials, issues the cookie, returns AuthUser (200).
-func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
-	var body account.LoginBody
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	if fields := account.ValidateLogin(body); len(fields) > 0 {
-		plataforma.WriteValidationError(w, fields)
-		return
-	}
-	user, err := s.authenticate(r.Context(), body.Email, body.Password)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusUnauthorized, "Invalid credentials")
-		return
-	}
-	if !s.issueSession(w, user) {
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, s.authUser(user))
-}
-
 // errBadCredentials is the ONE answer for "no such account" and "wrong
 // password": telling them apart hands an anonymous caller a way to enumerate
 // who has an account here.
@@ -166,17 +130,6 @@ func (s *Server) authenticate(ctx context.Context, email, password string) (sqlc
 		return sqlcgen.User{}, errBadCredentials
 	}
 	return user, nil
-}
-
-// handleLogout clears the session cookie (204).
-func (s *Server) handleLogout(w http.ResponseWriter, _ *http.Request) {
-	http.SetCookie(w, s.sessionCookie("", -1))
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// handleMe returns the authenticated user (behind requireAuth).
-func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
-	plataforma.WriteJSON(w, http.StatusOK, currentUser(r))
 }
 
 // issueSession signs a JWT for the user and sets the session cookie. Returns

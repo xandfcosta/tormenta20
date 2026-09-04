@@ -77,8 +77,9 @@ func endAppliedEffect(s Scene, r *http.Request, row sqlcgen.Character, _ Signals
 	}
 	// A POSSE É CONFERIDA ANTES, e a query não a confere por nós: o
 	// `DeleteEffectByID` apaga por id e mais nada, então sem esta leitura um
-	// pedido montado à mão encerraria o efeito de OUTRO personagem. É a mesma
-	// checagem que o `handleDeleteEffect` da API JSON faz.
+	// pedido montado à mão encerraria o efeito de OUTRO personagem. Era a mesma
+	// checagem que o `handleDeleteEffect` da API JSON fazia; com ele apagado na
+	// ALE-277 esta é a ÚNICA, e não a segunda cópia de nada.
 	meta, err := s.deps.Queries().GetActiveEffectMeta(r.Context(), id)
 	if err != nil || meta.Characterid != row.ID {
 		return fmt.Errorf("o efeito %d não é desta ficha", id)
