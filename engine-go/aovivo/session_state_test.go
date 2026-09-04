@@ -318,10 +318,15 @@ func TestRedactForPlayers(t *testing.T) {
 	_ = AddEntry(st, npc("Ogro", 12), id)
 	_ = AddEntry(st, npc("Bandido", 8), id)
 	oculto, aberto := int64(120), int64(130)
-	sim := true
+	sim, nao := true, false
 	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &oculto, &aberto
 	st.Initiative[0].HpHidden = &sim
 	st.Initiative[1].HpCurrent, st.Initiative[1].HpMax = &oculto, &aberto
+	// O `nao` EXPLÍCITO é o que mudou na ALE-211: o Bandido é NPC, e desde
+	// aquela issue o PV de NPC nasce escondido. "Linha aberta" deixou de ser o
+	// padrão e passou a ser uma escolha do mestre — o guarda do padrão novo é o
+	// `TestTheTableSeesThePartyHpAndNothingElseByDefault`, abaixo.
+	st.Initiative[1].HpHidden = &nao
 
 	redigido := RedactForPlayers(st)
 
@@ -339,6 +344,71 @@ func TestRedactForPlayers(t *testing.T) {
 	// O estado do MESTRE não pode ser tocado pela redação.
 	if st.Initiative[0].HpCurrent == nil || *st.Initiative[0].HpCurrent != 120 {
 		t.Error("a redação mexeu no estado original — o mestre perderia o número")
+	}
+}
+
+// O PADRÃO da mesa é ver o PV do GRUPO e mais nada (ALE-211).
+//
+// Decisão do dono, 2026-09-04: "pv e pm aparecem pro mestre; para os jogadores,
+// só podem ver o pv do grupo por padrão, o resto o mestre escolhe quando podem
+// ver."
+//
+// Isso INVERTE o padrão do NPC. Até aqui o PV dele nascia visível e o mestre
+// escondia linha a linha — falhar ABERTO, que na prática entrega o número do
+// ogro toda vez que o mestre esquece de clicar, e o esquecimento não deixa
+// marca. O padrão passa a ser o seguro; revelar é que é o ato deliberado.
+func TestTheTableSeesThePartyHpAndNothingElseByDefault(t *testing.T) {
+	st := cenaEmCurso()
+	id := counter()
+	_ = AddEntry(st, charEntry("Arwen", 18, 7), id)
+	_ = AddEntry(st, npc("Ogro", 12), id)
+	pv, pm := int64(32), int64(12)
+	for i := range st.Initiative {
+		st.Initiative[i].HpCurrent, st.Initiative[i].HpMax = &pv, &pv
+		st.Initiative[i].MpCurrent, st.Initiative[i].MpMax = &pm, &pm
+	}
+
+	mesa := RedactForPlayers(st)
+	arwen, ogro := mesa.Initiative[0], mesa.Initiative[1]
+
+	if arwen.HpMax == nil {
+		t.Error("a mesa perdeu o PV do próprio grupo — é justamente o que ela vê por padrão")
+	}
+	if ogro.HpMax != nil {
+		t.Errorf("o PV do NPC vazou sem o mestre revelar: %+v", ogro)
+	}
+	if arwen.MpMax != nil || ogro.MpMax != nil {
+		t.Error("o PM vazou: ele é do mestre até ele decidir o contrário, e vale para o grupo também")
+	}
+	// A MARCA sobrevive, senão "sem barra" e "escondido" viram a mesma coisa na
+	// tela do jogador — e a segunda é informação (ALE-210).
+	if ogro.HpHidden == nil || !*ogro.HpHidden {
+		t.Error("o NPC oculto chegou sem a marca: a tela não teria como dizer que existe PV ali")
+	}
+}
+
+// E o mestre REVELA linha a linha, que é a outra metade da decisão.
+func TestTheGmRevealsAPoolLineByLine(t *testing.T) {
+	st := cenaEmCurso()
+	_ = AddEntry(st, npc("Ogro", 12), counter())
+	pv, pm, nao := int64(130), int64(20), false
+	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &pv, &pv
+	st.Initiative[0].MpCurrent, st.Initiative[0].MpMax = &pm, &pm
+	st.Initiative[0].HpHidden, st.Initiative[0].MpHidden = &nao, &nao
+
+	ogro := RedactForPlayers(st).Initiative[0]
+
+	if ogro.HpMax == nil || *ogro.HpMax != 130 {
+		t.Errorf("o mestre revelou o PV e a mesa não viu: %+v", ogro)
+	}
+	if ogro.MpMax == nil || *ogro.MpMax != 20 {
+		t.Errorf("o mestre revelou o PM e a mesa não viu: %+v", ogro)
+	}
+	// O CONTROLE: o mestre continua vendo tudo, sempre. A redação não é para ele,
+	// e um `RedactForPlayers` que zerasse os dois lados passaria nas asserções de
+	// esconder e reprovaria só aqui.
+	if paraMestre := StateForRole("gm", st); paraMestre.Initiative[0].MpMax == nil {
+		t.Error("o mestre perdeu o PM, que é dele por direito")
 	}
 }
 
