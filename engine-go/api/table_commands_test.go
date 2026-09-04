@@ -370,7 +370,7 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.tracker(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/"+entryID+"/vitals/harm/5", "")
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/"+entryID+"/vitals/hp/harm/5", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("ferir deu %d: %s", rec.Code, rec.Body.String())
 	}
@@ -398,7 +398,7 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.tracker(t)
-	base := f.tableUrl() + "/initiative/" + entryID + "/vitals/"
+	base := f.tableUrl() + "/initiative/" + entryID + "/vitals/hp/"
 
 	// O CONTROLE: os dois passos que existem passam. Sem ele, "o inventado
 	// falhou" também seria verdade se a rota inteira estivesse quebrada.
@@ -422,7 +422,7 @@ func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
 func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.tracker(t)
-	olho := f.tableUrl() + "/initiative/" + entryID + "/vitals/hidden"
+	olho := f.tableUrl() + "/initiative/" + entryID + "/vitals/hp/hidden"
 
 	oculto := func() bool {
 		for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
@@ -450,6 +450,97 @@ func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
 	}
 }
 
+// O MANA passa pelo mesmo caminho do PV, e chega na FICHA (ALE-211).
+//
+// A fila mandava `nil` no lugar do mana em todo clique, para todo combatente —
+// o `DeltaVitals` sempre soube dos dois e ninguém pedia o segundo. O caminho da
+// ficha por baixo também já era o mesmo, então a asserção é sobre ELA: escrever
+// só na entrada compilaria e deixaria a fila com um número plausível ao lado de
+// uma ficha que não gastou mana (ALE-122, pelo outro lado).
+func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.tracker(t)
+
+	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("ler a ficha: %v", err)
+	}
+	// O CONTROLE: sem mana para gastar o caso mediria um clampeamento em zero e
+	// passaria verde sobre nada.
+	if antes.Mpcurrent < 5 {
+		t.Fatalf("a ficha semeada tem %d PM: o caso precisa de mana para gastar", antes.Mpcurrent)
+	}
+
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/"+entryID+"/vitals/mp/harm/5", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("gastar mana deu %d: %s", rec.Code, rec.Body.String())
+	}
+
+	depois, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("reler a ficha: %v", err)
+	}
+	if depois.Mpcurrent != antes.Mpcurrent-5 {
+		t.Errorf("a ficha ficou com %d PM; %d-5 = %d", depois.Mpcurrent, antes.Mpcurrent, antes.Mpcurrent-5)
+	}
+	if depois.Hpcurrent != antes.Hpcurrent {
+		t.Errorf("gastar mana mexeu no PV: %d virou %d", antes.Hpcurrent, depois.Hpcurrent)
+	}
+}
+
+// O PRIMEIRO clique do olho num NPC REVELA, porque ele já nasce escondido
+// (ALE-211).
+//
+// É a armadilha que o padrão por pool criou. Enquanto nulo significava
+// "visível", alternar a partir do PONTEIRO estava certo; com o PV do NPC
+// nascendo oculto, o mesmo código gravaria "esconder" sobre uma linha já
+// escondida — o mestre clica e a tela não muda nada, que é o defeito mais
+// difícil de reportar porque o botão parece morto em vez de errado.
+//
+// A asserção é sobre O QUE A MESA VÊ e não sobre a flag, e essa é a diferença
+// que importa: com padrão por pool os dois DIVERGEM, e um caso que lesse
+// `HpHidden` continuaria verde exatamente no caso que ele veio medir.
+func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
+	f := novoPiloto(t)
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
+		`{"novonome":"Ogro","novainiciativa":12,"novopv":130,"novotipo":"npc"}`); rec.Code != http.StatusOK {
+		t.Fatalf("pôr o ogro na fila deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+	fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative
+	entryID := fila[0].ID
+
+	aMesaVeOPv := func() bool {
+		paraMesa := aovivo.StateForRole("player", f.s.tableHost().Sessions().GetState(f.sessionID))
+		for _, e := range paraMesa.Initiative {
+			if e.ID == entryID {
+				return e.HpMax != nil
+			}
+		}
+		t.Fatal("a linha sumiu da cópia da mesa")
+		return false
+	}
+
+	if aMesaVeOPv() {
+		t.Fatal("o PV do ogro nasceu à vista — o caso mediria o contrário do que quer")
+	}
+	olho := f.tableUrl() + "/initiative/" + entryID + "/vitals/hp/hidden"
+	if rec := f.pede(t, f.mestre, "POST", olho, ""); rec.Code != http.StatusOK {
+		t.Fatalf("o primeiro clique deu %d", rec.Code)
+	}
+	if !aMesaVeOPv() {
+		t.Error("o primeiro clique não revelou: o olho alternou o ponteiro em vez do que a mesa vê")
+	}
+	if rec := f.pede(t, f.mestre, "POST", olho, ""); rec.Code != http.StatusOK {
+		t.Fatalf("o segundo clique deu %d", rec.Code)
+	}
+	if aMesaVeOPv() {
+		t.Error("o segundo clique não voltou a esconder")
+	}
+}
+
 // TestTheRowVerbsBelongToTheGm: a trava é o 403, e o HTML do jogador nem os
 // tem. As duas coisas são medidas juntas porque uma sem a outra engana — botão
 // ausente nunca foi prova de trava (ALE-144).
@@ -460,7 +551,14 @@ func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
-	for _, acao := range []string{"vitals/harm/1", "vitals/heal/1", "vitals/hidden", "remove"} {
+	// Os DOIS pools entram na varredura desde a ALE-211: um verbo novo que
+	// nascesse aberto ao jogador seria exatamente o que este guarda existe para
+	// impedir, e enumerar só o `hp` deixaria o `mp` nascer sem medição.
+	for _, acao := range []string{
+		"vitals/hp/harm/1", "vitals/hp/heal/1", "vitals/hp/hidden",
+		"vitals/mp/harm/1", "vitals/mp/heal/1", "vitals/mp/hidden",
+		"remove",
+	} {
 		rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/initiative/"+entryID+"/"+acao, "")
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador fez %q e levou %d, quero 403", acao, rec.Code)
@@ -806,5 +904,47 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 	}
 	if strings.Contains(corpo, ">PC<") {
 		t.Error("o crachá voltou a dizer PC, que o GLOSSARIO proíbe")
+	}
+}
+
+// A LINHA da fila desenha UM POOL POR BARRA, com os verbos de cada um ao lado —
+// e cada papel lê o que a redação lhe deixou (ALE-211).
+//
+// O caso mede os dois lados no mesmo estado, e é isso que o torna honesto:
+// afirmar só o do mestre não distingue "o jogador não vê o PM" de "o PM não foi
+// desenhado para ninguém", e afirmar só o do jogador passaria verde sobre uma
+// fila que não desenha nada.
+func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
+	f := novoPiloto(t)
+	f.tracker(t)
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+
+	doMestre := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+	// O verbo mora ao lado da barra que ele mexe, e o nome acessível é o que
+	// prova isso: dois olhos na mesma linha, cada um dizendo de qual pool é.
+	for _, rotulo := range []string{"Ocultar os PV de ", "Ocultar os PM de "} {
+		if !strings.Contains(doMestre, rotulo) {
+			t.Errorf("o mestre não recebeu o olho %q — o verbo não diz de qual pool fala", rotulo)
+		}
+	}
+	if !strings.Contains(doMestre, "/vitals/mp/harm/") {
+		t.Error("o mestre não recebeu o gesto de gastar mana na fila")
+	}
+
+	doJogador := f.pede(t, f.jogador, "GET", f.tableUrl(), "").Body.String()
+	// O PV do GRUPO é o que a mesa vê por padrão, e o personagem desta bancada é
+	// justamente do jogador que está pedindo.
+	if !strings.Contains(doJogador, "PV ") {
+		t.Error("a mesa perdeu o PV do próprio grupo")
+	}
+	if !strings.Contains(doJogador, "PM ocultos pelo mestre") {
+		t.Error("a mesa não foi avisada de que existe PM escondido: 'sem barra' e 'escondido' viraram a mesma coisa")
+	}
+	// E o jogador não recebe verbo nenhum — a trava é o 403, mas o HTML também
+	// não os tem, e as duas coisas se medem juntas (ALE-144).
+	if strings.Contains(doJogador, "/vitals/mp/harm/") || strings.Contains(doJogador, "Ocultar os PM de ") {
+		t.Error("os verbos do mana vazaram para o HTML do jogador")
 	}
 }

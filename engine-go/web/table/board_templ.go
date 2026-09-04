@@ -2156,7 +2156,7 @@ func planToken(v BoardView, p boardToken) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var99 = []any{"tabuleiro-vida-cheia", hpTomDe(*p.PV)}
+			var templ_7745c5c3_Var99 = []any{"tabuleiro-vida-cheia", hpToneOf(*p.PV)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var99...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2181,7 +2181,7 @@ func planToken(v BoardView, p boardToken) templ.Component {
 			var templ_7745c5c3_Var101 string
 			templ_7745c5c3_Var101, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width:%d%%", *p.PV))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 870, Col: 99}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 870, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
 			if templ_7745c5c3_Err != nil {

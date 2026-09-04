@@ -58,9 +58,9 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 	// registrar iniciativa (ALE-213), e uma segunda regra de escrita seria uma
 	// porta que nenhuma tela usa.
 	r.Route("/mesa/{campaignId}/{sessionId}/initiative/{entryId}", func(r chi.Router) {
-		r.Post("/vitals/harm/{passo}", s.gmCommand(moveVitals(-1)))
-		r.Post("/vitals/heal/{passo}", s.gmCommand(moveVitals(+1)))
-		r.Post("/vitals/hidden", s.gmCommand(toggleEye))
+		r.Post("/vitals/{pool}/harm/{step}", s.gmCommand(moveVitals(-1)))
+		r.Post("/vitals/{pool}/heal/{step}", s.gmCommand(moveVitals(+1)))
+		r.Post("/vitals/{pool}/hidden", s.gmCommand(toggleEye))
 		r.Post("/edit", s.gmCommand(editaOCombatente))
 		r.Post("/remove", s.gmCommand(tiraDaFila))
 	})
@@ -156,16 +156,20 @@ func signalsCombatant(r *http.Request) (aovivo.CombatantDraft, error) {
 // Quem sabe somar é o store: com personagem atrás da linha quem manda é a FICHA
 // (o dano drena PV temporários) e a entrada espelha o resultado (ALE-122). O
 // piloto não tem uma segunda conta.
-func moveVitals(sinal int64) func(Scene, commandCtx) (*aovivo.SessionRuntimeState, error) {
+func moveVitals(sign int64) func(Scene, commandCtx) (*aovivo.SessionRuntimeState, error) {
 	return func(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
-		bruto := chi.URLParam(c.R, "passo")
-		passo, ok := vitalSteps[bruto]
+		raw := chi.URLParam(c.R, "step")
+		step, ok := vitalSteps[raw]
 		if !ok {
-			return nil, fmt.Errorf("passo %q não existe; a tela oferece 1 (clique) e 5 (Shift+clique)", bruto)
+			return nil, fmt.Errorf("passo %q não existe; a tela oferece 1 (clique) e 5 (Shift+clique)", raw)
 		}
-		delta := sinal * passo
+		delta := sign * step
+		hp, mp, ok := poolDeltas(chi.URLParam(c.R, "pool"), delta)
+		if !ok {
+			return nil, fmt.Errorf("pool %q não existe; a fila mexe em 'hp' e em 'mp'", chi.URLParam(c.R, "pool"))
+		}
 		entryID := chi.URLParam(c.R, "entryId")
-		estado, err := st.deps.Sessions().DeltaVitals(c.SessionID, entryID, &delta, nil)
+		state, err := st.deps.Sessions().DeltaVitals(c.SessionID, entryID, hp, mp)
 		// QUANDO HÁ FICHA ATRÁS DA LINHA, quem levou o dano foi o PERSONAGEM e
 		// não o rastreador (ver `DeltaVitals`) — então a ficha de quem está na
 		// mesa mudou, e a tela dele precisa saber (ALE-275). NPC não tem ficha:
@@ -175,7 +179,7 @@ func moveVitals(sinal int64) func(Scene, commandCtx) (*aovivo.SessionRuntimeStat
 				st.deps.CharacterChanged(*charID)
 			}
 		}
-		return estado, err
+		return state, err
 	}
 }
 
@@ -186,6 +190,22 @@ func moveVitals(sinal int64) func(Scene, commandCtx) (*aovivo.SessionRuntimeStat
 // chamarem de "um golpe" coisas diferentes.
 var vitalSteps = map[string]int64{"1": 1, "5": 5}
 
+// poolDeltas manda o passo para o pool que a URL nomeia (ALE-211).
+//
+// O `DeltaVitals` sempre soube dos dois — a assinatura dele pede `hpDelta` e
+// `mpDelta` desde que existe, e o caminho da FICHA por baixo também. O que
+// faltava era a fila poder pedir o segundo: até aqui ela mandava `nil` no lugar
+// do mana, para todo combatente, em todo clique.
+func poolDeltas(pool string, delta int64) (hp, mp *int64, ok bool) {
+	switch pool {
+	case "hp":
+		return &delta, nil, true
+	case "mp":
+		return nil, &delta, true
+	}
+	return nil, nil, false
+}
+
 // toggleEye esconde e revela os PV de uma linha para os JOGADORES.
 //
 // O servidor lê o estado atual e o INVERTE, em vez de a página mandar o valor
@@ -194,16 +214,36 @@ var vitalSteps = map[string]int64{"1": 1, "5": 5}
 // sem ninguém ter pedido. Quem sabe o estado é quem o guarda.
 func toggleEye(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
-	estado := st.deps.Sessions().GetState(c.SessionID)
-	i := aovivo.FindEntryIndex(estado, entryID)
+	state := st.deps.Sessions().GetState(c.SessionID)
+	i := aovivo.FindEntryIndex(state, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
 	}
-	// Nil é "nunca escondido", que é o estado de nascença de toda linha — e o
-	// `DerefOr` da casa só serve para int64.
-	atual := estado.Initiative[i].HpHidden
-	oculto := atual == nil || !*atual
-	return st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID, aovivo.EntryPatch{HpHidden: &oculto})
+	// A ALTERNÂNCIA parte do que a MESA VÊ hoje, e não do ponteiro — e essa é a
+	// armadilha que a ALE-211 criou ao dar padrão a cada pool.
+	//
+	// Enquanto nulo significava "visível", `nil → true` estava certo. Com o PV
+	// do NPC nascendo ESCONDIDO, o mesmo código gravaria "esconder" sobre uma
+	// linha que já está escondida: o mestre clicaria no olho e a tela não mudaria
+	// nada, que é o defeito mais difícil de reportar — o botão parece morto.
+	e := state.Initiative[i]
+	choice, visibleByDefault := e.MpHidden, false
+	pool := chi.URLParam(c.R, "pool")
+	if pool == "hp" {
+		choice, visibleByDefault = e.HpHidden, e.Type == "character"
+	} else if pool != "mp" {
+		return nil, fmt.Errorf("pool %q não existe; a fila esconde 'hp' e 'mp'", pool)
+	}
+	visible := visibleByDefault
+	if choice != nil {
+		visible = !*choice
+	}
+	hidden := visible
+	patch := aovivo.EntryPatch{MpHidden: &hidden}
+	if pool == "hp" {
+		patch = aovivo.EntryPatch{HpHidden: &hidden}
+	}
+	return st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID, patch)
 }
 
 // editaOCombatente corrige a iniciativa e o PV de quem já está na fila.

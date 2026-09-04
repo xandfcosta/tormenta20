@@ -69,8 +69,8 @@ func TestHpToneAtTheThresholds(t *testing.T) {
 		{100, "bg-hp-full"},
 	}
 	for _, c := range casos {
-		if got := hpTomDe(c.pct); got != c.tom {
-			t.Errorf("hpTomDe(%d) = %q, queria %q", c.pct, got, c.tom)
+		if got := hpToneOf(c.pct); got != c.tom {
+			t.Errorf("hpToneOf(%d) = %q, queria %q", c.pct, got, c.tom)
 		}
 	}
 }

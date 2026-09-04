@@ -124,8 +124,8 @@ templ tableRailTracker(v View) {
 templ retratoDaFila(l tableRow) {
 	<button
 		type="button"
-		title={ rotuloDoRetrato(l) }
-		aria-label={ rotuloDoRetrato(l) }
+		title={ portraitLabel(l) }
+		aria-label={ portraitLabel(l) }
 		data-on:click="document.getElementById('gaveta-da-fila').showModal()"
 		class={ "flex w-full flex-col items-center gap-0.5 rounded-sm border px-1 py-1 outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/10", l.NaVez),
@@ -140,7 +140,7 @@ templ retratoDaFila(l tableRow) {
 		if l.PV != nil {
 			<span class="h-1 w-full overflow-hidden rounded-full bg-muted">
 				<span
-					class={ "block h-full", l.PV.Tom }
+					class={ "block h-full", l.PV.Tone }
 					style={ fmt.Sprintf("width:%d%%", l.PV.Pct) }
 				></span>
 			</span>

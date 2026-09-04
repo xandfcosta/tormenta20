@@ -88,9 +88,21 @@ type tableTurn struct {
 // template não faz conta nem escolhe tom, porque conta em template é regra
 // escondida onde ninguém a testa.
 type tableBar struct {
-	Atual int64
-	Max   int64
-	Pct   int
+	Current int64
+	Max     int64
+	Pct     int
+	// Hidden é "o mestre está escondendo ESTE pool da mesa" (ALE-211).
+	//
+	// Mora na BARRA e não na linha porque desde aquela issue a decisão é por
+	// pool: o PV do grupo aparece e o PM não, e uma flag por linha não teria
+	// como dizer as duas coisas do mesmo combatente. É também o que põe o olho
+	// ao lado da barra que ele esconde, em vez de numa tira onde ele não diz de
+	// qual número está falando.
+	//
+	// Para o JOGADOR, uma barra escondida chega sem números e com isto ligado —
+	// é assim que a tela distingue "não tem PV rastreado" de "o mestre escondeu"
+	// (ALE-210).
+	Hidden bool
 	// Tom é a CLASSE do preenchimento — a cor diz "quão mal", não só a largura
 	// (espelha `hpFillVar` do `vital-bar.tsx`).
 	//
@@ -99,7 +111,7 @@ type tableBar struct {
 	// vira `ZgotmplZ`, e classe é o que o scanner do Tailwind sabe procurar.
 	// Como o nome nasce aqui e não no template, o scanner NÃO o vê — por isso
 	// os quatro estão declarados no `@source inline(...)` do `piloto.src.css`.
-	Tom string
+	Tone string
 }
 
 // Member é um personagem do grupo no cartão "Grupo".
@@ -166,8 +178,10 @@ type tableRow struct {
 	// PV nil = linha sem vida rastreada. `Oculto` é outra coisa: o mestre
 	// escondeu, e a flag sobrevive à redação de propósito (ALE-210) — "sem
 	// barra" e "escondido" não são a mesma coisa, e a segunda é informação.
-	PV        *tableBar
-	Oculto    bool
+	PV *tableBar
+	// PM é o mana, e ele entrou na fila na ALE-211 — o dado já viajava no
+	// `InitiativeEntry` desde sempre e a view o descartava.
+	PM        *tableBar
 	Condicoes []string
 	// Iniciais é o monograma do trilho de 80px (ALE-269). Nasce na view e não
 	// no template pela convenção da casa — `web/campaigns/list_view.go` faz o
@@ -176,7 +190,7 @@ type tableRow struct {
 	Iniciais string
 }
 
-// rotuloDoRetrato é o nome INTEIRO de um combatente do trilho, com os vitais
+// portraitLabel é o nome INTEIRO de um combatente do trilho, com os vitais
 // junto (ALE-269).
 //
 // Ele existe porque duas letras não são um nome: o retrato de 80px desenha o
@@ -187,15 +201,15 @@ type tableRow struct {
 // primeira é linha sem vida rastreada, a segunda é o mestre tendo escondido de
 // propósito (ALE-210), e ele é o único que lê este trilho.
 //
-// @example rotuloDoRetrato(tableRow{Rotulo: "Ogro", PV: &tableBar{22, 40, 55, ""}}) // "Ogro — PV 22 de 40"
-func rotuloDoRetrato(l tableRow) string {
-	if l.Oculto {
-		return fmt.Sprintf("%s — PV oculto", l.Rotulo)
-	}
+// @example portraitLabel(tableRow{Rotulo: "Ogro", PV: &tableBar{Current: 22, Max: 40}}) // "Ogro — PV 22 de 40"
+func portraitLabel(l tableRow) string {
 	if l.PV == nil {
 		return l.Rotulo
 	}
-	return fmt.Sprintf("%s — PV %d de %d", l.Rotulo, l.PV.Atual, l.PV.Max)
+	if l.PV.Hidden {
+		return fmt.Sprintf("%s — PV oculto", l.Rotulo)
+	}
+	return fmt.Sprintf("%s — PV %d de %d", l.Rotulo, l.PV.Current, l.PV.Max)
 }
 
 // castLabel é o nome de um personagem do elenco recolhido, com a presença
@@ -240,29 +254,29 @@ func tableTurnOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) tableTurn 
 // Máximo ausente ou zero devolve 0% em vez de dividir: uma linha sem pool não
 // tem barra cheia nem vazia, ela não tem barra — e é quem chama que decide não
 // desenhar.
-func tableBarOf(atual, max int64, arcano bool) tableBar {
-	barra := tableBar{Atual: atual, Max: max, Tom: "bg-mp-arcane"}
+func tableBarOf(current, max int64, arcane bool) tableBar {
+	bar := tableBar{Current: current, Max: max, Tone: "bg-mp-arcane"}
 	if max > 0 {
-		pct := int(atual * 100 / max)
+		pct := int(current * 100 / max)
 		if pct < 0 {
 			pct = 0
 		}
 		if pct > 100 {
 			pct = 100
 		}
-		barra.Pct = pct
+		bar.Pct = pct
 	}
-	if !arcano {
-		barra.Tom = hpTomDe(barra.Pct)
+	if !arcane {
+		bar.Tone = hpToneOf(bar.Pct)
 	}
-	return barra
+	return bar
 }
 
 // hpTomDe é a tradução literal do `hpFillVar` (vital-bar.tsx): a COR da barra de
 // PV diz "quão mal", e os limiares são os mesmos dos dois lados de propósito —
 // duas escadas divergiriam em silêncio, cada tela chamando de "ferido" uma
 // coisa diferente.
-func hpTomDe(pct int) string {
+func hpToneOf(pct int) string {
 	if pct <= 25 {
 		return "bg-hp-critical"
 	}
@@ -284,19 +298,37 @@ func tableTrackerOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) []table
 			EhFicha:    e.Type == "character",
 			Minha:      e.CharacterID != nil && meus[*e.CharacterID],
 			NaVez:      i == st.TurnIndex,
-			Oculto:     e.HpHidden != nil && *e.HpHidden,
 			Condicoes:  e.Conditions,
 			Iniciais:   ui.Monogram(e.Label),
 		}
 		// O `HpMax` nil depois da redação é como o servidor DIZ "isto não é seu
-		// para ver". Desenhar barra aqui inventaria um número.
-		if e.HpMax != nil {
-			barra := tableBarOf(aovivo.DerefOr(e.HpCurrent, 0), *e.HpMax, false)
-			linha.PV = &barra
-		}
+		// para ver". Desenhar barra aqui inventaria um número — mas a MARCA que
+		// veio junto ainda tem de virar tela, senão "não tem PV" e "o mestre
+		// escondeu" ficam iguais (ALE-210).
+		linha.PV = poolBar(e.HpCurrent, e.HpMax, e.HpHidden, false)
+		linha.PM = poolBar(e.MpCurrent, e.MpMax, e.MpHidden, true)
 		fila = append(fila, linha)
 	}
 	return fila
+}
+
+// poolBar traduz UM pool da linha em barra, ou em nada.
+//
+// Três estados e não dois, e é por isso que ela existe: com número, é barra; sem
+// número mas com a marca, é a barra ESCONDIDA que a tela desenha como frase; sem
+// número e sem marca, é linha que não rastreia aquele pool e não desenha nada.
+// O segundo caso é o que a redação produz para a mesa (ALE-211), e juntá-lo ao
+// terceiro faria o jogador ler "este capanga não tem PV" sobre um ogro de 130.
+func poolBar(current, max *int64, hidden *bool, arcane bool) *tableBar {
+	if max != nil {
+		bar := tableBarOf(aovivo.DerefOr(current, 0), *max, arcane)
+		bar.Hidden = hidden != nil && *hidden
+		return &bar
+	}
+	if hidden != nil && *hidden {
+		return &tableBar{Hidden: true}
+	}
+	return nil
 }
 
 // tableViewOf monta a tela a partir das partes já buscadas. Tudo o que decide
@@ -431,8 +463,34 @@ func rowCommand(v View, l tableRow, acao string) string {
 // O `@post` recebe uma expressão como ARGUMENTO, e não é um `@post` dentro de
 // cada braço de um ternário: a chamada é uma só, e o que varia é a string. Assim
 // o que o Datastar precisa reescrever é uma ação, não duas dentro de um desvio.
-func rowVital(v View, l tableRow, verbo string) string {
-	base := fmt.Sprintf("/mesa/%d/%d/initiative/%s/vitals/%s/", v.CampaignID, v.SessionID, l.ID, verbo)
+// healVerb e harmVerb dão a CADA pool o verbo da mesa, e não é enfeite: com os
+// dois passos na mesma linha, "Ferir Arwen" duas vezes são dois controles com o
+// mesmo nome acessível e destinos diferentes — quem usa leitor de tela ouve a
+// mesma frase e tira mana achando que tira vida.
+//
+// Quem acusou foi o e2e do transbordo a 390px, que procura o botão por nome e
+// esbarrou em dois. Ele não veio medir isto; veio medir leiaute — e é o segundo
+// caso desta sessão em que um guarda pega o defeito do vizinho por afirmar algo
+// preciso o bastante para quebrar quando a premissa muda.
+//
+// A frase é a da mesa: PV se fere e se cura, PM se gasta e se recupera. O "de"
+// mora no verbo do mana porque "Gastar PM Arwen" não é português.
+func healVerb(pool string) string {
+	if pool == "mp" {
+		return "Recuperar PM de"
+	}
+	return "Curar"
+}
+
+func harmVerb(pool string) string {
+	if pool == "mp" {
+		return "Gastar PM de"
+	}
+	return "Ferir"
+}
+
+func rowVital(v View, l tableRow, pool, verb string) string {
+	base := fmt.Sprintf("/mesa/%d/%d/initiative/%s/vitals/%s/%s/", v.CampaignID, v.SessionID, l.ID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }
 
@@ -444,7 +502,7 @@ func rowVital(v View, l tableRow, verbo string) string {
 func openEdit(v View, l tableRow) string {
 	pv, pvMax := int64(0), int64(0)
 	if l.PV != nil {
-		pv, pvMax = l.PV.Atual, l.PV.Max
+		pv, pvMax = l.PV.Current, l.PV.Max
 	}
 	return fmt.Sprintf(
 		"$edicaolinha = '%s'; $edicaonome = %s; $edicaoiniciativa = %d; $edicaopv = %d; $edicaopvmax = %d; document.getElementById('editar-combatente').showModal()",

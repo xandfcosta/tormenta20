@@ -40,7 +40,12 @@ type InitiativeEntry struct {
 	// HpHidden esconde os PV desta linha dos JOGADORES: saber que o ogro está com
 	// 12 de 130 muda a decisão de quem está na mesa, e essa é a informação do
 	// mestre. Ponteiro porque a maioria das linhas não decide nada a respeito.
-	HpHidden  *bool  `json:"hpHidden,omitempty"`
+	HpHidden *bool `json:"hpHidden,omitempty"`
+	// MpHidden é o irmão do `HpHidden` para o mana, e os dois são TRI-ESTADO
+	// desde a ALE-211: nulo é "o mestre não decidiu", e aí vale o padrão do
+	// pool — o PV do grupo aparece, o resto não. Explícito manda nos dois
+	// sentidos, que é como o mestre REVELA o ogro de propósito.
+	MpHidden  *bool  `json:"mpHidden,omitempty"`
 	HpCurrent *int64 `json:"hpCurrent,omitempty"`
 	HpMax     *int64 `json:"hpMax,omitempty"`
 	MpCurrent *int64 `json:"mpCurrent,omitempty"`
@@ -99,6 +104,7 @@ type EntryPatch struct {
 	MpCurrent   *int64  `json:"mpCurrent"`
 	MpMax       *int64  `json:"mpMax"`
 	HpHidden    *bool   `json:"hpHidden"`
+	MpHidden    *bool   `json:"mpHidden"`
 	// Conditions substitui a lista inteira, como o endpoint da ficha faz: um
 	// patch por condição exigiria dizer "some" e "tire", e a tela sempre sabe o
 	// conjunto final.
@@ -255,6 +261,9 @@ func UpdateEntry(st *SessionRuntimeState, entryID string, patch EntryPatch) erro
 	if patch.MpMax != nil {
 		e.MpMax = patch.MpMax
 	}
+	if patch.MpHidden != nil {
+		e.MpHidden = patch.MpHidden
+	}
 	if patch.HpHidden != nil {
 		e.HpHidden = patch.HpHidden
 	}
@@ -385,11 +394,37 @@ func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
 	out := cloneState(st)
 	for i := range out.Initiative {
 		e := &out.Initiative[i]
-		if e.HpHidden != nil && *e.HpHidden {
-			e.HpCurrent, e.HpMax = nil, nil
-		}
+		// O PV do GRUPO é o único pool que a mesa vê sem o mestre mandar (ALE-211).
+		hideIfSecret(e.HpHidden, e.Type == "character", &e.HpCurrent, &e.HpMax, &e.HpHidden)
+		hideIfSecret(e.MpHidden, false, &e.MpCurrent, &e.MpMax, &e.MpHidden)
 	}
 	return out
+}
+
+// hideIfSecret apaga um pool da cópia da mesa quando ela não tem direito a ele, e
+// DEIXA A MARCA quando apaga.
+//
+// A escolha do mestre é tri-estado no ponteiro: nulo é "ele não decidiu", e aí
+// vale o `visibleByDefault`. É isso que permite o padrão ser por POOL — o PV do
+// grupo nasce à vista, o PV do NPC e todo PM nascem escondidos — sem que
+// "revelei de propósito" e "nunca decidi" virem a mesma coisa.
+//
+// A marca não é detalhe: sem ela o jogador recebe `HpMax` nulo tanto para "este
+// capanga não tem PV rastreado" quanto para "o mestre está escondendo", e a tela
+// precisa dizer coisas diferentes nos dois casos (ALE-210). Por isso só marcamos
+// o pool que EXISTE — senão a mesa leria "PV ocultos pelo mestre" de um
+// combatente que nunca teve PV.
+func hideIfSecret(choice *bool, visibleByDefault bool, current, max **int64, mark **bool) {
+	visible := visibleByDefault
+	if choice != nil {
+		visible = !*choice
+	}
+	if visible || *max == nil {
+		return
+	}
+	*current, *max = nil, nil
+	hidden := true
+	*mark = &hidden
 }
 
 // StateForRole é o que UM socket pode ver. Existe porque o broadcast não é o

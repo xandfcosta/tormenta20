@@ -592,13 +592,8 @@ templ tableRowTracker(v View, l tableRow) {
 					<span class="shrink-0 text-[10px] font-bold uppercase tracking-widest text-grimorio-gold">Na vez</span>
 				}
 			</div>
-			if l.PV != nil {
-				@barra("PV", *l.PV)
-			} else if l.Oculto {
-				// A flag sobrevive à redação de propósito: "sem barra" e "escondido"
-				// são coisas diferentes, e a segunda é informação (ALE-210).
-				<p class="text-xs italic text-muted-foreground">PV ocultos pelo mestre</p>
-			}
+			@trackerBar(v, l, "hp", "PV", l.PV)
+			@trackerBar(v, l, "mp", "PM", l.PM)
 			if len(l.Condicoes) > 0 {
 				<ul class="flex flex-wrap gap-1">
 					// Fundo a 15% da MESMA cor e a cor como texto, que é o desenho do
@@ -629,34 +624,25 @@ templ tableRowTracker(v View, l tableRow) {
 	</li>
 }
 
-// rowVerbs é o que o MESTRE faz com um combatente: ferir, curar, esconder
-// os PV da mesa, e tirar da fila.
+// rowVerbs é o que o MESTRE faz com a LINHA: condições e tirar da fila.
 //
-// CADA VERBO TEM O SEU LUGAR, reservado pela lista inteira (ALE-141). Sem isso o
-// conjunto muda de linha para linha e a fileira encolhe, então o `−` de uma cai
-// onde está a lixeira de outra e o olho não forma coluna. Quem não tem o verbo
-// deixa o espaço VAZIO em vez de encolher — é o `@vagaDeVerbo`.
+// Ele já foi maior. Ferir, curar e o olho moravam aqui até a ALE-211, e saíram
+// quando o mana entrou: os três falam de UM pool, e com dois pools por linha uma
+// tira compartilhada não tem como dizer de qual — o `+` ao lado da lixeira não
+// diz se devolve vida ou mana. Foram para o lado da barra que cada um mexe, no
+// `trackerBar`. O que sobrou aqui é o que vale para a linha INTEIRA, com pool ou
+// sem nenhum.
 //
-// Ferir e curar só existem em linha COM vida: um capanga anônimo sem PV não tem
-// no que apanhar, e um botão que não muda nada é pior que um espaço em branco,
-// porque só se descobre clicando.
+// Aqui morava a `vagaDeVerbo` e a razão dela (ALE-141): com o conjunto mudando
+// de linha para linha, a fileira encolhia e o `−` de uma caía onde estava a
+// lixeira de outra, então o verbo ausente deixava o espaço vazio em vez de
+// sumir. Ela foi apagada porque a causa sumiu — os dois verbos que restaram
+// existem para TODA linha, e uma fileira que não varia não tem como desalinhar.
 //
-// A ordem é a do HUD e é deliberada: o `−` vem DEPOIS do `+` para um polegar
-// apressado não curar quando queria machucar.
+// A ordem da ALE-141 continua valendo onde os passos foram parar: o `−` vem
+// DEPOIS do `+` para um polegar apressado não curar quando queria machucar.
 templ rowVerbs(v View, l tableRow) {
 	<div class="flex shrink-0 items-center gap-1">
-		if l.PV != nil {
-			@vitalStep(v, l, "heal", "+", "Curar")
-			@vitalStep(v, l, "harm", "−", "Ferir")
-			@rowEye(v, l)
-		} else {
-			@vagaDeVerbo()
-			@vagaDeVerbo()
-			@vagaDeVerbo()
-		}
-		// AS CONDIÇÕES antes do remover, porque é o verbo do meio do combate e o
-		// remover é o do fim. Ele não tem `vagaDeVerbo` irmã: existe para toda
-		// linha, com ficha ou sem.
 		<button
 			type="button"
 			aria-label={ "Condições de " + l.Rotulo }
@@ -678,9 +664,32 @@ templ rowVerbs(v View, l tableRow) {
 	</div>
 }
 
-// vagaDeVerbo é o espaço que o verbo ausente continua ocupando (ALE-141).
-templ vagaDeVerbo() {
-	<span aria-hidden="true" class="size-9"></span>
+// trackerBar é UM pool da linha: a barra, e os verbos que mexem NELA (ALE-211).
+//
+// O verbo mora ao lado do que ele muda, e isso deixou de ser preferência quando
+// o mana entrou: com dois pools por linha, um `+` numa tira compartilhada não
+// diz de qual número está falando, e o dedo apressado do mestre cura o PV
+// querendo devolver mana.
+//
+// Três estados, e os três são desenho diferente: sem barra nenhuma a linha não
+// rastreia aquele pool e não sai nada; com a barra ESCONDIDA sai a frase, porque
+// "não tem PV" e "o mestre escondeu" são coisas diferentes (ALE-210); com número
+// sai a barra. Os verbos só existem para o mestre — o jogador lê.
+templ trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) {
+	if b != nil {
+		<div class="flex items-center gap-1">
+			if b.Hidden && v.Mestre == nil {
+				<p class="text-xs italic text-muted-foreground">{ rotulo } ocultos pelo mestre</p>
+			} else {
+				@barra(rotulo, *b)
+			}
+			if v.Mestre != nil {
+				@vitalStep(v, l, pool, "heal", "+", healVerb(pool))
+				@vitalStep(v, l, pool, "harm", "−", harmVerb(pool))
+				@rowEye(v, l, pool, rotulo, b.Hidden)
+			}
+		</div>
+	}
 }
 
 // vitalStep: clique tira ou devolve 1, Shift+clique 5.
@@ -689,14 +698,14 @@ templ vagaDeVerbo() {
 // número nunca viaja como dado. O `title` conta os dois passos porque atalho que
 // ninguém descobre não existe, e o nome acessível traz o do combatente: numa
 // fila de nove, "Ferir" sozinho não diz quem.
-templ vitalStep(v View, l tableRow, verbo, sinal, rotulo string) {
+templ vitalStep(v View, l tableRow, pool, verb, sign, label string) {
 	<button
 		type="button"
-		aria-label={ rotulo + " " + l.Rotulo }
-		title={ rotulo + " " + l.Rotulo + " — clique 1, Shift+clique 5" }
-		data-on:click={ rowVital(v, l, verbo) }
+		aria-label={ label + " " + l.Rotulo }
+		title={ label + " " + l.Rotulo + " — clique 1, Shift+clique 5" }
+		data-on:click={ rowVital(v, l, pool, verb) }
 		class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-	>{ sinal }</button>
+	>{ sign }</button>
 }
 
 // rowEye esconde os PV deste combatente DOS JOGADORES.
@@ -704,22 +713,22 @@ templ vitalStep(v View, l tableRow, verbo, sinal, rotulo string) {
 // `aria-pressed` porque é um estado que fica, não uma ação que passa. E o
 // `title` diz de quem se esconde: o ícone sozinho não conta que o segredo é dos
 // jogadores e não do mestre (ALE-133).
-templ rowEye(v View, l tableRow) {
+templ rowEye(v View, l tableRow, pool, rotulo string, hidden bool) {
 	<button
 		type="button"
-		aria-pressed={ fmt.Sprint(l.Oculto) }
-		if l.Oculto {
-			aria-label={ "Revelar os PV de " + l.Rotulo }
-			title={ "Revelar os PV de " + l.Rotulo + " para os jogadores" }
+		aria-pressed={ fmt.Sprint(hidden) }
+		if hidden {
+			aria-label={ "Revelar os " + rotulo + " de " + l.Rotulo }
+			title={ "Revelar os " + rotulo + " de " + l.Rotulo + " para os jogadores" }
 		} else {
-			aria-label={ "Ocultar os PV de " + l.Rotulo }
-			title={ "Ocultar os PV de " + l.Rotulo + " dos jogadores" }
+			aria-label={ "Ocultar os " + rotulo + " de " + l.Rotulo }
+			title={ "Ocultar os " + rotulo + " de " + l.Rotulo + " dos jogadores" }
 		}
-		data-on:click={ rowCommand(v, l, "vitals/hidden") }
+		data-on:click={ rowCommand(v, l, "vitals/"+pool+"/hidden") }
 		class={ "flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-			templ.KV("text-grimorio-gold", l.Oculto), templ.KV("text-muted-foreground", !l.Oculto) }
+			templ.KV("text-grimorio-gold", hidden), templ.KV("text-muted-foreground", !hidden) }
 	>
-		if l.Oculto {
+		if hidden {
 			@ui.Icon("EyeOff", "size-4")
 		} else {
 			@ui.Icon("Eye", "size-4")
@@ -735,15 +744,15 @@ templ barra(rotulo string, b tableBar) {
 		<span class="w-7 shrink-0 text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</span>
 		<div
 			role="progressbar"
-			aria-valuenow={ fmt.Sprint(b.Atual) }
+			aria-valuenow={ fmt.Sprint(b.Current) }
 			aria-valuemin="0"
 			aria-valuemax={ fmt.Sprint(b.Max) }
-			aria-label={ fmt.Sprintf("%s %d de %d", rotulo, b.Atual, b.Max) }
+			aria-label={ fmt.Sprintf("%s %d de %d", rotulo, b.Current, b.Max) }
 			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
 		>
-			<div class={ "h-full rounded-full", b.Tom } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
+			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
 		</div>
-		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ fmt.Sprint(b.Atual) }/{ fmt.Sprint(b.Max) }</span>
+		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ fmt.Sprint(b.Current) }/{ fmt.Sprint(b.Max) }</span>
 	</div>
 }
 
