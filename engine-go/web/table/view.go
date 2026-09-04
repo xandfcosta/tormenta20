@@ -42,9 +42,12 @@ type View struct {
 	SceneActive bool
 	Round       int
 	Turn        tableTurn
-	Grupo       []Member
-	Fila        []tableRow
-	Eu          *tableMe
+	// Proximos é a faixa de quem vem depois (ALE-290): a vez e as duas
+	// seguintes, dando a volta. Vazia fora de combate.
+	Proximos []turnAhead
+	Grupo    []Member
+	Fila     []tableRow
+	Eu       *tableMe
 	// MinhaFicha é a ficha do personagem DESTE jogador, desenhada dentro da
 	// sessão (ALE-272, fatia 10b). Nil para o mestre e para quem não tem
 	// personagem na campanha — é a mesma trava do `Mestre`: o que a view não
@@ -249,6 +252,106 @@ func tableTurnOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) tableTurn 
 	return tableTurn{Kind: "other", Label: naVez.Label}
 }
 
+// A FAIXA DE QUEM VEM DEPOIS (ALE-290): a vez de agora e as duas seguintes, na
+// ordem da mesa, dando a volta.
+//
+// # Por que ela existe, e o que ela conserta
+//
+// A pergunta "chamo quem depois?" era respondida LENDO uma lista. No trilho do
+// mestre e na iniciativa do jogador a ordem está lá — mas no ÚLTIMO da rodada o
+// próximo está no TOPO da lista, e é justamente o turno em que a pergunta mais
+// importa (ALE-179). Quem lê de cima para baixo não acha ninguém depois da
+// última linha.
+//
+// A conta circular que resolve isso é o `aovivo.UpcomingTurns`, e ela estava no
+// ar desde a ALE-179 com cinco guardas e NENHUMA tela — a mesma família da
+// cortina e da presença. Esta é a tela.
+//
+// # Ela não repete o botão de avanço, e a repetição é deliberada
+//
+// O `NextTurnButton` diz "Próximo: Arwen" e continua dizendo. Os dois respondem
+// coisas diferentes no mesmo instante: a faixa é onde se LÊ a ordem, o botão é o
+// que o CLIQUE vai fazer. Tirar o nome do botão desfaria a ALE-184 — o mestre
+// voltaria a clicar sem saber para quem vai.
+
+// turnAhead é um lugar na faixa.
+type turnAhead struct {
+	Rotulo string
+	// Meu é o meu personagem, e é o que faz a faixa responder "quanto falta para
+	// mim?" — a pergunta do JOGADOR, que é quem mais precisa dela.
+	Meu bool
+	// Agora é a vez em curso. Sempre a primeira, e escrito mesmo assim: o
+	// desenho não deve depender da posição no laço para saber o que destacar.
+	Agora bool
+	// ViraARodada marca o lugar onde a rodada seguinte começa — o ponto em que a
+	// lista deu a volta. Sem ele a faixa mentiria por omissão: "Zumbi 2 › Ogro"
+	// parece a mesma rodada, e não é.
+	ViraARodada bool
+	// DizVoce troca o nome pela palavra, e ela é uma decisão da faixa INTEIRA e
+	// não desta linha: só vale quando UM dos três é de quem olha.
+	//
+	// Medido no navegador (ALE-290): com dois personagens meus na fila a faixa
+	// saiu "você › Tanque Placas Nv10 › ⟲ você", e a pergunta que ela existe para
+	// responder — quanto falta para MIM — ficou sem resposta. A bancada não
+	// pegava porque ela semeia um personagem por pessoa; a seed, com o dono
+	// levando vários, pegou.
+	DizVoce bool
+}
+
+// turnStripOf traduz a janela circular para a tela.
+//
+// A REGRA continua no `aovivo`: quem escolhe os três e dá a volta é o
+// `UpcomingTurns`, com os guardas dele. O que se decide aqui são dois fatos de
+// APRESENTAÇÃO, e nenhum deles é do domínio: qual dos três é de quem está
+// olhando, e onde a rodada vira.
+//
+// A VOLTA é recalculada do índice em vez de vir do `UpcomingTurns`, que devolve
+// entradas e não posições. Não é a regra reimplementada — a regra é *quem* vem;
+// isto é *onde desenhar o símbolo*, e ela não tem por que saber que existe um.
+//
+// A fila que chega aqui é a que o `StateForRole` já redigiu, como a lista e o
+// tabuleiro: um segundo caminho até os nomes seria um segundo lugar por onde
+// vazar o que a mesa não deve ver.
+func turnStripOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) []turnAhead {
+	janela := aovivo.UpcomingTurns(st.Initiative, st.TurnIndex, turnsAhead)
+	faixa := make([]turnAhead, 0, len(janela))
+	for passo, entrada := range janela {
+		faixa = append(faixa, turnAhead{
+			Rotulo:      entrada.Label,
+			Meu:         entrada.CharacterID != nil && meus[*entrada.CharacterID],
+			Agora:       passo == 0,
+			ViraARodada: st.TurnIndex+passo == len(st.Initiative),
+		})
+	}
+	// "VOCÊ" é decisão da faixa inteira, então ela é tomada com ela pronta: a
+	// palavra só desambigua enquanto for UMA. Ver o `DizVoce`.
+	if meusNaFaixa(faixa) == 1 {
+		for i := range faixa {
+			faixa[i].DizVoce = faixa[i].Meu
+		}
+	}
+	return faixa
+}
+
+func meusNaFaixa(faixa []turnAhead) int {
+	quantos := 0
+	for _, p := range faixa {
+		if p.Meu {
+			quantos++
+		}
+	}
+	return quantos
+}
+
+// turnsAhead é o tamanho da faixa: a vez e as duas seguintes.
+//
+// TRÊS, e o número é escolhido e não medido — o Go não sabe quanto cabe na
+// caixa. Três nomes cabem no cabeçalho a 390px sem truncar a ponto de não
+// identificar ninguém, e respondem a pergunta que a faixa existe para
+// responder. Quem quer a ordem inteira tem o trilho e a gaveta; a faixa não
+// compete com eles, e crescê-la até competir é como ela deixa de caber.
+const turnsAhead = 3
+
 // tableBarOf resolve a porcentagem (presa em 0..100) e o tom.
 //
 // Máximo ausente ou zero devolve 0% em vez de dividir: uma linha sem pool não
@@ -368,6 +471,7 @@ func tableViewOf(
 		SceneActive: st.SceneActive,
 		Round:       st.Round,
 		Turn:        tableTurnOf(st, meus),
+		Proximos:    turnStripOf(st, meus),
 		Grupo:       grupo,
 		Fila:        tableTrackerOf(st, meus),
 		Eu:          eu,

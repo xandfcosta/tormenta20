@@ -346,3 +346,98 @@ func TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch(t *testing.T) {
 		t.Error("a cena sem peça nenhuma não se anuncia como vazia")
 	}
 }
+
+/*
+A FAIXA DE QUEM VEM DEPOIS na tela (ALE-290).
+
+O `aovivo.UpcomingTurns` estava no ar desde a ALE-179 com cinco guardas e
+nenhuma tela. Os casos de tradução moram no `web/table`; o que se prende aqui é
+que ela CHEGA ao HTML dos dois papéis, e que a do jogador obedece à mesma
+redação que o resto da Mesa.
+*/
+
+// A faixa desenha os três, e o jogador se lê como "você".
+func TestTheTurnStripReachesBothScreens(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+	// A CENA COMEÇADA não basta: o `StartScene` deixa o turno em -1, que é "em
+	// cena, ninguém na vez ainda". A faixa só existe DENTRO do combate, e é o
+	// avanço que o inicia — pela porta de verdade, que é o botão mais clicado da
+	// sessão.
+	//
+	// DOIS avanços, e o segundo é o caso que a ALE-179 nomeia: a fila tem dois,
+	// então o segundo turno é o ÚLTIMO da rodada, e "quem vem depois" está no
+	// TOPO da lista. É o turno em que ler de cima para baixo não acha ninguém.
+	f.posta(t, f.mestre, f.tableUrl()+"/initiative/next-turn", "")
+	f.posta(t, f.mestre, f.tableUrl()+"/initiative/next-turn", "")
+
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+	// ANCORADO NA VIRADA DA RODADA, que é texto que SÓ a faixa escreve: o nome
+	// do Ogro aparece na lista de iniciativa de qualquer jeito, e procurá-lo
+	// mediria a lista em vez da faixa.
+	if !strings.Contains(doMestre, "começa a rodada 2") {
+		t.Errorf("a faixa do mestre não marca onde a rodada vira")
+	}
+	// E ela DÁ A VOLTA: no último da rodada, o próximo é o primeiro da fila.
+	// Sem esta linha o caso passaria com uma faixa que só desenha a vez atual.
+	if !strings.Contains(doMestre, "Ogro cansado") {
+		t.Errorf("a faixa não deu a volta: o primeiro da fila não aparece depois do último")
+	}
+	// O MESTRE não é personagem nenhum da fila, então nenhuma linha é dele.
+	if strings.Contains(doMestre, ">você<") {
+		t.Errorf("a faixa do mestre marcou uma linha como dele")
+	}
+
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(doJogador, ">você<") {
+		t.Errorf("a faixa do jogador não marca o personagem dele como \"você\"")
+	}
+	// E ele continua vendo quem está na vez — a faixa é sobre ORDEM, e esconder
+	// os outros a deixaria sem sentido.
+	if !strings.Contains(doJogador, "Ogro cansado") {
+		t.Errorf("a faixa do jogador não diz quem está na vez")
+	}
+}
+
+// A faixa do jogador passa pela MESMA redação do resto da Mesa.
+//
+// Ela lê a fila, e a fila é o que o `StateForRole` redige. Um segundo caminho
+// até os nomes seria um segundo lugar por onde vazar o que a mesa não deve ver —
+// e este caso prende que ela usa o primeiro, e não um seu.
+//
+// O PV OCULTO é a prova concreta: o Ogro da cena tem PV escondidos, e eles não
+// podem aparecer por causa da faixa nova.
+func TestThePlayerTurnStripObeysTheSameRedaction(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+	f.posta(t, f.mestre, f.tableUrl()+"/initiative/next-turn", "")
+	f.posta(t, f.mestre, f.tableUrl()+"/initiative/next-turn", "")
+
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+
+	if strings.Contains(doJogador, "12/130") {
+		t.Errorf("os PV que o mestre escondeu chegaram à tela do jogador")
+	}
+	// CONTROLE: o MESTRE vê os PV. Sem ele, um HTML que não trouxesse a fila
+	// nenhuma passaria por "a redação funcionou".
+	if doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(doMestre, "12") {
+		t.Fatal("o mestre também não viu os PV — o guarda mediu uma tela vazia")
+	}
+}
+
+// FORA DE COMBATE não há faixa, e a frase de espera continua.
+//
+// É o estado em que a maior parte de uma sessão vive, e uma faixa vazia com as
+// setas soltas seria enfeite dizendo nada.
+func TestOutOfCombatTheHeaderKeepsWaiting(t *testing.T) {
+	f := novoPiloto(t)
+
+	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+
+	if !strings.Contains(corpo, "Aguardando iniciativa") {
+		t.Error("fora de combate o cabeçalho não diz que espera a iniciativa")
+	}
+	if strings.Contains(corpo, "começa a rodada") {
+		t.Error("desenhou a virada de rodada fora de combate")
+	}
+}
