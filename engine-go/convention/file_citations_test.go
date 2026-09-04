@@ -72,6 +72,27 @@ var arquivosAusentesDePROPOSITO = map[string]bool{
 	// mundo de duas branches que não existe mais, e reescrevê-la é decisão de
 	// quem conhece a colheita, não deste passe mecânico.
 	"vista.go": true,
+
+	// AS ROTAS JSON SEM CONSUMIDOR (ALE-277). Os dois arquivos de comando
+	// traduziam o socket da SPA para HTTP na ALE-253 — 36 manipuladores, mil
+	// linhas — e ficaram sem um único chamador quando as cenas em Datastar
+	// passaram a mutar o estado pela porta delas. Quem os cita é quem explica o
+	// que SOBROU: as regras que eles chamavam ficaram, e o `live_publish.go`
+	// carrega a publicação.
+	"board_commands.go":   true,
+	"session_commands.go": true,
+
+	// Os dois arquivos de TESTE de rota que morreram com as rotas na mesma
+	// issue. Cada um é citado pela lápide que diz onde cada garantia dele foi
+	// parar — a de `character_play_state_test.go` lista sete, uma a uma.
+	"character_play_state_test.go": true,
+	"creatures_http_test.go":       true,
+	"invites_test.go":              true,
+
+	// O `sse_events.go` guardava o `emitPresence` e, antes dele, o handshake do
+	// fluxo da SPA. O `aovivo/stream.go` o cita para dizer de onde o laço de
+	// entrega veio — e por que o transporte NÃO veio junto.
+	"sse_events.go": true,
 }
 
 // oCaminhoCitado casa o que parece um arquivo DESTE repositório: um nome com

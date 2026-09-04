@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"t20engine/plataforma"
 
-	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/sheet"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // handleListCharacters returns the caller's own characters (newest-updated first),
@@ -46,21 +47,6 @@ func (s *Server) characterList(ctx context.Context, ownerID int64) ([]sheet.Char
 		out = append(out, dto)
 	}
 	return out, nil
-}
-
-// handleGetCharacter returns one character aggregate. Access = owner OR campaign
-// GM. 404 when missing, 403 when unauthorized.
-func (s *Server) handleGetCharacter(w http.ResponseWriter, r *http.Request) {
-	row, ok := s.characterFor(w, r)
-	if !ok {
-		return
-	}
-	dto, err := s.LoadCharacter(r.Context(), row)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, dto)
 }
 
 // characterFor is the preamble every character route repeats: read {id}, load
@@ -115,27 +101,6 @@ func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int6
 	return row, http.StatusOK, nil
 }
 
-// handleGetSheet ports GET /characters/:id/sheet — the server-computed derived sheet
-// (ComputedSheetV2), the same shape the WASM engine produces for the front. No live
-// consumer today (the front derives via WASM); provided for non-WASM clients + parity.
-// Active conditionals (stances) aren't applied — this is the base sheet.
-func (s *Server) handleGetSheet(w http.ResponseWriter, r *http.Request) {
-	row, ok := s.characterFor(w, r)
-	if !ok {
-		return
-	}
-	if s.catalogs == nil {
-		plataforma.WriteError(w, http.StatusServiceUnavailable, "Rules catalog not loaded")
-		return
-	}
-	sheet, err := s.ComputeSheet(r.Context(), row)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not compute sheet")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, sheet)
-}
-
 // assertCharacterOwner is the strict owner-only check
 // the WS vitals gate uses: a player may edit only a character they own. Transport-agnostic.
 func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
@@ -175,10 +140,6 @@ func (s *Server) LoadCharacter(ctx context.Context, c sqlcgen.Character) (sheet.
 
 func (s *Server) ComputeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
 	return sheet.LoadAndCompute(ctx, s.queries, s.catalogs, row)
-}
-
-func (s *Server) sheetFromDTO(dto sheet.CharacterDTO) (engine.ComputedSheetV2, error) {
-	return sheet.Compute(s.catalogs, dto)
 }
 
 // CharacterList cumpre a porta da cena de personagens (`characters.Deps`,

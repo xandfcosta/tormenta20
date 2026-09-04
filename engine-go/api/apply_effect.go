@@ -15,88 +15,6 @@ import (
 
 const manualTempHpCatalogID = "manual-temp-hp"
 
-// handleApplyEffect applies a manual
-// temp-HP pool, a spell buff, or (deferred) a power grant. NOTE: the powerId path
-// (activation-registry grants + server-side pool compute) is not yet ported.
-func (s *Server) handleApplyEffect(w http.ResponseWriter, r *http.Request) {
-	row, ok := s.characterFor(w, r)
-	if !ok {
-		return
-	}
-	var body struct {
-		SpellID      *string `json:"spellId"`
-		PowerID      *string `json:"powerId"`
-		ManualTempHp *int64  `json:"manualTempHp"`
-		Scope        *string `json:"scope"`
-	}
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-
-	switch {
-	case body.ManualTempHp != nil:
-		s.applyManualPool(w, r, row.ID, *body.ManualTempHp, derefStr(body.Scope, "scene"))
-	case body.PowerID != nil:
-		s.applyPowerGrant(w, r, row, *body.PowerID, body.Scope)
-	case body.SpellID == nil:
-		plataforma.WriteFieldError(w, http.StatusBadRequest, "applyEffect requires spellId, powerId or manualTempHp", plataforma.FieldErrorMap{"spellId": {"Informe uma magia, um poder ou PV temporários"}})
-	default:
-		dto, status, err := s.applySpellBuffEffect(r.Context(), row.ID, *body.SpellID, body.Scope)
-		if err != nil {
-			plataforma.WriteDomainError(w, status, err)
-			return
-		}
-		plataforma.WriteJSON(w, http.StatusOK, dto)
-	}
-}
-
-func (s *Server) applyManualPool(w http.ResponseWriter, r *http.Request, id, amount int64, scope string) {
-	if amount < 0 || amount > 9999 {
-		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("manualTempHp must be an integer >= 0 — got %d", amount), plataforma.FieldErrorMap{"manualTempHp": {"Informe um valor inteiro ≥ 0"}})
-		return
-	}
-	if amount == 0 {
-		ids, err := s.queries.ListEffectIdsByCatalog(r.Context(), sqlcgen.ListEffectIdsByCatalogParams{Characterid: id, Catalogid: manualTempHpCatalogID})
-		if err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not clear pool")
-			return
-		}
-		if err := s.queries.DeleteEffectsByCatalog(r.Context(), sqlcgen.DeleteEffectsByCatalogParams{Characterid: id, Catalogid: manualTempHpCatalogID}); err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not clear pool")
-			return
-		}
-		if ids == nil {
-			ids = []int64{}
-		}
-		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"cleared": true, "removedEffectIds": ids})
-		return
-	}
-	s.applyPool(w, r, id, "manual", manualTempHpCatalogID, scope, int(amount), "PV temporários (manual)")
-}
-
-// applyPool ports temp-hp.service applyPool: upsert a tempHp pool under vale-o-maior.
-// Ele é a casca HTTP do `applyPoolTx` — lê nada, decide nada, só traduz o
-// resultado em resposta.
-func (s *Server) applyPool(w http.ResponseWriter, r *http.Request, id int64, source, catalogID, scope string, amount int, note string) {
-	plan, efeito, err := s.applyPoolTx(r.Context(), id, source, catalogID, scope, amount, note)
-	if err != nil {
-		// O ERRO CARREGA O PASSO: as três mensagens diferentes que este handler
-		// tinha viraram uma só quando a transação foi extraída, e o `%w` do
-		// `applyPoolTx` é o que devolve a granularidade — sem ele, "Could not
-		// apply pool" mandaria procurar em cinco escritas diferentes.
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply pool: "+err.Error())
-		return
-	}
-	if plan.Superseded {
-		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"superseded": true, "keptEffectId": plan.KeptEffectID, "keptAmount": plan.KeptAmount})
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]any{
-		"effect":    efeito,
-		"displaced": plan.Displaced,
-	})
-}
-
 // applyPoolTx é a transação da poça de PV temporários, SEM transporte.
 //
 // Ela nasceu na ALE-278 porque a mesma sequência — `BeginTx`, listar os efeitos,
@@ -175,27 +93,6 @@ func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID
 	return effectDTOFromUpsert(eff), http.StatusOK, nil
 }
 
-// applyPowerGrant is the powerId branch: resolve the power's activation grant and
-// apply it — a temp-HP pool scaled by (level + attribute total), or a fixed active-effect.
-// Unknown power / power without a grant → 400.
-func (s *Server) applyPowerGrant(w http.ResponseWriter, r *http.Request, row sqlcgen.Character, powerID string, scopeOverride *string) {
-	grant, ok := resolvePowerGrant(w, powerID)
-	if !ok {
-		return
-	}
-	scope := derefStr(scopeOverride, grant.Scope)
-	if grant.Kind == "temp-hp" {
-		amount, ok := s.powerTempHpAmount(r, row, grant.Attribute)
-		if !ok {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not compute power temp HP")
-			return
-		}
-		s.applyPool(w, r, row.ID, "power", powerID, scope, amount, "PV temporários")
-		return
-	}
-	s.upsertPowerEffect(w, r, row.ID, powerID, scope, grant.Modifiers)
-}
-
 // resolvePowerGrant looks up a power's activation grant, writing the appropriate 400 and
 // returning ok=false when the power is unknown or has no applicable grant.
 func resolvePowerGrant(w http.ResponseWriter, powerID string) (*catalog.ActivationGrant, bool) {
@@ -209,22 +106,6 @@ func resolvePowerGrant(w http.ResponseWriter, powerID string) (*catalog.Activati
 		return nil, false
 	}
 	return spec.Grant, true
-}
-
-// upsertPowerEffect upserts an active-effect power grant's modifiers (source "power").
-func (s *Server) upsertPowerEffect(w http.ResponseWriter, r *http.Request, id int64, powerID, scope string, modifiers json.RawMessage) {
-	mods := modifiers
-	if len(mods) == 0 {
-		mods = json.RawMessage("[]")
-	}
-	eff, err := s.queries.UpsertActiveEffect(r.Context(), sqlcgen.UpsertActiveEffectParams{
-		Characterid: id, Source: "power", Catalogid: powerID, Scope: scope, Modifiers: string(mods), Createdat: plataforma.NowISO(),
-	})
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply power")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, effectDTOFromUpsert(eff))
 }
 
 // powerTempHpAmount computes a temp-HP power's magnitude: character level + the attribute's

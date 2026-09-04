@@ -29,6 +29,31 @@ var tombstones = map[string]bool{
 	"TestSocketOriginFollowsTheHttpPolicy":         true,
 	"TestStatForAbsentTarget":                      true,
 	"TestTodaAbaDaFichaEstaPortada":                true,
+
+	// AS ROTAS JSON SEM CONSUMIDOR (ALE-277). Dezessete casos que dirigiam rotas
+	// que a ALE-277 apagou. Nenhum deles some sem substituto: a REGRA que cada
+	// um prendia foi repontada para a função que a possui, ou já estava presa na
+	// cena que hoje faz o gesto — e a lápide, no arquivo de origem, nomeia qual
+	// das duas coisas aconteceu com cada garantia.
+	"TestANormalBodyStillPasses":                          true,
+	"TestEveryCharacterRouteIsCoveredByTheOwnershipTable": true,
+	"TestEveryCharacterRouteRejectsAnIntruder":            true,
+	"TestAResetRefusesAWeakPassword":                      true,
+	"TestAdminScreenRoutesRejectEveryoneElse":             true,
+	"TestAdminStatusReportsTheRunningServer":              true,
+	"TestAdminUserListCountsWhatEachAccountOwns":          true,
+	"TestAnOversizedBodyIsRefusedBySize":                  true,
+	"TestCampaignDescriptionBlankIsTheSameEitherWay":      true,
+	"TestCampaignWritesRejectNonOwner":                    true,
+	"TestConsumeRejectsAStranger":                         true,
+	"TestGetCampaignAuthorization":                        true,
+	"TestMeCarriesTheAdminFlag":                           true,
+	"TestOnlyAnAdminIssuesInvites":                        true,
+	"TestSessionRoutesRejectCrossCampaignAndNonOwner":     true,
+	"TestTheAdminCannotDeleteThemselves":                  true,
+	"TestTheCampaignDetailLoadsTheRules":                  true,
+	"TestTheJsonApiRefusesAChoiceOutsideTheRule":          true,
+	"TestUpdateMemberRole":                                true,
 }
 
 // familias são os PREFIXOS que a prosa usa para falar de um conjunto de guardas

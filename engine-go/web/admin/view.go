@@ -139,8 +139,9 @@ func belongings(admin bool, campanhas, fichas int64) string {
 // deletionCost espelha o `deletionCost`: o diálogo diz o preço ANTES.
 //
 // As campanhas passam para quem apaga, as fichas vão junto — é a decisão que o
-// `handleAdminDeleteUser` implementa, e a frase existe para que o dono a leia
-// antes de confirmar, e não descubra depois.
+// `DeleteAccount` do hospedeiro implementa (o `handleAdminDeleteUser`, que a
+// implementava antes, foi apagado com as rotas JSON na ALE-277), e a frase
+// existe para que o dono a leia antes de confirmar, e não descubra depois.
 func deletionCost(campanhas, fichas int64) string {
 	f := ui.Plural(fichas, "ficha", "fichas")
 	if campanhas == 0 {

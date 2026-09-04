@@ -96,21 +96,27 @@ func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 
 // A trava é do SERVIDOR: quem não administra não cunha, mesmo postando na mão.
 // A tela nem oferece o botão, mas isso é UX — a fronteira é aqui.
-
-// A trava é do SERVIDOR: quem não administra não cunha, mesmo postando na mão.
-// A tela nem oferece o botão, mas isso é UX — a fronteira é aqui.
+// O caso ANÔNIMO entrou na ALE-277, vindo do `TestOnlyAnAdminIssuesInvites`
+// que media a rota JSON `/admin/invites`. Ele não repete o de cima: sem sessão
+// a cena MANDA para a porta (303, `requirePage`), e com sessão sem coroa ela
+// RECUSA (403, `requireAdmin`) — dois middlewares diferentes, e trocar um pelo
+// outro deixaria o servidor pedindo login a quem já está logado.
 func TestANonAdminDoesNotReachTheInviteRoute(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	seedUser(t, s, "chefe@t20.local")
 	qualquerUm := seedUser(t, s, "outro@t20.local")
 
 	rec := pedeNoPiloto(t, s, qualquerUm, http.MethodPost, "/admin/convites")
-	if rec.Code == http.StatusOK {
-		t.Errorf("a rota respondeu %d para quem não é admin", rec.Code)
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("a rota respondeu %d para quem não é admin, esperado 403", rec.Code)
+	}
+
+	semSessao := httptest.NewRecorder()
+	s.WebRouter().ServeHTTP(semSessao, httptest.NewRequest(http.MethodPost, "/admin/convites", nil))
+	if semSessao.Code != http.StatusSeeOther {
+		t.Errorf("sem credencial a cena respondeu %d, esperado 303 para a porta", semSessao.Code)
 	}
 }
-
-// pedeNoPiloto bate no roteador do piloto, que é OUTRO que o `Router()` da API.
 
 // pedeNoPiloto bate no roteador do piloto, que é OUTRO que o `Router()` da API.
 func pedeNoPiloto(t *testing.T, s *Server, userID int64, metodo, caminho string) *httptest.ResponseRecorder {

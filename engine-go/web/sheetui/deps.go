@@ -87,8 +87,8 @@ type Deps interface {
 	//
 	// A cena montava a TRANSAÇÃO inteira aqui — `BeginTx`, o plano, as escritas
 	// e o `Commit` —, e o hospedeiro tinha a mesma sequência escrita de novo no
-	// `applyPool` da rota JSON. A conta continua sendo do `sheet`
-	// (`PlanPoolSupremacy`); o que atravessa é QUANDO ela vale.
+	// `applyPool` da rota JSON, apagada na ALE-277. A conta continua sendo do
+	// `sheet` (`PlanPoolSupremacy`); o que atravessa é QUANDO ela vale.
 	ApplyPowerTempHp(ctx context.Context, id int64, powerID, escopo string, quanto int) error
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)

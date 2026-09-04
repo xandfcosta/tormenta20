@@ -11,7 +11,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -32,38 +31,6 @@ type backupDTO struct {
 	Name      string `json:"name"`
 	Size      int64  `json:"size"`
 	CreatedAt string `json:"createdAt"`
-}
-
-// handleAdminStatus: GET /admin/status.
-func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
-	counts, err := s.queries.TableCounts(r.Context())
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not read status")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, serverStatusDTO{
-		Environment:  string(s.cfg.AppEnv),
-		DatabasePath: s.cfg.DatabasePath,
-		DatabaseSize: fileSize(s.cfg.DatabasePath),
-		Users:        counts.Users, Campaigns: counts.Campaigns, Characters: counts.Characters,
-	})
-}
-
-// handleAdminCreateBackup: POST /admin/backups.
-func (s *Server) handleAdminCreateBackup(w http.ResponseWriter, r *http.Request) {
-	name, err := s.backupDatabase(r.Context(), time.Now())
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not back up: "+err.Error())
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusCreated, backupDTO{
-		Name: name, Size: fileSize(filepath.Join(s.cfg.BackupDir, name)), CreatedAt: plataforma.NowISO(),
-	})
-}
-
-// handleAdminListBackups: GET /admin/backups, newest first.
-func (s *Server) handleAdminListBackups(w http.ResponseWriter, r *http.Request) {
-	plataforma.WriteJSON(w, http.StatusOK, s.listBackups())
 }
 
 // backupDatabase writes a consistent snapshot with SQLite's own VACUUM INTO.

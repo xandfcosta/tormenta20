@@ -126,7 +126,7 @@ func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 		Classes:  ClassesOf(c),
 	}
 	// A DEFESA vem da mesma `ComputeSheetV2` que a ficha usa, e do agregado JÁ
-	// carregado — ver `sheetFromDTO`. Sem motor (catálogo não primado) o cartão
+	// carregado — ver `sheet.Compute`. Sem motor (catálogo não primado) o cartão
 	// simplesmente não mostra Defesa; a cena inteira não pode cair por causa de
 	// um número.
 	cartao.Defense = "—"

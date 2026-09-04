@@ -76,7 +76,8 @@ func (s *Server) RestartCombat(ctx context.Context, sessionID int64) error {
 	// a linha limpa sem derrubar o cache deixa a sessão servindo a fila velha —
 	// o reinício "funciona" e nada muda na tela.
 	//
-	// Esta linha estava no `handleClearTracker` e eu a PERDI ao extrair a regra.
+	// Esta linha estava no `handleClearTracker` — apagado na ALE-277 — e eu a
+	// PERDI ao extrair a regra.
 	// O guarda que eu tinha escrito não pegou porque media o BANCO, que já
 	// estava vazio antes do reset: a fila nunca tinha chegado lá. Foi a
 	// sabotagem que denunciou os dois.

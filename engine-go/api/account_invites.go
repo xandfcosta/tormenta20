@@ -13,11 +13,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"net/http"
 	"t20engine/plataforma"
 	"time"
-
-	"github.com/go-chi/chi/v5"
 
 	"t20engine/db/sqlcgen"
 )
@@ -37,16 +34,6 @@ type accountInviteDTO struct {
 	ExpiresAt string `json:"expiresAt"`
 }
 
-// handleCreateAccountInvite issues a fresh invite: POST /admin/invites (admin only).
-func (s *Server) handleCreateAccountInvite(w http.ResponseWriter, r *http.Request) {
-	invite, err := s.mintAccountInvite(r.Context(), currentUser(r).ID)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create invite")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusCreated, accountInviteDTO{Token: invite.Token, ExpiresAt: invite.Expiresat})
-}
-
 // mintAccountInvite cunha o link de uso único.
 //
 // Transport-agnostic, e esta é a QUARTA vez que a migração encontra a mesma
@@ -62,19 +49,6 @@ func (s *Server) mintAccountInvite(ctx context.Context, criadoPor int64) (sqlcge
 		Createdat: plataforma.IsoAt(now),
 		Expiresat: plataforma.IsoAt(now.Add(accountInviteTTL)),
 	})
-}
-
-// handleResolveAccountInvite answers whether a link still works: GET
-// /account-invites/{token}. Anonymous by necessity — it is read BEFORE the
-// account exists, so the register screen can tell "peça um convite" apart from
-// "esse link já foi usado" without the player submitting a form first.
-func (s *Server) handleResolveAccountInvite(w http.ResponseWriter, r *http.Request) {
-	invite, ok := s.usableInvite(r.Context(), chi.URLParam(r, "token"))
-	if !ok {
-		plataforma.WriteError(w, http.StatusNotFound, inviteRejected)
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, accountInviteDTO{Token: invite.Token, ExpiresAt: invite.Expiresat})
 }
 
 // usableInvite loads an invite that can still be spent: it exists, nobody used

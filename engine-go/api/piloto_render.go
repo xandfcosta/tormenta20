@@ -8,8 +8,9 @@ import (
 	"t20engine/web/bookui"
 	"t20engine/web/finder"
 
-	"github.com/a-h/templ"
 	"t20engine/web/ui"
+
+	"github.com/a-h/templ"
 )
 
 // Os ESTÁTICOS do piloto Datastar (ALE-219). Embutidos, como os catálogos: o

@@ -1,11 +1,10 @@
 package api
 
-import "t20engine/aovivo"
-
 import (
 	"context"
 	"errors"
 	"log"
+	"t20engine/aovivo"
 )
 
 // As regras dos vitais na mesa: quem pode editar e o espelho no tracker.
@@ -13,9 +12,14 @@ import (
 // Este arquivo é o que SOBROU de `realtime_vitals.go` quando o socket.io foi
 // apagado (ALE-253). O corte foi pelo receptor: o que era `(g *realtimeGateway)`
 // era transporte e morreu junto; o que está aqui é aplicação, e não mudou uma
-// linha ao mudar de vizinho. As rotas HTTP em `session_commands.go` e
-// `board_commands.go` chamam exatamente as mesmas funções que os eventos
-// chamavam.
+// linha ao mudar de vizinho.
+//
+// Aqui morava "as rotas HTTP em `session_commands.go` e `board_commands.go`
+// chamam exatamente as mesmas funções que os eventos chamavam". Os dois
+// arquivos saíram na ALE-277 com os 36 manipuladores deles, que não tinham um
+// chamador desde que as cenas em Datastar passaram a mutar o estado pela porta
+// própria. A frase continua valendo com outro sujeito: quem chama estas funções
+// hoje é a cena da Mesa, e elas continuam sem saber por onde o pedido entrou.
 
 // assertVitalsEditableFor é a REGRA, e ela mudou de dono junto com o transporte
 // (ALE-253): o mestre edita qualquer combatente, o jogador só o personagem

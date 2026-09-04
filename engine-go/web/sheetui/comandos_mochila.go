@@ -170,10 +170,15 @@ func stowItem(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 
 // equipItemFromSheet põe o item na mão ou no corpo.
 //
-// As DUAS recusas são as mesmas da API JSON, e pela razão de sempre: o eixo do
-// item (`sheet.EquipAxisError` — um escudo não se veste) e os tetos de 2 mãos e 4
-// vestidos (`equipLimitCheck`, p141). Escrevê-las de novo aqui daria duas
-// regras para a mesma pergunta.
+// As DUAS recusas moram no `sheet`, e pela razão de sempre: o eixo do item
+// (`sheet.EquipAxisError` — um escudo não se veste) e os tetos de 2 mãos e 4
+// vestidos (`sheet.EquipLimitErrorOver`, p141). Escrevê-las de novo aqui daria
+// duas regras para a mesma pergunta.
+//
+// Aqui morava "as duas recusas são as mesmas da API JSON", com o
+// `equipLimitCheck` no lugar do nome de cima. A rota JSON foi apagada na
+// ALE-277 e o invólucro dela junto: estas não são mais a segunda cópia de
+// nada, são as únicas — o que só reforça que elas fiquem onde a regra mora.
 func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -53,8 +54,26 @@ func TestTheWireSpellingIsLowercase(t *testing.T) {
 func agrafiaDasRotas(t *testing.T) {
 	rota := regexp.MustCompile(`r\.(?:Get|Post|Put|Delete|Patch|Head|Options|Route|Handle|HandleFunc)\("(/[^"]*)"`)
 	var sitios int
-	for _, raiz := range []string{".", "../aovivo", "../tabuleiro", "../plataforma", "../cmd/api"} {
-		arquivos, _ := filepath.Glob(filepath.Join(raiz, "*.go"))
+	// CAMINHA A ÁRVORE desde a ALE-277. A lista enumerava cinco pacotes e as
+	// rotas do app já não moravam em nenhum deles: elas estão nos
+	// `web/*/routes.go` desde a ALE-278, e o `api` ficou com sete. O piso de 40
+	// derrubou o guarda, que é exatamente o que um piso existe para fazer —
+	// enumerar é remendo, e o que restaura a amostragem é a caminhada.
+	{
+		var arquivos []string
+		raizDoModulo, err := os.Getwd()
+		if err != nil {
+			t.Fatalf("achar a raiz: %v", err)
+		}
+		if err := filepath.WalkDir(filepath.Dir(raizDoModulo), func(caminho string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() || !strings.HasSuffix(caminho, ".go") {
+				return err
+			}
+			arquivos = append(arquivos, caminho)
+			return nil
+		}); err != nil {
+			t.Fatalf("caminhar a árvore: %v", err)
+		}
 		for _, caminho := range arquivos {
 			conteudo, err := os.ReadFile(caminho)
 			if err != nil {
@@ -87,7 +106,10 @@ func agrafiaDasRotas(t *testing.T) {
 }
 
 func agrafiaDasTags(t *testing.T) {
-	raizes := []string{".", "../aovivo", "../tabuleiro", "../plataforma"}
+	// A lista de raízes saiu na ALE-277: ela enumerava quatro pacotes, e as
+	// rotas do app mudaram de casa para os `web/*` na ALE-278. Enumerar é
+	// remendo; o que restaura a amostragem é a caminhada.
+	raizes := []string{"."}
 	// A tag pode vir com opções (`json:"nome,omitempty"`); o que importa é a
 	// primeira letra do NOME. `json:"-"` é descarte e não é nome.
 	tag := regexp.MustCompile("`[^`]*json:\"([A-Za-z][^\",]*)")

@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"net/http"
-	"strconv"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
@@ -13,19 +11,27 @@ import (
 // senha DE VERDADE (a antiga para de valer), serve uma vez só, e nada disso
 // depende de estar logado — quem esqueceu a senha não consegue autenticar.
 
-// resetLinkFor mints a Reset link for UserID through the admin route.
+// resetLinkFor cunha o link pela REGRA, e não pela rota do admin.
+//
+// As duas rotas que estes casos dirigiam — `POST /admin/users/{id}/password-reset`
+// e `POST /auth/reset-password` — saíram na ALE-277. O que eles prendem nunca foi
+// o transporte: é o link valer UMA vez, a corrida de dois pedidos gastá-lo uma
+// vez só, e a senha fraca ser recusada no SERVIDOR. A porta em Datastar troca a
+// senha pelo mesmo `ResetPassword`, e a administração cunha pelo mesmo
+// `mintPasswordReset`.
 func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 	t.Helper()
-	path := "/admin/users/" + strconv.FormatInt(UserID, 10) + "/password-reset"
-	rec := authed(t, s, adminID, http.MethodPost, path, "")
-	if rec.Code != http.StatusCreated {
-		t.Fatalf("gerar link: esperado 201, veio %d (%s)", rec.Code, rec.Body.String())
+	reset, err := s.mintPasswordReset(context.Background(), UserID, adminID)
+	if err != nil {
+		t.Fatalf("gerar link: %v", err)
 	}
-	token, _ := jsonField(t, rec, "token").(string)
-	if token == "" {
-		t.Fatalf("link sem token: %s", rec.Body.String())
-	}
-	return token
+	return reset.Token
+}
+
+// trocaASenha é o gesto que a PORTA faz: um token e uma senha nova.
+func trocaASenha(t *testing.T, s *Server, token, senha string) bool {
+	t.Helper()
+	return s.ResetPassword(context.Background(), token, senha)
 }
 
 func passwordOf(t *testing.T, s *Server, UserID int64) string {
@@ -44,11 +50,8 @@ func TestTheResetLinkActuallyChangesThePassword(t *testing.T) {
 	token := resetLinkFor(t, s, admin, player)
 	before := passwordOf(t, s, player)
 
-	rec := sendRaw(t, s, http.MethodPost, "/auth/reset-password",
-		`{"token":"`+token+`","password":"nova-senha-do-jogador"}`, "")
-
-	if rec.Code != http.StatusNoContent {
-		t.Fatalf("esperado 204, veio %d (%s)", rec.Code, rec.Body.String())
+	if !trocaASenha(t, s, token, "nova-senha-do-jogador") {
+		t.Fatal("o link não trocou a senha")
 	}
 	after := passwordOf(t, s, player)
 	if after == before {
@@ -66,16 +69,11 @@ func TestTheResetLinkWorksOnlyOnce(t *testing.T) {
 	admin := seedUser(t, s, adminEmail)
 	player := seedUser(t, s, "jogador@t20.local")
 	token := resetLinkFor(t, s, admin, player)
-	body := `{"token":"` + token + `","password":"outra-senha-longa"}`
-
-	first := sendRaw(t, s, http.MethodPost, "/auth/reset-password", body, "")
-	second := sendRaw(t, s, http.MethodPost, "/auth/reset-password", body, "")
-
-	if first.Code != http.StatusNoContent {
-		t.Fatalf("primeiro uso: esperado 204, veio %d", first.Code)
+	if !trocaASenha(t, s, token, "outra-senha-longa") {
+		t.Fatal("o primeiro uso do link falhou")
 	}
-	if second.Code != http.StatusForbidden {
-		t.Errorf("segundo uso: esperado 403, veio %d (%s)", second.Code, second.Body.String())
+	if trocaASenha(t, s, token, "outra-senha-longa") {
+		t.Error("o link gasto trocou a senha de novo")
 	}
 }
 
@@ -91,18 +89,21 @@ func TestConcurrentResetsSpendTheLinkOnce(t *testing.T) {
 	const racers = 4
 	codes := make(chan int, racers)
 	start := make(chan struct{})
-	for i := range racers {
+	for range racers {
 		go func() {
-			body := `{"token":"` + token + `","password":"senha-do-corredor-` + strconv.Itoa(i) + `"}`
 			<-start
-			codes <- sendRaw(t, s, http.MethodPost, "/auth/reset-password", body, "").Code
+			if trocaASenha(t, s, token, "senha-da-corrida") {
+				codes <- 1
+			} else {
+				codes <- 0
+			}
 		}()
 	}
 	close(start)
 
 	won := 0
 	for range racers {
-		if <-codes == http.StatusNoContent {
+		if <-codes == 1 {
 			won++
 		}
 	}
@@ -119,33 +120,25 @@ func TestResolvingAResetLinkNamesTheAccount(t *testing.T) {
 	player := seedUser(t, s, "jogador@t20.local")
 	token := resetLinkFor(t, s, admin, player)
 
-	ok := anon(t, s, http.MethodGet, "/password-resets/"+token)
-	bogus := anon(t, s, http.MethodGet, "/password-resets/nao-existe")
-
-	if email, _ := jsonField(t, ok, "email").(string); email != "jogador@t20.local" {
-		t.Errorf("email = %q, esperado a conta do link (%s)", email, ok.Body.String())
+	// A PERGUNTA da porta, e não a rota JSON: `ResetLinkOwner` é o que a cena
+	// chama para escrever "você está trocando a senha de fulano" antes do
+	// formulário.
+	email, achou := s.ResetLinkOwner(context.Background(), token)
+	if !achou || email != "jogador@t20.local" {
+		t.Errorf("dono do link = %q (achou=%v), esperado a conta do link", email, achou)
 	}
-	if bogus.Code != http.StatusNotFound {
-		t.Errorf("link inventado: esperado 404, veio %d", bogus.Code)
-	}
-}
-
-// A senha nova passa pela MESMA regra do registro — a tela que ficasse mais
-// frouxa seria justamente a que troca a senha de uma conta que já existe.
-func TestAResetRefusesAWeakPassword(t *testing.T) {
-	s := newTestServer(t, adminEmail)
-	admin := seedUser(t, s, adminEmail)
-	player := seedUser(t, s, "jogador@t20.local")
-	token := resetLinkFor(t, s, admin, player)
-	before := passwordOf(t, s, player)
-
-	rec := sendRaw(t, s, http.MethodPost, "/auth/reset-password",
-		`{"token":"`+token+`","password":"curta"}`, "")
-
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("esperado 400, veio %d (%s)", rec.Code, rec.Body.String())
-	}
-	if passwordOf(t, s, player) != before {
-		t.Error("a senha mudou apesar da recusa")
+	if _, achou := s.ResetLinkOwner(context.Background(), "nao-existe"); achou {
+		t.Error("um link inventado devolveu dono")
 	}
 }
+
+// Aqui morava o TestAResetRefusesAWeakPassword. A rota `POST /auth/reset-password`
+// saiu na ALE-277, e a garantia está em DUAS camadas que não morreram: a regra é
+// do `account` (`ValidatePassword`, com a frase em pt-BR), e quem a chama antes
+// de trocar é a PORTA — `TestTheDoorSaysValidationRefusalsInPortuguese` e
+// `TestTheDoorRefusesPasswordsThatDoNotMatchOnTheServer`.
+//
+// Vale dizer o que isso significa para o `ResetPassword` da porta: ele NÃO valida
+// força de senha, e nunca validou — quem valida é quem chama. Um segundo
+// chamador que esquecesse disso trocaria a senha por "123", e é por isso que a
+// linha fica escrita aqui em vez de sumir com o teste.

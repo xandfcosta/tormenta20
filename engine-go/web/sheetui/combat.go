@@ -166,7 +166,7 @@ func (s Scene) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheetV2, [
 		return engine.ComputedSheetV2{}, nil, false
 	}
 	// O OPT-IN DO JOGADOR entra na conta, e é a primeira vez que uma cena do
-	// piloto o faz: todo uso anterior passou pelo `sheetFromDTO`, que computa a
+	// piloto o faz: todo uso anterior passou pela `sheet.Compute`, que computa a
 	// ficha base. Com Fúria ligada, a base mostraria o ataque de quem não está
 	// em Fúria e a ficha discordaria da Mesa.
 	active := sheet.ToStringSet(dto.Conditionals)

@@ -1,13 +1,9 @@
 package api
 
 import (
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
-	"strings"
 	"t20engine/plataforma"
-	"time"
 
 	"t20engine/creature"
 	"t20engine/db/sqlcgen"
@@ -40,134 +36,6 @@ func creatureToDTO(row sqlcgen.CampaignCreature) (creatureDTO, error) {
 		ID: row.ID, CampaignID: row.Campaignid, Name: row.Name, Block: block,
 		CreatedAt: row.Createdat, UpdatedAt: row.Updatedat,
 	}, nil
-}
-
-// requireGM é a porta desta família inteira: o bloco de criatura é informação
-// do MESTRE. O jogador continua vendo o que via — nome e barra de PV pela
-// iniciativa, com a regra de PV oculto (ALE-137). Aqui a recusa é do servidor,
-// não da tela: esconder o botão é UX, o limite é aqui.
-func (s *Server) requireGM(w http.ResponseWriter, r *http.Request, campaignID int64) bool {
-	Role, status, err := s.resolveRole(r.Context(), currentUser(r), campaignID)
-	if err != nil {
-		plataforma.WriteError(w, status, err.Error())
-		return false
-	}
-	if Role != "gm" {
-		plataforma.WriteError(w, http.StatusForbidden, "Only the GM may read or write campaign creatures")
-		return false
-	}
-	return true
-}
-
-func (s *Server) handleListCreatures(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok || !s.requireGM(w, r, cid) {
-		return
-	}
-	rows, err := s.queries.ListCampaignCreatures(r.Context(), cid)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list creatures")
-		return
-	}
-	out := make([]creatureDTO, 0, len(rows))
-	for _, row := range rows {
-		dto, err := creatureToDTO(row)
-		if err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Stored creature block is unreadable")
-			return
-		}
-		out = append(out, dto)
-	}
-	plataforma.WriteJSON(w, http.StatusOK, out)
-}
-
-func (s *Server) handleCreateCreature(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok || !s.requireGM(w, r, cid) {
-		return
-	}
-	input, ok := decodeCreature(w, r)
-	if !ok {
-		return
-	}
-	now := time.Now().UTC().Format(time.RFC3339)
-	blob, err := json.Marshal(input.Block)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not store creature block")
-		return
-	}
-	row, err := s.queries.CreateCampaignCreature(r.Context(), sqlcgen.CreateCampaignCreatureParams{
-		Campaignid: cid, Name: strings.TrimSpace(input.Name), Block: string(blob),
-		Createdat: now, Updatedat: now,
-	})
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create creature")
-		return
-	}
-	writeCreature(w, http.StatusCreated, row)
-}
-
-func (s *Server) handleUpdateCreature(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok || !s.requireGM(w, r, cid) {
-		return
-	}
-	id, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	// A criatura tem de ser DESTA campanha: sem esta conferência, o mestre de
-	// uma mesa reescreveria o vilão de outra sabendo só o id.
-	if !s.creatureBelongsTo(w, r, id, cid) {
-		return
-	}
-	input, ok := decodeCreature(w, r)
-	if !ok {
-		return
-	}
-	blob, err := json.Marshal(input.Block)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not store creature block")
-		return
-	}
-	row, err := s.queries.UpdateCampaignCreature(r.Context(), sqlcgen.UpdateCampaignCreatureParams{
-		ID: id, Name: strings.TrimSpace(input.Name), Block: string(blob),
-		Updatedat: time.Now().UTC().Format(time.RFC3339),
-	})
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update creature")
-		return
-	}
-	writeCreature(w, http.StatusOK, row)
-}
-
-func (s *Server) handleDeleteCreature(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok || !s.requireGM(w, r, cid) {
-		return
-	}
-	id, ok := intParam(w, r, "id")
-	if !ok || !s.creatureBelongsTo(w, r, id, cid) {
-		return
-	}
-	if err := s.queries.DeleteCampaignCreature(r.Context(), id); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete creature")
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func (s *Server) creatureBelongsTo(w http.ResponseWriter, r *http.Request, id, campaignID int64) bool {
-	row, err := s.queries.GetCampaignCreature(r.Context(), id)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && row.Campaignid != campaignID) {
-		plataforma.WriteError(w, http.StatusNotFound, "Creature not found in this campaign")
-		return false
-	}
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load creature")
-		return false
-	}
-	return true
 }
 
 func decodeCreature(w http.ResponseWriter, r *http.Request) (creatureInput, bool) {

@@ -37,9 +37,11 @@ func sessionDTO(s sqlcgen.Session) SessionDTO {
 }
 
 // loadSessionInCampaign loads a session and asserts it belongs to the campaign —
-// transport-agnostic, no access check of its own. Shared by ownedSession (owner-only)
-// and the WS gateway's member-aware sessionForCaller so the "session belongs to the
-// campaign" rule lives in one place.
+// transport-agnostic, no access check of its own. Ela era compartilhada pelo
+// `ownedSession` (só o dono) e pelo `sessionForCaller` do gateway, para a regra
+// "a sessão é desta campanha" morar num lugar só. O `ownedSession` foi apagado
+// com as rotas JSON na ALE-277; o `sessionForCaller` ficou, e é por ele que as
+// cenas passam.
 func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionID int64) (sqlcgen.Session, int, error) {
 	sess, err := s.queries.GetSession(ctx, sessionID)
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && sess.Campaignid != campaignID) {
@@ -65,60 +67,6 @@ func (s *Server) sessionForCaller(ctx context.Context, user AuthUser, campaignID
 		return sqlcgen.Session{}, "", status, err
 	}
 	return sess, Role, http.StatusOK, nil
-}
-
-func (s *Server) ownedSession(w http.ResponseWriter, r *http.Request, campaignID, sessionID int64) (sqlcgen.Session, bool) {
-	if _, ok := s.ownedCampaign(w, r, campaignID); !ok {
-		return sqlcgen.Session{}, false
-	}
-	sess, status, err := s.loadSessionInCampaign(r.Context(), campaignID, sessionID)
-	if err != nil {
-		plataforma.WriteError(w, status, err.Error())
-		return sqlcgen.Session{}, false
-	}
-	return sess, true
-}
-
-// handleListSessions ports listForCaller: member-aware, ordered by sessionNumber.
-func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok {
-		return
-	}
-	if !s.campaignAccess(w, r, cid) {
-		return
-	}
-	rows, err := s.queries.ListSessions(r.Context(), cid)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list sessions")
-		return
-	}
-	out := make([]SessionDTO, 0, len(rows))
-	for _, sess := range rows {
-		out = append(out, sessionDTO(sess))
-	}
-	plataforma.WriteJSON(w, http.StatusOK, out)
-}
-
-func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok {
-		return
-	}
-	sid, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	// Member-aware (ALE-19): a player who is a member must be able to Load the
-	// session before the socket connects — the WS gateway already gates on
-	// sessionForCaller, so mirror it here instead of the owner-only ownedSession
-	// (which 403'd invited players with "belongs to another user").
-	sess, _, status, err := s.sessionForCaller(r.Context(), currentUser(r), cid, sid)
-	if err != nil {
-		plataforma.WriteError(w, status, err.Error())
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(sess))
 }
 
 func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
@@ -151,144 +99,6 @@ func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	plataforma.WriteJSON(w, http.StatusCreated, sessionDTO(sess))
-}
-
-func (s *Server) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok {
-		return
-	}
-	sid, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	var body struct {
-		SessionNumber *int64  `json:"sessionNumber"`
-		Title         *string `json:"title"`
-		Notes         *string `json:"notes"`
-	}
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	if _, ok := s.ownedSession(w, r, cid, sid); !ok {
-		return
-	}
-	var set setBuilder
-	if body.SessionNumber != nil {
-		if *body.SessionNumber < 1 {
-			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
-			return
-		}
-		set.Add("sessionNumber = ?", *body.SessionNumber)
-	}
-	if body.Title != nil {
-		set.Add("title = ?", nullableArg(trimOrNull(body.Title)))
-	}
-	if body.Notes != nil {
-		set.Add("notes = ?", nullableArg(trimOrNull(body.Notes)))
-	}
-	if set.empty() {
-		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
-		return
-	}
-	if err := set.execTouched(r.Context(), s.db, "UPDATE sessions", sid); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update session")
-		return
-	}
-	sess, _ := s.queries.GetSession(r.Context(), sid)
-	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(sess))
-}
-
-func (s *Server) handleDeleteSession(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok {
-		return
-	}
-	sid, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	if _, ok := s.ownedSession(w, r, cid, sid); !ok {
-		return
-	}
-	if err := s.queries.DeleteSession(r.Context(), sid); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete session")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": sid})
-}
-
-// handleStartSession ports start: active is a no-op, ended reopens, planned starts.
-func (s *Server) handleStartSession(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok {
-		return
-	}
-	sid, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	sess, ok := s.ownedSession(w, r, cid, sid)
-	if !ok {
-		return
-	}
-	// A DECISÃO mora no `session_lifecycle.go` desde a ALE-269: a Mesa em Datastar
-	// precisa dela sem reescrevê-la, e duas telas decidindo por conta própria o
-	// que "iniciar" significa é como nasce a divergência que ninguém nota.
-	updated, err := s.StartSession(r.Context(), sess)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not start session")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(updated))
-}
-
-// handleEndSession ports end: planned → 400, ended → no-op, active → ends. The WS
-// vitals write-through is deferred to B.6.
-func (s *Server) handleEndSession(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok {
-		return
-	}
-	sid, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	sess, ok := s.ownedSession(w, r, cid, sid)
-	if !ok {
-		return
-	}
-	// A RECUSA do "planejada" continua sendo 400, e a mensagem mudou de língua
-	// junto com a extração — ela agora sai do `EndSession`, que é quem
-	// conhece a regra. O status é o mesmo de antes.
-	updated, err := s.EndSession(r.Context(), sess)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(updated))
-}
-
-// handleClearTracker resets the initiative runtime state to empty.
-func (s *Server) handleClearTracker(w http.ResponseWriter, r *http.Request) {
-	cid, ok := intParam(w, r, "campaignId")
-	if !ok {
-		return
-	}
-	sid, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	if _, ok := s.ownedSession(w, r, cid, sid); !ok {
-		return
-	}
-	// A REGRA — incluindo o `Forget` do cache, sem o qual a fila velha continua
-	// servida — mora no `session_lifecycle.go` desde a ALE-269.
-	if err := s.RestartCombat(r.Context(), sid); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not clear tracker")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": sid})
 }
 
 // trimOrNull trims a string pointer, treating nil AND whitespace-only as NULL.

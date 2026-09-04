@@ -8,8 +8,6 @@ import (
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
 	"t20engine/sheet"
-
-	"github.com/go-chi/chi/v5"
 )
 
 // O `AugmentPick` mora no `sheet` desde a ALE-278: a cena o lê dos sinais e
@@ -18,48 +16,6 @@ import (
 type castResult struct {
 	MpCurrent        int64   `json:"mpCurrent"`
 	RemovedEffectIDs []int64 `json:"removedEffectIds"`
-}
-
-// handleCastSpell validate learned +
-// prepared + augments, check the PM cost against the per-spell limit and current
-// PM, then deduct. NOTE: the catalisador scene-discount is deferred (rare edge);
-// removedEffectIds is therefore always empty.
-func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
-	row, ok := s.characterFor(w, r)
-	if !ok {
-		return
-	}
-	catalogSpellID := chi.URLParam(r, "catalogSpellId")
-	var body struct {
-		Augments []sheet.AugmentPick `json:"augments"`
-	}
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	if _, known := catalog.LookupSpell(catalogSpellID); !known {
-		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Unknown spell %q", catalogSpellID))
-		return
-	}
-	dto, err := s.LoadCharacter(r.Context(), row)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
-		return
-	}
-
-	// A REGRA MORA NUM LUGAR SÓ. Este handler já teve cópia própria do teto da
-	// p224 e ela discordava da ficha sobre qual classe conta (ALE-92); desde a
-	// ALE-272 as duas pontas — este endpoint e o gesto da ficha em Datastar —
-	// chamam a MESMA função.
-	if err := s.castSpellForCharacter(r, dto, catalogSpellID, body.Augments); err != nil {
-		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	atualizado, err := s.queries.GetCharacter(r.Context(), row.ID)
-	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not read character")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, castResult{MpCurrent: atualizado.Mpcurrent, RemovedEffectIDs: []int64{}})
 }
 
 // castSpellForCharacter é a conjuração INTEIRA, sem HTTP.

@@ -20,8 +20,9 @@ import (
 // # O que ela deliberadamente NÃO pede
 //
 // O `sheetFromDTO` do hospedeiro esteve nesta lista e saiu depois de medido:
-// ele é um invólucro de UMA linha sobre `sheet.Compute(catalogs, dto)`, e a
-// cena já tem o `Catalogs()`. Pedir os dois seria pedir a mesma coisa duas
+// ele era um invólucro de UMA linha sobre `sheet.Compute(catalogs, dto)`, e a
+// cena já tem o `Catalogs()`. (O invólucro foi apagado de vez na ALE-277, com
+// o resto do que só a API JSON chamava; a `sheet.Compute` é a mesma.) Pedir os dois seria pedir a mesma coisa duas
 // vezes — a regra da menor pergunta, com a nuance de que aqui o menor não é o
 // mais estreito, é o que não se repete.
 //

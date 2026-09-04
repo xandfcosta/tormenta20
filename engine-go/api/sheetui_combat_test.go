@@ -107,7 +107,7 @@ func TestTheCombatPanelSaysTheEngineNumbers(t *testing.T) {
 
 // OS CONDICIONAIS LIGADOS ENTRAM NA CONTA, e esta é a garantia nova da fatia.
 //
-// Toda cena do piloto até aqui computou a ficha BASE (`sheetFromDTO`, com
+// Toda cena do piloto até aqui computou a ficha BASE (`sheet.Compute`, com
 // `map[string]bool{}`). Se o Combate fizesse o mesmo, um bárbaro em Fúria veria
 // o ataque de quem não está em Fúria — e a ficha discordaria da Mesa, que já lê
 // o estado ligado. O defeito não teria sintoma nenhum numa ficha sem

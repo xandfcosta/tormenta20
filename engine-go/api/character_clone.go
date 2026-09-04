@@ -7,26 +7,6 @@ import (
 	"t20engine/plataforma"
 )
 
-// cloneCharacterForCampaign snapshots a character — its row plus every child
-// table (races, classes, expertises, items, active effects, spells) — into a
-// new campaign-scoped copy, so edits during play stay isolated to that mesa
-// (ALE-33). The copy stamps `sourceCharacterId` (the template it came from) and
-// `campaignId`. Raw INSERT…SELECT keeps every column verbatim; sqlc's SQLite
-// parser rejects RETURNING on INSERT…SELECT, so we read the new id via
-// LastInsertId. All inserts run in one transaction.
-func (s *Server) cloneCharacterForCampaign(ctx context.Context, sourceID, campaignID int64) (int64, error) {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = tx.Rollback() }()
-	destID, err := cloneCharacterTx(ctx, tx, sourceID, campaignID)
-	if err != nil {
-		return 0, err
-	}
-	return destID, tx.Commit()
-}
-
 // cloneCharacterTx é o clone SEM dono da transação, para quem precisa que a
 // cópia e o que vem depois dela caiam ou vivam juntos.
 //

@@ -134,7 +134,7 @@ func EngineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 	return ec, json.Unmarshal(b, &ec)
 }
 
-// sheetFromDTO computa a ficha de um agregado JÁ CARREGADO.
+// Compute computa a ficha de um agregado JÁ CARREGADO.
 //
 // Separado do `computeSheet` para a cena de personagens (ALE-239), que precisa
 // da ficha de TODOS de uma vez: ela já tem os agregados na mão, e passar por

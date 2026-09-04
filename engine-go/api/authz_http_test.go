@@ -119,55 +119,17 @@ func TestRequireAuthRejectsMissingAndBrokenCredentials(t *testing.T) {
 func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 	s := newTestServer(t)
 
+	// As SETE que sobraram da ALE-277. A lista era de trinta e seis, e ela
+	// encolheu com as rotas — não por alguém ter tirado casos, mas porque o que
+	// elas protegiam deixou de existir. O `/health` fica de fora de propósito:
+	// ele é anônimo por desenho, e é o `healthcheck` do compose que bate nele.
 	protected := []struct{ method, path string }{
-		{http.MethodGet, "/auth/me"},
 		{http.MethodGet, "/campaigns"},
 		{http.MethodPost, "/campaigns"},
-		{http.MethodGet, "/campaigns/1"},
-		{http.MethodPatch, "/campaigns/1"},
 		{http.MethodDelete, "/campaigns/1"},
-		{http.MethodPost, "/campaigns/1/invite"},
-		{http.MethodGet, "/campaigns/1/members"},
-		{http.MethodPost, "/campaigns/1/members"},
-		{http.MethodPatch, "/campaigns/1/members/1"},
-		{http.MethodDelete, "/campaigns/1/members/1"},
-		{http.MethodGet, "/campaigns/1/sessions"},
 		{http.MethodPost, "/campaigns/1/sessions"},
-		{http.MethodGet, "/campaigns/1/sessions/1"},
-		{http.MethodPatch, "/campaigns/1/sessions/1"},
-		{http.MethodDelete, "/campaigns/1/sessions/1"},
-		{http.MethodPost, "/campaigns/1/sessions/1/start"},
-		{http.MethodPost, "/campaigns/1/sessions/1/end"},
-		{http.MethodPost, "/campaigns/1/sessions/1/clear-tracker"},
 		{http.MethodGet, "/characters"},
-		{http.MethodPost, "/characters"},
-		{http.MethodGet, "/characters/1"},
-		{http.MethodGet, "/characters/1/sheet"},
-		{http.MethodGet, "/characters/1/campaigns"},
-		{http.MethodPatch, "/characters/1/vitals"},
-		{http.MethodPatch, "/characters/1/tibar"},
-		{http.MethodPost, "/characters/1/damage"},
-		{http.MethodPatch, "/characters/1/level"},
-		{http.MethodPatch, "/characters/1/classes/level"},
-		{http.MethodPatch, "/characters/1/abilities"},
-		{http.MethodPatch, "/characters/1/proficiencies"},
 		{http.MethodPatch, "/characters/1/conditions"},
-		{http.MethodPost, "/characters/1/items"},
-		{http.MethodPatch, "/characters/1/items/1"},
-		{http.MethodDelete, "/characters/1/items/1"},
-		{http.MethodPost, "/characters/1/items/1/consume"},
-		{http.MethodPost, "/characters/1/expertises"},
-		{http.MethodPatch, "/characters/1/expertises"},
-		{http.MethodDelete, "/characters/1/expertises/atletismo"},
-		{http.MethodPost, "/characters/1/spells"},
-		{http.MethodDelete, "/characters/1/spells/bola-de-fogo"},
-		{http.MethodPatch, "/characters/1/spells/bola-de-fogo/prepared"},
-		{http.MethodPost, "/characters/1/spells/bola-de-fogo/cast"},
-		{http.MethodPost, "/characters/1/active-effects"},
-		{http.MethodPatch, "/characters/1/active-effects/1"},
-		{http.MethodDelete, "/characters/1/active-effects/1"},
-		{http.MethodPost, "/characters/1/end-scene"},
-		{http.MethodPost, "/characters/1/end-day"},
 	}
 
 	for _, route := range protected {
@@ -178,148 +140,40 @@ func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 	}
 }
 
-func TestGetCampaignAuthorization(t *testing.T) {
+// A ÚNICA escrita de ficha que sobrou na API responde 403 para um estranho.
+//
+// Aqui morava um guarda de VARREDURA — o `TestEveryCharacterRouteRejectsAnIntruder`
+// lia as rotas de `/characters` do `server.go` e cobrava um 403 de cada uma
+// (ALE-186). Ele saiu na ALE-277 com as 24 rotas que mediam, e o sucessor dele
+// não é este caso: é o `TestNoSheetWriteAcceptsAStranger`, que faz a MESMA
+// varredura no roteador das cenas, que é onde a ficha se escreve hoje.
+//
+// Este caso existe porque a varredura de lá não alcança a rota que ficou aqui:
+// ela filtra por `/personagens/{id}/`, e esta atende em `/characters`. Uma rota
+// só, então enumerar não é remendo — é o conjunto inteiro.
+func TestTheSurvivingCharacterWriteRejectsAStranger(t *testing.T) {
 	s := newTestServer(t)
-	gm := seedUser(t, s, "mestre@t20.local")
-	player := seedUser(t, s, "jogador@t20.local")
-	stranger := seedUser(t, s, "estranho@t20.local")
-	campaign := seedCampaign(t, s, gm)
-	hero := seedCharacter(t, s, player, "Herói", 10, 10, 0, 0)
-	seedMember(t, s, campaign, hero, "player")
-	path := "/campaigns/" + id64(campaign)
+	dono := seedUser(t, s, "dono@t20.local")
+	estranho := seedUser(t, s, "estranho@t20.local")
+	ficha := seedCharacter(t, s, dono, "Herói Alheio", 10, 10, 0, 0)
 
-	t.Run("o mestre vê a campanha como gm", func(t *testing.T) {
-		rec := authed(t, s, gm, http.MethodGet, path, "")
-		if rec.Code != http.StatusOK {
-			t.Fatalf("esperado 200 para o dono, veio %d (%s)", rec.Code, rec.Body.String())
-		}
-		if papel := jsonField(t, rec, "role"); papel != "gm" {
-			t.Fatalf("papel esperado gm, veio %v", papel)
-		}
-	})
+	rec := authed(t, s, estranho, http.MethodPatch, "/characters/"+id64(ficha)+"/conditions",
+		`{"activeConditions":["caido"]}`)
 
-	t.Run("o membro vê a campanha como player", func(t *testing.T) {
-		rec := authed(t, s, player, http.MethodGet, path, "")
-		if rec.Code != http.StatusOK {
-			t.Fatalf("esperado 200 para o membro, veio %d (%s)", rec.Code, rec.Body.String())
-		}
-		if papel := jsonField(t, rec, "role"); papel != "player" {
-			t.Fatalf("papel esperado player, veio %v", papel)
-		}
-	})
-
-	t.Run("um estranho leva 403", func(t *testing.T) {
-		if rec := authed(t, s, stranger, http.MethodGet, path, ""); rec.Code != http.StatusForbidden {
-			t.Fatalf("esperado 403 para estranho, veio %d (%s)", rec.Code, rec.Body.String())
-		}
-	})
-
-	t.Run("campanha inexistente é 404", func(t *testing.T) {
-		if rec := authed(t, s, gm, http.MethodGet, "/campaigns/99999", ""); rec.Code != http.StatusNotFound {
-			t.Fatalf("esperado 404, veio %d", rec.Code)
-		}
-	})
-}
-
-// The write block a player must never reach. Each case checks the refusal AND
-// that the row is untouched — a 403 that already mutated is not a refusal.
-func TestCampaignWritesRejectNonOwner(t *testing.T) {
-	s := newTestServer(t)
-	gm := seedUser(t, s, "mestre@t20.local")
-	player := seedUser(t, s, "jogador@t20.local")
-	campaign := seedCampaign(t, s, gm)
-	hero := seedCharacter(t, s, player, "Herói", 10, 10, 0, 0)
-	seedMember(t, s, campaign, hero, "player")
-	path := "/campaigns/" + id64(campaign)
-
-	before, err := s.queries.GetCampaign(context.Background(), campaign)
-	if err != nil {
-		t.Fatalf("ler campanha: %v", err)
-	}
-
-	cases := []struct{ nome, method, path, body string }{
-		{"editar", http.MethodPatch, path, `{"name":"Sequestrada"}`},
-		{"excluir", http.MethodDelete, path, ""},
-		{"gerar convite", http.MethodPost, path + "/invite", ""},
-	}
-
-	for _, c := range cases {
-		t.Run(c.nome+" como membro é 403", func(t *testing.T) {
-			rec := authed(t, s, player, c.method, c.path, c.body)
-			if rec.Code != http.StatusForbidden {
-				t.Fatalf("esperado 403, veio %d (%s)", rec.Code, rec.Body.String())
-			}
-
-			after, err := s.queries.GetCampaign(context.Background(), campaign)
-			if err != nil {
-				t.Fatalf("a campanha sumiu depois de um 403: %v", err)
-			}
-			if after.Name != before.Name {
-				t.Fatalf("nome mudou apesar do 403: %q → %q", before.Name, after.Name)
-			}
-			if after.Invitetoken != before.Invitetoken {
-				t.Fatalf("token de convite girou apesar do 403")
-			}
-		})
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("um estranho recebeu %d ao mexer na ficha dos outros, esperado 403 (%s)",
+			rec.Code, rec.Body.String())
 	}
 }
 
-// A session id from ANOTHER campaign must not resolve through a campaign the
-// caller does own — the classic nested-route confusion.
-func TestSessionRoutesRejectCrossCampaignAndNonOwner(t *testing.T) {
-	s := newTestServer(t)
-	gm := seedUser(t, s, "mestre@t20.local")
-	other := seedUser(t, s, "outro@t20.local")
-	mine := seedCampaign(t, s, gm)
-	theirs := seedCampaign(t, s, other)
-	foreignSession := seedSession(t, s, theirs)
+// Aqui morava o TestGetCampaignAuthorization, sobre a leitura de UMA campanha. A rota saiu na ALE-277.
 
-	t.Run("sessão de outra campanha pela minha é 404", func(t *testing.T) {
-		path := "/campaigns/" + id64(mine) + "/sessions/" + id64(foreignSession)
-		rec := authed(t, s, gm, http.MethodGet, path, "")
-		if rec.Code != http.StatusNotFound {
-			t.Fatalf("esperado 404 para id cruzado, veio %d (%s)", rec.Code, rec.Body.String())
-		}
-	})
+// Aqui morava o TestCampaignWritesRejectNonOwner, sobre o PATCH e o convite da campanha. A rota saiu na ALE-277.
 
-	t.Run("iniciar sessão alheia é recusado", func(t *testing.T) {
-		path := "/campaigns/" + id64(theirs) + "/sessions/" + id64(foreignSession) + "/start"
-		rec := authed(t, s, gm, http.MethodPost, path, "")
-		if rec.Code != http.StatusForbidden && rec.Code != http.StatusNotFound {
-			t.Fatalf("esperado 403 ou 404 para campanha alheia, veio %d (%s)", rec.Code, rec.Body.String())
-		}
-	})
-}
+// Aqui morava o TestSessionRoutesRejectCrossCampaignAndNonOwner, sobre as rotas de sessão. A rota saiu na ALE-277.
 
-// id64 formats a seeded row id for a URL — the package's `itoa` takes an int.
 func id64(v int64) string {
 	return strconv.FormatInt(v, 10)
 }
 
-// A descrição de campanha tinha DUAS grafias de "vazio": `handleCreateCampaign`
-// usava `trimmedNull` (só-espaços → string vazia) e `handleUpdateCampaign`
-// inlineava o trim gravando NULL. Mesma coluna, dois valores — o cliente recebia
-// `""` de um caminho e `null` do outro, para a mesma entrada do usuário.
-func TestCampaignDescriptionBlankIsTheSameEitherWay(t *testing.T) {
-	s := newTestServer(t)
-	gm := seedUser(t, s, "mestre@t20.local")
-
-	criada := authed(t, s, gm, http.MethodPost, "/campaigns",
-		`{"name":"Mesa Nova","description":"   "}`)
-	if criada.Code != http.StatusCreated && criada.Code != http.StatusOK {
-		t.Fatalf("criar: esperado 2xx, veio %d (%s)", criada.Code, criada.Body.String())
-	}
-	aoCriar := jsonField(t, criada, "description")
-
-	id := int64(jsonField(t, criada, "id").(float64))
-	editada := authed(t, s, gm, http.MethodPatch, "/campaigns/"+id64(id),
-		`{"description":"   "}`)
-	if editada.Code != http.StatusOK {
-		t.Fatalf("editar: esperado 200, veio %d (%s)", editada.Code, editada.Body.String())
-	}
-	aoEditar := jsonField(t, editada, "description")
-
-	if aoCriar != aoEditar {
-		t.Fatalf("mesma entrada, valores diferentes: criar deu %#v, editar deu %#v", aoCriar, aoEditar)
-	}
-}
+// Aqui morava o TestCampaignDescriptionBlankIsTheSameEitherWay, sobre a descrição em branco. A rota saiu na ALE-277.

@@ -159,8 +159,9 @@ func (s *Server) SaveChoices(ctx context.Context, id int64, escolhas sheetui.Cho
 //
 // A cena tinha a transação inteira escrita dentro dela, e o `applyPool` da rota
 // JSON tinha a MESMA sequência — duas cópias de um `BeginTx` sobre a mesma
-// regra. As duas passam agora pelo `applyPoolTx`, e a conta continua sendo do
-// `sheet`: "considere apenas o maior valor" (p256).
+// regra. As duas passaram pelo `applyPoolTx`, e então a rota JSON foi apagada
+// na ALE-277: sobrou uma chamadora e a extração continua valendo, porque a
+// conta é do `sheet`, "considere apenas o maior valor" (p256).
 func (s *Server) ApplyPowerTempHp(
 	ctx context.Context, id int64, powerID, escopo string, quanto int,
 ) error {

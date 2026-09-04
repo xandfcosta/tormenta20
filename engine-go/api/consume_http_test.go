@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"t20engine/plataforma"
@@ -32,17 +31,22 @@ func seedConsumable(t *testing.T, s *Server, charID int64, catalogID, name strin
 	return it.ID
 }
 
-func consumePath(charID, itemID int64) string {
-	return "/characters/" + id64(charID) + "/items/" + id64(itemID) + "/consume"
-}
-
-func decodeConsume(t *testing.T, rec *httptest.ResponseRecorder) consumeResult {
+// consumeItem chama a REGRA direto, e não a rota.
+//
+// Ela batia em `POST /characters/{id}/items/{itemId}/consume`, que saiu na
+// ALE-277 com as outras sessenta e nove rotas sem consumidor. O que estes casos
+// prendem nunca foi o transporte: é a baixa de UMA dose, a cura presa no
+// máximo, o efeito de cena e a porção diária. **Teste de regra vive junto da
+// regra**, e o caminho é o mesmo que a Mochila da ficha usa pelo `ConsumeItem`
+// da porta.
+func consumeItem(t *testing.T, s *Server, charID, itemID int64, pv, pm *int64) (doseUsed, error) {
 	t.Helper()
-	var out consumeResult
-	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
-		t.Fatalf("resposta não é um consumeResult (%s): %v", rec.Body.String(), err)
+	row, err := s.queries.GetCharacter(context.Background(), charID)
+	if err != nil {
+		t.Fatalf("ler personagem %d: %v", charID, err)
 	}
-	return out
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	return s.consumeItemForCharacter(req, row, itemID, pv, pm)
 }
 
 func itemQuantity(t *testing.T, s *Server, itemID int64) (int64, bool) {
@@ -65,12 +69,12 @@ func TestConsumeDecrementsExactlyOneAndHeals(t *testing.T) {
 	char := seedCharacter(t, s, owner, "Guerreiro", 12, 20, 0, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 3)
 
-	rec := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
+	dose, errDose := consumeItem(t, s, char, item, nil, nil)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d, esperado 200 (corpo %q)", rec.Code, rec.Body.String())
+	if errDose != nil {
+		t.Fatalf("a dose foi recusada: %v", errDose)
 	}
-	got := decodeConsume(t, rec)
+	got := dose.consumeResult
 	if got.Item.Quantity != 2 || got.Item.Removed {
 		t.Fatalf("resposta diz quantidade %d removido=%v, esperado 2 e falso", got.Item.Quantity, got.Item.Removed)
 	}
@@ -91,12 +95,12 @@ func TestConsumeLastUnitRemovesTheItem(t *testing.T) {
 	char := seedCharacter(t, s, owner, "Guerreiro", 12, 20, 0, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
-	rec := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
+	dose, errDose := consumeItem(t, s, char, item, nil, nil)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d, esperado 200 (corpo %q)", rec.Code, rec.Body.String())
+	if errDose != nil {
+		t.Fatalf("a dose foi recusada: %v", errDose)
 	}
-	if got := decodeConsume(t, rec); !got.Item.Removed {
+	if got := dose.consumeResult; !got.Item.Removed {
 		t.Fatalf("a última dose devia sair da mochila, veio %+v", got.Item)
 	}
 	if _, alive := itemQuantity(t, s, item); alive {
@@ -110,9 +114,12 @@ func TestConsumeClampsGainAtMaximum(t *testing.T) {
 	char := seedCharacter(t, s, owner, "Guerreiro", 18, 20, 0, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
-	rec := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
+	dose, errDose := consumeItem(t, s, char, item, nil, nil)
+	if errDose != nil {
+		t.Fatalf("a dose foi recusada: %v", errDose)
+	}
 
-	if got := decodeConsume(t, rec); got.HpCurrent != 20 {
+	if got := dose.consumeResult; got.HpCurrent != 20 {
 		t.Fatalf("PV = %d, esperado 20: 18 + 5 não pode passar do máximo", got.HpCurrent)
 	}
 }
@@ -124,9 +131,13 @@ func TestConsumeUsesRolledValueWhenTheTableRolls(t *testing.T) {
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
 	// A média é o padrão de quem não quer rolar; quem rola manda o resultado.
-	rec := authed(t, s, owner, http.MethodPost, consumePath(char, item), `{"hpRolled":8}`)
+	pvRolado := int64(8)
+	dose, errDose := consumeItem(t, s, char, item, &pvRolado, nil)
+	if errDose != nil {
+		t.Fatalf("a dose foi recusada: %v", errDose)
+	}
 
-	if got := decodeConsume(t, rec); got.HpCurrent != 18 {
+	if got := dose.consumeResult; got.HpCurrent != 18 {
 		t.Fatalf("PV = %d, esperado 18 (10 + o 8 rolado na mesa)", got.HpCurrent)
 	}
 }
@@ -137,9 +148,12 @@ func TestConsumeCreatesTheSceneEffect(t *testing.T) {
 	char := seedCharacter(t, s, owner, "Bardo", 10, 10, 0, 0)
 	item := seedConsumable(t, s, char, "cosmetico", "Cosmético", 1)
 
-	rec := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
+	dose, errDose := consumeItem(t, s, char, item, nil, nil)
+	if errDose != nil {
+		t.Fatalf("a dose foi recusada: %v", errDose)
+	}
 
-	got := decodeConsume(t, rec)
+	got := dose.consumeResult
 	if got.Effect == nil {
 		t.Fatal("o cosmético dura a cena inteira e não devolveu efeito nenhum")
 	}
@@ -148,22 +162,11 @@ func TestConsumeCreatesTheSceneEffect(t *testing.T) {
 	}
 }
 
-func TestConsumeRejectsAStranger(t *testing.T) {
-	s := newTestServer(t)
-	owner := seedUser(t, s, "dono@t20.local")
-	stranger := seedUser(t, s, "estranho@t20.local")
-	char := seedCharacter(t, s, owner, "Guerreiro", 12, 20, 0, 0)
-	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 2)
-
-	rec := authed(t, s, stranger, http.MethodPost, consumePath(char, item), "{}")
-
-	if rec.Code != http.StatusForbidden {
-		t.Fatalf("status = %d, esperado 403: a mochila é de quem a carrega", rec.Code)
-	}
-	if qty, _ := itemQuantity(t, s, item); qty != 2 {
-		t.Fatalf("quantidade = %d, esperado 2: o 403 não pode ter bebido a poção", qty)
-	}
-}
+// Aqui morava o TestConsumeRejectsAStranger, que provava o 403 de quem não é
+// dono da mochila. Ele morreu com a rota na ALE-277, e a garantia não: a POSSE é
+// do TRANSPORTE, e a cena da ficha a prende no próprio comando — o
+// `characterFor` é o gargalo único por onde toda rota de personagem passa. Uma
+// regra, uma camada.
 
 func TestConsumeRefusesWhatIsNotConsumable(t *testing.T) {
 	s := newTestServer(t)
@@ -171,10 +174,10 @@ func TestConsumeRefusesWhatIsNotConsumable(t *testing.T) {
 	char := seedCharacter(t, s, owner, "Guerreiro", 12, 20, 0, 0)
 	item := seedConsumable(t, s, char, "espada-longa", "Espada longa", 1)
 
-	rec := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
+	dose, errDose := consumeItem(t, s, char, item, nil, nil)
 
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status = %d, esperado 400 ao beber uma espada (corpo %q)", rec.Code, rec.Body.String())
+	if errDose == nil {
+		t.Fatalf("status = — e não foi recusado (dose %+v)", dose)
 	}
 	if _, alive := itemQuantity(t, s, item); !alive {
 		t.Fatal("a espada sumiu da mochila ao ser recusada")
@@ -187,15 +190,14 @@ func TestConsumeRefusesTheSecondPortionOfTheDay(t *testing.T) {
 	char := seedCharacter(t, s, owner, "Guerreiro", 10, 40, 0, 0)
 	item := seedConsumable(t, s, char, "macarrao-de-yuvalin", "Macarrão de Yuvalin", 2)
 
-	first := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
-	if first.Code != http.StatusOK {
-		t.Fatalf("a primeira porção falhou: %d (%s)", first.Code, first.Body.String())
+	if _, first := consumeItem(t, s, char, item, nil, nil); first != nil {
+		t.Fatalf("a primeira porção falhou: %v", first)
 	}
 
-	second := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
+	_, second := consumeItem(t, s, char, item, nil, nil)
 
-	if second.Code != http.StatusBadRequest {
-		t.Fatalf("status = %d, esperado 400: o catálogo marca este prato como uma vez por dia", second.Code)
+	if second == nil {
+		t.Fatal("a segunda porção passou: o catálogo marca este prato como uma vez por dia")
 	}
 	if qty, _ := itemQuantity(t, s, item); qty != 1 {
 		t.Fatalf("quantidade = %d, esperado 1: a porção recusada não pode ter sido comida", qty)
@@ -208,7 +210,7 @@ func TestConsumeAllowsThePortionAgainAfterTheDayEnds(t *testing.T) {
 	char := seedCharacter(t, s, owner, "Guerreiro", 10, 40, 0, 0)
 	item := seedConsumable(t, s, char, "macarrao-de-yuvalin", "Macarrão de Yuvalin", 2)
 
-	authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
+	consumeItem(t, s, char, item, nil, nil)
 	// A outra metade da regra: o marcador é de ESCOPO DE DIA, e encerrar o dia
 	// o limpa. Sem isto, o conserto acima teria trocado "come o dia inteiro"
 	// por "nunca mais come" — que é pior, porque some sem aviso.
@@ -221,9 +223,9 @@ func TestConsumeAllowsThePortionAgainAfterTheDayEnds(t *testing.T) {
 		t.Fatalf("encerrar o dia falhou: %d (%v)", status, err)
 	}
 
-	rec := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")
+	_, errDose := consumeItem(t, s, char, item, nil, nil)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d, esperado 200: amanhã se come de novo (corpo %q)", rec.Code, rec.Body.String())
+	if errDose != nil {
+		t.Fatalf("a dose foi recusada: %v", errDose)
 	}
 }

@@ -187,6 +187,35 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 // Router builds the HTTP handler: shared middleware + domain routes. Routes carry
 // NO /api prefix — in dev the Vite proxy strips it, and in production cmd/api
 // mounts this under http.StripPrefix("/api") while serving the SPA itself.
+// Router é o que sobrou da API JSON depois da ALE-277: SETE rotas.
+//
+// # Ela foi escrita para a SPA, e a SPA morreu
+//
+// Eram 76 rotas e 113 handlers. Medido antes do corte: **nenhuma cena chama
+// `/api/*`** — as onze cenas em Datastar leem o banco pelo `Queries` da porta
+// delas e desenham HTML. O único consumidor que sobrou é a SUÍTE DE E2E, e ela
+// usa seis endereços; o sétimo é o `/health`.
+//
+// # O que ficou, e por quê cada um
+//
+//   - `/health` é INFRAESTRUTURA, e é o contra-exemplo que esta casa já pagou
+//     uma vez: ele parece rota de API e quem bate nele é o `healthcheck` do
+//     compose e o `-health` do próprio binário. Tirar "rota sem consumidor" sem
+//     perguntar quem pergunta DE FORA foi o defeito que o CI pegou na ALE-272.
+//   - As seis restantes são a bancada do e2e: listar e apagar campanha de teste,
+//     listar ficha e limpar condição que uma execução anterior deixou, e montar
+//     a mesa descartável do spec do tabuleiro. Elas não são produto — são o que
+//     faz a suíte ser REPETÍVEL, e a alternativa (montar tudo pela tela) troca
+//     segundos de setup por minutos.
+//
+// # O que saiu junto, e que não aparece nesta função
+//
+// O `mountLiveRoutes` e o `/events`: dezoito rotas do tempo real da SPA. A Mesa
+// em Datastar tem stream próprio (`/mesa/{campanha}/{sessao}/stream`) e escreve
+// pelos comandos dela — medido, ninguém abria o `EventSource` daqui.
+//
+// E os quinze `*_http_test.go`, com 71 casos. Teste verde sobre código que
+// ninguém usa é a pior dívida: cobra manutenção e não protege nada.
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RealIP)
@@ -208,128 +237,29 @@ func (s *Server) Router() http.Handler {
 
 	r.Get("/health", s.handleHealth)
 
-	r.Route("/auth", func(r chi.Router) {
-		r.Post("/register", s.handleRegister)
-		r.Post("/login", s.handleLogin)
-		r.Post("/logout", s.handleLogout)
-		// Anonymous: see /password-resets above.
-		r.Post("/reset-password", s.handleResetPassword)
-		r.With(s.requireAuth).Get("/me", s.handleMe)
-	})
-
-	r.Route("/catalog", func(r chi.Router) {
-		r.Get("/", s.handleCatalogIndex)
-		r.Get("/{resource}", s.handleCatalogResource)
-	})
-
-	// Invite landing is anonymous (pre-login preview).
-	r.Get("/invites/{token}", s.handleResolveInvite)
-	// Account invite, a different thing from the campaign one above: this is the
-	// link that lets someone CREATE an account, so it is read before any session
-	// exists (ALE-120).
-	r.Get("/account-invites/{token}", s.handleResolveAccountInvite)
-
-	// Anonymous by necessity: whoever forgot their password cannot authenticate
-	// to change it. What guards it is the single-use token (ALE-120).
-	r.Get("/password-resets/{token}", s.handleResolvePasswordReset)
-
-	r.Route("/admin", func(r chi.Router) {
-		r.Use(s.requireAuth)
-		r.Use(s.requireAdmin)
-		r.Get("/users", s.handleAdminListUsers)
-		r.Delete("/users/{id}", s.handleAdminDeleteUser)
-		r.Post("/users/{id}/password-reset", s.handleAdminCreatePasswordReset)
-		r.Get("/invites", s.handleAdminListInvites)
-		r.Post("/invites", s.handleCreateAccountInvite)
-		r.Get("/status", s.handleAdminStatus)
-		r.Get("/backups", s.handleAdminListBackups)
-		r.Post("/backups", s.handleAdminCreateBackup)
-	})
-
 	r.Route("/campaigns", func(r chi.Router) {
 		r.Use(s.requireAuth)
+		// A varredura do `auth.setup.ts`: lista, filtra pelo prefixo "E2E
+		// Descartável" e apaga. Nomeia pelo PREFIXO e nunca por id — apagar por
+		// id seria apagar seed.
 		r.Get("/", s.handleListCampaigns)
-		r.Post("/", s.handleCreateCampaign)
-		r.Get("/{id}", s.handleGetCampaign)
-		r.Patch("/{id}", s.handleUpdateCampaign)
 		r.Delete("/{id}", s.handleDeleteCampaign)
-		r.Post("/{id}/invite", s.handleRotateInvite)
-		// Regras opcionais (ALE-221). PUT porque a tela manda o conjunto INTEIRO
-		// das regras desligadas, nunca um delta. Só o dono da campanha escreve.
-		r.Put("/{id}/rules", s.handleReplaceCampaignRules)
-		r.Route("/{campaignId}/members", func(r chi.Router) {
-			r.Get("/", s.handleListMembers)
-			r.Post("/", s.handleAddMember)
-			r.Patch("/{id}", s.handleUpdateMemberRole)
-			r.Delete("/{id}", s.handleRemoveMember)
-		})
-		// Bloco de criatura do mestre (ALE-137). Só o mestre lê e escreve — o
-		// jogador continua vendo nome e barra de PV pela iniciativa.
-		r.Route("/{campaignId}/creatures", func(r chi.Router) {
-			r.Get("/", s.handleListCreatures)
-			r.Post("/", s.handleCreateCreature)
-			r.Patch("/{id}", s.handleUpdateCreature)
-			r.Delete("/{id}", s.handleDeleteCreature)
-		})
+		// A fixture do `piloto-tabuleiro.spec.ts`: uma mesa descartável por
+		// corrida, montada em duas chamadas em vez de seis telas.
+		r.Post("/", s.handleCreateCampaign)
 		r.Route("/{campaignId}/sessions", func(r chi.Router) {
-			r.Get("/", s.handleListSessions)
 			r.Post("/", s.handleCreateSession)
-			r.Get("/{id}", s.handleGetSession)
-			r.Patch("/{id}", s.handleUpdateSession)
-			r.Delete("/{id}", s.handleDeleteSession)
-			r.Post("/{id}/start", s.handleStartSession)
-			r.Post("/{id}/end", s.handleEndSession)
-			r.Post("/{id}/clear-tracker", s.handleClearTracker)
-			// O fluxo de eventos ao vivo (ALE-253). Debaixo do `requireAuth`
-			// como qualquer rota — o `EventSource` manda o cookie sozinho.
-			r.Get("/{id}/events", s.handleSessionEvents)
-			s.mountLiveRoutes(r)
 		})
 	})
 
 	r.Route("/characters", func(r chi.Router) {
-		// Public creation lists: the Forge reads them before anyone logs in.
-		r.Get("/options", s.handleCharacterOptions)
-		r.Group(func(r chi.Router) {
-			r.Use(s.requireAuth)
-			r.Use(s.serializeCharacterWrites)
-			r.Get("/", s.handleListCharacters)
-			r.Post("/", s.handleCreateCharacter)
-			r.Get("/{id}", s.handleGetCharacter)
-			r.Get("/{id}/sheet", s.handleGetSheet)
-			r.Get("/{id}/campaigns", s.handleListCharacterCampaigns)
-			r.Post("/{id}/active-effects", s.handleApplyEffect)
-			r.Patch("/{id}/active-effects/{effectId}", s.handleAdjustEffect)
-			r.Delete("/{id}/active-effects/{effectId}", s.handleDeleteEffect)
-			r.Post("/{id}/end-scene", s.handleEndScene)
-			r.Post("/{id}/end-day", s.handleEndDay)
-			r.Patch("/{id}/vitals", s.handleUpdateVitals)
-			r.Patch("/{id}/tibar", s.handleUpdateTibar)
-			r.Post("/{id}/damage", s.handleApplyDamage)
-			r.Patch("/{id}/level", s.handleUpdateLevel)
-			r.Patch("/{id}/classes/level", s.handleUpdateClassLevel)
-			r.Patch("/{id}/abilities", s.handleUpdateAbilities)
-			r.Patch("/{id}/proficiencies", s.handleUpdateProficiencies)
-			r.Post("/{id}/items", s.handleAddItem)
-			r.Patch("/{id}/items/{itemId}", s.handleUpdateItem)
-			r.Delete("/{id}/items/{itemId}", s.handleDeleteItem)
-			r.Post("/{id}/items/{itemId}/consume", s.handleConsumeItem)
-			r.Patch("/{id}/conditions", s.handleUpdateConditions)
-			// O estado de JOGO da ficha (ALE-222). `conditionals` e vizinho de
-			// `conditions` uma linha acima e e OUTRA COISA: aquele e o opt-in do
-			// jogador, este sao as condicoes do livro. Ver C6 no GLOSSARIO.md.
-			r.Patch("/{id}/conditionals", s.handleUpdateConditionals)
-			r.Post("/{id}/power-uses", s.handleBumpPowerUse)
-			r.Put("/{id}/stances/{flag}", s.handleSetStance)
-			r.Delete("/{id}/stances/{flag}", s.handleDeleteStance)
-			r.Post("/{id}/expertises", s.handleAddExpertise)
-			r.Patch("/{id}/expertises", s.handleUpdateExpertise)
-			r.Delete("/{id}/expertises/{name}", s.handleDeleteExpertise)
-			r.Post("/{id}/spells", s.handleLearnSpell)
-			r.Delete("/{id}/spells/{catalogSpellId}", s.handleUnlearnSpell)
-			r.Patch("/{id}/spells/{catalogSpellId}/prepared", s.handleSetSpellPrepared)
-			r.Post("/{id}/spells/{catalogSpellId}/cast", s.handleCastSpell)
-		})
+		r.Use(s.requireAuth)
+		r.Use(s.serializeCharacterWrites)
+		// A varredura das CONDIÇÕES: o spec da sessão aplica Abalado, Agarrado e
+		// Cego para medir a faixa cheia, e a limpeza dele mora no corpo do teste
+		// — quando ele falha, a condição fica gravada e ele falha PARA SEMPRE.
+		r.Get("/", s.handleListCharacters)
+		r.Patch("/{id}/conditions", s.handleUpdateConditions)
 	})
 	return r
 }

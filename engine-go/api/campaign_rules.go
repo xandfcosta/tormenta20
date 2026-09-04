@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"net/http"
-	"t20engine/campaign"
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
@@ -31,39 +29,6 @@ func (s *Server) ignoredRulesOf(ctx context.Context, campaignID int64) []string 
 		return []string{}
 	}
 	return rules
-}
-
-// handleReplaceCampaignRules grava o conjunto INTEIRO das regras desligadas.
-//
-// Substituição e não delta de propósito: a tela mostra todos os interruptores de
-// uma vez, então ela sempre sabe o estado completo, e um par ligar/desligar
-// disputando a mesma regra terminaria num estado que ninguém pediu.
-func (s *Server) handleReplaceCampaignRules(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
-	if !ok {
-		return
-	}
-	var body struct {
-		IgnoredRules []string `json:"ignoredRules"`
-	}
-	if !plataforma.DecodeJSON(w, r, &body) {
-		return
-	}
-	// A posse vem ANTES da validação do corpo: um estranho que mandasse uma regra
-	// inválida aprenderia, pela mensagem, que a campanha existe.
-	if _, ok := s.ownedCampaign(w, r, id); !ok {
-		return
-	}
-	wanted, msg := campaign.NormalizeIgnoredRules(body.IgnoredRules)
-	if msg != "" {
-		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"ignoredRules": {msg}})
-		return
-	}
-	if err := s.saveIgnoredRules(r.Context(), id, wanted); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update campaign rules")
-		return
-	}
-	plataforma.WriteJSON(w, http.StatusOK, campaignRulesDTO{IgnoredRules: wanted})
 }
 
 // A normalização das regras opcionais mora em `campaign` desde a ALE-278: ela é
