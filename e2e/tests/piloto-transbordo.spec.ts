@@ -188,3 +188,56 @@ test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, li
     expect(m.livro, `${cena}: o palco não usa a largura`).toBeGreaterThan(1400)
   }
 })
+
+/**
+ * O CRACHÁ DA DEFESA cabe no rodapé da ficha a 390px, com o alvo CAÍDO (ALE-274).
+ *
+ * O Caído parte a Defesa em duas (p394), e desde a ALE-274 o crachá mostra as
+ * duas: `10` vira `5 CaC · 15 Dist`, três vezes mais largo. Ele é `shrink-0` num
+ * flex ao lado do nome do herói, que TRUNCA — então o risco não é o crachá
+ * transbordar, é ele espremer o nome até sumir.
+ *
+ * E2E porque a pergunta é de LEIAUTE REAL: quanto o nome trunca depende da
+ * fonte e do algoritmo do navegador, e em jsdom tudo mede zero.
+ *
+ * E VISITAR O CASO É METADE DO GUARDA. A suíte já rodava verde com esta mudança
+ * dentro, porque a seed não tem ninguém caído — o guarda de transbordo media o
+ * crachá curto e dizia "passou". É a família que o guia cataloga em "um guarda
+ * só mede o que ele VISITA": a cena estava na lista, o DADO não.
+ */
+test('o crachá da Defesa partida cabe no rodapé da ficha a 390px', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  // A aba dos EFEITOS porque é lá que a condição se aplica; o crachá medido é o
+  // do RODAPÉ, que aparece em todas elas — e é justamente esse o argumento dele.
+  await page.goto('/personagens/1?tab=conditionals')
+
+  // O CONTROLE: em pé, o crachá é curto — é assim que se sabe que a medição
+  // depois é do caso novo e não do que já estava lá.
+  const cracha = page.locator('span', { hasText: /^DEF$/ }).locator('..')
+  await expect(cracha).toBeVisible()
+  const curto = await cracha.evaluate((el) => el.getBoundingClientRect().width)
+
+  await page.getByRole('button', { name: 'Aplicar condição' }).click()
+  await page.getByRole('button', { name: /^Caído/ }).click()
+  await expect(cracha).toContainText('CaC')
+
+  const medida = await cracha.evaluate((el) => {
+    const caixa = el.getBoundingClientRect()
+    const linha = el.parentElement as HTMLElement
+    const pai = linha.getBoundingClientRect()
+    const nome = linha.querySelector('p') as HTMLElement | null
+    return {
+      largura: caixa.width,
+      foraPelaDireita: caixa.right - pai.right,
+      recorteDaLinha: linha.scrollWidth - linha.clientWidth,
+      nomeVisivel: nome ? nome.getBoundingClientRect().width : -1,
+    }
+  })
+
+  expect(medida.largura, 'o crachá não cresceu: o caso não está medindo a Defesa partida')
+    .toBeGreaterThan(curto)
+  expect(medida.foraPelaDireita, 'o crachá saiu pela direita da linha').toBeLessThanOrEqual(1)
+  expect(medida.recorteDaLinha, 'a linha recortou o próprio conteúdo').toBeLessThanOrEqual(1)
+  // O nome não pode ser espremido a nada: truncar é o desenho, sumir não é.
+  expect(medida.nomeVisivel, 'o crachá espremeu o nome do herói até sumir').toBeGreaterThan(24)
+})

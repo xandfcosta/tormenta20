@@ -644,7 +644,7 @@ func playerBadge(v View) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(v.Defesa)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 201, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 209, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -715,7 +715,7 @@ func levelRow(v View) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(v.Nivel, 10))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 222, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 230, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -783,7 +783,7 @@ func levelStep(v View, passo int, rotulo, desenho string) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 243, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 251, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -796,7 +796,7 @@ func levelStep(v View, passo int, rotulo, desenho string) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 244, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 252, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -820,7 +820,7 @@ func levelStep(v View, passo int, rotulo, desenho string) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(directStep(v, passo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 247, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 255, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 			if templ_7745c5c3_Err != nil {
@@ -838,7 +838,7 @@ func levelStep(v View, passo int, rotulo, desenho string) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('" + stepDialog(passo) + "').showModal()")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 249, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 257, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 			if templ_7745c5c3_Err != nil {
@@ -900,7 +900,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepDialog(passo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 266, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 274, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -913,7 +913,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepDialog(passo) + "-titulo")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 268, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 276, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -926,7 +926,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepDialog(passo) + "-titulo")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 271, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 279, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {
@@ -939,7 +939,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 271, Col: 114}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 279, Col: 114}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
@@ -957,7 +957,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('" + stepDialog(passo) + "').close(); " + stepCommand(v, classe.Nome, passo))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 280, Col: 124}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 288, Col: 124}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 				if templ_7745c5c3_Err != nil {
@@ -970,7 +970,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(classe.Nome)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 283, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 291, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
@@ -983,7 +983,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 				var templ_7745c5c3_Var40 string
 				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(classe.Nivel, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 284, Col: 103}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 292, Col: 103}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
@@ -1001,7 +1001,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('" + stepDialog(passo) + "').close()")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 292, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 300, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 			if templ_7745c5c3_Err != nil {
@@ -1071,7 +1071,7 @@ func vitalBar(v View, rotulo string, vital sheetVital, apagado bool) templ.Compo
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 311, Col: 106}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 319, Col: 106}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -1106,7 +1106,7 @@ func vitalBar(v View, rotulo string, vital sheetVital, apagado bool) templ.Compo
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %d%%", vital.Porcento))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 315, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 323, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1119,7 +1119,7 @@ func vitalBar(v View, rotulo string, vital sheetVital, apagado bool) templ.Compo
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(vital.Fracao)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 318, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 326, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -1191,7 +1191,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepLabel(rotulo, passo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 341, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 349, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 		if templ_7745c5c3_Err != nil {
@@ -1204,7 +1204,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepLabel(rotulo, passo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 342, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 350, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 		if templ_7745c5c3_Err != nil {
@@ -1217,7 +1217,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue(vitalCommand(v, rotulo, passo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 343, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 351, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 		if templ_7745c5c3_Err != nil {
@@ -1230,7 +1230,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(stepSignal(passo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 346, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 354, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -1283,7 +1283,7 @@ func ruleRefusal(v View) templ.Component {
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(v.Recusa)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 365, Col: 13}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 373, Col: 13}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {

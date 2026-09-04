@@ -193,9 +193,17 @@ templ playerBadge(v View) {
 						}
 					</div>
 					// A DEFESA é o número que a mesa pergunta em voz alta, e por
-					// isso ela fica no crachá e não só na aba Combate: com o
-					// Combate ainda na ficha antiga, sem ela aqui a ficha nova
-					// não responderia a pergunta mais comum de um turno.
+					// isso ela fica no crachá e não só na aba Combate — ele
+					// aparece em TODAS as abas, e a aba Combate é uma.
+					//
+					// Aqui morava a razão original ("com o Combate ainda na ficha
+					// antiga"), e ela venceu: o Combate está na ficha nova desde a
+					// ALE-272. O crachá ficou porque o argumento dele nunca
+					// dependeu disso.
+					//
+					// E é por ser a pergunta do turno que ele mostra o PAR quando
+					// a Defesa é direcional (ALE-274): com o alvo caído, o total é
+					// o único número que não responde "acerta?".
 					<div class="flex shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1">
 						<span class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">DEF</span>
 						<span class="font-mono text-lg font-semibold tabular-nums text-foreground">{ v.Defesa }</span>
