@@ -2280,6 +2280,55 @@ esteja ele escrito ou não.
 > precisa*, e ela mora no `turnStripOf`, que é quem enxerga a faixa inteira — uma
 > linha sozinha não tem como saber se é a única.
 
+## O guarda de leiaute precisa do ESTADO, não só da cena (ALE-271)
+
+O painel de verbos do tabuleiro começava em **x = −122** numa janela de 390, com
+"Centralizar o mapa" e "Afastar o mapa" INALCANÇÁVEIS — e o zoom é de todo
+mundo. Quem o empurrava era o botão do acervo, o único item com texto e
+contagem: 144px sozinho, contra 32 dos ícones.
+
+**Nenhum guarda pegou, e nenhum estava desligado.** O `expectDentroDaJanela`
+percorre todo botão da página e mede; a Mesa está nas listas. O que faltava era
+o ESTADO: a seed do e2e não tinha acervo, então o botão mais largo do painel não
+existia na tela medida. **A cena estava na lista e o estado não** — é a família
+"um guarda só mede o que ele VISITA" com o eixo trocado.
+
+O conserto do guarda foi o acervo entrar na SEED (campanha 1, três lugares: o
+que muda a largura é o botão existir e a contagem ter dígito, não o tamanho do
+acervo), mais um caso que abre o tabuleiro a 390px com lugares semeados pela
+porta de verdade.
+
+### Encolher rótulo não é decidir por CSS o que o servidor escreve
+
+Os dois rótulos saem no telefone (`hidden sm:inline`) e a frase inteira fica no
+`aria-label`. **Esconder texto por CSS o tira da árvore de acessibilidade** —
+`display:none` não é `sr-only` —, e um botão que vira "3" para quem usa leitor de
+tela é pior que um botão largo.
+
+O mostrador do zoom é o caso que ensina a diferença: ele é `aria-live` porque é a
+única resposta ao clique para quem não vê o mapa mudar, então ele virou
+`sr-only sm:not-sr-only` — sai dos PIXELS e fica na árvore. Um `hidden` ali teria
+consertado a largura calando o único retorno que aquele grupo dá.
+
+### Três medidas que o mockup não previa
+
+1. **Os ícones estavam sendo ESPREMIDOS.** Antes do conserto eles mediam 22px; o
+   natural é 32. O `flex` encolhia tudo para caber, então a medição do "antes"
+   subestimava a largura real — e a conta de quanto faltava saía errada.
+2. **O número do acervo tem DÍGITOS.** Com 3 lugares cabia; com 148, o painel
+   voltava a estourar por 9px. Uma largura que depende de quantos dígitos o
+   estado tem não é uma largura resolvida.
+3. **A janela não é o viewport.** O painel vive dentro da cena, que já é inset
+   pelo padding do palco: a 390px de viewport sobram 378 para ele.
+
+### Um ID de AUTOINCREMENT numa fixture compartilhada quebra por outra issue
+
+O guarda de contraste do rascunho abria `/campanhas/4/lugares/1`. O acervo da
+campanha 1 entrou na seed, os ids reordenaram, e ele passou a abrir outro lugar —
+falhando com "heading não encontrado", que não aponta para nada. Ele passou a
+NAVEGAR (aba de lugares → "Montar"), que é o caminho do mestre e não depende de
+número nenhum.
+
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 
 Ele tinha **89 métodos exportados**, e todos existiam por um motivo só: cumprir

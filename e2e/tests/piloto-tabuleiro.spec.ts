@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
+import { expectDentroDaJanela } from './support/geometry'
 
 /**
  * O TABULEIRO da Mesa em Datastar (ALE-264, item 7).
@@ -141,7 +142,11 @@ async function poeUmaPecaNoMapa(page: Page): Promise<void> {
 async function abreOTabuleiro(page: Page, mesa: string): Promise<void> {
   await page.goto(mesa, { waitUntil: 'domcontentloaded' })
   await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
-  await page.getByLabel('Lugar').fill('Taverna do E2E')
+  // `exact` porque `getByLabel` casa por SUBSTRING, e o diálogo do acervo se
+  // chama "Lugares da campanha" — com acervo na mesa, `'Lugar'` resolve para
+  // DOIS e o helper estoura em strict mode (ALE-271). O sintoma não aponta para
+  // a causa: ele diz "waiting for getByLabel('Lugar')" num campo que está lá.
+  await page.getByLabel('Lugar', { exact: true }).fill('Taverna do E2E')
   await page.getByRole('button', { name: 'Abrir', exact: true }).click()
   // A CENA e não o PLANO: desde a ALE-203 o plano é uma ORIGEM de tamanho zero
   // num plano infinito, e o Playwright chama de invisível todo elemento sem
@@ -644,6 +649,55 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
       page.locator('.tabuleiro-previa-cabe'),
       'a seta viva sobreviveu ao soltar',
     ).toHaveAttribute('d', '')
+  } finally {
+    await apagar()
+  }
+})
+
+/**
+ * O PAINEL DE VERBOS CABE NO TELEFONE, COM ACERVO (ALE-271).
+ *
+ * Por que e2e, e este arquivo cobra a justificativa de cada caso: o que estoura
+ * é LARGURA REAL de texto renderizado. O servidor não mede caixa — ele escreve
+ * "Lugares da campanha · 3" e não sabe que aquilo dá 144px numa janela de 390.
+ * Só o navegador sabe, e o defeito é exatamente a soma das larguras.
+ *
+ * O ESTADO é o assunto, e é por isso que o caso semeia lugares: o painel sem
+ * acervo não tem o botão largo, e medi-lo assim é medir outro painel. Foi essa a
+ * lacuna que deixou o defeito viver — a cena estava nas listas dos guardas, e o
+ * estado que a quebra não estava em lugar nenhum.
+ *
+ * MEDIDO antes do conserto, com a Mesa a 390px: o painel começava em x = −122 e
+ * "Centralizar o mapa" (x = −117) e "Afastar o mapa" (x = −72) ficavam fora da
+ * janela — inalcançáveis, e o zoom é de TODO MUNDO.
+ */
+test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    const campanha = mesa.split('/')[2]
+    // O ACERVO pela porta de verdade — a mesma que a aba de lugares usa. Três
+    // basta: o que muda a largura é o botão EXISTIR e a contagem ter dígito.
+    for (const nome of ['Taverna do E2E', 'Cripta do E2E', 'Ruínas do E2E']) {
+      const criado = await page.request.post(`/campanhas/${campanha}/lugares/novo`, {
+        form: { name: nome, ground: 'cripta' },
+      })
+      expect(criado.ok(), `semear o lugar ${nome}: ${criado.status()}`).toBeTruthy()
+    }
+
+    await abreOTabuleiro(page, mesa)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.waitForTimeout(300)
+
+    // O CONTROLE, e sem ele o caso não mede nada: se o botão do acervo não
+    // estiver na tela, o painel medido é o estreito, e o guarda passa verde
+    // sobre o painel que nunca quebrou.
+    const acervo = page.locator('.tabuleiro-verbos-da-cena button').filter({ hasText: /Lugares|3/ })
+    await expect(
+      acervo.first(),
+      'o botão do acervo não está no painel — o caso mediria um painel sem o item que o estoura',
+    ).toBeVisible()
+
+    await expectDentroDaJanela(page)
   } finally {
     await apagar()
   }

@@ -86,6 +86,21 @@ var demoCampaigns = []demoCampaign{
 			{4, "", "active", "2026-08-10T19:00:00.000Z", "", ""},
 			{5, "", "planned", "", "", "2026-08-22T19:00:00.000Z"},
 		},
+		// O ACERVO da mesa-vitrine (ALE-271), e ele não é enfeite: o botão
+		// "Lugares da campanha · N" é o ÚNICO item do painel de verbos com texto
+		// e contagem, e era ele que empurrava dois botões para fora da janela a
+		// 390px. Sem acervo na seed, o painel que o e2e mede não é o painel que a
+		// mesa vê — a cena estava na lista dos guardas e o ESTADO não.
+		//
+		// TRÊS e não cento e quarenta e oito: o que muda a largura é o botão
+		// EXISTIR e a contagem ter dois dígitos, e três lugares já dão isso. Um
+		// acervo grande na seed custaria o dobro do arquivo para medir a mesma
+		// coisa.
+		places: []demoPlace{
+			{"Taverna do Javali", tavernaDoJavali},
+			{"Ponte de Vectora", pontDeVectora},
+			{"Ruínas de Lenoria", ruinasDeLenoria},
+		},
 	},
 	{
 		name:        "A Queda de Tauron",
@@ -138,6 +153,24 @@ var demoCampaigns = []demoCampaign{
 // guarda de contraste mede o que a tela DESENHA: um lugar vazio seria uma grade
 // em branco, e a medição passaria por cima da tinta que ela existe para
 // conferir. Foi assim que ela achou, na estreia, um marcador carmim a 4,11:1.
+// A TAVERNA é a cena de interpretação: gente e mobília, sem terreno difícil.
+const tavernaDoJavali = `{"id":"semente-taverna","version":5,"place":"Taverna do Javali","terrain":"taverna",` +
+	`"tokens":[` +
+	`{"id":"semente-taverna-1","label":"Taverneiro","kind":"npc","x":0,"y":-2,"footprint":1},` +
+	`{"id":"semente-taverna-2","label":"Balcão","kind":"object","x":1,"y":-2,"footprint":2},` +
+	`{"id":"semente-taverna-3","label":"Mesa redonda","kind":"object","x":-2,"y":1,"footprint":2}]}`
+
+// A PONTE é a cena da primeira sessão da mesa-vitrine ("A emboscada na ponte"),
+// com terreno difícil dos dois lados.
+const pontDeVectora = `{"id":"semente-ponte","version":4,"place":"Ponte de Vectora","terrain":"pedra",` +
+	`"tokens":[{"id":"semente-ponte-1","label":"Salteador","kind":"npc","x":2,"y":0,"footprint":1,"hidden":true}],` +
+	`"difficult":[{"x":-1,"y":0},{"x":-1,"y":1},{"x":5,"y":0},{"x":5,"y":1}]}`
+
+// A cena VAZIA existe de propósito: é o lugar aberto e abandonado, o caso que a
+// linha "cena vazia" do acervo descreve e que o mestre abre o acervo para
+// limpar.
+const ruinasDeLenoria = `{"id":"semente-ruinas","version":1,"place":"Ruínas de Lenoria","terrain":"ermo","tokens":[]}`
+
 const criptaDeThwor = `{"id":"semente-cripta","version":3,"place":"Cripta de Thwor","terrain":"cripta",` +
 	`"tokens":[` +
 	`{"id":"semente-peca-1","label":"Porta selada","kind":"object","x":-2,"y":1,"footprint":1},` +
