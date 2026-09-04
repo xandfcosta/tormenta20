@@ -10,7 +10,7 @@ import (
 // A ficha de item, o catálogo, o item custom, a dose do consumível e — a parte
 // que era só de tela até aqui — a compatibilidade de melhoria e material.
 
-// oItemDaFichaPorNome acha um item pelo nome, para o teste não guardar ids.
+// itemScreenSheet acha um item pelo nome, para o teste não guardar ids.
 // A FICHA DO ITEM oferece os lugares ALCANÇÁVEIS, e só eles.
 // oFichaDoItemNaTela recorta o diálogo de UM item pelo rótulo dele.
 func itemScreenSheet(tela, nome string) string {

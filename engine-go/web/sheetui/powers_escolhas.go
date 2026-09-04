@@ -40,7 +40,7 @@ type pendencia struct {
 	Rotulo string
 }
 
-// asPendenciasDaFicha são as escolhas que faltam, na ordem das abas.
+// sheetPendings são as escolhas que faltam, na ordem das abas.
 func (s Scene) sheetPendings(dto sheet.CharacterDTO) []pendencia {
 	fora := []pendencia{}
 	fora = append(fora, s.attributeRacePending(dto)...)
@@ -49,7 +49,7 @@ func (s Scene) sheetPendings(dto sheet.CharacterDTO) []pendencia {
 	return fora
 }
 
-// aPendenciaDoAtributoDeRaca é o `+1 ×3` do humano e a ascendência do suraggel.
+// attributeRacePending é o `+1 ×3` do humano e a ascendência do suraggel.
 //
 // Ela PERGUNTA ao motor em vez de repetir a condição dele: o `resolveAtributoMod`
 // já sabe quantas escolhas cada raça pede, que elas têm de ser distintas e qual
@@ -130,7 +130,7 @@ func classPendings(dto sheet.CharacterDTO) []pendencia {
 	return fora
 }
 
-// asPendenciasEscritas é "3 escolhas pendentes", com o singular certo.
+// writtenPendings é "3 escolhas pendentes", com o singular certo.
 func writtenPendings(total int) string {
 	if total == 1 {
 		return "1 escolha pendente"
@@ -138,7 +138,7 @@ func writtenPendings(total int) string {
 	return strconv.Itoa(total) + " escolhas pendentes"
 }
 
-// aFonteEscrita é o rótulo da aba do diálogo.
+// writtenSources é o rótulo da aba do diálogo.
 var writtenSources = map[string]string{"raca": "Raça", "origem": "Origem", "classe": "Classe"}
 
 func writtenSource(fonte string) string {

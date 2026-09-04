@@ -35,7 +35,7 @@ type Race struct {
 	BookPage     int         `json:"bookPage"`
 }
 
-// atributoDeRaca são as DUAS formas do livro, e elas não se reduzem a uma: o
+// RaceAttribute são as DUAS formas do livro, e elas não se reduzem a uma: o
 // humano escolhe três +1 onde quiser (`floating`), o elfo recebe +2 Int, +1 Des
 // e −1 Con (`fixed`). Guardar as duas num mapa só faria a escolha do humano
 // virar três atributos inventados.
@@ -68,7 +68,7 @@ func (a RaceAttribute) Escrito() string {
 	return strings.Join(partes, ", ")
 }
 
-// porExtenso escreve a contagem da escolha livre. Vai até seis porque são seis
+// InWords escreve a contagem da escolha livre. Vai até seis porque são seis
 // atributos — não há sétima escolha possível.
 func InWords(n int) string {
 	nomes := []string{"nenhum atributo", "um atributo", "dois atributos", "três atributos",
@@ -99,7 +99,7 @@ type Class struct {
 	Poderes  int      `json:"-"`
 }
 
-// periciasDaClasse é o que `class-expertises` guarda: as treinadas de saída mais
+// ClassExpertises é o que `class-expertises` guarda: as treinadas de saída mais
 // quantas o jogador escolhe.
 type ClassExpertises struct {
 	Fixed       []string `json:"fixed"`
@@ -108,7 +108,7 @@ type ClassExpertises struct {
 
 // ── perícia ──────────────────────────────────────────────────────────────────
 
-// periciaDoLivro é uma das 29, com o que o livro imprime ao lado do nome.
+// Expertise é uma das 29, com o que o livro imprime ao lado do nome.
 //
 // As duas regras vêm da Tabela 2-1 (p115) e não de uma lista no código: o motor
 // tinha as três de penalidade de armadura escritas à mão em
@@ -128,7 +128,7 @@ type Expertise struct {
 	Classes []string `json:"-"`
 }
 
-// ordemDasClasses devolve os nomes em ordem estável: a de um `map` é aleatória,
+// ClassOrder devolve os nomes em ordem estável: a de um `map` é aleatória,
 // e sem isto a lista de classes de cada perícia mudaria a cada render.
 func ClassOrder(pericias map[string]ClassExpertises) []string {
 	nomes := make([]string, 0, len(pericias))
@@ -139,7 +139,7 @@ func ClassOrder(pericias map[string]ClassExpertises) []string {
 	return nomes
 }
 
-// siglaDoAtributo escreve o atributo como a ficha e a tabela do livro escrevem.
+// AttributeAbbrev escreve o atributo como a ficha e a tabela do livro escrevem.
 func AttributeAbbrev(chave string) string {
 	for _, a := range AttributeOrder {
 		if a.Chave == chave {
@@ -178,7 +178,7 @@ type God struct {
 
 // ── a leitura, uma vez só ────────────────────────────────────────────────────
 
-// ordenaPorNome usa o MESMO colador pt-BR do resto do acervo: sem ele "Ártico"
+// SortByName usa o MESMO colador pt-BR do resto do acervo: sem ele "Ártico"
 // cai depois de "Zumbi", porque a comparação de bytes põe todo acento no fim.
 func SortByName[T any](lista []T, nome func(T) string) {
 	col := collate.New(language.BrazilianPortuguese)
@@ -187,7 +187,7 @@ func SortByName[T any](lista []T, nome func(T) string) {
 	})
 }
 
-// classesComOQueSeSabe junta o catálogo mínimo com o que se DERIVA do resto.
+// ClassesWithKnownExpertises junta o catálogo mínimo com o que se DERIVA do resto.
 func ClassesWithKnownExpertises() []Class {
 	classes := ListOf[Class]("classes")
 
@@ -233,7 +233,7 @@ func GodFields(d God) []string {
 	return append(campos, d.Devotos...)
 }
 
-// nomeDoTier escreve o `tier` da raça. Fica com a palavra do DADO no
+// TierName escreve o `tier` da raça. Fica com a palavra do DADO no
 // identificador, como `nomeDaCategoria` e `nomeDoTipo`, em vez de inventar uma
 // palavra nova em português para um conceito que a tela mostra só como
 // "Comum"/"Exótica" — o livro tem a seção "Raças Exóticas" e nada além disso.
@@ -323,7 +323,7 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 
 // ── raça ─────────────────────────────────────────────────────────────────────
 
-// ordemDosAtributos é a do livro, e ela existe por DUAS razões — a segunda é a
+// AttributeOrder é a do livro, e ela existe por DUAS razões — a segunda é a
 // que morde: a ordem de um `map` em Go é ALEATÓRIA por projeto, então imprimir
 // os modificadores direto do mapa daria uma ordem diferente a cada render. A
 // página mudaria sozinha entre dois pedidos iguais, e qualquer teste sobre o

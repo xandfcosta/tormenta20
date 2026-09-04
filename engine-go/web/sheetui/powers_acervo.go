@@ -45,7 +45,7 @@ func ownedPowersOf(dto sheet.CharacterDTO) []ownedPower {
 	return fora
 }
 
-// asHabilidadesDeRaca são as habilidades de cada raça da ficha.
+// raceAbilities são as habilidades de cada raça da ficha.
 //
 // Quem lê o catálogo é o `racasDaTela` do dossiê — o MESMO `race-defs.json`, já
 // indexado por id E por nome, porque o personagem guarda a raça por um dos dois.
@@ -67,7 +67,7 @@ func raceAbilities(dto sheet.CharacterDTO) []ownedPower {
 	return fora
 }
 
-// osBeneficiosDeOrigem são só os ESCOLHIDOS.
+// originBenefits são só os ESCOLHIDOS.
 //
 // A origem oferece mais benefícios do que o personagem leva (duas perícias e um
 // poder, de uma lista maior), então listar todos mostraria como possuído o que
@@ -97,7 +97,7 @@ func originBenefits(dto sheet.CharacterDTO) []ownedPower {
 	return fora
 }
 
-// asHabilidadesAutomaticas são as que o NÍVEL concede, sem escolha.
+// automaticAbilities são as que o NÍVEL concede, sem escolha.
 //
 // Quem decide a posse é o MOTOR (`engine.OwnedClassPowerIDs`), com a mesma
 // regra que a derivação usa para somar os modificadores: nível alcançado, id
@@ -122,7 +122,7 @@ func automaticAbilities(dto sheet.CharacterDTO) []ownedPower {
 	return fora
 }
 
-// aPosseAutomatica pergunta ao MOTOR se a classe concede este poder.
+// automaticOwnership pergunta ao MOTOR se a classe concede este poder.
 //
 // A lista de ESCOLHIDOS entra vazia de propósito: quem escolheu já aparece em
 // `chosenPowers`, e passá-la aqui listaria o mesmo poder duas vezes.
@@ -141,7 +141,7 @@ func automaticOwnership(
 	return engine.OwnsClassPower(doMotor, int(classe.Level), nil, escolhas[classe.ClassName])
 }
 
-// asEscolhasDeClasse lê o blob `classChoices` — o caminho do arcanista, o deus
+// chosenPowers lê o blob `classChoices` — o caminho do arcanista, o deus
 // do clérigo. Blob torto vira mapa vazio: a aba não pode deixar de abrir porque
 // uma linha do banco está errada.
 // osPoderesEscolhidos são os ids da coluna `classPowers` — poder de classe,
@@ -170,7 +170,7 @@ func chosenPowers(dto sheet.CharacterDTO) []ownedPower {
 	return fora
 }
 
-// aFonteDoPoderGeral separa o poder da TORMENTA do poder geral comum: eles
+// powerGeneralSource separa o poder da TORMENTA do poder geral comum: eles
 // moram no mesmo catálogo e a mesa os trata como coisas diferentes.
 func powerGeneralSource(poder book.GeneralPower) string {
 	if poder.Kind == "tormenta" {
@@ -181,7 +181,7 @@ func powerGeneralSource(poder book.GeneralPower) string {
 
 // ── os catálogos, lidos uma vez ──────────────────────────────────────────────
 
-// oModDeAtributoDaRaca é como a raça mexe nos atributos: fixo, distribuído ou
+// attributeRaceMod é como a raça mexe nos atributos: fixo, distribuído ou
 // por ascendência. Nil quando a raça não está no catálogo.
 //
 // Ele vem do `races.json` — a vitrine do mestre —, que é o único catálogo que
@@ -197,7 +197,7 @@ func attributeRaceMod(nome string) *book.RaceAttribute {
 	return nil
 }
 
-// asAscendenciasDaRaca são as metades de uma raça que se escolhe na criação — o
+// raceAncestries são as metades de uma raça que se escolhe na criação — o
 // suraggel é "aggelus" ou "sulfure".
 func raceAncestries(nome string) []filterOption {
 	racas, _, _ := book.CharacterCatalogs()
@@ -214,7 +214,7 @@ func raceAncestries(nome string) []filterOption {
 	return nil
 }
 
-// aRacaComVariantes é a entrada do `race-defs.json`, que é a que tem as
+// withVariantsRace é a entrada do `race-defs.json`, que é a que tem as
 // variantes de habilidade.
 func withVariantsRace(nome string) *book.RaceForScreen {
 	if raca, tem := book.RaceTraitsByKey()[nome]; tem {
@@ -223,7 +223,7 @@ func withVariantsRace(nome string) *book.RaceForScreen {
 	return nil
 }
 
-// asEscolhasDeAtributoGuardadas são os atributos que a pessoa já distribuiu.
+// attributeSavedChoices são os atributos que a pessoa já distribuiu.
 func attributeSavedChoices(blob string) []string {
 	var escolha struct {
 		FloatingPicks []string `json:"floatingPicks"`
@@ -234,7 +234,7 @@ func attributeSavedChoices(blob string) []string {
 	return escolha.FloatingPicks
 }
 
-// aAscendenciaGuardada é a metade escolhida, ou "".
+// savedAncestry é a metade escolhida, ou "".
 func savedAncestry(blob string) string {
 	var escolha struct {
 		Ascendencia string `json:"ascendencia"`

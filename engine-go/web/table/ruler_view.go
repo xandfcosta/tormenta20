@@ -95,7 +95,7 @@ func clickedPointRuler(v BoardView) string {
 	)
 }
 
-// pointerFollowsRuler é a PERNA VIVA: a linha que sai da última parada e vai
+// rulerFollowsPointer é a PERNA VIVA: a linha que sai da última parada e vai
 // até o dedo, sempre (pedido do dono).
 //
 // Ela só fala com o servidor quando o ponteiro TROCA DE CASA, pelo mesmo motivo
@@ -174,7 +174,7 @@ func clickedPointTemplate(v BoardView) string {
 	)
 }
 
-// pointerFollowsTemplate leva a MIRA atrás do dedo enquanto a forma aponta.
+// templateFollowsPointer leva a MIRA atrás do dedo enquanto a forma aponta.
 //
 // É o irmão do `rulerFollowsPointer` e tem as mesmas duas guardas: só fala com
 // o servidor quando o ponteiro TROCA DE CASA — a área muda por quadrado e não

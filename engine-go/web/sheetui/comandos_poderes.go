@@ -100,7 +100,7 @@ func enterStance(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals
 	return s.applyTheGrantsStance(r, row, flag)
 }
 
-// aPosturaDaFlag acha a ativação da postura pela flag que ela acende.
+// flagStance acha a ativação da postura pela flag que ela acende.
 func flagStance(flag string) *book.Activation {
 	postura, tem := stancesFromCatalog()[flag]
 	if !tem {
@@ -109,7 +109,7 @@ func flagStance(flag string) *book.Activation {
 	return book.ActivationOf("", postura.Name)
 }
 
-// cobraOPm tira o PM da ficha, sem deixar o saldo abaixo de zero.
+// chargePm tira o PM da ficha, sem deixar o saldo abaixo de zero.
 //
 // O piso existe porque a decisão que autorizou o gasto foi tomada com o saldo
 // LIDO antes, e duas requisições na mesma ficha podem se cruzar: cobrar até o
@@ -128,7 +128,7 @@ func (s Scene) chargePm(r *http.Request, row sqlcgen.Character, quanto int) erro
 	})
 }
 
-// ligaOsCondicionaisDaFlag sobe TODOS os condicionais daquela flag.
+// turnsOnTheConditionalsFlag sobe TODOS os condicionais daquela flag.
 //
 // São vários por postura — a Fúria mexe em ataque, dano, Defesa e testes de
 // Vontade —, e eles sobem juntos: metade ligada é uma ficha que soma metade de
@@ -242,7 +242,7 @@ func pickRaceAscendencia(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	return s.saveRaceAttributeChoice(r, row.ID, string(blob))
 }
 
-// gravaAsEscolhas aplica a mudança e CONFERE a ficha inteira antes de gravar.
+// saveTheChoices aplica a mudança e CONFERE a ficha inteira antes de gravar.
 //
 // A conferência é sobre o RESULTADO e não sobre a diferença: a escrita tem de
 // deixar a ficha válida pelo livro. É a decisão do dono nesta fatia, e ela é
@@ -280,7 +280,7 @@ func (s Scene) saveTheChoices(
 	return s.deps.SaveChoices(r.Context(), row.ID, escreve)
 }
 
-// gravaAEscolhaDeAtributoDaRaca escreve o blob de `raceAttributeChoices`.
+// saveRaceAttributeChoice escreve o blob de `raceAttributeChoices`.
 //
 // Ela é a única escolha que se grava SOZINHA — as outras quatro passam pelo
 // `saveTheChoices`, que confere a ficha inteira antes.
@@ -288,7 +288,7 @@ func (s Scene) saveRaceAttributeChoice(r *http.Request, id int64, valor string) 
 	return s.deps.SaveChoices(r.Context(), id, ChoiceWrite{RaceAttributeChoices: &valor})
 }
 
-// comOIdAlternado liga ou desliga um id numa lista guardada como blob.
+// idToggledCom liga ou desliga um id numa lista guardada como blob.
 func idToggledCom(blob, id string) string {
 	atuais := sheet.UnmarshalStrings(blob)
 	depois := []string{}
@@ -306,7 +306,7 @@ func idToggledCom(blob, id string) string {
 	return sheet.MarshalStrings(&depois)
 }
 
-// comAVarianteTrocada troca a variante escolhida dentro da MESMA habilidade.
+// variantSwappedCom troca a variante escolhida dentro da MESMA habilidade.
 func variantSwappedCom(dto sheet.CharacterDTO, escolhida string) string {
 	irmas := variantSibling(dto, escolhida)
 	depois := []string{escolhida}
@@ -318,7 +318,7 @@ func variantSwappedCom(dto sheet.CharacterDTO, escolhida string) string {
 	return sheet.MarshalStrings(&depois)
 }
 
-// asIrmasDaVariante são todas as opções da habilidade a que a escolhida
+// variantSibling são todas as opções da habilidade a que a escolhida
 // pertence — inclusive ela.
 func variantSibling(dto sheet.CharacterDTO, escolhida string) map[string]bool {
 	fora := map[string]bool{}
@@ -338,7 +338,7 @@ func variantSibling(dto sheet.CharacterDTO, escolhida string) map[string]bool {
 	return fora
 }
 
-// comAEscolhaDeClasse escreve caminho ou devoto no blob de escolhas.
+// choiceClassCom escreve caminho ou devoto no blob de escolhas.
 func choiceClassCom(blob, classe, qual, valor string) string {
 	escolhas := map[string]engine.ClassChoiceSelections{}
 	_ = json.Unmarshal([]byte(blob), &escolhas)

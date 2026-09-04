@@ -15,7 +15,7 @@ import (
 // `items.json`: que entrada do livro é esta, o que ela concede, que melhorias
 // ela está usando, e em que chip da grade ela cai.
 
-// itemDoCatalogo acha a entrada do livro de um item da ficha.
+// catalogItem acha a entrada do livro de um item da ficha.
 func catalogItem(item sheet.ItemDTO) *book.Item {
 	if item.CatalogID == nil || *item.CatalogID == "" {
 		return nil
@@ -23,7 +23,7 @@ func catalogItem(item sheet.ItemDTO) *book.Item {
 	return book.ItemByID(*item.CatalogID)
 }
 
-// asSobreposicoesDoItem são os NOMES das melhorias e do material aplicados.
+// itemOverlays são os NOMES das melhorias e do material aplicados.
 func itemOverlays(item sheet.ItemDTO) []string {
 	nomes := []string{}
 	for _, entrada := range bookOverlays(item) {
@@ -32,7 +32,7 @@ func itemOverlays(item sheet.ItemDTO) []string {
 	return nomes
 }
 
-// asSobreposicoesDoLivro resolve melhorias + material contra o catálogo.
+// bookOverlays resolve melhorias + material contra o catálogo.
 //
 // Id desconhecido é PULADO em vez de virar erro: a coluna guarda um blob de
 // texto, e uma linha torta não pode impedir a mochila inteira de abrir.
@@ -50,7 +50,7 @@ func bookOverlays(item sheet.ItemDTO) []book.Item {
 	return fora
 }
 
-// asMelhoriasGuardadas lê o blob JSON da coluna `improvements`.
+// savedImprovements lê o blob JSON da coluna `improvements`.
 func savedImprovements(blob string) []string {
 	var ids []string
 	if json.Unmarshal([]byte(blob), &ids) != nil {
@@ -59,7 +59,7 @@ func savedImprovements(blob string) []string {
 	return ids
 }
 
-// oQueOItemConcede são os crachás do que o item dá enquanto equipado.
+// thatGrantsItem são os crachás do que o item dá enquanto equipado.
 //
 // A Defesa base de armadura e escudo sai UMA vez: o catálogo traz o número em
 // `armor.defense` E como modificador de Defesa do mesmo valor, e desenhar os
@@ -98,7 +98,7 @@ func baseItemDefense(catalogo book.Item) string {
 	return "Defesa " + book.WithSign(protecao.Defense)
 }
 
-// oCrachaDoModificador escreve o que um modificador de item concede.
+// modifierBadge escreve o que um modificador de item concede.
 //
 // Alvo de FLAG é booleano: ele não leva número, e escrever "Fadiga ao dormir
 // +1" faria a tela prometer uma quantidade que não existe.
@@ -123,7 +123,7 @@ func repetidosSem(lista []string) []string {
 	return fora
 }
 
-// oCatalogoDoItem é o id de catálogo de uma linha do banco, ou "".
+// itemCatalog é o id de catálogo de uma linha do banco, ou "".
 func itemCatalog(item sqlcgen.GetItemRow) string {
 	if !item.Catalogid.Valid {
 		return ""
@@ -131,7 +131,7 @@ func itemCatalog(item sqlcgen.GetItemRow) string {
 	return item.Catalogid.String
 }
 
-// oItemComoDoMotor traduz a entrada do livro para a forma que as validações do
+// howEngineItem traduz a entrada do livro para a forma que as validações do
 // motor esperam. Só os campos que elas leem — eixo, id e nome —, porque um
 // tradutor completo prometeria que os dois lados têm a mesma forma, e não têm.
 func howEngineItem(catalogo *book.Item) *engine.CatalogItem {

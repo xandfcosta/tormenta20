@@ -41,7 +41,7 @@ func spell(t *testing.T, f pilotoFixture, id int64, caminho string) int {
 	return f.pede(t, f.jogador, http.MethodPost, alvo, "").Code
 }
 
-// aRecusaDaMagia é a frase da regra que barrou o comando, ou "".
+// spellRefusal é a frase da regra que barrou o comando, ou "".
 func spellRefusal(t *testing.T, f pilotoFixture, id int64, caminho string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, caminho)

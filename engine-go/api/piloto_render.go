@@ -24,7 +24,7 @@ import (
 //go:embed piloto/static/*
 var pilotoFS embed.FS
 
-// escrevePagina renderiza uma tela inteira do piloto direto na resposta.
+// WritePage renderiza uma tela inteira do piloto direto na resposta.
 //
 // O corpo entra como `templ.Component` e não como HTML já renderizado. É a
 // diferença que a ALE-227 comprou: antes eram DUAS passadas — `renderFragmento`

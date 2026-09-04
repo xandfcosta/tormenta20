@@ -15,7 +15,7 @@ import (
 
 // ── o DINHEIRO, e a conta que ele exige ──────────────────────────────────────
 
-// oSaldoDepoisDoGesto resolve o saldo e a recusa dos três modos (ALE-224).
+// afterGestureBalance resolve o saldo e a recusa dos três modos (ALE-224).
 //
 // # Arredondar em DUAS CASAS não é enfeite
 //

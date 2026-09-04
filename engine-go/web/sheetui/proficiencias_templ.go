@@ -25,7 +25,7 @@ import (
 // navegador. É o que a ALE-225 decidiu, e aqui ele se paga na hora: o mesmo
 // personagem aberto em dois aparelhos não diverge.
 
-// oPainelDasProficiencias é a seção inteira, com o restaurar no cabeçalho.
+// proficiencyPanel é a seção inteira, com o restaurar no cabeçalho.
 func proficiencyPanel(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -152,7 +152,7 @@ func proficiencyGroupPanel(v View, grupo proficiencyGroup) templ.Component {
 	})
 }
 
-// aLinhaDaProficiencia é uma categoria, ligada ou desligada.
+// proficiencyRow é uma categoria, ligada ou desligada.
 //
 // O ESTADO É DITO DE TRÊS JEITOS de propósito: o ícone (✓ ou ✕), o traço sobre
 // o texto de quem não tem, e o `aria-pressed`. Cor sozinha não serve — é a

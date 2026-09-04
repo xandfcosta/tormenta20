@@ -25,7 +25,7 @@ import (
 // `sheet.ParseTempHpPools` são os mesmos. O que se repete são as vinte linhas de
 // transação, e elas morrem com o handler JSON.
 
-// aplicaAsConcessoesDaPostura liga o que a flag concede.
+// applyTheGrantsStance liga o que a flag concede.
 //
 // Uma concessão que falha NÃO derruba a postura que a pessoa acabou de pagar: o
 // erro sobe como recusa e o PM já foi cobrado, então engolir seria pior. Por
@@ -42,7 +42,7 @@ func (s Scene) applyTheGrantsStance(
 	return nil
 }
 
-// removeAsConcessoesDaPostura apaga os efeitos que a postura tinha ligado.
+// removeTheGrantsStance apaga os efeitos que a postura tinha ligado.
 //
 // A busca é pelo id do PODER na coluna `catalogId` do efeito — é assim que o
 // efeito guarda de onde veio, e é o que permite encerrar sem lembrar de nada
@@ -72,7 +72,7 @@ func (s Scene) removeTheGrantsStance(
 	return nil
 }
 
-// asConcessoesDaFlag são as ativações de gatilho daquela flag que concedem algo.
+// flagGrants são as ativações de gatilho daquela flag que concedem algo.
 //
 // Ela NÃO filtra pelo que o personagem possui, e isso é uma folga deliberada:
 // quem chega aqui já entrou na postura, e a postura é de uma classe. Filtrar
@@ -88,7 +88,7 @@ func flagGrants(row sqlcgen.Character, flag string) []book.Activation {
 	return fora
 }
 
-// aplicaUmaConcessao grava o efeito de uma concessão.
+// applyOneGrant grava o efeito de uma concessão.
 func (s Scene) applyOneGrant(
 	r *http.Request, row sqlcgen.Character, spec book.Activation,
 ) error {

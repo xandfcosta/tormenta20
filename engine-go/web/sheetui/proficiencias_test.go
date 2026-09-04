@@ -7,7 +7,7 @@ package sheetui
 // tem validação de schema no catálogo (`TestClassProficienciesTable`); repetir
 // aqui um `expect` por categoria seria a tabela escrita duas vezes.
 
-// oGuerreiro é a ficha das duas metades: ele CONCEDE armas marciais e armaduras
+// panelTitle é a ficha das duas metades: ele CONCEDE armas marciais e armaduras
 // pesadas, e NÃO concede exóticas — é a classe que separa "tem" de "não tem" sem
 // precisar de duas fixtures.
 // VARREDURA: toda aba da ficha desenha um painel de verdade.

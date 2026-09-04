@@ -15,7 +15,7 @@ import (
 
 // OS COMANDOS DAS ABAS PERÍCIAS E PROFICIÊNCIAS (ALE-272, fatias 2 e 4).
 
-// oNomeDaPericia lê o nome do caminho, desescapando como a API JSON faz.
+// expertiseName lê o nome do caminho, desescapando como a API JSON faz.
 func expertiseName(r *http.Request) string {
 	nome := chi.URLParam(r, "nome")
 	if decodificado, err := url.PathUnescape(nome); err == nil {
@@ -24,7 +24,7 @@ func expertiseName(r *http.Request) string {
 	return nome
 }
 
-// alternaOTreino liga ou desliga o treino de UMA perícia.
+// toggleTraining liga ou desliga o treino de UMA perícia.
 //
 // O comando manda a PERÍCIA e não o estado desejado, pela mesma razão da
 // proficiência: mandar "treinada" perde para o clique repetido e para a segunda
@@ -51,7 +51,7 @@ func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 	return fmt.Errorf("a perícia %q não é desta ficha", nome)
 }
 
-// trocaOAtributo repõe a perícia em outro atributo.
+// swapAttribute repõe a perícia em outro atributo.
 //
 // O atributo vai no CAMINHO junto do nome: é o valor do `<option>` escolhido, e
 // mandá-lo por sinal faria seis opções de 29 linhas disputarem a mesma chave.
@@ -70,7 +70,7 @@ func swapAttribute(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) e
 	return nil
 }
 
-// removeOOficio apaga uma perícia INVENTADA pelo jogador.
+// removeCraft apaga uma perícia INVENTADA pelo jogador.
 //
 // As 29 do livro não se apagam, e a recusa é do servidor e não da tela: a ficha
 // nova não desenha a lixeira numa perícia do livro, mas travar só na UI deixaria
@@ -117,7 +117,7 @@ func criaOOficio(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals
 	return err
 }
 
-// alternaAProficiencia liga ou desliga UMA categoria.
+// toggleProficiency liga ou desliga UMA categoria.
 //
 // O comando não manda o estado desejado, manda a categoria: mandar "ligada"
 // perderia para o clique repetido e para a segunda aba aberta no mesmo
@@ -135,7 +135,7 @@ func toggleProficiency(s Scene, r *http.Request, row sqlcgen.Character, _ Signal
 	return s.saveTheProficienciesSheet(r, row.ID, depois)
 }
 
-// restauraOPadraoDaClasse joga fora os ajustes manuais.
+// restoresDefaultClass joga fora os ajustes manuais.
 func restoresDefaultClass(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
@@ -144,7 +144,7 @@ func restoresDefaultClass(s Scene, r *http.Request, row sqlcgen.Character, _ Sig
 	return s.saveTheProficienciesSheet(r, row.ID, classDefault(dto))
 }
 
-// gravaAsProficienciasDaFicha usa a MESMA gravação da API JSON.
+// saveTheProficienciesSheet usa a MESMA gravação da API JSON.
 //
 // A lista de desconhecidas vira frase porque quem está do outro lado é um
 // navegador mostrando página, e não um cliente lendo `FieldErrorMap`. Ela só

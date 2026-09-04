@@ -11,7 +11,7 @@ import (
 // está fora do teto. Os números da carga não são reafirmados aqui — eles vêm do
 // motor e têm guarda de regra própria em `engine/load_rules_test.go`.
 
-// aTelaDaMochila é a aba desenhada.
+// screenSaved é a aba desenhada.
 // oGuardadoDaTela recorta só a GRADE, e o recorte não é preciosismo: o nome de
 // um item aparece também nos crachás da tira e em CADA diálogo de ficha de
 // item, que são desenhados logo depois do painel. Procurar na tela inteira

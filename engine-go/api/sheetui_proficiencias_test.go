@@ -24,7 +24,7 @@ func guerreiro(t *testing.T) (pilotoFixture, int64) {
 	return f, id
 }
 
-// asGuardadas lê o blob da coluna, que é a única fonte da verdade do painel.
+// saved lê o blob da coluna, que é a única fonte da verdade do painel.
 func saved(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 	t.Helper()
 	row, err := f.s.Queries().GetCharacter(context.Background(), id)
@@ -34,7 +34,7 @@ func saved(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 	return sheet.ToStringSet(sheet.UnmarshalStrings(row.Proficiencies))
 }
 
-// gravaNaMao põe um estado que só um ajuste manual produziria.
+// saveHand põe um estado que só um ajuste manual produziria.
 func saveHand(t *testing.T, f pilotoFixture, id int64, blob string) {
 	t.Helper()
 	err := f.s.Queries().SetProficiencies(context.Background(), sqlcgen.SetProficienciesParams{

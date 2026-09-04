@@ -10,7 +10,7 @@ import (
 // ativar agora, e o que entrar numa postura custa — e a decisão de tela que
 // separa o que se USA do que só está lá.
 
-// oBarbaro é a ficha das posturas: a Fúria é a postura de escala do livro e a
+// powerPanel é a ficha das posturas: a Fúria é a postura de escala do livro e a
 // Alma de Bronze é o único poder do catálogo que CONCEDE algo ao entrar nela.
 // oPainelDosPoderes corta a LISTA, deixando de fora os diálogos que vêm depois
 // dela — o de escolher poderes mostra o catálogo inteiro de opções.

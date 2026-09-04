@@ -123,7 +123,7 @@ func (s Scene) raceChoices(dto sheet.CharacterDTO) []raceChoiceCard {
 	return cartoes
 }
 
-// oBonusDeAtributoDaRaca descreve a escolha de atributo, ou nil quando a raça
+// attributeRaceBonus descreve a escolha de atributo, ou nil quando a raça
 // não pede nenhuma (as doze de bônus fixo).
 func (s Scene) attributeRaceBonus(dto sheet.CharacterDTO, nome string) *attributeChoice {
 	mod := attributeRaceMod(nome)
@@ -149,7 +149,7 @@ func (s Scene) attributeRaceBonus(dto sheet.CharacterDTO, nome string) *attribut
 	return escolha
 }
 
-// osAtributosQueCabem são os seis do livro, menos o proibido da raça.
+// thatFitAttributes são os seis do livro, menos o proibido da raça.
 func thatFitAttributes(proibido string) []filterOption {
 	fora := []filterOption{}
 	for _, a := range book.AttributeOrder {
@@ -161,7 +161,7 @@ func thatFitAttributes(proibido string) []filterOption {
 	return fora
 }
 
-// asVariantesDaRaca são as habilidades de raça que pedem uma escolha.
+// raceVariants são as habilidades de raça que pedem uma escolha.
 func raceVariants(dto sheet.CharacterDTO, nome string) []variantChoice {
 	raca := withVariantsRace(nome)
 	if raca == nil {
@@ -187,7 +187,7 @@ func raceVariants(dto sheet.CharacterDTO, nome string) []variantChoice {
 	return fora
 }
 
-// aEscolhaDeOrigem monta o cartão da origem.
+// originChoice monta o cartão da origem.
 func originChoice(dto sheet.CharacterDTO) *originChoiceCard {
 	origem, tem := book.Origins()[dto.Origin]
 	if !tem {
@@ -206,7 +206,7 @@ func originChoice(dto sheet.CharacterDTO) *originChoiceCard {
 	return cartao
 }
 
-// asEscolhasDasClasses monta um cartão por classe da ficha.
+// classChoiceCards monta um cartão por classe da ficha.
 func classChoiceCards(dto sheet.CharacterDTO, busca string) []classChoiceCard {
 	escolhidos := sheet.UnmarshalStrings(dto.ClassPowers)
 	escolhas := sheet.ClassChoiceSelections(dto)
@@ -244,7 +244,7 @@ func markedPicker(opcoes []sheet.ChoiceOption, escolhido string) *pickerChoice {
 	return &pickerChoice{Options: marcadas, Chosen: escolhido}
 }
 
-// osPoderesQueDaParaEscolher são os ELETIVOS da classe mais os gerais.
+// thatChoosePowers são os ELETIVOS da classe mais os gerais.
 //
 // "Você sempre pode substituir um poder de classe por um poder geral" (p33), e
 // por isso as duas listas viram uma só — a vaga é a mesma.
@@ -284,12 +284,12 @@ func casaComABusca(nome, termo string) bool {
 
 // ── o que a TELA escreve ─────────────────────────────────────────────────────
 
-// asVagasDaClasseEscritas é "3 de 4 vagas".
+// classWrittenSlots é "3 de 4 vagas".
 func classWrittenSlots(cartao classChoiceCard) string {
 	return strconv.Itoa(cartao.Used) + " de " + strconv.Itoa(cartao.Slots) + " vagas"
 }
 
-// aEscolhaDoAtributoEscrita descreve o que a raça pede.
+// attributeWrittenChoice descreve o que a raça pede.
 func attributeWrittenChoice(escolha attributeChoice) string {
 	if escolha.Kind == "ascendencia" {
 		return "Escolha a ascendência"
@@ -302,11 +302,11 @@ func attributeWrittenChoice(escolha attributeChoice) string {
 	return texto
 }
 
-// asTresFontes são as abas do diálogo, na ordem em que o livro monta um
+// sourceThree são as abas do diálogo, na ordem em que o livro monta um
 // personagem: raça, origem, classe.
 var sourceThree = []string{"raca", "origem", "classe"}
 
-// aFonteDaPrimeiraPendencia é a aba em que o diálogo ABRE.
+// firstPendingSource é a aba em que o diálogo ABRE.
 //
 // Quem abriu veio pela pendência, e fazê-lo caçar a aba certa é gastar o clique
 // que ele acabou de dar. Sem pendência nenhuma, ele abre na Raça.
@@ -317,7 +317,7 @@ func firstPendingSource(v View) string {
 	return "raca"
 }
 
-// oChipDaEscolha é a classe de um chip que liga e desliga.
+// choiceChip é a classe de um chip que liga e desliga.
 func choiceChip(ativo bool) string {
 	base := "rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	if ativo {
@@ -326,12 +326,12 @@ func choiceChip(ativo bool) string {
 	return base + " border-grimorio-iron text-muted-foreground hover:text-foreground"
 }
 
-// oComandoDaEscolhaDeClasse escreve o `@post` do caminho ou do devoto.
+// choiceClassCommand escreve o `@post` do caminho ou do devoto.
 func choiceClassCommand(v View, classe, escolha, valor string) string {
 	return sheetPost(v, "/poderes/classe/"+url.PathEscape(classe)+"/"+escolha+"/"+valor)
 }
 
-// oGestoQueAlternaOAtributo liga ou desliga um atributo na distribuição.
+// thatTogglesAttributeGesture liga ou desliga um atributo na distribuição.
 //
 // A lista é COPIADA antes de ser mexida: o sinal é um proxy, e escrever dentro
 // dele item a item é a armadilha que o guia do Go registra.

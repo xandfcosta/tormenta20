@@ -22,7 +22,7 @@ import (
 // aprimoramentos, fechada na fatia 6, e ela morreria com a SPA — que é o
 // destino desta migração.
 
-// asCategoriasSemSobreposicao são as que nunca recebem melhoria nem material.
+// categoriesWithoutOverlap são as que nunca recebem melhoria nem material.
 //
 // Não se forja uma poção em aço-rubi, nem se põe mira telescópica num cavalo.
 // Recusar aqui é o que faz o botão SUMIR na tela em vez de abrir um diálogo com
@@ -36,7 +36,7 @@ func aceitaMelhoria(catalogo book.Item) bool {
 	return !categoriesWithoutOverlap[catalogo.Category]
 }
 
-// aFamiliaDoItem é a classificação grossa que o `appliesTo` do catálogo usa.
+// itemFamily é a classificação grossa que o `appliesTo` do catálogo usa.
 //
 // Quatro famílias, e a última é o resto: arma, armadura, escudo e vestuário. É
 // a mesma tabela do `familyFor` do front, e ela é do CATÁLOGO — não do livro —,
@@ -65,7 +65,7 @@ func aceitaAFamilia(sobreposicao book.Item, familia string) bool {
 	return contemTraco(sobreposicao.AppliesTo, familia)
 }
 
-// aMelhoriaCabeNoItem é a RECUSA do servidor, e ela é a fronteira.
+// fitsItemImprovement é a RECUSA do servidor, e ela é a fronteira.
 //
 // Ela confere três coisas de cada id: que ele existe no catálogo, que ele é da
 // categoria certa (melhoria não entra no campo do material e vice-versa), e que

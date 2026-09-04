@@ -87,7 +87,7 @@ type Signals struct {
 	RacaAtributos []string `json:"racaatributos"`
 }
 
-// osAprimoramentos traduz os seis sinais no que a validação espera.
+// augments traduz os seis sinais no que a validação espera.
 //
 // Zero e nulo saem da lista: "não escolhi" não é "escolhi zero pilhas", e um
 // `stacks: 0` é recusado pelo servidor de propósito.
@@ -102,7 +102,7 @@ func (s Signals) augments() []sheet.AugmentPick {
 	return picks
 }
 
-// osSinaisDaFicha lê o que o cliente mandou, caindo na URL quando não há sinal.
+// sheetSignals lê o que o cliente mandou, caindo na URL quando não há sinal.
 //
 // A queda para a query serve a quem abre o endereço à mão — e serve à bancada,
 // que precisa poder pedir uma aba filtrada sem montar um corpo de Datastar.
@@ -127,14 +127,14 @@ func sheetSignals(r *http.Request) Signals {
 	return sinais
 }
 
-// preencheDaURL põe o valor da query no campo quando o sinal veio vazio.
+// fillsURL põe o valor da query no campo quando o sinal veio vazio.
 func fillsURL(r *http.Request, chave string, campo *string) {
 	if *campo == "" {
 		*campo = r.URL.Query().Get(chave)
 	}
 }
 
-// aBusca é o termo já resolvido, para quem só quer o texto.
+// term é o termo já resolvido, para quem só quer o texto.
 func (s Signals) term() string {
 	if s.Busca == nil {
 		return ""

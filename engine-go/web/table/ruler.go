@@ -216,7 +216,7 @@ func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// tableMeasuresWho é a mesma leitura de acesso dos comandos, sem o papel de mestre.
+// whoMeasuresTheTable é a mesma leitura de acesso dos comandos, sem o papel de mestre.
 //
 // Medir é de TODO MUNDO — "dá para acertar daqui?" é pergunta de quem ataca —, e
 // a trava que sobra é a de sempre: quem não está na mesa não mede a cena dela.
@@ -358,7 +358,7 @@ func direction(n int) int {
 	return 0
 }
 
-// sinalOuUm nunca devolve zero: uma diagonal com um eixo parado não é diagonal,
+// orDirection nunca devolve zero: uma diagonal com um eixo parado não é diagonal,
 // e um passo (0,0) faria o cone nascer sem direção nenhuma.
 func orDirection(n int) int {
 	if s := direction(n); s != 0 {
@@ -373,7 +373,7 @@ func pointsTemplate(k engine.AreaKind) bool {
 	return k == engine.AreaCone || k == engine.AreaLine
 }
 
-// intersectionStartsShape diz onde a ORIGEM da forma pousa, e isso é REGRA do
+// shapeStartsAtIntersection diz onde a ORIGEM da forma pousa, e isso é REGRA do
 // livro e não escolha de tela (p225, conferido no PDF p231):
 //
 //	"Esfera. Surge na INTERSEÇÃO DE QUATRO QUADRADOS, estendendo-se em todas as

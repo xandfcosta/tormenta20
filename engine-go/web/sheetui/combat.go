@@ -142,7 +142,7 @@ var theSaves = []struct {
 	{"Vontade", "wisdom", "SAB"},
 }
 
-// combatPanelOf computa a aba Combate de um personagem.
+// sheetForPanels computa a aba Combate de um personagem.
 //
 // SEM CATÁLOGO PRIMADO ela devolve o painel vazio, pela mesma razão que a Defesa
 // do crachá vira travessão: a ficha inteira não pode deixar de abrir por causa
@@ -181,7 +181,7 @@ func (s Scene) panelOfCombat(dto sheet.CharacterDTO) panelCombat {
 	return panelForCombat(sheet, cards, isCaster(sheet))
 }
 
-// combatPanelFor monta a aba inteira.
+// panelForCombat monta a aba inteira.
 //
 // Ela recebe a ficha JÁ computada em vez de computar: o `Load` chama o
 // motor uma vez e reparte, e computar de novo aqui daria duas contas que podem

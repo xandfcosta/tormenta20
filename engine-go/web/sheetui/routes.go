@@ -142,14 +142,14 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	}, SceneBody(view))
 }
 
-// pedidaDeDentroDaSessao diz se este pedido veio da superfície "Minha ficha" da
+// insideSessionAsked diz se este pedido veio da superfície "Minha ficha" da
 // Mesa. A marca viaja na query pela mesma razão que o `?tab=`: o handler
 // descobre o que desenhar lendo a requisição, e sinal do cliente sumiria num F5.
 func insideSessionAsked(r *http.Request) bool {
 	return r.URL.Query().Get("embutida") == "1"
 }
 
-// comandoDaFicha é o gateway das mutações da ficha.
+// sheetCommand é o gateway das mutações da ficha.
 //
 // Ele existe pela mesma razão do `comandoDoTabuleiro`: resolver a posse, mutar e
 // redesenhar são três passos que toda mutação da ficha faz, e escrevê-los em
@@ -225,7 +225,7 @@ func (s Scene) sheetCommand(
 	}
 }
 
-// mexeNoVital soma o passo ao PV ou ao PM, PRENDENDO na faixa.
+// touchesVital soma o passo ao PV ou ao PM, PRENDENDO na faixa.
 //
 // PRENDER e não recusar, e essa é a diferença entre o gesto e a API: o corpo do
 // `PATCH /vitals` manda o valor ABSOLUTO e é recusado fora da faixa, o que está
@@ -255,7 +255,7 @@ func touchesVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) er
 	})
 }
 
-// presoNaFaixa mantém o vital entre zero e o máximo.
+// rangePinned mantém o vital entre zero e o máximo.
 func rangePinned(valor, max int64) int64 {
 	if valor < 0 {
 		return 0
@@ -305,7 +305,7 @@ func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 	return fmt.Errorf("%s não é uma classe deste personagem", classe)
 }
 
-// oPersonagemDaURL lê o id do caminho. Erro aqui é URL digitada errada, e a
+// uRLCharacter lê o id do caminho. Erro aqui é URL digitada errada, e a
 // resposta é uma frase: quem está do outro lado é um navegador mostrando página.
 func uRLCharacter(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
@@ -316,7 +316,7 @@ func uRLCharacter(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	return id, true
 }
 
-// oPassoDaURL aceita o sinal de menos: o passo é para os dois lados.
+// uRLStep aceita o sinal de menos: o passo é para os dois lados.
 func uRLStep(r *http.Request) (int, error) {
 	bruto := chi.URLParam(r, "passo")
 	passo, err := strconv.Atoi(bruto)

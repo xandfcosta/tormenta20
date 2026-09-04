@@ -74,7 +74,7 @@ func TestClassExpertisesTable(t *testing.T) {
 	}
 }
 
-// classeDoLivro é o que `classes.json` guarda de cada uma das 14.
+// classeDoCatalogo é o que `classes.json` guarda de cada uma das 14.
 type classeDoCatalogo struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`

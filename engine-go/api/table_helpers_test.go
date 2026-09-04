@@ -26,7 +26,7 @@ func bodyDraft(dentro string) string {
 	return `{"rascunho":{` + dentro + `}}`
 }
 
-// boxReceiveClasses lê a folha COMPILADA e devolve as classes de toda
+// classesThatReceiveBox lê a folha COMPILADA e devolve as classes de toda
 // regra que resolve o `--col` em pixels.
 //
 // A folha compilada e não a fonte, porque é ela que o navegador recebe: uma

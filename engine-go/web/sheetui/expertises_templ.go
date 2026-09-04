@@ -31,7 +31,7 @@ import (
 // resolvedor cai na primeira aba. É a sexta armadilha do Datastar, e aqui ela
 // morderia um GET, que o guarda de varredura dos comandos não olha.
 
-// oPainelDePericias é a seção inteira.
+// expertisePanelBody é a seção inteira.
 func expertisePanelBody(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -148,7 +148,7 @@ func expertisePanelBody(v View) templ.Component {
 	})
 }
 
-// aBuscaDePericia é o campo que filtra a lista.
+// expertiseTerm é o campo que filtra a lista.
 //
 // O `__debounce` não é afinação: sem ele isto é uma requisição POR TECLA. 250ms
 // é o que separa "ainda digitando" de "parou de digitar", e é o mesmo número da
@@ -216,7 +216,7 @@ func expertiseTerm(v View) templ.Component {
 	})
 }
 
-// aLinhaDaPericia é uma perícia: o número, o nome, o atributo e o treino.
+// expertiseRowBody é uma perícia: o número, o nome, o atributo e o treino.
 func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -370,7 +370,7 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 	})
 }
 
-// oTotalDaPericia é o número, e ele ABRE a decomposição.
+// expertiseTotal é o número, e ele ABRE a decomposição.
 //
 // A FALHA AUTOMÁTICA não tem número para mostrar (p394): o traço carrega o
 // sentido no desenho e o rótulo acessível o diz por extenso. A composição
@@ -477,7 +477,7 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 	})
 }
 
-// aEstrelaDeSoTreinada marca a perícia que o livro fecha sem treinamento (p115).
+// onlyTrainedStar marca a perícia que o livro fecha sem treinamento (p115).
 //
 // Ela é um `<span>` com `title`, e não um botão com dica: um botão que não faz
 // nada é uma parada muda para quem navega por teclado, e seriam nove delas.
@@ -538,7 +538,7 @@ func onlyTrainedStar(linha expertiseRow) templ.Component {
 	})
 }
 
-// oSeletorDeAtributo escolhe com QUAL atributo a perícia rola.
+// attributePicker escolhe com QUAL atributo a perícia rola.
 //
 // As opções mostram o modificador FINAL — raça e itens já dentro —, porque um
 // valor cru aqui faria a linha discordar do próprio total.
@@ -666,7 +666,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 	})
 }
 
-// oBotaoDeTreino liga e desliga o treino.
+// trainingButton liga e desliga o treino.
 func trainingButton(v View, linha expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -763,7 +763,7 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 	})
 }
 
-// oDetalheDaPericia é a decomposição de UMA perícia.
+// expertiseDetail é a decomposição de UMA perícia.
 func expertiseDetail(linha expertiseRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -858,7 +858,7 @@ func expertiseDetail(linha expertiseRow) templ.Component {
 	})
 }
 
-// oDialogoDoOficio cria uma perícia que o livro não tem.
+// craftDialog cria uma perícia que o livro não tem.
 //
 // A TELA DIZ "nova perícia", e NUNCA "ofício" — a palavra é da SPA e é a certa:
 // **Ofício É uma das 29 do livro** (p115), e chamar a perícia inventada de

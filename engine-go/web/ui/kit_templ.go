@@ -47,7 +47,7 @@ const (
 	SizeTiny    Size = "xs"
 )
 
-// classesDoBotao mora neste arquivo, e não num `.go` ao lado, por uma razão
+// ButtonClasses mora neste arquivo, e não num `.go` ao lado, por uma razão
 // mecânica: o scanner do Tailwind varre `../*.templ`, então uma classe escrita
 // num `.go` comum não seria emitida e o botão sairia sem estilo. Foi assim que
 // as cores das barras de PV precisaram do `@source inline(...)`.
@@ -423,7 +423,7 @@ func TextField(c Field) templ.Component {
 	})
 }
 
-// molduraDePainel é o contêiner padrão de uma cena: borda de ferro com um filete
+// PanelFrame é o contêiner padrão de uma cena: borda de ferro com um filete
 // dourado por dentro (`FramedPanel`, variante stone).
 func PanelFrame(extra string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -480,7 +480,7 @@ func PanelFrame(extra string) templ.Component {
 	})
 }
 
-// tituloDaCena é o título cinematográfico do Grimório: Cinzel em caixa alta,
+// SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
 // entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
 func SceneTitle(titulo, kicker string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -547,7 +547,7 @@ func SceneTitle(titulo, kicker string) templ.Component {
 	})
 }
 
-// campoDeTextoLongo é o irmão do `campoDeTexto` para texto de vários parágrafos
+// TextArea é o irmão do `campoDeTexto` para texto de vários parágrafos
 // (ALE-246). Mesma gramática de rótulo, erro e dica — o que muda é só o
 // elemento e a altura.
 //
@@ -776,7 +776,7 @@ func TextArea(c Field, linhas int) templ.Component {
 	})
 }
 
-// folhaDoTomo é uma FOLHA do grimório aberta: a capa de couro segurando uma
+// TomeSheet é uma FOLHA do grimório aberta: a capa de couro segurando uma
 // página que preenche a cena (ALE-246, portado do `TomePage`).
 //
 // Toda cena de campanha é página do mesmo livro — a crônica que se lê, a folha
@@ -825,7 +825,7 @@ func TomeSheet() templ.Component {
 	})
 }
 
-// rotuloDeSecao é o cabeçalho de um bloco — a receita `secao` da casa, portada
+// SectionLabel é o cabeçalho de um bloco — a receita `secao` da casa, portada
 // do `SectionLabel` (ALE-251).
 //
 // Ela existe porque eu tinha INVENTADO uma receita em vez de portar esta, e o
@@ -899,7 +899,7 @@ func SectionLabel(tom string, extra string) templ.Component {
 	})
 }
 
-// classesDoRotulo é a mesma receita para quem precisa dela no PRÓPRIO elemento —
+// SectionLabelClasses é a mesma receita para quem precisa dela no PRÓPRIO elemento —
 // um `<h4>`, um `<caption>`, um `<summary>`. Mesma forma do `classesDoBotao`.
 func SectionLabelClasses(tom, extra string) string {
 	return Join("text-2xs font-semibold uppercase tracking-[0.16em] "+SectionLabelTone(tom), extra)
@@ -969,7 +969,7 @@ func SectionLabelTone(tom string) string {
 	return "text-muted-foreground"
 }
 
-// caixaRolavel é uma região que ROLA e que o TECLADO alcança.
+// ScrollBox é uma região que ROLA e que o TECLADO alcança.
 //
 // O `tabindex="0"` é o conserto e não enfeite. A casca do piloto é `h-dvh` com
 // `overflow-hidden`, então o DOCUMENTO não rola: quem rola são caixas aninhadas.
@@ -1058,7 +1058,7 @@ func ScrollBox(rotulo string, extra string) templ.Component {
 	})
 }
 
-// legendaDoTeclado diz como andar na cena SEM o mouse.
+// KeyboardLegend diz como andar na cena SEM o mouse.
 //
 // O dono pediu depois de perceber que a gramática existia e não se anunciava:
 // "falta as hints de movimentação com teclado". Descoberta é metade de uma
@@ -1203,7 +1203,7 @@ const SlashShortcut = `evt.key === '/' && ` +
 // fechamento do navegador seria o foco pulando sozinho numa sessão futura.
 const KeyboardSwapMark = `evt.key === 'Enter' && sessionStorage.setItem('piloto-foco-no-trilho', '1')`
 
-// restauraOFocoDoTrilho roda na carga. Lê a marca, APAGA, e devolve o foco ao
+// RestoreRailFocus roda na carga. Lê a marca, APAGA, e devolve o foco ao
 // item da ferramenta atual — não ao primeiro, que é o que a pessoa não pediu.
 const RestoreRailFocus = `sessionStorage.getItem('piloto-foco-no-trilho') && ` +
 	`(sessionStorage.removeItem('piloto-foco-no-trilho'), ` +
@@ -1236,7 +1236,7 @@ const SearchShortcut = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey || 
 	`document.getElementById('buscador').open || document.getElementById('buscador').showModal(), ` +
 	`document.getElementById('buscador-campo').select())`
 
-// abreOLivroPorCima troca a ida para outra aba por um diálogo sobre a cena.
+// OpenBookOverlay troca a ida para outra aba por um diálogo sobre a cena.
 //
 // Ele DEIXA PASSAR o clique modificado (Ctrl, ⌘, Shift, botão do meio) e o
 // `target="_blank"` cuida desses: quem pede outra aba está pedindo outra aba, e
@@ -1256,14 +1256,14 @@ const OpenBookOverlay = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.butt
 	`document.getElementById('livro-em-dialogo').querySelector('iframe').src = el.getAttribute('href') + '&dialogo=1', ` +
 	`document.getElementById('livro-em-dialogo').showModal())`
 
-// atalhosDaCasca é o que o `keydown` da janela roda, e eles vão num atributo SÓ.
+// ShellShortcuts é o que o `keydown` da janela roda, e eles vão num atributo SÓ.
 //
 // Dois `data-on:keydown__window` no mesmo elemento não somam: é atributo
 // repetido, e o segundo é descartado pelo analisador de HTML antes de o Datastar
 // ver qualquer coisa — o atalho novo simplesmente não existiria, sem erro.
 const ShellShortcuts = SlashShortcut + "; " + SearchShortcut
 
-// andaNoBuscador move o foco entre os resultados com as setas.
+// WalkTheSearch move o foco entre os resultados com as setas.
 //
 // O driver de teclado da cena não faz isso aqui, e é por construção: ele se
 // RECOLHE quando há `dialog[open]`, que é justamente o que dá o foco preso e o

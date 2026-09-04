@@ -27,7 +27,7 @@ import (
 // o grimório usa (`?aba=`), e a alternativa — trocar por sinal — daria uma troca
 // instantânea que não sobrevive a um F5.
 
-// cenaDaFicha embrulha a cena num elemento com `id`, e é ele que o remendo dos
+// SceneBody embrulha a cena num elemento com `id`, e é ele que o remendo dos
 // comandos substitui. O `id` é o que o morph do Datastar casa — sem ele o
 // remendo não teria onde pousar.
 func SceneBody(v View) templ.Component {
@@ -148,7 +148,7 @@ func ficha(v View) templ.Component {
 	})
 }
 
-// aBarraDaFicha é o cabeçalho: a volta e o nome.
+// sheetBar é o cabeçalho: a volta e o nome.
 //
 // O ‹ Voltar leva ao ELENCO e não ao histórico do navegador: quem chega por link
 // direto não tem para onde voltar, e um botão que às vezes não faz nada é pior
@@ -265,7 +265,7 @@ func embeddedSheetHeader(v View) templ.Component {
 	})
 }
 
-// asAbasDesenhadas é a fileira das sete seções.
+// drawnTabs é a fileira das sete seções.
 //
 // `role="tablist"` com links dentro seria mentira de papel: uma aba ARIA troca
 // conteúdo na mesma página, e estas navegam. São links num `<nav>`, e quem está
@@ -465,7 +465,7 @@ func sheetTabLink(v View, aba Tab) templ.Component {
 	})
 }
 
-// oVestidoDaAbaDaFicha é a mesma aparência nos dois desenhos da aba — link fora da
+// tabSheetVested é a mesma aparência nos dois desenhos da aba — link fora da
 // sessão, botão dentro dela. Escrita uma vez porque a diferença entre os dois é
 // para onde o clique vai, e não como a aba se parece.
 func tabSheetVested(aba Tab) string {
@@ -481,7 +481,7 @@ func tabSheetTint(ativa bool) string {
 	return "border-transparent text-muted-foreground hover:border-grimorio-iron hover:text-foreground"
 }
 
-// oPainelDaFicha desenha a seção ativa.
+// sheetPanel desenha a seção ativa.
 //
 // Aqui morava o ramo "esta seção ainda vive na ficha antiga", com o link para a
 // SPA. Ele saiu na fatia 10 junto com a própria ficha antiga: as sete abas estão
@@ -674,7 +674,7 @@ func playerBadge(v View) templ.Component {
 	})
 }
 
-// aFileiraDoNivel é o degrau de nível.
+// levelRow é o degrau de nível.
 //
 // Ele está aqui porque é o ÚNICO lugar do app que muda o nível de um
 // personagem: não existe tela de edição, e a Forja só cria. Tirá-lo do crachá
@@ -745,7 +745,7 @@ func levelRow(v View) templ.Component {
 	})
 }
 
-// oDegrauDoNivel é um lado do degrau, e ele decide entre AGIR e PERGUNTAR.
+// levelStep é um lado do degrau, e ele decide entre AGIR e PERGUNTAR.
 //
 // Com UMA classe elegível ele age direto, que é o caso comum e o que a mesa
 // espera de um `+`. Com mais de uma ele abre a escolha — adivinhar qual classe
@@ -865,7 +865,7 @@ func levelStep(v View, passo int, rotulo, desenho string) templ.Component {
 	})
 }
 
-// aEscolhaDaClasse é o diálogo do multiclasse.
+// classChoice é o diálogo do multiclasse.
 //
 // Ele só nasce quando há MAIS DE UMA classe elegível: com uma só, o degrau age
 // direto e um diálogo no DOM seria um nó que nunca abre. `<dialog>` nativo, como
@@ -1016,7 +1016,7 @@ func classChoice(v View, passo int, titulo string) templ.Component {
 	})
 }
 
-// aBarraDoVital é o PV ou o PM, com os passos de mexer.
+// vitalBar é o PV ou o PM, com os passos de mexer.
 //
 // OS PASSOS SÃO 1 E 5, e não um campo de digitar: no meio de um turno o gesto é
 // "levou seis", e dois toques resolvem sem teclado. O campo continua existindo
@@ -1244,7 +1244,7 @@ func vitalStep(v View, rotulo string, passo int) templ.Component {
 	})
 }
 
-// aRecusaDaRegra é a frase da regra que barrou o gesto.
+// ruleRefusal é a frase da regra que barrou o gesto.
 //
 // Ela fica ACIMA do painel e não dentro do diálogo que originou o gesto: a cena
 // é redesenhada inteira a cada comando, então o diálogo já se fechou quando a

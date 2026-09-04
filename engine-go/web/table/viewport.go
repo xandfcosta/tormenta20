@@ -152,7 +152,7 @@ func centerViewport(x, y int) string {
 // tem o tamanho da janela agora é a caixa que ancora os overlays.
 const sceneId = "tabuleiro-cena"
 
-// focusFollowsViewport devolve o que a ROLAGEM NATIVA fazia de graça, e sem ele
+// viewportFollowsFocus devolve o que a ROLAGEM NATIVA fazia de graça, e sem ele
 // esta fatia teria embutido uma regressão de teclado.
 //
 // MEDIDO, e vermelho antes de escrito: com a peça em (-2039,-1268) e a janela em

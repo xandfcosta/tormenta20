@@ -577,7 +577,7 @@ func moveTerrain(b *tabuleiro.BoardState) engine.MoveTerrain {
 	return engine.MoveTerrain{Difficult: dificil}
 }
 
-// pecaQueEuPossoMover é a peça que quem olha pode COMEÇAR a mover agora, ou "".
+// reachAndTarget é a peça que quem olha pode COMEÇAR a mover agora, ou "".
 //
 // Uma só, e não uma lista, porque a Mesa move uma peça por vez: com um
 // movimento em curso a resposta é vazia — quem tem um proposto confirma ou
@@ -861,7 +861,7 @@ func followsFinger(quem string) string {
 		"$arrastando === '%s' && ($arrastox = evt.clientX - $arrastoinix, $arrastoy = evt.clientY - $arrastoiniy)", quem)
 }
 
-// previewFollowsFinger é o `followsFinger` da PEÇA, com a seta viva por cima.
+// fingerFollowsWithPreview é o `followsFinger` da PEÇA, com a seta viva por cima.
 //
 // Ele pede a prévia ao servidor SÓ QUANDO O QUADRADO MUDA, e não a cada pixel:
 // é a mesma trava do `rulerFollowsPointer`, e ela transforma "um pedido por
@@ -975,7 +975,7 @@ func dropFor(v BoardView, quem string, x, y int) string {
 // ferramentas: **exclusão por CONSTRUÇÃO**, e não por dois blocos que se
 // prometem exclusivos.
 
-// gestureReceivesToken diz se ela escuta o ponteiro.
+// tokenReceivesGesture diz se ela escuta o ponteiro.
 //
 // O mestre entra sempre porque marcar é gesto dele: uma peça que não é alvo do
 // movimento ainda pode estar num grupo marcado, e o `partyTakes` é quem checa a

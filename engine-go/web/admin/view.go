@@ -157,7 +157,7 @@ func firstChars(s string, n int) string {
 	return s[:n]
 }
 
-// emBytes é a mesma escada do `bytes()` do `server-panel.tsx`.
+// inBytes é a mesma escada do `bytes()` do `server-panel.tsx`.
 func inBytes(n int64) string {
 	const k = 1024.0
 	switch {
@@ -170,7 +170,7 @@ func inBytes(n int64) string {
 	}
 }
 
-// expiraEm traduz o prazo do convite para o que o dono precisa saber: quanto
+// expiryLabel traduz o prazo do convite para o que o dono precisa saber: quanto
 // ainda dá para esperar. Porte do `expiryLabel` do `open-invites-panel.tsx`.
 //
 // Ele existe porque a MIGRAÇÃO O PERDEU. A primeira versão desta tela

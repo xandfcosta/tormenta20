@@ -113,7 +113,7 @@ var creatureSizes = map[string]bool{
 
 const creatureMaxAttacks = 12
 
-// validateCreature recusa um bloco que a tela não saberia mostrar. As mensagens
+// Validate recusa um bloco que a tela não saberia mostrar. As mensagens
 // dizem o valor recebido e a forma esperada, como manda o guia da raiz: quem lê
 // o erro está com o formulário aberto e precisa saber o que corrigir.
 //
@@ -160,7 +160,7 @@ func Validate(name string, b *Block) error {
 	return nil
 }
 
-// normalizeCreature preenche as listas vazias para o JSON sair com `[]` e não
+// Normalize preenche as listas vazias para o JSON sair com `[]` e não
 // `null` — o cliente itera sobre elas sem checar, e `null` viraria erro de
 // runtime na primeira criatura sem ataque.
 func Normalize(b *Block) {

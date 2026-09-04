@@ -301,7 +301,7 @@ func readerScene(v readerView) templ.Component {
 	})
 }
 
-// botaoDoLeitor é o botão quadrado da barra. Um componente porque são quatro, e
+// readerButton é o botão quadrado da barra. Um componente porque são quatro, e
 // quatro cópias de nove classes divergem na primeira que alguém ajustar.
 //
 // UMA marca (`data-acao`) e não uma por família: o `leitor.js` procura pelo que

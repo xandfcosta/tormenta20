@@ -30,7 +30,7 @@ type Condition struct {
 	BookPage int `json:"bookPage"`
 }
 
-// aprimoramentoDaMagia é o que o livro imprime abaixo da magia: quanto custa a
+// SpellAugment é o que o livro imprime abaixo da magia: quanto custa a
 // mais e o que muda. Eram `[]any` — a cena só contava quantos havia —, e o
 // dono pediu para poder LER cada um.
 type SpellAugment struct {
@@ -63,7 +63,7 @@ type Spell struct {
 	BookPage   int            `json:"bookPage"`
 }
 
-// poderDoLivro é o poder ACHATADO. O livro espalha poder por três catálogos —
+// Power é o poder ACHATADO. O livro espalha poder por três catálogos —
 // habilidade de classe, poder geral/de combate e poder concedido —, e o mestre
 // quer UMA lista buscável. A `Fonte` diz de onde veio, que é o que o
 // achatamento não pode perder.
@@ -75,7 +75,7 @@ type Power struct {
 	BookPage    int
 }
 
-// itemDoLivro é a entrada do catálogo de itens.
+// Item é a entrada do catálogo de itens.
 //
 // Ela nasceu com os seis campos que a vitrine do mestre mostra e cresceu na
 // ALE-272 (fatia 7): a Mochila do jogador precisa do EIXO de equipar, das
@@ -111,7 +111,7 @@ type Weapon struct {
 	Traits    []string `json:"traits"`
 }
 
-// protecaoDoLivro serve armadura E escudo: os dois trazem os mesmos três
+// Armor serve armadura E escudo: os dois trazem os mesmos três
 // números, e o livro os apresenta na mesma tabela (p154).
 type Armor struct {
 	Defense int  `json:"defense"`
@@ -124,7 +124,7 @@ type Consumable struct {
 	Instant *ImmediateGain `json:"instant"`
 }
 
-// ganhoImediato é o PV/PM que um consumível devolve na hora. O `Dice` é a
+// ImmediateGain é o PV/PM que um consumível devolve na hora. O `Dice` é a
 // rolagem que a MESA faz — a ficha não rola por ninguém.
 type ImmediateGain struct {
 	HP *GainRoll `json:"hp"`
@@ -138,7 +138,7 @@ type GainRoll struct {
 
 // ── a leitura, uma vez só ────────────────────────────────────────────────────
 
-// catalogosDoLivro lê os quatro catálogos e os ORDENA uma vez.
+// Catalogs lê os quatro catálogos e os ORDENA uma vez.
 //
 // Ordenar aqui e não a cada pedido: a ordem não depende do filtro, e refazer
 // quatro ordenações a cada tecla digitada seria trabalho por nada. O
@@ -177,7 +177,7 @@ func Catalogs() GMCatalogs {
 	return acervo
 }
 
-// mapaDoCatalogo lê um recurso guardado como OBJETO por id e devolve os valores.
+// MapOf lê um recurso guardado como OBJETO por id e devolve os valores.
 //
 // Catálogo ausente ou malformado devolve lista vazia em vez de derrubar a Mesa:
 // a ferramenta abre sem aquela aba, e as outras três continuam servindo.
@@ -197,7 +197,7 @@ func MapOf[T any](nome string) []T {
 	return fora
 }
 
-// listaDoCatalogo lê um recurso guardado como ARRAY.
+// ListOf lê um recurso guardado como ARRAY.
 func ListOf[T any](nome string) []T {
 	bruto, ok := catalog.Resource(nome)
 	if !ok {
@@ -210,7 +210,7 @@ func ListOf[T any](nome string) []T {
 	return lista
 }
 
-// poderesAchatados junta os três catálogos de poder numa lista só.
+// FlattenedPowers junta os três catálogos de poder numa lista só.
 //
 // Os poderes DIVINOS ficam de fora, e a razão é da SPA: o dado deles carrega
 // página do livro e nenhum texto de regra, então não há o que consultar.
@@ -245,7 +245,7 @@ func FlattenedPowers() []Power {
 	return append(fora, DivinePowers()...)
 }
 
-// poderesDivinos são os que os DEUSES concedem, e este bloco é conserto de uma
+// DivinePowers são os que os DEUSES concedem, e este bloco é conserto de uma
 // lacuna que o dono viu na tela: nos cartões de Valkaria, Wynna e Thwor a maior
 // parte dos poderes concedidos não virava elo.
 //
@@ -294,7 +294,7 @@ func DivinePowers() []Power {
 	return fora
 }
 
-// chaveDoNome transforma um nome em chave de endereço: sem acento, minúsculo,
+// KeyOfName transforma um nome em chave de endereço: sem acento, minúsculo,
 // espaços viram hífen. É a mesma forma dos ids que os catálogos já usam.
 func KeyOfName(nome string) string {
 	return strings.ReplaceAll(search.Fold(nome), " ", "-")
@@ -481,7 +481,7 @@ type Chunk struct {
 	Pagina int
 }
 
-// comElosParaCondicoes parte a descrição nos nomes de CONDIÇÃO que ela cita.
+// WithConditionLinks parte a descrição nos nomes de CONDIÇÃO que ela cita.
 //
 //	"Desprevenido e imóvel; -2 em ataques"
 //	→ [{Desprevenido, condicoes}, {" e imóvel; -2 em ataques", ""}]
@@ -496,13 +496,13 @@ func WithConditionLinks(texto, exceto string) []Chunk {
 	return WithPageLinks(splitOnNames(texto, conditionNamesBySize(), exceto, "condicoes"))
 }
 
-// referenciaDePagina é como o livro cita a si mesmo: "veja a página 230",
+// pageRef é como o livro cita a si mesmo: "veja a página 230",
 // "pág. 172". Medido no catálogo — são cinco ocorrências, duas nos tipos de
 // efeito e três nos dragões —, e cada uma era texto morto: o número estava lá e
 // não levava a lugar nenhum.
 var pageRef = regexp.MustCompile(`(?i)p[áa]g(?:ina)?\.?\s*(\d{1,3})`)
 
-// comElosDePagina parte os pedaços de TEXTO PURO nas referências de página.
+// WithPageLinks parte os pedaços de TEXTO PURO nas referências de página.
 //
 // Roda DEPOIS da varredura de nomes e só sobre o que sobrou como texto: um
 // pedaço que já virou elo para um verbete não pode virar elo para o livro
@@ -543,14 +543,14 @@ func splitOnPages(texto string) []Chunk {
 	return fora
 }
 
-// comElosDoTexto é a varredura para os catálogos que NÃO citam condições — só as
+// WithLinks é a varredura para os catálogos que NÃO citam condições — só as
 // referências de página. Ver o cabeçalho: em magia e poder as citações de
 // condição são 3 em 668, e varrer 992 descrições atrás delas é custo sem retorno.
 func WithLinks(texto string) []Chunk {
 	return splitOnPages(texto)
 }
 
-// idDaCondicao resolve o nome no id com que o catálogo a guarda.
+// conditionID resolve o nome no id com que o catálogo a guarda.
 func conditionID(nome string) string {
 	for _, c := range Catalogs().Condicoes {
 		if c.Name == nome {
@@ -575,7 +575,7 @@ func conditionNamesBySize() []string {
 	return nomesLongos
 }
 
-// parteNosNomes é a varredura, e ela casa PALAVRA INTEIRA com a caixa do livro.
+// splitOnNames é a varredura, e ela casa PALAVRA INTEIRA com a caixa do livro.
 //
 // Caixa exata porque no texto do livro a condição é escrita com maiúscula
 // ("fica Abalado") e a palavra comum não ("um efeito de medo") — casar sem caixa
@@ -602,7 +602,7 @@ func splitOnNames(texto string, nomes []string, exceto, aba string) []Chunk {
 	return []Chunk{{Texto: texto}}
 }
 
-// indicePalavraInteira acha o nome com fronteira dos dois lados, ou -1.
+// wholeWordIndex acha o nome com fronteira dos dois lados, ou -1.
 func wholeWordIndex(texto, nome string) int {
 	de := 0
 	for {
@@ -629,7 +629,7 @@ func isBoundary(texto string, i int) bool {
 
 // ── os elos que vêm de CAMPO e não de texto ──────────────────────────────────
 
-// eloDoDevoto acha a aba e o id de um devoto do deus ("Elfos", "Bárbaros").
+// DevoteeLink acha a aba e o id de um devoto do deus ("Elfos", "Bárbaros").
 //
 // O dado vem no PLURAL e as entradas são singulares. A primeira versão tentava
 // só tirar "s" e "es", e o dono viu os buracos: MEDIDOS, faltavam elo em
@@ -666,7 +666,7 @@ func DevoteeLink(nome string) (aba, id string) {
 	return "", ""
 }
 
-// noSingular devolve as formas a tentar, do nome como veio ao singular provável.
+// singular devolve as formas a tentar, do nome como veio ao singular provável.
 //
 // As regras são as do português, e cada uma nasceu de um caso do catálogo:
 //
@@ -703,7 +703,7 @@ func singular(nome string) []string {
 	return fora
 }
 
-// dobraSimples é minúsculas sem acento, para casar a ascendência que o catálogo
+// fold é minúsculas sem acento, para casar a ascendência que o catálogo
 // guarda em caixa baixa ("aggelus") com o nome que o deus escreve ("Aggelus").
 func fold(s string) string {
 	return strings.ToLower(s)

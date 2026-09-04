@@ -75,7 +75,7 @@ func applyDamagePlan(
 	return plan, nil
 }
 
-// applyCharacterDelta moves a character's PV/PM by a delta and persists it,
+// ApplyDelta moves a character's PV/PM by a delta and persists it,
 // returning the values the tracker entry must mirror. Damage (negative PV) goes
 // through applyDamagePlan; healing and PM are clamped to the character's maxes.
 func (v sheetVitals) ApplyDelta(
@@ -102,7 +102,7 @@ func (v sheetVitals) ApplyDelta(
 	return v.persistVitals(ctx, charID, hp, healed, mp, mpDelta != nil)
 }
 
-// applyCharacterVitals sets absolute PV/PM on the character (the tracker's
+// ApplyAbsolute sets absolute PV/PM on the character (the tracker's
 // "vitals-patch"). An absolute value is a statement about the total, not a hit,
 // so it does NOT drain temporary pools — that rule belongs to damage.
 func (v sheetVitals) ApplyAbsolute(

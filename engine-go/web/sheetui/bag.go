@@ -122,7 +122,7 @@ type moneyLine struct {
 	Slots string
 }
 
-// osFiltrosDaMochila é o que a pessoa digitou: os dois filtros da grade e os dois do
+// bagFilters é o que a pessoa digitou: os dois filtros da grade e os dois do
 // diálogo do catálogo. Uma struct e não quatro parâmetros — quatro strings em
 // sequência é a assinatura em que se troca a ordem sem o compilador reclamar.
 type bagFilters struct {
@@ -182,7 +182,7 @@ func equippedSlotOf(item sheet.ItemDTO) string {
 	return *item.Equipped
 }
 
-// comQuatroPosicoes completa a tira de Vestidos com as posições vazias.
+// quatroPosicoesCom completa a tira de Vestidos com as posições vazias.
 //
 // Quatro sempre, mesmo com um item só: o teto do livro é a informação, e uma
 // tira que crescesse com o uso esconderia justamente quanto ainda cabe.
@@ -200,7 +200,7 @@ func usedInHands(hands handSlots) int {
 	return len(hands.Wielded)
 }
 
-// oRotuloDaMao nomeia a posição pela ORDEM. A terceira em diante não tem nome
+// handLabel nomeia a posição pela ORDEM. A terceira em diante não tem nome
 // no livro porque não deveria existir — e é justamente por isso que ela é
 // nomeada do jeito que denuncia.
 func handLabel(indice int) string {
@@ -213,7 +213,7 @@ func handLabel(indice int) string {
 	return "Acima do limite"
 }
 
-// asDuasMaos completa as empunhadas com as posições vazias, sem NUNCA cortar o
+// handsTwo completa as empunhadas com as posições vazias, sem NUNCA cortar o
 // que passou do teto.
 func handsTwo(cards []*equippedCard) []*equippedCard {
 	for len(cards) < 2 {
@@ -234,7 +234,7 @@ func equippedCardOf(item sheet.ItemDTO, rotulo string, proficiencias map[string]
 	}
 }
 
-// ehProficiente diz se o personagem sabe usar o item.
+// proficienteEh diz se o personagem sabe usar o item.
 //
 // A tabela que decide é a do MOTOR (`engine.RequiredProficiency`), a mesma que
 // resolve a penalidade da p142: um segundo mapa aqui daria uma tela que avisa
@@ -264,7 +264,7 @@ func stowedTilesOf(itens []sheet.ItemDTO) []stowedTile {
 	return linhas
 }
 
-// oGlifoDoItem escolhe o desenho do ladrilho pela categoria.
+// itemGlyph escolhe o desenho do ladrilho pela categoria.
 //
 // Item sem catálogo cai no pacote genérico, que é honesto: não há o que
 // adivinhar sobre um item que a pessoa inventou.
@@ -290,7 +290,7 @@ func itemGlyph(item sheet.ItemDTO) string {
 	return "Package"
 }
 
-// filtradosNaMochila cruza a busca com a categoria escolhida.
+// bagFiltered cruza a busca com a categoria escolhida.
 //
 // A busca ignora acento pela mesma razão das Perícias: quem digita "balsamo"
 // tem de achar "Bálsamo restaurador".
@@ -309,7 +309,7 @@ func bagFiltered(itens []sheet.ItemDTO, busca, categoria string) []sheet.ItemDTO
 	return fora
 }
 
-// asCategoriasDaMochila são os chips, na ordem em que aparecem.
+// bagCategories são os chips, na ordem em que aparecem.
 //
 // São CINCO e não as quinze do catálogo: o chip existe para achar uma coisa no
 // meio de trinta ladrilhos, e quinze chips numa tela de 390px seriam outra
@@ -330,7 +330,7 @@ func bagCategoryOptions(ativa string) []filterOption {
 	return fora
 }
 
-// daCategoriaDaMochila diz se o item aparece sob o chip escolhido.
+// categoryBagDa diz se o item aparece sob o chip escolhido.
 //
 // Item custom não tem categoria de catálogo e conta como equipamento comum —
 // assim ele cai em "tudo" e em "outros", e nunca some da mochila inteira.
@@ -376,7 +376,7 @@ func loadMeterOf(sheet engine.ComputedSheetV2) loadMeter {
 	}
 }
 
-// aLarguraDaBarra é a porcentagem já presa em 100.
+// barWidth é a porcentagem já presa em 100.
 func barWidth(usado float64, limite int) int {
 	if limite <= 0 {
 		return 0
@@ -388,7 +388,7 @@ func barWidth(usado float64, limite int) int {
 	return percent
 }
 
-// oRotuloDoLimite mostra a CONTA que produziu o limite, com o valor de Força
+// limitLabel mostra a CONTA que produziu o limite, com o valor de Força
 // resolvido — e não a notação "10 + 2×|FOR|", que manda a pessoa fazer a conta
 // de cabeça para conferir o número que já está do lado.
 func limitLabel(limite, forca int) string {
@@ -404,7 +404,7 @@ func moneyLineOf(dto sheet.CharacterDTO) moneyLine {
 	return linha
 }
 
-// espacosDeMoeda são os milheiros COMPLETOS: "cada 1.000 moedas ocupam um
+// coinSlots são os milheiros COMPLETOS: "cada 1.000 moedas ocupam um
 // espaço" (p141), e 1.999 T$ ocupam um espaço e não dois.
 func coinSlots(tibar float64) float64 {
 	return float64(int(tibar) / int(engine.CoinsPerSlot))
@@ -417,7 +417,7 @@ func slotPlural(espacos float64) string {
 	return " espaços"
 }
 
-// comVirgula escreve o número como a mesa escreve: sem casa decimal quando ele
+// virgulaCom escreve o número como a mesa escreve: sem casa decimal quando ele
 // é inteiro, e com VÍRGULA quando não é.
 func virgulaCom(valor float64) string {
 	if valor == float64(int64(valor)) {
@@ -426,7 +426,7 @@ func virgulaCom(valor float64) string {
 	return strings.Replace(strconv.FormatFloat(valor, 'f', -1, 64), ".", ",", 1)
 }
 
-// asMelhoriasOrdenadas devolve as sobreposições do item ordenadas por nome,
+// sortedImprovements devolve as sobreposições do item ordenadas por nome,
 // para a ficha do item listá-las sempre na mesma ordem.
 func sortedImprovements(item sheet.ItemDTO) []book.Item {
 	entradas := bookOverlays(item)
@@ -436,7 +436,7 @@ func sortedImprovements(item sheet.ItemDTO) []book.Item {
 
 // ── o que a TELA precisa escrever ────────────────────────────────────────────
 
-// osItensEscrito é "3 itens", com o singular certo.
+// writtenItems é "3 itens", com o singular certo.
 func writtenItems(n int) string {
 	if n == 1 {
 		return "1 item"
@@ -449,7 +449,7 @@ func juntoComPonto(nomes []string) string {
 	return strings.Join(nomes, " · ")
 }
 
-// oAvisoDaSobrecarga diz o que a sobrecarga CUSTA, com os dois números que o
+// overloadNotice diz o que a sobrecarga CUSTA, com os dois números que o
 // motor já aplicou — e não uma frase decorada que pode divergir deles.
 //
 // A segunda metade só aparece acima do DOBRO do limite, que é o outro teto da
@@ -465,7 +465,7 @@ func overloadNotice(load loadMeter) string {
 	return aviso
 }
 
-// osModosDoDinheiro são as três coisas que se fazem com dinheiro na mesa
+// moneyModes são as três coisas que se fazem com dinheiro na mesa
 // (ALE-224): "achamos 350 no baú", "paguei 80 pela estalagem", e escrever o
 // total — que é o gesto da forja (Tabela 3-1, p140) e o de consertar um erro de
 // digitação.

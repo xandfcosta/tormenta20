@@ -1600,7 +1600,7 @@ func numberRow(caminho, rotulo string, minimo, maximo int) templ.Component {
 	})
 }
 
-// rowRemoveButton diz O QUE vai sair no nome acessível, e não "remover".
+// removeRowButton diz O QUE vai sair no nome acessível, e não "remover".
 //
 // Com cinco ataques na tela, cinco botões chamados "Remover" são cinco botões
 // idênticos para quem navega por leitor de tela — e o que se apaga por engano é

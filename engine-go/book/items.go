@@ -8,7 +8,7 @@ import "strings"
 // camada) porque moravam num arquivo da MOCHILA, e só apareceram quando a forja
 // tentou sair: ela precisa achar o item que o kit inicial nomeia.
 
-// itemDoLivroPorID é a busca por id no acervo já ordenado.
+// ItemByID é a busca por id no acervo já ordenado.
 func ItemByID(id string) *Item {
 	for i, entrada := range Catalogs().Itens {
 		if entrada.ID == id {
@@ -18,7 +18,7 @@ func ItemByID(id string) *Item {
 	return nil
 }
 
-// bookItemByName é a busca por NOME, sem diferenciar maiúsculas.
+// ItemByName é a busca por NOME, sem diferenciar maiúsculas.
 //
 // Existe porque nem toda procedência cita o item por id: a linha "Itens" de uma
 // origem cita "Símbolo sagrado" por escrito (p85), e é o nome que tem de achar

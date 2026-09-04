@@ -155,7 +155,7 @@ func powerRowFor(
 	return linha
 }
 
-// oEstadoDaPostura resolve a flag, os degraus do nível e se ela está em curso.
+// stanceStateFor resolve a flag, os degraus do nível e se ela está em curso.
 func stanceStateFor(
 	dto sheet.CharacterDTO, spec book.Activation, posturas map[string]bool, contexto useContext,
 ) *stanceState {
@@ -173,7 +173,7 @@ func stanceStateFor(
 	return estado
 }
 
-// aFlagDaPostura acha a flag que a postura acende.
+// stanceFlag acha a flag que a postura acende.
 //
 // Ela sai do mapa que a fatia 5 montou lendo o catálogo — a postura NÃO declara
 // a própria flag, e derivá-la do id acertaria as duas de hoje e erraria calado
@@ -187,7 +187,7 @@ func stanceFlag(spec book.Activation) string {
 	return ""
 }
 
-// oNivelNaClasseDoPoder é o nível NA CLASSE que concede o poder, e não o do
+// classPowerLevel é o nível NA CLASSE que concede o poder, e não o do
 // personagem (p40): um bárbaro 5/ladino 5 tem a Fúria de um bárbaro 5.
 //
 // A classe sai do id da ativação (`class.barbaro.furia`), que é a convenção do
@@ -203,7 +203,7 @@ func classPowerLevel(dto sheet.CharacterDTO, activationID string) int {
 	return int(dto.Level)
 }
 
-// asFlagsAtivas são as FLAGS levantadas agora, e elas não estão no banco.
+// activeFlags são as FLAGS levantadas agora, e elas não estão no banco.
 //
 // O que o banco guarda é a lista de condicionais LIGADOS, e o id de um
 // condicional é um encadeado que o motor monta (`engine.ConditionalID`). A flag
@@ -232,7 +232,7 @@ func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 	return fora
 }
 
-// asPosturasPagas são as posturas com pagamento registrado.
+// paidStances são as posturas com pagamento registrado.
 func paidStances(dto sheet.CharacterDTO) map[string]bool {
 	fora := map[string]bool{}
 	for _, p := range dto.Stances {
@@ -257,7 +257,7 @@ func powerUses(dto sheet.CharacterDTO) map[string]powerUse {
 	return fora
 }
 
-// semPosturasRepetidas junta os DEGRAUS numa linha só.
+// stanceRepeatedSem junta os DEGRAUS numa linha só.
 //
 // "Inspiração +1" até "+5" são cinco linhas do catálogo e UMA postura na mesa —
 // mostrar as cinco daria cinco botões de Ativar para a mesma coisa.
@@ -298,7 +298,7 @@ func activeOne(linha powerRow) bool {
 	return linha.Stance != nil && linha.Stance.Active
 }
 
-// oPmDaLinha é o custo para ordenar. O custo variável vai para o FIM, e é por
+// rowPm é o custo para ordenar. O custo variável vai para o FIM, e é por
 // isso que ele vira um número grande em vez de ganhar um caso próprio.
 func rowPm(linha powerRow) int {
 	if strings.Contains(linha.Cost, "variável") {
@@ -312,7 +312,7 @@ func rowPm(linha powerRow) int {
 	return 0
 }
 
-// osGatilhosNoAr são as passivas de gatilho que estão fazendo efeito agora.
+// airTriggers são as passivas de gatilho que estão fazendo efeito agora.
 func airTriggers(passivas []powerRow) []powerRow {
 	fora := []powerRow{}
 	for _, linha := range passivas {
@@ -335,14 +335,14 @@ func filtradasPorNome(linhas []powerRow, termo string) []powerRow {
 
 // ── o que a TELA escreve ─────────────────────────────────────────────────────
 
-// asAcoesEscritas é a economia de ações do livro (p105), em caixa alta porque
+// writtenActions é a economia de ações do livro (p105), em caixa alta porque
 // ela é crachá.
 var writtenActions = map[string]string{
 	"padrao": "PADRÃO", "movimento": "MOVIMENTO", "livre": "LIVRE", "reacao": "REAÇÃO",
 	"gratuita": "GRATUITA", "completa": "COMPLETA", "passivo": "PASSIVA", "varia": "VARIA",
 }
 
-// oCustoEscrito é "LIVRE · 1 PM" — a ação que o uso consome e o preço.
+// writtenCost é "LIVRE · 1 PM" — a ação que o uso consome e o preço.
 //
 // A POSTURA escreve outra coisa: "POSTURA · 2+ PM". A economia de ação dela
 // importa menos que o fato de ser postura (ela DURA), e o "+" avisa que o preço
@@ -368,7 +368,7 @@ func stepsMore(spec book.Activation) string {
 	return ""
 }
 
-// oGastoEscrito é "usado 1/1 cena" — o que já se gastou do limite cobrado.
+// writtenSpent é "usado 1/1 cena" — o que já se gastou do limite cobrado.
 func writtenSpent(escopo string, uso powerUse) string {
 	gasto, palavra := uso.Dia, "dia"
 	if escopo == "scene" {
@@ -377,7 +377,7 @@ func writtenSpent(escopo string, uso powerUse) string {
 	return "usado " + strconv.Itoa(gasto) + "/1 " + palavra
 }
 
-// aFonteCurta encurta a procedência para caber no crachá da linha.
+// shortSource encurta a procedência para caber no crachá da linha.
 //
 // "Classe · Bárbaro" vira "Bárbaro" porque a palavra "Classe" é a que se repete
 // em quase toda linha — o que distingue é o nome da classe.
@@ -397,7 +397,7 @@ func shortSource(fonte string) string {
 	return "Geral"
 }
 
-// oGlifoDaAtivacao escolhe o desenho pelo tipo da ativação.
+// activationGlyph escolhe o desenho pelo tipo da ativação.
 func activationGlyph(kind string) string {
 	switch kind {
 	case "instant":
@@ -410,7 +410,7 @@ func activationGlyph(kind string) string {
 	return "BookOpen"
 }
 
-// osPoderesEscrito é "26 poderes", com o singular certo.
+// writtenPowers é "26 poderes", com o singular certo.
 func writtenPowers(n int) string {
 	if n == 1 {
 		return "1 poder"
@@ -418,7 +418,7 @@ func writtenPowers(n int) string {
 	return strconv.Itoa(n) + " poderes"
 }
 
-// aFraseDeSemAcoes explica a seção vazia, e ela DEPENDE de quem lê: mandar às
+// noActionsPhrase explica a seção vazia, e ela DEPENDE de quem lê: mandar às
 // Magias quem não conjura seria mandá-lo a uma aba vazia.
 func noActionsPhrase(conjura bool) string {
 	if conjura {
@@ -427,7 +427,7 @@ func noActionsPhrase(conjura bool) string {
 	return "Nenhuma ação ativável. Suas habilidades são passivas."
 }
 
-// oCrachaDoPoder é a classe do crachá — a postura sai na tinta arcana, que é a
+// powerBadge é a classe do crachá — a postura sai na tinta arcana, que é a
 // mesma da tripla mágica do Combate.
 func powerBadge(kind string) string {
 	base := "shrink-0 rounded-full border px-1.5 py-px text-3xs font-semibold uppercase tracking-wide"
@@ -437,7 +437,7 @@ func powerBadge(kind string) string {
 	return base + " border-grimorio-iron text-muted-foreground"
 }
 
-// aPreviaDoCustoDaPostura soma o custo dos degraus na tela.
+// costStancePreview soma o custo dos degraus na tela.
 //
 // PRÉVIA e não decisão: quem cobra é o servidor, com o teto de degraus do nível
 // e o PM disponível. Escrever a regra aqui daria uma segunda conta do mesmo

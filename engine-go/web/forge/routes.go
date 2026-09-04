@@ -16,12 +16,12 @@ import (
 // enquanto o herói não nasce, quem carrega as respostas é o próprio formulário
 // no navegador, e depois que ele nasce quem carrega é o banco.
 
-// handleForja desenha a folha em branco.
+// handleForge desenha a folha em branco.
 func (s Scene) handleForge(w http.ResponseWriter, r *http.Request) {
 	s.writeForge(w, r, http.StatusOK, blankForgeSheet(forgeAnswers{}, nil))
 }
 
-// handleForjaEsboco redesenha a folha com o que já foi respondido.
+// handleForgeDraft redesenha a folha com o que já foi respondido.
 //
 // É o único pedido do Datastar desta cena, e ele existe por uma razão só: o
 // equipamento de p140 depende da classe, e essa regra fica no servidor. A
@@ -42,7 +42,7 @@ func (s Scene) handleForgeDraft(w http.ResponseWriter, r *http.Request) {
 	_ = datastar.NewSSE(w, r).PatchElements(fragmento)
 }
 
-// handleForjaPost cria o herói e leva para a distribuição de atributos.
+// handleForgePost cria o herói e leva para a distribuição de atributos.
 //
 // A recusa REDESENHA a folha com o que foi respondido e o erro no campo, em 422
 // — a mesma decisão da folha em branco da campanha (ALE-246). Aqui o 422 é
@@ -70,7 +70,7 @@ func (s Scene) handleForgePost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/personagens/"+strconv.FormatInt(id, 10)+"/atributos", http.StatusSeeOther)
 }
 
-// aForjaDoFormulario lê as respostas do formulário.
+// answersFromForm lê as respostas do formulário.
 //
 // Serve os dois caminhos — o `submit` do navegador e o `@post` do Datastar com
 // `contentType: 'form'` — porque os dois mandam `application/x-www-form-urlencoded`.
