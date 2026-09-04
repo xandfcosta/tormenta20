@@ -67,6 +67,10 @@ func Routes(r chi.Router, s Scene) {
 	s.CastRoutes(r)
 	s.RoutesNpc(r)
 	s.RoutesEditorNpc(r)
+	// O RASCUNHO DE LUGAR (ALE-292) entra por aqui apesar de o endereço dele ser
+	// `/campanhas/…`: quem o desenha é o TABULEIRO, que é desta cena, e montá-lo
+	// no grupo das campanhas exigiria que aquele pacote alcançasse este.
+	s.DraftRoutes(r)
 }
 
 // O endereço da Mesa mora em `web/routes` desde a ALE-278 (`routes.Table`): a

@@ -2209,6 +2209,50 @@ func (q *Queries) ListOpenBoards(ctx context.Context, sessionid int64) ([]ListOp
 	return items, nil
 }
 
+const listOpenBoardsOfCampaign = `-- name: ListOpenBoardsOfCampaign :many
+SELECT b.sessionId, b.boardId, b.state
+FROM open_boards b
+JOIN sessions s ON s.id = b.sessionId
+WHERE s.campaignId = ?
+`
+
+type ListOpenBoardsOfCampaignRow struct {
+	Sessionid int64  `json:"sessionid"`
+	Boardid   string `json:"boardid"`
+	State     string `json:"state"`
+}
+
+// O RASCUNHO DE LUGAR precisa saber se a cena esta aberta em ALGUMA mesa da
+// campanha (ALE-292), e nao so na sessao ativa: uma sessao encerrada guarda os
+// tabuleiros dela, e reabri-la os traz de volta -- fechar um deles depois chama
+// o `Archive`, que sobrescreve o lugar de mesmo nome e apaga o rascunho.
+//
+// Uma consulta e nao um laco pelas sessoes: um acervo de campanha longa tem
+// dezenas delas, e perguntar sessao por sessao seria dezenas de idas ao disco
+// para desenhar uma lista.
+func (q *Queries) ListOpenBoardsOfCampaign(ctx context.Context, campaignid int64) ([]ListOpenBoardsOfCampaignRow, error) {
+	rows, err := q.db.QueryContext(ctx, listOpenBoardsOfCampaign, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListOpenBoardsOfCampaignRow{}
+	for rows.Next() {
+		var i ListOpenBoardsOfCampaignRow
+		if err := rows.Scan(&i.Sessionid, &i.Boardid, &i.State); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRacesByCharacter = `-- name: ListRacesByCharacter :many
 SELECT race FROM character_races WHERE characterId = ? ORDER BY id ASC
 `

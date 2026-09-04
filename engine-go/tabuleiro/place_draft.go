@@ -30,23 +30,18 @@ import (
 
 // EditPlace roda uma mutação sobre a cena guardada de um lugar.
 //
-// `liveSessionID` é a sessão AO VIVO da campanha, ou zero quando não há uma —
-// ela chega resolvida de quem chamou, como o orçamento chega ao `ProposeMove`,
-// porque quem sabe qual sessão está viva é o gateway e a trava daqui não pode
-// esperar por I/O que ela mesma dispare.
-//
 // A gravação passa pelo `SavePlaceScene`, então a conferência dele vale para
 // todo gesto: a mutação é pura e não sabe do teto de peças nem da coordenada
 // sã. Uma recusa deixa o acervo INTACTO, porque quem escreve é a gravação e ela
 // não chega a acontecer.
 func (bs *BoardStore) EditPlace(
-	ctx context.Context, campaignID, liveSessionID, placeID int64, fn func(*BoardState) error,
+	ctx context.Context, campaignID, placeID int64, fn func(*BoardState) error,
 ) (*BoardState, error) {
 	cena, err := bs.PlaceScene(ctx, campaignID, placeID)
 	if err != nil {
 		return nil, err
 	}
-	if err := bs.refusesIfLive(ctx, liveSessionID, cena.Place); err != nil {
+	if err := bs.refusesIfOnATable(ctx, campaignID, cena.Place); err != nil {
 		return nil, err
 	}
 	if err := fn(cena); err != nil {
@@ -58,27 +53,100 @@ func (bs *BoardStore) EditPlace(
 	return cena, nil
 }
 
-// refusesIfLive recusa o rascunho do lugar que está ABERTO numa mesa ao vivo.
+// NewID cunha um id de peça ou de marcador, com o mesmo cunho da mesa.
+//
+// Exposto para o RASCUNHO, e é a única coisa que ele precisa do store além do
+// `EditPlace`: as mutações dele são as funções PURAS deste pacote (`AddToken`,
+// `AddMarker`, `DuplicateToken`), e as três recebem o cunho de fora porque o
+// servidor é quem numera — dois clientes duplicando ao mesmo tempo não podem
+// inventar o mesmo "Zumbi 3" (ALE-192).
+//
+// Um cunho próprio do rascunho seria uma segunda política de identidade sobre as
+// mesmas peças, e elas se encontram: a cena montada aqui vai para a mesa.
+func (bs *BoardStore) NewID() string { return bs.newID() }
+
+// refusesIfOnATable recusa o rascunho do lugar que está ABERTO numa mesa.
 //
 // Seriam duas verdades sobre onde as peças estão, e a de fora perderia em
 // SILÊNCIO: encerrar a aba chama o `Archive`, que sobrescreve o lugar de mesmo
 // nome — a noite de trabalho no rascunho sumiria sem uma linha na tela.
 //
+// EM QUALQUER SESSÃO DA CAMPANHA, e não só na que está ativa. A primeira versão
+// desta trava olhava a sessão ativa e tinha um buraco: uma sessão ENCERRADA
+// guarda os tabuleiros dela — o `EndSession` não toca em `open_boards` —, e
+// reabri-la os traz de volta. Fechar um deles depois chamaria o `Archive` sobre
+// um lugar montado semanas antes, e o rascunho sumiria pelo caminho que a trava
+// existia para fechar.
+//
 // Pelo NOME e não pelo id, porque é o nome que identifica o lugar dentro da
 // campanha — é assim que o `Archive` decide se sobrescreve, e é a mesma conta
 // que o acervo já faz para escrever "nesta mesa agora".
-func (bs *BoardStore) refusesIfLive(ctx context.Context, liveSessionID int64, nome string) error {
-	if liveSessionID == 0 {
-		return nil
+//
+// DAS DUAS FONTES, e nenhuma delas basta sozinha — foi medido nas duas direções:
+//
+//   - só a MEMÓRIA não vê o tabuleiro aberto ontem, numa sessão que este
+//     processo nunca hidratou. Depois de um `docker compose up` o mapa está
+//     vazio e a trava passaria a deixar tudo montar.
+//   - só o BANCO não vê o tabuleiro que acabou de ser aberto: a gravação é
+//     ASSÍNCRONA (ver `persistBoardAndWarn`), e entre o `Open` e o `Persist` a
+//     tabela ainda não sabe dele. O primeiro caso escrito aqui reprovou por
+//     isso, e a lição é a de sempre — a fonte que "obviamente" tem o dado tem
+//     uma janela em que não tem.
+func (bs *BoardStore) refusesIfOnATable(ctx context.Context, campaignID int64, nome string) error {
+	if sessao := bs.sessionShowingLocked(nome); sessao != 0 {
+		return placeOnATable(nome)
 	}
-	for _, aberto := range bs.OpenBoards(ctx, liveSessionID) {
-		if aberto.Place == nome {
-			return fmt.Errorf(
-				"%q está aberto numa mesa agora: encerre a aba antes de montar o rascunho, senão o que você montar aqui some quando ela for encerrada",
-				nome)
+	abertos, err := bs.q.ListOpenBoardsOfCampaign(ctx, campaignID)
+	if err != nil {
+		// RECUSA em vez de deixar passar: o que está em jogo é o trabalho do
+		// mestre, e o modo de falha do "deixa passar" é ele montar uma cripta
+		// inteira que o `Archive` apaga depois. Um erro na tela custa um clique;
+		// o silêncio custa a noite.
+		return fmt.Errorf("não consegui conferir se %q está aberto numa mesa: %v", nome, err)
+	}
+	for _, aberto := range abertos {
+		var cena BoardState
+		if err := json.Unmarshal([]byte(aberto.State), &cena); err != nil {
+			// Um blob quebrado não pode virar "pode montar": ele é justamente o
+			// tabuleiro sobre o qual não se sabe nada.
+			return fmt.Errorf("o tabuleiro %s da sessão %d está ilegível; não dá para saber se é %q",
+				aberto.Boardid, aberto.Sessionid, nome)
+		}
+		if cena.Place == nome {
+			return placeOnATable(nome)
 		}
 	}
 	return nil
+}
+
+// placeOnATable é a frase da recusa, escrita UMA vez.
+//
+// As duas fontes acima chegam à mesma conclusão, e duas cópias da frase é como
+// uma delas passa a dizer outra coisa — quem lê a tela não sabe nem deve saber
+// se quem pegou foi a memória ou o disco.
+func placeOnATable(nome string) error {
+	return fmt.Errorf(
+		"%q está aberto numa mesa agora: encerre a aba antes de montar o rascunho, senão o que você montar aqui some quando ela for encerrada",
+		nome)
+}
+
+// sessionShowingLocked procura o lugar entre os tabuleiros VIVOS deste processo,
+// e devolve a sessão que o mostra (zero quando nenhuma).
+//
+// Varre todas as sessões em memória e não uma: o rascunho não sabe em qual mesa
+// o lugar poderia estar, e é justamente essa a pergunta. O custo é um laço sobre
+// as sessões hidratadas, sem I/O nenhum, debaixo da trava que já protege o mapa.
+func (bs *BoardStore) sessionShowingLocked(nome string) int64 {
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	for sessionID, abertos := range bs.boards {
+		for _, b := range abertos {
+			if b.Place == nome {
+				return sessionID
+			}
+		}
+	}
+	return 0
 }
 
 // NewPlace devolve o lugar em que o mestre vai montar a cena, criando-o vazio

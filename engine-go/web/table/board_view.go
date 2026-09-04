@@ -7,6 +7,7 @@ import (
 	"t20engine/aovivo"
 	"t20engine/engine"
 	"t20engine/tabuleiro"
+	"t20engine/web/routes"
 )
 
 // O TABULEIRO como dado (ALE-263) — a fatia que se OLHA.
@@ -106,6 +107,20 @@ type BoardView struct {
 	//
 	// Escrita SÓ pelo `tableBoardBase` e pelo `placeDraftBase`.
 	Base string
+	// Rascunho é a cena sendo montada NO ACERVO, fora da sessão (ALE-292).
+	//
+	// Ela é um MODO e não a ausência de sessão, e a diferença importa: `SessionID
+	// == 0` também acontece por engano, e um desenho que decidisse por ele
+	// atenderia a um estado inválido como se fosse um recurso. Aqui o modo é
+	// declarado por quem monta a view, e o que ele governa é o que NÃO existe
+	// fora da sessão — cortina, lente, abas, acervo, encerrar, pôr na fila — mais
+	// o significado do arrasto.
+	//
+	// O ARRASTO é a diferença que se sente: na mesa ele PROPÕE um movimento, com
+	// custo e vez, e alguém confirma; no rascunho ele põe a peça onde ela foi
+	// solta e acabou. Não há vez para gastar nem mesa para avisar, e uma proposta
+	// pendurada num rascunho seria um movimento que ninguém pode confirmar.
+	Rascunho bool
 	// Mestre é quem MONTA e DESMONTA a cena. Sai do mesmo `quem.Role` que a
 	// redação usa, e não de um parâmetro novo: duas fontes para o papel é como
 	// nasce a tela que esconde o botão de quem pode e o mostra para quem não.
@@ -1016,7 +1031,10 @@ func tokenReceivesGesture(v BoardView, id string) bool {
 
 // takeToken escolhe entre começar o arrasto DA PEÇA e o DO GRUPO.
 func takeToken(v BoardView, id string) string {
-	if v.ArrastaAPeca == id {
+	// No RASCUNHO toda peça se arrasta sozinha: não há grupo marcado nem alvo do
+	// turno, e a única coisa que o mestre quer fazer com uma peça guardada é
+	// mudá-la de lugar.
+	if v.Rascunho || v.ArrastaAPeca == id {
 		return pegaParaArrastar("peca")
 	}
 	return partyTakes(id)
@@ -1030,10 +1048,34 @@ func takeToken(v BoardView, id string) string {
 // o fim do caminho — é o que faz a próxima parada contar do lugar onde a peça
 // está (ALE-203, item 4).
 func dropToken(v BoardView, p boardToken) string {
+	if v.Rascunho {
+		return draftMoveDrop(v, p)
+	}
 	if v.ArrastaAPeca == p.ID {
 		return erasePreview + "; " + dropFor(v, "peca", p.X, p.Y)
 	}
 	return dropParty(v)
+}
+
+// draftMoveDrop põe a peça ONDE ELA FOI SOLTA, e acabou (ALE-292).
+//
+// O arrasto da mesa manda uma PARADA e o servidor devolve uma proposta com
+// custo, para alguém confirmar. Aqui não há vez para gastar nem mesa para
+// avisar: a peça vai para a casa e a cena guardada muda.
+//
+// A aritmética é a mesma do `dropFor` — o deslocamento em pixels dividido pelo
+// tamanho da casa, arredondado para o quadrado mais PRÓXIMO — e ela é repetida
+// em vez de extraída porque o que muda entre as duas é justamente o resto: o
+// destino, o desvio para o grupo e a prévia. Um helper comum guardaria três
+// linhas e faria as duas mudarem juntas no dia em que uma delas precisar de
+// outro arredondamento.
+func draftMoveDrop(v BoardView, p boardToken) string {
+	return fmt.Sprintf(
+		"if ($arrastando === 'peca') { "+
+			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
+			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
+			"if (dx || dy) @post('%s/pecas/%s/mover/' + (%d + dx) + '/' + (%d + dy)) }",
+		v.Base, p.ID, p.X, p.Y)
 }
 
 // followToken é o par do `takeToken` no `pointermove`: a peça que se
@@ -1043,7 +1085,11 @@ func dropToken(v BoardView, p boardToken) string {
 // UMA peça, e o gesto do grupo move várias sem regra de deslocamento nenhuma —
 // pedir prévia ali desenharia a seta de uma peça sobre o arrasto de todas.
 func followToken(v BoardView, p boardToken) string {
-	if v.ArrastaAPeca == p.ID {
+	// A PRÉVIA fica de fora do rascunho, e não por economia: ela pergunta ao
+	// servidor quanto o caminho CUSTA, e custo de deslocamento é conta de turno.
+	// Fora da sessão não há turno, então a seta desenharia um orçamento que não
+	// existe — a peça só está sendo posta no lugar.
+	if !v.Rascunho && v.ArrastaAPeca == p.ID {
 		return fingerFollowsWithPreview(v, p)
 	}
 	return followsFinger("peca")
@@ -1136,7 +1182,7 @@ func tableBoardBase(campaignID, sessionID int64) string {
 // Sem sessão no caminho de propósito — o rascunho é do ACERVO e sobrevive a
 // qualquer sessão, que é a diferença que a issue nomeia entre ele e a cortina.
 func placeDraftBase(campaignID, placeID int64) string {
-	return fmt.Sprintf("/campanhas/%d/lugares/%d/tabuleiro", campaignID, placeID)
+	return routes.PlaceDraft(campaignID, placeID) + "/tabuleiro"
 }
 
 // portugueseTokens concorda o número com o substantivo.

@@ -1,0 +1,95 @@
+package table
+
+import (
+	"t20engine/web/routes"
+
+	"t20engine/web/ui"
+)
+
+// O RASCUNHO DE LUGAR desenhado (ALE-292).
+//
+// A tela é o TABULEIRO e mais nada em volta, e essa é a decisão: quem monta uma
+// cripta na quinta-feira quer a superfície inteira para o mapa. A Mesa tem fila,
+// elenco, notas e o trilho do bestiário porque ela é uma partida acontecendo;
+// aqui não há partida — há uma pessoa desenhando.
+//
+// O que sobra da moldura é o mínimo que responde três perguntas que a pessoa faz
+// sem perceber: ONDE estou (o nome do lugar), QUEM vê isto (ninguém, e a tarja
+// diz), e o que acontece com o meu trabalho (grava sozinho, a cada gesto).
+
+templ draftBody(v draftView) {
+	<main
+		id="rascunho"
+		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`"
+		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
+	>
+		@draftHeader(v)
+		<div class="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5">
+			@draftBoardRegion(v)
+		</div>
+	</main>
+}
+
+// A CABEÇA do rascunho, e a tarja é a peça que importa.
+//
+// Ela existe pela mesma razão que o aviso da cortina: **um modo que se esquece é
+// pior que nenhum**. O mapa do rascunho é IGUALZINHO ao da mesa — mesmo trilho,
+// mesmos pincéis, mesmas peças —, e sem uma linha dizendo o contrário o mestre
+// pode montar a emboscada inteira acreditando que a mesa está vendo, ou pior,
+// acreditando que ela NÃO está enquanto joga. A cortina aprendeu isso na
+// ALE-202; esta tarja é a mesma lição, do outro lado do tempo.
+templ draftHeader(v draftView) {
+	<header class="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-grimorio-iron bg-grimorio-panel px-2 py-1 sm:px-3">
+		<div class="flex min-w-0 items-center gap-2">
+			<a
+				href={ templ.SafeURL(routes.CampaignTab(v.CampaignID, "lugares")) }
+				title={ "Voltar para " + v.CampanhaNome }
+				class="inline-flex min-h-11 items-center gap-1 rounded-sm px-1 text-sm text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				@ui.Icon("ChevronLeft", "size-4")
+				<span class="max-w-40 truncate">{ v.CampanhaNome }</span>
+			</a>
+			<span aria-hidden="true" class="text-muted-foreground">·</span>
+			<h1 class="min-w-0 truncate font-heading text-base tracking-wide text-foreground">{ v.Lugar }</h1>
+		</div>
+		<p class="flex items-center gap-2">
+			@ui.Icon("EyeOff", "size-4 text-grimorio-gold/70")
+			<span class="text-xs font-semibold uppercase tracking-widest text-grimorio-gold">Rascunho</span>
+			// A FRASE diz o que a palavra não diz. "Rascunho" sozinho pode ser
+			// lido como "não gravei ainda", que é o oposto do que acontece aqui.
+			<span class="text-sm text-muted-foreground">· a mesa não vê, e cada gesto já fica gravado</span>
+		</p>
+	</header>
+}
+
+// draftBoardRegion é a região que os gestos remendam.
+//
+// UMA região e não nove, ao contrário da Mesa, e o motivo é o que a tela É: aqui
+// não há fila que mude com o turno nem elenco que mude com a ficha. O que muda é
+// o mapa, e o `erroDoComando` viaja como SINAL — ele não precisa de HTML novo
+// para acender.
+//
+// O id é o do rascunho e NÃO `mesa-tabuleiro`: os dois nunca estão no mesmo
+// documento, mas um remendo mandado para o id errado é escrito no vazio e some
+// sem erro — a família de defeito que o `TableRegions` já registra.
+templ draftBoardRegion(v draftView) {
+	<div id="rascunho-tabuleiro" class="flex min-h-0 flex-1 flex-col">
+		@boardTable(v.Tabuleiro)
+		<div class="flex items-center justify-between gap-2 px-1 pt-1">
+			// A RECUSA do gesto, no mesmo sinal que o rodapé do mestre usa na
+			// Mesa: é a mesma pergunta ("o servidor não aceitou o quê?") e um
+			// sinal novo faria a recusa acender em dois lugares que podem
+			// discordar.
+			<p
+				data-show="$erroDoComando != ''"
+				data-text="$erroDoComando"
+				aria-live="assertive"
+				class="text-xs text-destructive-ink"
+			></p>
+			// A HORA da gravação, e ela é o par da tarja: uma diz que grava
+			// sozinho, a outra prova que gravou. Sem a prova, a promessa é
+			// exatamente tão confiável quanto a memória de quem lê.
+			<p class="ml-auto shrink-0 text-xs text-muted-foreground">{ v.GravadoEm }</p>
+		</div>
+	</div>
+}

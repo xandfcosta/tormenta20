@@ -59,6 +59,27 @@ type Deps interface {
 	// IsAdmin diz se quem pede administra, para a cena que o rodapé oferece.
 	IsAdminRequester(ctx context.Context, userID int64) bool
 
+	// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR (ALE-292): a campanha,
+	// quando quem pede a MESTRA, mais a sessão AO VIVO dela.
+	//
+	// Ela existe porque a trava do rascunho é de OUTRA natureza que a da mesa. O
+	// `SessionForCaller` pergunta por uma sessão, e o rascunho acontece quando
+	// não há nenhuma — usá-lo aqui exigiria inventar uma sessão para autorizar
+	// preparação, que é exatamente o acoplamento que esta issue existe para
+	// desfazer. E é `gm` e não "membro": o acervo é do mestre, e um jogador que
+	// abrisse esta tela veria a emboscada de sábado.
+	//
+	// Ela devolve a CAMPANHA e não um booleano porque a cena escreve o nome dela
+	// no "voltar": um sim-ou-não obrigaria uma segunda ida ao banco só para
+	// desenhar o cabeçalho.
+	//
+	// A trava do lugar que está numa MESA não passa por aqui — ela é do domínio
+	// (`EditPlace`), que a resolve contra todas as sessões da campanha numa
+	// consulta só. Ela chegou a morar nesta porta, e o que a tirou foi o buraco
+	// que a versão de lá tinha: perguntar "qual é a sessão ativa" não vê o
+	// tabuleiro aberto numa sessão encerrada, que reabre com ele.
+	PlaceDraftCampaign(ctx context.Context, userID, campaignID int64) (campanha sqlcgen.Campaign, status int, err error)
+
 	// SessionForCaller é a trava de acesso à mesa: existe, e quem pede pertence?
 	//
 	// Ela devolve a LINHA da sessão, o papel e o STATUS: a cena desenha os dois
