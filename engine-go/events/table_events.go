@@ -116,7 +116,7 @@ func (e BoardChanged) Target() Target { return Target{SessionID: e.SessionID} }
 // CharacterChanged — a ficha de um personagem mudou no banco.
 //
 // Publicado pelo GATEWAY e não por cada comando: passam mais de trinta mutações
-// pelo `comandoDaFicha`, e a linha esquecida numa delas seria uma ficha que não
+// pelo `sheetCommand`, e a linha esquecida numa delas seria uma ficha que não
 // atualiza só naquele gesto (ALE-275).
 //
 // Sem `SessionID`, e isso não é esquecimento: a ficha muda por caminhos que não

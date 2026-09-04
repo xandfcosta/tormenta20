@@ -843,7 +843,7 @@ func TomeSheet() templ.Component {
 // EXPULSA o cabeçalho do parágrafo e deixa um `<p>` vazio para trás. Medido na
 // ALE-262: o `h4` acabava filho da `<section>`, com `text-transform: none`
 // porque a classe ficou no parágrafo abandonado, e a página juntou 24 desses.
-// Para pôr a receita num cabeçalho, use `classesDoRotulo` direto no elemento.
+// Para pôr a receita num cabeçalho, use `ui.SectionLabelClasses` direto no elemento.
 func SectionLabel(tom string, extra string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

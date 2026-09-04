@@ -46,7 +46,7 @@ func (s Scene) handleCharacters(w http.ResponseWriter, r *http.Request) {
 }
 
 // termFromRequest lê a busca da URL na carga fria e dos SINAIS quando o Datastar
-// chama. Mesma razão do `filtroDoPedido` das campanhas: ler os dois no mesmo
+// chama. Mesma razão do `filterFromRequest` das campanhas: ler os dois no mesmo
 // lugar é o que deixa `?busca=anao` ser um endereço que se recarrega.
 func termFromRequest(r *http.Request) string {
 	busca := r.URL.Query().Get("busca")

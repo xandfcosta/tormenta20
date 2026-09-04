@@ -237,7 +237,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// As SETE travas moram em `entrarNaMesa` (ALE-249) e não mais aqui: esta
+	// As SETE travas moram em `joinTable` (ALE-249) e não mais aqui: esta
 	// rota e a cena do servidor precisam das mesmas, e enquanto elas viviam
 	// dentro deste handler a segunda tela teria de copiá-las. O que sobra aqui
 	// é a TRADUÇÃO de cada recusa para o status e a frase que o fio JSON usa.

@@ -12,9 +12,9 @@ import (
 
 // powerPanel é a ficha das posturas: a Fúria é a postura de escala do livro e a
 // Alma de Bronze é o único poder do catálogo que CONCEDE algo ao entrar nela.
-// oPainelDosPoderes corta a LISTA, deixando de fora os diálogos que vêm depois
+// powerPanel corta a LISTA, deixando de fora os diálogos que vêm depois
 // dela — o de escolher poderes mostra o catálogo inteiro de opções.
-// oPainelDosPoderes corta a LISTA, deixando de fora os diálogos que vêm depois
+// powerPanel corta a LISTA, deixando de fora os diálogos que vêm depois
 // dela — o de escolher poderes mostra o catálogo inteiro de opções.
 func powerPanel(tela string) string {
 	// O CORTE é no ABRIR do primeiro diálogo, e não no primeiro `</section>`: as

@@ -85,7 +85,7 @@ func EstaticoDoPiloto(arquivo string) string {
 // O `alcance` é `public` ou `private`, e não é detalhe: `public` autoriza um
 // cache COMPARTILHADO a guardar a resposta, o que está certo para a folha e as
 // fontes (elas saem sem sessão) e errado para o que só sai depois do
-// `requirePagina` — ver `piloto_livro.go`.
+// `requirePage` — ver `piloto_livro.go`.
 func comCacheVersionado(versao, alcance string, interno http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("v") == versao {

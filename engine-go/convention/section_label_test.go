@@ -42,7 +42,7 @@ import (
 //
 // O guarda é grep, como o dos ícones, e cobre a mesma classe de defeito: uma
 // peça que nasce errada sem ninguém reclamar. Quem precisa da receita num
-// cabeçalho usa `classesDoRotulo` no próprio elemento.
+// cabeçalho usa `ui.SectionLabelClasses` no próprio elemento.
 func TestNoFlowContentInsideASectionLabel(t *testing.T) {
 	// O bloco do componente e as duas linhas seguintes: é onde o filho entra.
 	abre := regexp.MustCompile(`@ui.SectionLabel\([^)]*\)\s*\{`)
@@ -68,7 +68,7 @@ func TestNoFlowContentInsideASectionLabel(t *testing.T) {
 			return err
 		}
 		// COMENTÁRIO FORA ANTES DE MEDIR. O comentário do próprio
-		// `rotuloDeSecao` cita `<h4>` para explicar por que ele não pode entrar
+		// `ui.SectionLabel` cita `<h4>` para explicar por que ele não pode entrar
 		// ali, e um guarda que lê a fonte crua acusaria a explicação do
 		// defeito como se fosse o defeito. A sessão irmã pagou exatamente isso
 		// hoje num guarda irmão: ele nasceu VERMELHO sobre o próprio texto, e

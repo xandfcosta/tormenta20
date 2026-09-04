@@ -318,7 +318,7 @@ func entryHit(m book.Entry) finderHit {
 	}
 }
 
-// collectionDestination leva à cena dos catálogos com a entrada já filtrada.
+// routes.MasterSearch leva à cena dos catálogos com a entrada já filtrada.
 //
 // Pelo NOME e não por um id na URL, e é escolha e não preguiça: a cena não tem
 // endereço para uma entrada só — ela tem `?aba=` e `?busca=`, que já são
@@ -328,7 +328,7 @@ func entryHit(m book.Entry) finderHit {
 
 // entryDestination é o endereço de UM verbete: a aba dele, mostrando só ele.
 //
-// Diferente do `collectionDestination`, que faz uma BUSCA. A diferença apareceu na
+// Diferente do `routes.MasterSearch`, que faz uma BUSCA. A diferença apareceu na
 // tela: clicar no elo "Medo" caía numa busca por "medo" nos oito catálogos, com
 // o verbete procurado espremido no quinto grupo. Quem clica num conceito pediu o
 // conceito.

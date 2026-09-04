@@ -358,7 +358,7 @@ func signOf(n int) int {
 //
 // O movimento não é um destino: é uma sequência de lugares onde a peça parou.
 // Só as paradas são guardadas, e o caminho entre duas consecutivas é desenhado
-// pelo `CaminhoEntre`. É assim que a ROTA vira escolha de quem joga — contorna-se
+// pelo `PathBetween`. É assim que a ROTA vira escolha de quem joga — contorna-se
 // um inimigo ou uma poça de lama acrescentando uma parada — sem o cliente
 // precisar mandar a trilha inteira do ponteiro.
 //
@@ -368,7 +368,7 @@ func signOf(n int) int {
 // não anda não é um passo.
 //
 // Uma parada IGUAL à anterior (quem soltou a peça onde ela já estava) não
-// acrescenta nada, e isso cai fora sozinho: o `CaminhoEntre` devolve um quadrado
+// acrescenta nada, e isso cai fora sozinho: o `PathBetween` devolve um quadrado
 // só e a emenda o descarta.
 func PathThroughStops(paradas []Square) []Square {
 	if len(paradas) == 0 {

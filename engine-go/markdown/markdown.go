@@ -159,7 +159,7 @@ func gatherList(linhas []string, inicio int) (Block, int) {
 	return Block{Kind: "list", Ordenada: ordenada, Itens: itens}, i - 1
 }
 
-// itemDaLista: `- [ ] dar XP` é um item com ESTADO; qualquer outro é comum.
+// listItem: `- [ ] dar XP` é um item com ESTADO; qualquer outro é comum.
 func listItem(linha string, indice int, texto string) Item {
 	m := mdTarefaRe.FindStringSubmatch(linha)
 	if m == nil {

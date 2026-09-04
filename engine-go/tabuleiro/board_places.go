@@ -216,7 +216,7 @@ func (bs *BoardStore) openPlaceLocked(ctx context.Context, campaignID, sessionID
 // inNewTabLocked acrescenta a cena como mais uma aba, com a trava na mão.
 //
 // UM lugar só cunha id e sequência, e é por isso que ele existe: o `Reopen` sem
-// aba e o `AbreOLugar` fazem a mesma coisa, e duas cópias disso é como uma delas
+// aba e o `OpenPlace` fazem a mesma coisa, e duas cópias disso é como uma delas
 // esquece o teto — que é a diferença entre uma sessão com oito cenas e uma que
 // cresce sem limite carregando tudo em toda hidratação.
 func (bs *BoardStore) inNewTabLocked(sessionID int64, cena *BoardState) (*BoardState, error) {
@@ -234,7 +234,7 @@ func (bs *BoardStore) inNewTabLocked(sessionID int64, cena *BoardState) (*BoardS
 // storedScene desempacota o que o acervo guardou, pronto para entrar na mesa.
 //
 // As três decisões que ela carrega estavam soltas no `Reopen`, e a segunda porta
-// de entrada (o `AbreOLugar`) precisava exatamente delas — copiadas, seria a
+// de entrada (o `OpenPlace`) precisava exatamente delas — copiadas, seria a
 // forma clássica de uma se esquecer: a cena reaberta por um caminho voltaria com
 // o movimento proposto da semana passada e a do outro não.
 func storedScene(blob, nome string) (*BoardState, error) {

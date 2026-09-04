@@ -93,7 +93,7 @@ func TestTheBookRouteServesRanges(t *testing.T) {
 	}
 }
 
-// TestTheBookLeavesWithAPrivateCache: ele passa pelo `requirePagina`.
+// TestTheBookLeavesWithAPrivateCache: ele passa pelo `requirePage`.
 //
 // `public` autorizaria um cache compartilhado a guardar a resposta de quem
 // entrou e reentregá-la a quem não entrou. A folha e as fontes são `public` de

@@ -103,7 +103,7 @@ var wideBrush = fmt.Sprintf("$%s = ''", brushSignal)
 // O SEGMENTO e não o ponto, e isso é conserto de um defeito medido: entre dois
 // avisos do ponteiro o dedo anda mais de uma casa, e mandar só onde ele ESTÁ
 // deixava buraco. Na bancada, um arrasto pintou 11,6 · 13,6 · 15,7 · 16,8 · 18,9
-// — as colunas 12, 14 e 17 vazias. Quem preenche é o `tabuleiro.CasasDoTraco`,
+// — as colunas 12, 14 e 17 vazias. Quem preenche é o `tabuleiro.StrokeSquares`,
 // porque a conta é regra de tabuleiro e não de tela.
 //
 // O `pointerdown` manda a casa CONTRA ELA MESMA (um traço de uma casa), e é por

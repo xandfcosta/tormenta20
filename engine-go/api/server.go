@@ -345,7 +345,7 @@ func (s *Server) Queries() *sqlcgen.Queries { return s.queries }
 // Catalogs é o motor primado — o mesmo que o oráculo usa.
 func (s *Server) Catalogs() *engine.Catalogs { return s.catalogs }
 
-// CurrentUserID lê quem está pedindo do contexto que o `requirePagina` escreveu.
+// CurrentUserID lê quem está pedindo do contexto que o `requirePage` escreveu.
 // Ela é método porque a CHAVE do contexto é deste pacote: uma segunda chave com
 // o mesmo nome, declarada noutro pacote, não lê o mesmo valor.
 func (s *Server) CurrentUserID(r *http.Request) int64 { return currentUser(r).ID }

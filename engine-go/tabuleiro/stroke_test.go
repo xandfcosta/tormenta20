@@ -60,7 +60,7 @@ func TestTheStrokeDoesNotGoDiagonalWhenItGrazes(t *testing.T) {
 				casas[i-1], casas[i])
 		}
 	}
-	// O CONTROLE: sem isto, um `CasasDoTraco` que devolvesse só a origem passaria
+	// O CONTROLE: sem isto, um `StrokeSquares` que devolvesse só a origem passaria
 	// no laço acima sobre uma lista de um item.
 	if len(casas) != 4 {
 		t.Errorf("o traço (0,0)→(2,1) tem %d casas, esperado 4 — %v", len(casas), casas)

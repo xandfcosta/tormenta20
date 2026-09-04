@@ -179,7 +179,7 @@ func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
 // NOME, e teria continuado verde com a classe fora do índice. Aqui o nome e a
 // classe são propositalmente disjuntos, e cada campo é buscado pelo termo que
 // só ELE contém; é isso que faz o teste morrer se algum sair de
-// `camposDeBusca`.
+// `searchFields`.
 func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	id := seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)

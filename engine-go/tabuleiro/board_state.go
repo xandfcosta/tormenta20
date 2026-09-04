@@ -160,7 +160,7 @@ type BoardState struct {
 	// migração, não para evitar a forma — quem revisar isto não deve herdar o
 	// argumento errado (achado da sessão da main, que foi ler a persistência).
 	//
-	// A repetição está contida no `listaDaEspecie`, que é o único lugar que sabe
+	// A repetição está contida no `listForKind`, que é o único lugar que sabe
 	// qual lista guarda qual espécie.
 	Difficult []engine.Square `json:"difficult,omitempty"`
 	// Cover: +5 na Defesa de quem está nela (p238). Trincheira, árvore estreita.
@@ -652,14 +652,14 @@ type PendingMove struct {
 	// nas três faixas (uma ação de movimento, duas, mais que duas).
 	//
 	// Por isso ele é o deslocamento da PEÇA e não a permissão de quem arrasta —
-	// ver `orcamentoDeDesenho`.
+	// ver `boardDefaultSpeedSquares`.
 	Budget int `json:"budget"`
 	// ByUserID é quem propôs. O mestre confirma por qualquer um; o jogador só
 	// confirma o que ele mesmo propôs.
 	ByUserID int64 `json:"byUserId"`
 	// Stops são as casas onde a pessoa CLICOU, na ordem, com a primeira sendo o
 	// lugar de onde a peça saiu. O `Path` é o que elas produzem
-	// (`CaminhoPorParadas`), e não o contrário.
+	// (`PathThroughStops`), e não o contrário.
 	//
 	// Existe porque o caminho NÃO deixa descobri-las: um trecho legítimo já tem
 	// uma dobra (a diagonal vem primeiro), e ela é indistinguível da dobra de uma
@@ -668,7 +668,7 @@ type PendingMove struct {
 	//
 	// NULO é um valor legítimo e quer dizer "não se sabe onde ela parou": é o que
 	// o `ProposeMove` deixa quando o caminho chega pronto de fora. Quem propõe por
-	// paradas usa o `ProposeMoveComParadas`, e só aí o desfazer de UMA existe.
+	// paradas usa o `ProposeMoveWithStops`, e só aí o desfazer de UMA existe.
 	Stops []engine.Square `json:"stops,omitempty"`
 }
 
@@ -815,7 +815,7 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 // contornando o que quem move quiser. É a forma que o piloto usa, e é ela que
 // torna "desfazer a última perna" uma operação exata em vez de um palpite: o
 // caminho se reconstrói pelas paradas que sobraram, e reconstruir é o que o
-// `CaminhoPorParadas` já faz de graça.
+// `PathThroughStops` já faz de graça.
 //
 // A validação inteira continua sendo a do `ProposeMove` — o orçamento, a vez, a
 // posse, a contiguidade. Esta função não afrouxa nada; ela só LEMBRA de onde o
@@ -861,7 +861,7 @@ func PaintTerrain(b *BoardState, square engine.Square, especie TerrainKind, liga
 //
 // Devolve ponteiro para o campo porque o pincel escreve nele. É o que segura a
 // repetição das quatro listas irmãs num ponto só: acrescentar uma quinta espécie
-// é uma linha aqui e uma no `EspeciesDeTerreno`, e o resto do código não muda.
+// é uma linha aqui e uma no `TerrainKinds`, e o resto do código não muda.
 //
 // nil para espécie desconhecida, e o pincel trata: o id vem do cliente, e uma
 // espécie inventada não pode derrubar a mesa nem pintar a lista errada.
@@ -954,7 +954,7 @@ func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 	// era ele que obrigava o servidor a ter uma regra de deslocamento, porque
 	// alguém sem autoridade estava mexendo no tabuleiro.
 	//
-	// É a MESMA divisa do resto da Mesa (`comandoDoMestre`), e a razão de a trava
+	// É a MESMA divisa do resto da Mesa (`gmCommand`), e a razão de a trava
 	// de deslocamento ter podido sair inteira logo abaixo.
 	if by.Role != "gm" {
 		return errors.New("só o mestre põe a peça no lugar: o seu movimento é um rascunho para a mesa ver")
@@ -1002,7 +1002,7 @@ func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 // desfaz de novo — cada passo com a mesa vendo.
 //
 // Não confere a VEZ nem a posse, ao contrário do movimento: quem chama é o mestre
-// arrumando a cena (a rota é `comandoDoMestreNoTabuleiro`), e a peça já está onde
+// arrumando a cena (a rota é `gmBoardCommand`), e a peça já está onde
 // ele a pôs. Recusar por "não é a vez de Arwen" impediria justamente o conserto.
 func ReturnToken(b *BoardState, tokenID string) error {
 	token := FindToken(b, tokenID)
@@ -1068,7 +1068,7 @@ func CanMoveWith(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 // SquaresOf são as casas pintadas de uma espécie, para quem só LÊ.
 //
 // Existe para o mapeamento espécie→lista continuar com um dono só: sem ela,
-// quem desenha refaz o `switch` do `listaDaEspecie` do lado de fora, e é a cópia
+// quem desenha refaz o `switch` do `listForKind` do lado de fora, e é a cópia
 // de fora que fica para trás quando a quinta espécie chegar. Devolve a fatia e
 // não o ponteiro justamente por ser leitura — o pincel é quem escreve.
 func SquaresOf(b *BoardState, especie TerrainKind) []engine.Square {

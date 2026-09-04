@@ -146,7 +146,7 @@ func ehLinearizado(cabeca []byte) bool {
 // `http.ServeFile` responde `Range` sozinho — é isso que faz o visualizador de
 // PDF pedir só os pedaços da página quando o arquivo é linearizado.
 //
-// O alcance do cache é `private` porque esta rota sai DEPOIS do `requirePagina`:
+// O alcance do cache é `private` porque esta rota sai DEPOIS do `requirePage`:
 // `public` autorizaria um cache compartilhado a guardar e reentregar o livro de
 // alguém que entrou para quem não entrou.
 func (s *Server) LivroDoPiloto() http.Handler {

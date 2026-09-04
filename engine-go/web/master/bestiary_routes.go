@@ -105,7 +105,7 @@ type BestiaryCriteria struct {
 //
 // Ler os dois no mesmo lugar é o que faz `?busca=ogro&nd-max=3` ser um ENDEREÇO
 // que se recarrega e se cola no chat da mesa — a mesma decisão do
-// `buscaDoPedido` dos personagens e do `filtroDoPedido` das campanhas.
+// `buscaDoPedido` dos personagens e do `filterFromRequest` das campanhas.
 //
 // Os sinais VENCEM a URL quando existem, e não o contrário: quando o Datastar
 // chama, os sinais são o que o mestre acabou de digitar, e a URL é o que ele

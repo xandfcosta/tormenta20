@@ -21,7 +21,7 @@ import (
 // O `ClassPower` do motor é um subconjunto deliberado: ele carrega o que a
 // derivação lê — id, classe, nível, modificadores — e não a descrição. Quem
 // tem o texto é o catálogo cru, que a vitrine do mestre já lê
-// (`poderesAchatados`). Então a POSSE é pergunta do motor e o TEXTO é do
+// (`FlattenedPowers`). Então a POSSE é pergunta do motor e o TEXTO é do
 // catálogo; misturar as duas fontes numa struct só é o que este arquivo faz.
 
 // ownedPower é um poder que o personagem TEM, pronto para a tela.
@@ -47,7 +47,7 @@ func ownedPowersOf(dto sheet.CharacterDTO) []ownedPower {
 
 // raceAbilities são as habilidades de cada raça da ficha.
 //
-// Quem lê o catálogo é o `racasDaTela` do dossiê — o MESMO `race-defs.json`, já
+// Quem lê o catálogo é o `RaceTraitsByKey` do dossiê — o MESMO `race-defs.json`, já
 // indexado por id E por nome, porque o personagem guarda a raça por um dos dois.
 // Um segundo leitor aqui seria uma terceira cópia da mesma decisão.
 func raceAbilities(dto sheet.CharacterDTO) []ownedPower {

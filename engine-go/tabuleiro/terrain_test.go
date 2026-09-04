@@ -15,7 +15,7 @@ import (
 
 // TestEachKindHasItsOwnList.
 //
-// Amostragem e não enumeração: percorre `EspeciesDeTerreno`, então a quinta
+// Amostragem e não enumeração: percorre `TerrainKinds`, então a quinta
 // espécie que alguém acrescentar já nasce medida, e não há uma entrada por caso
 // para alguém esquecer de escrever.
 func TestEachKindHasItsOwnList(t *testing.T) {

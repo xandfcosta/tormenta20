@@ -268,7 +268,7 @@ func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude 
 			X: m.X, Y: m.Y, Onde: Coordinate(m.X, m.Y),
 		})
 	}
-	// A ORDEM do laço é a de `EspeciesDeTerreno`, então o desenho de uma casa
+	// A ORDEM do laço é a de `TerrainKinds`, então o desenho de uma casa
 	// com duas espécies é sempre o mesmo — folhagens são difícil E camuflagem
 	// (p267), e uma ordem que variasse faria a mesma casa mudar de cara entre
 	// dois remendos.
@@ -592,7 +592,7 @@ func moveTerrain(b *tabuleiro.BoardState) engine.MoveTerrain {
 // `assertMovable` lê "fora de combate" e devolve que pode: a tela ofereceria
 // mover a peça do jogador FORA DA VEZ dele, e a recusa só viria no clique.
 // O RESTANTE sai daqui junto com as casas porque é a MESMA conta: `Alcance` e
-// `Restante` são os dois valores que `AlcanceDaProximaParada` devolve de uma
+// `Restante` são os dois valores que `reachAndTarget` devolve de uma
 // chamada só. A primeira versão chamava a função duas vezes com os mesmos
 // argumentos, cada sítio jogando fora a metade que não usava — e duas contas da
 // mesma regra é como este repositório já mostrou dois números diferentes para o
@@ -671,7 +671,7 @@ func screenSquares(casas []engine.Square) []boardSquare {
 // moveBalance diz o que SOBRA — ou o que passou (ALE-203, item 13).
 //
 // O rodapé dizia "sobram %d" sempre, e desde que o caminho caro passou a ser
-// aceito esse número parava em ZERO: o `AlcanceDaProximaParada` trava o restante
+// aceito esse número parava em ZERO: o `reachAndTarget` trava o restante
 // em zero de propósito, porque ele alimenta o desenho das casas alcançáveis e
 // alcance negativo não é lugar nenhum. O efeito era um rodapé que dizia "sobram
 // 0" para um caminho que passou três quadrados do deslocamento — verdade sobre

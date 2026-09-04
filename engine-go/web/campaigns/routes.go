@@ -61,7 +61,7 @@ func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: "Campanhas · Tormenta 20",
-		// `cascaNua`: esta cena desenha o próprio cabeçalho, porque ele carrega a
+		// `ui.ShellBare`: esta cena desenha o próprio cabeçalho, porque ele carrega a
 		// busca e os filtros. A casca densa poria um segundo `<h1>` acima.
 		Forma: ui.ShellBare,
 	}, SceneBody(view))
@@ -156,7 +156,7 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 func (s Scene) writeNewPage(w http.ResponseWriter, r *http.Request, status int, v newView) {
 	s.deps.WritePage(w, r, status, ui.Page{
 		Titulo: "Abrir nova campanha",
-		// `cascaDensa`: a tela da SPA usa o cabeçalho compacto com o "‹ Voltar",
+		// `ui.ShellDense`: a tela da SPA usa o cabeçalho compacto com o "‹ Voltar",
 		// e sem ele a folha nasce sem saída visível — o Esc existe, mas atalho
 		// não é a única porta.
 		Forma:  ui.ShellDense,
@@ -178,7 +178,7 @@ func (s Scene) handleJoin(w http.ResponseWriter, r *http.Request) {
 
 // handleJoinPost senta o herói à mesa.
 //
-// As sete travas são do `entrarNaMesa` e não daqui — a mesma função que a rota
+// As sete travas são do `joinTable` e não daqui — a mesma função que a rota
 // JSON usa. O que este manipulador faz é TRADUZIR cada recusa para uma frase em
 // português no campo certo, que é trabalho de tela e não de regra.
 func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {

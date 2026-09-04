@@ -17,7 +17,7 @@ import (
 //
 // Ela é a mesma folha do grimório que a crônica que se lê — mesmo couro, mesma
 // virada de página —, só que vazia e com você segurando a pena. É por isso que
-// ela mora no `folhaDoTomo` e não numa casca comum.
+// ela mora no `ui.TomeSheet` e não numa casca comum.
 //
 // SEM Datastar, e a ausência é a mesma decisão da porta (ALE-229): é um
 // formulário que NAVEGA ao dar certo. `<form method="post">` faz isso desde

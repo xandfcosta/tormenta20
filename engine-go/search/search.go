@@ -130,7 +130,7 @@ func isSubsequence(campo, alvo string) bool {
 //
 // Só o nome, e de propósito: casar por descrição não distingue o verbete que a
 // pessoa procura do que apenas menciona a palavra. A descrição entra por fora,
-// com peso baixo — ver `pontuaEntrada`.
+// com peso baixo — ver `Score`.
 //
 // VÁRIOS TERMOS são exigidos TODOS, e a nota é a média. Sem isso "bola fogo"
 // não acha "Bola de Fogo" — medido: o nome não começa com a frase, não a contém,
@@ -177,7 +177,7 @@ func scoreTerm(campo, termo string) int {
 // isNearlyEqual é a tolerância a typo APERTADA, e ela existe porque a frouxa não
 // serve aqui.
 //
-// O `ehSubsequencia` aceita letras faltando em qualquer lugar, e o comentário
+// O `isSubsequence` aceita letras faltando em qualquer lugar, e o comentário
 // dele já avisa o limite: "numa lista de seis campanhas isso faria a busca
 // devolver a lista inteira". Em 1.072 entradas é pior, e foi MEDIDO na tela —
 // "abal" trouxe "Capitão-Baluarte", "Hobgoblin Mago de Batalha" e "Suporte

@@ -116,7 +116,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: view.Nome + " · Tormenta 20",
-		// `cascaNua`: a cena desenha o próprio cabeçalho, com a volta e o nome.
+		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
 		Forma: ui.ShellBare,
 		// `detalhe` é a caixa do Combate cujo diálogo está aberto, e ele mora no
 		// <body> porque o <body> nunca é remendado: declarado dentro do painel, o

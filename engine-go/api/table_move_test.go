@@ -269,7 +269,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 // desfazer. O alcance desenhado é o aviso mudo; este número é o falado.
 //
 // Guarda também a CONTA, que estava sem dono: `Alcance` e `Restante` são os dois
-// valores de UMA chamada de `AlcanceDaProximaParada`, e enquanto ninguém
+// valores de UMA chamada de `reachAndTarget`, e enquanto ninguém
 // afirmava o segundo dava para movê-lo de lugar sem nenhum teste piscar.
 func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	f := novoPiloto(t)

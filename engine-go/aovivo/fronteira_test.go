@@ -17,7 +17,7 @@ import (
 //
 // O caso concreto que este guarda protege já aconteceu durante a própria
 // extração: o `sessionStore` chamava `applyCharacterVitals`, que usa as regras
-// de dano da FICHA. A resposta certa foi declarar a porta `VitaisDaFicha` e
+// de dano da FICHA. A resposta certa foi declarar a porta `aovivo.SheetVitals` e
 // receber quem a cumpre por parâmetro — e não importar a ficha daqui. Sem este
 // guarda, o próximo a precisar de algo da ficha acrescenta o import, compila, e
 // a porta vira enfeite.

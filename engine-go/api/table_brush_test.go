@@ -28,7 +28,7 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 			len(casas), len(esperadas), casas)
 	}
 	// E o traço não tem buraco na ponta que este lado controla: a primeira e a
-	// última casa do segmento estão lá. O meio é problema do `CasasDoTraco`, que
+	// última casa do segmento estão lá. O meio é problema do `StrokeSquares`, que
 	// tem guarda próprio.
 	for _, ponta := range []engine.Square{{X: 2, Y: 2}, {X: 8, Y: 5}} {
 		if !contem(casas, ponta) {

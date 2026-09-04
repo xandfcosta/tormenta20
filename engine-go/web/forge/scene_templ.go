@@ -16,7 +16,7 @@ import (
 // A FORJA — a folha em branco de um herói (ALE-272, fatia 9).
 //
 // Ela é a mesma folha do tomo da campanha nova (ALE-246), e por isso mora no
-// `folhaDoTomo`: mesmo couro, mesma virada de página, com você segurando a pena.
+// `ui.TomeSheet`: mesmo couro, mesma virada de página, com você segurando a pena.
 //
 // O ESTADO TEM UMA CASA SÓ: o próprio formulário. Não há `data-signals` aqui, e
 // isso é decisão — o único pedaço que precisa do servidor é o EQUIPAMENTO, que
