@@ -8,6 +8,7 @@ import (
 	"strings"
 	"t20engine/plataforma"
 
+	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
 	"t20engine/tabuleiro"
 	"t20engine/web/campaigns"
@@ -35,11 +36,17 @@ type campaignsHost struct {
 	// domínio ao vivo que esta cena alcança — pelas três perguntas da porta, e
 	// não pelo store inteiro. A crônica lista, cria e apaga um lugar; quem MONTA
 	// a cena é a cena do tabuleiro.
-	boards *tabuleiro.BoardStore
+	//
+	// O `sessions` entrou na ALE-270 e NÃO abre a mesma concessão: ele não
+	// atravessa a porta da cena, e vive aqui só para a faxina de memória de
+	// apagar a campanha — que é do hospedeiro, e que a cena pede como PERGUNTA
+	// (`CampaignDeleted`) e não como store.
+	boards   *tabuleiro.BoardStore
+	sessions *aovivo.SessionStore
 }
 
 func (s *Server) campaignsHost() campaignsHost {
-	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules(), boards: s.boards}
+	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules(), boards: s.boards, sessions: s.sessions}
 }
 
 // List traduz o `campaignList` para a forma que a CENA declarou.
@@ -191,6 +198,11 @@ func descricaoOuNulo(texto string) sql.NullString {
 		return sql.NullString{String: t, Valid: true}
 	}
 	return sql.NullString{}
+}
+
+// CampaignDeleted é a faxina de memória das sessões da campanha (ALE-270).
+func (h campaignsHost) CampaignDeleted(ctx context.Context, campanhaID int64) {
+	campaignDeleted(ctx, h.rules.queries, h.boards, h.sessions, campanhaID)
 }
 
 // ── o ACERVO DE LUGARES da crônica (ALE-292) ─────────────────────────────────

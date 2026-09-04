@@ -2329,6 +2329,69 @@ falhando com "heading não encontrado", que não aponta para nada. Ele passou a
 NAVEGAR (aba de lugares → "Montar"), que é o caminho do mestre e não depende de
 número nenhum.
 
+## A sessão apagada deixava o alarme travado, e a suíte não reproduzia mais (ALE-270)
+
+A mesa roda de MEMÓRIA: o tabuleiro num mapa por sessão no `BoardStore`, a fila
+noutro no `SessionStore`. **Apagar a sessão não esvaziava nem um nem outro**, e o
+`Persist` seguinte batia na chave estrangeira de `open_boards`:
+
+    session 14: board Persist failed (constraint failed: FOREIGN KEY constraint failed (787))
+
+O estrago não é a linha. É o `Dirty`: ele existe desde a ALE-154 para a mesa
+SABER quando parou de gravar, e só um `Persist` bem-sucedido o apaga — nenhum ia
+suceder, porque a sessão não volta a existir. **Um alarme construído para gritar
+"PARE, não estou gravando" passava a gritar por um tabuleiro que ninguém queria
+gravar**, sobre a tela de uma sessão VIVA, e sem nada que o mestre pudesse fazer.
+É a ALE-154 ao contrário: lá a gravação falhava em silêncio, aqui ela avisava
+sobre o nada.
+
+### A premissa de um comentário certo pode deixar de valer sem ninguém mexer nele
+
+O `SessionStore.Forget` NÃO limpa o `Dirty`, e o comentário dele explica por quê:
+apagá-lo engoliria a recuperação suja→saudável, porque o próximo `Persist` ainda
+tem de avisar que voltou. **O argumento está certo e depende de a sessão
+continuar existindo** — e é exatamente essa premissa que apagar a sessão
+desmente. Ele não estava errado; estava respondendo a outra pergunta.
+
+Daí os DOIS verbos, e a diferença entre eles é o que a issue é: `Forget` é
+esquecer o cache de uma sessão que continua lá; `SessionDeleted` é o fim da vida
+dela.
+
+### Limpeza que depende de o cliente esperar não é limpeza
+
+O `Close` apagava a linha de `open_boards` com o contexto da REQUISIÇÃO, que
+morre quando quem clicou vai embora — `board delete failed (context canceled)`,
+medido na mesma corrida. A linha ficava no banco e a hidratação seguinte trazia
+de volta uma cena que o mestre tinha encerrado.
+
+`context.WithoutCancel(ctx)` e não `context.Background()`: os valores do
+contexto continuam valendo, e o que se descarta é só o cancelamento — que é a
+única parte dele que pertence ao cliente.
+
+### O CONTROLE que quase não foi feito, e o que ele mostrou
+
+A issue dizia *"a corrida de e2e reproduz sozinha"*. Antes de declarar consertado
+eu rodei a suíte **SABOTADA**, com o defeito de volta: **zero linhas**. O canal
+existe (o log do servidor chega ao relatório com `[WebServer]`, e as linhas do
+goose estão lá); o que não existe mais é o caminho — a suíte mudou desde agosto e
+nada mais faz um `Persist` DEPOIS de a sessão morrer.
+
+Rodar só a versão consertada teria dado a mesma tela: zero linhas, e a conclusão
+"consertei" apoiada numa suíte que não passa perto do código. **É a forma exata
+do que a raiz chama de "o instrumento mente com cara de resultado"**, e o que a
+desmontou foi rodar o caso NEGATIVO primeiro.
+
+O canal honesto é um teste de Go que dirige o `Persist` depois de apagar a
+sessão. Ele emite a linha da issue verbatim, com o mesmo `(787)`.
+
+### O que ficou de fora, e por quê
+
+`chosenTabs` e `lenses` (em `web/table`) também guardam por sessão e também
+sobrevivem a ela. Ficaram: são estado da CENA e não dos stores, não alimentam
+alarme nenhum, não escrevem log, e alcançá-los do hospedeiro inverteria a
+dependência que a porta existe para manter. É vazamento de bytes, não alarme
+travado — e a issue era sobre o alarme.
+
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 
 Ele tinha **89 métodos exportados**, e todos existiam por um motivo só: cumprir

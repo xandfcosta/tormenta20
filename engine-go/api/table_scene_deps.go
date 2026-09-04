@@ -97,6 +97,15 @@ func (h tableHost) PlaceDraftCampaign(
 	return h.rules.campaign.loadOwnedCampaign(ctx, AuthUser{ID: userID}, campaignID)
 }
 
+// SessionDeleted avisa os dois stores de que a sessão deixou de existir.
+//
+// O corpo dela mora no `session_lifetime.go`, ao lado do irmão de campanha: os
+// dois caminhos de apagar têm de fazer a mesma faxina, e escrevê-la duas vezes é
+// como uma delas passa a esquecer um store.
+func (h tableHost) SessionDeleted(sessionID int64) {
+	sessionDeleted(h.rules.boards, h.rules.sessions, sessionID)
+}
+
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
 
 // StartSessionForTable e EndSessionForTable abrem e encerram a partida e
