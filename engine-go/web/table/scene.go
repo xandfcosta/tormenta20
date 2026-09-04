@@ -43,6 +43,7 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.gmContinuousCommand(fillRect))
 	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.gmContinuousCommand(clearRect))
 	r.Post(base+"/pecas", s.gmBoardCommand(poeNoMapa))
+	r.Post(base+"/pecas/nova/{x}/{y}", s.gmBoardCommand(newLoosePiece))
 }
 
 // paintTerrain liga ou desliga uma espécie numa casa (T20 p238).

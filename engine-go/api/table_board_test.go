@@ -457,3 +457,94 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 		t.Error("o mestre não foi avisado de que a cortina está fechada")
 	}
 }
+
+// A PEÇA AVULSA NASCE ONDE O MESTRE CLICOU (ALE-291).
+//
+// O GLOSSARIO promete que "uma peça pode existir sem linha na fila (a porta, o
+// baú)", e até aqui não havia caminho: a única rota que criava peça era o
+// `poeNoMapa`, cujo `populateBoard` itera a INICIATIVA — só nascia peça para
+// quem já era combatente.
+//
+// A asserção é sobre a CASA e não só sobre a existência: uma peça que nasce no
+// lugar errado é pior que nenhuma, porque o mestre põe a porta e ela aparece do
+// outro lado da cripta.
+func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/nova/-3/7",
+		`{"pecanome":"  Porta da cripta  ","pecatamanho":1,"pecaaparencia":"object"}`)
+
+	mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	if len(mapa.Tokens) != 1 {
+		t.Fatalf("o mapa ficou com %d peças; a resposta foi:\n%s", len(mapa.Tokens), firstRows(corpo, 6))
+	}
+	peca := mapa.Tokens[0]
+	// COORDENADA NEGATIVA é lugar legítimo — o plano não tem bordas —, e é por
+	// isso que ela viaja no caminho. O -3 está aqui de propósito.
+	if peca.X != -3 || peca.Y != 7 {
+		t.Errorf("a peça nasceu em (%d,%d) e o clique foi em (-3,7)", peca.X, peca.Y)
+	}
+	// O nome vai APARADO, como o do combatente: espaço sobrando não deve
+	// produzir uma peça que ordena e se lê diferente do que o mestre digitou.
+	if peca.Label != "Porta da cripta" {
+		t.Errorf("o rótulo ficou %q", peca.Label)
+	}
+	if peca.Kind != "object" {
+		t.Errorf("a aparência ficou %q", peca.Kind)
+	}
+	// E ela NÃO tem linha na fila: é isso que a distingue do `poeNoMapa`, e é a
+	// promessa do glossário.
+	if peca.EntryID != nil {
+		t.Errorf("a peça avulsa nasceu ligada à fila: %v", *peca.EntryID)
+	}
+}
+
+// A TIRA RECUSA o que não desenha peça nenhuma, e a recusa nomeia o valor.
+//
+// Os três casos são de naturezas diferentes de propósito: o nome vazio é o que
+// deixaria a peça muda no mapa e no leitor de tela; o tamanho fora da Tabela
+// 1-21 (p107) desenharia uma criatura que o livro não tem; e a aparência
+// `character` é a que criaria uma peça que PARECE de jogador sem ninguém atrás.
+func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+	casos := []struct{ nome, sinais, espera string }{
+		{"sem nome", `{"pecanome":"   ","pecatamanho":1,"pecaaparencia":"object"}`, "dê um nome"},
+		{"tamanho de nada", `{"pecanome":"Carroça","pecatamanho":4,"pecaaparencia":"object"}`, "p107"},
+		{"ficha solta", `{"pecanome":"Falso herói","pecatamanho":1,"pecaaparencia":"character"}`, "aparência"},
+	}
+	for _, caso := range casos {
+		t.Run(caso.nome, func(t *testing.T) {
+			corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/nova/1/1", caso.sinais)
+			if !strings.Contains(corpo, caso.espera) {
+				t.Errorf("a recusa não citou %q; a resposta foi:\n%s", caso.espera, firstRows(corpo, 6))
+			}
+		})
+	}
+	// O CONTROLE: nenhuma das três recusas pode ter escrito. Sem ele, uma recusa
+	// que já tivesse criado a peça passaria pelas asserções acima.
+	if mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(mapa.Tokens) != 0 {
+		t.Errorf("as recusas deixaram %d peças no mapa", len(mapa.Tokens))
+	}
+}
+
+// PÔR PEÇA É DO MESTRE, e a trava é o servidor.
+//
+// Esconder o botão do jogador é UX; quem impede é o handler. O caso posta na
+// mão, como quem abre o console — é o que a ALE-144 registrou ao tirar três
+// asserções de AUSÊNCIA da suíte: botão ausente nunca foi prova de trava.
+func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+
+	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/pecas/nova/1/1",
+		`{"pecanome":"Porta","pecatamanho":1,"pecaaparencia":"object"}`)
+
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("o jogador pôs peça e levou %d, queria 403", rec.Code)
+	}
+	if mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(mapa.Tokens) != 0 {
+		t.Errorf("a recusa deixou %d peças no mapa", len(mapa.Tokens))
+	}
+}
