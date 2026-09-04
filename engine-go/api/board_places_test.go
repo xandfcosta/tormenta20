@@ -69,7 +69,7 @@ func TestReopeningBringsTheTokensBackWhereTheyWere(t *testing.T) {
 	s.boards.Close(ctx, sessao, defaultTab)
 	guardado := s.boards.Places(ctx, campanha)[0]
 
-	volta, err := s.boards.Reopen(ctx, sessao, defaultTab, guardado.ID)
+	volta, err := s.boards.OpenPlace(ctx, campanha, sessao, guardado.ID)
 	if err != nil {
 		t.Fatalf("reabrir: %v", err)
 	}
@@ -122,7 +122,7 @@ func TestThePendingMoveDoesNotComeBackWithThePlace(t *testing.T) {
 		t.Fatalf("arquivar: %v", err)
 	}
 	s.boards.Close(ctx, sessao, defaultTab)
-	volta, err := s.boards.Reopen(ctx, sessao, defaultTab, s.boards.Places(ctx, campanha)[0].ID)
+	volta, err := s.boards.OpenPlace(ctx, campanha, sessao, s.boards.Places(ctx, campanha)[0].ID)
 	if err != nil {
 		t.Fatalf("reabrir: %v", err)
 	}
@@ -152,61 +152,23 @@ func TestAPlaceFromAnotherCampaignCannotBeDeleted(t *testing.T) {
 }
 
 /*
-Trocar de scene com a table jogando (ALE-191).
+Aqui moravam o TestSwitchingScenesArchivesTheOneOnTheTable e o
+TestASceneFromAnotherCampaignCannotReachTheTable, os dois dirigindo o `ShowPlace`
+(ALE-191) — a porta que a ALE-205 aposentou e que nenhuma rota chamava havia três
+fatias.
 
-Até aqui a lista de Lugares só aparecia na scene VAZIA, então "mostrar outro
-lugar à table" era um caminho que a tela não abria — e o `Reopen`, por baixo,
-trocava o tabuleiro vivo sem guardar o que estava nele. Abrir o caminho sem
-consertar isso mataria a taverna no clique que traz a cripta.
+O PRIMEIRO é a razão de esta lápide existir. Ele afirmava, EM VERDE, que trocar
+de cena arquiva a que estava na mesa; o GLOSSARIO diz o contrário desde a
+ALE-205 — "Reabrir não troca mais nada de lugar: ele acrescenta uma aba, e a
+cena que estava na mesa continua onde estava". Ele não ficou obsoleto junto com
+a porta que dirigia: passou a afirmar o OPOSTO do produto, e continuou verde
+porque a porta morta ainda respondia. É a forma mais cara desta família — o
+teste não avisa que envelheceu, ele mente com cara de cobertura (ALE-289).
+
+O SEGUNDO prendia uma regra VIVA na porta errada, e por isso mudou de casa em
+vez de morrer: virou o TestNoSceneFromAnotherCampaignReachesTheTableThroughOpenPlace,
+logo abaixo, com o controle que ele não tinha.
 */
-
-// A cena que estava na mesa vai para o acervo ANTES de sair de cena.
-func TestSwitchingScenesArchivesTheOneOnTheTable(t *testing.T) {
-	s, campanha, sessao := mesaComTaverna(t)
-	ctx := context.Background()
-	cripta := &tabuleiro.BoardState{Version: 1, Place: "Cripta do Necromante", Tokens: []tabuleiro.BoardToken{
-		{ID: "c1", Label: "Necromante", X: 2, Y: 2, Footprint: 1},
-	}}
-	if err := s.boards.Archive(ctx, campanha, cripta); err != nil {
-		t.Fatalf("guardar a cripta: %v", err)
-	}
-	guardada := s.boards.Places(ctx, campanha)[0]
-
-	naMesa, err := s.boards.ShowPlace(ctx, campanha, sessao, defaultTab, guardada.ID)
-	if err != nil {
-		t.Fatalf("mostrar a cripta à mesa: %v", err)
-	}
-
-	if naMesa.Place != "Cripta do Necromante" {
-		t.Errorf("a mesa ficou com %q", naMesa.Place)
-	}
-	// E a taverna continua existindo, com a peça onde estava: é ela que o
-	// mestre reabre depois que o grupo sair da cripta.
-	taverna := placeNamed(t, s.boards.Places(ctx, campanha), "Taverna do Javali")
-	if taverna.Tokens != 1 {
-		t.Errorf("a taverna guardada tem %d peças, esperado 1", taverna.Tokens)
-	}
-}
-
-// O id do lugar vem do cliente: sem conferir a crônica, um mestre puxaria para
-// a própria mesa a cena de OUTRA campanha — a mesma posse que o apagar confere.
-func TestASceneFromAnotherCampaignCannotReachTheTable(t *testing.T) {
-	s, campanha, sessao := mesaComTaverna(t)
-	ctx := context.Background()
-	outra := seedCampaign(t, s, seedUser(t, s, "vizinho@t.com"))
-	if err := s.boards.Archive(ctx, outra, &tabuleiro.BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
-		t.Fatalf("guardar a cena da outra mesa: %v", err)
-	}
-	alheia := s.boards.Places(ctx, outra)[0]
-
-	if _, err := s.boards.ShowPlace(ctx, campanha, sessao, defaultTab, alheia.ID); err == nil {
-		t.Fatal("mostrou à mesa a cena de outra crônica")
-	}
-	if naMesa := s.boards.Get(ctx, sessao, defaultTab); naMesa == nil || naMesa.Place != "Taverna do Javali" {
-		t.Errorf("a recusa mexeu na cena que estava na mesa: %+v", naMesa)
-	}
-}
-
 // O id do lugar vem do cliente, e o `OpenPlace` é a porta VIVA: sem conferir a
 // crônica, um mestre puxaria para a própria mesa a cena de OUTRA campanha.
 //
