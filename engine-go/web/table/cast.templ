@@ -116,8 +116,8 @@ templ castSheet(v View, m Member) {
 			</p>
 		}
 		<dl class="mt-3 space-y-2">
-			@barra("PV", m.PV)
-			@barra("PM", m.PM)
+			@castBar(v, m, "hp", "PV", m.PV)
+			@castBar(v, m, "mp", "PM", m.PM)
 		</dl>
 		<p class="mt-3 flex items-baseline justify-between gap-2 border-t border-grimorio-iron pt-3 text-sm">
 			<span class="text-muted-foreground">Defesa</span>
@@ -138,4 +138,38 @@ templ castSheet(v View, m Member) {
 			}
 		</div>
 	</dialog>
+}
+
+// castBar é uma barra do elenco com os passos que mexem NELA (ALE-211).
+//
+// Ela é irmã do `trackerBar` da fila e não a mesma função, e a diferença é o que
+// as separa: a da fila leva o OLHO, porque esconder é decisão sobre o que a mesa
+// vê de uma LINHA da iniciativa; o elenco é painel do mestre e não tem
+// espectador para esconder de.
+//
+// O gesto entra por outra porta pelo mesmo motivo: as rotas da fila são por
+// `entryId`, e metade do elenco não tem linha na iniciativa na maior parte da
+// sessão. Quem manda nos dois é a FICHA, que é o que impede as duas telas de
+// divergirem sobre o mesmo herói (ALE-122).
+templ castBar(v View, m Member, pool, rotulo string, b tableBar) {
+	<div class="flex items-center gap-1">
+		@barra(rotulo, b)
+		@castStep(v, m, pool, "heal", "+", healVerb(pool))
+		@castStep(v, m, pool, "harm", "−", harmVerb(pool))
+	</div>
+}
+
+// castStep: clique tira ou devolve 1, Shift+clique 5 — a MESMA escada da fila.
+//
+// Dois números diferentes fariam o mestre chamar de "um golpe" coisas
+// diferentes em duas telas da mesma sessão, que é a família de defeito que a
+// ALE-122 pagou caro para fechar.
+templ castStep(v View, m Member, pool, verb, sign, label string) {
+	<button
+		type="button"
+		aria-label={ label + " " + m.Nome }
+		title={ label + " " + m.Nome + " — clique 1, Shift+clique 5" }
+		data-on:click={ castVital(v, m, pool, verb) }
+		class="flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>{ sign }</button>
 }
