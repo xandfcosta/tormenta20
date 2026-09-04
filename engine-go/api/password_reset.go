@@ -86,7 +86,7 @@ func (s *Server) applyReset(ctx context.Context, Reset sqlcgen.PasswordReset, ha
 
 	q := s.queries.WithTx(tx)
 	spent, err := q.SpendPasswordReset(ctx, sqlcgen.SpendPasswordResetParams{
-		Usedat: nullString(ptrTo(plataforma.NowISO())), ID: Reset.ID,
+		Usedat: plataforma.NullString(ptrTo(plataforma.NowISO())), ID: Reset.ID,
 	})
 	if err != nil {
 		return err

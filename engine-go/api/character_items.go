@@ -99,13 +99,13 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 
 	item, err := s.queries.CreateItem(r.Context(), sqlcgen.CreateItemParams{
 		Characterid:  row.ID,
-		Catalogid:    nullString(body.CatalogID),
+		Catalogid:    plataforma.NullString(body.CatalogID),
 		Name:         name,
 		Quantity:     *body.Quantity,
 		Slots:        *slots,
-		Equipped:     nullString(body.Equipped),
-		Improvements: marshalStrings(body.Improvements),
-		Material:     nullString(body.Material),
+		Equipped:     plataforma.NullString(body.Equipped),
+		Improvements: sheet.MarshalStrings(body.Improvements),
+		Material:     plataforma.NullString(body.Material),
 		Createdat:    plataforma.NowISO(),
 	})
 	if err != nil {
@@ -195,7 +195,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		set.Add("equipped = ?", nullString(eq))
+		set.Add("equipped = ?", plataforma.NullString(eq))
 	}
 	if v, has := raw["improvements"]; has {
 		var imp []string
@@ -203,7 +203,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteError(w, http.StatusBadRequest, "Invalid improvements")
 			return
 		}
-		set.Add("improvements = ?", marshalStrings(&imp))
+		set.Add("improvements = ?", sheet.MarshalStrings(&imp))
 	}
 	if v, has := raw["material"]; has {
 		var mat *string
@@ -211,7 +211,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteError(w, http.StatusBadRequest, "Invalid material")
 			return
 		}
-		set.Add("material = ?", nullString(mat))
+		set.Add("material = ?", plataforma.NullString(mat))
 	}
 	if set.empty() {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
@@ -277,14 +277,7 @@ func (s *Server) equipLimitCheck(r *http.Request, charID, excludeItemID int64, i
 	if err != nil {
 		return "", err
 	}
-	others := make([]string, 0, len(equipped))
-	for _, e := range equipped {
-		if e.ID == excludeItemID || !e.Equipped.Valid {
-			continue
-		}
-		others = append(others, e.Equipped.String)
-	}
-	return sheet.EquipLimitError(others, incoming), nil
+	return sheet.EquipLimitErrorOver(equipped, excludeItemID, incoming), nil
 }
 
 // writeAxisError emits the equip-axis BadRequest: a custom top message + the
@@ -293,12 +286,5 @@ func writeAxisError(w http.ResponseWriter, top, field string) {
 	plataforma.WriteFieldError(w, http.StatusBadRequest, top, plataforma.FieldErrorMap{"equipped": {field}})
 }
 
-// marshalStrings JSON-encodes a string slice, normalizing nil (absent or JSON
-// null) to "[]" rather than Go's "null" so the column matches JSON.stringify.
-func marshalStrings(p *[]string) string {
-	if p == nil || *p == nil {
-		return "[]"
-	}
-	b, _ := json.Marshal(*p)
-	return string(b)
-}
+// O `MarshalStrings` mora no `sheet` desde a ALE-278: a cena da ficha e o
+// hospedeiro gravam a mesma coluna, e a normalização de nulo é forma do DADO.

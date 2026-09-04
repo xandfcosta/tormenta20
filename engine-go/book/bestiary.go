@@ -3,8 +3,6 @@ package book
 import (
 	"cmp"
 	"encoding/json"
-	"golang.org/x/text/collate"
-	"golang.org/x/text/language"
 	"math"
 	"slices"
 	"strconv"
@@ -13,6 +11,9 @@ import (
 	"t20engine/catalog"
 	"t20engine/creature"
 	"t20engine/search"
+
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
 // O BESTIÁRIO: a entrada do livro e o que se pergunta sobre ela.

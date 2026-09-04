@@ -5,17 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"t20engine/book"
 	"t20engine/plataforma"
 	"t20engine/sheet"
 
 	"t20engine/db/sqlcgen"
 )
-
-// proficiencyCategories mirrors t20-data PROFICIENCY_CATEGORIES.
-var proficiencyCategories = sheet.ToStringSet([]string{
-	"armas-simples", "armas-marciais", "armas-exoticas", "armas-de-fogo",
-	"armaduras-leves", "armaduras-pesadas", "escudos",
-})
 
 // handleUpdateAbilities ports updateAbilityChoices: patch any subset of the
 // character's ability-choice JSON blobs, echoing back only the fields written.
@@ -52,13 +47,13 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 		resp[column] = value
 	}
 	if body.RaceAbilityChoices != nil {
-		Add("raceAbilityChoices", marshalStrings(body.RaceAbilityChoices))
+		Add("raceAbilityChoices", sheet.MarshalStrings(body.RaceAbilityChoices))
 	}
 	if body.OriginChoices != nil {
-		Add("originChoices", marshalStrings(body.OriginChoices))
+		Add("originChoices", sheet.MarshalStrings(body.OriginChoices))
 	}
 	if body.ClassPowers != nil {
-		Add("classPowers", marshalStrings(body.ClassPowers))
+		Add("classPowers", sheet.MarshalStrings(body.ClassPowers))
 	}
 	if body.ClassChoices != nil {
 		Add("classChoices", compactJSON(*body.ClassChoices))
@@ -140,7 +135,7 @@ func (s *Server) saveProficiencies(
 	seen := map[string]bool{}
 	dedup := []string{}
 	for _, cat := range categorias {
-		if !proficiencyCategories[cat] {
+		if !book.IsProficiencyCategory(cat) {
 			unknown = append(unknown, fmt.Sprintf("Unknown category %q", cat))
 		}
 		if !seen[cat] {
@@ -151,7 +146,7 @@ func (s *Server) saveProficiencies(
 	if len(unknown) > 0 {
 		return "", unknown, nil
 	}
-	proficiencies := marshalStrings(&dedup)
+	proficiencies := sheet.MarshalStrings(&dedup)
 	if err := s.queries.SetProficiencies(ctx, sqlcgen.SetProficienciesParams{
 		Proficiencies: proficiencies, UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {
@@ -193,7 +188,7 @@ func (s *Server) invalidChoiceAfterPatch(
 	if v, tem := patch["classChoices"]; tem {
 		dto.ClassChoices = v
 	}
-	if err := aFichaComEscolhasValidas(dto); err != nil {
+	if err := sheet.WithChoicesValid(dto); err != nil {
 		return err.Error()
 	}
 	return ""

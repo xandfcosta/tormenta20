@@ -13,6 +13,7 @@ import (
 	"t20engine/web/master"
 	"t20engine/web/reader"
 	"t20engine/web/routes"
+	"t20engine/web/sheetui"
 
 	"fmt"
 	"io/fs"
@@ -68,7 +69,7 @@ func (s *Server) WebRouter() http.Handler {
 		characters.Routes(r, characters.New(s))
 		forge.Routes(r, forge.New(s))
 		// A FICHA (ALE-272) é filha do endereço do elenco: `/personagens/{id}`.
-		s.SheetRoutes(r)
+		sheetui.Routes(r, sheetui.New(s))
 		grimoire.Routes(r, grimoire.New(s))
 		// A MESA DO MESTRE (ALE-278): o trilho, os nove catálogos, o bestiário,
 		// os encontros e o improviso — mais o VERBETE, que sai junto porque ele
@@ -212,7 +213,7 @@ func sinaisDaMesa() string {
 		// estava. `fichaversao` é o carimbo que o servidor empurra quando o
 		// personagem muda no banco, e ele nasce vazio porque a página já chega
 		// com a ficha de agora.
-		fmt.Sprintf("fichatab: '%s', fichaversao: ''", aAbaPedida("")),
+		fmt.Sprintf("fichatab: '%s', fichaversao: ''", sheetui.AskedTab("")),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
 		"ferramenta: '', marcadorescolhido: '', escolhidosdomapa: ''",
 		// O MENU DA PEÇA (ALE-206). `pecaescolhida` é qual menu está aberto e
@@ -307,12 +308,12 @@ func (s *Server) corpoDaMesa(r *http.Request, view mesaView, campaignID, session
 // Falha em silêncio de propósito: uma ficha que não carrega tira a aba da tela,
 // e não derruba a sessão. Estar numa mesa é mais importante que ver a própria
 // ficha dentro dela, e o jogador continua tendo o elenco.
-func (s *Server) aFichaDoJogadorNaMesa(r *http.Request, view mesaView) *fichaView {
+func (s *Server) aFichaDoJogadorNaMesa(r *http.Request, view mesaView) *sheetui.View {
 	if view.Mestre != nil || view.Eu == nil {
 		return nil
 	}
-	ficha, _, err := s.carregaFicha(
-		r.Context(), currentUser(r), view.Eu.CharacterID, aAbaPedida(""), "", fichaSignals{})
+	ficha, _, err := sheetui.New(s).Load(
+		r.Context(), currentUser(r).ID, view.Eu.CharacterID, sheetui.AskedTab(""), "", sheetui.Signals{})
 	if err != nil {
 		return nil
 	}

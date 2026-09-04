@@ -11,6 +11,22 @@ var AttributeKeys = []string{
 	"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
 }
 
+// IsAttributeKey diz se a chave é um dos seis atributos.
+//
+// Ela nasceu na ALE-278 apagando uma SEGUNDA transcrição dos mesmos seis nomes
+// — o `atributosValidos` do `api`, que a ficha em Datastar também lia. A lista e
+// a pergunta sobre a lista moram juntas de propósito: é a lição do `Fold`
+// copiado para o `book`, onde a cópia compilava, tinha o nome certo e fazia
+// outra coisa.
+func IsAttributeKey(chave string) bool {
+	for _, k := range AttributeKeys {
+		if k == chave {
+			return true
+		}
+	}
+	return false
+}
+
 // ─── Input ────────────────────────────────────────────────────────────
 
 // CharacterInput mirrors t20-data CharacterInput. Unused catalog fields are

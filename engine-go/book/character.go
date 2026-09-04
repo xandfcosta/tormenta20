@@ -3,12 +3,13 @@ package book
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/text/collate"
-	"golang.org/x/text/language"
 	"slices"
 	"strings"
 	"sync"
 	"t20engine/catalog"
+
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
 type RaceTrait struct {
@@ -87,8 +88,11 @@ type Class struct {
 	// Proficiencias é a linha "Proficiências." do bloco da classe (p36–83),
 	// transcrita. Ela chegou na ALE-272 com o painel de Proficiências da ficha:
 	// a tabela existia só em TypeScript, fora do alcance da validação de schema
-	// — ver `piloto_ficha_proficiencias.go`.
+	// — ver `web/sheetui/proficiencias.go`.
 	Proficiencias []string `json:"proficiencies"`
+	// Spellcasting é a tabela de progressão de círculo, e ela é NULA para as
+	// classes que não conjuram — ver `spellcasting.go`.
+	Spellcasting *SpellProgression `json:"spellcasting"`
 	// Derivados do que já existe — ver o cabeçalho do arquivo.
 	Pericias []string `json:"-"`
 	Escolhe  int      `json:"-"`

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/plataforma"
+	"t20engine/sheet"
 
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
@@ -38,7 +39,7 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 			"Unknown condition ids: %s — expected ids from the CONDITIONS catalog", strings.Join(unknown, ", ")))
 		return
 	}
-	activeConditions := marshalStrings(&body.ActiveConditions)
+	activeConditions := sheet.MarshalStrings(&body.ActiveConditions)
 	if err := s.queries.UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
 		ActiveConditions: activeConditions, UpdatedAt: plataforma.NowISO(), ID: row.ID,
 	}); err != nil {

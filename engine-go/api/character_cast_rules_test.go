@@ -99,19 +99,9 @@ func mpOf(t *testing.T, s *Server, characterID int64) int64 {
 	return row.Mpcurrent
 }
 
-// Tabela 4-1. Uma tabela de seis linhas que decide o custo de TODA magia do
-// jogo — cara demais para ficar só implícita nos oráculos.
-func TestSpellBasePmCostTable(t *testing.T) {
-	want := map[int]int{0: 0, 1: 1, 2: 3, 3: 6, 4: 10, 5: 15}
-	for circle, pm := range want {
-		if got := spellBasePmCost[circle]; got != pm {
-			t.Errorf("círculo %d custa %d PM, want %d (Tabela 4-1, p170)", circle, got, pm)
-		}
-	}
-	if len(spellBasePmCost) != len(want) {
-		t.Errorf("a tabela tem %d círculos, want %d", len(spellBasePmCost), len(want))
-	}
-}
+// Aqui morava o TestSpellBasePmCostTable, que prendia a Tabela 4-1 contra a
+// p170. Ele foi com a tabela para o `sheet` na ALE-278 — os cinco casos que
+// sobraram montam um `Server` de verdade e são de outra camada.
 
 // O exemplo trabalhado do livro, p171 (quadro "Aprimoramentos Cumulativos"):
 //

@@ -228,7 +228,7 @@ func TestEquipLimitsAreEnforcedByTheHandler(t *testing.T) {
 
 // withEquipCatalog dá ao servidor o catálogo MÍNIMO de que o eixo precisa. O
 // `newTestServer` sobe com catálogo nil de propósito (a maioria dos handlers não
-// o usa), e sem ele o `equipAxisError` desiste em silêncio: "item desconhecido"
+// o usa), e sem ele o `sheet.EquipAxisError` desiste em silêncio: "item desconhecido"
 // vale como válido. Isso não é do teste — é como a produção se comporta quando
 // o arquivo de catálogo não é encontrado, e o `main.go` até loga
 // "mutation validators disabled" ao cair nesse caso.

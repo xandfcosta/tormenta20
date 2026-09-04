@@ -75,56 +75,81 @@ func (s *Server) applyManualPool(w http.ResponseWriter, r *http.Request, id, amo
 }
 
 // applyPool ports temp-hp.service applyPool: upsert a tempHp pool under vale-o-maior.
+// Ele é a casca HTTP do `applyPoolTx` — lê nada, decide nada, só traduz o
+// resultado em resposta.
 func (s *Server) applyPool(w http.ResponseWriter, r *http.Request, id int64, source, catalogID, scope string, amount int, note string) {
+	plan, efeito, err := s.applyPoolTx(r.Context(), id, source, catalogID, scope, amount, note)
+	if err != nil {
+		// O ERRO CARREGA O PASSO: as três mensagens diferentes que este handler
+		// tinha viraram uma só quando a transação foi extraída, e o `%w` do
+		// `applyPoolTx` é o que devolve a granularidade — sem ele, "Could not
+		// apply pool" mandaria procurar em cinco escritas diferentes.
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply pool: "+err.Error())
+		return
+	}
+	if plan.Superseded {
+		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"superseded": true, "keptEffectId": plan.KeptEffectID, "keptAmount": plan.KeptAmount})
+		return
+	}
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{
+		"effect":    efeito,
+		"displaced": plan.Displaced,
+	})
+}
+
+// applyPoolTx é a transação da poça de PV temporários, SEM transporte.
+//
+// Ela nasceu na ALE-278 porque a mesma sequência — `BeginTx`, listar os efeitos,
+// planejar pelo `sheet`, apagar/zerar os deslocados, gravar o novo, `Commit` —
+// estava escrita DUAS vezes: aqui e dentro da cena da ficha, que a montava para
+// a concessão de um poder. Duas transações sobre a mesma regra divergem na
+// primeira vez que uma das duas ganhar um passo.
+//
+// A conta continua sendo do `sheet` (`PlanPoolSupremacy`): "se você receber PV
+// temporários de mais de uma fonte, considere apenas o maior valor" (p256).
+// Poça SUPERADA não é erro — é a regra dizendo que esta não vale —, e por isso
+// ela volta com o plano e sem efeito.
+func (s *Server) applyPoolTx(
+	ctx context.Context, id int64, source, catalogID, scope string, amount int, note string,
+) (sheet.PoolPlan, sheet.EffectDTO, error) {
 	mods := []map[string]any{{"target": map[string]any{"k": "tempHp"}, "amount": amount, "bonusType": "untyped", "note": note}}
 	modJSON, _ := json.Marshal(mods)
 
-	tx, err := s.db.BeginTx(r.Context(), nil)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply pool")
-		return
+		return sheet.PoolPlan{}, sheet.EffectDTO{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := s.queries.WithTx(tx)
 
-	rows, err := q.ListActiveEffectsByCharacter(r.Context(), id)
+	rows, err := q.ListActiveEffectsByCharacter(ctx, id)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load effects")
-		return
+		return sheet.PoolPlan{}, sheet.EffectDTO{}, fmt.Errorf("ler os efeitos do personagem %d: %w", id, err)
 	}
 	plan := sheet.PlanPoolSupremacy(sheet.ParseTempHpPools(rows), catalogID, scope, amount)
 	if plan.Superseded {
-		_ = tx.Commit()
-		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"superseded": true, "keptEffectId": plan.KeptEffectID, "keptAmount": plan.KeptAmount})
-		return
+		return plan, sheet.EffectDTO{}, tx.Commit()
 	}
 	for _, z := range plan.ZeroWrites {
-		if err := q.UpdateEffectModifiers(r.Context(), sqlcgen.UpdateEffectModifiersParams{Modifiers: z.Modifiers, ID: z.EffectID}); err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not displace pool")
-			return
+		if err := q.UpdateEffectModifiers(ctx, sqlcgen.UpdateEffectModifiersParams{Modifiers: z.Modifiers, ID: z.EffectID}); err != nil {
+			return plan, sheet.EffectDTO{}, fmt.Errorf("zerar a poça deslocada %d: %w", z.EffectID, err)
 		}
 	}
 	for _, delID := range plan.DeleteIDs {
-		if err := q.DeleteEffectByID(r.Context(), delID); err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not displace pool")
-			return
+		if err := q.DeleteEffectByID(ctx, delID); err != nil {
+			return plan, sheet.EffectDTO{}, fmt.Errorf("apagar a poça deslocada %d: %w", delID, err)
 		}
 	}
-	eff, err := q.UpsertActiveEffect(r.Context(), sqlcgen.UpsertActiveEffectParams{
+	eff, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
 		Characterid: id, Source: source, Catalogid: catalogID, Scope: scope, Modifiers: string(modJSON), Createdat: plataforma.NowISO(),
 	})
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply pool")
-		return
+		return plan, sheet.EffectDTO{}, err
 	}
 	if err := tx.Commit(); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply pool")
-		return
+		return plan, sheet.EffectDTO{}, err
 	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]any{
-		"effect":    effectDTOFromUpsert(eff),
-		"displaced": plan.Displaced,
-	})
+	return plan, effectDTOFromUpsert(eff), nil
 }
 
 // applySpellBuffEffect is the spell-buff domain rule, transport-agnostic: the spell must

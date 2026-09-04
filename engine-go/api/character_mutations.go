@@ -132,11 +132,6 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// maxTibar é o teto do campo de dinheiro. Não é regra do livro — é o limite que
-// mantém o número legível na ficha e a carga sã (cada mil moedas ocupam um
-// espaço, p141, então isto já são mil espaços de moeda).
-const maxTibar = 1_000_000
-
 // handleUpdateTibar grava o dinheiro do personagem. O tibar é o MESMO campo que
 // a Forja preenche com a Tabela 3-1 (p140) e o mesmo que a carga lê — não há um
 // segundo lugar onde o dinheiro mora (ALE-215). Devolve o valor gravado para o
@@ -176,7 +171,7 @@ func tibarError(v *float64) string {
 		return "tibar must be a number"
 	case *v < 0:
 		return "tibar must not be less than 0"
-	case *v > maxTibar:
+	case *v > sheet.MaxTibar:
 		return "tibar must not be greater than 1000000"
 	}
 	return ""

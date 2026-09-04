@@ -445,7 +445,7 @@ benefícios a origem dá, quais caminhos e quais deuses cada classe aceita — e
 363 linhas de `shared/rules/abilities-*.ts`, e o `handleUpdateAbilities` gravava
 os cinco blobs sem conferir NADA. Um pedido montado à mão punha vinte poderes num
 personagem de nível 1 e o motor somava os modificadores de todos. A validação é
-`aFichaComEscolhasValidas`, ela roda nas DUAS portas (o endpoint JSON e os
+`sheet.WithChoicesValid`, ela roda nas DUAS portas (o endpoint JSON e os
 comandos da ficha), e é **estrita**: a escrita tem de deixar a ficha VÁLIDA, e
 não só "não piorar". Decisão do dono, com a razão registrada — o projeto ainda
 não foi usado numa mesa real, então não há ficha antiga fora da conta para
@@ -1382,6 +1382,148 @@ medir.** O controle não é enfeite — é o que transforma "não mediu" em verm
 Ele foi para o `convention/` caminhando a árvore, e ganhou o segundo piso (o de
 arquivos LIDOS), porque a caminhada pode encolher sem zerar.
 
+## `web/sheetui`: a MAIOR cena, e o SQL que ela montava em quatro lugares
+
+A décima cena saiu na ALE-278: 36 arquivos de produção, sete abas, mais de trinta
+mutações, e **dezoito** métodos na porta — contra onze das campanhas, treze da
+administração e dois do trilho do mestre.
+
+**O nome tem sufixo, e a medição é que decidiu.** `sheet` já é a FORMA do dado
+(`CharacterDTO`, `Load`, `Compute`) e esta cena o lê 148 vezes em 20 arquivos:
+com o mesmo nome, cada um desses vinte arquivos carregaria um apelido no import.
+O plural que resolveu o `web/characters` e o `web/campaigns` não serve aqui —
+a ficha é uma. O GLOSSARIO registra a linha.
+
+### Cena que compõe SQL é cena com o banco dentro, quatro vezes
+
+A porta das campanhas deixou a frase escrita e esta cena a provou em escala: ela
+montava `setBuilder` + `"UPDATE character_items"` e `"UPDATE characters"` em
+QUATRO lugares, e um deles abria a transação inteira — `BeginTx`, plano,
+escritas, `Commit`. Viraram três perguntas:
+
+- `SaveItemOverlays` — a melhoria e o material de um item. Atravessam a LISTA e o
+  nome do material, não o JSON nem o `sql.NullString`.
+- `SaveChoices` — as cinco colunas de escolha, com nulo querendo dizer "não toque
+  nesta". A versão anterior mandava a string `"raceAttributeChoices"` de dentro da
+  cena, que é SQL viajando com outra roupa.
+- `ApplyPowerTempHp` — a reserva de PV temporários sob o vale-o-maior (p256).
+
+**A terceira pagou sozinha**, e é o achado que vale repetir: a transação que a
+cena montava era a MESMA do `applyPool` da rota JSON, escrita de novo. Duas
+transações sobre a mesma regra divergem no dia em que uma das duas ganhar um
+passo. Agora as duas passam pelo `applyPoolTx`, e o handler HTTP ficou sendo a
+casca que traduz o resultado em resposta.
+
+### A porta ENCOLHEU em dois lugares, e as razões são opostas
+
+`ConsumeItem` devolvia `doseUsed`, que embrulha o corpo da resposta JSON com tag
+`json:` em cada campo. A cena descartava o resultado inteiro, e a única recusa
+que ela precisa — a porção diária — já chega como erro: a porta passou a devolver
+só `error`. É o leitor outra vez, com a menor pergunta sendo NENHUMA.
+
+`ApplyClassLevel` era o contrário: a porta estava certa e o chamador não. O
+hospedeiro devolve quatro valores e um deles é o `storedVitals`, que é tipo DELE
+— uma porta que devolvesse isso não seria porta.
+
+E uma assinatura estava simplesmente ERRADA: o `SaveCustomItem` pedia `espacos
+int64`, e a coluna `slots` é REAL porque a carga do livro conta de meio em meio
+(p141). **Conserta-se a porta, não o chamador.**
+
+### As regras que precisavam do LIVRO e da FICHA ao mesmo tempo
+
+Duas não cabiam em lugar nenhum: quantas vagas de poder o nível abre
+(`WithChoicesValid`, com os benefícios de origem, os caminhos e os deuses) e qual
+círculo o personagem alcança (`HighestCastableCircle`). Elas leem o catálogo E o
+personagem, o `book` não pode importar o `sheet` — ele é consultado por treze
+famílias —, e as duas rodam nas DUAS portas, o endpoint JSON e os comandos da
+ficha.
+
+**Decisão do dono: o `sheet` passou a importar o `book`.** A lista de permitidos
+do guarda de lá ganhou uma quarta entrada, e a prosa dele mudou junto — "a ficha
+é forma de DADO" deixou de ser verdade quando as regras da ficha vieram morar
+nela, o que já tinha começado na fatia anterior com o `equip.go` e o
+`temp_hp.go`. O preço está escrito no guarda: toda cena que importa a ficha
+alcança o livro de graça, e ele é pequeno só porque oito das dez já importam
+`book` direto.
+
+As outras três alternativas ficaram registradas na issue, e a que mais tenta é a
+pior: `api` importando `web/sheetui` para a rota JSON ler regra de um pacote de
+APRESENTAÇÃO.
+
+### `catalog.Resource` direto, três vezes na mesma cena
+
+Quinto, sexto e sétimo casos da família que o `items.go` da forja abriu.
+`Resource("class-powers")` era lido em DOIS arquivos, com o mesmo `Unmarshal`
+anônimo, e `Resource("activations")` num terceiro. Foram para o `book` —
+`ClassPowerFlags`, `PowersThatTeachSpells` e `Activations` —, pela regra que
+aquele achado deixou: **o destino de uma função é a DEPENDÊNCIA dela.**
+
+O que NÃO foi junto é a metade que a cena decide: se o botão está ativo, que
+crachá o limite desenha e a frase da recusa. Aquilo lê a tabela e a ficha, e a
+voz é da tela.
+
+E o que sobrou de `catalog` na cena está CONTADO no guarda, sem fingir que coube:
+quatro chamadas (`LookupSpell`, `IsCondition`) e três assinaturas com
+`catalog.Spell`/`catalog.Augment`. Elas não são a mesma coisa que o `Resource` —
+são o acessor tipado, e o hospedeiro usa o mesmo. Unificá-lo com o `book.Spell`
+mexe nos dois lados e é trabalho próprio.
+
+### Cinco cópias do mesmo corpo, achadas por uma COLISÃO de nome
+
+O renome de pacote deu o mesmo nome inglês a duas transcrições dos mesmos sete
+valores e o compilador reclamou. Puxando o fio saíram cinco:
+
+- **as sete categorias de proficiência**, em TRÊS lugares — a lista de chaves do
+  `book`, um conjunto no `character_abilities.go` e a lista com rótulo e grupo da
+  aba. Viraram `book.ProficiencyCategories`;
+- **os seis atributos**, transcritos uma segunda vez ao lado de
+  `engine.AttributeKeys`. Viraram `engine.IsAttributeKey`;
+- **o leitor de blob de ids**, escrito TRÊS vezes (escolhas, condições ativas,
+  proficiências). Virou `sheet.UnmarshalStrings`, ao lado do `MarshalStrings`
+  que já era o caminho de ida;
+- **o `*T` → `sql.Null*`**, que o `api` tinha e a cena precisava. Foi para o
+  `plataforma`, ao lado do `NullToPtr` que faz o inverso;
+- **o filtro dos itens equipados** que os dois tetos do livro contam. Virou
+  `sheet.EquipLimitErrorOver` — o `EquipLimitError` sozinho não via QUAIS itens
+  entram na conta, e esse pedaço é regra.
+
+Nenhuma das cinco tinha guarda, e nenhuma daria erro: três transcrições do mesmo
+dado compilam e ficam verdes até uma divergir. **A colisão foi sorte, e vale
+dizer isso** — o que a produziu foi um renome em massa dando o mesmo nome a duas
+delas.
+
+### O teste se dividiu pela sétima vez, e o instrumento errou duas
+
+25 casos puros ficaram, 126 blocos voltaram para o `api`. A divisão é a de
+sempre — unitário onde a regra mora, integração onde a composição acontece —, e
+os ajudantes que os dois lados usam foram COPIADOS num
+`api/sheetui_helpers_test.go`, pela regra que a fatia da porta deixou escrita:
+importar do que está sendo testado faz o teste andar junto com o defeito.
+
+**O classificador automático errou duas vezes, e as duas valem para a próxima
+divisão grande.** A primeira: ele classificou POR ARQUIVO, e os ajudantes de
+teste são do PACOTE — um caso "puro" chamava um `combatant` declarado noutro
+arquivo que tinha ido embora, e só o compilador acusou. O fecho tem de ser
+global. A segunda: a semente de "isto precisa da bancada" listava `novoPiloto` e
+`seedX`, e não `*Server` — casos que pegavam o servidor direto passaram por
+puros.
+
+E um recorte por marcador de texto levou junto QUATRO funções vizinhas que ele
+não devia tocar. O que denunciou foi o build; o que consertou foi o `git show` do
+commit anterior. **Corte de bloco em arquivo grande se confere com o diff de
+declarações**, e não com a leitura do trecho recortado.
+
+### Três nomes colidiram ao voltar para o hospedeiro
+
+`combatant` já era um TIPO do `initiative_rules.go`, `sheetCombatant` já era um
+ajudante do `test_helpers.go`, e o `aFichaDe` da bancada tinha sido renomeado
+para `sheet` — que ESCONDE o pacote `sheet` no arquivo inteiro. O último é o mais
+traiçoeiro: ele compila enquanto ninguém precisar do pacote naquele arquivo.
+
+**Um símbolo de teste que volta para um pacote de 20 mil linhas encontra um
+espaço de nomes que a cena não tinha**, e é onde o `grep` de menos de cinco
+ocorrências vale mais.
+
 ## `campaign`: a mesma regra recusando com DUAS frases
 
 O que é um nome válido e o que é uma descrição válida saíram do `api` na
@@ -1568,8 +1710,9 @@ Os dois pacotes têm guarda de fronteira, e a razão é a que o `events` já
 documenta: **cada cena que se mudar vai importá-los.** No dia em que o `creature`
 alcançar o catálogo, todas as cenas alcançam junto — de graça, e com o guarda de
 fronteira de cada uma continuando VERDE, porque cada guarda só olha os imports
-dele. A lista do `creature` é vazia; a do `sheet` tem os três que ele já
-importava.
+dele. A lista do `creature` é vazia; a do `sheet` tem QUATRO, e a quarta é a
+única desta série que mudou o que um pacote é — o `book`, na fatia da ficha. Ver
+a seção do `web/sheetui`, mais abaixo.
 
 ## `web/ui`: o kit de apresentação, e o que ele NÃO pode saber
 
@@ -1712,7 +1855,7 @@ loga: o servidor desenhou uma cena perfeitamente válida, só que de outra seç�
 
 **O remédio é o servidor escrever o `?` no comando**, já que é ele quem sabe o
 estado ao renderizar o botão: uma função só monta todo `@post` da cena
-(`oPostDaFicha`), e um guarda de varredura lê o HTML de cada aba e falha se algum
+(`sheetPost`), e um guarda de varredura lê o HTML de cada aba e falha se algum
 comando sair sem ele (`TestNoSheetCommandLosesTheTab`). Sinal do cliente
 resolveria também, e é pior: some no F5, que é justamente o que o endereço na URL
 existe para sobreviver.
@@ -1774,9 +1917,9 @@ uma palavra na tela.
 
 **Numa cena servida, a recusa é CONTEÚDO.** Ela volta 200 com a cena inteira
 redesenhada — que é o que mostra que nada mudou — mais a frase num `role="alert"`
-(`comandoDaFicha` + `fichaView.Recusa`). A consequência para os testes é a parte
+(`sheetCommand` + `sheetui.View.Recusa`). A consequência para os testes é a parte
 que importa: o status deixou de distinguir "gravou" de "recusou", então **o que
-os guardas afirmam é a FRASE**, com `aRecusaDaCena`. A API JSON continua com os
+os guardas afirmam é a FRASE**, com `sceneRefusal`. A API JSON continua com os
 status dela; quem desenha página responde página.
 
 ### `contentType: 'form'` valida o formulário ANTES de mandar
@@ -1841,7 +1984,7 @@ ficha mexeu; ver "O barramento de eventos" acima.
   lê conheça o truque.
 
 Quem publica é o GATEWAY (`characterChanged`) e não cada comando: passam mais de
-trinta mutações pelo `comandoDaFicha`, e a linha esquecida numa delas seria uma
+trinta mutações pelo `sheetCommand`, e a linha esquecida numa delas seria uma
 ficha que não atualiza só naquele gesto. É a mesma lição do gancho que nascia
 desligado, na seção do SSE.
 

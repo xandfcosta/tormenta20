@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"t20engine/engine"
 	"t20engine/plataforma"
 
-	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
 	"t20engine/sheet"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // expertiseNames mirrors t20-data EXPERTISE_NAMES — the builtin perícias. A
@@ -23,10 +25,6 @@ var expertiseNames = sheet.ToStringSet([]string{
 	"Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Ladinagem",
 	"Luta", "Misticismo", "Nobreza", "Ofício", "Percepção", "Pilotagem", "Pontaria",
 	"Reflexos", "Religião", "Sobrevivência", "Vontade",
-})
-
-var attributeKeys = sheet.ToStringSet([]string{
-	"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
 })
 
 // saveNewCraft é a regra de quem pode virar ofício, e ela é a MESMA para a
@@ -77,7 +75,7 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 	if err := s.saveNewCraft(r.Context(), character.ID, name); err != nil {
 		fields["name"] = []string{err.Error()}
 	}
-	if !attributeKeys[body.Attribute] {
+	if !engine.IsAttributeKey(body.Attribute) {
 		fields["attribute"] = []string{"attribute must be a valid AttributeKey"}
 	}
 	if len(fields) > 0 {
@@ -126,13 +124,13 @@ func (s *Server) handleUpdateExpertise(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
-	if body.Attribute != nil && !attributeKeys[*body.Attribute] {
+	if body.Attribute != nil && !engine.IsAttributeKey(*body.Attribute) {
 		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"attribute": {"attribute must be a valid AttributeKey"}})
 		return
 	}
 	row, err := s.queries.UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
-		Attribute:   nullString(body.Attribute),
-		Trained:     nullBool(body.Trained),
+		Attribute:   plataforma.NullString(body.Attribute),
+		Trained:     plataforma.NullBool(body.Trained),
 		CharacterId: character.ID,
 		Name:        body.Name,
 	})
@@ -176,11 +174,4 @@ func (s *Server) handleDeleteExpertise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"name": name})
-}
-
-func nullBool(p *bool) sql.NullInt64 {
-	if p == nil {
-		return sql.NullInt64{}
-	}
-	return sql.NullInt64{Int64: boolToInt(*p), Valid: true}
 }
