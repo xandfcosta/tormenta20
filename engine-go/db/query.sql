@@ -279,30 +279,31 @@ SELECT id, email, name, createdAt FROM users WHERE id IN (sqlc.slice('ids')) ORD
 -- campaign members (B.4)
 
 -- name: ListMembers :many
-SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
+-- O ownerId do PERSONAGEM entra na ALE-287, e ele substitui a coluna `role`.
+-- Quem mestra e o DONO da campanha, e essa e a mesma verdade que o `roleIn`
+-- usa para autorizar -- ver a razao no `one_view.go`.
+SELECT m.id, m.campaignId, m.characterId, m.addedAt,
+       ch.ownerId AS charOwnerId,
        ch.name AS charName, ch.level AS charLevel,
        ch.hpCurrent AS charHpCurrent, ch.hpMax AS charHpMax,
        ch.mpCurrent AS charMpCurrent, ch.mpMax AS charMpMax
 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
 WHERE m.campaignId = ? ORDER BY m.addedAt ASC;
 
--- name: GetMember :one
-SELECT * FROM campaign_members WHERE id = ? LIMIT 1;
-
 -- name: HasPlayerPc :one
+-- UMA pessoa, UM personagem por mesa (ALE-156).
+-- O `m.role = 'player'` saiu com a coluna na ALE-287 e nao muda nada: ela era
+-- sempre 'player', entao a clausula nunca excluiu uma linha sequer.
 SELECT EXISTS (
   SELECT 1 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
-  WHERE m.campaignId = ? AND m.role = 'player' AND ch.ownerId = ?
+  WHERE m.campaignId = ? AND ch.ownerId = ?
 ) AS hasPc;
 
 -- name: IsCharacterMember :one
 SELECT EXISTS (SELECT 1 FROM campaign_members WHERE campaignId = ? AND characterId = ?) AS isMember;
 
 -- name: CreateMember :one
-INSERT INTO campaign_members (campaignId, characterId, role, addedAt) VALUES (?, ?, ?, ?) RETURNING *;
-
--- name: SetMemberRole :one
-UPDATE campaign_members SET role = sqlc.arg('role') WHERE id = sqlc.arg('id') RETURNING *;
+INSERT INTO campaign_members (campaignId, characterId, addedAt) VALUES (?, ?, ?) RETURNING *;
 
 -- name: DeleteMember :exec
 DELETE FROM campaign_members WHERE id = ?;
@@ -410,7 +411,7 @@ ON CONFLICT(sessionId, boardId) DO UPDATE SET state = excluded.state, updatedAt 
 DELETE FROM open_boards WHERE sessionId = ? AND boardId = ?;
 
 -- name: ListCampaignsForCharacter :many
-SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
+SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt
 FROM campaign_members m
 JOIN campaigns c ON c.id = m.campaignId

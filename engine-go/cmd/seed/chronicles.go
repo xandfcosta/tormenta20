@@ -12,10 +12,15 @@ import (
 // clock (these `*At` columns are excluded from the dump's timestamp normalizer).
 const seedChronicleDate = "2026-07-01T12:00:00.000Z"
 
+// demoMember é quem senta à mesa.
+//
+// O `role` saiu na ALE-287 com a coluna: quem mestra é o DONO da campanha, e
+// isso já está dito pelo `ownerEmail` do personagem casado com o dono da mesa —
+// escrever o papel de novo seria uma segunda fonte para o mesmo fato, livre
+// para divergir dela.
 type demoMember struct {
 	ownerEmail string
 	charName   string
-	role       string // gm | player
 }
 
 type demoSession struct {
@@ -54,11 +59,11 @@ var demoCampaigns = []demoCampaign{
 		ownerEmail:  "mestre@t20.local",
 		description: "Mesa-vitrine: um grupo veterano segurando a linha contra a Tormenta enquanto o conselho de Tauron desmorona por dentro.",
 		members: []demoMember{
-			{"mestre@t20.local", "Tanque Placas Nv10", "gm"},
-			{"jogador@t20.local", "Guerreiro Veterano Nv8", "player"},
-			{"jogador@t20.local", "Arcanista Erudito Nv9", "player"},
-			{"jogador@t20.local", "Paladino Sagrado Nv10", "player"},
-			{"jogador@t20.local", "Recruta Nv1 Simples", "player"},
+			{"mestre@t20.local", "Tanque Placas Nv10"},
+			{"jogador@t20.local", "Guerreiro Veterano Nv8"},
+			{"jogador@t20.local", "Arcanista Erudito Nv9"},
+			{"jogador@t20.local", "Paladino Sagrado Nv10"},
+			{"jogador@t20.local", "Recruta Nv1 Simples"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
@@ -92,9 +97,9 @@ var demoCampaigns = []demoCampaign{
 		ownerEmail:  "jogador@t20.local",
 		description: "Mercenários caçando uma relíquia de Tenebra pelos Reinados. Mesa quinzenal.",
 		members: []demoMember{
-			{"mestre@t20.local", "Tanque Placas Nv10", "player"},
-			{"mestre@t20.local", "Curandeira Divina Nv8", "player"},
-			{"mestre@t20.local", "Necromante Nv12 Magias", "player"},
+			{"mestre@t20.local", "Tanque Placas Nv10"},
+			{"mestre@t20.local", "Curandeira Divina Nv8"},
+			{"mestre@t20.local", "Necromante Nv12 Magias"},
 		},
 		sessions: []demoSession{
 			{1, "O contrato de Tenebra", "ended", "2026-07-05T20:00:00.000Z", "2026-07-05T23:20:00.000Z", ""},
@@ -104,7 +109,7 @@ var demoCampaigns = []demoCampaign{
 		name:        "Caçadores de Deheon",
 		ownerEmail:  "jogador@t20.local",
 		description: "Fronteira selvagem de Deheon: contratos, bestas e política nobre.",
-		members:     []demoMember{{"mestre@t20.local", "Bardo Versátil Nv7", "player"}},
+		members:     []demoMember{{"mestre@t20.local", "Bardo Versátil Nv7"}},
 	},
 }
 
@@ -141,8 +146,8 @@ func seedMembers(database *sql.DB, campID int64, dc demoCampaign) error {
 			return fmt.Errorf("campaign %q member: %w", dc.name, err)
 		}
 		if _, err := database.Exec(
-			`INSERT INTO campaign_members (campaignId, characterId, role, addedAt) VALUES (?, ?, ?, ?)`,
-			campID, chID, m.role, seedChronicleDate); err != nil {
+			`INSERT INTO campaign_members (campaignId, characterId, addedAt) VALUES (?, ?, ?)`,
+			campID, chID, seedChronicleDate); err != nil {
 			return fmt.Errorf("campaign %q membership: %w", dc.name, err)
 		}
 	}

@@ -44,8 +44,8 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 
 	pcID := seedCharacter(t, s, player, "Herói", 20, 30, 5, 10)
 	otherID := seedCharacter(t, s, other, "Colega", 20, 30, 5, 10)
-	seedMember(t, s, campaignID, pcID, "player")
-	seedMember(t, s, campaignID, otherID, "player")
+	seedMember(t, s, campaignID, pcID)
+	seedMember(t, s, campaignID, otherID)
 
 	sess, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: campaignID, Sessionnumber: 1, Title: sql.NullString{String: "S1", Valid: true},

@@ -2,6 +2,7 @@ package table
 
 import (
 	"context"
+	"t20engine/aovivo"
 	"t20engine/web/ui"
 
 	"crypto/sha256"
@@ -54,6 +55,36 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
+
+	// A PRESENÇA é registrada AQUI, e não numa rota própria (ALE-287).
+	//
+	// A Mesa desenha um anel por carta do elenco dizendo quem está com a aba
+	// aberta, e ele ficava CINZA para sempre: quem preenchia o registro era o
+	// handshake da rota `/events` da SPA, apagada na ALE-277 por não ter
+	// consumidor. Ninguém em produção chamava `Join` desde a ALE-272 — o anel
+	// dizia "todos fora" com cara de medição, e o mestre agia sobre isso.
+	//
+	// Este fluxo é o lugar certo por três coisas que ele já tem e uma rota nova
+	// teria de recriar: QUEM está pedindo, EM QUE sessão, e o `r.Context()` que
+	// o servidor cancela quando a aba fecha — que é a saída, e ela é a metade
+	// difícil de acertar num transporte próprio.
+	//
+	// O PAPEL sai do `view.Mestre`, que é nil para o jogador: é a mesma leitura
+	// que já decidiu o que desenhar, e não uma segunda pergunta ao banco. Ele
+	// importa ao registro porque quem abre duas abas conta uma vez só, e a
+	// dedupe promove a pessoa a mestre se QUALQUER conexão dela for de mestre.
+	//
+	// Não há evento novo: o `writeTable` só manda bytes quando o HTML MUDA, e o
+	// batimento de 1s já leva a mudança às outras abas. Um aviso no barramento
+	// pagaria latência que ninguém está medindo aqui — quem entra na mesa não
+	// tem pressa de aparecer no anel de outra pessoa.
+	papel := "player"
+	if view.Mestre != nil {
+		papel = "gm"
+	}
+	conexao := aovivo.NewUUID()
+	s.deps.Presence().Join(sessionID, conexao, aovivo.PresenceUser{UserID: userID, Role: papel})
+	defer s.deps.Presence().Leave(sessionID, conexao)
 
 	// A ASSINATURA vem ANTES do primeiro quadro, senão uma mutação que caia entre
 	// render e assinatura se perde e a tela fica velha até o batimento.

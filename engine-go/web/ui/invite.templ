@@ -19,7 +19,13 @@ package ui
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.
-templ MintedInvite(caminho string) {
+//
+// A NOTA vem por parâmetro desde a ALE-287, e não é enfeite: são dois convites
+// com VIDAS diferentes. O de CONTA vale uma vez e some quando alguém o gasta; o
+// de CAMPANHA vale enquanto o mestre não gerar outro. Escrever "serve para uma
+// conta" embaixo de um link reutilizável faria o mestre gerar um por jogador e
+// derrubar o dos anteriores a cada vez.
+templ MintedInvite(caminho, nota string) {
 	<div id="convite-link" class="mt-3 space-y-2">
 		<label for="convite-url" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
 			Link de convite
@@ -40,9 +46,7 @@ templ MintedInvite(caminho string) {
 			}
 		</div>
 		<p class="text-xs text-hp-full" aria-live="polite" data-show="$copiado">Link copiado.</p>
-		<p class="text-xs text-muted-foreground">
-			Cada convite serve para UMA conta. Gere outro para o próximo jogador.
-		</p>
+		<p class="text-xs text-muted-foreground">{ nota }</p>
 	</div>
 }
 

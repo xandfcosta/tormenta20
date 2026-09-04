@@ -254,7 +254,7 @@ templ heroRow(h heroAtTable) {
 			style={ "background: " + h.Gradiente }
 		>{ h.Iniciais }</span>
 		<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ h.Nome }</span>
-		if h.Papel == "gm" {
+		if h.EhMestre {
 			// COROA e não a palavra "mestre": o crachá de texto compete com o
 			// nome pela mesma largura, e numa lista de seis ele empurra os
 			// nomes para o truncamento. O ícone é `aria-hidden` e quem o
@@ -348,6 +348,7 @@ templ configTab(v oneView) {
 			Ajustes do tomo
 		}
 		@campaignForm(v)
+		@invitePanel(v)
 		@rulesPanel(v)
 		@dangerZone(v)
 	</div>
@@ -379,6 +380,53 @@ templ campaignForm(v oneView) {
 				}
 			</div>
 		</form>
+	</section>
+}
+
+// O LINK DA MESA (ALE-287). Sem ele ninguém entra — e por isso ele fica na
+// configuração, ao lado do nome, e não escondido atrás de um diálogo.
+//
+// Duas situações e o mesmo painel, porque para quem lê elas são a mesma
+// pergunta ("qual é o link desta mesa?"):
+//
+//   - A mesa TEM link: mostra, oferece copiar, e oferece gerar outro.
+//   - A mesa NÃO tem: é uma campanha aberta antes desta issue, e só o que cabe
+//     é o botão de gerar. A frase diz por que ele está ali, senão parece um
+//     botão que faz o que o de cima faria.
+//
+// Não há migração de dados justamente por causa do segundo caso: um `UPDATE`
+// varrendo o banco escreveria token para mesas que o dono talvez nem use mais,
+// e o botão custa uma linha e resolve na hora em que alguém precisa.
+templ invitePanel(v oneView) {
+	<section id="painel-convite" aria-label="Link da mesa" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
+		<header class="space-y-0.5">
+			@ui.SectionLabel("muted", "") {
+				Campanha
+			}
+			<h2 class="font-heading text-base tracking-wide text-foreground">Link da mesa</h2>
+		</header>
+		if v.LinkDoConvite != "" {
+			@ui.MintedInvite(v.LinkDoConvite,
+				"Quem abrir este link entra com um herói do elenco. Ele vale até você gerar outro.")
+		} else {
+			<p class="text-sm text-muted-foreground">
+				Esta mesa não tem link. Sem um, só você entra nela.
+			</p>
+		}
+		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/convite", v.ID)) }>
+			@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
+				if v.LinkDoConvite != "" {
+					Gerar novo link
+				} else {
+					Gerar link
+				}
+			}
+		</form>
+		if v.LinkDoConvite != "" {
+			<p class="text-xs text-muted-foreground">
+				Gerar outro derruba o link atual: quem ainda não entrou vai precisar do novo.
+			</p>
+		}
 	</section>
 }
 

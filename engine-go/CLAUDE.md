@@ -1709,6 +1709,165 @@ sabotagem nunca chegou. **Verde depois de sabotar só significa alguma coisa
 quando a sabotagem CHEGOU** — e a terceira, com `campaign.Name`, reprovou o
 guarda como devia.
 
+## A mesa que não aceitava ninguém (ALE-287)
+
+O `CreateCampaign` gerado pelo sqlc não escreve o `inviteToken`, então **toda
+mesa aberta pela tela nascia com a coluna nula**. E o `joinTable` recusa quem
+não é o dono já no `!c.Invitetoken.Valid`, antes de olhar o que a pessoa
+digitou. As duas coisas juntas: a mesa não aceitava ninguém, e as únicas em que
+alguém entrava eram as seis da `seed.sql`, com `seedtoken-0N` escrito à mão.
+
+Não era funcionalidade faltando — era defeito entregue, e ele sobreviveu à
+migração inteira da SPA para o Datastar.
+
+### Por que a suíte passava por cima
+
+A bancada semeia campanha com o token DADO (`seedCampanha(t, s, dono, nome,
+convite)`), e todos os casos de entrar usavam essa porta. **O teste fornecia o
+que a produção nunca fornecia.** É a família do "esperado calculado" com o
+arranjo no lugar do valor: um dado de fixture que o código sob teste não sabe
+produzir esconde exatamente o defeito de quem deveria produzi-lo.
+
+O caso que fecha isso (`TestACampaignBornOnScreenLetsAPlayerIn`) chama a mesma
+função que a cena chama, com os mesmos parâmetros e mais nada.
+
+### A forma do conserto
+
+Cunhar mora no `campaignRules.createCampaign` e não no `INSERT`, e é isso que
+faz os DOIS caminhos passarem por ele — a cena de campanhas e a rota JSON que a
+suíte de e2e usa como fixture. É `UPDATE` depois do `INSERT` e não coluna com
+`DEFAULT` porque o token é `crypto/rand`, e SQLite não tem de onde tirar isso.
+
+**Não há migração de dados, e a razão vale saber:** as mesas abertas antes desta
+issue continuam sem link, e quem as conserta é o botão `Gerar link` da própria
+tela. Um `UPDATE` varrendo o banco escreveria token para mesas que o dono talvez
+nem use, e o botão custa uma linha e resolve na hora em que alguém precisa.
+
+### Dois convites, duas VIDAS — e a nota virou parâmetro
+
+O `ui.MintedInvite` é o mesmo widget para os dois, e por um tempo ele trazia a
+frase do convite de CONTA colada: *"Cada convite serve para UMA conta."* O de
+campanha vale enquanto o mestre não gerar outro. Escrever a frase errada embaixo
+de um link reutilizável faria o mestre gerar um por jogador — e derrubar o dos
+anteriores a cada vez.
+
+> O que o componente já trazia de lição e continua valendo: **o link carrega o
+> CAMINHO, e quem prefixa a origem é o navegador**. Com `r.Host` o link nascia
+> apontando para a porta errada atrás de proxy, e link de convite existe para ser
+> mandado a outra pessoa — host errado é link morto.
+
+## A presença que nunca acendeu (ALE-287)
+
+A Mesa desenha um anel por carta do elenco dizendo quem está com a aba aberta, e
+ele ficava CINZA para sempre. Quem preenchia o registro era o handshake da rota
+`/events` da SPA, apagada na ALE-277 por não ter consumidor: **ninguém em
+produção chamava `PresenceRegistry.Join` desde a ALE-272.**
+
+Cinza quer dizer "fora da mesa", então a tela dizia "todos fora" com cara de
+medição — e o mestre agia sobre isso.
+
+O registro passou a acontecer no fluxo próprio da Mesa
+(`web/table/stream.go`), e ele é o lugar certo por três coisas que já tem e uma
+rota nova teria de recriar: QUEM pede, EM QUE sessão, e o `r.Context()` que o
+servidor cancela quando a aba fecha — a saída, que é a metade difícil. O papel
+sai do `view.Mestre` (nil para o jogador), a mesma leitura que já decidiu o que
+desenhar. Sem evento novo: o `writeTable` só manda bytes quando o HTML muda, e o
+batimento de 1s leva a mudança às outras abas.
+
+### O guarda do DESENHO existia e passava
+
+`TestTheGmSeesWhoIsAtTheTableAndThePlayerDoesNot` já media o anel aceso, o
+apagado, e que o jogador não recebe presença nenhuma — **chamando `Join` ele
+mesmo**. Arranjo que a produção não sabia produzir: a terceira ocorrência da
+mesma forma nesta issue, depois do token de convite e da coluna `role`.
+
+> A regra que sai daí: **quando o arranjo de um teste usa uma porta que nenhum
+> caminho de produção usa, o verde é sobre o arranjo.** Vale procurar por
+> fixture que escreve coluna à mão, que chama método de store direto, ou que
+> aceita um parâmetro cujo valor a produção nunca varia.
+
+### Um teste cujo modo de falha era TRAVAR
+
+O caso novo abre o `/stream` num `httptest.NewServer` de verdade. A primeira
+versão criava o `context.WithCancel` e só chamava `fechar()` no fim — então
+qualquer `t.Fatalf` no meio pulava o cancelamento, o stream ficava aberto, e o
+`srv.Close()` do defer esperava por ele para sempre.
+
+Descoberto sabotando o `Join`: o veredito veio como `panic: test timed out after
+1m0s` apontando para a linha do `Fatalf`, e não como a frase que o teste
+escreveu. Com `defer fechar()` logo depois do `WithCancel`, a mesma sabotagem
+reprova em **0,01s** dizendo "o elenco presente = [], queria só o jogador 2".
+
+É a família do `finally` que engole o erro de verdade (ALE-245), com outra
+roupa: **limpeza que espera não pode falar mais alto que o defeito.**
+
+## A coluna que não decidia nada (ALE-287)
+
+`campaign_members.role` valia `'player'` em **toda linha que a produção
+escreveu**: o único escritor fixava a string, e o `SetMemberRole` nunca teve
+chamador. E a autorização **nunca a leu** — o `roleIn` decide por "é o dono da
+campanha?", então escrever `'gm'` ali não mudaria nada do que a pessoa pode
+fazer.
+
+Ela era lida em quatro lugares, e os quatro estavam DESLIGADOS sem ninguém
+saber:
+
+| onde | o que devia fazer | o que fazia |
+| --- | --- | --- |
+| ordenação do elenco | o mestre primeiro | `a.Role == b.Role` sempre verdadeiro → ordem de entrada |
+| `heroRow` | coroa ao lado do mestre | nunca desenhada |
+| `tableRoster` | tirar o PC do mestre do grupo | nunca tirou ninguém |
+| `listPlayerCombatants` | o mesmo, no popular-iniciativa | idem |
+
+### Dois testes VERDES sobre comportamento que não existia
+
+O `seedMember` da bancada recebia um papel e escrevia `"gm"` — **um estado que só
+ela sabia produzir**. Dois casos passavam por causa disso: o
+`TestTheGmComesFirstInTheCast`, que afirmava uma ordenação que a produção nunca
+fez, e o `TestListMemberHelpers`, que esperava 2 combatentes onde a produção
+sempre devolveu 3.
+
+É a mesma família do convite desta mesma issue, e as duas moravam no mesmo
+arquivo de fixture: **quando a bancada escreve o que a produção não escreve, o
+verde é sobre a bancada.** O sinal de alerta é uma fixture com um parâmetro que
+nenhum caminho de produção sabe variar.
+
+### O que substituiu
+
+A coluna saiu, e a coroa e a ordenação passaram a perguntar `ch.ownerId ==
+campaigns.ownerId` — a **mesma verdade** que o `roleIn` usa para autorizar. Uma
+regra, uma camada: a tela e a autorização não podem mais divergir sobre quem
+mestra.
+
+Os dois filtros de grupo (`tableRoster` e `listPlayerCombatants`) saíram **sem
+virar a condição verdadeira**, e isso é deliberado: tornar real um filtro que
+nunca filtrou MUDARIA o que a mesa mostra, e isso é decisão de produto, não de
+quem apaga uma coluna morta.
+
+### O `DROP COLUMN` passou pelo sqlc — e é a exceção da família
+
+O guia avisa que `ALTER TABLE … ADD COLUMN` de um arquivo de migração NOVO não
+entra no catálogo do sqlc (v1.31.1), e que trocar chave primária também não.
+**O `DROP COLUMN` entra**: o `Role` sumiu do `models.go` e das consultas na
+primeira geração. Medido nesta issue, no mesmo sqlc.
+
+O que exigiu cuidado foi outra coisa: um `SELECT *` teria continuado a pedir a
+coluna. Aqui não houve porque as três consultas que a tocavam de perto —
+`GetMember` (`SELECT *`), `AddMember` e `SetMemberRole` — tinham **zero
+chamadores** e saíram junto, pela regra da ALE-277.
+
+### E o `seed.sql` é gerado, mas foi editado à mão
+
+O `cmd/seed` dirige a aplicação por HTTP (`/auth/register`, `POST /characters`,
+`/characters/{id}/spells`…), e a ALE-277 apagou **todas** essas rotas: o gerador
+não roda. O `seed.sql` commitado continua válido como SQL, então o app e o e2e
+semeiam normalmente — o que não dá para fazer é REGERAR.
+
+Por isso as nove linhas de `campaign_members` foram editadas no arquivo, e o
+gerador foi corrigido junto para quando ele voltar a rodar. Conferido que a
+regra derivada reproduz o mesmo desenho: na campanha 1, o único membro cujo
+personagem é do dono é justamente o que estava marcado `'gm'`.
+
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 
 Ele tinha **89 métodos exportados**, e todos existiam por um motivo só: cumprir

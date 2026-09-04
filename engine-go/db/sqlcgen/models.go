@@ -57,7 +57,6 @@ type CampaignMember struct {
 	ID          int64  `json:"id"`
 	Campaignid  int64  `json:"campaignid"`
 	Characterid int64  `json:"characterid"`
-	Role        string `json:"role"`
 	Addedat     string `json:"addedat"`
 }
 

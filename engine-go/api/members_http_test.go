@@ -41,13 +41,13 @@ func newMemberFixture(t *testing.T) memberFixture {
 	otherPc := seedCharacter(t, s, otherOwner, "Vizinho", 20, 30, 5, 10)
 
 	member, err := s.queries.CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: pcID, Role: "player", Addedat: plataforma.NowISO(),
+		Campaignid: campaignID, Characterid: pcID, Addedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed member: %v", err)
 	}
 	otherMember, err := s.queries.CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: otherCamp, Characterid: otherPc, Role: "player", Addedat: plataforma.NowISO(),
+		Campaignid: otherCamp, Characterid: otherPc, Addedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed other member: %v", err)

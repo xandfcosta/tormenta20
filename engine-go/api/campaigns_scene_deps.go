@@ -2,8 +2,11 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
+	"strings"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 	"t20engine/web/campaigns"
@@ -142,3 +145,44 @@ func (h campaignsHost) Join(ctx context.Context, campanhaID, heroiID, quemPede i
 // contrário do caso do `MintAccountInvite`: lá um contrato existente ganhou
 // porque era a MESMA pergunta; aqui ele não ganha porque não é.
 func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUser(r).IsAdmin }
+
+// OpenTable abre a mesa COM link de convite (ALE-287).
+//
+// A cena chamava o `CreateCampaign` direto e a mesa nascia sem link — e sem
+// link ela não aceita ninguém. Cunhar é do hospedeiro: é `crypto/rand` e é a
+// política de quem entra, nenhuma das duas coisas é da tela.
+func (h campaignsHost) OpenTable(
+	ctx context.Context, donoID int64, nome, descricao string,
+) (int64, error) {
+	agora := plataforma.NowISO()
+	c, err := h.rules.createCampaign(ctx, sqlcgen.CreateCampaignParams{
+		Ownerid: donoID, Name: nome, Description: descricaoOuNulo(descricao),
+		Createdat: agora, Updatedat: agora,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return c.ID, nil
+}
+
+// InviteLink devolve "" quando a mesa não tem link, e isso é estado normal:
+// toda campanha aberta antes da ALE-287 nasceu assim.
+func (h campaignsHost) InviteLink(ctx context.Context, campanhaID int64) string {
+	return h.rules.inviteOf(ctx, campanhaID)
+}
+
+func (h campaignsHost) RotateInvite(ctx context.Context, campanhaID int64) (string, error) {
+	return h.rules.rotateInvite(ctx, campanhaID)
+}
+
+// descricaoOuNulo traduz o vazio da tela para o NULO do banco.
+//
+// Os dois querem dizer "sem descrição", e a diferença importa numa direção só:
+// gravar string vazia faria a coluna distinguir "não escreveu" de "apagou o que
+// tinha", e a tela não oferece essa diferença a ninguém.
+func descricaoOuNulo(texto string) sql.NullString {
+	if t := strings.TrimSpace(texto); t != "" {
+		return sql.NullString{String: t, Valid: true}
+	}
+	return sql.NullString{}
+}

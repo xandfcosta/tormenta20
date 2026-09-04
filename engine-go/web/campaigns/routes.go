@@ -11,8 +11,6 @@ import (
 	"t20engine/campaign"
 	"t20engine/plataforma"
 
-	"t20engine/db/sqlcgen"
-
 	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -36,6 +34,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Get("/campanhas/{id}", s.handleOne)
 	r.Post("/campanhas/{id}/editar", s.handleEdit)
 	r.Post("/campanhas/{id}/excluir", s.handleDelete)
+	r.Post("/campanhas/{id}/convite", s.handleRotateInvite)
 	r.Post("/campanhas/{id}/regras/{regra}", s.handleToggleRule)
 }
 
@@ -137,11 +136,7 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agora := plataforma.NowISO()
-	c, err := s.deps.Queries().CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
-		Ownerid: s.deps.CurrentUserID(r), Name: nome, Description: trimOrNull(descricaoTexto),
-		Createdat: agora, Updatedat: agora,
-	})
+	id, err := s.deps.OpenTable(r.Context(), s.deps.CurrentUserID(r), nome, descricaoTexto)
 	if err != nil {
 		v.Aviso = ui.NoticeInternal
 		s.writeNewPage(w, r, http.StatusInternalServerError, v)
@@ -150,7 +145,7 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 	// 303 e não 302: depois de um POST, o `See Other` é o que garante que o
 	// navegador siga com GET. Sem ele, recarregar a crônica reenviaria o
 	// formulário e abriria uma segunda campanha igual.
-	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(c.ID, 10), http.StatusSeeOther)
+	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(id, 10), http.StatusSeeOther)
 }
 
 func (s Scene) writeNewPage(w http.ResponseWriter, r *http.Request, status int, v newView) {
@@ -298,6 +293,30 @@ func (s Scene) handleOne(w http.ResponseWriter, r *http.Request) {
 //
 // A recusa REDESENHA a aba de configuração com o que foi digitado, como a folha
 // em branco — e pela mesma razão: a descrição é o campo caro de reescrever.
+// handleRotateInvite cunha o link da mesa, e é o MESMO gesto para duas coisas:
+// gerar o primeiro (mesa aberta antes da ALE-287, que nasceu sem) e derrubar o
+// atual para cortar quem já o tem na mão.
+//
+// Formulário e 303, e não Datastar: o link muda a URL que a pessoa vai COPIAR,
+// e um remendo de fragmento deixaria a página com o endereço novo no campo e o
+// antigo em qualquer outro lugar que o mostrasse. Recarregar é o que garante
+// que a tela inteira fale do mesmo token.
+//
+// A trava é o `ownerOrRefuse`, a mesma de editar e excluir: gerar link é dar
+// acesso à mesa, então quem não é dono não gera. A tela nem oferece o botão a um
+// jogador — mas isso é UX, e a fronteira é esta linha.
+func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
+	id, _, ok := s.ownerOrRefuse(w, r)
+	if !ok {
+		return
+	}
+	if _, err := s.deps.RotateInvite(r.Context(), id); err != nil {
+		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
+}
+
 func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 	id, eu, ok := s.ownerOrRefuse(w, r)
 	if !ok {

@@ -9,35 +9,15 @@ import (
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
-	"t20engine/sheet"
 )
 
 var campaignMemberRoles = map[string]bool{"player": true, "gm": true}
 
-type memberDTO struct {
-	ID          int64               `json:"id"`
-	CampaignID  int64               `json:"campaignId"`
-	CharacterID int64               `json:"characterId"`
-	Role        string              `json:"role"`
-	AddedAt     string              `json:"addedAt"`
-	Character   *memberCharacterDTO `json:"character,omitempty"`
-}
-
-type memberCharacterDTO struct {
-	ID        int64            `json:"id"`
-	OwnerID   int64            `json:"ownerId"`
-	Name      string           `json:"name"`
-	Level     int64            `json:"level"`
-	HpCurrent int64            `json:"hpCurrent"`
-	HpMax     int64            `json:"hpMax"`
-	MpCurrent int64            `json:"mpCurrent"`
-	MpMax     int64            `json:"mpMax"`
-	Classes   []sheet.ClassDTO `json:"classes"`
-}
-
-func memberScalars(m sqlcgen.CampaignMember) memberDTO {
-	return memberDTO{ID: m.ID, CampaignID: m.Campaignid, CharacterID: m.Characterid, Role: m.Role, AddedAt: m.Addedat}
-}
+// Aqui moravam o `memberDTO` e o `memberScalars`, a forma de FIO de um membro
+// para a rota `GET /campaigns/{id}/members`. A rota saiu na ALE-277 por não ter
+// consumidor, e os dois ficaram sem chamador — método sem uso não quebra
+// compilação, então eles atravessaram a issue inteira. O que os denunciou foi a
+// coluna `role` sumindo debaixo deles (ALE-287).
 
 // initiativeBonus é o total da perícia Iniciativa do personagem (½ nível +
 // atributo + treino + itens), lido da ficha COMPUTADA pelo motor (ALE-213).
@@ -139,10 +119,11 @@ func (tr tableRules) listPlayerCombatants(ctx context.Context, campaignID int64)
 		return nil, err
 	}
 	out := []combatant{}
+	// Aqui morava `if m.Role != "player" { continue }`, e ele NUNCA excluiu
+	// ninguém: a coluna valia `'player'` em toda linha. Ela saiu na ALE-287, e
+	// o filtro saiu junto sem mudar o que esta função devolve — ver a nota mais
+	// longa no `tableRoster`, que tinha o irmão dele.
 	for _, m := range rows {
-		if m.Role != "player" {
-			continue
-		}
 		out = append(out, combatant{
 			characterID: m.Characterid, name: m.Charname,
 			hpCurrent: m.Charhpcurrent, hpMax: m.Charhpmax, mpCurrent: m.Charmpcurrent, mpMax: m.Charmpmax,
@@ -202,7 +183,7 @@ func (rules campaignRules) joinCampaign(ctx context.Context, sourceID, campaignI
 		return sqlcgen.CampaignMember{}, err
 	}
 	member, err := rules.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: copyID, Role: role, Addedat: plataforma.NowISO(),
+		Campaignid: campaignID, Characterid: copyID, Addedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err

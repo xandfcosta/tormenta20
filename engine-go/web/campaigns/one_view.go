@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net/url"
 	"slices"
 	"strconv"
 	"t20engine/plataforma"
@@ -60,6 +61,10 @@ type oneView struct {
 	// é a regra valer, então guardar as exceções é guardar o que alguém
 	// decidiu — e uma regra nova nasce em vigor sem migração de dados.
 	RegrasIgnoradas []string
+	// LinkDoConvite é o CAMINHO do convite desta mesa, ou "" quando ela não tem
+	// um (ALE-287). Caminho e não URL: quem prefixa a origem é o navegador — ver
+	// a razão medida em `ui.MintedInvite`.
+	LinkDoConvite string
 	// Erros e Aviso servem à aba de configuração, que é a única com formulário.
 	Erros plataforma.FieldErrorMap
 	Aviso string
@@ -72,8 +77,13 @@ type oneTab struct {
 }
 
 type heroAtTable struct {
-	Nome      string
-	Papel     string
+	Nome string
+	// EhMestre é "este personagem é do dono da mesa?".
+	//
+	// Booleano e não a string do papel: a tela desenha uma COROA ou não desenha
+	// nada, e um campo de texto convidaria a inventar um terceiro estado que a
+	// autorização não tem. Ela conhece dois — dono e o resto.
+	EhMestre  bool
 	Iniciais  string
 	Gradiente string
 }
@@ -174,6 +184,15 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		v.DonoOutro = s.deps.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
 	}
 	v.Abas = oneTabs(v.EhMestre, aba)
+	// O LINK só é LIDO para quem mestra, e essa é a fronteira desta tela: a aba
+	// de configuração não existe para o jogador, mas "não desenhar" é UX — não
+	// carregar é a regra. Um jogador que forjasse `?tab=config` receberia a
+	// visão geral (ver `oneTabs`), e mesmo assim o link não teria sido lido.
+	if v.EhMestre {
+		if token := s.deps.InviteLink(ctx, c.ID); token != "" {
+			v.LinkDoConvite = "/campanhas/entrar?token=" + url.QueryEscape(token)
+		}
+	}
 
 	membros, err := s.deps.Queries().ListMembers(ctx, id)
 	if err != nil {
@@ -182,22 +201,34 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	// O MESTRE PRIMEIRO, e o resto na ordem que veio. É a regra do `sortRoster`
 	// da SPA, portada: numa mesa de seis, quem mestra ser o primeiro da lista é
 	// o que faz o elenco se ler como grupo em vez de como fila.
+	//
+	// ELA NUNCA ACONTECEU até a ALE-287, e não por engano de ordenação: a
+	// comparação era sobre `m.Role`, uma coluna que valia `'player'` em toda
+	// linha. `a.Role == b.Role` dava sempre verdadeiro, a função devolvia zero
+	// para todo par, e a lista saía na ordem em que veio. A coroa ao lado do
+	// nome (ver `heroRow`) nunca foi desenhada pela mesma razão.
+	//
+	// Quem mestra é o DONO da campanha, e essa é a MESMA verdade que o `roleIn`
+	// usa para autorizar. Perguntar ao dono do personagem em vez de a uma coluna
+	// é o que faz a tela e a autorização não poderem divergir.
+	ehDoMestre := func(m sqlcgen.ListMembersRow) bool { return m.Charownerid == c.Ownerid }
 	slices.SortStableFunc(membros, func(a, b sqlcgen.ListMembersRow) int {
-		if a.Role == b.Role {
+		switch {
+		case ehDoMestre(a) == ehDoMestre(b):
 			return 0
-		}
-		if a.Role == "gm" {
+		case ehDoMestre(a):
 			return -1
+		default:
+			return 1
 		}
-		return 1
 	})
 	for _, m := range membros {
-		if m.Role == "player" {
+		if !ehDoMestre(m) {
 			v.TotalHerois++
 		}
 		nome := memberName(m.Charname, m.Characterid)
 		v.Herois = append(v.Herois, heroAtTable{
-			Nome: nome, Papel: m.Role,
+			Nome: nome, EhMestre: ehDoMestre(m),
 			Iniciais: ui.Monogram(nome), Gradiente: ui.NameGradient(nome),
 		})
 	}

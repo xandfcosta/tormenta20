@@ -65,20 +65,37 @@ func TestSessionsComeFromTheNewestToTheOldest(t *testing.T) {
 
 // O MESTRE VEM PRIMEIRO no elenco. É a regra do `sortRoster` da SPA, e ela é o
 // que faz o grupo se ler como grupo em vez de fila.
+//
+// # Ela nunca aconteceu, e este caso passava mesmo assim (ALE-287)
+//
+// A ordenação comparava a coluna `campaign_members.role`, que valia `'player'`
+// em toda linha que a produção escreveu — o único escritor fixava a string. O
+// comparador devolvia zero para todo par e a lista saía na ordem de entrada; a
+// coroa ao lado do nome nunca foi desenhada.
+//
+// O que fazia este caso passar era a BANCADA: o `seedMember` recebia um papel e
+// escrevia `"gm"`, um estado que só ela sabia produzir. Verde sobre dado que a
+// produção não tem é a mesma família do convite desta issue — e as duas moravam
+// no mesmo arquivo de fixture.
+//
+// Hoje quem mestra é o DONO da mesa, e é por isso que os dois personagens
+// precisam de donos DIFERENTES: com os dois pertencendo ao mesmo usuário, os
+// dois são do mestre, e não haveria fila para ordenar.
 func TestTheGmComesFirstInTheCast(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
+	quemJoga := seedUser(t, s, "jogador@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
-	jogador := seedCharacterAtLevel(t, s, dono, "Yrla", 4, 10, 14, 2, 6)
+	jogador := seedCharacterAtLevel(t, s, quemJoga, "Yrla", 4, 10, 14, 2, 6)
 	mestre := seedCharacterAtLevel(t, s, dono, "Thalen", 5, 16, 12, 3, 8)
-	seedMember(t, s, campanha, jogador, "player")
-	seedMember(t, s, campanha, mestre, "gm")
+	seedMember(t, s, campanha, jogador)
+	seedMember(t, s, campanha, mestre)
 
 	v, err := campaigns.New(s.campaignsHost()).LoadOne(context.Background(), dono, s.ehAdmin(t, dono), campanha, "")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
-	if len(v.Herois) != 2 || v.Herois[0].Papel != "gm" {
+	if len(v.Herois) != 2 || !v.Herois[0].EhMestre || v.Herois[0].Nome != "Thalen" {
 		t.Errorf("elenco = %+v, queria o mestre primeiro", v.Herois)
 	}
 	// E o sinete conta JOGADORES, não membros: são duas contagens legítimas, e
@@ -97,7 +114,7 @@ func TestAPlayerAskingForConfigFallsBackToTheOverview(t *testing.T) {
 	visitante := seedUser(t, s, "visitante@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
 	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
-	seedMember(t, s, campanha, heroi, "player")
+	seedMember(t, s, campanha, heroi)
 
 	v, err := campaigns.New(s.campaignsHost()).LoadOne(context.Background(), visitante, s.ehAdmin(t, visitante), campanha, "config")
 	if err != nil {
@@ -119,7 +136,7 @@ func TestTheCampaignActionsBelongToTheGm(t *testing.T) {
 	visitante := seedUser(t, s, "visitante@t20.local")
 	campanha := seedCampanha(t, s, dono, "Mesa", "")
 	heroi := seedCharacterAtLevel(t, s, visitante, "Yrla", 4, 10, 14, 2, 6)
-	seedMember(t, s, campanha, heroi, "player")
+	seedMember(t, s, campanha, heroi)
 	base := "/campanhas/" + strconv.FormatInt(campanha, 10)
 
 	for _, caminho := range []string{base + "/editar", base + "/excluir", base + "/regras/carga"} {

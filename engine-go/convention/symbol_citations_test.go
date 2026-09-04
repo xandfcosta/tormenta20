@@ -257,7 +257,28 @@ func oBlocoDoComentario(linhas []string, i int) string {
 func oQueORepositorioDeclara(t *testing.T) (map[string]bool, map[string]bool) {
 	t.Helper()
 	existe := map[string]bool{}
-	decl := regexp.MustCompile(`(?m)^func\s+(?:\([^)]*\)\s*)?(\w+)|^(?:type|var|const)\s+(\w+)|^templ\s+(\w+)|^\t(\w+)\s+[\w\[\]\*\.]|^\t(\w+)\s*=`)
+	// A última alternância é a CONSTANTE DE `iota` SEM TIPO, e ela entrou na
+	// ALE-287 depois de o guarda acusar FALSO.
+	//
+	// Num bloco `const (…)` só a PRIMEIRA linha carrega o tipo:
+	//
+	//	const (
+	//	    JoinOK JoinRefusal = iota   // esta o `^\t(\w+)\s+[\w…]` pega
+	//	    JoinNoSuchCampaign          // esta não tinha quem a pegasse
+	//	    JoinNeedsInvite
+	//	)
+	//
+	// São 17 nomes na árvore, e o silêncio deles é do tipo caro: quem os citasse
+	// levava um "não existe na árvore" apontando para um símbolo que EXISTE, e o
+	// conserto óbvio — pôr o nome em `simbolosAusentesDePROPOSITO` — teria feito
+	// o guarda parar de conferir um nome vivo. **Guarda que acusa falso ensina a
+	// desligá-lo**, e essa é a única forma de cegueira que uma lista de exceções
+	// não consegue distinguir de um acerto.
+	//
+	// Um identificador sozinho numa linha indentada não é ambíguo em Go: dentro
+	// de função ele não é instrução válida (rótulo tem dois-pontos), e em bloco
+	// `var` ou `type` ele não compila sem tipo. Só `const` produz esta forma.
+	decl := regexp.MustCompile(`(?m)^func\s+(?:\([^)]*\)\s*)?(\w+)|^(?:type|var|const)\s+(\w+)|^templ\s+(\w+)|^\t(\w+)\s+[\w\[\]\*\.]|^\t(\w+)\s*=|^\t(\w+)\s*$`)
 	local := regexp.MustCompile(`\b(\w+)\s*:=`)
 	// `var a, b bool` dentro de uma função: o `:=` não a pega, e ela é
 	// declaração igual.

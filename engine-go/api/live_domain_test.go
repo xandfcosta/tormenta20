@@ -122,10 +122,17 @@ func seedCharacterAtLevel(
 	return id
 }
 
-func seedMember(t *testing.T, s *Server, campaignID, characterID int64, Role string) {
+// seedMember senta um personagem à mesa.
+//
+// Ele recebia um PAPEL e escrevia na coluna `role`, apagada na ALE-287 — e essa
+// assinatura era a origem de dois verdes falsos: a produção sempre escreveu
+// `'player'`, então todo caso que semeava `"gm"` media um estado que só a
+// bancada sabia produzir. Quem mestra é o DONO da campanha, e o jeito de dizer
+// isso a um teste é semear o personagem com o dono certo.
+func seedMember(t *testing.T, s *Server, campaignID, characterID int64) {
 	t.Helper()
 	if _, err := s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: characterID, Role: Role, Addedat: plataforma.NowISO(),
+		Campaignid: campaignID, Characterid: characterID, Addedat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("seed member: %v", err)
 	}
@@ -139,7 +146,7 @@ func TestResolveRole(t *testing.T) {
 	stranger := seedUser(t, s, "x@t.com")
 	campaignID := seedCampaign(t, s, gm)
 	pc := seedCharacter(t, s, player, "PC", 10, 10, 5, 5)
-	seedMember(t, s, campaignID, pc, "player")
+	seedMember(t, s, campaignID, pc)
 
 	cases := []struct {
 		name       string
@@ -173,7 +180,7 @@ func TestResolveCombatant(t *testing.T) {
 	stranger := seedUser(t, s, "x@t.com")
 	campaignID := seedCampaign(t, s, gm)
 	pc := seedCharacter(t, s, player, "Herói", 7, 12, 3, 8)
-	seedMember(t, s, campaignID, pc, "player")
+	seedMember(t, s, campaignID, pc)
 	loose := seedCharacter(t, s, player, "Solto", 5, 5, 0, 0) // not a member
 
 	t.Run("owner resolves with vitals", func(t *testing.T) {
@@ -370,13 +377,21 @@ func TestListMemberHelpers(t *testing.T) {
 	pcA := seedCharacter(t, s, p1, "A", 10, 10, 4, 4)
 	pcB := seedCharacter(t, s, p2, "B", 6, 8, 2, 2)
 	npc := seedCharacter(t, s, gm, "NPC", 20, 20, 0, 0)
-	seedMember(t, s, campaignID, pcA, "player")
-	seedMember(t, s, campaignID, pcB, "player")
-	seedMember(t, s, campaignID, npc, "gm")
+	seedMember(t, s, campaignID, pcA)
+	seedMember(t, s, campaignID, pcB)
+	seedMember(t, s, campaignID, npc)
 
+	// TRÊS e não dois, e o número mudou sem a produção mudar (ALE-287).
+	//
+	// Aqui se esperava 2, com o NPC de fora, porque o `listPlayerCombatants`
+	// filtrava `m.Role != "player"` e a bancada semeava o NPC como `"gm"`. **A
+	// produção nunca escreveu `"gm"` nessa coluna** — o único escritor fixava
+	// `'player'` —, então o filtro nunca excluiu ninguém e esta função sempre
+	// devolveu todos os membros. O 2 era um verde sobre um estado que só a
+	// bancada sabia montar.
 	players, err := s.tableRules().listPlayerCombatants(ctx, campaignID)
-	if err != nil || len(players) != 2 {
-		t.Fatalf("players=%d err=%v, want 2", len(players), err)
+	if err != nil || len(players) != 3 {
+		t.Fatalf("players=%d err=%v, want 3", len(players), err)
 	}
 	if players[0].name != "A" || players[0].hpMax != 10 || players[1].name != "B" {
 		t.Errorf("unexpected players: %+v", players)
