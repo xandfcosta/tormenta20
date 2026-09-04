@@ -184,13 +184,30 @@ func (h tableHost) SpeedsForBoard(board *tabuleiro.BoardState) map[string]int {
 	return h.rules.speedsForBoard(board)
 }
 
+// SaveFailed junta os DOIS stores numa pergunta só.
+//
+// Para quem está mestrando não existe "o tabuleiro não salvou" e "a fila não
+// salvou": existe "a mesa não está sendo salva". Separar daria à tela uma
+// decisão que ela não tem o que fazer com — os dois têm a mesma causa (o disco)
+// e o mesmo remédio (parar e chamar alguém).
+func (h tableHost) SaveFailed(sessionID int64) bool {
+	return h.rules.boards.SaveFailed(sessionID) || h.rules.sessions.SaveFailed(sessionID)
+}
+
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────
 
+// Os DOIS passos ficam escritos aqui, e essa é a separação que a ALE-288 fez: o
+// disco primeiro, o fio depois. Antes a gravação era uma linha dentro do
+// publicador, e como o `SSEHub` não tem ouvinte em produção, apagar o publicador
+// — que é a leitura natural de "isto emite para ninguém" — levaria a gravação
+// junto e a mesa passaria a viver só em memória (ALE-154).
 func (h tableHost) PublishSessionState(sessionID int64, estado *aovivo.SessionRuntimeState) {
+	h.rules.saveSession(sessionID)
 	h.rules.publishSessionState(sessionID, estado)
 }
 
 func (h tableHost) PublishBoardState(sessionID int64, board *tabuleiro.BoardState) {
+	h.rules.saveBoard(sessionID, board)
 	h.rules.publishBoardState(sessionID, board)
 }
 

@@ -369,6 +369,14 @@ type viewGm struct {
 	// cena aberta o avanço não existe, e um botão aceso que recusa é pior que um
 	// apagado que explica.
 	PodeAvancar bool
+	// GravacaoFalhando: a mesa está rodando de MEMÓRIA e o disco não recebeu a
+	// última escrita (ALE-288).
+	//
+	// Ele vive no bloco do MESTRE e não na `View`, e isso é a fronteira: quem
+	// pode parar a sessão e chamar alguém é ele. Para o jogador seria um alarme
+	// sobre o qual não há o que fazer — e a mesma razão que mantém a presença
+	// por personagem fora da tela dele.
+	GravacaoFalhando bool
 }
 
 func ofViewGm(
@@ -376,13 +384,15 @@ func ofViewGm(
 	membros []aovivo.TableMember,
 	presentes []int64,
 	ehMestre bool,
+	gravacaoFalhando bool,
 ) viewGm {
 	return viewGm{
-		Contador:    aovivo.TurnCounter(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
-		Avanco:      aovivo.NextTurnButton(st.Initiative, st.TurnIndex),
-		VeVitais:    aovivo.GmSeesVitals(st.Initiative, ehMestre),
-		Conectados:  aovivo.ConnectedCharacters(membros, presentes),
-		PodeAvancar: st.SceneActive && len(st.Initiative) > 0,
+		GravacaoFalhando: gravacaoFalhando,
+		Contador:         aovivo.TurnCounter(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
+		Avanco:           aovivo.NextTurnButton(st.Initiative, st.TurnIndex),
+		VeVitais:         aovivo.GmSeesVitals(st.Initiative, ehMestre),
+		Conectados:       aovivo.ConnectedCharacters(membros, presentes),
+		PodeAvancar:      st.SceneActive && len(st.Initiative) > 0,
 	}
 }
 

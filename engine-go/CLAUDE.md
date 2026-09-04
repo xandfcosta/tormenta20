@@ -356,15 +356,12 @@ de eventos" existe.
 
 > **E o `SSEHub` ficou sem ouvinte.** Medido na ALE-277: em produção ninguém
 > chama `SSEHub.Add` — só testes —, porque a única rota que abria conexão era a
-> `/events`. Quem EMITE continua lá (o `live_publish.go`, o `session-rest` da
-> Mesa, o `character-changed` do servidor), e emitir para zero ouvinte não
-> estoura nada. Não foi apagado nesta issue por uma razão específica: o
-> `publishBoardState` e o `publishSessionState` fazem DUAS coisas, e a segunda é
-> GRAVAR — desmontar o hub sem separar a persistência primeiro trocaria uma
-> emissão inútil por uma escrita perdida. A mesma medição vale para a
-> `PresenceRegistry`: a Mesa LÊ o elenco (`Presence().Roster`), e quem o
-> preenchia era o handshake da `/events`, então a lista está vazia desde a
-> ALE-272.
+> `/events`. Quem EMITE continua lá, e emitir para zero ouvinte não estoura nada.
+>
+> Ele segue de pé, e o que MUDOU é que apagá-lo deixou de ser perigoso: a
+> gravação saiu de dentro do publicador na ALE-288 — ver "A gravação saiu de
+> dentro da publicação", abaixo. A `PresenceRegistry` também deixou de estar
+> vazia: quem a preenche agora é o fluxo da própria Mesa (ALE-287).
 
 Três coisas sumiram junto, e todas eram exceção:
 
@@ -1708,6 +1705,102 @@ instrutivo: `campaign.ValidateName` não existe, então o build quebrou e a
 sabotagem nunca chegou. **Verde depois de sabotar só significa alguma coisa
 quando a sabotagem CHEGOU** — e a terceira, com `campaign.Name`, reprovou o
 guarda como devia.
+
+## A gravação saiu de dentro da publicação (ALE-288)
+
+`publishBoardState` fazia DUAS coisas com nomes que só diziam uma:
+
+```go
+func (tr tableRules) publishBoardState(sessionID, board) {
+    if board != nil {
+        go tr.persistBoardAndWarn(...)                 // ① o DISCO
+        if board.ID != DefaultBoardID { return }
+    }
+    tr.sse.EmitOrdered(...)                            // ② o FIO
+}
+```
+
+E ② emite para **zero ouvintes** desde a ALE-272. A leitura natural de "isto
+emite para ninguém" é apagar a função — e ela levaria ① junto. **A mesa passaria
+a viver só em memória**, que é literalmente a ALE-154, o dia em que o tabuleiro
+sobreviveu uma sessão inteira sem tocar o disco.
+
+Não era hipótese: os únicos escritores de disco do tabuleiro e do estado da
+sessão eram `persistBoardAndWarn` e `persistSessionAndWarn`, e cada um tinha
+**exatamente um chamador** — o publicador.
+
+Hoje são `saveBoard`/`saveSession` (o disco) e `publishBoardState`/
+`publishSessionState` (o fio), e quem chama faz os dois passos escritos, em
+ordem. Custa uma linha a mais no chamador e tira o engano do mapa: quem apagar
+o publicador lê "o disco" na linha de cima.
+
+> **O `return` da aba não-padrão ficou do lado do PUBLICADOR**, e essa é a
+> assimetria que a divisão tinha de preservar: quem não vê a aba não precisa do
+> quadro, mas o disco precisa de todas.
+
+### O guarda que faltava era o do CAMINHO INTEIRO
+
+Os casos do `board_store_test.go` dirigem o STORE direto (`bs.Open`,
+`bs.Persist`). **Nenhum media comando da Mesa → regra → disco** — então apagar a
+gravação não quebrava teste nenhum, e era isso que tornava o acidente possível.
+
+`TestACommandFromTheTableReachesTheDisk` fecha isso: posta uma peça pela cena de
+verdade e sonda a linha em `open_boards`. Sabotado o `saveBoard`, ele reprova com
+"a mesa está vivendo só em memória".
+
+Ele SONDA em vez de dormir, porque a gravação é em goroutine de propósito — o
+mestre não espera o disco no meio do turno (139ms por toque no prato girante
+antes do `synchronous=NORMAL`, ALE-273).
+
+## O mestre é avisado quando a gravação falha (ALE-288)
+
+Quando a escrita falha, os dois stores marcam a sessão e **seguem servindo da
+memória**: a tela fica certa, o combate anda, e o disco não tem nada. O remédio
+que existia era um `persistence-warning` emitido no `SSEHub` — que não tem
+ouvinte desde a ALE-272. **O aviso ia para o vazio, e a Mesa não desenhava
+nada.**
+
+### ESTADO e não notícia, e essa é a decisão
+
+Um aviso perdido é um aviso que não existiu, e este precisa valer **enquanto
+durar**: quem abre a aba dez minutos depois da primeira falha merece vê-lo. Por
+isso ele não virou evento no barramento — a verdade mora no store (é ele quem
+sabe se a última gravação deu certo), e a cena a LÊ a cada quadro pelo
+`SaveFailed`.
+
+É a regra que o próprio barramento desta casa já escrevia, aplicada ao contrário:
+*o evento é a notícia, a verdade está no store.* Quando o que se precisa é a
+verdade e não a notícia, pergunte ao store.
+
+O adaptador junta os dois stores numa pergunta só, porque para quem mestra não
+existe "o tabuleiro não salvou" e "a fila não salvou" — existe "a mesa não está
+sendo salva". Os dois têm a mesma causa e o mesmo remédio.
+
+**Só o mestre vê**, e no CABEÇALHO: ele fica ao lado do "Ao vivo", que é a
+promessa que este aviso desmente. Para o jogador seria um alarme sobre o qual
+não há o que fazer — a mesma fronteira que mantém a presença por personagem fora
+da tela dele.
+
+### A reprodução levou três tentativas, e as duas primeiras ensinam
+
+1. **`boards.Persist` no fixture cru não tentava escrever nada.** O `f.scene(t)`
+   abre a cena e enche a fila, mas não abre tabuleiro — o store não achava o que
+   gravar e devolvia `changed=false`. O teste DISSE isso em vez de passar, que é
+   o que a asserção de reprodução existe para fazer.
+2. **Fechar o `*sql.DB` mata a LEITURA junto**, e a página nem renderiza. O
+   defeito de verdade não é esse: é escrita falhando com leitura funcionando, que
+   é como ele fica invisível.
+3. **Derrubar a tabela `open_boards`** dá exatamente isso, e é a ALE-154
+   literal: `sessions`, `users` e os membros continuam lá, a mesa desenha
+   normalmente, e só a gravação do tabuleiro falha.
+
+### A tinta foi COPIADA de propósito
+
+O aviso usa `border-destructive/60 bg-destructive/10 text-destructive-ink`, a
+combinação que o `npc_editor.templ` já usa. Inventar uma variante aqui seria
+criar uma tinta **sem medição**: o medidor de contraste só mede o que ele
+VISITA, e este aviso só aparece com o disco falhando — nenhum caminho do e2e o
+desenha.
 
 ## A mesa que não aceitava ninguém (ALE-287)
 

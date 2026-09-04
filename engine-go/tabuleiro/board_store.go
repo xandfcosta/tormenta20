@@ -474,6 +474,20 @@ func (bs *BoardStore) SetSpeeds(ctx context.Context, sessionID int64, tabuleiroI
 // tabuleiro passou um dia vivendo só em memória — cada gravação falhava numa
 // linha de log que ninguém lê, e na tela estava tudo perfeito até o processo
 // reiniciar. Falha permanente de gravação não é "o disco piscou".
+
+// SaveFailed diz se a última gravação do tabuleiro desta sessão falhou.
+//
+// ESTADO e não notícia, e a diferença é o que faz o aviso servir: ele vale
+// enquanto durar, então quem abre a aba dez minutos depois da primeira falha
+// merece vê-lo. Um evento perdido é um evento que não existiu (ALE-288).
+//
+// Sob a trava porque o `Dirty` é escrito pelo `Persist`, que roda em goroutine.
+func (bs *BoardStore) SaveFailed(sessionID int64) bool {
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	return bs.Dirty[sessionID]
+}
+
 func (bs *BoardStore) Persist(ctx context.Context, sessionID int64, tabuleiroID string) (Dirty, changed bool) {
 	bs.Mu.Lock()
 	b := cloneBoard(bs.findLocked(sessionID, tabuleiroID))

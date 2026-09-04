@@ -95,6 +95,14 @@ type Deps interface {
 	// elenco mostram.
 	InitiativeBonus(ctx context.Context, characterID int64) (int64, error)
 	ComputedSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error)
+	// SaveFailed diz se a última gravação desta sessão falhou — o tabuleiro OU o
+	// estado da fila, porque para quem está mestrando os dois são "a mesa".
+	//
+	// A cena PERGUNTA a cada quadro em vez de esperar um aviso, e isso é o
+	// desenho e não preguiça: o problema vale enquanto durar, então quem abre a
+	// aba dez minutos depois da primeira falha merece vê-lo. Aviso perdido é
+	// aviso que não existiu (ALE-288).
+	SaveFailed(sessionID int64) bool
 	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
 	SpeedsForBoard(board *tabuleiro.BoardState) map[string]int
 

@@ -121,8 +121,9 @@ func (tr tableRules) listPlayerCombatants(ctx context.Context, campaignID int64)
 	out := []combatant{}
 	// Aqui morava `if m.Role != "player" { continue }`, e ele NUNCA excluiu
 	// ninguém: a coluna valia `'player'` em toda linha. Ela saiu na ALE-287, e
-	// o filtro saiu junto sem mudar o que esta função devolve — ver a nota mais
-	// longa no `tableRoster`, que tinha o irmão dele.
+	// o filtro não volta — o mestre não tem personagem próprio, e os NPCs dele
+	// não são membros da campanha. Ver a nota mais longa no `tableRoster`, que
+	// tinha o irmão dele.
 	for _, m := range rows {
 		out = append(out, combatant{
 			characterID: m.Characterid, name: m.Charname,

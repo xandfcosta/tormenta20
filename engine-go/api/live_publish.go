@@ -33,7 +33,52 @@ import (
 // decisão ser lida por quem passar aqui.
 const defaultTab = ""
 
-// publishBoardState transmite às duas salas por papel e persiste.
+// saveBoard GRAVA o tabuleiro no disco, e não faz mais nada.
+//
+// Ela era uma linha dentro do `publishBoardState`, e essa vizinhança era uma
+// armadilha (ALE-288): o `SSEHub` não tem ouvinte em produção desde a ALE-272,
+// então a leitura natural de "publicar para ninguém" é apagar a função — e ela
+// levaria a gravação junto. **A mesa passaria a viver só em memória**, que é
+// literalmente a ALE-154.
+//
+// Duas funções com nomes que dizem o que fazem custam uma linha a mais no
+// chamador e tiram essa possibilidade do mapa: quem apagar o `publish` lê "o
+// disco" na linha de cima.
+//
+// Em GOROUTINE porque o mestre não espera o disco no meio do turno, e o custo
+// disso está medido: 139ms por toque num prato girante antes do
+// `synchronous=NORMAL` (ALE-273).
+func (tr tableRules) saveBoard(sessionID int64, board *tabuleiro.BoardState) {
+	if board == nil {
+		return
+	}
+	go tr.persistBoardAndWarn(sessionID, board.ID)
+}
+
+// saveSession GRAVA o estado da sessão. O irmão do `saveBoard`, e pela mesma
+// razão — ver lá.
+//
+// Ela conta no `emSegundoPlano` e o tabuleiro não, e a diferença é histórica e
+// não desenho: quem espera no `Shutdown` é este contador, e a gravação do
+// tabuleiro nunca entrou nele. Fica anotado como diferença conhecida em vez de
+// "arrumada" de passagem — mexer no que o desligamento espera é decisão de
+// quem mediu o desligamento.
+func (tr tableRules) saveSession(sessionID int64) {
+	tr.emSegundoPlano.Add(1)
+	go func() {
+		defer tr.emSegundoPlano.Done()
+		tr.persistSessionAndWarn(sessionID)
+	}()
+}
+
+// publishBoardState transmite às duas salas por papel. Ela NÃO grava — ver o
+// `saveBoard`.
+//
+// > **O canal dela não tem ouvinte em produção** desde que a SPA foi apagada
+// > (ALE-272): quem abria conexão no `SSEHub` era a rota `/events`, e a Mesa em
+// > Datastar tem fluxo próprio pelo `events.Bus`. Ela fica porque desmontar o
+// > hub é trabalho com desenho próprio, e o que a ALE-288 precisava era que
+// > apagá-la deixasse de ser perigoso.
 //
 // # A tela antiga tem UM slot, e por isso ela não recebe as outras abas
 //
@@ -44,15 +89,13 @@ const defaultTab = ""
 // existe. Descartar é estritamente melhor: o que ela mostra continua sendo o
 // que ela mostrava.
 //
-// A GRAVAÇÃO acontece sempre, e é essa a divisão: quem não vê a aba não precisa
-// do quadro, mas o disco precisa de todas. Trocar as duas de lugar seria perder
+// A GRAVAÇÃO acontece SEMPRE e a publicação não, e é essa a divisão: quem não vê
+// a aba não precisa do quadro, mas o disco precisa de todas. Por isso o `return`
+// abaixo é do publicador e nunca do gravador — trocar as duas de lugar perderia
 // em silêncio a cena de quem não está na aba padrão, que é a ALE-154 outra vez.
 func (tr tableRules) publishBoardState(sessionID int64, board *tabuleiro.BoardState) {
-	if board != nil {
-		go tr.persistBoardAndWarn(sessionID, board.ID)
-		if board.ID != tr.boards.DefaultBoardID(context.Background(), sessionID) {
-			return
-		}
+	if board != nil && board.ID != tr.boards.DefaultBoardID(context.Background(), sessionID) {
+		return
 	}
 	// O tabuleiro já numera as próprias mutações, então a ordem sai de graça —
 	// `Version` sobe a cada mutação aceita. Fechar o tabuleiro manda `nil` e cai
@@ -75,8 +118,16 @@ func (tr tableRules) publishBoardState(sessionID int64, board *tabuleiro.BoardSt
 //
 // Então quem responde é o estado: sobrou aba, vai a PADRÃO; não sobrou, vai o
 // `nil` de sempre, que continua sendo a verdade.
+// Ela GRAVA e publica, os dois passos escritos — como o `PublishBoardState` do
+// adaptador. O `Close` do store já apagou a linha da aba fechada; o que esta
+// regravação alcança é a que SOBROU, e ela fica porque era o comportamento de
+// antes da ALE-288: mexer no que vai ao disco não era o assunto daquela issue,
+// e uma escrita a menos é a espécie de mudança que não tem sintoma até a
+// sessão seguinte.
 func (tr tableRules) publishWhatIsLeft(ctx context.Context, sessionID int64) {
-	tr.publishBoardState(sessionID, tr.boards.Get(ctx, sessionID, defaultTab))
+	sobrou := tr.boards.Get(ctx, sessionID, defaultTab)
+	tr.saveBoard(sessionID, sobrou)
+	tr.publishBoardState(sessionID, sobrou)
 }
 
 func (tr tableRules) persistBoardAndWarn(sessionID int64, tabuleiroID string) {
@@ -100,16 +151,11 @@ type liveCtx struct {
 	Role       string
 }
 
-// publishSessionState transmite o estado às duas salas por papel e persiste.
-// Espelha o `emitSessionState` do gateway.
+// publishSessionState transmite o estado às duas salas por papel. Ela NÃO grava
+// — ver o `saveSession`. Espelha o `emitSessionState` do gateway.
 func (tr tableRules) publishSessionState(sessionID int64, state *aovivo.SessionRuntimeState) {
 	tr.sse.EmitOrdered(sessionID, "gm", "session-state", state.Seq, state)
 	tr.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, aovivo.RedactForPlayers(state))
-	tr.emSegundoPlano.Add(1)
-	go func() {
-		defer tr.emSegundoPlano.Done()
-		tr.persistSessionAndWarn(sessionID)
-	}()
 }
 
 // persistSessionAndWarn persiste e avisa a mesa SÓ quando o sinal de sujeira
