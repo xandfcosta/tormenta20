@@ -54,6 +54,20 @@ var tombstones = map[string]bool{
 	"TestTheCampaignDetailLoadsTheRules":                  true,
 	"TestTheJsonApiRefusesAChoiceOutsideTheRule":          true,
 	"TestUpdateMemberRole":                                true,
+
+	// A PORTA QUE A ALE-205 APOSENTOU (ALE-289). Os dois dirigiam o `ShowPlace`,
+	// que nenhuma rota chamava havia três fatias.
+	//
+	// O primeiro é a razão de a varredura ter acontecido: ele afirmava, em
+	// verde, que trocar de cena ARQUIVA a que estava na mesa — o comportamento
+	// que a ALE-205 removeu e que o GLOSSARIO desmente com todas as letras. Um
+	// teste que dirige uma porta morta não fica obsoleto junto com ela; ele passa
+	// a afirmar o oposto do produto, e continua passando.
+	//
+	// O segundo prendia uma regra VIVA (a posse do lugar) na porta errada, e por
+	// isso mudou de casa em vez de morrer.
+	"TestSwitchingScenesArchivesTheOneOnTheTable":      true,
+	"TestASceneFromAnotherCampaignCannotReachTheTable": true,
 }
 
 // familias são os PREFIXOS que a prosa usa para falar de um conjunto de guardas

@@ -185,8 +185,8 @@ func TestStoreDirtyOnPersistFailure(t *testing.T) {
 	if d, _ := store.Persist(ctx, sid); !d {
 		t.Error("Persist after DB Close should report Dirty")
 	}
-	if !store.IsDirty(sid) {
-		t.Error("IsDirty should be true after a failed Persist")
+	if !store.SaveFailed(sid) {
+		t.Error("SaveFailed should be true after a failed Persist")
 	}
 }
 
@@ -201,7 +201,7 @@ func TestForgetPreservesDirtyForRecovery(t *testing.T) {
 
 	store.Forget(sid)
 
-	if !store.IsDirty(sid) {
+	if !store.SaveFailed(sid) {
 		t.Error("Forget cleared the Dirty flag — the Dirty→healthy recovery broadcast would be lost")
 	}
 }

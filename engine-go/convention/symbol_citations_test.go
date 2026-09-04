@@ -152,6 +152,23 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	// dígito vazio). O código sumiu; a explicação de por que a ordem das linhas é
 	// aquela precisa dele para fazer sentido.
 	"ifNoneMatch": true,
+
+	// ── A PORTA QUE A ALE-205 APOSENTOU (ALE-289) ────────────────────────────
+	//
+	// O `ShowPlace` punha uma cena guardada na mesa ARQUIVANDO antes a que estava
+	// lá — a saída que a ALE-191 inventou para o mestre pular da taverna para a
+	// cripta sem perder a taverna. Com abas, nada é substituído e o problema
+	// deixou de existir; ele ficou três fatias no ar com zero chamadores de
+	// produção e quatro testes em cima, um deles afirmando em VERDE o
+	// comportamento que a ALE-205 tinha removido.
+	//
+	// Ele é citado em TRÊS blocos que não são lápide e estão certos: a docstring
+	// do `OpenPlace`, que se define pelo contraste com ele; o `collection_test`,
+	// que nomeia o papercut que a fatia 3 consertou; e o `reopenPlace` da cena.
+	// Os três explicam POR QUE a coisa de hoje é como é, e apagar o nome deles
+	// apagaria a razão junto — que é exatamente o que esta lista existe para
+	// impedir.
+	"ShowPlace": true,
 }
 
 // oSimboloCitado é o que parece identificador dentro de um comentário: entre

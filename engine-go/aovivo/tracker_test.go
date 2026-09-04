@@ -115,25 +115,6 @@ func TestTheCounterHasFourStates(t *testing.T) {
 	}
 }
 
-// TestTheBridgeToThePersonIsTheOwner, e não o id do personagem: a ficha de um membro é
-// o SNAPSHOT da campanha (ALE-33).
-func TestTheBridgeToThePersonIsTheOwner(t *testing.T) {
-	membros := []TableMember{
-		{CharacterID: 10, OwnerID: 1},
-		{CharacterID: 11, OwnerID: 2},
-		{CharacterID: 12, OwnerID: 1},
-		{CharacterID: 13, OwnerID: 0}, // sem personagem ligado
-	}
-	meus := MyCharacters(membros, 1)
-	if len(meus) != 2 || !meus[10] || !meus[12] {
-		t.Errorf("os meus vieram %v", meus)
-	}
-	// Sem usuário não há "meu" — e devolver tudo seria pior que devolver nada.
-	if got := MyCharacters(membros, 0); len(got) != 0 {
-		t.Errorf("sem usuário vieram %d personagens", len(got))
-	}
-}
-
 // TestAMemberWithoutACharacterDoesNotEnterPresence.
 //
 // Não é que ele esteja offline: é que não há personagem para marcar, e um zero

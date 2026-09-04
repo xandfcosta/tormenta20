@@ -77,102 +77,26 @@ func (bs *BoardStore) Places(ctx context.Context, campaignID int64) []Place {
 	return lugares
 }
 
-// ShowPlace põe um lugar guardado na mesa — e GUARDA ANTES a cena que estava
-// lá (ALE-191).
+// Aqui moravam o `ShowPlace`, o `Reopen` e o `reopenLocked` — as três portas com
+// que a ALE-191 resolvia "põe esta cena na mesa" ANTES de existirem abas.
 //
-// Sem isso, mostrar a cripta à mesa DESTRUÍA a taverna: o `Reopen` troca o
-// tabuleiro vivo, e o que estava nele não ia para lugar nenhum. Até agora o
-// caminho era inalcançável, porque a lista de Lugares só aparecia na cena
-// vazia; é esta issue que o abre, ao deixar o mestre trocar de cena com a mesa
-// jogando.
+// O `ShowPlace` arquivava a cena da aba e entrava no lugar dela; o `Reopen` era a
+// primitiva que trocava a cena de UMA aba, ou abria a primeira se não houvesse
+// nenhuma. A ALE-205 tirou o problema que os dois resolviam: com abas nada é
+// substituído, então não há o que guardar antes — e desde então a rota
+// `/lugares/{placeId}/reabrir` entra pelo `OpenPlace`, logo abaixo.
 //
-// A falha ao guardar RECUSA a troca, e aqui a política é o oposto da do
-// encerrar: lá o mestre mandou tirar a cena da mesa e prendê-lo numa cena que
-// já acabou seria pior; aqui ele mandou trocar, e trocar em cima de um acervo
-// que não gravou é justamente perder a taverna.
-func (bs *BoardStore) ShowPlace(ctx context.Context, campaignID, sessionID int64, tabuleiroID string, placeID int64) (*BoardState, error) {
-	row, err := bs.q.GetCampaignPlace(ctx, placeID)
-	if err != nil {
-		return nil, err
-	}
-	// O id vem do cliente: sem conferir a crônica, um mestre puxaria para a
-	// própria mesa a cena de OUTRA campanha. É a mesma posse que o `RemovePlace`
-	// confere, e pelo mesmo motivo.
-	if row.Campaignid != campaignID {
-		return nil, errPlaceFromAnotherCampaign
-	}
-	// A troca acontece DENTRO DE UMA ABA (ALE-205): é a cena daquela aba que vai
-	// para o acervo e é ali que a nova entra. Com vários tabuleiros abertos,
-	// arquivar "o tabuleiro da sessão" seria arquivar o de alguém que não pediu
-	// nada — o mestre troca a cripta pela ponte e a taverna da outra aba some.
-	if atual := bs.Get(ctx, sessionID, tabuleiroID); atual != nil {
-		if err := bs.Archive(ctx, campaignID, atual); err != nil {
-			return nil, fmt.Errorf("não consegui guardar %q antes de trocar de cena: %w", atual.Place, err)
-		}
-	}
-	return bs.Reopen(ctx, sessionID, tabuleiroID, placeID)
-}
-
-// Reopen põe o lugar guardado de volta na mesa. É a PRIMITIVA: não confere de
-// que crônica o lugar é, nem guarda a cena que estava na mesa — quem faz as
-// duas coisas é o `ShowPlace`, que é por onde o gateway entra.
+// Elas ficaram no ar com ZERO chamadores de produção e QUATRO casos de teste em
+// cima (ALE-289), e é isso que as tornava caras: um daqueles casos afirmava, em
+// verde, que trocar de cena ARQUIVA a que estava na mesa — o comportamento exato
+// que a ALE-205 removeu. Um teste que dirige uma porta morta não fica obsoleto
+// junto com ela; ele passa a afirmar o oposto do produto, e continua verde.
 //
-// A VERSÃO continua a do tabuleiro que estava aberto, e não a que foi
-// arquivada: um cliente com a cena velha na mão precisa reconhecer esta como
-// mais recente. Reabrir é uma mutação de agora, não uma volta ao passado.
-//
-// COM ABA ele TROCA a cena daquela aba; SEM aba nenhuma ele ABRE a primeira
-// (ALE-205). Os dois casos são o mesmo gesto do mestre — "põe esta na mesa" —, e
-// o que muda é se já havia mesa: recusar o segundo deixaria o acervo inalcançável
-// justamente na sessão que ainda não abriu tabuleiro, que é quando ele é mais
-// usado. O teto de abertos vale nos dois.
-func (bs *BoardStore) Reopen(ctx context.Context, sessionID int64, tabuleiroID string, placeID int64) (*BoardState, error) {
-	b, ev, err := bs.reopenLocked(ctx, sessionID, tabuleiroID, placeID)
-	if err != nil {
-		return nil, err
-	}
-	bs.bus.Publish(ev)
-	return b, nil
-}
-
-// reopenLocked faz o trabalho e DEVOLVE o evento que ele produziu.
-//
-// Devolver em vez de publicar aqui dentro é o que permite dizer a verdade: com
-// aba já aberta a cena TROCA dentro dela, e sem aba ela NASCE. Um wrapper que
-// adivinhasse o evento pelo nome do método chamaria as duas de "abriu".
-func (bs *BoardStore) reopenLocked(ctx context.Context, sessionID int64, tabuleiroID string, placeID int64) (*BoardState, events.Event, error) {
-	row, err := bs.q.GetCampaignPlace(ctx, placeID)
-	if err != nil {
-		return nil, nil, err
-	}
-	cena, err := storedScene(row.State, row.Name)
-	if err != nil {
-		return nil, nil, err
-	}
-	guardado := *cena
-
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	bs.hydrateLocked(ctx, sessionID)
-	aberto := bs.findLocked(sessionID, tabuleiroID)
-	if aberto == nil {
-		b, err := bs.inNewTabLocked(sessionID, &guardado)
-		return b, events.BoardOpened{SessionID: sessionID}, err
-	}
-	if aberto.Version >= guardado.Version {
-		guardado.Version = aberto.Version + 1
-	}
-	// A ABA continua a mesma: o que muda é a cena que está nela. O id é a
-	// identidade da aba na barra e no que cada pessoa escolheu olhar — trocá-lo
-	// aqui tiraria da tela de todo mundo a aba que ainda está lá.
-	guardado.ID = aberto.ID
-	// A POSIÇÃO na barra também é da aba, e não da cena que entrou nela: trocar
-	// a taverna pela cripta não pode fazer a aba pular de lugar debaixo do dedo
-	// de quem estava clicando nela.
-	guardado.Seq = aberto.Seq
-	*aberto = guardado
-	return cloneBoard(aberto), events.BoardChanged{SessionID: sessionID}, nil
-}
+// Nenhuma garantia sumiu, as três mudaram de porta e hoje são presas contra o
+// `OpenPlace`: a posse (`…ThroughOpenPlace`), as peças que voltam onde estavam e
+// o movimento provisório que NÃO volta. A última mora no `storedScene`, por onde
+// as duas portas sempre passaram — foi ela que impediu que a divergência entre
+// os dois caminhos acontecesse enquanto ambos existiam.
 
 // OpenPlace põe um lugar guardado numa ABA NOVA, sem tocar no que já está na
 // mesa (ALE-205, fatia 3).
@@ -183,7 +107,7 @@ func (bs *BoardStore) reopenLocked(ctx context.Context, sessionID int64, tabulei
 // preventivo que a ALE-191 inventou deixou de ser necessário porque deixou de
 // haver o que perder — nada é substituído.
 //
-// A posse é conferida como no `ShowPlace` e no `RemovePlace`, e pelo mesmo
+// A posse é conferida como no `RemovePlace`, e pelo mesmo
 // motivo: o id vem do cliente, e sem a checagem um mestre puxaria para a própria
 // mesa a cena de OUTRA campanha.
 func (bs *BoardStore) OpenPlace(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {

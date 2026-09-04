@@ -2014,6 +2014,72 @@ E ele foi provado com a árvore de ONTEM em vez de sabotagem — `git archive` d
 merge anterior, o guarda copiado por cima, `go test`. Reprovou com "o gerador
 não rodou: exit status 1", que é o defeito real.
 
+## Órfão é dívida OU capacidade esperando gesto (ALE-289)
+
+A ALE-287 deixou escrita a regra de procurar *"fixture que chama método de store
+direto, ou que aceita um parâmetro cujo valor a produção nunca varia"*. A
+varredura aconteceu, e o resultado não foi o que ela previa: das seis famílias
+achadas, **três eram dívida e duas eram funcionalidade perdida** — e as duas
+tinham exatamente a mesma assinatura no `grep`.
+
+**O que separa as duas não é a contagem de chamadores. É ler o que a coisa
+FAZ.** Eu classifiquei o `nextFreeSpot` como "regra superada pelo `clusterSpot`"
+e ia apagá-lo; o que desmentiu foi o teste que o prende falar de "peças
+avulsas" e nomear o "+ Peça" da ALE-178. Os dois põem peça no mapa e não são a
+mesma coisa: o `clusterSpot` põe COMBATENTE em dois lados a 6 quadrados (o
+alcance curto, p224), e o `nextFreeSpot` põe CENÁRIO — uma porta não tem lado, e
+pô-la na fileira do grupo diria que ela é aliada.
+
+O sinal de "capacidade esperando gesto" é a família que a cortina (ALE-202) e a
+presença (ALE-287) já tinham desenhado: **a camada de baixo inteira no ar, com
+teste, e nenhuma rota chegando nela.** Duas apareceram aqui — a peça avulsa
+(ALE-291), em que o `ParseBoardToken` não tem *nenhum* chamador, nem de teste; e
+o rascunho de lugar (ALE-292), cujas docstrings carregam a decisão de protocolo
+inteira sobre um botão que não existe.
+
+### Um teste que dirige uma porta morta afirma o OPOSTO do produto
+
+Este é o custo que justifica a varredura, e ele não é "manutenção".
+
+`TestSwitchingScenesArchivesTheOneOnTheTable` prendia que trocar de cena ARQUIVA
+a que estava na mesa. A ALE-205 removeu esse comportamento e o GLOSSARIO diz o
+contrário com todas as letras. Ele continuou **verde** porque dirigia o
+`ShowPlace` — a porta que a ALE-205 aposentou e que ninguém chamava havia três
+fatias.
+
+**Um teste não fica obsoleto junto com a porta que ele dirige.** Ele passa a
+afirmar o contrário do que o app faz, e o terminal continua verde, que é a pior
+forma desta casa: não é cobertura faltando, é cobertura mentindo.
+
+### A sonda de órfãos é textual, e tem DOIS pontos cegos estruturais
+
+Ela é uma linha de shell — para cada símbolo exportado, contar chamadores em
+produção e em teste. Ela errou nos dois sentidos, e as duas formas voltam na
+próxima vez:
+
+- **Casando só `.Simbolo(`, ela perde todo nome que colide com a biblioteca
+  padrão.** O `SSEHub.Add`, órfão *conhecido* desde a ALE-277, não apareceu:
+  `.Add(` casa 19 chamadas de produção que são `Header().Add`, `time.Add` e
+  `atomic.Add`. **Foi o controle positivo que reprovou a sonda** — sem ele os 26
+  achados teriam passado por lista completa.
+- **Casando também `Simbolo(`, ela mascara nome sobrecarregado.** O método
+  `BoardStore.AddToken` sumiu da segunda corrida, escondido pela FUNÇÃO
+  `AddToken(b, t, newID)` que o `populateBoard` chama de verdade.
+
+As duas juntas: **o resultado é piso, e o silêncio dela não é evidência.** O
+achado mais caro da issue veio de conferir à mão. Uma sonda que resolvesse isso
+precisa ser *type-aware*, e enquanto for `grep` a prosa não pode prometer
+varredura completa.
+
+### O corte por número de linha come a vizinha, de novo
+
+A armadilha #1 da fatia 6 da ALE-278 repetiu-se aqui: apagar o `IsDirty` por
+`sed '361,367d'` levou junto a primeira linha da docstring do `Forget`, logo
+abaixo. **O `go build` ficou verde e a suíte inteira também** — o que sobrou era
+um bloco de comentário começando no meio de uma frase, e comentário não compila.
+Quem denunciou foi o `git diff`. *Corte de bloco se confere no diff, nunca no
+verde.*
+
 ## O `*Server` deixou de ser porta (ALE-278, fatia 6)
 
 Ele tinha **89 métodos exportados**, e todos existiam por um motivo só: cumprir
