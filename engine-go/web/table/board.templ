@@ -1275,9 +1275,9 @@ templ placesCollection(v BoardView) {
 								// agora aparecia no meio dos outros sem nada que o
 								// distinguisse.
 								@ui.Icon("LayoutGrid", "mr-1 inline size-3")
-								{ "nesta mesa agora · " + portugueseTokens(l.Pecas) }
+								{ "nesta mesa agora · " + ui.TokenCount(l.Pecas) }
 							} else {
-								{ fmt.Sprintf("%s · %s", portugueseTokens(l.Pecas), l.Quando) }
+								{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Pecas), l.Quando) }
 							}
 						</span>
 					</span>

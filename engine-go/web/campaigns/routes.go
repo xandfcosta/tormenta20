@@ -11,6 +11,7 @@ import (
 	"t20engine/campaign"
 	"t20engine/plataforma"
 
+	"t20engine/web/routes"
 	"t20engine/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -36,6 +37,12 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/campanhas/{id}/excluir", s.handleDelete)
 	r.Post("/campanhas/{id}/convite", s.handleRotateInvite)
 	r.Post("/campanhas/{id}/regras/{regra}", s.handleToggleRule)
+	// O ACERVO DE LUGARES (ALE-292). A cena LISTA, CRIA e APAGA; quem MONTA a
+	// cena guardada é o tabuleiro, num endereço vizinho
+	// (`/campanhas/{id}/lugares/{placeId}`) servido pela cena da Mesa — é lá que
+	// o mapa mora, e uma segunda superfície de montagem aqui seria a que diverge.
+	r.Post("/campanhas/{id}/lugares/novo", s.handleNewPlace)
+	r.Post("/campanhas/{id}/lugares/{placeId}/excluir", s.handleRemovePlace)
 }
 
 func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
@@ -448,6 +455,71 @@ func (s Scene) ownerOrRefuse(w http.ResponseWriter, r *http.Request) (int64, int
 		return 0, 0, false
 	}
 	return id, eu, true
+}
+
+// ── o ACERVO DE LUGARES (ALE-292) ────────────────────────────────────────────
+
+// handleNewPlace abre o lugar e LEVA para ele.
+//
+// Levar direto é a decisão: quem clicou em "Novo lugar" e digitou um nome quer
+// montar a cena, não voltar para a lista e clicar de novo no que acabou de
+// criar. É a mesma leitura do "reabrir" do acervo da Mesa, que também leva para
+// onde a cena está.
+//
+// Nome REPETIDO leva ao lugar que já existe, e é o `NewPlace` que decide: o nome
+// é a identidade do lugar dentro da campanha. A tela avisa disso antes, no
+// diálogo — a surpresa seria descobrir depois de montar meia cripta.
+func (s Scene) handleNewPlace(w http.ResponseWriter, r *http.Request) {
+	id, _, ok := s.ownerOrRefuse(w, r)
+	if !ok {
+		return
+	}
+	lugarID, err := s.deps.NewPlace(r.Context(), id, r.PostFormValue("name"), r.PostFormValue("ground"))
+	if err != nil {
+		// A RECUSA volta para a aba com a frase no campo, e não numa página de
+		// erro: o que ela diz ("dê um nome ao lugar") é sobre o que a pessoa
+		// acabou de digitar, e uma tela de erro a faria digitar tudo de novo.
+		s.redrawPlacesWithError(w, r, id, err)
+		return
+	}
+	http.Redirect(w, r, routes.PlaceDraft(id, lugarID), http.StatusSeeOther)
+}
+
+// handleRemovePlace tira o lugar do acervo e VOLTA para a lista.
+//
+// Volta e não leva a lugar nenhum, ao contrário do criar: quem apaga está
+// limpando, e limpar é um gesto que se repete — devolver a lista é devolver a
+// pessoa ao trabalho dela.
+func (s Scene) handleRemovePlace(w http.ResponseWriter, r *http.Request) {
+	id, _, ok := s.ownerOrRefuse(w, r)
+	if !ok {
+		return
+	}
+	lugarID, err := strconv.ParseInt(chi.URLParam(r, "placeId"), 10, 64)
+	if err != nil {
+		http.Error(w, "id de lugar inválido", http.StatusBadRequest)
+		return
+	}
+	if err := s.deps.RemovePlace(r.Context(), id, lugarID); err != nil {
+		s.redrawPlacesWithError(w, r, id, err)
+		return
+	}
+	http.Redirect(w, r, routes.CampaignTab(id, "lugares"), http.StatusSeeOther)
+}
+
+// redrawPlacesWithError redesenha a aba com a recusa no campo do nome.
+//
+// A view é montada DE NOVO em vez de remendada porque estes dois gestos são
+// formulários de verdade — eles levam a página embora quando dão certo, e a
+// recusa tem de devolver uma página inteira.
+func (s Scene) redrawPlacesWithError(w http.ResponseWriter, r *http.Request, id int64, recusa error) {
+	v, err := s.LoadOne(r.Context(), s.deps.CurrentUserID(r), s.deps.RequesterIsAdmin(r), id, "lugares")
+	if err != nil {
+		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
+		return
+	}
+	v.Erros["place"] = []string{recusa.Error()}
+	s.writeOnePage(w, r, http.StatusUnprocessableEntity, v)
 }
 
 func (s Scene) writeOnePage(w http.ResponseWriter, r *http.Request, status int, v oneView) {

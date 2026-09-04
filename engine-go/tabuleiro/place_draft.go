@@ -3,7 +3,10 @@ package tabuleiro
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"t20engine/db/sqlcgen"
@@ -52,6 +55,16 @@ func (bs *BoardStore) EditPlace(
 	}
 	return cena, nil
 }
+
+// MaxPlaceNameLength é o teto do nome de um lugar, em LETRAS e não em bytes:
+// "Câmara Mortuária de Thwor" tem acento, e contar bytes cortaria um nome mais
+// curto do que o número promete.
+//
+// O teto existe porque o nome é a IDENTIDADE do lugar e ele é lido em coluna,
+// numa lista — um nome de mil letras não é um lugar, é um parágrafo colado no
+// campo errado, e ele quebra a linha de todos os vizinhos. Sessenta é o mesmo
+// teto que o nome da peça já usa no diálogo de editar.
+const MaxPlaceNameLength = 60
 
 // NewID cunha um id de peça ou de marcador, com o mesmo cunho da mesa.
 //
@@ -119,6 +132,51 @@ func (bs *BoardStore) refusesIfOnATable(ctx context.Context, campaignID int64, n
 	return nil
 }
 
+// PlacesOnATable diz, para cada NOME de lugar aberto numa mesa da campanha, a
+// sessão que o mostra (ALE-292).
+//
+// Ela é a irmã de leitura do `refusesIfOnATable`, e as duas leem as MESMAS duas
+// fontes pela mesma razão: a lista da crônica escreve "nesta mesa agora" ao lado
+// do lugar, e ela tem de dizer a mesma coisa que a trava vai aplicar. Duas
+// varreduras diferentes é a tela oferecendo "Montar" num lugar que o servidor
+// recusa — o clique que não faz nada e não diz nada.
+//
+// Mapa por NOME e não por id, porque é assim que o `Archive` identifica o lugar,
+// e é a chave que faz uma cena aberta do zero com o nome de um lugar guardado
+// contar como aquele lugar.
+func (bs *BoardStore) PlacesOnATable(ctx context.Context, campaignID int64) map[string]int64 {
+	naMesa := map[string]int64{}
+	abertos, err := bs.q.ListOpenBoardsOfCampaign(ctx, campaignID)
+	if err != nil {
+		// A LISTA SEGUE sem a marca, ao contrário da trava, e a assimetria é
+		// deliberada: aqui o custo do erro é oferecer um botão que o servidor
+		// recusa com uma frase; lá é o mestre perder a noite de trabalho. A trava
+		// erra para o lado seguro, a tela erra para o lado que fala.
+		log.Printf("campaign %d: falha ao listar os tabuleiros abertos (%v)", campaignID, err)
+	}
+	for _, aberto := range abertos {
+		var cena BoardState
+		if err := json.Unmarshal([]byte(aberto.State), &cena); err != nil {
+			continue
+		}
+		if cena.Place != "" {
+			naMesa[cena.Place] = aberto.Sessionid
+		}
+	}
+	// A MEMÓRIA por cima do disco, e não o contrário: o tabuleiro aberto agora
+	// ainda não foi gravado, e é justamente o que a pessoa acabou de fazer.
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	for sessionID, vivos := range bs.boards {
+		for _, b := range vivos {
+			if b.Place != "" {
+				naMesa[b.Place] = sessionID
+			}
+		}
+	}
+	return naMesa
+}
+
 // placeOnATable é a frase da recusa, escrita UMA vez.
 //
 // As duas fontes acima chegam à mesma conclusão, e duas cópias da frase é como
@@ -162,6 +220,13 @@ func (bs *BoardStore) sessionShowingLocked(nome string) int64 {
 // montada repintaria o chão dela por baixo do pano, e quem quer trocar o chão
 // tem o gesto do próprio rascunho para isso.
 func (bs *BoardStore) NewPlace(ctx context.Context, campaignID int64, name, terrain string) (Place, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return Place{}, errors.New("dê um nome ao lugar: é ele que identifica a cena no acervo, e é por ele que encerrar o tabuleiro reconhece qual lugar sobrescrever")
+	}
+	if len([]rune(name)) > MaxPlaceNameLength {
+		return Place{}, fmt.Errorf("o nome do lugar tem %d letras (máximo %d)", len([]rune(name)), MaxPlaceNameLength)
+	}
 	if existente, err := bs.q.FindCampaignPlaceByName(ctx, sqlcgen.FindCampaignPlaceByNameParams{
 		Campaignid: campaignID,
 		Name:       name,

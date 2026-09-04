@@ -34,3 +34,30 @@ func Plural(n int64, um, muitos string) string {
 	}
 	return fmt.Sprintf("%d %s", n, muitos)
 }
+
+// TokenCount concorda o número de PEÇAS com o substantivo, e escreve o zero por
+// extenso.
+//
+// Ela morava no `web/table` com nome próprio e subiu na ALE-292, quando a
+// crônica passou a listar o mesmo acervo que a Mesa lista. Duas cópias da frase
+// é como as duas telas passam a dizer coisas diferentes sobre a mesma cena — e o
+// que está escrito aqui não é formatação, é uma DECISÃO: "0 peças" descreve mal
+// o que a linha é, e "cena vazia" nomeia o que o mestre está procurando quando
+// abre o acervo para limpar.
+//
+// Ela não usa o `Plural` acima justamente por causa do zero: aquele escreveria
+// "0 peças", que é o que esta existe para não escrever.
+//
+//	ui.TokenCount(0) // "cena vazia"
+//	ui.TokenCount(1) // "1 peça"
+//	ui.TokenCount(9) // "9 peças"
+func TokenCount(n int) string {
+	switch n {
+	case 0:
+		return "cena vazia"
+	case 1:
+		return "1 peça"
+	default:
+		return fmt.Sprintf("%d peças", n)
+	}
+}

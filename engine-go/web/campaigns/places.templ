@@ -1,0 +1,161 @@
+package campaigns
+
+import (
+	"fmt"
+
+	"t20engine/web/routes"
+	"t20engine/web/ui"
+)
+
+// O ACERVO DE LUGARES da crônica (ALE-292): onde o mestre prepara a próxima
+// cena, fora da sessão.
+//
+// A mesma lista existe DENTRO da Mesa, e as duas não são cópia uma da outra
+// porque respondem a perguntas diferentes. Lá o gesto é "traga esta cena para a
+// mesa AGORA", com a sessão rolando; aqui é "abra esta cena para eu montar",
+// numa quinta-feira sem ninguém conectado. O que elas compartilham é a única
+// coisa que não pode divergir — quem está numa mesa agora —, e essa conta é do
+// servidor, num lugar só (`BoardStore.PlacesOnATable`).
+//
+// LISTA e não grade, pela mesma razão que a da Mesa: o que decide entre a
+// taverna e a cripta é o NOME, e nome é texto que se lê em coluna. Miniatura
+// exigiria imagem, e a cena guardada é estado.
+
+templ placesTab(v oneView) {
+	<div class="space-y-4">
+		<div class="flex flex-wrap items-center justify-between gap-2">
+			@ui.SectionLabel("muted", "") {
+				Acervo da campanha
+			}
+			<button
+				type="button"
+				data-on:click="document.getElementById('lugar-novo').showModal()"
+				class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "") }
+			>
+				@ui.Icon("Plus", "size-4")
+				Novo lugar
+			</button>
+		</div>
+		// A FRASE explica o que esta tela é, e ela precisa: a palavra "lugar"
+		// aparece na Mesa querendo dizer a mesma coisa com outro gesto, e sem a
+		// linha o mestre não sabe o que "Montar" vai abrir.
+		<p class="text-sm text-muted-foreground">
+			As cenas guardadas desta campanha. Montar abre o mapa para você preparar a cena com calma — a mesa não vê nada até você reabrir o lugar numa sessão.
+		</p>
+		if len(v.Lugares) == 0 {
+			// O VAZIO diz o que fazer, e não só que está vazio: este é o estado
+			// do primeiro dia da campanha, e uma linha "nenhum lugar" deixaria a
+			// pessoa procurando de onde eles vêm.
+			<div class="flex flex-col items-center gap-2 border border-dashed border-grimorio-iron p-6 text-center">
+				@ui.Icon("Library", "size-6 text-muted-foreground")
+				<p class="text-sm text-muted-foreground">
+					Nenhum lugar guardado ainda. Eles nascem quando você encerra um tabuleiro na mesa — ou aqui, com "Novo lugar".
+				</p>
+			</div>
+		} else {
+			<ul class="space-y-1">
+				for _, l := range v.Lugares {
+					@placeRow(v, l)
+				}
+			</ul>
+		}
+		@newPlaceDialog(v)
+	</div>
+}
+
+// placeRow é uma cena guardada, com os gestos que ela aceita.
+templ placeRow(v oneView, l PlaceRow) {
+	<li class="flex flex-wrap items-center gap-2 border border-grimorio-iron bg-grimorio-panel px-3 py-2">
+		<span class="min-w-0 flex-1">
+			<span class="block truncate text-sm text-foreground">{ l.Nome }</span>
+			<span class="block text-xs text-muted-foreground">
+				if l.NaMesaID > 0 {
+					@ui.Icon("LayoutGrid", "mr-1 inline size-3")
+					{ "nesta mesa agora · " + ui.TokenCount(l.Pecas) }
+				} else {
+					{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Pecas), shortDate(l.Quando)) }
+				}
+			</span>
+		</span>
+		if l.NaMesaID > 0 {
+			// O QUE ESTÁ NA MESA NÃO SE MONTA NEM SE APAGA, e não é cortesia
+			// vazia: as duas coisas seriam desfeitas pelo `Archive` quando a aba
+			// encerrasse — o rascunho some, e o lugar apagado volta. As travas de
+			// verdade são do servidor; isto é não oferecer o gesto que ele
+			// recusa. O que sobra é ir até onde a cena está.
+			<a
+				href={ templ.SafeURL(routes.Table(v.ID, l.NaMesaID)) }
+				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }
+			>Ver na mesa</a>
+		} else {
+			<a
+				href={ templ.SafeURL(routes.PlaceDraft(v.ID, l.ID)) }
+				class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "") }
+			>Montar</a>
+			// APAGAR é um `form` e não um link: ele DESTRÓI, e um `GET` que
+			// destrói é apagado pelo pré-carregamento do navegador sem ninguém
+			// clicar em nada.
+			<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/lugares/%d/excluir", v.ID, l.ID)) }>
+				<button
+					type="submit"
+					aria-label={ "Apagar " + l.Nome }
+					title={ "Apagar " + l.Nome + " do acervo" }
+					class="flex size-11 items-center justify-center rounded-sm border border-transparent text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
+					@ui.Icon("Trash2", "size-4")
+				</button>
+			</form>
+		}
+	</li>
+}
+
+// O LUGAR NOVO: o nome e o chão, e mais nada.
+//
+// O NOME é a identidade do lugar dentro da campanha — é por ele que o `Archive`
+// decide se sobrescreve —, e a frase diz isso com todas as letras: repetir um
+// nome que já existe leva ÀQUELE lugar em vez de criar um segundo quase igual.
+// Sem a linha, o mestre que digita "Taverna" de novo acha que perdeu a primeira.
+templ newPlaceDialog(v oneView) {
+	<dialog
+		id="lugar-novo"
+		aria-labelledby="lugar-novo-titulo"
+		class="scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="lugar-novo-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Novo lugar</h2>
+		<p class="mt-1 text-sm text-muted-foreground">
+			A cena que você vai montar. Um nome que já existe no acervo abre aquele lugar, em vez de criar outro.
+		</p>
+		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/lugares/novo", v.ID)) } class="mt-3 space-y-4">
+			// SEM `TamanhoMaximo`, ao contrário do formulário da campanha logo
+			// ali: o teto do nome do lugar é do `tabuleiro`, que esta cena não
+			// alcança (ver o guarda de fronteira). Repeti-lo aqui seria a
+			// segunda verdade sobre quantas letras cabem, e a que fica para trás
+			// é sempre a da tela — o `maxlength` é conforto, e a fronteira é o
+			// servidor, que recusa com a frase.
+			@ui.TextField(ui.Field{
+				Nome: "name", Label: "Nome do lugar", Valor: "",
+				Obrigatorio: true, Erros: v.Erros["place"],
+			})
+			<div class="space-y-1">
+				<label for="lugar-chao" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Chão</label>
+				<select
+					id="lugar-chao"
+					name="ground"
+					class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+				>
+					for _, c := range v.Chaos {
+						<option value={ c.ID }>{ c.Rotulo }</option>
+					}
+				</select>
+			</div>
+			<div class="flex items-center justify-end gap-2 border-t border-grimorio-iron pt-3">
+				<button
+					type="button"
+					data-on:click="document.getElementById('lugar-novo').close()"
+					class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }
+				>Cancelar</button>
+				<button type="submit" class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "") }>Montar</button>
+			</div>
+		</form>
+	</dialog>
+}

@@ -9,6 +9,7 @@ import (
 	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
+	"t20engine/tabuleiro"
 	"t20engine/web/campaigns"
 )
 
@@ -30,10 +31,15 @@ import (
 type campaignsHost struct {
 	sceneCore
 	rules campaignRules
+	// boards é o acervo de LUGARES da campanha (ALE-292), e é a única coisa do
+	// domínio ao vivo que esta cena alcança — pelas três perguntas da porta, e
+	// não pelo store inteiro. A crônica lista, cria e apaga um lugar; quem MONTA
+	// a cena é a cena do tabuleiro.
+	boards *tabuleiro.BoardStore
 }
 
 func (s *Server) campaignsHost() campaignsHost {
-	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules()}
+	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules(), boards: s.boards}
 }
 
 // List traduz o `campaignList` para a forma que a CENA declarou.
@@ -185,4 +191,43 @@ func descricaoOuNulo(texto string) sql.NullString {
 		return sql.NullString{String: t, Valid: true}
 	}
 	return sql.NullString{}
+}
+
+// ── o ACERVO DE LUGARES da crônica (ALE-292) ─────────────────────────────────
+
+// Places lista o acervo, já dizendo qual lugar está numa MESA agora.
+//
+// O casamento é pelo NOME e não pelo id, como o acervo da Mesa já faz: o nome é
+// a identidade do lugar dentro da campanha — é assim que o `Archive` decide se
+// sobrescreve —, e uma cena aberta do zero com o nome de um lugar guardado É
+// aquele lugar, porque é a conta que o arquivamento fará quando ela fechar.
+func (h campaignsHost) Places(ctx context.Context, campanhaID int64) []campaigns.PlaceRow {
+	naMesa := h.boards.PlacesOnATable(ctx, campanhaID)
+	lugares := h.boards.Places(ctx, campanhaID)
+	fora := make([]campaigns.PlaceRow, 0, len(lugares))
+	for _, l := range lugares {
+		fora = append(fora, campaigns.PlaceRow{
+			ID: l.ID, Nome: l.Name, Pecas: l.Tokens,
+			Quando: l.UpdatedAt, NaMesaID: naMesa[l.Name],
+		})
+	}
+	return fora
+}
+
+func (h campaignsHost) NewPlace(ctx context.Context, campanhaID int64, nome, chao string) (int64, error) {
+	lugar, err := h.boards.NewPlace(ctx, campanhaID, nome, chao)
+	return lugar.ID, err
+}
+
+func (h campaignsHost) RemovePlace(ctx context.Context, campanhaID, lugarID int64) error {
+	return h.boards.RemovePlace(ctx, campanhaID, lugarID)
+}
+
+// Grounds traduz as aparências do tabuleiro para a forma que a tela desenha.
+func (h campaignsHost) Grounds() []campaigns.GroundOption {
+	fora := make([]campaigns.GroundOption, 0, len(tabuleiro.PlaceGrounds))
+	for _, c := range tabuleiro.PlaceGrounds {
+		fora = append(fora, campaigns.GroundOption{ID: c.ID, Rotulo: c.Rotulo})
+	}
+	return fora
 }

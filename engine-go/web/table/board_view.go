@@ -1185,24 +1185,6 @@ func placeDraftBase(campaignID, placeID int64) string {
 	return routes.PlaceDraft(campaignID, placeID) + "/tabuleiro"
 }
 
-// portugueseTokens concorda o número com o substantivo.
-//
-// Existe porque "1 peças" apareceu na tela na primeira medição, e essa é a
-// classe de erro que passa por todo teste que compara com `fmt.Sprintf` do mesmo
-// jeito — o teste re-derivaria o defeito. O caso do ZERO é escrito por extenso
-// porque "0 peças" descreve mal o que a linha é: cena aberta e abandonada, que é
-// justamente o que o mestre está procurando quando abre o acervo para limpar.
-func portugueseTokens(n int) string {
-	switch n {
-	case 0:
-		return "cena vazia"
-	case 1:
-		return "1 peça"
-	default:
-		return fmt.Sprintf("%d peças", n)
-	}
-}
-
 // ── o PINCEL de terreno (ALE-264, item 5) ────────────────────────────────────
 //
 // UM SINAL para a ferramenta ativa, `pincel`, e não um por espécie. A razão veio
