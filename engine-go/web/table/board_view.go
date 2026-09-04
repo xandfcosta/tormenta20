@@ -193,6 +193,19 @@ type boardToken struct {
 	// Oculta é a peça que o mestre escondeu da mesa. Ela só existe na view dele:
 	// o `BoardForRole` já a tirou da do jogador.
 	Oculta bool
+	// IsObject desenha a peça QUADRADA em vez de redonda (ALE-291).
+	//
+	// A forma e não a cor, e a escolha tem duas razões que se somam. A primeira é
+	// de leitura: redondo é criatura em toda mesa de VTT, e uma porta redonda
+	// pede tradução. A segunda é de medição — tinta nova entra na conta do
+	// medidor de contraste, e uma variante que só aparece com uma peça de
+	// cenário no mapa nasceria SEM medição, que é a família que o
+	// `engine-go/CLAUDE.md` cataloga em "um guarda só mede o que ele VISITA".
+	//
+	// O nome sai em inglês porque o conceito é NOVO: a regra de idioma manda o
+	// identificador novo em inglês, e os vizinhos em português desta struct são
+	// passivo, não alvo.
+	IsObject bool
 }
 
 type boardMarker struct {
@@ -360,6 +373,7 @@ func boardTokenOf(t *tabuleiro.BoardToken, saude map[string]int, naVez string) b
 		Monograma: a.Monograma, Instancia: a.Instancia, Matiz: a.Matiz,
 		Oculta:     t.Hidden,
 		DeOndeVeio: t.DeOndeVeio,
+		IsObject:   t.Kind == "object",
 	}
 	if t.EntryID != nil {
 		p.NaVez = naVez != "" && *t.EntryID == naVez

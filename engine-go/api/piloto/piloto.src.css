@@ -1015,6 +1015,18 @@ html {
    * o jogador ela não vem no HTML (`BoardForRole`). */
   .tabuleiro-peca-oculta { opacity: 0.55; border-style: dashed; }
 
+  /* A peça de CENÁRIO é quadrada (ALE-291): a porta, o baú, o barril.
+   *
+   * FORMA e não cor, e as duas razões se somam. Redondo é criatura em toda mesa
+   * de VTT, então a porta redonda pede tradução; e tinta nova entraria na conta
+   * do medidor de contraste, onde uma variante que só aparece com cenário no
+   * mapa nasceria sem medição — a família de "um guarda só mede o que VISITA".
+   *
+   * O raio não é zero: canto vivo num gradiente escuro lê como falha de
+   * renderização, e o que se quer dizer é "isto não é gente", não "isto está
+   * quebrado". */
+  .tabuleiro-peca-objeto { border-radius: calc(var(--quadrado) * 0.08); }
+
   .tabuleiro-monograma {
     font-weight: 700;
     font-size: calc(var(--quadrado) * 0.34);

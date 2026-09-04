@@ -857,6 +857,7 @@ templ planToken(v BoardView, p boardToken) {
 		}
 		class={ "tabuleiro-peca",
 			templ.KV("tabuleiro-peca-na-vez", p.NaVez),
+			templ.KV("tabuleiro-peca-objeto", p.IsObject),
 			templ.KV("tabuleiro-peca-oculta", p.Oculta) }
 	>
 		<span class="tabuleiro-monograma">{ p.Monograma }</span>

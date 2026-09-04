@@ -594,3 +594,35 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 		t.Error("o gesto de criar peça vazou para o HTML do jogador")
 	}
 }
+
+// A PEÇA DE CENÁRIO SE DESENHA DIFERENTE, e é aqui que o `Kind` ganha leitor
+// (ALE-291).
+//
+// O campo existe no fio desde sempre e o `engine-go/CLAUDE.md` registrava que
+// NADA em produção o lia — ele sobreviveu à morte do `board-view.tsx` da SPA,
+// que era quem fazia a pergunta. Esta fatia devolve a pergunta a alguém.
+//
+// A distinção é a FORMA e não a cor: redondo é criatura em toda mesa de VTT, e
+// tinta nova entraria na conta do medidor de contraste — onde uma variante que
+// só aparece com cenário no mapa nasceria sem medição.
+func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "cripta")
+	base := f.tableUrl() + "/tabuleiro/pecas/nova/"
+	f.posta(t, f.mestre, base+"1/1", `{"novapecanome":"Porta","novapecatamanho":1,"novapecaaparencia":"object"}`)
+	f.posta(t, f.mestre, base+"5/5", `{"novapecanome":"Lobo","novapecatamanho":1,"novapecaaparencia":"npc"}`)
+
+	html := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+
+	// O CONTROLE vem primeiro: as duas peças TÊM de estar no mapa, senão o resto
+	// mede a ausência das duas e passa verde dizendo nada.
+	for _, nome := range []string{"Porta", "Lobo"} {
+		if !strings.Contains(html, nome) {
+			t.Fatalf("a peça %q não chegou ao mapa", nome)
+		}
+	}
+	// UMA classe de objeto e só uma: a porta a tem, o lobo não.
+	if n := strings.Count(html, "tabuleiro-peca-objeto"); n != 1 {
+		t.Errorf("a classe de cenário aparece %d vezes; a porta a tem e o lobo não", n)
+	}
+}
