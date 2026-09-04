@@ -8,6 +8,7 @@ BEGIN TRANSACTION;
 
 DELETE FROM sqlite_sequence;
 DELETE FROM active_effects;
+DELETE FROM campaign_places;
 DELETE FROM sessions;
 DELETE FROM campaign_members;
 DELETE FROM character_spells;
@@ -676,6 +677,8 @@ INSERT INTO sessions ("id", "campaignId", "title", "sessionNumber", "notes", "st
 INSERT INTO sessions ("id", "campaignId", "title", "sessionNumber", "notes", "status", "startedAt", "endedAt", "createdAt", "updatedAt", "runtimeState") VALUES (6, 2, 'Chegada a Tauron', 1, NULL, 'ended', '2026-06-20T19:00:00.000Z', '2026-06-20T22:40:00.000Z', '2026-06-20T19:00:00.000Z', '2026-06-20T19:00:00.000Z', '{"initiative":[],"round":0,"turnIndex":-1}');
 INSERT INTO sessions ("id", "campaignId", "title", "sessionNumber", "notes", "status", "startedAt", "endedAt", "createdAt", "updatedAt", "runtimeState") VALUES (7, 2, NULL, 2, NULL, 'planned', NULL, NULL, '2026-08-15T19:00:00.000Z', '2026-08-15T19:00:00.000Z', '{"initiative":[],"round":0,"turnIndex":-1}');
 INSERT INTO sessions ("id", "campaignId", "title", "sessionNumber", "notes", "status", "startedAt", "endedAt", "createdAt", "updatedAt", "runtimeState") VALUES (8, 5, 'O contrato de Tenebra', 1, NULL, 'ended', '2026-07-05T20:00:00.000Z', '2026-07-05T23:20:00.000Z', '2026-07-05T20:00:00.000Z', '2026-07-05T20:00:00.000Z', '{"initiative":[],"round":0,"turnIndex":-1}');
+
+INSERT INTO campaign_places ("id", "campaignId", "name", "state", "createdAt", "updatedAt") VALUES (1, 4, 'Cripta de Thwor', '{"id":"semente-cripta","version":3,"place":"Cripta de Thwor","terrain":"cripta","tokens":[{"id":"semente-peca-1","label":"Porta selada","kind":"object","x":-2,"y":1,"footprint":1},{"id":"semente-peca-2","label":"Guardião de Thwor","kind":"npc","x":3,"y":-1,"footprint":2,"hidden":true}],"markers":[{"id":"semente-marca-1","text":"A","color":"carmim","x":0,"y":0,"hidden":true}],"difficult":[{"x":1,"y":1},{"x":2,"y":1}]}', '2026-07-01T12:00:00.000Z', '2026-07-01T12:00:00.000Z');
 
 INSERT INTO active_effects ("id", "characterId", "source", "catalogId", "scope", "modifiers", "createdAt") VALUES (1, 1, 'consumable', 'cosmetico', 'scene', '[{"target":{"k":"attribute","name":"charisma"},"amount":2,"bonusType":"untyped"}]', '2026-01-01T00:00:00.000Z');
 INSERT INTO active_effects ("id", "characterId", "source", "catalogId", "scope", "modifiers", "createdAt") VALUES (2, 4, 'consumable', 'cosmetico', 'scene', '[{"target":{"k":"attribute","name":"charisma"},"amount":2,"bonusType":"untyped"}]', '2026-01-01T00:00:00.000Z');

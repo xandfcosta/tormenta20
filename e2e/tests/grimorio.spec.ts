@@ -75,6 +75,44 @@ const SUPERFICIES_COM_TINTA = [
       await expect(page.getByRole('heading', { name: 'Campanhas' })).toBeVisible()
     },
   },
+  {
+    onde: 'na aba de lugares da crônica',
+    abre: async (page: Page) => {
+      // O ACERVO DA CAMPANHA (ALE-292), sobre o PERGAMINHO da crônica — que é
+      // creme e inverte a conta inteira, como a lista de campanhas acima.
+      //
+      // Cena nova entra aqui NO MESMO commit que a cria, e não depois: o regime
+      // desta lista é ENUMERAÇÃO, então a que alguém esquecer nasce sem medição,
+      // em silêncio, que é a marca desta família (ALE-252).
+      await page.goto('/campanhas/4?tab=lugares')
+      // Ancorado no GESTO e não num título: as seções da crônica são abertas por
+      // sobrancelha (`SectionLabel`, um `<p>`) e não por `<h2>`, então exigir um
+      // heading aqui seria exigir uma forma que a cena não tem.
+      await expect(page.getByRole('button', { name: 'Novo lugar' })).toBeVisible()
+      await expect(page.getByText('Cripta de Thwor')).toBeVisible()
+    },
+  },
+  {
+    onde: 'no rascunho de lugar',
+    abre: async (page: Page) => {
+      // O RASCUNHO (ALE-292) é a superfície do TABULEIRO fora da sessão, e ela
+      // escreve tinta que nenhuma outra entrada desta lista alcança: a tarja
+      // dourada do modo, o nome da peça sobre o chão de cripta, e o terreno
+      // difícil por baixo dela.
+      //
+      // A cena vem da SEMENTE e não de um clique: criar o lugar aqui deixaria
+      // uma linha para trás no banco compartilhado da corrida, e o guarda de
+      // contraste não é lugar para escrever.
+      await page.goto('/campanhas/4/lugares/1')
+      // O NÍVEL importa: o nome do lugar aparece DUAS vezes na tela — no `<h1>`
+      // da moldura e no `<h2>` da cena, que é o mesmo desenho da Mesa. Sem o
+      // nível o seletor casa com os dois e estoura em `strict mode`.
+      await expect(page.getByRole('heading', { level: 1, name: 'Cripta de Thwor' })).toBeVisible()
+      // E o CONTROLE do que esta entrada existe para medir: a tarja do modo, que
+      // é a tinta que nenhuma outra cena desta lista alcança.
+      await expect(page.getByText('a mesa não vê')).toBeVisible()
+    },
+  },
 ] as const
 
 /**

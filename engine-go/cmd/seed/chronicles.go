@@ -45,12 +45,26 @@ func (s demoSession) sessionDate() string {
 	return seedChronicleDate
 }
 
+// demoPlace é uma cena GUARDADA no acervo da campanha (ALE-292).
+//
+// A cena vai como JSON cru porque é isso que a coluna guarda: o `BoardState`
+// serializado. Montá-la com o tipo do `tabuleiro` obrigaria este gerador a
+// importar o domínio ao vivo para escrever seis peças — e o que se quer aqui é
+// uma cena FIXA, não uma cena computada.
+type demoPlace struct {
+	name string
+	// state é o `BoardState` serializado. Ver `tabuleiro/board_state.go` para os
+	// nomes dos campos; eles são a fronteira e não mudam por capricho.
+	state string
+}
+
 type demoCampaign struct {
 	name        string
 	description string
 	ownerEmail  string
 	members     []demoMember
 	sessions    []demoSession
+	places      []demoPlace
 }
 
 var demoCampaigns = []demoCampaign{
@@ -91,6 +105,7 @@ var demoCampaigns = []demoCampaign{
 		name:        "O Chamado de Valkaria",
 		ownerEmail:  "mestre@t20.local",
 		description: "Heróis reunidos pela deusa da ambição para deter uma invasão de lefeu nas Montanhas Uivantes.",
+		places:      []demoPlace{{"Cripta de Thwor", criptaDeThwor}},
 	},
 	{
 		name:        "A Lâmina de Arton",
@@ -113,6 +128,23 @@ var demoCampaigns = []demoCampaign{
 	},
 }
 
+// A cena guardada de "O Chamado de Valkaria" (ALE-292).
+//
+// Ela vive nessa campanha DE PROPÓSITO. As mesas do e2e são todas da campanha 1,
+// e um lugar a mais no acervo dela mudaria a contagem do botão "Lugares da
+// campanha · N" debaixo de specs que não falam disto.
+//
+// A cena tem peça, peça ESCONDIDA, marcador escondido e terreno difícil porque o
+// guarda de contraste mede o que a tela DESENHA: um lugar vazio seria uma grade
+// em branco, e a medição passaria por cima da tinta que ela existe para
+// conferir. Foi assim que ela achou, na estreia, um marcador carmim a 4,11:1.
+const criptaDeThwor = `{"id":"semente-cripta","version":3,"place":"Cripta de Thwor","terrain":"cripta",` +
+	`"tokens":[` +
+	`{"id":"semente-peca-1","label":"Porta selada","kind":"object","x":-2,"y":1,"footprint":1},` +
+	`{"id":"semente-peca-2","label":"Guardião de Thwor","kind":"npc","x":3,"y":-1,"footprint":2,"hidden":true}],` +
+	`"markers":[{"id":"semente-marca-1","text":"A","color":"carmim","x":0,"y":0,"hidden":true}],` +
+	`"difficult":[{"x":1,"y":1},{"x":2,"y":1}]}`
+
 // seedChronicles inserts the demo campaigns, memberships and sessions directly
 // (no engine needed — plain rows referencing the seeded users/chars).
 func seedChronicles(database *sql.DB) error {
@@ -133,6 +165,9 @@ func seedChronicles(database *sql.DB) error {
 			return err
 		}
 		if err := seedSessions(database, campID, dc); err != nil {
+			return err
+		}
+		if err := seedPlaces(database, campID, dc); err != nil {
 			return err
 		}
 	}
@@ -163,6 +198,18 @@ func seedSessions(database *sql.DB, campID int64, dc demoCampaign) error {
 			campID, s.number, nullable(s.title), s.status, nullable(s.startedAt),
 			nullable(s.endedAt), at, at); err != nil {
 			return fmt.Errorf("campaign %q session %d: %w", dc.name, s.number, err)
+		}
+	}
+	return nil
+}
+
+func seedPlaces(database *sql.DB, campID int64, dc demoCampaign) error {
+	for _, l := range dc.places {
+		if _, err := database.Exec(
+			`INSERT INTO campaign_places (campaignId, name, state, createdAt, updatedAt)
+			 VALUES (?, ?, ?, ?, ?)`,
+			campID, l.name, l.state, seedChronicleDate, seedChronicleDate); err != nil {
+			return fmt.Errorf("campaign %q place %q: %w", dc.name, l.name, err)
 		}
 	}
 	return nil
