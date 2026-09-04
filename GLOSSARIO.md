@@ -167,9 +167,9 @@ qual:
 
 | Predicado | Pergunta que responde | Onde |
 |---|---|---|
-| `entry.Type == "character"` | esta linha é ficha ou é NPC? | `board_state.go:468`, `piloto_mesa_pecas.go:61`, `piloto_mesa_view.go:281` |
+| `entry.Type == "character"` | esta linha é ficha ou é NPC? | `board_state.go:468`, `tokens.go:61`, `view.go:281` |
 | `member.role === 'player'` | a PESSOA dona é jogador ou mestre? | `listPlayerCombatants` |
-| "é meu?" | o personagem é de quem está olhando? | `mesaRoster`, em `piloto_mesa_routes.go` |
+| "é meu?" | o personagem é de quem está olhando? | `mesaRoster`, em `routes.go` |
 
 **O QUARTO se juntou ao primeiro, e é preciso dizer como** (ALE-284): ele era
 `token.kind === 'character'`, "esta peça se desenha como PC?", e vivia no
@@ -195,7 +195,7 @@ entidade.
 
 > O número das colisões NÃO é reaproveitado quando uma sai. `C1`, `C4`, `C6`,
 > `C7` e `C8` são citados por número de dentro do código (`sheet/play_state.go`,
-> `piloto_mesa_pecas.go`, `vitals_rules.go`) e do README — renumerar quebraria
+> `tokens.go`, `vitals_rules.go`) e do README — renumerar quebraria
 > cinco referências em silêncio, que é o defeito que esta issue veio consertar.
 
 **C6 — `condition` e `conditional` são conceitos DIFERENTES a uma letra de
@@ -273,7 +273,7 @@ O exemplo que abria esta seção era o `board-region.tsx`, onde conviviam
 `selectedToken` e `linhasNoMapa`. **Ele morreu com a SPA e a frase ficou**
 (ALE-284), o que é a própria costura falhando: o arquivo que ilustrava a mistura
 sumiu e ninguém releu a linha que o citava. O exemplo vivo é o
-`piloto_mesa_tabuleiro_view.go`, e a mistura lá não é entre arquivos — é dentro
+`board_view.go`, e a mistura lá não é entre arquivos — é dentro
 de um identificador só: `tabuleiroView`, `pecaDoTabuleiro`, `movimentoView` e
 `tabuleiroViewOf` colam raiz portuguesa em sufixo inglês, na mesma linha.
 

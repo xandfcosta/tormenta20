@@ -265,7 +265,7 @@ func TestBuildingThePlaceStoresTheSceneWithAnIdForTheNewToken(t *testing.T) {
 }
 
 // O estado chega do cliente, então o que ele afirma é conferido: uma peça em
-// coordenada absurda estouraria a serialização e a tela de todo mundo quando a
+// table.Coordinate absurda estouraria a serialização e a tela de todo mundo quando a
 // cena chegasse à mesa — e o erro tem de dizer o valor ofensor.
 func TestASceneBuiltWithAnAbsurdCoordinateIsRefused(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)

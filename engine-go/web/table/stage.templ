@@ -1,0 +1,226 @@
+package table
+
+import (
+	"fmt"
+	"t20engine/web/master"
+	"t20engine/web/ui"
+)
+
+// O PALCO DO MESTRE (ALE-269): a Mesa em forma de SHELL DE JOGO.
+//
+// A Mesa em Datastar nasceu como a superfície do JOGADOR (ALE-219) — uma coluna
+// de `max-w-3xl` com Grupo, mapa e fila EMPILHADOS e rolando —, e as ferramentas
+// do mestre foram entrando dentro dela. Só que a SPA já tinha abandonado esse
+// desenho DUAS VEZES, e por medida: a ALE-129 tirou o jogador da pilha porque
+// nela o tabuleiro cabia em 8×4 quadrados, e a ALE-198 inverteu a hierarquia da
+// cena do mestre — o mapa é o que a mesa inteira está olhando, e é ele que fica.
+//
+// Portar as superfícies que faltavam para dentro da coluna teria congelado a
+// forma errada: as que faltam são JUSTAMENTE as que moram nos trilhos (notas,
+// elenco, régua). Por isso a forma vem primeiro, e este arquivo é só ela.
+//
+// NENHUMA REGRA NOVA. As regiões são as mesmas, com os mesmos ids e os mesmos
+// componentes — o que muda é ONDE elas são penduradas. É isso que faz o stream
+// não notar a mudança: ele remenda por id, e o leiaute só posiciona as raízes.
+//
+// A GEOMETRIA é a da `session-gm-view`: faixa ao vivo em cima, trilho da fila à
+// esquerda, tabuleiro no centro, trilho das consultas à direita, comandos no pé.
+// Ela NÃO MUDA DE FORMA — nem ao escolher um combatente, nem ao abrir uma cena.
+// Abaixo de 1024 os trilhos viram uma fileira acima do mapa e o da esquerda
+// deixa de existir, com a fila alcançável pelo mesmo botão.
+//
+// O que este arquivo NÃO copia da SPA, e de propósito: os comandos do mestre
+// continuam no RODAPÉ em vez de subirem para a faixa do turno. A gaveta da
+// ALE-263 é ancorada em `bottom-full` porque nasce no pé, e mover a fileira
+// mudaria uma regra de leiaute JÁ MEDIDA para caber numa semelhança de desenho.
+templ gmStage(v View, b master.BestiaryView) {
+	<main
+		id="mesa"
+		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`"
+		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
+	>
+		@tableHeader(v)
+		<div class="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row">
+			@leftRail(v)
+			@tableBoard(v)
+			@tableNotes(v)
+			@queriesRail(v)
+		</div>
+		@tableCommands(v)
+		@gavetaDaFila(v)
+		@tableMap(v)
+		@tableCollectionPlaces(v)
+		@tableConfigSession(v)
+		@tableCastCampaign(v)
+	</main>
+	@tableBestiary(b)
+}
+
+// O TRILHO DA ESQUERDA: quem age quando, e quem está na mesa.
+//
+// `hidden lg:flex` e não um `if` do servidor, porque quem sabe a largura é o
+// navegador. `display:none` tira o trilho da árvore acessível de verdade — a
+// ressalva da SPA contra esconder por CSS era sobre nós que continuam expostos,
+// e este não continua.
+templ leftRail(v View) {
+	<div class="hidden w-20 shrink-0 flex-col gap-2 lg:flex">
+		@tableRailTracker(v)
+		@tableParty(v)
+	</div>
+}
+
+// A FILA EM 80px — região própria (ALE-269).
+//
+// A iniciativa deixou de pagar largura permanente: ela responde "de quem é a
+// vez" e "quanto o ogro ainda aguenta", que são perguntas de um instante. A
+// lista inteira — dano, ordem, condição, editar — mora na gaveta.
+//
+// AQUI ELA ROLA, e a SPA não deixa (ALE-211): lá o trilho recorta uma JANELA
+// centrada na vez, porque a posição carrega significado. A janela é conta
+// MEDIDA (`rail-geometry.ts` parte da altura do trilho), e o Go não mede caixa —
+// é a mesma razão que deixou o `palcoBaixo` para o CSS na ALE-265. Entre rolar e
+// RECORTAR sem saber onde cortar, rolar é o erro menor: uma barra de rolagem
+// atrapalha, um `overflow-hidden` mudo ESCONDE combatente e faz o trilho mentir
+// sobre quem ainda vai jogar. A janela volta quando houver uma medida honesta.
+templ tableRailTracker(v View) {
+	<nav
+		id="mesa-trilho-fila"
+		aria-label="Fila do combate"
+		class="flex max-h-1/2 shrink-0 flex-col gap-1 border border-grimorio-iron bg-grimorio-panel p-1"
+	>
+		<button
+			type="button"
+			aria-label="Abrir a iniciativa"
+			title="Abrir a fila inteira: dano, ordem e condições"
+			data-on:click="document.getElementById('gaveta-da-fila').showModal()"
+			class="flex shrink-0 items-center justify-center rounded-sm border border-grimorio-iron py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			@ui.Icon("PanelLeftOpen", "size-4")
+		</button>
+		if len(v.Fila) == 0 {
+			<p class="px-1 py-2 text-center text-2xs text-muted-foreground">Fila vazia</p>
+		} else {
+			<ul class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+				for _, l := range v.Fila {
+					<li>
+						@retratoDaFila(l)
+					</li>
+				}
+			</ul>
+		}
+	</nav>
+}
+
+// Um combatente em 80px: iniciais, o filete de vida e a marca da vez.
+//
+// DUAS LETRAS NÃO SÃO UM NOME, então o rótulo inteiro — com os PV junto — viaja
+// no `aria-label` e no `title`. Quem usa leitor de tela ouve "Ogro, PV 22 de
+// 40", e não "OG".
+//
+// O clique abre a GAVETA, e é o único destino honesto: é lá que vivem o dano, a
+// ordem e as condições. Na SPA ele abre o painel do combatente, que esta tela
+// ainda não tem — e mandar o clique para lugar nenhum seria pior que mandá-lo
+// para onde o gesto se completa.
+templ retratoDaFila(l tableRow) {
+	<button
+		type="button"
+		title={ rotuloDoRetrato(l) }
+		aria-label={ rotuloDoRetrato(l) }
+		data-on:click="document.getElementById('gaveta-da-fila').showModal()"
+		class={ "flex w-full flex-col items-center gap-0.5 rounded-sm border px-1 py-1 outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+			templ.KV("border-grimorio-gold bg-grimorio-gold/10", l.NaVez),
+			templ.KV("border-grimorio-iron", !l.NaVez) }
+	>
+		<span class="text-2xs font-bold uppercase tracking-widest text-muted-foreground">{ fmt.Sprint(l.Iniciativa) }</span>
+		<span
+			class={ "text-sm font-semibold",
+				templ.KV("text-grimorio-gold", l.NaVez),
+				templ.KV("text-foreground", !l.NaVez) }
+		>{ l.Iniciais }</span>
+		if l.PV != nil {
+			<span class="h-1 w-full overflow-hidden rounded-full bg-muted">
+				<span
+					class={ "block h-full", l.PV.Tom }
+					style={ fmt.Sprintf("width:%d%%", l.PV.Pct) }
+				></span>
+			</span>
+		}
+	</button>
+}
+
+// O TRILHO DAS CONSULTAS: a borda direita, de onde se chama o que se consulta e
+// se fecha (ALE-198).
+//
+// Ele existe porque a hierarquia se inverteu: o tabuleiro é o que FICA, e
+// bestiário, encontros e catálogo são coisas que se abrem com uma pergunta na
+// cabeça e se fecham em seguida. Consulta com casa fixa não precisa de aba,
+// precisa de um lugar previsível — o trilho é esse lugar, e é nele que as
+// superfícies 5 (notas) e 6 (elenco) vão pousar.
+//
+// UMA lista nas duas larguras, trocando por classe: coluna à direita do mapa a
+// partir de 1024, fileira ACIMA dele abaixo disso (`order-first`). Duas árvores
+// num condicional é como um trilho e o gêmeo de telefone divergem.
+templ queriesRail(v View) {
+	<nav
+		aria-label="Consultas do mestre"
+		class="order-first flex shrink-0 gap-1 overflow-x-auto border border-grimorio-iron bg-grimorio-panel p-1 lg:order-last lg:w-14 lg:flex-col lg:overflow-x-visible"
+	>
+		<button
+			type="button"
+			aria-label={ "Abrir a iniciativa · " + fmt.Sprint(len(v.Fila)) + " na fila" }
+			data-on:click="document.getElementById('gaveta-da-fila').showModal()"
+			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"
+		>Iniciativa · { fmt.Sprint(len(v.Fila)) }</button>
+		@notesButton()
+		@castButton(v)
+		<button
+			type="button"
+			aria-label="Abrir o bestiário"
+			title="Bestiário — trazer uma criatura do livro"
+			data-on:click="document.getElementById('bestiario-da-mesa').showModal()"
+			class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
+		>
+			@ui.Icon("Skull", "size-5")
+		</button>
+	</nav>
+}
+
+// A GAVETA DA FILA: a iniciativa inteira, pela ESQUERDA.
+//
+// `<dialog>` nativo e não uma caixa flutuante, pelo mesmo argumento do descanso
+// de dia: o modal de verdade traz foco preso, Escape, fundo inerte e camada de
+// topo — e a última é o que o tira de dentro do `contain` do palco.
+//
+// `data-preserve-attr="open"` NÃO é enfeite e sem ele a gaveta é inútil: a cena
+// é remendada a cada mudança de qualquer um na mesa, o `open` do `showModal()`
+// só existe no DOM vivo, e o morph o apagaria — a gaveta FECHARIA sozinha no
+// instante em que um jogador registrasse iniciativa.
+//
+// A vaga de REGISTRAR entra aqui, e não no trilho: ela é do mestre que também
+// joga, é sobre a fila, e é onde a fila está.
+templ gavetaDaFila(v View) {
+	<dialog
+		id="gaveta-da-fila"
+		data-preserve-attr="open"
+		aria-labelledby="gaveta-da-fila-titulo"
+		class="scene-grimorio mr-auto h-dvh max-h-none w-[min(30rem,calc(100vw-2rem))] max-w-none border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60"
+	>
+		<div class="flex h-full flex-col">
+			<div class="flex shrink-0 items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2">
+				<h2 id="gaveta-da-fila-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Iniciativa</h2>
+				<button
+					type="button"
+					aria-label="Fechar a iniciativa"
+					data-on:click="document.getElementById('gaveta-da-fila').close()"
+					class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
+			@ui.Icon("X", "size-4")
+		</button>
+			</div>
+			<div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+				@tableRegisterRegion(v)
+				@tableTracker(v)
+			</div>
+		</div>
+	</dialog>
+}

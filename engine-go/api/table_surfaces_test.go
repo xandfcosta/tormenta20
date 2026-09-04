@@ -1,0 +1,195 @@
+package api
+
+import (
+	"html"
+	"net/http"
+	"strconv"
+	"strings"
+	"t20engine/web/table"
+	"testing"
+)
+
+func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+
+	for _, id := range tableRegionNames {
+		marca := `id="` + id + `"`
+		if n := strings.Count(html, marca); n != 1 {
+			t.Errorf("a região %q aparece %d vezes na cena do jogador, e o remendo precisa de exatamente 1", id, n)
+		}
+	}
+}
+
+// TestTheSelectorHasTheThreeSurfaces.
+//
+// Por duas fatias foram DUAS, e a asserção aqui era a negativa: a ficha era a
+// última tela da migração e a aba dela nasceria junto com ela (decisão do dono).
+// A ficha nasceu na fatia 8 e ganhou link na 10a; a aba entra na 10b, antes de a
+// SPA ser apagada, para a migração não tirar da mesa o que ela tinha.
+//
+// A asserção é sobre o RÓTULO que o usuário leria, e não sobre um id interno: é
+// o rótulo que promete.
+func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+
+	if !strings.Contains(html, "O que ver na sessão") {
+		t.Fatal("o jogador não recebeu o seletor de superfícies")
+	}
+	for _, rotulo := range []string{"Ficha", "Mesa", "Tabuleiro"} {
+		if !strings.Contains(html, ">"+rotulo+"<") {
+			t.Errorf("o seletor não oferece %q", rotulo)
+		}
+	}
+	// E a ficha chega DESENHADA, não prometida: a aba sem conteúdo atrás é
+	// exatamente o que a decisão do dono evitava enquanto ela não existia.
+	if !strings.Contains(html, `id="cena-ficha"`) {
+		t.Error("a aba Ficha está na tela e a ficha não veio junto")
+	}
+}
+
+// TestTheSheetInTheSessionDoesNotNavigateOutOfIt.
+//
+// Dentro da sessão as abas da ficha são COMANDO e não link. Um `<a href>` ali
+// tiraria o jogador da mesa no meio do combate — e o modo de errar é silencioso,
+// porque o link funciona: ele leva para uma tela legítima, só que a errada.
+func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+
+	dentroDaFicha := html[strings.Index(html, `id="cena-ficha"`):]
+	if i := strings.Index(dentroDaFicha, "Seções da ficha"); i >= 0 {
+		nav := dentroDaFicha[i : i+3000]
+		if strings.Contains(nav, `href="/personagens/`) {
+			t.Error("a fileira de abas da ficha embutida ainda tem link para fora da sessão")
+		}
+		if !strings.Contains(nav, "embutida=1") {
+			t.Error("a aba embutida não carrega a marca que a mantém dentro da sessão")
+		}
+	} else {
+		t.Fatal("não achei a fileira de abas dentro da ficha embutida")
+	}
+}
+
+// TestEmbeddedSheetNamesItsCharacter.
+//
+// A ficha embutida abre direto nas sete abas, e nenhuma delas diz o nome: a
+// barra de cima é pulada porque o ‹ Voltar dela levaria o jogador para fora da
+// mesa. Pular a barra inteira pulou junto o NOME — o crachá do rodapé diz a raça
+// e a classe, e nunca de quem é a ficha.
+//
+// O caso prende as DUAS metades, e a segunda tem controle: a ficha SOLTA continua
+// com a volta, senão "não achei a volta" seria verde num HTML vazio.
+func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+
+	naMesa := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+	embutida := naMesa[strings.Index(naMesa, `id="cena-ficha"`):]
+	cabecalho, _, _ := strings.Cut(embutida, "Seções da ficha")
+
+	if !strings.Contains(cabecalho, ">Arcanista<") {
+		t.Error("a ficha dentro da sessão não diz de quem ela é")
+	}
+	if strings.Contains(cabecalho, "‹ Voltar") {
+		t.Error("a ficha embutida tem a volta que tira o jogador da mesa")
+	}
+
+	solta := f.pede(t, f.jogador, http.MethodGet,
+		"/personagens/"+strconv.FormatInt(f.charID, 10), "").Body.String()
+	if !strings.Contains(solta, "‹ Voltar") {
+		t.Fatal("a ficha de página inteira perdeu a volta — sem ela o caso acima não mede nada")
+	}
+}
+
+// TestTheGmDoesNotGetTheSelector.
+//
+// Ele tem o PALCO — faixa, trilhos e tabuleiro ao mesmo tempo —, e é essa a
+// diferença entre as duas formas. Um seletor na tela dele esconderia atrás de uma
+// aba o que a forma do mestre existe para mostrar junto.
+func TestTheGmDoesNotGetTheSelector(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+
+	html := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
+
+	// O CONTROLE: a cena do mestre chegou inteira. Sem ele, "não achei o seletor"
+	// seria verdade também num 403 ou numa página vazia.
+	if !strings.Contains(html, `id="mesa-trilho-fila"`) {
+		t.Fatal("o mestre não recebeu o palco — a página não é o que este teste pensa que é")
+	}
+	if strings.Contains(html, "O que ver na sessão") {
+		t.Error("o mestre recebeu o seletor de superfícies do jogador")
+	}
+}
+
+// TestTheOpeningSurfaceIsDerivedAndNotTyped.
+//
+// O padrão é a MESA (decisão do dono), e ele é escrito num lugar só: a página
+// semeia o sinal a partir da mesma constante que a lista de superfícies usa.
+// Digitar 'mesa' no `data-signals` seria a segunda cópia, e a que fica para trás
+// no dia em que o padrão mudar — a cena nasceria com um sinal e o botão marcando
+// outro.
+func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
+	f := novoPiloto(t)
+	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
+
+	if !strings.Contains(html, `superficie: &#39;`+table.DefaultOpeningSurface+`&#39;`) {
+		t.Errorf("a página não semeia a superfície padrão (%q)", table.DefaultOpeningSurface)
+	}
+	// E a superfície padrão precisa EXISTIR na lista: um padrão que não é
+	// oferecido abriria a sessão com as duas abas apagadas e a tela vazia.
+	oferecida := false
+	for _, s := range table.PlayerSurfaces {
+		oferecida = oferecida || s.ID == table.DefaultOpeningSurface
+	}
+	if !oferecida {
+		t.Errorf("a superfície padrão %q não está entre as oferecidas", table.DefaultOpeningSurface)
+	}
+}
+
+// TestTheSheetInTheSessionHasAWayToKnowItChanged (ALE-275).
+//
+// A ficha embutida não é região do stream, então o que a mantém em dia é um par:
+// o servidor escreve `fichaversao` num sinal, e um ouvinte na cena repede a
+// ficha. As duas pontas estão em arquivos diferentes e nenhuma delas falha
+// sozinha de forma visível — sem o ouvinte, o sinal chega e ninguém escuta;
+// sem o filtro, o ouvinte dispara em qualquer remendo de sinal e a ficha é
+// repedida quando o mestre puxa alguém para o mapa.
+//
+// O e2e prova o comportamento com dois clientes; este guarda é a rede barata que
+// falha no commit em que uma das pontas some.
+func TestTheSheetInTheSessionHasAWayToKnowItChanged(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+
+	// DESESCAPADO: `data-signals` e `data-on-*` são valores DINÂMICOS de
+	// atributo, e o templ escapa a aspa simples deles (`&#39;`). Procurar a
+	// forma crua aqui daria um guarda que reprova o código certo.
+	scene := html.UnescapeString(f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String())
+
+	if !strings.Contains(scene, "fichaversao: ''") {
+		t.Error("o sinal `fichaversao` não foi declarado: o remendo do servidor não teria onde pousar")
+	}
+	if !strings.Contains(scene, `data-on-signal-patch=`) {
+		t.Fatal("a cena não tem o ouvinte que repede a ficha")
+	}
+	if !strings.Contains(scene, `data-on-signal-patch-filter="{include: /^fichaversao$/}"`) {
+		t.Error("o ouvinte está sem filtro: ele dispararia em QUALQUER remendo de sinal")
+	}
+	// A ABA viaja num sinal porque o servidor não a conhece daqui. Sem esta
+	// escrita, o repedido devolveria a ficha na aba padrão.
+	if !strings.Contains(scene, "$fichatab = ") {
+		t.Error("as abas da ficha embutida não guardam a seção aberta")
+	}
+	if !strings.Contains(scene, "' + $fichatab + '") {
+		t.Error("o repedido não lê a seção do sinal: ele devolveria a aba padrão")
+	}
+}

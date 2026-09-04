@@ -366,7 +366,7 @@ identificadores em geral não cabe.
   procura código.
 - **O assunto diz o que MUDOU para quem usa**, não o que foi editado. "a seta diz
   os metros de cada perna e vira vermelha onde o deslocamento acaba" é o assunto;
-  "atualiza piloto_mesa_tabuleiro.templ" é o diff parafraseado.
+  "atualiza board.templ" é o diff parafraseado.
 - Cite a issue do Linear. Varreu? Diga quantos eram. Provou o teste vermelho?
   Diga como.
 - **Commit pequeno e frequente bate commit grande e raro.** Se a mudança já se

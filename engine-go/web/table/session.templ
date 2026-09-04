@@ -1,0 +1,194 @@
+package table
+
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
+
+// O CICLO DA SESSÃO na tela (ALE-269, superfícies 3, 4 e 11).
+//
+// A regra mora no `session_lifecycle.go` e o caminho no `session.go`;
+// aqui é o desenho.
+
+// O botão que abre as configurações, e o SAIR ao lado dele.
+//
+// Os dois no cabeçalho porque são as duas coisas que se faz com a SESSÃO, e não
+// dentro dela: o resto da tela é sobre a cena, a fila e o mapa.
+templ sessionVerbs(v View) {
+	<span class="ml-auto flex shrink-0 items-center gap-1">
+		if v.Mestre != nil {
+			<button
+				type="button"
+				aria-label="Configurações da sessão"
+				title="Configurações da sessão"
+				data-on:click={ openConfigSession(v) }
+				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+			@ui.Icon("Settings2", "size-4")
+		</button>
+		}
+		// SAIR é um link e não um botão: ele navega, e navegação é do navegador.
+		// Assim o ctrl+clique e o "abrir em nova aba" continuam valendo.
+		<a
+			href={ templ.SafeURL(campaignChronicle(v)) }
+			title="Sair da sessão e voltar para a crônica da campanha"
+			class="inline-flex min-h-8 items-center rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>Sair da sessão</a>
+	</span>
+}
+
+// AS CONFIGURAÇÕES DA SESSÃO — uma linha, uma decisão.
+//
+// O desenho é o da SPA e a razão de ele ser assim está escrita lá: a FRASE de
+// cada linha é o que deixa o botão ser curto ("Encerrar" em vez de "Encerrar
+// sessão") sem virar adivinhação. E a hierarquia é deliberada — excluir, a ação
+// mais rara e a única irreversível, NÃO é o elemento mais forte da tela; o
+// vermelho fica onde a decisão acontece, que é a confirmação.
+//
+// Os verbos são travados pelo ESTADO: iniciar só aparece no que ainda não
+// começou, encerrar só no que está no ar. O servidor recusa o resto, e oferecer
+// o que será recusado é desenhar um erro.
+// tableConfigSession é a REGIÃO do diálogo, pela mesma razão do `mesa-por-no-mapa`:
+// ele muda com o CICLO da sessão, que não é o ritmo do mapa nem o da fila.
+// Pendurado no cabeçalho, ele seria redesenhado a cada troca de turno.
+//
+// O `<div>` existe sempre, inclusive para o jogador: região que some do HTML é
+// região que o remendo não acha. Quem a porta do mestre esconde é o CONTEÚDO.
+templ tableConfigSession(v View) {
+	<div id="mesa-config-da-sessao">
+		if v.Mestre != nil {
+			@sessionConfig(v)
+		}
+	</div>
+}
+
+templ sessionConfig(v View) {
+	<dialog
+		id="config-da-sessao"
+		data-preserve-attr="open"
+		aria-labelledby="config-da-sessao-titulo"
+		class="scene-grimorio m-auto w-[min(32rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="config-da-sessao-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
+			Sessão { fmt.Sprint(v.SessionNum) }
+			<span class="ml-2 text-xs font-normal uppercase tracking-widest text-muted-foreground">{ portugueseCycle(v.Status) }</span>
+		</h2>
+		<div class="mt-3 space-y-1 divide-y divide-grimorio-iron/60">
+			<div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 py-3">
+				// O CAMPO NÃO RECEBE `value` DO SERVIDOR, e quem o semeia é a
+				// ABERTURA — regra da casa: entrada em curso é do teclado de quem
+				// digita, não estado da aplicação. Esta região é remendada a cada
+				// troca de turno, e um `value` vindo de lá apagaria o que o mestre
+				// está escrevendo no meio da frase.
+				<div class="min-w-0 flex-1 space-y-1">
+					<label for="titulo-da-sessao" class="block text-sm text-foreground">Título</label>
+					<p class="text-xs text-muted-foreground">O apelido da noite. Pode ficar em branco — quem identifica a sessão é o número.</p>
+					<input
+						id="titulo-da-sessao"
+						type="text"
+						data-bind:titulodasessao
+						placeholder="A cripta do rio"
+						class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+					/>
+				</div>
+				<button
+					type="button"
+					data-on:click={ sessionCommand(v, "titulo") }
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>Salvar</button>
+			</div>
+			if v.Status != "active" {
+				@adjustRow("Iniciar sessão", "A mesa passa a ver a partida ao vivo.") {
+					<button
+						type="button"
+						data-on:click={ sessionCommand(v, "iniciar") }
+						class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>
+						if v.Status == "ended" {
+							Reabrir
+						} else {
+							Iniciar
+						}
+					</button>
+				}
+			}
+			if v.Status == "active" {
+				@adjustRow("Encerrar sessão", "A partida sai do ar para a mesa. A campanha e as fichas ficam como estão.") {
+					<button
+						type="button"
+						data-on:click={ "document.getElementById('config-da-sessao').close(); " + sessionCommand(v, "encerrar") }
+						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>Encerrar</button>
+				}
+			}
+			// REINICIAR fica ao lado de ENCERRAR de propósito, e é por isso que as
+			// duas frases dizem o que ACONTECE: os dois verbos se parecem e fazem
+			// coisas diferentes, e é aqui que a confusão custaria a noite de alguém.
+			@adjustRow("Reiniciar o combate", "Esvazia a fila e os turnos. A partida CONTINUA no ar.") {
+				<button
+					type="button"
+					data-on:click={ sessionCommand(v, "reiniciar") }
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>Reiniciar</button>
+			}
+			// EXCLUIR é `form` e não `@post`: ele navega para fora da sessão, e um
+			// comando de Datastar responde com remendo, que não tem destino.
+			@adjustRow("Excluir sessão", "Apaga a sessão e o histórico dela. Não dá para desfazer.") {
+				<button
+					type="button"
+					data-on:click="document.getElementById('config-da-sessao').close(); document.getElementById('excluir-a-sessao').showModal()"
+					class="inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive-ink outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>Excluir</button>
+			}
+		</div>
+		<div class="mt-4 flex justify-end">
+			<button
+				type="button"
+				data-on:click="document.getElementById('config-da-sessao').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Fechar</button>
+		</div>
+	</dialog>
+	@confirmDeleteSession(v)
+}
+
+// A CONFIRMAÇÃO de excluir, onde o vermelho pertence.
+//
+// Ela é um `form` de verdade porque o destino é outra página: o servidor apaga e
+// redireciona para a crônica. Datastar não entra aqui.
+templ confirmDeleteSession(v View) {
+	<dialog
+		id="excluir-a-sessao"
+		data-preserve-attr="open"
+		aria-labelledby="excluir-a-sessao-titulo"
+		class="scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-destructive bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="excluir-a-sessao-titulo" class="font-heading text-lg tracking-wide text-destructive-ink">Excluir a sessão { fmt.Sprint(v.SessionNum) }?</h2>
+		<p class="mt-2 text-sm text-muted-foreground">
+			A fila, o tabuleiro e o histórico desta noite vão junto. As fichas e a campanha ficam como estão. Não dá para desfazer.
+		</p>
+		<form method="post" action={ templ.SafeURL(caminhoDeExcluir(v)) } class="mt-4 flex justify-end gap-2">
+			<button
+				type="button"
+				data-on:click="document.getElementById('excluir-a-sessao').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Cancelar</button>
+			<button
+				type="submit"
+				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Excluir a sessão</button>
+		</form>
+	</dialog>
+}
+
+// adjustRow: uma decisão por linha — o nome, o que ela faz numa frase, e o
+// botão à direita. A frase não é enfeite: é ela que deixa o botão ser curto.
+templ adjustRow(nome, frase string) {
+	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+		<div class="min-w-0 flex-1">
+			<p class="text-sm text-foreground">{ nome }</p>
+			<p class="text-xs text-muted-foreground">{ frase }</p>
+		</div>
+		{ children... }
+	</div>
+}
