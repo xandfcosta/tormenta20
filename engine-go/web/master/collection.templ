@@ -581,29 +581,34 @@ templ CrossRefEntry(g collectionGroup, livro bookui.BookAddress) {
 // linha só e o contexto basta; aqui são até três, e sem o rótulo ninguém sabe
 // se "Evocação" é escola ou classe.
 templ collectionFilters(v collectionView) {
-	<div class="flex shrink-0 flex-col gap-1.5">
-		for _, f := range v.Filtros {
-			<fieldset class="flex flex-wrap items-center gap-1.5 border-0 p-0">
-				<legend class="sr-only">{ "Filtrar por " + f.Rotulo }</legend>
-				<span aria-hidden="true" class="w-24 shrink-0 font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
-					{ f.Rotulo }
-				</span>
-				for _, o := range f.Opcoes {
-					// `aria-pressed` com a STRING e não com booleano: o Datastar
-					// trata valor booleano como atributo de PRESENÇA, e um
-					// `aria-pressed=""` não anuncia estado nenhum.
-					<button
-						type="button"
-						aria-pressed={ ui.AriaBool(v.badgeOn(f.Chave, o.Valor)) }
-						data-on:click={ toggleBadge(v.Aba, f.Chave, o.Valor) }
-						if v.badgeOn(f.Chave, o.Valor) {
-							class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-						} else {
-							class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-						}
-					>{ o.Rotulo }</button>
-				}
-			</fieldset>
-		}
-	</div>
+	// Deitado eles viram gaveta (ALE-230). Aqui não há busca a preservar dentro
+	// da caixa — ela mora na cena, acima —, então a gaveta leva as três linhas
+	// de crachá inteiras.
+	@ui.FilterDrawer("Filtros") {
+		<div class="mt-2 flex shrink-0 flex-col gap-1.5">
+			for _, f := range v.Filtros {
+				<fieldset class="flex flex-wrap items-center gap-1.5 border-0 p-0">
+					<legend class="sr-only">{ "Filtrar por " + f.Rotulo }</legend>
+					<span aria-hidden="true" class="w-24 shrink-0 font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
+						{ f.Rotulo }
+					</span>
+					for _, o := range f.Opcoes {
+						// `aria-pressed` com a STRING e não com booleano: o Datastar
+						// trata valor booleano como atributo de PRESENÇA, e um
+						// `aria-pressed=""` não anuncia estado nenhum.
+						<button
+							type="button"
+							aria-pressed={ ui.AriaBool(v.badgeOn(f.Chave, o.Valor)) }
+							data-on:click={ toggleBadge(v.Aba, f.Chave, o.Valor) }
+							if v.badgeOn(f.Chave, o.Valor) {
+								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							} else {
+								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							}
+						>{ o.Rotulo }</button>
+					}
+				</fieldset>
+			}
+		</div>
+	}
 }

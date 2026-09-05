@@ -501,3 +501,35 @@ const WalkTheSearch = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preven
 templ Key(rotulo string) {
 	<kbd class="ml-1 hidden text-3xs opacity-70 xl:inline">{ rotulo }</kbd>
 }
+
+// FilterDrawer recolhe os filtros de uma cena de lista no celular DEITADO, e em
+// nenhuma outra forma (ALE-230).
+//
+// A 844×390 a lista do bestiário recebia 11px — 0,2 de uma criatura —, e o que a
+// comia não era navegação: eram 124px de filtro. Medido, esconder a camada
+// devolve 3,37 linhas, o maior corte disponível naquela cena.
+//
+// A troca é do CSS (`.filtros-em-gaveta`, na folha do piloto) e NÃO de uma
+// consulta de mídia em JS nem de um segundo bloco condicional no `.templ`: são
+// os mesmos nós nas seis formas, e o que muda é se o `<details>` se comporta
+// como gaveta. Dois desenhos do mesmo filtro seriam dois lugares para consertar.
+//
+// A BUSCA fica de fora, e quem a chama é que decide isso — achar uma criatura
+// pelo nome é o gesto do meio do combate, e recolher a busca junto trocaria um
+// problema por outro.
+//
+// O rótulo vem por parâmetro porque as duas cenas filtram coisas diferentes, e
+// "Filtros" sozinho num leitor de tela não diz filtros de quê.
+templ FilterDrawer(rotulo string) {
+	<details class="filtros-em-gaveta shrink-0">
+		// `min-h-11` porque no deitado ele é um alvo de toque de verdade, e é a
+		// única porta para os filtros ali dentro.
+		<summary
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			@Icon("SlidersHorizontal", "size-4 shrink-0")
+			{ rotulo }
+		</summary>
+		{ children... }
+	</details>
+}
