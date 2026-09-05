@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/aovivo"
 	"t20engine/engine"
 	"t20engine/tabuleiro"
 )
@@ -47,7 +48,11 @@ import (
 func (s Scene) TokenActionRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/pecas/{tokenId}"
 	r.Post(base+"/visibilidade", s.gmBoardCommand(toggleVisibility))
-	r.Post(base+"/duplicar", s.gmBoardCommand(duplicatesToken))
+	// TRÊS duplicares e não um com parâmetro, porque são três VERBOS na tela e o
+	// endereço é o que o menu escreve. Ver o `duplicatesToken`.
+	r.Post(base+"/duplicar/peca", s.gmBoardCommand(duplicatesToken))
+	r.Post(base+"/duplicar/junto", s.gmBoardCommand(duplicatesTokenSharingTheLine))
+	r.Post(base+"/duplicar/sozinha", s.gmBoardCommand(duplicatesTokenWithItsOwnLine))
 	r.Post(base+"/voltar", s.gmBoardCommand(wasWhereForTokenBack))
 	r.Post(base+"/editar", s.gmBoardCommand(editsToken))
 	r.Post(base+"/remover", s.gmBoardCommand(removesToken))
@@ -68,18 +73,134 @@ func toggleVisibility(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 		tabuleiro.ParseTokenPatch(map[string]any{"hidden": !peca.Hidden}))
 }
 
-// duplicatesToken é "mais um zumbi" (ALE-192), a operação mais repetida ao montar
-// encontro.
+// OS TRÊS DUPLICARES, e a diferença entre eles é o que a cópia faz com a LINHA
+// DA FILA (ALE-206).
 //
 // A cópia nasce AO LADO da original e com o número seguinte no nome, e o servidor
 // é quem numera — duas telas escolhendo por conta própria é como nasce o segundo
 // "Zumbi 3" no mesmo mapa.
+//
+// O eixo é a LINHA e não a ficha, e a issue nasceu dizendo o contrário. A barra
+// de PV da peça é indexada por `entryId` (`saude[*t.EntryID]`, no `board_view`),
+// então é a linha que decide se um dano aparece nas duas peças ou só numa — e o
+// zumbi do exemplo sequer tem ficha, porque NPC entra na fila com `characterId`
+// nulo por construção. Duplicar "apontando para a mesma ficha" seria um no-op
+// exatamente no caso que motivou a issue.
+
+// duplicatesToken é o PEÃO MUDO: sem fila e sem PV.
+//
+// É o que existe desde a ALE-192, e continua sendo o certo para cenário e para a
+// peça que vai entrar na fila depois.
 func duplicatesToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID)
+	return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID, nil)
+}
+
+// duplicatesTokenSharingTheLine faz as duas peças SANGRAREM JUNTO: uma linha na
+// fila, uma barra de PV, um "na vez" para as duas.
+//
+// Serve para o inimigo desenhado em dois pontos e para a criatura que ocupa dois
+// lugares. Recusa quando a original não tem linha, e a frase diz o caminho: sem
+// linha não há PV para compartilhar, e o silêncio ali seria uma cópia igual à do
+// peão mudo com outro nome.
+func duplicatesTokenSharingTheLine(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+	peca, err := st.tokenOfCommand(c)
+	if err != nil {
+		return nil, err
+	}
+	linha := st.queueLineOf(c.SessionID, peca)
+	if linha == nil {
+		return nil, fmt.Errorf("%s não é um combatente da fila: não há PV para as duas dividirem", peca.Label)
+	}
+	return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID, linha)
+}
+
+// duplicatesTokenWithItsOwnLine é o "mais um zumbi" de montar encontro: linha
+// NOVA na fila, com o PV do original, e a cópia apontando para ela.
+//
+// Ela escreve nos DOIS estados — a fila e o tabuleiro — e é a única mutação de
+// tabuleiro que faz isso. Por isso ela PUBLICA A FILA ela mesma, o que em
+// qualquer outro comando seria trabalho do gateway: o `boardCommand` publica só
+// o tabuleiro, e o `PublishSessionState` não é só o fio — ele GRAVA a sessão no
+// disco (`table_scene_deps.go`). Sem esta chamada a linha nova viveria só em
+// memória e sumiria no próximo restart, que é o defeito da ALE-154 outra vez.
+func duplicatesTokenWithItsOwnLine(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+	peca, err := st.tokenOfCommand(c)
+	if err != nil {
+		return nil, err
+	}
+	linha := st.queueLineOf(c.SessionID, peca)
+	if linha == nil {
+		return nil, fmt.Errorf("%s não é um combatente da fila: só quem tem PV pode ganhar um próprio", peca.Label)
+	}
+	nova, err := st.addsACopyOfTheLine(c.SessionID, *linha)
+	if err != nil {
+		return nil, err
+	}
+	if fila := st.deps.Sessions().GetState(c.SessionID); fila != nil {
+		st.deps.PublishSessionState(c.SessionID, fila)
+	}
+	return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID, nova)
+}
+
+// queueLineOf é a linha da fila por trás de uma peça, ou nulo.
+func (s Scene) queueLineOf(sessionID int64, peca *tabuleiro.BoardToken) *aovivo.InitiativeEntry {
+	if peca.EntryID == nil {
+		return nil
+	}
+	estado := s.deps.Sessions().GetState(sessionID)
+	if estado == nil {
+		return nil
+	}
+	for i := range estado.Initiative {
+		if estado.Initiative[i].ID == *peca.EntryID {
+			return &estado.Initiative[i]
+		}
+	}
+	return nil
+}
+
+// addsACopyOfTheLine põe na fila outra linha igual à dada, e devolve a que
+// nasceu.
+//
+// O PV ATUAL vira o MÁXIMO da nova, e não o máximo da original: o segundo zumbi
+// chega inteiro, não com os 12 de 130 que o primeiro levou de porrada. Quem
+// quisesse o contrário estaria pedindo "sangra junto", que é o outro verbo.
+//
+// As CONDIÇÕES ficam para trás pela mesma razão: caído e sangrando são estado de
+// combate do primeiro, e o que entra agora entra de pé.
+//
+// A linha nova é achada por DIFERENÇA e nunca pelo último da lista: o `AddEntry`
+// ORDENA a fila por iniciativa depois de inserir, então a recém-chegada pode
+// pousar em qualquer posição. Pegar `Initiative[len-1]` daria a de menor
+// iniciativa da mesa, e daria certo por acaso sempre que o zumbi fosse lento.
+func (s Scene) addsACopyOfTheLine(sessionID int64, modelo aovivo.InitiativeEntry) (*aovivo.InitiativeEntry, error) {
+	antes := map[string]bool{}
+	if estado := s.deps.Sessions().GetState(sessionID); estado != nil {
+		for i := range estado.Initiative {
+			antes[estado.Initiative[i].ID] = true
+		}
+	}
+	nova := modelo
+	nova.ID = ""
+	nova.Conditions = nil
+	if modelo.HpMax != nil {
+		cheia := aovivo.DerefOr(modelo.HpMax, 0)
+		nova.HpCurrent, nova.HpMax = &cheia, &cheia
+	}
+	depois, err := s.deps.Sessions().AddInitiativeEntry(sessionID, nova)
+	if err != nil {
+		return nil, err
+	}
+	for i := range depois.Initiative {
+		if !antes[depois.Initiative[i].ID] {
+			return &depois.Initiative[i], nil
+		}
+	}
+	return nil, fmt.Errorf("a linha de %s não entrou na fila", modelo.Label)
 }
 
 // wasWhereForTokenBack desfaz o último pouso (ALE-206).
@@ -213,12 +334,48 @@ func chosenToken(id string) string {
 // o único caminho — a issue pede isso e a peça continua tendo o clique esquerdo
 // para mover, o teclado para focar e o `Enter` para abrir o mesmo menu.
 func openMenuToken(id string) string {
-	return fmt.Sprintf("evt.preventDefault(); $pecaescolhida = %q", id)
+	return fmt.Sprintf("evt.preventDefault(); $pecacopia = ''; $pecaescolhida = %q", id)
 }
 
-// closeMenuToken é a saída, e ela existe em três lugares: o ✕ do menu, a tecla
-// Esc e o gesto que abre OUTRA peça (que é o mesmo sinal recebendo outro id).
-const closeMenuToken = "$pecaescolhida = ''"
+// closeMenuToken é a saída, e ela existe em DOIS lugares: o ✕ do menu e o gesto
+// que abre outra peça (o mesmo sinal recebendo outro id).
+//
+// Aqui morava "três lugares: o ✕ do menu, a tecla Esc e …", e o Esc nunca
+// funcionou — medido na ALE-206: com o menu aberto, `Escape` o deixa `display:
+// flex` e só o ✕ o fecha. Não é um defeito a consertar, é uma promessa a
+// retirar: o `cena.js` mapeia Escape para "voltar" e chama `stopPropagation` no
+// documento, então ele não chega. O `railKeyboard` e o `clickedPointRuler` já
+// tinham medido exatamente isso, cada um no seu canto, e os dois escrevem que
+// um ramo de Escape ali "seria uma promessa que a tela não cumpre". Este
+// comentário era essa promessa, escrita.
+//
+// Ele apaga o SUBMENU junto, e o `openMenuToken` também: sem isso, abrir o menu
+// de outra peça a mostraria com a segunda camada já aberta, porque o
+// `$pecacopia` guarda um id e não um booleano. É a mesma armadilha do nó
+// COMPARTILHADO que o `openEditToken` registra logo abaixo — quem troca de peça
+// é quem tem de limpar o que a anterior deixou.
+const closeMenuToken = "$pecacopia = ''; $pecaescolhida = ''"
+
+// copyingToken é o teste que abre a SEGUNDA camada do menu — a que pergunta o
+// que a cópia vai ser (ALE-206).
+func copyingToken(id string) string {
+	return fmt.Sprintf("$pecacopia === %q", id)
+}
+
+// openCopyToken abre o submenu, e FECHA-o no segundo clique: o mesmo ícone que
+// abre é o que desiste, que é o que um `▾` promete.
+func openCopyToken(id string) string {
+	return fmt.Sprintf("$pecacopia = $pecacopia === %q ? '' : %q", id, id)
+}
+
+// copyCommand é o gesto de um dos três modos: manda e fecha as duas camadas.
+//
+// Fechar faz parte do gesto porque a resposta REDESENHA o tabuleiro inteiro, e um
+// submenu que sobrevive ao redesenho fica pendurado sobre uma peça que já ganhou
+// irmã — pedindo um segundo clique para dizer que acabou.
+func copyCommand(v BoardView, id, modo string) string {
+	return tokenCommand(v, id, "duplicar/"+modo) + "; " + closeMenuToken
+}
 
 // tokenCommand escreve o gesto de um verbo do menu.
 func tokenCommand(v BoardView, id, acao string) string {

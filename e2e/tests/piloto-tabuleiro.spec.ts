@@ -702,3 +702,62 @@ test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ pag
     await apagar()
   }
 })
+
+/**
+ * A SEGUNDA CAMADA do menu da peça só aparece quando pedida (ALE-206).
+ *
+ * O submenu de duplicar acrescenta TRÊS botões por peça, e quem os esconde é o
+ * `data-show`, que é CSS. Com o MENU aberto e o submenu fechado eles não podem
+ * estar no caminho do teclado: seriam três paradas de Tab que não se veem, e a
+ * pessoa navegando pelo menu passaria por elas antes de chegar ao ✕.
+ *
+ * O MENU É ABERTO ANTES, e essa linha é a diferença entre um guarda e um enfeite.
+ * A primeira versão deste caso media com o menu FECHADO, e passou verde com o
+ * submenu sabotado para `data-show="true"` — porque um filho de pai
+ * `display:none` é invisível de qualquer jeito. Ele afirmava no nome uma coisa e
+ * media outra, e só a sabotagem o denunciou.
+ *
+ * Por que e2e: o que se mede é `checkVisibility` com o `data-show` aplicado de
+ * verdade, e a herança de `display` de um pai para o filho. Em jsdom todo
+ * elemento mede zero e o caso passaria verde sobre os três botões no ar.
+ */
+test('o submenu de duplicar só entra no caminho do teclado quando é aberto', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    await abreOTabuleiro(page, mesa)
+    await poeUmaPecaNoMapa(page)
+
+    const botoesDoSubmenu = () =>
+      page.evaluate(
+        () =>
+          [...document.querySelectorAll('.tabuleiro-peca-copia button')].filter((b) =>
+            (b as HTMLElement).checkVisibility(),
+          ).length,
+      )
+
+    // O MENU ABERTO é a premissa: com ele fechado, o submenu seria invisível pela
+    // herança do pai e o caso não mediria o `data-show` dele.
+    await page.locator('.tabuleiro-peca').first().click({ button: 'right' })
+    const duplicar = page.getByRole('button', { name: /^Duplicar / })
+    await expect(
+      duplicar,
+      'o menu da peça não abriu: sem ele o caso mede a herança do pai, não o submenu',
+    ).toBeVisible()
+
+    expect(
+      await botoesDoSubmenu(),
+      'o submenu fechado deixou botão alcançável pelo Tab dentro de um menu aberto',
+    ).toBe(0)
+
+    // O CONTROLE POSITIVO: aberto, os três aparecem. Sem ele, "nenhum botão
+    // visível" seria também o resultado de um seletor que parou de casar.
+    await duplicar.click()
+    await expect
+      .poll(botoesDoSubmenu, {
+        message: 'o submenu não abriu: a asserção acima estaria medindo uma camada que nunca aparece',
+      })
+      .toBe(3)
+  } finally {
+    await apagar()
+  }
+})

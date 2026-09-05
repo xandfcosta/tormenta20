@@ -173,7 +173,7 @@ func TestTheCopyGetsTheNextFreeNumber(t *testing.T) {
 				alvo = token.ID
 			}
 		}
-		if err := DuplicateToken(b, alvo, novoIDFixo()); err != nil {
+		if err := DuplicateToken(b, alvo, nil, novoIDFixo()); err != nil {
 			t.Fatalf("%s: duplicar: %v", caso.nome, err)
 		}
 		copia := b.Tokens[len(b.Tokens)-1]
@@ -183,7 +183,9 @@ func TestTheCopyGetsTheNextFreeNumber(t *testing.T) {
 	}
 }
 
-// A cópia é uma PEÇA NOVA: ela leva o corpo e deixa o vínculo para trás.
+// SEM LAÇO a cópia é um PEÃO MUDO: leva o corpo e deixa os dois vínculos para
+// trás. É o que a ALE-192 fazia, e continua sendo o certo para cenário e para a
+// peça que vai entrar na fila depois.
 func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	entrada := "e7"
@@ -193,7 +195,7 @@ func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 	b.Tokens[0].Footprint = 2
 	b.Tokens[0].Hidden = true
 
-	if err := DuplicateToken(b, "t0", novoIDFixo()); err != nil {
+	if err := DuplicateToken(b, "t0", nil, novoIDFixo()); err != nil {
 		t.Fatalf("duplicar: %v", err)
 	}
 
@@ -210,13 +212,66 @@ func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
 	}
 }
 
+// COM LAÇO a cópia entra na fila junto: os dois zumbis compartilham a linha, e
+// por isso a mesma barra de PV.
+//
+// É a distinção inteira da ALE-206, e o eixo dela é a LINHA e não a ficha: o
+// `board_view` indexa a barra por `entryId` (`saude[*t.EntryID]`), então é a
+// linha que decide se um dano aparece nas duas peças ou só numa. O exemplo que a
+// issue usa — o zumbi — sequer TEM ficha: NPC entra na fila com `characterId`
+// nulo por construção.
+func TestTheCopyWithALoopSharesTheQueueLine(t *testing.T) {
+	b := tabuleiroCom("Zumbi 1")
+	entrada := "e7"
+	b.Tokens[0].EntryID = &entrada
+
+	linha := aovivo.InitiativeEntry{ID: "e7", Label: "Zumbi", Type: "npc"}
+	if err := DuplicateToken(b, "t0", &linha, novoIDFixo()); err != nil {
+		t.Fatalf("duplicar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.EntryID == nil || *copia.EntryID != "e7" {
+		t.Errorf("a cópia aponta para a linha %v, esperado e7 — sem ela não há barra de PV", copia.EntryID)
+	}
+}
+
+// O LAÇO manda nos DOIS vínculos, e a ficha vem da LINHA e não da original.
+//
+// É o que mantém peça e linha coerentes quando a cópia ganha uma linha NOVA: a
+// linha nova de um NPC não tem ficha, e herdar o `characterId` da original ali
+// daria uma peça que diz ser de um personagem que a fila dela não conhece —
+// posse e deslocamento (os dois que o `characterId` decide) sairiam de uma ficha
+// que não é a daquele combatente.
+func TestTheCopyTakesTheSheetFromTheLineAndNotFromTheOriginal(t *testing.T) {
+	b := tabuleiroCom("Arwen")
+	entrada := "e1"
+	var daOriginal int64 = 42
+	b.Tokens[0].EntryID = &entrada
+	b.Tokens[0].CharacterID = &daOriginal
+
+	// A linha nova é de NPC: sem ficha.
+	linha := aovivo.InitiativeEntry{ID: "e9", Label: "Zumbi 2", Type: "npc"}
+	if err := DuplicateToken(b, "t0", &linha, novoIDFixo()); err != nil {
+		t.Fatalf("duplicar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.CharacterID != nil {
+		t.Errorf("a cópia levou a ficha %d da original, e a linha dela não tem ficha nenhuma", *copia.CharacterID)
+	}
+	if copia.EntryID == nil || *copia.EntryID != "e9" {
+		t.Errorf("a cópia aponta para %v, esperado a linha nova e9", copia.EntryID)
+	}
+}
+
 // Ao LADO, e não em cima nem na fileira de entrada: quem duplica o zumbi do
 // canto do mapa espera o irmão dele ali do lado.
 func TestTheCopyIsBornBesideAndNotOnTop(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	b.Tokens[0].X, b.Tokens[0].Y = 30, 12
 
-	if err := DuplicateToken(b, "t0", novoIDFixo()); err != nil {
+	if err := DuplicateToken(b, "t0", nil, novoIDFixo()); err != nil {
 		t.Fatalf("duplicar: %v", err)
 	}
 

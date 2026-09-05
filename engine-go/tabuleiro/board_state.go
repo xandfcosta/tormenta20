@@ -230,18 +230,41 @@ func nextInstanceLabel(b *BoardState, label string) string {
 // DuplicateToken põe outra igual no tabuleiro — "mais um zumbi" é a operação
 // mais repetida ao montar encontro (ALE-192).
 //
-// A cópia leva o corpo (rótulo renumerado, tamanho, tipo e o ocultamento: o
-// segundo zumbi da emboscada também está escondido) e NÃO leva o vínculo:
-// `entryId` e `characterId` ficam para trás porque a cópia é uma peça nova, não
-// a mesma linha da iniciativa nem o mesmo personagem.
-func DuplicateToken(b *BoardState, tokenID string, newID func() string) error {
+// A cópia leva o corpo: rótulo renumerado, tamanho, tipo e o ocultamento (o
+// segundo zumbi da emboscada também está escondido).
+//
+// # O LAÇO é a decisão inteira, e ele é a LINHA DA FILA (ALE-206)
+//
+// A barra de PV de uma peça é indexada por `entryId` — o `board_view` lê
+// `saude[*t.EntryID]` —, então é a LINHA, e não a ficha, que decide se um dano
+// aparece nas duas peças ou só numa. O exemplo que a issue usa prova o ponto: o
+// zumbi é NPC e NPC não tem ficha, com `characterId` nulo por construção.
+//
+// São três usos, e o chamador escolhe passando ou não uma linha:
+//
+//   - `laco == nil` → PEÃO MUDO: sem fila e sem PV, que é o que existia desde a
+//     ALE-192 e continua certo para cenário e para a peça que entra na fila
+//     depois;
+//   - `laco` = a linha DA ORIGINAL → as duas peças sangram JUNTO, com uma barra
+//     só. Serve para o mesmo inimigo desenhado em dois pontos;
+//   - `laco` = uma linha NOVA → a cópia sangra SOZINHA, com PV próprio. Quem
+//     cria a linha é o chamador, porque ela mora no `SessionStore` e não aqui.
+//
+// A FICHA vem do laço e nunca da original, e isso não é detalhe: a linha nova de
+// um NPC não tem ficha, e herdar o `characterId` da original ali daria uma peça
+// dizendo ser de um personagem que a fila dela não conhece — posse e
+// deslocamento, os dois que o `characterId` decide, sairiam da ficha errada.
+func DuplicateToken(b *BoardState, tokenID string, laco *aovivo.InitiativeEntry, newID func() string) error {
 	original := FindToken(b, tokenID)
 	if original == nil {
 		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
 	copia := *original
-	copia.EntryID = nil
-	copia.CharacterID = nil
+	copia.EntryID, copia.CharacterID = nil, nil
+	if laco != nil {
+		copia.EntryID = strPtr(laco.ID)
+		copia.CharacterID = laco.CharacterID
+	}
 	copia.SpeedSquares = original.SpeedSquares
 	copia.Label = nextInstanceLabel(b, original.Label)
 	spot := freeSpotNear(b, boardSpot{x: original.X, y: original.Y})
