@@ -82,7 +82,8 @@ alguém já usou e que não voltam.
 | **iniciativa** | `initiative` | — | **Três coisas, e o contexto separa:** a perícia do livro, o VALOR rolado (`entry.initiative`) e, por extensão, a fila. Só a perícia é do livro — as outras duas são nossas e cedem quando houver ambiguidade. |
 | **cena** | `SceneActive` | — | O estado que o mestre liga e desliga; enquanto ela dura, a mesa recebe a fila (ALE-210). **Ver a colisão C1.** |
 | **rodada / vez** | `round` / `turnIndex` | ~~turno~~ para "de quem é a vez" | "Turno" é o que se GASTA (ação de movimento etc.); "vez" é de quem é. |
-| **recuperação** | `rest` | — | O painel. As ações dentro dele são **descanso de cena** e **descanso de dia**, que é a palavra do livro (T20 p105) — a seção diz o que devolve, as ações dizem o que o livro chama. |
+| **recuperação** | `rest` | — | O painel. Dentro dele mora UMA ação de descanso — o **descanso de dia**, que é a palavra do livro (T20 p105) e devolve PV e PM. Aqui esta linha dizia que eram DUAS, *"descanso de cena e descanso de dia"*, e a de cena nunca devolveu ponto nenhum: ela expira a **duração de cena**, e o glossário mentia junto com o botão (ALE-233). Ver **expirar efeitos de cena**. |
+| **expirar efeitos de cena** | `expirePartyScene`, `rest/scene` | ~~recuperar~~, ~~descansar~~, ~~limpar~~ | Levar ao FIM tudo que dura uma **cena** em toda ficha do grupo: os efeitos de escopo cena, os usos "1/cena" e as **posturas**. **Não devolve PV nem PM** — e o botão prometia isso, chamando-se "Recuperar · cena" desde sempre (ALE-233). O verbo é do livro: a duração *"encerra-se quando esse momento da história acaba"* (p227). **Não é encerrar a cena**, que é o estado da sessão e tira a fila do ar: os dois passam pelo mesmo helper desde a ALE-220, e o que os separa é a fila. É por isso que os dois gestos ficam — *"acabou a bênção"* nem sempre é *"acabou a cena"*. `~~limpar~~` está proibido apesar de o aviso dizer "Efeitos de cena limpos": limpar soa como apagar o que estava errado, e o que acontece é uma duração chegando ao fim. |
 | **situacional** | `conditional` | ~~condição~~, ~~modificador opcional~~ | O modificador OPT-IN que o jogador liga na própria ficha e que muda o cálculo dela — Fúria, Ataque Poderoso, os homebrew. Na tela: "Situação — opt-in por contexto". **Não é condição** — ver C6. |
 | **postura** | `stance` | — | O situacional que cobra PM para entrar. O que foi pago fica registrado, para sair não devolver. Na tela: "Posturas ativas". |
 | **uso** | `powerUse` | ~~carga~~, ~~gasto~~ | Quantas vezes um poder "1/cena" ou "1/dia" já foi usado. ~~carga~~ está tomada: desde a ALE-215 ela é o peso que a mochila carrega. |
@@ -139,6 +140,11 @@ Consequência medida: `endScene` existe **três vezes** no pacote `api` —
 `session_state.go` e `session_store.go` desligam a cena, e
 `character_effects.go` limpa a duração "cena" de UMA ficha. Os três nomes
 continuam, e o renome ainda espera decisão do dono.
+
+> A colisão ficou MENOR na ALE-233: o sentido 2 (a duração de efeito) ganhou nome
+> próprio na tela — **expirar efeitos de cena** —, então o gesto do mestre deixou
+> de disputar a palavra "recuperar" com o descanso. O identificador continua
+> `scene` nos três lugares, e o renome de código continua esperando decisão.
 
 O BUG que a colisão escondia está fechado (ALE-220): `onSceneEnd` não limpava
 efeito nenhum, e quem limpava era só a Recuperação com `scope='scene'` — o

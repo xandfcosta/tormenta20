@@ -125,7 +125,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
   test('a recuperação sai da fileira quando o palco é baixo', async ({ page }) => {
     await page.goto(MESA)
     const naFileira = page.locator(`${rodape} .palco-alto-so`).getByRole('button', {
-      name: 'Recuperar · cena',
+      name: 'Expirar efeitos · cena',
     })
     const gaveta = page.locator(`${rodape} details.palco-gaveta`)
 
@@ -155,7 +155,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     // rodapé, e subir é o que pode estourar por cima num palco de 390.
     await abrir.click()
     const painel = gaveta.locator('div').first()
-    await expect(painel.getByRole('button', { name: 'Recuperar · cena' })).toBeVisible()
+    await expect(painel.getByRole('button', { name: 'Expirar efeitos · cena' })).toBeVisible()
     const caixa = await painel.evaluate((el) => {
       const r = el.getBoundingClientRect()
       return { top: r.top, bottom: r.bottom, left: r.left, right: r.right }
