@@ -162,7 +162,11 @@ func tableSignalsExpr() string {
 		// `pecaeditada` é qual peça o diálogo está editando: são DOIS porque abrir
 		// o diálogo FECHA o menu, e um sinal só faria o gesto de abrir apagar o
 		// alvo do gesto de salvar.
-		"pecaescolhida: '', pecaeditada: '', pecanome: '', pecatamanho: 1",
+		// `pecacopia` é a terceira e é qual peça está com o SUBMENU de duplicar
+		// aberto (ALE-206). Separado do `pecaescolhida` pelo mesmo motivo do
+		// `pecaeditada`: o submenu é uma camada DENTRO do menu, e um sinal só
+		// faria escolher a peça já abrir a segunda camada em cima da primeira.
+		"pecaescolhida: '', pecaeditada: '', pecacopia: '', pecanome: '', pecatamanho: 1",
 		// A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril. Os nomes levam
 		// `nova` porque `pecanome` e `pecatamanho` JÁ SÃO do diálogo de EDITAR
 		// peça, logo acima, e vivem no mesmo documento: reusá-los faria o gesto

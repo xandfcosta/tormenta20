@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"t20engine/aovivo"
 	"t20engine/engine"
 	"t20engine/tabuleiro"
 	"t20engine/web/table"
@@ -184,7 +185,7 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	id := mapToken(t, f, "Zumbi", 3, 3)
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/peca", ""); rec.Code != http.StatusOK {
 		t.Fatalf("duplicar deu %d", rec.Code)
 	}
 	b := nowBoard(t, f)
@@ -197,6 +198,135 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	}
 	if perto := engine.RangeSquares(engine.Square{X: 3, Y: 3}, engine.Square{X: copia.X, Y: copia.Y}); perto > 2 {
 		t.Errorf("a cópia nasceu a %d quadrados da original", perto)
+	}
+}
+
+// ── OS TRÊS DUPLICARES (ALE-206) ─────────────────────────────────────────────
+//
+// A distinção é o que a cópia faz com a LINHA DA FILA, e ela se prova AQUI e não
+// no `tabuleiro`: a regra de qual vínculo a cópia leva já está presa lá, e o que
+// esta faixa cobre é a COMPOSIÇÃO — a linha nova nasce, ela nasce CHEIA, e a
+// peça aponta para ela e não para outra.
+
+// tokenOnTheQueue põe no mapa uma peça amarrada à linha de um combatente.
+//
+// O `mapToken` põe peça SOLTA, que é o caso do cenário; sem esta o teste dos
+// modos mediria sempre a recusa.
+func tokenOnTheQueue(t *testing.T, f pilotoFixture, rotulo string) (string, string) {
+	t.Helper()
+	estado := f.s.sessions.GetState(f.sessionID)
+	var linha string
+	for i := range estado.Initiative {
+		if estado.Initiative[i].Label == rotulo {
+			linha = estado.Initiative[i].ID
+		}
+	}
+	if linha == "" {
+		t.Fatalf("%q não está na fila: o resto do caso não mediria nada", rotulo)
+	}
+	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+		tabuleiro.BoardToken{Label: rotulo, X: 3, Y: 3, Kind: "npc", EntryID: &linha})
+	if err != nil {
+		t.Fatalf("pôr a peça de %q: %v", rotulo, err)
+	}
+	return posto.Tokens[len(posto.Tokens)-1].ID, linha
+}
+
+// TestTheCopyWithItsOwnLineEntersTheQueueWhole.
+//
+// É o "mais um zumbi" de montar encontro, e o número que importa é o PV: o ogro
+// da bancada está com 12 de 130, e o segundo ogro chega INTEIRO. Copiar o PV
+// atual daria um irmão que já nasce sangrando pela porrada que o primeiro levou
+// — quem quer isso está pedindo "sangra junto", que é o outro verbo.
+func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	id, linhaOriginal := tokenOnTheQueue(t, f, "Ogro cansado")
+	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", ""); rec.Code != http.StatusOK {
+		t.Fatalf("duplicar com PV próprio deu %d", rec.Code)
+	}
+
+	fila := f.s.sessions.GetState(f.sessionID)
+	if len(fila.Initiative) != antes+1 {
+		t.Fatalf("a fila ficou com %d linhas, esperado %d", len(fila.Initiative), antes+1)
+	}
+	b := nowBoard(t, f)
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.EntryID == nil {
+		t.Fatal("a cópia nasceu sem linha: ela não teria barra de PV nenhuma")
+	}
+	if *copia.EntryID == linhaOriginal {
+		t.Fatal("a cópia ficou na linha da ORIGINAL — isso é o 'sangra junto', não o PV próprio")
+	}
+	var nova *aovivo.InitiativeEntry
+	for i := range fila.Initiative {
+		if fila.Initiative[i].ID == *copia.EntryID {
+			nova = &fila.Initiative[i]
+		}
+	}
+	if nova == nil {
+		t.Fatal("a peça aponta para uma linha que não está na fila")
+	}
+	// O NÚMERO ESCRITO NA MÃO, e não derivado da linha original: derivá-lo do
+	// código sob teste esconderia justamente a troca de "cheio" por "atual".
+	if aovivo.DerefOr(nova.HpCurrent, 0) != 130 || aovivo.DerefOr(nova.HpMax, 0) != 130 {
+		t.Errorf("o segundo ogro entrou com %d/%d, esperado 130/130 — ele chega inteiro",
+			aovivo.DerefOr(nova.HpCurrent, 0), aovivo.DerefOr(nova.HpMax, 0))
+	}
+}
+
+// TestTheCopySharingTheLineAddsNoLine: as duas peças, uma barra só.
+func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	id, linha := tokenOnTheQueue(t, f, "Ogro cansado")
+	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/junto", ""); rec.Code != http.StatusOK {
+		t.Fatalf("duplicar sangrando junto deu %d", rec.Code)
+	}
+
+	if depois := len(f.s.sessions.GetState(f.sessionID).Initiative); depois != antes {
+		t.Errorf("a fila ganhou linha: %d → %d, e o ponto deste modo é NÃO ganhar", antes, depois)
+	}
+	b := nowBoard(t, f)
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.EntryID == nil || *copia.EntryID != linha {
+		t.Errorf("a cópia aponta para %v, esperado a linha da original — sem isso o dano não aparece nas duas", copia.EntryID)
+	}
+}
+
+// TestTheModesThatNeedALineRefuseALoosePiece.
+//
+// Peça de cenário não tem PV, e os dois modos que falam de PV não têm o que
+// fazer com ela. A recusa é ESCRITA porque o silêncio ali produziria uma cópia
+// idêntica à do peão mudo com outro nome — o mestre clicaria em "com PV próprio"
+// e receberia exatamente o que "só a peça" dá.
+func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "pedra")
+	id := mapToken(t, f, "Baú", 1, 1)
+
+	for _, modo := range []string{"junto", "sozinha"} {
+		recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/"+modo, "")
+		if !strings.Contains(recusa, "não é um combatente da fila") {
+			t.Errorf("o modo %q não recusou a peça solta:\n%s", modo, recusa)
+		}
+	}
+	// O CONTROLE: o peão mudo, na mesma peça, PASSA. Sem ele as duas recusas
+	// acima seriam verdade também numa rota que recusa tudo.
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/peca", ""); rec.Code != http.StatusOK {
+		t.Fatalf("o peão mudo também foi recusado: %d", rec.Code)
+	}
+	if b := nowBoard(t, f); len(b.Tokens) != 2 {
+		t.Errorf("o mapa ficou com %d peças, esperado 2", len(b.Tokens))
 	}
 }
 
@@ -238,7 +368,7 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
-	for _, verbo := range []string{"/visibilidade", "/duplicar", "/voltar", "/remover"} {
+	for _, verbo := range []string{"/visibilidade", "/duplicar/peca", "/duplicar/junto", "/duplicar/sozinha", "/voltar", "/remover"} {
 		if rec := f.pede(t, f.jogador, http.MethodPost, base+verbo, ""); rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador alcançou %s: %d", verbo, rec.Code)
 		}

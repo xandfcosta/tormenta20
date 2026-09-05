@@ -1342,6 +1342,72 @@ html {
     white-space: nowrap;
   }
 
+  /* A SEGUNDA CAMADA do menu da peça (ALE-206): os três modos de duplicar, com
+   * a frase que os distingue.
+   *
+   * Ela pende do menu e é posicionada em relação a ele — `top: 100%` no menu,
+   * que já é `absolute` na casa da peça. Assim ela acompanha a peça sem uma
+   * segunda conta de `--col`/`--lin`, e sem um segundo lugar para errar.
+   *
+   * `min-width` e não `width`: as frases têm comprimentos diferentes e a mais
+   * longa é quem manda. Um valor fixo cortaria "mesma linha da fila" ou deixaria
+   * um rio de espaço depois de "Só a peça".
+   *
+   * `z-index` ACIMA do menu (6) porque ela nasce por baixo dele na ordem do
+   * documento e precisa cobrir a peça que estiver na casa de baixo. */
+  .tabuleiro-peca-copia {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 7;
+    display: flex;
+    min-width: 15rem;
+    flex-direction: column;
+    margin-top: 0.125rem;
+    padding: 0.125rem;
+    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    background: oklch(0.18 0.012 300);
+    box-shadow: 0 6px 16px oklch(0 0 0 / 0.5);
+    white-space: nowrap;
+  }
+
+  .tabuleiro-peca-copia-modo {
+    display: flex;
+    /* 44px de alvo de toque aqui, ao contrário dos 28px dos verbos: lá são seis
+     * ícones colados numa fileira, sem nada perto para acertar por engano; aqui
+     * são três alvos EMPILHADOS, e errar o vizinho é escolher outro modo de
+     * duplicar. O menu já transborda a casa, então a altura não custa mapa. */
+    min-height: 2.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.0625rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid transparent;
+    text-align: left;
+    outline: none;
+    transition: background-color 150ms, color 150ms;
+  }
+
+  .tabuleiro-peca-copia-modo:hover {
+    background: var(--color-accent, oklch(0.28 0.02 300));
+  }
+
+  .tabuleiro-peca-copia-modo:focus-visible {
+    outline: 2px solid var(--color-ring, oklch(0.72 0.13 85));
+    outline-offset: -2px;
+  }
+
+  .tabuleiro-peca-copia-nome {
+    font-size: 0.8125rem;
+    color: var(--color-foreground, oklch(0.94 0.01 85));
+  }
+
+  .tabuleiro-peca-copia-frase {
+    font-size: 0.6875rem;
+    color: var(--color-muted-foreground, oklch(0.74 0.02 85));
+  }
+
   .tabuleiro-peca-verbo {
     display: flex;
     /* 28px e não os 44px de alvo de toque da casa: são seis verbos ancorados numa

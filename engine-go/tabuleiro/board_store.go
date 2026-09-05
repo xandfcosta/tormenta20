@@ -425,9 +425,13 @@ func (bs *BoardStore) RemoveToken(ctx context.Context, sessionID int64, tabuleir
 
 // DuplicateToken põe outra igual ao lado, numerada pelo SERVIDOR: dois clientes
 // duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3" (ALE-192).
-func (bs *BoardStore) DuplicateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string) (*BoardState, error) {
+//
+// O `laco` é o que a cópia vai ser — ver o `DuplicateToken` do estado, onde a
+// decisão está escrita. Ele chega PRONTO porque a linha nova mora no
+// `SessionStore`, e este store não o conhece.
+func (bs *BoardStore) DuplicateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, laco *aovivo.InitiativeEntry) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
-		return DuplicateToken(b, tokenID, bs.newID)
+		return DuplicateToken(b, tokenID, laco, bs.newID)
 	})
 }
 

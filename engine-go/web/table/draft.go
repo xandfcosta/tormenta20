@@ -304,7 +304,8 @@ func draftEditsToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
 }
 
 func draftDuplicatesToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
-	return tabuleiro.DuplicateToken(b, chi.URLParam(c.R, "id"), st.deps.Boards().NewID)
+	// O rascunho não tem fila: laço nulo, sempre peão mudo (ALE-206).
+	return tabuleiro.DuplicateToken(b, chi.URLParam(c.R, "id"), nil, st.deps.Boards().NewID)
 }
 
 func draftRemovesToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {

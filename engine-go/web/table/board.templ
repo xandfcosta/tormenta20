@@ -1396,11 +1396,18 @@ templ tokenMenu(v BoardView, p boardToken) {
 				@ui.Icon("Eye", "size-4")
 			}
 		</button>
+		// DUPLICAR abre uma SEGUNDA CAMADA em vez de agir (ALE-206): são três
+		// modos, e a diferença entre eles — o que a cópia faz com a linha da fila
+		// — não cabe num ícone. Três ícones lado a lado caberiam, e seriam três
+		// desenhos parecidos numa fileira de 28px sobre o mapa; a decisão do dono
+		// foi a camada com o texto por extenso.
 		<button
 			type="button"
 			aria-label={ "Duplicar " + p.Rotulo }
-			title="Duplicar: mais um, ao lado e com o número seguinte"
-			data-on:click={ tokenCommand(v, p.ID, "duplicar") }
+			title="Duplicar: escolher o que a cópia leva"
+			aria-expanded="false"
+			data-attr:aria-expanded={ copyingToken(p.ID) }
+			data-on:click={ openCopyToken(p.ID) }
 			class="tabuleiro-peca-verbo"
 		>
 			@ui.Icon("Copy", "size-4")
@@ -1448,7 +1455,51 @@ templ tokenMenu(v BoardView, p boardToken) {
 		>
 			@ui.Icon("X", "size-4")
 		</button>
+		@tokenCopyMenu(v, p)
 	</div>
+}
+
+// A SEGUNDA CAMADA do menu: o que a cópia vai ser (ALE-206).
+//
+// A ORDEM é a do uso: "com PV próprio" é o "mais um zumbi" de montar encontro e
+// vem primeiro; "sangrando junto" é o caso raro do mesmo inimigo desenhado em
+// dois pontos; "só a peça" é o que existia antes e fica por último, porque quem
+// o quer sabe o que quer.
+//
+// Cada linha tem a FRASE embaixo, e ela não é enfeite: "duplicar" e "duplicar"
+// são a mesma palavra três vezes, e o que distingue é uma consequência — se o
+// dano de um aparece no outro. Sem a frase, o menu pede que se adivinhe.
+templ tokenCopyMenu(v BoardView, p boardToken) {
+	<div
+		role="group"
+		aria-label={ "O que a cópia de " + p.Rotulo + " leva" }
+		data-show={ copyingToken(p.ID) }
+		class="tabuleiro-peca-copia"
+	>
+		@tokenCopyMode(v, p, "sozinha", "Outro, com PV próprio", "entra na fila com o PV cheio do original")
+		// "COMBATENTE" e não "linha", e o GLOSSARIO é quem manda: `linha` é
+		// proibida em texto visível para o objeto — ela só vale falando do
+		// elemento de UI. O comentário do código pode dizer linha; a tela, não.
+		@tokenCopyMode(v, p, "junto", "Outro, sangrando junto", "o mesmo combatente da fila: uma barra de PV para os dois")
+		@tokenCopyMode(v, p, "peca", "Só a peça", "sem fila e sem PV — cenário, ou entra na fila depois")
+	</div>
+}
+
+// tokenCopyMode é uma escolha da segunda camada.
+//
+// O `title` NÃO repete a frase que já está desenhada: o rótulo acessível é o
+// nome mais a frase, e um `title` igual faria o leitor de tela dizer a mesma
+// coisa duas vezes — a armadilha que o `ui.Icon` já registra.
+templ tokenCopyMode(v BoardView, p boardToken, modo, nome, frase string) {
+	<button
+		type="button"
+		aria-label={ nome + ": " + frase }
+		data-on:click={ copyCommand(v, p.ID, modo) }
+		class="tabuleiro-peca-copia-modo"
+	>
+		<span class="tabuleiro-peca-copia-nome">{ nome }</span>
+		<span aria-hidden="true" class="tabuleiro-peca-copia-frase">{ frase }</span>
+	</button>
 }
 
 // O DIÁLOGO DE EDITAR é UM só para todas as peças, e quem o semeia é o gesto que
