@@ -104,12 +104,21 @@ templ tableDrawer(v View) {
 	</details>
 }
 
-// rest é o par do livro (T20 p105): devolve PV e PM ao grupo.
+// Os DOIS gestos de fim de duração, e eles NÃO são o mesmo par (ALE-233).
 //
-// A palavra da SEÇÃO é "recuperação" porque diz o que ela DEVOLVE, e a das AÇÕES
-// é "descanso" porque é a do livro — a distinção é do GLOSSARIO e a SPA já a
-// pratica com estas mesmas frases. Duas telas não devem inventar dois
-// vocabulários para o mesmo gesto.
+// Aqui estava escrito que os dois eram "o par do livro (T20 p105): devolve PV e
+// PM ao grupo". **Metade disso nunca foi verdade.** O de CENA nunca devolveu
+// ponto nenhum — ele expira a duração de cena, os usos "1/cena" e as posturas —,
+// e mesmo assim se chamava "Recuperar · cena", que é a palavra que o painel usa
+// para o descanso. O nome prometia o que a função não fazia, desde sempre.
+//
+// Decisão do dono (ALE-233): os dois FICAM, porque "acabou a bênção" nem sempre
+// é "acabou a cena" e o mestre precisa poder expirar a duração sem tirar a fila
+// de ninguém. O que sai é a mentira — o de cena passa a dizer o que faz.
+//
+// E isso separa os três gestos deste painel pela PALAVRA em vez de pela cor, que
+// é o que a ALE-200 pede: "Encerrar cena" tira a fila do ar, "Expirar efeitos"
+// só encerra a duração, "Recuperar · dia" é o único que devolve pontos.
 //
 // A de CENA acontece no clique porque não precisa de mais nada. A de DIA precisa
 // da qualidade, que é o que a p105 usa para calcular quanto volta, e só por isso
@@ -124,7 +133,7 @@ templ rest(v View) {
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 	>
 		@ui.Icon("Hourglass", "size-4")
-		Recuperar · cena
+		Expirar efeitos · cena
 	</button>
 	<button
 		type="button"

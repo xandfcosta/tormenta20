@@ -71,7 +71,9 @@ func (tr tableRules) restParty(user AuthUser, campaignID, sessionID int64, scope
 // `EndScene` faz os três).
 //
 // É o caminho ÚNICO desde a ALE-220, e essa unificação É o conserto: o
-// "Encerrar cena" do mestre e a "Recuperar · cena" agora chamam ESTE helper.
+// "Encerrar cena" do mestre e o "Expirar efeitos · cena" chamam ESTE helper.
+// (Aquele segundo se chamava "Recuperar · cena" até a ALE-233, e o nome
+// prometia PV e PM que ele nunca deu.)
 // Antes só a Recuperação passava por aqui, e encerrar a cena deixava a bênção
 // de duração "cena" viva na ficha — a colisão C1 do glossário.
 func (tr tableRules) expirePartyScene(user AuthUser, campaignID, sessionID int64) (done, total int, err error) {
