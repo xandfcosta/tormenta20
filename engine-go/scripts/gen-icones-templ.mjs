@@ -19,7 +19,11 @@ import { fileURLToPath } from 'node:url'
 
 const AQUI = dirname(fileURLToPath(import.meta.url))
 const LUCIDE = resolve(AQUI, '../node_modules/lucide-solid/dist/esm')
-const SAIDA = resolve(AQUI, '../../engine-go/api/piloto_icones.templ')
+// O destino MUDOU de lugar e o gerador não tinha ido junto (ALE-230): ele ainda
+// escrevia `api/piloto_icones.templ`, um arquivo que não existe mais no
+// repositório, enquanto o arquivo VIVO é `web/ui/icons.templ`. Rodá-lo criava um
+// órfão não rastreado e deixava o ícone novo de fora, sem erro nenhum.
+const SAIDA = resolve(AQUI, '../web/ui/icons.templ')
 
 /** Os nomes como a SPA os escreve. Acrescentar aqui e rodar o gerador. */
 const QUERIDOS = [
@@ -122,6 +126,9 @@ const QUERIDOS = [
   // perícia que o livro fecha sem treinamento, e a lixeira do ofício. `Star`,
   // `Search`, `Plus` e `Scroll` já estavam na lista.
   'Dumbbell',
+  // A gaveta de filtros do celular deitado (ALE-230): a única porta para os
+  // filtros naquela forma precisa parecer um controle de filtro.
+  'SlidersHorizontal',
   'Lock',
   // A Mochila (ALE-272, fatia 7): o glifo de cada categoria no ladrilho, os
   // mesmos que a `bag-tile` da SPA escolhe. `Sword`, `Shield` e `Wand2` já
@@ -169,7 +176,7 @@ const casos = QUERIDOS.map((nome) => {
   return `\t\t\tcase "${nome}":\n${filhos}\n\t\t\t\t// lucide: ${arquivo}`
 }).join('\n')
 
-const conteudo = `package api
+const conteudo = `package ui
 
 // GERADO por \`node scripts/gen-icones-templ.mjs\` — não edite à mão.
 //
@@ -181,12 +188,12 @@ const conteudo = `package api
 //
 // Ícone novo: acrescente o nome em \`QUERIDOS\` e rode o gerador.
 
-// icone desenha um ícone do lucide. \`nome\` é o nome que a SPA usa.
+// Icon desenha um ícone do lucide. \`nome\` é o nome que a SPA usa.
 //
 // Sempre \`aria-hidden\`: nos doze usos deste app o ícone acompanha um rótulo em
 // texto, e um nome acessível a mais faria o leitor de tela dizer a mesma coisa
 // duas vezes. Ícone que precisar de nome próprio pede um componente próprio.
-templ icone(nome, classe string) {
+templ Icon(nome, classe string) {
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="24"

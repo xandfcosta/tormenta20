@@ -222,3 +222,126 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
   }
 })
 })
+
+/**
+ * A GAVETA DE FILTROS do celular deitado (ALE-230).
+ *
+ * A 844×390 o bestiário dava 11px para a lista de criaturas — 0,2 de uma linha
+ * de 49px. O maior consumidor da cena NÃO era navegação: eram 124px de ND
+ * mínimo, ND máximo e sete crachás de tipo. Deitado eles viram gaveta, e a
+ * lista passou a 69px (1,41 criatura). Nos catálogos a mesma gaveta devolveu 43
+ * dos 18px de miolo que Magias, Perícias e Poderes tinham.
+ *
+ * O CASO MEDE OS DOIS LADOS, e o segundo não é redundância — é o controle. Uma
+ * gaveta que se fecha em toda forma passaria com folga numa asserção só de
+ * altura, e o custo seria os filtros sumirem da tela larga, que é onde eles mais
+ * servem. Este é exatamente o modo de falha que a folha do piloto tenta evitar
+ * escrevendo DUAS regras de abertura (`display: revert` e `::details-content`),
+ * porque os motores escondem o miolo de um `<details>` fechado de dois jeitos
+ * diferentes e um deles pode não existir.
+ *
+ * Só um browser testemunha: a chave é `(max-width: 1023px) and (orientation:
+ * landscape)`, e orientação não existe em jsdom. Pior: o miolo de um `<details>`
+ * FECHADO ainda devolve `boundingClientRect` — o navegador o esconde por
+ * `content-visibility` —, então a medição é da CAIXA e a visibilidade vem de
+ * `checkVisibility`. Medir o filho foi o que mentiu na primeira sonda desta
+ * issue.
+ *
+ * Ele CAMINHA pelo trilho em vez de trazer uma lista de paradas: a parada que
+ * entrar amanhã já nasce medida. Uma lista escrita à mão nasce incompleta na
+ * primeira vez que alguém esquece.
+ */
+test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos', async ({ page }) => {
+  await page.goto('/mestre/bestiario')
+  const paradas = await page
+    .getByRole('navigation', { name: 'Ferramentas do mestre' })
+    .getByRole('link')
+    .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href))
+  expect(paradas.length, 'o trilho veio vazio: este caso não mediria nada').toBeGreaterThan(10)
+
+  // A CAIXA da gaveta fechada é o resumo e mais nada: 44px de alvo de toque.
+  const TETO_FECHADA = 44 + 12
+
+  let comGaveta = 0
+  let semGaveta = 0
+  for (const parada of paradas) {
+    // ── deitado: a gaveta existe e está recolhida ──────────────────────────
+    await page.setViewportSize({ width: 844, height: 390 })
+    await page.goto(parada)
+    const gaveta = page.locator('.filtros-em-gaveta')
+    if ((await gaveta.count()) === 0) {
+      semGaveta++
+      continue
+    }
+    comGaveta++
+
+    const medida = await gaveta.first().evaluate((d: HTMLDetailsElement) => ({
+      // A CAIXA, e nunca o filho: fechado, o miolo devolve retângulo mesmo.
+      alta: Math.round(d.getBoundingClientRect().height),
+      aberta: d.open,
+      resumoAparece: d.querySelector('summary')!.checkVisibility(),
+      filtroAparece: !!d.querySelector('button')?.checkVisibility(),
+    }))
+    expect(medida.aberta, `a gaveta de ${parada} nasce aberta no deitado`).toBe(false)
+    expect(medida.resumoAparece, `sem o resumo, os filtros de ${parada} ficam inalcançáveis`).toBe(true)
+    expect(medida.filtroAparece, `os filtros de ${parada} não recolheram deitado`).toBe(false)
+    expect(
+      medida.alta,
+      `a gaveta de ${parada} recolhida ocupa ${medida.alta}px`,
+    ).toBeLessThanOrEqual(TETO_FECHADA)
+
+    // ── em pé e no laptop: a gaveta não existe como gaveta ─────────────────
+    for (const forma of [
+      { nome: 'no formato em pé', width: 390, height: 844 },
+      { nome: 'no laptop', width: 1280, height: 720 },
+    ]) {
+      await page.setViewportSize({ width: forma.width, height: forma.height })
+      const larga = await gaveta.first().evaluate((d: HTMLDetailsElement) => ({
+        resumoAparece: d.querySelector('summary')!.checkVisibility(),
+        filtroAparece: !!d.querySelector('button')?.checkVisibility(),
+      }))
+      expect(
+        larga.filtroAparece,
+        `em ${forma.nome} os filtros de ${parada} continuam escondidos: a regra de abertura caiu`,
+      ).toBe(true)
+      expect(
+        larga.resumoAparece,
+        `em ${forma.nome} a gaveta de ${parada} ainda mostra o resumo, e ali ela não deveria existir`,
+      ).toBe(false)
+    }
+  }
+
+  // O DENOMINADOR: sem ele, um seletor que parou de casar dá o mesmo verde que
+  // uma tela em ordem. Medido: sete paradas filtram, seis não.
+  expect(comGaveta, 'nenhuma parada tinha gaveta: o seletor `.filtros-em-gaveta` parou de casar').toBeGreaterThanOrEqual(7)
+  expect(comGaveta + semGaveta).toBe(paradas.length)
+})
+
+/**
+ * O PISO DO ÚTIL, deitado: uma criatura INTEIRA (ALE-230).
+ *
+ * A issue chama uma linha inteira de piso do útil, e o bestiário era o caso que
+ * mais longe estava dele: 11px de lista para uma linha de 49. Este caso prende o
+ * resultado, e não o mecanismo — a gaveta é uma forma de chegar lá, e amanhã
+ * pode ser outra.
+ *
+ * Nos catálogos o piso NÃO é alcançável cortando cromo, e vale saber por quê: um
+ * cartão de magia mede 205px dos 390 da tela, então mesmo com cromo ZERO ele
+ * mal caberia. Ali o que não cabe é o CARTÃO, e isso é outra decisão.
+ */
+test('deitado, a lista do bestiário mostra uma criatura inteira', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 })
+  await page.goto('/mestre/bestiario')
+  const lista = page.locator('#bestiario ul')
+  await expect(lista, 'sem a lista não há medição').toBeVisible()
+
+  const medida = await lista.evaluate((ul) => ({
+    caixa: Math.round(ul.getBoundingClientRect().height),
+    linha: Math.round(ul.firstElementChild!.getBoundingClientRect().height),
+  }))
+  expect(medida.linha, 'uma linha de zero passaria em qualquer teto').toBeGreaterThan(20)
+  expect(
+    medida.caixa,
+    `a lista recebe ${medida.caixa}px e uma criatura mede ${medida.linha}px`,
+  ).toBeGreaterThanOrEqual(medida.linha)
+})

@@ -322,30 +322,39 @@ templ BestiaryFilters(v BestiaryView) {
 				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
 			/>
 		</div>
-		<div class="flex flex-wrap items-end gap-2">
-			@crBox(v.BestiaryBase(), "nd-min", "ND mínimo", "ndMin", crInBox(v.CRMin))
-			@crBox(v.BestiaryBase(), "nd-max", "ND máximo", "ndMax", crInBox(v.CRMax))
-		</div>
-		// `fieldset` porque é um conjunto de escolhas, e a `legend` em `sr-only`
-		// porque a tela já diz "Bestiário" logo acima — repetir "Tipo" ali só
-		// tira espaço de sete crachás que precisam caber numa linha.
-		<fieldset class="flex flex-wrap gap-1.5 border-0 p-0">
-			@ui.SectionCaption("muted", "sr-only") {
-				Filtrar por tipo
-			}
-			for _, t := range book.CreatureTypes {
-				<button
-					type="button"
-					aria-pressed={ ui.AriaBool(v.typeOn(t)) }
-					data-on:click={ fmt.Sprintf("@post('%s/tipo/%s')", v.BestiaryBase(), t) }
-					if v.typeOn(t) {
-						class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-					} else {
-						class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		// A BUSCA fica FORA da gaveta e o ND e os tipos dentro (ALE-230): achar
+		// uma criatura pelo nome é o gesto do meio do combate, e recolher a
+		// busca junto trocaria um problema por outro. Deitado, estes 124px eram
+		// o maior consumidor da cena — medido, escondê-los devolve 3,37 linhas
+		// numa lista que tinha 0,2.
+		@ui.FilterDrawer("Filtros") {
+			<div class="mt-2 space-y-2">
+				<div class="flex flex-wrap items-end gap-2">
+					@crBox(v.BestiaryBase(), "nd-min", "ND mínimo", "ndMin", crInBox(v.CRMin))
+					@crBox(v.BestiaryBase(), "nd-max", "ND máximo", "ndMax", crInBox(v.CRMax))
+				</div>
+				// `fieldset` porque é um conjunto de escolhas, e a `legend` em `sr-only`
+				// porque a tela já diz "Bestiário" logo acima — repetir "Tipo" ali só
+				// tira espaço de sete crachás que precisam caber numa linha.
+				<fieldset class="flex flex-wrap gap-1.5 border-0 p-0">
+					@ui.SectionCaption("muted", "sr-only") {
+						Filtrar por tipo
 					}
-				>{ book.TypeName(t) }</button>
-			}
-		</fieldset>
+					for _, t := range book.CreatureTypes {
+						<button
+							type="button"
+							aria-pressed={ ui.AriaBool(v.typeOn(t)) }
+							data-on:click={ fmt.Sprintf("@post('%s/tipo/%s')", v.BestiaryBase(), t) }
+							if v.typeOn(t) {
+								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							} else {
+								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							}
+						>{ book.TypeName(t) }</button>
+					}
+				</fieldset>
+			</div>
+		}
 	</div>
 }
 
