@@ -300,3 +300,69 @@ test('as sete abas são endereços, e a ativa se anuncia', async ({ page }) => {
   await page.goto(`/personagens/${id}?tab=inventory`)
   await expect(page.getByRole('link', { name: 'Mochila', exact: true })).toHaveAttribute('aria-current', 'page')
 })
+
+/**
+ * O CELULAR DEITADO, e o orçamento do crachá (ALE-230).
+ *
+ * A 844×390 a ficha gastava **366 dos 390px em cromo** e sobravam 24 para a
+ * lista — meia magia. A conta, medida camada por camada com a partição fechando
+ * em 390: barra 69, abas 57, cabeçalho do painel 49, **crachá 205**, lista 24.
+ *
+ * O crachá sozinho comia 53% da tela, mais que a barra e as abas juntas, e os
+ * 205px eram iguais nos seis personagens da semente — estrutura, não dado.
+ *
+ * O TETO É O CRACHÁ e não a lista, e isso é deliberado: ele é a única peça
+ * COMPARTILHADA pelas sete abas, então uma regra presa aqui cobre as sete sem
+ * enumerar nenhuma — a oitava aba já nasce medida. Prender "a lista mostra uma
+ * linha" seria a mesma garantia sete vezes, e ainda ficaria impossível nas duas
+ * abas cujo "primeiro filho" é um bloco de 242px e não uma linha.
+ *
+ * O TETO é ARITMÉTICA e não um número redondo: duas fileiras de alvo de toque
+ * mais o respiro entre elas. Duas e não uma porque a fileira ENROLA de
+ * propósito — os oito passos de vital são 44px de alvo mínimo cada, e
+ * espremê-los para caber numa linha só trocaria este defeito pelo da ALE-177.
+ *
+ * Escrito como conta e não como constante porque a primeira versão dizia 96 e
+ * estava errada: eu tinha somado 2×44 e chamado o resto de "respiro", esquecendo
+ * o `gap-y` e a borda de cima. O crachá mede 101, e 101 é o que duas fileiras
+ * CUSTAM. Um teto redondo esconde de qual conta ele saiu, e some no dia em que
+ * alguém precisa saber se pode mexer nele.
+ *
+ * Só um navegador testemunha: a chave é `max-lg:landscape:`, que é largura MAIS
+ * orientação. Em jsdom não há orientação, e a asserção passaria verde sobre o
+ * crachá de 205px.
+ */
+test('deitado, o crachá do jogador não come metade da tela', async ({ page }) => {
+  await aFichaDoPrimeiro(page)
+  const enderecos = await page
+    .getByRole('navigation', { name: 'Seções da ficha' })
+    .getByRole('link')
+    .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href))
+  expect(enderecos, 'a barra de abas veio vazia: este caso não mediria nada').toHaveLength(7)
+
+  // 44 é o alvo mínimo de toque; o respiro é o `py-1` (8), o `gap-y-1` (4) e a
+  // borda de cima (1), com três de folga.
+  const ALVO_DE_TOQUE = 44
+  const TETO_DO_CRACHA = 2 * ALVO_DE_TOQUE + 8 + 4 + 1 + 3
+
+  await page.setViewportSize({ width: 844, height: 390 })
+  for (const endereco of enderecos) {
+    await page.goto(endereco)
+    const cracha = page.locator('#cracha-do-jogador')
+    // `toBeVisible` ANTES de medir: uma caixa escondida devolve zero sem
+    // reclamar, e um zero passaria neste teto com folga.
+    await expect(cracha, `o crachá sumiu em ${endereco}: sem ele não há medição`).toBeVisible()
+    const caixa = await cracha.boundingBox()
+    expect(
+      caixa?.height,
+      `o crachá come ${Math.round(caixa?.height ?? 0)}px dos 390 em ${endereco}`,
+    ).toBeLessThanOrEqual(TETO_DO_CRACHA)
+
+    // E o que o corte NÃO pode custar: mexer no PV é o gesto mais frequente da
+    // noite, e o crachá existe para que ele não dependa de qual aba está
+    // aberta. Um passo de vital fora da janela deitado seria trocar um defeito
+    // por outro.
+    await expectDentroDaJanela(page)
+    await expectNadaRolaDeLado(page)
+  }
+})

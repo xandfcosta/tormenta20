@@ -165,6 +165,34 @@ O mesmo vale para qualquer sonda de vida longa — `addEventListener`,
 `PerformanceObserver`, um `page.on(...)` cujo alvo recarregou. Afirme o documento
 antes de afirmar o silêncio.
 
+### Instrumento que DECOMPÕE tem denominador de graça: a soma
+
+Medir "quanto cada camada come dos 390px" na ALE-230 exigiu três instrumentos, e
+**os dois primeiros produziram uma tabela plausível com o número errado**:
+
+- **792 de 390** — o instrumento subia a árvore somando os irmãos de cada
+  ancestral, e contou a textura de fundo (`absolute inset-0`, 390px) como camada
+  empilhada. O que está FORA DO FLUXO não empilha.
+- **412 de 390** — o mesmo instrumento contou o `gap` de um filho
+  `display:none`. Um filho que não desenha não separa nada de nada.
+
+Nenhum dos dois reclamou. As duas tabelas tinham nomes de camada certos, alturas
+certas para as camadas que existiam, e uma linha de total que ninguém confere
+quando a lista parece boa. O que os denunciou foi **a soma não fechar na altura
+da janela** — e é isso que faz de uma decomposição um instrumento barato de
+validar: ela já tem denominador embutido, ao contrário de uma lista de falhas,
+que precisa de um `medidos` escrito à mão.
+
+O terceiro fechou em 390 **por construção**: uma coluna de sondas
+`elementFromPoint` de y=0 a y=389, agrupada em bandas. Não há como uma camada ser
+contada duas vezes nem um overlay virar empilhamento, porque cada pixel da coluna
+tem exatamente um dono.
+
+**A regra: toda decomposição afirma a soma antes de afirmar as parcelas.** E
+quando o que se mede é o EFEITO de um corte, corte de verdade — a ALE-230 mediu
+"quanto esta camada devolve" escondendo-a com `display:none` e remedindo, em vez
+de subtrair a altura dela. Somar teria errado pelos mesmos dois motivos acima.
+
 ### Um guarda só mede o que ele VISITA
 
 Cobertura de contraste, de tipografia e de leiaute é função de onde o teste

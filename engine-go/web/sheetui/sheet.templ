@@ -174,19 +174,48 @@ templ sheetPanel(v View) {
 // Ele é o que a ficha tem de permanente: as abas trocam, ele fica. É por isso
 // que o PV e o PM moram aqui e nunca num painel — mexer no PV é o gesto mais
 // frequente da noite, e ele não pode depender de qual aba está aberta.
+//
+// DEITADO ELE VIRA FILEIRA (ALE-230). Medido a 844×390: a ficha gastava 366 dos
+// 390px em cromo e a lista ficava com 24 — meia magia —, e o crachá sozinho era
+// 205 desses, mais que a barra e as abas somadas. Empilhado ele tem quatro
+// andares (identidade, nível, PV, PM); deitado os quatro entram na mesma
+// fileira, e o que se recupera vai inteiro para o painel.
+//
+// A chave é `max-lg:landscape:` e nunca uma consulta de ALTURA, pela razão que
+// o `ui.TomeSheet` já registra: o telefone em pé com o teclado virtual aberto
+// mede 390×494 e casaria com qualquer teto de altura — e aí o crachá se
+// reorganizaria debaixo do dedo no meio da digitação.
+//
+// O que NÃO muda deitado são os oito passos de vital: eles são 44px de alvo
+// mínimo, e espremê-los para caber numa linha só trocaria este defeito pelo da
+// ALE-177. A fileira ENROLA, e o teto do guarda são duas fileiras.
 templ playerBadge(v View) {
-	<div class="border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 sm:px-4">
-		<div class="flex min-w-0 items-stretch gap-3">
+	// O `id` é HANDLE PUBLICADO e não decoração: o guarda do celular deitado
+	// (ALE-230) mede a altura desta caixa, e prendê-lo em nome de classe seria
+	// a asserção sobre forma de DOM que ninguém prometeu.
+	<div id="cracha-do-jogador" class="border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 max-lg:landscape:py-1 sm:px-4">
+		<div class="flex min-w-0 items-stretch gap-3 max-lg:landscape:items-center max-lg:landscape:gap-2">
+			// O retrato ENCOLHE em vez de sair: ele é `aria-hidden`, então some
+			// dos pixels sem custar nada a quem não vê a tela, e o monograma
+			// continua sendo como se reconhece de quem é a ficha num relance.
 			<div
 				aria-hidden="true"
-				class="flex h-auto w-20 shrink-0 select-none items-center justify-center rounded-none border-2 border-grimorio-iron font-display text-3xl text-white/25 sm:w-24 sm:text-4xl"
+				class="flex h-auto w-20 shrink-0 select-none items-center justify-center rounded-none border-2 border-grimorio-iron font-display text-3xl text-white/25 max-lg:landscape:size-9 max-lg:landscape:text-base sm:w-24 sm:text-4xl"
 				style={ "background: " + v.Gradiente }
 			>
 				{ v.Iniciais }
 			</div>
-			<div class="flex min-w-0 flex-1 flex-col gap-1.5">
-				<div class="flex items-start justify-between gap-2">
-					<div class="min-w-0">
+			<div class="flex min-w-0 flex-1 flex-col gap-1.5 max-lg:landscape:flex-row max-lg:landscape:flex-wrap max-lg:landscape:items-center max-lg:landscape:gap-x-3 max-lg:landscape:gap-y-1">
+				// `contents` e não uma segunda árvore: deitado, a identidade e a
+				// Defesa passam a ser itens da MESMA fileira que o nível e os
+				// vitais, sem que o desenho empilhado precise de outro nó. Dois
+				// crachás para o mesmo estado seriam dois lugares para consertar.
+				<div class="flex items-start justify-between gap-2 max-lg:landscape:contents">
+					// `sr-only` e NUNCA `hidden`, que é a lição da ALE-271: a raça
+					// e a classe não têm outro canal nesta tela — o `h1` acima leva
+					// o NOME —, e `display:none` as tiraria da árvore de
+					// acessibilidade em vez de só dos pixels.
+					<div class="min-w-0 max-lg:landscape:sr-only">
 						<p class="truncate text-sm text-foreground">{ v.Resumo }</p>
 						if v.Classes != "" {
 							<p class="truncate text-xs text-muted-foreground">{ v.Classes }</p>
