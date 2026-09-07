@@ -408,10 +408,10 @@ function Q(e) {
 function re(e) {
 	let t = document.querySelector(`[popovertarget="${e.id}"]`);
 	if (!t) return;
-	let n = t.getBoundingClientRect(), r = n.top > window.innerHeight / 2;
-	e.style.top = r ? "auto" : `${Math.round(n.bottom + 8)}px`, e.style.bottom = r ? `${Math.round(window.innerHeight - n.top + 8)}px` : "auto";
-	let i = e.offsetWidth || 224;
-	e.style.left = `${Math.round(Math.max(8, Math.min(n.left, window.innerWidth - i - 8)))}px`;
+	let n = t.getBoundingClientRect(), r = n.top - 16, i = window.innerHeight - n.bottom - 16, a = r > i;
+	e.style.top = a ? "auto" : `${Math.round(n.bottom + 8)}px`, e.style.bottom = a ? `${Math.round(window.innerHeight - n.top + 8)}px` : "auto", e.style.maxHeight = `${Math.max(96, Math.round(a ? r : i))}px`;
+	let o = e.offsetWidth || 224;
+	e.style.left = `${Math.round(Math.max(8, Math.min(n.left, window.innerWidth - o - 8)))}px`;
 }
 window.cena = {
 	som() {
@@ -449,7 +449,8 @@ f({
 	e.target?.closest?.("[data-cue-hover]") && Q("hover");
 }, !0), document.addEventListener("click", (e) => {
 	e.target?.closest?.("[data-cue-select]") && Q("select");
-}), document.addEventListener("beforetoggle", (e) => {
+});
+for (let e of ["beforetoggle", "toggle"]) document.addEventListener(e, (e) => {
 	let t = e.target;
 	t?.matches?.("[popover]") && e.newState === "open" && re(t);
 }, !0);

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"t20engine/aovivo"
@@ -380,5 +381,137 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	}
 	if strings.Contains(doJogador, "O que fazer com Ogro") {
 		t.Error("o menu do mestre apareceu na tela do jogador")
+	}
+}
+
+// ── COPIAR E COLAR (ALE-206) ─────────────────────────────────────────────────
+//
+// O colar faz três coisas que o duplicar não faz: repete sem perguntar de novo,
+// pousa onde a pessoa está OLHANDO, e ATRAVESSA AS ABAS. A terceira é a que não
+// tinha caminho nenhum antes, e é a que estes casos prendem.
+
+// colaNaAba manda o comando de colar com a área apontando para outra aba.
+func colaNaAba(t *testing.T, f pilotoFixture, deOndeVeio, peca, modo string, x, y int) string {
+	t.Helper()
+	area := fmt.Sprintf(`{"areapeca":%q,"areatabuleiro":%q,"areamodo":%q}`, peca, deOndeVeio, modo)
+	return f.posta(t, f.mestre,
+		fmt.Sprintf("%s/tabuleiro/colar/%d/%d", f.tableUrl(), x, y), area)
+}
+
+// TestThePasteCrossesTheTabs.
+//
+// Copiar o zumbi na Cripta e colá-lo na Taverna. O servidor procura a original
+// no tabuleiro que a ÁREA nomeia, e não no que está na tela — são diferentes
+// justamente quando o colar mais serve.
+func TestThePasteCrossesTheTabs(t *testing.T) {
+	f := novoPiloto(t)
+	cripta := f.seedOpenBoard(t, "pedra")
+	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, cripta.ID,
+		tabuleiro.BoardToken{Label: "Zumbi", X: 1, Y: 1, Kind: "npc"})
+	if err != nil {
+		t.Fatalf("pôr a peça na cripta: %v", err)
+	}
+	naCripta := posto.Tokens[len(posto.Tokens)-1].ID
+
+	// A SEGUNDA ABA, e o comando age nela porque é a que o mestre está olhando.
+	taverna, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, "Taverna", "madeira")
+	if err != nil {
+		t.Fatalf("abrir a segunda aba: %v", err)
+	}
+	if taverna.ID == cripta.ID {
+		t.Fatal("as duas abas têm o mesmo id: o caso não mediria travessia nenhuma")
+	}
+	// A ABA é escolhida pela PORTA de verdade, e não mexendo no campo do
+	// servidor: é o mesmo gesto de clicar na aba, e ele é quem decide em qual
+	// tabuleiro o comando age.
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/aba/"+taverna.ID, ""); rec.Code != http.StatusOK {
+		t.Fatalf("escolher a aba da taverna deu %d", rec.Code)
+	}
+
+	if recusa := colaNaAba(t, f, cripta.ID, naCripta, "peca", 6, 4); strings.Contains(recusa, "não há peça na área") {
+		t.Fatalf("o colar recusou:\n%s", recusa)
+	}
+
+	naTaverna := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, taverna.ID)
+	if len(naTaverna.Tokens) != 1 {
+		t.Fatalf("a taverna ficou com %d peças, esperado 1", len(naTaverna.Tokens))
+	}
+	colada := naTaverna.Tokens[0]
+	if colada.X != 6 || colada.Y != 4 {
+		t.Errorf("a cópia pousou em (%d,%d), esperado o quadrado pedido (6,4)", colada.X, colada.Y)
+	}
+	// E a CRIPTA não perdeu a original: colar copia, não move.
+	if depois := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, cripta.ID); len(depois.Tokens) != 1 {
+		t.Errorf("a cripta ficou com %d peças — o colar levou a original junto", len(depois.Tokens))
+	}
+}
+
+// TestThePasteWithoutAClipboardSaysSo: a recusa é escrita.
+//
+// `CTRL + V` sem nada na área é o gesto mais provável de todos — a tecla existe
+// no dedo de quem usa qualquer outro programa. O silêncio ali seria a mesma tela
+// de antes, e a pessoa apertaria de novo.
+func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "pedra")
+
+	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/colar/2/2", `{"areapeca":""}`)
+	if !strings.Contains(recusa, "não há peça na área") {
+		t.Errorf("a área vazia não foi recusada:\n%s", recusa)
+	}
+}
+
+// TestThePasteOfAPieceThatIsGoneSaysSo.
+//
+// A área é do CLIENTE e vive mais que a peça: o mestre copia o zumbi, tira o
+// zumbi do mapa, e aperta CTRL+V. Sem esta frase o colar sairia calado.
+func TestThePasteOfAPieceThatIsGoneSaysSo(t *testing.T) {
+	f := novoPiloto(t)
+	b := f.seedOpenBoard(t, "pedra")
+
+	recusa := colaNaAba(t, f, b.ID, "peca-que-nao-existe", "peca", 2, 2)
+	if !strings.Contains(recusa, "não está mais no tabuleiro de origem") {
+		t.Errorf("a peça sumida não foi recusada:\n%s", recusa)
+	}
+}
+
+// TestThePasteWithItsOwnLineAlsoFillsTheQueue: o modo grudado na área vale
+// igual no colar.
+//
+// Ele é o mesmo `bondForMode` do duplicar, e este caso é quem prova que os dois
+// verbos concordam sobre o que "com PV próprio" significa.
+func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+	b := f.seedOpenBoard(t, "pedra")
+	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
+	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
+
+	if recusa := colaNaAba(t, f, b.ID, id, "sozinha", 8, 8); strings.Contains(recusa, "não há peça") {
+		t.Fatalf("o colar recusou:\n%s", recusa)
+	}
+
+	fila := f.s.sessions.GetState(f.sessionID)
+	if len(fila.Initiative) != antes+1 {
+		t.Fatalf("a fila ficou com %d linhas, esperado %d", len(fila.Initiative), antes+1)
+	}
+	mapa := nowBoard(t, f)
+	colada := mapa.Tokens[len(mapa.Tokens)-1]
+	if colada.EntryID == nil {
+		t.Fatal("a cópia colada nasceu sem linha: ela não teria barra de PV")
+	}
+	var nova *aovivo.InitiativeEntry
+	for i := range fila.Initiative {
+		if fila.Initiative[i].ID == *colada.EntryID {
+			nova = &fila.Initiative[i]
+		}
+	}
+	if nova == nil {
+		t.Fatal("a peça colada aponta para uma linha que não está na fila")
+	}
+	if aovivo.DerefOr(nova.HpCurrent, 0) != 130 {
+		t.Errorf("o ogro colado entrou com %d de PV, esperado 130 — ele chega inteiro",
+			aovivo.DerefOr(nova.HpCurrent, 0))
 	}
 }

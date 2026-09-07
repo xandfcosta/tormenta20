@@ -435,6 +435,13 @@ func (bs *BoardStore) DuplicateToken(ctx context.Context, sessionID int64, tabul
 	})
 }
 
+// PasteToken põe a cópia NESTE tabuleiro, e a original pode ser de outro (ALE-206).
+func (bs *BoardStore) PasteToken(ctx context.Context, sessionID int64, tabuleiroID string, modelo BoardToken, laco *aovivo.InitiativeEntry, x, y int) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
+		return PasteToken(b, modelo, laco, x, y, bs.newID)
+	})
+}
+
 func (bs *BoardStore) UpdateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, patch tokenPatch) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { return UpdateToken(b, tokenID, patch) })
 }

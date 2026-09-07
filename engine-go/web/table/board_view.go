@@ -107,6 +107,9 @@ type BoardView struct {
 	//
 	// Escrita SÓ pelo `tableBoardBase` e pelo `placeDraftBase`.
 	Base string
+	// TabuleiroID é qual tabuleiro ESTA view desenha, e ele viaja para a tela
+	// porque o COPIAR precisa registrar de onde a peça saiu (ALE-206).
+	TabuleiroID string
 	// Rascunho é a cena sendo montada NO ACERVO, fora da sessão (ALE-292).
 	//
 	// Ela é um MODO e não a ausência de sessão, e a diferença importa: `SessionID
@@ -301,6 +304,11 @@ func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude 
 	v := BoardView{
 		Aberto: true, AvisoDaCortina: b.Curtained,
 		Lugar: b.Place, Chao: chaoConhecido(b.Terrain),
+		// O ID DESTE tabuleiro, e ele vem do ESTADO e não da aba ativa (ALE-206):
+		// a aba é a escolha de quem olha, e a fonte de qual tabuleiro está
+		// desenhado é o próprio `b`. Ele é o que o COPIAR guarda na área, para o
+		// colar achar a original mesmo depois de a pessoa trocar de aba.
+		TabuleiroID: b.ID,
 	}
 	for i := range b.Tokens {
 		v.Pecas = append(v.Pecas, boardTokenOf(&b.Tokens[i], saude, naVez))

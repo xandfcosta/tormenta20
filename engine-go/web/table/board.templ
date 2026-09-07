@@ -396,6 +396,43 @@ templ showIsTable(aba boardTab) {
 // aproximar. Os verbos do mestre vêm depois, no mesmo painel — são todos "o que
 // se faz COM a cena", e separá-los em dois cantos faria o jogador procurar num
 // lugar que só existe para ele.
+// A FAIXA DA ÁREA de transferência (ALE-206): o que o CTRL+V vai colar.
+//
+// Ela existe porque a decisão do modo foi tomada no COPIAR e não no colar, e uma
+// decisão guardada que não aparece na tela é estado escondido — a pessoa colaria
+// "sangrando junto" pensando em "com PV próprio", e o sintoma (dano num zumbi
+// aparecendo no outro) chegaria três turnos depois.
+//
+// O NÓ EXISTE SEMPRE e quem o esconde é o `data-show`: aqui mora o `keydown` do
+// CTRL+V, e um nó que só nasce com a área cheia levaria o atalho junto — o
+// primeiro colar depois de um remendo não teria quem o escutasse.
+//
+// O `keydown__window` mora AQUI e não no trilho de ferramentas porque aquele nó
+// já tem um: atributo repetido não existe no templ, e o segundo some sem erro.
+templ clipboardStrip(v BoardView) {
+	<div
+		data-show="$areapeca !== ''"
+		data-on:keydown__window={ pasteInTheMiddleOfTheView(v) }
+		class="tabuleiro-area"
+	>
+		// `aria-live` porque copiar não navega e não move o foco: sem ele, quem
+		// não vê a tela clica em "copiar para colar" e nada é anunciado.
+		<span aria-live="polite" class="tabuleiro-area-texto">
+			<span aria-hidden="true">@ui.Icon("Copy", "size-4")</span>
+			<span data-text="$arearotulo + ' · ' + $areafrase"></span>
+		</span>
+		<button
+			type="button"
+			aria-label="Esvaziar a área de transferência"
+			title="Esvaziar a área"
+			data-on:click={ emptiesTheClipboard }
+			class="tabuleiro-area-limpar"
+		>
+			@ui.Icon("X", "size-4")
+		</button>
+	</div>
+}
+
 templ sceneVerbs(v BoardView) {
 	<div class="tabuleiro-verbos-da-cena">
 		@planFraming(v)
@@ -405,6 +442,7 @@ templ sceneVerbs(v BoardView) {
 		// cortina, lente, pôr na fila, abrir outro, acervo e encerrar — e cada um
 		// deles precisa de uma mesa do outro lado (ALE-292).
 		if v.Mestre && !v.Rascunho {
+			@clipboardStrip(v)
 			// O acervo alcançável COM cena na mesa (ALE-191): trocar da taverna
 			// para a cripta sem encerrar primeiro.
 			@curtainButton(v)
@@ -1405,9 +1443,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 			type="button"
 			aria-label={ "Duplicar " + p.Rotulo }
 			title="Duplicar: escolher o que a cópia leva"
-			aria-expanded="false"
-			data-attr:aria-expanded={ copyingToken(p.ID) }
-			data-on:click={ openCopyToken(p.ID) }
+			popovertarget={ copyMenuId(p.ID) }
 			class="tabuleiro-peca-verbo"
 		>
 			@ui.Icon("Copy", "size-4")
@@ -1461,6 +1497,25 @@ templ tokenMenu(v BoardView, p boardToken) {
 
 // A SEGUNDA CAMADA do menu: o que a cópia vai ser (ALE-206).
 //
+// POPOVER NATIVO, e isso foi medido e não escolhido. Como camada `absolute`
+// dentro do menu ela media 314×325 e, a 844×390 com o menu em y=187, passava
+// 122px da janela — QUATRO dos seis modos inalcançáveis. Virar para cima não
+// resolveria (325px não cabem em 390 por direção nenhuma), e `position: fixed`
+// não escapa: o plano tem `transform`, e transform em ancestral vira bloco de
+// contenção para `fixed` — medido, a camada foi parar em y=-204 com 6px de
+// largura.
+//
+// A top layer resolve os três de uma vez: sai do `transform`, sai do
+// `overflow` e é posicionada em relação à JANELA. Quem escreve as coordenadas é
+// o `ancora()` do `cena.js`, no `beforetoggle` — o mesmo que posiciona o menu do
+// jogador no Hub —, e ele já vira para cima quando o gatilho está na metade de
+// baixo da tela.
+//
+// De brinde vêm o clique-fora e o Esc, que aqui FUNCIONA: o navegador fecha o
+// popover antes de o `cena.js` engolir a tecla. É o único Esc desta cena que
+// responde, e é por isso que ele não é anunciado em lugar nenhum — prometer
+// "Esc fecha" numa tela em que ele só fecha ISTO seria pior que não prometer.
+//
 // A ORDEM é a do uso: "com PV próprio" é o "mais um zumbi" de montar encontro e
 // vem primeiro; "sangrando junto" é o caso raro do mesmo inimigo desenhado em
 // dois pontos; "só a peça" é o que existia antes e fica por último, porque quem
@@ -1471,18 +1526,52 @@ templ tokenMenu(v BoardView, p boardToken) {
 // dano de um aparece no outro. Sem a frase, o menu pede que se adivinhe.
 templ tokenCopyMenu(v BoardView, p boardToken) {
 	<div
-		role="group"
+		id={ copyMenuId(p.ID) }
+		popover
 		aria-label={ "O que a cópia de " + p.Rotulo + " leva" }
-		data-show={ copyingToken(p.ID) }
 		class="tabuleiro-peca-copia"
 	>
+		@tokenCopyGroup("Duplicar aqui")
 		@tokenCopyMode(v, p, "sozinha", "Outro, com PV próprio", "entra na fila com o PV cheio do original")
 		// "COMBATENTE" e não "linha", e o GLOSSARIO é quem manda: `linha` é
 		// proibida em texto visível para o objeto — ela só vale falando do
 		// elemento de UI. O comentário do código pode dizer linha; a tela, não.
 		@tokenCopyMode(v, p, "junto", "Outro, sangrando junto", "o mesmo combatente da fila: uma barra de PV para os dois")
 		@tokenCopyMode(v, p, "peca", "Só a peça", "sem fila e sem PV — cenário, ou entra na fila depois")
+		// COPIAR guarda a decisão e não age (ALE-206). A pergunta dos três modos
+		// é feita UMA vez, aqui, e cada `CTRL + V` depois põe outro igual sem
+		// perguntar de novo — decisão do dono: perguntar a cada colada mataria o
+		// valor do teclado, que é repetir.
+		@tokenCopyGroup("Copiar para colar")
+		@tokenClipboardMode(v, p, "sozinha", "com PV próprio")
+		@tokenClipboardMode(v, p, "junto", "sangrando junto")
+		@tokenClipboardMode(v, p, "peca", "só a peça")
 	</div>
+}
+
+// tokenCopyGroup separa as duas metades da camada.
+//
+// `<p>` e não cabeçalho: a camada já tem `aria-label`, e um `<h4>` faria o leitor
+// de tela anunciar um nível novo no meio de uma lista de seis botões. O que
+// separa para quem NÃO vê é o rótulo de cada botão, que diz o verbo inteiro.
+templ tokenCopyGroup(rotulo string) {
+	<p aria-hidden="true" class="tabuleiro-peca-copia-grupo">{ rotulo }</p>
+}
+
+// tokenClipboardMode põe a peça na área com um modo grudado.
+//
+// O rótulo acessível diz o VERBO inteiro — "Copiar Zumbi para colar: com PV
+// próprio" — porque o cabeçalho do grupo é `aria-hidden`, e sem ele o botão se
+// anunciaria só como "com PV próprio", que é a metade que não diz o que acontece.
+templ tokenClipboardMode(v BoardView, p boardToken, modo, nome string) {
+	<button
+		type="button"
+		aria-label={ "Copiar " + p.Rotulo + " para colar: " + nome }
+		data-on:click={ putsInTheClipboard(v, p, modo, nome) }
+		class="tabuleiro-peca-copia-modo"
+	>
+		<span class="tabuleiro-peca-copia-nome">{ nome }</span>
+	</button>
 }
 
 // tokenCopyMode é uma escolha da segunda camada.
