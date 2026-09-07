@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/aovivo"
+	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/tabuleiro"
 	"t20engine/web/table"
@@ -513,5 +514,102 @@ func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 	if aovivo.DerefOr(nova.HpCurrent, 0) != 130 {
 		t.Errorf("o ogro colado entrou com %d de PV, esperado 130 — ele chega inteiro",
 			aovivo.DerefOr(nova.HpCurrent, 0))
+	}
+}
+
+// ── O CHEFE QUE GANHA NOME (ALE-206) ─────────────────────────────────────────
+
+// TestTheCopyWithItsOwnBlockClonesTheCreature.
+//
+// Duas linhas dividem um bloco sem problema — ele é um MOLDE. Clonar só importa
+// quando o mestre vai EDITAR uma das duas: sem a cópia, dar 30 PV a mais ao
+// chefe daria aos outros três zumbis também.
+//
+// É o BLOCO e não a ficha de personagem, e a diferença é do modelo: neste app
+// `characterId` é PC de jogador e `creatureId` é a criatura que o mestre
+// escreveu. Clonar personagem exigiria matricular a cópia na campanha, e todo
+// membro aparece no painel do Grupo — um zumbi duplicado entraria lá.
+func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
+	f := novoPiloto(t)
+	agora := "2026-01-01T00:00:00Z"
+	bloco, err := f.s.queries.CreateCampaignCreature(context.Background(), sqlcgen.CreateCampaignCreatureParams{
+		Campaignid: f.campaignID, Name: "Zumbi",
+		Block:     `{` + blocoMinimo + `}`,
+		Createdat: agora, Updatedat: agora,
+	})
+	if err != nil {
+		t.Fatalf("semear o bloco: %v", err)
+	}
+	if _, err := f.s.sessions.StartScene(f.sessionID); err != nil {
+		t.Fatalf("iniciar cena: %v", err)
+	}
+	pv := int64(20)
+	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
+		Label: "Zumbi", Initiative: 10, Type: "npc",
+		HpCurrent: &pv, HpMax: &pv, CreatureID: &bloco.ID,
+	}); err != nil {
+		t.Fatalf("semear a linha: %v", err)
+	}
+	f.seedOpenBoard(t, "pedra")
+	id, linhaOriginal := tokenOnTheQueue(t, f, "Zumbi")
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", ""); rec.Code != http.StatusOK {
+		t.Fatalf("duplicar com bloco próprio deu %d", rec.Code)
+	}
+
+	fila := f.s.sessions.GetState(f.sessionID)
+	var nova *aovivo.InitiativeEntry
+	for i := range fila.Initiative {
+		if fila.Initiative[i].ID != linhaOriginal {
+			nova = &fila.Initiative[i]
+		}
+	}
+	if nova == nil {
+		t.Fatal("a fila não ganhou linha")
+	}
+	if nova.CreatureID == nil {
+		t.Fatal("a linha nova nasceu sem bloco: o chefe não teria ficha para editar")
+	}
+	if *nova.CreatureID == bloco.ID {
+		t.Fatal("a linha nova aponta para o bloco da ORIGINAL — editar um mexeria no outro")
+	}
+	copia, err := f.s.queries.GetCampaignCreature(context.Background(), *nova.CreatureID)
+	if err != nil {
+		t.Fatalf("o bloco copiado não está no acervo: %v", err)
+	}
+	if copia.Block != `{`+blocoMinimo+`}` {
+		t.Errorf("o bloco copiado veio diferente do original:\n%s", copia.Block)
+	}
+	// O NOME do bloco acompanha o da linha, e este é o ponto: com dois "Zumbi"
+	// no acervo, o olho da fila abriria um bloco chamado como o outro.
+	if copia.Name != nova.Label {
+		t.Errorf("o bloco se chama %q e a linha %q — dois nomes para a mesma criatura",
+			copia.Name, nova.Label)
+	}
+	if copia.Campaignid != f.campaignID {
+		t.Errorf("o bloco copiado caiu na campanha %d", copia.Campaignid)
+	}
+}
+
+// TestTheOwnBlockModeRefusesWhoHasNone: herói e NPC digitado à mão não têm bloco.
+//
+// O menu já esconde o verbo nesses casos; a trava é do servidor, e o botão
+// escondido nunca foi prova de trava.
+func TestTheOwnBlockModeRefusesWhoHasNone(t *testing.T) {
+	f := novoPiloto(t)
+	f.scene(t)
+	f.seedOpenBoard(t, "pedra")
+	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
+
+	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", "")
+	if !strings.Contains(recusa, "não tem bloco de criatura") {
+		t.Errorf("o modo do bloco aceitou uma linha sem bloco:\n%s", recusa)
+	}
+	// O CONTROLE: o "com PV próprio", na MESMA peça, passa. Sem ele a recusa
+	// acima seria verdade também numa rota que recusa tudo.
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/sozinha", ""); rec.Code != http.StatusOK {
+		t.Fatalf("o modo com PV próprio também foi recusado: %d", rec.Code)
 	}
 }

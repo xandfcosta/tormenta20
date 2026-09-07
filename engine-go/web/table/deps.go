@@ -105,6 +105,19 @@ type Deps interface {
 	RestParty(userID, campaignID, sessionID int64, escopo, condicao string) (int, int, error)
 	// SelfInitiativeEntry monta a linha de quem entra na fila com o próprio d20.
 	SelfInitiativeEntry(userID, campaignID, characterID, d20 int64) (aovivo.InitiativeEntry, error)
+	// CloneCreatureBlock copia o bloco de criatura do mestre e devolve o id da
+	// cópia (ALE-206).
+	//
+	// Ele existe para o "chefe que ganha nome": duas linhas podem dividir um
+	// bloco sem problema — ele é um MOLDE —, e clonar só importa quando o mestre
+	// vai EDITAR uma das duas. Sem a cópia, dar 30 PV a mais ao chefe daria aos
+	// outros três zumbis também.
+	//
+	// É o bloco e NÃO a ficha de personagem, e a diferença é do modelo: neste app
+	// `characterId` é PC de jogador e `creatureId` é a criatura que o mestre
+	// escreveu. Clonar personagem exigiria matricular a cópia na campanha, e todo
+	// membro aparece no painel do Grupo — um zumbi duplicado entraria lá.
+	CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error)
 	// MaterializeEntry transforma o pedido de linha nova (ficha, NPC, verbete)
 	// na linha de fila que o store aceita.
 	MaterializeEntry(ctx context.Context, userID, campaignID int64, pedido map[string]any) (aovivo.InitiativeEntry, error)
