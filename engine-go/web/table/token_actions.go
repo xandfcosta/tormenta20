@@ -55,6 +55,7 @@ func (s Scene) TokenActionRoutes(r chi.Router) {
 	r.Post(base+"/duplicar/"+modoSoAPeca, s.gmBoardCommand(duplicatesWith(modoSoAPeca)))
 	r.Post(base+"/duplicar/"+modoJunto, s.gmBoardCommand(duplicatesWith(modoJunto)))
 	r.Post(base+"/duplicar/"+modoSozinha, s.gmBoardCommand(duplicatesWith(modoSozinha)))
+	r.Post(base+"/duplicar/"+modoBloco, s.gmBoardCommand(duplicatesWith(modoBloco)))
 	// COLAR não é de uma peça e por isso não pende do `base`: a peça de origem
 	// pode estar em OUTRA aba, e quem a nomeia é a área de transferência de quem
 	// clicou, não o caminho. O que vem no caminho é o QUADRADO, que é a única
@@ -204,10 +205,26 @@ func (s Scene) bondForMode(c commandCtx, modo string, modelo *tabuleiro.BoardTok
 	if modo == modoJunto {
 		return linha, nil
 	}
-	if modo != modoSozinha {
+	if modo != modoSozinha && modo != modoBloco {
 		return nil, fmt.Errorf("modo de cópia desconhecido: %q", modo)
 	}
-	nova, err := s.addsACopyOfTheLine(c.SessionID, *linha)
+	linhaModelo := *linha
+	if modo == modoBloco {
+		// O BLOCO é clonado ANTES da linha, e a ordem importa: a linha nova já
+		// nasce apontando para a cópia. Criar a linha primeiro e remendá-la
+		// depois deixaria uma janela em que ela aponta para o bloco da original —
+		// e nessa janela um remendo da cena desenharia o chefe com a ficha errada.
+		if linha.CreatureID == nil {
+			return nil, fmt.Errorf("%s não tem bloco de criatura: não há o que copiar", linha.Label)
+		}
+		nomeDaCopia := s.nextNameForTheLine(c.SessionID, linha.Label)
+		blocoNovo, err := s.deps.CloneCreatureBlock(c.R.Context(), *linha.CreatureID, c.CampaignID, nomeDaCopia)
+		if err != nil {
+			return nil, err
+		}
+		linhaModelo.CreatureID = &blocoNovo
+	}
+	nova, err := s.addsACopyOfTheLine(c.SessionID, linhaModelo)
 	if err != nil {
 		return nil, err
 	}
@@ -224,6 +241,9 @@ const (
 	modoSoAPeca = "peca"
 	modoJunto   = "junto"
 	modoSozinha = "sozinha"
+	// modoBloco é o "chefe que ganha nome": linha nova E bloco de criatura
+	// próprio, para o mestre editar um sem mexer nos outros.
+	modoBloco = "bloco"
 )
 
 // queueLineOf é a linha da fila por trás de uma peça, ou nulo.
@@ -241,6 +261,29 @@ func (s Scene) queueLineOf(sessionID int64, peca *tabuleiro.BoardToken) *aovivo.
 		}
 	}
 	return nil
+}
+
+// nextNameForTheLine é o nome que a cópia VAI receber, calculado ANTES de ela
+// existir.
+//
+// Ele existe porque o bloco é clonado antes da linha, e o bloco leva nome: sem
+// isto, o acervo do mestre ficaria com dois "Zumbi" e a linha com "Zumbi 2" —
+// dois nomes para a mesma criatura, e o olho da fila abrindo um bloco que se
+// chama outra coisa.
+//
+// A conta é a MESMA do `AddEntry` (o `numberedLabel`), e repeti-la aqui é o
+// preço de precisar do nome cedo. Ela não briga: quem numera de verdade continua
+// sendo o `AddEntry`, e este valor só decide como o BLOCO se chama.
+func (s Scene) nextNameForTheLine(sessionID int64, rotulo string) string {
+	estado := s.deps.Sessions().GetState(sessionID)
+	if estado == nil {
+		return rotulo
+	}
+	usados := make([]string, 0, len(estado.Initiative))
+	for i := range estado.Initiative {
+		usados = append(usados, estado.Initiative[i].Label)
+	}
+	return aovivo.NextInstanceLabelAmong(usados, rotulo)
 }
 
 // addsACopyOfTheLine põe na fila outra linha igual à dada, e devolve a que

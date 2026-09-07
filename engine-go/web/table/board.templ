@@ -1537,6 +1537,13 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 		// proibida em texto visível para o objeto — ela só vale falando do
 		// elemento de UI. O comentário do código pode dizer linha; a tela, não.
 		@tokenCopyMode(v, p, "junto", "Outro, sangrando junto", "o mesmo combatente da fila: uma barra de PV para os dois")
+		// O BLOCO PRÓPRIO só aparece para quem TEM bloco (ALE-206): o herói e o
+		// NPC digitado à mão não têm o que copiar, e oferecer o que o servidor vai
+		// recusar é desenhar um erro — a mesma regra que o `sessionConfig` segue
+		// ao esconder "encerrar" na sessão que não começou.
+		if p.TemBloco {
+			@tokenCopyMode(v, p, "bloco", "Outro, com bloco próprio", "copia a ficha da criatura: dá para editar o chefe sem mexer nos outros")
+		}
 		@tokenCopyMode(v, p, "peca", "Só a peça", "sem fila e sem PV — cenário, ou entra na fila depois")
 		// COPIAR guarda a decisão e não age (ALE-206). A pergunta dos três modos
 		// é feita UMA vez, aqui, e cada `CTRL + V` depois põe outro igual sem

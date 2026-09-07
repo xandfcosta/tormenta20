@@ -2,12 +2,14 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
+	"t20engine/plataforma"
 	"t20engine/tabuleiro"
 	"t20engine/web/sheetui"
 	"t20engine/web/table"
@@ -157,6 +159,34 @@ func (h tableHost) SelfInitiativeEntry(
 	userID, campaignID, characterID, d20 int64,
 ) (aovivo.InitiativeEntry, error) {
 	return h.rules.selfInitiativeEntry(userID, campaignID, characterID, d20)
+}
+
+// CloneCreatureBlock copia o bloco e devolve o id da cópia (ALE-206).
+//
+// Uma leitura e uma escrita, sem transação: o bloco é uma linha só, e não há
+// segundo passo que possa falhar deixando a cópia órfã — que é o que obrigou o
+// `cloneCharacterTx` a ter dono de transação (ALE-156).
+//
+// A CAMPANHA vem de fora e não do bloco lido, e isso é deliberado: é o servidor
+// que sabe em qual mesa o gesto aconteceu, e copiar o `campaignId` da origem
+// deixaria um bloco de outra campanha entrar nesta pelo id na URL.
+func (h tableHost) CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error) {
+	origem, err := h.rules.queries.GetCampaignCreature(ctx, creatureID)
+	if err != nil {
+		return 0, fmt.Errorf("o bloco %d não foi encontrado: %w", creatureID, err)
+	}
+	if origem.Campaignid != campaignID {
+		return 0, fmt.Errorf("o bloco %d é de outra campanha", creatureID)
+	}
+	agora := plataforma.NowISO()
+	copia, err := h.rules.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
+		Campaignid: campaignID, Name: nome, Block: origem.Block,
+		Createdat: agora, Updatedat: agora,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("copiar o bloco %d: %w", creatureID, err)
+	}
+	return copia.ID, nil
 }
 
 func (h tableHost) MaterializeEntry(

@@ -209,6 +209,10 @@ type boardToken struct {
 	// NaVez acende o anel dourado, que é o MESMO sinal que a fila usa. Duas
 	// cores para "a vez" fariam a mesa procurar duas coisas.
 	NaVez bool
+	// TemBloco: este combatente tem bloco de criatura do mestre, e por isso o
+	// menu pode oferecer o "com bloco próprio" (ALE-206). Falso para o herói e
+	// para o NPC digitado à mão — nos dois não há bloco a copiar.
+	TemBloco bool
 	// PV é a porcentagem restante, ou nil quando não há número para mostrar —
 	// inclusive para o JOGADOR quando o mestre ocultou os PV (ALE-188). É assim
 	// que a redação por papel chega até a peça.
@@ -310,8 +314,9 @@ func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude 
 		// colar achar a original mesmo depois de a pessoa trocar de aba.
 		TabuleiroID: b.ID,
 	}
+	comBloco := blocosDaFila(st)
 	for i := range b.Tokens {
-		v.Pecas = append(v.Pecas, boardTokenOf(&b.Tokens[i], saude, naVez))
+		v.Pecas = append(v.Pecas, boardTokenOf(&b.Tokens[i], saude, comBloco, naVez))
 	}
 	for i := range b.Markers {
 		m := &b.Markers[i]
@@ -400,7 +405,7 @@ func dropWasWhereLandsToken(pecas []boardToken, mov *moveView, mestre bool) *boa
 	return nil
 }
 
-func boardTokenOf(t *tabuleiro.BoardToken, saude map[string]int, naVez string) boardToken {
+func boardTokenOf(t *tabuleiro.BoardToken, saude map[string]int, comBloco map[string]bool, naVez string) boardToken {
 	a := tabuleiro.AppearanceOf(t.Label)
 	pegada := t.Footprint
 	if pegada < 1 {
@@ -420,6 +425,7 @@ func boardTokenOf(t *tabuleiro.BoardToken, saude map[string]int, naVez string) b
 		if pct, ok := saude[*t.EntryID]; ok {
 			p.PV = &pct
 		}
+		p.TemBloco = comBloco[*t.EntryID]
 	}
 	return p
 }
@@ -429,6 +435,25 @@ func boardTokenOf(t *tabuleiro.BoardToken, saude map[string]int, naVez string) b
 // Num plano sem bordas o "+1" de planilha mente sobre onde a peça está, e é este
 // texto que o leitor de tela recebe — sem ele a peça é um disco anônimo.
 func Coordinate(x, y int) string { return fmt.Sprintf("%d, %d", x, y) }
+
+// blocosDaFila diz quais combatentes têm bloco de criatura do mestre (ALE-206).
+//
+// Mapa por `entryId` como a saúde, e pela mesma razão: não é do tabuleiro, é da
+// FILA, e o tabuleiro só mostra. Ele decide se o menu da peça OFERECE o
+// "com bloco próprio" — oferecer o que o servidor vai recusar é desenhar um erro,
+// que é o que o `sessionConfig` já escreve com todas as letras.
+func blocosDaFila(st *aovivo.SessionRuntimeState) map[string]bool {
+	comBloco := map[string]bool{}
+	if st == nil {
+		return comBloco
+	}
+	for i := range st.Initiative {
+		if st.Initiative[i].CreatureID != nil {
+			comBloco[st.Initiative[i].ID] = true
+		}
+	}
+	return comBloco
+}
 
 // saudeDaFila é quanto de PV resta a cada combatente, em porcentagem (ALE-188).
 //
