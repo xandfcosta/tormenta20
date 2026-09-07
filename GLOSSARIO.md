@@ -373,6 +373,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **porta** (a cena de entrar) | `door` | `TestTheDoorRefusesAWrongPasswordWithoutOpeningASession` |
 | **crachá** | `badge` | `TestTheTypeBadgeTogglesWithoutNavigating` |
 | **gaveta** | `drawer` | e2e `a recuperação sai da fileira quando o palco é baixo` (a do palco), e2e `deitado os filtros viram gaveta` (a dos filtros) |
+| **área** (de transferência) | `clipboard` | e2e `colar põe outro igual no centro da vista` |
 | **dossiê** | `dossier` | `TestTheDossierRespectsTheLimit` |
 | **monograma** | `monogram` | `TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal` |
 | **matiz** | `hue` | `TestTheNameHueMatchesTheJs` |

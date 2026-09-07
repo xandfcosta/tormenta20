@@ -1,6 +1,9 @@
 package tabuleiro
 
-import "t20engine/aovivo"
+import (
+	"t20engine/aovivo"
+	"t20engine/engine"
+)
 
 import (
 	"fmt"
@@ -262,6 +265,65 @@ func TestTheCopyTakesTheSheetFromTheLineAndNotFromTheOriginal(t *testing.T) {
 	}
 	if copia.EntryID == nil || *copia.EntryID != "e9" {
 		t.Errorf("a cópia aponta para %v, esperado a linha nova e9", copia.EntryID)
+	}
+}
+
+// COLAR pousa onde se está OLHANDO, e não colado na original (ALE-206).
+//
+// É a diferença inteira para o duplicar: o colar existe para pôr a cópia longe,
+// noutra parte do mapa ou noutra aba.
+func TestThePasteLandsOnTheGivenSquare(t *testing.T) {
+	b := tabuleiroCom("Zumbi 1")
+	b.Tokens[0].X, b.Tokens[0].Y = 0, 0
+	modelo := b.Tokens[0]
+
+	if err := PasteToken(b, modelo, nil, 12, 7, novoIDFixo()); err != nil {
+		t.Fatalf("colar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.X != 12 || copia.Y != 7 {
+		t.Errorf("a cópia pousou em (%d,%d), esperado (12,7)", copia.X, copia.Y)
+	}
+	if copia.Label == "Zumbi 1" {
+		t.Error("a cópia ficou com o mesmo nome — dois 'Zumbi 1' no mesmo mapa")
+	}
+}
+
+// A cópia colada NÃO herda o "de onde veio".
+//
+// Aquilo é a memória do último pouso DESTA peça, e uma que nasce agora não tem
+// para onde voltar. Colando entre abas seria pior: o voltar mandaria a cópia
+// para um quadrado de OUTRO mapa.
+func TestThePastedCopyHasNowhereToGoBackTo(t *testing.T) {
+	b := tabuleiroCom("Ogro")
+	b.Tokens[0].DeOndeVeio = &engine.Square{X: 3, Y: 4}
+	modelo := b.Tokens[0]
+
+	if err := PasteToken(b, modelo, nil, 9, 9, novoIDFixo()); err != nil {
+		t.Fatalf("colar: %v", err)
+	}
+
+	if copia := b.Tokens[len(b.Tokens)-1]; copia.DeOndeVeio != nil {
+		t.Errorf("a cópia nasceu com um voltar para (%d,%d), onde ela nunca esteve",
+			copia.DeOndeVeio.X, copia.DeOndeVeio.Y)
+	}
+}
+
+// A casa OCUPADA empurra a cópia para a vizinha: pousar em cima esconde a de
+// baixo sem dizer nada.
+func TestThePasteDoesNotLandOnTopOfAnother(t *testing.T) {
+	b := tabuleiroCom("Zumbi 1")
+	b.Tokens[0].X, b.Tokens[0].Y = 5, 5
+	modelo := b.Tokens[0]
+
+	if err := PasteToken(b, modelo, nil, 5, 5, novoIDFixo()); err != nil {
+		t.Fatalf("colar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.X == 5 && copia.Y == 5 {
+		t.Error("a cópia pousou em cima da original, e uma some debaixo da outra")
 	}
 }
 

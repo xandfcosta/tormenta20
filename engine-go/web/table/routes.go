@@ -162,11 +162,26 @@ func tableSignalsExpr() string {
 		// `pecaeditada` é qual peça o diálogo está editando: são DOIS porque abrir
 		// o diálogo FECHA o menu, e um sinal só faria o gesto de abrir apagar o
 		// alvo do gesto de salvar.
-		// `pecacopia` é a terceira e é qual peça está com o SUBMENU de duplicar
-		// aberto (ALE-206). Separado do `pecaescolhida` pelo mesmo motivo do
-		// `pecaeditada`: o submenu é uma camada DENTRO do menu, e um sinal só
-		// faria escolher a peça já abrir a segunda camada em cima da primeira.
-		"pecaescolhida: '', pecaeditada: '', pecacopia: '', pecanome: '', pecatamanho: 1",
+		// A SEGUNDA CAMADA do menu não tem sinal: ela é popover NATIVO, e quem
+		// guarda o aberto/fechado é o navegador (ALE-206).
+		"pecaescolhida: '', pecaeditada: '', pecanome: '', pecatamanho: 1",
+		// A ÁREA DE TRANSFERÊNCIA da peça (ALE-206), e ela é do CLIENTE de
+		// propósito: é a área de QUEM COPIOU, não da mesa. No servidor ela seria
+		// um estado por usuário e por sessão que ninguém pediu, e que o mestre
+		// encontraria cheio no dia seguinte.
+		//
+		// São quatro sinais e não um objeto porque chave de atributo é
+		// minusculada pelo HTML: um `data-bind:areaPeca` chega como `areapeca` e
+		// liga um sinal NOVO, com o servidor lendo o antigo para sempre vazio.
+		//
+		// `areatabuleiro` guarda de ONDE a peça veio, e é ele que faz o colar
+		// atravessar as abas: a original pode não estar no tabuleiro em que se
+		// cola, e sem a origem o servidor não teria onde procurá-la.
+		//
+		// `areamodo` é o valor que o SERVIDOR consome e `areafrase` é o que a
+		// pessoa lê: sem os dois, a faixa diria "Zumbi · sozinha", que é um
+		// identificador de código na tela de alguém.
+		"areapeca: '', areatabuleiro: '', areamodo: '', arearotulo: '', areafrase: ''",
 		// A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril. Os nomes levam
 		// `nova` porque `pecanome` e `pecatamanho` JÁ SÃO do diálogo de EDITAR
 		// peça, logo acima, e vivem no mesmo documento: reusá-los faria o gesto

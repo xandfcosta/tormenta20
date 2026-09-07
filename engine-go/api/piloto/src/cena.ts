@@ -68,11 +68,22 @@ function ancora(painel: HTMLElement): void {
   // medi e ele posicionou 46px fora do lugar com um palpite de altura. Ancorar
   // pela borda de baixo dispensa a altura, e aí não há palpite.
   //
-  // "Para cima" é decidido pela METADE DA TELA e não por caber: caber também
-  // exige a altura. É a heurística que todo menu de rodapé usa, e o rodapé do
-  // Hub está sempre no pé.
-  const paraCima = g.top > window.innerHeight / 2
+  // O LADO é o que tem MAIS ESPAÇO, e não a metade da tela.
+  //
+  // Aqui morava a heurística da metade, com o argumento de que "caber também
+  // exige a altura" — e ele valia enquanto o painel não tinha teto. Com o teto
+  // logo abaixo ele deixou de valer: dá para escolher o lado sem saber a altura,
+  // porque o painel passa a caber no lado escolhido por construção.
+  //
+  // Medido na ALE-206, que é o que forçou a mudança: a segunda camada do menu da
+  // peça mede 312px e, a 844×390 com o gatilho em y=147, a regra da metade a
+  // mandava para BAIXO — 191 + 312 = 503 numa janela de 390, com três dos seis
+  // modos fora da tela. O rodapé do Hub não muda de lado: lá os dois critérios
+  // concordam.
   const margem = 8
+  const espacoAcima = g.top - margem * 2
+  const espacoAbaixo = window.innerHeight - g.bottom - margem * 2
+  const paraCima = espacoAcima > espacoAbaixo
   // `auto` e NÃO string vazia. O estilo de agente de usuário do popover é
   // `inset: 0`, então limpar a propriedade devolve o `top: 0` DELE — e com
   // `top` e `bottom` ambos definidos e altura automática a caixa fica
@@ -80,8 +91,26 @@ function ancora(painel: HTMLElement): void {
   // Medido: o painel encostava no alto da tela com `bottom: 112px` aplicado.
   painel.style.top = paraCima ? 'auto' : `${Math.round(g.bottom + margem)}px`
   painel.style.bottom = paraCima ? `${Math.round(window.innerHeight - g.top + margem)}px` : 'auto'
+  // O TETO é o espaço do lado escolhido, e com ele o painel nunca passa da
+  // janela — o que não couber ROLA, o que é diferente de não existir. O piso de
+  // 96px existe para o caso degenerado (gatilho colado numa borda): melhor um
+  // painel curto que rola do que um de altura zero.
+  //
+  // Quem quiser um painel sem rolagem declara `max-height` menor na própria
+  // folha; este é o TETO, não a altura.
+  painel.style.maxHeight = `${Math.max(96, Math.round(paraCima ? espacoAcima : espacoAbaixo))}px`
   // Preso à janela: num telefone o gatilho pode estar perto da borda direita e
   // o painel é mais largo que ele.
+  //
+  // O 224 é CHUTE e ele erra, pelo mesmo motivo que a altura errava: no
+  // `beforetoggle` o painel ainda está escondido e `offsetWidth` é ZERO. Medido
+  // na ALE-206: a segunda camada do menu da peça mede 314px, o chute a tratou
+  // como 224, e a 390px de janela ela passou 80px da borda direita — alcançável
+  // pelo dedo, e com o texto cortado pela tela.
+  //
+  // Por isso o `ancora` roda DUAS vezes (ver o ouvinte no fim do arquivo): a
+  // primeira com o chute, para não haver lampejo no canto, e a segunda no
+  // `toggle`, quando o painel já tem tamanho e a conta deixa de ser palpite.
   const largura = painel.offsetWidth || 224
   painel.style.left = `${Math.round(Math.max(margem, Math.min(g.left, window.innerWidth - largura - margem)))}px`
 }
@@ -160,11 +189,18 @@ document.addEventListener('click', (e) => {
 // ouvinte no `document` sem captura nunca dispara — medido, o popover abria no
 // canto superior esquerdo. A fase de captura desce do root até o alvo mesmo
 // para evento que não sobe.
-document.addEventListener(
-  'beforetoggle',
-  (e) => {
-    const alvo = e.target as HTMLElement
-    if (alvo?.matches?.('[popover]') && (e as ToggleEvent).newState === 'open') ancora(alvo)
-  },
-  true,
-)
+//
+// E DUAS VEZES, `beforetoggle` e `toggle`: na primeira o painel ainda está
+// escondido e mede zero, então a largura e o espaço saem de um chute; na
+// segunda ele já está na top layer e a conta é a real. Só a segunda não bastaria
+// — o painel apareceria no canto por um quadro antes de saltar para o lugar.
+for (const quando of ['beforetoggle', 'toggle']) {
+  document.addEventListener(
+    quando,
+    (e) => {
+      const alvo = e.target as HTMLElement
+      if (alvo?.matches?.('[popover]') && (e as ToggleEvent).newState === 'open') ancora(alvo)
+    },
+    true,
+  )
+}

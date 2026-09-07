@@ -706,20 +706,23 @@ test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ pag
 /**
  * A SEGUNDA CAMADA do menu da peça só aparece quando pedida (ALE-206).
  *
- * O submenu de duplicar acrescenta TRÊS botões por peça, e quem os esconde é o
- * `data-show`, que é CSS. Com o MENU aberto e o submenu fechado eles não podem
- * estar no caminho do teclado: seriam três paradas de Tab que não se veem, e a
- * pessoa navegando pelo menu passaria por elas antes de chegar ao ✕.
+ * Ela é POPOVER NATIVO desde a fatia do colar, e a mudança de mecanismo é o que
+ * este caso protege: como camada `absolute` ela media 314×325 e passava 122px da
+ * janela a 844×390, com quatro dos seis modos inalcançáveis; `position: fixed`
+ * não resolvia porque o plano tem `transform`, que vira bloco de contenção.
  *
- * O MENU É ABERTO ANTES, e essa linha é a diferença entre um guarda e um enfeite.
- * A primeira versão deste caso media com o menu FECHADO, e passou verde com o
- * submenu sabotado para `data-show="true"` — porque um filho de pai
- * `display:none` é invisível de qualquer jeito. Ele afirmava no nome uma coisa e
- * media outra, e só a sabotagem o denunciou.
+ * O que se mede aqui é o FECHADO: um popover escondido não pode deixar botão no
+ * caminho do teclado. São seis por peça, e dez zumbis dariam sessenta paradas de
+ * Tab sobre um mapa em que nenhuma se vê.
  *
- * Por que e2e: o que se mede é `checkVisibility` com o `data-show` aplicado de
- * verdade, e a herança de `display` de um pai para o filho. Em jsdom todo
- * elemento mede zero e o caso passaria verde sobre os três botões no ar.
+ * A primeira versão deste caso media com o MENU fechado e passou verde com o
+ * submenu sabotado — um filho de pai `display:none` é invisível de qualquer
+ * jeito. Ele afirmava no nome uma coisa e media outra. Por isso o menu é aberto
+ * antes: é a linha que separa um guarda de um enfeite.
+ *
+ * Por que e2e: `display` computado, a top layer e `checkVisibility` só existem
+ * num navegador. Em jsdom todo elemento mede zero e o caso passaria verde sobre
+ * os seis botões no ar.
  */
 test('o submenu de duplicar só entra no caminho do teclado quando é aberto', async ({ page }) => {
   const { mesa, apagar } = await mesaDescartavel(page)
@@ -736,12 +739,12 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
       )
 
     // O MENU ABERTO é a premissa: com ele fechado, o submenu seria invisível pela
-    // herança do pai e o caso não mediria o `data-show` dele.
+    // herança do pai e o caso não mediria o popover.
     await page.locator('.tabuleiro-peca').first().click({ button: 'right' })
     const duplicar = page.getByRole('button', { name: /^Duplicar / })
     await expect(
       duplicar,
-      'o menu da peça não abriu: sem ele o caso mede a herança do pai, não o submenu',
+      'o menu da peça não abriu: sem ele o caso mede a herança do pai, não o popover',
     ).toBeVisible()
 
     expect(
@@ -749,14 +752,113 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
       'o submenu fechado deixou botão alcançável pelo Tab dentro de um menu aberto',
     ).toBe(0)
 
-    // O CONTROLE POSITIVO: aberto, os três aparecem. Sem ele, "nenhum botão
-    // visível" seria também o resultado de um seletor que parou de casar.
+    // O CONTROLE POSITIVO: aberto, os seis aparecem — três de duplicar aqui e
+    // três de copiar para colar.
     await duplicar.click()
     await expect
       .poll(botoesDoSubmenu, {
         message: 'o submenu não abriu: a asserção acima estaria medindo uma camada que nunca aparece',
       })
-      .toBe(3)
+      .toBe(6)
+
+    // E ele CABE na janela em toda forma, que é o que o popover comprou: a
+    // camada `absolute` de antes passava 122px da borda a 844×390.
+    //
+    // REABERTO em cada formato, e não redimensionado com ele no ar: quem
+    // posiciona é o `ancora()` no `beforetoggle`, e ele não roda de novo num
+    // `resize`. Medir sem reabrir mede a conta do formato ANTERIOR — deu 9px de
+    // estouro num painel que, reaberto, sobra 8.
+    // SÓ O DEITADO, e o motivo é registrado: a 390px de LARGURA a peça nasce em
+    // (3,0), debaixo do painel de verbos da cena, e o clique direito vai para o
+    // botão de afastar em vez da peça — a armadilha da ALE-203, pré-existente e
+    // de outra issue. Medir ali exigiria pôr a peça noutro quadrado, o que este
+    // caso não faz. O formato deitado é onde o defeito foi medido, e é o que
+    // este guarda prende.
+    for (const [nome, w, h] of [['deitado', 844, 390]] as const) {
+      await page.setViewportSize({ width: w, height: h })
+      await page.evaluate(() =>
+        document.querySelectorAll('[popover]').forEach((p) => {
+          try {
+            ;(p as HTMLElement & { hidePopover(): void }).hidePopover()
+          } catch {
+            // já estava fechado
+          }
+        }),
+      )
+      await page.locator('.tabuleiro-peca').first().click({ button: 'right' })
+      await page.getByRole('button', { name: /^Duplicar / }).click()
+      await page.waitForTimeout(300)
+      const escapou = await page.evaluate(() => {
+        const p = document.querySelector('.tabuleiro-peca-copia')!.getBoundingClientRect()
+        return {
+          abaixo: Math.round(p.bottom - window.innerHeight),
+          direita: Math.round(p.right - window.innerWidth),
+        }
+      })
+      expect(escapou.abaixo, `a camada passa ${escapou.abaixo}px do pé da janela ${nome}`).toBeLessThanOrEqual(1)
+      expect(escapou.direita, `a camada passa ${escapou.direita}px da borda direita ${nome}`).toBeLessThanOrEqual(1)
+    }
+  } finally {
+    await apagar()
+  }
+})
+
+/**
+ * COPIAR guarda a decisão, e cada CTRL+V repete (ALE-206).
+ *
+ * A issue pedia a pergunta no momento de COLAR; perguntar a cada tecla mataria o
+ * valor do teclado, que é repetir. Decisão do dono: a pergunta é feita uma vez,
+ * no menu, e o colar só executa.
+ *
+ * Por que e2e, e este arquivo cobra a justificativa: o `CTRL + V` é um atalho de
+ * TECLADO competindo com o colar do navegador, e o quadrado de destino é o centro
+ * da JANELA — uma conta de pixels que só existe com zoom e vista reais. Nada
+ * disso tem testemunha fora de um navegador.
+ *
+ * O caso NÃO reprova a regra de PV, que já está presa em Go (`bondForMode`): o
+ * que ele prende é a ligação — copiar enche a área, a tecla dispara, e o segundo
+ * CTRL+V põe outro.
+ */
+test('copiar guarda o modo, e cada CTRL+V põe outro igual', async ({ page }) => {
+  const { mesa, apagar } = await mesaDescartavel(page)
+  try {
+    await abreOTabuleiro(page, mesa)
+    await poeUmaPecaNoMapa(page)
+
+    // A FAIXA da área começa VAZIA, e este é o controle: sem ele, uma faixa que
+    // aparecesse sempre passaria pelas asserções de baixo sem provar nada.
+    const faixa = page.locator('.tabuleiro-area')
+    await expect(faixa, 'a faixa da área nasceu visível com a área vazia').toBeHidden()
+
+    await page.locator('.tabuleiro-peca').first().click({ button: 'right' })
+    await page.getByRole('button', { name: /^Duplicar / }).click()
+    await page.getByRole('button', { name: /^Copiar .* para colar: com PV próprio/ }).click()
+
+    await expect(faixa, 'copiar não acendeu a faixa da área').toBeVisible()
+    await expect(faixa).toContainText('com PV próprio')
+
+    const antes = await page.locator('.tabuleiro-peca').count()
+    await page.keyboard.press('Control+v')
+    await expect
+      .poll(() => page.locator('.tabuleiro-peca').count(), { message: 'o primeiro CTRL+V não colou' })
+      .toBe(antes + 1)
+    await page.keyboard.press('Control+v')
+    await expect
+      .poll(() => page.locator('.tabuleiro-peca').count(), {
+        message: 'o segundo CTRL+V não colou: a área não sobreviveu ao remendo da cena',
+      })
+      .toBe(antes + 2)
+
+    // ESVAZIAR é um BOTÃO e nunca o Esc: o `cena.js` mapeia Escape para "voltar"
+    // e o mata no documento — medido, e o `railKeyboard` já o registra.
+    await page.getByRole('button', { name: 'Esvaziar a área de transferência' }).click()
+    await expect(faixa, 'esvaziar não apagou a faixa').toBeHidden()
+    await page.keyboard.press('Control+v')
+    await page.waitForTimeout(500)
+    expect(
+      await page.locator('.tabuleiro-peca').count(),
+      'o CTRL+V colou com a área vazia',
+    ).toBe(antes + 2)
   } finally {
     await apagar()
   }

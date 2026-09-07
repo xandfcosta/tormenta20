@@ -272,6 +272,46 @@ func DuplicateToken(b *BoardState, tokenID string, laco *aovivo.InitiativeEntry,
 	return AddToken(b, copia, newID)
 }
 
+// PasteToken põe no tabuleiro uma cópia de uma peça que veio de OUTRO LUGAR —
+// de outra aba, ou da mesma depois de o mestre ter arrastado a vista (ALE-206).
+//
+// A diferença para o `DuplicateToken` é o DESTINO e nada mais: lá a cópia nasce
+// colada na original, aqui ela nasce onde a pessoa está olhando. As duas regras
+// que valem nos dois casos ficam escritas uma vez só — o rótulo é renumerado
+// contra as peças DESTE tabuleiro, e a casa é a primeira livre a partir do alvo,
+// porque pousar uma peça em cima de outra esconde a de baixo sem dizer nada.
+//
+// O `modelo` é a peça de ORIGEM e ela pode não estar neste tabuleiro: por isso
+// ela chega por valor e não por id. O `laco` decide o que a cópia é, exatamente
+// como no `DuplicateToken` — ver a explicação lá, que é onde a decisão mora.
+func PasteToken(b *BoardState, modelo BoardToken, laco *aovivo.InitiativeEntry, x, y int, newID func() string) error {
+	copia := modelo
+	copia.EntryID, copia.CharacterID = nil, nil
+	if laco != nil {
+		copia.EntryID = strPtr(laco.ID)
+		copia.CharacterID = laco.CharacterID
+	}
+	// O DE-ONDE-VEIO não viaja: ele é a memória do último pouso DESTA peça, e
+	// uma cópia que nasce agora não tem para onde voltar. Herdá-lo daria um
+	// "voltar" que manda a cópia para um lugar onde ela nunca esteve — e, colando
+	// entre abas, para um quadrado de outro mapa.
+	copia.DeOndeVeio = nil
+	copia.Label = nextInstanceLabel(b, modelo.Label)
+	// O ALVO PRIMEIRO, e só depois a vizinhança. O `freeSpotNear` começa no anel
+	// 1 e nunca olha o próprio quadrado — ele foi escrito para o duplicar, onde
+	// pousar EM CIMA da original é justamente o que não se quer. No colar o alvo
+	// é o alvo: quem apertou CTRL+V está olhando para aquele quadrado.
+	//
+	// Medido, e o teste nasceu vermelho aqui: colar em (12,7) num tabuleiro vazio
+	// pousava em (11,6), a primeira casa do anel de fora.
+	copia.X, copia.Y = x, y
+	if occupied(b, x, y) {
+		spot := freeSpotNear(b, boardSpot{x: x, y: y})
+		copia.X, copia.Y = spot.x, spot.y
+	}
+	return AddToken(b, copia, newID)
+}
+
 // freeSpotNear acha o primeiro quadrado livre em volta de um ponto, em anéis
 // que crescem.
 //

@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -48,11 +49,18 @@ import (
 func (s Scene) TokenActionRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/pecas/{tokenId}"
 	r.Post(base+"/visibilidade", s.gmBoardCommand(toggleVisibility))
-	// TRÊS duplicares e não um com parâmetro, porque são três VERBOS na tela e o
-	// endereço é o que o menu escreve. Ver o `duplicatesToken`.
-	r.Post(base+"/duplicar/peca", s.gmBoardCommand(duplicatesToken))
-	r.Post(base+"/duplicar/junto", s.gmBoardCommand(duplicatesTokenSharingTheLine))
-	r.Post(base+"/duplicar/sozinha", s.gmBoardCommand(duplicatesTokenWithItsOwnLine))
+	// TRÊS rotas de duplicar e não uma com parâmetro, porque são três VERBOS na
+	// tela e o endereço é o que o menu escreve. O que muda entre elas é só o
+	// modo — ver o `duplicatesWith`.
+	r.Post(base+"/duplicar/"+modoSoAPeca, s.gmBoardCommand(duplicatesWith(modoSoAPeca)))
+	r.Post(base+"/duplicar/"+modoJunto, s.gmBoardCommand(duplicatesWith(modoJunto)))
+	r.Post(base+"/duplicar/"+modoSozinha, s.gmBoardCommand(duplicatesWith(modoSozinha)))
+	// COLAR não é de uma peça e por isso não pende do `base`: a peça de origem
+	// pode estar em OUTRA aba, e quem a nomeia é a área de transferência de quem
+	// clicou, não o caminho. O que vem no caminho é o QUADRADO, que é a única
+	// coisa que o cliente sabe e o servidor não — ele não conhece o zoom nem
+	// onde cada pessoa está olhando.
+	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/colar/{x}/{y}", s.gmBoardCommand(pastesToken))
 	r.Post(base+"/voltar", s.gmBoardCommand(wasWhereForTokenBack))
 	r.Post(base+"/editar", s.gmBoardCommand(editsToken))
 	r.Post(base+"/remover", s.gmBoardCommand(removesToken))
@@ -87,64 +95,136 @@ func toggleVisibility(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // nulo por construção. Duplicar "apontando para a mesma ficha" seria um no-op
 // exatamente no caso que motivou a issue.
 
-// duplicatesToken é o PEÃO MUDO: sem fila e sem PV.
+// duplicatesWith é o construtor dos TRÊS duplicares: a peça é a mesma, e o que
+// muda é o laço.
 //
-// É o que existe desde a ALE-192, e continua sendo o certo para cenário e para a
-// peça que vai entrar na fila depois.
-func duplicatesToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
-	peca, err := st.tokenOfCommand(c)
-	if err != nil {
-		return nil, err
+// Um construtor e não três funções porque a diferença entre eles cabe inteira no
+// `bondForMode` — três corpos seriam três lugares para o "sangrando junto" do
+// duplicar e o do colar discordarem sobre o que a palavra significa.
+func duplicatesWith(modo string) func(Scene, commandCtx) (*tabuleiro.BoardState, error) {
+	return func(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+		peca, err := st.tokenOfCommand(c)
+		if err != nil {
+			return nil, err
+		}
+		laco, err := st.bondForMode(c, modo, peca)
+		if err != nil {
+			return nil, err
+		}
+		return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID, laco)
 	}
-	return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID, nil)
 }
 
-// duplicatesTokenSharingTheLine faz as duas peças SANGRAREM JUNTO: uma linha na
-// fila, uma barra de PV, um "na vez" para as duas.
+// clipboardSignals é a ÁREA DE TRANSFERÊNCIA de quem clicou, e ela viaja do
+// cliente porque é dele: a área é de quem copiou, não da mesa.
 //
-// Serve para o inimigo desenhado em dois pontos e para a criatura que ocupa dois
-// lugares. Recusa quando a original não tem linha, e a frase diz o caminho: sem
-// linha não há PV para compartilhar, e o silêncio ali seria uma cópia igual à do
-// peão mudo com outro nome.
-func duplicatesTokenSharingTheLine(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
-	peca, err := st.tokenOfCommand(c)
-	if err != nil {
-		return nil, err
-	}
-	linha := st.queueLineOf(c.SessionID, peca)
-	if linha == nil {
-		return nil, fmt.Errorf("%s não é um combatente da fila: não há PV para as duas dividirem", peca.Label)
-	}
-	return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID, linha)
+// Nomes TODOS MINÚSCULOS pela mesma razão do `tokenSignals`: o analisador de HTML
+// minuscula chave de atributo, e um `data-bind:areaPeca` ligaria um sinal novo
+// com o servidor lendo o antigo para sempre vazio.
+type clipboardSignals struct {
+	Peca      string `json:"areapeca"`
+	Tabuleiro string `json:"areatabuleiro"`
+	Modo      string `json:"areamodo"`
 }
 
-// duplicatesTokenWithItsOwnLine é o "mais um zumbi" de montar encontro: linha
-// NOVA na fila, com o PV do original, e a cópia apontando para ela.
+// pastesToken põe outra igual onde a pessoa está OLHANDO (ALE-206).
 //
-// Ela escreve nos DOIS estados — a fila e o tabuleiro — e é a única mutação de
-// tabuleiro que faz isso. Por isso ela PUBLICA A FILA ela mesma, o que em
-// qualquer outro comando seria trabalho do gateway: o `boardCommand` publica só
-// o tabuleiro, e o `PublishSessionState` não é só o fio — ele GRAVA a sessão no
-// disco (`table_scene_deps.go`). Sem esta chamada a linha nova viveria só em
-// memória e sumiria no próximo restart, que é o defeito da ALE-154 outra vez.
-func duplicatesTokenWithItsOwnLine(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
-	peca, err := st.tokenOfCommand(c)
+// # Por que ele existe, tendo duplicar
+//
+// O duplicar põe a cópia colada na original. O colar faz três coisas que ele não
+// faz: repete sem perguntar de novo, pousa onde se está olhando depois de
+// arrastar o mapa, e ATRAVESSA AS ABAS — copiar o zumbi na Cripta e colá-lo na
+// Taverna. É essa terceira que não tinha caminho nenhum antes.
+//
+// # O modo foi decidido no COPIAR, e não aqui
+//
+// Decisão do dono (2026-09-05): a issue dizia "ao colar, perguntar", e perguntar
+// a cada `CTRL+V` mataria o valor do teclado, que é repetir. A pergunta continua
+// sendo feita uma vez, no menu, no momento de copiar — e o que a área guarda é a
+// resposta.
+//
+// # Colar ENTRE abas com "sangrando junto" é permitido, e é decisão
+//
+// O mesmo combatente passa a ter peça em dois mapas, com uma barra de PV só.
+// Poderia ser recusado, e não é: a regra do modo é "um combatente, um PV", e ela
+// não fala de mapa. Quem cola na outra aba escolheu isso na tela que diz o modo.
+// O que ele custa está escrito para o dia em que incomodar: a marca da VEZ
+// acende nas duas abas, e quem estiver olhando a Taverna vê o ogro aceso com o
+// combate acontecendo na Cripta.
+func pastesToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+	var area clipboardSignals
+	if err := datastar.ReadSignals(c.R, &area); err != nil {
+		return nil, fmt.Errorf("não entendi o que há na área: %v", err)
+	}
+	if area.Peca == "" {
+		return nil, fmt.Errorf("não há peça na área — copie uma primeiro, pelo menu dela")
+	}
+	// A ORIGEM é o tabuleiro de onde a peça foi copiada, e não o que está na
+	// tela: são diferentes justamente quando o colar mais serve.
+	origem := st.deps.Boards().Get(c.R.Context(), c.SessionID, area.Tabuleiro)
+	modelo := tabuleiro.FindToken(origem, area.Peca)
+	if modelo == nil {
+		return nil, fmt.Errorf("a peça que estava na área não está mais no tabuleiro de origem")
+	}
+	laco, err := st.bondForMode(c, area.Modo, modelo)
 	if err != nil {
 		return nil, err
 	}
-	linha := st.queueLineOf(c.SessionID, peca)
-	if linha == nil {
-		return nil, fmt.Errorf("%s não é um combatente da fila: só quem tem PV pode ganhar um próprio", peca.Label)
-	}
-	nova, err := st.addsACopyOfTheLine(c.SessionID, *linha)
+	x, y, err := squareOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
-	if fila := st.deps.Sessions().GetState(c.SessionID); fila != nil {
-		st.deps.PublishSessionState(c.SessionID, fila)
-	}
-	return st.deps.Boards().DuplicateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID, nova)
+	return st.deps.Boards().PasteToken(c.R.Context(), c.SessionID, c.TabuleiroID, *modelo, laco, x, y)
 }
+
+// squareOfCommand lê o quadrado que o cliente calculou.
+func squareOfCommand(c commandCtx) (int, int, error) {
+	x, errX := strconv.Atoi(chi.URLParam(c.R, "x"))
+	y, errY := strconv.Atoi(chi.URLParam(c.R, "y"))
+	if errX != nil || errY != nil {
+		return 0, 0, fmt.Errorf("o quadrado de destino veio ilegível: %q, %q",
+			chi.URLParam(c.R, "x"), chi.URLParam(c.R, "y"))
+	}
+	return x, y, nil
+}
+
+// bondForMode traduz o modo guardado na área para o LAÇO da cópia.
+//
+// Ele é o mesmo mapa que os três verbos de duplicar usam, escrito uma vez: o
+// colar e o duplicar têm de concordar sobre o que "sangrando junto" significa, e
+// duas traduções seriam dois lugares para discordar.
+func (s Scene) bondForMode(c commandCtx, modo string, modelo *tabuleiro.BoardToken) (*aovivo.InitiativeEntry, error) {
+	if modo == modoSoAPeca {
+		return nil, nil
+	}
+	linha := s.queueLineOf(c.SessionID, modelo)
+	if linha == nil {
+		return nil, fmt.Errorf("%s não é um combatente da fila, e sem PV não há o que dividir nem o que copiar", modelo.Label)
+	}
+	if modo == modoJunto {
+		return linha, nil
+	}
+	if modo != modoSozinha {
+		return nil, fmt.Errorf("modo de cópia desconhecido: %q", modo)
+	}
+	nova, err := s.addsACopyOfTheLine(c.SessionID, *linha)
+	if err != nil {
+		return nil, err
+	}
+	if fila := s.deps.Sessions().GetState(c.SessionID); fila != nil {
+		s.deps.PublishSessionState(c.SessionID, fila)
+	}
+	return nova, nil
+}
+
+// Os três modos, e eles são a MESMA palavra na rota do duplicar, no sinal da
+// área e aqui. Escritos uma vez porque um terceiro lugar com a string à mão é o
+// lugar onde alguém digita "sozinho".
+const (
+	modoSoAPeca = "peca"
+	modoJunto   = "junto"
+	modoSozinha = "sozinha"
+)
 
 // queueLineOf é a linha da fila por trás de uma peça, ou nulo.
 func (s Scene) queueLineOf(sessionID int64, peca *tabuleiro.BoardToken) *aovivo.InitiativeEntry {
@@ -334,7 +414,7 @@ func chosenToken(id string) string {
 // o único caminho — a issue pede isso e a peça continua tendo o clique esquerdo
 // para mover, o teclado para focar e o `Enter` para abrir o mesmo menu.
 func openMenuToken(id string) string {
-	return fmt.Sprintf("evt.preventDefault(); $pecacopia = ''; $pecaescolhida = %q", id)
+	return fmt.Sprintf("evt.preventDefault(); $pecaescolhida = %q", id)
 }
 
 // closeMenuToken é a saída, e ela existe em DOIS lugares: o ✕ do menu e o gesto
@@ -354,18 +434,63 @@ func openMenuToken(id string) string {
 // `$pecacopia` guarda um id e não um booleano. É a mesma armadilha do nó
 // COMPARTILHADO que o `openEditToken` registra logo abaixo — quem troca de peça
 // é quem tem de limpar o que a anterior deixou.
-const closeMenuToken = "$pecacopia = ''; $pecaescolhida = ''"
+const closeMenuToken = "$pecaescolhida = ''"
 
-// copyingToken é o teste que abre a SEGUNDA camada do menu — a que pergunta o
-// que a cópia vai ser (ALE-206).
-func copyingToken(id string) string {
-	return fmt.Sprintf("$pecacopia === %q", id)
+// copyMenuId nomeia a segunda camada de UMA peça.
+//
+// Um id por peça porque o popover nativo casa gatilho e painel por id, e o menu
+// existe no HTML de toda peça do mapa.
+func copyMenuId(tokenID string) string {
+	return "peca-copia-" + tokenID
 }
 
-// openCopyToken abre o submenu, e FECHA-o no segundo clique: o mesmo ícone que
-// abre é o que desiste, que é o que um `▾` promete.
-func openCopyToken(id string) string {
-	return fmt.Sprintf("$pecacopia = $pecacopia === %q ? '' : %q", id, id)
+// closesTheCopyMenu fecha a segunda camada por JS, e ela existe porque escolher
+// um modo tem de fechar as DUAS camadas: o popover não se fecha sozinho quando o
+// clique é num botão dentro dele.
+func closesTheCopyMenu(tokenID string) string {
+	return fmt.Sprintf("document.getElementById(%q)?.hidePopover(); ", copyMenuId(tokenID))
+}
+
+// putsInTheClipboard é o gesto de COPIAR: ele não chama o servidor.
+//
+// Copiar é decisão de quem olha, e ela mora no cliente inteira — a área é de
+// QUEM COPIOU, não da mesa. Uma rota aqui gravaria por usuário e por sessão um
+// estado que ninguém pediu, e que o mestre encontraria cheio no dia seguinte.
+//
+// O RÓTULO viaja junto para a faixa poder dizer o que está na área sem uma
+// segunda ida ao servidor. Ele é só para ler: quem manda no que se cola é o par
+// `areapeca` + `areatabuleiro`.
+func putsInTheClipboard(v BoardView, p boardToken, modo, frase string) string {
+	return closesTheCopyMenu(p.ID) + fmt.Sprintf(
+		"$areapeca = %q; $areatabuleiro = %q; $areamodo = %q; $arearotulo = %q; $areafrase = %q; ",
+		p.ID, v.TabuleiroID, modo, p.Rotulo, frase,
+	) + closeMenuToken
+}
+
+// emptiesTheClipboard limpa a área, e o gesto é um BOTÃO e nunca o Esc.
+//
+// O Esc não chega: o `cena.js` o mapeia para "voltar" e o mata no documento —
+// medido na ALE-206, e o `railKeyboard` e o `clickedPointRuler` já registram o
+// mesmo. Uma faixa que dissesse "Esc limpa" prometeria o que a tela não cumpre.
+const emptiesTheClipboard = "$areapeca = ''; $areatabuleiro = ''; $areamodo = ''; " +
+	"$arearotulo = ''; $areafrase = ''"
+
+// pasteInTheMiddleOfTheView é o `CTRL + V`, e o quadrado é o CENTRO do que se vê.
+//
+// A conta é a inversa do `centerViewport`, e é do cliente pelo mesmo motivo de
+// sempre: o servidor não sabe o zoom nem para onde cada pessoa arrastou o mapa.
+//
+// `preventDefault` porque o `CTRL + V` é do navegador antes de ser nosso, e sem
+// ele o colar da página dispara junto. O `typingTargetWithout` é o outro lado da
+// mesma promessa: dentro de um campo de texto a tecla continua sendo do texto,
+// que é o que a issue pede com todas as letras.
+func pasteInTheMiddleOfTheView(v BoardView) string {
+	meioX := fmt.Sprintf("Math.floor(($vistax + document.getElementById(%q).clientWidth / 2) / $quadrado)", sceneId)
+	meioY := fmt.Sprintf("Math.floor(($vistay + document.getElementById(%q).clientHeight / 2) / $quadrado)", sceneId)
+	return typingTargetWithout +
+		fmt.Sprintf("(evt.key === 'v' || evt.key === 'V') && (evt.ctrlKey || evt.metaKey) && $areapeca !== '' "+
+			"? (evt.preventDefault(), @post('%s/colar/' + (%s) + '/' + (%s))) : null",
+			v.Base, meioX, meioY)
 }
 
 // copyCommand é o gesto de um dos três modos: manda e fecha as duas camadas.
@@ -374,7 +499,7 @@ func openCopyToken(id string) string {
 // submenu que sobrevive ao redesenho fica pendurado sobre uma peça que já ganhou
 // irmã — pedindo um segundo clique para dizer que acabou.
 func copyCommand(v BoardView, id, modo string) string {
-	return tokenCommand(v, id, "duplicar/"+modo) + "; " + closeMenuToken
+	return closesTheCopyMenu(id) + tokenCommand(v, id, "duplicar/"+modo) + "; " + closeMenuToken
 }
 
 // tokenCommand escreve o gesto de um verbo do menu.
