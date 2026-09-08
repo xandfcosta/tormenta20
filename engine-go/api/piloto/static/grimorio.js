@@ -1,47 +1,9 @@
-//#region api/piloto/src/lib/turn-juice.ts
-function e(e) {
-	return !!e && typeof e.animate == "function";
-}
-function t(t, n) {
-	if (!e(t)) return;
-	let r = document.createElement("div");
-	r.setAttribute("aria-hidden", "true"), r.style.cssText = [
-		"position:absolute",
-		"inset:0",
-		"border-radius:inherit",
-		"pointer-events:none",
-		`background:var(${n.curou ? "--hp-full" : "--hp-critical"})`
-	].join(";"), t.appendChild(r), r.animate([{ opacity: .45 }, { opacity: 0 }], {
-		duration: 380,
-		easing: "ease-out"
-	}).finished.then(() => r.remove()).catch(() => r.remove());
-}
-function n(t) {
-	e(t) && t.animate([
-		{
-			transform: "scale(1)",
-			boxShadow: "0 0 0 0 transparent"
-		},
-		{
-			transform: "scale(1.015)",
-			boxShadow: "0 0 14px 2px color-mix(in oklch, var(--grimorio-gold) 45%, transparent)",
-			offset: .4
-		},
-		{
-			transform: "scale(1)",
-			boxShadow: "0 0 0 0 transparent"
-		}
-	], {
-		duration: 250,
-		easing: "ease-out"
-	});
-}
-//#endregion
+import { r as e, t } from "./turn-juice.js";
 //#region api/piloto/src/grimorio.ts
-function r(e) {
+function n(e) {
 	return e.closest("figure, [data-par]")?.querySelector("[data-amostra]") ?? null;
 }
-function i(e) {
+function r(e) {
 	let t = document.createElement("canvas");
 	t.width = 1, t.height = 1;
 	let n = t.getContext("2d"), r = document.querySelector(".scene-grimorio");
@@ -67,27 +29,27 @@ function i(e) {
 	}, o = getComputedStyle(r).getPropertyValue("--grimorio-panel").trim(), [s, c] = [a(i(e)), a(i(o))].sort((e, t) => t - e);
 	return Number((((s ?? 0) + .05) / ((c ?? 0) + .05)).toFixed(2));
 }
-function a() {
+function i() {
 	for (let e of document.querySelectorAll("[data-medir]")) {
-		let t = r(e), n = e.dataset.medir;
-		!t || !n || (e.textContent = getComputedStyle(t).getPropertyValue(n).trim() || "—");
+		let t = n(e), r = e.dataset.medir;
+		!t || !r || (e.textContent = getComputedStyle(t).getPropertyValue(r).trim() || "—");
 	}
 }
-function o() {
+function a() {
 	for (let e of document.querySelectorAll("[data-contraste]")) {
-		let t = r(e);
+		let t = n(e);
 		if (!t) continue;
-		let n = i(getComputedStyle(t).backgroundColor);
-		if (n === null) continue;
-		let a = n >= 4.5;
-		e.textContent = a ? `${n}:1 no painel` : `${n}:1 — só bloco, não texto`, e.classList.toggle("text-grimorio-gold", !a), e.classList.toggle("font-bold", !a), e.classList.toggle("text-muted-foreground", a);
+		let i = r(getComputedStyle(t).backgroundColor);
+		if (i === null) continue;
+		let a = i >= 4.5;
+		e.textContent = a ? `${i}:1 no painel` : `${i}:1 — só bloco, não texto`, e.classList.toggle("text-grimorio-gold", !a), e.classList.toggle("font-bold", !a), e.classList.toggle("text-muted-foreground", a);
 	}
 }
-async function s() {
+async function o() {
 	let e = new Set([...document.querySelectorAll("[data-amostra-cela] *")].map((e) => e.tagName.toLowerCase()).filter((e) => e.includes("-")));
-	await Promise.all([...e].map((e) => customElements.whenDefined(e))), await new Promise((e) => requestAnimationFrame(() => e(null))), c();
+	await Promise.all([...e].map((e) => customElements.whenDefined(e))), await new Promise((e) => requestAnimationFrame(() => e(null))), s();
 }
-function c() {
+function s() {
 	for (let e of document.querySelectorAll("[data-medir-cela]")) {
 		let t = e.previousElementSibling?.querySelector("button, input, [role=\"progressbar\"]");
 		if (!t) continue;
@@ -95,21 +57,21 @@ function c() {
 		e.textContent = `h ${Math.round(n.height)} · w ${Math.round(n.width)} · r ${r}`;
 	}
 }
-function l() {
-	let e = document.querySelector("[data-linha-iniciativa]"), r = window.matchMedia("(prefers-reduced-motion: reduce)"), i = () => {
+function c() {
+	let n = document.querySelector("[data-linha-iniciativa]"), r = window.matchMedia("(prefers-reduced-motion: reduce)"), i = () => {
 		let e = document.querySelector("[data-movimento-reduzido]");
 		e && (e.textContent = r.matches ? "LIGADO" : "desligado");
 	};
 	i(), r.addEventListener("change", i);
 	for (let i of document.querySelectorAll("[data-disparar]")) i.addEventListener("click", () => {
-		if (r.matches || !e) return;
+		if (r.matches || !n) return;
 		let a = i.dataset.disparar;
-		a === "ferir" && t(e, { curou: !1 }), a === "curar" && t(e, { curou: !0 }), a === "vez" && n(e);
+		a === "ferir" && t(n, { curou: !1 }), a === "curar" && t(n, { curou: !0 }), a === "vez" && e(n);
 	});
 }
-function u() {
-	a(), o(), s(), l();
+function l() {
+	i(), a(), o(), c();
 }
-u();
+l();
 //#endregion
-export { u as medeAFolha };
+export { l as medeAFolha };

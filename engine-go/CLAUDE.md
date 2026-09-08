@@ -169,7 +169,7 @@ o servidor mandava os 3,7 MB crus do `t20.wasm` para um navegador que pedia
 `gzip, br`.
 
 Com a SPA apagada (ALE-272, fatia 10c) não há `dist` para servir nem asset
-pesado para pré-comprimir — os estáticos do piloto são a folha, quatro ilhas de
+pesado para pré-comprimir — os estáticos do piloto são a folha, cinco ilhas de
 JS e duas fontes, todos embutidos no binário. O que sobrou é a compressão do que
 o servidor RENDERIZA, logo abaixo.
 

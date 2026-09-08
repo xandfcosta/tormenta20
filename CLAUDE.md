@@ -165,6 +165,23 @@ pareceu erro na hora:
   acusaria nunca — ele mede a tinta do TEXTO, que continua legível. **Instrumento
   que compara TAMANHO responde sobre tamanho**; a pergunta seguinte é sempre "e
   o que ele não mede?" (ALE-250).
+- **O instrumento APAGOU o que ele foi medir, e a ausência tinha cara de
+  ausência.** Conferindo o deslize da peça no tabuleiro, três capturas tiradas a
+  30, 60 e 90ms de uma animação de 200ms saíram **byte a byte idênticas**. A
+  leitura ingênua é "a animação não existe" — e o que existe é que o
+  `screenshot()` do Playwright roda com `animations: 'disabled'` por padrão, o
+  que FINALIZA toda animação finita antes de fotografar. Captura de tela não
+  responde nada sobre linha do tempo; quem responde é amostrar a geometria a
+  cada quadro. **A pergunta é sempre "o que este instrumento desliga para
+  funcionar?"** (ALE-174).
+- **E a sonda seguinte mediu o GESTO em vez do efeito dele.** Trocada a captura
+  por uma amostragem de `getBoundingClientRect()` quadro a quadro, o guarda
+  contou "mais de duas posições" e passou verde — **com o módulo que ele
+  protege removido da página**. Ele estava armado antes do arrasto, e o dedo
+  atravessando quatro casas pinta a peça em cada uma: `630 → 674 → 718 → 762 →
+  806` é a mão, não a animação. Sonda de vida longa mede tudo o que acontece na
+  janela dela, e a janela é parte do desenho — armá-la depois do gesto e antes
+  do efeito foi o conserto (ALE-174).
 - **A mesma família, e desta vez o instrumento inflou o defeito em vinte e cinco
   vezes.** A ALE-177 media alvos de toque com `largura < 24 || altura < 24` e
   reportou 98 de 175 reprovando o WCAG 2.5.8. Refeita a conta na ficha de hoje,

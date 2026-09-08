@@ -51,11 +51,23 @@ jobs:
           ./engine-go/scripts/build-piloto-js.sh
           node engine-go/scripts/gen-icones-templ.mjs
 
+      # A COMPARAÇÃO É DA PASTA INTEIRA e não de dois arquivos nomeados à mão
+      # (ALE-174). Ela citava `cena.js`, e no dia em que a Mesa ganhou a ilha
+      # dela o guarda passou a medir uma das cinco entradas — a ilha nova
+      # poderia envelhecer no repositório sem ninguém acusar, que é a família do
+      # "um guarda só mede o que ele VISITA". A pasta cobre a entrada que nascer
+      # amanhã, mais o pedaço compartilhado que o Vite emite sozinho.
+      #
+      # `--` com o diretório também pega ARQUIVO NOVO não commitado, que é o
+      # jeito mais provável de esquecer uma entrada: ela existe na config, é
+      # gerada no CI, e nunca foi para o git.
       - name: Fail if the generated scene assets were stale
         run: |
-          if ! git diff --quiet -- engine-go/api/piloto/static/cena.js engine-go/api/piloto_icones.templ; then
-            echo "::error::cena.js ou os ícones estão desatualizados. Rode ./engine-go/scripts/build-piloto-js.sh e node engine-go/scripts/gen-icones-templ.mjs, e commite."
-            git diff --stat -- engine-go/api/piloto/static/cena.js engine-go/api/piloto_icones.templ
+          if ! git diff --quiet -- engine-go/api/piloto/static/ engine-go/api/piloto_icones.templ \
+             || [ -n "$(git ls-files --others --exclude-standard -- engine-go/api/piloto/static/)" ]; then
+            echo "::error::As ilhas do piloto ou os ícones estão desatualizados. Rode ./engine-go/scripts/build-piloto-js.sh e node engine-go/scripts/gen-icones-templ.mjs, e commite o resultado."
+            git diff --stat -- engine-go/api/piloto/static/ engine-go/api/piloto_icones.templ
+            git ls-files --others --exclude-standard -- engine-go/api/piloto/static/
             exit 1
           fi
 
