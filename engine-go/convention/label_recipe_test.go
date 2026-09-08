@@ -38,6 +38,10 @@ import (
 //
 //   - o CRACHÁ — `<span>` com caixa (borda, fundo ou canto). Ele não é da
 //     família: a caixa é o que ele diz, e a SPA nunca teve receita para ele.
+//     **Ele ganhou a própria na ALE-177** (`ui.BadgeClasses`, cobrada pelo
+//     `TestNoHandwrittenBadgeRecipe`), e ela é de GEOMETRIA e não de tipografia:
+//     o piso de 24px do WCAG 2.5.8. As duas convivem sem sobrepor — um crachá
+//     que também escreve rótulo em caixa alta continua fora desta família.
 //   - o CONTROLE — `<button>`/`<summary>`, cuja tipografia é do `ui.Button`.
 //   - a NAVEGAÇÃO — `<a>`, um sítio só.
 //   - o TÍTULO DE PALCO — o que declara tamanho RESPONSIVO (`sm:text-*`). São

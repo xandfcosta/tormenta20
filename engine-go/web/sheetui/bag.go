@@ -324,13 +324,13 @@ var bagCategories = []filterOption{
 
 func bagCategoryOptions(ativa string) []filterOption {
 	fora := make([]filterOption, 0, len(bagCategories))
-	for _, chip := range bagCategories {
-		fora = append(fora, filterOption{Valor: chip.Valor, Rotulo: chip.Rotulo, Ativo: chip.Valor == ativa})
+	for _, badge := range bagCategories {
+		fora = append(fora, filterOption{Valor: badge.Valor, Rotulo: badge.Rotulo, Ativo: badge.Valor == ativa})
 	}
 	return fora
 }
 
-// categoryBagDa diz se o item aparece sob o chip escolhido.
+// categoryBagDa diz se o item aparece sob o crachá escolhido.
 //
 // Item custom não tem categoria de catálogo e conta como equipamento comum —
 // assim ele cai em "tudo" e em "outros", e nunca some da mochila inteira.

@@ -401,9 +401,10 @@ templ partsSection() {
 			@partPair("default", solidButton("default", "default", "default"), sheetButtonInSize(ui.SizeDefault, "default"))
 			@partPair("lg", solidButton("default", "lg", "lg"), sheetButtonInSize(ui.SizeLarge, "lg"))
 		}
-		@sheetBlock("Chip", "O `Badge` tem seis variantes e quatro usos; a cena tem 17 chips escritos à mão (ALE-173, P6). Nenhum deles existe do lado do servidor ainda — e a coluna vazia é o registro disso.") {
+		@sheetBlock("Crachá", "O `Badge` da SPA tem seis variantes e quatro usos; a cena tinha 17 escritos à mão (ALE-173, P6). O servidor ganhou o dele na ALE-177, e ele carrega uma coisa só: o PISO DE 24px do WCAG 2.5.8. Quatro crachás da ficha reprovavam a 21px, e um quinto já tinha sido consertado sozinho para 28 sem que ninguém varresse os irmãos. As VARIANTES continuam sem par: a cor de ligado e desligado diz o que aquele crachá significa, e ela é diferente nos cinco sítios — inventá-las aqui seria escrever a receita em vez de portá-la (a punição da ALE-252).") {
 			@columnHeader()
-			for _, v := range []string{"default", "secondary", "outline", "destructive"} {
+			@partPair("geometria", solidChip("outline"), sheetBadge())
+			for _, v := range []string{"default", "secondary", "destructive"} {
 				@partPair(v, solidChip(v), nil)
 			}
 		}
@@ -436,6 +437,15 @@ templ sheetButton(v ui.Variant) {
 	@ui.Button(v, ui.SizeDefault, "", templ.Attributes{"type": "button"}) {
 		Abrir
 	}
+}
+
+// O crachá do servidor (ALE-177). Ele é a GEOMETRIA e nada mais, e é por isso
+// que o exemplo traz a borda neutra à mão: escolher uma cor aqui inventaria uma
+// variante que não existe.
+templ sheetBadge() {
+	<button type="button" class={ ui.BadgeClasses("inline-flex items-center border-grimorio-iron text-3xs uppercase tracking-wider text-muted-foreground") }>
+		crachá
+	</button>
 }
 
 templ sheetButtonInSize(t ui.Size, texto string) {

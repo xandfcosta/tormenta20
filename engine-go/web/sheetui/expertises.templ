@@ -163,7 +163,7 @@ templ attributePicker(v View, linha expertiseRow) {
 	<select
 		aria-label={ linha.Name + " atributo" }
 		data-on:change={ attributeCommand(v, linha.Command) }
-		class="h-6 min-w-0 max-w-full shrink cursor-pointer rounded-full border border-grimorio-iron bg-transparent px-2 font-mono text-2xs text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class={ ui.BadgeClasses("min-w-0 max-w-full shrink cursor-pointer border-grimorio-iron bg-transparent font-mono text-2xs text-foreground") }
 	>
 		for _, opcao := range v.Expertises.Attributes {
 			if opcao.Key == linha.Attribute {
@@ -183,7 +183,7 @@ templ trainingButton(v View, linha expertiseRow) {
 		aria-checked={ fmt.Sprintf("%t", linha.Trained) }
 		aria-label={ linha.Name + " treinada" }
 		data-on:click={ sheetPost(v, "/pericias/treino/"+linha.Command) }
-		class={ "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		class={ ui.BadgeClasses("inline-flex shrink-0 items-center gap-1 text-3xs uppercase tracking-wider"),
 			templ.KV("border-grimorio-gold/60 text-grimorio-gold", linha.Trained),
 			templ.KV("border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40", !linha.Trained) }
 	>

@@ -165,6 +165,18 @@ pareceu erro na hora:
   acusaria nunca — ele mede a tinta do TEXTO, que continua legível. **Instrumento
   que compara TAMANHO responde sobre tamanho**; a pergunta seguinte é sempre "e
   o que ele não mede?" (ALE-250).
+- **A mesma família, e desta vez o instrumento inflou o defeito em vinte e cinco
+  vezes.** A ALE-177 media alvos de toque com `largura < 24 || altura < 24` e
+  reportou 98 de 175 reprovando o WCAG 2.5.8. Refeita a conta na ficha de hoje,
+  são **58 pequenos e QUATRO reprovando** — porque o critério tem duas exceções
+  que contar tamanho não enxerga: ESPAÇAMENTO (um alvo pequeno passa se o
+  círculo de 24px centrado nele não cruzar outro alvo) e EQUIVALENTE (passa se
+  outro controle da mesma tela faz a mesma coisa e cumpre o piso). Cada perícia
+  tem as duas: 62px de passo entre linhas, e o número de 44×44 disparando o
+  mesmo comando que o nome de 139×20. **Ler a norma até o fim é parte de
+  construir o medidor**, e o conserto proposto a partir do número inflado ia
+  mexer na densidade da tela mais densa do app — por 54 alvos que a norma já
+  aceita (ALE-177).
 - Uma varredura de `grep` sobre os `.templ` contou **9** violações do piso da
   Cinzel. Eram **14**, e as cinco que faltavam saíram por duas cegueiras
   diferentes — nenhuma delas visível no resultado. A escada de tamanhos escrita
@@ -312,7 +324,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **54 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **55 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -326,8 +338,9 @@ flutua sobre o mapa deixa um controle próprio sem ponteiro, nenhuma cena escrev
 a receita de rótulo à mão, nenhum nó escondido por `data-show` nasce visível,
 todo campo do seed é classificado como referência de catálogo ou não, nenhum id
 de catálogo carrega acento, toda cena de seleção declara os sinais que o gesto
-dela escreve, nenhuma delas desenha o livro de couro que saiu da folha. Cada um
-nasceu de um defeito que tinha irmãos.
+dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum
+crachá escreve a própria geometria à mão. Cada um nasceu de um defeito que tinha
+irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
