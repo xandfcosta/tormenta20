@@ -1561,7 +1561,7 @@ func partsSection() templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = sheetBlock("Botão — variantes", "As três do servidor são as que as cenas migradas pediram; as outras não faltam por descuido. E o `secondary` NÃO é par: o do servidor mede 2px a mais porque tem borda, e o da SPA não tem. Olhando quem o usa — Cancelar, Fechar, Convidar — ele está fazendo o papel do `outline` da SPA. O errado é o NOME, não a borda (ALE-250).").Render(templ.WithChildren(ctx, templ_7745c5c3_Var66), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetBlock("Botão — variantes", "As três do servidor são as que as cenas migradas pediram; as outras não faltam por descuido. O `secondary` do servidor mede 2px a mais porque tem borda, e a ALE-250 nasceu propondo tirá-la — a conclusão foi o contrário. Medido: o preenchimento sozinho dá 1,30:1 de limite contra o fundo e a borda dá 3,57:1, quando o mínimo do WCAG para limite de componente é 3:1. A borda é CONSERTO, e o `secondary` sem borda da SPA é que era o defeito. O nome também está certo: dos 38 chamadores, 32 são ação secundária de verdade e só 6 são dispensa.").Render(templ.WithChildren(ctx, templ_7745c5c3_Var66), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

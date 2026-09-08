@@ -155,6 +155,16 @@ pareceu erro na hora:
   decomposição, não tem denominador embutido. Hoje aquele parser FALHA no
   seletor desconhecido (ALE-294).
 
+- Uma medição respondeu a pergunta ERRADA por medir a coisa certa. A folha de
+  especificação comparava o botão do servidor com o da SPA e achou 2px de
+  diferença: o `secondary` do servidor tem borda. A conclusão registrada foi "o
+  errado é o nome", e ela sobreviveu meses. **O que ninguém tinha medido era o
+  LIMITE**: o preenchimento sozinho dá 1,30:1 contra o fundo da cena e a borda dá
+  3,57:1, contra o mínimo de 3:1 do WCAG 1.4.11. A borda era conserto, e o botão
+  sem borda da SPA é que era o defeito. O medidor de contraste da casa não
+  acusaria nunca — ele mede a tinta do TEXTO, que continua legível. **Instrumento
+  que compara TAMANHO responde sobre tamanho**; a pergunta seguinte é sempre "e
+  o que ele não mede?" (ALE-250).
 - Uma varredura de `grep` sobre os `.templ` contou **9** violações do piso da
   Cinzel. Eram **14**, e as cinco que faltavam saíram por duas cegueiras
   diferentes — nenhuma delas visível no resultado. A escada de tamanhos escrita
