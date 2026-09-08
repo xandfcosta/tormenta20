@@ -96,7 +96,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><p class=\"text-xs text-hp-full\" aria-live=\"polite\" data-show=\"$copiado\">Link copiado.</p><p class=\"text-xs text-muted-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><p class=\"text-xs text-hp-full\" aria-live=\"polite\" style=\"display:none\" data-show=\"$copiado\">Link copiado.</p><p class=\"text-xs text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

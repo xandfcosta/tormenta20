@@ -244,8 +244,20 @@ templ weaponDetail(arma weaponTile) {
 // contrário do que vale para `aria-*`: é a PRESENÇA do atributo que o seletor
 // procura.
 templ overlay(key, titulo, icone string, magic bool) {
+	// NASCE ESCONDIDO (ALE-296), e o `style` estático é o conserto inteiro.
+	//
+	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
+	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
+	// medido com sonda de quadro: até 30 quadros de pano preto sobre a cena, que o
+	// dono relatou como "um dialog que aparece e some".
+	//
+	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
+	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
+	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
+	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<div
 		data-show={ "$detalhe === '" + key + "'" }
+		style="display:none"
 		data-on:click="evt.target === el && ($detalhe = '')"
 		data-on:keydown__window="evt.key === 'Escape' && ($detalhe = '')"
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4"

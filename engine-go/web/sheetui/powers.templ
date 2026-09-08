@@ -107,14 +107,14 @@ templ passivesBlock(v View) {
 				class="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				<span data-show="!$passivas">{ "Passivas · mostrar (" + strconv.Itoa(len(v.Powers.Passives)) + ")" }</span>
-				<span data-show="$passivas">Passivas · ocultar</span>
+				<span style="display:none" data-show="$passivas">Passivas · ocultar</span>
 			</button>
 			<div data-show="!$passivas" class="space-y-1">
 				for _, linha := range v.Powers.LiveTriggers {
 					<p class="text-2xs text-bonus-ink">{ "● gatilho ativo: " + linha.Name }</p>
 				}
 			</div>
-			<ul data-show="$passivas" class="space-y-1.5">
+			<ul style="display:none" data-show="$passivas" class="space-y-1.5">
 				for _, linha := range v.Powers.Passives {
 					@powerRowItem(v, linha)
 				}

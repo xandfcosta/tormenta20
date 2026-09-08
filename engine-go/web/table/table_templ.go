@@ -2373,7 +2373,7 @@ func formDeCombatente(v View) templ.Component {
 			templ_7745c5c3_Var105 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 169, "<div data-show=\"$formdecombatente\" data-on:keydown__window=\"evt.key === 'Escape' && ($formdecombatente = false)\" class=\"flex flex-wrap items-end gap-2 border border-dashed border-grimorio-iron p-3\"><div class=\"min-w-[10rem] flex-1 space-y-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 169, "<div data-show=\"$formdecombatente\" style=\"display:none\" data-on:keydown__window=\"evt.key === 'Escape' && ($formdecombatente = false)\" class=\"flex flex-wrap items-end gap-2 border border-dashed border-grimorio-iron p-3\"><div class=\"min-w-[10rem] flex-1 space-y-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2426,7 +2426,7 @@ func formDeCombatente(v View) templ.Component {
 		var templ_7745c5c3_Var108 string
 		templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mesa/%d/%d/initiative/add')", v.CampaignID, v.SessionID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 893, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 894, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var108)
 		if templ_7745c5c3_Err != nil {
@@ -2477,7 +2477,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var111 string
 		templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 901, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 902, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var111)
 		if templ_7745c5c3_Err != nil {
@@ -2503,7 +2503,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var113 string
 		templ_7745c5c3_Var113, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 901, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 902, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var113))
 		if templ_7745c5c3_Err != nil {
@@ -2516,7 +2516,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var114 string
 		templ_7745c5c3_Var114, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 903, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 904, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var114)
 		if templ_7745c5c3_Err != nil {
@@ -2529,7 +2529,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var115 string
 		templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.ResolveAttributeValue(min)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 905, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 906, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var115)
 		if templ_7745c5c3_Err != nil {
@@ -2542,7 +2542,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var116 string
 		templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.ResolveAttributeValue(max)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 906, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 907, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var116)
 		if templ_7745c5c3_Err != nil {
@@ -2555,7 +2555,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var117 string
 		templ_7745c5c3_Var117, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 908, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 909, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var117)
 		if templ_7745c5c3_Err != nil {
@@ -2600,7 +2600,7 @@ func combatantKind(tipo, rotulo string) templ.Component {
 		var templ_7745c5c3_Var119 string
 		templ_7745c5c3_Var119, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$novotipo === '%s' ? 'true' : 'false'", tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 920, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 921, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var119)
 		if templ_7745c5c3_Err != nil {
@@ -2613,7 +2613,7 @@ func combatantKind(tipo, rotulo string) templ.Component {
 		var templ_7745c5c3_Var120 string
 		templ_7745c5c3_Var120, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$novotipo = '%s'", tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 921, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 922, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var120)
 		if templ_7745c5c3_Err != nil {
@@ -2626,7 +2626,7 @@ func combatantKind(tipo, rotulo string) templ.Component {
 		var templ_7745c5c3_Var121 string
 		templ_7745c5c3_Var121, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $novotipo === '%s', 'border-grimorio-iron text-muted-foreground': $novotipo !== '%s'}", tipo, tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 922, Col: 171}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 923, Col: 171}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var121)
 		if templ_7745c5c3_Err != nil {
@@ -2639,7 +2639,7 @@ func combatantKind(tipo, rotulo string) templ.Component {
 		var templ_7745c5c3_Var122 string
 		templ_7745c5c3_Var122, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 924, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 925, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var122))
 		if templ_7745c5c3_Err != nil {
@@ -2697,7 +2697,7 @@ func numberEditable(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var125 string
 		templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.ResolveAttributeValue("Editar " + l.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 940, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 941, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var125)
 		if templ_7745c5c3_Err != nil {
@@ -2710,7 +2710,7 @@ func numberEditable(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var126 string
 		templ_7745c5c3_Var126, templ_7745c5c3_Err = templ.ResolveAttributeValue("Editar " + l.Rotulo + " — iniciativa e PV")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 941, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 942, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var126)
 		if templ_7745c5c3_Err != nil {
@@ -2723,7 +2723,7 @@ func numberEditable(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var127 string
 		templ_7745c5c3_Var127, templ_7745c5c3_Err = templ.ResolveAttributeValue(openEdit(v, l))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 942, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 943, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var127)
 		if templ_7745c5c3_Err != nil {
@@ -2749,7 +2749,7 @@ func numberEditable(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var129 string
 		templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(l.Iniciativa))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 945, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 946, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var129))
 		if templ_7745c5c3_Err != nil {
@@ -2845,7 +2845,7 @@ func editarCombatente(v View) templ.Component {
 		var templ_7745c5c3_Var135 string
 		templ_7745c5c3_Var135, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveEdit(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 1007, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 1008, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var135)
 		if templ_7745c5c3_Err != nil {

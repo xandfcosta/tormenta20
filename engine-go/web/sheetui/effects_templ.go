@@ -1447,20 +1447,20 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var74 string
 		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue("$" + sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 327, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 338, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "\" style=\"display:none\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var75 string
 		templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue("evt.target === el && ($" + sinal + " = false)")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 328, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 340, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 		if templ_7745c5c3_Err != nil {
@@ -1473,7 +1473,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var76 string
 		templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.ResolveAttributeValue("evt.key === 'Escape' && ($" + sinal + " = false)")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 329, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 341, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var76)
 		if templ_7745c5c3_Err != nil {
@@ -1486,7 +1486,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var77 string
 		templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 335, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 347, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 		if templ_7745c5c3_Err != nil {
@@ -1499,7 +1499,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var78 string
 		templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.ResolveAttributeValue("$" + sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 336, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 348, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var78)
 		if templ_7745c5c3_Err != nil {
@@ -1534,7 +1534,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var81 string
 		templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 339, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 351, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 		if templ_7745c5c3_Err != nil {
@@ -1547,7 +1547,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var82 string
 		templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue("Fechar " + titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 342, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 354, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var82)
 		if templ_7745c5c3_Err != nil {
@@ -1560,7 +1560,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var83 string
 		templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.ResolveAttributeValue("$" + sinal + " = false")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 343, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/effects.templ`, Line: 355, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var83)
 		if templ_7745c5c3_Err != nil {

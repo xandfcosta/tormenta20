@@ -322,8 +322,20 @@ templ createFrame(temAlgum bool, indice int) {
 // As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) — na
 // SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
 templ heroDossier(h HeroCard) {
+	// NASCE ESCONDIDO (ALE-296), e o `style` estático é o conserto inteiro.
+	//
+	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
+	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
+	// medido com sonda de quadro: até 30 quadros de pano preto sobre a cena, que o
+	// dono relatou como "um dialog que aparece e some".
+	//
+	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
+	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
+	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
+	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<aside
 		data-show={ fmt.Sprintf("$dossie && $cursor == %d", h.ID) }
+		style="display:none"
 		aria-label={ "Dossiê de " + h.Name }
 		class="fixed inset-y-0 right-0 z-20 w-full max-w-sm overflow-y-auto border-l border-grimorio-iron bg-grimorio-panel-raised p-5 shadow-2xl"
 	>

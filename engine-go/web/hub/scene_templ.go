@@ -344,7 +344,7 @@ func playerMenu(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\"><span data-show=\"$som\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\"><span style=\"display:none\" data-show=\"$som\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -360,7 +360,7 @@ func playerMenu(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</span> <span data-text=\"$som ? 'Som ligado' : 'Som desligado'\"></span></button><div data-show=\"$som\" class=\"px-2 pb-2 pt-1\"><label for=\"volume\" class=\"flex justify-between text-xs text-muted-foreground\">Volume <span data-text=\"$volume + '%'\"></span></label> <input id=\"volume\" type=\"range\" min=\"0\" max=\"100\" data-bind:volume data-on:input=\"cena.volume($volume)\" class=\"mt-1 w-full accent-grimorio-gold\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</span> <span data-text=\"$som ? 'Som ligado' : 'Som desligado'\"></span></button><div style=\"display:none\" data-show=\"$som\" class=\"px-2 pb-2 pt-1\"><label for=\"volume\" class=\"flex justify-between text-xs text-muted-foreground\">Volume <span data-text=\"$volume + '%'\"></span></label> <input id=\"volume\" type=\"range\" min=\"0\" max=\"100\" data-bind:volume data-on:input=\"cena.volume($volume)\" class=\"mt-1 w-full accent-grimorio-gold\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -390,7 +390,7 @@ func playerMenu(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</span> <span data-show=\"$cheia\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</span> <span style=\"display:none\" data-show=\"$cheia\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

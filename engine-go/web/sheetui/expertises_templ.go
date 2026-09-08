@@ -934,7 +934,7 @@ func craftDialog(v View) templ.Component {
 			templ_7745c5c3_Var49 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<div data-show=\"$oficio\" data-on:click=\"evt.target === el && ($oficio = false)\" data-on:keydown__window=\"evt.key === 'Escape' && ($oficio = false)\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4\"><div role=\"dialog\" aria-modal=\"true\" aria-label=\"Nova perícia\" data-attr:data-expanded=\"$oficio\" class=\"relative w-full rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<div data-show=\"$oficio\" style=\"display:none\" data-on:click=\"evt.target === el && ($oficio = false)\" data-on:keydown__window=\"evt.key === 'Escape' && ($oficio = false)\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4\"><div role=\"dialog\" aria-modal=\"true\" aria-label=\"Nova perícia\" data-attr:data-expanded=\"$oficio\" class=\"relative w-full rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1012,7 +1012,7 @@ func craftDialog(v View) templ.Component {
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Key)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 267, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 279, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 			if templ_7745c5c3_Err != nil {
@@ -1025,7 +1025,7 @@ func craftDialog(v View) templ.Component {
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 267, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 279, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1052,7 +1052,7 @@ func craftDialog(v View) templ.Component {
 		var templ_7745c5c3_Var59 string
 		templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/nova") + "; $oficio = false")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 273, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 285, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var59)
 		if templ_7745c5c3_Err != nil {

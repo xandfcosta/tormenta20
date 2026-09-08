@@ -861,6 +861,7 @@ templ addParty(v View) {
 templ formDeCombatente(v View) {
 	<div
 		data-show="$formdecombatente"
+		style="display:none"
 		data-on:keydown__window="evt.key === 'Escape' && ($formdecombatente = false)"
 		class="flex flex-wrap items-end gap-2 border border-dashed border-grimorio-iron p-3"
 	>
