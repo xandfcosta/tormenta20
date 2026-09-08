@@ -596,17 +596,29 @@ func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
 
 // ── a presença no cartão do Grupo (ALE-263) ──────────────────────────────────
 
-// TestTheGmSeesWhoIsAtTheTableAndThePlayerDoesNot.
+// TestBothTheGmAndThePlayerSeeWhoIsAtTheTable.
 //
 // A regra de QUEM está conectado já tem guarda no `aovivo`; o que se prende aqui
 // é a LIGAÇÃO — que o cartão do Grupo é casado com a presença pelo id do
-// personagem, e que ela chega à tela do mestre e não à do jogador.
+// personagem, e que ela chega às DUAS telas.
 //
-// O precedente é da SPA e é deliberado: presença POR PERSONAGEM é do mestre (o
-// trilho do elenco vive na `session-gm-view`), enquanto os crachás de nome são
-// de todo mundo. Um anel apagado na tela do jogador diria "fora da mesa" sobre
-// um colega a quem ele não tem por que vigiar.
-func TestTheGmSeesWhoIsAtTheTableAndThePlayerDoesNot(t *testing.T) {
+// # A metade do jogador era o CONTRÁRIO, e a decisão foi revista (ALE-214)
+//
+// Aqui morava "…AndThePlayerDoesNot", com o precedente da SPA: presença por
+// personagem era do mestre, e um anel apagado na tela do jogador diria "fora da
+// mesa" sobre um colega a quem ele não tem por que vigiar.
+//
+// O dono reviu em 2026-09-08, e o argumento que venceu é o da ALE-214: **saber
+// quem caiu é o que faz a mesa ESPERAR em vez de continuar sem alguém.** Isso
+// vale mais que a discrição — e a discrição protegia pouco, porque quem está na
+// chamada de voz já sabe quem sumiu.
+//
+// O custo de manter a decisão antiga estava escondido e apareceu junto: o
+// `cardsParty` desenhava o ponto de presença dentro de um `if m.Presenca != nil`
+// que NUNCA era verdadeiro para o único consumidor dele. Ramo morto que desenha
+// uma funcionalidade responde "sim" a quem procura — foi lendo aquele `if` que
+// eu afirmei, errado, que a ALE-214 já estava metade entregue.
+func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 	f := novoPiloto(t)
 
 	// Fora da mesa primeiro, que é o estado de nascença: sem esta metade, "vi
@@ -628,15 +640,14 @@ func TestTheGmSeesWhoIsAtTheTableAndThePlayerDoesNot(t *testing.T) {
 		t.Error("o dono do personagem entrou e o cartão dele não acendeu")
 	}
 
-	// E o jogador não recebe presença nenhuma — nem acesa nem apagada.
+	// E O JOGADOR RECEBE A MESMA COISA (ALE-214). A frase é o que se prende, e
+	// não a cor: cor não existe para quem usa leitor de tela (ALE-212).
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doJogador, "Arcanista") {
-		t.Fatal("o jogador não viu o cartão do Grupo; a ausência abaixo não provaria nada")
+		t.Fatal("o jogador não viu o cartão do Grupo; o que vem abaixo não provaria nada")
 	}
-	for _, frase := range []string{"na mesa", "fora da mesa"} {
-		if strings.Contains(doJogador, frase) {
-			t.Errorf("o HTML do jogador veio com %q", frase)
-		}
+	if !strings.Contains(doJogador, "na mesa") {
+		t.Error("o cartão do jogador não diz quem está na mesa: o `Presenca` chega nil e o ponto é ramo morto")
 	}
 }
 

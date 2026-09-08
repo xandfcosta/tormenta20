@@ -22,7 +22,7 @@ import (
 //
 // # Por que este caso não é o mesmo que o do anel
 //
-// Já havia um guarda do DESENHO (`TestTheGmSeesWhoIsAtTheTableAndThePlayerDoesNot`)
+// Já havia um guarda do DESENHO (`TestBothTheGmAndThePlayerSeeWhoIsAtTheTable`)
 // e ele passava: só que ele chamava `Presence().Join` ele mesmo, arranjando um
 // estado que a produção não sabia produzir. É a terceira vez nesta issue que um
 // verde vinha da bancada e não do app.

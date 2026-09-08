@@ -375,13 +375,22 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if role == "gm" {
 		view.NPCs = s.CampaignCast(ctx, campaignID)
 	}
+	// A PRESENÇA É DOS DOIS PAPÉIS desde a ALE-214, e isto era o contrário.
+	//
+	// Ela era escrita DENTRO do ramo do mestre, e o comentário de lá explicava
+	// que era isso que a mantinha fora da tela do jogador "sem uma segunda
+	// decisão na cena". O efeito colateral é que o `cardsParty` — que já
+	// desenhava o ponto, o `title` e o rótulo de leitor de tela — nunca entrava
+	// no `if`: código completo e inalcançável pelo único consumidor dele.
+	//
+	// Decisão do dono (2026-09-08): saber quem caiu é o que faz a mesa ESPERAR em
+	// vez de continuar sem alguém. Agora quem calcula é a cena, e o mestre recebe
+	// o mesmo conjunto para o elenco dele.
+	membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
+	conectados := aovivo.ConnectedCharacters(membros, presentes)
+	marcaAPresenca(view.Grupo, conectados)
 	if role == "gm" {
-		membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
 		r := ofViewGm(st, membros, presentes, true, s.deps.SaveFailed(sessionID))
-		// A presença é escrita nos cartões DEPOIS de o papel ser resolvido, e é
-		// isso que a mantém fora da tela do jogador sem uma segunda decisão na
-		// cena: quem não é mestre não chega aqui, e lá o campo continua nil.
-		marcaAPresenca(view.Grupo, r.Conectados)
 		view.Mestre = &r
 	}
 	return view, http.StatusOK, nil
