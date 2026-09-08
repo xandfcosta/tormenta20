@@ -600,6 +600,23 @@ Duas mudanças, as duas só no teste:
 2. **`PRAGMA synchronous=OFF`** no banco de teste. Durabilidade é o que um banco
    que morre no fim do caso não tem o que proteger. Fica no helper e **nunca** no
    `db.Open`: em produção essa linha é perda de dados do mestre.
+3. **A cópia FALHA ALTO** (ALE-268), e as três defesas dela existem porque a
+   cópia era a parte silenciosa do arranjo: o erro do `Close` era descartado num
+   `defer`, não havia `Sync`, e ninguém conferia se o arquivo chegou inteiro.
+   Hoje o `Close` volta o erro, o `Sync` força os bytes ao disco, e o TAMANHO é
+   comparado com o do molde.
+
+   **O sintoma que isso conserta apontava para o lugar errado**: uma cópia
+   parcial produz um SQLite truncado, que se comporta exatamente como um banco
+   sem as tabelas — o CI reprovou uma vez com `no such table: session_boards`
+   junto de um `disk I/O error`, e "no such table" é a frase de um banco NÃO
+   MIGRADO. Quem investigasse iria caçar migração. E repare que o item 2 acima é
+   o que remove a barreira que tornaria isso barulhento sozinho: a decisão certa
+   para velocidade é a que cala o erro.
+
+   **O preço foi medido e não estimado**: `./api/ ./db/...` foi de 10,34 s para
+   10,96 s, ~6%, e é o `Sync` por banco de teste. Frequência do defeito em
+   2026-09-08: uma ocorrência em 100 corridas de CI.
 
 Resultado: `api/` de **15m01s para 24 s** no disco girante, e a suíte Go inteira
 de 6,8 s para **4,7 s** em tmpfs. Os 178 casos que o pacote tinha na época

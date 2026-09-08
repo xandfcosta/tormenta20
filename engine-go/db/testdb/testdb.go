@@ -108,6 +108,24 @@ func Fresh(t *testing.T) string {
 	return destino
 }
 
+// copyFile copia o molde e CONFERE que ele chegou inteiro (ALE-268).
+//
+// As três defesas são desta issue, e cada uma pega o que a anterior deixa
+// passar. O CI reprovou uma vez com `no such table: session_boards` junto de um
+// `disk I/O error` — e "no such table" é a frase de um banco não migrado, então
+// quem investiga vai caçar migração e não a cópia.
+//
+//  1. O ERRO DO `Close` volta. Ele era descartado num `defer`, e é justamente no
+//     `Close` que uma escrita com buffer reporta a falha que o `Write` engoliu.
+//  2. O `Sync` força os bytes ao disco ANTES de alguém abrir o arquivo. Sem ele,
+//     `io.Copy` devolver nil só diz que os bytes saíram do processo.
+//  3. O TAMANHO é conferido, e esta é a que não depende de o sistema de arquivos
+//     reportar coisa alguma. Cópia byte a byte tem o tamanho da origem; se não
+//     tem, o que o teste receberia é um SQLite truncado — que se comporta
+//     exatamente como um banco sem as tabelas.
+//
+// O `PRAGMA synchronous=OFF` do banco de teste é decisão certa para velocidade
+// (ALE-260) e é o que remove a barreira que tornaria isso barulhento sozinho.
 func copyFile(de, para string) error {
 	origem, err := os.Open(de)
 	if err != nil {
@@ -118,9 +136,43 @@ func copyFile(de, para string) error {
 	if err != nil {
 		return fmt.Errorf("criar %q: %w", para, err)
 	}
-	defer func() { _ = destino.Close() }()
 	if _, err := io.Copy(destino, origem); err != nil {
+		_ = destino.Close()
 		return fmt.Errorf("copiar %q para %q: %w", de, para, err)
+	}
+	if err := destino.Sync(); err != nil {
+		_ = destino.Close()
+		return fmt.Errorf("gravar %q no disco: %w", para, err)
+	}
+	// O `Close` FECHA e o erro dele VOLTA — não é higiene: num sistema de
+	// arquivos com buffer, é aqui que a falha de escrita aparece.
+	if err := destino.Close(); err != nil {
+		return fmt.Errorf("fechar %q: %w", para, err)
+	}
+	return conferAcopia(de, para)
+}
+
+// conferAcopia recusa uma cópia que não tem o tamanho da origem.
+//
+// A mensagem carrega OS DOIS tamanhos porque quem a lê precisa saber se faltou
+// um byte ou o arquivo inteiro — e porque ela é o que aparece no lugar de um
+// `no such table` três camadas adiante.
+func conferAcopia(de, para string) error {
+	origem, err := os.Stat(de)
+	if err != nil {
+		return fmt.Errorf("medir o molde %q: %w", de, err)
+	}
+	copia, err := os.Stat(para)
+	if err != nil {
+		return fmt.Errorf("medir a cópia %q: %w", para, err)
+	}
+	if copia.Size() != origem.Size() {
+		return fmt.Errorf(
+			"a cópia do molde saiu incompleta: %q tem %d bytes e o molde %q tem %d. "+
+				"Um SQLite truncado se comporta como um banco SEM AS TABELAS, e o teste que "+
+				"o receber reprova dizendo `no such table` — que manda procurar defeito na "+
+				"migração (ALE-268)",
+			para, copia.Size(), de, origem.Size())
 	}
 	return nil
 }
