@@ -170,7 +170,7 @@ templ restDay(v View) {
 	>
 		<h2 id="descanso-de-dia-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Descanso de dia</h2>
 		<p class="mt-1 text-sm text-muted-foreground">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p105).</p>
-		<label for="qualidade-do-descanso" class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Qualidade do descanso</label>
+		<label for="qualidade-do-descanso" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Qualidade do descanso</label>
 		// O NOME DO SINAL É TODO MINÚSCULO, e isso não é desleixo: nome de
 		// ATRIBUTO é minusculado pelo analisador de HTML, então um
 		// `data-bind:restQuality` chega ao Datastar como

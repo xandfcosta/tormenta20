@@ -77,7 +77,7 @@ templ poeNoMapaDialogo(v BoardView) {
 						// idempotente), que é pior — parece que não funcionou.
 						<span class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-dashed border-grimorio-iron px-3 text-sm text-muted-foreground">
 							{ cand.Nome }
-							<span class="text-xs uppercase tracking-widest">já no mapa</span>
+							<span class={ ui.SectionLabelClasses("herda", "") }>já no mapa</span>
 						</span>
 					} else {
 						<button
@@ -94,9 +94,9 @@ templ poeNoMapaDialogo(v BoardView) {
 							// mesmo predicado que o servidor usa. `Ficha`/`NPC` é o
 							// par da casa — o `PC` está proibido (GLOSSARIO).
 							if cand.Ficha {
-								<span class="text-xs uppercase tracking-widest text-muted-foreground">Ficha</span>
+								<span class={ ui.SectionLabelClasses("muted", "") }>Ficha</span>
 							} else {
-								<span class="text-xs uppercase tracking-widest text-muted-foreground">NPC</span>
+								<span class={ ui.SectionLabelClasses("muted", "") }>NPC</span>
 							}
 						</button>
 					}

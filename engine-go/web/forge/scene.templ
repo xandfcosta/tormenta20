@@ -205,7 +205,7 @@ templ gearChoice(g startingGear, erros map[string][]string) {
 		}
 		if len(g.ToResolve) > 0 {
 			<div class="space-y-1 border-l-2 border-grimorio-iron pl-3">
-				<p class="text-2xs uppercase tracking-wider text-muted-foreground">
+				<p class={ ui.SectionLabelClasses("muted", "") }>
 					A origem ainda dá, e isto se escolhe na Mochila
 				</p>
 				for _, rotulo := range g.ToResolve {

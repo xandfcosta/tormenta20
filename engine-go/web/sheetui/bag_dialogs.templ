@@ -32,7 +32,7 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 		</p>
 		if len(ficha.Equip) > 0 {
 			<div class="space-y-1">
-				<p class="text-3xs uppercase tracking-wider text-muted-foreground">Equipar</p>
+				<p class={ ui.FieldLabelClasses("muted", "") }>Equipar</p>
 				<div class="grid grid-cols-2 gap-2">
 					for _, lugar := range ficha.Equip {
 						<button
@@ -52,7 +52,7 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 		}
 		if len(ficha.Overlays) > 0 {
 			<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
-				<p class="text-3xs uppercase tracking-wider text-muted-foreground">Melhorias & material</p>
+				<p class={ ui.FieldLabelClasses("muted", "") }>Melhorias & material</p>
 				for _, melhoria := range ficha.Overlays {
 					<p class="text-xs">
 						<span class="font-semibold text-grimorio-gold">{ melhoria.Nome }</span>
@@ -101,7 +101,7 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 // dado emprestado e para o "rolei de novo porque caiu no chão".
 templ consumeBlock(v View, ficha itemSheet) {
 	<div class="space-y-1 rounded-sm border border-grimorio-iron p-2">
-		<p class="text-3xs uppercase tracking-wider text-muted-foreground">
+		<p class={ ui.FieldLabelClasses("muted", "") }>
 			{ "Usar · " + ficha.Consumable.Escopo }
 		</p>
 		if ficha.Consumable.HpDice != "" {
@@ -149,7 +149,7 @@ templ bookBlock(ficha itemSheet) {
 templ overlayDialog(v View, ficha itemSheet) {
 	@overlay("melhorias-"+ficha.Command, "Melhorias de "+ficha.Name, "Sparkles", false) {
 		<div class="space-y-1">
-			<p class="text-3xs uppercase tracking-wider text-muted-foreground">Melhorias</p>
+			<p class={ ui.FieldLabelClasses("muted", "") }>Melhorias</p>
 			for _, escolha := range ficha.Improvements {
 				<button
 					type="button"
@@ -167,7 +167,7 @@ templ overlayDialog(v View, ficha itemSheet) {
 			}
 		</div>
 		<div class="space-y-1">
-			<p class="text-3xs uppercase tracking-wider text-muted-foreground">Material</p>
+			<p class={ ui.FieldLabelClasses("muted", "") }>Material</p>
 			<select
 				data-bind:itemmaterial
 				aria-label={ "Material de " + ficha.Name }
@@ -214,7 +214,7 @@ templ catalogAddDialog(v View) {
 			</select>
 		</div>
 		<label class="block space-y-1">
-			<span class="text-3xs uppercase tracking-wider text-muted-foreground">quantidade</span>
+			<span class={ ui.FieldLabelClasses("muted", "") }>quantidade</span>
 			<input
 				type="number"
 				min="1"
@@ -252,7 +252,7 @@ templ catalogAddDialog(v View) {
 templ itemFormDialog(v View, chave, titulo, botao, comando string) {
 	@overlay(chave, titulo, "Pencil", false) {
 		<label class="block space-y-1">
-			<span class="text-3xs uppercase tracking-wider text-muted-foreground">nome</span>
+			<span class={ ui.FieldLabelClasses("muted", "") }>nome</span>
 			<input
 				type="text"
 				maxlength="80"
@@ -262,7 +262,7 @@ templ itemFormDialog(v View, chave, titulo, botao, comando string) {
 		</label>
 		<div class="grid grid-cols-2 gap-2">
 			<label class="block space-y-1">
-				<span class="text-3xs uppercase tracking-wider text-muted-foreground">quantidade</span>
+				<span class={ ui.FieldLabelClasses("muted", "") }>quantidade</span>
 				<input
 					type="number"
 					min="1"
@@ -272,7 +272,7 @@ templ itemFormDialog(v View, chave, titulo, botao, comando string) {
 				/>
 			</label>
 			<label class="block space-y-1">
-				<span class="text-3xs uppercase tracking-wider text-muted-foreground">espaços</span>
+				<span class={ ui.FieldLabelClasses("muted", "") }>espaços</span>
 				<input
 					type="number"
 					min="0"

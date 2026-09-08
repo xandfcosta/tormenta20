@@ -27,7 +27,7 @@ import (
 templ expertisePanelBody(v View) {
 	<section class="flex min-h-0 flex-1 flex-col">
 		<div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Perícias</h2>
+			<h2 class={ ui.SectionTitleClasses("painel", "", "") }>Perícias</h2>
 			// AS DUAS PARCELAS QUE VALEM PARA TODAS, ditas uma vez. Sem esta linha
 			// cada jogador redescobre o próprio treino abrindo um diálogo.
 			<p class="text-3xs text-muted-foreground sm:text-xs">
@@ -197,7 +197,7 @@ templ expertiseDetail(linha expertiseRow) {
 	@overlay(linha.Key, linha.Name, "Scroll", false) {
 		@breakdownRows(linha.Rows)
 		<div class="flex items-center justify-between rounded-none border border-grimorio-iron bg-grimorio-panel-raised px-3 py-2">
-			<span class="text-xs uppercase tracking-widest text-muted-foreground">Total</span>
+			<span class={ ui.SectionLabelClasses("muted", "") }>Total</span>
 			<span
 				class={ "flex items-center gap-1.5 font-mono text-2xl font-bold",
 					templ.KV("text-muted-foreground", linha.Locked),
@@ -237,7 +237,7 @@ templ craftDialog(v View) {
 			data-attr:data-expanded="$oficio"
 			class="relative w-full rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm"
 		>
-			<p class="pr-10 font-heading uppercase tracking-wide text-grimorio-gold">Nova perícia</p>
+			<p class={ ui.SectionLabelClasses("gold", "pr-10") }>Nova perícia</p>
 			<button
 				type="button"
 				aria-label="Fechar nova perícia"
@@ -246,7 +246,7 @@ templ craftDialog(v View) {
 			>×</button>
 			<div class="mt-3 space-y-3">
 				<div>
-					<label for="oficio-nome" class="text-xs uppercase tracking-widest text-muted-foreground">Nome</label>
+					<label for="oficio-nome" class={ ui.FieldLabelClasses("muted", "") }>Nome</label>
 					<input
 						id="oficio-nome"
 						type="text"
@@ -257,7 +257,7 @@ templ craftDialog(v View) {
 					/>
 				</div>
 				<div>
-					<label for="oficio-atributo" class="text-xs uppercase tracking-widest text-muted-foreground">Atributo</label>
+					<label for="oficio-atributo" class={ ui.FieldLabelClasses("muted", "") }>Atributo</label>
 					<select
 						id="oficio-atributo"
 						data-bind:novoatributo

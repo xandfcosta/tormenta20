@@ -45,7 +45,7 @@ templ blockEditor(v View) {
 		// para quem navega por leitor de tela. O e2e só foi o primeiro a tropeçar
 		// nela (`strict mode violation` em `getByLabel('Nome')`).
 		<div class="shrink-0 space-y-1">
-			<label for="npc-nome" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Nome do NPC</label>
+			<label for="npc-nome" class={ ui.FieldLabelClasses("muted", "block") }>Nome do NPC</label>
 			<input
 				id="npc-nome"
 				type="text"
@@ -159,7 +159,7 @@ templ blockNumbers() {
 // estado — e é o estado errado na hora em que o mestre for gastar.
 templ blockMana() {
 	<div class="space-y-1">
-		<label for="npc-pm" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Pontos de Mana</label>
+		<label for="npc-pm" class={ ui.FieldLabelClasses("muted", "block") }>Pontos de Mana</label>
 		<div class="flex items-center gap-2">
 			<label class="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
 				<input type="checkbox" data-bind="rascunho.conjura" class="size-4 accent-grimorio-gold"/>
@@ -210,7 +210,7 @@ templ ownedTab(v View) {
 
 templ listHeader(v View, lista, titulo, oQue string) {
 	<div class="flex items-center justify-between gap-2">
-		<h4 class="text-xs font-bold uppercase tracking-widest text-grimorio-gold">{ titulo }</h4>
+		<h4 class={ ui.SectionLabelClasses("gold", "") }>{ titulo }</h4>
 		<button
 			type="button"
 			data-on:click={ listCommand(v.CampaignID, v.SessionID, lista, -1) }
@@ -297,7 +297,7 @@ templ draftAbilities(campanha, sessao int64, habilidades []string) {
 
 templ blockSection(titulo string) {
 	<section class="space-y-2">
-		<h4 class="text-xs font-bold uppercase tracking-widest text-grimorio-gold">{ titulo }</h4>
+		<h4 class={ ui.SectionLabelClasses("gold", "") }>{ titulo }</h4>
 		<div class="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
 			{ children... }
 		</div>
@@ -306,7 +306,7 @@ templ blockSection(titulo string) {
 
 templ numberBlock(campo, rotulo string, minimo, maximo int) {
 	<div class="space-y-1">
-		<label for={ "npc-" + campo } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
+		<label for={ "npc-" + campo } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
 		<input
 			id={ "npc-" + campo }
 			type="number"
@@ -320,7 +320,7 @@ templ numberBlock(campo, rotulo string, minimo, maximo int) {
 
 templ blockText(campo, rotulo, dica string) {
 	<div class="col-span-2 space-y-1 sm:col-span-3">
-		<label for={ "npc-" + campo } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
+		<label for={ "npc-" + campo } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
 		<input
 			id={ "npc-" + campo }
 			type="text"
@@ -336,7 +336,7 @@ templ blockText(campo, rotulo, dica string) {
 // nativo já traz teclado, busca por letra e o menu do sistema no telefone.
 templ blockChoice(campo, rotulo string, opcoes []blockOption) {
 	<div class="space-y-1">
-		<label for={ "npc-" + campo } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
+		<label for={ "npc-" + campo } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
 		<select
 			id={ "npc-" + campo }
 			data-bind={ draftField(campo) }
@@ -351,7 +351,7 @@ templ blockChoice(campo, rotulo string, opcoes []blockOption) {
 
 templ rowBox(caminho, rotulo, dica, largura string) {
 	<div class={ "space-y-1", largura }>
-		<span class="block text-2xs uppercase tracking-widest text-muted-foreground">{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "block") }>{ rotulo }</span>
 		<input
 			type="text"
 			aria-label={ rotulo }
@@ -364,7 +364,7 @@ templ rowBox(caminho, rotulo, dica, largura string) {
 
 templ numberRow(caminho, rotulo string, minimo, maximo int) {
 	<div class="w-24 space-y-1">
-		<span class="block text-2xs uppercase tracking-widest text-muted-foreground">{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "block") }>{ rotulo }</span>
 		<input
 			type="number"
 			aria-label={ rotulo }

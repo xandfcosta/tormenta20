@@ -183,7 +183,7 @@ templ artPage(c campaignCard) {
 // não os tokens escuros da cena — eles sumiriam sobre o creme.
 templ infoPage(c campaignCard) {
 	<div class="grimorio-parchment-bg flex flex-1 flex-col justify-center gap-4 p-6 sm:p-8 lg:p-12 xl:p-16">
-		<p class="flex items-center gap-2 text-2xs font-semibold uppercase tracking-[0.22em] opacity-70">
+		<p class={ ui.SectionLabelClasses("herda", "flex items-center gap-2 opacity-70") }>
 			<span>{ c.Papel }</span>
 			if c.AoVivo {
 				<span aria-hidden="true">·</span>
@@ -311,7 +311,7 @@ templ campaignMarker(c campaignCard) {
 		// de outras pessoas e precisa distinguir a própria (ALE-120).
 		<span class="flex min-w-0 flex-1 flex-col">
 			<span class="truncate font-heading text-sm tracking-wide">{ c.Nome }</span>
-			<span class="text-3xs uppercase tracking-[0.18em] opacity-65">{ c.Papel }</span>
+			<span class={ ui.FieldLabelClasses("herda", "opacity-65") }>{ c.Papel }</span>
 		</span>
 		if c.AoVivo {
 			<span aria-hidden="true" class="size-2 shrink-0 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none"></span>

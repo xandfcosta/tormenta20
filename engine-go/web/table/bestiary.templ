@@ -128,7 +128,7 @@ templ adjustEntry(v master.BestiaryView, m book.Entry) {
 
 templ campoDoAjuste(id, rotulo, sinal, min, max string) {
 	<div class="w-24 space-y-1">
-		<label for={ id } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
+		<label for={ id } class={ ui.FieldLabelClasses("muted", "block") }>{ rotulo }</label>
 		// O `min`/`max` nativo governa o SPINNER; digitar passa direto por ele, e
 		// quem prende é o servidor (ALE-236). Estão aqui pelo teclado numérico e
 		// pelas setas, não como trava.

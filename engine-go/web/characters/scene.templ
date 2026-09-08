@@ -163,7 +163,7 @@ templ heroVitals(h HeroCard) {
 
 templ oneVital(rotulo, valor, tom string, apagado bool) {
 	<div class={ "flex items-baseline gap-1.5", templ.KV("opacity-50", apagado) }>
-		<dt class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{ rotulo }</dt>
+		<dt class={ ui.FieldLabelClasses("muted", "") }>{ rotulo }</dt>
 		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ valor }</dd>
 	</div>
 }
@@ -342,7 +342,7 @@ templ heroDossier(h HeroCard) {
 			@dossierRow("Nível", strconv.FormatInt(h.Level, 10))
 		</dl>
 		if len(h.Dossier) > 0 {
-			<h3 class="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+			<h3 class={ ui.SectionLabelClasses("muted", "mt-6") }>
 				Habilidades de { h.Race }
 			</h3>
 			<ul class="mt-2 space-y-3">

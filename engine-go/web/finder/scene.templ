@@ -87,7 +87,7 @@ templ finderResults(v finderView) {
 				</p>
 			}
 			for _, g := range v.Grupos {
-				<p class="px-2 pt-2 pb-1 text-3xs font-bold uppercase tracking-widest text-grimorio-gold">{ g.Rotulo }</p>
+				<p class={ ui.FieldLabelClasses("gold", "px-2 pt-2 pb-1") }>{ g.Rotulo }</p>
 				<ul>
 					for _, a := range g.Achados {
 						<li>

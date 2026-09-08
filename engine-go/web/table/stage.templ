@@ -131,7 +131,7 @@ templ retratoDaFila(l tableRow) {
 			templ.KV("border-grimorio-gold bg-grimorio-gold/10", l.NaVez),
 			templ.KV("border-grimorio-iron", !l.NaVez) }
 	>
-		<span class="text-2xs font-bold uppercase tracking-widest text-muted-foreground">{ fmt.Sprint(l.Iniciativa) }</span>
+		<span class={ ui.SectionLabelClasses("muted", "") }>{ fmt.Sprint(l.Iniciativa) }</span>
 		<span
 			class={ "text-sm font-semibold",
 				templ.KV("text-grimorio-gold", l.NaVez),

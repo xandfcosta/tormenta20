@@ -40,7 +40,7 @@ templ adminScene(v adminView) {
 
 templ playersPanel(v adminView) {
 	<section id="painel-jogadores" class="border border-grimorio-iron bg-grimorio-panel p-3">
-		<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">
+		<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>
 			Jogadores ({ fmt.Sprint(len(v.Players)) })
 		</h2>
 		<ul class="mt-3 divide-y divide-grimorio-iron/60">
@@ -97,7 +97,7 @@ templ playersPanel(v adminView) {
 templ invitesPanel(v adminView) {
 	<section id="painel-convites" class="border border-grimorio-iron bg-grimorio-panel p-3">
 		<div class="flex items-center justify-between gap-2">
-			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">
+			<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>
 				Convites abertos ({ fmt.Sprint(len(v.Invites)) })
 			</h2>
 			<button
@@ -148,7 +148,7 @@ templ invitesPanel(v adminView) {
 
 templ serverPanel(v adminView) {
 	<section id="painel-servidor" class="border border-grimorio-iron bg-grimorio-panel p-3">
-		<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">Servidor</h2>
+		<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>Servidor</h2>
 		<dl class="mt-3 space-y-1 text-sm">
 			<div class="flex justify-between gap-3">
 				<dt class="text-muted-foreground">Ambiente</dt>
@@ -286,7 +286,7 @@ templ resetDialog() {
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.
 templ mintedReset(caminho string) {
 	<div id="reset-link" class="mt-3 space-y-2">
-		<label for="reset-url" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+		<label for="reset-url" class={ ui.FieldLabelClasses("muted", "block") }>
 			Link de redefinição
 		</label>
 		<div class="flex gap-2">

@@ -142,7 +142,7 @@ templ oneNav(v oneView) {
 		// A dica de teclado vive AQUI e não numa camada de ajuda: ela é a única
 		// coisa que conta que a cena tem gramática de setas, e uma gramática
 		// que ninguém descobre é uma gramática que não existe.
-		<p class="hidden pt-2 text-3xs uppercase tracking-widest text-muted-foreground/70 sm:block">
+		<p class={ ui.FieldLabelClasses("herda", "hidden pt-2 text-muted-foreground/70 sm:block") }>
 			↑↓←→ navegar · PgUp/PgDn seção · Esc voltar
 		</p>
 	</nav>

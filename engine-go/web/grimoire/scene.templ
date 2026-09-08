@@ -122,7 +122,7 @@ var houseSteps = []simpleSample{
 // sheetSection: cabeçalho com âncora, para a trilha lateral pular até aqui.
 templ sheetSection(id, titulo string) {
 	<section id={ id } aria-labelledby={ id + "-titulo" } class="scroll-mt-4 space-y-3">
-		<h2 id={ id + "-titulo" } class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">
+		<h2 id={ id + "-titulo" } class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>
 			{ titulo }
 		</h2>
 		{ children... }
@@ -217,7 +217,7 @@ templ colorSection() {
 		// depende dele.
 		@sheetBlock("Tinta sobre pergaminho", "O livro de campanhas é creme, e a conta inverte: o que é legível no painel escuro pode não ser aqui. O crimson base rende 3,95:1 sobre este fundo — abaixo do mínimo de texto —, e por isso a superfície clara tem tinta própria. Ela NÃO é um ajuste no crimson base: aquele é o `--destructive`, medido com branco por cima, e mexer nele mudaria o botão que apaga por um motivo que não é dele.") {
 			<div class="grimorio-parchment-bg flex items-center gap-3 rounded-sm p-3">
-				<span class="font-heading text-sm uppercase tracking-wide text-grimorio-parchment-crimson">
+				<span class={ ui.SectionTitleClasses("painel", "", "text-grimorio-parchment-crimson") }>
 					Sessão ao vivo
 				</span>
 				<code class="font-mono text-3xs text-grimorio-parchment-ink">--grimorio-parchment-crimson</code>
@@ -363,8 +363,8 @@ templ measuredCell() {
 templ columnHeader() {
 	<div class="flex w-full items-center gap-4 pb-1">
 		<span class="w-24 shrink-0"></span>
-		<span class="w-1/2 text-3xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">SPA (Solid)</span>
-		<span class="w-1/2 text-3xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Servidor (templ)</span>
+		<span class={ ui.FieldLabelClasses("muted", "w-1/2") }>SPA (Solid)</span>
+		<span class={ ui.FieldLabelClasses("muted", "w-1/2") }>Servidor (templ)</span>
 	</div>
 }
 

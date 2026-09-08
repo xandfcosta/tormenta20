@@ -22,7 +22,7 @@ import (
 templ bagPanelSection(v View) {
 	<section class="flex min-h-0 flex-1 flex-col">
 		<div class="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Mochila</h2>
+			<h2 class={ ui.SectionTitleClasses("painel", "", "") }>Mochila</h2>
 			@loadHeadline(v)
 			@moneyHeadline(v)
 			@bagAddButtons(v)
@@ -50,14 +50,14 @@ templ loadHeadline(v View) {
 		>{ v.Bag.Load.Used }</span>
 		{ "/ " + strconv.Itoa(v.Bag.Load.Limit) }
 		if v.Bag.Load.Overloaded {
-			<span class="ml-1 uppercase tracking-wider text-penalty-ink">sobrecarga</span>
+			<span class={ ui.SectionLabelClasses("herda", "ml-1 text-penalty-ink") }>sobrecarga</span>
 		}
 		if !v.Bag.Load.Enforced {
 			// A regra desligada NÃO apaga o número: o livro condiciona o
 			// desligamento a "desde que os jogadores não abusem" (p141), e não
 			// dá para vigiar abuso sem ver o quanto se carrega. Sem esta frase,
 			// uma carga acima do limite e sem alerta pareceria defeito da tela.
-			<span class="ml-1 uppercase tracking-wider">a critério do mestre</span>
+			<span class={ ui.SectionLabelClasses("herda", "ml-1") }>a critério do mestre</span>
 		}
 		<span class="ml-1">{ "• " + v.Bag.Load.LimitLabel }</span>
 	</p>
@@ -146,7 +146,7 @@ templ equippedCardItem(v View, card *equippedCard, largo bool) {
 			data-on:click={ "$detalhe = 'item-" + card.Command + "'" }
 			class="block w-[calc(100%-1.5rem)] text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
-			<p class="text-4xs uppercase tracking-wider text-muted-foreground">{ card.Label }</p>
+			<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ card.Label }</p>
 			<p class="truncate text-sm font-semibold text-grimorio-gold">{ card.Name }</p>
 			if card.NoProficiency {
 				// O motor já cobra a penalidade da p142; o crachá existe para
@@ -188,7 +188,7 @@ templ emptySlot(rotulo string, largo bool) {
 		class={ "flex min-h-[3.75rem] flex-col justify-center rounded-none border border-dashed border-grimorio-iron bg-grimorio-panel px-2 py-1.5",
 			templ.KV("col-span-2", largo) }
 	>
-		<p class="text-4xs uppercase tracking-wider text-muted-foreground">{ rotulo }</p>
+		<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ rotulo }</p>
 		<p class="text-xs text-muted-foreground">vazio</p>
 	</div>
 }
@@ -320,7 +320,7 @@ templ moneyDialog(v View) {
 			}
 		</div>
 		<label class="block space-y-1">
-			<span class="text-3xs uppercase tracking-wider text-muted-foreground">valor em T$</span>
+			<span class={ ui.FieldLabelClasses("muted", "") }>valor em T$</span>
 			<input
 				type="number"
 				min="0"

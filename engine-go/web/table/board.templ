@@ -1184,7 +1184,7 @@ templ openBoardButton(v BoardView) {
 		<p class="mt-1 text-sm text-muted-foreground">
 			O tabuleiro não tem bordas: cada quadrado é 1,5m (p236) e a scene cresce para onde a Table for. O deslocamento padrão de 9m anda 6 quadrados (p106).
 		</p>
-		<label for="novo-lugar" class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Lugar</label>
+		<label for="novo-lugar" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Lugar</label>
 		// O NOME DO SINAL É TODO MINÚSCULO, e é obrigatório: nome de ATRIBUTO é
 		// minusculado pelo analisador de HTML, então um `data-bind:novoLugar`
 		// liga um sinal `novolugar` e deixa o declarado intocado — o fio leva os
@@ -1199,7 +1199,7 @@ templ openBoardButton(v BoardView) {
 		// CHÃO e não "Cenário", que é o rótulo da SPA: em T20 cenário é ARTON, o
 		// mundo da campanha, e a palavra não pode significar duas coisas na
 		// mesma casa. Ver GLOSSARIO.md.
-		<label for="novo-chao" class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Chão</label>
+		<label for="novo-chao" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Chão</label>
 		<select
 			id="novo-chao"
 			data-bind:novochao
@@ -1614,7 +1614,7 @@ templ tokenEdit(v BoardView) {
 	>
 		<h2 id="editar-peca-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Editar a peça</h2>
 		<div class="space-y-1">
-			<label for="peca-nome" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Nome da peça</label>
+			<label for="peca-nome" class={ ui.FieldLabelClasses("muted", "block") }>Nome da peça</label>
 			<input
 				id="peca-nome"
 				type="text"
@@ -1627,7 +1627,7 @@ templ tokenEdit(v BoardView) {
 		// (p107, Tab. 1-21), e não existe 4 nem 5. Um campo livre deixaria o mestre
 		// desenhar uma peça que nenhuma criatura tem.
 		<div class="space-y-1">
-			<label for="peca-tamanho" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Tamanho</label>
+			<label for="peca-tamanho" class={ ui.FieldLabelClasses("muted", "block") }>Tamanho</label>
 			<select
 				id="peca-tamanho"
 				data-bind="pecatamanho"
@@ -2218,7 +2218,7 @@ templ newPieceBar(v BoardView) {
 		class="tabuleiro-ajudante gap-1.5"
 	>
 		<label class="flex items-center gap-1.5 text-xs">
-			<span class="uppercase tracking-widest text-muted-foreground">Nova peça</span>
+			<span class={ ui.SectionLabelClasses("muted", "") }>Nova peça</span>
 			<input
 				type="text"
 				data-bind="novapecanome"
