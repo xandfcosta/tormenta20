@@ -1,6 +1,7 @@
-import { type Page, expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
-import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
+import { expectCinzelAcimaDoPiso } from './support/tipografia'
+import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
  * O Grimório é a folha de especificação viva do sistema de desenho (ALE-173).
@@ -562,39 +563,21 @@ test.describe('Grimório — a folha de especificação', () => {
   /**
    * A Cinzel não desce abaixo de 14px (ALE-173).
    *
-   * Ela é serifada de display — contraste de traço alto e olhos pequenos —, e
-   * em 11px maiúscula com espaçamento largo vira desenho antes de virar texto.
-   * O dono apontou isso olhando esta folha, e a casa já tinha tomado a mesma
-   * decisão um degrau abaixo: o rótulo de campo, em 10px, nunca usou Cinzel.
-   * O cabeçalho de bloco era a exceção solta.
+   * O MEDIDOR SAIU DAQUI e virou `support/tipografia.ts` (ALE-252), e a mudança
+   * é a issue inteira: ele vivia inline neste `test()`, então visitava um
+   * endereço só — e quatro violações minhas viveram em três cenas com ele no ar
+   * o tempo todo. Instrumento que mora dentro de um chamador tem exatamente um
+   * chamador, e isso não aparece em revisão de diff nenhuma.
    *
-   * O guarda vive aqui porque a folha desenha a família inteira com os
-   * componentes de verdade — se um deles voltar a usar Cinzel pequena, ela
-   * aparece aqui antes de aparecer em 43 telas.
-   *
-   * Por que e2e: a face resolvida só existe em browser. Em jsdom
-   * `font-family` devolve a string do CSS, não o que foi de fato usado.
+   * Este caso FICA, e não virou redundante: a folha é a superfície onde a
+   * decisão foi tomada, com o dono olhando para ela. Ele agora é uma das cenas
+   * medidas em vez de a única.
    */
   test('a Cinzel não desce abaixo do piso de leitura', async ({ page }) => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
 
-    const pequenas = await page.evaluate(() =>
-      [...document.querySelectorAll('*')]
-        .filter((n) => {
-          const cs = getComputedStyle(n)
-          if (!cs.fontFamily.startsWith('Cinzel')) return false
-          if (!(n.textContent ?? '').trim()) return false
-          return Number.parseFloat(cs.fontSize) < 14
-        })
-        .map((n) => `${Math.round(Number.parseFloat(getComputedStyle(n).fontSize))}px: ${(n.textContent ?? '').trim().slice(0, 24)}`)
-        .slice(0, 6),
-    )
-
-    expect(
-      pequenas,
-      'Cinzel abaixo de 14px — ela não se lê nesse tamanho, e o piso da casa é 14',
-    ).toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'na folha de especificação')
   })
 
   test('a folha cabe nos seis formatos', async ({ page }) => {
