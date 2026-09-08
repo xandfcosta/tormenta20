@@ -129,11 +129,18 @@ type Member struct {
 	Classes  string
 	PV       tableBar
 	PM       tableBar
-	// Presenca é nil para o JOGADOR, e isso segue o precedente da SPA: presença
-	// POR PERSONAGEM é do mestre (o trilho do elenco vive na `session-gm-view`),
-	// enquanto os crachás de NOME são de todo mundo. Nil e não "false" porque
-	// "não mostrar" e "está fora" são coisas diferentes — um anel apagado diria
-	// "fora da mesa" a quem não tem por que saber.
+	// Presenca chega para os DOIS papéis desde a ALE-214.
+	//
+	// Aqui morava o contrário, com o precedente da SPA: presença por personagem
+	// era do mestre, e "um anel apagado diria 'fora da mesa' a quem não tem por
+	// que saber". Decisão do dono (2026-09-08): saber quem caiu é o que faz a
+	// mesa ESPERAR em vez de continuar sem alguém, e isso vale mais que a
+	// discrição.
+	//
+	// **Continua PONTEIRO e não `bool`**, e essa parte da decisão antiga fica de
+	// pé: "não sei" e "está fora" são coisas diferentes, e um cartão sem dado de
+	// presença não pode afirmar ausência. Nil é o que o remendo desenha quando a
+	// cena ainda não resolveu quem está na mesa.
 	Presenca *presencaDoMembro
 	// Defesa é TEXTO e nunca número, pela mesma razão do cartão de personagem:
 	// sem motor ela é desconhecida, e um ZERO é um valor de Defesa plausível e
@@ -155,7 +162,8 @@ type presencaDoMembro struct {
 }
 
 // marcaAPresenca escreve em cada cartão do Grupo se aquele personagem está na
-// mesa agora. Só é chamada para o MESTRE — ver o comentário do campo.
+// mesa agora. Chamada para os DOIS papéis desde a ALE-214 — ver o comentário do
+// campo `Presenca`.
 func marcaAPresenca(grupo []Member, conectados map[int64]bool) {
 	for i := range grupo {
 		naMesa := conectados[grupo[i].CharacterID]

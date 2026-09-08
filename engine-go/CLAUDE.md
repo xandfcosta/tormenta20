@@ -1917,10 +1917,20 @@ batimento de 1s leva a mudança às outras abas.
 
 ### O guarda do DESENHO existia e passava
 
-`TestTheGmSeesWhoIsAtTheTableAndThePlayerDoesNot` já media o anel aceso, o
-apagado, e que o jogador não recebe presença nenhuma — **chamando `Join` ele
-mesmo**. Arranjo que a produção não sabia produzir: a terceira ocorrência da
-mesma forma nesta issue, depois do token de convite e da coluna `role`.
+`TestBothTheGmAndThePlayerSeeWhoIsAtTheTable` já media o anel aceso e o apagado
+— **chamando `Join` ele mesmo**. Arranjo que a produção não sabia produzir: a
+terceira ocorrência da mesma forma nesta issue, depois do token de convite e da
+coluna `role`.
+
+> O nome dele era `…AndThePlayerDoesNot` e a metade do jogador foi INVERTIDA na
+> ALE-214: o dono decidiu que quem está na mesa se vê nas duas telas. E ali
+> apareceu um segundo modo de falhar, irmão deste: o cartão do jogador
+> desenhava o ponto de presença dentro de um `if` que **nunca era verdadeiro**,
+> porque o `Conectados` só era calculado no ramo do mestre. Ramo morto que
+> desenha uma funcionalidade responde "sim" a quem procura — eu li aquele `if` e
+> afirmei, errado, que a funcionalidade existia. **Código alcançável por
+> ninguém e teste que arranja o próprio estado são a mesma doença: os dois
+> parecem cobertura e medem o vazio.**
 
 > A regra que sai daí: **quando o arranjo de um teste usa uma porta que nenhum
 > caminho de produção usa, o verde é sobre o arranjo.** Vale procurar por
