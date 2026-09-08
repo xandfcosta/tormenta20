@@ -516,6 +516,40 @@ Uma armadilha que ela documenta e que vale para qualquer extração deste PDF: o
 linha de atributos aparece colada à criatura errada. Ler por coordenada, nunca
 por layout.
 
+### E o buraco INVERSO: o valor existe, mas não se confere que ele APONTA
+
+O schema pega FORMA e não VALOR — é o parágrafo acima. O `seed-data.json` tinha o
+buraco virado do avesso: os valores eram strings bem formadas, e ninguém conferia
+se elas achavam alguma coisa no catálogo. Só `create.items[].catalogId` passava
+por lookup; raça, origem, classe, deus, poder concedido, tamanho e magia entravam
+crus (ALE-226).
+
+**Seed que mente é caro porque não quebra**: `machado-de-batalha` no lugar de
+`machado-batalha` produz um personagem sem a arma, com a ficha abrindo normal. E
+o e2e roda contra a seed, então o combatente sem arma vira um teste que mede o
+ambiente em vez do app.
+
+Três coisas que a correção ensinou, e valem para qualquer validador de
+referência:
+
+- **A mensagem sugere o VIZINHO**, porque errar id é erro de digitação e
+  digitação erra por pouco. O teto de distância — um terço do comprimento — é o
+  que separa sugestão de chute: sugestão errada é pior que nenhuma, porque quem
+  lê a segue.
+- **Ela junta TUDO antes de falhar.** Parar no primeiro erro faz quem escreveu
+  cinco ids errados rodar o gerador cinco vezes.
+- **O validador afirma o próprio DENOMINADOR.** O `catalog` carrega os embeds com
+  `sync.Once` e engole erro de leitura e de parse: com o embed quebrado toda
+  lista vem vazia, e um validador ingênuo acusaria TODOS os nomes do arquivo —
+  culpando quem escreveu o seed por um defeito do build. Lista vazia é falha de
+  carga, e a mensagem diz isso.
+
+E a referência que escapou vale registro: a CHAVE do `classChoices` é um nome de
+classe (`{"Arcanista": {…}}`). Referência escondida em chave de objeto não se
+parece com referência, e ela só apareceu quando o
+`TestEveryCreateFieldOfTheSeedIsClassified` obrigou a classificar campo por
+campo. **Guarda que força a varredura acha o que a leitura não acha.**
+
 ## O fixture do piloto prima o catálogo DE VERDADE
 
 O `novoPiloto` primava `{"items":[]}`, e isso fazia regra sumir do TESTE sem

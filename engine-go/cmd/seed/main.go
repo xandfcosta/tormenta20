@@ -97,6 +97,12 @@ func main() {
 	if err := json.Unmarshal(seedData, &sf); err != nil {
 		log.Fatalf("seed-data.json: %v", err)
 	}
+	// ANTES DE O SERVIDOR SUBIR (ALE-226): nenhuma linha vai para o banco com
+	// referência quebrada. Um id de catálogo errado não quebrava nada — ele
+	// produzia um personagem QUASE certo, e o e2e roda contra a seed.
+	if err := validateCatalogRefs(sf); err != nil {
+		log.Fatalf("%v", err)
+	}
 	casa, database, cleanup := freshServer(seedEmails(sf))
 	defer cleanup()
 	total, seeded := 0, 0

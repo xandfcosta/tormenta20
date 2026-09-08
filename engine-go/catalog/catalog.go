@@ -222,6 +222,82 @@ func Options() ([]byte, error) {
 	return files.ReadFile("data/options.json")
 }
 
+// SpellIDs e ItemIDs existem para a SUGESTÃO de vizinho (ALE-226): recusar um id
+// desconhecido sem dizer qual é o parecido deixa quem leu a mensagem procurando
+// na mão, e errar id é erro de digitação — digitação erra por pouco.
+func SpellIDs() []string {
+	LookupSpell("") // força o `sync.Once`, senão isto responde antes da carga
+	ids := make([]string, 0, len(spellsByID))
+	for id := range spellsByID {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+func ItemIDs() []string {
+	LookupItem("") // idem
+	ids := make([]string, 0, len(itemsByID))
+	for id := range itemsByID {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+var (
+	optionsOnce sync.Once
+	optionLists map[string][]string
+)
+
+// OptionList devolve os valores aceitos de uma lista de criação — `races`,
+// `classes`, `origins`, `gods`, `sizes`, `expertises` —, ou `nil` para uma lista
+// que não existe (ALE-226).
+//
+// Ela existe porque o catálogo sabia procurar ITEM, MAGIA e ATIVAÇÃO e mais
+// nada: um deus inventado, uma raça fora do livro ou uma origem com erro de
+// digitação não tinham contra o que ser conferidos, e o seed os escrevia no
+// banco em silêncio.
+//
+// São NOMES e não ids, e isso é do dado: o `options.json` lista "Humano",
+// "Arcanista", "Acólito" — é o que a ficha grava e é o que se confere.
+//
+// **Lista VAZIA e lista DESCONHECIDA são coisas diferentes**, e quem chama
+// precisa distinguir: com o embed quebrado toda lista vem vazia, e um chamador
+// que leia isso como "nenhum valor é válido" acusa todo id do arquivo em vez de
+// dizer que o catálogo não carregou. Ver o `catalogOfSeed.ausente`.
+func OptionList(kind string) []string {
+	optionsOnce.Do(func() {
+		optionLists = map[string][]string{}
+		if b, err := files.ReadFile("data/options.json"); err == nil {
+			_ = json.Unmarshal(b, &optionLists)
+		}
+	})
+	return optionLists[kind]
+}
+
+var (
+	grantedOnce  sync.Once
+	grantedNames []string
+)
+
+// GrantedPowerNames devolve o nome de cada poder concedido pelos deuses
+// (`granted-powers.json`), que é a forma como a ficha os grava — "Bênção do
+// Mana", e não um id.
+func GrantedPowerNames() []string {
+	grantedOnce.Do(func() {
+		var lista []struct {
+			Name string `json:"name"`
+		}
+		if b, err := files.ReadFile("data/granted-powers.json"); err == nil {
+			if json.Unmarshal(b, &lista) == nil {
+				for _, p := range lista {
+					grantedNames = append(grantedNames, p.Name)
+				}
+			}
+		}
+	})
+	return grantedNames
+}
+
 var (
 	conditionsOnce sync.Once
 	conditionIDSet map[string]bool
