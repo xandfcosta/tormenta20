@@ -550,20 +550,46 @@ const (
 	clusterCols = 3
 )
 
+// TopChromeRows são as fileiras do plano que o CROMO do topo cobre quando a
+// cena abre, e ninguém nasce nelas (ALE-294).
+//
+// A janela nasce em (0,0) — o quadrado (0,0) do plano fica na quina de cima da
+// tela, ver `table.viewportSignals` — e o painel de verbos flutua a 0.5rem do
+// topo dela com 50px de altura: 8px de recuo mais 44px do botão mais alto
+// (`min-h-11`) e a borda. Ele termina em y=58px, que no zoom padrão de 44px
+// (`table.DefaultSquare`) são as fileiras 0 e 1.
+//
+// Medido a 390×844 na `73658909`: a peça nova saía em (3,0) com 82% da área sob
+// o painel, e o clique direito nela abria "Afastar o mapa" em vez do menu da
+// peça. Não era só o menu — pintar terreno, largar marcador ou pegar a peça
+// para arrastar naquela faixa também eram do painel.
+//
+// O número é PIXEL DO NAVEGADOR escrito no servidor, e ele não pode ser
+// importado de `web/table` porque aquele pacote importa este. Quem o mantém
+// honesto é o e2e `o submenu de duplicar só entra no caminho do teclado quando
+// é aberto`, que abre o menu da peça a 390px de largura: painel mais alto ou
+// zoom padrão menor põem a peça de volta debaixo dele e o caso fica vermelho.
+const TopChromeRows = 2
+
 // clusterSpot devolve o primeiro quadrado livre do lado pedido, preenchendo em
-// blocos de três colunas que crescem para baixo.
+// blocos de três colunas que crescem para baixo — a partir da primeira fileira
+// que o cromo do topo não cobre (ALE-294).
 //
 // Continua havendo um lugar COMBINADO onde a peça nova aparece, que é o que um
 // plano infinito exige — só que agora são dois, um por lado. E continua
 // respeitando quem já está no tabuleiro: o mestre pode ter posicionado alguém
 // ali antes de trazer o resto.
+//
+// O recuo é das DUAS colunas de uma vez, e é por isso que ele não mexe na
+// distância entre os lados: os seis quadrados do alcance curto (p224) são
+// horizontais.
 func clusterSpot(b *BoardState, isParty bool) boardSpot {
 	baseX := enemySideX
 	if isParty {
 		baseX = partySideX
 	}
 	for i := 0; ; i++ {
-		spot := boardSpot{x: baseX + i%clusterCols, y: i / clusterCols}
+		spot := boardSpot{x: baseX + i%clusterCols, y: TopChromeRows + i/clusterCols}
 		if !occupied(b, spot.x, spot.y) {
 			return spot
 		}

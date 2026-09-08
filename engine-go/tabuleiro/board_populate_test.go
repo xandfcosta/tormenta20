@@ -74,3 +74,35 @@ func TestChosenEntriesTellsAbsentFromEmpty(t *testing.T) {
 		t.Error("uma linha que ninguém nomeou entrou na escolha")
 	}
 }
+
+// A PEÇA NÃO NASCE DEBAIXO DO CROMO (ALE-294).
+//
+// A janela do mapa nasce com o quadrado (0,0) na quina de cima da tela, e o
+// painel de verbos da cena flutua ali. Medido a 390×844 na `73658909`: a peça
+// nova saía em (3,0) com 82% da área sob o painel, e o clique direito nela ia
+// para o botão "Afastar o mapa" em vez de abrir o menu dela. Qualquer gesto
+// naquela faixa era do painel — pintar terreno, largar marcador, pegar a peça.
+//
+// A regra prende as DUAS pontas: nenhuma peça na faixa do cromo, e nenhuma
+// longe demais para a janela mostrar. Nascer na fileira 40 também resolveria a
+// primeira e deixaria o mestre procurando o próprio grupo.
+func TestPopulateIsBornBelowTheTopChrome(t *testing.T) {
+	st := aovivo.EmptyRuntimeState()
+	id := ContadorDeIds()
+	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
+	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
+	b := newBoard("t1", "Cripta", "pedra")
+
+	if placed := populateBoard(b, st, boardCounter(), nil); placed != 2 {
+		t.Fatalf("colocou %d peças, esperado 2: o que vem abaixo não mediria nada", placed)
+	}
+	for _, token := range b.Tokens {
+		if token.Y < TopChromeRows {
+			t.Errorf("%s nasceu na fileira %d, debaixo do painel de verbos — o clique nela vai para o botão de afastar",
+				token.Label, token.Y)
+		}
+		if token.Y > TopChromeRows+2 {
+			t.Errorf("%s nasceu na fileira %d, longe demais da faixa que a janela mostra ao abrir", token.Label, token.Y)
+		}
+	}
+}

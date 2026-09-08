@@ -768,13 +768,20 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
     // posiciona é o `ancora()` no `beforetoggle`, e ele não roda de novo num
     // `resize`. Medir sem reabrir mede a conta do formato ANTERIOR — deu 9px de
     // estouro num painel que, reaberto, sobra 8.
-    // SÓ O DEITADO, e o motivo é registrado: a 390px de LARGURA a peça nasce em
-    // (3,0), debaixo do painel de verbos da cena, e o clique direito vai para o
-    // botão de afastar em vez da peça — a armadilha da ALE-203, pré-existente e
-    // de outra issue. Medir ali exigiria pôr a peça noutro quadrado, o que este
-    // caso não faz. O formato deitado é onde o defeito foi medido, e é o que
-    // este guarda prende.
-    for (const [nome, w, h] of [['deitado', 844, 390]] as const) {
+    // OS DOIS FORMATOS desde a ALE-294, e o EM PÉ é o que prende aquela issue.
+    //
+    // Aqui morava "só o deitado", porque a 390px de LARGURA a peça nascia em
+    // (3,0) — debaixo do painel de verbos — e o clique direito ia para o botão
+    // de afastar em vez de abrir o menu dela. A peça passou a nascer abaixo da
+    // faixa do cromo (`tabuleiro.TopChromeRows`), e é este caso que mantém
+    // aquele número honesto: painel mais alto ou zoom padrão menor põem a peça
+    // de volta debaixo do painel, o menu não abre e o `.tabuleiro-peca-copia`
+    // não existe para medir. É a única testemunha possível — quem cobre um
+    // elemento e quem recebe o clique só existem num navegador.
+    for (const [nome, w, h] of [
+      ['deitado', 844, 390],
+      ['em pé', 390, 844],
+    ] as const) {
       await page.setViewportSize({ width: w, height: h })
       await page.evaluate(() =>
         document.querySelectorAll('[popover]').forEach((p) => {
