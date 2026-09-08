@@ -316,45 +316,71 @@ templ tableParty(v View) {
 //
 // Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
 templ cardsParty(v View) {
-			if len(v.Grupo) > 0 {
-				<section class="space-y-1.5">
-					<h2 class={ ui.SectionLabelClasses("muted", "") }>Grupo</h2>
-					<div class="grid gap-2 sm:grid-cols-2">
-						for _, m := range v.Grupo {
-							<article class="space-y-1.5 border border-border/60 bg-card/60 p-2.5">
-								<div class="flex items-baseline justify-between gap-2">
-									<span class="flex min-w-0 items-baseline gap-1.5">
-										// A presença é um PONTO e não um anel, porque aqui o cartão tem
-										// largura de sobra — o anel da SPA existe porque num trilho de
-										// 80px um ponto ao lado do retrato disputaria espaço com ele.
-										//
-										// E ele nunca vai sozinho: cor não existe para quem usa leitor
-										// de tela (ALE-212), então a frase viaja no `title` e num
-										// rótulo só-para-leitor. Verde é o mesmo `--hp-full` que os
-										// crachás de conectado já usam.
-										if m.Presenca != nil {
-											<span
-												title={ m.Nome + " — " + m.Presenca.Frase }
-												class={ "size-2 shrink-0 self-center rounded-full",
-													templ.KV("bg-hp-full", m.Presenca.NaMesa),
-													templ.KV("bg-grimorio-iron", !m.Presenca.NaMesa) }
-											></span>
-											<span class="sr-only">{ m.Presenca.Frase }</span>
-										}
-										<span class="truncate font-medium">{ m.Nome }</span>
-									</span>
-									<span class="shrink-0 bg-muted px-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Nv { fmt.Sprint(m.Nivel) }</span>
-								</div>
-								if m.Classes != "" {
-									<p class="truncate text-xs text-muted-foreground">{ m.Classes }</p>
-								}
-								@barra("PV", m.PV)
-								@barra("PM", m.PM)
-							</article>
-						}
-					</div>
-				</section>
-			}
+	if len(v.Grupo) > 0 {
+		<section class="space-y-1.5">
+			<h2 class={ ui.SectionLabelClasses("muted", "") }>Grupo</h2>
+			<div class="grid gap-2 sm:grid-cols-2">
+				for _, m := range v.Grupo {
+					// O RETRATO ANCORA O CARTÃO (ALE-214), e é ele que permite as três
+					// linhas: sem nada à esquerda, o nome e as barras ficavam soltos
+					// num bloco de 119px que gastava altura sem dizer quem é.
+					//
+					// A "imagem do personagem" que a issue pede É a monograma, por
+					// decisão do dono (2026-08-22): não há campo de imagem no modelo, e
+					// uma caixa que espera foto e recebe duas letras fica pior que uma
+					// desenhada para duas letras. O `.monograma` é essa caixa (ALE-252),
+					// e no dia em que a foto entrar ela entra aqui.
+					<article class="flex items-center gap-2.5 border border-border/60 bg-card/60 p-2.5">
+						<span
+							aria-hidden="true"
+							class="monograma size-11 rounded-sm text-sm"
+							style={ "background: " + ui.NameGradient(m.Nome) }
+						>{ m.Iniciais }</span>
+						<div class="flex min-w-0 flex-1 flex-col gap-1">
+							<div class="flex items-baseline justify-between gap-2">
+								<span class="flex min-w-0 items-baseline gap-1.5">
+									// A presença é um PONTO e não um anel, porque aqui o cartão tem
+									// largura de sobra — o anel da SPA existe porque num trilho de
+									// 80px um ponto ao lado do retrato disputaria espaço com ele.
+									//
+									// E ele nunca vai sozinho: cor não existe para quem usa leitor
+									// de tela (ALE-212), então a frase viaja no `title` e num
+									// rótulo só-para-leitor. Verde é o mesmo `--hp-full` que os
+									// crachás de conectado já usam.
+									if m.Presenca != nil {
+										<span
+											title={ m.Nome + " — " + m.Presenca.Frase }
+											class={ "size-2 shrink-0 self-center rounded-full",
+												templ.KV("bg-hp-full", m.Presenca.NaMesa),
+												templ.KV("bg-grimorio-iron", !m.Presenca.NaMesa) }
+										></span>
+										<span class="sr-only">{ m.Presenca.Frase }</span>
+									}
+									<span class="truncate font-medium">{ m.Nome }</span>
+								</span>
+								<span class="shrink-0 bg-muted px-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Nv { fmt.Sprint(m.Nivel) }</span>
+							</div>
+							if m.Classes != "" {
+								<p class="truncate text-xs text-muted-foreground">{ m.Classes }</p>
+							}
+							// PV E PM LADO A LADO, e é daqui que vêm os 51px que o cartão
+							// devolveu — de 119px para 68. Empilhadas elas gastavam duas
+							// linhas para dizer duas coisas que cabem numa.
+							//
+							// O RÓTULO FICA, mesmo apertado: sem ele, o que separa PV de PM é
+							// só a cor, e cor sozinha não informa quem não a distingue. O
+							// `aria-label` da barra já dizia a frase inteira; isto é para
+							// quem enxerga.
+							<div class="flex items-center gap-3">
+								@barraCompacta("PV", m.PV)
+								@barraCompacta("PM", m.PM)
+							</div>
+						</div>
+					</article>
+				}
+			</div>
+		</section>
+	}
 }
 
 // O TABULEIRO vem ANTES da fila e depois do Grupo: quando há mapa, é nele que a
@@ -810,6 +836,26 @@ templ rowEye(v View, l tableRow, pool, rotulo string, hidden bool) {
 // barra tem o mesmo contrato de acessibilidade da `VitalBar` da SPA: um
 // `progressbar` de verdade, porque "um pouco de verde" não é resposta para quem
 // não vê a tela — e é o que o e2e consegue ler.
+// barraCompacta é a barra do cartão do Grupo, para duas cabendo numa linha
+// (ALE-214). A diferença para a `barra` é só o que ocupa largura: o rótulo
+// encolhe e o número perde o máximo, que já viaja no `aria-label`.
+templ barraCompacta(rotulo string, b tableBar) {
+	<div class="flex min-w-0 flex-1 items-center gap-1">
+		<span class={ ui.SectionLabelClasses("muted", "shrink-0") }>{ rotulo }</span>
+		<div
+			role="progressbar"
+			aria-valuenow={ fmt.Sprint(b.Current) }
+			aria-valuemin="0"
+			aria-valuemax={ fmt.Sprint(b.Max) }
+			aria-label={ fmt.Sprintf("%s %d de %d", rotulo, b.Current, b.Max) }
+			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
+		>
+			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
+		</div>
+		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ fmt.Sprint(b.Current) }/{ fmt.Sprint(b.Max) }</span>
+	</div>
+}
+
 templ barra(rotulo string, b tableBar) {
 	<div class="flex items-center gap-1.5">
 		<span class={ ui.SectionLabelClasses("muted", "w-7 shrink-0") }>{ rotulo }</span>
