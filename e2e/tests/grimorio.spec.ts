@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
+import { expectBotoesComLimiteVisivel } from './support/limite'
 import { expectCinzelAcimaDoPiso } from './support/tipografia'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
@@ -578,6 +579,28 @@ test.describe('Grimório — a folha de especificação', () => {
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
 
     await expectCinzelAcimaDoPiso(page, 'na folha de especificação')
+  })
+
+  /**
+   * TODO BOTÃO TEM LIMITE VISÍVEL contra o fundo (WCAG 1.4.11) — ALE-250.
+   *
+   * Ele mora aqui, e o lugar é o argumento: a folha de especificação desenha
+   * TODAS as variantes e TODOS os tamanhos lado a lado. Medir esta tela é medir
+   * a família inteira por AMOSTRAGEM — o oposto da enumeração que a ALE-252
+   * pagou caro para conseguir.
+   *
+   * O que ele prende é uma decisão que quase foi desfeita: o `secondary` do
+   * servidor tem borda e o da SPA não tinha, e a issue propunha tirá-la em nome
+   * da fidelidade. Medido: o preenchimento sozinho dá 1,30:1 contra o fundo da
+   * cena, e a borda dá 3,57:1. **A borda é o conserto, não a divergência** — e
+   * sem este guarda, tirá-la não quebra nada que alguém veja: o botão continua
+   * clicável e o texto continua legível. O que some é a fronteira.
+   */
+  test('todo botão tem limite visível contra o fundo', async ({ page }) => {
+    await page.goto('/grimorio')
+    await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
+
+    await expectBotoesComLimiteVisivel(page, 'na folha de especificação')
   })
 
   test('a folha cabe nos seis formatos', async ({ page }) => {

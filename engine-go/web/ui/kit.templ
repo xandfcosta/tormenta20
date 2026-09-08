@@ -45,9 +45,26 @@ const (
 // as cores das barras de PV precisaram do `@source inline(...)`.
 func ButtonClasses(v Variant, t Size, extra string) string {
 	base := "inline-flex shrink-0 items-center justify-center gap-2 rounded-sm text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
+	// A BORDA DO `secondary` É CONSERTO, E NÃO DIVERGÊNCIA (ALE-250). Não tire.
+	//
+	// O `secondary` da SPA não tinha borda, e a folha de especificação media isso
+	// como 2px de divergência — a ALE-250 nasceu propondo tirá-la em nome da
+	// fidelidade. Medido no navegador antes de mexer:
+	//
+	//   preenchimento (`--secondary`) contra o fundo da cena    1,30:1
+	//   a borda (`--grimorio-iron-light`) contra o mesmo fundo   3,57:1
+	//
+	// O mínimo do WCAG 1.4.11 para LIMITE de componente é 3:1. Sem a borda não se
+	// vê onde o botão começa — e o guarda de contraste da casa não acusaria,
+	// porque ele mede a tinta do TEXTO, que continua legível. **A SPA é que tinha
+	// o defeito**, e ele sobreviveu por nunca ter sido medido.
+	//
+	// Quem prende isso é o e2e `todo botão tem limite visível contra o fundo`, na
+	// folha de especificação — que desenha todas as variantes lado a lado e por
+	// isso cobre a família por amostragem.
 	porVariante := map[Variant]string{
-		VariantPrimary:   "bg-primary text-primary-foreground hover:bg-primary/90",
-		VariantSecondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
+		VariantPrimary:     "bg-primary text-primary-foreground hover:bg-primary/90",
+		VariantSecondary:   "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
 		VariantDestructive: "bg-destructive text-white hover:bg-destructive/90",
 	}
 	porTamanho := map[Size]string{
