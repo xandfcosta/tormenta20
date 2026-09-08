@@ -22,11 +22,16 @@ import (
 // replica ("a mesma animação, já concluída, no mesmo nó").
 //
 // Nenhuma das saídas que a issue previa foi necessária: nem morph, nem reflow
-// forçado, nem id que muda a cada troca. Ver `theEnteringStage` e a folha.
+// forçado, nem id que muda a cada troca. Ver `ui.EnteringStage` e a folha.
 //
-// O que continua na ALE-235 é a VIRADA DE PÁGINA do livro de campanhas: lá a
-// folha carrega a arte dos DOIS lados, e desenhar isso exigiria copiar conteúdo
-// que só o servidor tem — outro problema, não este.
+// O MECANISMO É GERAL, e a ALE-297 provou: a cena de campanhas largou o livro de
+// couro, virou palco e herdou a entrada inteira sem uma linha nova de CSS. Foi
+// essa segunda cena que tirou o vizinho, o facho, a entrada e o gesto daqui de
+// dentro para o `ui` — enquanto eram privados deste arquivo, tinham exatamente
+// um chamador possível.
+//
+// A VIRADA DE PÁGINA que ainda restava da ALE-235 morreu com o livro: sem
+// lombada não há folha para atravessar.
 
 templ charactersBody(v View) {
 	@charactersBar(v)
@@ -39,13 +44,13 @@ templ charactersBody(v View) {
 		<div class="flex min-h-0 flex-1 flex-col">
 			<div class="relative flex min-h-0 flex-1 items-center justify-center">
 				for i, h := range v.Heroes {
-					@heroStage(h, peekAt(v.Heroes, i-1), peekAt(v.Heroes, i+1))
+					@heroStage(h, ui.NeighborAt(v.Neighbors, i-1), ui.NeighborAt(v.Neighbors, i+1))
 				}
 				// A vaga de criar é um palco como os outros, e o cursor pousa
 				// nela: `$cursor == 0` é a posição dela, porque nenhum id de
 				// personagem é zero. O vizinho da esquerda é o ÚLTIMO herói,
 				// que é o caminho de volta para o elenco.
-				@createStage(false, peekAt(v.Heroes, len(v.Heroes)-1))
+				@createStage(false, ui.NeighborAt(v.Neighbors, len(v.Neighbors)-1))
 			</div>
 			@characterFilm(v)
 		</div>
@@ -58,7 +63,7 @@ templ charactersBody(v View) {
 templ charactersBar(v View) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
-		data-signals={ fmt.Sprintf("{busca: %q, cursor: %d, dossie: false, sentido: 1, indice: 0}", v.Busca, v.CursorID) }
+		data-signals={ fmt.Sprintf("{busca: %q, dossie: false, %s}", v.Busca, ui.StageSignals(v.CursorID)) }
 		data-on:keydown__window="(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossie = !$dossie)"
 	>
 		<a
@@ -88,10 +93,10 @@ templ charactersBar(v View) {
 
 // ── o palco ──────────────────────────────────────────────────────────────────
 
-templ heroStage(h HeroCard, anterior, proximo *neighbor) {
+templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 	<div
 		data-show={ fmt.Sprintf("$cursor == %d", h.ID) }
-		data-class={ theEnteringStage(h.ID) }
+		data-class={ ui.EnteringStage(h.ID) }
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
 	>
 		// A lavagem de luz no matiz do herói. Decorativa, e por isso fora da
@@ -99,10 +104,10 @@ templ heroStage(h HeroCard, anterior, proximo *neighbor) {
 		<div
 			aria-hidden="true"
 			class="pointer-events-none absolute inset-0 -z-10"
-			style={ "background: " + heroWash(h) }
+			style={ "background: " + ui.StageWash(h.Name) }
 		></div>
 		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
-			@neighborPortrait(anterior, "Anterior")
+			@ui.NeighborPortrait(anterior, "Anterior")
 			<a
 				href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) }
 				aria-label={ "Abrir ficha de " + h.Name }
@@ -114,7 +119,7 @@ templ heroStage(h HeroCard, anterior, proximo *neighbor) {
 				</span>
 				<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
 			</a>
-			@neighborPortrait(proximo, "Próximo")
+			@ui.NeighborPortrait(proximo, "Próximo")
 		</div>
 		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
@@ -170,16 +175,16 @@ templ oneVital(rotulo, valor, tom string, apagado bool) {
 
 // createStage é a vaga do fim — e ela existe TAMBÉM com o elenco vazio, porque
 // aí ela é a única coisa que dá o que fazer.
-templ createStage(sozinha bool, anterior *neighbor) {
+templ createStage(sozinha bool, anterior *ui.Neighbor) {
 	<div
 		if !sozinha {
 			data-show="$cursor == 0"
-			data-class={ theEnteringStage(0) }
+			data-class={ ui.EnteringStage(0) }
 		}
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
 	>
 		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
-			@neighborPortrait(anterior, "Anterior")
+			@ui.NeighborPortrait(anterior, "Anterior")
 			<a
 				href="/personagens/nova"
 				aria-label="Forjar um novo herói"
@@ -190,7 +195,7 @@ templ createStage(sozinha bool, anterior *neighbor) {
 			// À direita da vaga não há vizinho: ela é o fim do trilho. O
 			// espaçador entra do mesmo jeito, senão o retrato desliza para a
 			// direita ao chegar aqui.
-			@neighborPortrait(nil, "Próximo")
+			@ui.NeighborPortrait(nil, "Próximo")
 		</div>
 		<div class="palco-placa max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Forjar um herói</h2>
@@ -218,39 +223,6 @@ templ createStage(sozinha bool, anterior *neighbor) {
 			@ui.Key("⏎")
 		</a>
 	</div>
-}
-
-// neighborPortrait é o retrato apagado de quem está ao lado — clicá-lo anda o
-// cursor para lá.
-//
-// O NOME fica sempre visível, e isso é regra e não estilo: a versão original
-// escondia a legenda atrás de `group-hover`, e hover não existe no toque nem
-// sob navegação por teclado, que são justamente os dois modos em que duas
-// iniciais não dizem quem vem a seguir.
-//
-// Vizinho nulo vira ESPAÇADOR da mesma largura, nunca elemento ausente — ver
-// `peekAt`.
-templ neighborPortrait(vz *neighbor, lado string) {
-	if vz == nil {
-		<div class="w-20 shrink-0 sm:w-28 lg:w-32" aria-hidden="true"></div>
-	} else {
-		<button
-			type="button"
-			title={ vz.Name }
-			aria-label={ lado + ": " + vz.Name }
-			data-cue-hover
-			data-on:click={ theCursorGesture(vz.Index, vz.ID) }
-			class="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-sm border border-grimorio-iron opacity-50 outline-none transition-all hover:opacity-80 focus-visible:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-28 lg:w-32"
-			style={ "background: " + vz.Gradient }
-		>
-			<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-4xl text-white/20 sm:text-5xl">
-				{ vz.Monogram }
-			</span>
-			<span class="absolute inset-x-0 bottom-0 line-clamp-2 bg-black/60 px-1 py-0.5 text-center text-3xs leading-tight text-white">
-				{ vz.Name }
-			</span>
-		</button>
-	}
 }
 
 // ── o filme ──────────────────────────────────────────────────────────────────
@@ -281,8 +253,8 @@ templ filmFrame(h HeroCard, i int) {
 		data-cue-hover
 		aria-label={ h.Name + " · " + h.Role }
 		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", h.ID) }
-		data-on:focusin={ theCursorGesture(i, h.ID) }
-		data-on:click={ theCursorGesture(i, h.ID) }
+		data-on:focusin={ ui.CursorGesture(i, h.ID) }
+		data-on:click={ ui.CursorGesture(i, h.ID) }
 		data-on:keydown={ fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = '/personagens/%d')", h.ID) }
 		class="monograma size-12 rounded-sm border border-grimorio-iron text-xs outline-none transition-all hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:ring-1 aria-selected:ring-grimorio-gold"
 		style={ "background: " + h.Gradient }
@@ -305,8 +277,8 @@ templ createFrame(temAlgum bool, indice int) {
 		data-on:keydown="evt.key === 'Enter' && (evt.preventDefault(), location.href = '/personagens/nova')"
 		if temAlgum {
 			data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
-			data-on:focusin={ theCursorGesture(indice, 0) }
-			data-on:click={ theCursorGesture(indice, 0) }
+			data-on:focusin={ ui.CursorGesture(indice, 0) }
+			data-on:click={ ui.CursorGesture(indice, 0) }
 		}
 		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
 	>

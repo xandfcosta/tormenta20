@@ -2,7 +2,6 @@ package characters
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"t20engine/book"
@@ -36,6 +35,12 @@ type View struct {
 	Total       int
 	HasAny      bool
 	FilteredAll bool
+	// Neighbors espelha `Heroes` na ordem do trilho, e existe porque o vizinho
+	// é COMPARTILHADO com a cena de campanhas (ALE-297): o `ui.NeighborAt` só
+	// indexa, e quem sabe traduzir um cartão de herói em vizinho é quem tem o
+	// cartão. Montar aqui, uma vez, também evita reconstruir dois vizinhos por
+	// palco desenhado.
+	Neighbors []ui.Neighbor
 }
 
 type HeroCard struct {
@@ -110,6 +115,11 @@ func (s Scene) Load(ctx context.Context, ownerID int64, busca string) (View, err
 	v.FilteredAll = v.HasAny && len(v.Heroes) == 0
 	if len(v.Heroes) > 0 {
 		v.CursorID = v.Heroes[0].ID
+	}
+	for i, h := range v.Heroes {
+		v.Neighbors = append(v.Neighbors, ui.Neighbor{
+			ID: h.ID, Name: h.Name, Monogram: h.Monogram, Gradient: h.Gradient, Index: i,
+		})
 	}
 	return v, nil
 }
@@ -235,99 +245,4 @@ func mainRace(c sheet.CharacterDTO) string {
 
 func vital(atual, max int64) string {
 	return strconv.FormatInt(atual, 10) + "/" + strconv.FormatInt(max, 10)
-}
-
-// heroWash é o facho de luz no matiz do próprio herói — o que faz o palco
-// parecer iluminado em vez de listado. Decorativo, e por isso o elemento que o
-// usa é `aria-hidden`.
-func heroWash(h HeroCard) string {
-	m := ui.NameHue(h.Name)
-	return "radial-gradient(ellipse 60% 50% at 50% 42%, oklch(0.55 0.15 " +
-		strconv.Itoa(m) + " / 0.14), transparent 70%)"
-}
-
-// vizinho é o retrato APAGADO que ladeia o palco — o "peek" da SPA, portado na
-// virada da ALE-239 porque apagá-lo junto com a tela antiga seria perder uma
-// feature debaixo de uma migração.
-//
-// Ele carrega só o que o peek desenha, e não um `HeroCard` inteiro: o peek
-// não mostra vitais, nem resumo, nem dossiê, e passar a estrutura cheia
-// convidaria a próxima pessoa a mostrar.
-type neighbor struct {
-	ID       int64
-	Name     string
-	Monogram string
-	Gradient string
-	// Indice é a posição dele no trilho, e ela existe para o gesto saber o
-	// SENTIDO do movimento (ALE-235): clicar no vizinho da esquerda anda para
-	// trás, e é isso que faz o palco entrar pelo lado certo. Sem o índice, o
-	// clique no retrato vizinho seria o único gesto da cena sem direção.
-	Index int
-}
-
-// peekAt é o vizinho na posição `i` do trilho, ou nil quando `i` cai fora.
-//
-// Nil NÃO significa "não desenhe": significa espaçador. Sem a caixa vazia nas
-// pontas do elenco o palco escorrega para o lado ao chegar no primeiro ou no
-// último herói, que é a família de defeitos da ALE-99 — a mesma razão do
-// `min-h-[2lh]` no nome e do travessão na Defesa.
-func peekAt(herois []HeroCard, i int) *neighbor {
-	if i < 0 || i >= len(herois) {
-		return nil
-	}
-	h := herois[i]
-	return &neighbor{ID: h.ID, Name: h.Name, Monogram: h.Monogram, Gradient: h.Gradient, Index: i}
-}
-
-// A ENTRADA DO PALCO (ALE-235): a classe que substitui o mount.
-//
-// Na SPA a animação era `animate-in`, que dispara no mount — e o `<Show keyed>`
-// reconstruía o nó a cada troca justamente para ela disparar (ALE-97). Aqui a
-// cena inteira é desenhada e o cursor só alterna `data-show`: **nada nunca
-// monta**, e uma animação presa ao mount não tocaria nunca.
-//
-// O que substitui o mount é a CLASSE entrando num nó que não a tinha. O palco
-// que sai perde a classe e o que entra ganha — são elementos DIFERENTES, então
-// não existe o caso que não replica ("a mesma animação, já concluída, no mesmo
-// nó"). Isso dispensa o morph, o reflow forçado e o id que muda a cada troca,
-// que eram as saídas que a issue previa.
-
-// theEnteringStage escreve o `data-class` de um palco.
-//
-// Duas classes e não uma com direção por variável: `translateX(calc(var(--dir) *
-// …))` dentro de `@keyframes` não é interpolado de forma confiável entre
-// navegadores, e uma animação que não anima é o defeito mudo desta família.
-func theEnteringStage(id int64) string {
-	return fmt.Sprintf(
-		"{'palco-entra-adiante': $cursor == %d && $sentido == 1, 'palco-entra-atras': $cursor == %d && $sentido == -1}",
-		id, id)
-}
-
-// theCursorGesture é o ÚNICO escritor de `$cursor` nesta cena, e é por isso
-// que ele é uma função (ALE-235).
-//
-// São CINCO gestos que movem o cursor — o quadro do filme no clique e no foco,
-// os dois retratos vizinhos e a vaga de criar —, e cada um deles precisa
-// escrever também o SENTIDO e o índice. Escrito à mão cinco vezes, o sexto é o
-// que esquece: o palco entraria pelo lado errado, sem erro em lugar nenhum, e
-// só quem conhecesse a animação notaria. O `TestEveryGestureThatMovesTheCursorSaysTheDirection`
-// varre a cena e recusa um `$cursor =` que não venha daqui.
-//
-// # Ele é IDEMPOTENTE, e isso foi medido no navegador
-//
-// Um clique num quadro do filme dispara `focusin` E `click`, os dois com este
-// mesmo gesto. Sem a guarda, a primeira passagem calcula o sentido certo e
-// escreve o índice; a SEGUNDA recalcula com o índice já atualizado — `N >= N` é
-// sempre verdade — e o palco entra "adiante" mesmo andando para trás. O sintoma
-// é uma animação na direção errada, que ninguém lê como defeito de lógica.
-//
-// A guarda é um `if` de statements e não um ternário: ver a armadilha do
-// Datastar no guia do pacote — sequência de comandos dentro de um ternário é
-// erro de sintaxe, o framework engole o parse e o gesto INTEIRO vira nada.
-//
-// @example theCursorGesture(2, 41) // "if ($indice != 2) { … } $cursor = 41"
-func theCursorGesture(indice int, id int64) string {
-	return fmt.Sprintf(
-		"if ($indice != %d) { $sentido = %d >= $indice ? 1 : -1; $indice = %d } $cursor = %d",
-		indice, indice, indice, id)
 }
