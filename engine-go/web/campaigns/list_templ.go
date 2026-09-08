@@ -956,7 +956,7 @@ func campaignMarker(c campaignCard) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\"><span aria-hidden=\"true\" class=\"flex size-8 shrink-0 items-center justify-center rounded-none border border-grimorio-iron font-display text-xs text-white/85\" style=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\"><span aria-hidden=\"true\" class=\"monograma size-8 rounded-none border border-grimorio-iron text-xs\" style=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

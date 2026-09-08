@@ -278,6 +278,33 @@ html {
 }
 
 @layer components {
+  /* O MONOGRAMA do avatar: as duas letras dentro do círculo colorido (ALE-252).
+   *
+   * Ele é MARCA e não texto — decisão do dono, 2026-09-08 —, e a diferença tem
+   * consequência mecânica. O piso de 14px da Cinzel existe porque ela "vira
+   * desenho antes de virar texto" nesse tamanho (ALE-173), e num monograma
+   * virar desenho é o objetivo: são duas letras (ver `ui.Monogram`), com o nome
+   * escrito por extenso ao lado em texto de verdade.
+   *
+   * A receita mora AQUI e não em quatro `class=` à mão porque a classe É a
+   * isenção: o `support/tipografia.ts` pula quem estiver dentro de um
+   * `.monograma`, e assim quem escrever um monograma novo herda o desenho e a
+   * isenção juntos. Isentar por `aria-hidden` — que é o que três dos quatro
+   * sítios já tinham — livraria TODA Cinzel decorativa, que é largo demais.
+   *
+   * O TAMANHO e a FORMA ficam com quem chama: os quatro círculos medem 32, 44 e
+   * 48px, com cantos diferentes, e normalizá-los aqui mudaria quatro cenas numa
+   * issue que não é sobre isso. O `background` é o gradiente derivado do nome
+   * (`ui.NameGradient`), e por isso é `style` e não classe. */
+  .monograma {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    color: oklch(1 0 0 / 0.85);
+  }
+
   .acervo-em-colunas {
     display: grid;
     gap: 0.5rem;
