@@ -12,7 +12,7 @@ import (
 // migração: um cursor que anda, um palco que muda com ele, um trilho e uma
 // busca.
 //
-// A decisão que governa o formato: o servidor entrega TODOS os livros já
+// A decisão que governa o formato: o servidor entrega TODOS os palcos já
 // desenhados e o cursor é um sinal do cliente. Com uma dúzia de campanhas numa
 // mesa doméstica isso custa alguns kilobytes e faz ←/→ serem instantâneos, sem
 // requisição. O contrário — uma ida ao servidor por passo do cursor —
@@ -32,6 +32,10 @@ type listView struct {
 	CursorID    int64
 	TemAlguma   bool
 	FiltrouTudo bool
+	// Neighbors espelha `Campanhas` na ordem do trilho — ver `ui.NeighborAt`.
+	// Montado uma vez aqui em vez de dois por palco desenhado, e no tipo
+	// compartilhado porque o vizinho é a MESMA peça da cena do elenco (ALE-297).
+	Neighbors []ui.Neighbor
 }
 
 type campaignCard struct {
@@ -48,9 +52,10 @@ type campaignCard struct {
 }
 
 type myCharacter struct {
-	Nome     string
-	Classes  string
-	Iniciais string
+	Nome      string
+	Classes   string
+	Iniciais  string
+	Gradiente string
 }
 
 // LoadList monta a cena.
@@ -82,6 +87,11 @@ func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, busca, pape
 		// palco vazio com o trilho cheio.
 		v.CursorID = v.Campanhas[0].ID
 	}
+	for i, c := range v.Campanhas {
+		v.Neighbors = append(v.Neighbors, ui.Neighbor{
+			ID: c.ID, Name: c.Nome, Monogram: c.Iniciais, Gradient: c.Gradiente, Index: i,
+		})
+	}
 	return v, nil
 }
 
@@ -99,9 +109,10 @@ func cardOf(c ListRow, vivas map[int64]int64) campaignCard {
 	}
 	if c.Character != nil {
 		cartao.Meu = &myCharacter{
-			Nome:     c.Character.Name,
-			Classes:  classesInLine(c.Character),
-			Iniciais: ui.Monogram(c.Character.Name),
+			Nome:      c.Character.Name,
+			Classes:   classesInLine(c.Character),
+			Iniciais:  ui.Monogram(c.Character.Name),
+			Gradiente: ui.NameGradient(c.Character.Name),
 		}
 	}
 	return cartao
