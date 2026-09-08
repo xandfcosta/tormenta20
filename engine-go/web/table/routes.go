@@ -117,6 +117,12 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: tableSignalsExpr(),
 		Init:   fmt.Sprintf("@get('/mesa/%d/%d/stream')", campaignID, sessionID),
+		// A ILHA DA MESA (ALE-174): o que anima quando o estado chega pelo fio.
+		//
+		// Módulo PRÓPRIO e não `cena.js`, que carrega em toda página: um
+		// observador de mutação sobre o tabuleiro não tem o que fazer na ficha
+		// nem na porta. É a mesma divisão que o leitor do livro já usa.
+		Scripts: []string{s.deps.Asset("mesa.js")},
 	}, s.tableBody(r, view, campaignID, sessionID))
 }
 

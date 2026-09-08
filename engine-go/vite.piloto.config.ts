@@ -30,7 +30,7 @@ export default defineConfig({
     emptyOutDir: false,
     target: 'es2022',
     lib: {
-      // DUAS entradas e não duas configs: o `grimorio.js` só é pedido pela
+      // CINCO entradas e não cinco configs: o `grimorio.js` só é pedido pela
       // folha de especificação, e carregá-lo em toda cena seria pôr canvas e
       // medição de contraste no caminho de quem só quer jogar.
       entry: {
@@ -42,6 +42,11 @@ export default defineConfig({
         // cena `/livro/ler` o pede. Pô-lo no `cena.js` seria mandar um
         // visualizador de PDF para quem abriu a ficha de um personagem.
         leitor: resolve(import.meta.dirname, 'api/piloto/src/leitor.ts'),
+        // A MESA (ALE-174) é a quarta entrada com o mesmo motivo das outras:
+        // ela instala um observador de mutação sobre o tabuleiro, e pô-la no
+        // `cena.js` seria pendurar isso na ficha, na porta e no grimório —
+        // páginas que não têm peça nenhuma para animar.
+        mesa: resolve(import.meta.dirname, 'api/piloto/src/mesa.ts'),
       },
       formats: ['es'],
       fileName: (_formato, nome) => `${nome}.js`,

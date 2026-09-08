@@ -174,6 +174,11 @@ type Deps interface {
 	// BookAddress é o endereço do livro, ou o zero quando não há `LIVRO_PDF`.
 	// A cena não pergunta "há livro?": o valor já responde, como o leitor.
 	BookAddress() bookui.BookAddress
+	// Asset é o endereço VERSIONADO de um estático. A Mesa precisa de um — a
+	// ilha que anima o que chega pelo fio (ALE-174) —, e ele é `go:embed` do
+	// hospedeiro. Mesma porta que o leitor do livro usa, pelo mesmo motivo: o
+	// que varia é só o nome do arquivo.
+	Asset(arquivo string) string
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 }

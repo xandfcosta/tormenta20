@@ -34,8 +34,14 @@
  * camada.
  */
 
-/** Ambiente sem WAAPI (o jsdom da suíte) responde nada em vez de explodir. */
-function podeAnimar(alvo: Element | null | undefined): alvo is Element {
+/**
+ * Ambiente sem WAAPI (o jsdom da suíte) responde nada em vez de explodir.
+ *
+ * EXPORTADA desde a ALE-174: o `token-move` faz a mesma pergunta antes de
+ * animar, e uma segunda cópia da checagem divergiria no dia em que o alvo
+ * pudesse ser outra coisa que não um `Element`.
+ */
+export function podeAnimar(alvo: Element | null | undefined): alvo is Element {
   return !!alvo && typeof (alvo as HTMLElement).animate === 'function'
 }
 
