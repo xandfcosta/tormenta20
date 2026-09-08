@@ -591,6 +591,32 @@ html {
     gap: 0.125rem;
     padding: 0.125rem 0.25rem;
   }
+  /* O PAINEL DEVOLVE OS VÃOS AO MAPA (ALE-294).
+   *
+   * Ele é uma CAIXA por cima da cena, e como caixa recebia o clique na faixa
+   * inteira que ocupa — inclusive no fundo entre os ícones, que não faz nada.
+   * Medido a 390px varrendo a janela a cada 4px: dos 864 pontos do painel, 328
+   * (38%) caíam no fundo. Ali pintar terreno, largar marcador ou pegar uma peça
+   * era um gesto que sumia sem nada na tela para explicar, e cobrir a vista e
+   * roubar o clique são promessas diferentes — a segunda nunca foi feita.
+   *
+   * É o mesmo remédio dos avisos e ajudantes acima, e a mesma armadilha: só é
+   * seguro se TODO controle reativar. Um que fique de fora vira botão morto, que
+   * é pior que o defeito porque não deixa erro em lugar nenhum. Quem prende isso
+   * é o `TestNoChromeOverTheMapStealsTheClickOffItsControls`, que cruza esta
+   * lista com o HTML servido.
+   *
+   * O NOME DA CENA fica de fora, e não por esquecimento: a caixa dele É o texto
+   * (ele encolhe até o nome), então não há vão para devolver — e sem ponteiro o
+   * nome deixaria de poder ser selecionado, que é perder por nada. O TRILHO
+   * também: ele ROLA por dentro quando as nove ferramentas não cabem, e um fundo
+   * transparente ao ponteiro mandaria a roda para o mapa, que amplia. */
+  .tabuleiro-verbos-da-cena {
+    pointer-events: none;
+  }
+  .tabuleiro-verbos-da-cena :is(a, button, input, label, select, summary, textarea) {
+    pointer-events: auto;
+  }
 
   .tabuleiro-trilho {
     position: absolute;
