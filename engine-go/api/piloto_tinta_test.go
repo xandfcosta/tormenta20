@@ -28,10 +28,7 @@ import (
 // cena servida: a varredura é o que faz a convenção valer para a próxima tela
 // também.
 func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
-	folha, err := os.ReadFile(filepath.Join("piloto", "static", "piloto.css"))
-	if err != nil {
-		t.Fatalf("ler a folha compilada: %v", err)
-	}
+	folha := compiledStylesheet(t)
 	arquivos := osFontesDoPiloto(t)
 	usadas := map[string][]string{}
 	for _, caminho := range arquivos {
@@ -71,7 +68,7 @@ func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 	}
 	sort.Strings(nomes)
 	for _, nome := range nomes {
-		if aFolhaConhece(string(folha), nome) {
+		if aFolhaConhece(folha, nome) {
 			continue
 		}
 		t.Errorf("a tinta %q não existe na folha (usada em %s): o elemento sai com a cor herdada e ninguém reclama",

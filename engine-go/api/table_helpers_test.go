@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"t20engine/engine"
 	"testing"
@@ -26,20 +27,29 @@ func bodyDraft(dentro string) string {
 	return `{"rascunho":{` + dentro + `}}`
 }
 
-// classesThatReceiveBox lê a folha COMPILADA e devolve as classes de toda
-// regra que resolve o `--col` em pixels.
+// compiledStylesheet é a folha que o NAVEGADOR recebe, e é sempre ela que os
+// guardas leem — nunca a fonte.
 //
-// A folha compilada e não a fonte, porque é ela que o navegador recebe: uma
-// classe que o scanner do Tailwind não viu não existe na folha, e é justamente
-// esse o modo de falhar que não dá erro (ver o `engine-go/CLAUDE.md`).
-func classesThatReceiveBox(t *testing.T) map[string]bool {
+// Uma classe que o scanner do Tailwind não viu não existe na folha, e é
+// justamente esse o modo de falhar que não dá erro (ver o `engine-go/CLAUDE.md`).
+// Ler a fonte faria todo guarda desta família passar verde sobre tinta que o
+// navegador nunca recebeu.
+func compiledStylesheet(t *testing.T) string {
 	t.Helper()
-	folha, err := os.ReadFile("piloto/static/piloto.css")
+	folha, err := os.ReadFile(filepath.Join("piloto", "static", "piloto.css"))
 	if err != nil {
 		t.Fatalf("ler a folha compilada: %v", err)
 	}
+	return string(folha)
+}
+
+// classesThatReceiveBox lê a folha COMPILADA e devolve as classes de toda
+// regra que resolve o `--col` em pixels.
+func classesThatReceiveBox(t *testing.T) map[string]bool {
+	t.Helper()
+	folha := compiledStylesheet(t)
 	classes := map[string]bool{}
-	for _, regra := range strings.Split(string(folha), "}") {
+	for _, regra := range strings.Split(folha, "}") {
 		abre := strings.Index(regra, "{")
 		if abre < 0 || !strings.Contains(regra[abre:], "left:calc(var(--col)") {
 			continue
