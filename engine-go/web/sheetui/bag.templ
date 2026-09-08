@@ -265,15 +265,15 @@ templ bagFiltersBody(v View) {
 			class="h-8 min-w-32 flex-1 rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		/>
 		<div class="flex flex-wrap gap-1">
-			for _, chip := range v.Bag.Categories {
+			for _, badge := range v.Bag.Categories {
 				<button
 					type="button"
-					aria-pressed={ ui.AriaBool(chip.Ativo) }
-					data-on:click={ "$itemcategoria = '" + chip.Valor + "'; " + sheetGet(v) }
-					class={ "rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-						templ.KV("border-grimorio-gold/60 bg-accent text-grimorio-gold", chip.Ativo),
-						templ.KV("border-grimorio-iron text-muted-foreground hover:text-foreground", !chip.Ativo) }
-				>{ chip.Rotulo }</button>
+					aria-pressed={ ui.AriaBool(badge.Ativo) }
+					data-on:click={ "$itemcategoria = '" + badge.Valor + "'; " + sheetGet(v) }
+					class={ ui.BadgeClasses("inline-flex items-center text-3xs uppercase tracking-wider"),
+						templ.KV("border-grimorio-gold/60 bg-accent text-grimorio-gold", badge.Ativo),
+						templ.KV("border-grimorio-iron text-muted-foreground hover:text-foreground", !badge.Ativo) }
+				>{ badge.Rotulo }</button>
 			}
 		</div>
 	</div>

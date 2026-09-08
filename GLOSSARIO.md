@@ -399,7 +399,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **perna** (do caminho) | `leg` | `TestEachLegGetsItsOwnLabel` |
 | **laço** | `lasso` | `TestTheLassoCatchesTheTokenByItsBody` |
 | **porta** (a cena de entrar) | `door` | `TestTheDoorRefusesAWrongPasswordWithoutOpeningASession` |
-| **crachá** | `badge` | `TestTheTypeBadgeTogglesWithoutNavigating` |
+| **crachá** | `badge` | `TestTheTypeBadgeTogglesWithoutNavigating`, e a receita `ui.BadgeClasses` desde a ALE-177. **A grafia é `badge` e não `chip`**: a folha de especificação do grimório chamava o bloco de "Chip" enquanto o servidor já escrevia `badgeOn`/`toggleBadge` para a mesma pílula — dois nomes para um conceito, que é o que esta coluna existe para impedir |
 | **gaveta** | `drawer` | e2e `a recuperação sai da fileira quando o palco é baixo` (a do palco), e2e `deitado os filtros viram gaveta` (a dos filtros) |
 | **área** (de transferência) | `clipboard` | e2e `colar põe outro igual no centro da vista` |
 | **dossiê** | `dossier` | `TestTheDossierRespectsTheLimit` |

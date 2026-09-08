@@ -253,7 +253,7 @@ templ situationalToggle(v View, linha situationalRow) {
 				aria-label={ "Detalhar " + linha.Label }
 				aria-haspopup="dialog"
 				data-on:click={ "$detalhe = 'situacao-" + linha.Key + "'" }
-				class="shrink-0 rounded-full border border-grimorio-iron px-2 py-0.5 text-3xs text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class={ ui.BadgeClasses("inline-flex shrink-0 items-center border-grimorio-iron text-3xs text-muted-foreground hover:text-foreground") }
 			>{ strconv.Itoa(len(linha.Modifiers)) + " mods" }</button>
 		}
 	</div>

@@ -133,7 +133,7 @@ templ preparedToggle(v View, magia learnedSpellRow) {
 		aria-checked={ fmt.Sprintf("%t", magia.Prepared) }
 		aria-label={ magia.Name + " preparada" }
 		data-on:click={ sheetPost(v, "/magias/prepara/"+magia.Command) }
-		class={ "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		class={ ui.BadgeClasses("inline-flex shrink-0 items-center gap-1 text-3xs uppercase tracking-wider"),
 			templ.KV("border-grimorio-gold/60 text-grimorio-gold", magia.Prepared),
 			templ.KV("border-grimorio-iron text-muted-foreground", !magia.Prepared) }
 	>Preparada</button>
@@ -229,7 +229,7 @@ templ augmentStepper(a augmentRow) {
 				aria-label={ a.Description }
 				data-attr:aria-checked={ augmentSignal(a.Index) + " > 0 ? 'true' : 'false'" }
 				data-on:click={ augmentSignal(a.Index) + " = " + augmentSignal(a.Index) + " > 0 ? 0 : 1" }
-				class="inline-flex min-h-7 items-center rounded-full border border-grimorio-iron px-2 text-3xs uppercase tracking-wider text-muted-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class={ ui.BadgeClasses("inline-flex items-center border-grimorio-iron text-3xs uppercase tracking-wider text-muted-foreground") }
 			>Trocar</button>
 		}
 	</div>
