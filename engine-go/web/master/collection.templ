@@ -589,7 +589,7 @@ templ collectionFilters(v collectionView) {
 			for _, f := range v.Filtros {
 				<fieldset class="flex flex-wrap items-center gap-1.5 border-0 p-0">
 					<legend class="sr-only">{ "Filtrar por " + f.Rotulo }</legend>
-					<span aria-hidden="true" class="w-24 shrink-0 font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
+					<span aria-hidden="true" class={ ui.SectionLabelClasses("muted", "w-24 shrink-0") }>
 						{ f.Rotulo }
 					</span>
 					for _, o := range f.Opcoes {

@@ -80,7 +80,7 @@ templ raceChoicesBlock(v View) {
 	} else {
 		for _, cartao := range v.Choices.Races {
 			<section class="space-y-2 rounded-sm border border-grimorio-iron p-2">
-				<h4 class="font-heading text-2xs uppercase tracking-wider text-grimorio-gold">{ cartao.Race }</h4>
+				<h4 class={ ui.SectionLabelClasses("gold", "") }>{ cartao.Race }</h4>
 				if cartao.Attribute != nil {
 					@attributeChoiceBlock(v, *cartao.Attribute)
 				}
@@ -159,7 +159,7 @@ templ originChoicesBlock(v View) {
 	} else {
 		<section class="space-y-2 rounded-sm border border-grimorio-iron p-2">
 			<div class="flex items-baseline justify-between">
-				<h4 class="font-heading text-2xs uppercase tracking-wider text-grimorio-gold">{ v.Choices.Origin.Name }</h4>
+				<h4 class={ ui.SectionLabelClasses("gold", "") }>{ v.Choices.Origin.Name }</h4>
 				<span class="font-mono text-2xs text-muted-foreground">
 					{ strconv.Itoa(len(v.Choices.Origin.Chosen)) + " de " + strconv.Itoa(sheet.BenefitsOriginLimit) }
 				</span>
@@ -183,7 +183,7 @@ templ classChoicesBlock(v View) {
 	for _, cartao := range v.Choices.Classes {
 		<section class="space-y-2 rounded-sm border border-grimorio-iron p-2">
 			<div class="flex items-baseline justify-between">
-				<h4 class="font-heading text-2xs uppercase tracking-wider text-grimorio-gold">
+				<h4 class={ ui.SectionLabelClasses("gold", "") }>
 					{ cartao.ClassName + " " + strconv.FormatInt(cartao.Level, 10) }
 				</h4>
 				<span class="font-mono text-2xs text-muted-foreground">{ classWrittenSlots(cartao) }</span>
