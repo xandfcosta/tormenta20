@@ -27,10 +27,7 @@ import (
 // `scene-grimorio` virou `scene-grimoire` junto com o resto. Uma entrada de
 // mapa, três estragos de naturezas diferentes, e este era o silencioso.
 func TestEveryScopeClassExistsInTheStylesheet(t *testing.T) {
-	folha, err := os.ReadFile(filepath.Join("piloto", "static", "piloto.css"))
-	if err != nil {
-		t.Fatalf("ler a folha compilada: %v", err)
-	}
+	folha := compiledStylesheet(t)
 
 	// Só o que está DENTRO de `class=`, e a primeira versão deste guarda errou
 	// justamente aí: procurando `scene-…` no arquivo inteiro, ela reprovou
@@ -63,7 +60,7 @@ func TestEveryScopeClassExistsInTheStylesheet(t *testing.T) {
 	}
 
 	for classe, onde := range usadas {
-		if aFolhaConhece(string(folha), classe) {
+		if aFolhaConhece(folha, classe) {
 			continue
 		}
 		t.Errorf("a classe de escopo %q não existe na folha (usada em %s): sem ela NENHUM token da paleta resolve",
