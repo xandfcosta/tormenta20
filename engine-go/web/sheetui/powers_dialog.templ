@@ -39,7 +39,7 @@ templ choicesDialog(v View) {
 	@overlay("escolher-poderes", "Escolher poderes", "Star", false) {
 		if len(v.Choices.Pendencias) > 0 {
 			<div class="space-y-1 rounded-sm border border-grimorio-gold/40 bg-accent p-2">
-				<p class="text-3xs uppercase tracking-wider text-grimorio-gold">
+				<p class={ ui.FieldLabelClasses("gold", "") }>
 					{ writtenPendings(len(v.Choices.Pendencias)) }
 				</p>
 				for _, p := range v.Choices.Pendencias {
@@ -86,7 +86,7 @@ templ raceChoicesBlock(v View) {
 				}
 				for _, variante := range cartao.Variants {
 					<div class="space-y-1">
-						<p class="text-3xs uppercase tracking-wider text-muted-foreground">{ variante.Name }</p>
+						<p class={ ui.FieldLabelClasses("muted", "") }>{ variante.Name }</p>
 						<div class="flex flex-wrap gap-1">
 							for _, o := range variante.Options {
 								<button
@@ -114,7 +114,7 @@ templ raceChoicesBlock(v View) {
 // escolha que vai ficar válida no terceiro.
 templ attributeChoiceBlock(v View, escolha attributeChoice) {
 	<div class="space-y-1">
-		<p class="text-3xs uppercase tracking-wider text-muted-foreground">{ attributeWrittenChoice(escolha) }</p>
+		<p class={ ui.FieldLabelClasses("muted", "") }>{ attributeWrittenChoice(escolha) }</p>
 		if escolha.Kind == "ascendencia" {
 			<div class="flex flex-wrap gap-1">
 				for _, o := range escolha.Options {
@@ -228,7 +228,7 @@ templ classChoicesBlock(v View) {
 // classPicker é uma escolha de valor único — caminho ou devoto.
 templ classPicker(v View, classe, escolha, rotulo string, seletor pickerChoice) {
 	<div class="space-y-1">
-		<p class="text-3xs uppercase tracking-wider text-muted-foreground">{ rotulo }</p>
+		<p class={ ui.FieldLabelClasses("muted", "") }>{ rotulo }</p>
 		<div class="flex flex-wrap gap-1">
 			for _, o := range seletor.Options {
 				<button

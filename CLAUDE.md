@@ -229,15 +229,19 @@ medição — em silêncio, que é a marca desta família. Enumerar é remendo; 
 restaura a amostragem é a tela nova passar pelos componentes da casa.** Escolher
 o remendo dá sensação de conserto e deixa o buraco aberto (ALE-252).
 
-> **O remendo foi escolhido, de olhos abertos, e vale saber o que ele comprou.**
-> O medidor virou `e2e/tests/support/tipografia.ts` com `{falhas, medidos}` e
-> passou de UM endereço para quinze, mais o caminhar pelas sete abas da ficha —
-> e reprovou de saída dez sítios em cinco cenas que ele nunca tinha olhado. Foi
-> barato e achou defeito de verdade. Mas cada cena nova continua precisando da
-> própria linha, e o buraco só fecha quando os 129 rótulos escritos à mão
-> (medidos: 130 sítios, 1 igual à receita, e nove grafias diferentes só de
-> entreletra) passarem pelos componentes. Enumerar comprou tempo; não comprou
-> cobertura.
+> **O remendo foi escolhido, de olhos abertos** (ALE-252): o medidor virou
+> `e2e/tests/support/tipografia.ts` com `{falhas, medidos}` e passou de UM
+> endereço para quinze, mais o caminhar pelas sete abas da ficha — reprovando de
+> saída dez sítios em cinco cenas que ele nunca tinha olhado. Barato, e achou
+> defeito de verdade. Mas cada cena nova continuava precisando da própria linha.
+>
+> **A amostragem voltou na ALE-295**, e o que a devolveu não foi visitar mais
+> cenas: foi o `TestNoHandwrittenLabelRecipe`, que não pergunta "esta cena está
+> na lista?" e sim "alguém escreveu a receita à mão?". 102 dos 122 rótulos
+> passaram pelas três receitas da casa, e a resposta do guarda vale para a cena
+> que nascer amanhã. **Ele é o molde de como esta família se conserta**: a
+> enumeração compra tempo, e quem fecha o buraco é o guarda que força a
+> varredura.
 
 **Duas formas a mais de "não visitar", as duas medidas na ALE-272 e nenhuma
 parecida com esquecer uma cena.**
@@ -298,7 +302,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **48 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **49 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -308,7 +312,8 @@ lista, nenhum foco pede ao servidor sem guarda de teclado, todo item do kit
 inicial existe no catálogo, nenhuma concessão de origem com escolha nasce fixa,
 todo endereço antigo leva ao piloto, nenhum gesto do tabuleiro escreve o próprio
 endereço, toda ferramenta desenhada no rascunho tem rota nele, nenhum cromo que
-flutua sobre o mapa deixa um controle próprio sem ponteiro. Cada um nasceu de um defeito que tinha irmãos.
+flutua sobre o mapa deixa um controle próprio sem ponteiro, nenhuma cena escreve
+a receita de rótulo à mão. Cada um nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27

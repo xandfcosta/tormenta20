@@ -21,7 +21,7 @@ import (
 templ proficiencyPanel(v View) {
 	<section class="flex min-h-0 flex-1 flex-col">
 		<div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Proficiências</h2>
+			<h2 class={ ui.SectionTitleClasses("painel", "", "") }>Proficiências</h2>
 			// RESTAURAR é destrutivo de um jeito discreto — ele joga fora todo
 			// ajuste manual — e por isso diz no `title` o que vai fazer. Não
 			// pergunta antes: o estado anterior é reconstruível com um toque por
@@ -44,7 +44,7 @@ templ proficiencyPanel(v View) {
 
 templ proficiencyGroupPanel(v View, grupo proficiencyGroup) {
 	<section class="rounded-none border border-grimorio-iron p-3">
-		<h3 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">{ grupo.Titulo }</h3>
+		<h3 class={ ui.SectionTitleClasses("painel", "", "") }>{ grupo.Titulo }</h3>
 		<ul class="mt-2 space-y-1">
 			for _, linha := range grupo.Linhas {
 				@proficiencyRow(v, linha)

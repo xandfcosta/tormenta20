@@ -54,7 +54,7 @@ templ draftHeader(v draftView) {
 		</div>
 		<p class="flex items-center gap-2">
 			@ui.Icon("EyeOff", "size-4 text-grimorio-gold/70")
-			<span class="text-xs font-semibold uppercase tracking-widest text-grimorio-gold">Rascunho</span>
+			<span class={ ui.SectionLabelClasses("gold", "") }>Rascunho</span>
 			// A FRASE diz o que a palavra não diz. "Rascunho" sozinho pode ser
 			// lido como "não gravei ainda", que é o oposto do que acontece aqui.
 			<span class="text-sm text-muted-foreground">· a mesa não vê, e cada gesto já fica gravado</span>

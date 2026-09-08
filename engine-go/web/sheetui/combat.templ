@@ -30,7 +30,7 @@ import "t20engine/web/ui"
 templ combatPanel(v View) {
 	<section class="flex min-h-0 flex-1 flex-col">
 		<div class="flex shrink-0 items-center border-b border-grimorio-iron px-3 py-2 sm:px-4">
-			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Combate</h2>
+			<h2 class={ ui.SectionTitleClasses("painel", "", "") }>Combate</h2>
 		</div>
 		<div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3 sm:p-4">
 			<div class="grid grid-cols-3 gap-2">
@@ -133,7 +133,7 @@ templ combatBox(tile statTile) {
 // por teclado, que pararia em seis paradas mudas.
 templ attributeBox(attr attributeTile) {
 	<div class="rounded-none border-2 border-grimorio-iron bg-grimorio-panel p-2 text-center">
-		<p class="text-4xs font-bold uppercase tracking-widest text-muted-foreground">{ attr.Abbr }</p>
+		<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ attr.Abbr }</p>
 		<p class="mt-0.5 text-2xl font-bold leading-none text-foreground">{ attr.Value }</p>
 	</div>
 }
@@ -164,7 +164,7 @@ templ weaponCard(arma weaponTile) {
 		data-on:click={ "$detalhe = '" + arma.Key + "'" }
 		class="flex cursor-pointer flex-col items-center rounded-none border-2 border-destructive/50 bg-grimorio-panel p-2 text-center outline-none transition-colors hover:bg-destructive/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
-		<span class="max-w-full truncate text-4xs font-bold uppercase tracking-widest text-penalty-ink">{ arma.Name }</span>
+		<span class={ ui.SectionLabelClasses("herda", "max-w-full truncate text-4xs text-penalty-ink") }>{ arma.Name }</span>
 		<span class="mt-0.5 font-mono text-sm font-bold leading-tight text-foreground">
 			{ arma.Attack + " · " + arma.Damage }
 		</span>
@@ -195,7 +195,7 @@ templ boxDetail(tile statTile) {
 		</div>
 		if tile.Extra != nil {
 			<div class="space-y-1">
-				<p class="text-xs font-bold uppercase tracking-widest text-penalty-ink">{ tile.Extra.Title }</p>
+				<p class={ ui.SectionLabelClasses("herda", "text-penalty-ink") }>{ tile.Extra.Title }</p>
 				@breakdownRows(tile.Extra.Rows)
 			</div>
 		}
@@ -210,7 +210,7 @@ templ boxDetail(tile statTile) {
 templ weaponDetail(arma weaponTile) {
 	@overlay(arma.Key, arma.Name, "Sword", false) {
 		<div>
-			<p class="text-xs font-bold uppercase tracking-widest text-penalty-ink">
+			<p class={ ui.SectionLabelClasses("herda", "text-penalty-ink") }>
 				{ "Ataque (" + arma.Skill + ") " + arma.Attack }
 			</p>
 			<div class="mt-1">
@@ -218,7 +218,7 @@ templ weaponDetail(arma weaponTile) {
 			</div>
 		</div>
 		<div>
-			<p class="text-xs font-bold uppercase tracking-widest text-penalty-ink">
+			<p class={ ui.SectionLabelClasses("herda", "text-penalty-ink") }>
 				{ "Dano " + arma.Damage + " · crítico " + arma.Crit }
 			</p>
 			<div class="mt-1">

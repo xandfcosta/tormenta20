@@ -88,7 +88,7 @@ templ castNpcCard(v View, npc castNpc) {
 			<p class="flex flex-wrap items-baseline gap-x-2">
 				<span class="truncate font-medium text-foreground">{ npc.Nome }</span>
 				if npc.DoLivro != "" && npc.DoLivro != npc.Nome {
-					<span class="text-2xs uppercase tracking-widest text-muted-foreground">cópia de { npc.DoLivro }</span>
+					<span class={ ui.SectionLabelClasses("muted", "") }>cópia de { npc.DoLivro }</span>
 				}
 			</p>
 			if npc.Resumo != "" {
@@ -154,7 +154,7 @@ templ castButton(v View) {
 templ saveToCastButton(v master.BestiaryView) {
 	<div class="flex flex-wrap items-end gap-2 border-t border-grimorio-iron pt-3">
 		<div class="min-w-0 flex-1 space-y-1">
-			<label for="nome-do-npc" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Guardar no elenco</label>
+			<label for="nome-do-npc" class={ ui.FieldLabelClasses("muted", "block") }>Guardar no elenco</label>
 			<input
 				id="nome-do-npc"
 				type="text"

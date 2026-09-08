@@ -24,7 +24,7 @@ import (
 templ effectsPanelSection(v View) {
 	<section class="flex min-h-0 flex-1 flex-col">
 		<div class="flex shrink-0 items-center gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Efeitos</h2>
+			<h2 class={ ui.SectionTitleClasses("painel", "", "") }>Efeitos</h2>
 			if v.Effects.Count > 0 {
 				// O par de tinta é o da casa (`CountBadge`): `bg-primary` é o
 				// ouro do grimório e `text-primary-foreground` é a tinta que se
@@ -64,7 +64,7 @@ templ effectsPanelSection(v View) {
 templ bookConditionsBlock(v View) {
 	<section class="rounded-none border border-grimorio-iron p-3">
 		<div class="flex flex-wrap items-center justify-between gap-2">
-			<h3 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Condições (p394)</h3>
+			<h3 class={ ui.SectionTitleClasses("painel", "", "") }>Condições (p394)</h3>
 			<button
 				type="button"
 				aria-label="Aplicar condição"
@@ -116,7 +116,7 @@ templ bookConditionRow(v View, linha conditionRow) {
 templ stancesBlock(v View) {
 	if len(v.Effects.Stances) > 0 {
 		<section class="rounded-none border border-grimorio-iron p-3">
-			<h3 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Posturas ativas</h3>
+			<h3 class={ ui.SectionTitleClasses("painel", "", "") }>Posturas ativas</h3>
 			<ul aria-label="Posturas em curso" class="mt-2 space-y-1">
 				for _, linha := range v.Effects.Stances {
 					<li class="flex items-center gap-2 rounded-sm border border-grimorio-gold/40 bg-grimorio-panel px-2 py-1.5">
@@ -144,7 +144,7 @@ templ stancesBlock(v View) {
 templ appliedEffectsBlock(v View) {
 	<section class="rounded-none border border-grimorio-iron p-3">
 		<div class="flex flex-wrap items-center justify-between gap-2">
-			<h3 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Efeitos ativos</h3>
+			<h3 class={ ui.SectionTitleClasses("painel", "", "") }>Efeitos ativos</h3>
 			<button
 				type="button"
 				aria-label="Aplicar magia"
@@ -187,7 +187,7 @@ templ appliedEffectsBlock(v View) {
 templ situationalBlock(v View) {
 	if len(v.Effects.Situational) > 0 || len(v.Effects.AlwaysOn) > 0 {
 		<section class="space-y-2 rounded-none border border-grimorio-iron p-3">
-			<h3 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Situação — opt-in por contexto</h3>
+			<h3 class={ ui.SectionTitleClasses("painel", "", "") }>Situação — opt-in por contexto</h3>
 			@alwaysOnList(v)
 			for _, linha := range v.Effects.Situational {
 				@situationalToggle(v, linha)
@@ -208,7 +208,7 @@ templ situationalBlock(v View) {
 templ alwaysOnList(v View) {
 	if len(v.Effects.AlwaysOn) > 0 {
 		<div class="space-y-1">
-			<p class="text-3xs font-bold uppercase tracking-widest text-muted-foreground">Sempre ativos (itens equipados)</p>
+			<p class={ ui.FieldLabelClasses("muted", "") }>Sempre ativos (itens equipados)</p>
 			<ul class="space-y-1">
 				for _, linha := range v.Effects.AlwaysOn {
 					<li class="flex items-center gap-2 rounded-sm border border-grimorio-iron bg-muted px-2 py-1.5">
@@ -336,7 +336,7 @@ templ pickerDialog(sinal, titulo string, opcoes []pickerOption) {
 			data-attr:data-expanded={ "$" + sinal }
 			class="relative flex max-h-[85vh] w-full flex-col rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm"
 		>
-			<p class="pr-10 font-heading uppercase tracking-wide text-grimorio-gold">{ titulo }</p>
+			<p class={ ui.SectionLabelClasses("gold", "pr-10") }>{ titulo }</p>
 			<button
 				type="button"
 				aria-label={ "Fechar " + titulo }

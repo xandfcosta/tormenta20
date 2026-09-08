@@ -137,7 +137,7 @@ templ newPlaceDialog(v oneView) {
 				Obrigatorio: true, Erros: v.Erros["place"],
 			})
 			<div class="space-y-1">
-				<label for="lugar-chao" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Chão</label>
+				<label for="lugar-chao" class={ ui.FieldLabelClasses("muted", "block") }>Chão</label>
 				<select
 					id="lugar-chao"
 					name="ground"

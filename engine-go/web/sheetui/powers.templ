@@ -19,7 +19,7 @@ import (
 templ powersPanelSection(v View) {
 	<section class="flex min-h-0 flex-1 flex-col">
 		<div class="flex shrink-0 items-center gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Poderes</h2>
+			<h2 class={ ui.SectionTitleClasses("painel", "", "") }>Poderes</h2>
 			<p class="text-3xs text-muted-foreground sm:text-xs">{ writtenPowers(v.Powers.Total) }</p>
 			<span class="ml-auto">
 				@choicesButton(v)

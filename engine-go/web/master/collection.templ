@@ -525,7 +525,7 @@ templ SpellAugments(m book.Spell, livro bookui.BookAddress) {
 					// número em coluna se lê pela unidade.
 					<span class="text-right font-mono text-xs text-grimorio-gold">{ a.Escrito() }</span>
 					<span class="text-muted-foreground">
-						<span class="mr-1 text-3xs uppercase tracking-widest opacity-70">{ book.AugmentKindName(a.Kind) }</span>
+						<span class={ ui.FieldLabelClasses("herda", "mr-1 opacity-70") }>{ book.AugmentKindName(a.Kind) }</span>
 						for _, pedaco := range book.WithLinks(a.Description) {
 							@bookui.Chunk(pedaco, livro)
 						}

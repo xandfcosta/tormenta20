@@ -234,7 +234,7 @@ templ playerBadge(v View) {
 					// a Defesa é direcional (ALE-274): com o alvo caído, o total é
 					// o único número que não responde "acerta?".
 					<div class="flex shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1">
-						<span class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">DEF</span>
+						<span class={ ui.SectionLabelClasses("muted", "") }>DEF</span>
 						<span class="font-mono text-lg font-semibold tabular-nums text-foreground">{ v.Defesa }</span>
 					</div>
 				</div>
@@ -253,7 +253,7 @@ templ playerBadge(v View) {
 // seria tirar a capacidade, e não mover um controle — é a lição da ALE-183.
 templ levelRow(v View) {
 	<div class="flex flex-wrap items-center gap-1.5">
-		<span class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Nível</span>
+		<span class={ ui.SectionLabelClasses("muted", "") }>Nível</span>
 		@levelStep(v, -1, "Diminuir o nível", "Minus")
 		<span class="min-w-6 text-center font-mono text-lg font-semibold tabular-nums text-foreground">
 			{ strconv.FormatInt(v.Nivel, 10) }
@@ -345,7 +345,7 @@ templ classChoice(v View, passo int, titulo string) {
 // que fazer com uma largura em porcento, e a fração já diz tudo.
 templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
 	<div class={ "flex flex-wrap items-center gap-2", templ.KV("opacity-50", apagado) }>
-		<span class="w-6 shrink-0 text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{ rotulo }</span>
+		<span class={ ui.SectionLabelClasses("muted", "w-6 shrink-0") }>{ rotulo }</span>
 		<div aria-hidden="true" class="h-2 min-w-16 flex-1 overflow-hidden rounded-sm bg-grimorio-iron">
 			<div
 				class={ "h-full", templ.KV("bg-[color:var(--hp-full)]", rotulo == "PV"), templ.KV("bg-[color:var(--mp-arcane)]", rotulo == "PM") }

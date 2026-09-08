@@ -27,7 +27,7 @@ import (
 templ spellsPanelSection(v View) {
 	<section class="flex min-h-0 flex-1 flex-col">
 		<div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-muted-foreground">Grimório</h2>
+			<h2 class={ ui.SectionTitleClasses("painel", "", "") }>Grimório</h2>
 			<p class="text-3xs text-muted-foreground sm:text-xs">{ aprendidasEscrito(len(v.Spells.Learned)) }</p>
 			if v.Spells.IsCaster {
 				<button
@@ -76,7 +76,7 @@ templ spellsPanelSection(v View) {
 templ grantedSpellsBlock(v View) {
 	if len(v.Spells.Granted) > 0 {
 		<div class="space-y-1 rounded-none border border-grimorio-iron p-2">
-			<p class="text-3xs font-bold uppercase tracking-widest text-muted-foreground">Concedidas por poderes</p>
+			<p class={ ui.FieldLabelClasses("muted", "") }>Concedidas por poderes</p>
 			for _, magia := range v.Spells.Granted {
 				<div class="flex items-center gap-2 rounded-sm border border-arcane/40 bg-grimorio-panel px-2 py-1.5">
 					<span class="shrink-0 rounded-full border border-arcane/40 px-1.5 font-mono text-3xs text-arcane-ink">{ magia.Circle }</span>
@@ -152,13 +152,13 @@ templ castSpellDialog(v View, magia learnedSpellRow) {
 		</p>
 		<p class="text-xs text-foreground">{ magia.Effect }</p>
 		<div class="flex items-baseline gap-2 rounded-sm border border-arcane/40 bg-arcane/10 px-3 py-2">
-			<span class="text-xs uppercase tracking-widest text-arcane-ink">Custo</span>
+			<span class={ ui.SectionLabelClasses("herda", "text-arcane-ink") }>Custo</span>
 			<span class="font-mono text-2xl font-bold text-arcane-ink" data-text={ costPreview(magia) }></span>
 			<span class="ml-auto font-mono text-2xs text-muted-foreground">{ "PM " + strconv.FormatInt(v.Spells.PmCurrent, 10) }</span>
 		</div>
 		if len(magia.Augments) > 0 {
 			<div class="space-y-1">
-				<p class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Aprimoramentos</p>
+				<p class={ ui.SectionLabelClasses("muted", "") }>Aprimoramentos</p>
 				for _, aprimoramento := range magia.Augments {
 					@augmentPicker(aprimoramento)
 				}
@@ -250,7 +250,7 @@ templ learnSpellDialog(v View) {
 			data-attr:data-expanded="$aprender"
 			class="relative flex max-h-[85vh] w-full flex-col rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-lg"
 		>
-			<p class="pr-10 font-heading uppercase tracking-wide text-grimorio-gold">Aprender magia</p>
+			<p class={ ui.SectionLabelClasses("gold", "pr-10") }>Aprender magia</p>
 			<button
 				type="button"
 				aria-label="Fechar aprender magia"
