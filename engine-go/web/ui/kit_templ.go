@@ -905,6 +905,57 @@ func SectionLabelClasses(tom, extra string) string {
 	return Join("text-2xs font-semibold uppercase tracking-[0.16em] "+SectionLabelTone(tom), extra)
 }
 
+// ── OS OUTROS DOIS PAPÉIS DA FAMÍLIA (ALE-295, portados da ALE-173) ──────────
+//
+// A família de rótulos em CAIXA ALTA tem TRÊS papéis, e isso foi medido, não
+// escolhido: a SPA contou 208 ocorrências escritas de 59 jeitos e descobriu que
+// elas não eram 59 variações da mesma coisa. O `SectionLabel` acima veio na
+// ALE-251; os outros dois ficaram para trás, e as cenas em templ reinventaram os
+// dois em 106 sítios com 30 grafias — o mesmo fenômeno, uma migração depois.
+//
+// **Um componente só para os três seria pior que as 59 grafias**, porque
+// passaria a esconder que são coisas diferentes: o rótulo de campo não é
+// cabeçalho de nada, e vesti-lo de Cinzel mudaria a cara da ficha em dezenas de
+// lugares. Eles compartilham a família e nada mais.
+
+// SectionTitleClasses é o título de uma SEÇÃO DA CENA: Cinzel grande e dourada.
+//
+// 18px e não 14, e a ALE-173 mediu os dois: subir o cabeçalho de bloco para 14px
+// foi descartado porque **14px é a medida do CORPO do texto neste app**, e um
+// cabeçalho do mesmo tamanho do texto perde a hierarquia que ele existe para
+// criar. A voz da Cinzel fica onde ela lê bem — aqui, e nos títulos de cena.
+// Abaixo de 14 ela não vai (ver `support/tipografia.ts`).
+//
+// O CONTEXTO muda só a entreletra, e a divisão não é deriva: `tracking-wide` é
+// de painel de tela densa — Mochila, Perícias, Grimório — e `[0.16em]` é de
+// passo de forja e ferramenta do mestre. Um passo de cena é o único assunto da
+// tela e o título pode respirar; um cabeçalho de painel disputa espaço com nove
+// outros, e apertar é o que o mantém legível ao lado dos vizinhos. Medido na
+// SPA: 0,45px contra 2,88px no mesmo tamanho.
+func SectionTitleClasses(contexto, tom, extra string) string {
+	entreletra := "tracking-[0.16em]"
+	if contexto == "painel" {
+		entreletra = "tracking-wide"
+	}
+	if tom == "" {
+		tom = "gold"
+	}
+	return Join("font-heading text-lg uppercase "+entreletra+" "+SectionLabelTone(tom), extra)
+}
+
+// FieldLabelClasses é o rótulo colado num VALOR — o "FOR" ao lado do 16.
+//
+// SEM Cinzel, e isso é a decisão mais antiga da família: em 10px ela vira
+// desenho antes de virar texto, e este papel nunca a usou. É o degrau que já
+// estava certo quando o cabeçalho de bloco ainda era a exceção solta (ALE-173).
+//
+// Ele NÃO é cabeçalho de nada, e a distinção tem consequência: o `<span>` do
+// "FOR" ao lado do 16 e o `<h3>` de "Poderes" pediram o mesmo desenho por
+// acidente de aparência, e trocá-los de papel muda o que a tela diz.
+func FieldLabelClasses(tom, extra string) string {
+	return Join("text-3xs uppercase tracking-widest "+SectionLabelTone(tom), extra)
+}
+
 // A mesma receita como LEGENDA de um `fieldset`, que é o elemento certo para a
 // pergunta de um grupo de escolhas.
 func SectionCaption(tom string, extra string) templ.Component {
@@ -962,9 +1013,19 @@ func SectionCaption(tom string, extra string) templ.Component {
 	})
 }
 
+// SectionLabelTone é a cor dos três papéis, e o `herda` não é conveniência.
+//
+// Ele existe porque há rótulo cuja cor o CSS não sabe de antemão: a barra vital
+// pinta o rótulo com a mesma variável do preenchimento, que muda com o valor, e
+// o crachá de penalidade tem tinta própria. Sem um tom que não escreve cor
+// nenhuma, esses sítios teriam de ficar fora da receita — e ficar fora da
+// receita é exatamente o que esta issue veio desfazer.
 func SectionLabelTone(tom string) string {
-	if tom == "gold" {
+	switch tom {
+	case "gold":
 		return "text-grimorio-gold"
+	case "herda":
+		return ""
 	}
 	return "text-muted-foreground"
 }
@@ -1023,7 +1084,7 @@ func ScrollBox(rotulo string, extra string) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 320, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 381, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 		if templ_7745c5c3_Err != nil {
@@ -1113,7 +1174,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(" navegar")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 354, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 415, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1126,7 +1187,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(" trocar de painel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 356, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 417, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -1139,7 +1200,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(" abrir")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 358, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 419, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1152,7 +1213,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(" buscar no livro")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 360, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 421, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1336,7 +1397,7 @@ func Key(rotulo string) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 507, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 568, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1400,7 +1461,7 @@ func FilterDrawer(rotulo string) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 536, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 597, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {
