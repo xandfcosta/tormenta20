@@ -140,11 +140,11 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	// O CONTROLE, e ele é o que a ALE-122 pagou: a condição que a lista à mão
 	// esquecia É aceita. Sem ele, "recusou a inventada" seria verdade também
 	// numa validação que recusa tudo.
-	if !catalog.IsCondition("enfeitiçado") {
-		t.Fatal("o catálogo não tem `enfeitiçado` — o controle está medindo outra coisa")
+	if !catalog.IsCondition("enfeiticado") {
+		t.Fatal("o catálogo não tem `enfeiticado` — o controle está medindo outra coisa")
 	}
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/initiative/"+npc+"/condicao/enfeitiçado", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/initiative/"+npc+"/condicao/enfeiticado", ""); rec.Code != http.StatusOK {
 		t.Errorf("a condição do livro foi recusada: %d", rec.Code)
 	}
 }
