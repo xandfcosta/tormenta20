@@ -9,7 +9,7 @@ import (
 
 // A cena de CAMPANHAS desenhada (ALE-234).
 //
-// O cursor (`$cursor`) é um sinal e o servidor manda TODOS os livros: trocar de
+// O cursor (`$cursor`) é um sinal e o servidor manda TODOS os palcos: trocar de
 // campanha é `data-show`, não requisição. Quem move o cursor é o FOCO — cada
 // marcador do trilho o escreve no `focusin` —, e assim as setas funcionam sem
 // uma linha de teclado nesta tela: o driver do `cena.js` já move foco dentro de
@@ -20,9 +20,20 @@ import (
 // `onCommand` mapeando cada direção, porque o cursor era estado do componente e
 // o foco não o seguia.
 //
-// A VIRADA DE PÁGINA não está aqui: a troca é instantânea, que é o caminho que
-// a própria SPA usa no telefone e sob `prefers-reduced-motion`. A folha
-// atravessando a lombada tem issue própria (ALE-235), por decisão do dono.
+// O LIVRO DE COURO SAIU (ALE-297), por decisão do dono. A campanha em foco era
+// um tomo aberto — duas folhas de pergaminho separadas por uma lombada — e o
+// elenco, que faz a MESMA pergunta ("escolha um da lista e veja o que
+// escolheu"), era um palco. Duas formas para uma pergunta é o que faz o mestre
+// reaprender a tela ao trocar de cena.
+//
+// O que muda é só o miolo: o cabeçalho, o trilho e a mecânica do cursor já eram
+// os mesmos desde a ALE-264. A gramática compartilhada — vizinho, facho, entrada
+// e gesto — mora no `ui` e foi ESTA cena que a tirou de dentro do `characters`,
+// onde ela tinha um chamador possível e só um.
+//
+// A VIRADA DE PÁGINA morreu junto: sem lombada não há folha para atravessar.
+// O que a ALE-235 tinha de geral já estava entregue na ALE-239, e é o que esta
+// cena herda sem uma linha nova de CSS.
 
 // SceneBody embrulha a cena num elemento com `id`, e é ele que o remendo
 // da busca substitui. O `id` é o que o morph do Datastar casa — sem ele o
@@ -36,34 +47,23 @@ templ SceneBody(v listView) {
 templ listBody(v listView) {
 	@listBar(v)
 	if !v.TemAlguma {
-		@emptyList()
+		// Sem campanha nenhuma a vaga é a única coisa que dá o que fazer, e ela
+		// vem SOZINHA — sem trilho, porque um trilho de um item só é moldura em
+		// volta de nada.
+		@blankSheetStage(true, nil)
 	} else if v.FiltrouTudo {
 		@searchWithoutResult(v)
 	} else {
-		// PALCO em cima, LISTA embaixo — a mesma forma da cena de personagens,
-		// por decisão do dono. O trilho era uma COLUNA de 14rem ao lado, e o
-		// livro ficava com o resto: numa janela de 1568px ele desenhava a ~680px,
-		// metade da tela, com a arte da campanha espremida.
-		//
-		// Some junto o vão que espelhava a largura do trilho para centralizar o
-		// livro: sem coluna ao lado, o livro centraliza sozinho.
-		//
-		// As duas telas são irmãs e discordavam — a de personagens já punha o
-		// elenco numa tira embaixo. Duas formas para a mesma pergunta ("escolha
-		// um da lista e veja o palco") é o que faz o mestre reaprender a tela.
 		<div class="flex min-h-0 flex-1 flex-col">
-			// `overflow-y-auto` no palco e `m-auto` no livro, e NÃO
-			// `items-center`: no telefone o livro fica mais alto que o palco, e
-			// centralizar com flex CORTA o que passa — medido a 390px, o livro
-			// terminava 35px por baixo da tira. Com `m-auto` ele centraliza
-			// quando cabe e rola quando não cabe, que é o comportamento que o
-			// dedo espera.
-			<div class="flex min-h-0 flex-1 overflow-y-auto px-4 py-2">
-				<div class="m-auto w-full max-w-7xl">
-					for _, c := range v.Campanhas {
-						@campaignBook(c)
-					}
-				</div>
+			<div class="relative flex min-h-0 flex-1 items-center justify-center">
+				for i, c := range v.Campanhas {
+					@campaignStage(c, ui.NeighborAt(v.Neighbors, i-1), ui.NeighborAt(v.Neighbors, i+1))
+				}
+				// A vaga de abrir é um palco como os outros, e o cursor pousa
+				// nela: `$cursor == 0` é a posição dela, porque nenhum id de
+				// campanha é zero. O vizinho da esquerda é a ÚLTIMA campanha,
+				// que é o caminho de volta para a lista.
+				@blankSheetStage(false, ui.NeighborAt(v.Neighbors, len(v.Neighbors)-1))
 			</div>
 			@campaignRail(v)
 		</div>
@@ -79,7 +79,7 @@ templ listBody(v listView) {
 templ listBar(v listView) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
-		data-signals={ fmt.Sprintf("{busca: %q, papel: %q, cursor: %d}", v.Busca, v.Papel, v.CursorID) }
+		data-signals={ fmt.Sprintf("{busca: %q, papel: %q, %s}", v.Busca, v.Papel, ui.StageSignals(v.CursorID)) }
 	>
 		<a
 			href="/"
@@ -145,75 +145,153 @@ templ roleChip(v listView, valor, rotulo string) {
 	</button>
 }
 
-// ── o livro ──────────────────────────────────────────────────────────────────
+// ── o palco ──────────────────────────────────────────────────────────────────
 
-// campaignBook é a crônica em foco como um tomo aberto: capa de couro com
-// duas folhas separadas pela lombada. A da esquerda é a ilustração (o emblema
-// de matiz, até haver arte de verdade); a da direita é a informação e a ação.
+// campaignStage é a campanha em foco: a capa 3:4 ladeada pelos vizinhos
+// apagados, o nome embaixo, o herói que você joga nela e as ações.
 //
-// Todos os livros são desenhados e o `data-show` escolhe um. É o que faz ←/→
+// É a MESMA caixa do retrato de herói, com as mesmas larguras, e isso é o ponto
+// da ALE-297 — as duas cenas de seleção passam a ter uma forma só.
+//
+// Todos os palcos são desenhados e o `data-show` escolhe um. É o que faz ←/→
 // não custar requisição.
-templ campaignBook(c campaignCard) {
-	<div data-show={ fmt.Sprintf("$cursor == %d", c.ID) } class="grimorio-book w-full p-2.5 sm:p-3">
-		<div class="grimorio-book-pages flex flex-col overflow-hidden sm:min-h-[26rem] sm:flex-row sm:items-stretch lg:min-h-[32rem] xl:min-h-[36rem]">
-			@artPage(c)
-			@infoPage(c)
-		</div>
-	</div>
-}
-
-templ artPage(c campaignCard) {
-	<div class="grimorio-parchment-bg flex shrink-0 items-center justify-center p-0 sm:w-1/2 sm:p-4 lg:p-7 xl:p-10">
+templ campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) {
+	<div
+		data-show={ fmt.Sprintf("$cursor == %d", c.ID) }
+		data-class={ ui.EnteringStage(c.ID) }
+		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
+	>
+		// A lavagem de luz no matiz da própria campanha. Decorativa, e por isso
+		// fora da árvore de acessibilidade.
 		<div
-			class="relative aspect-[16/10] w-full overflow-hidden rounded-none border border-[color:var(--grimorio-parchment-ink)]/35 sm:aspect-auto sm:h-full"
-			style={ "background: " + c.Gradiente }
-		>
-			<span
-				aria-hidden="true"
-				class="absolute inset-0 flex select-none items-center justify-center font-display text-[4.5rem] leading-none text-white/15 sm:text-[7rem] lg:text-[8.5rem]"
+			aria-hidden="true"
+			class="pointer-events-none absolute inset-0 -z-10"
+			style={ "background: " + ui.StageWash(c.Nome) }
+		></div>
+		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
+			@ui.NeighborPortrait(anterior, "Anterior")
+			<a
+				href={ templ.SafeURL("/campanhas/" + strconv.FormatInt(c.ID, 10)) }
+				aria-label={ "Abrir " + c.Nome }
+				class="relative aspect-[3/4] w-44 overflow-hidden rounded-sm border-2 border-grimorio-iron outline-none transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
+				style={ "background: " + c.Gradiente }
 			>
-				{ c.Iniciais }
-			</span>
-			<span aria-hidden="true" class="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_90px_14px_oklch(0_0_0/0.45)]"></span>
-		</div>
-	</div>
-}
-
-// infoPage é pergaminho com tinta escura. O apagado aqui é OPACIDADE e
-// não os tokens escuros da cena — eles sumiriam sobre o creme.
-templ infoPage(c campaignCard) {
-	<div class="grimorio-parchment-bg flex flex-1 flex-col justify-center gap-4 p-6 sm:p-8 lg:p-12 xl:p-16">
-		<p class={ ui.SectionLabelClasses("herda", "flex items-center gap-2 opacity-70") }>
-			<span>{ c.Papel }</span>
-			if c.AoVivo {
-				<span aria-hidden="true">·</span>
-				<span class="flex items-center gap-1.5 text-[color:var(--grimorio-parchment-crimson)] opacity-100">
-					<span class="size-2 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none"></span>
-					Sessão ao vivo
+				<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-[7rem] leading-none text-white/20 sm:text-[9rem]">
+					{ c.Iniciais }
 				</span>
-			}
-		</p>
-		<h2 class="font-display text-2xl uppercase leading-tight tracking-[0.05em] sm:text-[2rem] lg:text-4xl">{ c.Nome }</h2>
-		if c.Sinopse == "" {
-			<p class="text-sm italic opacity-60">Esta campanha ainda não tem uma sinopse.</p>
-		} else {
-			<p class="max-w-prose text-sm leading-relaxed opacity-85">{ c.Sinopse }</p>
-		}
-		if c.Meu != nil {
-			<div class="flex w-full max-w-xs items-center gap-2 rounded-sm border border-[color:var(--grimorio-parchment-ink)]/25 p-2">
-				<span
-					aria-hidden="true"
-					class="grid size-9 shrink-0 place-items-center rounded-full font-heading text-sm font-bold text-white"
-					style={ "background: " + ui.NameGradient(c.Meu.Nome) }
-				>{ c.Meu.Iniciais }</span>
-				<div class="min-w-0">
-					<p class="truncate font-medium">{ c.Meu.Nome }</p>
-					<p class="truncate text-xs opacity-70">{ c.Meu.Classes }</p>
-				</div>
-			</div>
-		}
+				<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
+			</a>
+			@ui.NeighborPortrait(proximo, "Próximo")
+		</div>
+		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
+		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
+		// que quebra em duas linhas empurra a fileira da capa 20px para cima e os
+		// palcos dançam ao percorrer a lista (ALE-99).
+		<div class="palco-placa max-w-2xl px-4 text-center">
+			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ c.Nome }</h2>
+			@campaignPlate(c)
+		</div>
+		@myHeroBand(c)
+		@synopsisTaste(c.Sinopse)
 		@campaignActions(c)
 	</div>
+}
+
+// campaignPlate é o subtítulo da placa: o papel, e o pulso vermelho quando há
+// sessão rolando. O ponto NÃO substitui a palavra — quem não distingue a cor
+// precisa ler "ao vivo".
+templ campaignPlate(c campaignCard) {
+	@ui.SectionLabel("gold", "mt-1 flex items-center justify-center gap-2") {
+		<span>{ c.Papel }</span>
+		if c.AoVivo {
+			<span aria-hidden="true">·</span>
+			<span class="flex items-center gap-1.5 text-destructive-ink">
+				<span class="size-2 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none"></span>
+				Sessão ao vivo
+			</span>
+		}
+	}
+}
+
+// myHeroBand ocupa a faixa que o palco do elenco dá aos vitais: quem VOCÊ é
+// nesta mesa.
+//
+// A ALTURA É RESERVADA SEMPRE (ALE-99). Andar de uma campanha que você mestra
+// (sem herói) para uma em que você joga faria a capa saltar, e é a mesma família
+// de defeitos do `min-h-[2lh]` do nome.
+//
+// O espaçador é a MESMA marcação com `invisible`, e não uma caixa de altura
+// escrita à mão: altura copiada à mão diverge no dia em que o cartão mudar, e o
+// sintoma é o palco dançando de novo — exatamente o que ela existe para impedir.
+templ myHeroBand(c campaignCard) {
+	if c.Meu != nil {
+		@oneHeroCard(c.Meu.Iniciais, c.Meu.Nome, c.Meu.Classes, c.Meu.Gradiente, false)
+	} else {
+		@oneHeroCard("··", "sem herói", "você mestra esta mesa", "", true)
+	}
+}
+
+templ oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) {
+	<div
+		if espacador {
+			aria-hidden="true"
+		}
+		class={ "flex w-full max-w-xs items-center gap-2 rounded-sm border border-grimorio-iron p-2 text-left",
+			templ.KV("invisible", espacador) }
+	>
+		<span
+			aria-hidden="true"
+			class="grid size-9 shrink-0 place-items-center rounded-full font-heading text-sm font-bold text-white"
+			style={ "background: " + gradiente }
+		>{ iniciais }</span>
+		<div class="min-w-0">
+			<p class="truncate text-sm font-medium text-foreground">{ nome }</p>
+			<p class="truncate text-xs text-muted-foreground">{ classes }</p>
+		</div>
+	</div>
+}
+
+// synopsisTaste é o GOSTO da história, e ele tem exatamente duas linhas —
+// sempre, com sinopse curta, longa ou nenhuma.
+//
+// As duas linhas fixas resolvem dois problemas de uma vez, e o segundo é o
+// grave:
+//
+//  1. O palco DANÇAVA. Medido na bancada com a seed: a capa pousava em y=126
+//     nas quatro campanhas de sinopse com duas linhas e em y=136 nas três de uma
+//     linha — 10px de salto ao andar no trilho, que é a família da ALE-99, a
+//     mesma do `min-h-[2lh]` do nome.
+//  2. A sinopse é TEXTO DO MESTRE e vai até 2000 caracteres
+//     (`campaign.MaxDescriptionLength`). Num palco que é uma coluna centralizada
+//     sem rolagem, uma sinopse cheia daria ~28 linhas e empurraria a capa e as
+//     ações para fora da tela. O livro não tinha esse risco: ele crescia dentro
+//     da própria folha. O palco não cresce — ele desloca tudo em volta.
+//
+// Duas e não três: o palco é um CARTAZ (capa, nome, papel, seu herói, um gosto
+// da história, as ações), e a sinopse inteira mora a um clique daqui, na crônica
+// aberta. Trocar por `line-clamp-3`/`min-h-[3lh]` é uma linha, se o dono quiser
+// mais texto — mas custa ~40px, e a 390px o palco tem só isso de folga.
+//
+// A CAIXA é uma só (`synopsisBox`) para os três casos — com sinopse, sem sinopse
+// e o espaçador da vaga. Escrita três vezes, a terceira é a que diverge: já
+// aconteceu neste mesmo palco, com um `<p>` de uma linha fazendo de espaçador
+// para uma sinopse de duas.
+const synopsisBox = "line-clamp-2 min-h-[2lh] max-w-xl px-4 text-center text-sm"
+
+templ synopsisTaste(sinopse string) {
+	if sinopse == "" {
+		<p class={ synopsisBox, "italic text-muted-foreground opacity-70" }>
+			Esta campanha ainda não tem uma sinopse.
+		</p>
+	} else {
+		<p class={ synopsisBox, "text-muted-foreground" }>{ sinopse }</p>
+	}
+}
+
+// synopsisSpacer é a mesma caixa, vazia: a vaga do fim não tem história, mas
+// ocupa a altura de uma.
+templ synopsisSpacer() {
+	<p aria-hidden="true" class={ synopsisBox, "invisible" }>.</p>
 }
 
 // campaignActions: "Abrir campanha" fica SEMPRE na primeira posição e no mesmo
@@ -223,13 +301,17 @@ templ infoPage(c campaignCard) {
 // viva, e um botão que muda de lugar quando o dado chega some debaixo do
 // cursor. Ao vivo ele só troca de preenchimento, cedendo o destaque para
 // "Continuar a sessão", que ENTRA à direita em vez de empurrar.
+//
+// O `⏎` está no primeiro porque é o que a tecla faz com o cursor parado aqui —
+// ver o `keydown` do marcador. Ele não vai no segundo: uma tecla só, um destino.
 templ campaignActions(c campaignCard) {
-	<div class="flex flex-wrap items-center gap-2 pt-1">
+	<div class="flex flex-wrap items-center justify-center gap-2">
 		<a
 			href={ templ.SafeURL("/campanhas/" + strconv.FormatInt(c.ID, 10)) }
 			class={ ui.ButtonClasses(ifLive(c, ui.VariantSecondary, ui.VariantPrimary), ui.SizeLarge, "") }
 		>
 			Abrir campanha
+			@ui.Key("⏎")
 		</a>
 		if c.AoVivo {
 			<a
@@ -248,6 +330,64 @@ func ifLive(c campaignCard, aoVivo, parado ui.Variant) ui.Variant {
 		return aoVivo
 	}
 	return parado
+}
+
+// blankSheetStage é a vaga do fim — e ela existe TAMBÉM com a lista vazia,
+// porque aí ela é a única coisa que dá o que fazer.
+//
+// "Folha em branco" é o nome que a cena de criar já usa (ALE-246), e não uma
+// terceira palavra inventada aqui para a mesma coisa.
+//
+// Os botões **Entrar** e **Nova** do cabeçalho FICAM: a vaga representa só um
+// dos dois caminhos de entrada, e "entrar com o link que o mestre mandou" não
+// tem palco — não há campanha para pôr nele antes de aceitar o convite.
+templ blankSheetStage(sozinha bool, anterior *ui.Neighbor) {
+	<div
+		if !sozinha {
+			data-show="$cursor == 0"
+			data-class={ ui.EnteringStage(0) }
+		}
+		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
+	>
+		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
+			@ui.NeighborPortrait(anterior, "Anterior")
+			<a
+				href="/campanhas/nova"
+				aria-label="Abrir uma folha em branco"
+				class="flex aspect-[3/4] w-44 items-center justify-center rounded-sm border-2 border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
+			>
+				@ui.Icon("Plus", "size-16")
+			</a>
+			// À direita da vaga não há vizinho: ela é o fim do trilho. O
+			// espaçador entra do mesmo jeito, senão a capa desliza para a
+			// direita ao chegar aqui.
+			@ui.NeighborPortrait(nil, "Próximo")
+		</div>
+		<div class="palco-placa max-w-2xl px-4 text-center">
+			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Folha em branco</h2>
+			@ui.SectionLabel("muted", "mt-1") {
+				Uma crônica que ainda não começou
+			}
+		</div>
+		// A vaga não tem herói nem sinopse, mas precisa da ALTURA dos dois: sem
+		// essas fileiras invisíveis a coluna centralizada puxa a capa para cima
+		// ao chegar aqui, e o palco DANÇA na última posição do trilho (ALE-99).
+		//
+		// As duas são a MESMA marcação com `invisible`, e não uma altura escrita
+		// à mão: o espaçador da sinopse já foi um `<p>` de uma linha só, e ele
+		// media 20px a menos que a sinopse de duas linhas ao lado.
+		@myHeroBand(campaignCard{})
+		@synopsisSpacer()
+		if sozinha {
+			<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">
+				Você ainda não tem campanha nenhuma. Comece a sua, ou entre numa com o link que o mestre enviou.
+			</p>
+		}
+		<a href="/campanhas/nova" class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }>
+			Abrir a folha em branco
+			@ui.Key("⏎")
+		</a>
+	</div>
 }
 
 // ── o trilho ─────────────────────────────────────────────────────────────────
@@ -283,21 +423,23 @@ templ campaignRail(v listView) {
 		data-nav-layout="row"
 		class="flex shrink-0 items-center gap-2 overflow-x-auto border-t border-grimorio-iron px-4 py-3"
 	>
-		for _, c := range v.Campanhas {
-			@campaignMarker(c)
+		for i, c := range v.Campanhas {
+			@campaignMarker(c, i)
 		}
+		@blankSheetMarker(len(v.Campanhas))
 	</div>
 }
 
-templ campaignMarker(c campaignCard) {
+templ campaignMarker(c campaignCard, indice int) {
 	<button
 		type="button"
 		role="option"
 		data-nav-item
 		data-cue-hover
 		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", c.ID) }
-		data-on:focusin={ fmt.Sprintf("$cursor = %d", c.ID) }
-		data-on:click={ fmt.Sprintf("$cursor = %d", c.ID) }
+		data-on:focusin={ ui.CursorGesture(indice, c.ID) }
+		data-on:click={ ui.CursorGesture(indice, c.ID) }
+		data-on:keydown={ fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = '/campanhas/%d')", c.ID) }
 		class={ "flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
 			"aria-selected:border-grimorio-gold aria-selected:bg-grimorio-panel-raised" }
 	>
@@ -320,18 +462,32 @@ templ campaignMarker(c campaignCard) {
 	</button>
 }
 
-// ── os vazios ────────────────────────────────────────────────────────────────
-
-templ emptyList() {
-	<div class="flex flex-1 items-center justify-center p-8">
-		<div class="max-w-md space-y-3 text-center">
-			<h2 class="font-heading text-lg tracking-wide">Nenhuma campanha ainda</h2>
-			<p class="text-sm text-muted-foreground">
-				Crie a sua para começar a mestrar, ou entre numa com o link que o mestre enviou.
-			</p>
-		</div>
-	</div>
+// O ⏎ daqui leva à folha em branco, como o ⏎ de uma campanha leva à crônica. Sem
+// ele a gramática do teclado morre na última posição do trilho: a seta chega na
+// vaga e a tecla que abriu tudo até ali não faz nada. (E o comentário fica FORA
+// da lista de atributos: o `templ` não o aceita lá dentro.)
+templ blankSheetMarker(indice int) {
+	<button
+		type="button"
+		role="option"
+		data-nav-item
+		data-cue-hover
+		aria-label="Abrir uma folha em branco"
+		data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
+		data-on:focusin={ ui.CursorGesture(indice, 0) }
+		data-on:click={ ui.CursorGesture(indice, 0) }
+		data-on:keydown="evt.key === 'Enter' && (evt.preventDefault(), location.href = '/campanhas/nova')"
+		class="flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-dashed border-grimorio-iron-light px-3 py-2 text-left text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
+	>
+		<span aria-hidden="true" class="flex size-8 shrink-0 items-center justify-center border border-dashed border-grimorio-iron-light">
+			@ui.Icon("Plus", "size-4")
+		</span>
+		<span class="truncate font-heading text-sm tracking-wide">Folha em branco</span>
+	</button>
 }
+
+// ── o vazio ──────────────────────────────────────────────────────────────────
+
 
 templ searchWithoutResult(v listView) {
 	<div class="flex flex-1 items-center justify-center p-8">

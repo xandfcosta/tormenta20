@@ -227,7 +227,7 @@ de subtrair a altura dela. Somar teria errado pelos mesmos dois motivos acima.
 Cobertura de contraste, de tipografia e de leiaute é função de onde o teste
 NAVEGA, não de quantas asserções ele tem. Dois defeitos de contraste
 sobreviveram anos com o guarda no ar porque ele nunca abria um popover nem
-entrava no livro de campanhas (ALE-237); a mesma forma reapareceu na tipografia
+entrava na cena de campanhas (ALE-237); a mesma forma reapareceu na tipografia
 (ALE-252).
 
 **Mas "põe a cena na lista" só resolve enquanto as cenas forem contáveis, e vale
@@ -312,7 +312,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **52 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **54 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -325,7 +325,9 @@ endereço, toda ferramenta desenhada no rascunho tem rota nele, nenhum cromo que
 flutua sobre o mapa deixa um controle próprio sem ponteiro, nenhuma cena escreve
 a receita de rótulo à mão, nenhum nó escondido por `data-show` nasce visível,
 todo campo do seed é classificado como referência de catálogo ou não, nenhum id
-de catálogo carrega acento. Cada um nasceu de um defeito que tinha irmãos.
+de catálogo carrega acento, toda cena de seleção declara os sinais que o gesto
+dela escreve, nenhuma delas desenha o livro de couro que saiu da folha. Cada um
+nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27

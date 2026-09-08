@@ -2935,6 +2935,16 @@ Duas coisas para quem repetir a receita:
   não move o foco: só o gesto de verdade dispara os dois eventos. Mesma família
   do evento de ponteiro sintético, logo abaixo.
 
+**Que a receita é GERAL, e não um remendo de uma cena, foi medido na ALE-297**:
+as campanhas largaram o livro de couro, viraram palco e herdaram a entrada
+inteira — as duas classes, o atraso da placa e o movimento reduzido — **sem uma
+linha nova de CSS**. O que a segunda cena custou foi outra coisa, e ela vale
+mais que a receita: enquanto o vizinho, o facho, a entrada e o gesto eram
+privados de `web/characters`, eles tinham exatamente um chamador POSSÍVEL.
+Copiá-los seria a saída óbvia e teria produzido duas gramáticas de cursor
+divergindo em silêncio; hoje moram em `web/ui/stage.go` e o guarda de gesto
+varre as duas cenas.
+
 ### O `@post` que redesenha a CENA precisa carregar o estado que está na URL
 
 Um comando do Datastar responde com um remendo da cena inteira, e o handler

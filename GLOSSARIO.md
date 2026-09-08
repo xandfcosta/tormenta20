@@ -381,6 +381,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **cortina** | `curtain` | `curtained` já existia no fio |
 | **lente** | `lens` | `TestTheLensSaysHowManyVanished` |
 | **palco** | `stage` | `TestTheStageHasTheTwoPartsThatAnimate` |
+| **vizinho** (o retrato apagado ao lado do palco) | `neighbor` | `ui.NeighborPortrait` (ALE-297). **Não é qualquer elemento ao lado**: é a peça que mostra QUEM vem antes e depois no trilho e que, clicada, anda o cursor para lá. Ela virou componente da casa quando a SEGUNDA cena de seleção passou a usá-la, e o nome é o que o rótulo acessível já dizia (`Anterior: …` / `Próximo: …`) |
 | **trilho** | `rail` | `TestTheRailOffersEveryStop` |
 | **trilha** | `trail` | `TestTheTrailSlugsAreUnique` |
 | **régua** | `ruler` | `TestTheRulerHasNoDirection` |

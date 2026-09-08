@@ -430,11 +430,14 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
    */
   test('a busca filtra a lista que o servidor desenhou', async ({ page }) => {
     await page.goto('/campanhas')
-    const antes = await page.getByRole('option').count()
-    expect(antes, 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
+    // A VAGA conta como opção no trilho (ALE-297) e ela nunca é filtrada — o
+    // que se conta aqui são as CAMPANHAS, então ela sai do número. Contar o
+    // trilho inteiro faria o guarda medir "3 achados" onde a busca achou 2.
+    const campanhas = page.getByRole('option').filter({ hasNotText: 'Folha em branco' })
+    expect(await campanhas.count(), 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
 
     await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('tauron')
-    await expect(page.getByRole('option')).toHaveCount(3)
+    await expect(campanhas).toHaveCount(3)
     await expect(page.getByRole('option', { name: /A Queda de Tauron/ })).toBeVisible()
 
     await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('zzzzzz')
