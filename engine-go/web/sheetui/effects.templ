@@ -323,8 +323,20 @@ templ buffPickerDialog(v View) {
 // virtualização que a SPA usa aqui existe porque lá a lista era do catálogo
 // INTEIRO; a regra da casa é virtualizar as LONGAS, e estas não são.
 templ pickerDialog(sinal, titulo string, opcoes []pickerOption) {
+	// NASCE ESCONDIDO (ALE-296), e o `style` estático é o conserto inteiro.
+	//
+	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
+	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
+	// medido com sonda de quadro: até 30 quadros de pano preto sobre a cena, que o
+	// dono relatou como "um dialog que aparece e some".
+	//
+	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
+	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
+	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
+	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<div
 		data-show={ "$" + sinal }
+		style="display:none"
 		data-on:click={ "evt.target === el && ($" + sinal + " = false)" }
 		data-on:keydown__window={ "evt.key === 'Escape' && ($" + sinal + " = false)" }
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4"

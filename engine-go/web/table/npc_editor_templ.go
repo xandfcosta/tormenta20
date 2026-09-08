@@ -50,7 +50,7 @@ func blockEditor(v View) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div data-show=\"$rascunhoaberto\" class=\"flex min-h-0 flex-1 flex-col gap-3\"><div class=\"flex shrink-0 items-center gap-2\"><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"display:none\" data-show=\"$rascunhoaberto\" class=\"flex min-h-0 flex-1 flex-col gap-3\"><div class=\"flex shrink-0 items-center gap-2\"><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

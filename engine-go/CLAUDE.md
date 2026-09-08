@@ -2760,12 +2760,39 @@ como rede para o resto — em Go, `ui.Field := …` não é declaração válida
 todo parâmetro e toda variável local com nome colidente vira erro. O que o
 compilador não pega é o hifenizado; esse se acha com um `grep` por `-ui.` depois.
 
-## Datastar: dez armadilhas que não deixam erro para trás
+## Datastar: onze armadilhas que não deixam erro para trás
 
 As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na
-ALE-235, quatro na ALE-272 e a última na ALE-275; nenhuma delas escreve uma linha
-no console — a oitava escreve UMA, e no lugar que ninguém olha. Estão aqui porque
-o sintoma de cada uma aponta para o lugar errado.
+ALE-235, quatro na ALE-272, a décima na ALE-275 e a décima primeira na ALE-296;
+nenhuma delas escreve uma linha no console — a oitava escreve UMA, e no lugar que
+ninguém olha. Estão aqui porque o sintoma de cada uma aponta para o lugar errado.
+
+### `data-show` esconde TARDE: o nó pinta antes de o Datastar chegar
+
+O `data-show` só é avaliado quando o runtime carrega e processa o DOM. Até lá o
+nó está no documento com as classes que ele tem — e se elas o fazem visível, ele
+PINTA. Um diálogo com `fixed inset-0 bg-black/60` cobre a janela inteira e
+depois some.
+
+**Medido** (ALE-296), com uma sonda de `requestAnimationFrame` instalada antes de
+qualquer script da página: 30 quadros nas Perícias, 13 na Mochila, 10 no Combate,
+9 nas Magias. A 60fps é meio segundo de pano preto, e o dono relatou como *"um
+dialog de 1 frame que some"* — a impressão de quem vê subestima, porque um
+piscar não se cronometra a olho.
+
+**O conserto é `style="display:none"` estático ao lado do `data-show`**: ele é
+lido na análise do HTML, antes de qualquer script, e o Datastar o troca por vazio
+ao mostrar. **Não confundir com o `data-attr:style` da armadilha seguinte** — a
+diferença é que aquele reescreve o atributo a cada avaliação e este é lido uma
+vez.
+
+Eram DEZESSEIS nós: seis sobreposições (uma delas o `templ overlay` da casa, com
+dez call sites) e dez conteúdos escondidos por sinal puro. O
+`TestNoDataShowNodeIsBornVisible` varre as duas formas, e a segunda é a que
+decide sozinha: `data-show="$x"` sem negação e sem operador quer dizer "escondido
+até ficar verdadeiro", e todos os sinais assim deste repositório nascem `false`.
+Ele erra para o lado seguro — nascer escondido e aparecer um quadro depois é
+sempre melhor que pintar e sumir.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 

@@ -302,7 +302,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **49 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **50 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -313,7 +313,7 @@ inicial existe no catálogo, nenhuma concessão de origem com escolha nasce fixa
 todo endereço antigo leva ao piloto, nenhum gesto do tabuleiro escreve o próprio
 endereço, toda ferramenta desenhada no rascunho tem rota nele, nenhum cromo que
 flutua sobre o mapa deixa um controle próprio sem ponteiro, nenhuma cena escreve
-a receita de rótulo à mão. Cada um nasceu de um defeito que tinha irmãos.
+a receita de rótulo à mão, nenhum nó escondido por `data-show` nasce visível. Cada um nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27

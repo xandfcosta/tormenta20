@@ -117,13 +117,13 @@ templ playerMenu(v hubView) {
 		class="fixed m-0 w-56 border border-grimorio-iron bg-grimorio-panel-raised p-1.5 text-foreground shadow-lg"
 	>
 		<button type="button" data-on:click="$som = cena.som()" class={ quickItemClass(false) }>
-			<span data-show="$som">@ui.Icon("Volume2", "size-4")</span>
+			<span style="display:none" data-show="$som">@ui.Icon("Volume2", "size-4")</span>
 			<span data-show="!$som">@ui.Icon("VolumeX", "size-4")</span>
 			<span data-text="$som ? 'Som ligado' : 'Som desligado'"></span>
 		</button>
 		// O slider só existe com o som ligado: slider sobre o mudo é controle
 		// morto, e o que ele resolve é o sino do "Sua vez" alto demais (ALE-180).
-		<div data-show="$som" class="px-2 pb-2 pt-1">
+		<div style="display:none" data-show="$som" class="px-2 pb-2 pt-1">
 			<label for="volume" class="flex justify-between text-xs text-muted-foreground">
 				Volume
 				<span data-text="$volume + '%'"></span>
@@ -149,7 +149,7 @@ templ playerMenu(v hubView) {
 			class={ quickItemClass(false) }
 		>
 			<span data-show="!$cheia">@ui.Icon("Maximize", "size-4")</span>
-			<span data-show="$cheia">@ui.Icon("Minimize", "size-4")</span>
+			<span style="display:none" data-show="$cheia">@ui.Icon("Minimize", "size-4")</span>
 			<span data-text="$cheia ? 'Sair da tela cheia' : 'Tela cheia'"></span>
 		</button>
 		if v.EhAdmin {
