@@ -155,6 +155,16 @@ pareceu erro na hora:
   decomposição, não tem denominador embutido. Hoje aquele parser FALHA no
   seletor desconhecido (ALE-294).
 
+- Uma varredura de `grep` sobre os `.templ` contou **9** violações do piso da
+  Cinzel. Eram **14**, e as cinco que faltavam saíram por duas cegueiras
+  diferentes — nenhuma delas visível no resultado. A escada de tamanhos escrita
+  à mão no regex pulou o `text-3xs` (10px): quatro sítios. E o trilho do mestre
+  põe a `font-heading` num `<span>` e o `text-xs` no `<a>` que o contém — **os
+  dois tokens nunca estiveram na mesma `class=`**, e regex nenhum sobre uma
+  linha os junta. Herança é a REGRA do CSS, não a exceção: quem mede tipografia
+  pelo texto do código mede o que foi ESCRITO, e a pergunta é sobre o que é
+  DESENHADO. Só o navegador respondeu (ALE-252).
+
 **O controle é barato e é obrigatório: antes de ler AUSÊNCIA como evidência,
 provar que o canal estaria lá se o evento tivesse acontecido.** Procurar no mesmo
 arquivo uma linha que sai SEMPRE; conferir que a sonda vê o caso positivo
@@ -218,6 +228,16 @@ ENUMERAÇÃO: uma entrada por cena, para sempre, e a que alguém esquecer nasce 
 medição — em silêncio, que é a marca desta família. Enumerar é remendo; **o que
 restaura a amostragem é a tela nova passar pelos componentes da casa.** Escolher
 o remendo dá sensação de conserto e deixa o buraco aberto (ALE-252).
+
+> **O remendo foi escolhido, de olhos abertos, e vale saber o que ele comprou.**
+> O medidor virou `e2e/tests/support/tipografia.ts` com `{falhas, medidos}` e
+> passou de UM endereço para quinze, mais o caminhar pelas sete abas da ficha —
+> e reprovou de saída dez sítios em cinco cenas que ele nunca tinha olhado. Foi
+> barato e achou defeito de verdade. Mas cada cena nova continua precisando da
+> própria linha, e o buraco só fecha quando os 129 rótulos escritos à mão
+> (medidos: 130 sítios, 1 igual à receita, e nove grafias diferentes só de
+> entreletra) passarem pelos componentes. Enumerar comprou tempo; não comprou
+> cobertura.
 
 **Duas formas a mais de "não visitar", as duas medidas na ALE-272 e nenhuma
 parecida com esquecer uma cena.**
