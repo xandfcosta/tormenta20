@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
-import { expectDentroDaJanela, expectNadaRolaDeLado } from './support/geometry'
-import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 import { medeOContraste } from './support/contraste'
+import { expectDentroDaJanela, expectNadaRolaDeLado } from './support/geometry'
+import { medeATipografia } from './support/tipografia'
+import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
  * A FICHA em Datastar (ALE-272, fatia 1) — a casca, as abas e o crachá.
@@ -100,6 +101,17 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
       `em ${endereco} o medidor olhou ${contraste.medidos} textos: o seletor da cena parou de casar`,
     ).toBeGreaterThan(30)
     expect(contraste.falhas, `texto abaixo do AA em ${endereco}`).toEqual([])
+
+    // A TIPOGRAFIA entra no MESMO caminhar, e pela mesma razão que o contraste
+    // entrou: à parte ela seria enumeração, e a aba que alguém acrescentar
+    // amanhã nasceria sem medição. Quatro violações da Cinzel viveram nesta
+    // ficha com o guarda no ar (ALE-252) — ele só visitava `/grimorio`.
+    const tipografia = await medeATipografia(page)
+    expect(
+      tipografia.medidos,
+      `em ${endereco} o medidor não achou NENHUM texto em Cinzel: ou a fonte não carregou, ou o filtro parou de casar — e o silêncio abaixo não seria evidência`,
+    ).toBeGreaterThan(0)
+    expect(tipografia.falhas, `Cinzel abaixo do piso de leitura em ${endereco}`).toEqual([])
   }
 })
 

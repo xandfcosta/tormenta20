@@ -137,7 +137,7 @@ templ railNav(atual string) {
 			// `hidden lg:block`: no telefone o trilho é uma barra que rola na
 			// horizontal, e um rótulo de seção ali roubaria uma parada inteira de
 			// espaço sem separar nada — em fileira, o que separa é a ordem.
-			<p class="hidden shrink-0 px-3 pt-2 font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground lg:block">
+			<p class={ ui.SectionLabelClasses("muted", "hidden shrink-0 px-3 pt-2 lg:block") }>
 				{ secao.Rotulo }
 			</p>
 			for _, f := range secao.Paradas {
@@ -153,7 +153,15 @@ templ railNav(atual string) {
 					}
 				>
 					@ui.Icon(f.Icone, "size-4 shrink-0")
-					<span class="truncate font-heading uppercase tracking-[0.12em]">{ f.Rotulo }</span>
+					// SEM Cinzel, e o motivo não se lê neste `<span>`: o tamanho mora no
+					// `<a>` que o contém (`text-xs`, 12px), e a Cinzel aqui descia
+					// abaixo do piso de 14px da ALE-173 por HERANÇA. Foi assim que
+					// treze paradas escaparam de toda varredura estática — os dois
+					// tokens nunca estiveram na mesma `class=` (ALE-252).
+					//
+					// Decisão do dono: sai a Cinzel e fica o tamanho. Subir para 14
+					// mexeria no leiaute do trilho, que rola na horizontal no telefone.
+					<span class="truncate uppercase tracking-[0.12em]">{ f.Rotulo }</span>
 				</a>
 			}
 		}

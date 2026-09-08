@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
-import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
-import { expectDentroDaJanela } from './support/geometry'
 import { medeOContraste, textoComContrasteBaixo } from './support/contraste'
+import { expectDentroDaJanela } from './support/geometry'
+import { expectCinzelAcimaDoPiso } from './support/tipografia'
+import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
  * As DUAS telas do piloto Datastar (ALE-219): a Mesa do jogador e a
@@ -39,6 +40,7 @@ test.describe('Mesa do jogador (piloto Datastar)', () => {
     await expect(page.getByRole('heading', { name: 'Iniciativa', exact: true })).toBeVisible()
 
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na Mesa').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'na Mesa')
   })
 })
 
@@ -109,6 +111,7 @@ test.describe('Administração (piloto Datastar)', () => {
     await expect(page.getByRole('heading', { name: 'Administração' })).toBeVisible()
 
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na administração').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'na administração')
   })
 
   /**
@@ -274,6 +277,7 @@ test.describe('O Hub (piloto Datastar)', () => {
     await page.goto('/')
     await expect(page.getByRole('navigation', { name: 'Menu principal' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no Hub').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'no Hub')
   })
 
   /**
@@ -371,6 +375,7 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
     await page.goto('/campanhas')
     await expect(page.getByRole('listbox', { name: 'Campanhas' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nas campanhas').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'nas campanhas')
   })
 
   /**
@@ -444,6 +449,7 @@ test.describe('A folha em branco (piloto Datastar)', () => {
     await page.goto('/campanhas/nova')
     await expect(page.getByRole('heading', { name: 'Abrir nova campanha' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na folha em branco').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'na folha em branco')
   })
 
   // Tela nova se valida nos seis formatos. Aqui importa mais que de costume: a
@@ -504,6 +510,7 @@ test.describe('A crônica (piloto Datastar)', () => {
     await page.goto('/campanhas/1')
     await expect(page.getByRole('navigation', { name: 'Seções da crônica' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na crônica').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'na crônica')
   })
 
   test('a crônica cabe nos seis formatos', async ({ page }) => {
@@ -668,6 +675,7 @@ test.describe('A carta de convite (piloto Datastar)', () => {
     await page.goto('/campanhas/entrar')
     await expect(page.getByRole('heading', { name: 'Entrar na mesa' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na carta').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'na carta')
   })
 
   test('a carta cabe nos seis formatos', async ({ page }) => {
@@ -732,6 +740,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     await page.goto('/personagens')
     await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos personagens').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'nos personagens')
   })
 
   /**
@@ -946,6 +955,7 @@ test.describe('O bestiário (piloto Datastar)', () => {
     await page.goto(BESTIARIO)
     await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no bestiário').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'no bestiário')
   })
 
   test('o bestiário cabe nos seis formatos', async ({ page }) => {
@@ -1067,6 +1077,7 @@ test.describe('Os catálogos (piloto Datastar)', () => {
     await page.goto(CATALOGOS)
     await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos catálogos').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'nos catálogos')
   })
 
   /**
@@ -1163,6 +1174,7 @@ test.describe('O construtor de encontros (piloto Datastar)', () => {
     await page.goto(`${ENCONTROS}?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4`)
     await expect(page.getByRole('heading', { name: 'Construtor de encontros' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos encontros').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'nos encontros')
   })
 
   test('o construtor cabe nos seis formatos', async ({ page }) => {
@@ -1241,6 +1253,7 @@ test.describe('O improviso (piloto Datastar)', () => {
     await ruina.getByRole('button', { name: 'Rolar d6' }).click()
     await expect(ruina.locator('[aria-live="polite"]')).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no improviso').toEqual([])
+    await expectCinzelAcimaDoPiso(page, 'no improviso')
   })
 
   test('o improviso cabe nos seis formatos', async ({ page }) => {

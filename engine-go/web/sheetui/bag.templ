@@ -121,7 +121,7 @@ templ vestedSlot(v View, card *equippedCard) {
 templ poolBox(titulo string, usados, teto int) {
 	<div class="space-y-1.5">
 		<div class="flex items-baseline justify-between">
-			<h3 class="font-heading text-3xs font-bold uppercase tracking-[0.18em] text-grimorio-gold">{ titulo }</h3>
+			<h3 class={ ui.SectionLabelClasses("gold", "") }>{ titulo }</h3>
 			<span
 				class={ "font-mono text-xs", templ.KV("text-foreground", usados >= teto),
 					templ.KV("text-muted-foreground", usados < teto) }
@@ -197,7 +197,7 @@ templ emptySlot(rotulo string, largo bool) {
 templ stowedBlock(v View) {
 	<div class="space-y-2">
 		<div class="flex items-baseline justify-between">
-			<h3 class="font-heading text-3xs font-bold uppercase tracking-[0.18em] text-grimorio-gold">Guardado</h3>
+			<h3 class={ ui.SectionLabelClasses("gold", "") }>Guardado</h3>
 			<span class="font-mono text-xs text-muted-foreground">{ writtenItems(v.Bag.StowedTotal) }</span>
 		</div>
 		@loadBar(v)

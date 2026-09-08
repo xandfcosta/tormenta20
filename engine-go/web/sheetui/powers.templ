@@ -73,7 +73,7 @@ templ powerSearchResults(v View) {
 // actionsBlock são os poderes que se ATIVAM.
 templ actionsBlock(v View) {
 	<section class="space-y-1.5">
-		<h3 class="font-heading text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Ações</h3>
+		<h3 class={ ui.SectionLabelClasses("muted", "") }>Ações</h3>
 		if len(v.Powers.Actions) == 0 {
 			// A SEÇÃO FICA MESMO VAZIA, e explica (decisão do dono, ALE-217).
 			// Medido: um arcanista de nível 20 tem ZERO ações ativáveis — 26

@@ -885,7 +885,7 @@ func heroRow(h heroAtTable) templ.Component {
 			templ_7745c5c3_Var38 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<li class=\"flex items-center gap-3\"><span aria-hidden=\"true\" class=\"flex size-8 shrink-0 items-center justify-center rounded-sm font-display text-2xs text-white/85\" style=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<li class=\"flex items-center gap-3\"><span aria-hidden=\"true\" class=\"monograma size-8 rounded-sm text-2xs\" style=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

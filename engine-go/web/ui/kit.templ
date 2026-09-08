@@ -157,13 +157,18 @@ templ SceneTitle(titulo, kicker string) {
 			{ titulo }
 		</h1>
 		if kicker != "" {
-			// O ÚNICO Cinzel abaixo de 14px que fica, e ele é porte FIEL: o
-			// `scene-title.tsx` da SPA escreve exatamente isto. É violação do
-			// piso da ALE-173 que já existia, e consertá-la aqui mudaria a
-			// tela-título por conta própria no meio de uma virada. O guarda da
-			// folha não o vê porque a folha não desenha a tela-título — ver a
-			// ALE-252.
-			<p class="font-heading text-xs uppercase tracking-[0.3em] text-grimorio-gold">{ kicker }</p>
+			// 14px E NÃO 12, e essa diferença é uma issue inteira (ALE-252).
+			//
+			// Aqui morava o `text-xs` do `scene-title.tsx` da SPA, com um
+			// comentário explicando que era porte FIEL e que consertá-lo no meio
+			// da virada seria mudar a tela-título por conta própria. A virada
+			// fechou (ALE-272), e o dono decidiu: sobe para o piso da ALE-173 e
+			// mantém a Cinzel — o subtítulo continua conversando com o título
+			// serifado acima dele, que é o que ele existe para fazer.
+			//
+			// Ele sobreviveu anos porque o guarda do piso só visitava
+			// `/grimorio`, e a folha não desenha tela-título nenhuma.
+			<p class="font-heading text-sm uppercase tracking-[0.3em] text-grimorio-gold">{ kicker }</p>
 		}
 	</div>
 }

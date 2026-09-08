@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { medeOContraste } from './support/contraste'
+import { expectCinzelAcimaDoPiso } from './support/tipografia'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
@@ -60,6 +61,7 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
   const contraste = await medeOContraste(page)
   expect(contraste.medidos, 'o medidor não achou texto: a folha não carregou').toBeGreaterThan(100)
   expect(contraste.falhas, 'texto abaixo do AA na folha da forja').toEqual([])
+  await expectCinzelAcimaDoPiso(page, 'na folha da forja')
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 })
 
@@ -86,6 +88,7 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   const contraste = await medeOContraste(page)
   expect(contraste.medidos, 'o medidor não achou texto: a cena não carregou').toBeGreaterThan(20)
   expect(contraste.falhas, 'texto abaixo do AA nos atributos da forja').toEqual([])
+  await expectCinzelAcimaDoPiso(page, 'nos atributos da forja')
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 
   // A GRAMÁTICA DE TECLADO, medida aqui e não na lista do
