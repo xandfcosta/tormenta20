@@ -62,11 +62,13 @@ func TestParseEntryPatchLosesNoField(t *testing.T) {
 // e não de uma cópia escrita aqui: a cópia anterior desviou do livro — faltava
 // `enfeitiçado`, e aplicá-la dava 400 para todo mundo.
 func TestParseConditionsFiltersByTheCatalog(t *testing.T) {
-	// Repare no ç: `enfeitiçado` é o ÚNICO dos 35 ids do catálogo com acento —
-	// todos os outros são normalizados ("caido", não "caído"). É o mesmo id que
-	// já derrubou a aplicação com 400 quando a API tinha a lista à mão, e a
-	// grafia irregular é o que faz qualquer cópia errar de novo.
-	list := parseConditions([]any{"caido", "inventada", "enfeitiçado", "atordoado"})
+	// O `enfeiticado` é o id que já derrubou a aplicação com 400 quando a API
+	// tinha a lista de condições escrita à mão ao lado das 35 do catálogo. Ele
+	// era `enfeitiçado`, com cedilha — o único dos 35 fora do padrão —, e a
+	// grafia irregular é o que fazia toda cópia errar NELE. Normalizado na
+	// ALE-152, junto com outros dois, e agora há guarda:
+	// `catalog.TestNoCatalogIDIsAccented`.
+	list := parseConditions([]any{"caido", "inventada", "enfeiticado", "atordoado"})
 
 	if len(list) != 3 {
 		t.Fatalf("passaram %v, queria as três do livro", list)

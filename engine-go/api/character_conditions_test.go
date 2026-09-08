@@ -48,7 +48,7 @@ func TestAnUnknownConditionIsRejected(t *testing.T) {
 	character := seedCharacter(t, s, owner, "Herói", 20, 20, 10, 10)
 
 	rec := authed(t, s, owner, http.MethodPatch, "/characters/"+id64(character)+"/conditions",
-		`{"activeConditions":["caido","enfeitiçado","voando"]}`)
+		`{"activeConditions":["caido","enfeiticado","voando"]}`)
 
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("esperado 400, veio %d (%s)", rec.Code, rec.Body.String())
