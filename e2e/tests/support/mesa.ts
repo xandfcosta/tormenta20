@@ -81,6 +81,11 @@ export async function fechaAFila(page: Page): Promise<void> {
 }
 
 export async function abreAFila(page: Page): Promise<void> {
+  // IDEMPOTENTE, porque acrescentar dois combatentes é abrir a gaveta duas
+  // vezes: com ela já aberta o botão de abrir está coberto pelo próprio modal,
+  // e o sintoma é um timeout de clique num seletor que casou — o mesmo que o
+  // comentário de baixo descreve, chegando por outro caminho.
+  if (await page.locator('#gaveta-da-fila[open]').count()) return
   await page
     .getByRole('button', { name: /^Abrir a iniciativa/ })
     .filter({ visible: true })
@@ -100,15 +105,45 @@ export async function abreAFila(page: Page): Promise<void> {
  * Descobri isto SABOTANDO: tirei o `z-index` do marcador e o caso continuou
  * verde. Ele media um palco onde nada cobria nada.
  */
-export async function poeUmaPecaNoMapa(page: Page): Promise<void> {
+/**
+ * Acrescenta UM combatente à fila, com a gaveta ABERTA no fim.
+ *
+ * O `pv` é opcional porque o formulário o trata assim, e a diferença importa:
+ * sem ele a linha não desenha barra de vital nenhuma (`trackerBar` só desenha
+ * `if b != nil`), e um guarda que precise ver o número mudar mediria uma linha
+ * que não tem número. Foi assim que a sonda da ALE-174 não achou o "Ferir".
+ */
+export async function poeUmCombatenteNaFila(
+  page: Page,
+  nome: string,
+  pv?: number,
+): Promise<void> {
   await abreAFila(page)
-  await page.getByRole('button', { name: '+ Combatente' }).click()
+  // O "+ Combatente" é um ALTERNADOR (`$formdecombatente = !$formdecombatente`),
+  // e o formulário fica aberto depois de acrescentar. Clicar sem olhar o estado
+  // FECHA o formulário no segundo combatente, e o sintoma é um timeout no campo
+  // Nome — que existe, e está escondido.
+  const abrir = page.getByRole('button', { name: '+ Combatente' })
+  if ((await abrir.getAttribute('aria-expanded')) !== 'true') {
+    await abrir.click()
+  }
   // `exact` porque `getByLabel` casa por SUBSTRING: desde o editor de bloco
   // (ALE-269) a mesma cena tem "Nome do NPC", e `'Nome'` passou a resolver para
   // dois campos. É a segunda vez nesta fatia que um seletor único por acidente
   // deixa de ser — a outra foi a camada de clique.
-  await page.getByLabel('Nome', { exact: true }).fill('Ogro do E2E')
+  await page.getByLabel('Nome', { exact: true }).fill(nome)
+  if (pv !== undefined) {
+    // Pelo ID e não pelo rótulo: `PV` resolve para DOIS campos nesta cena — este
+    // e o ajuste do bestiário —, e o `exact` não desempata porque os dois se
+    // chamam exatamente "PV". É a terceira vez que um seletor único por acidente
+    // deixa de ser aqui, depois de `Nome` e de `Lugar`.
+    await page.locator('#novo-pv').fill(String(pv))
+  }
   await page.getByRole('button', { name: 'Acrescentar' }).click()
+}
+
+export async function poeUmaPecaNoMapa(page: Page): Promise<void> {
+  await poeUmCombatenteNaFila(page, 'Ogro do E2E')
   // A GAVETA FECHA ANTES de o teste voltar ao mapa, e esta ordem é a jornada de
   // verdade: monta-se a fila na gaveta, fecha-se, e põe-se no mapa pela faixa do
   // tabuleiro. Ela é MODAL — deixá-la aberta torna inerte tudo o que está atrás,
