@@ -431,35 +431,19 @@ templ campaignRail(v listView) {
 }
 
 templ campaignMarker(c campaignCard, indice int) {
-	<button
-		type="button"
-		role="option"
-		data-nav-item
-		data-cue-hover
-		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", c.ID) }
-		data-on:focusin={ ui.CursorGesture(indice, c.ID) }
-		data-on:click={ ui.CursorGesture(indice, c.ID) }
-		data-on:keydown={ fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = '/campanhas/%d')", c.ID) }
-		class={ "flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
-			"aria-selected:border-grimorio-gold aria-selected:bg-grimorio-panel-raised" }
-	>
-		<span
-			aria-hidden="true"
-			class="monograma size-8 rounded-none border border-grimorio-iron text-xs"
-			style={ "background: " + c.Gradiente }
-		>{ c.Iniciais }</span>
+	@ui.Marker(ui.RailMarker{
+		ID: c.ID, Index: indice, Monogram: c.Iniciais, Gradient: c.Gradiente,
 		// Nome E papel, como a SPA: o marcador anuncia "Snapshot Test ALE-33
 		// Mestrando". O papel não é enfeite na lista de um admin, que vê mesas
 		// de outras pessoas e precisa distinguir a própria (ALE-120).
-		<span class="flex min-w-0 flex-1 flex-col">
-			<span class="truncate font-heading text-sm tracking-wide">{ c.Nome }</span>
-			<span class={ ui.FieldLabelClasses("herda", "opacity-65") }>{ c.Papel }</span>
-		</span>
+		Name: c.Nome, Sub: c.Papel,
+		Destino: "/campanhas/" + strconv.FormatInt(c.ID, 10),
+	}) {
 		if c.AoVivo {
 			<span aria-hidden="true" class="size-2 shrink-0 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none"></span>
 			<span class="sr-only">com sessão ao vivo</span>
 		}
-	</button>
+	}
 }
 
 // O ⏎ daqui leva à folha em branco, como o ⏎ de uma campanha leva à crônica. Sem
@@ -467,23 +451,7 @@ templ campaignMarker(c campaignCard, indice int) {
 // vaga e a tecla que abriu tudo até ali não faz nada. (E o comentário fica FORA
 // da lista de atributos: o `templ` não o aceita lá dentro.)
 templ blankSheetMarker(indice int) {
-	<button
-		type="button"
-		role="option"
-		data-nav-item
-		data-cue-hover
-		aria-label="Abrir uma folha em branco"
-		data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
-		data-on:focusin={ ui.CursorGesture(indice, 0) }
-		data-on:click={ ui.CursorGesture(indice, 0) }
-		data-on:keydown="evt.key === 'Enter' && (evt.preventDefault(), location.href = '/campanhas/nova')"
-		class="flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-dashed border-grimorio-iron-light px-3 py-2 text-left text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
-	>
-		<span aria-hidden="true" class="flex size-8 shrink-0 items-center justify-center border border-dashed border-grimorio-iron-light">
-			@ui.Icon("Plus", "size-4")
-		</span>
-		<span class="truncate font-heading text-sm tracking-wide">Folha em branco</span>
-	</button>
+	@ui.BlankMarker(indice, "Folha em branco", "/campanhas/nova")
 }
 
 // ── o vazio ──────────────────────────────────────────────────────────────────

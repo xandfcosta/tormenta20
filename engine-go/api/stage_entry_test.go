@@ -35,6 +35,9 @@ type cenaDePalco struct {
 	itens int
 	quem  int64
 	f     pilotoFixture
+	// nomesNoTrilho são nomes que a bancada semeou e que TÊM de aparecer
+	// escritos no marcador — a prova de que ele diz mais que duas letras.
+	nomesNoTrilho []string
 }
 
 // asCenasDePalco monta as duas com TRÊS itens cada, e três não é número redondo
@@ -56,8 +59,10 @@ func asCenasDePalco(t *testing.T) []cenaDePalco {
 	seedCampaign(t, campanhas.s, campanhas.mestre)
 
 	return []cenaDePalco{
-		{nome: "o elenco", rota: "/personagens", itens: 3, quem: elenco.jogador, f: elenco},
-		{nome: "as campanhas", rota: "/campanhas", itens: 3, quem: campanhas.mestre, f: campanhas},
+		{nome: "o elenco", rota: "/personagens", itens: 3, quem: elenco.jogador, f: elenco,
+			nomesNoTrilho: []string{"Anã Clériga", "Elfo Ladino"}},
+		{nome: "as campanhas", rota: "/campanhas", itens: 3, quem: campanhas.mestre, f: campanhas,
+			nomesNoTrilho: []string{"Mesa"}},
 	}
 }
 
@@ -166,6 +171,52 @@ func TestNoSelectionSceneDrawsTheLeatherBook(t *testing.T) {
 		for _, morta := range []string{"grimorio-book", "grimorio-leaf"} {
 			if strings.Contains(tela, morta) {
 				t.Errorf("%s escreve %q, e essa classe não existe mais na folha: a caixa sairia sem estilo nenhum", cena.nome, morta)
+			}
+		}
+	}
+}
+
+// O MARCADOR DO TRILHO DIZ O NOME, e não só as iniciais (ALE-181).
+//
+// O elenco identificava nove heróis por um monograma de 48px — `TP CD NN DN MG
+// PS LN BV IG` — e achar alguém ali era navegar às cegas. **As iniciais nem
+// precisavam colidir**: medido na seed, elas são todas distintas e continuam
+// não sendo nomes.
+//
+// O que este guarda prende é que o nome está no CONTEÚDO do marcador e não só
+// num `aria-label`. A diferença importa: rótulo acessível serve quem usa leitor
+// de tela, e o defeito era de quem OLHA — mouse e teclado com a tela à frente.
+//
+// Ele varre as duas cenas pela razão de sempre, e aqui ela tem história: as duas
+// já divergiram neste ponto exato depois da ALE-297, que deu o marcador com nome
+// às campanhas e deixou o elenco com o monograma.
+func TestEveryRailMarkerSaysTheName(t *testing.T) {
+	for _, cena := range asCenasDePalco(t) {
+		tela := cena.tela(t)
+
+		// O trilho da cena, e só ele: a mesma frase aparece no palco e no
+		// dossiê, e procurar na página inteira acharia o palco e passaria verde
+		// sobre um trilho de duas letras.
+		trilho := regexp.MustCompile(`(?s)<div[^>]*data-nav-region="rail"[^>]*>(.*?)</div>\s*</div>`).FindStringSubmatch(tela)
+		if trilho == nil {
+			t.Fatalf("%s não tem trilho: o guarda não mediu nada", cena.nome)
+		}
+
+		// O CONTROLE: o trilho tem marcadores. Sem isto, "nenhum marcador sem
+		// nome" é verdade sobre um trilho vazio.
+		marcadores := strings.Count(trilho[1], `role="option"`)
+		if marcadores < cena.itens {
+			t.Fatalf("%s: o trilho tem %d marcadores para %d itens — o recorte não pegou a região",
+				cena.nome, marcadores, cena.itens)
+		}
+
+		// A prova é o NOME de um item que a bancada semeou, visível no trilho.
+		// Ele não pode estar só no `aria-label`, então o que se procura é o
+		// texto entre tags.
+		for _, nome := range cena.nomesNoTrilho {
+			if !strings.Contains(trilho[1], ">"+nome+"</span>") {
+				t.Errorf("%s: o trilho não escreve %q no conteúdo do marcador — quem olha a tela navega por duas letras",
+					cena.nome, nome)
 			}
 		}
 	}

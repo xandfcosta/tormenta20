@@ -341,7 +341,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **55 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **56 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -356,8 +356,8 @@ a receita de rótulo à mão, nenhum nó escondido por `data-show` nasce visíve
 todo campo do seed é classificado como referência de catálogo ou não, nenhum id
 de catálogo carrega acento, toda cena de seleção declara os sinais que o gesto
 dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum
-crachá escreve a própria geometria à mão. Cada um nasceu de um defeito que tinha
-irmãos.
+crachá escreve a própria geometria à mão, todo marcador de trilho diz o NOME e
+não só as iniciais. Cada um nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
