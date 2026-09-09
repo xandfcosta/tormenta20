@@ -38,6 +38,39 @@ import (
 // E as notas NÃO entram no `TableRegions`: elas são de um leitor só — o mestre
 // — e nada fora desta aba as muda. Pendurá-las no stream faria o tique de 200ms
 // disputar com o teclado dele por nada.
+// A DIVISA entre o mapa e as notas (ALE-218).
+//
+// Ela existe porque a largura era fixa em 40% do palco (ALE-198), e 40% é a
+// resposta certa para uma pergunta que muda: escrever uma cena longa quer mais
+// coluna, e conduzir um combate quer mais mapa.
+//
+// `role="separator"` com `tabindex` e `aria-valuenow` é o padrão de divisa
+// redimensionável, e o teclado NÃO É ENFEITE aqui: a regra da casa diz que
+// **gesto nunca é o único caminho**, e uma divisa que só responde a arrasto é
+// uma preferência que quem não usa ponteiro não tem. As setas andam 32px e o
+// `Home` devolve ao padrão.
+//
+// Só a partir de `lg`: abaixo disso a coluna é uma gaveta que cobre a tela
+// inteira, e não há divisa entre duas coisas que não convivem.
+templ notesSplitter() {
+	<div
+		role="separator"
+		aria-orientation="vertical"
+		aria-label="Largura das notas"
+		tabindex="0"
+		data-show="$notasabertas"
+		style="display:none"
+		data-attr:aria-valuenow={ "Math.round(" + aLarguraDeAgora() + ")" }
+		aria-valuemin="352"
+		data-attr:aria-valuemax={ "Math.round(" + oTetoDaLargura() + ")" }
+		data-on:pointerdown={ oArrastoDaLargura() }
+		data-on:pointermove__window={ oMoverDaLargura() }
+		data-on:pointerup__window={ oSoltarDaLargura() }
+		data-on:keydown={ oPassoDaLargura() }
+		class="notas-divisa hidden shrink-0 cursor-col-resize rounded-full bg-grimorio-iron outline-none transition-colors hover:bg-grimorio-gold focus-visible:bg-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:block"
+	></div>
+}
+
 templ tableNotes(v View) {
 	<section
 		id="mesa-notas"
@@ -45,7 +78,7 @@ templ tableNotes(v View) {
 		data-init={ seedNotes(v) }
 		data-show="$notasabertas"
 		style="display:none"
-		class="notas-coluna fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:w-[clamp(22rem,40%,44rem)] lg:shrink-0"
+		class="notas-coluna fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:shrink-0"
 	>
 		<div class="flex shrink-0 flex-wrap items-center justify-between gap-2">
 			<h2 class={ ui.SectionLabelClasses("muted", "") }>Notas</h2>
@@ -251,16 +284,37 @@ templ modesRange() {
 		@notesMode("escrever", "Escrever")
 		@notesMode("ler", "Ler")
 		@notesMode("duplo", "Lado a lado")
+		// EMPILHADO é um jeito de mostrar OS DOIS, e por isso ele fica na mesma
+		// fileira em vez de virar um segundo eixo (ALE-218). "Onde as duas
+		// metades ficam" só significa alguma coisa quando as duas estão à
+		// mostra — em "Escrever" ou "Ler" há um painel só —, então a gramática
+		// é UM eixo com quatro valores, e não dois eixos com seis botões.
+		//
+		// Ele custa zero CSS: `grid-template-columns: 1fr` já é o padrão do
+		// arranjo, e a classe `notas-duplo` que reparte só entra no modo
+		// `duplo`. O que ele muda é o arranjo deixar de ser resposta AUTOMÁTICA
+		// à largura e passar a ser escolha — a 1024 a coluna já empilha sozinha.
+		@notesMode("empilhado", "Empilhado")
 	</fieldset>
 }
 
+// O DESTAQUE sai do `aria-pressed` e não de um `data-class` paralelo (ALE-218).
+//
+// Eram duas fontes para o mesmo estado, e elas discordavam: `hover:bg-accent`
+// ganha de um `bg-primary` posto por classe, então **o modo escolhido perdia o
+// dourado enquanto o ponteiro estivesse em cima dele** — medido, `oklch(0.8
+// 0.11 85)` virando `oklch(0.27 0.016 300)` no hover. A tela dizia "nenhum
+// escolhido" no instante exato em que a pessoa vai escolher.
+//
+// Com o estilo pendurado na variante `aria-pressed:`, o estado acessível é a
+// ÚNICA fonte — é o mesmo desenho do marcador do trilho, que pinta por
+// `aria-selected:`.
 templ notesMode(valor, rotulo string) {
 	<button
 		type="button"
 		data-attr:aria-pressed={ fmt.Sprintf("$notasmodo === '%s' ? 'true' : 'false'", valor) }
 		data-on:click={ escolheOModo(valor) }
-		data-class={ fmt.Sprintf("{'bg-primary': $notasmodo === '%s', 'text-primary-foreground': $notasmodo === '%s'}", valor, valor) }
-		class="inline-flex h-7 items-center rounded-sm border border-grimorio-iron px-2 text-2xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="inline-flex h-7 items-center rounded-sm border border-grimorio-iron px-2 text-2xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
 	>{ rotulo }</button>
 }
 
