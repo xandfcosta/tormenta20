@@ -173,7 +173,7 @@ test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, li
     medidas[cena] = await page.evaluate(() => {
       // A tira é a região que o driver de teclado dirige: `rail` nas campanhas
       // (o nome é contrato com o driver) e `filme` nos personagens.
-      const tira = document.querySelector('[data-nav-region="rail"], [data-nav-region="filme"]')!
+      const tira = document.querySelector('[data-nav-region="rail"]')!
       const palco = tira.previousElementSibling!
       const t = tira.getBoundingClientRect()
       const p = palco.getBoundingClientRect()

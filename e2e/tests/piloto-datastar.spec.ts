@@ -831,7 +831,12 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
    */
   test('a seta alcança a vaga de criar e ⏎ leva à Forja', async ({ page }) => {
     await page.goto('/personagens')
-    const vaga = page.getByRole('option', { name: 'Forjar um novo herói' })
+    // "Forjar um herói", e não "…um NOVO herói": desde a ALE-181 o marcador
+    // MOSTRA o rótulo em vez de o esconder num `aria-label`, então ele passou a
+    // ser o mesmo texto do título do palco. O retrato tracejado do palco segue
+    // dizendo "novo" — lá a palavra distingue a vaga das capas ao redor, e aqui
+    // ela só truncaria em 208px.
+    const vaga = page.getByRole('option', { name: 'Forjar um herói' })
     await expect(vaga).toBeVisible()
 
     await page.getByRole('option').first().focus()
