@@ -33,16 +33,22 @@ import (
 // continuam no RODAPÉ em vez de subirem para a faixa do turno. A gaveta da
 // ALE-263 é ancorada em `bottom-full` porque nasce no pé, e mover a fileira
 // mudaria uma regra de leiaute JÁ MEDIDA para caber numa semelhança de desenho.
+// A LARGURA DAS NOTAS viaja no `<main>` e não na coluna delas (ALE-218): a
+// coluna tem `data-show`, e o `TestNoNodeHasDataShowAndDataAttrStyleTogether`
+// proíbe o par — `data-attr:style` reescreve o atributo inteiro e apagaria o
+// `display` que o outro acabou de pôr, e os dois se reescrevem em laço até a
+// aba travar.
 templ gmStage(v View, b master.BestiaryView) {
 	<main
 		id="mesa"
-		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`"
+		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px; --notas-largura:${$notaslargura ? $notaslargura + 'px' : 'clamp(22rem,40%,44rem)'}`"
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@tableHeader(v)
 		<div class="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row">
 			@leftRail(v)
 			@tableBoard(v)
+			@notesSplitter()
 			@tableNotes(v)
 			@queriesRail(v)
 		</div>

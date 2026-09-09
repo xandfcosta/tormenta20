@@ -917,6 +917,23 @@ html {
     container-name: notas;
   }
 
+  /* A LARGURA vem do sinal (ALE-218), com o `clamp` de antes como PADRÃO — o
+   * mestre que nunca arrastou a divisa vê exatamente o que via. A variável mora
+   * no `<main>`, e não aqui, porque esta coluna tem `data-show`. */
+  @media (min-width: 64rem) {
+    .notas-coluna {
+      width: var(--notas-largura, clamp(22rem, 40%, 44rem));
+    }
+  }
+
+  /* A DIVISA é fina e o ALVO é largo: 4px de tinta com 12px de área, que é o
+   * mínimo que um ponteiro acha sem mirar. */
+  .notas-divisa {
+    width: 4px;
+    margin-inline: 4px;
+    cursor: col-resize;
+  }
+
   .notas-arranjo {
     grid-template-columns: 1fr;
   }
