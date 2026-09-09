@@ -193,8 +193,9 @@ func seedNotes(v View) string {
 		texto = []byte(`""`)
 	}
 	return fmt.Sprintf(
-		"$notas = %s; $notassalvas = %s; $notasmodo = localStorage.getItem('%s') || 'duplo'",
-		texto, texto, notesModeKey,
+		"$notas = %s; $notassalvas = %s; $notasmodo = localStorage.getItem('%s') || 'duplo'; "+
+			"$notaslargura = Number(localStorage.getItem('%s')) || 0",
+		texto, texto, notesModeKey, notesWidthKey,
 	)
 }
 
@@ -204,6 +205,80 @@ const notesModeKey = "t20:notas-view"
 
 func escolheOModo(valor string) string {
 	return fmt.Sprintf("$notasmodo = '%s'; localStorage.setItem('%s', '%s')", valor, notesModeKey, valor)
+}
+
+// A LARGURA DA COLUNA (ALE-218), e ela GRUDA como os modos grudam.
+//
+// É preferência de trabalho e não estado da sessão — o mestre escolhe uma vez o
+// quanto de mapa quer ver ao lado das notas, e não deve reescolher a cada
+// sessão. Chave própria porque é outra escolha que a do arranjo.
+const notesWidthKey = "t20:notas-largura"
+
+// O PISO é o do `clamp` que a coluna tinha fixo: abaixo de 22rem o "lado a lado"
+// não cabe e a coluna vira uma tira inútil.
+const notesMinWidth = 352 // 22rem
+
+// O TETO é RELATIVO ao palco, e o de 44rem do `clamp` não servia.
+//
+// Lá ele limitava uma PORCENTAGEM, então nunca era alcançado numa janela
+// pequena. Copiado para uma divisa explícita ele vira uma parede: medido a
+// 1920, 40% já dá exatamente 704px, e a divisa nascia sem PARA ONDE CRESCER —
+// morta numa das duas direções, na tela em que ela mais serve.
+//
+// 70% do palco deixa o mapa com quase um terço em qualquer janela, que é o que
+// mantém as notas ao lado do tabuleiro em vez de no lugar dele.
+func oTetoDaLargura() string {
+	return "(document.getElementById('mesa-notas').parentElement.getBoundingClientRect().width * 0.7)"
+}
+
+// oPassoDaLargura é a seta do teclado, e ela existe porque **gesto nunca é o
+// único caminho**: uma divisa que só responde a arrasto é uma preferência que
+// quem não usa ponteiro não tem.
+//
+// 32px por seta, e o `Home` devolve ao padrão — o número redondo é escolha, e o
+// que importa é ele ser grande o bastante para atravessar a faixa em poucos
+// toques e pequeno o bastante para ajustar.
+func oPassoDaLargura() string {
+	return fmt.Sprintf(
+		"if (evt.key === 'ArrowLeft' || evt.key === 'ArrowRight') { evt.preventDefault(); "+
+			"$notaslargura = Math.min(%s, Math.max(%d, %s + (evt.key === 'ArrowLeft' ? 32 : -32))); %s } "+
+			"if (evt.key === 'Home') { evt.preventDefault(); $notaslargura = 0; localStorage.removeItem('%s') }",
+		oTetoDaLargura(), notesMinWidth, aLarguraDeAgora(), guardaALargura(), notesWidthKey,
+	)
+}
+
+// aLarguraDeAgora é o valor de PARTIDA de um ajuste, e ele é medido na tela em
+// vez de cair num padrão.
+//
+// Enquanto o mestre não escolhe, `$notaslargura` é zero e quem manda é o
+// `clamp` da folha — que depende da janela. Um padrão escrito aqui faria a
+// PRIMEIRA seta SALTAR: medido, a coluna ia de 704px para 384 num toque, porque
+// o piso de 22rem não é o que está na tela. A divisa tem de continuar de onde a
+// coluna está.
+func aLarguraDeAgora() string {
+	return "($notaslargura || document.getElementById('mesa-notas').getBoundingClientRect().width)"
+}
+
+// oArrastoDaLargura é o gesto de ponteiro. A conta é sobre a borda DIREITA da
+// coluna, que não se move: arrastar para a esquerda cresce as notas.
+func oArrastoDaLargura() string {
+	return "evt.preventDefault(); $notasarrastando = true; el.setPointerCapture(evt.pointerId)"
+}
+
+func oMoverDaLargura() string {
+	return fmt.Sprintf(
+		"if ($notasarrastando) { const c = document.getElementById('mesa-notas').getBoundingClientRect(); "+
+			"$notaslargura = Math.min(%s, Math.max(%d, c.right - evt.clientX)) }",
+		oTetoDaLargura(), notesMinWidth,
+	)
+}
+
+func oSoltarDaLargura() string {
+	return "if ($notasarrastando) { $notasarrastando = false; " + guardaALargura() + " }"
+}
+
+func guardaALargura() string {
+	return fmt.Sprintf("localStorage.setItem('%s', $notaslargura)", notesWidthKey)
 }
 
 func saveNotes(v View) string {

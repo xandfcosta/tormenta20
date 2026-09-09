@@ -41,6 +41,11 @@ import (
 // continuam no RODAPÉ em vez de subirem para a faixa do turno. A gaveta da
 // ALE-263 é ancorada em `bottom-full` porque nasce no pé, e mover a fileira
 // mudaria uma regra de leiaute JÁ MEDIDA para caber numa semelhança de desenho.
+// A LARGURA DAS NOTAS viaja no `<main>` e não na coluna delas (ALE-218): a
+// coluna tem `data-show`, e o `TestNoNodeHasDataShowAndDataAttrStyleTogether`
+// proíbe o par — `data-attr:style` reescreve o atributo inteiro e apagaria o
+// `display` que o outro acabou de pôr, e os dois se reescrevem em laço até a
+// aba travar.
 func gmStage(v View, b master.BestiaryView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -62,7 +67,7 @@ func gmStage(v View, b master.BestiaryView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"mesa\" data-attr:style=\"`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`\" class=\"mesa-palco flex min-h-0 w-full flex-1 flex-col\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"mesa\" data-attr:style=\"`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px; --notas-largura:${$notaslargura ? $notaslargura + 'px' : 'clamp(22rem,40%,44rem)'}`\" class=\"mesa-palco flex min-h-0 w-full flex-1 flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -79,6 +84,10 @@ func gmStage(v View, b master.BestiaryView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = tableBoard(v).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = notesSplitter().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -305,7 +314,7 @@ func retratoDaFila(l tableRow) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(portraitLabel(l))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 127, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 133, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -318,7 +327,7 @@ func retratoDaFila(l tableRow) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(portraitLabel(l))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 128, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 134, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -366,7 +375,7 @@ func retratoDaFila(l tableRow) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(l.Iniciativa))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 134, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 140, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -403,7 +412,7 @@ func retratoDaFila(l tableRow) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(l.Iniciais)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 139, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 145, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -443,7 +452,7 @@ func retratoDaFila(l tableRow) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width:%d%%", l.PV.Pct))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 144, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 150, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -502,7 +511,7 @@ func queriesRail(v View) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir a iniciativa · " + fmt.Sprint(len(v.Fila)) + " na fila")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 170, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 176, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -515,7 +524,7 @@ func queriesRail(v View) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(v.Fila)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 173, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/stage.templ`, Line: 179, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
