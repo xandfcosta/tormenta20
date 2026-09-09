@@ -136,3 +136,41 @@ test('entrar na vez pulsa a linha do combatente que entrou', async ({ page }) =>
     await apagar()
   }
 })
+
+/**
+ * A CONDIÇÃO que chega SURGE (ALE-174, P4).
+ *
+ * É a única dos cinco disparos que é de mount de verdade, e o guarda mede o que
+ * a mesa vê: o crachá é pintado com opacidade crescente durante 150ms. Contar
+ * `getAnimations()` nele responde a pergunta sem depender de qual keyframe foi
+ * escolhido.
+ */
+test('aplicar uma condição faz o crachá dela surgir', async ({ page }) => {
+  const { apagar } = await umaFilaComDois(page)
+  try {
+    await page.evaluate(() => {
+      const w = window as unknown as { __c: number }
+      w.__c = 0
+      const t0 = performance.now()
+      const passo = () => {
+        for (const c of document.querySelectorAll('[data-condicao]')) {
+          if (c.getAnimations().length > 0) w.__c++
+        }
+        if (performance.now() - t0 < 900) requestAnimationFrame(passo)
+      }
+      requestAnimationFrame(passo)
+    })
+
+    await page.getByRole('button', { name: 'Condições de Ogro do E2E' }).click()
+    await page.getByRole('button', { name: 'Abalado', exact: true }).click()
+    await page.waitForTimeout(1000)
+
+    const quadros = await page.evaluate(() => (window as unknown as { __c: number }).__c)
+    expect(
+      quadros,
+      'o crachá da condição apareceu sem animar: o estado chegou em silêncio',
+    ).toBeGreaterThan(0)
+  } finally {
+    await apagar()
+  }
+})

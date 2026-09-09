@@ -714,6 +714,7 @@ templ tableRowTracker(v View, l tableRow) {
 					// ler o que ela faz (ALE-122).
 					for _, c := range l.Condicoes {
 						<li
+							data-condicao
 							title={ conditionEffect(c) }
 							class="rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]"
 						>{ book.ConditionName(c) }</li>

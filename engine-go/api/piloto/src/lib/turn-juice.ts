@@ -104,3 +104,28 @@ export function pulsarVez(alvo: Element | null | undefined): void {
     { duration: 250, easing: 'ease-out' },
   )
 }
+
+/**
+ * O que ENTRA na tela: um crachá de condição, um item que aparece numa lista.
+ *
+ * Fade e zoom de 150ms, uma vez só. É a animação de MOUNT que a ALE-174 chama de
+ * P4, e ela é a única das cinco que pode ser de mount de verdade — as outras
+ * disparam por diferença de valor, porque o nó delas sobrevive ao remendo.
+ *
+ * O que a torna possível foi medido: aplicar uma condição CRIA o `<ul>` dos
+ * crachás, que não existia com a lista vazia. Onde o morph reusa o nó — a linha
+ * de um combatente que entra na fila — não há mount, e uma animação presa a ele
+ * não tocaria nunca.
+ *
+ * @example surgir(cracha)
+ */
+export function surgir(alvo: Element | null | undefined): void {
+  if (!podeAnimar(alvo)) return
+  alvo.animate(
+    [
+      { opacity: 0, transform: 'scale(0.92)' },
+      { opacity: 1, transform: 'scale(1)' },
+    ],
+    { duration: 150, easing: 'ease-out' },
+  )
+}
