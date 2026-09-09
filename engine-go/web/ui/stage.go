@@ -128,3 +128,16 @@ func CursorGesture(index int, id int64) string {
 func StageSignals(cursorID int64) string {
 	return fmt.Sprintf("cursor: %d, sentido: 1, indice: 0", cursorID)
 }
+
+// theEnterThatOpens é o ⏎ de um marcador do trilho.
+//
+// Ele é função e não string escrita à mão em cada cena pelo motivo de sempre
+// nesta família: são quatro sítios hoje (dois por cena de seleção), e o quinto é
+// o que esquece o `preventDefault` — sem ele o navegador dispara o `click` do
+// botão JUNTO, e o gesto vira "escolher e abrir" quando a pessoa só queria
+// escolher.
+//
+// @example theEnterThatOpens("/personagens/41")
+func theEnterThatOpens(destino string) string {
+	return fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = %q)", destino)
+}
