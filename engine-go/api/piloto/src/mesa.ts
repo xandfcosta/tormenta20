@@ -1,4 +1,5 @@
 import { casaDoEstilo, deslizaAPeca } from '@/lib/token-move'
+import { piscarVital, pulsarVez } from '@/lib/turn-juice'
 
 /**
  * A ILHA DA MESA — o que anima quando o estado chega pelo fio (ALE-174).
@@ -16,7 +17,7 @@ import { casaDoEstilo, deslizaAPeca } from '@/lib/token-move'
  * especificação... e **um importador só: o `grimorio.ts`**. Elas eram
  * demonstráveis por botão e não aconteciam na sessão, porque a Mesa não tinha
  * módulo próprio — o `vite.piloto.config.ts` tinha quatro entradas e nenhuma
- * era esta. Isto é a quinta.
+ * era esta. Isto é a quinta, e hoje ela liga as TRÊS.
  *
  * **Entrada própria e não `cena.ts`**, pela mesma razão escrita naquele arquivo:
  * o `cena.js` carrega em TODA página, e pôr observador de tabuleiro nele seria
@@ -53,9 +54,7 @@ const MOVIMENTO_REDUZIDO = '(prefers-reduced-motion: reduce)'
  * contra os 16,7ms de um quadro. O filtro de atributo é o que compra isso: sem
  * ele o observador acordaria em toda mudança de classe da Mesa.
  */
-function ligaODeslizeDasPecas(): void {
-  const parado = window.matchMedia(MOVIMENTO_REDUZIDO)
-
+function ligaODeslizeDasPecas(parado: MediaQueryList): void {
   new MutationObserver((registros) => {
     if (parado.matches) return
     for (const registro of registros) {
@@ -86,4 +85,128 @@ function ligaODeslizeDasPecas(): void {
   })
 }
 
-ligaODeslizeDasPecas()
+/**
+ * A LINHA da fila que sangrou ou foi curada.
+ *
+ * O gatilho é o `aria-valuenow` da barra de vital, e a escolha dele é o achado
+ * desta fatia: ele é o NÚMERO, medido chegando como `"40" → "39"` sobre o mesmo
+ * nó. As outras coisas que mudam no mesmo remendo não servem — a largura em
+ * porcentagem ARREDONDA (perder 1 de 300 não muda um por cento, e a linha não
+ * piscaria), e o `aria-label` da linha é texto que precisaria ser interpretado.
+ *
+ * A COR diz o sinal, e quem a escolhe é a comparação: subiu é cura, desceu é
+ * dano. Por isso o valor antigo é obrigatório — sem ele haveria um flash só,
+ * e "levei 12" e "curei 12" ficariam iguais.
+ *
+ * Ela pinta a LINHA e não a barra: a pergunta que a issue registra é *"ninguém
+ * viu QUEM sangrou"*, e quem responde é a linha inteira, com o nome dentro.
+ *
+ * O trilho de 80px fica de fora de propósito. Ele tem um filete de 4px e as
+ * iniciais, sem número nenhum — a piscada ali não responderia a pergunta, e
+ * pendurá-la num rótulo de texto ("… — PV 39 de 40") seria interpretar prosa
+ * para descobrir o que um atributo já diz na gaveta.
+ */
+function ligaAPiscadaDoVital(parado: MediaQueryList): void {
+  new MutationObserver((registros) => {
+    if (parado.matches) return
+    for (const registro of registros) {
+      if (registro.attributeName !== 'aria-valuenow') continue
+      const barra = registro.target as Element
+      const antes = Number(registro.oldValue)
+      const agora = Number(barra.getAttribute('aria-valuenow'))
+      if (!Number.isFinite(antes) || !Number.isFinite(agora) || antes === agora) continue
+
+      // A linha é quem tem o nome. Sem ela — uma barra fora de linha nenhuma —
+      // não há o que piscar, e piscar a barra seria responder outra pergunta.
+      const linha = barra.closest('li')
+      if (!linha) continue
+
+      // ESPERAR O MORPH ASSENTAR, e isto não é cautela: medido, sem o quadro de
+      // espera a piscada NUNCA PINTA.
+      //
+      // O véu é um filho que este módulo pendura na linha, e o observador roda
+      // como microtarefa — no meio do remendo. O morph reconcilia os filhos da
+      // linha logo depois e remove o nó estranho, porque ele não está no HTML
+      // que veio do servidor. A sonda mediu exatamente isso: `ligado` no
+      // instante do `animate()`, `ligado` na microtarefa, **DESLIGADO no
+      // primeiro quadro** — e o pior é que ela passa despercebida, porque a
+      // animação foi PEDIDA e o guarda que conta chamadas ficaria verde.
+      //
+      // O pulso da vez não precisa disto: ele anima a própria linha, e o morph
+      // reusa esse nó em vez de trocá-lo.
+      requestAnimationFrame(() => piscarVital(linha, { curou: agora > antes }))
+    }
+  }).observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeOldValue: true,
+    attributeFilter: ['aria-valuenow'],
+  })
+}
+
+/**
+ * O PULSO de quem entra na vez.
+ *
+ * O gatilho é o `aria-current`, que a linha já escrevia por acessibilidade
+ * (ALE-212) — nenhum atributo novo foi inventado para animar. Isso não é
+ * economia: um atributo que existe só para o JS achar o nó envelhece sozinho,
+ * e este é lido por leitor de tela, então ele tem quem o defenda.
+ *
+ * **Só quando ele é "true"**, e não há guarda contra reescrita de valor igual —
+ * o que é decisão MEDIDA e não descuido, porque ela é a primeira coisa que
+ * alguém vai querer acrescentar aqui.
+ *
+ * O medo é razoável: a Mesa redesenha a região da fila inteira a cada dano de
+ * qualquer um, então parecia que o `aria-current` da linha da vez seria
+ * reescrito com o mesmo `"true"` a todo remendo, e o holofote viraria um
+ * pisca-pisca. Escrevi a guarda antes de medir.
+ *
+ * Ela nunca protegeu nada: **o morph não toca atributo que já bate**, então
+ * mutação de `aria-current` só chega quando a vez MUDA de verdade. Provado pelo
+ * avesso — com a guarda removida do pacote e um guarda de e2e ferindo outro
+ * combatente enquanto a vez estava parada, ZERO pulsos. Um `if` que nunca é
+ * verdadeiro é dívida com cara de cuidado.
+ *
+ * E o caso oposto degrada bem: se o morph um dia TROCAR o nó da linha em vez de
+ * reconciliá-lo, não há mutação de atributo nenhuma e o pulso simplesmente não
+ * toca — perde-se a animação, nunca se ganha uma errada.
+ *
+ * # O que FALTA aqui, e por que não entrou junto
+ *
+ * A issue pede também `scrollIntoView({behavior:'smooth'})` na linha que entra
+ * na vez — a metade que importa numa fila longa, onde o holofote pode andar
+ * para fora da janela de rolagem.
+ *
+ * Ela não entrou porque **este repositório já mediu rolagem suave falhando em
+ * silêncio**: o comentário do centralizar do tabuleiro registra que
+ * `scroll-behavior: smooth` deixava o `scrollTop` em ZERO, sem erro em lugar
+ * nenhum. E provar que esta instância CHEGA custa dois clientes — a lista rola
+ * na gaveta, que é modal, então quem avança o turno não é quem a vê rolar.
+ * Escrever a linha com um comentário dizendo "deve funcionar" seria dívida com
+ * cara de entrega.
+ */
+function ligaOPulsoDaVez(parado: MediaQueryList): void {
+  new MutationObserver((registros) => {
+    if (parado.matches) return
+    for (const registro of registros) {
+      if (registro.attributeName !== 'aria-current') continue
+      const linha = registro.target as Element
+      if (linha.getAttribute('aria-current') !== 'true') continue
+      pulsarVez(linha)
+    }
+  }).observe(document.body, {
+    subtree: true,
+    attributes: true,
+    // Sem `attributeOldValue`: o valor antigo não é lido aqui. Ele estava
+    // ligado enquanto existia a guarda contra repetição, e ficar depois dela
+    // sair seria pedir ao navegador que guardasse uma string por mutação para
+    // ninguém olhar.
+    attributeFilter: ['aria-current'],
+  })
+}
+
+const PARADO = window.matchMedia(MOVIMENTO_REDUZIDO)
+
+ligaODeslizeDasPecas(PARADO)
+ligaAPiscadaDoVital(PARADO)
+ligaOPulsoDaVez(PARADO)

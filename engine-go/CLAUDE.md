@@ -3099,6 +3099,31 @@ escreve (`$fichatab`), e o repedido a concatena. Sem isso o remendo devolve a
 aba padrão e tira o jogador de onde ele estava — provado por sabotagem, e é a
 mesma família do `?tab=` perdido logo acima.
 
+### O morph REMOVE o nó que o seu JS pendurou na linha
+
+Uma animação que precisa de um elemento próprio — um véu, um brilho, um
+espaçador — não pode ser pendurada de dentro do observador que reage ao remendo.
+**O `MutationObserver` roda como MICROTAREFA, no meio do morph**, e o morph
+reconcilia os filhos daquele nó logo em seguida: o que você acabou de criar não
+está no HTML que veio do servidor, então ele some.
+
+O que torna isso caro é que a animação foi PEDIDA. Um guarda que conte chamadas
+de `el.animate` fica verde; a sonda que olhe o DOM no instante do `animate()`
+também. Medido na ALE-174, com o mesmo nó consultado em quatro instantes:
+
+    ao animar: ligado · microtask: ligado · raf1: DESLIGADO · +300ms: DESLIGADO
+
+O conserto é um `requestAnimationFrame` antes de pendurar — o quadro seguinte já
+tem o morph assentado. Animação que mexe no PRÓPRIO nó (escala, sombra, opacidade
+do elemento que já existe) não precisa disso: o morph reusa o nó e a animação
+sobrevive à reconciliação de atributos.
+
+**E a mesma reconciliação é o que dispensa guarda contra repetição**: o morph não
+toca atributo que já bate, então um observador de `aria-current` (ou de qualquer
+atributo de estado) só acorda quando o valor MUDA de verdade. Escrevi um `if
+(oldValue === 'true') continue` por medo do pisca-pisca e ele nunca foi
+verdadeiro — provado removendo-o e medindo zero disparos extras.
+
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 
 `element.dispatchEvent(new PointerEvent(...))` com um `pointerId` inventado faz
