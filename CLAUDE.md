@@ -182,6 +182,13 @@ pareceu erro na hora:
   806` é a mão, não a animação. Sonda de vida longa mede tudo o que acontece na
   janela dela, e a janela é parte do desenho — armá-la depois do gesto e antes
   do efeito foi o conserto (ALE-174).
+- **E a terceira sonda desta mesma família mediu a coisa certa no instante
+  errado.** Conferindo a piscada do vital, uma sonda perguntou ao DOM no momento
+  do `el.animate()` se o véu estava lá: estava. O guarda contou **zero em 151
+  quadros**. As duas mediam o mesmo nó, e a diferença era o INSTANTE — o morph o
+  remove no quadro seguinte, e a animação some *pedida*. **"Existe agora" e
+  "existe quando importa" são perguntas diferentes**, e para animação a segunda é
+  sempre a que vale (ALE-174).
 - **A mesma família, e desta vez o instrumento inflou o defeito em vinte e cinco
   vezes.** A ALE-177 media alvos de toque com `largura < 24 || altura < 24` e
   reportou 98 de 175 reprovando o WCAG 2.5.8. Refeita a conta na ficha de hoje,

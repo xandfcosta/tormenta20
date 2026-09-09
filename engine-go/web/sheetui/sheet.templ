@@ -344,7 +344,9 @@ templ classChoice(v View, passo int, titulo string) {
 // A barra é `aria-hidden` e o número é o que se lê: um leitor de tela não tem o
 // que fazer com uma largura em porcento, e a fração já diz tudo.
 templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
-	<div class={ "flex flex-wrap items-center gap-2", templ.KV("opacity-50", apagado) }>
+	// O `relative` é CONTEXTO DE POSICIONAMENTO e não estilo (ALE-174): a
+	// piscada pinta um véu `absolute inset-0` sobre a fileira.
+	<div class={ "relative flex flex-wrap items-center gap-2", templ.KV("opacity-50", apagado) }>
 		<span class={ ui.SectionLabelClasses("muted", "w-6 shrink-0") }>{ rotulo }</span>
 		<div aria-hidden="true" class="h-2 min-w-16 flex-1 overflow-hidden rounded-sm bg-grimorio-iron">
 			<div
@@ -352,7 +354,12 @@ templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
 				style={ fmt.Sprintf("width: %d%%", vital.Porcento) }
 			></div>
 		</div>
-		<span class="shrink-0 font-mono text-sm tabular-nums text-foreground">{ vital.Fracao }</span>
+		// `data-vital` é a âncora da PISCADA (ALE-174), e ela fica na FRAÇÃO e
+		// não na barra: a fração é o número, e a barra é `aria-hidden` de
+		// propósito (ver o cabeçalho). Pôr `role="progressbar"` aqui só para o
+		// JS achar o nó faria a ficha anunciar "PV 39 de 40" e "39/40" em
+		// seguida — duas vozes para o mesmo dado.
+		<span data-vital={ rotulo } class="shrink-0 font-mono text-sm tabular-nums text-foreground">{ vital.Fracao }</span>
 		if !apagado {
 			// OS PASSOS SÃO UM GRUPO e a fileira ENROLA — medido a 390px: em
 			// linha única o `+5` do PV terminava em x=399 numa janela de 390, e

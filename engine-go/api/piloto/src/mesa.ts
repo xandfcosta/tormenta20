@@ -1,5 +1,5 @@
 import { casaDoEstilo, deslizaAPeca } from '@/lib/token-move'
-import { piscarVital, pulsarVez } from '@/lib/turn-juice'
+import { piscarVital, pulsarVez, surgir } from '@/lib/turn-juice'
 
 /**
  * A ILHA DA MESA — o que anima quando o estado chega pelo fio (ALE-174).
@@ -105,6 +105,18 @@ function ligaODeslizeDasPecas(parado: MediaQueryList): void {
  * iniciais, sem número nenhum — a piscada ali não responderia a pergunta, e
  * pendurá-la num rótulo de texto ("… — PV 39 de 40") seria interpretar prosa
  * para descobrir o que um atributo já diz na gaveta.
+ *
+ * # A FICHA usa outro gatilho, e a diferença é honesta
+ *
+ * A ficha dentro da sessão também mostra PV e PM, e o P1 pede a piscada lá. Ela
+ * não tem `aria-valuenow`: a barra dela é `aria-hidden` de propósito — *"um
+ * leitor de tela não tem o que fazer com uma largura em porcento, e a fração já
+ * diz tudo"* — e o número mora no TEXTO ao lado, `39/40`.
+ *
+ * Pôr `role="progressbar"` ali só para este módulo achar o nó faria a ficha
+ * anunciar "PV 39 de 40" e "39/40" em seguida: duas vozes para o mesmo dado. O
+ * gatilho é a mudança do TEXTO, que é o número de verdade, e o `data-vital` diz
+ * apenas QUAL poço é — não repete o valor.
  */
 function ligaAPiscadaDoVital(parado: MediaQueryList): void {
   new MutationObserver((registros) => {
@@ -141,6 +153,48 @@ function ligaAPiscadaDoVital(parado: MediaQueryList): void {
     attributes: true,
     attributeOldValue: true,
     attributeFilter: ['aria-valuenow'],
+  })
+}
+
+/** `"39/40"` → 39. Nulo quando a fração não é uma fração. */
+function oAtualDaFracao(texto: string | null): number | null {
+  const m = /^\s*(-?\d+)\s*\//.exec(texto ?? '')
+  return m ? Number(m[1]) : null
+}
+
+/**
+ * A PISCADA na ficha dentro da sessão.
+ *
+ * Mesmo efeito, outro gatilho: aqui o número é o TEXTO da fração, então o que se
+ * observa é `characterData`. Ver o cabeçalho de `ligaAPiscadaDoVital` para por
+ * que não é um papel ARIA.
+ *
+ * Ela pinta a FILEIRA do vital — o `<div>` que tem o rótulo, a barra, a fração e
+ * os passos —, que é o equivalente da linha da fila: a caixa que diz DE QUEM é o
+ * número que mudou. Piscar só a fração seria piscar dois dígitos.
+ */
+function ligaAPiscadaDaFicha(parado: MediaQueryList): void {
+  new MutationObserver((registros) => {
+    if (parado.matches) return
+    for (const registro of registros) {
+      const texto = registro.target
+      const span = texto.parentElement
+      if (!span?.hasAttribute('data-vital')) continue
+
+      const antes = oAtualDaFracao(registro.oldValue)
+      const agora = oAtualDaFracao(texto.textContent)
+      if (antes === null || agora === null || antes === agora) continue
+
+      const fileira = span.parentElement
+      if (!fileira) continue
+      // O mesmo quadro de espera da fila, e pela mesma razão medida: o morph
+      // remove o véu se ele for pendurado de dentro do observador.
+      requestAnimationFrame(() => piscarVital(fileira, { curou: agora > antes }))
+    }
+  }).observe(document.body, {
+    subtree: true,
+    characterData: true,
+    characterDataOldValue: true,
   })
 }
 
@@ -205,8 +259,40 @@ function ligaOPulsoDaVez(parado: MediaQueryList): void {
   })
 }
 
+/**
+ * A CONDIÇÃO que foi aplicada (ALE-174, P4).
+ *
+ * É a única dos cinco disparos que é de MOUNT de verdade, e isso foi medido:
+ * aplicar uma condição CRIA o `<ul>` dos crachás, que não existia com a lista
+ * vazia. O que o morph REUSA — a linha de um combatente que entra na fila, o
+ * P5 — não tem mount para prender, e por isso ficou de fora desta fatia com a
+ * medição registrada na issue.
+ *
+ * Ele anima os crachás e não o `<ul>`: a lista é um contêiner sem tinta, e uma
+ * segunda condição chega dentro de um `<ul>` que já existe — animar só o
+ * contêiner faria a primeira aparecer e as seguintes não.
+ */
+function ligaOSurgirDaCondicao(parado: MediaQueryList): void {
+  new MutationObserver((registros) => {
+    if (parado.matches) return
+    for (const registro of registros) {
+      for (const no of registro.addedNodes) {
+        if (no.nodeType !== Node.ELEMENT_NODE) continue
+        const elemento = no as Element
+        // O crachá em si, ou a lista inteira chegando de uma vez.
+        const crachas = elemento.matches('[data-condicao]')
+          ? [elemento]
+          : [...elemento.querySelectorAll('[data-condicao]')]
+        for (const cracha of crachas) surgir(cracha)
+      }
+    }
+  }).observe(document.body, { subtree: true, childList: true })
+}
+
 const PARADO = window.matchMedia(MOVIMENTO_REDUZIDO)
 
 ligaODeslizeDasPecas(PARADO)
 ligaAPiscadaDoVital(PARADO)
+ligaAPiscadaDaFicha(PARADO)
 ligaOPulsoDaVez(PARADO)
+ligaOSurgirDaCondicao(PARADO)

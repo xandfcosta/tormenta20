@@ -36,5 +36,17 @@ function n(t) {
 		easing: "ease-out"
 	});
 }
+function r(t) {
+	e(t) && t.animate([{
+		opacity: 0,
+		transform: "scale(0.92)"
+	}, {
+		opacity: 1,
+		transform: "scale(1)"
+	}], {
+		duration: 150,
+		easing: "ease-out"
+	});
+}
 //#endregion
-export { e as n, n as r, t };
+export { r as i, e as n, n as r, t };
