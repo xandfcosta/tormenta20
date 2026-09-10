@@ -996,6 +996,13 @@ func weaponDetail(arma weaponTile) templ.Component {
 // saída é tela travada, e quem navega por teclado não deve depender de descobrir
 // o Esc.
 //
+// O ESC NÃO MORA AQUI (ALE-298), e a razão é aritmética: esta moldura é
+// desenhada POR ITEM da lista, e o ouvinte dela era de JANELA. Medido na aba de
+// Perícias, **trinta ouvintes de Escape numa página** — vinte e nove deles
+// escrevendo o mesmo `$detalhe = ”`. Um ouvinte de janela não pertence ao nó
+// que o pendura; ele pertence à CENA, e é lá que ele passou a morar. Ver
+// `ficha`.
+//
 // `data-expanded` é o que faz o driver de setas se recolher — ele procura
 // `[role="dialog"][data-expanded]`, e sem isto as setas continuariam andando nas
 // caixas ATRÁS da sobreposição. Aqui o `data-attr` com BOOLEANO é o certo, ao
@@ -1029,20 +1036,20 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var56 string
 		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe === '" + key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 259, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 266, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\" style=\"display:none\" data-on:click=\"evt.target === el && ($detalhe = '')\" data-on:keydown__window=\"evt.key === 'Escape' && ($detalhe = '')\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4\"><div role=\"dialog\" aria-modal=\"true\" aria-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\" style=\"display:none\" data-on:click=\"evt.target === el && ($detalhe = '')\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4\"><div role=\"dialog\" aria-modal=\"true\" aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var57 string
 		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 273, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 279, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 		if templ_7745c5c3_Err != nil {
@@ -1055,7 +1062,7 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var58 string
 		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe === '" + key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 274, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 280, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 		if templ_7745c5c3_Err != nil {
@@ -1068,7 +1075,7 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var59 string
 		templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.ResolveAttributeValue("Fechar " + titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 279, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 285, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var59)
 		if templ_7745c5c3_Err != nil {
@@ -1109,7 +1116,7 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 289, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 295, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 		if templ_7745c5c3_Err != nil {
@@ -1215,7 +1222,7 @@ func breakdownRows(rows []breakdownRow) templ.Component {
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(row.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 311, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 317, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 			if templ_7745c5c3_Err != nil {
@@ -1228,7 +1235,7 @@ func breakdownRows(rows []breakdownRow) templ.Component {
 			var templ_7745c5c3_Var68 string
 			templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(row.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 312, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 318, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 			if templ_7745c5c3_Err != nil {
@@ -1246,7 +1253,7 @@ func breakdownRows(rows []breakdownRow) templ.Component {
 				var templ_7745c5c3_Var69 string
 				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(row.Note)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 318, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 324, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 				if templ_7745c5c3_Err != nil {

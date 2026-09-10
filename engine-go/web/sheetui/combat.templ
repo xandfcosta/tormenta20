@@ -238,6 +238,13 @@ templ weaponDetail(arma weaponTile) {
 // saída é tela travada, e quem navega por teclado não deve depender de descobrir
 // o Esc.
 //
+// O ESC NÃO MORA AQUI (ALE-298), e a razão é aritmética: esta moldura é
+// desenhada POR ITEM da lista, e o ouvinte dela era de JANELA. Medido na aba de
+// Perícias, **trinta ouvintes de Escape numa página** — vinte e nove deles
+// escrevendo o mesmo `$detalhe = ''`. Um ouvinte de janela não pertence ao nó
+// que o pendura; ele pertence à CENA, e é lá que ele passou a morar. Ver
+// `ficha`.
+//
 // `data-expanded` é o que faz o driver de setas se recolher — ele procura
 // `[role="dialog"][data-expanded]`, e sem isto as setas continuariam andando nas
 // caixas ATRÁS da sobreposição. Aqui o `data-attr` com BOOLEANO é o certo, ao
@@ -259,7 +266,6 @@ templ overlay(key, titulo, icone string, magic bool) {
 		data-show={ "$detalhe === '" + key + "'" }
 		style="display:none"
 		data-on:click="evt.target === el && ($detalhe = '')"
-		data-on:keydown__window="evt.key === 'Escape' && ($detalhe = '')"
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4"
 	>
 		// CENTRALIZADO em toda largura, e não folha subindo da borda de baixo: é
