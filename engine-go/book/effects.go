@@ -70,7 +70,7 @@ var (
 
 func EffectKinds() []EffectKind {
 	efeitosUmaVez.Do(func() {
-		efeitosDoAcervo = ListOf[EffectKind]("tipos-de-efeito")
+		efeitosDoAcervo = ListOf[EffectKind]("effect-types")
 	})
 	return efeitosDoAcervo
 }
@@ -82,7 +82,7 @@ var (
 
 func SpellSchools() []SpellSchool {
 	escolasUmaVez.Do(func() {
-		escolasDoLivro = ListOf[SpellSchool]("escolas-de-magia")
+		escolasDoLivro = ListOf[SpellSchool]("spell-schools")
 	})
 	return escolasDoLivro
 }

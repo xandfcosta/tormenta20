@@ -21,7 +21,7 @@ import (
 // Vive em `engine/` e não em `api/` porque o dono da regra é o motor: é ele que
 // aplica a penalidade no cálculo.
 func TestTheArmorPenaltyAgreesWithTheBook(t *testing.T) {
-	bruto, ok := catalog.Resource("pericias")
+	bruto, ok := catalog.Resource("expertises")
 	if !ok {
 		t.Fatal("catálogo de perícias ausente")
 	}

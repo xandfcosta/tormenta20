@@ -89,7 +89,7 @@ func TestOriginGrantsAreClassified(t *testing.T) {
 // dele. Como o classificador é por FORMA, uma origem nova com uma forma nova
 // falha aqui em vez de nascer errada.
 func TestNoOriginGrantWithAChoiceIsBornFixed(t *testing.T) {
-	bruto, ok := catalog.Resource("origens")
+	bruto, ok := catalog.Resource("origins-source")
 	if !ok {
 		t.Fatal("catálogo de origens ausente")
 	}

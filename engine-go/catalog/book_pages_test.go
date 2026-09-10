@@ -9,7 +9,7 @@ import (
 
 // O guarda das PÁGINAS DO LIVRO (ALE-264).
 //
-// As 745 páginas que o `scripts/paginas-do-livro.py` derivou vieram do Índice
+// As 745 páginas que o `scripts/book-pages.py` derivou vieram do Índice
 // Remissivo do próprio livro, e cada uma foi conferida contra o texto da página
 // antes de entrar. Este teste não repete a conferência — ele não tem o PDF, que
 // vive fora do repositório e é ignorado pelo git.
@@ -195,7 +195,7 @@ func TestTheThreeBlocksThatOpenOnePageLater(t *testing.T) {
 // TestNoExtractedEntryCarriesPageDirt (ALE-264).
 //
 // Os tipos de efeito e as escolas de magia são EXTRAÍDOS do PDF pelo
-// `scripts/paginas-do-livro.py`, e as duas formas de sujeira que o extrator já
+// `scripts/book-pages.py`, e as duas formas de sujeira que o extrator já
 // deixou passar estão aqui — as duas vistas na tela, nenhuma detectada por ele:
 //
 //   - o HÍFEN de quebra de linha, que virou "impede convoca- ções";
@@ -206,7 +206,7 @@ func TestTheThreeBlocksThatOpenOnePageLater(t *testing.T) {
 // Este teste não tem o livro — ele mora fora do repositório. O que ele mede é a
 // FORMA do que foi extraído, que é o que sobrevive sem o PDF na mão.
 func TestNoExtractedEntryCarriesPageDirt(t *testing.T) {
-	for _, recurso := range []string{"tipos-de-efeito", "escolas-de-magia"} {
+	for _, recurso := range []string{"effect-types", "spell-schools"} {
 		bruto, ok := Resource(recurso)
 		if !ok {
 			t.Errorf("catálogo %q ausente", recurso)

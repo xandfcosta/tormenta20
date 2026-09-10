@@ -170,28 +170,28 @@ func LookupActivation(id string) (Activation, bool) {
 // not the 8 KB. Their shape is pinned by `rules_tables_test.go`, which is the
 // schema validation that replaces per-field transcription tests.
 var resources = []string{
-	"spells", "bestiary", "items", "conditions", "deuses", "races", "origins",
-	"race-defs", "class-powers", "general-powers", "granted-powers", "origens",
+	"spells", "bestiary", "items", "conditions", "gods", "races", "origins",
+	"race-defs", "class-powers", "general-powers", "granted-powers", "origins-source",
 	"tormenta-powers", "divine-powers", "activations",
-	"class-expertises", "devoto-terms", "gm-tables", "dungeon-design",
+	"class-expertises", "devotee-terms", "gm-tables", "dungeon-design",
 	// `classes` nasceu na ALE-264 com três campos — id, nome e página do livro.
 	// As classes existiam só como uma lista de NOMES dentro de `options.json`, e
 	// sem lugar para a página não havia botão para o livro. Ver
-	// `scripts/paginas-do-livro.py`.
+	// `scripts/book-pages.py`.
 	"classes",
 	// `tipos-de-efeito` nasceu na ALE-264 pelo mesmo motivo de `classes`: a
 	// condição CITA o tipo ("Abalado … Medo.") e não havia para onde o elo
 	// apontar. As definições saem do texto da p228, extraídas pelo
-	// `scripts/paginas-do-livro.py`.
-	"tipos-de-efeito",
+	// `scripts/book-pages.py`.
+	"effect-types",
 	// `escolas-de-magia` (ALE-264), pelo mesmo motivo: a magia CITA a escola e
 	// não havia para onde o elo apontar — o nome dela nem aparecia no cartão.
 	// As oito definições saem do texto da p172.
-	"escolas-de-magia",
+	"spell-schools",
 	// `pericias` (ALE-264): elas existiam como lista de nome e atributo dentro
 	// do `options.json`, sem página e sem as duas regras que o livro imprime ao
 	// lado de cada uma — só treinada e penalidade de armadura, da Tabela 2-1.
-	"pericias",
+	"expertises",
 }
 
 var valid = func() map[string]bool {

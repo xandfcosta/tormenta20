@@ -491,7 +491,7 @@ Das três varreduras que essa decisão abriu, **a dos specs rodou** (ALE-301):
 os 22 arquivos do `e2e/tests` saíram em inglês com as descrições intactas em
 português, e quem cobra é o `TestNoSpecFileIsNamedInPortuguese`. **Os 139 sinais
 e as 121 classes continuam em português**, e o nome de arquivo do `engine-go`
-também (`pericias.json`, `paginas-do-livro.py`). Enquanto elas não rodam, o
+também (`pericias.json`, `book-pages.py`). Enquanto elas não rodam, o
 que vale é a regra: o que você escrever novo já sai em inglês.
 
 O conceito continua sendo o do livro — o que muda é a grafia do identificador.

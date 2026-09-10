@@ -11,7 +11,7 @@
  * achar o arquivo é o que impede as duas portas de desenharem ícones
  * diferentes quando o pacote renomeia alguma coisa.
  *
- *   node scripts/gen-icones-templ.mjs
+ *   node scripts/gen-icons-templ.mjs
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -180,7 +180,7 @@ const casos = QUERIDOS.map((nome) => {
 
 const conteudo = `package ui
 
-// GERADO por \`node scripts/gen-icones-templ.mjs\` — não edite à mão.
+// GERADO por \`node scripts/gen-icons-templ.mjs\` — não edite à mão.
 //
 // Os SVGs vêm do lucide INSTALADO, não transcritos: copiar path à mão é a classe
 // de erro que nenhum teste pega, porque um path errado é um path válido. O

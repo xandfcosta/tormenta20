@@ -44,7 +44,7 @@ type oraculoDoMarkdown struct {
 
 func leOOraculoDoMarkdown(t *testing.T) oraculoDoMarkdown {
 	t.Helper()
-	bruto, err := os.ReadFile("testdata/markdown-do-js.json")
+	bruto, err := os.ReadFile("testdata/markdown-from-the-js.json")
 	if err != nil {
 		t.Fatalf("oráculo ausente — ele é versionado e não se regenera mais: %v", err)
 	}

@@ -24,7 +24,7 @@ func TestTheGmTrailIconsExist(t *testing.T) {
 	for _, f := range railStops {
 		if !strings.Contains(string(gerado), `case "`+f.Icone+`":`) {
 			t.Errorf("a ferramenta %q pede o ícone %q e o gerado não o tem — sai SVG vazio, sem erro. "+
-				"Acrescente em scripts/gen-icones-templ.mjs e rode o gerador.", f.Slug, f.Icone)
+				"Acrescente em scripts/gen-icons-templ.mjs e rode o gerador.", f.Slug, f.Icone)
 		}
 	}
 }

@@ -41,7 +41,7 @@ fi
 
 cd "$RAIZ/e2e" || exit 1
 
-ARQUIVO=${1:?uso: medir-flake.sh <spec> <n>}
+ARQUIVO=${1:?uso: measure-flake.sh <spec> <n>}
 N=${2:-8}
 
 para_a_api() {

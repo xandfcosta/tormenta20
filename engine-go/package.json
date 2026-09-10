@@ -13,7 +13,7 @@
     "seed": "SEED_API_URL=http://localhost:3001 go run ./cmd/seed",
     "build:piloto-css": "bash ./scripts/build-piloto-css.sh",
     "build:piloto-js": "bash ./scripts/build-piloto-js.sh",
-    "build:icones": "node ./scripts/gen-icones-templ.mjs",
+    "build:icons": "node ./scripts/gen-icons-templ.mjs",
     "prebuild": "bash ./scripts/build-piloto-css.sh && bash ./scripts/build-piloto-js.sh"
   },
   "dependencies": {

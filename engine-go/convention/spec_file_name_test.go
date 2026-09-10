@@ -27,7 +27,7 @@ var properNounsInFileNames = map[string]bool{"piloto": true, "grimorio": true}
 
 func TestNoSpecFileIsNamedInPortuguese(t *testing.T) {
 	// A RAIZ é o `e2e/`, e o recorte é honesto: o `engine-go` ainda tem nome de
-	// arquivo em português (`pericias.json`, `paginas-do-livro.py`), e
+	// arquivo em português (`pericias.json`, `book-pages.py`), e
 	// varrê-los é outra fatia da ALE-301. Um guarda que mede o que a fatia
 	// arrumou é melhor que um guarda desligado por medir o que ela não arrumou.
 	raiz := filepath.Join("..", "..", "e2e", "tests")

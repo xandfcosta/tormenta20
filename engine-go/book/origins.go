@@ -28,7 +28,7 @@ var (
 func OriginItemsByName() map[string][]string {
 	originItemsOnce.Do(func() {
 		originItemsIndex = map[string][]string{}
-		bruto, ok := catalog.Resource("origens")
+		bruto, ok := catalog.Resource("origins-source")
 		if !ok {
 			return
 		}

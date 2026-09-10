@@ -8,7 +8,7 @@ não está lá. A ALE-187 escreveu dezenas desses ponteiros de uma vez.
 A ideia veio da sessão da migração Datastar, que achou três ponteiros quebrados
 na base dela VARRENDO em vez de lembrar — ela conhecia um dos três.
 
-    python3 scripts/confere-ponteiros.py
+    python3 scripts/check-pointers.py
 
 LIMITAÇÃO, e ela importa: a varredura não distingue "o destino sumiu" de "o
 comentário cita um arquivo que FOI SUBSTITUÍDO e diz isso". O

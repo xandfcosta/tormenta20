@@ -8,7 +8,7 @@ package ui
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// GERADO por `node scripts/gen-icones-templ.mjs` — não edite à mão.
+// GERADO por `node scripts/gen-icons-templ.mjs` — não edite à mão.
 //
 // Os SVGs vêm do lucide INSTALADO, não transcritos: copiar path à mão é a classe
 // de erro que nenhum teste pega, porque um path errado é um path válido. O

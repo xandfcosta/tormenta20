@@ -119,7 +119,7 @@ func TestTheGodLinksOnlyPointAtWhoHasAnEntry(t *testing.T) {
 
 // TestEveryConditionTagHasAnEffectType: a rede não pode ter ponta solta.
 //
-// O `scripts/paginas-do-livro.py` já recusa gravar com tag órfã; este guarda
+// O `scripts/book-pages.py` já recusa gravar com tag órfã; este guarda
 // cobra o mesmo do lado de cá, porque quem edita `conditions.json` à mão não
 // passa pelo script.
 func TestEveryConditionTagHasAnEffectType(t *testing.T) {

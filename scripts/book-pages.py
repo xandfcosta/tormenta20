@@ -11,8 +11,8 @@ a CONFERÊNCIA: nenhuma página é aceita sem que o nome da entrada apareça no
 texto daquela página. Entrada que não confere fica SEM página — o botão não
 nasce, que é honesto; página errada seria o defeito.
 
-    python3 scripts/paginas-do-livro.py               # relatório, não grava
-    python3 scripts/paginas-do-livro.py --gravar      # aplica nos catálogos
+    python3 scripts/book-pages.py               # relatório, não grava
+    python3 scripts/book-pages.py --gravar      # aplica nos catálogos
 
 O livro é ignorado pelo git e vive fora do repositório: passe o caminho em
 LIVRO_PDF ou como primeiro argumento.
@@ -264,13 +264,13 @@ CATALOGOS = [
     {"arquivo": "bestiary.json", "rotulo": "criaturas", "qualificadores": ("criatura", ""),
      "assinatura": r"{nome}\s+nd\s+\d"},
     {"arquivo": "races.json", "rotulo": "raças", "qualificadores": ("raça", "")},
-    {"arquivo": "deuses.json", "rotulo": "deuses", "qualificadores": ("",)},
+    {"arquivo": "gods.json", "rotulo": "deuses", "qualificadores": ("",)},
     {"arquivo": "general-powers.json", "rotulo": "poderes gerais", "qualificadores": ("",)},
     {"arquivo": "class-powers.json", "rotulo": "poderes de classe", "qualificadores": ("",)},
     {"arquivo": "granted-powers.json", "rotulo": "poderes concedidos", "qualificadores": ("",)},
     {"arquivo": "tormenta-powers.json", "rotulo": "poderes da Tormenta", "qualificadores": ("",)},
     {"arquivo": "divine-powers.json", "rotulo": "poderes divinos", "qualificadores": ("",)},
-    {"arquivo": "origens.json", "rotulo": "origens", "qualificadores": ("origem", "")},
+    {"arquivo": "origins-source.json", "rotulo": "origens", "qualificadores": ("origem", "")},
 ]
 
 
@@ -604,7 +604,7 @@ NOMES_DOS_EFEITOS = [
 
 
 def cria_o_catalogo_de_efeitos(livro):
-    """Escreve `catalog/data/tipos-de-efeito.json` a partir do texto da p228.
+    """Escreve `catalog/data/effect-types.json` a partir do texto da p228.
 
     Ele existe porque a condição CITA o tipo ("Abalado ... Medo.") e o leitor da
     tela não tem para onde ir com isso. O livro define cada tipo em uma frase, e
@@ -625,7 +625,7 @@ def cria_o_catalogo_de_efeitos(livro):
     if orfas:
         raise SystemExit(f"tags de condição sem tipo de efeito: {orfas}")
 
-    grava("tipos-de-efeito.json", efeitos)
+    grava("effect-types.json", efeitos)
     print(f"catálogo de tipos de efeito: {len(efeitos)} · nenhuma tag órfã")
 
 
@@ -729,7 +729,7 @@ NOMES_DOS_EFEITOS = [
 
 
 def cria_o_catalogo_de_efeitos(livro):
-    """Escreve `catalog/data/tipos-de-efeito.json` a partir do texto da p228.
+    """Escreve `catalog/data/effect-types.json` a partir do texto da p228.
 
     Ele existe porque a condição CITA o tipo ("Abalado ... Medo.") e o leitor da
     tela não tem para onde ir com isso. O livro define cada tipo em uma frase, e
@@ -786,7 +786,7 @@ def cria_o_catalogo_de_efeitos(livro):
     if orfas:
         raise SystemExit(f"tags de condição sem tipo de efeito: {orfas}")
 
-    grava("tipos-de-efeito.json", efeitos)
+    grava("effect-types.json", efeitos)
     print(f"catálogo de tipos de efeito: {len(efeitos)} · nenhuma tag órfã")
 
 
@@ -804,7 +804,7 @@ NOMES_DAS_ESCOLAS = [
 
 
 def cria_o_catalogo_de_escolas(livro):
-    """Escreve `catalog/data/escolas-de-magia.json` a partir do texto da p172.
+    """Escreve `catalog/data/spell-schools.json` a partir do texto da p172.
 
     Mesmo motivo dos tipos de efeito: a magia CITA a escola e não havia para onde
     o elo apontar — o nome dela nem aparecia no cartão. O `id` é o nome dobrado,
@@ -828,7 +828,7 @@ def cria_o_catalogo_de_escolas(livro):
     if orfas:
         raise SystemExit(f"magias com escola sem verbete: {orfas}")
 
-    grava("escolas-de-magia.json", escolas)
+    grava("spell-schools.json", escolas)
     print(f"catálogo de escolas de magia: {len(escolas)} · nenhuma magia órfã")
 
 
@@ -849,7 +849,7 @@ SIGLA_DO_ATRIBUTO = {
 
 
 def cria_o_catalogo_de_pericias(livro):
-    """Escreve `catalog/data/pericias.json`.
+    """Escreve `catalog/data/expertises.json`.
 
     As perícias existiam como uma lista de NOME e ATRIBUTO dentro de
     `options.json` — sem página, sem as duas regras que o livro imprime ao lado
@@ -908,7 +908,7 @@ def cria_o_catalogo_de_pericias(livro):
             "bookPage": paginas[0],
         })
 
-    grava("pericias.json", pericias)
+    grava("expertises.json", pericias)
     treinadas = sum(1 for p in pericias if p["soTreinada"])
     armaduras = sum(1 for p in pericias if p["penalidadeDeArmadura"])
     print(f"catálogo de perícias: {len(pericias)} · {treinadas} só treinadas · "

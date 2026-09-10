@@ -154,7 +154,7 @@ func TestDevotoTermsTable(t *testing.T) {
 	table := decodeResource[struct {
 		OpenTerms   []string            `json:"openTerms"`
 		TermToNames map[string][]string `json:"termToNames"`
-	}](t, "devoto-terms")
+	}](t, "devotee-terms")
 
 	if len(table.OpenTerms) == 0 {
 		t.Error("sem termos abertos — 'Quaisquer' deixaria de admitir todo mundo")

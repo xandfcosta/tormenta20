@@ -23,7 +23,7 @@ import (
 //
 // A paridade é MEDIDA e não afirmada: `markdown/markdown_test.go` compara esta
 // árvore com a que o JS produz, a partir de um oráculo gerado por
-// `api/testdata/markdown-do-js.json`, que hoje é linha de base congelada.
+// `api/testdata/markdown-from-the-js.json`, que hoje é linha de base congelada.
 
 // Span é um trecho de uma linha. `Href` só existe em `elo`.
 //

@@ -49,7 +49,7 @@ func TestEveryRequestedIconExistsInTheGeneratedFile(t *testing.T) {
 		for _, m := range pedido.FindAllStringSubmatch(string(conteudo), -1) {
 			if !strings.Contains(string(gerado), `case "`+m[1]+`":`) {
 				t.Errorf("%s pede o ícone %q e o gerado não o tem — ele sai como SVG vazio, sem erro. "+
-					"Acrescente em frontend/scripts/gen-icones-templ.mjs e rode o gerador.", nome, m[1])
+					"Acrescente em scripts/gen-icons-templ.mjs e rode o gerador.", nome, m[1])
 			}
 		}
 	}
