@@ -454,6 +454,27 @@ domínio e infraestrutura.
 - **Português:** comentário, docstring, `.md`, mensagem de commit, tudo que
   aparece na tela, e o texto de mensagem de erro que um humano vai ler.
 
+**A linha exata entre os dois foi fechada pelo dono na ALE-301**, porque quatro
+casos ficavam de fora da lista e cada um foi decidido por palpite pelo menos uma
+vez:
+
+| o quê | idioma | por quê |
+|---|---|---|
+| nome do arquivo de spec (`board-drag.spec.ts`) | **inglês** | é nome de arquivo, e a lista acima já dizia isso |
+| a **descrição do teste** — o texto dentro de `test('…')` | **português** | é frase que uma pessoa lê no relatório, como qualquer texto de tela |
+| classe CSS (`.tabuleiro-peca`) | **inglês** | é identificador que o código escreve e casa |
+| sinal do Datastar (`$arrastando`) | **inglês** | é a FRONTEIRA, como campo JSON e evento SSE |
+
+O par do meio é o que confunde: **o arquivo e a descrição são coisas
+diferentes** e o mesmo spec leva as duas línguas — `board-drag.spec.ts` contendo
+`test('arrastar a peça propõe a parada')`. Eu já chamei essa descrição de "título
+de caso" e de "descrição do teste" na mesma conversa, que é o pecado do
+`GLOSSARIO.md`: uma palavra por conceito. **Ela se chama descrição do teste.**
+
+As três varreduras que essa decisão abre — 22 specs, 139 sinais e 121 classes —
+são issue própria e NÃO estão feitas. Enquanto elas não rodam, o que vale é a
+regra: o que você escrever novo já sai em inglês.
+
 O conceito continua sendo o do livro — o que muda é a grafia do identificador.
 `sheet`, e não `characterData`: a tradução é do TERMO do glossário, não uma
 oportunidade de trocar o conceito por um genérico. Termo sem tradução assentada
