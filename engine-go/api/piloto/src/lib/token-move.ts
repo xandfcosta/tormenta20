@@ -43,7 +43,7 @@ import { podeAnimar } from '@/lib/turn-juice'
  */
 
 /** A casa em que a peça está, lida de um `style` cru. Nulo quando não dá. */
-export function casaDoEstilo(estilo: string | null): { col: number; lin: number } | null {
+export function squareFromStyle(estilo: string | null): { col: number; lin: number } | null {
   if (!estilo) return null
   const col = /--col:\s*(-?\d+)/.exec(estilo)
   const lin = /--lin:\s*(-?\d+)/.exec(estilo)
@@ -62,9 +62,9 @@ export function casaDoEstilo(estilo: string | null): { col: number; lin: number 
  * o que o zoom muda. Passá-lo em vez de lê-lo aqui dentro é o que mantém esta
  * função sem dependência do DOM em volta.
  *
- * @example deslizaAPeca(botao, { col: 3, lin: 2 }, { col: 7, lin: 2 }, 44)
+ * @example slideTheToken(botao, { col: 3, lin: 2 }, { col: 7, lin: 2 }, 44)
  */
-export function deslizaAPeca(
+export function slideTheToken(
   alvo: Element | null | undefined,
   de: { col: number; lin: number },
   para: { col: number; lin: number },

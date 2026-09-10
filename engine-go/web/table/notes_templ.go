@@ -86,9 +86,9 @@ func notesSplitter() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue("Math.round(" + aLarguraDeAgora() + ")")
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue("Math.round(" + widthRightNow() + ")")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 63, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 63, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -99,9 +99,9 @@ func notesSplitter() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("Math.round(" + oTetoDaLargura() + ")")
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("Math.round(" + widthCeiling() + ")")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 65, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 65, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -112,9 +112,9 @@ func notesSplitter() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(oArrastoDaLargura())
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(widthDragStarts())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 66, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 66, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -125,9 +125,9 @@ func notesSplitter() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(oMoverDaLargura())
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(widthFollowsPointer())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 67, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 67, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -138,9 +138,9 @@ func notesSplitter() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(oSoltarDaLargura())
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(widthDragDrops())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 68, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 68, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -151,9 +151,9 @@ func notesSplitter() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPassoDaLargura())
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(widthKeyStep())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 69, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 69, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -976,9 +976,9 @@ func floatToggle() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var34 string
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(alternaOFlutuar())
+		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleFloating())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 328, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 328, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 		if templ_7745c5c3_Err != nil {

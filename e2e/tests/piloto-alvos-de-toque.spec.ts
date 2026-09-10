@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { alvosDeToque } from './support/alvos'
+import { touchTargets } from './support/touch-targets'
 
 /**
  * O PISO DE TOQUE DA FICHA NO TELEFONE — WCAG 2.5.8, AA (ALE-177).
@@ -18,7 +18,7 @@ import { alvosDeToque } from './support/alvos'
  *
  * A diferença não é a tela ter melhorado 90%: é que contar tamanho responde
  * "quantos são pequenos" quando a pergunta é "quantos reprovam". A norma tem
- * duas exceções, e as duas valem aqui — ver `support/alvos.ts`, que as mede.
+ * duas exceções, e as duas valem aqui — ver `support/touch-targets.ts`, que as mede.
  *
  * O conserto foi o `ui.BadgeClasses`, e quem impede a receita de ser reescrita à
  * mão é o `TestNoHandwrittenBadgeRecipe`, em Go, que é mais barato. **Este guarda
@@ -41,7 +41,7 @@ const ABAS = [
 // só existe para quem conjura, e foram justamente as abas do arcanista — Mochila
 // e Magias — que continham as quatro reprovações. Medir só o guerreiro teria
 // dado verde sobre a tela que estava errada (a lição da ALE-272).
-const HEROIS = [
+const HEROES = [
   { id: 1, quem: 'o guerreiro' },
   { id: 3, quem: 'quem conjura' },
 ]
@@ -67,7 +67,7 @@ test('o medidor acusa um alvo que reprova de verdade', async ({ page }) => {
     document.body.append(caixa)
   })
 
-  const { alvos } = await alvosDeToque(page)
+  const { alvos } = await touchTargets(page)
   const plantados = alvos.filter((a) => a.nome === 'a' || a.nome === 'b')
   expect(plantados.map((a) => a.reprova), 'o medidor não achou dois alvos 20×20 colados').toEqual([
     true,
@@ -78,7 +78,7 @@ test('o medidor acusa um alvo que reprova de verdade', async ({ page }) => {
 // UM caso por herói, e não um por aba: são catorze navegações contra duas, e
 // e2e é a faixa mais cara do repositório. A aba ofensora entra na MENSAGEM, que
 // é o que a divisão em catorze casos comprava.
-for (const heroi of HEROIS) {
+for (const heroi of HEROES) {
   test(`a ficha de ${heroi.quem} cumpre o piso de toque a 390px, nas sete abas`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     const reprovas: string[] = []
@@ -91,7 +91,7 @@ for (const heroi of HEROIS) {
       // O `networkidle` também não serve na Mesa, onde o SSE nunca fecha.
       await expect(page.locator('[aria-current="page"]')).toBeVisible()
 
-      const { medidos, alvos } = await alvosDeToque(page)
+      const { medidos, alvos } = await touchTargets(page)
 
       // O DENOMINADOR: sem alvo medido, a asserção final é verde sobre uma
       // página que não carregou. Aconteceu na bancada desta issue — a Mesa fora

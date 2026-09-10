@@ -35,7 +35,7 @@ import type { Page } from '@playwright/test'
  * Devolve `medidos` junto com as falhas, sempre: lista vazia e seletor que não
  * casa com nada se parecem no terminal.
  */
-export type AlvoMedido = {
+export type MeasuredTarget = {
   nome: string
   larg: number
   alt: number
@@ -45,7 +45,7 @@ export type AlvoMedido = {
   reprova: boolean
 }
 
-export async function alvosDeToque(page: Page): Promise<{ medidos: number; alvos: AlvoMedido[] }> {
+export async function touchTargets(page: Page): Promise<{ medidos: number; alvos: MeasuredTarget[] }> {
   return page.evaluate(() => {
     const SELETOR =
       'a[href],button:not([disabled]),input:not([type=hidden]),select,textarea,summary,[tabindex]:not([tabindex="-1"])'
@@ -83,7 +83,7 @@ export async function alvosDeToque(page: Page): Promise<{ medidos: number; alvos
     const nomeDe = (e: Element) =>
       (e.getAttribute('aria-label') ?? e.getAttribute('title') ?? e.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 40)
 
-    const medidos: AlvoMedido[] = []
+    const medidos: MeasuredTarget[] = []
     for (let i = 0; i < alvos.length; i++) {
       const r = caixas[i]
       if (!pequeno(r)) continue

@@ -13,7 +13,7 @@ import { expect, type Page } from '@playwright/test'
  */
 
 /** Uma mesa só desta corrida. Devolve o endereço e como se livrar dela. */
-export async function mesaDescartavel(page: Page): Promise<{ mesa: string; apagar: () => Promise<void> }> {
+export async function disposableTable(page: Page): Promise<{ mesa: string; apagar: () => Promise<void> }> {
   const nome = `E2E Descartável tabuleiro ${Date.now()}-${Math.floor(Math.random() * 1e6)}`
 
   // A FIXTURE vai pela API e não pela tela, de propósito: montar campanha e
@@ -72,7 +72,7 @@ export async function mesaDescartavel(page: Page): Promise<{ mesa: string; apaga
  * acessível de propósito. O `visible` é o que escolhe entre eles — o outro está
  * no DOM com `display:none`, e sem o filtro o `.first()` acertaria o escondido.
  */
-export async function fechaAFila(page: Page): Promise<void> {
+export async function closeTheQueue(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Fechar a iniciativa' }).click()
   await expect(page.locator('#gaveta-da-fila'), 'a gaveta da fila não fechou').not.toHaveAttribute(
     'open',
@@ -80,7 +80,7 @@ export async function fechaAFila(page: Page): Promise<void> {
   )
 }
 
-export async function abreAFila(page: Page): Promise<void> {
+export async function openTheQueue(page: Page): Promise<void> {
   // IDEMPOTENTE, porque acrescentar dois combatentes é abrir a gaveta duas
   // vezes: com ela já aberta o botão de abrir está coberto pelo próprio modal,
   // e o sintoma é um timeout de clique num seletor que casou — o mesmo que o
@@ -113,12 +113,12 @@ export async function abreAFila(page: Page): Promise<void> {
  * `if b != nil`), e um guarda que precise ver o número mudar mediria uma linha
  * que não tem número. Foi assim que a sonda da ALE-174 não achou o "Ferir".
  */
-export async function poeUmCombatenteNaFila(
+export async function putACombatantInTheQueue(
   page: Page,
   nome: string,
   pv?: number,
 ): Promise<void> {
-  await abreAFila(page)
+  await openTheQueue(page)
   // O "+ Combatente" é um ALTERNADOR (`$formdecombatente = !$formdecombatente`),
   // e o formulário fica aberto depois de acrescentar. Clicar sem olhar o estado
   // FECHA o formulário no segundo combatente, e o sintoma é um timeout no campo
@@ -142,15 +142,15 @@ export async function poeUmCombatenteNaFila(
   await page.getByRole('button', { name: 'Acrescentar' }).click()
 }
 
-export async function poeUmaPecaNoMapa(page: Page): Promise<void> {
-  await poeUmCombatenteNaFila(page, 'Ogro do E2E')
+export async function putATokenOnTheMap(page: Page): Promise<void> {
+  await putACombatantInTheQueue(page, 'Ogro do E2E')
   // A GAVETA FECHA ANTES de o teste voltar ao mapa, e esta ordem é a jornada de
   // verdade: monta-se a fila na gaveta, fecha-se, e põe-se no mapa pela faixa do
   // tabuleiro. Ela é MODAL — deixá-la aberta torna inerte tudo o que está atrás,
   // e o `Pôr no mapa` da faixa (que vem antes no DOM, então é o que o `.first()`
   // acha) ficaria coberto por ela. O sintoma é "dialog intercepts pointer
   // events" num seletor que casou, e não um "não achei".
-  await fechaAFila(page)
+  await closeTheQueue(page)
   await page.getByRole('button', { name: 'Pôr no mapa', exact: true }).first().click()
   // Escopado ao DIÁLOGO: o nome do combatente aparece também na fila atrás dele,
   // e um seletor de página inteira acha os dois.
@@ -161,7 +161,7 @@ export async function poeUmaPecaNoMapa(page: Page): Promise<void> {
 }
 
 /** Abre o tabuleiro pela TELA, que é o gesto de verdade. */
-export async function abreOTabuleiro(page: Page, mesa: string): Promise<void> {
+export async function openTheBoard(page: Page, mesa: string): Promise<void> {
   await page.goto(mesa, { waitUntil: 'domcontentloaded' })
   await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
   // `exact` porque `getByLabel` casa por SUBSTRING, e o diálogo do acervo se

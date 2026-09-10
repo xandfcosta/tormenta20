@@ -356,7 +356,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **57 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **58 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -373,7 +373,7 @@ de catálogo carrega acento, toda cena de seleção declara os sinais que o gest
 dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum
 crachá escreve a própria geometria à mão, todo marcador de trilho diz o NOME e
 não só as iniciais, nenhum componente com ouvinte de TECLA na janela é chamado
-de dentro de um laço. Cada um nasceu de um defeito que tinha irmãos.
+de dentro de um laço, nenhum identificador NOVO nasce em português. Cada um nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
@@ -483,6 +483,21 @@ Na prática: quando uma fatia move ou reescreve um arquivo, os identificadores
 dele saem em inglês inteiros — não os do diff. **O nome que você CHAMA de fora e
 não vai tocar segue o que está lá**, porque renomear o chamado obriga a varrer
 todos os chamadores, e aí é a varredura em massa por outro caminho.
+
+**O resto da regra ganhou CATRACA na ALE-300**
+(`convention.TestNoNewIdentifierIsWrittenInPortuguese`), e vale saber por quê: a
+metade com guarda saiu 100% em inglês e a metade sem guarda produziu **39
+identificadores em português em sete fatias seguidas** — no mesmo commit, os
+nomes de teste certos ao lado de `alternaOFlutuar` e `deslizaAPeca`. A diferença
+entre as duas metades não foi cuidado, foi varredura, e foi o dono quem
+perguntou: *"você está criando em português? e as regras de inglês?"*.
+
+O guarda é catraca e não amostragem, de olhos abertos: os **292** identificadores
+em português que existiam no dia moram numa linha de base que **só pode
+encolher** — nome novo reprova com o nome dele, e nome baselinado que sumiu
+reprova também, senão o arquivo vira mentira sozinho. Varrer 292 nomes COM
+CHAMADOR num commit é a varredura em massa que o parágrafo acima diz que não
+cabe; o que a catraca compra é o buraco parar de crescer.
 
 **Nome de teste é a exceção que já foi varrida, e ela tem guarda**
 (`convention.TestEveryTestNameIsEnglish`). A varredura foi barata onde o resto não

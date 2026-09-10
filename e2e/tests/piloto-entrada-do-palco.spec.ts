@@ -51,12 +51,12 @@ async function animacoesDoGesto(page: import('@playwright/test').Page, gesto: ()
 // As duas cenas que têm palco. Cena nova entra aqui e nasce medida — é a mesma
 // enumeração do guarda de Go, e ela é remendo pelo mesmo motivo: nada IMPEDE uma
 // terceira cena de nascer fora da lista.
-const CENAS_COM_PALCO = [
+const SCENES_WITH_A_STAGE = [
   { nome: 'personagens', url: '/personagens' },
   { nome: 'campanhas', url: '/campanhas' },
 ]
 
-for (const cena of CENAS_COM_PALCO) {
+for (const cena of SCENES_WITH_A_STAGE) {
   test(`o palco de ${cena.nome} entra pelo lado para onde o cursor foi`, async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 })
     await page.goto(cena.url)
@@ -103,7 +103,7 @@ for (const cena of CENAS_COM_PALCO) {
  * numa largura, e onde isso põe os irmãos. Em jsdom todo elemento mede zero e a
  * resposta seria "não dança" para qualquer código.
  */
-for (const cena of CENAS_COM_PALCO) {
+for (const cena of SCENES_WITH_A_STAGE) {
   test(`a capa de ${cena.nome} pousa no mesmo y em toda posição do trilho`, async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 })
     await page.goto(cena.url)
