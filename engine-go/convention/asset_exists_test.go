@@ -30,20 +30,20 @@ import (
 var assetCall = regexp.MustCompile(`Asset\("([^"]+)"\)`)
 
 func TestEveryAssetAskedForExists(t *testing.T) {
-	estaticos := filepath.Join("..", "api", "piloto", "static")
-	if _, err := os.Stat(estaticos); err != nil {
-		t.Fatalf("a pasta dos estáticos não está em %s: %v", estaticos, err)
+	staticDir := filepath.Join("..", "api", "piloto", "static")
+	if _, err := os.Stat(staticDir); err != nil {
+		t.Fatalf("a pasta dos estáticos não está em %s: %v", staticDir, err)
 	}
 
-	pedidos := map[string][]string{}
-	arquivos := 0
-	raiz := filepath.Join("..", "..")
-	err := filepath.WalkDir(raiz, func(caminho string, entrada fs.DirEntry, err error) error {
+	asked := map[string][]string{}
+	filesRead := 0
+	root := filepath.Join("..", "..")
+	err := filepath.WalkDir(root, func(path string, item fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if entrada.IsDir() {
-			switch entrada.Name() {
+		if item.IsDir() {
+			switch item.Name() {
 			case ".git", "node_modules", "test-results", "playwright-report", "dist", "backups", "data":
 				return fs.SkipDir
 			}
@@ -51,18 +51,18 @@ func TestEveryAssetAskedForExists(t *testing.T) {
 		}
 		// O `_templ.go` fica de FORA: ele repete o que o `.templ` já disse, e
 		// contá-lo duplicaria cada pedido sem cobrir nada a mais.
-		ext := filepath.Ext(caminho)
-		if (ext != ".go" && ext != ".templ") || strings.HasSuffix(caminho, "_templ.go") {
+		ext := filepath.Ext(path)
+		if (ext != ".go" && ext != ".templ") || strings.HasSuffix(path, "_templ.go") {
 			return nil
 		}
-		corpo, err := os.ReadFile(caminho)
+		body, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		arquivos++
-		relativo := strings.TrimPrefix(filepath.ToSlash(strings.TrimPrefix(caminho, raiz)), "/")
-		for _, m := range assetCall.FindAllStringSubmatch(string(corpo), -1) {
-			pedidos[m[1]] = append(pedidos[m[1]], relativo)
+		filesRead++
+		relative := strings.TrimPrefix(filepath.ToSlash(strings.TrimPrefix(path, root)), "/")
+		for _, m := range assetCall.FindAllStringSubmatch(string(body), -1) {
+			asked[m[1]] = append(asked[m[1]], relative)
 		}
 		return nil
 	})
@@ -74,26 +74,26 @@ func TestEveryAssetAskedForExists(t *testing.T) {
 	// são a mesma cor no terminal. São seis hoje — a folha, o Datastar, o
 	// `scene.js`, o `reader.js`, o `table.js`, o `tokens-solid.js`, o
 	// `grimorio.js` e o `pdf.worker.js` —, e o piso é folgado de propósito.
-	if arquivos < 300 || len(pedidos) < 5 {
+	if filesRead < 300 || len(asked) < 5 {
 		t.Fatalf("a varredura leu %d arquivos e achou %d estáticos pedidos — a raiz é o primeiro suspeito",
-			arquivos, len(pedidos))
+			filesRead, len(asked))
 	}
 
-	var faltando []string
-	for nome, onde := range pedidos {
-		if _, err := os.Stat(filepath.Join(estaticos, nome)); err != nil {
+	var missing []string
+	for name, onde := range asked {
+		if _, err := os.Stat(filepath.Join(staticDir, name)); err != nil {
 			sort.Strings(onde)
-			faltando = append(faltando, nome+" — pedido em "+strings.Join(onde, ", "))
+			missing = append(missing, name+" — pedido em "+strings.Join(onde, ", "))
 		}
 	}
-	sort.Strings(faltando)
-	if len(faltando) > 0 {
+	sort.Strings(missing)
+	if len(missing) > 0 {
 		t.Errorf("estático pedido que NÃO existe em api/piloto/static — %d de %d:\n  %s\n"+
 			"O endereço sai montado do mesmo jeito e o navegador leva 404: a ilha de JS não "+
 			"instala e a cena funciona quase toda, em silêncio. Se o nome mudou, mude os CINCO "+
 			"elos — fonte, `vite.piloto.config.ts`, artefato, `Asset(…)` e o `<script src>` — e "+
 			"rode `scripts/build-piloto-js.sh` ANTES de tirar o artefato velho.",
-			len(faltando), len(pedidos), strings.Join(faltando, "\n  "))
+			len(missing), len(asked), strings.Join(missing, "\n  "))
 	}
-	t.Logf("estáticos pedidos: %d, %d sem arquivo, de %d arquivos varridos", len(pedidos), len(faltando), arquivos)
+	t.Logf("estáticos pedidos: %d, %d sem arquivo, de %d arquivos varridos", len(asked), len(missing), filesRead)
 }

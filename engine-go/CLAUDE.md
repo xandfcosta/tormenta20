@@ -422,7 +422,7 @@ Três coisas que este desenho pede, e uma que ele proíbe:
   invisível (`Subscription.Dropped`), pela mesma razão que o medidor de contraste
   devolve o denominador.
 - **`events/` não importa NADA do projeto.** Ele teve de entrar na lista de
-  permitidos do `aovivo` e do `tabuleiro`, cujos guardas de fronteira avisam que
+  permitidos do `aovivo` e do `board`, cujos guardas de fronteira avisam que
   acrescentar import à lista transforma a porta em enfeite. O que impede a porta
   dos fundos é o `TestVocabularyImportsNothing`: enquanto o vocabulário for
   folha, depender dele não cria fronteira errada — e no dia em que alguém
