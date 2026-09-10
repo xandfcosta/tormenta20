@@ -168,7 +168,7 @@ func (s Scene) sheetCommand(
 		}
 		// UMA leitura de sinais por requisição, e ela vem ANTES de tudo: o
 		// `ReadSignals` consome o corpo do POST, então a segunda chamada
-		// receberia vazio sem erro nenhum. Ver `sinais.go`.
+		// receberia vazio sem erro nenhum. Ver `signals.go`.
 		sinais := sheetSignals(r)
 		row, err := s.deps.Queries().GetCharacter(r.Context(), id)
 		if err != nil {

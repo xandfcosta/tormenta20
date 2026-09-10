@@ -88,7 +88,7 @@ type Class struct {
 	// Proficiencias é a linha "Proficiências." do bloco da classe (p36–83),
 	// transcrita. Ela chegou na ALE-272 com o painel de Proficiências da ficha:
 	// a tabela existia só em TypeScript, fora do alcance da validação de schema
-	// — ver `web/sheetui/proficiencias.go`.
+	// — ver `web/sheetui/proficiencies.go`.
 	Proficiencias []string `json:"proficiencies"`
 	// Spellcasting é a tabela de progressão de círculo, e ela é NULA para as
 	// classes que não conjuram — ver `spellcasting.go`.
