@@ -92,7 +92,7 @@ func draftFromRequest(r *http.Request) (int, int, []encounterRow, string) {
 		Nivel         *int            `json:"nivel"`
 		Grupo         *int            `json:"grupo"`
 		Encontro      *[]encounterRow `json:"encontro"`
-		BuscaCriatura *string         `json:"buscaCriatura"`
+		BuscaCriatura *string         `json:"buscacriatura"`
 	}{}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return nivel, grupo, linhas, busca

@@ -772,7 +772,7 @@ func addPanel(v encountersView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<input type=\"search\" name=\"buscaCriatura\" data-bind:buscaCriatura data-on:input__debounce.250ms=\"@get('/mestre/encontros')\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<input type=\"search\" name=\"buscacriatura\" data-bind:buscacriatura data-on:input__debounce.250ms=\"@get('/mestre/encontros')\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
