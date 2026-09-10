@@ -182,6 +182,14 @@ pareceu erro na hora:
   806` é a mão, não a animação. Sonda de vida longa mede tudo o que acontece na
   janela dela, e a janela é parte do desenho — armá-la depois do gesto e antes
   do efeito foi o conserto (ALE-174).
+- **Um guarda de varredura pode medir a FOLHA e ignorar o galho.** O da ALE-298
+  recusava ouvinte de janela escrito dentro de um `for` — e passou verde sobre o
+  defeito que o originou, porque a cadeia real era `for` → `@expertiseDetail` →
+  `@overlay` e só o último tinha o atributo. **Varredura de um nível não é
+  varredura**; o conserto foi o fecho transitivo de quem chama quem. E o que
+  desmentiu o guarda foi rodá-lo contra a ÁRVORE DE ONTEM, que é melhor que
+  sabotagem por dois motivos: o caso negativo é real, e não há como ele sair
+  inerte (ALE-298).
 - **E a terceira sonda desta mesma família mediu a coisa certa no instante
   errado.** Conferindo a piscada do vital, uma sonda perguntou ao DOM no momento
   do `el.animate()` se o véu estava lá: estava. O guarda contou **zero em 151
@@ -348,7 +356,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **56 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **57 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -364,7 +372,8 @@ todo campo do seed é classificado como referência de catálogo ou não, nenhum
 de catálogo carrega acento, toda cena de seleção declara os sinais que o gesto
 dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum
 crachá escreve a própria geometria à mão, todo marcador de trilho diz o NOME e
-não só as iniciais. Cada um nasceu de um defeito que tinha irmãos.
+não só as iniciais, nenhum componente com ouvinte de TECLA na janela é chamado
+de dentro de um laço. Cada um nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
