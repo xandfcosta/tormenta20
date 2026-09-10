@@ -179,16 +179,16 @@ var resources = []string{
 	// sem lugar para a página não havia botão para o livro. Ver
 	// `scripts/book-pages.py`.
 	"classes",
-	// `tipos-de-efeito` nasceu na ALE-264 pelo mesmo motivo de `classes`: a
+	// `effect-types` nasceu na ALE-264 pelo mesmo motivo de `classes`: a
 	// condição CITA o tipo ("Abalado … Medo.") e não havia para onde o elo
 	// apontar. As definições saem do texto da p228, extraídas pelo
 	// `scripts/book-pages.py`.
 	"effect-types",
-	// `escolas-de-magia` (ALE-264), pelo mesmo motivo: a magia CITA a escola e
+	// `spell-schools` (ALE-264), pelo mesmo motivo: a magia CITA a escola e
 	// não havia para onde o elo apontar — o nome dela nem aparecia no cartão.
 	// As oito definições saem do texto da p172.
 	"spell-schools",
-	// `pericias` (ALE-264): elas existiam como lista de nome e atributo dentro
+	// `expertises` (ALE-264): elas existiam como lista de nome e atributo dentro
 	// do `options.json`, sem página e sem as duas regras que o livro imprime ao
 	// lado de cada uma — só treinada e penalidade de armadura, da Tabela 2-1.
 	"expertises",
