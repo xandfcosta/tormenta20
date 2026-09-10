@@ -824,6 +824,24 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   v4 varre da pasta da folha até a raiz do projeto respeitando o `.gitignore`. As
   linhas ficaram como declaração de intenção; quem depurar "classe sumiu" não
   deve perder tempo nelas. O suspeito é o TOKEN que não existe na paleta.
+- **Regra da casa que precisa GANHAR de um utilitário mora em `@layer utilities`,
+  e não em `components`.** No Tailwind v4 a CAMADA decide antes da
+  especificidade: `utilities` vence `components` mesmo quando o seletor de baixo
+  tem duas classes contra uma. A ALE-218 escreveu `.notas-flutuam .notas-coluna
+  { position: absolute }` em `components` e ela perdeu para o `lg:static` que a
+  coluna traz do próprio `class=` — com o sintoma pedindo a conclusão errada: o
+  mapa crescia **18px em vez de 728**, porque só a divisa (que não tinha
+  concorrente) tinha flutuado. "Cresceu um pouco" parece regra aplicada com
+  cálculo errado; era regra DESCARTADA, e a outra metade da tela mentiu por ela.
+  E o conserto tentador — tirar o `lg:static` do elemento — **troca o defeito de
+  lado**: sem ele o `fixed` da classe base passou a ganhar e a coluna virou tela
+  cheia em toda largura. Quem tem de mudar é a camada.
+- **`inset-0` põe `left: 0`, e `left` ganha de `right`.** Posicionar um painel
+  pela direita não é só escrever `right: 0`: com os dois lados definidos e a
+  largura fixa, o navegador resolve pelo `left` e o painel vai para o lado
+  errado. Toda regra que ancora à direita sobre uma classe base com `inset`
+  escreve `left: auto` junto — e o comentário fica, porque a linha parece
+  redundante para quem não viu o painel do lado errado do mapa (ALE-218).
 - **E TOKEN inventado tem o mesmo fim, com o script rodado.** `text-grimorio-ink`
   parece irmão de `text-grimorio-gold` e não é: `grimorio-ink` não está na
   paleta, o Tailwind não emite regra para o que não conhece, e o elemento fica

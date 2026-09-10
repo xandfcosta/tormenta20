@@ -194,8 +194,9 @@ func seedNotes(v View) string {
 	}
 	return fmt.Sprintf(
 		"$notas = %s; $notassalvas = %s; $notasmodo = localStorage.getItem('%s') || 'duplo'; "+
-			"$notaslargura = Number(localStorage.getItem('%s')) || 0",
-		texto, texto, notesModeKey, notesWidthKey,
+			"$notaslargura = Number(localStorage.getItem('%s')) || 0; "+
+			"$notasflutua = localStorage.getItem('%s') === 'true'",
+		texto, texto, notesModeKey, notesWidthKey, notesFloatKey,
 	)
 }
 
@@ -213,6 +214,22 @@ func escolheOModo(valor string) string {
 // quanto de mapa quer ver ao lado das notas, e não deve reescolher a cada
 // sessão. Chave própria porque é outra escolha que a do arranjo.
 const notesWidthKey = "t20:notas-largura"
+
+// ONDE a coluna vive (ALE-218): encostada, empurrando o mapa, ou flutuando
+// por cima dele. Chave própria, e ela GRUDA como as outras duas escolhas.
+const notesFloatKey = "t20:notas-flutua"
+
+// alternaOFlutuar é o segundo eixo da faixa, e ele é o ÚNICO que merece um
+// controle separado.
+//
+// "Escrever / Ler / Lado a lado / Empilhado" é O QUE se mostra e como as duas
+// metades se arranjam — um eixo com quatro valores. "Encostada ou flutuando" é
+// ONDE o painel inteiro vive, e isso vale para os quatro. Juntar os dois numa
+// fileira daria oito botões para descrever duas perguntas.
+func alternaOFlutuar() string {
+	return fmt.Sprintf(
+		"$notasflutua = !$notasflutua; localStorage.setItem('%s', $notasflutua)", notesFloatKey)
+}
 
 // O PISO é o do `clamp` que a coluna tinha fixo: abaixo de 22rem o "lado a lado"
 // não cabe e a coluna vira uma tira inútil.

@@ -1939,3 +1939,54 @@ html {
     }
   }
 }
+
+/* AS NOTAS FLUTUANDO (ALE-218), e esta regra mora na camada dos UTILITÁRIOS por
+ * uma razão MEDIDA: **camada ganha de especificidade**.
+ *
+ * A coluna traz `lg:static` do Tailwind. Escrita em `components`, a regra que a
+ * faz flutuar tem dois seletores contra um e perde do mesmo jeito — utilitário
+ * mora numa camada acima. O sintoma foi cruel porque a tela ficava QUASE certa:
+ * a divisa flutuava (ela não tem utilitário de posição) e a coluna não, então o
+ * mapa crescia 18px em vez de 728, e o guarda que só cobrava "cresceu" passou.
+ *
+ * Tirar o `lg:static` do elemento troca o defeito de lado: sem ele o `fixed` da
+ * classe base passa a ganhar, e a coluna vira tela cheia em TODA largura.
+ *
+ * Aqui dentro os dois competem por especificidade, e o mais específico vence —
+ * que é o que se espera de CSS.
+ *
+ * Só a partir de `lg`: abaixo disso a coluna já é uma gaveta de tela cheia, e
+ * não há mapa ao lado para cobrir.
+ *
+ * O cabeçalho do `notes.templ` registra que a COLUNA QUE EMPURRA é o desenho
+ * certo para o gesto de narrar olhando o tabuleiro, e ela continua sendo o
+ * PADRÃO. Isto é a escolha de quem quer o mapa inteiro com a nota sobre um canto
+ * dele — sem escurecer o fundo e sem tornar o mapa inerte, porque o ponto é
+ * continuar VENDO. */
+@layer utilities {
+  @media (min-width: 64rem) {
+    .notas-flutuam .notas-coluna {
+      position: absolute;
+      inset-block: 0;
+      /* `left: auto` NÃO é redundante: a classe base traz `inset-0` do
+       * Tailwind, que põe `left: 0` junto. Com os dois lados definidos e uma
+       * largura fixa, o navegador resolve pelo LEFT — e o painel foi parar do
+       * lado ERRADO do mapa, com o guarda passando porque ele só media a
+       * largura do tabuleiro. */
+      left: auto;
+      right: 0;
+      z-index: 30;
+    }
+
+    /* A divisa acompanha a borda ESQUERDA do painel, senão ela ficaria no fim do
+     * mapa e a largura passaria a ser ajustada por um alvo que não encosta no
+     * que ele ajusta. */
+    .notas-flutuam .notas-divisa {
+      position: absolute;
+      inset-block: 0;
+      right: var(--notas-largura, clamp(22rem, 40%, 44rem));
+      z-index: 31;
+      margin-inline: 0;
+    }
+  }
+}

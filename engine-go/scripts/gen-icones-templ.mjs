@@ -69,6 +69,8 @@ const QUERIDOS = [
   // aprendeu um lado reconhecer o outro.
   'NotebookPen',
   'PanelLeftOpen',
+  // O alternador de ONDE as notas vivem (ALE-218): encostadas ou flutuando.
+  'PictureInPicture2',
   'X',
   'Settings2',
   'Hourglass',
