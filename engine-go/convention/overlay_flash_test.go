@@ -79,7 +79,7 @@ func TestNoDataShowNodeIsBornVisible(t *testing.T) {
 				continue
 			}
 			// A CLASSE é opcional, e isto foi um furo: a primeira versão exigia
-			// `class=` para julgar qualquer nó, então um `<span data-show="$som">`
+			// `class=` para julgar qualquer nó, então um `<span data-show="$sound">`
 			// sem classe nenhuma — que pisca igual — passava por baixo do guarda.
 			// Só a regra da SOBREPOSIÇÃO precisa da classe; a do sinal puro não.
 			var tokens []string

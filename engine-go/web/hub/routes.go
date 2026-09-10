@@ -53,19 +53,19 @@ func (s Scene) handleHubInvite(w http.ResponseWriter, r *http.Request) {
 	if !s.deps.CurrentViewer(r).IsAdmin {
 		// A tela não oferece o botão para quem não é admin, mas a trava é aqui:
 		// a UI decide o que MOSTRAR, o servidor decide o que ACONTECE.
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": "Só quem administra pode convidar."})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Só quem administra pode convidar."})
 		return
 	}
 	invite, err := s.deps.MintAccountInvite(r.Context(), s.deps.CurrentViewer(r).ID)
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": internalNotice})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `ui.MintedInvite`.
 	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+invite.Token,
 		"Cada convite serve para UMA conta. Gere outro para o próximo jogador."))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": internalNotice})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return
 	}
 	_ = sse.PatchElements(fragmento)

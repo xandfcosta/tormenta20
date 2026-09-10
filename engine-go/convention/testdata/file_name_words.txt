@@ -63,6 +63,7 @@ button
 cache
 campaign
 campaigns
+case
 cast
 catalog
 catalogs
@@ -106,6 +107,7 @@ data
 datastar
 db
 dead
+debt
 default
 defense
 defs
@@ -217,6 +219,7 @@ join
 js
 json
 juice
+key
 keyboard
 kit
 label
@@ -353,6 +356,7 @@ shape
 sheet
 sheetui
 sheetv2
+signal
 signals
 snapshot
 solid

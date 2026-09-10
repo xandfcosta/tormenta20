@@ -19,7 +19,7 @@ import "strconv"
 //
 // A caixa mora na CASCA e é desenhada UMA vez por página. Ela não é remendada —
 // só o `#buscador-achados` de dentro é —, e essa divisão importa: o
-// `data-bind:buscador` do campo vive fora do que o servidor troca, então o que
+// `data-bind:finder` do campo vive fora do que o servidor troca, então o que
 // a pessoa está digitando nunca é redeclarado por baixo dela.
 templ Dialog() {
 	<dialog
@@ -43,7 +43,7 @@ templ Dialog() {
 			<input
 				id="buscador-campo"
 				type="text"
-				data-bind:buscador
+				data-bind:finder
 				data-on:input__debounce.200ms={ "@get('" + finderRoute + "')" }
 				autocomplete="off"
 				placeholder="Buscar no livro"

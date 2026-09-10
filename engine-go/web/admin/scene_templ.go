@@ -71,7 +71,7 @@ func adminScene(v adminView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"text-sm text-destructive-ink\" data-show=\"$erro != ''\" data-text=\"$erro\"></p></main>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"text-sm text-destructive-ink\" data-show=\"$error != ''\" data-text=\"$error\"></p></main>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -205,7 +205,7 @@ func playersPanel(v adminView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" data-on:click=\"$alvoId = el.dataset.id; $alvoNome = el.dataset.nome; $copiado = ''; document.getElementById('reset-link').innerHTML = ''; $redefinir.showModal()\" aria-label=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" data-on:click=\"$target_id = el.dataset.id; $target_name = el.dataset.nome; $copied = ''; document.getElementById('reset-link').innerHTML = ''; $reset_dialog.showModal()\" aria-label=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -270,7 +270,7 @@ func playersPanel(v adminView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" data-on:click=\"$alvoId = el.dataset.id; $alvoNome = el.dataset.nome; $alvoCusto = el.dataset.custo; $confirmar.showModal()\" aria-label=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" data-on:click=\"$target_id = el.dataset.id; $target_name = el.dataset.nome; $target_cost = el.dataset.custo; $confirm_dialog.showModal()\" aria-label=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -357,7 +357,7 @@ func invitesPanel(v adminView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, ")</h2><button type=\"button\" data-on:click=\"$copiado = ''; document.getElementById('convite-link').innerHTML = ''; $convidar.showModal()\" class=\"inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, ")</h2><button type=\"button\" data-on:click=\"$copied = ''; document.getElementById('convite-link').innerHTML = ''; $invite_dialog.showModal()\" class=\"inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -419,7 +419,7 @@ func invitesPanel(v adminView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" data-on:click=\"navigator.clipboard.writeText(location.origin + el.dataset.url); $copiado = el.dataset.url\" aria-label=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" data-on:click=\"navigator.clipboard.writeText(location.origin + el.dataset.url); $copied = el.dataset.url\" aria-label=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -437,7 +437,7 @@ func invitesPanel(v adminView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</ul>   <p class=\"mt-2 text-xs text-hp-full\" aria-live=\"polite\" data-show=\"$copiado != ''\">Link copiado.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</ul>   <p class=\"mt-2 text-xs text-hp-full\" aria-live=\"polite\" data-show=\"$copied != ''\">Link copiado.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -558,7 +558,7 @@ func serverPanel(v adminView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</p><button type=\"button\" data-indicator:salvando data-attr:disabled=\"$salvando\" data-on:click=\"@post('/admin/backup')\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50\">Fazer backup</button></div></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</p><button type=\"button\" data-indicator:saving data-attr:disabled=\"$saving\" data-on:click=\"@post('/admin/backup')\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50\">Fazer backup</button></div></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -605,7 +605,7 @@ func confirmDialog() templ.Component {
 			templ_7745c5c3_Var32 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<dialog id=\"confirmar\" data-ref=\"confirmar\" aria-labelledby=\"confirmar-titulo\" aria-describedby=\"confirmar-custo\" class=\"m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"confirmar-titulo\" class=\"font-heading text-base\">Apagar a conta de <span data-text=\"$alvoNome\"></span>?</h2><p id=\"confirmar-custo\" class=\"mt-2 text-sm text-muted-foreground\" data-text=\"$alvoCusto\"></p><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Cancelar</button></form><button type=\"button\" data-on:click=\"@post('/admin/usuarios/' + $alvoId + '/apagar'); $confirmar.close()\" class=\"bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Apagar conta</button></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<dialog id=\"confirmar\" data-ref=\"confirm_dialog\" aria-labelledby=\"confirmar-titulo\" aria-describedby=\"confirmar-custo\" class=\"m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"confirmar-titulo\" class=\"font-heading text-base\">Apagar a conta de <span data-text=\"$target_name\"></span>?</h2><p id=\"confirmar-custo\" class=\"mt-2 text-sm text-muted-foreground\" data-text=\"$target_cost\"></p><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Cancelar</button></form><button type=\"button\" data-on:click=\"@post('/admin/usuarios/' + $target_id + '/apagar'); $confirm_dialog.close()\" class=\"bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Apagar conta</button></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -643,7 +643,7 @@ func resetDialog() templ.Component {
 			templ_7745c5c3_Var33 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<dialog id=\"redefinir\" data-ref=\"redefinir\" aria-labelledby=\"redefinir-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"redefinir-titulo\" class=\"flex items-center gap-2 font-heading text-base\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<dialog id=\"redefinir\" data-ref=\"reset_dialog\" aria-labelledby=\"redefinir-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"redefinir-titulo\" class=\"flex items-center gap-2 font-heading text-base\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -651,7 +651,7 @@ func resetDialog() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "Redefinir senha</h2><p class=\"mt-2 text-sm text-muted-foreground\">Envie o link para <span data-text=\"$alvoNome\"></span>. Vale uma vez só, expira em 24 horas, e quem recebe escolhe a própria senha — você não digita senha nenhuma.</p><div id=\"reset-link\" class=\"mt-3\"></div><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Fechar</button></form><button type=\"button\" data-indicator:gerando data-attr:disabled=\"$gerando\" data-on:click=\"@post('/admin/usuarios/' + $alvoId + '/redefinir')\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50\">Gerar link</button></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "Redefinir senha</h2><p class=\"mt-2 text-sm text-muted-foreground\">Envie o link para <span data-text=\"$target_name\"></span>. Vale uma vez só, expira em 24 horas, e quem recebe escolhe a própria senha — você não digita senha nenhuma.</p><div id=\"reset-link\" class=\"mt-3\"></div><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Fechar</button></form><button type=\"button\" data-indicator:generating data-attr:disabled=\"$generating\" data-on:click=\"@post('/admin/usuarios/' + $target_id + '/redefinir')\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50\">Gerar link</button></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -723,7 +723,7 @@ func mintedReset(caminho string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" data-init=\"el.value = location.origin + el.dataset.caminho\" class=\"h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 font-mono text-xs outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"> <button type=\"button\" data-on:click=\"navigator.clipboard.writeText(document.getElementById('reset-url').value); $copiado = true\" class=\"shrink-0 border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Copiar</button></div><p class=\"text-xs text-hp-full\" aria-live=\"polite\" style=\"display:none\" data-show=\"$copiado\">Link copiado.</p><p class=\"text-xs text-muted-foreground\">Enquanto o link não for usado, a senha atual continua valendo.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" data-init=\"el.value = location.origin + el.dataset.caminho\" class=\"h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 font-mono text-xs outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"> <button type=\"button\" data-on:click=\"navigator.clipboard.writeText(document.getElementById('reset-url').value); $copied = true\" class=\"shrink-0 border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Copiar</button></div><p class=\"text-xs text-hp-full\" aria-live=\"polite\" style=\"display:none\" data-show=\"$copied\">Link copiado.</p><p class=\"text-xs text-muted-foreground\">Enquanto o link não for usado, a senha atual continua valendo.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

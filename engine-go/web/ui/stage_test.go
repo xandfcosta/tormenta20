@@ -38,7 +38,7 @@ func TestNoNeighborIsInventedOutsideTheRail(t *testing.T) {
 // O GESTO É IDEMPOTENTE, e este guarda nasceu de um defeito medido no navegador.
 //
 // Um clique num quadro do filme dispara `focusin` E `click`, os dois com o mesmo
-// gesto. Sem a guarda `if ($indice != N)`, a primeira passagem calcula o sentido
+// gesto. Sem a guarda `if ($last_index != N)`, a primeira passagem calcula o sentido
 // certo e escreve o índice; a SEGUNDA recalcula com o índice já atualizado —
 // `N >= N` é sempre verdade — e o palco entra "adiante" mesmo andando para trás.
 //
@@ -51,13 +51,13 @@ func TestTheCursorGestureDoesNotRecomputeTheDirectionTwice(t *testing.T) {
 	// um nada. Sem `if`, rodar duas vezes é o defeito.
 	gesto := CursorGesture(3, 16)
 
-	if !strings.HasPrefix(gesto, "if ($indice != 3)") {
+	if !strings.HasPrefix(gesto, "if ($last_index != 3)") {
 		t.Fatalf("o gesto não é idempotente: %q — o focusin e o click seguidos apagariam o sentido", gesto)
 	}
 	// E a ordem importa: o sentido é calculado ANTES de o índice ser escrito,
 	// senão ele compara o índice novo consigo mesmo.
-	sentido := strings.Index(gesto, "$sentido =")
-	escrita := strings.Index(gesto, "$indice = ")
+	sentido := strings.Index(gesto, "$direction =")
+	escrita := strings.Index(gesto, "$last_index = ")
 	if sentido < 0 || escrita < 0 || sentido > escrita {
 		t.Errorf("o índice é escrito antes de o sentido ser calculado: %q", gesto)
 	}
@@ -67,12 +67,12 @@ func TestTheCursorGestureDoesNotRecomputeTheDirectionTwice(t *testing.T) {
 // eles são declarados num lugar e escritos noutro.
 //
 // Uma cena que declarasse só `cursor` não daria erro nenhum: o gesto escreveria
-// em `$sentido` e `$indice` recém-inventados, e o primeiro passo do cursor
+// em `$direction` e `$last_index` recém-inventados, e o primeiro passo do cursor
 // entraria pelo lado errado — `undefined >= undefined` é `false`, então o palco
 // escolheria "atrás" e ninguém leria isso como defeito.
 func TestTheStageSignalsCoverEveryOneTheGestureWrites(t *testing.T) {
 	declarados := StageSignals(41)
-	for _, sinal := range []string{"cursor", "sentido", "indice"} {
+	for _, sinal := range []string{"cursor", "direction", "last_index"} {
 		if !strings.Contains(declarados, sinal+":") {
 			t.Errorf("a cena não declara $%s, que o gesto escreve: %q", sinal, declarados)
 		}

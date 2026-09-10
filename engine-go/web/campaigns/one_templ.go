@@ -1689,7 +1689,7 @@ func rulesPanel(v oneView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "<p class=\"text-sm text-destructive-ink\" data-show=\"$erroDaRegra != ''\" data-text=\"$erroDaRegra\"></p></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "<p class=\"text-sm text-destructive-ink\" data-show=\"$rule_error != ''\" data-text=\"$rule_error\"></p></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1755,7 +1755,7 @@ func ruleSwitch(v oneView, regra optionalRule) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 107, "\" data-indicator:salvando data-attr:disabled=\"$salvando\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 107, "\" data-indicator:saving data-attr:disabled=\"$saving\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1873,7 +1873,7 @@ func dangerZone(v oneView) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = ui.Button(ui.VariantDestructive, ui.SizeSmall, "shrink-0", templ.Attributes{
-			"type": "button", "data-on:click": "$excluir.showModal()",
+			"type": "button", "data-on:click": "$delete_dialog.showModal()",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var78), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1911,7 +1911,7 @@ func deleteDialog(v oneView) templ.Component {
 			templ_7745c5c3_Var79 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<dialog id=\"excluir\" data-ref=\"excluir\" aria-labelledby=\"excluir-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60\"><h2 id=\"excluir-titulo\" class=\"font-heading text-base\">Excluir \"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<dialog id=\"excluir\" data-ref=\"delete_dialog\" aria-labelledby=\"excluir-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60\"><h2 id=\"excluir-titulo\" class=\"font-heading text-base\">Excluir \"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

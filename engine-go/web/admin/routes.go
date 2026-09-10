@@ -36,7 +36,7 @@ func (s Scene) handleAdmin(w http.ResponseWriter, r *http.Request) {
 		// Sem `Init`: esta tela não abre stream nenhum. Os sinais existem só
 		// para o diálogo e para os avisos — estado de INTERAÇÃO, não da
 		// aplicação.
-		Sinais: "{alvoId: 0, alvoNome: '', alvoCusto: '', copiado: '', erro: ''}",
+		Sinais: "{target_id: 0, target_name: '', target_cost: '', copied: '', error: ''}",
 	}, adminScene(view))
 }
 
@@ -59,7 +59,7 @@ func (s Scene) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 	// esta tela precisou dela. O piloto não ganha uma segunda versão de "não se
 	// apaga a própria conta"; se ganhasse, mediria a cópia.
 	if err := s.deps.DeleteAccount(r, id, s.deps.CurrentUserID(r)); err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": err.Error()})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": err.Error()})
 		return
 	}
 	s.patchPanels(sse, r, playersPanel, serverPanel)
@@ -69,7 +69,7 @@ func (s Scene) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 func (s Scene) handleBackup(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
 	if err := s.deps.BackupNow(r.Context(), time.Now()); err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": "Não consegui fazer o backup: " + err.Error()})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Não consegui fazer o backup: " + err.Error()})
 		return
 	}
 	s.patchPanels(sse, r, serverPanel)
@@ -90,7 +90,7 @@ type adminPanel func(adminView) templ.Component
 func (s Scene) patchPanels(sse *datastar.ServerSentEventGenerator, r *http.Request, paineis ...adminPanel) {
 	view, err := s.loadAdmin(r.Context(), s.deps.CurrentUserID(r))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": "Não consegui reler a tela."})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Não consegui reler a tela."})
 		return
 	}
 	for _, painel := range paineis {
@@ -102,7 +102,7 @@ func (s Scene) patchPanels(sse *datastar.ServerSentEventGenerator, r *http.Reque
 	}
 	// Limpa o aviso anterior: sem isto, um erro de uma ação passada fica na
 	// tela depois de a seguinte dar certo.
-	_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ""})
+	_ = sse.MarshalAndPatchSignals(map[string]string{"error": ""})
 }
 
 // handleMintReset cunha o link de redefinição e devolve o remendo
@@ -123,17 +123,17 @@ func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
 	reset, err := s.deps.MintPasswordReset(r.Context(), id, s.deps.CurrentUserID(r))
 	if s.deps.IsUnknownUser(err) {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": "Essa conta não existe mais."})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Essa conta não existe mais."})
 		return
 	}
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `mintedReset`.
 	fragmento, err := ui.RenderFragment(r.Context(), mintedReset("/redefinir-senha?token="+url.QueryEscape(reset.Token)))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
 	_ = sse.PatchElements(fragmento)
@@ -150,13 +150,13 @@ func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
 	invite, err := s.deps.MintAccountInvite(r.Context(), s.deps.CurrentUserID(r))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
 	fragmento, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+url.QueryEscape(invite.Token),
 		"Cada convite serve para UMA conta. Gere outro para o próximo jogador."))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erro": ui.NoticeInternal})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
 	_ = sse.PatchElements(fragmento)

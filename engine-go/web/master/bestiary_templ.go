@@ -455,7 +455,7 @@ func CreatureDialog(m book.Entry, livro bookui.BookAddress) templ.Component {
 			templ_7745c5c3_Var15 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<div class=\"mesa-ficha-em-dialogo fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4\" data-show=\"$fichaAberta\" style=\"display:none\" data-on:click=\"evt.target === el && ($fichaAberta = false)\" data-on:keydown__window=\"evt.key === 'Escape' && ($fichaAberta = false)\"><div role=\"dialog\" aria-modal=\"true\" data-attr:data-expanded=\"$fichaAberta\" aria-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<div class=\"mesa-ficha-em-dialogo fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4\" data-show=\"$sheet_open\" style=\"display:none\" data-on:click=\"evt.target === el && ($sheet_open = false)\" data-on:keydown__window=\"evt.key === 'Escape' && ($sheet_open = false)\"><div role=\"dialog\" aria-modal=\"true\" data-attr:data-expanded=\"$sheet_open\" aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -481,7 +481,7 @@ func CreatureDialog(m book.Entry, livro bookui.BookAddress) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" data-on:click=\"$fichaAberta = false\" class=\"absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" data-on:click=\"$sheet_open = false\" class=\"absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -550,7 +550,7 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, " data-bind:busca data-on:input__debounce.250ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, " data-bind:search data-on:input__debounce.250ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -928,7 +928,7 @@ func EntryList(v BestiaryView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var37 string
-				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("evt.preventDefault(); $criatura = %q; @get('%s')", m.ID, openTheEntry(v.BestiaryBase())))
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, openTheEntry(v.BestiaryBase())))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/master/bestiary.templ`, Line: 466, Col: 123}
 				}
@@ -941,7 +941,7 @@ func EntryList(v BestiaryView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var38 string
-				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("el.matches(':focus-visible') && ($criatura = %q, @get('%s'))", m.ID, v.BestiaryBase()))
+				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("el.matches(':focus-visible') && ($creature = %q, @get('%s'))", m.ID, v.BestiaryBase()))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/master/bestiary.templ`, Line: 467, Col: 145}
 				}

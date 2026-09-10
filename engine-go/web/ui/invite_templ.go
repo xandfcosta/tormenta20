@@ -91,12 +91,12 @@ func MintedInvite(caminho, nota string) templ.Component {
 		})
 		templ_7745c5c3_Err = Button(VariantSecondary, SizeDefault, "shrink-0", templ.Attributes{
 			"type":          "button",
-			"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copiado = true",
+			"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copied = true",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><p class=\"text-xs text-hp-full\" aria-live=\"polite\" style=\"display:none\" data-show=\"$copiado\">Link copiado.</p><p class=\"text-xs text-muted-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><p class=\"text-xs text-hp-full\" aria-live=\"polite\" style=\"display:none\" data-show=\"$copied\">Link copiado.</p><p class=\"text-xs text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -152,7 +152,7 @@ func InviteDialog(rota string) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<dialog id=\"convidar\" data-ref=\"convidar\" aria-labelledby=\"convidar-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"convidar-titulo\" class=\"flex items-center gap-2 font-heading text-base\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<dialog id=\"convidar\" data-ref=\"invite_dialog\" aria-labelledby=\"convidar-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"convidar-titulo\" class=\"flex items-center gap-2 font-heading text-base\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -210,7 +210,7 @@ func InviteDialog(rota string) templ.Component {
 		})
 		templ_7745c5c3_Err = Button(VariantPrimary, SizeDefault, "", templ.Attributes{
 			"type": "button", "data-on:click": "@post('" + rota + "')",
-			"data-indicator:gerando": true, "data-attr:disabled": "$gerando",
+			"data-indicator:generating": true, "data-attr:disabled": "$generating",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

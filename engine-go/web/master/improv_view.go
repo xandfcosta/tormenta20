@@ -216,6 +216,6 @@ func improvSignals(v improvView) string {
 		b, _ := json.Marshal(s)
 		return string(b)
 	}
-	return fmt.Sprintf(`{ruina: %s, perseguicao: %s, recompensa: %s, ideias: %s, salas: %d}`,
+	return fmt.Sprintf(`{ruina: %s, perseguicao: %s, recompensa: %s, ideias: %s, rooms: %d}`,
 		j(v.Ruina), j(v.Perseguicao), j(v.Recompensa), j(v.Ideias), v.Salas)
 }

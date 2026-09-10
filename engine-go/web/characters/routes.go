@@ -51,7 +51,7 @@ func (s Scene) handleCharacters(w http.ResponseWriter, r *http.Request) {
 func termFromRequest(r *http.Request) string {
 	busca := r.URL.Query().Get("busca")
 	sinais := struct {
-		Busca string `json:"busca"`
+		Busca string `json:"search"`
 	}{}
 	if err := datastar.ReadSignals(r, &sinais); err == nil && sinais.Busca != "" {
 		busca = sinais.Busca

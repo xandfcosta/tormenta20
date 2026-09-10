@@ -175,21 +175,21 @@ func TestTheSheetInTheSessionHasAWayToKnowItChanged(t *testing.T) {
 	// forma crua aqui daria um guarda que reprova o código certo.
 	scene := html.UnescapeString(f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String())
 
-	if !strings.Contains(scene, "fichaversao: ''") {
-		t.Error("o sinal `fichaversao` não foi declarado: o remendo do servidor não teria onde pousar")
+	if !strings.Contains(scene, "sheet_version: ''") {
+		t.Error("o sinal `sheet_version` não foi declarado: o remendo do servidor não teria onde pousar")
 	}
 	if !strings.Contains(scene, `data-on-signal-patch=`) {
 		t.Fatal("a cena não tem o ouvinte que repede a ficha")
 	}
-	if !strings.Contains(scene, `data-on-signal-patch-filter="{include: /^fichaversao$/}"`) {
+	if !strings.Contains(scene, `data-on-signal-patch-filter="{include: /^sheet_version$/}"`) {
 		t.Error("o ouvinte está sem filtro: ele dispararia em QUALQUER remendo de sinal")
 	}
 	// A ABA viaja num sinal porque o servidor não a conhece daqui. Sem esta
 	// escrita, o repedido devolveria a ficha na aba padrão.
-	if !strings.Contains(scene, "$fichatab = ") {
+	if !strings.Contains(scene, "$sheet_tab = ") {
 		t.Error("as abas da ficha embutida não guardam a seção aberta")
 	}
-	if !strings.Contains(scene, "' + $fichatab + '") {
+	if !strings.Contains(scene, "' + $sheet_tab + '") {
 		t.Error("o repedido não lê a seção do sinal: ele devolveria a aba padrão")
 	}
 }

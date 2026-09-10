@@ -63,8 +63,8 @@ templ charactersBody(v View) {
 templ charactersBar(v View) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
-		data-signals={ fmt.Sprintf("{busca: %q, dossie: false, %s}", v.Busca, ui.StageSignals(v.CursorID)) }
-		data-on:keydown__window="(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossie = !$dossie)"
+		data-signals={ fmt.Sprintf("{search: %q, dossier: false, %s}", v.Busca, ui.StageSignals(v.CursorID)) }
+		data-on:keydown__window="(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossier = !$dossier)"
 	>
 		<a
 			href="/"
@@ -79,7 +79,7 @@ templ charactersBar(v View) {
 					type="search"
 					name="busca"
 					data-busca
-					data-bind:busca
+					data-bind:search
 					data-on:input__debounce.250ms="@get('/personagens')"
 					value={ v.Busca }
 					placeholder="Buscar personagem"
@@ -140,8 +140,8 @@ templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 			</a>
 			// O dossiê é do CLIENTE: ele já está desenhado, e abrir é revelar.
 			@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{
-				"type": "button", "data-on:click": "$dossie = !$dossie",
-				"data-attr:aria-pressed": "$dossie",
+				"type": "button", "data-on:click": "$dossier = !$dossier",
+				"data-attr:aria-pressed": "$dossier",
 			}) {
 				Dossiê
 				@ui.Key("D")
@@ -277,7 +277,7 @@ templ createFrame(indice int) {
 // ── o dossiê ─────────────────────────────────────────────────────────────────
 
 // heroDossier é a gaveta de detalhe. Ela é desenhada para todos e revelada
-// pelo par cursor+`$dossie`: abrir não pede nada ao servidor.
+// pelo par cursor+`$dossier`: abrir não pede nada ao servidor.
 //
 // As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) — na
 // SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
@@ -294,7 +294,7 @@ templ heroDossier(h HeroCard) {
 	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
 	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<aside
-		data-show={ fmt.Sprintf("$dossie && $cursor == %d", h.ID) }
+		data-show={ fmt.Sprintf("$dossier && $cursor == %d", h.ID) }
 		style="display:none"
 		aria-label={ "Dossiê de " + h.Name }
 		class="fixed inset-y-0 right-0 z-20 w-full max-w-sm overflow-y-auto border-l border-grimorio-iron bg-grimorio-panel-raised p-5 shadow-2xl"
@@ -302,7 +302,7 @@ templ heroDossier(h HeroCard) {
 		<div class="flex items-start justify-between gap-3">
 			<h2 class="font-heading text-lg tracking-wide text-grimorio-gold">{ h.Name }</h2>
 			@ui.Button(ui.VariantSecondary, ui.SizeTiny, "", templ.Attributes{
-				"type": "button", "data-on:click": "$dossie = false", "aria-label": "Fechar o dossiê",
+				"type": "button", "data-on:click": "$dossier = false", "aria-label": "Fechar o dossiê",
 			}) {
 				✕
 			}
@@ -343,7 +343,7 @@ templ searchWithoutHero() {
 		<div class="max-w-md space-y-3 text-center">
 			<p class="text-sm text-muted-foreground">Nenhum herói combina com o que você buscou.</p>
 			@ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{
-				"type": "button", "data-on:click": "$busca = ''; @get('/personagens')",
+				"type": "button", "data-on:click": "$search = ''; @get('/personagens')",
 			}) {
 				Limpar a busca
 			}

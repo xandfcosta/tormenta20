@@ -100,11 +100,11 @@ func TestEveryGestureThatMovesTheCursorSaysTheDirection(t *testing.T) {
 		}
 
 		// Todo `$cursor =` tem de vir precedido da guarda que escreve o sentido.
-		// A expressão inteira é `if ($indice != N) { … } $cursor = ID`, então
+		// A expressão inteira é `if ($last_index != N) { … } $cursor = ID`, então
 		// basta olhar o que vem ANTES na mesma expressão.
 		for _, atributo := range regexp.MustCompile(`data-on:(?:click|focusin)="([^"]*\$cursor = \d+[^"]*)"`).FindAllStringSubmatch(screen, -1) {
 			gesto := atributo[1]
-			if !strings.Contains(gesto, "$sentido") || !strings.Contains(gesto, "$indice") {
+			if !strings.Contains(gesto, "$direction") || !strings.Contains(gesto, "$last_index") {
 				t.Errorf("%s: um gesto move o cursor sem dizer o sentido: %q — o palco entraria pelo lado errado, em silêncio", cena.nome, gesto)
 			}
 		}
@@ -148,7 +148,7 @@ func TestTheStageHasTheTwoPartsThatAnimate(t *testing.T) {
 func TestEverySelectionSceneDeclaresTheSignalsTheGestureWrites(t *testing.T) {
 	for _, cena := range stageScenes(t) {
 		screen := cena.screen(t)
-		for _, sinal := range []string{"cursor:", "sentido:", "indice:"} {
+		for _, sinal := range []string{"cursor:", "direction:", "last_index:"} {
 			if !strings.Contains(screen, sinal) {
 				t.Errorf("%s não declara %q, e o gesto escreve nele", cena.nome, sinal)
 			}

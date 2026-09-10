@@ -104,11 +104,11 @@ templ copyEncounterButton(v encountersView) {
 	<button
 		type="button"
 		data-url={ encounterAddress(v) }
-		data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copiado = true; setTimeout(() => $copiado = false, 2000)"
+		data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copied = true; setTimeout(() => $copied = false, 2000)"
 		class="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
-		<span data-show="!$copiado">Copiar link do encontro</span>
-		<span style="display:none" data-show="$copiado" class="text-grimorio-gold">Link copiado</span>
+		<span data-show="!$copied">Copiar link do encontro</span>
+		<span style="display:none" data-show="$copied" class="text-grimorio-gold">Link copiado</span>
 	</button>
 }
 
@@ -165,8 +165,8 @@ templ addPanel(v encountersView) {
 			@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 			<input
 				type="search"
-				name="buscaCriatura"
-				data-bind:buscaCriatura
+				name="creature_search"
+				data-bind:creature_search
 				data-on:input__debounce.250ms="@get('/mestre/encontros')"
 				value={ v.Term }
 				placeholder="Buscar criatura para acrescentar"

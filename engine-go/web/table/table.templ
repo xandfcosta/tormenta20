@@ -55,7 +55,7 @@ templ tableScene(v View) {
 			// mestre puxa alguém para o mapa — a ficha seria repedida por causa
 			// de um gesto que não tem nada a ver com ela.
 			<div
-				data-on-signal-patch-filter="{include: /^fichaversao$/}"
+				data-on-signal-patch-filter="{include: /^sheet_version$/}"
 				data-on-signal-patch={ sheetui.SheetRefetch(*v.MinhaFicha) }
 				class="hidden"
 			></div>
@@ -642,7 +642,7 @@ templ tableRegister(v View) {
 		>
 			Registrar
 		</button>
-		<p class="text-xs text-destructive-ink" data-show="$erro != ''" data-text="$erro"></p>
+		<p class="text-xs text-destructive-ink" data-show="$error != ''" data-text="$error"></p>
 	</section>
 }
 

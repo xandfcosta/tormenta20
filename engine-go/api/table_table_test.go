@@ -80,8 +80,8 @@ func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 	if !strings.Contains(corpo, "47") {
 		t.Errorf("a recusa não disse qual valor foi recusado:\n%s", corpo)
 	}
-	if !strings.Contains(corpo, `\"erro\"`) && !strings.Contains(corpo, `"erro"`) {
-		t.Errorf("a recusa não veio no sinal `erro`, então nada acende na tela:\n%s", corpo)
+	if !strings.Contains(corpo, `\"error\"`) && !strings.Contains(corpo, `"error"`) {
+		t.Errorf("a recusa não veio no sinal `error`, então nada acende na tela:\n%s", corpo)
 	}
 }
 
@@ -104,7 +104,7 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 
 	// O corpo é conferido, e não só o código: com a ordem trocada o servidor
 	// devolve 200 com um erro DENTRO do sinal, e "deu 200" não é resposta.
-	if resposta := f.posta(t, f.jogador, f.tableUrl()+"/iniciativa", `{"d20":14}`); !strings.Contains(resposta, `{"erro":""}`) {
+	if resposta := f.posta(t, f.jogador, f.tableUrl()+"/iniciativa", `{"d20":14}`); !strings.Contains(resposta, `{"error":""}`) {
 		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", resposta)
 	}
 

@@ -140,7 +140,7 @@ func BestiarySignals(v BestiaryView) string {
 	// mover: é o servidor redeclarar com o valor CERTO, e aí o conteúdo e o
 	// estado de aberto chegam no MESMO remendo — atômicos, sem janela em que um
 	// esteja aplicado e o outro não.
-	return fmt.Sprintf(`{busca: %s, ndMin: %s, ndMax: %s, tipos: %s, criatura: %s, fichaAberta: %t}`,
+	return fmt.Sprintf(`{search: %s, ndMin: %s, ndMax: %s, tipos: %s, creature: %s, sheet_open: %t}`,
 		busca, crInBox(v.CRMin), crInBox(v.CRMax), tipos, criatura, v.Open)
 }
 

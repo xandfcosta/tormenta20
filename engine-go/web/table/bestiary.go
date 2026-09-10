@@ -202,7 +202,7 @@ type envioDoVerbete struct {
 func envioDosSinais(r *http.Request) (envioDoVerbete, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Criatura   string `json:"criatura"`
+		Criatura   string `json:"creature"`
 		PV         int64  `json:"pvdoverbete"`
 		Iniciativa int    `json:"inidoverbete"`
 		Copias     int    `json:"copiasdoverbete"`

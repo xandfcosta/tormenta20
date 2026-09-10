@@ -13,7 +13,7 @@ import (
 //
 // # A BUSCA vai ao SERVIDOR, e é o padrão da casa
 //
-// `data-bind:busca` mais um `@get` com debounce, como a cena de campanhas. Ela
+// `data-bind:search` mais um `@get` com debounce, como a cena de campanhas. Ela
 // custa uma ida — 2ms, e a cena volta comprimida desde a ALE-273 — e ganha o
 // filtro sobrevivendo a qualquer outro gesto: o termo viaja como sinal em TODA
 // requisição da ficha, então mexer no PV com a busca escrita devolve a lista
@@ -74,7 +74,7 @@ templ expertiseTerm(v View) {
 		<input
 			type="search"
 			name="busca"
-			data-bind:busca
+			data-bind:search
 			data-on:input__debounce.250ms={ sheetGet(v) }
 			value={ v.Expertises.Search }
 			placeholder="Buscar perícia"

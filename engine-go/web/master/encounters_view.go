@@ -237,7 +237,7 @@ func encounterSignals(v encountersView) string {
 	}
 	encontro, _ := json.Marshal(linhas)
 	busca, _ := json.Marshal(v.Term)
-	return fmt.Sprintf(`{nivel: %d, grupo: %d, encontro: %s, buscaCriatura: %s, copiado: false}`,
+	return fmt.Sprintf(`{nivel: %d, grupo: %d, encontro: %s, creature_search: %s, copied: false}`,
 		v.Nivel, v.Grupo, encontro, busca)
 }
 

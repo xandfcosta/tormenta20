@@ -124,11 +124,11 @@ func BestiaryCriteriaFromRequest(r *http.Request) BestiaryCriteria {
 	c.CRMin, c.CRMax = book.CRRange(q.Get("nd-min"), q.Get("nd-max"))
 
 	sinais := struct {
-		Term     *string   `json:"busca"`
+		Term     *string   `json:"search"`
 		Types    *[]string `json:"tipos"`
 		CRMin    *float64  `json:"ndMin"`
 		CRMax    *float64  `json:"ndMax"`
-		Criatura *string   `json:"criatura"`
+		Criatura *string   `json:"creature"`
 	}{}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return c

@@ -427,7 +427,7 @@ func sheetGet(v View) string {
 // Dois comandos separados por `;` e NUNCA num ternário: sequência dentro de
 // ternário é erro de sintaxe que o Datastar engole, e o gesto inteiro vira nada.
 func tabEmbeddedGet(v View, aba string) string {
-	return fmt.Sprintf("$fichatab = %q; @get('/personagens/%d?tab=%s&embutida=1')",
+	return fmt.Sprintf("$sheet_tab = %q; @get('/personagens/%d?tab=%s&embutida=1')",
 		aba, v.ID, aba)
 }
 
@@ -448,8 +448,8 @@ func SheetRefetch(v View) string {
 	// remendo da ficha: um sinal teria de ser reescrito por fora, e é
 	// exatamente o tipo de segunda escrita que sai de sincronia.
 	return fmt.Sprintf(
-		"$fichaversao !== document.getElementById('cena-ficha').dataset.versao && "+
-			"@get('/personagens/%d?tab=' + $fichatab + '&embutida=1')", v.ID)
+		"$sheet_version !== document.getElementById('cena-ficha').dataset.versao && "+
+			"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1')", v.ID)
 }
 
 // attributeCommand escreve o `@post` que repõe a perícia noutro atributo.

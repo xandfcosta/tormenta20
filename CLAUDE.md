@@ -370,7 +370,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **62 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **65 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -389,8 +389,10 @@ crachá escreve a própria geometria à mão, todo marcador de trilho diz o NOME
 não só as iniciais, nenhum componente com ouvinte de TECLA na janela é chamado
 de dentro de um laço, nenhum identificador NOVO nasce em português, nenhum gesto
 de uma peça do tabuleiro responde por outra, nenhum arquivo do repositório tem
-nome em português, todo estático pedido por `Asset(…)` existe na pasta. Cada um
-nasceu de um defeito que tinha irmãos.
+nome em português, todo estático pedido por `Asset(…)` existe na pasta, nenhuma
+chave de atributo do Datastar carrega caixa alta, nenhum sinal novo quebra o
+padrão de nome, todo sinal declarado por valor tem quem o leia. Cada um nasceu
+de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
@@ -480,13 +482,58 @@ vez:
 | nome do arquivo de spec (`board-drag.spec.ts`) | **inglês** | é nome de arquivo, e a lista acima já dizia isso |
 | a **descrição do teste** — o texto dentro de `test('…')` | **português** | é frase que uma pessoa lê no relatório, como qualquer texto de tela |
 | classe CSS (`.tabuleiro-peca`) | **inglês** | é identificador que o código escreve e casa |
-| sinal do Datastar (`$arrastando`) | **inglês** | é a FRONTEIRA, como campo JSON e evento SSE |
+| sinal do Datastar (`$creature_search`) | **inglês, `snake_case`** | é a FRONTEIRA, como campo JSON e evento SSE — e a forma tem razão própria, logo abaixo |
 
 O par do meio é o que confunde: **o arquivo e a descrição são coisas
 diferentes** e o mesmo spec leva as duas línguas — `board-drag.spec.ts` contendo
 `test('arrastar a peça propõe a parada')`. Eu já chamei essa descrição de "título
 de caso" e de "descrição do teste" na mesma conversa, que é o pecado do
 `GLOSSARY.md`: uma palavra por conceito. **Ela se chama descrição do teste.**
+
+### O padrão de nome de SINAL, e por que a forma não é gosto
+
+**`snake_case`, em inglês, com UMA grafia só em todos os canais** — a expressão
+(`$creature_search`), a chave de atributo (`data-bind:creature_search`), a tag
+JSON do servidor (`json:"creature_search"`) e a ilha de `.ts`. Prefixo por
+FAMÍLIA quando o sinal pertence a um grupo (`template_*`, `ruler_*`,
+`viewport_*`), para o `grep` achar a família inteira de uma vez.
+
+A forma foi MEDIDA no navegador, e cada alternativa morreu por um motivo
+diferente:
+
+- **camelCase quebra em silêncio.** Nome de atributo é minusculado pelo
+  analisador de HTML: `data-bind:buscaCriatura` chega como
+  `data-bind:buscacriatura` e o Datastar liga um sinal NOVO, deixando o declarado
+  intocado. O fio leva os DOIS e o servidor lê o errado. **Estava vivo** no
+  construtor de encontros (ALE-301), e funcionava por acidente: o `encoding/json`
+  do Go casa campo sem diferenciar caixa quando não há correspondência exata, e a
+  chave ligada vinha por último. Invertida a ordem das chaves, o mesmo código lê
+  `""` e a caixa de busca deixa de filtrar — sem erro em lugar nenhum.
+- **kebab-case vira outra coisa.** O Datastar transforma `-[a-z]` em maiúscula
+  por padrão (é o modificador `case`, e `camel` é o default), então
+  `data-bind:creature-search` liga um sinal em camelCase e a expressão teria de
+  lê-lo naquela outra grafia. São duas grafias para um conceito — exatamente a
+  raiz do defeito acima, com outra roupa.
+- **`_` atravessa intacto.** Não há caixa para perder, e o `-` é o único
+  caractere que a transformação toca. Medido: `data-bind:creature_search` chega
+  ao parser com o nome que o autor escreveu, e o fio leva uma chave só.
+
+**Nenhum teste podia pegar isso onde ele morava**: a minusculação acontece no
+parser do NAVEGADOR, então o HTML servido ainda tem a caixa que o autor escreveu
+e todo teste de Go vê o nome certo. A garantia desceu para a camada mais barata
+que a segura — o TEXTO do atributo, que é onde o autor erra —, e são dois
+guardas: o `TestNoDatastarAttributeKeyCarriesUppercase`, que varre a forma, e o
+`TestNoNewSignalBreaksTheNamingStandard`, que é CATRACA sobre os 147 sinais que
+existiam no dia. Ele não cobra tradução, e o cabeçalho dele diz isso com todas as
+letras: quem força a tradução é a linha de base encolher a cada superfície
+varrida.
+
+> **A regra já estava escrita treze vezes** — treze comentários em `web/table`,
+> `web/sheetui`, `web/finder` e `web/master`, cada um contando a mesma história
+> com um exemplo diferente — e nunca tinha sido varrida. O décimo quarto sítio
+> era o que tinha o defeito. É a tese da seção "Como uma convenção passa a
+> valer", acontecida no repositório que a escreve: **convenção escrita e não
+> varrida vale exatamente nos arquivos que alguém apontou.**
 
 Das três varreduras que essa decisão abriu, **a dos nomes de arquivo rodou
 inteira** (ALE-301): os 22 specs do `e2e/tests` na fatia 1 e mais **96 arquivos**

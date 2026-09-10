@@ -49,7 +49,7 @@ func (s Scene) RoutesNpc(r chi.Router) {
 // `nomedonpc` e liga um sinal NOVO, com o servidor lendo o antigo para sempre
 // vazio.
 type npcSignals struct {
-	Criatura string `json:"criatura"`
+	Criatura string `json:"creature"`
 	Nome     string `json:"nomedonpc"`
 }
 

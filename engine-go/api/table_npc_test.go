@@ -13,7 +13,7 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete",
-		`{"criatura":"ogro","nomedonpc":"Ogro Capitão"}`)
+		`{"creature":"ogro","nomedonpc":"Ogro Capitão"}`)
 
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 {
@@ -42,7 +42,7 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"criatura":"ogro","nomedonpc":"   "}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","nomedonpc":"   "}`)
 
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 || npcs[0].Name == "" {
@@ -63,7 +63,7 @@ func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
 	f := novoPiloto(t)
 	outraSessao := seedSession(t, f.s, f.campaignID)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 
 	// A view da OUTRA sessão da mesma campanha tem de enxergar o mesmo NPC.
 	view, _, err := f.s.tableScene.LoadView(t.Context(), f.mestre, f.campaignID, outraSessao)
@@ -111,7 +111,7 @@ func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 // perder o combatente EM CURSO ao arrumar a preparação, no meio da noite.
 func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 	f := novoPiloto(t)
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 {
 		t.Fatalf("o NPC não foi guardado")
@@ -133,7 +133,7 @@ func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/elenco/npc/do-verbete", `{"criatura":"ogro"}`)
+	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador guardou NPC no elenco do mestre: %d", rec.Code)

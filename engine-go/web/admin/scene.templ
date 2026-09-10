@@ -34,7 +34,7 @@ templ adminScene(v adminView) {
 		// aqui porque este é o lugar natural da ação, ao lado da LISTA que ela
 		// muda; a entrada do Hub continua valendo para quem já está lá.
 		@ui.InviteDialog("/admin/convites")
-		<p class="text-sm text-destructive-ink" data-show="$erro != ''" data-text="$erro"></p>
+		<p class="text-sm text-destructive-ink" data-show="$error != ''" data-text="$error"></p>
 	</main>
 }
 
@@ -63,7 +63,7 @@ templ playersPanel(v adminView) {
 						type="button"
 						data-id={ fmt.Sprint(j.ID) }
 						data-nome={ j.Name }
-						data-on:click="$alvoId = el.dataset.id; $alvoNome = el.dataset.nome; $copiado = ''; document.getElementById('reset-link').innerHTML = ''; $redefinir.showModal()"
+						data-on:click="$target_id = el.dataset.id; $target_name = el.dataset.nome; $copied = ''; document.getElementById('reset-link').innerHTML = ''; $reset_dialog.showModal()"
 						aria-label={ "Redefinir a senha de " + j.Name }
 						class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 					>
@@ -81,7 +81,7 @@ templ playersPanel(v adminView) {
 							data-id={ fmt.Sprint(j.ID) }
 							data-nome={ j.Name }
 							data-custo={ j.Cost }
-							data-on:click="$alvoId = el.dataset.id; $alvoNome = el.dataset.nome; $alvoCusto = el.dataset.custo; $confirmar.showModal()"
+							data-on:click="$target_id = el.dataset.id; $target_name = el.dataset.nome; $target_cost = el.dataset.custo; $confirm_dialog.showModal()"
 							aria-label={ "Apagar a conta de " + j.Name }
 							class="shrink-0 border border-destructive/60 bg-destructive px-2 py-1 text-xs font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 						>
@@ -102,7 +102,7 @@ templ invitesPanel(v adminView) {
 			</h2>
 			<button
 				type="button"
-				data-on:click="$copiado = ''; document.getElementById('convite-link').innerHTML = ''; $convidar.showModal()"
+				data-on:click="$copied = ''; document.getElementById('convite-link').innerHTML = ''; $invite_dialog.showModal()"
 				class="inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
 				@ui.Icon("UserPlus", "size-4")
@@ -129,7 +129,7 @@ templ invitesPanel(v adminView) {
 						<button
 							type="button"
 							data-url={ c.URL }
-							data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copiado = el.dataset.url"
+							data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copied = el.dataset.url"
 							aria-label={ "Copiar o " + c.Label }
 							class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 						>
@@ -141,7 +141,7 @@ templ invitesPanel(v adminView) {
 			// `aria-live` porque copiar não muda nada visível sozinho: sem isto,
 			// quem não vê a tela não recebe confirmação nenhuma de que o clique
 			// fez algo.
-			<p class="mt-2 text-xs text-hp-full" aria-live="polite" data-show="$copiado != ''">Link copiado.</p>
+			<p class="mt-2 text-xs text-hp-full" aria-live="polite" data-show="$copied != ''">Link copiado.</p>
 		}
 	</section>
 }
@@ -170,8 +170,8 @@ templ serverPanel(v adminView) {
 			// superfícies do piloto — a Mesa tinha um SSE aberto para isso.
 			<button
 				type="button"
-				data-indicator:salvando
-				data-attr:disabled="$salvando"
+				data-indicator:saving
+				data-attr:disabled="$saving"
 				data-on:click="@post('/admin/backup')"
 				class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 			>
@@ -202,15 +202,15 @@ templ serverPanel(v adminView) {
 templ confirmDialog() {
 	<dialog
 		id="confirmar"
-		data-ref="confirmar"
+		data-ref="confirm_dialog"
 		aria-labelledby="confirmar-titulo"
 		aria-describedby="confirmar-custo"
 		class="m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="confirmar-titulo" class="font-heading text-base">
-			Apagar a conta de <span data-text="$alvoNome"></span>?
+			Apagar a conta de <span data-text="$target_name"></span>?
 		</h2>
-		<p id="confirmar-custo" class="mt-2 text-sm text-muted-foreground" data-text="$alvoCusto"></p>
+		<p id="confirmar-custo" class="mt-2 text-sm text-muted-foreground" data-text="$target_cost"></p>
 		<div class="mt-4 flex justify-end gap-2">
 			// `method="dialog"` fecha sem JavaScript nenhum — e é o que faz o botão
 			// de cancelar continuar funcionando se a expressão do Datastar falhar.
@@ -224,7 +224,7 @@ templ confirmDialog() {
 			</form>
 			<button
 				type="button"
-				data-on:click="@post('/admin/usuarios/' + $alvoId + '/apagar'); $confirmar.close()"
+				data-on:click="@post('/admin/usuarios/' + $target_id + '/apagar'); $confirm_dialog.close()"
 				class="bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
 				Apagar conta
@@ -245,7 +245,7 @@ templ confirmDialog() {
 templ resetDialog() {
 	<dialog
 		id="redefinir"
-		data-ref="redefinir"
+		data-ref="reset_dialog"
 		aria-labelledby="redefinir-titulo"
 		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
 	>
@@ -254,7 +254,7 @@ templ resetDialog() {
 			Redefinir senha
 		</h2>
 		<p class="mt-2 text-sm text-muted-foreground">
-			Envie o link para <span data-text="$alvoNome"></span>. Vale uma vez só, expira em 24 horas, e quem recebe escolhe a própria senha — você não digita senha nenhuma.
+			Envie o link para <span data-text="$target_name"></span>. Vale uma vez só, expira em 24 horas, e quem recebe escolhe a própria senha — você não digita senha nenhuma.
 		</p>
 		<div id="reset-link" class="mt-3"></div>
 		<div class="mt-4 flex justify-end gap-2">
@@ -265,9 +265,9 @@ templ resetDialog() {
 			</form>
 			<button
 				type="button"
-				data-indicator:gerando
-				data-attr:disabled="$gerando"
-				data-on:click="@post('/admin/usuarios/' + $alvoId + '/redefinir')"
+				data-indicator:generating
+				data-attr:disabled="$generating"
+				data-on:click="@post('/admin/usuarios/' + $target_id + '/redefinir')"
 				class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 			>
 				Gerar link
@@ -299,13 +299,13 @@ templ mintedReset(caminho string) {
 			/>
 			<button
 				type="button"
-				data-on:click="navigator.clipboard.writeText(document.getElementById('reset-url').value); $copiado = true"
+				data-on:click="navigator.clipboard.writeText(document.getElementById('reset-url').value); $copied = true"
 				class="shrink-0 border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
 				Copiar
 			</button>
 		</div>
-		<p class="text-xs text-hp-full" aria-live="polite" style="display:none" data-show="$copiado">Link copiado.</p>
+		<p class="text-xs text-hp-full" aria-live="polite" style="display:none" data-show="$copied">Link copiado.</p>
 		<p class="text-xs text-muted-foreground">
 			Enquanto o link não for usado, a senha atual continua valendo.
 		</p>
