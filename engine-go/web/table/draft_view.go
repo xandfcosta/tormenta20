@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // O RASCUNHO DE LUGAR desenhado (ALE-292): a superfície do tabuleiro apontada
@@ -52,8 +52,8 @@ type draftView struct {
 // O papel é `gm` porque o rascunho é privativo por construção — quem não mestra
 // a campanha não chega até aqui (ver `draftGm`). Não é a redação do
 // `BoardForRole` sendo pulada: é que não há mesa para redigir nada PARA.
-func draftBoardOf(cena *tabuleiro.BoardState, campaignID, placeID int64) BoardView {
-	v := boardViewOf(cena, nil, nil, "", tabuleiro.Mover{Role: "gm"}, nil, campaignID, 0)
+func draftBoardOf(cena *board.BoardState, campaignID, placeID int64) BoardView {
+	v := boardViewOf(cena, nil, nil, "", board.Mover{Role: "gm"}, nil, campaignID, 0)
 	// O `boardViewOf` escreve o `Base` da MESA, que é o destino de 99% das
 	// chamadas dele. Aqui ele é reescrito, e o par é o que faz os gestos
 	// desta tela postarem no acervo em vez de numa sessão que não existe.

@@ -6,11 +6,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // OS MARCADORES na Mesa em Datastar (ALE-264, item 5) — o ponto apontado no
-// mapa, ver GLOSSARIO.md.
+// mapa, ver GLOSSARY.md.
 //
 // O tabuleiro já DESENHAVA marcadores desde o `33380d6`; o que não existia era
 // gesto para criar, revelar ou apagar um. As rotas JSON (`handleBoardMarker*`)
@@ -36,7 +36,7 @@ func (s Scene) MarkerRoutes(r chi.Router) {
 // A LETRA vem do motor (`NextMarkerLetter`) e não da tela: na SPA era o
 // cliente que escolhia "A", "B", "C" e mandava pronto, e duas telas escolhendo
 // letra por conta própria é como nasce o segundo "C" no mesmo mapa.
-func marcaOLugar(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func marcaOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 	casa, err := quadradoDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -45,10 +45,10 @@ func marcaOLugar(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	if b == nil {
 		return nil, errors.New("não há tabuleiro aberto para marcar")
 	}
-	return st.deps.Boards().AddMarker(c.R.Context(), c.SessionID, c.TabuleiroID, tabuleiro.BoardMarker{
+	return st.deps.Boards().AddMarker(c.R.Context(), c.SessionID, c.TabuleiroID, board.BoardMarker{
 		X: casa.X, Y: casa.Y,
-		Text:  tabuleiro.NextMarkerLetter(b.Markers),
-		Color: tabuleiro.DefaultMarkerColor(),
+		Text:  board.NextMarkerLetter(b.Markers),
+		Color: board.DefaultMarkerColor(),
 		// ESCONDIDO ao nascer, e é a razão de o marcador existir.
 		Hidden: true,
 	})
@@ -59,17 +59,17 @@ func marcaOLugar(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // ALTERNA e não "revela", apesar do nome do gesto: o mestre que revelou cedo
 // demais precisa poder esconder de volta, e um segundo botão para desfazer o
 // primeiro seria a mesma decisão em dois lugares.
-func revealMarker(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func revealMarker(st Scene, c commandCtx) (*board.BoardState, error) {
 	marcador, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
 	}
 	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID,
-		tabuleiro.MarkerReveal(!marcador.Hidden))
+		board.MarkerReveal(!marcador.Hidden))
 }
 
 // paintMarker troca a cor.
-func paintMarker(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func paintMarker(st Scene, c commandCtx) (*board.BoardState, error) {
 	marcador, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
@@ -78,15 +78,15 @@ func paintMarker(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	// A RECUSA é aqui e explícita, apesar de o `UpdateMarker` ignorar cor
 	// desconhecida: ignorar em silêncio é um clique que não faz nada e não diz
 	// nada, que o mestre lê como tela travada.
-	if !tabuleiro.KnownMarkerColor(cor) {
+	if !board.KnownMarkerColor(cor) {
 		return nil, fmt.Errorf("a cor %q não existe; as do mapa são %s", cor, coresEmPortugues())
 	}
 	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.TabuleiroID, marcador.ID,
-		tabuleiro.NewMarkerColor(cor))
+		board.NewMarkerColor(cor))
 }
 
 // eraseMarker tira o ponto do mapa.
-func eraseMarker(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func eraseMarker(st Scene, c commandCtx) (*board.BoardState, error) {
 	marcador, err := urlMarker(st, c)
 	if err != nil {
 		return nil, err
@@ -100,25 +100,25 @@ func eraseMarker(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // atual — revelar alterna, e alternar sem ler é escrever `true` por cima de
 // `true`. E achar aqui é o que faz um id inventado virar recusa com frase em vez
 // de mutação silenciosa que não acha ninguém.
-func urlMarker(st Scene, c commandCtx) (tabuleiro.BoardMarker, error) {
+func urlMarker(st Scene, c commandCtx) (board.BoardMarker, error) {
 	id := chi.URLParam(c.R, "id")
 	b := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {
-		return tabuleiro.BoardMarker{}, errors.New("não há tabuleiro aberto")
+		return board.BoardMarker{}, errors.New("não há tabuleiro aberto")
 	}
 	for _, m := range b.Markers {
 		if m.ID == id {
 			return m, nil
 		}
 	}
-	return tabuleiro.BoardMarker{}, fmt.Errorf("o marcador %q não está neste mapa", id)
+	return board.BoardMarker{}, fmt.Errorf("o marcador %q não está neste mapa", id)
 }
 
 // coresEmPortugues lista as cores para a frase da recusa — a mensagem tem de
 // dizer o que era esperado, não só o que veio errado.
 func coresEmPortugues() string {
 	nomes := ""
-	for i, c := range tabuleiro.MarkerColors {
+	for i, c := range board.MarkerColors {
 		if i > 0 {
 			nomes += ", "
 		}

@@ -1,4 +1,4 @@
-package tabuleiro
+package board
 
 import "t20engine/engine"
 

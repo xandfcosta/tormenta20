@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // Os guardas de VER COMO JOGADOR (ALE-193, superfície 7 da ALE-269).
@@ -23,9 +23,9 @@ import (
 // simplesmente não vê. Comparar os dois retratos cobre tudo o que a redação tira,
 // inclusive o que ela vier a tirar depois.
 func TestTheLensCountComesFromTheDifference(t *testing.T) {
-	doMestre := &tabuleiro.BoardState{
+	doMestre := &board.BoardState{
 		Curtained: true,
-		Tokens: []tabuleiro.BoardToken{
+		Tokens: []board.BoardToken{
 			{ID: "a", Label: "Taverneiro"}, {ID: "b", Label: "Ogro"},
 		},
 	}

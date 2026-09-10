@@ -16,7 +16,7 @@ e a regra tem um lugar só.
 ## Antes de mexer
 
 - **Não assuma.** Se a regra do livro ou a decisão de produto não estiver clara
-  no código, no `.md` do pacote ou no [GLOSSARIO.md](GLOSSARIO.md), **pergunte**.
+  no código, no `.md` do pacote ou no [GLOSSARY.md](GLOSSARY.md), **pergunte**.
   Adivinhar regra de T20 custa mais caro que esperar a resposta, e o erro sai na
   ficha de alguém.
 - **Regra do livro se confere no livro**, com a página citada. O offset entre PDF
@@ -33,7 +33,7 @@ e a regra tem um lugar só.
   em gesto de ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e &&
   npx playwright test` (~2 min, sobe o próprio servidor e o próprio banco).
 - **Releia a documentação que a sua mudança tocou** — o `.md` do pacote e o
-  `GLOSSARIO.md`. Não "atualize se mudou o comportamento": **releia**. Ver
+  `GLOSSARY.md`. Não "atualize se mudou o comportamento": **releia**. Ver
   "Documentação".
 
 ## Estilo de código
@@ -485,7 +485,7 @@ O par do meio é o que confunde: **o arquivo e a descrição são coisas
 diferentes** e o mesmo spec leva as duas línguas — `board-drag.spec.ts` contendo
 `test('arrastar a peça propõe a parada')`. Eu já chamei essa descrição de "título
 de caso" e de "descrição do teste" na mesma conversa, que é o pecado do
-`GLOSSARIO.md`: uma palavra por conceito. **Ela se chama descrição do teste.**
+`GLOSSARY.md`: uma palavra por conceito. **Ela se chama descrição do teste.**
 
 Das três varreduras que essa decisão abriu, **a dos specs rodou** (ALE-301):
 os 22 arquivos do `e2e/tests` saíram em inglês com as descrições intactas em
@@ -499,7 +499,7 @@ O conceito continua sendo o do livro — o que muda é a grafia do identificador
 oportunidade de trocar o conceito por um genérico. Termo sem tradução assentada
 (`tormenta`, `goblinoide`) fica como está; é nome próprio.
 
-- **[GLOSSARIO.md](GLOSSARIO.md) — uma palavra por conceito, e um conceito por
+- **[GLOSSARY.md](GLOSSARY.md) — uma palavra por conceito, e um conceito por
   palavra.** Leia antes de nomear qualquer coisa que o usuário vá ler ou que vá
   virar identificador. Ele tem a coluna dos termos PROIBIDOS, as colisões abertas
   que não se consertam por palpite, e a tradução de cada termo. Termo novo:

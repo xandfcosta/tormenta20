@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // A SETA do movimento proposto (ALE-203, item 4 da lista do dono).
@@ -248,7 +248,7 @@ func numeroDoFio(n float64) string {
 // sem passar por paradas (ver o `PendingMove`) —, e nesse caso a seta é a reta
 // entre o começo e o fim. Deduzir as dobras do `Path` não é possível: um trecho
 // legítimo já dobra sozinho, porque a diagonal vem primeiro.
-func moveFolds(p *tabuleiro.PendingMove) []engine.Square {
+func moveFolds(p *board.PendingMove) []engine.Square {
 	if len(p.Stops) >= 2 {
 		return p.Stops
 	}

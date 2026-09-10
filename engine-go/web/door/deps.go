@@ -13,7 +13,7 @@ import (
 
 // A PORTA da porta — e a piada não é de graça, é o aviso da colisão (ALE-278).
 //
-// `door` e `port` são a mesma palavra em português, e o GLOSSARIO registra a
+// `door` e `port` são a mesma palavra em português, e o GLOSSARY registra a
 // distinção porque ela vai confundir alguém: `door` é a CENA de entrar, `port` é
 // a interface que uma cena declara para o hospedeiro. Este arquivo é a `port` da
 // `door`.

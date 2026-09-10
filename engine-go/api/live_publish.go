@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"t20engine/aovivo"
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // CONTEXTO: O QUE A MESA AO VIVO PUBLICA — o quadro do tabuleiro, o estado da
@@ -48,7 +48,7 @@ const defaultTab = ""
 // Em GOROUTINE porque o mestre não espera o disco no meio do turno, e o custo
 // disso está medido: 139ms por toque num prato girante antes do
 // `synchronous=NORMAL` (ALE-273).
-func (tr tableRules) saveBoard(sessionID int64, board *tabuleiro.BoardState) {
+func (tr tableRules) saveBoard(sessionID int64, board *board.BoardState) {
 	if board == nil {
 		return
 	}
@@ -93,19 +93,19 @@ func (tr tableRules) saveSession(sessionID int64) {
 // a aba não precisa do quadro, mas o disco precisa de todas. Por isso o `return`
 // abaixo é do publicador e nunca do gravador — trocar as duas de lugar perderia
 // em silêncio a cena de quem não está na aba padrão, que é a ALE-154 outra vez.
-func (tr tableRules) publishBoardState(sessionID int64, board *tabuleiro.BoardState) {
-	if board != nil && board.ID != tr.boards.DefaultBoardID(context.Background(), sessionID) {
+func (tr tableRules) publishBoardState(sessionID int64, state *board.BoardState) {
+	if state != nil && state.ID != tr.boards.DefaultBoardID(context.Background(), sessionID) {
 		return
 	}
 	// O tabuleiro já numera as próprias mutações, então a ordem sai de graça —
 	// `Version` sobe a cada mutação aceita. Fechar o tabuleiro manda `nil` e cai
 	// no caminho "sem ordem", que reinicia o destino de propósito.
 	var ordem uint64
-	if board != nil {
-		ordem = uint64(board.Version)
+	if state != nil {
+		ordem = uint64(state.Version)
 	}
-	tr.sse.EmitOrdered(sessionID, "gm", "board-state", ordem, board)
-	tr.sse.EmitOrdered(sessionID, "player", "board-state", ordem, tabuleiro.BoardForRole("player", board))
+	tr.sse.EmitOrdered(sessionID, "gm", "board-state", ordem, state)
+	tr.sse.EmitOrdered(sessionID, "player", "board-state", ordem, board.BoardForRole("player", state))
 }
 
 // publishWhatIsLeft é o quadro DEPOIS de fechar uma aba (ALE-205).

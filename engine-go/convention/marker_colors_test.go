@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // O guarda da COR do marcador (ALE-264): a lista que o domínio aceita e o CSS
@@ -40,11 +40,11 @@ func TestEveryMarkerColorCanBePainted(t *testing.T) {
 	}
 	// E o CONTROLE da lista: uma lista vazia faria o laço abaixo não rodar
 	// nenhuma vez e o teste passaria afirmando nada.
-	if len(tabuleiro.MarkerColors) == 0 {
+	if len(board.MarkerColors) == 0 {
 		t.Fatal("o domínio não oferece cor nenhuma — não há o que medir")
 	}
 
-	for _, cor := range tabuleiro.MarkerColors {
+	for _, cor := range board.MarkerColors {
 		if !strings.Contains(folha, "--marcador-"+cor.ID) {
 			t.Errorf("a cor %q (%s) é aceita pelo domínio e o CSS não sabe pintá-la: falta --marcador-%s",
 				cor.ID, cor.Rotulo, cor.ID)

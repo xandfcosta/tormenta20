@@ -1,6 +1,6 @@
-package tabuleiro
+package board
 
-// O MARCADOR — o ponto apontado no mapa (ALE-195). Ver GLOSSARIO.md: ele nasce
+// O MARCADOR — o ponto apontado no mapa (ALE-195). Ver GLOSSARY.md: ele nasce
 // ESCONDIDO, porque marcar a armadilha na frente da mesa entrega a armadilha.
 //
 // Este arquivo nasceu do mesmo defeito que criou o `ground.go`, e desta vez ele

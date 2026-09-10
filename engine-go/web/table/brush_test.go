@@ -3,13 +3,13 @@ package table
 import (
 	"testing"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // Os guardas do GESTO CONTÍNUO do pincel (ALE-203, itens 8 e 9 do dono).
 //
-// A aritmética do traço não é medida aqui: `tabuleiro.StrokeSquares` tem guarda
+// A aritmética do traço não é medida aqui: `board.StrokeSquares` tem guarda
 // próprio, e ele prende a regra ("o traço não tem buraco") no lugar mais barato.
 // O que se prende deste lado é o que só existe deste lado — que a rota pinta o
 // SEGMENTO numa gravação só, que a resposta não devolve a Mesa inteira, e que a
@@ -46,7 +46,7 @@ func contem(casas []engine.Square, alvo engine.Square) bool {
 // p267) mostraria uma só.
 func TestEveryKindHasADrawing(t *testing.T) {
 	cantos := map[string]string{}
-	for _, pincel := range tabuleiro.TerrainKinds {
+	for _, pincel := range board.TerrainKinds {
 		d := drawing(pincel.ID)
 		if d.Icone == "" || d.Canto == "" {
 			t.Errorf("a espécie %q tem desenho incompleto: %+v", pincel.ID, d)

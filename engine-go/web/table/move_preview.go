@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // A PRÉVIA do movimento DURANTE O ARRASTO (ALE-203, pedido do dono: *"durante o
@@ -56,9 +56,9 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tokenID := chi.URLParam(r, "tokenId")
-	b := tabuleiro.BoardForRole(papel, s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID))
+	b := board.BoardForRole(papel, s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID))
 	previa, err := dragPreview(b, s.deps.Sessions().GetState(sessionID), tokenID, destino,
-		s.whoDragsInPreview(r, papel, tabuleiro.FindToken(b, tokenID)))
+		s.whoDragsInPreview(r, papel, board.FindToken(b, tokenID)))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -68,7 +68,7 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 
 // whoDragsInPreview monta o `Mover` de quem pergunta.
 //
-// O ORÇAMENTO da prévia sai do mesmo `tabuleiro.CanMoveWith` que o desenho usa, então
+// O ORÇAMENTO da prévia sai do mesmo `board.CanMoveWith` que o desenho usa, então
 // quem não pode mover aquela peça recebe uma prévia sem faixas — e não uma
 // prévia mentindo o deslocamento de uma peça que não é dele.
 //
@@ -77,9 +77,9 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 // direto, e isso teria dado a qualquer jogador o deslocamento da peça de
 // qualquer outro — não pela tela, que só oferece o arrasto da peça dele, mas
 // pela ROTA, que é onde a fronteira mora.
-func (s Scene) whoDragsInPreview(r *http.Request, papel string, peca *tabuleiro.BoardToken) tabuleiro.Mover {
+func (s Scene) whoDragsInPreview(r *http.Request, papel string, peca *board.BoardToken) board.Mover {
 	userID := s.deps.CurrentUserID(r)
-	quem := tabuleiro.Mover{UserID: userID, Role: papel}
+	quem := board.Mover{UserID: userID, Role: papel}
 	if papel == "gm" || peca == nil || peca.CharacterID == nil {
 		return quem
 	}
@@ -99,16 +99,16 @@ func (s Scene) whoDragsInPreview(r *http.Request, papel string, peca *tabuleiro.
 // não. É a mesma leitura do `paradasDaProposta`, e ela é refeita aqui em vez de
 // reusada porque aquela vive num `commandCtx` (o caminho da MUTAÇÃO) e esta não
 // pode ter direito de escrita nenhum.
-func dragPreview(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, tokenID string, destino engine.Square, quem tabuleiro.Mover) (map[string]any, error) {
+func dragPreview(b *board.BoardState, st *aovivo.SessionRuntimeState, tokenID string, destino engine.Square, quem board.Mover) (map[string]any, error) {
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
-	peca := tabuleiro.FindToken(b, tokenID)
+	peca := board.FindToken(b, tokenID)
 	if peca == nil {
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
 	dobras := append(progressStops(b, tokenID, peca), destino)
-	_, orcamento := tabuleiro.CanMoveWith(b, st, tokenID, quem)
+	_, orcamento := board.CanMoveWith(b, st, tokenID, quem)
 	custos := legsCosts(dobras, moveTerrain(b))
 	cabe, segundo, alem := moveWires(dobras, custos, orcamento)
 	return map[string]any{
@@ -121,7 +121,7 @@ func dragPreview(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, tokenI
 }
 
 // progressStops são as dobras do caminho já desenhado, ou a casa da peça.
-func progressStops(b *tabuleiro.BoardState, tokenID string, peca *tabuleiro.BoardToken) []engine.Square {
+func progressStops(b *board.BoardState, tokenID string, peca *board.BoardToken) []engine.Square {
 	if p := b.Pending; p != nil && p.TokenID == tokenID && len(p.Stops) > 0 {
 		return append([]engine.Square(nil), p.Stops...)
 	}

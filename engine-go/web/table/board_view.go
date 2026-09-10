@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 	"t20engine/web/routes"
 )
 
@@ -38,7 +38,7 @@ type BoardView struct {
 	AvisoDaCortina bool
 	Lugar          string
 	// Chao é a APARÊNCIA do lugar (pedra, taverna, cripta…), e não o terreno
-	// difícil, que é regra de movimento e vive no `Dificil`. Ver GLOSSARIO.md.
+	// difícil, que é regra de movimento e vive no `Dificil`. Ver GLOSSARY.md.
 	Chao string
 	// A MOLDURA SAIU na ALE-203 (decisão do dono: o tabuleiro é infinito para o
 	// usuário). O servidor não tem mais `X0`, `Colunas` nem `Linhas` — ele manda
@@ -278,7 +278,7 @@ type boardSquare struct {
 // A saúde chega de fora, num mapa por `entryId`, porque ela não é do tabuleiro:
 // é da FILA, e o tabuleiro só a mostra. Derivá-la aqui seria a segunda conta de
 // PV do app, que é como a ALE-122 começou.
-func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude map[string]int, naVez string, quem tabuleiro.Mover, meus map[int64]bool, campaignID, sessionID int64) BoardView {
+func boardViewOf(b *board.BoardState, st *aovivo.SessionRuntimeState, saude map[string]int, naVez string, quem board.Mover, meus map[int64]bool, campaignID, sessionID int64) BoardView {
 	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que
 	// sai o "Abrir tabuleiro", e um botão sem rota não é botão. A primeira
 	// versão devolvia o zero e o mestre via a moldura tracejada sem gesto
@@ -329,8 +329,8 @@ func boardViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude 
 	// com duas espécies é sempre o mesmo — folhagens são difícil E camuflagem
 	// (p267), e uma ordem que variasse faria a mesma casa mudar de cara entre
 	// dois remendos.
-	for _, pincel := range tabuleiro.TerrainKinds {
-		for _, q := range tabuleiro.SquaresOf(b, pincel.ID) {
+	for _, pincel := range board.TerrainKinds {
+		for _, q := range board.SquaresOf(b, pincel.ID) {
 			v.Terreno = append(v.Terreno, terrainSquare{
 				boardSquare{X: q.X, Y: q.Y}, string(pincel.ID),
 			})
@@ -405,8 +405,8 @@ func dropWasWhereLandsToken(pecas []boardToken, mov *moveView, mestre bool) *boa
 	return nil
 }
 
-func boardTokenOf(t *tabuleiro.BoardToken, saude map[string]int, comBloco map[string]bool, naVez string) boardToken {
-	a := tabuleiro.AppearanceOf(t.Label)
+func boardTokenOf(t *board.BoardToken, saude map[string]int, comBloco map[string]bool, naVez string) boardToken {
+	a := board.AppearanceOf(t.Label)
 	pegada := t.Footprint
 	if pegada < 1 {
 		pegada = 1
@@ -524,10 +524,10 @@ func tokenName(p boardToken) string {
 // A cor vem do banco, então é dado de cliente: fora da lista ela cai no padrão,
 // porque string livre daqui iria direto para o `style`.
 func markerColor(c string) string {
-	if tabuleiro.KnownMarkerColor(c) {
+	if board.KnownMarkerColor(c) {
 		return "var(--marcador-" + c + ")"
 	}
-	return "var(--marcador-" + tabuleiro.DefaultMarkerColor() + ")"
+	return "var(--marcador-" + board.DefaultMarkerColor() + ")"
 }
 
 // ── o MOVIMENTO em curso (ALE-266) ───────────────────────────────────────────
@@ -596,12 +596,12 @@ type moveView struct {
 //
 // O ALCANCE só é desenhado para quem PODE decidir: oferecer casas clicáveis a
 // quem não vai poder confirmar é convidar para um beco.
-func moveBoard(b *tabuleiro.BoardState, m tabuleiro.Mover) *moveView {
+func moveBoard(b *board.BoardState, m board.Mover) *moveView {
 	if b == nil || b.Pending == nil {
 		return nil
 	}
 	p := b.Pending
-	peca := tabuleiro.FindToken(b, p.TokenID)
+	peca := board.FindToken(b, p.TokenID)
 	if peca == nil {
 		return nil
 	}
@@ -642,10 +642,10 @@ func moveBoard(b *tabuleiro.BoardState, m tabuleiro.Mover) *moveView {
 
 // moveTerrain traduz o terreno difícil do tabuleiro para o motor.
 //
-// Existe porque o `moveTerrainOf` do pacote `tabuleiro` é privado, e duplicar a
+// Existe porque o `moveTerrainOf` do pacote `board` é privado, e duplicar a
 // TRADUÇÃO é barato — duplicar a REGRA não seria. Se um dia ela virar três
 // linhas, ela sobe para lá.
-func moveTerrain(b *tabuleiro.BoardState) engine.MoveTerrain {
+func moveTerrain(b *board.BoardState) engine.MoveTerrain {
 	if len(b.Difficult) == 0 {
 		return engine.MoveTerrain{}
 	}
@@ -663,7 +663,7 @@ func moveTerrain(b *tabuleiro.BoardState) engine.MoveTerrain {
 // cancela antes de pegar outra.
 //
 // A pergunta é respondida pelo `tabuleiro` e não aqui: quem sabe se é a vez, se
-// a peça é sua e quanto sobra de deslocamento é o `tabuleiro.CanMove`, que é o mesmo
+// a peça é sua e quanto sobra de deslocamento é o `board.CanMove`, que é o mesmo
 // `assertMovable` que a escrita usa. Perguntar de outro jeito na TELA é como
 // nasce um botão que existe e o servidor recusa.
 //
@@ -676,7 +676,7 @@ func moveTerrain(b *tabuleiro.BoardState) engine.MoveTerrain {
 // argumentos, cada sítio jogando fora a metade que não usava — e duas contas da
 // mesma regra é como este repositório já mostrou dois números diferentes para o
 // mesmo combatente em duas telas (ALE-122).
-func reachAndTarget(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool) boardReach {
+func reachAndTarget(b *board.BoardState, st *aovivo.SessionRuntimeState, quem board.Mover, meus map[int64]bool) boardReach {
 	if b == nil {
 		return boardReach{}
 	}
@@ -687,7 +687,7 @@ func reachAndTarget(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 	de := []engine.Square(nil)
 	orcamento := 0
 	if p := b.Pending; p != nil && (quem.Role == "gm" || p.ByUserID == quem.UserID) {
-		if peca := tabuleiro.FindToken(b, p.TokenID); peca != nil {
+		if peca := board.FindToken(b, p.TokenID); peca != nil {
 			alvo, rotulo, de, orcamento = p.TokenID, peca.Label, p.Path, p.Budget
 		}
 	}
@@ -705,7 +705,7 @@ func reachAndTarget(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 			if id := b.Tokens[i].CharacterID; id != nil {
 				dela.OwnsCharacter = meus[*id]
 			}
-			podeMover, orcamentoDela := tabuleiro.CanMoveWith(b, st, b.Tokens[i].ID, dela)
+			podeMover, orcamentoDela := board.CanMoveWith(b, st, b.Tokens[i].ID, dela)
 			if !podeMover {
 				continue
 			}
@@ -1176,7 +1176,7 @@ func sceneBoardCommand(v BoardView, acao string) string {
 // hora não ajuda a escolher entre a taverna de ontem e a cripta de março. O
 // formato vem do banco em ISO, e cortar no `T` é mais honesto que reformatar —
 // não inventa fuso que o servidor não guardou.
-func campaignCollection(lugares []tabuleiro.Place, abertos []*tabuleiro.BoardState) []lugarDoAcervo {
+func campaignCollection(lugares []board.Place, abertos []*board.BoardState) []lugarDoAcervo {
 	// O índice é montado UMA vez: com 148 lugares e oito abas, comparar cada
 	// linha com cada aba é a lista inteira multiplicada pelo número de cenas
 	// abertas, a cada carga da página e a cada quadro do stream.

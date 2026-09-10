@@ -23,7 +23,7 @@ import (
 // A palavra "Elenco" aparece em dois lugares e é o MESMO conceito em duas
 // densidades, como na SPA: o trilho esquerdo mostra os jogadores recolhidos em
 // retratos, e este painel mostra o elenco inteiro — os jogadores e os NPCs. Não
-// é a colisão que o GLOSSARIO proíbe; é a mesma coisa de perto e de longe.
+// é a colisão que o GLOSSARY proíbe; é a mesma coisa de perto e de longe.
 func tableCastCampaign(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

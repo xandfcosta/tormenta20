@@ -3,10 +3,10 @@ package table
 import (
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
-// A CORTINA na Mesa em Datastar (ALE-269, superfície 1) — ver GLOSSARIO.md.
+// A CORTINA na Mesa em Datastar (ALE-269, superfície 1) — ver GLOSSARY.md.
 //
 // O tabuleiro EXISTE para o mestre e a mesa vê uma cortina no lugar dele
 // (ALE-202): montar a taverna enquanto eles olham a cripta. O servidor já sabia
@@ -30,7 +30,7 @@ func (s Scene) CurtainRoutes(r chi.Router) {
 // só ABRE. Um alternar cego faria a tira fechar a cortina de novo se ela
 // chegasse a ser desenhada com a cortina já aberta — e ela é justamente o que o
 // mestre clica com pressa, no meio da cena.
-func runsCurtain(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func runsCurtain(st Scene, c commandCtx) (*board.BoardState, error) {
 	fechada := chi.URLParam(c.R, "estado") == "fechar"
 	board, mudou, err := st.deps.Boards().SetCurtain(c.R.Context(), c.SessionID, c.TabuleiroID, fechada)
 	if err != nil {

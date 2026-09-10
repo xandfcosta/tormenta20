@@ -30,7 +30,7 @@ import (
 
 // verbete é uma entrada do bestiário do livro.
 //
-// O nome vem do GLOSSARIO.md, seção D: `verbete` é a entrada IMUTÁVEL do livro,
+// O nome vem do GLOSSARY.md, seção D: `verbete` é a entrada IMUTÁVEL do livro,
 // `bloco de criatura` é o que o mestre escreve, e `criatura` é o guarda-chuva.
 // A primeira versão disto se chamava `monstro`, que é uma quarta palavra para
 // um conceito que já tem a sua.

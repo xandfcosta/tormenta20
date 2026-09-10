@@ -294,6 +294,22 @@ Nome de pacote é identificador, então o glossário manda nele — e pela regra
 regra e ficam: renomear pacote move todo import do repositório, que é o preço
 mais alto da lista por ganho puramente estético.
 
+> **`tabuleiro/` virou `board/` na ALE-301**, por decisão do dono, e o preço
+> ficou medido para a próxima vez que alguém quiser mexer nos outros dois: **105
+> arquivos e 444 linhas**, e o custo NÃO foi o import — foi a SOMBRA. `board` é
+> o nome de variável mais comum do código da mesa, então o pacote passou a
+> disputar o identificador com o parâmetro em dois sítios, e num deles
+> `tabuleiro.BoardForRole(…)` virou `board.BoardForRole(…)` chamado sobre o
+> `*BoardState` local — que COMPILA como acesso a método e não como pacote, se o
+> tipo tiver o método. Aqui não tinha, e por isso o compilador falou.
+>
+> E a varredura por expressão regular quase entregou um defeito de outra
+> natureza: um `\bboard\b` largo demais reescreveu `"board-state"`, que é NOME
+> DE EVENTO SSE, para `"state-state"`. O compilador não tem nada a dizer sobre
+> uma string. **Renome de pacote cujo nome também é substantivo comum não é
+> `sed`** — é `sed` mais leitura do diff inteiro, e a fronteira (evento, rota,
+> campo JSON) é o primeiro lugar onde se procura o estrago.
+
 | termo | no código | proibido | o que é |
 | -- | -- | -- | -- |
 | **ao vivo** | `aovivo/`, `live*` | ~~mesa~~ (como pacote), ~~tempo real~~ | **O REGIME: a sessão enquanto está acontecendo.** O que existe só enquanto há gente conectada — o estado da fila em memória, a entrega por SSE, a presença, e a autorização de quem está na sessão. Nomeia o regime e não as pessoas, o que o distingue de `mesa`, e não a linha do banco, o que o distingue de `sessão`. O código já dizia `mountLiveRoutes`, `liveAccess` e `liveCtx` antes de a palavra existir aqui. |

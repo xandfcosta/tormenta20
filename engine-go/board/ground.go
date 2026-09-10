@@ -1,7 +1,7 @@
-package tabuleiro
+package board
 
 // O CHÃO DO LUGAR — a APARÊNCIA da cena (pedra, taverna, floresta, ermo, cripta,
-// papel). Ver GLOSSARIO.md: não é o TERRENO, que é o que o quadrado FAZ e mora
+// papel). Ver GLOSSARY.md: não é o TERRENO, que é o que o quadrado FAZ e mora
 // no `terrain.go`; um é como a cena se parece, o outro é quanto custa
 // atravessá-la.
 //
@@ -16,7 +16,7 @@ package tabuleiro
 // outro lado, para as duas branches não inventarem dois arquivos para a mesma
 // coisa.
 
-// PlaceGround é uma das aparências que o lugar pode ter. Ver GLOSSARIO.md: é o
+// PlaceGround é uma das aparências que o lugar pode ter. Ver GLOSSARY.md: é o
 // CHÃO, e não o terreno difícil — um é como a cena se parece, o outro é quanto
 // custa atravessá-la.
 type PlaceGround struct {

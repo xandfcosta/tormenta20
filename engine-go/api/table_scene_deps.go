@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
 	"t20engine/plataforma"
-	"t20engine/tabuleiro"
 	"t20engine/web/sheetui"
 	"t20engine/web/table"
 )
@@ -50,7 +50,7 @@ func (s *Server) tableHost() tableHost {
 // Embrulhá-los método a método daria oitenta entradas na porta e nenhuma
 // fronteira a mais — é a mesma concessão do `Queries`, e ela tem o mesmo sinal
 // de estar no lugar.
-func (h tableHost) Boards() *tabuleiro.BoardStore      { return h.rules.boards }
+func (h tableHost) Boards() *board.BoardStore          { return h.rules.boards }
 func (h tableHost) Sessions() *aovivo.SessionStore     { return h.rules.sessions }
 func (h tableHost) Presence() *aovivo.PresenceRegistry { return h.rules.presence }
 func (h tableHost) SSE() *aovivo.SSEHub                { return h.rules.sse }
@@ -234,7 +234,7 @@ func (h tableHost) ComputedSheet(ctx context.Context, row sqlcgen.Character) (en
 	return h.rules.sheet.ComputeSheet(ctx, row)
 }
 
-func (h tableHost) SpeedsForBoard(board *tabuleiro.BoardState) map[string]int {
+func (h tableHost) SpeedsForBoard(board *board.BoardState) map[string]int {
 	return h.rules.speedsForBoard(board)
 }
 
@@ -260,7 +260,7 @@ func (h tableHost) PublishSessionState(sessionID int64, estado *aovivo.SessionRu
 	h.rules.publishSessionState(sessionID, estado)
 }
 
-func (h tableHost) PublishBoardState(sessionID int64, board *tabuleiro.BoardState) {
+func (h tableHost) PublishBoardState(sessionID int64, board *board.BoardState) {
 	h.rules.saveBoard(sessionID, board)
 	h.rules.publishBoardState(sessionID, board)
 }

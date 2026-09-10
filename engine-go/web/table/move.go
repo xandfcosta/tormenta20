@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // O MOVIMENTO da peça na Mesa em Datastar (ALE-266).
@@ -41,7 +41,7 @@ func (s Scene) MoveRoutes(r chi.Router) {
 }
 
 // paraNoQuadrado acrescenta uma parada ao movimento — ou começa um.
-func paraNoQuadrado(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func paraNoQuadrado(st Scene, c commandCtx) (*board.BoardState, error) {
 	destino, err := quadradoDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func paraNoQuadrado(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // Reconstrói pelas paradas que sobraram em vez de cortar o fim do caminho: o
 // número de quadrados de um trecho não se deduz das paradas sem redesenhá-lo, e
 // redesenhar é o que o `PathThroughStops` faz de graça.
-func undoLastStop(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func undoLastStop(st Scene, c commandCtx) (*board.BoardState, error) {
 	tokenID := chi.URLParam(c.R, "tokenId")
 	paradas, err := st.paradasDaProposta(c, tokenID)
 	if err != nil {
@@ -90,7 +90,7 @@ func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square,
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
-	peca := tabuleiro.FindToken(b, tokenID)
+	peca := board.FindToken(b, tokenID)
 	if peca == nil {
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
@@ -103,12 +103,12 @@ func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square,
 	return []engine.Square{{X: peca.X, Y: peca.Y}}, nil
 }
 
-func (s Scene) propoePorParadas(c commandCtx, tokenID string, paradas []engine.Square) (*tabuleiro.BoardState, error) {
+func (s Scene) propoePorParadas(c commandCtx, tokenID string, paradas []engine.Square) (*board.BoardState, error) {
 	return s.deps.Boards().ProposeMoveWithStops(c.R.Context(), c.SessionID, c.TabuleiroID,
 		s.deps.Sessions().GetState(c.SessionID), tokenID, paradas, s.moveWho(c), 0)
 }
 
-func confirmMove(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func confirmMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	// Versão ZERO: o `CommitMove` só compara quando ela é positiva, e aqui quem
 	// confirma acabou de ver a cena que o servidor desenhou — não há uma versão
 	// vinda do cliente para conferir contra. A trava contra a mesa ter mudado
@@ -117,7 +117,7 @@ func confirmMove(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 		st.deps.Sessions().GetState(c.SessionID), 0, st.moveWho(c))
 }
 
-func cancelMove(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	return st.deps.Boards().CancelMove(c.R.Context(), c.SessionID, c.TabuleiroID, st.moveWho(c))
 }
 
@@ -158,18 +158,18 @@ func urlSquareSecond(r *http.Request) (engine.Square, error) {
 // peça aponta para um personagem, e quem responde de quem ele é são as fichas da
 // campanha — o mesmo caminho que o `tableRoster` usa para saber quais são os MEUS
 // (ALE-33).
-func (s Scene) moveWho(c commandCtx) tabuleiro.Mover {
+func (s Scene) moveWho(c commandCtx) board.Mover {
 	_, papel, _, err := s.deps.SessionForCaller(c.R.Context(), c.User, c.CampaignID, c.SessionID)
 	if err != nil {
 		papel = "player"
 	}
-	quem := tabuleiro.Mover{UserID: c.User, Role: papel}
+	quem := board.Mover{UserID: c.User, Role: papel}
 	if papel == "gm" {
 		return quem
 	}
 	_, meus, _ := s.tableRoster(c.R.Context(), c.User, c.CampaignID)
 	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID)
-	if peca := tabuleiro.FindToken(b, chi.URLParam(c.R, "tokenId")); peca != nil && peca.CharacterID != nil {
+	if peca := board.FindToken(b, chi.URLParam(c.R, "tokenId")); peca != nil && peca.CharacterID != nil {
 		quem.OwnsCharacter = meus[*peca.CharacterID]
 	}
 	return quem
@@ -183,7 +183,7 @@ func (s Scene) moveWho(c commandCtx) tabuleiro.Mover {
 // regra, com a frase que ela escreve ("não é a vez de Arwen"), e não de um 403
 // que diria a coisa errada.
 func (s Scene) tableCommand(
-	mutar func(Scene, commandCtx) (*tabuleiro.BoardState, error),
+	mutar func(Scene, commandCtx) (*board.BoardState, error),
 ) http.HandlerFunc {
 	return s.boardCommand(mutar, false)
 }
@@ -197,7 +197,7 @@ func (s Scene) tableCommand(
 // fala no TABULEIRO, porque jogador não renderiza rodapé nenhum — foi assim que
 // uma recusa de movimento ficou muda por meia sessão.
 func (s Scene) gmBoardCommand(
-	mutar func(Scene, commandCtx) (*tabuleiro.BoardState, error),
+	mutar func(Scene, commandCtx) (*board.BoardState, error),
 ) http.HandlerFunc {
 	return s.boardCommand(mutar, true)
 }
@@ -217,7 +217,7 @@ func (s Scene) gmBoardCommand(
 // nenhum. Quem precisar de outra região não usa este atalho — é uma lista
 // explícita, não um padrão.
 func (s Scene) gmContinuousCommand(
-	mutar func(Scene, commandCtx) (*tabuleiro.BoardState, error),
+	mutar func(Scene, commandCtx) (*board.BoardState, error),
 ) http.HandlerFunc {
 	return s.boardCommand(mutar, true, "mesa-tabuleiro")
 }
@@ -226,7 +226,7 @@ func (s Scene) gmContinuousCommand(
 // resolver a mesa, mutar, publicar e redesenhar — e é numa delas que alguém
 // esquece de publicar e a mesa fica vendo a cena velha.
 func (s Scene) boardCommand(
-	mutar func(Scene, commandCtx) (*tabuleiro.BoardState, error),
+	mutar func(Scene, commandCtx) (*board.BoardState, error),
 	soODoMestre bool,
 	soAsRegioes ...string,
 ) http.HandlerFunc {

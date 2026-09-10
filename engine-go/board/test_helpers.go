@@ -1,4 +1,4 @@
-package tabuleiro
+package board
 
 // Andaime dos testes deste pacote (ALE-254).
 //

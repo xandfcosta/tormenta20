@@ -3,7 +3,7 @@ package table
 import (
 	"fmt"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 	"t20engine/web/ui"
 )
 
@@ -158,7 +158,7 @@ templ boardTable(v BoardView) {
 						// `terrain_drawing.go` para o porquê dos
 						// cantos e de o ícone dizer a REGRA da espécie.
 						<div aria-hidden="true" class={ squareClass(q.Especie) } style={ posicaoNoPlano(q.X, q.Y, 1) }>
-							@ui.Icon(drawing(tabuleiro.TerrainKind(q.Especie)).Icone, "terreno-marca")
+							@ui.Icon(drawing(board.TerrainKind(q.Especie)).Icone, "terreno-marca")
 						</div>
 					}
 					// A TRILHA vem antes das peças e depois do chão: ela é rastro,
@@ -308,7 +308,7 @@ templ boardTable(v BoardView) {
 // A BARRA nasce AQUI e não no trilho de ferramentas, que é onde a issue a tinha
 // escrito em 2026-08-22 (decisão do dono, 2026-08-27). Duas razões: a aba É o
 // nome da cena, e é aqui que esse nome já se lê; e o trilho responde outra
-// pergunta — "o que o dedo faz" —, que o GLOSSARIO já separa desta em letras
+// pergunta — "o que o dedo faz" —, que o GLOSSARY já separa desta em letras
 // grandes. Um trilho que misturasse as duas obrigaria a ler ícone por ícone para
 // saber qual é ferramenta e qual é lugar.
 //
@@ -1139,7 +1139,7 @@ templ markerActions(v BoardView, m boardMarker) {
 				@ui.Icon("EyeOff", "size-4")
 			}
 		</button>
-		for _, cor := range tabuleiro.MarkerColors {
+		for _, cor := range board.MarkerColors {
 			<button
 				type="button"
 				aria-label={ "Pintar o marcador " + m.Texto + " de " + cor.Rotulo }
@@ -1198,7 +1198,7 @@ templ openBoardButton(v BoardView) {
 		/>
 		// CHÃO e não "Cenário", que é o rótulo da SPA: em T20 cenário é ARTON, o
 		// mundo da campanha, e a palavra não pode significar duas coisas na
-		// mesma casa. Ver GLOSSARIO.md.
+		// mesma casa. Ver GLOSSARY.md.
 		<label for="novo-chao" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Chão</label>
 		<select
 			id="novo-chao"
@@ -1208,7 +1208,7 @@ templ openBoardButton(v BoardView) {
 			// A lista vem do `tabuleiro` e não é digitada aqui: ela já existia no
 			// CSS e na SPA, e uma terceira cópia à mão é como nasce a opção que a
 			// tela oferece e o navegador desenha em branco.
-			for _, chao := range tabuleiro.PlaceGrounds {
+			for _, chao := range board.PlaceGrounds {
 				<option value={ chao.ID }>{ chao.Rotulo }</option>
 			}
 		</select>
@@ -1533,7 +1533,7 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 	>
 		@tokenCopyGroup("Duplicar aqui")
 		@tokenCopyMode(v, p, "sozinha", "Outro, com PV próprio", "entra na fila com o PV cheio do original")
-		// "COMBATENTE" e não "linha", e o GLOSSARIO é quem manda: `linha` é
+		// "COMBATENTE" e não "linha", e o GLOSSARY é quem manda: `linha` é
 		// proibida em texto visível para o objeto — ela só vale falando do
 		// elemento de UI. O comentário do código pode dizer linha; a tela, não.
 		@tokenCopyMode(v, p, "junto", "Outro, sangrando junto", "o mesmo combatente da fila: uma barra de PV para os dois")
@@ -2051,7 +2051,7 @@ templ clickLayers(v BoardView) {
 	// o dedo nunca chegava ao laço. Medido no navegador, e o sintoma é o gesto
 	// que simplesmente não acontece.
 	//
-	// O LAÇO só existe para o mestre, e a razão está no `tabuleiro.MoveGroup`:
+	// O LAÇO só existe para o mestre, e a razão está no `board.MoveGroup`:
 	// um jogador tem uma peça, e o que o grupo dispensa (a regra de deslocamento)
 	// é justamente o que protege o turno dele.
 	//

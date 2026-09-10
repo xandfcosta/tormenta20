@@ -26,7 +26,7 @@ import (
 // `sheet` já é a FORMA do dado — `CharacterDTO`, `Load`, `Compute` — e esta cena
 // o lê 148 vezes em 20 arquivos. Com o mesmo nome, cada um desses vinte
 // arquivos precisaria de um apelido no import. O sufixo resolve de graça, e o
-// GLOSSARIO registra a medição que decidiu.
+// GLOSSARY registra a medição que decidiu.
 type Deps interface {
 	// Queries é o banco. As sete abas leem e escrevem a mesma linha de
 	// personagem — é a concessão da forja e da administração, e o sinal de que

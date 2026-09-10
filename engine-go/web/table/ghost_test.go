@@ -7,8 +7,8 @@ import (
 
 	"golang.org/x/net/html"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // Os guardas do FANTASMA e da SETA (ALE-203, item 4 da lista do dono).
@@ -67,7 +67,7 @@ func element(t *testing.T, tela, atributo, trecho string) map[string]string {
 // legítimo já dobra sozinho, porque a diagonal vem primeiro —, então a seta vira
 // a reta entre o começo e o fim.
 func TestTheArrowWithoutStopsJoinsBothEndsOfThePath(t *testing.T) {
-	semParadas := &tabuleiro.PendingMove{
+	semParadas := &board.PendingMove{
 		Path: []engine.Square{{}, {X: 1}, {X: 2}, {X: 3}},
 	}
 	dobras := moveFolds(semParadas)

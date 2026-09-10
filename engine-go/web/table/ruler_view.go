@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // As expressões da RÉGUA e do GABARITO (ALE-269, superfície 8).
@@ -40,8 +40,8 @@ const (
 // era verdade para toda ferramenta que ainda não existia. Uma lista escrita à mão
 // no `.templ` teria o mesmo defeito adiado — a espécie nova nasceria fora dela.
 func onIsBrush() string {
-	nomes := make([]string, 0, len(tabuleiro.TerrainKinds))
-	for _, e := range tabuleiro.TerrainKinds {
+	nomes := make([]string, 0, len(board.TerrainKinds))
+	for _, e := range board.TerrainKinds {
 		nomes = append(nomes, fmt.Sprintf("%q", string(e.ID)))
 	}
 	return fmt.Sprintf("[%s].includes($ferramenta)", strings.Join(nomes, ", "))

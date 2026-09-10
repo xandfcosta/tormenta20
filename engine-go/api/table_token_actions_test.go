@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 	"t20engine/web/table"
 	"testing"
 )
@@ -16,14 +16,14 @@ import (
 func mapToken(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
 	t.Helper()
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"})
+		board.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"})
 	if err != nil {
 		t.Fatalf("pôr a peça %q: %v", rotulo, err)
 	}
 	return posto.Tokens[len(posto.Tokens)-1].ID
 }
 
-func nowBoard(t *testing.T, f pilotoFixture) *tabuleiro.BoardState {
+func nowBoard(t *testing.T, f pilotoFixture) *board.BoardState {
 	t.Helper()
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
@@ -48,7 +48,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
 		t.Fatalf("esconder deu %d", rec.Code)
 	}
-	if !tabuleiro.FindToken(nowBoard(t, f), id).Hidden {
+	if !board.FindToken(nowBoard(t, f), id).Hidden {
 		t.Fatal("a peça não foi escondida")
 	}
 	// A MESA deixa de vê-la, que é o ponto inteiro: a trava é o `BoardForRole`, e
@@ -64,7 +64,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/visibilidade", ""); rec.Code != http.StatusOK {
 		t.Fatalf("mostrar deu %d", rec.Code)
 	}
-	if tabuleiro.FindToken(nowBoard(t, f), id).Hidden {
+	if board.FindToken(nowBoard(t, f), id).Hidden {
 		t.Error("mostrar não devolveu a peça à mesa")
 	}
 }
@@ -79,7 +79,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID})
+		board.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 		f.tableUrl()+"/tabuleiro/pecas/"+id+"/remover", ""); rec.Code != http.StatusOK {
 		t.Fatalf("remover deu %d", rec.Code)
 	}
-	if tabuleiro.FindToken(nowBoard(t, f), id) != nil {
+	if board.FindToken(nowBoard(t, f), id) != nil {
 		t.Error("a peça continuou no tabuleiro")
 	}
 	// A LINHA fica: quem estava no combate continua no combate.
@@ -133,14 +133,14 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, mover+"/confirmar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("confirmar deu %d", rec.Code)
 	}
-	if peca := tabuleiro.FindToken(nowBoard(t, f), id); peca.X != 5 {
+	if peca := board.FindToken(nowBoard(t, f), id); peca.X != 5 {
 		t.Fatalf("a peça não andou: está em (%d,%d)", peca.X, peca.Y)
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/voltar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("voltar deu %d", rec.Code)
 	}
-	peca := tabuleiro.FindToken(nowBoard(t, f), id)
+	peca := board.FindToken(nowBoard(t, f), id)
 	if peca.X != 1 || peca.Y != 1 {
 		t.Errorf("a peça voltou para (%d,%d), esperado (1,1)", peca.X, peca.Y)
 	}
@@ -227,7 +227,7 @@ func tokenOnTheQueue(t *testing.T, f pilotoFixture, rotulo string) (string, stri
 		t.Fatalf("%q não está na fila: o resto do caso não mediria nada", rotulo)
 	}
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: rotulo, X: 3, Y: 3, Kind: "npc", EntryID: &linha})
+		board.BoardToken{Label: rotulo, X: 3, Y: 3, Kind: "npc", EntryID: &linha})
 	if err != nil {
 		t.Fatalf("pôr a peça de %q: %v", rotulo, err)
 	}
@@ -354,7 +354,7 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	// E o caso positivo, sem o qual as duas recusas acima seriam verdade também
 	// numa rota que recusa tudo.
 	f.posta(t, f.mestre, base, `{"pecanome":"Ogro Capitão","pecatamanho":2}`)
-	peca := tabuleiro.FindToken(nowBoard(t, f), id)
+	peca := board.FindToken(nowBoard(t, f), id)
 	if peca.Label != "Ogro Capitão" || peca.Footprint != 2 {
 		t.Errorf("a edição válida não pegou: %q, lado %d", peca.Label, peca.Footprint)
 	}
@@ -408,7 +408,7 @@ func TestThePasteCrossesTheTabs(t *testing.T) {
 	f := novoPiloto(t)
 	cripta := f.seedOpenBoard(t, "pedra")
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, cripta.ID,
-		tabuleiro.BoardToken{Label: "Zumbi", X: 1, Y: 1, Kind: "npc"})
+		board.BoardToken{Label: "Zumbi", X: 1, Y: 1, Kind: "npc"})
 	if err != nil {
 		t.Fatalf("pôr a peça na cripta: %v", err)
 	}

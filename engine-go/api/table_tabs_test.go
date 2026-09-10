@@ -4,11 +4,11 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"t20engine/tabuleiro"
+	"t20engine/board"
 	"testing"
 )
 
-func (f pilotoFixture) openSecond(t *testing.T, nome string) *tabuleiro.BoardState {
+func (f pilotoFixture) openSecond(t *testing.T, nome string) *board.BoardState {
 	t.Helper()
 	b, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, nome, "pedra")
 	if err != nil {

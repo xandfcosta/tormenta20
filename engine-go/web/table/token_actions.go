@@ -9,8 +9,8 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // O MENU DE CONTEXTO NA PEÇA (ALE-206), em Datastar.
@@ -73,13 +73,13 @@ func (s Scene) TokenActionRoutes(r chi.Router) {
 // estado com dois lados e um botão com `aria-pressed`. Mandar o valor da tela
 // faria dois cliques rápidos com a resposta atrasada apagarem um ao outro — e
 // aqui o resultado desse empate é a emboscada aparecendo para a mesa.
-func toggleVisibility(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func toggleVisibility(st Scene, c commandCtx) (*board.BoardState, error) {
 	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
 	}
 	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID,
-		tabuleiro.ParseTokenPatch(map[string]any{"hidden": !peca.Hidden}))
+		board.ParseTokenPatch(map[string]any{"hidden": !peca.Hidden}))
 }
 
 // OS TRÊS DUPLICARES, e a diferença entre eles é o que a cópia faz com a LINHA
@@ -102,8 +102,8 @@ func toggleVisibility(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // Um construtor e não três funções porque a diferença entre eles cabe inteira no
 // `bondForMode` — três corpos seriam três lugares para o "sangrando junto" do
 // duplicar e o do colar discordarem sobre o que a palavra significa.
-func duplicatesWith(modo string) func(Scene, commandCtx) (*tabuleiro.BoardState, error) {
-	return func(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func duplicatesWith(modo string) func(Scene, commandCtx) (*board.BoardState, error) {
+	return func(st Scene, c commandCtx) (*board.BoardState, error) {
 		peca, err := st.tokenOfCommand(c)
 		if err != nil {
 			return nil, err
@@ -152,7 +152,7 @@ type clipboardSignals struct {
 // O que ele custa está escrito para o dia em que incomodar: a marca da VEZ
 // acende nas duas abas, e quem estiver olhando a Taverna vê o ogro aceso com o
 // combate acontecendo na Cripta.
-func pastesToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func pastesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	var area clipboardSignals
 	if err := datastar.ReadSignals(c.R, &area); err != nil {
 		return nil, fmt.Errorf("não entendi o que há na área: %v", err)
@@ -163,7 +163,7 @@ func pastesToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	// A ORIGEM é o tabuleiro de onde a peça foi copiada, e não o que está na
 	// tela: são diferentes justamente quando o colar mais serve.
 	origem := st.deps.Boards().Get(c.R.Context(), c.SessionID, area.Tabuleiro)
-	modelo := tabuleiro.FindToken(origem, area.Peca)
+	modelo := board.FindToken(origem, area.Peca)
 	if modelo == nil {
 		return nil, fmt.Errorf("a peça que estava na área não está mais no tabuleiro de origem")
 	}
@@ -194,7 +194,7 @@ func squareOfCommand(c commandCtx) (int, int, error) {
 // Ele é o mesmo mapa que os três verbos de duplicar usam, escrito uma vez: o
 // colar e o duplicar têm de concordar sobre o que "sangrando junto" significa, e
 // duas traduções seriam dois lugares para discordar.
-func (s Scene) bondForMode(c commandCtx, modo string, modelo *tabuleiro.BoardToken) (*aovivo.InitiativeEntry, error) {
+func (s Scene) bondForMode(c commandCtx, modo string, modelo *board.BoardToken) (*aovivo.InitiativeEntry, error) {
 	if modo == modoSoAPeca {
 		return nil, nil
 	}
@@ -247,7 +247,7 @@ const (
 )
 
 // queueLineOf é a linha da fila por trás de uma peça, ou nulo.
-func (s Scene) queueLineOf(sessionID int64, peca *tabuleiro.BoardToken) *aovivo.InitiativeEntry {
+func (s Scene) queueLineOf(sessionID int64, peca *board.BoardToken) *aovivo.InitiativeEntry {
 	if peca.EntryID == nil {
 		return nil
 	}
@@ -335,7 +335,7 @@ func (s Scene) addsACopyOfTheLine(sessionID int64, modelo aovivo.InitiativeEntry
 // UMA vez e não uma pilha: voltar limpa o registro, então o botão some depois de
 // usado. Um "voltar" que continuasse disponível andaria para trás na cena sem
 // dizer até onde vai.
-func wasWhereForTokenBack(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func wasWhereForTokenBack(st Scene, c commandCtx) (*board.BoardState, error) {
 	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
@@ -362,7 +362,7 @@ type tokenSignals struct {
 // tamanho é o que decide quantos quadrados ela ocupa (T20 p107, Tab. 1-21): uma
 // peça Grande desenhada em 1×1 mente sobre quem o gabarito pega e sobre onde cabe
 // passar.
-func editsToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func editsToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
@@ -379,7 +379,7 @@ func editsToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 		return nil, fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", sinais.Tamanho)
 	}
 	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.TabuleiroID, peca.ID,
-		tabuleiro.ParseTokenPatch(map[string]any{"label": nome, "footprint": sinais.Tamanho}))
+		board.ParseTokenPatch(map[string]any{"label": nome, "footprint": sinais.Tamanho}))
 }
 
 // removesToken tira a peça do tabuleiro, e SÓ do tabuleiro.
@@ -388,7 +388,7 @@ func editsToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // "ele saiu do mapa" e "ele saiu do combate" —, e juntá-los faria o mestre perder
 // o combatente ao arrumar a cena. É a mesma separação que o elenco e a fila já
 // têm (superfície 6b).
-func removesToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func removesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	peca, err := st.tokenOfCommand(c)
 	if err != nil {
 		return nil, err
@@ -401,13 +401,13 @@ func removesToken(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // Sem a leitura, cada verbo teria de tratar "a peça sumiu" por conta própria — e
 // ela some de verdade: outra aba do mestre pode ter removido a mesma peça meio
 // segundo antes. A frase diz o id porque é ele que o botão carregava.
-func (s Scene) tokenOfCommand(c commandCtx) (*tabuleiro.BoardToken, error) {
+func (s Scene) tokenOfCommand(c commandCtx) (*board.BoardToken, error) {
 	b := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID)
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
 	tokenID := chi.URLParam(c.R, "tokenId")
-	peca := tabuleiro.FindToken(b, tokenID)
+	peca := board.FindToken(b, tokenID)
 	if peca == nil {
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}

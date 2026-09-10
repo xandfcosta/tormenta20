@@ -60,7 +60,7 @@ const Book = "/livro"
 // endereço INTERNO da família do livro — só o `piloto_book.go` o citava —, e
 // deixou de ser no instante em que o `bookui` virou pacote. Não é o
 // visualizador do navegador, que fica a um clique de distância: ver o verbete
-// **leitor** no GLOSSARIO.
+// **leitor** no GLOSSARY.
 const Reader = "/livro/ler"
 
 // Entry é a rota que devolve UM verbete como fragmento, para a caixa que o
@@ -83,7 +83,7 @@ const masterRail = "/mestre/"
 // Não confundir com `MasterSearch`: `?entrada=` é o verbete, `?busca=` procura o
 // termo e mostra os grupos. A diferença nasceu de um defeito de UX — o elo
 // endereçava por busca, e clicar num conceito caía numa lista onde ele era o
-// quinto grupo (ver GLOSSARIO, verbete **entrada**).
+// quinto grupo (ver GLOSSARY, verbete **entrada**).
 func MasterEntry(tab, id string) string {
 	return masterRail + tab + "?entrada=" + url.QueryEscape(id)
 }
@@ -121,7 +121,7 @@ func Table(campanhaID, sessaoID int64) string {
 //
 // O endereço é da CAMPANHA e não da mesa, e isso é a issue: o lugar é do acervo
 // e sobrevive a qualquer sessão — montar a cripta na quinta-feira não pode
-// depender de haver uma partida rolando. É a diferença que o GLOSSARIO desenha
+// depender de haver uma partida rolando. É a diferença que o GLOSSARY desenha
 // entre o rascunho e a cortina.
 //
 // Ela entra aqui pelo critério de sempre: a cena da campanha a cita para levar

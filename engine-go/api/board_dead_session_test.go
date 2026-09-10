@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 /*
@@ -122,7 +122,7 @@ func TestClosingABoardSurvivesTheClientLeaving(t *testing.T) {
 	}
 	// E A LINHA SAIU do banco: sem isto, a próxima hidratação traz de volta um
 	// tabuleiro que o mestre encerrou.
-	depois := tabuleiro.NewBoardStore(s.queries, s.boards.NewID, s.bus)
+	depois := board.NewBoardStore(s.queries, s.boards.NewID, s.bus)
 	if abertos := depois.OpenBoards(context.Background(), sessao); len(abertos) != 0 {
 		t.Errorf("a linha do tabuleiro fechado ficou no banco: %d aberto(s) depois do reinício", len(abertos))
 	}

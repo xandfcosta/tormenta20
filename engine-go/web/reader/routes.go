@@ -19,7 +19,7 @@ import (
 // endereço dele.
 //
 // **Não é o visualizador do navegador**, que continua a um clique de distância.
-// A distinção importa e está no GLOSSARIO: o leitor mostra uma página por vez
+// A distinção importa e está no GLOSSARY: o leitor mostra uma página por vez
 // com o termo marcado, o visualizador tem busca, miniaturas e impressão. Ele
 // existe por medição — o Chrome ignora `#search=` e transfere o arquivo inteiro
 // (85 MiB) para abrir uma página; o leitor destaca e custou 1 MiB.
@@ -66,7 +66,7 @@ func readerFromRequest(r *http.Request, livro bookui.BookAddress) readerView {
 		PDF:  livro.Base,
 		Page: pagina,
 		// `Opening` é nome NOVO e `Abertura` é o nome CHAMADO: a costura PT/EN
-		// aparece nesta linha de propósito, e o GLOSSARIO diz por quê.
+		// aparece nesta linha de propósito, e o GLOSSARY diz por quê.
 		Opening:  livro.Abertura,
 		Term:     r.URL.Query().Get("t"),
 		Back:     voltar,

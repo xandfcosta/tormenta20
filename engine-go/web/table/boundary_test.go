@@ -21,7 +21,7 @@ import (
 //
 // # O que a lista PERMITE, e por quê
 //
-// Os quatro stores (`tabuleiro`, `aovivo`, `events`) atravessam INTEIROS pela
+// Os quatro stores (`board`, `aovivo`, `events`) atravessam INTEIROS pela
 // porta, e é isso que os deixa entrar aqui: são tipos de outros pacotes, o
 // vocabulário do domínio ao vivo, não o hospedeiro com outro nome. Embrulhá-los
 // método a método daria oitenta entradas na porta e nenhuma fronteira a mais.
@@ -55,7 +55,7 @@ var permitidos = map[string]bool{
 	"t20engine/events":      true, // o barramento, para o stream saber o que houve
 	"t20engine/markdown":    true, // as notas do mestre, que saíram daqui na fatia 1
 	"t20engine/plataforma":  true, // o carimbo ISO e o envelope de resposta
-	"t20engine/tabuleiro":   true, // o mapa: peça, marcador, terreno, lugar
+	"t20engine/board":       true, // o mapa: peça, marcador, terreno, lugar
 	"t20engine/web/bookui":  true, // o endereço do livro que o bestiário linka
 	"t20engine/web/master":  true, // o MESMO desenho do bestiário do mestre
 	"t20engine/web/routes":  true, // os endereços que ela cita da campanha (ALE-292)

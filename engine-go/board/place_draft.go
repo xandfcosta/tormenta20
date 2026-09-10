@@ -1,4 +1,4 @@
-package tabuleiro
+package board
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 // A cortina resolve "montar a cripta enquanto a mesa olha a taverna" DURANTE a
 // sessão (ALE-202). O rascunho resolve o outro tempo, que é o da ALE-191:
 // preparar a sessão de sábado na quinta-feira, sem ninguém conectado. Decisão do
-// dono — os dois convivem, e o GLOSSARIO registra a linha entre eles.
+// dono — os dois convivem, e o GLOSSARY registra a linha entre eles.
 //
 // # Por que não há um estado do rascunho em memória
 //

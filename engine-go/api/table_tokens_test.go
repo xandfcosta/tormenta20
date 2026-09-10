@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"t20engine/tabuleiro"
+	"t20engine/board"
 	"t20engine/web/table"
 	"testing"
 )
@@ -199,8 +199,8 @@ func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	for _, especie := range tabuleiro.TerrainKinds {
-		if casas := tabuleiro.SquaresOf(b, especie.ID); len(casas) != 0 {
+	for _, especie := range board.TerrainKinds {
+		if casas := board.SquaresOf(b, especie.ID); len(casas) != 0 {
 			t.Errorf("pôr no mapa pintou %s em %v", especie.ID, casas)
 		}
 	}

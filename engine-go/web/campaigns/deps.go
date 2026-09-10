@@ -143,7 +143,7 @@ type Deps interface {
 
 // PlaceRow é um lugar do acervo, na forma que esta tela desenha.
 //
-// Ela existe pela mesma razão que o `ListRow`: o `tabuleiro.Place` é a forma do
+// Ela existe pela mesma razão que o `ListRow`: o `board.Place` é a forma do
 // domínio ao vivo, com tag `json:` nos campos porque ele viaja no fio da mesa —
 // e uma tela que o lesse passaria a depender do formato de um protocolo que ela
 // não fala.

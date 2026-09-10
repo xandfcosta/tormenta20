@@ -68,7 +68,7 @@ func TestThePlayerDoesNotDrawTheCurtain(t *testing.T) {
 // transmite"), e a ausência é deliberada — eu tinha escrito um e o cortei.
 //
 // Ele media a VERSÃO do tabuleiro, que é comportamento do `SetCurtain` e já tem
-// dono no `tabuleiro/curtain_test.go`. Sabotei a economia no comando daqui e o
+// dono no `board/curtain_test.go`. Sabotei a economia no comando daqui e o
 // caso continuou VERDE: ele afirmava uma garantia que não segurava, o que é pior
 // que teste nenhum porque parece cobertura.
 //

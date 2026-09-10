@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"t20engine/tabuleiro"
+	"t20engine/board"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func (f pilotoFixture) onBoard(t *testing.T) string {
 	f.seedOpenBoard(t, "pedra")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID, CharacterID: &f.charID})
+		board.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID, CharacterID: &f.charID})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
@@ -64,7 +64,7 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 	onde := func() (int, int) {
-		p := tabuleiro.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
+		p := board.FindToken(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab), tokenID)
 		return p.X, p.Y
 	}
 
@@ -103,7 +103,7 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 	if b.Pending != nil {
 		t.Error("o cancelamento não limpou a proposta")
 	}
-	if p := tabuleiro.FindToken(b, tokenID); p.X != 0 || p.Y != 0 {
+	if p := board.FindToken(b, tokenID); p.X != 0 || p.Y != 0 {
 		t.Errorf("a peça ficou em %d,%d depois do cancelamento", p.X, p.Y)
 	}
 }
@@ -118,7 +118,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Ogro", X: 5, Y: 5})
+		board.BoardToken{Label: "Ogro", X: 5, Y: 5})
 	if err != nil {
 		t.Fatalf("pôr o Ogro: %v", err)
 	}

@@ -1537,7 +1537,7 @@ administração e dois do trilho do mestre.
 (`CharacterDTO`, `Load`, `Compute`) e esta cena o lê 148 vezes em 20 arquivos:
 com o mesmo nome, cada um desses vinte arquivos carregaria um apelido no import.
 O plural que resolveu o `web/characters` e o `web/campaigns` não serve aqui —
-a ficha é uma. O GLOSSARIO registra a linha.
+a ficha é uma. O GLOSSARY registra a linha.
 
 ### Cena que compõe SQL é cena com o banco dentro, quatro vezes
 
@@ -2139,7 +2139,7 @@ carregando a decisão de protocolo inteira sobre um botão que não existia.
 Este é o custo que justifica a varredura, e ele não é "manutenção".
 
 `TestSwitchingScenesArchivesTheOneOnTheTable` prendia que trocar de cena ARQUIVA
-a que estava na mesa. A ALE-205 removeu esse comportamento e o GLOSSARIO diz o
+a que estava na mesa. A ALE-205 removeu esse comportamento e o GLOSSARY diz o
 contrário com todas as letras. Ele continuou **verde** porque dirigia o
 `ShowPlace` — a porta que a ALE-205 aposentou e que ninguém chamava havia três
 fatias.
@@ -2180,7 +2180,7 @@ verde.*
 ## A capacidade esperando gesto pode NÃO precisar do que a esperava (ALE-291)
 
 A peça AVULSA — a porta, o baú, o barril — era a mais clara das duas capacidades
-no ar que a ALE-289 achou. O GLOSSARIO promete, na linha de `peça`, que "uma peça
+no ar que a ALE-289 achou. O GLOSSARY promete, na linha de `peça`, que "uma peça
 pode existir sem linha na fila", e não havia caminho: a única rota que criava
 peça era o `poeNoMapa`, cujo `populateBoard` itera a INICIATIVA.
 
@@ -2225,7 +2225,7 @@ salvar, sem erro em lugar nenhum, porque o segundo `data-signals` simplesmente
 vence.
 
 O `TestNoTableSignalIsDeclaredTwice` varre os ~40 sinais da cena com denominador.
-É a mesma forma que o GLOSSARIO já registra na linha do `buscador`, que se chama
+É a mesma forma que o GLOSSARY já registra na linha do `buscador`, que se chama
 assim para não colidir com o `busca` das cenas — e agora ela é mecanizada.
 
 

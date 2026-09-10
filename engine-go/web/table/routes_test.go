@@ -14,7 +14,7 @@ import (
 //
 // Este guarda nasceu de um quase-acidente medido: a peça avulsa ia usar
 // `pecanome` e `pecatamanho`, que JÁ eram do diálogo de editar peça (ALE-206) e
-// estão quatro linhas acima na mesma função. O GLOSSARIO já registra a mesma
+// estão quatro linhas acima na mesma função. O GLOSSARY já registra a mesma
 // forma na linha do `buscador`, que se chama assim para não colidir com o
 // `busca` das cenas.
 func TestNoTableSignalIsDeclaredTwice(t *testing.T) {

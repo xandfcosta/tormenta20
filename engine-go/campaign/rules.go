@@ -23,7 +23,7 @@ import (
 // servidor-renderizado a teria apagado sem ninguém notar.
 //
 // > Aqui a prosa dizia "as regras de uma CRÔNICA". `crônica` é termo PROIBIDO
-// > pelo GLOSSARIO desde 2026-08-22 — a palavra é `campanha` —, e o comentário
+// > pelo GLOSSARY desde 2026-08-22 — a palavra é `campanha` —, e o comentário
 // > atravessou a decisão sem ninguém reler. É o defeito que a seção
 // > "Documentação" descreve, acontecido no arquivo que define o conceito.
 //
@@ -119,7 +119,7 @@ func ValidateText(nomeBruto string, descricaoBruta *string) (string, string, pla
 // AS REGRAS OPCIONAIS: o que o mestre DESLIGOU na campanha (ALE-221).
 //
 // O nome do campo diz o que está DESLIGADO e isso é proposital: valor zero
-// significa "tudo em vigor", que é o padrão do livro. Ver o GLOSSARIO, verbete
+// significa "tudo em vigor", que é o padrão do livro. Ver o GLOSSARY, verbete
 // **regra opcional**.
 
 // NormalizeIgnoredRules ordena, tira repetidos e recusa o que o motor não

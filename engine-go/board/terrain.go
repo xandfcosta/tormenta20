@@ -1,4 +1,4 @@
-package tabuleiro
+package board
 
 // AS ESPÉCIES DE TERRENO — o que um quadrado FAZ com quem está nele ou atrás
 // dele (T20 p238, Tabela 5-3).
@@ -17,7 +17,7 @@ package tabuleiro
 // desfaz a dívida em vez de adiá-la.
 
 // TerrainKind é uma das quatro coisas que um quadrado FAZ (T20 p238,
-// Tabela 5-3). Ver GLOSSARIO.md: terreno é a família, não o chão do lugar.
+// Tabela 5-3). Ver GLOSSARY.md: terreno é a família, não o chão do lugar.
 type TerrainKind string
 
 const (

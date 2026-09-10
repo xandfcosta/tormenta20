@@ -9,8 +9,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	datastar "github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 	"t20engine/web/ui"
 )
 
@@ -36,7 +36,7 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	r.Get("/campanhas/{campaignId}/lugares/{placeId}", s.handleDraftPage)
 	base := "/campanhas/{campaignId}/lugares/{placeId}/tabuleiro"
 	// O TRAÇO, como na mesa: as rotas de terreno recebem de ONDE ATÉ ONDE o dedo
-	// andou desde o aviso anterior. Ver `tabuleiro.StrokeSquares`.
+	// andou desde o aviso anterior. Ver `board.StrokeSquares`.
 	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.draftCommand(draftPaintsTerrain))
 	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.draftCommand(draftClearsTerrain))
 	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.draftCommand(draftFillsRect))
@@ -174,7 +174,7 @@ func (s Scene) handleDraftPage(w http.ResponseWriter, r *http.Request) {
 // mesa esperando; e a resposta redesenha UMA região, porque a página do rascunho
 // tem uma só — a Mesa manda nove.
 func (s Scene) draftCommand(
-	mutar func(Scene, draftCtx, *tabuleiro.BoardState) error,
+	mutar func(Scene, draftCtx, *board.BoardState) error,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c, ok := s.draftGm(w, r)
@@ -186,7 +186,7 @@ func (s Scene) draftCommand(
 		// passou VERDE em teste de handler e falhou no servidor de verdade, e o
 		// comentário do `handleTableInitiative` conta a história inteira.
 		_, err := s.deps.Boards().EditPlace(r.Context(), c.CampaignID, c.PlaceID,
-			func(b *tabuleiro.BoardState) error { return mutar(s, c, b) })
+			func(b *board.BoardState) error { return mutar(s, c, b) })
 
 		sse := datastar.NewSSE(w, r)
 		frase := ""
@@ -207,51 +207,51 @@ func (s Scene) draftCommand(
 
 // ── o TERRENO (T20 p238) ─────────────────────────────────────────────────────
 
-func draftPaintsTerrain(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftPaintsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
 	traco, err := tracoDaURL(c.R)
 	if err != nil {
 		return err
 	}
-	especie := tabuleiro.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
 	// O `apagar` continua sendo MODO da ferramenta e não caminho, como na mesa:
 	// ele vale para o arraste inteiro, e não para um quadrado.
 	ligado := c.R.URL.Query().Get("apagar") == ""
 	for _, casa := range traco {
-		tabuleiro.PaintTerrain(b, casa, especie, ligado)
+		board.PaintTerrain(b, casa, especie, ligado)
 	}
 	return nil
 }
 
-func draftClearsTerrain(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftClearsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
 	traco, err := tracoDaURL(c.R)
 	if err != nil {
 		return err
 	}
 	for _, casa := range traco {
-		tabuleiro.ClearSquare(b, casa)
+		board.ClearSquare(b, casa)
 	}
 	return nil
 }
 
-func draftFillsRect(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftFillsRect(st Scene, c draftCtx, b *board.BoardState) error {
 	casas, err := urlRect(c.R)
 	if err != nil {
 		return err
 	}
-	especie := tabuleiro.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
 	for _, casa := range casas {
-		tabuleiro.PaintTerrain(b, casa, especie, true)
+		board.PaintTerrain(b, casa, especie, true)
 	}
 	return nil
 }
 
-func draftClearsRect(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
 	casas, err := urlRect(c.R)
 	if err != nil {
 		return err
 	}
 	for _, casa := range casas {
-		tabuleiro.ClearSquare(b, casa)
+		board.ClearSquare(b, casa)
 	}
 	return nil
 }
@@ -262,7 +262,7 @@ func draftClearsRect(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
 //
 // Ela lê a MESMA tira que a mesa lê (`loosePieceSignals`), com as mesmas
 // recusas — nome obrigatório, tamanho do livro (p107), aparência conhecida.
-func draftNewLoosePiece(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftNewLoosePiece(st Scene, c draftCtx, b *board.BoardState) error {
 	casa, err := quadradoDaURL(c.R)
 	if err != nil {
 		return err
@@ -271,23 +271,23 @@ func draftNewLoosePiece(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
 	if err != nil {
 		return err
 	}
-	return tabuleiro.AddToken(b, tabuleiro.BoardToken{
+	return board.AddToken(b, board.BoardToken{
 		Label: desenho.Nome, Kind: desenho.Aparencia, Footprint: desenho.Tamanho,
 		X: casa.X, Y: casa.Y,
 	}, st.deps.Boards().NewID)
 }
 
 // draftMovesToken põe a peça na casa, sem proposta e sem custo.
-func draftMovesToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftMovesToken(st Scene, c draftCtx, b *board.BoardState) error {
 	casa, err := quadradoDaURL(c.R)
 	if err != nil {
 		return err
 	}
-	return tabuleiro.UpdateToken(b, chi.URLParam(c.R, "id"),
-		tabuleiro.ParseTokenPatch(map[string]any{"x": casa.X, "y": casa.Y}))
+	return board.UpdateToken(b, chi.URLParam(c.R, "id"),
+		board.ParseTokenPatch(map[string]any{"x": casa.X, "y": casa.Y}))
 }
 
-func draftEditsToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftEditsToken(st Scene, c draftCtx, b *board.BoardState) error {
 	var sinais tokenSignals
 	if err := datastar.ReadSignals(c.R, &sinais); err != nil {
 		return fmt.Errorf("não entendi o formulário da peça: %v", err)
@@ -299,21 +299,21 @@ func draftEditsToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
 	if !tokenSize(sinais.Tamanho) {
 		return fmt.Errorf("uma peça ocupa 1, 2, 3 ou 6 quadrados de lado (p107); veio %d", sinais.Tamanho)
 	}
-	return tabuleiro.UpdateToken(b, chi.URLParam(c.R, "id"),
-		tabuleiro.ParseTokenPatch(map[string]any{"label": nome, "footprint": sinais.Tamanho}))
+	return board.UpdateToken(b, chi.URLParam(c.R, "id"),
+		board.ParseTokenPatch(map[string]any{"label": nome, "footprint": sinais.Tamanho}))
 }
 
-func draftDuplicatesToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftDuplicatesToken(st Scene, c draftCtx, b *board.BoardState) error {
 	// O rascunho não tem fila: laço nulo, sempre peão mudo (ALE-206).
-	return tabuleiro.DuplicateToken(b, chi.URLParam(c.R, "id"), nil, st.deps.Boards().NewID)
+	return board.DuplicateToken(b, chi.URLParam(c.R, "id"), nil, st.deps.Boards().NewID)
 }
 
-func draftRemovesToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftRemovesToken(st Scene, c draftCtx, b *board.BoardState) error {
 	id := chi.URLParam(c.R, "id")
-	if tabuleiro.FindToken(b, id) == nil {
+	if board.FindToken(b, id) == nil {
 		return fmt.Errorf("peça %q não está no rascunho", id)
 	}
-	tabuleiro.RemoveToken(b, id)
+	board.RemoveToken(b, id)
 	return nil
 }
 
@@ -322,59 +322,59 @@ func draftRemovesToken(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
 //
 // ALTERNA lendo o estado atual, como na mesa: escrever o valor desejado faria a
 // tela ser a fonte da verdade de um estado que é do servidor.
-func draftTogglesVisibility(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftTogglesVisibility(st Scene, c draftCtx, b *board.BoardState) error {
 	id := chi.URLParam(c.R, "id")
-	peca := tabuleiro.FindToken(b, id)
+	peca := board.FindToken(b, id)
 	if peca == nil {
 		return fmt.Errorf("peça %q não está no rascunho", id)
 	}
 	escondida := !peca.Hidden
-	return tabuleiro.UpdateToken(b, id, tabuleiro.ParseTokenPatch(map[string]any{"hidden": escondida}))
+	return board.UpdateToken(b, id, board.ParseTokenPatch(map[string]any{"hidden": escondida}))
 }
 
 // ── os MARCADORES (ALE-195) ──────────────────────────────────────────────────
 
-func draftMarksTheSpot(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftMarksTheSpot(st Scene, c draftCtx, b *board.BoardState) error {
 	casa, err := quadradoDaURL(c.R)
 	if err != nil {
 		return err
 	}
-	return tabuleiro.AddMarker(b, tabuleiro.BoardMarker{
+	return board.AddMarker(b, board.BoardMarker{
 		X: casa.X, Y: casa.Y,
-		Text:  tabuleiro.NextMarkerLetter(b.Markers),
-		Color: tabuleiro.DefaultMarkerColor(),
+		Text:  board.NextMarkerLetter(b.Markers),
+		Color: board.DefaultMarkerColor(),
 		// ESCONDIDO ao nascer, e é a razão de o marcador existir: marcar a
 		// armadilha na frente da mesa entrega a armadilha.
 		Hidden: true,
 	}, st.deps.Boards().NewID)
 }
 
-func draftRevealsMarker(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftRevealsMarker(st Scene, c draftCtx, b *board.BoardState) error {
 	marcador, err := draftMarker(c, b)
 	if err != nil {
 		return err
 	}
-	return tabuleiro.UpdateMarker(b, marcador.ID, tabuleiro.MarkerReveal(!marcador.Hidden))
+	return board.UpdateMarker(b, marcador.ID, board.MarkerReveal(!marcador.Hidden))
 }
 
-func draftPaintsMarker(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftPaintsMarker(st Scene, c draftCtx, b *board.BoardState) error {
 	marcador, err := draftMarker(c, b)
 	if err != nil {
 		return err
 	}
 	cor := chi.URLParam(c.R, "cor")
-	if !tabuleiro.KnownMarkerColor(cor) {
+	if !board.KnownMarkerColor(cor) {
 		return fmt.Errorf("a cor %q não existe; as do mapa são %s", cor, coresEmPortugues())
 	}
-	return tabuleiro.UpdateMarker(b, marcador.ID, tabuleiro.NewMarkerColor(cor))
+	return board.UpdateMarker(b, marcador.ID, board.NewMarkerColor(cor))
 }
 
-func draftErasesMarker(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
+func draftErasesMarker(st Scene, c draftCtx, b *board.BoardState) error {
 	marcador, err := draftMarker(c, b)
 	if err != nil {
 		return err
 	}
-	tabuleiro.RemoveMarker(b, marcador.ID)
+	board.RemoveMarker(b, marcador.ID)
 	return nil
 }
 
@@ -382,12 +382,12 @@ func draftErasesMarker(st Scene, c draftCtx, b *tabuleiro.BoardState) error {
 //
 // Devolve o MARCADOR e não o id pela mesma razão do `urlMarker` da mesa: revelar
 // ALTERNA, e alternar sem ler é escrever `true` por cima de `true`.
-func draftMarker(c draftCtx, b *tabuleiro.BoardState) (tabuleiro.BoardMarker, error) {
+func draftMarker(c draftCtx, b *board.BoardState) (board.BoardMarker, error) {
 	id := chi.URLParam(c.R, "id")
 	for _, m := range b.Markers {
 		if m.ID == id {
 			return m, nil
 		}
 	}
-	return tabuleiro.BoardMarker{}, fmt.Errorf("marcador %q não está no rascunho", id)
+	return board.BoardMarker{}, fmt.Errorf("marcador %q não está no rascunho", id)
 }

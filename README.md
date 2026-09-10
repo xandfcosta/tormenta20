@@ -8,7 +8,7 @@ engine-go/ Go: API (:3001), motor de regras, e as CENAS em templ + Datastar —
 e2e/       Playwright, dirigindo o app rodando
 ```
 
-A linguagem do domínio mora em **[GLOSSARIO.md](GLOSSARIO.md)**: uma palavra por
+A linguagem do domínio mora em **[GLOSSARY.md](GLOSSARY.md)**: uma palavra por
 conceito, os sinônimos proibidos e a regra de quando se escreve em português e
 quando em inglês. Consulte antes de nomear algo que o usuário vá ler.
 

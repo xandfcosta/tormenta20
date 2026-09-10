@@ -3,7 +3,7 @@ package table
 import (
 	"testing"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // O FALLBACK da cor de marcador fica NA CENA, e a varredura da folha foi para
@@ -18,7 +18,7 @@ import (
 // fallback e, de quebra, prende que ele aponta para uma variável que EXISTE —
 // era exatamente aí que o defeito antigo morava.
 func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
-	padrao := markerColor(tabuleiro.DefaultMarkerColor())
+	padrao := markerColor(board.DefaultMarkerColor())
 
 	for _, torta := range []string{"gold", "red", "'; background: url(x)", ""} {
 		if got := markerColor(torta); got != padrao {
@@ -28,8 +28,8 @@ func TestAnUnknownMarkerColorFallsBackToTheDefault(t *testing.T) {
 	// O CONTROLE: uma cor BOA não cai no padrão por acidente, senão o teste
 	// acima seria verdade sobre uma função que devolve sempre a mesma coisa.
 	outra := ""
-	for _, c := range tabuleiro.MarkerColors {
-		if c.ID != tabuleiro.DefaultMarkerColor() {
+	for _, c := range board.MarkerColors {
+		if c.ID != board.DefaultMarkerColor() {
 			outra = c.ID
 			break
 		}

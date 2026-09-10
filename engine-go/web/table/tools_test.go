@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // Os guardas do TRILHO DE FERRAMENTAS (ALE-203), em Datastar.
@@ -105,15 +105,15 @@ func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
 // mudou — e o `writeTable` compara o HTML depois, mas o trabalho de renderizar
 // nove regiões já teria acontecido.
 func TestClearingAnAlreadyCleanSquareReturnsFalse(t *testing.T) {
-	b := &tabuleiro.BoardState{}
-	if tabuleiro.ClearSquare(b, engine.Square{X: 1, Y: 1}) {
+	b := &board.BoardState{}
+	if board.ClearSquare(b, engine.Square{X: 1, Y: 1}) {
 		t.Error("limpar chão limpo disse que mudou alguma coisa")
 	}
 	if b.Version != 0 {
 		t.Errorf("a versão subiu para %d sem mudança nenhuma", b.Version)
 	}
 	b.Difficult = append(b.Difficult, engine.Square{X: 1, Y: 1})
-	if !tabuleiro.ClearSquare(b, engine.Square{X: 1, Y: 1}) {
+	if !board.ClearSquare(b, engine.Square{X: 1, Y: 1}) {
 		t.Error("limpar uma casa pintada disse que nada mudou")
 	}
 	if b.Version != 1 {

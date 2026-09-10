@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // O TRILHO DE FERRAMENTAS do tabuleiro (ALE-203), em Datastar.
@@ -85,7 +85,7 @@ func MapTools() []mapTool {
 	}
 	// Os PINCÉIS saem da lista de espécies e nunca de uma cópia escrita à mão: a
 	// quinta espécie nasce no trilho, com atalho, sem ninguém lembrar disto.
-	for _, pincel := range tabuleiro.TerrainKinds {
+	for _, pincel := range board.TerrainKinds {
 		trilho = append(trilho, mapTool{
 			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
 			Icone: drawing(pincel.ID).Icone,
