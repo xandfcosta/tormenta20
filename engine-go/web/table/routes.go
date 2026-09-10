@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/book"
-	"t20engine/tabuleiro"
 	"time"
 
 	"github.com/a-h/templ"
@@ -119,10 +119,10 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		Init:   fmt.Sprintf("@get('/mesa/%d/%d/stream')", campaignID, sessionID),
 		// A ILHA DA MESA (ALE-174): o que anima quando o estado chega pelo fio.
 		//
-		// Módulo PRÓPRIO e não `cena.js`, que carrega em toda página: um
+		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um
 		// observador de mutação sobre o tabuleiro não tem o que fazer na ficha
 		// nem na porta. É a mesma divisão que o leitor do livro já usa.
-		Scripts: []string{s.deps.Asset("mesa.js")},
+		Scripts: []string{s.deps.Asset("table.js")},
 	}, s.tableBody(r, view, campaignID, sessionID))
 }
 
@@ -149,7 +149,7 @@ func tableSignalsExpr() string {
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
-		fmt.Sprintf("novolugar: '', novochao: '%s'", tabuleiro.DefaultGround()),
+		fmt.Sprintf("novolugar: '', novochao: '%s'", board.DefaultGround()),
 		// A SUPERFÍCIE do jogador (ALE-129): qual das duas ocupa a tela. Abre na
 		// MESA (decisão do dono) — quem entra na sessão quer saber de quem é a vez
 		// e quem está em cena, e o tabuleiro pode nem estar aberto.
@@ -192,7 +192,7 @@ func tableSignalsExpr() string {
 		// `nova` porque `pecanome` e `pecatamanho` JÁ SÃO do diálogo de EDITAR
 		// peça, logo acima, e vivem no mesmo documento: reusá-los faria o gesto
 		// de criar escrever no alvo do gesto de salvar, que é o defeito que a
-		// linha do `buscador` no GLOSSARIO existe para impedir.
+		// linha do `buscador` no GLOSSARY existe para impedir.
 		"novapecanome: '', novapecatamanho: 1, novapecaaparencia: 'object'",
 		// A FILA e os verbos da linha.
 		"qualidadedodescanso: 'normal', formdecombatente: false",
@@ -332,12 +332,12 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// O `Mover` diz de quem é a vez e de quem é a peça, e a POSSE é resolvida
 	// contra o banco (o `meus` do roster) e nunca contra o cliente — é o mesmo
 	// fio de volta até a pessoa que a ALE-33 fixou.
-	quemOlha := tabuleiro.Mover{UserID: userID, Role: role}
+	quemOlha := board.Mover{UserID: userID, Role: role}
 	// A ABA que ESTA pessoa está olhando (ALE-205), e não "o tabuleiro da
 	// sessão", que deixou de existir como coisa única. Ela é resolvida contra os
 	// abertos, então a aba que o mestre fechou não deixa ninguém numa tela morta.
 	aba, puxado, deOnde := s.pullTab(ctx, sessionID, userID)
-	scene := tabuleiro.BoardForRole(role, s.deps.Boards().Get(ctx, sessionID, aba))
+	scene := board.BoardForRole(role, s.deps.Boards().Get(ctx, sessionID, aba))
 	// A LENTE DO MESTRE (ALE-193): com ela ligada, o que se desenha é a cena
 	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `quemOlha` continua
 	// dizendo "mestre", porque a lente é sobre o que ele vê e não sobre o que ele

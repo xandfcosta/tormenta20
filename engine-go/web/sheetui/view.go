@@ -139,7 +139,7 @@ type Tab struct {
 // `?tab=abilities` continua sendo Poderes, e o comentário da SPA diz por quê: o
 // valor sobreviveu de propósito ao renome Habilidades→Poderes, porque link
 // compartilhado e favorito apontam para ele. O mesmo vale para a chave `tab`
-// estar em inglês enquanto a tela fala português — ela é FRONTEIRA (GLOSSARIO
+// estar em inglês enquanto a tela fala português — ela é FRONTEIRA (GLOSSARY
 // §F), e trocá-la quebraria endereços para ganhar estética.
 //
 // A ordem é a do `SHEET_PANELS`, e a primeira é o padrão de quem chega sem
@@ -283,7 +283,7 @@ func sheetRoute(id int64, aba string) string {
 
 // routeVital traduz o rótulo da tela para o pedaço da URL.
 //
-// Duas palavras para a mesma coisa é o que o GLOSSARIO chama de colisão, e aqui
+// Duas palavras para a mesma coisa é o que o GLOSSARY chama de colisão, e aqui
 // ela é deliberada e contida: a TELA diz "PV" porque é o que a mesa fala, e a
 // ROTA diz "pv" porque endereço é minúsculo. Esta função é a única costura.
 func routeVital(rotulo string) string {

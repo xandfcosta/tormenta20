@@ -211,8 +211,8 @@ func osNomesDeArquivoDoRepositorio(t *testing.T) map[string]bool {
 	// CONTROLE: um arquivo que sabidamente existe. Sem ele, uma varredura que
 	// voltasse vazia faria todas as citações reprovarem de uma vez — e o
 	// diagnóstico apontaria para a prosa, que é o lugar errado.
-	if !fora["GLOSSARIO.md"] {
-		t.Fatal("a varredura da árvore não achou o GLOSSARIO.md: ela está medindo o lugar errado")
+	if !fora["GLOSSARY.md"] {
+		t.Fatal("a varredura da árvore não achou o GLOSSARY.md: ela está medindo o lugar errado")
 	}
 	return fora
 }

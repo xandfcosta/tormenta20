@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
 	"t20engine/plataforma"
-	"t20engine/tabuleiro"
 	"t20engine/web/hub"
 	"t20engine/web/routes"
 	"t20engine/web/table"
@@ -30,7 +30,7 @@ type Server struct {
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs         // nil if the catalog snapshot failed to Load
 	sessions *aovivo.SessionStore     // in-memory realtime tracker state (B.6)
-	boards   *tabuleiro.BoardStore    // tabuleiros táticos vivos por sessão (ALE-124, vários na ALE-205)
+	boards   *board.BoardStore        // tabuleiros táticos vivos por sessão (ALE-124, vários na ALE-205)
 	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
 	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
 	// bus é o barramento de eventos da casa (ALE-279): o que acontece numa mesa
@@ -165,7 +165,7 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		livro:    abreOLivro(cfg),
 		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, sheetVitals{q: q}, bus),
-		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID, bus),
+		boards:   board.NewBoardStore(q, aovivo.NewUUID, bus),
 		bus:      bus,
 		presence: aovivo.NewPresenceRegistry(),
 		sse:      aovivo.NewSSEHub(),

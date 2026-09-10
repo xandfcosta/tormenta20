@@ -4,11 +4,11 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"t20engine/tabuleiro"
+	"t20engine/board"
 	"testing"
 )
 
-func mapMarkers(t *testing.T, f pilotoFixture) []tabuleiro.BoardMarker {
+func mapMarkers(t *testing.T, f pilotoFixture) []board.BoardMarker {
 	t.Helper()
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
@@ -148,7 +148,7 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 		}
 	}
 	marcadores := mapMarkers(t, f)
-	if len(marcadores) != 1 || !marcadores[0].Hidden || marcadores[0].Color != tabuleiro.DefaultMarkerColor() {
+	if len(marcadores) != 1 || !marcadores[0].Hidden || marcadores[0].Color != board.DefaultMarkerColor() {
 		t.Errorf("o mapa mudou apesar dos 403: %+v", marcadores)
 	}
 }

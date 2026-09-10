@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"t20engine/tabuleiro"
+	"t20engine/board"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 
-	for i, pincel := range tabuleiro.TerrainKinds {
+	for i, pincel := range board.TerrainKinds {
 		// O caminho é o TRAÇO desde a ALE-203, e um clique parado é um traço de
 		// uma casa: a mesma casa nas duas pontas.
 		casa := fmt.Sprintf("/%d/0/ate/%d/0", i, i)
@@ -25,8 +25,8 @@ func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 	}
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	for i, pincel := range tabuleiro.TerrainKinds {
-		casas := tabuleiro.SquaresOf(b, pincel.ID)
+	for i, pincel := range board.TerrainKinds {
+		casas := board.SquaresOf(b, pincel.ID)
 		if len(casas) != 1 || casas[0].X != i {
 			t.Errorf("%s ficou com %v, esperado só a casa %d", pincel.ID, casas, i)
 		}
@@ -54,10 +54,10 @@ func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 	}
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if n := len(tabuleiro.SquaresOf(b, tabuleiro.TerrenoCamuflagem)); n != 0 {
+	if n := len(board.SquaresOf(b, board.TerrenoCamuflagem)); n != 0 {
 		t.Errorf("a camuflagem não foi apagada (%d casas)", n)
 	}
-	if n := len(tabuleiro.SquaresOf(b, tabuleiro.TerrenoDificil)); n != 1 {
+	if n := len(board.SquaresOf(b, board.TerrenoDificil)); n != 1 {
 		t.Errorf("a borracha levou o difícil junto (%d casas) — a casa tinha as duas", n)
 	}
 }
@@ -70,7 +70,7 @@ func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
-	for i, pincel := range tabuleiro.TerrainKinds {
+	for i, pincel := range board.TerrainKinds {
 		if rec := f.pede(t, f.mestre, "POST",
 			fmt.Sprintf("%s/tabuleiro/terreno/%s/%d/0/ate/%d/0", f.tableUrl(), pincel.ID, i, i), ""); rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", pincel.ID, rec.Code)
@@ -83,7 +83,7 @@ func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 	if !strings.Contains(tela, "tabuleiro-plano") {
 		t.Fatal("o tabuleiro não desenhou — o guarda mediria a tela errada")
 	}
-	for _, pincel := range tabuleiro.TerrainKinds {
+	for _, pincel := range board.TerrainKinds {
 		if !strings.Contains(tela, "tabuleiro-"+string(pincel.ID)) {
 			t.Errorf("a espécie %s foi pintada e não tem desenho próprio na cena", pincel.ID)
 		}
@@ -118,7 +118,7 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	if strings.Contains(tela, "'Pintar ' + $ferramenta") {
 		t.Error("o nome acessível da camada monta o rótulo com o id da ferramenta")
 	}
-	for _, pincel := range tabuleiro.TerrainKinds {
+	for _, pincel := range board.TerrainKinds {
 		if !strings.Contains(tela, pincel.Efeito) {
 			t.Errorf("o trilho não diz o que %s faz (%q)", pincel.ID, pincel.Efeito)
 		}
@@ -138,7 +138,7 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	// mantida como estava, esta linha teria falhado dizendo a coisa errada — e
 	// fosse apagada, o vazamento do pincel deixaria de ser medido.
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	for _, pincel := range tabuleiro.TerrainKinds {
+	for _, pincel := range board.TerrainKinds {
 		if strings.Contains(doJogador, pincel.Efeito) {
 			t.Errorf("o pincel %q apareceu na cena do jogador", pincel.ID)
 		}
@@ -158,7 +158,7 @@ func TestOnlyTheGmPaints(t *testing.T) {
 		t.Errorf("o jogador pintou o chão: %d", rec.Code)
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if n := len(tabuleiro.SquaresOf(b, tabuleiro.TerrenoDificil)); n != 0 {
+	if n := len(board.SquaresOf(b, board.TerrenoDificil)); n != 0 {
 		t.Errorf("a pintura do jogador entrou mesmo assim (%d casas)", n)
 	}
 }

@@ -3,15 +3,15 @@ package api
 import (
 	"context"
 	"log"
+	"t20engine/board"
 	"t20engine/engine"
 	"t20engine/plataforma"
-	"t20engine/tabuleiro"
 )
 
 // speedsForBoard mede o deslocamento das peças de personagem que ainda não têm
 // um. Só as que faltam: recomputar a ficha de todo mundo a cada "trazer o grupo"
 // seria pagar caro por um número que não muda sozinho.
-func (tr tableRules) speedsForBoard(board *tabuleiro.BoardState) map[string]int {
+func (tr tableRules) speedsForBoard(board *board.BoardState) map[string]int {
 	speeds := map[string]int{}
 	if board == nil {
 		return speeds
@@ -41,9 +41,9 @@ func (tr tableRules) speedSquaresFor(characterID int64) int {
 	return engine.SquaresForDisplacement(float64(sheet.Displacement.Total))
 }
 
-// tabuleiro.FindToken num tabuleiro possivelmente ausente — a leitura do gateway acontece
+// board.FindToken num tabuleiro possivelmente ausente — a leitura do gateway acontece
 // fora da trava, e "sem tabuleiro" é resposta legítima.
-func pendingTokenOf(b *tabuleiro.BoardState) string {
+func pendingTokenOf(b *board.BoardState) string {
 	if b == nil || b.Pending == nil {
 		return ""
 	}

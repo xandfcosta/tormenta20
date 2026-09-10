@@ -3,7 +3,7 @@ package table
 import (
 	"fmt"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // COMO UMA CASA DE TERRENO SE PARECE (ALE-203, escolha do dono).
@@ -50,15 +50,15 @@ type speciesDrawing struct {
 // drawingBySpecies é a tabela, e ela é conferida contra a lista do domínio
 // pelo `TestEveryKindHasADrawing`.
 //
-// Mapa e não campo no `tabuleiro.PincelDeTerreno`, porque nome de ícone do lucide
+// Mapa e não campo no `board.PincelDeTerreno`, porque nome de ícone do lucide
 // é APARÊNCIA e o domínio não tem por que conhecê-lo. O preço dessa separação é a
 // espécie nova poder nascer sem desenho — e é exatamente por isso que o guarda
 // existe e que o `drawing` recusa em vez de devolver um branco.
-var drawingBySpecies = map[tabuleiro.TerrainKind]speciesDrawing{
-	tabuleiro.TerrenoDificil:    {Icone: "Waves", Canto: "noroeste"},
-	tabuleiro.TerrenoCobertura:  {Icone: "Shield", Canto: "nordeste"},
-	tabuleiro.TerrenoCamuflagem: {Icone: "EyeOff", Canto: "sudeste"},
-	tabuleiro.TerrenoElevado:    {Icone: "Mountain", Canto: "sudoeste"},
+var drawingBySpecies = map[board.TerrainKind]speciesDrawing{
+	board.TerrenoDificil:    {Icone: "Waves", Canto: "noroeste"},
+	board.TerrenoCobertura:  {Icone: "Shield", Canto: "nordeste"},
+	board.TerrenoCamuflagem: {Icone: "EyeOff", Canto: "sudeste"},
+	board.TerrenoElevado:    {Icone: "Mountain", Canto: "sudoeste"},
 }
 
 // drawing devolve o desenho da espécie, e ENTRA EM PÂNICO se não houver.
@@ -67,7 +67,7 @@ var drawingBySpecies = map[tabuleiro.TerrainKind]speciesDrawing{
 // não se distingue de nenhuma outra, e isso é indistinguível de "o pincel não
 // funcionou". O `TestEveryKindHasADrawing` faz o pânico acontecer na suíte e não
 // na mesa de alguém.
-func drawing(especie tabuleiro.TerrainKind) speciesDrawing {
+func drawing(especie board.TerrainKind) speciesDrawing {
 	d, tem := drawingBySpecies[especie]
 	if !tem {
 		panic(fmt.Sprintf("a espécie de terreno %q não tem desenho: acrescente-a em oDesenhoDasEspecies", especie))
@@ -78,6 +78,6 @@ func drawing(especie tabuleiro.TerrainKind) speciesDrawing {
 // squareClass é o que a casa pintada veste: a espécie (que traz a tinta) e o
 // canto do ícone.
 func squareClass(especie string) string {
-	d := drawing(tabuleiro.TerrainKind(especie))
+	d := drawing(board.TerrainKind(especie))
 	return "tabuleiro-terreno tabuleiro-" + especie + " terreno-canto-" + d.Canto
 }

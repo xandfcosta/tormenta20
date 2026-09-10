@@ -22,7 +22,7 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  *
  * O que NÃO está aqui, de propósito: recusa de escolha que o kit não oferece,
  * nascimento com o kit de p140, e o limite da compra de pontos. Isso é regra de
- * SERVIDOR e está preso em `api/piloto_forja_test.go`, que é a camada mais
+ * SERVIDOR e está preso em `api/piloto_forge_test.go`, que é a camada mais
  * barata que a segura.
  */
 test.use({ storageState: '.auth/user.json' })

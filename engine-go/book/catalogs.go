@@ -25,7 +25,7 @@ type Condition struct {
 	UpgradesTo string `json:"upgradesTo,omitempty"`
 	// BookPage é a página IMPRESSA do verbete, derivada do Índice Remissivo do
 	// próprio livro e conferida contra o texto da página
-	// (`scripts/paginas-do-livro.py`). ZERO significa "o catálogo não sabe", e a
+	// (`scripts/book-pages.py`). ZERO significa "o catálogo não sabe", e a
 	// tela não desenha selo nenhum — mentir a página é pior que não mostrá-la.
 	BookPage int `json:"bookPage"`
 }
@@ -390,7 +390,7 @@ func GodName(id string) string {
 		for _, d := range ListOf[struct {
 			ID   string `json:"id"`
 			Name string `json:"name"`
-		}]("deuses") {
+		}]("gods") {
 			nomePorDeus[d.ID] = d.Name
 		}
 	})

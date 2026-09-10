@@ -17,7 +17,7 @@ import "t20engine/web/ui"
 //
 //  1. O TECLADO. As setas andam no menu, e nada aqui as implementa: o menu só
 //     DECLARA a forma dele (`data-nav-region`, `data-nav-layout`) e o driver —
-//     o mesmo `scene-nav.ts` da SPA, servido por `cena.js` — lê isso do DOM.
+//     o mesmo `scene-nav.ts` da SPA, servido por `scene.js` — lê isso do DOM.
 //     Um DOM vindo do servidor é um DOM.
 //  2. O POPOVER do rodapé, que era Kobalte, é a Popover API NATIVA. Foco,
 //     dispensa por clique fora, `Esc` e camada de topo vêm do navegador; o que
@@ -130,7 +130,7 @@ func hubMenu(v hubView) templ.Component {
 // entrada é NAVEGAÇÃO, e um botão perderia o clique do meio, o "abrir em nova
 // aba" e o menu de contexto que o navegador já dá.
 //
-// Os `data-cue-*` são o gancho dos sons: o `cena.js` escuta por DELEGAÇÃO num
+// Os `data-cue-*` são o gancho dos sons: o `scene.js` escuta por DELEGAÇÃO num
 // ouvinte só, porque o HTML pode ser remendado a qualquer tique e ouvinte preso
 // a nó morre no remendo.
 func menuItem(icone_, rotulo, destino string, temProximo bool) templ.Component {
@@ -296,7 +296,7 @@ func hubFooter(v hubView) templ.Component {
 // O `position: fixed` com `margin: 0` é obrigatório: a top layer ignora o
 // contexto de posicionamento do pai, e o preflight do Tailwind não zera a
 // margem do popover como zera a do `<dialog>`. Quem escreve as coordenadas é o
-// `cena.js`, no `beforetoggle`.
+// `scene.js`, no `beforetoggle`.
 //
 // Os sinais aqui são estado de INTERAÇÃO (o rótulo do som, a visibilidade do
 // slider), não da aplicação — e nascem no `data-init` lendo a preferência deste

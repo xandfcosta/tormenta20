@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // O TRILHO DE FERRAMENTAS do tabuleiro (ALE-203), em Datastar.
@@ -85,7 +85,7 @@ func MapTools() []mapTool {
 	}
 	// Os PINCÉIS saem da lista de espécies e nunca de uma cópia escrita à mão: a
 	// quinta espécie nasce no trilho, com atalho, sem ninguém lembrar disto.
-	for _, pincel := range tabuleiro.TerrainKinds {
+	for _, pincel := range board.TerrainKinds {
 		trilho = append(trilho, mapTool{
 			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
 			Icone: drawing(pincel.ID).Icone,
@@ -167,7 +167,7 @@ func railKeyboard(mestre bool) string {
 	}
 	// ESC NÃO ENTRA AQUI, e isto é medido e não escolhido.
 	//
-	// Ele já tem dono: o `cena.js` mapeia Escape para "voltar" na gramática do
+	// Ele já tem dono: o `scene.js` mapeia Escape para "voltar" na gramática do
 	// teclado e chama `preventDefault` + `stopPropagation` no `document` — o
 	// evento **nunca chega à janela**, que é onde o `__window` escuta. Provado com
 	// controle no navegador: um `keydown` de `F2` no mesmo nó liga a ferramenta, e

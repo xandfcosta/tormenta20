@@ -88,7 +88,7 @@ type Class struct {
 	// Proficiencias é a linha "Proficiências." do bloco da classe (p36–83),
 	// transcrita. Ela chegou na ALE-272 com o painel de Proficiências da ficha:
 	// a tabela existia só em TypeScript, fora do alcance da validação de schema
-	// — ver `web/sheetui/proficiencias.go`.
+	// — ver `web/sheetui/proficiencies.go`.
 	Proficiencias []string `json:"proficiencies"`
 	// Spellcasting é a tabela de progressão de círculo, e ela é NULA para as
 	// classes que não conjuram — ver `spellcasting.go`.
@@ -260,7 +260,7 @@ var (
 
 func Expertises() []Expertise {
 	periciasUmaVez.Do(func() {
-		periciasDoLivro = ListOf[Expertise]("pericias")
+		periciasDoLivro = ListOf[Expertise]("expertises")
 		treinadaPor := map[string][]string{}
 		var pericias map[string]ClassExpertises
 		if bruto, ok := catalog.Resource("class-expertises"); ok {
@@ -294,7 +294,7 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 		// devolve lista vazia em silêncio, que é a degradação normal deste
 		// carregador e seria um catálogo sumindo da tela sem aviso.
 		racasDoAcervo = MapOf[Race]("races")
-		deusesDoAcervo = ListOf[God]("deuses")
+		deusesDoAcervo = ListOf[God]("gods")
 		classesDoAcervo = ClassesWithKnownExpertises()
 		SortByName(racasDoAcervo, func(r Race) string { return r.Name })
 		SortByName(classesDoAcervo, func(c Class) string { return c.Name })
@@ -316,7 +316,7 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 // nasceu nesta issue com três campos — id, nome e página — porque ela existia só
 // como uma lista de nomes dentro de `options.json`. PV, PM e proficiências são
 // transcrição de tabela, e transcrever à mão é exatamente o que o
-// `scripts/paginas-do-livro.py` existe para não fazer. O que a tela mostra além
+// `scripts/book-pages.py` existe para não fazer. O que a tela mostra além
 // do nome ela DERIVA do que já está no repositório: as perícias treinadas saem
 // de `class-expertises`, a conta de poderes sai de `class-powers`. Quem quiser o
 // bloco inteiro tem o botão do livro ao lado do nome.

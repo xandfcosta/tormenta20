@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // Os guardas da RÉGUA e do GABARITO na Mesa (ALE-269, superfície 8).
@@ -105,7 +105,7 @@ func TestTheTemplatePathUsesThePlaneCoordinate(t *testing.T) {
 // Uma Colossal ocupa 6×6 (p107), e exigir que ela caiba inteira na área deixaria
 // o dragão de fora do próprio incêndio. Basta UM quadrado do corpo cair dentro.
 func TestTheTemplateCatchesTheLargeTokenByItsBody(t *testing.T) {
-	b := &tabuleiro.BoardState{Tokens: []tabuleiro.BoardToken{
+	b := &board.BoardState{Tokens: []board.BoardToken{
 		{ID: "dragao", Label: "Dragão", X: 10, Y: 10, Footprint: 6},
 		{ID: "rato", Label: "Rato", X: 30, Y: 30},
 	}}
@@ -194,7 +194,7 @@ func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 // prende: a quinta espécie nasce dentro da condição em vez de fora dela.
 func TestThePaintLayerOnlyLightsUpWithABrush(t *testing.T) {
 	condicao := onIsBrush()
-	for _, e := range tabuleiro.TerrainKinds {
+	for _, e := range board.TerrainKinds {
 		if !strings.Contains(condicao, `"`+string(e.ID)+`"`) {
 			t.Errorf("a espécie %q ficou fora da condição da pintura: %s", e.ID, condicao)
 		}

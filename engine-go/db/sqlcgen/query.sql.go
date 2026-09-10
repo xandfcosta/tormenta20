@@ -1620,7 +1620,7 @@ WHERE characterId = ? ORDER BY conditionalId
 
 // Estado de mesa da ficha (ALE-222). Saiu do localStorage: o servidor e dono.
 // CUIDADO: conditionals (o opt-in do JOGADOR) nao e conditions (as do LIVRO,
-// que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARIO.md.
+// que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARY.md.
 func (q *Queries) ListCharacterConditionals(ctx context.Context, characterid int64) ([]string, error) {
 	rows, err := q.db.QueryContext(ctx, listCharacterConditionals, characterid)
 	if err != nil {

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // As expressões da RÉGUA e do GABARITO (ALE-269, superfície 8).
@@ -40,8 +40,8 @@ const (
 // era verdade para toda ferramenta que ainda não existia. Uma lista escrita à mão
 // no `.templ` teria o mesmo defeito adiado — a espécie nova nasceria fora dela.
 func onIsBrush() string {
-	nomes := make([]string, 0, len(tabuleiro.TerrainKinds))
-	for _, e := range tabuleiro.TerrainKinds {
+	nomes := make([]string, 0, len(board.TerrainKinds))
+	for _, e := range board.TerrainKinds {
 		nomes = append(nomes, fmt.Sprintf("%q", string(e.ID)))
 	}
 	return fmt.Sprintf("[%s].includes($ferramenta)", strings.Join(nomes, ", "))
@@ -75,7 +75,7 @@ const (
 // quadrado pendurada. Com ela, o segundo clique do duplo não faz nada e o
 // congelamento cai limpo.
 //
-// O ESC NÃO ENTRA, e é medido: o `cena.js` mapeia Escape para "voltar" e chama
+// O ESC NÃO ENTRA, e é medido: o `scene.js` mapeia Escape para "voltar" e chama
 // `stopPropagation` no documento — provado com controle, um `F2` chega a um
 // listener cru na janela e o `Escape` não. Era ele que a nota do dono usava para
 // apagar; quem apaga é o botão direito, que chega.

@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"fmt"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 	"t20engine/web/ui"
 )
 
@@ -267,7 +267,7 @@ func boardTable(v BoardView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = ui.Icon(drawing(tabuleiro.TerrainKind(q.Especie)).Icone, "terreno-marca").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ui.Icon(drawing(board.TerrainKind(q.Especie)).Icone, "terreno-marca").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -487,7 +487,7 @@ func boardTable(v BoardView) templ.Component {
 // A BARRA nasce AQUI e não no trilho de ferramentas, que é onde a issue a tinha
 // escrito em 2026-08-22 (decisão do dono, 2026-08-27). Duas razões: a aba É o
 // nome da cena, e é aqui que esse nome já se lê; e o trilho responde outra
-// pergunta — "o que o dedo faz" —, que o GLOSSARIO já separa desta em letras
+// pergunta — "o que o dedo faz" —, que o GLOSSARY já separa desta em letras
 // grandes. Um trilho que misturasse as duas obrigaria a ler ícone por ícone para
 // saber qual é ferramenta e qual é lugar.
 //
@@ -2932,7 +2932,7 @@ func markerActions(v BoardView, m boardMarker) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, cor := range tabuleiro.MarkerColors {
+		for _, cor := range board.MarkerColors {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 221, "<button type=\"button\" aria-label=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3125,7 +3125,7 @@ func openBoardButton(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, chao := range tabuleiro.PlaceGrounds {
+		for _, chao := range board.PlaceGrounds {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 236, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3519,7 +3519,7 @@ func placesCollection(v BoardView) templ.Component {
 // `<button>` de verdade, o teclado a alcança, e o `Enter` abre este mesmo menu.
 //
 // O ESC NÃO FECHA o menu, e a linha que prometia isso saiu na ALE-203 por ser
-// mentira: o `cena.js` mapeia Escape para "voltar" e o para no `document`, então
+// mentira: o `scene.js` mapeia Escape para "voltar" e o para no `document`, então
 // um `keydown__window` nunca o vê. Quem fecha é o ✕, e abrir o menu de OUTRA
 // peça — que é o mesmo sinal recebendo outro id.
 func tokenMenu(v BoardView, p boardToken) templ.Component {
@@ -3870,12 +3870,12 @@ func tokenMenu(v BoardView, p boardToken) templ.Component {
 //
 // A top layer resolve os três de uma vez: sai do `transform`, sai do
 // `overflow` e é posicionada em relação à JANELA. Quem escreve as coordenadas é
-// o `ancora()` do `cena.js`, no `beforetoggle` — o mesmo que posiciona o menu do
+// o `ancora()` do `scene.js`, no `beforetoggle` — o mesmo que posiciona o menu do
 // jogador no Hub —, e ele já vira para cima quando o gatilho está na metade de
 // baixo da tela.
 //
 // De brinde vêm o clique-fora e o Esc, que aqui FUNCIONA: o navegador fecha o
-// popover antes de o `cena.js` engolir a tecla. É o único Esc desta cena que
+// popover antes de o `scene.js` engolir a tecla. É o único Esc desta cena que
 // responde, e é por isso que ele não é anunciado em lugar nenhum — prometer
 // "Esc fecha" numa tela em que ele só fecha ISTO seria pior que não prometer.
 //

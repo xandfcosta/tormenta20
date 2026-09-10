@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"sync"
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
-	"t20engine/tabuleiro"
 )
 
 // AS REGRAS DA MESA AO VIVO, com casa própria (ALE-278, fatia 6).
@@ -37,7 +37,7 @@ type tableRules struct {
 	cfg      configForTable
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs
-	boards   *tabuleiro.BoardStore
+	boards   *board.BoardStore
 	sessions *aovivo.SessionStore
 	presence *aovivo.PresenceRegistry
 	sse      *aovivo.SSEHub

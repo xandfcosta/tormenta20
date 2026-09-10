@@ -10,7 +10,7 @@ package sheet
 //
 // CUIDADO com o vizinho: `conditionals` é o opt-in do JOGADOR (Fúria, Ataque
 // Poderoso); `conditions` são as do LIVRO (p394-395, Caído/Atordoado) e moram na
-// coluna `characters.activeConditions`. Ver a colisão C6 no GLOSSARIO.md.
+// coluna `characters.activeConditions`. Ver a colisão C6 no GLOSSARY.md.
 
 // PowerUseDTO é quanto de um poder já se gastou num escopo.
 type PowerUseDTO struct {

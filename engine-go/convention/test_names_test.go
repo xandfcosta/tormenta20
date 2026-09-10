@@ -151,7 +151,7 @@ func TestEveryTestNameIsEnglish(t *testing.T) {
 				}
 				t.Errorf("%s: %s tem %q, que é português.\n"+
 					"Nome de teste é IDENTIFICADOR, e identificador é em inglês (CLAUDE.md § Idioma).\n"+
-					"A grafia do termo sai do GLOSSARIO — traduzir na hora, duas vezes, é como um\n"+
+					"A grafia do termo sai do GLOSSARY — traduzir na hora, duas vezes, é como um\n"+
 					"conceito vira dois.",
 					caminho, nome, palavra)
 				break

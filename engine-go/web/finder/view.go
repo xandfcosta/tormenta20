@@ -42,7 +42,7 @@ type finderHit struct {
 	Destino string
 	// Pagina é a do livro, e ZERO significa "o catálogo não sabe" — a linha sai
 	// sem número em vez de sair com "p0". Desde a derivação das páginas
-	// (`scripts/paginas-do-livro.py`) os cinco catálogos sabem a sua; o que
+	// (`scripts/book-pages.py`) os cinco catálogos sabem a sua; o que
 	// continua zerado são as 81 entradas que o Índice Remissivo não resolve.
 	Pagina int
 	// ponto não vai para a tela: ele é a ORDEM, e mostrá-lo convidaria a

@@ -60,7 +60,7 @@ var tombstones = map[string]bool{
 	//
 	// O primeiro é a razão de a varredura ter acontecido: ele afirmava, em
 	// verde, que trocar de cena ARQUIVA a que estava na mesa — o comportamento
-	// que a ALE-205 removeu e que o GLOSSARIO desmente com todas as letras. Um
+	// que a ALE-205 removeu e que o GLOSSARY desmente com todas as letras. Um
 	// teste que dirige uma porta morta não fica obsoleto junto com ela; ele passa
 	// a afirmar o oposto do produto, e continua passando.
 	//

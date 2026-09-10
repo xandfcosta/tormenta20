@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // VER COMO JOGADOR (ALE-193, portado na ALE-269 como superfície 7).
@@ -108,7 +108,7 @@ func (s Scene) LensRoutes(r chi.Router) {
 // Devolve o tabuleiro SEM MUDÁ-LO — a lente não é mutação da cena, e publicá-la
 // acordaria a mesa inteira para um modo que é de uma pessoa só. O que redesenha
 // a tela de quem clicou é a resposta do próprio comando.
-func toggleLens(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func toggleLens(st Scene, c commandCtx) (*board.BoardState, error) {
 	st.lenses.Toggle(c.SessionID, c.User)
 	return nil, nil
 }
@@ -123,8 +123,8 @@ func toggleLens(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // assim ela cobre tudo o que a redação tira, inclusive o que ela vier a tirar
 // depois — a cortina esvazia a cena inteira, e uma contagem por campo diria zero
 // escondidas sobre um mapa que a mesa não vê.
-func seesTableHowScene(doMestre *tabuleiro.BoardState) (daMesa *tabuleiro.BoardState, escondidas int) {
-	daMesa = tabuleiro.BoardForRole("player", doMestre)
+func seesTableHowScene(doMestre *board.BoardState) (daMesa *board.BoardState, escondidas int) {
+	daMesa = board.BoardForRole("player", doMestre)
 	if doMestre == nil {
 		return daMesa, 0
 	}

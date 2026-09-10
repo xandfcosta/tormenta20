@@ -1,6 +1,6 @@
 package api
 
-import "t20engine/tabuleiro"
+import "t20engine/board"
 
 import (
 	"context"
@@ -30,7 +30,7 @@ func mesaComTaverna(t *testing.T) (*Server, int64, int64) {
 	ctx := context.Background()
 
 	s.boards.Open(ctx, sessao, "Taverna do Javali", "taverna")
-	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
+	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, board.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	return s, campanha, sessao
@@ -96,7 +96,7 @@ func TestArchivingTwiceDoesNotStackTheSamePlace(t *testing.T) {
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
-	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{Label: "Bandido", X: 9, Y: 9}); err != nil {
+	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, board.BoardToken{Label: "Bandido", X: 9, Y: 9}); err != nil {
 		t.Fatalf("segunda peça: %v", err)
 	}
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, defaultTab)); err != nil {
@@ -117,10 +117,10 @@ func TestArchivingTwiceDoesNotStackTheSamePlace(t *testing.T) {
 func TestThePendingMoveDoesNotComeBackWithThePlace(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
-	board := s.boards.Get(ctx, sessao, defaultTab)
-	board.Pending = &tabuleiro.PendingMove{TokenID: "t1", Cost: 3, Budget: 6}
+	opened := s.boards.Get(ctx, sessao, defaultTab)
+	opened.Pending = &board.PendingMove{TokenID: "t1", Cost: 3, Budget: 6}
 
-	if err := s.boards.Archive(ctx, campanha, board); err != nil {
+	if err := s.boards.Archive(ctx, campanha, opened); err != nil {
 		t.Fatalf("arquivar: %v", err)
 	}
 	s.boards.Close(ctx, sessao, defaultTab)
@@ -160,7 +160,7 @@ TestASceneFromAnotherCampaignCannotReachTheTable, os dois dirigindo o `ShowPlace
 fatias.
 
 O PRIMEIRO é a razão de esta lápide existir. Ele afirmava, EM VERDE, que trocar
-de cena arquiva a que estava na mesa; o GLOSSARIO diz o contrário desde a
+de cena arquiva a que estava na mesa; o GLOSSARY diz o contrário desde a
 ALE-205 — "Reabrir não troca mais nada de lugar: ele acrescenta uma aba, e a
 cena que estava na mesa continua onde estava". Ele não ficou obsoleto junto com
 a porta que dirigia: passou a afirmar o OPOSTO do produto, e continuou verde
@@ -181,7 +181,7 @@ func TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace(t *testing
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
 	neighbourCampaign := seedCampaign(t, s, seedUser(t, s, "vizinho-openplace@t.com"))
-	if err := s.boards.Archive(ctx, neighbourCampaign, &tabuleiro.BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
+	if err := s.boards.Archive(ctx, neighbourCampaign, &board.BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
 		t.Fatalf("guardar a cena da outra mesa: %v", err)
 	}
 	theirPlace := s.boards.Places(ctx, neighbourCampaign)[0]
@@ -204,7 +204,7 @@ func TestASceneFromAnotherCampaignCannotReachTheTableThroughOpenPlace(t *testing
 	}
 }
 
-func placeNamed(t *testing.T, lugares []tabuleiro.Place, nome string) tabuleiro.Place {
+func placeNamed(t *testing.T, lugares []board.Place, nome string) board.Place {
 	t.Helper()
 	for _, lugar := range lugares {
 		if lugar.Name == nome {
@@ -212,7 +212,7 @@ func placeNamed(t *testing.T, lugares []tabuleiro.Place, nome string) tabuleiro.
 		}
 	}
 	t.Fatalf("%q não está no acervo: %+v", nome, lugares)
-	return tabuleiro.Place{}
+	return board.Place{}
 }
 
 /*
@@ -239,7 +239,7 @@ func TestBuildingThePlaceStoresTheSceneWithAnIdForTheNewToken(t *testing.T) {
 	}
 	lugar := s.boards.Places(ctx, campanha)[0]
 
-	montada := &tabuleiro.BoardState{Place: "nome que o cliente inventou", Tokens: []tabuleiro.BoardToken{
+	montada := &board.BoardState{Place: "nome que o cliente inventou", Tokens: []board.BoardToken{
 		{Label: "Necromante", X: 4, Y: 4, Footprint: 2},
 	}}
 	if err := s.boards.SavePlaceScene(ctx, campanha, lugar.ID, montada); err != nil {
@@ -277,7 +277,7 @@ func TestASceneBuiltWithAnAbsurdCoordinateIsRefused(t *testing.T) {
 	}
 	lugar := s.boards.Places(ctx, campanha)[0]
 
-	absurda := &tabuleiro.BoardState{Tokens: []tabuleiro.BoardToken{{Label: "Fantasma", X: 9_000_000, Y: 0}}}
+	absurda := &board.BoardState{Tokens: []board.BoardToken{{Label: "Fantasma", X: 9_000_000, Y: 0}}}
 	err := s.boards.SavePlaceScene(ctx, campanha, lugar.ID, absurda)
 
 	if err == nil {
@@ -296,7 +296,7 @@ func TestAPlaceFromAnotherCampaignCannotBeBuilt(t *testing.T) {
 	s, campanha, _ := mesaComTaverna(t)
 	ctx := context.Background()
 	outra := seedCampaign(t, s, seedUser(t, s, "vizinha@t.com"))
-	if err := s.boards.Archive(ctx, outra, &tabuleiro.BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
+	if err := s.boards.Archive(ctx, outra, &board.BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
 		t.Fatalf("guardar a cena da outra mesa: %v", err)
 	}
 	alheia := s.boards.Places(ctx, outra)[0]
@@ -304,7 +304,7 @@ func TestAPlaceFromAnotherCampaignCannotBeBuilt(t *testing.T) {
 	if _, err := s.boards.PlaceScene(ctx, campanha, alheia.ID); err == nil {
 		t.Error("leu a cena de outra crônica")
 	}
-	if err := s.boards.SavePlaceScene(ctx, campanha, alheia.ID, &tabuleiro.BoardState{}); err == nil {
+	if err := s.boards.SavePlaceScene(ctx, campanha, alheia.ID, &board.BoardState{}); err == nil {
 		t.Error("escreveu na cena de outra crônica")
 	}
 }
@@ -335,8 +335,8 @@ func TestEditingThePlaceDraftChangesTheArchiveAndNotTheTable(t *testing.T) {
 		t.Fatalf("criar a cripta: %v", err)
 	}
 
-	cena, err := s.boards.EditPlace(ctx, campanha, cripta.ID, func(b *tabuleiro.BoardState) error {
-		return tabuleiro.AddToken(b, tabuleiro.BoardToken{
+	cena, err := s.boards.EditPlace(ctx, campanha, cripta.ID, func(b *board.BoardState) error {
+		return board.AddToken(b, board.BoardToken{
 			Label: "Necromante", X: 4, Y: 4, Footprint: 2,
 		}, s.boards.NewID)
 	})
@@ -373,13 +373,13 @@ func TestAPlaceDraftGestureThatProducesAnAbsurdCoordinateIsRefused(t *testing.T)
 	if err != nil {
 		t.Fatalf("criar a cripta: %v", err)
 	}
-	if _, err := s.boards.EditPlace(ctx, campanha, cripta.ID, func(b *tabuleiro.BoardState) error {
-		return tabuleiro.AddToken(b, tabuleiro.BoardToken{Label: "Porta", X: 3, Y: 3}, s.boards.NewID)
+	if _, err := s.boards.EditPlace(ctx, campanha, cripta.ID, func(b *board.BoardState) error {
+		return board.AddToken(b, board.BoardToken{Label: "Porta", X: 3, Y: 3}, s.boards.NewID)
 	}); err != nil {
 		t.Fatalf("semear a peça: %v", err)
 	}
 
-	_, err = s.boards.EditPlace(ctx, campanha, cripta.ID, func(b *tabuleiro.BoardState) error {
+	_, err = s.boards.EditPlace(ctx, campanha, cripta.ID, func(b *board.BoardState) error {
 		b.Tokens[0].X = 9_000_000
 		return nil
 	})
@@ -408,7 +408,7 @@ func TestThePlaceOpenOnALiveTableRefusesTheDraft(t *testing.T) {
 	}
 	lugar := s.boards.Places(ctx, campanha)[0]
 
-	_, err := s.boards.EditPlace(ctx, campanha, lugar.ID, func(b *tabuleiro.BoardState) error {
+	_, err := s.boards.EditPlace(ctx, campanha, lugar.ID, func(b *board.BoardState) error {
 		b.Tokens = nil
 		return nil
 	})
@@ -426,14 +426,14 @@ func TestThePlaceOpenOnALiveTableRefusesTheDraft(t *testing.T) {
 	if err != nil {
 		t.Fatalf("criar a cripta: %v", err)
 	}
-	if _, err := s.boards.EditPlace(ctx, campanha, cripta.ID, func(b *tabuleiro.BoardState) error {
+	if _, err := s.boards.EditPlace(ctx, campanha, cripta.ID, func(b *board.BoardState) error {
 		return nil
 	}); err != nil {
 		t.Fatalf("o lugar que NÃO está na mesa foi recusado: %v", err)
 	}
 }
 
-// A trava pega o tabuleiro aberto num processo ANTERIOR, pelo disco.
+// A trava pega o tabuleiro opened num processo ANTERIOR, pelo disco.
 //
 // O caso de cima passa pela MEMÓRIA — a taverna está no mapa deste store. Este
 // prova a outra fonte, e ela não é redundância: depois de um reinício o mapa
@@ -453,8 +453,8 @@ func TestThePlaceOpenBeforeARestartStillRefusesTheDraft(t *testing.T) {
 		t.Fatal("a gravação do tabuleiro falhou")
 	}
 
-	depoisDoReinicio := tabuleiro.NewBoardStore(s.queries, s.boards.NewID, &events.Bus{})
-	_, err := depoisDoReinicio.EditPlace(ctx, campanha, lugar.ID, func(b *tabuleiro.BoardState) error {
+	depoisDoReinicio := board.NewBoardStore(s.queries, s.boards.NewID, &events.Bus{})
+	_, err := depoisDoReinicio.EditPlace(ctx, campanha, lugar.ID, func(b *board.BoardState) error {
 		b.Tokens = nil
 		return nil
 	})

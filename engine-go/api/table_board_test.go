@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"t20engine/board"
 	"t20engine/events"
-	"t20engine/tabuleiro"
 	"t20engine/web/table"
 	"testing"
 	"time"
 )
 
-func (f pilotoFixture) seedOpenBoard(t *testing.T, terreno string) *tabuleiro.BoardState {
+func (f pilotoFixture) seedOpenBoard(t *testing.T, terreno string) *board.BoardState {
 	t.Helper()
 	b, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, "Taverna do Javali", terreno)
 	if err != nil {
@@ -51,11 +51,11 @@ func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}); err != nil {
+		board.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
 	}
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "avista", Label: "Arwen", X: 1, Y: 1}); err != nil {
+		board.BoardToken{ID: "avista", Label: "Arwen", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça à vista: %v", err)
 	}
 
@@ -86,7 +86,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 	entryID := f.tracker(t)
 	f.seedOpenBoard(t, "pedra")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}); err != nil {
+		board.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
@@ -179,7 +179,7 @@ func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 	avisou("abrir o tabuleiro", events.BoardOpened{})
 
 	drenar()
-	if _, err := bs.AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}); err != nil {
+	if _, err := bs.AddToken(ctx, sessao, defaultTab, board.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	avisou("pôr uma peça (pelo apply)", events.BoardChanged{})
@@ -200,7 +200,7 @@ func TestARefusedMutationTellsNobody(t *testing.T) {
 	sub, parar := f.s.tableHost().Bus().Subscribe(events.OfSession(sessao))
 	defer parar()
 	// SEM tabuleiro aberto: o `apply` recusa antes de mexer em nada.
-	if _, err := f.s.tableHost().Boards().AddToken(ctx, sessao, defaultTab, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}); err == nil {
+	if _, err := f.s.tableHost().Boards().AddToken(ctx, sessao, defaultTab, board.BoardToken{ID: "p", Label: "Ogro"}); err == nil {
 		t.Fatal("pôr peça sem tabuleiro devia recusar; sem a recusa este teste não mede nada")
 	}
 	select {
@@ -234,7 +234,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 	// estado devolvido em vez de assumido — a primeira versão deste teste
 	// assumiu "p" e morreu em `peça "p" não está no tabuleiro`.
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2})
+		board.BoardToken{Label: "Ogro", X: 2, Y: 2})
 	if err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
@@ -297,7 +297,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 
 	inicio := time.Now()
 	if _, err := f.s.tableHost().Boards().UpdateToken(context.Background(), f.sessionID, defaultTab, pecaID,
-		tabuleiro.ParseTokenPatch(map[string]any{"x": 7})); err != nil {
+		board.ParseTokenPatch(map[string]any{"x": 7})); err != nil {
 		t.Fatalf("mover a peça: %v", err)
 	}
 
@@ -330,7 +330,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}); err != nil {
+		board.BoardToken{Label: "Ogro", X: 2, Y: 2}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 
@@ -426,7 +426,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
-		tabuleiro.BoardToken{Label: "Dragão", X: 3, Y: 3}); err != nil {
+		board.BoardToken{Label: "Dragão", X: 3, Y: 3}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
 	if _, _, err := f.s.tableHost().Boards().SetCurtain(context.Background(), f.sessionID, defaultTab, true); err != nil {
@@ -461,7 +461,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 
 // A PEÇA AVULSA NASCE ONDE O MESTRE CLICOU (ALE-291).
 //
-// O GLOSSARIO promete que "uma peça pode existir sem linha na fila (a porta, o
+// O GLOSSARY promete que "uma peça pode existir sem linha na fila (a porta, o
 // baú)", e até aqui não havia caminho: a única rota que criava peça era o
 // `poeNoMapa`, cujo `populateBoard` itera a INICIATIVA — só nascia peça para
 // quem já era combatente.

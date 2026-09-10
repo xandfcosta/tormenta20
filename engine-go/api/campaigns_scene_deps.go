@@ -9,8 +9,8 @@ import (
 	"t20engine/plataforma"
 
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/db/sqlcgen"
-	"t20engine/tabuleiro"
 	"t20engine/web/campaigns"
 )
 
@@ -41,7 +41,7 @@ type campaignsHost struct {
 	// atravessa a porta da cena, e vive aqui só para a faxina de memória de
 	// apagar a campanha — que é do hospedeiro, e que a cena pede como PERGUNTA
 	// (`CampaignDeleted`) e não como store.
-	boards   *tabuleiro.BoardStore
+	boards   *board.BoardStore
 	sessions *aovivo.SessionStore
 }
 
@@ -237,8 +237,8 @@ func (h campaignsHost) RemovePlace(ctx context.Context, campanhaID, lugarID int6
 
 // Grounds traduz as aparências do tabuleiro para a forma que a tela desenha.
 func (h campaignsHost) Grounds() []campaigns.GroundOption {
-	fora := make([]campaigns.GroundOption, 0, len(tabuleiro.PlaceGrounds))
-	for _, c := range tabuleiro.PlaceGrounds {
+	fora := make([]campaigns.GroundOption, 0, len(board.PlaceGrounds))
+	for _, c := range board.PlaceGrounds {
 		fora = append(fora, campaigns.GroundOption{ID: c.ID, Rotulo: c.Rotulo})
 	}
 	return fora

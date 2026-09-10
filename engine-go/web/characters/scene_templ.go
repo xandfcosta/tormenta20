@@ -801,7 +801,7 @@ func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 // que salva um elenco longo do "aperta a seta trinta vezes".
 //
 // A REGIÃO se chama `rail` e não `filme` desde a ALE-181, e o nome é CONTRATO e
-// não gosto: o driver do `cena.js` procura literalmente `[data-nav-region="rail"]`
+// não gosto: o driver do `scene.js` procura literalmente `[data-nav-region="rail"]`
 // para o Esc subir um nível e para escolher onde o foco pousa ao entrar na cena.
 // Com um nome próprio, esta cena caía no ramo "a primeira região que houver" —
 // que acertava por ser a única. O comentário do trilho de campanhas já avisava

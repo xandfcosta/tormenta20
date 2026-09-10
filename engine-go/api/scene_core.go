@@ -46,7 +46,7 @@ type sceneCore struct {
 // É a concessão mais larga da casa e ela é consciente: sete cenas leem e
 // escrevem a linha delas por aqui. O que a mantém honesta é o que ela NÃO
 // entrega — `*sql.DB` não atravessa, então nenhuma cena monta SQL nem abre
-// transação (ver os `fronteira_test.go`).
+// transação (ver os `boundary_test.go`).
 func (c sceneCore) Queries() *sqlcgen.Queries { return c.queries }
 
 // Catalogs é o motor primado — o mesmo que o oráculo usa.

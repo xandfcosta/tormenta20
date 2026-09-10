@@ -29,7 +29,7 @@ func (s Scene) handleGrimoire(w http.ResponseWriter, r *http.Request) {
 		VoltarRotulo:  "Hub",
 		Scripts: []string{
 			s.deps.Asset("grimorio.js"),
-			s.deps.Asset("pecas-solid.js"),
+			s.deps.Asset("tokens-solid.js"),
 		},
 	}, grimoire())
 }

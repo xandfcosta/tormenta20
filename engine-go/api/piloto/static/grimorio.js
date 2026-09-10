@@ -1,4 +1,4 @@
-import { r as e, t } from "./turn-juice.js";
+import { i as e, n as t } from "./turn-juice.js";
 //#region api/piloto/src/grimorio.ts
 function n(e) {
 	return e.closest("figure, [data-par]")?.querySelector("[data-amostra]") ?? null;

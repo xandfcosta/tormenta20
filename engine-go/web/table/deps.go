@@ -7,10 +7,10 @@ import (
 	"github.com/a-h/templ"
 
 	"t20engine/aovivo"
+	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
-	"t20engine/tabuleiro"
 	"t20engine/web/bookui"
 	"t20engine/web/sheetui"
 	"t20engine/web/ui"
@@ -31,7 +31,7 @@ import (
 // # Os STORES atravessam, e os campos do `Server` não
 //
 // `Boards`, `Sessions`, `Presence` e `Bus` são tipos de OUTROS pacotes
-// (`tabuleiro`, `aovivo`, `events`) — a cena os recebe inteiros pela mesma
+// (`board`, `aovivo`, `events`) — a cena os recebe inteiros pela mesma
 // razão que a forja recebe o `Queries`: eles são o vocabulário do domínio ao
 // vivo, não o hospedeiro com outro nome. Uma porta que os embrulhasse método a
 // método teria oitenta entradas e nenhuma fronteira a mais.
@@ -45,7 +45,7 @@ type Deps interface {
 	// Catalogs é o motor primado, para computar a ficha de quem senta à mesa.
 	Catalogs() *engine.Catalogs
 	// Boards são os tabuleiros vivos por sessão; Sessions é a fila e a cena.
-	Boards() *tabuleiro.BoardStore
+	Boards() *board.BoardStore
 	Sessions() *aovivo.SessionStore
 	// Presence é quem está online na sala; SSE são os leitores por sessão e
 	// papel; Bus é o que aconteceu na mesa.
@@ -138,7 +138,7 @@ type Deps interface {
 	// aviso que não existiu (ALE-288).
 	SaveFailed(sessionID int64) bool
 	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
-	SpeedsForBoard(board *tabuleiro.BoardState) map[string]int
+	SpeedsForBoard(board *board.BoardState) map[string]int
 
 	// SessionDeleted avisa que a sessão deixou de EXISTIR (ALE-270).
 	//
@@ -155,7 +155,7 @@ type Deps interface {
 	// PUBLICAR é do hospedeiro: ele conhece o hub e o barramento, e a cena só
 	// sabe QUANDO alguma coisa mudou.
 	PublishSessionState(sessionID int64, estado *aovivo.SessionRuntimeState)
-	PublishBoardState(sessionID int64, board *tabuleiro.BoardState)
+	PublishBoardState(sessionID int64, board *board.BoardState)
 	PublishWhatIsLeft(ctx context.Context, sessionID int64)
 	CharacterChanged(characterID int64)
 

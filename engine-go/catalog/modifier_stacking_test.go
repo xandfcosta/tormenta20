@@ -42,7 +42,7 @@ import (
 func TestNoEntityStacksWithItself(t *testing.T) {
 	resources := []string{
 		"items", "class-powers", "general-powers", "granted-powers",
-		"race-defs", "origins", "divine-powers", "races", "origens",
+		"race-defs", "origins", "divine-powers", "races", "origins-source",
 	}
 	total := 0
 	for _, name := range resources {

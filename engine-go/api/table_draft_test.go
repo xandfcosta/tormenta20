@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 /*
@@ -236,8 +236,8 @@ func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
 	// O ID vem do SERVIDOR e não do teste: o `AddToken` cunha um sempre, e
 	// escolher um aqui seria arranjar um dado que a produção nunca produz.
 	semeada, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
-		func(b *tabuleiro.BoardState) error {
-			return tabuleiro.AddToken(b, tabuleiro.BoardToken{
+		func(b *board.BoardState) error {
+			return board.AddToken(b, board.BoardToken{
 				Label: "Porta", X: 1, Y: 1, Footprint: 1,
 			}, f.s.tableHost().Boards().NewID)
 		})
@@ -249,7 +249,7 @@ func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
 	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/"+id+"/mover/6/2", "{}")
 
 	cena, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, lugar)
-	peca := tabuleiro.FindToken(cena, id)
+	peca := board.FindToken(cena, id)
 	if peca == nil {
 		t.Fatal("a peça sumiu do rascunho")
 	}
@@ -309,8 +309,8 @@ func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing
 	f := novoPiloto(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
 	if _, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
-		func(b *tabuleiro.BoardState) error {
-			return tabuleiro.AddToken(b, tabuleiro.BoardToken{
+		func(b *board.BoardState) error {
+			return board.AddToken(b, board.BoardToken{
 				Label: "Assassino emboscado", X: 4, Y: 4, Footprint: 1, Hidden: true,
 			}, f.s.tableHost().Boards().NewID)
 		}); err != nil {
@@ -361,8 +361,8 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 	f := novoPiloto(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
 	if _, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
-		func(b *tabuleiro.BoardState) error {
-			return tabuleiro.AddToken(b, tabuleiro.BoardToken{
+		func(b *board.BoardState) error {
+			return board.AddToken(b, board.BoardToken{
 				Label: "Assassino emboscado", X: 4, Y: 4, Footprint: 1, Hidden: true,
 			}, f.s.tableHost().Boards().NewID)
 		}); err != nil {

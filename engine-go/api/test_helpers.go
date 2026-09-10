@@ -35,7 +35,7 @@ func npc(label string, init int) aovivo.InitiativeEntry {
 }
 
 // idCounter gera ids previsíveis ("e1", "e2", …) para os testes deste
-// pacote. Andaime local: o irmão dele vive no `tabuleiro/` desde a ALE-254, e
+// pacote. Andaime local: o irmão dele vive no `board/` desde a ALE-254, e
 // teste não exporta para o vizinho.
 func idCounter() func() string {
 	n := 0

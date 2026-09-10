@@ -422,7 +422,7 @@ Três coisas que este desenho pede, e uma que ele proíbe:
   invisível (`Subscription.Dropped`), pela mesma razão que o medidor de contraste
   devolve o denominador.
 - **`events/` não importa NADA do projeto.** Ele teve de entrar na lista de
-  permitidos do `aovivo` e do `tabuleiro`, cujos guardas de fronteira avisam que
+  permitidos do `aovivo` e do `board`, cujos guardas de fronteira avisam que
   acrescentar import à lista transforma a porta em enfeite. O que impede a porta
   dos fundos é o `TestVocabularyImportsNothing`: enquanto o vocabulário for
   folha, depender dele não cria fronteira errada — e no dia em que alguém
@@ -978,7 +978,7 @@ O `web/door` tem dois testes: o de fronteira e o do redirecionamento aberto (que
 é regra da cena e usa função não exportada). Todo o resto — treze casos que
 montam um `api.Server` de verdade e dirigem o roteador de verdade — ficou em
 `api/door_test.go`, que é o que a forja já tinha feito com o
-`api/piloto_forja_test.go`.
+`api/piloto_forge_test.go`.
 
 Não é indecisão: um pacote de cena que hospedasse esses casos teria de importar o
 `api`, que importa a cena de volta. **A cena sai; a bancada que a exercita
@@ -1085,7 +1085,7 @@ faria o pacote de apresentação do livro importar a cena que serve o arquivo.
 
 Os dois casos de teste que prendem a REGRA do endereço foram junto — livro não
 configurado não produz link, e o termo entra escapado. O resto do
-`piloto_livro_test.go` ficou no `api`, porque serve o PDF de verdade por HTTP:
+`piloto_book_test.go` ficou no `api`, porque serve o PDF de verdade por HTTP:
 outra camada, outra pergunta. **Quarta vez seguida que a fronteira separa um
 arquivo de teste que misturava duas.**
 
@@ -1408,7 +1408,7 @@ medição parcial não é um número menor: é um número de outra pergunta.**
 O leitor saiu na ALE-278, e é a primeira extração em que um arquivo se dividiu
 porque fazia duas coisas — não porque era grande.
 
-O `piloto_livro.go` lia `LIVRO_PDF` no boot, cunhava o dígito de cache, avisava
+O `piloto_book.go` lia `LIVRO_PDF` no boot, cunhava o dígito de cache, avisava
 sobre linearização e SERVIA o arquivo com faixas; e desenhava a página que abre
 esse arquivo numa página, com o termo destacado. **A divisão é a de sempre:
 dependência.** O que ficou chama `os.Stat` e devolve um `http.Handler` sobre um
@@ -1537,7 +1537,7 @@ administração e dois do trilho do mestre.
 (`CharacterDTO`, `Load`, `Compute`) e esta cena o lê 148 vezes em 20 arquivos:
 com o mesmo nome, cada um desses vinte arquivos carregaria um apelido no import.
 O plural que resolveu o `web/characters` e o `web/campaigns` não serve aqui —
-a ficha é uma. O GLOSSARIO registra a linha.
+a ficha é uma. O GLOSSARY registra a linha.
 
 ### Cena que compõe SQL é cena com o banco dentro, quatro vezes
 
@@ -2139,7 +2139,7 @@ carregando a decisão de protocolo inteira sobre um botão que não existia.
 Este é o custo que justifica a varredura, e ele não é "manutenção".
 
 `TestSwitchingScenesArchivesTheOneOnTheTable` prendia que trocar de cena ARQUIVA
-a que estava na mesa. A ALE-205 removeu esse comportamento e o GLOSSARIO diz o
+a que estava na mesa. A ALE-205 removeu esse comportamento e o GLOSSARY diz o
 contrário com todas as letras. Ele continuou **verde** porque dirigia o
 `ShowPlace` — a porta que a ALE-205 aposentou e que ninguém chamava havia três
 fatias.
@@ -2180,7 +2180,7 @@ verde.*
 ## A capacidade esperando gesto pode NÃO precisar do que a esperava (ALE-291)
 
 A peça AVULSA — a porta, o baú, o barril — era a mais clara das duas capacidades
-no ar que a ALE-289 achou. O GLOSSARIO promete, na linha de `peça`, que "uma peça
+no ar que a ALE-289 achou. O GLOSSARY promete, na linha de `peça`, que "uma peça
 pode existir sem linha na fila", e não havia caminho: a única rota que criava
 peça era o `poeNoMapa`, cujo `populateBoard` itera a INICIATIVA.
 
@@ -2225,7 +2225,7 @@ salvar, sem erro em lugar nenhum, porque o segundo `data-signals` simplesmente
 vence.
 
 O `TestNoTableSignalIsDeclaredTwice` varre os ~40 sinais da cena com denominador.
-É a mesma forma que o GLOSSARIO já registra na linha do `buscador`, que se chama
+É a mesma forma que o GLOSSARY já registra na linha do `buscador`, que se chama
 assim para não colidir com o `busca` das cenas — e agora ela é mecanizada.
 
 

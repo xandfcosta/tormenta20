@@ -11,8 +11,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	datastar "github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 )
 
 // ABRIR e ENCERRAR a cena na Mesa em Datastar (ALE-264, item 3).
@@ -33,7 +33,7 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	r.Post(base+"/lugares/{placeId}/remover", s.gmBoardCommand(removeOLugar))
 	// O TRAÇO e não o ponto (ALE-203): as duas rotas recebem de ONDE ATÉ ONDE o
 	// dedo andou desde o aviso anterior do ponteiro. Um clique parado manda o
-	// mesmo par duas vezes, que é um traço de uma casa. Ver `tabuleiro.StrokeSquares`.
+	// mesmo par duas vezes, que é um traço de uma casa. Ver `board.StrokeSquares`.
 	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.gmContinuousCommand(paintTerrain))
 	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.gmContinuousCommand(clearTerrain))
 	// O RETÂNGULO (ALE-203, item 10): os mesmos dois cantos, outra FORMA. Rota
@@ -56,7 +56,7 @@ func (s Scene) SceneRoutes(r chi.Router) {
 // Idempotente de propósito, e o `PaintTerrain` é quem garante: o pincel pinta
 // ARRASTANDO e o arraste passa duas vezes pela mesma casa. Alternar faria a casa
 // piscar entre brejo e chão limpo debaixo do dedo.
-func paintTerrain(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func paintTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 	traco, err := tracoDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func paintTerrain(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := tabuleiro.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
 	ligado := c.R.URL.Query().Get("apagar") == ""
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
 }
@@ -76,7 +76,7 @@ func paintTerrain(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // conserta o defeito: aquela precisa de uma ESPÉCIE no caminho, e era justamente
 // a espécie que fazia a borracha apagar a coisa errada em silêncio. Sem espécie
 // no caminho, não há como errar qual.
-func clearTerrain(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 	traco, err := tracoDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func clearTerrain(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // Eles chamam as MESMAS gravações (`PaintStroke`, `ClearStroke`) — o nome fala em
 // traço porque foi ele que as pediu primeiro, e o que elas recebem sempre foi uma
 // lista de casas. Quem escolhe a forma é a rota.
-func fillRect(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func fillRect(st Scene, c commandCtx) (*board.BoardState, error) {
 	casas, err := urlRect(c.R)
 	if err != nil {
 		return nil, err
@@ -100,11 +100,11 @@ func fillRect(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := tabuleiro.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas, especie, true)
 }
 
-func clearRect(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func clearRect(st Scene, c commandCtx) (*board.BoardState, error) {
 	casas, err := urlRect(c.R)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func clearRect(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 
 // urlRect lê os dois cantos e devolve as casas de dentro.
 //
-// A RECUSA vem do domínio (`tabuleiro.RetanguloValido`) e o teto dele é maior que
+// A RECUSA vem do domínio (`board.RetanguloValido`) e o teto dele é maior que
 // o do traço, pela razão escrita lá: o retângulo é um gesto DELIBERADO de dois
 // cantos, e o traço é um quadro de 16ms.
 func urlRect(r *http.Request) ([]engine.Square, error) {
@@ -129,15 +129,15 @@ func urlRect(r *http.Request) ([]engine.Square, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !tabuleiro.ValidRectangle(de, ate) {
+	if !board.ValidRectangle(de, ate) {
 		return nil, fmt.Errorf("o retângulo de %v até %v é grande demais para um gesto", de, ate)
 	}
-	return tabuleiro.RectangleSquares(de, ate), nil
+	return board.RectangleSquares(de, ate), nil
 }
 
 // tracoDaURL lê o segmento que o dedo percorreu e devolve as casas dele.
 //
-// A RECUSA de um traço grande demais vem do `tabuleiro.TracoValido` e é do
+// A RECUSA de um traço grande demais vem do `board.TracoValido` e é do
 // DOMÍNIO, não do transporte: o que ela protege é o tabuleiro gravado, e a razão
 // está escrita lá.
 func tracoDaURL(r *http.Request) ([]engine.Square, error) {
@@ -149,10 +149,10 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !tabuleiro.ValidStroke(de, ate) {
+	if !board.ValidStroke(de, ate) {
 		return nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
 	}
-	return tabuleiro.StrokeSquares(de, ate), nil
+	return board.StrokeSquares(de, ate), nil
 }
 
 // reopenPlace traz uma cena guardada de volta para a mesa, NUMA ABA NOVA
@@ -168,7 +168,7 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 // de escolher aquele lugar numa lista, e deixá-lo na cena anterior faria o gesto
 // parecer que não aconteceu. A MESA não é levada junto — isso é o "mostrar à
 // mesa", que é gesto próprio desde a fatia 2.
-func reopenPlace(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func reopenPlace(st Scene, c commandCtx) (*board.BoardState, error) {
 	id, err := lugarDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -187,7 +187,7 @@ func reopenPlace(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // que está na mesa, e devolver nil faria o `boardCommand` publicar "não há
 // tabuleiro" para a mesa inteira — o mestre limparia o acervo e a mesa perderia
 // a cena em que estava jogando.
-func removeOLugar(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func removeOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 	id, err := lugarDaURL(c.R)
 	if err != nil {
 		return nil, err
@@ -261,7 +261,7 @@ func lugarDaURL(r *http.Request) (int64, error) {
 // ele procuraria na tela uma taverna que nasceu na aba ao lado. É escolha de
 // quem clicou e de mais ninguém: a mesa não é puxada, porque a aba padrão
 // continua sendo a mais antiga.
-func openBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func openBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 	lugar, chao, err := signalsScene(c.R)
 	if err != nil {
 		return nil, err
@@ -274,7 +274,7 @@ func openBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	// O formulário volta ao zero, como o do combatente: sem isto o lugar fica no
 	// campo e a cena seguinte nasce com o nome da anterior.
 	c.Sinais["novolugar"] = ""
-	c.Sinais["novochao"] = tabuleiro.DefaultGround()
+	c.Sinais["novochao"] = board.DefaultGround()
 	return b, nil
 }
 
@@ -284,7 +284,7 @@ func openBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // `handleBoardClose` de propósito — ele foi apagado na ALE-277, e o motivo
 // sobreviveu a ele: o mestre mandou tirar a cena da mesa, e recusar isso porque
 // o acervo falhou deixaria a mesa presa numa cena que já acabou.
-func endBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 	if atual := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID); atual != nil {
 		if err := st.deps.Boards().Archive(c.R.Context(), c.CampaignID, atual); err != nil {
 			log.Printf("session %d: falha ao arquivar o lugar (%v)", c.SessionID, err)
@@ -344,10 +344,10 @@ func signalsScene(r *http.Request) (lugar, chao string, err error) {
 
 // chaoConhecido devolve o chão pedido se ele existe, ou o padrão.
 func chaoConhecido(pedido string) string {
-	for _, c := range tabuleiro.PlaceGrounds {
+	for _, c := range board.PlaceGrounds {
 		if c.ID == pedido {
 			return pedido
 		}
 	}
-	return tabuleiro.DefaultGround()
+	return board.DefaultGround()
 }

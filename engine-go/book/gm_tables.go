@@ -16,7 +16,7 @@ import (
 // uma função é a DEPENDÊNCIA dela**. Estas lêem catálogo, então são do livro —
 // mesmo que só a Mesa do Mestre as use.
 //
-// Não confundir com `master`, que é a TELA (ver o GLOSSARIO): `gm` aqui é o nome
+// Não confundir com `master`, que é a TELA (ver o GLOSSARY): `gm` aqui é o nome
 // do recurso no catálogo (`gm-tables`), e a fronteira não se renomeia por
 // estética.
 

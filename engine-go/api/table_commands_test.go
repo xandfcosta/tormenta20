@@ -895,7 +895,7 @@ func TestACombatantWithAQuoteInTheNameDoesNotBreakTheExpression(t *testing.T) {
 // irmã trocou este mesmo crachá na SPA e 260 testes passaram sem piscar, porque
 // nada afirmava o texto — o e2e cobre o LEIAUTE do selo, não a palavra.
 //
-// A palavra carrega regra: o GLOSSARIO bane `PC` sem qualificador de escopo, e o
+// A palavra carrega regra: o GLOSSARY bane `PC` sem qualificador de escopo, e o
 // canônico aqui é `ficha` e não "personagem" porque a tabela de colisões diz
 // qual pergunta o `type == "character"` responde — "esta linha é ficha ou é
 // NPC?". As duas metades ficam juntas de propósito: afirmar só a nova deixaria
@@ -914,7 +914,7 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 		t.Error("o crachá da linha de personagem não diz Ficha")
 	}
 	if strings.Contains(corpo, ">PC<") {
-		t.Error("o crachá voltou a dizer PC, que o GLOSSARIO proíbe")
+		t.Error("o crachá voltou a dizer PC, que o GLOSSARY proíbe")
 	}
 }
 

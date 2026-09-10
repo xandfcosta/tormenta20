@@ -9,10 +9,10 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/aovivo"
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
-// PÔR NO MAPA (ALE-264, item 5) — ver a linha do GLOSSARIO.
+// PÔR NO MAPA (ALE-264, item 5) — ver a linha do GLOSSARY.
 //
 // O gesto que faltava: o tabuleiro do piloto desenhava peças desde o `33380d6`,
 // mas só nascia peça por `curl`. Aqui ele ganha a afordância, e o servidor já
@@ -31,7 +31,7 @@ type candidatoAoMapa struct {
 	// Ficha responde "é ficha de jogador ou é NPC?" (`type == "character"`), que
 	// é o predicado com que o SERVIDOR escolhe o lado do mapa. Usar o mesmo aqui
 	// é o que faz o atalho pôr as peças exatamente na fileira do grupo — decisão
-	// do dono na ALE-204, registrada na colisão C4 do GLOSSARIO.
+	// do dono na ALE-204, registrada na colisão C4 do GLOSSARY.
 	Ficha bool
 	// NoMapa: já tem peça. A linha continua aparecendo, marcada e travada, em vez
 	// de sumir: esconder faria o mestre procurar um nome que ele acabou de ver na
@@ -43,7 +43,7 @@ type candidatoAoMapa struct {
 //
 // A ordem é a da FILA e não alfabética: é a ordem em que o mestre acabou de ler
 // os nomes na tela ao lado, e reordenar aqui faria ele procurar duas vezes.
-func MapCandidates(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState) []candidatoAoMapa {
+func MapCandidates(b *board.BoardState, st *aovivo.SessionRuntimeState) []candidatoAoMapa {
 	if b == nil || st == nil {
 		return nil
 	}
@@ -87,7 +87,7 @@ func MapOutsideSheets(candidatos []candidatoAoMapa) []string {
 // Sem o segundo a peça nasce no mapa sem deslocamento, o alcance não acende e o
 // jogador vê uma peça que não anda — um meio-recurso que ninguém reporta porque
 // parece regra. É o que o `handleBoardPopulate` da SPA já fazia.
-func poeNoMapa(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 	escolhidos, err := escolhidosDosSinais(c.R)
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func poeNoMapa(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // é exatamente o padrão inseguro que a ALE-204 tirou do app. Se a leitura falha
 // ou ninguém foi escolhido, o comando recusa em vez de cair no "traz todo mundo"
 // — o vilão do terceiro turno não vai para o mapa por causa de um sinal perdido.
-func escolhidosDosSinais(r *http.Request) (tabuleiro.EntrySelection, error) {
+func escolhidosDosSinais(r *http.Request) (board.EntrySelection, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
 		Escolhidos string `json:"escolhidosdomapa"`
@@ -128,7 +128,7 @@ func escolhidosDosSinais(r *http.Request) (tabuleiro.EntrySelection, error) {
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return nil, fmt.Errorf("não entendi quem pôr no mapa: %v", err)
 	}
-	escolha := tabuleiro.EntrySelection{}
+	escolha := board.EntrySelection{}
 	for _, id := range strings.Split(sinais.Escolhidos, ",") {
 		if id = strings.TrimSpace(id); id != "" {
 			escolha[id] = true
@@ -208,7 +208,7 @@ func sheetsShortcut(v BoardView) string {
 
 // A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril.
 //
-// O GLOSSARIO promete, na linha de `peça`, que "uma peça pode existir sem linha
+// O GLOSSARY promete, na linha de `peça`, que "uma peça pode existir sem linha
 // na fila (a porta, o baú)". A promessa estava sem caminho nenhum: a única rota
 // que criava peça era o `poeNoMapa`, e o `populateBoard` por baixo dela ITERA A
 // INICIATIVA — só nascia peça para quem já era combatente. O mestre não tinha
@@ -221,7 +221,7 @@ func sheetsShortcut(v BoardView) string {
 // `quadradoDoCaminho` já registra: coordenada negativa é lugar legítimo num
 // plano sem bordas, e o valor é o do CLIQUE que aconteceu — não o de um estado
 // que outro gesto poderia ter mexido entre a escolha e o envio.
-func newLoosePiece(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func newLoosePiece(st Scene, c commandCtx) (*board.BoardState, error) {
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, errors.New("não há tabuleiro aberto para pôr uma peça")
 	}
@@ -233,7 +233,7 @@ func newLoosePiece(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Boards().AddToken(c.R.Context(), c.SessionID, c.TabuleiroID, tabuleiro.BoardToken{
+	return st.deps.Boards().AddToken(c.R.Context(), c.SessionID, c.TabuleiroID, board.BoardToken{
 		Label: desenho.Nome, Kind: desenho.Aparencia, Footprint: desenho.Tamanho,
 		X: casa.X, Y: casa.Y,
 	})

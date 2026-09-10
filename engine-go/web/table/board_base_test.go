@@ -55,7 +55,7 @@ func TestNoBoardRouteIsHandwritten(t *testing.T) {
 		for numero, linha := range strings.Split(string(bruto), "\n") {
 			usosDaBase += strings.Count(linha, "v.Base")
 			// O que se procura é um CAMINHO, e não a palavra: o import do
-			// pacote `t20engine/tabuleiro` casa com ela e não é rota nenhuma.
+			// pacote `t20engine/board` casa com ela e não é rota nenhuma.
 			// Por isso a linha só conta quando o caminho vem montado — com o
 			// `/mesa/` na frente ou com um `%d` para o id.
 			ehCaminho := strings.Contains(linha, "/tabuleiro") &&

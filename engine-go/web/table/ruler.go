@@ -8,8 +8,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/board"
 	"t20engine/engine"
-	"t20engine/tabuleiro"
 	"t20engine/web/ui"
 )
 
@@ -210,7 +210,7 @@ func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
 	// O tabuleiro passa pelo MESMO gargalo por papel do resto da Mesa: quem
 	// pergunta quem o cone pega não pode descobrir por aí a peça que a cortina e
 	// o `Hidden` escondem dele.
-	b := tabuleiro.BoardForRole(papel, s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID))
+	b := board.BoardForRole(papel, s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID))
 	writeSignals(w, r, map[string]any{
 		"gabaritopath":  squaresPath(casas),
 		"gabaritotexto": takesTemplateWho(b, casas),
@@ -281,7 +281,7 @@ func squaresPath(casas []engine.Square) string {
 // A peça entra se QUALQUER quadrado do corpo dela cair na área — uma Colossal
 // ocupa 6×6 (p107), e exigir que ela caiba inteira deixaria o dragão de fora do
 // próprio incêndio.
-func takesTemplateWho(b *tabuleiro.BoardState, casas []engine.Square) string {
+func takesTemplateWho(b *board.BoardState, casas []engine.Square) string {
 	if len(casas) == 0 {
 		return "Clique numa casa para pôr o gabarito."
 	}
@@ -303,7 +303,7 @@ func takesTemplateWho(b *tabuleiro.BoardState, casas []engine.Square) string {
 	return fmt.Sprintf("Pega %s: %s", ui.TokenCount(len(nomes)), strings.Join(nomes, ", "))
 }
 
-func tokenTakes(dentro map[engine.Square]bool, t *tabuleiro.BoardToken) bool {
+func tokenTakes(dentro map[engine.Square]bool, t *board.BoardToken) bool {
 	lado := t.Footprint
 	if lado < 1 {
 		lado = 1

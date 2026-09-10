@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // A SELEÇÃO EM ÁREA de peças (ALE-203, item 10 do dono).
@@ -30,7 +30,7 @@ import (
 //
 // Um jogador tem uma peça, e o que o grupo dispensa — a regra de deslocamento —
 // é exatamente o que protege o turno dele. A razão inteira está no
-// `tabuleiro.MoveOGrupo`.
+// `board.MoveOGrupo`.
 
 func (s Scene) PartyRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
@@ -60,7 +60,7 @@ func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b := s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID)
-	ids := tabuleiro.TokensInRectangle(b, de, ate)
+	ids := board.TokensInRectangle(b, de, ate)
 	writeSignals(w, r, map[string]any{
 		markedTokensSignal: strings.Join(ids, ","),
 	})
@@ -71,7 +71,7 @@ func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 // A LISTA vem dos SINAIS e o DELTA vem do caminho, e a divisão é a mesma do
 // resto: o caminho carrega o que o gesto ACABOU de decidir (quantos quadrados o
 // dedo andou), e o sinal carrega o estado que já estava lá (quem foi marcado).
-func movePartyTable(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func movePartyTable(st Scene, c commandCtx) (*board.BoardState, error) {
 	dx, errX := intDoCaminho(chi.URLParam(c.R, "dx"))
 	dy, errY := intDoCaminho(chi.URLParam(c.R, "dy"))
 	if errX != nil || errY != nil {

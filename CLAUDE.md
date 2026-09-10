@@ -16,7 +16,7 @@ e a regra tem um lugar só.
 ## Antes de mexer
 
 - **Não assuma.** Se a regra do livro ou a decisão de produto não estiver clara
-  no código, no `.md` do pacote ou no [GLOSSARIO.md](GLOSSARIO.md), **pergunte**.
+  no código, no `.md` do pacote ou no [GLOSSARY.md](GLOSSARY.md), **pergunte**.
   Adivinhar regra de T20 custa mais caro que esperar a resposta, e o erro sai na
   ficha de alguém.
 - **Regra do livro se confere no livro**, com a página citada. O offset entre PDF
@@ -33,7 +33,7 @@ e a regra tem um lugar só.
   em gesto de ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e &&
   npx playwright test` (~2 min, sobe o próprio servidor e o próprio banco).
 - **Releia a documentação que a sua mudança tocou** — o `.md` do pacote e o
-  `GLOSSARIO.md`. Não "atualize se mudou o comportamento": **releia**. Ver
+  `GLOSSARY.md`. Não "atualize se mudou o comportamento": **releia**. Ver
   "Documentação".
 
 ## Estilo de código
@@ -370,7 +370,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **61 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **62 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -388,8 +388,9 @@ dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum
 crachá escreve a própria geometria à mão, todo marcador de trilho diz o NOME e
 não só as iniciais, nenhum componente com ouvinte de TECLA na janela é chamado
 de dentro de um laço, nenhum identificador NOVO nasce em português, nenhum gesto
-de uma peça do tabuleiro responde por outra, nenhum arquivo de spec tem nome em
-português. Cada um nasceu de um defeito que tinha irmãos.
+de uma peça do tabuleiro responde por outra, nenhum arquivo do repositório tem
+nome em português, todo estático pedido por `Asset(…)` existe na pasta. Cada um
+nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
@@ -485,21 +486,36 @@ O par do meio é o que confunde: **o arquivo e a descrição são coisas
 diferentes** e o mesmo spec leva as duas línguas — `board-drag.spec.ts` contendo
 `test('arrastar a peça propõe a parada')`. Eu já chamei essa descrição de "título
 de caso" e de "descrição do teste" na mesma conversa, que é o pecado do
-`GLOSSARIO.md`: uma palavra por conceito. **Ela se chama descrição do teste.**
+`GLOSSARY.md`: uma palavra por conceito. **Ela se chama descrição do teste.**
 
-Das três varreduras que essa decisão abriu, **a dos specs rodou** (ALE-301):
-os 22 arquivos do `e2e/tests` saíram em inglês com as descrições intactas em
-português, e quem cobra é o `TestNoSpecFileIsNamedInPortuguese`. **Os 139 sinais
-e as 121 classes continuam em português**, e o nome de arquivo do `engine-go`
-também (`cena.ts`, `leitor.ts`, `comandos_magias.go`). Enquanto elas não rodam, o
-que vale é a regra: o que você escrever novo já sai em inglês.
+Das três varreduras que essa decisão abriu, **a dos nomes de arquivo rodou
+inteira** (ALE-301): os 22 specs do `e2e/tests` na fatia 1 e mais **96 arquivos**
+no resto do repositório na fatia 2 — o pacote `tabuleiro/` virou `board/`, o
+`GLOSSARIO.md` virou `GLOSSARY.md`, e as 18 fixtures de `engine-go/parity/`
+ficaram, por decisão do dono, porque o nome delas É o `slug` gravado no dado.
+Quem cobra é o `TestNoFileIsNamedInPortuguese`. **Os 139 sinais e as 121 classes
+continuam em português**; enquanto elas não rodam, o que vale é a regra: o que
+você escrever novo já sai em inglês.
+
+> **E o instrumento da fatia 1 mentiu com cara de resposta.** Ele casava contra
+> uma lista de palavras PORTUGUESAS, e ela não conhecia `fronteira`: a primeira
+> contagem do `engine-go` deu **13**, a lista ampliada deu **18**, e o terreno
+> era **96** — vinte e cinco deles um guarda de fronteira por pacote, invisíveis
+> nas três contagens. **Lista de proibidos subconta em silêncio**, e ao
+> contrário de uma decomposição ela não tem denominador embutido para denunciar.
+> O guarda de hoje inverteu a lista: ele tem um PERMITIDOS de 423 palavras em
+> `convention/testdata/file_name_words.txt` e **falha no segmento que não
+> conhece**, como o parser da ALE-294 passou a fazer com o seletor desconhecido.
+> Palavra inglesa nova custa uma linha; palavra portuguesa lá dentro é um ato
+> visível. Rodado contra a ÁRVORE DE ONTEM ele acusa 80 arquivos onde o velho
+> acusava zero.
 
 O conceito continua sendo o do livro — o que muda é a grafia do identificador.
 `sheet`, e não `characterData`: a tradução é do TERMO do glossário, não uma
 oportunidade de trocar o conceito por um genérico. Termo sem tradução assentada
 (`tormenta`, `goblinoide`) fica como está; é nome próprio.
 
-- **[GLOSSARIO.md](GLOSSARIO.md) — uma palavra por conceito, e um conceito por
+- **[GLOSSARY.md](GLOSSARY.md) — uma palavra por conceito, e um conceito por
   palavra.** Leia antes de nomear qualquer coisa que o usuário vá ler ou que vá
   virar identificador. Ele tem a coluna dos termos PROIBIDOS, as colisões abertas
   que não se consertam por palpite, e a tradução de cada termo. Termo novo:

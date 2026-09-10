@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/tabuleiro"
+	"t20engine/board"
 )
 
 // AS ABAS DE TABULEIRO (ALE-205): o grupo se separou e a cena é uma só.
@@ -254,7 +254,7 @@ func (s Scene) TabRoutes(r chi.Router) {
 // quadro do tabuleiro. Quem leva o puxão às outras telas é o batimento do
 // stream, que redesenha a cena de cada um a cada 200ms e já pergunta ao
 // `pullTab` qual aba vale.
-func showTableIsTab(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func showTableIsTab(st Scene, c commandCtx) (*board.BoardState, error) {
 	alvo := chi.URLParam(c.R, "tabuleiroId")
 	// Puxar para uma aba que não existe deixaria a mesa inteira caindo no padrão
 	// sem nada dizendo por quê. O id vem do caminho, então isto é a conferência
@@ -272,7 +272,7 @@ func showTableIsTab(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 //
 // O nome não é `pickTab` porque o EDITOR DE NPC já tem uma função com esse
 // nome — as abas dele são outra coisa (Números / Ataques / Perícias). Duas abas
-// no mesmo pacote é uma colisão de palavra que o GLOSSARIO registra; o que
+// no mesmo pacote é uma colisão de palavra que o GLOSSARY registra; o que
 // resolve aqui é o verbo dizer o que se troca.
 //
 // Devolve `nil` como a lente, e pelo mesmo motivo: trocar de aba NÃO é mutação
@@ -282,7 +282,7 @@ func showTableIsTab(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
 // Não confere se o id existe, e isso não é descuido: quem confere é o `chosenTabOf`,
 // a cada leitura, porque a aba pode morrer DEPOIS da escolha. Uma conferência
 // aqui daria a mesma resposta e ainda deixaria a outra necessária.
-func swapBoard(st Scene, c commandCtx) (*tabuleiro.BoardState, error) {
+func swapBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 	st.chosenTabs.Escolhe(c.SessionID, c.User, chi.URLParam(c.R, "tabuleiroId"))
 	return nil, nil
 }
@@ -332,7 +332,7 @@ type pullScreen struct {
 // não pelo que o servidor guardou. Ler o nome do estado CRU e "esconder na tela"
 // seria pôr "Cripta do Rei" no HTML de quem não pode saber que há uma cripta —
 // o vazamento que não aparece na tela, só no ver-código-fonte.
-func tableTabs(abertos []*tabuleiro.BoardState, papel, ativa string, campaignID, sessionID int64) []boardTab {
+func tableTabs(abertos []*board.BoardState, papel, ativa string, campaignID, sessionID int64) []boardTab {
 	// UMA aba não é uma barra: com um tabuleiro só não há o que trocar, e a
 	// tira de fichas seria enfeite ocupando mapa. A tela cai no `<h2>` de sempre.
 	if len(abertos) < 2 {
@@ -340,7 +340,7 @@ func tableTabs(abertos []*tabuleiro.BoardState, papel, ativa string, campaignID,
 	}
 	barra := make([]boardTab, 0, len(abertos))
 	for i, aberto := range abertos {
-		daMesa := tabuleiro.BoardForRole(papel, aberto)
+		daMesa := board.BoardForRole(papel, aberto)
 		ficha := boardTab{
 			ID:      daMesa.ID,
 			Nome:    tabName(daMesa, i),
@@ -419,7 +419,7 @@ func activeTabIs(id, ativa string, posicao int) bool {
 // é o que se pode dizer sem contar nada: "Cena 2".
 //
 // Para o MESTRE o nome atravessa, porque a cortina não é sobre ele.
-func tabName(daMesa *tabuleiro.BoardState, posicao int) string {
+func tabName(daMesa *board.BoardState, posicao int) string {
 	if daMesa.Place != "" {
 		return daMesa.Place
 	}

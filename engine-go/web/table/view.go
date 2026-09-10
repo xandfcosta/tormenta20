@@ -180,7 +180,7 @@ type tableRow struct {
 	ID         string
 	Rotulo     string
 	Iniciativa int
-	// EhFicha responde a pergunta que o GLOSSARIO faz do `type === "character"`:
+	// EhFicha responde a pergunta que o GLOSSARY faz do `type === "character"`:
 	// "esta linha é ficha ou é NPC?". O campo se chamava `PC`, que é termo
 	// PROIBIDO — e o par na tela é `Ficha`/`NPC` pelo mesmo motivo.
 	EhFicha bool

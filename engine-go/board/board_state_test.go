@@ -1,0 +1,436 @@
+package board
+
+import (
+	"t20engine/aovivo"
+	"t20engine/engine"
+)
+
+import (
+	"fmt"
+	"testing"
+)
+
+// O tabuleiro tático da sessão (ALE-124). O que se prova aqui é o que alguém na
+// mesa notaria quebrar: peça que sai da grade, peça escondida que vaza para o
+// jogador, e "adicionar grupo" duplicando quem já está no tabuleiro.
+
+func boardCounter() func() string {
+	n := 0
+	return func() string { n++; return fmt.Sprintf("t%d", n) }
+}
+
+func openBoard(t *testing.T) *BoardState {
+	t.Helper()
+	return newBoard("t1", "Taverna do Javali", "pedra")
+}
+
+// O plano NÃO tem bordas: quadrado negativo é lugar legítimo, e é para lá que a
+// cena cresce quando o mestre empurra a briga para a esquerda (ALE-124).
+func TestBoardHasNoEdges(t *testing.T) {
+	b := openBoard(t)
+	id := boardCounter()
+
+	if err := AddToken(b, BoardToken{Label: "Batedor", X: -40, Y: -12}, id); err != nil {
+		t.Errorf("coordenada negativa recusada num plano infinito: %v", err)
+	}
+	if err := AddToken(b, BoardToken{Label: "Ogro", Footprint: 2, X: 999, Y: 4}, id); err != nil {
+		t.Errorf("peça longe da origem recusada: %v", err)
+	}
+}
+
+// O limite de sanidade não é borda do mapa: é o guarda contra o cliente que
+// manda lixo, porque um número absurdo estoura a serialização e a tela de todo
+// mundo na mesa.
+func TestAbsurdCoordinatesAreRefused(t *testing.T) {
+	b := openBoard(t)
+	id := boardCounter()
+
+	if err := AddToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id); err == nil {
+		t.Error("coordenada absurda foi aceita")
+	}
+	if err := AddToken(b, BoardToken{Label: "Lixo", Y: -(boardCoordLimit + 1)}, id); err == nil {
+		t.Error("coordenada absurda negativa foi aceita")
+	}
+	if len(b.Tokens) != 0 {
+		t.Errorf("a peça recusada entrou assim mesmo: %+v", b.Tokens)
+	}
+}
+
+func TestBoardVersionRisesOnEveryAcceptedChange(t *testing.T) {
+	b := openBoard(t)
+	id := boardCounter()
+	inicio := b.Version
+
+	_ = AddToken(b, BoardToken{Label: "Goblin"}, id)
+	depoisDeAdicionar := b.Version
+	if depoisDeAdicionar <= inicio {
+		t.Error("adicionar peça não moveu a versão")
+	}
+	// Recusa NÃO conta: uma versão que sobe sem o estado mudar faria o cliente
+	// descartar broadcast bom.
+	_ = AddToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id)
+	if b.Version != depoisDeAdicionar {
+		t.Error("uma mutação RECUSADA mexeu na versão")
+	}
+	RemoveToken(b, "t1")
+	if b.Version <= depoisDeAdicionar {
+		t.Error("remover peça não moveu a versão")
+	}
+}
+
+// A peça escondida some INTEIRA da cópia do jogador. É a assimetria deliberada
+// em relação ao `hpHidden` da iniciativa, onde a linha sobrevive sem os números:
+// aqui a existência da peça é a emboscada (ALE-124).
+func TestHiddenTokenVanishesForPlayers(t *testing.T) {
+	b := openBoard(t)
+	id := boardCounter()
+	_ = AddToken(b, BoardToken{Label: "Bandido", X: 1, Y: 1}, id)
+	_ = AddToken(b, BoardToken{Label: "Assassino na viga", X: 2, Y: 2, Hidden: true}, id)
+
+	doJogador := BoardForRole("player", b)
+
+	if len(doJogador.Tokens) != 1 || doJogador.Tokens[0].Label != "Bandido" {
+		t.Errorf("o jogador recebeu %d peças: %+v", len(doJogador.Tokens), doJogador.Tokens)
+	}
+	if doMestre := BoardForRole("gm", b); len(doMestre.Tokens) != 2 {
+		t.Errorf("o mestre perdeu a própria emboscada: %d peças", len(doMestre.Tokens))
+	}
+	// Papel desconhecido cai em jogador: errar para o lado que MOSTRA seria
+	// vazar por omissão.
+	if len(BoardForRole("", b).Tokens) != 1 {
+		t.Error("papel vazio recebeu o tabuleiro inteiro")
+	}
+	if len(b.Tokens) != 2 {
+		t.Error("a redação mexeu no tabuleiro original — o mestre perderia a peça")
+	}
+}
+
+func TestPopulateBoardIsIdempotent(t *testing.T) {
+	b := openBoard(t)
+	id := boardCounter()
+	st := aovivo.EmptyRuntimeState()
+	entryID := ContadorDeIds()
+	_ = aovivo.AddEntry(st, npc("Ogro", 12), entryID)
+	_ = aovivo.AddEntry(st, npc("Bandido", 8), entryID)
+
+	if placed := populateBoard(b, st, id, nil); placed != 2 {
+		t.Errorf("primeira chamada colocou %d peças, esperado 2", placed)
+	}
+	if placed := populateBoard(b, st, id, nil); placed != 0 {
+		t.Errorf("segunda chamada colocou %d peças — quem já está no tabuleiro duplicou", placed)
+	}
+	if len(b.Tokens) != 2 {
+		t.Errorf("o tabuleiro ficou com %d peças", len(b.Tokens))
+	}
+	// Ninguém empilhado: duas peças no mesmo quadrado seriam uma peça invisível.
+	if b.Tokens[0].X == b.Tokens[1].X && b.Tokens[0].Y == b.Tokens[1].Y {
+		t.Errorf("as duas peças nasceram no mesmo quadrado: %+v", b.Tokens)
+	}
+}
+
+/*
+Duplicar peça (ALE-192).
+
+"Mais um zumbi" é a operação mais repetida ao montar encontro, e até agora ela
+custava abrir a forma, digitar o nome, escolher o tamanho e posicionar — para
+uma criatura idêntica à que já está ali ao lado.
+
+A tabela de exemplos aqui é a MESMA de `token-appearance.test.ts`, no front: as
+duas pontas carregam a convenção "espécie + número", e se elas divergirem a
+cópia nasce com um nome que o desenho colore como outra espécie.
+*/
+
+func tabuleiroCom(labels ...string) *BoardState {
+	b := newBoard("t1", "Cripta", "pedra")
+	for i, label := range labels {
+		b.Tokens = append(b.Tokens, BoardToken{
+			ID: fmt.Sprintf("t%d", i), Label: label, X: i, Y: 0, Footprint: 1, Kind: "npc",
+		})
+	}
+	return b
+}
+
+func TestTheCopyGetsTheNextFreeNumber(t *testing.T) {
+	casos := []struct {
+		nome    string
+		cena    []string
+		duplica string
+		quer    string
+	}{
+		{"a fila continua", []string{"Zumbi 1", "Zumbi 2"}, "Zumbi 1", "Zumbi 3"},
+		// Menor livre e não maior+1: tirado o Zumbi 2, a próxima cópia volta a
+		// ser o Zumbi 2 e a numeração continua colada.
+		{"o buraco é preenchido", []string{"Zumbi 1", "Zumbi 3"}, "Zumbi 3", "Zumbi 2"},
+		// A peça SEM número ocupa o 1: um "Ogro 1" ninguém distingue do "Ogro".
+		{"o sem número vira o 1", []string{"Ogro"}, "Ogro", "Ogro 2"},
+		// A ARMADILHA: número no meio do nome não é instância.
+		{"número no meio não conta", []string{"Recruta Nv1 Simples"}, "Recruta Nv1 Simples", "Recruta Nv1 Simples 2"},
+		// Espécies diferentes não disputam número.
+		{"outra espécie não atrapalha", []string{"Zumbi 1", "Goblin 2"}, "Zumbi 1", "Zumbi 2"},
+	}
+	for _, caso := range casos {
+		b := tabuleiroCom(caso.cena...)
+		alvo := ""
+		for _, token := range b.Tokens {
+			if token.Label == caso.duplica {
+				alvo = token.ID
+			}
+		}
+		if err := DuplicateToken(b, alvo, nil, novoIDFixo()); err != nil {
+			t.Fatalf("%s: duplicar: %v", caso.nome, err)
+		}
+		copia := b.Tokens[len(b.Tokens)-1]
+		if copia.Label != caso.quer {
+			t.Errorf("%s: a cópia se chama %q, esperado %q", caso.nome, copia.Label, caso.quer)
+		}
+	}
+}
+
+// SEM LAÇO a cópia é um PEÃO MUDO: leva o corpo e deixa os dois vínculos para
+// trás. É o que a ALE-192 fazia, e continua sendo o certo para cenário e para a
+// peça que vai entrar na fila depois.
+func TestTheCopyTakesTheBodyAndNotTheLink(t *testing.T) {
+	b := tabuleiroCom("Zumbi 1")
+	entrada := "e7"
+	var personagem int64 = 42
+	b.Tokens[0].EntryID = &entrada
+	b.Tokens[0].CharacterID = &personagem
+	b.Tokens[0].Footprint = 2
+	b.Tokens[0].Hidden = true
+
+	if err := DuplicateToken(b, "t0", nil, novoIDFixo()); err != nil {
+		t.Fatalf("duplicar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.EntryID != nil || copia.CharacterID != nil {
+		t.Errorf("a cópia levou o vínculo junto: entryId=%v characterId=%v", copia.EntryID, copia.CharacterID)
+	}
+	if copia.Footprint != 2 {
+		t.Errorf("a cópia nasceu com tamanho %d, esperado 2", copia.Footprint)
+	}
+	// O segundo zumbi da emboscada também está escondido.
+	if !copia.Hidden {
+		t.Error("a cópia de uma peça escondida nasceu visível")
+	}
+}
+
+// COM LAÇO a cópia entra na fila junto: os dois zumbis compartilham a linha, e
+// por isso a mesma barra de PV.
+//
+// É a distinção inteira da ALE-206, e o eixo dela é a LINHA e não a ficha: o
+// `board_view` indexa a barra por `entryId` (`saude[*t.EntryID]`), então é a
+// linha que decide se um dano aparece nas duas peças ou só numa. O exemplo que a
+// issue usa — o zumbi — sequer TEM ficha: NPC entra na fila com `characterId`
+// nulo por construção.
+func TestTheCopyWithALoopSharesTheQueueLine(t *testing.T) {
+	b := tabuleiroCom("Zumbi 1")
+	entrada := "e7"
+	b.Tokens[0].EntryID = &entrada
+
+	linha := aovivo.InitiativeEntry{ID: "e7", Label: "Zumbi", Type: "npc"}
+	if err := DuplicateToken(b, "t0", &linha, novoIDFixo()); err != nil {
+		t.Fatalf("duplicar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.EntryID == nil || *copia.EntryID != "e7" {
+		t.Errorf("a cópia aponta para a linha %v, esperado e7 — sem ela não há barra de PV", copia.EntryID)
+	}
+}
+
+// O LAÇO manda nos DOIS vínculos, e a ficha vem da LINHA e não da original.
+//
+// É o que mantém peça e linha coerentes quando a cópia ganha uma linha NOVA: a
+// linha nova de um NPC não tem ficha, e herdar o `characterId` da original ali
+// daria uma peça que diz ser de um personagem que a fila dela não conhece —
+// posse e deslocamento (os dois que o `characterId` decide) sairiam de uma ficha
+// que não é a daquele combatente.
+func TestTheCopyTakesTheSheetFromTheLineAndNotFromTheOriginal(t *testing.T) {
+	b := tabuleiroCom("Arwen")
+	entrada := "e1"
+	var daOriginal int64 = 42
+	b.Tokens[0].EntryID = &entrada
+	b.Tokens[0].CharacterID = &daOriginal
+
+	// A linha nova é de NPC: sem ficha.
+	linha := aovivo.InitiativeEntry{ID: "e9", Label: "Zumbi 2", Type: "npc"}
+	if err := DuplicateToken(b, "t0", &linha, novoIDFixo()); err != nil {
+		t.Fatalf("duplicar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.CharacterID != nil {
+		t.Errorf("a cópia levou a ficha %d da original, e a linha dela não tem ficha nenhuma", *copia.CharacterID)
+	}
+	if copia.EntryID == nil || *copia.EntryID != "e9" {
+		t.Errorf("a cópia aponta para %v, esperado a linha nova e9", copia.EntryID)
+	}
+}
+
+// COLAR pousa onde se está OLHANDO, e não colado na original (ALE-206).
+//
+// É a diferença inteira para o duplicar: o colar existe para pôr a cópia longe,
+// noutra parte do mapa ou noutra aba.
+func TestThePasteLandsOnTheGivenSquare(t *testing.T) {
+	b := tabuleiroCom("Zumbi 1")
+	b.Tokens[0].X, b.Tokens[0].Y = 0, 0
+	modelo := b.Tokens[0]
+
+	if err := PasteToken(b, modelo, nil, 12, 7, novoIDFixo()); err != nil {
+		t.Fatalf("colar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.X != 12 || copia.Y != 7 {
+		t.Errorf("a cópia pousou em (%d,%d), esperado (12,7)", copia.X, copia.Y)
+	}
+	if copia.Label == "Zumbi 1" {
+		t.Error("a cópia ficou com o mesmo nome — dois 'Zumbi 1' no mesmo mapa")
+	}
+}
+
+// A cópia colada NÃO herda o "de onde veio".
+//
+// Aquilo é a memória do último pouso DESTA peça, e uma que nasce agora não tem
+// para onde voltar. Colando entre abas seria pior: o voltar mandaria a cópia
+// para um quadrado de OUTRO mapa.
+func TestThePastedCopyHasNowhereToGoBackTo(t *testing.T) {
+	b := tabuleiroCom("Ogro")
+	b.Tokens[0].DeOndeVeio = &engine.Square{X: 3, Y: 4}
+	modelo := b.Tokens[0]
+
+	if err := PasteToken(b, modelo, nil, 9, 9, novoIDFixo()); err != nil {
+		t.Fatalf("colar: %v", err)
+	}
+
+	if copia := b.Tokens[len(b.Tokens)-1]; copia.DeOndeVeio != nil {
+		t.Errorf("a cópia nasceu com um voltar para (%d,%d), onde ela nunca esteve",
+			copia.DeOndeVeio.X, copia.DeOndeVeio.Y)
+	}
+}
+
+// A casa OCUPADA empurra a cópia para a vizinha: pousar em cima esconde a de
+// baixo sem dizer nada.
+func TestThePasteDoesNotLandOnTopOfAnother(t *testing.T) {
+	b := tabuleiroCom("Zumbi 1")
+	b.Tokens[0].X, b.Tokens[0].Y = 5, 5
+	modelo := b.Tokens[0]
+
+	if err := PasteToken(b, modelo, nil, 5, 5, novoIDFixo()); err != nil {
+		t.Fatalf("colar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.X == 5 && copia.Y == 5 {
+		t.Error("a cópia pousou em cima da original, e uma some debaixo da outra")
+	}
+}
+
+// Ao LADO, e não em cima nem na fileira de entrada: quem duplica o zumbi do
+// canto do mapa espera o irmão dele ali do lado.
+func TestTheCopyIsBornBesideAndNotOnTop(t *testing.T) {
+	b := tabuleiroCom("Zumbi 1")
+	b.Tokens[0].X, b.Tokens[0].Y = 30, 12
+
+	if err := DuplicateToken(b, "t0", nil, novoIDFixo()); err != nil {
+		t.Fatalf("duplicar: %v", err)
+	}
+
+	copia := b.Tokens[len(b.Tokens)-1]
+	if copia.X == 30 && copia.Y == 12 {
+		t.Error("a cópia nasceu em cima do original")
+	}
+	if abs(copia.X-30) > 1 || abs(copia.Y-12) > 1 {
+		t.Errorf("a cópia nasceu em (%d,%d), longe do original (30,12)", copia.X, copia.Y)
+	}
+}
+
+func novoIDFixo() func() string {
+	n := 0
+	return func() string {
+		n++
+		return fmt.Sprintf("copia%d", n)
+	}
+}
+
+/*
+O lugar marcado no mapa (ALE-195).
+
+Nem tudo que importa é criatura ou móvel: a armadilha, a porta que range, o
+ponto de encontro. Até aqui o mestre só tinha a saída de criar uma PEÇA
+`object`, e peça ocupa quadrado, entra na conta de quem o gabarito pega e vira
+alvo. O marcador aponta e mais nada.
+*/
+
+// Ele nasce ESCONDIDO e some inteiro da cópia do jogador — a mesma redação da
+// peça, e não uma segunda política.
+func TestTheHiddenMarkerVanishesForThePlayer(t *testing.T) {
+	b := newBoard("t1", "Cripta", "cripta")
+	if err := AddMarker(b, BoardMarker{X: 2, Y: 3, Text: "1A", Color: "carmim", Hidden: true}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+	if err := AddMarker(b, BoardMarker{X: 5, Y: 5, Text: "B", Color: "ouro"}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+
+	daMesa := BoardForRole("player", b)
+
+	if len(b.Markers) != 2 {
+		t.Fatalf("o mestre ficou com %d marcadores", len(b.Markers))
+	}
+	if len(daMesa.Markers) != 1 || daMesa.Markers[0].Text != "B" {
+		t.Errorf("a mesa recebeu %+v; o escondido tinha de sumir inteiro", daMesa.Markers)
+	}
+}
+
+// O rótulo tem DUAS letras, cortadas em runas: "Ê2A" não pode virar meio
+// caractere na tela.
+func TestTheMarkerFitsInTwoLetters(t *testing.T) {
+	b := newBoard("t1", "Cripta", "cripta")
+	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "Ê2A", Color: "azul"}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+
+	if got := b.Markers[0].Text; got != "Ê2" {
+		t.Errorf("o rótulo ficou %q, esperado %q", got, "Ê2")
+	}
+}
+
+// A cor vem de um conjunto FECHADO: ela vira classe na tela, e aceitar qualquer
+// string deixaria o cliente escrever CSS no estado da mesa.
+func TestTheMarkerColorComesFromAClosedSet(t *testing.T) {
+	b := newBoard("t1", "Cripta", "cripta")
+	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "X", Color: "url(javascript:alert(1))"}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+
+	if got := b.Markers[0].Color; got != "ouro" {
+		t.Errorf("a cor virou %q; fora do conjunto ela tem de cair no padrão", got)
+	}
+	// E o mesmo vale ao ALTERAR: o patch não é uma porta de trás.
+	fora := "vermelho-do-cliente"
+	if err := UpdateMarker(b, b.Markers[0].ID, markerPatch{Color: &fora}); err != nil {
+		t.Fatalf("alterar: %v", err)
+	}
+	if got := b.Markers[0].Color; got != "ouro" {
+		t.Errorf("o patch escreveu a cor %q", got)
+	}
+}
+
+// Revelar é o gesto seguinte a marcar, e é o que a mesa vê mudar.
+func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
+	b := newBoard("t1", "Cripta", "cripta")
+	if err := AddMarker(b, BoardMarker{X: 1, Y: 1, Text: "A", Color: "ouro", Hidden: true}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+	visivel := false
+
+	if err := UpdateMarker(b, b.Markers[0].ID, markerPatch{Hidden: &visivel}); err != nil {
+		t.Fatalf("revelar: %v", err)
+	}
+
+	if len(BoardForRole("player", b).Markers) != 1 {
+		t.Error("revelado, o marcador continuou fora da cópia da mesa")
+	}
+}

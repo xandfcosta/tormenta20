@@ -728,7 +728,7 @@ test('copiar guarda o modo, e cada CTRL+V põe outro igual', async ({ page }) =>
       })
       .toBe(antes + 2)
 
-    // ESVAZIAR é um BOTÃO e nunca o Esc: o `cena.js` mapeia Escape para "voltar"
+    // ESVAZIAR é um BOTÃO e nunca o Esc: o `scene.js` mapeia Escape para "voltar"
     // e o mata no documento — medido, e o `railKeyboard` já o registra.
     await page.getByRole('button', { name: 'Esvaziar a área de transferência' }).click()
     await expect(faixa, 'esvaziar não apagou a faixa').toBeHidden()

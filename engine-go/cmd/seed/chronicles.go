@@ -53,7 +53,7 @@ func (s demoSession) sessionDate() string {
 // uma cena FIXA, não uma cena computada.
 type demoPlace struct {
 	name string
-	// state é o `BoardState` serializado. Ver `tabuleiro/board_state.go` para os
+	// state é o `BoardState` serializado. Ver `board/board_state.go` para os
 	// nomes dos campos; eles são a fronteira e não mudam por capricho.
 	state string
 }

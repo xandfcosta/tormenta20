@@ -30,7 +30,7 @@ func TestAConditionAnnouncesItselfToTheLiveTable(t *testing.T) {
 	// viva com este personagem na fila para ouvir um SSE é caro, e o que se quer
 	// prender é que a CHAMADA não some — que é como a ALE-245 foi perdida da
 	// primeira vez (um gancho que ninguém preenchia).
-	fonte := lerFonte(t, "comandos_efeitos.go")
+	fonte := lerFonte(t, "effects_commands.go")
 	corpo := functionSlice(t, fonte, "func toggleBookCondition")
 	if !strings.Contains(corpo, "s.deps.CharacterChanged(row.ID)") {
 		t.Error("o comando de condição não chama `characterChanged`: o mestre aplica " +
