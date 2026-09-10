@@ -185,7 +185,7 @@ func TestTheSceneCenterFramesTheLargeTokenBody(t *testing.T) {
 
 // TestThePaintLayerOnlyLightsUpWithABrush.
 //
-// A pergunta antiga era `$ferramenta != ” && != 'marcador'`, e ela era VERDADE
+// A pergunta antiga era `$tool != ” && != 'marcador'`, e ela era VERDADE
 // para toda ferramenta que ainda não existia: com a régua ligada, a camada de
 // pintar cobriria o mapa e roubaria o clique da medida — um defeito que não dá
 // erro em lugar nenhum, só faz a régua não medir.

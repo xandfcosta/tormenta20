@@ -30,7 +30,7 @@ import "fmt"
 // mão sozinho; guardando, ele faz até o fim o que foi pedido no começo.
 
 // brushSignal é o modo do gesto em curso: vazio (parado), `pintar` ou
-// `apagar`. Um sinal só e o valor É o modo, como o `$ferramenta` — assim não
+// `apagar`. Um sinal só e o valor É o modo, como o `$tool` — assim não
 // existe o estado impossível "apagando e pintando".
 const brushSignal = "pincelando"
 
@@ -123,7 +123,7 @@ func brushActsOnSquare(v BoardView) string {
 			"const traco = de + '/ate/' + casa; "+
 			"return $%s === %q "+
 			"? @post('%s/terreno/limpar/' + traco) "+
-			": @post('%s/terreno/' + $ferramenta + '/' + traco) })()",
+			": @post('%s/terreno/' + $tool + '/' + traco) })()",
 		clicouEmX, clicouEmY,
 		squareLastSignal,
 		squareLastSignal, squareLastSignal, squareLastSignal,
@@ -134,7 +134,7 @@ func brushActsOnSquare(v BoardView) string {
 
 // takesEraser é o traço da BORRACHA: os dois botões apagam.
 //
-// Ela usa a rota sem espécie (`terreno/limpar`), então o `$ferramenta` não entra
+// Ela usa a rota sem espécie (`terreno/limpar`), então o `$tool` não entra
 // na conta — que é exatamente o conserto do defeito que o dono relatou como "a
 // borracha não funciona".
 func takesEraser(v BoardView) string { return takesBrush(v, pincelApaga) }

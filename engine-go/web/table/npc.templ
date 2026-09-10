@@ -39,13 +39,13 @@ templ tableCastCampaign(v View) {
 		</div>
 		// A LISTA e o EDITOR trocam de lugar na MESMA janela (decisão do dono):
 		// sem diálogo dentro de diálogo, e o formulário fica com os 40rem
-		// inteiros. Quem alterna é `$rascunhoaberto`, e quem o liga é o SERVIDOR
+		// inteiros. Quem alterna é `$draft_open`, e quem o liga é o SERVIDOR
 		// ao devolver o rascunho semeado — o editor nunca aparece antes de ter
 		// conteúdo.
-		<div data-show="!$rascunhoaberto" class="min-h-0 flex-1 overflow-y-auto">
+		<div data-show="!$draft_open" class="min-h-0 flex-1 overflow-y-auto">
 			@tableListNpCs(v)
 		</div>
-		<div data-show="!$rascunhoaberto" class="shrink-0 space-y-2 border-t border-grimorio-iron pt-3">
+		<div data-show="!$draft_open" class="shrink-0 space-y-2 border-t border-grimorio-iron pt-3">
 			<p class="text-xs text-muted-foreground">
 				Para guardar alguém novo, abra o bestiário e use <span class="text-foreground">Guardar no elenco</span> — a cópia nasce com os números do livro e você muda o que quiser.
 			</p>

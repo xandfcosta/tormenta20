@@ -111,11 +111,11 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 	// guarda o ID, e o leitor de tela anunciaria "Pintar dificil" sem acento.
 	// Quem diz qual é a espécie é o botão `aria-pressed` do trilho.
 	//
-	// O sinal chama-se `$ferramenta` desde a ALE-264 — e esta linha é um lembrete
+	// O sinal chama-se `$tool` desde a ALE-264 — e esta linha é um lembrete
 	// caro: ela citava `$pincel`, que deixou de existir, e uma asserção de
 	// AUSÊNCIA sobre um nome morto passa verde sobre nada. Nome de sinal em
 	// asserção negativa envelhece em silêncio.
-	if strings.Contains(tela, "'Pintar ' + $ferramenta") {
+	if strings.Contains(tela, "'Pintar ' + $tool") {
 		t.Error("o nome acessível da camada monta o rótulo com o id da ferramenta")
 	}
 	for _, pincel := range board.TerrainKinds {

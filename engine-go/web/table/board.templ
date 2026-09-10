@@ -122,7 +122,7 @@ templ boardTable(v BoardView) {
 			<div
 				id={ sceneId }
 				data-attr:style={ sceneStyle }
-				data-class="{'tabuleiro-com-ferramenta': $ferramenta !== ''}"
+				data-class="{'tabuleiro-com-ferramenta': $tool !== ''}"
 				data-on:wheel={ wheelMovesViewport }
 				data-on:keydown__window={ zoomPeloTeclado }
 				data-on:focusin={ viewportFollowsFocus }
@@ -584,7 +584,7 @@ templ toolHelpers(v BoardView) {
 // sem erro nenhum. O `d` cabe num SINAL, e sinal sobrevive ao remendo. É o mesmo
 // argumento da caixa de notas, que também não é região.
 //
-// O SVG fala em QUADRADOS, não em pixels: um `scale($quadrado)` converte a
+// O SVG fala em QUADRADOS, não em pixels: um `scale($square)` converte a
 // unidade inteira, então mudar o zoom muda a escala do desenho sem uma linha de
 // JavaScript. Ele era um `viewBox` do tamanho da moldura, e a moldura saiu na
 // ALE-203 — sem bordas não há caixa para recortar, e o desenho ESCAPA do
@@ -592,7 +592,7 @@ templ toolHelpers(v BoardView) {
 templ drawnTemplate(v BoardView) {
 	<svg
 		aria-hidden="true"
-		data-show={ "$template_path !== '' && $ferramenta === '" + FerramentaDoGabarito + "'" }
+		data-show={ "$template_path !== '' && $tool === '" + FerramentaDoGabarito + "'" }
 		class="tabuleiro-medida tabuleiro-medida-fundo"
 	>
 		<g data-attr:transform={ viewportDrawing }>
@@ -642,7 +642,7 @@ templ drawnTemplate(v BoardView) {
 templ drawnRuler(v BoardView) {
 	<svg
 		aria-hidden="true"
-		data-show={ "$ruler_phase > 0 && $ferramenta === '" + FerramentaDaRegua + "'" }
+		data-show={ "$ruler_phase > 0 && $tool === '" + FerramentaDaRegua + "'" }
 		class="tabuleiro-medida tabuleiro-medida-frente"
 	>
 		<g data-attr:transform={ viewportDrawing }>
@@ -685,8 +685,8 @@ templ drawnRuler(v BoardView) {
 		for _, i := range stopsReserve() {
 			<g data-show={ existsLabel(i) }>
 				<text
-					data-attr:x={ legMid(i, 0) + " * $quadrado - $vistax" }
-					data-attr:y={ legMid(i, 1) + " * $quadrado - $vistay" }
+					data-attr:x={ legMid(i, 0) + " * $square - $viewport_x" }
+					data-attr:y={ legMid(i, 1) + " * $square - $viewport_y" }
 					data-text={ legLabel(i) }
 					text-anchor="middle"
 					dominant-baseline="middle"
@@ -710,7 +710,7 @@ templ drawnRuler(v BoardView) {
 templ rulerReadingBox() {
 	<p
 		role="status"
-		data-show={ "$ruler_text !== '' && $ferramenta === '" + FerramentaDaRegua + "'" }
+		data-show={ "$ruler_text !== '' && $tool === '" + FerramentaDaRegua + "'" }
 		class="tabuleiro-ajudante gap-2"
 	>
 		@ui.Icon("Ruler", "size-4 text-grimorio-gold")
@@ -738,7 +738,7 @@ templ rulerReadingBox() {
 templ templateBar(v BoardView) {
 	<div
 		role="status"
-		data-show={ "$ferramenta === '" + FerramentaDoGabarito + "'" }
+		data-show={ "$tool === '" + FerramentaDoGabarito + "'" }
 		class="tabuleiro-ajudante gap-1.5"
 	>
 		for _, forma := range bookShapes {
@@ -1050,7 +1050,7 @@ templ moveArrow(v BoardView) {
 			// paradas de movimentação não mostram a distância em metros").
 			//
 			// FORA do `<g>` que escala, pela mesma razão dos rótulos da régua:
-			// dentro dele o `scale($quadrado)` multiplicaria a fonte e 12px virariam
+			// dentro dele o `scale($square)` multiplicaria a fonte e 12px virariam
 			// 1000px no zoom máximo. Aqui o texto tem o tamanho que se lê, e quem o
 			// posiciona é o mesmo par de números que o `scale` aplicaria à mão.
 			//
@@ -1065,8 +1065,8 @@ templ moveArrow(v BoardView) {
 			// das vezes.
 			for _, perna := range v.Movimento.Pernas {
 				<text
-					data-attr:x={ numeroDoFio(perna.MeioX) + " * $quadrado - $vistax" }
-					data-attr:y={ numeroDoFio(perna.MeioY) + " * $quadrado - $vistay" }
+					data-attr:x={ numeroDoFio(perna.MeioX) + " * $square - $viewport_x" }
+					data-attr:y={ numeroDoFio(perna.MeioY) + " * $square - $viewport_y" }
 					text-anchor="middle"
 					dominant-baseline="middle"
 					class="tabuleiro-regua-rotulo"
@@ -1192,7 +1192,7 @@ templ openBoardButton(v BoardView) {
 		<input
 			id="novo-lugar"
 			type="text"
-			data-bind:novolugar
+			data-bind:new_place
 			placeholder="Taverna do Javali"
 			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		/>
@@ -1202,7 +1202,7 @@ templ openBoardButton(v BoardView) {
 		<label for="novo-chao" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Chão</label>
 		<select
 			id="novo-chao"
-			data-bind:novochao
+			data-bind:new_ground
 			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>
 			// A lista vem do `tabuleiro` e não é digitada aqui: ela já existia no
@@ -1619,7 +1619,7 @@ templ tokenEdit(v BoardView) {
 				id="peca-nome"
 				type="text"
 				maxlength="60"
-				data-bind="pecanome"
+				data-bind="token_name"
 				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			/>
 		</div>
@@ -1630,7 +1630,7 @@ templ tokenEdit(v BoardView) {
 			<label for="peca-tamanho" class={ ui.FieldLabelClasses("muted", "block") }>Tamanho</label>
 			<select
 				id="peca-tamanho"
-				data-bind="pecatamanho"
+				data-bind="token_size"
 				class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
 				for _, t := range tokenSizes {
@@ -1690,7 +1690,7 @@ templ toolsRail(v BoardView) {
 		// faz — e mesmo assim não é uma décima primeira entrada: o `railKeys` tem
 		// dez dígitos e o `numberRail` estoura na décima primeira de propósito.
 		//
-		// O sinal é o MESMO (`$ferramenta`), então ela exclui as outras por
+		// O sinal é o MESMO (`$tool`), então ela exclui as outras por
 		// construção, como todas. O que ela não tem é número, e o `NewPieceTool`
 		// registra por quê.
 		if v.Mestre {
@@ -1784,7 +1784,7 @@ templ planFraming(v BoardView) {
 		<output
 			aria-live="polite"
 			aria-label="Tamanho do quadrado"
-			data-text="$quadrado"
+			data-text="$square"
 			class="sr-only text-right text-xs tabular-nums text-muted-foreground sm:not-sr-only sm:min-w-8"
 		></output>
 		<span aria-hidden="true" class="hidden text-xs text-muted-foreground sm:inline">px</span>
@@ -2022,7 +2022,7 @@ templ clickLayers(v BoardView) {
 	// que não chega.
 	<button
 		type="button"
-		data-show={ "$ferramenta === '" + FerramentaDaRegua + "'" }
+		data-show={ "$tool === '" + FerramentaDaRegua + "'" }
 		aria-label="Medir a distância — clique para acrescentar paradas, duplo clique fecha, botão direito apaga"
 		data-on:click={ clickedPointRuler(v) }
 		data-on:dblclick={ freezeRuler }
@@ -2036,7 +2036,7 @@ templ clickLayers(v BoardView) {
 	// gramáticas diferentes seriam duas coisas para lembrar.
 	<button
 		type="button"
-		data-show={ "$ferramenta === '" + FerramentaDoGabarito + "'" }
+		data-show={ "$tool === '" + FerramentaDoGabarito + "'" }
 		aria-label="Pôr o gabarito de área — clique na origem, clique de novo para apontar, botão direito apaga"
 		data-on:click={ clickedPointTemplate(v) }
 		data-on:pointermove={ templateFollowsPointer(v) }
@@ -2047,7 +2047,7 @@ templ clickLayers(v BoardView) {
 	// casa para onde a peça vai, e o ARRASTO marca um grupo (ALE-203, item 10).
 	//
 	// Duas camadas foi a primeira tentativa e ela não funciona: as duas se
-	// mostram com `$ferramenta === ''`, e a que vem DEPOIS no DOM cobre a outra —
+	// mostram com `$tool === ''`, e a que vem DEPOIS no DOM cobre a outra —
 	// o dedo nunca chegava ao laço. Medido no navegador, e o sintoma é o gesto
 	// que simplesmente não acontece.
 	//
@@ -2061,7 +2061,7 @@ templ clickLayers(v BoardView) {
 	if v.AlvoDoMovimento != "" || v.Mestre {
 		<button
 			type="button"
-			data-show="$ferramenta === ''"
+			data-show="$tool === ''"
 			aria-label={ restLayerName(v) }
 			data-on:click={ clickRest(v) }
 			if v.Mestre {
@@ -2175,8 +2175,8 @@ templ movePreview(v BoardView) {
 		for _, i := range legsReserve() {
 			<g data-show={ existsPreviewLabel(i) }>
 				<text
-					data-attr:x={ previewMid(i, "x") + " * $quadrado - $vistax" }
-					data-attr:y={ previewMid(i, "y") + " * $quadrado - $vistay" }
+					data-attr:x={ previewMid(i, "x") + " * $square - $viewport_x" }
+					data-attr:y={ previewMid(i, "y") + " * $square - $viewport_y" }
 					data-text={ previewText(i) }
 					text-anchor="middle"
 					dominant-baseline="middle"
@@ -2221,7 +2221,7 @@ templ newPieceBar(v BoardView) {
 			<span class={ ui.SectionLabelClasses("muted", "") }>Nova peça</span>
 			<input
 				type="text"
-				data-bind="novapecanome"
+				data-bind="new_token_name"
 				placeholder="Porta da cripta"
 				aria-label="Nome da peça"
 				class="min-h-11 w-40 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -2235,9 +2235,9 @@ templ newPieceBar(v BoardView) {
 				type="button"
 				title={ t.Rotulo + ": " + t.Lado + " (p107)" }
 				aria-label={ "Tamanho " + t.Rotulo }
-				data-attr:aria-pressed={ fmt.Sprintf("$novapecatamanho === %d ? 'true' : 'false'", t.Lados) }
-				data-class={ fmt.Sprintf("{'pincel-ligado': $novapecatamanho === %d}", t.Lados) }
-				data-on:click={ fmt.Sprintf("$novapecatamanho = %d", t.Lados) }
+				data-attr:aria-pressed={ fmt.Sprintf("$new_token_size === %d ? 'true' : 'false'", t.Lados) }
+				data-class={ fmt.Sprintf("{'pincel-ligado': $new_token_size === %d}", t.Lados) }
+				data-on:click={ fmt.Sprintf("$new_token_size = %d", t.Lados) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>{ t.Lado }</button>
 		}
@@ -2246,9 +2246,9 @@ templ newPieceBar(v BoardView) {
 				type="button"
 				title={ a.Dica }
 				aria-label={ "Aparência: " + a.Rotulo }
-				data-attr:aria-pressed={ fmt.Sprintf("$novapecaaparencia === %q ? 'true' : 'false'", a.ID) }
-				data-class={ fmt.Sprintf("{'pincel-ligado': $novapecaaparencia === %q}", a.ID) }
-				data-on:click={ fmt.Sprintf("$novapecaaparencia = %q", a.ID) }
+				data-attr:aria-pressed={ fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID) }
+				data-class={ fmt.Sprintf("{'pincel-ligado': $new_token_look === %q}", a.ID) }
+				data-on:click={ fmt.Sprintf("$new_token_look = %q", a.ID) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>{ a.Rotulo }</button>
 		}

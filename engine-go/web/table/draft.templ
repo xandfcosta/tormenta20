@@ -20,7 +20,7 @@ import (
 templ draftBody(v draftView) {
 	<main
 		id="rascunho"
-		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`"
+		data-attr:style="`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@draftHeader(v)

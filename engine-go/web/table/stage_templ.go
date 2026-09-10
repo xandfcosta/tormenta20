@@ -67,7 +67,7 @@ func gmStage(v View, b master.BestiaryView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"mesa\" data-attr:style=\"`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px; --notas-largura:${$notaslargura ? $notaslargura + 'px' : 'clamp(22rem,40%,44rem)'}`\" class=\"mesa-palco flex min-h-0 w-full flex-1 flex-col\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"mesa\" data-attr:style=\"`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px; --notas-largura:${$notaslargura ? $notaslargura + 'px' : 'clamp(22rem,40%,44rem)'}`\" class=\"mesa-palco flex min-h-0 w-full flex-1 flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

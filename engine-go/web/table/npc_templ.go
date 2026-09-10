@@ -53,7 +53,7 @@ func tableCastCampaign(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</button></div><div data-show=\"!$rascunhoaberto\" class=\"min-h-0 flex-1 overflow-y-auto\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</button></div><div data-show=\"!$draft_open\" class=\"min-h-0 flex-1 overflow-y-auto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -61,7 +61,7 @@ func tableCastCampaign(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><div data-show=\"!$rascunhoaberto\" class=\"shrink-0 space-y-2 border-t border-grimorio-iron pt-3\"><p class=\"text-xs text-muted-foreground\">Para guardar alguém novo, abra o bestiário e use <span class=\"text-foreground\">Guardar no elenco</span> — a cópia nasce com os números do livro e você muda o que quiser.</p><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><div data-show=\"!$draft_open\" class=\"shrink-0 space-y-2 border-t border-grimorio-iron pt-3\"><p class=\"text-xs text-muted-foreground\">Para guardar alguém novo, abra o bestiário e use <span class=\"text-foreground\">Guardar no elenco</span> — a cópia nasce com os números do livro e você muda o que quiser.</p><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

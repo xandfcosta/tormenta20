@@ -28,7 +28,7 @@ import "fmt"
 // posicionado por uma expressão — e por isso não custa nó por casa.
 
 // Os sinais do laço. `retangulando` é o modo em curso e o valor É o modo, como
-// o `$ferramenta` e o `$pincelando`: vazio (parado), `terreno` ou `pecas`.
+// o `$tool` e o `$pincelando`: vazio (parado), `terreno` ou `pecas`.
 const (
 	sinalDoRetangulo   = "rect_mode"
 	sinalDoRetanguloDe = "rect_from" // "x/y" do canto onde o dedo desceu
@@ -78,15 +78,15 @@ func followsRect(modo string) string {
 
 // dropTerrainRect fecha o laço e manda encher.
 //
-// O `$ferramenta` escolhe a rota: a borracha tem caminho sem espécie, que é o
+// O `$tool` escolhe a rota: a borracha tem caminho sem espécie, que é o
 // conserto que a fatia 1 fez e que não pode se perder aqui.
 func dropTerrainRect(v BoardView) string {
 	return fmt.Sprintf(
 		"if ($%s !== %q) return; const ate = $rect_to_x + '/' + $rect_to_y, de = $%s; "+
 			"$%s = ''; "+
-			"return $ferramenta === %q "+
+			"return $tool === %q "+
 			"? @post('%s/terreno/limpar/retangulo/' + de + '/' + ate) "+
-			": @post('%s/terreno/' + $ferramenta + '/retangulo/' + de + '/' + ate)",
+			": @post('%s/terreno/' + $tool + '/retangulo/' + de + '/' + ate)",
 		sinalDoRetangulo, retanguloDeTerreno, sinalDoRetanguloDe,
 		sinalDoRetangulo,
 		EraserTool,
@@ -106,10 +106,10 @@ func openIsLasso() string {
 // lado do servidor, e é de propósito que as duas existam: esta desenha o que
 // aquela vai fazer, e uma promessa que não bate com o resultado é pior que não
 // desenhar nada.
-const lassoStyle = "`left: ${Math.min($rect_from_x, $rect_to_x) * $quadrado}px; " +
-	"top: ${Math.min($rect_from_y, $rect_to_y) * $quadrado}px; " +
-	"width: ${(Math.abs($rect_to_x - $rect_from_x) + 1) * $quadrado}px; " +
-	"height: ${(Math.abs($rect_to_y - $rect_from_y) + 1) * $quadrado}px`"
+const lassoStyle = "`left: ${Math.min($rect_from_x, $rect_to_x) * $square}px; " +
+	"top: ${Math.min($rect_from_y, $rect_to_y) * $square}px; " +
+	"width: ${(Math.abs($rect_to_x - $rect_from_x) + 1) * $square}px; " +
+	"height: ${(Math.abs($rect_to_y - $rect_from_y) + 1) * $square}px`"
 
 // sinalDoCliqueEngolido diz ao `click` que o gesto anterior foi um ARRASTO.
 //
@@ -186,9 +186,9 @@ func partyTakes(id string) string {
 // quantas peças ele leva.
 func dropParty(v BoardView) string {
 	return fmt.Sprintf(
-		"if ($arrastando === '%s') { "+
-			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
-			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
+		"if ($dragging === '%s') { "+
+			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
+			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
 			"if (dx || dy) @post('%s/grupo/mover/' + dx + '/' + dy) }",
 		dragsTheParty, v.Base,
 	)
@@ -207,7 +207,7 @@ func tokenStyling(id string, movesItself bool) string {
 	// O ID e não o literal `'peca'` (ALE-299): com o literal, a única peça que
 	// vestia a classe era a `ArrastaAPeca`, então no rascunho pegar o Beta fazia
 	// o ALFA correr atrás do dedo. A classe segue quem o gesto marcou.
-	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === '%s', %s}", id, marcada)
+	return fmt.Sprintf("{'tabuleiro-arrastando': $dragging === '%s', %s}", id, marcada)
 }
 
 // brushGesture decide entre TRAÇO e RETÂNGULO no `pointerdown`.

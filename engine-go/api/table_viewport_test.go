@@ -10,7 +10,7 @@ import (
 func TestNoLayerReadsThePointWithoutAddingTheViewport(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
-		`{"novolugar":"Taverna do Javali","novochao":"taverna"}`); rec.Code != http.StatusOK {
+		`{"new_place":"Taverna do Javali","new_ground":"taverna"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -23,10 +23,10 @@ func TestNoLayerReadsThePointWithoutAddingTheViewport(t *testing.T) {
 	}
 
 	// Cada leitura tem de vir somada à vista. A expressão é sempre
-	// `(evt.offsetX + $vistax)`, então basta olhar o que vem logo depois.
+	// `(evt.offsetX + $viewport_x)`, então basta olhar o que vem logo depois.
 	for _, eixo := range []struct{ ponto, sinal string }{
-		{"evt.offsetX", "vistax"},
-		{"evt.offsetY", "vistay"},
+		{"evt.offsetX", "viewport_x"},
+		{"evt.offsetY", "viewport_y"},
 	} {
 		olho := regexp.MustCompile(regexp.QuoteMeta(eixo.ponto) + `(?: \+ \$` + eixo.sinal + `)?`)
 		for _, achado := range olho.FindAllString(tela, -1) {

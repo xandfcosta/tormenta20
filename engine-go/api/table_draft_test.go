@@ -103,7 +103,7 @@ func TestADraftGestureChangesTheArchivedScene(t *testing.T) {
 	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
 
 	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/nova/4/3",
-		`{"novapecanome":"Porta da cripta","novapecatamanho":1,"novapecaaparencia":"object"}`)
+		`{"new_token_name":"Porta da cripta","new_token_size":1,"new_token_look":"object"}`)
 
 	cena, err := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, lugar)
 	if err != nil {
@@ -141,7 +141,7 @@ func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
 
 	// E POSTANDO NA MÃO, que é o caso que o botão escondido não cobre.
 	gesto := f.posta(t, f.jogador, f.draftUrl(lugar)+"/tabuleiro/pecas/nova/4/3",
-		`{"novapecanome":"Intruso","novapecatamanho":1,"novapecaaparencia":"object"}`)
+		`{"new_token_name":"Intruso","new_token_size":1,"new_token_look":"object"}`)
 	if strings.Contains(gesto, "datastar") {
 		t.Errorf("o gesto do jogador foi atendido: %q", gesto)
 	}
@@ -202,7 +202,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 		"Taverna do Javali")
 
 	resposta := f.posta(t, f.mestre, f.draftUrl(lugar.ID)+"/tabuleiro/pecas/nova/4/3",
-		`{"novapecanome":"Fantasma","novapecatamanho":1,"novapecaaparencia":"object"}`)
+		`{"new_token_name":"Fantasma","new_token_size":1,"new_token_look":"object"}`)
 
 	if !strings.Contains(resposta, "está aberto numa mesa agora") {
 		t.Errorf("a recusa não chegou à tela: %q", resposta)
@@ -218,7 +218,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 	// seria lida como "a trava funcionou".
 	outro := f.draftPlace(t, "Cripta de Thwor", "cripta")
 	f.posta(t, f.mestre, f.draftUrl(outro)+"/tabuleiro/pecas/nova/4/3",
-		`{"novapecanome":"Porta","novapecatamanho":1,"novapecaaparencia":"object"}`)
+		`{"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
 	if livre, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, outro); len(livre.Tokens) != 1 {
 		t.Fatalf("o gesto foi recusado no lugar que NÃO está na mesa: %+v", livre.Tokens)
 	}

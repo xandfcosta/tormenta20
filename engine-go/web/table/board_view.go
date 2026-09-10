@@ -927,7 +927,7 @@ func clickedPointStop(v BoardView) string {
 // propagação DEPOIS de já ter escrito os sinais: o `pointerup` calculava o
 // deslocamento certo (a URL saía `parada/4/3`) enquanto `data-class` e
 // `data-attr:style` nunca reagiam — o gesto funcionava e era invisível.
-// O QUE `$arrastando` GUARDA É UMA IDENTIDADE, e não o nome do gesto (ALE-299).
+// O QUE `$dragging` GUARDA É UMA IDENTIDADE, e não o nome do gesto (ALE-299).
 //
 // Ele guardava o literal `'peca'` — igual para TODAS as peças —, e cada peça
 // pendura o próprio par de ouvintes na janela. Com duas no rascunho, os dois
@@ -941,11 +941,11 @@ func clickedPointStop(v BoardView) string {
 // mesma.
 func startsTheDrag(quem string) string {
 	return fmt.Sprintf(
-		"$arrastando = '%s'; $arrastoinix = evt.clientX; $arrastoiniy = evt.clientY; "+
-			"$arrastox = 0; $arrastoy = 0", quem)
+		"$dragging = '%s'; $drag_start_x = evt.clientX; $drag_start_y = evt.clientY; "+
+			"$drag_x = 0; $drag_y = 0", quem)
 }
 
-// dragsTheParty é o valor de `$arrastando` quando o gesto move o GRUPO marcado.
+// dragsTheParty é o valor de `$dragging` quando o gesto move o GRUPO marcado.
 //
 // Uma palavra e não um id, porque o grupo não tem um: quem começa é qualquer
 // peça marcada, e todas as marcadas se movem juntas. É o único valor que não
@@ -967,7 +967,7 @@ func dragsItself(v BoardView, id string) bool {
 // sendo arrastado: os dois alvos escutam a mesma janela.
 func followsFinger(quem string) string {
 	return fmt.Sprintf(
-		"$arrastando === '%s' && ($arrastox = evt.clientX - $arrastoinix, $arrastoy = evt.clientY - $arrastoiniy)", quem)
+		"$dragging === '%s' && ($drag_x = evt.clientX - $drag_start_x, $drag_y = evt.clientY - $drag_start_y)", quem)
 }
 
 // fingerFollowsWithPreview é o `followsFinger` da PEÇA, com a seta viva por cima.
@@ -983,9 +983,9 @@ func followsFinger(quem string) string {
 // esta tela pode ter, porque ele só aparece depois da decisão.
 func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 	return fmt.Sprintf(
-		"if ($arrastando !== '%s') return; "+
-			"$arrastox = evt.clientX - $arrastoinix; $arrastoy = evt.clientY - $arrastoiniy; "+
-			"const cx = %d + Math.round($arrastox / $quadrado), cy = %d + Math.round($arrastoy / $quadrado); "+
+		"if ($dragging !== '%s') return; "+
+			"$drag_x = evt.clientX - $drag_start_x; $drag_y = evt.clientY - $drag_start_y; "+
+			"const cx = %d + Math.round($drag_x / $square), cy = %d + Math.round($drag_y / $square); "+
 			"if (cx === $preview_x && cy === $preview_y) return; "+
 			"$preview_x = cx; $preview_y = cy; "+
 			"@post('%s/%s/previa/' + cx + '/' + cy)",
@@ -1036,9 +1036,9 @@ func dropFor(v BoardView, quem string, x, y int) string {
 		destino = fmt.Sprintf("%s ? %s : %s", markedIsToken(v.AlvoDoMovimento), grupo, destino)
 	}
 	return fmt.Sprintf(
-		"if ($arrastando === '%s') { "+
-			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
-			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
+		"if ($dragging === '%s') { "+
+			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
+			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
 			"if (dx || dy) %s }", quem, destino)
 }
 
@@ -1134,9 +1134,9 @@ func dropToken(v BoardView, p boardToken) string {
 // outro arredondamento.
 func draftMoveDrop(v BoardView, p boardToken) string {
 	return fmt.Sprintf(
-		"if ($arrastando === '%s') { "+
-			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
-			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
+		"if ($dragging === '%s') { "+
+			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
+			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
 			"if (dx || dy) @post('%s/pecas/%s/mover/' + (%d + dx) + '/' + (%d + dy)) }",
 		p.ID, v.Base, p.ID, p.X, p.Y)
 }
@@ -1269,7 +1269,7 @@ func placeDraftBase(campaignID, placeID int64) string {
 // cinco sinais soltos deixavam pincel e régua ligados ao mesmo tempo, com um
 // roubando o clique do outro.
 func pickTool(qual string) string {
-	return fmt.Sprintf("$ferramenta = ($ferramenta === %q ? '' : %q)", qual, qual)
+	return fmt.Sprintf("$tool = ($tool === %q ? '' : %q)", qual, qual)
 }
 
 // MarkTool é o valor do sinal quando o clique MARCA.
@@ -1287,7 +1287,7 @@ const MarkTool = "marcador"
 // fileira numerada. O `railKeys` tem dez dígitos e o comentário do `numberRail`
 // defende esse teto por escrito: a décima primeira "não ganha uma letra
 // sorteada — ela pede outra ideia". A ideia é esta: um modo ao lado do trilho,
-// que é valor do MESMO sinal `$ferramenta` e por isso continua excluindo as
+// que é valor do MESMO sinal `$tool` e por isso continua excluindo as
 // outras por construção.
 //
 // Sem atalho de tecla, então, e de propósito. O botão é focável e é o caminho
@@ -1338,7 +1338,7 @@ func markerName(m boardMarker) string {
 
 // chosenMarker é a pergunta que mostra as ações de UM marcador.
 func chosenMarker(id string) string {
-	return fmt.Sprintf("$marcadorescolhido === %q", id)
+	return fmt.Sprintf("$marker_chosen === %q", id)
 }
 
 // pickMarker abre as ações, ou as fecha se já estavam abertas.
@@ -1350,9 +1350,9 @@ func chosenMarker(id string) string {
 // clique.
 func pickMarker(id string) string {
 	if id == "" {
-		return "$marcadorescolhido = ''"
+		return "$marker_chosen = ''"
 	}
-	return fmt.Sprintf("$marcadorescolhido = ($marcadorescolhido === %q ? '' : %q)", id, id)
+	return fmt.Sprintf("$marker_chosen = ($marker_chosen === %q ? '' : %q)", id, id)
 }
 
 // curtainCommand escreve o gesto que fecha ou abre (ALE-202, ALE-269).

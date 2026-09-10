@@ -169,7 +169,7 @@ func PushForMap(s Scene, sse *datastar.ServerSentEventGenerator, sessionID, user
 	if seq == 0 || seq == jaEmpurrado {
 		return jaEmpurrado
 	}
-	if err := sse.PatchSignals([]byte(`{"superficie":"` + superficieDoTabuleiro + `"}`)); err != nil {
+	if err := sse.PatchSignals([]byte(`{"surface":"` + superficieDoTabuleiro + `"}`)); err != nil {
 		// O leitor foi embora; o laço do stream descobre isso no próximo ciclo.
 		// NÃO grava o número: gravar faria este puxão ser considerado empurrado
 		// numa tela que nunca o recebeu.

@@ -37,7 +37,7 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 	ficha, npc := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) != 1 {
@@ -64,7 +64,7 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 	f.scene(t)
 	f.seedOpenBoard(t, "pedra")
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":""}`)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
 
 	if b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab); len(b.Tokens) != 0 {
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
@@ -88,7 +88,7 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 	ficha, _ := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) != 1 {
@@ -137,7 +137,7 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	ficha, _ := sceneIds(t, f)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+		f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça no mapa: %d", rec.Code)
@@ -158,7 +158,7 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 	ficha, npc := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	candidatos := table.MapCandidates(b, f.s.tableHost().Sessions().GetState(f.sessionID))
@@ -196,7 +196,7 @@ func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 	ficha, _ := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	for _, especie := range board.TerrainKinds {

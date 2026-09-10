@@ -21,7 +21,7 @@ import (
 // struct faria o teste mandar exatamente o que o servidor espera, e um campo
 // renomeado passaria verde nos dois lados. Aqui o teste fala a língua do FIO.
 func bodyDraft(dentro string) string {
-	return `{"rascunho":{` + dentro + `}}`
+	return `{"draft":{` + dentro + `}}`
 }
 
 const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":10,` +
@@ -45,7 +45,7 @@ func responseDraft(t *testing.T, resposta string) map[string]any {
 		linha = linha[:fim]
 	}
 	var sinais struct {
-		Rascunho map[string]any `json:"rascunho"`
+		Rascunho map[string]any `json:"draft"`
 	}
 	if err := json.Unmarshal([]byte(linha), &sinais); err != nil {
 		t.Fatalf("os sinais não são JSON: %v\n%s", err, linha)

@@ -177,7 +177,7 @@ test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ 
  * debaixo do ponteiro.
  *
  * Por que e2e: o deslocamento é um `transform` de CSS sobre um plano de tamanho
- * ZERO, e a conta do clique é `offsetX + $vistax` num elemento IRMÃO desse
+ * ZERO, e a conta do clique é `offsetX + $viewport_x` num elemento IRMÃO desse
  * plano. Nenhuma camada abaixo do navegador tem geometria para testemunhar
  * isso — em jsdom todo elemento mede zero, e a asserção passaria verde com as
  * duas contas erradas.

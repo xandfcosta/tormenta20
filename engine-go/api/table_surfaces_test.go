@@ -141,7 +141,7 @@ func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 	f := novoPiloto(t)
 	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if !strings.Contains(html, `superficie: &#39;`+table.DefaultOpeningSurface+`&#39;`) {
+	if !strings.Contains(html, `surface: &#39;`+table.DefaultOpeningSurface+`&#39;`) {
 		t.Errorf("a página não semeia a superfície padrão (%q)", table.DefaultOpeningSurface)
 	}
 	// E a superfície padrão precisa EXISTIR na lista: um padrão que não é

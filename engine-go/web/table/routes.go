@@ -149,11 +149,11 @@ func tableSignalsExpr() string {
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
-		fmt.Sprintf("novolugar: '', novochao: '%s'", board.DefaultGround()),
+		fmt.Sprintf("new_place: '', new_ground: '%s'", board.DefaultGround()),
 		// A SUPERFÍCIE do jogador (ALE-129): qual das duas ocupa a tela. Abre na
 		// MESA (decisão do dono) — quem entra na sessão quer saber de quem é a vez
 		// e quem está em cena, e o tabuleiro pode nem estar aberto.
-		fmt.Sprintf("superficie: '%s'", DefaultOpeningSurface),
+		fmt.Sprintf("surface: '%s'", DefaultOpeningSurface),
 		// A FICHA DENTRO DA SESSÃO (ALE-275). `fichatab` é a seção que a pessoa
 		// está olhando — quem a escreve é o clique na aba, e quem a lê é o
 		// repedido que o stream dispara; sem ela, um aviso do servidor
@@ -163,14 +163,14 @@ func tableSignalsExpr() string {
 		// com a ficha de agora.
 		fmt.Sprintf("sheet_tab: '%s', sheet_version: ''", sheetui.AskedTab("")),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
-		"ferramenta: '', marcadorescolhido: '', escolhidosdomapa: ''",
+		"tool: '', marker_chosen: '', map_selection: ''",
 		// O MENU DA PEÇA (ALE-206). `pecaescolhida` é qual menu está aberto e
 		// `pecaeditada` é qual peça o diálogo está editando: são DOIS porque abrir
 		// o diálogo FECHA o menu, e um sinal só faria o gesto de abrir apagar o
 		// alvo do gesto de salvar.
 		// A SEGUNDA CAMADA do menu não tem sinal: ela é popover NATIVO, e quem
 		// guarda o aberto/fechado é o navegador (ALE-206).
-		"pecaescolhida: '', pecaeditada: '', pecanome: '', pecatamanho: 1",
+		"token_chosen: '', token_edited: '', token_name: '', token_size: 1",
 		// A ÁREA DE TRANSFERÊNCIA da peça (ALE-206), e ela é do CLIENTE de
 		// propósito: é a área de QUEM COPIOU, não da mesa. No servidor ela seria
 		// um estado por usuário e por sessão que ninguém pediu, e que o mestre
@@ -194,24 +194,24 @@ func tableSignalsExpr() string {
 		// peça, logo acima, e vivem no mesmo documento: reusá-los faria o gesto
 		// de criar escrever no alvo do gesto de salvar, que é o defeito que a
 		// linha do `buscador` no GLOSSARY existe para impedir.
-		"novapecanome: '', novapecatamanho: 1, novapecaaparencia: 'object'",
+		"new_token_name: '', new_token_size: 1, new_token_look: 'object'",
 		// A FILA e os verbos da linha.
 		"qualidadedodescanso: 'normal', formdecombatente: false",
 		"linhadacondicao: '', condicoesdalinha: '', rotulodalinha: ''",
 		"novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc'",
 		"edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0",
 		// O BESTIÁRIO e o elenco.
-		"rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, nomedonpc: ''",
+		"draft_of: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, nomedonpc: ''",
 		// O EDITOR DE BLOCO. O `rascunho` nasce com a FORMA inteira e não vazio,
 		// e isso não é enfeite: `data-bind` num caminho que ainda não existe liga
 		// um sinal NOVO em vez de escrever no de baixo, e o campo ficaria mudo
 		// até o primeiro `@post`. A semente é a mesma do "criar do zero", vinda
 		// do `blocoEmBranco` — escrevê-la aqui à mão seria o segundo branco.
-		fmt.Sprintf("rascunhoaberto: false, rascunhoaba: %q, erroDoRascunho: '', rascunho: %s",
+		fmt.Sprintf("draft_open: false, draft_tab: %q, erroDoRascunho: '', draft: %s",
 			abaDosNumeros, blankDraft()),
 		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
-		fmt.Sprintf("quadrado: %d", DefaultSquare),
-		"arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0",
+		fmt.Sprintf("square: %d", DefaultSquare),
+		"dragging: '', drag_start_x: 0, drag_start_y: 0, drag_x: 0, drag_y: 0",
 		// A JANELA sobre o plano infinito (ALE-203): ela substituiu a rolagem
 		// nativa, que precisava de uma caixa com fim para ter até onde rolar.
 		viewportSignals,

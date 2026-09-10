@@ -94,7 +94,7 @@ func movePartyTable(st Scene, c commandCtx) (*board.BoardState, error) {
 // PROXY do Datastar: lista de sinal cria índice ao ser lida, e aqui a tela
 // precisa perguntar "esta peça está marcada?" uma vez POR PEÇA. Com string, a
 // pergunta é um `includes` sobre um valor só.
-const markedTokensSignal = "pecasmarcadas"
+const markedTokensSignal = "marked_tokens"
 
 // markedMax é o teto do grupo, e ele é o teto da MESA: 50 combatentes
 // (`aovivo`). Uma lista maior que isso não saiu de um laço sobre este tabuleiro.
@@ -103,7 +103,7 @@ const markedMax = 50
 // markedTokens lê os ids do sinal.
 func markedTokens(r *http.Request) ([]string, error) {
 	var sinais struct {
-		Marcadas string `json:"pecasmarcadas"`
+		Marcadas string `json:"marked_tokens"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return nil, fmt.Errorf("as peças marcadas não vieram: %w", err)

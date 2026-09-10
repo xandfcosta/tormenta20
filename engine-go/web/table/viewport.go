@@ -30,15 +30,15 @@ import "fmt"
 
 // A janela é medida em PIXELS e não em quadrados, e a razão é o arrasto: o dedo
 // anda em pixels, e converter a cada passo daria um degrau visível quando o
-// quadrado é grande. O zoom continua sendo o `$quadrado`, e os dois se compõem
+// quadrado é grande. O zoom continua sendo o `$square`, e os dois se compõem
 // na hora de desenhar.
 const (
-	sinalDaVistaX = "vistax"
-	sinalDaVistaY = "vistay"
+	sinalDaVistaX = "viewport_x"
+	sinalDaVistaY = "viewport_y"
 	// sinalDoArrastoDaVista diz se o dedo está segurando o plano. Ele existe
 	// para o CURSOR (a mão fechada) e não para a conta: o `followsView` já o lê
 	// como guarda, e o `data-class` da camada o lê para trocar o desenho.
-	sinalDoArrastoDaVista = "arrastandoavista"
+	sinalDoArrastoDaVista = "dragging_viewport"
 )
 
 // sceneStyle leva a janela e o zoom do sinal para o CSS.
@@ -46,7 +46,7 @@ const (
 // Vai na CENA — a caixa que não rola e que o remendo não substitui — e desce por
 // herança até o plano e a grade. No plano ele seria apagado pelo primeiro quadro
 // do SSE, que é a mesma razão pela qual as variáveis do arrasto moram no `#mesa`.
-const sceneStyle = "`--quadrado: ${$quadrado}px; --vista-x: ${$vistax}px; --vista-y: ${$vistay}px`"
+const sceneStyle = "`--quadrado: ${$square}px; --vista-x: ${$viewport_x}px; --vista-y: ${$viewport_y}px`"
 
 // oQuadradoClicado traduz o PONTO do clique em quadrado do plano.
 //
@@ -68,8 +68,8 @@ const sceneStyle = "`--quadrado: ${$quadrado}px; --vista-x: ${$vistax}px; --vist
 // pode ser uma peça dentro do plano deslocado —, e por isso o zoom mede pelo
 // retângulo do `currentTarget`.
 const (
-	clicouEmX = "Math.floor((evt.offsetX + $vistax) / $quadrado)"
-	clicouEmY = "Math.floor((evt.offsetY + $vistay) / $quadrado)"
+	clicouEmX = "Math.floor((evt.offsetX + $viewport_x) / $square)"
+	clicouEmY = "Math.floor((evt.offsetY + $viewport_y) / $square)"
 )
 
 // A INTERSEÇÃO MAIS PERTO do clique, e não a casa.
@@ -84,15 +84,15 @@ const (
 // no alto-esquerda da casa `(X,Y)`, e a esfera se espalha simétrica em volta
 // dele.
 const (
-	clicouNoCantoX = "Math.round((evt.offsetX + $vistax) / $quadrado)"
-	clicouNoCantoY = "Math.round((evt.offsetY + $vistay) / $quadrado)"
+	clicouNoCantoX = "Math.round((evt.offsetX + $viewport_x) / $square)"
+	clicouNoCantoY = "Math.round((evt.offsetY + $viewport_y) / $square)"
 )
 
 // planPoint é o mesmo para um ponto qualquer da janela, e não só do clique —
 // o arrasto da vista precisa dele para o zoom ancorado.
 func planPoint(pixelX, pixelY string) (x, y string) {
-	return fmt.Sprintf("((%s) + $vistax) / $quadrado", pixelX),
-		fmt.Sprintf("((%s) + $vistay) / $quadrado", pixelY)
+	return fmt.Sprintf("((%s) + $viewport_x) / $square", pixelX),
+		fmt.Sprintf("((%s) + $viewport_y) / $square", pixelY)
 }
 
 // ── ARRASTAR A VISTA ─────────────────────────────────────────────────────────
@@ -107,18 +107,18 @@ const ViewTool = "vista"
 
 // pegaAVista guarda de onde o dedo saiu. Em PIXELS da janela, não do plano: o
 // que se mede é o deslocamento do dedo, e ele não depende do zoom.
-const pegaAVista = "$arrastandoavista = true; $vistainix = evt.clientX + $vistax; " +
-	"$vistainiy = evt.clientY + $vistay; evt.currentTarget.setPointerCapture(evt.pointerId)"
+const pegaAVista = "$dragging_viewport = true; $viewport_start_x = evt.clientX + $viewport_x; " +
+	"$viewport_start_y = evt.clientY + $viewport_y; evt.currentTarget.setPointerCapture(evt.pointerId)"
 
 // followsView move a janela junto com o dedo.
 //
 // A janela anda ao CONTRÁRIO do dedo: arrastar para a direita traz o conteúdo da
 // esquerda, que é como todo mapa se comporta. Por isso o sinal é
 // `início - atual` e não o inverso.
-const followsView = "$arrastandoavista && ($vistax = $vistainix - evt.clientX, " +
-	"$vistay = $vistainiy - evt.clientY)"
+const followsView = "$dragging_viewport && ($viewport_x = $viewport_start_x - evt.clientX, " +
+	"$viewport_y = $viewport_start_y - evt.clientY)"
 
-const dropView = "$arrastandoavista = false"
+const dropView = "$dragging_viewport = false"
 
 // wheelMovesViewport: a roda ROLA o plano, e `Ctrl+roda` amplia.
 //
@@ -141,8 +141,8 @@ var wheelMovesViewport = fmt.Sprintf(
 func centerViewport(x, y int) string {
 	return fmt.Sprintf(
 		"const cena = document.getElementById(%q); "+
-			"$vistax = (%d + 0.5) * $quadrado - cena.clientWidth / 2; "+
-			"$vistay = (%d + 0.5) * $quadrado - cena.clientHeight / 2",
+			"$viewport_x = (%d + 0.5) * $square - cena.clientWidth / 2; "+
+			"$viewport_y = (%d + 0.5) * $square - cena.clientHeight / 2",
 		sceneId, x, y)
 }
 
@@ -171,8 +171,8 @@ const sceneId = "tabuleiro-cena"
 // conta sobre um retângulo em lugar nenhum.
 const viewportFollowsFocus = "const janela = evt.currentTarget.getBoundingClientRect(), " +
 	"alvo = evt.target.getBoundingClientRect(); alvo.width && (" +
-	"$vistax += Math.max(0, alvo.right - janela.right) - Math.max(0, janela.left - alvo.left), " +
-	"$vistay += Math.max(0, alvo.bottom - janela.bottom) - Math.max(0, janela.top - alvo.top))"
+	"$viewport_x += Math.max(0, alvo.right - janela.right) - Math.max(0, janela.left - alvo.left), " +
+	"$viewport_y += Math.max(0, alvo.bottom - janela.bottom) - Math.max(0, janela.top - alvo.top))"
 
 // AS SETAS NÃO PERCORREM O PLANO, e isto é medido e não escolhido — é a mesma
 // história do Escape que o trilho registra.
@@ -194,5 +194,5 @@ const viewportFollowsFocus = "const janela = evt.currentTarget.getBoundingClient
 // quina de cima da tela". É um lugar arbitrário num plano sem bordas — e é por
 // isso que a cena CENTRALIZA nas peças ao abrir, em vez de deixar o mestre
 // procurar o próprio grupo.
-var viewportSignals = fmt.Sprintf("%s: 0, %s: 0, %s: false, vistainix: 0, vistainiy: 0",
+var viewportSignals = fmt.Sprintf("%s: 0, %s: 0, %s: false, viewport_start_x: 0, viewport_start_y: 0",
 	sinalDaVistaX, sinalDaVistaY, sinalDoArrastoDaVista)

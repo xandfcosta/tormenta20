@@ -127,7 +127,7 @@ func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 	ficha, _ := sceneIds(t, f)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 
 	// O CONTROLE: a peça entrou na memória. Sem isto, um disco vazio não
 	// distingue "não gravou" de "não havia o que gravar".

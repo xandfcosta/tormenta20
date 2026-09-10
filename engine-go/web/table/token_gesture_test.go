@@ -10,7 +10,7 @@ import (
 //
 // Cada peça pendura o próprio `pointermove__window` e `pointerup__window`, e a
 // janela entrega o evento a TODOS eles. A única coisa que separa um gesto do
-// outro é o valor de `$arrastando` — e ele guardava o literal `'peca'`, igual
+// outro é o valor de `$dragging` — e ele guardava o literal `'peca'`, igual
 // para todas. No rascunho com duas peças, os dois `pointerup` passavam na mesma
 // guarda: o PRIMEIRO DO DOM vencia, zerava o sinal, e o segundo achava o gesto
 // já encerrado. Pegar o Beta movia o Alfa, que corria atrás do dedo desde o
@@ -27,7 +27,7 @@ import (
 // `tokenStyling` perguntava `v.ArrastaAPeca == p.ID` enquanto o `takeToken`
 // perguntava `v.Rascunho || v.ArrastaAPeca == id`. Um pedaço novo que volte a
 // escrever um literal compartilhado nasce vermelho aqui.
-var dragComparison = regexp.MustCompile(`\$arrastando\s*(?:===|!==|=)\s*'([^']*)'`)
+var dragComparison = regexp.MustCompile(`\$dragging\s*(?:===|!==|=)\s*'([^']*)'`)
 
 func tokenGesturePieces(v BoardView, p boardToken) map[string]string {
 	return map[string]string{
@@ -64,11 +64,11 @@ func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
 				medidos++
 				for _, m := range dragComparison.FindAllStringSubmatch(expressao, -1) {
 					valor := m[1]
-					// Vazio é o FIM do gesto ("$arrastando = ''"), e vale para todo mundo.
+					// Vazio é o FIM do gesto ("$dragging = ''"), e vale para todo mundo.
 					if valor == "" || valor == p.ID || valor == dragsTheParty {
 						continue
 					}
-					t.Errorf("[%s] o %s da peça %s reconhece `$arrastando === %q`, que não é o id dela nem %q.\n"+
+					t.Errorf("[%s] o %s da peça %s reconhece `$dragging === %q`, que não é o id dela nem %q.\n"+
 						"Um valor compartilhado faz o gesto de uma peça responder pelas outras: a janela entrega o "+
 						"evento a todas, e quem vence é a ORDEM DO DOM.\n  expressão: %s",
 						cena, onde, p.ID, valor, dragsTheParty, expressao)
@@ -86,7 +86,7 @@ func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
 
 // TestEveryTokenThatDragsItselfIsGuardedByItsOwnId é a metade POSITIVA, e ela não
 // é decoração: o guarda de cima passaria verde sobre uma expressão que não
-// mencionasse `$arrastando` nenhuma vez — um gesto morto e um gesto correto se
+// mencionasse `$dragging` nenhuma vez — um gesto morto e um gesto correto se
 // parecem numa lista de violações vazia.
 func TestEveryTokenThatDragsItselfIsGuardedByItsOwnId(t *testing.T) {
 	pecas := []boardToken{

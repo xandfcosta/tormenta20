@@ -273,8 +273,8 @@ func openBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 	st.chosenTabs.Escolhe(c.SessionID, c.User, b.ID)
 	// O formulário volta ao zero, como o do combatente: sem isto o lugar fica no
 	// campo e a cena seguinte nasce com o nome da anterior.
-	c.Sinais["novolugar"] = ""
-	c.Sinais["novochao"] = board.DefaultGround()
+	c.Sinais["new_place"] = ""
+	c.Sinais["new_ground"] = board.DefaultGround()
 	return b, nil
 }
 
@@ -329,8 +329,8 @@ func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 func signalsScene(r *http.Request) (lugar, chao string, err error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Lugar string `json:"novolugar"`
-		Chao  string `json:"novochao"`
+		Lugar string `json:"new_place"`
+		Chao  string `json:"new_ground"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return "", "", fmt.Errorf("não entendi a cena enviada: %v", err)

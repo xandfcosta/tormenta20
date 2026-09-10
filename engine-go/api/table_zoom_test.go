@@ -33,7 +33,7 @@ func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	// O PADRÃO é derivado e não digitado: escrever 44 no `data-signals` seria a
 	// terceira cópia da mesma escolha, e a que fica para trás é sempre a da
 	// página — a cena nasceria com um zoom e o botão contando outro.
-	if !strings.Contains(tela, fmt.Sprintf("quadrado: %d", table.DefaultSquare)) {
+	if !strings.Contains(tela, fmt.Sprintf("square: %d", table.DefaultSquare)) {
 		t.Errorf("a página não semeia o zoom padrão (%d)", table.DefaultSquare)
 	}
 	// E os limites que desabilitam os botões são os do código, não outros dois.

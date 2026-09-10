@@ -96,14 +96,14 @@ func entryDraft(m book.Entry) map[string]any {
 		"pvdoverbete":     m.HP,
 		"inidoverbete":    rand.IntN(20) + 1,
 		"copiasdoverbete": 1,
-		"rascunhode":      m.ID,
+		"draft_of":        m.ID,
 	}
 }
 
 // signalsDraft lê de QUAL criatura o rascunho na tela é.
 func signalsDraft(r *http.Request) string {
 	var sinais struct {
-		De string `json:"rascunhode"`
+		De string `json:"draft_of"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return ""
