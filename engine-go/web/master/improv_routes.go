@@ -142,7 +142,7 @@ func improvFromRequest(r *http.Request) improvView {
 		Perseguicao []roll `json:"perseguicao"`
 		Recompensa  []roll `json:"recompensa"`
 		Ideias      []roll `json:"ideias"`
-		Salas       *int   `json:"salas"`
+		Salas       *int   `json:"rooms"`
 	}{}
 	v := improvView{Salas: salasPadrao}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {

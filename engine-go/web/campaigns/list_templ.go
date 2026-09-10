@@ -186,7 +186,7 @@ func listBar(v listView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{busca: %q, papel: %q, %s}", v.Busca, v.Papel, ui.StageSignals(v.CursorID)))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{search: %q, role: %q, %s}", v.Busca, v.Papel, ui.StageSignals(v.CursorID)))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/campaigns/list.templ`, Line: 82, Col: 105}
 		}
@@ -207,7 +207,7 @@ func listBar(v listView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<input type=\"search\" name=\"busca\" data-busca data-bind:busca data-on:input__debounce.250ms=\"@get('/campanhas')\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<input type=\"search\" name=\"busca\" data-busca data-bind:search data-on:input__debounce.250ms=\"@get('/campanhas')\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -390,9 +390,9 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$papel = %q; @get('/campanhas')", valor))
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$role = %q; @get('/campanhas')", valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/campaigns/list.templ`, Line: 139, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/campaigns/list.templ`, Line: 139, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -1496,7 +1496,7 @@ func searchWithoutResult(v listView) templ.Component {
 		})
 		templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{
 			"type":          "button",
-			"data-on:click": "$busca = ''; $papel = 'todas'; @get('/campanhas')",
+			"data-on:click": "$search = ''; $role = 'todas'; @get('/campanhas')",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var63), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

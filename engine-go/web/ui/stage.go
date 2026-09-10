@@ -83,7 +83,7 @@ func StageWash(nome string) string {
 // navegadores, e uma animação que não anima é o defeito mudo desta família.
 func EnteringStage(id int64) string {
 	return fmt.Sprintf(
-		"{'palco-entra-adiante': $cursor == %d && $sentido == 1, 'palco-entra-atras': $cursor == %d && $sentido == -1}",
+		"{'palco-entra-adiante': $cursor == %d && $direction == 1, 'palco-entra-atras': $cursor == %d && $direction == -1}",
 		id, id)
 }
 
@@ -109,10 +109,10 @@ func EnteringStage(id int64) string {
 // Datastar no guia do pacote — sequência de comandos dentro de um ternário é
 // erro de sintaxe, o framework engole o parse e o gesto INTEIRO vira nada.
 //
-// @example CursorGesture(2, 41) // "if ($indice != 2) { … } $cursor = 41"
+// @example CursorGesture(2, 41) // "if ($last_index != 2) { … } $cursor = 41"
 func CursorGesture(index int, id int64) string {
 	return fmt.Sprintf(
-		"if ($indice != %d) { $sentido = %d >= $indice ? 1 : -1; $indice = %d } $cursor = %d",
+		"if ($last_index != %d) { $direction = %d >= $last_index ? 1 : -1; $last_index = %d } $cursor = %d",
 		index, index, index, id)
 }
 
@@ -126,7 +126,7 @@ func CursorGesture(index int, id int64) string {
 //
 // @example StageSignals(41) // "cursor: 41, sentido: 1, indice: 0"
 func StageSignals(cursorID int64) string {
-	return fmt.Sprintf("cursor: %d, sentido: 1, indice: 0", cursorID)
+	return fmt.Sprintf("cursor: %d, direction: 1, last_index: 0", cursorID)
 }
 
 // theEnterThatOpens é o ⏎ de um marcador do trilho.

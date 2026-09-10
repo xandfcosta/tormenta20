@@ -167,7 +167,7 @@ templ dungeonPlanner(v improvView) {
 				min={ ui.Int(salasMinimo) }
 				max={ ui.Int(salasMaximo) }
 				value={ ui.Int(v.Salas) }
-				data-bind:salas
+				data-bind:rooms
 				data-on:input__debounce.300ms="@get('/mestre/improviso')"
 				aria-label="Número de salas da masmorra"
 				class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"

@@ -16,7 +16,7 @@ import (
 // O analisador de HTML minuscula NOME DE ATRIBUTO. Um `data-bind:novoNome`
 // chega ao Datastar como `data-bind:novonome` e liga um sinal NOVO — o
 // declarado fica intocado, o fio leva os DOIS, e o servidor lê o errado. Só o
-// VALOR de um atributo preserva a caixa, que é por que o `$fichaAberta` pode ser
+// VALOR de um atributo preserva a caixa, que é por que o `$sheet_open` pode ser
 // camelCase: ele só aparece dentro de expressões.
 //
 // # Por que este guarda existe, e por que ele existe TARDE
@@ -101,7 +101,7 @@ func TestNoDatastarAttributeKeyCarriesUppercase(t *testing.T) {
 			"O analisador de HTML a minuscula e o Datastar liga um sinal NOVO: o declarado fica "+
 			"intocado, o fio leva os dois e o servidor lê o errado — sem erro em lugar nenhum. "+
 			"Escreva a chave toda minúscula (`data-bind:novonome`). Caixa alta só sobrevive "+
-			"dentro de EXPRESSÃO (`$fichaAberta`), onde o valor do atributo preserva a caixa.",
+			"dentro de EXPRESSÃO (`$sheet_open`), onde o valor do atributo preserva a caixa.",
 			len(offenders), keysRead, strings.Join(offenders, "\n  "))
 	}
 	t.Logf("chaves de atributo do Datastar: %d, %d com caixa alta, de %d arquivos", keysRead, len(offenders), filesRead)

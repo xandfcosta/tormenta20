@@ -147,15 +147,15 @@ func charactersBar(v View) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{busca: %q, dossie: false, %s}", v.Busca, ui.StageSignals(v.CursorID)))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{search: %q, dossier: false, %s}", v.Busca, ui.StageSignals(v.CursorID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/characters/scene.templ`, Line: 66, Col: 100}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/characters/scene.templ`, Line: 66, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" data-on:keydown__window=\"(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossie = !$dossie)\"><a href=\"/\" class=\"inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">‹ Voltar</a><h1 class=\"font-heading text-xl tracking-wide text-foreground\">Personagens</h1>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" data-on:keydown__window=\"(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossier = !$dossier)\"><a href=\"/\" class=\"inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">‹ Voltar</a><h1 class=\"font-heading text-xl tracking-wide text-foreground\">Personagens</h1>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -181,7 +181,7 @@ func charactersBar(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<input type=\"search\" name=\"busca\" data-busca data-bind:busca data-on:input__debounce.250ms=\"@get('/personagens')\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<input type=\"search\" name=\"busca\" data-busca data-bind:search data-on:input__debounce.250ms=\"@get('/personagens')\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -471,8 +471,8 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{
-			"type": "button", "data-on:click": "$dossie = !$dossie",
-			"data-attr:aria-pressed": "$dossie",
+			"type": "button", "data-on:click": "$dossier = !$dossier",
+			"data-attr:aria-pressed": "$dossier",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -937,7 +937,7 @@ func createFrame(indice int) templ.Component {
 // ── o dossiê ─────────────────────────────────────────────────────────────────
 
 // heroDossier é a gaveta de detalhe. Ela é desenhada para todos e revelada
-// pelo par cursor+`$dossie`: abrir não pede nada ao servidor.
+// pelo par cursor+`$dossier`: abrir não pede nada ao servidor.
 //
 // As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) — na
 // SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
@@ -967,9 +967,9 @@ func heroDossier(h HeroCard) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var42 string
-		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$dossie && $cursor == %d", h.ID))
+		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$dossier && $cursor == %d", h.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/characters/scene.templ`, Line: 297, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/characters/scene.templ`, Line: 297, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 		if templ_7745c5c3_Err != nil {
@@ -1024,7 +1024,7 @@ func heroDossier(h HeroCard) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeTiny, "", templ.Attributes{
-			"type": "button", "data-on:click": "$dossie = false", "aria-label": "Fechar o dossiê",
+			"type": "button", "data-on:click": "$dossier = false", "aria-label": "Fechar o dossiê",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1235,7 +1235,7 @@ func searchWithoutHero() templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{
-			"type": "button", "data-on:click": "$busca = ''; @get('/personagens')",
+			"type": "button", "data-on:click": "$search = ''; @get('/personagens')",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var55), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

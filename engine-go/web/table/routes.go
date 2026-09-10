@@ -161,7 +161,7 @@ func tableSignalsExpr() string {
 		// estava. `fichaversao` é o carimbo que o servidor empurra quando o
 		// personagem muda no banco, e ele nasce vazio porque a página já chega
 		// com a ficha de agora.
-		fmt.Sprintf("fichatab: '%s', fichaversao: ''", sheetui.AskedTab("")),
+		fmt.Sprintf("sheet_tab: '%s', sheet_version: ''", sheetui.AskedTab("")),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
 		"ferramenta: '', marcadorescolhido: '', escolhidosdomapa: ''",
 		// O MENU DA PEÇA (ALE-206). `pecaescolhida` é qual menu está aberto e

@@ -275,10 +275,10 @@ templ CreatureDialog(m book.Entry, livro bookui.BookAddress) {
 	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<div
 		class="mesa-ficha-em-dialogo fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
-		data-show="$fichaAberta"
+		data-show="$sheet_open"
 		style="display:none"
-		data-on:click="evt.target === el && ($fichaAberta = false)"
-		data-on:keydown__window="evt.key === 'Escape' && ($fichaAberta = false)"
+		data-on:click="evt.target === el && ($sheet_open = false)"
+		data-on:keydown__window="evt.key === 'Escape' && ($sheet_open = false)"
 	>
 		// `data-expanded` é o que faz o DRIVER DE TECLADO se recolher: ele procura
 		// `[role="dialog"][data-expanded]`, e sem isto as setas continuariam
@@ -294,14 +294,14 @@ templ CreatureDialog(m book.Entry, livro bookui.BookAddress) {
 		<div
 			role="dialog"
 			aria-modal="true"
-			data-attr:data-expanded="$fichaAberta"
+			data-attr:data-expanded="$sheet_open"
 			aria-label={ m.Name }
 			class="relative max-h-[85vh] w-full overflow-y-auto rounded-t-md border border-grimorio-iron bg-background p-4 sm:max-w-2xl sm:rounded-md"
 		>
 			<button
 				type="button"
 				aria-label={ "Fechar a ficha de " + m.Name }
-				data-on:click="$fichaAberta = false"
+				data-on:click="$sheet_open = false"
 				class="absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>×</button>
 			@EntryBlock(m, livro)
@@ -334,7 +334,7 @@ templ BestiaryFilters(v BestiaryView) {
 				name="busca"
 				data-busca-da-cena
 				{ navigableField()... }
-				data-bind:busca
+				data-bind:search
 				data-on:input__debounce.250ms={ fmt.Sprintf("@get('%s')", v.BestiaryBase()) }
 				value={ v.Term }
 				placeholder="Buscar criatura"
@@ -463,8 +463,8 @@ templ EntryList(v BestiaryView) {
 					// mouse deixa de mandar o pedido que só desfaz o dele.
 					<a
 						href={ templ.SafeURL(v.BestiaryBase() + "?criatura=" + m.ID) }
-						data-on:click={ fmt.Sprintf("evt.preventDefault(); $criatura = %q; @get('%s')", m.ID, openTheEntry(v.BestiaryBase())) }
-						data-on:focus__throttle.100ms.leading={ fmt.Sprintf("el.matches(':focus-visible') && ($criatura = %q, @get('%s'))", m.ID, v.BestiaryBase()) }
+						data-on:click={ fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, openTheEntry(v.BestiaryBase())) }
+						data-on:focus__throttle.100ms.leading={ fmt.Sprintf("el.matches(':focus-visible') && ($creature = %q, @get('%s'))", m.ID, v.BestiaryBase()) }
 						if v.Chosen != nil && v.Chosen.ID == m.ID {
 							aria-current="true"
 							class="block w-full rounded-sm border border-grimorio-gold bg-accent p-2 text-left transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

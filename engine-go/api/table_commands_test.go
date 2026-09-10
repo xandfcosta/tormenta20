@@ -198,7 +198,7 @@ func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 	}
 }
 
-// E o sinal do comando é OUTRO que o `$erro` do registrar (ALE-263).
+// E o sinal do comando é OUTRO que o `$error` do registrar (ALE-263).
 //
 // Um sinal só faria a recusa de "Adicionar grupo" acender a frase vermelha
 // dentro da caixa "Registrar iniciativa" do mestre que também joga — a frase

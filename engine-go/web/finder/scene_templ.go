@@ -27,7 +27,7 @@ import "strconv"
 //
 // A caixa mora na CASCA e é desenhada UMA vez por página. Ela não é remendada —
 // só o `#buscador-achados` de dentro é —, e essa divisão importa: o
-// `data-bind:buscador` do campo vive fora do que o servidor troca, então o que
+// `data-bind:finder` do campo vive fora do que o servidor troca, então o que
 // a pessoa está digitando nunca é redeclarado por baixo dela.
 func Dialog() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -63,7 +63,7 @@ func Dialog() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"scene-grimorio m-auto w-[min(42rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60\"><h2 id=\"buscador-titulo\" class=\"sr-only\">Buscar no livro</h2><div class=\"buscador-linha flex items-center gap-2 border-b border-grimorio-iron px-3 transition-colors\"><span aria-hidden=\"true\" class=\"text-sm text-muted-foreground\">⌕</span><input id=\"buscador-campo\" type=\"text\" data-bind:buscador data-on:input__debounce.200ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"scene-grimorio m-auto w-[min(42rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60\"><h2 id=\"buscador-titulo\" class=\"sr-only\">Buscar no livro</h2><div class=\"buscador-linha flex items-center gap-2 border-b border-grimorio-iron px-3 transition-colors\"><span aria-hidden=\"true\" class=\"text-sm text-muted-foreground\">⌕</span><input id=\"buscador-campo\" type=\"text\" data-bind:finder data-on:input__debounce.200ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

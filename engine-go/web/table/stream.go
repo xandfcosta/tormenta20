@@ -247,7 +247,7 @@ func announceSheetChange(
 	if versao == "" || versao == jaAvisada {
 		return jaAvisada
 	}
-	if err := sse.PatchSignals([]byte(`{"fichaversao":` + strconv.Quote(versao) + `}`)); err != nil {
+	if err := sse.PatchSignals([]byte(`{"sheet_version":` + strconv.Quote(versao) + `}`)); err != nil {
 		// O leitor foi embora. NÃO grava: gravar faria esta mudança ser
 		// considerada avisada numa tela que nunca a recebeu.
 		return jaAvisada

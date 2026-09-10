@@ -370,7 +370,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **64 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **65 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -391,7 +391,8 @@ de dentro de um laço, nenhum identificador NOVO nasce em português, nenhum ges
 de uma peça do tabuleiro responde por outra, nenhum arquivo do repositório tem
 nome em português, todo estático pedido por `Asset(…)` existe na pasta, nenhuma
 chave de atributo do Datastar carrega caixa alta, nenhum sinal novo quebra o
-padrão de nome. Cada um nasceu de um defeito que tinha irmãos.
+padrão de nome, todo sinal declarado por valor tem quem o leia. Cada um nasceu
+de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27

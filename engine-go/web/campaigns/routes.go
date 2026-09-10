@@ -83,8 +83,8 @@ func filterFromRequest(r *http.Request) (busca, papel string) {
 	q := r.URL.Query()
 	busca, papel = q.Get("busca"), q.Get("papel")
 	sinais := struct {
-		Busca string `json:"busca"`
-		Papel string `json:"papel"`
+		Busca string `json:"search"`
+		Papel string `json:"role"`
 	}{}
 	if err := datastar.ReadSignals(r, &sinais); err == nil {
 		if sinais.Busca != "" || sinais.Papel != "" {
@@ -414,26 +414,26 @@ func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
 	// recusada mesmo vindo de um caminho de tela.
 	normalizadas, msg := campaign.NormalizeIgnoredRules(desejadas)
 	if msg != "" {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": msg})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": msg})
 		return
 	}
 	if err := s.deps.SaveIgnoredRules(r.Context(), id, normalizadas); err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
 	}
 
 	v, err := s.LoadOne(r.Context(), eu, s.deps.RequesterIsAdmin(r), id, "config")
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
 	}
 	fragmento, err := ui.RenderFragment(r.Context(), rulesPanel(v))
 	if err != nil {
-		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ui.NoticeInternal})
+		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
 	}
 	_ = sse.PatchElements(fragmento)
-	_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ""})
+	_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ""})
 }
 
 // ownerOrRefuse resolve o id e exige que quem pede seja o DONO.
@@ -535,6 +535,6 @@ func (s Scene) writeOnePage(w http.ResponseWriter, r *http.Request, status int, 
 		// Os sinais são só de INTERAÇÃO — o diálogo de excluir e o aviso do
 		// interruptor. Nada de estado da aplicação: a aba vem da URL e o resto
 		// vem desenhado.
-		Sinais: "{erroDaRegra: ''}",
+		Sinais: "{rule_error: ''}",
 	}, oneBody(v))
 }

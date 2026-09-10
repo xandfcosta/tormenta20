@@ -55,7 +55,7 @@ func (s Scene) handleTableInitiative(w http.ResponseWriter, r *http.Request) {
 	// acerto para APAGAR a frase anterior. Quem redesenha a fila é o stream, que
 	// já está aberto — mandar o fragmento aqui também o desenharia por dois
 	// caminhos que podem discordar, que é o defeito que a ALE-122 consertou.
-	_ = sse.MarshalAndPatchSignals(map[string]string{"erro": erro})
+	_ = sse.MarshalAndPatchSignals(map[string]string{"error": erro})
 }
 
 // registerInitiativeTable é o caminho inteiro da escrita: autoriza, acha o

@@ -457,7 +457,7 @@ templ rulesPanel(v oneView) {
 				@ruleSwitch(v, regra)
 			</div>
 		}
-		<p class="text-sm text-destructive-ink" data-show="$erroDaRegra != ''" data-text="$erroDaRegra"></p>
+		<p class="text-sm text-destructive-ink" data-show="$rule_error != ''" data-text="$rule_error"></p>
 	</section>
 }
 
@@ -471,8 +471,8 @@ templ ruleSwitch(v oneView, regra optionalRule) {
 		role="switch"
 		aria-checked={ ui.AriaBool(v.RegraEmVigor(regra.ID)) }
 		aria-label={ regra.Titulo }
-		data-indicator:salvando
-		data-attr:disabled="$salvando"
+		data-indicator:saving
+		data-attr:disabled="$saving"
 		data-on:click={ fmt.Sprintf("@post('/campanhas/%d/regras/%s')", v.ID, regra.ID) }
 		class={ "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(regra.ID)),
@@ -507,7 +507,7 @@ templ dangerZone(v oneView) {
 		// mesma propriedade do apagar conta da administração, e pelo mesmo
 		// motivo: primeiro clique não pode ser irreversível.
 		@ui.Button(ui.VariantDestructive, ui.SizeSmall, "shrink-0", templ.Attributes{
-			"type": "button", "data-on:click": "$excluir.showModal()",
+			"type": "button", "data-on:click": "$delete_dialog.showModal()",
 		}) {
 			@ui.Icon("Trash2", "mr-1 size-3.5")
 			Excluir campanha
@@ -519,7 +519,7 @@ templ dangerZone(v oneView) {
 templ deleteDialog(v oneView) {
 	<dialog
 		id="excluir"
-		data-ref="excluir"
+		data-ref="delete_dialog"
 		aria-labelledby="excluir-titulo"
 		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60"
 	>

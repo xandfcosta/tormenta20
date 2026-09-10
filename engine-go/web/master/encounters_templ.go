@@ -518,7 +518,7 @@ func copyEncounterButton(v encountersView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\" data-on:click=\"navigator.clipboard.writeText(location.origin + el.dataset.url); $copiado = true; setTimeout(() => $copiado = false, 2000)\" class=\"ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\"><span data-show=\"!$copiado\">Copiar link do encontro</span> <span style=\"display:none\" data-show=\"$copiado\" class=\"text-grimorio-gold\">Link copiado</span></button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\" data-on:click=\"navigator.clipboard.writeText(location.origin + el.dataset.url); $copied = true; setTimeout(() => $copied = false, 2000)\" class=\"ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\"><span data-show=\"!$copied\">Copiar link do encontro</span> <span style=\"display:none\" data-show=\"$copied\" class=\"text-grimorio-gold\">Link copiado</span></button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

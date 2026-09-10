@@ -40,7 +40,7 @@ templ collectionScene(v collectionView) {
 				type="search"
 				data-busca-da-cena
 				name="busca"
-				data-bind:busca
+				data-bind:search
 				data-on:input__debounce.250ms={ "@get('/mestre/" + v.Aba + "')" }
 				value={ v.Term }
 				placeholder="Buscar em todos os catálogos"

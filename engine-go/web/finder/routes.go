@@ -67,7 +67,7 @@ func handleFinder(w http.ResponseWriter, r *http.Request) {
 // termo anterior.
 func finderTerm(r *http.Request) string {
 	sinais := struct {
-		Buscador *string `json:"buscador"`
+		Buscador *string `json:"finder"`
 	}{}
 	if err := datastar.ReadSignals(r, &sinais); err != nil || sinais.Buscador == nil {
 		return r.URL.Query().Get("busca")

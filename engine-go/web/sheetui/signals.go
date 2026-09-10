@@ -28,7 +28,7 @@ import (
 // Chave de atributo é minusculada pelo HTML: um `data-bind:novaPericia` vira
 // `data-bind:novapericia` e liga um sinal NOVO, deixando o que o servidor lê
 // sempre vazio. Só o VALOR de um atributo preserva a caixa, que é por que o
-// `$fichaAberta` do bestiário pode ser camelCase — ele só aparece dentro de
+// `$sheet_open` do bestiário pode ser camelCase — ele só aparece dentro de
 // expressões.
 
 // Signals é o que o cliente manda junto de qualquer gesto da ficha.
@@ -37,7 +37,7 @@ import (
 // busca é gesto legítimo, e tratá-lo como ausência ressuscitaria o termo
 // anterior — é a mesma decisão do `finderTerm`.
 type Signals struct {
-	Busca *string `json:"busca"`
+	Busca *string `json:"search"`
 	// NovaPericia e NovoAtributo são os dois campos do diálogo de ofício novo.
 	NovaPericia  *string `json:"novapericia"`
 	NovoAtributo *string `json:"novoatributo"`

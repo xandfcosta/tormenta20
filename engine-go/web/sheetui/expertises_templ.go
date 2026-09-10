@@ -21,7 +21,7 @@ import (
 //
 // # A BUSCA vai ao SERVIDOR, e é o padrão da casa
 //
-// `data-bind:busca` mais um `@get` com debounce, como a cena de campanhas. Ela
+// `data-bind:search` mais um `@get` com debounce, como a cena de campanhas. Ela
 // custa uma ida — 2ms, e a cena volta comprimida desde a ALE-273 — e ganha o
 // filtro sobrevivendo a qualquer outro gesto: o termo viaja como sinal em TODA
 // requisição da ficha, então mexer no PV com a busca escrita devolve a lista
@@ -204,7 +204,7 @@ func expertiseTerm(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<input type=\"search\" name=\"busca\" data-bind:busca data-on:input__debounce.250ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<input type=\"search\" name=\"busca\" data-bind:search data-on:input__debounce.250ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

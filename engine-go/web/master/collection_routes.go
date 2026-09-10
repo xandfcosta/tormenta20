@@ -107,7 +107,7 @@ func collectionCriteriaFromRequest(r *http.Request) collectionCriteria {
 	}
 
 	sinais := struct {
-		Term *string `json:"busca"`
+		Term *string `json:"search"`
 		Aba  *string `json:"aba"`
 	}{}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {

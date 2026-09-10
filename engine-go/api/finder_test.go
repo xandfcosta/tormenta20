@@ -30,7 +30,7 @@ func TestTheFinderRouteReadsTheSignal(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := askTheFinder(t, s, eu, `{"buscador":"abalado"}`)
+	corpo := askTheFinder(t, s, eu, `{"finder":"abalado"}`)
 	if !strings.Contains(corpo, "datastar-patch-elements") {
 		t.Fatal("a rota não devolveu remendo nenhum — o resto do guarda mediria a resposta errada")
 	}

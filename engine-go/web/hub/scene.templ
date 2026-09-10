@@ -112,18 +112,18 @@ templ playerMenu(v hubView) {
 	<div
 		id="menu-do-jogador"
 		popover
-		data-signals="{som: false, volume: 100}"
-		data-init="const p = cena.preferencias(); $som = p.som; $volume = p.volume"
+		data-signals="{sound: false, volume: 100}"
+		data-init="const p = cena.preferencias(); $sound = p.som; $volume = p.volume"
 		class="fixed m-0 w-56 border border-grimorio-iron bg-grimorio-panel-raised p-1.5 text-foreground shadow-lg"
 	>
-		<button type="button" data-on:click="$som = cena.som()" class={ quickItemClass(false) }>
-			<span style="display:none" data-show="$som">@ui.Icon("Volume2", "size-4")</span>
-			<span data-show="!$som">@ui.Icon("VolumeX", "size-4")</span>
-			<span data-text="$som ? 'Som ligado' : 'Som desligado'"></span>
+		<button type="button" data-on:click="$sound = cena.som()" class={ quickItemClass(false) }>
+			<span style="display:none" data-show="$sound">@ui.Icon("Volume2", "size-4")</span>
+			<span data-show="!$sound">@ui.Icon("VolumeX", "size-4")</span>
+			<span data-text="$sound ? 'Som ligado' : 'Som desligado'"></span>
 		</button>
 		// O slider só existe com o som ligado: slider sobre o mudo é controle
 		// morto, e o que ele resolve é o sino do "Sua vez" alto demais (ALE-180).
-		<div style="display:none" data-show="$som" class="px-2 pb-2 pt-1">
+		<div style="display:none" data-show="$sound" class="px-2 pb-2 pt-1">
 			<label for="volume" class="flex justify-between text-xs text-muted-foreground">
 				Volume
 				<span data-text="$volume + '%'"></span>
@@ -144,20 +144,20 @@ templ playerMenu(v hubView) {
 		<button
 			type="button"
 			data-show="cena.temTelaCheia()"
-			data-on:click="$cheia = cena.telaCheia()"
-			data-signals="{cheia: false}"
+			data-on:click="$fullscreen = cena.telaCheia()"
+			data-signals="{fullscreen: false}"
 			class={ quickItemClass(false) }
 		>
-			<span data-show="!$cheia">@ui.Icon("Maximize", "size-4")</span>
-			<span style="display:none" data-show="$cheia">@ui.Icon("Minimize", "size-4")</span>
-			<span data-text="$cheia ? 'Sair da tela cheia' : 'Tela cheia'"></span>
+			<span data-show="!$fullscreen">@ui.Icon("Maximize", "size-4")</span>
+			<span style="display:none" data-show="$fullscreen">@ui.Icon("Minimize", "size-4")</span>
+			<span data-text="$fullscreen ? 'Sair da tela cheia' : 'Tela cheia'"></span>
 		</button>
 		if v.EhAdmin {
 			// Desenhado só para admin, e isso é UX: quem chegar na mão leva 403 do
 			// servidor, que é onde a fronteira mora (ALE-120).
 			<button
 				type="button"
-				data-on:click="$convidar.showModal()"
+				data-on:click="$invite_dialog.showModal()"
 				class={ quickItemClass(false) }
 			>
 				@ui.Icon("UserPlus", "size-4")

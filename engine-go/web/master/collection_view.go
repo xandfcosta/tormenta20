@@ -315,7 +315,7 @@ func filter[T any](lista []T, campos func(T) []string, busca string) []T {
 func collectionSignals(v collectionView) string {
 	busca, _ := json.Marshal(v.Term)
 	aba, _ := json.Marshal(v.Aba)
-	partes := []string{fmt.Sprintf("busca: %s", busca), fmt.Sprintf("aba: %s", aba)}
+	partes := []string{fmt.Sprintf("search: %s", busca), fmt.Sprintf("aba: %s", aba)}
 	// UM sinal por filtro da cena, e só os DELA: um sinal de círculo declarado
 	// na cena das condições viajaria em toda requisição dali para nada.
 	for _, f := range v.Filtros {

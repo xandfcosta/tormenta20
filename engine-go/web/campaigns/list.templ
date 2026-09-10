@@ -79,7 +79,7 @@ templ listBody(v listView) {
 templ listBar(v listView) {
 	<div
 		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
-		data-signals={ fmt.Sprintf("{busca: %q, papel: %q, %s}", v.Busca, v.Papel, ui.StageSignals(v.CursorID)) }
+		data-signals={ fmt.Sprintf("{search: %q, role: %q, %s}", v.Busca, v.Papel, ui.StageSignals(v.CursorID)) }
 	>
 		<a
 			href="/"
@@ -96,7 +96,7 @@ templ listBar(v listView) {
 					type="search"
 					name="busca"
 					data-busca
-					data-bind:busca
+					data-bind:search
 					data-on:input__debounce.250ms="@get('/campanhas')"
 					value={ v.Busca }
 					placeholder="Buscar campanha"
@@ -136,7 +136,7 @@ templ roleChip(v listView, valor, rotulo string) {
 	<button
 		type="button"
 		aria-pressed={ boolText(v.Papel == valor) }
-		data-on:click={ fmt.Sprintf("$papel = %q; @get('/campanhas')", valor) }
+		data-on:click={ fmt.Sprintf("$role = %q; @get('/campanhas')", valor) }
 		class={ "h-8 rounded-sm px-3 text-sm font-medium outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
 			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Papel == valor),
 			templ.KV("text-muted-foreground hover:text-foreground", v.Papel != valor) }
@@ -463,7 +463,7 @@ templ searchWithoutResult(v listView) {
 			<p class="text-sm text-muted-foreground">Nenhuma campanha combina com o que você buscou.</p>
 			@ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{
 				"type":          "button",
-				"data-on:click": "$busca = ''; $papel = 'todas'; @get('/campanhas')",
+				"data-on:click": "$search = ''; $role = 'todas'; @get('/campanhas')",
 			}) {
 				Limpar a busca
 			}

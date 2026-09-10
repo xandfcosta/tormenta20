@@ -40,12 +40,12 @@ templ MintedInvite(caminho, nota string) {
 			/>
 			@Button(VariantSecondary, SizeDefault, "shrink-0", templ.Attributes{
 				"type":          "button",
-				"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copiado = true",
+				"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copied = true",
 			}) {
 				Copiar
 			}
 		</div>
-		<p class="text-xs text-hp-full" aria-live="polite" style="display:none" data-show="$copiado">Link copiado.</p>
+		<p class="text-xs text-hp-full" aria-live="polite" style="display:none" data-show="$copied">Link copiado.</p>
 		<p class="text-xs text-muted-foreground">{ nota }</p>
 	</div>
 }
@@ -67,7 +67,7 @@ templ MintedInvite(caminho, nota string) {
 templ InviteDialog(rota string) {
 	<dialog
 		id="convidar"
-		data-ref="convidar"
+		data-ref="invite_dialog"
 		aria-labelledby="convidar-titulo"
 		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
 	>
@@ -87,7 +87,7 @@ templ InviteDialog(rota string) {
 			</form>
 			@Button(VariantPrimary, SizeDefault, "", templ.Attributes{
 				"type": "button", "data-on:click": "@post('" + rota + "')",
-				"data-indicator:gerando": true, "data-attr:disabled": "$gerando",
+				"data-indicator:generating": true, "data-attr:disabled": "$generating",
 			}) {
 				Gerar convite
 			}
