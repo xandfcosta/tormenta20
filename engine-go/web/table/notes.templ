@@ -84,6 +84,7 @@ templ tableNotes(v View) {
 			<h2 class={ ui.SectionLabelClasses("muted", "") }>Notas</h2>
 			<div class="flex items-center gap-2">
 				@modesRange()
+				@floatToggle()
 				@autosaveState()
 				<button
 					type="button"
@@ -309,6 +310,28 @@ templ modesRange() {
 // Com o estilo pendurado na variante `aria-pressed:`, o estado acessível é a
 // ÚNICA fonte — é o mesmo desenho do marcador do trilho, que pinta por
 // `aria-selected:`.
+// O SEGUNDO EIXO: encostada ou flutuando (ALE-218).
+//
+// Ele é um alternador e não um par de botões porque são dois estados, e porque
+// ele vale para os QUATRO modos — o que se mostra e onde o painel vive são
+// perguntas independentes.
+//
+// O `title` diz o que o clique FAZ e não o que o estado é: o ícone sozinho não
+// conta a diferença entre "empurra o mapa" e "flutua sobre ele", e essa é toda a
+// escolha.
+templ floatToggle() {
+	<button
+		type="button"
+		data-attr:aria-pressed="$notasflutua ? 'true' : 'false'"
+		data-attr:title="$notasflutua ? 'Encostar as notas ao lado do mapa' : 'Flutuar as notas sobre o mapa'"
+		aria-label="Flutuar as notas sobre o mapa"
+		data-on:click={ alternaOFlutuar() }
+		class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
+	>
+		@ui.Icon("PictureInPicture2", "size-3.5")
+	</button>
+}
+
 templ notesMode(valor, rotulo string) {
 	<button
 		type="button"

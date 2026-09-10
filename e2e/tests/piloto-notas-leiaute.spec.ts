@@ -117,3 +117,70 @@ test('a largura sobrevive ao recarregar', async ({ page }) => {
     await apagar()
   }
 })
+
+/**
+ * AS NOTAS FLUTUANDO SOBRE O MAPA (ALE-218), e o que ele prende é que o mapa
+ * NÃO ENCOLHE.
+ *
+ * Essa é a diferença inteira entre as duas formas, e ela é geométrica: encostada
+ * a coluna toma largura do tabuleiro; flutuando ela passa por cima. Um guarda
+ * que só afirmasse "a coluna está posicionada" mediria CSS em vez do efeito.
+ *
+ * O cabeçalho do `notes.templ` registra que a coluna que EMPURRA é o desenho
+ * certo para narrar olhando o tabuleiro — ela continua sendo o padrão, e este
+ * caso começa provando isso.
+ */
+test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async ({ page }) => {
+  const { apagar } = await comAsNotasAbertas(page)
+  try {
+    const mapa = () =>
+      page.evaluate(() => Math.round(document.querySelector('.tabuleiro-cena')!.getBoundingClientRect().width))
+
+    // A REFERÊNCIA é o mapa SEM notas: é o tamanho que flutuar tem de devolver.
+    await page.getByRole('button', { name: 'Fechar as notas' }).click()
+    await page.waitForTimeout(250)
+    const semNotas = await mapa()
+    await page.getByRole('button', { name: /Notas/ }).first().click()
+    await expect(page.locator('#mesa-notas')).toBeVisible()
+    await page.waitForTimeout(250)
+
+    // O PADRÃO É ENCOSTADA, e o mapa paga por isso.
+    const encostada = await mapa()
+    const flutuar = page.getByRole('button', { name: 'Flutuar as notas sobre o mapa' })
+    await expect(flutuar, 'o alternador nasceu ligado: o padrão deixou de ser a coluna').toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+
+    await flutuar.click()
+    await page.waitForTimeout(250)
+    const flutuando = await mapa()
+    // O ALVO É O MAPA FECHADO, e não "maior que antes": a primeira versão deste
+    // guarda cobrava só crescimento, e passou verde sobre uma coluna que ficou
+    // no fluxo — o mapa crescia 18px em vez de 728, porque só a DIVISA tinha
+    // flutuado. "Cresceu um pouco" e "saiu do caminho" são coisas diferentes.
+    expect(
+      flutuando,
+      `flutuar devolveu só ${flutuando - encostada}px ao mapa; fechada ela mede ${semNotas}`,
+    ).toBeGreaterThan(semNotas - 20)
+
+    // E as notas continuam à mostra POR CIMA: flutuar não é fechar.
+    await expect(page.locator('#mesa-notas')).toBeVisible()
+
+    // DO LADO CERTO, e este pedaço existe porque a primeira versão do guarda
+    // não o tinha: o painel foi parar na ESQUERDA do mapa — a classe base traz
+    // `inset-0`, que põe `left: 0`, e com os dois lados definidos o navegador
+    // resolve pelo left. O mapa media certo e a tela estava errada.
+    const [naDireita, meio] = await page.evaluate(() => {
+      const n = document.getElementById('mesa-notas')!.getBoundingClientRect()
+      return [Math.round(n.x + n.width), Math.round(innerWidth / 2)]
+    })
+    expect(naDireita, 'as notas flutuaram do lado errado do mapa').toBeGreaterThan(meio)
+
+    await flutuar.click()
+    await page.waitForTimeout(250)
+    expect(await mapa(), 'encostar não devolveu o mapa ao tamanho de antes').toBe(encostada)
+  } finally {
+    await apagar()
+  }
+})

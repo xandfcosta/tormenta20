@@ -242,7 +242,7 @@ func tableSignalsExpr() string {
 		"gabaritox: 0, gabaritoy: 0, gabaritomirax: 0, gabaritomiray: 0, gabaritofase: 0",
 		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", emptyTemplateHint),
 		// As NOTAS da sessão.
-		"notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false, notaslargura: 0, notasarrastando: false",
+		"notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false, notaslargura: 0, notasarrastando: false, notasflutua: false",
 		"notassalvando: false, erroDasNotas: ''",
 	}, ", ") + "}"
 }

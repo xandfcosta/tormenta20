@@ -47,9 +47,22 @@ templ gmStage(v View, b master.BestiaryView) {
 		@tableHeader(v)
 		<div class="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row">
 			@leftRail(v)
-			@tableBoard(v)
-			@notesSplitter()
-			@tableNotes(v)
+			// O MAPA E AS NOTAS dividem um contêiner POSICIONADO, e o trilho de
+			// consultas fica FORA dele (ALE-218).
+			//
+			// É o que permite as notas flutuarem sobre o mapa sem cobrir o
+			// trilho: `absolute right-0` aqui é a borda direita do mapa, não a
+			// da janela. Ancorar na janela exigiria descontar a largura do
+			// trilho em número — um `right: calc(3.5rem + …)` que envelhece no
+			// dia em que o trilho mudar de medida, sem nada acusando.
+			<div
+				data-class="{'notas-flutuam': $notasflutua}"
+				class="relative flex min-h-0 flex-1 flex-col gap-1.5 lg:flex-row"
+			>
+				@tableBoard(v)
+				@notesSplitter()
+				@tableNotes(v)
+			</div>
 			@queriesRail(v)
 		</div>
 		@tableCommands(v)
