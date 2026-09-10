@@ -411,7 +411,7 @@ templ showIsTable(aba boardTab) {
 // já tem um: atributo repetido não existe no templ, e o segundo some sem erro.
 templ clipboardStrip(v BoardView) {
 	<div
-		data-show="$areapeca !== ''"
+		data-show="$area_token !== ''"
 		data-on:keydown__window={ pasteInTheMiddleOfTheView(v) }
 		class="tabuleiro-area"
 	>
@@ -419,7 +419,7 @@ templ clipboardStrip(v BoardView) {
 		// não vê a tela clica em "copiar para colar" e nada é anunciado.
 		<span aria-live="polite" class="tabuleiro-area-texto">
 			<span aria-hidden="true">@ui.Icon("Copy", "size-4")</span>
-			<span data-text="$arearotulo + ' · ' + $areafrase"></span>
+			<span data-text="$area_label + ' · ' + $area_phrase"></span>
 		</span>
 		<button
 			type="button"
@@ -592,11 +592,11 @@ templ toolHelpers(v BoardView) {
 templ drawnTemplate(v BoardView) {
 	<svg
 		aria-hidden="true"
-		data-show={ "$gabaritopath !== '' && $ferramenta === '" + FerramentaDoGabarito + "'" }
+		data-show={ "$template_path !== '' && $ferramenta === '" + FerramentaDoGabarito + "'" }
 		class="tabuleiro-medida tabuleiro-medida-fundo"
 	>
 		<g data-attr:transform={ viewportDrawing }>
-			<path data-attr:d="$gabaritopath" class="tabuleiro-gabarito"></path>
+			<path data-attr:d="$template_path" class="tabuleiro-gabarito"></path>
 			// AS DUAS PONTAS (ALE-203, item 7 do dono: "não tem feedback visual
 			// algum no tabuleiro para mostrar o ponto inicial e o final").
 			//
@@ -612,16 +612,16 @@ templ drawnTemplate(v BoardView) {
 			// centro da casa para as outras (p225). Desenhá-lo sempre no centro
 			// mostrava a origem meio quadrado longe de onde a bola caiu.
 			<circle
-				data-show={ "$gabaritofase > 0" }
-				data-attr:cx="$gabaritox + ($gabaritonaintersecao ? 0 : 0.5)"
-				data-attr:cy="$gabaritoy + ($gabaritonaintersecao ? 0 : 0.5)"
+				data-show={ "$template_phase > 0" }
+				data-attr:cx="$template_x + ($template_at_intersection ? 0 : 0.5)"
+				data-attr:cy="$template_y + ($template_at_intersection ? 0 : 0.5)"
 				r="0.13"
 				class="tabuleiro-regua-ponta"
 			></circle>
 			<circle
-				data-show="$gabaritofase === 1 && $gabaritoaponta"
-				data-attr:cx="$gabaritomirax + 0.5"
-				data-attr:cy="$gabaritomiray + 0.5"
+				data-show="$template_phase === 1 && $template_aims"
+				data-attr:cx="$template_aim_x + 0.5"
+				data-attr:cy="$template_aim_y + 0.5"
 				r="0.22"
 				vector-effect="non-scaling-stroke"
 				class="tabuleiro-regua-alvo"
@@ -642,7 +642,7 @@ templ drawnTemplate(v BoardView) {
 templ drawnRuler(v BoardView) {
 	<svg
 		aria-hidden="true"
-		data-show={ "$reguafase > 0 && $ferramenta === '" + FerramentaDaRegua + "'" }
+		data-show={ "$ruler_phase > 0 && $ferramenta === '" + FerramentaDaRegua + "'" }
 		class="tabuleiro-medida tabuleiro-medida-frente"
 	>
 		<g data-attr:transform={ viewportDrawing }>
@@ -667,9 +667,9 @@ templ drawnRuler(v BoardView) {
 			// O ALVO na ponta VIVA, que é onde o dedo está. Ele some quando a
 			// régua congela: ali a ponta virou parada e já tem pingo.
 			<circle
-				data-show={ "$reguafase === " + number(reguaMedindo) }
-				data-attr:cx="$reguamirax + 0.5"
-				data-attr:cy="$reguamiray + 0.5"
+				data-show={ "$ruler_phase === " + number(reguaMedindo) }
+				data-attr:cx="$ruler_aim_x + 0.5"
+				data-attr:cy="$ruler_aim_y + 0.5"
 				r="0.22"
 				vector-effect="non-scaling-stroke"
 				class="tabuleiro-regua-alvo"
@@ -710,11 +710,11 @@ templ drawnRuler(v BoardView) {
 templ rulerReadingBox() {
 	<p
 		role="status"
-		data-show={ "$reguatexto !== '' && $ferramenta === '" + FerramentaDaRegua + "'" }
+		data-show={ "$ruler_text !== '' && $ferramenta === '" + FerramentaDaRegua + "'" }
 		class="tabuleiro-ajudante gap-2"
 	>
 		@ui.Icon("Ruler", "size-4 text-grimorio-gold")
-		<span data-text="$reguatexto" class="font-mono tabular-nums text-grimorio-gold"></span>
+		<span data-text="$ruler_text" class="font-mono tabular-nums text-grimorio-gold"></span>
 		<button
 			type="button"
 			aria-label="Guardar a régua"
@@ -745,8 +745,8 @@ templ templateBar(v BoardView) {
 			<button
 				type="button"
 				title={ shapeLabel(forma) + ": o " + shapeMeasure(forma) + " em quadrados (p225)" }
-				data-attr:aria-pressed={ fmt.Sprintf("$gabarito === %q ? 'true' : 'false'", string(forma)) }
-				data-class={ fmt.Sprintf("{'pincel-ligado': $gabarito === %q}", string(forma)) }
+				data-attr:aria-pressed={ fmt.Sprintf("$template === %q ? 'true' : 'false'", string(forma)) }
+				data-class={ fmt.Sprintf("{'pincel-ligado': $template === %q}", string(forma)) }
 				data-on:click={ pickShape(forma) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>{ shapeLabel(forma) }</button>
@@ -759,7 +759,7 @@ templ templateBar(v BoardView) {
 		for _, forma := range bookShapes {
 			<label
 				for="gabarito-tamanho"
-				data-show={ fmt.Sprintf("$gabarito === %q", string(forma)) }
+				data-show={ fmt.Sprintf("$template === %q", string(forma)) }
 				class="text-xs text-muted-foreground"
 			>{ shapeMeasure(forma) }</label>
 		}
@@ -768,7 +768,7 @@ templ templateBar(v BoardView) {
 			type="number"
 			min="1"
 			max={ templateBiggest() }
-			data-bind="gabaritotamanho"
+			data-bind="template_size"
 			data-on:input__debounce.200ms={ repatchTemplate(v) }
 			class="h-11 w-20 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		/>
@@ -776,7 +776,7 @@ templ templateBar(v BoardView) {
 			data-text={ metersSize() }
 			class="font-mono text-xs tabular-nums text-muted-foreground"
 		></span>
-		<span data-text="$gabaritotexto" class="min-w-0 flex-1 truncate text-xs text-grimorio-gold"></span>
+		<span data-text="$template_text" class="min-w-0 flex-1 truncate text-xs text-grimorio-gold"></span>
 		<button
 			type="button"
 			aria-label="Guardar o gabarito"
@@ -2142,7 +2142,7 @@ templ partyBar(v BoardView) {
 templ movePreview(v BoardView) {
 	<svg
 		aria-hidden="true"
-		data-show="$previafiocabe !== ''"
+		data-show="$preview_arrow_fits !== ''"
 		class="tabuleiro-medida tabuleiro-medida-frente"
 	>
 		<g data-attr:transform={ viewportDrawing }>
@@ -2151,17 +2151,17 @@ templ movePreview(v BoardView) {
 			// `data-show` por nó, que é a combinação que congela a aba quando
 			// encontra um `data-attr` de estilo no mesmo elemento.
 			<path
-				data-attr:d="$previafiocabe"
+				data-attr:d="$preview_arrow_fits"
 				vector-effect="non-scaling-stroke"
 				class="tabuleiro-previa-fio tabuleiro-previa-cabe"
 			></path>
 			<path
-				data-attr:d="$previafiosegundo"
+				data-attr:d="$preview_arrow_second"
 				vector-effect="non-scaling-stroke"
 				class="tabuleiro-previa-fio tabuleiro-previa-segundo"
 			></path>
 			<path
-				data-attr:d="$previafioalem"
+				data-attr:d="$preview_arrow_beyond"
 				vector-effect="non-scaling-stroke"
 				class="tabuleiro-previa-fio tabuleiro-previa-alem"
 			></path>
@@ -2194,9 +2194,9 @@ templ movePreview(v BoardView) {
 // há proposta nenhuma. Duas frases no mesmo lugar fariam a pessoa ler o custo
 // velho achando que é o novo.
 templ previewReading() {
-	<p role="status" data-show="$previatexto !== ''" class="tabuleiro-ajudante gap-2">
+	<p role="status" data-show="$preview_text !== ''" class="tabuleiro-ajudante gap-2">
 		@ui.Icon("MapPin", "size-4 text-grimorio-gold")
-		<span data-text="$previatexto" class="font-mono tabular-nums text-grimorio-gold"></span>
+		<span data-text="$preview_text" class="font-mono tabular-nums text-grimorio-gold"></span>
 	</p>
 }
 

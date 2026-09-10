@@ -125,7 +125,7 @@ func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
 	// inventar a decisão que falta.
 	if pointsTemplate(tipo) && mira == origem {
 		writeSignals(w, r, map[string]any{
-			"gabaritopath": "", "gabaritotexto": "Clique de novo para apontar.",
+			"template_path": "", "template_text": "Clique de novo para apontar.",
 		})
 		return
 	}
@@ -142,8 +142,8 @@ func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
 		cena = nil
 	}
 	writeSignals(w, r, map[string]any{
-		"gabaritopath":  squaresPath(casas),
-		"gabaritotexto": takesTemplateWho(cena, casas),
+		"template_path": squaresPath(casas),
+		"template_text": takesTemplateWho(cena, casas),
 	})
 }
 

@@ -87,10 +87,10 @@ func clickedPointRuler(v BoardView) string {
 		// o sintético vem com `offsetX` ZERO — o que se via era a régua sendo
 		// apagada e nascendo de novo na ORIGEM do plano, no mesmo gesto.
 		"if (evt.button !== 0) return; const cx = %s, cy = %s; "+
-			"if ($reguafase !== %d) { $reguapontos = [[cx, cy]]; $reguafase = %d } "+
-			"else { const p = [...$reguapontos], u = p[p.length - 1]; "+
-			"if (u[0] === cx && u[1] === cy) return; $reguapontos = [...p, [cx, cy]] } "+
-			"$reguamirax = cx; $reguamiray = cy; %s",
+			"if ($ruler_phase !== %d) { $ruler_points = [[cx, cy]]; $ruler_phase = %d } "+
+			"else { const p = [...$ruler_points], u = p[p.length - 1]; "+
+			"if (u[0] === cx && u[1] === cy) return; $ruler_points = [...p, [cx, cy]] } "+
+			"$ruler_aim_x = cx; $ruler_aim_y = cy; %s",
 		clicouEmX, clicouEmY, reguaMedindo, reguaMedindo, repatchRuler(v),
 	)
 }
@@ -106,9 +106,9 @@ func clickedPointRuler(v BoardView) string {
 // servidor, porque é geometria e não regra.
 func rulerFollowsPointer(v BoardView) string {
 	return fmt.Sprintf(
-		"if ($reguafase !== %d) return; const cx = %s, cy = %s; "+
-			"if (cx === $reguamirax && cy === $reguamiray) return; "+
-			"$reguamirax = cx; $reguamiray = cy; %s",
+		"if ($ruler_phase !== %d) return; const cx = %s, cy = %s; "+
+			"if (cx === $ruler_aim_x && cy === $ruler_aim_y) return; "+
+			"$ruler_aim_x = cx; $ruler_aim_y = cy; %s",
 		reguaMedindo, clicouEmX, clicouEmY, repatchRuler(v),
 	)
 }
@@ -118,13 +118,13 @@ func rulerFollowsPointer(v BoardView) string {
 // É o `dblclick`, que é a convenção de "terminar polilinha" de todo editor de
 // desenho. O `preventDefault` existe porque um duplo clique também SELECIONA
 // texto, e um tabuleiro com meia tela selecionada em azul é o que a mesa vê.
-var freezeRuler = fmt.Sprintf("evt.preventDefault(); $reguafase = %d", reguaCongelada)
+var freezeRuler = fmt.Sprintf("evt.preventDefault(); $ruler_phase = %d", reguaCongelada)
 
 // saveRuler apaga as paradas, o desenho E a leitura.
 //
 // As três juntas porque são a mesma coisa: a frase de uma medida cujo desenho
 // sumiu é a resposta a uma pergunta que ninguém consegue mais ver.
-var saveRuler = fmt.Sprintf("$reguafase = %d; $reguapontos = []; $reguarotulos = []; $reguatexto = %q",
+var saveRuler = fmt.Sprintf("$ruler_phase = %d; $ruler_points = []; $ruler_labels = []; $ruler_text = %q",
 	reguaParada, emptyRulerHint)
 
 // repatchRuler pede os rótulos das pernas e a frase do total.
@@ -144,9 +144,9 @@ func repatchRuler(v BoardView) string {
 // de fogo três vezes antes de decidir, e um botão de limpar entre cada tentativa
 // seria um clique a mais em cada uma.
 //
-// QUEM APONTA é dito pelo `$gabaritoaponta`, escrito pelo botão da forma com o
-// valor que o `pointsTemplate` do servidor deu. Perguntar aqui `$gabarito ===
-// 'cone' || $gabarito === 'linha'` seria a segunda cópia da regra da p225, livre
+// QUEM APONTA é dito pelo `$template_aims`, escrito pelo botão da forma com o
+// valor que o `pointsTemplate` do servidor deu. Perguntar aqui `$template ===
+// 'cone' || $template === 'linha'` seria a segunda cópia da regra da p225, livre
 // para divergir da primeira.
 func clickedPointTemplate(v BoardView) string {
 	return fmt.Sprintf(
@@ -154,18 +154,18 @@ func clickedPointTemplate(v BoardView) string {
 		// clique sintético que acompanha o botão direito vem com `offsetX` zero e
 		// poria a área na origem do plano no mesmo gesto que a apagou.
 		//
-		// A ORIGEM pousa onde o LIVRO manda, e é o `$gabaritonaintersecao` quem
+		// A ORIGEM pousa onde o LIVRO manda, e é o `$template_at_intersection` quem
 		// diz qual: a esfera na interseção de quatro quadrados, o resto na casa
-		// (p225). Perguntar aqui `$gabarito === 'esfera'` seria a segunda cópia da
+		// (p225). Perguntar aqui `$template === 'esfera'` seria a segunda cópia da
 		// regra, livre para divergir da primeira — a mesma razão do
-		// `$gabaritoaponta`.
+		// `$template_aims`.
 		//
 		// A MIRA continua sendo CASA em qualquer forma: ela é para onde o cone
 		// aponta, e direção se escolhe apontando para um quadrado.
 		"if (evt.button !== 0) return; "+
-			"const cx = $gabaritonaintersecao ? %s : %s, cy = $gabaritonaintersecao ? %s : %s; "+
-			"if ($gabaritofase === 1 && $gabaritoaponta) { $gabaritomirax = %s; $gabaritomiray = %s; $gabaritofase = 2 } "+
-			"else { $gabaritox = cx; $gabaritoy = cy; $gabaritomirax = %s; $gabaritomiray = %s; $gabaritofase = 1 } "+
+			"const cx = $template_at_intersection ? %s : %s, cy = $template_at_intersection ? %s : %s; "+
+			"if ($template_phase === 1 && $template_aims) { $template_aim_x = %s; $template_aim_y = %s; $template_phase = 2 } "+
+			"else { $template_x = cx; $template_y = cy; $template_aim_x = %s; $template_aim_y = %s; $template_phase = 1 } "+
 			"%s",
 		clicouNoCantoX, clicouEmX, clicouNoCantoY, clicouEmY,
 		clicouEmX, clicouEmY,
@@ -185,9 +185,9 @@ func clickedPointTemplate(v BoardView) string {
 // o ponteiro sobre uma esfera posta não tem o que mudar.
 func templateFollowsPointer(v BoardView) string {
 	return fmt.Sprintf(
-		"if ($gabaritofase !== 1 || !$gabaritoaponta) return; const cx = %s, cy = %s; "+
-			"if (cx === $gabaritomirax && cy === $gabaritomiray) return; "+
-			"$gabaritomirax = cx; $gabaritomiray = cy; %s",
+		"if ($template_phase !== 1 || !$template_aims) return; const cx = %s, cy = %s; "+
+			"if (cx === $template_aim_x && cy === $template_aim_y) return; "+
+			"$template_aim_x = cx; $template_aim_y = cy; %s",
 		clicouEmX, clicouEmY, repatchTemplate(v),
 	)
 }
@@ -200,8 +200,8 @@ func templateFollowsPointer(v BoardView) string {
 // sintoma seria um gabarito que ignora o número que a pessoa acabou de digitar.
 func repatchTemplate(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('%s/gabarito/' + $gabarito + '/' + $gabaritotamanho"+
-			" + '/' + $gabaritox + '/' + $gabaritoy + '/' + $gabaritomirax + '/' + $gabaritomiray)",
+		"@post('%s/gabarito/' + $template + '/' + $template_size"+
+			" + '/' + $template_x + '/' + $template_y + '/' + $template_aim_x + '/' + $template_aim_y)",
 		v.Base,
 	)
 }
@@ -213,10 +213,10 @@ func repatchTemplate(v BoardView) string {
 // antiga — escolher "Cone" com uma esfera na tela desenhava um cone apontado para
 // o lado de onde se clicou.
 //
-// O `$gabaritoaponta` sai daqui com o valor do SERVIDOR: é o botão que sabe qual
+// O `$template_aims` sai daqui com o valor do SERVIDOR: é o botão que sabe qual
 // forma ele liga, e é o `pointsTemplate` que sabe quais formas apontam.
 func pickShape(forma engine.AreaKind) string {
-	return fmt.Sprintf("$gabarito = %q; $gabaritoaponta = %t; $gabaritonaintersecao = %t; %s",
+	return fmt.Sprintf("$template = %q; $template_aims = %t; $template_at_intersection = %t; %s",
 		string(forma), pointsTemplate(forma), shapeStartsAtIntersection(forma), saveTemplate)
 }
 
@@ -228,7 +228,7 @@ var emptyTemplateHint = takesTemplateWho(nil, nil)
 
 // saveTemplate apaga o desenho E a lista, pelo mesmo motivo da régua.
 var saveTemplate = fmt.Sprintf(
-	"$gabaritofase = 0; $gabaritopath = ''; $gabaritotexto = %q", emptyTemplateHint)
+	"$template_phase = 0; $template_path = ''; $template_text = %q", emptyTemplateHint)
 
 // shapeMeasure é a palavra que nomeia o número que a pessoa digita: a esfera
 // tem raio, o cone tem alcance, a linha tem comprimento e o quadrado tem lado
@@ -287,14 +287,14 @@ func shapeLabel(k engine.AreaKind) string {
 // última parada até o mouse" que o dono pediu. Congelada, o desenho para nas
 // paradas e o ponteiro passeia sem mexer nele.
 var rulerPath = fmt.Sprintf(
-	"(() => { const p = [...$reguapontos]; "+
-		"if ($reguafase === %d) p.push([$reguamirax, $reguamiray]); "+
+	"(() => { const p = [...$ruler_points]; "+
+		"if ($ruler_phase === %d) p.push([$ruler_aim_x, $ruler_aim_y]); "+
 		"return p.map((c, i) => (i ? 'L' : 'M') + (c[0] + 0.5) + ' ' + (c[1] + 0.5)).join(' ') })()",
 	reguaMedindo)
 
 // ── LER UMA LISTA DE SINAL SEM CRIAR SINAL NENHUM ────────────────────────────
 //
-// `$reguapontos[0]` NÃO é "o primeiro item da lista": o Datastar lê `$nome...`
+// `$ruler_points[0]` NÃO é "o primeiro item da lista": o Datastar lê `$nome...`
 // como CAMINHO DE SINAL e REGISTRA o que não existe. Medido no navegador, com a
 // reserva de doze rótulos no ar, o sinal virou
 //
@@ -319,12 +319,12 @@ func list(sinal, corpo string) string {
 
 // rulerStop é o centro da i-ésima parada, para o pingo que a marca.
 func rulerStop(i int, eixo int) string {
-	return list("reguapontos", fmt.Sprintf("(lista[%d]?.[%d] ?? 0) + 0.5", i, eixo))
+	return list("ruler_points", fmt.Sprintf("(lista[%d]?.[%d] ?? 0) + 0.5", i, eixo))
 }
 
 // existsDot esconde o pingo da reserva que ainda não tem parada.
 func existsDot(i int) string {
-	return list("reguapontos", fmt.Sprintf("lista.length > %d", i))
+	return list("ruler_points", fmt.Sprintf("lista.length > %d", i))
 }
 
 // existsLabel esconde o rótulo da perna que ainda não existe.
@@ -338,20 +338,20 @@ func existsLabel(i int) string {
 	// VAZIO também esconde, e não é a mesma pergunta que "existe": a perna de
 	// zero quadrado devolve texto vazio de propósito (ver `metersLeg`), e um
 	// `<text>` sem conteúdo continuaria ocupando o nó com o halo do contorno.
-	return list("reguarotulos", fmt.Sprintf("(lista[%d] ?? '') !== ''", i))
+	return list("ruler_labels", fmt.Sprintf("(lista[%d] ?? '') !== ''", i))
 }
 
 // legLabel é o texto que o servidor mediu para a perna `i`.
 func legLabel(i int) string {
-	return list("reguarotulos", fmt.Sprintf("lista[%d] ?? ''", i))
+	return list("ruler_labels", fmt.Sprintf("lista[%d] ?? ''", i))
 }
 
 // legMid é onde o rótulo pousa: o meio do segmento entre a parada `i` e a
 // seguinte — que pode ser a MIRA, quando a perna é a viva.
 func legMid(i int, eixo int) string {
-	return list("reguapontos", fmt.Sprintf(
+	return list("ruler_points", fmt.Sprintf(
 		"(() => { const a = lista[%d], b = lista[%d] ?? "+
-			"($reguafase === %d ? [$reguamirax, $reguamiray] : a); "+
+			"($ruler_phase === %d ? [$ruler_aim_x, $ruler_aim_y] : a); "+
 			"return a && b ? ((a[%d] + b[%d]) / 2) + 0.5 : 0 })()",
 		i, i+1, reguaMedindo, eixo, eixo))
 }
@@ -395,7 +395,7 @@ const viewportDrawing = "`translate(${-$vistax}, ${-$vistay}) scale(${$quadrado}
 // `engine.SquareMetres` — escrever `1.5` no `.templ` seria mais uma cópia da
 // p236 solta no repositório.
 func metersSize() string {
-	return fmt.Sprintf("($gabaritotamanho * %g).toFixed(1).replace('.', ',') + 'm'", engine.SquareMetres)
+	return fmt.Sprintf("($template_size * %g).toFixed(1).replace('.', ',') + 'm'", engine.SquareMetres)
 }
 
 // templateBiggest é o teto da caixa de digitação: o alcance longo do livro
@@ -413,5 +413,5 @@ func number(n int) string { return strconv.Itoa(n) }
 // polilinha que forçou a troca: com número variável de paradas, quatro sinais
 // nomeados viravam oito, depois vinte e quatro.
 var rulerSignals = fmt.Sprintf(
-	"reguapontos: [], reguamirax: 0, reguamiray: 0, reguafase: %d, reguarotulos: [], reguatexto: %q",
+	"ruler_points: [], ruler_aim_x: 0, ruler_aim_y: 0, ruler_phase: %d, ruler_labels: [], ruler_text: %q",
 	reguaParada, emptyRulerHint)

@@ -20,7 +20,7 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 
 	// Cinco casas para o leste custam 5, que cabem no deslocamento de 6: fio de
 	// uma faixa só, e a frase nomeando a ação.
-	if !strings.Contains(sinais, `"previafiocabe":"M 4.5 2.5 L 9 2.5"`) {
+	if !strings.Contains(sinais, `"preview_arrow_fits":"M 4.5 2.5 L 9 2.5"`) {
 		t.Errorf("a prévia não desenhou a seta da perna viva; sinais = %s", sinais)
 	}
 	if !strings.Contains(sinais, "5 de 6 quadrados") || !strings.Contains(sinais, "ação de movimento") {
@@ -80,7 +80,7 @@ func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 	sinais := trechoDeSinais(f.pede(t, f.jogador, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa/15/0", "").Body.String())
 
-	for _, fio := range []string{"previafiocabe", "previafiosegundo", "previafioalem"} {
+	for _, fio := range []string{"preview_arrow_fits", "preview_arrow_second", "preview_arrow_beyond"} {
 		if strings.Contains(sinais, `"`+fio+`":""`) {
 			t.Errorf("a faixa %q saiu vazia num caminho que passa das duas ações; sinais = %s", fio, sinais)
 		}
@@ -101,12 +101,12 @@ func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
 	sinais := trechoDeSinais(f.pede(t, f.mestre, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa/15/0", "").Body.String())
 
-	if !strings.Contains(sinais, `"previafiosegundo":""`) || !strings.Contains(sinais, `"previafioalem":""`) {
+	if !strings.Contains(sinais, `"preview_arrow_second":""`) || !strings.Contains(sinais, `"preview_arrow_beyond":""`) {
 		t.Errorf("fora de combate a prévia pintou faixa de ação; sinais = %s", sinais)
 	}
 	// E MEDE do mesmo jeito: o canal está aberto, então o vazio acima é o
 	// resultado e não a ausência de resposta.
-	if strings.Contains(sinais, `"previafiocabe":""`) {
+	if strings.Contains(sinais, `"preview_arrow_fits":""`) {
 		t.Errorf("a prévia não desenhou seta nenhuma fora de combate; sinais = %s", sinais)
 	}
 	if !strings.Contains(sinais, "15 quadrados") {

@@ -30,8 +30,8 @@ import "fmt"
 // Os sinais do laço. `retangulando` é o modo em curso e o valor É o modo, como
 // o `$ferramenta` e o `$pincelando`: vazio (parado), `terreno` ou `pecas`.
 const (
-	sinalDoRetangulo   = "retangulando"
-	sinalDoRetanguloDe = "retangulode" // "x/y" do canto onde o dedo desceu
+	sinalDoRetangulo   = "rect_mode"
+	sinalDoRetanguloDe = "rect_from" // "x/y" do canto onde o dedo desceu
 )
 
 const (
@@ -45,7 +45,7 @@ const (
 // o formato do CAMINHO, e converter na hora de montar a rota foi exatamente onde
 // a vírgula produziu um 404 mudo.
 var rectSignals = fmt.Sprintf(
-	"%s: '', %s: '', retangulodex: 0, retangulodey: 0, retanguloatex: 0, retanguloatey: 0",
+	"%s: '', %s: '', rect_from_x: 0, rect_from_y: 0, rect_to_x: 0, rect_to_y: 0",
 	sinalDoRetangulo, sinalDoRetanguloDe)
 
 // takesRect abre o laço no canto em que o dedo desceu.
@@ -58,7 +58,7 @@ func takesRect(modo string) string {
 	return fmt.Sprintf(
 		"evt.preventDefault(); const cx = %s, cy = %s; "+
 			"$%s = %q; $%s = cx + '/' + cy; "+
-			"$retangulodex = cx; $retangulodey = cy; $retanguloatex = cx; $retanguloatey = cy; "+
+			"$rect_from_x = cx; $rect_from_y = cy; $rect_to_x = cx; $rect_to_y = cy; "+
 			"evt.currentTarget.setPointerCapture(evt.pointerId)",
 		clicouEmX, clicouEmY, sinalDoRetangulo, modo, sinalDoRetanguloDe,
 	)
@@ -71,7 +71,7 @@ func takesRect(modo string) string {
 // o gesto inteiro é UMA.
 func followsRect(modo string) string {
 	return fmt.Sprintf(
-		"$%s === %q && ($retanguloatex = %s, $retanguloatey = %s)",
+		"$%s === %q && ($rect_to_x = %s, $rect_to_y = %s)",
 		sinalDoRetangulo, modo, clicouEmX, clicouEmY,
 	)
 }
@@ -82,7 +82,7 @@ func followsRect(modo string) string {
 // conserto que a fatia 1 fez e que não pode se perder aqui.
 func dropTerrainRect(v BoardView) string {
 	return fmt.Sprintf(
-		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
+		"if ($%s !== %q) return; const ate = $rect_to_x + '/' + $rect_to_y, de = $%s; "+
 			"$%s = ''; "+
 			"return $ferramenta === %q "+
 			"? @post('%s/terreno/limpar/retangulo/' + de + '/' + ate) "+
@@ -106,10 +106,10 @@ func openIsLasso() string {
 // lado do servidor, e é de propósito que as duas existam: esta desenha o que
 // aquela vai fazer, e uma promessa que não bate com o resultado é pior que não
 // desenhar nada.
-const lassoStyle = "`left: ${Math.min($retangulodex, $retanguloatex) * $quadrado}px; " +
-	"top: ${Math.min($retangulodey, $retanguloatey) * $quadrado}px; " +
-	"width: ${(Math.abs($retanguloatex - $retangulodex) + 1) * $quadrado}px; " +
-	"height: ${(Math.abs($retanguloatey - $retangulodey) + 1) * $quadrado}px`"
+const lassoStyle = "`left: ${Math.min($rect_from_x, $rect_to_x) * $quadrado}px; " +
+	"top: ${Math.min($rect_from_y, $rect_to_y) * $quadrado}px; " +
+	"width: ${(Math.abs($rect_to_x - $rect_from_x) + 1) * $quadrado}px; " +
+	"height: ${(Math.abs($rect_to_y - $rect_from_y) + 1) * $quadrado}px`"
 
 // sinalDoCliqueEngolido diz ao `click` que o gesto anterior foi um ARRASTO.
 //
@@ -118,7 +118,7 @@ const lassoStyle = "`left: ${Math.min($retangulodex, $retanguloatex) * $quadrado
 // ele, terminar um laço em cima da camada de repouso também MOVERIA a peça da
 // vez para onde o laço terminou — o mestre marca um grupo e a peça do turno anda
 // junto, sem ninguém ter pedido.
-const sinalDoCliqueEngolido = "engoleoclique"
+const sinalDoCliqueEngolido = "swallow_click"
 
 // dropTokensRect fecha o laço e pergunta ao servidor quem ele pegou.
 //
@@ -128,7 +128,7 @@ const sinalDoCliqueEngolido = "engoleoclique"
 // segue o caminho do clique — é assim que a mesma camada serve aos dois gestos.
 func dropTokensRect(v BoardView) string {
 	return fmt.Sprintf(
-		"if ($%s !== %q) return; const ate = $retanguloatex + '/' + $retanguloatey, de = $%s; "+
+		"if ($%s !== %q) return; const ate = $rect_to_x + '/' + $rect_to_y, de = $%s; "+
 			"$%s = ''; if (de === ate) return; $%s = true; "+
 			"return @post('%s/marcar-area/' + de + '/' + ate)",
 		sinalDoRetangulo, retanguloDePecas, sinalDoRetanguloDe,

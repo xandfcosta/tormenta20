@@ -56,8 +56,8 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 	// As paradas vêm nos SINAIS desde a ALE-203: com número variável de pernas,
 	// um caminho com as pontas dentro seria uma rota que muda de forma.
 	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/regua",
-		`{"reguapontos":[[0,0],[3,0]],"reguafase":2}`)
-	if !strings.Contains(resposta, "reguatexto") {
+		`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
+	if !strings.Contains(resposta, "ruler_text") {
 		t.Fatalf("a medida não voltou: %s", resposta)
 	}
 	if strings.Contains(resposta, "mesa-tabuleiro") || strings.Contains(resposta, "datastar-patch-elements") {

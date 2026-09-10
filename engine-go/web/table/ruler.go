@@ -78,10 +78,10 @@ const stopsMax = 12
 // enquanto a régua está MEDINDO: congelada, o ponteiro passeia e a medida fica.
 func rulerStops(r *http.Request) ([]engine.Square, error) {
 	var sinais struct {
-		Pontos [][]int `json:"reguapontos"`
-		MiraX  int     `json:"reguamirax"`
-		MiraY  int     `json:"reguamiray"`
-		Fase   int     `json:"reguafase"`
+		Pontos [][]int `json:"ruler_points"`
+		MiraX  int     `json:"ruler_aim_x"`
+		MiraY  int     `json:"ruler_aim_y"`
+		Fase   int     `json:"ruler_phase"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return nil, fmt.Errorf("as paradas da régua não vieram: %w", err)
@@ -122,11 +122,11 @@ func polylineReading(paradas []engine.Square) map[string]any {
 		rotulos = append(rotulos, metersLeg(perna))
 	}
 	if len(paradas) < 2 {
-		return map[string]any{"reguarotulos": rotulos, "reguatexto": emptyRulerHint}
+		return map[string]any{"ruler_labels": rotulos, "ruler_text": emptyRulerHint}
 	}
 	return map[string]any{
-		"reguarotulos": rotulos,
-		"reguatexto": rulerReading(engine.Measurement{
+		"ruler_labels": rotulos,
+		"ruler_text": rulerReading(engine.Measurement{
 			Squares: total,
 			Metres:  float64(total) * engine.SquareMetres,
 			Band:    engine.BandFor(total),
@@ -202,7 +202,7 @@ func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
 	// servidor seria inventar a decisão que falta.
 	if pointsTemplate(tipo) && mira == origem {
 		writeSignals(w, r, map[string]any{
-			"gabaritopath": "", "gabaritotexto": "Clique de novo para apontar.",
+			"template_path": "", "template_text": "Clique de novo para apontar.",
 		})
 		return
 	}
@@ -212,8 +212,8 @@ func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
 	// o `Hidden` escondem dele.
 	b := board.BoardForRole(papel, s.deps.Boards().Get(r.Context(), sessionID, tabuleiroID))
 	writeSignals(w, r, map[string]any{
-		"gabaritopath":  squaresPath(casas),
-		"gabaritotexto": takesTemplateWho(b, casas),
+		"template_path": squaresPath(casas),
+		"template_text": takesTemplateWho(b, casas),
 	})
 }
 

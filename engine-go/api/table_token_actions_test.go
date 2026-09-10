@@ -394,7 +394,7 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 // colaNaAba manda o comando de colar com a área apontando para outra aba.
 func colaNaAba(t *testing.T, f pilotoFixture, deOndeVeio, peca, modo string, x, y int) string {
 	t.Helper()
-	area := fmt.Sprintf(`{"areapeca":%q,"areatabuleiro":%q,"areamodo":%q}`, peca, deOndeVeio, modo)
+	area := fmt.Sprintf(`{"area_token":%q,"area_board":%q,"area_mode":%q}`, peca, deOndeVeio, modo)
 	return f.posta(t, f.mestre,
 		fmt.Sprintf("%s/tabuleiro/colar/%d/%d", f.tableUrl(), x, y), area)
 }
@@ -457,7 +457,7 @@ func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 
-	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/colar/2/2", `{"areapeca":""}`)
+	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/colar/2/2", `{"area_token":""}`)
 	if !strings.Contains(recusa, "não há peça na área") {
 		t.Errorf("a área vazia não foi recusada:\n%s", recusa)
 	}

@@ -109,7 +109,7 @@ func TestTheRestingLayerServesBothGestures(t *testing.T) {
 	if quantas := strings.Count(tela, `data-show="$ferramenta === ''"`); quantas != 1 {
 		t.Errorf("há %d camadas de repouso; com mais de uma a de baixo nunca recebe o dedo", quantas)
 	}
-	for _, pedaco := range []string{"marcar-area", "engoleoclique", "tabuleiro-peca-marcada"} {
+	for _, pedaco := range []string{"marcar-area", "swallow_click", "tabuleiro-peca-marcada"} {
 		if !strings.Contains(tela, pedaco) {
 			t.Errorf("a cena não tem %q: a seleção em área não acontece", pedaco)
 		}

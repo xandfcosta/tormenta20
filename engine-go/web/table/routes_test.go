@@ -18,7 +18,12 @@ import (
 // forma na linha do `buscador`, que se chama assim para não colidir com o
 // `busca` das cenas.
 func TestNoTableSignalIsDeclaredTwice(t *testing.T) {
-	nomes := regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9]*)\s*:`)
+	// O `_` PRECISA estar na classe, e a falta dele já mentiu: com
+	// `([a-zA-Z][a-zA-Z0-9]*)` o `ruler_aim_x: 0` casava só o `x:`, e o guarda
+	// acusou sete duplicatas inexistentes — "mode", "x", "y", "labels", "text" —
+	// no dia em que os sinais viraram `snake_case` (ALE-301). Parser que não
+	// entende a forma nova produz lista de falhas com cara de descoberta.
+	nomes := regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9_]*)\s*:`)
 	vistos := map[string]bool{}
 	medidos := 0
 	for _, achado := range nomes.FindAllStringSubmatch(tableSignalsExpr(), -1) {
