@@ -294,7 +294,7 @@ func moneyHeadline(v View) templ.Component {
 			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<button type=\"button\" aria-label=\"Mexer no dinheiro\" aria-haspopup=\"dialog\" data-on:click=\"$tibarmodo = 'receber'; $tibarvalor = 0; $detalhe = 'dinheiro'\" class=\"ml-auto inline-flex items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1 text-3xs outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:text-xs\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<button type=\"button\" aria-label=\"Mexer no dinheiro\" aria-haspopup=\"dialog\" data-on:click=\"$tibar_mode = 'receber'; $tibar_value = 0; $detail = 'dinheiro'\" class=\"ml-auto inline-flex items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1 text-3xs outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:text-xs\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -676,9 +676,9 @@ func equippedCardItem(v View, card *equippedCard, largo bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var33 string
-		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe = 'item-" + card.Command + "'")
+		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = 'item-" + card.Command + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 146, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 146, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -1182,7 +1182,7 @@ func bagFiltersBody(v View) templ.Component {
 			templ_7745c5c3_Var61 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<div class=\"flex flex-wrap items-center gap-2\"><input type=\"search\" data-bind:itembusca data-on:input__debounce.250ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<div class=\"flex flex-wrap items-center gap-2\"><input type=\"search\" data-bind:item_search data-on:input__debounce.250ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1238,7 +1238,7 @@ func bagFiltersBody(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var66 string
-			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue("$itemcategoria = '" + badge.Valor + "'; " + sheetGet(v))
+			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue("$item_category = '" + badge.Valor + "'; " + sheetGet(v))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 272, Col: 77}
 			}
@@ -1325,9 +1325,9 @@ func stowedTileItem(ladrilho stowedTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var71 string
-		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe = 'item-" + ladrilho.Command + "'")
+		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = 'item-" + ladrilho.Command + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 288, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 288, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var71)
 		if templ_7745c5c3_Err != nil {
@@ -1463,9 +1463,9 @@ func moneyDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var78 string
-				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibarmodo = '" + modo.Valor + "'")
+				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibar_mode = '" + modo.Valor + "'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 316, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 316, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var78)
 				if templ_7745c5c3_Err != nil {
@@ -1476,9 +1476,9 @@ func moneyDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var79 string
-				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibarmodo === '" + modo.Valor + "' ? 'true' : 'false'")
+				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tibar_mode === '" + modo.Valor + "' ? 'true' : 'false'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 317, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 317, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var79)
 				if templ_7745c5c3_Err != nil {
@@ -1524,7 +1524,7 @@ func moneyDialog(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, "\">valor em T$</span> <input type=\"number\" min=\"0\" step=\"0.01\" data-bind:tibarvalor class=\"h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\"></label> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, "\">valor em T$</span> <input type=\"number\" min=\"0\" step=\"0.01\" data-bind:tibar_value class=\"h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\"></label> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1538,9 +1538,9 @@ func moneyDialog(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var84 string
-			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/dinheiro") + "; $detalhe = ''")
+			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/dinheiro") + "; $detail = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 334, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/bag.templ`, Line: 334, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var84)
 			if templ_7745c5c3_Err != nil {

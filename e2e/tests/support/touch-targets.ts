@@ -12,7 +12,7 @@ import type { Page } from '@playwright/test'
  * A EXCEÇÃO DO EQUIVALENTE também é medida, e nesta ficha ela é mecânica em vez
  * de julgamento: um alvo pequeno passa se OUTRO alvo que dispara **o mesmo
  * comando** cumpre os 24px. É o caso de cada perícia — o número (`size-11`,
- * 44×44) e o nome (139×20) fazem os dois `$detalhe = <chave>`, e clicar em
+ * 44×44) e o nome (139×20) fazem os dois `$detail = <chave>`, e clicar em
  * qualquer um abre a mesma decomposição.
  *
  * Contar só o tamanho infla o número com alvos que a norma aceita, e isso não é

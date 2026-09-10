@@ -246,7 +246,7 @@ func TestMoneyNeverGoesNegative(t *testing.T) {
 
 func money(t *testing.T, f pilotoFixture, id int64, modo string, valor float64) string {
 	t.Helper()
-	corpo := fmt.Sprintf(`{"tibarmodo":%q,"tibarvalor":%v}`, modo, valor)
+	corpo := fmt.Sprintf(`{"tibar_mode":%q,"tibar_value":%v}`, modo, valor)
 	alvo := fmt.Sprintf("/personagens/%d/dinheiro?tab=bag", id)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }

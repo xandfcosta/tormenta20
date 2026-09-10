@@ -84,11 +84,11 @@ func SceneBody(v View) templ.Component {
 //
 // Ele morava dentro do `overlay`, que é desenhado por item da lista: a aba de
 // Perícias servia **trinta** ouvintes de Escape, vinte e nove escrevendo o mesmo
-// `$detalhe = ”`. Um ouvinte de JANELA não pertence ao nó que o pendura — ele
+// `$detail = ”`. Um ouvinte de JANELA não pertence ao nó que o pendura — ele
 // não sabe qual diálogo está por cima e roda de qualquer jeito —, então o lugar
 // dele é a cena.
 //
-// Fechar o que já está fechado não é nada: `$detalhe` é um valor só, e apagá-lo
+// Fechar o que já está fechado não é nada: `$detail` é um valor só, e apagá-lo
 // com nenhum diálogo aberto é a mesma string vazia. Foi isso que tornou os
 // vinte e nove idempotentes, e é isso que torna este UM suficiente.
 //
@@ -115,7 +115,7 @@ func ficha(v View) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div data-on:keydown__window=\"evt.key === 'Escape' && ($detalhe = '')\" class=\"flex min-h-0 flex-1 flex-col\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div data-on:keydown__window=\"evt.key === 'Escape' && ($detail = '')\" class=\"flex min-h-0 flex-1 flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

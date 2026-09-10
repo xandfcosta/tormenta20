@@ -130,15 +130,15 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		// pelo HTML, e um `data-bind:novaPericia` ligaria um sinal `novapericia`
 		// que o servidor lê — mas o `data-bind` teria escrito noutro, e o campo
 		// chegaria sempre vazio.
-		Sinais: "{detalhe: '', oficio: false, novapericia: '', novoatributo: 'intelligence'," +
-			" condicao: false, buff: false, situacao: ''," +
-			" aprender: false, aug0: 0, aug1: 0, aug2: 0, aug3: 0, aug4: 0, aug5: 0," +
-			" magiabusca: '', magiacirculo: '', magiaescola: ''," +
-			" itembusca: '', itemcategoria: '', tibarmodo: 'receber', tibarvalor: 0," +
-			" catalogobusca: '', catalogocategoria: '', itemqtd: 1, itemnome: '', itemespacos: 1," +
-			" itemrolagempv: 0, itemrolagempm: 0, itemmelhorias: [], itemmaterial: ''," +
-			" poderbusca: '', poderdegraus: 0, poder: '', passivas: false," +
-			" fonte: 'raca', racaatributos: []}",
+		Sinais: "{detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
+			" condition_dialog: false, buff_dialog: false, conditional: ''," +
+			" learn_dialog: false, augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0," +
+			" spell_search: '', spell_circle: '', spell_school: ''," +
+			" item_search: '', item_category: '', tibar_mode: 'receber', tibar_value: 0," +
+			" catalog_search: '', catalog_category: '', item_qty: 1, item_name: '', item_slots: 1," +
+			" item_roll_hp: 0, item_roll_mp: 0, item_improvements: [], item_material: ''," +
+			" power_search: '', stance_degrees: 0, power: '', show_passives: false," +
+			" power_source: 'raca', race_attributes: []}",
 	}, SceneBody(view))
 }
 

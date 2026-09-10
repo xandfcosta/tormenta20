@@ -55,9 +55,9 @@ func choicesButton(v View) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("$fonte = '" + firstPendingSource(v) + "'; $detalhe = 'escolher-poderes'")
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("$power_source = '" + firstPendingSource(v) + "'; $detail = 'escolher-poderes'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 24, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 24, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -200,9 +200,9 @@ func choicesDialog(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var12 string
-					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("$fonte = '" + p.Fonte + "'")
+					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("$power_source = '" + p.Fonte + "'")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 48, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 48, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 					if templ_7745c5c3_Err != nil {
@@ -241,9 +241,9 @@ func choicesDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue("$fonte = '" + fonte + "'")
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue("$power_source = '" + fonte + "'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 58, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 58, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 				if templ_7745c5c3_Err != nil {
@@ -254,9 +254,9 @@ func choicesDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("$fonte === '" + fonte + "' ? 'true' : 'false'")
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("$power_source === '" + fonte + "' ? 'true' : 'false'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 59, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 59, Col: 84}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 				if templ_7745c5c3_Err != nil {
@@ -280,7 +280,7 @@ func choicesDialog(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div><div data-show=\"$fonte === 'raca'\" class=\"space-y-3\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div><div data-show=\"$power_source === 'raca'\" class=\"space-y-3\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -288,7 +288,7 @@ func choicesDialog(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div><div data-show=\"$fonte === 'origem'\" class=\"space-y-3\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div><div data-show=\"$power_source === 'origem'\" class=\"space-y-3\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -296,7 +296,7 @@ func choicesDialog(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div><div data-show=\"$fonte === 'classe'\" class=\"space-y-3\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div><div data-show=\"$power_source === 'classe'\" class=\"space-y-3\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -729,9 +729,9 @@ func attributeChoiceBlock(v View, escolha attributeChoice) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var44 string
-				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue("$racaatributos.includes('" + o.Valor + "')")
+				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue("$race_attributes.includes('" + o.Valor + "')")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 140, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers_dialog.templ`, Line: 140, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 				if templ_7745c5c3_Err != nil {
@@ -1068,7 +1068,7 @@ func classChoicesBlock(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<input type=\"search\" data-bind:poderbusca data-on:input__debounce.250ms=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<input type=\"search\" data-bind:power_search data-on:input__debounce.250ms=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

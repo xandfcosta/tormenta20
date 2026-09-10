@@ -69,7 +69,7 @@ templ moneyHeadline(v View) {
 		type="button"
 		aria-label="Mexer no dinheiro"
 		aria-haspopup="dialog"
-		data-on:click="$tibarmodo = 'receber'; $tibarvalor = 0; $detalhe = 'dinheiro'"
+		data-on:click="$tibar_mode = 'receber'; $tibar_value = 0; $detail = 'dinheiro'"
 		class="ml-auto inline-flex items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1 text-3xs outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:text-xs"
 	>
 		@ui.Icon("Coins", "size-3.5 text-grimorio-gold")
@@ -143,7 +143,7 @@ templ equippedCardItem(v View, card *equippedCard, largo bool) {
 			type="button"
 			aria-label={ "Abrir " + card.Name }
 			aria-haspopup="dialog"
-			data-on:click={ "$detalhe = 'item-" + card.Command + "'" }
+			data-on:click={ "$detail = 'item-" + card.Command + "'" }
 			class="block w-[calc(100%-1.5rem)] text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ card.Label }</p>
@@ -257,7 +257,7 @@ templ bagFiltersBody(v View) {
 	<div class="flex flex-wrap items-center gap-2">
 		<input
 			type="search"
-			data-bind:itembusca
+			data-bind:item_search
 			data-on:input__debounce.250ms={ sheetGet(v) }
 			value={ v.Bag.Search }
 			placeholder="Buscar item…"
@@ -269,7 +269,7 @@ templ bagFiltersBody(v View) {
 				<button
 					type="button"
 					aria-pressed={ ui.AriaBool(badge.Ativo) }
-					data-on:click={ "$itemcategoria = '" + badge.Valor + "'; " + sheetGet(v) }
+					data-on:click={ "$item_category = '" + badge.Valor + "'; " + sheetGet(v) }
 					class={ ui.BadgeClasses("inline-flex items-center text-3xs uppercase tracking-wider"),
 						templ.KV("border-grimorio-gold/60 bg-accent text-grimorio-gold", badge.Ativo),
 						templ.KV("border-grimorio-iron text-muted-foreground hover:text-foreground", !badge.Ativo) }
@@ -285,7 +285,7 @@ templ stowedTileItem(ladrilho stowedTile) {
 		type="button"
 		aria-label={ "Abrir " + ladrilho.Name }
 		aria-haspopup="dialog"
-		data-on:click={ "$detalhe = 'item-" + ladrilho.Command + "'" }
+		data-on:click={ "$detail = 'item-" + ladrilho.Command + "'" }
 		class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
 		if ladrilho.Quantity > 1 {
@@ -313,8 +313,8 @@ templ moneyDialog(v View) {
 			for _, modo := range moneyModes {
 				<button
 					type="button"
-					data-on:click={ "$tibarmodo = '" + modo.Valor + "'" }
-					data-attr:aria-pressed={ "$tibarmodo === '" + modo.Valor + "' ? 'true' : 'false'" }
+					data-on:click={ "$tibar_mode = '" + modo.Valor + "'" }
+					data-attr:aria-pressed={ "$tibar_mode === '" + modo.Valor + "' ? 'true' : 'false'" }
 					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>{ modo.Rotulo }</button>
 			}
@@ -325,13 +325,13 @@ templ moneyDialog(v View) {
 				type="number"
 				min="0"
 				step="0.01"
-				data-bind:tibarvalor
+				data-bind:tibar_value
 				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			/>
 		</label>
 		<button
 			type="button"
-			data-on:click={ sheetPost(v, "/dinheiro") + "; $detalhe = ''" }
+			data-on:click={ sheetPost(v, "/dinheiro") + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Confirmar</button>
 	}

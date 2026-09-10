@@ -49,7 +49,7 @@ type expertisePanel struct {
 
 // expertiseRow é uma perícia na lista.
 type expertiseRow struct {
-	// Key identifica o diálogo desta linha para o sinal `$detalhe`, e é o índice
+	// Key identifica o diálogo desta linha para o sinal `$detail`, e é o índice
 	// e não o nome: nome de ofício é texto livre do jogador, e um apóstrofo nele
 	// quebraria a expressão do Datastar que compara a chave.
 	Key  string

@@ -46,7 +46,7 @@ templ powersPanelSection(v View) {
 templ powerSearch(v View) {
 	<input
 		type="search"
-		data-bind:poderbusca
+		data-bind:power_search
 		data-on:input__debounce.250ms={ sheetGet(v) }
 		value={ v.Powers.Search }
 		placeholder="Buscar poder ou habilidade…"
@@ -102,19 +102,19 @@ templ passivesBlock(v View) {
 		<section class="space-y-1.5">
 			<button
 				type="button"
-				data-on:click="$passivas = !$passivas"
-				data-attr:aria-expanded="$passivas ? 'true' : 'false'"
+				data-on:click="$show_passives = !$show_passives"
+				data-attr:aria-expanded="$show_passives ? 'true' : 'false'"
 				class="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
-				<span data-show="!$passivas">{ "Passivas · mostrar (" + strconv.Itoa(len(v.Powers.Passives)) + ")" }</span>
-				<span style="display:none" data-show="$passivas">Passivas · ocultar</span>
+				<span data-show="!$show_passives">{ "Passivas · mostrar (" + strconv.Itoa(len(v.Powers.Passives)) + ")" }</span>
+				<span style="display:none" data-show="$show_passives">Passivas · ocultar</span>
 			</button>
-			<div data-show="!$passivas" class="space-y-1">
+			<div data-show="!$show_passives" class="space-y-1">
 				for _, linha := range v.Powers.LiveTriggers {
 					<p class="text-2xs text-bonus-ink">{ "● gatilho ativo: " + linha.Name }</p>
 				}
 			</div>
-			<ul style="display:none" data-show="$passivas" class="space-y-1.5">
+			<ul style="display:none" data-show="$show_passives" class="space-y-1.5">
 				for _, linha := range v.Powers.Passives {
 					@powerRowItem(v, linha)
 				}
@@ -134,8 +134,8 @@ templ powerRowItem(v View, linha powerRow) {
 			<button
 				type="button"
 				aria-label={ "Detalhes de " + linha.Name }
-				data-on:click={ "$poder = $poder === '" + linha.ID + "' ? '' : '" + linha.ID + "'" }
-				data-attr:aria-expanded={ "$poder === '" + linha.ID + "' ? 'true' : 'false'" }
+				data-on:click={ "$power = $power === '" + linha.ID + "' ? '' : '" + linha.ID + "'" }
+				data-attr:aria-expanded={ "$power === '" + linha.ID + "' ? 'true' : 'false'" }
 				class="flex min-w-0 flex-1 basis-40 flex-col gap-0.5 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				<span class="flex flex-wrap items-center gap-1.5">
@@ -143,13 +143,13 @@ templ powerRowItem(v View, linha powerRow) {
 					<span class="text-xs font-semibold text-foreground">{ linha.Name }</span>
 					<span class="rounded-none bg-muted px-1 text-3xs text-muted-foreground">{ linha.Source }</span>
 				</span>
-				<span data-show={ "$poder !== '" + linha.ID + "'" } class="line-clamp-1 text-2xs leading-snug text-muted-foreground">
+				<span data-show={ "$power !== '" + linha.ID + "'" } class="line-clamp-1 text-2xs leading-snug text-muted-foreground">
 					{ linha.Detail }
 				</span>
 			</button>
 			@powerActionSlot(v, linha)
 		</div>
-		<p data-show={ "$poder === '" + linha.ID + "'" } class="mt-1 text-2xs leading-snug text-muted-foreground">
+		<p data-show={ "$power === '" + linha.ID + "'" } class="mt-1 text-2xs leading-snug text-muted-foreground">
 			{ linha.Detail }
 			if linha.Page > 0 {
 				<span class="ml-1 opacity-70">{ "(p" + strconv.Itoa(linha.Page) + ")" }</span>
@@ -206,7 +206,7 @@ templ stanceButton(v View, linha powerRow) {
 			aria-haspopup="dialog"
 			disabled?={ !linha.Can }
 			title={ linha.Why }
-			data-on:click={ "$poderdegraus = 0; $detalhe = 'postura-" + linha.Stance.Flag + "'" }
+			data-on:click={ "$stance_degrees = 0; $detail = 'postura-" + linha.Stance.Flag + "'" }
 			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
 			@ui.Icon("Flame", "size-3")
@@ -218,7 +218,7 @@ templ stanceButton(v View, linha powerRow) {
 			aria-label={ "Ativar " + linha.Name }
 			disabled?={ !linha.Can }
 			title={ linha.Why }
-			data-on:click={ "$poderdegraus = 0; " + sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") }
+			data-on:click={ "$stance_degrees = 0; " + sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") }
 			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
 			@ui.Icon("Flame", "size-3")
@@ -238,14 +238,14 @@ templ stanceStepperDialog(v View, linha powerRow) {
 			<button
 				type="button"
 				aria-label="Menos um degrau"
-				data-on:click="$poderdegraus = Math.max(0, $poderdegraus - 1)"
+				data-on:click="$stance_degrees = Math.max(0, $stance_degrees - 1)"
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>−</button>
-			<span class="font-mono text-lg text-foreground" data-text="$poderdegraus"></span>
+			<span class="font-mono text-lg text-foreground" data-text="$stance_degrees"></span>
 			<button
 				type="button"
 				aria-label="Mais um degrau"
-				data-on:click={ "$poderdegraus = Math.min(" + strconv.Itoa(linha.Stance.MaxSteps) + ", $poderdegraus + 1)" }
+				data-on:click={ "$stance_degrees = Math.min(" + strconv.Itoa(linha.Stance.MaxSteps) + ", $stance_degrees + 1)" }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>+</button>
 		</div>
@@ -255,7 +255,7 @@ templ stanceStepperDialog(v View, linha powerRow) {
 		<button
 			type="button"
 			aria-label={ "Confirmar " + linha.Name }
-			data-on:click={ sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") + "; $detalhe = ''" }
+			data-on:click={ sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Ativar</button>
 	}

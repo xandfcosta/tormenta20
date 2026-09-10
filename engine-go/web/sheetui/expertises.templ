@@ -38,7 +38,7 @@ templ expertisePanelBody(v View) {
 				<button
 					type="button"
 					aria-label="Nova perícia"
-					data-on:click="$novapericia = ''; $novoatributo = 'intelligence'; $oficio = true"
+					data-on:click="$new_expertise = ''; $new_attribute = 'intelligence'; $craft = true"
 					class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 				>
 					@ui.Icon("Plus", "size-4")
@@ -94,7 +94,7 @@ templ expertiseRowBody(v View, linha expertiseRow) {
 		<button
 			type="button"
 			aria-label={ "Detalhar " + linha.Name }
-			data-on:click={ "$detalhe = '" + linha.Key + "'" }
+			data-on:click={ "$detail = '" + linha.Key + "'" }
 			class="min-w-0 flex-1 truncate text-left text-sm text-foreground outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>{ linha.Name }</button>
 		if linha.TrainedOnly {
@@ -126,7 +126,7 @@ templ expertiseTotal(linha expertiseRow) {
 		type="button"
 		aria-label={ totalLabel(linha) }
 		aria-haspopup="dialog"
-		data-on:click={ "$detalhe = '" + linha.Key + "'" }
+		data-on:click={ "$detail = '" + linha.Key + "'" }
 		class={ "flex size-11 shrink-0 items-center justify-center rounded-none border font-mono text-lg font-bold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 			templ.KV("border-destructive/60 bg-destructive/10 text-penalty-ink", linha.AutoFail),
 			templ.KV("border-dashed border-grimorio-iron text-muted-foreground", linha.Locked && !linha.AutoFail),
@@ -236,24 +236,24 @@ templ craftDialog(v View) {
 	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
 	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<div
-		data-show="$oficio"
+		data-show="$craft"
 		style="display:none"
-		data-on:click="evt.target === el && ($oficio = false)"
-		data-on:keydown__window="evt.key === 'Escape' && ($oficio = false)"
+		data-on:click="evt.target === el && ($craft = false)"
+		data-on:keydown__window="evt.key === 'Escape' && ($craft = false)"
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4"
 	>
 		<div
 			role="dialog"
 			aria-modal="true"
 			aria-label="Nova perícia"
-			data-attr:data-expanded="$oficio"
+			data-attr:data-expanded="$craft"
 			class="relative w-full rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm"
 		>
 			<p class={ ui.SectionLabelClasses("gold", "pr-10") }>Nova perícia</p>
 			<button
 				type="button"
 				aria-label="Fechar nova perícia"
-				data-on:click="$oficio = false"
+				data-on:click="$craft = false"
 				class="absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>×</button>
 			<div class="mt-3 space-y-3">
@@ -263,7 +263,7 @@ templ craftDialog(v View) {
 						id="oficio-nome"
 						type="text"
 						maxlength="40"
-						data-bind:novapericia
+						data-bind:new_expertise
 						placeholder="Ferreiro, Marinheiro…"
 						class="mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring sm:text-sm"
 					/>
@@ -272,7 +272,7 @@ templ craftDialog(v View) {
 					<label for="oficio-atributo" class={ ui.FieldLabelClasses("muted", "") }>Atributo</label>
 					<select
 						id="oficio-atributo"
-						data-bind:novoatributo
+						data-bind:new_attribute
 						class="mt-1 h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 font-mono text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 					>
 						for _, opcao := range v.Expertises.Attributes {
@@ -282,7 +282,7 @@ templ craftDialog(v View) {
 				</div>
 				<button
 					type="button"
-					data-on:click={ sheetPost(v, "/pericias/nova") + "; $oficio = false" }
+					data-on:click={ sheetPost(v, "/pericias/nova") + "; $craft = false" }
 					class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 				>Criar perícia</button>
 			</div>

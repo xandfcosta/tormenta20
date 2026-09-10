@@ -445,5 +445,5 @@ func powerBadge(kind string) string {
 func costStancePreview(linha powerRow) string {
 	base := strconv.Itoa(linha.Stance.BasePm)
 	passo := strconv.Itoa(linha.Stance.StepPm)
-	return "(" + base + " + " + passo + " * $poderdegraus) + ' PM'"
+	return "(" + base + " + " + passo + " * $stance_degrees) + ' PM'"
 }

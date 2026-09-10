@@ -9,15 +9,15 @@ import (
 // OS DIÁLOGOS DA MOCHILA (ALE-272, fatia 7).
 //
 // Um por item, mais dois compartilhados — adicionar do catálogo e criar um item
-// custom. Todos são desenhados de uma vez e alternados pelo sinal `$detalhe`,
+// custom. Todos são desenhados de uma vez e alternados pelo sinal `$detail`,
 // que é a forma desta migração; o custo é HTML a mais no fio e o ganho é que
 // abrir uma caixa não pede nada ao servidor.
 //
 // # Quem TROCA de item limpa
 //
 // O diálogo de melhorias de cada item traz as escolhas dele já marcadas, e o
-// gesto que ABRE zera os campos compartilhados (`$itemnome`, `$itemqtd`,
-// `$itemespacos`, as rolagens): sem isso, o que foi digitado numa caixa
+// gesto que ABRE zera os campos compartilhados (`$item_name`, `$item_qty`,
+// `$item_slots`, as rolagens): sem isso, o que foi digitado numa caixa
 // reaparece na próxima, que é a armadilha do "remendo em nó compartilhado" do
 // guia do Go.
 
@@ -37,7 +37,7 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 					for _, lugar := range ficha.Equip {
 						<button
 							type="button"
-							data-on:click={ equipCommand(v, ficha, lugar) + "; $detalhe = ''" }
+							data-on:click={ equipCommand(v, ficha, lugar) + "; $detail = ''" }
 							class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 						>{ lugar.Rotulo }</button>
 					}
@@ -81,7 +81,7 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 			<button
 				type="button"
 				aria-label={ "Remover " + ficha.Name }
-				data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/remove") + "; $detalhe = ''" }
+				data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/remove") + "; $detail = ''" }
 				class={ ui.ButtonClasses(ui.VariantDestructive, ui.SizeSmall, "ml-auto") }
 			>Remover</button>
 		</div>
@@ -105,15 +105,15 @@ templ consumeBlock(v View, ficha itemSheet) {
 			{ "Usar · " + ficha.Consumable.Escopo }
 		</p>
 		if ficha.Consumable.HpDice != "" {
-			@rollField("itemrolagempv", "PV rolados ("+ficha.Consumable.HpDice+")")
+			@rollField("item_roll_hp", "PV rolados ("+ficha.Consumable.HpDice+")")
 		}
 		if ficha.Consumable.MpDice != "" {
-			@rollField("itemrolagempm", "PM rolados ("+ficha.Consumable.MpDice+")")
+			@rollField("item_roll_mp", "PM rolados ("+ficha.Consumable.MpDice+")")
 		}
 		<button
 			type="button"
 			aria-label={ "Usar " + ficha.Name }
-			data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/usa") + "; $detalhe = ''" }
+			data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/usa") + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "w-full") }
 		>Usar</button>
 	</div>
@@ -169,7 +169,7 @@ templ overlayDialog(v View, ficha itemSheet) {
 		<div class="space-y-1">
 			<p class={ ui.FieldLabelClasses("muted", "") }>Material</p>
 			<select
-				data-bind:itemmaterial
+				data-bind:item_material
 				aria-label={ "Material de " + ficha.Name }
 				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
@@ -183,7 +183,7 @@ templ overlayDialog(v View, ficha itemSheet) {
 		</div>
 		<button
 			type="button"
-			data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/melhorias") + "; $detalhe = ''" }
+			data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/melhorias") + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Aplicar</button>
 	}
@@ -195,7 +195,7 @@ templ catalogAddDialog(v View) {
 		<div class="flex gap-2">
 			<input
 				type="search"
-				data-bind:catalogobusca
+				data-bind:catalog_search
 				data-on:input__debounce.250ms={ sheetGet(v) }
 				value={ v.Bag.CatalogSearch }
 				placeholder="Buscar no catálogo…"
@@ -203,7 +203,7 @@ templ catalogAddDialog(v View) {
 				class="h-9 min-w-0 flex-1 rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			/>
 			<select
-				data-bind:catalogocategoria
+				data-bind:catalog_category
 				data-on:change={ sheetGet(v) }
 				aria-label="Categoria do catálogo"
 				class="h-9 max-w-[45%] rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -219,7 +219,7 @@ templ catalogAddDialog(v View) {
 				type="number"
 				min="1"
 				max="9999"
-				data-bind:itemqtd
+				data-bind:item_qty
 				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			/>
 		</label>
@@ -231,7 +231,7 @@ templ catalogAddDialog(v View) {
 					<button
 						type="button"
 						aria-label={ "Adicionar " + linha.Nome }
-						data-on:click={ sheetPost(v, "/itens/adiciona/"+linha.ID) + "; $detalhe = ''" }
+						data-on:click={ sheetPost(v, "/itens/adiciona/"+linha.ID) + "; $detail = ''" }
 						class="flex w-full items-baseline gap-2 rounded-sm border border-grimorio-iron px-2 py-1 text-left text-xs outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					>
 						<span class="min-w-0 flex-1 truncate text-foreground">{ linha.Nome }</span>
@@ -256,7 +256,7 @@ templ itemFormDialog(v View, chave, titulo, botao, comando string) {
 			<input
 				type="text"
 				maxlength="80"
-				data-bind:itemnome
+				data-bind:item_name
 				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			/>
 		</label>
@@ -267,7 +267,7 @@ templ itemFormDialog(v View, chave, titulo, botao, comando string) {
 					type="number"
 					min="1"
 					max="9999"
-					data-bind:itemqtd
+					data-bind:item_qty
 					class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				/>
 			</label>
@@ -277,14 +277,14 @@ templ itemFormDialog(v View, chave, titulo, botao, comando string) {
 					type="number"
 					min="0"
 					step="0.5"
-					data-bind:itemespacos
+					data-bind:item_slots
 					class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				/>
 			</label>
 		</div>
 		<button
 			type="button"
-			data-on:click={ comando + "; $detalhe = ''" }
+			data-on:click={ comando + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>{ botao }</button>
 	}
@@ -297,7 +297,7 @@ templ bagAddButtons(v View) {
 			type="button"
 			aria-label="Adicionar do catálogo"
 			aria-haspopup="dialog"
-			data-on:click="$itemqtd = 1; $catalogobusca = ''; $catalogocategoria = ''; $detalhe = 'catalogo'"
+			data-on:click="$item_qty = 1; $catalog_search = ''; $catalog_category = ''; $detail = 'catalogo'"
 			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
 			@ui.Icon("Plus", "size-3.5")
@@ -307,7 +307,7 @@ templ bagAddButtons(v View) {
 			type="button"
 			aria-label="Adicionar item custom"
 			aria-haspopup="dialog"
-			data-on:click="$itemnome = ''; $itemqtd = 1; $itemespacos = 1; $detalhe = 'item-custom'"
+			data-on:click="$item_name = ''; $item_qty = 1; $item_slots = 1; $detail = 'item-custom'"
 			class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "gap-1") }
 		>
 			@ui.Icon("Plus", "size-3.5")
@@ -332,18 +332,18 @@ func equipCommand(v View, ficha itemSheet, lugar equipChoice) string {
 
 // improvementSignal é a expressão que diz se a melhoria está escolhida AGORA.
 func improvementSignal(escolha overlayChoice) string {
-	return "$itemmelhorias.includes('" + escolha.ID + "')"
+	return "$item_improvements.includes('" + escolha.ID + "')"
 }
 
 // thatTogglesImprovementGesture liga ou desliga uma melhoria na lista do sinal.
 //
-// A lista é COPIADA antes de ser mexida (`[...$itemmelhorias]`): o sinal é um
+// A lista é COPIADA antes de ser mexida (`[...$item_improvements]`): o sinal é um
 // proxy, e escrever dentro dele item a item é a armadilha que o guia do Go
 // registra — ler um índice que não existe o CRIA.
 func thatTogglesImprovementGesture(escolha overlayChoice) string {
-	return "const escolhidas = [...$itemmelhorias]; const onde = escolhidas.indexOf('" + escolha.ID + "'); " +
+	return "const escolhidas = [...$item_improvements]; const onde = escolhidas.indexOf('" + escolha.ID + "'); " +
 		"if (onde >= 0) { escolhidas.splice(onde, 1) } else { escolhidas.push('" + escolha.ID + "') }; " +
-		"$itemmelhorias = escolhidas"
+		"$item_improvements = escolhidas"
 }
 
 // thatOpensTheImprovementsGesture carrega o que o item JÁ tem antes de abrir.
@@ -352,17 +352,17 @@ func thatTogglesImprovementGesture(escolha overlayChoice) string {
 // apareceriam marcadas na armadura aberta em seguida — e o botão Aplicar
 // gravaria nela o que era de outra.
 func thatOpensTheImprovementsGesture(ficha itemSheet) string {
-	return "$itemmelhorias = " + improvementWrittenList(ficha) +
-		"; $itemmaterial = '" + chosenMaterial(ficha) + "'" +
-		"; $detalhe = 'melhorias-" + ficha.Command + "'"
+	return "$item_improvements = " + improvementWrittenList(ficha) +
+		"; $item_material = '" + chosenMaterial(ficha) + "'" +
+		"; $detail = 'melhorias-" + ficha.Command + "'"
 }
 
 // thatOpensEditGesture põe os valores atuais no formulário.
 func thatOpensEditGesture(ficha itemSheet) string {
-	return "$itemnome = " + strconv.Quote(ficha.Name) +
-		"; $itemqtd = " + strconv.FormatInt(ficha.Quantity, 10) +
-		"; $itemespacos = " + strings.Replace(ficha.Slots, ",", ".", 1) +
-		"; $detalhe = 'editar-" + ficha.Command + "'"
+	return "$item_name = " + strconv.Quote(ficha.Name) +
+		"; $item_qty = " + strconv.FormatInt(ficha.Quantity, 10) +
+		"; $item_slots = " + strings.Replace(ficha.Slots, ",", ".", 1) +
+		"; $detail = 'editar-" + ficha.Command + "'"
 }
 
 func improvementWrittenList(ficha itemSheet) string {

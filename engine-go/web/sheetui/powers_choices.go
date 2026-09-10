@@ -336,7 +336,7 @@ func choiceClassCommand(v View, classe, escolha, valor string) string {
 // A lista é COPIADA antes de ser mexida: o sinal é um proxy, e escrever dentro
 // dele item a item é a armadilha que o guia do Go registra.
 func thatTogglesAttributeGesture(atributo string) string {
-	return "const escolhidos = [...$racaatributos]; const onde = escolhidos.indexOf('" + atributo + "'); " +
+	return "const escolhidos = [...$race_attributes]; const onde = escolhidos.indexOf('" + atributo + "'); " +
 		"if (onde >= 0) { escolhidos.splice(onde, 1) } else { escolhidos.push('" + atributo + "') }; " +
-		"$racaatributos = escolhidos"
+		"$race_attributes = escolhidos"
 }

@@ -101,7 +101,7 @@ func expertisePanelBody(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<button type=\"button\" aria-label=\"Nova perícia\" data-on:click=\"$novapericia = ''; $novoatributo = 'intelligence'; $oficio = true\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<button type=\"button\" aria-label=\"Nova perícia\" data-on:click=\"$new_expertise = ''; $new_attribute = 'intelligence'; $craft = true\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -305,9 +305,9 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe = '" + linha.Key + "'")
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + linha.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 97, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 97, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -445,9 +445,9 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var22 string
-		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe = '" + linha.Key + "'")
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + linha.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 129, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 129, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -952,7 +952,7 @@ func craftDialog(v View) templ.Component {
 			templ_7745c5c3_Var51 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<div data-show=\"$oficio\" style=\"display:none\" data-on:click=\"evt.target === el && ($oficio = false)\" data-on:keydown__window=\"evt.key === 'Escape' && ($oficio = false)\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4\"><div role=\"dialog\" aria-modal=\"true\" aria-label=\"Nova perícia\" data-attr:data-expanded=\"$oficio\" class=\"relative w-full rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<div data-show=\"$craft\" style=\"display:none\" data-on:click=\"evt.target === el && ($craft = false)\" data-on:keydown__window=\"evt.key === 'Escape' && ($craft = false)\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4\"><div role=\"dialog\" aria-modal=\"true\" aria-label=\"Nova perícia\" data-attr:data-expanded=\"$craft\" class=\"relative w-full rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -974,7 +974,7 @@ func craftDialog(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\">Nova perícia</p><button type=\"button\" aria-label=\"Fechar nova perícia\" data-on:click=\"$oficio = false\" class=\"absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button><div class=\"mt-3 space-y-3\"><div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\">Nova perícia</p><button type=\"button\" aria-label=\"Fechar nova perícia\" data-on:click=\"$craft = false\" class=\"absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button><div class=\"mt-3 space-y-3\"><div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -996,7 +996,7 @@ func craftDialog(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\">Nome</label> <input id=\"oficio-nome\" type=\"text\" maxlength=\"40\" data-bind:novapericia placeholder=\"Ferreiro, Marinheiro…\" class=\"mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring sm:text-sm\"></div><div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\">Nome</label> <input id=\"oficio-nome\" type=\"text\" maxlength=\"40\" data-bind:new_expertise placeholder=\"Ferreiro, Marinheiro…\" class=\"mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring sm:text-sm\"></div><div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1018,7 +1018,7 @@ func craftDialog(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "\">Atributo</label> <select id=\"oficio-atributo\" data-bind:novoatributo class=\"mt-1 h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 font-mono text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "\">Atributo</label> <select id=\"oficio-atributo\" data-bind:new_attribute class=\"mt-1 h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 font-mono text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1068,9 +1068,9 @@ func craftDialog(v View) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var61 string
-		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/nova") + "; $oficio = false")
+		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/nova") + "; $craft = false")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 285, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/expertises.templ`, Line: 285, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 		if templ_7745c5c3_Err != nil {

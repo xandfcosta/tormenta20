@@ -21,7 +21,7 @@ templ choicesButton(v View) {
 		type="button"
 		aria-label="Escolher poderes"
 		aria-haspopup="dialog"
-		data-on:click={ "$fonte = '" + firstPendingSource(v) + "'; $detalhe = 'escolher-poderes'" }
+		data-on:click={ "$power_source = '" + firstPendingSource(v) + "'; $detail = 'escolher-poderes'" }
 		class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "shrink-0 gap-1") }
 	>
 		Escolher
@@ -45,7 +45,7 @@ templ choicesDialog(v View) {
 				for _, p := range v.Choices.Pendencias {
 					<button
 						type="button"
-						data-on:click={ "$fonte = '" + p.Fonte + "'" }
+						data-on:click={ "$power_source = '" + p.Fonte + "'" }
 						class="block w-full text-left text-xs text-foreground underline-offset-2 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					>{ p.Rotulo }</button>
 				}
@@ -55,19 +55,19 @@ templ choicesDialog(v View) {
 			for _, fonte := range sourceThree {
 				<button
 					type="button"
-					data-on:click={ "$fonte = '" + fonte + "'" }
-					data-attr:aria-pressed={ "$fonte === '" + fonte + "' ? 'true' : 'false'" }
+					data-on:click={ "$power_source = '" + fonte + "'" }
+					data-attr:aria-pressed={ "$power_source === '" + fonte + "' ? 'true' : 'false'" }
 					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>{ writtenSource(fonte) }</button>
 			}
 		</div>
-		<div data-show="$fonte === 'raca'" class="space-y-3">
+		<div data-show="$power_source === 'raca'" class="space-y-3">
 			@raceChoicesBlock(v)
 		</div>
-		<div data-show="$fonte === 'origem'" class="space-y-3">
+		<div data-show="$power_source === 'origem'" class="space-y-3">
 			@originChoicesBlock(v)
 		</div>
-		<div data-show="$fonte === 'classe'" class="space-y-3">
+		<div data-show="$power_source === 'classe'" class="space-y-3">
 			@classChoicesBlock(v)
 		</div>
 	}
@@ -137,7 +137,7 @@ templ attributeChoiceBlock(v View, escolha attributeChoice) {
 						aria-checked={ ui.AriaBool(contemTraco(escolha.Chosen, o.Valor)) }
 						aria-label={ o.Rotulo }
 						data-on:click={ thatTogglesAttributeGesture(o.Valor) }
-						data-attr:data-escolhido={ "$racaatributos.includes('" + o.Valor + "')" }
+						data-attr:data-escolhido={ "$race_attributes.includes('" + o.Valor + "')" }
 						class={ ui.BadgeClasses("inline-flex items-center border-grimorio-iron text-3xs uppercase tracking-wider text-muted-foreground data-[escolhido]:border-grimorio-gold/60 data-[escolhido]:bg-accent data-[escolhido]:text-grimorio-gold") }
 					>{ o.Rotulo }</button>
 				}
@@ -196,7 +196,7 @@ templ classChoicesBlock(v View) {
 			}
 			<input
 				type="search"
-				data-bind:poderbusca
+				data-bind:power_search
 				data-on:input__debounce.250ms={ sheetGet(v) }
 				value={ v.Powers.Search }
 				placeholder="Buscar poder…"

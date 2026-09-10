@@ -156,7 +156,7 @@ func powerSearch(v View) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<input type=\"search\" data-bind:poderbusca data-on:input__debounce.250ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<input type=\"search\" data-bind:power_search data-on:input__debounce.250ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -367,20 +367,20 @@ func passivesBlock(v View) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(v.Powers.Passives) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<section class=\"space-y-1.5\"><button type=\"button\" data-on:click=\"$passivas = !$passivas\" data-attr:aria-expanded=\"$passivas ? 'true' : 'false'\" class=\"flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\"><span data-show=\"!$passivas\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<section class=\"space-y-1.5\"><button type=\"button\" data-on:click=\"$show_passives = !$show_passives\" data-attr:aria-expanded=\"$show_passives ? 'true' : 'false'\" class=\"flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\"><span data-show=\"!$show_passives\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs("Passivas · mostrar (" + strconv.Itoa(len(v.Powers.Passives)) + ")")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 109, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 109, Col: 108}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</span> <span style=\"display:none\" data-show=\"$passivas\">Passivas · ocultar</span></button><div data-show=\"!$passivas\" class=\"space-y-1\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</span> <span style=\"display:none\" data-show=\"$show_passives\">Passivas · ocultar</span></button><div data-show=\"!$show_passives\" class=\"space-y-1\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -403,7 +403,7 @@ func passivesBlock(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</div><ul style=\"display:none\" data-show=\"$passivas\" class=\"space-y-1.5\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</div><ul style=\"display:none\" data-show=\"$show_passives\" class=\"space-y-1.5\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -466,7 +466,7 @@ func powerRowItem(v View, linha powerRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poder = $poder === '" + linha.ID + "' ? '' : '" + linha.ID + "'")
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("$power = $power === '" + linha.ID + "' ? '' : '" + linha.ID + "'")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 137, Col: 86}
 		}
@@ -479,7 +479,7 @@ func powerRowItem(v View, linha powerRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poder === '" + linha.ID + "' ? 'true' : 'false'")
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue("$power === '" + linha.ID + "' ? 'true' : 'false'")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 138, Col: 80}
 		}
@@ -526,7 +526,7 @@ func powerRowItem(v View, linha powerRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var23 string
-		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poder !== '" + linha.ID + "'")
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("$power !== '" + linha.ID + "'")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 146, Col: 53}
 		}
@@ -560,7 +560,7 @@ func powerRowItem(v View, linha powerRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poder === '" + linha.ID + "'")
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("$power === '" + linha.ID + "'")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 152, Col: 48}
 		}
@@ -963,9 +963,9 @@ func stanceButton(v View, linha powerRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var51 string
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poderdegraus = 0; $detalhe = 'postura-" + linha.Stance.Flag + "'")
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue("$stance_degrees = 0; $detail = 'postura-" + linha.Stance.Flag + "'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 209, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 209, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {
@@ -1043,9 +1043,9 @@ func stanceButton(v View, linha powerRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var56 string
-			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poderdegraus = 0; " + sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra"))
+			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("$stance_degrees = 0; " + sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 221, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 221, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 			if templ_7745c5c3_Err != nil {
@@ -1149,7 +1149,7 @@ func stanceStepperDialog(v View, linha powerRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<button type=\"button\" aria-label=\"Menos um degrau\" data-on:click=\"$poderdegraus = Math.max(0, $poderdegraus - 1)\" class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<button type=\"button\" aria-label=\"Menos um degrau\" data-on:click=\"$stance_degrees = Math.max(0, $stance_degrees - 1)\" class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1162,7 +1162,7 @@ func stanceStepperDialog(v View, linha powerRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "\">−</button> <span class=\"font-mono text-lg text-foreground\" data-text=\"$poderdegraus\"></span> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "\">−</button> <span class=\"font-mono text-lg text-foreground\" data-text=\"$stance_degrees\"></span> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1176,9 +1176,9 @@ func stanceStepperDialog(v View, linha powerRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var65 string
-			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue("$poderdegraus = Math.min(" + strconv.Itoa(linha.Stance.MaxSteps) + ", $poderdegraus + 1)")
+			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue("$stance_degrees = Math.min(" + strconv.Itoa(linha.Stance.MaxSteps) + ", $stance_degrees + 1)")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 248, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 248, Col: 114}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 			if templ_7745c5c3_Err != nil {
@@ -1237,9 +1237,9 @@ func stanceStepperDialog(v View, linha powerRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var70 string
-			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") + "; $detalhe = ''")
+			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/poderes/postura/"+linha.Stance.Flag+"/entra") + "; $detail = ''")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 258, Col: 99}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/powers.templ`, Line: 258, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
 			if templ_7745c5c3_Err != nil {

@@ -148,7 +148,7 @@ func TestTheStanceStepsComeFromTheLevelInTheClass(t *testing.T) {
 func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 	f, id := barbaro(t, 10)
 
-	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"poderdegraus":2}`); recusa != "" {
+	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":2}`); recusa != "" {
 		t.Fatalf("entrar foi recusado: %q", recusa)
 	}
 	// Base 2 + dois degraus de 1 PM = 4 PM sobre os 20 semeados.
@@ -172,7 +172,7 @@ func TestEnteringTheStanceChargesTheStepsAndRecordsThePayment(t *testing.T) {
 func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 	f, id := barbaro(t, 5)
 
-	recusa := powerCommand(t, f, id, "postura/furia/entra", `{"poderdegraus":3}`)
+	recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":3}`)
 	if !strings.Contains(recusa, "1 degraus") {
 		t.Errorf("a recusa não diz o teto: %q", recusa)
 	}
@@ -184,7 +184,7 @@ func TestAStanceAboveTheStepCeilingIsRefused(t *testing.T) {
 // ENCERRAR não devolve PM — é o que a tabela de posturas existe para lembrar.
 func TestEndingTheStanceGivesNoMpBack(t *testing.T) {
 	f, id := barbaro(t, 5)
-	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"poderdegraus":0}`); recusa != "" {
+	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); recusa != "" {
 		t.Fatalf("entrar foi recusado: %q", recusa)
 	}
 	antes := pm(t, f, id)
@@ -266,7 +266,7 @@ func TestAVariableCostCannotBeSpentFromTheSheet(t *testing.T) {
 func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 	f, id := barbaro(t, 5)
 
-	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"poderdegraus":0}`); recusa != "" {
+	if recusa := powerCommand(t, f, id, "postura/furia/entra", `{"stance_degrees":0}`); recusa != "" {
 		t.Fatalf("entrar foi recusado: %q", recusa)
 	}
 	efeitos := effects(t, f, id)
