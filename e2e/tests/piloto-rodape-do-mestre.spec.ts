@@ -46,7 +46,7 @@ const rodape = 'section[aria-label="Controles do mestre"]'
  * no DOM com `display:none`, e sem o filtro o `.first()` acertaria o escondido.
  * É o caso de 390px deste arquivo que exercita a segunda metade.
  */
-async function abreAFila(page: Page): Promise<void> {
+async function openTheQueue(page: Page): Promise<void> {
   await page
     .getByRole('button', { name: /^Abrir a iniciativa/ })
     .filter({ visible: true })
@@ -185,7 +185,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     // O CONTROLE: sem linha na fila não há o que medir, e um `toBeLessThan`
     // sobre uma lista vazia passa verde dizendo nada. O "Adicionar grupo" é
     // idempotente, então chamá-lo aqui não depende do que outro spec deixou.
-    await abreAFila(page)
+    await openTheQueue(page)
     await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
     const linha = page.locator('#mesa ol li').first()
     await expect(linha).toBeVisible()
@@ -251,7 +251,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     })
 
     await page.goto(MESA)
-    await abreAFila(page)
+    await openTheQueue(page)
     await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
 
     const olho = page

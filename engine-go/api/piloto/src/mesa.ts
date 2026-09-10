@@ -1,5 +1,5 @@
-import { casaDoEstilo, deslizaAPeca } from '@/lib/token-move'
-import { piscarVital, pulsarVez, surgir } from '@/lib/turn-juice'
+import { squareFromStyle, slideTheToken } from '@/lib/token-move'
+import { piscarVital, pulsarVez, emerge } from '@/lib/turn-juice'
 
 /**
  * A ILHA DA MESA — o que anima quando o estado chega pelo fio (ALE-174).
@@ -31,7 +31,7 @@ import { piscarVital, pulsarVez, surgir } from '@/lib/turn-juice'
  * um ponto só decide, e é ele que se conferem ligando a preferência no sistema.
  */
 
-const MOVIMENTO_REDUZIDO = '(prefers-reduced-motion: reduce)'
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
 
 /**
  * Liga o deslize das peças ao remendo do servidor.
@@ -54,7 +54,7 @@ const MOVIMENTO_REDUZIDO = '(prefers-reduced-motion: reduce)'
  * contra os 16,7ms de um quadro. O filtro de atributo é o que compra isso: sem
  * ele o observador acordaria em toda mudança de classe da Mesa.
  */
-function ligaODeslizeDasPecas(parado: MediaQueryList): void {
+function wireTheTokenSlide(parado: MediaQueryList): void {
   new MutationObserver((registros) => {
     if (parado.matches) return
     for (const registro of registros) {
@@ -66,8 +66,8 @@ function ligaODeslizeDasPecas(parado: MediaQueryList): void {
       // dedo está conduzindo.
       if (alvo.classList.contains('tabuleiro-peca-fantasma')) continue
 
-      const de = casaDoEstilo(registro.oldValue)
-      const para = casaDoEstilo(alvo.getAttribute('style'))
+      const de = squareFromStyle(registro.oldValue)
+      const para = squareFromStyle(alvo.getAttribute('style'))
       if (!de || !para) continue
 
       // O lado da casa vem do COMPUTADO e não do atributo: `--quadrado` mora na
@@ -75,7 +75,7 @@ function ligaODeslizeDasPecas(parado: MediaQueryList): void {
       const quadrado = Number.parseFloat(getComputedStyle(alvo).getPropertyValue('--quadrado'))
       if (!Number.isFinite(quadrado) || quadrado <= 0) continue
 
-      deslizaAPeca(alvo, de, para, quadrado)
+      slideTheToken(alvo, de, para, quadrado)
     }
   }).observe(document.body, {
     subtree: true,
@@ -118,7 +118,7 @@ function ligaODeslizeDasPecas(parado: MediaQueryList): void {
  * gatilho é a mudança do TEXTO, que é o número de verdade, e o `data-vital` diz
  * apenas QUAL poço é — não repete o valor.
  */
-function ligaAPiscadaDoVital(parado: MediaQueryList): void {
+function wireTheVitalBlink(parado: MediaQueryList): void {
   new MutationObserver((registros) => {
     if (parado.matches) return
     for (const registro of registros) {
@@ -157,7 +157,7 @@ function ligaAPiscadaDoVital(parado: MediaQueryList): void {
 }
 
 /** `"39/40"` → 39. Nulo quando a fração não é uma fração. */
-function oAtualDaFracao(texto: string | null): number | null {
+function currentOfTheFraction(texto: string | null): number | null {
   const m = /^\s*(-?\d+)\s*\//.exec(texto ?? '')
   return m ? Number(m[1]) : null
 }
@@ -166,14 +166,14 @@ function oAtualDaFracao(texto: string | null): number | null {
  * A PISCADA na ficha dentro da sessão.
  *
  * Mesmo efeito, outro gatilho: aqui o número é o TEXTO da fração, então o que se
- * observa é `characterData`. Ver o cabeçalho de `ligaAPiscadaDoVital` para por
+ * observa é `characterData`. Ver o cabeçalho de `wireTheVitalBlink` para por
  * que não é um papel ARIA.
  *
  * Ela pinta a FILEIRA do vital — o `<div>` que tem o rótulo, a barra, a fração e
  * os passos —, que é o equivalente da linha da fila: a caixa que diz DE QUEM é o
  * número que mudou. Piscar só a fração seria piscar dois dígitos.
  */
-function ligaAPiscadaDaFicha(parado: MediaQueryList): void {
+function wireTheSheetBlink(parado: MediaQueryList): void {
   new MutationObserver((registros) => {
     if (parado.matches) return
     for (const registro of registros) {
@@ -181,8 +181,8 @@ function ligaAPiscadaDaFicha(parado: MediaQueryList): void {
       const span = texto.parentElement
       if (!span?.hasAttribute('data-vital')) continue
 
-      const antes = oAtualDaFracao(registro.oldValue)
-      const agora = oAtualDaFracao(texto.textContent)
+      const antes = currentOfTheFraction(registro.oldValue)
+      const agora = currentOfTheFraction(texto.textContent)
       if (antes === null || agora === null || antes === agora) continue
 
       const fileira = span.parentElement
@@ -239,7 +239,7 @@ function ligaAPiscadaDaFicha(parado: MediaQueryList): void {
  * Escrever a linha com um comentário dizendo "deve funcionar" seria dívida com
  * cara de entrega.
  */
-function ligaOPulsoDaVez(parado: MediaQueryList): void {
+function wireTheTurnPulse(parado: MediaQueryList): void {
   new MutationObserver((registros) => {
     if (parado.matches) return
     for (const registro of registros) {
@@ -272,7 +272,7 @@ function ligaOPulsoDaVez(parado: MediaQueryList): void {
  * segunda condição chega dentro de um `<ul>` que já existe — animar só o
  * contêiner faria a primeira aparecer e as seguintes não.
  */
-function ligaOSurgirDaCondicao(parado: MediaQueryList): void {
+function wireTheConditionEmerging(parado: MediaQueryList): void {
   new MutationObserver((registros) => {
     if (parado.matches) return
     for (const registro of registros) {
@@ -283,16 +283,16 @@ function ligaOSurgirDaCondicao(parado: MediaQueryList): void {
         const crachas = elemento.matches('[data-condicao]')
           ? [elemento]
           : [...elemento.querySelectorAll('[data-condicao]')]
-        for (const cracha of crachas) surgir(cracha)
+        for (const cracha of crachas) emerge(cracha)
       }
     }
   }).observe(document.body, { subtree: true, childList: true })
 }
 
-const PARADO = window.matchMedia(MOVIMENTO_REDUZIDO)
+const STILL = window.matchMedia(REDUCED_MOTION)
 
-ligaODeslizeDasPecas(PARADO)
-ligaAPiscadaDoVital(PARADO)
-ligaAPiscadaDaFicha(PARADO)
-ligaOPulsoDaVez(PARADO)
-ligaOSurgirDaCondicao(PARADO)
+wireTheTokenSlide(STILL)
+wireTheVitalBlink(STILL)
+wireTheSheetBlink(STILL)
+wireTheTurnPulse(STILL)
+wireTheConditionEmerging(STILL)

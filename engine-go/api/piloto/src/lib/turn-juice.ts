@@ -119,7 +119,7 @@ export function pulsarVez(alvo: Element | null | undefined): void {
  *
  * @example surgir(cracha)
  */
-export function surgir(alvo: Element | null | undefined): void {
+export function emerge(alvo: Element | null | undefined): void {
   if (!podeAnimar(alvo)) return
   alvo.animate(
     [

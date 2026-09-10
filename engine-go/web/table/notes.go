@@ -219,14 +219,14 @@ const notesWidthKey = "t20:notas-largura"
 // por cima dele. Chave própria, e ela GRUDA como as outras duas escolhas.
 const notesFloatKey = "t20:notas-flutua"
 
-// alternaOFlutuar é o segundo eixo da faixa, e ele é o ÚNICO que merece um
+// toggleFloating é o segundo eixo da faixa, e ele é o ÚNICO que merece um
 // controle separado.
 //
 // "Escrever / Ler / Lado a lado / Empilhado" é O QUE se mostra e como as duas
 // metades se arranjam — um eixo com quatro valores. "Encostada ou flutuando" é
 // ONDE o painel inteiro vive, e isso vale para os quatro. Juntar os dois numa
 // fileira daria oito botões para descrever duas perguntas.
-func alternaOFlutuar() string {
+func toggleFloating() string {
 	return fmt.Sprintf(
 		"$notasflutua = !$notasflutua; localStorage.setItem('%s', $notasflutua)", notesFloatKey)
 }
@@ -244,27 +244,27 @@ const notesMinWidth = 352 // 22rem
 //
 // 70% do palco deixa o mapa com quase um terço em qualquer janela, que é o que
 // mantém as notas ao lado do tabuleiro em vez de no lugar dele.
-func oTetoDaLargura() string {
+func widthCeiling() string {
 	return "(document.getElementById('mesa-notas').parentElement.getBoundingClientRect().width * 0.7)"
 }
 
-// oPassoDaLargura é a seta do teclado, e ela existe porque **gesto nunca é o
+// widthKeyStep é a seta do teclado, e ela existe porque **gesto nunca é o
 // único caminho**: uma divisa que só responde a arrasto é uma preferência que
 // quem não usa ponteiro não tem.
 //
 // 32px por seta, e o `Home` devolve ao padrão — o número redondo é escolha, e o
 // que importa é ele ser grande o bastante para atravessar a faixa em poucos
 // toques e pequeno o bastante para ajustar.
-func oPassoDaLargura() string {
+func widthKeyStep() string {
 	return fmt.Sprintf(
 		"if (evt.key === 'ArrowLeft' || evt.key === 'ArrowRight') { evt.preventDefault(); "+
 			"$notaslargura = Math.min(%s, Math.max(%d, %s + (evt.key === 'ArrowLeft' ? 32 : -32))); %s } "+
 			"if (evt.key === 'Home') { evt.preventDefault(); $notaslargura = 0; localStorage.removeItem('%s') }",
-		oTetoDaLargura(), notesMinWidth, aLarguraDeAgora(), guardaALargura(), notesWidthKey,
+		widthCeiling(), notesMinWidth, widthRightNow(), storeTheWidth(), notesWidthKey,
 	)
 }
 
-// aLarguraDeAgora é o valor de PARTIDA de um ajuste, e ele é medido na tela em
+// widthRightNow é o valor de PARTIDA de um ajuste, e ele é medido na tela em
 // vez de cair num padrão.
 //
 // Enquanto o mestre não escolhe, `$notaslargura` é zero e quem manda é o
@@ -272,29 +272,29 @@ func oPassoDaLargura() string {
 // PRIMEIRA seta SALTAR: medido, a coluna ia de 704px para 384 num toque, porque
 // o piso de 22rem não é o que está na tela. A divisa tem de continuar de onde a
 // coluna está.
-func aLarguraDeAgora() string {
+func widthRightNow() string {
 	return "($notaslargura || document.getElementById('mesa-notas').getBoundingClientRect().width)"
 }
 
-// oArrastoDaLargura é o gesto de ponteiro. A conta é sobre a borda DIREITA da
+// widthDragStarts é o gesto de ponteiro. A conta é sobre a borda DIREITA da
 // coluna, que não se move: arrastar para a esquerda cresce as notas.
-func oArrastoDaLargura() string {
+func widthDragStarts() string {
 	return "evt.preventDefault(); $notasarrastando = true; el.setPointerCapture(evt.pointerId)"
 }
 
-func oMoverDaLargura() string {
+func widthFollowsPointer() string {
 	return fmt.Sprintf(
 		"if ($notasarrastando) { const c = document.getElementById('mesa-notas').getBoundingClientRect(); "+
 			"$notaslargura = Math.min(%s, Math.max(%d, c.right - evt.clientX)) }",
-		oTetoDaLargura(), notesMinWidth,
+		widthCeiling(), notesMinWidth,
 	)
 }
 
-func oSoltarDaLargura() string {
-	return "if ($notasarrastando) { $notasarrastando = false; " + guardaALargura() + " }"
+func widthDragDrops() string {
+	return "if ($notasarrastando) { $notasarrastando = false; " + storeTheWidth() + " }"
 }
 
-func guardaALargura() string {
+func storeTheWidth() string {
 	return fmt.Sprintf("localStorage.setItem('%s', $notaslargura)", notesWidthKey)
 }
 

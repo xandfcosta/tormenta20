@@ -60,13 +60,13 @@ templ notesSplitter() {
 		tabindex="0"
 		data-show="$notasabertas"
 		style="display:none"
-		data-attr:aria-valuenow={ "Math.round(" + aLarguraDeAgora() + ")" }
+		data-attr:aria-valuenow={ "Math.round(" + widthRightNow() + ")" }
 		aria-valuemin="352"
-		data-attr:aria-valuemax={ "Math.round(" + oTetoDaLargura() + ")" }
-		data-on:pointerdown={ oArrastoDaLargura() }
-		data-on:pointermove__window={ oMoverDaLargura() }
-		data-on:pointerup__window={ oSoltarDaLargura() }
-		data-on:keydown={ oPassoDaLargura() }
+		data-attr:aria-valuemax={ "Math.round(" + widthCeiling() + ")" }
+		data-on:pointerdown={ widthDragStarts() }
+		data-on:pointermove__window={ widthFollowsPointer() }
+		data-on:pointerup__window={ widthDragDrops() }
+		data-on:keydown={ widthKeyStep() }
 		class="notas-divisa hidden shrink-0 cursor-col-resize rounded-full bg-grimorio-iron outline-none transition-colors hover:bg-grimorio-gold focus-visible:bg-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:block"
 	></div>
 }
@@ -325,7 +325,7 @@ templ floatToggle() {
 		data-attr:aria-pressed="$notasflutua ? 'true' : 'false'"
 		data-attr:title="$notasflutua ? 'Encostar as notas ao lado do mapa' : 'Flutuar as notas sobre o mapa'"
 		aria-label="Flutuar as notas sobre o mapa"
-		data-on:click={ alternaOFlutuar() }
+		data-on:click={ toggleFloating() }
 		class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
 	>
 		@ui.Icon("PictureInPicture2", "size-3.5")

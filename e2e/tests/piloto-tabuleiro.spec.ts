@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
-import { abreOTabuleiro, mesaDescartavel, poeUmaPecaNoMapa } from './support/mesa'
+import { openTheBoard, disposableTable, putATokenOnTheMap } from './support/table'
 
 /**
  * O TABULEIRO da Mesa em Datastar (ALE-264, item 7).
@@ -87,9 +87,9 @@ const quadrado = (page: Page) =>
  * o CLAUDE.md desta casa persegue.
  */
 test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
+    await openTheBoard(page, mesa)
 
     await page.getByRole('button', { name: 'Aproximar o mapa' }).click()
     await page.getByRole('button', { name: 'Aproximar o mapa' }).click()
@@ -131,9 +131,9 @@ test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => 
  * duas erradas do mesmo jeito.
  */
 test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
+    await openTheBoard(page, mesa)
     // Aproxima ao máximo: com a casa grande, um erro de conversão de um quadrado
     // já sai da caixa e a asserção o pega. No zoom padrão um erro pequeno pode
     // cair dentro da mesma casa por sorte.
@@ -187,9 +187,9 @@ test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ 
  * mesma.
  */
 test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
+    await openTheBoard(page, mesa)
 
     // ARRASTA A VISTA um bom pedaço, com a ferramenta da mão. O deslocamento é
     // deliberadamente NÃO múltiplo do quadrado: um múltiplo esconderia um erro
@@ -256,9 +256,9 @@ test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', as
  * navegador tem viewport para recortar.
  */
 test('o gabarito desenhado cabe dentro do SVG que o carrega', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
+    await openTheBoard(page, mesa)
 
     await ferramenta(page, 'Gabarito').click()
     await camadaDe(page, /Pôr o gabarito/).click({ position: { x: 300, y: 200 } })
@@ -306,10 +306,10 @@ test('o gabarito desenhado cabe dentro do SVG que o carrega', async ({ page }) =
  * "a peça está dentro" é verdade também numa janela que nunca saiu do lugar.
  */
 test('a janela vai atrás do foco quando a peça está fora dela', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
-    await poeUmaPecaNoMapa(page)
+    await openTheBoard(page, mesa)
+    await putATokenOnTheMap(page)
 
     const cena = page.locator('.tabuleiro-cena')
     const peca = page.locator('.tabuleiro-peca')
@@ -356,9 +356,9 @@ test('a janela vai atrás do foco quando a peça está fora dela', async ({ page
  * para um app que ignorasse a tecla e enchesse sempre.
  */
 test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
+    await openTheBoard(page, mesa)
     await ferramenta(page, 'Difícil').click()
 
     const casas = camadaDe(page, /Pintar terreno/)
@@ -412,10 +412,10 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
  * ponto que ele marcou e mexer nele.
  */
 test('o marcador continua clicável por baixo da camada de mover', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
-    await poeUmaPecaNoMapa(page)
+    await openTheBoard(page, mesa)
+    await putATokenOnTheMap(page)
 
     // `exact` porque o nome do botão do trilho é PREFIXO do nome da camada de
     // clique ("Marcar um lugar — escolha a casa"), e sem ele o seletor casa com
@@ -474,10 +474,10 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
  * silêncio como defeito, o caso confere que a peça TEM o gesto pendurado.
  */
 test('a seta e a distância aparecem durante o arrasto da peça', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
-    await poeUmaPecaNoMapa(page)
+    await openTheBoard(page, mesa)
+    await putATokenOnTheMap(page)
     await page.getByLabel('Centralizar nas peças').click()
 
     const peca = page.locator('.tabuleiro-peca').first()
@@ -544,7 +544,7 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
  * janela — inalcançáveis, e o zoom é de TODO MUNDO.
  */
 test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
     const campanha = mesa.split('/')[2]
     // O ACERVO pela porta de verdade — a mesma que a aba de lugares usa. Três
@@ -556,7 +556,7 @@ test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ pag
       expect(criado.ok(), `semear o lugar ${nome}: ${criado.status()}`).toBeTruthy()
     }
 
-    await abreOTabuleiro(page, mesa)
+    await openTheBoard(page, mesa)
     await page.setViewportSize({ width: 390, height: 844 })
     await page.waitForTimeout(300)
 
@@ -597,10 +597,10 @@ test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ pag
  * os seis botões no ar.
  */
 test('o submenu de duplicar só entra no caminho do teclado quando é aberto', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
-    await poeUmaPecaNoMapa(page)
+    await openTheBoard(page, mesa)
+    await putATokenOnTheMap(page)
 
     const botoesDoSubmenu = () =>
       page.evaluate(
@@ -699,10 +699,10 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
  * CTRL+V põe outro.
  */
 test('copiar guarda o modo, e cada CTRL+V põe outro igual', async ({ page }) => {
-  const { mesa, apagar } = await mesaDescartavel(page)
+  const { mesa, apagar } = await disposableTable(page)
   try {
-    await abreOTabuleiro(page, mesa)
-    await poeUmaPecaNoMapa(page)
+    await openTheBoard(page, mesa)
+    await putATokenOnTheMap(page)
 
     // A FAIXA da área começa VAZIA, e este é o controle: sem ele, uma faixa que
     // aparecesse sempre passaria pelas asserções de baixo sem provar nada.

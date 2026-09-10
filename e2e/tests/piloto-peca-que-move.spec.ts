@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
-import { abreOTabuleiro, mesaDescartavel, poeUmaPecaNoMapa } from './support/mesa'
+import { openTheBoard, disposableTable, putATokenOnTheMap } from './support/table'
 
 /**
  * A PEÇA QUE MOVEU DESLIZA, em vez de teleportar (ALE-174, P3).
@@ -58,7 +58,7 @@ async function posicoesPintadas(page: Page, gesto: () => Promise<void>, ms = 800
 }
 
 /** Arrasta a peça `casas` para a direita, deixando o movimento PROPOSTO. */
-async function arrasta(page: Page, casas: number): Promise<void> {
+async function drag(page: Page, casas: number): Promise<void> {
   const peca = page.locator('.tabuleiro-peca').first()
   const caixa = await peca.boundingBox()
   if (!caixa) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
@@ -73,23 +73,23 @@ async function arrasta(page: Page, casas: number): Promise<void> {
 }
 
 /** Arrasta, arma a sonda e confirma — nesta ordem, ver `posicoesPintadas`. */
-async function deslizeAoConfirmar(page: Page, casas: number): Promise<number[]> {
-  await arrasta(page, casas)
+async function slideOnConfirm(page: Page, casas: number): Promise<number[]> {
+  await drag(page, casas)
   return posicoesPintadas(page, () => page.getByRole('button', { name: 'Confirmar' }).click())
 }
 
-async function umTabuleiroComUmaPeca(page: Page) {
-  const mesa = await mesaDescartavel(page)
-  await abreOTabuleiro(page, mesa.mesa)
-  await poeUmaPecaNoMapa(page)
+async function aBoardWithOneToken(page: Page) {
+  const mesa = await disposableTable(page)
+  await openTheBoard(page, mesa.mesa)
+  await putATokenOnTheMap(page)
   await page.getByLabel('Centralizar nas peças').click()
   return mesa
 }
 
 test('confirmar um movimento desliza a peça em vez de teleportá-la', async ({ page }) => {
-  const { apagar } = await umTabuleiroComUmaPeca(page)
+  const { apagar } = await aBoardWithOneToken(page)
   try {
-    const posicoes = await deslizeAoConfirmar(page, 4)
+    const posicoes = await slideOnConfirm(page, 4)
 
     // TRÊS é o piso do que se pode chamar de deslize: origem, destino e ao menos
     // um lugar no meio. Um teleporte dá exatamente duas.
@@ -117,12 +117,12 @@ test('confirmar um movimento desliza a peça em vez de teleportá-la', async ({ 
  * causa de verdade.
  */
 test('aproximar o mapa não faz as peças deslizarem', async ({ page }) => {
-  const { apagar } = await umTabuleiroComUmaPeca(page)
+  const { apagar } = await aBoardWithOneToken(page)
   try {
     // O CONTROLE vem primeiro, e é a metade que importa: um movimento de
     // verdade TEM de deslizar nesta mesma página. Sem ele, "o zoom não animou"
     // seria verdade também sobre uma sonda que não está amostrando nada.
-    const movendo = await deslizeAoConfirmar(page, 3)
+    const movendo = await slideOnConfirm(page, 3)
     expect(movendo.length, 'o CONTROLE não deslizou: a sonda não está medindo').toBeGreaterThan(2)
 
     const aproximando = await posicoesPintadas(page, () => page.getByLabel('Aproximar').click(), 600)

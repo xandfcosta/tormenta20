@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
-import { abreOTabuleiro, fechaAFila, mesaDescartavel, poeUmCombatenteNaFila } from './support/mesa'
+import { openTheBoard, closeTheQueue, disposableTable, putACombatantInTheQueue } from './support/table'
 
 /**
  * A FILA EXPLICA O QUE MUDOU: a piscada do vital e o pulso da vez (ALE-174).
@@ -35,7 +35,7 @@ test.use({ storageState: '.auth/user.json' })
  * anterior: uma sonda de vida longa mede tudo o que acontece na janela dela, e a
  * janela é parte do desenho.
  */
-async function animacoesDaFila(
+async function queueAnimations(
   page: Page,
   gesto: () => Promise<void>,
   ms = 2500,
@@ -61,18 +61,18 @@ async function animacoesDaFila(
   return { veus: m.veus, linhasAnimando: m.linhas }
 }
 
-async function umaFilaComDois(page: Page) {
-  const mesa = await mesaDescartavel(page)
-  await abreOTabuleiro(page, mesa.mesa)
-  await poeUmCombatenteNaFila(page, 'Ogro do E2E', 40)
-  await poeUmCombatenteNaFila(page, 'Anao do E2E', 30)
+async function aQueueOfTwo(page: Page) {
+  const mesa = await disposableTable(page)
+  await openTheBoard(page, mesa.mesa)
+  await putACombatantInTheQueue(page, 'Ogro do E2E', 40)
+  await putACombatantInTheQueue(page, 'Anao do E2E', 30)
   return mesa
 }
 
 test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async ({ page }) => {
-  const { apagar } = await umaFilaComDois(page)
+  const { apagar } = await aQueueOfTwo(page)
   try {
-    const ferindo = await animacoesDaFila(page, () =>
+    const ferindo = await queueAnimations(page, () =>
       page.getByRole('button', { name: /^Ferir/ }).first().click(),
     )
     expect(
@@ -111,10 +111,10 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
 })
 
 test('entrar na vez pulsa a linha do combatente que entrou', async ({ page }) => {
-  const { apagar } = await umaFilaComDois(page)
+  const { apagar } = await aQueueOfTwo(page)
   try {
     // Pelo ajudante e não pelo clique cru: ele ESPERA a gaveta fechar.
-    await fechaAFila(page)
+    await closeTheQueue(page)
 
     // A CENA PRECISA COMEÇAR, senão não há vez para entrar: o `PodeAvancar` é
     // `SceneActive && len(Initiative) > 0`, e sem ele o botão de avanço nasce
@@ -124,7 +124,7 @@ test('entrar na vez pulsa a linha do combatente que entrou', async ({ page }) =>
     await page.getByRole('button', { name: 'Iniciar cena' }).click()
     await expect(page.getByRole('button', { name: /^Começar:/ })).toBeEnabled()
 
-    const comecando = await animacoesDaFila(page, () =>
+    const comecando = await queueAnimations(page, () =>
       page.getByRole('button', { name: /^Começar:/ }).first().click(),
     )
     expect(
@@ -146,7 +146,7 @@ test('entrar na vez pulsa a linha do combatente que entrou', async ({ page }) =>
  * escolhido.
  */
 test('aplicar uma condição faz o crachá dela surgir', async ({ page }) => {
-  const { apagar } = await umaFilaComDois(page)
+  const { apagar } = await aQueueOfTwo(page)
   try {
     await page.evaluate(() => {
       const w = window as unknown as { __c: number }

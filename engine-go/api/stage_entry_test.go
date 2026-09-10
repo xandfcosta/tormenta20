@@ -25,8 +25,8 @@ import (
 // precisa entrar. Enumerar é remendo; o que restauraria a amostragem seria a
 // cena nova não poder existir fora desta lista, e isso não é verdade hoje.
 
-// cenaDePalco é uma cena de seleção montada e pronta para ser pedida.
-type cenaDePalco struct {
+// stageScene é uma cena de seleção montada e pronta para ser pedida.
+type stageScene struct {
 	nome string
 	rota string
 	// itens é quantos itens de verdade o trilho tem, SEM a vaga do fim. Ele é o
@@ -40,11 +40,11 @@ type cenaDePalco struct {
 	nomesNoTrilho []string
 }
 
-// asCenasDePalco monta as duas com TRÊS itens cada, e três não é número redondo
+// stageScenes monta as duas com TRÊS itens cada, e três não é número redondo
 // escolhido por gosto: com um item só não há vizinho nenhum (as duas pontas
 // viram espaçador), e é justamente o clique no retrato vizinho que o guarda
 // precisa visitar. Com três, o do meio tem os dois.
-func asCenasDePalco(t *testing.T) []cenaDePalco {
+func stageScenes(t *testing.T) []stageScene {
 	t.Helper()
 
 	elenco := novoPiloto(t)
@@ -58,7 +58,7 @@ func asCenasDePalco(t *testing.T) []cenaDePalco {
 	seedCampaign(t, campanhas.s, campanhas.mestre)
 	seedCampaign(t, campanhas.s, campanhas.mestre)
 
-	return []cenaDePalco{
+	return []stageScene{
 		{nome: "o elenco", rota: "/personagens", itens: 3, quem: elenco.jogador, f: elenco,
 			nomesNoTrilho: []string{"Anã Clériga", "Elfo Ladino"}},
 		{nome: "as campanhas", rota: "/campanhas", itens: 3, quem: campanhas.mestre, f: campanhas,
@@ -66,7 +66,7 @@ func asCenasDePalco(t *testing.T) []cenaDePalco {
 	}
 }
 
-func (c cenaDePalco) tela(t *testing.T) string {
+func (c stageScene) screen(t *testing.T) string {
 	t.Helper()
 	return c.f.pede(t, c.quem, http.MethodGet, c.rota, "").Body.String()
 }
@@ -82,8 +82,8 @@ func (c cenaDePalco) tela(t *testing.T) string {
 // O guarda falha com o TRECHO ofensor e com o NOME da cena, que é a diferença
 // entre "conserte isto" e "procure".
 func TestEveryGestureThatMovesTheCursorSaysTheDirection(t *testing.T) {
-	for _, cena := range asCenasDePalco(t) {
-		tela := cena.tela(t)
+	for _, cena := range stageScenes(t) {
+		screen := cena.screen(t)
 
 		// O CONTROLE vem primeiro: sem ele, "não achei escritor solto" é
 		// indistinguível de "não achei escritor nenhum" — e as duas passam
@@ -93,7 +93,7 @@ func TestEveryGestureThatMovesTheCursorSaysTheDirection(t *testing.T) {
 		// trilho escreve o cursor no clique e no foco, e a vaga do fim também.
 		// Os vizinhos acrescentam mais, e por isso é piso e não igualdade.
 		piso := 2 * (cena.itens + 1)
-		escritores := regexp.MustCompile(`\$cursor = \d+`).FindAllString(tela, -1)
+		escritores := regexp.MustCompile(`\$cursor = \d+`).FindAllString(screen, -1)
 		if len(escritores) < piso {
 			t.Fatalf("%s: só %d gestos movem o cursor, e o desenho pede ao menos %d — o canal não está aberto, e a ausência abaixo não seria evidência",
 				cena.nome, len(escritores), piso)
@@ -102,7 +102,7 @@ func TestEveryGestureThatMovesTheCursorSaysTheDirection(t *testing.T) {
 		// Todo `$cursor =` tem de vir precedido da guarda que escreve o sentido.
 		// A expressão inteira é `if ($indice != N) { … } $cursor = ID`, então
 		// basta olhar o que vem ANTES na mesma expressão.
-		for _, atributo := range regexp.MustCompile(`data-on:(?:click|focusin)="([^"]*\$cursor = \d+[^"]*)"`).FindAllStringSubmatch(tela, -1) {
+		for _, atributo := range regexp.MustCompile(`data-on:(?:click|focusin)="([^"]*\$cursor = \d+[^"]*)"`).FindAllStringSubmatch(screen, -1) {
 			gesto := atributo[1]
 			if !strings.Contains(gesto, "$sentido") || !strings.Contains(gesto, "$indice") {
 				t.Errorf("%s: um gesto move o cursor sem dizer o sentido: %q — o palco entraria pelo lado errado, em silêncio", cena.nome, gesto)
@@ -118,21 +118,21 @@ func TestEveryGestureThatMovesTheCursorSaysTheDirection(t *testing.T) {
 // delas deixaria a animação viva e sem alvo — e o sintoma seria "metade do palco
 // entra", que ninguém liga a um seletor de CSS.
 func TestTheStageHasTheTwoPartsThatAnimate(t *testing.T) {
-	for _, cena := range asCenasDePalco(t) {
-		tela := cena.tela(t)
+	for _, cena := range stageScenes(t) {
+		screen := cena.screen(t)
 
 		for _, parte := range []string{"palco-retrato", "palco-placa"} {
-			if !strings.Contains(tela, parte) {
+			if !strings.Contains(screen, parte) {
 				t.Errorf("%s não tem %q: a animação de entrada ficaria sem alvo", cena.nome, parte)
 			}
 		}
 		// E a classe que ENTRA é escrita por `data-class`, não pelo `class`
 		// fixo: no `class` ela nasceria em todos os palcos ao mesmo tempo, e a
 		// animação tocaria uma vez só, na carga.
-		if !strings.Contains(tela, "palco-entra-adiante") || !strings.Contains(tela, "palco-entra-atras") {
+		if !strings.Contains(screen, "palco-entra-adiante") || !strings.Contains(screen, "palco-entra-atras") {
 			t.Errorf("%s não escreve as duas direções da entrada", cena.nome)
 		}
-		if strings.Contains(tela, `class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2 palco-entra`) {
+		if strings.Contains(screen, `class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2 palco-entra`) {
 			t.Errorf("%s pôs a classe de entrada no `class` fixo: ela tocaria na carga e nunca mais", cena.nome)
 		}
 	}
@@ -146,10 +146,10 @@ func TestTheStageHasTheTwoPartsThatAnimate(t *testing.T) {
 // pelo lado errado, porque `undefined >= undefined` é `false`. O unitário do
 // `ui` prende a FRASE; este prende que a cena de fato a escreve.
 func TestEverySelectionSceneDeclaresTheSignalsTheGestureWrites(t *testing.T) {
-	for _, cena := range asCenasDePalco(t) {
-		tela := cena.tela(t)
+	for _, cena := range stageScenes(t) {
+		screen := cena.screen(t)
 		for _, sinal := range []string{"cursor:", "sentido:", "indice:"} {
-			if !strings.Contains(tela, sinal) {
+			if !strings.Contains(screen, sinal) {
 				t.Errorf("%s não declara %q, e o gesto escreve nele", cena.nome, sinal)
 			}
 		}
@@ -166,10 +166,10 @@ func TestEverySelectionSceneDeclaresTheSignalsTheGestureWrites(t *testing.T) {
 // O `ui.TomeSheet` NÃO é isto e continua de pé: ele é a folha das telas de
 // FORMULÁRIO (abrir campanha, entrar, forjar, a ficha), e é a identidade delas.
 func TestNoSelectionSceneDrawsTheLeatherBook(t *testing.T) {
-	for _, cena := range asCenasDePalco(t) {
-		tela := cena.tela(t)
+	for _, cena := range stageScenes(t) {
+		screen := cena.screen(t)
 		for _, morta := range []string{"grimorio-book", "grimorio-leaf"} {
-			if strings.Contains(tela, morta) {
+			if strings.Contains(screen, morta) {
 				t.Errorf("%s escreve %q, e essa classe não existe mais na folha: a caixa sairia sem estilo nenhum", cena.nome, morta)
 			}
 		}
@@ -191,13 +191,13 @@ func TestNoSelectionSceneDrawsTheLeatherBook(t *testing.T) {
 // já divergiram neste ponto exato depois da ALE-297, que deu o marcador com nome
 // às campanhas e deixou o elenco com o monograma.
 func TestEveryRailMarkerSaysTheName(t *testing.T) {
-	for _, cena := range asCenasDePalco(t) {
-		tela := cena.tela(t)
+	for _, cena := range stageScenes(t) {
+		screen := cena.screen(t)
 
 		// O trilho da cena, e só ele: a mesma frase aparece no palco e no
 		// dossiê, e procurar na página inteira acharia o palco e passaria verde
 		// sobre um trilho de duas letras.
-		trilho := regexp.MustCompile(`(?s)<div[^>]*data-nav-region="rail"[^>]*>(.*?)</div>\s*</div>`).FindStringSubmatch(tela)
+		trilho := regexp.MustCompile(`(?s)<div[^>]*data-nav-region="rail"[^>]*>(.*?)</div>\s*</div>`).FindStringSubmatch(screen)
 		if trilho == nil {
 			t.Fatalf("%s não tem trilho: o guarda não mediu nada", cena.nome)
 		}
