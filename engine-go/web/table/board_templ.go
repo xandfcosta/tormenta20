@@ -2110,9 +2110,9 @@ func planToken(v BoardView, p boardToken) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var93 string
-		templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.ResolveAttributeValue(tokenStyling(p.ID, v.ArrastaAPeca == p.ID))
+		templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.ResolveAttributeValue(tokenStyling(p.ID, dragsItself(v, p.ID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 900, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 900, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var93)
 		if templ_7745c5c3_Err != nil {

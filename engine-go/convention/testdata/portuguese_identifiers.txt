@@ -206,7 +206,6 @@ pedeNoPiloto
 pedeOLivro
 pedidaOuTodas
 pegaAVista
-pegaParaArrastar
 periciaTotal
 permitidos
 PISO_DA_CINZEL

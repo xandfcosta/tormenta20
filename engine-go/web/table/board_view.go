@@ -915,7 +915,7 @@ func clickedPointStop(v BoardView) string {
 // em cima do outro, e a regra do `nextStepOrigin` passou a se cumprir sozinha: a
 // próxima parada conta do fim da trilha porque é lá que a peça está.
 
-// pegaParaArrastar escreve o `pointerdown`: marca quem está sendo arrastado e
+// startsTheDrag escreve o `pointerdown`: marca quem está sendo arrastado e
 // guarda o ponto de partida.
 //
 // NÃO chama `setPointerCapture`, e a ausência é deliberada. Quem faz o gesto
@@ -927,10 +927,40 @@ func clickedPointStop(v BoardView) string {
 // propagação DEPOIS de já ter escrito os sinais: o `pointerup` calculava o
 // deslocamento certo (a URL saía `parada/4/3`) enquanto `data-class` e
 // `data-attr:style` nunca reagiam — o gesto funcionava e era invisível.
-func pegaParaArrastar(quem string) string {
+// O QUE `$arrastando` GUARDA É UMA IDENTIDADE, e não o nome do gesto (ALE-299).
+//
+// Ele guardava o literal `'peca'` — igual para TODAS as peças —, e cada peça
+// pendura o próprio par de ouvintes na janela. Com duas no rascunho, os dois
+// `pointerup` passavam na mesma guarda e o PRIMEIRO DO DOM vencia: pegar o Beta
+// movia o Alfa, que corria atrás do dedo desde o primeiro quadro. Com uma peça
+// só o primeiro do DOM É o arrastado, e por isso o defeito atravessou a fatia
+// inteira com a suíte verde.
+//
+// Hoje o valor é o ID da peça, ou `dragsTheParty` quando o gesto move o grupo. A
+// ordem dos ouvintes deixou de importar porque cada expressão só reconhece a si
+// mesma.
+func startsTheDrag(quem string) string {
 	return fmt.Sprintf(
 		"$arrastando = '%s'; $arrastoinix = evt.clientX; $arrastoiniy = evt.clientY; "+
 			"$arrastox = 0; $arrastoy = 0", quem)
+}
+
+// dragsTheParty é o valor de `$arrastando` quando o gesto move o GRUPO marcado.
+//
+// Uma palavra e não um id, porque o grupo não tem um: quem começa é qualquer
+// peça marcada, e todas as marcadas se movem juntas. É o único valor que não
+// identifica um nó, e é por isso que ele tem nome.
+const dragsTheParty = "grupo"
+
+// dragsItself responde se o `pointerdown` DESTA peça move ELA, e não o grupo.
+//
+// Os quatro pedaços do gesto — pegar, seguir, soltar e deslocar na tela — têm de
+// concordar sobre isso, e a divisa mora aqui numa vez só justamente porque eles
+// divergiram: o `tokenStyling` já perguntava `v.ArrastaAPeca == p.ID` enquanto o
+// `takeToken` perguntava `v.Rascunho || v.ArrastaAPeca == id`. No rascunho isso
+// dava a classe de arrasto a UMA peça e o gesto a todas.
+func dragsItself(v BoardView, id string) bool {
+	return v.Rascunho || v.ArrastaAPeca == id
 }
 
 // followsFinger escreve o `pointermove`. Só mexe nos sinais se for ESTE que está
@@ -953,13 +983,13 @@ func followsFinger(quem string) string {
 // esta tela pode ter, porque ele só aparece depois da decisão.
 func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 	return fmt.Sprintf(
-		"if ($arrastando !== 'peca') return; "+
+		"if ($arrastando !== '%s') return; "+
 			"$arrastox = evt.clientX - $arrastoinix; $arrastoy = evt.clientY - $arrastoiniy; "+
 			"const cx = %d + Math.round($arrastox / $quadrado), cy = %d + Math.round($arrastoy / $quadrado); "+
 			"if (cx === $previax && cy === $previay) return; "+
 			"$previax = cx; $previay = cy; "+
 			"@post('%s/%s/previa/' + cx + '/' + cy)",
-		p.X, p.Y, v.Base, p.ID)
+		p.ID, p.X, p.Y, v.Base, p.ID)
 }
 
 // erasePreview limpa a seta viva. Vai no `pointerup`, junto do que solta.
@@ -1031,7 +1061,7 @@ func dropFor(v BoardView, quem string, x, y int) string {
 // porque o código-fonte parecia certo:
 //
 //	if v.ArrastaAPeca == p.ID {
-//	    data-on:pointerdown={ pegaParaArrastar("peca") }
+//	    data-on:pointerdown={ startsTheDrag(p.ID) }
 //	} else if v.Mestre {
 //	    data-on:pointerdown={ partyTakes(p.ID) }
 //	}
@@ -1067,8 +1097,8 @@ func takeToken(v BoardView, id string) string {
 	// No RASCUNHO toda peça se arrasta sozinha: não há grupo marcado nem alvo do
 	// turno, e a única coisa que o mestre quer fazer com uma peça guardada é
 	// mudá-la de lugar.
-	if v.Rascunho || v.ArrastaAPeca == id {
-		return pegaParaArrastar("peca")
+	if dragsItself(v, id) {
+		return startsTheDrag(id)
 	}
 	return partyTakes(id)
 }
@@ -1081,13 +1111,13 @@ func takeToken(v BoardView, id string) string {
 // o fim do caminho — é o que faz a próxima parada contar do lugar onde a peça
 // está (ALE-203, item 4).
 func dropToken(v BoardView, p boardToken) string {
+	if !dragsItself(v, p.ID) {
+		return dropParty(v)
+	}
 	if v.Rascunho {
 		return draftMoveDrop(v, p)
 	}
-	if v.ArrastaAPeca == p.ID {
-		return erasePreview + "; " + dropFor(v, "peca", p.X, p.Y)
-	}
-	return dropParty(v)
+	return erasePreview + "; " + dropFor(v, p.ID, p.X, p.Y)
 }
 
 // draftMoveDrop põe a peça ONDE ELA FOI SOLTA, e acabou (ALE-292).
@@ -1104,11 +1134,11 @@ func dropToken(v BoardView, p boardToken) string {
 // outro arredondamento.
 func draftMoveDrop(v BoardView, p boardToken) string {
 	return fmt.Sprintf(
-		"if ($arrastando === 'peca') { "+
+		"if ($arrastando === '%s') { "+
 			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
 			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
 			"if (dx || dy) @post('%s/pecas/%s/mover/' + (%d + dx) + '/' + (%d + dy)) }",
-		v.Base, p.ID, p.X, p.Y)
+		p.ID, v.Base, p.ID, p.X, p.Y)
 }
 
 // followToken é o par do `takeToken` no `pointermove`: a peça que se
@@ -1122,15 +1152,13 @@ func followToken(v BoardView, p boardToken) string {
 	// servidor quanto o caminho CUSTA, e custo de deslocamento é conta de turno.
 	// Fora da sessão não há turno, então a seta desenharia um orçamento que não
 	// existe — a peça só está sendo posta no lugar.
-	if !v.Rascunho && v.ArrastaAPeca == p.ID {
-		return fingerFollowsWithPreview(v, p)
+	if !dragsItself(v, p.ID) {
+		return followsFinger(dragsTheParty)
 	}
-	return followsFinger("peca")
-}
-
-// estaArrastando marca o elemento que o CSS deve deslocar.
-func estaArrastando(quem string) string {
-	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === '%s'}", quem)
+	if v.Rascunho {
+		return followsFinger(p.ID)
+	}
+	return fingerFollowsWithPreview(v, p)
 }
 
 // sceneBoardCommand escreve a chamada de abrir ou encerrar.

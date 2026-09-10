@@ -176,7 +176,7 @@ var unmarkParty = fmt.Sprintf("$%s = ''", markedTokensSignal)
 // do mapa moveria o grupo distante — o gesto agiria sobre o que a pessoa não
 // está olhando, que é a pior classe de surpresa num tabuleiro.
 func partyTakes(id string) string {
-	return fmt.Sprintf("if (!(%s)) return; %s", markedIsToken(id), pegaParaArrastar("peca"))
+	return fmt.Sprintf("if (!(%s)) return; %s", markedIsToken(id), startsTheDrag(dragsTheParty))
 }
 
 // dropParty converte o deslocamento em QUADRADOS e move todas.
@@ -186,11 +186,11 @@ func partyTakes(id string) string {
 // quantas peças ele leva.
 func dropParty(v BoardView) string {
 	return fmt.Sprintf(
-		"if ($arrastando === 'peca') { "+
+		"if ($arrastando === '%s') { "+
 			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
 			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
 			"if (dx || dy) @post('%s/grupo/mover/' + dx + '/' + dy) }",
-		v.Base,
+		dragsTheParty, v.Base,
 	)
 }
 
@@ -199,12 +199,15 @@ func dropParty(v BoardView) string {
 // UM `data-class` só porque atributo repetido não existe: o navegador guarda o
 // primeiro e descarta o segundo, e a marca do grupo nasceria morta — é a mesma
 // armadilha do `data-on:keydown__window` duplicado que a fatia 2 registrou.
-func tokenStyling(id string, arrastavel bool) string {
+func tokenStyling(id string, movesItself bool) string {
 	marcada := fmt.Sprintf("'tabuleiro-peca-marcada': %s", markedIsToken(id))
-	if !arrastavel {
+	if !movesItself {
 		return "{" + marcada + "}"
 	}
-	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === 'peca', %s}", marcada)
+	// O ID e não o literal `'peca'` (ALE-299): com o literal, a única peça que
+	// vestia a classe era a `ArrastaAPeca`, então no rascunho pegar o Beta fazia
+	// o ALFA correr atrás do dedo. A classe segue quem o gesto marcou.
+	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === '%s', %s}", id, marcada)
 }
 
 // brushGesture decide entre TRAÇO e RETÂNGULO no `pointerdown`.
