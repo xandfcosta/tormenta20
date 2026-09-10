@@ -348,12 +348,12 @@ func wasWhereForTokenBack(st Scene, c commandCtx) (*board.BoardState, error) {
 
 // tokenSignals é o que o diálogo de editar manda.
 //
-// Nomes TODOS MINÚSCULOS porque viram chave de atributo, e o analisador de HTML
-// minuscula chave — um `data-bind:pecaTamanho` chega como `pecatamanho` e liga um
+// Nomes em `snake_case` porque viram chave de atributo, e o analisador de HTML
+// minuscula chave de atributo, então caixa alta ali chega minúscula e liga um
 // sinal NOVO, com o servidor lendo o antigo para sempre vazio.
 type tokenSignals struct {
-	Nome    string `json:"pecanome"`
-	Tamanho int    `json:"pecatamanho"`
+	Nome    string `json:"token_name"`
+	Tamanho int    `json:"token_size"`
 }
 
 // editsToken muda o NOME e o TAMANHO.
@@ -445,10 +445,10 @@ func tokenSize(lado int) bool {
 //
 // UM SINAL com o id dentro, e não um booleano por peça: com dez zumbis no mapa,
 // dez sinais dariam dez lugares onde dois menus podem estar abertos ao mesmo
-// tempo. Com o id, a exclusão é por construção — a mesma escolha do `$ferramenta`
-// e do `$marcadorescolhido`.
+// tempo. Com o id, a exclusão é por construção — a mesma escolha do `$tool`
+// e do `$marker_chosen`.
 func chosenToken(id string) string {
-	return fmt.Sprintf("$pecaescolhida === %q", id)
+	return fmt.Sprintf("$token_chosen === %q", id)
 }
 
 // openMenuToken é o clique DIREITO.
@@ -457,7 +457,7 @@ func chosenToken(id string) string {
 // o único caminho — a issue pede isso e a peça continua tendo o clique esquerdo
 // para mover, o teclado para focar e o `Enter` para abrir o mesmo menu.
 func openMenuToken(id string) string {
-	return fmt.Sprintf("evt.preventDefault(); $pecaescolhida = %q", id)
+	return fmt.Sprintf("evt.preventDefault(); $token_chosen = %q", id)
 }
 
 // closeMenuToken é a saída, e ela existe em DOIS lugares: o ✕ do menu e o gesto
@@ -477,7 +477,7 @@ func openMenuToken(id string) string {
 // `$pecacopia` guarda um id e não um booleano. É a mesma armadilha do nó
 // COMPARTILHADO que o `openEditToken` registra logo abaixo — quem troca de peça
 // é quem tem de limpar o que a anterior deixou.
-const closeMenuToken = "$pecaescolhida = ''"
+const closeMenuToken = "$token_chosen = ''"
 
 // copyMenuId nomeia a segunda camada de UMA peça.
 //
@@ -528,8 +528,8 @@ const emptiesTheClipboard = "$area_token = ''; $area_board = ''; $area_mode = ''
 // mesma promessa: dentro de um campo de texto a tecla continua sendo do texto,
 // que é o que a issue pede com todas as letras.
 func pasteInTheMiddleOfTheView(v BoardView) string {
-	meioX := fmt.Sprintf("Math.floor(($vistax + document.getElementById(%q).clientWidth / 2) / $quadrado)", sceneId)
-	meioY := fmt.Sprintf("Math.floor(($vistay + document.getElementById(%q).clientHeight / 2) / $quadrado)", sceneId)
+	meioX := fmt.Sprintf("Math.floor(($viewport_x + document.getElementById(%q).clientWidth / 2) / $square)", sceneId)
+	meioY := fmt.Sprintf("Math.floor(($viewport_y + document.getElementById(%q).clientHeight / 2) / $square)", sceneId)
 	return typingTargetWithout +
 		fmt.Sprintf("(evt.key === 'v' || evt.key === 'V') && (evt.ctrlKey || evt.metaKey) && $area_token !== '' "+
 			"? (evt.preventDefault(), @post('%s/colar/' + (%s) + '/' + (%s))) : null",
@@ -558,14 +558,14 @@ func tokenCommand(v BoardView, id, acao string) string {
 // mostraria o nome do Zumbi sobre o Ogro — o defeito do link de redefinição de
 // senha, de novo.
 func openEditToken(p boardToken) string {
-	return fmt.Sprintf("$pecaeditada = %q; $pecanome = %q; $pecatamanho = %d; %s; "+
+	return fmt.Sprintf("$token_edited = %q; $token_name = %q; $token_size = %d; %s; "+
 		"document.getElementById('editar-peca').showModal()",
 		p.ID, p.Rotulo, p.Pegada, closeMenuToken)
 }
 
 // saveEditToken manda o formulário para a peça que o gesto de abrir marcou.
 //
-// O id vem de `$pecaeditada` e não de `$pecaescolhida`, e os dois existem por
+// O id vem de `$token_edited` e não de `$token_chosen`, e os dois existem por
 // isso: abrir o diálogo FECHA o menu — senão ele ficaria aceso atrás do modal —,
 // e um sinal só faria o gesto de abrir apagar o alvo do gesto de salvar.
 // FECHA ANTES de comandar, que é o que todo diálogo desta cena faz — o de abrir
@@ -575,7 +575,7 @@ func openEditToken(p boardToken) string {
 func saveEditToken(v BoardView) string {
 	return fmt.Sprintf(
 		"document.getElementById('editar-peca').close(); "+
-			"@post('%s/pecas/' + $pecaeditada + '/editar')",
+			"@post('%s/pecas/' + $token_edited + '/editar')",
 		v.Base)
 }
 

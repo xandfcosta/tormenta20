@@ -18,7 +18,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 	}
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"novolugar":"Taverna do Javali","novochao":"taverna"}`)
+		`{"new_place":"Taverna do Javali","new_ground":"taverna"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
@@ -35,7 +35,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 
 	// O formulário volta ao zero: sem isto a cena seguinte nasce com o nome da
 	// anterior, e no fim da noite ninguém confere o campo antes de clicar.
-	if !strings.Contains(rec.Body.String(), `"novolugar":""`) {
+	if !strings.Contains(rec.Body.String(), `"new_place":""`) {
 		t.Errorf("o campo do lugar não foi limpo; sinais = %s", trechoDeSinais(rec.Body.String()))
 	}
 }
@@ -49,7 +49,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"novolugar":"   ","novochao":"lava"}`); rec.Code != http.StatusOK {
+		`{"new_place":"   ","new_ground":"lava"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
@@ -72,7 +72,7 @@ func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *test
 func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusForbidden {
+		`{"new_place":"Cripta","new_ground":"cripta"}`); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu a cena: %d", rec.Code)
 	}
 	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab) != nil {
@@ -218,7 +218,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 		t.Fatalf("encerrar a taverna deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusOK {
+		`{"new_place":"Cripta","new_ground":"cripta"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir a cripta deu %d", rec.Code)
 	}
 
@@ -274,7 +274,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusOK {
+		`{"new_place":"Cripta","new_ground":"cripta"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir a cripta deu %d", rec.Code)
 	}
 	guardados := f.s.tableHost().Boards().Places(context.Background(), f.campaignID)
@@ -326,7 +326,7 @@ func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 func TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"novolugar":"Sala esquecida","novochao":"pedra"}`); rec.Code != http.StatusOK {
+		`{"new_place":"Sala esquecida","new_ground":"pedra"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {

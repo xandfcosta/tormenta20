@@ -169,7 +169,7 @@ func TestNoNewSignalBreaksTheNamingStandard(t *testing.T) {
 //
 // **LER É DE DOIS LADOS**, e a primeira versão deste guarda só conhecia um: ele
 // acusou o `novapecanome`, que está CERTO — o cliente só o ESCREVE, pelo
-// `data-bind`, e quem o lê é o servidor, por uma tag `json:"novapecanome"`. Um
+// `data-bind`, e quem o lê é o servidor, por uma tag `json:"new_token_name"`. Um
 // guarda que ignora o canal do servidor transforma o desenho normal desta cena
 // em falha, e guarda que grita sobre o que está certo é desligado na segunda
 // semana. Por isso "leitor" aqui é a expressão `$nome` OU a tag JSON.

@@ -78,7 +78,7 @@ type npcDraft struct {
 func pageDraft(r *http.Request) (npcDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Rascunho npcDraft `json:"rascunho"`
+		Rascunho npcDraft `json:"draft"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return npcDraft{}, fmt.Errorf("não entendi o formulário: %v", err)
@@ -228,7 +228,7 @@ func saveDraft(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	// gesto do mestre é "salvar e voltar", e deixar o formulário aberto sobre uma
 	// lista já atualizada faria ele clicar em Salvar de novo por não saber se
 	// pegou.
-	c.Sinais["rascunhoaberto"] = false
+	c.Sinais["draft_open"] = false
 	c.Sinais["erroDoRascunho"] = ""
 	// O ELENCO NÃO É ESTADO DE SESSÃO — guardar um NPC não muda a fila nem o
 	// mapa. O estado volta mesmo assim porque é dele que o `gmCommand`
@@ -301,7 +301,7 @@ func paraOFormulario(id int64, nome string, bloco creature.Block) npcDraft {
 		zero := 0
 		bloco.PM = &zero
 	}
-	// As três listas nunca chegam nulas ao navegador: `$rascunho.bloco.attacks.length`
+	// As três listas nunca chegam nulas ao navegador: `$draft.bloco.attacks.length`
 	// numa lista ausente estoura a expressão do contador da aba, e o número some
 	// sem erro em lugar nenhum.
 	creature.Normalize(&bloco)
@@ -341,11 +341,11 @@ func (s Scene) respondDraft(w http.ResponseWriter, r *http.Request, c commandCtx
 		}
 	}
 	_ = sse.MarshalAndPatchSignals(map[string]any{
-		"rascunho": rascunho,
+		"draft": rascunho,
 		// ABRIR o editor e apagar a recusa anterior fazem parte da resposta: uma
 		// frase de erro de dois gestos atrás sobre um formulário que acabou de
 		// abrir é a recusa certa na tela errada.
-		"rascunhoaberto": true,
+		"draft_open":     true,
 		"erroDoRascunho": "",
 	})
 }

@@ -72,14 +72,14 @@ func surfaces(v View) []playerSurface {
 // botão dela. Escrita aqui e não no `.templ` porque o id do botão tem de casar
 // com o do painel, e dois literais divergem no dia em que alguém renomear um.
 func surface(qual string) string {
-	return fmt.Sprintf("$superficie === %q", qual)
+	return fmt.Sprintf("$surface === %q", qual)
 }
 
 // pickSurface liga a pedida. Não desliga ao reclicar, ao contrário do
 // trilho de ferramentas do mapa: uma superfície desligada não deixaria nada na
 // tela.
 func pickSurface(qual string) string {
-	return fmt.Sprintf("$superficie = %q", qual)
+	return fmt.Sprintf("$surface = %q", qual)
 }
 
 // surfaceStyling liga UMA das duas aparências, e nunca deixa as duas.

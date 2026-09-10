@@ -29,7 +29,7 @@ import (
 
 // mapTool é uma entrada do trilho.
 type mapTool struct {
-	// ID é o valor que o sinal `$ferramenta` guarda. Vazio é MOVER, que é o
+	// ID é o valor que o sinal `$tool` guarda. Vazio é MOVER, que é o
 	// estado de repouso da cena.
 	ID string
 	// Atalho é a tecla, e ela é fixa por ferramenta (ver o comentário do topo).
@@ -163,7 +163,7 @@ func forVisible(mestre bool, trilho []mapTool) []mapTool {
 func railKeyboard(mestre bool) string {
 	var casos []string
 	for _, f := range rail(mestre) {
-		casos = append(casos, fmt.Sprintf("evt.key === %q ? ($ferramenta = %q)", f.Atalho, f.ID))
+		casos = append(casos, fmt.Sprintf("evt.key === %q ? ($tool = %q)", f.Atalho, f.ID))
 	}
 	// ESC NÃO ENTRA AQUI, e isto é medido e não escolhido.
 	//
@@ -189,7 +189,7 @@ const typingTargetWithout = `!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.
 
 // onIsTool é o teste que marca o botão e mostra a camada dela.
 func onIsTool(id string) string {
-	return fmt.Sprintf("$ferramenta === %q", id)
+	return fmt.Sprintf("$tool === %q", id)
 }
 
 // toolStyling liga UMA das duas aparências, e nunca deixa as duas.

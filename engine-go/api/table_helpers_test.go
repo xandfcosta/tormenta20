@@ -24,7 +24,7 @@ const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":1
 	`"deslocamento":"9m (6q)","attacks":[],"skills":[],"specialAbilities":[]`
 
 func bodyDraft(dentro string) string {
-	return `{"rascunho":{` + dentro + `}}`
+	return `{"draft":{` + dentro + `}}`
 }
 
 // compiledStylesheet é a folha que o NAVEGADOR recebe, e é sempre ela que os
@@ -163,7 +163,7 @@ func responseDraft(t *testing.T, resposta string) map[string]any {
 		linha = linha[:fim]
 	}
 	var sinais struct {
-		Rascunho map[string]any `json:"rascunho"`
+		Rascunho map[string]any `json:"draft"`
 	}
 	if err := json.Unmarshal([]byte(linha), &sinais); err != nil {
 		t.Fatalf("os sinais não são JSON: %v\n%s", err, linha)

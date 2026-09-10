@@ -21,7 +21,7 @@ import (
 // faixa do livro, desenha a forma e diz quem ela pega. Nada do que a régua
 // responde é recalculado na tela.
 
-// FerramentaDaRegua e FerramentaDoGabarito são os valores do sinal `$ferramenta`
+// FerramentaDaRegua e FerramentaDoGabarito são os valores do sinal `$tool`
 // quando o clique MEDE em vez de mover ou pintar.
 //
 // Constantes pela mesma razão da `MarkTool`: cada uma aparece em meia
@@ -36,7 +36,7 @@ const (
 // lista de espécies e nunca à mão.
 //
 // Ele existe porque a régua e o gabarito quebraram a pergunta antiga: a camada de
-// pintura mostrava-se com `$ferramenta != ” && $ferramenta != 'marcador'`, que
+// pintura mostrava-se com `$tool != ” && $tool != 'marcador'`, que
 // era verdade para toda ferramenta que ainda não existia. Uma lista escrita à mão
 // no `.templ` teria o mesmo defeito adiado — a espécie nova nasceria fora dela.
 func onIsBrush() string {
@@ -44,7 +44,7 @@ func onIsBrush() string {
 	for _, e := range board.TerrainKinds {
 		nomes = append(nomes, fmt.Sprintf("%q", string(e.ID)))
 	}
-	return fmt.Sprintf("[%s].includes($ferramenta)", strings.Join(nomes, ", "))
+	return fmt.Sprintf("[%s].includes($tool)", strings.Join(nomes, ", "))
 }
 
 // AS FASES da régua. Elas eram 0/1/2 escritas à mão em nove lugares, e a
@@ -371,7 +371,7 @@ func stopsReserve() []int {
 //
 // Ele era um `viewBox` do tamanho da moldura mais um `transform` que descontava
 // a quina dela, e a moldura saiu na ALE-203. A primeira tentativa foi só um
-// `scale($quadrado)` com o SVG dentro do plano deslocado — e ela NÃO DESENHAVA
+// `scale($square)` com o SVG dentro do plano deslocado — e ela NÃO DESENHAVA
 // NADA. Medido: o `<path>` tinha caixa certa (176×176 no lugar certo), `fill`
 // certo, `display: block`, e a tela ficava vazia; dar tamanho ao `<svg>` na mão
 // fazia a esfera aparecer na hora.
@@ -385,7 +385,7 @@ func stopsReserve() []int {
 // que a gente QUER —, e os dois números que todo o resto usa entram aqui no
 // `transform`: a janela desloca, o zoom escala. Nessa ordem, porque a janela é
 // medida em PIXELS e o `scale` viria depois multiplicá-la.
-const viewportDrawing = "`translate(${-$vistax}, ${-$vistay}) scale(${$quadrado})`"
+const viewportDrawing = "`translate(${-$viewport_x}, ${-$viewport_y}) scale(${$square})`"
 
 // metersSize converte o número digitado para a unidade da FICHA.
 //

@@ -38,7 +38,7 @@ func TestTheKeyboardAndTheRailAgreeOnWhatExists(t *testing.T) {
 	// mudo — a camada não existe lá, e o gesto simplesmente não faria nada.
 	doJogador := railKeyboard(false)
 	for _, f := range MapTools() {
-		if f.SoMestre && strings.Contains(doJogador, `$ferramenta = "`+f.ID+`"`) {
+		if f.SoMestre && strings.Contains(doJogador, `$tool = "`+f.ID+`"`) {
 			t.Errorf("o jogador tem a tecla de %q, que é do mestre", f.Rotulo)
 		}
 	}

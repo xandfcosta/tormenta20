@@ -41,7 +41,7 @@ import (
 templ gmStage(v View, b master.BestiaryView) {
 	<main
 		id="mesa"
-		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px; --notas-largura:${$notaslargura ? $notaslargura + 'px' : 'clamp(22rem,40%,44rem)'}`"
+		data-attr:style="`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px; --notas-largura:${$notaslargura ? $notaslargura + 'px' : 'clamp(22rem,40%,44rem)'}`"
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@tableHeader(v)

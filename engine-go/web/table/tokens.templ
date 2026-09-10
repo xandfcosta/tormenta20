@@ -114,7 +114,7 @@ templ poeNoMapaDialogo(v BoardView) {
 			// dela esconderia a única frase que explica o que houve.
 			<button
 				type="button"
-				data-attr:disabled="$escolhidosdomapa === ''"
+				data-attr:disabled="$map_selection === ''"
 				data-on:click={ "document.getElementById('por-no-mapa').close(); " + mapCommand(v) }
 				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 			>Pôr no mapa</button>

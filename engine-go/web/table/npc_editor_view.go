@@ -13,7 +13,7 @@ import (
 //
 // A divisão do trabalho é a mesma do resto do piloto, e aqui ela cai num lugar
 // incomum: o RASCUNHO inteiro é do navegador — cada caixa escreve num pedaço de
-// `$rascunho` —, e o servidor só entra onde o navegador não sabe ir sozinho, que
+// `$draft` —, e o servidor só entra onde o navegador não sabe ir sozinho, que
 // é mudar o NÚMERO DE LINHAS de uma lista. Datastar não tem laço no cliente.
 
 // Os nomes das três listas de tamanho variável. Constantes porque cada uma
@@ -107,13 +107,13 @@ func draftLists(c commandCtx, rascunho npcDraft) []templ.Component {
 // servidor lê o antigo para sempre vazio, e o número some ao salvar.
 //
 // @example draftField("hp") // "rascunho.bloco.hp"
-func draftField(campo string) string { return "rascunho.bloco." + campo }
+func draftField(campo string) string { return "draft.bloco." + campo }
 
 // rowField é o mesmo para um item de lista, com o índice no meio.
 //
 // @example rowField(listaDeAtaques, 0, "name") // "rascunho.bloco.attacks.0.name"
 func rowField(lista string, indice int, campo string) string {
-	caminho := fmt.Sprintf("rascunho.bloco.%s.%d", blockName(lista), indice)
+	caminho := fmt.Sprintf("draft.bloco.%s.%d", blockName(lista), indice)
 	if campo == "" {
 		return caminho
 	}
@@ -154,7 +154,7 @@ func openEditor(v View, npcID int64) string {
 // Não precisa: o rascunho mora no navegador e NADA foi escrito. É a metade que
 // paga a decisão do dono — "Cancelar desfaz de verdade" é grátis quando não há
 // nada a desfazer.
-const closeEditor = "$rascunhoaberto = false; $erroDoRascunho = ''"
+const closeEditor = "$draft_open = false; $erroDoRascunho = ''"
 
 // listCommand escreve o gesto que acrescenta ou tira uma linha.
 func listCommand(campanha, sessao int64, lista string, indice int) string {
@@ -172,7 +172,7 @@ func salvaOBloco(v View) string {
 
 // onTabExpr é a condição que mostra uma aba. Escrita aqui e não no `.templ` porque o
 // id da aba tem de casar com o do botão que a liga, e dois literais divergem.
-func onTabExpr(aba string) string { return fmt.Sprintf("$rascunhoaba === %q", aba) }
+func onTabExpr(aba string) string { return fmt.Sprintf("$draft_tab === %q", aba) }
 
 // editorTitle diz o que está aberto, e ele vem do SINAL e não do servidor.
 //
@@ -180,7 +180,7 @@ func onTabExpr(aba string) string { return fmt.Sprintf("$rascunhoaba === %q", ab
 // enquanto o mestre digita "Ogro Capitão", senão ele lê o nome antigo sobre o
 // formulário novo. Nome vazio cai em "NPC sem nome", que é o que a validação vai
 // recusar — dizê-lo antes é mais barato que recusar depois.
-const editorTitle = "$rascunho.nome || 'NPC sem nome'"
+const editorTitle = "$draft.nome || 'NPC sem nome'"
 
 // kindOptions e sizeOptions são as listas do livro, com os rótulos que o
 // bestiário já usa — um segundo par faria o mesmo Ogro ser "Humanoide" numa tela
@@ -209,9 +209,9 @@ func options(valores []string, rotulo func(string) string) []blockOption {
 func tabSummary(aba string) string {
 	switch aba {
 	case abaDosAtaques:
-		return "$rascunho.bloco.attacks.length"
+		return "$draft.bloco.attacks.length"
 	case abaDasPosses:
-		return "$rascunho.bloco.skills.length + $rascunho.bloco.specialAbilities.length"
+		return "$draft.bloco.skills.length + $draft.bloco.specialAbilities.length"
 	default:
 		return ""
 	}
@@ -219,7 +219,7 @@ func tabSummary(aba string) string {
 
 // pickTab liga a aba pedida. Não desliga ao reclicar, ao contrário do trilho
 // de ferramentas do mapa: uma aba desligada não deixaria nada na tela.
-func pickTab(aba string) string { return fmt.Sprintf("$rascunhoaba = %q", aba) }
+func pickTab(aba string) string { return fmt.Sprintf("$draft_tab = %q", aba) }
 
 // tabStyling liga UMA das duas aparências, e nunca deixa as duas na mesa.
 //

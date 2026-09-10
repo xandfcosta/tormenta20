@@ -18,7 +18,7 @@ import (
 //
 // Ele mora DENTRO do diálogo do elenco e troca de lugar com a lista (decisão do
 // dono): sem diálogo dentro de diálogo, e o formulário fica com os 40rem
-// inteiros. Quem alterna é `$rascunhoaberto`, que o SERVIDOR liga ao devolver o
+// inteiros. Quem alterna é `$draft_open`, que o SERVIDOR liga ao devolver o
 // rascunho semeado — assim o formulário nunca aparece antes de ter conteúdo.
 //
 // TRÊS ABAS (decisão do dono): Números, Ataques, Perícias e posses. O corte é
@@ -26,7 +26,7 @@ import (
 // "o que ele sabe e o que ele carrega".
 //
 // As CAIXAS ESCALARES são desenhadas UMA VEZ e nunca remendadas: elas se ligam a
-// pedaços de `$rascunho`, e sinal sobrevive a qualquer remendo. O que o servidor
+// pedaços de `$draft`, e sinal sobrevive a qualquer remendo. O que o servidor
 // redesenha são só as três LISTAS, porque Datastar não tem laço no cliente e uma
 // lista de tamanho variável só existe como HTML que alguém escreveu.
 func blockEditor(v View) templ.Component {
@@ -50,7 +50,7 @@ func blockEditor(v View) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"display:none\" data-show=\"$rascunhoaberto\" class=\"flex min-h-0 flex-1 flex-col gap-3\"><div class=\"flex shrink-0 items-center gap-2\"><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div style=\"display:none\" data-show=\"$draft_open\" class=\"flex min-h-0 flex-1 flex-col gap-3\"><div class=\"flex shrink-0 items-center gap-2\"><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -106,7 +106,7 @@ func blockEditor(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">Nome do NPC</label> <input id=\"npc-nome\" type=\"text\" data-bind=\"rascunho.nome\" placeholder=\"Ogro Capitão\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div role=\"tablist\" aria-label=\"Partes do bloco\" class=\"flex shrink-0 flex-wrap gap-1 border-b border-grimorio-iron\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">Nome do NPC</label> <input id=\"npc-nome\" type=\"text\" data-bind=\"draft.nome\" placeholder=\"Ogro Capitão\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div role=\"tablist\" aria-label=\"Partes do bloco\" class=\"flex shrink-0 flex-wrap gap-1 border-b border-grimorio-iron\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -577,7 +577,7 @@ func blockMana() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\">Pontos de Mana</label><div class=\"flex items-center gap-2\"><label class=\"inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground\"><input type=\"checkbox\" data-bind=\"rascunho.conjura\" class=\"size-4 accent-grimorio-gold\"> Conjura</label> <input id=\"npc-pm\" type=\"number\" min=\"0\" max=\"999\" data-show=\"$rascunho.conjura\" data-bind=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\">Pontos de Mana</label><div class=\"flex items-center gap-2\"><label class=\"inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground\"><input type=\"checkbox\" data-bind=\"draft.conjura\" class=\"size-4 accent-grimorio-gold\"> Conjura</label> <input id=\"npc-pm\" type=\"number\" min=\"0\" max=\"999\" data-show=\"$draft.conjura\" data-bind=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

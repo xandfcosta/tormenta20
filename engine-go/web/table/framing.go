@@ -23,9 +23,9 @@ import (
 // grade, as peças, os marcadores e o terreno derivam todos do mesmo número.
 // Mudar UM valor reenquadra a cena inteira.
 //
-// E a conta do clique acompanha de graça: ela já dividia por `$quadrado`, que é
+// E a conta do clique acompanha de graça: ela já dividia por `$square`, que é
 // o mesmo número. Era isso que o comentário da camada de casas prometia com "o
-// `$quadrado` acompanha o zoom quando ele chegar".
+// `$square` acompanha o zoom quando ele chegar".
 
 // Os LIMITES são os da SPA, com as razões dela (`board-viewport.ts`): abaixo de
 // 20 a peça vira um ponto e o rótulo some; acima de 96 uma tela de 1024 mostra
@@ -50,16 +50,16 @@ const (
 // botões. Escritos à mão lá, seriam a segunda cópia dos tetos — e a que
 // divergiria no dia em que o zoom máximo mudasse.
 func zoomPlan(passo string) string {
-	return fmt.Sprintf("$quadrado = Math.min(%d, Math.max(%d, $quadrado + (%s)))",
+	return fmt.Sprintf("$square = Math.min(%d, Math.max(%d, $square + (%s)))",
 		quadradoMaximo, quadradoMinimo, passo)
 }
 
 // ZoomAtLimit é a pergunta que desabilita o botão que não faria nada.
 func ZoomAtLimit(delta int) string {
 	if delta < 0 {
-		return fmt.Sprintf("$quadrado <= %d", quadradoMinimo)
+		return fmt.Sprintf("$square <= %d", quadradoMinimo)
 	}
-	return fmt.Sprintf("$quadrado >= %d", quadradoMaximo)
+	return fmt.Sprintf("$square >= %d", quadradoMaximo)
 }
 
 // zoomAnchored muda o zoom SEM tirar de baixo do ponto o quadrado que estava
@@ -74,10 +74,10 @@ func ZoomAtLimit(delta int) string {
 // A conta é a de sempre nesta família de ferramentas: guarde o ponto do plano
 // que está sob a âncora, mude a escala, e reescreva a janela para que aquele
 // mesmo ponto do plano volte para a mesma âncora. Os dois `const` vêm ANTES do
-// `zoomPlan` porque leem `$quadrado`.
+// `zoomPlan` porque leem `$square`.
 func zoomAnchored(passo, pixelX, pixelY string) string {
 	x, y := planPoint(pixelX, pixelY)
-	return fmt.Sprintf("const ancorax = %s, ancoray = %s; %s; $%s = ancorax * $quadrado - (%s); $%s = ancoray * $quadrado - (%s)",
+	return fmt.Sprintf("const ancorax = %s, ancoray = %s; %s; $%s = ancorax * $square - (%s); $%s = ancoray * $square - (%s)",
 		x, y, zoomPlan(passo), sinalDaVistaX, pixelX, sinalDaVistaY, pixelY)
 }
 

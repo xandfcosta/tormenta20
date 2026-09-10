@@ -15,12 +15,6 @@
 # uma ponta esquecida não estoura — ela lê um sinal vazio, e o gesto "não faz
 # nada". Por isso a varredura anda por SUPERFÍCIE, e a catraca é o que impede o
 # buraco de crescer enquanto ela anda.
-arrastando
-arrastandoavista
-arrastoinix
-arrastoiniy
-arrastox
-arrastoy
 condicoesdalinha
 descansando
 edicaoiniciativa
@@ -32,12 +26,9 @@ erroDasNotas
 erroDoComando
 erroDoMovimento
 erroDoRascunho
-escolhidosdomapa
-ferramenta
 formdecombatente
 linhadacondicao
 mandando
-marcadorescolhido
 nomedonpc
 notas
 notasabertas
@@ -47,27 +38,10 @@ notaslargura
 notasmodo
 notassalvando
 notassalvas
-novapecaaparencia
-novapecatamanho
-novochao
-novolugar
 novonome
 novotipo
-pecaeditada
-pecaescolhida
-pecanome
-pecatamanho
-quadrado
 qualidadedodescanso
-rascunho
-rascunhoaba
-rascunhoaberto
 registrando
 rotulodalinha
-superficie
 titulodasessao
 trazendo
-vistainix
-vistainiy
-vistax
-vistay

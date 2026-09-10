@@ -474,7 +474,7 @@ func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
 	f.seedOpenBoard(t, "cripta")
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/nova/-3/7",
-		`{"novapecanome":"  Porta da cripta  ","novapecatamanho":1,"novapecaaparencia":"object"}`)
+		`{"new_token_name":"  Porta da cripta  ","new_token_size":1,"new_token_look":"object"}`)
 
 	mapa := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(mapa.Tokens) != 1 {
@@ -511,9 +511,9 @@ func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	casos := []struct{ nome, sinais, espera string }{
-		{"sem nome", `{"novapecanome":"   ","novapecatamanho":1,"novapecaaparencia":"object"}`, "dê um nome"},
-		{"tamanho de nada", `{"novapecanome":"Carroça","novapecatamanho":4,"novapecaaparencia":"object"}`, "p107"},
-		{"ficha solta", `{"novapecanome":"Falso herói","novapecatamanho":1,"novapecaaparencia":"character"}`, "aparência"},
+		{"sem nome", `{"new_token_name":"   ","new_token_size":1,"new_token_look":"object"}`, "dê um nome"},
+		{"tamanho de nada", `{"new_token_name":"Carroça","new_token_size":4,"new_token_look":"object"}`, "p107"},
+		{"ficha solta", `{"new_token_name":"Falso herói","new_token_size":1,"new_token_look":"character"}`, "aparência"},
 	}
 	for _, caso := range casos {
 		t.Run(caso.nome, func(t *testing.T) {
@@ -540,7 +540,7 @@ func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
 	f.seedOpenBoard(t, "cripta")
 
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/pecas/nova/1/1",
-		`{"novapecanome":"Porta","novapecatamanho":1,"novapecaaparencia":"object"}`)
+		`{"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pôs peça e levou %d, queria 403", rec.Code)
@@ -569,8 +569,8 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 	for _, pedaco := range []string{
 		"Nova peça — o clique escolhe a casa",       // o botão do modo
 		"Nova peça — escolha a casa onde ela nasce", // a camada de clique
-		"novapecanome", // a tira
-		"Colossal",     // o tamanho do livro (p107)
+		"new_token_name", // a tira
+		"Colossal",       // o tamanho do livro (p107)
 	} {
 		if !strings.Contains(doMestre, pedaco) {
 			t.Errorf("o mestre não recebeu %q", pedaco)
@@ -609,8 +609,8 @@ func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "cripta")
 	base := f.tableUrl() + "/tabuleiro/pecas/nova/"
-	f.posta(t, f.mestre, base+"1/1", `{"novapecanome":"Porta","novapecatamanho":1,"novapecaaparencia":"object"}`)
-	f.posta(t, f.mestre, base+"5/5", `{"novapecanome":"Lobo","novapecatamanho":1,"novapecaaparencia":"npc"}`)
+	f.posta(t, f.mestre, base+"1/1", `{"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
+	f.posta(t, f.mestre, base+"5/5", `{"new_token_name":"Lobo","new_token_size":1,"new_token_look":"npc"}`)
 
 	html := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
 

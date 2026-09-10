@@ -42,7 +42,7 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.draftCommand(draftFillsRect))
 	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.draftCommand(draftClearsRect))
 	r.Post(base+"/pecas/nova/{x}/{y}", s.draftCommand(draftNewLoosePiece))
-	// MOVER é o gesto que NÃO tem gêmeo na mesa, e é a diferença do rascunho:
+	// MOVER é o gesto que NÃO tem gêmeo na mesa, e é a diferença do draft:
 	// lá o arrasto manda uma PARADA e o servidor devolve uma proposta com custo,
 	// aqui ele põe a peça na casa. Ver `draftMoveDrop`.
 	r.Post(base+"/pecas/{id}/mover/{x}/{y}", s.draftCommand(draftMovesToken))

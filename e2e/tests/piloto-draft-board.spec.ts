@@ -5,7 +5,7 @@ import { expect, type Page, test } from '@playwright/test'
  *
  * O rascunho não tinha um único caso de e2e, e é onde o defeito estava: com DUAS
  * peças no mapa, pegar qualquer uma movia a PRIMEIRA. A causa é que
- * `$arrastando` guardava o literal `'peca'` — igual para todas —, então todo
+ * `$dragging` guardava o literal `'peca'` — igual para todas —, então todo
  * `pointerup__window` passava na guarda e o primeiro do DOM vencia e zerava o
  * sinal. Com uma peça só, o primeiro do DOM É o arrastado, e o defeito não
  * aparece: a suíte do tabuleiro media exatamente esse caso (`toHaveCount(1)`).
@@ -36,7 +36,7 @@ async function aDraftWith(
 
   for (const p of pecas) {
     const posta = await page.request.post(`${endereco}/tabuleiro/pecas/nova/${p.x}/${p.y}`, {
-      data: { novapecanome: p.nome, novapecatamanho: 1, novapecaaparencia: 'object' },
+      data: { new_token_name: p.nome, new_token_size: 1, new_token_look: 'object' },
     })
     expect(posta.ok(), `pôr a peça ${p.nome}: ${posta.status()}`).toBeTruthy()
   }

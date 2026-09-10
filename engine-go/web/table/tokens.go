@@ -123,7 +123,7 @@ func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 func escolhidosDosSinais(r *http.Request) (board.EntrySelection, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Escolhidos string `json:"escolhidosdomapa"`
+		Escolhidos string `json:"map_selection"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return nil, fmt.Errorf("não entendi quem pôr no mapa: %v", err)
@@ -164,7 +164,7 @@ const dialogSheets = "[...document.querySelectorAll('#por-no-mapa [data-ficha]')
 // que lembra a escolha de dois minutos atrás põe a emboscada no mapa com um
 // clique em "Pôr no mapa" que o mestre acha que está confirmando outra coisa.
 func openMap() string {
-	return "$escolhidosdomapa = " + dialogSheets +
+	return "$map_selection = " + dialogSheets +
 		"; document.getElementById('por-no-mapa').showModal()"
 }
 
@@ -175,16 +175,16 @@ func openMap() string {
 // um id vazio.
 func toggleMap(id string) string {
 	return fmt.Sprintf(
-		"$escolhidosdomapa = ($escolhidosdomapa.split(',').filter(Boolean).includes(%q)"+
-			" ? $escolhidosdomapa.split(',').filter((v) => v && v !== %q)"+
-			" : [...$escolhidosdomapa.split(',').filter(Boolean), %q]).join(',')",
+		"$map_selection = ($map_selection.split(',').filter(Boolean).includes(%q)"+
+			" ? $map_selection.split(',').filter((v) => v && v !== %q)"+
+			" : [...$map_selection.split(',').filter(Boolean), %q]).join(',')",
 		id, id, id,
 	)
 }
 
 // estaEscolhido é a pergunta que pinta o crachá.
 func estaEscolhido(id string) string {
-	return fmt.Sprintf("$escolhidosdomapa.split(',').includes(%q)", id)
+	return fmt.Sprintf("$map_selection.split(',').includes(%q)", id)
 }
 
 // mapCommand posta a escolha.
@@ -202,8 +202,8 @@ func mapCommand(v BoardView) string {
 // menos um", e uma recusa no rodapé em resposta a um clique direito parece
 // defeito. Silêncio é a resposta certa para "não há o que trazer".
 func sheetsShortcut(v BoardView) string {
-	return "evt.preventDefault(); $escolhidosdomapa = " + dialogSheets +
-		"; $escolhidosdomapa && (" + mapCommand(v) + ")"
+	return "evt.preventDefault(); $map_selection = " + dialogSheets +
+		"; $map_selection && (" + mapCommand(v) + ")"
 }
 
 // A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril.
@@ -259,9 +259,9 @@ type loosePieceDraft struct {
 func loosePieceSignals(r *http.Request) (loosePieceDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Nome      string `json:"novapecanome"`
-		Tamanho   int    `json:"novapecatamanho"`
-		Aparencia string `json:"novapecaaparencia"`
+		Nome      string `json:"new_token_name"`
+		Tamanho   int    `json:"new_token_size"`
+		Aparencia string `json:"new_token_look"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return loosePieceDraft{}, fmt.Errorf("não entendi a peça: %v", err)

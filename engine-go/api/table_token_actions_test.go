@@ -343,17 +343,17 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id + "/editar"
 
-	recusa := f.posta(t, f.mestre, base, `{"pecanome":"Ogro","pecatamanho":4}`)
+	recusa := f.posta(t, f.mestre, base, `{"token_name":"Ogro","token_size":4}`)
 	if !strings.Contains(recusa, "1, 2, 3 ou 6") {
 		t.Errorf("o lado 4 não foi recusado:\n%s", recusa)
 	}
-	semNome := f.posta(t, f.mestre, base, `{"pecanome":"  ","pecatamanho":1}`)
+	semNome := f.posta(t, f.mestre, base, `{"token_name":"  ","token_size":1}`)
 	if !strings.Contains(semNome, "precisa de um nome") {
 		t.Errorf("o nome vazio não foi recusado:\n%s", semNome)
 	}
 	// E o caso positivo, sem o qual as duas recusas acima seriam verdade também
 	// numa rota que recusa tudo.
-	f.posta(t, f.mestre, base, `{"pecanome":"Ogro Capitão","pecatamanho":2}`)
+	f.posta(t, f.mestre, base, `{"token_name":"Ogro Capitão","token_size":2}`)
 	peca := board.FindToken(nowBoard(t, f), id)
 	if peca.Label != "Ogro Capitão" || peca.Footprint != 2 {
 		t.Errorf("a edição válida não pegou: %q, lado %d", peca.Label, peca.Footprint)

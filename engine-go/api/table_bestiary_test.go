@@ -87,18 +87,18 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	painel := f.tableUrl() + "/bestiario"
 
 	// Primeira abertura: o rascunho na tela não é de ninguém ainda.
-	abriu := f.pede(t, f.mestre, http.MethodGet, painel+signals(`{"creature":"zumbi","rascunhode":""}`), "").Body.String()
+	abriu := f.pede(t, f.mestre, http.MethodGet, painel+signals(`{"creature":"zumbi","draft_of":""}`), "").Body.String()
 	if !strings.Contains(trechoDeSinais(abriu), `"pvdoverbete":20`) {
 		t.Errorf("abrir o Zumbi não semeou o PV do livro (20); sinais = %s", trechoDeSinais(abriu))
 	}
-	if !strings.Contains(trechoDeSinais(abriu), `"rascunhode":"zumbi"`) {
+	if !strings.Contains(trechoDeSinais(abriu), `"draft_of":"zumbi"`) {
 		t.Errorf("o rascunho não ficou marcado como do Zumbi; sinais = %s", trechoDeSinais(abriu))
 	}
 
 	// Segunda visita à MESMA criatura, agora com o rascunho já sendo dela: é o
 	// que acontece a cada tecla da busca, e não pode semear nada.
 	dinovo := f.pede(t, f.mestre, http.MethodGet,
-		painel+signals(`{"creature":"zumbi","search":"zu","rascunhode":"zumbi"}`), "").Body.String()
+		painel+signals(`{"creature":"zumbi","search":"zu","draft_of":"zumbi"}`), "").Body.String()
 	// O CONTROLE: o painel FOI redesenhado, senão "não semeou" seria só "não
 	// respondeu".
 	if !strings.Contains(dinovo, "bestiario-da-mesa") {

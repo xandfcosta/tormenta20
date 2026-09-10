@@ -72,7 +72,7 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	}
 	// O CAMINHO do campo vai escrito à mão: derivá-lo do `rowField` da cena
 	// faria o esperado sair do código sob teste.
-	if !strings.Contains(resposta, "rascunho.bloco.attacks.0.name") {
+	if !strings.Contains(resposta, "draft.bloco.attacks.0.name") {
 		t.Errorf("a linha nova não tem onde escrever o nome:\n%s", resposta)
 	}
 }

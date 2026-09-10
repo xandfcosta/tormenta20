@@ -32,7 +32,7 @@ func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 
 	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", "{}")
-	if !strings.Contains(resposta, "pecasmarcadas") {
+	if !strings.Contains(resposta, "marked_tokens") {
 		t.Fatalf("a marcação não voltou: %s", resposta)
 	}
 	if strings.Contains(resposta, "datastar-patch-elements") {
@@ -46,7 +46,7 @@ func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "pedra")
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/1/1", `{"pecasmarcadas":""}`)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/1/1", `{"marked_tokens":""}`)
 	if !strings.Contains(corpo, "não há peça marcada") {
 		t.Errorf("mover um grupo vazio não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
@@ -62,7 +62,7 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	f.scene(t)
 	f.seedOpenBoard(t, "pedra")
 	ficha, _ := sceneIds(t, f)
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if len(b.Tokens) == 0 {
@@ -70,7 +70,7 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	}
 	antes := b.Tokens[0]
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/3/-2",
-		`{"pecasmarcadas":"`+antes.ID+`"}`)
+		`{"marked_tokens":"`+antes.ID+`"}`)
 
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b.Tokens[0].X != antes.X+3 || b.Tokens[0].Y != antes.Y-2 {
@@ -85,7 +85,7 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 // TestTheRestingLayerServesBothGestures.
 //
 // UMA camada e não duas, e isto é conserto de um defeito medido: as duas se
-// mostravam com `$ferramenta === ”`, e a que vem DEPOIS no DOM cobria a outra —
+// mostravam com `$tool === ”`, e a que vem DEPOIS no DOM cobria a outra —
 // o dedo nunca chegava ao laço, e o gesto simplesmente não acontecia.
 //
 // O `engoleoclique` entra na lista pela mesma razão: o navegador dispara `click`
@@ -100,13 +100,13 @@ func TestTheRestingLayerServesBothGestures(t *testing.T) {
 	// vazio a classe não aparece — o guarda acusaria a ausência dela sobre uma
 	// cena que só não tem peça nenhuma.
 	ficha, _ := sceneIds(t, f)
-	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"escolhidosdomapa":"`+ficha+`"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O valor é CONSTANTE no `.templ`, então ele sai LITERAL no HTML — só o
 	// dinâmico é escapado. A primeira versão deste guarda procurava a forma
 	// escapada, achava zero, e acusava "0 camadas" sobre uma cena correta.
-	if quantas := strings.Count(tela, `data-show="$ferramenta === ''"`); quantas != 1 {
+	if quantas := strings.Count(tela, `data-show="$tool === ''"`); quantas != 1 {
 		t.Errorf("há %d camadas de repouso; com mais de uma a de baixo nunca recebe o dedo", quantas)
 	}
 	for _, pedaco := range []string{"marcar-area", "swallow_click", "tabuleiro-peca-marcada"} {
