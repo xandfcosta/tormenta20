@@ -10,7 +10,7 @@ import (
 
 // O PACOTE É FOLHA, e aqui isso importa mais do que na média (ALE-278).
 //
-// Irmão dos `fronteira_test.go` do `search`, do `creature`, do `sheet`, do
+// Irmão dos `boundary_test.go` do `search`, do `creature`, do `sheet`, do
 // `events`, do `tabuleiro` e da `plataforma`. A lista é de UM: só o
 // `plataforma`, de onde vem o mapa de erro por campo.
 //

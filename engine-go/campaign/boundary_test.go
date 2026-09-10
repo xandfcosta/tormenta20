@@ -10,7 +10,7 @@ import (
 
 // O PACOTE É FOLHA, e a lista é de UM (ALE-278).
 //
-// Irmão gêmeo do `account/fronteira_test.go`, e a semelhança não é estilo: os
+// Irmão gêmeo do `account/boundary_test.go`, e a semelhança não é estilo: os
 // dois pacotes nasceram do mesmo defeito. Uma regra de PRODUTO — o que é um
 // e-mail aceitável, o que é um nome de campanha aceitável — morava dentro do
 // `api`, era lida por uma tela E por uma rota JSON, e as duas divergiram na

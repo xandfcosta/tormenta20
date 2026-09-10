@@ -10,7 +10,7 @@ import (
 
 // O VOCABULÁRIO É FOLHA, e este guarda é o que faz isso valer (ALE-279).
 //
-// Ele é o irmão dos `fronteira_test.go` do `aovivo`, do `tabuleiro` e da
+// Ele é o irmão dos `boundary_test.go` do `aovivo`, do `tabuleiro` e da
 // `plataforma`, e existe por uma razão específica: `events` teve de ENTRAR na
 // lista de permitidos dos outros dois, e a lista de lá vem com um aviso —
 // *acrescentar o import à lista transforma a porta em enfeite*.

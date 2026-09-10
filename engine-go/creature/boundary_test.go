@@ -10,7 +10,7 @@ import (
 
 // A CRIATURA NÃO IMPORTA NADA DO PROJETO (ALE-278).
 //
-// Ela é o irmão mais estrito dos `fronteira_test.go` do `aovivo`, do `tabuleiro`,
+// Ela é o irmão mais estrito dos `boundary_test.go` do `aovivo`, do `tabuleiro`,
 // da `plataforma` e do `events`: a lista de permitidos aqui é VAZIA, e é o que a
 // medição que motivou a extração já dizia — o arquivo importava `fmt` e
 // `strings`, e nada mais.

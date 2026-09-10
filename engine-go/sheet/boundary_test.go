@@ -10,7 +10,7 @@ import (
 
 // A FICHA E AS REGRAS DELA, e nenhum contexto (ALE-278).
 //
-// Irmão dos `fronteira_test.go` do `aovivo`, do `tabuleiro`, da `plataforma`, do
+// Irmão dos `boundary_test.go` do `aovivo`, do `tabuleiro`, da `plataforma`, do
 // `events` e do `creature`. A lista aqui não é vazia como a do `creature`: três
 // entradas foram medidas antes da extração — o `character_dto.go` já importava
 // exatamente aquelas e mais nada, o que foi o que provou que ele saía inteiro.
