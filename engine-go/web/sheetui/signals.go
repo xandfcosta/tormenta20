@@ -26,7 +26,7 @@ import (
 // # As chaves são MINÚSCULAS, e não é estilo
 //
 // Chave de atributo é minusculada pelo HTML: um `data-bind:novaPericia` vira
-// `data-bind:novapericia` e liga um sinal NOVO, deixando o que o servidor lê
+// `data-bind:new_expertise` e liga um sinal NOVO, deixando o que o servidor lê
 // sempre vazio. Só o VALOR de um atributo preserva a caixa, que é por que o
 // `$sheet_open` do bestiário pode ser camelCase — ele só aparece dentro de
 // expressões.
@@ -39,52 +39,52 @@ import (
 type Signals struct {
 	Busca *string `json:"search"`
 	// NovaPericia e NovoAtributo são os dois campos do diálogo de ofício novo.
-	NovaPericia  *string `json:"novapericia"`
-	NovoAtributo *string `json:"novoatributo"`
+	NovaPericia  *string `json:"new_expertise"`
+	NovoAtributo *string `json:"new_attribute"`
 	// Situacao é a CHAVE do condicional que o gesto quer alternar. Ela vem por
 	// sinal e não pelo caminho porque é um encadeado com `::` e texto livre do
 	// catálogo dentro — um `PathEscape` daquilo funciona e é ilegível no log.
-	Situacao *string `json:"situacao"`
+	Situacao *string `json:"conditional"`
 	// Aprimoramentos são as pilhas escolhidas no diálogo de conjurar, uma por
 	// índice: `aug0`..`aug5`. Seis porque é o máximo do catálogo (Conjurar
 	// Monstro), e nomes minúsculos pela regra de sempre.
-	Aug0 *int `json:"aug0"`
-	Aug1 *int `json:"aug1"`
-	Aug2 *int `json:"aug2"`
-	Aug3 *int `json:"aug3"`
-	Aug4 *int `json:"aug4"`
-	Aug5 *int `json:"aug5"`
+	Aug0 *int `json:"augment0"`
+	Aug1 *int `json:"augment1"`
+	Aug2 *int `json:"augment2"`
+	Aug3 *int `json:"augment3"`
+	Aug4 *int `json:"augment4"`
+	Aug5 *int `json:"augment5"`
 	// Os filtros do catálogo de magias. Minúsculos como todos os outros.
-	MagiaBusca   string `json:"magiabusca"`
-	MagiaCirculo string `json:"magiacirculo"`
-	MagiaEscola  string `json:"magiaescola"`
+	MagiaBusca   string `json:"spell_search"`
+	MagiaCirculo string `json:"spell_circle"`
+	MagiaEscola  string `json:"spell_school"`
 	// Os filtros da Mochila: a busca da grade e o chip de categoria.
-	ItemBusca     string `json:"itembusca"`
-	ItemCategoria string `json:"itemcategoria"`
+	ItemBusca     string `json:"item_search"`
+	ItemCategoria string `json:"item_category"`
 	// O diálogo do dinheiro: o modo (receber, gastar, corrigir) e o valor.
-	TibarModo  string   `json:"tibarmodo"`
-	TibarValor *float64 `json:"tibarvalor"`
+	TibarModo  string   `json:"tibar_mode"`
+	TibarValor *float64 `json:"tibar_value"`
 	// Os filtros do diálogo de adicionar do catálogo.
-	CatalogoBusca     string `json:"catalogobusca"`
-	CatalogoCategoria string `json:"catalogocategoria"`
+	CatalogoBusca     string `json:"catalog_search"`
+	CatalogoCategoria string `json:"catalog_category"`
 	// Os campos de um item: quantidade, nome e espaços. `ItemQtd` serve ao
 	// catálogo e à edição; os outros dois só ao item custom.
-	ItemQtd     *int64   `json:"itemqtd"`
-	ItemNome    *string  `json:"itemnome"`
-	ItemEspacos *float64 `json:"itemespacos"`
+	ItemQtd     *int64   `json:"item_qty"`
+	ItemNome    *string  `json:"item_name"`
+	ItemEspacos *float64 `json:"item_slots"`
 	// O que a MESA rolou ao usar um consumível. A ficha não rola por ninguém.
-	ItemRolagemPv *int64 `json:"itemrolagempv"`
-	ItemRolagemPm *int64 `json:"itemrolagempm"`
+	ItemRolagemPv *int64 `json:"item_roll_hp"`
+	ItemRolagemPm *int64 `json:"item_roll_mp"`
 	// As melhorias escolhidas no diálogo, e o material. Lista e não par de
 	// ids: são até quatro melhorias no mesmo item.
-	ItemMelhorias []string `json:"itemmelhorias"`
-	ItemMaterial  string   `json:"itemmaterial"`
+	ItemMelhorias []string `json:"item_improvements"`
+	ItemMaterial  string   `json:"item_material"`
 	// Os degraus escolhidos ao entrar numa postura que escala com o nível, e a
 	// busca da lista de poderes.
-	PoderDegraus *int64 `json:"poderdegraus"`
-	PoderBusca   string `json:"poderbusca"`
+	PoderDegraus *int64 `json:"stance_degrees"`
+	PoderBusca   string `json:"power_search"`
 	// Os atributos que a raça distribui, escolhidos no diálogo.
-	RacaAtributos []string `json:"racaatributos"`
+	RacaAtributos []string `json:"race_attributes"`
 }
 
 // augments traduz os seis sinais no que a validação espera.

@@ -25,7 +25,7 @@ import "t20engine/web/ui"
 // mesma cena — que é exatamente a sétima armadilha do Datastar, a que custou o
 // vermelho do CI nesta issue.
 //
-// UM sinal e não onze: `$detalhe` guarda a CHAVE da caixa aberta, e cada
+// UM sinal e não onze: `$detail` guarda a CHAVE da caixa aberta, e cada
 // sobreposição se compara com ela. Onze booleanos precisariam de alguém que
 // apagasse os outros dez ao abrir o décimo primeiro, e o dia em que esse alguém
 // esquecesse uma caixa abriria duas ao mesmo tempo.
@@ -230,9 +230,9 @@ func combatBox(tile statTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe = '" + tile.Key + "'")
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + tile.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 103, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 103, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -581,9 +581,9 @@ func weaponCard(arma weaponTile) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var29 string
-		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe = '" + arma.Key + "'")
+		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + arma.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 164, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 164, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -999,7 +999,7 @@ func weaponDetail(arma weaponTile) templ.Component {
 // O ESC NÃO MORA AQUI (ALE-298), e a razão é aritmética: esta moldura é
 // desenhada POR ITEM da lista, e o ouvinte dela era de JANELA. Medido na aba de
 // Perícias, **trinta ouvintes de Escape numa página** — vinte e nove deles
-// escrevendo o mesmo `$detalhe = ”`. Um ouvinte de janela não pertence ao nó
+// escrevendo o mesmo `$detail = ”`. Um ouvinte de janela não pertence ao nó
 // que o pendura; ele pertence à CENA, e é lá que ele passou a morar. Ver
 // `ficha`.
 //
@@ -1034,15 +1034,15 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var56 string
-		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe === '" + key + "'")
+		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail === '" + key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 266, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 266, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\" style=\"display:none\" data-on:click=\"evt.target === el && ($detalhe = '')\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4\"><div role=\"dialog\" aria-modal=\"true\" aria-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\" style=\"display:none\" data-on:click=\"evt.target === el && ($detail = '')\" class=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4\"><div role=\"dialog\" aria-modal=\"true\" aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1060,9 +1060,9 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var58 string
-		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detalhe === '" + key + "'")
+		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail === '" + key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 280, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/combat.templ`, Line: 280, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 		if templ_7745c5c3_Err != nil {
@@ -1081,7 +1081,7 @@ func overlay(key, titulo, icone string, magic bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "\" data-on:click=\"$detalhe = ''\" class=\"absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "\" data-on:click=\"$detail = ''\" class=\"absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

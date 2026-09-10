@@ -528,6 +528,38 @@ existiam no dia. Ele não cobra tradução, e o cabeçalho dele diz isso com tod
 letras: quem força a tradução é a linha de base encolher a cada superfície
 varrida.
 
+#### Renomear um sinal são SETE canais, e nada liga um ao outro
+
+A lista está aqui porque foi construída a pedaços, cada pedaço por um vermelho
+diferente — e porque cinco deles são invisíveis para um `grep` de `$nome`:
+
+| # | canal | como ele aparece |
+|---|---|---|
+| 1 | expressão | `$creature_search` |
+| 2 | chave de atributo | `data-bind:creature_search` |
+| 3 | **valor** de atributo | `data-ref="delete_dialog"` |
+| 4 | declaração | `data-signals="{…}"`, e as strings montadas em Go (`Sinais:`, `StageSignals`) |
+| 5 | tag JSON do servidor | `json:"creature_search"` |
+| 6 | filtro de remendo | `data-on-signal-patch-filter="{include: /^sheet_version$/}"` |
+| 7 | **argumento de string** | `@pickerDialog("condition_dialog", …)`, que monta `"$" + sinal` lá dentro |
+
+O 3 e o 7 foram os que morderam na ALE-301, e os dois do mesmo jeito: a suíte de
+Go inteira passou verde e quem acusou foi o Playwright. O 3 deixou três diálogos
+(apagar campanha, apagar conta, redefinir senha) sem abrir; o 7 deixou o diálogo
+de aplicar condição sem abrir. **Nos dois casos a expressão passou a ler
+`undefined`, que em JavaScript não é erro** — é o gesto não fazer nada.
+
+O canal 5 tem uma armadilha própria na direção contrária: **nem toda tag JSON é
+sinal.** Uma varredura que trocasse `json:"fonte"` sem olhar onde ela mora
+reescreveu o oráculo do markdown e o `Buff` do catálogo, que não têm nada com
+Datastar. Os dois vermelhos vieram de teste, mas o hábito certo é ler o diff das
+tags antes de aceitar.
+
+**O que fecha os canais hoje**: o 2 tem o `TestNoDatastarAttributeKeyCarriesUppercase`,
+o 3 tem o `TestEverySignalDeclaredByValueHasAReader`, e a FORMA de todos tem a
+catraca. O 7 não tem guarda — são três sítios no repositório, e eles estão
+nomeados na tabela acima justamente porque um `grep` não os acha.
+
 > **A regra já estava escrita treze vezes** — treze comentários em `web/table`,
 > `web/sheetui`, `web/finder` e `web/master`, cada um contando a mesma história
 > com um exemplo diferente — e nunca tinha sido varrida. O décimo quarto sítio

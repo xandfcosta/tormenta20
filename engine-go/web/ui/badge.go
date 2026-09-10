@@ -23,7 +23,7 @@ package ui
 //     diâmetro centrado nele não cruzar outro alvo. As linhas de perícia têm 62px
 //     de passo, então sobra folga.
 //   - EQUIVALENTE — o número da perícia é `size-11` (44×44) e dispara o MESMO
-//     `$detalhe` que o nome de 139×20 ao lado. Um dos dois cumprindo os 24px
+//     `$detail` que o nome de 139×20 ao lado. Um dos dois cumprindo os 24px
 //     basta, e é o caso.
 //
 // Isso importa para quem for mexer: **este app troca alvo por densidade**, e a

@@ -55,7 +55,7 @@ type panelCombat struct {
 
 // statTile é uma caixa com um número e a decomposição dele por trás.
 type statTile struct {
-	// Key é o que o diálogo compara com o sinal `$detalhe`, e por isso ela é
+	// Key é o que o diálogo compara com o sinal `$detail`, e por isso ela é
 	// única na página. Ver `combatPanel`.
 	Key   string
 	Label string

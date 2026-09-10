@@ -33,7 +33,7 @@ templ spellsPanelSection(v View) {
 				<button
 					type="button"
 					aria-label="Aprender magia"
-					data-on:click="$aprender = true"
+					data-on:click="$learn_dialog = true"
 					class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "ml-auto") }
 				>
 					@ui.Icon("Plus", "size-4")
@@ -166,7 +166,7 @@ templ castSpellDialog(v View, magia learnedSpellRow) {
 		}
 		<button
 			type="button"
-			data-on:click={ sheetPost(v, "/magias/conjura/"+magia.Command) + "; $detalhe = ''" }
+			data-on:click={ sheetPost(v, "/magias/conjura/"+magia.Command) + "; $detail = ''" }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>{ "Conjurar " + magia.Name }</button>
 	}
@@ -249,24 +249,24 @@ templ learnSpellDialog(v View) {
 	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
 	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<div
-		data-show="$aprender"
+		data-show="$learn_dialog"
 		style="display:none"
-		data-on:click="evt.target === el && ($aprender = false)"
-		data-on:keydown__window="evt.key === 'Escape' && ($aprender = false)"
+		data-on:click="evt.target === el && ($learn_dialog = false)"
+		data-on:keydown__window="evt.key === 'Escape' && ($learn_dialog = false)"
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4"
 	>
 		<div
 			role="dialog"
 			aria-modal="true"
 			aria-label="Aprender magia"
-			data-attr:data-expanded="$aprender"
+			data-attr:data-expanded="$learn_dialog"
 			class="relative flex max-h-[85vh] w-full flex-col rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-lg"
 		>
 			<p class={ ui.SectionLabelClasses("gold", "pr-10") }>Aprender magia</p>
 			<button
 				type="button"
 				aria-label="Fechar aprender magia"
-				data-on:click="$aprender = false"
+				data-on:click="$learn_dialog = false"
 				class="absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>×</button>
 			@spellFilters(v)
@@ -304,7 +304,7 @@ templ spellFilters(v View) {
 			<input
 				type="search"
 				name="magiabusca"
-				data-bind:magiabusca
+				data-bind:spell_search
 				data-on:input__debounce.250ms={ sheetGet(v) }
 				value={ v.Spells.Search }
 				placeholder="Buscar magia"
@@ -314,7 +314,7 @@ templ spellFilters(v View) {
 		</div>
 		<select
 			name="magiacirculo"
-			data-bind:magiacirculo
+			data-bind:spell_circle
 			data-on:change={ sheetGet(v) }
 			aria-label="Filtrar por círculo"
 			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
@@ -329,7 +329,7 @@ templ spellFilters(v View) {
 		</select>
 		<select
 			name="magiaescola"
-			data-bind:magiaescola
+			data-bind:spell_school
 			data-on:change={ sheetGet(v) }
 			aria-label="Filtrar por escola"
 			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"

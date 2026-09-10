@@ -14,7 +14,7 @@ import (
 // # O defeito, medido
 //
 // A aba de Perícias servia **trinta** ouvintes de `keydown__window` com Escape.
-// Vinte e nove escreviam a MESMA coisa — `$detalhe = ”` —, porque a moldura de
+// Vinte e nove escreviam a MESMA coisa — `$detail = ”` —, porque a moldura de
 // diálogo é desenhada por item da lista e cada instância pendurava o próprio.
 //
 // Um ouvinte de janela não pertence ao nó que o pendura: ele não sabe qual

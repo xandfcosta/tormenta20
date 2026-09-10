@@ -204,7 +204,7 @@ func TestTheRaceAttributePendencyAppearsAndCloses(t *testing.T) {
 		t.Fatal("o humano sem distribuição não mostra a pendência")
 	}
 
-	corpo := `{"racaatributos":["strength","dexterity","constitution"]}`
+	corpo := `{"race_attributes":["strength","dexterity","constitution"]}`
 	if recusa := powerCommand(t, f, id, "atributos", corpo); recusa != "" {
 		t.Fatalf("a distribuição foi recusada: %q", recusa)
 	}
@@ -218,7 +218,7 @@ func TestARepeatedDistributionIsRefused(t *testing.T) {
 	f, id := barbaro(t, 1)
 	seedRaca(t, f.s, id, "Humano")
 
-	corpo := `{"racaatributos":["strength","strength","strength"]}`
+	corpo := `{"race_attributes":["strength","strength","strength"]}`
 	if recusa := powerCommand(t, f, id, "atributos", corpo); !strings.Contains(recusa, "distintos") {
 		t.Errorf("três vezes o mesmo atributo foi aceito: %q", recusa)
 	}

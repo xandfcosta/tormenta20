@@ -331,7 +331,7 @@ func aprendidasEscrito(n int) string {
 // sinal por magia daria 198 × 6 declarações no `<body>` para guardar seis
 // números.
 func augmentSignal(indice int) string {
-	return "$aug" + strconv.Itoa(indice)
+	return "$augment" + strconv.Itoa(indice)
 }
 
 // thatOpensCastGesture ZERA as pilhas antes de abrir.
@@ -345,7 +345,7 @@ func thatOpensCastGesture(magia learnedSpellRow) string {
 	for i := 0; i < 6; i++ {
 		limpeza += augmentSignal(i) + " = 0; "
 	}
-	return limpeza + "$detalhe = 'conjura-" + magia.Command + "'"
+	return limpeza + "$detail = 'conjura-" + magia.Command + "'"
 }
 
 // costPreview é a expressão que soma o custo na tela.
