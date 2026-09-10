@@ -897,7 +897,7 @@ templ planToken(v BoardView, p boardToken) {
 		aria-label={ tokenName(p) }
 		title={ tokenName(p) }
 		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
-		data-class={ tokenStyling(p.ID, v.ArrastaAPeca == p.ID) }
+		data-class={ tokenStyling(p.ID, dragsItself(v, p.ID)) }
 		if tokenReceivesGesture(v, p.ID) {
 			data-on:pointerdown={ takeToken(v, p.ID) }
 			data-on:pointermove__window={ followToken(v, p) }

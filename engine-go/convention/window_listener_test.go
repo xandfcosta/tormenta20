@@ -36,6 +36,18 @@ import (
 // de um sinal, e isso é refatoração com risco de comportamento — está medido na
 // ALE-299 em vez de virar exceção declarada aqui.
 //
+// **A ALE-299 rodou, e a resposta foi que o ponteiro CONTINUA fora — por outro
+// motivo.** O que ela achou não foi custo, foi CORREÇÃO: o sinal que separava um
+// arrasto do outro guardava um literal compartilhado, e no rascunho pegar uma
+// peça movia a primeira do DOM. Consertada a identidade, o custo foi medido com
+// nove peças — nove ouvintes de `pointermove`, 10,5ms de handler em 60 quadros,
+// 0,175ms por quadro contra um orçamento de 16,7ms. Juntar tudo num ouvinte
+// devolveria 0,156ms por quadro no gesto mais medido do app. Não paga.
+//
+// Quem cobra o gesto por peça agora é o `TestNoTokenGestureAnswersForAnotherToken`,
+// no `web/table`: ele não conta ouvintes, ele exige que cada um reconheça a
+// PRÓPRIA peça.
+//
 // # O que este guarda cobra, e o que ele NÃO cobra
 //
 // Ele lê a FONTE e recusa um COMPONENTE que pendure ouvinte de tecla na janela

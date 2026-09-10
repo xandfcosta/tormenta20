@@ -309,6 +309,20 @@ uma vez, todos herdados da tela antiga. **Instrumento que mora dentro de um
 chamador tem exatamente um chamador**, e isso não aparece em nenhuma revisão de
 diff.
 
+**E a terceira, medida na ALE-299: o guarda visita a tela com UM ITEM.** O
+arrasto da peça no tabuleiro tem guarda de e2e desde a ALE-203, cobrando passos
+intermediários, prévia, seta e distância — com **uma peça no mapa**
+(`toHaveCount(1)`). O defeito só existe a partir da segunda: cada peça pendura o
+próprio `pointerup__window`, todas passavam na mesma guarda compartilhada, e
+vencia a ORDEM DO DOM. Com uma peça, o primeiro do DOM É o arrastado, e o gesto
+errado e o certo produzem o mesmo resultado. No rascunho, pegar a segunda peça
+movia a primeira — visível desde o primeiro quadro, e verde na suíte inteira.
+
+Não é ramificar pelo dado, é ramificar pela CARDINALIDADE: uma tela que desenha
+N nós iguais tem um comportamento com N=1 e outro com N>1, e medir N=1 é medir a
+metade em que o defeito é invisível por construção. **A pergunta é "quantos
+itens o caso põe na tela, e o defeito precisa de quantos?"**
+
 A segunda: **o guarda visita todas as telas e um só DADO.** O caminhar pelas
 sete abas da ficha abre as sete — de um herói, e o primeiro do elenco é um
 guerreiro. Metade do painel de Combate (a tripla mágica, com a paleta arcana
@@ -356,7 +370,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **58 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **60 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -373,7 +387,9 @@ de catálogo carrega acento, toda cena de seleção declara os sinais que o gest
 dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum
 crachá escreve a própria geometria à mão, todo marcador de trilho diz o NOME e
 não só as iniciais, nenhum componente com ouvinte de TECLA na janela é chamado
-de dentro de um laço, nenhum identificador NOVO nasce em português. Cada um nasceu de um defeito que tinha irmãos.
+de dentro de um laço, nenhum identificador NOVO nasce em português, nenhum gesto
+de uma peça do tabuleiro responde por outra. Cada um nasceu de um defeito que
+tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
