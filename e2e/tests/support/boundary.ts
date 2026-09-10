@@ -4,7 +4,7 @@ import { expect, type Page } from '@playwright/test'
  * O LIMITE DE UM COMPONENTE contra o que está atrás dele (WCAG 1.4.11).
  *
  * A regra é 3:1, e ela não é sobre TEXTO: é sobre conseguir ver ONDE o botão
- * começa e acaba. O medidor de contraste da casa (`support/contraste.ts`) não
+ * começa e acaba. O medidor de contraste da casa (`support/contrast.ts`) não
  * responde isso — ele compara a tinta do texto com o fundo efetivo, e um botão
  * cujo preenchimento se confunde com a cena passa por ele sem reclamar, porque
  * a letra continua legível.

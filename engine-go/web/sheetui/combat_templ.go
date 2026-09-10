@@ -173,7 +173,7 @@ func combatPanel(v View) templ.Component {
 // diálogo — abaixo dos 4,5 do AA, e estes rótulos são `text-4xs`, que é o
 // tamanho que mais precisa. A SPA tem o mesmo defeito desde sempre; ele nunca
 // apareceu porque o medidor de contraste era função privada de outro spec e
-// nunca chegou à ficha (ver `e2e/tests/support/contraste.ts`).
+// nunca chegou à ficha (ver `e2e/tests/support/contrast.ts`).
 //
 // `penalty-ink` é o vermelho LEGÍVEL da casa, com a regra já escrita no
 // `index.css`: `bg-penalty` para o bloco, `text-penalty-ink` para a letra. A

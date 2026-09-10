@@ -55,7 +55,7 @@ async function asDuasTelas(browser: Browser) {
  * timeout de clique sobre um seletor que casou, com "subtree intercepts pointer
  * events" no log, que aponta para o lugar errado.
  */
-async function openTheQueue(page: Page) {
+async function openTheTracker(page: Page) {
   const gaveta = page.locator('#gaveta-da-fila')
   if (await gaveta.getAttribute('open') === null) {
     await page
@@ -66,14 +66,14 @@ async function openTheQueue(page: Page) {
   await expect(gaveta).toHaveAttribute('open', '')
 }
 
-async function closeTheQueue(page: Page) {
+async function closeTheTracker(page: Page) {
   await page.getByRole('button', { name: 'Fechar a iniciativa' }).click()
   await expect(page.locator('#gaveta-da-fila')).not.toHaveAttribute('open', '')
 }
 
 /** Põe um combatente na fila pelo gesto do mestre, e devolve o nome dele. */
 async function poeNaFila(page: Page, nome: string) {
-  await openTheQueue(page)
+  await openTheTracker(page)
   await page.getByRole('button', { name: '+ Combatente' }).click()
   await page.getByLabel('Nome', { exact: true }).fill(nome)
   await page.getByRole('button', { name: 'Acrescentar' }).click()
@@ -81,9 +81,9 @@ async function poeNaFila(page: Page, nome: string) {
 }
 
 async function tiraDaFila(page: Page, nome: string) {
-  await openTheQueue(page)
+  await openTheTracker(page)
   await page.getByRole('button', { name: `Remover ${nome} da fila` }).click()
-  await closeTheQueue(page)
+  await closeTheTracker(page)
 }
 
 /** A cena precisa estar EM CURSO: sem ela o servidor não manda fila à mesa. */
@@ -135,7 +135,7 @@ test('o que o mestre põe na fila aparece na tela do jogador', async ({ browser 
     await telaDoJogador.getByRole('button', { name: 'Mesa', exact: true }).click()
 
     await poeNaFila(telaDoMestre, eco)
-    await closeTheQueue(telaDoMestre)
+    await closeTheTracker(telaDoMestre)
 
     // A tela do jogador não recarrega: o combatente chega pelo stream.
     await expect(telaDoJogador.getByText(eco).first()).toBeVisible()
@@ -200,7 +200,7 @@ test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ brow
     await garanteACena(telaDoMestre)
     await telaDoJogador.getByRole('button', { name: 'Mesa', exact: true }).click()
     await poeNaFila(telaDoMestre, eco)
-    await closeTheQueue(telaDoMestre)
+    await closeTheTracker(telaDoMestre)
     await expect(telaDoJogador.getByText(eco).first()).toBeVisible()
 
     await telaDoMestre
@@ -210,12 +210,12 @@ test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ brow
       .click()
 
     await expect(telaDoJogador.getByText(eco)).toHaveCount(0)
-    await openTheQueue(telaDoMestre)
+    await openTheTracker(telaDoMestre)
     await expect(
       telaDoMestre.locator('#gaveta-da-fila').getByText(eco).first(),
       'a fila sumiu da tela do MESTRE: isso é apagar, não redigir',
     ).toBeVisible()
-    await closeTheQueue(telaDoMestre)
+    await closeTheTracker(telaDoMestre)
 
     // E volta pelo mesmo caminho: a fila estava guardada o tempo todo.
     await garanteACena(telaDoMestre)
@@ -303,7 +303,7 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
   const { telaDoMestre, telaDoJogador, fecha } = await asDuasTelas(browser)
   try {
     await garanteACena(telaDoMestre)
-    await openTheQueue(telaDoMestre)
+    await openTheTracker(telaDoMestre)
     await telaDoMestre.getByRole('button', { name: 'Adicionar grupo' }).click()
 
     // O NOME do personagem deste jogador, lido na superfície MESA — que é onde

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
-import { medeOContraste } from './support/contraste'
-import { expectCinzelAcimaDoPiso } from './support/tipografia'
+import { medeOContraste } from './support/contrast'
+import { expectCinzelAcimaDoPiso } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
@@ -92,7 +92,7 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 
   // A GRAMÁTICA DE TECLADO, medida aqui e não na lista do
-  // `piloto-gramatica-do-teclado.spec.ts`: aquele guarda enumera cenas de
+  // `piloto-keyboard-grammar.spec.ts`: aquele guarda enumera cenas de
   // endereço FIXO, e o desta tem o id de um herói que só existe depois de
   // alguém forjar. Sem esta asserção, a única cena do piloto com endereço
   // dinâmico nasceria fora do regime — que é a forma exata do defeito que

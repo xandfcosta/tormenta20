@@ -284,7 +284,7 @@ restaura a amostragem é a tela nova passar pelos componentes da casa.** Escolhe
 o remendo dá sensação de conserto e deixa o buraco aberto (ALE-252).
 
 > **O remendo foi escolhido, de olhos abertos** (ALE-252): o medidor virou
-> `e2e/tests/support/tipografia.ts` com `{falhas, medidos}` e passou de UM
+> `e2e/tests/support/typography.ts` com `{falhas, medidos}` e passou de UM
 > endereço para quinze, mais o caminhar pelas sete abas da ficha — reprovando de
 > saída dez sítios em cinco cenas que ele nunca tinha olhado. Barato, e achou
 > defeito de verdade. Mas cada cena nova continuava precisando da própria linha.
@@ -370,7 +370,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **60 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **61 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -388,8 +388,8 @@ dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum
 crachá escreve a própria geometria à mão, todo marcador de trilho diz o NOME e
 não só as iniciais, nenhum componente com ouvinte de TECLA na janela é chamado
 de dentro de um laço, nenhum identificador NOVO nasce em português, nenhum gesto
-de uma peça do tabuleiro responde por outra. Cada um nasceu de um defeito que
-tinha irmãos.
+de uma peça do tabuleiro responde por outra, nenhum arquivo de spec tem nome em
+português. Cada um nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
@@ -487,9 +487,12 @@ diferentes** e o mesmo spec leva as duas línguas — `board-drag.spec.ts` conte
 de caso" e de "descrição do teste" na mesma conversa, que é o pecado do
 `GLOSSARIO.md`: uma palavra por conceito. **Ela se chama descrição do teste.**
 
-As três varreduras que essa decisão abre — 22 specs, 139 sinais e 121 classes —
-são issue própria e NÃO estão feitas. Enquanto elas não rodam, o que vale é a
-regra: o que você escrever novo já sai em inglês.
+Das três varreduras que essa decisão abriu, **a dos specs rodou** (ALE-301):
+os 22 arquivos do `e2e/tests` saíram em inglês com as descrições intactas em
+português, e quem cobra é o `TestNoSpecFileIsNamedInPortuguese`. **Os 139 sinais
+e as 121 classes continuam em português**, e o nome de arquivo do `engine-go`
+também (`cena.ts`, `leitor.ts`, `comandos_magias.go`). Enquanto elas não rodam, o
+que vale é a regra: o que você escrever novo já sai em inglês.
 
 O conceito continua sendo o do livro — o que muda é a grafia do identificador.
 `sheet`, e não `characterData`: a tradução é do TERMO do glossário, não uma

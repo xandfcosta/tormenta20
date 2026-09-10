@@ -941,7 +941,7 @@ func SectionLabelClasses(tom, extra string) string {
 // foi descartado porque **14px é a medida do CORPO do texto neste app**, e um
 // cabeçalho do mesmo tamanho do texto perde a hierarquia que ele existe para
 // criar. A voz da Cinzel fica onde ela lê bem — aqui, e nos títulos de cena.
-// Abaixo de 14 ela não vai (ver `support/tipografia.ts`).
+// Abaixo de 14 ela não vai (ver `support/typography.ts`).
 //
 // O CONTEXTO muda só a entreletra, e a divisão não é deriva: `tracking-wide` é
 // de painel de tela densa — Mochila, Perícias, Grimório — e `[0.16em]` é de

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { medeOContraste } from './support/contraste'
+import { medeOContraste } from './support/contrast'
 import { expectDentroDaJanela, expectNadaRolaDeLado } from './support/geometry'
-import { medeATipografia } from './support/tipografia'
+import { medeATipografia } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
@@ -88,7 +88,7 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
     // de abas: à parte ele seria enumeração, e a aba da fatia 6 nasceria sem
     // medição. A ficha atravessou as fatias 1 e 2 sem medição nenhuma de
     // contraste — não por decisão, mas porque o medidor era função privada de
-    // outro spec (ver `support/contraste.ts`). O painel de Combate estreia a
+    // outro spec (ver `support/contrast.ts`). O painel de Combate estreia a
     // paleta ARCANA na ficha, que é tinta clara sobre painel escuro e
     // exatamente a forma dos dois defeitos que este medidor já pegou.
     const contraste = await medeOContraste(page)

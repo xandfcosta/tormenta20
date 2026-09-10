@@ -191,7 +191,7 @@ func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 // TestTheBookReaderLoadsWhatTheSceneNeeds (ALE-264).
 //
 // O leitor é JavaScript: o pdf.js lê o PDF, desenha o canvas e posiciona as
-// marcas. Nada disso cabe num teste de handler, e é o `e2e/tests/piloto-leitor.spec.ts`
+// marcas. Nada disso cabe num teste de handler, e é o `e2e/tests/piloto-book-reader.spec.ts`
 // que mede. O que cabe AQUI é o contrato entre os dois — os cinco dados que o
 // servidor escreve no `<div id="leitor">`. Errar um deles quebra o leitor em
 // silêncio: sem `data-abertura` ele abre seis páginas antes, sem `data-worker` o

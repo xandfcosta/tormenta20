@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { medeOContraste, textoComContrasteBaixo } from './support/contraste'
+import { medeOContraste, textoComContrasteBaixo } from './support/contrast'
 import { expectDentroDaJanela } from './support/geometry'
-import { expectCinzelAcimaDoPiso } from './support/tipografia'
+import { expectCinzelAcimaDoPiso } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**

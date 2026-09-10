@@ -125,13 +125,13 @@ export default defineConfig({
     // o arquivo ao abrir, a seed é só INSERT, e o login precisa dos usuários que
     // ela cria. Só existe quando NÓS subimos o servidor — com servidor externo
     // quem semeia é o CI, e aplicar `seed.sql` duas vezes estoura nas chaves.
-    ...(SERVIDOR_JA_DE_PE ? [] : [{ name: 'semente', testMatch: /semente\.setup\.ts/ }]),
+    ...(SERVIDOR_JA_DE_PE ? [] : [{ name: 'seed', testMatch: /seed\.setup\.ts/ }]),
     // Logs in once via the UI and saves the session (localStorage token) so the
     // other specs start authenticated.
     {
       name: 'setup',
       testMatch: /auth\.setup\.ts/,
-      dependencies: SERVIDOR_JA_DE_PE ? [] : ['semente'],
+      dependencies: SERVIDOR_JA_DE_PE ? [] : ['seed'],
     },
     {
       name: 'chromium',

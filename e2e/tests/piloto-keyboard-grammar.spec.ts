@@ -41,7 +41,7 @@ const CENAS = [
 
 // A segunda cena da forja NÃO cabe nesta lista: o endereço dela tem o id do
 // herói, e o herói só existe depois de alguém forjar. Ela é medida em
-// `piloto-forja.spec.ts`, que a alcança pelo caminho de verdade — a lista aqui é
+// `piloto-forge.spec.ts`, que a alcança pelo caminho de verdade — a lista aqui é
 // de cenas com endereço fixo, e fingir um id faria o guarda medir um 403.
 
 
