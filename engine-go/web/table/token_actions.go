@@ -119,13 +119,13 @@ func duplicatesWith(modo string) func(Scene, commandCtx) (*board.BoardState, err
 // clipboardSignals é a ÁREA DE TRANSFERÊNCIA de quem clicou, e ela viaja do
 // cliente porque é dele: a área é de quem copiou, não da mesa.
 //
-// Nomes TODOS MINÚSCULOS pela mesma razão do `tokenSignals`: o analisador de HTML
-// minuscula chave de atributo, e um `data-bind:areaPeca` ligaria um sinal novo
-// com o servidor lendo o antigo para sempre vazio.
+// Nomes em `snake_case` pela mesma razão do `tokenSignals`: o analisador de HTML
+// minuscula chave de atributo, então caixa alta ali liga um sinal novo e o
+// servidor fica lendo o antigo, para sempre vazio. O `_` atravessa intacto.
 type clipboardSignals struct {
-	Peca      string `json:"areapeca"`
-	Tabuleiro string `json:"areatabuleiro"`
-	Modo      string `json:"areamodo"`
+	Peca      string `json:"area_token"`
+	Tabuleiro string `json:"area_board"`
+	Modo      string `json:"area_mode"`
 }
 
 // pastesToken põe outra igual onde a pessoa está OLHANDO (ALE-206).
@@ -505,7 +505,7 @@ func closesTheCopyMenu(tokenID string) string {
 // `areapeca` + `areatabuleiro`.
 func putsInTheClipboard(v BoardView, p boardToken, modo, frase string) string {
 	return closesTheCopyMenu(p.ID) + fmt.Sprintf(
-		"$areapeca = %q; $areatabuleiro = %q; $areamodo = %q; $arearotulo = %q; $areafrase = %q; ",
+		"$area_token = %q; $area_board = %q; $area_mode = %q; $area_label = %q; $area_phrase = %q; ",
 		p.ID, v.TabuleiroID, modo, p.Rotulo, frase,
 	) + closeMenuToken
 }
@@ -515,8 +515,8 @@ func putsInTheClipboard(v BoardView, p boardToken, modo, frase string) string {
 // O Esc não chega: o `scene.js` o mapeia para "voltar" e o mata no documento —
 // medido na ALE-206, e o `railKeyboard` e o `clickedPointRuler` já registram o
 // mesmo. Uma faixa que dissesse "Esc limpa" prometeria o que a tela não cumpre.
-const emptiesTheClipboard = "$areapeca = ''; $areatabuleiro = ''; $areamodo = ''; " +
-	"$arearotulo = ''; $areafrase = ''"
+const emptiesTheClipboard = "$area_token = ''; $area_board = ''; $area_mode = ''; " +
+	"$area_label = ''; $area_phrase = ''"
 
 // pasteInTheMiddleOfTheView é o `CTRL + V`, e o quadrado é o CENTRO do que se vê.
 //
@@ -531,7 +531,7 @@ func pasteInTheMiddleOfTheView(v BoardView) string {
 	meioX := fmt.Sprintf("Math.floor(($vistax + document.getElementById(%q).clientWidth / 2) / $quadrado)", sceneId)
 	meioY := fmt.Sprintf("Math.floor(($vistay + document.getElementById(%q).clientHeight / 2) / $quadrado)", sceneId)
 	return typingTargetWithout +
-		fmt.Sprintf("(evt.key === 'v' || evt.key === 'V') && (evt.ctrlKey || evt.metaKey) && $areapeca !== '' "+
+		fmt.Sprintf("(evt.key === 'v' || evt.key === 'V') && (evt.ctrlKey || evt.metaKey) && $area_token !== '' "+
 			"? (evt.preventDefault(), @post('%s/colar/' + (%s) + '/' + (%s))) : null",
 			v.Base, meioX, meioY)
 }

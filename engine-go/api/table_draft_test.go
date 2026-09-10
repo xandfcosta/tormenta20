@@ -279,9 +279,9 @@ func TestTheRulerMeasuresInsideTheDraft(t *testing.T) {
 	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
 
 	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/regua",
-		`{"reguapontos":[[0,0],[3,0]],"reguafase":2}`)
+		`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
 
-	if !strings.Contains(resposta, "reguatexto") {
+	if !strings.Contains(resposta, "ruler_text") {
 		t.Fatalf("a régua não devolveu leitura: %s", resposta)
 	}
 	// TRÊS quadrados de 1,5m são 4,5m (T20 p238). O número é escrito na mão e
@@ -323,7 +323,7 @@ func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing
 	if !strings.Contains(resposta, "Assassino emboscado") {
 		t.Errorf("o mestre não viu a própria peça escondida no rascunho: %s", resposta)
 	}
-	if !strings.Contains(resposta, "gabaritopath") {
+	if !strings.Contains(resposta, "template_path") {
 		t.Errorf("o gabarito não devolveu o desenho: %s", resposta)
 	}
 	// O ACERVO não muda: medir não é comandar, e um `EditPlace` aqui gravaria a
@@ -373,7 +373,7 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 		f.draftUrl(lugar) + "/tabuleiro/regua",
 		f.draftUrl(lugar) + "/tabuleiro/gabarito/quadrado/1/4/4/4/4",
 	} {
-		resposta := f.posta(t, f.jogador, caminho, `{"reguapontos":[[0,0],[3,0]],"reguafase":2}`)
+		resposta := f.posta(t, f.jogador, caminho, `{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
 		if strings.Contains(resposta, "Assassino emboscado") {
 			t.Errorf("%s entregou a emboscada ao jogador: %s", caminho, resposta)
 		}

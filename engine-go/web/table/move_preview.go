@@ -112,11 +112,11 @@ func dragPreview(b *board.BoardState, st *aovivo.SessionRuntimeState, tokenID st
 	custos := legsCosts(dobras, moveTerrain(b))
 	cabe, segundo, alem := moveWires(dobras, custos, orcamento)
 	return map[string]any{
-		"previafiocabe":    cabe,
-		"previafiosegundo": segundo,
-		"previafioalem":    alem,
-		"previarotulos":    previewLabels(dobras, custos),
-		"previatexto":      previewPhrase(custos, orcamento),
+		"preview_arrow_fits":   cabe,
+		"preview_arrow_second": segundo,
+		"preview_arrow_beyond": alem,
+		"preview_labels":       previewLabels(dobras, custos),
+		"preview_text":         previewPhrase(custos, orcamento),
 	}, nil
 }
 
@@ -158,8 +158,8 @@ func previewLabels(dobras []engine.Square, custos []int) []map[string]any {
 // `previax`/`previay` nascem NULOS e não zero, e essa parte muda comportamento:
 // zero é uma casa legítima do plano, e um arrasto que começasse nela cairia na
 // trava do "só pede quando o quadrado muda" e não pediria a primeira prévia.
-const previewSignals = "previafiocabe: '', previafiosegundo: '', previafioalem: '', " +
-	"previarotulos: [], previatexto: '', previax: null, previay: null"
+const previewSignals = "preview_arrow_fits: '', preview_arrow_second: '', preview_arrow_beyond: '', " +
+	"preview_labels: [], preview_text: '', preview_x: null, preview_y: null"
 
 // legsReserve é a contagem que o `.templ` percorre para desenhar os nós
 // fixos dos rótulos. Sai do MESMO teto que o servidor corta — escritos em dois
@@ -178,12 +178,12 @@ func legsReserve() []int {
 // quadrado devolve texto vazio de propósito (ver `metersLeg`), e um `<text>`
 // sem conteúdo continuaria ocupando o nó com o halo do contorno.
 func existsPreviewLabel(i int) string {
-	return list("previarotulos", fmt.Sprintf("(lista[%d]?.t ?? '') !== ''", i))
+	return list("preview_labels", fmt.Sprintf("(lista[%d]?.t ?? '') !== ''", i))
 }
 
 // previewText e previewMid leem o trio que o servidor mandou.
 func previewText(i int) string {
-	return list("previarotulos", fmt.Sprintf("lista[%d]?.t ?? ''", i))
+	return list("preview_labels", fmt.Sprintf("lista[%d]?.t ?? ''", i))
 }
 
 // previewMid é o eixo `x` ou `y` do meio da perna, em QUADRADOS.
@@ -192,7 +192,7 @@ func previewText(i int) string {
 // atributo, porque o rótulo mora FORA do grupo que escala — se morasse dentro, o
 // `scale` multiplicaria a fonte e 12px virariam 1000px no zoom máximo.
 func previewMid(i int, eixo string) string {
-	return list("previarotulos", fmt.Sprintf("lista[%d]?.%s ?? 0", i, eixo))
+	return list("preview_labels", fmt.Sprintf("lista[%d]?.%s ?? 0", i, eixo))
 }
 
 // previewPhrase diz o custo e a faixa, na mesma língua do rodapé.

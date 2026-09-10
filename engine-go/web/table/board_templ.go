@@ -799,7 +799,7 @@ func clipboardStrip(v BoardView) templ.Component {
 			templ_7745c5c3_Var30 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<div data-show=\"$areapeca !== ''\" data-on:keydown__window=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<div data-show=\"$area_token !== ''\" data-on:keydown__window=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -820,7 +820,7 @@ func clipboardStrip(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</span> <span data-text=\"$arearotulo + ' · ' + $areafrase\"></span></span> <button type=\"button\" aria-label=\"Esvaziar a área de transferência\" title=\"Esvaziar a área\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</span> <span data-text=\"$area_label + ' · ' + $area_phrase\"></span></span> <button type=\"button\" aria-label=\"Esvaziar a área de transferência\" title=\"Esvaziar a área\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1232,9 +1232,9 @@ func drawnTemplate(v BoardView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var44 string
-		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue("$gabaritopath !== '' && $ferramenta === '" + FerramentaDoGabarito + "'")
+		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue("$template_path !== '' && $ferramenta === '" + FerramentaDoGabarito + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 595, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 595, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 		if templ_7745c5c3_Err != nil {
@@ -1253,20 +1253,20 @@ func drawnTemplate(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "\"><path data-attr:d=\"$gabaritopath\" class=\"tabuleiro-gabarito\"></path><circle data-show=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "\"><path data-attr:d=\"$template_path\" class=\"tabuleiro-gabarito\"></path><circle data-show=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var46 string
-		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue("$gabaritofase > 0")
+		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue("$template_phase > 0")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 615, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 615, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "\" data-attr:cx=\"$gabaritox + ($gabaritonaintersecao ? 0 : 0.5)\" data-attr:cy=\"$gabaritoy + ($gabaritonaintersecao ? 0 : 0.5)\" r=\"0.13\" class=\"tabuleiro-regua-ponta\"></circle> <circle data-show=\"$gabaritofase === 1 && $gabaritoaponta\" data-attr:cx=\"$gabaritomirax + 0.5\" data-attr:cy=\"$gabaritomiray + 0.5\" r=\"0.22\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-regua-alvo\"></circle></g></svg>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "\" data-attr:cx=\"$template_x + ($template_at_intersection ? 0 : 0.5)\" data-attr:cy=\"$template_y + ($template_at_intersection ? 0 : 0.5)\" r=\"0.13\" class=\"tabuleiro-regua-ponta\"></circle> <circle data-show=\"$template_phase === 1 && $template_aims\" data-attr:cx=\"$template_aim_x + 0.5\" data-attr:cy=\"$template_aim_y + 0.5\" r=\"0.22\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-regua-alvo\"></circle></g></svg>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1309,9 +1309,9 @@ func drawnRuler(v BoardView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var48 string
-		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue("$reguafase > 0 && $ferramenta === '" + FerramentaDaRegua + "'")
+		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue("$ruler_phase > 0 && $ferramenta === '" + FerramentaDaRegua + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 645, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 645, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 		if templ_7745c5c3_Err != nil {
@@ -1397,15 +1397,15 @@ func drawnRuler(v BoardView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var54 string
-		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue("$reguafase === " + number(reguaMedindo))
+		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue("$ruler_phase === " + number(reguaMedindo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 670, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 670, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "\" data-attr:cx=\"$reguamirax + 0.5\" data-attr:cy=\"$reguamiray + 0.5\" r=\"0.22\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-regua-alvo\"></circle></g>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "\" data-attr:cx=\"$ruler_aim_x + 0.5\" data-attr:cy=\"$ruler_aim_y + 0.5\" r=\"0.22\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-regua-alvo\"></circle></g>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1511,7 +1511,7 @@ func rulerReadingBox() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var60 string
-		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.ResolveAttributeValue("$reguatexto !== '' && $ferramenta === '" + FerramentaDaRegua + "'")
+		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.ResolveAttributeValue("$ruler_text !== '' && $ferramenta === '" + FerramentaDaRegua + "'")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 713, Col: 81}
 		}
@@ -1527,7 +1527,7 @@ func rulerReadingBox() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "<span data-text=\"$reguatexto\" class=\"font-mono tabular-nums text-grimorio-gold\"></span> <button type=\"button\" aria-label=\"Guardar a régua\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "<span data-text=\"$ruler_text\" class=\"font-mono tabular-nums text-grimorio-gold\"></span> <button type=\"button\" aria-label=\"Guardar a régua\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1622,7 +1622,7 @@ func templateBar(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var65 string
-			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$gabarito === %q ? 'true' : 'false'", string(forma)))
+			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$template === %q ? 'true' : 'false'", string(forma)))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 748, Col: 94}
 			}
@@ -1635,7 +1635,7 @@ func templateBar(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var66 string
-			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{'pincel-ligado': $gabarito === %q}", string(forma)))
+			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{'pincel-ligado': $template === %q}", string(forma)))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 749, Col: 82}
 			}
@@ -1680,7 +1680,7 @@ func templateBar(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var69 string
-			templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$gabarito === %q", string(forma)))
+			templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$template === %q", string(forma)))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 762, Col: 62}
 			}
@@ -1719,7 +1719,7 @@ func templateBar(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 124, "\" data-bind=\"gabaritotamanho\" data-on:input__debounce.200ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 124, "\" data-bind=\"template_size\" data-on:input__debounce.200ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1745,7 +1745,7 @@ func templateBar(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 126, "\" class=\"font-mono text-xs tabular-nums text-muted-foreground\"></span> <span data-text=\"$gabaritotexto\" class=\"min-w-0 flex-1 truncate text-xs text-grimorio-gold\"></span> <button type=\"button\" aria-label=\"Guardar o gabarito\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 126, "\" class=\"font-mono text-xs tabular-nums text-muted-foreground\"></span> <span data-text=\"$template_text\" class=\"min-w-0 flex-1 truncate text-xs text-grimorio-gold\"></span> <button type=\"button\" aria-label=\"Guardar o gabarito\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -5726,7 +5726,7 @@ func movePreview(v BoardView) templ.Component {
 			templ_7745c5c3_Var285 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 417, "<svg aria-hidden=\"true\" data-show=\"$previafiocabe !== ''\" class=\"tabuleiro-medida tabuleiro-medida-frente\"><g data-attr:transform=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 417, "<svg aria-hidden=\"true\" data-show=\"$preview_arrow_fits !== ''\" class=\"tabuleiro-medida tabuleiro-medida-frente\"><g data-attr:transform=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -5739,7 +5739,7 @@ func movePreview(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 418, "\"><path data-attr:d=\"$previafiocabe\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-previa-fio tabuleiro-previa-cabe\"></path> <path data-attr:d=\"$previafiosegundo\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-previa-fio tabuleiro-previa-segundo\"></path> <path data-attr:d=\"$previafioalem\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-previa-fio tabuleiro-previa-alem\"></path></g>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 418, "\"><path data-attr:d=\"$preview_arrow_fits\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-previa-fio tabuleiro-previa-cabe\"></path> <path data-attr:d=\"$preview_arrow_second\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-previa-fio tabuleiro-previa-segundo\"></path> <path data-attr:d=\"$preview_arrow_beyond\" vector-effect=\"non-scaling-stroke\" class=\"tabuleiro-previa-fio tabuleiro-previa-alem\"></path></g>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -5836,7 +5836,7 @@ func previewReading() templ.Component {
 			templ_7745c5c3_Var291 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 425, "<p role=\"status\" data-show=\"$previatexto !== ''\" class=\"tabuleiro-ajudante gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 425, "<p role=\"status\" data-show=\"$preview_text !== ''\" class=\"tabuleiro-ajudante gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -5844,7 +5844,7 @@ func previewReading() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 426, "<span data-text=\"$previatexto\" class=\"font-mono tabular-nums text-grimorio-gold\"></span></p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 426, "<span data-text=\"$preview_text\" class=\"font-mono tabular-nums text-grimorio-gold\"></span></p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

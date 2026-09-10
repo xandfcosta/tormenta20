@@ -986,8 +986,8 @@ func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 		"if ($arrastando !== '%s') return; "+
 			"$arrastox = evt.clientX - $arrastoinix; $arrastoy = evt.clientY - $arrastoiniy; "+
 			"const cx = %d + Math.round($arrastox / $quadrado), cy = %d + Math.round($arrastoy / $quadrado); "+
-			"if (cx === $previax && cy === $previay) return; "+
-			"$previax = cx; $previay = cy; "+
+			"if (cx === $preview_x && cy === $preview_y) return; "+
+			"$preview_x = cx; $preview_y = cy; "+
 			"@post('%s/%s/previa/' + cx + '/' + cy)",
 		p.ID, p.X, p.Y, v.Base, p.ID)
 }
@@ -1000,11 +1000,11 @@ func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 // qual é o que vale. É a mesma regra do nó compartilhado que o diálogo de senha
 // ensinou (ver o CLAUDE.md deste pacote).
 //
-// O `$previax` volta para um valor IMPOSSÍVEL e não para zero: zero é uma casa
+// O `$preview_x` volta para um valor IMPOSSÍVEL e não para zero: zero é uma casa
 // legítima do plano, e o próximo arrasto que começasse nela não pediria prévia
 // nenhuma — a trava do "só quando o quadrado muda" o engoliria em silêncio.
-const erasePreview = "$previafiocabe = ''; $previafiosegundo = ''; $previafioalem = ''; " +
-	"$previarotulos = []; $previatexto = ''; $previax = null; $previay = null"
+const erasePreview = "$preview_arrow_fits = ''; $preview_arrow_second = ''; $preview_arrow_beyond = ''; " +
+	"$preview_labels = []; $preview_text = ''; $preview_x = null; $preview_y = null"
 
 // dropFor escreve o `pointerup`: converte o deslocamento em QUADRADOS e
 // propõe a parada.

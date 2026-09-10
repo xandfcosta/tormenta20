@@ -177,8 +177,9 @@ func tableSignalsExpr() string {
 		// encontraria cheio no dia seguinte.
 		//
 		// São quatro sinais e não um objeto porque chave de atributo é
-		// minusculada pelo HTML: um `data-bind:areaPeca` chega como `areapeca` e
-		// liga um sinal NOVO, com o servidor lendo o antigo para sempre vazio.
+		// minusculada pelo HTML: escrita em camelCase, ela chega minúscula e liga
+		// um sinal NOVO, com o servidor lendo o antigo para sempre vazio. Daí o
+		// `snake_case`, que atravessa o parser intacto (CLAUDE.md, "Idioma").
 		//
 		// `areatabuleiro` guarda de ONDE a peça veio, e é ele que faz o colar
 		// atravessar as abas: a original pode não estar no tabuleiro em que se
@@ -187,7 +188,7 @@ func tableSignalsExpr() string {
 		// `areamodo` é o valor que o SERVIDOR consome e `areafrase` é o que a
 		// pessoa lê: sem os dois, a faixa diria "Zumbi · sozinha", que é um
 		// identificador de código na tela de alguém.
-		"areapeca: '', areatabuleiro: '', areamodo: '', arearotulo: '', areafrase: ''",
+		"area_token: '', area_board: '', area_mode: '', area_label: '', area_phrase: ''",
 		// A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril. Os nomes levam
 		// `nova` porque `pecanome` e `pecatamanho` JÁ SÃO do diálogo de EDITAR
 		// peça, logo acima, e vivem no mesmo documento: reusá-los faria o gesto
@@ -236,11 +237,11 @@ func tableSignalsExpr() string {
 		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a
 		// barra marcando uma forma e o mapa desenhando outra. `aponta: false`
 		// acompanha, porque a esfera vai para todos os lados (p225).
-		fmt.Sprintf("gabarito: '%s', gabaritoaponta: %t, gabaritonaintersecao: %t, gabaritotamanho: 2",
+		fmt.Sprintf("template: '%s', template_aims: %t, template_at_intersection: %t, template_size: 2",
 			string(bookShapes[0]), pointsTemplate(bookShapes[0]),
 			shapeStartsAtIntersection(bookShapes[0])),
-		"gabaritox: 0, gabaritoy: 0, gabaritomirax: 0, gabaritomiray: 0, gabaritofase: 0",
-		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", emptyTemplateHint),
+		"template_x: 0, template_y: 0, template_aim_x: 0, template_aim_y: 0, template_phase: 0",
+		fmt.Sprintf("template_path: '', template_text: %q", emptyTemplateHint),
 		// As NOTAS da sessão.
 		"notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false, notaslargura: 0, notasarrastando: false, notasflutua: false",
 		"notassalvando: false, erroDasNotas: ''",

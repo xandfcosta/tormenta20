@@ -11,7 +11,7 @@ import (
 // porque a armadilha custou duas rodadas na bancada.
 //
 // O sinal do Datastar é um PROXY REATIVO: ler um índice que não existe o CRIA.
-// Com a reserva de doze rótulos no ar, `$reguapontos[i]` encheu o sinal de
+// Com a reserva de doze rótulos no ar, `$ruler_points[i]` encheu o sinal de
 // strings vazias —
 //
 //	[[9,3], "", "", "", "", "", "", "", "", "", "", "", "", [17,7], …]
@@ -29,9 +29,9 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: as expressões da régua ESTÃO na página. Sem ele, não achar
-	// `$reguapontos[` seria verdade também sobre uma cena que não desenhou régua
+	// `$ruler_points[` seria verdade também sobre uma cena que não desenhou régua
 	// nenhuma.
-	if !strings.Contains(tela, "reguapontos") {
+	if !strings.Contains(tela, "ruler_points") {
 		t.Fatal("a cena não tem as expressões da régua — o guarda mediria o vazio")
 	}
 	// A REGRA: depois de `$lista` só pode vir `=` (uma escrita) ou `]` (o fim de
@@ -39,12 +39,12 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	// acesso ao proxy, e o proxy cria.
 	//
 	// A primeira versão deste guarda procurava só `$lista[`, e ela passou VERDE
-	// sobre a segunda forma do mesmo defeito: `const lista = $reguapontos;` põe o
+	// sobre a segunda forma do mesmo defeito: `const lista = $ruler_points;` põe o
 	// PROXY na constante, e `lista[12]` cria o índice do mesmo jeito. Provado na
 	// bancada sabotando as duas formas — a primeira acusou, a segunda não. Por
 	// isso a regra é sobre o que PODE vir depois, e não sobre uma forma errada
 	// conhecida.
-	for _, lista := range []string{"reguapontos", "reguarotulos"} {
+	for _, lista := range []string{"ruler_points", "ruler_labels"} {
 		acessos := regexp.MustCompile(`\$`+lista+`\s*(.)`).FindAllStringSubmatch(tela, -1)
 		if len(acessos) == 0 {
 			t.Errorf("`$%s` não aparece na cena — o controle acima não alcançou esta lista", lista)
@@ -101,7 +101,7 @@ func TestAForgedRulerIsRefused(t *testing.T) {
 		pontos = append(pontos, "["+string(rune('0'+i%10))+",0]")
 	}
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/regua",
-		`{"reguapontos":[`+strings.Join(pontos, ",")+`],"reguafase":2}`)
+		`{"ruler_points":[`+strings.Join(pontos, ",")+`],"ruler_phase":2}`)
 	if !strings.Contains(corpo, "teto") {
 		t.Errorf("uma régua com %d paradas não foi recusada: %q", len(pontos), corpo)
 	}
@@ -133,7 +133,7 @@ func TestTheSphereIsBornAtTheIntersection(t *testing.T) {
 		t.Error("a tela não arredonda o clique para o canto: com `floor` a esfera cai " +
 			"meio quadrado longe do dedo, e o defeito é silencioso")
 	}
-	if !strings.Contains(tela, "gabaritonaintersecao") {
+	if !strings.Contains(tela, "template_at_intersection") {
 		t.Error("a tela não pergunta ao servidor onde a forma nasce — a regra virou " +
 			"uma segunda cópia na expressão")
 	}
