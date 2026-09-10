@@ -86,7 +86,7 @@ func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
 	if !strings.Contains(teclado, "isContentEditable") {
 		t.Error("o atalho não se protege de um campo `contenteditable`")
 	}
-	// E o ESC NÃO pode estar aqui. Ele tem dono — o `cena.js` mapeia Escape para
+	// E o ESC NÃO pode estar aqui. Ele tem dono — o `scene.js` mapeia Escape para
 	// "voltar" e o para no `document`, então um `keydown__window` nunca o vê.
 	// Provado no navegador com controle: `F2` no mesmo nó liga a ferramenta e
 	// `Escape` não chega nem a um `addEventListener` cru na janela.
@@ -94,7 +94,7 @@ func TestTheShortcutDoesNotStealTheKeyFromWhoIsTyping(t *testing.T) {
 	// O guarda é NEGATIVO de propósito: um ramo de Escape aqui não daria erro em
 	// lugar nenhum — ele só ficaria prometendo uma saída que a tela não cumpre.
 	if strings.Contains(teclado, "Escape") {
-		t.Error("o trilho promete o Esc, que o `cena.js` engole antes de chegar à janela")
+		t.Error("o trilho promete o Esc, que o `scene.js` engole antes de chegar à janela")
 	}
 }
 

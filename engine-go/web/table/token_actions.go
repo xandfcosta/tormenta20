@@ -466,7 +466,7 @@ func openMenuToken(id string) string {
 // Aqui morava "três lugares: o ✕ do menu, a tecla Esc e …", e o Esc nunca
 // funcionou — medido na ALE-206: com o menu aberto, `Escape` o deixa `display:
 // flex` e só o ✕ o fecha. Não é um defeito a consertar, é uma promessa a
-// retirar: o `cena.js` mapeia Escape para "voltar" e chama `stopPropagation` no
+// retirar: o `scene.js` mapeia Escape para "voltar" e chama `stopPropagation` no
 // documento, então ele não chega. O `railKeyboard` e o `clickedPointRuler` já
 // tinham medido exatamente isso, cada um no seu canto, e os dois escrevem que
 // um ramo de Escape ali "seria uma promessa que a tela não cumpre". Este
@@ -512,7 +512,7 @@ func putsInTheClipboard(v BoardView, p boardToken, modo, frase string) string {
 
 // emptiesTheClipboard limpa a área, e o gesto é um BOTÃO e nunca o Esc.
 //
-// O Esc não chega: o `cena.js` o mapeia para "voltar" e o mata no documento —
+// O Esc não chega: o `scene.js` o mapeia para "voltar" e o mata no documento —
 // medido na ALE-206, e o `railKeyboard` e o `clickedPointRuler` já registram o
 // mesmo. Uma faixa que dissesse "Esc limpa" prometeria o que a tela não cumpre.
 const emptiesTheClipboard = "$areapeca = ''; $areatabuleiro = ''; $areamodo = ''; " +

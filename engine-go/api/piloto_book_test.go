@@ -213,10 +213,10 @@ func TestTheBookReaderLoadsWhatTheSceneNeeds(t *testing.T) {
 		}
 	}
 	// O módulo do leitor só entra NESTA cena: são 540 KB de pdf.js.
-	if !strings.Contains(corpo, "leitor.js") {
+	if !strings.Contains(corpo, "reader.js") {
 		t.Error("a cena não carrega o módulo do leitor")
 	}
-	if bestiario := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "").Body.String(); strings.Contains(bestiario, "leitor.js") {
+	if bestiario := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "").Body.String(); strings.Contains(bestiario, "reader.js") {
 		t.Error("o bestiário carregou o pdf.js — 540 KB no caminho de quem só quer a ficha")
 	}
 }

@@ -8,16 +8,16 @@ function i(e) {
 		lin: Number(n[1])
 	};
 }
-function a(e, n, r, i) {
-	if (!t(e)) return;
-	let a = (n.col - r.col) * i, o = (n.lin - r.lin) * i;
+function a(e, t, r, i) {
+	if (!n(e)) return;
+	let a = (t.col - r.col) * i, o = (t.lin - r.lin) * i;
 	a === 0 && o === 0 || e.animate([{ transform: `translate(${a}px, ${o}px)` }, { transform: "translate(0, 0)" }], {
 		duration: 200,
 		easing: "cubic-bezier(0.22, 1, 0.36, 1)"
 	});
 }
 //#endregion
-//#region api/piloto/src/mesa.ts
+//#region api/piloto/src/table.ts
 var o = "(prefers-reduced-motion: reduce)";
 function s(e) {
 	new MutationObserver((t) => {
@@ -38,13 +38,13 @@ function s(e) {
 	});
 }
 function c(e) {
-	new MutationObserver((t) => {
-		if (!e.matches) for (let e of t) {
+	new MutationObserver((n) => {
+		if (!e.matches) for (let e of n) {
 			if (e.attributeName !== "aria-valuenow") continue;
-			let t = e.target, n = Number(e.oldValue), i = Number(t.getAttribute("aria-valuenow"));
-			if (!Number.isFinite(n) || !Number.isFinite(i) || n === i) continue;
-			let a = t.closest("li");
-			a && requestAnimationFrame(() => r(a, { curou: i > n }));
+			let n = e.target, r = Number(e.oldValue), i = Number(n.getAttribute("aria-valuenow"));
+			if (!Number.isFinite(r) || !Number.isFinite(i) || r === i) continue;
+			let a = n.closest("li");
+			a && requestAnimationFrame(() => t(a, { curou: i > r }));
 		}
 	}).observe(document.body, {
 		subtree: !0,
@@ -58,14 +58,14 @@ function l(e) {
 	return t ? Number(t[1]) : null;
 }
 function u(e) {
-	new MutationObserver((t) => {
-		if (!e.matches) for (let e of t) {
-			let t = e.target, n = t.parentElement;
-			if (!n?.hasAttribute("data-vital")) continue;
-			let i = l(e.oldValue), a = l(t.textContent);
+	new MutationObserver((n) => {
+		if (!e.matches) for (let e of n) {
+			let n = e.target, r = n.parentElement;
+			if (!r?.hasAttribute("data-vital")) continue;
+			let i = l(e.oldValue), a = l(n.textContent);
 			if (i === null || a === null || i === a) continue;
-			let o = n.parentElement;
-			o && requestAnimationFrame(() => r(o, { curou: a > i }));
+			let o = r.parentElement;
+			o && requestAnimationFrame(() => t(o, { curou: a > i }));
 		}
 	}).observe(document.body, {
 		subtree: !0,
@@ -73,12 +73,12 @@ function u(e) {
 		characterDataOldValue: !0
 	});
 }
-function d(e) {
-	new MutationObserver((t) => {
-		if (!e.matches) for (let e of t) {
-			if (e.attributeName !== "aria-current") continue;
-			let t = e.target;
-			t.getAttribute("aria-current") === "true" && n(t);
+function d(t) {
+	new MutationObserver((n) => {
+		if (!t.matches) for (let t of n) {
+			if (t.attributeName !== "aria-current") continue;
+			let n = t.target;
+			n.getAttribute("aria-current") === "true" && e(n);
 		}
 	}).observe(document.body, {
 		subtree: !0,
@@ -86,12 +86,12 @@ function d(e) {
 		attributeFilter: ["aria-current"]
 	});
 }
-function f(t) {
-	new MutationObserver((n) => {
-		if (!t.matches) for (let t of n) for (let n of t.addedNodes) {
-			if (n.nodeType !== Node.ELEMENT_NODE) continue;
-			let t = n, r = t.matches("[data-condicao]") ? [t] : [...t.querySelectorAll("[data-condicao]")];
-			for (let t of r) e(t);
+function f(e) {
+	new MutationObserver((t) => {
+		if (!e.matches) for (let e of t) for (let t of e.addedNodes) {
+			if (t.nodeType !== Node.ELEMENT_NODE) continue;
+			let e = t, n = e.matches("[data-condicao]") ? [e] : [...e.querySelectorAll("[data-condicao]")];
+			for (let e of n) r(e);
 		}
 	}).observe(document.body, {
 		subtree: !0,

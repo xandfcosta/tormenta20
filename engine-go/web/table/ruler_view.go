@@ -75,7 +75,7 @@ const (
 // quadrado pendurada. Com ela, o segundo clique do duplo não faz nada e o
 // congelamento cai limpo.
 //
-// O ESC NÃO ENTRA, e é medido: o `cena.js` mapeia Escape para "voltar" e chama
+// O ESC NÃO ENTRA, e é medido: o `scene.js` mapeia Escape para "voltar" e chama
 // `stopPropagation` no documento — provado com controle, um `F2` chega a um
 // listener cru na janela e o `Escape` não. Era ele que a nota do dono usava para
 // apagar; quem apaga é o botão direito, que chega.

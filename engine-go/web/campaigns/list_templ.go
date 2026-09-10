@@ -20,7 +20,7 @@ import (
 // O cursor (`$cursor`) é um sinal e o servidor manda TODOS os palcos: trocar de
 // campanha é `data-show`, não requisição. Quem move o cursor é o FOCO — cada
 // marcador do trilho o escreve no `focusin` —, e assim as setas funcionam sem
-// uma linha de teclado nesta tela: o driver do `cena.js` já move foco dentro de
+// uma linha de teclado nesta tela: o driver do `scene.js` já move foco dentro de
 // uma `data-nav-region`, e o cursor vem de carona.
 //
 // Essa é a diferença de desenho em relação à SPA, e ela é simplificação de

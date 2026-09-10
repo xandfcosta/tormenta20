@@ -63,7 +63,7 @@ type Page struct {
 	Kicker        string
 	Sinais        string
 	Init          string
-	// Scripts são os módulos EXTRA de UMA cena. O `cena.js` vale para toda
+	// Scripts são os módulos EXTRA de UMA cena. O `scene.js` vale para toda
 	// página; estes são para o que é de uma só — hoje a folha de especificação,
 	// que mede o desenho com canvas e `getComputedStyle` e ainda monta as peças
 	// da SPA como elementos customizados (ALE-251). Somam ~77 KB, e carregá-los
@@ -106,11 +106,11 @@ templ Layout(p Page, corpo templ.Component) {
 			<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 			<link rel="stylesheet" href={ p.Asset("piloto.css") }/>
 			<script type="module" src={ p.Asset("datastar.js") }></script>
-			// `cena.js` é o teclado, os cues de áudio e o posicionamento do
+			// `scene.js` é o teclado, os cues de áudio e o posicionamento do
 			// popover — compilado dos MESMOS fontes que a SPA usa (ALE-231), não
 			// de uma cópia. Vale para toda página do Datastar, e é `defer` por ser
 			// módulo: ele consulta o DOM ao carregar.
-			<script type="module" src={ p.Asset("cena.js") }></script>
+			<script type="module" src={ p.Asset("scene.js") }></script>
 			for _, modulo := range p.Scripts {
 				<script type="module" src={ modulo }></script>
 			}

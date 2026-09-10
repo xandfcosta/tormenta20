@@ -336,7 +336,7 @@ test.describe('O Hub e a SPA dividem a preferência de som', () => {
    * Enquanto as duas portas existirem, som e volume têm de ser a MESMA
    * preferência: quem liga o som no Hub do servidor não pode achá-lo desligado
    * na cena do tabuleiro. O contrato é a chave e a forma do `localStorage`
-   * (`t20-ui` → `{state:{sfx,volume}}`), e o `cena.js` escreve pelo mesmo
+   * (`t20-ui` → `{state:{sfx,volume}}`), e o `scene.js` escreve pelo mesmo
    * `persistUi` que o `ui-store` da SPA usa.
    *
    * É este contrato que se afirma — não o rótulo do botão. O rótulo é

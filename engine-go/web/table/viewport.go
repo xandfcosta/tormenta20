@@ -177,7 +177,7 @@ const viewportFollowsFocus = "const janela = evt.currentTarget.getBoundingClient
 // AS SETAS NÃO PERCORREM O PLANO, e isto é medido e não escolhido — é a mesma
 // história do Escape que o trilho registra.
 //
-// Elas já têm dono: o `cena.js` mapeia as quatro para "mover o foco" na gramática
+// Elas já têm dono: o `scene.js` mapeia as quatro para "mover o foco" na gramática
 // espacial do teclado e chama `preventDefault` + `stopPropagation` no
 // `document`. O evento **nunca chega à janela**, que é onde o `__window` escuta.
 // Provado com controle no mesmo teclado: um `F2` chega a um `addEventListener`

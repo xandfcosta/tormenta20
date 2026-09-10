@@ -70,7 +70,7 @@ alguém já usou e que não voltam.
 | **leitor** | `leitor` | ~~visualizador~~, ~~viewer~~ | A cena que abre o PDF do livro na página do verbete e o DESTACA (ALE-264). **Não é o visualizador do navegador**, que continua a um clique de distância ("abrir fora") — a distinção importa porque os dois existem lado a lado: o leitor mostra uma página por vez com o termo marcado, o visualizador tem busca, miniaturas e impressão. Ele existe por medição: o Chrome ignora `#search=` e transfere o arquivo inteiro (85 MiB) para abrir uma página; o leitor destaca e custou 1 MiB. |
 | **página do livro** | `BookPage` | ~~folha~~ | O número IMPRESSO no rodapé, que é o que o catálogo grava e o que a ficha mostra ("p289"). **Não é a página do ARQUIVO**, que é a que `#page=N` conta — ver `abertura` abaixo. |
 | **abertura** | `LivroAbertura` | ~~offset~~, ~~deslocamento~~ | Quantas páginas o arquivo tem ANTES da página impressa 1: 6 no PDF da casa, medido pelo rodapé. `deslocamento` está proibido porque em T20 é o quanto uma criatura anda. |
-| **tela cheia** | `api/piloto/src/cena.ts` | ~~fullscreen~~ (na tela) | O gesto do menu do Hub que estica a janela ATUAL pela Fullscreen API. Some quando a aba fecha, e o iPhone não o tem. Continua sendo a saída de quem não instalou (ALE-118). |
+| **tela cheia** | `api/piloto/src/scene.ts` | ~~fullscreen~~ (na tela) | O gesto do menu do Hub que estica a janela ATUAL pela Fullscreen API. Some quando a aba fecha, e o iPhone não o tem. Continua sendo a saída de quem não instalou (ALE-118). |
 
 ## B. O combate
 

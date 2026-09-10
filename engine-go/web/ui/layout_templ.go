@@ -71,7 +71,7 @@ type Page struct {
 	Kicker             string
 	Sinais             string
 	Init               string
-	// Scripts são os módulos EXTRA de UMA cena. O `cena.js` vale para toda
+	// Scripts são os módulos EXTRA de UMA cena. O `scene.js` vale para toda
 	// página; estes são para o que é de uma só — hoje a folha de especificação,
 	// que mede o desenho com canvas e `getComputedStyle` e ainda monta as peças
 	// da SPA como elementos customizados (ALE-251). Somam ~77 KB, e carregá-los
@@ -169,9 +169,9 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Asset("cena.js"))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Asset("scene.js"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/layout.templ`, Line: 113, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/layout.templ`, Line: 113, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {

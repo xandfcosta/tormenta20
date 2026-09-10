@@ -3519,7 +3519,7 @@ func placesCollection(v BoardView) templ.Component {
 // `<button>` de verdade, o teclado a alcança, e o `Enter` abre este mesmo menu.
 //
 // O ESC NÃO FECHA o menu, e a linha que prometia isso saiu na ALE-203 por ser
-// mentira: o `cena.js` mapeia Escape para "voltar" e o para no `document`, então
+// mentira: o `scene.js` mapeia Escape para "voltar" e o para no `document`, então
 // um `keydown__window` nunca o vê. Quem fecha é o ✕, e abrir o menu de OUTRA
 // peça — que é o mesmo sinal recebendo outro id.
 func tokenMenu(v BoardView, p boardToken) templ.Component {
@@ -3870,12 +3870,12 @@ func tokenMenu(v BoardView, p boardToken) templ.Component {
 //
 // A top layer resolve os três de uma vez: sai do `transform`, sai do
 // `overflow` e é posicionada em relação à JANELA. Quem escreve as coordenadas é
-// o `ancora()` do `cena.js`, no `beforetoggle` — o mesmo que posiciona o menu do
+// o `ancora()` do `scene.js`, no `beforetoggle` — o mesmo que posiciona o menu do
 // jogador no Hub —, e ele já vira para cima quando o gatilho está na metade de
 // baixo da tela.
 //
 // De brinde vêm o clique-fora e o Esc, que aqui FUNCIONA: o navegador fecha o
-// popover antes de o `cena.js` engolir a tecla. É o único Esc desta cena que
+// popover antes de o `scene.js` engolir a tecla. É o único Esc desta cena que
 // responde, e é por isso que ele não é anunciado em lugar nenhum — prometer
 // "Esc fecha" numa tela em que ele só fecha ISTO seria pior que não prometer.
 //

@@ -393,7 +393,7 @@ function Y(e) {
 	return typeof e != "number" || Number.isNaN(e) ? G : Math.min(100, Math.max(0, Math.round(e)));
 }
 //#endregion
-//#region api/piloto/src/cena.ts
+//#region api/piloto/src/scene.ts
 function X() {
 	let e = globalThis.localStorage?.getItem("t20-ui") ?? null;
 	return {

@@ -19,8 +19,8 @@ import { piscarVital, pulsarVez, emerge } from '@/lib/turn-juice'
  * módulo próprio — o `vite.piloto.config.ts` tinha quatro entradas e nenhuma
  * era esta. Isto é a quinta, e hoje ela liga as TRÊS.
  *
- * **Entrada própria e não `cena.ts`**, pela mesma razão escrita naquele arquivo:
- * o `cena.js` carrega em TODA página, e pôr observador de tabuleiro nele seria
+ * **Entrada própria e não `scene.ts`**, pela mesma razão escrita naquele arquivo:
+ * o `scene.js` carrega em TODA página, e pôr observador de tabuleiro nele seria
  * mandar código de mapa para quem abriu a ficha de um personagem.
  *
  * # O gate de movimento reduzido decide UMA vez, aqui

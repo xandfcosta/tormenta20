@@ -18,7 +18,7 @@ import "fmt"
 //
 // Todo o estado vive no `<div id="leitor">` como atributos de DADO, e não em
 // sinais do Datastar. A razão é que quem lê isto não é o Datastar: é o
-// `leitor.js`, um módulo próprio que roda uma vez na carga. Sinal seria estado
+// `reader.js`, um módulo próprio que roda uma vez na carga. Sinal seria estado
 // de cliente viajando em toda requisição seguinte para nada.
 func readerScene(v readerView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -304,7 +304,7 @@ func readerScene(v readerView) templ.Component {
 // readerButton é o botão quadrado da barra. Um componente porque são quatro, e
 // quatro cópias de nove classes divergem na primeira que alguém ajustar.
 //
-// UMA marca (`data-acao`) e não uma por família: o `leitor.js` procura pelo que
+// UMA marca (`data-acao`) e não uma por família: o `reader.js` procura pelo que
 // o botão FAZ, e dois atributos diferentes obrigariam o componente a saber qual
 // dos dois escrever — decisão de leiaute virando decisão de comportamento.
 func readerButton(acao, rotulo string) templ.Component {

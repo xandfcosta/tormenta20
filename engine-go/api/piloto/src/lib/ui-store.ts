@@ -10,7 +10,7 @@ import { type Accessor, createSignal } from 'solid-js'
 export const STORAGE_KEY = 't20-ui'
 
 /** Grava a preferência na MESMA chave e forma que a SPA usa. Exportado porque o
- *  módulo do Datastar (`piloto/cena.ts`, ALE-231) escreve nela: som e volume
+ *  módulo do Datastar (`piloto/scene.ts`, ALE-231) escreve nela: som e volume
  *  são preferência DESTE aparelho, e as duas portas do app têm de ler a mesma. */
 export function persistUi(state: { sfx: boolean; volume: number }, storage = globalThis.localStorage): void {
   storage?.setItem(STORAGE_KEY, JSON.stringify({ state }))

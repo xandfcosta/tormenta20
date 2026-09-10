@@ -167,7 +167,7 @@ func railKeyboard(mestre bool) string {
 	}
 	// ESC NÃO ENTRA AQUI, e isto é medido e não escolhido.
 	//
-	// Ele já tem dono: o `cena.js` mapeia Escape para "voltar" na gramática do
+	// Ele já tem dono: o `scene.js` mapeia Escape para "voltar" na gramática do
 	// teclado e chama `preventDefault` + `stopPropagation` no `document` — o
 	// evento **nunca chega à janela**, que é onde o `__window` escuta. Provado com
 	// controle no navegador: um `keydown` de `F2` no mesmo nó liga a ferramenta, e

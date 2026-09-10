@@ -97,6 +97,6 @@ func (s Scene) handleReader(w http.ResponseWriter, r *http.Request) {
 		// O módulo do leitor só entra AQUI: são 540 KB de pdf.js, e mandá-los em
 		// toda cena seria pôr um visualizador de PDF no caminho de quem abriu a
 		// ficha de um personagem.
-		Scripts: []string{s.deps.Asset("leitor.js")},
+		Scripts: []string{s.deps.Asset("reader.js")},
 	}, readerScene(v))
 }

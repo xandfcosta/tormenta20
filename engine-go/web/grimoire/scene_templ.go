@@ -1114,7 +1114,7 @@ func grimoire() templ.Component {
 // permanente: cada peça aparece nas duas versões, medida, e a divergência salta
 // aos olhos sem ninguém precisar lembrar de procurar.
 //
-// A coluna da SPA vem de elementos customizados (`pecas-solid.tsx`), que
+// A coluna da SPA vem de elementos customizados (`tokens-solid.tsx`), que
 // envolvem as peças DE VERDADE. Uma imitação com as mesmas classes concordaria
 // consigo mesma e não flagraria nada — que é o oposto do que esta seção existe
 // para fazer.

@@ -25,7 +25,7 @@ type BookAddress struct {
 // Aponta para o LEITOR e não para o PDF cru, e a troca é medida: o visualizador
 // do Chrome obedece `#page=N` e IGNORA `#search=` — não há como pedir destaque
 // por URL —, e ainda transfere o arquivo inteiro para mostrar uma página (85 MiB
-// contados no loopback). O leitor da casa (`api/piloto/src/leitor.ts`)
+// contados no loopback). O leitor da casa (`api/piloto/src/reader.ts`)
 // resolve os dois: destaca o termo e pede faixas.
 //
 // A ABERTURA não entra aqui: quem soma é o leitor, que fala em página impressa

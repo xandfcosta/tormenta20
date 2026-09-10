@@ -10,7 +10,7 @@ import "fmt"
 //
 // Todo o estado vive no `<div id="leitor">` como atributos de DADO, e não em
 // sinais do Datastar. A razão é que quem lê isto não é o Datastar: é o
-// `leitor.js`, um módulo próprio que roda uma vez na carga. Sinal seria estado
+// `reader.js`, um módulo próprio que roda uma vez na carga. Sinal seria estado
 // de cliente viajando em toda requisição seguinte para nada.
 templ readerScene(v readerView) {
 	<div class="flex h-full min-h-0 flex-col">
@@ -72,7 +72,7 @@ templ readerScene(v readerView) {
 			class="relative min-h-0 flex-1 overflow-auto p-4"
 		>
 			<div class="relative mx-auto w-fit">
-				// Sem `max-w-full`: a largura é decidida no `leitor.ts` (ver
+				// Sem `max-w-full`: a largura é decidida no `reader.ts` (ver
 				// `LARGURA_MAXIMA`), e deixar o CSS encolher o canvas por cima
 				// desalinharia as marcas, que são posicionadas na largura que o
 				// pdf.js desenhou.
@@ -90,7 +90,7 @@ templ readerScene(v readerView) {
 // readerButton é o botão quadrado da barra. Um componente porque são quatro, e
 // quatro cópias de nove classes divergem na primeira que alguém ajustar.
 //
-// UMA marca (`data-acao`) e não uma por família: o `leitor.js` procura pelo que
+// UMA marca (`data-acao`) e não uma por família: o `reader.js` procura pelo que
 // o botão FAZ, e dois atributos diferentes obrigariam o componente a saber qual
 // dos dois escrever — decisão de leiaute virando decisão de comportamento.
 templ readerButton(acao, rotulo string) {

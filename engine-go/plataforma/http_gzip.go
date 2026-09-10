@@ -43,7 +43,7 @@ import (
 var tiposComprimiveis = []string{
 	"text/",                  // html, css, plain, event-stream
 	"application/json",       // a API
-	"application/javascript", // o `cena.js` do piloto
+	"application/javascript", // o `scene.js` do piloto
 	"image/svg+xml",
 }
 
