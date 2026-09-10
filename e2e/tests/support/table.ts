@@ -4,7 +4,7 @@ import { expect, type Page } from '@playwright/test'
  * A MESA DESCARTÁVEL e os passos que chegam ao tabuleiro (ALE-264, extraídos na
  * ALE-174).
  *
- * Eles moravam dentro do `piloto-tabuleiro.spec.ts`, privados, e mudaram de casa
+ * Eles moravam dentro do `piloto-board.spec.ts`, privados, e mudaram de casa
  * quando o segundo spec precisou chegar ao mesmo lugar — o guarda do deslize da
  * peça. É a lição do `CLAUDE.md` acontecendo de novo: **instrumento que mora
  * dentro de um chamador tem exatamente um chamador**, e a alternativa era
@@ -72,7 +72,7 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
  * acessível de propósito. O `visible` é o que escolhe entre eles — o outro está
  * no DOM com `display:none`, e sem o filtro o `.first()` acertaria o escondido.
  */
-export async function closeTheQueue(page: Page): Promise<void> {
+export async function closeTheTracker(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Fechar a iniciativa' }).click()
   await expect(page.locator('#gaveta-da-fila'), 'a gaveta da fila não fechou').not.toHaveAttribute(
     'open',
@@ -80,7 +80,7 @@ export async function closeTheQueue(page: Page): Promise<void> {
   )
 }
 
-export async function openTheQueue(page: Page): Promise<void> {
+export async function openTheTracker(page: Page): Promise<void> {
   // IDEMPOTENTE, porque acrescentar dois combatentes é abrir a gaveta duas
   // vezes: com ela já aberta o botão de abrir está coberto pelo próprio modal,
   // e o sintoma é um timeout de clique num seletor que casou — o mesmo que o
@@ -113,12 +113,12 @@ export async function openTheQueue(page: Page): Promise<void> {
  * `if b != nil`), e um guarda que precise ver o número mudar mediria uma linha
  * que não tem número. Foi assim que a sonda da ALE-174 não achou o "Ferir".
  */
-export async function putACombatantInTheQueue(
+export async function putACombatantInTheTracker(
   page: Page,
   nome: string,
   pv?: number,
 ): Promise<void> {
-  await openTheQueue(page)
+  await openTheTracker(page)
   // O "+ Combatente" é um ALTERNADOR (`$formdecombatente = !$formdecombatente`),
   // e o formulário fica aberto depois de acrescentar. Clicar sem olhar o estado
   // FECHA o formulário no segundo combatente, e o sintoma é um timeout no campo
@@ -143,14 +143,14 @@ export async function putACombatantInTheQueue(
 }
 
 export async function putATokenOnTheMap(page: Page): Promise<void> {
-  await putACombatantInTheQueue(page, 'Ogro do E2E')
+  await putACombatantInTheTracker(page, 'Ogro do E2E')
   // A GAVETA FECHA ANTES de o teste voltar ao mapa, e esta ordem é a jornada de
   // verdade: monta-se a fila na gaveta, fecha-se, e põe-se no mapa pela faixa do
   // tabuleiro. Ela é MODAL — deixá-la aberta torna inerte tudo o que está atrás,
   // e o `Pôr no mapa` da faixa (que vem antes no DOM, então é o que o `.first()`
   // acha) ficaria coberto por ela. O sintoma é "dialog intercepts pointer
   // events" num seletor que casou, e não um "não achei".
-  await closeTheQueue(page)
+  await closeTheTracker(page)
   await page.getByRole('button', { name: 'Pôr no mapa', exact: true }).first().click()
   // Escopado ao DIÁLOGO: o nome do combatente aparece também na fila atrás dele,
   // e um seletor de página inteira acha os dois.

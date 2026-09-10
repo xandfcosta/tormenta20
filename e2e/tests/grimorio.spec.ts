@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
-import { expectBotoesComLimiteVisivel } from './support/limite'
-import { expectCinzelAcimaDoPiso } from './support/tipografia'
+import { expectBotoesComLimiteVisivel } from './support/boundary'
+import { expectCinzelAcimaDoPiso } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
@@ -564,7 +564,7 @@ test.describe('Grimório — a folha de especificação', () => {
   /**
    * A Cinzel não desce abaixo de 14px (ALE-173).
    *
-   * O MEDIDOR SAIU DAQUI e virou `support/tipografia.ts` (ALE-252), e a mudança
+   * O MEDIDOR SAIU DAQUI e virou `support/typography.ts` (ALE-252), e a mudança
    * é a issue inteira: ele vivia inline neste `test()`, então visitava um
    * endereço só — e quatro violações minhas viveram em três cenas com ele no ar
    * o tempo todo. Instrumento que mora dentro de um chamador tem exatamente um
