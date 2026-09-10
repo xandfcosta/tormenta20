@@ -29,7 +29,7 @@ type PlaceGround struct {
 // Ela vive aqui e não na tela porque JÁ EXISTIA duas vezes — em `.chao-*` no CSS
 // do piloto e no `TERRAIN_LABEL` da SPA —, e uma terceira cópia escrita à mão no
 // templ é como nasce a opção que a tela oferece e o CSS não sabe pintar. O
-// `api/piloto_chao_test.go` amarra esta lista ao CSS: acrescentar um chão aqui sem
+// `api/piloto_ground_test.go` amarra esta lista ao CSS: acrescentar um chão aqui sem
 // pintá-lo lá derruba o guarda.
 //
 // A ORDEM é a da SPA, e o primeiro é o padrão de quem não escolhe.

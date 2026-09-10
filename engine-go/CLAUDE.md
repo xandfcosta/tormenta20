@@ -978,7 +978,7 @@ O `web/door` tem dois testes: o de fronteira e o do redirecionamento aberto (que
 é regra da cena e usa função não exportada). Todo o resto — treze casos que
 montam um `api.Server` de verdade e dirigem o roteador de verdade — ficou em
 `api/door_test.go`, que é o que a forja já tinha feito com o
-`api/piloto_forja_test.go`.
+`api/piloto_forge_test.go`.
 
 Não é indecisão: um pacote de cena que hospedasse esses casos teria de importar o
 `api`, que importa a cena de volta. **A cena sai; a bancada que a exercita
@@ -1085,7 +1085,7 @@ faria o pacote de apresentação do livro importar a cena que serve o arquivo.
 
 Os dois casos de teste que prendem a REGRA do endereço foram junto — livro não
 configurado não produz link, e o termo entra escapado. O resto do
-`piloto_livro_test.go` ficou no `api`, porque serve o PDF de verdade por HTTP:
+`piloto_book_test.go` ficou no `api`, porque serve o PDF de verdade por HTTP:
 outra camada, outra pergunta. **Quarta vez seguida que a fronteira separa um
 arquivo de teste que misturava duas.**
 
@@ -1408,7 +1408,7 @@ medição parcial não é um número menor: é um número de outra pergunta.**
 O leitor saiu na ALE-278, e é a primeira extração em que um arquivo se dividiu
 porque fazia duas coisas — não porque era grande.
 
-O `piloto_livro.go` lia `LIVRO_PDF` no boot, cunhava o dígito de cache, avisava
+O `piloto_book.go` lia `LIVRO_PDF` no boot, cunhava o dígito de cache, avisava
 sobre linearização e SERVIA o arquivo com faixas; e desenhava a página que abre
 esse arquivo numa página, com o termo destacado. **A divisão é a de sempre:
 dependência.** O que ficou chama `os.Stat` e devolve um `http.Handler` sobre um

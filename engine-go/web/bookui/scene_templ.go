@@ -22,7 +22,7 @@ import "t20engine/web/ui"
 // Ela morava em `piloto_ui.templ` junto com o kit, e ficou para trás quando o
 // kit virou `web/ui` (ALE-278, fatia 4). A razão não é tamanho: estes
 // componentes leem `BookAddress` e `trecho`, e o `trecho` nasce de uma
-// consulta ao catálogo de efeitos e de escolas de magia (o antigo `piloto_elos`, hoje `powers.go` aqui do lado).
+// consulta ao catálogo de efeitos e de escolas de magia (o antigo `piloto_crossrefs_test.go`, hoje `powers.go` aqui do lado).
 // Levá-los faria o pacote de APRESENTAÇÃO importar catálogo, que é o contrário
 // do que a divisão existe para conseguir.
 

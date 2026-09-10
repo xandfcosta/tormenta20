@@ -301,7 +301,7 @@ func (h tableHost) SaveNotes(ctx context.Context, sessionID int64, texto string)
 
 // ── a casca e a ficha embutida ───────────────────────────────────────────────
 //
-// O `BookAddress` NÃO está aqui: ele já existia no `piloto_livro.go`, com a
+// O `BookAddress` NÃO está aqui: ele já existia no `piloto_book.go`, com a
 // forma exata que a porta pede. É a regra que a administração deixou — um
 // contrato que já existe ganha, e declarar um segundo daria ao `*Server` dois
 // nomes para a mesma coisa.

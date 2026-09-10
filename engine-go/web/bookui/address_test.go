@@ -4,7 +4,7 @@ import "testing"
 
 // O ENDEREÇO DO LEITOR, provado onde ele é montado (ALE-278).
 //
-// Estes dois casos vieram do `api/piloto_livro_test.go` junto com o tipo. O
+// Estes dois casos vieram do `api/piloto_book_test.go` junto com o tipo. O
 // resto de lá continua no `api`, porque serve o PDF de verdade por HTTP — outra
 // camada, outra pergunta.
 //

@@ -57,7 +57,7 @@ const Book = "/livro"
 // destacado (ALE-264).
 //
 // Ela entrou aqui na ALE-278 e é o caso que mostra o critério funcionando: era
-// endereço INTERNO da família do livro — só o `piloto_livro.go` o citava —, e
+// endereço INTERNO da família do livro — só o `piloto_book.go` o citava —, e
 // deixou de ser no instante em que o `bookui` virou pacote. Não é o
 // visualizador do navegador, que fica a um clique de distância: ver o verbete
 // **leitor** no GLOSSARIO.
