@@ -28,8 +28,22 @@ templ SceneBody(v View) {
 	</div>
 }
 
+// O ESC DA FICHA, e ele é UM (ALE-298).
+//
+// Ele morava dentro do `overlay`, que é desenhado por item da lista: a aba de
+// Perícias servia **trinta** ouvintes de Escape, vinte e nove escrevendo o mesmo
+// `$detalhe = ''`. Um ouvinte de JANELA não pertence ao nó que o pendura — ele
+// não sabe qual diálogo está por cima e roda de qualquer jeito —, então o lugar
+// dele é a cena.
+//
+// Fechar o que já está fechado não é nada: `$detalhe` é um valor só, e apagá-lo
+// com nenhum diálogo aberto é a mesma string vazia. Foi isso que tornou os
+// vinte e nove idempotentes, e é isso que torna este UM suficiente.
+//
+// Os outros diálogos da ficha — Ofício, Aprender, Condição — têm sinal PRÓPRIO e
+// um ouvinte cada, e ficam onde estão: são um por cena, não um por item.
 templ ficha(v View) {
-	<div class="flex min-h-0 flex-1 flex-col">
+	<div data-on:keydown__window="evt.key === 'Escape' && ($detalhe = '')" class="flex min-h-0 flex-1 flex-col">
 		if v.Embutida {
 			@embeddedSheetHeader(v)
 		} else {
