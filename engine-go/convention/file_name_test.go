@@ -1,8 +1,8 @@
 package convention
 
 import (
-	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -42,23 +42,31 @@ import (
 // `testdata/file_name_words.txt`; palavra portuguesa lá dentro é um ato visível.
 const fileNameWords = "testdata/file_name_words.txt"
 
-// dirsOutsideTheSweep são as que não têm nome de arquivo NOSSO dentro.
+// A FONTE É O `git ls-files`, e não um `WalkDir` com lista de pastas puladas.
 //
-// `parity/` é a única EXCEÇÃO DE CONTEÚDO, e a razão é que o nome não é um
-// identificador solto: ele é o `slug` gravado dentro do `_fixtures.json`, então
-// renomear o arquivo é editar o dado — e o dado ali é vizinho do oráculo, que o
-// `engine-go/CLAUDE.md` diz que só se regenera por ato deliberado. Decisão do
-// dono, ALE-301: as 18 ficam.
+// A primeira versão varria o disco e pulava `node_modules`, `dist`,
+// `test-results` e mais quatro à mão. Ela passou verde no worktree — que nasce
+// limpo — e reprovou **2118 segmentos** no checkout primário, onde moram
+// `.claude/`, `.playwright-mcp/` e as capturas de tela de quem estava
+// depurando. Nenhum desses arquivos é do repositório, e a lista à mão nunca ia
+// acabar: cada ferramenta nova traz a pasta dela.
 //
-// As outras são produto de build, dependência ou banco. **Pasta de PACOTE não
-// entra aqui**: `aovivo/` e `plataforma/` seguem em português por decisão do
-// glossário (§E-bis) e este guarda não as vê, porque ele mede o NOME DO ARQUIVO
-// e os arquivos lá dentro já são ingleses. O `tabuleiro/` virou `board/` nesta
-// mesma fatia.
-var dirsOutsideTheSweep = map[string]bool{
-	".git": true, "node_modules": true, "dist": true, "test-results": true,
-	"playwright-report": true, "backups": true, ".auth": true,
-}
+// Quem sabe o que é "arquivo deste repositório" é o git, então é ele que
+// responde. De quebra, a lista de pastas sumiu inteira — `node_modules` e
+// companhia já estão no `.gitignore`, que é onde essa informação mora uma vez
+// só.
+//
+// A EXCEÇÃO que sobra é `engine-go/parity/`, e ela é de CONTEÚDO e não de
+// ferramenta: o nome daqueles 18 arquivos é o `slug` gravado dentro do
+// `_fixtures.json`, então renomeá-los é editar o dado — e o dado ali é vizinho
+// do oráculo, que o `engine-go/CLAUDE.md` diz que só se regenera por ato
+// deliberado. Decisão do dono, ALE-301: as 18 ficam.
+//
+// **Pasta de PACOTE não entra aqui**: `aovivo/` e `plataforma/` seguem em
+// português por decisão do glossário (§E-bis) e este guarda não as vê, porque
+// ele mede o NOME DO ARQUIVO e os arquivos lá dentro já são ingleses. O
+// `tabuleiro/` virou `board/` nesta mesma fatia.
+const parityIsTheException = "engine-go/parity/"
 
 // A quebra é por `.`, `_`, `-` e por camelCase, e o segmento puramente numérico
 // sai fora: o `00011` de uma migração e o `2` de `sheetv2` não são palavra de
@@ -82,46 +90,28 @@ func TestNoFileIsNamedInPortuguese(t *testing.T) {
 	}
 
 	root := filepath.Join("..", "..")
-	parity := filepath.Join(root, "engine-go", "parity")
+	// `-z` porque nome de arquivo pode ter espaço, e `--cached` porque o que
+	// vale é o que está VERSIONADO: um arquivo novo ainda não adicionado não é
+	// do repositório, e um que alguém apagou sem commitar ainda é.
+	saida, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached").Output()
+	if err != nil {
+		t.Fatalf("git ls-files em %s: %v", root, err)
+	}
+
 	filesRead, segmentsRead := 0, 0
 	var unknown []string
 	used := map[string]bool{}
 
-	err = filepath.WalkDir(root, func(path string, item fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		// O nome é conferido ANTES do `IsDir`, e não é preciosismo: num
-		// worktree do git o `.git` é um ARQUIVO apontando para o gitdir, não uma
-		// pasta. A versão que só olhava diretórios passava no CI (clone normal,
-		// `.git` é pasta) e reprovava na bancada — o pior par possível, porque o
-		// verde de lá é o que autoriza o merge.
-		if dirsOutsideTheSweep[item.Name()] {
-			if item.IsDir() {
-				return fs.SkipDir
-			}
-			return nil
-		}
-		if item.IsDir() {
-			if path == parity {
-				return fs.SkipDir
-			}
-			return nil
-		}
-		// O banco do e2e e os despejos vivem em `engine-go/data`; o catálogo
-		// vive em `engine-go/catalog/data` e É medido. Por isso o corte é por
-		// CAMINHO e não por nome de pasta — a versão por nome apagaria da
-		// medição justamente os seis arquivos que esta fatia renomeou.
-		if strings.HasPrefix(path, filepath.Join(root, "engine-go", "data")) {
-			return nil
+	for _, relative := range strings.Split(strings.TrimRight(string(saida), "\x00"), "\x00") {
+		if relative == "" || strings.HasPrefix(relative, parityIsTheException) {
+			continue
 		}
 		// O PONTO da frente não isenta: `.gitignore` e `.dockerignore` são nome
 		// de arquivo como qualquer outro, e a primeira versão que os pulava
 		// deixava duas palavras órfãs no léxico — o guarda denunciando o próprio
 		// recorte, que é o que um denominador serve para fazer.
-		name := strings.TrimPrefix(item.Name(), ".")
+		name := strings.TrimPrefix(filepath.Base(relative), ".")
 		filesRead++
-		relative := strings.TrimPrefix(filepath.ToSlash(strings.TrimPrefix(path, root)), "/")
 		spaced := fileNameCamel.ReplaceAllString(name, "$1 $2")
 		for _, seg := range fileNameSeparators.Split(spaced, -1) {
 			for _, word := range strings.Fields(seg) {
@@ -137,10 +127,6 @@ func TestNoFileIsNamedInPortuguese(t *testing.T) {
 				unknown = append(unknown, relative+" — "+word)
 			}
 		}
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("varrer %s: %v", root, err)
 	}
 
 	// O DENOMINADOR: uma lista vazia e uma raiz errada se parecem no terminal.
