@@ -119,11 +119,11 @@ func brushActsOnSquare(v BoardView) string {
 	return fmt.Sprintf(
 		"(() => { const cx = %s, cy = %s, casa = cx + '/' + cy; "+
 			"if (casa === $%s) return; "+
-			"const de = $%s === '' ? casa : $%s; $%s = casa; "+
-			"const traco = de + '/ate/' + casa; "+
+			"const de = ($%s === '' ? casa : $%s).split('/').map(Number); $%s = casa; "+
+			"const traco = {de: {X: de[0], Y: de[1]}, ate: {X: cx, Y: cy}}; "+
 			"return $%s === %q "+
-			"? @post('%s/terreno/limpar/' + traco) "+
-			": @post('%s/terreno/' + $tool + '/' + traco) })()",
+			"? @post('%s/terreno/limpar', {payload: traco}) "+
+			": @post('%s/terreno', {payload: {...traco, especie: $tool}}) })()",
 		clicouEmX, clicouEmY,
 		squareLastSignal,
 		squareLastSignal, squareLastSignal, squareLastSignal,

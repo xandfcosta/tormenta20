@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -236,3 +237,25 @@ func trechoDeSinais(corpo string) string {
 }
 
 // ── editar o combatente (ALE-263) ────────────────────────────────────────────
+
+// stroke monta o CORPO de um gesto de pincel (ALE-305).
+//
+// Espécie vazia é a BORRACHA, que não nomeia espécie nenhuma — nem no caminho
+// nem no corpo. Era a espécie que a fazia apagar a coisa errada em silêncio
+// (ALE-203), e o corpo não devolve esse campo de graça.
+func stroke(especie string, x, y, x2, y2 int) string {
+	if especie == "" {
+		return fmt.Sprintf(`{"de":{"X":%d,"Y":%d},"ate":{"X":%d,"Y":%d}}`, x, y, x2, y2)
+	}
+	return fmt.Sprintf(`{"especie":%q,"de":{"X":%d,"Y":%d},"ate":{"X":%d,"Y":%d}}`,
+		especie, x, y, x2, y2)
+}
+
+// strokeErasing é o traço que apaga AQUELA espécie, e não a casa inteira.
+//
+// São coisas diferentes e por isso não são a mesma rota: esta nomeia a espécie e
+// a borracha (`/terreno/limpar`) não nomeia nenhuma.
+func strokeErasing(especie string, x, y, x2, y2 int) string {
+	return fmt.Sprintf(`{"especie":%q,"apagar":true,"de":{"X":%d,"Y":%d},"ate":{"X":%d,"Y":%d}}`,
+		especie, x, y, x2, y2)
+}

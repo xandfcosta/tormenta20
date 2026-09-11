@@ -207,7 +207,7 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	// A cena precisa ter as três famílias no ar, senão o guarda mede o que
 	// sobrou: terreno pintado, movimento proposto (trilha e paradas) e alcance.
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/5/2/ate/5/2", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 5, 2, 5, 2)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar terreno deu %d", rec.Code)
 	}
 	for _, parada := range []string{"/parada/7/3", "/parada/7/6"} {

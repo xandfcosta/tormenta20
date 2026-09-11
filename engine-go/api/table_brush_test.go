@@ -15,7 +15,7 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 
 	rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/2/2/ate/8/5", "")
+		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 2, 2, 8, 5))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o traço deu %d", rec.Code)
 	}
@@ -44,7 +44,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/cobertura/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno", stroke("cobertura", 0, 0, 6, 6)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
 	// O CONTROLE: havia o que apagar. Sem ele, "sobrou zero" é verdade também
@@ -56,7 +56,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/limpar/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/limpar", stroke("", 0, 0, 6, 6)); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
@@ -75,7 +75,7 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/0/0/ate/9999999/0", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 0, 0, 9999999, 0)).Body.String()
 	if !strings.Contains(corpo, "longo demais") {
 		t.Errorf("o traço forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
@@ -100,7 +100,7 @@ func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/1/1/ate/1/1", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1)).Body.String()
 
 	if !strings.Contains(corpo, `id="table-board"`) {
 		t.Error("a resposta do pincel não traz o mapa — a casa pintada não apareceria")
@@ -132,7 +132,9 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 		"data-on:pointermove",
 		"data-on:pointerup",
 		"data-on:contextmenu",
-		"/ate/",
+		// O TRAÇO viaja no corpo desde a ALE-305, então o que a cena mostra é
+		// o par de cantos montado como payload — não mais um `/ate/` na URL.
+		"ate: {X: ",
 		"evt.button === 2",
 	} {
 		if !strings.Contains(tela, pedaco) {
@@ -151,7 +153,7 @@ func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/camuflagem/3/3/ate/3/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno", stroke("camuflagem", 3, 3, 3, 3)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -270,6 +272,41 @@ func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
 		if strings.Contains(tag, "data-show=") && strings.Contains(tag, "data-attr:style=") {
 			t.Errorf("um nó tem `data-show` e `data-attr:style` juntos e vai CONGELAR a aba "+
 				"em laço de escrita: %s", primeirosAtributos(tag))
+		}
+	}
+}
+
+// A COORDENADA NEGATIVA ATRAVESSA O CORPO (ALE-305).
+//
+// Ela é a razão ESCRITA para as pontas do traço não virarem sinal da página — o
+// plano não tem bordas, então (−3,−5) é lugar legítimo — e nunca teve teste: o
+// caminho a carregava por acaso, porque `/-3/-5` é segmento válido e ninguém
+// tinha medido.
+//
+// O corte da ALE-305 tirou as pontas do caminho e pôs no corpo. Se a travessia
+// não preservasse o sinal negativo, o pincel pintaria no quadrante errado e o
+// mapa pareceria vazio — o mestre pinta e nada acontece onde ele olhou.
+func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "stone")
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", -3, -5, -1, -5)); rec.Code != http.StatusOK {
+		t.Fatalf("o traço negativo deu %d", rec.Code)
+	}
+
+	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
+	casas := board.SquaresOf(b, "dificil")
+	esperadas := board.StrokeSquares(engine.Square{X: -3, Y: -5}, engine.Square{X: -1, Y: -5})
+	if len(casas) != len(esperadas) {
+		t.Fatalf("o traço (−3,−5)→(−1,−5) pintou %d casas, esperado %d: %v",
+			len(casas), len(esperadas), casas)
+	}
+	// E elas estão MESMO no quadrante negativo: contar as casas certas não
+	// distingue "pintou lá" de "pintou o espelho em (3,5)".
+	for _, q := range casas {
+		if q.X >= 0 || q.Y >= 0 {
+			t.Errorf("a casa %v não está no quadrante negativo — o sinal se perdeu na travessia", q)
 		}
 	}
 }

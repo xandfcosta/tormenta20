@@ -94,7 +94,7 @@ func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 	ctx := context.Background()
 
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
-	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/terreno/dificil/2/3/ate/2/3", "")
+	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 2, 3, 2, 3))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
