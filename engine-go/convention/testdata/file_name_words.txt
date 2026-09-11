@@ -136,6 +136,7 @@ dungeon
 editor
 effect
 effects
+element
 encoding
 encounter
 encounters
@@ -199,6 +200,7 @@ hp
 http
 hub
 icons
+id
 identifier
 identifiers
 identity
