@@ -11,13 +11,13 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 
-	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", "")
+	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`)
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador marcou um grupo e recebeu %d, esperado 403", rec.Code)
 	}
 	// O CONTROLE: o mestre PODE. Sem ele, um 403 para todo mundo passaria igual.
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`); rec.Code != http.StatusOK {
 		t.Errorf("o mestre não conseguiu marcar: %d", rec.Code)
 	}
 }
@@ -31,7 +31,7 @@ func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 
-	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", "{}")
+	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area", "{}")
 	if !strings.Contains(resposta, "marked_tokens") {
 		t.Fatalf("a marcação não voltou: %s", resposta)
 	}

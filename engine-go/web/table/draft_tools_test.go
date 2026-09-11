@@ -35,7 +35,7 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 		"":                   base + "/pecas/alguma/mover",
 		ViewTool:             "", // a mão é do NAVEGADOR: ela arrasta a vista e não fala com o servidor
 		FerramentaDaRegua:    base + "/regua",
-		FerramentaDoGabarito: base + "/gabarito/esfera/6/0/0/1/1",
+		FerramentaDoGabarito: base + "/gabarito",
 		MarkTool:             base + "/marcadores/novo",
 		EraserTool:           base + "/terreno/limpar",
 		NewPieceTool:         base + "/pecas/nova/1/1",

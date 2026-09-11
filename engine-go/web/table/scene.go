@@ -192,6 +192,12 @@ type strokeBody struct {
 	Erase bool               `json:"erase"`
 	From  struct{ X, Y int } `json:"from"`
 	To    struct{ X, Y int } `json:"to"`
+	// O GABARITO usa os mesmos dois pontos com outro nome na boca — a origem e
+	// a mira — e acrescenta a forma e o tamanho. Um tipo só para o tabuleiro
+	// inteiro é um formato só para aprender; um por gesto é como nasce a
+	// terceira grafia do mesmo par de números.
+	Shape string `json:"shape"`
+	Size  string `json:"size"`
 }
 
 // pointsFromBody lê os DOIS CANTOS do corpo da requisição.

@@ -58,7 +58,7 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	// `draftCommand`: elas não mutam nada e respondem só com sinais. Um
 	// `EditPlace` aqui gravaria o acervo a cada movimento do dedo sobre a régua.
 	r.Post(base+"/regua", s.handleDraftRuler)
-	r.Post(base+"/gabarito/{tipo}/{tamanho}/{x}/{y}/{mx}/{my}", s.handleDraftTemplate)
+	r.Post(base+"/gabarito", s.handleDraftTemplate)
 }
 
 // ── MEDIR o rascunho (ALE-293) ───────────────────────────────────────────────
@@ -109,15 +109,14 @@ func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tipo, err := urlTemplate(chi.URLParam(r, "tipo"))
+	pedido, origem, mira, err := pointsFromBody(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}
-	origem, erroOrigem := quadradoDoCaminho(r, "x", "y")
-	mira, erroMira := quadradoDoCaminho(r, "mx", "my")
-	if erroOrigem != nil || erroMira != nil {
-		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
+	tipo, err := urlTemplate(pedido.Shape)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	// A MIRA ainda não foi dada quando ela é a própria origem: o cone e a linha
@@ -130,7 +129,7 @@ func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	casas := engine.AreaSquares(origem, engine.Area{
-		Kind: tipo, Size: templateSize(chi.URLParam(r, "tamanho")),
+		Kind: tipo, Size: templateSize(pedido.Size),
 		Direction: templateDirection(origem, mira),
 	})
 	// A cena pode ter sumido entre desenhar a tela e medir — outro navegador do

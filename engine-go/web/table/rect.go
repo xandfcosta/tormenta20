@@ -131,7 +131,9 @@ func dropTokensRect(v BoardView) string {
 	return fmt.Sprintf(
 		"if ($%s !== %q) return; const ate = $rect_to_x + '/' + $rect_to_y, de = $%s; "+
 			"$%s = ''; if (de === ate) return; $%s = true; "+
-			"return @post('%s/marcar-area/' + de + '/' + ate)",
+			"const canto = de.split('/').map(Number); "+
+			"return @post('%s/marcar-area', {payload: {from: {X: canto[0], Y: canto[1]}, "+
+			"to: {X: $rect_to_x, Y: $rect_to_y}}})",
 		sinalDoRetangulo, retanguloDePecas, sinalDoRetanguloDe,
 		sinalDoRetangulo, sinalDoCliqueEngolido,
 		v.Base,

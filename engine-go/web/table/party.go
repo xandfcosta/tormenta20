@@ -34,7 +34,7 @@ import (
 
 func (s Scene) PartyRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
-	r.Post(base+"/marcar-area/{x}/{y}/{x2}/{y2}", s.handleMarcarArea)
+	r.Post(base+"/marcar-area", s.handleMarcarArea)
 	r.Post(base+"/grupo/mover/{dx}/{dy}", s.gmContinuousCommand(movePartyTable))
 }
 
@@ -53,9 +53,8 @@ func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "só o mestre marca um grupo", http.StatusForbidden)
 		return
 	}
-	de, err1 := quadradoDaURL(r)
-	ate, err2 := urlSquareSecond(r)
-	if err1 != nil || err2 != nil {
+	_, de, ate, err := pointsFromBody(r)
+	if err != nil {
 		http.Error(w, "os cantos do laço precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}

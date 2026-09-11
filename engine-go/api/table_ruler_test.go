@@ -26,12 +26,13 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	}
 
 	// Um quadrado de lado 1 exatamente em cima dela.
-	caminho := f.tableUrl() + "/tabuleiro/gabarito/quadrado/1/4/4/4/4"
-	doMestre := f.posta(t, f.mestre, caminho, "")
+	caminho := f.tableUrl() + "/tabuleiro/gabarito"
+	quadrado := templateBody("quadrado", "1", 4, 4, 4, 4)
+	doMestre := f.posta(t, f.mestre, caminho, quadrado)
 	if !strings.Contains(doMestre, "Ogro emboscado") {
 		t.Fatalf("o MESTRE não viu a própria peça: %s\n— sem o caso positivo o resto não mede nada", doMestre)
 	}
-	doJogador := f.posta(t, f.jogador, caminho, "")
+	doJogador := f.posta(t, f.jogador, caminho, quadrado)
 	if strings.Contains(doJogador, "Ogro emboscado") {
 		t.Errorf("a emboscada vazou no gabarito do jogador: %s", doJogador)
 	}
@@ -73,7 +74,7 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
-	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito/piramide/2/0/0/0/0", "")
+	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito", templateBody("piramide", "2", 0, 0, 0, 0))
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("forma inventada deu %d, esperado 400", rec.Code)
 	}
