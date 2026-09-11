@@ -175,7 +175,7 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 	if fio["d"] != "M 0.5 0.5 L 3.5 0.5 L 3.5 4" {
 		t.Errorf("a seta saiu %q, esperado \"M 0.5 0.5 L 3.5 0.5 L 3.5 4\"", fio["d"])
 	}
-	if !strings.Contains(fio["marker-end"], "tabuleiro-ponta-do-movimento") {
+	if !strings.Contains(fio["marker-end"], "board-tip-move") {
 		t.Errorf("a seta não tem ponta: %q — sem ela o desenho é uma régua, que não tem sentido", fio["marker-end"])
 	}
 }

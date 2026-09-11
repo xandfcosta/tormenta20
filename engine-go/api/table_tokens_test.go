@@ -115,12 +115,12 @@ func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 
 	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doMestre, `id="por-no-mapa"`) {
+	if !strings.Contains(doMestre, `id="populate"`) {
 		t.Fatal("o diálogo não está na página do MESTRE — o controle falhou, e sem ele o resto não mede nada")
 	}
 
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(doJogador, `id="por-no-mapa"`) {
+	if strings.Contains(doJogador, `id="populate"`) {
 		t.Error("o diálogo do mestre foi para o HTML do jogador, com a fila inteira dentro")
 	}
 }

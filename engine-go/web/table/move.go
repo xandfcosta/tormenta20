@@ -219,7 +219,7 @@ func (s Scene) gmBoardCommand(
 func (s Scene) gmContinuousCommand(
 	mutar func(Scene, commandCtx) (*board.BoardState, error),
 ) http.HandlerFunc {
-	return s.boardCommand(mutar, true, "mesa-tabuleiro")
+	return s.boardCommand(mutar, true, "table-board")
 }
 
 // boardCommand é o corpo dos dois. Separá-los em duas cópias seria repetir

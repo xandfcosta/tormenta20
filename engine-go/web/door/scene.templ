@@ -163,11 +163,11 @@ func linkSubtitle(v resetView) string {
 // um sinal, e isso é o ponto: a senha não entra em estado de cliente nenhum.
 templ passwordConfirmation(erros []string) {
 	<div class="space-y-2">
-		<label for="confirmar" class="flex items-center gap-2 text-sm leading-none font-medium select-none">
+		<label for="confirm" class="flex items-center gap-2 text-sm leading-none font-medium select-none">
 			Confirmar senha
 		</label>
 		<input
-			id="confirmar"
+			id="confirm"
 			name="confirmar"
 			type="password"
 			autocomplete="new-password"
@@ -175,12 +175,12 @@ templ passwordConfirmation(erros []string) {
 			data-on:input={ "el.setCustomValidity(el.value === el.form.senha.value ? '' : '" + noticePasswordMismatch + "')" }
 			if len(erros) > 0 {
 				aria-invalid="true"
-				aria-describedby="confirmar-erro"
+				aria-describedby="confirm-error"
 			}
 			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
 		/>
 		if len(erros) > 0 {
-			<div id="confirmar-erro">
+			<div id="confirm-error">
 				for _, e := range erros {
 					<p class="text-sm text-destructive-ink">{ e }</p>
 				}

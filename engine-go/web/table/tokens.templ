@@ -45,7 +45,7 @@ templ botaoDePorNoMapa(v BoardView) {
 // voltaria a precisar de uma recarga para o diálogo existir. O que a porta do
 // mestre esconde é o CONTEÚDO.
 templ tableMap(v View) {
-	<div id="mesa-por-no-mapa">
+	<div id="table-populate">
 		if v.Tabuleiro.Mestre {
 			@poeNoMapaDialogo(v.Tabuleiro)
 		}
@@ -58,12 +58,12 @@ templ tableMap(v View) {
 // qualquer um na mesa, e entrada em curso presa ao DOM seria apagada no meio.
 templ poeNoMapaDialogo(v BoardView) {
 	<dialog
-		id="por-no-mapa"
+		id="populate"
 		data-preserve-attr="open"
-		aria-labelledby="por-no-mapa-titulo"
+		aria-labelledby="populate-title"
 		class="scene-grimorio m-auto w-[min(28rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="por-no-mapa-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Pôr no mapa</h2>
+		<h2 id="populate-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Pôr no mapa</h2>
 		<p class="mt-1 text-sm text-muted-foreground">
 			As fichas já vêm escolhidas. Quem você marcar aqui nasce no mapa: as fichas de um lado, o resto do outro.
 		</p>
@@ -106,7 +106,7 @@ templ poeNoMapaDialogo(v BoardView) {
 		<div class="mt-4 flex justify-end gap-2">
 			<button
 				type="button"
-				data-on:click="document.getElementById('por-no-mapa').close()"
+				data-on:click="document.getElementById('populate').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			// Fecha ANTES de postar, como o abrir e o descanso: a recusa chega no
@@ -115,7 +115,7 @@ templ poeNoMapaDialogo(v BoardView) {
 			<button
 				type="button"
 				data-attr:disabled="$map_selection === ''"
-				data-on:click={ "document.getElementById('por-no-mapa').close(); " + mapCommand(v) }
+				data-on:click={ "document.getElementById('populate').close(); " + mapCommand(v) }
 				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 			>Pôr no mapa</button>
 		</div>

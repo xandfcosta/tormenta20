@@ -114,7 +114,7 @@ func tableMap(v View) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"mesa-por-no-mapa\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div id=\"table-populate\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -157,7 +157,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<dialog id=\"por-no-mapa\" data-preserve-attr=\"open\" aria-labelledby=\"por-no-mapa-titulo\" class=\"scene-grimorio m-auto w-[min(28rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"por-no-mapa-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Pôr no mapa</h2><p class=\"mt-1 text-sm text-muted-foreground\">As fichas já vêm escolhidas. Quem você marcar aqui nasce no mapa: as fichas de um lado, o resto do outro.</p><ul class=\"mt-3 flex flex-wrap gap-1.5\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<dialog id=\"populate\" data-preserve-attr=\"open\" aria-labelledby=\"populate-title\" class=\"scene-grimorio m-auto w-[min(28rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"populate-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Pôr no mapa</h2><p class=\"mt-1 text-sm text-muted-foreground\">As fichas já vêm escolhidas. Quem você marcar aqui nasce no mapa: as fichas de um lado, o resto do outro.</p><ul class=\"mt-3 flex flex-wrap gap-1.5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -339,14 +339,14 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</ul><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('por-no-mapa').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-attr:disabled=\"$map_selection === ''\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</ul><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('populate').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-attr:disabled=\"$map_selection === ''\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('por-no-mapa').close(); " + mapCommand(v))
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('populate').close(); " + mapCommand(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/tokens.templ`, Line: 118, Col: 86}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/tokens.templ`, Line: 118, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {

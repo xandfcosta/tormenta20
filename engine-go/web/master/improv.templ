@@ -40,12 +40,12 @@ import (
 
 templ improvScene(v improvView) {
 	<section
-		id="improviso"
+		id="improv"
 		class="mesa-palco flex min-h-0 flex-1 flex-col gap-4"
-		aria-labelledby="mesa-improviso"
+		aria-labelledby="table-improv"
 		data-signals={ improvSignals(v) }
 	>
-		<h2 id="mesa-improviso" class="font-heading text-lg tracking-wide text-foreground">Improviso</h2>
+		<h2 id="table-improv" class="font-heading text-lg tracking-wide text-foreground">Improviso</h2>
 		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
 			<div>
 				@ui.SectionLabel("muted", "mb-2") {
@@ -159,10 +159,10 @@ templ dungeonPlanner(v improvView) {
 		</div>
 		<div class="space-y-1">
 			@ui.SectionLabel("muted", "block") {
-				<label for="improviso-salas">Salas</label>
+				<label for="improv-rooms">Salas</label>
 			}
 			<input
-				id="improviso-salas"
+				id="improv-rooms"
 				type="number"
 				min={ ui.Int(salasMinimo) }
 				max={ ui.Int(salasMaximo) }

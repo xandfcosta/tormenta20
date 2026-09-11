@@ -337,7 +337,7 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 	if !strings.Contains(tela, "board-move-second") {
 		t.Error("o caminho passou da ação de movimento e a seta saiu inteira dourada")
 	}
-	if !strings.Contains(tela, "url(#tabuleiro-ponta-do-segundo)") {
+	if !strings.Contains(tela, "url(#board-tip-second)") {
 		t.Error("o trecho azul saiu sem ponta, ou com a ponta dourada")
 	}
 	// NOVE cabe em DOZE: passa da ação de movimento e ainda cabe na ação padrão

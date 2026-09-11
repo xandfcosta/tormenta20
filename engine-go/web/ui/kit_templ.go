@@ -1309,10 +1309,10 @@ const RestoreRailFocus = `sessionStorage.getItem('piloto-foco-no-trilho') && ` +
 // `.open ||` antes do `showModal()` porque chamar `showModal` num diálogo já
 // aberto lança `InvalidStateError` — apertar ⌃K duas vezes é gesto normal.
 const SearchShortcut = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey || evt.metaKey) && ` +
-	`document.getElementById('buscador') && (` +
+	`document.getElementById('finder') && (` +
 	`evt.preventDefault(), ` +
-	`document.getElementById('buscador').open || document.getElementById('buscador').showModal(), ` +
-	`document.getElementById('buscador-campo').select())`
+	`document.getElementById('finder').open || document.getElementById('finder').showModal(), ` +
+	`document.getElementById('finder-field').select())`
 
 // OpenBookOverlay troca a ida para outra aba por um diálogo sobre a cena.
 //
@@ -1331,8 +1331,8 @@ const SearchShortcut = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey || 
 // descarta o documento, o worker e o bitmap de uma vez.
 const OpenBookOverlay = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
 	`evt.preventDefault(), ` +
-	`document.getElementById('livro-em-dialogo').querySelector('iframe').src = el.getAttribute('href') + '&dialogo=1', ` +
-	`document.getElementById('livro-em-dialogo').showModal())`
+	`document.getElementById('book-in-dialog').querySelector('iframe').src = el.getAttribute('href') + '&dialogo=1', ` +
+	`document.getElementById('book-in-dialog').showModal())`
 
 // ShellShortcuts é o que o `keydown` da janela roda, e eles vão num atributo SÓ.
 //
@@ -1364,7 +1364,7 @@ const WalkTheSearch = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preven
 	`const alvo = onde < 0 ? (passo > 0 ? 0 : itens.length - 1) : Math.min(itens.length - 1, Math.max(0, onde + passo));` +
 	`itens[alvo].focus();` +
 	`})()), ` +
-	`evt.key === 'Enter' && document.activeElement?.id === 'buscador-campo' && ` +
+	`evt.key === 'Enter' && document.activeElement?.id === 'finder-field' && ` +
 	`(evt.preventDefault(), el.querySelector('[data-resultado]')?.click())`
 
 // Key é a dica de atalho — o `Kbd` da SPA.

@@ -415,7 +415,7 @@ func sheetGet(v View) string {
 }
 
 // tabEmbeddedGet troca de seção SEM sair da sessão: o mesmo endereço da
-// ficha, pedido pelo Datastar, remendando o `#cena-ficha` no lugar.
+// ficha, pedido pelo Datastar, remendando o `#sheet-scene` no lugar.
 //
 // Ele ESCREVE a aba num sinal antes de pedir, e o sinal é o que faz a ficha
 // sobreviver a um aviso do servidor (ALE-275): quando o mestre mexe no
@@ -448,7 +448,7 @@ func SheetRefetch(v View) string {
 	// remendo da ficha: um sinal teria de ser reescrito por fora, e é
 	// exatamente o tipo de segunda escrita que sai de sincronia.
 	return fmt.Sprintf(
-		"$sheet_version !== document.getElementById('cena-ficha').dataset.versao && "+
+		"$sheet_version !== document.getElementById('sheet-scene').dataset.versao && "+
 			"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1')", v.ID)
 }
 

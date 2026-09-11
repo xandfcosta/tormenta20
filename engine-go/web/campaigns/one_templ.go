@@ -1484,7 +1484,7 @@ func invitePanel(v oneView) templ.Component {
 			templ_7745c5c3_Var61 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "<section id=\"painel-convite\" aria-label=\"Link da mesa\" class=\"space-y-3 border border-grimorio-iron bg-grimorio-panel p-4\"><header class=\"space-y-0.5\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "<section id=\"invite-panel\" aria-label=\"Link da mesa\" class=\"space-y-3 border border-grimorio-iron bg-grimorio-panel p-4\"><header class=\"space-y-0.5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1619,7 +1619,7 @@ func rulesPanel(v oneView) templ.Component {
 			templ_7745c5c3_Var65 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<section id=\"painel-regras\" aria-label=\"Regras da campanha\" class=\"space-y-3 border border-grimorio-iron bg-grimorio-panel p-4\"><header class=\"space-y-0.5\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<section id=\"rules-panel\" aria-label=\"Regras da campanha\" class=\"space-y-3 border border-grimorio-iron bg-grimorio-panel p-4\"><header class=\"space-y-0.5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1911,14 +1911,14 @@ func deleteDialog(v oneView) templ.Component {
 			templ_7745c5c3_Var79 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<dialog id=\"excluir\" data-ref=\"delete_dialog\" aria-labelledby=\"excluir-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60\"><h2 id=\"excluir-titulo\" class=\"font-heading text-base\">Excluir \"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<dialog id=\"delete\" data-ref=\"delete_dialog\" aria-labelledby=\"delete-title\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60\"><h2 id=\"delete-title\" class=\"font-heading text-base\">Excluir \"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var80 string
 		templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(v.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/campaigns/one.templ`, Line: 526, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/campaigns/one.templ`, Line: 526, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 		if templ_7745c5c3_Err != nil {

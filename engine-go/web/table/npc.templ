@@ -18,20 +18,20 @@ import (
 // é a colisão que o GLOSSARY proíbe; é a mesma coisa de perto e de longe.
 templ tableCastCampaign(v View) {
 	<dialog
-		id="elenco-da-campanha"
+		id="campaign-cast"
 		data-preserve-attr="open"
-		aria-labelledby="elenco-da-campanha-titulo"
+		aria-labelledby="campaign-cast-title"
 		class="scene-grimorio m-auto hidden h-[min(40rem,calc(100vh-2rem))] w-[min(40rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground open:flex backdrop:bg-black/60"
 	>
 		<div class="flex shrink-0 items-start justify-between gap-3">
 			<div>
-				<h2 id="elenco-da-campanha-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Elenco da campanha</h2>
+				<h2 id="campaign-cast-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Elenco da campanha</h2>
 				<p class="text-xs text-muted-foreground">Quem existe nesta campanha fora da fila do combate. Eles voltam semana que vem.</p>
 			</div>
 			<button
 				type="button"
 				aria-label="Fechar o elenco"
-				data-on:click="document.getElementById('elenco-da-campanha').close()"
+				data-on:click="document.getElementById('campaign-cast').close()"
 				class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("X", "size-4")
@@ -69,7 +69,7 @@ templ tableCastCampaign(v View) {
 // apaga um NPC, que é um ritmo completamente diferente do da fila e do mapa.
 // Pendurá-la em qualquer um dos dois faria o outro ser remendado de graça.
 templ tableListNpCs(v View) {
-	<div id="mesa-npcs" class="space-y-2">
+	<div id="table-npcs" class="space-y-2">
 		if len(v.NPCs) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-6 text-center text-sm text-muted-foreground">
 				Nenhum NPC guardado ainda.
@@ -135,7 +135,7 @@ templ castButton(v View) {
 		type="button"
 		aria-label={ fmt.Sprintf("Elenco da campanha · %d NPCs guardados", len(v.NPCs)) }
 		title="Elenco — os NPCs que você preparou para esta campanha"
-		data-on:click="document.getElementById('elenco-da-campanha').showModal()"
+		data-on:click="document.getElementById('campaign-cast').showModal()"
 		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
 	>
 		@ui.Icon("Users2", "size-5")
@@ -154,9 +154,9 @@ templ castButton(v View) {
 templ saveToCastButton(v master.BestiaryView) {
 	<div class="flex flex-wrap items-end gap-2 border-t border-grimorio-iron pt-3">
 		<div class="min-w-0 flex-1 space-y-1">
-			<label for="nome-do-npc" class={ ui.FieldLabelClasses("muted", "block") }>Guardar no elenco</label>
+			<label for="npc-name-field" class={ ui.FieldLabelClasses("muted", "block") }>Guardar no elenco</label>
 			<input
-				id="nome-do-npc"
+				id="npc-name-field"
 				type="text"
 				data-bind:npc_name
 				placeholder="Com outro nome? (em branco, fica o do livro)"

@@ -173,7 +173,7 @@ test.describe('Administração (piloto Datastar)', () => {
     await page.getByRole('button', { name: 'Fechar' }).click()
     await gatilhos.nth(1).click()
 
-    await expect(page.locator('dialog#redefinir')).toBeVisible()
+    await expect(page.locator('dialog#reset')).toBeVisible()
     await expect(campo, 'o link do primeiro jogador sobreviveu na caixa do segundo').toHaveCount(0)
   })
 
@@ -183,11 +183,11 @@ test.describe('Administração (piloto Datastar)', () => {
     await gatilho.focus()
     await gatilho.press('Enter')
 
-    const dialogo = page.locator('#confirmar')
+    const dialogo = page.locator('#confirm')
     await expect(dialogo).toBeVisible()
 
     const estado = await page.evaluate(() => {
-      const d = document.getElementById('confirmar') as HTMLDialogElement
+      const d = document.getElementById('confirm') as HTMLDialogElement
       return {
         modal: d.matches(':modal'),
         focoDentro: d.contains(document.activeElement),
@@ -257,15 +257,15 @@ test.describe('A porta (piloto Datastar)', () => {
   }) => {
     await page.goto('/criar-conta?convite=nao-importa')
     await page.locator('#senha').fill('uma senha boa')
-    await page.locator('#confirmar').fill('outra coisa')
+    await page.locator('#confirm').fill('outra coisa')
 
     expect(
-      await page.locator('#confirmar').evaluate((el: HTMLInputElement) => el.validationMessage),
+      await page.locator('#confirm').evaluate((el: HTMLInputElement) => el.validationMessage),
     ).toBe('As senhas não conferem')
 
-    await page.locator('#confirmar').fill('uma senha boa')
+    await page.locator('#confirm').fill('uma senha boa')
     expect(
-      await page.locator('#confirmar').evaluate((el: HTMLInputElement) => el.checkValidity()),
+      await page.locator('#confirm').evaluate((el: HTMLInputElement) => el.checkValidity()),
     ).toBe(true)
   })
 })
@@ -319,7 +319,7 @@ test.describe('O Hub (piloto Datastar)', () => {
     const gatilho = page.getByRole('button', { name: /^Menu de / })
     await gatilho.click()
 
-    const menu = page.locator('#menu-do-jogador')
+    const menu = page.locator('#player-menu')
     await expect(menu).toBeVisible()
     expect(await menu.evaluate((el) => el.matches(':popover-open'))).toBe(true)
 
@@ -354,7 +354,7 @@ test.describe('O Hub e a SPA dividem a preferência de som', () => {
     await page.goto('/')
 
     await page.getByRole('button', { name: /^Menu de / }).click()
-    const alternador = page.locator('#menu-do-jogador button').first()
+    const alternador = page.locator('#player-menu button').first()
     await expect(alternador).toHaveText(/Som desligado/)
 
     await alternador.click()
@@ -1017,7 +1017,7 @@ test.describe('O bestiário (piloto Datastar)', () => {
    *
    * O clique do mouse também FOCA, e por uma fatia inteira a linha saía com dois
    * pedidos: o do foco, que só pré-visualiza e não leva `abrir=1`, e o do
-   * clique, que leva. Os dois remendam o `#bestiario`, que redeclara
+   * clique, que leva. Os dois remendam o `#bestiary`, que redeclara
    * `fichaAberta` a cada remendo — então quem CHEGA por último manda, e a ordem
    * de chegada não é a de saída. Na bancada o do clique chegava depois e a ficha
    * abria; no CI a ordem inverteu e o teste acima pegou a criatura escolhida com
@@ -1233,7 +1233,7 @@ test.describe('O construtor de encontros (piloto Datastar)', () => {
    */
   test('o link do botão de copiar reabre o mesmo encontro', async ({ page }) => {
     await page.goto(`${ENCONTROS}?nivel=3&grupo=4&c=ogro:2`)
-    const veredito = page.locator('#encontros')
+    const veredito = page.locator('#encounters')
     const antes = await veredito.textContent()
 
     const link = await page
@@ -1288,7 +1288,7 @@ test.describe('O improviso (piloto Datastar)', () => {
 
     for (let i = 0; i < 3; i++) {
       await page.getByRole('button', { name: 'Rolar d20' }).first().click()
-      await expect(page.locator('#improviso [aria-live="polite"]').first()).toBeVisible()
+      await expect(page.locator('#improv [aria-live="polite"]').first()).toBeVisible()
     }
 
     expect(await page.evaluate(() => history.length), 'as rolagens empilharam histórico').toBe(

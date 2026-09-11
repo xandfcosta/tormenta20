@@ -16,7 +16,7 @@ import "fmt"
 // cena, trilho e migalhas roubariam altura da página do livro, que é o único
 // conteúdo aqui. A barra fina de cima já diz onde se está e como andar.
 //
-// Todo o estado vive no `<div id="leitor">` como atributos de DADO, e não em
+// Todo o estado vive no `<div id="reader">` como atributos de DADO, e não em
 // sinais do Datastar. A razão é que quem lê isto não é o Datastar: é o
 // `reader.js`, um módulo próprio que roda uma vez na carga. Sinal seria estado
 // de cliente viajando em toda requisição seguinte para nada.
@@ -228,7 +228,7 @@ func readerScene(v readerView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" target=\"_blank\" rel=\"noopener\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">abrir fora ↗</a></div></div><div id=\"leitor\" data-livro=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" target=\"_blank\" rel=\"noopener\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">abrir fora ↗</a></div></div><div id=\"reader\" data-livro=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

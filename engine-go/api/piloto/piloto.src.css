@@ -249,7 +249,7 @@ html {
 
    FORA de `@layer` pela mesma razão da regra abaixo: utilitário do Tailwind é
    camada, e estilo não-camada ganha dele. */
-#verbete-em-dialogo .collection-card {
+#entry-in-dialog .collection-card {
   border: 0;
   padding: 0;
 }
@@ -269,11 +269,11 @@ html {
 
    O `:has()` na linha é o mesmo padrão do `.mesa-painel` acima: quem recebe o
    foco é o campo, quem acende é a caixa. */
-.scene-grimorio #buscador-campo:focus-visible {
+.scene-grimorio #finder-field:focus-visible {
   outline: none;
 }
 
-.scene-grimorio .finder-row:has(#buscador-campo:focus-visible) {
+.scene-grimorio .finder-row:has(#finder-field:focus-visible) {
   border-color: var(--grimorio-gold);
 }
 
@@ -901,7 +901,7 @@ html {
    *
    * UM NÓ NOS DOIS ARRANJOS, e isto não é economia: a prévia tem id, e id é
    * como o remendo a encontra. Um segundo nó para o telefone seria um segundo
-   * `#mesa-notas-previa` — o `PatchElements` acerta o primeiro, o outro
+   * `#table-notes-preview` — o `PatchElements` acerta o primeiro, o outro
    * envelhece na tela, e as duas metades passam a discordar sobre a mesma nota.
    * É o mesmo defeito da ALE-122, agora em HTML, e o guarda das regiões o
    * pegaria. Então a "gaveta" do telefone é ESTA seção, posicionada por CSS.
@@ -1723,7 +1723,7 @@ html {
  * parada é aceita. É isso que faz o remendo de outro jogador não cancelar o
  * gesto: ele redesenha a peça no lugar dela, e o deslocamento vive por fora.
  *
- * As variáveis vêm do `#mesa` por herança — a única raiz que o remendo não
+ * As variáveis vêm do `#table` por herança — a única raiz que o remendo não
  * toca. */
 @layer components {
   .board-dragging {

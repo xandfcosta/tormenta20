@@ -55,7 +55,7 @@ templ sessionVerbs(v View) {
 // O `<div>` existe sempre, inclusive para o jogador: região que some do HTML é
 // região que o remendo não acha. Quem a porta do mestre esconde é o CONTEÚDO.
 templ tableConfigSession(v View) {
-	<div id="mesa-config-da-sessao">
+	<div id="table-session-config">
 		if v.Mestre != nil {
 			@sessionConfig(v)
 		}
@@ -64,12 +64,12 @@ templ tableConfigSession(v View) {
 
 templ sessionConfig(v View) {
 	<dialog
-		id="config-da-sessao"
+		id="session-config"
 		data-preserve-attr="open"
-		aria-labelledby="config-da-sessao-titulo"
+		aria-labelledby="session-config-title"
 		class="scene-grimorio m-auto w-[min(32rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="config-da-sessao-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
+		<h2 id="session-config-title" class="font-heading text-lg tracking-wide text-grimorio-gold">
 			Sessão { fmt.Sprint(v.SessionNum) }
 			<span class={ ui.SectionLabelClasses("muted", "ml-2 font-normal") }>{ portugueseCycle(v.Status) }</span>
 		</h2>
@@ -81,10 +81,10 @@ templ sessionConfig(v View) {
 				// troca de turno, e um `value` vindo de lá apagaria o que o mestre
 				// está escrevendo no meio da frase.
 				<div class="min-w-0 flex-1 space-y-1">
-					<label for="titulo-da-sessao" class="block text-sm text-foreground">Título</label>
+					<label for="session-title" class="block text-sm text-foreground">Título</label>
 					<p class="text-xs text-muted-foreground">O apelido da noite. Pode ficar em branco — quem identifica a sessão é o número.</p>
 					<input
-						id="titulo-da-sessao"
+						id="session-title"
 						type="text"
 						data-bind:session_title
 						placeholder="A cripta do rio"
@@ -116,7 +116,7 @@ templ sessionConfig(v View) {
 				@adjustRow("Encerrar sessão", "A partida sai do ar para a mesa. A campanha e as fichas ficam como estão.") {
 					<button
 						type="button"
-						data-on:click={ "document.getElementById('config-da-sessao').close(); " + sessionCommand(v, "encerrar") }
+						data-on:click={ "document.getElementById('session-config').close(); " + sessionCommand(v, "encerrar") }
 						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					>Encerrar</button>
 				}
@@ -136,7 +136,7 @@ templ sessionConfig(v View) {
 			@adjustRow("Excluir sessão", "Apaga a sessão e o histórico dela. Não dá para desfazer.") {
 				<button
 					type="button"
-					data-on:click="document.getElementById('config-da-sessao').close(); document.getElementById('excluir-a-sessao').showModal()"
+					data-on:click="document.getElementById('session-config').close(); document.getElementById('delete-session').showModal()"
 					class="inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive-ink outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>Excluir</button>
 			}
@@ -144,7 +144,7 @@ templ sessionConfig(v View) {
 		<div class="mt-4 flex justify-end">
 			<button
 				type="button"
-				data-on:click="document.getElementById('config-da-sessao').close()"
+				data-on:click="document.getElementById('session-config').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Fechar</button>
 		</div>
@@ -158,19 +158,19 @@ templ sessionConfig(v View) {
 // redireciona para a crônica. Datastar não entra aqui.
 templ confirmDeleteSession(v View) {
 	<dialog
-		id="excluir-a-sessao"
+		id="delete-session"
 		data-preserve-attr="open"
-		aria-labelledby="excluir-a-sessao-titulo"
+		aria-labelledby="delete-session-title"
 		class="scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-destructive bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="excluir-a-sessao-titulo" class="font-heading text-lg tracking-wide text-destructive-ink">Excluir a sessão { fmt.Sprint(v.SessionNum) }?</h2>
+		<h2 id="delete-session-title" class="font-heading text-lg tracking-wide text-destructive-ink">Excluir a sessão { fmt.Sprint(v.SessionNum) }?</h2>
 		<p class="mt-2 text-sm text-muted-foreground">
 			A fila, o tabuleiro e o histórico desta noite vão junto. As fichas e a campanha ficam como estão. Não dá para desfazer.
 		</p>
 		<form method="post" action={ templ.SafeURL(caminhoDeExcluir(v)) } class="mt-4 flex justify-end gap-2">
 			<button
 				type="button"
-				data-on:click="document.getElementById('excluir-a-sessao').close()"
+				data-on:click="document.getElementById('delete-session').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			<button

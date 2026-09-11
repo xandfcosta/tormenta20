@@ -45,7 +45,7 @@ const (
 //
 // Vai na CENA — a caixa que não rola e que o remendo não substitui — e desce por
 // herança até o plano e a grade. No plano ele seria apagado pelo primeiro quadro
-// do SSE, que é a mesma razão pela qual as variáveis do arrasto moram no `#mesa`.
+// do SSE, que é a mesma razão pela qual as variáveis do arrasto moram no `#table`.
 const sceneStyle = "`--quadrado: ${$square}px; --vista-x: ${$viewport_x}px; --vista-y: ${$viewport_y}px`"
 
 // oQuadradoClicado traduz o PONTO do clique em quadrado do plano.

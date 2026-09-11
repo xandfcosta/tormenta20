@@ -559,7 +559,7 @@ func tokenCommand(v BoardView, id, acao string) string {
 // senha, de novo.
 func openEditToken(p boardToken) string {
 	return fmt.Sprintf("$token_edited = %q; $token_name = %q; $token_size = %d; %s; "+
-		"document.getElementById('editar-peca').showModal()",
+		"document.getElementById('edit-token').showModal()",
 		p.ID, p.Rotulo, p.Pegada, closeMenuToken)
 }
 
@@ -574,7 +574,7 @@ func openEditToken(p boardToken) string {
 // atrás de um `<dialog>` aberto é uma frase que ninguém lê.
 func saveEditToken(v BoardView) string {
 	return fmt.Sprintf(
-		"document.getElementById('editar-peca').close(); "+
+		"document.getElementById('edit-token').close(); "+
 			"@post('%s/pecas/' + $token_edited + '/editar')",
 		v.Base)
 }

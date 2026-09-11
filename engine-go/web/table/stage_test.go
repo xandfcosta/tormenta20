@@ -12,20 +12,20 @@ package table
 // Estes três casos foram vistos VERMELHOS antes de valerem:
 //   - tirar `@tableRailTracker` do palco → o primeiro falha
 //   - pendurar `@tableTracker` no palco E na gaveta → o segundo falha, dizendo 2
-//   - listar `mesa-trilho-fila` sem a guarda de papel → o terceiro falha
+//   - listar `table-tracker-rail` sem a guarda de papel → o terceiro falha
 
 // tableRegionNames são os ids que o stream remenda. A lista é a mesma do
 // `TableRegions`, escrita aqui de novo DE PROPÓSITO: derivá-la da produção
 // faria o teste concordar com o defeito: uma região removida sumiria dos dois
 // lados e o guarda ficaria verde sobre nada.
 var tableRegionNames = []string{
-	"mesa-cabecalho",
-	"mesa-registrar",
-	"mesa-grupo",
-	"mesa-tabuleiro",
-	"mesa-por-no-mapa",
-	"mesa-acervo",
-	"mesa-config-da-sessao",
-	"mesa-fila",
-	"mesa-comandos",
+	"table-header",
+	"table-register",
+	"table-party",
+	"table-board",
+	"table-populate",
+	"table-archive",
+	"table-session-config",
+	"table-tracker",
+	"table-commands",
 }

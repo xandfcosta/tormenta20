@@ -85,7 +85,7 @@ type adminPanel func(adminView) templ.Component
 // patchPanels manda um `datastar-patch-elements` por painel.
 //
 // Cada fragmento carrega o próprio `id`, então o Datastar casa pelo id e o
-// `selector` fica desnecessário — é o mesmo mecanismo do `#mesa`, só que
+// `selector` fica desnecessário — é o mesmo mecanismo do `#table`, só que
 // apontado a pedaços em vez da tela toda.
 func (s Scene) patchPanels(sse *datastar.ServerSentEventGenerator, r *http.Request, paineis ...adminPanel) {
 	view, err := s.loadAdmin(r.Context(), s.deps.CurrentUserID(r))

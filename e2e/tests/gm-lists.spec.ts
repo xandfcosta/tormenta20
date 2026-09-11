@@ -27,7 +27,7 @@ test.describe('As listas do mestre', () => {
     // A ferramenta virou cena do SERVIDOR na ALE-264, e o teste foi REAPONTADO
     // em vez de apagado: o que ele afirma — a lista pinta, a busca filtra, o
     // painel mostra a escolhida — continua sendo a promessa da tela, e o id
-    // `mesa-bestiario` sobreviveu ao porte de propósito.
+    // `table-bestiary-panel` sobreviveu ao porte de propósito.
     //
     // A linha é LINK e não botão: abrir uma criatura passou a ser navegação,
     // com `?criatura=` no endereço.
@@ -78,7 +78,7 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
   // Isto NÃO cega o guarda, e a diferença é de duas ordens de grandeza: o
   // defeito da ALE-175 eram 243px de banda morta. Provado — recolocar uma tampa
   // de altura na lista deixa este teste VERMELHO com a tolerância em 12.
-  await expectSemFaixaMorta(page, '[aria-labelledby=mesa-bestiario]', 12)
+  await expectSemFaixaMorta(page, '[aria-labelledby=table-bestiary-panel]', 12)
 })
 
 /**
@@ -107,7 +107,7 @@ test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) =>
 
   await expectColunasMonotonicas(
     page,
-    '[aria-labelledby=mesa-bestiario] div.grid',
+    '[aria-labelledby=table-bestiary-panel] div.grid',
     [1920, 1440, 1200, 1100, 1040, 1024, 1000, 950, 900, 860, 844, 830, 812, 800, 768, 390],
   )
 })
@@ -332,7 +332,7 @@ test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos'
 test('deitado, a lista do bestiário mostra uma criatura inteira', async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })
   await page.goto('/mestre/bestiario')
-  const lista = page.locator('#bestiario ul')
+  const lista = page.locator('#bestiary ul')
   await expect(lista, 'sem a lista não há medição').toBeVisible()
 
   const medida = await lista.evaluate((ul) => ({

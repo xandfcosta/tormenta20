@@ -130,7 +130,7 @@ func BestiarySignals(v BestiaryView) string {
 	busca, _ := json.Marshal(v.Term)
 	criatura, _ := json.Marshal(escolhida)
 	// `fichaAberta` sai DAQUI e não de um evento de sinal separado, e a razão é o
-	// que a medição mostrou: este `data-signals` mora no `#bestiario`, que É o
+	// que a medição mostrou: este `data-signals` mora no `#bestiary`, que É o
 	// elemento remendado, então ele REDECLARA os sinais a cada remendo. Um
 	// evento de sinal mandado depois do conteúdo era desfeito por esta linha —
 	// o fio levava `{"fichaAberta":true}` e o diálogo continuava `display:none`.

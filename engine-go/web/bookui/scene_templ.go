@@ -309,7 +309,7 @@ func BookDialog() templ.Component {
 			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<dialog id=\"livro-em-dialogo\" data-preserve-attr=\"open\" aria-label=\"O livro\" data-on:close=\"el.querySelector('iframe').src = 'about:blank'\" class=\"scene-grimorio m-auto h-[min(92vh,60rem)] w-[min(72rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/70\"><button type=\"button\" aria-label=\"Fechar o livro\" data-on:click=\"el.closest('dialog').close()\" class=\"absolute right-2 top-2 z-10 flex size-11 items-center justify-center rounded-sm border border-grimorio-iron bg-grimorio-panel text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button> <iframe title=\"O livro\" class=\"size-full border-0\"></iframe></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<dialog id=\"book-in-dialog\" data-preserve-attr=\"open\" aria-label=\"O livro\" data-on:close=\"el.querySelector('iframe').src = 'about:blank'\" class=\"scene-grimorio m-auto h-[min(92vh,60rem)] w-[min(72rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/70\"><button type=\"button\" aria-label=\"Fechar o livro\" data-on:click=\"el.closest('dialog').close()\" class=\"absolute right-2 top-2 z-10 flex size-11 items-center justify-center rounded-sm border border-grimorio-iron bg-grimorio-panel text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button> <iframe title=\"O livro\" class=\"size-full border-0\"></iframe></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -499,13 +499,13 @@ func CrossRef(aba, id, nome string) templ.Component {
 // A CAIXA do verbete do elo (ALE-264): o conceito citado, mostrado por cima da
 // cena que se estava lendo.
 //
-// Ela nasce com o "carregando" e é REMENDADA pelo `#verbete-do-elo` — o
+// Ela nasce com o "carregando" e é REMENDADA pelo `#crossref-entry` — o
 // conteúdo vem do servidor, que já tem os oito catálogos em memória. Sem sinal
 // nenhum: o que decide o que aparece é o endereço no `href` do elo, e sinal aqui
 // seria estado de cliente viajando em toda requisição da cena.
 //
 // Mora na CASCA e não na cena dos catálogos, e a razão é mecânica: o
-// `#catalogos` é REMENDADO a cada tecla da busca, e um diálogo lá dentro seria
+// `#catalogs` é REMENDADO a cada tecla da busca, e um diálogo lá dentro seria
 // redesenhado junto — perdendo o conteúdo que o elo acabou de trazer. A casca
 // nunca é remendada.
 func EntryDialog() templ.Component {
@@ -529,7 +529,7 @@ func EntryDialog() templ.Component {
 			templ_7745c5c3_Var23 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<dialog id=\"verbete-em-dialogo\" data-preserve-attr=\"open\" aria-label=\"Verbete citado\" class=\"scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-3 text-foreground backdrop:bg-black/60\"><button type=\"button\" aria-label=\"Fechar o verbete\" data-on:click=\"el.closest('dialog').close()\" class=\"absolute right-2 top-2 flex size-9 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button><div id=\"verbete-do-elo\" class=\"pr-8\"><p class=\"text-xs text-muted-foreground\">Carregando…</p></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<dialog id=\"entry-in-dialog\" data-preserve-attr=\"open\" aria-label=\"Verbete citado\" class=\"scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-3 text-foreground backdrop:bg-black/60\"><button type=\"button\" aria-label=\"Fechar o verbete\" data-on:click=\"el.closest('dialog').close()\" class=\"absolute right-2 top-2 flex size-9 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button><div id=\"crossref-entry\" class=\"pr-8\"><p class=\"text-xs text-muted-foreground\">Carregando…</p></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -557,7 +557,7 @@ func EntryDialog() templ.Component {
 // navegador; o que o servidor precisa saber, o servidor escreve.
 const openEntryOver = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
 	`evt.preventDefault(), ` +
-	`document.getElementById('verbete-em-dialogo').showModal(), ` +
+	`document.getElementById('entry-in-dialog').showModal(), ` +
 	"@get('" + routes.Entry + "?aba=' + el.dataset.aba + '&entrada=' + encodeURIComponent(el.dataset.entrada)))"
 
 // OpensAugments mostra os aprimoramentos da magia na MESMA caixa do elo.
@@ -570,7 +570,7 @@ const openEntryOver = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button
 // do verbete, e a magia inteira já tem o endereço dela. Botão que não navega é
 // botão.
 func OpensAugments(id string) string {
-	return `document.getElementById('verbete-em-dialogo').showModal(); ` +
+	return `document.getElementById('entry-in-dialog').showModal(); ` +
 		`@get('` + routes.Entry + `?aba=magias&parte=aprimoramentos&entrada=` + url.QueryEscape(id) + `')`
 }
 

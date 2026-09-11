@@ -19,7 +19,7 @@ async function withTheNotesOpen(page: Page) {
   await page.setViewportSize({ width: 1920, height: 1080 })
   await openTheBoard(page, mesa.mesa)
   await page.getByRole('button', { name: /Notas/ }).first().click()
-  await expect(page.locator('#mesa-notas')).toBeVisible()
+  await expect(page.locator('#table-notes')).toBeVisible()
   return mesa
 }
 
@@ -31,7 +31,7 @@ const trilhas = (page: Page) =>
   )
 
 const width = (page: Page) =>
-  page.evaluate(() => Math.round(document.getElementById('mesa-notas')!.getBoundingClientRect().width))
+  page.evaluate(() => Math.round(document.getElementById('table-notes')!.getBoundingClientRect().width))
 
 test('empilhado põe a prévia ABAIXO da caixa, mesmo onde as duas colunas cabem', async ({
   page,
@@ -53,7 +53,7 @@ test('empilhado põe a prévia ABAIXO da caixa, mesmo onde as duas colunas cabem
     // E as DUAS metades continuam à mostra — empilhado não é "Escrever" com
     // outro nome.
     await expect(page.getByRole('textbox', { name: 'Notas da sessão' })).toBeVisible()
-    await expect(page.locator('#mesa-notas-previa')).toBeVisible()
+    await expect(page.locator('#table-notes-preview')).toBeVisible()
   } finally {
     await apagar()
   }
@@ -110,7 +110,7 @@ test('a largura sobrevive ao recarregar', async ({ page }) => {
 
     await page.goto(mesa)
     await page.getByRole('button', { name: /Notas/ }).first().click()
-    await expect(page.locator('#mesa-notas')).toBeVisible()
+    await expect(page.locator('#table-notes')).toBeVisible()
 
     expect(await width(page), 'a largura escolhida não sobreviveu ao F5').toBe(escolhida)
   } finally {
@@ -141,7 +141,7 @@ test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async 
     await page.waitForTimeout(250)
     const semNotas = await mapa()
     await page.getByRole('button', { name: /Notas/ }).first().click()
-    await expect(page.locator('#mesa-notas')).toBeVisible()
+    await expect(page.locator('#table-notes')).toBeVisible()
     await page.waitForTimeout(250)
 
     // O PADRÃO É ENCOSTADA, e o mapa paga por isso.
@@ -165,14 +165,14 @@ test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async 
     ).toBeGreaterThan(semNotas - 20)
 
     // E as notas continuam à mostra POR CIMA: flutuar não é fechar.
-    await expect(page.locator('#mesa-notas')).toBeVisible()
+    await expect(page.locator('#table-notes')).toBeVisible()
 
     // DO LADO CERTO, e este pedaço existe porque a primeira versão do guarda
     // não o tinha: o painel foi parar na ESQUERDA do mapa — a classe base traz
     // `inset-0`, que põe `left: 0`, e com os dois lados definidos o navegador
     // resolve pelo left. O mapa media certo e a tela estava errada.
     const [naDireita, meio] = await page.evaluate(() => {
-      const n = document.getElementById('mesa-notas')!.getBoundingClientRect()
+      const n = document.getElementById('table-notes')!.getBoundingClientRect()
       return [Math.round(n.x + n.width), Math.round(innerWidth / 2)]
     })
     expect(naDireita, 'as notas flutuaram do lado errado do mapa').toBeGreaterThan(meio)

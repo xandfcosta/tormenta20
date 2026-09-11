@@ -16,12 +16,12 @@ import (
 
 templ encountersScene(v encountersView) {
 	<section
-		id="encontros"
+		id="encounters"
 		class="mesa-palco flex min-h-0 flex-1 flex-col gap-3"
-		aria-labelledby="mesa-encontros"
+		aria-labelledby="table-encounters"
 		data-signals={ encounterSignals(v) }
 	>
-		<h2 id="mesa-encontros" class="font-heading text-lg tracking-wide text-foreground">
+		<h2 id="table-encounters" class="font-heading text-lg tracking-wide text-foreground">
 			Construtor de encontros
 		</h2>
 		@encounterPartyPanel(v)

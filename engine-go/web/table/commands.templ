@@ -137,7 +137,7 @@ templ rest(v View) {
 	</button>
 	<button
 		type="button"
-		data-on:click="document.getElementById('descanso-de-dia').showModal()"
+		data-on:click="document.getElementById('day-rest').showModal()"
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>
 		@ui.Icon("Moon", "size-4")
@@ -163,14 +163,14 @@ templ rest(v View) {
 // canto superior esquerdo — medido, `top: 0, left: 0` numa janela de 1916×907.
 templ restDay(v View) {
 	<dialog
-		id="descanso-de-dia"
+		id="day-rest"
 		data-preserve-attr="open"
-		aria-labelledby="descanso-de-dia-titulo"
+		aria-labelledby="day-rest-title"
 		class="scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="descanso-de-dia-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Descanso de dia</h2>
+		<h2 id="day-rest-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Descanso de dia</h2>
 		<p class="mt-1 text-sm text-muted-foreground">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p105).</p>
-		<label for="qualidade-do-descanso" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Qualidade do descanso</label>
+		<label for="rest-quality" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Qualidade do descanso</label>
 		// O NOME DO SINAL É `snake_case`, e isso não é desleixo: nome de
 		// ATRIBUTO é minusculado pelo analisador de HTML, então uma chave
 		// em camelCase chega MINÚSCULA e o Datastar liga um sinal NOVO com
@@ -185,7 +185,7 @@ templ restDay(v View) {
 		// `data-signals`), e valor preserva a caixa. A regra é sobre sinal usado
 		// como CHAVE.
 		<select
-			id="qualidade-do-descanso"
+			id="rest-quality"
 			data-bind:rest_quality
 			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>
@@ -199,7 +199,7 @@ templ restDay(v View) {
 			// fechar é explícito, e é o mesmo `close()` que o Descansar usa.
 			<button
 				type="button"
-				data-on:click="document.getElementById('descanso-de-dia').close()"
+				data-on:click="document.getElementById('day-rest').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			// Fecha ANTES de postar: a recusa do servidor chega no
@@ -207,7 +207,7 @@ templ restDay(v View) {
 			// cima dela esconderia a única frase que explica o que houve.
 			<button
 				type="button"
-				data-on:click={ "document.getElementById('descanso-de-dia').close(); " + tableCommand(v, "POST", "rest/day") }
+				data-on:click={ "document.getElementById('day-rest').close(); " + tableCommand(v, "POST", "rest/day") }
 				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Descansar</button>
 		</div>

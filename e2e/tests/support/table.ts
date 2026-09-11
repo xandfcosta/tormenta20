@@ -74,7 +74,7 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
  */
 export async function closeTheTracker(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Fechar a iniciativa' }).click()
-  await expect(page.locator('#gaveta-da-fila'), 'a gaveta da fila não fechou').not.toHaveAttribute(
+  await expect(page.locator('#tracker-drawer'), 'a gaveta da fila não fechou').not.toHaveAttribute(
     'open',
     '',
   )
@@ -85,12 +85,12 @@ export async function openTheTracker(page: Page): Promise<void> {
   // vezes: com ela já aberta o botão de abrir está coberto pelo próprio modal,
   // e o sintoma é um timeout de clique num seletor que casou — o mesmo que o
   // comentário de baixo descreve, chegando por outro caminho.
-  if (await page.locator('#gaveta-da-fila[open]').count()) return
+  if (await page.locator('#tracker-drawer[open]').count()) return
   await page
     .getByRole('button', { name: /^Abrir a iniciativa/ })
     .filter({ visible: true })
     .click()
-  await expect(page.locator('#gaveta-da-fila'), 'a gaveta da fila não abriu').toHaveAttribute(
+  await expect(page.locator('#tracker-drawer'), 'a gaveta da fila não abriu').toHaveAttribute(
     'open',
     '',
   )
@@ -154,7 +154,7 @@ export async function putATokenOnTheMap(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Pôr no mapa', exact: true }).first().click()
   // Escopado ao DIÁLOGO: o nome do combatente aparece também na fila atrás dele,
   // e um seletor de página inteira acha os dois.
-  const dialogo = page.locator('#por-no-mapa')
+  const dialogo = page.locator('#populate')
   await dialogo.getByRole('button', { name: /Ogro do E2E/ }).click()
   await dialogo.getByRole('button', { name: 'Pôr no mapa', exact: true }).click()
   await expect(page.locator('.board-token'), 'a peça não entrou no mapa').toHaveCount(1)

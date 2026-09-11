@@ -54,7 +54,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"convite-link\" class=\"mt-3 space-y-2\"><label for=\"convite-url\" class=\"block text-xs font-bold uppercase tracking-widest text-muted-foreground\">Link de convite</label><div class=\"flex gap-2\"><input id=\"convite-url\" readonly data-caminho=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"invite-link\" class=\"mt-3 space-y-2\"><label for=\"invite-url\" class=\"block text-xs font-bold uppercase tracking-widest text-muted-foreground\">Link de convite</label><div class=\"flex gap-2\"><input id=\"invite-url\" readonly data-caminho=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -91,7 +91,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 		})
 		templ_7745c5c3_Err = Button(VariantSecondary, SizeDefault, "shrink-0", templ.Attributes{
 			"type":          "button",
-			"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copied = true",
+			"data-on:click": "navigator.clipboard.writeText(document.getElementById('invite-url').value); $copied = true",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -127,7 +127,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 // divergiriam, e é a mesma razão pela qual o `mintAccountInvite` saiu do
 // manipulador HTTP.
 //
-// O link chega por remendo do servidor (`#convite-link`), então ele NÃO passa
+// O link chega por remendo do servidor (`#invite-link`), então ele NÃO passa
 // por sinal: um token de uso único em estado de cliente viajaria de volta ao
 // servidor em toda requisição seguinte da página, que é a mesma razão pela qual
 // a senha ficou fora dos sinais na ALE-229.
@@ -152,7 +152,7 @@ func InviteDialog(rota string) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<dialog id=\"convidar\" data-ref=\"invite_dialog\" aria-labelledby=\"convidar-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"convidar-titulo\" class=\"flex items-center gap-2 font-heading text-base\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<dialog id=\"invite\" data-ref=\"invite_dialog\" aria-labelledby=\"invite-title\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"invite-title\" class=\"flex items-center gap-2 font-heading text-base\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -160,7 +160,7 @@ func InviteDialog(rota string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "Convidar jogador</h2><p class=\"mt-2 text-sm text-muted-foreground\">Gere um link e envie para quem vai entrar. Ele vale uma vez só, expira em 7 dias, e a pessoa escolhe a própria senha.</p><div id=\"convite-link\" class=\"mt-3\"></div><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "Convidar jogador</h2><p class=\"mt-2 text-sm text-muted-foreground\">Gere um link e envie para quem vai entrar. Ele vale uma vez só, expira em 7 dias, e a pessoa escolhe a própria senha.</p><div id=\"invite-link\" class=\"mt-3\"></div><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

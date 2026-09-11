@@ -850,17 +850,17 @@ func moveLegend(m *moveView) []moveRange {
 // acabou —, e uma ponta ali apontaria para o nada e pareceria um segundo
 // destino.
 func endWireFits(m *moveView) string {
-	return endForEnd(m, m.FioSegundo == "" && m.FioAlem == "", "movimento")
+	return endForEnd(m, m.FioSegundo == "" && m.FioAlem == "", "move")
 }
 
 // endWireSecond e endWireBeyond completam a regra: a ponta vai em quem
 // TERMINA o caminho, e cada faixa a carrega na cor dela.
 func endWireSecond(m *moveView) string {
-	return endForEnd(m, m.FioAlem == "", "segundo")
+	return endForEnd(m, m.FioAlem == "", "second")
 }
 
 func endWireBeyond(m *moveView) string {
-	return endForEnd(m, true, "alem")
+	return endForEnd(m, true, "beyond")
 }
 
 // endForEnd devolve a ponta da cor pedida, ou `none`.
@@ -872,7 +872,7 @@ func endForEnd(m *moveView, eOFim bool, cor string) string {
 	if !eOFim {
 		return "none"
 	}
-	return "url(#tabuleiro-ponta-do-" + cor + ")"
+	return "url(#board-tip-" + cor + ")"
 }
 
 // moveCommand escreve a chamada de confirmar ou cancelar.
@@ -903,7 +903,7 @@ func clickedPointStop(v BoardView) string {
 // servidor governa. Enquanto o dedo está em cima, o que muda é um `transform`
 // alimentado por SINAIS; a posição de verdade só muda quando a parada é aceita.
 //
-// Os sinais vivem no `#mesa`, que é a única raiz que o remendo NUNCA toca desde
+// Os sinais vivem no `#table`, que é a única raiz que o remendo NUNCA toca desde
 // que a cena virou regiões — as variáveis CSS descem por herança até a peça. Se
 // morassem no plano ou na peça, o primeiro remendo de outro jogador as apagaria
 // no meio do gesto, que é exatamente o defeito que o dono nomeou.
@@ -1042,7 +1042,7 @@ func dropFor(v BoardView, quem string, x, y int) string {
 			"if (dx || dy) %s }", quem, destino)
 }
 
-// As variáveis do arrasto moram SÓ no `#mesa`, e descem por herança até quem
+// As variáveis do arrasto moram SÓ no `#table`, e descem por herança até quem
 // está sendo arrastado.
 //
 // A razão é que o `data-attr:style` SUBSTITUI o atributo inteiro. Eu escrevi

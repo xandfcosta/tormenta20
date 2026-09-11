@@ -360,7 +360,7 @@ test('deitado, o crachá do jogador não come metade da tela', async ({ page }) 
   await page.setViewportSize({ width: 844, height: 390 })
   for (const endereco of enderecos) {
     await page.goto(endereco)
-    const cracha = page.locator('#cracha-do-jogador')
+    const cracha = page.locator('#player-badge')
     // `toBeVisible` ANTES de medir: uma caixa escondida devolve zero sem
     // reclamar, e um zero passaria neste teto com folga.
     await expect(cracha, `o crachá sumiu em ${endereco}: sem ele não há medição`).toBeVisible()

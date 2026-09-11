@@ -31,7 +31,7 @@ templ boardTable(v BoardView) {
 				<p class="text-sm text-muted-foreground">Nenhum tabuleiro aberto. Vale para combate e para cena de interpretação.</p>
 				<button
 					type="button"
-					data-on:click="document.getElementById('abrir-tabuleiro').showModal()"
+					data-on:click="document.getElementById('open-board').showModal()"
 					class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>Abrir tabuleiro</button>
 				// O acervo vem DEPOIS do abrir: montar cena nova é o que se faz
@@ -463,7 +463,7 @@ templ sceneVerbs(v BoardView) {
 				type="button"
 				aria-label="Abrir outro tabuleiro"
 				title="Abrir outro tabuleiro, sem fechar este"
-				data-on:click="document.getElementById('abrir-tabuleiro').showModal()"
+				data-on:click="document.getElementById('open-board').showModal()"
 				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("LayoutGrid", "size-4")
@@ -479,7 +479,7 @@ templ sceneVerbs(v BoardView) {
 				type="button"
 				aria-label="Encerrar o tabuleiro"
 				title="Encerrar o tabuleiro"
-				data-on:click="document.getElementById('encerrar-tabuleiro').showModal()"
+				data-on:click="document.getElementById('close-board').showModal()"
 				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("X", "size-4")
@@ -758,13 +758,13 @@ templ templateBar(v BoardView) {
 		// quatro textos alternados deixaria três rótulos apontando para o nada.
 		for _, forma := range bookShapes {
 			<label
-				for="gabarito-tamanho"
+				for="template-size"
 				data-show={ fmt.Sprintf("$template === %q", string(forma)) }
 				class="text-xs text-muted-foreground"
 			>{ shapeMeasure(forma) }</label>
 		}
 		<input
-			id="gabarito-tamanho"
+			id="template-size"
 			type="number"
 			min="1"
 			max={ templateBiggest() }
@@ -978,7 +978,7 @@ templ moveArrow(v BoardView) {
 		<svg aria-hidden="true" class="board-measure board-measure-front">
 			<defs>
 				<marker
-					id="tabuleiro-ponta-do-movimento"
+					id="board-tip-move"
 					markerUnits="userSpaceOnUse"
 					markerWidth="0.5"
 					markerHeight="0.44"
@@ -992,7 +992,7 @@ templ moveArrow(v BoardView) {
 				// `marker-end` referencia um nó por `id`, e um `<marker>` só herdaria
 				// a cor do primeiro fio que o usasse.
 				<marker
-					id="tabuleiro-ponta-do-segundo"
+					id="board-tip-second"
 					markerUnits="userSpaceOnUse"
 					markerWidth="0.5"
 					markerHeight="0.44"
@@ -1003,7 +1003,7 @@ templ moveArrow(v BoardView) {
 					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="board-move-tip-second"></path>
 				</marker>
 				<marker
-					id="tabuleiro-ponta-do-alem"
+					id="board-tip-beyond"
 					markerUnits="userSpaceOnUse"
 					markerWidth="0.5"
 					markerHeight="0.44"
@@ -1175,22 +1175,22 @@ templ markerActions(v BoardView, m boardMarker) {
 // elemento, e a centralização do modal é justamente a `margin: auto`.
 templ openBoardButton(v BoardView) {
 	<dialog
-		id="abrir-tabuleiro"
+		id="open-board"
 		data-preserve-attr="open"
-		aria-labelledby="abrir-tabuleiro-titulo"
+		aria-labelledby="open-board-title"
 		class="scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="abrir-tabuleiro-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Abrir tabuleiro</h2>
+		<h2 id="open-board-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Abrir tabuleiro</h2>
 		<p class="mt-1 text-sm text-muted-foreground">
 			O tabuleiro não tem bordas: cada quadrado é 1,5m (p236) e a scene cresce para onde a Table for. O deslocamento padrão de 9m anda 6 quadrados (p106).
 		</p>
-		<label for="novo-lugar" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Lugar</label>
+		<label for="new-place-field" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Lugar</label>
 		// O NOME DO SINAL É `snake_case`, e é obrigatório: nome de ATRIBUTO é
 		// minusculado pelo analisador de HTML, então caixa alta na chave liga um
 		// sinal NOVO e deixa o declarado intocado — o fio leva os dois e o
 		// servidor lê o errado.
 		<input
-			id="novo-lugar"
+			id="new-place-field"
 			type="text"
 			data-bind:new_place
 			placeholder="Taverna do Javali"
@@ -1199,9 +1199,9 @@ templ openBoardButton(v BoardView) {
 		// CHÃO e não "Cenário", que é o rótulo da SPA: em T20 cenário é ARTON, o
 		// mundo da campanha, e a palavra não pode significar duas coisas na
 		// mesma casa. Ver GLOSSARY.md.
-		<label for="novo-chao" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Chão</label>
+		<label for="new-ground" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Chão</label>
 		<select
-			id="novo-chao"
+			id="new-ground"
 			data-bind:new_ground
 			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>
@@ -1215,7 +1215,7 @@ templ openBoardButton(v BoardView) {
 		<div class="mt-4 flex justify-end gap-2">
 			<button
 				type="button"
-				data-on:click="document.getElementById('abrir-tabuleiro').close()"
+				data-on:click="document.getElementById('open-board').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			// Fecha ANTES de postar, como o descanso: a recusa chega no
@@ -1223,7 +1223,7 @@ templ openBoardButton(v BoardView) {
 			// esconderia a única frase que explica o que houve.
 			<button
 				type="button"
-				data-on:click={ "document.getElementById('abrir-tabuleiro').close(); " + sceneBoardCommand(v, "abrir") }
+				data-on:click={ "document.getElementById('open-board').close(); " + sceneBoardCommand(v, "abrir") }
 				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Abrir</button>
 		</div>
@@ -1238,24 +1238,24 @@ templ openBoardButton(v BoardView) {
 // seguinte.
 templ endBoardButton(v BoardView) {
 	<dialog
-		id="encerrar-tabuleiro"
+		id="close-board"
 		data-preserve-attr="open"
-		aria-labelledby="encerrar-tabuleiro-titulo"
+		aria-labelledby="close-board-title"
 		class="scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="encerrar-tabuleiro-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Encerrar o tabuleiro?</h2>
+		<h2 id="close-board-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Encerrar o tabuleiro?</h2>
 		<p class="mt-1 text-sm text-muted-foreground">
 			A cena vai para os Lugares da campanha, com as peças onde estão, e você a reabre quando quiser. A iniciativa e os PV continuam como estão.
 		</p>
 		<div class="mt-4 flex justify-end gap-2">
 			<button
 				type="button"
-				data-on:click="document.getElementById('encerrar-tabuleiro').close()"
+				data-on:click="document.getElementById('close-board').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			<button
 				type="button"
-				data-on:click={ "document.getElementById('encerrar-tabuleiro').close(); " + sceneBoardCommand(v, "encerrar") }
+				data-on:click={ "document.getElementById('close-board').close(); " + sceneBoardCommand(v, "encerrar") }
 				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Encerrar</button>
 		</div>
@@ -1271,7 +1271,7 @@ templ botaoDoAcervo(v BoardView) {
 		type="button"
 		aria-label={ collectionLabel(v) }
 		title={ collectionLabel(v) }
-		data-on:click="document.getElementById('acervo-de-lugares').showModal()"
+		data-on:click="document.getElementById('place-archive').showModal()"
 		class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3"
 	>
 		@ui.Icon("Library", "size-4")
@@ -1308,12 +1308,12 @@ func collectionLabel(v BoardView) string {
 // peças" é lixo que o mestre quer apagar.
 templ placesCollection(v BoardView) {
 	<dialog
-		id="acervo-de-lugares"
+		id="place-archive"
 		data-preserve-attr="open"
-		aria-labelledby="acervo-titulo"
+		aria-labelledby="archive-title"
 		class="scene-grimorio m-auto w-[min(30rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="acervo-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Lugares da campanha</h2>
+		<h2 id="archive-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Lugares da campanha</h2>
 		// A FRASE MUDOU COM O COMPORTAMENTO (ALE-205, fatia 3). Ela dizia "reabrir
 		// traz a cena para a mesa e guarda a atual no lugar dela", que era verdade
 		// enquanto a sessão tinha um tabuleiro só — e virou mentira no dia em que
@@ -1346,13 +1346,13 @@ templ placesCollection(v BoardView) {
 						// acervo. O gesto que sobra é ir até ela.
 						<button
 							type="button"
-							data-on:click={ "document.getElementById('acervo-de-lugares').close(); " + tabCommand(v, l.AbertaEm) }
+							data-on:click={ "document.getElementById('place-archive').close(); " + tabCommand(v, l.AbertaEm) }
 							class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm font-semibold text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>Ver</button>
 					} else {
 						<button
 							type="button"
-							data-on:click={ "document.getElementById('acervo-de-lugares').close(); " + placeCommand(v, l.ID, "reabrir") }
+							data-on:click={ "document.getElementById('place-archive').close(); " + placeCommand(v, l.ID, "reabrir") }
 							class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>Reabrir</button>
 					}
@@ -1384,7 +1384,7 @@ templ placesCollection(v BoardView) {
 		<div class="mt-4 flex justify-end">
 			<button
 				type="button"
-				data-on:click="document.getElementById('acervo-de-lugares').close()"
+				data-on:click="document.getElementById('place-archive').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Fechar</button>
 		</div>
@@ -1607,16 +1607,16 @@ templ tokenCopyMode(v BoardView, p boardToken, modo, nome, frase string) {
 // mostraria o nome do Zumbi sobre o Ogro, e o mestre salvaria isso.
 templ tokenEdit(v BoardView) {
 	<dialog
-		id="editar-peca"
+		id="edit-token"
 		data-preserve-attr="open"
-		aria-labelledby="editar-peca-titulo"
+		aria-labelledby="edit-token-title"
 		class="scene-grimorio m-auto hidden w-[min(24rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground open:flex backdrop:bg-black/60"
 	>
-		<h2 id="editar-peca-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Editar a peça</h2>
+		<h2 id="edit-token-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Editar a peça</h2>
 		<div class="space-y-1">
-			<label for="peca-nome" class={ ui.FieldLabelClasses("muted", "block") }>Nome da peça</label>
+			<label for="token-name" class={ ui.FieldLabelClasses("muted", "block") }>Nome da peça</label>
 			<input
-				id="peca-nome"
+				id="token-name"
 				type="text"
 				maxlength="60"
 				data-bind="token_name"
@@ -1627,9 +1627,9 @@ templ tokenEdit(v BoardView) {
 		// (p107, Tab. 1-21), e não existe 4 nem 5. Um campo livre deixaria o mestre
 		// desenhar uma peça que nenhuma criatura tem.
 		<div class="space-y-1">
-			<label for="peca-tamanho" class={ ui.FieldLabelClasses("muted", "block") }>Tamanho</label>
+			<label for="token-size" class={ ui.FieldLabelClasses("muted", "block") }>Tamanho</label>
 			<select
-				id="peca-tamanho"
+				id="token-size"
 				data-bind="token_size"
 				class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
@@ -1641,7 +1641,7 @@ templ tokenEdit(v BoardView) {
 		<div class="flex items-center justify-end gap-2 border-t border-grimorio-iron pt-3">
 			<button
 				type="button"
-				data-on:click="document.getElementById('editar-peca').close()"
+				data-on:click="document.getElementById('edit-token').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			<button
@@ -2095,7 +2095,7 @@ templ clickLayers(v BoardView) {
 // continua nascendo e morrendo com o gatilho, porque um diálogo sem botão que o
 // abra é peso morto que a busca da página ainda encontra.
 templ tableCollectionPlaces(v View) {
-	<div id="mesa-acervo">
+	<div id="table-archive">
 		if v.Tabuleiro.Mestre && len(v.Tabuleiro.Acervo) > 0 {
 			@placesCollection(v.Tabuleiro)
 		}

@@ -19,7 +19,7 @@ import (
 
 templ draftBody(v draftView) {
 	<main
-		id="rascunho"
+		id="draft"
 		data-attr:style="`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
@@ -73,7 +73,7 @@ templ draftHeader(v draftView) {
 // documento, mas um remendo mandado para o id errado é escrito no vazio e some
 // sem erro — a família de defeito que o `TableRegions` já registra.
 templ draftBoardRegion(v draftView) {
-	<div id="rascunho-tabuleiro" class="flex min-h-0 flex-1 flex-col">
+	<div id="draft-board" class="flex min-h-0 flex-1 flex-col">
 		@boardTable(v.Tabuleiro)
 		<div class="flex items-center justify-between gap-2 px-1 pt-1">
 			// A RECUSA do gesto, no mesmo sinal que o rodapé do mestre usa na

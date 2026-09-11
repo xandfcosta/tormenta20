@@ -28,7 +28,7 @@ func TestTheConfigTabShowsTheTableLink(t *testing.T) {
 	rec := pedeNaCronica(t, s, mestre, http.MethodGet, destino+"?tab=config", "")
 	corpo := rec.Body.String()
 
-	if !strings.Contains(corpo, `id="painel-convite"`) {
+	if !strings.Contains(corpo, `id="invite-panel"`) {
 		t.Fatalf("a aba de configuração não traz o painel do link:\n%s", primeiros(corpo, 400))
 	}
 	// O CAMINHO e não a URL: quem prefixa a origem é o navegador, e um `r.Host`

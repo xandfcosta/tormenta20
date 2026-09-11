@@ -67,7 +67,7 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 	}
 	// A LINHA nova volta como HTML, e não só como sinal: um `data-bind` para uma
 	// posição que a tela não desenhou é um campo que não existe.
-	if !strings.Contains(resposta, `id="npc-ataques"`) {
+	if !strings.Contains(resposta, `id="npc-attacks"`) {
 		t.Errorf("a lista de ataques não foi redesenhada:\n%s", resposta)
 	}
 	// O CAMINHO do campo vai escrito à mão: derivá-lo do `rowField` da cena

@@ -154,7 +154,7 @@ func listaDeIDs(ids []string) string { return strings.Join(ids, ",") }
 // ali, qualquer mudança na fila mudaria o HTML do mapa e o remendo trocaria a
 // peça debaixo do dedo do mestre no meio do arrasto — foi exatamente isso que o
 // `TestATrackerChangeDoesNotPatchTheMap` acusou na primeira versão.
-const dialogSheets = "[...document.querySelectorAll('#por-no-mapa [data-ficha]')]" +
+const dialogSheets = "[...document.querySelectorAll('#populate [data-ficha]')]" +
 	".map((e) => e.dataset.id).join(',')"
 
 // openMap recomeça a escolha no padrão SEGURO e abre o diálogo.
@@ -165,7 +165,7 @@ const dialogSheets = "[...document.querySelectorAll('#por-no-mapa [data-ficha]')
 // clique em "Pôr no mapa" que o mestre acha que está confirmando outra coisa.
 func openMap() string {
 	return "$map_selection = " + dialogSheets +
-		"; document.getElementById('por-no-mapa').showModal()"
+		"; document.getElementById('populate').showModal()"
 }
 
 // toggleMap liga ou desliga um id na escolha.

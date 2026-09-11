@@ -187,15 +187,15 @@ func signals(json string) string {
 }
 
 var tableRegionNames = []string{
-	"mesa-cabecalho",
-	"mesa-registrar",
-	"mesa-grupo",
-	"mesa-tabuleiro",
-	"mesa-por-no-mapa",
-	"mesa-acervo",
-	"mesa-config-da-sessao",
-	"mesa-fila",
-	"mesa-comandos",
+	"table-header",
+	"table-register",
+	"table-party",
+	"table-board",
+	"table-populate",
+	"table-archive",
+	"table-session-config",
+	"table-tracker",
+	"table-commands",
 }
 
 // temAlgumaClasse: basta UMA classe posicionada, porque o elemento veste várias —

@@ -65,7 +65,7 @@ func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 	// A RESPOSTA redesenha a prévia, e é por ela que a tela do mestre muda: sem
 	// o fragmento, a nota mudaria no banco e o quadrinho continuaria vazio na
 	// tela até um F5 — que é a forma mais convincente de um botão parecer quebrado.
-	if !strings.Contains(corpo, "mesa-notas-previa") {
+	if !strings.Contains(corpo, "table-notes-preview") {
 		t.Error("a resposta não trouxe a prévia; o quadrinho mudaria só no banco")
 	}
 	// E o SINAL volta junto, que é o que atualiza a caixa de texto sem trocar o

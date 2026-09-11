@@ -37,7 +37,7 @@ func TestTheFinderRouteReadsTheSignal(t *testing.T) {
 	if !strings.Contains(corpo, "Abalado") {
 		t.Error("o remendo não traz a condição buscada")
 	}
-	if !strings.Contains(corpo, `id="buscador-achados"`) {
+	if !strings.Contains(corpo, `id="finder-found"`) {
 		t.Error("o remendo não traz o id que ele substitui — o Datastar não teria onde aplicá-lo")
 	}
 }
@@ -65,12 +65,12 @@ func TestTheDoorDoesNotDrawTheFinder(t *testing.T) {
 
 	porta := httptest.NewRecorder()
 	s.WebRouter().ServeHTTP(porta, httptest.NewRequest(http.MethodGet, "/entrar", nil))
-	if strings.Contains(porta.Body.String(), `id="buscador"`) {
+	if strings.Contains(porta.Body.String(), `id="finder"`) {
 		t.Error("a porta desenhou a caixa do buscador, e com ela um sinal que viaja com a senha")
 	}
 
 	dentro := pedeNoMestre(t, s, eu, "GET", "/mestre/bestiario", "")
-	if !strings.Contains(dentro.Body.String(), `id="buscador"`) {
+	if !strings.Contains(dentro.Body.String(), `id="finder"`) {
 		t.Error("a caixa sumiu da cena com sessão — o guarda acima passaria por ausência de tudo")
 	}
 }

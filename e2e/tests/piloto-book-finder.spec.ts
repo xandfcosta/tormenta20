@@ -16,8 +16,8 @@ import { expect, test } from '@playwright/test'
  */
 test.use({ storageState: '.auth/user.json' })
 
-const CAIXA = '#buscador'
-const CAMPO = '#buscador-campo'
+const CAIXA = '#finder'
+const CAMPO = '#finder-field'
 const ACHADO = '[data-resultado]'
 
 // AMOSTRAGEM e não enumeração: o atalho mora na CASCA, então provar que ele
@@ -64,7 +64,7 @@ test('a seta desce do campo para o primeiro achado e o Enter abre a cena', async
   // `waitForURL` e NUNCA `networkidle` depois de uma tecla que navega: o
   // segundo volta ANTES de a navegação começar, e a asserção leria a URL velha.
   await page.waitForURL(/\/mestre\/condicoes\?/)
-  await expect(page.locator('#buscador')).toHaveCount(1)
+  await expect(page.locator('#finder')).toHaveCount(1)
 })
 
 test('o Enter no campo abre o primeiro achado sem passar pelas setas', async ({ page }) => {
@@ -108,12 +108,12 @@ test('o campo do buscador acende a linha, e não um retângulo colado na caixa',
   // E2E porque a pergunta é de CASCATA: quem ganha entre duas folhas, e um
   // `:has()` que acende o pai. Só o navegador resolve isso.
   const medida = await page.evaluate(() => {
-    const campo = document.getElementById('buscador-campo')!
+    const campo = document.getElementById('finder-field')!
     const linha = campo.closest('.finder-row')!
     return {
       anelDoCampo: getComputedStyle(campo).outlineStyle,
       bordaDaLinha: getComputedStyle(linha).borderBottomColor,
-      bordaDeFora: getComputedStyle(document.getElementById('buscador')!).borderTopColor,
+      bordaDeFora: getComputedStyle(document.getElementById('finder')!).borderTopColor,
     }
   })
   expect(medida.anelDoCampo, 'o campo ainda desenha o anel do navegador').toBe('none')

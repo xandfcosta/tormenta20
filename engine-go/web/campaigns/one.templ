@@ -400,7 +400,7 @@ templ campaignForm(v oneView) {
 // varrendo o banco escreveria token para mesas que o dono talvez nem use mais,
 // e o botão custa uma linha e resolve na hora em que alguém precisa.
 templ invitePanel(v oneView) {
-	<section id="painel-convite" aria-label="Link da mesa" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
+	<section id="invite-panel" aria-label="Link da mesa" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
 		<header class="space-y-0.5">
 			@ui.SectionLabel("muted", "") {
 				Campanha
@@ -441,7 +441,7 @@ templ invitePanel(v oneView) {
 // decisão medida: este mesmo painel é montado dentro de um overlay na cena da
 // sessão, e aviso disparado de dentro de modal não é anunciado.
 templ rulesPanel(v oneView) {
-	<section id="painel-regras" aria-label="Regras da campanha" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
+	<section id="rules-panel" aria-label="Regras da campanha" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
 		<header class="space-y-0.5">
 			@ui.SectionLabel("muted", "") {
 				Campanha
@@ -518,12 +518,12 @@ templ dangerZone(v oneView) {
 
 templ deleteDialog(v oneView) {
 	<dialog
-		id="excluir"
+		id="delete"
 		data-ref="delete_dialog"
-		aria-labelledby="excluir-titulo"
+		aria-labelledby="delete-title"
 		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="excluir-titulo" class="font-heading text-base">Excluir "{ v.Nome }"?</h2>
+		<h2 id="delete-title" class="font-heading text-base">Excluir "{ v.Nome }"?</h2>
 		<p class="mt-2 text-sm text-muted-foreground">
 			Todas as sessões e membros da campanha serão removidos. Esta ação não pode ser desfeita.
 		</p>

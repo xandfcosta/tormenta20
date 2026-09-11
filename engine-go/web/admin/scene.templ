@@ -39,7 +39,7 @@ templ adminScene(v adminView) {
 }
 
 templ playersPanel(v adminView) {
-	<section id="painel-jogadores" class="border border-grimorio-iron bg-grimorio-panel p-3">
+	<section id="players-panel" class="border border-grimorio-iron bg-grimorio-panel p-3">
 		<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>
 			Jogadores ({ fmt.Sprint(len(v.Players)) })
 		</h2>
@@ -95,14 +95,14 @@ templ playersPanel(v adminView) {
 }
 
 templ invitesPanel(v adminView) {
-	<section id="painel-convites" class="border border-grimorio-iron bg-grimorio-panel p-3">
+	<section id="invites-panel" class="border border-grimorio-iron bg-grimorio-panel p-3">
 		<div class="flex items-center justify-between gap-2">
 			<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>
 				Convites abertos ({ fmt.Sprint(len(v.Invites)) })
 			</h2>
 			<button
 				type="button"
-				data-on:click="$copied = ''; document.getElementById('convite-link').innerHTML = ''; $invite_dialog.showModal()"
+				data-on:click="$copied = ''; document.getElementById('invite-link').innerHTML = ''; $invite_dialog.showModal()"
 				class="inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			>
 				@ui.Icon("UserPlus", "size-4")
@@ -147,7 +147,7 @@ templ invitesPanel(v adminView) {
 }
 
 templ serverPanel(v adminView) {
-	<section id="painel-servidor" class="border border-grimorio-iron bg-grimorio-panel p-3">
+	<section id="server-panel" class="border border-grimorio-iron bg-grimorio-panel p-3">
 		<h2 class={ ui.SectionTitleClasses("painel", "", "text-grimorio-gold/80") }>Servidor</h2>
 		<dl class="mt-3 space-y-1 text-sm">
 			<div class="flex justify-between gap-3">
@@ -201,16 +201,16 @@ templ serverPanel(v adminView) {
 // tirou. Medido: apareceu no canto na primeira abertura.
 templ confirmDialog() {
 	<dialog
-		id="confirmar"
+		id="confirm"
 		data-ref="confirm_dialog"
-		aria-labelledby="confirmar-titulo"
-		aria-describedby="confirmar-custo"
+		aria-labelledby="confirm-title"
+		aria-describedby="confirm-cost"
 		class="m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="confirmar-titulo" class="font-heading text-base">
+		<h2 id="confirm-title" class="font-heading text-base">
 			Apagar a conta de <span data-text="$target_name"></span>?
 		</h2>
-		<p id="confirmar-custo" class="mt-2 text-sm text-muted-foreground" data-text="$target_cost"></p>
+		<p id="confirm-cost" class="mt-2 text-sm text-muted-foreground" data-text="$target_cost"></p>
 		<div class="mt-4 flex justify-end gap-2">
 			// `method="dialog"` fecha sem JavaScript nenhum — e é o que faz o botão
 			// de cancelar continuar funcionando se a expressão do Datastar falhar.
@@ -244,12 +244,12 @@ templ confirmDialog() {
 // caminho.
 templ resetDialog() {
 	<dialog
-		id="redefinir"
+		id="reset"
 		data-ref="reset_dialog"
-		aria-labelledby="redefinir-titulo"
+		aria-labelledby="reset-title"
 		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="redefinir-titulo" class="flex items-center gap-2 font-heading text-base">
+		<h2 id="reset-title" class="flex items-center gap-2 font-heading text-base">
 			@ui.Icon("KeyRound", "size-4 text-grimorio-gold")
 			Redefinir senha
 		</h2>

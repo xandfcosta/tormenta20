@@ -45,9 +45,9 @@ templ blockEditor(v View) {
 		// para quem navega por leitor de tela. O e2e só foi o primeiro a tropeçar
 		// nela (`strict mode violation` em `getByLabel('Nome')`).
 		<div class="shrink-0 space-y-1">
-			<label for="npc-nome" class={ ui.FieldLabelClasses("muted", "block") }>Nome do NPC</label>
+			<label for="npc-name" class={ ui.FieldLabelClasses("muted", "block") }>Nome do NPC</label>
 			<input
-				id="npc-nome"
+				id="npc-name"
 				type="text"
 				data-bind="draft.nome"
 				placeholder="Ogro Capitão"
@@ -159,14 +159,14 @@ templ blockNumbers() {
 // estado — e é o estado errado na hora em que o mestre for gastar.
 templ blockMana() {
 	<div class="space-y-1">
-		<label for="npc-pm" class={ ui.FieldLabelClasses("muted", "block") }>Pontos de Mana</label>
+		<label for="npc-mp" class={ ui.FieldLabelClasses("muted", "block") }>Pontos de Mana</label>
 		<div class="flex items-center gap-2">
 			<label class="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
 				<input type="checkbox" data-bind="draft.conjura" class="size-4 accent-grimorio-gold"/>
 				Conjura
 			</label>
 			<input
-				id="npc-pm"
+				id="npc-mp"
 				type="number"
 				min="0"
 				max="999"
@@ -229,7 +229,7 @@ templ listHeader(v View, lista, titulo, oQue string) {
 // um quadro dele apagaria as linhas em silêncio.
 
 templ draftAttacks(campanha, sessao int64, ataques []creature.Attack) {
-	<div id="npc-ataques" class="space-y-2">
+	<div id="npc-attacks" class="space-y-2">
 		if len(ataques) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhum ataque.</p>
 		}
@@ -250,7 +250,7 @@ templ draftAttacks(campanha, sessao int64, ataques []creature.Attack) {
 }
 
 templ draftExpertises(campanha, sessao int64, pericias []creature.Skill) {
-	<div id="npc-pericias" class="space-y-2">
+	<div id="npc-expertises" class="space-y-2">
 		if len(pericias) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma perícia.</p>
 		}
@@ -274,7 +274,7 @@ templ draftExpertises(campanha, sessao int64, pericias []creature.Skill) {
 // Recebe +2 em testes de Percepção baseados em olfato", p289), e uma caixa de uma
 // linha faria o mestre resumir o que ele vai precisar ler em voz alta.
 templ draftAbilities(campanha, sessao int64, habilidades []string) {
-	<div id="npc-habilidades" class="space-y-2">
+	<div id="npc-abilities" class="space-y-2">
 		if len(habilidades) == 0 {
 			<p class="border border-dashed border-grimorio-iron p-3 text-center text-xs text-muted-foreground">Nenhuma habilidade especial.</p>
 		}
