@@ -160,14 +160,14 @@ func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	// desenho). Ler o valor do `drawing` da cena faria o esperado sair do código
 	// sob teste, e os dois andariam juntos com o defeito — é o que o CLAUDE.md
 	// proíbe com todas as letras.
-	if !strings.Contains(tela, "terreno-canto-sudeste") {
+	if !strings.Contains(tela, "terrain-corner-southeast") {
 		t.Error("a casa de camuflagem não veste o canto sudeste")
 	}
-	if !strings.Contains(tela, "terreno-marca") {
+	if !strings.Contains(tela, "terrain-mark") {
 		t.Error("a casa pintada não tem a marca da espécie")
 	}
 	// E o TRILHO usa a mesma tabela: o botão do pincel tinge com a cor dela.
-	if !strings.Contains(tela, "tabuleiro-matiz-camuflagem") {
+	if !strings.Contains(tela, "board-hue-camuflagem") {
 		t.Error("o pincel do trilho não veste o matiz da espécie")
 	}
 }
@@ -229,7 +229,7 @@ func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	for _, pedaco := range []string{"evt.shiftKey", "/retangulo/", "tabuleiro-laco"} {
+	for _, pedaco := range []string{"evt.shiftKey", "/retangulo/", "board-lasso"} {
 		if !strings.Contains(tela, pedaco) {
 			t.Errorf("a cena não tem %q: o retângulo do pincel não acontece", pedaco)
 		}

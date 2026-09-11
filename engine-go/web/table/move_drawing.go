@@ -38,7 +38,7 @@ import (
 //
 // Meio quadrado põe a ponta na BORDA da casa de destino, e é o que faz a seta
 // apontar para a peça em vez de riscá-la pelo meio: a peça pousou ali (é o item
-// 4), e uma ponta no centro cairia em cima do monograma. Toda perna tem pelo
+// 4), e uma ponta no centro cairia em cima do monogram. Toda perna tem pelo
 // menos um quadrado, então o recuo nunca inverte a última.
 const recuoDaSeta = 0.5
 

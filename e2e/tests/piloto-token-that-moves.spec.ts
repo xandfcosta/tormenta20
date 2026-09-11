@@ -45,7 +45,7 @@ async function posicoesPintadas(page: Page, gesto: () => Promise<void>, ms = 800
     w.__x = []
     const inicio = performance.now()
     const passo = () => {
-      const peca = document.querySelector('.tabuleiro-peca')
+      const peca = document.querySelector('.board-token')
       if (peca) w.__x.push(Math.round(peca.getBoundingClientRect().x))
       if (performance.now() - inicio < limite) requestAnimationFrame(passo)
     }
@@ -59,7 +59,7 @@ async function posicoesPintadas(page: Page, gesto: () => Promise<void>, ms = 800
 
 /** Arrasta a peça `casas` para a direita, deixando o movimento PROPOSTO. */
 async function drag(page: Page, casas: number): Promise<void> {
-  const peca = page.locator('.tabuleiro-peca').first()
+  const peca = page.locator('.board-token').first()
   const caixa = await peca.boundingBox()
   if (!caixa) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
   const x = caixa.x + caixa.width / 2

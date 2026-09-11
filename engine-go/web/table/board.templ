@@ -122,14 +122,14 @@ templ boardTable(v BoardView) {
 			<div
 				id={ sceneId }
 				data-attr:style={ sceneStyle }
-				data-class="{'tabuleiro-com-ferramenta': $tool !== ''}"
+				data-class="{'board-with-tool': $tool !== ''}"
 				data-on:wheel={ wheelMovesViewport }
 				data-on:keydown__window={ zoomPeloTeclado }
 				data-on:focusin={ viewportFollowsFocus }
-				class={ "tabuleiro-cena grimorio-frame chao-" + v.Chao }
+				class={ "board-scene grimorio-frame chao-" + v.Chao }
 			>
-				<div aria-hidden="true" class="tabuleiro-ambiente"></div>
-				<div aria-hidden="true" class="tabuleiro-grade"></div>
+				<div aria-hidden="true" class="board-ambient"></div>
+				<div aria-hidden="true" class="board-grid"></div>
 				// O PLANO É DOIS, e a divisa é onde as camadas de clique entram
 				// (ALE-203). O e2e do marcador foi quem provou que ele precisava
 				// ser dois: um `transform` cria CONTEXTO DE EMPILHAMENTO, então
@@ -144,7 +144,7 @@ templ boardTable(v BoardView) {
 				// fica o que RESPONDE ao dedo: peças, marcadores, régua, destino.
 				// É a mesma ordem de antes; o que mudou é que agora ela está
 				// escrita em dois nós em vez de numa pilha de `z-index`.
-				<div class="tabuleiro-plano tabuleiro-plano-chao">
+				<div class="board-plane board-plane-ground">
 					// O TERRENO vem ANTES das peças para ficar por baixo delas:
 					// ele é chão, e uma peça em cima de terreno difícil continua
 					// sendo a peça que se clica.
@@ -158,7 +158,7 @@ templ boardTable(v BoardView) {
 						// `terrain_drawing.go` para o porquê dos
 						// cantos e de o ícone dizer a REGRA da espécie.
 						<div aria-hidden="true" class={ squareClass(q.Especie) } style={ posicaoNoPlano(q.X, q.Y, 1) }>
-							@ui.Icon(drawing(board.TerrainKind(q.Especie)).Icone, "terreno-marca")
+							@ui.Icon(drawing(board.TerrainKind(q.Especie)).Icone, "terrain-mark")
 						</div>
 					}
 					// A TRILHA vem antes das peças e depois do chão: ela é rastro,
@@ -166,14 +166,14 @@ templ boardTable(v BoardView) {
 					// se clica.
 					if v.Movimento != nil {
 						for _, q := range v.Movimento.Trilha {
-							<div aria-hidden="true" class="tabuleiro-trilha" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
+							<div aria-hidden="true" class="board-trail" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 						}
 						// As PARADAS marcadas sobre a trilha (ALE-266, portadas na
 						// ALE-269): sem elas o caminho é uma faixa contínua e não há
 						// como ver quantas pernas o "Desfazer parada" vai encontrar —
 						// o botão desfaria algo que a tela não mostra.
 						for _, q := range v.Movimento.Paradas {
-							<div aria-hidden="true" class="tabuleiro-parada" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
+							<div aria-hidden="true" class="board-stop" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 						}
 					}
 					// O ALCANCE é PINTURA e não alvo de clique, e a diferença é o
@@ -192,10 +192,10 @@ templ boardTable(v BoardView) {
 					// e ter o ouro por cima na pilha garante que uma casa de fronteira
 					// nunca apareça azul por acidente de empate.
 					for _, q := range v.AlcanceSegundo {
-						<div aria-hidden="true" class="tabuleiro-alcance tabuleiro-alcance-segundo" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
+						<div aria-hidden="true" class="board-range board-range-second" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 					}
 					for _, q := range v.Alcance {
-						<div aria-hidden="true" class="tabuleiro-alcance" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
+						<div aria-hidden="true" class="board-range" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
 					}
 					// O LAÇO do retângulo (ALE-203, item 10). Dentro do plano
 					// porque ele fala em QUADRADOS e anda com a janela; no plano
@@ -218,7 +218,7 @@ templ boardTable(v BoardView) {
 					// Então quem ESCONDE é o de fora e quem POSICIONA é o de
 					// dentro. É a mesma forma que os rótulos da régua já usam.
 					<div aria-hidden="true" data-show={ openIsLasso() }>
-						<div data-attr:style={ lassoStyle } class="tabuleiro-laco"></div>
+						<div data-attr:style={ lassoStyle } class="board-lasso"></div>
 					</div>
 				</div>
 				// O GABARITO vem ACIMA do terreno e ABAIXO das peças, e é essa
@@ -232,7 +232,7 @@ templ boardTable(v BoardView) {
 				// O PLANO DE CIMA: o que RESPONDE ao dedo. Ele repete o
 				// `transform` da janela — os dois planos andam juntos, e o preço
 				// de dois `translate` é o mesmo de um, porque quem compõe é a GPU.
-				<div class="tabuleiro-plano tabuleiro-plano-pecas">
+				<div class="board-plane board-plane-tokens">
 					for _, m := range v.Marcadores {
 						@planMarker(v, m)
 					}
@@ -317,9 +317,9 @@ templ boardTable(v BoardView) {
 // ocupando mapa.
 templ sceneName(v BoardView) {
 	if len(v.Abas) == 0 {
-		<h2 class="tabuleiro-nome-da-cena">{ v.Lugar }</h2>
+		<h2 class="board-scene-name">{ v.Lugar }</h2>
 	} else {
-		<div class="tabuleiro-nome-da-cena" role="group" aria-label="Tabuleiros abertos">
+		<div class="board-scene-name" role="group" aria-label="Tabuleiros abertos">
 			for _, aba := range v.Abas {
 				@boardTabLink(aba)
 			}
@@ -342,7 +342,7 @@ templ sceneName(v BoardView) {
 // pergunta, dos dois lados.
 templ boardTabLink(aba boardTab) {
 	if aba.Ativa {
-		<h2 class="tabuleiro-aba tabuleiro-aba-ativa" aria-current="true">
+		<h2 class="board-tab board-tab-active" aria-current="true">
 			if aba.Cortina {
 				@ui.Icon("Theater", "size-3.5 shrink-0")
 			}
@@ -357,7 +357,7 @@ templ boardTabLink(aba boardTab) {
 			aria-label={ "Ver o tabuleiro " + aba.Nome }
 			title={ "Ver o tabuleiro " + aba.Nome }
 			data-on:click={ aba.Comando }
-			class="tabuleiro-aba"
+			class="board-tab"
 		>
 			if aba.Cortina {
 				@ui.Icon("Theater", "size-3.5 shrink-0")
@@ -383,7 +383,7 @@ templ showIsTable(aba boardTab) {
 		aria-label={ "Mostrar " + aba.Nome + " à mesa" }
 		title="Mostrar esta cena à mesa: todo mundo salta para ela"
 		data-on:click={ aba.MostraAMesa }
-		class="tabuleiro-aba-mostrar"
+		class="board-tab-pull"
 	>
 		@ui.Icon("Users2", "size-3.5")
 	</button>
@@ -413,11 +413,11 @@ templ clipboardStrip(v BoardView) {
 	<div
 		data-show="$area_token !== ''"
 		data-on:keydown__window={ pasteInTheMiddleOfTheView(v) }
-		class="tabuleiro-area"
+		class="board-area"
 	>
 		// `aria-live` porque copiar não navega e não move o foco: sem ele, quem
 		// não vê a tela clica em "copiar para colar" e nada é anunciado.
-		<span aria-live="polite" class="tabuleiro-area-texto">
+		<span aria-live="polite" class="board-area-text">
 			<span aria-hidden="true">@ui.Icon("Copy", "size-4")</span>
 			<span data-text="$area_label + ' · ' + $area_phrase"></span>
 		</span>
@@ -426,7 +426,7 @@ templ clipboardStrip(v BoardView) {
 			aria-label="Esvaziar a área de transferência"
 			title="Esvaziar a área"
 			data-on:click={ emptiesTheClipboard }
-			class="tabuleiro-area-limpar"
+			class="board-area-clear"
 		>
 			@ui.Icon("X", "size-4")
 		</button>
@@ -434,7 +434,7 @@ templ clipboardStrip(v BoardView) {
 }
 
 templ sceneVerbs(v BoardView) {
-	<div class="tabuleiro-verbos-da-cena">
+	<div class="board-scene-verbs">
 		@planFraming(v)
 		// O ENQUADRAMENTO é o único verbo que atravessa para o rascunho: ele é
 		// sobre a JANELA, que é de quem olha, e montar uma cripta grande pede
@@ -500,21 +500,21 @@ templ sceneVerbs(v BoardView) {
 // própria saída: quem percebe o modo tem de poder desfazê-lo de onde percebeu.
 templ boardNotices(v BoardView) {
 	if v.AvisoDaCortina || v.Lente || v.Puxado != nil {
-		<div class="tabuleiro-avisos">
+		<div class="board-notices">
 			if v.Puxado != nil {
 				// A TIRA DO PUXÃO é a única aqui que fala de uma mudança que quem
 				// lê NÃO fez — as outras duas são modos que o dono da tela ligou.
 				// Por isso ela nomeia a cena: "o mestre trouxe você" sobre um mapa
 				// que trocou sozinho ainda deixaria a pessoa procurando o que
 				// aconteceu.
-				<p role="status" class="tabuleiro-aviso">
+				<p role="status" class="board-notice">
 					@ui.Icon("Users2", "size-4 shrink-0")
 					{ "O mestre trouxe a mesa para " + v.Puxado.Cena + "." }
 					if v.Puxado.Volta != "" {
 						<button
 							type="button"
 							data-on:click={ v.Puxado.ComandoDeVolta }
-							class="tabuleiro-aviso-saida"
+							class="board-notice-exit"
 						>{ "Voltar para " + v.Puxado.Volta }</button>
 					} else {
 						// Quem JÁ estava nesta aba não tem para onde voltar: o que
@@ -526,30 +526,30 @@ templ boardNotices(v BoardView) {
 						<button
 							type="button"
 							data-on:click={ v.Puxado.ComandoDeVolta }
-							class="tabuleiro-aviso-saida"
+							class="board-notice-exit"
 						>Continuar aqui</button>
 					}
 				</p>
 			}
 			if v.AvisoDaCortina {
-				<p role="status" class="tabuleiro-aviso">
+				<p role="status" class="board-notice">
 					@ui.Icon("Theater", "size-4 shrink-0")
 					A cortina está fechada: a mesa não vê esta cena.
 					<button
 						type="button"
 						data-on:click={ curtainCommand(v, "abrir") }
-						class="tabuleiro-aviso-saida"
+						class="board-notice-exit"
 					>Abrir a cortina</button>
 				</p>
 			}
 			if v.Lente {
-				<p role="status" class="tabuleiro-aviso">
+				<p role="status" class="board-notice">
 					@ui.Icon("Eye", "size-4 shrink-0")
 					{ lensPhrase(v.PecasEscondidas) }
 					<button
 						type="button"
 						data-on:click={ lensCommand(v) }
-						class="tabuleiro-aviso-saida"
+						class="board-notice-exit"
 					>Voltar à vista do mestre</button>
 				</p>
 			}
@@ -563,7 +563,7 @@ templ boardNotices(v BoardView) {
 // de tamanho por causa de uma barra, e a casa debaixo do dedo trocava de lugar
 // no meio do gesto. Agora flutuam, e o conteúdo do tabuleiro fica imóvel.
 templ toolHelpers(v BoardView) {
-	<div class="tabuleiro-ajudantes">
+	<div class="board-helpers">
 		if v.Mestre {
 			@partyBar(v)
 		}
@@ -593,10 +593,10 @@ templ drawnTemplate(v BoardView) {
 	<svg
 		aria-hidden="true"
 		data-show={ "$template_path !== '' && $tool === '" + FerramentaDoGabarito + "'" }
-		class="tabuleiro-medida tabuleiro-medida-fundo"
+		class="board-measure board-measure-back"
 	>
 		<g data-attr:transform={ viewportDrawing }>
-			<path data-attr:d="$template_path" class="tabuleiro-gabarito"></path>
+			<path data-attr:d="$template_path" class="board-template"></path>
 			// AS DUAS PONTAS (ALE-203, item 7 do dono: "não tem feedback visual
 			// algum no tabuleiro para mostrar o ponto inicial e o final").
 			//
@@ -616,7 +616,7 @@ templ drawnTemplate(v BoardView) {
 				data-attr:cx="$template_x + ($template_at_intersection ? 0 : 0.5)"
 				data-attr:cy="$template_y + ($template_at_intersection ? 0 : 0.5)"
 				r="0.13"
-				class="tabuleiro-regua-ponta"
+				class="board-ruler-tip"
 			></circle>
 			<circle
 				data-show="$template_phase === 1 && $template_aims"
@@ -624,7 +624,7 @@ templ drawnTemplate(v BoardView) {
 				data-attr:cy="$template_aim_y + 0.5"
 				r="0.22"
 				vector-effect="non-scaling-stroke"
-				class="tabuleiro-regua-alvo"
+				class="board-ruler-target"
 			></circle>
 		</g>
 	</svg>
@@ -643,7 +643,7 @@ templ drawnRuler(v BoardView) {
 	<svg
 		aria-hidden="true"
 		data-show={ "$ruler_phase > 0 && $tool === '" + FerramentaDaRegua + "'" }
-		class="tabuleiro-medida tabuleiro-medida-frente"
+		class="board-measure board-measure-front"
 	>
 		<g data-attr:transform={ viewportDrawing }>
 			// A POLILINHA inteira num `<path>` só: o caminho sai dos sinais, e o
@@ -651,7 +651,7 @@ templ drawnRuler(v BoardView) {
 			<path
 				data-attr:d={ rulerPath }
 				vector-effect="non-scaling-stroke"
-				class="tabuleiro-regua-fio"
+				class="board-ruler-arrow"
 			></path>
 			// OS PINGOS de cada parada, e a RESERVA existe porque o Datastar não
 			// tem laço: os nós são fixos e cada um se mostra conforme a lista.
@@ -661,7 +661,7 @@ templ drawnRuler(v BoardView) {
 					data-attr:cx={ rulerStop(i, 0) }
 					data-attr:cy={ rulerStop(i, 1) }
 					r="0.13"
-					class="tabuleiro-regua-ponta"
+					class="board-ruler-tip"
 				></circle>
 			}
 			// O ALVO na ponta VIVA, que é onde o dedo está. Ele some quando a
@@ -672,7 +672,7 @@ templ drawnRuler(v BoardView) {
 				data-attr:cy="$ruler_aim_y + 0.5"
 				r="0.22"
 				vector-effect="non-scaling-stroke"
-				class="tabuleiro-regua-alvo"
+				class="board-ruler-target"
 			></circle>
 		</g>
 		// OS RÓTULOS DE CADA PERNA (pedido do dono: "mostre a distância como um
@@ -690,7 +690,7 @@ templ drawnRuler(v BoardView) {
 					data-text={ legLabel(i) }
 					text-anchor="middle"
 					dominant-baseline="middle"
-					class="tabuleiro-regua-rotulo"
+					class="board-ruler-label"
 				></text>
 			</g>
 		}
@@ -711,7 +711,7 @@ templ rulerReadingBox() {
 	<p
 		role="status"
 		data-show={ "$ruler_text !== '' && $tool === '" + FerramentaDaRegua + "'" }
-		class="tabuleiro-ajudante gap-2"
+		class="board-helper gap-2"
 	>
 		@ui.Icon("Ruler", "size-4 text-grimorio-gold")
 		<span data-text="$ruler_text" class="font-mono tabular-nums text-grimorio-gold"></span>
@@ -739,14 +739,14 @@ templ templateBar(v BoardView) {
 	<div
 		role="status"
 		data-show={ "$tool === '" + FerramentaDoGabarito + "'" }
-		class="tabuleiro-ajudante gap-1.5"
+		class="board-helper gap-1.5"
 	>
 		for _, forma := range bookShapes {
 			<button
 				type="button"
 				title={ shapeLabel(forma) + ": o " + shapeMeasure(forma) + " em quadrados (p225)" }
 				data-attr:aria-pressed={ fmt.Sprintf("$template === %q ? 'true' : 'false'", string(forma)) }
-				data-class={ fmt.Sprintf("{'pincel-ligado': $template === %q}", string(forma)) }
+				data-class={ fmt.Sprintf("{'brush-on': $template === %q}", string(forma)) }
 				data-on:click={ pickShape(forma) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>{ shapeLabel(forma) }</button>
@@ -798,12 +798,12 @@ templ templateBar(v BoardView) {
 // cena: são dois verbos com consequências diferentes, e um só convidaria ao
 // clique de volta que não existe.
 templ moveProposed(v BoardView) {
-	<div class="tabuleiro-ajudante gap-2">
+	<div class="board-helper gap-2">
 		// RASCUNHO é a palavra do lado do jogador, e ela vem primeiro porque é ela
 		// que explica a ausência do Confirmar: sem nomear a natureza do traço, a
 		// tela dele parece a do mestre com um botão faltando.
 		if !v.Mestre {
-			<span class="tabuleiro-rascunho-selo">Rascunho</span>
+			<span class="board-draft-seal">Rascunho</span>
 		}
 		<p aria-live="polite" class="text-muted-foreground">
 			{ v.Movimento.Rotulo } ·
@@ -834,9 +834,9 @@ templ moveProposed(v BoardView) {
 		// uma cor só, e uma legenda de três cores sobre um desenho de uma seria
 		// explicar o que não está na tela.
 		if v.Movimento.Orcamento >= 0 {
-			<ul aria-label="O que as cores do movimento querem dizer" class="tabuleiro-faixas">
+			<ul aria-label="O que as cores do movimento querem dizer" class="board-bands">
 				for _, faixa := range moveLegend(v.Movimento) {
-					<li class={ "tabuleiro-faixa", faixa.Classe, templ.KV("tabuleiro-faixa-ativa", faixa.Ativa) }>
+					<li class={ "board-band", faixa.Classe, templ.KV("board-band-active", faixa.Ativa) }>
 						{ faixa.Texto }
 					</li>
 				}
@@ -881,7 +881,7 @@ templ moveProposed(v BoardView) {
 
 
 
-// planToken é uma peça: monograma da ESPÉCIE, selo da INSTÂNCIA, e a barra de
+// planToken é uma peça: monogram da ESPÉCIE, selo da INSTÂNCIA, e a barra de
 // PV quando há número para mostrar.
 //
 // O nome acessível diz QUEM e ONDE, com a Coordinate COM SINAL que o servidor
@@ -907,20 +907,20 @@ templ planToken(v BoardView, p boardToken) {
 			data-on:contextmenu={ openMenuToken(p.ID) }
 			data-attr:aria-expanded={ chosenToken(p.ID) + " ? 'true' : 'false'" }
 		}
-		class={ "tabuleiro-peca",
-			templ.KV("tabuleiro-peca-na-vez", p.NaVez),
-			templ.KV("tabuleiro-peca-objeto", p.IsObject),
-			templ.KV("tabuleiro-peca-oculta", p.Oculta) }
+		class={ "board-token",
+			templ.KV("board-token-on-turn", p.NaVez),
+			templ.KV("board-token-object", p.IsObject),
+			templ.KV("board-token-hidden", p.Oculta) }
 	>
-		<span class="tabuleiro-monograma">{ p.Monograma }</span>
+		<span class="board-monogram">{ p.Monograma }</span>
 		if p.Instancia != "" {
 			// O selo é TEXTO e não só cor: "eu ataco o Zumbi 3" precisa de
 			// resposta num relance inclusive para quem não distingue matiz.
-			<span class="tabuleiro-selo">{ p.Instancia }</span>
+			<span class="board-seal">{ p.Instancia }</span>
 		}
 		if p.PV != nil {
-			<span aria-hidden="true" class="tabuleiro-vida">
-				<span class={ "tabuleiro-vida-cheia", hpToneOf(*p.PV) } style={ fmt.Sprintf("width:%d%%", *p.PV) }></span>
+			<span aria-hidden="true" class="board-vitals">
+				<span class={ "board-vitals-full", hpToneOf(*p.PV) } style={ fmt.Sprintf("width:%d%%", *p.PV) }></span>
 			</span>
 		}
 	</button>
@@ -934,7 +934,7 @@ templ planToken(v BoardView, p boardToken) {
 // onde se passou, mas não de onde se PARTIU, porque um rastro sem ponta não tem
 // direção.
 //
-// É a peça INTEIRA e não um disco genérico porque o monograma e o selo são o que
+// É a peça INTEIRA e não um disco genérico porque o monogram e o selo são o que
 // dizem QUEM saiu dali: com três zumbis em campo, uma sombra anônima na casa não
 // responde qual deles está a caminho.
 //
@@ -949,11 +949,11 @@ templ originGhost(p boardToken) {
 	<div
 		aria-hidden="true"
 		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
-		class="tabuleiro-peca tabuleiro-peca-fantasma"
+		class="board-token board-token-ghost"
 	>
-		<span class="tabuleiro-monograma">{ p.Monograma }</span>
+		<span class="board-monogram">{ p.Monograma }</span>
 		if p.Instancia != "" {
-			<span class="tabuleiro-selo">{ p.Instancia }</span>
+			<span class="board-seal">{ p.Instancia }</span>
 		}
 	</div>
 }
@@ -975,7 +975,7 @@ templ originGhost(p boardToken) {
 // aqui obrigaria a mandar as paradas para o navegador para ele redesenhá-las.
 templ moveArrow(v BoardView) {
 	if v.Movimento != nil && v.Movimento.Fio != "" {
-		<svg aria-hidden="true" class="tabuleiro-medida tabuleiro-medida-frente">
+		<svg aria-hidden="true" class="board-measure board-measure-front">
 			<defs>
 				<marker
 					id="tabuleiro-ponta-do-movimento"
@@ -986,7 +986,7 @@ templ moveArrow(v BoardView) {
 					refY="0.22"
 					orient="auto"
 				>
-					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="tabuleiro-movimento-ponta"></path>
+					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="board-move-tip"></path>
 				</marker>
 				// UMA PONTA POR FAIXA, e não a mesma repintada por CSS:
 				// `marker-end` referencia um nó por `id`, e um `<marker>` só herdaria
@@ -1000,7 +1000,7 @@ templ moveArrow(v BoardView) {
 					refY="0.22"
 					orient="auto"
 				>
-					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="tabuleiro-movimento-ponta-segundo"></path>
+					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="board-move-tip-second"></path>
 				</marker>
 				<marker
 					id="tabuleiro-ponta-do-alem"
@@ -1011,7 +1011,7 @@ templ moveArrow(v BoardView) {
 					refY="0.22"
 					orient="auto"
 				>
-					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="tabuleiro-movimento-ponta-alem"></path>
+					<path d="M 0 0 L 0.5 0.22 L 0 0.44 Z" class="board-move-tip-beyond"></path>
 				</marker>
 			</defs>
 			<g data-attr:transform={ viewportDrawing }>
@@ -1019,7 +1019,7 @@ templ moveArrow(v BoardView) {
 					d={ v.Movimento.Fio }
 					marker-end={ endWireFits(v.Movimento) }
 					vector-effect="non-scaling-stroke"
-					class="tabuleiro-movimento-fio"
+					class="board-move-arrow"
 				></path>
 				// O SEGUNDO MOVIMENTO, em azul: o trecho que passa da ação de
 				// movimento e ainda cabe na ação padrão trocada por ela (T20 p233).
@@ -1032,7 +1032,7 @@ templ moveArrow(v BoardView) {
 						d={ v.Movimento.FioSegundo }
 						marker-end={ endWireSecond(v.Movimento) }
 						vector-effect="non-scaling-stroke"
-						class="tabuleiro-movimento-fio tabuleiro-movimento-segundo"
+						class="board-move-arrow board-move-second"
 					></path>
 				}
 				// O QUE NÃO CABE NO TURNO, em vermelho: passou das duas ações, e não
@@ -1042,7 +1042,7 @@ templ moveArrow(v BoardView) {
 						d={ v.Movimento.FioAlem }
 						marker-end={ endWireBeyond(v.Movimento) }
 						vector-effect="non-scaling-stroke"
-						class="tabuleiro-movimento-fio tabuleiro-movimento-alem"
+						class="board-move-arrow board-move-beyond"
 					></path>
 				}
 			</g>
@@ -1069,7 +1069,7 @@ templ moveArrow(v BoardView) {
 					data-attr:y={ numeroDoFio(perna.MeioY) + " * $square - $viewport_y" }
 					text-anchor="middle"
 					dominant-baseline="middle"
-					class="tabuleiro-regua-rotulo"
+					class="board-ruler-label"
 				>{ perna.Rotulo }</text>
 			}
 		</svg>
@@ -1091,7 +1091,7 @@ templ planMarker(v BoardView, m boardMarker) {
 			data-attr:aria-pressed={ chosenMarker(m.ID) + " ? 'true' : 'false'" }
 			data-on:click={ pickMarker(m.ID) }
 			style={ posicaoNoPlano(m.X, m.Y, 1) + fmt.Sprintf("--marcador:%s;", markerColor(m.Cor)) }
-			class={ "tabuleiro-marcador", templ.KV("tabuleiro-marcador-escondido", m.Escondido) }
+			class={ "board-marker", templ.KV("board-marker-hidden", m.Escondido) }
 		>{ m.Texto }</button>
 		@markerActions(v, m)
 	} else {
@@ -1099,7 +1099,7 @@ templ planMarker(v BoardView, m boardMarker) {
 			aria-label={ "Marcador " + m.Texto + " em " + m.Onde }
 			title={ m.Texto + " · " + m.Onde }
 			style={ posicaoNoPlano(m.X, m.Y, 1) + fmt.Sprintf("--marcador:%s;", markerColor(m.Cor)) }
-			class="tabuleiro-marcador"
+			class="board-marker"
 		>{ m.Texto }</span>
 	}
 }
@@ -1119,7 +1119,7 @@ templ markerActions(v BoardView, m boardMarker) {
 		aria-label={ "O que fazer com o marcador " + m.Texto }
 		data-show={ chosenMarker(m.ID) }
 		style={ posicaoNoPlano(m.X, m.Y, 1) }
-		class="tabuleiro-marcador-acoes"
+		class="board-marker-actions"
 	>
 		<button
 			type="button"
@@ -1147,7 +1147,7 @@ templ markerActions(v BoardView, m boardMarker) {
 				aria-pressed={ fmt.Sprintf("%t", cor.ID == m.Cor) }
 				data-on:click={ markerCommand(v, m.ID, "cor/"+cor.ID) }
 				style={ fmt.Sprintf("--marcador:var(--marcador-%s);", cor.ID) }
-				class="tabuleiro-marcador-cor"
+				class="board-marker-color"
 			></button>
 		}
 		<button
@@ -1415,7 +1415,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 		aria-label={ "O que fazer com " + p.Rotulo }
 		data-show={ chosenToken(p.ID) }
 		style={ posicaoNoPlano(p.X, p.Y, p.Pegada) }
-		class="tabuleiro-peca-menu"
+		class="board-token-menu"
 	>
 		// VISIBILIDADE primeiro: é o verbo que a mesa vê, e o único cujo esquecimento
 		// entrega a emboscada. `aria-pressed` carrega o ESTADO; o nome carrega o
@@ -1426,7 +1426,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 			title={ visibilityName(p) }
 			aria-pressed={ fmt.Sprintf("%t", p.Oculta) }
 			data-on:click={ tokenCommand(v, p.ID, "visibilidade") }
-			class="tabuleiro-peca-verbo"
+			class="board-token-verb"
 		>
 			if p.Oculta {
 				@ui.Icon("EyeOff", "size-4")
@@ -1444,7 +1444,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 			aria-label={ "Duplicar " + p.Rotulo }
 			title="Duplicar: escolher o que a cópia leva"
 			popovertarget={ copyMenuId(p.ID) }
-			class="tabuleiro-peca-verbo"
+			class="board-token-verb"
 		>
 			@ui.Icon("Copy", "size-4")
 		</button>
@@ -1453,7 +1453,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 			aria-label={ "Editar " + p.Rotulo }
 			title="Editar o nome e o tamanho"
 			data-on:click={ openEditToken(p) }
-			class="tabuleiro-peca-verbo"
+			class="board-token-verb"
 		>
 			@ui.Icon("Pencil", "size-4")
 		</button>
@@ -1465,12 +1465,12 @@ templ tokenMenu(v BoardView, p boardToken) {
 				aria-label={ "Voltar " + p.Rotulo + " para " + tokenSquare(p.DeOndeVeio) }
 				title={ "Voltar para onde estava (" + tokenSquare(p.DeOndeVeio) + ")" }
 				data-on:click={ tokenCommand(v, p.ID, "voltar") }
-				class="tabuleiro-peca-verbo"
+				class="board-token-verb"
 			>
 				@ui.Icon("CornerUpLeft", "size-4")
 			</button>
 		}
-		<span aria-hidden="true" class="tabuleiro-peca-vinco"></span>
+		<span aria-hidden="true" class="board-token-crease"></span>
 		// TIRAR fica depois do vinco e é o único em vermelho: ele é o que não se
 		// desfaz, e a distância é o que impede o clique de inércia depois de
 		// duplicar três zumbis seguidos.
@@ -1479,7 +1479,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 			aria-label={ "Tirar " + p.Rotulo + " do tabuleiro" }
 			title="Tirar do tabuleiro (a linha da iniciativa fica)"
 			data-on:click={ tokenCommand(v, p.ID, "remover") }
-			class="tabuleiro-peca-verbo tabuleiro-peca-verbo-perigo"
+			class="board-token-verb board-token-verb-danger"
 		>
 			@ui.Icon("Trash2", "size-4")
 		</button>
@@ -1487,7 +1487,7 @@ templ tokenMenu(v BoardView, p boardToken) {
 			type="button"
 			aria-label={ "Fechar o menu de " + p.Rotulo }
 			data-on:click={ closeMenuToken }
-			class="tabuleiro-peca-verbo"
+			class="board-token-verb"
 		>
 			@ui.Icon("X", "size-4")
 		</button>
@@ -1529,7 +1529,7 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 		id={ copyMenuId(p.ID) }
 		popover
 		aria-label={ "O que a cópia de " + p.Rotulo + " leva" }
-		class="tabuleiro-peca-copia"
+		class="board-token-copy"
 	>
 		@tokenCopyGroup("Duplicar aqui")
 		@tokenCopyMode(v, p, "sozinha", "Outro, com PV próprio", "entra na fila com o PV cheio do original")
@@ -1562,7 +1562,7 @@ templ tokenCopyMenu(v BoardView, p boardToken) {
 // de tela anunciar um nível novo no meio de uma lista de seis botões. O que
 // separa para quem NÃO vê é o rótulo de cada botão, que diz o verbo inteiro.
 templ tokenCopyGroup(rotulo string) {
-	<p aria-hidden="true" class="tabuleiro-peca-copia-grupo">{ rotulo }</p>
+	<p aria-hidden="true" class="board-token-copy-group">{ rotulo }</p>
 }
 
 // tokenClipboardMode põe a peça na área com um modo grudado.
@@ -1575,9 +1575,9 @@ templ tokenClipboardMode(v BoardView, p boardToken, modo, nome string) {
 		type="button"
 		aria-label={ "Copiar " + p.Rotulo + " para colar: " + nome }
 		data-on:click={ putsInTheClipboard(v, p, modo, nome) }
-		class="tabuleiro-peca-copia-modo"
+		class="board-token-copy-mode"
 	>
-		<span class="tabuleiro-peca-copia-nome">{ nome }</span>
+		<span class="board-token-copy-name">{ nome }</span>
 	</button>
 }
 
@@ -1591,10 +1591,10 @@ templ tokenCopyMode(v BoardView, p boardToken, modo, nome, frase string) {
 		type="button"
 		aria-label={ nome + ": " + frase }
 		data-on:click={ copyCommand(v, p.ID, modo) }
-		class="tabuleiro-peca-copia-modo"
+		class="board-token-copy-mode"
 	>
-		<span class="tabuleiro-peca-copia-nome">{ nome }</span>
-		<span aria-hidden="true" class="tabuleiro-peca-copia-frase">{ frase }</span>
+		<span class="board-token-copy-name">{ nome }</span>
+		<span aria-hidden="true" class="board-token-copy-phrase">{ frase }</span>
 	</button>
 }
 
@@ -1674,14 +1674,14 @@ templ toolsRail(v BoardView) {
 	<nav
 		aria-label="Ferramentas do mapa"
 		data-on:keydown__window={ railKeyboard(v.Mestre) }
-		class="tabuleiro-trilho"
+		class="board-rail"
 	>
 		for i, f := range rail(v.Mestre) {
 			// O VINCO separa o que é de todo mundo do que é do mestre. Ele sai do
 			// PAPEL da ferramenta e não de um índice mágico: a primeira só-do-mestre
 			// leva o vinco, e acrescentar uma quinta espécie não move nada.
 			if i > 0 && f.SoMestre && !rail(v.Mestre)[i-1].SoMestre {
-				<span aria-hidden="true" class="tabuleiro-trilho-vinco"></span>
+				<span aria-hidden="true" class="board-rail-crease"></span>
 			}
 			@railTool(f)
 		}
@@ -1694,7 +1694,7 @@ templ toolsRail(v BoardView) {
 		// construção, como todas. O que ela não tem é número, e o `NewPieceTool`
 		// registra por quê.
 		if v.Mestre {
-			<span aria-hidden="true" class="tabuleiro-trilho-vinco"></span>
+			<span aria-hidden="true" class="board-rail-crease"></span>
 			<button
 				type="button"
 				title="Nova peça: a porta, o baú, o barril — o clique escolhe a casa"
@@ -1702,7 +1702,7 @@ templ toolsRail(v BoardView) {
 				data-attr:aria-pressed={ onIsTool(NewPieceTool) + " ? 'true' : 'false'" }
 				data-class={ toolStyling(NewPieceTool) }
 				data-on:click={ pickTool(NewPieceTool) }
-				class="tabuleiro-ferramenta"
+				class="board-tool"
 			>
 				@ui.Icon("PackagePlus", "size-4")
 			</button>
@@ -1723,10 +1723,10 @@ templ railTool(f mapTool) {
 		data-attr:aria-pressed={ onIsTool(f.ID) + " ? 'true' : 'false'" }
 		data-class={ toolStyling(f.ID) }
 		data-on:click={ pickTool(f.ID) }
-		class="tabuleiro-ferramenta"
+		class="board-tool"
 	>
 		@ui.Icon(f.Icone, "size-4 "+f.Matiz)
-		<span aria-hidden="true" class="tabuleiro-ferramenta-tecla">{ f.Atalho }</span>
+		<span aria-hidden="true" class="board-tool-key">{ f.Atalho }</span>
 	</button>
 }
 
@@ -1912,12 +1912,12 @@ templ clickLayers(v BoardView) {
 	<div
 		aria-hidden="true"
 		data-show={ onIsTool(ViewTool) }
-		data-class={ "{'tabuleiro-vista-pegando': $" + sinalDoArrastoDaVista + "}" }
+		data-class={ "{'board-viewport-grabbing': $" + sinalDoArrastoDaVista + "}" }
 		data-on:pointerdown={ pegaAVista }
 		data-on:pointermove={ followsView }
 		data-on:pointerup={ dropView }
 		data-on:pointercancel={ dropView }
-		class="tabuleiro-vista"
+		class="board-viewport"
 	></div>
 	// AS CAMADAS DE CLIQUE cobrem a JANELA INTEIRA e são IRMÃS do
 	// plano, não filhas (ALE-203, decisão do dono).
@@ -1970,7 +1970,7 @@ templ clickLayers(v BoardView) {
 			data-on:pointerup={ wideBrush + "; " + dropTerrainRect(v) }
 			data-on:pointercancel={ wideBrush + "; $" + sinalDoRetangulo + " = ''" }
 			data-on:contextmenu={ prendeOMenuDoNavegador }
-			class="tabuleiro-casas"
+			class="board-squares"
 		></button>
 		// A BORRACHA tem camada PRÓPRIA desde a ALE-203, e não é
 		// arrumação: ela deixou de ser um modo do pincel e virou
@@ -1990,14 +1990,14 @@ templ clickLayers(v BoardView) {
 			data-on:pointerup={ wideBrush + "; " + dropTerrainRect(v) }
 			data-on:pointercancel={ wideBrush + "; $" + sinalDoRetangulo + " = ''" }
 			data-on:contextmenu={ prendeOMenuDoNavegador }
-			class="tabuleiro-casas"
+			class="board-squares"
 		></button>
 		<button
 			type="button"
 			data-show={ onIsTool(MarkTool) }
 			aria-label="Marcar um lugar — escolha a casa"
 			data-on:click={ clickedPointMarking(v) }
-			class="tabuleiro-casas"
+			class="board-squares"
 		></button>
 		// A camada da PEÇA AVULSA é irmã da de marcar, e pelo mesmo desenho: o
 		// clique numa casa é o gesto inteiro, e a casa vai no caminho.
@@ -2006,7 +2006,7 @@ templ clickLayers(v BoardView) {
 			data-show={ onIsTool(NewPieceTool) }
 			aria-label="Nova peça — escolha a casa onde ela nasce"
 			data-on:click={ clickedSquareNewPiece(v) }
-			class="tabuleiro-casas"
+			class="board-squares"
 		></button>
 	}
 	// A camada de MEDIR é dos dois papéis, e por isso ela sai do
@@ -2028,7 +2028,7 @@ templ clickLayers(v BoardView) {
 		data-on:dblclick={ freezeRuler }
 		data-on:pointermove={ rulerFollowsPointer(v) }
 		data-on:contextmenu={ prendeOMenuDoNavegador + "; " + saveRuler }
-		class="tabuleiro-casas"
+		class="board-squares"
 	></button>
 	// O GABARITO ganhou os mesmos gestos da régua na ALE-203, e por simetria: o
 	// ponteiro leva a MIRA atrás do dedo enquanto a forma aponta, e o botão
@@ -2041,7 +2041,7 @@ templ clickLayers(v BoardView) {
 		data-on:click={ clickedPointTemplate(v) }
 		data-on:pointermove={ templateFollowsPointer(v) }
 		data-on:contextmenu={ prendeOMenuDoNavegador + "; " + saveTemplate }
-		class="tabuleiro-casas"
+		class="board-squares"
 	></button>
 	// A CAMADA DE REPOUSO é UMA SÓ, e ela faz duas coisas: o CLIQUE escolhe a
 	// casa para onde a peça vai, e o ARRASTO marca um grupo (ALE-203, item 10).
@@ -2070,7 +2070,7 @@ templ clickLayers(v BoardView) {
 				data-on:pointerup={ dropTokensRect(v) }
 				data-on:pointercancel={ "$" + sinalDoRetangulo + " = ''" }
 			}
-			class="tabuleiro-casas"
+			class="board-squares"
 		></button>
 	}
 }
@@ -2113,7 +2113,7 @@ templ tableCollectionPlaces(v View) {
 // peça marcada, e um botão "mover" numa barra teria de perguntar para onde —
 // que é justamente o que o dedo já responde.
 templ partyBar(v BoardView) {
-	<p role="status" data-show={ hasMarkedParty } class="tabuleiro-ajudante gap-2">
+	<p role="status" data-show={ hasMarkedParty } class="board-helper gap-2">
 		@ui.Icon("LayoutGrid", "size-4 text-grimorio-gold")
 		<span data-text={ partyPhrase } class="text-grimorio-gold"></span>
 		<button
@@ -2143,7 +2143,7 @@ templ movePreview(v BoardView) {
 	<svg
 		aria-hidden="true"
 		data-show="$preview_arrow_fits !== ''"
-		class="tabuleiro-medida tabuleiro-medida-frente"
+		class="board-measure board-measure-front"
 	>
 		<g data-attr:transform={ viewportDrawing }>
 			// AS TRÊS FAIXAS, cada uma no seu nó fixo: o `d` vazio não desenha nada,
@@ -2153,17 +2153,17 @@ templ movePreview(v BoardView) {
 			<path
 				data-attr:d="$preview_arrow_fits"
 				vector-effect="non-scaling-stroke"
-				class="tabuleiro-previa-fio tabuleiro-previa-cabe"
+				class="board-preview-arrow board-preview-fits"
 			></path>
 			<path
 				data-attr:d="$preview_arrow_second"
 				vector-effect="non-scaling-stroke"
-				class="tabuleiro-previa-fio tabuleiro-previa-segundo"
+				class="board-preview-arrow board-preview-second"
 			></path>
 			<path
 				data-attr:d="$preview_arrow_beyond"
 				vector-effect="non-scaling-stroke"
-				class="tabuleiro-previa-fio tabuleiro-previa-alem"
+				class="board-preview-arrow board-preview-beyond"
 			></path>
 		</g>
 		// OS RÓTULOS EM METROS, fora do grupo que escala — mesma razão dos da régua
@@ -2180,7 +2180,7 @@ templ movePreview(v BoardView) {
 					data-text={ previewText(i) }
 					text-anchor="middle"
 					dominant-baseline="middle"
-					class="tabuleiro-regua-rotulo"
+					class="board-ruler-label"
 				></text>
 			</g>
 		}
@@ -2194,7 +2194,7 @@ templ movePreview(v BoardView) {
 // há proposta nenhuma. Duas frases no mesmo lugar fariam a pessoa ler o custo
 // velho achando que é o novo.
 templ previewReading() {
-	<p role="status" data-show="$preview_text !== ''" class="tabuleiro-ajudante gap-2">
+	<p role="status" data-show="$preview_text !== ''" class="board-helper gap-2">
 		@ui.Icon("MapPin", "size-4 text-grimorio-gold")
 		<span data-text="$preview_text" class="font-mono tabular-nums text-grimorio-gold"></span>
 	</p>
@@ -2215,7 +2215,7 @@ templ newPieceBar(v BoardView) {
 	<div
 		role="status"
 		data-show={ onIsTool(NewPieceTool) }
-		class="tabuleiro-ajudante gap-1.5"
+		class="board-helper gap-1.5"
 	>
 		<label class="flex items-center gap-1.5 text-xs">
 			<span class={ ui.SectionLabelClasses("muted", "") }>Nova peça</span>
@@ -2236,7 +2236,7 @@ templ newPieceBar(v BoardView) {
 				title={ t.Rotulo + ": " + t.Lado + " (p107)" }
 				aria-label={ "Tamanho " + t.Rotulo }
 				data-attr:aria-pressed={ fmt.Sprintf("$new_token_size === %d ? 'true' : 'false'", t.Lados) }
-				data-class={ fmt.Sprintf("{'pincel-ligado': $new_token_size === %d}", t.Lados) }
+				data-class={ fmt.Sprintf("{'brush-on': $new_token_size === %d}", t.Lados) }
 				data-on:click={ fmt.Sprintf("$new_token_size = %d", t.Lados) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>{ t.Lado }</button>
@@ -2247,7 +2247,7 @@ templ newPieceBar(v BoardView) {
 				title={ a.Dica }
 				aria-label={ "Aparência: " + a.Rotulo }
 				data-attr:aria-pressed={ fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID) }
-				data-class={ fmt.Sprintf("{'pincel-ligado': $new_token_look === %q}", a.ID) }
+				data-class={ fmt.Sprintf("{'brush-on': $new_token_look === %q}", a.ID) }
 				data-on:click={ fmt.Sprintf("$new_token_look = %q", a.ID) }
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>{ a.Rotulo }</button>

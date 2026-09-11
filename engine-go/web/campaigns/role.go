@@ -3,7 +3,7 @@ package campaigns
 // roleLabel ficou aqui quando o resto do arquivo virou `web/ui/identity.go`
 // (ALE-278).
 //
-// Os três companheiros dele — o matiz, o gradiente e o monograma — são função de
+// Os três companheiros dele — o matiz, o gradiente e o monogram — são função de
 // `string` para `string` e não sabem do domínio, então foram para o kit. Este
 // sabe: "Mestrando", "Jogando" e "Mesa de X" é regra de QUEM É O QUÊ numa
 // campanha, e o kit de apresentação não pode conhecer isso. Ele é lido por um

@@ -34,7 +34,7 @@ import "fmt"
 // # DUAS LETRAS NÃO SÃO UM NOME
 //
 // É a razão de o marcador ser largo. O elenco identificava nove heróis por
-// monograma de 48px — `TP CD NN DN MG PS LN BV IG` —, e achar alguém ali é
+// monogram de 48px — `TP CD NN DN MG PS LN BV IG` —, e achar alguém ali é
 // navegar às cegas. As iniciais nem precisam COLIDIR para o defeito existir:
 // medido nesta seed, elas são todas distintas e continuam não sendo nomes.
 //
@@ -155,7 +155,7 @@ func Marker(m RailMarker) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><span aria-hidden=\"true\" class=\"monograma size-8 rounded-none border border-grimorio-iron text-xs\" style=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\"><span aria-hidden=\"true\" class=\"monogram size-8 rounded-none border border-grimorio-iron text-xs\" style=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

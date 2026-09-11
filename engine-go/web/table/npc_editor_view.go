@@ -225,7 +225,7 @@ func pickTab(aba string) string { return fmt.Sprintf("$draft_tab = %q", aba) }
 //
 // Os DOIS lados no `data-class` em vez de a cor apagada ficar no `class` fixo, e
 // isso é uma armadilha de CASCATA que custou uma medição: a marca de aberta
-// (`.aba-ligada`) mora em `@layer components` e o `text-muted-foreground` é uma
+// (`.tab-on`) mora em `@layer components` e o `text-muted-foreground` é uma
 // utilidade do Tailwind, que vive numa camada POSTERIOR — camada vence
 // especificidade, então o dourado perdia para o cinza sem nada acusar. A aba
 // ficava com a classe certa e a cor errada.
@@ -234,7 +234,7 @@ func pickTab(aba string) string { return fmt.Sprintf("$draft_tab = %q", aba) }
 // elemento a cada instante, e a regra deixa de depender de onde o Tailwind
 // resolveu escrever a folha.
 func tabStyling(aba string) string {
-	return fmt.Sprintf("{'aba-ligada': %s, 'text-muted-foreground': !(%s)}", onTabExpr(aba), onTabExpr(aba))
+	return fmt.Sprintf("{'tab-on': %s, 'text-muted-foreground': !(%s)}", onTabExpr(aba), onTabExpr(aba))
 }
 
 // attackName e expertiseName dizem O QUE o botão de remover vai tirar.

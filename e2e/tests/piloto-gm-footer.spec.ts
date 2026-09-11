@@ -125,10 +125,10 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
    */
   test('a recuperação sai da fileira quando o palco é baixo', async ({ page }) => {
     await page.goto(MESA)
-    const naFileira = page.locator(`${rodape} .palco-alto-so`).getByRole('button', {
+    const naFileira = page.locator(`${rodape} .stage-tall-only`).getByRole('button', {
       name: 'Expirar efeitos · cena',
     })
-    const gaveta = page.locator(`${rodape} details.palco-gaveta`)
+    const gaveta = page.locator(`${rodape} details.stage-drawer`)
 
     // Localizador de CSS e não `getByRole('button')`: `<summary>` não expõe o
     // papel de botão, então aquele localizador não achava nada — e `toBeHidden`

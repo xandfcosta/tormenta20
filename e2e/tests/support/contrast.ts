@@ -88,7 +88,7 @@ export async function medeOContraste(page: Page): Promise<MedicaoDeContraste> {
         if (cs.visibility === 'hidden' || cs.display === 'none') return null
         // Texto DECORATIVO não entra na conta, e isto não é afrouxar o guarda:
         // o WCAG isenta texto que não é exposto, e `aria-hidden` é exatamente
-        // essa declaração. O caso que trouxe a regra foi o monograma do livro
+        // essa declaração. O caso que trouxe a regra foi o monogram do livro
         // de campanhas — as iniciais gigantes em `text-white/15` sobre o emblema
         // são um substituto de ARTE, com o nome da campanha escrito ao lado em
         // texto de verdade. Medi-las é medir a ilustração.

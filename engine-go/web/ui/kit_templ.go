@@ -1435,7 +1435,7 @@ func Key(rotulo string) templ.Component {
 // comia não era navegação: eram 124px de filtro. Medido, esconder a camada
 // devolve 3,37 linhas, o maior corte disponível naquela cena.
 //
-// A troca é do CSS (`.filtros-em-gaveta`, na folha do piloto) e NÃO de uma
+// A troca é do CSS (`.filters-in-drawer`, na folha do piloto) e NÃO de uma
 // consulta de mídia em JS nem de um segundo bloco condicional no `.templ`: são
 // os mesmos nós nas seis formas, e o que muda é se o `<details>` se comporta
 // como gaveta. Dois desenhos do mesmo filtro seriam dois lugares para consertar.
@@ -1467,7 +1467,7 @@ func FilterDrawer(rotulo string) templ.Component {
 			templ_7745c5c3_Var54 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<details class=\"filtros-em-gaveta shrink-0\"><summary class=\"inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<details class=\"filters-in-drawer shrink-0\"><summary class=\"inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

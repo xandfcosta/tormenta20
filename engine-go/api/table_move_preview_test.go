@@ -33,7 +33,7 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 
 	// E A CENA NÃO MUDOU: nem a peça andou, nem nasceu proposta.
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(tela, "tabuleiro-peca-fantasma") {
+	if strings.Contains(tela, "board-token-ghost") {
 		t.Error("a prévia deixou uma proposta na cena: arrastar viraria uma proposta por casa")
 	}
 	if !strings.Contains(tela, "Arcanista em 4, 2") {

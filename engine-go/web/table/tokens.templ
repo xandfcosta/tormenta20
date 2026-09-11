@@ -85,7 +85,7 @@ templ poeNoMapaDialogo(v BoardView) {
 							data-id={ cand.ID }
 							data-ficha?={ cand.Ficha }
 							data-attr:aria-pressed={ estaEscolhido(cand.ID) + " ? 'true' : 'false'" }
-							data-class={ "{'pincel-ligado': " + estaEscolhido(cand.ID) + "}" }
+							data-class={ "{'brush-on': " + estaEscolhido(cand.ID) + "}" }
 							data-on:click={ toggleMap(cand.ID) }
 							class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>

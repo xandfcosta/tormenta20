@@ -71,7 +71,7 @@ func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
 	}
 	css := string(folha)
 
-	pos := strings.Index(css, ".mesa-ficha-em-dialogo")
+	pos := strings.Index(css, ".table-sheet-in-dialog")
 	if pos < 0 {
 		t.Fatalf("a regra sumiu da folha — o guarda está lendo o arquivo errado (%d bytes)", len(css))
 	}

@@ -59,7 +59,7 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
   expect(caixa?.height ?? 0).toBeGreaterThan(200)
 
   // E as marcas: elas só existem se o texto da página foi lido e o termo casou.
-  const marcas = page.locator('.leitor-marca')
+  const marcas = page.locator('.reader-mark')
   await expect.poll(async () => await marcas.count(), { timeout: 15_000 }).toBeGreaterThan(0)
 
   // A marca cai DENTRO da página desenhada. Uma marca fora do canvas seria a
@@ -119,7 +119,7 @@ test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ pag
 
     const dentro = dialogo.frameLocator('iframe')
     await expect(dentro.locator('#leitor[data-pronto]')).toBeAttached({ timeout: 30_000 })
-    await expect(dentro.locator('.leitor-marca').first()).toBeAttached()
+    await expect(dentro.locator('.reader-mark').first()).toBeAttached()
 
     await dialogo.locator('button[aria-label="Fechar o livro"]').click()
     expect(await dialogo.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)

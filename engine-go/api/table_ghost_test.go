@@ -82,7 +82,7 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	tokenID := f.onBoardAt(t, 4, 2)
 
 	semMovimento := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(semMovimento, "tabuleiro-peca-fantasma") {
+	if strings.Contains(semMovimento, "board-token-ghost") {
 		t.Fatal("há fantasma SEM movimento proposto: ele estaria marcando um começo que não existe")
 	}
 
@@ -92,7 +92,7 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	}
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	fantasma := element(t, tela, "class", "tabuleiro-peca-fantasma")
+	fantasma := element(t, tela, "class", "board-token-ghost")
 	if fantasma == nil {
 		t.Fatal("a origem do movimento não tem fantasma: o começo do caminho não está marcado em lugar nenhum")
 	}
@@ -137,7 +137,7 @@ func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 	if peca := element(t, tela, "aria-label", "Arcanista em 4, 2"); peca == nil {
 		t.Error("a peça do mestre saiu da casa dela numa proposta que ele ainda não confirmou")
 	}
-	fantasma := element(t, tela, "class", "tabuleiro-peca-fantasma")
+	fantasma := element(t, tela, "class", "board-token-ghost")
 	if fantasma == nil {
 		t.Fatal("o mestre não vê fantasma nenhum: o destino proposto não está marcado")
 	}
@@ -163,7 +163,7 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	fio := element(t, tela, "class", "tabuleiro-movimento-fio")
+	fio := element(t, tela, "class", "board-move-arrow")
 	if fio == nil {
 		t.Fatal("o movimento não tem seta")
 	}
@@ -192,7 +192,7 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 //
 // Medido no navegador (ALE-203): a TRILHA do movimento e o ALCANCE estavam assim
 // desde que a moldura saiu — o caminho proposto e as casas alcançáveis não
-// apareciam para ninguém. A `.tabuleiro-parada` escapou por ter copiado a
+// apareciam para ninguém. A `.board-stop` escapou por ter copiado a
 // geometria para dentro de si, que é o remendo que fecha um buraco e deixa a
 // família aberta.
 //

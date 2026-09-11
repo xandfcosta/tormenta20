@@ -89,7 +89,7 @@ func TestNoHandwrittenBadgeRecipe(t *testing.T) {
 				continue
 			}
 			// A ESCALA MIÚDA é o que separa o crachá do resto do redondo: a barra
-			// de progresso da mochila e o monograma do Hub também são
+			// de progresso da mochila e o monogram do Hub também são
 			// `rounded-full` e não são pílula de texto.
 			if !contem(tokens, "text-3xs") && !contem(tokens, "text-2xs") {
 				continue

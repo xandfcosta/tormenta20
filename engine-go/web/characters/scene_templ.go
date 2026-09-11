@@ -268,7 +268,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\"></div><div class=\"palco-retrato flex items-center justify-center gap-4 sm:gap-8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\"></div><div class=\"stage-portrait flex items-center justify-center gap-4 sm:gap-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -336,7 +336,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div><div class=\"palco-placa max-w-2xl px-4 text-center\"><h2 class=\"min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div><div class=\"stage-plate max-w-2xl px-4 text-center\"><h2 class=\"min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -701,7 +701,7 @@ func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, " class=\"relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2\"><div class=\"palco-retrato flex items-center justify-center gap-4 sm:gap-8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, " class=\"relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2\"><div class=\"stage-portrait flex items-center justify-center gap-4 sm:gap-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -725,7 +725,7 @@ func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</div><div class=\"palco-placa max-w-2xl px-4 text-center\"><h2 class=\"min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl\">Forjar um herói</h2>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</div><div class=\"stage-plate max-w-2xl px-4 text-center\"><h2 class=\"min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl\">Forjar um herói</h2>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -888,7 +888,7 @@ func filmFrame(h HeroCard, i int) templ.Component {
 			ID: h.ID, Index: i, Monogram: h.Monogram, Gradient: h.Gradient,
 			// Nome E papel, como o marcador de campanhas. O `aria-label` que este
 			// quadro carregava some junto e isso é conserto, não perda: ele existia
-			// porque o monograma de 48px não dizia quem era, e um nome acessível
+			// porque o monogram de 48px não dizia quem era, e um nome acessível
 			// escrito à mão sobre um conteúdo que agora o diz seria duas fontes
 			// para a mesma frase.
 			Name: h.Name, Sub: h.Role,

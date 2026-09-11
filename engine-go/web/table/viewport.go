@@ -150,7 +150,7 @@ func centerViewport(x, y int) string {
 //
 // A CENA e não o palco: o palco deixou de existir como caixa que rola, e quem
 // tem o tamanho da janela agora é a caixa que ancora os overlays.
-const sceneId = "tabuleiro-cena"
+const sceneId = "board-scene"
 
 // viewportFollowsFocus devolve o que a ROLAGEM NATIVA fazia de graça, e sem ele
 // esta fatia teria embutido uma regressão de teclado.

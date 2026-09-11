@@ -41,7 +41,7 @@ async function aDraftWith(
     expect(posta.ok(), `pôr a peça ${p.nome}: ${posta.status()}`).toBeTruthy()
   }
   await page.goto(endereco)
-  await page.locator('.tabuleiro-cena').waitFor({ timeout: 10_000 })
+  await page.locator('.board-scene').waitFor({ timeout: 10_000 })
   return {
     endereco,
     // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO (ALE-245).
@@ -58,14 +58,14 @@ async function aDraftWith(
 /** Onde cada peça está GRAVADA, pela coordenada que o servidor devolveu. */
 function whereEachTokenIs(page: Page) {
   return page.evaluate(() =>
-    [...document.querySelectorAll('.tabuleiro-peca')].map((e) => e.getAttribute('aria-label') ?? '?'),
+    [...document.querySelectorAll('.board-token')].map((e) => e.getAttribute('aria-label') ?? '?'),
   )
 }
 
 /** Quem está DESENHADO deslocado agora, no meio do gesto. */
 function whoIsSlidingNow(page: Page) {
   return page.evaluate(() =>
-    [...document.querySelectorAll('.tabuleiro-peca.tabuleiro-arrastando')].map(
+    [...document.querySelectorAll('.board-token.board-dragging')].map(
       (e) => e.getAttribute('aria-label')?.split(' em ')[0] ?? '?',
     ),
   )
@@ -73,7 +73,7 @@ function whoIsSlidingNow(page: Page) {
 
 async function theSquareSide(page: Page) {
   return page.evaluate(() =>
-    Number.parseFloat(getComputedStyle(document.querySelector('.tabuleiro-peca')!).getPropertyValue('--quadrado')),
+    Number.parseFloat(getComputedStyle(document.querySelector('.board-token')!).getPropertyValue('--quadrado')),
   )
 }
 
@@ -83,10 +83,10 @@ test('no rascunho, arrastar a segunda peça move a SEGUNDA — e nenhuma outra',
     { nome: 'Beta', x: 8, y: 3 },
   ])
   try {
-    await expect(page.locator('.tabuleiro-peca'), 'as duas peças não entraram').toHaveCount(2)
+    await expect(page.locator('.board-token'), 'as duas peças não entraram').toHaveCount(2)
     expect(await whereEachTokenIs(page)).toEqual(['Alfa em 3, 3', 'Beta em 8, 3'])
 
-    const beta = page.locator('.tabuleiro-peca').nth(1)
+    const beta = page.locator('.board-token').nth(1)
     const caixa = await beta.boundingBox()
     if (!caixa) throw new Error('a peça não tem caixa: o arrasto não tem de onde partir')
     const quadrado = await theSquareSide(page)
@@ -120,7 +120,7 @@ test('no rascunho, arrastar a segunda peça move a SEGUNDA — e nenhuma outra',
 test('no rascunho com UMA peça, arrastar move essa peça', async ({ page }) => {
   const { apagar } = await aDraftWith(page, [{ nome: 'Alfa', x: 3, y: 3 }])
   try {
-    const alfa = page.locator('.tabuleiro-peca').first()
+    const alfa = page.locator('.board-token').first()
     const caixa = await alfa.boundingBox()
     if (!caixa) throw new Error('a peça não tem caixa')
     const quadrado = await theSquareSide(page)

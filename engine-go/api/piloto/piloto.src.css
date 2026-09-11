@@ -96,7 +96,7 @@ html {
    quer é justamente sobrepor uma utilitária que o elemento precisa ter para
    funcionar como modal na largura em que ele É usado. */
 @container (min-width: 50rem) and (min-height: 30rem) {
-  .mesa-ficha-em-dialogo {
+  .table-sheet-in-dialog {
     display: none;
   }
 }
@@ -126,21 +126,21 @@ html {
  * regra inteira cairia e o desktop ficaria com o resumo escondido E o miolo
  * fechado — os filtros sumiriam da tela larga, que é onde eles mais servem. Com
  * as duas, o pior caso é a gaveta abrir onde não precisava. */
-.filtros-em-gaveta > summary {
+.filters-in-drawer > summary {
   list-style: none;
   cursor: pointer;
 }
-.filtros-em-gaveta > summary::-webkit-details-marker {
+.filters-in-drawer > summary::-webkit-details-marker {
   display: none;
 }
 @media not all and (max-width: 1023px), (orientation: portrait) {
-  .filtros-em-gaveta > summary {
+  .filters-in-drawer > summary {
     display: none;
   }
-  .filtros-em-gaveta:not([open]) > *:not(summary) {
+  .filters-in-drawer:not([open]) > *:not(summary) {
     display: revert;
   }
-  .filtros-em-gaveta:not([open])::details-content {
+  .filters-in-drawer:not([open])::details-content {
     content-visibility: visible;
   }
 }
@@ -212,21 +212,21 @@ html {
    habilidades vira torre.
 
    FORA de `@layer` pela mesma razão das regras vizinhas. */
-.bloco-do-verbete {
+.entry-block {
   container-type: inline-size;
 }
 
-.bloco-do-verbete-colunas {
+.entry-block-columns {
   display: grid;
   gap: 1rem;
 }
 
-.bloco-do-verbete .bloco-atributos {
+.entry-block .entry-attributes {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 @container (min-width: 46rem) {
-  .bloco-do-verbete-colunas {
+  .entry-block-columns {
     grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
     gap: 1.5rem;
     /* `start` porque as duas colunas têm alturas diferentes: sem isto, a coluna
@@ -234,7 +234,7 @@ html {
        defeito que o teto de 56rem existia para evitar. */
     align-items: start;
   }
-  .bloco-do-verbete .bloco-atributos {
+  .entry-block .entry-attributes {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
@@ -249,7 +249,7 @@ html {
 
    FORA de `@layer` pela mesma razão da regra abaixo: utilitário do Tailwind é
    camada, e estilo não-camada ganha dele. */
-#verbete-em-dialogo .cartao-do-acervo {
+#verbete-em-dialogo .collection-card {
   border: 0;
   padding: 0;
 }
@@ -273,7 +273,7 @@ html {
   outline: none;
 }
 
-.scene-grimorio .buscador-linha:has(#buscador-campo:focus-visible) {
+.scene-grimorio .finder-row:has(#buscador-campo:focus-visible) {
   border-color: var(--grimorio-gold);
 }
 
@@ -282,13 +282,13 @@ html {
    *
    * Ele é MARCA e não texto — decisão do dono, 2026-09-08 —, e a diferença tem
    * consequência mecânica. O piso de 14px da Cinzel existe porque ela "vira
-   * desenho antes de virar texto" nesse tamanho (ALE-173), e num monograma
+   * desenho antes de virar texto" nesse tamanho (ALE-173), e num monogram
    * virar desenho é o objetivo: são duas letras (ver `ui.Monogram`), com o nome
    * escrito por extenso ao lado em texto de verdade.
    *
    * A receita mora AQUI e não em quatro `class=` à mão porque a classe É a
    * isenção: o `support/tipografia.ts` pula quem estiver dentro de um
-   * `.monograma`, e assim quem escrever um monograma novo herda o desenho e a
+   * `.monogram`, e assim quem escrever um monogram novo herda o desenho e a
    * isenção juntos. Isentar por `aria-hidden` — que é o que três dos quatro
    * sítios já tinham — livraria TODA Cinzel decorativa, que é largo demais.
    *
@@ -296,7 +296,7 @@ html {
    * 48px, com cantos diferentes, e normalizá-los aqui mudaria quatro cenas numa
    * issue que não é sobre isso. O `background` é o gradiente derivado do nome
    * (`ui.NameGradient`), e por isso é `style` e não classe. */
-  .monograma {
+  .monogram {
     display: flex;
     flex: none;
     align-items: center;
@@ -305,12 +305,12 @@ html {
     color: oklch(1 0 0 / 0.85);
   }
 
-  .acervo-em-colunas {
+  .collection-in-columns {
     display: grid;
     gap: 0.5rem;
     grid-template-columns: repeat(auto-fill, minmax(max(22rem, (100% - 1rem) / 3), 1fr));
   }
-  .acervo-em-colunas > * {
+  .collection-in-columns > * {
     min-width: 0;
   }
 }
@@ -345,17 +345,17 @@ html {
  * Com `contents` o invólucro não existe para o leiaute enquanto está visível —
  * os botões participam da fileira como se ele não estivesse lá. */
 @layer components {
-  .palco-alto-so {
+  .stage-tall-only {
     display: contents;
   }
-  .palco-gaveta {
+  .stage-drawer {
     display: none;
   }
   @container (max-height: 30rem) {
-    .palco-alto-so {
+    .stage-tall-only {
       display: none;
     }
-    .palco-gaveta {
+    .stage-drawer {
       display: block;
     }
   }
@@ -385,22 +385,22 @@ html {
    * assoalho, a floresta tem duas clareiras descentradas porque luz de mata não
    * vem de um ponto só. O "papel" fica LIMPO de propósito — é o modo mapa de
    * batalha, onde ambiente seria sujeira sobre a régua. */
-  .chao-pedra    .tabuleiro-ambiente { background: radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,.06), transparent 60%), radial-gradient(100% 100% at 50% 120%, rgba(0,0,0,.45), transparent 55%); }
-  .chao-taverna  .tabuleiro-ambiente { background: radial-gradient(45% 40% at 22% 30%, rgba(255,176,86,.18), transparent 70%), repeating-linear-gradient(90deg, rgba(0,0,0,.16) 0 2px, transparent 2px 92px), radial-gradient(120% 110% at 50% 120%, rgba(0,0,0,.42), transparent 60%); }
-  .chao-floresta .tabuleiro-ambiente { background: radial-gradient(38% 34% at 28% 24%, rgba(150,220,120,.14), transparent 70%), radial-gradient(30% 28% at 72% 62%, rgba(120,200,110,.10), transparent 72%), radial-gradient(120% 110% at 50% 115%, rgba(0,0,0,.45), transparent 58%); }
-  .chao-ermo     .tabuleiro-ambiente { background: radial-gradient(80% 50% at 50% 0%, rgba(255,214,148,.10), transparent 65%), radial-gradient(120% 110% at 50% 120%, rgba(0,0,0,.40), transparent 60%); }
-  .chao-cripta   .tabuleiro-ambiente { background: radial-gradient(60% 45% at 50% -5%, rgba(150,130,255,.16), transparent 70%), radial-gradient(110% 100% at 50% 115%, rgba(0,0,0,.55), transparent 55%); }
+  .chao-pedra    .board-ambient { background: radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,.06), transparent 60%), radial-gradient(100% 100% at 50% 120%, rgba(0,0,0,.45), transparent 55%); }
+  .chao-taverna  .board-ambient { background: radial-gradient(45% 40% at 22% 30%, rgba(255,176,86,.18), transparent 70%), repeating-linear-gradient(90deg, rgba(0,0,0,.16) 0 2px, transparent 2px 92px), radial-gradient(120% 110% at 50% 120%, rgba(0,0,0,.42), transparent 60%); }
+  .chao-floresta .board-ambient { background: radial-gradient(38% 34% at 28% 24%, rgba(150,220,120,.14), transparent 70%), radial-gradient(30% 28% at 72% 62%, rgba(120,200,110,.10), transparent 72%), radial-gradient(120% 110% at 50% 115%, rgba(0,0,0,.45), transparent 58%); }
+  .chao-ermo     .board-ambient { background: radial-gradient(80% 50% at 50% 0%, rgba(255,214,148,.10), transparent 65%), radial-gradient(120% 110% at 50% 120%, rgba(0,0,0,.40), transparent 60%); }
+  .chao-cripta   .board-ambient { background: radial-gradient(60% 45% at 50% -5%, rgba(150,130,255,.16), transparent 70%), radial-gradient(110% 100% at 50% 115%, rgba(0,0,0,.55), transparent 55%); }
 
   /* A grade é OURO quase apagado — a assinatura da casa em vez do branco neutro
    * de planilha (ALE-188) —, e escura sobre o pergaminho, onde linha clara é
    * invisível. Duas faixas cruzadas de 1px em ZERO nós. */
-  .tabuleiro-grade {
+  .board-grid {
     background:
       repeating-linear-gradient(0deg, oklch(0.8 0.11 85 / 0.08) 0 1px, transparent 1px 100%),
       repeating-linear-gradient(90deg, oklch(0.8 0.11 85 / 0.08) 0 1px, transparent 1px 100%);
     background-size: var(--quadrado) var(--quadrado);
   }
-  .chao-papel .tabuleiro-grade {
+  .chao-papel .board-grid {
     background:
       repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 1px, transparent 1px 100%),
       repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 1px, transparent 1px 100%);
@@ -412,8 +412,8 @@ html {
    * revelaria o vazio na direção do arrasto. Como fundo da janela, com a origem
    * amarrada à vista, ela é a mesma grade para sempre — o mesmo truque que o
    * Excalidraw usa, e é ele que dispensa desenhar o que não aparece. */
-  .tabuleiro-grade,
-  .chao-papel .tabuleiro-grade {
+  .board-grid,
+  .chao-papel .board-grid {
     background-position: calc(var(--vista-x) * -1) calc(var(--vista-y) * -1);
   }
 
@@ -434,7 +434,7 @@ html {
    * finita: fora da janela nada é pintado. `touch-action: none` porque o arrasto
    * da vista é o gesto do dedo, e sem isso o navegador o interpreta como rolagem
    * da página. */
-  .tabuleiro-cena {
+  .board-scene {
     --quadrado: 44px;
     --vista-x: 0px;
     --vista-y: 0px;
@@ -507,8 +507,8 @@ html {
    * "Salão dos Mil Espelhos de Wynlla" sem teto atravessaria o topo até debaixo
    * dos verbos do outro canto. O corte com reticências é o que mantém os dois
    * painéis dois. */
-  .tabuleiro-nome-da-cena,
-  .tabuleiro-verbos-da-cena {
+  .board-scene-name,
+  .board-scene-verbs {
     position: absolute;
     top: 0.5rem;
     z-index: 7;
@@ -518,7 +518,7 @@ html {
     border-radius: 0.125rem;
     background: oklch(0.18 0.012 300);
   }
-  .tabuleiro-nome-da-cena {
+  .board-scene-name {
     left: 0.5rem;
     max-width: min(18rem, 40%);
     padding: 0.25rem 0.625rem;
@@ -536,7 +536,7 @@ html {
    * altura de uma linha e uma segunda o faria crescer para dentro do mapa. Com
    * oito abas (o teto do servidor) num telefone, rolar é a saída que não custa
    * mapa. */
-  .tabuleiro-nome-da-cena:has(.tabuleiro-aba) {
+  .board-scene-name:has(.board-tab) {
     /* 35% e não mais, MEDIDO com oito abas em 1280px: o painel dos verbos do
      * MESTRE é o mais cheio da casa (zoom, cortina, lente, pôr no mapa, abrir
      * outra, acervo com contagem, encerrar) e ocupa 61% da cena. Com 55% os
@@ -551,7 +551,7 @@ html {
   }
   /* Cada ficha corta a SUA — o corte no painel cortaria a última aba pela
    * metade e ela pareceria não existir. */
-  .tabuleiro-aba {
+  .board-tab {
     flex: none;
     display: flex;
     align-items: center;
@@ -567,20 +567,20 @@ html {
     text-overflow: ellipsis;
     transition: color 150ms, border-color 150ms;
   }
-  .tabuleiro-aba:hover {
+  .board-tab:hover {
     color: var(--color-foreground);
     border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
   }
-  .tabuleiro-aba:focus-visible {
+  .board-tab:focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
   /* MOSTRAR ESTA À MESA (ALE-205, fatia 2) vive colado na ficha ativa, e é o
    * único item da barra que não é uma aba — por isso ele não herda o
-   * `.tabuleiro-aba`: uma ficha a mais ali seria lida como um quarto tabuleiro.
+   * `.board-tab`: uma ficha a mais ali seria lida como um quarto tabuleiro.
    * Menor que 44px de propósito: ele não é alvo de toque frequente (o mestre o
    * usa uma vez por cena), e a barra tem altura de uma linha. */
-  .tabuleiro-aba-mostrar {
+  .board-tab-pull {
     flex: none;
     display: flex;
     align-items: center;
@@ -592,18 +592,18 @@ html {
     color: var(--color-muted-foreground);
     transition: color 150ms, background-color 150ms;
   }
-  .tabuleiro-aba-mostrar:hover {
+  .board-tab-pull:hover {
     color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
     background: oklch(0.24 0.014 300);
   }
-  .tabuleiro-aba-mostrar:focus-visible {
+  .board-tab-pull:focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
   /* A ATIVA acende, e é o ÚNICO sinal de qual cena está na tela: o mapa embaixo
    * não se identifica sozinho — duas cenas de cripta com o mesmo chão são a
    * mesma imagem. */
-  .tabuleiro-aba-ativa {
+  .board-tab-active {
     color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
     border-color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
     /* A ATIVA tem mais largura que as outras porque é a que se LÊ: as demais
@@ -613,7 +613,7 @@ html {
      * que se está é o que o painel existia para dizer. */
     max-width: 14rem;
   }
-  .tabuleiro-verbos-da-cena {
+  .board-scene-verbs {
     right: 0.5rem;
     gap: 0.125rem;
     padding: 0.125rem 0.25rem;
@@ -638,14 +638,14 @@ html {
    * nome deixaria de poder ser selecionado, que é perder por nada. O TRILHO
    * também: ele ROLA por dentro quando as nove ferramentas não cabem, e um fundo
    * transparente ao ponteiro mandaria a roda para o mapa, que amplia. */
-  .tabuleiro-verbos-da-cena {
+  .board-scene-verbs {
     pointer-events: none;
   }
-  .tabuleiro-verbos-da-cena :is(a, button, input, label, select, summary, textarea) {
+  .board-scene-verbs :is(a, button, input, label, select, summary, textarea) {
     pointer-events: auto;
   }
 
-  .tabuleiro-trilho {
+  .board-rail {
     position: absolute;
     left: 0.5rem;
     top: 50%;
@@ -669,14 +669,14 @@ html {
     overflow-y: auto;
     overscroll-behavior: contain;
   }
-  .tabuleiro-trilho-vinco {
+  .board-rail-crease {
     width: 1.25rem;
     height: 1px;
     margin-block: 0.125rem;
     background: var(--color-grimorio-iron, oklch(0.35 0.01 305));
   }
 
-  .tabuleiro-ferramenta {
+  .board-tool {
     position: relative;
     display: flex;
     width: 2.25rem;
@@ -688,30 +688,30 @@ html {
     outline: none;
     transition: color 150ms, border-color 150ms, background-color 150ms;
   }
-  .tabuleiro-ferramenta:hover {
+  .board-tool:hover {
     border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
     color: var(--color-foreground, oklch(0.93 0.014 85));
   }
-  .tabuleiro-ferramenta:focus-visible {
+  .board-tool:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
   }
   /* A ATIVA é a coisa mais alta do trilho, e isto foi medido na tela: com só o
-   * `.pincel-ligado` (borda + fundo a 14%), o ANEL DE FOCO de outro botão lia
+   * `.brush-on` (borda + fundo a 14%), o ANEL DE FOCO de outro botão lia
    * como "esta é a ativa" — dois estados diferentes com o mesmo peso visual, num
    * componente que existe justamente para responder "qual está ligada".
    *
    * Aqui ela ganha o fundo cheio e uma barra na borda esquerda, que é a marca
    * que nenhum estado passageiro usa. */
-  .tabuleiro-ferramenta.pincel-ligado {
+  .board-tool.brush-on {
     background-color: oklch(0.8 0.11 85 / 0.22);
     box-shadow: inset 3px 0 0 var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
-  .tabuleiro-ferramenta.pincel-ligado .tabuleiro-ferramenta-tecla { opacity: 0.9; }
+  .board-tool.brush-on .board-tool-key { opacity: 0.9; }
   /* O NÚMERO no canto, e não só no `title`: um atalho que só existe no balão do
    * mouse é um atalho que quem navega por teclado nunca descobre — e é
    * justamente essa pessoa que mais o usaria. */
-  .tabuleiro-ferramenta-tecla {
+  .board-tool-key {
     position: absolute;
     right: 1px;
     bottom: 0;
@@ -728,8 +728,8 @@ html {
    * O CONTÊINER não recebe clique e os filhos recebem: eles cobrem uma faixa
    * inteira do mapa, e sem isso um aviso apagado roubaria o clique de metade da
    * cena sem nada na tela para explicar. */
-  .tabuleiro-avisos,
-  .tabuleiro-ajudantes {
+  .board-notices,
+  .board-helpers {
     position: absolute;
     left: 0;
     right: 0;
@@ -749,14 +749,14 @@ html {
    * justamente a faixa onde o primeiro aviso nascia. Sem este recuo, "a cortina
    * está fechada" aparece por baixo do nome da cena — visível pela metade, que é
    * pior que escondido: quem olha rápido lê meia frase e segue. */
-  .tabuleiro-avisos { top: 2.75rem; }
-  .tabuleiro-ajudantes { bottom: 0; }
-  .tabuleiro-avisos > *,
-  .tabuleiro-ajudantes > * {
+  .board-notices { top: 2.75rem; }
+  .board-helpers { bottom: 0; }
+  .board-notices > *,
+  .board-helpers > * {
     pointer-events: auto;
   }
 
-  .tabuleiro-aviso {
+  .board-notice {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -769,7 +769,7 @@ html {
     color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
   }
-  .tabuleiro-aviso-saida {
+  .board-notice-exit {
     margin-left: auto;
     display: inline-flex;
     min-height: 1.5rem;
@@ -781,8 +781,8 @@ html {
     outline: none;
     transition: background-color 150ms;
   }
-  .tabuleiro-aviso-saida:hover { background: oklch(0.8 0.11 85 / 0.2); }
-  .tabuleiro-aviso-saida:focus-visible {
+  .board-notice-exit:hover { background: oklch(0.8 0.11 85 / 0.2); }
+  .board-notice-exit:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 1px;
   }
@@ -790,7 +790,7 @@ html {
   /* O AJUDANTE é a barra da ferramenta ativa. Ele era uma tira ABAIXO do mapa,
    * com `border-t`, e virou painel flutuante — a borda de cima não descreve mais
    * nada, e o fundo opaco é o que o torna legível sobre a grade. */
-  .tabuleiro-ajudante {
+  .board-helper {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -817,7 +817,7 @@ html {
    * APAGADA é opacidade e não uma cor cinza: a bolinha continua na cor da faixa,
    * só que fraca, e é isso que faz a acesa e a apagada serem reconhecíveis como
    * a mesma coisa em dois estados. */
-  .tabuleiro-faixas {
+  .board-bands {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -826,30 +826,30 @@ html {
     margin-top: 0.25rem;
     font-size: 0.75rem;
   }
-  .tabuleiro-faixa {
+  .board-band {
     display: inline-flex;
     align-items: center;
     gap: 0.3125rem;
     opacity: 0.45;
     color: var(--color-muted-foreground);
   }
-  .tabuleiro-faixa::before {
+  .board-band::before {
     content: '';
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 9999px;
     background: var(--faixa-cor);
   }
-  .tabuleiro-faixa-cabe {
+  .board-band-fits {
     --faixa-cor: var(--movimento-cabe);
   }
-  .tabuleiro-faixa-segundo {
+  .board-band-second {
     --faixa-cor: var(--movimento-segundo);
   }
-  .tabuleiro-faixa-alem {
+  .board-band-beyond {
     --faixa-cor: var(--movimento-alem);
   }
-  .tabuleiro-faixa-ativa {
+  .board-band-active {
     opacity: 1;
     color: var(--color-foreground);
     font-weight: 600;
@@ -864,7 +864,7 @@ html {
    * Contorno e não preenchimento chapado: ele fica ao lado de um texto que já é
    * a informação principal (o custo e as ações), e um bloco sólido ali roubaria
    * a leitura do número. */
-  .tabuleiro-rascunho-selo {
+  .board-draft-seal {
     margin-right: 0.5rem;
     border: 1px solid color-mix(in oklch, var(--color-grimorio-gold, oklch(0.8 0.11 85)) 45%, transparent);
     border-radius: 0.125rem;
@@ -912,7 +912,7 @@ html {
    * cabe uma só.
    *
    * 42rem = 672px é o MESMO corte do `@2xl` que a SPA usa para o lado a lado. */
-  .notas-coluna {
+  .notes-column {
     container-type: inline-size;
     container-name: notas;
   }
@@ -921,20 +921,20 @@ html {
    * mestre que nunca arrastou a divisa vê exatamente o que via. A variável mora
    * no `<main>`, e não aqui, porque esta coluna tem `data-show`. */
   @media (min-width: 64rem) {
-    .notas-coluna {
+    .notes-column {
       width: var(--notas-largura, clamp(22rem, 40%, 44rem));
     }
   }
 
   /* A DIVISA é fina e o ALVO é largo: 4px de tinta com 12px de área, que é o
    * mínimo que um ponteiro acha sem mirar. */
-  .notas-divisa {
+  .notes-divider {
     width: 4px;
     margin-inline: 4px;
     cursor: col-resize;
   }
 
-  .notas-arranjo {
+  .notes-layout {
     grid-template-columns: 1fr;
   }
 
@@ -942,7 +942,7 @@ html {
    * duas trilhas, o modo "ler" deixaria metade da região vazia — o item
    * escondido não é item de grade, e a trilha dele fica lá do mesmo jeito. */
   @container notas (min-width: 42rem) {
-    .notas-arranjo.notas-duplo {
+    .notes-layout.notes-split {
       grid-template-columns: 1fr 1fr;
     }
   }
@@ -953,7 +953,7 @@ html {
    * UM `translate` para o plano inteiro, e não uma conta por peça: mover a
    * janela é uma composição na GPU em vez de recalcular a posição de cada nó.
    * `will-change` porque o arrasto o move a cada quadro. */
-  .tabuleiro-plano {
+  .board-plane {
     position: absolute;
     top: 0;
     left: 0;
@@ -975,26 +975,26 @@ html {
    * Embaixo fica o que é CHÃO e se olha; em cima, o que responde ao dedo. É a
    * mesma ordem de sempre, agora escrita em dois nós em vez de numa pilha de
    * `z-index` que o contexto de empilhamento passou a ignorar. */
-  .tabuleiro-plano-chao { z-index: 0; }
-  .tabuleiro-medida-fundo { z-index: 1; }
-  .tabuleiro-casas,
-  .tabuleiro-vista { z-index: 2; }
-  .tabuleiro-plano-pecas { z-index: 3; }
-  .tabuleiro-medida-frente { z-index: 4; }
+  .board-plane-ground { z-index: 0; }
+  .board-measure-back { z-index: 1; }
+  .board-squares,
+  .board-viewport { z-index: 2; }
+  .board-plane-tokens { z-index: 3; }
+  .board-measure-front { z-index: 4; }
   /* O AMBIENTE cobre a JANELA, pela mesma razão da grade: ele é a luz da cena,
    * e luz que acaba na borda do que já foi pintado denuncia que o plano tem
    * fim. */
-  .tabuleiro-ambiente,
-  .tabuleiro-grade { position: absolute; inset: 0; pointer-events: none; }
+  .board-ambient,
+  .board-grid { position: absolute; inset: 0; pointer-events: none; }
 
   /* Posição ABSOLUTA e não grade: uma grade de 280 trilhas custaria leiaute a
    * cada remendo para colocar meia dúzia de coisas. */
-  .tabuleiro-terreno,
-  .tabuleiro-peca,
-  .tabuleiro-marcador,
-  .tabuleiro-trilha,
-  .tabuleiro-parada,
-  .tabuleiro-alcance {
+  .board-terrain,
+  .board-token,
+  .board-marker,
+  .board-trail,
+  .board-stop,
+  .board-range {
     position: absolute;
     left: calc(var(--col) * var(--quadrado));
     top: calc(var(--lin) * var(--quadrado));
@@ -1020,7 +1020,7 @@ html {
      Os ícones dizem a REGRA e não a aparência: `Shield` porque cobertura é +5 na
      Defesa, `EyeOff` porque camuflagem é 20% de chance de falha. Ver
      `piloto_mesa_terreno_desenho.go`. */
-  .tabuleiro-terreno {
+  .board-terrain {
     pointer-events: none;
     /* CONTÊINER para o ícone poder medir a CASA. O `--quadrado` é uma variável
        CSS, e `@media` não enxerga variável — `@container` enxerga o tamanho, que
@@ -1031,41 +1031,41 @@ html {
   /* A TINTA de cada espécie. Chapada e não textura: a textura era o que sumia de
      longe, e é o ícone que carrega a identidade agora. As quatro somam sem virar
      papa porque a leitura de QUAL não depende mais da cor. */
-  .tabuleiro-dificil { background-color: oklch(0.8 0.11 85 / 0.16); }
-  .tabuleiro-cobertura { background-color: oklch(0.72 0.09 230 / 0.18); }
-  .tabuleiro-camuflagem { background-color: oklch(0.85 0.03 260 / 0.16); }
-  .tabuleiro-elevado { background-color: oklch(0.75 0.12 145 / 0.16); }
+  .board-dificil { background-color: oklch(0.8 0.11 85 / 0.16); }
+  .board-cobertura { background-color: oklch(0.72 0.09 230 / 0.18); }
+  .board-camuflagem { background-color: oklch(0.85 0.03 260 / 0.16); }
+  .board-elevado { background-color: oklch(0.75 0.12 145 / 0.16); }
 
   /* A MARCA é o ícone no canto. `position: absolute` dentro da casa, e o canto
      vem da classe que o servidor escreve — uma espécie, um canto, para sempre.
      
      `18cqw` = 18% da largura da casa: ele acompanha o zoom sem uma linha de
      JavaScript, do mesmo jeito que todo o resto do plano. */
-  .terreno-marca {
+  .terrain-mark {
     position: absolute;
     width: 26cqw;
     height: 26cqw;
     opacity: 0.85;
   }
-  .terreno-canto-noroeste .terreno-marca { top: 6cqw; left: 6cqw; }
-  .terreno-canto-nordeste .terreno-marca { top: 6cqw; right: 6cqw; }
-  .terreno-canto-sudeste .terreno-marca { bottom: 6cqw; right: 6cqw; }
-  .terreno-canto-sudoeste .terreno-marca { bottom: 6cqw; left: 6cqw; }
+  .terrain-corner-northwest .terrain-mark { top: 6cqw; left: 6cqw; }
+  .terrain-corner-northeast .terrain-mark { top: 6cqw; right: 6cqw; }
+  .terrain-corner-southeast .terrain-mark { bottom: 6cqw; right: 6cqw; }
+  .terrain-corner-southwest .terrain-mark { bottom: 6cqw; left: 6cqw; }
 
   /* A COR da marca é a da espécie, cheia — a tinta do fundo é translúcida de
      propósito (o chão do lugar continua sendo informação), e o ícone é o que
      precisa de contraste. */
-  .tabuleiro-dificil .terreno-marca { color: oklch(0.8 0.11 85); }
-  .tabuleiro-cobertura .terreno-marca { color: oklch(0.78 0.11 230); }
-  .tabuleiro-camuflagem .terreno-marca { color: oklch(0.88 0.04 260); }
-  .tabuleiro-elevado .terreno-marca { color: oklch(0.8 0.14 145); }
+  .board-dificil .terrain-mark { color: oklch(0.8 0.11 85); }
+  .board-cobertura .terrain-mark { color: oklch(0.78 0.11 230); }
+  .board-camuflagem .terrain-mark { color: oklch(0.88 0.04 260); }
+  .board-elevado .terrain-mark { color: oklch(0.8 0.14 145); }
 
   /* O ÍCONE SOME NO ZOOM PEQUENO, e este é o custo que a escolha do dono
      declarou: abaixo de 32px de lado ele vira um borrão de seis pixels, e um
      borrão não informa — só suja. Nesse regime a TINTA sozinha responde "tem
      alguma coisa aqui", que é o que cabe em 20px. */
   @container (max-width: 31px) {
-    .terreno-marca { display: none; }
+    .terrain-mark { display: none; }
   }
 
   /* O PINCEL NO TRILHO mostra o MESMO ícone que a casa recebe, tingido com a cor
@@ -1074,19 +1074,19 @@ html {
      Ele era um QUADRADINHO de cor, e a troca veio junto com o desenho novo — no
      dia em que cada espécie ganhou ícone próprio, quatro quadradinhos que só
      diferiam de matiz viraram a legenda que a casa acabara de dispensar. */
-  .pincel-matiz { opacity: 0.95; }
-  .tabuleiro-matiz-dificil { color: oklch(0.8 0.11 85); }
-  .tabuleiro-matiz-cobertura { color: oklch(0.78 0.11 230); }
-  .tabuleiro-matiz-camuflagem { color: oklch(0.88 0.04 260); }
-  .tabuleiro-matiz-elevado { color: oklch(0.8 0.14 145); }
+  .brush-hue { opacity: 0.95; }
+  .board-hue-dificil { color: oklch(0.8 0.11 85); }
+  .board-hue-cobertura { color: oklch(0.78 0.11 230); }
+  .board-hue-camuflagem { color: oklch(0.88 0.04 260); }
+  .board-hue-elevado { color: oklch(0.8 0.14 145); }
 
   /* A SUPERFÍCIE ESCOLHIDA do jogador (ALE-129, portada na ALE-269).
    *
    * Dourado cheio e não só o texto, ao contrário da aba do editor: aqui a
    * escolha decide o que ocupa a TELA INTEIRA, e não onde se está olhando dentro
-   * de um formulário. É a mesma marca do `.pincel-ligado`, porque é a mesma
+   * de um formulário. É a mesma marca do `.brush-on`, porque é a mesma
    * força de afirmação. */
-  .superficie-escolhida {
+  .surface-chosen {
     border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     background-color: oklch(0.8 0.11 85 / 0.15);
     color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
@@ -1095,24 +1095,24 @@ html {
   /* A ABA ABERTA do editor de bloco (ALE-269).
    *
    * Dourado no TEXTO e um filete embaixo, e não o fundo cheio do
-   * `.pincel-ligado`: são coisas diferentes e a tela precisa dizer isso. Uma
+   * `.brush-on`: são coisas diferentes e a tela precisa dizer isso. Uma
    * ferramenta LIGADA muda o que o próximo clique faz e fica ligada enquanto o
    * mestre trabalha; uma aba só diz onde ele está olhando agora. Vestir as duas
    * igual ensinaria que trocar de aba muda o comportamento de alguma coisa. */
-  .aba-ligada {
+  .tab-on {
     color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     border-bottom-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
 
   /* A ferramenta LIGADA, e é dourado porque nesta casa dourado é o que diz "a
      vez" e "o ativo" — na iniciativa e no tabuleiro (ALE-200/ALE-201). */
-  .pincel-ligado {
+  .brush-on {
     border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     background-color: oklch(0.8 0.11 85 / 0.14);
     color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
 
-  .tabuleiro-peca {
+  .board-token {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1125,17 +1125,17 @@ html {
     outline: none;
     transition: box-shadow 120ms ease;
   }
-  .tabuleiro-peca:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .board-token:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
   /* O anel da vez é o MESMO dourado da linha da fila e da faixa: duas cores para
    * "a vez" fariam a mesa procurar duas coisas (ALE-200). */
-  .tabuleiro-peca-na-vez {
+  .board-token-on-turn {
     box-shadow: 0 0 0 3px var(--grimorio-gold), 0 0 12px 2px oklch(0.8 0.11 85 / 0.45);
     z-index: 2;
   }
   /* Escondida da mesa: meia tinta e traço cortado, e só o MESTRE a recebe — para
    * o jogador ela não vem no HTML (`BoardForRole`). */
-  .tabuleiro-peca-oculta { opacity: 0.55; border-style: dashed; }
+  .board-token-hidden { opacity: 0.55; border-style: dashed; }
 
   /* A peça de CENÁRIO é quadrada (ALE-291): a porta, o baú, o barril.
    *
@@ -1147,16 +1147,16 @@ html {
    * O raio não é zero: canto vivo num gradiente escuro lê como falha de
    * renderização, e o que se quer dizer é "isto não é gente", não "isto está
    * quebrado". */
-  .tabuleiro-peca-objeto { border-radius: calc(var(--quadrado) * 0.08); }
+  .board-token-object { border-radius: calc(var(--quadrado) * 0.08); }
 
-  .tabuleiro-monograma {
+  .board-monogram {
     font-weight: 700;
     font-size: calc(var(--quadrado) * 0.34);
     letter-spacing: 0.02em;
   }
   /* O selo é TEXTO e fica na quina, porque ele é o que distingue os três zumbis
-   * e não pode competir com o monograma pelo meio do disco. */
-  .tabuleiro-selo {
+   * e não pode competir com o monogram pelo meio do disco. */
+  .board-seal {
     position: absolute;
     right: -2px;
     top: -2px;
@@ -1169,7 +1169,7 @@ html {
     font-weight: 700;
     line-height: 1.25;
   }
-  .tabuleiro-vida {
+  .board-vitals {
     position: absolute;
     left: 12%;
     right: 12%;
@@ -1179,9 +1179,9 @@ html {
     background: oklch(0 0 0 / 0.55);
     overflow: hidden;
   }
-  .tabuleiro-vida-cheia { display: block; height: 100%; }
+  .board-vitals-full { display: block; height: 100%; }
 
-  .tabuleiro-marcador {
+  .board-marker {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1197,11 +1197,11 @@ html {
   /* O marcador do MESTRE é clicável; o da mesa não. O `pointer-events: none`
      acima é o certo para quem só olha — o marcador fica POR CIMA do plano, e
      capturar o clique roubaria o gesto de mover a peça que estiver embaixo. */
-  button.tabuleiro-marcador {
+  button.board-marker {
     pointer-events: auto;
     cursor: pointer;
     /* O `z-index` é o que torna o `pointer-events` acima efetivo, e sem ele o
-       marcador é INALCANÇÁVEL: as camadas de clique (`.tabuleiro-casas`) cobrem
+       marcador é INALCANÇÁVEL: as camadas de clique (`.board-squares`) cobrem
        o plano inteiro e vêm depois no DOM, então a de MOVER — que é a ativa por
        padrão — engolia o clique. O navegador foi a única testemunha disso; nada
        no HTML denuncia um elemento coberto. É o mesmo 2 da peça, e pela mesma
@@ -1213,7 +1213,7 @@ html {
      chega (o `BoardForRole` o retira). Sem esta distinção o mestre revela e a
      TELA DELE não muda — ele não tem como saber o que a mesa está vendo, que é
      exatamente a pergunta que o gesto de revelar existe para responder. */
-  .tabuleiro-marcador-escondido {
+  .board-marker-hidden {
     border-style: dashed;
     opacity: 0.6;
   }
@@ -1222,7 +1222,7 @@ html {
      ponto e descem um quadrado: em cima ficariam sob o dedo que acabou de
      clicar, e do lado sairiam da moldura quando o marcador estivesse na borda
      direita. */
-  .tabuleiro-marcador-acoes {
+  .board-marker-actions {
     position: absolute;
     left: calc(var(--col) * var(--quadrado));
     top: calc((var(--lin) + 1) * var(--quadrado));
@@ -1238,7 +1238,7 @@ html {
     white-space: nowrap;
   }
 
-  .tabuleiro-marcador-cor {
+  .board-marker-color {
     width: 1rem;
     height: 1rem;
     border-radius: 9999px;
@@ -1249,7 +1249,7 @@ html {
 
   /* As cores que o mestre pode escolher para um marcador são nomeadas porque o
    * valor vem do banco — interpolar a string crua no `style` seria injeção de
-   * CSS, e o Go já a prende a esta lista. Elas moram na `.tabuleiro-cena`
+   * CSS, e o Go já a prende a esta lista. Elas moram na `.board-scene`
    * (ALE-203), que é o ancestral que sobrou depois de o palco sair. */
 }
 
@@ -1259,7 +1259,7 @@ html {
    * diz "a vez" —, porque o movimento em curso é do turno em curso. Ela é
    * pintura e não recebe clique: a peça que anda por cima dela continua sendo a
    * peça que se clica. */
-  .tabuleiro-trilha {
+  .board-trail {
     background: oklch(0.8 0.11 85 / 0.22);
     box-shadow: inset 0 0 0 1px oklch(0.8 0.11 85 / 0.45);
     pointer-events: none;
@@ -1274,8 +1274,8 @@ html {
    * movimento tinha caixa `0×0` com o `background` certo no `getComputedStyle`.
    *
    * O CSS parecia certo em cada regra, e o que faltava estava em OUTRO bloco: as
-   * três caíram fora da lista `.tabuleiro-terreno, .tabuleiro-peca,
-   * .tabuleiro-marcador` quando a moldura saiu, e ninguém volta a essa lista ao
+   * três caíram fora da lista `.board-terrain, .board-token,
+   * .board-marker` quando a moldura saiu, e ninguém volta a essa lista ao
    * escrever a tinta de uma classe nova. Quem prende isso agora é o
    * `TestTodaClassePosicionadaPorColLinTemCaixa`, que cruza o HTML servido com a
    * folha compilada — a lista deixou de ser algo que se lembra e passou a ser
@@ -1289,7 +1289,7 @@ html {
    * mostra. Um ponto no meio da casa, e não a casa inteira pintada: a casa já
    * está na trilha, e pintá-la de novo diria "o caminho passa aqui" em vez de
    * "aqui houve uma decisão". */
-  .tabuleiro-parada {
+  .board-stop {
     pointer-events: none;
     z-index: 1;
     background:
@@ -1313,12 +1313,12 @@ html {
    * onde clicar", e isso deixou de valer quando o clique passou a ir para a
    * camada de casas e a trava saiu do servidor. Hoje o desenho é informação para
    * todos, e a permissão é outra coisa. */
-  .tabuleiro-alcance {
+  .board-range {
     background: color-mix(in oklch, var(--movimento-cabe) 14%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--movimento-cabe) 30%, transparent);
     pointer-events: none;
   }
-  .tabuleiro-alcance-segundo {
+  .board-range-second {
     background: color-mix(in oklch, var(--movimento-segundo) 16%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--movimento-segundo) 32%, transparent);
   }
@@ -1334,7 +1334,7 @@ html {
    * crescesse até lá. Por isso ela é irmã do plano e NÃO filha — filha, ela
    * andaria com o `translate` e o `offsetX` mediria a partir da origem do
    * plano em vez da quina da tela. */
-  .tabuleiro-casas {
+  .board-squares {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -1352,7 +1352,7 @@ html {
    *
    * `pointer-events: none` porque quem recebe o dedo é a camada de clique acima
    * dele; o laço só desenha. */
-  .tabuleiro-laco {
+  .board-lasso {
     position: absolute;
     pointer-events: none;
     border: 2px dashed var(--color-grimorio-gold, oklch(0.8 0.11 85));
@@ -1365,7 +1365,7 @@ html {
    * dentro: as duas coisas convivem — o zumbi da vez pode estar no grupo — e
    * duas marcas no mesmo lugar seriam uma só. Aqui o de dentro continua dizendo
    * de quem é o turno, e o de fora diz que o dedo vai levar esta junto. */
-  .tabuleiro-peca-marcada {
+  .board-token-marked {
     outline: 2px dashed var(--color-grimorio-gold, oklch(0.8 0.11 85));
     outline-offset: 2px;
   }
@@ -1375,26 +1375,26 @@ html {
    * enquanto o dedo segura. É a convenção de toda tela infinita (Figma,
    * Excalidraw, Miro), e reconhecê-la é metade do que faz a ferramenta ser
    * descoberta sem ninguém explicar. */
-  .tabuleiro-vista {
+  .board-viewport {
     position: absolute;
     inset: 0;
     cursor: grab;
   }
-  .tabuleiro-vista-pegando { cursor: grabbing; }
+  .board-viewport-grabbing { cursor: grabbing; }
 
-  .tabuleiro-casas:focus-visible {
+  .board-squares:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
   }
   /* As peças e a trilha sobem acima da camada de casas. */
-  .tabuleiro-peca { z-index: 2; }
+  .board-token { z-index: 2; }
 
   /* O MENU DE CONTEXTO DA PEÇA (ALE-206).
    *
    * Ancorado na CASA da peça e saindo dela para baixo, como o do marcador: o
    * mestre clicou ali e é ali que a resposta aparece. Acima de tudo (z-index 6)
    * porque ele é a coisa mais recente na tela e nada do mapa pode cobri-lo. */
-  .tabuleiro-peca-menu {
+  .board-token-menu {
     position: absolute;
     left: calc(var(--col) * var(--quadrado));
     top: calc((var(--lin) + var(--pegada)) * var(--quadrado));
@@ -1440,7 +1440,7 @@ html {
    *
    * O TETO com rolagem fecha o caso: a 390px de altura nem virada para cima ela
    * caberia inteira, e o que não cabe ROLA, que é diferente de não existir. */
-  .tabuleiro-peca-copia {
+  .board-token-copy {
     position: fixed;
     margin: 0;
     min-width: 15rem;
@@ -1458,12 +1458,12 @@ html {
    * `display: flex` na classe GANHA dele — a camada ficava permanentemente
    * aberta sobre o mapa, cobrindo o próprio botão que a abre. O menu do jogador
    * no Hub não declara `display` nenhum, e é por isso que ele nunca teve isto. */
-  .tabuleiro-peca-copia:popover-open {
+  .board-token-copy:popover-open {
     display: flex;
     flex-direction: column;
   }
 
-  .tabuleiro-peca-copia-grupo {
+  .board-token-copy-group {
     padding: 0.375rem 0.5rem 0.125rem;
     font-size: 0.625rem;
     text-transform: uppercase;
@@ -1471,7 +1471,7 @@ html {
     color: var(--color-muted-foreground, oklch(0.74 0.02 85));
   }
 
-  .tabuleiro-peca-copia-grupo + .tabuleiro-peca-copia-modo {
+  .board-token-copy-group + .board-token-copy-mode {
     margin-top: 0;
   }
 
@@ -1481,7 +1481,7 @@ html {
    * "o que o CTRL+V vai colar?" — é uma pergunta sobre a CENA, como o zoom e a
    * cortina ao lado. Um balão próprio seria uma segunda casa para o mesmo tipo
    * de informação. */
-  .tabuleiro-area {
+  .board-area {
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -1490,7 +1490,7 @@ html {
     margin-right: 0.25rem;
   }
 
-  .tabuleiro-area-texto {
+  .board-area-text {
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -1505,7 +1505,7 @@ html {
     color: var(--color-grimorio-gold, oklch(0.78 0.12 85));
   }
 
-  .tabuleiro-area-limpar {
+  .board-area-clear {
     display: flex;
     width: 1.5rem;
     height: 1.5rem;
@@ -1518,17 +1518,17 @@ html {
     transition: color 150ms, border-color 150ms;
   }
 
-  .tabuleiro-area-limpar:hover {
+  .board-area-clear:hover {
     border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
     color: var(--color-foreground, oklch(0.94 0.01 85));
   }
 
-  .tabuleiro-area-limpar:focus-visible {
+  .board-area-clear:focus-visible {
     outline: 2px solid var(--color-ring, oklch(0.72 0.13 85));
     outline-offset: -2px;
   }
 
-  .tabuleiro-peca-copia-modo {
+  .board-token-copy-mode {
     display: flex;
     /* 44px de alvo de toque aqui, ao contrário dos 28px dos verbos: lá são seis
      * ícones colados numa fileira, sem nada perto para acertar por engano; aqui
@@ -1546,11 +1546,11 @@ html {
     transition: background-color 150ms, color 150ms;
   }
 
-  .tabuleiro-peca-copia-modo:hover {
+  .board-token-copy-mode:hover {
     background: var(--color-accent, oklch(0.28 0.02 300));
   }
 
-  .tabuleiro-peca-copia-modo:focus-visible {
+  .board-token-copy-mode:focus-visible {
     outline: 2px solid var(--color-ring, oklch(0.72 0.13 85));
     outline-offset: -2px;
   }
@@ -1564,26 +1564,26 @@ html {
    * espaço abaixo do gatilho — metade dos modos ficava atrás de uma rolagem.
    * Sem elas ela pede ~200. */
   @media (max-width: 1023px) and (orientation: landscape) {
-    .tabuleiro-peca-copia-frase {
+    .board-token-copy-phrase {
       display: none;
     }
 
-    .tabuleiro-peca-copia-modo {
+    .board-token-copy-mode {
       min-height: 2.25rem;
     }
   }
 
-  .tabuleiro-peca-copia-nome {
+  .board-token-copy-name {
     font-size: 0.8125rem;
     color: var(--color-foreground, oklch(0.94 0.01 85));
   }
 
-  .tabuleiro-peca-copia-frase {
+  .board-token-copy-phrase {
     font-size: 0.6875rem;
     color: var(--color-muted-foreground, oklch(0.74 0.02 85));
   }
 
-  .tabuleiro-peca-verbo {
+  .board-token-verb {
     display: flex;
     /* 28px e não os 44px de alvo de toque da casa: são seis verbos ancorados numa
      * casa que pode ter 20px de lado, e a 44px o menu seria mais largo que meio
@@ -1598,25 +1598,25 @@ html {
     outline: none;
     transition: color 150ms, border-color 150ms, background-color 150ms;
   }
-  .tabuleiro-peca-verbo:hover {
+  .board-token-verb:hover {
     border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
     color: var(--color-foreground, oklch(0.93 0.014 85));
   }
-  .tabuleiro-peca-verbo:focus-visible {
+  .board-token-verb:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
   }
   /* LIGADO em dourado: é o `aria-pressed` da visibilidade, e dourado é o que esta
      casa usa para "o ativo" em toda parte. */
-  .tabuleiro-peca-verbo[aria-pressed='true'] {
+  .board-token-verb[aria-pressed='true'] {
     border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
-  .tabuleiro-peca-verbo-perigo:hover {
+  .board-token-verb-danger:hover {
     border-color: var(--destructive);
     color: var(--destructive);
   }
-  .tabuleiro-peca-vinco {
+  .board-token-crease {
     width: 1px;
     height: 1.25rem;
     margin-inline: 0.125rem;
@@ -1629,7 +1629,7 @@ html {
    * está acima das camadas de clique, então sem isto o pointerdown sobre ela
    * vira arrasto: com a régua ligada, medir a distância até o ogro MOVERIA o
    * ogro. Sai o ponteiro e não o foco; o teclado continua alcançando as duas. */
-  .tabuleiro-com-ferramenta .tabuleiro-peca {
+  .board-with-tool .board-token {
     pointer-events: none;
   }
 }
@@ -1658,7 +1658,7 @@ html {
      
      Cobrindo a janela, o recorte passa a ser o que a gente quer, e quem desloca
      o desenho é o `transform` do `<g>` (`oDesenhoNaJanela`). */
-  .tabuleiro-medida {
+  .board-measure {
     position: absolute;
     inset: 0;
     /* `width`/`height` explícitos, e não só o `inset: 0`: o `<svg>` é elemento
@@ -1672,7 +1672,7 @@ html {
     pointer-events: none;
   }
 
-  .tabuleiro-gabarito {
+  .board-template {
     fill: oklch(0.8 0.11 85 / 0.25);
     stroke: oklch(0.8 0.11 85 / 0.5);
     /* Em unidades de QUADRADO, como o resto do desenho: a borda engrossa junto
@@ -1680,7 +1680,7 @@ html {
     stroke-width: 0.04;
   }
 
-  .tabuleiro-regua-fio {
+  .board-ruler-arrow {
     fill: none;
     stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     /* `non-scaling-stroke` no atributo do elemento: o fio é uma LINHA de leitura
@@ -1688,8 +1688,8 @@ html {
        ao contrário da borda do gabarito, que é a forma. */
     stroke-width: 2;
   }
-  .tabuleiro-regua-ponta { fill: var(--color-grimorio-gold, oklch(0.8 0.11 85)); }
-  .tabuleiro-regua-alvo {
+  .board-ruler-tip { fill: var(--color-grimorio-gold, oklch(0.8 0.11 85)); }
+  .board-ruler-target {
     fill: none;
     stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     stroke-width: 2;
@@ -1705,7 +1705,7 @@ html {
      O `paint-order: stroke` desenha o contorno ANTES do preenchimento, e é ele
      que faz o número sobreviver por cima do fio dourado e de uma peça: sem o
      halo escuro, ouro sobre ouro some. */
-  .tabuleiro-regua-rotulo {
+  .board-ruler-label {
     fill: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     stroke: oklch(0.15 0.01 300 / 0.9);
     stroke-width: 3;
@@ -1726,7 +1726,7 @@ html {
  * As variáveis vêm do `#mesa` por herança — a única raiz que o remendo não
  * toca. */
 @layer components {
-  .tabuleiro-arrastando {
+  .board-dragging {
     transform: translate(var(--arrasto-x, 0px), var(--arrasto-y, 0px));
     z-index: 5;
     cursor: grabbing;
@@ -1743,7 +1743,7 @@ html {
    * quem percorre é o arrasto, e é ele que não pode ser confundido com rolagem.
    * Aqui a declaração fica pelo `cursor`, e porque repetir o que já vem por
    * herança custa menos que descobrir um dia que a herança quebrou. */
-  .tabuleiro-peca[data-on\:pointerdown] {
+  .board-token[data-on\:pointerdown] {
     touch-action: none;
     cursor: grab;
   }
@@ -1760,10 +1760,10 @@ html {
 
   /* O FANTASMA é a peça na casa de onde ela SAIU (ALE-203, item 4).
    *
-   * Ele herda o `.tabuleiro-peca` inteiro — o disco, o gradiente do matiz, o
-   * monograma —, e o que muda é só a TINTA: é a mesma peça, meio apagada, e não
+   * Ele herda o `.board-token` inteiro — o disco, o gradiente do matiz, o
+   * monogram —, e o que muda é só a TINTA: é a mesma peça, meio apagada, e não
    * uma segunda coisa que se aprende a ler. O traço cortado repete o que o
-   * `.tabuleiro-peca-oculta` já usa para "isto não é definitivo".
+   * `.board-token-hidden` já usa para "isto não é definitivo".
    *
    * `pointer-events: none` porque ele não é alvo de nada: o clique na casa dele
    * continua sendo da camada de casas, e roubá-lo faria a origem virar um lugar
@@ -1772,7 +1772,7 @@ html {
    * `z-index` abaixo da peça pela mesma razão da ordem no HTML: uma peça grande
    * ao lado da origem invade a casa do fantasma, e quem tem de ficar por cima é
    * a que se clica. */
-  .tabuleiro-peca-fantasma {
+  .board-token-ghost {
     opacity: 0.4;
     border-style: dashed;
     pointer-events: none;
@@ -1782,7 +1782,7 @@ html {
   /* A SETA DO MOVIMENTO, com a gramática da RÉGUA (ALE-203, item 4: "a seta da
    * régua conecta os dois pontos").
    *
-   * O mesmo dourado e o mesmo `non-scaling-stroke` do `.tabuleiro-regua-fio`:
+   * O mesmo dourado e o mesmo `non-scaling-stroke` do `.board-ruler-arrow`:
    * são a mesma família de linha de leitura, e duas espessuras diferentes para
    * dois fios dourados fariam a mesa procurar uma diferença que não existe.
    *
@@ -1790,13 +1790,13 @@ html {
    * sentido; o movimento VAI de um para o outro. Ela é `userSpaceOnUse` e mede
    * em QUADRADOS, ao contrário do fio: uma ponta de espessura constante ficaria
    * do tamanho de uma casa no zoom mínimo. */
-  .tabuleiro-movimento-fio {
+  .board-move-arrow {
     fill: none;
     stroke: var(--movimento-cabe);
     stroke-width: 2;
     stroke-linejoin: round;
   }
-  .tabuleiro-movimento-ponta {
+  .board-move-tip {
     fill: var(--movimento-cabe);
   }
 
@@ -1805,17 +1805,17 @@ html {
      principal, e vermelho quando extrapola ambas").
    *
    * Só a COR muda: a espessura, a junta e o recuo da ponta continuam os do
-   * `.tabuleiro-movimento-fio`, que esta classe acompanha em vez de substituir.
+   * `.board-move-arrow`, que esta classe acompanha em vez de substituir.
    * Um fio mais grosso ou tracejado no excesso faria a mesa procurar uma segunda
    * diferença — a única que existe aqui é "isto você não anda".
    *
    * `--destructive` é o vermelho que esta casa já usa para o que não se pode
-   * fazer (o `.tabuleiro-peca-verbo-perigo` é o vizinho): um vermelho novo só
+   * fazer (o `.board-token-verb-danger` é o vizinho): um vermelho novo só
    * para a seta seria mais uma cor a aprender para dizer o que a folha já diz. */
   /* A SETA VIVA do arrasto tem CLASSES PRÓPRIAS e não as da seta guardada.
    *
    * Ela é o mesmo desenho e a mesma cor, mas os três nós dela existem SEMPRE no
-   * HTML — o `d` vazio é que os apaga —, e reusar `.tabuleiro-movimento-alem`
+   * HTML — o `d` vazio é que os apaga —, e reusar `.board-move-beyond`
    * faria a classe do vermelho estar na página em toda cena, inclusive nas que
    * não têm vermelho nenhum. Quem descobriu isso foi um guarda que procurava a
    * classe no HTML servido e passou a achá-la sempre: o teste ficou verde sobre
@@ -1825,32 +1825,32 @@ html {
    * uma hipótese, e ao soltar ele vira o traço cheio da proposta. Sem isso as
    * duas setas seriam idênticas, e a que sobrevivesse a um remendo fora de hora
    * seria indistinguível da que vale. */
-  .tabuleiro-previa-fio {
+  .board-preview-arrow {
     fill: none;
     stroke-width: 2;
     stroke-linejoin: round;
     stroke-dasharray: 6 4;
   }
-  .tabuleiro-previa-cabe {
+  .board-preview-fits {
     stroke: var(--movimento-cabe);
   }
-  .tabuleiro-previa-segundo {
+  .board-preview-second {
     stroke: var(--movimento-segundo);
   }
-  .tabuleiro-previa-alem {
+  .board-preview-beyond {
     stroke: var(--movimento-alem);
   }
 
-  .tabuleiro-movimento-segundo {
+  .board-move-second {
     stroke: var(--movimento-segundo);
   }
-  .tabuleiro-movimento-ponta-segundo {
+  .board-move-tip-second {
     fill: var(--movimento-segundo);
   }
-  .tabuleiro-movimento-alem {
+  .board-move-beyond {
     stroke: var(--movimento-alem);
   }
-  .tabuleiro-movimento-ponta-alem {
+  .board-move-tip-beyond {
     fill: var(--movimento-alem);
   }
 
@@ -1865,7 +1865,7 @@ html {
    * é papel claro com textura, e um retângulo semitransparente por cima apaga o
    * texto. Multiplicando, a tinta preta atravessa a marca amarela como num
    * marca-texto de verdade. */
-  .leitor-marca {
+  .reader-mark {
     position: absolute;
     background: oklch(0.86 0.17 95);
     mix-blend-mode: multiply;
@@ -1913,17 +1913,17 @@ html {
     }
   }
 
-  .palco-entra-adiante .palco-retrato {
+  .stage-enters-forward .stage-portrait {
     animation: palcoEntraAdiante 220ms ease-out both;
   }
-  .palco-entra-atras .palco-retrato {
+  .stage-enters-back .stage-portrait {
     animation: palcoEntraAtras 220ms ease-out both;
   }
   /* A PLACA sobe com atraso, e o atraso é a metade do efeito: o retrato chega
    * primeiro e o nome pousa em cima dele. Sem os 80ms as duas coisas se movem
    * juntas e o palco parece um bloco só deslizando. */
-  .palco-entra-adiante .palco-placa,
-  .palco-entra-atras .palco-placa {
+  .stage-enters-forward .stage-plate,
+  .stage-enters-back .stage-plate {
     animation: placaSobe 220ms ease-out 80ms both;
   }
 
@@ -1931,10 +1931,10 @@ html {
    * `both` das regras acima preenche o estado final, então sem animação o palco
    * simplesmente aparece pronto — não fica preso no quadro inicial. */
   @media (prefers-reduced-motion: reduce) {
-    .palco-entra-adiante .palco-retrato,
-    .palco-entra-atras .palco-retrato,
-    .palco-entra-adiante .palco-placa,
-    .palco-entra-atras .palco-placa {
+    .stage-enters-forward .stage-portrait,
+    .stage-enters-back .stage-portrait,
+    .stage-enters-forward .stage-plate,
+    .stage-enters-back .stage-plate {
       animation: none;
     }
   }
@@ -1965,7 +1965,7 @@ html {
  * continuar VENDO. */
 @layer utilities {
   @media (min-width: 64rem) {
-    .notas-flutuam .notas-coluna {
+    .notes-float .notes-column {
       position: absolute;
       inset-block: 0;
       /* `left: auto` NÃO é redundante: a classe base traz `inset-0` do
@@ -1981,7 +1981,7 @@ html {
     /* A divisa acompanha a borda ESQUERDA do painel, senão ela ficaria no fim do
      * mapa e a largura passaria a ser ajustada por um alvo que não encosta no
      * que ele ajusta. */
-    .notas-flutuam .notas-divisa {
+    .notes-float .notes-divider {
       position: absolute;
       inset-block: 0;
       right: var(--notas-largura, clamp(22rem, 40%, 44rem));

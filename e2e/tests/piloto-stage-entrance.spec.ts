@@ -127,7 +127,7 @@ for (const cena of SCENES_WITH_A_STAGE) {
           const palcos = [...document.querySelectorAll('[data-show^="$cursor =="]')]
           const ativo = palcos.find((p) => p.getBoundingClientRect().height > 0)
           if (!ativo) return -1
-          return Math.round(ativo.querySelector('.palco-retrato')!.getBoundingClientRect().top)
+          return Math.round(ativo.querySelector('.stage-portrait')!.getBoundingClientRect().top)
         }),
       )
     }
@@ -189,8 +189,8 @@ test('o palco que entra é o que o cursor escolheu, e a placa espera o retrato',
     const palcos = [...document.querySelectorAll('[data-show^="$cursor =="]')]
     const ativo = palcos.find((p) => p.getBoundingClientRect().height > 0)
     if (!ativo) return null
-    const retrato = ativo.querySelector('.palco-retrato')
-    const placa = ativo.querySelector('.palco-placa')
+    const retrato = ativo.querySelector('.stage-portrait')
+    const placa = ativo.querySelector('.stage-plate')
     if (!retrato || !placa) return null
     const cs = (el: Element) => {
       const s = getComputedStyle(el)
@@ -212,7 +212,7 @@ test('o palco que entra é o que o cursor escolheu, e a placa espera o retrato',
         page.evaluate(() => {
           const palcos = [...document.querySelectorAll('[data-show^="$cursor =="]')]
           const ativo = palcos.find((p) => p.getBoundingClientRect().height > 0)
-          const placa = ativo?.querySelector('.palco-placa')
+          const placa = ativo?.querySelector('.stage-plate')
           return placa ? getComputedStyle(placa).opacity : '0'
         }),
       { timeout: 3000 },

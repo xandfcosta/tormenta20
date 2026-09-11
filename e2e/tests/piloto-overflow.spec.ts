@@ -49,9 +49,9 @@ test('nenhum cartão do acervo transborda a coluna, em nenhuma cena', async ({ p
     await page.goto(cena)
 
     const medida = await page.evaluate(() => {
-      const cartoes = [...document.querySelectorAll('.acervo-em-colunas > div')]
+      const cartoes = [...document.querySelectorAll('.collection-in-columns > div')]
       return {
-        temGrade: !!document.querySelector('.acervo-em-colunas'),
+        temGrade: !!document.querySelector('.collection-in-columns'),
         quantos: cartoes.length,
         estouram: cartoes
           .filter((c) => c.scrollWidth > c.clientWidth + 1)
@@ -125,7 +125,7 @@ test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quan
   // telefone, que o CSS esconde nesta largura. Medir o do painel é medir o que
   // está na tela; o outro tem largura zero, e medir caixa escondida é medir
   // nada com cara de medição.
-  const colunas = page.locator('.mesa-painel .bloco-do-verbete-colunas')
+  const colunas = page.locator('.mesa-painel .entry-block-columns')
   await expect(colunas).toBeVisible()
 
   const largo = await colunas.evaluate((el) => ({

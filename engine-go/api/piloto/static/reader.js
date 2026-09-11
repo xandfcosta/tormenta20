@@ -16457,7 +16457,7 @@ var la = class {
 		let a = await e.getTextContent();
 		this.camada.style.width = `${Math.floor(n.width)}px`, this.camada.style.height = `${Math.floor(n.height)}px`, this.camada.replaceChildren(...ca(a.items, this.cartaz.termo, n).map((e) => {
 			let t = document.createElement("span");
-			return t.className = "leitor-marca", t.style.left = `${e.esquerda}px`, t.style.top = `${e.topo}px`, t.style.width = `${e.largura}px`, t.style.height = `${e.altura}px`, t;
+			return t.className = "reader-mark", t.style.left = `${e.esquerda}px`, t.style.top = `${e.topo}px`, t.style.width = `${e.largura}px`, t.style.height = `${e.altura}px`, t;
 		})), this.rotulo.textContent = `p${this.cartaz.pagina} de ${this.doc.numPages - this.cartaz.abertura}`;
 	}
 };

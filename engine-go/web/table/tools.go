@@ -90,7 +90,7 @@ func MapTools() []mapTool {
 			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
 			Icone: drawing(pincel.ID).Icone,
 			Dica:  pincel.Rotulo + ": " + pincel.Efeito + " (p238)",
-			Matiz: "pincel-matiz tabuleiro-matiz-" + string(pincel.ID),
+			Matiz: "brush-hue board-hue-" + string(pincel.ID),
 		})
 	}
 	trilho = append(trilho, mapTool{
@@ -199,7 +199,7 @@ func onIsTool(id string) string {
 // Tailwind são utilidades, numa camada POSTERIOR — camada vence especificidade,
 // e o dourado perderia para o cinza sem nada acusar.
 func toolStyling(id string) string {
-	return fmt.Sprintf("{'pincel-ligado': %s, 'text-muted-foreground': !(%s)}",
+	return fmt.Sprintf("{'brush-on': %s, 'text-muted-foreground': !(%s)}",
 		onIsTool(id), onIsTool(id))
 }
 

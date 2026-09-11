@@ -109,7 +109,7 @@ test('o campo do buscador acende a linha, e não um retângulo colado na caixa',
   // `:has()` que acende o pai. Só o navegador resolve isso.
   const medida = await page.evaluate(() => {
     const campo = document.getElementById('buscador-campo')!
-    const linha = campo.closest('.buscador-linha')!
+    const linha = campo.closest('.finder-row')!
     return {
       anelDoCampo: getComputedStyle(campo).outlineStyle,
       bordaDaLinha: getComputedStyle(linha).borderBottomColor,

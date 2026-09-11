@@ -43,7 +43,7 @@ import (
 // A issue avisa: na SPA o clique direito apaga terreno com a borracha rápida, e
 // "provavelmente o menu só existe fora das ferramentas de pintura". Nesta Mesa a
 // regra sai de graça e por CONSTRUÇÃO: com ferramenta ligada a peça já é inerte
-// ao ponteiro (o `.tabuleiro-com-ferramenta` da superfície 8), então o clique
+// ao ponteiro (o `.board-with-tool` da superfície 8), então o clique
 // direito sobre ela nem chega à peça. Nenhuma condição a mais para lembrar.
 
 func (s Scene) TokenActionRoutes(r chi.Router) {

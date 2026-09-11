@@ -106,7 +106,7 @@ templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 			class="pointer-events-none absolute inset-0 -z-10"
 			style={ "background: " + ui.StageWash(h.Name) }
 		></div>
-		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
+		<div class="stage-portrait flex items-center justify-center gap-4 sm:gap-8">
 			@ui.NeighborPortrait(anterior, "Anterior")
 			<a
 				href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) }
@@ -125,7 +125,7 @@ templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
 		// que quebra em duas linhas empurra a fileira do retrato 20px para cima
 		// e os cartões dançam ao percorrer o elenco (ALE-99).
-		<div class="palco-placa max-w-2xl px-4 text-center">
+		<div class="stage-plate max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Name }</h2>
 			@ui.SectionLabel("gold", "mt-1") {
 				{ h.Role }
@@ -183,7 +183,7 @@ templ createStage(sozinha bool, anterior *ui.Neighbor) {
 		}
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
 	>
-		<div class="palco-retrato flex items-center justify-center gap-4 sm:gap-8">
+		<div class="stage-portrait flex items-center justify-center gap-4 sm:gap-8">
 			@ui.NeighborPortrait(anterior, "Anterior")
 			<a
 				href="/personagens/nova"
@@ -197,7 +197,7 @@ templ createStage(sozinha bool, anterior *ui.Neighbor) {
 			// direita ao chegar aqui.
 			@ui.NeighborPortrait(nil, "Próximo")
 		</div>
-		<div class="palco-placa max-w-2xl px-4 text-center">
+		<div class="stage-plate max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Forjar um herói</h2>
 			@ui.SectionLabel("muted", "mt-1") {
 					Uma vaga vazia no grupo
@@ -257,7 +257,7 @@ templ filmFrame(h HeroCard, i int) {
 		ID: h.ID, Index: i, Monogram: h.Monogram, Gradient: h.Gradient,
 		// Nome E papel, como o marcador de campanhas. O `aria-label` que este
 		// quadro carregava some junto e isso é conserto, não perda: ele existia
-		// porque o monograma de 48px não dizia quem era, e um nome acessível
+		// porque o monogram de 48px não dizia quem era, e um nome acessível
 		// escrito à mão sobre um conteúdo que agora o diz seria duas fontes
 		// para a mesma frase.
 		Name: h.Name, Sub: h.Role,

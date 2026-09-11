@@ -152,17 +152,17 @@ func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	// O CONTROLE: o jogador vê o tabuleiro. Sem isto, "não achei alcance" seria
 	// verdade também numa cena sem mapa.
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doJogador, "tabuleiro-plano") {
+	if !strings.Contains(doJogador, "board-plane") {
 		t.Fatal("o jogador não viu o tabuleiro")
 	}
-	if !strings.Contains(doJogador, "tabuleiro-alcance") {
+	if !strings.Contains(doJogador, "board-range") {
 		t.Error("é a vez do jogador e ele não viu até onde pode andar")
 	}
 	// AS DUAS FAIXAS (T20 p233): ouro é o que a ação de movimento alcança, azul é
 	// o que só se alcança gastando a ação padrão junto. É a resposta de relance à
 	// pergunta do dono — "se ele precisa gastar a ação de movimento e a ação
 	// principal" — sem desenhar caminho nenhum.
-	if !strings.Contains(doJogador, "tabuleiro-alcance-segundo") {
+	if !strings.Contains(doJogador, "board-range-second") {
 		t.Error("o jogador não viu até onde chega gastando a ação principal também")
 	}
 
@@ -171,7 +171,7 @@ func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	// saiu do servidor —, e esconder as faixas dele tiraria da pessoa que decide
 	// exatamente o que a mesa está lendo.
 	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doMestre, "tabuleiro-alcance-segundo") {
+	if !strings.Contains(doMestre, "board-range-second") {
 		t.Error("o mestre não viu as faixas de alcance da peça que ele move")
 	}
 }
@@ -188,10 +188,10 @@ func TestOutOfCombatNobodySeesReach(t *testing.T) {
 
 	for quem, quemChama := range map[string]int64{"jogador": f.jogador, "mestre": f.mestre} {
 		tela := f.pede(t, quemChama, http.MethodGet, f.tableUrl(), "").Body.String()
-		if !strings.Contains(tela, "tabuleiro-plano") {
+		if !strings.Contains(tela, "board-plane") {
 			t.Fatalf("o %s não viu o tabuleiro: a ausência abaixo não é evidência", quem)
 		}
-		if strings.Contains(tela, "tabuleiro-alcance") {
+		if strings.Contains(tela, "board-range") {
 			t.Errorf("fora de combate o %s viu um teto desenhado", quem)
 		}
 	}
@@ -334,7 +334,7 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 	}
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if !strings.Contains(tela, "tabuleiro-movimento-segundo") {
+	if !strings.Contains(tela, "board-move-second") {
 		t.Error("o caminho passou da ação de movimento e a seta saiu inteira dourada")
 	}
 	if !strings.Contains(tela, "url(#tabuleiro-ponta-do-segundo)") {
@@ -343,7 +343,7 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 	// NOVE cabe em DOZE: passa da ação de movimento e ainda cabe na ação padrão
 	// trocada por ela (p233). Nada de vermelho — o vermelho é só o que não cabe
 	// no turno, e confundir os dois apagaria a distinção que o dono pediu.
-	if strings.Contains(tela, "tabuleiro-movimento-alem") {
+	if strings.Contains(tela, "board-move-beyond") {
 		t.Error("nove quadrados sobre um deslocamento de seis pintaram vermelho: eles cabem em duas ações")
 	}
 	if !strings.Contains(tela, "ação de movimento + ação principal") {
@@ -374,7 +374,7 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 
 // TestTheControlForTheTwoColorArrow: o caminho que CABE sai inteiro dourado.
 //
-// Sem ele, "a tela tem `tabuleiro-movimento-alem`" não se distingue de "a tela
+// Sem ele, "a tela tem `board-move-beyond`" não se distingue de "a tela
 // tem sempre", e o vermelho poderia aparecer em todo movimento sem nenhum guarda
 // reclamar. O mesmo jogador, na mesma vez, com um caminho que o deslocamento
 // paga.
@@ -388,7 +388,7 @@ func TestTheControlForTheTwoColorArrow(t *testing.T) {
 	}
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if strings.Contains(tela, "tabuleiro-movimento-alem") {
+	if strings.Contains(tela, "board-move-beyond") {
 		t.Error("quatro quadrados sobre um deslocamento de seis pintaram vermelho")
 	}
 	if strings.Contains(tela, "além do deslocamento") {
@@ -396,7 +396,7 @@ func TestTheControlForTheTwoColorArrow(t *testing.T) {
 	}
 	// O CANAL continua aberto: a seta e o rótulo em metros saem do mesmo jeito,
 	// senão "não achei vermelho" seria verdade sobre uma cena sem seta nenhuma.
-	if !strings.Contains(tela, "tabuleiro-movimento-fio") {
+	if !strings.Contains(tela, "board-move-arrow") {
 		t.Fatal("não há seta na tela: a ausência de vermelho não prova nada")
 	}
 	if !strings.Contains(tela, ">6,0m<") {

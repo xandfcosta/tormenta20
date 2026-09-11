@@ -249,7 +249,7 @@ type loosePieceDraft struct {
 
 // loosePieceSignals lê a tira e RECUSA o que não serve.
 //
-// O nome é obrigatório porque a peça inteira se identifica por ele: o monograma
+// O nome é obrigatório porque a peça inteira se identifica por ele: o monogram
 // sai dele, o `aria-label` sai dele, e "eu ataco o quê?" não tem resposta sem
 // ele. Uma peça sem nome nasceria muda no mapa e no leitor de tela.
 //

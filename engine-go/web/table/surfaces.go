@@ -90,6 +90,6 @@ func pickSurface(qual string) string {
 // vence especificidade, e o dourado perderia para o cinza sem nada acusar.
 func surfaceStyling(qual string) string {
 	return fmt.Sprintf(
-		"{'superficie-escolhida': %s, 'border-grimorio-iron': !(%s), 'text-muted-foreground': !(%s)}",
+		"{'surface-chosen': %s, 'border-grimorio-iron': !(%s), 'text-muted-foreground': !(%s)}",
 		surface(qual), surface(qual), surface(qual))
 }

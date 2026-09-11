@@ -1140,7 +1140,7 @@ test.describe('Os catálogos (piloto Datastar)', () => {
       await page.setViewportSize({ width: largura, height: altura })
       await page.goto(`${CATALOGOS}?aba=condicoes`)
       const colunas = await page.evaluate(() => {
-        const grade = document.querySelector('.acervo-em-colunas')
+        const grade = document.querySelector('.collection-in-columns')
         if (!grade) return 0
         return getComputedStyle(grade).gridTemplateColumns.split(' ').length
       })

@@ -592,7 +592,7 @@ templ Key(rotulo string) {
 // comia não era navegação: eram 124px de filtro. Medido, esconder a camada
 // devolve 3,37 linhas, o maior corte disponível naquela cena.
 //
-// A troca é do CSS (`.filtros-em-gaveta`, na folha do piloto) e NÃO de uma
+// A troca é do CSS (`.filters-in-drawer`, na folha do piloto) e NÃO de uma
 // consulta de mídia em JS nem de um segundo bloco condicional no `.templ`: são
 // os mesmos nós nas seis formas, e o que muda é se o `<details>` se comporta
 // como gaveta. Dois desenhos do mesmo filtro seriam dois lugares para consertar.
@@ -604,7 +604,7 @@ templ Key(rotulo string) {
 // O rótulo vem por parâmetro porque as duas cenas filtram coisas diferentes, e
 // "Filtros" sozinho num leitor de tela não diz filtros de quê.
 templ FilterDrawer(rotulo string) {
-	<details class="filtros-em-gaveta shrink-0">
+	<details class="filters-in-drawer shrink-0">
 		// `min-h-11` porque no deitado ele é um alvo de toque de verdade, e é a
 		// única porta para os filtros ali dentro.
 		<summary
