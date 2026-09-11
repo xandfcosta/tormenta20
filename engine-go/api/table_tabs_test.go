@@ -28,7 +28,7 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	f.seedOpenBoard(t, "pedra")
 
 	uma := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(uma, "tabuleiro-aba") {
+	if strings.Contains(uma, "board-tab") {
 		t.Error("com uma cena aberta a barra de abas apareceu — é ficha só, sobre o mapa")
 	}
 
@@ -38,7 +38,7 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	if !strings.Contains(duas, "Ver o tabuleiro Cripta") {
 		t.Fatal("com duas cenas abertas não há como chegar à segunda")
 	}
-	if n := strings.Count(duas, `class="tabuleiro-aba tabuleiro-aba-ativa"`); n != 1 {
+	if n := strings.Count(duas, `class="board-tab board-tab-active"`); n != 1 {
 		t.Errorf("%d abas ativas na barra, esperado exatamente 1", n)
 	}
 	// A ativa é o cabeçalho, e as outras são botões: UM `<h2>` na barra inteira.
@@ -46,7 +46,7 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	// A primeira versão desta asserção contava `<h2` na PÁGINA e esperava 1 — a
 	// Mesa tem quinze, uma por região, e o que ela media era a página e não a
 	// barra. Instrumento que responde outra pergunta.
-	if n := strings.Count(duas, `<h2 class="tabuleiro-aba`); n != 1 {
+	if n := strings.Count(duas, `<h2 class="board-tab`); n != 1 {
 		t.Errorf("a barra tem %d abas como cabeçalho, esperado 1 (as outras são botões)", n)
 	}
 }

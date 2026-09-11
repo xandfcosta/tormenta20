@@ -49,7 +49,7 @@ func TestNoChromeOverTheMapStealsTheClickOffItsControls(t *testing.T) {
 	// O PAINEL DE VERBOS é o caso que escreveu a issue, e ele é nomeado porque a
 	// varredura abaixo não o cobraria: um painel que recebe o clique inteiro não
 	// tem controle morto nenhum — ele está errado do outro lado.
-	if !semPonteiro["tabuleiro-verbos-da-cena"] {
+	if !semPonteiro["board-scene-verbs"] {
 		t.Error("o painel de verbos recebe o clique na faixa INTEIRA que ocupa: medido a 390px, 328 dos 864 pontos dele (38%) caem no fundo entre os ícones, e ali pintar terreno, largar marcador ou pegar uma peça é um gesto que some")
 	}
 
@@ -99,7 +99,7 @@ func TestNoChromeOverTheMapStealsTheClickOffItsControls(t *testing.T) {
 // nó que não recebe o ponteiro. São as TRÊS formas que a folha usa hoje, e uma
 // quarta faz o guarda FALHAR em vez de passar por cima: um seletor que ele não
 // sabe ler é um controle que ele não sabe conferir, e a primeira versão deste
-// guarda ignorou em silêncio o `.tabuleiro-avisos>*` — 14 botões vivos saíram
+// guarda ignorou em silêncio o `.board-notices>*` — 14 botões vivos saíram
 // como mortos, com cara de defeito achado.
 type pointerRelief struct {
 	filhoDireto bool            // `.painel>*`
@@ -111,7 +111,7 @@ type pointerRelief struct {
 // recebe ponteiro e o que o devolve dentro de cada um.
 //
 // Só entra no primeiro conjunto o seletor de UMA CLASSE SOZINHA: um
-// `.tabuleiro-com-ferramenta .tabuleiro-peca` tira o ponteiro sob uma condição
+// `.board-with-tool .board-token` tira o ponteiro sob uma condição
 // que não está no nó, e ler isso como "a peça está morta" reprovaria a cena
 // inteira toda vez que uma ferramenta estivesse desligada.
 func pointerRulesOfTheMap(t *testing.T) (map[string]bool, map[string][]pointerRelief) {
@@ -129,7 +129,7 @@ func pointerRulesOfTheMap(t *testing.T) (map[string]bool, map[string][]pointerRe
 			switch {
 			case strings.Contains(corpo, "pointer-events:none"):
 				nome := strings.TrimPrefix(seletor, ".")
-				if strings.HasPrefix(nome, "tabuleiro-") && !strings.ContainsAny(nome, " >+~.:[") {
+				if strings.HasPrefix(nome, "board-") && !strings.ContainsAny(nome, " >+~.:[") {
 					semPonteiro[nome] = true
 				}
 			case strings.Contains(corpo, "pointer-events:auto"):
@@ -168,25 +168,25 @@ func splitSelectors(lista string) []string {
 
 func parseRelief(t *testing.T, seletor string) (string, pointerRelief, bool) {
 	t.Helper()
-	// `button.tabuleiro-marcador`: a folha diz que ESTA tag do painel recebe o
+	// `button.board-marker`: a folha diz que ESTA tag do painel recebe o
 	// ponteiro. O marcador é `none` para a mesa e `auto` para o mestre, e a
 	// diferença entre os dois é a tag que o servidor escreve.
 	if tag, nome, achou := strings.Cut(seletor, "."); achou && tag != "" && !strings.ContainsAny(nome, " >+~.:[") {
-		if strings.HasPrefix(nome, "tabuleiro-") {
+		if strings.HasPrefix(nome, "board-") {
 			return nome, pointerRelief{tags: map[string]bool{tag: true}, oProprioNo: true}, true
 		}
 		return "", pointerRelief{}, false
 	}
 	if nome, achou := strings.CutSuffix(strings.TrimPrefix(seletor, "."), ">*"); achou {
-		if !strings.HasPrefix(nome, "tabuleiro-") {
+		if !strings.HasPrefix(nome, "board-") {
 			return "", pointerRelief{}, false
 		}
 		return nome, pointerRelief{filhoDireto: true}, true
 	}
 	nome, resto, achou := strings.Cut(strings.TrimPrefix(seletor, "."), " ")
-	if !achou || !strings.HasPrefix(nome, "tabuleiro-") {
+	if !achou || !strings.HasPrefix(nome, "board-") {
 		// Seletor que não fala de dentro de um painel do tabuleiro — o
-		// `.tabuleiro-marcador-acoes` é um nó solto e não um alívio.
+		// `.board-marker-actions` é um nó solto e não um alívio.
 		return "", pointerRelief{}, false
 	}
 	lista, ok := strings.CutPrefix(resto, ":is(")

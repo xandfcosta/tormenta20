@@ -246,7 +246,7 @@ templ bestiaryScene(v BestiaryView) {
 // O `.mesa-painel` da SPA é `display:none` até 50rem de contêiner, e abaixo
 // disso a lista ficaria sem detalhe nenhum — a SPA abre um diálogo, e não
 // trazer isso perderia a ficha inteira no telefone. A troca é do CSS
-// (`.mesa-ficha-em-dialogo`, na folha do piloto) e não de uma consulta de mídia
+// (`.table-sheet-in-dialog`, na folha do piloto) e não de uma consulta de mídia
 // em JS, e ela compõe com o `data-show`: numa tela larga o diálogo fica
 // escondido mesmo com o sinal ligado, porque lá o painel já mostra a ficha.
 //
@@ -274,7 +274,7 @@ templ CreatureDialog(m book.Entry, livro bookui.BookAddress) {
 	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
 	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<div
-		class="mesa-ficha-em-dialogo fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
+		class="table-sheet-in-dialog fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
 		data-show="$sheet_open"
 		style="display:none"
 		data-on:click="evt.target === el && ($sheet_open = false)"
@@ -514,7 +514,7 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 	// ESTE bloco recebe": ele é desenhado no painel do mestre, no diálogo da
 	// Mesa e na ficha em diálogo do telefone, e as três larguras são diferentes.
 	// Consulta de viewport aqui erraria nas três.
-	<div class="bloco-do-verbete space-y-4 text-sm">
+	<div class="entry-block space-y-4 text-sm">
 		<div class="space-y-0.5">
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
@@ -532,7 +532,7 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 		// desenho: numa coluna só (telefone, diálogo estreito) é nessa ordem que
 		// tudo empilha, e é a ordem em que o leitor de tela lê. Ataque antes de
 		// PV leria a ficha de trás para a frente.
-		<div class="bloco-do-verbete-colunas">
+		<div class="entry-block-columns">
 			<div class="space-y-4">
 				// Iniciativa e Percepção são a PRIMEIRA linha do bloco impresso
 				// (p289), e o mestre rola as duas antes de qualquer outra coisa
@@ -548,7 +548,7 @@ templ EntryBlock(m book.Entry, livro bookui.BookAddress) {
 					}
 				</div>
 				@blockSection("Atributos") {
-					<div class="bloco-atributos grid gap-1">
+					<div class="entry-attributes grid gap-1">
 						@stat("For", book.WithSignPtr(m.Forca))
 						@stat("Des", book.WithSignPtr(m.Destreza))
 						@stat("Con", book.WithSignPtr(m.Constituicao))

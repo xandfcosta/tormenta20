@@ -80,11 +80,11 @@ func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: o tabuleiro desenhou. Sem ele, não achar as classes seria
 	// verdade também sobre uma cena que não abriu.
-	if !strings.Contains(tela, "tabuleiro-plano") {
+	if !strings.Contains(tela, "board-plane") {
 		t.Fatal("o tabuleiro não desenhou — o guarda mediria a tela errada")
 	}
 	for _, pincel := range board.TerrainKinds {
-		if !strings.Contains(tela, "tabuleiro-"+string(pincel.ID)) {
+		if !strings.Contains(tela, "board-"+string(pincel.ID)) {
 			t.Errorf("a espécie %s foi pintada e não tem desenho próprio na cena", pincel.ID)
 		}
 	}

@@ -42,7 +42,7 @@ import (
 // resultado. A sessão irmã pegou o um-a-menos conferindo o folio.
 //
 // Três tabelas lado a lado e a masmorra embaixo, como o original. A grade é
-// `sm:2 xl:3` e não a `.acervo-em-colunas` dos catálogos: aqui os cartões são
+// `sm:2 xl:3` e não a `.collection-in-columns` dos catálogos: aqui os cartões são
 // CONTROLES com histórico curto, não prosa de regra, então a medida de leitura
 // que rege os catálogos não se aplica.
 func improvScene(v improvView) templ.Component {

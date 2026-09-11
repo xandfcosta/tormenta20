@@ -43,7 +43,7 @@ type speciesDrawing struct {
 	// PINTA, e não por uma legenda que ele teria de decorar.
 	Icone string
 	// Canto é o sufixo da classe que põe o ícone no lugar dele
-	// (`terreno-canto-<Canto>`). Quatro espécies, quatro cantos.
+	// (`terrain-corner-<Canto>`). Quatro espécies, quatro cantos.
 	Canto string
 }
 
@@ -55,10 +55,10 @@ type speciesDrawing struct {
 // espécie nova poder nascer sem desenho — e é exatamente por isso que o guarda
 // existe e que o `drawing` recusa em vez de devolver um branco.
 var drawingBySpecies = map[board.TerrainKind]speciesDrawing{
-	board.TerrenoDificil:    {Icone: "Waves", Canto: "noroeste"},
-	board.TerrenoCobertura:  {Icone: "Shield", Canto: "nordeste"},
-	board.TerrenoCamuflagem: {Icone: "EyeOff", Canto: "sudeste"},
-	board.TerrenoElevado:    {Icone: "Mountain", Canto: "sudoeste"},
+	board.TerrenoDificil:    {Icone: "Waves", Canto: "northwest"},
+	board.TerrenoCobertura:  {Icone: "Shield", Canto: "northeast"},
+	board.TerrenoCamuflagem: {Icone: "EyeOff", Canto: "southeast"},
+	board.TerrenoElevado:    {Icone: "Mountain", Canto: "southwest"},
 }
 
 // drawing devolve o desenho da espécie, e ENTRA EM PÂNICO se não houver.
@@ -79,5 +79,5 @@ func drawing(especie board.TerrainKind) speciesDrawing {
 // canto do ícone.
 func squareClass(especie string) string {
 	d := drawing(board.TerrainKind(especie))
-	return "tabuleiro-terreno tabuleiro-" + especie + " terreno-canto-" + d.Canto
+	return "board-terrain board-" + especie + " terrain-corner-" + d.Canto
 }

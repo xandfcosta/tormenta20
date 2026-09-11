@@ -114,14 +114,14 @@ func TestEveryGestureThatMovesTheCursorSaysTheDirection(t *testing.T) {
 // AS DUAS PARTES QUE SE MOVEM existem no HTML, e são as que o CSS anima.
 //
 // A classe do palco não anima nada sozinha: quem tem `animation` são os
-// descendentes `.palco-retrato` e `.palco-placa`. Um porte que renomeasse uma
+// descendentes `.stage-portrait` e `.stage-plate`. Um porte que renomeasse uma
 // delas deixaria a animação viva e sem alvo — e o sintoma seria "metade do palco
 // entra", que ninguém liga a um seletor de CSS.
 func TestTheStageHasTheTwoPartsThatAnimate(t *testing.T) {
 	for _, cena := range stageScenes(t) {
 		screen := cena.screen(t)
 
-		for _, parte := range []string{"palco-retrato", "palco-placa"} {
+		for _, parte := range []string{"stage-portrait", "stage-plate"} {
 			if !strings.Contains(screen, parte) {
 				t.Errorf("%s não tem %q: a animação de entrada ficaria sem alvo", cena.nome, parte)
 			}
@@ -129,7 +129,7 @@ func TestTheStageHasTheTwoPartsThatAnimate(t *testing.T) {
 		// E a classe que ENTRA é escrita por `data-class`, não pelo `class`
 		// fixo: no `class` ela nasceria em todos os palcos ao mesmo tempo, e a
 		// animação tocaria uma vez só, na carga.
-		if !strings.Contains(screen, "palco-entra-adiante") || !strings.Contains(screen, "palco-entra-atras") {
+		if !strings.Contains(screen, "stage-enters-forward") || !strings.Contains(screen, "stage-enters-back") {
 			t.Errorf("%s não escreve as duas direções da entrada", cena.nome)
 		}
 		if strings.Contains(screen, `class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2 palco-entra`) {
@@ -178,7 +178,7 @@ func TestNoSelectionSceneDrawsTheLeatherBook(t *testing.T) {
 
 // O MARCADOR DO TRILHO DIZ O NOME, e não só as iniciais (ALE-181).
 //
-// O elenco identificava nove heróis por um monograma de 48px — `TP CD NN DN MG
+// O elenco identificava nove heróis por um monogram de 48px — `TP CD NN DN MG
 // PS LN BV IG` — e achar alguém ali era navegar às cegas. **As iniciais nem
 // precisavam colidir**: medido na seed, elas são todas distintas e continuam
 // não sendo nomes.
@@ -189,7 +189,7 @@ func TestNoSelectionSceneDrawsTheLeatherBook(t *testing.T) {
 //
 // Ele varre as duas cenas pela razão de sempre, e aqui ela tem história: as duas
 // já divergiram neste ponto exato depois da ALE-297, que deu o marcador com nome
-// às campanhas e deixou o elenco com o monograma.
+// às campanhas e deixou o elenco com o monogram.
 func TestEveryRailMarkerSaysTheName(t *testing.T) {
 	for _, cena := range stageScenes(t) {
 		screen := cena.screen(t)

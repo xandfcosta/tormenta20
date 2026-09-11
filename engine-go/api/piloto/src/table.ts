@@ -60,11 +60,11 @@ function wireTheTokenSlide(parado: MediaQueryList): void {
     for (const registro of registros) {
       if (registro.attributeName !== 'style') continue
       const alvo = registro.target as Element
-      if (!alvo.classList?.contains('tabuleiro-peca')) continue
+      if (!alvo.classList?.contains('board-token')) continue
       // O FANTASMA do arrasto é uma peça também, e ele nasce e morre a cada
       // gesto: animá-lo seria desenhar um deslize por cima da prévia que o
       // dedo está conduzindo.
-      if (alvo.classList.contains('tabuleiro-peca-fantasma')) continue
+      if (alvo.classList.contains('board-token-ghost')) continue
 
       const de = squareFromStyle(registro.oldValue)
       const para = squareFromStyle(alvo.getAttribute('style'))

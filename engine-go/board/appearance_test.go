@@ -23,7 +23,7 @@ func TestEqualsComeOutEqualAndTheNumberStaysOutOfTheColor(t *testing.T) {
 	}
 }
 
-// O monograma vem da ESPÉCIE. Ele comia as duas primeiras palavras, então
+// O monogram vem da ESPÉCIE. Ele comia as duas primeiras palavras, então
 // "Zumbi Putrefato 2" virava "ZP" e o número — a única coisa que distingue as
 // três peças na mesa — era justamente o que se perdia.
 func TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal(t *testing.T) {
@@ -41,7 +41,7 @@ func TestWithoutANumberThereIsNoSealAndTheMonogramStillHasTwoLetters(t *testing.
 		t.Errorf("apareceu selo %q num nome sem número", p.Instancia)
 	}
 	if p.Monograma != "OG" {
-		t.Errorf("monograma %q, queria OG", p.Monograma)
+		t.Errorf("monogram %q, queria OG", p.Monograma)
 	}
 }
 
@@ -53,7 +53,7 @@ func TestANumberInTheMiddleOfTheNameIsNotAnInstance(t *testing.T) {
 		t.Errorf("o Nv1 virou selo %q", p.Instancia)
 	}
 	if p.Monograma != "RN" {
-		t.Errorf("monograma %q", p.Monograma)
+		t.Errorf("monogram %q", p.Monograma)
 	}
 }
 

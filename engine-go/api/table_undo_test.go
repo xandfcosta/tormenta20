@@ -114,7 +114,7 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 	}
 	// E a JUNTA fica marcada no mapa: sem ela a trilha é uma faixa contínua, e o
 	// botão desfaria uma perna que a tela não mostra.
-	if !strings.Contains(comDuas, "tabuleiro-parada") {
+	if !strings.Contains(comDuas, "board-stop") {
 		t.Error("a parada intermediária não foi marcada na trilha")
 	}
 }

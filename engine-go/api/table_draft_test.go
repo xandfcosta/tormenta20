@@ -50,7 +50,7 @@ func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.draftUrl(lugar), "").Body.String()
 
-	if !strings.Contains(corpo, "tabuleiro-plano") {
+	if !strings.Contains(corpo, "board-plane") {
 		t.Error("o rascunho não desenhou o plano do tabuleiro")
 	}
 	if !strings.Contains(corpo, "Cripta de Thwor") {

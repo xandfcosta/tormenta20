@@ -248,9 +248,9 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var11 string
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'pincel-ligado': " + estaEscolhido(cand.ID) + "}")
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'brush-on': " + estaEscolhido(cand.ID) + "}")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/tokens.templ`, Line: 88, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/tokens.templ`, Line: 88, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 				if templ_7745c5c3_Err != nil {

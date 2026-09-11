@@ -809,7 +809,7 @@ func cardsParty(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, m := range v.Grupo {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "         <article class=\"flex items-center gap-2.5 border border-border/60 bg-card/60 p-2.5\"><span aria-hidden=\"true\" class=\"monograma size-11 rounded-sm text-sm\" style=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "         <article class=\"flex items-center gap-2.5 border border-border/60 bg-card/60 p-2.5\"><span aria-hidden=\"true\" class=\"monogram size-11 rounded-sm text-sm\" style=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1233,9 +1233,9 @@ func condicoesDoCombatente(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var48 string
-			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'pincel-ligado': " + onCondition(c.ID) + "}")
+			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'brush-on': " + onCondition(c.ID) + "}")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 539, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/table.templ`, Line: 539, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 			if templ_7745c5c3_Err != nil {

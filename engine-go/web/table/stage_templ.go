@@ -83,7 +83,7 @@ func gmStage(v View, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div data-class=\"{'notas-flutuam': $notes_floating}\" class=\"relative flex min-h-0 flex-1 flex-col gap-1.5 lg:flex-row\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div data-class=\"{'notes-float': $notes_floating}\" class=\"relative flex min-h-0 flex-1 flex-col gap-1.5 lg:flex-row\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

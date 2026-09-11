@@ -194,7 +194,7 @@ class Leitor {
     this.camada.replaceChildren(
       ...marcasNoTexto(texto.items as never[], this.cartaz.termo, viewport).map((marca) => {
         const caixa = document.createElement('span')
-        caixa.className = 'leitor-marca'
+        caixa.className = 'reader-mark'
         caixa.style.left = `${marca.esquerda}px`
         caixa.style.top = `${marca.topo}px`
         caixa.style.width = `${marca.largura}px`

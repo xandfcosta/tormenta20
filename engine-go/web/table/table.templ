@@ -325,15 +325,15 @@ templ cardsParty(v View) {
 					// linhas: sem nada à esquerda, o nome e as barras ficavam soltos
 					// num bloco de 119px que gastava altura sem dizer quem é.
 					//
-					// A "imagem do personagem" que a issue pede É a monograma, por
+					// A "imagem do personagem" que a issue pede É a monogram, por
 					// decisão do dono (2026-08-22): não há campo de imagem no modelo, e
 					// uma caixa que espera foto e recebe duas letras fica pior que uma
-					// desenhada para duas letras. O `.monograma` é essa caixa (ALE-252),
+					// desenhada para duas letras. O `.monogram` é essa caixa (ALE-252),
 					// e no dia em que a foto entrar ela entra aqui.
 					<article class="flex items-center gap-2.5 border border-border/60 bg-card/60 p-2.5">
 						<span
 							aria-hidden="true"
-							class="monograma size-11 rounded-sm text-sm"
+							class="monogram size-11 rounded-sm text-sm"
 							style={ "background: " + ui.NameGradient(m.Nome) }
 						>{ m.Iniciais }</span>
 						<div class="flex min-w-0 flex-1 flex-col gap-1">
@@ -536,7 +536,7 @@ templ condicoesDoCombatente(v View) {
 						type="button"
 						title={ c.Description }
 						data-attr:aria-pressed={ onCondition(c.ID) + " ? 'true' : 'false'" }
-						data-class={ "{'pincel-ligado': " + onCondition(c.ID) + "}" }
+						data-class={ "{'brush-on': " + onCondition(c.ID) + "}" }
 						data-on:click={ toggleConditionRow(v, c.ID) }
 						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					>{ c.Name }</button>

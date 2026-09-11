@@ -26,7 +26,7 @@ async function withTheNotesOpen(page: Page) {
 const trilhas = (page: Page) =>
   page.evaluate(
     () =>
-      getComputedStyle(document.querySelector('.notas-arranjo')!).gridTemplateColumns.split(' ')
+      getComputedStyle(document.querySelector('.notes-layout')!).gridTemplateColumns.split(' ')
         .length,
   )
 
@@ -134,7 +134,7 @@ test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async 
   const { apagar } = await withTheNotesOpen(page)
   try {
     const mapa = () =>
-      page.evaluate(() => Math.round(document.querySelector('.tabuleiro-cena')!.getBoundingClientRect().width))
+      page.evaluate(() => Math.round(document.querySelector('.board-scene')!.getBoundingClientRect().width))
 
     // A REFERÊNCIA é o mapa SEM notas: é o tamanho que flutuar tem de devolver.
     await page.getByRole('button', { name: 'Fechar as notas' }).click()

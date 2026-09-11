@@ -83,7 +83,7 @@ func StageWash(nome string) string {
 // navegadores, e uma animação que não anima é o defeito mudo desta família.
 func EnteringStage(id int64) string {
 	return fmt.Sprintf(
-		"{'palco-entra-adiante': $cursor == %d && $direction == 1, 'palco-entra-atras': $cursor == %d && $direction == -1}",
+		"{'stage-enters-forward': $cursor == %d && $direction == 1, 'stage-enters-back': $cursor == %d && $direction == -1}",
 		id, id)
 }
 

@@ -122,7 +122,7 @@ type Member struct {
 	// CharacterID não é desenhado: é a chave que casa o cartão com a presença.
 	CharacterID int64
 	Nome        string
-	// Iniciais é o monograma do ELENCO no trilho do mestre (ALE-269) — a vaga
+	// Iniciais é o monogram do ELENCO no trilho do mestre (ALE-269) — a vaga
 	// do `gmCast` da SPA. O jogador continua lendo o nome inteiro no cartão.
 	Iniciais string
 	Nivel    int64
@@ -194,7 +194,7 @@ type tableRow struct {
 	// `InitiativeEntry` desde sempre e a view o descartava.
 	PM        *tableBar
 	Condicoes []string
-	// Iniciais é o monograma do trilho de 80px (ALE-269). Nasce na view e não
+	// Iniciais é o monogram do trilho de 80px (ALE-269). Nasce na view e não
 	// no template pela convenção da casa — `web/campaigns/list_view.go` faz o
 	// mesmo —, e porque duas letras NÃO são um nome: quem desenha o retrato
 	// precisa do rótulo inteiro ao lado, no `aria-label`.
@@ -205,7 +205,7 @@ type tableRow struct {
 // junto (ALE-269).
 //
 // Ele existe porque duas letras não são um nome: o retrato de 80px desenha o
-// monograma, e quem usa leitor de tela — ou o ponteiro parado em cima — precisa
+// monogram, e quem usa leitor de tela — ou o ponteiro parado em cima — precisa
 // ouvir "Ogro, PV 22 de 40" e não "OG".
 //
 // PV ausente e PV OCULTO dizem coisas diferentes e a frase separa as duas: a

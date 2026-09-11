@@ -184,7 +184,7 @@ func collectionCount(v collectionView) string {
 
 // collectionResults é a caixa que ROLA. Ver o cabeçalho do arquivo.
 //
-// As colunas são CSS (`.acervo-em-colunas`) e não um número calculado em JS
+// As colunas são CSS (`.collection-in-columns`) e não um número calculado em JS
 // como na SPA. Lá o cálculo era necessário porque a lista é virtualizada e
 // "duas colunas" tinha de ser um agrupamento dos DADOS antes de entregá-los;
 // sem virtualização a grade nativa mede o contêiner de graça.
@@ -283,7 +283,7 @@ func collectionResults(v collectionView) templ.Component {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"acervo-em-colunas\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"collection-in-columns\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -365,7 +365,7 @@ func collectionResults(v collectionView) templ.Component {
 
 // ── os quatro cartões ────────────────────────────────────────────────────────
 
-// A classe `cartao-do-acervo` é ANCORAGEM e não estilo: dentro da caixa do elo o
+// A classe `collection-card` é ANCORAGEM e não estilo: dentro da caixa do elo o
 // cartão perde a moldura, porque lá a caixa já é a moldura — duas bordas
 // concêntricas com três milímetros entre elas, que foi o que o dono viu. A regra
 // vive no `piloto.src.css`, fora de `@layer`.
@@ -403,7 +403,7 @@ func collectionCard() templ.Component {
 			templ_7745c5c3_Var14 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"cartao-do-acervo wrap-anywhere rounded-sm border border-grimorio-iron p-2.5 text-sm\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"collection-card wrap-anywhere rounded-sm border border-grimorio-iron p-2.5 text-sm\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

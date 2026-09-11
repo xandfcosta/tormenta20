@@ -159,7 +159,7 @@ func notesSplitter() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" class=\"notas-divisa hidden shrink-0 cursor-col-resize rounded-full bg-grimorio-iron outline-none transition-colors hover:bg-grimorio-gold focus-visible:bg-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:block\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" class=\"notes-divider hidden shrink-0 cursor-col-resize rounded-full bg-grimorio-iron outline-none transition-colors hover:bg-grimorio-gold focus-visible:bg-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:block\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -201,7 +201,7 @@ func tableNotes(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" data-show=\"$notes_open\" style=\"display:none\" class=\"notas-coluna fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:shrink-0\"><div class=\"flex shrink-0 flex-wrap items-center justify-between gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" data-show=\"$notes_open\" style=\"display:none\" class=\"notes-column fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:shrink-0\"><div class=\"flex shrink-0 flex-wrap items-center justify-between gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -293,7 +293,7 @@ func notesBody(v View) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div data-class=\"{'notas-duplo': $notes_mode === 'duplo'}\" class=\"notas-arranjo grid min-h-0 flex-1 gap-2\"><textarea data-bind:notes data-show=\"$notes_mode != 'ler'\" data-on:input__debounce.1200ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div data-class=\"{'notes-split': $notes_mode === 'duplo'}\" class=\"notes-layout grid min-h-0 flex-1 gap-2\"><textarea data-bind:notes data-show=\"$notes_mode != 'ler'\" data-on:input__debounce.1200ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

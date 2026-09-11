@@ -66,7 +66,7 @@ templ gmControls(v View, r viewGm) {
 			// Palco BAIXO: os mesmos nós reaparecem na gaveta, e não outros —
 			// são as MESMAS funções chamadas duas vezes, porque dois desenhos do
 			// mesmo botão são dois lugares para consertar.
-			<div class="palco-alto-so">
+			<div class="stage-tall-only">
 				if v.SceneActive {
 					@endSceneButton(v)
 				}
@@ -88,7 +88,7 @@ templ gmControls(v View, r viewGm) {
 // aqui: a decisão é sobre a ALTURA MEDIDA do palco, e essa medida o servidor não
 // tem — é a tradução do `palcoBaixo` que a ALE-265 deixou anotada.
 templ tableDrawer(v View) {
-	<details class="palco-gaveta relative">
+	<details class="stage-drawer relative">
 		<summary
 			aria-label="Mais comandos da mesa"
 			class="flex size-11 cursor-pointer list-none items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

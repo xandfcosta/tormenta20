@@ -87,7 +87,7 @@ type BoardView struct {
 	AlcanceSegundo []boardSquare
 	// Fantasma é a peça DESENHADA na origem do movimento proposto, ou nil.
 	//
-	// Ela é a peça inteira e não um marcador genérico porque é o monograma e o
+	// Ela é a peça inteira e não um marcador genérico porque é o monogram e o
 	// selo que dizem QUEM saiu dali: com três zumbis em campo, um disco vazio na
 	// casa não responde qual deles está a caminho.
 	Fantasma *boardToken
@@ -811,9 +811,9 @@ type moveRange struct {
 // que alguém reescrevesse uma — com a tela dizendo "gasta a ação principal" ao
 // lado de uma bolinha que diz outra coisa.
 var rangesThree = []moveRange{
-	{Classe: "tabuleiro-faixa-cabe", Texto: "ação de movimento"},
-	{Classe: "tabuleiro-faixa-segundo", Texto: "ação de movimento + ação principal"},
-	{Classe: "tabuleiro-faixa-alem", Texto: "não cabe no turno"},
+	{Classe: "board-band-fits", Texto: "ação de movimento"},
+	{Classe: "board-band-second", Texto: "ação de movimento + ação principal"},
+	{Classe: "board-band-beyond", Texto: "não cabe no turno"},
 }
 
 // costRange diz em qual das três faixas o caminho INTEIRO cai (T20 p233).

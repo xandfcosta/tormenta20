@@ -200,14 +200,14 @@ func dropParty(v BoardView) string {
 // primeiro e descarta o segundo, e a marca do grupo nasceria morta — é a mesma
 // armadilha do `data-on:keydown__window` duplicado que a fatia 2 registrou.
 func tokenStyling(id string, movesItself bool) string {
-	marcada := fmt.Sprintf("'tabuleiro-peca-marcada': %s", markedIsToken(id))
+	marcada := fmt.Sprintf("'board-token-marked': %s", markedIsToken(id))
 	if !movesItself {
 		return "{" + marcada + "}"
 	}
 	// O ID e não o literal `'peca'` (ALE-299): com o literal, a única peça que
 	// vestia a classe era a `ArrastaAPeca`, então no rascunho pegar o Beta fazia
 	// o ALFA correr atrás do dedo. A classe segue quem o gesto marcou.
-	return fmt.Sprintf("{'tabuleiro-arrastando': $dragging === '%s', %s}", id, marcada)
+	return fmt.Sprintf("{'board-dragging': $dragging === '%s', %s}", id, marcada)
 }
 
 // brushGesture decide entre TRAÇO e RETÂNGULO no `pointerdown`.

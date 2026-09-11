@@ -9,7 +9,7 @@ import (
 // `shared/lib/hue-from-name.ts` e `shared/lib/initials.ts`.
 //
 // O app não tem campo de imagem para campanha nem para personagem: o que faz
-// cada um ser reconhecível é um monograma sobre um gradiente cuja cor vem do
+// cada um ser reconhecível é um monogram sobre um gradiente cuja cor vem do
 // NOME. Por isso a fórmula tem de ser a mesma nos dois lados até o último
 // dígito — um matiz diferente faz a mesma campanha ter duas capas, e a pessoa
 // que abre a tela nova acha que abriu outra mesa.
@@ -60,7 +60,7 @@ func NameGradient(nome string) string {
 	)
 }
 
-// Monogram é o monograma de até duas letras.
+// Monogram é o monogram de até duas letras.
 func Monogram(nome string) string {
 	partes := strings.Fields(nome)
 	if len(partes) == 0 {

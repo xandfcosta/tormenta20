@@ -157,7 +157,7 @@ export async function putATokenOnTheMap(page: Page): Promise<void> {
   const dialogo = page.locator('#por-no-mapa')
   await dialogo.getByRole('button', { name: /Ogro do E2E/ }).click()
   await dialogo.getByRole('button', { name: 'Pôr no mapa', exact: true }).click()
-  await expect(page.locator('.tabuleiro-peca'), 'a peça não entrou no mapa').toHaveCount(1)
+  await expect(page.locator('.board-token'), 'a peça não entrou no mapa').toHaveCount(1)
 }
 
 /** Abre o tabuleiro pela TELA, que é o gesto de verdade. */
@@ -173,6 +173,6 @@ export async function openTheBoard(page: Page, mesa: string): Promise<void> {
   // A CENA e não o PLANO: desde a ALE-203 o plano é uma ORIGEM de tamanho zero
   // num plano infinito, e o Playwright chama de invisível todo elemento sem
   // caixa. Quem tem o retângulo agora é a janela que recorta.
-  await page.locator('.tabuleiro-cena').waitFor({ timeout: 10_000 })
+  await page.locator('.board-scene').waitFor({ timeout: 10_000 })
 }
 

@@ -88,7 +88,7 @@ func collectionCount(v collectionView) string {
 
 // collectionResults é a caixa que ROLA. Ver o cabeçalho do arquivo.
 //
-// As colunas são CSS (`.acervo-em-colunas`) e não um número calculado em JS
+// As colunas são CSS (`.collection-in-columns`) e não um número calculado em JS
 // como na SPA. Lá o cálculo era necessário porque a lista é virtualizada e
 // "duas colunas" tinha de ser um agrupamento dos DADOS antes de entregá-los;
 // sem virtualização a grade nativa mede o contêiner de graça.
@@ -112,7 +112,7 @@ templ collectionResults(v collectionView) {
 							{ fmt.Sprintf("%s · %d", g.Rotulo, g.Count()) }
 						}
 					}
-					<div class="acervo-em-colunas">
+					<div class="collection-in-columns">
 						for _, c := range g.Condicoes {
 							@conditionCard(c, v.Book)
 						}
@@ -152,7 +152,7 @@ templ collectionResults(v collectionView) {
 
 // ── os quatro cartões ────────────────────────────────────────────────────────
 
-// A classe `cartao-do-acervo` é ANCORAGEM e não estilo: dentro da caixa do elo o
+// A classe `collection-card` é ANCORAGEM e não estilo: dentro da caixa do elo o
 // cartão perde a moldura, porque lá a caixa já é a moldura — duas bordas
 // concêntricas com três milímetros entre elas, que foi o que o dono viu. A regra
 // vive no `piloto.src.css`, fora de `@layer`.
@@ -170,7 +170,7 @@ templ collectionResults(v collectionView) {
 //
 // No cartão e não em cada descrição: são oito abas, e a nona nasce protegida.
 templ collectionCard() {
-	<div class="cartao-do-acervo wrap-anywhere rounded-sm border border-grimorio-iron p-2.5 text-sm">
+	<div class="collection-card wrap-anywhere rounded-sm border border-grimorio-iron p-2.5 text-sm">
 		{ children... }
 	</div>
 }

@@ -35,7 +35,7 @@ func TestWithoutABoardTheSceneSaysThereIsNoMap(t *testing.T) {
 	if !strings.Contains(corpo, "Nenhum tabuleiro aberto") {
 		t.Error("a cena não disse que não há mapa")
 	}
-	if strings.Contains(corpo, "tabuleiro-plano") {
+	if strings.Contains(corpo, "board-plane") {
 		t.Error("desenhou a grade sem tabuleiro aberto")
 	}
 }
@@ -97,7 +97,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 	// montada — é o `TurnIndex` negativo, e a peça não pode acender por estar
 	// no mapa.
 	antes := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(antes, "tabuleiro-peca-na-vez") {
+	if strings.Contains(antes, "board-token-on-turn") {
 		t.Error("a peça acendeu antes de o combate começar")
 	}
 
@@ -105,7 +105,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 	depois := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(depois, "tabuleiro-peca-na-vez") {
+	if !strings.Contains(depois, "board-token-on-turn") {
 		t.Error("chegou a vez do combatente e a peça dele não acendeu")
 	}
 	if !strings.Contains(depois, "— na vez") {
@@ -440,7 +440,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	// As TRÊS ausências, e cada uma é um vazamento diferente: a grade contaria
 	// que há cena montada, a peça contaria o que há nela, e o nome contaria qual
 	// é ela.
-	for _, vazamento := range []string{"tabuleiro-plano", "Dragão", "Taverna do Javali"} {
+	for _, vazamento := range []string{"board-plane", "Dragão", "Taverna do Javali"} {
 		if strings.Contains(doJogador, vazamento) {
 			t.Errorf("a cortina deixou passar %q", vazamento)
 		}
@@ -449,7 +449,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	// O CONTROLE: o mestre continua vendo a cena inteira, senão "a mesa não viu"
 	// seria verdade também num tabuleiro que ninguém abriu.
 	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(doMestre, "Dragão") || !strings.Contains(doMestre, "tabuleiro-plano") {
+	if !strings.Contains(doMestre, "Dragão") || !strings.Contains(doMestre, "board-plane") {
 		t.Error("o mestre perdeu a própria cena com a cortina fechada")
 	}
 	// E ele é AVISADO. Sem a tira, o mapa dele fica igualzinho com a cortina
@@ -622,7 +622,7 @@ func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
 		}
 	}
 	// UMA classe de objeto e só uma: a porta a tem, o lobo não.
-	if n := strings.Count(html, "tabuleiro-peca-objeto"); n != 1 {
+	if n := strings.Count(html, "board-token-object"); n != 1 {
 		t.Errorf("a classe de cenário aparece %d vezes; a porta a tem e o lobo não", n)
 	}
 }

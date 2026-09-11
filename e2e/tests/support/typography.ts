@@ -62,17 +62,17 @@ export async function medeATipografia(page: Page): Promise<MedicaoDeTipografia> 
         if (!texto) return null
         // O MONOGRAMA DO AVATAR não é texto, é marca — decisão do dono
         // (2026-09-08). O piso existe porque a Cinzel pequena "vira desenho
-        // antes de virar texto", e num monograma virar desenho é o objetivo:
+        // antes de virar texto", e num monogram virar desenho é o objetivo:
         // são duas letras dentro de um círculo colorido (ver `ui.Monogram`),
         // com o nome escrito por extenso ao lado em texto de verdade.
         //
         // A exceção é a CLASSE e não uma heurística, e essa escolha é o que a
-        // separa de afrouxar o guarda: `.monograma` é a receita da casa, então
-        // quem escreve um monograma novo herda a isenção junto com o desenho, e
+        // separa de afrouxar o guarda: `.monogram` é a receita da casa, então
+        // quem escreve um monogram novo herda a isenção junto com o desenho, e
         // quem escrever Cinzel pequena em qualquer outro lugar continua sendo
         // pego. Um `aria-hidden` no lugar dela isentaria toda Cinzel decorativa,
         // que é largo demais.
-        if (el.closest('.monograma')) return null
+        if (el.closest('.monogram')) return null
         const px = Number.parseFloat(cs.fontSize)
         olhados.push(texto)
         return px < piso ? `${Math.round(px)}px: "${texto.slice(0, 32)}"` : null

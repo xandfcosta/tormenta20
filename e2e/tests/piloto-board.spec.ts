@@ -46,7 +46,7 @@ test.use({ storageState: '.auth/user.json' })
  * um prefixo que qualquer ferramenta nova pode voltar a colidir.
  */
 const camadaDe = (page: Page, gesto: RegExp) =>
-  page.locator('.tabuleiro-casas').and(page.getByRole('button', { name: gesto }))
+  page.locator('.board-squares').and(page.getByRole('button', { name: gesto }))
 
 /**
  * A FERRAMENTA no trilho, e não qualquer botão com aquele nome.
@@ -70,7 +70,7 @@ const ferramenta = (page: Page, nome: string) =>
  * que recorta.
  */
 const quadrado = (page: Page) =>
-  page.locator('.tabuleiro-cena').evaluate((e) => getComputedStyle(e).getPropertyValue('--quadrado').trim())
+  page.locator('.board-scene').evaluate((e) => getComputedStyle(e).getPropertyValue('--quadrado').trim())
 
 /**
  * O ZOOM SOBREVIVE AO REMENDO — e esta é A aposta da fatia inteira.
@@ -102,12 +102,12 @@ test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => 
 
     // O CONTROLE: o remendo chegou e mudou a cena.
     //
-    // O seletor é `.tabuleiro-terreno.tabuleiro-dificil` e não só o segundo: a
+    // O seletor é `.board-terrain.board-dificil` e não só o segundo: a
     // AMOSTRA do crachá no trilho carrega a mesma classe de espécie, e o
     // seletor curto acharia dois elementos — um deles um quadradinho de
     // legenda que existe desde antes do clique.
     await expect(
-      page.locator('.tabuleiro-terreno.tabuleiro-dificil'),
+      page.locator('.board-terrain.board-dificil'),
       'o terreno não apareceu — o remendo não aconteceu e o resto não mede nada',
     ).toHaveCount(1)
 
@@ -145,7 +145,7 @@ test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ 
     const alvo = { x: 150, y: 110 }
     await casas.click({ position: alvo })
 
-    const pintada = page.locator('.tabuleiro-terreno.tabuleiro-camuflagem')
+    const pintada = page.locator('.board-terrain.board-camuflagem')
     await expect(pintada, 'nada foi pintado').toHaveCount(1)
 
     const caixaDaCamada = (await casas.boundingBox())!
@@ -195,7 +195,7 @@ test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', as
     // deliberadamente NÃO múltiplo do quadrado: um múltiplo esconderia um erro
     // de fase, porque a casa certa e a errada cairiam no mesmo lugar da grade.
     await ferramenta(page, 'Arrastar a vista').click()
-    const mao = page.locator('.tabuleiro-vista')
+    const mao = page.locator('.board-viewport')
     const caixaDaMao = (await mao.boundingBox())!
     await page.mouse.move(caixaDaMao.x + 400, caixaDaMao.y + 300)
     await page.mouse.down()
@@ -205,7 +205,7 @@ test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', as
     // O CONTROLE: a vista ANDOU. Sem ele, "a casa está certa" é verdade também
     // numa tela onde o arrasto não fez nada — que é o verde mais caro que existe.
     const vista = await page
-      .locator('.tabuleiro-cena')
+      .locator('.board-scene')
       .evaluate((e) => getComputedStyle(e).getPropertyValue('--vista-x').trim())
     expect(vista, 'a vista não saiu do lugar — o arrasto não aconteceu e o resto não mede nada').not.toBe('0px')
 
@@ -214,7 +214,7 @@ test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', as
     const alvo = { x: 260, y: 180 }
     await casas.click({ position: alvo })
 
-    const pintada = page.locator('.tabuleiro-terreno.tabuleiro-camuflagem')
+    const pintada = page.locator('.board-terrain.board-camuflagem')
     await expect(pintada, 'nada foi pintado').toHaveCount(1)
 
     const caixaDaCamada = (await casas.boundingBox())!
@@ -263,7 +263,7 @@ test('o gabarito desenhado cabe dentro do SVG que o carrega', async ({ page }) =
     await ferramenta(page, 'Gabarito').click()
     await camadaDe(page, /Pôr o gabarito/).click({ position: { x: 300, y: 200 } })
 
-    const svg = page.locator('.tabuleiro-medida-fundo')
+    const svg = page.locator('.board-measure-back')
     const desenho = svg.locator('path')
 
     // O CONTROLE: o servidor respondeu e há desenho. Sem ele, "cabe no SVG" seria
@@ -311,12 +311,12 @@ test('a janela vai atrás do foco quando a peça está fora dela', async ({ page
     await openTheBoard(page, mesa)
     await putATokenOnTheMap(page)
 
-    const cena = page.locator('.tabuleiro-cena')
-    const peca = page.locator('.tabuleiro-peca')
+    const cena = page.locator('.board-scene')
+    const peca = page.locator('.board-token')
 
     // Arrasta a vista para BEM longe da peça, com a ferramenta da mão.
     await ferramenta(page, 'Arrastar a vista').click()
-    const caixaDaMao = (await page.locator('.tabuleiro-vista').boundingBox())!
+    const caixaDaMao = (await page.locator('.board-viewport').boundingBox())!
     await page.mouse.move(caixaDaMao.x + caixaDaMao.width - 40, caixaDaMao.y + caixaDaMao.height - 40)
     await page.mouse.down()
     await page.mouse.move(caixaDaMao.x + 20, caixaDaMao.y + 20, { steps: 10 })
@@ -371,7 +371,7 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
     await page.mouse.down()
     await page.mouse.move(ate.x, ate.y, { steps: 10 })
     await page.mouse.up()
-    const doTraco = await page.locator('.tabuleiro-terreno.tabuleiro-dificil').count()
+    const doTraco = await page.locator('.board-terrain.board-dificil').count()
 
     // E agora COM Shift, num pedaço virgem do plano.
     const deB = { x: caixa.x + 420, y: caixa.y + 120 }
@@ -382,18 +382,18 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
     await page.mouse.move(ateB.x, ateB.y, { steps: 6 })
     // O LAÇO tem de estar na tela ENQUANTO o dedo segura: é a promessa visual do
     // gesto, e sem ela a pessoa arrasta no escuro.
-    await expect(page.locator('.tabuleiro-laco'), 'o laço não apareceu durante o arrasto').toBeVisible()
+    await expect(page.locator('.board-lasso'), 'o laço não apareceu durante o arrasto').toBeVisible()
     await page.mouse.up()
     await page.keyboard.up('Shift')
 
     await expect
-      .poll(() => page.locator('.tabuleiro-terreno.tabuleiro-dificil').count(), {
+      .poll(() => page.locator('.board-terrain.board-dificil').count(), {
         message: 'o retângulo não encheu a área',
       })
       .toBeGreaterThan(doTraco * 2)
 
     // E o laço some quando o dedo solta — ele é intenção, não resultado.
-    await expect(page.locator('.tabuleiro-laco'), 'o laço ficou na tela depois de soltar').toBeHidden()
+    await expect(page.locator('.board-lasso'), 'o laço ficou na tela depois de soltar').toBeHidden()
   } finally {
     await apagar()
   }
@@ -422,7 +422,7 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
     // os dois.
     await ferramenta(page, 'Marcar').click()
     await camadaDe(page, /Marcar um lugar/).click({ position: { x: 90, y: 90 } })
-    const marcador = page.locator('.tabuleiro-marcador')
+    const marcador = page.locator('.board-marker')
     await expect(marcador, 'o marcador não nasceu').toHaveCount(1)
 
     // De volta ao padrão: é assim que a ferramenta fica enquanto o mestre joga,
@@ -440,14 +440,14 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
 
     await marcador.click()
     await expect(
-      page.locator('.tabuleiro-marcador-acoes'),
+      page.locator('.board-marker-actions'),
       'o clique não chegou ao marcador — alguma camada o cobriu de novo',
     ).toBeVisible()
 
     // E o que o gesto existe para fazer: revelar para a mesa.
-    await expect(marcador, 'o marcador não nasceu escondido').toHaveClass(/escondido/)
+    await expect(marcador, 'o marcador não nasceu escondido').toHaveClass(/board-marker-hidden/)
     await page.getByRole('button', { name: /^Revelar o marcador/ }).click()
-    await expect(marcador, 'revelar não mudou nada na tela do mestre').not.toHaveClass(/escondido/)
+    await expect(marcador, 'revelar não mudou nada na tela do mestre').not.toHaveClass(/board-marker-hidden/)
   } finally {
     await apagar()
   }
@@ -480,7 +480,7 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
     await putATokenOnTheMap(page)
     await page.getByLabel('Centralizar nas peças').click()
 
-    const peca = page.locator('.tabuleiro-peca').first()
+    const peca = page.locator('.board-token').first()
     // O CONTROLE, antes de qualquer ausência virar conclusão: o gesto está
     // pendurado nesta peça? Sem isto, "não achei prévia" seria verdade também
     // sobre uma peça que ninguém pode arrastar.
@@ -505,11 +505,11 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
 
     // MEDIR NO MEIO DO GESTO: é o único instante em que a prévia existe.
     await expect(
-      page.locator('.tabuleiro-previa-cabe'),
+      page.locator('.board-preview-fits'),
       'o arrasto não desenhou a seta viva',
     ).toHaveAttribute('d', /^M /)
     await expect(
-      page.locator('.tabuleiro-medida-frente text').filter({ hasText: /m$/ }).first(),
+      page.locator('.board-measure-front text').filter({ hasText: /m$/ }).first(),
       'a seta viva não diz a distância em metros',
     ).toBeVisible()
 
@@ -518,7 +518,7 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
     // verdade, com o mesmo formato e outra medida — dois caminhos na tela e
     // nenhum jeito de saber qual vale.
     await expect(
-      page.locator('.tabuleiro-previa-cabe'),
+      page.locator('.board-preview-fits'),
       'a seta viva sobreviveu ao soltar',
     ).toHaveAttribute('d', '')
   } finally {
@@ -563,7 +563,7 @@ test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ pag
     // O CONTROLE, e sem ele o caso não mede nada: se o botão do acervo não
     // estiver na tela, o painel medido é o estreito, e o guarda passa verde
     // sobre o painel que nunca quebrou.
-    const acervo = page.locator('.tabuleiro-verbos-da-cena button').filter({ hasText: /Lugares|3/ })
+    const acervo = page.locator('.board-scene-verbs button').filter({ hasText: /Lugares|3/ })
     await expect(
       acervo.first(),
       'o botão do acervo não está no painel — o caso mediria um painel sem o item que o estoura',
@@ -605,14 +605,14 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
     const botoesDoSubmenu = () =>
       page.evaluate(
         () =>
-          [...document.querySelectorAll('.tabuleiro-peca-copia button')].filter((b) =>
+          [...document.querySelectorAll('.board-token-copy button')].filter((b) =>
             (b as HTMLElement).checkVisibility(),
           ).length,
       )
 
     // O MENU ABERTO é a premissa: com ele fechado, o submenu seria invisível pela
     // herança do pai e o caso não mediria o popover.
-    await page.locator('.tabuleiro-peca').first().click({ button: 'right' })
+    await page.locator('.board-token').first().click({ button: 'right' })
     const duplicar = page.getByRole('button', { name: /^Duplicar / })
     await expect(
       duplicar,
@@ -647,7 +647,7 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
     // de afastar em vez de abrir o menu dela. A peça passou a nascer abaixo da
     // faixa do cromo (`tabuleiro.TopChromeRows`), e é este caso que mantém
     // aquele número honesto: painel mais alto ou zoom padrão menor põem a peça
-    // de volta debaixo do painel, o menu não abre e o `.tabuleiro-peca-copia`
+    // de volta debaixo do painel, o menu não abre e o `.board-token-copy`
     // não existe para medir. É a única testemunha possível — quem cobre um
     // elemento e quem recebe o clique só existem num navegador.
     for (const [nome, w, h] of [
@@ -664,11 +664,11 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
           }
         }),
       )
-      await page.locator('.tabuleiro-peca').first().click({ button: 'right' })
+      await page.locator('.board-token').first().click({ button: 'right' })
       await page.getByRole('button', { name: /^Duplicar / }).click()
       await page.waitForTimeout(300)
       const escapou = await page.evaluate(() => {
-        const p = document.querySelector('.tabuleiro-peca-copia')!.getBoundingClientRect()
+        const p = document.querySelector('.board-token-copy')!.getBoundingClientRect()
         return {
           abaixo: Math.round(p.bottom - window.innerHeight),
           direita: Math.round(p.right - window.innerWidth),
@@ -706,24 +706,24 @@ test('copiar guarda o modo, e cada CTRL+V põe outro igual', async ({ page }) =>
 
     // A FAIXA da área começa VAZIA, e este é o controle: sem ele, uma faixa que
     // aparecesse sempre passaria pelas asserções de baixo sem provar nada.
-    const faixa = page.locator('.tabuleiro-area')
+    const faixa = page.locator('.board-area')
     await expect(faixa, 'a faixa da área nasceu visível com a área vazia').toBeHidden()
 
-    await page.locator('.tabuleiro-peca').first().click({ button: 'right' })
+    await page.locator('.board-token').first().click({ button: 'right' })
     await page.getByRole('button', { name: /^Duplicar / }).click()
     await page.getByRole('button', { name: /^Copiar .* para colar: com PV próprio/ }).click()
 
     await expect(faixa, 'copiar não acendeu a faixa da área').toBeVisible()
     await expect(faixa).toContainText('com PV próprio')
 
-    const antes = await page.locator('.tabuleiro-peca').count()
+    const antes = await page.locator('.board-token').count()
     await page.keyboard.press('Control+v')
     await expect
-      .poll(() => page.locator('.tabuleiro-peca').count(), { message: 'o primeiro CTRL+V não colou' })
+      .poll(() => page.locator('.board-token').count(), { message: 'o primeiro CTRL+V não colou' })
       .toBe(antes + 1)
     await page.keyboard.press('Control+v')
     await expect
-      .poll(() => page.locator('.tabuleiro-peca').count(), {
+      .poll(() => page.locator('.board-token').count(), {
         message: 'o segundo CTRL+V não colou: a área não sobreviveu ao remendo da cena',
       })
       .toBe(antes + 2)
@@ -735,7 +735,7 @@ test('copiar guarda o modo, e cada CTRL+V põe outro igual', async ({ page }) =>
     await page.keyboard.press('Control+v')
     await page.waitForTimeout(500)
     expect(
-      await page.locator('.tabuleiro-peca').count(),
+      await page.locator('.board-token').count(),
       'o CTRL+V colou com a área vazia',
     ).toBe(antes + 2)
   } finally {

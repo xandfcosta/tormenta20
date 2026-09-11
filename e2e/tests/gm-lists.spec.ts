@@ -131,11 +131,11 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
   // a fileira que o virtualizador montava. A garantia é a mesma: alargar a
   // janela nunca pode tirar uma coluna.
   await page.goto('/mestre/condicoes')
-  await expect(page.locator('.acervo-em-colunas').first()).toBeVisible()
+  await expect(page.locator('.collection-in-columns').first()).toBeVisible()
 
   await expectColunasMonotonicas(
     page,
-    '.acervo-em-colunas',
+    '.collection-in-columns',
     [1920, 1440, 1200, 1100, 1024, 1000, 900, 844, 768, 600, 390],
   )
 
@@ -153,7 +153,7 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
   // medido na ALE-258, quatro colunas a 1920 onde o teto de leitura é três.
   await page.setViewportSize({ width: 1920, height: 1080 })
   const colunas = await page.evaluate(() => {
-    const grade = document.querySelector('.acervo-em-colunas')
+    const grade = document.querySelector('.collection-in-columns')
     if (!grade) return null
     return getComputedStyle(grade).gridTemplateColumns.split(' ').filter(Boolean).length
   })
@@ -268,7 +268,7 @@ test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos'
     // ── deitado: a gaveta existe e está recolhida ──────────────────────────
     await page.setViewportSize({ width: 844, height: 390 })
     await page.goto(parada)
-    const gaveta = page.locator('.filtros-em-gaveta')
+    const gaveta = page.locator('.filters-in-drawer')
     if ((await gaveta.count()) === 0) {
       semGaveta++
       continue
@@ -313,7 +313,7 @@ test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos'
 
   // O DENOMINADOR: sem ele, um seletor que parou de casar dá o mesmo verde que
   // uma tela em ordem. Medido: sete paradas filtram, seis não.
-  expect(comGaveta, 'nenhuma parada tinha gaveta: o seletor `.filtros-em-gaveta` parou de casar').toBeGreaterThanOrEqual(7)
+  expect(comGaveta, 'nenhuma parada tinha gaveta: o seletor `.filters-in-drawer` parou de casar').toBeGreaterThanOrEqual(7)
   expect(comGaveta + semGaveta).toBe(paradas.length)
 })
 

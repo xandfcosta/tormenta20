@@ -115,7 +115,7 @@ func classesThatReceiveBox(t *testing.T) map[string]bool {
 }
 
 // temAlgumaClasse: basta UMA classe posicionada, porque o elemento veste várias —
-// o fantasma é `tabuleiro-peca tabuleiro-peca-fantasma`, e quem lhe dá caixa é a
+// o fantasma é `board-token board-token-ghost`, e quem lhe dá caixa é a
 // primeira.
 func temAlgumaClasse(lista string, procuradas map[string]bool) bool {
 	for _, c := range strings.Fields(lista) {

@@ -24,7 +24,7 @@ function s(e) {
 		if (!e.matches) for (let e of t) {
 			if (e.attributeName !== "style") continue;
 			let t = e.target;
-			if (!t.classList?.contains("tabuleiro-peca") || t.classList.contains("tabuleiro-peca-fantasma")) continue;
+			if (!t.classList?.contains("board-token") || t.classList.contains("board-token-ghost")) continue;
 			let n = i(e.oldValue), r = i(t.getAttribute("style"));
 			if (!n || !r) continue;
 			let o = Number.parseFloat(getComputedStyle(t).getPropertyValue("--quadrado"));
