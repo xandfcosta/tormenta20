@@ -368,8 +368,8 @@ func TestTheTurnStripReachesBothScreens(t *testing.T) {
 	// DOIS avanços, e o segundo é o caso que a ALE-179 nomeia: a fila tem dois,
 	// então o segundo turno é o ÚLTIMO da rodada, e "quem vem depois" está no
 	// TOPO da lista. É o turno em que ler de cima para baixo não acha ninguém.
-	f.posta(t, f.mestre, f.tableUrl()+"/initiative/next-turn", "")
-	f.posta(t, f.mestre, f.tableUrl()+"/initiative/next-turn", "")
+	f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/proxima-vez", "")
+	f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/proxima-vez", "")
 
 	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	// ANCORADO NA VIRADA DA RODADA, que é texto que SÓ a faixa escreve: o nome
@@ -410,8 +410,8 @@ func TestTheTurnStripReachesBothScreens(t *testing.T) {
 func TestThePlayerTurnStripObeysTheSameRedaction(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.posta(t, f.mestre, f.tableUrl()+"/initiative/next-turn", "")
-	f.posta(t, f.mestre, f.tableUrl()+"/initiative/next-turn", "")
+	f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/proxima-vez", "")
+	f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/proxima-vez", "")
 
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 

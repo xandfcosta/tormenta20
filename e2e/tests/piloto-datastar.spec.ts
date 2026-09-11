@@ -593,8 +593,8 @@ test.describe('A crônica (piloto Datastar)', () => {
 
   // O endereço antigo é o que os jogadores têm salvo, e o `?tab=` viaja junto:
   // perdê-lo quebraria todo link de seção já compartilhado.
-  test('o endereço antigo /campaigns/:id encaminha COM a seção', async ({ page }) => {
-    await page.goto('/campaigns/1?tab=sessoes')
+  test('o endereço antigo /campanhas/:id encaminha COM a seção', async ({ page }) => {
+    await page.goto('/campanhas/1?tab=sessoes')
     await expect(page).toHaveURL(/\/campanhas\/1\?tab=sessoes$/)
     await expect(page.locator('[aria-current="page"]')).toHaveText('Sessões')
   })
@@ -948,7 +948,7 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
   // promessa vivia numa casca da SPA (`routes/characters.index.tsx`) e desceu
   // para o Go na fatia 10 — na SPA ela morreria junto com o `git rm`.
   test('o endereço antigo /characters encaminha para a cena nova', async ({ page }) => {
-    await page.goto('/characters')
+    await page.goto('/personagens')
     await expect(page).toHaveURL(/\/personagens$/)
     await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
   })

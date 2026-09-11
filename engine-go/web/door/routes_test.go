@@ -13,7 +13,7 @@ import "testing"
 // o trata como absoluto.
 func TestTheRequestedDestinationOnlyAcceptsAnInternalPath(t *testing.T) {
 	casos := map[string]string{
-		"/campaigns/7":        "/campaigns/7",
+		"/campanhas/7":        "/campanhas/7",
 		"":                    "/",
 		"https://outro.site":  "/",
 		"//outro.site":        "/", // protocol-relative: o navegador trata como absoluto

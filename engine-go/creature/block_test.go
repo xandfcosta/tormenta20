@@ -8,7 +8,7 @@ import (
 // O BLOCO IMPOSSÍVEL É RECUSADO, e a mensagem nomeia o valor ofensor.
 //
 // Ele veio do `api/creatures_http_test.go` na ALE-277. Lá media o 400 de
-// `POST /campaigns/{id}/creatures`, e a rota saiu com as outras sem consumidor;
+// `POST /campanhas/{id}/creatures`, e a rota saiu com as outras sem consumidor;
 // a garantia desceu para onde a regra MORA. Quem a chama hoje é o editor de NPC
 // da Mesa (`creature.Validate`, em `web/table/npc_editor.go`), e ele é o único
 // caminho por onde um bloco entra.

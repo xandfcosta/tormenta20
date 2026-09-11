@@ -14,7 +14,7 @@ import (
 var campaignMemberRoles = map[string]bool{"player": true, "gm": true}
 
 // Aqui moravam o `memberDTO` e o `memberScalars`, a forma de FIO de um membro
-// para a rota `GET /campaigns/{id}/members`. A rota saiu na ALE-277 por não ter
+// para a rota `GET /campanhas/{id}/members`. A rota saiu na ALE-277 por não ter
 // consumidor, e os dois ficaram sem chamador — método sem uso não quebra
 // compilação, então eles atravessaram a issue inteira. O que os denunciou foi a
 // coluna `role` sumindo debaixo deles (ALE-287).

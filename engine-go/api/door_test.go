@@ -138,14 +138,14 @@ func TestTheDoorDoesNotTellAMissingAccountFromAWrongPassword(t *testing.T) {
 func TestTheDoorSignsInAndSendsToTheDestination(t *testing.T) {
 	f := newDoor(t)
 	rec := f.bate(t, "/entrar", url.Values{
-		"email": {f.email}, "senha": {f.senha}, "destino": {"/campaigns/7"},
+		"email": {f.email}, "senha": {f.senha}, "destino": {"/campanhas/7"},
 	}, "")
 
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303 (Post/Redirect/Get: sem ele, recarregar reenvia o formulário)", rec.Code)
 	}
-	if got := rec.Header().Get("Location"); got != "/campaigns/7" {
-		t.Errorf("Location = %q, queria /campaigns/7", got)
+	if got := rec.Header().Get("Location"); got != "/campanhas/7" {
+		t.Errorf("Location = %q, queria /campanhas/7", got)
 	}
 	if !hasSessionCookie(f, rec) {
 		t.Error("entrou e não abriu sessão")

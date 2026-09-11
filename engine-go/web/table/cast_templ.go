@@ -490,11 +490,11 @@ func castBar(v View, m Member, pool, rotulo string, b tableBar) templ.Component 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = castStep(v, m, pool, "heal", "+", healVerb(pool)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = castStep(v, m, pool, "curar", "+", healVerb(pool)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = castStep(v, m, pool, "harm", "−", harmVerb(pool)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = castStep(v, m, pool, "ferir", "−", harmVerb(pool)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

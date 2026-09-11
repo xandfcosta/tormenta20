@@ -52,7 +52,7 @@ import (
 // daria a impressão de que a fronteira é dela, e ela não é.
 func Routes(r chi.Router, s Scene) {
 	r.Get("/mesa/{campaignId}/{sessionId}", s.handleTablePage)
-	r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleTableStream)
+	r.Get("/mesa/{campaignId}/{sessionId}/fluxo", s.handleTableStream)
 	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleTableInitiative)
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
@@ -116,7 +116,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: tableSignalsExpr(),
-		Init:   fmt.Sprintf("@get('/mesa/%d/%d/stream')", campaignID, sessionID),
+		Init:   fmt.Sprintf("@get('/mesa/%d/%d/fluxo')", campaignID, sessionID),
 		// A ILHA DA MESA (ALE-174): o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um

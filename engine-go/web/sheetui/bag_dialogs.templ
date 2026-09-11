@@ -81,7 +81,7 @@ templ itemSheetDialog(v View, ficha itemSheet) {
 			<button
 				type="button"
 				aria-label={ "Remover " + ficha.Name }
-				data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/remove") + "; $detail = ''" }
+				data-on:click={ sheetPost(v, "/itens/"+ficha.Command+"/remover") + "; $detail = ''" }
 				class={ ui.ButtonClasses(ui.VariantDestructive, ui.SizeSmall, "ml-auto") }
 			>Remover</button>
 		</div>

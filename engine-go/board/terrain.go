@@ -20,12 +20,41 @@ package board
 // Tabela 5-3). Ver GLOSSARY.md: terreno é a família, não o chão do lugar.
 type TerrainKind string
 
+// O VALOR é o segmento de ROTA, e por isso está em português (ALE-304): o
+// endereço é a única parte da fronteira que uma pessoa vê, e `/terreno/dificil`
+// é o que ela entende. As outras fronteiras — tabela, coluna, campo JSON, evento
+// SSE — seguem em inglês, porque nenhuma aparece para ninguém.
+//
+// A CLASSE CSS que cada espécie veste é outra coisa: classe é IDENTIFICADOR e
+// sai em inglês, e quem traduz é o `ClassOf` logo abaixo. As duas grafias
+// conviverem é o preço de o mesmo conceito atravessar duas fronteiras com regras
+// opostas — e é melhor pagá-lo aqui, num mapa de quatro linhas, do que numa
+// classe pela metade (`board-dificil`).
 const (
-	TerrenoDificil    TerrainKind = "difficult"
-	TerrenoCobertura  TerrainKind = "cover"
-	TerrenoCamuflagem TerrainKind = "concealment"
-	TerrenoElevado    TerrainKind = "elevated"
+	TerrenoDificil    TerrainKind = "dificil"
+	TerrenoCobertura  TerrainKind = "cobertura"
+	TerrenoCamuflagem TerrainKind = "camuflagem"
+	TerrenoElevado    TerrainKind = "elevado"
 )
+
+// ClassOf devolve o nome INGLÊS da espécie, que é o que a classe CSS usa.
+//
+// Espécie desconhecida devolve vazio, e quem chama escreve uma classe a menos —
+// o certo, porque o `TerrainKinds` é a lista fechada e um id fora dela não veio
+// da tela.
+func ClassOf(k TerrainKind) string {
+	switch k {
+	case TerrenoDificil:
+		return "difficult"
+	case TerrenoCobertura:
+		return "cover"
+	case TerrenoCamuflagem:
+		return "concealment"
+	case TerrenoElevado:
+		return "elevated"
+	}
+	return ""
+}
 
 // TerrainBrush é uma espécie pronta para a tela oferecer.
 type TerrainBrush struct {

@@ -11,7 +11,7 @@ import (
 // TestTheEraserClearsTheWholeSquare — o conserto do defeito que o dono achou.
 //
 // Ela era um MODO que invertia o pincel selecionado: com `Cobertura` na mão,
-// clicar num quadrado de `Difícil` mandava `terreno/cover/…?apagar=1`,
+// clicar num quadrado de `Difícil` mandava `terreno/cobertura/…?apagar=1`,
 // apagava a cobertura que não estava ali, e a tela não dizia nada. Medido na
 // bancada, clique a clique, antes de virar este teste.
 //
@@ -23,7 +23,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 
 	// Três espécies EMPILHADAS na mesma casa: é o caso que o modo antigo não
 	// sabia resolver, porque ele tinha de escolher uma.
-	for _, especie := range []string{"difficult", "cover", "elevated"} {
+	for _, especie := range []string{"dificil", "cobertura", "elevado"} {
 		if rec := f.pede(t, f.mestre, http.MethodPost, casa+"/"+especie+"/4/4/ate/4/4", ""); rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", especie, rec.Code)
 		}

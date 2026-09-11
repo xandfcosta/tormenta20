@@ -49,7 +49,7 @@ func TestEveryDoorLeadsToTheDatastarTable(t *testing.T) {
 	// novo faria o teste concordar com o defeito, e derivar o velho o faria
 	// procurar uma string que ninguém escreve mais.
 	daMesa := "/mesa/" + strconv.FormatInt(campanha, 10) + "/" + strconv.FormatInt(sessao, 10)
-	daSPA := "/campaigns/" + strconv.FormatInt(campanha, 10) + "/sessions/" + strconv.FormatInt(sessao, 10)
+	daSPA := "/campanhas/" + strconv.FormatInt(campanha, 10) + "/sessoes/" + strconv.FormatInt(sessao, 10)
 
 	for _, porta := range asPortasParaASessao(campanha) {
 		html := pedeHub(t, s, dono, http.MethodGet, porta.Caminho).Body.String()

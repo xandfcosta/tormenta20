@@ -136,7 +136,7 @@ func TestTheTableStreamCompresses(t *testing.T) {
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
 
-	req, err := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/stream", nil)
+	req, err := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/fluxo", nil)
 	if err != nil {
 		t.Fatalf("montar pedido: %v", err)
 	}

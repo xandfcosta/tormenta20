@@ -27,27 +27,27 @@ import (
 // botão é UX; a trava é aqui.
 
 func (s Scene) TableCommandRoutes(r chi.Router) {
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/next-turn", s.gmCommand(
+	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/proxima-vez", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().NextTurn(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/previous-turn", s.gmCommand(
+	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/vez-anterior", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().PreviousTurn(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/scene/start", s.gmCommand(
+	r.Post("/mesa/{campaignId}/{sessionId}/cena/iniciar", s.gmCommand(
 		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().StartScene(c.SessionID)
 		}))
-	r.Post("/mesa/{campaignId}/{sessionId}/scene/end", s.gmCommand(endScene))
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/populate", s.gmCommand(bringParty))
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/add", s.gmCommand(addCombatant))
+	r.Post("/mesa/{campaignId}/{sessionId}/cena/encerrar", s.gmCommand(endScene))
+	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/por-no-mapa", s.gmCommand(bringParty))
+	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/adicionar", s.gmCommand(addCombatant))
 	// DOIS caminhos e não um `/rest` com o escopo no corpo, que é a forma da API
 	// JSON: aqui o VERBO é o caminho, como em `scene/start` e `scene/end`. A
 	// gramática desta superfície já foi escolhida, e misturar as duas faria a
 	// próxima pessoa ter de descobrir qual vale onde.
-	r.Post("/mesa/{campaignId}/{sessionId}/rest/scene", s.gmCommand(restParty("scene")))
-	r.Post("/mesa/{campaignId}/{sessionId}/rest/day", s.gmCommand(restParty("day")))
+	r.Post("/mesa/{campaignId}/{sessionId}/descanso/cena", s.gmCommand(restParty("scene")))
+	r.Post("/mesa/{campaignId}/{sessionId}/descanso/dia", s.gmCommand(restParty("day")))
 	// O QUE O MESTRE MEXE EM CADA LINHA. O `entryId` vem do caminho como os
 	// outros dois ids, e a autorização é a mesma dos comandos da mesa: o
 	// `gmCommand` já barra quem não é mestre.
@@ -57,12 +57,12 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 	// tela do jogador que faz isso. Aqui a superfície do jogador é leitura mais
 	// registrar iniciativa (ALE-213), e uma segunda regra de escrita seria uma
 	// porta que nenhuma tela usa.
-	r.Route("/mesa/{campaignId}/{sessionId}/initiative/{entryId}", func(r chi.Router) {
-		r.Post("/vitals/{pool}/harm/{step}", s.gmCommand(moveVitals(-1)))
-		r.Post("/vitals/{pool}/heal/{step}", s.gmCommand(moveVitals(+1)))
-		r.Post("/vitals/{pool}/hidden", s.gmCommand(toggleEye))
-		r.Post("/edit", s.gmCommand(editaOCombatente))
-		r.Post("/remove", s.gmCommand(tiraDaFila))
+	r.Route("/mesa/{campaignId}/{sessionId}/iniciativa/{entryId}", func(r chi.Router) {
+		r.Post("/vitais/{pool}/ferir/{step}", s.gmCommand(moveVitals(-1)))
+		r.Post("/vitais/{pool}/curar/{step}", s.gmCommand(moveVitals(+1)))
+		r.Post("/vitais/{pool}/oculto", s.gmCommand(toggleEye))
+		r.Post("/editar", s.gmCommand(editaOCombatente))
+		r.Post("/remover", s.gmCommand(tiraDaFila))
 	})
 }
 

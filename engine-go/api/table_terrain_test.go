@@ -44,12 +44,12 @@ func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/terreno"
 
-	for _, especie := range []string{"difficult", "concealment"} {
+	for _, especie := range []string{"dificil", "camuflagem"} {
 		if rec := f.pede(t, f.mestre, "POST", base+"/"+especie+"/3/3/ate/3/3", ""); rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", especie, rec.Code)
 		}
 	}
-	if rec := f.pede(t, f.mestre, "POST", base+"/concealment/3/3/ate/3/3?apagar=1", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", base+"/camuflagem/3/3/ate/3/3?apagar=1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 
@@ -84,7 +84,7 @@ func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 		t.Fatal("o tabuleiro não desenhou — o guarda mediria a tela errada")
 	}
 	for _, pincel := range board.TerrainKinds {
-		if !strings.Contains(tela, "board-"+string(pincel.ID)) {
+		if !strings.Contains(tela, "board-"+board.ClassOf(pincel.ID)) {
 			t.Errorf("a espécie %s foi pintada e não tem desenho próprio na cena", pincel.ID)
 		}
 	}
@@ -153,7 +153,7 @@ func TestOnlyTheGmPaints(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 
-	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/terreno/difficult/1/1/ate/1/1", "")
+	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/terreno/dificil/1/1/ate/1/1", "")
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador pintou o chão: %d", rec.Code)
 	}
@@ -169,7 +169,7 @@ func TestOnlyTheGmPaints(t *testing.T) {
 // onde acontecer, e a recusa fala no `command_error` do rodapé do mestre.
 func TestPaintingWithoutABoardRefusesWithASentence(t *testing.T) {
 	f := novoPiloto(t)
-	corpo := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/terreno/difficult/1/1/ate/1/1", "").Body.String()
+	corpo := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/terreno/dificil/1/1/ate/1/1", "").Body.String()
 	if !strings.Contains(corpo, "não há tabuleiro aberto") {
 		t.Errorf("a recusa não explica o que faltou; sinais = %s", trechoDeSinais(corpo))
 	}

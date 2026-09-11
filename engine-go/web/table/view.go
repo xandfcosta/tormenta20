@@ -195,7 +195,7 @@ type tableRow struct {
 	PM        *tableBar
 	Condicoes []string
 	// Iniciais é o monogram do trilho de 80px (ALE-269). Nasce na view e não
-	// no template pela convenção da casa — `web/campaigns/list_view.go` faz o
+	// no template pela convenção da casa — `web/campanhas/list_view.go` faz o
 	// mesmo —, e porque duas letras NÃO são um nome: quem desenha o retrato
 	// precisa do rótulo inteiro ao lado, no `aria-label`.
 	Iniciais string
@@ -566,7 +566,7 @@ func tableCommand(v View, metodo, acao string) string {
 // postar é uma corrida esperando por um mestre de dedo rápido. Caminho é do
 // botão que foi clicado, e não há segundo escritor.
 func rowCommand(v View, l tableRow, acao string) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/initiative/%s/%s')", v.CampaignID, v.SessionID, l.ID, acao)
+	return fmt.Sprintf("@post('/mesa/%d/%d/iniciativa/%s/%s')", v.CampaignID, v.SessionID, l.ID, acao)
 }
 
 // rowVital escreve o ferir/curar com os DOIS passos já resolvidos em duas
@@ -602,7 +602,7 @@ func harmVerb(pool string) string {
 }
 
 func rowVital(v View, l tableRow, pool, verb string) string {
-	base := fmt.Sprintf("/mesa/%d/%d/initiative/%s/vitals/%s/%s/", v.CampaignID, v.SessionID, l.ID, pool, verb)
+	base := fmt.Sprintf("/mesa/%d/%d/iniciativa/%s/vitais/%s/%s/", v.CampaignID, v.SessionID, l.ID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }
 
@@ -625,7 +625,7 @@ func openEdit(v View, l tableRow) string {
 // saveEdit monta o caminho com o id que o número semeou.
 func saveEdit(v View) string {
 	return fmt.Sprintf(
-		"document.getElementById('edit-combatant').close(); @post('/mesa/%d/%d/initiative/' + $edit_row + '/edit')",
+		"document.getElementById('edit-combatant').close(); @post('/mesa/%d/%d/iniciativa/' + $edit_row + '/editar')",
 		v.CampaignID, v.SessionID,
 	)
 }
@@ -674,7 +674,7 @@ func onCondition(id string) string {
 // por combatente, e o sinal é reescrito a cada abertura.
 func toggleConditionRow(v View, id string) string {
 	return fmt.Sprintf(
-		"@post('/mesa/%d/%d/initiative/' + $condition_row + '/condicao/%s')",
+		"@post('/mesa/%d/%d/iniciativa/' + $condition_row + '/condicao/%s')",
 		v.CampaignID, v.SessionID, id,
 	)
 }

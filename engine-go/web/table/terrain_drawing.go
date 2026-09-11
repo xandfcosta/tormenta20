@@ -79,5 +79,5 @@ func drawing(especie board.TerrainKind) speciesDrawing {
 // canto do ícone.
 func squareClass(especie string) string {
 	d := drawing(board.TerrainKind(especie))
-	return "board-terrain board-" + especie + " terrain-corner-" + d.Canto
+	return "board-terrain board-" + board.ClassOf(board.TerrainKind(especie)) + " terrain-corner-" + d.Canto
 }

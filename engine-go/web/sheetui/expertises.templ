@@ -106,7 +106,7 @@ templ expertiseRowBody(v View, linha expertiseRow) {
 			<button
 				type="button"
 				aria-label={ "Remover " + linha.Name }
-				data-on:click={ sheetPost(v, "/pericias/remove/"+linha.Command) }
+				data-on:click={ sheetPost(v, "/pericias/remover/"+linha.Command) }
 				class="inline-flex shrink-0 rounded-sm p-1 text-muted-foreground outline-none transition-colors hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				@ui.Icon("Trash2", "size-3.5")

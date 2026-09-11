@@ -149,7 +149,7 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 		t.Errorf("a edição gravou %d × %v", editado.Quantity, editado.Slots)
 	}
 
-	if recusa := bagCommand(t, f, id, fmt.Sprintf("itens/%d/remove", item)); recusa != "" {
+	if recusa := bagCommand(t, f, id, fmt.Sprintf("itens/%d/remover", item)); recusa != "" {
 		t.Fatalf("remover foi recusado: %q", recusa)
 	}
 	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)

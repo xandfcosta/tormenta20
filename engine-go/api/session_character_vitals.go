@@ -31,7 +31,7 @@ import (
 // pool primeiro. Duas regras para a mesma pancada.
 //
 // Agora a linha do personagem é a fonte: o dano percorre a MESMA regra do
-// `POST /characters/{id}/damage` e a entrada da iniciativa espelha o que foi
+// `POST /personagens/{id}/damage` e a entrada da iniciativa espelha o que foi
 // gravado. NPC continua vivendo só no rastreador — não há ficha atrás dele.
 
 // sheetVitals é quem cumpre a porta. Guarda só o que precisa — as queries —
@@ -43,7 +43,7 @@ type sheetVitals struct{ q *sqlcgen.Queries }
 // first — persisting the drained pools and the new PV. Returns the plan so the
 // HTTP handler can report what was absorbed.
 //
-// Shared by POST /characters/{id}/damage and the live tracker: uma pancada
+// Shared by POST /personagens/{id}/damage and the live tracker: uma pancada
 // digitada na sessão e a mesma pancada digitada na ficha não podem discordar.
 func applyDamagePlan(
 	ctx context.Context, q *sqlcgen.Queries, row sqlcgen.Character, amount int,

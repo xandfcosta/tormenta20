@@ -45,7 +45,7 @@ func Routes(r chi.Router, s Scene) {
 	// 29 botões idênticos.
 	r.Post("/personagens/{id}/pericias/treino/{nome}", s.sheetCommand(toggleTraining))
 	r.Post("/personagens/{id}/pericias/atributo/{nome}/{atributo}", s.sheetCommand(swapAttribute))
-	r.Post("/personagens/{id}/pericias/remove/{nome}", s.sheetCommand(removeCraft))
+	r.Post("/personagens/{id}/pericias/remover/{nome}", s.sheetCommand(removeCraft))
 	// A CRIAÇÃO é a única que lê SINAL, porque o nome é texto que a pessoa acabou
 	// de digitar e ainda não existe em lugar nenhum para virar caminho.
 	r.Post("/personagens/{id}/pericias/nova", s.sheetCommand(criaOOficio))
@@ -73,7 +73,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/itens/adiciona/{catalogo}", s.sheetCommand(addCatalogItem))
 	r.Post("/personagens/{id}/itens/custom", s.sheetCommand(addCustomItem))
 	r.Post("/personagens/{id}/itens/{item}/edita", s.sheetCommand(editItem))
-	r.Post("/personagens/{id}/itens/{item}/remove", s.sheetCommand(removeItemFromSheet))
+	r.Post("/personagens/{id}/itens/{item}/remover", s.sheetCommand(removeItemFromSheet))
 	r.Post("/personagens/{id}/itens/{item}/usa", s.sheetCommand(useItem))
 	r.Post("/personagens/{id}/itens/{item}/melhorias", s.sheetCommand(applyOverlays))
 	// OS PODERES (fatia 8).

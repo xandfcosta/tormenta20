@@ -81,7 +81,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     await page.goto(MESA)
 
     let corpo: string | null = null
-    await page.route('**/rest/day', async (rota) => {
+    await page.route('**/descanso/dia', async (rota) => {
       corpo = rota.request().postData()
       await rota.abort()
     })
@@ -241,12 +241,12 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     // abortar depois deixaria uma conexão viva que poderia entregar o remendo e
     // fazer o teste passar pelo motivo errado.
     // REGEX e não glob: o `@get` do Datastar anexa os sinais da página como
-    // query string, então a URL é `.../stream?datastar={...}` e um glob
-    // terminado em `/stream` não casa. Foi o controle abaixo que denunciou —
+    // query string, então a URL é `.../fluxo?datastar={...}` e um glob
+    // terminado em `/fluxo` não casa. Foi o controle abaixo que denunciou —
     // sem ele este teste teria passado verde com o stream ABERTO, medindo
     // exatamente o caminho que ele existe para excluir.
     let tentouAbrir = 0
-    await page.route(/\/mesa\/\d+\/\d+\/stream(\?|$)/, async (rota) => {
+    await page.route(/\/mesa\/\d+\/\d+\/fluxo(\?|$)/, async (rota) => {
       tentouAbrir++
       await rota.abort()
     })

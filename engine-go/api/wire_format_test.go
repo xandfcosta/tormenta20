@@ -14,7 +14,7 @@ import (
 // A ALE-254 renomeou identificadores ao partir o `api/` em quatro pacotes, e a
 // renomeação varreu a STRING da tag junto: `role` virou `Role` dentro de
 // `json:"role"` em sete lugares. O efeito no produto foi que o
-// `GET /campaigns/{id}` passou a mandar `Role`, a SPA continuou lendo `role`, e
+// `GET /campanhas/{id}` passou a mandar `Role`, a SPA continuou lendo `role`, e
 // o `isGm()` do rastreador virou SEMPRE FALSO — o mestre recebia a visão de
 // jogador na mesa ao vivo. Um dos sete era corpo de ENTRADA, então trocar papel
 // de membro também parou.

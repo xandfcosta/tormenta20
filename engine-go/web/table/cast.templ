@@ -154,8 +154,8 @@ templ castSheet(v View, m Member) {
 templ castBar(v View, m Member, pool, rotulo string, b tableBar) {
 	<div class="flex items-center gap-1">
 		@barra(rotulo, b)
-		@castStep(v, m, pool, "heal", "+", healVerb(pool))
-		@castStep(v, m, pool, "harm", "−", harmVerb(pool))
+		@castStep(v, m, pool, "curar", "+", healVerb(pool))
+		@castStep(v, m, pool, "ferir", "−", harmVerb(pool))
 	</div>
 }
 

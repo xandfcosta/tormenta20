@@ -482,8 +482,19 @@ SSE) seguem em inglês, porque nenhuma delas aparece para alguém.
 
 > Aqui a lista dizia "rota" junto com as outras quatro, e a ALE-301 chegou a
 > traduzir `/terreno/dificil` para `/terreno/difficult` obedecendo a ela. A
-> tradução FICA — desfazê-la mexeria no endereço de novo, por nada —, mas a regra
-> que a produziu deixou de valer: **rota nova sai em português.**
+> ALE-304 desfez aquilo e varreu o resto: **sem exceção** entre as rotas que uma
+> pessoa alcança.
+>
+> **`/health` e `/static/*` ficam em inglês**, e não é fresta: eles não são
+> domínio nem endereço de ninguém — são a sonda do `docker compose` e a pasta dos
+> estáticos, convenção que ferramenta de fora reconhece. A **API JSON** foi junto
+> (`/api/campanhas`, `/api/personagens`), porque essa É domínio.
+>
+> E os endereços da SPA morta — `/campaigns/new`, `/characters/{id}` — **seguem
+> em inglês de propósito**: eles não são rota, são LÁPIDE. Existem só para um
+> marcador antigo cair de pé, e traduzi-los faria cada um desviar para si mesmo.
+> Quem cobra é o `TestEveryLegacyAddressLandsOnAScene`, que foi quem denunciou a
+> varredura larga demais.
 
 **A linha exata entre os dois foi fechada pelo dono na ALE-301**, porque quatro
 casos ficavam de fora da lista e cada um foi decidido por palpite pelo menos uma
