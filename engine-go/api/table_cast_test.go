@@ -144,7 +144,7 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 	}
 
 	// O STATUS NÃO BASTA, e descobri isso sabotando: numa cena servida a recusa
-	// é CONTEÚDO e volta 200, com a frase no `erroDoComando` do rodapé. Um
+	// é CONTEÚDO e volta 200, com a frase no `command_error` do rodapé. Um
 	// caso que olhasse só o código e a ficha passaria verde sobre um gesto que
 	// escreveu a ficha e reprovou depois — que é exatamente a forma que a
 	// sabotagem produziu.
@@ -154,8 +154,8 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("%s deu %d: %s", caminho, rec.Code, rec.Body.String())
 		}
-		if corpo := rec.Body.String(); strings.Contains(corpo, "erroDoComando") &&
-			!strings.Contains(corpo, `"erroDoComando":""`) {
+		if corpo := rec.Body.String(); strings.Contains(corpo, "command_error") &&
+			!strings.Contains(corpo, `"command_error":""`) {
 			t.Fatalf("%s foi recusado apesar do 200: %s", caminho, firstRows(corpo, 6))
 		}
 	}

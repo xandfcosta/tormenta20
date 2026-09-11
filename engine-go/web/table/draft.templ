@@ -66,7 +66,7 @@ templ draftHeader(v draftView) {
 //
 // UMA região e não nove, ao contrário da Mesa, e o motivo é o que a tela É: aqui
 // não há fila que mude com o turno nem elenco que mude com a ficha. O que muda é
-// o mapa, e o `erroDoComando` viaja como SINAL — ele não precisa de HTML novo
+// o mapa, e o `command_error` viaja como SINAL — ele não precisa de HTML novo
 // para acender.
 //
 // O id é o do rascunho e NÃO `mesa-tabuleiro`: os dois nunca estão no mesmo
@@ -81,8 +81,8 @@ templ draftBoardRegion(v draftView) {
 			// sinal novo faria a recusa acender em dois lugares que podem
 			// discordar.
 			<p
-				data-show="$erroDoComando != ''"
-				data-text="$erroDoComando"
+				data-show="$command_error != ''"
+				data-text="$command_error"
 				aria-live="assertive"
 				class="text-xs text-destructive-ink"
 			></p>

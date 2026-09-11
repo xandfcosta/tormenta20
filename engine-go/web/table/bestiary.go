@@ -93,10 +93,10 @@ func (s Scene) handleBestiaryTable(w http.ResponseWriter, r *http.Request) {
 // do d20 do jogador (ALE-213) — a página não faz conta que vale.
 func entryDraft(m book.Entry) map[string]any {
 	return map[string]any{
-		"pvdoverbete":     m.HP,
-		"inidoverbete":    rand.IntN(20) + 1,
-		"copiasdoverbete": 1,
-		"draft_of":        m.ID,
+		"entry_hp":         m.HP,
+		"entry_initiative": rand.IntN(20) + 1,
+		"entry_copies":     1,
+		"draft_of":         m.ID,
 	}
 }
 
@@ -203,9 +203,9 @@ func envioDosSinais(r *http.Request) (envioDoVerbete, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
 		Criatura   string `json:"creature"`
-		PV         int64  `json:"pvdoverbete"`
-		Iniciativa int    `json:"inidoverbete"`
-		Copias     int    `json:"copiasdoverbete"`
+		PV         int64  `json:"entry_hp"`
+		Iniciativa int    `json:"entry_initiative"`
+		Copias     int    `json:"entry_copies"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return envioDoVerbete{}, fmt.Errorf("não entendi o envio: %v", err)

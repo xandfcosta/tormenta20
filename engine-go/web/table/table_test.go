@@ -111,7 +111,7 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	if !strings.Contains(html, "informe o dado") {
 		t.Error("sem dado, a linha não diz o que falta")
 	}
-	if !strings.Contains(html, "$registrando || !(") {
+	if !strings.Contains(html, "$registering || !(") {
 		t.Error("o botão continua oferecendo uma ação que o servidor vai recusar")
 	}
 }

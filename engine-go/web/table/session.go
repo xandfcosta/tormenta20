@@ -59,7 +59,7 @@ func encerraAPartida(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error
 // texto para poder salvar.
 func renameStart(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	var sinais struct {
-		Titulo string `json:"titulodasessao"`
+		Titulo string `json:"session_title"`
 	}
 	c.R.Body = http.MaxBytesReader(nil, c.R.Body, 1<<20)
 	if err := datastar.ReadSignals(c.R, &sinais); err != nil {

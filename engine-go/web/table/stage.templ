@@ -41,7 +41,7 @@ import (
 templ gmStage(v View, b master.BestiaryView) {
 	<main
 		id="mesa"
-		data-attr:style="`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px; --notas-largura:${$notaslargura ? $notaslargura + 'px' : 'clamp(22rem,40%,44rem)'}`"
+		data-attr:style="`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px; --notas-largura:${$notes_width ? $notes_width + 'px' : 'clamp(22rem,40%,44rem)'}`"
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@tableHeader(v)
@@ -56,7 +56,7 @@ templ gmStage(v View, b master.BestiaryView) {
 			// trilho em número — um `right: calc(3.5rem + …)` que envelhece no
 			// dia em que o trilho mudar de medida, sem nada acusando.
 			<div
-				data-class="{'notas-flutuam': $notasflutua}"
+				data-class="{'notas-flutuam': $notes_floating}"
 				class="relative flex min-h-0 flex-1 flex-col gap-1.5 lg:flex-row"
 			>
 				@tableBoard(v)

@@ -136,15 +136,15 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 // Nomes MINÚSCULOS nos que aparecem como CHAVE de atributo (`data-bind`,
 // `data-signals`): o HTML minuscula a chave, e um `data-bind="gabaritoTamanho"`
 // liga um sinal NOVO, vazio, ao lado do que se queria. Os que só vivem dentro de
-// expressão (`$erroDoComando`) mantêm a caixa.
+// expressão (`$command_error`) mantêm a caixa.
 func tableSignalsExpr() string {
 	return "{" + strings.Join([]string{
-		// `erro` e `erroDoComando` são DOIS sinais e não um. Um só faria a
+		// `erro` e `command_error` são DOIS sinais e não um. Um só faria a
 		// recusa de "Adicionar grupo" acender a frase vermelha dentro da caixa
 		// "Registrar iniciativa" do mestre que também joga: a frase certa no
 		// lugar errado, que é como se lê um defeito. Uma palavra por conceito
 		// vale para sinal de página como vale para identificador.
-		"d20: 10, erro: '', erroDoComando: '', erroDoMovimento: ''",
+		"d20: 10, erro: '', command_error: '', move_error: ''",
 		// O chão padrão é DERIVADO e não digitado: escrever 'pedra' aqui seria a
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
@@ -196,18 +196,18 @@ func tableSignalsExpr() string {
 		// linha do `buscador` no GLOSSARY existe para impedir.
 		"new_token_name: '', new_token_size: 1, new_token_look: 'object'",
 		// A FILA e os verbos da linha.
-		"qualidadedodescanso: 'normal', formdecombatente: false",
-		"linhadacondicao: '', condicoesdalinha: '', rotulodalinha: ''",
-		"novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc'",
-		"edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0",
+		"rest_quality: 'normal', combatant_form: false",
+		"condition_row: '', row_conditions: '', row_label: ''",
+		"new_name: '', new_initiative: 10, new_hp: 0, new_type: 'npc'",
+		"edit_row: '', edit_name: '', edit_initiative: 0, edit_hp: 0, edit_hp_max: 0",
 		// O BESTIÁRIO e o elenco.
-		"draft_of: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, nomedonpc: ''",
+		"draft_of: '', entry_hp: 0, entry_initiative: 10, entry_copies: 1, npc_name: ''",
 		// O EDITOR DE BLOCO. O `rascunho` nasce com a FORMA inteira e não vazio,
 		// e isso não é enfeite: `data-bind` num caminho que ainda não existe liga
 		// um sinal NOVO em vez de escrever no de baixo, e o campo ficaria mudo
 		// até o primeiro `@post`. A semente é a mesma do "criar do zero", vinda
 		// do `blocoEmBranco` — escrevê-la aqui à mão seria o segundo branco.
-		fmt.Sprintf("draft_open: false, draft_tab: %q, erroDoRascunho: '', draft: %s",
+		fmt.Sprintf("draft_open: false, draft_tab: %q, draft_error: '', draft: %s",
 			abaDosNumeros, blankDraft()),
 		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
 		fmt.Sprintf("square: %d", DefaultSquare),
@@ -243,8 +243,8 @@ func tableSignalsExpr() string {
 		"template_x: 0, template_y: 0, template_aim_x: 0, template_aim_y: 0, template_phase: 0",
 		fmt.Sprintf("template_path: '', template_text: %q", emptyTemplateHint),
 		// As NOTAS da sessão.
-		"notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false, notaslargura: 0, notasarrastando: false, notasflutua: false",
-		"notassalvando: false, erroDasNotas: ''",
+		"notes: '', notes_saved: '', notes_mode: 'duplo', notes_open: false, notes_width: 0, notes_dragging: false, notes_floating: false",
+		"notes_saving: false, notes_error: ''",
 	}, ", ") + "}"
 }
 

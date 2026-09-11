@@ -54,7 +54,7 @@ func gmControls(v View, r viewGm) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p><p data-show=\"$erroDoComando != ''\" data-text=\"$erroDoComando\" aria-live=\"assertive\" class=\"order-last w-full text-xs text-destructive-ink\"></p><div class=\"ml-auto flex flex-wrap items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</p><p data-show=\"$command_error != ''\" data-text=\"$command_error\" aria-live=\"assertive\" class=\"order-last w-full text-xs text-destructive-ink\"></p><div class=\"ml-auto flex flex-wrap items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -252,7 +252,7 @@ func rest(v View) templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<button type=\"button\" data-indicator:descansando data-attr:disabled=\"$descansando\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<button type=\"button\" data-indicator:resting data-attr:disabled=\"$resting\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -348,14 +348,14 @@ func restDay(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">Qualidade do descanso</label><select id=\"qualidade-do-descanso\" data-bind:qualidadedodescanso class=\"mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"><option value=\"ruim\">Ruim (½ nível)</option> <option value=\"normal\">Normal (nível)</option> <option value=\"confortavel\">Confortável (2×)</option> <option value=\"luxuosa\">Luxuosa (3×)</option></select><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('descanso-de-dia').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">Qualidade do descanso</label><select id=\"qualidade-do-descanso\" data-bind:rest_quality class=\"mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"><option value=\"ruim\">Ruim (½ nível)</option> <option value=\"normal\">Normal (nível)</option> <option value=\"confortavel\">Confortável (2×)</option> <option value=\"luxuosa\">Luxuosa (3×)</option></select><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('descanso-de-dia').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('descanso-de-dia').close(); " + tableCommand(v, "POST", "rest/day"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 211, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 210, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -399,7 +399,7 @@ func turnStep(v View, rota, rotulo, sinal string, ligado bool) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 223, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 222, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -417,7 +417,7 @@ func turnStep(v View, rota, rotulo, sinal string, ligado bool) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "initiative/"+rota))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 225, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 224, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -440,7 +440,7 @@ func turnStep(v View, rota, rotulo, sinal string, ligado bool) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 231, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 230, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -493,7 +493,7 @@ func endSceneButton(v View) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "scene/end"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 248, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 247, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
@@ -535,7 +535,7 @@ func startScene(v View) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "scene/start"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 256, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 255, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {

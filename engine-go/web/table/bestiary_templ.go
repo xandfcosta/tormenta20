@@ -197,19 +197,19 @@ func adjustEntry(v master.BestiaryView, m book.Entry) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = campoDoAjuste("ajuste-pv", "PV", "pvdoverbete", "1", "999").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = campoDoAjuste("ajuste-pv", "PV", "entry_hp", "1", "999").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = campoDoAjuste("ajuste-ini", "Iniciativa", "inidoverbete", "-5", "40").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = campoDoAjuste("ajuste-ini", "Iniciativa", "entry_initiative", "-5", "40").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = campoDoAjuste("ajuste-copias", "Quantas", "copiasdoverbete", "1", fmt.Sprint(maxCopiasDeUmVerbete)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = campoDoAjuste("ajuste-copias", "Quantas", "entry_copies", "1", fmt.Sprint(maxCopiasDeUmVerbete)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<button type=\"button\" data-indicator:mandando data-attr:disabled=\"$mandando\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<button type=\"button\" data-indicator:sending data-attr:disabled=\"$sending\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

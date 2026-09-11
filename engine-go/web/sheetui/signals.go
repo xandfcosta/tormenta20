@@ -25,11 +25,10 @@ import (
 //
 // # As chaves são MINÚSCULAS, e não é estilo
 //
-// Chave de atributo é minusculada pelo HTML: um `data-bind:novaPericia` vira
-// `data-bind:new_expertise` e liga um sinal NOVO, deixando o que o servidor lê
-// sempre vazio. Só o VALOR de um atributo preserva a caixa, que é por que o
-// `$sheet_open` do bestiário pode ser camelCase — ele só aparece dentro de
-// expressões.
+// Chave de atributo é minusculada pelo HTML: escrita em camelCase, ela vira
+// outra chave e liga um sinal NOVO, deixando o que o servidor lê sempre vazio.
+// Só o VALOR de um atributo preserva a caixa — e é por isso que o padrão é
+// `snake_case`, que atravessa o parser intacto nos dois lugares (ALE-301).
 
 // Signals é o que o cliente manda junto de qualquer gesto da ficha.
 //

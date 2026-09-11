@@ -63,7 +63,7 @@ func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 
 	// E a trava é do SERVIDOR, não do desenho.
 	for _, gesto := range []string{"iniciar", "encerrar", "reiniciar", "titulo", "excluir"} {
-		rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/sessao/"+gesto, `{"titulodasessao":"x"}`)
+		rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/sessao/"+gesto, `{"session_title":"x"}`)
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador passou em %q: %d", gesto, rec.Code)
 		}
@@ -78,13 +78,13 @@ func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
 
-	f.posta(t, f.mestre, f.tableUrl()+"/sessao/titulo", `{"titulodasessao":"A cripta do rio"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/sessao/titulo", `{"session_title":"A cripta do rio"}`)
 	sess, _ := f.s.queries.GetSession(ctx, f.sessionID)
 	if !sess.Title.Valid || sess.Title.String != "A cripta do rio" {
 		t.Fatalf("o título não foi salvo: %+v", sess.Title)
 	}
 
-	f.posta(t, f.mestre, f.tableUrl()+"/sessao/titulo", `{"titulodasessao":"   "}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/sessao/titulo", `{"session_title":"   "}`)
 	sess, _ = f.s.queries.GetSession(ctx, f.sessionID)
 	if sess.Title.Valid && strings.TrimSpace(sess.Title.String) != "" {
 		t.Errorf("o título em branco não virou nulo: %+v", sess.Title)

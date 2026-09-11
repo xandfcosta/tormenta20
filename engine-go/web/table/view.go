@@ -617,7 +617,7 @@ func openEdit(v View, l tableRow) string {
 		pv, pvMax = l.PV.Current, l.PV.Max
 	}
 	return fmt.Sprintf(
-		"$edicaolinha = '%s'; $edicaonome = %s; $edicaoiniciativa = %d; $edicaopv = %d; $edicaopvmax = %d; document.getElementById('editar-combatente').showModal()",
+		"$edit_row = '%s'; $edit_name = %s; $edit_initiative = %d; $edit_hp = %d; $edit_hp_max = %d; document.getElementById('editar-combatente').showModal()",
 		l.ID, jsTextHow(l.Rotulo), l.Iniciativa, pv, pvMax,
 	)
 }
@@ -625,7 +625,7 @@ func openEdit(v View, l tableRow) string {
 // saveEdit monta o caminho com o id que o número semeou.
 func saveEdit(v View) string {
 	return fmt.Sprintf(
-		"document.getElementById('editar-combatente').close(); @post('/mesa/%d/%d/initiative/' + $edicaolinha + '/edit')",
+		"document.getElementById('editar-combatente').close(); @post('/mesa/%d/%d/initiative/' + $edit_row + '/edit')",
 		v.CampaignID, v.SessionID,
 	)
 }
@@ -656,7 +656,7 @@ func jsTextHow(s string) string {
 // quem troca sabe que houve um anterior.
 func openConditions(l tableRow) string {
 	return fmt.Sprintf(
-		"$linhadacondicao = %q; $condicoesdalinha = %q; $rotulodalinha = %q;"+
+		"$condition_row = %q; $row_conditions = %q; $row_label = %q;"+
 			" document.getElementById('condicoes-do-combatente').showModal()",
 		l.ID, strings.Join(l.Condicoes, ","), l.Rotulo,
 	)
@@ -664,7 +664,7 @@ func openConditions(l tableRow) string {
 
 // onCondition é a pergunta que pinta o crachá do diálogo.
 func onCondition(id string) string {
-	return fmt.Sprintf("$condicoesdalinha.split(',').includes(%q)", id)
+	return fmt.Sprintf("$row_conditions.split(',').includes(%q)", id)
 }
 
 // toggleConditionRow posta o clique na linha ESCOLHIDA.
@@ -674,7 +674,7 @@ func onCondition(id string) string {
 // por combatente, e o sinal é reescrito a cada abertura.
 func toggleConditionRow(v View, id string) string {
 	return fmt.Sprintf(
-		"@post('/mesa/%d/%d/initiative/' + $linhadacondicao + '/condicao/%s')",
+		"@post('/mesa/%d/%d/initiative/' + $condition_row + '/condicao/%s')",
 		v.CampaignID, v.SessionID, id,
 	)
 }
@@ -722,5 +722,5 @@ func portugueseCycle(status string) string {
 // um SINAL e nunca recebe `value` do servidor, senão o remendo da próxima troca
 // de turno apagaria o que o mestre está digitando.
 func openConfigSession(v View) string {
-	return fmt.Sprintf("$titulodasessao = %q; document.getElementById('config-da-sessao').showModal()", v.Titulo)
+	return fmt.Sprintf("$session_title = %q; document.getElementById('config-da-sessao').showModal()", v.Titulo)
 }

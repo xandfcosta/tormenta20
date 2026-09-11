@@ -109,7 +109,7 @@ func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 	resposta := f.posta(t, f.mestre,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/7/remover",
 		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
-	if !strings.Contains(resposta, "erroDoRascunho") {
+	if !strings.Contains(resposta, "draft_error") {
 		t.Errorf("a linha inexistente não recusou:\n%s", resposta)
 	}
 }
@@ -168,7 +168,7 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 
 // TestSavingWithoutANameSpeaksInsideTheEditor.
 //
-// A recusa do `gmCommand` sai por padrão no `erroDoComando`, que é o rodapé
+// A recusa do `gmCommand` sai por padrão no `command_error`, que é o rodapé
 // do mestre — e o editor é um DIÁLOGO por cima dele. Medido no navegador: salvar
 // sem nome não dizia absolutamente nada, porque a frase estava atrás do painel.
 //
@@ -180,7 +180,7 @@ func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 	resposta := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":0,"nome":"","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
-	if !strings.Contains(resposta, "erroDoRascunho") || !strings.Contains(resposta, "precisa de um nome") {
+	if !strings.Contains(resposta, "draft_error") || !strings.Contains(resposta, "precisa de um nome") {
 		t.Errorf("a recusa não falou no editor:\n%s", resposta)
 	}
 	if elenco := f.s.tableScene.CampaignCast(context.Background(), f.campaignID); len(elenco) != 0 {

@@ -523,10 +523,12 @@ parser do NAVEGADOR, então o HTML servido ainda tem a caixa que o autor escreve
 e todo teste de Go vê o nome certo. A garantia desceu para a camada mais barata
 que a segura — o TEXTO do atributo, que é onde o autor erra —, e são dois
 guardas: o `TestNoDatastarAttributeKeyCarriesUppercase`, que varre a forma, e o
-`TestNoNewSignalBreaksTheNamingStandard`, que é CATRACA sobre os 147 sinais que
-existiam no dia. Ele não cobra tradução, e o cabeçalho dele diz isso com todas as
-letras: quem força a tradução é a linha de base encolher a cada superfície
-varrida.
+`TestNoNewSignalBreaksTheNamingStandard`, que nasceu CATRACA sobre os 147 sinais
+do dia e hoje varre com a linha de base VAZIA — todo sinal da árvore cumpre o
+padrão. Ele não cobra tradução, e o cabeçalho dele diz isso com todas as letras:
+quem forçou a tradução foi a linha de base encolher a cada superfície varrida,
+porque renomear um sinal o tira da lista e o guarda cobra que ele saia do arquivo
+junto.
 
 #### Renomear um sinal são SETE canais, e nada liga um ao outro
 
@@ -572,9 +574,17 @@ inteira** (ALE-301): os 22 specs do `e2e/tests` na fatia 1 e mais **96 arquivos*
 no resto do repositório na fatia 2 — o pacote `tabuleiro/` virou `board/`, o
 `GLOSSARIO.md` virou `GLOSSARY.md`, e as 18 fixtures de `engine-go/parity/`
 ficaram, por decisão do dono, porque o nome delas É o `slug` gravado no dado.
-Quem cobra é o `TestNoFileIsNamedInPortuguese`. **Os 139 sinais e as 121 classes
-continuam em português**; enquanto elas não rodam, o que vale é a regra: o que
-você escrever novo já sai em inglês.
+Quem cobra é o `TestNoFileIsNamedInPortuguese`.
+
+**A dos SINAIS também rodou** (ALE-301): eram **147** — e não 139, porque a
+primeira contagem não enxergava três que só existiam dentro de constantes Go —,
+varridos em quatro superfícies, com a suíte de Playwright inteira entre uma e
+outra. A linha de base do `signal_debt.txt` foi de 147 a **zero**, e o arquivo
+fica vazio de propósito: enquanto ele existe, uma exceção é uma linha visível em
+vez de um `if` escondido no guarda.
+
+**As 121 classes CSS continuam em português**, e são a última das três; enquanto
+ela não roda, o que vale é a regra: o que você escrever novo já sai em inglês.
 
 > **E o instrumento da fatia 1 mentiu com cara de resposta.** Ele casava contra
 > uma lista de palavras PORTUGUESAS, e ela não conhecia `fronteira`: a primeira

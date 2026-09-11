@@ -105,7 +105,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	// `grimorio-gold` e o `title` do botão de cor. Asserção sobre substring
 	// comum mede a página, não a mensagem.
 	// AS ASPAS VÊM ESCAPADAS, e isto foi MEDIDO e não suposto: a recusa viaja
-	// dentro do sinal `erroDoComando`, num `data: signals {...}` JSON, então o
+	// dentro do sinal `command_error`, num `data: signals {...}` JSON, então o
 	// `%q` do servidor chega como `\"gold\"`. Procurar a frase com aspas
 	// normais falhava sobre uma recusa que estava lá.
 	if !strings.Contains(corpo, `\"gold\" não existe`) {

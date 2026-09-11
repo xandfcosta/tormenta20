@@ -201,7 +201,7 @@ func (s Scene) draftCommand(
 				_ = sse.PatchElements(fragmento)
 			}
 		}
-		_ = sse.MarshalAndPatchSignals(map[string]any{"erroDoComando": frase})
+		_ = sse.MarshalAndPatchSignals(map[string]any{"command_error": frase})
 	}
 }
 

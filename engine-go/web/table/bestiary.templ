@@ -110,13 +110,13 @@ templ tableBestiary(v master.BestiaryView) {
 // servidor, e SÓ ao abrir outra criatura — ver `entryDraft`.
 templ adjustEntry(v master.BestiaryView, m book.Entry) {
 	<div class="flex shrink-0 flex-wrap items-end gap-3 border-t border-grimorio-iron pt-3">
-		@campoDoAjuste("ajuste-pv", "PV", "pvdoverbete", "1", "999")
-		@campoDoAjuste("ajuste-ini", "Iniciativa", "inidoverbete", "-5", "40")
-		@campoDoAjuste("ajuste-copias", "Quantas", "copiasdoverbete", "1", fmt.Sprint(maxCopiasDeUmVerbete))
+		@campoDoAjuste("ajuste-pv", "PV", "entry_hp", "1", "999")
+		@campoDoAjuste("ajuste-ini", "Iniciativa", "entry_initiative", "-5", "40")
+		@campoDoAjuste("ajuste-copias", "Quantas", "entry_copies", "1", fmt.Sprint(maxCopiasDeUmVerbete))
 		<button
 			type="button"
-			data-indicator:mandando
-			data-attr:disabled="$mandando"
+			data-indicator:sending
+			data-attr:disabled="$sending"
 			data-on:click={ fmt.Sprintf("@post('%s/enviar')", v.BestiaryBase()) }
 			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 		>

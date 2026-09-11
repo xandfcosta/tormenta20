@@ -31,12 +31,12 @@ func (s Scene) RoutesNote(r chi.Router) {
 // notesSignals é o que a página manda: o texto em curso.
 //
 // O NOME DO SINAL É TODO MINÚSCULO porque ele é usado como CHAVE de atributo
-// (`data-bind:notas`), e o analisador de HTML minuscula chave — um
+// (`data-bind:notes`), e o analisador de HTML minuscula chave — um
 // `data-bind:notesSignals` chegaria como `notasdasessao` e ligaria um sinal
 // NOVO, com o servidor lendo o antigo para sempre vazio. Já custou uma sessão
 // inteira no descanso de dia.
 type notesSignals struct {
-	Notas string `json:"notas"`
+	Notas string `json:"notes"`
 }
 
 // readsNotesClient pega o texto que está na tela de quem pediu.
@@ -161,11 +161,11 @@ func (s Scene) respondNotes(
 	campaignID, sessionID int64, texto string, recusa error,
 ) {
 	sse := datastar.NewSSE(w, r)
-	sinais := map[string]any{"notas": texto, "erroDasNotas": ""}
+	sinais := map[string]any{"notes": texto, "notes_error": ""}
 	if recusa != nil {
-		sinais["erroDasNotas"] = recusa.Error()
+		sinais["notes_error"] = recusa.Error()
 	} else {
-		sinais["notassalvas"] = texto
+		sinais["notes_saved"] = texto
 		previa := tableNotesPreview(View{
 			CampaignID: campaignID, SessionID: sessionID,
 			Notas: texto, NotasBlocos: markdown.Parse(texto),
@@ -193,9 +193,9 @@ func seedNotes(v View) string {
 		texto = []byte(`""`)
 	}
 	return fmt.Sprintf(
-		"$notas = %s; $notassalvas = %s; $notasmodo = localStorage.getItem('%s') || 'duplo'; "+
-			"$notaslargura = Number(localStorage.getItem('%s')) || 0; "+
-			"$notasflutua = localStorage.getItem('%s') === 'true'",
+		"$notes = %s; $notes_saved = %s; $notes_mode = localStorage.getItem('%s') || 'duplo'; "+
+			"$notes_width = Number(localStorage.getItem('%s')) || 0; "+
+			"$notes_floating = localStorage.getItem('%s') === 'true'",
 		texto, texto, notesModeKey, notesWidthKey, notesFloatKey,
 	)
 }
@@ -205,7 +205,7 @@ func seedNotes(v View) string {
 const notesModeKey = "t20:notas-view"
 
 func escolheOModo(valor string) string {
-	return fmt.Sprintf("$notasmodo = '%s'; localStorage.setItem('%s', '%s')", valor, notesModeKey, valor)
+	return fmt.Sprintf("$notes_mode = '%s'; localStorage.setItem('%s', '%s')", valor, notesModeKey, valor)
 }
 
 // A LARGURA DA COLUNA (ALE-218), e ela GRUDA como os modos grudam.
@@ -228,7 +228,7 @@ const notesFloatKey = "t20:notas-flutua"
 // fileira daria oito botões para descrever duas perguntas.
 func toggleFloating() string {
 	return fmt.Sprintf(
-		"$notasflutua = !$notasflutua; localStorage.setItem('%s', $notasflutua)", notesFloatKey)
+		"$notes_floating = !$notes_floating; localStorage.setItem('%s', $notes_floating)", notesFloatKey)
 }
 
 // O PISO é o do `clamp` que a coluna tinha fixo: abaixo de 22rem o "lado a lado"
@@ -258,8 +258,8 @@ func widthCeiling() string {
 func widthKeyStep() string {
 	return fmt.Sprintf(
 		"if (evt.key === 'ArrowLeft' || evt.key === 'ArrowRight') { evt.preventDefault(); "+
-			"$notaslargura = Math.min(%s, Math.max(%d, %s + (evt.key === 'ArrowLeft' ? 32 : -32))); %s } "+
-			"if (evt.key === 'Home') { evt.preventDefault(); $notaslargura = 0; localStorage.removeItem('%s') }",
+			"$notes_width = Math.min(%s, Math.max(%d, %s + (evt.key === 'ArrowLeft' ? 32 : -32))); %s } "+
+			"if (evt.key === 'Home') { evt.preventDefault(); $notes_width = 0; localStorage.removeItem('%s') }",
 		widthCeiling(), notesMinWidth, widthRightNow(), storeTheWidth(), notesWidthKey,
 	)
 }
@@ -267,35 +267,35 @@ func widthKeyStep() string {
 // widthRightNow é o valor de PARTIDA de um ajuste, e ele é medido na tela em
 // vez de cair num padrão.
 //
-// Enquanto o mestre não escolhe, `$notaslargura` é zero e quem manda é o
+// Enquanto o mestre não escolhe, `$notes_width` é zero e quem manda é o
 // `clamp` da folha — que depende da janela. Um padrão escrito aqui faria a
 // PRIMEIRA seta SALTAR: medido, a coluna ia de 704px para 384 num toque, porque
 // o piso de 22rem não é o que está na tela. A divisa tem de continuar de onde a
 // coluna está.
 func widthRightNow() string {
-	return "($notaslargura || document.getElementById('mesa-notas').getBoundingClientRect().width)"
+	return "($notes_width || document.getElementById('mesa-notas').getBoundingClientRect().width)"
 }
 
 // widthDragStarts é o gesto de ponteiro. A conta é sobre a borda DIREITA da
 // coluna, que não se move: arrastar para a esquerda cresce as notas.
 func widthDragStarts() string {
-	return "evt.preventDefault(); $notasarrastando = true; el.setPointerCapture(evt.pointerId)"
+	return "evt.preventDefault(); $notes_dragging = true; el.setPointerCapture(evt.pointerId)"
 }
 
 func widthFollowsPointer() string {
 	return fmt.Sprintf(
-		"if ($notasarrastando) { const c = document.getElementById('mesa-notas').getBoundingClientRect(); "+
-			"$notaslargura = Math.min(%s, Math.max(%d, c.right - evt.clientX)) }",
+		"if ($notes_dragging) { const c = document.getElementById('mesa-notas').getBoundingClientRect(); "+
+			"$notes_width = Math.min(%s, Math.max(%d, c.right - evt.clientX)) }",
 		widthCeiling(), notesMinWidth,
 	)
 }
 
 func widthDragDrops() string {
-	return "if ($notasarrastando) { $notasarrastando = false; " + storeTheWidth() + " }"
+	return "if ($notes_dragging) { $notes_dragging = false; " + storeTheWidth() + " }"
 }
 
 func storeTheWidth() string {
-	return fmt.Sprintf("localStorage.setItem('%s', $notaslargura)", notesWidthKey)
+	return fmt.Sprintf("localStorage.setItem('%s', $notes_width)", notesWidthKey)
 }
 
 func saveNotes(v View) string {

@@ -27,7 +27,7 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 		{"scene/end", ""},
 		{"initiative/populate", ""},
 		{"rest/scene", ""},
-		{"rest/day", `{"qualidadedodescanso":"normal"}`},
+		{"rest/day", `{"rest_quality":"normal"}`},
 	}
 	for _, cmd := range comandos {
 		t.Run(cmd.rota, func(t *testing.T) {
@@ -190,10 +190,10 @@ func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/end", "")
 	corpo := rec.Body.String()
-	if !strings.Contains(corpo, "erroDoComando") {
+	if !strings.Contains(corpo, "command_error") {
 		t.Fatalf("a recusa não chegou à cena do mestre; corpo = %q", corpo)
 	}
-	if strings.Contains(corpo, `"erroDoComando":""`) {
+	if strings.Contains(corpo, `"command_error":""`) {
 		t.Error("a cena recebeu a frase VAZIA — o mestre veria a cena ligada e nenhuma explicação")
 	}
 }
@@ -207,7 +207,7 @@ func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 func TestTheCommandErrorDoesNotInvadeTheRecordError(t *testing.T) {
 	f := novoPiloto(t)
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(corpo, "erroDoComando") {
+	if !strings.Contains(corpo, "command_error") {
 		t.Error("a página do mestre não declarou o sinal do comando")
 	}
 }
@@ -269,7 +269,7 @@ func TestThePlayerDoesNotGetAddPartyInTheHtml(t *testing.T) {
 func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/rest/day", `{"qualidadedodescanso":"ruim"}`)
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/rest/day", `{"rest_quality":"ruim"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("descanso de dia deu %d: %s", rec.Code, rec.Body.String())
 	}
@@ -293,7 +293,7 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 func TestAnInventedQualityIsRefused(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/rest/day", `{"qualidadedodescanso":"palaciana"}`)
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/rest/day", `{"rest_quality":"palaciana"}`)
 	corpo := rec.Body.String()
 	if !strings.Contains(corpo, "palaciana") {
 		t.Errorf("a recusa não citou o valor ofensivo; corpo = %q", corpo)
@@ -503,7 +503,7 @@ func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
 func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
-		`{"novonome":"Ogro","novainiciativa":12,"novopv":130,"novotipo":"npc"}`); rec.Code != http.StatusOK {
+		`{"new_name":"Ogro","new_initiative":12,"new_hp":130,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("pôr o ogro na fila deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
@@ -664,7 +664,7 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
-		`{"novonome":"  Goblin salteador  ","novainiciativa":17,"novopv":12,"novotipo":"npc"}`)
+		`{"new_name":"  Goblin salteador  ","new_initiative":17,"new_hp":12,"new_type":"npc"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d: %s", rec.Code, rec.Body.String())
 	}
@@ -685,7 +685,7 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	}
 
 	rec = f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
-		`{"novonome":"Figurante","novainiciativa":3,"novopv":0,"novotipo":"npc"}`)
+		`{"new_name":"Figurante","new_initiative":3,"new_hp":0,"new_type":"npc"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar sem PV deu %d", rec.Code)
 	}
@@ -705,7 +705,7 @@ func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
 	f := novoPiloto(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
-		`{"novonome":"Ogro","novainiciativa":400,"novopv":0,"novotipo":"npc"}`)
+		`{"new_name":"Ogro","new_initiative":400,"new_hp":0,"new_type":"npc"}`)
 	if corpo := rec.Body.String(); !strings.Contains(corpo, "400") {
 		t.Errorf("a recusa não citou a iniciativa ofensiva; corpo = %q", corpo)
 	}
@@ -717,7 +717,7 @@ func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
 // E acrescentar é do MESTRE, com as duas metades medidas juntas (ALE-144).
 func TestAddingACombatantBelongsToTheGm(t *testing.T) {
 	f := novoPiloto(t)
-	corpo := `{"novonome":"Intruso","novainiciativa":10,"novopv":0,"novotipo":"npc"}`
+	corpo := `{"new_name":"Intruso","new_initiative":10,"new_hp":0,"new_type":"npc"}`
 
 	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/initiative/add", corpo); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador acrescentou e levou %d, quero 403", rec.Code)
@@ -745,16 +745,16 @@ func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
 	f := novoPiloto(t)
 
 	aceito := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
-		`{"novonome":"Goblin","novainiciativa":17,"novopv":12,"novotipo":"character"}`).Body.String()
-	if !strings.Contains(aceito, `"novonome":""`) {
+		`{"new_name":"Goblin","new_initiative":17,"new_hp":12,"new_type":"character"}`).Body.String()
+	if !strings.Contains(aceito, `"new_name":""`) {
 		t.Errorf("o formulário não se limpou depois do aceite; corpo = %s", trechoDeSinais(aceito))
 	}
-	if !strings.Contains(aceito, `"novotipo":"npc"`) {
+	if !strings.Contains(aceito, `"new_type":"npc"`) {
 		t.Errorf("o tipo não voltou para npc; corpo = %s", trechoDeSinais(aceito))
 	}
 
 	recusado := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
-		`{"novonome":"Ogro","novainiciativa":400,"novopv":0,"novotipo":"npc"}`).Body.String()
+		`{"new_name":"Ogro","new_initiative":400,"new_hp":0,"new_type":"npc"}`).Body.String()
 	// O CONTROLE: a recusa TEM de ter acontecido, senão "não limpou" seria só
 	// "não houve resposta nenhuma".
 	if !strings.Contains(recusado, "400") {
@@ -763,7 +763,7 @@ func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
 	// Quem garante isto é a ORDEM — a mutação só escreve nos sinais depois de a
 	// própria escrita ter dado certo —, e não um descarte na resposta. O teste
 	// prende a ordem: quem mover a limpeza para antes da mutação cai aqui.
-	if strings.Contains(recusado, `"novonome"`) {
+	if strings.Contains(recusado, `"new_name"`) {
 		t.Error("o formulário foi limpo numa RECUSA — a pessoa perdeu o que digitou e precisa corrigir")
 	}
 }
@@ -783,7 +783,7 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	}
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/"+entryID+"/edit",
-		`{"edicaoiniciativa":21,"edicaopv":7}`)
+		`{"edit_initiative":21,"edit_hp":7}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("editar deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
 	}
@@ -819,7 +819,7 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 	entryID := f.tracker(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/"+entryID+"/edit",
-		`{"edicaoiniciativa":41,"edicaopv":10}`)
+		`{"edit_initiative":41,"edit_hp":10}`)
 	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "41") {
 		t.Errorf("a recusa não citou a iniciativa ofensiva; sinais = %s", corpo)
 	}
@@ -836,14 +836,14 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
-		`{"novonome":"Figurante","novainiciativa":5,"novopv":0,"novotipo":"npc"}`); rec.Code != http.StatusOK {
+		`{"new_name":"Figurante","new_initiative":5,"new_hp":0,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d", rec.Code)
 	}
 	entryID := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative[0].ID
 
 	// A página manda PV, como mandaria se estivesse defasada.
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/"+entryID+"/edit",
-		`{"edicaoiniciativa":9,"edicaopv":50}`); rec.Code != http.StatusOK {
+		`{"edit_initiative":9,"edit_hp":50}`); rec.Code != http.StatusOK {
 		t.Fatalf("editar deu %d", rec.Code)
 	}
 
@@ -861,7 +861,7 @@ func TestEditingBelongsToTheGm(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.tracker(t)
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/initiative/"+entryID+"/edit",
-		`{"edicaoiniciativa":21,"edicaopv":7}`)
+		`{"edit_initiative":21,"edit_hp":7}`)
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador editou e levou %d, quero 403", rec.Code)
 	}
@@ -877,14 +877,14 @@ func TestEditingBelongsToTheGm(t *testing.T) {
 func TestACombatantWithAQuoteInTheNameDoesNotBreakTheExpression(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/add",
-		`{"novonome":"O'Brien, o \"Justo\"","novainiciativa":5,"novopv":0,"novotipo":"npc"}`); rec.Code != http.StatusOK {
+		`{"new_name":"O'Brien, o \"Justo\"","new_initiative":5,"new_hp":0,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d", rec.Code)
 	}
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O literal tem de sair como JSON: aspas ESCAPADAS dentro dele, e não uma
 	// aspa crua fechando a string no meio do nome.
-	if !strings.Contains(corpo, `$edicaonome = &#34;O&#39;Brien, o \&#34;Justo\&#34;&#34;`) {
+	if !strings.Contains(corpo, `$edit_name = &#34;O&#39;Brien, o \&#34;Justo\&#34;&#34;`) {
 		t.Errorf("o nome com aspas não virou literal seguro; a semeadura saiu como: %s", trechoDaSemeadura(corpo))
 	}
 }

@@ -100,7 +100,7 @@ func (s Scene) openDraft(w http.ResponseWriter, r *http.Request) {
 	if chi.URLParam(r, "npcId") != "" {
 		linha, bloco, err := s.campaignNpc(c)
 		if err != nil {
-			writeSignals(w, r, map[string]any{"erroDoComando": err.Error()})
+			writeSignals(w, r, map[string]any{"command_error": err.Error()})
 			return
 		}
 		rascunho = paraOFormulario(linha.ID, linha.Name, bloco)
@@ -125,7 +125,7 @@ func (s Scene) moveList(
 		}
 		rascunho, err := pageDraft(r)
 		if err != nil {
-			writeSignals(w, r, map[string]any{"erroDoRascunho": err.Error()})
+			writeSignals(w, r, map[string]any{"draft_error": err.Error()})
 			return
 		}
 		// O índice é opcional: acrescentar não tem um. `-1` e não zero, porque
@@ -138,7 +138,7 @@ func (s Scene) moveList(
 			}
 		}
 		if err := mexer(&rascunho, chi.URLParam(r, "lista"), indice); err != nil {
-			writeSignals(w, r, map[string]any{"erroDoRascunho": err.Error()})
+			writeSignals(w, r, map[string]any{"draft_error": err.Error()})
 			return
 		}
 		s.respondDraft(w, r, c, rascunho)
@@ -212,16 +212,16 @@ func itemWithout[T any](itens []T, indice int) ([]T, error) {
 // a CENA muda: a lista do elenco ganha ou perde uma linha, e ela é uma região
 // que precisa ser redesenhada.
 func saveDraft(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
-	// A RECUSA VAI PARA O EDITOR, e não para o `erroDoComando` do rodapé — que é
+	// A RECUSA VAI PARA O EDITOR, e não para o `command_error` do rodapé — que é
 	// a saída normal do `gmCommand`. É o mesmo argumento do
-	// `erroDoMovimento`: quem lê a frase está com o formulário aberto POR CIMA do
+	// `move_error`: quem lê a frase está com o formulário aberto POR CIMA do
 	// rodapé, e uma recusa escrita atrás do diálogo é uma recusa que ninguém lê.
 	// Medido no navegador antes de virar isto: "salvar sem nome" não dizia nada.
 	//
 	// Por isso o erro é devolvido como SINAL e a função sai sem erro: o comando
 	// não falhou, ele recusou — e quem tinha de saber já soube.
 	if err := st.triesSaveDraft(c); err != nil {
-		c.Sinais["erroDoRascunho"] = err.Error()
+		c.Sinais["draft_error"] = err.Error()
 		return st.deps.Sessions().GetState(c.SessionID), nil
 	}
 	// FECHA o editor no mesmo passo em que grava, e não num clique à parte: o
@@ -229,7 +229,7 @@ func saveDraft(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	// lista já atualizada faria ele clicar em Salvar de novo por não saber se
 	// pegou.
 	c.Sinais["draft_open"] = false
-	c.Sinais["erroDoRascunho"] = ""
+	c.Sinais["draft_error"] = ""
 	// O ELENCO NÃO É ESTADO DE SESSÃO — guardar um NPC não muda a fila nem o
 	// mapa. O estado volta mesmo assim porque é dele que o `gmCommand`
 	// redesenha as regiões, e sem isso a lista só mostraria a mudança no F5.
@@ -239,7 +239,7 @@ func saveDraft(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 // triesSaveDraft é o caminho inteiro do salvar, do sinal ao banco.
 //
 // Separado do `saveDraft` para que TODA recusa saia por um lugar só — o
-// `erroDoRascunho` do editor. Com as validações espalhadas em `return nil, err`,
+// `draft_error` do editor. Com as validações espalhadas em `return nil, err`,
 // cada uma teria de lembrar de escrever no sinal certo, e a que esquecesse
 // falaria atrás do diálogo.
 func (s Scene) triesSaveDraft(c commandCtx) error {
@@ -345,8 +345,8 @@ func (s Scene) respondDraft(w http.ResponseWriter, r *http.Request, c commandCtx
 		// ABRIR o editor e apagar a recusa anterior fazem parte da resposta: uma
 		// frase de erro de dois gestos atrás sobre um formulário que acabou de
 		// abrir é a recusa certa na tela errada.
-		"draft_open":     true,
-		"erroDoRascunho": "",
+		"draft_open":  true,
+		"draft_error": "",
 	})
 }
 

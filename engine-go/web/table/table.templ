@@ -408,15 +408,15 @@ templ tableBoard(v View) {
 	<div id="mesa-tabuleiro" class="flex min-h-0 flex-1 flex-col">
 		@boardTable(v.Tabuleiro)
 		// A RECUSA de uma parada, e ela mora aqui: quem move é o jogador, que
-		// não tem o rodapé do mestre onde o `erroDoComando` acende. Fora do
+		// não tem o rodapé do mestre onde o `command_error` acende. Fora do
 		// tabuleiro ela seria a frase certa longe do gesto que a causou.
 		//
 		// Fica FORA do movimento proposto de propósito, porque a recusa mais
 		// comum é a da PRIMEIRA parada ("não é a vez de Arwen"), e nessa hora
 		// não há proposta nenhuma para pendurá-la.
 		<p
-			data-show="$erroDoMovimento != ''"
-			data-text="$erroDoMovimento"
+			data-show="$move_error != ''"
+			data-text="$move_error"
 			aria-live="assertive"
 			class="px-1 pt-1 text-xs text-destructive-ink"
 		></p>
@@ -450,8 +450,8 @@ templ tableTracker(v View) {
 							// não anuncia estado nenhum. Vale para todo `data-attr:aria-*`.
 							<button
 								type="button"
-								data-on:click="$formdecombatente = !$formdecombatente"
-								data-attr:aria-expanded="$formdecombatente ? 'true' : 'false'"
+								data-on:click="$combatant_form = !$combatant_form"
+								data-attr:aria-expanded="$combatant_form ? 'true' : 'false'"
 								class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 							>+ Combatente</button>
 							<button
@@ -524,7 +524,7 @@ templ condicoesDoCombatente(v View) {
 		class="scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="condicoes-do-combatente-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
-			Condições de <span data-text="$rotulodalinha"></span>
+			Condições de <span data-text="$row_label"></span>
 		</h2>
 		<p class="mt-1 text-sm text-muted-foreground">
 			As condições do livro (p394-395). Aqui elas são RASTREIO: o bloco de uma criatura é escrito à mão, então o app não recalcula Defesa nem ataque — quem aplica o efeito é você.
@@ -635,8 +635,8 @@ templ tableRegister(v View) {
 		// escreve ZERO no sinal quando ele esvazia.
 		<button
 			type="button"
-			data-indicator:registrando
-			data-attr:disabled="$registrando || !($d20 >= 1 && $d20 <= 20)"
+			data-indicator:registering
+			data-attr:disabled="$registering || !($d20 >= 1 && $d20 <= 20)"
 			data-on:click={ fmt.Sprintf("@post('/mesa/%d/%d/iniciativa')", v.CampaignID, v.SessionID) }
 			class="bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 		>
@@ -888,8 +888,8 @@ templ barra(rotulo string, b tableBar) {
 templ addParty(v View) {
 	<button
 		type="button"
-		data-indicator:trazendo
-		data-attr:disabled="$trazendo"
+		data-indicator:bringing
+		data-attr:disabled="$bringing"
 		data-on:click={ tableCommand(v, "POST", "initiative/populate") }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 	>+ Adicionar grupo</button>
@@ -904,18 +904,18 @@ templ addParty(v View) {
 // recebem `value` do servidor — entrada em curso é do teclado de quem digita,
 // não estado da aplicação (é a mesma escolha do d20, ALE-219).
 //
-// TODOS OS NOMES DE SINAL SÃO MINÚSCULOS, e isso é obrigatório: eles são chaves
+// TODOS OS NOMES DE SINAL EM `snake_case`, e isso é obrigatório: eles são chaves
 // de `data-bind:`, e nome de atributo é minusculado pelo analisador de HTML —
-// `data-bind:novoNome` ligaria um sinal `novonome` e deixaria o declarado
-// intocado, com o fio levando os dois e o servidor lendo o que ninguém tocou.
+// caixa alta na chave ligaria um sinal NOVO e deixaria o declarado intocado,
+// com o fio levando os dois e o servidor lendo o que ninguém tocou.
 //
 // O `Escape` fecha, porque é o gesto que todo mundo tenta primeiro num
 // formulário aberto por engano e o gatilho que o abriu fica longe (ALE-136).
 templ formDeCombatente(v View) {
 	<div
-		data-show="$formdecombatente"
+		data-show="$combatant_form"
 		style="display:none"
-		data-on:keydown__window="evt.key === 'Escape' && ($formdecombatente = false)"
+		data-on:keydown__window="evt.key === 'Escape' && ($combatant_form = false)"
 		class="flex flex-wrap items-end gap-2 border border-dashed border-grimorio-iron p-3"
 	>
 		<div class="min-w-[10rem] flex-1 space-y-1">
@@ -925,12 +925,12 @@ templ formDeCombatente(v View) {
 				type="text"
 				maxlength="60"
 				placeholder="Goblin salteador…"
-				data-bind:novonome
+				data-bind:new_name
 				class="w-full border border-input bg-background px-2 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			/>
 		</div>
-		@campoDeNumero("nova-iniciativa", "Iniciativa", "novainiciativa", "-5", "40")
-		@campoDeNumero("novo-pv", "PV", "novopv", "0", "999")
+		@campoDeNumero("nova-iniciativa", "Iniciativa", "new_initiative", "-5", "40")
+		@campoDeNumero("novo-pv", "PV", "new_hp", "0", "999")
 		// PC ou NPC: dois botões e não um seletor, porque são DOIS e o estado
 		// tem de ser legível sem abrir nada. `aria-pressed` porque é escolha que
 		// fica, não ação que passa.
@@ -943,7 +943,7 @@ templ formDeCombatente(v View) {
 		// é o que a ALE-236 consertou no d20.
 		<button
 			type="button"
-			data-attr:disabled="!$novonome.trim()"
+			data-attr:disabled="!$new_name.trim()"
 			data-on:click={ fmt.Sprintf("@post('/mesa/%d/%d/initiative/add')", v.CampaignID, v.SessionID) }
 			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 		>Acrescentar</button>
@@ -971,9 +971,9 @@ templ campoDeNumero(id, rotulo, sinal, min, max string) {
 templ combatantKind(tipo, rotulo string) {
 	<button
 		type="button"
-		data-attr:aria-pressed={ fmt.Sprintf("$novotipo === '%s' ? 'true' : 'false'", tipo) }
-		data-on:click={ fmt.Sprintf("$novotipo = '%s'", tipo) }
-		data-class={ fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $novotipo === '%s', 'border-grimorio-iron text-muted-foreground': $novotipo !== '%s'}", tipo, tipo) }
+		data-attr:aria-pressed={ fmt.Sprintf("$new_type === '%s' ? 'true' : 'false'", tipo) }
+		data-on:click={ fmt.Sprintf("$new_type = '%s'", tipo) }
+		data-class={ fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $new_type === '%s', 'border-grimorio-iron text-muted-foreground': $new_type !== '%s'}", tipo, tipo) }
 		class="min-h-11 rounded-sm border px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 	>{ rotulo }</button>
 }
@@ -1017,7 +1017,7 @@ templ editarCombatente(v View) {
 		class="scene-grimorio m-auto w-[min(20rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="editar-combatente-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
-			Editar <span data-text="$edicaonome"></span>
+			Editar <span data-text="$edit_name"></span>
 		</h2>
 		<p class="mt-1 text-sm text-muted-foreground">A ordem se reordena sozinha, e quem está na vez continua na vez.</p>
 		<label for="edicao-iniciativa" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Iniciativa</label>
@@ -1027,23 +1027,23 @@ templ editarCombatente(v View) {
 			min="-5"
 			max="40"
 			inputmode="numeric"
-			data-bind="edicaoiniciativa"
+			data-bind="edit_initiative"
 			class="mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		/>
 		// O campo de PV só existe em linha COM vida, e quem sabe disso é o sinal
 		// que o número semeou — o servidor confere de novo na escrita, porque a
 		// tela pode estar defasada.
-		<div data-show="$edicaopvmax > 0">
+		<div data-show="$edit_hp_max > 0">
 			<label for="edicao-pv" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>
-				PV (de <span data-text="$edicaopvmax"></span>)
+				PV (de <span data-text="$edit_hp_max"></span>)
 			</label>
 			<input
 				id="edicao-pv"
 				type="number"
 				min="0"
-				data-attr:max="$edicaopvmax"
+				data-attr:max="$edit_hp_max"
 				inputmode="numeric"
-				data-bind="edicaopv"
+				data-bind="edit_hp"
 				class="mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 			/>
 		</div>

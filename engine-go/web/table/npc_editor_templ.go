@@ -132,7 +132,7 @@ func blockEditor(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><p role=\"alert\" data-show=\"$erroDoRascunho !== ''\" data-text=\"$erroDoRascunho\" class=\"shrink-0 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs text-destructive-ink\"></p><div class=\"flex shrink-0 items-center justify-end gap-2 border-t border-grimorio-iron pt-3\"><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><p role=\"alert\" data-show=\"$draft_error !== ''\" data-text=\"$draft_error\" class=\"shrink-0 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs text-destructive-ink\"></p><div class=\"flex shrink-0 items-center justify-end gap-2 border-t border-grimorio-iron pt-3\"><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
