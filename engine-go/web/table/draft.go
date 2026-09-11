@@ -45,12 +45,12 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	// MOVER é o gesto que NÃO tem gêmeo na mesa, e é a diferença do draft:
 	// lá o arrasto manda uma PARADA e o servidor devolve uma proposta com custo,
 	// aqui ele põe a peça na casa. Ver `draftMoveDrop`.
-	r.Post(base+"/pecas/{id}/mover/{x}/{y}", s.draftCommand(draftMovesToken))
+	r.Post(base+"/pecas/{id}/mover", s.draftCommand(draftMovesToken))
 	r.Post(base+"/pecas/{id}/editar", s.draftCommand(draftEditsToken))
 	r.Post(base+"/pecas/{id}/duplicar", s.draftCommand(draftDuplicatesToken))
 	r.Post(base+"/pecas/{id}/remover", s.draftCommand(draftRemovesToken))
 	r.Post(base+"/pecas/{id}/visibilidade", s.draftCommand(draftTogglesVisibility))
-	r.Post(base+"/marcadores/novo/{x}/{y}", s.draftCommand(draftMarksTheSpot))
+	r.Post(base+"/marcadores/novo", s.draftCommand(draftMarksTheSpot))
 	r.Post(base+"/marcadores/{id}/revelar", s.draftCommand(draftRevealsMarker))
 	r.Post(base+"/marcadores/{id}/cor/{cor}", s.draftCommand(draftPaintsMarker))
 	r.Post(base+"/marcadores/{id}/remover", s.draftCommand(draftErasesMarker))
@@ -263,6 +263,8 @@ func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
 // Ela lê a MESMA tira que a mesa lê (`loosePieceSignals`), com as mesmas
 // recusas — nome obrigatório, tamanho do livro (p107), aparência conhecida.
 func draftNewLoosePiece(st Scene, c draftCtx, b *board.BoardState) error {
+	// A casa vem do CAMINHO e não do corpo: o corpo é o formulário da peça (ver
+	// a rota, ALE-305).
 	casa, err := quadradoDaURL(c.R)
 	if err != nil {
 		return err
@@ -279,7 +281,7 @@ func draftNewLoosePiece(st Scene, c draftCtx, b *board.BoardState) error {
 
 // draftMovesToken põe a peça na casa, sem proposta e sem custo.
 func draftMovesToken(st Scene, c draftCtx, b *board.BoardState) error {
-	casa, err := quadradoDaURL(c.R)
+	casa, err := squareOnly(c.R)
 	if err != nil {
 		return err
 	}
@@ -335,7 +337,7 @@ func draftTogglesVisibility(st Scene, c draftCtx, b *board.BoardState) error {
 // ── os MARCADORES (ALE-195) ──────────────────────────────────────────────────
 
 func draftMarksTheSpot(st Scene, c draftCtx, b *board.BoardState) error {
-	casa, err := quadradoDaURL(c.R)
+	casa, err := squareOnly(c.R)
 	if err != nil {
 		return err
 	}

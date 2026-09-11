@@ -12,7 +12,7 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 	f.turnPlayer(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	rec := f.pede(t, f.jogador, http.MethodPost, base+"/previa/9/2", "")
+	rec := f.pede(t, f.jogador, http.MethodPost, base+"/previa", `{"from":{"X":9,"Y":2}}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("a prévia deu %d", rec.Code)
 	}
@@ -52,10 +52,10 @@ func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
 	f.turnPlayer(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/parada/3/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/parada", `{"from":{"X":3,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a primeira parada deu %d", rec.Code)
 	}
-	sinais := trechoDeSinais(f.pede(t, f.jogador, http.MethodPost, base+"/previa/6/0", "").Body.String())
+	sinais := trechoDeSinais(f.pede(t, f.jogador, http.MethodPost, base+"/previa", `{"from":{"X":6,"Y":0}}`).Body.String())
 
 	// Três mais três: o total é 6, e não 3. Recomeçar daria "3 de 6".
 	if !strings.Contains(sinais, "6 de 6 quadrados") {
@@ -78,7 +78,7 @@ func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 	f.turnPlayer(t)
 
 	sinais := trechoDeSinais(f.pede(t, f.jogador, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa/15/0", "").Body.String())
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa", `{"from":{"X":15,"Y":0}}`).Body.String())
 
 	for _, fio := range []string{"preview_arrow_fits", "preview_arrow_second", "preview_arrow_beyond"} {
 		if strings.Contains(sinais, `"`+fio+`":""`) {
@@ -99,7 +99,7 @@ func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
 	tokenID := f.onBoardAt(t, 0, 0)
 
 	sinais := trechoDeSinais(f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa/15/0", "").Body.String())
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa", `{"from":{"X":15,"Y":0}}`).Body.String())
 
 	if !strings.Contains(sinais, `"preview_arrow_second":""`) || !strings.Contains(sinais, `"preview_arrow_beyond":""`) {
 		t.Errorf("fora de combate a prévia pintou faixa de ação; sinais = %s", sinais)

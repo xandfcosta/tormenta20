@@ -58,6 +58,12 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	r.Post(base+"/terreno/retangulo", s.gmContinuousCommand(fillRect))
 	r.Post(base+"/terreno/limpar/retangulo", s.gmContinuousCommand(clearRect))
 	r.Post(base+"/pecas", s.gmBoardCommand(poeNoMapa))
+	// A PEÇA AVULSA é a exceção da ALE-305, e a razão é dura: o corpo desta
+	// requisição JÁ ESTÁ OCUPADO pelos sinais do formulário — nome, tamanho e
+	// aparência, que o `loosePieceSignals` lê. O `payload` do Datastar
+	// SUBSTITUI os sinais, então pôr a casa nele faria a peça nascer sem nome.
+	//
+	// Quando o corpo já é o formulário, o caminho é o lugar certo da coordenada.
 	r.Post(base+"/pecas/nova/{x}/{y}", s.gmBoardCommand(newLoosePiece))
 }
 
@@ -208,6 +214,24 @@ func pointsFromBody(r *http.Request) (strokeBody, engine.Square, engine.Square, 
 		engine.Square{X: pedido.From.X, Y: pedido.From.Y},
 		engine.Square{X: pedido.To.X, Y: pedido.To.Y},
 		nil
+}
+
+// squareFromBody é UM quadrado, para os gestos que apontam um lugar só — a peça
+// avulsa, o marcador, a parada do movimento, a prévia.
+//
+// Ele reusa o `from` do mesmo corpo em vez de um campo `square` próprio, e isso é
+// escolha: um formato só para todos os gestos do tabuleiro é um formato só para
+// aprender, e o `to` sobra sem custo. O contrário — um campo por gesto — é como
+// nasce a terceira grafia do mesmo par de números.
+func squareFromBody(r *http.Request) (strokeBody, engine.Square, error) {
+	pedido, de, _, err := pointsFromBody(r)
+	return pedido, de, err
+}
+
+// squareOnly é o `squareFromBody` para quem não precisa do resto do pedido.
+func squareOnly(r *http.Request) (engine.Square, error) {
+	_, casa, err := squareFromBody(r)
+	return casa, err
 }
 
 // strokeFromBody é o SEGMENTO entre os dois cantos.

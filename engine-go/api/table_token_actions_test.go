@@ -127,7 +127,7 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 
 	// Agora com um movimento CONFIRMADO: o mestre move sem orçamento.
 	mover := f.tableUrl() + "/tabuleiro/" + id
-	if rec := f.pede(t, f.mestre, http.MethodPost, mover+"/parada/5/1", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, mover+"/parada", `{"from":{"X":5,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, http.MethodPost, mover+"/confirmar", ""); rec.Code != http.StatusOK {
@@ -163,9 +163,12 @@ func TestUndoSurvivesAReload(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Dragão", 2, 2)
 	mover := f.tableUrl() + "/tabuleiro/" + id
-	for _, passo := range []string{"/parada/8/8", "/confirmar"} {
-		if rec := f.pede(t, f.mestre, http.MethodPost, mover+passo, ""); rec.Code != http.StatusOK {
-			t.Fatalf("%s deu %d", passo, rec.Code)
+	for _, passo := range []struct{ rota, corpo string }{
+		{"/parada", `{"from":{"X":8,"Y":8}}`},
+		{"/confirmar", ""},
+	} {
+		if rec := f.pede(t, f.mestre, http.MethodPost, mover+passo.rota, passo.corpo); rec.Code != http.StatusOK {
+			t.Fatalf("%s deu %d", passo.rota, rec.Code)
 		}
 	}
 

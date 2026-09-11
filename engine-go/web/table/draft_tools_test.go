@@ -32,11 +32,11 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 	// a rota: uma rota renomeada derruba este caso.
 	const base = "/campanhas/12/lugares/7/tabuleiro"
 	posta := map[string]string{
-		"":                   base + "/pecas/alguma/mover/1/1",
+		"":                   base + "/pecas/alguma/mover",
 		ViewTool:             "", // a mão é do NAVEGADOR: ela arrasta a vista e não fala com o servidor
 		FerramentaDaRegua:    base + "/regua",
 		FerramentaDoGabarito: base + "/gabarito/esfera/6/0/0/1/1",
-		MarkTool:             base + "/marcadores/novo/1/1",
+		MarkTool:             base + "/marcadores/novo",
 		EraserTool:           base + "/terreno/limpar",
 		NewPieceTool:         base + "/pecas/nova/1/1",
 	}

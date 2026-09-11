@@ -246,7 +246,7 @@ func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
 	}
 	id := semeada.Tokens[0].ID
 
-	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/"+id+"/mover/6/2", "{}")
+	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/"+id+"/mover", `{"from":{"X":6,"Y":2}}`)
 
 	cena, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, lugar)
 	peca := board.FindToken(cena, id)

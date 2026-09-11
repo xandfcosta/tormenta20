@@ -892,7 +892,7 @@ func moveCommand(v BoardView, acao string) string {
 // pode ser NEGATIVO.
 func clickedPointStop(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('%s/%s/parada/' + (%s) + '/' + (%s))",
+		"@post('%s/%s/parada', {payload: {from: {X: (%s), Y: (%s)}}})",
 		v.Base, v.AlvoDoMovimento, clicouEmX, clicouEmY,
 	)
 }
@@ -988,7 +988,7 @@ func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 			"const cx = %d + Math.round($drag_x / $square), cy = %d + Math.round($drag_y / $square); "+
 			"if (cx === $preview_x && cy === $preview_y) return; "+
 			"$preview_x = cx; $preview_y = cy; "+
-			"@post('%s/%s/previa/' + cx + '/' + cy)",
+			"@post('%s/%s/previa', {payload: {from: {X: cx, Y: cy}}})",
 		p.ID, p.X, p.Y, v.Base, p.ID)
 }
 
@@ -1028,7 +1028,7 @@ const erasePreview = "$preview_arrow_fits = ''; $preview_arrow_second = ''; $pre
 //
 // MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
 func dropFor(v BoardView, quem string, x, y int) string {
-	parada := fmt.Sprintf("'%s/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
+	parada := fmt.Sprintf("'%s/%s/parada', {payload: {from: {X: %d + dx, Y: %d + dy}}}",
 		v.Base, v.AlvoDoMovimento, x, y)
 	destino := "@post(" + parada + ")"
 	if quem == "peca" && v.Mestre && v.AlvoDoMovimento != "" {
@@ -1137,7 +1137,7 @@ func draftMoveDrop(v BoardView, p boardToken) string {
 		"if ($dragging === '%s') { "+
 			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
 			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
-			"if (dx || dy) @post('%s/pecas/%s/mover/' + (%d + dx) + '/' + (%d + dy)) }",
+			"if (dx || dy) @post('%s/pecas/%s/mover', {payload: {from: {X: %d + dx, Y: %d + dy}}}) }",
 		p.ID, v.Base, p.ID, p.X, p.Y)
 }
 
@@ -1313,7 +1313,7 @@ func clickedSquareNewPiece(v BoardView) string {
 // rotas mudarem juntas no dia em que uma delas precisar do canto e não do centro.
 func clickedPointMarking(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('%s/marcadores/novo/' + (%s) + '/' + (%s))",
+		"@post('%s/marcadores/novo', {payload: {from: {X: (%s), Y: (%s)}}})",
 		v.Base, clicouEmX, clicouEmY,
 	)
 }
