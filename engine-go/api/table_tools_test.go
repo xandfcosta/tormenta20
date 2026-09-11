@@ -24,7 +24,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	// Três espécies EMPILHADAS na mesma casa: é o caso que o modo antigo não
 	// sabia resolver, porque ele tinha de escolher uma.
 	for _, especie := range []string{"dificil", "cobertura", "elevado"} {
-		if rec := f.pede(t, f.mestre, http.MethodPost, casa+"/"+especie+"/4/4/ate/4/4", ""); rec.Code != http.StatusOK {
+		if rec := f.pede(t, f.mestre, http.MethodPost, casa, stroke(especie, 4, 4, 4, 4)); rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", especie, rec.Code)
 		}
 	}
@@ -34,7 +34,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 			len(b.Difficult), len(b.Cover), len(b.Elevated))
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, casa+"/limpar/4/4/ate/4/4", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, casa+"/limpar", stroke("", 4, 4, 4, 4)); rec.Code != http.StatusOK {
 		t.Fatalf("limpar deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)

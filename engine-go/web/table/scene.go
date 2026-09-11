@@ -2,7 +2,9 @@ package table
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -34,8 +36,21 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	// O TRAÇO e não o ponto (ALE-203): as duas rotas recebem de ONDE ATÉ ONDE o
 	// dedo andou desde o aviso anterior do ponteiro. Um clique parado manda o
 	// mesmo par duas vezes, que é um traço de uma casa. Ver `board.StrokeSquares`.
-	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.gmContinuousCommand(paintTerrain))
-	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.gmContinuousCommand(clearTerrain))
+	//
+	// AS PONTAS VIAJAM NO CORPO, e não no caminho (ALE-305). O endereço era
+	// `/terreno/dificil/2/2/ate/8/5` — quatro números e um `ate` de separador —
+	// porque a razão escrita dizia que coordenada tinha de vir do CLIQUE e não de
+	// um sinal da página, que outro gesto pode ter mexido. A razão continua certa
+	// e não defende o caminho: o `@post` do Datastar aceita `payload`, que
+	// SUBSTITUI os sinais por um corpo calculado no instante do clique. Sinal e
+	// corpo não são a mesma coisa, e o comentário antigo tratava como se fossem.
+	r.Post(base+"/terreno", s.gmContinuousCommand(paintTerrain))
+	// A BORRACHA continua com rota PRÓPRIA, e agora a razão é mais forte que
+	// antes: ela é a única que não nomeia espécie NENHUMA, nem no caminho nem no
+	// corpo. Era a espécie que a fazia apagar a coisa errada em silêncio
+	// (ALE-203), e um corpo compartilhado com a pintura devolveria o campo — e o
+	// risco — de graça.
+	r.Post(base+"/terreno/limpar", s.gmContinuousCommand(clearTerrain))
 	// O RETÂNGULO (ALE-203, item 10): os mesmos dois cantos, outra FORMA. Rota
 	// própria e não uma query na de cima porque o que muda é o que o par de
 	// cantos NOMEIA — a linha entre eles ou tudo o que cabe dentro —, e isso é o
@@ -57,15 +72,15 @@ func (s Scene) SceneRoutes(r chi.Router) {
 // ARRASTANDO e o arraste passa duas vezes pela mesma casa. Alternar faria a casa
 // piscar entre brejo e chão limpo debaixo do dedo.
 func paintTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
-	traco, err := tracoDaURL(c.R)
+	pedido, traco, err := strokeFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
-	ligado := c.R.URL.Query().Get("apagar") == ""
+	especie := board.KnownTerrainKind(pedido.Kind)
+	ligado := !pedido.Erase
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
 }
 
@@ -77,7 +92,7 @@ func paintTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 // a espécie que fazia a borracha apagar a coisa errada em silêncio. Sem espécie
 // no caminho, não há como errar qual.
 func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
-	traco, err := tracoDaURL(c.R)
+	_, traco, err := strokeFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -153,6 +168,44 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 		return nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
 	}
 	return board.StrokeSquares(de, ate), nil
+}
+
+// strokeBody é o TRAÇO como o cliente o manda: os dois cantos e, na pintura, a
+// espécie (ALE-305).
+//
+// As chaves são INGLESAS porque campo JSON é FRONTEIRA, e só a ROTA saiu dessa
+// lista (ALE-304): o endereço é o que uma pessoa vê, o corpo não. Escrevi
+// `especie`/`de`/`ate` na primeira versão, arrastando o vocabulário da rota para
+// dentro do corpo — o dono pegou.
+//
+// `from` e `to` são objetos e não quatro campos soltos porque o par é UM conceito
+// — o segmento que o dedo andou desde o aviso anterior do ponteiro —, e separá-lo
+// em `x1,y1,x2,y2` convida a mandar três dos quatro.
+type strokeBody struct {
+	Kind  string             `json:"kind"`
+	Erase bool               `json:"erase"`
+	From  struct{ X, Y int } `json:"from"`
+	To    struct{ X, Y int } `json:"to"`
+}
+
+// strokeFromBody lê o traço do corpo da requisição.
+//
+// COORDENADA NEGATIVA é lugar legítimo — o plano não tem bordas —, e é por ela
+// que o valor não pode vir de um sinal da página: sinal é estado compartilhado, e
+// o que se quer é o clique que ACONTECEU. O corpo resolve isso sem o caminho de
+// seis parâmetros, porque o `payload` do `@post` é calculado no instante do
+// gesto e não sobrevive a ele.
+func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
+	var pedido strokeBody
+	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&pedido); err != nil {
+		return pedido, nil, fmt.Errorf("não entendi o traço enviado: %v", err)
+	}
+	de := engine.Square{X: pedido.From.X, Y: pedido.From.Y}
+	ate := engine.Square{X: pedido.To.X, Y: pedido.To.Y}
+	if !board.ValidStroke(de, ate) {
+		return pedido, nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
+	}
+	return pedido, board.StrokeSquares(de, ate), nil
 }
 
 // reopenPlace traz uma cena guardada de volta para a mesa, NUMA ABA NOVA
