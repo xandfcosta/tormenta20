@@ -1032,7 +1032,7 @@ func dropFor(v BoardView, quem string, x, y int) string {
 		v.Base, v.AlvoDoMovimento, x, y)
 	destino := "@post(" + parada + ")"
 	if quem == "peca" && v.Mestre && v.AlvoDoMovimento != "" {
-		grupo := fmt.Sprintf("@post('%s/grupo/mover/' + dx + '/' + dy)", v.Base)
+		grupo := fmt.Sprintf("@post('%s/grupo/mover', {payload: {delta: {X: dx, Y: dy}, marked_tokens: $marked_tokens}})", v.Base)
 		destino = fmt.Sprintf("%s ? %s : %s", markedIsToken(v.AlvoDoMovimento), grupo, destino)
 	}
 	return fmt.Sprintf(

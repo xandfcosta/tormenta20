@@ -35,7 +35,7 @@ import (
 func (s Scene) PartyRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
 	r.Post(base+"/marcar-area", s.handleMarcarArea)
-	r.Post(base+"/grupo/mover/{dx}/{dy}", s.gmContinuousCommand(movePartyTable))
+	r.Post(base+"/grupo/mover", s.gmContinuousCommand(movePartyTable))
 }
 
 // handleMarcarArea devolve os ids das peças dentro do laço.
@@ -67,24 +67,55 @@ func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 
 // movePartyTable desloca as peças marcadas pelo delta do arrasto.
 //
-// A LISTA vem dos SINAIS e o DELTA vem do caminho, e a divisão é a mesma do
-// resto: o caminho carrega o que o gesto ACABOU de decidir (quantos quadrados o
-// dedo andou), e o sinal carrega o estado que já estava lá (quem foi marcado).
+// A LISTA E O DELTA vêm do mesmo CORPO (ALE-307). Aqui morava a divisão
+// contrária — o delta no caminho, a lista nos sinais — com o argumento de que o
+// caminho carrega o que o gesto acabou de decidir e o sinal, o estado que já
+// estava lá. O argumento não se sustentava: `payload` carrega os dois, e o que a
+// divisão custava era o endereço montado por concatenação na expressão.
 func movePartyTable(st Scene, c commandCtx) (*board.BoardState, error) {
-	dx, errX := intDoCaminho(chi.URLParam(c.R, "dx"))
-	dy, errY := intDoCaminho(chi.URLParam(c.R, "dy"))
-	if errX != nil || errY != nil {
-		return nil, fmt.Errorf("o deslocamento (%q,%q) não é um par de números",
-			chi.URLParam(c.R, "dx"), chi.URLParam(c.R, "dy"))
-	}
-	ids, err := markedTokens(c.R)
+	corpo, err := partyDrag(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if len(ids) == 0 {
+	if len(corpo.ids) == 0 {
 		return nil, fmt.Errorf("não há peça marcada para mover")
 	}
-	return st.deps.Boards().MoveGroup(c.R.Context(), c.SessionID, c.TabuleiroID, ids, dx, dy)
+	return st.deps.Boards().MoveGroup(
+		c.R.Context(), c.SessionID, c.TabuleiroID, corpo.ids, corpo.Delta.X, corpo.Delta.Y)
+}
+
+// partyDragBody é o arrasto do grupo: o DELTA e a lista, num corpo só.
+//
+// Os dois viajam juntos porque o corpo só pode ser lido UMA vez — o
+// `ReadSignals` copia o `r.Body` inteiro num buffer, e a segunda chamada recebe
+// vazio sem erro nenhum. Até a ALE-307 o delta vinha do caminho e a lista do
+// corpo, e a divisão não era desenho: era o que sobrava de escrever o endereço
+// com o delta concatenado dentro de uma expressão do Datastar.
+//
+// O `payload` do `@post` SUBSTITUI os sinais, então `marked_tokens` está
+// listado ao lado do delta na expressão que posta — a mesma forma do colar.
+type partyDragBody struct {
+	Delta    struct{ X, Y int } `json:"delta"`
+	Marcadas string             `json:"marked_tokens"`
+
+	ids []string
+}
+
+// partyDrag lê o corpo do arrasto e reparte a lista de marcadas.
+func partyDrag(r *http.Request) (partyDragBody, error) {
+	var corpo partyDragBody
+	if err := datastar.ReadSignals(r, &corpo); err != nil {
+		return corpo, fmt.Errorf("as peças marcadas não vieram: %w", err)
+	}
+	for _, id := range strings.Split(corpo.Marcadas, ",") {
+		if id != "" {
+			corpo.ids = append(corpo.ids, id)
+		}
+	}
+	if len(corpo.ids) > markedMax {
+		return corpo, fmt.Errorf("o grupo tem %d peças e a mesa cabe %d", len(corpo.ids), markedMax)
+	}
+	return corpo, nil
 }
 
 // markedTokensSignal guarda os ids marcados, separados por vírgula.

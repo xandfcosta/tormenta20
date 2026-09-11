@@ -192,7 +192,7 @@ func dropParty(v BoardView) string {
 		"if ($dragging === '%s') { "+
 			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
 			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
-			"if (dx || dy) @post('%s/grupo/mover/' + dx + '/' + dy) }",
+			"if (dx || dy) @post('%s/grupo/mover', {payload: {delta: {X: dx, Y: dy}, marked_tokens: $marked_tokens}}) }",
 		dragsTheParty, v.Base,
 	)
 }
