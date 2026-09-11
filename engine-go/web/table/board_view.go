@@ -1296,11 +1296,21 @@ const NewPieceTool = "peca-nova"
 
 // clickedSquareNewPiece cria a peça avulsa NA CASA CLICADA.
 //
-// A posição viaja no CAMINHO pela razão do `quadradoDoCaminho`: coordenada
-// negativa é lugar legítimo, e o valor tem de ser o do clique que aconteceu.
+// ELE NOMEIA OS TRÊS SINAIS, e essa é a diferença desta rota para as outras
+// vinte e uma da ALE-305 (ALE-306). O `payload` do Datastar SUBSTITUI os sinais
+// em vez de acrescentá-los, então um gesto que precisa da casa E do formulário
+// tem de listar o formulário à mão.
+//
+// O preço é uma grafia a mais de cada nome de sinal, num lugar que um `grep` de
+// `$nome` não acha — e o modo de falhar é o da família: esquecer um faz a peça
+// nascer sem aquele campo, em silêncio. Quem cobra é o
+// `TestEveryPayloadKeyMatchesTheSignalItReads`: a chave tem de ter o nome do
+// sinal que ela lê, então `new_token_name: $new_token_look` reprova.
 func clickedSquareNewPiece(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('%s/pecas/nova/' + (%s) + '/' + (%s))",
+		"@post('%s/pecas/nova', {payload: {from: {X: %s, Y: %s}, "+
+			"new_token_name: $new_token_name, new_token_size: $new_token_size, "+
+			"new_token_look: $new_token_look}})",
 		v.Base, clicouEmX, clicouEmY,
 	)
 }

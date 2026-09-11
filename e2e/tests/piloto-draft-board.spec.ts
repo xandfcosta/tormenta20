@@ -35,8 +35,13 @@ async function aDraftWith(
   expect(endereco, `criar o lugar: ${nova.status()}`).toContain('/lugares/')
 
   for (const p of pecas) {
-    const posta = await page.request.post(`${endereco}/tabuleiro/pecas/nova/${p.x}/${p.y}`, {
-      data: { new_token_name: p.nome, new_token_size: 1, new_token_look: 'object' },
+    const posta = await page.request.post(`${endereco}/tabuleiro/pecas/nova`, {
+      data: {
+        from: { X: p.x, Y: p.y },
+        new_token_name: p.nome,
+        new_token_size: 1,
+        new_token_look: 'object',
+      },
     })
     expect(posta.ok(), `pôr a peça ${p.nome}: ${posta.status()}`).toBeTruthy()
   }

@@ -38,7 +38,7 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 		FerramentaDoGabarito: base + "/gabarito",
 		MarkTool:             base + "/marcadores/novo",
 		EraserTool:           base + "/terreno/limpar",
-		NewPieceTool:         base + "/pecas/nova/1/1",
+		NewPieceTool:         base + "/pecas/nova",
 	}
 
 	medidas := 0

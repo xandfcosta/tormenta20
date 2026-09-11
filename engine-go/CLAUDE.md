@@ -2858,16 +2858,33 @@ As chaves são INGLESAS porque campo JSON é fronteira; só a ROTA saiu dessa li
 porque um formato só é um formato só para aprender; um por gesto é como nasce a
 terceira grafia do mesmo par de números.
 
-### A EXCEÇÃO, e ela é dura: quando o corpo já é o FORMULÁRIO
+### Quando o corpo JÁ É o formulário, o payload lista os sinais
 
-**`/pecas/nova/{x}/{y}` fica com a coordenada no caminho**, nas duas superfícies.
-O `payload` do Datastar **SUBSTITUI os sinais** — não os acrescenta —, e este
-handler lê o `loosePieceSignals`: nome, tamanho e aparência da peça avulsa. Pôr a
-casa no payload faria a peça nascer sem nome, e nada estouraria.
+**`/pecas/nova` também foi** (ALE-306), e o caminho dela é o que ensina.
 
-**A regra que isso ensina**: a coordenada só sai do caminho quando o handler NÃO
-lê sinais. Antes de converter a próxima, o teste é `grep ReadSignals` no corpo
-dela — foi assim que as duas foram encontradas, e as outras dezesseis passaram.
+Eu a deixei de fora na ALE-305 dizendo que era impossível: *"o `payload`
+SUBSTITUI os sinais, então a peça nasceria sem nome"*. A primeira metade é
+verdade e a conclusão não segue — **o payload pode carregar os sinais**, basta
+nomeá-los:
+
+```js
+@post('…/pecas/nova', {payload: {from: {X: cx, Y: cy},
+  new_token_name: $new_token_name, new_token_size: $new_token_size,
+  new_token_look: $new_token_look}})
+```
+
+O obstáculo real era outro, e mais raso: **o corpo não se lê duas vezes.** O
+`ReadSignals` do datastar-go copia `r.Body` inteiro num buffer, então um segundo
+leitor pega vazio. O conserto é um struct só, lido uma vez — e some o leitor
+separado.
+
+**O preço, que é o que decide:** a expressão passa a listar cada sinal pelo nome,
+uma grafia a mais num lugar que um `grep` de `$nome` não distingue de leitura
+qualquer. Quem paga é o `TestEveryPayloadKeyMatchesTheSignalItReads`: quando a
+chave é ela mesma um nome de sinal, ela tem de carregar aquele sinal — então
+`new_token_size: $new_token_look` reprova, e `kind: $tool` passa, porque `kind`
+não é sinal nenhum.
+
 
 ## Datastar: onze armadilhas que não deixam erro para trás
 
