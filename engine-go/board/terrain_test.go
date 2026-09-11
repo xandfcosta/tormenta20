@@ -11,7 +11,7 @@ import (
 //
 // O que se prende aqui é a SEPARAÇÃO: cada espécie tem a própria lista, e pintar
 // uma não mexe nas outras. É a garantia que um mapa com chave de string não
-// daria — lá `"elevated"` contra `"elevado"` viraria lista vazia em silêncio.
+// daria — lá `"elevated"` contra `"elevated"` viraria lista vazia em silêncio.
 
 // TestEachKindHasItsOwnList.
 //

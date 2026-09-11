@@ -10,7 +10,7 @@ import (
 func TestNoLayerReadsThePointWithoutAddingTheViewport(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
-		`{"new_place":"Taverna do Javali","new_ground":"taverna"}`); rec.Code != http.StatusOK {
+		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()

@@ -19,7 +19,7 @@ import (
 // decisão sobre quem vê o quê.
 func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
@@ -51,7 +51,7 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 // resposta passou a trazer `mesa-tabuleiro` e este teste acusou.
 func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	// As paradas vêm nos SINAIS desde a ALE-203: com número variável de pernas,
 	// um caminho com as pontas dentro seria uma rota que muda de forma.
@@ -72,7 +72,7 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 // dizer que o pedido está errado.
 func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito/piramide/2/0/0/0/0", "")
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("forma inventada deu %d, esperado 400", rec.Code)
@@ -92,7 +92,7 @@ func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 // uma rota aberta seria a lista do bestiário da cena para quem tiver a URL.
 func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	estranho := seedUser(t, f.s, "estranho@t.com")
 
 	rec := f.pede(t, estranho, http.MethodPost, f.tableUrl()+"/tabuleiro/regua/0/0/3/0", "")
@@ -112,7 +112,7 @@ func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 // aqui é a cortesia de não oferecer o que seria recusado.
 func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 	for _, esperado := range []string{"Régua", "Gabarito", "Mover a peça"} {

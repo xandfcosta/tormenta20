@@ -34,7 +34,7 @@ func sceneIds(t *testing.T, f pilotoFixture) (ficha, npc string) {
 func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	ficha, npc := sceneIds(t, f)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
@@ -62,7 +62,7 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":""}`)
 
@@ -85,7 +85,7 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
@@ -112,7 +112,7 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(doMestre, `id="por-no-mapa"`) {
@@ -133,7 +133,7 @@ func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
@@ -155,7 +155,7 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	ficha, npc := sceneIds(t, f)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
@@ -193,7 +193,7 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 func TestPopulateDoesNotPaintTerrain(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)

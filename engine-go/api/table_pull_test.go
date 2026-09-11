@@ -12,7 +12,7 @@ import (
 
 func TestThePullReachesWhoNeverChoseATab(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra") // a padrão, onde o jogador está sem ter escolhido
+	f.seedOpenBoard(t, "stone") // a padrão, onde o jogador está sem ter escolhido
 	cripta := f.openSecond(t, "Cripta")
 
 	// O mestre vai até a cripta e a mostra à mesa.
@@ -49,7 +49,7 @@ func TestThePullReachesWhoNeverChoseATab(t *testing.T) {
 // e a pessoa clica três vezes achando que o clique não pegou.
 func TestAfterThePullThePlayerChoosesAgain(t *testing.T) {
 	f := novoPiloto(t)
-	taverna := f.seedOpenBoard(t, "pedra")
+	taverna := f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
@@ -72,7 +72,7 @@ func TestAfterThePullThePlayerChoosesAgain(t *testing.T) {
 // que puxasse tiraria dos outros cinco exatamente o que a fatia 1 lhes deu.
 func TestThePlayerShowsNothingToTheTable(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 
 	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
@@ -104,7 +104,7 @@ func TestThePlayerShowsNothingToTheTable(t *testing.T) {
 // só se distinguem quando a escolha da pessoa não é a padrão.
 func TestAPullToAnEndedSceneGivesBackTheViewersOwnTab(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra") // "Taverna do Javali", a PADRÃO
+	f.seedOpenBoard(t, "stone") // "Taverna do Javali", a PADRÃO
 	ponte := f.openSecond(t, "Ponte de Corda")
 	cripta := f.openSecond(t, "Cripta")
 	// O jogador escolheu a ponte — é dela que ele foi tirado.
@@ -142,7 +142,7 @@ func TestAPullToAnEndedSceneGivesBackTheViewersOwnTab(t *testing.T) {
 // na tela de quem nunca tocou em nada.
 func TestAPullToTheTabThePlayerIsAlreadyOnStillTellsThem(t *testing.T) {
 	f := novoPiloto(t)
-	taverna := f.seedOpenBoard(t, "pedra") // a padrão, onde o jogador já está
+	taverna := f.seedOpenBoard(t, "stone") // a padrão, onde o jogador já está
 	f.openSecond(t, "Cripta")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+taverna.ID+"/mostrar", ""); rec.Code != http.StatusOK {
@@ -176,7 +176,7 @@ func TestAPullToTheTabThePlayerIsAlreadyOnStillTellsThem(t *testing.T) {
 // de sinal SAI, que é a coisa que a pessoa sente.
 func TestTheSurfaceIsPushedOncePerPull(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")
 

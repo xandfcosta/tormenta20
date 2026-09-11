@@ -373,23 +373,23 @@ html {
  * Os valores são os mesmos do `board-terrain.ts`, campo a campo. Duas paletas
  * fariam a mesma cripta ter dois climas nas duas telas. */
 @layer components {
-  .chao-pedra    { background: linear-gradient(160deg,#332f2a,#1d1b18 60%,#15140f); }
-  .chao-taverna  { background: linear-gradient(160deg,#4a3624,#2a1e14 60%,#1b120c); }
-  .chao-floresta { background: linear-gradient(160deg,#25381f,#162114 60%,#0f170e); }
-  .chao-ermo     { background: linear-gradient(160deg,#413726,#241f16 60%,#18140e); }
-  .chao-cripta   { background: linear-gradient(160deg,#2b2a33,#181720 60%,#101017); }
-  .chao-papel    { background: linear-gradient(160deg,#efe6cf,#ddd0b2 60%,#cbbc9a); }
+  .ground-stone    { background: linear-gradient(160deg,#332f2a,#1d1b18 60%,#15140f); }
+  .ground-tavern  { background: linear-gradient(160deg,#4a3624,#2a1e14 60%,#1b120c); }
+  .ground-forest { background: linear-gradient(160deg,#25381f,#162114 60%,#0f170e); }
+  .ground-wilds     { background: linear-gradient(160deg,#413726,#241f16 60%,#18140e); }
+  .ground-crypt   { background: linear-gradient(160deg,#2b2a33,#181720 60%,#101017); }
+  .ground-paper    { background: linear-gradient(160deg,#efe6cf,#ddd0b2 60%,#cbbc9a); }
 
   /* O AMBIENTE é a camada entre o chão e as peças (ALE-188): a cripta tem o frio
    * roxo caindo do alto, a taverna tem a LAREIRA fora do centro e as pranchas do
    * assoalho, a floresta tem duas clareiras descentradas porque luz de mata não
    * vem de um ponto só. O "papel" fica LIMPO de propósito — é o modo mapa de
    * batalha, onde ambiente seria sujeira sobre a régua. */
-  .chao-pedra    .board-ambient { background: radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,.06), transparent 60%), radial-gradient(100% 100% at 50% 120%, rgba(0,0,0,.45), transparent 55%); }
-  .chao-taverna  .board-ambient { background: radial-gradient(45% 40% at 22% 30%, rgba(255,176,86,.18), transparent 70%), repeating-linear-gradient(90deg, rgba(0,0,0,.16) 0 2px, transparent 2px 92px), radial-gradient(120% 110% at 50% 120%, rgba(0,0,0,.42), transparent 60%); }
-  .chao-floresta .board-ambient { background: radial-gradient(38% 34% at 28% 24%, rgba(150,220,120,.14), transparent 70%), radial-gradient(30% 28% at 72% 62%, rgba(120,200,110,.10), transparent 72%), radial-gradient(120% 110% at 50% 115%, rgba(0,0,0,.45), transparent 58%); }
-  .chao-ermo     .board-ambient { background: radial-gradient(80% 50% at 50% 0%, rgba(255,214,148,.10), transparent 65%), radial-gradient(120% 110% at 50% 120%, rgba(0,0,0,.40), transparent 60%); }
-  .chao-cripta   .board-ambient { background: radial-gradient(60% 45% at 50% -5%, rgba(150,130,255,.16), transparent 70%), radial-gradient(110% 100% at 50% 115%, rgba(0,0,0,.55), transparent 55%); }
+  .ground-stone    .board-ambient { background: radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,.06), transparent 60%), radial-gradient(100% 100% at 50% 120%, rgba(0,0,0,.45), transparent 55%); }
+  .ground-tavern  .board-ambient { background: radial-gradient(45% 40% at 22% 30%, rgba(255,176,86,.18), transparent 70%), repeating-linear-gradient(90deg, rgba(0,0,0,.16) 0 2px, transparent 2px 92px), radial-gradient(120% 110% at 50% 120%, rgba(0,0,0,.42), transparent 60%); }
+  .ground-forest .board-ambient { background: radial-gradient(38% 34% at 28% 24%, rgba(150,220,120,.14), transparent 70%), radial-gradient(30% 28% at 72% 62%, rgba(120,200,110,.10), transparent 72%), radial-gradient(120% 110% at 50% 115%, rgba(0,0,0,.45), transparent 58%); }
+  .ground-wilds     .board-ambient { background: radial-gradient(80% 50% at 50% 0%, rgba(255,214,148,.10), transparent 65%), radial-gradient(120% 110% at 50% 120%, rgba(0,0,0,.40), transparent 60%); }
+  .ground-crypt   .board-ambient { background: radial-gradient(60% 45% at 50% -5%, rgba(150,130,255,.16), transparent 70%), radial-gradient(110% 100% at 50% 115%, rgba(0,0,0,.55), transparent 55%); }
 
   /* A grade é OURO quase apagado — a assinatura da casa em vez do branco neutro
    * de planilha (ALE-188) —, e escura sobre o pergaminho, onde linha clara é
@@ -400,7 +400,7 @@ html {
       repeating-linear-gradient(90deg, oklch(0.8 0.11 85 / 0.08) 0 1px, transparent 1px 100%);
     background-size: var(--quadrado) var(--quadrado);
   }
-  .chao-papel .board-grid {
+  .ground-paper .board-grid {
     background:
       repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 1px, transparent 1px 100%),
       repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 1px, transparent 1px 100%);
@@ -413,7 +413,7 @@ html {
    * amarrada à vista, ela é a mesma grade para sempre — o mesmo truque que o
    * Excalidraw usa, e é ele que dispensa desenhar o que não aparece. */
   .board-grid,
-  .chao-papel .board-grid {
+  .ground-paper .board-grid {
     background-position: calc(var(--vista-x) * -1) calc(var(--vista-y) * -1);
   }
 
@@ -1031,10 +1031,10 @@ html {
   /* A TINTA de cada espécie. Chapada e não textura: a textura era o que sumia de
      longe, e é o ícone que carrega a identidade agora. As quatro somam sem virar
      papa porque a leitura de QUAL não depende mais da cor. */
-  .board-dificil { background-color: oklch(0.8 0.11 85 / 0.16); }
-  .board-cobertura { background-color: oklch(0.72 0.09 230 / 0.18); }
-  .board-camuflagem { background-color: oklch(0.85 0.03 260 / 0.16); }
-  .board-elevado { background-color: oklch(0.75 0.12 145 / 0.16); }
+  .board-difficult { background-color: oklch(0.8 0.11 85 / 0.16); }
+  .board-cover { background-color: oklch(0.72 0.09 230 / 0.18); }
+  .board-concealment { background-color: oklch(0.85 0.03 260 / 0.16); }
+  .board-elevated { background-color: oklch(0.75 0.12 145 / 0.16); }
 
   /* A MARCA é o ícone no canto. `position: absolute` dentro da casa, e o canto
      vem da classe que o servidor escreve — uma espécie, um canto, para sempre.
@@ -1055,10 +1055,10 @@ html {
   /* A COR da marca é a da espécie, cheia — a tinta do fundo é translúcida de
      propósito (o chão do lugar continua sendo informação), e o ícone é o que
      precisa de contraste. */
-  .board-dificil .terrain-mark { color: oklch(0.8 0.11 85); }
-  .board-cobertura .terrain-mark { color: oklch(0.78 0.11 230); }
-  .board-camuflagem .terrain-mark { color: oklch(0.88 0.04 260); }
-  .board-elevado .terrain-mark { color: oklch(0.8 0.14 145); }
+  .board-difficult .terrain-mark { color: oklch(0.8 0.11 85); }
+  .board-cover .terrain-mark { color: oklch(0.78 0.11 230); }
+  .board-concealment .terrain-mark { color: oklch(0.88 0.04 260); }
+  .board-elevated .terrain-mark { color: oklch(0.8 0.14 145); }
 
   /* O ÍCONE SOME NO ZOOM PEQUENO, e este é o custo que a escolha do dono
      declarou: abaixo de 32px de lado ele vira um borrão de seis pixels, e um
@@ -1075,10 +1075,10 @@ html {
      dia em que cada espécie ganhou ícone próprio, quatro quadradinhos que só
      diferiam de matiz viraram a legenda que a casa acabara de dispensar. */
   .brush-hue { opacity: 0.95; }
-  .board-hue-dificil { color: oklch(0.8 0.11 85); }
-  .board-hue-cobertura { color: oklch(0.78 0.11 230); }
-  .board-hue-camuflagem { color: oklch(0.88 0.04 260); }
-  .board-hue-elevado { color: oklch(0.8 0.14 145); }
+  .board-hue-difficult { color: oklch(0.8 0.11 85); }
+  .board-hue-cover { color: oklch(0.78 0.11 230); }
+  .board-hue-concealment { color: oklch(0.88 0.04 260); }
+  .board-hue-elevated { color: oklch(0.8 0.14 145); }
 
   /* A SUPERFÍCIE ESCOLHIDA do jogador (ALE-129, portada na ALE-269).
    *

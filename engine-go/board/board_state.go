@@ -147,7 +147,7 @@ type BoardState struct {
 	// hoje não são consumidos por nada — alimentam o OLHO, porque o app não
 	// resolve ataque contra Defesa em lugar nenhum. Um mapa afirmaria que são
 	// intercambiáveis, e a Tabela 5-3 diz que não; e chave de string ainda
-	// convida ao erro mudo, com `"elevated"` contra `"elevado"` virando lista
+	// convida ao erro mudo, com `"elevated"` contra `"elevated"` virando lista
 	// vazia sem estourar.
 	//
 	// A assimetria é a parte que importa e a que um mapa esconderia: ela é

@@ -28,7 +28,7 @@ func TestThePlacesTabListsTheArchiveAndOffersToBuild(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	cripta, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "cripta")
+	cripta, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
@@ -60,7 +60,7 @@ func TestThePlacesTabDoesNotExistForThePlayer(t *testing.T) {
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
 	heroi := seedCharacterAtLevel(t, s, jogador, "Guerreiro", 1, 10, 10, 5, 10)
 	seedMember(t, s, campanha, heroi)
-	if _, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "cripta"); err != nil {
+	if _, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt"); err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
 
@@ -86,7 +86,7 @@ func TestANewPlaceTakesTheMasterStraightToTheDraft(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
 
-	form := url.Values{"name": {"Cripta de Thwor"}, "ground": {"cripta"}}
+	form := url.Values{"name": {"Cripta de Thwor"}, "ground": {"crypt"}}
 	resp := pedeNaCronica(t, s, dono, http.MethodPost,
 		"/campanhas/"+strconv.FormatInt(campanha, 10)+"/lugares/novo", form.Encode())
 
@@ -102,7 +102,7 @@ func TestANewPlaceTakesTheMasterStraightToTheDraft(t *testing.T) {
 		t.Errorf("levou para %q em vez do rascunho (%s)", para, destino)
 	}
 	cena, _ := s.boards.PlaceScene(context.Background(), campanha, lugares[0].ID)
-	if cena.Terrain != "cripta" {
+	if cena.Terrain != "crypt" {
 		t.Errorf("o chão escolhido não ficou: %q", cena.Terrain)
 	}
 }
@@ -117,7 +117,7 @@ func TestAPlaceWithoutANameIsRefusedWithTheReasonInTheField(t *testing.T) {
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
 
-	form := url.Values{"name": {"   "}, "ground": {"cripta"}}
+	form := url.Values{"name": {"   "}, "ground": {"crypt"}}
 	resp := pedeNaCronica(t, s, dono, http.MethodPost,
 		"/campanhas/"+strconv.FormatInt(campanha, 10)+"/lugares/novo", form.Encode())
 
@@ -143,7 +143,7 @@ func TestThePlaceOnATableOffersGoingToItInstead(t *testing.T) {
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
 	sessao := seedSessao(t, s, campanha, 1)
 	ctx := context.Background()
-	if _, err := s.boards.Open(ctx, sessao, "Taverna do Javali", "taverna"); err != nil {
+	if _, err := s.boards.Open(ctx, sessao, "Taverna do Javali", "tavern"); err != nil {
 		t.Fatalf("abrir a taverna: %v", err)
 	}
 	if err := s.boards.Archive(ctx, campanha, s.boards.Get(ctx, sessao, "")); err != nil {
@@ -173,7 +173,7 @@ func TestThePlaceOnATableOffersGoingToItInstead(t *testing.T) {
 	}
 	// CONTROLE: um lugar FORA da mesa, na mesma tela, ganha os dois gestos. Sem
 	// ele, uma aba que falhasse em desenhar as linhas passaria neste caso.
-	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "cripta")
+	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar a cripta: %v", err)
 	}
@@ -193,7 +193,7 @@ func TestRemovingAPlaceReturnsToTheList(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	cripta, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "cripta")
+	cripta, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
@@ -226,7 +226,7 @@ func TestTheArchiveIsNotReadOutsideItsTab(t *testing.T) {
 	s := newTestServer(t)
 	dono := seedUser(t, s, "dono@t20.local")
 	campanha := seedCampanha(t, s, dono, "A Queda de Tauron", "")
-	if _, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "cripta"); err != nil {
+	if _, err := s.boards.NewPlace(context.Background(), campanha, "Cripta de Thwor", "crypt"); err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
 	cena := campaigns.New(s.campaignsHost())

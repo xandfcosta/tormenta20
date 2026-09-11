@@ -9,7 +9,7 @@ import (
 
 func TestOnlyTheGmMarksAGroup(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", "")
 	if rec.Code != http.StatusForbidden {
@@ -29,7 +29,7 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 // arrastando — que é exatamente o gesto que acabou de acontecer.
 func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area/0/0/9/9", "{}")
 	if !strings.Contains(resposta, "marked_tokens") {
@@ -44,7 +44,7 @@ func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 // diz isso, em vez de gravar uma versão nova sem mudar nada.
 func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/1/1", `{"marked_tokens":""}`)
 	if !strings.Contains(corpo, "não há peça marcada") {
@@ -60,7 +60,7 @@ func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)
 
@@ -95,7 +95,7 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 func TestTheRestingLayerServesBothGestures(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	// COM PEÇA no mapa: a marca do grupo é vestida pela peça, e num tabuleiro
 	// vazio a classe não aparece — o guarda acusaria a ausência dela sobre uma
 	// cena que só não tem peça nenhuma.

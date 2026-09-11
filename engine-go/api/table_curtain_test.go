@@ -9,7 +9,7 @@ import (
 
 func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "Fechar a cortina") {
@@ -45,7 +45,7 @@ func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 // que o mestre está montando, e um jogador que a abre pela mão vê a emboscada.
 func TestThePlayerDoesNotDrawTheCurtain(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/cortina"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("fechar deu %d", rec.Code)

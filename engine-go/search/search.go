@@ -261,7 +261,7 @@ func startsAWord(campo, alvo string) bool {
 
 // ScoreText é o último recurso: o termo aparece no CORPO da regra.
 //
-// Dez é deliberadamente baixo e sem graus: achar "camuflagem" no efeito de uma
+// Dez é deliberadamente baixo e sem graus: achar "concealment" no efeito de uma
 // magia é um acerto de verdade, e ainda assim vale menos que qualquer casamento
 // de nome.
 //

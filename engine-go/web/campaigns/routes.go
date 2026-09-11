@@ -102,7 +102,7 @@ func listURL(busca, papel string) string {
 		q.Set("busca", busca)
 	}
 	if papel != "" && papel != "todas" {
-		q.Set("papel", papel)
+		q.Set("paper", papel)
 	}
 	if len(q) == 0 {
 		return "/campanhas"

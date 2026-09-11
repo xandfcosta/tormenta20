@@ -31,7 +31,7 @@ func TestPopulateBringsOnlyTheChosen(t *testing.T) {
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
 	_ = aovivo.AddEntry(st, npc("Assassino", 20), id)
-	b := newBoard("t1", "Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "stone")
 
 	escolhidos := EntrySelection{
 		entryIDByLabel(t, st, "Sílfide"):  true,
@@ -91,7 +91,7 @@ func TestPopulateIsBornBelowTheTopChrome(t *testing.T) {
 	id := ContadorDeIds()
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
-	b := newBoard("t1", "Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "stone")
 
 	if placed := populateBoard(b, st, boardCounter(), nil); placed != 2 {
 		t.Fatalf("colocou %d peças, esperado 2: o que vem abaixo não mediria nada", placed)

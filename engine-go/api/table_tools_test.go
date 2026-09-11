@@ -11,19 +11,19 @@ import (
 // TestTheEraserClearsTheWholeSquare — o conserto do defeito que o dono achou.
 //
 // Ela era um MODO que invertia o pincel selecionado: com `Cobertura` na mão,
-// clicar num quadrado de `Difícil` mandava `terreno/cobertura/…?apagar=1`,
+// clicar num quadrado de `Difícil` mandava `terreno/cover/…?apagar=1`,
 // apagava a cobertura que não estava ali, e a tela não dizia nada. Medido na
 // bancada, clique a clique, antes de virar este teste.
 //
 // Agora a rota não tem espécie no caminho — não há como errar qual.
 func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	casa := f.tableUrl() + "/tabuleiro/terreno"
 
 	// Três espécies EMPILHADAS na mesma casa: é o caso que o modo antigo não
 	// sabia resolver, porque ele tinha de escolher uma.
-	for _, especie := range []string{"dificil", "cobertura", "elevado"} {
+	for _, especie := range []string{"difficult", "cover", "elevated"} {
 		if rec := f.pede(t, f.mestre, http.MethodPost, casa+"/"+especie+"/4/4/ate/4/4", ""); rec.Code != http.StatusOK {
 			t.Fatalf("pintar %s deu %d", especie, rec.Code)
 		}
@@ -55,7 +55,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 // caminho, este teste cai.
 func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(tela, "tabuleiro/terreno/limpar/") {
@@ -78,7 +78,7 @@ func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 // ferramenta oferecida a ele seria um modo que liga e não faz nada.
 func TestThePlayerRailLacksWhatThePlayerCannotDo(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(tela, "Régua (tecla ") {

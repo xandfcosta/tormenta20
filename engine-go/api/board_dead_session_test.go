@@ -30,7 +30,7 @@ func deadSessionBoard(t *testing.T) (*Server, int64, int64) {
 	sessao := seedSession(t, s, campanha)
 	ctx := context.Background()
 
-	if _, err := s.boards.Open(ctx, sessao, "Taverna do Javali", "taverna"); err != nil {
+	if _, err := s.boards.Open(ctx, sessao, "Taverna do Javali", "tavern"); err != nil {
 		t.Fatalf("abrir o tabuleiro: %v", err)
 	}
 	// A GRAVAÇÃO tem de dar certo ANTES, senão o caso mede uma sessão que nunca
@@ -65,7 +65,7 @@ func TestADeletedSessionLeavesNoBoardBehind(t *testing.T) {
 	// normalmente. Sem isto, um esquecimento que limpasse o store INTEIRO
 	// passaria neste caso.
 	outra := seedSession(t, s, campanha)
-	if _, err := s.boards.Open(ctx, outra, "Cripta", "cripta"); err != nil {
+	if _, err := s.boards.Open(ctx, outra, "Cripta", "crypt"); err != nil {
 		t.Fatalf("abrir tabuleiro na sessão vizinha: %v", err)
 	}
 	if dirty, _ := s.boards.Persist(ctx, outra, defaultTab); dirty {
@@ -81,7 +81,7 @@ func TestADeletedCampaignLeavesNoBoardBehind(t *testing.T) {
 	s, campanha, sessao := deadSessionBoard(t)
 	ctx := context.Background()
 	segunda := seedSession(t, s, campanha)
-	if _, err := s.boards.Open(ctx, segunda, "Cripta", "cripta"); err != nil {
+	if _, err := s.boards.Open(ctx, segunda, "Cripta", "crypt"); err != nil {
 		t.Fatalf("abrir o segundo tabuleiro: %v", err)
 	}
 	if dirty, _ := s.boards.Persist(ctx, segunda, defaultTab); dirty {

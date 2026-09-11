@@ -12,16 +12,16 @@ import (
 
 func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/2/2/ate/8/5", "")
+		f.tableUrl()+"/tabuleiro/terreno/difficult/2/2/ate/8/5", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o traço deu %d", rec.Code)
 	}
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	casas := board.SquaresOf(b, "dificil")
+	casas := board.SquaresOf(b, "difficult")
 	esperadas := board.StrokeSquares(engine.Square{X: 2, Y: 2}, engine.Square{X: 8, Y: 5})
 	if len(casas) != len(esperadas) {
 		t.Errorf("o traço (2,2)→(8,5) pintou %d casas, esperado as %d do segmento: %v",
@@ -42,17 +42,17 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 // e foi justamente ela que ficou para trás na primeira versão desta superfície.
 func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/cobertura/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/cover/0/0/ate/6/6", ""); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
 	// O CONTROLE: havia o que apagar. Sem ele, "sobrou zero" é verdade também
 	// sobre um tabuleiro em que nada foi pintado.
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if len(board.SquaresOf(b, "cobertura")) < 7 {
+	if len(board.SquaresOf(b, "cover")) < 7 {
 		t.Fatalf("o traço de pintura só fez %d casas — não há o que a borracha apagar",
-			len(board.SquaresOf(b, "cobertura")))
+			len(board.SquaresOf(b, "cover")))
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -60,7 +60,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if sobrou := board.SquaresOf(b, "cobertura"); len(sobrou) != 0 {
+	if sobrou := board.SquaresOf(b, "cover"); len(sobrou) != 0 {
 		t.Errorf("a borracha deixou %v pelo caminho", sobrou)
 	}
 }
@@ -72,15 +72,15 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 // o que houve.
 func TestAForgedStrokeIsRefused(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/0/0/ate/9999999/0", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno/difficult/0/0/ate/9999999/0", "").Body.String()
 	if !strings.Contains(corpo, "longo demais") {
 		t.Errorf("o traço forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if casas := board.SquaresOf(b, "dificil"); len(casas) != 0 {
+	if casas := board.SquaresOf(b, "difficult"); len(casas) != 0 {
 		t.Errorf("o traço recusado pintou %d casas assim mesmo", len(casas))
 	}
 }
@@ -97,10 +97,10 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 // não muda quando alguém pinta uma casa).
 func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/1/1/ate/1/1", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno/difficult/1/1/ate/1/1", "").Body.String()
 
 	if !strings.Contains(corpo, `id="mesa-tabuleiro"`) {
 		t.Error("a resposta do pincel não traz o mapa — a casa pintada não apareceria")
@@ -124,7 +124,7 @@ func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 // dono relatou.
 func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, pedaco := range []string{
@@ -149,9 +149,9 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 // o ícone chega à casa, e o trilho mostra o MESMO.
 func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/camuflagem/3/3/ate/3/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/concealment/3/3/ate/3/3", ""); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -167,7 +167,7 @@ func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 		t.Error("a casa pintada não tem a marca da espécie")
 	}
 	// E o TRILHO usa a mesma tabela: o botão do pincel tinge com a cor dela.
-	if !strings.Contains(tela, "board-hue-camuflagem") {
+	if !strings.Contains(tela, "board-hue-concealment") {
 		t.Error("o pincel do trilho não veste o matiz da espécie")
 	}
 }
@@ -180,15 +180,15 @@ func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 // espécie (o conserto da fatia 1, que não pode se perder numa rota nova).
 func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/difficult/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("o retângulo deu %d", rec.Code)
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	// 3 colunas × 4 linhas = 12 casas, e as duas pontas incluídas.
-	if casas := board.SquaresOf(b, "dificil"); len(casas) != 12 {
+	if casas := board.SquaresOf(b, "difficult"); len(casas) != 12 {
 		t.Errorf("(2,2)→(4,5) pintou %d casas, esperado as 12 do retângulo: %v", len(casas), casas)
 	}
 
@@ -197,7 +197,7 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 		t.Fatalf("limpar o retângulo deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if sobrou := board.SquaresOf(b, "dificil"); len(sobrou) != 0 {
+	if sobrou := board.SquaresOf(b, "difficult"); len(sobrou) != 0 {
 		t.Errorf("a borracha em área deixou %v", sobrou)
 	}
 }
@@ -206,15 +206,15 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 // como FRASE. Mil casas são 32×32 — uma sala grande de masmorra.
 func TestAForgedRectangleIsRefusedByTheRoute(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/retangulo/0/0/999/999", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno/difficult/retangulo/0/0/999/999", "").Body.String()
 	if !strings.Contains(corpo, "grande demais") {
 		t.Errorf("o retângulo forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if casas := board.SquaresOf(b, "dificil"); len(casas) != 0 {
+	if casas := board.SquaresOf(b, "difficult"); len(casas) != 0 {
 		t.Errorf("o retângulo recusado pintou %d casas assim mesmo", len(casas))
 	}
 }
@@ -226,7 +226,7 @@ func TestAForgedRectangleIsRefusedByTheRoute(t *testing.T) {
 // pode trocar o que ele está fazendo, porque o dedo já está a caminho de um canto.
 func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, pedaco := range []string{"evt.shiftKey", "/retangulo/", "board-lasso"} {
@@ -252,7 +252,7 @@ func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 // O conserto é sempre o mesmo: quem ESCONDE é um nó, quem POSICIONA é outro.
 func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: as duas diretivas existem na cena, em nós diferentes. Sem ele,

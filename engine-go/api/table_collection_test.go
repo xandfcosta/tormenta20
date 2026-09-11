@@ -29,7 +29,7 @@ func (f pilotoFixture) savePlace(t *testing.T, nome string) int64 {
 // apagando a outra no acervo, porque o `Archive` sobrescreve pelo nome.
 func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "taverna") // "Taverna do Javali"
+	f.seedOpenBoard(t, "tavern") // "Taverna do Javali"
 	f.savePlace(t, "Taverna do Javali")
 	// Ela volta para a mesa, agora numa aba.
 	taverna := f.openSecond(t, "Taverna do Javali")
@@ -65,7 +65,7 @@ func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 // pior forma de um botão mentir.
 func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "taverna")
+	f.seedOpenBoard(t, "tavern")
 	id := f.savePlace(t, "Taverna do Javali")
 	f.openSecond(t, "Taverna do Javali")
 
@@ -103,7 +103,7 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 // de lugares — que é justamente onde há 148 botões para clicar.
 func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "taverna")
+	f.seedOpenBoard(t, "tavern")
 	id := f.savePlace(t, "Taverna do Javali")
 	for i := 0; i < 8; i++ {
 		f.openSecond(t, fmt.Sprintf("Cena %d", i))

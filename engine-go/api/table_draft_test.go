@@ -46,7 +46,7 @@ func (f pilotoFixture) draftUrl(placeID int64) string {
 // de que lado do tempo ele está. É a lição da cortina (ALE-202) aplicada aqui.
 func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.draftUrl(lugar), "").Body.String()
 
@@ -59,7 +59,7 @@ func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
 	if !strings.Contains(corpo, "a mesa não vê") {
 		t.Error("a tarja não diz que ninguém está vendo — o mestre não tem como saber em que tempo está")
 	}
-	if !strings.Contains(corpo, "chao-cripta") {
+	if !strings.Contains(corpo, "ground-crypt") {
 		t.Error("o chão escolhido não foi desenhado")
 	}
 }
@@ -72,7 +72,7 @@ func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
 // O sintoma seria "o pincel não pinta", sem uma linha em lugar nenhum.
 func TestTheDraftGesturesPostToTheArchiveAndNotToATable(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.draftUrl(lugar), "").Body.String()
 
@@ -100,7 +100,7 @@ func TestTheDraftGesturesPostToTheArchiveAndNotToATable(t *testing.T) {
 // trocada passa verde na suíte e quebra toda escrita no servidor.
 func TestADraftGestureChangesTheArchivedScene(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/nova/4/3",
 		`{"new_token_name":"Porta da cripta","new_token_size":1,"new_token_look":"object"}`)
@@ -129,7 +129,7 @@ func TestADraftGestureChangesTheArchivedScene(t *testing.T) {
 // posicionada e os marcadores que ainda não foram revelados.
 func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	pagina := f.pede(t, f.jogador, http.MethodGet, f.draftUrl(lugar), "")
 	if pagina.Code != http.StatusForbidden {
@@ -159,7 +159,7 @@ func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
 // pior que a ausência dele — ele ensina um gesto errado.
 func TestTheDraftDoesNotOfferTheSessionVerbs(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.draftUrl(lugar), "").Body.String()
 
@@ -193,7 +193,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 	// em andamento. O status da sessão NÃO importa para a trava, e é de
 	// propósito: uma sessão encerrada guarda os tabuleiros dela e reabre com
 	// eles, então "está na mesa" é sobre o tabuleiro, não sobre a partida.
-	f.seedOpenBoard(t, "taverna")
+	f.seedOpenBoard(t, "tavern")
 	if err := f.s.tableHost().Boards().Archive(context.Background(), f.campaignID,
 		f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)); err != nil {
 		t.Fatalf("guardar a taverna: %v", err)
@@ -216,7 +216,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 	// CONTROLE: o mesmo gesto num lugar que NÃO está na mesa passa. Sem ele,
 	// uma recusa por qualquer outro motivo — id errado, rota que não existe —
 	// seria lida como "a trava funcionou".
-	outro := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	outro := f.draftPlace(t, "Cripta de Thwor", "crypt")
 	f.posta(t, f.mestre, f.draftUrl(outro)+"/tabuleiro/pecas/nova/4/3",
 		`{"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
 	if livre, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, outro); len(livre.Tokens) != 1 {
@@ -232,7 +232,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 // `PlaceScene` a descarta na leitura seguinte, então ela sumiria em silêncio.
 func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 	// O ID vem do SERVIDOR e não do teste: o `AddToken` cunha um sempre, e
 	// escolher um aqui seria arranjar um dado que a produção nunca produz.
 	semeada, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
@@ -276,7 +276,7 @@ GUARDADA, que a resposta não mexe no acervo, e que um estranho não as alcança
 // A régua mede no rascunho, e a resposta é só SINAL.
 func TestTheRulerMeasuresInsideTheDraft(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/regua",
 		`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
@@ -307,7 +307,7 @@ func TestTheRulerMeasuresInsideTheDraft(t *testing.T) {
 // dele a própria resposta.
 func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 	if _, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
 		func(b *board.BoardState) error {
 			return board.AddToken(b, board.BoardToken{
@@ -341,7 +341,7 @@ func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing
 // desenharia um cone apontando para onde o servidor achou melhor.
 func TestTheDraftConeWithoutAimAsksForIt(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito/cone/6/0/0/0/0", "")
 
@@ -359,7 +359,7 @@ func TestTheDraftConeWithoutAimAsksForIt(t *testing.T) {
 // DOM.
 func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 	f := novoPiloto(t)
-	lugar := f.draftPlace(t, "Cripta de Thwor", "cripta")
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 	if _, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
 		func(b *board.BoardState) error {
 			return board.AddToken(b, board.BoardToken{

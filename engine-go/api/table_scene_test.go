@@ -18,7 +18,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 	}
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"new_place":"Taverna do Javali","new_ground":"taverna"}`)
+		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
@@ -29,7 +29,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 	if b.Place != "Taverna do Javali" {
 		t.Errorf("o lugar ficou %q — o sinal do diálogo não chegou", b.Place)
 	}
-	if b.Terrain != "taverna" {
+	if b.Terrain != "tavern" {
 		t.Errorf("o chão ficou %q — o mestre escolheu taverna", b.Terrain)
 	}
 
@@ -59,7 +59,7 @@ func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *test
 	if b.Place != "Cena" {
 		t.Errorf("o lugar em branco virou %q", b.Place)
 	}
-	if b.Terrain != "pedra" {
+	if b.Terrain != "stone" {
 		t.Errorf("o chão inventado virou %q — devia cair no padrão", b.Terrain)
 	}
 }
@@ -72,14 +72,14 @@ func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *test
 func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"new_place":"Cripta","new_ground":"cripta"}`); rec.Code != http.StatusForbidden {
+		`{"new_place":"Cripta","new_ground":"crypt"}`); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu a cena: %d", rec.Code)
 	}
 	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab) != nil {
 		t.Error("a cena do jogador abriu mesmo assim")
 	}
 
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador encerrou a cena: %d", rec.Code)
 	}
@@ -95,7 +95,7 @@ func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 // numa cena que já acabou.
 func TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "taverna")
+	f.seedOpenBoard(t, "tavern")
 
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
@@ -213,12 +213,12 @@ func TestWithoutAStoredPlaceThereIsNoArchiveButton(t *testing.T) {
 func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	f := novoPiloto(t)
 	ctx := context.Background()
-	f.seedOpenBoard(t, "taverna") // "Taverna do Javali"
+	f.seedOpenBoard(t, "tavern") // "Taverna do Javali"
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar a taverna deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"new_place":"Cripta","new_ground":"cripta"}`); rec.Code != http.StatusOK {
+		`{"new_place":"Cripta","new_ground":"crypt"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir a cripta deu %d", rec.Code)
 	}
 
@@ -269,12 +269,12 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 // o acervo e a mesa perderia a cena em que estava jogando.
 func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "taverna")
+	f.seedOpenBoard(t, "tavern")
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"new_place":"Cripta","new_ground":"cripta"}`); rec.Code != http.StatusOK {
+		`{"new_place":"Cripta","new_ground":"crypt"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir a cripta deu %d", rec.Code)
 	}
 	guardados := f.s.tableHost().Boards().Places(context.Background(), f.campaignID)
@@ -296,7 +296,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 // TestOnlyTheGmTouchesTheArchive: a trava é do servidor.
 func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "taverna")
+	f.seedOpenBoard(t, "tavern")
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
@@ -326,7 +326,7 @@ func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 func TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch(t *testing.T) {
 	f := novoPiloto(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
-		`{"new_place":"Sala esquecida","new_ground":"pedra"}`); rec.Code != http.StatusOK {
+		`{"new_place":"Sala esquecida","new_ground":"stone"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {

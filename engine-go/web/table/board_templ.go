@@ -140,7 +140,7 @@ func boardTable(v BoardView) templ.Component {
 					}
 				}
 			}
-			var templ_7745c5c3_Var3 = []any{"board-scene grimorio-frame chao-" + v.Chao}
+			var templ_7745c5c3_Var3 = []any{"board-scene grimorio-frame ground-" + v.Chao}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

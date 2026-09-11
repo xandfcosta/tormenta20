@@ -10,7 +10,7 @@ import (
 
 func (f pilotoFixture) openSecond(t *testing.T, nome string) *board.BoardState {
 	t.Helper()
-	b, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, nome, "pedra")
+	b, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, nome, "stone")
 	if err != nil {
 		t.Fatalf("abrir %q: %v", nome, err)
 	}
@@ -25,7 +25,7 @@ func (f pilotoFixture) openSecond(t *testing.T, nome string) *board.BoardState {
 // uma região que desenha uma cena.
 func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	uma := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(uma, "board-tab") {
@@ -59,7 +59,7 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 // e no meio de um combate ninguém entenderia por que o mapa mudou.
 func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra") // "Taverna do Javali", a primeira
+	f.seedOpenBoard(t, "stone") // "Taverna do Javali", a primeira
 	cripta := f.openSecond(t, "Cripta")
 
 	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
@@ -89,12 +89,12 @@ func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 // que a mesa está vendo, que é a emboscada vazando por outro caminho.
 func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 	f := novoPiloto(t)
-	taverna := f.seedOpenBoard(t, "pedra")
+	taverna := f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 	ctx := context.Background()
 
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
-	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/terreno/dificil/2/3/ate/2/3", "")
+	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/terreno/difficult/2/3/ate/2/3", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
 	}
@@ -115,7 +115,7 @@ func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 // teria como ligar uma coisa à outra.
 func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 	f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
 
@@ -148,7 +148,7 @@ func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 // não aparece na tela — só no ver-código-fonte.
 func TestATabUnderTheCurtainDoesNotTellThePlayerTheSceneName(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	emboscada := f.openSecond(t, "Cripta do Rei Caolho")
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+emboscada.ID, "")
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/cortina/fechar", ""); rec.Code != http.StatusOK {
