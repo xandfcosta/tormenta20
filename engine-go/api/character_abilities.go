@@ -15,7 +15,7 @@ import (
 //
 // Extraída na ALE-272 (fatia 2) porque a ficha em Datastar passou a gravar
 // proficiencia pelo mesmo caminho, e a regra e uma so: o painel do piloto e o
-// `PATCH /characters/{id}/proficiencies` guardam com a MESMA validacao. Duas
+// `PATCH /personagens/{id}/proficiencies` guardam com a MESMA validacao. Duas
 // copias divergiriam no dia em que uma categoria nova chegasse — e a copia
 // esquecida aceitaria o que a outra recusa.
 //

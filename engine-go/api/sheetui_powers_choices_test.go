@@ -232,7 +232,7 @@ func TestARepeatedDistributionIsRefused(t *testing.T) {
 }
 
 // Aqui morava o TestTheJsonApiRefusesAChoiceOutsideTheRule, que provava que a
-// rota `PATCH /characters/{id}/abilities` recusava três poderes em duas vagas.
+// rota `PATCH /personagens/{id}/abilities` recusava três poderes em duas vagas.
 // Ela saiu na ALE-277 com as outras sem consumidor.
 //
 // A REGRA não saiu: ela é `sheet.WithChoicesValid`, e quem a prende agora é o

@@ -142,10 +142,10 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 	f := novoPiloto(t)
 	f.onBoard(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 
@@ -217,10 +217,10 @@ func TestOutOfCombatNobodySeesReach(t *testing.T) {
 func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.onBoard(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
@@ -274,10 +274,10 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.onBoard(t)
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 
@@ -305,10 +305,10 @@ func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 // orçamento -1 e nunca vê vermelho.
 func (f pilotoFixture) turnPlayer(t *testing.T) {
 	t.Helper()
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 }

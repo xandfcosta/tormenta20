@@ -50,7 +50,7 @@ func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
 	// presença. Limpeza não pode falar mais alto que o defeito (ALE-245).
 	ctx, fechar := context.WithCancel(context.Background())
 	defer fechar()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+f.tableUrl()+"/stream", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+f.tableUrl()+"/fluxo", nil)
 	if err != nil {
 		t.Fatalf("montar pedido: %v", err)
 	}

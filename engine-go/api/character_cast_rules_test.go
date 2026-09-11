@@ -87,7 +87,7 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 
 // castSpell chama a REGRA direto, e não uma rota.
 //
-// Ela batia em `POST /characters/{id}/spells/{id}/cast`, que saiu na ALE-277
+// Ela batia em `POST /personagens/{id}/spells/{id}/cast`, que saiu na ALE-277
 // junto com as outras sessenta e nove rotas sem consumidor. O que estes cinco
 // casos prendem nunca foi o transporte: é o teto de PM da p171, o empilhamento
 // de aprimoramento da p224 e a ressalva do custo mínimo. **Teste de regra vive

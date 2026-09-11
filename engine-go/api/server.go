@@ -137,7 +137,7 @@ func (s *Server) serializeCharacterWrites(next http.Handler) http.Handler {
 	})
 }
 
-// characterIDFromPath extracts the {id} from /characters/{id}/... — used to key the write
+// characterIDFromPath extracts the {id} from /personagens/{id}/... — used to key the write
 // lock. Returns false for paths without a numeric id (e.g. POST /characters create).
 func characterIDFromPath(path string) (int64, bool) {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
@@ -265,7 +265,7 @@ func (s *Server) Router() http.Handler {
 
 	r.Get("/health", s.handleHealth)
 
-	r.Route("/campaigns", func(r chi.Router) {
+	r.Route("/campanhas", func(r chi.Router) {
 		r.Use(s.requireAuth)
 		// A varredura do `auth.setup.ts`: lista, filtra pelo prefixo "E2E
 		// Descartável" e apaga. Nomeia pelo PREFIXO e nunca por id — apagar por
@@ -275,12 +275,12 @@ func (s *Server) Router() http.Handler {
 		// A fixture do `piloto-board.spec.ts`: uma mesa descartável por
 		// corrida, montada em duas chamadas em vez de seis telas.
 		r.Post("/", s.handleCreateCampaign)
-		r.Route("/{campaignId}/sessions", func(r chi.Router) {
+		r.Route("/{campaignId}/sessoes", func(r chi.Router) {
 			r.Post("/", s.handleCreateSession)
 		})
 	})
 
-	r.Route("/characters", func(r chi.Router) {
+	r.Route("/personagens", func(r chi.Router) {
 		r.Use(s.requireAuth)
 		r.Use(s.serializeCharacterWrites)
 		// A varredura das CONDIÇÕES: o spec da sessão aplica Abalado, Agarrado e

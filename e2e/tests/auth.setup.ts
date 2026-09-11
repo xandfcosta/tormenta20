@@ -53,11 +53,11 @@ async function signIn(page: Page, email: string, file: string): Promise<void> {
  * Nomeia pelo PREFIXO, nunca por id: apagar por id seria apagar seed.
  */
 async function varrerCronicasDeTeste(page: Page): Promise<void> {
-  const lista = await page.request.get('/api/campaigns')
+  const lista = await page.request.get('/api/campanhas')
   expect(lista.ok(), 'a varredura de campanhas de teste rodou sem sessão').toBe(true)
   const cronicas = (await lista.json()) as { id: number; name: string }[]
   const restos = cronicas.filter((c) => c.name.startsWith('E2E Descartável'))
-  for (const resto of restos) await page.request.delete(`/api/campaigns/${resto.id}`)
+  for (const resto of restos) await page.request.delete(`/api/campanhas/${resto.id}`)
   if (restos.length > 0) console.log(`[setup] ${restos.length} campanha(s) de teste varrida(s)`)
 }
 
@@ -74,19 +74,19 @@ async function varrerCronicasDeTeste(page: Page): Promise<void> {
  * Varre no SETUP, que roda antes de tudo e não depende de nenhum teste ter
  * terminado bem. Mesma escolha da varredura de campanhas acima.
  *
- * Roda nas DUAS sessões, e isso custou uma tentativa: `/api/characters` lista
+ * Roda nas DUAS sessões, e isso custou uma tentativa: `/api/personagens` lista
  * só o que a sessão POSSUI, e a ficha que o spec suja — o Arcanista Erudito —
  * é do JOGADOR. Varrendo só com o mestre a limpeza achava zero e ia embora
  * dizendo que tinha limpado.
  */
 async function varrerCondicoesDeTeste(page: Page): Promise<void> {
-  const lista = await page.request.get('/api/characters')
+  const lista = await page.request.get('/api/personagens')
   expect(lista.ok(), 'a varredura de condições rodou sem sessão').toBe(true)
   const fichas = (await lista.json()) as { id: number; activeConditions?: string }[]
   let varridas = 0
   for (const ficha of fichas) {
     if (!ficha.activeConditions || ficha.activeConditions === '[]') continue
-    const limpou = await page.request.patch(`/api/characters/${ficha.id}/conditions`, {
+    const limpou = await page.request.patch(`/api/personagens/${ficha.id}/conditions`, {
       data: { activeConditions: [] },
     })
     expect(limpou.ok(), `não consegui limpar as condições da ficha ${ficha.id}`).toBe(true)

@@ -52,7 +52,7 @@ func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 
 // putRules chama a REGRA direto, e não a rota.
 //
-// Ela batia em `PUT /campaigns/{id}/rules`, que saiu na ALE-277 com as outras
+// Ela batia em `PUT /campanhas/{id}/rules`, que saiu na ALE-277 com as outras
 // sem consumidor. O que estes casos prendem nunca foi o transporte: é a mais
 // ESTRITA vencendo entre duas mesas, e a ficha avulsa aplicando tudo. A cena das
 // campanhas grava pelo mesmo `saveIgnoredRules`, pela porta.
@@ -154,6 +154,6 @@ func TestASheetWithoutACampaignAppliesEveryRule(t *testing.T) {
 }
 
 // Aqui morava o TestTheCampaignDetailLoadsTheRules, que lia as regras pelo
-// `GET /campaigns/{id}` — rota que saiu na ALE-277. A garantia é da cena das
+// `GET /campanhas/{id}` — rota que saiu na ALE-277. A garantia é da cena das
 // campanhas, que desenha os interruptores no estado real na primeira pintura, e
 // ela tem guarda lá.

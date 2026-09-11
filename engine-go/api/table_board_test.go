@@ -89,7 +89,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 		board.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
 	}
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/scene/start", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
 
@@ -101,7 +101,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 		t.Error("a peça acendeu antes de o combate começar")
 	}
 
-	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("avançar deu %d", rec.Code)
 	}
 	depois := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -242,7 +242,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
-	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/stream", nil)
+	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/fluxo", nil)
 	if erroDoPedido != nil {
 		t.Fatalf("montar pedido: %v", erroDoPedido)
 	}
@@ -336,7 +336,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
-	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/stream", nil)
+	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/fluxo", nil)
 	if erroDoPedido != nil {
 		t.Fatalf("montar pedido: %v", erroDoPedido)
 	}

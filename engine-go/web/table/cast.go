@@ -21,9 +21,9 @@ import (
 func (s Scene) CastRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/na-fila",
 		s.gmCommand(putPlayerTracker))
-	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/vitals/{pool}/harm/{step}",
+	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/vitais/{pool}/ferir/{step}",
 		s.gmCommand(moveCastVitals(-1)))
-	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/vitals/{pool}/heal/{step}",
+	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/vitais/{pool}/curar/{step}",
 		s.gmCommand(moveCastVitals(+1)))
 }
 
@@ -136,7 +136,7 @@ func poeNaFila(v View, m Member) string {
 // `evt.shiftKey` escolhendo entre elas — a mesma forma do `rowVital` da fila, e
 // pela mesma razão: o número nunca viaja como dado.
 func castVital(v View, m Member, pool, verb string) string {
-	base := fmt.Sprintf("/mesa/%d/%d/elenco/%d/vitals/%s/%s/",
+	base := fmt.Sprintf("/mesa/%d/%d/elenco/%d/vitais/%s/%s/",
 		v.CampaignID, v.SessionID, m.CharacterID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
 }

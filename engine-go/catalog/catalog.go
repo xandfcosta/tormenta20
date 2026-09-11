@@ -217,7 +217,7 @@ func Resource(name string) ([]byte, bool) {
 	return b, true
 }
 
-// Options returns the character-creation option lists JSON (/characters/options).
+// Options returns the character-creation option lists JSON (/personagens/options).
 func Options() ([]byte, error) {
 	return files.ReadFile("data/options.json")
 }

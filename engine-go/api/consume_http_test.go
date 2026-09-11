@@ -33,7 +33,7 @@ func seedConsumable(t *testing.T, s *Server, charID int64, catalogID, name strin
 
 // consumeItem chama a REGRA direto, e não a rota.
 //
-// Ela batia em `POST /characters/{id}/items/{itemId}/consume`, que saiu na
+// Ela batia em `POST /personagens/{id}/items/{itemId}/consume`, que saiu na
 // ALE-277 com as outras sessenta e nove rotas sem consumidor. O que estes casos
 // prendem nunca foi o transporte: é a baixa de UMA dose, a cura presa no
 // máximo, o efeito de cena e a porção diária. **Teste de regra vive junto da

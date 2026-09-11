@@ -10,7 +10,7 @@ import (
 	"t20engine/db/sqlcgen"
 )
 
-// Gestão de membros pelo ROUTER real. `PATCH /campaigns/{cid}/members/{id}` promove
+// Gestão de membros pelo ROUTER real. `PATCH /campanhas/{cid}/members/{id}` promove
 // alguém a mestre da mesa, e só tinha o 401 anônimo da tabela de rotas — nada provava
 // que um membro comum não se promove sozinho, nem que um id de OUTRA mesa é recusado.
 
@@ -62,7 +62,7 @@ func newMemberFixture(t *testing.T) memberFixture {
 // Aqui morava o TestUpdateMemberRole, e ele merece uma linha porque o que saiu
 // não foi só um teste.
 //
-// `PATCH /campaigns/{id}/members/{id}` era o ÚNICO caminho para promover um
+// `PATCH /campanhas/{id}/members/{id}` era o ÚNICO caminho para promover um
 // jogador a mestre, e nenhuma cena em Datastar oferece o gesto — medido antes de
 // apagar. Ou seja: a capacidade já estava inalcançável desde que a SPA morreu
 // (ALE-272), e a rota só sobrevivia porque ninguém tinha ido conferir. Apagá-la
@@ -136,7 +136,7 @@ func TestJoiningStillWorks(t *testing.T) {
 
 // addMember chama a REGRA direto, e não a rota.
 //
-// Ela batia em `POST /campaigns/{id}/members`, que saiu na ALE-277 com as outras
+// Ela batia em `POST /campanhas/{id}/members`, que saiu na ALE-277 com as outras
 // sem consumidor. O que estes casos prendem é a TRAVA DE UNICIDADE do
 // `joinTable` — a decisão do `_txlock=immediate` da ALE-156, que é o que faz
 // dois pedidos simultâneos criarem UM membro em vez de um 500. Isso nunca foi
@@ -246,7 +246,7 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 
 // Aqui moravam o TestAnOversizedBodyIsRefusedBySize e o TestANormalBodyStillPasses,
 // sobre o teto de 1 MB do corpo e o 413 próprio (ALE-157). Eles dirigiam
-// `POST /campaigns/{id}/members`, que saiu na ALE-277.
+// `POST /campanhas/{id}/members`, que saiu na ALE-277.
 //
 // A garantia não é da rota e sim do `platform.DecodeJSON`, que continua no ar
 // e é chamado por todo comando de cena — o teto e a mensagem são de lá, e é lá

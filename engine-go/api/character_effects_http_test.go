@@ -37,15 +37,15 @@ func endScopeRouter(s *Server, user AuthUser) http.Handler {
 			next.ServeHTTP(w, req.WithContext(context.WithValue(req.Context(), userCtxKey, user)))
 		})
 	})
-	r.Post("/characters/{id}/end-scene", s.handleEndScene)
-	r.Post("/characters/{id}/end-day", s.handleEndDay)
+	r.Post("/personagens/{id}/fim-de-cena", s.handleEndScene)
+	r.Post("/personagens/{id}/fim-de-dia", s.handleEndDay)
 	return r
 }
 
 func postEndScope(t *testing.T, h http.Handler, path string, charID int64) *httptest.ResponseRecorder {
 	t.Helper()
 	rec := httptest.NewRecorder()
-	url := "/characters/" + strconv.FormatInt(charID, 10) + path
+	url := "/personagens/" + strconv.FormatInt(charID, 10) + path
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, url, nil))
 	return rec
 }
@@ -86,7 +86,7 @@ func TestEndSceneRouteClearsSceneOnly(t *testing.T) {
 	seedEffect(t, s, char, "buff-b", "day")
 	seedLiveSession(t, s, gmID, char)
 
-	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/end-scene", char)
+	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/fim-de-cena", char)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200 (body %q)", rec.Code, rec.Body.String())
@@ -108,7 +108,7 @@ func TestEndDayRouteClearsBothScopes(t *testing.T) {
 	seedEffect(t, s, char, "buff-b", "day")
 	seedLiveSession(t, s, gmID, char)
 
-	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/end-day", char)
+	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/fim-de-dia", char)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200 (body %q)", rec.Code, rec.Body.String())
@@ -133,7 +133,7 @@ func TestEndSceneRouteRejectsStranger(t *testing.T) {
 	seedEffect(t, s, char, "buff-a", "scene")
 	seedLiveSession(t, s, gmID, char)
 
-	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: strangerID}), "/end-scene", char)
+	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: strangerID}), "/fim-de-cena", char)
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want 403", rec.Code)
@@ -146,7 +146,7 @@ func TestEndSceneRouteRejectsStranger(t *testing.T) {
 // A metade que a ALE-223 inverteu: o DONO da ficha não encerra cena nem dia,
 // nem com mesa em curso. Descanso é decisão da mesa, e a mesa é do mestre.
 func TestEndScopeRoutesRefuseTheOwnerAtALiveTable(t *testing.T) {
-	for _, path := range []string{"/end-scene", "/end-day"} {
+	for _, path := range []string{"/fim-de-cena", "/fim-de-dia"} {
 		t.Run(path, func(t *testing.T) {
 			s := newTestServer(t)
 			gmID := seedUser(t, s, "gm@t.com")
@@ -189,7 +189,7 @@ func TestEndSceneRouteRefusedWithNoRunningSession(t *testing.T) {
 	seedSession(t, s, campaign) // planned, never started
 
 	for quem, id := range map[string]int64{"o mestre": gmID, "o dono da ficha": ownerID} {
-		rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: id}), "/end-scene", char)
+		rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: id}), "/fim-de-cena", char)
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("%s: status = %d, want 403 (body %q)", quem, rec.Code, rec.Body.String())
 		}
@@ -219,7 +219,7 @@ func TestEndSceneRouteRefusesGmWhoseLiveSessionIsAnotherCampaign(t *testing.T) {
 	outroPc := seedCharacter(t, s, ownerID, "Outro", 10, 10, 5, 5)
 	seedLiveSession(t, s, gmID, outroPc)
 
-	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/end-scene", char)
+	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/fim-de-cena", char)
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want 403 (body %q)", rec.Code, rec.Body.String())

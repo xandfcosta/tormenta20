@@ -48,7 +48,7 @@ templ gmControls(v View, r viewGm) {
 			<button
 				type="button"
 				if r.PodeAvancar {
-					data-on:click={ tableCommand(v, "POST", "initiative/next-turn") }
+					data-on:click={ tableCommand(v, "POST", "iniciativa/proxima-vez") }
 					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-gold bg-accent px-3 text-sm font-medium text-grimorio-gold outline-none transition-colors hover:bg-grimorio-gold/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				} else {
 					disabled
@@ -129,7 +129,7 @@ templ rest(v View) {
 		type="button"
 		data-indicator:resting
 		data-attr:disabled="$resting"
-		data-on:click={ tableCommand(v, "POST", "rest/scene") }
+		data-on:click={ tableCommand(v, "POST", "descanso/cena") }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 	>
 		@ui.Icon("Hourglass", "size-4")
@@ -207,7 +207,7 @@ templ restDay(v View) {
 			// cima dela esconderia a única frase que explica o que houve.
 			<button
 				type="button"
-				data-on:click={ "document.getElementById('day-rest').close(); " + tableCommand(v, "POST", "rest/day") }
+				data-on:click={ "document.getElementById('day-rest').close(); " + tableCommand(v, "POST", "descanso/dia") }
 				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Descansar</button>
 		</div>
@@ -244,7 +244,7 @@ templ turnStep(v View, rota, rotulo, sinal string, ligado bool) {
 templ endSceneButton(v View) {
 	<button
 		type="button"
-		data-on:click={ tableCommand(v, "POST", "scene/end") }
+		data-on:click={ tableCommand(v, "POST", "cena/encerrar") }
 		class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>Encerrar cena</button>
 }
@@ -252,7 +252,7 @@ templ endSceneButton(v View) {
 templ startScene(v View) {
 	<button
 		type="button"
-		data-on:click={ tableCommand(v, "POST", "scene/start") }
+		data-on:click={ tableCommand(v, "POST", "cena/iniciar") }
 		class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 	>Iniciar cena</button>
 }

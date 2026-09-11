@@ -24,13 +24,13 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
   // Estas rotas JSON estão na lista de órfãs da ALE-247. Quando elas caírem,
   // esta fixture troca de caminho e nenhum dos casos abaixo muda: eles só
   // precisam de um endereço de mesa.
-  const criada = await page.request.post('/api/campaigns', {
+  const criada = await page.request.post('/api/campanhas', {
     data: { name: nome, description: 'Criada e apagada pelo E2E do tabuleiro.' },
   })
   expect(criada.ok(), `criar a campanha descartável: ${criada.status()}`).toBeTruthy()
   const campanha = (await criada.json()).id as number
 
-  const sessao = await page.request.post(`/api/campaigns/${campanha}/sessions`, {
+  const sessao = await page.request.post(`/api/campanhas/${campanha}/sessoes`, {
     data: { sessionNumber: 1, title: 'Sessão do E2E' },
   })
   expect(sessao.ok(), `criar a sessão descartável: ${sessao.status()}`).toBeTruthy()
@@ -46,7 +46,7 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
     // defeito escondido custa uma sessão inteira.
     apagar: async () => {
       try {
-        await page.request.delete(`/api/campaigns/${campanha}`)
+        await page.request.delete(`/api/campanhas/${campanha}`)
       } catch {
         // A mesa descartável fica para trás. É o preço certo a pagar.
       }

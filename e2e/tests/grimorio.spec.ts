@@ -55,7 +55,7 @@ const SUPERFICIES_COM_TINTA = [
       // tela entre na varredura quando alguém puser tinta nova nela.
       //
       // O endereço era o do construtor DENTRO da sessão da SPA
-      // (`/campaigns/1/sessions/4`, num diálogo do trilho do mestre). Com a SPA
+      // (`/campanhas/1/sessoes/4`, num diálogo do trilho do mestre). Com a SPA
       // apagada (ALE-272, fatia 10c) o construtor é cena própria do servidor, e
       // é ela que passa a ser medida — o guarda mede TINTA CONTRA FUNDO, e isso
       // independe de quem desenhou.
@@ -73,7 +73,7 @@ const SUPERFICIES_COM_TINTA = [
       // Na base da migração (ALE-234) este endereço encaminha para a cena do
       // servidor, e é ela que passa a ser medida. Vale o mesmo do popover
       // acima: o guarda não sabe nem precisa saber qual stack desenhou.
-      await page.goto('/campaigns')
+      await page.goto('/campanhas')
       await expect(page.getByRole('heading', { name: 'Campanhas' })).toBeVisible()
     },
   },

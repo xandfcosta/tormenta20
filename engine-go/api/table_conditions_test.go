@@ -35,7 +35,7 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 	_, npc := sceneIds(t, f)
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/initiative/"+npc+"/condicao/caido", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/iniciativa/"+npc+"/condicao/caido", ""); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar deu %d", rec.Code)
 	}
 
@@ -75,7 +75,7 @@ func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
 	_, npc := sceneIds(t, f)
-	base := f.tableUrl() + "/initiative/" + npc + "/condicao/"
+	base := f.tableUrl() + "/iniciativa/" + npc + "/condicao/"
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"abalado", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ligar deu %d", rec.Code)
@@ -111,7 +111,7 @@ func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/initiative/"+npc+"/condicao/abalado", "")
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", "")
 
 	if !strings.Contains(corpo, `"row_conditions":"abalado"`) {
 		t.Errorf("o conjunto novo não voltou no sinal; resposta: %.300s", corpo)
@@ -128,7 +128,7 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/initiative/"+npc+"/condicao/maldicao-inventada", "")
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/"+npc+"/condicao/maldicao-inventada", "")
 
 	if !strings.Contains(corpo, "p394-395") {
 		t.Errorf("a recusa não cita a página da tabela; resposta: %.300s", corpo)
@@ -144,7 +144,7 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 		t.Fatal("o catálogo não tem `enfeiticado` — o controle está medindo outra coisa")
 	}
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/initiative/"+npc+"/condicao/enfeiticado", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/iniciativa/"+npc+"/condicao/enfeiticado", ""); rec.Code != http.StatusOK {
 		t.Errorf("a condição do livro foi recusada: %d", rec.Code)
 	}
 }
@@ -156,7 +156,7 @@ func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 	_, npc := sceneIds(t, f)
 
 	rec := f.pede(t, f.jogador, http.MethodPost,
-		f.tableUrl()+"/initiative/"+npc+"/condicao/abalado", "")
+		f.tableUrl()+"/iniciativa/"+npc+"/condicao/abalado", "")
 
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador aplicou condição: %d", rec.Code)

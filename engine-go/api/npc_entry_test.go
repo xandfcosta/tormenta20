@@ -4,7 +4,7 @@ import "testing"
 
 // A monster dropped into the tracker from the bestiary carries its PV — that is
 // the whole point of tracking it there. `materializeNpcEntry` used to build the
-// entry from label/initiative/type alone and DISCARD hpCurrent/hpMax, so the
+// entry from label/iniciativa/type alone and DISCARD hpCurrent/hpMax, so the
 // client sent them and the row arrived with no health bar (ALE-75).
 func TestMaterializeNpcEntryKeepsHp(t *testing.T) {
 	entry, err := materializeNpcEntry(map[string]any{

@@ -148,8 +148,8 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 	// caso que olhasse só o código e a ficha passaria verde sobre um gesto que
 	// escreveu a ficha e reprovou depois — que é exatamente a forma que a
 	// sabotagem produziu.
-	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitals/"
-	for _, caminho := range []string{"hp/harm/5", "mp/harm/1"} {
+	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitais/"
+	for _, caminho := range []string{"hp/ferir/5", "mp/ferir/1"} {
 		rec := f.pede(t, f.mestre, "POST", base+caminho, "")
 		if rec.Code != http.StatusOK {
 			t.Fatalf("%s deu %d: %s", caminho, rec.Code, rec.Body.String())
@@ -188,7 +188,7 @@ func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
 	}
 
 	corpo := f.posta(t, f.mestre,
-		f.tableUrl()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/vitals/hp/harm/5", "")
+		f.tableUrl()+"/elenco/"+strconv.FormatInt(forasteiro, 10)+"/vitais/hp/ferir/5", "")
 
 	if !strings.Contains(corpo, "não é jogador desta campanha") {
 		t.Errorf("a recusa não veio; a resposta foi:\n%s", firstRows(corpo, 6))
@@ -210,8 +210,8 @@ func TestTheCastVitalsMirrorIntoTheTrackerWhenThereIsALine(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.tracker(t)
 
-	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitals/"
-	if rec := f.pede(t, f.mestre, "POST", base+"hp/harm/5", ""); rec.Code != http.StatusOK {
+	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitais/"
+	if rec := f.pede(t, f.mestre, "POST", base+"hp/ferir/5", ""); rec.Code != http.StatusOK {
 		t.Fatalf("ferir pelo elenco deu %d", rec.Code)
 	}
 

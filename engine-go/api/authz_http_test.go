@@ -75,7 +75,7 @@ func TestRequireAuthRejectsMissingAndBrokenCredentials(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
 	campaign := seedCampaign(t, s, owner)
-	path := "/campaigns/" + id64(campaign)
+	path := "/campanhas/" + id64(campaign)
 
 	t.Run("sem credencial nenhuma", func(t *testing.T) {
 		if rec := anon(t, s, http.MethodGet, path); rec.Code != http.StatusUnauthorized {
@@ -124,12 +124,12 @@ func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 	// elas protegiam deixou de existir. O `/health` fica de fora de propósito:
 	// ele é anônimo por desenho, e é o `healthcheck` do compose que bate nele.
 	protected := []struct{ method, path string }{
-		{http.MethodGet, "/campaigns"},
-		{http.MethodPost, "/campaigns"},
-		{http.MethodDelete, "/campaigns/1"},
-		{http.MethodPost, "/campaigns/1/sessions"},
-		{http.MethodGet, "/characters"},
-		{http.MethodPatch, "/characters/1/conditions"},
+		{http.MethodGet, "/campanhas"},
+		{http.MethodPost, "/campanhas"},
+		{http.MethodDelete, "/campanhas/1"},
+		{http.MethodPost, "/campanhas/1/sessoes"},
+		{http.MethodGet, "/personagens"},
+		{http.MethodPatch, "/personagens/1/conditions"},
 	}
 
 	for _, route := range protected {
@@ -157,7 +157,7 @@ func TestTheSurvivingCharacterWriteRejectsAStranger(t *testing.T) {
 	estranho := seedUser(t, s, "estranho@t20.local")
 	ficha := seedCharacter(t, s, dono, "Herói Alheio", 10, 10, 0, 0)
 
-	rec := authed(t, s, estranho, http.MethodPatch, "/characters/"+id64(ficha)+"/conditions",
+	rec := authed(t, s, estranho, http.MethodPatch, "/personagens/"+id64(ficha)+"/conditions",
 		`{"activeConditions":["caido"]}`)
 
 	if rec.Code != http.StatusForbidden {

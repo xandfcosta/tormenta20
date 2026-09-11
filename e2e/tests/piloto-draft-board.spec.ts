@@ -21,7 +21,7 @@ async function aDraftWith(
   page: Page,
   pecas: Array<{ nome: string; x: number; y: number }>,
 ): Promise<{ endereco: string; apagar: () => Promise<void> }> {
-  const criada = await page.request.post('/api/campaigns', {
+  const criada = await page.request.post('/api/campanhas', {
     data: { name: `E2E rascunho ${Date.now()}-${Math.floor(Math.random() * 1e6)}`, description: 'ALE-299' },
   })
   expect(criada.ok(), `criar a campanha: ${criada.status()}`).toBeTruthy()
@@ -47,7 +47,7 @@ async function aDraftWith(
     // A LIMPEZA NÃO PODE FALAR MAIS ALTO QUE O DEFEITO (ALE-245).
     apagar: async () => {
       try {
-        await page.request.delete(`/api/campaigns/${campanha}`)
+        await page.request.delete(`/api/campanhas/${campanha}`)
       } catch {
         // O lugar fica para trás. É o preço certo.
       }

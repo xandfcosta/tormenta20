@@ -40,7 +40,7 @@ func conditionEffect(id string) string {
 }
 
 func (s Scene) ConditionRoutes(r chi.Router) {
-	r.Post("/mesa/{campaignId}/{sessionId}/initiative/{entryId}/condicao/{id}",
+	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/{entryId}/condicao/{id}",
 		s.gmCommand(toggleCondition))
 }
 

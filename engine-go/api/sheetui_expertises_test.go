@@ -206,7 +206,7 @@ func TestACraftIsBornTrainedAndOnlyItCanBeRemoved(t *testing.T) {
 		t.Error("o ofício não nasceu treinado")
 	}
 
-	expertiseAt(t, f, id, "remove/Ferreiro")
+	expertiseAt(t, f, id, "remover/Ferreiro")
 	todas, _ := f.s.sceneCore().Queries().ListExpertisesByCharacter(context.Background(), id)
 	for _, e := range todas {
 		if e.Name == "Ferreiro" {
@@ -214,7 +214,7 @@ func TestACraftIsBornTrainedAndOnlyItCanBeRemoved(t *testing.T) {
 		}
 	}
 
-	alvo := fmt.Sprintf("/personagens/%d/pericias/remove/Fortitude?tab=expertises", id)
+	alvo := fmt.Sprintf("/personagens/%d/pericias/remover/Fortitude?tab=expertises", id)
 	if recusa := sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String()); recusa == "" {
 		t.Error("uma perícia do LIVRO foi removida da ficha")
 	}

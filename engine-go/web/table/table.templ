@@ -760,7 +760,7 @@ templ rowVerbs(v View, l tableRow) {
 			type="button"
 			aria-label={ "Remover " + l.Rotulo + " da fila" }
 			title={ "Remover " + l.Rotulo + " da fila" }
-			data-on:click={ rowCommand(v, l, "remove") }
+			data-on:click={ rowCommand(v, l, "remover") }
 			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		>
 			@ui.Icon("Trash2", "size-4")
@@ -788,8 +788,8 @@ templ trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) {
 				@barra(rotulo, *b)
 			}
 			if v.Mestre != nil {
-				@vitalStep(v, l, pool, "heal", "+", healVerb(pool))
-				@vitalStep(v, l, pool, "harm", "−", harmVerb(pool))
+				@vitalStep(v, l, pool, "curar", "+", healVerb(pool))
+				@vitalStep(v, l, pool, "ferir", "−", harmVerb(pool))
 				@rowEye(v, l, pool, rotulo, b.Hidden)
 			}
 		</div>
@@ -828,7 +828,7 @@ templ rowEye(v View, l tableRow, pool, rotulo string, hidden bool) {
 			aria-label={ "Ocultar os " + rotulo + " de " + l.Rotulo }
 			title={ "Ocultar os " + rotulo + " de " + l.Rotulo + " dos jogadores" }
 		}
-		data-on:click={ rowCommand(v, l, "vitals/"+pool+"/hidden") }
+		data-on:click={ rowCommand(v, l, "vitais/"+pool+"/oculto") }
 		class={ "flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 			templ.KV("text-grimorio-gold", hidden), templ.KV("text-muted-foreground", !hidden) }
 	>
@@ -890,7 +890,7 @@ templ addParty(v View) {
 		type="button"
 		data-indicator:bringing
 		data-attr:disabled="$bringing"
-		data-on:click={ tableCommand(v, "POST", "initiative/populate") }
+		data-on:click={ tableCommand(v, "POST", "iniciativa/por-no-mapa") }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 	>+ Adicionar grupo</button>
 }
@@ -944,7 +944,7 @@ templ formDeCombatente(v View) {
 		<button
 			type="button"
 			data-attr:disabled="!$new_name.trim()"
-			data-on:click={ fmt.Sprintf("@post('/mesa/%d/%d/initiative/add')", v.CampaignID, v.SessionID) }
+			data-on:click={ fmt.Sprintf("@post('/mesa/%d/%d/iniciativa/adicionar')", v.CampaignID, v.SessionID) }
 			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 		>Acrescentar</button>
 	</div>

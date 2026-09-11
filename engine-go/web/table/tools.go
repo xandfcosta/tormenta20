@@ -90,7 +90,7 @@ func MapTools() []mapTool {
 			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
 			Icone: drawing(pincel.ID).Icone,
 			Dica:  pincel.Rotulo + ": " + pincel.Efeito + " (p238)",
-			Matiz: "brush-hue board-hue-" + string(pincel.ID),
+			Matiz: "brush-hue board-hue-" + board.ClassOf(pincel.ID),
 		})
 	}
 	trilho = append(trilho, mapTool{
