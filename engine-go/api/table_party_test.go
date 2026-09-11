@@ -46,7 +46,7 @@ func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/1/1", `{"marked_tokens":""}`)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover", `{"delta":{"X":1,"Y":1},"marked_tokens":""}`)
 	if !strings.Contains(corpo, "não há peça marcada") {
 		t.Errorf("mover um grupo vazio não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
@@ -69,8 +69,8 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 		t.Fatal("a peça não entrou no mapa — o guarda mediria o vazio")
 	}
 	antes := b.Tokens[0]
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover/3/-2",
-		`{"marked_tokens":"`+antes.ID+`"}`)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover",
+		`{"delta":{"X":3,"Y":-2},"marked_tokens":"`+antes.ID+`"}`)
 
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b.Tokens[0].X != antes.X+3 || b.Tokens[0].Y != antes.Y-2 {

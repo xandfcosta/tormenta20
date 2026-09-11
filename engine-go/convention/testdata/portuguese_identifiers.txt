@@ -221,8 +221,6 @@ primeiros
 primeirosAtributos
 pulsarVez
 quadrado
-quadradoDaURL
-quadradoDoCaminho
 quadrados
 quadradosEmPortugues
 quantasMagias
@@ -280,7 +278,6 @@ tiraDaFila
 tiraDaLista
 tormentaCarismaItem
 tormentaCarismaLoss
-tracoDaURL
 trechoDaSemeadura
 trocaASenha
 trocaNaClasse

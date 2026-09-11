@@ -2,7 +2,6 @@ package table
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -61,7 +60,7 @@ func (s Scene) TokenActionRoutes(r chi.Router) {
 	// clicou, não o caminho. O que vem no caminho é o QUADRADO, que é a única
 	// coisa que o cliente sabe e o servidor não — ele não conhece o zoom nem
 	// onde cada pessoa está olhando.
-	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/colar/{x}/{y}", s.gmBoardCommand(pastesToken))
+	r.Post("/mesa/{campaignId}/{sessionId}/tabuleiro/colar", s.gmBoardCommand(pastesToken))
 	r.Post(base+"/voltar", s.gmBoardCommand(wasWhereForTokenBack))
 	r.Post(base+"/editar", s.gmBoardCommand(editsToken))
 	r.Post(base+"/remover", s.gmBoardCommand(removesToken))
@@ -126,6 +125,11 @@ type clipboardSignals struct {
 	Peca      string `json:"area_token"`
 	Tabuleiro string `json:"area_board"`
 	Modo      string `json:"area_mode"`
+	// O DESTINO viaja junto, no mesmo corpo (ALE-307). Ele é calculado no
+	// instante do Ctrl+V — o meio da vista de quem cola — e o `payload` do
+	// Datastar SUBSTITUI os sinais, então os três acima precisam estar listados
+	// na expressão ao lado dele. Ver `pasteInTheMiddleOfTheView`.
+	Destino struct{ X, Y int } `json:"from"`
 }
 
 // pastesToken põe outra igual onde a pessoa está OLHANDO (ALE-206).
@@ -171,22 +175,8 @@ func pastesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	x, y, err := squareOfCommand(c)
-	if err != nil {
-		return nil, err
-	}
-	return st.deps.Boards().PasteToken(c.R.Context(), c.SessionID, c.TabuleiroID, *modelo, laco, x, y)
-}
-
-// squareOfCommand lê o quadrado que o cliente calculou.
-func squareOfCommand(c commandCtx) (int, int, error) {
-	x, errX := strconv.Atoi(chi.URLParam(c.R, "x"))
-	y, errY := strconv.Atoi(chi.URLParam(c.R, "y"))
-	if errX != nil || errY != nil {
-		return 0, 0, fmt.Errorf("o quadrado de destino veio ilegível: %q, %q",
-			chi.URLParam(c.R, "x"), chi.URLParam(c.R, "y"))
-	}
-	return x, y, nil
+	return st.deps.Boards().PasteToken(c.R.Context(), c.SessionID, c.TabuleiroID, *modelo, laco,
+		area.Destino.X, area.Destino.Y)
 }
 
 // bondForMode traduz o modo guardado na área para o LAÇO da cópia.
@@ -532,7 +522,8 @@ func pasteInTheMiddleOfTheView(v BoardView) string {
 	meioY := fmt.Sprintf("Math.floor(($viewport_y + document.getElementById(%q).clientHeight / 2) / $square)", sceneId)
 	return typingTargetWithout +
 		fmt.Sprintf("(evt.key === 'v' || evt.key === 'V') && (evt.ctrlKey || evt.metaKey) && $area_token !== '' "+
-			"? (evt.preventDefault(), @post('%s/colar/' + (%s) + '/' + (%s))) : null",
+			"? (evt.preventDefault(), @post('%s/colar', {payload: {from: {X: %s, Y: %s}, "+
+			"area_token: $area_token, area_board: $area_board, area_mode: $area_mode}})) : null",
 			v.Base, meioX, meioY)
 }
 

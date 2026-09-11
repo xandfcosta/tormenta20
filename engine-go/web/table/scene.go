@@ -130,46 +130,6 @@ func clearRect(st Scene, c commandCtx) (*board.BoardState, error) {
 	return st.deps.Boards().ClearStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas)
 }
 
-// urlRect lê os dois cantos e devolve as casas de dentro.
-//
-// A RECUSA vem do domínio (`board.RetanguloValido`) e o teto dele é maior que
-// o do traço, pela razão escrita lá: o retângulo é um gesto DELIBERADO de dois
-// cantos, e o traço é um quadro de 16ms.
-func urlRect(r *http.Request) ([]engine.Square, error) {
-	de, err := quadradoDaURL(r)
-	if err != nil {
-		return nil, err
-	}
-	ate, err := urlSquareSecond(r)
-	if err != nil {
-		return nil, err
-	}
-	if !board.ValidRectangle(de, ate) {
-		return nil, fmt.Errorf("o retângulo de %v até %v é grande demais para um gesto", de, ate)
-	}
-	return board.RectangleSquares(de, ate), nil
-}
-
-// tracoDaURL lê o segmento que o dedo percorreu e devolve as casas dele.
-//
-// A RECUSA de um traço grande demais vem do `board.TracoValido` e é do
-// DOMÍNIO, não do transporte: o que ela protege é o tabuleiro gravado, e a razão
-// está escrita lá.
-func tracoDaURL(r *http.Request) ([]engine.Square, error) {
-	de, err := quadradoDaURL(r)
-	if err != nil {
-		return nil, err
-	}
-	ate, err := urlSquareSecond(r)
-	if err != nil {
-		return nil, err
-	}
-	if !board.ValidStroke(de, ate) {
-		return nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
-	}
-	return board.StrokeSquares(de, ate), nil
-}
-
 // strokeBody é o TRAÇO como o cliente o manda: os dois cantos e, na pintura, a
 // espécie (ALE-305).
 //
