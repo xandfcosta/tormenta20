@@ -28,9 +28,20 @@ import (
 
 func Routes(r chi.Router, s Scene) {
 	r.Get("/personagens/{id}", s.sheetHandle)
-	// O PASSO no caminho e não no corpo, como o quadrado do movimento no
-	// tabuleiro: o valor é do botão que foi clicado, e não de um sinal da página
-	// que quatro botões disputariam.
+	// O PASSO no caminho e não no corpo, e a razão MUDOU na ALE-307.
+	//
+	// Aqui se lia "como o quadrado do movimento no tabuleiro: o valor é do botão
+	// que foi clicado, e não de um sinal da página que quatro botões
+	// disputariam". As duas metades caíram: o quadrado do tabuleiro viaja no
+	// CORPO desde a ALE-305, e o `payload` é calculado por chamada — quatro
+	// botões não disputam nada, cada um escreve o seu literal.
+	//
+	// O que SEGURA o passo aqui é o `sheetCommand` logo abaixo: ele lê os sinais
+	// uma vez e os entrega ao `s.Load` que redesenha a cena INTEIRA. Como o
+	// `payload` substitui os sinais, um corpo com o passo chegaria com os outros
+	// 28 campos zerados e a tela voltaria sem o filtro que a pessoa usava —
+	// medido em `engine-go/CLAUDE.md`, seção "Onde a coordenada de um gesto do
+	// tabuleiro viaja".
 	r.Post("/personagens/{id}/vitais/{qual}/{passo}", s.sheetCommand(touchesVital))
 	// A CLASSE vai no caminho porque o nível é dela: o do personagem é a SOMA.
 	r.Post("/personagens/{id}/nivel/{classe}/{passo}", s.sheetCommand(mudaONivel))

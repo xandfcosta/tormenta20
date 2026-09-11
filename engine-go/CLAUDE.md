@@ -2851,6 +2851,7 @@ o tabuleiro inteiro:
 {"kind":"dificil","erase":true,"from":…,"to":…}  // com a espécie do pincel
 {"shape":"esfera","size":"6","from":…,"to":…}    // o gabarito: origem e mira
 {"from":{"X":7,"Y":3}}                           // um lugar só: parada, marcador
+{"delta":{"X":3,"Y":-2},"marked_tokens":"a,b"}   // o arrasto do grupo marcado
 ```
 
 As chaves são INGLESAS porque campo JSON é fronteira; só a ROTA saiu dessa lista
@@ -2884,6 +2885,58 @@ qualquer. Quem paga é o `TestEveryPayloadKeyMatchesTheSignalItReads`: quando a
 chave é ela mesma um nome de sinal, ela tem de carregar aquele sinal — então
 `new_token_size: $new_token_look` reprova, e `kind: $tool` passa, porque `kind`
 não é sinal nenhum.
+
+### DESLOCAMENTO é coordenada, e o guarda não sabia disso
+
+**`/grupo/mover/{dx}/{dy}` também foi** (ALE-307), e ela é a que denuncia o
+guarda. O `TestNoBoardRouteCarriesACoordinateInThePath` nasceu na mesma issue,
+para impedir que a família voltasse a escapar — e ele passou VERDE por cima
+dela, porque eu escrevi o padrão com os nomes que tinha na frente (`x`, `y`,
+`x2`, `mx`) e o arrasto do grupo chama os seus de `dx` e `dy`.
+
+É a terceira vez nesta família que uma varredura mede a grafia comum e a incomum
+sobra: a `colar` escapou de um `grep` por `base+"…"`, o `/pecas/nova` escapou por
+um argumento errado, e agora o guarda que existia para fechar as duas escapou
+pelo NOME do parâmetro. **O que faz de um número "coordenada" não é ele ser
+absoluto — é ele vir do PONTEIRO**, e por isso o endereço só se escreve
+concatenando (`'…/grupo/mover/' + dx + '/' + dy`), que é a forma que esta seção
+inteira existe para apagar.
+
+A conversão levou junto **cinco leitores mortos**: `urlRect`, `tracoDaURL`,
+`quadradoDaURL`, `urlSquareSecond` e `quadradoDoCaminho` — 86 linhas lendo
+`chi.URLParam(r, "x")` com nenhuma rota registrando `{x}` desde a ALE-305, e
+nenhum chamador. Função de pacote sem uso não é erro em Go; quem as achou foi
+perguntar quem chama, e não o compilador.
+
+### O PASSO da ficha FICA no caminho, e a razão não é a que estava escrita
+
+`/personagens/{id}/vitais/{qual}/{passo}`, `/nivel/{classe}/{passo}` e
+`/poderes/classe/{classe}/{escolha}/{valor}` continuam com o dado no caminho.
+**Não por descuido — por medição.**
+
+A razão que estava escrita no `web/sheetui/routes.go` era *"o valor é do botão
+que foi clicado, e não de um sinal da página que quatro botões disputariam"*, e
+ela é o mesmo não-sequitur do `/pecas/nova`: o `payload` é calculado por
+chamada, então quatro botões não disputam nada — cada um escreve o seu literal.
+
+**O obstáculo real é o REDESENHO.** Toda mutação da ficha passa pelo
+`sheetCommand`, que lê os sinais UMA vez e os entrega ao `s.Load(…)` que redesenha
+a cena inteira. São 29 campos: as buscas, os filtros, os aumentos, o construtor
+de item. Como o `payload` SUBSTITUI os sinais, um `{step: -1}` chegaria com os
+outros 28 zerados — e a tela voltaria sem o filtro que a pessoa estava usando.
+
+Medido, postando `/vitais/pv/-1` com e sem os sinais no corpo:
+
+| aba | com os sinais | só o passo |
+|---|---|---|
+| `expertises`, filtrando por "Perce" | 19.091 bytes, acha o termo | 24.122 bytes, lista inteira de volta |
+| `abilities`, filtrando por "Ataque" | 23.247 bytes, acha o termo | 23.389 bytes, filtro perdido |
+
+Converter custaria listar os 29 sinais no payload de cada botão de passo — o
+preço da seção anterior, multiplicado por vinte e nove. **A divisão que vale não
+é "caminho para o que o gesto decidiu, corpo para o estado"**: é que uma
+coordenada vem do ponteiro e obriga a concatenar o endereço, e um passo é um
+literal que o `templ` escreve na renderização, num endereço constante por botão.
 
 
 ## Datastar: onze armadilhas que não deixam erro para trás
