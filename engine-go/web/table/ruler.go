@@ -418,21 +418,6 @@ func templateSize(bruto string) int {
 	return n
 }
 
-// quadradoDoCaminho lê um par de coordenadas com os nomes que a rota deu.
-//
-// Coordenada NEGATIVA é lugar legítimo — o plano não tem bordas —, e por isso
-// as pontas viajam no CAMINHO e não num sinal da página: o valor é do clique que
-// aconteceu, e não de um estado que outro gesto poderia ter mexido.
-func quadradoDoCaminho(r *http.Request, nomeX, nomeY string) (engine.Square, error) {
-	x, errX := intDoCaminho(chi.URLParam(r, nomeX))
-	y, errY := intDoCaminho(chi.URLParam(r, nomeY))
-	if errX != nil || errY != nil {
-		return engine.Square{}, fmt.Errorf("quadrado (%q,%q) não é um par de números",
-			chi.URLParam(r, nomeX), chi.URLParam(r, nomeY))
-	}
-	return engine.Square{X: x, Y: y}, nil
-}
-
 // meters escreve o metro com VÍRGULA, que é como o livro e a mesa o leem.
 func meters(m float64) string {
 	return strings.Replace(fmt.Sprintf("%.1f", m), ".", ",", 1)

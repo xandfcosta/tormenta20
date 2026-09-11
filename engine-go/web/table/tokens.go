@@ -218,10 +218,10 @@ func sheetsShortcut(v BoardView) string {
 // É a família da cortina (ALE-202) e da presença (ALE-287): a capacidade
 // inteira no ar, com teste, e nenhum caminho até ela.
 //
-// A POSIÇÃO VEM DO CAMINHO e não de um sinal, pela razão que o
-// `quadradoDoCaminho` já registra: coordenada negativa é lugar legítimo num
-// plano sem bordas, e o valor é o do CLIQUE que aconteceu — não o de um estado
-// que outro gesto poderia ter mexido entre a escolha e o envio.
+// A POSIÇÃO VEM DO CORPO, junto com os sinais do desenho (ALE-306). Este bloco
+// dizia "vem do CAMINHO" e sobreviveu à conversão que o desmentiu — o
+// `loosePieceSignals` logo abaixo lê os dois do mesmo corpo, porque o
+// `ReadSignals` o consome inteiro e não há segunda leitura.
 func newLoosePiece(st Scene, c commandCtx) (*board.BoardState, error) {
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, errors.New("não há tabuleiro aberto para pôr uma peça")

@@ -121,37 +121,6 @@ func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {
 	return st.deps.Boards().CancelMove(c.R.Context(), c.SessionID, c.TabuleiroID, st.moveWho(c))
 }
 
-// quadradoDaURL lê o destino do CAMINHO e não de um sinal.
-//
-// Coordenada NEGATIVA é lugar legítimo — o plano não tem bordas —, então o
-// caminho carrega o número com sinal e o `strconv` o aceita. Vir pela URL é o
-// mesmo argumento dos verbos da linha: o valor é do botão que foi clicado, e não
-// de um sinal da página inteira que nove botões disputariam.
-func quadradoDaURL(r *http.Request) (engine.Square, error) {
-	x, errX := intDoCaminho(chi.URLParam(r, "x"))
-	y, errY := intDoCaminho(chi.URLParam(r, "y"))
-	if errX != nil || errY != nil {
-		return engine.Square{}, fmt.Errorf("quadrado (%q,%q) não é um par de números",
-			chi.URLParam(r, "x"), chi.URLParam(r, "y"))
-	}
-	return engine.Square{X: x, Y: y}, nil
-}
-
-// urlSquareSecond é o FIM do traço do pincel (ALE-203).
-//
-// Nomes próprios (`x2`, `y2`) e não um `quadradoDaURL` com prefixo: o chi lê por
-// nome, e um helper que recebesse o prefixo seria uma indireção a mais para ler
-// dois parâmetros.
-func urlSquareSecond(r *http.Request) (engine.Square, error) {
-	x, errX := intDoCaminho(chi.URLParam(r, "x2"))
-	y, errY := intDoCaminho(chi.URLParam(r, "y2"))
-	if errX != nil || errY != nil {
-		return engine.Square{}, fmt.Errorf("fim do traço (%q,%q) não é um par de números",
-			chi.URLParam(r, "x2"), chi.URLParam(r, "y2"))
-	}
-	return engine.Square{X: x, Y: y}, nil
-}
-
 // moveWho resolve a POSSE contra o banco, e nunca contra o cliente.
 //
 // O `Mover.OwnsCharacter` é o que separa "a peça é sua" de "você disse que é": a
