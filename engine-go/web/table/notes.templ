@@ -58,7 +58,7 @@ templ notesSplitter() {
 		aria-orientation="vertical"
 		aria-label="Largura das notas"
 		tabindex="0"
-		data-show="$notasabertas"
+		data-show="$notes_open"
 		style="display:none"
 		data-attr:aria-valuenow={ "Math.round(" + widthRightNow() + ")" }
 		aria-valuemin="352"
@@ -76,7 +76,7 @@ templ tableNotes(v View) {
 		id="mesa-notas"
 		aria-label="Notas da sessão"
 		data-init={ seedNotes(v) }
-		data-show="$notasabertas"
+		data-show="$notes_open"
 		style="display:none"
 		class="notas-coluna fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:shrink-0"
 	>
@@ -89,7 +89,7 @@ templ tableNotes(v View) {
 				<button
 					type="button"
 					aria-label="Fechar as notas"
-					data-on:click="$notasabertas = false"
+					data-on:click="$notes_open = false"
 					class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 				>
 			@ui.Icon("X", "size-4")
@@ -111,19 +111,19 @@ templ tableNotes(v View) {
 // cabem duas colunas é a consulta de contêiner na folha, que é quem sabe.
 templ notesBody(v View) {
 	<div
-		data-class="{'notas-duplo': $notasmodo === 'duplo'}"
+		data-class="{'notas-duplo': $notes_mode === 'duplo'}"
 		class="notas-arranjo grid min-h-0 flex-1 gap-2"
 	>
 		<textarea
-			data-bind:notas
-			data-show="$notasmodo != 'ler'"
+			data-bind:notes
+			data-show="$notes_mode != 'ler'"
 			data-on:input__debounce.1200ms={ saveNotes(v) }
-			data-indicator:notassalvando
+			data-indicator:notes_saving
 			aria-label="Notas da sessão"
 			placeholder={ "# Cena 1\n- O ogro **fugiu** pela ponte\n> \"voltarei\", ele disse" }
 			class="field-sizing-fixed h-full min-h-0 w-full resize-none rounded-sm border border-input bg-background p-2 font-mono text-xs outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>{ v.Notas }</textarea>
-		<div data-show="$notasmodo != 'escrever'" class="min-h-0 overflow-y-auto rounded-sm border border-grimorio-iron p-3">
+		<div data-show="$notes_mode != 'escrever'" class="min-h-0 overflow-y-auto rounded-sm border border-grimorio-iron p-3">
 			@tableNotesPreview(v)
 		</div>
 	</div>
@@ -322,8 +322,8 @@ templ modesRange() {
 templ floatToggle() {
 	<button
 		type="button"
-		data-attr:aria-pressed="$notasflutua ? 'true' : 'false'"
-		data-attr:title="$notasflutua ? 'Encostar as notas ao lado do mapa' : 'Flutuar as notas sobre o mapa'"
+		data-attr:aria-pressed="$notes_floating ? 'true' : 'false'"
+		data-attr:title="$notes_floating ? 'Encostar as notas ao lado do mapa' : 'Flutuar as notas sobre o mapa'"
 		aria-label="Flutuar as notas sobre o mapa"
 		data-on:click={ toggleFloating() }
 		class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
@@ -335,7 +335,7 @@ templ floatToggle() {
 templ notesMode(valor, rotulo string) {
 	<button
 		type="button"
-		data-attr:aria-pressed={ fmt.Sprintf("$notasmodo === '%s' ? 'true' : 'false'", valor) }
+		data-attr:aria-pressed={ fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", valor) }
 		data-on:click={ escolheOModo(valor) }
 		class="inline-flex h-7 items-center rounded-sm border border-grimorio-iron px-2 text-2xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
 	>{ rotulo }</button>
@@ -347,13 +347,13 @@ templ notesMode(valor, rotulo string) {
 // texto está "Não salvo", e dizer "Salvando…" ali seria mentira. Quem separa os
 // dois é o `data-indicator`, que só é verdadeiro com o pedido no ar.
 //
-// `$notassalvas` é escrito pelo SERVIDOR quando a gravação dá certo — é a
+// `$notes_saved` é escrito pelo SERVIDOR quando a gravação dá certo — é a
 // resposta que afirma "isto está no banco", e não o cliente supondo.
 templ autosaveState() {
 	<span
 		aria-live="polite"
-		data-text="$notassalvando ? 'Salvando…' : ($notas === $notassalvas ? 'Salvo' : 'Não salvo')"
-		data-class="{'text-destructive-ink': $erroDasNotas != '', 'text-muted-foreground': $erroDasNotas == ''}"
+		data-text="$notes_saving ? 'Salvando…' : ($notes === $notes_saved ? 'Salvo' : 'Não salvo')"
+		data-class="{'text-destructive-ink': $notes_error != '', 'text-muted-foreground': $notes_error == ''}"
 		class="text-xs"
 	></span>
 }
@@ -367,8 +367,8 @@ templ notesButton() {
 		type="button"
 		aria-label="Notas da sessão"
 		title="Notas — o que aconteceu nesta sessão, ao lado do mapa"
-		data-attr:aria-pressed="$notasabertas ? 'true' : 'false'"
-		data-on:click="$notasabertas = !$notasabertas"
+		data-attr:aria-pressed="$notes_open ? 'true' : 'false'"
+		data-on:click="$notes_open = !$notes_open"
 		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
 	>
 			@ui.Icon("NotebookPen", "size-5")

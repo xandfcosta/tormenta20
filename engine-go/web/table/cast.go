@@ -125,7 +125,7 @@ func closeSheetCast(m Member) string {
 }
 
 // poeNaFila fecha ANTES de postar, e isso não é arrumação: a recusa do servidor
-// acende no `$erroDoComando`, que é do RODAPÉ — um diálogo aberto por cima dela
+// acende no `$command_error`, que é do RODAPÉ — um diálogo aberto por cima dela
 // esconderia a única frase que explica o que houve.
 func poeNaFila(v View, m Member) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/%d/na-fila')",

@@ -196,7 +196,7 @@ func draftHeader(v draftView) templ.Component {
 //
 // UMA região e não nove, ao contrário da Mesa, e o motivo é o que a tela É: aqui
 // não há fila que mude com o turno nem elenco que mude com a ficha. O que muda é
-// o mapa, e o `erroDoComando` viaja como SINAL — ele não precisa de HTML novo
+// o mapa, e o `command_error` viaja como SINAL — ele não precisa de HTML novo
 // para acender.
 //
 // O id é o do rascunho e NÃO `mesa-tabuleiro`: os dois nunca estão no mesmo
@@ -231,7 +231,7 @@ func draftBoardRegion(v draftView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"flex items-center justify-between gap-2 px-1 pt-1\"><p data-show=\"$erroDoComando != ''\" data-text=\"$erroDoComando\" aria-live=\"assertive\" class=\"text-xs text-destructive-ink\"></p><p class=\"ml-auto shrink-0 text-xs text-muted-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"flex items-center justify-between gap-2 px-1 pt-1\"><p data-show=\"$command_error != ''\" data-text=\"$command_error\" aria-live=\"assertive\" class=\"text-xs text-destructive-ink\"></p><p class=\"ml-auto shrink-0 text-xs text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -21,7 +21,7 @@ import (
 // Mas "não dá para clicar no que o servidor recusaria" deixou de ser verdade
 // quando o ARRASTO entrou: clique cai numa casa oferecida, soltura cai onde o
 // dedo estiver, inclusive fora do alcance. Por isso a recusa também PRECISA
-// falar — e fala em `erroDoMovimento`, no tabuleiro. O alcance continua sendo a
+// falar — e fala em `move_error`, no tabuleiro. O alcance continua sendo a
 // realimentação principal; a frase é a rede embaixo dela.
 //
 // A LISTA DE PARADAS é guardada desde a ALE-269 (item 10), e a linha que estava
@@ -261,11 +261,11 @@ func (s Scene) boardCommand(
 			s.deps.PublishBoardState(sessionID, estado)
 		}
 		if soODoMestre {
-			// O `respondGm` escreve o `erroDoComando` do rodapé sozinho.
+			// O `respondGm` escreve o `command_error` do rodapé sozinho.
 			s.respondGm(w, r, userID, campaignID, sessionID, err, sinais, soAsRegioes...)
 			return
 		}
-		// A recusa vai para `erroDoMovimento` e NÃO para o `erroDoComando` do
+		// A recusa vai para `move_error` e NÃO para o `command_error` do
 		// rodapé, que é do mestre: quem move é o jogador, e ele não tem rodapé
 		// nenhum — a frase cairia num elemento que a tela dele nem renderiza.
 		// Escrita nos DOIS caminhos pelo mesmo motivo do outro sinal: só acender
@@ -274,7 +274,7 @@ func (s Scene) boardCommand(
 		if err != nil {
 			frase = err.Error()
 		}
-		sinais["erroDoMovimento"] = frase
+		sinais["move_error"] = frase
 		s.respondGm(w, r, userID, campaignID, sessionID, nil, sinais)
 	}
 }

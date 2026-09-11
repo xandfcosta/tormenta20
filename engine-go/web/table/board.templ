@@ -1185,10 +1185,10 @@ templ openBoardButton(v BoardView) {
 			O tabuleiro não tem bordas: cada quadrado é 1,5m (p236) e a scene cresce para onde a Table for. O deslocamento padrão de 9m anda 6 quadrados (p106).
 		</p>
 		<label for="novo-lugar" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Lugar</label>
-		// O NOME DO SINAL É TODO MINÚSCULO, e é obrigatório: nome de ATRIBUTO é
-		// minusculado pelo analisador de HTML, então um `data-bind:novoLugar`
-		// liga um sinal `novolugar` e deixa o declarado intocado — o fio leva os
-		// dois e o servidor lê o errado.
+		// O NOME DO SINAL É `snake_case`, e é obrigatório: nome de ATRIBUTO é
+		// minusculado pelo analisador de HTML, então caixa alta na chave liga um
+		// sinal NOVO e deixa o declarado intocado — o fio leva os dois e o
+		// servidor lê o errado.
 		<input
 			id="novo-lugar"
 			type="text"
@@ -1219,7 +1219,7 @@ templ openBoardButton(v BoardView) {
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			// Fecha ANTES de postar, como o descanso: a recusa chega no
-			// `$erroDoComando`, que é do RODAPÉ — o diálogo aberto por cima dela
+			// `$command_error`, que é do RODAPÉ — o diálogo aberto por cima dela
 			// esconderia a única frase que explica o que houve.
 			<button
 				type="button"

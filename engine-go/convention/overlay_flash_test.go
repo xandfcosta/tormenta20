@@ -51,7 +51,13 @@ func TestNoDataShowNodeIsBornVisible(t *testing.T) {
 	// até o sinal ficar verdadeiro", e todos os seis sinais assim deste
 	// repositório nascem `false`. Um nó desses que não nasce escondido pinta o
 	// próprio conteúdo e some.
-	sinalPuro := regexp.MustCompile(`^\$[a-z0-9]+$`)
+	//
+	// O `_` PRECISA estar na classe. Sem ele, o dia em que os sinais viraram
+	// `snake_case` (ALE-301) o padrão parou de casar com `$notes_open` e o guarda
+	// caiu de 16 nós julgáveis para 13 — e teria passado VERDE se o piso do
+	// denominador não estivesse ali. É a mesma cegueira do `TestNoTableSignalIsDeclaredTwice`,
+	// no mesmo dia: parser que não entende a forma nova mede menos e não reclama.
+	sinalPuro := regexp.MustCompile(`^\$[a-z0-9_]+$`)
 
 	var candidatos, arquivosLidos int
 	err := filepath.WalkDir("..", func(nome string, entrada fs.DirEntry, err error) error {

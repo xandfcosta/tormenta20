@@ -13,9 +13,9 @@ import (
 
 // CHAVE DE ATRIBUTO DO DATASTAR É MINÚSCULA, E NÃO É ESTILO (ALE-301).
 //
-// O analisador de HTML minuscula NOME DE ATRIBUTO. Um `data-bind:novoNome`
-// chega ao Datastar como `data-bind:novonome` e liga um sinal NOVO — o
-// declarado fica intocado, o fio leva os DOIS, e o servidor lê o errado. Só o
+// O analisador de HTML minuscula NOME DE ATRIBUTO. Uma chave escrita em
+// camelCase chega minúscula ao Datastar e liga um sinal NOVO — o declarado
+// fica intocado, o fio leva os DOIS, e o servidor lê o errado. Só o
 // VALOR de um atributo preserva a caixa, que é por que o `$sheet_open` pode ser
 // camelCase: ele só aparece dentro de expressões.
 //
@@ -100,7 +100,7 @@ func TestNoDatastarAttributeKeyCarriesUppercase(t *testing.T) {
 		t.Errorf("chave de atributo do Datastar com CAIXA ALTA — %d de %d:\n  %s\n"+
 			"O analisador de HTML a minuscula e o Datastar liga um sinal NOVO: o declarado fica "+
 			"intocado, o fio leva os dois e o servidor lê o errado — sem erro em lugar nenhum. "+
-			"Escreva a chave toda minúscula (`data-bind:novonome`). Caixa alta só sobrevive "+
+			"Escreva a chave toda minúscula (`data-bind:new_name`). Caixa alta só sobrevive "+
 			"dentro de EXPRESSÃO (`$sheet_open`), onde o valor do atributo preserva a caixa.",
 			len(offenders), keysRead, strings.Join(offenders, "\n  "))
 	}

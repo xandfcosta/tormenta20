@@ -154,7 +154,7 @@ func openEditor(v View, npcID int64) string {
 // Não precisa: o rascunho mora no navegador e NADA foi escrito. É a metade que
 // paga a decisão do dono — "Cancelar desfaz de verdade" é grátis quando não há
 // nada a desfazer.
-const closeEditor = "$draft_open = false; $erroDoRascunho = ''"
+const closeEditor = "$draft_open = false; $draft_error = ''"
 
 // listCommand escreve o gesto que acrescenta ou tira uma linha.
 func listCommand(campanha, sessao int64, lista string, indice int) string {

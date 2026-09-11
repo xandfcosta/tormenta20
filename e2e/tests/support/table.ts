@@ -119,7 +119,7 @@ export async function putACombatantInTheTracker(
   pv?: number,
 ): Promise<void> {
   await openTheTracker(page)
-  // O "+ Combatente" é um ALTERNADOR (`$formdecombatente = !$formdecombatente`),
+  // O "+ Combatente" é um ALTERNADOR (`$combatant_form = !$combatant_form`),
   // e o formulário fica aberto depois de acrescentar. Clicar sem olhar o estado
   // FECHA o formulário no segundo combatente, e o sintoma é um timeout no campo
   // Nome — que existe, e está escondido.

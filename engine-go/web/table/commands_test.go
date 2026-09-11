@@ -132,7 +132,7 @@ func trechoDeSinais(corpo string) string {
 // trechoDaSemeadura tira só o pedaço da expressão que semeia o nome, porque a
 // página inteira enterra a asserção em vários KB de HTML.
 func trechoDaSemeadura(corpo string) string {
-	i := strings.Index(corpo, "$edicaonome = ")
+	i := strings.Index(corpo, "$edit_name = ")
 	if i < 0 {
 		return "(a semeadura do nome não está na página)"
 	}

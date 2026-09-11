@@ -33,5 +33,5 @@ func npcCommand(v View, npc castNpc, acao string) string {
 // notas teve por nascer de uma view sintética.
 func saveToCastPost(v master.BestiaryView) string {
 	base := strings.TrimSuffix(v.BestiaryBase(), "/bestiario")
-	return fmt.Sprintf("@post('%s/elenco/npc/do-verbete'); $nomedonpc = ''", base)
+	return fmt.Sprintf("@post('%s/elenco/npc/do-verbete'); $npc_name = ''", base)
 }

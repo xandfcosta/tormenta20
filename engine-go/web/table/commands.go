@@ -110,28 +110,28 @@ func addCombatant(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 	// clique seguinte acrescenta o MESMO capanga de novo — e no meio de um
 	// combate ninguém confere a fila antes de clicar. Volta para NPC porque é o
 	// caso comum; o PC digitado à mão é a exceção.
-	c.Sinais["novonome"] = ""
-	c.Sinais["novainiciativa"] = 10
-	c.Sinais["novopv"] = 0
-	c.Sinais["novotipo"] = "npc"
+	c.Sinais["new_name"] = ""
+	c.Sinais["new_initiative"] = 10
+	c.Sinais["new_hp"] = 0
+	c.Sinais["new_type"] = "npc"
 	return estado, nil
 }
 
 // signalsCombatant lê o formulário da página.
 //
-// TODOS OS NOMES SÃO MINÚSCULOS, e isso é obrigatório e não estilo: eles são
+// TODOS OS NOMES EM `snake_case`, e isso é obrigatório e não estilo: eles são
 // chaves de `data-bind:`, e nome de atributo é minusculado pelo analisador de
-// HTML. Um `data-bind:novoNome` liga um sinal `novonome` e deixa o declarado
-// intocado — o fio leva os dois e o servidor lê o errado. Foi exatamente isso
+// HTML. Caixa alta na chave liga um sinal NOVO e deixa o declarado intocado —
+// o fio leva os dois e o servidor lê o errado. Foi exatamente isso
 // que aconteceu com a qualidade do descanso, e o navegador foi a única
 // testemunha.
 func signalsCombatant(r *http.Request) (aovivo.CombatantDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Nome       string `json:"novonome"`
-		Iniciativa int    `json:"novainiciativa"`
-		PV         int64  `json:"novopv"`
-		Tipo       string `json:"novotipo"`
+		Nome       string `json:"new_name"`
+		Iniciativa int    `json:"new_initiative"`
+		PV         int64  `json:"new_hp"`
+		Tipo       string `json:"new_type"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return aovivo.CombatantDraft{}, fmt.Errorf("não entendi o combatente enviado: %v", err)
@@ -301,8 +301,8 @@ func edicaoDosSinais(r *http.Request) (struct {
 	}
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
-		Iniciativa int   `json:"edicaoiniciativa"`
-		PV         int64 `json:"edicaopv"`
+		Iniciativa int   `json:"edit_initiative"`
+		PV         int64 `json:"edit_hp"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return fora, fmt.Errorf("não entendi a edição enviada: %v", err)
@@ -377,7 +377,7 @@ var restQualities = map[string]bool{"ruim": true, "normal": true, "confortavel":
 func restQuality(r *http.Request) (string, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `plataforma.DecodeJSON`
 	var sinais struct {
-		Qualidade string `json:"qualidadedodescanso"`
+		Qualidade string `json:"rest_quality"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
 		return "", fmt.Errorf("não entendi a qualidade do descanso: %v", err)
@@ -581,7 +581,7 @@ func (s Scene) respondGm(
 	// Sai nos DOIS caminhos: no da recusa para acender a frase, e no do acerto
 	// para APAGAR a anterior. Um sinal que só se escreve quando dá errado deixa
 	// a recusa de dois cliques atrás acesa sobre um comando que funcionou.
-	sinais["erroDoComando"] = frase
+	sinais["command_error"] = frase
 	_ = sse.MarshalAndPatchSignals(sinais)
 }
 

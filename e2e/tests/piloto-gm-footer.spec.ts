@@ -61,13 +61,14 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
   /**
    * O DEFEITO QUE SÓ O NAVEGADOR MOSTRA (ALE-263).
    *
-   * `data-bind:qualidadeDoDescanso` chega ao Datastar como
-   * `data-bind:qualidadedodescanso`, porque nome de atributo é minusculado pelo
-   * analisador — e ele então liga um sinal NOVO com esse nome. Medido antes do
-   * conserto: o fio levava os DOIS, `"qualidadeDoDescanso":"normal"` (o
-   * declarado, que ninguém tocou) e `"qualidadedodescanso":"luxuosa"` (a
-   * escolha real), e o servidor lia o primeiro. O mestre escolhia Luxuosa e o
-   * grupo descansava em normal — um número plausível no lugar do certo.
+   * Uma chave de atributo escrita em camelCase chega ao Datastar MINÚSCULA,
+   * porque nome de atributo é minusculado pelo analisador — e ele então liga um
+   * sinal NOVO com esse nome. Medido antes do conserto: o fio levava os DOIS, o
+   * declarado em camelCase com `"normal"` (que ninguém tocou) e o minúsculo com
+   * `"luxuosa"` (a escolha real), e o servidor lia o primeiro. O mestre escolhia
+   * Luxuosa e o grupo descansava em normal — um número plausível no lugar do
+   * certo. Hoje o sinal é `rest_quality`, e o `_` atravessa o parser intacto
+   * (ALE-301).
    *
    * O guarda Go ao lado NÃO pega isto: ele monta o corpo à mão e por isso
    * afirma o servidor, não a página. Este afirma o FIO.
@@ -98,11 +99,11 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
 
     await expect.poll(() => corpo, { message: 'o clique não postou nada' }).not.toBeNull()
     const sinais = JSON.parse(corpo ?? '{}') as Record<string, unknown>
-    expect(sinais.qualidadedodescanso, `o fio levou ${corpo}`).toBe('luxuosa')
+    expect(sinais.rest_quality, `o fio levou ${corpo}`).toBe('luxuosa')
     // E leva UM nome só. Dois — o declarado e o que o `data-bind` inventou — é
     // exatamente a forma do defeito, e ela passa despercebida porque o valor
     // certo ESTÁ lá, só que na chave que o servidor não lê.
-    expect(Object.keys(sinais).filter((k) => k.toLowerCase().includes('qualidade'))).toHaveLength(1)
+    expect(Object.keys(sinais).filter((k) => k.toLowerCase().includes('quality'))).toHaveLength(1)
   })
 
   /**

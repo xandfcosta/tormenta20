@@ -67,11 +67,11 @@ templ blockEditor(v View) {
 		// A RECUSA fica junto dos botões e não no rodapé do mestre, pelo mesmo
 		// motivo do `erroDoMovimento`: quem lê está com o formulário aberto, e uma
 		// frase que aparece atrás do painel é uma frase que ninguém lê. Sinal
-		// próprio para não disputar com o `erroDoComando`, que é da fila.
+		// próprio para não disputar com o `command_error`, que é da fila.
 		<p
 			role="alert"
-			data-show="$erroDoRascunho !== ''"
-			data-text="$erroDoRascunho"
+			data-show="$draft_error !== ''"
+			data-text="$draft_error"
 			class="shrink-0 rounded-sm border border-destructive/60 bg-destructive/10 px-2 py-1 text-xs text-destructive-ink"
 		></p>
 		<div class="flex shrink-0 items-center justify-end gap-2 border-t border-grimorio-iron pt-3">

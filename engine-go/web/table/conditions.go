@@ -90,6 +90,6 @@ func toggleCondition(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error
 	// depois de um clique aquele sinal descreve o estado de antes. O mestre
 	// aplicaria "abalado", veria o crachá apagado, e clicaria de novo — tirando
 	// a condição que ele acabou de pôr.
-	c.Sinais["condicoesdalinha"] = strings.Join(novas, ",")
+	c.Sinais["row_conditions"] = strings.Join(novas, ",")
 	return estadoNovo, nil
 }

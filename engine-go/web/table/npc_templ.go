@@ -460,7 +460,7 @@ func saveToCastButton(v master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\">Guardar no elenco</label> <input id=\"nome-do-npc\" type=\"text\" data-bind:nomedonpc placeholder=\"Com outro nome? (em branco, fica o do livro)\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\">Guardar no elenco</label> <input id=\"nome-do-npc\" type=\"text\" data-bind:npc_name placeholder=\"Com outro nome? (em branco, fica o do livro)\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

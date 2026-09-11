@@ -166,7 +166,7 @@ func TestOnlyTheGmPaints(t *testing.T) {
 // TestPaintingWithoutABoardRefusesWithASentence.
 //
 // Não é 500 nem silêncio: pintar chão de uma cena que não está na mesa não tem
-// onde acontecer, e a recusa fala no `erroDoComando` do rodapé do mestre.
+// onde acontecer, e a recusa fala no `command_error` do rodapé do mestre.
 func TestPaintingWithoutABoardRefusesWithASentence(t *testing.T) {
 	f := novoPiloto(t)
 	corpo := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/terreno/dificil/1/1/ate/1/1", "").Body.String()

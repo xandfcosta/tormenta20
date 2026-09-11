@@ -125,11 +125,11 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		//
 		// Minúsculo de propósito: chave de atributo é minusculada pelo HTML, e um
 		// `detalheAberto` ligaria um sinal NOVO em vez do que a expressão lê.
-		// `oficio` é o diálogo de criar perícia, e `novapericia`/`novoatributo`
-		// são os dois campos dele. Tudo MINÚSCULO: chave de atributo é minusculada
-		// pelo HTML, e um `data-bind:novaPericia` ligaria um sinal `novapericia`
-		// que o servidor lê — mas o `data-bind` teria escrito noutro, e o campo
-		// chegaria sempre vazio.
+		// `craft` é o diálogo de criar perícia, e `new_expertise`/`new_attribute`
+		// são os dois campos dele. Tudo em `snake_case`: chave de atributo é
+		// minusculada pelo HTML, e caixa alta ali ligaria um sinal que o servidor
+		// não lê — o `data-bind` teria escrito noutro, e o campo chegaria sempre
+		// vazio.
 		Sinais: "{detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
 			" condition_dialog: false, buff_dialog: false, conditional: ''," +
 			" learn_dialog: false, augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0," +

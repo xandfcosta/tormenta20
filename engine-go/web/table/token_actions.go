@@ -569,7 +569,7 @@ func openEditToken(p boardToken) string {
 // isso: abrir o diálogo FECHA o menu — senão ele ficaria aceso atrás do modal —,
 // e um sinal só faria o gesto de abrir apagar o alvo do gesto de salvar.
 // FECHA ANTES de comandar, que é o que todo diálogo desta cena faz — o de abrir
-// a cena, o de encerrar, o do acervo. A recusa cai no `erroDoComando` do rodapé
+// a cena, o de encerrar, o do acervo. A recusa cai no `command_error` do rodapé
 // do mestre, e ela só é legível com o modal fora do caminho: uma frase escrita
 // atrás de um `<dialog>` aberto é uma frase que ninguém lê.
 func saveEditToken(v BoardView) string {

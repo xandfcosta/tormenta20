@@ -30,14 +30,14 @@ templ gmControls(v View, r viewGm) {
 		// A RECUSA de um comando, e ela mora aqui e não na caixa de registrar: o
 		// mestre que também joga tem as duas na tela, e a frase do "Adicionar
 		// grupo" acesa dentro do "Registrar iniciativa" seria a frase certa no
-		// lugar errado. Por isso o sinal é `erroDoComando` e não `erro`.
+		// lugar errado. Por isso o sinal é `command_error` e não `erro`.
 		//
 		// `w-full` e `order-last` para ela ocupar a própria fileira quando
 		// aparece: enfiada entre os botões, empurraria o avanço para fora da
 		// linha e a frase seria lida como rótulo do vizinho.
 		<p
-			data-show="$erroDoComando != ''"
-			data-text="$erroDoComando"
+			data-show="$command_error != ''"
+			data-text="$command_error"
 			aria-live="assertive"
 			class="order-last w-full text-xs text-destructive-ink"
 		></p>
@@ -127,8 +127,8 @@ templ tableDrawer(v View) {
 templ rest(v View) {
 	<button
 		type="button"
-		data-indicator:descansando
-		data-attr:disabled="$descansando"
+		data-indicator:resting
+		data-attr:disabled="$resting"
 		data-on:click={ tableCommand(v, "POST", "rest/scene") }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 	>
@@ -171,23 +171,22 @@ templ restDay(v View) {
 		<h2 id="descanso-de-dia-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Descanso de dia</h2>
 		<p class="mt-1 text-sm text-muted-foreground">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p105).</p>
 		<label for="qualidade-do-descanso" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Qualidade do descanso</label>
-		// O NOME DO SINAL É TODO MINÚSCULO, e isso não é desleixo: nome de
-		// ATRIBUTO é minusculado pelo analisador de HTML, então um
-		// `data-bind:restQuality` chega ao Datastar como
-		// `data-bind:qualidadedodescanso` e ele liga um sinal NOVO com esse
-		// nome. Medido no navegador: o fio levava os DOIS —
-		// `"restQuality":"normal"`, que ninguém tocou, e
-		// `"qualidadedodescanso":"luxuosa"`, que era a escolha real —, e o
-		// servidor lia o primeiro. O mestre escolhia Luxuosa e o grupo
-		// descansava em normal.
+		// O NOME DO SINAL É `snake_case`, e isso não é desleixo: nome de
+		// ATRIBUTO é minusculado pelo analisador de HTML, então uma chave
+		// em camelCase chega MINÚSCULA e o Datastar liga um sinal NOVO com
+		// esse outro nome. Medido no navegador: o fio levava os DOIS — o
+		// declarado em camelCase com "normal", que ninguém tocou, e o
+		// minúsculo com "luxuosa", que era a escolha real —, e o servidor
+		// lia o primeiro. O mestre escolhia Luxuosa e o grupo descansava em
+		// normal. O `_` atravessa o parser intacto (ALE-301).
 		//
-		// A distinção que salva os outros sinais: `erroDoComando` e `d20`
+		// A distinção que salva os outros sinais: `command_error` e `d20`
 		// aparecem só em VALOR de atributo (`data-show`, `data-text`,
 		// `data-signals`), e valor preserva a caixa. A regra é sobre sinal usado
 		// como CHAVE.
 		<select
 			id="qualidade-do-descanso"
-			data-bind:qualidadedodescanso
+			data-bind:rest_quality
 			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 		>
 			<option value="ruim">Ruim (½ nível)</option>
@@ -204,7 +203,7 @@ templ restDay(v View) {
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			// Fecha ANTES de postar: a recusa do servidor chega no
-			// `$erroDoComando`, que é do RODAPÉ — deixar o diálogo aberto por
+			// `$command_error`, que é do RODAPÉ — deixar o diálogo aberto por
 			// cima dela esconderia a única frase que explica o que houve.
 			<button
 				type="button"

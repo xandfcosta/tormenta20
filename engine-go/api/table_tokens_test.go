@@ -70,7 +70,7 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 		t.Fatalf("escolha vazia trouxe %d peças — nil virou TODAS", len(b.Tokens))
 	}
 	// E a recusa FALA: um comando que não faz nada e não diz nada é lido como
-	// tela travada. O texto vai para o `erroDoComando`, o rodapé do mestre.
+	// tela travada. O texto vai para o `command_error`, o rodapé do mestre.
 	if !strings.Contains(corpo, "escolha ao menos um") {
 		t.Errorf("a recusa não chegou ao rodapé do mestre; resposta: %.200s", corpo)
 	}

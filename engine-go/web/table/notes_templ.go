@@ -81,7 +81,7 @@ func notesSplitter() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div role=\"separator\" aria-orientation=\"vertical\" aria-label=\"Largura das notas\" tabindex=\"0\" data-show=\"$notasabertas\" style=\"display:none\" data-attr:aria-valuenow=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div role=\"separator\" aria-orientation=\"vertical\" aria-label=\"Largura das notas\" tabindex=\"0\" data-show=\"$notes_open\" style=\"display:none\" data-attr:aria-valuenow=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -201,7 +201,7 @@ func tableNotes(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" data-show=\"$notasabertas\" style=\"display:none\" class=\"notas-coluna fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:shrink-0\"><div class=\"flex shrink-0 flex-wrap items-center justify-between gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" data-show=\"$notes_open\" style=\"display:none\" class=\"notas-coluna fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:shrink-0\"><div class=\"flex shrink-0 flex-wrap items-center justify-between gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -239,7 +239,7 @@ func tableNotes(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<button type=\"button\" aria-label=\"Fechar as notas\" data-on:click=\"$notasabertas = false\" class=\"flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<button type=\"button\" aria-label=\"Fechar as notas\" data-on:click=\"$notes_open = false\" class=\"flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -293,7 +293,7 @@ func notesBody(v View) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div data-class=\"{'notas-duplo': $notasmodo === 'duplo'}\" class=\"notas-arranjo grid min-h-0 flex-1 gap-2\"><textarea data-bind:notas data-show=\"$notasmodo != 'ler'\" data-on:input__debounce.1200ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div data-class=\"{'notas-duplo': $notes_mode === 'duplo'}\" class=\"notas-arranjo grid min-h-0 flex-1 gap-2\"><textarea data-bind:notes data-show=\"$notes_mode != 'ler'\" data-on:input__debounce.1200ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -306,7 +306,7 @@ func notesBody(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" data-indicator:notassalvando aria-label=\"Notas da sessão\" placeholder=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" data-indicator:notes_saving aria-label=\"Notas da sessão\" placeholder=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -332,7 +332,7 @@ func notesBody(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</textarea><div data-show=\"$notasmodo != 'escrever'\" class=\"min-h-0 overflow-y-auto rounded-sm border border-grimorio-iron p-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</textarea><div data-show=\"$notes_mode != 'escrever'\" class=\"min-h-0 overflow-y-auto rounded-sm border border-grimorio-iron p-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -971,7 +971,7 @@ func floatToggle() templ.Component {
 			templ_7745c5c3_Var33 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<button type=\"button\" data-attr:aria-pressed=\"$notasflutua ? 'true' : 'false'\" data-attr:title=\"$notasflutua ? 'Encostar as notas ao lado do mapa' : 'Flutuar as notas sobre o mapa'\" aria-label=\"Flutuar as notas sobre o mapa\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<button type=\"button\" data-attr:aria-pressed=\"$notes_floating ? 'true' : 'false'\" data-attr:title=\"$notes_floating ? 'Encostar as notas ao lado do mapa' : 'Flutuar as notas sobre o mapa'\" aria-label=\"Flutuar as notas sobre o mapa\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1026,9 +1026,9 @@ func notesMode(valor, rotulo string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var36 string
-		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$notasmodo === '%s' ? 'true' : 'false'", valor))
+		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 338, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/notes.templ`, Line: 338, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 		if templ_7745c5c3_Err != nil {
@@ -1074,7 +1074,7 @@ func notesMode(valor, rotulo string) templ.Component {
 // texto está "Não salvo", e dizer "Salvando…" ali seria mentira. Quem separa os
 // dois é o `data-indicator`, que só é verdadeiro com o pedido no ar.
 //
-// `$notassalvas` é escrito pelo SERVIDOR quando a gravação dá certo — é a
+// `$notes_saved` é escrito pelo SERVIDOR quando a gravação dá certo — é a
 // resposta que afirma "isto está no banco", e não o cliente supondo.
 func autosaveState() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -1097,7 +1097,7 @@ func autosaveState() templ.Component {
 			templ_7745c5c3_Var39 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "<span aria-live=\"polite\" data-text=\"$notassalvando ? 'Salvando…' : ($notas === $notassalvas ? 'Salvo' : 'Não salvo')\" data-class=\"{'text-destructive-ink': $erroDasNotas != '', 'text-muted-foreground': $erroDasNotas == ''}\" class=\"text-xs\"></span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "<span aria-live=\"polite\" data-text=\"$notes_saving ? 'Salvando…' : ($notes === $notes_saved ? 'Salvo' : 'Não salvo')\" data-class=\"{'text-destructive-ink': $notes_error != '', 'text-muted-foreground': $notes_error == ''}\" class=\"text-xs\"></span>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1130,7 +1130,7 @@ func notesButton() templ.Component {
 			templ_7745c5c3_Var40 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<button type=\"button\" aria-label=\"Notas da sessão\" title=\"Notas — o que aconteceu nesta sessão, ao lado do mapa\" data-attr:aria-pressed=\"$notasabertas ? 'true' : 'false'\" data-on:click=\"$notasabertas = !$notasabertas\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<button type=\"button\" aria-label=\"Notas da sessão\" title=\"Notas — o que aconteceu nesta sessão, ao lado do mapa\" data-attr:aria-pressed=\"$notes_open ? 'true' : 'false'\" data-on:click=\"$notes_open = !$notes_open\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

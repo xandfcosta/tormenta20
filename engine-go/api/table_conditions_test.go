@@ -113,7 +113,7 @@ func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/initiative/"+npc+"/condicao/abalado", "")
 
-	if !strings.Contains(corpo, `"condicoesdalinha":"abalado"`) {
+	if !strings.Contains(corpo, `"row_conditions":"abalado"`) {
 		t.Errorf("o conjunto novo não voltou no sinal; resposta: %.300s", corpo)
 	}
 }

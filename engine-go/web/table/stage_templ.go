@@ -67,7 +67,7 @@ func gmStage(v View, b master.BestiaryView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"mesa\" data-attr:style=\"`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px; --notas-largura:${$notaslargura ? $notaslargura + 'px' : 'clamp(22rem,40%,44rem)'}`\" class=\"mesa-palco flex min-h-0 w-full flex-1 flex-col\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"mesa\" data-attr:style=\"`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px; --notas-largura:${$notes_width ? $notes_width + 'px' : 'clamp(22rem,40%,44rem)'}`\" class=\"mesa-palco flex min-h-0 w-full flex-1 flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -83,7 +83,7 @@ func gmStage(v View, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div data-class=\"{'notas-flutuam': $notasflutua}\" class=\"relative flex min-h-0 flex-1 flex-col gap-1.5 lg:flex-row\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div data-class=\"{'notas-flutuam': $notes_floating}\" class=\"relative flex min-h-0 flex-1 flex-col gap-1.5 lg:flex-row\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

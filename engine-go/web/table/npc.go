@@ -44,13 +44,12 @@ func (s Scene) RoutesNpc(r chi.Router) {
 
 // npcSignals é o que o painel manda ao guardar uma cópia.
 //
-// Nomes TODOS MINÚSCULOS porque viram chave de atributo (`data-bind:...`), e o
-// analisador de HTML minuscula chave — um `data-bind:nomeDoNpc` chega como
-// `nomedonpc` e liga um sinal NOVO, com o servidor lendo o antigo para sempre
-// vazio.
+// Nomes em `snake_case` porque viram chave de atributo (`data-bind:...`), e o
+// analisador de HTML minuscula chave — caixa alta ali chega minúscula e liga um
+// sinal NOVO, com o servidor lendo o antigo para sempre vazio.
 type npcSignals struct {
 	Criatura string `json:"creature"`
-	Nome     string `json:"nomedonpc"`
+	Nome     string `json:"npc_name"`
 }
 
 // saveEntryCast copia um verbete do livro para o elenco da campanha.

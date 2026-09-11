@@ -13,7 +13,7 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 	f := novoPiloto(t)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete",
-		`{"creature":"ogro","nomedonpc":"Ogro Capitão"}`)
+		`{"creature":"ogro","npc_name":"Ogro Capitão"}`)
 
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 {
@@ -42,7 +42,7 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","nomedonpc":"   "}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","npc_name":"   "}`)
 
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 || npcs[0].Name == "" {

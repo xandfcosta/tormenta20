@@ -1,47 +1,16 @@
-# OS SINAIS QUE AINDA NÃO SEGUEM O PADRÃO (ALE-301).
+# A DÍVIDA DE NOME DE SINAL — HOJE VAZIA (ALE-301).
 #
 # O padrão está no `CLAUDE.md`, seção "Idioma": nome de sinal do Datastar é
 # `snake_case`, em INGLÊS, com UMA grafia só em todos os canais — a expressão
 # (`$creature_search`), a chave de atributo (`data-bind:creature_search`), a tag
 # JSON do servidor (`json:"creature_search"`) e a ilha de `.ts`.
 #
-# Esta lista é uma CATRACA, como a `portuguese_identifiers.txt` da ALE-300: ela
-# registra a dívida e SÓ PODE ENCOLHER. Sinal novo fora do padrão nasce vermelho
-# com o nome dele; sinal baselinado que deixou de existir também reprova, senão
-# o arquivo vira mentira sozinho.
+# Este arquivo nasceu com os **147 sinais** que existiam no dia e foi ESVAZIADO
+# em quatro superfícies — hub/admin/campanhas/mestre (26), ficha (31), as
+# ferramentas de desenho do tabuleiro (36) e os painéis dele (34), mais três que
+# só existiam dentro de constantes Go e que o inventário por `$nome` nunca viu.
 #
-# Varrer 147 sinais num commit é a varredura em massa que o guia recusa, e aqui
-# ela é pior que de costume: cada sinal atravessa quatro canais que nada liga, e
-# uma ponta esquecida não estoura — ela lê um sinal vazio, e o gesto "não faz
-# nada". Por isso a varredura anda por SUPERFÍCIE, e a catraca é o que impede o
-# buraco de crescer enquanto ela anda.
-condicoesdalinha
-descansando
-edicaoiniciativa
-edicaolinha
-edicaonome
-edicaopv
-edicaopvmax
-erroDasNotas
-erroDoComando
-erroDoMovimento
-erroDoRascunho
-formdecombatente
-linhadacondicao
-mandando
-nomedonpc
-notas
-notasabertas
-notasarrastando
-notasflutua
-notaslargura
-notasmodo
-notassalvando
-notassalvas
-novonome
-novotipo
-qualidadedodescanso
-registrando
-rotulodalinha
-titulodasessao
-trazendo
+# ELE FICA, e vazio de propósito: enquanto ele existe, o guarda tem onde
+# registrar uma exceção que alguém precise abrir, e a lista vazia diz que não há
+# nenhuma. Uma linha nova aqui é um ato visível, que é o contrário de uma
+# exceção escrita num `if` do guarda.

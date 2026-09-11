@@ -8,7 +8,7 @@ import (
 func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/notas", `{"notas":"eu escrevi isto"}`)
+	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/notas", `{"notes":"eu escrevi isto"}`)
 
 	if rec.Code != 403 {
 		t.Errorf("o jogador escreveu nas notas do mestre: %d", rec.Code)
@@ -25,7 +25,7 @@ func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notas":"# Cena 1\nO ogro fugiu"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro fugiu"}`)
 
 	if got := f.dbNote(t); got != "# Cena 1\nO ogro fugiu" {
 		t.Errorf("a nota no banco é %q", got)
@@ -41,7 +41,7 @@ func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notas":"a cena acabou\n\n"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"a cena acabou\n\n"}`)
 
 	if got := f.dbNote(t); got != "a cena acabou\n\n" {
 		t.Errorf("a nota foi aparada: %q", got)
@@ -55,7 +55,7 @@ func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
 // CAMINHO, como os outros verbos de linha da Mesa.
 func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 	f := novoPiloto(t)
-	nota := `{"notas":"- [ ] pagar o taverneiro\n- [x] dar o XP"}`
+	nota := `{"notes":"- [ ] pagar o taverneiro\n- [x] dar o XP"}`
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/notas/tarefa/0/marcar", nota)
 
@@ -80,7 +80,7 @@ func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 	f := novoPiloto(t)
 
-	f.posta(t, f.mestre, f.tableUrl()+"/notas/tarefa/0/desmarcar", `{"notas":"- [x] dar o XP"}`)
+	f.posta(t, f.mestre, f.tableUrl()+"/notas/tarefa/0/desmarcar", `{"notes":"- [x] dar o XP"}`)
 
 	if got := f.dbNote(t); got != "- [ ] dar o XP" {
 		t.Errorf("desmarcar não voltou o quadrinho: %q", got)
@@ -97,7 +97,7 @@ func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 func TestAnOutOfRangeLineDoesNotBringTheHandlerDown(t *testing.T) {
 	f := novoPiloto(t)
 
-	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/notas/tarefa/99/marcar", `{"notas":"- [ ] a"}`)
+	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/notas/tarefa/99/marcar", `{"notes":"- [ ] a"}`)
 
 	if rec.Code >= 500 {
 		t.Fatalf("uma linha fora da faixa derrubou o handler: %d", rec.Code)
@@ -139,7 +139,7 @@ func (f pilotoFixture) dbNote(t *testing.T) string {
 func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 	f := novoPiloto(t)
 
-	corpo := f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notas":"- [ ] pagar o taverneiro"}`)
+	corpo := f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"- [ ] pagar o taverneiro"}`)
 
 	// O CONTROLE: a prévia tem de trazer um quadrinho, senão não há caminho
 	// nenhum para conferir e o teste passaria dizendo nada.
