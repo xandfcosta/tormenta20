@@ -27,6 +27,7 @@ addresses
 admin
 agrees
 air
+and
 appearance
 applied
 apply
@@ -138,6 +139,7 @@ effects
 encoding
 encounter
 encounters
+english
 entities
 entrance
 entry
@@ -205,6 +207,7 @@ ignored
 improv
 improvements
 improvisation
+in
 index
 init
 initiative
