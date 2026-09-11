@@ -185,7 +185,7 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/retangulo", stroke("dificil", 2, 2, 4, 5)); rec.Code != http.StatusOK {
 		t.Fatalf("o retângulo deu %d", rec.Code)
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
@@ -195,7 +195,7 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/limpar/retangulo/2/2/4/5", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/limpar/retangulo", stroke("", 2, 2, 4, 5)); rec.Code != http.StatusOK {
 		t.Fatalf("limpar o retângulo deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
@@ -211,7 +211,7 @@ func TestAForgedRectangleIsRefusedByTheRoute(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/retangulo/0/0/999/999", "").Body.String()
+		f.tableUrl()+"/tabuleiro/terreno/retangulo", stroke("dificil", 0, 0, 999, 999)).Body.String()
 	if !strings.Contains(corpo, "grande demais") {
 		t.Errorf("o retângulo forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
 	}
@@ -231,7 +231,7 @@ func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	for _, pedaco := range []string{"evt.shiftKey", "/retangulo/", "board-lasso"} {
+	for _, pedaco := range []string{"evt.shiftKey", "/terreno/retangulo", "board-lasso"} {
 		if !strings.Contains(tela, pedaco) {
 			t.Errorf("a cena não tem %q: o retângulo do pincel não acontece", pedaco)
 		}

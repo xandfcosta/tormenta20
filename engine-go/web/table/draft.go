@@ -37,10 +37,10 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	base := "/campanhas/{campaignId}/lugares/{placeId}/tabuleiro"
 	// O TRAÇO, como na mesa: as rotas de terreno recebem de ONDE ATÉ ONDE o dedo
 	// andou desde o aviso anterior. Ver `board.StrokeSquares`.
-	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.draftCommand(draftPaintsTerrain))
-	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.draftCommand(draftClearsTerrain))
-	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.draftCommand(draftFillsRect))
-	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.draftCommand(draftClearsRect))
+	r.Post(base+"/terreno", s.draftCommand(draftPaintsTerrain))
+	r.Post(base+"/terreno/limpar", s.draftCommand(draftClearsTerrain))
+	r.Post(base+"/terreno/retangulo", s.draftCommand(draftFillsRect))
+	r.Post(base+"/terreno/limpar/retangulo", s.draftCommand(draftClearsRect))
 	r.Post(base+"/pecas/nova/{x}/{y}", s.draftCommand(draftNewLoosePiece))
 	// MOVER é o gesto que NÃO tem gêmeo na mesa, e é a diferença do draft:
 	// lá o arrasto manda uma PARADA e o servidor devolve uma proposta com custo,
@@ -208,14 +208,14 @@ func (s Scene) draftCommand(
 // ── o TERRENO (T20 p238) ─────────────────────────────────────────────────────
 
 func draftPaintsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
-	traco, err := tracoDaURL(c.R)
+	pedido, traco, err := strokeFromBody(c.R)
 	if err != nil {
 		return err
 	}
-	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
-	// O `apagar` continua sendo MODO da ferramenta e não caminho, como na mesa:
-	// ele vale para o arraste inteiro, e não para um quadrado.
-	ligado := c.R.URL.Query().Get("apagar") == ""
+	especie := board.KnownTerrainKind(pedido.Kind)
+	// O `erase` continua sendo MODO da ferramenta e não uma rota própria, como
+	// na mesa: ele vale para o arraste inteiro, e não para um quadrado.
+	ligado := !pedido.Erase
 	for _, casa := range traco {
 		board.PaintTerrain(b, casa, especie, ligado)
 	}
@@ -223,7 +223,7 @@ func draftPaintsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftClearsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
-	traco, err := tracoDaURL(c.R)
+	_, traco, err := strokeFromBody(c.R)
 	if err != nil {
 		return err
 	}
@@ -234,11 +234,11 @@ func draftClearsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftFillsRect(st Scene, c draftCtx, b *board.BoardState) error {
-	casas, err := urlRect(c.R)
+	pedido, casas, err := rectFromBody(c.R)
 	if err != nil {
 		return err
 	}
-	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	especie := board.KnownTerrainKind(pedido.Kind)
 	for _, casa := range casas {
 		board.PaintTerrain(b, casa, especie, true)
 	}
@@ -246,7 +246,7 @@ func draftFillsRect(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
-	casas, err := urlRect(c.R)
+	_, casas, err := rectFromBody(c.R)
 	if err != nil {
 		return err
 	}

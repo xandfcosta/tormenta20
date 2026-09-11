@@ -37,7 +37,7 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 		FerramentaDaRegua:    base + "/regua",
 		FerramentaDoGabarito: base + "/gabarito/esfera/6/0/0/1/1",
 		MarkTool:             base + "/marcadores/novo/1/1",
-		EraserTool:           base + "/terreno/limpar/1/1/ate/1/1",
+		EraserTool:           base + "/terreno/limpar",
 		NewPieceTool:         base + "/pecas/nova/1/1",
 	}
 
@@ -45,10 +45,11 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 	for _, f := range rail(true) {
 		caminho, declarada := posta[f.ID]
 		if !declarada {
-			// O PINCEL de terreno: um por espécie, e eles nascem da lista de
-			// espécies. Escrevê-los à mão aqui seria a lista que fica para trás
-			// quando a quinta espécie chegar.
-			caminho = base + "/terreno/" + f.ID + "/1/1/ate/1/1"
+			// O PINCEL de terreno: TODOS na mesma rota desde a ALE-305, porque a
+			// espécie viaja no corpo. O laço continua percorrendo a lista de
+			// espécies — o que ele afirma agora é que nenhuma delas ficou sem
+			// rota, e não mais que cada uma tem a sua.
+			caminho = base + "/terreno"
 		}
 		if caminho == "" {
 			continue

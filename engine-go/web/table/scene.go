@@ -55,8 +55,8 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	// própria e não uma query na de cima porque o que muda é o que o par de
 	// cantos NOMEIA — a linha entre eles ou tudo o que cabe dentro —, e isso é o
 	// significado do pedido, não um modo dele.
-	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.gmContinuousCommand(fillRect))
-	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.gmContinuousCommand(clearRect))
+	r.Post(base+"/terreno/retangulo", s.gmContinuousCommand(fillRect))
+	r.Post(base+"/terreno/limpar/retangulo", s.gmContinuousCommand(clearRect))
 	r.Post(base+"/pecas", s.gmBoardCommand(poeNoMapa))
 	r.Post(base+"/pecas/nova/{x}/{y}", s.gmBoardCommand(newLoosePiece))
 }
@@ -108,19 +108,19 @@ func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 // traço porque foi ele que as pediu primeiro, e o que elas recebem sempre foi uma
 // lista de casas. Quem escolhe a forma é a rota.
 func fillRect(st Scene, c commandCtx) (*board.BoardState, error) {
-	casas, err := urlRect(c.R)
+	pedido, casas, err := rectFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	especie := board.KnownTerrainKind(pedido.Kind)
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas, especie, true)
 }
 
 func clearRect(st Scene, c commandCtx) (*board.BoardState, error) {
-	casas, err := urlRect(c.R)
+	_, casas, err := rectFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -188,24 +188,50 @@ type strokeBody struct {
 	To    struct{ X, Y int } `json:"to"`
 }
 
-// strokeFromBody lê o traço do corpo da requisição.
+// pointsFromBody lê os DOIS CANTOS do corpo da requisição.
 //
 // COORDENADA NEGATIVA é lugar legítimo — o plano não tem bordas —, e é por ela
 // que o valor não pode vir de um sinal da página: sinal é estado compartilhado, e
 // o que se quer é o clique que ACONTECEU. O corpo resolve isso sem o caminho de
 // seis parâmetros, porque o `payload` do `@post` é calculado no instante do
 // gesto e não sobrevive a ele.
-func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
+//
+// Ela é o pedaço COMUM do traço e do retângulo. O que muda entre os dois é o que
+// o par NOMEIA — a linha entre os cantos ou tudo o que cabe dentro —, e isso é do
+// chamador: é o significado do pedido, não um detalhe de leitura.
+func pointsFromBody(r *http.Request) (strokeBody, engine.Square, engine.Square, error) {
 	var pedido strokeBody
 	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&pedido); err != nil {
-		return pedido, nil, fmt.Errorf("não entendi o traço enviado: %v", err)
+		return pedido, engine.Square{}, engine.Square{}, fmt.Errorf("não entendi o gesto enviado: %v", err)
 	}
-	de := engine.Square{X: pedido.From.X, Y: pedido.From.Y}
-	ate := engine.Square{X: pedido.To.X, Y: pedido.To.Y}
+	return pedido,
+		engine.Square{X: pedido.From.X, Y: pedido.From.Y},
+		engine.Square{X: pedido.To.X, Y: pedido.To.Y},
+		nil
+}
+
+// strokeFromBody é o SEGMENTO entre os dois cantos.
+func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
+	pedido, de, ate, err := pointsFromBody(r)
+	if err != nil {
+		return pedido, nil, err
+	}
 	if !board.ValidStroke(de, ate) {
 		return pedido, nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
 	}
 	return pedido, board.StrokeSquares(de, ate), nil
+}
+
+// rectFromBody é TUDO O QUE CABE entre os dois cantos.
+func rectFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
+	pedido, de, ate, err := pointsFromBody(r)
+	if err != nil {
+		return pedido, nil, err
+	}
+	if !board.ValidRectangle(de, ate) {
+		return pedido, nil, fmt.Errorf("o retângulo de %v até %v é grande demais para um gesto", de, ate)
+	}
+	return pedido, board.RectangleSquares(de, ate), nil
 }
 
 // reopenPlace traz uma cena guardada de volta para a mesa, NUMA ABA NOVA
