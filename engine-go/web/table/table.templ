@@ -26,12 +26,12 @@ templ tableScene(v View) {
 	// com ela as duas faixas deixam de precisar de `sticky`: elas são o cabeçalho
 	// e o rodapé de uma caixa que não rola.
 	// O `data-attr:style` traz as variáveis do ARRASTO, e elas moram AQUI porque
-	// o `#mesa` é a única raiz que o remendo nunca toca desde que a cena virou
+	// o `#table` é a única raiz que o remendo nunca toca desde que a cena virou
 	// regiões — as variáveis descem por herança até quem está sendo arrastado.
 	// Na peça ou no plano, o primeiro remendo de outro jogador as apagaria no
 	// meio do gesto, que é o defeito que o dono nomeou.
 	<main
-		id="mesa"
+		id="table"
 		data-attr:style="`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
@@ -40,13 +40,13 @@ templ tableScene(v View) {
 		// MINHA FICHA (ALE-272, fatia 10b): a ficha do jogador dentro da sessão,
 		// como a SPA faz. Ela fica FORA de `TableRegions` de propósito — o
 		// stream nunca a toca, e quem a mantém em dia são os comandos dela, que
-		// remendam o `#cena-ficha` por conta.
+		// remendam o `#sheet-scene` por conta.
 		if v.MinhaFicha != nil {
 			// O OUVIDO DA FICHA (ALE-275): o stream avisa que o personagem mudou
 			// escrevendo `fichaversao`, e é o CLIENTE que repede a ficha — na aba
 			// em que a pessoa está, que só ele sabe.
 			//
-			// FORA do `#cena-ficha` de propósito: aquele nó é substituído a cada
+			// FORA do `#sheet-scene` de propósito: aquele nó é substituído a cada
 			// remendo da ficha, e um ouvinte que se apaga e renasce no meio do
 			// caminho pode perder o aviso que o fez nascer.
 			//
@@ -130,7 +130,7 @@ templ surfaceSelector(v View) {
 
 // AS REGIÕES DA MESA (ALE-264).
 //
-// A cena era UM fragmento, e o stream remendava o `<main id="mesa">` inteiro a
+// A cena era UM fragmento, e o stream remendava o `<main id="table">` inteiro a
 // cada mudança de qualquer um — 39.742 bytes medidos, para mover uma peça um
 // quadrado. Isso é desperdício, e é também um PROBLEMA DE COMPORTAMENTO que o
 // dono nomeou: com o arrasto na próxima fatia, um jogador registrando iniciativa
@@ -147,7 +147,7 @@ templ surfaceSelector(v View) {
 // porque dourado é o que já diz "a vez" na iniciativa e no tabuleiro (ALE-200).
 templ tableHeader(v View) {
 		<div
-			id="mesa-cabecalho"
+			id="table-header"
 			class={ "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-2 py-1 sm:px-3",
 				templ.KV("border-grimorio-gold/60 bg-grimorio-gold/10", v.Turn.Kind == "mine"),
 				templ.KV("border-grimorio-iron bg-grimorio-panel", v.Turn.Kind != "mine") }
@@ -290,7 +290,7 @@ templ savingWarning(v View) {
 // cena pelo mesmo motivo da SPA: gravaria o combatente na fila do mestre sem
 // mudar nada na tela de quem clicou.
 templ tableRegisterRegion(v View) {
-	<div id="mesa-registrar">
+	<div id="table-register">
 		if v.SceneActive && v.Eu != nil {
 			@tableRegister(v)
 		}
@@ -301,7 +301,7 @@ templ tableRegisterRegion(v View) {
 // Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
 templ tableParty(v View) {
 	<div
-		id="mesa-grupo"
+		id="table-party"
 		class={ templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre != nil) }
 	>
 		if v.Mestre != nil {
@@ -405,7 +405,7 @@ templ cardsParty(v View) {
 // crescer se o ancestral repassar a altura. Sem elas a janela nasceria com a
 // altura do nada.
 templ tableBoard(v View) {
-	<div id="mesa-tabuleiro" class="flex min-h-0 flex-1 flex-col">
+	<div id="table-board" class="flex min-h-0 flex-1 flex-col">
 		@boardTable(v.Tabuleiro)
 		// A RECUSA de uma parada, e ela mora aqui: quem move é o jogador, que
 		// não tem o rodapé do mestre onde o `command_error` acende. Fora do
@@ -426,7 +426,7 @@ templ tableBoard(v View) {
 // Iniciativa — LEITURA para o jogador (ALE-213); o mestre ganha aqui o que MONTA
 // a fila. O diálogo de editar vem junto porque é dela que ele fala.
 templ tableTracker(v View) {
-	<div id="mesa-fila">
+	<div id="table-tracker">
 			<section class="space-y-1.5">
 				<div class="flex items-center justify-between gap-2">
 					<h2 class={ ui.SectionLabelClasses("muted", "") }>Iniciativa</h2>
@@ -458,7 +458,7 @@ templ tableTracker(v View) {
 								type="button"
 								aria-label="Abrir o bestiário"
 								title="Bestiário — trazer uma criatura do livro"
-								data-on:click="document.getElementById('bestiario-da-mesa').showModal()"
+								data-on:click="document.getElementById('table-bestiary').showModal()"
 								class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 							>
 			@ui.Icon("Skull", "size-5")
@@ -518,12 +518,12 @@ templ tableTracker(v View) {
 // 35 do catálogo, e a que faltava dava 400 ao ser aplicada.
 templ condicoesDoCombatente(v View) {
 	<dialog
-		id="condicoes-do-combatente"
+		id="combatant-conditions"
 		data-preserve-attr="open"
-		aria-labelledby="condicoes-do-combatente-titulo"
+		aria-labelledby="combatant-conditions-title"
 		class="scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="condicoes-do-combatente-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
+		<h2 id="combatant-conditions-title" class="font-heading text-lg tracking-wide text-grimorio-gold">
 			Condições de <span data-text="$row_label"></span>
 		</h2>
 		<p class="mt-1 text-sm text-muted-foreground">
@@ -548,7 +548,7 @@ templ condicoesDoCombatente(v View) {
 			// confirmar prometeria que nada valeu até ali.
 			<button
 				type="button"
-				data-on:click="document.getElementById('condicoes-do-combatente').close()"
+				data-on:click="document.getElementById('combatant-conditions').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Fechar</button>
 		</div>
@@ -559,7 +559,7 @@ templ condicoesDoCombatente(v View) {
 // mestre — a trava continua sendo a view não ter o que desenhar, e o jogador
 // recebe uma casca vazia em vez de um id que some e leva o remendo junto.
 templ tableCommands(v View) {
-	<div id="mesa-comandos" class="contents">
+	<div id="table-commands" class="contents">
 		if v.Mestre != nil {
 			@gmControls(v, *v.Mestre)
 		}
@@ -919,9 +919,9 @@ templ formDeCombatente(v View) {
 		class="flex flex-wrap items-end gap-2 border border-dashed border-grimorio-iron p-3"
 	>
 		<div class="min-w-[10rem] flex-1 space-y-1">
-			<label for="novo-combatente" class={ ui.FieldLabelClasses("muted", "block") }>Nome</label>
+			<label for="new-combatant" class={ ui.FieldLabelClasses("muted", "block") }>Nome</label>
 			<input
-				id="novo-combatente"
+				id="new-combatant"
 				type="text"
 				maxlength="60"
 				placeholder="Goblin salteador…"
@@ -1011,18 +1011,18 @@ templ numberEditable(v View, l tableRow) {
 // 1 e 5; este é o caminho do valor exato, que na SPA custava seis cliques.
 templ editarCombatente(v View) {
 	<dialog
-		id="editar-combatente"
+		id="edit-combatant"
 		data-preserve-attr="open"
-		aria-labelledby="editar-combatente-titulo"
+		aria-labelledby="edit-combatant-title"
 		class="scene-grimorio m-auto w-[min(20rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
 	>
-		<h2 id="editar-combatente-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
+		<h2 id="edit-combatant-title" class="font-heading text-lg tracking-wide text-grimorio-gold">
 			Editar <span data-text="$edit_name"></span>
 		</h2>
 		<p class="mt-1 text-sm text-muted-foreground">A ordem se reordena sozinha, e quem está na vez continua na vez.</p>
-		<label for="edicao-iniciativa" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Iniciativa</label>
+		<label for="edit-initiative" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Iniciativa</label>
 		<input
-			id="edicao-iniciativa"
+			id="edit-initiative"
 			type="number"
 			min="-5"
 			max="40"
@@ -1034,11 +1034,11 @@ templ editarCombatente(v View) {
 		// que o número semeou — o servidor confere de novo na escrita, porque a
 		// tela pode estar defasada.
 		<div data-show="$edit_hp_max > 0">
-			<label for="edicao-pv" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>
+			<label for="edit-hp" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>
 				PV (de <span data-text="$edit_hp_max"></span>)
 			</label>
 			<input
-				id="edicao-pv"
+				id="edit-hp"
 				type="number"
 				min="0"
 				data-attr:max="$edit_hp_max"
@@ -1050,7 +1050,7 @@ templ editarCombatente(v View) {
 		<div class="mt-4 flex justify-end gap-2">
 			<button
 				type="button"
-				data-on:click="document.getElementById('editar-combatente').close()"
+				data-on:click="document.getElementById('edit-combatant').close()"
 				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>Cancelar</button>
 			// O caminho é montado com o id que o número semeou: o `entryId` viaja

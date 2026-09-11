@@ -245,7 +245,7 @@ const notesMinWidth = 352 // 22rem
 // 70% do palco deixa o mapa com quase um terço em qualquer janela, que é o que
 // mantém as notas ao lado do tabuleiro em vez de no lugar dele.
 func widthCeiling() string {
-	return "(document.getElementById('mesa-notas').parentElement.getBoundingClientRect().width * 0.7)"
+	return "(document.getElementById('table-notes').parentElement.getBoundingClientRect().width * 0.7)"
 }
 
 // widthKeyStep é a seta do teclado, e ela existe porque **gesto nunca é o
@@ -273,7 +273,7 @@ func widthKeyStep() string {
 // o piso de 22rem não é o que está na tela. A divisa tem de continuar de onde a
 // coluna está.
 func widthRightNow() string {
-	return "($notes_width || document.getElementById('mesa-notas').getBoundingClientRect().width)"
+	return "($notes_width || document.getElementById('table-notes').getBoundingClientRect().width)"
 }
 
 // widthDragStarts é o gesto de ponteiro. A conta é sobre a borda DIREITA da
@@ -284,7 +284,7 @@ func widthDragStarts() string {
 
 func widthFollowsPointer() string {
 	return fmt.Sprintf(
-		"if ($notes_dragging) { const c = document.getElementById('mesa-notas').getBoundingClientRect(); "+
+		"if ($notes_dragging) { const c = document.getElementById('table-notes').getBoundingClientRect(); "+
 			"$notes_width = Math.min(%s, Math.max(%d, c.right - evt.clientX)) }",
 		widthCeiling(), notesMinWidth,
 	)

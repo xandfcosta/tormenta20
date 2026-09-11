@@ -172,13 +172,13 @@ templ railNav(atual string) {
 
 templ bestiaryScene(v BestiaryView) {
 	<section
-		id="bestiario"
+		id="bestiary"
 		class="mesa-palco flex min-h-0 flex-1 flex-col gap-3"
-		aria-labelledby="mesa-bestiario"
+		aria-labelledby="table-bestiary-panel"
 		data-signals={ BestiarySignals(v) }
 	>
 		<div class="flex flex-wrap items-baseline gap-x-3">
-			<h2 id="mesa-bestiario" class="font-heading text-lg tracking-wide text-foreground">Bestiário</h2>
+			<h2 id="table-bestiary-panel" class="font-heading text-lg tracking-wide text-foreground">Bestiário</h2>
 			<p class="text-xs text-muted-foreground">{ fmt.Sprintf("%d de %d", len(v.Entries), v.Total) }</p>
 		</div>
 		// A grade é a mesma `mesa-duas-colunas` da SPA, e ela é `@container` e
@@ -448,7 +448,7 @@ templ EntryList(v BestiaryView) {
 					// um defeito que o CI pegou e a bancada não (ALE-272): o
 					// clique do mouse TAMBÉM foca, então uma linha tocada saía
 					// com DOIS pedidos — o do foco, sem `abrir=1`, e o do
-					// clique, com. Os dois remendam o `#bestiario`, que
+					// clique, com. Os dois remendam o `#bestiary`, que
 					// redeclara `fichaAberta`, e quem chega por último manda.
 					// Na bancada o do clique chegava depois e a ficha abria; na
 					// máquina carregada do CI a ordem inverteu e a criatura

@@ -44,7 +44,7 @@ func fluxoDaFicha(t *testing.T, f pilotoFixture, alvo string) string {
 //
 // A garantia é de ATOMICIDADE e não de ordem, e a diferença foi medida: a
 // primeira versão do conserto mandava um EVENTO DE SINAL depois do conteúdo, e
-// ele não funcionava — o `data-signals` que abre a ficha mora no `#bestiario`,
+// ele não funcionava — o `data-signals` que abre a ficha mora no `#bestiary`,
 // que É o elemento remendado, e o remendo redeclarava `sheet_open: false` por
 // cima. O fio levava `{"sheet_open":true}` e o diálogo continuava
 // `display:none`. Com o servidor redeclarando o valor CERTO, o conteúdo e o

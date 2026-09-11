@@ -22,16 +22,16 @@ import (
 
 templ collectionScene(v collectionView) {
 	<section
-		id="catalogos"
+		id="catalogs"
 		class="mesa-palco flex min-h-0 flex-1 flex-col gap-3"
-		aria-labelledby="mesa-catalogos"
+		aria-labelledby="table-catalogs"
 		data-signals={ collectionSignals(v) }
 	>
 		<div class="flex flex-wrap items-baseline gap-x-3">
 			// O título é o da ABA, e não "Catálogos": desde que cada catálogo
 			// virou uma parada do trilho, a cena é a das Condições — e repetir a
 			// palavra genérica aqui deixaria a tela sem dizer onde se está.
-			<h2 id="mesa-catalogos" class="font-heading text-lg tracking-wide text-foreground">{ tabLabel(v.Aba) }</h2>
+			<h2 id="table-catalogs" class="font-heading text-lg tracking-wide text-foreground">{ tabLabel(v.Aba) }</h2>
 			<p class="text-xs text-muted-foreground">{ collectionCount(v) }</p>
 		</div>
 		<div class="relative shrink-0">
@@ -501,10 +501,10 @@ templ godCard(d book.God, livro bookui.BookAddress) {
 // SpellAugments é a outra coisa que a caixa mostra: o que a magia
 // ganha quando se gasta mais mana.
 //
-// O mesmo id (`#verbete-do-elo`) porque é a mesma caixa — o que muda é o miolo,
+// O mesmo id (`#crossref-entry`) porque é a mesma caixa — o que muda é o miolo,
 // e quem decide é a rota.
 templ SpellAugments(m book.Spell, livro bookui.BookAddress) {
-	<div id="verbete-do-elo" class="space-y-2 pr-8">
+	<div id="crossref-entry" class="space-y-2 pr-8">
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ m.Name }
 			@bookui.PageSeal(livro, m.BookPage, m.Name)
@@ -541,7 +541,7 @@ templ SpellAugments(m book.Spell, livro bookui.BookAddress) {
 // Reusa os MESMOS cartões da aba — o verbete tem um desenho só, e um segundo
 // desenho "para a caixa" divergiria do primeiro na terceira issue.
 templ CrossRefEntry(g collectionGroup, livro bookui.BookAddress) {
-	<div id="verbete-do-elo" class="pr-8">
+	<div id="crossref-entry" class="pr-8">
 		if g.Count() == 0 {
 			<p class="text-xs text-muted-foreground">Este book.Entry não está no acervo.</p>
 		}

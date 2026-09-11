@@ -47,8 +47,8 @@ async function trackerAnimations(
     const passo = () => {
       // O VÉU da piscada nasce e morre com a animação: contá-lo é contar a
       // piscada, sem depender de qual cor ela usou.
-      w.__f.veus += document.querySelectorAll('#mesa-fila li > div[aria-hidden="true"]').length
-      for (const linha of document.querySelectorAll('#mesa-fila li')) {
+      w.__f.veus += document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]').length
+      for (const linha of document.querySelectorAll('#table-tracker li')) {
         if (linha.getAnimations().length > 0) w.__f.linhas++
       }
       if (performance.now() - inicio < limite) requestAnimationFrame(passo)
@@ -83,14 +83,14 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
     // A COR do véu diz o sinal, e é a única coisa que separa "levei 12" de
     // "curei 12". Medida no véu que está no ar durante a cura.
     const corDaCura = await page.evaluate(async () => {
-      const antes = document.querySelectorAll('#mesa-fila li > div[aria-hidden="true"]').length
+      const antes = document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]').length
       const curar = [...document.querySelectorAll('button')].find((b) =>
         (b.getAttribute('aria-label') ?? '').startsWith('Curar'),
       )
       curar?.click()
       for (let i = 0; i < 40; i++) {
         await new Promise((p) => requestAnimationFrame(p))
-        const veus = [...document.querySelectorAll('#mesa-fila li > div[aria-hidden="true"]')]
+        const veus = [...document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]')]
         if (veus.length > antes) return getComputedStyle(veus[veus.length - 1]).background
       }
       return ''

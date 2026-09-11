@@ -48,7 +48,7 @@ func collectionScene(v collectionView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"catalogos\" class=\"mesa-palco flex min-h-0 flex-1 flex-col gap-3\" aria-labelledby=\"mesa-catalogos\" data-signals=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"catalogs\" class=\"mesa-palco flex min-h-0 flex-1 flex-col gap-3\" aria-labelledby=\"table-catalogs\" data-signals=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -61,7 +61,7 @@ func collectionScene(v collectionView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><div class=\"flex flex-wrap items-baseline gap-x-3\"><h2 id=\"mesa-catalogos\" class=\"font-heading text-lg tracking-wide text-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><div class=\"flex flex-wrap items-baseline gap-x-3\"><h2 id=\"table-catalogs\" class=\"font-heading text-lg tracking-wide text-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1930,7 +1930,7 @@ func godCard(d book.God, livro bookui.BookAddress) templ.Component {
 // SpellAugments é a outra coisa que a caixa mostra: o que a magia
 // ganha quando se gasta mais mana.
 //
-// O mesmo id (`#verbete-do-elo`) porque é a mesma caixa — o que muda é o miolo,
+// O mesmo id (`#crossref-entry`) porque é a mesma caixa — o que muda é o miolo,
 // e quem decide é a rota.
 func SpellAugments(m book.Spell, livro bookui.BookAddress) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -1953,7 +1953,7 @@ func SpellAugments(m book.Spell, livro bookui.BookAddress) templ.Component {
 			templ_7745c5c3_Var91 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "<div id=\"verbete-do-elo\" class=\"space-y-2 pr-8\"><p class=\"flex flex-wrap items-center gap-1.5 font-medium\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "<div id=\"crossref-entry\" class=\"space-y-2 pr-8\"><p class=\"flex flex-wrap items-center gap-1.5 font-medium\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2071,7 +2071,7 @@ func CrossRefEntry(g collectionGroup, livro bookui.BookAddress) templ.Component 
 			templ_7745c5c3_Var97 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "<div id=\"verbete-do-elo\" class=\"pr-8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "<div id=\"crossref-entry\" class=\"pr-8\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

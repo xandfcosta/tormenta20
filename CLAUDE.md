@@ -482,7 +482,8 @@ vez:
 |---|---|---|
 | nome do arquivo de spec (`board-drag.spec.ts`) | **inglês** | é nome de arquivo, e a lista acima já dizia isso |
 | a **descrição do teste** — o texto dentro de `test('…')` | **português** | é frase que uma pessoa lê no relatório, como qualquer texto de tela |
-| classe CSS (`.tabuleiro-peca`) | **inglês** | é identificador que o código escreve e casa |
+| classe CSS (`.board-token`) | **inglês** | é identificador que o código escreve e casa |
+| id de elemento (`id="finder-field"`) | **inglês** | mesma razão, e o `getElementById` o casa por texto (ALE-302) |
 | sinal do Datastar (`$creature_search`) | **inglês, `snake_case`** | é a FRONTEIRA, como campo JSON e evento SSE — e a forma tem razão própria, logo abaixo |
 
 O par do meio é o que confunde: **o arquivo e a descrição são coisas
@@ -562,6 +563,25 @@ tags antes de aceitar.
 o 3 tem o `TestEverySignalDeclaredByValueHasAReader`, e a FORMA de todos tem a
 catraca. O 7 não tem guarda — são três sítios no repositório, e eles estão
 nomeados na tabela acima justamente porque um `grep` não os acha.
+
+#### O id de elemento tem OITO canais, e o oitavo custou um vermelho
+
+O molde é o da classe CSS, e o guarda é o `TestEveryReferencedElementIdExists`:
+**todo id apontado existe em algum `.templ`**. Ele não cobra o contrário — um id
+existe legitimamente só para o CSS ou como âncora, e proibir isso mandaria apagar
+desenho válido.
+
+Os canais: `id="x"` · `getElementById('x')` · `aria-labelledby` ·
+`aria-describedby` · `for=` · `popovertarget` · `querySelector('#x')` · e
+**`el.id === 'x'`**, que é o que escapou. O Enter do buscador comparava
+`activeElement.id` com um literal, e nenhum dos outros sete padrões o via: o
+renome passou por cima, o Enter deixou de abrir o primeiro achado, e **nada mais
+mudou na tela**. Quem acusou foi o Playwright.
+
+O que o guarda NÃO vê é o par DINÂMICO — um `id={ sceneId }` e um
+`getElementById(%q)` alimentados pela mesma constante. Isso não é buraco: os dois
+saem do mesmo lugar, então renomear a constante move as duas pontas. O que ele
+pega é a ASSIMETRIA, que é onde o descuido mora.
 
 > **A regra já estava escrita treze vezes** — treze comentários em `web/table`,
 > `web/sheetui`, `web/finder` e `web/master`, cada um contando a mesma história

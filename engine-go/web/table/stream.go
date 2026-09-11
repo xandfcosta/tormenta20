@@ -332,24 +332,24 @@ type tableRegion struct {
 // cada papel, e este pacote não tem banco para montar a view de verdade.
 func TableRegions(v View) []tableRegion {
 	regioes := []tableRegion{
-		{"mesa-cabecalho", tableHeader(v)},
-		{"mesa-registrar", tableRegisterRegion(v)},
-		{"mesa-grupo", tableParty(v)},
-		{"mesa-tabuleiro", tableBoard(v)},
+		{"table-header", tableHeader(v)},
+		{"table-register", tableRegisterRegion(v)},
+		{"table-party", tableParty(v)},
+		{"table-board", tableBoard(v)},
 		// REGIÃO PRÓPRIA, e ela nasceu de um guarda: o diálogo de pôr no mapa muda
 		// com a FILA (quem existe) e com o MAPA (quem já tem peça), então pendurá-lo
 		// em qualquer uma das duas faz a outra ser remendada de graça. Dentro do
 		// mapa, `TestATrackerChangeDoesNotPatchTheMap` acusou na hora — a peça
 		// debaixo do dedo do mestre seria trocada no meio do arrasto.
-		{"mesa-por-no-mapa", tableMap(v)},
+		{"table-populate", tableMap(v)},
 		// O ACERVO é região pela MESMA razão, e ela foi medida (ALE-203): a lista
 		// de 147 lugares guardados era 236 dos 282 KB da região do tabuleiro, e
 		// ela muda duas vezes por sessão enquanto o mapa muda a cada peça que
 		// anda. Ver `tableCollectionPlaces`.
-		{"mesa-acervo", tableCollectionPlaces(v)},
-		{"mesa-config-da-sessao", tableConfigSession(v)},
-		{"mesa-fila", tableTracker(v)},
-		{"mesa-comandos", tableCommands(v)},
+		{"table-archive", tableCollectionPlaces(v)},
+		{"table-session-config", tableConfigSession(v)},
+		{"table-tracker", tableTracker(v)},
+		{"table-commands", tableCommands(v)},
 	}
 	// O TRILHO DA FILA só existe no palco do mestre (ALE-269), e por isso ele
 	// entra na lista pela MESMA condição que o desenha. Mandar um remendo para
@@ -357,8 +357,8 @@ func TableRegions(v View) []tableRegion {
 	// página não podem discordar sobre quais regiões existem, o que só se
 	// garante fazendo as duas perguntarem à mesma `view`.
 	if v.Mestre != nil {
-		regioes = append(regioes, tableRegion{"mesa-trilho-fila", tableRailTracker(v)})
-		regioes = append(regioes, tableRegion{"mesa-npcs", tableListNpCs(v)})
+		regioes = append(regioes, tableRegion{"table-tracker-rail", tableRailTracker(v)})
+		regioes = append(regioes, tableRegion{"table-npcs", tableListNpCs(v)})
 	}
 	return regioes
 }

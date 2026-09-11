@@ -73,7 +73,7 @@ templ notesSplitter() {
 
 templ tableNotes(v View) {
 	<section
-		id="mesa-notas"
+		id="table-notes"
 		aria-label="Notas da sessão"
 		data-init={ seedNotes(v) }
 		data-show="$notes_open"
@@ -134,7 +134,7 @@ templ notesBody(v View) {
 // A raiz existe SEMPRE, inclusive com a nota vazia: região que some leva o id
 // junto, e o remendo seguinte não acha onde pousar.
 templ tableNotesPreview(v View) {
-	<div id="mesa-notas-previa" class="space-y-2 text-sm">
+	<div id="table-notes-preview" class="space-y-2 text-sm">
 		if len(v.NotasBlocos) == 0 {
 			<p class="text-sm text-muted-foreground">Nenhuma nota ainda.</p>
 		} else {

@@ -66,7 +66,7 @@ func improvScene(v improvView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"improviso\" class=\"mesa-palco flex min-h-0 flex-1 flex-col gap-4\" aria-labelledby=\"mesa-improviso\" data-signals=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"improv\" class=\"mesa-palco flex min-h-0 flex-1 flex-col gap-4\" aria-labelledby=\"table-improv\" data-signals=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -79,7 +79,7 @@ func improvScene(v improvView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><h2 id=\"mesa-improviso\" class=\"font-heading text-lg tracking-wide text-foreground\">Improviso</h2><div class=\"min-h-0 flex-1 space-y-4 overflow-y-auto pr-1\"><div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><h2 id=\"table-improv\" class=\"font-heading text-lg tracking-wide text-foreground\">Improviso</h2><div class=\"min-h-0 flex-1 space-y-4 overflow-y-auto pr-1\"><div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -468,7 +468,7 @@ func dungeonPlanner(v improvView) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<label for=\"improviso-salas\">Salas</label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<label for=\"improv-rooms\">Salas</label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -478,7 +478,7 @@ func dungeonPlanner(v improvView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<input id=\"improviso-salas\" type=\"number\" min=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<input id=\"improv-rooms\" type=\"number\" min=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

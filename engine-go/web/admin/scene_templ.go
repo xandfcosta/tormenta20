@@ -100,7 +100,7 @@ func playersPanel(v adminView) templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<section id=\"painel-jogadores\" class=\"border border-grimorio-iron bg-grimorio-panel p-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<section id=\"players-panel\" class=\"border border-grimorio-iron bg-grimorio-panel p-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -322,7 +322,7 @@ func invitesPanel(v adminView) templ.Component {
 			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<section id=\"painel-convites\" class=\"border border-grimorio-iron bg-grimorio-panel p-3\"><div class=\"flex items-center justify-between gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<section id=\"invites-panel\" class=\"border border-grimorio-iron bg-grimorio-panel p-3\"><div class=\"flex items-center justify-between gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -357,7 +357,7 @@ func invitesPanel(v adminView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, ")</h2><button type=\"button\" data-on:click=\"$copied = ''; document.getElementById('convite-link').innerHTML = ''; $invite_dialog.showModal()\" class=\"inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, ")</h2><button type=\"button\" data-on:click=\"$copied = ''; document.getElementById('invite-link').innerHTML = ''; $invite_dialog.showModal()\" class=\"inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -471,7 +471,7 @@ func serverPanel(v adminView) templ.Component {
 			templ_7745c5c3_Var24 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<section id=\"painel-servidor\" class=\"border border-grimorio-iron bg-grimorio-panel p-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<section id=\"server-panel\" class=\"border border-grimorio-iron bg-grimorio-panel p-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -605,7 +605,7 @@ func confirmDialog() templ.Component {
 			templ_7745c5c3_Var32 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<dialog id=\"confirmar\" data-ref=\"confirm_dialog\" aria-labelledby=\"confirmar-titulo\" aria-describedby=\"confirmar-custo\" class=\"m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"confirmar-titulo\" class=\"font-heading text-base\">Apagar a conta de <span data-text=\"$target_name\"></span>?</h2><p id=\"confirmar-custo\" class=\"mt-2 text-sm text-muted-foreground\" data-text=\"$target_cost\"></p><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Cancelar</button></form><button type=\"button\" data-on:click=\"@post('/admin/usuarios/' + $target_id + '/apagar'); $confirm_dialog.close()\" class=\"bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Apagar conta</button></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<dialog id=\"confirm\" data-ref=\"confirm_dialog\" aria-labelledby=\"confirm-title\" aria-describedby=\"confirm-cost\" class=\"m-auto max-w-sm border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"confirm-title\" class=\"font-heading text-base\">Apagar a conta de <span data-text=\"$target_name\"></span>?</h2><p id=\"confirm-cost\" class=\"mt-2 text-sm text-muted-foreground\" data-text=\"$target_cost\"></p><div class=\"mt-4 flex justify-end gap-2\"><form method=\"dialog\"><button type=\"submit\" class=\"border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Cancelar</button></form><button type=\"button\" data-on:click=\"@post('/admin/usuarios/' + $target_id + '/apagar'); $confirm_dialog.close()\" class=\"bg-destructive px-3 py-1.5 text-sm font-semibold text-white outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">Apagar conta</button></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -643,7 +643,7 @@ func resetDialog() templ.Component {
 			templ_7745c5c3_Var33 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<dialog id=\"redefinir\" data-ref=\"reset_dialog\" aria-labelledby=\"redefinir-titulo\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"redefinir-titulo\" class=\"flex items-center gap-2 font-heading text-base\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<dialog id=\"reset\" data-ref=\"reset_dialog\" aria-labelledby=\"reset-title\" class=\"m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"reset-title\" class=\"flex items-center gap-2 font-heading text-base\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

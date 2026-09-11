@@ -318,7 +318,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 // TestATrackerChangeDoesNotPatchTheMap — o guarda que as REGIÕES existem para dar
 // (ALE-264).
 //
-// A cena era um fragmento só, e o stream remendava o `<main id="mesa">` inteiro
+// A cena era um fragmento só, e o stream remendava o `<main id="table">` inteiro
 // a cada mudança de qualquer um: 39.742 bytes medidos para mover uma peça. O
 // desperdício é o menor dos problemas — o problema é de COMPORTAMENTO, e o dono
 // o nomeou: com o arrasto, um jogador registrando iniciativa substituiria o
@@ -395,10 +395,10 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 	for !viuAFila {
 		select {
 		case q := <-quadros:
-			if strings.Contains(q, `id="mesa-fila"`) {
+			if strings.Contains(q, `id="table-tracker"`) {
 				viuAFila = true
 			}
-			if strings.Contains(q, `id="mesa-tabuleiro"`) {
+			if strings.Contains(q, `id="table-board"`) {
 				viuOMapa = true
 			}
 		case <-limite:

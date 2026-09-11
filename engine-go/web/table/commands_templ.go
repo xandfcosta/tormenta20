@@ -273,7 +273,7 @@ func rest(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "Expirar efeitos · cena</button> <button type=\"button\" data-on:click=\"document.getElementById('descanso-de-dia').showModal()\" class=\"inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "Expirar efeitos · cena</button> <button type=\"button\" data-on:click=\"document.getElementById('day-rest').showModal()\" class=\"inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -326,7 +326,7 @@ func restDay(v View) templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<dialog id=\"descanso-de-dia\" data-preserve-attr=\"open\" aria-labelledby=\"descanso-de-dia-titulo\" class=\"scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"descanso-de-dia-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Descanso de dia</h2><p class=\"mt-1 text-sm text-muted-foreground\">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p105).</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<dialog id=\"day-rest\" data-preserve-attr=\"open\" aria-labelledby=\"day-rest-title\" class=\"scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"day-rest-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Descanso de dia</h2><p class=\"mt-1 text-sm text-muted-foreground\">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p105).</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -335,7 +335,7 @@ func restDay(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<label for=\"qualidade-do-descanso\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<label for=\"rest-quality\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -348,14 +348,14 @@ func restDay(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">Qualidade do descanso</label><select id=\"qualidade-do-descanso\" data-bind:rest_quality class=\"mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"><option value=\"ruim\">Ruim (½ nível)</option> <option value=\"normal\">Normal (nível)</option> <option value=\"confortavel\">Confortável (2×)</option> <option value=\"luxuosa\">Luxuosa (3×)</option></select><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('descanso-de-dia').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">Qualidade do descanso</label><select id=\"rest-quality\" data-bind:rest_quality class=\"mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"><option value=\"ruim\">Ruim (½ nível)</option> <option value=\"normal\">Normal (nível)</option> <option value=\"confortavel\">Confortável (2×)</option> <option value=\"luxuosa\">Luxuosa (3×)</option></select><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('day-rest').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('descanso-de-dia').close(); " + tableCommand(v, "POST", "rest/day"))
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('day-rest').close(); " + tableCommand(v, "POST", "rest/day"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 210, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 210, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {

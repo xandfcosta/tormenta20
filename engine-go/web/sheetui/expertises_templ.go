@@ -983,7 +983,7 @@ func craftDialog(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<label for=\"oficio-nome\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<label for=\"craft-name\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -996,7 +996,7 @@ func craftDialog(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\">Nome</label> <input id=\"oficio-nome\" type=\"text\" maxlength=\"40\" data-bind:new_expertise placeholder=\"Ferreiro, Marinheiro…\" class=\"mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring sm:text-sm\"></div><div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\">Nome</label> <input id=\"craft-name\" type=\"text\" maxlength=\"40\" data-bind:new_expertise placeholder=\"Ferreiro, Marinheiro…\" class=\"mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring sm:text-sm\"></div><div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1005,7 +1005,7 @@ func craftDialog(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<label for=\"oficio-atributo\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<label for=\"craft-attribute\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1018,7 +1018,7 @@ func craftDialog(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "\">Atributo</label> <select id=\"oficio-atributo\" data-bind:new_attribute class=\"mt-1 h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 font-mono text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "\">Atributo</label> <select id=\"craft-attribute\" data-bind:new_attribute class=\"mt-1 h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 font-mono text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

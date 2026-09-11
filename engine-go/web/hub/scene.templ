@@ -80,7 +80,7 @@ templ hubFooter(v hubView) {
 	<footer class="mx-auto mt-auto flex w-full max-w-md border-t border-grimorio-iron pt-4">
 		<button
 			type="button"
-			popovertarget="menu-do-jogador"
+			popovertarget="player-menu"
 			aria-label={ "Menu de " + v.Nome }
 			data-cue-hover
 			class="group flex flex-1 items-center gap-3 rounded-none p-1 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -110,7 +110,7 @@ templ hubFooter(v hubView) {
 // aparelho. Não há lampejo de rótulo errado porque o menu começa FECHADO.
 templ playerMenu(v hubView) {
 	<div
-		id="menu-do-jogador"
+		id="player-menu"
 		popover
 		data-signals="{sound: false, volume: 100}"
 		data-init="const p = cena.preferencias(); $sound = p.som; $volume = p.volume"

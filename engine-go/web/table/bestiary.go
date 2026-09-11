@@ -26,7 +26,7 @@ import (
 // filtros e o bloco são os mesmos componentes da cena do mestre, apontando para
 // as rotas daqui.
 //
-// O painel mora FORA do `<main id="mesa">`, e essa é a diferença que faz ele
+// O painel mora FORA do `<main id="table">`, e essa é a diferença que faz ele
 // funcionar. A cena é remendada inteira a cada mudança de qualquer um na mesa; o
 // que o painel guarda — a busca digitada, o filtro aceso, a criatura aberta — é
 // estado de TELA e não da sessão, e um remendo da mesa o apagaria a cada turno
@@ -53,7 +53,7 @@ func (s Scene) forTableBestiary(r *http.Request, campaignID, sessionID int64) ma
 
 // handleBestiaryTable redesenha o PAINEL e mais nada.
 //
-// Remendar o `#mesa` junto seria redesenhar a fila inteira a cada tecla da
+// Remendar o `#table` junto seria redesenhar a fila inteira a cada tecla da
 // busca — e pior, apagaria o que o mestre está digitando, porque o campo vive
 // dentro do painel.
 func (s Scene) handleBestiaryTable(w http.ResponseWriter, r *http.Request) {

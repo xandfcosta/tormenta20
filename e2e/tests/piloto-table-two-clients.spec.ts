@@ -56,7 +56,7 @@ async function asDuasTelas(browser: Browser) {
  * events" no log, que aponta para o lugar errado.
  */
 async function openTheTracker(page: Page) {
-  const gaveta = page.locator('#gaveta-da-fila')
+  const gaveta = page.locator('#tracker-drawer')
   if (await gaveta.getAttribute('open') === null) {
     await page
       .getByRole('button', { name: /^Abrir a iniciativa/ })
@@ -68,7 +68,7 @@ async function openTheTracker(page: Page) {
 
 async function closeTheTracker(page: Page) {
   await page.getByRole('button', { name: 'Fechar a iniciativa' }).click()
-  await expect(page.locator('#gaveta-da-fila')).not.toHaveAttribute('open', '')
+  await expect(page.locator('#tracker-drawer')).not.toHaveAttribute('open', '')
 }
 
 /** Põe um combatente na fila pelo gesto do mestre, e devolve o nome dele. */
@@ -77,7 +77,7 @@ async function poeNaFila(page: Page, nome: string) {
   await page.getByRole('button', { name: '+ Combatente' }).click()
   await page.getByLabel('Nome', { exact: true }).fill(nome)
   await page.getByRole('button', { name: 'Acrescentar' }).click()
-  await expect(page.locator('#gaveta-da-fila').getByText(nome).first()).toBeVisible()
+  await expect(page.locator('#tracker-drawer').getByText(nome).first()).toBeVisible()
 }
 
 async function tiraDaFila(page: Page, nome: string) {
@@ -171,7 +171,7 @@ test('a condição que o mestre aplica aparece na fila do jogador', async ({ bro
     await expect(telaDoJogador.getByTitle(/Abalado|-2 em testes/).first()).toHaveCount(0)
 
     await telaDoMestre.getByRole('button', { name: `Condições de ${alvo}` }).click()
-    const dialogo = telaDoMestre.locator('#condicoes-do-combatente')
+    const dialogo = telaDoMestre.locator('#combatant-conditions')
     await dialogo.getByRole('button', { name: 'Abalado', exact: true }).click()
     await telaDoMestre.keyboard.press('Escape')
 
@@ -212,7 +212,7 @@ test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ brow
     await expect(telaDoJogador.getByText(eco)).toHaveCount(0)
     await openTheTracker(telaDoMestre)
     await expect(
-      telaDoMestre.locator('#gaveta-da-fila').getByText(eco).first(),
+      telaDoMestre.locator('#tracker-drawer').getByText(eco).first(),
       'a fila sumiu da tela do MESTRE: isso é apagar, não redigir',
     ).toBeVisible()
     await closeTheTracker(telaDoMestre)
@@ -251,7 +251,7 @@ test('o tabuleiro que o mestre abre aparece na tela do jogador, e a cortina o es
       await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
     }
     await telaDoMestre.getByRole('button', { name: 'Abrir tabuleiro' }).first().click()
-    await telaDoMestre.locator('#novo-lugar').fill(lugar)
+    await telaDoMestre.locator('#new-place-field').fill(lugar)
     await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Abrir' }).click()
     await expect(telaDoMestre.getByRole('region', { name: oMapa })).toBeVisible()
 
@@ -322,7 +322,7 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
 
     // A barra da ficha é `aria-hidden` de propósito — o que se LÊ é a fração.
     const oPVdaFicha = async () => {
-      const texto = await telaDoJogador.locator('#cena-ficha').innerText()
+      const texto = await telaDoJogador.locator('#sheet-scene').innerText()
       return texto.match(/\d+\/\d+/)?.[0] ?? ''
     }
     await expect.poll(oPVdaFicha).toMatch(/\d+\/\d+/)
@@ -332,7 +332,7 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
     // ordem sai de um d20, então mirar "o primeiro" editaria a ficha de outra
     // pessoa e o caso passaria a afirmar nada.
     await telaDoMestre
-      .locator('#gaveta-da-fila')
+      .locator('#tracker-drawer')
       .getByRole('button', { name: `Ferir ${nomeDoPc}` })
       .first()
       .click()

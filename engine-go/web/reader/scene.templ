@@ -8,7 +8,7 @@ import "fmt"
 // cena, trilho e migalhas roubariam altura da página do livro, que é o único
 // conteúdo aqui. A barra fina de cima já diz onde se está e como andar.
 //
-// Todo o estado vive no `<div id="leitor">` como atributos de DADO, e não em
+// Todo o estado vive no `<div id="reader">` como atributos de DADO, e não em
 // sinais do Datastar. A razão é que quem lê isto não é o Datastar: é o
 // `reader.js`, um módulo próprio que roda uma vez na carga. Sinal seria estado
 // de cliente viajando em toda requisição seguinte para nada.
@@ -63,7 +63,7 @@ templ readerScene(v readerView) {
 		// `h-dvh` com o conteúdo rolando por dentro, e deixar o documento rolar
 		// faria a barra de cima sair da tela junto com a página.
 		<div
-			id="leitor"
+			id="reader"
 			data-livro={ v.PDF }
 			data-worker={ v.Worker }
 			data-pagina={ fmt.Sprintf("%d", v.Page) }

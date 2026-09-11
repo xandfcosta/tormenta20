@@ -51,14 +51,14 @@ func SceneBody(v View) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"cena-ficha\" data-versao=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"sheet-scene\" data-versao=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Versao)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 26, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/sheetui/sheet.templ`, Line: 26, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -604,7 +604,7 @@ func playerBadge(v View) templ.Component {
 			templ_7745c5c3_Var20 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div id=\"cracha-do-jogador\" class=\"border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 max-lg:landscape:py-1 sm:px-4\"><div class=\"flex min-w-0 items-stretch gap-3 max-lg:landscape:items-center max-lg:landscape:gap-2\"><div aria-hidden=\"true\" class=\"flex h-auto w-20 shrink-0 select-none items-center justify-center rounded-none border-2 border-grimorio-iron font-display text-3xl text-white/25 max-lg:landscape:size-9 max-lg:landscape:text-base sm:w-24 sm:text-4xl\" style=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div id=\"player-badge\" class=\"border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 max-lg:landscape:py-1 sm:px-4\"><div class=\"flex min-w-0 items-stretch gap-3 max-lg:landscape:items-center max-lg:landscape:gap-2\"><div aria-hidden=\"true\" class=\"flex h-auto w-20 shrink-0 select-none items-center justify-center rounded-none border-2 border-grimorio-iron font-display text-3xl text-white/25 max-lg:landscape:size-9 max-lg:landscape:text-base sm:w-24 sm:text-4xl\" style=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

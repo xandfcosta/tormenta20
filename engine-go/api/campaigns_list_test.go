@@ -235,7 +235,7 @@ func TestTheSceneAnswersPageOrPatchDependingOnWhoAsks(t *testing.T) {
 	if strings.Contains(remendo, "<html") {
 		t.Error("o pedido do Datastar recebeu a página inteira — o remendo viraria um documento dentro do outro")
 	}
-	if !strings.Contains(remendo, "cena-campanhas") {
+	if !strings.Contains(remendo, "campaigns-scene") {
 		t.Error("o remendo não trouxe o id que o morph casa")
 	}
 }

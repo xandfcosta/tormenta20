@@ -275,7 +275,7 @@ func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64
 // tablePlayerSheet carrega a ficha que a superfície "Minha ficha" desenha.
 //
 // Só na CARGA FRIA e não no stream (ALE-272, fatia 10b): a ficha é sete painéis
-// computados, e ela muda pelos comandos DELA — que remendam o `#cena-ficha`
+// computados, e ela muda pelos comandos DELA — que remendam o `#sheet-scene`
 // direto. Recomputá-la a cada tique da sessão seria pagar o preço mais caro da
 // página para descobrir que nada mudou.
 //

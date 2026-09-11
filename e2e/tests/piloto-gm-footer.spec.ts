@@ -51,7 +51,7 @@ async function openTheTracker(page: Page): Promise<void> {
     .getByRole('button', { name: /^Abrir a iniciativa/ })
     .filter({ visible: true })
     .click()
-  await expect(page.locator('#gaveta-da-fila'), 'a gaveta da fila não abriu').toHaveAttribute(
+  await expect(page.locator('#tracker-drawer'), 'a gaveta da fila não abriu').toHaveAttribute(
     'open',
     '',
   )
@@ -188,7 +188,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     // idempotente, então chamá-lo aqui não depende do que outro spec deixou.
     await openTheTracker(page)
     await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
-    const linha = page.locator('#mesa ol li').first()
+    const linha = page.locator('#table ol li').first()
     await expect(linha).toBeVisible()
     await expect(linha.getByRole('button', { name: /^Ferir / })).toBeVisible()
     // E a linha medida TEM o crachá, senão a medida é de outra linha que não a
@@ -256,7 +256,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
 
     const olho = page
-      .locator('#mesa ol li')
+      .locator('#table ol li')
       .first()
       .getByRole('button', { name: /^(Ocultar|Revelar) os PV de / })
     await expect(olho).toBeVisible()
@@ -328,7 +328,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     await page.goto(MESA)
     await page.getByRole('button', { name: 'Recuperar · dia' }).first().click()
 
-    const caixa = page.locator('dialog#descanso-de-dia')
+    const caixa = page.locator('dialog#day-rest')
     await expect(caixa).toBeVisible()
     const centro = await caixa.evaluate((el) => {
       const r = el.getBoundingClientRect()

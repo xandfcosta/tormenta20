@@ -657,7 +657,7 @@ func passwordConfirmation(erros []string) templ.Component {
 			templ_7745c5c3_Var24 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"space-y-2\"><label for=\"confirmar\" class=\"flex items-center gap-2 text-sm leading-none font-medium select-none\">Confirmar senha</label> <input id=\"confirmar\" name=\"confirmar\" type=\"password\" autocomplete=\"new-password\" required data-on:input=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"space-y-2\"><label for=\"confirm\" class=\"flex items-center gap-2 text-sm leading-none font-medium select-none\">Confirmar senha</label> <input id=\"confirm\" name=\"confirmar\" type=\"password\" autocomplete=\"new-password\" required data-on:input=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -675,7 +675,7 @@ func passwordConfirmation(erros []string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if len(erros) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, " aria-invalid=\"true\" aria-describedby=\"confirmar-erro\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, " aria-invalid=\"true\" aria-describedby=\"confirm-error\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -685,7 +685,7 @@ func passwordConfirmation(erros []string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if len(erros) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<div id=\"confirmar-erro\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<div id=\"confirm-error\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

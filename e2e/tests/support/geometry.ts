@@ -298,7 +298,7 @@ export async function expectNadaRolaDeLado(page: Page, raiz = 'body'): Promise<v
  *   coube e a asserção não prova nada. Quem chama afirma isso antes.
  * - ignora caixa de 1px, que é `sr-only` por definição e existe em toda tela.
  *
- * @example await expectSemFaixaMorta(page, '[aria-labelledby=mesa-bestiario]')
+ * @example await expectSemFaixaMorta(page, '[aria-labelledby=table-bestiary-panel]')
  */
 export async function expectSemFaixaMorta(
   page: Page,

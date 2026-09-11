@@ -80,7 +80,7 @@ func placesTab(v oneView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<button type=\"button\" data-on:click=\"document.getElementById('lugar-novo').showModal()\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<button type=\"button\" data-on:click=\"document.getElementById('new-place').showModal()\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -377,7 +377,7 @@ func newPlaceDialog(v oneView) templ.Component {
 			templ_7745c5c3_Var18 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<dialog id=\"lugar-novo\" aria-labelledby=\"lugar-novo-titulo\" class=\"scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"lugar-novo-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Novo lugar</h2><p class=\"mt-1 text-sm text-muted-foreground\">A cena que você vai montar. Um nome que já existe no acervo abre aquele lugar, em vez de criar outro.</p><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<dialog id=\"new-place\" aria-labelledby=\"new-place-title\" class=\"scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"new-place-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Novo lugar</h2><p class=\"mt-1 text-sm text-muted-foreground\">A cena que você vai montar. Um nome que já existe no acervo abre aquele lugar, em vez de criar outro.</p><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -410,7 +410,7 @@ func newPlaceDialog(v oneView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<label for=\"lugar-chao\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<label for=\"place-ground\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -423,7 +423,7 @@ func newPlaceDialog(v oneView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\">Chão</label> <select id=\"lugar-chao\" name=\"ground\" class=\"h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\">Chão</label> <select id=\"place-ground\" name=\"ground\" class=\"h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -468,7 +468,7 @@ func newPlaceDialog(v oneView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<button type=\"button\" data-on:click=\"document.getElementById('lugar-novo').close()\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<button type=\"button\" data-on:click=\"document.getElementById('new-place').close()\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -93,7 +93,7 @@ func blockEditor(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<label for=\"npc-nome\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<label for=\"npc-name\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -106,7 +106,7 @@ func blockEditor(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">Nome do NPC</label> <input id=\"npc-nome\" type=\"text\" data-bind=\"draft.nome\" placeholder=\"Ogro Capitão\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div role=\"tablist\" aria-label=\"Partes do bloco\" class=\"flex shrink-0 flex-wrap gap-1 border-b border-grimorio-iron\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">Nome do NPC</label> <input id=\"npc-name\" type=\"text\" data-bind=\"draft.nome\" placeholder=\"Ogro Capitão\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div role=\"tablist\" aria-label=\"Partes do bloco\" class=\"flex shrink-0 flex-wrap gap-1 border-b border-grimorio-iron\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -564,7 +564,7 @@ func blockMana() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<label for=\"npc-pm\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<label for=\"npc-mp\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -577,7 +577,7 @@ func blockMana() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\">Pontos de Mana</label><div class=\"flex items-center gap-2\"><label class=\"inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground\"><input type=\"checkbox\" data-bind=\"draft.conjura\" class=\"size-4 accent-grimorio-gold\"> Conjura</label> <input id=\"npc-pm\" type=\"number\" min=\"0\" max=\"999\" data-show=\"$draft.conjura\" data-bind=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\">Pontos de Mana</label><div class=\"flex items-center gap-2\"><label class=\"inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-xs text-muted-foreground\"><input type=\"checkbox\" data-bind=\"draft.conjura\" class=\"size-4 accent-grimorio-gold\"> Conjura</label> <input id=\"npc-mp\" type=\"number\" min=\"0\" max=\"999\" data-show=\"$draft.conjura\" data-bind=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -875,7 +875,7 @@ func draftAttacks(campanha, sessao int64, ataques []creature.Attack) templ.Compo
 			templ_7745c5c3_Var35 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<div id=\"npc-ataques\" class=\"space-y-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<div id=\"npc-attacks\" class=\"space-y-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -961,7 +961,7 @@ func draftExpertises(campanha, sessao int64, pericias []creature.Skill) templ.Co
 			templ_7745c5c3_Var37 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<div id=\"npc-pericias\" class=\"space-y-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<div id=\"npc-expertises\" class=\"space-y-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1030,7 +1030,7 @@ func draftAbilities(campanha, sessao int64, habilidades []string) templ.Componen
 			templ_7745c5c3_Var38 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<div id=\"npc-habilidades\" class=\"space-y-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<div id=\"npc-abilities\" class=\"space-y-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

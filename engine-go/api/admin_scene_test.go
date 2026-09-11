@@ -83,10 +83,10 @@ func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 	rec := pedeNoPiloto(t, s, chefe, http.MethodPost, "/admin/convites")
 	corpo := rec.Body.String()
 
-	if !strings.Contains(corpo, "convite-url") {
+	if !strings.Contains(corpo, "invite-url") {
 		t.Errorf("o remendo do link não veio:\n%s", corpo)
 	}
-	if !strings.Contains(corpo, `id="painel-convites"`) {
+	if !strings.Contains(corpo, `id="invites-panel"`) {
 		t.Error("o painel de convites não foi remendado — a contagem ao lado do botão fica velha")
 	}
 	if !strings.Contains(corpo, "Convites abertos (1)") {

@@ -21,7 +21,7 @@
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
 import * as pdfjs from 'pdfjs-dist'
 
-/** O que o servidor escreve no `<div id="leitor">`. */
+/** O que o servidor escreve no `<div id="reader">`. */
 type Cartaz = {
   livro: string
   worker: string
@@ -207,7 +207,7 @@ class Leitor {
 }
 
 export function montaOLeitor(): void {
-  const raiz = document.getElementById('leitor')
+  const raiz = document.getElementById('reader')
   if (!raiz) return
   const tela = raiz.querySelector<HTMLCanvasElement>('canvas')
   const camada = raiz.querySelector<HTMLElement>('[data-marcas]')
@@ -235,7 +235,7 @@ export function montaOLeitor(): void {
     // alguém embutir esta cena de outro lugar.
     if (evento.key === 'Escape' && window.parent !== window) {
       try {
-        window.parent.document.querySelector<HTMLDialogElement>('#livro-em-dialogo')?.close()
+        window.parent.document.querySelector<HTMLDialogElement>('#book-in-dialog')?.close()
       } catch {
         /* origem diferente: não há o que fechar daqui */
       }

@@ -21,7 +21,7 @@ func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 
 	html := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
 
-	for _, id := range append(tableRegionNames, "mesa-trilho-fila") {
+	for _, id := range append(tableRegionNames, "table-tracker-rail") {
 		marca := `id="` + id + `"`
 		if n := strings.Count(html, marca); n != 1 {
 			t.Errorf("a região %q aparece %d vezes no palco do mestre, e o remendo precisa de exatamente 1", id, n)
@@ -45,10 +45,10 @@ func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 
 	// O CONTROLE primeiro: sem ele, "não achei o trilho" seria verdade também
 	// numa página que voltou vazia, num 403, ou num id que alguém renomeou.
-	if !strings.Contains(html, `id="mesa-fila"`) {
+	if !strings.Contains(html, `id="table-tracker"`) {
 		t.Fatal("o jogador não recebeu nem a fila — a página não é o que este teste pensa que é")
 	}
-	if strings.Contains(html, `id="mesa-trilho-fila"`) {
+	if strings.Contains(html, `id="table-tracker-rail"`) {
 		t.Error("o jogador recebeu o trilho do mestre")
 	}
 }
@@ -67,10 +67,10 @@ func TestTheStreamOnlySendsTheRegionTheDocumentHas(t *testing.T) {
 	paraOMestre := idsDasRegioes(t, f, f.mestre)
 	paraOJogador := idsDasRegioes(t, f, f.jogador)
 
-	if !paraOMestre["mesa-trilho-fila"] {
+	if !paraOMestre["table-tracker-rail"] {
 		t.Error("o palco do mestre desenha o trilho e o stream não o remenda: ele nasce e nunca mais muda")
 	}
-	if paraOJogador["mesa-trilho-fila"] {
+	if paraOJogador["table-tracker-rail"] {
 		t.Error("o stream manda ao jogador uma região que a coluna dele não tem — o remendo escreve no vazio")
 	}
 }

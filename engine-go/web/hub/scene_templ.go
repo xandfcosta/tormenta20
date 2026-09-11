@@ -228,7 +228,7 @@ func hubFooter(v hubView) templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<footer class=\"mx-auto mt-auto flex w-full max-w-md border-t border-grimorio-iron pt-4\"><button type=\"button\" popovertarget=\"menu-do-jogador\" aria-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<footer class=\"mx-auto mt-auto flex w-full max-w-md border-t border-grimorio-iron pt-4\"><button type=\"button\" popovertarget=\"player-menu\" aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -322,7 +322,7 @@ func playerMenu(v hubView) templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div id=\"menu-do-jogador\" popover data-signals=\"{sound: false, volume: 100}\" data-init=\"const p = cena.preferencias(); $sound = p.som; $volume = p.volume\" class=\"fixed m-0 w-56 border border-grimorio-iron bg-grimorio-panel-raised p-1.5 text-foreground shadow-lg\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div id=\"player-menu\" popover data-signals=\"{sound: false, volume: 100}\" data-init=\"const p = cena.preferencias(); $sound = p.som; $volume = p.volume\" class=\"fixed m-0 w-56 border border-grimorio-iron bg-grimorio-panel-raised p-1.5 text-foreground shadow-lg\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

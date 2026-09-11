@@ -16462,14 +16462,14 @@ var la = class {
 	}
 };
 function ua() {
-	let e = document.getElementById("leitor");
+	let e = document.getElementById("reader");
 	if (!e) return;
 	let t = e.querySelector("canvas"), n = e.querySelector("[data-marcas]"), r = document.querySelector("[data-pagina-atual]");
 	if (!t || !n || !r) return;
 	let i = new la(e, oa(e), t, n, r), a = (e, t) => document.querySelector(`[data-acao="${e}"]`)?.addEventListener("click", t);
 	a("anterior", () => i.vai(-1)), a("proxima", () => i.vai(1)), a("mais", () => i.aproxima(1.25)), a("menos", () => i.aproxima(.8)), window.addEventListener("keydown", (e) => {
 		if (!document.querySelector("dialog[open]") && (e.key === "ArrowRight" && i.vai(1), e.key === "ArrowLeft" && i.vai(-1), e.key === "Escape" && window.parent !== window)) try {
-			window.parent.document.querySelector("#livro-em-dialogo")?.close();
+			window.parent.document.querySelector("#book-in-dialog")?.close();
 		} catch {}
 	}), i.abre().catch((e) => {
 		r.textContent = "não consegui abrir o livro", console.error("[leitor]", e);

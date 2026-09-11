@@ -343,7 +343,7 @@ func bestiaryScene(v BestiaryView) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<section id=\"bestiario\" class=\"mesa-palco flex min-h-0 flex-1 flex-col gap-3\" aria-labelledby=\"mesa-bestiario\" data-signals=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<section id=\"bestiary\" class=\"mesa-palco flex min-h-0 flex-1 flex-col gap-3\" aria-labelledby=\"table-bestiary-panel\" data-signals=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -356,7 +356,7 @@ func bestiaryScene(v BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\"><div class=\"flex flex-wrap items-baseline gap-x-3\"><h2 id=\"mesa-bestiario\" class=\"font-heading text-lg tracking-wide text-foreground\">Bestiário</h2><p class=\"text-xs text-muted-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\"><div class=\"flex flex-wrap items-baseline gap-x-3\"><h2 id=\"table-bestiary-panel\" class=\"font-heading text-lg tracking-wide text-foreground\">Bestiário</h2><p class=\"text-xs text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

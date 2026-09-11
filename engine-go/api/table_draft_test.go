@@ -292,7 +292,7 @@ func TestTheRulerMeasuresInsideTheDraft(t *testing.T) {
 	}
 	// Ela NÃO remenda a cena: uma medição que devolvesse o mapa trocaria a peça
 	// debaixo do dedo de quem está arrastando a régua.
-	if strings.Contains(resposta, "rascunho-tabuleiro") {
+	if strings.Contains(resposta, "draft-board") {
 		t.Errorf("a régua redesenhou o mapa: %s", resposta)
 	}
 }

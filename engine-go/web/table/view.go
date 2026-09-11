@@ -617,7 +617,7 @@ func openEdit(v View, l tableRow) string {
 		pv, pvMax = l.PV.Current, l.PV.Max
 	}
 	return fmt.Sprintf(
-		"$edit_row = '%s'; $edit_name = %s; $edit_initiative = %d; $edit_hp = %d; $edit_hp_max = %d; document.getElementById('editar-combatente').showModal()",
+		"$edit_row = '%s'; $edit_name = %s; $edit_initiative = %d; $edit_hp = %d; $edit_hp_max = %d; document.getElementById('edit-combatant').showModal()",
 		l.ID, jsTextHow(l.Rotulo), l.Iniciativa, pv, pvMax,
 	)
 }
@@ -625,7 +625,7 @@ func openEdit(v View, l tableRow) string {
 // saveEdit monta o caminho com o id que o número semeou.
 func saveEdit(v View) string {
 	return fmt.Sprintf(
-		"document.getElementById('editar-combatente').close(); @post('/mesa/%d/%d/initiative/' + $edit_row + '/edit')",
+		"document.getElementById('edit-combatant').close(); @post('/mesa/%d/%d/initiative/' + $edit_row + '/edit')",
 		v.CampaignID, v.SessionID,
 	)
 }
@@ -657,7 +657,7 @@ func jsTextHow(s string) string {
 func openConditions(l tableRow) string {
 	return fmt.Sprintf(
 		"$condition_row = %q; $row_conditions = %q; $row_label = %q;"+
-			" document.getElementById('condicoes-do-combatente').showModal()",
+			" document.getElementById('combatant-conditions').showModal()",
 		l.ID, strings.Join(l.Condicoes, ","), l.Rotulo,
 	)
 }
@@ -722,5 +722,5 @@ func portugueseCycle(status string) string {
 // um SINAL e nunca recebe `value` do servidor, senão o remendo da próxima troca
 // de turno apagaria o que o mestre está digitando.
 func openConfigSession(v View) string {
-	return fmt.Sprintf("$session_title = %q; document.getElementById('config-da-sessao').showModal()", v.Titulo)
+	return fmt.Sprintf("$session_title = %q; document.getElementById('session-config').showModal()", v.Titulo)
 }

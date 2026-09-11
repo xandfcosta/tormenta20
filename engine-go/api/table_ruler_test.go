@@ -45,10 +45,10 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 // A régua não muda a cena, e a resposta dela tem de ser do tamanho disso. Uma
 // medição que devolvesse as nove regiões trocaria o mapa debaixo de quem está
 // medindo — a peça sob o dedo de quem arrasta some e volta —, que é o mesmo
-// defeito que a região `mesa-por-no-mapa` já existe para evitar.
+// defeito que a região `table-populate` já existe para evitar.
 //
 // Provado VERMELHO trocando o `writeSignals` pelo `respondGm`: a
-// resposta passou a trazer `mesa-tabuleiro` e este teste acusou.
+// resposta passou a trazer `table-board` e este teste acusou.
 func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
@@ -60,7 +60,7 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 	if !strings.Contains(resposta, "ruler_text") {
 		t.Fatalf("a medida não voltou: %s", resposta)
 	}
-	if strings.Contains(resposta, "mesa-tabuleiro") || strings.Contains(resposta, "datastar-patch-elements") {
+	if strings.Contains(resposta, "table-board") || strings.Contains(resposta, "datastar-patch-elements") {
 		t.Errorf("medir remendou a cena inteira:\n%s", resposta)
 	}
 }

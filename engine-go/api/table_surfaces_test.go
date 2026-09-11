@@ -48,7 +48,7 @@ func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
 	}
 	// E a ficha chega DESENHADA, não prometida: a aba sem conteúdo atrás é
 	// exatamente o que a decisão do dono evitava enquanto ela não existia.
-	if !strings.Contains(html, `id="cena-ficha"`) {
+	if !strings.Contains(html, `id="sheet-scene"`) {
 		t.Error("a aba Ficha está na tela e a ficha não veio junto")
 	}
 }
@@ -64,7 +64,7 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 
 	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	dentroDaFicha := html[strings.Index(html, `id="cena-ficha"`):]
+	dentroDaFicha := html[strings.Index(html, `id="sheet-scene"`):]
 	if i := strings.Index(dentroDaFicha, "Seções da ficha"); i >= 0 {
 		nav := dentroDaFicha[i : i+3000]
 		if strings.Contains(nav, `href="/personagens/`) {
@@ -92,7 +92,7 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 	f.scene(t)
 
 	naMesa := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
-	embutida := naMesa[strings.Index(naMesa, `id="cena-ficha"`):]
+	embutida := naMesa[strings.Index(naMesa, `id="sheet-scene"`):]
 	cabecalho, _, _ := strings.Cut(embutida, "Seções da ficha")
 
 	if !strings.Contains(cabecalho, ">Arcanista<") {
@@ -122,7 +122,7 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 
 	// O CONTROLE: a cena do mestre chegou inteira. Sem ele, "não achei o seletor"
 	// seria verdade também num 403 ou numa página vazia.
-	if !strings.Contains(html, `id="mesa-trilho-fila"`) {
+	if !strings.Contains(html, `id="table-tracker-rail"`) {
 		t.Fatal("o mestre não recebeu o palco — a página não é o que este teste pensa que é")
 	}
 	if strings.Contains(html, "O que ver na sessão") {

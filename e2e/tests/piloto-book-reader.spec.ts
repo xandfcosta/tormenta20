@@ -50,10 +50,10 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
   // desenhar mede 300×150 (o default do elemento) e passa por "visível". A
   // primeira versão deste guarda mediu exatamente isso e reprovou uma página
   // que estava certa — o instrumento chegou antes do render.
-  const leitor = page.locator('#leitor[data-pronto]')
+  const leitor = page.locator('#reader[data-pronto]')
   await expect(leitor).toBeAttached({ timeout: 30_000 })
 
-  const tela = page.locator('#leitor canvas')
+  const tela = page.locator('#reader canvas')
   const caixa = await tela.boundingBox()
   expect(caixa?.width ?? 0).toBeGreaterThan(200)
   expect(caixa?.height ?? 0).toBeGreaterThan(200)
@@ -79,7 +79,7 @@ test('as setas andam pelo livro e a barra diz a página impressa', async ({ page
     return
   }
 
-  await expect(page.locator('#leitor[data-pronto]')).toBeAttached({ timeout: 30_000 })
+  await expect(page.locator('#reader[data-pronto]')).toBeAttached({ timeout: 30_000 })
   const rotulo = page.locator('[data-pagina-atual]')
   await expect(rotulo).toHaveText(/p290 de \d+/)
 
@@ -100,7 +100,7 @@ test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ pag
     return
   }
 
-  const dialogo = page.locator('#livro-em-dialogo')
+  const dialogo = page.locator('#book-in-dialog')
   // O CONTROLE: a moldura existe e nasce VAZIA. É isso que faz uma cena que
   // nunca abre o livro não pagar um byte de pdf.js.
   await expect(dialogo).toBeAttached()
@@ -118,7 +118,7 @@ test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ pag
     await expect(page.locator('[data-slot="scene-content"]')).toBeVisible()
 
     const dentro = dialogo.frameLocator('iframe')
-    await expect(dentro.locator('#leitor[data-pronto]')).toBeAttached({ timeout: 30_000 })
+    await expect(dentro.locator('#reader[data-pronto]')).toBeAttached({ timeout: 30_000 })
     await expect(dentro.locator('.reader-mark').first()).toBeAttached()
 
     await dialogo.locator('button[aria-label="Fechar o livro"]').click()

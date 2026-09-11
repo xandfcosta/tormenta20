@@ -43,6 +43,12 @@ var (
 		regexp.MustCompile(`getElementById\(['"]([a-zA-Z][\w-]*)['"]\)`),
 		regexp.MustCompile(`(?:aria-labelledby|aria-describedby|popovertarget|for)="([a-zA-Z][\w-]*)"`),
 		regexp.MustCompile(`querySelector\(['"]#([a-zA-Z][\w-]*)['"]\)`),
+		// `el.id === 'x'` é o OITAVO canal, e ele custou um vermelho de
+		// Playwright: o Enter do buscador comparava `activeElement.id` com um
+		// literal, e nenhum dos sete padrões acima o via. Um renome que passa por
+		// cima dele não quebra nada visível — o Enter simplesmente deixa de abrir
+		// o primeiro achado (ALE-302).
+		regexp.MustCompile(`\.id\s*={2,3}\s*['"]([a-zA-Z][\w-]*)['"]`),
 	}
 )
 

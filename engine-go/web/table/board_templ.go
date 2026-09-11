@@ -53,7 +53,7 @@ func boardTable(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if v.Mestre {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-sm text-muted-foreground\">Nenhum tabuleiro aberto. Vale para combate e para cena de interpretação.</p><button type=\"button\" data-on:click=\"document.getElementById('abrir-tabuleiro').showModal()\" class=\"inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Abrir tabuleiro</button>    ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"text-sm text-muted-foreground\">Nenhum tabuleiro aberto. Vale para combate e para cena de interpretação.</p><button type=\"button\" data-on:click=\"document.getElementById('open-board').showModal()\" class=\"inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Abrir tabuleiro</button>    ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -907,7 +907,7 @@ func sceneVerbs(v BoardView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "         <button type=\"button\" aria-label=\"Abrir outro tabuleiro\" title=\"Abrir outro tabuleiro, sem fechar este\" data-on:click=\"document.getElementById('abrir-tabuleiro').showModal()\" class=\"flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "         <button type=\"button\" aria-label=\"Abrir outro tabuleiro\" title=\"Abrir outro tabuleiro, sem fechar este\" data-on:click=\"document.getElementById('open-board').showModal()\" class=\"flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -925,7 +925,7 @@ func sceneVerbs(v BoardView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "     <button type=\"button\" aria-label=\"Encerrar o tabuleiro\" title=\"Encerrar o tabuleiro\" data-on:click=\"document.getElementById('encerrar-tabuleiro').showModal()\" class=\"flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "     <button type=\"button\" aria-label=\"Encerrar o tabuleiro\" title=\"Encerrar o tabuleiro\" data-on:click=\"document.getElementById('close-board').showModal()\" class=\"flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1675,7 +1675,7 @@ func templateBar(v BoardView) templ.Component {
 			}
 		}
 		for _, forma := range bookShapes {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "<label for=\"gabarito-tamanho\" data-show=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "<label for=\"template-size\" data-show=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1706,7 +1706,7 @@ func templateBar(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 123, "<input id=\"gabarito-tamanho\" type=\"number\" min=\"1\" max=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 123, "<input id=\"template-size\" type=\"number\" min=\"1\" max=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2431,7 +2431,7 @@ func moveArrow(v BoardView) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if v.Movimento != nil && v.Movimento.Fio != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 181, "<svg aria-hidden=\"true\" class=\"board-measure board-measure-front\"><defs><marker id=\"tabuleiro-ponta-do-movimento\" markerUnits=\"userSpaceOnUse\" markerWidth=\"0.5\" markerHeight=\"0.44\" refX=\"0.5\" refY=\"0.22\" orient=\"auto\"><path d=\"M 0 0 L 0.5 0.22 L 0 0.44 Z\" class=\"board-move-tip\"></path></marker><marker id=\"tabuleiro-ponta-do-segundo\" markerUnits=\"userSpaceOnUse\" markerWidth=\"0.5\" markerHeight=\"0.44\" refX=\"0.5\" refY=\"0.22\" orient=\"auto\"><path d=\"M 0 0 L 0.5 0.22 L 0 0.44 Z\" class=\"board-move-tip-second\"></path></marker> <marker id=\"tabuleiro-ponta-do-alem\" markerUnits=\"userSpaceOnUse\" markerWidth=\"0.5\" markerHeight=\"0.44\" refX=\"0.5\" refY=\"0.22\" orient=\"auto\"><path d=\"M 0 0 L 0.5 0.22 L 0 0.44 Z\" class=\"board-move-tip-beyond\"></path></marker></defs> <g data-attr:transform=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 181, "<svg aria-hidden=\"true\" class=\"board-measure board-measure-front\"><defs><marker id=\"board-tip-move\" markerUnits=\"userSpaceOnUse\" markerWidth=\"0.5\" markerHeight=\"0.44\" refX=\"0.5\" refY=\"0.22\" orient=\"auto\"><path d=\"M 0 0 L 0.5 0.22 L 0 0.44 Z\" class=\"board-move-tip\"></path></marker><marker id=\"board-tip-second\" markerUnits=\"userSpaceOnUse\" markerWidth=\"0.5\" markerHeight=\"0.44\" refX=\"0.5\" refY=\"0.22\" orient=\"auto\"><path d=\"M 0 0 L 0.5 0.22 L 0 0.44 Z\" class=\"board-move-tip-second\"></path></marker> <marker id=\"board-tip-beyond\" markerUnits=\"userSpaceOnUse\" markerWidth=\"0.5\" markerHeight=\"0.44\" refX=\"0.5\" refY=\"0.22\" orient=\"auto\"><path d=\"M 0 0 L 0.5 0.22 L 0 0.44 Z\" class=\"board-move-tip-beyond\"></path></marker></defs> <g data-attr:transform=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -3077,7 +3077,7 @@ func openBoardButton(v BoardView) templ.Component {
 			templ_7745c5c3_Var147 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 231, "<dialog id=\"abrir-tabuleiro\" data-preserve-attr=\"open\" aria-labelledby=\"abrir-tabuleiro-titulo\" class=\"scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"abrir-tabuleiro-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Abrir tabuleiro</h2><p class=\"mt-1 text-sm text-muted-foreground\">O tabuleiro não tem bordas: cada quadrado é 1,5m (p236) e a scene cresce para onde a Table for. O deslocamento padrão de 9m anda 6 quadrados (p106).</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 231, "<dialog id=\"open-board\" data-preserve-attr=\"open\" aria-labelledby=\"open-board-title\" class=\"scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"open-board-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Abrir tabuleiro</h2><p class=\"mt-1 text-sm text-muted-foreground\">O tabuleiro não tem bordas: cada quadrado é 1,5m (p236) e a scene cresce para onde a Table for. O deslocamento padrão de 9m anda 6 quadrados (p106).</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3086,7 +3086,7 @@ func openBoardButton(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 232, "<label for=\"novo-lugar\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 232, "<label for=\"new-place-field\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3099,7 +3099,7 @@ func openBoardButton(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 233, "\">Lugar</label><input id=\"novo-lugar\" type=\"text\" data-bind:new_place placeholder=\"Taverna do Javali\" class=\"mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 233, "\">Lugar</label><input id=\"new-place-field\" type=\"text\" data-bind:new_place placeholder=\"Taverna do Javali\" class=\"mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3108,7 +3108,7 @@ func openBoardButton(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 234, "<label for=\"novo-chao\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 234, "<label for=\"new-ground\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3121,7 +3121,7 @@ func openBoardButton(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 235, "\">Chão</label> <select id=\"novo-chao\" data-bind:new_ground class=\"mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 235, "\">Chão</label> <select id=\"new-ground\" data-bind:new_ground class=\"mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3157,14 +3157,14 @@ func openBoardButton(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 239, "</select><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('abrir-tabuleiro').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 239, "</select><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('open-board').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var154 string
-		templ_7745c5c3_Var154, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('abrir-tabuleiro').close(); " + sceneBoardCommand(v, "abrir"))
+		templ_7745c5c3_Var154, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('open-board').close(); " + sceneBoardCommand(v, "abrir"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 1226, Col: 106}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 1226, Col: 101}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var154)
 		if templ_7745c5c3_Err != nil {
@@ -3205,14 +3205,14 @@ func endBoardButton(v BoardView) templ.Component {
 			templ_7745c5c3_Var155 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 241, "<dialog id=\"encerrar-tabuleiro\" data-preserve-attr=\"open\" aria-labelledby=\"encerrar-tabuleiro-titulo\" class=\"scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"encerrar-tabuleiro-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Encerrar o tabuleiro?</h2><p class=\"mt-1 text-sm text-muted-foreground\">A cena vai para os Lugares da campanha, com as peças onde estão, e você a reabre quando quiser. A iniciativa e os PV continuam como estão.</p><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('encerrar-tabuleiro').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button> <button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 241, "<dialog id=\"close-board\" data-preserve-attr=\"open\" aria-labelledby=\"close-board-title\" class=\"scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"close-board-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Encerrar o tabuleiro?</h2><p class=\"mt-1 text-sm text-muted-foreground\">A cena vai para os Lugares da campanha, com as peças onde estão, e você a reabre quando quiser. A iniciativa e os PV continuam como estão.</p><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('close-board').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button> <button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var156 string
-		templ_7745c5c3_Var156, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('encerrar-tabuleiro').close(); " + sceneBoardCommand(v, "encerrar"))
+		templ_7745c5c3_Var156, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('close-board').close(); " + sceneBoardCommand(v, "encerrar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 1258, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 1258, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var156)
 		if templ_7745c5c3_Err != nil {
@@ -3277,7 +3277,7 @@ func botaoDoAcervo(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 245, "\" data-on:click=\"document.getElementById('acervo-de-lugares').showModal()\" class=\"inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 245, "\" data-on:click=\"document.getElementById('place-archive').showModal()\" class=\"inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3342,7 +3342,7 @@ func placesCollection(v BoardView) templ.Component {
 			templ_7745c5c3_Var161 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 248, "<dialog id=\"acervo-de-lugares\" data-preserve-attr=\"open\" aria-labelledby=\"acervo-titulo\" class=\"scene-grimorio m-auto w-[min(30rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"acervo-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Lugares da campanha</h2><p class=\"mt-1 text-sm text-muted-foreground\">As cenas que você encerrou, com as peças onde estavam. Reabrir traz a cena numa aba nova, sem fechar as que já estão abertas.</p><ul class=\"mt-3 max-h-[50vh] space-y-1 overflow-y-auto\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 248, "<dialog id=\"place-archive\" data-preserve-attr=\"open\" aria-labelledby=\"archive-title\" class=\"scene-grimorio m-auto w-[min(30rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"archive-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Lugares da campanha</h2><p class=\"mt-1 text-sm text-muted-foreground\">As cenas que você encerrou, com as peças onde estavam. Reabrir traz a cena numa aba nova, sem fechar as que já estão abertas.</p><ul class=\"mt-3 max-h-[50vh] space-y-1 overflow-y-auto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3407,9 +3407,9 @@ func placesCollection(v BoardView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var165 string
-				templ_7745c5c3_Var165, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('acervo-de-lugares').close(); " + tabCommand(v, l.AbertaEm))
+				templ_7745c5c3_Var165, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('place-archive').close(); " + tabCommand(v, l.AbertaEm))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 1349, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 1349, Col: 103}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var165)
 				if templ_7745c5c3_Err != nil {
@@ -3425,9 +3425,9 @@ func placesCollection(v BoardView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var166 string
-				templ_7745c5c3_Var166, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('acervo-de-lugares').close(); " + placeCommand(v, l.ID, "reabrir"))
+				templ_7745c5c3_Var166, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('place-archive').close(); " + placeCommand(v, l.ID, "reabrir"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 1355, Col: 114}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/board.templ`, Line: 1355, Col: 110}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var166)
 				if templ_7745c5c3_Err != nil {
@@ -3496,7 +3496,7 @@ func placesCollection(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 264, "</ul><div class=\"mt-4 flex justify-end\"><button type=\"button\" data-on:click=\"document.getElementById('acervo-de-lugares').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Fechar</button></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 264, "</ul><div class=\"mt-4 flex justify-end\"><button type=\"button\" data-on:click=\"document.getElementById('place-archive').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Fechar</button></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4218,7 +4218,7 @@ func tokenEdit(v BoardView) templ.Component {
 			templ_7745c5c3_Var203 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 308, "<dialog id=\"editar-peca\" data-preserve-attr=\"open\" aria-labelledby=\"editar-peca-titulo\" class=\"scene-grimorio m-auto hidden w-[min(24rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground open:flex backdrop:bg-black/60\"><h2 id=\"editar-peca-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Editar a peça</h2><div class=\"space-y-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 308, "<dialog id=\"edit-token\" data-preserve-attr=\"open\" aria-labelledby=\"edit-token-title\" class=\"scene-grimorio m-auto hidden w-[min(24rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground open:flex backdrop:bg-black/60\"><h2 id=\"edit-token-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Editar a peça</h2><div class=\"space-y-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4227,7 +4227,7 @@ func tokenEdit(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 309, "<label for=\"peca-nome\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 309, "<label for=\"token-name\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4240,7 +4240,7 @@ func tokenEdit(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 310, "\">Nome da peça</label> <input id=\"peca-nome\" type=\"text\" maxlength=\"60\" data-bind=\"token_name\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div class=\"space-y-1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 310, "\">Nome da peça</label> <input id=\"token-name\" type=\"text\" maxlength=\"60\" data-bind=\"token_name\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div class=\"space-y-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4249,7 +4249,7 @@ func tokenEdit(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 311, "<label for=\"peca-tamanho\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 311, "<label for=\"token-size\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4262,7 +4262,7 @@ func tokenEdit(v BoardView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 312, "\">Tamanho</label> <select id=\"peca-tamanho\" data-bind=\"token_size\" class=\"h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 312, "\">Tamanho</label> <select id=\"token-size\" data-bind=\"token_size\" class=\"h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4298,7 +4298,7 @@ func tokenEdit(v BoardView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 316, "</select></div><div class=\"flex items-center justify-end gap-2 border-t border-grimorio-iron pt-3\"><button type=\"button\" data-on:click=\"document.getElementById('editar-peca').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button> <button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 316, "</select></div><div class=\"flex items-center justify-end gap-2 border-t border-grimorio-iron pt-3\"><button type=\"button\" data-on:click=\"document.getElementById('edit-token').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button> <button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -5581,7 +5581,7 @@ func tableCollectionPlaces(v View) templ.Component {
 			templ_7745c5c3_Var280 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 409, "<div id=\"mesa-acervo\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 409, "<div id=\"table-archive\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

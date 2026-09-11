@@ -102,10 +102,10 @@ func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 	corpo := f.pede(t, f.mestre, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno/difficult/1/1/ate/1/1", "").Body.String()
 
-	if !strings.Contains(corpo, `id="mesa-tabuleiro"`) {
+	if !strings.Contains(corpo, `id="table-board"`) {
 		t.Error("a resposta do pincel não traz o mapa — a casa pintada não apareceria")
 	}
-	for _, region := range []string{"mesa-acervo", "mesa-fila", "mesa-grupo", "mesa-npcs"} {
+	for _, region := range []string{"table-archive", "table-tracker", "table-party", "table-npcs"} {
 		if strings.Contains(corpo, `id="`+region+`"`) {
 			t.Errorf("a resposta do pincel repinta a região %q, que não muda ao pintar uma casa", region)
 		}

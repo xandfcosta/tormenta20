@@ -185,7 +185,7 @@ func TestTheEntryBoxCarriesTheWholeCard(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	corpo := pedeNoMestre(t, s, eu, "GET", "/verbete?aba=efeitos&entrada=medo", "").Body.String()
-	if !strings.Contains(corpo, `id="verbete-do-elo"`) {
+	if !strings.Contains(corpo, `id="crossref-entry"`) {
 		t.Fatal("o remendo não traz o id que ele substitui")
 	}
 	if !strings.Contains(corpo, "Medo capaz de prejudicar o alvo") {

@@ -23,7 +23,7 @@ import (
 // comandos substitui. O `id` é o que o morph do Datastar casa — sem ele o
 // remendo não teria onde pousar.
 templ SceneBody(v View) {
-	<div id="cena-ficha" data-versao={ v.Versao } class="flex min-h-0 flex-1 flex-col">
+	<div id="sheet-scene" data-versao={ v.Versao } class="flex min-h-0 flex-1 flex-col">
 		@ficha(v)
 	</div>
 }
@@ -207,7 +207,7 @@ templ playerBadge(v View) {
 	// O `id` é HANDLE PUBLICADO e não decoração: o guarda do celular deitado
 	// (ALE-230) mede a altura desta caixa, e prendê-lo em nome de classe seria
 	// a asserção sobre forma de DOM que ninguém prometeu.
-	<div id="cracha-do-jogador" class="border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 max-lg:landscape:py-1 sm:px-4">
+	<div id="player-badge" class="border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 max-lg:landscape:py-1 sm:px-4">
 		<div class="flex min-w-0 items-stretch gap-3 max-lg:landscape:items-center max-lg:landscape:gap-2">
 			// O retrato ENCOLHE em vez de sair: ele é `aria-hidden`, então some
 			// dos pixels sem custar nada a quem não vê a tela, e o monogram

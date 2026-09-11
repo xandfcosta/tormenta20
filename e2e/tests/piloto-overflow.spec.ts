@@ -92,7 +92,7 @@ test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', as
   const elo = page.locator('a[title="Ver Medo"]').first()
   await expect(elo).toBeVisible()
 
-  const caixa = page.locator('#verbete-em-dialogo')
+  const caixa = page.locator('#entry-in-dialog')
   expect(await caixa.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
 
   await elo.click()

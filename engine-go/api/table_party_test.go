@@ -77,7 +77,7 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 		t.Errorf("a peça de %s foi para (%d,%d), esperado (%d,%d)",
 			ficha, b.Tokens[0].X, b.Tokens[0].Y, antes.X+3, antes.Y-2)
 	}
-	if strings.Contains(corpo, `id="mesa-acervo"`) {
+	if strings.Contains(corpo, `id="table-archive"`) {
 		t.Error("mover o grupo devolveu a Mesa inteira no meio de um arrasto")
 	}
 }

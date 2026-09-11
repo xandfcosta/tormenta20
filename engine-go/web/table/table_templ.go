@@ -38,7 +38,7 @@ func tableScene(v View) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"mesa\" data-attr:style=\"`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`\" class=\"mesa-palco flex min-h-0 w-full flex-1 flex-col\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"table\" data-attr:style=\"`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`\" class=\"mesa-palco flex min-h-0 w-full flex-1 flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -282,7 +282,7 @@ func surfaceSelector(v View) templ.Component {
 
 // AS REGIÕES DA MESA (ALE-264).
 //
-// A cena era UM fragmento, e o stream remendava o `<main id="mesa">` inteiro a
+// A cena era UM fragmento, e o stream remendava o `<main id="table">` inteiro a
 // cada mudança de qualquer um — 39.742 bytes medidos, para mover uma peça um
 // quadrado. Isso é desperdício, e é também um PROBLEMA DE COMPORTAMENTO que o
 // dono nomeou: com o arrasto na próxima fatia, um jogador registrando iniciativa
@@ -325,7 +325,7 @@ func tableHeader(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div id=\"mesa-cabecalho\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div id=\"table-header\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -675,7 +675,7 @@ func tableRegisterRegion(v View) templ.Component {
 			templ_7745c5c3_Var25 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<div id=\"mesa-registrar\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<div id=\"table-register\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -721,7 +721,7 @@ func tableParty(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<div id=\"mesa-grupo\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<div id=\"table-party\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1008,7 +1008,7 @@ func tableBoard(v View) templ.Component {
 			templ_7745c5c3_Var41 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<div id=\"mesa-tabuleiro\" class=\"flex min-h-0 flex-1 flex-col\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<div id=\"table-board\" class=\"flex min-h-0 flex-1 flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1047,7 +1047,7 @@ func tableTracker(v View) templ.Component {
 			templ_7745c5c3_Var42 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<div id=\"mesa-fila\"><section class=\"space-y-1.5\"><div class=\"flex items-center justify-between gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<div id=\"table-tracker\"><section class=\"space-y-1.5\"><div class=\"flex items-center justify-between gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1082,7 +1082,7 @@ func tableTracker(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "<button type=\"button\" data-on:click=\"$combatant_form = !$combatant_form\" data-attr:aria-expanded=\"$combatant_form ? 'true' : 'false'\" class=\"inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">+ Combatente</button> <button type=\"button\" aria-label=\"Abrir o bestiário\" title=\"Bestiário — trazer uma criatura do livro\" data-on:click=\"document.getElementById('bestiario-da-mesa').showModal()\" class=\"flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "<button type=\"button\" data-on:click=\"$combatant_form = !$combatant_form\" data-attr:aria-expanded=\"$combatant_form ? 'true' : 'false'\" class=\"inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">+ Combatente</button> <button type=\"button\" aria-label=\"Abrir o bestiário\" title=\"Bestiário — trazer uma criatura do livro\" data-on:click=\"document.getElementById('table-bestiary').showModal()\" class=\"flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1197,7 +1197,7 @@ func condicoesDoCombatente(v View) templ.Component {
 			templ_7745c5c3_Var45 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "<dialog id=\"condicoes-do-combatente\" data-preserve-attr=\"open\" aria-labelledby=\"condicoes-do-combatente-titulo\" class=\"scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"condicoes-do-combatente-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Condições de <span data-text=\"$row_label\"></span></h2><p class=\"mt-1 text-sm text-muted-foreground\">As condições do livro (p394-395). Aqui elas são RASTREIO: o bloco de uma criatura é escrito à mão, então o app não recalcula Defesa nem ataque — quem aplica o efeito é você.</p><ul class=\"mt-3 flex max-h-[50vh] flex-wrap gap-1.5 overflow-y-auto\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "<dialog id=\"combatant-conditions\" data-preserve-attr=\"open\" aria-labelledby=\"combatant-conditions-title\" class=\"scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"combatant-conditions-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Condições de <span data-text=\"$row_label\"></span></h2><p class=\"mt-1 text-sm text-muted-foreground\">As condições do livro (p394-395). Aqui elas são RASTREIO: o bloco de uma criatura é escrito à mão, então o app não recalcula Defesa nem ataque — quem aplica o efeito é você.</p><ul class=\"mt-3 flex max-h-[50vh] flex-wrap gap-1.5 overflow-y-auto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1272,7 +1272,7 @@ func condicoesDoCombatente(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "</ul><div class=\"mt-4 flex justify-end\"><button type=\"button\" data-on:click=\"document.getElementById('condicoes-do-combatente').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Fechar</button></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "</ul><div class=\"mt-4 flex justify-end\"><button type=\"button\" data-on:click=\"document.getElementById('combatant-conditions').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Fechar</button></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1304,7 +1304,7 @@ func tableCommands(v View) templ.Component {
 			templ_7745c5c3_Var51 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "<div id=\"mesa-comandos\" class=\"contents\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "<div id=\"table-commands\" class=\"contents\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2585,7 +2585,7 @@ func formDeCombatente(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 185, "<label for=\"novo-combatente\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 185, "<label for=\"new-combatant\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2598,7 +2598,7 @@ func formDeCombatente(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 186, "\">Nome</label> <input id=\"novo-combatente\" type=\"text\" maxlength=\"60\" placeholder=\"Goblin salteador…\" data-bind:new_name class=\"w-full border border-input bg-background px-2 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 186, "\">Nome</label> <input id=\"new-combatant\" type=\"text\" maxlength=\"60\" placeholder=\"Goblin salteador…\" data-bind:new_name class=\"w-full border border-input bg-background px-2 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2997,7 +2997,7 @@ func editarCombatente(v View) templ.Component {
 			templ_7745c5c3_Var144 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 210, "<dialog id=\"editar-combatente\" data-preserve-attr=\"open\" aria-labelledby=\"editar-combatente-titulo\" class=\"scene-grimorio m-auto w-[min(20rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"editar-combatente-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Editar <span data-text=\"$edit_name\"></span></h2><p class=\"mt-1 text-sm text-muted-foreground\">A ordem se reordena sozinha, e quem está na vez continua na vez.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 210, "<dialog id=\"edit-combatant\" data-preserve-attr=\"open\" aria-labelledby=\"edit-combatant-title\" class=\"scene-grimorio m-auto w-[min(20rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><h2 id=\"edit-combatant-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Editar <span data-text=\"$edit_name\"></span></h2><p class=\"mt-1 text-sm text-muted-foreground\">A ordem se reordena sozinha, e quem está na vez continua na vez.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3006,7 +3006,7 @@ func editarCombatente(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 211, "<label for=\"edicao-iniciativa\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 211, "<label for=\"edit-initiative\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3019,7 +3019,7 @@ func editarCombatente(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 212, "\">Iniciativa</label> <input id=\"edicao-iniciativa\" type=\"number\" min=\"-5\" max=\"40\" inputmode=\"numeric\" data-bind=\"edit_initiative\" class=\"mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"><div data-show=\"$edit_hp_max > 0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 212, "\">Iniciativa</label> <input id=\"edit-initiative\" type=\"number\" min=\"-5\" max=\"40\" inputmode=\"numeric\" data-bind=\"edit_initiative\" class=\"mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"><div data-show=\"$edit_hp_max > 0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3028,7 +3028,7 @@ func editarCombatente(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 213, "<label for=\"edicao-pv\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 213, "<label for=\"edit-hp\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3041,7 +3041,7 @@ func editarCombatente(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 214, "\">PV (de <span data-text=\"$edit_hp_max\"></span>)</label> <input id=\"edicao-pv\" type=\"number\" min=\"0\" data-attr:max=\"$edit_hp_max\" inputmode=\"numeric\" data-bind=\"edit_hp\" class=\"mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('editar-combatente').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 214, "\">PV (de <span data-text=\"$edit_hp_max\"></span>)</label> <input id=\"edit-hp\" type=\"number\" min=\"0\" data-attr:max=\"$edit_hp_max\" inputmode=\"numeric\" data-bind=\"edit_hp\" class=\"mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('edit-combatant').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">Cancelar</button><button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

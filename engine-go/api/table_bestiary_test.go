@@ -101,7 +101,7 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 		painel+signals(`{"creature":"zumbi","search":"zu","draft_of":"zumbi"}`), "").Body.String()
 	// O CONTROLE: o painel FOI redesenhado, senão "não semeou" seria só "não
 	// respondeu".
-	if !strings.Contains(dinovo, "bestiario-da-mesa") {
+	if !strings.Contains(dinovo, "table-bestiary") {
 		t.Fatalf("o painel não voltou no remendo; a ausência abaixo não provaria nada")
 	}
 	// A asserção é sobre a LINHA DE SINAIS e não sobre o corpo inteiro: a
@@ -139,12 +139,12 @@ func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 	// O painel não é ESCONDIDO na tela do jogador: ele não existe nela. Mandá-lo
 	// e esconder por CSS entregaria as 80 criaturas com PV e defesa a quem
 	// abrisse o inspetor.
-	for _, marca := range []string{"bestiario-da-mesa", "Abrir o bestiário"} {
+	for _, marca := range []string{"table-bestiary", "Abrir o bestiário"} {
 		if strings.Contains(html, marca) {
 			t.Errorf("o HTML do jogador veio com %q", marca)
 		}
 	}
-	if doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(doMestre, "bestiario-da-mesa") {
+	if doMestre := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(doMestre, "table-bestiary") {
 		t.Error("o mestre não recebeu o painel")
 	}
 }

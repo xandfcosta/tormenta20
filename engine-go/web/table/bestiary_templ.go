@@ -31,7 +31,7 @@ import (
 // apagaria o PV que ele acabou de baixar. Eles nascem no `<body>`, que nunca é
 // remendado, e só o servidor os semeia — ao abrir OUTRA criatura.
 //
-// Mora FORA do `<main id="mesa">` de propósito. A cena é remendada inteira a
+// Mora FORA do `<main id="table">` de propósito. A cena é remendada inteira a
 // cada mudança de qualquer um na mesa, e o que este painel guarda — a busca
 // digitada, o filtro aceso, a criatura aberta — é estado de TELA e não da
 // sessão: um remendo da mesa o apagaria a cada turno que alguém avançasse.
@@ -76,7 +76,7 @@ func tableBestiary(v master.BestiaryView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<dialog id=\"bestiario-da-mesa\" data-preserve-attr=\"open\" aria-labelledby=\"bestiario-da-mesa-titulo\" data-signals=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<dialog id=\"table-bestiary\" data-preserve-attr=\"open\" aria-labelledby=\"table-bestiary-title\" data-signals=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -89,7 +89,7 @@ func tableBestiary(v master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"scene-grimorio m-auto hidden h-[min(44rem,calc(100vh-2rem))] open:flex w-[min(56rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><div class=\"flex shrink-0 flex-wrap items-baseline gap-x-3\"><h2 id=\"bestiario-da-mesa-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Bestiário</h2><p class=\"text-xs text-muted-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"scene-grimorio m-auto hidden h-[min(44rem,calc(100vh-2rem))] open:flex w-[min(56rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60\"><div class=\"flex shrink-0 flex-wrap items-baseline gap-x-3\"><h2 id=\"table-bestiary-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Bestiário</h2><p class=\"text-xs text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -102,7 +102,7 @@ func tableBestiary(v master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p><button type=\"button\" aria-label=\"Fechar o bestiário\" data-on:click=\"document.getElementById('bestiario-da-mesa').close()\" class=\"ml-auto flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p><button type=\"button\" aria-label=\"Fechar o bestiário\" data-on:click=\"document.getElementById('table-bestiary').close()\" class=\"ml-auto flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
