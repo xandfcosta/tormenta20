@@ -97,7 +97,7 @@ func movePartyTable(st Scene, c commandCtx) (*board.BoardState, error) {
 const markedTokensSignal = "marked_tokens"
 
 // markedMax é o teto do grupo, e ele é o teto da MESA: 50 combatentes
-// (`aovivo`). Uma lista maior que isso não saiu de um laço sobre este tabuleiro.
+// (`live`). Uma lista maior que isso não saiu de um laço sobre este tabuleiro.
 const markedMax = 50
 
 // markedTokens lê os ids do sinal.

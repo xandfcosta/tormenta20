@@ -1,4 +1,4 @@
-package aovivo
+package live
 
 import (
 	"go/parser"
@@ -10,14 +10,14 @@ import (
 
 // A FRONTEIRA DO REGIME (ALE-254).
 //
-// O irmão deste guarda vive em `plataforma/` e a regra é a mesma: um bounded
+// O irmão deste guarda vive em `platform/` e a regra é a mesma: um bounded
 // context vale pelo que o compilador IMPEDE. A lista aqui é maior porque o
 // regime É domínio — ele pode falar com a persistência e com a plataforma — mas
 // o que ele NÃO pode é conhecer os outros contextos.
 //
 // O caso concreto que este guarda protege já aconteceu durante a própria
 // extração: o `sessionStore` chamava `applyCharacterVitals`, que usa as regras
-// de dano da FICHA. A resposta certa foi declarar a porta `aovivo.SheetVitals` e
+// de dano da FICHA. A resposta certa foi declarar a porta `live.SheetVitals` e
 // receber quem a cumpre por parâmetro — e não importar a ficha daqui. Sem este
 // guarda, o próximo a precisar de algo da ficha acrescenta o import, compila, e
 // a porta vira enfeite.
@@ -34,7 +34,7 @@ var permitidos = map[string]bool{
 	"t20engine/db/sqlcgen": true,
 	// A plataforma não é domínio nenhum, então depender dela não cria fronteira
 	// errada nenhuma. É a direção que o guarda de lá garante ser de mão única.
-	"t20engine/plataforma": true,
+	"t20engine/platform": true,
 	// O VOCABULÁRIO DA MESA é shared kernel, e não um contexto (ALE-279).
 	//
 	// Ele entra nesta lista sabendo do aviso que está escrito acima — que
@@ -48,7 +48,7 @@ var permitidos = map[string]bool{
 	// não é confiança: é o `TestVocabularyImportsNothing`, que recusa
 	// QUALQUER import do projeto dentro de `events/`. Enquanto ele for folha,
 	// depender dele não cria fronteira errada nenhuma — que é exatamente a
-	// justificativa da `plataforma`, por outro caminho.
+	// justificativa da `platform`, por outro caminho.
 	"t20engine/events": true,
 }
 

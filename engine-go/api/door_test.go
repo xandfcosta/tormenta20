@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"testing"
 	"time"
 
@@ -36,7 +36,7 @@ func newDoor(t *testing.T, admins ...string) doorFixture {
 		t.Fatalf("hash: %v", err)
 	}
 	if _, err := s.queries.CreateUser(context.Background(), sqlcgen.CreateUserParams{
-		Email: f.email, Passwordhash: string(hash), Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
+		Email: f.email, Passwordhash: string(hash), Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
 	}); err != nil {
 		t.Fatalf("semear conta: %v", err)
 	}
@@ -252,7 +252,7 @@ func (f doorFixture) seedResetLink(t *testing.T, validade time.Duration) string 
 	agora := time.Now()
 	reset, err := f.s.queries.CreatePasswordReset(context.Background(), sqlcgen.CreatePasswordResetParams{
 		Token: generateInviteToken(), Userid: user.ID, Createdby: user.ID,
-		Createdat: plataforma.IsoAt(agora), Expiresat: plataforma.IsoAt(agora.Add(validade)),
+		Createdat: platform.IsoAt(agora), Expiresat: platform.IsoAt(agora.Add(validade)),
 	})
 	if err != nil {
 		t.Fatalf("semear link: %v", err)

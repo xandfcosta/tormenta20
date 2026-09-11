@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // cloneCharacterTx é o clone SEM dono da transação, para quem precisa que a
@@ -16,7 +16,7 @@ import (
 // passa a responder "já está na mesa" e o herói fica impedido de entrar PARA
 // SEMPRE, sem membro nenhum para remover.
 func cloneCharacterTx(ctx context.Context, tx *sql.Tx, sourceID, campaignID int64) (int64, error) {
-	now := plataforma.NowISO()
+	now := platform.NowISO()
 
 	res, err := tx.ExecContext(ctx, `
 INSERT INTO characters (

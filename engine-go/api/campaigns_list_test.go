@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/web/campaigns"
 	"testing"
 )
@@ -50,7 +50,7 @@ func (f cenaFixture) eu(t *testing.T) AuthUser {
 func (f cenaFixture) campanha(t *testing.T, nome, sinopse string) int64 {
 	t.Helper()
 	c, err := f.s.queries.CreateCampaign(context.Background(), sqlcgen.CreateCampaignParams{
-		Ownerid: f.dono, Name: nome, Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
+		Ownerid: f.dono, Name: nome, Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("criar campanha: %v", err)
@@ -144,7 +144,7 @@ func TestALiveSessionGoesToTheRightCampaign(t *testing.T) {
 	sessaoViva := seedSession(t, f.s, rolando)
 	_ = sessaoParada
 	if _, err := f.s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		UpdatedAt: plataforma.NowISO(), ID: sessaoViva,
+		UpdatedAt: platform.NowISO(), ID: sessaoViva,
 	}); err != nil {
 		t.Fatalf("iniciar: %v", err)
 	}

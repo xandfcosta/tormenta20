@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/engine"
+	"t20engine/live"
 	"t20engine/web/routes"
 )
 
@@ -278,7 +278,7 @@ type boardSquare struct {
 // A saúde chega de fora, num mapa por `entryId`, porque ela não é do tabuleiro:
 // é da FILA, e o tabuleiro só a mostra. Derivá-la aqui seria a segunda conta de
 // PV do app, que é como a ALE-122 começou.
-func boardViewOf(b *board.BoardState, st *aovivo.SessionRuntimeState, saude map[string]int, naVez string, quem board.Mover, meus map[int64]bool, campaignID, sessionID int64) BoardView {
+func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, saude map[string]int, naVez string, quem board.Mover, meus map[int64]bool, campaignID, sessionID int64) BoardView {
 	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que
 	// sai o "Abrir tabuleiro", e um botão sem rota não é botão. A primeira
 	// versão devolvia o zero e o mestre via a moldura tracejada sem gesto
@@ -442,7 +442,7 @@ func Coordinate(x, y int) string { return fmt.Sprintf("%d, %d", x, y) }
 // FILA, e o tabuleiro só mostra. Ele decide se o menu da peça OFERECE o
 // "com bloco próprio" — oferecer o que o servidor vai recusar é desenhar um erro,
 // que é o que o `sessionConfig` já escreve com todas as letras.
-func blocosDaFila(st *aovivo.SessionRuntimeState) map[string]bool {
+func blocosDaFila(st *live.SessionRuntimeState) map[string]bool {
 	comBloco := map[string]bool{}
 	if st == nil {
 		return comBloco
@@ -460,7 +460,7 @@ func blocosDaFila(st *aovivo.SessionRuntimeState) map[string]bool {
 // Lê o estado JÁ REDIGIDO: o combatente cujo PV o mestre ocultou chega sem
 // `HpMax`, não entra no mapa, e a peça dele sai sem barra. É assim que a redação
 // por papel alcança o tabuleiro sem uma segunda decisão sobre quem vê o quê.
-func saudeDaFila(st *aovivo.SessionRuntimeState) map[string]int {
+func saudeDaFila(st *live.SessionRuntimeState) map[string]int {
 	saude := map[string]int{}
 	if st == nil {
 		return saude
@@ -470,14 +470,14 @@ func saudeDaFila(st *aovivo.SessionRuntimeState) map[string]int {
 		if e.HpMax == nil || *e.HpMax <= 0 {
 			continue
 		}
-		saude[e.ID] = tableBarOf(aovivo.DerefOr(e.HpCurrent, 0), *e.HpMax, false).Pct
+		saude[e.ID] = tableBarOf(live.DerefOr(e.HpCurrent, 0), *e.HpMax, false).Pct
 	}
 	return saude
 }
 
 // turnCombatant é o `entryId` de quem está na vez, ou vazio fora de combate.
 // A peça acende com o MESMO dourado da linha, porque é o mesmo fato.
-func turnCombatant(st *aovivo.SessionRuntimeState) string {
+func turnCombatant(st *live.SessionRuntimeState) string {
 	if st == nil || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return ""
 	}
@@ -676,7 +676,7 @@ func moveTerrain(b *board.BoardState) engine.MoveTerrain {
 // argumentos, cada sítio jogando fora a metade que não usava — e duas contas da
 // mesma regra é como este repositório já mostrou dois números diferentes para o
 // mesmo combatente em duas telas (ALE-122).
-func reachAndTarget(b *board.BoardState, st *aovivo.SessionRuntimeState, quem board.Mover, meus map[int64]bool) boardReach {
+func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, quem board.Mover, meus map[int64]bool) boardReach {
 	if b == nil {
 		return boardReach{}
 	}

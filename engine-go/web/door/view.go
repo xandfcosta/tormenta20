@@ -1,7 +1,7 @@
 package door
 
 import (
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // A PORTA como dado (ALE-229): entrar, criar conta e redefinir senha.
@@ -21,7 +21,7 @@ type signInView struct {
 	// mandado para a porta volta para onde estava. Ele viaja em campo OCULTO e
 	// não na URL do POST para o formulário ser o dono do próprio contexto.
 	Destination string
-	Errors      plataforma.FieldErrorMap
+	Errors      platform.FieldErrorMap
 	// Aviso é a recusa do formulário inteiro, quando nenhum campo é o dono do
 	// problema — "E-mail ou senha incorretos" não é culpa de um dos dois.
 	Notice string
@@ -32,7 +32,7 @@ type signUpView struct {
 	Email  string
 	Name   string
 	Invite string
-	Errors plataforma.FieldErrorMap
+	Errors platform.FieldErrorMap
 	Notice string
 }
 
@@ -44,7 +44,7 @@ type resetView struct {
 	// vale — e aí não há formulário para mostrar.
 	AccountEmail string
 	LinkIsValid  bool
-	Errors       plataforma.FieldErrorMap
+	Errors       platform.FieldErrorMap
 	Notice       string
 }
 

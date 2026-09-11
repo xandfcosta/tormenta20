@@ -6,11 +6,11 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/db/sqlcgen"
+	"t20engine/live"
 	"t20engine/web/campaigns"
 )
 
@@ -42,7 +42,7 @@ type campaignsHost struct {
 	// apagar a campanha — que é do hospedeiro, e que a cena pede como PERGUNTA
 	// (`CampaignDeleted`) e não como store.
 	boards   *board.BoardStore
-	sessions *aovivo.SessionStore
+	sessions *live.SessionStore
 }
 
 func (s *Server) campaignsHost() campaignsHost {
@@ -167,7 +167,7 @@ func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUs
 func (h campaignsHost) OpenTable(
 	ctx context.Context, donoID int64, nome, descricao string,
 ) (int64, error) {
-	agora := plataforma.NowISO()
+	agora := platform.NowISO()
 	c, err := h.rules.createCampaign(ctx, sqlcgen.CreateCampaignParams{
 		Ownerid: donoID, Name: nome, Description: descricaoOuNulo(descricao),
 		Createdat: agora, Updatedat: agora,

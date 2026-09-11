@@ -90,7 +90,7 @@ var arquivosAusentesDePROPOSITO = map[string]bool{
 	"invites_test.go":              true,
 
 	// O `sse_events.go` guardava o `emitPresence` e, antes dele, o handshake do
-	// fluxo da SPA. O `aovivo/stream.go` o cita para dizer de onde o laço de
+	// fluxo da SPA. O `live/stream.go` o cita para dizer de onde o laço de
 	// entrega veio — e por que o transporte NÃO veio junto.
 	"sse_events.go": true,
 }

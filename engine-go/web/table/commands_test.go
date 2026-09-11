@@ -4,17 +4,17 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/aovivo"
+	"t20engine/live"
 )
 
 // Os guardas do RASTREADOR DO MESTRE (ALE-265).
 //
-// As regras têm teste próprio no `aovivo`, contra as bordas que cada issue
+// As regras têm teste próprio no `live`, contra as bordas que cada issue
 // nomeia. O que se prende aqui é a COMPOSIÇÃO — que a cena pergunta a coisa
 // certa a cada regra, que é onde um argumento trocado passa por dado plausível.
 
-func estadoDe(cenaAtiva bool, rodada, turno int, fila ...aovivo.InitiativeEntry) *aovivo.SessionRuntimeState {
-	return &aovivo.SessionRuntimeState{
+func estadoDe(cenaAtiva bool, rodada, turno int, fila ...live.InitiativeEntry) *live.SessionRuntimeState {
+	return &live.SessionRuntimeState{
 		SceneActive: cenaAtiva, Round: rodada, TurnIndex: turno, Initiative: fila,
 	}
 }
@@ -26,11 +26,11 @@ func estadoDe(cenaAtiva bool, rodada, turno int, fila ...aovivo.InitiativeEntry)
 // diferentes de estar apagado — sem cena, e em cena sem ninguém na fila —, que
 // é o que o contador diz enquanto o botão fica quieto.
 func TestAdvanceOnlyLightsUpWithASceneAndATracker(t *testing.T) {
-	arwen := aovivo.InitiativeEntry{Label: "Arwen"}
+	arwen := live.InitiativeEntry{Label: "Arwen"}
 
 	casos := []struct {
 		nome  string
-		st    *aovivo.SessionRuntimeState
+		st    *live.SessionRuntimeState
 		quero bool
 	}{
 		{"fora de cena, com fila", estadoDe(false, 0, -1, arwen), false},
@@ -53,7 +53,7 @@ func TestAdvanceOnlyLightsUpWithASceneAndATracker(t *testing.T) {
 // compila, e a tela mente com números plausíveis. Aqui se afirma que as duas
 // concordam sobre o estado.
 func TestTheCounterAndTheAdvanceTellTheSameStory(t *testing.T) {
-	fila := []aovivo.InitiativeEntry{{Label: "Arwen"}, {Label: "Ogro"}}
+	fila := []live.InitiativeEntry{{Label: "Arwen"}, {Label: "Ogro"}}
 
 	fora := ofViewGm(estadoDe(false, 0, -1, fila...), nil, nil, true, false)
 	if fora.Contador != "Fora de cena" {
@@ -83,8 +83,8 @@ func TestTheCounterAndTheAdvanceTellTheSameStory(t *testing.T) {
 // costuma ser esquecida.
 func TestVitalsFollowTheTrackerAndTheRole(t *testing.T) {
 	pv := int64(30)
-	comNPC := estadoDe(true, 1, 0, aovivo.InitiativeEntry{Label: "Ogro", HpMax: &pv})
-	soPCs := estadoDe(true, 1, 0, aovivo.InitiativeEntry{Label: "Arwen"})
+	comNPC := estadoDe(true, 1, 0, live.InitiativeEntry{Label: "Ogro", HpMax: &pv})
+	soPCs := estadoDe(true, 1, 0, live.InitiativeEntry{Label: "Arwen"})
 
 	if !ofViewGm(comNPC, nil, nil, true, false).VeVitais {
 		t.Error("o mestre não vê vitais numa fila com NPC")
@@ -100,7 +100,7 @@ func TestVitalsFollowTheTrackerAndTheRole(t *testing.T) {
 // TestPresenceReachesTheScene: quem está com a aba aberta aparece marcado, e quem
 // não tem personagem ligado não vira "personagem 0 online".
 func TestPresenceReachesTheScene(t *testing.T) {
-	membros := []aovivo.TableMember{
+	membros := []live.TableMember{
 		{CharacterID: 10, OwnerID: 1},
 		{CharacterID: 11, OwnerID: 2},
 		{CharacterID: 12, OwnerID: 0},

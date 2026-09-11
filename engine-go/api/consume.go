@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/catalog"
 	"t20engine/db"
@@ -81,7 +81,7 @@ func (sr sheetRules) consumeItemForCharacter(
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := sr.queries.WithTx(tx)
-	now := plataforma.NowISO()
+	now := platform.NowISO()
 
 	var effect *sheet.EffectDTO
 	if wantsEffectRow(spec) {
@@ -142,7 +142,7 @@ type doseUsed struct {
 }
 
 func writeOncePerDay(w http.ResponseWriter, name string) {
-	plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("%q already active for the day", name), plataforma.FieldErrorMap{"catalogId": {"Apenas uma porção por dia"}})
+	platform.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("%q already active for the day", name), platform.FieldErrorMap{"catalogId": {"Apenas uma porção por dia"}})
 }
 
 func findItemDTO(items []sheet.ItemDTO, itemID int64) *sheet.ItemDTO {

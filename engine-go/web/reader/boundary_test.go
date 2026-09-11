@@ -10,7 +10,7 @@ import (
 
 // A CENA NÃO IMPORTA O HOSPEDEIRO (ALE-278).
 //
-// A tentação daqui é o `os` e o `plataforma.Config`, e ela é concreta: a outra
+// A tentação daqui é o `os` e o `platform.Config`, e ela é concreta: a outra
 // metade do arquivo original faz `os.Stat`, lê `LIVRO_PDF` e serve o arquivo com
 // faixas. Essa metade ficou no `api` de propósito — uma cena que descobrisse
 // onde o PDF está no disco teria o hospedeiro dentro dela, e o que ela precisa
@@ -52,7 +52,7 @@ func TestTheReaderDoesNotImportItsHost(t *testing.T) {
 				"Se a cena precisa de algo de lá, DECLARE na `Deps` e receba de quem monta.\n"+
 				"Acrescentar o import à lista transforma a porta em enfeite — e se %q for\n"+
 				"o `api`, é ciclo, porque ele importa esta cena para montar rota.\n"+
-				"Se for `t20engine/plataforma`, a resposta é outra: quem lê configuração e\n"+
+				"Se for `t20engine/platform`, a resposta é outra: quem lê configuração e\n"+
 				"serve o ARQUIVO é o hospedeiro; esta cena só desenha a página.",
 				nome, caminho, caminho)
 		}

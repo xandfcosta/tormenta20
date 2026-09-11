@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/sheet"
 	"t20engine/web/sheetui"
 	"testing"
@@ -38,7 +38,7 @@ func saved(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 func saveHand(t *testing.T, f pilotoFixture, id int64, blob string) {
 	t.Helper()
 	err := f.s.sceneCore().Queries().SetProficiencies(context.Background(), sqlcgen.SetProficienciesParams{
-		Proficiencies: blob, UpdatedAt: plataforma.NowISO(), ID: id,
+		Proficiencies: blob, UpdatedAt: platform.NowISO(), ID: id,
 	})
 	if err != nil {
 		t.Fatalf("gravar %q: %v", blob, err)

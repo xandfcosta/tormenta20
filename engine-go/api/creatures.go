@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/creature"
 	"t20engine/db/sqlcgen"
@@ -41,12 +41,12 @@ func creatureToDTO(row sqlcgen.CampaignCreature) (creatureDTO, error) {
 func decodeCreature(w http.ResponseWriter, r *http.Request) (creatureInput, bool) {
 	var input creatureInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		plataforma.WriteError(w, http.StatusBadRequest, "Body must be {name, block}")
+		platform.WriteError(w, http.StatusBadRequest, "Body must be {name, block}")
 		return input, false
 	}
 	creature.Normalize(&input.Block)
 	if err := creature.Validate(input.Name, &input.Block); err != nil {
-		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
+		platform.WriteError(w, http.StatusBadRequest, err.Error())
 		return input, false
 	}
 	return input, true
@@ -55,8 +55,8 @@ func decodeCreature(w http.ResponseWriter, r *http.Request) (creatureInput, bool
 func writeCreature(w http.ResponseWriter, status int, row sqlcgen.CampaignCreature) {
 	dto, err := creatureToDTO(row)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Stored creature block is unreadable")
+		platform.WriteError(w, http.StatusInternalServerError, "Stored creature block is unreadable")
 		return
 	}
-	plataforma.WriteJSON(w, status, dto)
+	platform.WriteJSON(w, status, dto)
 }

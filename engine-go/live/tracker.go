@@ -1,4 +1,4 @@
-package aovivo
+package live
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ import (
 // estavam soldadas ao TRANSPORTE (o gateway do socket) e estas estão soldadas à
 // TELA — mas o efeito é o mesmo, e o segundo consumidor não as alcança.
 //
-// Ficam no `aovivo` e não no `api` porque falam do estado da sessão ao vivo, que
+// Ficam no `live` e não no `api` porque falam do estado da sessão ao vivo, que
 // é o que este pacote é. A cópia da SPA fica enquanto a tela dela existir; as
 // duas convivem durante a migração e some com a virada do rastreador.
 //
@@ -179,7 +179,7 @@ func GmSeesVitals(fila []InitiativeEntry, ehMestre bool) bool {
 // Eles vinham do formulário da SPA (`AddCombatantForm`), escritos como atributos
 // dos campos — que é UI e não trava: quem postasse na mão passava por cima dos
 // quatro. Vêm para cá pelo mesmo motivo das outras seis regras desta fatia, e a
-// escolha de virem para o `aovivo` em vez de ficarem no piloto é a que evita o
+// escolha de virem para o `live` em vez de ficarem no piloto é a que evita o
 // defeito clássico: dois formulários com escadas diferentes deixariam as duas
 // telas discordando sobre o que é um combatente aceitável.
 //

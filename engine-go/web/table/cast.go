@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/aovivo"
+	"t20engine/live"
 )
 
 // O ELENCO DA CAMPANHA (ALE-269, superfície 6a) — o caminho.
@@ -34,7 +34,7 @@ func (s Scene) CastRoutes(r chi.Router) {
 // segunda forma de pôr PC na fila divergiria no dia em que a primeira mudasse —
 // e a diferença apareceria como uma linha sem ficha, que é justamente o defeito
 // que este gesto existe para não repetir.
-func putPlayerTracker(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	escolhido, err := castMemberOf(st, c)
 	if err != nil {
 		return nil, err
@@ -76,8 +76,8 @@ func castMemberOf(st Scene, c commandCtx) (*Combatant, error) {
 // onde mora quem não tem linha na iniciativa. A conta e os passos são os mesmos
 // — o `poolDeltas` e o `vitalSteps` são compartilhados de propósito, senão as
 // duas telas passariam a chamar de "um golpe" coisas diferentes.
-func moveCastVitals(sign int64) func(Scene, commandCtx) (*aovivo.SessionRuntimeState, error) {
-	return func(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
+	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		raw := chi.URLParam(c.R, "step")
 		step, ok := vitalSteps[raw]
 		if !ok {

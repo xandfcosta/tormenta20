@@ -21,7 +21,7 @@ import (
 //
 // # O que a lista PERMITE, e por quê
 //
-// Os quatro stores (`board`, `aovivo`, `events`) atravessam INTEIROS pela
+// Os quatro stores (`board`, `live`, `events`) atravessam INTEIROS pela
 // porta, e é isso que os deixa entrar aqui: são tipos de outros pacotes, o
 // vocabulário do domínio ao vivo, não o hospedeiro com outro nome. Embrulhá-los
 // método a método daria oitenta entradas na porta e nenhuma fronteira a mais.
@@ -46,7 +46,7 @@ import (
 // cena com o banco dentro; viraram `SaveSessionTitle` e `SaveNotes`. O
 // `database/sql` não está na lista, e não é por precaução: é a tentação MEDIDA.
 var permitidos = map[string]bool{
-	"t20engine/aovivo":      true, // a fila, a cena e a presença, pela porta
+	"t20engine/live":        true, // a fila, a cena e a presença, pela porta
 	"t20engine/book":        true, // o catálogo tipado do bestiário e das condições
 	"t20engine/catalog":     true, // ver a nota abaixo — é o IsCondition, não o Resource
 	"t20engine/creature":    true, // o bloco de criatura que o NPC edita
@@ -54,7 +54,7 @@ var permitidos = map[string]bool{
 	"t20engine/engine":      true, // a medição de área e a ficha computada
 	"t20engine/events":      true, // o barramento, para o stream saber o que houve
 	"t20engine/markdown":    true, // as notas do mestre, que saíram daqui na fatia 1
-	"t20engine/plataforma":  true, // o carimbo ISO e o envelope de resposta
+	"t20engine/platform":    true, // o carimbo ISO e o envelope de resposta
 	"t20engine/board":       true, // o mapa: peça, marcador, terreno, lugar
 	"t20engine/web/bookui":  true, // o endereço do livro que o bestiário linka
 	"t20engine/web/master":  true, // o MESMO desenho do bestiário do mestre

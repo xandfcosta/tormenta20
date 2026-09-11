@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"t20engine/aovivo"
+	"t20engine/live"
 	"t20engine/markdown"
 	"t20engine/web/sheetui"
 	"t20engine/web/ui"
@@ -249,7 +249,7 @@ type tableMe struct {
 //
 // Fora de combate ninguém está na vez. A linha na vez sendo de um personagem
 // MEU é o único caso em que a faixa acende.
-func tableTurnOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) tableTurn {
+func tableTurnOf(st *live.SessionRuntimeState, meus map[int64]bool) tableTurn {
 	if st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return tableTurn{Kind: "idle"}
 	}
@@ -271,7 +271,7 @@ func tableTurnOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) tableTurn 
 // importa (ALE-179). Quem lê de cima para baixo não acha ninguém depois da
 // última linha.
 //
-// A conta circular que resolve isso é o `aovivo.UpcomingTurns`, e ela estava no
+// A conta circular que resolve isso é o `live.UpcomingTurns`, e ela estava no
 // ar desde a ALE-179 com cinco guardas e NENHUMA tela — a mesma família da
 // cortina e da presença. Esta é a tela.
 //
@@ -308,7 +308,7 @@ type turnAhead struct {
 
 // turnStripOf traduz a janela circular para a tela.
 //
-// A REGRA continua no `aovivo`: quem escolhe os três e dá a volta é o
+// A REGRA continua no `live`: quem escolhe os três e dá a volta é o
 // `UpcomingTurns`, com os guardas dele. O que se decide aqui são dois fatos de
 // APRESENTAÇÃO, e nenhum deles é do domínio: qual dos três é de quem está
 // olhando, e onde a rodada vira.
@@ -320,8 +320,8 @@ type turnAhead struct {
 // A fila que chega aqui é a que o `StateForRole` já redigiu, como a lista e o
 // tabuleiro: um segundo caminho até os nomes seria um segundo lugar por onde
 // vazar o que a mesa não deve ver.
-func turnStripOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) []turnAhead {
-	janela := aovivo.UpcomingTurns(st.Initiative, st.TurnIndex, turnsAhead)
+func turnStripOf(st *live.SessionRuntimeState, meus map[int64]bool) []turnAhead {
+	janela := live.UpcomingTurns(st.Initiative, st.TurnIndex, turnsAhead)
 	faixa := make([]turnAhead, 0, len(janela))
 	for passo, entrada := range janela {
 		faixa = append(faixa, turnAhead{
@@ -398,7 +398,7 @@ func hpToneOf(pct int) string {
 }
 
 // tableTrackerOf desenha a fila que o jogador recebeu — já redigida.
-func tableTrackerOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) []tableRow {
+func tableTrackerOf(st *live.SessionRuntimeState, meus map[int64]bool) []tableRow {
 	fila := make([]tableRow, 0, len(st.Initiative))
 	for i := range st.Initiative {
 		e := &st.Initiative[i]
@@ -432,7 +432,7 @@ func tableTrackerOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) []table
 // terceiro faria o jogador ler "este capanga não tem PV" sobre um ogro de 130.
 func poolBar(current, max *int64, hidden *bool, arcane bool) *tableBar {
 	if max != nil {
-		bar := tableBarOf(aovivo.DerefOr(current, 0), *max, arcane)
+		bar := tableBarOf(live.DerefOr(current, 0), *max, arcane)
 		bar.Hidden = hidden != nil && *hidden
 		return &bar
 	}
@@ -445,7 +445,7 @@ func poolBar(current, max *int64, hidden *bool, arcane bool) *tableBar {
 // tableViewOf monta a tela a partir das partes já buscadas. Tudo o que decide
 // mora aqui; o handler ao lado só sabe buscar.
 func tableViewOf(
-	st *aovivo.SessionRuntimeState,
+	st *live.SessionRuntimeState,
 	campaignID, sessionID, sessionNum int64,
 	grupo []Member,
 	meus map[int64]bool,
@@ -503,7 +503,7 @@ type viewGm struct {
 	Contador string
 	// Avanco é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
 	// em vez de o que faz (ALE-184).
-	Avanco aovivo.NextTurnTarget
+	Avanco live.NextTurnTarget
 	// VeVitais decide se a fila mostra PV de NPC. A pergunta é sobre a FILA e
 	// não sobre o papel: numa fila só de PCs não há o que reservar.
 	VeVitais bool
@@ -524,18 +524,18 @@ type viewGm struct {
 }
 
 func ofViewGm(
-	st *aovivo.SessionRuntimeState,
-	membros []aovivo.TableMember,
+	st *live.SessionRuntimeState,
+	membros []live.TableMember,
 	presentes []int64,
 	ehMestre bool,
 	gravacaoFalhando bool,
 ) viewGm {
 	return viewGm{
 		GravacaoFalhando: gravacaoFalhando,
-		Contador:         aovivo.TurnCounter(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
-		Avanco:           aovivo.NextTurnButton(st.Initiative, st.TurnIndex),
-		VeVitais:         aovivo.GmSeesVitals(st.Initiative, ehMestre),
-		Conectados:       aovivo.ConnectedCharacters(membros, presentes),
+		Contador:         live.TurnCounter(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
+		Avanco:           live.NextTurnButton(st.Initiative, st.TurnIndex),
+		VeVitais:         live.GmSeesVitals(st.Initiative, ehMestre),
+		Conectados:       live.ConnectedCharacters(membros, presentes),
 		PodeAvancar:      st.SceneActive && len(st.Initiative) > 0,
 	}
 }

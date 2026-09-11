@@ -22,7 +22,7 @@
 // # Por que um pacote, e não a porta
 //
 // A regra é lida pela cena da porta E pela API JSON, e depende só do
-// `plataforma`. O destino de uma função é a DEPENDÊNCIA dela — pô-la em
+// `platform`. O destino de uma função é a DEPENDÊNCIA dela — pô-la em
 // `web/door` faria a API JSON importar um pacote de CENA para validar, que é o
 // contrário da direção que a divisão existe para criar.
 //
@@ -31,7 +31,7 @@
 // pacote escreve uma cópia — e a cópia sai errada de um jeito que compila. Aqui
 // ela já tinha saído.
 //
-// Ela NÃO vai para `plataforma` de propósito: aquele pacote é infraestrutura sem
+// Ela NÃO vai para `platform` de propósito: aquele pacote é infraestrutura sem
 // domínio, e "a senha precisa ter ao menos 8 caracteres" é regra de PRODUTO.
 // Quem a mudar está mudando o que o jogador pode fazer, não como o servidor
 // escreve JSON.
@@ -41,7 +41,7 @@ import (
 	"regexp"
 	"unicode/utf8"
 
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // LoginBody e RegisterBody são a forma dos dois pedidos, e os nomes de campo
@@ -89,8 +89,8 @@ func IsEmail(s string) bool { return emailRe.MatchString(s) }
 // senha fora da faixa, nome longo demais.
 //
 //	if fields := account.ValidateRegister(body); len(fields) > 0 { … }
-func ValidateRegister(b RegisterBody) plataforma.FieldErrorMap {
-	f := plataforma.FieldErrorMap{}
+func ValidateRegister(b RegisterBody) platform.FieldErrorMap {
+	f := platform.FieldErrorMap{}
 	if !IsEmail(b.Email) {
 		f["email"] = []string{msgEmailInvalido}
 	}
@@ -106,8 +106,8 @@ func ValidateRegister(b RegisterBody) plataforma.FieldErrorMap {
 // ValidatePassword é A regra de senha, uma só, dividida pelo registro e pelo
 // link de redefinição (ALE-120) — duas grafias de "ao menos 8" divergiriam, e a
 // tela que ficasse mais frouxa seria a que importa.
-func ValidatePassword(password string) plataforma.FieldErrorMap {
-	f := plataforma.FieldErrorMap{}
+func ValidatePassword(password string) platform.FieldErrorMap {
+	f := platform.FieldErrorMap{}
 	length := utf8.RuneCountInString(password)
 	if length < 8 {
 		f["password"] = append(f["password"], msgSenhaCurta)
@@ -121,8 +121,8 @@ func ValidatePassword(password string) plataforma.FieldErrorMap {
 // ValidateLogin não confere a FAIXA da senha, só que ela existe: quem já tem uma
 // senha de 200 caracteres gravada precisa conseguir entrar com ela, e recusar no
 // login o que o registro aceitou tranca a conta em vez de proteger.
-func ValidateLogin(b LoginBody) plataforma.FieldErrorMap {
-	f := plataforma.FieldErrorMap{}
+func ValidateLogin(b LoginBody) platform.FieldErrorMap {
+	f := platform.FieldErrorMap{}
 	if !IsEmail(b.Email) {
 		f["email"] = []string{msgEmailInvalido}
 	}

@@ -25,7 +25,7 @@ import (
 	"t20engine/api"
 	"t20engine/db"
 	"t20engine/engine"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // SONDA DE SAÚDE, para o contêiner ter como se examinar (ALE-273).
@@ -38,7 +38,7 @@ import (
 // e ela lê a MESMA `PORT` que o servidor escuta — apontar para uma porta escrita
 // à mão daria uma sonda que reprova um servidor saudável no dia em que a porta
 // mudasse.
-func healthProbe(cfg plataforma.Config) int {
+func healthProbe(cfg platform.Config) int {
 	cliente := &http.Client{Timeout: 3 * time.Second}
 	resp, err := cliente.Get(fmt.Sprintf("http://127.0.0.1:%s/health", cfg.Port))
 	if err != nil {
@@ -54,7 +54,7 @@ func healthProbe(cfg plataforma.Config) int {
 }
 
 func main() {
-	cfg, err := plataforma.LoadConfig()
+	cfg, err := platform.LoadConfig()
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
@@ -77,7 +77,7 @@ func main() {
 	defer func() { _ = database.Close() }()
 
 	srv := api.NewServer(cfg, database, primeCatalogs(cfg.CatalogPath))
-	mux := plataforma.Gzip(buildMux(srv))
+	mux := platform.Gzip(buildMux(srv))
 
 	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação
 	// (ALE-157): sem isto, um Ctrl-C durante um `VACUUM INTO` ou um persist do
@@ -109,7 +109,7 @@ func main() {
 // httpServerFor monta o servidor com os timeouts da casa. Separado da `serve`
 // para os testes poderem afirmar as escolhas — inclusive a AUSÊNCIA do
 // `WriteTimeout`, que é a mais fácil de alguém "consertar" sem saber.
-func httpServerFor(cfg plataforma.Config, mux http.Handler) *http.Server {
+func httpServerFor(cfg platform.Config, mux http.Handler) *http.Server {
 	return &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           mux,
@@ -132,7 +132,7 @@ func httpServerFor(cfg plataforma.Config, mux http.Handler) *http.Server {
 //   - `WriteTimeout` fica de FORA de propósito. Ele mataria o fluxo SSE, que é
 //     conexão longa por natureza, e o download do wasm de 780 KB numa rede
 //     ruim. É o timeout que parece obrigatório e é justamente o errado aqui.
-func serve(ctx context.Context, cfg plataforma.Config, mux http.Handler) error {
+func serve(ctx context.Context, cfg platform.Config, mux http.Handler) error {
 	server := httpServerFor(cfg, mux)
 	falhou := make(chan error, 1)
 	go func() {
@@ -166,7 +166,7 @@ func serve(ctx context.Context, cfg plataforma.Config, mux http.Handler) error {
 // Um pedido `http://` chegando numa porta com TLS recebe "Client sent an HTTP
 // request to an HTTPS server" do próprio net/http. Feio, mas VISÍVEL — que é o
 // oposto do que acontecia se a configuração caísse para HTTP em silêncio.
-func escutar(server *http.Server, cfg plataforma.Config) error {
+func escutar(server *http.Server, cfg platform.Config) error {
 	if !cfg.TLSEnabled() {
 		return server.ListenAndServe()
 	}
@@ -242,7 +242,7 @@ func buildMux(srv *api.Server) *http.ServeMux {
 // announce diz onde apontar o navegador, com os endereços da REDE junto: os
 // jogadores abrem o app das máquinas deles, e sem esta linha o dono da mesa
 // teria de ir ler `ip addr` (ALE-119).
-func announce(cfg plataforma.Config) {
+func announce(cfg platform.Config) {
 	log.Printf("t20 %s server listening on :%s (%s, db=%s)", cfg.AppEnv, cfg.Port, cfg.Scheme(), cfg.DatabasePath)
 	if cfg.TLSEnabled() && !cfg.CookieSecure {
 		log.Print("  aviso: há TLS e COOKIE_SECURE=false — o cookie de sessão viaja sem a marca Secure")
@@ -259,7 +259,7 @@ func announce(cfg plataforma.Config) {
 // O esquema vem da config, e não é detalhe: este log É o endereço que o mestre
 // lê e repassa para a mesa. Com TLS ligado e `http://` impresso, os quatro
 // telefones batem num 400 e o sintoma parece do app (ALE-118).
-func lanURLs(cfg plataforma.Config) []string {
+func lanURLs(cfg platform.Config) []string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		log.Printf("interfaces: %v — LAN address unknown", err)

@@ -1,12 +1,12 @@
 package api
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 import (
 	"context"
 	"database/sql"
 	"strings"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -49,17 +49,17 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 
 	sess, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: campaignID, Sessionnumber: 1, Title: sql.NullString{String: "S1", Valid: true},
-		Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
+		Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed session: %v", err)
 	}
 
 	srv := s
-	// O id da entrada é do SERVIDOR (`aovivo.AddEntry` sobrescreve o que vem do cliente),
+	// O id da entrada é do SERVIDOR (`live.AddEntry` sobrescreve o que vem do cliente),
 	// então o teste lê de volta o que ele gerou em vez de inventar um.
 	Add := func(label, kind string, characterID *int64) string {
-		state, err := srv.sessions.AddInitiativeEntry(sess.ID, aovivo.InitiativeEntry{
+		state, err := srv.sessions.AddInitiativeEntry(sess.ID, live.InitiativeEntry{
 			Label: label, Initiative: 10, Type: kind, CharacterID: characterID,
 		})
 		if err != nil {
@@ -143,7 +143,7 @@ func TestSessionForCallerRejectsForeignSession(t *testing.T) {
 
 	foreign, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: theirCampaign, Sessionnumber: 1, Title: sql.NullString{String: "Alheia", Valid: true},
-		Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
+		Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed foreign session: %v", err)

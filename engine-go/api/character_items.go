@@ -2,7 +2,7 @@ package api
 
 import (
 	"net/http"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 type createItemBody struct {
@@ -26,7 +26,7 @@ func ptrEq(a, b *string) bool {
 // writeAxisError emits the equip-axis BadRequest: a custom top message + the
 // equipped field error (assertEquipAxisAllowed).
 func writeAxisError(w http.ResponseWriter, top, field string) {
-	plataforma.WriteFieldError(w, http.StatusBadRequest, top, plataforma.FieldErrorMap{"equipped": {field}})
+	platform.WriteFieldError(w, http.StatusBadRequest, top, platform.FieldErrorMap{"equipped": {field}})
 }
 
 // O `MarshalStrings` mora no `sheet` desde a ALE-278: a cena da ficha e o

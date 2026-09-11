@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"t20engine/aovivo"
 	"t20engine/events"
+	"t20engine/live"
 	"testing"
 )
 
@@ -39,7 +39,7 @@ func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 	f := novoPiloto(t)
 	// Fila CHEIA e cena DESLIGADA: é o mestre montando a briga antes de começar.
-	if _, err := f.s.tableHost().Sessions().AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
+	if _, err := f.s.tableHost().Sessions().AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
 		Label: "Chefe secreto", Initiative: 22, Type: "npc",
 	}); err != nil {
 		t.Fatalf("semear chefe: %v", err)

@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"sync"
-	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/live"
+	"t20engine/platform"
 	"t20engine/sheet"
 	"testing"
 )
@@ -16,7 +16,7 @@ func seedSession(t *testing.T, s *Server, campaignID int64) int64 {
 	t.Helper()
 	sess, err := s.queries.CreateSession(context.Background(), sqlcgen.CreateSessionParams{
 		Campaignid: campaignID, Sessionnumber: 1, Title: sql.NullString{String: "S", Valid: true},
-		Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
+		Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed session: %v", err)
@@ -35,7 +35,7 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 	}
 	// A cena precisa estar iniciada para o turno andar (ALE-210).
 	if _, err := store.StartScene(sid); err != nil {
-		t.Fatalf("aovivo.StartScene: %v", err)
+		t.Fatalf("live.StartScene: %v", err)
 	}
 	if _, err := store.AddInitiativeEntry(sid, npc("Goblin", 15)); err != nil {
 		t.Fatalf("Add: %v", err)
@@ -66,7 +66,7 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	blob := `{"initiative":[{"id":"x","label":"Boss","initiative":9,"type":"npc"}],"round":2,"turnIndex":0}`
 	if err := s.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: blob, UpdatedAt: plataforma.NowISO(), ID: sid,
+		RuntimeState: blob, UpdatedAt: platform.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("seed blob: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestABlobWithoutATurnInventsNoScene(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	blob := `{"initiative":[{"id":"x","label":"Boss","initiative":9,"type":"npc"}],"round":0,"turnIndex":-1}`
 	if err := s.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: blob, UpdatedAt: plataforma.NowISO(), ID: sid,
+		RuntimeState: blob, UpdatedAt: platform.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("seed blob: %v", err)
 	}
@@ -229,7 +229,7 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	}
 	entryID := store.GetState(sid).Initiative[0].ID
 
-	snap, err := store.DeltaVitals(sid, entryID, aovivo.PtrInt64(-8), aovivo.PtrInt64(-2))
+	snap, err := store.DeltaVitals(sid, entryID, live.PtrInt64(-8), live.PtrInt64(-2))
 	if err != nil {
 		t.Fatalf("delta: %v", err)
 	}
@@ -244,9 +244,9 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	}
 	// E a entrada espelha o que foi gravado — os dois números da tela são um só.
 	got := snap.Initiative[0]
-	if aovivo.DerefOr(got.HpCurrent, -1) != 12 || aovivo.DerefOr(got.MpCurrent, -1) != 3 {
+	if live.DerefOr(got.HpCurrent, -1) != 12 || live.DerefOr(got.MpCurrent, -1) != 3 {
 		t.Errorf("entrada = %d/%d, esperado espelhar a ficha (12/3)",
-			aovivo.DerefOr(got.HpCurrent, -1), aovivo.DerefOr(got.MpCurrent, -1))
+			live.DerefOr(got.HpCurrent, -1), live.DerefOr(got.MpCurrent, -1))
 	}
 }
 
@@ -272,7 +272,7 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	}
 	entryID := store.GetState(sid).Initiative[0].ID
 
-	if _, err := store.DeltaVitals(sid, entryID, aovivo.PtrInt64(-8), nil); err != nil {
+	if _, err := store.DeltaVitals(sid, entryID, live.PtrInt64(-8), nil); err != nil {
 		t.Fatalf("delta: %v", err)
 	}
 
@@ -293,7 +293,7 @@ func seedTempHpPool(t *testing.T, s *Server, charID int64, amount int) {
 	mods := fmt.Sprintf(`[{"target":{"k":"tempHp"},"amount":%d,"bonusType":"untyped"}]`, amount)
 	if _, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
 		Characterid: charID, Catalogid: "armadura-arcana", Scope: "scene",
-		Modifiers: mods, Createdat: plataforma.NowISO(),
+		Modifiers: mods, Createdat: platform.NowISO(),
 	}); err != nil {
 		t.Fatalf("semear pool temporário: %v", err)
 	}

@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/db/sqlcgen"
+	"t20engine/live"
 )
 
 // O FIM DA VIDA de uma sessão, e de tudo que ela deixou em memória (ALE-270).
@@ -39,7 +39,7 @@ import (
 // só: avisar antes deixaria uma janela em que a sessão ainda responde e o
 // estado em memória já não existe — uma requisição nesse instante recriaria o
 // que se acabou de apagar.
-func sessionDeleted(boards *board.BoardStore, sessions *aovivo.SessionStore, sessionID int64) {
+func sessionDeleted(boards *board.BoardStore, sessions *live.SessionStore, sessionID int64) {
 	boards.SessionDeleted(sessionID)
 	sessions.SessionDeleted(sessionID)
 }
@@ -62,7 +62,7 @@ func (s *Server) SessionDeleted(sessionID int64) {
 // reinício, e ele fica REGISTRADO — sem esta linha, ninguém saberia por quê.
 func campaignDeleted(
 	ctx context.Context, q *sqlcgen.Queries,
-	boards *board.BoardStore, sessions *aovivo.SessionStore, campaignID int64,
+	boards *board.BoardStore, sessions *live.SessionStore, campaignID int64,
 ) {
 	sessoes, err := q.ListSessions(ctx, campaignID)
 	if err != nil {

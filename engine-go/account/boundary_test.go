@@ -11,8 +11,8 @@ import (
 // O PACOTE É FOLHA, e aqui isso importa mais do que na média (ALE-278).
 //
 // Irmão dos `boundary_test.go` do `search`, do `creature`, do `sheet`, do
-// `events`, do `tabuleiro` e da `plataforma`. A lista é de UM: só o
-// `plataforma`, de onde vem o mapa de erro por campo.
+// `events`, do `tabuleiro` e da `platform`. A lista é de UM: só o
+// `platform`, de onde vem o mapa de erro por campo.
 //
 // A razão de ser tão curta é a razão de o pacote existir. Estas funções são
 // lidas pela cena da porta E pela API JSON; no dia em que uma delas alcançar
@@ -25,7 +25,7 @@ import (
 // É a mesma lição que o `search` documenta com o `Fold`, e a única diferença é
 // que lá a cópia estava errada na CONTA e aqui na FRASE. As duas compilam.
 var permitidos = map[string]bool{
-	"t20engine/plataforma": true, // o mapa de erro por campo, e nada mais
+	"t20engine/platform": true, // o mapa de erro por campo, e nada mais
 }
 
 func TestTheAccountRulesStayALeaf(t *testing.T) {

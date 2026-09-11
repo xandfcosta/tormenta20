@@ -2,7 +2,7 @@
 // cookie/bearer JWT auth), and per-domain handlers. Deps live here and in
 // cmd/api — never in engine/, so the WASM build stays dep-free.
 
-package plataforma
+package platform
 
 import (
 	"fmt"

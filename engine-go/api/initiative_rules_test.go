@@ -1,6 +1,6 @@
 package api
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 import (
 	"context"
@@ -96,12 +96,12 @@ func TestParseConditionsNeitherDuplicatesNorBreaks(t *testing.T) {
 // A condição é estado de COMBATE e mora na linha, como os PV atuais: o bloco de
 // criatura descreve o vilão, e ele não volta na semana seguinte ainda caído.
 func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
-	st := aovivo.EmptyRuntimeState()
+	st := live.EmptyRuntimeState()
 	id := idCounter()
-	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
+	_ = live.AddEntry(st, npc("Ogro", 12), id)
 
 	aplicadas := []string{"caido", "atordoado"}
-	if err := aovivo.UpdateEntry(st, "e1", aovivo.EntryPatch{Conditions: &aplicadas}); err != nil {
+	if err := live.UpdateEntry(st, "e1", live.EntryPatch{Conditions: &aplicadas}); err != nil {
 		t.Fatalf("aplicar: %v", err)
 	}
 	if len(st.Initiative[0].Conditions) != 2 {
@@ -109,7 +109,7 @@ func TestAConditionEntersAndLeavesTheEntry(t *testing.T) {
 	}
 
 	vazio := []string{}
-	_ = aovivo.UpdateEntry(st, "e1", aovivo.EntryPatch{Conditions: &vazio})
+	_ = live.UpdateEntry(st, "e1", live.EntryPatch{Conditions: &vazio})
 	if len(st.Initiative[0].Conditions) != 0 {
 		t.Fatalf("limpar deixou %v", st.Initiative[0].Conditions)
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/web/ui"
 	"time"
 )
@@ -93,7 +93,7 @@ func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
 		})
 	}
 
-	convites, err := s.deps.Queries().ListOpenAccountInvites(ctx, plataforma.NowISO())
+	convites, err := s.deps.Queries().ListOpenAccountInvites(ctx, platform.NowISO())
 	if err != nil {
 		return adminView{}, err
 	}

@@ -2,8 +2,8 @@ package api
 
 import (
 	"context"
-	"t20engine/aovivo"
 	"t20engine/board"
+	"t20engine/live"
 )
 
 // CONTEXTO: O QUE A MESA AO VIVO PUBLICA — o quadro do tabuleiro, o estado da
@@ -153,9 +153,9 @@ type liveCtx struct {
 
 // publishSessionState transmite o estado às duas salas por papel. Ela NÃO grava
 // — ver o `saveSession`. Espelha o `emitSessionState` do gateway.
-func (tr tableRules) publishSessionState(sessionID int64, state *aovivo.SessionRuntimeState) {
+func (tr tableRules) publishSessionState(sessionID int64, state *live.SessionRuntimeState) {
 	tr.sse.EmitOrdered(sessionID, "gm", "session-state", state.Seq, state)
-	tr.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, aovivo.RedactForPlayers(state))
+	tr.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, live.RedactForPlayers(state))
 }
 
 // persistSessionAndWarn persiste e avisa a mesa SÓ quando o sinal de sujeira

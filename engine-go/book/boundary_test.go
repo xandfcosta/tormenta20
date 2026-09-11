@@ -10,7 +10,7 @@ import (
 
 // O LIVRO NÃO CONHECE NEM O HTTP NEM A TELA (ALE-278).
 //
-// Irmão dos `boundary_test.go` do `aovivo`, do `tabuleiro`, da `plataforma`, do
+// Irmão dos `boundary_test.go` do `live`, do `tabuleiro`, da `platform`, do
 // `events`, do `sheet` e do `creature`. Este é o mais importante da série, e a
 // razão é aritmética: TREZE famílias de arquivo leem o livro, então ele vai ser
 // importado por quase todo pacote de cena que nascer.

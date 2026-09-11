@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/sheet"
 	"testing"
 )
@@ -95,7 +95,7 @@ func TestAnEffectFromAnotherSheetCannotBeEnded(t *testing.T) {
 	outro := seedCharacterAtLevel(t, f.s, f.jogador, "Vizinho", 1, 10, 10, 0, 0)
 	alheio, err := f.s.sceneCore().Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
 		Characterid: outro, Catalogid: "armadura-arcana", Scope: "scene",
-		Modifiers: "[]", Createdat: plataforma.NowISO(),
+		Modifiers: "[]", Createdat: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o efeito alheio: %v", err)

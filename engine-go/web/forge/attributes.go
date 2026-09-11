@@ -13,7 +13,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/web/ui"
 )
 
@@ -140,7 +140,7 @@ func (s Scene) saveAttributes(ctx context.Context, id int64, espalhamento map[st
 		Strength: int64(espalhamento["strength"]), Dexterity: int64(espalhamento["dexterity"]),
 		Constitution: int64(espalhamento["constitution"]), Intelligence: int64(espalhamento["intelligence"]),
 		Wisdom: int64(espalhamento["wisdom"]), Charisma: int64(espalhamento["charisma"]),
-		UpdatedAt: plataforma.NowISO(), ID: id,
+		UpdatedAt: platform.NowISO(), ID: id,
 	})
 }
 

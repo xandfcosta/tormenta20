@@ -13,10 +13,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/aovivo"
 	"t20engine/creature"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/live"
+	"t20engine/platform"
 )
 
 // OS NPCs DA CAMPANHA (ALE-269, superfície 6b).
@@ -57,7 +57,7 @@ type npcSignals struct {
 // O NOME PODE VIR VAZIO, e aí é o do livro: guardar "Ogro" como "Ogro" é o caso
 // mais comum, e obrigar a digitar um nome faria o mestre repetir o que a tela
 // já mostra. Quem quiser "Ogro Capitão" escreve.
-func saveEntryCast(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func saveEntryCast(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	c.R.Body = http.MaxBytesReader(nil, c.R.Body, 1<<20)
 	var sinais npcSignals
 	if err := datastar.ReadSignals(c.R, &sinais); err != nil {
@@ -80,7 +80,7 @@ func saveEntryCast(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) 
 	if err != nil {
 		return nil, fmt.Errorf("não deu para guardar o bloco de %q", nome)
 	}
-	agora := plataforma.NowISO()
+	agora := platform.NowISO()
 	if _, err := st.deps.Queries().CreateCampaignCreature(c.R.Context(), sqlcgen.CreateCampaignCreatureParams{
 		Campaignid: c.CampaignID, Name: nome, Block: string(blob),
 		Createdat: agora, Updatedat: agora,
@@ -132,15 +132,15 @@ func (s Scene) idCampaignNpc(c commandCtx, id int64) (sqlcgen.CampaignCreature, 
 // Os PV vêm do BLOCO e não de um campo da tela: o bloco é a ficha daquele NPC, e
 // digitar o PV de novo ao trazê-lo seria pedir duas vezes o mesmo número — com
 // a segunda podendo discordar da primeira.
-func putNpcTracker(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func putNpcTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	linha, bloco, err := st.campaignNpc(c)
 	if err != nil {
 		return nil, err
 	}
-	novo := aovivo.CombatantDraft{
+	novo := live.CombatantDraft{
 		Label: linha.Name, Initiative: bloco.Iniciativa, HP: int64(bloco.HP), Kind: "npc",
 	}
-	if err := aovivo.ValidateCombatantDraft(novo); err != nil {
+	if err := live.ValidateCombatantDraft(novo); err != nil {
 		return nil, err
 	}
 	// `creatureId` liga a LINHA ao bloco guardado, e é o que faz o olho da fila
@@ -162,7 +162,7 @@ func putNpcTracker(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) 
 // e a linha do combate são dois gestos porque respondem a duas perguntas — "ele
 // não volta mais" e "ele saiu desta cena" —, e juntá-los faria o mestre perder
 // o combatente em curso ao arrumar a preparação.
-func eraseNpc(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func eraseNpc(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	linha, _, err := st.campaignNpc(c)
 	if err != nil {
 		return nil, err

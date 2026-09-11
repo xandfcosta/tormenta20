@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"testing"
 
 	"t20engine/db"
@@ -39,7 +39,7 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	// DatabasePath carries the file actually opened, so the config does not lie
 	// about it — /admin/status reports it, and reporting a path that is not the
 	// one in use would send the owner looking at the wrong file (ALE-120).
-	cfg := plataforma.Config{
+	cfg := platform.Config{
 		JWTSecret: "test-secret", CookieName: "t20_session",
 		AdminEmails: adminEmails, DatabasePath: path,
 	}
@@ -65,7 +65,7 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 func seedUser(t *testing.T, s *Server, email string) int64 {
 	t.Helper()
 	u, err := s.queries.CreateUser(context.Background(), sqlcgen.CreateUserParams{
-		Email: email, Passwordhash: "x", Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
+		Email: email, Passwordhash: "x", Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed user %q: %v", email, err)
@@ -76,7 +76,7 @@ func seedUser(t *testing.T, s *Server, email string) int64 {
 func seedCampaign(t *testing.T, s *Server, ownerID int64) int64 {
 	t.Helper()
 	c, err := s.queries.CreateCampaign(context.Background(), sqlcgen.CreateCampaignParams{
-		Ownerid: ownerID, Name: "Mesa", Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
+		Ownerid: ownerID, Name: "Mesa", Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed campaign: %v", err)
@@ -94,7 +94,7 @@ func seedCharacter(t *testing.T, s *Server, ownerID int64, name string, hpCur, h
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: plataforma.NowISO(), UpdatedAt: plataforma.NowISO(),
+		CreatedAt: platform.NowISO(), UpdatedAt: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed character %q: %v", name, err)
@@ -114,7 +114,7 @@ func seedCharacterAtLevel(
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: plataforma.NowISO(), UpdatedAt: plataforma.NowISO(),
+		CreatedAt: platform.NowISO(), UpdatedAt: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed character %q: %v", name, err)
@@ -132,7 +132,7 @@ func seedCharacterAtLevel(
 func seedMember(t *testing.T, s *Server, campaignID, characterID int64) {
 	t.Helper()
 	if _, err := s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: characterID, Addedat: plataforma.NowISO(),
+		Campaignid: campaignID, Characterid: characterID, Addedat: platform.NowISO(),
 	}); err != nil {
 		t.Fatalf("seed member: %v", err)
 	}
@@ -223,7 +223,7 @@ func TestSessionForCaller(t *testing.T) {
 	campaignID := seedCampaign(t, s, gm)
 	sess, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: campaignID, Sessionnumber: 1, Title: sql.NullString{String: "S1", Valid: true},
-		Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
+		Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed session: %v", err)
@@ -250,7 +250,7 @@ func TestSessionForCaller(t *testing.T) {
 func seedEffect(t *testing.T, s *Server, charID int64, catalogID, scope string) {
 	t.Helper()
 	if _, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
-		Characterid: charID, Catalogid: catalogID, Scope: scope, Modifiers: "[]", Createdat: plataforma.NowISO(),
+		Characterid: charID, Catalogid: catalogID, Scope: scope, Modifiers: "[]", Createdat: platform.NowISO(),
 	}); err != nil {
 		t.Fatalf("seed effect %q/%q: %v", catalogID, scope, err)
 	}

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/events"
+	"t20engine/live"
 )
 
 // A cortina precisa SOBREVIVER ao reinício (ALE-202): o mestre fecha a cortina,
@@ -26,7 +26,7 @@ func TestTheCurtainComesBackFromTheDatabase(t *testing.T) {
 	s.boards.Persist(ctx, sid, defaultTab)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	frio := board.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{})
+	frio := board.NewBoardStore(s.queries, live.NewUUID, &events.Bus{})
 
 	if voltou := frio.Get(ctx, sid, defaultTab); voltou == nil || !voltou.Curtained {
 		t.Fatalf("a cortina não voltou do banco e a mesa veria a cena: %+v", voltou)

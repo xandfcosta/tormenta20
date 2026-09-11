@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
@@ -64,7 +64,7 @@ func (sr sheetRules) castSpellForCharacter(
 		return nil
 	}
 	return sr.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
-		MpCurrent: dto.MpCurrent - int64(totalPm), UpdatedAt: plataforma.NowISO(), ID: dto.ID,
+		MpCurrent: dto.MpCurrent - int64(totalPm), UpdatedAt: platform.NowISO(), ID: dto.ID,
 	})
 }
 

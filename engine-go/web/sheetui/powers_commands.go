@@ -11,7 +11,7 @@ import (
 	"t20engine/book"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/sheet"
 )
 
@@ -124,7 +124,7 @@ func (s Scene) chargePm(r *http.Request, row sqlcgen.Character, quanto int) erro
 		depois = 0
 	}
 	return s.deps.Queries().SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{
-		MpCurrent: depois, UpdatedAt: plataforma.NowISO(), ID: row.ID,
+		MpCurrent: depois, UpdatedAt: platform.NowISO(), ID: row.ID,
 	})
 }
 

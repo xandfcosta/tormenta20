@@ -6,7 +6,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // A CONSTRUÇÃO da ficha (ALE-278, terceira camada compartilhada).
@@ -59,9 +59,9 @@ func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (Charact
 	}
 	for _, it := range items {
 		dto.Items = append(dto.Items, ItemDTO{
-			ID: it.ID, CatalogID: plataforma.NullToPtr(it.Catalogid), Name: it.Name,
-			Quantity: it.Quantity, Slots: it.Slots, Equipped: plataforma.NullToPtr(it.Equipped),
-			Improvements: it.Improvements, Material: plataforma.NullToPtr(it.Material),
+			ID: it.ID, CatalogID: platform.NullToPtr(it.Catalogid), Name: it.Name,
+			Quantity: it.Quantity, Slots: it.Slots, Equipped: platform.NullToPtr(it.Equipped),
+			Improvements: it.Improvements, Material: platform.NullToPtr(it.Material),
 		})
 	}
 

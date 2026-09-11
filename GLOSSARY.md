@@ -290,9 +290,19 @@ produto, o terceiro é a palavra da mesa. O identificador é que não pode ser s
 ## E-bis. Os contextos do servidor (ALE-254)
 
 Nome de pacote é identificador, então o glossário manda nele — e pela regra do
-§F identificador novo é em inglês. `aovivo/` e `plataforma/` são anteriores à
-regra e ficam: renomear pacote move todo import do repositório, que é o preço
-mais alto da lista por ganho puramente estético.
+§F identificador novo é em inglês. **Os três que estavam em português saíram**:
+`tabuleiro/` virou `board/` na ALE-301, e `aovivo/`/`plataforma/` viraram
+`live/`/`platform/` na ALE-303, por decisão do dono.
+
+> Aqui morava "`aovivo/` e `plataforma/` são anteriores à regra e ficam:
+> renomear pacote move todo import do repositório, que é o preço mais alto da
+> lista por ganho puramente estético". O dono decidiu o contrário, e o preço
+> medido foi menor do que o parágrafo previa: **151 arquivos, e o compilador
+> provou cada um.** O que custa num renome de pacote não é o import — é a
+> SOMBRA, e a do `board` (§abaixo) foi cara justamente porque `board` é
+> substantivo comum. `live` e `platform` não são nome de variável em lugar
+> nenhum deste repositório, e por isso os dois juntos custaram menos que o
+> `tabuleiro` sozinho.
 
 > **`tabuleiro/` virou `board/` na ALE-301**, por decisão do dono, e o preço
 > ficou medido para a próxima vez que alguém quiser mexer nos outros dois: **105
@@ -312,8 +322,8 @@ mais alto da lista por ganho puramente estético.
 
 | termo | no código | proibido | o que é |
 | -- | -- | -- | -- |
-| **ao vivo** | `aovivo/`, `live*` | ~~mesa~~ (como pacote), ~~tempo real~~ | **O REGIME: a sessão enquanto está acontecendo.** O que existe só enquanto há gente conectada — o estado da fila em memória, a entrega por SSE, a presença, e a autorização de quem está na sessão. Nomeia o regime e não as pessoas, o que o distingue de `mesa`, e não a linha do banco, o que o distingue de `sessão`. O código já dizia `mountLiveRoutes`, `liveAccess` e `liveCtx` antes de a palavra existir aqui. |
-| **plataforma** | `plataforma/` | ~~util~~, ~~common~~, ~~shared~~ | **O que não é domínio nenhum**: responder e decodificar HTTP, validar corpo, ler config, negociar codificação. Existe para NÃO virar o saco onde tudo cabe — se um conceito do jogo entrar aqui, a fronteira está errada. Os nomes proibidos são os que convidam exatamente esse acúmulo. |
+| **ao vivo** | `live/`, `live*` | ~~mesa~~ (como pacote), ~~tempo real~~ | **O REGIME: a sessão enquanto está acontecendo.** O que existe só enquanto há gente conectada — o estado da fila em memória, a entrega por SSE, a presença, e a autorização de quem está na sessão. Nomeia o regime e não as pessoas, o que o distingue de `mesa`, e não a linha do banco, o que o distingue de `sessão`. O código já dizia `mountLiveRoutes`, `liveAccess` e `liveCtx` antes de a palavra existir aqui. |
+| **plataforma** | `platform/` | ~~util~~, ~~common~~, ~~shared~~ | **O que não é domínio nenhum**: responder e decodificar HTTP, validar corpo, ler config, negociar codificação. Existe para NÃO virar o saco onde tudo cabe — se um conceito do jogo entrar aqui, a fronteira está errada. Os nomes proibidos são os que convidam exatamente esse acúmulo. |
 
 **Por que `mesa` NÃO serve para o pacote**, e vale ficar escrito porque a
 tentação vai voltar: a linha da seção A diz que "mesa" é metonímia das pessoas

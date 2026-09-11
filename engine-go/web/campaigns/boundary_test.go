@@ -29,7 +29,7 @@ import (
 var permitidos = map[string]bool{
 	"t20engine/campaign":       true, // as REGRAS: nome, descrição, regras opcionais
 	"t20engine/db/sqlcgen":     true, // as linhas do banco, pelo `Queries` da porta
-	"t20engine/plataforma":     true, // o mapa de erro por campo e o carimbo ISO
+	"t20engine/platform":       true, // o mapa de erro por campo e o carimbo ISO
 	"t20engine/search":         true, // o casamento da busca da lista
 	"t20engine/sheet":          true, // a forma do personagem que senta à mesa
 	"t20engine/web/characters": true, // a linha de classes do herói, uma só

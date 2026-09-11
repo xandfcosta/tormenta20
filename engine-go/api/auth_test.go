@@ -1,7 +1,7 @@
 package api
 
 import (
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"testing"
 	"time"
 
@@ -9,7 +9,7 @@ import (
 )
 
 func testServer(secret string) *Server {
-	return &Server{cfg: plataforma.Config{JWTSecret: secret, JWTExpiresIn: "7d", CookieName: "t20_session"}}
+	return &Server{cfg: platform.Config{JWTSecret: secret, JWTExpiresIn: "7d", CookieName: "t20_session"}}
 }
 
 // `TestSignVerifyRoundtrip` saiu na ALE-187: assinar e verificar o próprio

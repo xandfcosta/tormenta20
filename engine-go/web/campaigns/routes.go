@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/campaign"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/web/routes"
 	"t20engine/web/ui"
@@ -131,7 +131,7 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 	v := newView{
 		Nome:      r.PostFormValue("name"),
 		Descricao: r.PostFormValue("description"),
-		Erros:     plataforma.FieldErrorMap{},
+		Erros:     platform.FieldErrorMap{},
 	}
 	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campaign/rules.go`.
 	nome, descricaoTexto, erros := campaign.ValidateText(v.Nome, &v.Descricao)
@@ -239,26 +239,26 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 // (ALE-278). O que a tela diz não mudou; o que mudou é que os sentinelas de erro
 // deixaram de atravessar a fronteira. Quem classifica é o hospedeiro, quem
 // escolhe a frase é a cena — a decisão que a porta de entrar deixou escrita.
-func joinRefusalPhrase(recusa JoinRefusal) (plataforma.FieldErrorMap, string) {
+func joinRefusalPhrase(recusa JoinRefusal) (platform.FieldErrorMap, string) {
 	switch recusa {
 	case JoinNoSuchCampaign:
-		return plataforma.FieldErrorMap{"campaignId": {"Não existe campanha com esse número."}}, ""
+		return platform.FieldErrorMap{"campaignId": {"Não existe campanha com esse número."}}, ""
 	case JoinNeedsInvite:
-		return plataforma.FieldErrorMap{}, "Esta mesa é fechada. Peça um link de convite ao mestre."
+		return platform.FieldErrorMap{}, "Esta mesa é fechada. Peça um link de convite ao mestre."
 	case JoinNotYourHero:
-		return plataforma.FieldErrorMap{"characterId": {"Escolha um herói seu."}}, ""
+		return platform.FieldErrorMap{"characterId": {"Escolha um herói seu."}}, ""
 	case JoinAlreadyHasHero:
-		return plataforma.FieldErrorMap{"characterId": {"Você já tem um herói nesta mesa."}}, ""
+		return platform.FieldErrorMap{"characterId": {"Você já tem um herói nesta mesa."}}, ""
 	case JoinHeroAlreadyThere:
-		return plataforma.FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
+		return platform.FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
 	default:
-		return plataforma.FieldErrorMap{}, ui.NoticeInternal
+		return platform.FieldErrorMap{}, ui.NoticeInternal
 	}
 }
 
 func (s Scene) writeJoinPage(w http.ResponseWriter, r *http.Request, status int, v joinView) {
 	if v.Erros == nil {
-		v.Erros = plataforma.FieldErrorMap{}
+		v.Erros = platform.FieldErrorMap{}
 	}
 	s.deps.WritePage(w, r, status, ui.Page{
 		Titulo: "Entrar na mesa",

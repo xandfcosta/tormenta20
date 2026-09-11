@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // AS REGRAS DE CAMPANHA E DE MESA, com casa própria (ALE-278, fatia 6).
@@ -80,7 +80,7 @@ func (rules campaignRules) rotateInvite(ctx context.Context, campanhaID int64) (
 	token := generateInviteToken()
 	if _, err := rules.queries.SetInviteToken(ctx, sqlcgen.SetInviteTokenParams{
 		InviteToken: sql.NullString{String: token, Valid: true},
-		UpdatedAt:   plataforma.NowISO(),
+		UpdatedAt:   platform.NowISO(),
 		ID:          campanhaID,
 	}); err != nil {
 		return "", err

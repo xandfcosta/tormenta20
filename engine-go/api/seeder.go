@@ -5,7 +5,7 @@ import (
 	"t20engine/account"
 	"t20engine/book"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/sheet"
 )
 
@@ -116,7 +116,7 @@ func (sd Seeder) LearnSpell(ctx context.Context, id int64, catalogo string, prep
 	}
 	_, err := sd.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
 		Characterid: id, Catalogspellid: catalogo,
-		Prepared: preparadaEm, Learnedat: plataforma.NowISO(),
+		Prepared: preparadaEm, Learnedat: platform.NowISO(),
 	})
 	return err
 }
@@ -130,7 +130,7 @@ func (sd Seeder) SetHp(ctx context.Context, id, atual int64) error {
 	return sd.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
 		HpMax: linha.Hpmax, HpCurrent: atual,
 		MpMax: linha.Mpmax, MpCurrent: linha.Mpcurrent,
-		UpdatedAt: plataforma.NowISO(), ID: id,
+		UpdatedAt: platform.NowISO(), ID: id,
 	})
 }
 

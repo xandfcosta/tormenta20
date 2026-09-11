@@ -2,8 +2,8 @@ package api
 
 import (
 	"strings"
-	"t20engine/aovivo"
 	"t20engine/events"
+	"t20engine/live"
 	"testing"
 )
 
@@ -35,9 +35,9 @@ func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 		// que EXPLODE é melhor que nulo tolerado — a segunda forma foi o gancho
 		// que este arquivo conta ter nascido desligado.
 		bus: &events.Bus{},
-		sse: aovivo.NewSSEHub(),
-		sessions: &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
-			7: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
+		sse: live.NewSSEHub(),
+		sessions: &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+			7: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
 		}},
 	}
 	conn := s.sse.Add(7, "c1", "player")
@@ -65,9 +65,9 @@ func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 		// que EXPLODE é melhor que nulo tolerado — a segunda forma foi o gancho
 		// que este arquivo conta ter nascido desligado.
 		bus: &events.Bus{},
-		sse: aovivo.NewSSEHub(),
-		sessions: &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
-			7: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(99)}}},
+		sse: live.NewSSEHub(),
+		sessions: &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+			7: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(99)}}},
 		}},
 	}
 	conn := s.sse.Add(7, "c1", "player")
@@ -88,11 +88,11 @@ func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 // estar olhando.
 func TestOnlyTheLiveSessionsHoldingTheCharacter(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
-	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
-		1: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
-		2: {Initiative: []aovivo.InitiativeEntry{{ID: "b", CharacterID: umPersonagem(99)}}},
+	st := &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+		1: {Initiative: []live.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
+		2: {Initiative: []live.InitiativeEntry{{ID: "b", CharacterID: umPersonagem(99)}}},
 		// NPC na fila: `CharacterID` nulo não pode ser confundido com o 14.
-		3: {Initiative: []aovivo.InitiativeEntry{{ID: "c"}, {ID: "d", CharacterID: umPersonagem(14)}}},
+		3: {Initiative: []live.InitiativeEntry{{ID: "c"}, {ID: "d", CharacterID: umPersonagem(14)}}},
 	}}
 
 	achadas := st.LiveSessionsWithCharacter(14)
@@ -112,8 +112,8 @@ func TestOnlyTheLiveSessionsHoldingTheCharacter(t *testing.T) {
 // mesma busca duas vezes por escrita.
 func TestARepeatedSessionIsAnnouncedOnce(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
-	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
-		1: {Initiative: []aovivo.InitiativeEntry{
+	st := &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+		1: {Initiative: []live.InitiativeEntry{
 			{ID: "a", CharacterID: umPersonagem(14)},
 			{ID: "b", CharacterID: umPersonagem(14)},
 		}},
@@ -138,8 +138,8 @@ func TestARepeatedSessionIsAnnouncedOnce(t *testing.T) {
 // uma leitura de banco a cada escrita de ficha. Não foi feito, e a troca está
 // escrita aqui para quem for decidir de novo.
 func TestOffTableNobodyIsAnnouncedTo(t *testing.T) {
-	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
-		1: {Initiative: []aovivo.InitiativeEntry{{ID: "a"}}},
+	st := &live.SessionStore{States: map[int64]*live.SessionRuntimeState{
+		1: {Initiative: []live.InitiativeEntry{{ID: "a"}}},
 	}}
 
 	if achadas := st.LiveSessionsWithCharacter(14); len(achadas) != 0 {

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // A VIRADA (ALE-269): entrar numa sessão passa a ser entrar na Mesa em Datastar.
@@ -40,7 +40,7 @@ func TestEveryDoorLeadsToTheDatastarTable(t *testing.T) {
 	campanha := seedCampaign(t, s, dono)
 	sessao := seedSession(t, s, campanha)
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		UpdatedAt: plataforma.NowISO(), ID: sessao,
+		UpdatedAt: platform.NowISO(), ID: sessao,
 	}); err != nil {
 		t.Fatalf("iniciar sessão: %v", err)
 	}

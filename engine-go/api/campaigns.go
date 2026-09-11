@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"t20engine/campaign"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/db/sqlcgen"
 	"t20engine/sheet"
@@ -57,7 +57,7 @@ type campaignDetailDTO struct {
 
 func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 	return CampaignDTO{
-		ID: c.ID, OwnerID: c.Ownerid, Name: c.Name, Description: plataforma.NullToPtr(c.Description),
+		ID: c.ID, OwnerID: c.Ownerid, Name: c.Name, Description: platform.NullToPtr(c.Description),
 		CreatedAt: c.Createdat, UpdatedAt: c.Updatedat,
 	}
 }
@@ -65,10 +65,10 @@ func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 	out, err := s.campaignRules().campaignList(r.Context(), currentUser(r))
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
+		platform.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, out)
+	platform.WriteJSON(w, http.StatusOK, out)
 }
 
 // campaignList monta a lista COMO A TELA a mostra: o papel de quem olha, o nome
@@ -161,7 +161,7 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 		Name        string  `json:"name"`
 		Description *string `json:"description"`
 	}
-	if !plataforma.DecodeJSON(w, r, &body) {
+	if !platform.DecodeJSON(w, r, &body) {
 		return
 	}
 	// As DUAS recusas de uma vez, e em pt-BR: até a ALE-278 esta rota respondia
@@ -170,20 +170,20 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	// desfez nesta mesma épica.
 	name, descricaoTexto, erros := campaign.ValidateText(body.Name, body.Description)
 	if len(erros) > 0 {
-		plataforma.WriteValidationError(w, erros)
+		platform.WriteValidationError(w, erros)
 		return
 	}
 	descricao := trimOrNull(&descricaoTexto)
-	now := plataforma.NowISO()
+	now := platform.NowISO()
 	c, err := s.campaignRules().createCampaign(r.Context(), sqlcgen.CreateCampaignParams{
 		Ownerid: currentUser(r).ID, Name: name, Description: descricao,
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
+		platform.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusCreated, campaignScalars(c))
+	platform.WriteJSON(w, http.StatusCreated, campaignScalars(c))
 }
 
 func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
@@ -199,10 +199,10 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	// ficaria batendo na chave estrangeira até o processo reiniciar.
 	s.CampaignDeleted(r.Context(), id)
 	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete campaign")
+		platform.WriteError(w, http.StatusInternalServerError, "Could not delete campaign")
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
+	platform.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
 }
 
 // Aqui morava o `handleResolveInvite`, que resolvia o token compartilhado de
@@ -277,7 +277,7 @@ func (rules campaignRules) loadOwnedCampaign(ctx context.Context, user AuthUser,
 func (rules campaignRules) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64) (sqlcgen.Campaign, bool) {
 	c, status, err := rules.loadOwnedCampaign(r.Context(), currentUser(r), id)
 	if err != nil {
-		plataforma.WriteError(w, status, err.Error())
+		platform.WriteError(w, status, err.Error())
 		return c, false
 	}
 	return c, true

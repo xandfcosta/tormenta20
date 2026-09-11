@@ -1,6 +1,6 @@
 package api
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 import (
 	"encoding/json"
@@ -58,7 +58,7 @@ func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
 			wg.Add(1)
 			go func(rotulo string) {
 				defer wg.Done()
-				estado, err := s.sessions.AddInitiativeEntry(sessionID, aovivo.InitiativeEntry{
+				estado, err := s.sessions.AddInitiativeEntry(sessionID, live.InitiativeEntry{
 					Label: rotulo, Type: "npc", Initiative: 10,
 				})
 				if err != nil {
@@ -92,7 +92,7 @@ func TestTheFrameFollowsTheOrderOfTheMutation(t *testing.T) {
 
 // ultimoQuadro drena a fila e devolve o último quadro, que é o que sobrevive na
 // tela — os anteriores são sobrescritos por ele.
-func ultimoQuadro(conn *aovivo.SSEConn) string {
+func ultimoQuadro(conn *live.SSEConn) string {
 	var ultimo string
 	for {
 		select {

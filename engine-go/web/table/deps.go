@@ -6,11 +6,11 @@ import (
 
 	"github.com/a-h/templ"
 
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
+	"t20engine/live"
 	"t20engine/web/bookui"
 	"t20engine/web/sheetui"
 	"t20engine/web/ui"
@@ -31,7 +31,7 @@ import (
 // # Os STORES atravessam, e os campos do `Server` não
 //
 // `Boards`, `Sessions`, `Presence` e `Bus` são tipos de OUTROS pacotes
-// (`board`, `aovivo`, `events`) — a cena os recebe inteiros pela mesma
+// (`board`, `live`, `events`) — a cena os recebe inteiros pela mesma
 // razão que a forja recebe o `Queries`: eles são o vocabulário do domínio ao
 // vivo, não o hospedeiro com outro nome. Uma porta que os embrulhasse método a
 // método teria oitenta entradas e nenhuma fronteira a mais.
@@ -46,11 +46,11 @@ type Deps interface {
 	Catalogs() *engine.Catalogs
 	// Boards são os tabuleiros vivos por sessão; Sessions é a fila e a cena.
 	Boards() *board.BoardStore
-	Sessions() *aovivo.SessionStore
+	Sessions() *live.SessionStore
 	// Presence é quem está online na sala; SSE são os leitores por sessão e
 	// papel; Bus é o que aconteceu na mesa.
-	Presence() *aovivo.PresenceRegistry
-	SSE() *aovivo.SSEHub
+	Presence() *live.PresenceRegistry
+	SSE() *live.SSEHub
 	Bus() *events.Bus
 	// CurrentUserID é quem está pedindo, pelo ID e não pelo usuário inteiro —
 	// o tipo do usuário é do hospedeiro, e uma porta que o devolvesse não é
@@ -98,13 +98,13 @@ type Deps interface {
 	// dela: um contrato que já existe ganha quando é a MESMA pergunta; quando só
 	// a cara é a mesma, forçar um nome só junta duas coisas diferentes. O sufixo
 	// não foi inventado agora — o `endSceneForTable` já usava.
-	StartSessionForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error)
-	EndSessionForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error)
-	RestartCombatForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error)
-	EndSceneForTable(userID, campaignID, sessionID int64) (*aovivo.SessionRuntimeState, error)
+	StartSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
+	EndSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
+	RestartCombatForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
+	EndSceneForTable(userID, campaignID, sessionID int64) (*live.SessionRuntimeState, error)
 	RestParty(userID, campaignID, sessionID int64, escopo, condicao string) (int, int, error)
 	// SelfInitiativeEntry monta a linha de quem entra na fila com o próprio d20.
-	SelfInitiativeEntry(userID, campaignID, characterID, d20 int64) (aovivo.InitiativeEntry, error)
+	SelfInitiativeEntry(userID, campaignID, characterID, d20 int64) (live.InitiativeEntry, error)
 	// CloneCreatureBlock copia o bloco de criatura do mestre e devolve o id da
 	// cópia (ALE-206).
 	//
@@ -120,11 +120,11 @@ type Deps interface {
 	CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error)
 	// MaterializeEntry transforma o pedido de linha nova (ficha, NPC, verbete)
 	// na linha de fila que o store aceita.
-	MaterializeEntry(ctx context.Context, userID, campaignID int64, pedido map[string]any) (aovivo.InitiativeEntry, error)
+	MaterializeEntry(ctx context.Context, userID, campaignID int64, pedido map[string]any) (live.InitiativeEntry, error)
 	// PlayerCombatants são os personagens dos jogadores da campanha, e
 	// PopulateParty põe os que faltam no mapa.
 	PlayerCombatants(ctx context.Context, campaignID int64) ([]Combatant, error)
-	PopulateParty(sessionID int64, quem []Combatant) (*aovivo.SessionRuntimeState, error)
+	PopulateParty(sessionID int64, quem []Combatant) (*live.SessionRuntimeState, error)
 	// InitiativeBonus e ComputedSheet são a ficha computada que a fila e o
 	// elenco mostram.
 	InitiativeBonus(ctx context.Context, characterID int64) (int64, error)
@@ -154,7 +154,7 @@ type Deps interface {
 
 	// PUBLICAR é do hospedeiro: ele conhece o hub e o barramento, e a cena só
 	// sabe QUANDO alguma coisa mudou.
-	PublishSessionState(sessionID int64, estado *aovivo.SessionRuntimeState)
+	PublishSessionState(sessionID int64, estado *live.SessionRuntimeState)
 	PublishBoardState(sessionID int64, board *board.BoardState)
 	PublishWhatIsLeft(ctx context.Context, sessionID int64)
 	CharacterChanged(characterID int64)

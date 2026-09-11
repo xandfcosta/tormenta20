@@ -8,8 +8,8 @@ import (
 
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/aovivo"
 	"t20engine/board"
+	"t20engine/live"
 )
 
 // PÔR NO MAPA (ALE-264, item 5) — ver a linha do GLOSSARY.
@@ -43,7 +43,7 @@ type candidatoAoMapa struct {
 //
 // A ordem é a da FILA e não alfabética: é a ordem em que o mestre acabou de ler
 // os nomes na tela ao lado, e reordenar aqui faria ele procurar duas vezes.
-func MapCandidates(b *board.BoardState, st *aovivo.SessionRuntimeState) []candidatoAoMapa {
+func MapCandidates(b *board.BoardState, st *live.SessionRuntimeState) []candidatoAoMapa {
 	if b == nil || st == nil {
 		return nil
 	}
@@ -112,7 +112,7 @@ func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 // escolhidosDosSinais lê a escolha do diálogo.
 //
 // O sinal é UMA string com os ids separados por vírgula, e ela é segura porque
-// id de combatente é UUID (`aovivo.NewUUID`) — não há vírgula dentro de um id
+// id de combatente é UUID (`live.NewUUID`) — não há vírgula dentro de um id
 // para partir a lista no meio. Um sinal por candidato seria um sinal por nome na
 // fila, criados e destruídos a cada remendo da cena.
 //

@@ -2,7 +2,7 @@ package table
 
 import (
 	"strings"
-	"t20engine/aovivo"
+	"t20engine/live"
 	"t20engine/web/ui"
 	"testing"
 )
@@ -10,7 +10,7 @@ import (
 // O guarda que justifica o piloto reusar `stateForRole` em vez de montar a
 // própria leitura: a PÁGINA obedece à mesma redação que o socket.
 //
-// Provado VERMELHO trocando `aovivo.StateForRole(role, ...)` por `s.deps.Sessions().GetState(...)`
+// Provado VERMELHO trocando `live.StateForRole(role, ...)` por `s.deps.Sessions().GetState(...)`
 // no `LoadView` — o HTML passou a carregar "12/130", os PV que o mestre
 // escondeu, para dentro da tela do jogador.
 // A vez é MINHA quando a linha na vez é de um personagem meu — e é "de outro"
@@ -18,7 +18,7 @@ import (
 // divergiriam em silêncio.
 func TestTableTurnOf(t *testing.T) {
 	meu, alheio := int64(7), int64(9)
-	fila := []aovivo.InitiativeEntry{
+	fila := []live.InitiativeEntry{
 		{Label: "Ogro", Initiative: 19, Type: "npc"},
 		{Label: "Arcanista", Initiative: 12, Type: "character", CharacterID: &meu},
 	}
@@ -37,15 +37,15 @@ func TestTableTurnOf(t *testing.T) {
 	}
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
-			got := tableTurnOf(&aovivo.SessionRuntimeState{Initiative: fila, TurnIndex: c.turnIndex}, meus)
+			got := tableTurnOf(&live.SessionRuntimeState{Initiative: fila, TurnIndex: c.turnIndex}, meus)
 			if got.Kind != c.kind || got.Label != c.label {
 				t.Errorf("veio {%s %q}, queria {%s %q}", got.Kind, got.Label, c.kind, c.label)
 			}
 		})
 	}
 	// O personagem alheio não acende a faixa de ninguém.
-	outro := tableTurnOf(&aovivo.SessionRuntimeState{
-		Initiative: []aovivo.InitiativeEntry{{Label: "Colega", Type: "character", CharacterID: &alheio}},
+	outro := tableTurnOf(&live.SessionRuntimeState{
+		Initiative: []live.InitiativeEntry{{Label: "Colega", Type: "character", CharacterID: &alheio}},
 		TurnIndex:  0,
 	}, meus)
 	if outro.Kind != "other" {
@@ -118,7 +118,7 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 
 // A FAIXA DE QUEM VEM DEPOIS (ALE-290).
 //
-// O `aovivo.UpcomingTurns` existia desde a ALE-179 com cinco guardas e ZERO
+// O `live.UpcomingTurns` existia desde a ALE-179 com cinco guardas e ZERO
 // telas — a conta da ordem circular no ar, e ninguém desenhando quem vem depois.
 // Estes casos prendem a TRADUÇÃO dela para a tela; a regra circular continua
 // presa lá, e reafirmá-la aqui seria a mesma fronteira duas vezes.
@@ -128,7 +128,7 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 // nem desenha setas.
 func TestTheTurnStripSaysWhoIsNextAndWhereTheRoundTurns(t *testing.T) {
 	meu := int64(7)
-	fila := []aovivo.InitiativeEntry{
+	fila := []live.InitiativeEntry{
 		{Label: "Ogro", Initiative: 20, Type: "npc"},
 		{Label: "Arwen", Initiative: 15, Type: "character", CharacterID: &meu},
 		{Label: "Zumbi 1", Initiative: 10, Type: "npc"},
@@ -160,7 +160,7 @@ func TestTheTurnStripSaysWhoIsNextAndWhereTheRoundTurns(t *testing.T) {
 	}
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
-			faixa := turnStripOf(&aovivo.SessionRuntimeState{
+			faixa := turnStripOf(&live.SessionRuntimeState{
 				Initiative: fila, TurnIndex: c.turnIndex, SceneActive: true,
 			}, meus)
 
@@ -200,14 +200,14 @@ func TestTheTurnStripSaysWhoIsNextAndWhereTheRoundTurns(t *testing.T) {
 func TestTheTurnStripShowsNothingOutOfCombatAndNeverRepeats(t *testing.T) {
 	meus := map[int64]bool{}
 
-	if faixa := turnStripOf(&aovivo.SessionRuntimeState{
-		Initiative: []aovivo.InitiativeEntry{{Label: "Ogro"}}, TurnIndex: -1,
+	if faixa := turnStripOf(&live.SessionRuntimeState{
+		Initiative: []live.InitiativeEntry{{Label: "Ogro"}}, TurnIndex: -1,
 	}, meus); len(faixa) != 0 {
 		t.Errorf("fora de combate a faixa desenhou %d nomes: %+v", len(faixa), faixa)
 	}
 
-	dois := []aovivo.InitiativeEntry{{Label: "Ogro"}, {Label: "Arwen"}}
-	faixa := turnStripOf(&aovivo.SessionRuntimeState{
+	dois := []live.InitiativeEntry{{Label: "Ogro"}, {Label: "Arwen"}}
+	faixa := turnStripOf(&live.SessionRuntimeState{
 		Initiative: dois, TurnIndex: 1, SceneActive: true,
 	}, meus)
 	if len(faixa) != 2 {
@@ -238,7 +238,7 @@ func TestTheStripSaysYourNameWhenMoreThanOneIsYours(t *testing.T) {
 	meu, outroMeu := int64(7), int64(8)
 	meus := map[int64]bool{meu: true, outroMeu: true}
 
-	umSo := turnStripOf(&aovivo.SessionRuntimeState{SceneActive: true, TurnIndex: 0, Initiative: []aovivo.InitiativeEntry{
+	umSo := turnStripOf(&live.SessionRuntimeState{SceneActive: true, TurnIndex: 0, Initiative: []live.InitiativeEntry{
 		{Label: "Ogro"},
 		{Label: "Arwen", Type: "character", CharacterID: &meu},
 		{Label: "Zumbi 1"},
@@ -247,7 +247,7 @@ func TestTheStripSaysYourNameWhenMoreThanOneIsYours(t *testing.T) {
 		t.Errorf("com UM personagem meu a faixa escreveu %q, queria \"você\"", got)
 	}
 
-	dois := turnStripOf(&aovivo.SessionRuntimeState{SceneActive: true, TurnIndex: 0, Initiative: []aovivo.InitiativeEntry{
+	dois := turnStripOf(&live.SessionRuntimeState{SceneActive: true, TurnIndex: 0, Initiative: []live.InitiativeEntry{
 		{Label: "Recruta", Type: "character", CharacterID: &meu},
 		{Label: "Tanque"},
 		{Label: "Arcanista", Type: "character", CharacterID: &outroMeu},

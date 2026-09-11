@@ -62,7 +62,7 @@ const fileNameWords = "testdata/file_name_words.txt"
 // do oráculo, que o `engine-go/CLAUDE.md` diz que só se regenera por ato
 // deliberado. Decisão do dono, ALE-301: as 18 ficam.
 //
-// **Pasta de PACOTE não entra aqui**: `aovivo/` e `plataforma/` seguem em
+// **Pasta de PACOTE não entra aqui**: `live/` e `platform/` seguem em
 // português por decisão do glossário (§E-bis) e este guarda não as vê, porque
 // ele mede o NOME DO ARQUIVO e os arquivos lá dentro já são ingleses. O
 // `tabuleiro/` virou `board/` nesta mesma fatia.

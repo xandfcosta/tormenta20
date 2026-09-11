@@ -20,7 +20,7 @@ import (
 //
 // Elas moram no `sheet` e não num pacote novo porque é aqui que a ficha já
 // mora: o `CharacterDTO` e o `Compute` estão ao lado, e os três imports que
-// estas regras precisam — `engine`, `sqlcgen`, `plataforma` — já eram os
+// estas regras precisam — `engine`, `sqlcgen`, `platform` — já eram os
 // permitidos deste pacote. Um `character` só para elas colidiria com o `sheet`
 // sem comprar nada.
 //

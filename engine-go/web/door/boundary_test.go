@@ -34,7 +34,7 @@ var permitidos = map[string]bool{
 	"t20engine/account":    true, // o que uma conta aceita: e-mail, senha, a forma do pedido
 	"t20engine/web/ui":     true, // o kit de apresentação e a casca
 	"t20engine/db/sqlcgen": true, // as linhas do banco, que atravessam a porta
-	"t20engine/plataforma": true, // não é domínio nenhum
+	"t20engine/platform":   true, // não é domínio nenhum
 }
 
 func TestTheDoorDoesNotImportItsHost(t *testing.T) {

@@ -3,11 +3,11 @@ package api
 import (
 	"database/sql"
 	"sync"
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
+	"t20engine/live"
 )
 
 // AS REGRAS DA MESA AO VIVO, com casa própria (ALE-278, fatia 6).
@@ -38,9 +38,9 @@ type tableRules struct {
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs
 	boards   *board.BoardStore
-	sessions *aovivo.SessionStore
-	presence *aovivo.PresenceRegistry
-	sse      *aovivo.SSEHub
+	sessions *live.SessionStore
+	presence *live.PresenceRegistry
+	sse      *live.SSEHub
 	bus      *events.Bus
 	campaign campaignRules
 	sheet    sheetRules
@@ -58,7 +58,7 @@ type tableRules struct {
 
 // configForTable é o pedaço da configuração que a mesa lê: quem administra.
 //
-// Um tipo de uma pergunta em vez da `plataforma.Config` inteira — a Mesa não
+// Um tipo de uma pergunta em vez da `platform.Config` inteira — a Mesa não
 // tem o que fazer com o segredo do JWT nem com a pasta de backup, e o
 // `IsAdminRequester` é a única coisa que ela pergunta à configuração.
 type configForTable struct {

@@ -1,8 +1,8 @@
 package board
 
 import (
-	"t20engine/aovivo"
 	"t20engine/engine"
+	"t20engine/live"
 )
 
 import (
@@ -108,10 +108,10 @@ func TestHiddenTokenVanishesForPlayers(t *testing.T) {
 func TestPopulateBoardIsIdempotent(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
-	st := aovivo.EmptyRuntimeState()
+	st := live.EmptyRuntimeState()
 	entryID := ContadorDeIds()
-	_ = aovivo.AddEntry(st, npc("Ogro", 12), entryID)
-	_ = aovivo.AddEntry(st, npc("Bandido", 8), entryID)
+	_ = live.AddEntry(st, npc("Ogro", 12), entryID)
+	_ = live.AddEntry(st, npc("Bandido", 8), entryID)
 
 	if placed := populateBoard(b, st, id, nil); placed != 2 {
 		t.Errorf("primeira chamada colocou %d peças, esperado 2", placed)
@@ -228,7 +228,7 @@ func TestTheCopyWithALoopSharesTheQueueLine(t *testing.T) {
 	entrada := "e7"
 	b.Tokens[0].EntryID = &entrada
 
-	linha := aovivo.InitiativeEntry{ID: "e7", Label: "Zumbi", Type: "npc"}
+	linha := live.InitiativeEntry{ID: "e7", Label: "Zumbi", Type: "npc"}
 	if err := DuplicateToken(b, "t0", &linha, novoIDFixo()); err != nil {
 		t.Fatalf("duplicar: %v", err)
 	}
@@ -254,7 +254,7 @@ func TestTheCopyTakesTheSheetFromTheLineAndNotFromTheOriginal(t *testing.T) {
 	b.Tokens[0].CharacterID = &daOriginal
 
 	// A linha nova é de NPC: sem ficha.
-	linha := aovivo.InitiativeEntry{ID: "e9", Label: "Zumbi 2", Type: "npc"}
+	linha := live.InitiativeEntry{ID: "e9", Label: "Zumbi 2", Type: "npc"}
 	if err := DuplicateToken(b, "t0", &linha, novoIDFixo()); err != nil {
 		t.Fatalf("duplicar: %v", err)
 	}

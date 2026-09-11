@@ -1,4 +1,4 @@
-package aovivo
+package live
 
 import "context"
 
@@ -7,7 +7,7 @@ import "context"
 // O regime precisa escrever PV e PM de um personagem — é a ALE-122, "o PV do
 // rastreador É o PV da ficha". Mas as REGRAS dessa escrita são da ficha e não
 // daqui: a ordem do dano do livro, os pools temporários, o teto de cada vital.
-// Quando o `aovivo/` foi extraído, o compilador apontou isso em três métodos de
+// Quando o `live/` foi extraído, o compilador apontou isso em três métodos de
 // uma vez, e a resposta certa não era arrastar as regras da ficha para cá.
 //
 // Então o regime declara o que PRECISA e não sabe quem entrega. Hoje quem

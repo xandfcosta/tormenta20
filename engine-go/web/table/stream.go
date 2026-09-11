@@ -2,7 +2,7 @@ package table
 
 import (
 	"context"
-	"t20engine/aovivo"
+	"t20engine/live"
 	"t20engine/web/ui"
 
 	"crypto/sha256"
@@ -82,8 +82,8 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	if view.Mestre != nil {
 		papel = "gm"
 	}
-	conexao := aovivo.NewUUID()
-	s.deps.Presence().Join(sessionID, conexao, aovivo.PresenceUser{UserID: userID, Role: papel})
+	conexao := live.NewUUID()
+	s.deps.Presence().Join(sessionID, conexao, live.PresenceUser{UserID: userID, Role: papel})
 	defer s.deps.Presence().Leave(sessionID, conexao)
 
 	// A ASSINATURA vem ANTES do primeiro quadro, senão uma mutação que caia entre

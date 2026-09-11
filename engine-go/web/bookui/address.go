@@ -30,7 +30,7 @@ type BookAddress struct {
 //
 // A ABERTURA não entra aqui: quem soma é o leitor, que fala em página impressa
 // com quem lê e em página de arquivo com o pdf.js. Ver
-// `plataforma.Config.LivroAbertura` para a medição do 6.
+// `platform.Config.LivroAbertura` para a medição do 6.
 func (l BookAddress) AtPage(pagina int, termo string) string {
 	if l.Base == "" || pagina <= 0 {
 		return ""

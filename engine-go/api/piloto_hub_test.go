@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/web/routes"
 	"testing"
 
@@ -58,7 +58,7 @@ func TestTheHubOnlyOffersResumeWithALiveSession(t *testing.T) {
 	}
 
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		UpdatedAt: plataforma.NowISO(), ID: sessao,
+		UpdatedAt: platform.NowISO(), ID: sessao,
 	}); err != nil {
 		t.Fatalf("iniciar sessão: %v", err)
 	}
@@ -88,12 +88,12 @@ func TestTheHubRefusesAnInviteFromANonAdmin(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogadora@t20.local")
 
-	antes, err := s.queries.ListOpenAccountInvites(context.Background(), plataforma.NowISO())
+	antes, err := s.queries.ListOpenAccountInvites(context.Background(), platform.NowISO())
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
 	pedeHub(t, s, jogador, http.MethodPost, "/convites")
-	depois, err := s.queries.ListOpenAccountInvites(context.Background(), plataforma.NowISO())
+	depois, err := s.queries.ListOpenAccountInvites(context.Background(), platform.NowISO())
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}

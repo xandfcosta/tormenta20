@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/db/sqlcgen"
 )
@@ -184,7 +184,7 @@ func (rules campaignRules) joinCampaign(ctx context.Context, sourceID, campaignI
 		return sqlcgen.CampaignMember{}, err
 	}
 	member, err := rules.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: copyID, Addedat: plataforma.NowISO(),
+		Campaignid: campaignID, Characterid: copyID, Addedat: platform.NowISO(),
 	})
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err

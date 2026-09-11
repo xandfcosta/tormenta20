@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // CharacterDTO is the character aggregate the frontend consumes (shared/api/api.ts
@@ -112,7 +112,7 @@ func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 		OwnerID:              c.Ownerid,
 		Name:                 c.Name,
 		Origin:               c.Origin,
-		God:                  plataforma.NullToPtr(c.God),
+		God:                  platform.NullToPtr(c.God),
 		GodPower:             c.Godpower,
 		Tibar:                c.Tibar,
 		Level:                c.Level,
@@ -181,7 +181,7 @@ func MarshalStrings(p *[]string) string {
 // Ela nasceu na ALE-278 apagando TRÊS cópias deste corpo — as escolhas de poder,
 // as condições ativas e as proficiências, cada uma com o mesmo `Unmarshal` e o
 // mesmo `return nil`. A ida e a volta ficam juntas pelo mesmo motivo que as do
-// `plataforma.NullToPtr`: separadas, elas divergem.
+// `platform.NullToPtr`: separadas, elas divergem.
 func UnmarshalStrings(blob string) []string {
 	var ids []string
 	if json.Unmarshal([]byte(blob), &ids) != nil {

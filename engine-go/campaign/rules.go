@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 
 	"t20engine/engine"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // As regras de uma CAMPANHA: o que é um nome válido e o que é uma descrição
@@ -27,10 +27,10 @@ import (
 // > atravessou a decisão sem ninguém reler. É o defeito que a seção
 // > "Documentação" descreve, acontecido no arquivo que define o conceito.
 //
-// # Por que pacote, e não `plataforma`
+// # Por que pacote, e não `platform`
 //
 // Mesma razão escrita no `account`, e ela vale letra por letra: "o nome cabe em
-// 120 caracteres" é regra de PRODUTO, e o `plataforma` é infraestrutura sem
+// 120 caracteres" é regra de PRODUTO, e o `platform` é infraestrutura sem
 // domínio. Um conceito do jogo lá dentro é a fronteira no lugar errado.
 
 const (
@@ -64,10 +64,10 @@ const (
 //
 //	nome, erros := campaign.Name(bruto)
 //	if len(erros) > 0 { … }
-func Name(bruto string) (string, plataforma.FieldErrorMap) {
+func Name(bruto string) (string, platform.FieldErrorMap) {
 	nome := strings.TrimSpace(bruto)
 	if nome == "" || utf8.RuneCountInString(nome) > MaxNameLength {
-		return "", plataforma.FieldErrorMap{"name": {msgNomeInvalido}}
+		return "", platform.FieldErrorMap{"name": {msgNomeInvalido}}
 	}
 	return nome, nil
 }
@@ -83,12 +83,12 @@ func Name(bruto string) (string, plataforma.FieldErrorMap) {
 // A medida é em RUNAS e não em bytes: "Coração" tem 7 caracteres para quem
 // escreve e 8 bytes para quem conta errado, e um limite que encolhe conforme os
 // acentos é um limite que mente.
-func Description(bruto *string) (string, plataforma.FieldErrorMap) {
+func Description(bruto *string) (string, platform.FieldErrorMap) {
 	if bruto == nil {
 		return "", nil
 	}
 	if utf8.RuneCountInString(*bruto) > MaxDescriptionLength {
-		return "", plataforma.FieldErrorMap{"description": {msgDescricaoLonga}}
+		return "", platform.FieldErrorMap{"description": {msgDescricaoLonga}}
 	}
 	return strings.TrimSpace(*bruto), nil
 }
@@ -100,8 +100,8 @@ func Description(bruto *string) (string, plataforma.FieldErrorMap) {
 // reenviar, e só então descobrir que a descrição também estava longa. Um
 // formulário que devolve um erro por vez é um formulário que se preenche duas
 // vezes.
-func ValidateText(nomeBruto string, descricaoBruta *string) (string, string, plataforma.FieldErrorMap) {
-	erros := plataforma.FieldErrorMap{}
+func ValidateText(nomeBruto string, descricaoBruta *string) (string, string, platform.FieldErrorMap) {
+	erros := platform.FieldErrorMap{}
 	nome, errNome := Name(nomeBruto)
 	for campo, frases := range errNome {
 		erros[campo] = frases

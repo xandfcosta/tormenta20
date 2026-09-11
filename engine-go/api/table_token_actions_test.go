@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/live"
 	"t20engine/web/table"
 	"testing"
 )
@@ -264,7 +264,7 @@ func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 	if *copia.EntryID == linhaOriginal {
 		t.Fatal("a cópia ficou na linha da ORIGINAL — isso é o 'sangra junto', não o PV próprio")
 	}
-	var nova *aovivo.InitiativeEntry
+	var nova *live.InitiativeEntry
 	for i := range fila.Initiative {
 		if fila.Initiative[i].ID == *copia.EntryID {
 			nova = &fila.Initiative[i]
@@ -275,9 +275,9 @@ func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 	}
 	// O NÚMERO ESCRITO NA MÃO, e não derivado da linha original: derivá-lo do
 	// código sob teste esconderia justamente a troca de "cheio" por "atual".
-	if aovivo.DerefOr(nova.HpCurrent, 0) != 130 || aovivo.DerefOr(nova.HpMax, 0) != 130 {
+	if live.DerefOr(nova.HpCurrent, 0) != 130 || live.DerefOr(nova.HpMax, 0) != 130 {
 		t.Errorf("o segundo ogro entrou com %d/%d, esperado 130/130 — ele chega inteiro",
-			aovivo.DerefOr(nova.HpCurrent, 0), aovivo.DerefOr(nova.HpMax, 0))
+			live.DerefOr(nova.HpCurrent, 0), live.DerefOr(nova.HpMax, 0))
 	}
 }
 
@@ -502,7 +502,7 @@ func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 	if colada.EntryID == nil {
 		t.Fatal("a cópia colada nasceu sem linha: ela não teria barra de PV")
 	}
-	var nova *aovivo.InitiativeEntry
+	var nova *live.InitiativeEntry
 	for i := range fila.Initiative {
 		if fila.Initiative[i].ID == *colada.EntryID {
 			nova = &fila.Initiative[i]
@@ -511,9 +511,9 @@ func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 	if nova == nil {
 		t.Fatal("a peça colada aponta para uma linha que não está na fila")
 	}
-	if aovivo.DerefOr(nova.HpCurrent, 0) != 130 {
+	if live.DerefOr(nova.HpCurrent, 0) != 130 {
 		t.Errorf("o ogro colado entrou com %d de PV, esperado 130 — ele chega inteiro",
-			aovivo.DerefOr(nova.HpCurrent, 0))
+			live.DerefOr(nova.HpCurrent, 0))
 	}
 }
 
@@ -544,7 +544,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	pv := int64(20)
-	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
 		Label: "Zumbi", Initiative: 10, Type: "npc",
 		HpCurrent: &pv, HpMax: &pv, CreatureID: &bloco.ID,
 	}); err != nil {
@@ -559,7 +559,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	}
 
 	fila := f.s.sessions.GetState(f.sessionID)
-	var nova *aovivo.InitiativeEntry
+	var nova *live.InitiativeEntry
 	for i := range fila.Initiative {
 		if fila.Initiative[i].ID != linhaOriginal {
 			nova = &fila.Initiative[i]

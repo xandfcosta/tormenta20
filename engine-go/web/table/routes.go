@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/book"
+	"t20engine/live"
 	"time"
 
 	"github.com/a-h/templ"
@@ -315,7 +315,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// `stateForRole` e não `redactForPlayers` direto: é o mesmo gargalo que o
 	// socket usa (ALE-122/ALE-210), e papel desconhecido cai em jogador. O
 	// piloto não ganha uma segunda decisão sobre quem vê o quê.
-	st := aovivo.StateForRole(role, s.deps.Sessions().RefreshCharacterMaxes(ctx, sessionID))
+	st := live.StateForRole(role, s.deps.Sessions().RefreshCharacterMaxes(ctx, sessionID))
 	grupo, meus, eu := s.tableRoster(ctx, userID, campaignID)
 	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu)
 	// O CICLO da sessão chega à tela (ALE-269): sem o estado, os verbos teriam de
@@ -394,7 +394,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// vez de continuar sem alguém. Agora quem calcula é a cena, e o mestre recebe
 	// o mesmo conjunto para o elenco dele.
 	membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
-	conectados := aovivo.ConnectedCharacters(membros, presentes)
+	conectados := live.ConnectedCharacters(membros, presentes)
 	marcaAPresenca(view.Grupo, conectados)
 	if role == "gm" {
 		r := ofViewGm(st, membros, presentes, true, s.deps.SaveFailed(sessionID))
@@ -493,18 +493,18 @@ const tableTick = 200 * time.Millisecond
 //
 // Roster indisponível não derruba a cena: a presença é enfeite ao lado dos
 // nomes, e a fila é o assunto da tela.
-func (s Scene) membrosEPresenca(ctx context.Context, campaignID, sessionID int64) ([]aovivo.TableMember, []int64) {
+func (s Scene) membrosEPresenca(ctx context.Context, campaignID, sessionID int64) ([]live.TableMember, []int64) {
 	rows, err := s.deps.Queries().ListMembers(ctx, campaignID)
 	if err != nil {
 		return nil, nil
 	}
-	membros := make([]aovivo.TableMember, 0, len(rows))
+	membros := make([]live.TableMember, 0, len(rows))
 	for _, m := range rows {
 		dono, err := s.deps.Queries().GetCharacterOwner(ctx, m.Characterid)
 		if err != nil {
 			continue
 		}
-		membros = append(membros, aovivo.TableMember{CharacterID: m.Characterid, OwnerID: dono})
+		membros = append(membros, live.TableMember{CharacterID: m.Characterid, OwnerID: dono})
 	}
 	var presentes []int64
 	for _, u := range s.deps.Presence().Roster(sessionID) {

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"t20engine/book"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/sheet"
 
 	"t20engine/db/sqlcgen"
@@ -41,7 +41,7 @@ func (sr sheetRules) saveProficiencies(
 	}
 	proficiencies := sheet.MarshalStrings(&dedup)
 	if err := sr.queries.SetProficiencies(ctx, sqlcgen.SetProficienciesParams{
-		Proficiencies: proficiencies, UpdatedAt: plataforma.NowISO(), ID: id,
+		Proficiencies: proficiencies, UpdatedAt: platform.NowISO(), ID: id,
 	}); err != nil {
 		return "", nil, err
 	}

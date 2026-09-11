@@ -8,7 +8,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"time"
 
 	"t20engine/db/sqlcgen"
@@ -62,7 +62,7 @@ func (h adminHost) deleteUserKeepingCampaigns(r *http.Request, userID, newOwnerI
 
 	q := h.queries.WithTx(tx)
 	moved, err := q.TransferCampaigns(ctx, sqlcgen.TransferCampaignsParams{
-		NewOwnerId: newOwnerID, UpdatedAt: plataforma.NowISO(), OldOwnerId: userID,
+		NewOwnerId: newOwnerID, UpdatedAt: platform.NowISO(), OldOwnerId: userID,
 	})
 	if err != nil {
 		return 0, err
@@ -99,7 +99,7 @@ func (h adminHost) mintPasswordReset(ctx context.Context, usuarioID, criadoPor i
 		Token:     generateInviteToken(),
 		Userid:    usuarioID,
 		Createdby: criadoPor,
-		Createdat: plataforma.IsoAt(now),
-		Expiresat: plataforma.IsoAt(now.Add(passwordResetTTL)),
+		Createdat: platform.IsoAt(now),
+		Expiresat: platform.IsoAt(now.Add(passwordResetTTL)),
 	})
 }

@@ -2,7 +2,7 @@ package api
 
 import (
 	"net/http"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/catalog"
 )
@@ -28,10 +28,10 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 		degraded = append(degraded, "activations")
 	}
 	if len(degraded) == 0 {
-		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+		platform.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"status": "degraded", "degraded": degraded})
+	platform.WriteJSON(w, http.StatusOK, map[string]any{"status": "degraded", "degraded": degraded})
 }
 
 // HealthProbe é o `/health` na RAIZ, ao lado do `/api/health`.

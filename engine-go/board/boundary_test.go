@@ -22,7 +22,7 @@ import (
 // algo da FICHA. Ele já precisa: o deslocamento da peça sai da ficha computada,
 // e hoje isso atravessa o `Server` porque o handler ainda mora em `api/`. Quando
 // o contexto `ficha` nascer, a tentação será importá-lo daqui — e a resposta
-// certa é uma PORTA declarada neste pacote, como `aovivo.aovivo.SheetVitals` fez.
+// certa é uma PORTA declarada neste pacote, como `live.SheetVitals` fez.
 // A mensagem de falha diz isso, porque uma lista que cresce em silêncio é uma
 // fronteira que deixou de existir sem ninguém notar.
 
@@ -30,9 +30,9 @@ import (
 var permitidos = map[string]bool{
 	// O regime: a fila é de onde as peças vêm, e a numeração de repetidos é
 	// compartilhada de propósito.
-	"t20engine/aovivo": true,
+	"t20engine/live": true,
 	// Não é domínio nenhum; a direção é de mão única e o guarda de lá garante.
-	"t20engine/plataforma": true,
+	"t20engine/platform": true,
 	// A persistência do mapa é do tabuleiro: `session_boards` é tabela dele.
 	"t20engine/db/sqlcgen": true,
 	// As regras de alcance e deslocamento do LIVRO já vivem em `engine/board_*`,
@@ -52,7 +52,7 @@ var permitidos = map[string]bool{
 	// não é confiança: é o `TestVocabularyImportsNothing`, que recusa
 	// QUALQUER import do projeto dentro de `events/`. Enquanto ele for folha,
 	// depender dele não cria fronteira errada nenhuma — que é exatamente a
-	// justificativa da `plataforma`, por outro caminho.
+	// justificativa da `platform`, por outro caminho.
 	"t20engine/events": true,
 }
 
