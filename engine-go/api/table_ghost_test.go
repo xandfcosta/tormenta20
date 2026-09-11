@@ -46,7 +46,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	// destino é o fato — a peça sólida vai para lá. Para o mestre é o contrário,
 	// e o guarda disso é o `TestForTheGmTheTokenStaysAndTheGhostGoes`.
 	if rec := f.pede(t, f.jogador, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
 	depois := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -60,7 +60,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	}
 	// O ARRASTO conta do lugar DESENHADO, senão a próxima parada cai longe do
 	// dedo — é a regra do `nextStepOrigin`, que antes morava no losango.
-	if !strings.Contains(peca["data-on:pointerup__window"], "(7 + dx)") {
+	if !strings.Contains(peca["data-on:pointerup__window"], "X: 7 + dx") {
 		t.Errorf("o arrasto da peça proposta conta da origem: %q", peca["data-on:pointerup__window"])
 	}
 
@@ -87,7 +87,7 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -129,7 +129,7 @@ func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 	tokenID := f.onBoardAt(t, 4, 2)
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -156,9 +156,10 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 	tokenID := f.onBoardAt(t, 0, 0)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	for _, parada := range []string{"/parada/3/0", "/parada/3/4"} {
-		if rec := f.pede(t, f.mestre, http.MethodPost, base+parada, ""); rec.Code != http.StatusOK {
-			t.Fatalf("a parada %s deu %d", parada, rec.Code)
+	// Três paradas: (0,0) de onde ela saiu, depois (3,0) e (3,4).
+	for _, casa := range []string{`{"from":{"X":3,"Y":0}}`, `{"from":{"X":3,"Y":4}}`} {
+		if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada", casa); rec.Code != http.StatusOK {
+			t.Fatalf("a parada %s deu %d", casa, rec.Code)
 		}
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -210,9 +211,9 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 5, 2, 5, 2)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar terreno deu %d", rec.Code)
 	}
-	for _, parada := range []string{"/parada/7/3", "/parada/7/6"} {
+	for _, parada := range []string{`{"from":{"X":7,"Y":3}}`, `{"from":{"X":7,"Y":6}}`} {
 		if rec := f.pede(t, f.mestre, http.MethodPost,
-			f.tableUrl()+"/tabuleiro/"+tokenID+parada, ""); rec.Code != http.StatusOK {
+			f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", parada); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", parada, rec.Code)
 		}
 	}
@@ -273,7 +274,7 @@ func TestNoElementRepeatsAnAttribute(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()

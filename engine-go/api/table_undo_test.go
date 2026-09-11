@@ -29,8 +29,8 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
 	// (0,0) → (2,0) são 2 quadrados; a segunda perna até (2,2) soma mais 2.
-	for _, casa := range []string{"/parada/2/0", "/parada/2/2"} {
-		if rec := f.pede(t, f.mestre, http.MethodPost, base+casa, ""); rec.Code != http.StatusOK {
+	for _, casa := range []string{`{"from":{"X":2,"Y":0}}`, `{"from":{"X":2,"Y":2}}`} {
+		if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada", casa); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", casa, rec.Code)
 		}
 	}
@@ -67,7 +67,7 @@ func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
 	if f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending == nil {
@@ -91,7 +91,7 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
 	comUma := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -105,7 +105,7 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 		t.Error("o botão apareceu com uma perna só, onde desfazer já é cancelar")
 	}
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/2", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a segunda parada deu %d", rec.Code)
 	}
 	comDuas := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -130,8 +130,8 @@ func TestTheStopsSurviveAPageReload(t *testing.T) {
 	f := novoPiloto(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
-	for _, casa := range []string{"/parada/2/0", "/parada/2/2"} {
-		if rec := f.pede(t, f.mestre, http.MethodPost, base+casa, ""); rec.Code != http.StatusOK {
+	for _, casa := range []string{`{"from":{"X":2,"Y":0}}`, `{"from":{"X":2,"Y":2}}`} {
+		if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada", casa); rec.Code != http.StatusOK {
 			t.Fatalf("a parada %s deu %d", casa, rec.Code)
 		}
 	}
@@ -154,13 +154,13 @@ func TestSomeoneElsesProposalDoesNotExtendMine(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada/2/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada do mestre deu %d", rec.Code)
 	}
 	// O jogador é dono da peça (ela aponta para a ficha dele) e a cena está fora
 	// de combate, então ele PODE propor — o que ele não pode é herdar as paradas
 	// de outra pessoa.
-	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/parada/0/2", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.jogador, http.MethodPost, base+"/parada", `{"from":{"X":0,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada do jogador deu %d", rec.Code)
 	}
 	paradas := boardStops(t, f)

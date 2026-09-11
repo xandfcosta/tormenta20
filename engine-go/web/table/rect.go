@@ -82,11 +82,12 @@ func followsRect(modo string) string {
 // conserto que a fatia 1 fez e que não pode se perder aqui.
 func dropTerrainRect(v BoardView) string {
 	return fmt.Sprintf(
-		"if ($%s !== %q) return; const ate = $rect_to_x + '/' + $rect_to_y, de = $%s; "+
+		"if ($%s !== %q) return; const de = $%s.split('/').map(Number); "+
+			"const cantos = {from: {X: de[0], Y: de[1]}, to: {X: $rect_to_x, Y: $rect_to_y}}; "+
 			"$%s = ''; "+
 			"return $tool === %q "+
-			"? @post('%s/terreno/limpar/retangulo/' + de + '/' + ate) "+
-			": @post('%s/terreno/' + $tool + '/retangulo/' + de + '/' + ate)",
+			"? @post('%s/terreno/limpar/retangulo', {payload: cantos}) "+
+			": @post('%s/terreno/retangulo', {payload: {...cantos, kind: $tool}})",
 		sinalDoRetangulo, retanguloDeTerreno, sinalDoRetanguloDe,
 		sinalDoRetangulo,
 		EraserTool,
@@ -130,7 +131,9 @@ func dropTokensRect(v BoardView) string {
 	return fmt.Sprintf(
 		"if ($%s !== %q) return; const ate = $rect_to_x + '/' + $rect_to_y, de = $%s; "+
 			"$%s = ''; if (de === ate) return; $%s = true; "+
-			"return @post('%s/marcar-area/' + de + '/' + ate)",
+			"const canto = de.split('/').map(Number); "+
+			"return @post('%s/marcar-area', {payload: {from: {X: canto[0], Y: canto[1]}, "+
+			"to: {X: $rect_to_x, Y: $rect_to_y}}})",
 		sinalDoRetangulo, retanguloDePecas, sinalDoRetanguloDe,
 		sinalDoRetangulo, sinalDoCliqueEngolido,
 		v.Base,

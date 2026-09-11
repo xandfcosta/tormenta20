@@ -200,8 +200,9 @@ func templateFollowsPointer(v BoardView) string {
 // sintoma seria um gabarito que ignora o número que a pessoa acabou de digitar.
 func repatchTemplate(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('%s/gabarito/' + $template + '/' + $template_size"+
-			" + '/' + $template_x + '/' + $template_y + '/' + $template_aim_x + '/' + $template_aim_y)",
+		"@post('%s/gabarito', {payload: {shape: $template, size: String($template_size), "+
+			"from: {X: $template_x, Y: $template_y}, "+
+			"to: {X: $template_aim_x, Y: $template_aim_y}}})",
 		v.Base,
 	)
 }

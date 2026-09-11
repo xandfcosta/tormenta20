@@ -37,7 +37,7 @@ func TestNoChromeOverTheMapStealsTheClickOffItsControls(t *testing.T) {
 	f.openSecond(t, "Cripta do Rei Caolho")
 	tokenID := f.onBoardAt(t, 4, 2)
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/7/3", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor a parada deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()

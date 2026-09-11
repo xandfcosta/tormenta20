@@ -25,7 +25,7 @@ func (s Scene) MarkerRoutes(r chi.Router) {
 	// O `novo` estático antes das coordenadas separa a criação dos gestos sobre
 	// um marcador que já existe — sem ele, `{x}` e `{id}` disputariam a mesma
 	// posição do caminho.
-	r.Post(base+"/novo/{x}/{y}", s.gmBoardCommand(marcaOLugar))
+	r.Post(base+"/novo", s.gmBoardCommand(marcaOLugar))
 	r.Post(base+"/{id}/revelar", s.gmBoardCommand(revealMarker))
 	r.Post(base+"/{id}/cor/{cor}", s.gmBoardCommand(paintMarker))
 	r.Post(base+"/{id}/remover", s.gmBoardCommand(eraseMarker))
@@ -37,7 +37,7 @@ func (s Scene) MarkerRoutes(r chi.Router) {
 // cliente que escolhia "A", "B", "C" e mandava pronto, e duas telas escolhendo
 // letra por conta própria é como nasce o segundo "C" no mesmo mapa.
 func marcaOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
-	casa, err := quadradoDaURL(c.R)
+	casa, err := squareOnly(c.R)
 	if err != nil {
 		return nil, err
 	}

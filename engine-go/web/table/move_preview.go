@@ -33,7 +33,7 @@ import (
 
 func (s Scene) MovePreviewRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
-	r.Post(base+"/previa/{x}/{y}", s.handlePreviewMove)
+	r.Post(base+"/previa", s.handlePreviewMove)
 }
 
 // previewLegsMax é o teto de rótulos que o `.templ` reserva.
@@ -50,7 +50,7 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	destino, err := quadradoDoCaminho(r, "x", "y")
+	destino, err := squareOnly(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

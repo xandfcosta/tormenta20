@@ -246,7 +246,7 @@ func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
 	}
 	id := semeada.Tokens[0].ID
 
-	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/"+id+"/mover/6/2", "{}")
+	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/"+id+"/mover", `{"from":{"X":6,"Y":2}}`)
 
 	cena, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, lugar)
 	peca := board.FindToken(cena, id)
@@ -318,7 +318,7 @@ func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing
 	}
 
 	// Um quadrado de lado 1 exatamente em cima dela.
-	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito/quadrado/1/4/4/4/4", "")
+	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito", templateBody("quadrado", "1", 4, 4, 4, 4))
 
 	if !strings.Contains(resposta, "Assassino emboscado") {
 		t.Errorf("o mestre não viu a própria peça escondida no rascunho: %s", resposta)
@@ -343,7 +343,7 @@ func TestTheDraftConeWithoutAimAsksForIt(t *testing.T) {
 	f := novoPiloto(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito/cone/6/0/0/0/0", "")
+	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito", templateBody("cone", "6", 0, 0, 0, 0))
 
 	if !strings.Contains(resposta, "Clique de novo para apontar") {
 		t.Errorf("o cone sem mira não pediu a mira: %s", resposta)
@@ -371,7 +371,7 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 
 	for _, caminho := range []string{
 		f.draftUrl(lugar) + "/tabuleiro/regua",
-		f.draftUrl(lugar) + "/tabuleiro/gabarito/quadrado/1/4/4/4/4",
+		f.draftUrl(lugar) + "/tabuleiro/gabarito",
 	} {
 		resposta := f.posta(t, f.jogador, caminho, `{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`)
 		if strings.Contains(resposta, "Assassino emboscado") {
@@ -383,7 +383,7 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 	}
 	// CONTROLE: o MESTRE mede as duas. Sem ele, uma rota que respondesse 404
 	// para todo mundo passaria por "a trava funcionou".
-	if r := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito/quadrado/1/4/4/4/4", ""); !strings.Contains(r, "Assassino emboscado") {
+	if r := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito", templateBody("quadrado", "1", 4, 4, 4, 4)); !strings.Contains(r, "Assassino emboscado") {
 		t.Fatalf("o mestre também não mediu — o guarda mediu uma rota morta: %s", r)
 	}
 }

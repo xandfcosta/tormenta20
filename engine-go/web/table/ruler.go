@@ -38,7 +38,7 @@ import (
 func (s Scene) RulerRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
 	r.Post(base+"/regua", s.handleRulerTable)
-	r.Post(base+"/gabarito/{tipo}/{tamanho}/{x}/{y}/{mx}/{my}", s.handleTemplateTable)
+	r.Post(base+"/gabarito", s.handleTemplateTable)
 }
 
 // handleRulerTable devolve a leitura de CADA PERNA e o total da polilinha.
@@ -181,20 +181,19 @@ func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tipo, err := urlTemplate(chi.URLParam(r, "tipo"))
+	pedido, origem, mira, err := pointsFromBody(r)
+	if err != nil {
+		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
+		return
+	}
+	tipo, err := urlTemplate(pedido.Shape)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	origem, errO := quadradoDoCaminho(r, "x", "y")
-	mira, errM := quadradoDoCaminho(r, "mx", "my")
-	if errO != nil || errM != nil {
-		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
-		return
-	}
 	area := engine.Area{
 		Kind:      tipo,
-		Size:      templateSize(chi.URLParam(r, "tamanho")),
+		Size:      templateSize(pedido.Size),
 		Direction: templateDirection(origem, mira),
 	}
 	// A mira AINDA NÃO FOI DADA quando ela é a própria origem: o cone e a linha

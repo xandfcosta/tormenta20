@@ -2839,6 +2839,36 @@ como rede para o resto — em Go, `ui.Field := …` não é declaração válida
 todo parâmetro e toda variável local com nome colidente vira erro. O que o
 compilador não pega é o hifenizado; esse se acha com um `grep` por `-ui.` depois.
 
+## Onde a coordenada de um gesto do tabuleiro viaja
+
+**No CORPO, e não no caminho** (ALE-305). O `@post` do Datastar aceita
+`{payload: …}`, e o payload é calculado no instante do clique — não vira sinal,
+que é estado compartilhado e viajaria em toda requisição. O formato é um só para
+o tabuleiro inteiro:
+
+```json
+{"from":{"X":2,"Y":2},"to":{"X":8,"Y":5}}        // o traço e o retângulo
+{"kind":"dificil","erase":true,"from":…,"to":…}  // com a espécie do pincel
+{"shape":"esfera","size":"6","from":…,"to":…}    // o gabarito: origem e mira
+{"from":{"X":7,"Y":3}}                           // um lugar só: parada, marcador
+```
+
+As chaves são INGLESAS porque campo JSON é fronteira; só a ROTA saiu dessa lista
+(ver o `CLAUDE.md` da raiz). Um tipo só — o `strokeBody` — para todos os gestos,
+porque um formato só é um formato só para aprender; um por gesto é como nasce a
+terceira grafia do mesmo par de números.
+
+### A EXCEÇÃO, e ela é dura: quando o corpo já é o FORMULÁRIO
+
+**`/pecas/nova/{x}/{y}` fica com a coordenada no caminho**, nas duas superfícies.
+O `payload` do Datastar **SUBSTITUI os sinais** — não os acrescenta —, e este
+handler lê o `loosePieceSignals`: nome, tamanho e aparência da peça avulsa. Pôr a
+casa no payload faria a peça nascer sem nome, e nada estouraria.
+
+**A regra que isso ensina**: a coordenada só sai do caminho quando o handler NÃO
+lê sinais. Antes de converter a próxima, o teste é `grep ReadSignals` no corpo
+dela — foi assim que as duas foram encontradas, e as outras dezesseis passaram.
+
 ## Datastar: onze armadilhas que não deixam erro para trás
 
 As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na

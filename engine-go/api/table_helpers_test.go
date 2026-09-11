@@ -259,3 +259,11 @@ func strokeErasing(especie string, x, y, x2, y2 int) string {
 	return fmt.Sprintf(`{"kind":%q,"erase":true,"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`,
 		especie, x, y, x2, y2)
 }
+
+// templateBody monta o CORPO do gabarito (ALE-305): a forma, o tamanho, a origem e a
+// mira. Os dois pontos usam os mesmos `from`/`to` do traço — um formato só para
+// o tabuleiro inteiro.
+func templateBody(forma, tamanho string, x, y, mx, my int) string {
+	return fmt.Sprintf(`{"shape":%q,"size":%q,"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`,
+		forma, tamanho, x, y, mx, my)
+}

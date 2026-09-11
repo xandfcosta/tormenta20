@@ -32,7 +32,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 
 	// O mestre move sem orçamento, então ele serve para medir o acúmulo sem a
 	// regra da vez entrar no meio.
-	if rec := f.pede(t, f.mestre, "POST", base+"/parada/2/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", base+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("primeira parada deu %d", rec.Code)
 	}
 	primeiro := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
@@ -40,7 +40,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 		t.Fatalf("o primeiro caminho ficou %+v", primeiro)
 	}
 
-	if rec := f.pede(t, f.mestre, "POST", base+"/parada/2/2", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", base+"/parada", `{"from":{"X":2,"Y":2}}`); rec.Code != http.StatusOK {
 		t.Fatalf("segunda parada deu %d", rec.Code)
 	}
 	depois := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab).Pending
@@ -68,7 +68,7 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 		return p.X, p.Y
 	}
 
-	if rec := f.pede(t, f.mestre, "POST", base+"/parada/3/1", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", base+"/parada", `{"from":{"X":3,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor deu %d", rec.Code)
 	}
 	if x, y := onde(); x != 0 || y != 0 {
@@ -92,7 +92,7 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
-	if rec := f.pede(t, f.mestre, "POST", base+"/parada/4/4", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, "POST", base+"/parada", `{"from":{"X":4,"Y":4}}`); rec.Code != http.StatusOK {
 		t.Fatalf("propor deu %d", rec.Code)
 	}
 	if rec := f.pede(t, f.mestre, "POST", base+"/cancelar", ""); rec.Code != http.StatusOK {
@@ -125,7 +125,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	ogro := posto.Tokens[len(posto.Tokens)-1].ID
 
 	corpo := f.pede(t, f.jogador, "POST",
-		f.tableUrl()+"/tabuleiro/"+ogro+"/parada/6/5", "").Body.String()
+		f.tableUrl()+"/tabuleiro/"+ogro+"/parada", `{"from":{"X":6,"Y":5}}`).Body.String()
 	if !strings.Contains(corpo, "não é sua") {
 		t.Errorf("a recusa não explica de quem é a peça; sinais = %s", trechoDeSinais(corpo))
 	}
@@ -237,7 +237,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	// ALE-203 a PARADA os aceita, porque é o desenho que conta à pessoa onde ela
 	// estourou. Quem recusa é o CONFIRMAR, e é a recusa dele que precisa pousar
 	// aqui.
-	proposta := f.pede(t, f.jogador, "POST", base+"/parada/9/0", "")
+	proposta := f.pede(t, f.jogador, "POST", base+"/parada", `{"from":{"X":9,"Y":0}}`)
 	if proposta.Code != http.StatusOK {
 		t.Fatalf("a parada cara deu %d: sem provisório não há trecho vermelho para desenhar", proposta.Code)
 	}
@@ -256,7 +256,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 
 	// E APAGA no acerto: um sinal que só se escreve quando dá errado deixa a
 	// recusa de duas paradas atrás acesa sobre uma que funcionou.
-	aceito := f.pede(t, f.jogador, "POST", base+"/parada/2/0", "").Body.String()
+	aceito := f.pede(t, f.jogador, "POST", base+"/parada", `{"from":{"X":2,"Y":0}}`).Body.String()
 	if !strings.Contains(trechoDeSinais(aceito), `"move_error":""`) {
 		t.Errorf("a parada válida não apagou a recusa anterior; sinais = %s", trechoDeSinais(aceito))
 	}
@@ -282,7 +282,7 @@ func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 	}
 
 	// Duas casas em linha reta custam 2 do deslocamento padrão de 6 (T20 p106).
-	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/2/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":2,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -329,7 +329,7 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 	f.turnPlayer(t)
 
 	// O deslocamento padrão são 6 quadrados (T20 p106); nove para o leste custam 9.
-	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/9/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":9,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada cara deu %d: sem provisório não há seta para pintar", rec.Code)
 	}
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -383,7 +383,7 @@ func TestTheControlForTheTwoColorArrow(t *testing.T) {
 	tokenID := f.onBoard(t)
 	f.turnPlayer(t)
 
-	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada/4/0", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":4,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a parada que cabe deu %d", rec.Code)
 	}
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()

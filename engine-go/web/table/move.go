@@ -34,7 +34,7 @@ import (
 
 func (s Scene) MoveRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
-	r.Post(base+"/parada/{x}/{y}", s.tableCommand(paraNoQuadrado))
+	r.Post(base+"/parada", s.tableCommand(paraNoQuadrado))
 	r.Post(base+"/desfazer-parada", s.tableCommand(undoLastStop))
 	r.Post(base+"/confirmar", s.tableCommand(confirmMove))
 	r.Post(base+"/cancelar", s.tableCommand(cancelMove))
@@ -42,7 +42,7 @@ func (s Scene) MoveRoutes(r chi.Router) {
 
 // paraNoQuadrado acrescenta uma parada ao movimento — ou começa um.
 func paraNoQuadrado(st Scene, c commandCtx) (*board.BoardState, error) {
-	destino, err := quadradoDaURL(c.R)
+	destino, err := squareOnly(c.R)
 	if err != nil {
 		return nil, err
 	}

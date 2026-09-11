@@ -37,20 +37,20 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	base := "/campanhas/{campaignId}/lugares/{placeId}/tabuleiro"
 	// O TRAÇO, como na mesa: as rotas de terreno recebem de ONDE ATÉ ONDE o dedo
 	// andou desde o aviso anterior. Ver `board.StrokeSquares`.
-	r.Post(base+"/terreno/{especie}/{x}/{y}/ate/{x2}/{y2}", s.draftCommand(draftPaintsTerrain))
-	r.Post(base+"/terreno/limpar/{x}/{y}/ate/{x2}/{y2}", s.draftCommand(draftClearsTerrain))
-	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.draftCommand(draftFillsRect))
-	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.draftCommand(draftClearsRect))
+	r.Post(base+"/terreno", s.draftCommand(draftPaintsTerrain))
+	r.Post(base+"/terreno/limpar", s.draftCommand(draftClearsTerrain))
+	r.Post(base+"/terreno/retangulo", s.draftCommand(draftFillsRect))
+	r.Post(base+"/terreno/limpar/retangulo", s.draftCommand(draftClearsRect))
 	r.Post(base+"/pecas/nova/{x}/{y}", s.draftCommand(draftNewLoosePiece))
 	// MOVER é o gesto que NÃO tem gêmeo na mesa, e é a diferença do draft:
 	// lá o arrasto manda uma PARADA e o servidor devolve uma proposta com custo,
 	// aqui ele põe a peça na casa. Ver `draftMoveDrop`.
-	r.Post(base+"/pecas/{id}/mover/{x}/{y}", s.draftCommand(draftMovesToken))
+	r.Post(base+"/pecas/{id}/mover", s.draftCommand(draftMovesToken))
 	r.Post(base+"/pecas/{id}/editar", s.draftCommand(draftEditsToken))
 	r.Post(base+"/pecas/{id}/duplicar", s.draftCommand(draftDuplicatesToken))
 	r.Post(base+"/pecas/{id}/remover", s.draftCommand(draftRemovesToken))
 	r.Post(base+"/pecas/{id}/visibilidade", s.draftCommand(draftTogglesVisibility))
-	r.Post(base+"/marcadores/novo/{x}/{y}", s.draftCommand(draftMarksTheSpot))
+	r.Post(base+"/marcadores/novo", s.draftCommand(draftMarksTheSpot))
 	r.Post(base+"/marcadores/{id}/revelar", s.draftCommand(draftRevealsMarker))
 	r.Post(base+"/marcadores/{id}/cor/{cor}", s.draftCommand(draftPaintsMarker))
 	r.Post(base+"/marcadores/{id}/remover", s.draftCommand(draftErasesMarker))
@@ -58,7 +58,7 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	// `draftCommand`: elas não mutam nada e respondem só com sinais. Um
 	// `EditPlace` aqui gravaria o acervo a cada movimento do dedo sobre a régua.
 	r.Post(base+"/regua", s.handleDraftRuler)
-	r.Post(base+"/gabarito/{tipo}/{tamanho}/{x}/{y}/{mx}/{my}", s.handleDraftTemplate)
+	r.Post(base+"/gabarito", s.handleDraftTemplate)
 }
 
 // ── MEDIR o rascunho (ALE-293) ───────────────────────────────────────────────
@@ -109,15 +109,14 @@ func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tipo, err := urlTemplate(chi.URLParam(r, "tipo"))
+	pedido, origem, mira, err := pointsFromBody(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
 		return
 	}
-	origem, erroOrigem := quadradoDoCaminho(r, "x", "y")
-	mira, erroMira := quadradoDoCaminho(r, "mx", "my")
-	if erroOrigem != nil || erroMira != nil {
-		http.Error(w, "a origem e a mira do gabarito precisam ser dois pares de números", http.StatusBadRequest)
+	tipo, err := urlTemplate(pedido.Shape)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	// A MIRA ainda não foi dada quando ela é a própria origem: o cone e a linha
@@ -130,7 +129,7 @@ func (s Scene) handleDraftTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	casas := engine.AreaSquares(origem, engine.Area{
-		Kind: tipo, Size: templateSize(chi.URLParam(r, "tamanho")),
+		Kind: tipo, Size: templateSize(pedido.Size),
 		Direction: templateDirection(origem, mira),
 	})
 	// A cena pode ter sumido entre desenhar a tela e medir — outro navegador do
@@ -208,14 +207,14 @@ func (s Scene) draftCommand(
 // ── o TERRENO (T20 p238) ─────────────────────────────────────────────────────
 
 func draftPaintsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
-	traco, err := tracoDaURL(c.R)
+	pedido, traco, err := strokeFromBody(c.R)
 	if err != nil {
 		return err
 	}
-	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
-	// O `apagar` continua sendo MODO da ferramenta e não caminho, como na mesa:
-	// ele vale para o arraste inteiro, e não para um quadrado.
-	ligado := c.R.URL.Query().Get("apagar") == ""
+	especie := board.KnownTerrainKind(pedido.Kind)
+	// O `erase` continua sendo MODO da ferramenta e não uma rota própria, como
+	// na mesa: ele vale para o arraste inteiro, e não para um quadrado.
+	ligado := !pedido.Erase
 	for _, casa := range traco {
 		board.PaintTerrain(b, casa, especie, ligado)
 	}
@@ -223,7 +222,7 @@ func draftPaintsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftClearsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
-	traco, err := tracoDaURL(c.R)
+	_, traco, err := strokeFromBody(c.R)
 	if err != nil {
 		return err
 	}
@@ -234,11 +233,11 @@ func draftClearsTerrain(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftFillsRect(st Scene, c draftCtx, b *board.BoardState) error {
-	casas, err := urlRect(c.R)
+	pedido, casas, err := rectFromBody(c.R)
 	if err != nil {
 		return err
 	}
-	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	especie := board.KnownTerrainKind(pedido.Kind)
 	for _, casa := range casas {
 		board.PaintTerrain(b, casa, especie, true)
 	}
@@ -246,7 +245,7 @@ func draftFillsRect(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
-	casas, err := urlRect(c.R)
+	_, casas, err := rectFromBody(c.R)
 	if err != nil {
 		return err
 	}
@@ -263,6 +262,8 @@ func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
 // Ela lê a MESMA tira que a mesa lê (`loosePieceSignals`), com as mesmas
 // recusas — nome obrigatório, tamanho do livro (p107), aparência conhecida.
 func draftNewLoosePiece(st Scene, c draftCtx, b *board.BoardState) error {
+	// A casa vem do CAMINHO e não do corpo: o corpo é o formulário da peça (ver
+	// a rota, ALE-305).
 	casa, err := quadradoDaURL(c.R)
 	if err != nil {
 		return err
@@ -279,7 +280,7 @@ func draftNewLoosePiece(st Scene, c draftCtx, b *board.BoardState) error {
 
 // draftMovesToken põe a peça na casa, sem proposta e sem custo.
 func draftMovesToken(st Scene, c draftCtx, b *board.BoardState) error {
-	casa, err := quadradoDaURL(c.R)
+	casa, err := squareOnly(c.R)
 	if err != nil {
 		return err
 	}
@@ -335,7 +336,7 @@ func draftTogglesVisibility(st Scene, c draftCtx, b *board.BoardState) error {
 // ── os MARCADORES (ALE-195) ──────────────────────────────────────────────────
 
 func draftMarksTheSpot(st Scene, c draftCtx, b *board.BoardState) error {
-	casa, err := quadradoDaURL(c.R)
+	casa, err := squareOnly(c.R)
 	if err != nil {
 		return err
 	}

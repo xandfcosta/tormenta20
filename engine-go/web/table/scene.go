@@ -55,9 +55,15 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	// própria e não uma query na de cima porque o que muda é o que o par de
 	// cantos NOMEIA — a linha entre eles ou tudo o que cabe dentro —, e isso é o
 	// significado do pedido, não um modo dele.
-	r.Post(base+"/terreno/{especie}/retangulo/{x}/{y}/{x2}/{y2}", s.gmContinuousCommand(fillRect))
-	r.Post(base+"/terreno/limpar/retangulo/{x}/{y}/{x2}/{y2}", s.gmContinuousCommand(clearRect))
+	r.Post(base+"/terreno/retangulo", s.gmContinuousCommand(fillRect))
+	r.Post(base+"/terreno/limpar/retangulo", s.gmContinuousCommand(clearRect))
 	r.Post(base+"/pecas", s.gmBoardCommand(poeNoMapa))
+	// A PEÇA AVULSA é a exceção da ALE-305, e a razão é dura: o corpo desta
+	// requisição JÁ ESTÁ OCUPADO pelos sinais do formulário — nome, tamanho e
+	// aparência, que o `loosePieceSignals` lê. O `payload` do Datastar
+	// SUBSTITUI os sinais, então pôr a casa nele faria a peça nascer sem nome.
+	//
+	// Quando o corpo já é o formulário, o caminho é o lugar certo da coordenada.
 	r.Post(base+"/pecas/nova/{x}/{y}", s.gmBoardCommand(newLoosePiece))
 }
 
@@ -108,19 +114,19 @@ func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 // traço porque foi ele que as pediu primeiro, e o que elas recebem sempre foi uma
 // lista de casas. Quem escolhe a forma é a rota.
 func fillRect(st Scene, c commandCtx) (*board.BoardState, error) {
-	casas, err := urlRect(c.R)
+	pedido, casas, err := rectFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := board.KnownTerrainKind(chi.URLParam(c.R, "especie"))
+	especie := board.KnownTerrainKind(pedido.Kind)
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, casas, especie, true)
 }
 
 func clearRect(st Scene, c commandCtx) (*board.BoardState, error) {
-	casas, err := urlRect(c.R)
+	_, casas, err := rectFromBody(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -186,26 +192,76 @@ type strokeBody struct {
 	Erase bool               `json:"erase"`
 	From  struct{ X, Y int } `json:"from"`
 	To    struct{ X, Y int } `json:"to"`
+	// O GABARITO usa os mesmos dois pontos com outro nome na boca — a origem e
+	// a mira — e acrescenta a forma e o tamanho. Um tipo só para o tabuleiro
+	// inteiro é um formato só para aprender; um por gesto é como nasce a
+	// terceira grafia do mesmo par de números.
+	Shape string `json:"shape"`
+	Size  string `json:"size"`
 }
 
-// strokeFromBody lê o traço do corpo da requisição.
+// pointsFromBody lê os DOIS CANTOS do corpo da requisição.
 //
 // COORDENADA NEGATIVA é lugar legítimo — o plano não tem bordas —, e é por ela
 // que o valor não pode vir de um sinal da página: sinal é estado compartilhado, e
 // o que se quer é o clique que ACONTECEU. O corpo resolve isso sem o caminho de
 // seis parâmetros, porque o `payload` do `@post` é calculado no instante do
 // gesto e não sobrevive a ele.
-func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
+//
+// Ela é o pedaço COMUM do traço e do retângulo. O que muda entre os dois é o que
+// o par NOMEIA — a linha entre os cantos ou tudo o que cabe dentro —, e isso é do
+// chamador: é o significado do pedido, não um detalhe de leitura.
+func pointsFromBody(r *http.Request) (strokeBody, engine.Square, engine.Square, error) {
 	var pedido strokeBody
 	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&pedido); err != nil {
-		return pedido, nil, fmt.Errorf("não entendi o traço enviado: %v", err)
+		return pedido, engine.Square{}, engine.Square{}, fmt.Errorf("não entendi o gesto enviado: %v", err)
 	}
-	de := engine.Square{X: pedido.From.X, Y: pedido.From.Y}
-	ate := engine.Square{X: pedido.To.X, Y: pedido.To.Y}
+	return pedido,
+		engine.Square{X: pedido.From.X, Y: pedido.From.Y},
+		engine.Square{X: pedido.To.X, Y: pedido.To.Y},
+		nil
+}
+
+// squareFromBody é UM quadrado, para os gestos que apontam um lugar só — a peça
+// avulsa, o marcador, a parada do movimento, a prévia.
+//
+// Ele reusa o `from` do mesmo corpo em vez de um campo `square` próprio, e isso é
+// escolha: um formato só para todos os gestos do tabuleiro é um formato só para
+// aprender, e o `to` sobra sem custo. O contrário — um campo por gesto — é como
+// nasce a terceira grafia do mesmo par de números.
+func squareFromBody(r *http.Request) (strokeBody, engine.Square, error) {
+	pedido, de, _, err := pointsFromBody(r)
+	return pedido, de, err
+}
+
+// squareOnly é o `squareFromBody` para quem não precisa do resto do pedido.
+func squareOnly(r *http.Request) (engine.Square, error) {
+	_, casa, err := squareFromBody(r)
+	return casa, err
+}
+
+// strokeFromBody é o SEGMENTO entre os dois cantos.
+func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
+	pedido, de, ate, err := pointsFromBody(r)
+	if err != nil {
+		return pedido, nil, err
+	}
 	if !board.ValidStroke(de, ate) {
 		return pedido, nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
 	}
 	return pedido, board.StrokeSquares(de, ate), nil
+}
+
+// rectFromBody é TUDO O QUE CABE entre os dois cantos.
+func rectFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
+	pedido, de, ate, err := pointsFromBody(r)
+	if err != nil {
+		return pedido, nil, err
+	}
+	if !board.ValidRectangle(de, ate) {
+		return pedido, nil, fmt.Errorf("o retângulo de %v até %v é grande demais para um gesto", de, ate)
+	}
+	return pedido, board.RectangleSquares(de, ate), nil
 }
 
 // reopenPlace traz uma cena guardada de volta para a mesa, NUMA ABA NOVA

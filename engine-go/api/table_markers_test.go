@@ -28,10 +28,10 @@ func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/2/3", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":2,"Y":3}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/4/5", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":4,"Y":5}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar o segundo deu %d", rec.Code)
 	}
 
@@ -62,7 +62,7 @@ func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	id := mapMarkers(t, f)[0].ID
@@ -91,7 +91,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	id := mapMarkers(t, f)[0].ID
@@ -136,12 +136,12 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	id := mapMarkers(t, f)[0].ID
 
-	for _, gesto := range []string{"novo/7/7", id + "/revelar", id + "/cor/azul", id + "/remover"} {
+	for _, gesto := range []string{"novo", id + "/revelar", id + "/cor/azul", id + "/remover"} {
 		rec := f.pede(t, f.jogador, http.MethodPost, base+"/"+gesto, "")
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador passou em %q: %d", gesto, rec.Code)
@@ -163,7 +163,7 @@ func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) 
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 
@@ -200,7 +200,7 @@ func TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
-	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
+	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
 	}
 	id := mapMarkers(t, f)[0].ID
