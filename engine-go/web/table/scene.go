@@ -58,13 +58,7 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	r.Post(base+"/terreno/retangulo", s.gmContinuousCommand(fillRect))
 	r.Post(base+"/terreno/limpar/retangulo", s.gmContinuousCommand(clearRect))
 	r.Post(base+"/pecas", s.gmBoardCommand(poeNoMapa))
-	// A PEÇA AVULSA é a exceção da ALE-305, e a razão é dura: o corpo desta
-	// requisição JÁ ESTÁ OCUPADO pelos sinais do formulário — nome, tamanho e
-	// aparência, que o `loosePieceSignals` lê. O `payload` do Datastar
-	// SUBSTITUI os sinais, então pôr a casa nele faria a peça nascer sem nome.
-	//
-	// Quando o corpo já é o formulário, o caminho é o lugar certo da coordenada.
-	r.Post(base+"/pecas/nova/{x}/{y}", s.gmBoardCommand(newLoosePiece))
+	r.Post(base+"/pecas/nova", s.gmBoardCommand(newLoosePiece))
 }
 
 // paintTerrain liga ou desliga uma espécie numa casa (T20 p238).

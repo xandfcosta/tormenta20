@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/engine"
 
 	"github.com/starfederation/datastar-go/datastar"
 
@@ -225,11 +226,7 @@ func newLoosePiece(st Scene, c commandCtx) (*board.BoardState, error) {
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, errors.New("não há tabuleiro aberto para pôr uma peça")
 	}
-	casa, err := quadradoDoCaminho(c.R, "x", "y")
-	if err != nil {
-		return nil, err
-	}
-	desenho, err := loosePieceSignals(c.R)
+	desenho, casa, err := loosePieceSignals(c.R)
 	if err != nil {
 		return nil, err
 	}
@@ -256,30 +253,37 @@ type loosePieceDraft struct {
 // O tamanho é o do livro (p107, Tab. 1-21): 1 é Médio, 2 é Grande, 3 é Enorme, 6
 // é Colossal. Fora dessa lista não é tamanho de criatura nenhuma, e um 40
 // digitado encheria a tela de uma peça só.
-func loosePieceSignals(r *http.Request) (loosePieceDraft, error) {
+func loosePieceSignals(r *http.Request) (loosePieceDraft, engine.Square, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
+	// UMA leitura e um struct só, porque o CORPO NÃO SE LÊ DUAS VEZES: o
+	// `ReadSignals` do datastar-go copia `r.Body` inteiro num buffer, e um
+	// segundo leitor pegaria vazio. Antes disso a casa vinha do CAMINHO e os
+	// três campos do corpo, então eram dois leitores de fontes diferentes; com o
+	// `payload` os quatro chegam juntos (ALE-306).
 	var sinais struct {
-		Nome      string `json:"new_token_name"`
-		Tamanho   int    `json:"new_token_size"`
-		Aparencia string `json:"new_token_look"`
+		Nome      string             `json:"new_token_name"`
+		Tamanho   int                `json:"new_token_size"`
+		Aparencia string             `json:"new_token_look"`
+		Casa      struct{ X, Y int } `json:"from"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
-		return loosePieceDraft{}, fmt.Errorf("não entendi a peça: %v", err)
+		return loosePieceDraft{}, engine.Square{}, fmt.Errorf("não entendi a peça: %v", err)
 	}
+	casa := engine.Square{X: sinais.Casa.X, Y: sinais.Casa.Y}
 	nome := strings.TrimSpace(sinais.Nome)
 	if nome == "" {
-		return loosePieceDraft{}, errors.New("dê um nome à peça: é ele que aparece no mapa e no leitor de tela")
+		return loosePieceDraft{}, casa, errors.New("dê um nome à peça: é ele que aparece no mapa e no laço")
 	}
 	if !footprintsDaCasa[sinais.Tamanho] {
-		return loosePieceDraft{}, fmt.Errorf(
-			"tamanho %d não é de criatura nenhuma; o livro tem 1 (Médio), 2 (Grande), 3 (Enorme) e 6 (Colossal), p107",
+		return loosePieceDraft{}, casa, fmt.Errorf(
+			"tamanho %d não é de criatura nenhuma; o livro tem 1 (Médio), 2 (Grande), 3 (Enorme) e 6 (Colossal, p107)",
 			sinais.Tamanho)
 	}
 	if !aparenciasDaPeca[sinais.Aparencia] {
-		return loosePieceDraft{}, fmt.Errorf(
-			"aparência %q não existe; a peça avulsa nasce como 'object' ou como 'npc'", sinais.Aparencia)
+		return loosePieceDraft{}, casa, fmt.Errorf(
+			"aparência %q não existe; a peça avulsa é objeto ou cenário", sinais.Aparencia)
 	}
-	return loosePieceDraft{Nome: nome, Tamanho: sinais.Tamanho, Aparencia: sinais.Aparencia}, nil
+	return loosePieceDraft{Nome: nome, Tamanho: sinais.Tamanho, Aparencia: sinais.Aparencia}, casa, nil
 }
 
 // footprintsDaCasa são os lados que a Tabela 1-21 produz (p107).

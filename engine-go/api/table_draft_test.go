@@ -102,8 +102,7 @@ func TestADraftGestureChangesTheArchivedScene(t *testing.T) {
 	f := novoPiloto(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
-	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/nova/4/3",
-		`{"new_token_name":"Porta da cripta","new_token_size":1,"new_token_look":"object"}`)
+	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Porta da cripta","new_token_size":1,"new_token_look":"object"}`)
 
 	cena, err := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, lugar)
 	if err != nil {
@@ -140,8 +139,7 @@ func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
 	}
 
 	// E POSTANDO NA MÃO, que é o caso que o botão escondido não cobre.
-	gesto := f.posta(t, f.jogador, f.draftUrl(lugar)+"/tabuleiro/pecas/nova/4/3",
-		`{"new_token_name":"Intruso","new_token_size":1,"new_token_look":"object"}`)
+	gesto := f.posta(t, f.jogador, f.draftUrl(lugar)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Intruso","new_token_size":1,"new_token_look":"object"}`)
 	if strings.Contains(gesto, "datastar") {
 		t.Errorf("o gesto do jogador foi atendido: %q", gesto)
 	}
@@ -201,8 +199,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 	lugar := placeNamed(t, f.s.tableHost().Boards().Places(context.Background(), f.campaignID),
 		"Taverna do Javali")
 
-	resposta := f.posta(t, f.mestre, f.draftUrl(lugar.ID)+"/tabuleiro/pecas/nova/4/3",
-		`{"new_token_name":"Fantasma","new_token_size":1,"new_token_look":"object"}`)
+	resposta := f.posta(t, f.mestre, f.draftUrl(lugar.ID)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Fantasma","new_token_size":1,"new_token_look":"object"}`)
 
 	if !strings.Contains(resposta, "está aberto numa mesa agora") {
 		t.Errorf("a recusa não chegou à tela: %q", resposta)
@@ -217,8 +214,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 	// uma recusa por qualquer outro motivo — id errado, rota que não existe —
 	// seria lida como "a trava funcionou".
 	outro := f.draftPlace(t, "Cripta de Thwor", "crypt")
-	f.posta(t, f.mestre, f.draftUrl(outro)+"/tabuleiro/pecas/nova/4/3",
-		`{"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
+	f.posta(t, f.mestre, f.draftUrl(outro)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
 	if livre, _ := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, outro); len(livre.Tokens) != 1 {
 		t.Fatalf("o gesto foi recusado no lugar que NÃO está na mesa: %+v", livre.Tokens)
 	}

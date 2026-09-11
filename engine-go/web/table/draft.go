@@ -41,7 +41,7 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	r.Post(base+"/terreno/limpar", s.draftCommand(draftClearsTerrain))
 	r.Post(base+"/terreno/retangulo", s.draftCommand(draftFillsRect))
 	r.Post(base+"/terreno/limpar/retangulo", s.draftCommand(draftClearsRect))
-	r.Post(base+"/pecas/nova/{x}/{y}", s.draftCommand(draftNewLoosePiece))
+	r.Post(base+"/pecas/nova", s.draftCommand(draftNewLoosePiece))
 	// MOVER é o gesto que NÃO tem gêmeo na mesa, e é a diferença do draft:
 	// lá o arrasto manda uma PARADA e o servidor devolve uma proposta com custo,
 	// aqui ele põe a peça na casa. Ver `draftMoveDrop`.
@@ -262,13 +262,7 @@ func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
 // Ela lê a MESMA tira que a mesa lê (`loosePieceSignals`), com as mesmas
 // recusas — nome obrigatório, tamanho do livro (p107), aparência conhecida.
 func draftNewLoosePiece(st Scene, c draftCtx, b *board.BoardState) error {
-	// A casa vem do CAMINHO e não do corpo: o corpo é o formulário da peça (ver
-	// a rota, ALE-305).
-	casa, err := quadradoDaURL(c.R)
-	if err != nil {
-		return err
-	}
-	desenho, err := loosePieceSignals(c.R)
+	desenho, casa, err := loosePieceSignals(c.R)
 	if err != nil {
 		return err
 	}
