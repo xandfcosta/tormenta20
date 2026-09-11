@@ -584,8 +584,18 @@ outra. A linha de base do `signal_debt.txt` foi de 147 a **zero**, e o arquivo
 fica vazio de propósito: enquanto ele existe, uma exceção é uma linha visível em
 vez de um `if` escondido no guarda.
 
-**As 121 classes CSS continuam em português**, e são a última das três; enquanto
-ela não roda, o que vale é a regra: o que você escrever novo já sai em inglês.
+**A das CLASSES CSS fechou as três** (ALE-301): eram **127** e não 121 — seis só
+aparecem em seletor composto, e um `grep` de declaração no início de linha não as
+via. Duas famílias tinham o sufixo vindo de fora do CSS, e o dono decidiu
+traduzir tudo: o id do pincel de terreno é SEGMENTO DE ROTA (`/terreno/dificil`
+virou `/terreno/difficult`) e o chão é DADO GRAVADO, com migração própria — a
+`00013`, que reescreve `$.terrain` nas duas tabelas onde o estado do tabuleiro
+mora.
+
+Quem cobra é o `TestEveryAppliedClassExistsInTheStylesheet`, e ele pega os DOIS
+lados de um renome pela metade sem precisar de lista nenhuma: a folha compilada é
+derivada da folha-fonte MAIS o que o Tailwind acha varrendo o repositório, então
+o nome que sobrou de um lado não está nela de qualquer jeito.
 
 > **E o instrumento da fatia 1 mentiu com cara de resposta.** Ele casava contra
 > uma lista de palavras PORTUGUESAS, e ela não conhecia `fronteira`: a primeira

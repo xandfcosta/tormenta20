@@ -34,13 +34,34 @@ type PlaceGround struct {
 //
 // A ORDEM é a da SPA, e o primeiro é o padrão de quem não escolhe.
 var PlaceGrounds = []PlaceGround{
-	{"pedra", "Pedra"},
-	{"taverna", "Taverna"},
-	{"floresta", "Floresta"},
-	{"ermo", "Ermo"},
-	{"cripta", "Cripta"},
-	{"papel", "Papel"},
+	{"stone", "Pedra"},
+	{"tavern", "Taverna"},
+	{"forest", "Floresta"},
+	{"wilds", "Ermo"},
+	{"crypt", "Cripta"},
+	{"paper", "Papel"},
 }
 
 // DefaultGround é o que o servidor usa quando ninguém escolheu.
 func DefaultGround() string { return PlaceGrounds[0].ID }
+
+// KnownGround devolve o chão pedido se ele existe, ou o PADRÃO.
+//
+// Ela existe porque o caminho de CRIAR lugar gravava o que chegasse do
+// formulário, enquanto o de abrir cena já filtrava (ALE-301). Enquanto os ids
+// eram os mesmos do formulário da casa a diferença não aparecia; quando eles
+// saíram em inglês, um cliente velho — ou um endereço guardado — passou a poder
+// gravar um chão que a folha não sabe pintar, e o mapa desenha SEM TEXTURA, sem
+// erro em lugar nenhum.
+//
+// O padrão em vez da recusa é a mesma escolha que a cena já fazia: chão é
+// APARÊNCIA, e derrubar a criação de um lugar por causa dela seria caro demais
+// para o que se perde.
+func KnownGround(asked string) string {
+	for _, g := range PlaceGrounds {
+		if g.ID == asked {
+			return asked
+		}
+	}
+	return DefaultGround()
+}

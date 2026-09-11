@@ -28,7 +28,7 @@ async function aDraftWith(
   const campanha = (await criada.json()).id as number
 
   const nova = await page.request.post(`/campanhas/${campanha}/lugares/novo`, {
-    form: { name: 'Cripta do E2E', ground: 'pedra' },
+    form: { name: 'Cripta do E2E', ground: 'stone' },
     maxRedirects: 0,
   })
   const endereco = nova.headers().location

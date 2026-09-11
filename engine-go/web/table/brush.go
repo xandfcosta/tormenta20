@@ -42,7 +42,7 @@ const brushSignal = "pincelando"
 // dariam duas chances de atualizar um e esquecer o outro.
 //
 // A BARRA e não a vírgula, e isso é conserto de um defeito MUDO: com `"x,y"` o
-// caminho saía `terreno/dificil/12,5/ate/12/5`, o chi não casava a rota, o
+// caminho saía `terreno/difficult/12,5/ate/12/5`, o chi não casava a rota, o
 // servidor devolvia 404, e o Datastar descartava a resposta sem escrever nada em
 // lugar nenhum — nem no console. O sintoma era o pincel não pintar, sem uma linha
 // de erro para seguir. Guardar já no formato de destino tira a conversão do

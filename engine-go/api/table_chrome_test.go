@@ -31,9 +31,9 @@ func TestNoChromeOverTheMapStealsTheClickOffItsControls(t *testing.T) {
 	// A cena mais CHEIA que o mestre vê, senão o guarda mede o que sobrou: com
 	// acervo (o baú só nasce com lugar guardado), com segunda aba (a barra de
 	// abas), com peça (a camada de mover) e com movimento proposto.
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	f.savePlace(t, "Taverna do Javali")
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	f.openSecond(t, "Cripta do Rei Caolho")
 	tokenID := f.onBoardAt(t, 4, 2)
 	if rec := f.pede(t, f.mestre, http.MethodPost,

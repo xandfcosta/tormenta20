@@ -29,7 +29,7 @@ func mesaComTaverna(t *testing.T) (*Server, int64, int64) {
 	sessao := seedSession(t, s, campanha)
 	ctx := context.Background()
 
-	s.boards.Open(ctx, sessao, "Taverna do Javali", "taverna")
+	s.boards.Open(ctx, sessao, "Taverna do Javali", "tavern")
 	if _, err := s.boards.AddToken(ctx, sessao, defaultTab, board.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
@@ -330,7 +330,7 @@ a cena guardada, aplica a MESMA função pura que a mesa aplica, e grava de volt
 func TestEditingThePlaceDraftChangesTheArchiveAndNotTheTable(t *testing.T) {
 	s, campanha, sessao := mesaComTaverna(t)
 	ctx := context.Background()
-	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "cripta")
+	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar a cripta: %v", err)
 	}
@@ -369,7 +369,7 @@ func TestEditingThePlaceDraftChangesTheArchiveAndNotTheTable(t *testing.T) {
 func TestAPlaceDraftGestureThatProducesAnAbsurdCoordinateIsRefused(t *testing.T) {
 	s, campanha, _ := mesaComTaverna(t)
 	ctx := context.Background()
-	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "cripta")
+	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar a cripta: %v", err)
 	}
@@ -422,7 +422,7 @@ func TestThePlaceOpenOnALiveTableRefusesTheDraft(t *testing.T) {
 	// CONTROLE: outro lugar, na mesma campanha, é montado sem reclamação. Sem
 	// ele, uma recusa por qualquer outro motivo — id errado, campanha errada —
 	// passaria por "o guarda funcionou".
-	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "cripta")
+	cripta, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar a cripta: %v", err)
 	}
@@ -478,7 +478,7 @@ func TestANewPlaceIsBornEmptyWithTheChosenGround(t *testing.T) {
 	s, campanha, _ := mesaComTaverna(t)
 	ctx := context.Background()
 
-	lugar, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "cripta")
+	lugar, err := s.boards.NewPlace(ctx, campanha, "Cripta de Thwor", "crypt")
 	if err != nil {
 		t.Fatalf("criar o lugar: %v", err)
 	}
@@ -489,7 +489,7 @@ func TestANewPlaceIsBornEmptyWithTheChosenGround(t *testing.T) {
 	if err != nil {
 		t.Fatalf("abrir o lugar novo: %v", err)
 	}
-	if cena.Terrain != "cripta" {
+	if cena.Terrain != "crypt" {
 		t.Errorf("o chão escolhido não ficou: %q", cena.Terrain)
 	}
 	if len(s.boards.Places(ctx, campanha)) != 1 {
@@ -508,7 +508,7 @@ func TestANewPlaceWithAnExistingNameOpensThatOne(t *testing.T) {
 	}
 	guardada := s.boards.Places(ctx, campanha)[0]
 
-	lugar, err := s.boards.NewPlace(ctx, campanha, "Taverna do Javali", "cripta")
+	lugar, err := s.boards.NewPlace(ctx, campanha, "Taverna do Javali", "crypt")
 	if err != nil {
 		t.Fatalf("pedir o lugar de nome repetido: %v", err)
 	}
@@ -522,5 +522,29 @@ func TestANewPlaceWithAnExistingNameOpensThatOne(t *testing.T) {
 	cena, _ := s.boards.PlaceScene(ctx, campanha, lugar.ID)
 	if len(cena.Tokens) != 1 {
 		t.Errorf("pedir o nome repetido apagou a cena guardada: %+v", cena.Tokens)
+	}
+}
+
+// CRIAR UM LUGAR COM UM CHAO QUE NAO EXISTE NAO GRAVA AQUELE CHAO (ALE-301).
+//
+// Este caso nasceu VERMELHO: o `NewPlace` gravava o `terrain` que chegasse do
+// formulário sem passar pelo catálogo, e a cena — que filtra — só corrigia o
+// que ELA desenhava. Um cliente velho postando `pedra` gravava `pedra`, e a
+// classe `ground-pedra` não existe na folha: o mapa abre sem textura, sem erro
+// em lugar nenhum.
+func TestAPlaceRefusesAGroundTheStylesheetCannotPaint(t *testing.T) {
+	s, campanha, _ := mesaComTaverna(t)
+	ctx := context.Background()
+
+	lugar, err := s.boards.NewPlace(ctx, campanha, "Cripta do guarda", "pedra")
+	if err != nil {
+		t.Fatalf("criar o lugar: %v", err)
+	}
+	cena, err := s.boards.PlaceScene(ctx, campanha, lugar.ID)
+	if err != nil {
+		t.Fatalf("abrir o lugar: %v", err)
+	}
+	if cena.Terrain != board.DefaultGround() {
+		t.Errorf("o chão gravado foi %q, e a folha não sabe pintá-lo", cena.Terrain)
 	}
 }

@@ -25,7 +25,7 @@ func onLens(t *testing.T, f pilotoFixture) string {
 // está ligada — e o controle positivo é a mesma tela sem a lente, onde ela está.
 func TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
@@ -57,7 +57,7 @@ func TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable(t *testing.T) {
 // que não está vendo.
 func TestTheLensSaysHowManyVanished(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	for _, id := range []string{"a", "b"} {
 		if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 			board.BoardToken{ID: id, Label: "Emboscado " + id, X: 4, Y: 4, Hidden: true}); err != nil {
@@ -77,7 +77,7 @@ func TestTheLensSaysHowManyVanished(t *testing.T) {
 // preso na vista da mesa.
 func TestTheLensDoesNotTakeTheGmControlsAway(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := onLens(t, f)
 
 	for _, controle := range []string{"Borracha", "Encerrar o tabuleiro", "Voltar à vista do mestre"} {
@@ -94,7 +94,7 @@ func TestTheLensDoesNotTakeTheGmControlsAway(t *testing.T) {
 // pergunta que a lente existe para responder.
 func TestTheLensDiesWithTheScene(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	if !strings.Contains(onLens(t, f), "Voltar à vista do mestre") {
 		t.Fatal("a lente não acendeu — o resto não mede nada")
 	}
@@ -102,7 +102,7 @@ func TestTheLensDiesWithTheScene(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
 	}
-	f.seedOpenBoard(t, "taverna")
+	f.seedOpenBoard(t, "tavern")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(tela, "Voltar à vista do mestre") {
 		t.Error("a lente sobreviveu ao fim da cena e acendeu sobre a cena seguinte")
@@ -116,7 +116,7 @@ func TestTheLensDiesWithTheScene(t *testing.T) {
 // revelar-lhe que alguém está conferindo.
 func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "visivel", Label: "Taverneiro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -136,7 +136,7 @@ func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 // TestOnlyTheGmLightsTheLens: a trava é do servidor, e não o botão escondido.
 func TestOnlyTheGmLightsTheLens(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador acendeu a lente: %d", rec.Code)

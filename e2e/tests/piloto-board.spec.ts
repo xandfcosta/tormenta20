@@ -102,12 +102,12 @@ test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => 
 
     // O CONTROLE: o remendo chegou e mudou a cena.
     //
-    // O seletor é `.board-terrain.board-dificil` e não só o segundo: a
+    // O seletor é `.board-terrain.board-difficult` e não só o segundo: a
     // AMOSTRA do crachá no trilho carrega a mesma classe de espécie, e o
     // seletor curto acharia dois elementos — um deles um quadradinho de
     // legenda que existe desde antes do clique.
     await expect(
-      page.locator('.board-terrain.board-dificil'),
+      page.locator('.board-terrain.board-difficult'),
       'o terreno não apareceu — o remendo não aconteceu e o resto não mede nada',
     ).toHaveCount(1)
 
@@ -145,7 +145,7 @@ test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ 
     const alvo = { x: 150, y: 110 }
     await casas.click({ position: alvo })
 
-    const pintada = page.locator('.board-terrain.board-camuflagem')
+    const pintada = page.locator('.board-terrain.board-concealment')
     await expect(pintada, 'nada foi pintado').toHaveCount(1)
 
     const caixaDaCamada = (await casas.boundingBox())!
@@ -214,7 +214,7 @@ test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', as
     const alvo = { x: 260, y: 180 }
     await casas.click({ position: alvo })
 
-    const pintada = page.locator('.board-terrain.board-camuflagem')
+    const pintada = page.locator('.board-terrain.board-concealment')
     await expect(pintada, 'nada foi pintado').toHaveCount(1)
 
     const caixaDaCamada = (await casas.boundingBox())!
@@ -371,7 +371,7 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
     await page.mouse.down()
     await page.mouse.move(ate.x, ate.y, { steps: 10 })
     await page.mouse.up()
-    const doTraco = await page.locator('.board-terrain.board-dificil').count()
+    const doTraco = await page.locator('.board-terrain.board-difficult').count()
 
     // E agora COM Shift, num pedaço virgem do plano.
     const deB = { x: caixa.x + 420, y: caixa.y + 120 }
@@ -387,7 +387,7 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
     await page.keyboard.up('Shift')
 
     await expect
-      .poll(() => page.locator('.board-terrain.board-dificil').count(), {
+      .poll(() => page.locator('.board-terrain.board-difficult').count(), {
         message: 'o retângulo não encheu a área',
       })
       .toBeGreaterThan(doTraco * 2)
@@ -551,7 +551,7 @@ test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ pag
     // basta: o que muda a largura é o botão EXISTIR e a contagem ter dígito.
     for (const nome of ['Taverna do E2E', 'Cripta do E2E', 'Ruínas do E2E']) {
       const criado = await page.request.post(`/campanhas/${campanha}/lugares/novo`, {
-        form: { name: nome, ground: 'cripta' },
+        form: { name: nome, ground: 'crypt' },
       })
       expect(criado.ok(), `semear o lugar ${nome}: ${criado.status()}`).toBeTruthy()
     }

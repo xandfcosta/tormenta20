@@ -240,7 +240,9 @@ func (bs *BoardStore) NewPlace(ctx context.Context, campaignID int64, name, terr
 	// `Open`: `null` no JSON derruba quem indexa `tokens.length`, e é o mesmo
 	// cuidado que o `storedScene` toma na volta.
 	blob, err := json.Marshal(&BoardState{
-		Version: 1, Place: name, Terrain: terrain, Tokens: []BoardToken{},
+		// O chão passa pelo catálogo ANTES de ser gravado: quem cria era a porta
+		// sem guarda, e um id que a folha não pinta vira mapa sem textura (ALE-301).
+		Version: 1, Place: name, Terrain: KnownGround(terrain), Tokens: []BoardToken{},
 	})
 	if err != nil {
 		return Place{}, err

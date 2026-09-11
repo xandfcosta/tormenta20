@@ -30,13 +30,13 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 	// errado ou um arquivo renomeado daria "nenhum chão encontrado" — que se
 	// parece com "todos faltando" e passaria verde se a asserção fosse ao
 	// contrário.
-	if !strings.Contains(folha, ".chao-") {
-		t.Fatalf("o CSS do piloto não tem nenhuma classe .chao-* — o guarda está lendo o arquivo errado (%d bytes)", len(folha))
+	if !strings.Contains(folha, ".ground-") {
+		t.Fatalf("o CSS do piloto não tem nenhuma classe .ground-* — o guarda está lendo o arquivo errado (%d bytes)", len(folha))
 	}
 
 	for _, chao := range board.PlaceGrounds {
-		if !strings.Contains(folha, ".chao-"+chao.ID) {
-			t.Errorf("o chão %q (%s) é oferecido na tela e o CSS não sabe pintá-lo: falta .chao-%s",
+		if !strings.Contains(folha, ".ground-"+chao.ID) {
+			t.Errorf("o chão %q (%s) é oferecido na tela e o CSS não sabe pintá-lo: falta .ground-%s",
 				chao.ID, chao.Rotulo, chao.ID)
 		}
 		if chao.Rotulo == "" {

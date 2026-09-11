@@ -10,7 +10,7 @@ import (
 
 func (f pilotoFixture) onBoard(t *testing.T) string {
 	t.Helper()
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID, CharacterID: &f.charID})
@@ -116,7 +116,7 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 // o que fazer, e "proibido" não.
 func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Ogro", X: 5, Y: 5})
 	if err != nil {

@@ -51,7 +51,7 @@ func mesaEmCombate(t *testing.T) (*BoardState, *aovivo.SessionRuntimeState) {
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)                     // e2
 	st.TurnIndex = 0
 
-	b := newBoard("t1", "Taverna do Javali", "pedra")
+	b := newBoard("t1", "Taverna do Javali", "stone")
 	tokens := boardCounter()
 	heroi := int64(7)
 	_ = AddToken(b, BoardToken{Label: "Sílfide", X: 0, Y: 0, EntryID: strPtr("e1"), CharacterID: &heroi, SpeedSquares: 6}, tokens)
@@ -346,7 +346,7 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
 	_ = aovivo.AddEntry(st, npc("Goblin", 9), id)
-	b := newBoard("t1", "Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "stone")
 
 	populateBoard(b, st, boardCounter(), nil)
 
@@ -397,7 +397,7 @@ func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
 	st := aovivo.EmptyRuntimeState()
 	id := ContadorDeIds()
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
-	b := newBoard("t1", "Cripta", "pedra")
+	b := newBoard("t1", "Cripta", "stone")
 	tokens := boardCounter()
 	_ = AddToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)
 

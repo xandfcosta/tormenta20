@@ -12,7 +12,7 @@ import (
 
 func (f pilotoFixture) onBoardAt(t *testing.T, x, y int) string {
 	t.Helper()
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Arcanista", X: x, Y: y, EntryID: &entryID, CharacterID: &f.charID})
@@ -207,7 +207,7 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 	// A cena precisa ter as três famílias no ar, senão o guarda mede o que
 	// sobrou: terreno pintado, movimento proposto (trilha e paradas) e alcance.
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/dificil/5/2/ate/5/2", ""); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/difficult/5/2/ate/5/2", ""); rec.Code != http.StatusOK {
 		t.Fatalf("pintar terreno deu %d", rec.Code)
 	}
 	for _, parada := range []string{"/parada/7/3", "/parada/7/6"} {

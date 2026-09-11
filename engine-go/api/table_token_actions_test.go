@@ -41,7 +41,7 @@ func nowBoard(t *testing.T, f pilotoFixture) *board.BoardState {
 // "nenhuma peça escondida nesta cena".
 func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	id := mapToken(t, f, "Ogro", 4, 4)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
@@ -76,7 +76,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 // separação que o elenco e a fila já têm (superfície 6b).
 func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Arcanista", X: 0, Y: 0, EntryID: &entryID})
@@ -109,7 +109,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 // que ninguém lembra de ter feito.
 func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
@@ -160,7 +160,7 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 // pessoas" — é justamente o que se quer desfazer de qualquer tela.
 func TestUndoSurvivesAReload(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Dragão", 2, 2)
 	mover := f.tableUrl() + "/tabuleiro/" + id
 	for _, passo := range []string{"/parada/8/8", "/confirmar"} {
@@ -183,7 +183,7 @@ func TestUndoSurvivesAReload(t *testing.T) {
 // zumbi do canto espera o irmão dele ali, não na fileira de entrada.
 func TestDuplicateNumbersOnTheServer(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Zumbi", 3, 3)
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -243,7 +243,7 @@ func tokenOnTheQueue(t *testing.T, f pilotoFixture, rotulo string) (string, stri
 func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id, linhaOriginal := tokenOnTheQueue(t, f, "Ogro cansado")
 	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
 
@@ -285,7 +285,7 @@ func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id, linha := tokenOnTheQueue(t, f, "Ogro cansado")
 	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
 
@@ -312,7 +312,7 @@ func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
 // e receberia exatamente o que "só a peça" dá.
 func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Baú", 1, 1)
 
 	for _, modo := range []string{"junto", "sozinha"} {
@@ -339,7 +339,7 @@ func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
 // e sobre onde cabe passar.
 func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id + "/editar"
 
@@ -366,7 +366,7 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 // vê nunca foi prova de trava — quem postar na mão leva 403.
 func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
 
@@ -406,7 +406,7 @@ func colaNaAba(t *testing.T, f pilotoFixture, deOndeVeio, peca, modo string, x, 
 // justamente quando o colar mais serve.
 func TestThePasteCrossesTheTabs(t *testing.T) {
 	f := novoPiloto(t)
-	cripta := f.seedOpenBoard(t, "pedra")
+	cripta := f.seedOpenBoard(t, "stone")
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, cripta.ID,
 		board.BoardToken{Label: "Zumbi", X: 1, Y: 1, Kind: "npc"})
 	if err != nil {
@@ -455,7 +455,7 @@ func TestThePasteCrossesTheTabs(t *testing.T) {
 // de antes, e a pessoa apertaria de novo.
 func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/colar/2/2", `{"area_token":""}`)
 	if !strings.Contains(recusa, "não há peça na área") {
@@ -469,7 +469,7 @@ func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
 // zumbi do mapa, e aperta CTRL+V. Sem esta frase o colar sairia calado.
 func TestThePasteOfAPieceThatIsGoneSaysSo(t *testing.T) {
 	f := novoPiloto(t)
-	b := f.seedOpenBoard(t, "pedra")
+	b := f.seedOpenBoard(t, "stone")
 
 	recusa := colaNaAba(t, f, b.ID, "peca-que-nao-existe", "peca", 2, 2)
 	if !strings.Contains(recusa, "não está mais no tabuleiro de origem") {
@@ -485,7 +485,7 @@ func TestThePasteOfAPieceThatIsGoneSaysSo(t *testing.T) {
 func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	b := f.seedOpenBoard(t, "pedra")
+	b := f.seedOpenBoard(t, "stone")
 	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
 	antes := len(f.s.sessions.GetState(f.sessionID).Initiative)
 
@@ -550,7 +550,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("semear a linha: %v", err)
 	}
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id, linhaOriginal := tokenOnTheQueue(t, f, "Zumbi")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -599,7 +599,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 func TestTheOwnBlockModeRefusesWhoHasNone(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
 
 	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/"+id+"/duplicar/bloco", "")

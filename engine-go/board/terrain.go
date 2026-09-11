@@ -21,10 +21,10 @@ package board
 type TerrainKind string
 
 const (
-	TerrenoDificil    TerrainKind = "dificil"
-	TerrenoCobertura  TerrainKind = "cobertura"
-	TerrenoCamuflagem TerrainKind = "camuflagem"
-	TerrenoElevado    TerrainKind = "elevado"
+	TerrenoDificil    TerrainKind = "difficult"
+	TerrenoCobertura  TerrainKind = "cover"
+	TerrenoCamuflagem TerrainKind = "concealment"
+	TerrenoElevado    TerrainKind = "elevated"
 )
 
 // TerrainBrush é uma espécie pronta para a tela oferecer.

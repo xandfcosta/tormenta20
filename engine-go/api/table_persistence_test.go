@@ -94,7 +94,7 @@ func TestThePlayerIsNotWarnedAboutSaving(t *testing.T) {
 func quebraAGravacao(t *testing.T, f pilotoFixture) {
 	t.Helper()
 	ctx := context.Background()
-	if _, err := f.s.boards.Open(ctx, f.sessionID, "Taverna do Javali", "taverna"); err != nil {
+	if _, err := f.s.boards.Open(ctx, f.sessionID, "Taverna do Javali", "tavern"); err != nil {
 		t.Fatalf("abrir tabuleiro: %v", err)
 	}
 	if _, err := f.s.db.ExecContext(ctx, "DROP TABLE open_boards"); err != nil {
@@ -124,7 +124,7 @@ func quebraAGravacao(t *testing.T, f pilotoFixture) {
 func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 	f := novoPiloto(t)
 	f.scene(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+ficha+`"}`)

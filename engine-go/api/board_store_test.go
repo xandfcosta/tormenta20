@@ -28,7 +28,7 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	abre(t, s, sid, "Taverna do Javali", "taverna")
+	abre(t, s, sid, "Taverna do Javali", "tavern")
 	if _, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
@@ -41,7 +41,7 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	if voltou == nil {
 		t.Fatal("o tabuleiro não voltou do banco")
 	}
-	if voltou.Place != "Taverna do Javali" || voltou.Terrain != "taverna" {
+	if voltou.Place != "Taverna do Javali" || voltou.Terrain != "tavern" {
 		t.Errorf("o lugar ou o cenário se perderam: %+v", voltou)
 	}
 	if len(voltou.Tokens) != 1 || voltou.Tokens[0].X != 3 || voltou.Tokens[0].Y != 4 {
@@ -73,7 +73,7 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "pedra")
+	abre(t, s, sid, "Cripta", "stone")
 	s.boards.Persist(ctx, sid, defaultTab)
 
 	s.boards.Close(ctx, sid, defaultTab)
@@ -100,12 +100,12 @@ func TestOpeningASecondBoardKeepsTheFirst(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	taverna := abre(t, s, sid, "Taverna", "taverna")
+	taverna := abre(t, s, sid, "Taverna", "tavern")
 	if _, err := s.boards.AddToken(ctx, sid, taverna.ID, board.BoardToken{Label: "Bandido"}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
 
-	masmorra := abre(t, s, sid, "Masmorra", "pedra")
+	masmorra := abre(t, s, sid, "Masmorra", "stone")
 
 	if masmorra.ID == taverna.ID {
 		t.Fatal("a segunda cena nasceu com o id da primeira: elas são a mesma aba")
@@ -143,8 +143,8 @@ func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	taverna := abre(t, s, sid, "Taverna", "taverna")
-	cripta := abre(t, s, sid, "Cripta", "pedra")
+	taverna := abre(t, s, sid, "Taverna", "tavern")
+	cripta := abre(t, s, sid, "Cripta", "stone")
 	if _, err := s.boards.AddToken(ctx, sid, cripta.ID, board.BoardToken{Label: "Ogro", X: 7, Y: 7}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
@@ -185,11 +185,11 @@ func TestClosingATabDoesNotMakeTheNextOneTie(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	ponte := abre(t, s, sid, "Ponte", "pedra")
-	taverna := abre(t, s, sid, "Taverna", "taverna")
+	ponte := abre(t, s, sid, "Ponte", "stone")
+	taverna := abre(t, s, sid, "Taverna", "tavern")
 	s.boards.Close(ctx, sid, ponte.ID)
 
-	cripta := abre(t, s, sid, "Cripta", "pedra")
+	cripta := abre(t, s, sid, "Cripta", "stone")
 
 	if cripta.Seq == taverna.Seq {
 		t.Fatalf("a cripta nasceu com o número da taverna (%d): a ordem das abas passou a depender do desempate do banco", cripta.Seq)
@@ -208,12 +208,12 @@ func TestOpeningRefusesPastTheCeiling(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	for i := 0; i < 8; i++ {
-		if _, err := s.boards.Open(ctx, sid, "Cena", "pedra"); err != nil {
+		if _, err := s.boards.Open(ctx, sid, "Cena", "stone"); err != nil {
 			t.Fatalf("a %da cena foi recusada antes do teto: %v", i+1, err)
 		}
 	}
 
-	_, err := s.boards.Open(ctx, sid, "A nona", "pedra")
+	_, err := s.boards.Open(ctx, sid, "A nona", "stone")
 
 	if err == nil {
 		t.Fatal("a nona cena abriu: o teto não existe")
@@ -254,7 +254,7 @@ func TestBoardPersistFailureIsReported(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "pedra")
+	abre(t, s, sid, "Cripta", "stone")
 
 	if Dirty, changed := s.boards.Persist(ctx, sid, defaultTab); Dirty || changed {
 		t.Fatalf("gravação saudável já saiu como falha: Dirty=%v changed=%v", Dirty, changed)
@@ -295,7 +295,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	abre(t, s, sid, "Cripta", "pedra")
+	abre(t, s, sid, "Cripta", "stone")
 	if _, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Ogro", X: 1, Y: 1}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
@@ -353,7 +353,7 @@ func TestClosingReportsAFailedDelete(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	abre(t, s, sid, "Cripta", "pedra")
+	abre(t, s, sid, "Cripta", "stone")
 	s.boards.Persist(ctx, sid, defaultTab)
 
 	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {

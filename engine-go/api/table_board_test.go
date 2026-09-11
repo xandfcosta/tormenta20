@@ -49,7 +49,7 @@ func TestWithoutABoardTheSceneSaysThereIsNoMap(t *testing.T) {
 // ele em vez de decidir por conta própria.
 func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}); err != nil {
 		t.Fatalf("pôr a peça escondida: %v", err)
@@ -84,7 +84,7 @@ func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 	f := novoPiloto(t)
 	entryID := f.tracker(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "p", Label: "Arcanista", X: 2, Y: 2, EntryID: &entryID}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -123,10 +123,10 @@ func TestAnInventedTerrainFallsBackToTheDefaultGround(t *testing.T) {
 	f.seedOpenBoard(t, "vulcão-de-neon")
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(corpo, "chao-pedra") {
+	if !strings.Contains(corpo, "ground-stone") {
 		t.Error("o terreno inventado não caiu no chão padrão")
 	}
-	if strings.Contains(corpo, "chao-vulcão") {
+	if strings.Contains(corpo, "ground-vulcão") {
 		t.Error("o terreno inventado virou classe solta")
 	}
 }
@@ -173,7 +173,7 @@ func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 	}
 
 	drenar()
-	if _, err := bs.Open(ctx, sessao, "Taverna", "taverna"); err != nil {
+	if _, err := bs.Open(ctx, sessao, "Taverna", "tavern"); err != nil {
 		t.Fatalf("abrir: %v", err)
 	}
 	avisou("abrir o tabuleiro", events.BoardOpened{})
@@ -228,7 +228,7 @@ func TestARefusedMutationTellsNobody(t *testing.T) {
 // menos da metade do batimento, então um verde aqui não pode ser o relógio.
 func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	// O id vem do SERVIDOR (`bs.newID`), não do que eu passo: dois clientes
 	// criando ao mesmo tempo não podem inventar o mesmo. Por isso ele é lido do
 	// estado devolvido em vez de assumido — a primeira versão deste teste
@@ -328,7 +328,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 // fila e NÃO manda o do mapa.
 func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Ogro", X: 2, Y: 2}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -424,7 +424,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 // `BoardForRole`; o que se prende aqui é que a cena não o reintroduz.
 func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Dragão", X: 3, Y: 3}); err != nil {
 		t.Fatalf("pôr a peça: %v", err)
@@ -471,7 +471,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 // outro lado da cripta.
 func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/nova/-3/7",
 		`{"new_token_name":"  Porta da cripta  ","new_token_size":1,"new_token_look":"object"}`)
@@ -509,7 +509,7 @@ func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
 // `character` é a que criaria uma peça que PARECE de jogador sem ninguém atrás.
 func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	casos := []struct{ nome, sinais, espera string }{
 		{"sem nome", `{"new_token_name":"   ","new_token_size":1,"new_token_look":"object"}`, "dê um nome"},
 		{"tamanho de nada", `{"new_token_name":"Carroça","new_token_size":4,"new_token_look":"object"}`, "p107"},
@@ -537,7 +537,7 @@ func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
 // asserções de AUSÊNCIA da suíte: botão ausente nunca foi prova de trava.
 func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/pecas/nova/1/1",
 		`{"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
@@ -563,7 +563,7 @@ func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
 // em silêncio.
 func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 
 	doMestre := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
 	for _, pedaco := range []string{
@@ -607,7 +607,7 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 // só aparece com cenário no mapa nasceria sem medição.
 func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "cripta")
+	f.seedOpenBoard(t, "crypt")
 	base := f.tableUrl() + "/tabuleiro/pecas/nova/"
 	f.posta(t, f.mestre, base+"1/1", `{"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
 	f.posta(t, f.mestre, base+"5/5", `{"new_token_name":"Lobo","new_token_size":1,"new_token_look":"npc"}`)

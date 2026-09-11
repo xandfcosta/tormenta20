@@ -25,7 +25,7 @@ func mapMarkers(t *testing.T, f pilotoFixture) []board.BoardMarker {
 // é como nasce o segundo "C" no mesmo mapa.
 func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/2/3", ""); rec.Code != http.StatusOK {
@@ -60,7 +60,7 @@ func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 // botão para desfazer o primeiro seria a mesma decisão em dois lugares.
 func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
@@ -89,7 +89,7 @@ func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 // erro.
 func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
@@ -134,7 +134,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 // nova é uma linha de registro que alguém pode trocar sem perceber.
 func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
@@ -161,7 +161,7 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 // que o gesto de revelar existe para responder.
 func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)
@@ -198,7 +198,7 @@ func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) 
 // responde 200: a tela diria que apagou algo que continua lá.
 func TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo/1/1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("marcar deu %d", rec.Code)

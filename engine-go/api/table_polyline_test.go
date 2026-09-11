@@ -25,7 +25,7 @@ import (
 // expressão que alguém escrever amanhã sem ler nada disto.
 func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	// O CONTROLE: as expressões da régua ESTÃO na página. Sem ele, não achar
@@ -70,7 +70,7 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 // `offsetX` zero e a régua renasce na ORIGEM do plano no mesmo gesto que a apagou.
 func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	for _, pedaco := range []string{
@@ -90,7 +90,7 @@ func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 // `.templ`, e uma polilinha maior teria pernas medidas que ninguém desenha.
 func TestAForgedRulerIsRefused(t *testing.T) {
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 
 	// O TETO vai escrito à mão (12 paradas, o tamanho da reserva de nós no
 	// `.templ`): lê-lo do `stopsMax` da cena faria o esperado sair do código sob
@@ -127,7 +127,7 @@ func TestTheSphereIsBornAtTheIntersection(t *testing.T) {
 	// desde a ALE-278: ela é função pura e não precisa de banco. Este caso ficou
 	// com a metade que só um servidor montado prova, e as duas continuam presas.
 	f := novoPiloto(t)
-	f.seedOpenBoard(t, "pedra")
+	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "Math.round((evt.offsetX") {
 		t.Error("a tela não arredonda o clique para o canto: com `floor` a esfera cai " +
