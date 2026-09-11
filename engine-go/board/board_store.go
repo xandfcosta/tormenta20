@@ -1,6 +1,6 @@
 package board
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
@@ -58,7 +58,7 @@ type BoardStore struct {
 	// bus é por onde as mudanças deste tabuleiro viram notícia (ALE-279).
 	//
 	// Aqui morava `ouvintes map[int64][]chan struct{}`, num arquivo `aviso.go`
-	// que espelhava o do `aovivo` linha por linha. O comentário dele explicava
+	// que espelhava o do `live` linha por linha. O comentário dele explicava
 	// por que eram DOIS registros e não um compartilhado: os dois stores têm
 	// travas próprias, e chamar o aviso do outro pacote de dentro da trava daqui
 	// é como se escreve um abraço mortal.
@@ -429,14 +429,14 @@ func (bs *BoardStore) RemoveToken(ctx context.Context, sessionID int64, tabuleir
 // O `laco` é o que a cópia vai ser — ver o `DuplicateToken` do estado, onde a
 // decisão está escrita. Ele chega PRONTO porque a linha nova mora no
 // `SessionStore`, e este store não o conhece.
-func (bs *BoardStore) DuplicateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, laco *aovivo.InitiativeEntry) (*BoardState, error) {
+func (bs *BoardStore) DuplicateToken(ctx context.Context, sessionID int64, tabuleiroID, tokenID string, laco *live.InitiativeEntry) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
 		return DuplicateToken(b, tokenID, laco, bs.newID)
 	})
 }
 
 // PasteToken põe a cópia NESTE tabuleiro, e a original pode ser de outro (ALE-206).
-func (bs *BoardStore) PasteToken(ctx context.Context, sessionID int64, tabuleiroID string, modelo BoardToken, laco *aovivo.InitiativeEntry, x, y int) (*BoardState, error) {
+func (bs *BoardStore) PasteToken(ctx context.Context, sessionID int64, tabuleiroID string, modelo BoardToken, laco *live.InitiativeEntry, x, y int) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
 		return PasteToken(b, modelo, laco, x, y, bs.newID)
 	})
@@ -503,7 +503,7 @@ func (bs *BoardStore) PaintStroke(
 }
 
 func (bs *BoardStore) Populate(
-	ctx context.Context, sessionID int64, tabuleiroID string, st *aovivo.SessionRuntimeState, chosen EntrySelection,
+	ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, chosen EntrySelection,
 ) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
 		populateBoard(b, st, bs.newID, chosen)
@@ -573,7 +573,7 @@ func (bs *BoardStore) Persist(ctx context.Context, sessionID int64, tabuleiroID 
 	// das abas na tela sai daquela coluna.
 	err = bs.q.SaveOpenBoard(ctx, sqlcgen.SaveOpenBoardParams{
 		Sessionid: sessionID, Boardid: b.ID, State: string(blob),
-		Openseq: b.Seq, Updatedat: plataforma.NowISO(),
+		Openseq: b.Seq, Updatedat: platform.NowISO(),
 	})
 
 	bs.Mu.Lock()
@@ -594,7 +594,7 @@ func (bs *BoardStore) Persist(ctx context.Context, sessionID int64, tabuleiroID 
 // A posse e o orçamento chegam RESOLVIDOS do gateway: quem consulta o banco é
 // ele, e a trava daqui não pode esperar por I/O.
 
-func (bs *BoardStore) ProposeMove(ctx context.Context, sessionID int64, tabuleiroID string, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
+func (bs *BoardStore) ProposeMove(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, tokenID string, path []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
 		// O orçamento fresco do motor entra na peça ANTES da medição: sem isso,
 		// a armadura vestida no meio da sessão só valeria no movimento seguinte.
@@ -612,7 +612,7 @@ func (bs *BoardStore) ProposeMove(ctx context.Context, sessionID int64, tabuleir
 // ONDE a pessoa parou, que o caminho sozinho não deixa reconstruir. Sem ela,
 // "desfazer a última perna" seria um palpite sobre o movimento que a mesa está
 // vendo.
-func (bs *BoardStore) ProposeMoveWithStops(ctx context.Context, sessionID int64, tabuleiroID string, st *aovivo.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
+func (bs *BoardStore) ProposeMoveWithStops(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error {
 		if token := FindToken(b, tokenID); token != nil && speedSquares > 0 {
 			token.SpeedSquares = speedSquares
@@ -621,7 +621,7 @@ func (bs *BoardStore) ProposeMoveWithStops(ctx context.Context, sessionID int64,
 	})
 }
 
-func (bs *BoardStore) CommitMove(ctx context.Context, sessionID int64, tabuleiroID string, st *aovivo.SessionRuntimeState, version int64, by Mover) (*BoardState, error) {
+func (bs *BoardStore) CommitMove(ctx context.Context, sessionID int64, tabuleiroID string, st *live.SessionRuntimeState, version int64, by Mover) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, tabuleiroID, func(b *BoardState) error { return CommitMove(b, st, version, by) })
 }
 

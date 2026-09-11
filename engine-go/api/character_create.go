@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/live"
+	"t20engine/platform"
 	"t20engine/sheet"
 )
 
@@ -62,10 +62,10 @@ func (h forgeHost) InsertCharacter(ctx context.Context, ownerID int64, name stri
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := h.queries.WithTx(tx)
-	now := plataforma.NowISO()
+	now := platform.NowISO()
 
 	id, err := q.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
-		OwnerId: ownerID, Name: name, Origin: body.Origin, God: plataforma.NullString(body.God),
+		OwnerId: ownerID, Name: name, Origin: body.Origin, God: platform.NullString(body.God),
 		GodPower: derefStr(body.GodPower, ""), Tibar: derefF64(body.Tibar, 0), Level: totalLevel,
 		HpMax: body.HpMax, HpCurrent: body.HpCurrent, MpMax: body.MpMax, MpCurrent: body.MpCurrent,
 		Strength: body.Strength, Dexterity: body.Dexterity, Constitution: body.Constitution,
@@ -102,9 +102,9 @@ func (h forgeHost) InsertCharacter(ctx context.Context, ownerID int64, name stri
 	}
 	for _, it := range body.Items {
 		if _, err := q.CreateItem(ctx, sqlcgen.CreateItemParams{
-			Characterid: id, Catalogid: plataforma.NullString(it.CatalogID), Name: derefStr(it.Name, ""),
-			Quantity: aovivo.DerefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
-			Equipped: plataforma.NullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
+			Characterid: id, Catalogid: platform.NullString(it.CatalogID), Name: derefStr(it.Name, ""),
+			Quantity: live.DerefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
+			Equipped: platform.NullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
 		}); err != nil {
 			return 0, err
 		}
@@ -133,7 +133,7 @@ func (h forgeHost) HealVitals(ctx context.Context, id int64, dto *sheet.Characte
 	}
 	if err := h.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
 		HpMax: next.HpMax, HpCurrent: next.HpCurrent, MpMax: next.MpMax, MpCurrent: next.MpCurrent,
-		UpdatedAt: plataforma.NowISO(), ID: id,
+		UpdatedAt: platform.NowISO(), ID: id,
 	}); err != nil {
 		return err
 	}

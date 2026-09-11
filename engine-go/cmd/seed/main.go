@@ -32,7 +32,7 @@ import (
 	"t20engine/catalog"
 	"t20engine/db"
 	"t20engine/engine"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/sheet"
 )
 
@@ -148,7 +148,7 @@ func freshServer(adminEmails []string) (casaDaSeed, *sql.DB, func()) {
 	if err != nil {
 		log.Fatalf("db.Open: %v", err)
 	}
-	cfg, err := plataforma.LoadConfig()
+	cfg, err := platform.LoadConfig()
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}

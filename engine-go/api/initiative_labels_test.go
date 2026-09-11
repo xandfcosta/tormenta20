@@ -1,7 +1,7 @@
 package api
 
 import (
-	"t20engine/aovivo"
+	"t20engine/live"
 	"testing"
 )
 
@@ -16,20 +16,20 @@ import (
 // próximo livre é decisão sobre o estado, e duas telas adivinhando produziriam
 // dois "Ogro 2".
 
-func addNpcs(t *testing.T, labels ...string) *aovivo.SessionRuntimeState {
+func addNpcs(t *testing.T, labels ...string) *live.SessionRuntimeState {
 	t.Helper()
-	st := &aovivo.SessionRuntimeState{TurnIndex: -1}
+	st := &live.SessionRuntimeState{TurnIndex: -1}
 	n := 0
 	novoID := func() string { n++; return string(rune('a' + n)) }
 	for _, label := range labels {
-		if err := aovivo.AddEntry(st, aovivo.InitiativeEntry{Label: label, Type: "npc", Initiative: 10}, novoID); err != nil {
+		if err := live.AddEntry(st, live.InitiativeEntry{Label: label, Type: "npc", Initiative: 10}, novoID); err != nil {
 			t.Fatalf("adicionar %q: %v", label, err)
 		}
 	}
 	return st
 }
 
-func labelsOf(st *aovivo.SessionRuntimeState) []string {
+func labelsOf(st *live.SessionRuntimeState) []string {
 	out := make([]string, 0, len(st.Initiative))
 	for _, e := range st.Initiative {
 		out = append(out, e.Label)
@@ -69,12 +69,12 @@ func TestDifferentKindsDoNotMix(t *testing.T) {
 // procurar os que não existem — a mesma razão escrita no `nextInstanceLabel`.
 func TestTheGapIsReused(t *testing.T) {
 	st := addNpcs(t, "Ogro", "Ogro", "Ogro")
-	if err := aovivo.RemoveEntry(st, st.Initiative[1].ID); err != nil {
+	if err := live.RemoveEntry(st, st.Initiative[1].ID); err != nil {
 		t.Fatalf("remover: %v", err)
 	}
 
 	novoID := func() string { return "z" }
-	if err := aovivo.AddEntry(st, aovivo.InitiativeEntry{Label: "Ogro", Type: "npc", Initiative: 10}, novoID); err != nil {
+	if err := live.AddEntry(st, live.InitiativeEntry{Label: "Ogro", Type: "npc", Initiative: 10}, novoID); err != nil {
 		t.Fatalf("readicionar: %v", err)
 	}
 
@@ -100,8 +100,8 @@ func TestTheGapIsReused(t *testing.T) {
 // obrigatoriedade é quem materializa a linha, e inventar um número aqui
 // esconderia o erro dele.
 func TestAnEmptyLabelPassesStraightThrough(t *testing.T) {
-	st := &aovivo.SessionRuntimeState{TurnIndex: -1}
-	if err := aovivo.AddEntry(st, aovivo.InitiativeEntry{Label: "", Type: "npc"}, func() string { return "a" }); err != nil {
+	st := &live.SessionRuntimeState{TurnIndex: -1}
+	if err := live.AddEntry(st, live.InitiativeEntry{Label: "", Type: "npc"}, func() string { return "a" }); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
 

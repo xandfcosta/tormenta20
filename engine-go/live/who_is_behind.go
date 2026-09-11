@@ -1,9 +1,9 @@
-package aovivo
+package live
 
 // Quem está ATRÁS de um combatente: a ficha, ou ninguém.
 //
 // É pura leitura do estado em memória, então é do regime — veio do
-// `session_character_vitals.go` quando o `aovivo/` nasceu (ALE-254). O que
+// `session_character_vitals.go` quando o `live/` nasceu (ALE-254). O que
 // ficou lá é o que ESCREVE na ficha, que é outro contexto e agora atravessa
 // uma porta.
 //

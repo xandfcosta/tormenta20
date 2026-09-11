@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"testing"
 )
 
@@ -20,7 +20,7 @@ func barbaro(t *testing.T, nivel int64) (pilotoFixture, int64) {
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: plataforma.NowISO(), UpdatedAt: plataforma.NowISO(),
+		CreatedAt: platform.NowISO(), UpdatedAt: platform.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o bárbaro: %v", err)

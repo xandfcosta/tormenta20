@@ -350,7 +350,7 @@ func TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch(t *testing.T) {
 /*
 A FAIXA DE QUEM VEM DEPOIS na tela (ALE-290).
 
-O `aovivo.UpcomingTurns` estava no ar desde a ALE-179 com cinco guardas e
+O `live.UpcomingTurns` estava no ar desde a ALE-179 com cinco guardas e
 nenhuma tela. Os casos de tradução moram no `web/table`; o que se prende aqui é
 que ela CHEGA ao HTML dos dois papéis, e que a do jogador obedece à mesma
 redação que o resto da Mesa.

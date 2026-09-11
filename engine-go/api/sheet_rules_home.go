@@ -2,10 +2,10 @@ package api
 
 import (
 	"database/sql"
-	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
+	"t20engine/live"
 )
 
 // AS REGRAS DE ESCRITA DA FICHA, com casa própria (ALE-278, fatia 6).
@@ -29,8 +29,8 @@ type sheetRules struct {
 	// — e porque um GANCHO opcional já nasceu desligado uma vez neste
 	// repositório (ver `characterChanged`).
 	bus      *events.Bus
-	sessions *aovivo.SessionStore
-	sse      *aovivo.SSEHub
+	sessions *live.SessionStore
+	sse      *live.SSEHub
 }
 
 func (s *Server) sheetRules() sheetRules {

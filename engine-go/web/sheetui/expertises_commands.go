@@ -10,7 +10,7 @@ import (
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // OS COMANDOS DAS ABAS PERÍCIAS E PROFICIÊNCIAS (ALE-272, fatias 2 e 4).
@@ -44,7 +44,7 @@ func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 		}
 		depois := e.Trained == 0
 		_, err := s.deps.Queries().UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
-			Trained: plataforma.NullBool(&depois), CharacterId: row.ID, Name: nome,
+			Trained: platform.NullBool(&depois), CharacterId: row.ID, Name: nome,
 		})
 		return err
 	}
@@ -62,7 +62,7 @@ func swapAttribute(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) e
 	}
 	nome := expertiseName(r)
 	_, err := s.deps.Queries().UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
-		Attribute: plataforma.NullString(&atributo), CharacterId: row.ID, Name: nome,
+		Attribute: platform.NullString(&atributo), CharacterId: row.ID, Name: nome,
 	})
 	if err != nil {
 		return fmt.Errorf("a perícia %q não é desta ficha", nome)

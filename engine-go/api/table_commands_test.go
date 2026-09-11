@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
-	"t20engine/aovivo"
+	"t20engine/live"
 	"testing"
 )
 
@@ -513,7 +513,7 @@ func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 	entryID := fila[0].ID
 
 	aMesaVeOPv := func() bool {
-		paraMesa := aovivo.StateForRole("player", f.s.tableHost().Sessions().GetState(f.sessionID))
+		paraMesa := live.StateForRole("player", f.s.tableHost().Sessions().GetState(f.sessionID))
 		for _, e := range paraMesa.Initiative {
 			if e.ID == entryID {
 				return e.HpMax != nil
@@ -598,7 +598,7 @@ func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
 
 // TestBothTheGmAndThePlayerSeeWhoIsAtTheTable.
 //
-// A regra de QUEM está conectado já tem guarda no `aovivo`; o que se prende aqui
+// A regra de QUEM está conectado já tem guarda no `live`; o que se prende aqui
 // é a LIGAÇÃO — que o cartão do Grupo é casado com a presença pelo id do
 // personagem, e que ela chega às DUAS telas.
 //
@@ -631,7 +631,7 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 		t.Error("alguém apareceu na mesa sem ter entrado")
 	}
 
-	f.s.tableHost().Presence().Join(f.sessionID, "conn-do-jogador", aovivo.PresenceUser{
+	f.s.tableHost().Presence().Join(f.sessionID, "conn-do-jogador", live.PresenceUser{
 		UserID: f.jogador, Name: "Jogador", Role: "player",
 	})
 
@@ -656,7 +656,7 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 // TestAddingACombatantBuildsTheEntryThroughTheHousePath.
 //
 // O que se prende é a COMPOSIÇÃO: que o piloto chama o `materializeEntry` e a
-// validação do `aovivo`, em vez de montar a linha por conta própria. As duas
+// validação do `live`, em vez de montar a linha por conta própria. As duas
 // metades do PV são o ponto — digitado ele vira pool cheio, e ZERO fica de fora
 // em vez de virar 0/0, que é a diferença entre "capanga sem vida rastreada" e
 // "capanga que já está morto".
@@ -696,9 +696,9 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	}
 }
 
-// E a validação do `aovivo` está LIGADA: o piloto não tem uma segunda escada.
+// E a validação do `live` está LIGADA: o piloto não tem uma segunda escada.
 //
-// Um caso só, e de propósito — as quatro bordas têm guarda no `aovivo`, contra a
+// Um caso só, e de propósito — as quatro bordas têm guarda no `live`, contra a
 // regra. O que falta provar aqui é a LIGAÇÃO, e repetir as quatro seria afirmar
 // a mesma coisa em duas camadas.
 func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {

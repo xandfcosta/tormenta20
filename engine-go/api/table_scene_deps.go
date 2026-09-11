@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
-	"t20engine/plataforma"
+	"t20engine/live"
+	"t20engine/platform"
 	"t20engine/web/sheetui"
 	"t20engine/web/table"
 )
@@ -50,10 +50,10 @@ func (s *Server) tableHost() tableHost {
 // Embrulhá-los método a método daria oitenta entradas na porta e nenhuma
 // fronteira a mais — é a mesma concessão do `Queries`, e ela tem o mesmo sinal
 // de estar no lugar.
-func (h tableHost) Boards() *board.BoardStore          { return h.rules.boards }
-func (h tableHost) Sessions() *aovivo.SessionStore     { return h.rules.sessions }
-func (h tableHost) Presence() *aovivo.PresenceRegistry { return h.rules.presence }
-func (h tableHost) SSE() *aovivo.SSEHub                { return h.rules.sse }
+func (h tableHost) Boards() *board.BoardStore        { return h.rules.boards }
+func (h tableHost) Sessions() *live.SessionStore     { return h.rules.sessions }
+func (h tableHost) Presence() *live.PresenceRegistry { return h.rules.presence }
+func (h tableHost) SSE() *live.SSEHub                { return h.rules.sse }
 
 // CharacterChanged avisa que uma ficha da mesa mexeu. A regra é da FICHA e a
 // Mesa a pede emprestada, que é o que o campo `sheet` do `tableRules` diz.
@@ -116,7 +116,7 @@ func (h tableHost) SessionDeleted(sessionID int64) {
 // A leitura da linha mora aqui e não na cena: ela existia lá só para ser
 // passada de volta ao hospedeiro, que é a forma "duas perguntas em sequência
 // viram uma" que a porta de entrar deixou escrita.
-func (h tableHost) StartSessionForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+func (h tableHost) StartSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	sess, err := h.rules.queries.GetSession(ctx, sessionID)
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (h tableHost) StartSessionForTable(ctx context.Context, sessionID int64) (*
 	return h.rules.sessions.GetState(sessionID), nil
 }
 
-func (h tableHost) EndSessionForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+func (h tableHost) EndSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	sess, err := h.rules.queries.GetSession(ctx, sessionID)
 	if err != nil {
 		return nil, err
@@ -138,11 +138,11 @@ func (h tableHost) EndSessionForTable(ctx context.Context, sessionID int64) (*ao
 	return h.rules.sessions.GetState(sessionID), nil
 }
 
-func (h tableHost) EndSceneForTable(userID, campaignID, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+func (h tableHost) EndSceneForTable(userID, campaignID, sessionID int64) (*live.SessionRuntimeState, error) {
 	return h.rules.endSceneForTable(AuthUser{ID: userID}, campaignID, sessionID)
 }
 
-func (h tableHost) RestartCombatForTable(ctx context.Context, sessionID int64) (*aovivo.SessionRuntimeState, error) {
+func (h tableHost) RestartCombatForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	if err := h.rules.RestartCombat(ctx, sessionID); err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (h tableHost) RestParty(
 
 func (h tableHost) SelfInitiativeEntry(
 	userID, campaignID, characterID, d20 int64,
-) (aovivo.InitiativeEntry, error) {
+) (live.InitiativeEntry, error) {
 	return h.rules.selfInitiativeEntry(userID, campaignID, characterID, d20)
 }
 
@@ -178,7 +178,7 @@ func (h tableHost) CloneCreatureBlock(ctx context.Context, creatureID, campaignI
 	if origem.Campaignid != campaignID {
 		return 0, fmt.Errorf("o bloco %d é de outra campanha", creatureID)
 	}
-	agora := plataforma.NowISO()
+	agora := platform.NowISO()
 	copia, err := h.rules.queries.CreateCampaignCreature(ctx, sqlcgen.CreateCampaignCreatureParams{
 		Campaignid: campaignID, Name: nome, Block: origem.Block,
 		Createdat: agora, Updatedat: agora,
@@ -191,7 +191,7 @@ func (h tableHost) CloneCreatureBlock(ctx context.Context, creatureID, campaignI
 
 func (h tableHost) MaterializeEntry(
 	ctx context.Context, userID, campaignID int64, pedido map[string]any,
-) (aovivo.InitiativeEntry, error) {
+) (live.InitiativeEntry, error) {
 	return h.rules.materializeEntry(ctx, userID, campaignID, pedido)
 }
 
@@ -214,7 +214,7 @@ func (h tableHost) PlayerCombatants(ctx context.Context, campaignID int64) ([]ta
 	return fora, nil
 }
 
-func (h tableHost) PopulateParty(sessionID int64, quem []table.Combatant) (*aovivo.SessionRuntimeState, error) {
+func (h tableHost) PopulateParty(sessionID int64, quem []table.Combatant) (*live.SessionRuntimeState, error) {
 	linhas := make([]combatant, 0, len(quem))
 	for _, c := range quem {
 		linhas = append(linhas, combatant{
@@ -255,7 +255,7 @@ func (h tableHost) SaveFailed(sessionID int64) bool {
 // publicador, e como o `SSEHub` não tem ouvinte em produção, apagar o publicador
 // — que é a leitura natural de "isto emite para ninguém" — levaria a gravação
 // junto e a mesa passaria a viver só em memória (ALE-154).
-func (h tableHost) PublishSessionState(sessionID int64, estado *aovivo.SessionRuntimeState) {
+func (h tableHost) PublishSessionState(sessionID int64, estado *live.SessionRuntimeState) {
 	h.rules.saveSession(sessionID)
 	h.rules.publishSessionState(sessionID, estado)
 }

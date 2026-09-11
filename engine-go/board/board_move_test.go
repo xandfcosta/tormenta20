@@ -1,17 +1,17 @@
 package board
 
 import (
-	"t20engine/aovivo"
+	"t20engine/live"
 	"testing"
 
 	"t20engine/engine"
 )
 
 // combatenteDeFicha monta uma entrada de PC. Helper de teste local: o do
-// `aovivo` mudou de pacote na ALE-254 e teste não exporta para o vizinho.
-func combatenteDeFicha(label string, init int, charID int64) aovivo.InitiativeEntry {
+// `live` mudou de pacote na ALE-254 e teste não exporta para o vizinho.
+func combatenteDeFicha(label string, init int, charID int64) live.InitiativeEntry {
 	c := charID
-	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
+	return live.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
 }
 
 // ContadorDeIds gera ids previsíveis para o teste. Era um helper compartilhado
@@ -43,12 +43,12 @@ func itoaLocal(n int) string {
 // da mesma regra.
 
 // mesaEmCombate monta um tabuleiro com a peça do jogador na vez e um NPC fora.
-func mesaEmCombate(t *testing.T) (*BoardState, *aovivo.SessionRuntimeState) {
+func mesaEmCombate(t *testing.T) (*BoardState, *live.SessionRuntimeState) {
 	t.Helper()
-	st := aovivo.EmptyRuntimeState()
+	st := live.EmptyRuntimeState()
 	id := ContadorDeIds()
-	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id) // e1
-	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)                     // e2
+	_ = live.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id) // e1
+	_ = live.AddEntry(st, npc("Ogro", 12), id)                     // e2
 	st.TurnIndex = 0
 
 	b := newBoard("t1", "Taverna do Javali", "stone")
@@ -340,12 +340,12 @@ func boolPtr(v bool) *bool { return &v }
 // que o mestre encontra o tabuleiro no segundo em que o combate começa: ele
 // tinha de arrastar nove peças antes de a cena servir para alguma coisa.
 func TestPopulateStartsTheSidesApart(t *testing.T) {
-	st := aovivo.EmptyRuntimeState()
+	st := live.EmptyRuntimeState()
 	id := ContadorDeIds()
-	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
-	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
-	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
-	_ = aovivo.AddEntry(st, npc("Goblin", 9), id)
+	_ = live.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
+	_ = live.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
+	_ = live.AddEntry(st, npc("Ogro", 12), id)
+	_ = live.AddEntry(st, npc("Goblin", 9), id)
 	b := newBoard("t1", "Cripta", "stone")
 
 	populateBoard(b, st, boardCounter(), nil)
@@ -394,9 +394,9 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 // posicionado NÃO é movido — o mestre pode ter colocado o vilão onde queria
 // antes de trazer o resto.
 func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
-	st := aovivo.EmptyRuntimeState()
+	st := live.EmptyRuntimeState()
 	id := ContadorDeIds()
-	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
+	_ = live.AddEntry(st, npc("Ogro", 12), id)
 	b := newBoard("t1", "Cripta", "stone")
 	tokens := boardCounter()
 	_ = AddToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)

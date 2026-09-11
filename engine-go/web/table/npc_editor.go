@@ -10,10 +10,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/aovivo"
 	"t20engine/creature"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/live"
+	"t20engine/platform"
 )
 
 // O EDITOR DE BLOCO (ALE-269): mexer nos números da cópia, e escrever do zero.
@@ -211,7 +211,7 @@ func itemWithout[T any](itens []T, indice int) ([]T, error) {
 // Passa pelo `gmCommand` — ao contrário dos gestos de forma — porque aqui
 // a CENA muda: a lista do elenco ganha ou perde uma linha, e ela é uma região
 // que precisa ser redesenhada.
-func saveDraft(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func saveDraft(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// A RECUSA VAI PARA O EDITOR, e não para o `command_error` do rodapé — que é
 	// a saída normal do `gmCommand`. É o mesmo argumento do
 	// `move_error`: quem lê a frase está com o formulário aberto POR CIMA do
@@ -260,7 +260,7 @@ func (s Scene) triesSaveDraft(c commandCtx) error {
 }
 
 func (s Scene) gravaOBloco(c commandCtx, rascunho npcDraft, blob string) error {
-	agora := plataforma.NowISO()
+	agora := platform.NowISO()
 	if rascunho.ID == 0 {
 		_, err := s.deps.Queries().CreateCampaignCreature(c.R.Context(), sqlcgen.CreateCampaignCreatureParams{
 			Campaignid: c.CampaignID, Name: rascunho.Nome, Block: blob,

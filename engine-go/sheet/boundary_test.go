@@ -10,7 +10,7 @@ import (
 
 // A FICHA E AS REGRAS DELA, e nenhum contexto (ALE-278).
 //
-// Irmão dos `boundary_test.go` do `aovivo`, do `tabuleiro`, da `plataforma`, do
+// Irmão dos `boundary_test.go` do `live`, do `tabuleiro`, da `platform`, do
 // `events` e do `creature`. A lista aqui não é vazia como a do `creature`: três
 // entradas foram medidas antes da extração — o `character_dto.go` já importava
 // exatamente aquelas e mais nada, o que foi o que provou que ele saía inteiro.
@@ -35,7 +35,7 @@ var permitidos = map[string]bool{
 	"t20engine/engine": true,
 	// Não é domínio nenhum, então depender dela não cria fronteira errada — a
 	// mesma justificativa dos irmãos.
-	"t20engine/plataforma": true,
+	"t20engine/platform": true,
 	// O LIVRO entrou na ALE-278, e é a única entrada desta lista que mudou o que
 	// este pacote É. Decisão do dono.
 	//

@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/engine"
+	"t20engine/live"
 )
 
 // A PRÉVIA do movimento DURANTE O ARRASTO (ALE-203, pedido do dono: *"durante o
@@ -99,7 +99,7 @@ func (s Scene) whoDragsInPreview(r *http.Request, papel string, peca *board.Boar
 // não. É a mesma leitura do `paradasDaProposta`, e ela é refeita aqui em vez de
 // reusada porque aquela vive num `commandCtx` (o caminho da MUTAÇÃO) e esta não
 // pode ter direito de escrita nenhum.
-func dragPreview(b *board.BoardState, st *aovivo.SessionRuntimeState, tokenID string, destino engine.Square, quem board.Mover) (map[string]any, error) {
+func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID string, destino engine.Square, quem board.Mover) (map[string]any, error) {
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}

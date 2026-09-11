@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/aovivo"
+	"t20engine/live"
 )
 
 // OS COMANDOS DO MESTRE na Mesa em Datastar (ALE-265).
@@ -28,15 +28,15 @@ import (
 
 func (s Scene) TableCommandRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/initiative/next-turn", s.gmCommand(
-		func(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().NextTurn(c.SessionID)
 		}))
 	r.Post("/mesa/{campaignId}/{sessionId}/initiative/previous-turn", s.gmCommand(
-		func(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().PreviousTurn(c.SessionID)
 		}))
 	r.Post("/mesa/{campaignId}/{sessionId}/scene/start", s.gmCommand(
-		func(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+		func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return st.deps.Sessions().StartScene(c.SessionID)
 		}))
 	r.Post("/mesa/{campaignId}/{sessionId}/scene/end", s.gmCommand(endScene))
@@ -69,7 +69,7 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 // addCombatant é o capanga digitado na hora: nome, iniciativa, PV e se é
 // PC ou NPC.
 //
-// A VALIDAÇÃO é do `aovivo` e não daqui, e essa é a extração de sempre: os
+// A VALIDAÇÃO é do `live` e não daqui, e essa é a extração de sempre: os
 // limites viviam como atributos dos campos do formulário da SPA, que é UI e não
 // trava — quem postasse na mão passava por cima dos quatro. Com eles no pacote
 // do estado, as duas telas param de poder discordar sobre o que é um combatente
@@ -79,12 +79,12 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 // API já usa: sem `characterId` ele cai no NPC, e o PV só entra quando foi
 // digitado. Escrever a montagem aqui seria a segunda cópia da mesma regra, que é
 // como a ALE-122 começou.
-func addCombatant(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	novo, err := signalsCombatant(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if err := aovivo.ValidateCombatantDraft(novo); err != nil {
+	if err := live.ValidateCombatantDraft(novo); err != nil {
 		return nil, err
 	}
 	entrada := map[string]any{
@@ -125,7 +125,7 @@ func addCombatant(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 // o fio leva os dois e o servidor lê o errado. Foi exatamente isso
 // que aconteceu com a qualidade do descanso, e o navegador foi a única
 // testemunha.
-func signalsCombatant(r *http.Request) (aovivo.CombatantDraft, error) {
+func signalsCombatant(r *http.Request) (live.CombatantDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
 		Nome       string `json:"new_name"`
@@ -134,9 +134,9 @@ func signalsCombatant(r *http.Request) (aovivo.CombatantDraft, error) {
 		Tipo       string `json:"new_type"`
 	}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
-		return aovivo.CombatantDraft{}, fmt.Errorf("não entendi o combatente enviado: %v", err)
+		return live.CombatantDraft{}, fmt.Errorf("não entendi o combatente enviado: %v", err)
 	}
-	return aovivo.CombatantDraft{
+	return live.CombatantDraft{
 		Label: sinais.Nome, Initiative: sinais.Iniciativa, HP: sinais.PV, Kind: sinais.Tipo,
 	}, nil
 }
@@ -156,8 +156,8 @@ func signalsCombatant(r *http.Request) (aovivo.CombatantDraft, error) {
 // Quem sabe somar é o store: com personagem atrás da linha quem manda é a FICHA
 // (o dano drena PV temporários) e a entrada espelha o resultado (ALE-122). O
 // piloto não tem uma segunda conta.
-func moveVitals(sign int64) func(Scene, commandCtx) (*aovivo.SessionRuntimeState, error) {
-	return func(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
+	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		raw := chi.URLParam(c.R, "step")
 		step, ok := vitalSteps[raw]
 		if !ok {
@@ -212,10 +212,10 @@ func poolDeltas(pool string, delta int64) (hp, mp *int64, ok bool) {
 // que ela quer. Dois mestres na mesma mesa — ou a mesma aba com o remendo
 // atrasado — mandariam "esconder" duas vezes, e a segunda desfaria a primeira
 // sem ninguém ter pedido. Quem sabe o estado é quem o guarda.
-func toggleEye(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func toggleEye(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
 	state := st.deps.Sessions().GetState(c.SessionID)
-	i := aovivo.FindEntryIndex(state, entryID)
+	i := live.FindEntryIndex(state, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
 	}
@@ -239,9 +239,9 @@ func toggleEye(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 		visible = !*choice
 	}
 	hidden := visible
-	patch := aovivo.EntryPatch{MpHidden: &hidden}
+	patch := live.EntryPatch{MpHidden: &hidden}
 	if pool == "hp" {
-		patch = aovivo.EntryPatch{HpHidden: &hidden}
+		patch = live.EntryPatch{HpHidden: &hidden}
 	}
 	return st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID, patch)
 }
@@ -259,24 +259,24 @@ func toggleEye(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 //
 // A ordem também importa: a iniciativa primeiro, porque ela REORDENA a fila, e
 // os vitais depois, pelo id — que não muda com a reordenação.
-func editaOCombatente(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func editaOCombatente(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
 	edicao, err := edicaoDosSinais(c.R)
 	if err != nil {
 		return nil, err
 	}
-	if err := aovivo.ValidateInitiative(edicao.Iniciativa); err != nil {
+	if err := live.ValidateInitiative(edicao.Iniciativa); err != nil {
 		return nil, err
 	}
 	antes := st.deps.Sessions().GetState(c.SessionID)
-	i := aovivo.FindEntryIndex(antes, entryID)
+	i := live.FindEntryIndex(antes, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
 	}
 	temVitais := antes.Initiative[i].HpMax != nil
 
 	estado, err := st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID,
-		aovivo.EntryPatch{Initiative: &edicao.Iniciativa})
+		live.EntryPatch{Initiative: &edicao.Iniciativa})
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func edicaoDosSinais(r *http.Request) (struct {
 // tiraDaFila remove o combatente. Sem confirmação, como na SPA: o gesto é do
 // meio do combate, e a fila é remontável — o que não é remontável (encerrar a
 // cena) é que ganhou dois verbos distintos em vez de um interruptor.
-func tiraDaFila(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	return st.deps.Sessions().RemoveInitiativeEntry(c.SessionID, chi.URLParam(c.R, "entryId"))
 }
 
@@ -327,8 +327,8 @@ func tiraDaFila(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 // O aviso é obrigatório e não é o `session-state`: o que muda no descanso é a
 // FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem estivesse
 // com a ficha aberta na SPA continuaria vendo o PV de antes até recarregar.
-func restParty(escopo string) func(Scene, commandCtx) (*aovivo.SessionRuntimeState, error) {
-	return func(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
+	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		qualidade := "normal"
 		if escopo == "day" {
 			lida, err := restQuality(c.R)
@@ -375,7 +375,7 @@ var restQualities = map[string]bool{"ruim": true, "normal": true, "confortavel":
 // a armadilha está registrada no `action.go`, onde ela passou VERDE
 // em teste de handler e falhou no navegador.
 func restQuality(r *http.Request) (string, error) {
-	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `plataforma.DecodeJSON`
+	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `platform.DecodeJSON`
 	var sinais struct {
 		Qualidade string `json:"rest_quality"`
 	}
@@ -397,7 +397,7 @@ func restQuality(r *http.Request) (string, error) {
 // O filtro de PAPEL é do `listPlayerCombatants`, e não daqui: o mestre costuma
 // ter um PC próprio no roster, e uma segunda opinião sobre quem é o grupo faria
 // esta tela discordar da SPA sobre a mesma pergunta (ALE-212).
-func bringParty(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	combatentes, err := st.deps.PlayerCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
@@ -469,7 +469,7 @@ type commandCtx struct {
 // A segunda é o aviso: as fichas não estão no estado do rastreador, então sem o
 // `session-rest` o efeito morto e o "usado 1/cena" ficariam na tela da SPA até
 // alguém recarregar.
-func endScene(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func endScene(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	estado, err := st.deps.EndSceneForTable(c.User, c.CampaignID, c.SessionID)
 	if err != nil {
 		return nil, err
@@ -487,7 +487,7 @@ func endScene(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 // quatro cópias, e é numa delas que alguém esquece de publicar e a mesa fica
 // vendo o turno velho.
 func (s Scene) gmCommand(
-	mutar func(Scene, commandCtx) (*aovivo.SessionRuntimeState, error),
+	mutar func(Scene, commandCtx) (*live.SessionRuntimeState, error),
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		campaignID, sessionID, ok := tableParams(w, r)

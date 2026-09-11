@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"t20engine/aovivo"
+	"t20engine/live"
 )
 
 // COMO UMA PEÇA SE PARECE.
@@ -51,7 +51,7 @@ type TokenAppearance struct {
 // "Eu ataco o Zumbi 3" é a frase mais dita da noite, e ela passa a ter resposta
 // num relance — inclusive para quem não distingue matiz, porque o selo é TEXTO.
 func AppearanceOf(rotulo string) TokenAppearance {
-	especie, numero := aovivo.Species(rotulo)
+	especie, numero := live.Species(rotulo)
 	a := TokenAppearance{Monograma: monogramOf(especie), Matiz: hueOf(especie)}
 	if numero > 0 {
 		a.Instancia = strconv.Itoa(numero)

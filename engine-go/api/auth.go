@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/account"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"time"
 
 	"t20engine/db"
@@ -60,7 +60,7 @@ func (a accountRules) createAccount(ctx context.Context, body account.RegisterBo
 	// linha escreveria `DONO@` como uma SEGUNDA linha em `users`, sem colidir
 	// com `dono@`, e com direito a dispensar convite: dois administradores onde
 	// só devia caber um (ALE-120). É idempotente para quem já normaliza.
-	body.Email = plataforma.NormalizeEmail(body.Email)
+	body.Email = platform.NormalizeEmail(body.Email)
 	invite, err := a.registrationInvite(ctx, body.Email, body.InviteToken)
 	if err != nil {
 		return sqlcgen.User{}, err
@@ -69,10 +69,10 @@ func (a accountRules) createAccount(ctx context.Context, body account.RegisterBo
 	if err != nil {
 		return sqlcgen.User{}, err
 	}
-	now := plataforma.NowISO()
+	now := platform.NowISO()
 	return a.createUser(ctx, sqlcgen.CreateUserParams{
 		Email:        body.Email,
-		Name:         plataforma.NullString(body.Name),
+		Name:         platform.NullString(body.Name),
 		Passwordhash: string(hash),
 		Createdat:    now,
 		Updatedat:    now,
@@ -102,11 +102,11 @@ func (a accountRules) registrationInvite(
 func writeRegisterError(w http.ResponseWriter, err error, email string) {
 	switch {
 	case db.IsUniqueViolation(err):
-		plataforma.WriteError(w, http.StatusConflict, "Email already registered: "+email)
+		platform.WriteError(w, http.StatusConflict, "Email already registered: "+email)
 	case errors.Is(err, errInviteRejected), errors.Is(err, errInviteSpent):
-		plataforma.WriteError(w, http.StatusForbidden, inviteRejected)
+		platform.WriteError(w, http.StatusForbidden, inviteRejected)
 	default:
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create user")
+		platform.WriteError(w, http.StatusInternalServerError, "Could not create user")
 	}
 }
 
@@ -122,7 +122,7 @@ var errBadCredentials = errors.New("invalid credentials")
 // hardening step (it does not today, and that is a timing oracle worth an issue
 // of its own); what matters here is that BOTH paths answer the same error.
 func (a accountRules) authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
-	user, err := a.queries.GetUserByEmail(ctx, plataforma.NormalizeEmail(email))
+	user, err := a.queries.GetUserByEmail(ctx, platform.NormalizeEmail(email))
 	if err != nil {
 		return sqlcgen.User{}, errBadCredentials
 	}
@@ -137,7 +137,7 @@ func (a accountRules) authenticate(ctx context.Context, email, password string) 
 func (a accountRules) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 	token, err := a.signToken(user)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sign session")
+		platform.WriteError(w, http.StatusInternalServerError, "Could not sign session")
 		return false
 	}
 	http.SetCookie(w, sessionCookie(a.cfg, token, int(sessionTTL.Seconds())))
@@ -184,7 +184,7 @@ func (a accountRules) verifyToken(tokenStr string) (int64, error) {
 // Ela recebe a CONFIGURAÇÃO em vez de pendurar no `*Server` (ALE-278, fatia 6):
 // o hub pede o biscoito expirado pela porta dele, e uma função que só precisa
 // de dois campos não tem razão para exigir um servidor inteiro.
-func sessionCookie(cfg plataforma.Config, value string, maxAge int) *http.Cookie {
+func sessionCookie(cfg platform.Config, value string, maxAge int) *http.Cookie {
 	return &http.Cookie{
 		Name:     cfg.CookieName,
 		Value:    value,
@@ -203,7 +203,7 @@ func parseExpiry(s string) time.Duration {
 		return sessionTTL
 	}
 	unit := s[len(s)-1]
-	n, err := plataforma.ParseInt(s[:len(s)-1])
+	n, err := platform.ParseInt(s[:len(s)-1])
 	if err != nil {
 		return sessionTTL
 	}

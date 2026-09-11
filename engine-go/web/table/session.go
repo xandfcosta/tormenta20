@@ -9,8 +9,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
+	"t20engine/live"
 )
 
 // O CICLO DA SESSÃO na Mesa em Datastar (ALE-269, superfícies 3, 4 e 11).
@@ -38,14 +38,14 @@ func commandSession(st Scene, c commandCtx) (sqlcgen.Session, error) {
 	return st.deps.Queries().GetSession(c.R.Context(), c.SessionID)
 }
 
-func iniciaAPartida(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func iniciaAPartida(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if _, err := st.deps.StartSessionForTable(c.R.Context(), c.SessionID); err != nil {
 		return nil, err
 	}
 	return st.deps.Sessions().GetState(c.SessionID), nil
 }
 
-func encerraAPartida(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func encerraAPartida(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if _, err := st.deps.EndSessionForTable(c.R.Context(), c.SessionID); err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func encerraAPartida(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error
 // Título VAZIO é legítimo e vira nulo: a sessão tem NÚMERO, que é a identidade
 // dela, e o título é o apelido da noite. Obrigar a um faria o mestre inventar
 // texto para poder salvar.
-func renameStart(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func renameStart(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	var sinais struct {
 		Titulo string `json:"session_title"`
 	}
@@ -82,7 +82,7 @@ func renameStart(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
 // Os dois verbos moram na mesma tela, um perto do outro, e é por isso que a
 // frase de cada um diz o que ACONTECE em vez de repetir o nome do botão:
 // "encerrar" tira a sessão do ar, "reiniciar" só apaga a ordem e os turnos.
-func reiniciaAFila(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func reiniciaAFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if _, err := st.deps.RestartCombatForTable(c.R.Context(), c.SessionID); err != nil {
 		return nil, fmt.Errorf("não deu para reiniciar o combate: %v", err)
 	}

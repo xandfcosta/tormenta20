@@ -3,7 +3,7 @@ package api
 import "t20engine/events"
 import "t20engine/board"
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 import (
 	"context"
@@ -35,7 +35,7 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	s.boards.Persist(ctx, sid, defaultTab)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	frio := board.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{})
+	frio := board.NewBoardStore(s.queries, live.NewUUID, &events.Bus{})
 	voltou := frio.Get(ctx, sid, defaultTab)
 
 	if voltou == nil {
@@ -81,7 +81,7 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	if b := s.boards.Get(ctx, sid, defaultTab); b != nil {
 		t.Error("o tabuleiro encerrado continua na memória")
 	}
-	if b := board.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{}).Get(ctx, sid, defaultTab); b != nil {
+	if b := board.NewBoardStore(s.queries, live.NewUUID, &events.Bus{}).Get(ctx, sid, defaultTab); b != nil {
 		t.Error("o tabuleiro encerrado voltou do banco no próximo reinício")
 	}
 }
@@ -152,7 +152,7 @@ func TestBothBoardsComeBackFromTheDatabaseInOrder(t *testing.T) {
 	s.boards.Persist(ctx, sid, cripta.ID)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	frio := board.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{})
+	frio := board.NewBoardStore(s.queries, live.NewUUID, &events.Bus{})
 	voltaram := frio.OpenBoards(ctx, sid)
 
 	if len(voltaram) != 2 {
@@ -303,7 +303,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 
 	// Um servidor frio sobre o mesmo banco, e a leitura falha: é o disco
 	// piscando no primeiro acesso à sessão.
-	frio := board.NewBoardStore(s.queries, aovivo.NewUUID, &events.Bus{})
+	frio := board.NewBoardStore(s.queries, live.NewUUID, &events.Bus{})
 	if _, err := s.db.Exec("ALTER TABLE open_boards RENAME TO open_boards_escondida"); err != nil {
 		t.Fatalf("esconder a tabela: %v", err)
 	}

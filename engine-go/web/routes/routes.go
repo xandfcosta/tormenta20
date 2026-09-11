@@ -10,7 +10,7 @@
 // **Só entra endereço que uma cena cita de outra.** O `/buscador` é escrito
 // pelos arquivos do buscador e por mais ninguém; o `/livro/ler`, pelos do livro.
 // Esses ficam com o dono, porque trazê-los para cá não compra nada e transforma
-// este arquivo no lugar onde tudo cabe — que é o que o `plataforma` tem escrito
+// este arquivo no lugar onde tudo cabe — que é o que o `platform` tem escrito
 // na porta dele para não virar.
 //
 // Medido na entrada: das cinco constantes de rota que o `api` tinha, DUAS são

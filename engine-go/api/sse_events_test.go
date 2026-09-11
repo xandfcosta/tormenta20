@@ -1,6 +1,6 @@
 package api
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 import (
 	"bufio"
@@ -57,7 +57,7 @@ func lerQuadro(t *testing.T, leitor *bufio.Reader) string {
 // asserção sobre o corpo e falharia na mesa: o mestre viraria o turno e a tela
 // do jogador só saberia quando a conexão caísse.
 func TestTheFrameArrivesWithTheRequestStillOpen(t *testing.T) {
-	hub := aovivo.NewSSEHub()
+	hub := live.NewSSEHub()
 	conn := hub.Add(7, "c1", "gm")
 
 	servidor := httptest.NewServer(fluxoDeTeste(conn, time.Hour))
@@ -89,7 +89,7 @@ func TestTheFrameArrivesWithTheRequestStillOpen(t *testing.T) {
 // SSE (começa com `:`), então o cliente a ignora — mandar um evento de verdade
 // faria o `EventSource` acordar o app por nada.
 func TestTheHeartbeatIsACommentAndNotAnEvent(t *testing.T) {
-	hub := aovivo.NewSSEHub()
+	hub := live.NewSSEHub()
 	conn := hub.Add(7, "c1", "gm")
 	servidor := httptest.NewServer(fluxoDeTeste(conn, 30*time.Millisecond))
 	defer servidor.Close()
@@ -109,10 +109,10 @@ func TestTheHeartbeatIsACommentAndNotAnEvent(t *testing.T) {
 	}
 }
 
-// fluxoDeTeste põe o LAÇO DE VERDADE (`aovivo.StreamFrames`) atrás de um servidor, com
+// fluxoDeTeste põe o LAÇO DE VERDADE (`live.StreamFrames`) atrás de um servidor, com
 // os mesmos cabeçalhos do handler. Copiar o laço numa imitação faria o teste
 // medir a cópia — que é o modo de o guarda passar verde sobre o app quebrado.
-func fluxoDeTeste(conn *aovivo.SSEConn, batida time.Duration) http.HandlerFunc {
+func fluxoDeTeste(conn *live.SSEConn, batida time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		flusher, ok := w.(http.Flusher)
 		if !ok {
@@ -123,6 +123,6 @@ func fluxoDeTeste(conn *aovivo.SSEConn, batida time.Duration) http.HandlerFunc {
 		w.Header().Set("Cache-Control", "no-cache")
 		w.WriteHeader(http.StatusOK)
 		flusher.Flush()
-		aovivo.StreamFrames(r.Context(), w, flusher, conn, batida)
+		live.StreamFrames(r.Context(), w, flusher, conn, batida)
 	}
 }

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // O guarda do LIVRO servido (ALE-264).
@@ -30,7 +30,7 @@ import (
 // importa é que ele exista e tenha bytes contáveis.
 func servidorComLivro(t *testing.T, s *Server, conteudo string) *Server {
 	t.Helper()
-	s.livro = abreOLivro(plataforma.Config{LivroPDF: livroDeMentira(t, conteudo), LivroAbertura: 6})
+	s.livro = abreOLivro(platform.Config{LivroPDF: livroDeMentira(t, conteudo), LivroAbertura: 6})
 	if s.livro.caminho == "" {
 		t.Fatal("o livro de mentira não foi aceito — o resto do guarda mediria a ausência")
 	}
@@ -47,7 +47,7 @@ func livroDeMentira(t *testing.T, conteudo string) string {
 }
 
 func TestAMissingBookDoesNotBringTheServerDown(t *testing.T) {
-	l := abreOLivro(plataforma.Config{LivroPDF: filepath.Join(t.TempDir(), "nao-existe.pdf")})
+	l := abreOLivro(platform.Config{LivroPDF: filepath.Join(t.TempDir(), "nao-existe.pdf")})
 	if l.caminho != "" || l.endereco.Base != "" {
 		t.Errorf("um caminho inexistente virou livro servido: %+v", l)
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
-	"t20engine/aovivo"
+	"t20engine/live"
 )
 
 // As regras dos vitais na mesa: quem pode editar e o espelho no tracker.
@@ -24,12 +24,12 @@ import (
 // assertVitalsEditableFor é a REGRA, e ela mudou de dono junto com o transporte
 // (ALE-253): o mestre edita qualquer combatente, o jogador só o personagem
 // dele, e NPC é do mestre porque não há ficha atrás para conferir dono.
-func (tr tableRules) assertVitalsEditableFor(ctx context.Context, live liveCtx, entryID string) error {
-	if live.Role == "gm" {
+func (tr tableRules) assertVitalsEditableFor(ctx context.Context, asked liveCtx, entryID string) error {
+	if asked.Role == "gm" {
 		return nil
 	}
-	state := tr.sessions.GetState(live.sessionID)
-	idx := aovivo.FindEntryIndex(state, entryID)
+	state := tr.sessions.GetState(asked.sessionID)
+	idx := live.FindEntryIndex(state, entryID)
 	if idx < 0 {
 		return errors.New("Entry " + entryID + " not found")
 	}
@@ -37,7 +37,7 @@ func (tr tableRules) assertVitalsEditableFor(ctx context.Context, live liveCtx, 
 	if entry.CharacterID == nil {
 		return errors.New("Only the GM can edit NPC vitals")
 	}
-	_, err := tr.assertCharacterOwner(ctx, live.UserID, *entry.CharacterID)
+	_, err := tr.assertCharacterOwner(ctx, asked.UserID, *entry.CharacterID)
 	return err
 }
 

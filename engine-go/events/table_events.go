@@ -8,7 +8,7 @@ package events
 // envelhece junto com o armazenamento.
 //
 // Eles moram todos aqui, e não cada um no pacote que o publica, e isso é
-// deliberado: o `aovivo` e o `tabuleiro` publicam, o `api` escuta, e nenhum dos
+// deliberado: o `live` e o `tabuleiro` publicam, o `api` escuta, e nenhum dos
 // três precisa importar os outros. Ler este arquivo é ler tudo que pode
 // acontecer numa mesa — que é a pergunta que ninguém conseguia responder quando
 // os avisos eram três `chan struct{}` em três pacotes.

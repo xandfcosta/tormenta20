@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"t20engine/aovivo"
+	"t20engine/live"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -155,13 +155,13 @@ func (f pilotoFixture) scene(t *testing.T) {
 	if _, err := f.s.sessions.StartScene(f.sessionID); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
-	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
 		Label: "Ogro cansado", Initiative: 19, Type: "npc",
 		HpHidden: &oculto, HpCurrent: &pv, HpMax: &pvMax,
 	}); err != nil {
 		t.Fatalf("semear ogro: %v", err)
 	}
-	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
 		Label: "Arcanista", Initiative: 12, Type: "character", CharacterID: &f.charID,
 	}); err != nil {
 		t.Fatalf("semear PC: %v", err)

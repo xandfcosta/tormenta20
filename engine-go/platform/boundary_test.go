@@ -1,4 +1,4 @@
-package plataforma
+package platform
 
 import (
 	"go/parser"
@@ -11,12 +11,12 @@ import (
 // A FRONTEIRA DA PLATAFORMA, e o único jeito de ela valer alguma coisa (ALE-254).
 //
 // A issue do trabalho diz a regra e ela merece ser repetida aqui: **um bounded
-// context vale pelo que o compilador IMPEDE.** Se `plataforma` puder alcançar o
+// context vale pelo que o compilador IMPEDE.** Se `platform` puder alcançar o
 // domínio, a pasta é decoração — o pacote continuaria sendo o saco onde tudo
 // cabe, só que com nome novo.
 //
-// O compilador já impede um ciclo: se `plataforma` importasse `api`, e `api`
-// importa `plataforma`, o build quebra. Mas ele NÃO impede o caminho que
+// O compilador já impede um ciclo: se `platform` importasse `api`, e `api`
+// importa `platform`, o build quebra. Mas ele NÃO impede o caminho que
 // realmente acontece na prática — alguém importar `engine`, `catalog` ou
 // `db/sqlcgen` daqui, achando que "é só um tipinho". Isso compila, não é ciclo,
 // e é exatamente como o `api/` chegou a 20 mil linhas.

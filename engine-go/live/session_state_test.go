@@ -1,4 +1,4 @@
-package aovivo
+package live
 
 import (
 	"reflect"

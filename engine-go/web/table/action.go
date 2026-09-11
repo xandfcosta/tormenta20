@@ -36,7 +36,7 @@ func (s Scene) handleTableInitiative(w http.ResponseWriter, r *http.Request) {
 	// ReadSignals?". A ordem inversa passou VERDE em teste de handler e falhou no
 	// servidor de verdade: `httptest.NewRequest` não reproduz esse ciclo de vida
 	// (foi assim que o defeito apareceu — no navegador, não na suíte).
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // teto de 1 MB, como o `plataforma.DecodeJSON` da casa
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // teto de 1 MB, como o `platform.DecodeJSON` da casa
 	var sinais tableSignals
 	erroDeLeitura := datastar.ReadSignals(r, &sinais)
 

@@ -15,7 +15,7 @@ import (
 //
 // A metade que toca o disco ficou no `api`: ler `LIVRO_PDF`, `os.Stat`, cunhar o
 // dígito de cache, avisar sobre linearização e servir o arquivo com faixas. Uma
-// cena que recebesse a `plataforma.Config` para descobrir onde o PDF está teria
+// cena que recebesse a `platform.Config` para descobrir onde o PDF está teria
 // o hospedeiro dentro dela.
 //
 // # A pergunta que o VALOR já responde

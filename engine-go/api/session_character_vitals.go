@@ -2,22 +2,22 @@ package api
 
 import (
 	"context"
-	"t20engine/aovivo"
 	"t20engine/db/sqlcgen"
-	"t20engine/plataforma"
+	"t20engine/live"
+	"t20engine/platform"
 	"t20engine/sheet"
 )
 
 // O PV do rastreador É o PV da ficha (ALE-122) — e agora atravessa uma PORTA.
 //
-// Este arquivo implementa `aovivo.aovivo.SheetVitals` (ALE-254). Os três métodos
+// Este arquivo implementa `live.SheetVitals` (ALE-254). Os três métodos
 // eram do `sessionStore`, e o compilador apontou o problema quando o regime
-// virou pacote: eles usam `applyDamagePlan` e `aovivo.ClampVital`, que são regras da
+// virou pacote: eles usam `applyDamagePlan` e `live.ClampVital`, que são regras da
 // FICHA. Um pacote do regime não pode conhecê-las.
 //
 // A troca é a que a issue pedia: o regime declara o que precisa, e quem entrega
 // fica deste lado. Quando o contexto `ficha` nascer, ele assume este tipo sem
-// que uma linha de `aovivo/` mude.
+// que uma linha de `live/` mude.
 //
 // Antes desta fatia havia dois PV para o mesmo personagem: o socket escrevia num
 // blob (`sessions.runtimeState`) e o HTTP escrevia na linha do personagem. A
@@ -67,7 +67,7 @@ func applyDamagePlan(
 	}
 	if plan.HpCurrent != int(row.Hpcurrent) {
 		if err := q.SetHpCurrent(ctx, sqlcgen.SetHpCurrentParams{
-			HpCurrent: int64(plan.HpCurrent), UpdatedAt: plataforma.NowISO(), ID: row.ID,
+			HpCurrent: int64(plan.HpCurrent), UpdatedAt: platform.NowISO(), ID: row.ID,
 		}); err != nil {
 			return sheet.DamagePlan{}, err
 		}
@@ -93,11 +93,11 @@ func (v sheetVitals) ApplyDelta(
 		}
 		hp = int64(plan.HpCurrent) // já persistido pelo plano
 	} else if hpDelta != nil {
-		hp, healed = aovivo.ClampVital(row.Hpcurrent+*hpDelta, &row.Hpmax), true
+		hp, healed = live.ClampVital(row.Hpcurrent+*hpDelta, &row.Hpmax), true
 	}
 	mp := row.Mpcurrent
 	if mpDelta != nil {
-		mp = aovivo.ClampVital(row.Mpcurrent+*mpDelta, &row.Mpmax)
+		mp = live.ClampVital(row.Mpcurrent+*mpDelta, &row.Mpmax)
 	}
 	return v.persistVitals(ctx, charID, hp, healed, mp, mpDelta != nil)
 }
@@ -114,11 +114,11 @@ func (v sheetVitals) ApplyAbsolute(
 	}
 	hp := row.Hpcurrent
 	if hpCurrent != nil {
-		hp = aovivo.ClampVital(*hpCurrent, &row.Hpmax)
+		hp = live.ClampVital(*hpCurrent, &row.Hpmax)
 	}
 	mp := row.Mpcurrent
 	if mpCurrent != nil {
-		mp = aovivo.ClampVital(*mpCurrent, &row.Mpmax)
+		mp = live.ClampVital(*mpCurrent, &row.Mpmax)
 	}
 	return v.persistVitals(ctx, charID, hp, hpCurrent != nil, mp, mpCurrent != nil)
 }
@@ -131,7 +131,7 @@ func (v sheetVitals) persistVitals(
 	ctx context.Context, charID, hp int64, writeHp bool, mp int64, writeMp bool,
 ) (*int64, *int64, error) {
 	if writeHp || writeMp {
-		params := sqlcgen.UpdateVitalsParams{UpdatedAt: plataforma.NowISO(), ID: charID}
+		params := sqlcgen.UpdateVitalsParams{UpdatedAt: platform.NowISO(), ID: charID}
 		if writeHp {
 			params.HpCurrent = nullInt(&hp)
 		}

@@ -1,13 +1,13 @@
 package board
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 import "testing"
 
-// entryIDByLabel devolve o ID que `aovivo.AddEntry` sorteou para uma linha. A escolha
+// entryIDByLabel devolve o ID que `live.AddEntry` sorteou para uma linha. A escolha
 // viaja por ID e nunca por rótulo (ALE-204/192): dois goblins têm o mesmo nome
 // até o servidor numerá-los.
-func entryIDByLabel(t *testing.T, st *aovivo.SessionRuntimeState, label string) string {
+func entryIDByLabel(t *testing.T, st *live.SessionRuntimeState, label string) string {
 	t.Helper()
 	for _, entry := range st.Initiative {
 		if entry.Label == label {
@@ -26,11 +26,11 @@ func entryIDByLabel(t *testing.T, st *aovivo.SessionRuntimeState, label string) 
 // não nasce — nem escondido, porque peça que não existe não vaza por bug de
 // redação.
 func TestPopulateBringsOnlyTheChosen(t *testing.T) {
-	st := aovivo.EmptyRuntimeState()
+	st := live.EmptyRuntimeState()
 	id := ContadorDeIds()
-	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
-	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
-	_ = aovivo.AddEntry(st, npc("Assassino", 20), id)
+	_ = live.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
+	_ = live.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
+	_ = live.AddEntry(st, npc("Assassino", 20), id)
 	b := newBoard("t1", "Cripta", "stone")
 
 	escolhidos := EntrySelection{
@@ -87,10 +87,10 @@ func TestChosenEntriesTellsAbsentFromEmpty(t *testing.T) {
 // longe demais para a janela mostrar. Nascer na fileira 40 também resolveria a
 // primeira e deixaria o mestre procurando o próprio grupo.
 func TestPopulateIsBornBelowTheTopChrome(t *testing.T) {
-	st := aovivo.EmptyRuntimeState()
+	st := live.EmptyRuntimeState()
 	id := ContadorDeIds()
-	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
-	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
+	_ = live.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
+	_ = live.AddEntry(st, npc("Ogro", 12), id)
 	b := newBoard("t1", "Cripta", "stone")
 
 	if placed := populateBoard(b, st, boardCounter(), nil); placed != 2 {

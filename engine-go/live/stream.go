@@ -1,4 +1,4 @@
-package aovivo
+package live
 
 // O laço do fluxo SSE (ALE-253), agora no pacote do regime (ALE-254).
 //

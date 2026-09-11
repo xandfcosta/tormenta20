@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/aovivo"
 	"t20engine/book"
 	"t20engine/catalog"
+	"t20engine/live"
 )
 
 // AS CONDIÇÕES do combatente na Mesa (ALE-122, portadas na ALE-269).
@@ -52,7 +52,7 @@ func (s Scene) ConditionRoutes(r chi.Router) {
 // que lê a lista atual e devolve a nova: o clique carrega a intenção, não o
 // estado, e uma tela que mandasse o conjunto inteiro apagaria a condição que
 // outro remendo acabou de acrescentar.
-func toggleCondition(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
 	id := chi.URLParam(c.R, "id")
 	// A VALIDAÇÃO é do catálogo e não de uma lista daqui, pela razão do
@@ -62,7 +62,7 @@ func toggleCondition(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error
 		return nil, fmt.Errorf("%q não é uma condição do livro (p394-395)", id)
 	}
 	estado := st.deps.Sessions().GetState(c.SessionID)
-	i := aovivo.FindEntryIndex(estado, entryID)
+	i := live.FindEntryIndex(estado, entryID)
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
 	}
@@ -81,7 +81,7 @@ func toggleCondition(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error
 		novas = append(novas, id)
 	}
 	estadoNovo, err := st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID,
-		aovivo.EntryPatch{Conditions: &novas})
+		live.EntryPatch{Conditions: &novas})
 	if err != nil {
 		return estadoNovo, err
 	}

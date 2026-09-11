@@ -2,13 +2,13 @@ package api
 
 // Andaime dos testes deste pacote (ALE-254).
 //
-// Eram helpers do `session_state_test.go`, que mudou para `aovivo/` junto com o
+// Eram helpers do `session_state_test.go`, que mudou para `live/` junto com o
 // que ele testa. Teste não exporta para o vizinho, e helper compartilhado entre
 // pacotes seria uma dependência que ninguém declarou — então cada lado fica com
 // o seu. Duplicação de ANDAIME é barata; duplicação de REGRA não seria, e não é
 // o caso aqui.
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 func itoa(n int) string {
 	if n == 0 {
@@ -22,7 +22,7 @@ func itoa(n int) string {
 	return string(b)
 }
 
-func labels(st *aovivo.SessionRuntimeState) []string {
+func labels(st *live.SessionRuntimeState) []string {
 	out := make([]string, len(st.Initiative))
 	for i, e := range st.Initiative {
 		out[i] = e.Label
@@ -30,8 +30,8 @@ func labels(st *aovivo.SessionRuntimeState) []string {
 	return out
 }
 
-func npc(label string, init int) aovivo.InitiativeEntry {
-	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "npc"}
+func npc(label string, init int) live.InitiativeEntry {
+	return live.InitiativeEntry{Label: label, Initiative: init, Type: "npc"}
 }
 
 // idCounter gera ids previsíveis ("e1", "e2", …) para os testes deste
@@ -45,7 +45,7 @@ func idCounter() func() string {
 	}
 }
 
-func sheetCombatant(label string, init int, charID int64) aovivo.InitiativeEntry {
+func sheetCombatant(label string, init int, charID int64) live.InitiativeEntry {
 	c := charID
-	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
+	return live.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
 }

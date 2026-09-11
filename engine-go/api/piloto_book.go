@@ -12,7 +12,7 @@ import (
 	"t20engine/web/bookui"
 	"t20engine/web/routes"
 
-	"t20engine/plataforma"
+	"t20engine/platform"
 )
 
 // O LIVRO servido pela mesa (ALE-264): o Tormenta 20 em PDF, entregue pelo
@@ -56,7 +56,7 @@ type livroServido struct {
 // sobre linearização e SERVIR o arquivo com faixas.
 //
 // A divisão não é por tamanho, é a de sempre — dependência. O que ficou lê
-// `plataforma.Config`, chama `os.Stat` e devolve um `http.Handler` sobre um
+// `platform.Config`, chama `os.Stat` e devolve um `http.Handler` sobre um
 // arquivo do disco do dono da mesa; nada disso é cena, e uma cena que
 // recebesse a `Config` para saber onde o PDF está teria o hospedeiro dentro
 // dela. O que saiu desenha uma página e não toca o disco.
@@ -67,7 +67,7 @@ type livroServido struct {
 // sem o livro, e derrubar o servidor por causa de um botão seria trocar um
 // problema pequeno por um grande. O aviso vai para o log com o caminho que
 // falhou, porque configurar e não ver o botão é o sintoma sem explicação.
-func abreOLivro(cfg plataforma.Config) livroServido {
+func abreOLivro(cfg platform.Config) livroServido {
 	if cfg.LivroPDF == "" {
 		return livroServido{}
 	}

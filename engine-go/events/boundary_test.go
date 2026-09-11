@@ -10,8 +10,8 @@ import (
 
 // O VOCABULÁRIO É FOLHA, e este guarda é o que faz isso valer (ALE-279).
 //
-// Ele é o irmão dos `boundary_test.go` do `aovivo`, do `tabuleiro` e da
-// `plataforma`, e existe por uma razão específica: `events` teve de ENTRAR na
+// Ele é o irmão dos `boundary_test.go` do `live`, do `tabuleiro` e da
+// `platform`, e existe por uma razão específica: `events` teve de ENTRAR na
 // lista de permitidos dos outros dois, e a lista de lá vem com um aviso —
 // *acrescentar o import à lista transforma a porta em enfeite*.
 //
@@ -22,7 +22,7 @@ import (
 // os dois contextos passam a alcançar a ficha por tabela, e o guarda de lá
 // continua verde — ele só olha os imports DELE.
 //
-// É a mesma forma da `plataforma`, por outro caminho: lá a lista de permitidos
+// É a mesma forma da `platform`, por outro caminho: lá a lista de permitidos
 // é vazia porque ela não é domínio nenhum; aqui ela é vazia porque o vocabulário
 // é de todos e por isso não pode ser de ninguém.
 //
@@ -55,7 +55,7 @@ func TestVocabularyImportsNothing(t *testing.T) {
 				continue
 			}
 			t.Errorf("%s importa %q — o vocabulário da mesa é FOLHA.\n"+
-				"Ele está na lista de permitidos do `aovivo` e do `tabuleiro`\n"+
+				"Ele está na lista de permitidos do `live` e do `tabuleiro`\n"+
 				"justamente porque não alcança nada; com um import daqui, os dois\n"+
 				"contextos passam a alcançar %q de graça, e o guarda de lá não vê.",
 				nome, caminho, caminho)

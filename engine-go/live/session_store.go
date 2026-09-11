@@ -1,11 +1,11 @@
-package aovivo
+package live
 
 import (
 	"context"
 	"encoding/json"
 	"log"
 	"sync"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"github.com/google/uuid"
 
@@ -382,7 +382,7 @@ func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, ch
 	st.Mu.Unlock()
 
 	err := st.q.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: string(blob), UpdatedAt: plataforma.NowISO(), ID: sessionID,
+		RuntimeState: string(blob), UpdatedAt: platform.NowISO(), ID: sessionID,
 	})
 
 	st.Mu.Lock()

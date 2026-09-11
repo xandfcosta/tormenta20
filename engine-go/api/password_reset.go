@@ -11,7 +11,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"time"
 
 	"t20engine/db/sqlcgen"
@@ -36,7 +36,7 @@ func (a accountRules) applyReset(ctx context.Context, Reset sqlcgen.PasswordRese
 
 	q := a.queries.WithTx(tx)
 	spent, err := q.SpendPasswordReset(ctx, sqlcgen.SpendPasswordResetParams{
-		Usedat: plataforma.NullString(ptrTo(plataforma.NowISO())), ID: Reset.ID,
+		Usedat: platform.NullString(ptrTo(platform.NowISO())), ID: Reset.ID,
 	})
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (a accountRules) applyReset(ctx context.Context, Reset sqlcgen.PasswordRese
 		return errResetSpent
 	}
 	if err := q.UpdateUserPassword(ctx, sqlcgen.UpdateUserPasswordParams{
-		Passwordhash: hash, Updatedat: plataforma.NowISO(), ID: Reset.Userid,
+		Passwordhash: hash, Updatedat: platform.NowISO(), ID: Reset.Userid,
 	}); err != nil {
 		return err
 	}
@@ -56,10 +56,10 @@ var errResetSpent = errors.New("Reset link already spent")
 
 func writeResetError(w http.ResponseWriter, err error) {
 	if errors.Is(err, errResetSpent) {
-		plataforma.WriteError(w, http.StatusForbidden, resetRejected)
+		platform.WriteError(w, http.StatusForbidden, resetRejected)
 		return
 	}
-	plataforma.WriteError(w, http.StatusInternalServerError, "Could not Reset password")
+	platform.WriteError(w, http.StatusInternalServerError, "Could not Reset password")
 }
 
 // usableReset loads a link that can still be spent: it exists, nobody used it,
@@ -72,7 +72,7 @@ func (a accountRules) usableReset(ctx context.Context, token string) (sqlcgen.Pa
 	if err != nil || Reset.Usedat.Valid {
 		return sqlcgen.PasswordReset{}, false
 	}
-	expiresAt, err := time.Parse(plataforma.IsoLayout, Reset.Expiresat)
+	expiresAt, err := time.Parse(platform.IsoLayout, Reset.Expiresat)
 	if err != nil || time.Now().UTC().After(expiresAt) {
 		return sqlcgen.PasswordReset{}, false
 	}

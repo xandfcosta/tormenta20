@@ -1,6 +1,6 @@
 package board
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"t20engine/engine"
 )
 
-// boardMaxTokens — teto de peças num tabuleiro. Espelha o `aovivo.InitiativeMaxEntries`
+// boardMaxTokens — teto de peças num tabuleiro. Espelha o `live.InitiativeMaxEntries`
 // pelo mesmo motivo: sem teto, o estado cresce sem limite e TODO broadcast o
 // carrega. Vinte tokens é uma mesa cheia; 200 é um acidente.
 const boardMaxTokens = 200
@@ -224,7 +224,7 @@ func nextInstanceLabel(b *BoardState, label string) string {
 	for _, token := range b.Tokens {
 		usados = append(usados, token.Label)
 	}
-	return aovivo.NextInstanceLabelAmong(usados, label)
+	return live.NextInstanceLabelAmong(usados, label)
 }
 
 // DuplicateToken põe outra igual no tabuleiro — "mais um zumbi" é a operação
@@ -254,7 +254,7 @@ func nextInstanceLabel(b *BoardState, label string) string {
 // um NPC não tem ficha, e herdar o `characterId` da original ali daria uma peça
 // dizendo ser de um personagem que a fila dela não conhece — posse e
 // deslocamento, os dois que o `characterId` decide, sairiam da ficha errada.
-func DuplicateToken(b *BoardState, tokenID string, laco *aovivo.InitiativeEntry, newID func() string) error {
+func DuplicateToken(b *BoardState, tokenID string, laco *live.InitiativeEntry, newID func() string) error {
 	original := FindToken(b, tokenID)
 	if original == nil {
 		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
@@ -284,7 +284,7 @@ func DuplicateToken(b *BoardState, tokenID string, laco *aovivo.InitiativeEntry,
 // O `modelo` é a peça de ORIGEM e ela pode não estar neste tabuleiro: por isso
 // ela chega por valor e não por id. O `laco` decide o que a cópia é, exatamente
 // como no `DuplicateToken` — ver a explicação lá, que é onde a decisão mora.
-func PasteToken(b *BoardState, modelo BoardToken, laco *aovivo.InitiativeEntry, x, y int, newID func() string) error {
+func PasteToken(b *BoardState, modelo BoardToken, laco *live.InitiativeEntry, x, y int, newID func() string) error {
 	copia := modelo
 	copia.EntryID, copia.CharacterID = nil, nil
 	if laco != nil {
@@ -518,7 +518,7 @@ func (s EntrySelection) wants(entryID string) bool { return s == nil || s[entryI
 // assassino que o mestre montou para aparecer no terceiro turno, e desfazer
 // era peça por peça. Quem não foi escolhido não nasce — nem escondido: peça
 // que não existe não vaza por bug de redação.
-func populateBoard(b *BoardState, st *aovivo.SessionRuntimeState, newID func() string, chosen EntrySelection) int {
+func populateBoard(b *BoardState, st *live.SessionRuntimeState, newID func() string, chosen EntrySelection) int {
 	placed := 0
 	for _, entry := range st.Initiative {
 		if !chosen.wants(entry.ID) || hasTokenForEntry(b, entry.ID) {
@@ -640,7 +640,7 @@ func occupied(b *BoardState, x, y int) bool {
 
 // BoardForRole é o tabuleiro como UM papel pode vê-lo. Papel desconhecido cai em
 // jogador: errar para o lado que MOSTRA seria vazar por omissão, a mesma regra
-// do `aovivo.StateForRole`.
+// do `live.StateForRole`.
 func BoardForRole(papel string, b *BoardState) *BoardState {
 	if b == nil || papel == "gm" {
 		return b
@@ -803,7 +803,7 @@ type Mover struct {
 //   - FORA DE COMBATE (`turnIndex` < 0) não existe vez nem deslocamento de
 //     turno: cada um anda com a própria peça, e o contador só informa;
 //   - em combate, o jogador move a própria peça só na vez dela.
-func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) (*BoardToken, int, error) {
+func assertMovable(b *BoardState, st *live.SessionRuntimeState, tokenID string, by Mover) (*BoardToken, int, error) {
 	token := FindToken(b, tokenID)
 	if token == nil {
 		return nil, 0, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
@@ -835,7 +835,7 @@ func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string
 // FORA DE COMBATE continua -1, e isso não é exceção, é a mesma frase: sem vez
 // não há ação padrão para trocar por movimento (p233), então azul e vermelho
 // não querem dizer nada e desenhá-los inventaria um teto que a cena não tem.
-func drawingBudget(token BoardToken, st *aovivo.SessionRuntimeState) int {
+func drawingBudget(token BoardToken, st *live.SessionRuntimeState) int {
 	if st == nil || st.TurnIndex < 0 {
 		return -1
 	}
@@ -845,7 +845,7 @@ func drawingBudget(token BoardToken, st *aovivo.SessionRuntimeState) int {
 // isTokenOnTurn amarra a peça à LINHA da iniciativa: a vez não é copiada para o
 // tabuleiro, ela é perguntada ao rastreador — duas cópias da vez divergiriam no
 // primeiro turno passado com o tabuleiro fechado.
-func isTokenOnTurn(token *BoardToken, st *aovivo.SessionRuntimeState) bool {
+func isTokenOnTurn(token *BoardToken, st *live.SessionRuntimeState) bool {
 	if token.EntryID == nil || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return false
 	}
@@ -857,7 +857,7 @@ func isTokenOnTurn(token *BoardToken, st *aovivo.SessionRuntimeState) bool {
 // Não recusa por deslocamento — ver o corpo. Quem pode desenhar é quem
 // `assertMovable` deixa: o mestre em qualquer peça, e o jogador na peça dele, na
 // vez dele. Quem transforma desenho em pouso é o `CommitMove`, e só o mestre.
-func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by Mover) error {
+func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, path []engine.Square, by Mover) error {
 	token, budget, err := assertMovable(b, st, tokenID, by)
 	if err != nil {
 		return err
@@ -907,7 +907,7 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 // A validação inteira continua sendo a do `ProposeMove` — o orçamento, a vez, a
 // posse, a contiguidade. Esta função não afrouxa nada; ela só LEMBRA de onde o
 // caminho veio.
-func ProposeMoveWithStops(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover) error {
+func ProposeMoveWithStops(b *BoardState, st *live.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover) error {
 	if err := ProposeMove(b, st, tokenID, engine.PathThroughStops(paradas), by); err != nil {
 		return err
 	}
@@ -1025,7 +1025,7 @@ func moveTerrainOf(b *BoardState) engine.MoveTerrain {
 // que chega depois da re-hidratação. Versão 0 = "não sei em que versão eu
 // estava", aceita, porque recusar um cliente honesto e desatualizado seria
 // pior que aplicar o que ele acabou de ver na tela.
-func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by Mover) error {
+func CommitMove(b *BoardState, st *live.SessionRuntimeState, version int64, by Mover) error {
 	pending, err := pendingFor(b, by)
 	if err != nil {
 		return err
@@ -1137,14 +1137,14 @@ func pendingFor(b *BoardState, by Mover) (*PendingMove, error) {
 //
 // Não devolve o porquê: quem só desenha não tem o que fazer com a frase, e a
 // frase certa é a que a RECUSA escreve, no instante em que ela acontece.
-func CanMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) bool {
+func CanMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, by Mover) bool {
 	pode, _ := CanMoveWith(b, st, tokenID, by)
 	return pode
 }
 
 // CanMoveWith devolve também o ORÇAMENTO, que é o que a tela precisa para
 // desenhar até onde dá para ir (-1 = sem teto).
-func CanMoveWith(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) (bool, int) {
+func CanMoveWith(b *BoardState, st *live.SessionRuntimeState, tokenID string, by Mover) (bool, int) {
 	if b == nil {
 		return false, 0
 	}

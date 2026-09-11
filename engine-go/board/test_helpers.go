@@ -6,9 +6,9 @@ package board
 // compartilhado entre pacotes é dependência que ninguém declarou. Duplicar
 // ANDAIME é barato; duplicar REGRA não seria.
 
-import "t20engine/aovivo"
+import "t20engine/live"
 
-func labels(st *aovivo.SessionRuntimeState) []string {
+func labels(st *live.SessionRuntimeState) []string {
 	out := make([]string, len(st.Initiative))
 	for i, e := range st.Initiative {
 		out[i] = e.Label
@@ -16,6 +16,6 @@ func labels(st *aovivo.SessionRuntimeState) []string {
 	return out
 }
 
-func npc(label string, init int) aovivo.InitiativeEntry {
-	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "npc"}
+func npc(label string, init int) live.InitiativeEntry {
+	return live.InitiativeEntry{Label: label, Initiative: init, Type: "npc"}
 }

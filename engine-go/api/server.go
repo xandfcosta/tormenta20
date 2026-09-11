@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 	"t20engine/events"
-	"t20engine/plataforma"
+	"t20engine/live"
+	"t20engine/platform"
 	"t20engine/web/hub"
 	"t20engine/web/routes"
 	"t20engine/web/table"
@@ -25,18 +25,18 @@ import (
 // Server holds the API dependencies (config, DB handle, typed queries, primed
 // rules catalogs) and builds the router.
 type Server struct {
-	cfg      plataforma.Config
+	cfg      platform.Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
-	catalogs *engine.Catalogs         // nil if the catalog snapshot failed to Load
-	sessions *aovivo.SessionStore     // in-memory realtime tracker state (B.6)
-	boards   *board.BoardStore        // tabuleiros táticos vivos por sessão (ALE-124, vários na ALE-205)
-	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
-	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
+	catalogs *engine.Catalogs       // nil if the catalog snapshot failed to Load
+	sessions *live.SessionStore     // in-memory realtime tracker state (B.6)
+	boards   *board.BoardStore      // tabuleiros táticos vivos por sessão (ALE-124, vários na ALE-205)
+	presence *live.PresenceRegistry // who's-online per session room (B.6)
+	sse      *live.SSEHub           // leitores SSE por sessão e papel (ALE-253)
 	// bus é o barramento de eventos da casa (ALE-279): o que acontece numa mesa
 	// vira notícia tipada aqui, e quem desenha cena escuta.
 	//
-	// Aqui morava `fichas aovivo.CharacterWatch`, o terceiro dos avisos que este
+	// Aqui morava `fichas live.CharacterWatch`, o terceiro dos avisos que este
 	// barramento substituiu.
 	bus   *events.Bus
 	livro livroServido // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
@@ -153,7 +153,7 @@ func characterIDFromPath(path string) (int64, bool) {
 
 // NewServer wires the API server. The DB is already opened + migrated (db.Open);
 // catalogs may be nil (best-effort) — rule-heavy handlers guard on it.
-func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
+func NewServer(cfg platform.Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
 	q := sqlcgen.New(database)
 	// UM barramento para os dois stores e para o servidor (ALE-279). Compartilhar
 	// é o ponto: um por store devolveria o problema que a issue veio resolver,
@@ -164,11 +164,11 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		livro:    abreOLivro(cfg),
-		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, sheetVitals{q: q}, bus),
-		boards:   board.NewBoardStore(q, aovivo.NewUUID, bus),
+		sessions: live.NewSessionStore(q, live.NewUUID, sheetVitals{q: q}, bus),
+		boards:   board.NewBoardStore(q, live.NewUUID, bus),
 		bus:      bus,
-		presence: aovivo.NewPresenceRegistry(),
-		sse:      aovivo.NewSSEHub(),
+		presence: live.NewPresenceRegistry(),
+		sse:      live.NewSSEHub(),
 	}
 	// A CENA DA MESA é montada UMA vez, e o servidor a guarda.
 	//
@@ -300,7 +300,7 @@ func (s *Server) Router() http.Handler {
 // estado nenhum.
 type hubHost struct {
 	sceneCore
-	cfg plataforma.Config
+	cfg platform.Config
 }
 
 func (s *Server) hubHost() hubHost { return hubHost{sceneCore: s.sceneCore(), cfg: s.cfg} }

@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/aovivo"
 	"t20engine/board"
 	"t20engine/engine"
+	"t20engine/live"
 )
 
 // O MENU DE CONTEXTO NA PEÇA (ALE-206), em Datastar.
@@ -194,7 +194,7 @@ func squareOfCommand(c commandCtx) (int, int, error) {
 // Ele é o mesmo mapa que os três verbos de duplicar usam, escrito uma vez: o
 // colar e o duplicar têm de concordar sobre o que "sangrando junto" significa, e
 // duas traduções seriam dois lugares para discordar.
-func (s Scene) bondForMode(c commandCtx, modo string, modelo *board.BoardToken) (*aovivo.InitiativeEntry, error) {
+func (s Scene) bondForMode(c commandCtx, modo string, modelo *board.BoardToken) (*live.InitiativeEntry, error) {
 	if modo == modoSoAPeca {
 		return nil, nil
 	}
@@ -247,7 +247,7 @@ const (
 )
 
 // queueLineOf é a linha da fila por trás de uma peça, ou nulo.
-func (s Scene) queueLineOf(sessionID int64, peca *board.BoardToken) *aovivo.InitiativeEntry {
+func (s Scene) queueLineOf(sessionID int64, peca *board.BoardToken) *live.InitiativeEntry {
 	if peca.EntryID == nil {
 		return nil
 	}
@@ -283,7 +283,7 @@ func (s Scene) nextNameForTheLine(sessionID int64, rotulo string) string {
 	for i := range estado.Initiative {
 		usados = append(usados, estado.Initiative[i].Label)
 	}
-	return aovivo.NextInstanceLabelAmong(usados, rotulo)
+	return live.NextInstanceLabelAmong(usados, rotulo)
 }
 
 // addsACopyOfTheLine põe na fila outra linha igual à dada, e devolve a que
@@ -300,7 +300,7 @@ func (s Scene) nextNameForTheLine(sessionID int64, rotulo string) string {
 // ORDENA a fila por iniciativa depois de inserir, então a recém-chegada pode
 // pousar em qualquer posição. Pegar `Initiative[len-1]` daria a de menor
 // iniciativa da mesa, e daria certo por acaso sempre que o zumbi fosse lento.
-func (s Scene) addsACopyOfTheLine(sessionID int64, modelo aovivo.InitiativeEntry) (*aovivo.InitiativeEntry, error) {
+func (s Scene) addsACopyOfTheLine(sessionID int64, modelo live.InitiativeEntry) (*live.InitiativeEntry, error) {
 	antes := map[string]bool{}
 	if estado := s.deps.Sessions().GetState(sessionID); estado != nil {
 		for i := range estado.Initiative {
@@ -311,7 +311,7 @@ func (s Scene) addsACopyOfTheLine(sessionID int64, modelo aovivo.InitiativeEntry
 	nova.ID = ""
 	nova.Conditions = nil
 	if modelo.HpMax != nil {
-		cheia := aovivo.DerefOr(modelo.HpMax, 0)
+		cheia := live.DerefOr(modelo.HpMax, 0)
 		nova.HpCurrent, nova.HpMax = &cheia, &cheia
 	}
 	depois, err := s.deps.Sessions().AddInitiativeEntry(sessionID, nova)

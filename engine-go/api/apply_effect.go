@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"t20engine/plataforma"
+	"t20engine/platform"
 
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
@@ -59,7 +59,7 @@ func (sr sheetRules) applyPoolTx(
 		}
 	}
 	eff, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
-		Characterid: id, Source: source, Catalogid: catalogID, Scope: scope, Modifiers: string(modJSON), Createdat: plataforma.NowISO(),
+		Characterid: id, Source: source, Catalogid: catalogID, Scope: scope, Modifiers: string(modJSON), Createdat: platform.NowISO(),
 	})
 	if err != nil {
 		return plan, sheet.EffectDTO{}, err
@@ -77,15 +77,15 @@ func (sr sheetRules) applyPoolTx(
 func (sr sheetRules) applySpellBuffEffect(ctx context.Context, charID int64, spellID string, scopeOverride *string) (sheet.EffectDTO, int, error) {
 	spell, known := catalog.LookupSpell(spellID)
 	if !known || spell.Buff == nil {
-		return sheet.EffectDTO{}, http.StatusBadRequest, plataforma.NewFieldError(
+		return sheet.EffectDTO{}, http.StatusBadRequest, platform.NewFieldError(
 			http.StatusBadRequest,
 			fmt.Sprintf("Spell %q has no applicable buff", spellID),
-			plataforma.FieldErrorMap{"spellId": {"Magia sem efeito aplicável"}},
+			platform.FieldErrorMap{"spellId": {"Magia sem efeito aplicável"}},
 		)
 	}
 	scope := derefStr(scopeOverride, spell.Buff.DefaultScope)
 	eff, err := sr.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
-		Characterid: charID, Source: "spell", Catalogid: spellID, Scope: scope, Modifiers: string(spell.Buff.Modifiers), Createdat: plataforma.NowISO(),
+		Characterid: charID, Source: "spell", Catalogid: spellID, Scope: scope, Modifiers: string(spell.Buff.Modifiers), Createdat: platform.NowISO(),
 	})
 	if err != nil {
 		return sheet.EffectDTO{}, http.StatusInternalServerError, errors.New("Could not apply buff")
@@ -98,11 +98,11 @@ func (sr sheetRules) applySpellBuffEffect(ctx context.Context, charID int64, spe
 func resolvePowerGrant(w http.ResponseWriter, powerID string) (*catalog.ActivationGrant, bool) {
 	spec, known := catalog.LookupActivation(powerID)
 	if !known {
-		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Power %q not found in the activation registry", powerID), plataforma.FieldErrorMap{"powerId": {"Poder desconhecido"}})
+		platform.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Power %q not found in the activation registry", powerID), platform.FieldErrorMap{"powerId": {"Poder desconhecido"}})
 		return nil, false
 	}
 	if spec.Grant == nil {
-		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Power %q has no applicable grant", powerID), plataforma.FieldErrorMap{"powerId": {"Poder sem efeito aplicável"}})
+		platform.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Power %q has no applicable grant", powerID), platform.FieldErrorMap{"powerId": {"Poder sem efeito aplicável"}})
 		return nil, false
 	}
 	return spec.Grant, true

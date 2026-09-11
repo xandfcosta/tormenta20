@@ -466,13 +466,24 @@ domínio e infraestrutura.
 
 - **Inglês:** nome de variável, função, tipo, método, campo de struct, constante,
   pacote, arquivo, nome de teste. Também a fronteira, que já era: tabela, coluna,
-  campo JSON, evento SSE, rota. **E componente `templ`**, que é função — a regra
+  campo JSON, evento SSE. **E componente `templ`**, que é função — a regra
   não dizia isso com todas as letras e por isso duas fatias da ALE-272 nasceram
   com os tipos em inglês e os componentes em português (`oPainelDeCombate` ao
   lado de `combatPanel`). Decisão do dono, ALE-272 fatia 5: componente novo é
   inglês; os que já existem ficam, pela regra do parágrafo final desta seção.
 - **Português:** comentário, docstring, `.md`, mensagem de commit, tudo que
   aparece na tela, e o texto de mensagem de erro que um humano vai ler.
+
+**A ROTA é a exceção da fronteira, e ela fica em PORTUGUÊS.** Decisão do dono,
+ALE-303: `/mestre/bestiario`, `?aba=pericias`, `/tabuleiro/terreno/…` — o
+endereço é a única parte da fronteira que **o cliente VÊ**, e ele entende mais
+fácil na língua da mesa. As outras quatro (tabela, coluna, campo JSON, evento
+SSE) seguem em inglês, porque nenhuma delas aparece para alguém.
+
+> Aqui a lista dizia "rota" junto com as outras quatro, e a ALE-301 chegou a
+> traduzir `/terreno/dificil` para `/terreno/difficult` obedecendo a ela. A
+> tradução FICA — desfazê-la mexeria no endereço de novo, por nada —, mas a regra
+> que a produziu deixou de valer: **rota nova sai em português.**
 
 **A linha exata entre os dois foi fechada pelo dono na ALE-301**, porque quatro
 casos ficavam de fora da lista e cada um foi decidido por palpite pelo menos uma

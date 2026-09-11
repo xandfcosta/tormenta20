@@ -43,8 +43,8 @@ import (
 //
 // ELE CAMINHA A ÁRVORE, e não uma lista de pacotes (ALE-278).
 //
-// A versão anterior enumerava quatro — `api`, `aovivo`, `tabuleiro`,
-// `plataforma` —, e isso já era a correção de uma que varria só o `api`. A
+// A versão anterior enumerava quatro — `api`, `live`, `tabuleiro`,
+// `platform` —, e isso já era a correção de uma que varria só o `api`. A
 // enumeração quebrou do jeito previsto: quando a Mesa virou `web/table` as tags
 // dela saíram da lista, a contagem caiu abaixo do piso e o guarda falhou ALTO.
 // Foi sorte de o piso existir; sem ele, o guarda teria seguido verde medindo

@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/web/ui"
 	"time"
 
@@ -75,7 +75,7 @@ type oneView struct {
 	// a razão medida em `ui.MintedInvite`.
 	LinkDoConvite string
 	// Erros e Aviso servem à aba de configuração, que é a única com formulário.
-	Erros plataforma.FieldErrorMap
+	Erros platform.FieldErrorMap
 	Aviso string
 }
 
@@ -188,7 +188,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		EhMestre:        papel == "gm",
 		CriadaEm:        shortDate(c.Createdat),
 		RegrasIgnoradas: s.deps.IgnoredRules(ctx, c.ID),
-		Erros:           plataforma.FieldErrorMap{},
+		Erros:           platform.FieldErrorMap{},
 	}
 	// O nome do DONO só aparece numa campanha que não é de quem está olhando, o
 	// que hoje quer dizer um admin. A pergunta "sou admin?" chega por parâmetro

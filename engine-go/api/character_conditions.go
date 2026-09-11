@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"t20engine/plataforma"
+	"t20engine/platform"
 	"t20engine/sheet"
 
 	"t20engine/catalog"
@@ -21,11 +21,11 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	var body struct {
 		ActiveConditions []string `json:"activeConditions"`
 	}
-	if !plataforma.DecodeJSON(w, r, &body) {
+	if !platform.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.ActiveConditions == nil {
-		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"activeConditions": {"activeConditions must be an array"}})
+		platform.WriteValidationError(w, platform.FieldErrorMap{"activeConditions": {"activeConditions must be an array"}})
 		return
 	}
 	var unknown []string
@@ -35,15 +35,15 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	if len(unknown) > 0 {
-		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf(
+		platform.WriteError(w, http.StatusBadRequest, fmt.Sprintf(
 			"Unknown condition ids: %s — expected ids from the CONDITIONS catalog", strings.Join(unknown, ", ")))
 		return
 	}
 	activeConditions := sheet.MarshalStrings(&body.ActiveConditions)
 	if err := s.queries.UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
-		ActiveConditions: activeConditions, UpdatedAt: plataforma.NowISO(), ID: row.ID,
+		ActiveConditions: activeConditions, UpdatedAt: platform.NowISO(), ID: row.ID,
 	}); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update conditions")
+		platform.WriteError(w, http.StatusInternalServerError, "Could not update conditions")
 		return
 	}
 	// Avisa a mesa AO VIVO (ALE-245). Sem isto o mestre aplica "Caído" num PC e a
@@ -54,5 +54,5 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	// DEPOIS da escrita, nunca antes: avisar sobre algo que ainda pode falhar
 	// faria a mesa buscar o estado velho e acreditar nele.
 	s.sheetRules().characterChanged(row.ID)
-	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
+	platform.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
 }

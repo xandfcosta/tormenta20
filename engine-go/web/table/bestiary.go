@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
-	"t20engine/aovivo"
+	"t20engine/live"
 )
 
 // O BESTIÁRIO DENTRO DA MESA (ALE-263).
@@ -149,7 +149,7 @@ func (s Scene) handleKindBestiaryTable(w http.ResponseWriter, r *http.Request) {
 //
 // O `monsterId` viaja junto porque é ele que liga a linha ao verbete do livro, e
 // é o que faz o painel do combatente mostrar o bloco depois.
-func sendsForTable(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) {
+func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	envio, err := envioDosSinais(c.R)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func sendsForTable(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) 
 	if m == nil {
 		return nil, fmt.Errorf("criatura %q não está no bestiário", envio.Criatura)
 	}
-	if err := aovivo.ValidateCombatantDraft(aovivo.CombatantDraft{
+	if err := live.ValidateCombatantDraft(live.CombatantDraft{
 		Label: m.Name, Initiative: envio.Iniciativa, HP: envio.PV, Kind: "npc",
 	}); err != nil {
 		return nil, err
@@ -167,7 +167,7 @@ func sendsForTable(st Scene, c commandCtx) (*aovivo.SessionRuntimeState, error) 
 		return nil, fmt.Errorf("quantas %d está fora da faixa de 1 a %d", envio.Copias, maxCopiasDeUmVerbete)
 	}
 
-	var estado *aovivo.SessionRuntimeState
+	var estado *live.SessionRuntimeState
 	for i := 0; i < envio.Copias; i++ {
 		linha, err := st.deps.MaterializeEntry(c.R.Context(), c.User, c.CampaignID, map[string]any{
 			"label": m.Name, "initiative": envio.Iniciativa, "type": "npc",
