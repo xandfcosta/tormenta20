@@ -120,10 +120,10 @@ func brushActsOnSquare(v BoardView) string {
 		"(() => { const cx = %s, cy = %s, casa = cx + '/' + cy; "+
 			"if (casa === $%s) return; "+
 			"const de = ($%s === '' ? casa : $%s).split('/').map(Number); $%s = casa; "+
-			"const traco = {de: {X: de[0], Y: de[1]}, ate: {X: cx, Y: cy}}; "+
+			"const traco = {from: {X: de[0], Y: de[1]}, to: {X: cx, Y: cy}}; "+
 			"return $%s === %q "+
 			"? @post('%s/terreno/limpar', {payload: traco}) "+
-			": @post('%s/terreno', {payload: {...traco, especie: $tool}}) })()",
+			": @post('%s/terreno', {payload: {...traco, kind: $tool}}) })()",
 		clicouEmX, clicouEmY,
 		squareLastSignal,
 		squareLastSignal, squareLastSignal, squareLastSignal,

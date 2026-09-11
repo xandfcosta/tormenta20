@@ -245,9 +245,9 @@ func trechoDeSinais(corpo string) string {
 // (ALE-203), e o corpo não devolve esse campo de graça.
 func stroke(especie string, x, y, x2, y2 int) string {
 	if especie == "" {
-		return fmt.Sprintf(`{"de":{"X":%d,"Y":%d},"ate":{"X":%d,"Y":%d}}`, x, y, x2, y2)
+		return fmt.Sprintf(`{"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`, x, y, x2, y2)
 	}
-	return fmt.Sprintf(`{"especie":%q,"de":{"X":%d,"Y":%d},"ate":{"X":%d,"Y":%d}}`,
+	return fmt.Sprintf(`{"kind":%q,"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`,
 		especie, x, y, x2, y2)
 }
 
@@ -256,6 +256,6 @@ func stroke(especie string, x, y, x2, y2 int) string {
 // São coisas diferentes e por isso não são a mesma rota: esta nomeia a espécie e
 // a borracha (`/terreno/limpar`) não nomeia nenhuma.
 func strokeErasing(especie string, x, y, x2, y2 int) string {
-	return fmt.Sprintf(`{"especie":%q,"apagar":true,"de":{"X":%d,"Y":%d},"ate":{"X":%d,"Y":%d}}`,
+	return fmt.Sprintf(`{"kind":%q,"erase":true,"from":{"X":%d,"Y":%d},"to":{"X":%d,"Y":%d}}`,
 		especie, x, y, x2, y2)
 }

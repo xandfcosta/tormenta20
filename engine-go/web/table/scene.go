@@ -79,8 +79,8 @@ func paintTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 	if st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID) == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
 	}
-	especie := board.KnownTerrainKind(pedido.Especie)
-	ligado := !pedido.Apagar
+	especie := board.KnownTerrainKind(pedido.Kind)
+	ligado := !pedido.Erase
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
 }
 
@@ -173,14 +173,19 @@ func tracoDaURL(r *http.Request) ([]engine.Square, error) {
 // strokeBody é o TRAÇO como o cliente o manda: os dois cantos e, na pintura, a
 // espécie (ALE-305).
 //
-// `de` e `ate` são objetos e não quatro campos soltos porque o par é UM conceito
+// As chaves são INGLESAS porque campo JSON é FRONTEIRA, e só a ROTA saiu dessa
+// lista (ALE-304): o endereço é o que uma pessoa vê, o corpo não. Escrevi
+// `especie`/`de`/`ate` na primeira versão, arrastando o vocabulário da rota para
+// dentro do corpo — o dono pegou.
+//
+// `from` e `to` são objetos e não quatro campos soltos porque o par é UM conceito
 // — o segmento que o dedo andou desde o aviso anterior do ponteiro —, e separá-lo
 // em `x1,y1,x2,y2` convida a mandar três dos quatro.
 type strokeBody struct {
-	Especie string             `json:"especie"`
-	Apagar  bool               `json:"apagar"`
-	De      struct{ X, Y int } `json:"de"`
-	Ate     struct{ X, Y int } `json:"ate"`
+	Kind  string             `json:"kind"`
+	Erase bool               `json:"erase"`
+	From  struct{ X, Y int } `json:"from"`
+	To    struct{ X, Y int } `json:"to"`
 }
 
 // strokeFromBody lê o traço do corpo da requisição.
@@ -195,8 +200,8 @@ func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
 	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&pedido); err != nil {
 		return pedido, nil, fmt.Errorf("não entendi o traço enviado: %v", err)
 	}
-	de := engine.Square{X: pedido.De.X, Y: pedido.De.Y}
-	ate := engine.Square{X: pedido.Ate.X, Y: pedido.Ate.Y}
+	de := engine.Square{X: pedido.From.X, Y: pedido.From.Y}
+	ate := engine.Square{X: pedido.To.X, Y: pedido.To.Y}
 	if !board.ValidStroke(de, ate) {
 		return pedido, nil, fmt.Errorf("traço de %v até %v é longo demais para um gesto", de, ate)
 	}

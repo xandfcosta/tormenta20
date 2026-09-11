@@ -133,8 +133,8 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 		"data-on:pointerup",
 		"data-on:contextmenu",
 		// O TRAÇO viaja no corpo desde a ALE-305, então o que a cena mostra é
-		// o par de cantos montado como payload — não mais um `/ate/` na URL.
-		"ate: {X: ",
+		// o par de cantos montado como payload, em inglês — não mais um `/ate/` na URL.
+		"to: {X: ",
 		"evt.button === 2",
 	} {
 		if !strings.Contains(tela, pedaco) {
