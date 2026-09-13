@@ -166,7 +166,9 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 		"data-on:contextmenu",
 		// O TRAÇO viaja no corpo desde a ALE-305, então o que a cena mostra é
 		// o par de cantos montado como payload, em inglês — não mais um `/ate/` na URL.
-		"to: {X: ",
+		// A chave é MINÚSCULA desde a ALE-313: é a grafia que o `engine.Square`
+		// declara (`json:"x"`) e a que está gravada no acervo.
+		"to: {x: ",
 		"evt.button === 2",
 	} {
 		if !strings.Contains(tela, pedaco) {

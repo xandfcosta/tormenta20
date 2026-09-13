@@ -522,7 +522,7 @@ func pasteInTheMiddleOfTheView(v BoardView) string {
 	meioY := fmt.Sprintf("Math.floor(($viewport_y + document.getElementById(%q).clientHeight / 2) / $square)", sceneId)
 	return typingTargetWithout +
 		fmt.Sprintf("(evt.key === 'v' || evt.key === 'V') && (evt.ctrlKey || evt.metaKey) && $area_token !== '' "+
-			"? (evt.preventDefault(), @post('%s/colar', {payload: {from: {X: %s, Y: %s}, "+
+			"? (evt.preventDefault(), @post('%s/colar', {payload: {from: {x: %s, y: %s}, "+
 			"area_token: $area_token, area_board: $area_board, area_mode: $area_mode}})) : null",
 			v.Base, meioX, meioY)
 }

@@ -2981,13 +2981,44 @@ tag `json:"chave"` ou um campo exportado de mesmo nome.
 > inclusive numa perfeitamente sadia: **"vermelho contra ontem" só é evidência
 > quando o motivo do vermelho é o defeito, e não o denominador.**
 
-> **Um achado da medição, anotado e não consertado:** o cliente escreve
-> `{X: cx, Y: cy}` e o `engine.Square` tem as tags `json:"x"` e `json:"y"`, em
-> MINÚSCULAS. Isso funciona **por acidente** — o `encoding/json` casa sem
-> diferenciar caixa quando não há correspondência exata —, e é o mesmo mecanismo
-> da armadilha do camelCase em nome de sinal: duas grafias para um conceito,
-> unidas por uma tolerância da biblioteca. Consertar mexe no fio de oito sítios,
-> e é issue própria.
+#### A CAIXA da chave conta, e ela vinha errada (ALE-313)
+
+O cliente escrevia `{X: cx, Y: cy}` e o `engine.Square` declara `json:"x"` e
+`json:"y"`, em MINÚSCULAS. Isso funcionava **por acidente**: o `encoding/json`
+casa campo sem diferenciar caixa **só quando não há correspondência exata**.
+
+É o mesmo mecanismo da armadilha do camelCase em nome de sinal, que esta casa
+já pagou no construtor de encontros — duas grafias para um conceito, seguradas
+por uma tolerância da biblioteca. O modo de falhar também é o mesmo: no dia em
+que o struct ganhar um campo com correspondência EXATA para `X`, a exata vence e
+a coordenada pousa no campo errado, sem erro em lugar nenhum.
+
+**Qual lado muda foi decidido pelo DADO, e não por gosto.** O tabuleiro gravado
+em `campaign_places` e `open_boards` carrega `"x": 3, "y": 0` — minúsculo. Mudar
+as tags do servidor reescreveria todo lugar do acervo; mudar o cliente é
+expressão. Foram 34 chaves em 13 linhas de `web/table`, todas dentro de literal
+de string — os `boardSquare{X: …}` em volta são campo de struct Go e ficam.
+
+Quem cobra é o `TestEveryPayloadKeyMatchesTheSignalItReads`, que passou a exigir
+a grafia EXATA: **a tag GANHA do nome do campo**, porque um campo tagueado não se
+lê pelo nome dele. Somar os dois faria o guarda aceitar `X` num campo que só
+responde por `x`.
+
+> **AQUI O NAVEGADOR NÃO É TESTEMUNHA, e é o inverso do achado da ALE-311.**
+> Lá, trocar `from` por `origin` deixava a suíte de Go verde e o Playwright
+> acusava com três falhas. Aqui não: devolvida UMA linha para `{X: …}`, o
+> `go test ./api/` passa, o app FUNCIONA e o Playwright passaria também —
+> porque a tolerância de caixa do `encoding/json` é exatamente o que faz a
+> grafia errada continuar funcionando. **Um defeito que só existe como risco
+> latente não tem testemunha em tempo de execução; quem o prende é o guarda de
+> TEXTO**, e é por isso que ele existe.
+
+> **E o guarda contaminou a si mesmo com a prosa que o explica.** Ao apertar a
+> regra, `x: $rect_to_x` passou a reprovar como "chave que é sinal e carrega
+> outro" — porque a colheita de sinais lia o corpo CRU dos arquivos, e o
+> `data-show="$x"` que o cabeçalho do `overlay_flash_test.go` usa como EXEMPLO
+> entrava na lista como se fosse sinal da árvore. O mesmo arquivo já tirava
+> comentário na varredura de payload e não na de sinais.
 
 ### DESLOCAMENTO é coordenada, e o guarda não sabia disso
 
