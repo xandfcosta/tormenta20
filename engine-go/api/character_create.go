@@ -115,6 +115,40 @@ func (h forgeHost) InsertCharacter(ctx context.Context, ownerID int64, name stri
 // healVitals recomputes the pools (clamp-only, matching healVitalsFromEngine) and
 // patches the aggregate + row.
 func (h forgeHost) HealVitals(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
+	return h.recomputeVitals(ctx, id, dto, clampVitalsNext)
+}
+
+// ShiftVitalsToNewMax recompute os poços e faz os ATUAIS ACOMPANHAREM o delta do
+// máximo, em vez de encherem (ALE-309).
+//
+// A regra é a MESMA da mudança de nível, e usa a mesma função de propósito:
+// `levelVitalsNext`. Uma regra é prendida uma vez, onde ela mora — e aqui isso
+// não é arrumação, é o conserto. Com "prende na faixa" só para baixo, o ciclo
+// `−` e `+` da cena de atributos devolveria dois pontos de PV por volta, que é
+// o mesmo defeito mais devagar.
+func (h forgeHost) ShiftVitalsToNewMax(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
+	return h.recomputeVitals(ctx, id, dto, levelVitalsNext)
+}
+
+// clampVitalsNext é a regra do `HealVitals`: máximo novo, atual PRESO na faixa.
+//
+// Ela difere do `levelVitalsNext` só no atual, e é por isso que as duas têm a
+// mesma assinatura — quem escolhe qual das duas vale é o chamador, e a diferença
+// entre elas é a decisão inteira.
+func clampVitalsNext(stored storedVitals, pvMax, pmMax int) (storedVitals, bool) {
+	next := storedVitals{
+		HpMax: int64(pvMax), HpCurrent: clampCurrent(stored.HpCurrent, int64(pvMax)),
+		MpMax: int64(pmMax), MpCurrent: clampCurrent(stored.MpCurrent, int64(pmMax)),
+	}
+	return next, next != stored
+}
+
+// recomputeVitals pergunta os máximos ao motor e grava o que `proximo` decidir
+// para os atuais, remendando o agregado junto.
+func (h forgeHost) recomputeVitals(
+	ctx context.Context, id int64, dto *sheet.CharacterDTO,
+	proximo func(storedVitals, int, int) (storedVitals, bool),
+) error {
 	if h.catalogs == nil || len(dto.Classes) == 0 {
 		return nil
 	}
@@ -124,11 +158,8 @@ func (h forgeHost) HealVitals(ctx context.Context, id int64, dto *sheet.Characte
 	}
 	pools := h.catalogs.VitalsForCharacter(ec)
 	stored := storedVitals{HpMax: dto.HpMax, HpCurrent: dto.HpCurrent, MpMax: dto.MpMax, MpCurrent: dto.MpCurrent}
-	next := storedVitals{
-		HpMax: int64(pools.PvMax), HpCurrent: clampCurrent(stored.HpCurrent, int64(pools.PvMax)),
-		MpMax: int64(pools.PmMax), MpCurrent: clampCurrent(stored.MpCurrent, int64(pools.PmMax)),
-	}
-	if next == stored {
+	next, mudou := proximo(stored, pools.PvMax, pools.PmMax)
+	if !mudou {
 		return nil
 	}
 	if err := h.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{

@@ -49,6 +49,10 @@ type Deps interface {
 	) (int64, error)
 	// HealVitals enche PV e PM depois do nascimento.
 	HealVitals(ctx context.Context, id int64, dto *sheet.CharacterDTO) error
+	// ShiftVitalsToNewMax recompute os máximos e faz os ATUAIS acompanharem o
+	// delta, em vez de encherem. É o que um passo de atributo faz com os poços
+	// de um herói que já apanhou (ALE-309).
+	ShiftVitalsToNewMax(ctx context.Context, id int64, dto *sheet.CharacterDTO) error
 	// WritePage é a montagem da casca: ela injeta os estáticos e as
 	// sobreposições que a cena não pode conhecer (ver `web/ui`).
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
