@@ -159,7 +159,11 @@ templ TextField(c Field) {
 }
 
 // PanelFrame é o contêiner padrão de uma cena: borda de ferro com um filete
-// dourado por dentro (`FramedPanel`, variante stone).
+// dourado por dentro.
+//
+// O desenho veio da variante `stone` do painel emoldurado da SPA, que não
+// existe mais: ele saiu na ALE-314 junto com os outros seis componentes em
+// Solid, quando a migração foi dada por fechada.
 templ PanelFrame(extra string) {
 	<div data-slot="framed-panel" data-variant="stone" class={ Join("grimorio-frame grimorio-frame--stone p-5 text-foreground", extra) }>
 		{ children... }

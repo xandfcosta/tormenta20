@@ -110,7 +110,6 @@ Escolhe
 escolheACarta
 escolheOModo
 escolhidosDosSinais
-escreveAsMedidas
 Escrito
 especializacaoArmaduraLevel
 especializacaoArmaduraRd

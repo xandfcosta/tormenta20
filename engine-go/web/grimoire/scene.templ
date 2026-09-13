@@ -309,50 +309,48 @@ templ grimoire() {
 	</div>
 }
 
-// ── as peças, nos DOIS stacks ────────────────────────────────────────────────
+// ── as peças do kit, medidas ─────────────────────────────────────────────────
 
-// A seção de Peças é a única da folha que mostra duas colunas, e ela é o
-// instrumento que faltava na migração (ALE-251).
+// Esta seção mostra cada peça de `web/ui` com o que o navegador RESOLVEU para
+// ela, e a medida é o ponto: sem ela, duas peças parecidas passam por iguais.
 //
-// Comparar as duas telas lado a lado é o que já devolveu CINCO features que um
-// porte tinha perdido — os peeks e o ⏎ da ALE-239, o link de redefinição da
-// ALE-242, e na ALE-246 o `data-tome-root` e o `field-sizing`. Até aqui isso
-// era disciplina manual, feita de memória, uma tela por vez. Esta seção torna
-// permanente: cada peça aparece nas duas versões, medida, e a divergência salta
-// aos olhos sem ninguém precisar lembrar de procurar.
+// # AQUI HAVIA DUAS COLUNAS, e vale saber o que a segunda fez (ALE-251)
 //
-// A coluna da SPA vem de elementos customizados (`tokens-solid.tsx`), que
-// envolvem as peças DE VERDADE. Uma imitação com as mesmas classes concordaria
-// consigo mesma e não flagraria nada — que é o oposto do que esta seção existe
-// para fazer.
+// Ela era a peça equivalente da SPA, montada como elemento customizado a partir
+// do componente Solid DE VERDADE — nunca uma imitação, porque uma imitação com
+// as mesmas classes concordaria consigo mesma e não flagraria nada. Comparar as
+// duas lado a lado devolveu CINCO features que um porte tinha perdido: os peeks
+// e o ⏎ da ALE-239, o link de redefinição da ALE-242, e na ALE-246 o
+// `data-tome-root` e o `field-sizing`. A ALE-250 saiu daqui também, e é a que
+// mais ensina: a comparação achou 2px de diferença no `secondary`, e a
+// conclusão registrada — "o errado é o nome" — sobreviveu meses até alguém
+// medir o LIMITE de contraste e descobrir que a borda era o conserto.
 //
-// O "sem par em templ" é INFORMAÇÃO e não buraco: ele diz o que ainda falta
-// portar, e some sozinho quando alguém portar.
+// A coluna saiu na ALE-314, por decisão do dono: a migração fechou e o corpo de
+// prova foi considerado cumprido. O que ela custava era 0,3% do `node_modules`
+// e ~77 KB do binário, então o preço não foi o que decidiu — foi o prazo de
+// validade, que ninguém tinha escrito.
+//
+// **O que saiu junto foi um INVENTÁRIO**, e ele está na ALE-316: oito peças da
+// SPA nunca ganharam contraparte aqui — três variantes de botão, as variantes
+// de crachá e as quatro barras vitais. A folha dizia isso por PRESENÇA, com uma
+// linha "sem par em templ"; agora é uma issue.
 
-templ partPair(nome string, spa templ.Component, emTempl templ.Component) {
+templ partPart(nome string, peca templ.Component) {
 	<div data-par class="flex w-full items-center gap-4 border-b border-grimorio-iron/40 py-2 last:border-0">
 		<span class="w-24 shrink-0 font-mono text-3xs text-muted-foreground">{ nome }</span>
 		@measuredCell() {
-			@spa
-		}
-		if emTempl != nil {
-			@measuredCell() {
-				@emTempl
-			}
-		} else {
-			<span class="flex w-1/2 min-w-0 items-center">
-				<span class="font-mono text-3xs text-grimorio-gold/70">— sem par em templ —</span>
-			</span>
+			@peca
 		}
 	</div>
 }
 
 // measuredCell põe a peça e, embaixo, o que o navegador resolveu para ela. É a
-// regra nº 1 da folha aplicada à comparação: sem a medida, duas peças parecidas
-// passam por iguais — e foi assim que a primeira versão desta seção deixou
-// passar um erro de 12px no `xs`.
+// regra nº 1 da folha: sem a medida, duas peças parecidas passam por iguais — e
+// foi assim que a primeira versão desta seção deixou passar um erro de 12px no
+// `xs`, quando ela ainda comparava com a SPA.
 templ measuredCell() {
-	<span class="flex w-1/2 min-w-0 flex-col gap-1">
+	<span class="flex w-full min-w-0 flex-col gap-1">
 		<span data-amostra-cela class="flex items-center gap-2">
 			{ children... }
 		</span>
@@ -360,76 +358,26 @@ templ measuredCell() {
 	</span>
 }
 
-templ columnHeader() {
-	<div class="flex w-full items-center gap-4 pb-1">
-		<span class="w-24 shrink-0"></span>
-		<span class={ ui.FieldLabelClasses("muted", "w-1/2") }>SPA (Solid)</span>
-		<span class={ ui.FieldLabelClasses("muted", "w-1/2") }>Servidor (templ)</span>
-	</div>
-}
-
-// Os elementos customizados são escritos como tags cruas de propósito: eles são
-// HTML, e o templ não precisa saber que há Solid do outro lado.
-// O `tamanho` é parâmetro, e a falta dele foi o primeiro defeito que esta
-// seção teve: sem passá-lo, TODA a coluna da SPA renderizava no padrão e a
-// linha "xs" comparava um botão xs do servidor com um default da SPA. O
-// instrumento mentia — e instrumento que mente é pior que instrumento nenhum,
-// porque ele produz confiança em vez de dúvida.
-templ solidButton(variante, tamanho, texto string) {
-	<spa-botao variante={ variante } tamanho={ tamanho } texto={ texto }></spa-botao>
-}
-
-templ solidChip(variante string) {
-	<spa-chip variante={ variante } texto={ variante }></spa-chip>
-}
-
 templ partsSection() {
 	@sheetSection("pecas", "Peças") {
-		@sheetBlock("Botão — variantes", "As três do servidor são as que as cenas migradas pediram; as outras não faltam por descuido. O `secondary` do servidor mede 2px a mais porque tem borda, e a ALE-250 nasceu propondo tirá-la — a conclusão foi o contrário. Medido: o preenchimento sozinho dá 1,30:1 de limite contra o fundo e a borda dá 3,57:1, quando o mínimo do WCAG para limite de componente é 3:1. A borda é CONSERTO, e o `secondary` sem borda da SPA é que era o defeito. O nome também está certo: dos 38 chamadores, 32 são ação secundária de verdade e só 6 são dispensa.") {
-			@columnHeader()
-			@partPair("default", solidButton("default", "default", "Abrir"), sheetButton(ui.VariantPrimary))
-			@partPair("secondary", solidButton("secondary", "default", "Abrir"), sheetButton(ui.VariantSecondary))
-			@partPair("destructive", solidButton("destructive", "default", "Abrir"), sheetButton(ui.VariantDestructive))
-			@partPair("outline", solidButton("outline", "default", "Abrir"), nil)
-			@partPair("ghost", solidButton("ghost", "default", "Abrir"), nil)
-			@partPair("link", solidButton("link", "default", "Abrir"), nil)
+		@sheetBlock("Botão — variantes", "As três que o servidor tem são as que as cenas migradas pediram. O `secondary` mede 2px a mais porque tem borda, e a ALE-250 nasceu propondo tirá-la — a conclusão foi o contrário. Medido: o preenchimento sozinho dá 1,30:1 de limite contra o fundo e a borda dá 3,57:1, quando o mínimo do WCAG para limite de componente é 3:1. A borda é CONSERTO. O nome também está certo: dos 38 chamadores, 32 são ação secundária de verdade e só 6 são dispensa.") {
+			@partPart("default", sheetButton(ui.VariantPrimary))
+			@partPart("secondary", sheetButton(ui.VariantSecondary))
+			@partPart("destructive", sheetButton(ui.VariantDestructive))
 		}
-		@sheetBlock("Botão — tamanhos", "Paridade completa, e agora medida: 24, 32, 36 e 40 nos dois lados. Vale dizer que a primeira versão desta seção parecia mostrar o contrário — ela não passava o tamanho ao elemento da SPA, e comparava um xs do servidor com um default da SPA. Instrumento que mente é pior que instrumento nenhum, porque produz confiança em vez de dúvida.") {
-			@columnHeader()
-			@partPair("xs", solidButton("default", "xs", "xs"), sheetButtonInSize(ui.SizeTiny, "xs"))
-			@partPair("sm", solidButton("default", "sm", "sm"), sheetButtonInSize(ui.SizeSmall, "sm"))
-			@partPair("default", solidButton("default", "default", "default"), sheetButtonInSize(ui.SizeDefault, "default"))
-			@partPair("lg", solidButton("default", "lg", "lg"), sheetButtonInSize(ui.SizeLarge, "lg"))
+		@sheetBlock("Botão — tamanhos", "Os quatro, medidos: 24, 32, 36 e 40. Vale guardar como esta medida foi ganha — a primeira versão desta seção comparava com a SPA e não passava o tamanho ao elemento dela, então media um xs do servidor contra um default da SPA e parecia mostrar divergência onde não havia. Instrumento que mente é pior que instrumento nenhum, porque produz confiança em vez de dúvida.") {
+			@partPart("xs", sheetButtonInSize(ui.SizeTiny, "xs"))
+			@partPart("sm", sheetButtonInSize(ui.SizeSmall, "sm"))
+			@partPart("default", sheetButtonInSize(ui.SizeDefault, "default"))
+			@partPart("lg", sheetButtonInSize(ui.SizeLarge, "lg"))
 		}
-		@sheetBlock("Crachá", "O `Badge` da SPA tem seis variantes e quatro usos; a cena tinha 17 escritos à mão (ALE-173, P6). O servidor ganhou o dele na ALE-177, e ele carrega uma coisa só: o PISO DE 24px do WCAG 2.5.8. Quatro crachás da ficha reprovavam a 21px, e um quinto já tinha sido consertado sozinho para 28 sem que ninguém varresse os irmãos. As VARIANTES continuam sem par: a cor de ligado e desligado diz o que aquele crachá significa, e ela é diferente nos cinco sítios — inventá-las aqui seria escrever a receita em vez de portá-la (a punição da ALE-252).") {
-			@columnHeader()
-			@partPair("geometria", solidChip("outline"), sheetBadge())
-			for _, v := range []string{"default", "secondary", "destructive"} {
-				@partPair(v, solidChip(v), nil)
-			}
+		@sheetBlock("Crachá", "A cena tinha 17 escritos à mão (ALE-173, P6). O servidor ganhou o dele na ALE-177, e ele carrega uma coisa só: o PISO DE 24px do WCAG 2.5.8. Quatro crachás da ficha reprovavam a 21px, e um quinto já tinha sido consertado sozinho para 28 sem que ninguém varresse os irmãos. Ele não tem VARIANTES de cor de propósito: a cor de ligado e desligado diz o que aquele crachá significa, e ela é diferente nos cinco sítios — inventá-las aqui seria escrever a receita em vez de portá-la (a punição da ALE-252).") {
+			@partPart("geometria", sheetBadge())
 		}
-		@sheetBlock("Campo", "O par não é exato e a diferença importa: a SPA tem um `Input` cru, e o servidor tem um CAMPO — rótulo, dica e erro no mesmo componente. Foi decisão da porta (ALE-229), porque campo sem rótulo associado é o defeito de acessibilidade que mais se repete.") {
-			@columnHeader()
-			@partPair("input/campo", solidField(), sheetField())
-		}
-		@sheetBlock("Barra vital", "Sem par do lado do servidor: a Mesa em Datastar desenha as barras à mão desde o piloto (ALE-219). É a peça mais óbvia a portar quando a ficha for migrada.") {
-			@columnHeader()
-			@partPair("hp cheio", solidBar("hp", "Vida", "52", "57"), nil)
-			@partPair("hp ferido", solidBar("hp", "Vida", "24", "57"), nil)
-			@partPair("hp crítico", solidBar("hp", "Vida", "6", "57"), nil)
-			@partPair("mp", solidBar("mp", "Mana", "18", "30"), nil)
+		@sheetBlock("Campo", "O servidor tem um CAMPO e não um input cru — rótulo, dica e erro no mesmo componente. Foi decisão da porta (ALE-229), porque campo sem rótulo associado é o defeito de acessibilidade que mais se repete.") {
+			@partPart("input/campo", sheetField())
 		}
 	}
-}
-
-templ solidField() {
-	<spa-campo placeholder="Nome do combatente"></spa-campo>
-}
-
-templ solidBar(tipo, rotulo, atual, max string) {
-	<span class="w-full min-w-0">
-		<spa-barra-vital tipo={ tipo } rotulo={ rotulo } atual={ atual } max={ max }></spa-barra-vital>
-	</span>
 }
 
 // Os embrulhos do lado templ: a peça REAL, com o texto da amostra.

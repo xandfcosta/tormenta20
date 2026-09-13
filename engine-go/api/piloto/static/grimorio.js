@@ -46,10 +46,7 @@ function a() {
 	}
 }
 async function o() {
-	let e = new Set([...document.querySelectorAll("[data-amostra-cela] *")].map((e) => e.tagName.toLowerCase()).filter((e) => e.includes("-")));
-	await Promise.all([...e].map((e) => customElements.whenDefined(e))), await new Promise((e) => requestAnimationFrame(() => e(null))), s();
-}
-function s() {
+	await new Promise((e) => requestAnimationFrame(() => e(null)));
 	for (let e of document.querySelectorAll("[data-medir-cela]")) {
 		let t = e.previousElementSibling?.querySelector("button, input, [role=\"progressbar\"]");
 		if (!t) continue;
@@ -57,7 +54,7 @@ function s() {
 		e.textContent = `h ${Math.round(n.height)} · w ${Math.round(n.width)} · r ${r}`;
 	}
 }
-function c() {
+function s() {
 	let n = document.querySelector("[data-linha-iniciativa]"), r = window.matchMedia("(prefers-reduced-motion: reduce)"), i = () => {
 		let e = document.querySelector("[data-movimento-reduzido]");
 		e && (e.textContent = r.matches ? "LIGADO" : "desligado");
@@ -69,9 +66,9 @@ function c() {
 		a === "ferir" && t(n, { curou: !1 }), a === "curar" && t(n, { curou: !0 }), a === "vez" && e(n);
 	});
 }
-function l() {
-	i(), a(), o(), c();
+function c() {
+	i(), a(), o(), s();
 }
-l();
+c();
 //#endregion
-export { l as medeAFolha };
+export { c as medeAFolha };

@@ -1,6 +1,5 @@
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
-import solid from 'vite-plugin-solid'
 
 /**
  * O bundle do módulo do piloto Datastar (ALE-231).
@@ -15,9 +14,6 @@ import solid from 'vite-plugin-solid'
  * escrito à mão num template Go.
  */
 export default defineConfig({
-  // O plugin do Solid é necessário desde a ilha das peças (ALE-251): o
-  // `tokens-solid.tsx` traz JSX, e sem ele o esbuild do Vite não o compila.
-  plugins: [solid()],
   // Sem `public/`: não há mais pasta pública neste pacote, e as fontes que a
   // folha pede em `/fonts/…` já vivem embutidas em `api/piloto/static/fonts`
   // (ver `FontesDoPiloto`).
@@ -36,7 +32,6 @@ export default defineConfig({
       entry: {
         scene: resolve(import.meta.dirname, 'api/piloto/src/scene.ts'),
         grimorio: resolve(import.meta.dirname, 'api/piloto/src/grimorio.ts'),
-        'tokens-solid': resolve(import.meta.dirname, 'api/piloto/src/tokens-solid.tsx'),
         // O leitor do livro (ALE-264) é a terceira entrada com o mesmo motivo
         // das duas anteriores: ele carrega o pdf.js, que são 448 KB, e só a
         // cena `/livro/ler` o pede. Pô-lo no `scene.js` seria mandar um
@@ -57,8 +52,8 @@ export default defineConfig({
         // o produto é embutido por `go:embed` e versionado, então um hash novo
         // a cada build encheria o repositório de sobras e faria o guarda de
         // "regenerar e comparar" do CI acusar mudança em toda corrida. O nome
-        // estável também é o que permite ao `tokens-solid.js` importá-lo por
-        // caminho previsível.
+        // estável também é o que mantém previsível o caminho de qualquer
+        // pedaço que duas entradas venham a dividir.
         chunkFileNames: '[name].js',
       },
     },
