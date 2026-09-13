@@ -58,7 +58,7 @@ func gmControls(v View, r viewGm) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = turnStep(v, "previous-turn", "Turno anterior", "‹", r.PodeAvancar).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = turnStep(v, "iniciativa/vez-anterior", "Turno anterior", "‹", r.PodeAvancar).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -371,7 +371,15 @@ func restDay(v View) templ.Component {
 
 // turnStep é o voltar. Ele existe porque errar o avanço é o engano mais
 // comum da mesa, e sem ele o conserto é remontar a ordem inteira.
-func turnStep(v View, rota, rotulo, sinal string, ligado bool) templ.Component {
+//
+// O `route` chega INTEIRO, e não como sufixo de um prefixo escrito aqui
+// (ALE-308). Ele era `"initiative/"+route`, com a outra metade no chamador: a
+// ALE-304 traduziu as rotas para português, pegou o avanço — que está inline
+// logo acima — e não pegou este, porque nenhuma das duas metades é um caminho
+// que se possa procurar. O botão ficou postando em `initiative/previous-turn`,
+// que não existe, e o Datastar descarta o remendo de resposta não-2xx: o clique
+// morria sem console, sem frase e sem nada.
+func turnStep(v View, route, label, glyph string, enabled bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -397,9 +405,9 @@ func turnStep(v View, rota, rotulo, sinal string, ligado bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 222, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 230, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -409,15 +417,15 @@ func turnStep(v View, rota, rotulo, sinal string, ligado bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if ligado {
+		if enabled {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, " data-on:click=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "initiative/"+rota))
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", route))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 224, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 232, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -438,9 +446,9 @@ func turnStep(v View, rota, rotulo, sinal string, ligado bool) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(sinal)
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(glyph)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 230, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 238, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -493,7 +501,7 @@ func endSceneButton(v View) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "cena/encerrar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 247, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 255, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
@@ -535,7 +543,7 @@ func startScene(v View) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "cena/iniciar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 255, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/table/commands.templ`, Line: 263, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
