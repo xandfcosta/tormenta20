@@ -1,0 +1,60 @@
+# OS PARÂMETROS DE CAMINHO PERMITIDOS (ALE-310).
+#
+# Uma LISTA DE PERMITIDOS, e não de proibidos. O guarda que esta lista substituiu
+# enumerava oito grafias de coordenada — `{x} {y} {dx} {dy} {mx} {my} {x2} {y2}` —
+# e nove grafias alternativas sabotadas passaram VERDES, entre elas `{col}`/`{lin}`,
+# que são os nomes que o `board_view.go` escreve em toda peça, e `{cx}`/`{cy}`,
+# que são os nomes que o cliente usa hoje.
+#
+# Lista de proibidos subconta em silêncio. Esta falha no que não conhece, como o
+# `TestNoFileIsNamedInPortuguese` e o parser de seletores da ALE-294.
+#
+# REGRA: a coordenada de um gesto do tabuleiro viaja no CORPO, pelo `payload` do
+# `@post` (ver `engine-go/CLAUDE.md`). Parâmetro NOVO reprova aqui até alguém
+# escrever a linha — e escrever a linha é o ato de declarar que ele não vem do
+# PONTEIRO.
+#
+# Os quatro suspeitos, conferidos um a um e mantidos de propósito:
+#   linha   — a linha da lista de tarefas das notas, não a linha do tabuleiro
+#   indice  — o índice do editor de NPC
+#   passo   — o passo de atributo da forja, que FICA no caminho (ALE-307)
+#   step    — o irmão dele na ficha
+ascendencia
+atributo
+beneficio
+campaignId
+catalogo
+categoria
+characterId
+classe
+cond
+cor
+efeito
+entryId
+escolha
+estado
+ferramenta
+flag
+id
+indice
+item
+linha
+lista
+magia
+nome
+npcId
+passo
+placeId
+poder
+pool
+qual
+regra
+sessionId
+slot
+step
+tabela
+tabuleiroId
+tipo
+tokenId
+valor
+variante

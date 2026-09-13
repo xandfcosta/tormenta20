@@ -2952,13 +2952,50 @@ chave é ela mesma um nome de sinal, ela tem de carregar aquele sinal — então
 `new_token_size: $new_token_look` reprova, e `kind: $tool` passa, porque `kind`
 não é sinal nenhum.
 
+#### O guarda tinha três cegos, e o denominador contava duas vezes (ALE-310)
+
+- **Janela de 400 CARACTERES.** Ela sangrava de um `payload:` para o seguinte, e
+  os "nove pares" que o guarda reportava eram OITO distintos, com `marked_tokens`
+  contado duas vezes. Hoje a janela é o objeto `{…}` casado por BALANÇO DE
+  CHAVES.
+- **O piso era sobre PARES.** `pares < 1` sobre nove: trocar `payload:` por
+  `payload :` — que o JavaScript aceita — em três sítios derrubava a conta para
+  UM e o guarda passava. Ele só afirmava "o regex ainda casa em algum lugar do
+  repositório". Hoje o piso é sobre SÍTIOS de payload, que são quinze, e a âncora
+  aceita o espaço.
+- **Payload que é VARIÁVEL.** `{payload: traco}` contribuía zero pares em
+  silêncio. Hoje o `const traco = {…}` da linha de cima é resolvido, e o spread
+  (`{...traco, kind: $tool}`) traz as chaves de origem junto.
+
+**E o TERCEIRO CANAL foi fechado.** O guarda prendia `chave == $sinal` — o lado
+do CLIENTE — e nada prendia `chave == o que o servidor lê`. Uma chave renomeada
+de um lado só chega ao servidor e cai no chão: o gesto responde 200 com o
+valor-zero, sem erro em lugar nenhum. Agora toda chave de payload tem de ter uma
+tag `json:"chave"` ou um campo exportado de mesmo nome.
+
+> **E o "vermelho contra a árvore de ontem" deste guarda nunca foi detecção.**
+> Rodado contra a árvore pré-307 — a que TINHA o defeito de coordenada no
+> caminho — ele passa, com 13 sítios e 6 pares casados. O FAIL que ele produz nas
+> árvores mais antigas é o PISO tropeçando, porque o piso é calibrado para a
+> contagem de hoje. Um piso calibrado falha em qualquer árvore anterior,
+> inclusive numa perfeitamente sadia: **"vermelho contra ontem" só é evidência
+> quando o motivo do vermelho é o defeito, e não o denominador.**
+
+> **Um achado da medição, anotado e não consertado:** o cliente escreve
+> `{X: cx, Y: cy}` e o `engine.Square` tem as tags `json:"x"` e `json:"y"`, em
+> MINÚSCULAS. Isso funciona **por acidente** — o `encoding/json` casa sem
+> diferenciar caixa quando não há correspondência exata —, e é o mesmo mecanismo
+> da armadilha do camelCase em nome de sinal: duas grafias para um conceito,
+> unidas por uma tolerância da biblioteca. Consertar mexe no fio de oito sítios,
+> e é issue própria.
+
 ### DESLOCAMENTO é coordenada, e o guarda não sabia disso
 
 **`/grupo/mover/{dx}/{dy}` também foi** (ALE-307), e ela é a que denuncia o
-guarda. O `TestNoBoardRouteCarriesACoordinateInThePath` nasceu na mesma issue,
-para impedir que a família voltasse a escapar — e ele passou VERDE por cima
-dela, porque eu escrevi o padrão com os nomes que tinha na frente (`x`, `y`,
-`x2`, `mx`) e o arrasto do grupo chama os seus de `dx` e `dy`.
+guarda. O guarda de rota nasceu na mesma issue, para impedir que a família
+voltasse a escapar — e ele passou VERDE por cima dela, porque eu escrevi o padrão
+com os nomes que tinha na frente (`x`, `y`, `x2`, `mx`) e o arrasto do grupo chama
+os seus de `dx` e `dy`.
 
 É a terceira vez nesta família que uma varredura mede a grafia comum e a incomum
 sobra: a `colar` escapou de um `grep` por `base+"…"`, o `/pecas/nova` escapou por
@@ -2973,6 +3010,36 @@ A conversão levou junto **cinco leitores mortos**: `urlRect`, `tracoDaURL`,
 `chi.URLParam(r, "x")` com nenhuma rota registrando `{x}` desde a ALE-305, e
 nenhum chamador. Função de pacote sem uso não é erro em Go; quem as achou foi
 perguntar quem chama, e não o compilador.
+
+#### E o guarda foi REFEITO, porque ele era duas coisas estreitas (ALE-310)
+
+Ele morava na `convention` e lia o CÓDIGO-FONTE, procurando oito literais de
+coordenada na mesma LINHA de um `r.Get|Post|…(`. As duas metades falhavam, e as
+duas falhas são reusáveis:
+
+- **Lista de PROIBIDOS subconta em silêncio.** Nove grafias alternativas
+  sabotadas passaram verdes — entre elas `{col}`/`{lin}`, que são os nomes que o
+  `board_view.go` escreve em toda peça, e `{cx}`/`{cy}`, que são os nomes que o
+  cliente usa hoje. Hoje é uma lista de PERMITIDOS em
+  `api/testdata/route_params.txt` com os 39 parâmetros da árvore, e parâmetro
+  novo REPROVA até alguém escrever a linha — que é o ato de declarar que ele não
+  vem do ponteiro.
+- **Parser que lê a LINHA não lê o ARGUMENTO.** Quatro portas ficavam de fora,
+  três delas forma que este repositório usa: a coordenada declarada no `base :=`
+  (dominante em `web/table`, 30+ rotas), o registro quebrado em duas linhas, e o
+  `r.Route`/`r.Handle`, fora do conjunto de verbos. Sabotando um `r.Route` o
+  guarda passava **e o denominador SUBIA**, porque ele contava o `r.Post` filho e
+  ignorava o pai.
+
+**O conserto não foi um parser melhor: foi perguntar ao ROTEADOR.** O `chi.Walk`
+devolve o padrão já montado — o `base :=` juntado, o pai concatenado com o filho,
+a continuação lida como uma linha só —, e não há linha para ler errado. O guarda
+mudou de casa junto, para `api/`, porque é lá que o roteador se monta.
+
+E o denominador passou a ser EXATO: **212 rotas de verdade**, contra as 193 que o
+regex estimava. Aquelas 193 incluíam dez linhas de `r.Header.Get(` — sete delas a
+MESMA linha (`if r.Header.Get("datastar-request")`) que toda cena nova copia, o
+que fazia o piso crescer a cada cena, na direção que o afrouxa.
 
 ### O PASSO da ficha FICA no caminho, e a razão não é a que estava escrita
 
