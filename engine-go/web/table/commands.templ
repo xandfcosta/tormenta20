@@ -42,7 +42,7 @@ templ gmControls(v View, r viewGm) {
 			class="order-last w-full text-xs text-destructive-ink"
 		></p>
 		<div class="ml-auto flex flex-wrap items-center gap-2">
-			@turnStep(v, "previous-turn", "Turno anterior", "‹", r.PodeAvancar)
+			@turnStep(v, "iniciativa/vez-anterior", "Turno anterior", "‹", r.PodeAvancar)
 			// O rótulo do avanço diz PARA ONDE vai (ALE-184): o mestre lia "▶" e
 			// contava a lista para saber quem entrava.
 			<button
@@ -216,18 +216,26 @@ templ restDay(v View) {
 
 // turnStep é o voltar. Ele existe porque errar o avanço é o engano mais
 // comum da mesa, e sem ele o conserto é remontar a ordem inteira.
-templ turnStep(v View, rota, rotulo, sinal string, ligado bool) {
+//
+// O `route` chega INTEIRO, e não como sufixo de um prefixo escrito aqui
+// (ALE-308). Ele era `"initiative/"+route`, com a outra metade no chamador: a
+// ALE-304 traduziu as rotas para português, pegou o avanço — que está inline
+// logo acima — e não pegou este, porque nenhuma das duas metades é um caminho
+// que se possa procurar. O botão ficou postando em `initiative/previous-turn`,
+// que não existe, e o Datastar descarta o remendo de resposta não-2xx: o clique
+// morria sem console, sem frase e sem nada.
+templ turnStep(v View, route, label, glyph string, enabled bool) {
 	<button
 		type="button"
-		aria-label={ rotulo }
-		if ligado {
-			data-on:click={ tableCommand(v, "POST", "initiative/"+rota) }
+		aria-label={ label }
+		if enabled {
+			data-on:click={ tableCommand(v, "POST", route) }
 			class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 		} else {
 			disabled
 			class="flex size-11 cursor-not-allowed items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground opacity-60"
 		}
-	>{ sinal }</button>
+	>{ glyph }</button>
 }
 
 // Abrir e encerrar a cena NÃO são um interruptor, e por isso são dois nós e não

@@ -3144,6 +3144,32 @@ que importa: o status deixou de distinguir "gravou" de "recusou", então **o que
 os guardas afirmam é a FRASE**, com `sceneRefusal`. A API JSON continua com os
 status dela; quem desenha página responde página.
 
+**E o caso EXTREMO desta armadilha é o 404: um endereço que não existe.** O
+Datastar descarta o remendo, o handler nunca roda, e não há nem a recusa nem a
+cena redesenhada — o gesto simplesmente não acontece. Foi assim que o `‹` da
+mesa viveu morto uma issue inteira: a ALE-304 traduziu as rotas para português,
+o botão continuou postando em `initiative/previous-turn`, e ninguém viu porque
+não há o que ver.
+
+O que tornava o defeito invisível ao `grep` é que o endereço era montado em duas
+metades — `"initiative/"+route` no helper, `"previous-turn"` no chamador —, e
+nenhuma das duas é um caminho que se possa procurar. **O endereço só existe
+RESOLVIDO**, depois que o `templ` juntou a base, o id e o verbo; ler isso do
+código-fonte é o parser que a ALE-307 já mostrou não saber ler `base :=`.
+
+Quem cobra é o `TestEveryAddressAPostWritesExistsInTheRouter` (ALE-308), e ele
+RENDERIZA: tira todo `@post`/`@get` do HTML servido de 29 cenas e pergunta ao
+chi com `Match` se a rota existe. `Match` e não um pedido de verdade, porque um
+POST em `/personagens/spliced` levaria 404 do HANDLER ("personagem não existe")
+e o guarda leria isso como rota faltando.
+
+**Duas coisas nele valem para quem escrever o próximo guarda de cena.** A
+primeira: ele precisa da mesa VIVA. O `‹` nasce `disabled` quando `PodeAvancar`
+é falso (`SceneActive && len(Initiative) > 0`), então na bancada recém-montada o
+endereço morto não está no HTML — a primeira versão passou VERDE sobre o defeito
+que ela veio pegar. A segunda: expressão que o extrator não souber resolver
+REPROVA, em vez de sair da conta em silêncio.
+
 ### `contentType: 'form'` valida o formulário ANTES de mandar
 
 `@post(url, {contentType: 'form'})` manda o `<form>` mais próximo em vez dos
