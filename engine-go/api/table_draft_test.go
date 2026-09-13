@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"t20engine/board"
+	"t20engine/engine"
 )
 
 /*
@@ -381,5 +382,145 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 	// para todo mundo passaria por "a trava funcionou".
 	if r := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito", templateBody("quadrado", "1", 4, 4, 4, 4)); !strings.Contains(r, "Assassino emboscado") {
 		t.Fatalf("o mestre também não mediu — o guarda mediu uma rota morta: %s", r)
+	}
+}
+
+// ── OS CINCO GESTOS DE TERRENO E MARCADOR DO RASCUNHO (ALE-311) ──────────────
+//
+// `draftPaintsTerrain`, `draftClearsTerrain`, `draftFillsRect`, `draftClearsRect`
+// e `draftMarksTheSpot` não tinham teste NENHUM. Medido: transformados em
+// `return nil` puro, a suíte inteira ficava verde — só o `go vet` reclamou de
+// linha morta.
+//
+// Eles são as rotas irmãs das da Mesa, e o que se prende aqui é o que cada
+// gêmeo tem de próprio: a coordenada chega pelo CORPO e pousa no ACERVO, não
+// numa sessão. A regra de pintura em si já está presa no `board`.
+
+// draftScene lê o que ficou gravado no acervo.
+func (f pilotoFixture) draftScene(t *testing.T, placeID int64) *board.BoardState {
+	t.Helper()
+	cena, err := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, placeID)
+	if err != nil {
+		t.Fatalf("ler a cena do lugar %d: %v", placeID, err)
+	}
+	return cena
+}
+
+// TestTheDraftBrushPaintsWhereTheBodySays.
+//
+// A coordenada é o assunto: uma tag `json:"from"` quebrada faz o corpo
+// decodificar para (0,0) em SILÊNCIO, e o traço inteiro pousa na quina. Por isso
+// nenhuma ponta deste caso é a origem.
+func TestTheDraftBrushPaintsWhereTheBodySays(t *testing.T) {
+	f := novoPiloto(t)
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.draftUrl(lugar)+"/tabuleiro/terreno", stroke("dificil", 3, 4, 6, 4)); rec.Code != http.StatusOK {
+		t.Fatalf("pintar no rascunho deu %d", rec.Code)
+	}
+
+	casas := board.SquaresOf(f.draftScene(t, lugar), "dificil")
+	// De (3,4) a (6,4) é uma linha reta de QUATRO casas, escritas à mão.
+	if len(casas) != 4 {
+		t.Errorf("o traço (3,4)→(6,4) pintou %d casas, e a linha tem 4: %v", len(casas), casas)
+	}
+	for _, ponta := range []engine.Square{{X: 3, Y: 4}, {X: 6, Y: 4}} {
+		if !contem(casas, ponta) {
+			t.Errorf("a casa %v não foi pintada — o traço não chegou onde o corpo mandou", ponta)
+		}
+	}
+	// E NADA NA ORIGEM. É o controle contra o `from` que parou de ser lido: (0,0)
+	// é o valor-zero do struct, então um corpo ignorado pinta exatamente ali.
+	if contem(casas, engine.Square{X: 0, Y: 0}) {
+		t.Errorf("o traço pintou (0,0), que é o valor-zero do corpo: a coordenada não foi lida")
+	}
+}
+
+// TestTheDraftEraserClearsOnlyWhatItCrosses: a borracha do rascunho, e a
+// testemunha de fora.
+func TestTheDraftEraserClearsOnlyWhatItCrosses(t *testing.T) {
+	f := novoPiloto(t)
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
+
+	for _, traco := range []string{stroke("dificil", 3, 4, 6, 4), stroke("cobertura", 1, 9, 1, 9)} {
+		if rec := f.pede(t, f.mestre, http.MethodPost,
+			f.draftUrl(lugar)+"/tabuleiro/terreno", traco); rec.Code != http.StatusOK {
+			t.Fatalf("pintar no rascunho deu %d", rec.Code)
+		}
+	}
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.draftUrl(lugar)+"/tabuleiro/terreno/limpar", stroke("", 3, 4, 6, 4)); rec.Code != http.StatusOK {
+		t.Fatalf("apagar no rascunho deu %d", rec.Code)
+	}
+
+	cena := f.draftScene(t, lugar)
+	if sobrou := board.SquaresOf(cena, "dificil"); len(sobrou) != 0 {
+		t.Errorf("a borracha do rascunho deixou %v pelo caminho", sobrou)
+	}
+	// A TESTEMUNHA: "sobrou zero" não diz nada sobre o que foi apagado A MAIS.
+	if testemunha := board.SquaresOf(cena, "cobertura"); len(testemunha) != 1 {
+		t.Errorf("a casa (1,9), fora do traço, virou %v — a borracha apagou além do pedido", testemunha)
+	}
+}
+
+// TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt.
+//
+// O retângulo é o gesto que o Shift liga, e os dois cantos vêm no corpo. Um
+// canto perdido não estoura: ele vira (0,0), e a caixa cresce até a quina
+// levando junto tudo que estiver no caminho.
+func TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt(t *testing.T) {
+	f := novoPiloto(t)
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.draftUrl(lugar)+"/tabuleiro/terreno/retangulo", stroke("dificil", 2, 3, 4, 5)); rec.Code != http.StatusOK {
+		t.Fatalf("encher o retângulo deu %d", rec.Code)
+	}
+	casas := board.SquaresOf(f.draftScene(t, lugar), "dificil")
+	// De (2,3) a (4,5) são 3×3 = NOVE casas, escritas à mão.
+	if len(casas) != 9 {
+		t.Errorf("o retângulo (2,3)→(4,5) encheu %d casas, e a caixa tem 9: %v", len(casas), casas)
+	}
+	for _, quina := range []engine.Square{{X: 2, Y: 3}, {X: 4, Y: 3}, {X: 2, Y: 5}, {X: 4, Y: 5}} {
+		if !contem(casas, quina) {
+			t.Errorf("a quina %v ficou de fora da caixa", quina)
+		}
+	}
+	if contem(casas, engine.Square{X: 0, Y: 0}) {
+		t.Errorf("a caixa alcançou (0,0), que é o valor-zero do corpo: um canto não foi lido")
+	}
+
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.draftUrl(lugar)+"/tabuleiro/terreno/limpar/retangulo", stroke("", 2, 3, 4, 5)); rec.Code != http.StatusOK {
+		t.Fatalf("limpar o retângulo deu %d", rec.Code)
+	}
+	if sobrou := board.SquaresOf(f.draftScene(t, lugar), "dificil"); len(sobrou) != 0 {
+		t.Errorf("limpar o retângulo deixou %v", sobrou)
+	}
+}
+
+// TestTheDraftMarkerLandsWhereTheBodySaysAndIsBornHidden.
+//
+// Duas afirmações, e a segunda é a razão de o marcador existir: ele nasce
+// ESCONDIDO, porque marcar a armadilha na frente da mesa entrega a armadilha.
+func TestTheDraftMarkerLandsWhereTheBodySaysAndIsBornHidden(t *testing.T) {
+	f := novoPiloto(t)
+	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
+
+	if rec := f.pede(t, f.mestre, http.MethodPost, f.draftUrl(lugar)+"/tabuleiro/marcadores/novo",
+		`{"from":{"X":7,"Y":2}}`); rec.Code != http.StatusOK {
+		t.Fatalf("pôr o marcador deu %d", rec.Code)
+	}
+
+	marcadores := f.draftScene(t, lugar).Markers
+	if len(marcadores) != 1 {
+		t.Fatalf("o rascunho ficou com %d marcadores, esperado 1", len(marcadores))
+	}
+	if m := marcadores[0]; m.X != 7 || m.Y != 2 {
+		t.Errorf("o marcador pousou em (%d,%d) e o corpo mandou (7,2)", m.X, m.Y)
+	}
+	if !marcadores[0].Hidden {
+		t.Error("o marcador do rascunho nasceu VISÍVEL — marcar a armadilha na frente da mesa a entrega")
 	}
 }

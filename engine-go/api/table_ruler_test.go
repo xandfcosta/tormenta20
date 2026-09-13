@@ -91,14 +91,38 @@ func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 // ataca —, e por isso a rota não exige o papel de mestre. A trava que sobra é a
 // de sempre, e ela é do SERVIDOR: o gabarito devolve os NOMES das peças, então
 // uma rota aberta seria a lista do bestiário da cena para quem tiver a URL.
+//
+// # ELE FOI VERDE SOBRE NADA POR UMA ISSUE INTEIRA (ALE-311)
+//
+// Ele postava em `/tabuleiro/regua/0/0/3/0`, e a única rota de régua registrada
+// é `/tabuleiro/regua`, SEM parâmetros — as paradas passaram a viajar nos sinais
+// na ALE-203 e o caso ficou postando no endereço velho. O chi devolvia 404, e a
+// asserção era `!= 200`: verde.
+//
+// Medido: removida a trava de autorização INTEIRA do handler, ele continuava
+// passando. Um caso que afirma só "não foi 200" não distingue "o servidor
+// recusou" de "este endereço não existe", e as duas coisas são a mesma linha no
+// terminal.
+//
+// Por isso agora ele afirma o 403 EXATO, e o CONTROLE ao lado é o que impede a
+// forma de voltar: quem está na mesa mede pelo MESMO endereço e recebe 200. Sem
+// ele, um endereço morto passaria nos dois.
 func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 	estranho := seedUser(t, f.s, "estranho@t.com")
 
-	rec := f.pede(t, estranho, http.MethodPost, f.tableUrl()+"/tabuleiro/regua/0/0/3/0", "")
-	if rec.Code == http.StatusOK {
-		t.Errorf("quem não está na mesa mediu a cena dela: %s", rec.Body.String())
+	caminho := f.tableUrl() + "/tabuleiro/regua"
+	paradas := `{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`
+
+	rec := f.pede(t, estranho, http.MethodPost, caminho, paradas)
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("quem não está na mesa recebeu %d, quero 403: %s", rec.Code, rec.Body.String())
+	}
+	// O CONTROLE. Ele responde a pergunta que o `!= 200` não respondia: o canal
+	// existe, e o 403 acima é uma RECUSA e não um endereço que não casa.
+	if rec := f.pede(t, f.jogador, http.MethodPost, caminho, paradas); rec.Code != http.StatusOK {
+		t.Fatalf("quem ESTÁ na mesa recebeu %d no mesmo endereço — o caso de cima passou a medir nada", rec.Code)
 	}
 }
 

@@ -22,10 +22,17 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	casas := board.SquaresOf(b, "dificil")
-	esperadas := board.StrokeSquares(engine.Square{X: 2, Y: 2}, engine.Square{X: 8, Y: 5})
-	if len(casas) != len(esperadas) {
-		t.Errorf("o traço (2,2)→(8,5) pintou %d casas, esperado as %d do segmento: %v",
-			len(casas), len(esperadas), casas)
+
+	// DEZ, escrito à mão (ALE-311). Aqui estava
+	// `esperadas := board.StrokeSquares(…)` — a MESMA função que o handler chama
+	// —, e uma contagem derivada do código sob teste anda junto com o defeito.
+	//
+	// O traço é SUPERCOVER e não Bresenham: ele inclui a casa de antes e a de
+	// depois em cada degrau, porque um pincel que pula deixa buraco. De (2,2) a
+	// (8,5) são as dez de `{2 2} {3 2} {4 2} {4 3} {5 3} {6 3} {6 4} {7 4}
+	// {8 4} {8 5}`.
+	if len(casas) != 10 {
+		t.Errorf("o traço (2,2)→(8,5) pintou %d casas, e o segmento tem 10: %v", len(casas), casas)
 	}
 	// E o traço não tem buraco na ponta que este lado controla: a primeira e a
 	// última casa do segmento estão lá. O meio é problema do `StrokeSquares`, que
@@ -33,6 +40,14 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	for _, ponta := range []engine.Square{{X: 2, Y: 2}, {X: 8, Y: 5}} {
 		if !contem(casas, ponta) {
 			t.Errorf("a casa %v não foi pintada: o traço não chega às pontas", ponta)
+		}
+	}
+	// E NADA FORA DA CAIXA do traço, que é a metade que faltava: sabotado para
+	// pintar um bloco além do pedido, este caso era VERDE — contar casas e
+	// conferir as pontas não diz nada sobre o que foi pintado a mais.
+	for _, casa := range casas {
+		if casa.X < 2 || casa.X > 8 || casa.Y < 2 || casa.Y > 5 {
+			t.Errorf("o traço (2,2)→(8,5) pintou %v, que está fora da caixa dele", casa)
 		}
 	}
 }
@@ -43,25 +58,42 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
+	// A ORIGEM NÃO É (0,0), e isso é o conserto de um defeito do próprio caso
+	// (ALE-311): ele apagava de (0,0) a (6,6), e (0,0) é o VALOR-ZERO do struct.
+	// Um `from` que parasse de ser lido — a tag `json:"from"` trocada, o corpo
+	// chegando vazio — decodifica exatamente para (0,0), e o caso continuaria
+	// passando. Ele era estruturalmente incapaz de detectar o que veio medir.
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno", stroke("cobertura", 0, 0, 6, 6)); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno", stroke("cobertura", 4, 4, 6, 6)); rec.Code != http.StatusOK {
 		t.Fatalf("pintar deu %d", rec.Code)
+	}
+	// A TESTEMUNHA DE FORA, pintada longe do traço da borracha. Ela é a metade
+	// que faltava: sabotado para apagar um bloco 10×10 na origem ALÉM do pedido,
+	// este caso era verde — "sobrou zero do traço" não diz nada sobre o que foi
+	// apagado a mais.
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 9, 1, 9)); rec.Code != http.StatusOK {
+		t.Fatalf("pintar a testemunha deu %d", rec.Code)
 	}
 	// O CONTROLE: havia o que apagar. Sem ele, "sobrou zero" é verdade também
 	// sobre um tabuleiro em que nada foi pintado.
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if len(board.SquaresOf(b, "cobertura")) < 7 {
+	if len(board.SquaresOf(b, "cobertura")) < 5 {
 		t.Fatalf("o traço de pintura só fez %d casas — não há o que a borracha apagar",
 			len(board.SquaresOf(b, "cobertura")))
 	}
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/limpar", stroke("", 0, 0, 6, 6)); rec.Code != http.StatusOK {
+		f.tableUrl()+"/tabuleiro/terreno/limpar", stroke("", 4, 4, 6, 6)); rec.Code != http.StatusOK {
 		t.Fatalf("apagar deu %d", rec.Code)
 	}
 	b = f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if sobrou := board.SquaresOf(b, "cobertura"); len(sobrou) != 0 {
 		t.Errorf("a borracha deixou %v pelo caminho", sobrou)
+	}
+	if testemunha := board.SquaresOf(b, "dificil"); len(testemunha) != 1 {
+		t.Errorf("a casa (1,9), que está fora do traço da borracha, virou %v — a borracha apagou além do pedido",
+			testemunha)
 	}
 }
 
@@ -309,4 +341,101 @@ func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
 			t.Errorf("a casa %v não está no quadrante negativo — o sinal se perdeu na travessia", q)
 		}
 	}
+}
+
+// TestEveryGestureThatReadsPointsRefusesABrokenBody é guarda de varredura sobre
+// o caminho de RECUSA (ALE-311).
+//
+// Nenhuma das vinte rotas convertidas na ALE-305/306/307 tinha caso aqui.
+// Medido: apagado o `if err != nil` do `pointsFromBody` — que serve QUATORZE
+// delas —, a suíte inteira ficava verde, e as sete frases de recusa tinham ZERO
+// ocorrências em `api/*_test.go`, `web/table/*_test.go` e `e2e/`.
+//
+// O corpo quebrado é o caso REAL desta borda: o `payload` do `@post` é calculado
+// no instante do gesto, e um sinal indefinido no meio da expressão manda
+// `undefined` — que não é JSON. O que não pode acontecer é o servidor decidir
+// sozinho que o gesto foi na origem.
+//
+// # O que ele afirma é a FRASE, e não o status
+//
+// As nove rotas se dividem em duas famílias com contratos diferentes, e a
+// primeira versão deste caso reprovou quatro delas por medir o contrato errado:
+//
+//   - as que respondem SÓ SINAIS (`marcar-area`, `gabarito`, `regua`) recusam
+//     em 400, porque não há cena para redesenhar;
+//   - as que são COMANDO (terreno, retângulo, peça avulsa, grupo) recusam em
+//     200 com a frase no `$command_error`, que é o padrão da casa — o Datastar
+//     DESCARTA o remendo de toda resposta não-2xx, então uma recusa em 4xx aqui
+//     não apareceria na tela.
+//
+// O que as duas famílias têm em comum é a única coisa que importa para quem
+// está na mesa: a frase CHEGA. É por isso que o guarda prende a frase.
+//
+// # O CONTROLE
+//
+// Um corpo BEM FORMADO na mesma rota não pode trazer a frase. Sem ele, um
+// servidor que gritasse "não entendi" em todo gesto passaria com louvor.
+//
+// # O que ele NÃO cobra, e por quê
+//
+// Corpo VAZIO não é recusa, e isso é desenho: `{}` decodifica para (0,0) em
+// silêncio, porque `from` ausente e `from` em (0,0) são indistinguíveis num
+// struct de inteiros. Prender isso exigiria ponteiro em todo campo de
+// coordenada, e a decisão fica registrada aqui em vez de virar um caso que
+// afirma o contrário do produto.
+func TestEveryGestureThatReadsPointsRefusesABrokenBody(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "stone")
+
+	casos := []struct{ rota, frase, corpoBom string }{
+		{"/tabuleiro/terreno", "não entendi o gesto enviado", stroke("dificil", 2, 3, 4, 3)},
+		{"/tabuleiro/terreno/limpar", "não entendi o gesto enviado", stroke("", 2, 3, 4, 3)},
+		{"/tabuleiro/terreno/retangulo", "não entendi o gesto enviado", stroke("dificil", 2, 3, 4, 5)},
+		{"/tabuleiro/terreno/limpar/retangulo", "não entendi o gesto enviado", stroke("", 2, 3, 4, 5)},
+		{"/tabuleiro/marcar-area", "os cantos do laço precisam ser dois pares de números",
+			`{"from":{"X":2,"Y":2},"to":{"X":5,"Y":5}}`},
+		{"/tabuleiro/gabarito", "a origem e a mira do gabarito precisam ser dois pares de números",
+			templateBody("quadrado", "1", 4, 4, 4, 4)},
+		{"/tabuleiro/pecas/nova", "não entendi a peça",
+			`{"from":{"X":4,"Y":3},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`},
+		{"/tabuleiro/regua", "as paradas da régua não vieram",
+			`{"ruler_points":[[0,0],[3,0]],"ruler_phase":2}`},
+		{"/tabuleiro/grupo/mover", "as peças marcadas não vieram",
+			`{"delta":{"X":1,"Y":1},"marked_tokens":""}`},
+	}
+	// `undefined` é o que uma expressão do Datastar manda quando um sinal do
+	// meio dela não existe — o corpo quebrado que acontece de verdade.
+	const corpoQuebrado = `{"from":{"X":undefined}}`
+
+	medidos := 0
+	for _, caso := range casos {
+		t.Run(caso.rota, func(t *testing.T) {
+			medidos++
+			quebrado := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+caso.rota, corpoQuebrado).Body.String()
+			if !strings.Contains(quebrado, caso.frase) {
+				t.Errorf("corpo quebrado em %s não trouxe %q — o servidor decidiu sozinho onde foi o gesto:\n%s",
+					caso.rota, caso.frase, firstChunk(quebrado))
+			}
+			// O CONTROLE, na mesma rota e no mesmo gesto.
+			bom := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+caso.rota, caso.corpoBom).Body.String()
+			if strings.Contains(bom, caso.frase) {
+				t.Errorf("%s recusou um corpo BEM FORMADO com %q — a frase acima não prova nada",
+					caso.rota, caso.frase)
+			}
+		})
+	}
+	// O DENOMINADOR. Uma tabela que encolhesse sem ninguém notar deixaria rotas
+	// sem o caminho de recusa medido, que é exatamente o estado de antes.
+	if medidos < 9 {
+		t.Errorf("a varredura mediu %d rotas, e são pelo menos nove", medidos)
+	}
+}
+
+// firstChunk corta a resposta para a mensagem de falha caber na tela: a cena
+// redesenhada tem dezenas de milhares de bytes, e o que interessa é o começo.
+func firstChunk(s string) string {
+	if len(s) > 300 {
+		return s[:300] + "…"
+	}
+	return s
 }

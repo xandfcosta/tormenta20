@@ -2894,6 +2894,37 @@ As chaves são INGLESAS porque campo JSON é fronteira; só a ROTA saiu dessa li
 porque um formato só é um formato só para aprender; um por gesto é como nasce a
 terceira grafia do mesmo par de números.
 
+### O que o corpo quebrado produz, e as DUAS famílias de recusa (ALE-311)
+
+O corpo que chega quebrado de verdade é `{"from":{"X":undefined}}` — o `payload`
+é calculado no instante do gesto, e um sinal indefinido no meio da expressão
+manda `undefined`, que não é JSON. O que não pode acontecer é o servidor decidir
+sozinho que o gesto foi na origem.
+
+**As nove rotas que lêem pontos se dividem em duas famílias, e o contrato de
+recusa é DIFERENTE em cada uma:**
+
+- as que respondem **só sinais** (`marcar-area`, `gabarito`, `regua`) recusam em
+  **400**, porque não há cena para redesenhar;
+- as que são **comando** (terreno, retângulo, peça avulsa, grupo) recusam em
+  **200** com a frase no `$command_error` — porque o Datastar DESCARTA o remendo
+  de toda resposta não-2xx, e uma recusa em 4xx ali não apareceria na tela.
+
+A primeira versão do guarda reprovou quatro rotas por medir o STATUS, que é o
+contrato errado para metade delas. **O que as duas famílias têm em comum é a
+única coisa que importa para quem está na mesa: a frase CHEGA** — e é por isso
+que o `TestEveryGestureThatReadsPointsRefusesABrokenBody` prende a frase.
+
+> **Corpo VAZIO não é recusa, e isso é desenho.** `{}` decodifica para (0,0) em
+> silêncio, porque `from` ausente e `from` em (0,0) são indistinguíveis num
+> struct de inteiros. Prender isso exigiria ponteiro em todo campo de coordenada.
+>
+> A consequência para quem escreve teste é a que morde: **(0,0) é o VALOR-ZERO,
+> então um caso ancorado na origem não consegue detectar um `from` que parou de
+> ser lido.** O `TestTheEraserStrokeClearsTheWholeSegment` apagava de (0,0) a
+> (6,6) e era estruturalmente incapaz de medir o que veio medir. Todo caso novo
+> sai da origem de propósito, e vários afirmam que (0,0) NÃO foi tocado.
+
 ### Quando o corpo JÁ É o formulário, o payload lista os sinais
 
 **`/pecas/nova` também foi** (ALE-306), e o caminho dela é o que ensina.
