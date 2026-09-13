@@ -1,0 +1,41 @@
+# OS SÍTIOS QUE ESCREVEM UMA TINTA VITAL SEM PERGUNTAR À ESCADA (ALE-316).
+#
+# As três tintas de PV — `hp-full`, `hp-hurt`, `hp-critical` — são da ESCADA:
+# `ui.HpFillTone` pinta a faixa, `ui.HpInkTone` escreve o número. Quem as escreve
+# à mão está reimplementando a regra, e foi assim que a ficha e a lista de heróis
+# passaram a migração inteira mostrando verde num herói a 17,5% de vida.
+#
+# Uma LISTA DE PERMITIDOS, e não de proibidos, pela razão que o `route_params.txt`
+# já registra: proibidos subconta em silêncio. Sítio NOVO reprova aqui até alguém
+# escrever a linha — e escrever a linha é o ato de declarar "esta tinta não está
+# dizendo quanto de vida sobrou".
+#
+# Porque é disso que a lista trata: as três tintas têm um segundo emprego na casa
+# que nada tem com PV. O verde é o "ligado/presente" (o ponto do Ao vivo, o "Link
+# copiado", o crachá de campanha viva); o âmbar e o vermelho são "atenção" e
+# "ruim" em contextos próprios. Nenhum deles é uma escada de nada.
+#
+# FORMATO: `caminho/relativo.ext` — o arquivo inteiro fica liberado. O grão é o
+# arquivo e não a linha de propósito: número de linha envelhece a cada edição, e
+# uma lista que envelhece sozinha é a que alguém apaga.
+
+# A ESCADA em pessoa, mais a folha que a demonstra.
+engine-go/web/ui/vitals.go
+engine-go/web/grimoire/scene.templ
+
+# PRESENÇA e confirmação, em verde: nada disso é vida.
+engine-go/web/ui/invite.templ
+engine-go/web/admin/scene.templ
+engine-go/web/table/cast.templ
+engine-go/web/campaigns/one.templ
+
+# A Mesa: o ponto do "Ao vivo", o crachá de presença e o de condição.
+engine-go/web/table/table.templ
+
+# A CARGA da mochila estoura em vermelho, e ela conta espaços e não PV — o
+# comentário de lá já separa a BARRA (crítico) do aviso (texto).
+engine-go/web/sheetui/bag.templ
+
+# A dificuldade do encontro: cinco degraus do livro (p281), e eles são OUTRA
+# escada — de "calmo" a "mortal", sobre o nível do grupo e não sobre vida.
+engine-go/web/master/encounters_view.go
