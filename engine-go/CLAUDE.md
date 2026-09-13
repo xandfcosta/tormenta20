@@ -908,9 +908,44 @@ Duas decisões que vale copiar na próxima cena:
 - **A porta pede o MENOR tipo que resolve.** Ela devolve `CurrentUserID(r) int64`
   e não o usuário inteiro, porque o tipo do usuário é do `api` — e uma porta que
   devolve tipo do hospedeiro não é porta, é o hospedeiro com outro nome.
-- **Uma cópia, declarada.** O `oPassoDaURL` são sete linhas de parse que a ficha
+- **Uma cópia, declarada.** O `stepFromURL` são sete linhas de parse que a ficha
   também tem. Pô-lo na porta seria mais acoplamento que duplicação, e a cópia diz
-  isso no comentário dela.
+  isso no comentário dela. (Aqui ele estava escrito `oPassoDaURL`, o nome de
+  antes da ALE-300 — a forma de envelhecer que a seção "Documentação" da raiz
+  descreve, acontecida neste parágrafo.)
+
+### A INTENÇÃO escrita num comentário não é uma trava (ALE-309)
+
+O passo de atributo terminava em `fillPools`, que grava `HpCurrent = HpMax`, e o
+comentário dizia por quê: *"o herói ainda está sendo forjado, então ele fica com
+os poços CHEIOS"*. A intenção estava certa. **A cena não a cobrava:**
+`heroOfTheForge` confere id, existência e posse, e nada mais.
+
+E não havia como cobrar — a tabela `characters` **não guarda** "sendo forjado".
+A cena também não tem link nenhum: o único endereço que leva a ela é o `303` do
+nascimento, e quem chega depois digita a URL ou volta no histórico.
+
+O que sobrava era uma bomba de cura de DOIS CLIQUES. O `−` num atributo é sempre
+aceito dentro da faixa, porque gasta MENOS pontos; o `+` devolve o ponto; o
+espalhamento volta ao que era — e os dois passos enchiam os poços. Uma Lenda de
+nível 20 com 3 de 180 PV saía com 180, sem nada mudar na ficha.
+
+**O conserto não foi trancar a porta, foi tirar o efeito colateral.** O passo usa
+`shiftPools`, e os ATUAIS acompanham o delta do máximo — a MESMA regra da mudança
+de nível, pela mesma função (`levelVitalsNext`). Isso preserva a intenção sem
+precisar do estado que não existe: quem nasce cheio continua cheio quando a
+Constituição sobe, e quem apanhou continua ferido.
+
+**E a regra tinha de valer nos DOIS sentidos.** Com "prende na faixa" só para
+baixo, o ciclo `−` e `+` devolveria dois pontos de PV por volta — o mesmo defeito,
+mais devagar. Com o delta nos dois sentidos o ciclo fecha EXATO, e é isso que o
+`TestTheAttributeStepWalksTheWoundedPoolWithTheMax` prende.
+
+> Uma decisão que se cumpre por ausência de efeito colateral é frágil do mesmo
+> jeito que uma que se cumpre por ausência de rota: não há linha nenhuma escrita
+> para produzi-la. O que a sustenta aqui são três casos que afirmam os três
+> resultados — o ferido que não cura, o ciclo que fecha, e o recém-nascido que
+> continua saindo cheio.
 
 ### O guarda de fronteira da cena pega o que o compilador não pega
 
