@@ -522,7 +522,7 @@ func dungeonPlanner(v improvView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.AcimaDoTeto {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "  <p class=\"text-xs text-muted-foreground\">Acima do maior ui.Size do livro. Ele recomenda parar aqui e quebrar em masmorras menores.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "  <p class=\"text-xs text-muted-foreground\">Acima do maior tamanho de masmorra do livro. Ele recomenda parar aqui e quebrar em masmorras menores.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

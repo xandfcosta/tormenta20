@@ -543,7 +543,7 @@ templ SpellAugments(m book.Spell, livro bookui.BookAddress) {
 templ CrossRefEntry(g collectionGroup, livro bookui.BookAddress) {
 	<div id="crossref-entry" class="pr-8">
 		if g.Count() == 0 {
-			<p class="text-xs text-muted-foreground">Este book.Entry não está no acervo.</p>
+			<p class="text-xs text-muted-foreground">Este verbete não está no acervo.</p>
 		}
 		for _, c := range g.Condicoes {
 			@conditionCard(c, livro)

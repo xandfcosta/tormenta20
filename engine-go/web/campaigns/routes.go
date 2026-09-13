@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -92,22 +91,6 @@ func filterFromRequest(r *http.Request) (busca, papel string) {
 		}
 	}
 	return busca, papel
-}
-
-// listURL monta o endereço que a cena representa, para o histórico do
-// navegador acompanhar a busca.
-func listURL(busca, papel string) string {
-	q := url.Values{}
-	if busca != "" {
-		q.Set("busca", busca)
-	}
-	if papel != "" && papel != "todas" {
-		q.Set("paper", papel)
-	}
-	if len(q) == 0 {
-		return "/campanhas"
-	}
-	return "/campanhas?" + q.Encode()
 }
 
 // ── a folha em branco: abrir campanha (ALE-246) ──────────────────────────────

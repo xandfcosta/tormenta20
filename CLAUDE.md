@@ -370,7 +370,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **70 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **71 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -395,7 +395,8 @@ padrão de nome, todo sinal declarado por valor tem quem o leia, toda classe
 aplicada existe na folha compilada, todo id apontado existe em algum `.templ`,
 toda chave de payload tem o nome do sinal que ela lê, nenhuma rota carrega
 coordenada nem deslocamento no caminho, todo endereço que um `@post` escreve
-existe no roteador. Cada um nasceu de um defeito que tinha irmãos.
+existe no roteador, todo sinal que a Mesa declara tem quem o leia. Cada um
+nasceu de um defeito que tinha irmãos.
 
 > O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
 > --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
@@ -584,9 +585,31 @@ Datastar. Os dois vermelhos vieram de teste, mas o hábito certo é ler o diff d
 tags antes de aceitar.
 
 **O que fecha os canais hoje**: o 2 tem o `TestNoDatastarAttributeKeyCarriesUppercase`,
-o 3 tem o `TestEverySignalDeclaredByValueHasAReader`, e a FORMA de todos tem a
-catraca. O 7 não tem guarda — são três sítios no repositório, e eles estão
-nomeados na tabela acima justamente porque um `grep` não os acha.
+o 3 tem o `TestEverySignalDeclaredByValueHasAReader`, o 4 tem o
+`TestEverySignalTheTableDeclaresHasAReader`, e a FORMA de todos tem a catraca. O
+7 não tem guarda — são três sítios no repositório, e eles estão nomeados na
+tabela acima justamente porque um `grep` não os acha.
+
+**O canal 4 entrou por um defeito, e ele mostra o que acontece quando um renome
+deixa a DECLARAÇÃO para trás** (ALE-312): a Mesa declarava `erro: ''` e ninguém
+lia `$erro`, porque a ALE-301 renomeou o leitor (`$error`) e a tag do servidor
+(`json:"error"`) e não alcançou a string montada em Go. A expressão passou a ler
+`undefined`, e **`undefined != ''` é VERDADEIRO** — então o `<p>` da recusa, que
+devia nascer escondido, nascia MOSTRADO. Vazio, logo invisível; o próximo pode
+não ser.
+
+> **E há um OITAVO leitor, que não está na tabela porque não é canal de escrita:
+> a CONSTANTE.** `const brushSignal = "pincelando"`, lida como `"$" + brushSignal`.
+> A primeira versão do guarda do canal 4 acusou CINCO órfãos e os cinco estavam
+> vivos por esse caminho — o mesmo buraco que fez a contagem de sinais da ALE-301
+> sair 139 em vez de 147. Um guarda que conte leitores tem de contar este, e
+> **exigir a palavra `const` na linha não basta**: metade delas mora num bloco
+> `const (…)`, com a palavra na linha de cima. Isso custou mais dois falsos
+> positivos.
+>
+> Dois dos cinco — `pincelando` e `ultimacasa` — **continuam em português**, e
+> foi a constante que os escondeu da varredura. A catraca não os pega: ela cobra
+> a FORMA, e os dois são `snake_case` válido.
 
 #### O id de elemento tem OITO canais, e o oitavo custou um vermelho
 

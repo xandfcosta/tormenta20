@@ -150,7 +150,7 @@ func (a *chosenTabs) Resolve(sessionID, userID int64) (tabuleiroID string, puxad
 // Existe para o stream, que precisa empurrar a SUPERFÍCIE uma vez por puxão e
 // não a cada quadro: empurrar sempre seria uma trava — a pessoa mandada para o
 // tabuleiro não conseguiria voltar para a Mesa, porque o quadro seguinte a
-// traria de volta 200ms depois, e ela concluiria que o botão está quebrado.
+// traria de volta no quadro seguinte, e ela concluiria que o botão está quebrado.
 func (a *chosenTabs) PullProgress(sessionID, userID int64) int64 {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -252,7 +252,7 @@ func (s Scene) TabRoutes(r chi.Router) {
 // ser outro: puxar não muda a CENA. Nenhuma peça andou, nenhum terreno foi
 // pintado — o que mudou foi para onde cada pessoa está olhando, e isso não é um
 // quadro do tabuleiro. Quem leva o puxão às outras telas é o batimento do
-// stream, que redesenha a cena de cada um a cada 200ms e já pergunta ao
+// stream, que redesenha a cena de cada um a cada batimento e já pergunta ao
 // `pullTab` qual aba vale.
 func showTableIsTab(st Scene, c commandCtx) (*board.BoardState, error) {
 	alvo := chi.URLParam(c.R, "tabuleiroId")

@@ -239,7 +239,7 @@ func (s *Server) sceneCore() sceneCore {
 // # O que saiu junto, e que não aparece nesta função
 //
 // O `mountLiveRoutes` e o `/events`: dezoito rotas do tempo real da SPA. A Mesa
-// em Datastar tem stream próprio (`/mesa/{campanha}/{sessao}/stream`) e escreve
+// em Datastar tem stream próprio (`/mesa/{campanha}/{sessao}/fluxo`) e escreve
 // pelos comandos dela — medido, ninguém abria o `EventSource` daqui.
 //
 // E os quinze `*_http_test.go`, com 71 casos. Teste verde sobre código que

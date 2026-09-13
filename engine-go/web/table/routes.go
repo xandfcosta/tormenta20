@@ -12,7 +12,6 @@ import (
 	"t20engine/board"
 	"t20engine/book"
 	"t20engine/live"
-	"time"
 
 	"github.com/a-h/templ"
 
@@ -139,12 +138,23 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 // expressão (`$command_error`) mantêm a caixa.
 func tableSignalsExpr() string {
 	return "{" + strings.Join([]string{
-		// `erro` e `command_error` são DOIS sinais e não um. Um só faria a
+		// `error` e `command_error` são DOIS sinais e não um. Um só faria a
 		// recusa de "Adicionar grupo" acender a frase vermelha dentro da caixa
 		// "Registrar iniciativa" do mestre que também joga: a frase certa no
 		// lugar errado, que é como se lê um defeito. Uma palavra por conceito
 		// vale para sinal de página como vale para identificador.
-		"d20: 10, erro: '', command_error: '', move_error: ''",
+		//
+		// Ele chamava-se `erro` e ninguém o lia (ALE-312): a varredura de idioma
+		// da ALE-301 renomeou o LEITOR (`$error`, em `table.templ`) e o escritor
+		// do servidor (`json:"error"`, em `action.go`) e deixou a DECLARAÇÃO
+		// para trás. Nada estourava — a expressão lia `undefined`, e
+		// `undefined != ''` é verdadeiro, então o `<p>` da recusa nascia MOSTRADO
+		// (vazio, logo invisível) até o primeiro registro.
+		//
+		// O `TestEverySignalDeclaredByValueHasAReader` não alcança este canal:
+		// ele lê o VALOR de atributo (`data-ref="x"`), e a declaração aqui é uma
+		// string montada em Go.
+		"d20: 10, error: '', command_error: '', move_error: ''",
 		// O chão padrão é DERIVADO e não digitado: escrever 'pedra' aqui seria a
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
@@ -480,14 +490,6 @@ func (s Scene) tableClasses(ctx context.Context, characterID int64) string {
 	}
 	return out
 }
-
-// tableTick é a cadência do stream. 200ms é a medida que a comunidade do
-// Datastar pratica (o Game of Life multiplayer do Anders Murphy re-renderiza o
-// <main> inteiro nessa cadência), e ela é folgada para uma mesa de RPG: o que
-// muda é um turno por vez, não um quadro por vez.
-//
-// Só sai byte quando o HTML MUDA — ver `handleTableStream`.
-const tableTick = 200 * time.Millisecond
 
 // membrosEPresenca junta o que as regras de presença precisam.
 //

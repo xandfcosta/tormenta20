@@ -541,7 +541,7 @@ func (s Scene) gmCommand(
 // mão, e a tela de quem não é mestre nunca teve o botão.
 //
 // A cena é remendada NA HORA em vez de esperar o próximo tique do stream. O
-// stream avisa-e-relê, então ele veria a mesma coisa daqui a até 200ms e o hash
+// stream avisa-e-relê, então ele veria a mesma coisa no aviso seguinte e o hash
 // o faria calar — o remendo aqui é o que torna o botão mais clicado da sessão
 // instantâneo. E ele vale também na recusa: redesenhar mostra que a cena
 // continua ABERTA, que é a verdade que o mestre precisa ver ao lado da frase.
