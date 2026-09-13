@@ -280,12 +280,9 @@ templ overlay(key, titulo, icone string, magic bool) {
 			data-attr:data-expanded={ "$detail === '" + key + "'" }
 			class="relative max-h-[85vh] w-full overflow-y-auto rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-sm"
 		>
-			<button
-				type="button"
-				aria-label={ "Fechar " + titulo }
-				data-on:click="$detail = ''"
-				class="absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>×</button>
+			@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar " + titulo, "data-on:click": "$detail = ''"}) {
+				×
+			}
 			<p
 				class={ "flex items-center gap-2 pr-10 font-heading uppercase tracking-wide",
 					templ.KV("text-grimorio-gold", !magic),

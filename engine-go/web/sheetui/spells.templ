@@ -92,13 +92,9 @@ templ grantedSpellsBlock(v View) {
 templ learnedSpellRowItem(v View, magia learnedSpellRow) {
 	<div class="flex min-w-0 items-center gap-2 rounded-none border border-grimorio-iron p-1.5">
 		<span class="shrink-0 rounded-full border border-arcane/40 px-1.5 font-mono text-3xs text-arcane-ink">{ magia.Circle }</span>
-		<button
-			type="button"
-			aria-label={ "Detalhar " + magia.Name }
-			aria-haspopup="dialog"
-			data-on:click={ thatOpensCastGesture(magia) }
-			class="min-w-0 flex-1 truncate text-left text-sm text-foreground outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>{ magia.Name }</button>
+		@ui.Button(ui.VariantLink, ui.SizeInline, "min-w-0 flex-1 truncate text-left text-sm", templ.Attributes{"type": "button", "aria-label": "Detalhar " + magia.Name, "aria-haspopup": "dialog", "data-on:click": thatOpensCastGesture(magia)}) {
+			{ magia.Name }
+		}
 		if magia.CD != "—" {
 			<span class="shrink-0 font-mono text-2xs text-muted-foreground">{ "CD " + magia.CD }</span>
 		}
@@ -112,14 +108,9 @@ templ learnedSpellRowItem(v View, magia learnedSpellRow) {
 			data-on:click={ thatOpensCastGesture(magia) }
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeSmall, "shrink-0") }
 		>Conjurar</button>
-		<button
-			type="button"
-			aria-label={ "Esquecer " + magia.Name }
-			data-on:click={ sheetPost(v, "/magias/esquece/"+magia.Command) }
-			class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none transition-colors hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>
+		@ui.Button(ui.VariantGhostDanger, ui.SizeIconSmall, "", templ.Attributes{"type": "button", "aria-label": "Esquecer " + magia.Name, "data-on:click": sheetPost(v, "/magias/esquece/"+magia.Command)}) {
 			@ui.Icon("Trash2", "size-3.5")
-		</button>
+		}
 	</div>
 }
 
@@ -263,12 +254,9 @@ templ learnSpellDialog(v View) {
 			class="relative flex max-h-[85vh] w-full flex-col rounded-md border border-grimorio-iron bg-background p-4 sm:max-w-lg"
 		>
 			<p class={ ui.SectionLabelClasses("gold", "pr-10") }>Aprender magia</p>
-			<button
-				type="button"
-				aria-label="Fechar aprender magia"
-				data-on:click="$learn_dialog = false"
-				class="absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>×</button>
+			@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar aprender magia", "data-on:click": "$learn_dialog = false"}) {
+				×
+			}
 			@spellFilters(v)
 			// A LISTA ROLA DENTRO DA CAIXA, e é isso que sustenta mandar as 198 de
 			// uma vez: sem o `min-h-0` aqui, a caixa cresce até a altura do

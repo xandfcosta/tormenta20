@@ -100,15 +100,10 @@ templ actionsBlock(v View) {
 templ passivesBlock(v View) {
 	if len(v.Powers.Passives) > 0 {
 		<section class="space-y-1.5">
-			<button
-				type="button"
-				data-on:click="$show_passives = !$show_passives"
-				data-attr:aria-expanded="$show_passives ? 'true' : 'false'"
-				class="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>
+			@ui.Button(ui.VariantGhost, ui.SizeInline, "gap-1 text-2xs font-semibold uppercase tracking-wide", templ.Attributes{"type": "button", "data-on:click": "$show_passives = !$show_passives", "data-attr:aria-expanded": "$show_passives ? 'true' : 'false'"}) {
 				<span data-show="!$show_passives">{ "Passivas · mostrar (" + strconv.Itoa(len(v.Powers.Passives)) + ")" }</span>
 				<span style="display:none" data-show="$show_passives">Passivas · ocultar</span>
-			</button>
+			}
 			<div data-show="!$show_passives" class="space-y-1">
 				for _, linha := range v.Powers.LiveTriggers {
 					<p class="text-2xs text-bonus-ink">{ "● gatilho ativo: " + linha.Name }</p>

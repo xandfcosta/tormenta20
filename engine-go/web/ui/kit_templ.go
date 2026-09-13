@@ -36,6 +36,24 @@ const (
 	VariantPrimary     Variant = "default"
 	VariantSecondary   Variant = "secondary"
 	VariantDestructive Variant = "destructive"
+	// O GHOST não tem caixa até o ponteiro chegar, e é o que 18 sítios
+	// desenhavam à mão (ALE-316): o ✕ do diálogo, o 🗑 da linha, o passo do
+	// contador. Ele não quebra a gramática da ALE-200 — não é uma terceira cor
+	// de AÇÃO, é a ausência de cor até o hover.
+	VariantGhost Variant = "ghost"
+	// O GHOST QUE DESTRÓI é variante PRÓPRIA e não um `extra`, e a razão foi
+	// MEDIDA (ALE-316): passado como extra, o `hover:text-destructive-ink`
+	// PERDE para o `hover:text-foreground` do ghost, porque a folha compilada
+	// declara o primeiro antes (offsets 72192 e 72256). O botão de apagar
+	// deixaria de ficar vermelho no hover, e nada falharia.
+	//
+	// Ele não abre uma terceira cor de ação — é a gramática da ALE-200 inteira:
+	// o crimson DESTRÓI, aqui sem caixa até o ponteiro chegar.
+	VariantGhostDanger Variant = "ghost-danger"
+	// O LINK é o nome clicável DENTRO de uma linha — o da perícia, o da magia,
+	// o do efeito. Ele não é um `<a>`: o gesto abre um diálogo na mesma página,
+	// e um `<a href>` que não navega mente para quem usa teclado.
+	VariantLink Variant = "link"
 )
 
 type Size string
@@ -45,14 +63,58 @@ const (
 	SizeLarge   Size = "lg"
 	SizeSmall   Size = "sm"
 	SizeTiny    Size = "xs"
+	// Os QUADRADOS, que a SPA tinha (`icon`, `icon-sm`, `icon-xs`) e o servidor
+	// não portou — daí os 22 sítios com a geometria escrita à mão (ALE-316).
+	//
+	// O grande é **44px e não 40**, e é a única medida desta lista que não vem
+	// da SPA: o `icon-lg` dela era `size-10`, e a ALE-177 mediu o piso de toque
+	// do WCAG 2.5.8 nesta ficha. Botão de ícone que não tem rótulo ao lado não
+	// tem o EQUIVALENTE que a norma aceita, então ele paga o piso inteiro.
+	SizeIcon      Size = "icon"
+	SizeIconSmall Size = "icon-sm"
+	SizeIconTiny  Size = "icon-xs"
+	// SizeInline não traz geometria NENHUMA, e existe para o botão que vive
+	// DENTRO de uma linha: o nome da perícia, o da magia, o do efeito. Eles
+	// medem o que a linha der, e qualquer `h-*`/`px-*` do kit quebraria o
+	// leiaute da fileira.
+	//
+	// O que o kit ainda dá a eles é o que importa: a receita de foco e a de
+	// hover, escritas uma vez. Era isso que estava copiado em cada sítio.
+	SizeInline Size = "inline"
 )
 
-// ButtonClasses mora neste arquivo, e não num `.go` ao lado, por uma razão
-// mecânica: o scanner do Tailwind varre `../*.templ`, então uma classe escrita
-// num `.go` comum não seria emitida e o botão sairia sem estilo. Foi assim que
-// as cores das barras de PV precisaram do `@source inline(...)`.
+// ButtonClasses mora neste arquivo por vizinhança com o componente, e não por
+// obrigação.
+//
+// Aqui estava escrito que era "uma razão MECÂNICA: o scanner do Tailwind varre
+// `../*.templ`, então uma classe escrita num `.go` comum não seria emitida". Já
+// era **falso** quando a ALE-316 leu: a ALE-278 mediu que tirar os dois
+// `@source` do `piloto.src.css` não muda um byte da folha, porque a detecção
+// automática do Tailwind v4 varre da pasta da folha até a raiz do projeto. E a
+// própria ALE-316 reconfirmou de acidente — o `text-hp-hurt` que o
+// `ui.HpFillTone` devolve nasceu num `.go` comum e saiu na folha.
+//
+// A linha ficava aqui cobrando que regra de apresentação morasse dentro de um
+// `.templ`, que é o contrário do que a divisão em pacotes existe para conseguir.
 func ButtonClasses(v Variant, t Size, extra string) string {
-	base := "inline-flex shrink-0 items-center justify-center gap-2 rounded-sm text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
+	// A FONTE saiu da base e foi para o TAMANHO, e isso é conserto de uma
+	// armadilha silenciosa (ALE-316).
+	//
+	// Duas classes de fonte na mesma tag não se somam: quem vence é a que a
+	// FOLHA COMPILADA declara por último, e o Tailwind v4 as emite da maior para
+	// a menor — medido nos offsets desta folha:
+	//
+	//   .text-base 58566 · .text-lg 58664 · .text-sm 58756 · .text-xs 58940
+	//
+	// Ou seja: com `text-sm` na base, todo `extra` MAIOR perdia em silêncio. O
+	// `SizeTiny` funcionava por sorte (o `text-xs` é menor e vem depois), e o
+	// primeiro botão de ícone a pedir `text-lg` teria saído pequeno sem nada
+	// falhar. Com uma fonte por TAMANHO não há duas para disputar.
+	//
+	// O `gap-2` saiu junto e pelo mesmo motivo, com um defeito VIVO no caminho:
+	// ele vence o `gap-1.5` do `SizeSmall` (offsets 41357 e 41316), então o
+	// botão pequeno nunca teve o respiro apertado que alguém escreveu para ele.
+	base := "inline-flex shrink-0 items-center justify-center rounded-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
 	// A BORDA DO `secondary` É CONSERTO, E NÃO DIVERGÊNCIA (ALE-250). Não tire.
 	//
 	// O `secondary` da SPA não tinha borda, e a folha de especificação media isso
@@ -74,12 +136,27 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 		VariantPrimary:     "bg-primary text-primary-foreground hover:bg-primary/90",
 		VariantSecondary:   "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
 		VariantDestructive: "bg-destructive text-white hover:bg-destructive/90",
+		// Sem `bg-` nenhum: o ghost é forma e foco, e a cor só chega no hover.
+		// Quem quiser que ele avise PERIGO passa `hover:text-destructive-ink` no
+		// `extra`, que é o que os quatro botões de apagar linha fazem.
+		VariantGhost:       "text-muted-foreground hover:bg-accent hover:text-foreground",
+		VariantGhostDanger: "text-muted-foreground hover:text-destructive-ink",
+		// `underline-offset-2` e não o 4 da SPA: aqui o sublinhado corre debaixo
+		// de uma linha de lista densa, e 4px encostam na linha de baixo.
+		VariantLink: "text-foreground underline-offset-2 hover:underline",
 	}
 	porTamanho := map[Size]string{
-		SizeDefault: "h-9 px-4 py-2",
-		SizeLarge:   "h-10 rounded-sm px-6",
-		SizeSmall:   "h-8 gap-1.5 rounded-sm px-3",
+		SizeDefault: "h-9 gap-2 px-4 py-2 text-sm",
+		SizeLarge:   "h-10 gap-2 rounded-sm px-6 text-sm",
+		SizeSmall:   "h-8 gap-1.5 rounded-sm px-3 text-sm",
 		SizeTiny:    "h-6 gap-1 rounded-sm px-2 text-xs",
+		// O glifo do ✕ é `text-lg` nos seis diálogos que o desenham à mão, e é
+		// por isso que ele mora AQUI: passado como `extra` ele perderia para o
+		// `text-sm` da base, calado.
+		SizeIcon:      "size-11 text-lg",
+		SizeIconSmall: "size-8 text-sm",
+		SizeIconTiny:  "size-6 text-xs",
+		SizeInline:    "",
 	}
 	return Join(base, porVariante[v], porTamanho[t], extra)
 }
@@ -210,7 +287,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 122, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 199, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -223,7 +300,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 123, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 200, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -236,7 +313,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 126, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 203, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -249,7 +326,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 127, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 204, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -262,7 +339,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(InputType(c.Tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 128, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 205, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -275,7 +352,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 129, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 206, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -293,7 +370,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Autocomplete)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 131, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 208, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -318,7 +395,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMinimo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 137, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 214, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -337,7 +414,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMaximo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 140, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 217, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -356,7 +433,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 144, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 221, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -379,7 +456,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 149, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 226, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -398,7 +475,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 152, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 229, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -416,7 +493,7 @@ func TextField(c Field) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 154, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 231, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -531,7 +608,7 @@ func SceneTitle(titulo, kicker string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 178, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 255, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -549,7 +626,7 @@ func SceneTitle(titulo, kicker string) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(kicker)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 192, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 269, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -611,7 +688,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 214, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 291, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -624,7 +701,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 215, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 292, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -637,7 +714,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 218, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 295, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -650,7 +727,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 219, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 296, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -663,7 +740,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(linhas))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 220, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 297, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -681,7 +758,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMaximo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 222, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 299, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -700,7 +777,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 226, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 303, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 			if templ_7745c5c3_Err != nil {
@@ -718,7 +795,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(c.Valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 229, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 306, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -736,7 +813,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 231, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 308, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -755,7 +832,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 234, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 311, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -773,7 +850,7 @@ func TextArea(c Field, linhas int) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 236, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 313, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -1105,7 +1182,7 @@ func ScrollBox(rotulo string, extra string) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 402, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 479, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 		if templ_7745c5c3_Err != nil {
@@ -1195,7 +1272,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(" navegar")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 436, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 513, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1208,7 +1285,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(" trocar de painel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 438, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 515, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -1221,7 +1298,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(" abrir")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 440, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 517, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1234,7 +1311,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(" buscar no livro")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 442, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 519, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1418,7 +1495,7 @@ func Key(rotulo string) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 589, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 666, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1482,7 +1559,7 @@ func FilterDrawer(rotulo string) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 618, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/kit.templ`, Line: 695, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {

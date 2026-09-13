@@ -298,12 +298,9 @@ templ CreatureDialog(m book.Entry, livro bookui.BookAddress) {
 			aria-label={ m.Name }
 			class="relative max-h-[85vh] w-full overflow-y-auto rounded-t-md border border-grimorio-iron bg-background p-4 sm:max-w-2xl sm:rounded-md"
 		>
-			<button
-				type="button"
-				aria-label={ "Fechar a ficha de " + m.Name }
-				data-on:click="$sheet_open = false"
-				class="absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>×</button>
+			@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar a ficha de " + m.Name, "data-on:click": "$sheet_open = false"}) {
+				×
+			}
 			@EntryBlock(m, livro)
 		</div>
 	</div>
