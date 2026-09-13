@@ -22,6 +22,7 @@ var tombstones = map[string]bool{
 	"TestAsFontesEmbutidasSaoAsMesmasDaSPA":        true,
 	"TestCharacterWritesRejectNonOwner":            true,
 	"TestGeneratedTypesAreCurrent":                 true,
+	"TestHpToneAtTheThresholds":                    true,
 	"TestReabrirTrocaACenaEGuardaAQueEstavaNaMesa": true,
 	"TestReopeningKeepsVersionMovingForward":       true,
 	"TestResolveConditionalDisplayEmpty":           true,

@@ -178,12 +178,9 @@ templ EntryDialog() {
 		aria-label="Verbete citado"
 		class="scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-3 text-foreground backdrop:bg-black/60"
 	>
-		<button
-			type="button"
-			aria-label="Fechar o verbete"
-			data-on:click="el.closest('dialog').close()"
-			class="absolute right-2 top-2 flex size-9 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>×</button>
+		@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar o verbete", "data-on:click": "el.closest('dialog').close()"}) {
+			×
+		}
 		<div id="crossref-entry" class="pr-8">
 			<p class="text-xs text-muted-foreground">Carregando…</p>
 		</div>

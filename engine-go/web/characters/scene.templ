@@ -158,10 +158,15 @@ templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 //
 // PV e PM levam as cores da casa; o PM fica apagado quando o máximo é zero,
 // porque quem não tem mana não tem por que ler um "0/0" em destaque.
+//
+// O PV segue a ESCADA e o PM não, e a assimetria é do livro: mana acabando é
+// um recurso no fim, vida acabando é um herói morrendo. Até a ALE-316 o PV era
+// `--hp-full` fixo aqui, então o trilho mostrava o elenco inteiro com a mesma
+// cor de saúde — e esta é a tela em que se ESCOLHE quem jogar.
 templ heroVitals(h HeroCard) {
 	<dl class="flex items-center justify-center gap-5 text-sm">
 		@oneVital("DEF", h.Defense, "", false)
-		@oneVital("PV", h.PV, "text-[color:var(--hp-full)]", false)
+		@oneVital("PV", h.PV, h.PVInk, false)
 		@oneVital("PM", h.PM, "text-[color:var(--mp-arcane)]", h.NoMana)
 	</dl>
 }

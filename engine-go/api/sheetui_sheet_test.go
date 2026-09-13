@@ -205,3 +205,57 @@ func TestTheRefusalComesBackInTheSceneAndNotInAnErrorStatus(t *testing.T) {
 		t.Error("a resposta não traz a cena inteira: o remendo apagaria a ficha em vez de avisar")
 	}
 }
+
+// A COR da barra de PV diz "quão mal", e não só a largura (ALE-316).
+//
+// # O defeito, e por que ele sobreviveu à migração inteira
+//
+// A `VitalBar` da SPA pintava por uma escada de três degraus (`hpFillVar`:
+// crítico até 25%, ferido até 50%, cheio acima). A Mesa portou a escada —
+// `hpToneOf`, com guarda de limiares desde a ALE-214 — e a FICHA não: ela
+// escrevia `--hp-full` num `templ.KV` preso ao rótulo ser "PV", sem nenhum
+// outro ramo possível.
+//
+// O resultado, MEDIDO no navegador antes deste caso existir: o herói 18 a
+// **10/57 (17,5%)** desenhava `oklch(0.6 0.17 145)` — o verde de vida cheia —
+// com a barra a 146px. O mesmo herói, na mesma sessão, sai vermelho na Mesa.
+//
+// Nenhum guarda podia pegar: os casos de vital afirmavam o NÚMERO, e o número
+// sempre esteve certo. A largura também. O que estava errado era a única coisa
+// que ninguém media.
+//
+// # Por que os TRÊS degraus, e por que as fronteiras
+//
+// Um caso só no crítico passaria verde sobre uma barra que pintasse crítico
+// SEMPRE — é o inverso exato do defeito, e igualmente invisível. Os degraus
+// são afirmados na descida, nas porcentagens de FRONTEIRA (75, 50, 25), com os
+// tons escritos à mão: derivá-los de `ui.HpFillTone` faria a asserção andar
+// junto com o defeito.
+func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
+	f, id := sheetOf(t, "Ferido", 3)
+	url := fmt.Sprintf("/personagens/%d/vitais/pv/-5", id)
+
+	// 20/20 — CHEIO, e este é o controle: sem ele, pintar crítico sempre
+	// passaria em tudo que vem depois.
+	tela := f.pede(t, f.jogador, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String()
+	if tom := hpTintOf(t, tela); tom != "full" {
+		t.Errorf("com 20/20 a faixa saiu %q, e vida cheia é `full`", tom)
+	}
+
+	// A descida, degrau por degrau, nas fronteiras da escada.
+	for _, caso := range []struct {
+		fracao string
+		pct    int
+		tom    string
+	}{
+		{"15/20", 75, "full"},
+		{"10/20", 50, "hurt"},
+		{"5/20", 25, "critical"},
+	} {
+		corpo := f.pede(t, f.jogador, http.MethodPost, url, "").Body.String()
+		if tom := hpTintOf(t, corpo); tom != caso.tom {
+			t.Errorf("com %s (%d%%) a faixa saiu %q, e o esperado é %q",
+				caso.fracao, caso.pct, tom, caso.tom)
+		}
+	}
+}

@@ -107,12 +107,9 @@ templ rollingTable(id, titulo, dado, fonte string, historico []roll) {
 			// `git show 7956b59:frontend/src/features/gm-tools/roll-history.test.ts`) com o
 			// substituto em Go antes de apagá-lo. Apagar primeiro teria levado
 			// a testemunha junto.
-			<button
-				type="button"
-				aria-label={ "Limpar o histórico de " + titulo }
-				data-on:click={ fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id) }
-				class="self-start px-1 text-xs text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>Limpar</button>
+			@ui.Button(ui.VariantGhost, ui.SizeInline, "self-start px-1 text-xs", templ.Attributes{"type": "button", "aria-label": "Limpar o histórico de " + titulo, "data-on:click": fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id)}) {
+				Limpar
+			}
 		}
 		if len(historico) == 0 {
 			<p class="text-xs text-muted-foreground">Nada rolado ainda.</p>

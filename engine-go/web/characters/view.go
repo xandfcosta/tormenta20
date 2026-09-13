@@ -57,7 +57,12 @@ type HeroCard struct {
 	Summary string
 	Level   int64
 	PV      string
-	PM      string
+	// PVInk é a TINTA do PV, e não a cor de preencher uma barra: aqui o vital
+	// é um número e não uma faixa, então ele segue a escada de ESCREVER
+	// (ALE-240 via ALE-316). Ela vive no cartão e não no `templ` porque quem
+	// decide é a view — o componente só pinta o que recebe.
+	PVInk string
+	PM    string
 	// Defesa é TEXTO e não número porque ela pode ser desconhecida, e aí é um
 	// travessão. A SPA faz igual, e o motivo dela vale aqui: nunca um zero, que
 	// é um valor de Defesa plausível e errado. Travessão também mantém a fileira
@@ -145,6 +150,7 @@ func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 		Summary:  stageLine(c),
 		Level:    c.Level,
 		PV:       vital(c.HpCurrent, c.HpMax),
+		PVInk:    ui.HpInkTone(ui.VitalPercent(c.HpCurrent, c.HpMax)),
 		PM:       vital(c.MpCurrent, c.MpMax),
 		NoMana:   c.MpMax == 0,
 		Race:     mainRace(c),

@@ -43,11 +43,9 @@ templ choicesDialog(v View) {
 					{ writtenPendings(len(v.Choices.Pendencias)) }
 				</p>
 				for _, p := range v.Choices.Pendencias {
-					<button
-						type="button"
-						data-on:click={ "$power_source = '" + p.Fonte + "'" }
-						class="block w-full text-left text-xs text-foreground underline-offset-2 outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-					>{ p.Rotulo }</button>
+					@ui.Button(ui.VariantLink, ui.SizeInline, "block w-full text-left text-xs", templ.Attributes{"type": "button", "data-on:click": "$power_source = '" + p.Fonte + "'"}) {
+						{ p.Rotulo }
+					}
 				}
 			</div>
 		}

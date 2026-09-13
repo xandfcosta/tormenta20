@@ -366,36 +366,18 @@ const turnsAhead = 3
 // tem barra cheia nem vazia, ela não tem barra — e é quem chama que decide não
 // desenhar.
 func tableBarOf(current, max int64, arcane bool) tableBar {
-	bar := tableBar{Current: current, Max: max, Tone: "bg-mp-arcane"}
-	if max > 0 {
-		pct := int(current * 100 / max)
-		if pct < 0 {
-			pct = 0
-		}
-		if pct > 100 {
-			pct = 100
-		}
-		bar.Pct = pct
-	}
+	bar := tableBar{Current: current, Max: max, Pct: ui.VitalPercent(current, max), Tone: "bg-mp-arcane"}
 	if !arcane {
-		bar.Tone = hpToneOf(bar.Pct)
+		bar.Tone = ui.HpFillTone(bar.Pct)
 	}
 	return bar
 }
 
-// hpTomDe é a tradução literal do `hpFillVar` (vital-bar.tsx): a COR da barra de
-// PV diz "quão mal", e os limiares são os mesmos dos dois lados de propósito —
-// duas escadas divergiriam em silêncio, cada tela chamando de "ferido" uma
-// coisa diferente.
-func hpToneOf(pct int) string {
-	if pct <= 25 {
-		return "bg-hp-critical"
-	}
-	if pct <= 50 {
-		return "bg-hp-hurt"
-	}
-	return "bg-hp-full"
-}
+// Aqui morava o `hpToneOf`, a tradução literal do `hpFillVar` da SPA. Ele foi
+// para `ui.HpFillTone` na ALE-316, e o motivo é o defeito que ele NÃO impediu:
+// o comentário dele prometia que os limiares eram os mesmos "dos dois lados",
+// e a ficha e a lista de heróis não tinham lado nenhum — elas pintavam verde
+// fixo. Regra privada de um pacote não diverge, ela não alcança.
 
 // tableTrackerOf desenha a fila que o jogador recebeu — já redigida.
 func tableTrackerOf(st *live.SessionRuntimeState, meus map[int64]bool) []tableRow {

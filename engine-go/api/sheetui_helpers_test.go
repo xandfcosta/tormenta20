@@ -4,6 +4,7 @@ import (
 	"html"
 	"regexp"
 	"strings"
+	"testing"
 )
 
 // Os ajudantes de leitura da cena da ficha, COPIADOS de `web/sheetui`
@@ -104,4 +105,26 @@ func screenSaved(tela string) string {
 		return tela[inicio:]
 	}
 	return tela[inicio : inicio+fim]
+}
+
+// hpTintOf devolve a tinta com que a FAIXA de PV foi pintada na tela, e falha
+// alto quando não acha — sem isso, um seletor que não casa com nada e uma
+// tinta ausente se parecem no terminal.
+//
+// Ele lê o trecho ANTES do `data-vital="PV"`, que é onde a barra mora, e aceita
+// as duas grafias que o repositório usa para a mesma tinta: a classe da paleta
+// (`bg-hp-full`) e o valor arbitrário (`bg-[color:var(--hp-full)]`). Aceitar as
+// duas é o que impede o guarda de passar verde sobre um renome de grafia.
+func hpTintOf(t *testing.T, tela string) string {
+	t.Helper()
+	corte := strings.Index(tela, `data-vital="PV"`)
+	if corte < 0 {
+		t.Fatal("a tela não desenha o PV: o guarda mediria o vazio")
+	}
+	achados := regexp.MustCompile(`hp-(full|hurt|critical)`).FindAllStringSubmatch(tela[:corte], -1)
+	if len(achados) == 0 {
+		t.Fatal("a faixa de PV não foi pintada com nenhuma tinta da escada")
+	}
+	// A ÚLTIMA é a da barra: as anteriores podem ser de outra fileira da cena.
+	return achados[len(achados)-1][1]
 }

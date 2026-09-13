@@ -2874,6 +2874,37 @@ como rede para o resto — em Go, `ui.Field := …` não é declaração válida
 todo parâmetro e toda variável local com nome colidente vira erro. O que o
 compilador não pega é o hifenizado; esse se acha com um `grep` por `-ui.` depois.
 
+### O `extra` do botão NÃO ganha da base, e quem decide é a FOLHA (ALE-316)
+
+`ButtonClasses(v, t, extra)` concatena, e concatenar não resolve conflito — o
+`cn()` da SPA era `tailwind-merge` e fazia isso; o `Join` daqui não faz. **Duas
+classes do mesmo eixo na mesma tag não se somam: vence a que a folha compilada
+declara por ÚLTIMO.** Então um `extra` cuja utilidade venha ANTES da base perde,
+e perde calado.
+
+Medido nos offsets da folha de hoje:
+
+| eixo | ordem na folha | consequência |
+|---|---|---|
+| fonte | `.text-base 58566` · `.text-lg 58664` · `.text-sm 58756` · `.text-xs 58940` | a MENOR sempre vence |
+| `gap` | `.gap-1 41290` · `.gap-1.5 41316` · `.gap-2 41357` | o MAIOR vence |
+| hover | `.hover:text-destructive-ink 72192` · `.hover:text-foreground 72256` | o `foreground` vence |
+
+As três linhas produziram um defeito cada. A da fonte era latente: o primeiro
+botão de ícone a pedir `text-lg` sairia pequeno. A do `gap` estava **VIVA** — o
+`gap-2` da base vencia o `gap-1.5` do `SizeSmall`, e o botão pequeno nunca teve
+o respiro que alguém escreveu para ele. A do hover é a razão de o ghost que
+apaga ser VARIANTE (`VariantGhostDanger`) e não um `extra`.
+
+**O conserto geral é de forma: nenhum eixo mora na BASE se um TAMANHO pode
+querer outro valor.** A fonte e o `gap` desceram para o mapa de tamanhos, e aí
+não há duas classes para disputar. O que sobra na base é o que nenhum tamanho
+contradiz — forma, foco, transição, desabilitado.
+
+Para quem for escrever a próxima variante: o teste é `grep -bo '\.classe'` na
+folha compilada, dos dois lados do conflito. Não adianta raciocinar pela ordem
+do `class=`, que o navegador ignora.
+
 ## Onde a coordenada de um gesto do tabuleiro viaja
 
 **No CORPO, e não no caminho** (ALE-305). O `@post` do Datastar aceita

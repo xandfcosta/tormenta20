@@ -311,3 +311,49 @@ func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 		t.Error("herói único ganhou um próximo que não existe")
 	}
 }
+
+// O TRILHO mostra quem está mal, e não o elenco inteiro com cara de saudável
+// (ALE-316).
+//
+// Esta é a tela em que se ESCOLHE quem jogar, e até esta issue ela pintava todo
+// PV com `--hp-full` fixo: o herói a 2/20 e o herói a 20/20 saíam da mesma cor,
+// com só a fração separando os dois.
+//
+// # Aqui a escada é a de ESCREVER, e ela diverge da de preencher
+//
+// Na ficha o vital é uma FAIXA e o tom é o de preencher; aqui ele é um NÚMERO,
+// e o crítico não pode usar `--hp-critical`, que dá 4,11:1 como letra pequena —
+// é a medição da ALE-240, que a ALE-292 repetiu no marcador do tabuleiro. Por
+// isso o caso afirma a tinta de perigo da casa e não o vermelho da barra: um
+// guarda que aceitasse `text-hp-critical` estaria prendendo o defeito.
+//
+// Os três heróis vão num elenco SÓ, e de propósito: com um por vez, um cartão
+// que ignorasse o herói e lesse o primeiro do elenco passaria nos três — é a
+// lição de cardinalidade da ALE-299.
+func TestTheCastPaintsEachHeroByHowBadlyHurtHeIs(t *testing.T) {
+	s, eu := novaCenaDeHerois(t)
+	seedCharacterAtLevel(t, s, eu.ID, "Inteiro", 5, 20, 20, 3, 8)
+	seedCharacterAtLevel(t, s, eu.ID, "Machucado", 5, 8, 20, 3, 8)
+	seedCharacterAtLevel(t, s, eu.ID, "Morrendo", 5, 2, 20, 3, 8)
+
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
+	if err != nil {
+		t.Fatalf("carregar: %v", err)
+	}
+	if len(v.Heroes) != 3 {
+		t.Fatalf("o elenco veio com %d heróis, e o caso precisa dos três", len(v.Heroes))
+	}
+
+	// As tintas escritas à mão: derivá-las de `ui.HpInkTone` faria a asserção
+	// andar junto com o defeito.
+	querido := map[string]string{
+		"Inteiro":   "text-hp-full",                 // 100%
+		"Machucado": "text-hp-hurt",                 // 40%
+		"Morrendo":  "text-grimorio-crimson-bright", // 10%
+	}
+	for _, h := range v.Heroes {
+		if tinta, ok := querido[h.Name]; ok && h.PVInk != tinta {
+			t.Errorf("%s (PV %s) escreve com %q, e o esperado é %q", h.Name, h.PV, h.PVInk, tinta)
+		}
+	}
+}

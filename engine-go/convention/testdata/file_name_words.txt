@@ -1,20 +1,6 @@
-# AS PALAVRAS QUE UM NOME DE ARQUIVO PODE USAR (ALE-301).
 #
-# Esta lista é um PERMITIDOS e não um proibidos, e a inversão é a lição da
-# fatia: o guarda de nomes de arquivo nasceu com uma lista de palavras
-# PORTUGUESAS, e ela não conhecia `fronteira`. O terreno medido com ela deu 13,
-# depois 18 com a lista ampliada, e o real era 96 — vinte e cinco deles um
-# `fronteira_test.go` por pacote, invisíveis nas três contagens. Lista de
-# proibidos SUBCONTA em silêncio e o resultado tem cara de resposta; lista de
-# permitidos falha no que não conhece, que é a forma do `TestNo…` da ALE-294.
 #
-# Palavra inglesa nova: acrescente a linha. Ela é barata, é revisável, e pôr uma
-# palavra PORTUGUESA aqui é um ato visível — que é exatamente o que faltava.
 #
-# NOME PRÓPRIO entra aqui pela regra do glossário (é o nome da coisa, não
-# tradução pendente): `piloto`, `grimorio`, `tormenta`, `tibar`, mais os nomes de
-# ferramenta e de fonte — `datastar`, `solid`, `vite`, `templ`, `sqlc`, `biome`,
-# `playwright`, `pnpm`, `cinzel`, `lucide`.
 abilities
 accents
 account
@@ -33,6 +19,7 @@ applied
 apply
 area
 ascii
+# AS PALAVRAS QUE UM NOME DE ARQUIVO PODE USAR (ALE-301).
 asset
 attribute
 attributes
@@ -111,6 +98,7 @@ debt
 default
 defense
 defs
+# depois 18 com a lista ampliada, e o real era 96 — vinte e cinco deles um
 deps
 design
 details
@@ -147,6 +135,7 @@ envfile
 equip
 equipped
 errors
+# Esta lista é um PERMITIDOS e não um proibidos, e a inversão é a lição da
 events
 example
 exists
@@ -154,7 +143,9 @@ expertises
 explains
 expr
 ext
+# fatia: o guarda de nomes de arquivo nasceu com uma lista de palavras
 favicon
+# ferramenta e de fonte — `datastar`, `solid`, `vite`, `templ`, `sqlc`, `biome`,
 fields
 file
 filters
@@ -170,6 +161,7 @@ forge
 format
 framing
 from
+# `fronteira_test.go` por pacote, invisíveis nas três contagens. Lista de
 gate
 gen
 general
@@ -226,6 +218,7 @@ keyboard
 kit
 label
 labels
+ladder
 language
 last
 latin
@@ -266,6 +259,7 @@ name
 names
 nav
 new
+# NOME PRÓPRIO entra aqui pela regra do glossário (é o nome da coisa, não
 notes
 notice
 notices
@@ -277,10 +271,13 @@ options
 order
 origin
 origins
+outside
 overflow
 overlay
 package
 pages
+# Palavra inglesa nova: acrescente a linha. Ela é barata, é revisável, e pôr uma
+# palavra PORTUGUESA aqui é um ato visível — que é exatamente o que faltava.
 params
 parity
 parse
@@ -289,6 +286,7 @@ password
 payload
 pdf
 pending
+# permitidos falha no que não conhece, que é a forma do `TestNo…` da ALE-294.
 persistence
 piloto
 place
@@ -296,6 +294,7 @@ places
 play
 player
 playwright
+# `playwright`, `pnpm`, `cinzel`, `lucide`.
 pm
 pnpm
 pointbuy
@@ -303,6 +302,7 @@ pointers
 polyline
 populate
 port
+# PORTUGUESAS, e ela não conhecia `fronteira`. O terreno medido com ela deu 13,
 portuguese
 post
 power
@@ -312,6 +312,7 @@ presence
 preview
 production
 proficiencies
+# proibidos SUBCONTA em silêncio e o resultado tem cara de resposta; lista de
 publish
 pull
 py
@@ -403,6 +404,7 @@ testdb
 that
 the
 tibar
+tints
 title
 to
 token
@@ -412,6 +414,7 @@ tools
 tormenta
 touch
 tracker
+# tradução pendente): `piloto`, `grimorio`, `tormenta`, `tibar`, mais os nomes de
 traits
 tree
 ts

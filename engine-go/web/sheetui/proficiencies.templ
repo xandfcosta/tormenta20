@@ -61,13 +61,7 @@ templ proficiencyGroupPanel(v View, grupo proficiencyGroup) {
 // e vale a redundância.
 templ proficiencyRow(v View, linha sheetProficiency) {
 	<li class={ "rounded-sm text-xs", templ.KV("bg-bonus/10", linha.Tem) }>
-		<button
-			type="button"
-			aria-pressed={ fmt.Sprintf("%t", linha.Tem) }
-			aria-label={ swapLabel(linha) }
-			data-on:click={ proficiencyCommand(v, linha.Chave) }
-			class="flex min-h-11 w-full items-center gap-2 rounded-sm px-2 text-left outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-		>
+		@ui.Button(ui.VariantGhost, ui.SizeInline, "min-h-11 w-full gap-2 px-2 text-left", templ.Attributes{"type": "button", "aria-pressed": fmt.Sprintf("%t", linha.Tem), "aria-label": swapLabel(linha), "data-on:click": proficiencyCommand(v, linha.Chave)}) {
 			if linha.Tem {
 				@ui.Icon("Check", "size-3.5 text-bonus-ink")
 			} else {
@@ -85,6 +79,6 @@ templ proficiencyRow(v View, linha sheetProficiency) {
 					class="ml-1 rounded-md bg-muted px-1 text-3xs uppercase tracking-[0.14em] text-muted-foreground"
 				>classe</span>
 			}
-		</button>
+		}
 	</li>
 }
