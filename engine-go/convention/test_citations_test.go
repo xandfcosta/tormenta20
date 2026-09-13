@@ -30,6 +30,16 @@ var tombstones = map[string]bool{
 	"TestStatForAbsentTarget":                      true,
 	"TestTodaAbaDaFichaEstaPortada":                true,
 
+	// O TETO DO RETÂNGULO SAIU (ALE-315), por decisão do dono: o app roda LOCAL
+	// e o limite de mil casas mordia gesto de verdade — no zoom mínimo o
+	// tabuleiro visível tem 68×29 = 1.972 casas, e "pinte tudo o que estou
+	// vendo" era recusado. A garantia não sumiu, ela INVERTEU: o
+	// `TestTheWholeViewportFitsInOneRectangle` prende que o gesto grande chega
+	// inteiro. O irmão TRAÇO mantém o teto dele, e por outro motivo — cem casas
+	// num quadro de 16ms continuam impossíveis para um dedo.
+	"TestAForgedRectangleIsRefused":           true,
+	"TestAForgedRectangleIsRefusedByTheRoute": true,
+
 	// AS ROTAS JSON SEM CONSUMIDOR (ALE-277). Dezessete casos que dirigiam rotas
 	// que a ALE-277 apagou. Nenhum deles some sem substituto: a REGRA que cada
 	// um prendia foi repontada para a função que a possui, ou já estava presa na

@@ -207,13 +207,16 @@ func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
 }
 
 // rectFromBody é TUDO O QUE CABE entre os dois cantos.
+//
+// SEM TETO DE ÁREA, por decisão do dono (ALE-315): o app roda LOCAL, numa mesa,
+// e o teto de mil casas mordia gesto de verdade — no zoom mínimo o tabuleiro
+// visível tem 68×29 = 1.972 casas, e "pinte tudo o que estou vendo" era
+// recusado. O irmão de cima, o TRAÇO, mantém o dele: ele é um quadro de 16ms, e
+// cem casas ali continuam sendo impossíveis para um dedo.
 func rectFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
 	pedido, de, ate, err := pointsFromBody(r)
 	if err != nil {
 		return pedido, nil, err
-	}
-	if !board.ValidRectangle(de, ate) {
-		return pedido, nil, fmt.Errorf("o retângulo de %v até %v é grande demais para um gesto", de, ate)
 	}
 	return pedido, board.RectangleSquares(de, ate), nil
 }
