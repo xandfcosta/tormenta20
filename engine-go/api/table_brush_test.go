@@ -238,20 +238,30 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 	}
 }
 
-// TestAForgedRectangleIsRefusedByTheRoute: o teto é do domínio e a recusa chega
-// como FRASE. Mil casas são 32×32 — uma sala grande de masmorra.
-func TestAForgedRectangleIsRefusedByTheRoute(t *testing.T) {
+// TestTheWholeViewportFitsInOneRectangle — o SUBSTITUTO do caso do teto.
+//
+// Aqui morava o `TestAForgedRectangleIsRefusedByTheRoute`, que provava que um
+// retângulo de mil casas para cima era recusado. **O teto saiu por decisão do
+// dono (ALE-315)**: o app roda local, e ele mordia gesto de verdade — no zoom
+// mínimo o tabuleiro visível tem 68×29 = 1.972 casas, e "pinte tudo o que estou
+// vendo" não passava.
+//
+// O caso não some, ele INVERTE: o que se prende agora é que o gesto grande
+// CHEGA, e chega inteiro. Sem ele, alguém que devolvesse um teto qualquer não
+// teria nada discordando.
+func TestTheWholeViewportFitsInOneRectangle(t *testing.T) {
 	f := novoPiloto(t)
 	f.seedOpenBoard(t, "stone")
 
-	corpo := f.pede(t, f.mestre, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno/retangulo", stroke("dificil", 0, 0, 999, 999)).Body.String()
-	if !strings.Contains(corpo, "grande demais") {
-		t.Errorf("o retângulo forjado não foi recusado com frase: %q", corpo[max(0, len(corpo)-200):])
+	// 68×29 é o viewport no zoom MÍNIMO, que é o maior gesto que um dedo alcança.
+	rec := f.pede(t, f.mestre, http.MethodPost,
+		f.tableUrl()+"/tabuleiro/terreno/retangulo", stroke("dificil", 0, 0, 67, 28))
+	if corpo := rec.Body.String(); strings.Contains(corpo, "grande demais") {
+		t.Errorf("o retângulo do viewport inteiro foi recusado: %q", corpo[max(0, len(corpo)-200):])
 	}
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
-	if casas := board.SquaresOf(b, "dificil"); len(casas) != 0 {
-		t.Errorf("o retângulo recusado pintou %d casas assim mesmo", len(casas))
+	if casas := board.SquaresOf(b, "dificil"); len(casas) != 68*29 {
+		t.Errorf("o retângulo 68×29 pintou %d casas, e a caixa tem %d", len(casas), 68*29)
 	}
 }
 
