@@ -7,6 +7,7 @@ import (
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -432,5 +433,76 @@ func TestRevealingTheMarkerHandsItToTheTable(t *testing.T) {
 
 	if len(BoardForRole("player", b).Markers) != 1 {
 		t.Error("revelado, o marcador continuou fora da cópia da mesa")
+	}
+}
+
+// ── OS TETOS QUE O ESTADO CARREGA EM TODO BROADCAST (ALE-315) ────────────────
+//
+// O `boardMaxTokens` e o `boardMaxMarkers` não tinham teste NENHUM, e são os
+// dois de maior consequência dos quatro do tabuleiro. A diferença para o traço e
+// o retângulo está na docstring deles: aqueles recusam UM GESTO grande demais;
+// estes dois seguram o ESTADO, que é gravado e que **todo broadcast carrega**.
+//
+// O que se prova aqui é a FRONTEIRA, e não "absurdo é recusado": o teto entra no
+// número, então um teto trocado por outro tem de reprovar. É a lição que a
+// ALE-311 registrou sobre esperado que não prende.
+
+// TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne.
+//
+// O 200 sai da docstring — *"vinte tokens é uma mesa cheia; 200 é um acidente"* —
+// e a frase carrega o valor ofensor, que é o que a casa cobra de toda recusa.
+func TestTheBoardAcceptsTwoHundredTokensAndRefusesTheNextOne(t *testing.T) {
+	b := newBoard("b", "Cripta", "stone")
+	proximoID := boardCounter()
+
+	// AS 200 PRIMEIRAS ENTRAM. Sem esta metade, um teto trocado por 1 passaria
+	// no caso de baixo — "a 201ª é recusada" é verdade também quando a 2ª é.
+	for i := 0; i < 200; i++ {
+		if err := AddToken(b, BoardToken{Label: "Goblin", X: i % 40, Y: i / 40}, proximoID); err != nil {
+			t.Fatalf("a peça %d de 200 foi recusada: %v", i+1, err)
+		}
+	}
+	if len(b.Tokens) != 200 {
+		t.Fatalf("o tabuleiro ficou com %d peças, e as 200 entraram", len(b.Tokens))
+	}
+
+	err := AddToken(b, BoardToken{Label: "A gota d'água", X: 0, Y: 0}, proximoID)
+	if err == nil {
+		t.Fatal("a 201ª peça entrou — sem teto o estado cresce sem limite, e TODO broadcast o carrega")
+	}
+	// A FRASE, e não só o erro: ela diz quantas há e qual é o teto, porque quem
+	// a lê está no meio de uma sessão.
+	if !strings.Contains(err.Error(), "200 peças") || !strings.Contains(err.Error(), "teto 200") {
+		t.Errorf("a recusa saiu %q, sem o número de peças ou sem o teto", err)
+	}
+	if len(b.Tokens) != 200 {
+		t.Errorf("a recusa mexeu no tabuleiro: ficou com %d peças", len(b.Tokens))
+	}
+}
+
+// TestTheBoardAcceptsOneHundredMarkersAndRefusesTheNextOne: o irmão, e o teto é
+// outro de propósito — marcador é anotação, peça é gente.
+func TestTheBoardAcceptsOneHundredMarkersAndRefusesTheNextOne(t *testing.T) {
+	b := newBoard("b", "Cripta", "stone")
+	proximoID := boardCounter()
+
+	for i := 0; i < 100; i++ {
+		if err := AddMarker(b, BoardMarker{X: i % 20, Y: i / 20}, proximoID); err != nil {
+			t.Fatalf("o marcador %d de 100 foi recusado: %v", i+1, err)
+		}
+	}
+	if len(b.Markers) != 100 {
+		t.Fatalf("o tabuleiro ficou com %d marcadores, e os 100 entraram", len(b.Markers))
+	}
+
+	err := AddMarker(b, BoardMarker{X: 0, Y: 0}, proximoID)
+	if err == nil {
+		t.Fatal("o 101º marcador entrou — o estado inteiro viaja em todo broadcast")
+	}
+	if !strings.Contains(err.Error(), "100 marcadores") || !strings.Contains(err.Error(), "teto 100") {
+		t.Errorf("a recusa saiu %q, sem o número ou sem o teto", err)
+	}
+	if len(b.Markers) != 100 {
+		t.Errorf("a recusa mexeu no tabuleiro: ficou com %d marcadores", len(b.Markers))
 	}
 }
