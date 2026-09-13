@@ -51,7 +51,7 @@ templ powerSearch(v View) {
 		value={ v.Powers.Search }
 		placeholder="Buscar poder ou habilidade…"
 		aria-label="Buscar poder ou habilidade"
-		class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground"
 	/>
 }
 
@@ -131,7 +131,7 @@ templ powerRowItem(v View, linha powerRow) {
 				aria-label={ "Detalhes de " + linha.Name }
 				data-on:click={ "$power = $power === '" + linha.ID + "' ? '' : '" + linha.ID + "'" }
 				data-attr:aria-expanded={ "$power === '" + linha.ID + "' ? 'true' : 'false'" }
-				class="flex min-w-0 flex-1 basis-40 flex-col gap-0.5 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex min-w-0 flex-1 basis-40 flex-col gap-0.5 text-left outline-none"
 			>
 				<span class="flex flex-wrap items-center gap-1.5">
 					@ui.Icon(linha.Glyph, "size-3.5 shrink-0 text-muted-foreground")

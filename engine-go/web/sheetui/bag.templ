@@ -70,7 +70,7 @@ templ moneyHeadline(v View) {
 		aria-label="Mexer no dinheiro"
 		aria-haspopup="dialog"
 		data-on:click="$tibar_mode = 'receber'; $tibar_value = 0; $detail = 'dinheiro'"
-		class="ml-auto inline-flex items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1 text-3xs outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:text-xs"
+		class="ml-auto inline-flex items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1 text-3xs outline-none transition-colors hover:border-grimorio-gold/50 sm:text-xs"
 	>
 		@ui.Icon("Coins", "size-3.5 text-grimorio-gold")
 		<span class="font-mono text-foreground">{ "T$ " + v.Bag.Money.Tibar }</span>
@@ -144,7 +144,7 @@ templ equippedCardItem(v View, card *equippedCard, largo bool) {
 			aria-label={ "Abrir " + card.Name }
 			aria-haspopup="dialog"
 			data-on:click={ "$detail = 'item-" + card.Command + "'" }
-			class="block w-[calc(100%-1.5rem)] text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="block w-[calc(100%-1.5rem)] text-left outline-none"
 		>
 			<p class={ ui.SectionLabelClasses("muted", "text-4xs") }>{ card.Label }</p>
 			<p class="truncate text-sm font-semibold text-grimorio-gold">{ card.Name }</p>
@@ -175,7 +175,7 @@ templ equippedCardItem(v View, card *equippedCard, largo bool) {
 			type="button"
 			aria-label={ "Guardar " + card.Name }
 			data-on:click={ sheetPost(v, "/itens/"+card.Command+"/guarda") }
-			class="absolute right-1 top-1 inline-flex size-6 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:text-penalty-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="absolute right-1 top-1 inline-flex size-6 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:text-penalty-ink"
 		>
 			@ui.Icon("X", "size-3")
 		</button>
@@ -262,7 +262,7 @@ templ bagFiltersBody(v View) {
 			value={ v.Bag.Search }
 			placeholder="Buscar item…"
 			aria-label="Buscar item na mochila"
-			class="h-8 min-w-32 flex-1 rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="h-8 min-w-32 flex-1 rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground"
 		/>
 		<div class="flex flex-wrap gap-1">
 			for _, badge := range v.Bag.Categories {
@@ -286,7 +286,7 @@ templ stowedTileItem(ladrilho stowedTile) {
 		aria-label={ "Abrir " + ladrilho.Name }
 		aria-haspopup="dialog"
 		data-on:click={ "$detail = 'item-" + ladrilho.Command + "'" }
-		class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center outline-none transition-colors hover:border-grimorio-gold/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center outline-none transition-colors hover:border-grimorio-gold/50"
 	>
 		if ladrilho.Quantity > 1 {
 			<span class="absolute right-1 top-1 rounded-full bg-accent px-1.5 font-mono text-3xs font-semibold text-grimorio-gold">
@@ -315,7 +315,7 @@ templ moneyDialog(v View) {
 					type="button"
 					data-on:click={ "$tibar_mode = '" + modo.Valor + "'" }
 					data-attr:aria-pressed={ "$tibar_mode === '" + modo.Valor + "' ? 'true' : 'false'" }
-					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold"
 				>{ modo.Rotulo }</button>
 			}
 		</div>
@@ -326,7 +326,7 @@ templ moneyDialog(v View) {
 				min="0"
 				step="0.01"
 				data-bind:tibar_value
-				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 			/>
 		</label>
 		<button

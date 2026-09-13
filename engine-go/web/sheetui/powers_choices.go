@@ -319,7 +319,7 @@ func firstPendingSource(v View) string {
 
 // choiceChip é a classe de um chip que liga e desliga.
 func choiceChip(ativo bool) string {
-	base := "rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	base := "rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors"
 	if ativo {
 		return base + " border-grimorio-gold/60 bg-accent text-grimorio-gold"
 	}

@@ -24,7 +24,7 @@ templ NeighborPortrait(vz *Neighbor, lado string) {
 			aria-label={ lado + ": " + vz.Name }
 			data-cue-hover
 			data-on:click={ CursorGesture(vz.Index, vz.ID) }
-			class="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-sm border border-grimorio-iron opacity-50 outline-none transition-all hover:opacity-80 focus-visible:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-28 lg:w-32"
+			class="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-sm border border-grimorio-iron opacity-50 outline-none transition-all hover:opacity-80 focus-visible:opacity-80 sm:w-28 lg:w-32"
 			style={ "background: " + vz.Gradient }
 		>
 			<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-4xl text-white/20 sm:text-5xl">

@@ -123,8 +123,12 @@ templ heroChoice(v joinView) {
 // diz por que não envia — a mesma queixa que a ALE-80 registrou sobre esta
 // tela. O servidor recusa de novo, porque `required` não sobrevive a um POST
 // feito na mão.
+//
+// O anel de foco mora no RÓTULO e não no rádio, pela razão que o `raceTile` da
+// forja registra por extenso — e com o mesmo afastamento de 1px da casa
+// (ALE-318).
 templ heroPlate(h joinHero, marcado bool) {
-	<label class="flex cursor-pointer items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring">
+	<label class="flex cursor-pointer items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
 		<input
 			type="radio"
 			name="characterId"

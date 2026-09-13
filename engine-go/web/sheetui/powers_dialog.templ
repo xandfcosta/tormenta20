@@ -55,7 +55,7 @@ templ choicesDialog(v View) {
 					type="button"
 					data-on:click={ "$power_source = '" + fonte + "'" }
 					data-attr:aria-pressed={ "$power_source === '" + fonte + "' ? 'true' : 'false'" }
-					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="flex-1 rounded-sm border border-grimorio-iron px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground outline-none transition-colors aria-pressed:border-grimorio-gold/60 aria-pressed:bg-accent aria-pressed:text-grimorio-gold"
 				>{ writtenSource(fonte) }</button>
 			}
 		</div>
@@ -199,7 +199,7 @@ templ classChoicesBlock(v View) {
 				value={ v.Powers.Search }
 				placeholder="Buscar poder…"
 				aria-label={ "Buscar poder de " + cartao.ClassName }
-				class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="h-8 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-xs text-foreground outline-none placeholder:text-muted-foreground"
 			/>
 			<div class="max-h-[40vh] space-y-1 overflow-y-auto">
 				for _, poder := range cartao.Powers {
@@ -209,7 +209,7 @@ templ classChoicesBlock(v View) {
 						aria-checked={ ui.AriaBool(poder.Chosen) }
 						aria-label={ poder.Name }
 						data-on:click={ sheetPost(v, "/poderes/escolhe/"+poder.ID) }
-						class={ "flex w-full items-baseline gap-2 rounded-sm border px-2 py-1 text-left text-xs outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+						class={ "flex w-full items-baseline gap-2 rounded-sm border px-2 py-1 text-left text-xs outline-none transition-colors",
 							templ.KV("border-grimorio-gold/60 bg-accent", poder.Chosen),
 							templ.KV("border-grimorio-iron", !poder.Chosen) }
 					>

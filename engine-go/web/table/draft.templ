@@ -44,7 +44,7 @@ templ draftHeader(v draftView) {
 			<a
 				href={ templ.SafeURL(routes.CampaignTab(v.CampaignID, "lugares")) }
 				title={ "Voltar para " + v.CampanhaNome }
-				class="inline-flex min-h-11 items-center gap-1 rounded-sm px-1 text-sm text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center gap-1 rounded-sm px-1 text-sm text-muted-foreground outline-none transition-colors hover:text-grimorio-gold"
 			>
 				@ui.Icon("ChevronLeft", "size-4")
 				<span class="max-w-40 truncate">{ v.CampanhaNome }</span>

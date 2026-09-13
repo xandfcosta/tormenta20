@@ -84,7 +84,7 @@ func Marker(m RailMarker) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{"flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+		var templ_7745c5c3_Var2 = []any{"flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised",
 			"aria-selected:border-grimorio-gold aria-selected:bg-grimorio-panel-raised"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
@@ -328,7 +328,7 @@ func BlankMarker(indice int, rotulo, destino string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" class=\"flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-dashed border-grimorio-iron-light px-3 py-2 text-left text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold\"><span aria-hidden=\"true\" class=\"flex size-8 shrink-0 items-center justify-center border border-dashed border-grimorio-iron-light\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" class=\"flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-dashed border-grimorio-iron-light px-3 py-2 text-left text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold\"><span aria-hidden=\"true\" class=\"flex size-8 shrink-0 items-center justify-center border border-dashed border-grimorio-iron-light\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

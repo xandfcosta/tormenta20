@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { medeOContraste } from './support/contrast'
+import { expectOneFocusRing } from './support/focus'
 import { expectCinzelAcimaDoPiso } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
@@ -62,6 +63,13 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
   expect(contraste.medidos, 'o medidor não achou texto: a folha não carregou').toBeGreaterThan(100)
   expect(contraste.falhas, 'texto abaixo do AA na folha da forja').toEqual([])
   await expectCinzelAcimaDoPiso(page, 'na folha da forja')
+  // O ANEL DE FOCO entra aqui e não numa lista própria, e a forja é a cena que
+  // o medidor precisa visitar: as cartas de raça e de classe escondem o
+  // `<input>` com `sr-only` e desenham o realce no `<label>`, por
+  // `has-[:focus-visible]:outline-*`. É a ÚNICA receita de foco escrita à mão
+  // que o `index.css` não alcança — a regra global casa `:is(a, button, input,
+  // …)`, e este anel mora no rótulo. Nenhum sweep de focáveis olha para lá.
+  await expectOneFocusRing(page, 'na folha da forja', 10)
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 })
 

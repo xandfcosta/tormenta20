@@ -219,6 +219,27 @@ pareceu erro na hora:
   pelo texto do código mede o que foi ESCRITO, e a pergunta é sobre o que é
   DESENHADO. Só o navegador respondeu (ALE-252).
 
+- **Uma transição em curso faz o computado mentir, e escolher outro INSTANTE não
+  conserta.** Medindo o anel de foco da ficha, 131 botões se decompuseram em
+  quatro aparências — dourado opaco, dourado a 50%, 2px, 3px, offset 1 e offset
+  0 —, a decomposição fechava a soma, e virou issue de ALTA prioridade dizendo
+  que a casa tinha três realces numa aba só. **Era um anel só, lido em três
+  instantes do trajeto:** o `transition-colors` e o `transition-all` do Tailwind
+  v4 incluem `outline-*`, e o realce levava 150ms para chegar ao que o
+  `index.css` promete. A sonda lia na mesma tarefa do `focus()`, que é quando o
+  navegador ainda devolve o valor de PARTIDA de toda propriedade em transição —
+  `3px solid off:0px`, que aquele botão nunca pinta.
+  E ler um quadro depois só troca o erro de lugar: a primeira amostra de uma
+  transição de 150ms continua não sendo o resultado. **A saída não é achar o
+  instante certo, é PERGUNTAR se existe transição** — `getAnimations()` devolve
+  uma `CSSTransition` por propriedade, com o nome dela, e aí o guarda falha
+  dizendo `outline-color em transição de 150ms` em vez de listar aparências.
+  Duas coisas ficam: a conclusão errada era a plausível (uma decomposição com
+  denominador fechado *parece* medição), e **a explicação certa já existia** —
+  num comentário do guarda antigo, que desligava a transição antes de medir
+  exatamente por isso. Instrumento que mora dentro de um chamador tem um
+  chamador; **explicação que mora dentro de um teste tem um leitor** (ALE-318).
+
 **O controle é barato e é obrigatório: antes de ler AUSÊNCIA como evidência,
 provar que o canal estaria lá se o evento tivesse acontecido.** Procurar no mesmo
 arquivo uma linha que sai SEMPRE; conferir que a sonda vê o caso positivo
@@ -370,7 +391,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **74 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **75 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -381,7 +402,8 @@ inicial existe no catálogo, nenhuma concessão de origem com escolha nasce fixa
 todo endereço antigo leva ao piloto, nenhum gesto do tabuleiro escreve o próprio
 endereço, toda ferramenta desenhada no rascunho tem rota nele, nenhum cromo que
 flutua sobre o mapa deixa um controle próprio sem ponteiro, nenhuma cena escreve
-a receita de rótulo à mão, nenhum nó escondido por `data-show` nasce visível,
+a receita de rótulo à mão, nenhuma cena escreve a receita de FOCO à mão,
+nenhum nó escondido por `data-show` nasce visível,
 todo campo do seed é classificado como referência de catálogo ou não, nenhum id
 de catálogo carrega acento, toda cena de seleção declara os sinais que o gesto
 dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum

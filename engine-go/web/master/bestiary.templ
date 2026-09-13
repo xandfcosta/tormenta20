@@ -147,9 +147,9 @@ templ railNav(atual string) {
 					title={ f.Dica }
 					if f.Slug == atual {
 						aria-current="page"
-						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-gold bg-accent px-3 py-2 text-left text-xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-full"
+						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-gold bg-accent px-3 py-2 text-left text-xs font-medium text-grimorio-gold transition-colors outline-none lg:w-full"
 					} else {
-						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron px-3 py-2 text-left text-xs text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-full"
+						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron px-3 py-2 text-left text-xs text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground lg:w-full"
 					}
 				>
 					@ui.Icon(f.Icone, "size-4 shrink-0")
@@ -336,7 +336,7 @@ templ BestiaryFilters(v BestiaryView) {
 				value={ v.Term }
 				placeholder="Buscar criatura"
 				aria-label="Buscar criatura"
-				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"
 			/>
 		</div>
 		// A BUSCA fica FORA da gaveta e o ND e os tipos dentro (ALE-230): achar
@@ -363,9 +363,9 @@ templ BestiaryFilters(v BestiaryView) {
 							aria-pressed={ ui.AriaBool(v.typeOn(t)) }
 							data-on:click={ fmt.Sprintf("@post('%s/tipo/%s')", v.BestiaryBase(), t) }
 							if v.typeOn(t) {
-								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none"
 							} else {
-								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent"
 							}
 						>{ book.TypeName(t) }</button>
 					}
@@ -396,7 +396,7 @@ templ crBox(base, id, rotulo, sinal, valor string) {
 			data-bind={ sinal }
 			data-on:input__debounce.400ms={ fmt.Sprintf("@get('%s')", base) }
 			aria-label={ rotulo }
-			class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+			class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none md:text-sm"
 		/>
 	</div>
 }
@@ -464,9 +464,9 @@ templ EntryList(v BestiaryView) {
 						data-on:focus__throttle.100ms.leading={ fmt.Sprintf("el.matches(':focus-visible') && ($creature = %q, @get('%s'))", m.ID, v.BestiaryBase()) }
 						if v.Chosen != nil && v.Chosen.ID == m.ID {
 							aria-current="true"
-							class="block w-full rounded-sm border border-grimorio-gold bg-accent p-2 text-left transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="block w-full rounded-sm border border-grimorio-gold bg-accent p-2 text-left transition-colors outline-none"
 						} else {
-							class="block w-full rounded-sm border border-grimorio-iron p-2 text-left transition-colors outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="block w-full rounded-sm border border-grimorio-iron p-2 text-left transition-colors outline-none hover:bg-accent"
 						}
 					>
 						<p class="flex flex-wrap items-baseline gap-x-1.5 text-xs font-semibold">

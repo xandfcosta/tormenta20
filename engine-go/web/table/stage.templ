@@ -112,7 +112,7 @@ templ tableRailTracker(v View) {
 			aria-label="Abrir a iniciativa"
 			title="Abrir a fila inteira: dano, ordem e condições"
 			data-on:click="document.getElementById('tracker-drawer').showModal()"
-			class="flex shrink-0 items-center justify-center rounded-sm border border-grimorio-iron py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="flex shrink-0 items-center justify-center rounded-sm border border-grimorio-iron py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 		>
 			@ui.Icon("PanelLeftOpen", "size-4")
 		</button>
@@ -146,7 +146,7 @@ templ retratoDaFila(l tableRow) {
 		title={ portraitLabel(l) }
 		aria-label={ portraitLabel(l) }
 		data-on:click="document.getElementById('tracker-drawer').showModal()"
-		class={ "flex w-full flex-col items-center gap-0.5 rounded-sm border px-1 py-1 outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		class={ "flex w-full flex-col items-center gap-0.5 rounded-sm border px-1 py-1 outline-none transition-colors hover:bg-accent",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/10", l.NaVez),
 			templ.KV("border-grimorio-iron", !l.NaVez) }
 	>
@@ -188,7 +188,7 @@ templ queriesRail(v View) {
 			type="button"
 			aria-label={ "Abrir a iniciativa · " + fmt.Sprint(len(v.Fila)) + " na fila" }
 			data-on:click="document.getElementById('tracker-drawer').showModal()"
-			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"
+			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent lg:hidden"
 		>Iniciativa · { fmt.Sprint(len(v.Fila)) }</button>
 		@notesButton()
 		@castButton(v)
@@ -197,7 +197,7 @@ templ queriesRail(v View) {
 			aria-label="Abrir o bestiário"
 			title="Bestiário — trazer uma criatura do livro"
 			data-on:click="document.getElementById('table-bestiary').showModal()"
-			class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
+			class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent lg:size-12"
 		>
 			@ui.Icon("Skull", "size-5")
 		</button>
@@ -231,7 +231,7 @@ templ gavetaDaFila(v View) {
 					type="button"
 					aria-label="Fechar a iniciativa"
 					data-on:click="document.getElementById('tracker-drawer').close()"
-					class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent"
 				>
 			@ui.Icon("X", "size-4")
 		</button>

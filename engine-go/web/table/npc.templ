@@ -32,7 +32,7 @@ templ tableCastCampaign(v View) {
 				type="button"
 				aria-label="Fechar o elenco"
 				data-on:click="document.getElementById('campaign-cast').close()"
-				class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent"
 			>
 				@ui.Icon("X", "size-4")
 			</button>
@@ -55,7 +55,7 @@ templ tableCastCampaign(v View) {
 			<button
 				type="button"
 				data-on:click={ openEditor(v, 0) }
-				class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 			>
 				@ui.Icon("Plus", "size-4")
 				NPC do zero
@@ -103,7 +103,7 @@ templ castNpcCard(v View, npc castNpc) {
 				aria-label={ "Editar o bloco de " + npc.Nome }
 				title="Editar o bloco — os números, os ataques e as perícias"
 				data-on:click={ openEditor(v, npc.ID) }
-				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 			>
 				@ui.Icon("Pencil", "size-4")
 			</button>
@@ -111,7 +111,7 @@ templ castNpcCard(v View, npc castNpc) {
 				<button
 					type="button"
 					data-on:click={ npcCommand(v, npc, "na-fila") }
-					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent"
 				>
 					@ui.Icon("Swords", "size-4")
 					Pôr na fila
@@ -121,7 +121,7 @@ templ castNpcCard(v View, npc castNpc) {
 				type="button"
 				aria-label={ "Apagar " + npc.Nome + " do elenco" }
 				data-on:click={ npcCommand(v, npc, "apagar") }
-				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 			>
 				@ui.Icon("Trash2", "size-4")
 			</button>
@@ -136,7 +136,7 @@ templ castButton(v View) {
 		aria-label={ fmt.Sprintf("Elenco da campanha · %d NPCs guardados", len(v.NPCs)) }
 		title="Elenco — os NPCs que você preparou para esta campanha"
 		data-on:click="document.getElementById('campaign-cast').showModal()"
-		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
+		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent lg:size-12"
 	>
 		@ui.Icon("Users2", "size-5")
 	</button>
@@ -160,13 +160,13 @@ templ saveToCastButton(v master.BestiaryView) {
 				type="text"
 				data-bind:npc_name
 				placeholder="Com outro nome? (em branco, fica o do livro)"
-				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 			/>
 		</div>
 		<button
 			type="button"
 			data-on:click={ saveToCastPost(v) }
-			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 		>
 			@ui.Icon("Users2", "size-4")
 			Guardar

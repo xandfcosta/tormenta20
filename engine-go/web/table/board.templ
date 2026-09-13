@@ -32,7 +32,7 @@ templ boardTable(v BoardView) {
 				<button
 					type="button"
 					data-on:click="document.getElementById('open-board').showModal()"
-					class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 				>Abrir tabuleiro</button>
 				// O acervo vem DEPOIS do abrir: montar cena nova é o que se faz
 				// na primeira noite, e reabrir é o que se faz nas outras. E só
@@ -464,7 +464,7 @@ templ sceneVerbs(v BoardView) {
 				aria-label="Abrir outro tabuleiro"
 				title="Abrir outro tabuleiro, sem fechar este"
 				data-on:click="document.getElementById('open-board').showModal()"
-				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
 			>
 				@ui.Icon("LayoutGrid", "size-4")
 			</button>
@@ -480,7 +480,7 @@ templ sceneVerbs(v BoardView) {
 				aria-label="Encerrar o tabuleiro"
 				title="Encerrar o tabuleiro"
 				data-on:click="document.getElementById('close-board').showModal()"
-				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 			>
 				@ui.Icon("X", "size-4")
 			</button>
@@ -719,7 +719,7 @@ templ rulerReadingBox() {
 			type="button"
 			aria-label="Guardar a régua"
 			data-on:click={ saveRuler }
-			class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron"
 		>
 			@ui.Icon("X", "size-4")
 		</button>
@@ -748,7 +748,7 @@ templ templateBar(v BoardView) {
 				data-attr:aria-pressed={ fmt.Sprintf("$template === %q ? 'true' : 'false'", string(forma)) }
 				data-class={ fmt.Sprintf("{'brush-on': $template === %q}", string(forma)) }
 				data-on:click={ pickShape(forma) }
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
 			>{ shapeLabel(forma) }</button>
 		}
 		// O RÓTULO muda com a forma porque "tamanho" não responde a pergunta de
@@ -770,7 +770,7 @@ templ templateBar(v BoardView) {
 			max={ templateBiggest() }
 			data-bind="template_size"
 			data-on:input__debounce.200ms={ repatchTemplate(v) }
-			class="h-11 w-20 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="h-11 w-20 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm tabular-nums outline-none"
 		/>
 		<span
 			data-text={ metersSize() }
@@ -781,7 +781,7 @@ templ templateBar(v BoardView) {
 			type="button"
 			aria-label="Guardar o gabarito"
 			data-on:click={ saveTemplate }
-			class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron"
 		>
 			@ui.Icon("X", "size-4")
 		</button>
@@ -852,7 +852,7 @@ templ moveProposed(v BoardView) {
 				<button
 					type="button"
 					data-on:click={ moveCommand(v, "desfazer-parada") }
-					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 				>
 					@ui.Icon("CornerUpLeft", "size-4")
 					Desfazer parada
@@ -861,7 +861,7 @@ templ moveProposed(v BoardView) {
 			<button
 				type="button"
 				data-on:click={ moveCommand(v, "cancelar") }
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 			>Cancelar</button>
 			// CONFIRMAR é do MESTRE, e só dele: quem muda o estado do tabuleiro é
 			// quem toca a cena. O desenho do jogador é sempre visual — ele conta à
@@ -872,7 +872,7 @@ templ moveProposed(v BoardView) {
 				<button
 					type="button"
 					data-on:click={ moveCommand(v, "confirmar") }
-					class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 				>Confirmar</button>
 			}
 		</span>
@@ -1131,7 +1131,7 @@ templ markerActions(v BoardView, m boardMarker) {
 				title="Esconder da mesa"
 			}
 			data-on:click={ markerCommand(v, m.ID, "revelar") }
-			class="inline-flex size-6 items-center justify-center rounded-sm text-xs outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="inline-flex size-6 items-center justify-center rounded-sm text-xs outline-none hover:bg-accent"
 		>
 			if m.Escondido {
 				@ui.Icon("Eye", "size-4")
@@ -1155,7 +1155,7 @@ templ markerActions(v BoardView, m boardMarker) {
 			aria-label={ "Apagar o marcador " + m.Texto }
 			title="Apagar"
 			data-on:click={ pickMarker("") + "; " + markerCommand(v, m.ID, "remover") }
-			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-muted-foreground outline-none hover:border hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-muted-foreground outline-none hover:border hover:border-destructive hover:text-destructive-ink"
 		>
 			@ui.Icon("X", "size-4")
 		</button>
@@ -1194,7 +1194,7 @@ templ openBoardButton(v BoardView) {
 			type="text"
 			data-bind:new_place
 			placeholder="Taverna do Javali"
-			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 		/>
 		// CHÃO e não "Cenário", que é o rótulo da SPA: em T20 cenário é ARTON, o
 		// mundo da campanha, e a palavra não pode significar duas coisas na
@@ -1203,7 +1203,7 @@ templ openBoardButton(v BoardView) {
 		<select
 			id="new-ground"
 			data-bind:new_ground
-			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 		>
 			// A lista vem do `tabuleiro` e não é digitada aqui: ela já existia no
 			// CSS e na SPA, e uma terceira cópia à mão é como nasce a opção que a
@@ -1216,7 +1216,7 @@ templ openBoardButton(v BoardView) {
 			<button
 				type="button"
 				data-on:click="document.getElementById('open-board').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 			>Cancelar</button>
 			// Fecha ANTES de postar, como o descanso: a recusa chega no
 			// `$command_error`, que é do RODAPÉ — o diálogo aberto por cima dela
@@ -1224,7 +1224,7 @@ templ openBoardButton(v BoardView) {
 			<button
 				type="button"
 				data-on:click={ "document.getElementById('open-board').close(); " + sceneBoardCommand(v, "abrir") }
-				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 			>Abrir</button>
 		</div>
 	</dialog>
@@ -1251,12 +1251,12 @@ templ endBoardButton(v BoardView) {
 			<button
 				type="button"
 				data-on:click="document.getElementById('close-board').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 			>Cancelar</button>
 			<button
 				type="button"
 				data-on:click={ "document.getElementById('close-board').close(); " + sceneBoardCommand(v, "encerrar") }
-				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90"
 			>Encerrar</button>
 		</div>
 	</dialog>
@@ -1272,7 +1272,7 @@ templ botaoDoAcervo(v BoardView) {
 		aria-label={ collectionLabel(v) }
 		title={ collectionLabel(v) }
 		data-on:click="document.getElementById('place-archive').showModal()"
-		class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3"
+		class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent sm:px-3"
 	>
 		@ui.Icon("Library", "size-4")
 		// AS PALAVRAS SAEM NO TELEFONE, a CONTAGEM fica (ALE-271).
@@ -1347,13 +1347,13 @@ templ placesCollection(v BoardView) {
 						<button
 							type="button"
 							data-on:click={ "document.getElementById('place-archive').close(); " + tabCommand(v, l.AbertaEm) }
-							class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm font-semibold text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm font-semibold text-grimorio-gold outline-none transition-colors hover:bg-accent"
 						>Ver</button>
 					} else {
 						<button
 							type="button"
 							data-on:click={ "document.getElementById('place-archive').close(); " + placeCommand(v, l.ID, "reabrir") }
-							class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 						>Reabrir</button>
 					}
 					// APAGAR não fecha o diálogo, ao contrário do reabrir: quem
@@ -1373,7 +1373,7 @@ templ placesCollection(v BoardView) {
 							aria-label={ "Apagar " + l.Nome }
 							title={ "Apagar " + l.Nome + " do acervo" }
 							data-on:click={ placeCommand(v, l.ID, "remover") }
-							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 						>
 							@ui.Icon("Trash2", "size-4")
 						</button>
@@ -1385,7 +1385,7 @@ templ placesCollection(v BoardView) {
 			<button
 				type="button"
 				data-on:click="document.getElementById('place-archive').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 			>Fechar</button>
 		</div>
 	</dialog>
@@ -1620,7 +1620,7 @@ templ tokenEdit(v BoardView) {
 				type="text"
 				maxlength="60"
 				data-bind="token_name"
-				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 			/>
 		</div>
 		// O TAMANHO é uma lista fechada e não um número: o livro define 1, 2, 3 e 6
@@ -1631,7 +1631,7 @@ templ tokenEdit(v BoardView) {
 			<select
 				id="token-size"
 				data-bind="token_size"
-				class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+				class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 			>
 				for _, t := range tokenSizes {
 					<option value={ fmt.Sprint(t.Lado) }>{ t.Rotulo }</option>
@@ -1642,12 +1642,12 @@ templ tokenEdit(v BoardView) {
 			<button
 				type="button"
 				data-on:click="document.getElementById('edit-token').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 			>Cancelar</button>
 			<button
 				type="button"
 				data-on:click={ saveEditToken(v) }
-				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 			>Salvar</button>
 		</div>
 	</dialog>
@@ -1756,7 +1756,7 @@ templ planFraming(v BoardView) {
 			title="Afastar (tecla −, ou Ctrl+roda)"
 			data-attr:disabled={ ZoomAtLimit(-ZoomStep) }
 			data-on:click={ zoomMidScene(step(-ZoomStep)) }
-			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent disabled:opacity-50"
 		>
 			@ui.Icon("Minus", "size-4")
 		</button>
@@ -1794,7 +1794,7 @@ templ planFraming(v BoardView) {
 			title="Aproximar (tecla +, ou Ctrl+roda)"
 			data-attr:disabled={ ZoomAtLimit(ZoomStep) }
 			data-on:click={ zoomMidScene(step(ZoomStep)) }
-			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent disabled:opacity-50"
 		>
 			@ui.Icon("Plus", "size-4")
 		</button>
@@ -1817,7 +1817,7 @@ templ centerer(v BoardView) {
 		aria-label={ CenterTarget(v) }
 		title={ CenterTarget(v) }
 		data-on:click={ centerTokens(v) }
-		class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent"
 	>
 		@ui.Icon("Crosshair", "size-4")
 	</button>
@@ -1845,7 +1845,7 @@ templ lensButton(v BoardView) {
 			title="Ver como jogador: confira a emboscada sem parar de montá-la"
 		}
 		data-on:click={ lensCommand(v) }
-		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.Lente),
 			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.Lente) }
 	>
@@ -1880,7 +1880,7 @@ templ curtainButton(v BoardView) {
 			title="Fechar a cortina: montar a cena sem a mesa ver"
 		}
 		data-on:click={ curtainCommand(v, curtainTarget(v.AvisoDaCortina)) }
-		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.AvisoDaCortina),
 			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.AvisoDaCortina) }
 	>
@@ -2120,7 +2120,7 @@ templ partyBar(v BoardView) {
 			type="button"
 			aria-label="Desmarcar o grupo"
 			data-on:click={ unmarkParty }
-			class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-iron"
 		>
 			@ui.Icon("X", "size-4")
 		</button>
@@ -2224,7 +2224,7 @@ templ newPieceBar(v BoardView) {
 				data-bind="new_token_name"
 				placeholder="Porta da cripta"
 				aria-label="Nome da peça"
-				class="min-h-11 w-40 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="min-h-11 w-40 rounded-sm border border-grimorio-iron bg-transparent px-2 text-sm outline-none"
 			/>
 		</label>
 		// O TAMANHO é o do livro (p107, Tab. 1-21), e os quatro são os lados que
@@ -2238,7 +2238,7 @@ templ newPieceBar(v BoardView) {
 				data-attr:aria-pressed={ fmt.Sprintf("$new_token_size === %d ? 'true' : 'false'", t.Lados) }
 				data-class={ fmt.Sprintf("{'brush-on': $new_token_size === %d}", t.Lados) }
 				data-on:click={ fmt.Sprintf("$new_token_size = %d", t.Lados) }
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
 			>{ t.Lado }</button>
 		}
 		for _, a := range piecesLooks {
@@ -2249,7 +2249,7 @@ templ newPieceBar(v BoardView) {
 				data-attr:aria-pressed={ fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID) }
 				data-class={ fmt.Sprintf("{'brush-on': $new_token_look === %q}", a.ID) }
 				data-on:click={ fmt.Sprintf("$new_token_look = %q", a.ID) }
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent"
 			>{ a.Rotulo }</button>
 		}
 		<span class="text-xs text-muted-foreground">clique numa casa para pôr</span>

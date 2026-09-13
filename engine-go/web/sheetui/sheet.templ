@@ -67,7 +67,7 @@ templ sheetBar(v View) {
 	<div class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3">
 		<a
 			href="/personagens"
-			class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold"
 		>‹ Voltar</a>
 		<h1 class="min-w-0 truncate font-heading text-xl tracking-wide text-foreground">{ v.Nome }</h1>
 		<span class="text-sm text-muted-foreground">{ v.Papel }</span>
@@ -144,7 +144,7 @@ templ sheetTabLink(v View, aba Tab) {
 // para onde o clique vai, e não como a aba se parece.
 func tabSheetVested(aba Tab) string {
 	return ui.Join(
-		"inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		"inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-sm outline-none transition-colors",
 		tabSheetTint(aba.Ativa))
 }
 
@@ -299,7 +299,7 @@ templ levelStep(v View, passo int, rotulo, desenho string) {
 		} else {
 			data-on:click={ "document.getElementById('" + stepDialog(passo) + "').showModal()" }
 		}
-		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-grimorio-iron disabled:hover:text-muted-foreground"
+		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-grimorio-iron disabled:hover:text-muted-foreground"
 	>
 		@ui.Icon(desenho, "size-4")
 	</button>
@@ -329,7 +329,7 @@ templ classChoice(v View, passo int, titulo string) {
 						<button
 							type="button"
 							data-on:click={ "document.getElementById('" + stepDialog(passo) + "').close(); " + stepCommand(v, classe.Nome, passo) }
-							class="flex min-h-11 w-full items-center justify-between gap-2 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="flex min-h-11 w-full items-center justify-between gap-2 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
 						>
 							<span>{ classe.Nome }</span>
 							<span class="font-mono tabular-nums text-muted-foreground">{ strconv.FormatInt(classe.Nivel, 10) }</span>
@@ -341,7 +341,7 @@ templ classChoice(v View, passo int, titulo string) {
 				<button
 					type="button"
 					data-on:click={ "document.getElementById('" + stepDialog(passo) + "').close()" }
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 				>Cancelar</button>
 			</div>
 		</dialog>
@@ -405,7 +405,7 @@ templ vitalStep(v View, rotulo string, passo int) {
 		aria-label={ stepLabel(rotulo, passo) }
 		title={ stepLabel(rotulo, passo) }
 		data-on:click={ vitalCommand(v, rotulo, passo) }
-		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-xs text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-xs text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
 	>
 		{ stepSignal(passo) }
 	</button>

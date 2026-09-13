@@ -96,8 +96,19 @@ templ raceChoice(v forgeView) {
 // raceTile: o rádio é INVISÍVEL mas real, e o rótulo inteiro é a área de clique
 // — a mesma plaqueta do "entrar na mesa" (ALE-246), pela mesma razão: o estado
 // visual segue o estado REAL do controle, e não uma segunda cópia dele.
+//
+// Daí o `has-[:focus-visible]:outline-*` escrito à mão, que é a ÚNICA receita de
+// foco do repositório que a regra global do `index.css` não alcança: ela casa
+// `:is(a, button, input, …)`, e aqui quem tem de acender é o RÓTULO. Uma regra
+// global `label:has(:focus-visible)` não serve — dez rótulos do app envolvem um
+// campo VISÍVEL, e ali ela desenharia dois anéis concêntricos.
+//
+// O afastamento é 1px e não 2px porque a casa tem UM (ALE-318): estas três
+// plaquetas — as duas da forja e a de entrar na mesa — eram a segunda aparência
+// de foco do app, e quem as achou foi o `support/focus.ts` subindo a árvore a
+// partir do rádio `sr-only`.
 templ raceTile(c raceCard) {
-	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring">
+	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
 		<input type="radio" name="race" value={ c.Name } checked?={ c.Chosen } class="sr-only"/>
 		<span class="truncate text-sm font-medium text-foreground">{ c.Name }</span>
 		<span class="text-xs text-grimorio-gold">{ c.Attributes }</span>
@@ -130,7 +141,7 @@ templ classChoice(v forgeView) {
 // p140 oferece — arma marcial, brunea, escudo —, e essa regra não é copiada
 // para dentro de uma expressão do navegador.
 templ classTile(c classCard) {
-	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring">
+	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
 		<input
 			type="radio"
 			name="class"
@@ -156,7 +167,7 @@ templ originChoice(v forgeView) {
 			id="origin"
 			name="origin"
 			data-on:change={ forgeRedraw() }
-			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 		>
 			<option value="">Escolha uma origem…</option>
 			for _, o := range v.Origins {
@@ -222,7 +233,7 @@ templ itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) {
 		<select
 			id={ nome }
 			name={ nome }
-			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 		>
 			<option value="">Escolha…</option>
 			for _, o := range opcoes {

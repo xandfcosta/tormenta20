@@ -22,7 +22,7 @@ templ botaoDePorNoMapa(v BoardView) {
 			title="Escolher quem vem para o mapa. Clique direito põe só as fichas."
 			data-on:click={ openMap() }
 			data-on:contextmenu={ sheetsShortcut(v) }
-			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3"
+			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent sm:px-3"
 		>
 			// O ÍCONE aparece e o texto sai no telefone (ALE-271). Ele não existia
 			// — este botão era só palavra —, e a alternativa era ele sumir da tela
@@ -87,7 +87,7 @@ templ poeNoMapaDialogo(v BoardView) {
 							data-attr:aria-pressed={ estaEscolhido(cand.ID) + " ? 'true' : 'false'" }
 							data-class={ "{'brush-on': " + estaEscolhido(cand.ID) + "}" }
 							data-on:click={ toggleMap(cand.ID) }
-							class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 						>
 							{ cand.Nome }
 							// O selo diz o LADO do mapa em que a peça nasce, e é o
@@ -107,7 +107,7 @@ templ poeNoMapaDialogo(v BoardView) {
 			<button
 				type="button"
 				data-on:click="document.getElementById('populate').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 			>Cancelar</button>
 			// Fecha ANTES de postar, como o abrir e o descanso: a recusa chega no
 			// `$command_error`, que é do RODAPÉ do mestre, e o diálogo por cima
@@ -116,7 +116,7 @@ templ poeNoMapaDialogo(v BoardView) {
 				type="button"
 				data-attr:disabled="$map_selection === ''"
 				data-on:click={ "document.getElementById('populate').close(); " + mapCommand(v) }
-				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 disabled:opacity-50"
 			>Pôr no mapa</button>
 		</div>
 	</dialog>

@@ -377,7 +377,7 @@ func oneNav(v oneView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		for _, a := range v.Abas {
-			var templ_7745c5c3_Var17 = []any{"shrink-0 justify-start gap-2 rounded-none px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+			var templ_7745c5c3_Var17 = []any{"shrink-0 justify-start gap-2 rounded-none px-3 py-2 text-left text-sm outline-none transition-colors",
 				templ.KV("bg-grimorio-panel-raised text-grimorio-gold sm:border-l-2 sm:border-grimorio-gold", a.Ativa),
 				templ.KV("text-muted-foreground hover:text-grimorio-gold sm:border-l-2 sm:border-transparent", !a.Ativa)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var17...)
@@ -861,7 +861,7 @@ func seeAll(campanhaID int64, aba, texto string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "\" class=\"inline-flex min-h-11 items-center text-xs text-muted-foreground underline-offset-4 outline-none hover:text-grimorio-gold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "\" class=\"inline-flex min-h-11 items-center text-xs text-muted-foreground underline-offset-4 outline-none hover:text-grimorio-gold hover:underline\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1005,7 +1005,7 @@ func sessionLine(campanhaID int64, sess sessionRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "\" data-nav-item class=\"flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\"><span class=\"shrink-0 font-mono text-xs tabular-nums text-muted-foreground\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "\" data-nav-item class=\"flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold\"><span class=\"shrink-0 font-mono text-xs tabular-nums text-muted-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1722,7 +1722,7 @@ func ruleSwitch(v oneView, regra optionalRule) templ.Component {
 			templ_7745c5c3_Var69 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var70 = []any{"relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50",
+		var templ_7745c5c3_Var70 = []any{"relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none disabled:opacity-50",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(regra.ID)),
 			templ.KV("border-grimorio-iron-light bg-grimorio-panel-raised", !v.RegraEmVigor(regra.ID))}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var70...)

@@ -101,7 +101,7 @@ templ combatBox(tile statTile) {
 		aria-label={ tile.Label + " " + tile.Value }
 		aria-haspopup="dialog"
 		data-on:click={ "$detail = '" + tile.Key + "'" }
-		class={ "relative flex cursor-pointer flex-col items-center rounded-none border-2 bg-grimorio-panel p-2 text-center outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		class={ "relative flex cursor-pointer flex-col items-center rounded-none border-2 bg-grimorio-panel p-2 text-center outline-none transition-colors",
 			templ.KV("border-destructive/50 hover:bg-destructive/10", !tile.Magic),
 			templ.KV("border-arcane/40 hover:bg-arcane/10", tile.Magic) }
 	>
@@ -162,7 +162,7 @@ templ weaponCard(arma weaponTile) {
 		aria-haspopup="dialog"
 		title={ arma.Skill + " " + arma.Attack + " · dano " + arma.Damage + " · crítico " + arma.Crit }
 		data-on:click={ "$detail = '" + arma.Key + "'" }
-		class="flex cursor-pointer flex-col items-center rounded-none border-2 border-destructive/50 bg-grimorio-panel p-2 text-center outline-none transition-colors hover:bg-destructive/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="flex cursor-pointer flex-col items-center rounded-none border-2 border-destructive/50 bg-grimorio-panel p-2 text-center outline-none transition-colors hover:bg-destructive/10"
 	>
 		<span class={ ui.SectionLabelClasses("herda", "max-w-full truncate text-4xs text-penalty-ink") }>{ arma.Name }</span>
 		<span class="mt-0.5 font-mono text-sm font-bold leading-tight text-foreground">

@@ -114,7 +114,7 @@ templ signUpPage(v signUpView) {
 
 templ footerWithSignIn() {
 	Já tem conta?&nbsp;
-	<a href="/entrar" class="underline underline-offset-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">Entrar</a>
+	<a href="/entrar" class="underline underline-offset-4 outline-none">Entrar</a>
 }
 
 // ── redefinir senha ──────────────────────────────────────────────────────────
@@ -177,7 +177,7 @@ templ passwordConfirmation(erros []string) {
 				aria-invalid="true"
 				aria-describedby="confirm-error"
 			}
-			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
 		/>
 		if len(erros) > 0 {
 			<div id="confirm-error">

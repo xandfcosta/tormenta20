@@ -228,7 +228,7 @@ func tableRailTracker(v View) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<nav id=\"table-tracker-rail\" aria-label=\"Fila do combate\" class=\"flex max-h-1/2 shrink-0 flex-col gap-1 border border-grimorio-iron bg-grimorio-panel p-1\"><button type=\"button\" aria-label=\"Abrir a iniciativa\" title=\"Abrir a fila inteira: dano, ordem e condições\" data-on:click=\"document.getElementById('tracker-drawer').showModal()\" class=\"flex shrink-0 items-center justify-center rounded-sm border border-grimorio-iron py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<nav id=\"table-tracker-rail\" aria-label=\"Fila do combate\" class=\"flex max-h-1/2 shrink-0 flex-col gap-1 border border-grimorio-iron bg-grimorio-panel p-1\"><button type=\"button\" aria-label=\"Abrir a iniciativa\" title=\"Abrir a fila inteira: dano, ordem e condições\" data-on:click=\"document.getElementById('tracker-drawer').showModal()\" class=\"flex shrink-0 items-center justify-center rounded-sm border border-grimorio-iron py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -308,7 +308,7 @@ func retratoDaFila(l tableRow) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var5 = []any{"flex w-full flex-col items-center gap-0.5 rounded-sm border px-1 py-1 outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		var templ_7745c5c3_Var5 = []any{"flex w-full flex-col items-center gap-0.5 rounded-sm border px-1 py-1 outline-none transition-colors hover:bg-accent",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/10", l.NaVez),
 			templ.KV("border-grimorio-iron", !l.NaVez)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
@@ -525,7 +525,7 @@ func queriesRail(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "\" data-on:click=\"document.getElementById('tracker-drawer').showModal()\" class=\"inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden\">Iniciativa · ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "\" data-on:click=\"document.getElementById('tracker-drawer').showModal()\" class=\"inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent lg:hidden\">Iniciativa · ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -550,7 +550,7 @@ func queriesRail(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<button type=\"button\" aria-label=\"Abrir o bestiário\" title=\"Bestiário — trazer uma criatura do livro\" data-on:click=\"document.getElementById('table-bestiary').showModal()\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<button type=\"button\" aria-label=\"Abrir o bestiário\" title=\"Bestiário — trazer uma criatura do livro\" data-on:click=\"document.getElementById('table-bestiary').showModal()\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent lg:size-12\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -600,7 +600,7 @@ func gavetaDaFila(v View) templ.Component {
 			templ_7745c5c3_Var21 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<dialog id=\"tracker-drawer\" data-preserve-attr=\"open\" aria-labelledby=\"tracker-drawer-title\" class=\"scene-grimorio mr-auto h-dvh max-h-none w-[min(30rem,calc(100vw-2rem))] max-w-none border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60\"><div class=\"flex h-full flex-col\"><div class=\"flex shrink-0 items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2\"><h2 id=\"tracker-drawer-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Iniciativa</h2><button type=\"button\" aria-label=\"Fechar a iniciativa\" data-on:click=\"document.getElementById('tracker-drawer').close()\" class=\"flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<dialog id=\"tracker-drawer\" data-preserve-attr=\"open\" aria-labelledby=\"tracker-drawer-title\" class=\"scene-grimorio mr-auto h-dvh max-h-none w-[min(30rem,calc(100vw-2rem))] max-w-none border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60\"><div class=\"flex h-full flex-col\"><div class=\"flex shrink-0 items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2\"><h2 id=\"tracker-drawer-title\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Iniciativa</h2><button type=\"button\" aria-label=\"Fechar a iniciativa\" data-on:click=\"document.getElementById('tracker-drawer').close()\" class=\"flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

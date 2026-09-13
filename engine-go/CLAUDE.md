@@ -691,10 +691,15 @@ regra do repositório no `api` seria escolher um dono arbitrário — e o `api` 
 sendo dividido em um pacote por cena (ALE-278), então o guarda mudaria de casa
 junto com a próxima fatia.
 
-OITO moram lá hoje, e a lista cresceu por duas razões diferentes — vale saber
-qual é qual. Três nasceram lá porque a regra é do REPOSITÓRIO e não de um
-pacote; três MUDARAM de casa porque mediam o próprio diretório e encolheram
-quando uma cena virou pacote; e as duas últimas são a família das citações.
+São **23** hoje (`grep -h '^func Test' convention/*_test.go | wc -l`), e aqui dizia OITO
+até a ALE-317 — o número envelheceu sozinho ao longo de sete issues, que é
+exatamente o que a seção "Como uma convenção passa a valer" do guia da raiz
+prevê para número escrito à mão sobre família que cresce. **O `grep` é a fonte.**
+
+O que vale saber não é a contagem, é por que cada um veio parar aqui, e são três
+razões. Uns nasceram lá porque a regra é do REPOSITÓRIO e não de um pacote;
+outros MUDARAM de casa porque mediam o próprio diretório e encolheram quando uma
+cena virou pacote; e três são a família das citações.
 
 - **`TestEveryTestNameIsEnglish`** varre todo `*_test.go` e recusa nome com
   palavra em português. Ele é o que impede o 774º — a regra de idioma sempre
@@ -752,6 +757,15 @@ quando uma cena virou pacote; e as duas últimas são a família das citações.
   interessa aqui é a forma, porque ela vale para o próximo: **um guarda que
   varre `.` mede o diretório em que ele por acaso mora**, e mover o arquivo
   encolhe a varredura sem mudar uma linha do guarda nem acender nada.
+
+- **`TestNoHandwrittenFocusRing`** (ALE-317) é regra do repositório desde o
+  primeiro dia, e a razão de ele existir não é estilo: a receita de foco é
+  GLOBAL e não layerada, então `focus-visible:outline-*` numa `class=` é
+  decoração — 242 sítios a escreviam, e apagar os 242 não muda um pixel. O que
+  vale copiar dele é o TERCEIRO controle: ele lê o `index.css` e afirma que a
+  regra global continua lá. Um guarda que proíbe a cópia porque existe o
+  original tem de falhar quando o original sumir, senão ele passa a cobrar uma
+  regra cuja razão morreu — e aí a proibição deixa o app sem realce nenhum.
 
 **A lista de marcadores tem uma fresta declarada**, e ela é deliberada: nome
 PRÓPRIO do livro passa. `TestBolaDeFogoWorkedExample` e
@@ -2904,6 +2918,59 @@ contradiz — forma, foco, transição, desabilitado.
 Para quem for escrever a próxima variante: o teste é `grep -bo '\.classe'` na
 folha compilada, dos dois lados do conflito. Não adianta raciocinar pela ordem
 do `class=`, que o navegador ignora.
+
+## O anel de foco é UMA receita, e o repouso dela existe para não animar (ALE-318)
+
+A regra é global, mora no `index.css` desde a ALE-173 e **não é layerada** —
+então ela ganha de todo utilitário do Tailwind, que é layerado. Consequência que
+vale saber antes de escrever qualquer botão: `focus-visible:outline-*` escrito à
+mão não faz efeito nenhum dentro de uma cena, porque a regra de cima já decidiu.
+Eram **242 sítios** copiando a mesma tripla — 240 em 43 `.templ` e 2 em `.go` de
+produção —, e apagar os 242 não mudou um pixel (ALE-317). A issue os contava como
+147 porque a primeira medição olhou só `<button>`, e a tripla também estava em
+`<a>`, `<input>`, `<summary>` e `<label>`: *uma medição parcial não é um número
+menor, é um número de outra pergunta.* Quem impede o 243º é o
+`TestNoHandwrittenFocusRing`.
+
+O que MUDA o pixel é o REPOUSO, e foi só medindo que isso apareceu. O `@layer
+base` traz o `* { border-color; outline-color }` do shadcn, e o `outline-color`
+vinha a 50%; a largura vinha de `medium`, que o navegador computa como **3px**; o
+afastamento vinha de `0`. Nada disso pinta — o `outline-style` em repouso é
+`none`. Mas os três são o ponto de PARTIDA da transição, e o `transition-colors`
+e o `transition-all` do Tailwind v4 incluem `outline-*`: o anel era ALCANÇADO em
+150ms em vez de desenhado. Medido quadro a quadro num botão do kit: ouro a 0,50
+no primeiro quadro, 0,73 aos 54ms, cheio aos 154ms — e quem tabula na
+autorrepetição do teclado (~33ms por parada) nunca via o anel inteiro. O meio do
+caminho mede 3,25:1 contra os 10,46:1 do final, raspando o piso de 3:1 do WCAG
+1.4.11.
+
+**O conserto é escrever o repouso igual ao destino**, no mesmo `*`: sem
+diferença, não há o que interpolar. A duplicação do `2px`/`1px` com a regra de
+foco é deliberada, e quem cobra que os dois lados não se separem é o
+`e2e/tests/support/focus.ts`.
+
+Três coisas que essa medição deixou, e nenhuma delas é sobre contorno:
+
+- **Ler o computado durante uma transição devolve o valor de PARTIDA**, e
+  escolher outro instante só troca o erro de lugar. O medidor da casa pergunta ao
+  navegador se existe transição (`getAnimations()` devolve uma `CSSTransition`
+  por propriedade, com o nome dela) em vez de inferir pela aparência. A história
+  inteira está na seção "O INSTRUMENTO MENTE COM CARA DE RESULTADO" do
+  [CLAUDE.md da raiz](../CLAUDE.md).
+- **A carta de rádio é a única exceção legítima, e ela é do RÓTULO.** A forja e o
+  "entrar na mesa" escondem o `<input>` com `sr-only` e desenham o realce no
+  `<label>`, com `has-[:focus-visible]:outline-*`. A regra global não alcança —
+  ela casa `:is(a, button, input, …)` —, e uma regra `label:has(:focus-visible)`
+  no lugar dela desenharia DOIS anéis concêntricos nos dez rótulos do app que
+  envolvem um campo VISÍVEL. As três plaquetas eram a segunda aparência de foco
+  do repositório (afastamento de 2px), e quem as achou foi o medidor subindo a
+  árvore a partir do rádio invisível — um sweep de focáveis nunca olha para lá.
+- **Guarda que aproxima um seletor mede outro seletor.** A primeira versão do
+  medidor isentava do anel tudo que estivesse dentro de `[data-nav-region]`,
+  porque o trilho fala por brilho; o `index.css` isenta `[data-nav-region] :is(a,
+  button, [data-nav-item])`. Os rádios `sr-only` das cartas e o contêiner rolável
+  estão dentro do trilho e não são item dele — 37 nós acusados de uma vez, na
+  folha da forja. A condição do guarda passou a COPIAR o seletor.
 
 ## Onde a coordenada de um gesto do tabuleiro viaja
 
