@@ -2973,6 +2973,14 @@ de um lado só chega ao servidor e cai no chão: o gesto responde 200 com o
 valor-zero, sem erro em lugar nenhum. Agora toda chave de payload tem de ter uma
 tag `json:"chave"` ou um campo exportado de mesmo nome.
 
+> **E o "vermelho contra a árvore de ontem" deste guarda nunca foi detecção.**
+> Rodado contra a árvore pré-307 — a que TINHA o defeito de coordenada no
+> caminho — ele passa, com 13 sítios e 6 pares casados. O FAIL que ele produz nas
+> árvores mais antigas é o PISO tropeçando, porque o piso é calibrado para a
+> contagem de hoje. Um piso calibrado falha em qualquer árvore anterior,
+> inclusive numa perfeitamente sadia: **"vermelho contra ontem" só é evidência
+> quando o motivo do vermelho é o defeito, e não o denominador.**
+
 > **Um achado da medição, anotado e não consertado:** o cliente escreve
 > `{X: cx, Y: cy}` e o `engine.Square` tem as tags `json:"x"` e `json:"y"`, em
 > MINÚSCULAS. Isso funciona **por acidente** — o `encoding/json` casa sem
