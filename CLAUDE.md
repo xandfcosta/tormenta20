@@ -800,5 +800,15 @@ certa.
   > Aqui morava a entrada do `frontend/`, dizendo que a SPA não tinha guia
   > próprio porque estava saindo. Ela saiu (ALE-272, fatia 10c), e com ela as
   > armadilhas de renderização do Solid, os contornos do Kobalte e o `.wasm`.
-  > O que sobreviveu da SPA está em `engine-go/api/piloto/src`: a folha de
-  > tokens, seis componentes e o driver de teclado das cenas.
+  >
+  > Este parágrafo dizia que o que sobreviveu da SPA em
+  > `engine-go/api/piloto/src` era "a folha de tokens, seis componentes e o
+  > driver de teclado das cenas", e ele **envelheceu sem ninguém mexer nele**,
+  > que é a forma que a seção "Documentação" descreve. Os componentes e a folha
+  > de tokens saíram na ALE-314, com o `solid-js` e mais cinco dependências: o
+  > único consumidor deles era a folha de especificação, comparando cada peça
+  > com a contraparte da SPA, e o dono deu a comparação por cumprida. **O que
+  > sobreviveu é TypeScript puro** — o driver de teclado (`attachSceneNav`), o
+  > tocador de som, o gesto de ponteiro das peças e o leitor de PDF —, e ele
+  > nunca dependeu de Solid: o que dependia eram dois invólucros da SPA sem
+  > chamador desde a ALE-272.
