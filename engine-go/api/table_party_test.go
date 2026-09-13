@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"t20engine/board"
 )
 
 func TestOnlyTheGmMarksAGroup(t *testing.T) {
@@ -19,6 +21,84 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 	if rec := f.pede(t, f.mestre, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`); rec.Code != http.StatusOK {
 		t.Errorf("o mestre não conseguiu marcar: %d", rec.Code)
+	}
+}
+
+// TestTheLassoMarksOnlyWhatIsInsideIt — o PREDICADO, que é a regra inteira deste
+// gesto (ALE-311).
+//
+// O laço decide QUAIS peças o arrasto do grupo vai mover, e até aqui nenhum caso
+// afirmava isso. Os dois que cobriam a rota olhavam 403-vs-200 e o TAMANHO da
+// resposta, e um deles posta `{}` — sem coordenada nenhuma.
+//
+// Medido: sabotado o handler para ignorar os dois cantos e marcar TODAS as
+// peças, a suíte ficava verde. É literalmente o caso que o `CLAUDE.md` descreve
+// em "quando o PREDICADO decide quem é afetado, prenda o predicado" — arranjar o
+// resultado por ordem de chamada diz o que acontece *com* as linhas achadas e
+// nada sobre *quais* linhas são essas.
+//
+// As três peças são o mínimo que distingue: uma DENTRO, uma FORA pelo eixo x e
+// uma FORA pelo eixo y. Com uma fora só, um predicado que testasse um eixo e
+// esquecesse o outro passaria em metade dos casos.
+func TestTheLassoMarksOnlyWhatIsInsideIt(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "stone")
+	dentro := f.seedToken(t, "Goblin de dentro", 3, 3)
+	foraNoX := f.seedToken(t, "Goblin à direita", 9, 3)
+	foraNoY := f.seedToken(t, "Goblin abaixo", 3, 9)
+
+	// O laço vai de (2,2) a (5,5): pega o (3,3) e deixa os dois vizinhos fora.
+	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area",
+		`{"from":{"X":2,"Y":2},"to":{"X":5,"Y":5}}`)
+
+	if !strings.Contains(resposta, dentro) {
+		t.Errorf("o laço de (2,2) a (5,5) não pegou a peça em (3,3):\n%s", resposta)
+	}
+	for nome, deFora := range map[string]string{"a de (9,3)": foraNoX, "a de (3,9)": foraNoY} {
+		if strings.Contains(resposta, deFora) {
+			t.Errorf("o laço de (2,2) a (5,5) marcou %s, que está fora dele:\n%s", nome, resposta)
+		}
+	}
+}
+
+// seedToken põe uma peça no tabuleiro e devolve o ID que o SERVIDOR deu a ela.
+//
+// O id não é escolha de quem semeia: o `AddToken` atribui um UUID e ignora o
+// campo. Um caso que comparasse o `marked_tokens` com o id que ele mesmo passou
+// afirmaria sobre uma peça que não existe — e, como `strings.Contains` de um
+// nome inventado é sempre falso, ele acusaria "o laço não pegou" para SEMPRE.
+func (f pilotoFixture) seedToken(t *testing.T, rotulo string, x, y int) string {
+	t.Helper()
+	estado, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+		board.BoardToken{Label: rotulo, X: x, Y: y})
+	if err != nil {
+		t.Fatalf("pôr a peça %q: %v", rotulo, err)
+	}
+	for _, peca := range estado.Tokens {
+		if peca.Label == rotulo {
+			return peca.ID
+		}
+	}
+	t.Fatalf("a peça %q não entrou no tabuleiro", rotulo)
+	return ""
+}
+
+// TestTheLassoReadsTheCornersInAnyOrder: arrastar da direita para a esquerda é o
+// mesmo laço.
+//
+// O canto onde o dedo DESCEU vira `from`, e o de cima-à-esquerda não é sempre
+// ele. Um predicado escrito como `de.X <= p.X && p.X <= ate.X` marca ZERO peças
+// no arrasto invertido — e não estoura, não recusa, não diz nada: a barra
+// simplesmente não aparece.
+func TestTheLassoReadsTheCornersInAnyOrder(t *testing.T) {
+	f := novoPiloto(t)
+	f.seedOpenBoard(t, "stone")
+	dentro := f.seedToken(t, "Goblin de dentro", 3, 3)
+
+	invertido := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area",
+		`{"from":{"X":5,"Y":5},"to":{"X":2,"Y":2}}`)
+	if !strings.Contains(invertido, dentro) {
+		t.Errorf("o laço arrastado de (5,5) para (2,2) não pegou a peça em (3,3):\n%s", invertido)
 	}
 }
 
