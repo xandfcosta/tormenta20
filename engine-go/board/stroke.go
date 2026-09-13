@@ -120,7 +120,22 @@ func RectangleSquares(de, ate engine.Square) []engine.Square {
 // rectangleFits é o teto de casas de um retângulo, e ele é maior que o do traço
 // pela mesma razão que o traço tem um menor: o retângulo é UM gesto deliberado —
 // dois cantos escolhidos —, enquanto o traço é um quadro de 16ms. Mil casas são
-// 32×32, que é uma sala grande de masmorra; acima disso é pedido forjado.
+// 32×32, que é uma sala grande de masmorra.
+//
+// AQUI DIZIA "acima disso é pedido forjado", E ISSO É FALSO (ALE-315). O zoom
+// mínimo é 20px por quadrado (`web/table.quadradoMinimo`), e a camada do
+// tabuleiro mede ~1370×584: a 20px são **68 × 29 = 1.972 casas**, quase o dobro
+// deste teto. Um mestre que afaste o mapa para ver a caverna inteira e arraste de
+// canto a canto pede 1.972 com um dedo de verdade, e leva a recusa.
+//
+// O teto é o mesmo e continua certo — o que ele segura é o TAMANHO do estado que
+// um gesto escreve, e esse estado é gravado e viaja em todo broadcast. O que
+// estava errado era a justificativa: ela foi calibrada pela INTENÇÃO do gesto
+// (uma sala) e não pelo ALCANCE dele (o viewport), que é a forma da ALE-250.
+//
+// Se o teto deve subir para cobrir o viewport ou se "pinte em duas passadas" é a
+// resposta, é decisão de produto e está aberta na ALE-315. Hoje a recusa é clara
+// e APARECE na tela: esta é rota de comando, e a frase vai no `$command_error`.
 const rectangleFits = 1000
 
 // ValidRectangle recusa a área que não pode ter saído de dois cantos escolhidos.
