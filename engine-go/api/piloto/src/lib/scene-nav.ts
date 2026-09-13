@@ -1,4 +1,3 @@
-import { createEffect, onCleanup } from 'solid-js'
 import {
   type Dir,
   type NavCandidate,
@@ -45,47 +44,22 @@ const DESKTOP = '(min-width: 1280px) and (pointer: fine)'
 const FOCUSABLE =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-nav-item]'
 
-/**
- * One window-level keyboard driver for a grimório scene (ALE-55). Scenes declare
- * **regions** in the DOM (`data-nav-region`, `data-nav-layout="grid|row|column"`)
- * and this moves real focus by geometry inside a region, crosses to the
- * neighbour at an edge, runs PageUp/Down bumpers, Enter (native), and Esc
- * (up one level). Keyboard is additive — every item stays a real clickable
- * control. Enabled only on laptop/desktop with a fine pointer.
- *
- * Solid port (ALE-66): everything below the shell is plain DOM code and came
- * over unchanged. What went away is the React bookkeeping — `useRef(opts)`
- * existed only so the effect closure wouldn't read stale props across
- * re-renders, and Solid has no re-render, so `opts` is read directly.
- *
- * Still listens in the **capture** phase: Kobalte's tab list does roving arrow
- * focus just like Radix did, so the driver has to pre-empt it (the issue
- * assumed this could go away — it can't).
- *
- * @example
- * createSceneNav({ root: () => el(), onEscape: toHub, sfx })
- */
-export function createSceneNav(opts: SceneNavOptions): void {
-  createEffect(() => {
-    // O `active` é lido AQUI dentro para o Solid rastreá-lo; a media query é
-    // do `attachSceneNav`, que a escuta sozinho.
-    if (opts.active?.() === false) return
-    onCleanup(attachSceneNav(opts))
-  })
-}
 
 /**
- * O MESMO driver, sem Solid: liga e devolve como desligar.
+ * O driver de teclado: liga e devolve como desligar.
  *
- * Ele existe porque o Datastar precisa dele (ALE-231), e a extração custou
- * doze linhas — o resto deste arquivo sempre foi código DOM puro, como o
- * comentário acima já dizia. Medido: `spatial-nav.ts` (151 linhas) e
- * `sfx-player.ts` (46) não importam `solid-js` NENHUMA vez, e este importava
- * duas.
+ * Ele nasceu na ALE-231 como a versão sem Solid de um irmão reativo
+ * (`createSceneNav`), e a extração custou DOZE LINHAS — o resto deste arquivo
+ * sempre foi código DOM puro. O irmão saiu na ALE-314, sem chamador nenhum
+ * desde que a SPA morreu, e com ele o último `import` de `solid-js` do
+ * repositório.
  *
- * Isso derruba a suposição que sustentava a ideia de "ilha" para telas ricas: a
- * gramática de teclado do app inteiro nunca precisou de framework. Ela lê
- * `data-nav-region` do DOM, e um DOM vindo do servidor é um DOM.
+ * A medição que justificou aquela extração vale mais do que ela: `spatial-nav.ts`
+ * (151 linhas) e `sfx-player.ts` (46) não importavam `solid-js` NENHUMA vez, e
+ * este importava duas. Isso derruba a suposição que sustentava a ideia de
+ * "ilha" para telas ricas — a gramática de teclado do app inteiro nunca
+ * precisou de framework. Ela lê `data-nav-region` do DOM, e um DOM vindo do
+ * servidor é um DOM.
  *
  * A media query mora aqui, e não no chamador, porque ela é uma REGRA do driver
  * (teclado é para laptop com ponteiro fino) e não uma opção de quem liga.

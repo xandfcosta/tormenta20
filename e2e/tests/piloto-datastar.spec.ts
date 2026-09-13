@@ -604,21 +604,27 @@ test.describe('A folha de especificação (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   /**
-   * A COLUNA DUPLA MEDE OS DOIS STACKS, e este guarda existe por causa de um
-   * defeito real: a primeira versão dela não passava o tamanho ao elemento
-   * customizado da SPA, então aquela coluna inteira renderizava no padrão e a
-   * linha "xs" comparava um xs do servidor com um default da SPA.
+   * A CELA TRAZ MEDIDA, e este guarda existe por causa de um defeito real: a
+   * primeira versão desta seção comparava o servidor com a SPA e não passava o
+   * tamanho ao elemento customizado dela, então a linha "xs" media um xs do
+   * servidor contra um default da SPA.
    *
    * O instrumento MENTIA — e instrumento que mente é pior que instrumento
    * nenhum, porque produz confiança em vez de dúvida. Um guarda que só
-   * checasse "a seção existe" não teria pego; este exige que as duas colunas
-   * tragam MEDIDA, e que a ladeira de tamanhos seja estritamente crescente dos
-   * dois lados.
+   * checasse "a seção existe" não teria pego; este exige que a cela traga
+   * MEDIDA, e que a ladeira de tamanhos seja estritamente crescente.
    *
-   * E2E porque a coluna da SPA é montada por `solid-element` e medida com
-   * `getBoundingClientRect` — nada disso existe sem navegador.
+   * Aqui morava o `a coluna dupla mede os DOIS stacks, e a ladeira cresce nos
+   * dois`, que afirmava as duas colunas. A da SPA saiu na ALE-314 junto com o
+   * Solid; a garantia que sobrevive é a desta — a ladeira é o que pega uma
+   * coluna constante, e uma coluna constante era exatamente o sintoma do
+   * defeito original.
+   *
+   * E2E porque a legenda é escrita com `getBoundingClientRect` e
+   * `getComputedStyle` depois do layout assentar — nada disso existe sem
+   * navegador.
    */
-  test('a coluna dupla mede os DOIS stacks, e a ladeira cresce nos dois', async ({ page }) => {
+  test('cada peça do kit sai com a medida do navegador, e a ladeira cresce', async ({ page }) => {
     await page.goto('/grimorio')
     const tamanhos = page.locator('#pecas [data-par]').filter({ hasText: /^(xs|sm|default|lg)/ })
     await expect(tamanhos.first()).toBeVisible()
@@ -634,34 +640,24 @@ test.describe('A folha de especificação (piloto Datastar)', () => {
       return { xs: daLinha('xs'), sm: daLinha('sm'), lg: daLinha('lg') }
     })
 
-    for (const [nome, par] of Object.entries(alturas)) {
-      expect(par.length, `a linha ${nome} não tem as duas colunas medidas`).toBe(2)
-      expect(par[0], `a coluna da SPA não mediu em ${nome}`).toBeGreaterThan(0)
-      expect(par[1], `a coluna do servidor não mediu em ${nome}`).toBeGreaterThan(0)
+    // O DENOMINADOR: uma linha que perdeu a cela — ou um nome que deixou de
+    // existir — devolve lista vazia, e lista vazia passaria calada em toda
+    // asserção de ladeira abaixo.
+    for (const [nome, celas] of Object.entries(alturas)) {
+      expect(celas.length, `a linha ${nome} não tem exatamente uma cela medida`).toBe(1)
+      expect(celas[0], `a cela de ${nome} não mediu`).toBeGreaterThan(0)
     }
-    // A ladeira cresce dos DOIS lados. Com o defeito antigo, a coluna da SPA
-    // vinha 36/36/36 — constante, e nenhuma asserção de igualdade a pegaria.
-    for (const coluna of [0, 1]) {
-      expect(alturas.xs[coluna], 'xs não é menor que sm').toBeLessThan(alturas.sm[coluna] as number)
-      expect(alturas.sm[coluna], 'sm não é menor que lg').toBeLessThan(alturas.lg[coluna] as number)
-    }
+    // A ladeira é o que pega a coluna CONSTANTE: com o defeito antigo os três
+    // tamanhos vinham 36/36/36, e nenhuma asserção de "mediu" os separaria.
+    expect(alturas.xs[0], 'xs não é menor que sm').toBeLessThan(alturas.sm[0] as number)
+    expect(alturas.sm[0], 'sm não é menor que lg').toBeLessThan(alturas.lg[0] as number)
   })
 
-  /**
-   * `noShadowDOM()` não é opcional: no shadow root as classes do Tailwind não
-   * alcançam, e as peças da SPA renderizariam sem forma nenhuma — numa página
-   * cujo trabalho é mostrar como elas são. Pior, as variáveis CSS atravessam o
-   * shadow, então o resultado seria parcialmente certo: cores no lugar, forma
-   * não.
-   */
-  test('as peças da SPA montam SEM shadow root, senão o Tailwind não as alcança', async ({
-    page,
-  }) => {
-    await page.goto('/grimorio')
-    const botao = page.locator('spa-botao').first()
-    await expect(botao.locator('button')).toBeVisible()
-    expect(await botao.evaluate((el) => !!el.shadowRoot)).toBe(false)
-  })
+  // Aqui morava o `as peças da SPA montam SEM shadow root, senão o Tailwind não
+  // as alcança`. Ele prendia o `noShadowDOM()` dos elementos customizados da
+  // SPA, e não há substituto: as peças desta folha são `templ` renderizado no
+  // servidor, e HTML de servidor não tem shadow root para esconder o Tailwind
+  // dentro (ALE-314).
 
   // O endereço antigo é o que os dois comentários do index.css mandam abrir.
   test('o endereço antigo /grimorio encaminha para a folha nova', async ({ page }) => {

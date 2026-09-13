@@ -1,4 +1,3 @@
-import { type Accessor, createSignal } from 'solid-js'
 
 /**
  * Persisted under the SAME key/shape the React app's zustand store used
@@ -16,21 +15,10 @@ export function persistUi(state: { sfx: boolean; volume: number }, storage = glo
   storage?.setItem(STORAGE_KEY, JSON.stringify({ state }))
 }
 
+
 /** Cheio por padrão: os cues foram afinados um a um nesse ganho, e o slider só
  *  atenua a partir daí (ALE-180). */
 const FULL_VOLUME = 100
-
-export type UiStore = {
-  /** UI sound cues (hover/select/scene transition). Off by default so the app
-   *  never surprises with sound — the player opts in from the Hub. */
-  sfx: Accessor<boolean>
-  setSfx: (on: boolean) => void
-  toggleSfx: () => void
-  /** 0–100. Alerta que só liga e desliga é alerta que se desliga: quem acha o
-   *  sino do "Sua vez" alto abaixa em vez de calar a mesa inteira (ALE-180). */
-  volume: Accessor<number>
-  setVolume: (percent: number) => void
-}
 
 type PersistedUi = { state?: { sfx?: unknown; volume?: unknown } }
 
@@ -58,36 +46,3 @@ function clampVolume(value: unknown): number {
   return Math.min(100, Math.max(0, Math.round(value)))
 }
 
-/**
- * Preferências de interface: som e volume.
- *
- * @example const ui = createUiStore(); ui.toggleSfx()
- */
-export function createUiStore(storage: Storage | undefined = globalThis.localStorage): UiStore {
-  const stored = storage?.getItem(STORAGE_KEY) ?? null
-  const [sfx, setSfxSignal] = createSignal(readStoredSfx(stored))
-  const [volume, setVolumeSignal] = createSignal(readStoredVolume(stored))
-
-  const persist = () => {
-    const state = { sfx: sfx(), volume: volume() }
-    storage?.setItem(STORAGE_KEY, JSON.stringify({ state }))
-  }
-
-  const setSfx = (on: boolean) => {
-    setSfxSignal(on)
-    persist()
-  }
-
-  const setVolume = (percent: number) => {
-    setVolumeSignal(clampVolume(percent))
-    persist()
-  }
-
-  return {
-    sfx,
-    setSfx,
-    toggleSfx: () => setSfx(!sfx()),
-    volume,
-    setVolume,
-  }
-}

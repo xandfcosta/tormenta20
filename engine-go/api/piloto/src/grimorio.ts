@@ -96,36 +96,27 @@ function medeOsContrastes(): void {
 }
 
 /**
- * A medida de uma CÉLULA da comparação: altura, largura e raio da peça que ela
- * contém.
+ * A medida de uma CÉLULA da seção de Peças: altura, largura e raio da peça que
+ * ela contém.
  *
  * Ela existe porque duas peças parecidas passam por iguais aos olhos — e foi
  * assim que a primeira versão da seção de Peças deixou passar 12px de diferença
  * no botão `xs`. O número é o que separa "parece igual" de "é igual".
  *
- * Ela espera pelo FATO e não pelo relógio. A coluna da SPA é montada por
- * elementos customizados, e a primeira versão disto usava dois
- * `requestAnimationFrame` — que é chute: mediu antes de os elementos existirem
- * e escreveu a coluna inteira vazia. `customElements.whenDefined` resolve
- * quando o elemento REALMENTE está registrado, e o `requestAnimationFrame`
- * depois dele é só para o layout assentar.
+ * # A ESPERA encolheu para um quadro (ALE-314)
  *
- * Genérica de propósito: ela descobre as tags a esperar olhando o documento
- * (nome com hífen é elemento customizado), então esta ilha não precisa saber
- * que existe uma segunda chamada `spa-alguma-coisa`.
+ * Aqui havia uma espera por `customElements.whenDefined`, e ela era o conserto
+ * de um defeito real: a coluna da SPA era montada por elementos customizados, e
+ * a versão anterior usava dois `requestAnimationFrame` — que é chute. Mediu
+ * antes de os elementos existirem e escreveu a coluna inteira VAZIA.
+ *
+ * Com o Solid fora, não há elemento customizado nenhum nesta folha: tudo é
+ * `templ` que chega pronto no HTML. O que sobra a esperar é o LAYOUT assentar,
+ * que é um quadro. Uma passada só, no carregamento, e sem observador de
+ * propósito — a folha é estática depois de desenhada.
  */
 async function medeAsCelulas(): Promise<void> {
-  const customizadas = new Set(
-    [...document.querySelectorAll('[data-amostra-cela] *')]
-      .map((e) => e.tagName.toLowerCase())
-      .filter((tag) => tag.includes('-')),
-  )
-  await Promise.all([...customizadas].map((tag) => customElements.whenDefined(tag)))
   await new Promise((pronto) => requestAnimationFrame(() => pronto(null)))
-  escreveAsMedidas()
-}
-
-function escreveAsMedidas(): void {
   for (const legenda of document.querySelectorAll<HTMLElement>('[data-medir-cela]')) {
     const cela = legenda.previousElementSibling
     const peca = cela?.querySelector<HTMLElement>('button, input, [role="progressbar"]')
@@ -136,11 +127,6 @@ function escreveAsMedidas(): void {
   }
 }
 
-/**
- * Uma passada só, no carregamento. Não há observador nem repetição de propósito:
- * a folha é estática depois de desenhada, e um `MutationObserver` aqui seria
- * maquinaria para um caso que não existe.
- */
 /**
  * A seção de MOVIMENTO: os mesmos disparos que a sessão usa, importados do
  * MESMO módulo (`turn-juice`). Uma cópia com os mesmos keyframes mentiria no
@@ -179,7 +165,7 @@ function ligaOsDisparos(): void {
 export function medeAFolha(): void {
   medeAsPropriedades()
   medeOsContrastes()
-  // As células esperam os elementos customizados existirem — ver `medeAsCelulas`.
+  // As células esperam o layout assentar — ver `medeAsCelulas`.
   void medeAsCelulas()
   ligaOsDisparos()
 }
