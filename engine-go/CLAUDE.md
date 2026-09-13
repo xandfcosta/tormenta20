@@ -2952,6 +2952,35 @@ chave é ela mesma um nome de sinal, ela tem de carregar aquele sinal — então
 `new_token_size: $new_token_look` reprova, e `kind: $tool` passa, porque `kind`
 não é sinal nenhum.
 
+#### O guarda tinha três cegos, e o denominador contava duas vezes (ALE-310)
+
+- **Janela de 400 CARACTERES.** Ela sangrava de um `payload:` para o seguinte, e
+  os "nove pares" que o guarda reportava eram OITO distintos, com `marked_tokens`
+  contado duas vezes. Hoje a janela é o objeto `{…}` casado por BALANÇO DE
+  CHAVES.
+- **O piso era sobre PARES.** `pares < 1` sobre nove: trocar `payload:` por
+  `payload :` — que o JavaScript aceita — em três sítios derrubava a conta para
+  UM e o guarda passava. Ele só afirmava "o regex ainda casa em algum lugar do
+  repositório". Hoje o piso é sobre SÍTIOS de payload, que são quinze, e a âncora
+  aceita o espaço.
+- **Payload que é VARIÁVEL.** `{payload: traco}` contribuía zero pares em
+  silêncio. Hoje o `const traco = {…}` da linha de cima é resolvido, e o spread
+  (`{...traco, kind: $tool}`) traz as chaves de origem junto.
+
+**E o TERCEIRO CANAL foi fechado.** O guarda prendia `chave == $sinal` — o lado
+do CLIENTE — e nada prendia `chave == o que o servidor lê`. Uma chave renomeada
+de um lado só chega ao servidor e cai no chão: o gesto responde 200 com o
+valor-zero, sem erro em lugar nenhum. Agora toda chave de payload tem de ter uma
+tag `json:"chave"` ou um campo exportado de mesmo nome.
+
+> **Um achado da medição, anotado e não consertado:** o cliente escreve
+> `{X: cx, Y: cy}` e o `engine.Square` tem as tags `json:"x"` e `json:"y"`, em
+> MINÚSCULAS. Isso funciona **por acidente** — o `encoding/json` casa sem
+> diferenciar caixa quando não há correspondência exata —, e é o mesmo mecanismo
+> da armadilha do camelCase em nome de sinal: duas grafias para um conceito,
+> unidas por uma tolerância da biblioteca. Consertar mexe no fio de oito sítios,
+> e é issue própria.
+
 ### DESLOCAMENTO é coordenada, e o guarda não sabia disso
 
 **`/grupo/mover/{dx}/{dy}` também foi** (ALE-307), e ela é a que denuncia o
