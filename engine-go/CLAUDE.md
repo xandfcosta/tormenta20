@@ -838,6 +838,17 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   v4 varre da pasta da folha até a raiz do projeto respeitando o `.gitignore`. As
   linhas ficaram como declaração de intenção; quem depurar "classe sumiu" não
   deve perder tempo nelas. O suspeito é o TOKEN que não existe na paleta.
+
+  **E porque ele varre a árvore inteira, a PROSA entra na folha — então compile
+  por ÚLTIMO.** O scanner não sabe distinguir uma classe aplicada de uma classe
+  citada num `.md` ou numa docstring, e não há como pedir que ele ignore: um
+  guia que explica uma receita faz o Tailwind emitir as utilidades daquela
+  receita, mesmo sem nenhum consumidor. Isso custou uma CI vermelha na ALE-317:
+  a varredura apagou 242 sítios, a folha foi compilada, e só DEPOIS os dois
+  guias ganharam a explicação — o passo "Fail if the stylesheet was stale"
+  reprovou com uma linha de diferença. A ordem do roteiro é **código → prosa →
+  `build-piloto-css.sh` → `git add`**, e o mesmo vale quando a mudança APAGA
+  classe: o artefato guarda o estado de antes.
 - **Regra da casa que precisa GANHAR de um utilitário mora em `@layer utilities`,
   e não em `components`.** No Tailwind v4 a CAMADA decide antes da
   especificidade: `utilities` vence `components` mesmo quando o seletor de baixo
