@@ -118,13 +118,13 @@ func CursorGesture(index int, id int64) string {
 
 // StageSignals são os quatro sinais que toda cena de seleção declara.
 //
-// Ela existe porque `sentido` e `indice` são exigência do `CursorGesture` e não
+// Ela existe porque `direction` e `last_index` são exigência do `CursorGesture` e não
 // escolha da cena: uma cena que declarasse só `cursor` teria o gesto escrevendo
 // em sinais que nascem indefinidos, e o primeiro passo do cursor entraria pelo
 // lado errado — em silêncio, porque `undefined >= undefined` é `false` e o
 // palco simplesmente escolhe "atrás".
 //
-// @example StageSignals(41) // "cursor: 41, sentido: 1, indice: 0"
+// @example StageSignals(41) // "cursor: 41, direction: 1, last_index: 0"
 func StageSignals(cursorID int64) string {
 	return fmt.Sprintf("cursor: %d, direction: 1, last_index: 0", cursorID)
 }

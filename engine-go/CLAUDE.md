@@ -349,7 +349,7 @@ fica aberto; o que subia virou uma rota por comando (`mountLiveRoutes`).
 
 **As duas pontas dessa troca saíram na ALE-277**, e o parágrafo acima fica porque
 o argumento continua sendo o certo — o que mudou é quem o exerce. A Mesa em
-Datastar tem fluxo PRÓPRIO (`/mesa/{campanha}/{sessao}/stream`, em
+Datastar tem fluxo PRÓPRIO (`/mesa/{campanha}/{sessao}/fluxo`, em
 `web/table/stream.go`), ele assina o `events.Bus` e não o `SSEHub`, e os comandos
 dela são rotas da CENA. Nenhuma linha do que este arquivo descrevia como "a rota
 de eventos" existe.
@@ -1974,7 +1974,7 @@ coluna `role`.
 
 ### Um teste cujo modo de falha era TRAVAR
 
-O caso novo abre o `/stream` num `httptest.NewServer` de verdade. A primeira
+O caso novo abre o `/fluxo` num `httptest.NewServer` de verdade. A primeira
 versão criava o `context.WithCancel` e só chamava `fechar()` no fim — então
 qualquer `t.Fatalf` no meio pulava o cancelamento, o stream ficava aberto, e o
 `srv.Close()` do defer esperava por ele para sempre.
