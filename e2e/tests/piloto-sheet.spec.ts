@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { medeOContraste } from './support/contrast'
+import { expectOneFocusRing } from './support/focus'
 import { expectDentroDaJanela, expectNadaRolaDeLado } from './support/geometry'
 import { medeATipografia } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
@@ -112,6 +113,12 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
       `em ${endereco} o medidor não achou NENHUM texto em Cinzel: ou a fonte não carregou, ou o filtro parou de casar — e o silêncio abaixo não seria evidência`,
     ).toBeGreaterThan(0)
     expect(tipografia.falhas, `Cinzel abaixo do piso de leitura em ${endereco}`).toEqual([])
+
+    // E O ANEL DE FOCO entra no MESMO caminhar, pela terceira vez e pela mesma
+    // razão (ALE-318): à parte ele seria enumeração. O guarda que existia media
+    // `/grimorio` e mais nada, e foi a ficha — 136 focáveis só nas Perícias —
+    // que produziu a medição que virou a issue.
+    await expectOneFocusRing(page, `em ${endereco}`, 10)
   }
 })
 

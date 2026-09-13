@@ -2905,6 +2905,53 @@ Para quem for escrever a próxima variante: o teste é `grep -bo '\.classe'` na
 folha compilada, dos dois lados do conflito. Não adianta raciocinar pela ordem
 do `class=`, que o navegador ignora.
 
+## O anel de foco é UMA receita, e o repouso dela existe para não animar (ALE-318)
+
+A regra é global, mora no `index.css` desde a ALE-173 e **não é layerada** —
+então ela ganha de todo utilitário do Tailwind, que é layerado. Consequência que
+vale saber antes de escrever qualquer botão: `focus-visible:outline-*` escrito à
+mão não faz efeito nenhum dentro de uma cena, porque a regra de cima já decidiu.
+
+O que MUDA o pixel é o REPOUSO, e foi só medindo que isso apareceu. O `@layer
+base` traz o `* { border-color; outline-color }` do shadcn, e o `outline-color`
+vinha a 50%; a largura vinha de `medium`, que o navegador computa como **3px**; o
+afastamento vinha de `0`. Nada disso pinta — o `outline-style` em repouso é
+`none`. Mas os três são o ponto de PARTIDA da transição, e o `transition-colors`
+e o `transition-all` do Tailwind v4 incluem `outline-*`: o anel era ALCANÇADO em
+150ms em vez de desenhado. Medido quadro a quadro num botão do kit: ouro a 0,50
+no primeiro quadro, 0,73 aos 54ms, cheio aos 154ms — e quem tabula na
+autorrepetição do teclado (~33ms por parada) nunca via o anel inteiro. O meio do
+caminho mede 3,25:1 contra os 10,46:1 do final, raspando o piso de 3:1 do WCAG
+1.4.11.
+
+**O conserto é escrever o repouso igual ao destino**, no mesmo `*`: sem
+diferença, não há o que interpolar. A duplicação do `2px`/`1px` com a regra de
+foco é deliberada, e quem cobra que os dois lados não se separem é o
+`e2e/tests/support/focus.ts`.
+
+Três coisas que essa medição deixou, e nenhuma delas é sobre contorno:
+
+- **Ler o computado durante uma transição devolve o valor de PARTIDA**, e
+  escolher outro instante só troca o erro de lugar. O medidor da casa pergunta ao
+  navegador se existe transição (`getAnimations()` devolve uma `CSSTransition`
+  por propriedade, com o nome dela) em vez de inferir pela aparência. A história
+  inteira está na seção "O INSTRUMENTO MENTE COM CARA DE RESULTADO" do
+  [CLAUDE.md da raiz](../CLAUDE.md).
+- **A carta de rádio é a única exceção legítima, e ela é do RÓTULO.** A forja e o
+  "entrar na mesa" escondem o `<input>` com `sr-only` e desenham o realce no
+  `<label>`, com `has-[:focus-visible]:outline-*`. A regra global não alcança —
+  ela casa `:is(a, button, input, …)` —, e uma regra `label:has(:focus-visible)`
+  no lugar dela desenharia DOIS anéis concêntricos nos dez rótulos do app que
+  envolvem um campo VISÍVEL. As três plaquetas eram a segunda aparência de foco
+  do repositório (afastamento de 2px), e quem as achou foi o medidor subindo a
+  árvore a partir do rádio invisível — um sweep de focáveis nunca olha para lá.
+- **Guarda que aproxima um seletor mede outro seletor.** A primeira versão do
+  medidor isentava do anel tudo que estivesse dentro de `[data-nav-region]`,
+  porque o trilho fala por brilho; o `index.css` isenta `[data-nav-region] :is(a,
+  button, [data-nav-item])`. Os rádios `sr-only` das cartas e o contêiner rolável
+  estão dentro do trilho e não são item dele — 37 nós acusados de uma vez, na
+  folha da forja. A condição do guarda passou a COPIAR o seletor.
+
 ## Onde a coordenada de um gesto do tabuleiro viaja
 
 **No CORPO, e não no caminho** (ALE-305). O `@post` do Datastar aceita

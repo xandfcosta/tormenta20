@@ -460,8 +460,41 @@
 }
 
 @layer base {
+  /* O ANEL DE FOCO NÃO ACENDE: ele já está inteiro no repouso (ALE-318).
+   *
+   * Nada disto pinta — o `outline-style` de todo elemento é `none`, então a
+   * cor, a largura e o afastamento ficam guardados sem desenhar. O que eles
+   * decidem é o ponto de PARTIDA da transição, e é aí que estava o defeito:
+   * `transition-colors` e `transition-all` do Tailwind v4 incluem `outline-*`,
+   * então o anel da receita da casa (mais acima, `2px solid
+   * var(--grimorio-gold)` a 1px) era ALCANÇADO em 150ms em vez de desenhado.
+   *
+   * Três propriedades, com o preço medido em cada uma:
+   *
+   *   - `outline-color` vinha de `outline-ring/50`, que é o que o shadcn traz.
+   *     Medido quadro a quadro num botão do kit: ouro a 0,50 no primeiro
+   *     quadro, 0,73 aos 54ms, cheio aos 154ms. Quem tabula na autorrepetição
+   *     do teclado (~33ms por parada) nunca via o anel inteiro, e o meio do
+   *     caminho mede 3,25:1 contra os 10,46:1 do final — passa raspando no piso
+   *     de 3:1 do WCAG 1.4.11.
+   *   - `outline-width` vinha de `medium`, que o navegador computa como **3px**.
+   *   - `outline-offset` vinha de `0`, que é o afastamento que a ALE-150
+   *     rejeitou: o anel colado na borda.
+   *
+   * As duas últimas custavam um quadro só, porque `medium` é palavra-chave e
+   * não interpola — mas um quadro de anel 3px colado na borda é um quadro que
+   * ninguém desenhou de propósito, e escrever o repouso apaga a pergunta.
+   *
+   * A DUPLICAÇÃO do 2px/1px com a regra de foco é deliberada e tem guarda: são
+   * os dois lados de "não há o que interpolar", e se um mudar sem o outro, o
+   * `support/focus.ts` do e2e acusa pelo nome da propriedade. Ele pergunta ao
+   * navegador se existe `CSSTransition` de `outline-*`, e não lê o computado num
+   * instante escolhido — todo instante devolve uma lista de falhas com cara de
+   * descoberta, e foi assim que a ALE-316 mediu "três anéis" que eram um. */
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
+    outline-width: 2px;
+    outline-offset: 1px;
   }
 
   body {
