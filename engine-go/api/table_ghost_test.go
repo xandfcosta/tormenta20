@@ -60,7 +60,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 	}
 	// O ARRASTO conta do lugar DESENHADO, senão a próxima parada cai longe do
 	// dedo — é a regra do `nextStepOrigin`, que antes morava no losango.
-	if !strings.Contains(peca["data-on:pointerup__window"], "X: 7 + dx") {
+	if !strings.Contains(peca["data-on:pointerup__window"], "x: 7 + dx") {
 		t.Errorf("o arrasto da peça proposta conta da origem: %q", peca["data-on:pointerup__window"])
 	}
 

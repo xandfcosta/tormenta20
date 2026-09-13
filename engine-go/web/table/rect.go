@@ -83,7 +83,7 @@ func followsRect(modo string) string {
 func dropTerrainRect(v BoardView) string {
 	return fmt.Sprintf(
 		"if ($%s !== %q) return; const de = $%s.split('/').map(Number); "+
-			"const cantos = {from: {X: de[0], Y: de[1]}, to: {X: $rect_to_x, Y: $rect_to_y}}; "+
+			"const cantos = {from: {x: de[0], y: de[1]}, to: {x: $rect_to_x, y: $rect_to_y}}; "+
 			"$%s = ''; "+
 			"return $tool === %q "+
 			"? @post('%s/terreno/limpar/retangulo', {payload: cantos}) "+
@@ -132,8 +132,8 @@ func dropTokensRect(v BoardView) string {
 		"if ($%s !== %q) return; const ate = $rect_to_x + '/' + $rect_to_y, de = $%s; "+
 			"$%s = ''; if (de === ate) return; $%s = true; "+
 			"const canto = de.split('/').map(Number); "+
-			"return @post('%s/marcar-area', {payload: {from: {X: canto[0], Y: canto[1]}, "+
-			"to: {X: $rect_to_x, Y: $rect_to_y}}})",
+			"return @post('%s/marcar-area', {payload: {from: {x: canto[0], y: canto[1]}, "+
+			"to: {x: $rect_to_x, y: $rect_to_y}}})",
 		sinalDoRetangulo, retanguloDePecas, sinalDoRetanguloDe,
 		sinalDoRetangulo, sinalDoCliqueEngolido,
 		v.Base,
@@ -192,7 +192,7 @@ func dropParty(v BoardView) string {
 		"if ($dragging === '%s') { "+
 			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
 			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
-			"if (dx || dy) @post('%s/grupo/mover', {payload: {delta: {X: dx, Y: dy}, marked_tokens: $marked_tokens}}) }",
+			"if (dx || dy) @post('%s/grupo/mover', {payload: {delta: {x: dx, y: dy}, marked_tokens: $marked_tokens}}) }",
 		dragsTheParty, v.Base,
 	)
 }

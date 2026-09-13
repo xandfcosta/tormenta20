@@ -201,8 +201,8 @@ func templateFollowsPointer(v BoardView) string {
 func repatchTemplate(v BoardView) string {
 	return fmt.Sprintf(
 		"@post('%s/gabarito', {payload: {shape: $template, size: String($template_size), "+
-			"from: {X: $template_x, Y: $template_y}, "+
-			"to: {X: $template_aim_x, Y: $template_aim_y}}})",
+			"from: {x: $template_x, y: $template_y}, "+
+			"to: {x: $template_aim_x, y: $template_aim_y}}})",
 		v.Base,
 	)
 }

@@ -86,17 +86,28 @@ func balancedObject(texto string, i int) (string, bool) {
 	return "", false
 }
 
-// serverReaders são os nomes que o servidor sabe ler de um corpo JSON.
+// serverReaders são os nomes que o servidor sabe ler de um corpo JSON, na
+// grafia EXATA em que ele os declara.
 //
-// DOIS canais, e o segundo não é zelo: o `encoding/json` casa pelo NOME DO CAMPO
-// quando não há tag, e casa SEM DIFERENCIAR CAIXA quando não há correspondência
-// exata. É por isso que `{X: cx, Y: cy}` no cliente pousa num `engine.Square`
-// cujas tags são `json:"x"` e `json:"y"` — em minúsculas.
+// A tag GANHA do nome do campo, e essa é a regra do `encoding/json`: um campo
+// tagueado só se lê pelo nome da tag. `X int ` + "`" + `json:"x"` + "`" + ` é lido por `x`, e não
+// por `X` — a única razão de `{"X":2}` chegar lá é a TOLERÂNCIA de caixa da
+// biblioteca, que só entra quando não há correspondência exata.
 //
-// Isso FUNCIONA POR ACIDENTE, e o acidente é o mesmo que o `CLAUDE.md` registra
-// na armadilha do camelCase: duas grafias para um conceito, unidas por uma
-// tolerância da biblioteca. Ele está anotado aqui em vez de consertado porque
-// consertá-lo mexe no fio de oito sítios, e isso é issue própria.
+// # Por que o guarda cobra a grafia exata (ALE-313)
+//
+// Porque essa tolerância é a mesma que já produziu defeito nesta casa. O
+// `CLAUDE.md` registra o camelCase do construtor de encontros: ele *funcionava
+// por acidente, porque o encoding/json casa campo sem diferenciar caixa quando
+// não há correspondência exata, e a chave ligada vinha por último* — invertida a
+// ordem das chaves, o mesmo código lê `""` e a busca deixa de filtrar, sem erro
+// em lugar nenhum.
+//
+// Duas grafias para um conceito, seguradas por uma tolerância de biblioteca, é
+// exatamente a raiz que a ALE-301 existiu para apagar. O fio do tabuleiro tinha
+// a mesma forma: o cliente escrevia `{X: cx, Y: cy}` e o `engine.Square` declara
+// `json:"x"`/`json:"y"`, que é também a grafia GRAVADA em `campaign_places` e
+// `open_boards` — foi o dado no banco que decidiu qual lado muda.
 func serverReaders(t *testing.T, root string, arquivos []string) map[string]bool {
 	t.Helper()
 	tag := regexp.MustCompile(`json:"([a-zA-Z_][\w]*)"`)
@@ -113,11 +124,15 @@ func serverReaders(t *testing.T, root string, arquivos []string) map[string]bool
 			if strings.HasPrefix(strings.TrimSpace(linha), "//") {
 				continue
 			}
-			for _, m := range tag.FindAllStringSubmatch(linha, -1) {
-				lidos[strings.ToLower(m[1])] = true
-			}
-			if m := goFieldName.FindStringSubmatch(linha); m != nil {
-				lidos[strings.ToLower(m[1])] = true
+			// A TAG GANHA, e o `else` é a regra inteira: um campo tagueado não
+			// se lê pelo nome dele. Somar os dois faria o guarda aceitar `X`
+			// num campo que só responde por `x`, que é o defeito.
+			if achados := tag.FindAllStringSubmatch(linha, -1); len(achados) > 0 {
+				for _, m := range achados {
+					lidos[m[1]] = true
+				}
+			} else if m := goFieldName.FindStringSubmatch(linha); m != nil {
+				lidos[m[1]] = true
 			}
 		}
 	}
@@ -145,7 +160,14 @@ func TestEveryPayloadKeyMatchesTheSignalItReads(t *testing.T) {
 		if err != nil {
 			continue
 		}
-		for _, m := range signalInExpression.FindAllStringSubmatch(string(body), -1) {
+		// COMENTÁRIO fora, aqui também. Sem isto o `data-show="$x"` que o
+		// cabeçalho do `overlay_flash_test.go` usa como EXEMPLO entra na lista
+		// como se fosse um sinal da árvore — e então `x: $rect_to_x`, que é uma
+		// chave de corpo perfeitamente correta, reprova como "chave que é sinal
+		// e carrega outro" (ALE-313). O instrumento contaminando a si mesmo com
+		// a prosa que o explica.
+		semProsa := strings.Join(semComentario(strings.Split(string(body), "\n")), "\n")
+		for _, m := range signalInExpression.FindAllStringSubmatch(semProsa, -1) {
 			sinais[m[1]] = true
 		}
 	}
@@ -209,7 +231,7 @@ func TestEveryPayloadKeyMatchesTheSignalItReads(t *testing.T) {
 			// sem erro em lugar nenhum.
 			for _, m := range payloadKey.FindAllStringSubmatch(janela, -1) {
 				chave := m[1]
-				if chave == "payload" || lidosPeloServidor[strings.ToLower(chave)] {
+				if chave == "payload" || lidosPeloServidor[chave] {
 					continue
 				}
 				semLeitor = append(semLeitor, onde+" — a chave `"+chave+"`")
@@ -236,10 +258,13 @@ func TestEveryPayloadKeyMatchesTheSignalItReads(t *testing.T) {
 	}
 	sort.Strings(semLeitor)
 	if len(semLeitor) > 0 {
-		t.Errorf("chave de payload que NENHUM campo do servidor lê — %d:\n  %s\n"+
-			"Leitor é uma tag `json:\"chave\"` ou um campo exportado de mesmo nome (o `encoding/json` "+
-			"casa por nome quando não há tag). Sem nenhum dos dois, o campo chega ao servidor e cai "+
-			"no chão: o gesto responde 200 com o valor-zero, sem erro em lugar nenhum.",
+		t.Errorf("chave de payload que nenhum campo do servidor lê NESTA GRAFIA — %d:\n  %s\n"+
+			"Leitor é uma tag `json:\"chave\"`, ou o nome do campo exportado quando ele não tem tag. "+
+			"A CAIXA conta: o `encoding/json` casa sem diferenciar caixa só quando não há "+
+			"correspondência exata, e depender disso é duas grafias para um conceito — o mesmo "+
+			"acidente que segurava o camelCase do construtor de encontros até a ALE-301. Sem "+
+			"leitor nenhum, o campo chega ao servidor e cai no chão: o gesto responde 200 com o "+
+			"valor-zero, sem erro em lugar nenhum.",
 			len(semLeitor), strings.Join(semLeitor, "\n  "))
 	}
 	if !t.Failed() {
