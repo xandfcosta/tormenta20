@@ -106,7 +106,7 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 	// O `gap-2` saiu junto e pelo mesmo motivo, com um defeito VIVO no caminho:
 	// ele vence o `gap-1.5` do `SizeSmall` (offsets 41357 e 41316), então o
 	// botão pequeno nunca teve o respiro apertado que alguém escreveu para ele.
-	base := "inline-flex shrink-0 items-center justify-center rounded-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
+	base := "inline-flex shrink-0 items-center justify-center rounded-sm font-medium whitespace-nowrap transition-all outline-none disabled:pointer-events-none disabled:opacity-50"
 	// A BORDA DO `secondary` É CONSERTO, E NÃO DIVERGÊNCIA (ALE-250). Não tire.
 	//
 	// O `secondary` da SPA não tinha borda, e a folha de especificação media isso
@@ -220,7 +220,7 @@ templ TextField(c Field) {
 				aria-invalid="true"
 				aria-describedby={ c.Nome + "-erro" }
 			}
-			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
 		/>
 		if len(c.Erros) == 0 && c.Dica != "" {
 			<p class="text-xs text-muted-foreground">{ c.Dica }</p>
@@ -302,7 +302,7 @@ templ TextArea(c Field, linhas int) {
 				aria-invalid="true"
 				aria-describedby={ c.Nome + "-erro" }
 			}
-			class="field-sizing-content min-h-16 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+			class="field-sizing-content min-h-16 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
 		>{ c.Valor }</textarea>
 		if len(c.Erros) == 0 && c.Dica != "" {
 			<p class="text-xs text-muted-foreground">{ c.Dica }</p>
@@ -478,7 +478,7 @@ templ ScrollBox(rotulo string, extra string) {
 		role="region"
 		aria-label={ rotulo }
 		tabindex="0"
-		class={ Join("min-h-0 flex-1 overflow-y-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", extra) }
+		class={ Join("min-h-0 flex-1 overflow-y-auto outline-none", extra) }
 	>
 		{ children... }
 	</div>
@@ -689,7 +689,7 @@ templ FilterDrawer(rotulo string) {
 		// `min-h-11` porque no deitado ele é um alvo de toque de verdade, e é a
 		// única porta para os filtros ali dentro.
 		<summary
-			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 		>
 			@Icon("SlidersHorizontal", "size-4 shrink-0")
 			{ rotulo }

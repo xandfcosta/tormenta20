@@ -22,7 +22,7 @@ templ sessionVerbs(v View) {
 				aria-label="Configurações da sessão"
 				title="Configurações da sessão"
 				data-on:click={ openConfigSession(v) }
-				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 			>
 			@ui.Icon("Settings2", "size-4")
 		</button>
@@ -32,7 +32,7 @@ templ sessionVerbs(v View) {
 		<a
 			href={ templ.SafeURL(campaignChronicle(v)) }
 			title="Sair da sessão e voltar para a crônica da campanha"
-			class="inline-flex min-h-8 items-center rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="inline-flex min-h-8 items-center rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent"
 		>Sair da sessão</a>
 	</span>
 }
@@ -88,13 +88,13 @@ templ sessionConfig(v View) {
 						type="text"
 						data-bind:session_title
 						placeholder="A cripta do rio"
-						class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+						class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 					/>
 				</div>
 				<button
 					type="button"
 					data-on:click={ sessionCommand(v, "titulo") }
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 				>Salvar</button>
 			</div>
 			if v.Status != "active" {
@@ -102,7 +102,7 @@ templ sessionConfig(v View) {
 					<button
 						type="button"
 						data-on:click={ sessionCommand(v, "iniciar") }
-						class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+						class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 					>
 						if v.Status == "ended" {
 							Reabrir
@@ -117,7 +117,7 @@ templ sessionConfig(v View) {
 					<button
 						type="button"
 						data-on:click={ "document.getElementById('session-config').close(); " + sessionCommand(v, "encerrar") }
-						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 					>Encerrar</button>
 				}
 			}
@@ -128,7 +128,7 @@ templ sessionConfig(v View) {
 				<button
 					type="button"
 					data-on:click={ sessionCommand(v, "reiniciar") }
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 				>Reiniciar</button>
 			}
 			// EXCLUIR é `form` e não `@post`: ele navega para fora da sessão, e um
@@ -137,7 +137,7 @@ templ sessionConfig(v View) {
 				<button
 					type="button"
 					data-on:click="document.getElementById('session-config').close(); document.getElementById('delete-session').showModal()"
-					class="inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive-ink outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive-ink outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground"
 				>Excluir</button>
 			}
 		</div>
@@ -145,7 +145,7 @@ templ sessionConfig(v View) {
 			<button
 				type="button"
 				data-on:click="document.getElementById('session-config').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 			>Fechar</button>
 		</div>
 	</dialog>
@@ -171,11 +171,11 @@ templ confirmDeleteSession(v View) {
 			<button
 				type="button"
 				data-on:click="document.getElementById('delete-session').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
 			>Cancelar</button>
 			<button
 				type="submit"
-				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90"
 			>Excluir a sessão</button>
 		</form>
 	</dialog>

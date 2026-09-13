@@ -167,7 +167,7 @@ templ originChoice(v forgeView) {
 			id="origin"
 			name="origin"
 			data-on:change={ forgeRedraw() }
-			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 		>
 			<option value="">Escolha uma origem…</option>
 			for _, o := range v.Origins {
@@ -233,7 +233,7 @@ templ itemSelect(nome, rotulo string, opcoes []itemOption, erros []string) {
 		<select
 			id={ nome }
 			name={ nome }
-			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
 		>
 			<option value="">Escolha…</option>
 			for _, o := range opcoes {

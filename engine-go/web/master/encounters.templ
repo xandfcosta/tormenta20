@@ -58,7 +58,7 @@ templ partyField(sinal, rotulo string, valor, minimo, maximo int) {
 			data-bind={ sinal }
 			data-on:input__debounce.300ms="@get('/mestre/encontros')"
 			aria-label={ rotulo + " do grupo" }
-			class="h-9 w-20 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+			class="h-9 w-20 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none md:text-sm"
 		/>
 	</div>
 }
@@ -105,7 +105,7 @@ templ copyEncounterButton(v encountersView) {
 		type="button"
 		data-url={ encounterAddress(v) }
 		data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copied = true; setTimeout(() => $copied = false, 2000)"
-		class="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 	>
 		<span data-show="!$copied">Copiar link do encontro</span>
 		<span style="display:none" data-show="$copied" class="text-grimorio-gold">Link copiado</span>
@@ -146,7 +146,7 @@ templ quantityStep(m book.Entry, passo, sinal string) {
 		type="button"
 		aria-label={ stepLabel(passo, m.Name) }
 		data-on:click={ fmt.Sprintf("@post('/mestre/encontros/%s/%s')", passo, m.ID) }
-		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent"
 	>{ sinal }</button>
 }
 
@@ -168,7 +168,7 @@ templ addPanel(v encountersView) {
 				value={ v.Term }
 				placeholder="Buscar criatura para acrescentar"
 				aria-label="Buscar criatura para acrescentar"
-				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"
 			/>
 		</div>
 		if v.Term != "" {
@@ -182,7 +182,7 @@ templ addPanel(v encountersView) {
 								type="button"
 								aria-label={ "Acrescentar " + m.Name + " ao encontro" }
 								data-on:click={ fmt.Sprintf("@post('/mestre/encontros/adicionar/%s')", m.ID) }
-								class="flex min-h-11 w-full flex-wrap items-baseline gap-x-2 rounded-sm border border-grimorio-iron p-2 text-left outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+								class="flex min-h-11 w-full flex-wrap items-baseline gap-x-2 rounded-sm border border-grimorio-iron p-2 text-left outline-none transition-colors hover:bg-accent"
 							>
 								<span class="text-xs font-semibold">{ m.Name }</span>
 								<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + book.CRWritten(m.ND) }</span>

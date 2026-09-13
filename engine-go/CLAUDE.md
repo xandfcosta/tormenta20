@@ -691,10 +691,15 @@ regra do repositório no `api` seria escolher um dono arbitrário — e o `api` 
 sendo dividido em um pacote por cena (ALE-278), então o guarda mudaria de casa
 junto com a próxima fatia.
 
-OITO moram lá hoje, e a lista cresceu por duas razões diferentes — vale saber
-qual é qual. Três nasceram lá porque a regra é do REPOSITÓRIO e não de um
-pacote; três MUDARAM de casa porque mediam o próprio diretório e encolheram
-quando uma cena virou pacote; e as duas últimas são a família das citações.
+São **23** hoje (`grep -h '^func Test' convention/*_test.go | wc -l`), e aqui dizia OITO
+até a ALE-317 — o número envelheceu sozinho ao longo de sete issues, que é
+exatamente o que a seção "Como uma convenção passa a valer" do guia da raiz
+prevê para número escrito à mão sobre família que cresce. **O `grep` é a fonte.**
+
+O que vale saber não é a contagem, é por que cada um veio parar aqui, e são três
+razões. Uns nasceram lá porque a regra é do REPOSITÓRIO e não de um pacote;
+outros MUDARAM de casa porque mediam o próprio diretório e encolheram quando uma
+cena virou pacote; e três são a família das citações.
 
 - **`TestEveryTestNameIsEnglish`** varre todo `*_test.go` e recusa nome com
   palavra em português. Ele é o que impede o 774º — a regra de idioma sempre
@@ -752,6 +757,15 @@ quando uma cena virou pacote; e as duas últimas são a família das citações.
   interessa aqui é a forma, porque ela vale para o próximo: **um guarda que
   varre `.` mede o diretório em que ele por acaso mora**, e mover o arquivo
   encolhe a varredura sem mudar uma linha do guarda nem acender nada.
+
+- **`TestNoHandwrittenFocusRing`** (ALE-317) é regra do repositório desde o
+  primeiro dia, e a razão de ele existir não é estilo: a receita de foco é
+  GLOBAL e não layerada, então `focus-visible:outline-*` numa `class=` é
+  decoração — 242 sítios a escreviam, e apagar os 242 não muda um pixel. O que
+  vale copiar dele é o TERCEIRO controle: ele lê o `index.css` e afirma que a
+  regra global continua lá. Um guarda que proíbe a cópia porque existe o
+  original tem de falhar quando o original sumir, senão ele passa a cobrar uma
+  regra cuja razão morreu — e aí a proibição deixa o app sem realce nenhum.
 
 **A lista de marcadores tem uma fresta declarada**, e ela é deliberada: nome
 PRÓPRIO do livro passa. `TestBolaDeFogoWorkedExample` e
@@ -2911,6 +2925,12 @@ A regra é global, mora no `index.css` desde a ALE-173 e **não é layerada** �
 então ela ganha de todo utilitário do Tailwind, que é layerado. Consequência que
 vale saber antes de escrever qualquer botão: `focus-visible:outline-*` escrito à
 mão não faz efeito nenhum dentro de uma cena, porque a regra de cima já decidiu.
+Eram **242 sítios** copiando a mesma tripla — 240 em 43 `.templ` e 2 em `.go` de
+produção —, e apagar os 242 não mudou um pixel (ALE-317). A issue os contava como
+147 porque a primeira medição olhou só `<button>`, e a tripla também estava em
+`<a>`, `<input>`, `<summary>` e `<label>`: *uma medição parcial não é um número
+menor, é um número de outra pergunta.* Quem impede o 243º é o
+`TestNoHandwrittenFocusRing`.
 
 O que MUDA o pixel é o REPOUSO, e foi só medindo que isso apareceu. O `@layer
 base` traz o `* { border-color; outline-color }` do shadcn, e o `outline-color`

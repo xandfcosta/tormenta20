@@ -221,7 +221,7 @@ templ situationalToggle(v View, linha situationalRow) {
 			aria-checked={ fmt.Sprintf("%t", linha.Active) }
 			aria-label={ linha.Label }
 			data-on:click={ "$conditional = '" + linha.Key + "'; " + sheetPost(v, "/efeitos/situacao") }
-			class="flex min-w-0 flex-1 items-center gap-2 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="flex min-w-0 flex-1 items-center gap-2 text-left outline-none"
 		>
 			if linha.Active {
 				@ui.Icon("Check", "size-3.5 shrink-0 text-bonus-ink")
@@ -274,7 +274,7 @@ templ conditionPickerDialog(v View) {
 			<button
 				type="button"
 				data-on:click={ sheetPost(v, "/efeitos/condicao/"+opcao.Command) + "; $condition_dialog = false" }
-				class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent"
 			>
 				<span class="block text-sm text-foreground">{ opcao.Label }</span>
 				<span class="block text-2xs text-muted-foreground">{ opcao.Detail }</span>
@@ -293,7 +293,7 @@ templ buffPickerDialog(v View) {
 			<button
 				type="button"
 				data-on:click={ sheetPost(v, "/efeitos/aplica/"+opcao.Command) + "; $buff_dialog = false" }
-				class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent"
 			>
 				<span class="block text-sm text-foreground">{ opcao.Label }</span>
 				<span class="block text-2xs text-muted-foreground">{ opcao.Detail }</span>

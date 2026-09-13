@@ -62,7 +62,7 @@ templ tableBestiary(v master.BestiaryView) {
 				type="button"
 				aria-label="Fechar o bestiário"
 				data-on:click="document.getElementById('table-bestiary').close()"
-				class="ml-auto flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="ml-auto flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent"
 			>
 			@ui.Icon("X", "size-4")
 		</button>
@@ -118,7 +118,7 @@ templ adjustEntry(v master.BestiaryView, m book.Entry) {
 			data-indicator:sending
 			data-attr:disabled="$sending"
 			data-on:click={ fmt.Sprintf("@post('%s/enviar')", v.BestiaryBase()) }
-			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 disabled:opacity-50"
 		>
 			Mandar { m.Name } para a Table
 		</button>
@@ -139,7 +139,7 @@ templ campoDoAjuste(id, rotulo, sinal, min, max string) {
 			max={ max }
 			inputmode="numeric"
 			data-bind={ sinal }
-			class="w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none"
 		/>
 	</div>
 }

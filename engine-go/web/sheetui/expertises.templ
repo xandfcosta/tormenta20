@@ -79,7 +79,7 @@ templ expertiseTerm(v View) {
 			value={ v.Expertises.Search }
 			placeholder="Buscar perícia"
 			aria-label="Buscar perícia"
-			class="h-8 w-full rounded-sm border border-input bg-transparent pl-7 pr-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring sm:text-xs"
+			class="h-8 w-full rounded-sm border border-input bg-transparent pl-7 pr-2 text-base outline-none sm:text-xs"
 		/>
 	</div>
 }
@@ -119,7 +119,7 @@ templ expertiseTotal(linha expertiseRow) {
 		aria-label={ totalLabel(linha) }
 		aria-haspopup="dialog"
 		data-on:click={ "$detail = '" + linha.Key + "'" }
-		class={ "flex size-11 shrink-0 items-center justify-center rounded-none border font-mono text-lg font-bold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+		class={ "flex size-11 shrink-0 items-center justify-center rounded-none border font-mono text-lg font-bold outline-none",
 			templ.KV("border-destructive/60 bg-destructive/10 text-penalty-ink", linha.AutoFail),
 			templ.KV("border-dashed border-grimorio-iron text-muted-foreground", linha.Locked && !linha.AutoFail),
 			templ.KV("border-grimorio-iron bg-grimorio-panel-raised text-grimorio-gold", !linha.Locked && !linha.AutoFail) }
@@ -254,7 +254,7 @@ templ craftDialog(v View) {
 						maxlength="40"
 						data-bind:new_expertise
 						placeholder="Ferreiro, Marinheiro…"
-						class="mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring sm:text-sm"
+						class="mt-1 h-9 w-full rounded-sm border border-input bg-transparent px-2 text-base outline-none sm:text-sm"
 					/>
 				</div>
 				<div>
@@ -262,7 +262,7 @@ templ craftDialog(v View) {
 					<select
 						id="craft-attribute"
 						data-bind:new_attribute
-						class="mt-1 h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 font-mono text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+						class="mt-1 h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 font-mono text-sm text-foreground outline-none"
 					>
 						for _, opcao := range v.Expertises.Attributes {
 							<option value={ opcao.Key }>{ opcao.Label }</option>

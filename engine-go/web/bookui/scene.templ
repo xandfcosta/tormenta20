@@ -58,7 +58,7 @@ templ bookAnchor(livro BookAddress, pagina int, termo string) {
 		rel="noopener"
 		data-nav-skip
 		title={ fmt.Sprintf("Abrir o livro na página %d", pagina) }
-		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
 	>{ children... }</a>
 }
 
@@ -104,7 +104,7 @@ templ BookDialog() {
 			type="button"
 			aria-label="Fechar o livro"
 			data-on:click="el.closest('dialog').close()"
-			class="absolute right-2 top-2 z-10 flex size-11 items-center justify-center rounded-sm border border-grimorio-iron bg-grimorio-panel text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="absolute right-2 top-2 z-10 flex size-11 items-center justify-center rounded-sm border border-grimorio-iron bg-grimorio-panel text-lg text-muted-foreground outline-none transition-colors hover:text-foreground"
 		>×</button>
 		<iframe title="O livro" class="size-full border-0"></iframe>
 	</dialog>
@@ -155,7 +155,7 @@ templ CrossRef(aba, id, nome string) {
 		data-on:click={ openEntryOver }
 		data-nav-skip
 		title={ "Ver " + nome }
-		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
 	>{ children... }</a>
 }
 

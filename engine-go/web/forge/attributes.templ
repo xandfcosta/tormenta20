@@ -85,7 +85,7 @@ templ attributeStepCmd(id int64, linha attributeRow, passo int, simbolo, rotulo 
 		aria-label={ rotulo }
 		disabled?={ !buttonFits(linha, passo) }
 		data-on:click={ attributePost(id, linha.Key, passo) }
-		class="inline-flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-base text-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40"
+		class="inline-flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-base text-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold disabled:cursor-not-allowed disabled:opacity-40"
 	>{ simbolo }</button>
 }
 

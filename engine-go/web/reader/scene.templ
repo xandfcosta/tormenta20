@@ -25,7 +25,7 @@ templ readerScene(v readerView) {
 			if !v.InDialog {
 				<a
 					href={ templ.SafeURL(v.Back) }
-					class="inline-flex min-h-11 items-center px-2 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center px-2 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold"
 				>‹ Back</a>
 			}
 			if v.Term != "" {
@@ -55,7 +55,7 @@ templ readerScene(v readerView) {
 					href={ templ.SafeURL(v.PDF) }
 					target="_blank"
 					rel="noopener"
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent"
 				>abrir fora ↗</a>
 			</div>
 		</div>
@@ -100,6 +100,6 @@ templ readerButton(acao, rotulo string) {
 		title={ rotulo }
 		data-acao={ acao }
 		disabled
-		class="inline-flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40"
+		class="inline-flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
 	>{ children... }</button>
 }

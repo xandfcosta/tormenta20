@@ -65,7 +65,7 @@ templ Marker(m RailMarker) {
 		data-on:focusin={ CursorGesture(m.Index, m.ID) }
 		data-on:click={ CursorGesture(m.Index, m.ID) }
 		data-on:keydown={ theEnterThatOpens(m.Destino) }
-		class={ "flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+		class={ "flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised",
 			"aria-selected:border-grimorio-gold aria-selected:bg-grimorio-panel-raised" }
 	>
 		<span
@@ -102,7 +102,7 @@ templ BlankMarker(indice int, rotulo, destino string) {
 		data-on:focusin={ CursorGesture(indice, 0) }
 		data-on:click={ CursorGesture(indice, 0) }
 		data-on:keydown={ theEnterThatOpens(destino) }
-		class="flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-dashed border-grimorio-iron-light px-3 py-2 text-left text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
+		class="flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-dashed border-grimorio-iron-light px-3 py-2 text-left text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
 	>
 		<span aria-hidden="true" class="flex size-8 shrink-0 items-center justify-center border border-dashed border-grimorio-iron-light">
 			@Icon("Plus", "size-4")

@@ -262,7 +262,7 @@ func finderResults(v finderView) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" data-resultado class=\"flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\"><span class=\"shrink-0 font-semibold\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" data-resultado class=\"flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:bg-accent\"><span class=\"shrink-0 font-semibold\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -330,7 +330,7 @@ func finderResults(v finderView) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" data-resultado class=\"flex min-h-11 items-center rounded-sm px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" data-resultado class=\"flex min-h-11 items-center rounded-sm px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

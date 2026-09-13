@@ -98,7 +98,7 @@ templ finderResults(v finderView) {
 							<a
 								href={ templ.SafeURL(a.Destino) }
 								data-resultado
-								class="flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+								class="flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:bg-accent"
 							>
 								<span class="shrink-0 font-semibold">{ a.Nome }</span>
 								<span class="truncate text-3xs text-muted-foreground">{ a.Detalhe }</span>
@@ -116,7 +116,7 @@ templ finderResults(v finderView) {
 							<a
 								href={ templ.SafeURL(g.Mais) }
 								data-resultado
-								class="flex min-h-11 items-center rounded-sm px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+								class="flex min-h-11 items-center rounded-sm px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent"
 							>{ "+" + strconv.Itoa(g.Cortados()) + " em " + g.Rotulo }</a>
 						</li>
 					}

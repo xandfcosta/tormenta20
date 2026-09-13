@@ -100,7 +100,7 @@ templ placeRow(v oneView, l PlaceRow) {
 					type="submit"
 					aria-label={ "Apagar " + l.Nome }
 					title={ "Apagar " + l.Nome + " do acervo" }
-					class="flex size-11 items-center justify-center rounded-sm border border-transparent text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="flex size-11 items-center justify-center rounded-sm border border-transparent text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 				>
 					@ui.Icon("Trash2", "size-4")
 				</button>
@@ -141,7 +141,7 @@ templ newPlaceDialog(v oneView) {
 				<select
 					id="place-ground"
 					name="ground"
-					class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+					class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 				>
 					for _, c := range v.Chaos {
 						<option value={ c.ID }>{ c.Rotulo }</option>

@@ -63,6 +63,5 @@ package ui
 func BadgeClasses(extra string) string {
 	return Join(
 		"min-h-6 rounded-full border px-2 outline-none transition-colors",
-		"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 		extra)
 }

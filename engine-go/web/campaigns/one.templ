@@ -134,7 +134,7 @@ templ oneNav(v oneView) {
 				href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", v.ID, a.ID)) }
 				data-nav-item
 				aria-current={ ariaCurrent(a.Ativa) }
-				class={ "shrink-0 justify-start gap-2 rounded-none px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+				class={ "shrink-0 justify-start gap-2 rounded-none px-3 py-2 text-left text-sm outline-none transition-colors",
 					templ.KV("bg-grimorio-panel-raised text-grimorio-gold sm:border-l-2 sm:border-grimorio-gold", a.Ativa),
 					templ.KV("text-muted-foreground hover:text-grimorio-gold sm:border-l-2 sm:border-transparent", !a.Ativa) }
 			>{ a.Rotulo }</a>
@@ -244,7 +244,7 @@ templ onePanel(sobrancelha, titulo string) {
 templ seeAll(campanhaID int64, aba, texto string) {
 	<a
 		href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", campanhaID, aba)) }
-		class="inline-flex min-h-11 items-center text-xs text-muted-foreground underline-offset-4 outline-none hover:text-grimorio-gold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="inline-flex min-h-11 items-center text-xs text-muted-foreground underline-offset-4 outline-none hover:text-grimorio-gold hover:underline"
 	>{ texto }</a>
 }
 
@@ -276,7 +276,7 @@ templ sessionLine(campanhaID int64, sess sessionRow) {
 		<a
 			href={ templ.SafeURL(routes.Table(campanhaID, sess.ID)) }
 			data-nav-item
-			class="flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold"
 		>
 			<span class="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{ strconv.FormatInt(sess.Numero, 10) }</span>
 			<span class="min-w-0 flex-1 truncate text-foreground">{ sessionName(sess) }</span>
@@ -474,7 +474,7 @@ templ ruleSwitch(v oneView, regra optionalRule) {
 		data-indicator:saving
 		data-attr:disabled="$saving"
 		data-on:click={ fmt.Sprintf("@post('/campanhas/%d/regras/%s')", v.ID, regra.ID) }
-		class={ "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50",
+		class={ "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none disabled:opacity-50",
 			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(regra.ID)),
 			templ.KV("border-grimorio-iron-light bg-grimorio-panel-raised", !v.RegraEmVigor(regra.ID)) }
 	>

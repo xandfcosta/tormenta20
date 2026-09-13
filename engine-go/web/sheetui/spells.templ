@@ -204,14 +204,14 @@ templ augmentStepper(a augmentRow) {
 				type="button"
 				aria-label={ "Menos de " + a.Description }
 				data-on:click={ augmentSignal(a.Index) + " = Math.max(0, " + augmentSignal(a.Index) + " - 1)" }
-				class="inline-flex size-7 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex size-7 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none hover:text-foreground"
 			>−</button>
 			<span class="w-5 text-center font-mono text-sm text-foreground" data-text={ augmentSignal(a.Index) }></span>
 			<button
 				type="button"
 				aria-label={ "Mais de " + a.Description }
 				data-on:click={ augmentSignal(a.Index) + "++" }
-				class="inline-flex size-7 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex size-7 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none hover:text-foreground"
 			>+</button>
 		} else {
 			<button
@@ -269,7 +269,7 @@ templ learnSpellDialog(v View) {
 						<button
 							type="button"
 							data-on:click={ sheetPost(v, "/magias/aprende/"+magia.Command) }
-							class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							class="block w-full rounded-sm border border-grimorio-iron px-2 py-1.5 text-left outline-none transition-colors hover:bg-accent"
 						>
 							<span class="flex items-baseline gap-2">
 								<span class="shrink-0 font-mono text-3xs text-arcane-ink">{ magia.Circle }</span>
@@ -297,7 +297,7 @@ templ spellFilters(v View) {
 				value={ v.Spells.Search }
 				placeholder="Buscar magia"
 				aria-label="Buscar magia"
-				class="h-8 w-full rounded-sm border border-input bg-transparent pl-7 pr-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring sm:text-sm"
+				class="h-8 w-full rounded-sm border border-input bg-transparent pl-7 pr-2 text-base outline-none sm:text-sm"
 			/>
 		</div>
 		<select
@@ -305,7 +305,7 @@ templ spellFilters(v View) {
 			data-bind:spell_circle
 			data-on:change={ sheetGet(v) }
 			aria-label="Filtrar por círculo"
-			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none"
 		>
 			@circleOption("", "Todos os círculos", v.Spells.Circulo)
 			@circleOption("0", "Truque", v.Spells.Circulo)
@@ -320,7 +320,7 @@ templ spellFilters(v View) {
 			data-bind:spell_school
 			data-on:change={ sheetGet(v) }
 			aria-label="Filtrar por escola"
-			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm text-foreground outline-none"
 		>
 			for _, opcao := range v.Spells.Escolas {
 				if opcao.Ativo {

@@ -391,7 +391,7 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **74 guardas de
+Este repositório já vive disso e nunca escreveu a regra: são **75 guardas de
 varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
 de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
 posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
@@ -402,7 +402,8 @@ inicial existe no catálogo, nenhuma concessão de origem com escolha nasce fixa
 todo endereço antigo leva ao piloto, nenhum gesto do tabuleiro escreve o próprio
 endereço, toda ferramenta desenhada no rascunho tem rota nele, nenhum cromo que
 flutua sobre o mapa deixa um controle próprio sem ponteiro, nenhuma cena escreve
-a receita de rótulo à mão, nenhum nó escondido por `data-show` nasce visível,
+a receita de rótulo à mão, nenhuma cena escreve a receita de FOCO à mão,
+nenhum nó escondido por `data-show` nasce visível,
 todo campo do seed é classificado como referência de catálogo ou não, nenhum id
 de catálogo carrega acento, toda cena de seleção declara os sinais que o gesto
 dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum

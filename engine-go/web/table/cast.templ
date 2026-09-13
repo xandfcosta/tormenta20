@@ -63,7 +63,7 @@ templ castPortrait(v View, m Member) {
 		title={ castLabel(m) }
 		aria-label={ castLabel(m) }
 		data-on:click={ openSheetCast(m) }
-		class="relative flex flex-col items-center rounded-sm border border-grimorio-iron px-1 py-1.5 outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="relative flex flex-col items-center rounded-sm border border-grimorio-iron px-1 py-1.5 outline-none transition-colors hover:bg-accent"
 	>
 		<span class="text-sm font-semibold text-foreground">{ m.Iniciais }</span>
 		if m.Presenca != nil {
@@ -99,7 +99,7 @@ templ castSheet(v View, m Member) {
 				type="button"
 				aria-label="Fechar"
 				data-on:click={ closeSheetCast(m) }
-				class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent"
 			>
 				@ui.Icon("X", "size-4")
 			</button>
@@ -130,7 +130,7 @@ templ castSheet(v View, m Member) {
 				<button
 					type="button"
 					data-on:click={ closeSheetCast(m) + " " + poeNaFila(v, m) }
-					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 				>
 					@ui.Icon("Swords", "size-4")
 					Pôr na iniciativa
@@ -170,6 +170,6 @@ templ castStep(v View, m Member, pool, verb, sign, label string) {
 		aria-label={ label + " " + m.Nome }
 		title={ label + " " + m.Nome + " — clique 1, Shift+clique 5" }
 		data-on:click={ castVital(v, m, pool, verb) }
-		class="flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent"
 	>{ sign }</button>
 }

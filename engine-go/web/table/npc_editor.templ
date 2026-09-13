@@ -28,7 +28,7 @@ templ blockEditor(v View) {
 			<button
 				type="button"
 				data-on:click={ closeEditor }
-				class="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-sm border border-grimorio-iron px-2 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-sm border border-grimorio-iron px-2 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 			>
 				@ui.Icon("ChevronRight", "size-4 rotate-180")
 				Voltar ao elenco
@@ -51,7 +51,7 @@ templ blockEditor(v View) {
 				type="text"
 				data-bind="draft.nome"
 				placeholder="Ogro Capitão"
-				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 			/>
 		</div>
 		<div role="tablist" aria-label="Partes do bloco" class="flex shrink-0 flex-wrap gap-1 border-b border-grimorio-iron">
@@ -78,12 +78,12 @@ templ blockEditor(v View) {
 			<button
 				type="button"
 				data-on:click={ closeEditor }
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
 			>Cancelar</button>
 			<button
 				type="button"
 				data-on:click={ salvaOBloco(v) }
-				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
 			>Salvar</button>
 		</div>
 	</div>
@@ -103,7 +103,7 @@ templ editorTabLink(aba editorTab) {
 		data-attr:aria-selected={ fmt.Sprintf("%s ? 'true' : 'false'", onTabExpr(aba.ID)) }
 		data-class={ tabStyling(aba.ID) }
 		data-on:click={ pickTab(aba.ID) }
-		class="inline-flex min-h-11 items-center gap-1.5 rounded-t-sm border border-transparent px-3 text-sm outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="inline-flex min-h-11 items-center gap-1.5 rounded-t-sm border border-transparent px-3 text-sm outline-none transition-colors hover:text-foreground"
 	>
 		{ aba.Rotulo }
 		if tabSummary(aba.ID) != "" {
@@ -172,7 +172,7 @@ templ blockMana() {
 				max="999"
 				data-show="$draft.conjura"
 				data-bind={ draftField("pm") }
-				class="h-11 w-24 rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+				class="h-11 w-24 rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none"
 			/>
 		</div>
 	</div>
@@ -214,7 +214,7 @@ templ listHeader(v View, lista, titulo, oQue string) {
 		<button
 			type="button"
 			data-on:click={ listCommand(v.CampaignID, v.SessionID, lista, -1) }
-			class="inline-flex min-h-9 items-center gap-1 rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			class="inline-flex min-h-9 items-center gap-1 rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent"
 		>
 			@ui.Icon("Plus", "size-3.5")
 			{ oQue }
@@ -285,7 +285,7 @@ templ draftAbilities(campanha, sessao int64, habilidades []string) {
 					aria-label={ fmt.Sprintf("Habilidade especial %d", i+1) }
 					data-bind={ rowField(listaDeHabilidades, i, "") }
 					placeholder={ abilityPlaceholder }
-					class="min-w-0 flex-1 rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+					class="min-w-0 flex-1 rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
 				></textarea>
 				@removeRowButton(campanha, sessao, listaDeHabilidades, i, fmt.Sprintf("a habilidade %d", i+1))
 			</div>
@@ -313,7 +313,7 @@ templ numberBlock(campo, rotulo string, minimo, maximo int) {
 			min={ fmt.Sprint(minimo) }
 			max={ fmt.Sprint(maximo) }
 			data-bind={ draftField(campo) }
-			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none"
 		/>
 	</div>
 }
@@ -326,7 +326,7 @@ templ blockText(campo, rotulo, dica string) {
 			type="text"
 			data-bind={ draftField(campo) }
 			placeholder={ dica }
-			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		/>
 	</div>
 }
@@ -340,7 +340,7 @@ templ blockChoice(campo, rotulo string, opcoes []blockOption) {
 		<select
 			id={ "npc-" + campo }
 			data-bind={ draftField(campo) }
-			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		>
 			for _, opcao := range opcoes {
 				<option value={ opcao.Valor }>{ opcao.Rotulo }</option>
@@ -357,7 +357,7 @@ templ rowBox(caminho, rotulo, dica, largura string) {
 			aria-label={ rotulo }
 			data-bind={ caminho }
 			placeholder={ dica }
-			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm outline-none"
 		/>
 	</div>
 }
@@ -371,7 +371,7 @@ templ numberRow(caminho, rotulo string, minimo, maximo int) {
 			min={ fmt.Sprint(minimo) }
 			max={ fmt.Sprint(maximo) }
 			data-bind={ caminho }
-			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			class="h-11 w-full rounded-sm border border-input bg-background px-2 text-sm tabular-nums outline-none"
 		/>
 	</div>
 }
@@ -387,7 +387,7 @@ templ removeRowButton(campanha, sessao int64, lista string, indice int, oQue str
 		aria-label={ "Tirar " + oQue }
 		title={ "Tirar " + oQue }
 		data-on:click={ listCommand(campanha, sessao, lista, indice) }
-		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
 	>
 		@ui.Icon("Trash2", "size-4")
 	</button>

@@ -45,7 +45,7 @@ templ collectionScene(v collectionView) {
 				value={ v.Term }
 				placeholder="Buscar em todos os catálogos"
 				aria-label="Buscar nos catálogos"
-				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"
 			/>
 		</div>
 		// Os FILTROS somem durante a busca: com termo digitado a cena responde
@@ -70,7 +70,7 @@ templ collectionScene(v collectionView) {
 			<p class="shrink-0 text-xs text-muted-foreground">
 				<a
 					href={ templ.SafeURL("/mestre/catalogos?aba=" + v.Aba) }
-					class="underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					class="underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
 				>{ "‹ ver " + tabLabel(v.Aba) + " inteiro" }</a>
 			</p>
 		}
@@ -329,7 +329,7 @@ templ spellCard(m book.Spell, livro bookui.BookAddress) {
 				type="button"
 				data-nav-skip
 				data-on:click={ bookui.OpensAugments(m.ID) }
-				class="mt-1 rounded-sm text-left text-xs text-muted-foreground underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="mt-1 rounded-sm text-left text-xs text-muted-foreground underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
 			>{ augmentsWritten(len(m.Augments)) }</button>
 		}
 	}
@@ -601,9 +601,9 @@ templ collectionFilters(v collectionView) {
 							aria-pressed={ ui.AriaBool(v.badgeOn(f.Chave, o.Valor)) }
 							data-on:click={ toggleBadge(v.Aba, f.Chave, o.Valor) }
 							if v.badgeOn(f.Chave, o.Valor) {
-								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none"
 							} else {
-								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent"
 							}
 						>{ o.Rotulo }</button>
 					}
