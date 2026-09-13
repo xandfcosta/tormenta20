@@ -53,27 +53,14 @@ func TestTableTurnOf(t *testing.T) {
 	}
 }
 
-// Os LIMIARES da cor, e só eles: a tabela inteira de porcentagens seria a
-// implementação reescrita. 25 e 50 são os mesmos do `hpFillVar` da SPA, e é a
-// divergência entre os dois que este teste existe para tornar barulhenta.
-func TestHpToneAtTheThresholds(t *testing.T) {
-	casos := []struct {
-		pct int
-		tom string
-	}{
-		{0, "bg-hp-critical"},
-		{25, "bg-hp-critical"},
-		{26, "bg-hp-hurt"},
-		{50, "bg-hp-hurt"},
-		{51, "bg-hp-full"},
-		{100, "bg-hp-full"},
-	}
-	for _, c := range casos {
-		if got := hpToneOf(c.pct); got != c.tom {
-			t.Errorf("hpToneOf(%d) = %q, queria %q", c.pct, got, c.tom)
-		}
-	}
-}
+// Aqui morava o `TestHpToneAtTheThresholds`, que prendia os limiares da cor do
+// PV. A regra foi para `web/ui` na ALE-316 e o guarda foi junto, agora como
+// `TestTheHpLadderTurnsAtTheThresholds`: a escada deixou de ser da Mesa, porque
+// as quatro superfícies que pintam PV leem a mesma — e guarda mora onde a regra
+// mora.
+//
+// (O nome novo fica numa LINHA SÓ de propósito: quebrado em duas, o guarda de
+// citação leu o pedaço de cima como um teste inexistente. Foi ele que acusou.)
 
 // O campo vazio não pode virar um total (ALE-236).
 //

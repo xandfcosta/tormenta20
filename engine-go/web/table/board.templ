@@ -920,7 +920,7 @@ templ planToken(v BoardView, p boardToken) {
 		}
 		if p.PV != nil {
 			<span aria-hidden="true" class="board-vitals">
-				<span class={ "board-vitals-full", hpToneOf(*p.PV) } style={ fmt.Sprintf("width:%d%%", *p.PV) }></span>
+				<span class={ "board-vitals-full", ui.HpFillTone(*p.PV) } style={ fmt.Sprintf("width:%d%%", *p.PV) }></span>
 			</span>
 		}
 	</button>

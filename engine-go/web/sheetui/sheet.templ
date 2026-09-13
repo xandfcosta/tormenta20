@@ -357,6 +357,12 @@ templ classChoice(v View, passo int, titulo string) {
 //
 // A barra é `aria-hidden` e o número é o que se lê: um leitor de tela não tem o
 // que fazer com uma largura em porcento, e a fração já diz tudo.
+//
+// A COR vem da escada da casa (`ui.HpFillTone`) e não de um token fixo. Até a
+// ALE-316 ela era `--hp-full` SEMPRE, com um `templ.KV` preso ao rótulo ser
+// "PV" e nenhum outro ramo possível — então o herói a 17,5% de vida saía verde
+// aqui e vermelho na Mesa, com a largura certa nas duas. Quem lê a ficha pela
+// cor, que é como se lê uma barra, lia a resposta errada.
 templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
 	// O `relative` é CONTEXTO DE POSICIONAMENTO e não estilo (ALE-174): a
 	// piscada pinta um véu `absolute inset-0` sobre a fileira.
@@ -364,7 +370,7 @@ templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
 		<span class={ ui.SectionLabelClasses("muted", "w-6 shrink-0") }>{ rotulo }</span>
 		<div aria-hidden="true" class="h-2 min-w-16 flex-1 overflow-hidden rounded-sm bg-grimorio-iron">
 			<div
-				class={ "h-full", templ.KV("bg-[color:var(--hp-full)]", rotulo == "PV"), templ.KV("bg-[color:var(--mp-arcane)]", rotulo == "PM") }
+				class={ "h-full", templ.KV(ui.HpFillTone(vital.Porcento), rotulo == "PV"), templ.KV("bg-mp-arcane", rotulo == "PM") }
 				style={ fmt.Sprintf("width: %d%%", vital.Porcento) }
 			></div>
 		</div>
