@@ -69,12 +69,36 @@ func TestTheStrokeDoesNotGoDiagonalWhenItGrazes(t *testing.T) {
 
 // TestAPossessedStrokeIsRefused: o teto existe contra o pedido forjado, não contra
 // o dedo. Num quadro de 16ms nenhum gesto atravessa cem casas.
+//
+// # A FRONTEIRA, e não "absurdo é recusado" (ALE-315)
+//
+// Aqui estavam só `9999999` contra o teto de 100 e um traço de nove aceito. Entre
+// nove e dez milhões cabe qualquer coisa: **trocar o `strokeFits` para 10 passava
+// verde nos dois**. O caso protegia contra o pedido forjado — que é o que o nome
+// promete — e não contra alguém mexer no teto.
+//
+// O predicado é `max(|dx|,|dy|) < strokeFits`, então o teto é de EXTENSÃO e não de
+// contagem de casas: 99 de extensão passa, 100 não. Os números estão escritos à
+// mão de propósito; derivá-los de `strokeFits` faria a asserção andar junto com o
+// defeito.
 func TestAPossessedStrokeIsRefused(t *testing.T) {
 	if ValidStroke(engine.Square{}, engine.Square{X: 9999999}) {
 		t.Error("um traço de dez milhões de casas foi aceito")
 	}
 	if !ValidStroke(engine.Square{}, engine.Square{X: 9, Y: 4}) {
 		t.Error("um traço de nove casas foi recusado — o teto está mordendo o gesto real")
+	}
+	// A FRONTEIRA: 99 de extensão é o último que passa.
+	if !ValidStroke(engine.Square{}, engine.Square{X: 99}) {
+		t.Error("um traço de extensão 99 foi recusado, e o teto é 100")
+	}
+	if ValidStroke(engine.Square{}, engine.Square{X: 100}) {
+		t.Error("um traço de extensão 100 foi aceito, e o teto é 100 — o predicado é `< 100`")
+	}
+	// E o teto é do MAIOR eixo, não da soma: um traço quase-diagonal de 99 por 99
+	// passa, porque o dedo que o fez andou 99 casas e não 198.
+	if !ValidStroke(engine.Square{}, engine.Square{X: 99, Y: 99}) {
+		t.Error("um traço diagonal de 99×99 foi recusado — o teto mede o maior eixo")
 	}
 }
 
@@ -103,12 +127,33 @@ func TestTheRectangleIsTheSameInAllFourDirections(t *testing.T) {
 }
 
 // TestAForgedRectangleIsRefused: mil casas são 32×32, uma sala grande de
-// masmorra. Acima disso não saiu de dois cantos escolhidos por alguém.
+// masmorra.
+//
+// # A FRONTEIRA, e não "absurdo é recusado" (ALE-315)
+//
+// Aqui estavam `9999×9999` contra o teto de 1000 e um 21×21 aceito. Entre 441 e
+// cem milhões cabe qualquer coisa: **trocar o `rectangleFits` para 500 passava
+// verde nos dois**. Os números abaixo estão escritos à mão e prendem o teto.
 func TestAForgedRectangleIsRefused(t *testing.T) {
 	if ValidRectangle(engine.Square{}, engine.Square{X: 9999, Y: 9999}) {
 		t.Error("um retângulo de cem milhões de casas foi aceito")
 	}
 	if !ValidRectangle(engine.Square{}, engine.Square{X: 20, Y: 20}) {
 		t.Error("um retângulo de 21×21 foi recusado — o teto está mordendo o gesto real")
+	}
+	// A FRONTEIRA: 25×40 são exatamente 1000, o último que passa; 25×41 são 1025.
+	if !ValidRectangle(engine.Square{}, engine.Square{X: 24, Y: 39}) {
+		t.Error("um retângulo de 25×40 = 1000 casas foi recusado, e o teto é 1000")
+	}
+	if ValidRectangle(engine.Square{}, engine.Square{X: 24, Y: 40}) {
+		t.Error("um retângulo de 25×41 = 1025 casas foi aceito, e o teto é 1000")
+	}
+	// E o teto é da ÁREA, não do lado: 1×1000 passa e 2×501 não, apesar de o
+	// segundo ser muito menor em cada eixo.
+	if !ValidRectangle(engine.Square{}, engine.Square{X: 0, Y: 999}) {
+		t.Error("uma coluna de 1×1000 foi recusada — o teto mede a área")
+	}
+	if ValidRectangle(engine.Square{}, engine.Square{X: 1, Y: 500}) {
+		t.Error("um retângulo de 2×501 = 1002 casas foi aceito — o teto mede a área")
 	}
 }
