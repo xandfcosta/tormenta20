@@ -286,6 +286,7 @@ overlay
 package
 pages
 panel
+params
 parity
 parse
 party

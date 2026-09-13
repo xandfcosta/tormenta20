@@ -2955,10 +2955,10 @@ não é sinal nenhum.
 ### DESLOCAMENTO é coordenada, e o guarda não sabia disso
 
 **`/grupo/mover/{dx}/{dy}` também foi** (ALE-307), e ela é a que denuncia o
-guarda. O `TestNoBoardRouteCarriesACoordinateInThePath` nasceu na mesma issue,
-para impedir que a família voltasse a escapar — e ele passou VERDE por cima
-dela, porque eu escrevi o padrão com os nomes que tinha na frente (`x`, `y`,
-`x2`, `mx`) e o arrasto do grupo chama os seus de `dx` e `dy`.
+guarda. O guarda de rota nasceu na mesma issue, para impedir que a família
+voltasse a escapar — e ele passou VERDE por cima dela, porque eu escrevi o padrão
+com os nomes que tinha na frente (`x`, `y`, `x2`, `mx`) e o arrasto do grupo chama
+os seus de `dx` e `dy`.
 
 É a terceira vez nesta família que uma varredura mede a grafia comum e a incomum
 sobra: a `colar` escapou de um `grep` por `base+"…"`, o `/pecas/nova` escapou por
@@ -2973,6 +2973,36 @@ A conversão levou junto **cinco leitores mortos**: `urlRect`, `tracoDaURL`,
 `chi.URLParam(r, "x")` com nenhuma rota registrando `{x}` desde a ALE-305, e
 nenhum chamador. Função de pacote sem uso não é erro em Go; quem as achou foi
 perguntar quem chama, e não o compilador.
+
+#### E o guarda foi REFEITO, porque ele era duas coisas estreitas (ALE-310)
+
+Ele morava na `convention` e lia o CÓDIGO-FONTE, procurando oito literais de
+coordenada na mesma LINHA de um `r.Get|Post|…(`. As duas metades falhavam, e as
+duas falhas são reusáveis:
+
+- **Lista de PROIBIDOS subconta em silêncio.** Nove grafias alternativas
+  sabotadas passaram verdes — entre elas `{col}`/`{lin}`, que são os nomes que o
+  `board_view.go` escreve em toda peça, e `{cx}`/`{cy}`, que são os nomes que o
+  cliente usa hoje. Hoje é uma lista de PERMITIDOS em
+  `api/testdata/route_params.txt` com os 39 parâmetros da árvore, e parâmetro
+  novo REPROVA até alguém escrever a linha — que é o ato de declarar que ele não
+  vem do ponteiro.
+- **Parser que lê a LINHA não lê o ARGUMENTO.** Quatro portas ficavam de fora,
+  três delas forma que este repositório usa: a coordenada declarada no `base :=`
+  (dominante em `web/table`, 30+ rotas), o registro quebrado em duas linhas, e o
+  `r.Route`/`r.Handle`, fora do conjunto de verbos. Sabotando um `r.Route` o
+  guarda passava **e o denominador SUBIA**, porque ele contava o `r.Post` filho e
+  ignorava o pai.
+
+**O conserto não foi um parser melhor: foi perguntar ao ROTEADOR.** O `chi.Walk`
+devolve o padrão já montado — o `base :=` juntado, o pai concatenado com o filho,
+a continuação lida como uma linha só —, e não há linha para ler errado. O guarda
+mudou de casa junto, para `api/`, porque é lá que o roteador se monta.
+
+E o denominador passou a ser EXATO: **212 rotas de verdade**, contra as 193 que o
+regex estimava. Aquelas 193 incluíam dez linhas de `r.Header.Get(` — sete delas a
+MESMA linha (`if r.Header.Get("datastar-request")`) que toda cena nova copia, o
+que fazia o piso crescer a cada cena, na direção que o afrouxa.
 
 ### O PASSO da ficha FICA no caminho, e a razão não é a que estava escrita
 
