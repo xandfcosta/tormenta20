@@ -15,7 +15,7 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
  *
  * A medição vivia espalhada: catorze cópias de `nenhum texto fica abaixo do
  * mínimo de contraste do AA`, uma por bloco `describe` do
- * `piloto-datastar.spec.ts`, mais avulsas no `piloto-sheet`, no `piloto-forge` e
+ * `scenes.spec.ts`, mais avulsas no `piloto-sheet`, no `piloto-forge` e
  * no `grimorio`. Dezoito endereços escritos à mão, e nada cobrando a cena que
  * nascesse amanhã — o regime que o `CLAUDE.md` chama de remendo na ALE-252.
  *

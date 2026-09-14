@@ -72,7 +72,7 @@ func TestTheImprovementsDialogOnlyOffersWhatFits(t *testing.T) {
 	}
 }
 
-func sheetNameItem(t *testing.T, f pilotoFixture, id int64, nome string) sqlcgen.ListItemsByCharacterRow {
+func sheetNameItem(t *testing.T, f sceneFixture, id int64, nome string) sqlcgen.ListItemsByCharacterRow {
 	t.Helper()
 	itens, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
@@ -128,7 +128,7 @@ func TestACustomItemRequiresANameAndHalfStepSlots(t *testing.T) {
 	}
 }
 
-func customItem(t *testing.T, f pilotoFixture, id int64, corpo string) string {
+func customItem(t *testing.T, f sceneFixture, id int64, corpo string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/itens/custom?tab=bag", id)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
@@ -163,7 +163,7 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 
 // USAR gasta a dose e aplica o que a MESA rolou, preso no máximo.
 func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.jogador, "Ferido", 3, 10, 30, 0, 0)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
@@ -189,7 +189,7 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 
 // A CURA NÃO PASSA DO MÁXIMO, e é o motor que prende.
 func TestUsingDoesNotGoPastMaximumHp(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.jogador, "Quase cheio", 3, 28, 30, 0, 0)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
@@ -218,7 +218,7 @@ func TestWhatIsNotConsumableCannotBeUsed(t *testing.T) {
 	}
 }
 
-func use(t *testing.T, f pilotoFixture, id, item int64, corpo string) string {
+func use(t *testing.T, f sceneFixture, id, item int64, corpo string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/itens/%d/usa?tab=bag", id, item)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
@@ -289,13 +289,13 @@ func TestAnInventedImprovementDoesNotEnter(t *testing.T) {
 	}
 }
 
-func improvements(t *testing.T, f pilotoFixture, id, item int64, corpo string) string {
+func improvements(t *testing.T, f sceneFixture, id, item int64, corpo string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/itens/%d/melhorias?tab=bag", id, item)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }
 
-func itemImprovements(t *testing.T, f pilotoFixture, item int64) string {
+func itemImprovements(t *testing.T, f sceneFixture, item int64) string {
 	t.Helper()
 	row, err := f.s.sceneCore().Queries().GetItem(context.Background(), item)
 	if err != nil {

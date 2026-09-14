@@ -10,7 +10,7 @@ import (
 	"t20engine/web/ui"
 )
 
-// A Mesa do jogador como DADO — o piloto Datastar (ALE-219).
+// A Mesa do jogador como DADO — as cenas em Datastar (ALE-219).
 //
 // Puro de propósito: o handler busca, este arquivo decide, o template só
 // desenha. É o que deixa a regra provável sem HTTP nenhum, pela mesma razão que
@@ -113,7 +113,7 @@ type tableBar struct {
 	// `html/template` sanitiza contexto CSS e um `var(--hp-full)` interpolado
 	// vira `ZgotmplZ`, e classe é o que o scanner do Tailwind sabe procurar.
 	// Como o nome nasce aqui e não no template, o scanner NÃO o vê — por isso
-	// os quatro estão declarados no `@source inline(...)` do `piloto.src.css`.
+	// os quatro estão declarados no `@source inline(...)` do `app.src.css`.
 	Tone string
 }
 
@@ -526,7 +526,7 @@ func ofViewGm(
 //
 // O caminho é o do PILOTO e não o da API JSON, e essa é a mesma escolha das
 // catorze fatias anteriores: a cena tem rotas próprias que chamam as MESMAS
-// regras extraídas. Apontar para `/api/...` acoplaria o piloto a uma superfície
+// regras extraídas. Apontar para `/api/...` acoplaria o app a uma superfície
 // que a migração existe para aposentar, e o ganho — não escrever a rota — some
 // no dia em que a API mudar de forma.
 //

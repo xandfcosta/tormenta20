@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func boardStops(t *testing.T, f pilotoFixture) []engine.Square {
+func boardStops(t *testing.T, f sceneFixture) []engine.Square {
 	t.Helper()
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil || b.Pending == nil {
@@ -24,7 +24,7 @@ func boardStops(t *testing.T, f pilotoFixture) []engine.Square {
 // a asserção que importa — um desfazer que tirasse os quadrados e deixasse o
 // número velho faria a mesa confirmar um movimento por um preço que não é o dele.
 func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
@@ -63,7 +63,7 @@ func TestUndoTakesTheLastLegAndRecomputesTheCost(t *testing.T) {
 // zero na mesa seria oferecer um "Confirmar" que não move ninguém, e a peça
 // ficaria presa num estado que só o Cancelar resolveria.
 func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
@@ -87,7 +87,7 @@ func TestUndoingTheLastStopCancelsTheMove(t *testing.T) {
 // Um botão que não faz nada é pior que nenhum, e com UMA perna desfazer já é
 // cancelar — que está ali do lado dizendo isso com a palavra certa.
 func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
@@ -127,7 +127,7 @@ func TestWithNoLegToUndoTheButtonDoesNotAppear(t *testing.T) {
 // então recarregar não perde nada. A cena que se abre do zero é a mesma que já
 // estava aberta.
 func TestTheStopsSurviveAPageReload(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 	for _, casa := range []string{`{"from":{"X":2,"Y":0}}`, `{"from":{"X":2,"Y":2}}`} {
@@ -150,7 +150,7 @@ func TestTheStopsSurviveAPageReload(t *testing.T) {
 // continuaria o caminho que o primeiro está montando — e quem confirmasse
 // confirmaria um percurso que ninguém inteiro escolheu.
 func TestSomeoneElsesProposalDoesNotExtendMine(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 

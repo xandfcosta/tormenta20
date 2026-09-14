@@ -368,7 +368,7 @@ func collectionResults(v collectionView) templ.Component {
 // A classe `collection-card` é ANCORAGEM e não estilo: dentro da caixa do elo o
 // cartão perde a moldura, porque lá a caixa já é a moldura — duas bordas
 // concêntricas com três milímetros entre elas, que foi o que o dono viu. A regra
-// vive no `piloto.src.css`, fora de `@layer`.
+// vive no `app.src.css`, fora de `@layer`.
 //
 // `wrap-anywhere` (`overflow-wrap: anywhere`) no CARTÃO, e é conserto de um
 // defeito que o dono viu na tela: a magia "Sopro da Salvação" lista as condições

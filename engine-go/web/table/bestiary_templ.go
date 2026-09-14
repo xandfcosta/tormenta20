@@ -38,7 +38,7 @@ import (
 //
 // É `<dialog>` modal e não uma gaveta ao lado, e aqui há um DESVIO da SPA que
 // vale dizer: lá o painel é não-modal em tela larga, para o rastreador continuar
-// recebendo clique atrás dele. A Mesa do piloto é uma coluna só — não existe o
+// recebendo clique atrás dele. A Mesa é uma coluna só — não existe o
 // "ao lado" que justificaria o não-modal —, e o modal traz de graça o foco
 // preso, o Escape e a camada de topo, que é também o que o tira de dentro do
 // `contain` do palco.

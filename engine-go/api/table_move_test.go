@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func (f pilotoFixture) onBoard(t *testing.T) string {
+func (f sceneFixture) onBoard(t *testing.T) string {
 	t.Helper()
 	f.seedOpenBoard(t, "stone")
 	entryID := f.tracker(t)
@@ -26,7 +26,7 @@ func (f pilotoFixture) onBoard(t *testing.T) string {
 // lugar da peça, o contorno seria impossível de expressar — que é exatamente o
 // defeito da SPA que a ALE-266 abriu.
 func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
@@ -60,7 +60,7 @@ func TestTheStopsAccumulateInsteadOfReplacingEachOther(t *testing.T) {
 // proposta. É o que deixa a pessoa contornar em vários cliques sem a mesa ver a
 // peça pulando de casa em casa.
 func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 	onde := func() (int, int) {
@@ -88,7 +88,7 @@ func TestTheMoveOnlyLandsOnConfirm(t *testing.T) {
 
 // E CANCELAR não mexe na peça: ela volta a poder ser movida de onde estava.
 func TestCancelDoesNotTouchTheToken(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
@@ -115,7 +115,7 @@ func TestCancelDoesNotTouchTheToken(t *testing.T) {
 // diferença importa porque a frase é o que a pessoa lê — "a peça não é sua" diz
 // o que fazer, e "proibido" não.
 func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Ogro", X: 5, Y: 5})
@@ -140,7 +140,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 // desenhar alcance para ele seria inventar um limite que a regra não põe — foi
 // isto que fez a casa alcançável deixar de ser o alvo do clique e virar pintura.
 func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.onBoard(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
@@ -183,7 +183,7 @@ func TestTheReachOnlyShowsWhenThereIsABudget(t *testing.T) {
 // há ação padrão para trocar, então não há teto a desenhar — não estaria sendo
 // medida por ninguém.
 func TestOutOfCombatNobodySeesReach(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.onBoard(t)
 
 	for quem, quemChama := range map[string]int64{"jogador": f.jogador, "mestre": f.mestre} {
@@ -215,7 +215,7 @@ func TestOutOfCombatNobodySeesReach(t *testing.T) {
 // Prende as DUAS metades, porque uma sem a outra não é o conserto: que a frase
 // sai no sinal certo, e que a região do tabuleiro tem onde acendê-la.
 func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
@@ -272,7 +272,7 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 // valores de UMA chamada de `reachAndTarget`, e enquanto ninguém
 // afirmava o segundo dava para movê-lo de lugar sem nenhum teste piscar.
 func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
@@ -303,7 +303,7 @@ func TestWhatIsLeftOfTheDisplacementAppearsInWriting(t *testing.T) {
 // turnPlayer põe a cena em combate e passa a vez para o jogador, que é a
 // única condição em que existe DESLOCAMENTO para estourar: o mestre tem
 // orçamento -1 e nunca vê vermelho.
-func (f pilotoFixture) turnPlayer(t *testing.T) {
+func (f sceneFixture) turnPlayer(t *testing.T) {
 	t.Helper()
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
@@ -324,7 +324,7 @@ func (f pilotoFixture) turnPlayer(t *testing.T) {
 // `moveWires` direto provaria a aritmética sobre uma proposta que a cena
 // talvez recusasse.
 func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	f.turnPlayer(t)
 
@@ -379,7 +379,7 @@ func TestTheArrowComesOutInTwoColorsWhenThePathOverruns(t *testing.T) {
 // reclamar. O mesmo jogador, na mesma vez, com um caminho que o deslocamento
 // paga.
 func TestTheControlForTheTwoColorArrow(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoard(t)
 	f.turnPlayer(t)
 

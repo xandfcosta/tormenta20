@@ -10,7 +10,7 @@ import (
 )
 
 func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete",
 		`{"creature":"ogro","npc_name":"Ogro Capitão"}`)
@@ -40,7 +40,7 @@ func TestStoringTheEntryCreatesTheGmBlock(t *testing.T) {
 // TestAnEmptyNameFallsBackToTheBookName — guardar "Ogro" como "Ogro" é o caso comum, e
 // obrigar a digitar faria o mestre repetir o que a tela já mostra.
 func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","npc_name":"   "}`)
 
@@ -60,7 +60,7 @@ func TestAnEmptyNameFallsBackToTheBookName(t *testing.T) {
 // campanha — e um guarda que olhasse só a sessão de origem passaria verde sobre
 // um elenco que se perde toda noite.
 func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	outraSessao := seedSession(t, f.s, f.campaignID)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
@@ -81,7 +81,7 @@ func TestTheCastBelongsToTheCampaignAndNotToTheSession(t *testing.T) {
 // mestre tem: o chefe da semana que vem está ali. Alcançar o de outra mesa é
 // pior que ver a fila dela.
 func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	outraCampanha := seedCampaign(t, f.s, f.jogador)
 	agora := "2026-01-01T00:00:00.000Z"
 	alheio, err := f.s.queries.CreateCampaignCreature(t.Context(), sqlcgen.CreateCampaignCreatureParams{
@@ -110,7 +110,7 @@ func TestTheGmDoesNotReachAnotherCampaignsCast(t *testing.T) {
 // — "ele não volta mais" e "ele saiu desta cena". Juntá-las faria o mestre
 // perder o combatente EM CURSO ao arrumar a preparação, no meio da noite.
 func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 	npcs := f.dbCast(t)
 	if len(npcs) != 1 {
@@ -131,7 +131,7 @@ func TestDeletingFromTheCastDoesNotRemoveFromTheTracker(t *testing.T) {
 
 // TestThePlayerDoesNotTouchTheCampaignCast — o papel, no servidor.
 func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro"}`)
 
@@ -143,7 +143,7 @@ func TestThePlayerDoesNotTouchTheCampaignCast(t *testing.T) {
 	}
 }
 
-func (f pilotoFixture) dbCast(t *testing.T) []sqlcgen.CampaignCreature {
+func (f sceneFixture) dbCast(t *testing.T) []sqlcgen.CampaignCreature {
 	t.Helper()
 	linhas, err := f.s.queries.ListCampaignCreatures(t.Context(), f.campaignID)
 	if err != nil {

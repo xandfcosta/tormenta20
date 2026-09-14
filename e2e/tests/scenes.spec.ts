@@ -5,10 +5,10 @@ import { expectCinzelAcimaDoPiso } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
- * As DUAS telas do piloto Datastar (ALE-219): a Mesa do jogador e a
+ * As DUAS telas das cenas em Datastar (ALE-219): a Mesa do jogador e a
  * administração.
  *
- * Este é o único spec do piloto, e ele existe por UM motivo que nenhuma outra
+ * Este é o único spec do app, e ele existe por UM motivo que nenhuma outra
  * camada cobre: contraste exige converter oklch para sRGB, e só o navegador faz
  * isso. Em jsdom o `getComputedStyle` devolve o oklch cru, e ler aqueles três
  * números como RGB dá razão inventada. É o mesmo motivo do guarda irmão em
@@ -21,7 +21,7 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  * só o vi porque medi.
  *
  * A página é do Go, não da SPA: o `baseURL` do Playwright é o Vite, e é o proxy
- * `/` do `vite.config.ts` que a alcança. Se o piloto for apagado, este
+ * `/` do `vite.config.ts` que a alcança. Se o app for apagado, este
  * arquivo vai junto.
  */
 
@@ -206,7 +206,7 @@ test.describe('A porta (piloto Datastar)', () => {
 
   /**
    * A porta é a tela-título, e a tela-título tem duas coisas que nenhuma outra
-   * superfície do piloto tinha: o brilho do `scene-title-glow` sobre a pedra, e
+   * superfície do app tinha: o brilho do `scene-title-glow` sobre a pedra, e
    * o `text-muted-foreground` do rodapé sobre o fundo mais escuro da cena.
    *
    * Nenhuma delas dá para medir fora do navegador: converter oklch para sRGB é

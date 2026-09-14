@@ -11,7 +11,7 @@ import { podeAnimar } from '@/lib/turn-juice'
  * # Por que FLIP, e por que não uma transição de CSS
  *
  * A peça é posicionada por `left`/`top` calculados de `--col`/`--lin`
- * (`piloto.src.css:982`). A issue previa o perigo de transicioná-los e nomeou a
+ * (`app.src.css:982`). A issue previa o perigo de transicioná-los e nomeou a
  * causa errada: ela dizia que o PAN também os muda. Não muda — o pan é
  * `transform` do contêiner da cena (`--vista-x`), e a peça não sabe dele.
  *

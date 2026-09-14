@@ -20,9 +20,9 @@ import (
 // alguém acrescentar amanhã já nasce medido — não há uma entrada por caso aqui
 // para alguém esquecer de escrever.
 func TestEveryOfferedGroundCanBePainted(t *testing.T) {
-	css, err := os.ReadFile("piloto/piloto.src.css")
+	css, err := os.ReadFile("assets/app.src.css")
 	if err != nil {
-		t.Fatalf("ler o CSS do piloto: %v", err)
+		t.Fatalf("ler o CSS da casa: %v", err)
 	}
 	folha := string(css)
 
@@ -31,7 +31,7 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 	// parece com "todos faltando" e passaria verde se a asserção fosse ao
 	// contrário.
 	if !strings.Contains(folha, ".ground-") {
-		t.Fatalf("o CSS do piloto não tem nenhuma classe .ground-* — o guarda está lendo o arquivo errado (%d bytes)", len(folha))
+		t.Fatalf("o CSS da casa não tem nenhuma classe .ground-* — o guarda está lendo o arquivo errado (%d bytes)", len(folha))
 	}
 
 	for _, chao := range board.PlaceGrounds {
@@ -65,9 +65,9 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 // pega é a regressão exata e provável — alguém arrastar a regra de volta para
 // dentro do `@layer` numa arrumação, achando que camada é organização.
 func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
-	folha, err := os.ReadFile("piloto/piloto.src.css")
+	folha, err := os.ReadFile("assets/app.src.css")
 	if err != nil {
-		t.Fatalf("ler o CSS do piloto: %v", err)
+		t.Fatalf("ler o CSS da casa: %v", err)
 	}
 	css := string(folha)
 
@@ -104,7 +104,7 @@ func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
 // caminho absoluto, e sem arquivo a Cinzel cai para uma serifada do sistema em
 // toda tela, que é um defeito de aparência que ninguém liga à causa.
 func TestTheStylesheetFontsExist(t *testing.T) {
-	fontes, err := os.ReadDir("piloto/static/fonts")
+	fontes, err := os.ReadDir("assets/static/fonts")
 	if err != nil {
 		t.Fatalf("ler as fontes embutidas: %v", err)
 	}

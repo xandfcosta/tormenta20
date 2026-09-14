@@ -810,7 +810,7 @@ func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 // para o Esc subir um nível e para escolher onde o foco pousa ao entrar na cena.
 // Com um nome próprio, esta cena caía no ramo "a primeira região que houver" —
 // que acertava por ser a única. O comentário do trilho de campanhas já avisava
-// que três cenas do piloto perderam esse comportamento assim.
+// que três cenas perderam esse comportamento assim.
 func characterFilm(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

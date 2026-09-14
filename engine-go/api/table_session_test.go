@@ -8,7 +8,7 @@ import (
 )
 
 func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 
 	// PLANEJADA: iniciar sim, encerrar não.
@@ -48,7 +48,7 @@ func TestTheScreenOffersTheVerbForTheState(t *testing.T) {
 //
 // Sair não é do mestre: quem entrou numa mesa precisa poder sair dela.
 func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if strings.Contains(tela, "Configurações da sessão") {
@@ -75,7 +75,7 @@ func TestThePlayerHasNoLifecycleButHasTheWayOut(t *testing.T) {
 // Vazio é legítimo: a identidade da sessão é o NÚMERO, e o título é o apelido da
 // noite. Obrigar a um faria o mestre inventar texto para poder salvar.
 func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 
 	f.posta(t, f.mestre, f.tableUrl()+"/sessao/titulo", `{"session_title":"A cripta do rio"}`)
@@ -97,7 +97,7 @@ func TestTheTitleSavesAndMayStayBlank(t *testing.T) {
 // Mesa recarrega a fila depois, senão o `GetState` recria um estado vazio sem
 // passar pelo banco e a próxima carga fria discordaria desta.
 func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n < 2 {
 		t.Fatalf("a cena montou %d combatentes — não há o que reiniciar", n)
@@ -117,7 +117,7 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 // O destino importa: voltar para a mesa apagada seria mandar o mestre para uma
 // porta que não existe mais.
 func TestDeletingErasesAndSendsTheGmToTheCampaign(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 
 	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/sessao/excluir", "")

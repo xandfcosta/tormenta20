@@ -8,7 +8,7 @@ import (
 )
 
 func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -44,7 +44,7 @@ func TestTheGmHasAWayToDrawTheCurtain(t *testing.T) {
 // Ela é o ponto INTEIRO desta feature: a cortina existe para o jogador não ver o
 // que o mestre está montando, e um jogador que a abre pela mão vê a emboscada.
 func TestThePlayerDoesNotDrawTheCurtain(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/cortina"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/fechar", ""); rec.Code != http.StatusOK {

@@ -73,7 +73,7 @@ func (s Scene) registerInitiativeTable(r *http.Request, campaignID, sessionID, d
 		return fmt.Errorf("você não tem personagem nesta mesa")
 	}
 	// A REGRA, e ela é a mesma do socket: confere o d20 de 1 a 20, pergunta o
-	// bônus ao motor e soma. O piloto não tem uma segunda — se tivesse, mediria
+	// bônus ao motor e soma. O app não tem uma segunda — se tivesse, mediria
 	// a cópia.
 	entry, err := s.deps.SelfInitiativeEntry(userID, campaignID, eu.CharacterID, d20)
 	if err != nil {

@@ -13,7 +13,7 @@ import (
 // A convenção que esta issue criou é uma frase: **o comando age na aba de quem
 // clicou**, e é ela que dispensou pôr o id do tabuleiro em vinte rotas. O
 // compilador obriga a passar o parâmetro; ele não obriga a passar o CERTO — um
-// `aAbaPadrao` num arquivo do piloto compila, roda, e pinta a taverna que a mesa
+// `aAbaPadrao` num arquivo do app compila, roda, e pinta a taverna que a mesa
 // está vendo enquanto o mestre olha a cripta. Sem estourar nada.
 //
 // Por isso ele varre em vez de conferir um caso: uma revisão nomeia um arquivo,
@@ -59,7 +59,7 @@ func TestNoSceneCommandUsesTheDefaultTab(t *testing.T) {
 		}
 		visitados++
 		if strings.Contains(string(fonte), "aAbaPadrao") {
-			t.Errorf("%s usa aAbaPadrao: o comando do piloto age na aba de QUEM CLICOU (c.TabuleiroID), "+
+			t.Errorf("%s usa aAbaPadrao: o comando da cena age na aba de QUEM CLICOU (c.TabuleiroID), "+
 				"e a padrão é da tela antiga — este gesto mexeria na cena que outra pessoa está olhando", caminho)
 		}
 	}

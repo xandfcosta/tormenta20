@@ -11,20 +11,20 @@ import (
 	"testing"
 )
 
-func effectScreen(t *testing.T, f pilotoFixture, id int64) string {
+func effectScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=conditionals", id), "").Body.String()
 }
 
-func effect(t *testing.T, f pilotoFixture, id int64, caminho string) *responseRecorderLike {
+func effect(t *testing.T, f sceneFixture, id int64, caminho string) *responseRecorderLike {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/efeitos/%s?tab=conditionals", id, caminho)
 	rec := f.pede(t, f.jogador, http.MethodPost, alvo, "")
 	return &responseRecorderLike{Code: rec.Code, Body: rec.Body.String()}
 }
 
-func conditions(t *testing.T, f pilotoFixture, id int64) []string {
+func conditions(t *testing.T, f sceneFixture, id int64) []string {
 	t.Helper()
 	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {

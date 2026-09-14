@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func rowConditions(t *testing.T, f pilotoFixture, entryID string) []string {
+func rowConditions(t *testing.T, f sceneFixture, entryID string) []string {
 	t.Helper()
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		if e.ID == entryID {
@@ -30,7 +30,7 @@ func rowConditions(t *testing.T, f pilotoFixture, entryID string) []string {
 // A escolha da condição é DELIBERADA: `caido` é uma das quatro em que id e nome
 // divergem. Uma que coincidisse passaria verde sobre o defeito.
 func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
@@ -72,7 +72,7 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 // lista nova é o servidor, lendo a atual. Uma tela que mandasse o conjunto
 // inteiro apagaria a condição que outro remendo acabou de acrescentar.
 func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 	base := f.tableUrl() + "/iniciativa/" + npc + "/condicao/"
@@ -107,7 +107,7 @@ func TestTogglingTurnsTheConditionOnAndOff(t *testing.T) {
 // estado de antes. O mestre aplicaria "abalado", veria o crachá apagado, e
 // clicaria de novo — tirando o que acabou de pôr.
 func TestTheNewSetComesBackInTheSignal(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
@@ -124,7 +124,7 @@ func TestTheNewSetComesBackInTheSignal(t *testing.T) {
 // ids ao lado das 35 do catálogo, e a que faltava — `enfeitiçado` — dava 400 ao
 // ser aplicada (ALE-122). Uma cópia da tabela do livro é uma cópia que desvia.
 func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
@@ -151,7 +151,7 @@ func TestAnInventedConditionIsRefusedWithThePage(t *testing.T) {
 
 // TestThePlayerDoesNotApplyAConditionButton — a trava é do servidor.
 func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	_, npc := sceneIds(t, f)
 
@@ -171,7 +171,7 @@ func TestThePlayerDoesNotApplyAConditionButton(t *testing.T) {
 // A condição que entrar no livro amanhã já nasce oferecida — não há uma lista
 // aqui para alguém esquecer de atualizar.
 func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()

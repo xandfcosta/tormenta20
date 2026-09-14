@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func mapMarkers(t *testing.T, f pilotoFixture) []board.BoardMarker {
+func mapMarkers(t *testing.T, f sceneFixture) []board.BoardMarker {
 	t.Helper()
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
@@ -24,7 +24,7 @@ func mapMarkers(t *testing.T, f pilotoFixture) []board.BoardMarker {
 // cliente que escolhia "A", "B", "C", e duas telas escolhendo por conta própria
 // é como nasce o segundo "C" no mesmo mapa.
 func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 
@@ -59,7 +59,7 @@ func TestTheMarkerIsBornHiddenAndWithTheFreeLetter(t *testing.T) {
 // O mestre que revelou cedo demais precisa poder esconder de volta, e um segundo
 // botão para desfazer o primeiro seria a mesma decisão em dois lugares.
 func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
@@ -88,7 +88,7 @@ func TestRevealTogglesInsteadOfOnlyRevealing(t *testing.T) {
 // nomeia o valor recebido E o esperado, que é a regra da casa para mensagem de
 // erro.
 func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
@@ -133,7 +133,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 // Os três gestos numa varredura só: o botão escondido é cortesia, e cada rota
 // nova é uma linha de registro que alguém pode trocar sem perceber.
 func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
@@ -160,7 +160,7 @@ func TestThePlayerDoesNotTouchTheMarkers(t *testing.T) {
 // mesa vê — senão ele revela e a tela dele não muda, que é justamente a pergunta
 // que o gesto de revelar existe para responder.
 func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {
@@ -197,7 +197,7 @@ func TestTheGmSeesTheMarkerStateAndTheTableDoesNotSeeTheHiddenOne(t *testing.T) 
 // A recusa importa porque a alternativa é uma mutação que não acha ninguém e
 // responde 200: a tela diria que apagou algo que continua lá.
 func TestDeleteRemovesTheMarkerAndAnInventedIdIsRefused(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/marcadores"
 	if rec := f.pede(t, f.mestre, http.MethodPost, base+"/novo", `{"from":{"X":1,"Y":1}}`); rec.Code != http.StatusOK {

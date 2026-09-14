@@ -6,7 +6,7 @@ import (
 )
 
 func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/notas", `{"notes":"eu escrevi isto"}`)
 
@@ -23,7 +23,7 @@ func TestThePlayerDoesNotWriteInTheGmNotes(t *testing.T) {
 // TestTheNoteAutosaveReachesTheDatabase é o caminho feliz, ponta a ponta pelo
 // roteador de verdade.
 func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro fugiu"}`)
 
@@ -39,7 +39,7 @@ func TestTheNoteAutosaveReachesTheDatabase(t *testing.T) {
 // branco que o mestre acabou de abrir para escrever o próximo parágrafo — o
 // cursor pularia para o fim da frase anterior no meio da noite.
 func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"a cena acabou\n\n"}`)
 
@@ -54,7 +54,7 @@ func TestTheNoteIsNotTrimmedMidTyping(t *testing.T) {
 // controle seria enfeite e a marcação não sobreviveria a um F5. A linha viaja no
 // CAMINHO, como os outros verbos de linha da Mesa.
 func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	nota := `{"notes":"- [ ] pagar o taverneiro\n- [x] dar o XP"}`
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/notas/tarefa/0/marcar", nota)
@@ -78,7 +78,7 @@ func TestTheTaskCheckboxRewritesTheNote(t *testing.T) {
 // TestUncheckingBringsTheCheckboxBack — o par do de cima. Sem ele o guarda mediria um
 // interruptor de mão única e chamaria de alternância.
 func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	f.posta(t, f.mestre, f.tableUrl()+"/notas/tarefa/0/desmarcar", `{"notes":"- [x] dar o XP"}`)
 
@@ -95,7 +95,7 @@ func TestUncheckingBringsTheCheckboxBack(t *testing.T) {
 // errada é um `index out of range` derrubando o handler que estava salvando o
 // texto de alguém.
 func TestAnOutOfRangeLineDoesNotBringTheHandlerDown(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/notas/tarefa/99/marcar", `{"notes":"- [ ] a"}`)
 
@@ -109,7 +109,7 @@ func TestAnOutOfRangeLineDoesNotBringTheHandlerDown(t *testing.T) {
 
 // dbNote lê a coluna direto, que é o único lugar que decide se a nota
 // existe. Ler a resposta do próprio handler seria perguntar ao acusado.
-func (f pilotoFixture) dbNote(t *testing.T) string {
+func (f sceneFixture) dbNote(t *testing.T) string {
 	t.Helper()
 	sess, err := f.s.queries.GetSession(t.Context(), f.sessionID)
 	if err != nil {
@@ -137,7 +137,7 @@ func (f pilotoFixture) dbNote(t *testing.T) string {
 // Um guarda que só afirmasse "a resposta traz a prévia" passaria verde sobre
 // isto: o fragmento ESTAVA lá, e estava errado por dentro.
 func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"- [ ] pagar o taverneiro"}`)
 
@@ -164,7 +164,7 @@ func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 // existe porque uma cena NOVA não herda a trava de ninguém: a do `notesCommand`
 // protege o POST, e o GET nasceu com a sua própria.
 func TestTheNotesWindowIsTheGmsAlone(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"# O que o jogador não vê"}`)
 
 	rec := f.pede(t, f.jogador, "GET", f.tableUrl()+"/notas", "")
@@ -189,7 +189,7 @@ func TestTheNotesWindowIsTheGmsAlone(t *testing.T) {
 // certos — que é o defeito que o `TestThePatchedPreviewCarriesTheTableIds`
 // pegou uma vez, com a `View` sintética nascendo em `0/0`.
 func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro **fugiu**"}`)
 
 	rec := f.pede(t, f.mestre, "GET", f.tableUrl()+"/notas", "")
@@ -221,7 +221,7 @@ func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
 // arquivos diferentes, e um renome que alcançasse só uma quebraria a exclusão
 // sem quebrar compilação nenhuma. É a mesma forma dos sete canais de um sinal.
 func TestTheNotesWindowAndTheColumnCannotBothHoldTheNotes(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	janela := f.pede(t, f.mestre, "GET", f.tableUrl()+"/notas", "").Body.String()
 	mesa := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()

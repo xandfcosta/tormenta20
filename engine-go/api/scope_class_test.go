@@ -38,7 +38,7 @@ func TestEveryScopeClassExistsInTheStylesheet(t *testing.T) {
 	atributoDeClasse := regexp.MustCompile(`class="([^"]*)"`)
 	escopo := regexp.MustCompile(`^scene-[a-z0-9-]+$`)
 	usadas := map[string][]string{}
-	for _, caminho := range osFontesDoPiloto(t) {
+	for _, caminho := range houseSources(t) {
 		fonte, err := os.ReadFile(caminho)
 		if err != nil {
 			t.Fatalf("ler %s: %v", caminho, err)

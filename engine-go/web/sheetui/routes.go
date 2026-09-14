@@ -14,7 +14,7 @@ import (
 	"t20engine/web/ui"
 )
 
-// As rotas da FICHA no piloto (ALE-272, fatia 1).
+// As rotas da FICHA no app (ALE-272, fatia 1).
 //
 // A ficha nova mora em `/personagens/{id}` — filha do endereço do elenco,
 // e não numa raiz própria: ela é o que se abre DE dentro da lista, e o endereço

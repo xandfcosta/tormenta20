@@ -276,7 +276,7 @@ func (s *Server) Router() http.Handler {
 		// id seria apagar seed.
 		r.Get("/", s.handleListCampaigns)
 		r.Delete("/{id}", s.handleDeleteCampaign)
-		// A fixture do `piloto-board.spec.ts`: uma mesa descartável por
+		// A fixture do `board.spec.ts`: uma mesa descartável por
 		// corrida, montada em duas chamadas em vez de seis telas.
 		r.Post("/", s.handleCreateCampaign)
 		r.Route("/{campaignId}/sessoes", func(r chi.Router) {

@@ -419,7 +419,7 @@ func bestiaryScene(v BestiaryView) templ.Component {
 // O `.mesa-painel` da SPA é `display:none` até 50rem de contêiner, e abaixo
 // disso a lista ficaria sem detalhe nenhum — a SPA abre um diálogo, e não
 // trazer isso perderia a ficha inteira no telefone. A troca é do CSS
-// (`.table-sheet-in-dialog`, na folha do piloto) e não de uma consulta de mídia
+// (`.table-sheet-in-dialog`, na folha da casa) e não de uma consulta de mídia
 // em JS, e ela compõe com o `data-show`: numa tela larga o diálogo fica
 // escondido mesmo com o sinal ligado, porque lá o painel já mostra a ficha.
 //

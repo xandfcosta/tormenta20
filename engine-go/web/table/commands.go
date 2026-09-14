@@ -361,7 +361,7 @@ func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState
 // para RECUSAR o que não é uma delas.
 //
 // O `restMultiplier` do motor cai em "normal" quando não reconhece a palavra, e
-// para o piloto isso não serve: um sinal adulterado faria o grupo descansar em
+// para o app isso não serve: um sinal adulterado faria o grupo descansar em
 // "normal" enquanto o mestre pediu "luxuosa", e ninguém veria a diferença — um
 // número plausível no lugar do certo é o desfecho que esta migração mais paga
 // para evitar.

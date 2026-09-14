@@ -11,7 +11,7 @@ import (
 )
 
 func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	rec := f.pede(t, f.mestre, http.MethodPost,
@@ -56,7 +56,7 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 // porque as duas rotas são caminhos diferentes — a da borracha não tem espécie,
 // e foi justamente ela que ficou para trás na primeira versão desta superfície.
 func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	// A ORIGEM NÃO É (0,0), e isso é o conserto de um defeito do próprio caso
 	// (ALE-311): ele apagava de (0,0) a (6,6), e (0,0) é o VALOR-ZERO do struct.
@@ -103,7 +103,7 @@ func TestTheEraserStrokeClearsTheWholeSegment(t *testing.T) {
 // milhões de casas só vem de um pedido montado à mão, e a resposta certa é dizer
 // o que houve.
 func TestAForgedStrokeIsRefused(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
@@ -128,7 +128,7 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 // não aparece) e a do acervo NÃO pode (é a maior da Mesa, com 147 lugares, e ela
 // não muda quando alguém pinta uma casa).
 func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.mestre, http.MethodPost,
@@ -155,7 +155,7 @@ func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
 // tela continua pintando um quadrado por clique, que é exatamente o estado que o
 // dono relatou.
 func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
@@ -184,7 +184,7 @@ func TestTheScreenWiresTheStrokeToTheRightButton(t *testing.T) {
 // TestThePaintedSquareCarriesTheKindIcon: a ponta que só o HTML servido responde —
 // o ícone chega à casa, e o trilho mostra o MESMO.
 func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	if rec := f.pede(t, f.mestre, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/terreno", stroke("camuflagem", 3, 3, 3, 3)); rec.Code != http.StatusOK {
@@ -215,7 +215,7 @@ func TestThePaintedSquareCarriesTheKindIcon(t *testing.T) {
 // camada responde: a área inteira pintada, e a borracha usando o caminho SEM
 // espécie (o conserto da fatia 1, que não pode se perder numa rota nova).
 func TestTheRectangleFillsTheWholeArea(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -250,7 +250,7 @@ func TestTheRectangleFillsTheWholeArea(t *testing.T) {
 // CHEGA, e chega inteiro. Sem ele, alguém que devolvesse um teto qualquer não
 // teria nada discordando.
 func TestTheWholeViewportFitsInOneRectangle(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	// 68×29 é o viewport no zoom MÍNIMO, que é o maior gesto que um dedo alcança.
@@ -271,7 +271,7 @@ func TestTheWholeViewportFitsInOneRectangle(t *testing.T) {
 // `pointerdown` para valer o gesto inteiro: soltar a tecla no meio do arrasto não
 // pode trocar o que ele está fazendo, porque o dedo já está a caminho de um canto.
 func TestTheScreenWiresTheRectangleShift(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
@@ -297,7 +297,7 @@ func TestTheScreenWiresTheRectangleShift(t *testing.T) {
 //
 // O conserto é sempre o mesmo: quem ESCONDE é um nó, quem POSICIONA é outro.
 func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
@@ -331,7 +331,7 @@ func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
 // não preservasse o sinal negativo, o pincel pintaria no quadrante errado e o
 // mapa pareceria vazio — o mestre pinta e nada acontece onde ele olhou.
 func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -396,7 +396,7 @@ func TestAStrokeInTheNegativeQuadrantPaintsThere(t *testing.T) {
 // coordenada, e a decisão fica registrada aqui em vez de virar um caso que
 // afirma o contrário do produto.
 func TestEveryGestureThatReadsPointsRefusesABrokenBody(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	casos := []struct{ rota, frase, corpoBom string }{

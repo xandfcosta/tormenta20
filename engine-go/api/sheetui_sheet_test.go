@@ -41,9 +41,9 @@ func TestTheSheetTabAddressSurvives(t *testing.T) {
 // segue valendo é `TestEverySheetTabDrawsSomething`, que cobra painel de TODA
 // aba — a mesma garantia, sem o placar.
 
-func sheetOf(t *testing.T, nome string, nivel int64) (pilotoFixture, int64) {
+func sheetOf(t *testing.T, nome string, nivel int64) (sceneFixture, int64) {
 	t.Helper()
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.jogador, nome, nivel, 20, 20, 10, 10)
 	seedClasse(t, f.s, id, "Arcanista", nivel)
 	return f, id

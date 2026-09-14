@@ -20,7 +20,7 @@ import (
 // passaria verde sobre uma ficha que continuou mentindo. Elas mostram o MESMO
 // herói, e a ALE-122 já pagou o preço de duas telas discordando sobre ele.
 func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	heroi := strconv.FormatInt(f.charID, 10)
 
 	// O CONTROLE vem primeiro: em pé, a Defesa é UM número, e é assim que se sabe
@@ -59,7 +59,7 @@ func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
 // Ele é prendido porque é o tipo de diferença que alguém "arruma" na primeira
 // leitura, achando que é esquecimento — e é escolha.
 func TestTheHeroListKeepsTheSingleDefenseNumber(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	heroi := strconv.FormatInt(f.charID, 10)
 	if rec := f.pede(t, f.jogador, "POST",
 		"/personagens/"+heroi+"/efeitos/condicao/caido", ""); rec.Code != http.StatusOK {

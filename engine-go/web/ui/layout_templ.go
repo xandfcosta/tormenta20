@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 // A CASCA da cena, portada da `SceneShell` da SPA (ALE-219, agora em templ pela
 // ALE-227).
 //
-// Ela nasceu de uma observação do dono olhando as duas telas do piloto: "existe
+// Ela nasceu de uma observação do dono olhando as duas telas do app: "existe
 // um padding lateral, estamos usando o padrão de Shell do SolidJS?". Não
 // estávamos — eu tinha escrito `mx-auto max-w-3xl p-3 sm:p-4` numa e
 // `max-w-5xl` na outra, inventando duas. Medido, faltavam CINCO coisas, e só
@@ -28,7 +28,7 @@ import templruntime "github.com/a-h/templ/runtime"
 //     mas sem `env()` ele só serve para o conteúdo entrar DEBAIXO do notch.
 //  5. A escala de espaçamento da casa (`px-4 py-4` no denso), em vez da minha.
 //
-// Fica registrado como o TERCEIRO achado estrutural do piloto, depois da
+// Fica registrado como o TERCEIRO achado estrutural do app, depois da
 // biblioteca de componentes e da faixa de teste: a casca também não atravessa
 // sozinha, e é o que faz duas telas individualmente corretas parecerem de dois
 // aplicativos.
@@ -143,9 +143,9 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 templ.SafeURL
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(p.Asset("piloto.css"))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(p.Asset("app.css"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/layout.templ`, Line: 107, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/layout.templ`, Line: 107, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {

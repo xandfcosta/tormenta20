@@ -23,7 +23,7 @@ import (
 // O ROTEADOR WEB do app (ALE-219; extraído da Mesa na ALE-278).
 //
 // Ele morava dentro do arquivo de rotas da MESA, e isso era acidente de
-// história e não desenho: a Mesa foi a primeira cena do piloto, então o mux
+// história e não desenho: a Mesa foi a primeira cena do app, então o mux
 // nasceu no arquivo dela e as onze cenas seguintes foram sendo penduradas ali.
 // Quando a Mesa virou pacote, o roteador teria ido junto — e o `api`, que é
 // quem monta o app, ficaria sem saber montar nada.
@@ -40,7 +40,7 @@ func (s *Server) WebRouter() http.Handler {
 	// a trocar. As outras sete ainda recebem o `s`, que atende pela ponte.
 	// Os estáticos são anônimos: são o bundle do Datastar e a folha de estilo,
 	// e exigir sessão para eles só quebraria o cache.
-	r.Handle("/static/*", http.StripPrefix("/static/", pilotoStaticHandler()))
+	r.Handle("/static/*", http.StripPrefix("/static/", assetsHandler()))
 	// A PORTA (ALE-229) é anônima por necessidade: é ela que cria a sessão. Ela
 	// tem de vir ANTES dos grupos com `requireAuth` — não por ordem de casamento
 	// (o chi casa por rota, não por ordem), mas porque ficar dentro do grupo a
@@ -76,7 +76,7 @@ func (s *Server) WebRouter() http.Handler {
 		// os estáticos: os estáticos são o bundle do Datastar, e isto é um
 		// arquivo do dono da mesa. Sem `LIVRO_PDF` a rota devolve 404 — o botão
 		// que a levaria também não é desenhado.
-		r.Handle(routes.Book, s.LivroDoPiloto())
+		r.Handle(routes.Book, s.BookFileHandler())
 		// O LEITOR é uma PÁGINA e o `/livro` é o arquivo. Rotas irmãs de
 		// propósito: quem quiser o PDF cru (imprimir, buscar no visualizador do
 		// navegador) tem o endereço de sempre. Desde a ALE-278 a página é um
@@ -104,9 +104,9 @@ func (s *Server) WebRouter() http.Handler {
 	return r
 }
 
-// pilotoStaticHandler serve o bundle e a folha embutidos.
-func pilotoStaticHandler() http.Handler {
-	sub, err := fs.Sub(pilotoFS, "piloto/static")
+// assetsHandler serve o bundle e a folha embutidos.
+func assetsHandler() http.Handler {
+	sub, err := fs.Sub(assetsFS, "assets/static")
 	if err != nil {
 		panic("piloto: static embutido ausente: " + err.Error())
 	}

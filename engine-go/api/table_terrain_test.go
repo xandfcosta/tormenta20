@@ -9,7 +9,7 @@ import (
 )
 
 func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	for i, pincel := range board.TerrainKinds {
@@ -38,7 +38,7 @@ func TestTheBrushPaintsTheKindItAskedFor(t *testing.T) {
 // está selecionada — já é o que o modo faz. Folhagens são difícil E camuflagem
 // (p267), então a casa com duas não é hipótese.
 func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	base := f.tableUrl() + "/tabuleiro/terreno"
 
@@ -66,7 +66,7 @@ func TestTheEraserClearsOnlyTheChosenKind(t *testing.T) {
 // própria some no desenho das outras, e o mestre lê a cena errada sem nada
 // estourar. Amostragem sobre a lista.
 func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	for i, pincel := range board.TerrainKinds {
 		if rec := f.pede(t, f.mestre, "POST",
@@ -94,7 +94,7 @@ func TestTheFourKindsAreDrawnDistinctly(t *testing.T) {
 // precisa da regra sai da mesa para procurá-la no livro. É a mesma razão de o
 // diálogo de abrir dizer que um quadrado são 1,5m.
 func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
@@ -148,7 +148,7 @@ func TestTheRailSaysTheEffectOfEachKind(t *testing.T) {
 
 // TestOnlyTheGmPaints: a trava é do servidor, e não o botão escondido.
 func TestOnlyTheGmPaints(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1))
@@ -166,7 +166,7 @@ func TestOnlyTheGmPaints(t *testing.T) {
 // Não é 500 nem silêncio: pintar chão de uma cena que não está na mesa não tem
 // onde acontecer, e a recusa fala no `command_error` do rodapé do mestre.
 func TestPaintingWithoutABoardRefusesWithASentence(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	corpo := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1)).Body.String()
 	if !strings.Contains(corpo, "não há tabuleiro aberto") {
 		t.Errorf("a recusa não explica o que faltou; sinais = %s", trechoDeSinais(corpo))

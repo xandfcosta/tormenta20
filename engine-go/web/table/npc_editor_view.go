@@ -11,7 +11,7 @@ import (
 
 // As expressões e as listas do EDITOR DE BLOCO (ALE-269).
 //
-// A divisão do trabalho é a mesma do resto do piloto, e aqui ela cai num lugar
+// A divisão do trabalho é a mesma do resto do app, e aqui ela cai num lugar
 // incomum: o RASCUNHO inteiro é do navegador — cada caixa escreve num pedaço de
 // `$draft` —, e o servidor só entra onde o navegador não sabe ir sozinho, que
 // é mudar o NÚMERO DE LINHAS de uma lista. Datastar não tem laço no cliente.

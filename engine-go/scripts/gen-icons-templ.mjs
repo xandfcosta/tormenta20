@@ -65,7 +65,7 @@ const QUERIDOS = [
   'Zap',
   'Backpack',
   'Star',
-  // A MESA em forma de shell (ALE-269). Ela era a única tela do piloto ainda
+  // A MESA em forma de shell (ALE-269). Ela era a única tela do app ainda
   // desenhada com EMOJI, e emoji não obedece `currentColor`: o 🐉 e o 📝 saíam
   // coloridos sobre a paleta de ouro e ferro, não escureciam quando o botão
   // ficava desabilitado e não acendiam em dourado na vez. Os nomes abaixo são

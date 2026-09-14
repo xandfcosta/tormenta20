@@ -9,7 +9,7 @@ import (
 )
 
 func TestSheetCommandNotifiesListeners(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	aviso, parar := f.s.bus.Subscribe(events.OfCharacter(f.charID))
 	defer parar()
 
@@ -39,7 +39,7 @@ func TestSheetCommandNotifiesListeners(t *testing.T) {
 // primeira versão deste caso media isso e reprovava dizendo que faltava a
 // recusa. Ela estava certa: não havia recusa nenhuma.
 func TestRefusedCommandNotifiesNobody(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	aviso, parar := f.s.bus.Subscribe(events.OfCharacter(f.charID))
 	defer parar()
 

@@ -7,7 +7,7 @@ import (
 )
 
 func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 	f.turnPlayer(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
@@ -47,7 +47,7 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 // responder à pergunta do gesto: "se eu soltar aqui, quanto GASTEI?" — que uma
 // perna medida sozinha não responde.
 func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 0, 0)
 	f.turnPlayer(t)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
@@ -73,7 +73,7 @@ func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
 // aqui basta o caro: quinze quadrados sobre um deslocamento de seis passam das
 // duas ações e têm de acender as três.
 func TestThePreviewPaintsTheThreeBands(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 0, 0)
 	f.turnPlayer(t)
 
@@ -95,7 +95,7 @@ func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 // O CONTROLE do guarda acima: sem vez não há ação de movimento a gastar, e as
 // três cores diriam respeito a um teto que a cena não tem.
 func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 0, 0)
 
 	sinais := trechoDeSinais(f.pede(t, f.mestre, http.MethodPost,

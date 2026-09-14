@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func mapToken(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
+func mapToken(t *testing.T, f sceneFixture, rotulo string, x, y int) string {
 	t.Helper()
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: rotulo, X: x, Y: y, Kind: "npc"})
@@ -23,7 +23,7 @@ func mapToken(t *testing.T, f pilotoFixture, rotulo string, x, y int) string {
 	return posto.Tokens[len(posto.Tokens)-1].ID
 }
 
-func nowBoard(t *testing.T, f pilotoFixture) *board.BoardState {
+func nowBoard(t *testing.T, f sceneFixture) *board.BoardState {
 	t.Helper()
 	b := f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)
 	if b == nil {
@@ -40,7 +40,7 @@ func nowBoard(t *testing.T, f pilotoFixture) *board.BoardState {
 // para conferir a emboscada, e sem um gesto de esconder ela respondia sempre
 // "nenhuma peça escondida nesta cena".
 func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	id := mapToken(t, f, "Ogro", 4, 4)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
@@ -75,7 +75,7 @@ func TestHidingTheTokenIsTheGestureThatWasMissing(t *testing.T) {
 // juntá-las faria o mestre perder o combatente ao arrumar a cena. É a mesma
 // separação que o elenco e a fila já têm (superfície 6b).
 func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	entryID := f.tracker(t)
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
@@ -108,7 +108,7 @@ func TestTakingOffTheMapDoesNotTakeOutOfCombat(t *testing.T) {
 // "voltar para onde estava" numa peça que nunca se moveu promete desfazer algo
 // que ninguém lembra de ter feito.
 func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
@@ -159,7 +159,7 @@ func TestUndoOnlyExistsWhereThereIsSomewhereToGoBackTo(t *testing.T) {
 // que ele conserta — "arrastei o dragão para o lugar errado na frente de seis
 // pessoas" — é justamente o que se quer desfazer de qualquer tela.
 func TestUndoSurvivesAReload(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Dragão", 2, 2)
 	mover := f.tableUrl() + "/tabuleiro/" + id
@@ -185,7 +185,7 @@ func TestUndoSurvivesAReload(t *testing.T) {
 // "Zumbi 3" no mesmo mapa. E a cópia nasce AO LADO da original: quem duplica o
 // zumbi do canto espera o irmão dele ali, não na fileira de entrada.
 func TestDuplicateNumbersOnTheServer(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Zumbi", 3, 3)
 
@@ -217,7 +217,7 @@ func TestDuplicateNumbersOnTheServer(t *testing.T) {
 //
 // O `mapToken` põe peça SOLTA, que é o caso do cenário; sem esta o teste dos
 // modos mediria sempre a recusa.
-func tokenOnTheQueue(t *testing.T, f pilotoFixture, rotulo string) (string, string) {
+func tokenOnTheQueue(t *testing.T, f sceneFixture, rotulo string) (string, string) {
 	t.Helper()
 	estado := f.s.sessions.GetState(f.sessionID)
 	var linha string
@@ -244,7 +244,7 @@ func tokenOnTheQueue(t *testing.T, f pilotoFixture, rotulo string) (string, stri
 // atual daria um irmão que já nasce sangrando pela porrada que o primeiro levou
 // — quem quer isso está pedindo "sangra junto", que é o outro verbo.
 func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	id, linhaOriginal := tokenOnTheQueue(t, f, "Ogro cansado")
@@ -286,7 +286,7 @@ func TestTheCopyWithItsOwnLineEntersTheQueueWhole(t *testing.T) {
 
 // TestTheCopySharingTheLineAddsNoLine: as duas peças, uma barra só.
 func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	id, linha := tokenOnTheQueue(t, f, "Ogro cansado")
@@ -314,7 +314,7 @@ func TestTheCopySharingTheLineAddsNoLine(t *testing.T) {
 // idêntica à do peão mudo com outro nome — o mestre clicaria em "com PV próprio"
 // e receberia exatamente o que "só a peça" dá.
 func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Baú", 1, 1)
 
@@ -341,7 +341,7 @@ func TestTheModesThatNeedALineRefuseALoosePiece(t *testing.T) {
 // número vem do cliente, e uma peça de lado 4 mentiria sobre quem o gabarito pega
 // e sobre onde cabe passar.
 func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id + "/editar"
@@ -368,7 +368,7 @@ func TestEditingRefusesASizeTheBookDoesNotHave(t *testing.T) {
 // O menu é do mestre porque quem monta a mesa é ele, e o botão que o jogador não
 // vê nunca foi prova de trava — quem postar na mão leva 403.
 func TestOnlyTheGmTouchesTheToken(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	id := mapToken(t, f, "Ogro", 1, 1)
 	base := f.tableUrl() + "/tabuleiro/pecas/" + id
@@ -395,7 +395,7 @@ func TestOnlyTheGmTouchesTheToken(t *testing.T) {
 // tinha caminho nenhum antes, e é a que estes casos prendem.
 
 // colaNaAba manda o comando de colar com a área apontando para outra aba.
-func colaNaAba(t *testing.T, f pilotoFixture, deOndeVeio, peca, modo string, x, y int) string {
+func colaNaAba(t *testing.T, f sceneFixture, deOndeVeio, peca, modo string, x, y int) string {
 	t.Helper()
 	area := fmt.Sprintf(`{"area_token":%q,"area_board":%q,"area_mode":%q,"from":{"X":%d,"Y":%d}}`,
 		peca, deOndeVeio, modo, x, y)
@@ -408,7 +408,7 @@ func colaNaAba(t *testing.T, f pilotoFixture, deOndeVeio, peca, modo string, x, 
 // no tabuleiro que a ÁREA nomeia, e não no que está na tela — são diferentes
 // justamente quando o colar mais serve.
 func TestThePasteCrossesTheTabs(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	cripta := f.seedOpenBoard(t, "stone")
 	posto, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, cripta.ID,
 		board.BoardToken{Label: "Zumbi", X: 1, Y: 1, Kind: "npc"})
@@ -457,7 +457,7 @@ func TestThePasteCrossesTheTabs(t *testing.T) {
 // no dedo de quem usa qualquer outro programa. O silêncio ali seria a mesma tela
 // de antes, e a pessoa apertaria de novo.
 func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	recusa := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/colar", `{"area_token":"","from":{"X":2,"Y":2}}`)
@@ -471,7 +471,7 @@ func TestThePasteWithoutAClipboardSaysSo(t *testing.T) {
 // A área é do CLIENTE e vive mais que a peça: o mestre copia o zumbi, tira o
 // zumbi do mapa, e aperta CTRL+V. Sem esta frase o colar sairia calado.
 func TestThePasteOfAPieceThatIsGoneSaysSo(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	b := f.seedOpenBoard(t, "stone")
 
 	recusa := colaNaAba(t, f, b.ID, "peca-que-nao-existe", "peca", 2, 2)
@@ -486,7 +486,7 @@ func TestThePasteOfAPieceThatIsGoneSaysSo(t *testing.T) {
 // Ele é o mesmo `bondForMode` do duplicar, e este caso é quem prova que os dois
 // verbos concordam sobre o que "com PV próprio" significa.
 func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	b := f.seedOpenBoard(t, "stone")
 	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")
@@ -533,7 +533,7 @@ func TestThePasteWithItsOwnLineAlsoFillsTheQueue(t *testing.T) {
 // escreveu. Clonar personagem exigiria matricular a cópia na campanha, e todo
 // membro aparece no painel do Grupo — um zumbi duplicado entraria lá.
 func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	agora := "2026-01-01T00:00:00Z"
 	bloco, err := f.s.queries.CreateCampaignCreature(context.Background(), sqlcgen.CreateCampaignCreatureParams{
 		Campaignid: f.campaignID, Name: "Zumbi",
@@ -600,7 +600,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 // O menu já esconde o verbo nesses casos; a trava é do servidor, e o botão
 // escondido nunca foi prova de trava.
 func TestTheOwnBlockModeRefusesWhoHasNone(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	id, _ := tokenOnTheQueue(t, f, "Ogro cansado")

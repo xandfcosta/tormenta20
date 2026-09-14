@@ -27,7 +27,7 @@ func oDesvioDe(t *testing.T, caminho string) (int, string) {
 //
 // Ela é uma lista escrita à mão — não há de onde derivá-la, porque a fonte era o
 // `beforeLoad` de cada rota da SPA, que some. O que este guarda impede é a
-// forma de errar que sobra: uma entrada apontando para um endereço que o piloto
+// forma de errar que sobra: uma entrada apontando para um endereço que o app
 // não atende, ou um padrão que nunca casa.
 func TestEveryLegacyAddressLandsOnAScene(t *testing.T) {
 	// Treze cascas da SPA na fatia 10a, mais os quatro endereços das telas que só
@@ -53,7 +53,7 @@ func TestEveryLegacyAddressLandsOnAScene(t *testing.T) {
 		// todo caminho começa. Verde sobre nada.
 		//
 		// O que ficou no lugar é o defeito que aquela mudança de fato produziu:
-		// três endereços que a SPA e o piloto escreviam IGUAIS passaram a apontar
+		// três endereços que a SPA e o app escreviam IGUAIS passaram a apontar
 		// para si mesmos, e no mux o padrão literal ganha do `"/"` das cenas — o
 		// desvio responderia 302 para si mesmo para sempre.
 		if destino == caminho {

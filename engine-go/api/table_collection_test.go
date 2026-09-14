@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func (f pilotoFixture) savePlace(t *testing.T, nome string) int64 {
+func (f sceneFixture) savePlace(t *testing.T, nome string) int64 {
 	t.Helper()
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
@@ -28,7 +28,7 @@ func (f pilotoFixture) savePlace(t *testing.T, nome string) int64 {
 // seriam duas verdades sobre onde as peças estão — com a que fechasse por último
 // apagando a outra no acervo, porque o `Archive` sobrescreve pelo nome.
 func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern") // "Taverna do Javali"
 	f.savePlace(t, "Taverna do Javali")
 	// Ela volta para a mesa, agora numa aba.
@@ -64,7 +64,7 @@ func TestTheArchiveSaysWhichSceneIsOnTheTable(t *testing.T) {
 // sozinha — e desfazer sozinho o trabalho de quem estava limpando o acervo é a
 // pior forma de um botão mentir.
 func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
 	id := f.savePlace(t, "Taverna do Javali")
 	f.openSecond(t, "Taverna do Javali")
@@ -102,7 +102,7 @@ func TestTheSceneOnTheTableCannotBeDeletedFromTheArchive(t *testing.T) {
 // caminho. Sem ele, um mestre com oito cenas abertas passaria da nona pela lista
 // de lugares — que é justamente onde há 148 botões para clicar.
 func TestReopeningRespectsTheOpenCeiling(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
 	id := f.savePlace(t, "Taverna do Javali")
 	for i := 0; i < 8; i++ {

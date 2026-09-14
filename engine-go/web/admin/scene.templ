@@ -122,7 +122,7 @@ templ invitesPanel(v adminView) {
 							<span class="block text-xs text-muted-foreground">Expira em { c.Expires }.</span>
 						</span>
 						// A área de transferência é API do NAVEGADOR — não há como o
-						// servidor copiar por ele. É o primeiro lugar do piloto onde a
+						// servidor copiar por ele. É o primeiro lugar do app onde a
 						// expressão faz trabalho de verdade em vez de disparar um
 						// pedido, e o resultado é uma linha: o Datastar não é "sem
 						// JavaScript", é "sem BUNDLE".
@@ -167,7 +167,7 @@ templ serverPanel(v adminView) {
 			<p class="text-xs text-muted-foreground">{ v.Machine.LastBackup }</p>
 			// Sem stream nenhum nesta tela: quem redesenha é a RESPOSTA do POST, que
 			// volta com o remendo deste painel. É a diferença central entre as duas
-			// superfícies do piloto — a Mesa tinha um SSE aberto para isso.
+			// superfícies das cenas — a Mesa tinha um SSE aberto para isso.
 			<button
 				type="button"
 				data-indicator:saving

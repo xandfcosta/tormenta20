@@ -16,7 +16,7 @@ import { piscarVital, pulsarVez, emerge } from '@/lib/turn-juice'
  * vez) já estavam escritas em `lib/turn-juice`, com testes de olho na folha de
  * especificação... e **um importador só: o `grimorio.ts`**. Elas eram
  * demonstráveis por botão e não aconteciam na sessão, porque a Mesa não tinha
- * módulo próprio — o `vite.piloto.config.ts` tinha quatro entradas e nenhuma
+ * módulo próprio — o `vite.config.ts` tinha quatro entradas e nenhuma
  * era esta. Isto é a quinta, e hoje ela liga as TRÊS.
  *
  * **Entrada própria e não `scene.ts`**, pela mesma razão escrita naquele arquivo:

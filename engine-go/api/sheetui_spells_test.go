@@ -10,9 +10,9 @@ import (
 	"testing"
 )
 
-func arcanista(t *testing.T) (pilotoFixture, int64) {
+func arcanista(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Conjuradora", Origin: "Charlatão", Level: 9,
 		HpMax: 40, HpCurrent: 40, MpMax: 40, MpCurrent: 40,
@@ -29,26 +29,26 @@ func arcanista(t *testing.T) (pilotoFixture, int64) {
 	return f, id
 }
 
-func spellScreen(t *testing.T, f pilotoFixture, id int64) string {
+func spellScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=spells", id), "").Body.String()
 }
 
-func spell(t *testing.T, f pilotoFixture, id int64, caminho string) int {
+func spell(t *testing.T, f sceneFixture, id int64, caminho string) int {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, caminho)
 	return f.pede(t, f.jogador, http.MethodPost, alvo, "").Code
 }
 
 // spellRefusal é a frase da regra que barrou o comando, ou "".
-func spellRefusal(t *testing.T, f pilotoFixture, id int64, caminho string) string {
+func spellRefusal(t *testing.T, f sceneFixture, id int64, caminho string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/magias/%s?tab=spells", id, caminho)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String())
 }
 
-func spellbook(t *testing.T, f pilotoFixture, id int64) map[string]bool {
+func spellbook(t *testing.T, f sceneFixture, id int64) map[string]bool {
 	t.Helper()
 	linhas, err := f.s.sceneCore().Queries().ListSpellsByCharacter(context.Background(), id)
 	if err != nil {
@@ -114,7 +114,7 @@ func TestCastingChargesTheMp(t *testing.T) {
 	}
 }
 
-func pm(t *testing.T, f pilotoFixture, id int64) int64 {
+func pm(t *testing.T, f sceneFixture, id int64) int64 {
 	t.Helper()
 	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
@@ -184,7 +184,7 @@ func TestWhoDoesNotCastDoesNotGetTheCatalog(t *testing.T) {
 // ensina uma magia. Ela não mora no grimório — não se aprende nem se esquece —,
 // e sem este bloco o jogador do bárbaro não teria onde ler o efeito dela.
 func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Totemista", Origin: "Batedor", Level: 3,
 		HpMax: 30, HpCurrent: 30, MpMax: 0, MpCurrent: 0,
@@ -221,7 +221,7 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 // `sheetui_augments_test.go`.
 func TestAnAugmentOutOfReachShowsLocked(t *testing.T) {
 	// Nível 5 abre o 2º círculo; a Invisibilidade tem aprimoramento de 3º.
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.jogador, "Aprendiz", 5, 20, 20, 20, 20)
 	seedClasse(t, f.s, id, "Arcanista", 5)
 	spell(t, f, id, "aprende/invisibilidade")

@@ -41,9 +41,9 @@ func seedEfeitoCondicional(t *testing.T, s *Server, id int64, quanto int) {
 		t.Fatalf("semear o efeito condicional: %v", err)
 	}
 }
-func fighterFixture(t *testing.T) (pilotoFixture, int64) {
+func fighterFixture(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Combatente", Origin: "Soldado", Level: 3,
 		HpMax: 30, HpCurrent: 30, MpMax: 0, MpCurrent: 0,
@@ -65,7 +65,7 @@ func fighterFixture(t *testing.T) (pilotoFixture, int64) {
 	return f, id
 }
 
-func combatScreen(t *testing.T, f pilotoFixture, id int64) string {
+func combatScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
@@ -107,7 +107,7 @@ func TestTheCombatPanelSaysTheEngineNumbers(t *testing.T) {
 
 // OS CONDICIONAIS LIGADOS ENTRAM NA CONTA, e esta é a garantia nova da fatia.
 //
-// Toda cena do piloto até aqui computou a ficha BASE (`sheet.Compute`, com
+// Toda cena do app até aqui computou a ficha BASE (`sheet.Compute`, com
 // `map[string]bool{}`). Se o Combate fizesse o mesmo, um bárbaro em Fúria veria
 // o ataque de quem não está em Fúria — e a ficha discordaria da Mesa, que já lê
 // o estado ligado. O defeito não teria sintoma nenhum numa ficha sem
@@ -151,7 +151,7 @@ func TestActiveConditionalsEnterTheAttack(t *testing.T) {
 // ele, um efeito semeado errado não ofereceria nenhum, o teste ligaria nada, e o
 // ataque continuaria +7 — falhando com a mensagem de que o painel ignora
 // condicionais, que é a conclusão errada.
-func ligaOCondicional(t *testing.T, f pilotoFixture, id int64) {
+func ligaOCondicional(t *testing.T, f sceneFixture, id int64) {
 	t.Helper()
 	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {

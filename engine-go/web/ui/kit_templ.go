@@ -10,9 +10,9 @@ import templruntime "github.com/a-h/templ/runtime"
 
 // A contraparte templ do `shared/ui` da SPA (ALE-229).
 //
-// Ela nasce agora e não no piloto porque o piloto podia escrever classe à mão
+// Ela nasce agora e não aqui porque o app podia escrever classe à mão
 // em cinco lugares e ainda caber na cabeça. Ela EXISTE porque isso já deu
-// errado: os botões do piloto usam `px-2 py-1 text-xs` e `px-3 py-1.5 text-sm`,
+// errado: os botões da casa usam `px-2 py-1 text-xs` e `px-3 py-1.5 text-sm`,
 // que não são nenhum dos tamanhos da casa — divergiram do `buttonVariants` no
 // primeiro dia, em silêncio, e ninguém compara duas telas lado a lado.
 //
@@ -89,7 +89,7 @@ const (
 // Aqui estava escrito que era "uma razão MECÂNICA: o scanner do Tailwind varre
 // `../*.templ`, então uma classe escrita num `.go` comum não seria emitida". Já
 // era **falso** quando a ALE-316 leu: a ALE-278 mediu que tirar os dois
-// `@source` do `piloto.src.css` não muda um byte da folha, porque a detecção
+// `@source` do `app.src.css` não muda um byte da folha, porque a detecção
 // automática do Tailwind v4 varre da pasta da folha até a raiz do projeto. E a
 // própria ALE-316 reconfirmou de acidente — o `text-hp-hurt` que o
 // `ui.HpFillTone` devolve nasceu num `.go` comum e saiu na folha.
@@ -1130,7 +1130,7 @@ func SectionLabelTone(tom string) string {
 
 // ScrollBox é uma região que ROLA e que o TECLADO alcança.
 //
-// O `tabindex="0"` é o conserto e não enfeite. A casca do piloto é `h-dvh` com
+// O `tabindex="0"` é o conserto e não enfeite. A casca do app é `h-dvh` com
 // `overflow-hidden`, então o DOCUMENTO não rola: quem rola são caixas aninhadas.
 // Uma caixa dessas cujo conteúdo é só TEXTO não tem nenhum descendente focável,
 // e sem `tabindex` o foco nunca entra nela — seta, PageDown, Home e End não
@@ -1360,12 +1360,12 @@ const SlashShortcut = `evt.key === '/' && ` +
 // documento — é justamente o que se perde aqui. E `session` e não `local` porque
 // a marca vale para ESTA aba e para os próximos milissegundos; sobreviver ao
 // fechamento do navegador seria o foco pulando sozinho numa sessão futura.
-const KeyboardSwapMark = `evt.key === 'Enter' && sessionStorage.setItem('piloto-foco-no-trilho', '1')`
+const KeyboardSwapMark = `evt.key === 'Enter' && sessionStorage.setItem('rail_focus', '1')`
 
 // RestoreRailFocus roda na carga. Lê a marca, APAGA, e devolve o foco ao
 // item da ferramenta atual — não ao primeiro, que é o que a pessoa não pediu.
-const RestoreRailFocus = `sessionStorage.getItem('piloto-foco-no-trilho') && ` +
-	`(sessionStorage.removeItem('piloto-foco-no-trilho'), ` +
+const RestoreRailFocus = `sessionStorage.getItem('rail_focus') && ` +
+	`(sessionStorage.removeItem('rail_focus'), ` +
 	`document.querySelector('[data-nav-region="rail"] [aria-current]')?.focus())`
 
 // O ⌃K abre o BUSCADOR DO LIVRO (ALE-264).
@@ -1516,7 +1516,7 @@ func Key(rotulo string) templ.Component {
 // comia não era navegação: eram 124px de filtro. Medido, esconder a camada
 // devolve 3,37 linhas, o maior corte disponível naquela cena.
 //
-// A troca é do CSS (`.filters-in-drawer`, na folha do piloto) e NÃO de uma
+// A troca é do CSS (`.filters-in-drawer`, na folha da casa) e NÃO de uma
 // consulta de mídia em JS nem de um segundo bloco condicional no `.templ`: são
 // os mesmos nós nas seis formas, e o que muda é se o `<details>` se comporta
 // como gaveta. Dois desenhos do mesmo filtro seriam dois lugares para consertar.

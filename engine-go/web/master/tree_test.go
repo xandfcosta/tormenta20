@@ -36,14 +36,14 @@ import (
 // Ele é mais largo que o guarda de grep do `@ui.SectionLabel`: aquele conhece um
 // componente, este mede o RESULTADO de qualquer cena.
 
-// cenasDoPiloto são as cenas que este guarda visita.
+// sceneAddresses são as cenas que este guarda visita.
 //
 // A lista é enumeração, e enumeração é remendo — o CLAUDE.md diz isso e está
 // certo. Ela existe porque renderizar uma cena exige montar a view dela, e não
 // há como descobrir isso por reflexão. **Cena nova que não entrar aqui nasce
 // sem medição**, que é a marca desta família de defeito; o comentário fica para
 // quem acrescentar a próxima saber que precisa vir aqui.
-func cenasDoPiloto(t *testing.T) map[string]string {
+func sceneAddresses(t *testing.T) map[string]string {
 	t.Helper()
 	fora := map[string]string{}
 	monta := func(nome string, render func() (string, error)) {
@@ -89,7 +89,7 @@ func cenasDoPiloto(t *testing.T) map[string]string {
 // Provado VERMELHO pondo o `<h4>` de volta dentro do `@ui.SectionLabel`: acusa o
 // bestiário com 24 parágrafos vazios.
 func TestTheBrowserDoesNotHaveToFixTheMarkup(t *testing.T) {
-	cenas := cenasDoPiloto(t)
+	cenas := sceneAddresses(t)
 	if len(cenas) == 0 {
 		t.Fatal("nenhuma cena foi montada: o guarda não visitaria nada e o verde não valeria")
 	}
@@ -115,7 +115,7 @@ func TestTheBrowserDoesNotHaveToFixTheMarkup(t *testing.T) {
 // pega o caso em que o parser hoista SEM deixar casca — quando o `<p>` tinha
 // texto antes do cabeçalho, ele fica com o texto e o cabeçalho sai.
 func TestHeadingsAreNotChildrenOfAParagraph(t *testing.T) {
-	for nome, marcacao := range cenasDoPiloto(t) {
+	for nome, marcacao := range sceneAddresses(t) {
 		t.Run(nome, func(t *testing.T) {
 			raiz, err := html.Parse(strings.NewReader(marcacao))
 			if err != nil {

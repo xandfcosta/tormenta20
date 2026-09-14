@@ -24,12 +24,12 @@ import (
 // inteira o personagem medido não tinha nenhum. Guarda que depende de o dado
 // certo estar no banco é guarda que mede quando quer.
 //
-// Ele varre a FONTE inteira — os `.templ` e os `.go` do piloto —, e não uma
+// Ele varre a FONTE inteira — os `.templ` e os `.go` das cenas —, e não uma
 // cena servida: a varredura é o que faz a convenção valer para a próxima tela
 // também.
 func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 	folha := compiledStylesheet(t)
-	arquivos := osFontesDoPiloto(t)
+	arquivos := houseSources(t)
 	usadas := map[string][]string{}
 	for _, caminho := range arquivos {
 		fonte, err := os.ReadFile(caminho)
@@ -76,8 +76,8 @@ func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 	}
 }
 
-// osFontesDoPiloto são os arquivos que escrevem classe: os `.templ`, que é o
-// que o scanner do Tailwind lê, e os `.go` do piloto, onde uma classe escrita
+// fontsHandler são os arquivos que escrevem classe: os `.templ`, que é o
+// que o scanner do Tailwind lê, e os `.go` do app, onde uma classe escrita
 // não passa pelo scanner e só existe se alguém a registrou no `@source inline`.
 // O gerado (`_templ.go`) fica de fora porque repete o `.templ` ao lado.
 //
@@ -90,7 +90,7 @@ func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 // É o mesmo defeito que o `CLAUDE.md` da raiz descreve como "um guarda só mede o
 // que ele VISITA", e desta vez o que sumiu da visita não foi uma cena esquecida:
 // foi um arquivo que mudou de nome.
-func osFontesDoPiloto(t *testing.T) []string {
+func houseSources(t *testing.T) []string {
 	t.Helper()
 	fora := []string{}
 	interessa := func(caminho string) bool {
@@ -100,14 +100,19 @@ func osFontesDoPiloto(t *testing.T) []string {
 		return strings.HasSuffix(caminho, ".templ") || strings.HasSuffix(caminho, ".go")
 	}
 
-	achados, err := filepath.Glob("piloto_*.templ")
-	if err == nil {
-		outros, _ := filepath.Glob("piloto_*.go")
-		achados = append(achados, outros...)
+	// O DIRETÓRIO INTEIRO, e não um padrão de nome. O glob era `piloto_*` e a
+	// história desta função é a de ele deixar de casar: primeiro quando o kit
+	// virou `web/ui/kit.templ`, e de novo quando os arquivos perderam o prefixo
+	// (ALE-327). Nas duas vezes o guarda seguiria VERDE medindo menos — que é a
+	// marca desta família. Um padrão de NOME acopla o guarda à nomenclatura;
+	// o diretório é o terreno, e ele não muda de nome sozinho.
+	daqui, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatalf("ler o diretório do api: %v", err)
 	}
-	for _, caminho := range achados {
-		if interessa(caminho) {
-			fora = append(fora, caminho)
+	for _, entrada := range daqui {
+		if !entrada.IsDir() && interessa(entrada.Name()) {
+			fora = append(fora, entrada.Name())
 		}
 	}
 
@@ -127,7 +132,7 @@ func osFontesDoPiloto(t *testing.T) []string {
 		t.Fatalf("varrer o web/: %v", err)
 	}
 	if len(fora) == 0 {
-		t.Fatal("nenhuma fonte do piloto encontrada: este guarda mediria o vazio")
+		t.Fatal("nenhuma fonte do app encontrada: este guarda mediria o vazio")
 	}
 	return fora
 }

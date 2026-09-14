@@ -13,7 +13,7 @@ import (
 
 // dbNpc lê o bloco guardado pelo nome, para as asserções não dependerem do
 // id que o banco escolheu.
-func dbNpc(t *testing.T, f pilotoFixture, nome string) creature.Block {
+func dbNpc(t *testing.T, f sceneFixture, nome string) creature.Block {
 	t.Helper()
 	for _, npc := range f.s.tableScene.CampaignCast(context.Background(), f.campaignID) {
 		if npc.Nome != nome {
@@ -48,7 +48,7 @@ func dbNpc(t *testing.T, f pilotoFixture, nome string) creature.Block {
 // Este caso afirma as duas metades de uma vez: o banco continua vazio E o nome
 // volta na resposta.
 func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	resposta := f.posta(t, f.mestre,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/nova",
@@ -83,7 +83,7 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 // mesa é o pior possível: o mestre clica no lixo do terceiro ataque e some o
 // segundo, que ele acabou de escrever.
 func TestRemovingARowRemovesThatRow(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tres := `"attacks":[{"name":"Clava"},{"name":"Mordida"},{"name":"Cauda"}],"skills":[],"specialAbilities":[]`
 	resposta := f.posta(t, f.mestre,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/1/remover",
@@ -105,7 +105,7 @@ func TestRemovingARowRemovesThatRow(t *testing.T) {
 // tirou a linha. Um `panic` aqui derrubaria a resposta inteira; a recusa com o
 // número diz o que aconteceu.
 func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	resposta := f.posta(t, f.mestre,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/7/remover",
 		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
@@ -123,7 +123,7 @@ func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 // O formulário não sabe digitar "ausente": ele guarda um número e um interruptor.
 // Este caso prende a tradução nos DOIS sentidos, porque é onde ela se perde.
 func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	base := f.tableUrl() + "/elenco/npc/rascunho/salvar"
 
 	// Sem conjurar: o número no formulário é ignorado e o bloco fica SEM a linha.
@@ -151,7 +151,7 @@ func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
 // O guarda é sobre o que o servidor MANDA: os campos opcionais têm de estar lá,
 // com valor vazio, e não faltando.
 func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	comOpcionaisVazios := `"attacks":[{"name":"Clava","attackBonus":7,"damage":"1d6+3"}],` +
 		`"skills":[{"name":"Furtividade","bonus":5}],"specialAbilities":[]`
 	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
@@ -176,7 +176,7 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 // português, e "creature name is required" ao lado de uma caixa escrita "Nome"
 // manda o mestre procurar um campo que não existe.
 func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	resposta := f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":0,"nome":"","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
@@ -195,7 +195,7 @@ func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 // `campaignNpc` já fazia para o caminho, e o editor tinha de reusá-la em vez
 // de confiar no número que chegou.
 func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	// Um NPC guardado numa campanha VIZINHA do mesmo mestre.
 	vizinha := seedCampaign(t, f.s, f.mestre)
 	agora := "2026-01-01T00:00:00Z"
@@ -225,7 +225,7 @@ func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 
 // TestOnlyTheGmTouchesTheCast: a trava é do servidor, e não o botão escondido.
 func TestOnlyTheGmTouchesTheCast(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	for _, caminho := range []string{
 		"/elenco/npc/novo",
 		"/elenco/npc/rascunho/ataque/nova",
@@ -245,7 +245,7 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 // apareceria como "criar do zero não tem a aba de perícias". A prova é que os
 // dois abrem devolvendo a MESMA forma de rascunho — o que muda é a semente.
 func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.posta(t, f.mestre, f.tableUrl()+"/elenco/npc/rascunho/salvar",
 		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
 
@@ -271,7 +271,7 @@ func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
 
 // npcId acha o id pelo nome, para o teste não depender do número que o banco
 // escolheu.
-func npcId(t *testing.T, f pilotoFixture, nome string) string {
+func npcId(t *testing.T, f sceneFixture, nome string) string {
 	t.Helper()
 	for _, npc := range f.s.tableScene.CampaignCast(context.Background(), f.campaignID) {
 		if npc.Nome == nome {

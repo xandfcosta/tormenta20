@@ -27,7 +27,7 @@ const sinalQueFecha = `sheet_open: false`
 // handler: o conteúdo tem de sair ANTES do sinal que abre. Invertido, a ficha
 // aparece com a criatura velha — e nenhum teste de "abriu?" pegaria isso.
 
-func fluxoDaFicha(t *testing.T, f pilotoFixture, alvo string) string {
+func fluxoDaFicha(t *testing.T, f sceneFixture, alvo string) string {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodGet, alvo, nil)
 	req.Header.Set("Authorization", "Bearer "+f.token(t, f.mestre))
@@ -50,7 +50,7 @@ func fluxoDaFicha(t *testing.T, f pilotoFixture, alvo string) string {
 // `display:none`. Com o servidor redeclarando o valor CERTO, o conteúdo e o
 // estado de aberto chegam juntos e não existe janela entre eles.
 func TestTheEntryCardIsBornOpenInTheSamePatchAsItsContent(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	corpo := fluxoDaFicha(t, f, "/mestre/bestiario?criatura=lobo&abrir=1")
 
 	if !strings.Contains(corpo, "datastar-patch-elements") {
@@ -76,7 +76,7 @@ func TestTheEntryCardIsBornOpenInTheSamePatchAsItsContent(t *testing.T) {
 // URL, digitar uma letra na busca abriria a ficha por cima da lista, a cada
 // tecla.
 func TestSearchAndFilterDoNotOpenTheEntryCard(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	// O CONTROLE: com `abrir` o sinal SAI. Sem ele, "não abriu" seria verdade
 	// também sobre uma rota quebrada que não responde nada.
@@ -98,7 +98,7 @@ func TestSearchAndFilterDoNotOpenTheEntryCard(t *testing.T) {
 // estoura — o defeito reaparece como um quadro piscando, que é o que ninguém
 // atribui a um commit.
 func TestClickingTheRowDoesNotOpenTheEntryCardOnItsOwn(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tela := f.pede(t, f.mestre, http.MethodGet, "/mestre/bestiario", "").Body.String()
 
 	if !strings.Contains(tela, "criatura=") {

@@ -38,7 +38,7 @@ import (
 //     modificador. Se o código escreve `"X"`, então `X` existe — é contrato;
 //  4. **API chamada**: qualquer `.X(` no código do repositório. Isso cobre a
 //     biblioteca padrão, o `chi`, o `templ` e o navegador de uma vez;
-//  5. **símbolo do JS/TS** das ilhas do piloto.
+//  5. **símbolo do JS/TS** das ilhas de JS.
 //
 // Mais duas regras que não são coleta e sim JULGAMENTO, e as duas foram medidas
 // antes de virar código:

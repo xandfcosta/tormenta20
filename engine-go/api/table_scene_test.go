@@ -9,7 +9,7 @@ import (
 )
 
 func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	// O CONTROLE: não há tabuleiro antes. Sem ele, "o lugar é a Taverna" seria
 	// verdade também sobre uma cena que já estava aberta desde a fixture.
@@ -47,7 +47,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 // ser barrado por um campo, e um chão que a tela não oferece só chega por posse
 // do fio — a resposta a isso é desenhar pedra, não discutir.
 func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"   ","new_ground":"lava"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
@@ -70,7 +70,7 @@ func TestABlankPlaceBecomesASceneAndAnUnknownGroundFallsBackToTheDefault(t *test
 // Este guarda é de HANDLER e não uma asserção de que o botão sumiu, porque a
 // fronteira de segurança é o servidor e a tela é UX.
 func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Cripta","new_ground":"crypt"}`); rec.Code != http.StatusForbidden {
 		t.Errorf("o jogador abriu a cena: %d", rec.Code)
@@ -94,7 +94,7 @@ func TestOnlyTheGmBuildsAndTearsDownTheScene(t *testing.T) {
 // arquivar perde a noite de trabalho, e arquivar sem tirar deixa a mesa presa
 // numa cena que já acabou.
 func TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
 
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
@@ -121,9 +121,9 @@ func TestEndingTakesTheSceneOffTheTableAndStoresItInTheArchive(t *testing.T) {
 // Não é a mesma frase com um botão a mais: o jogador não tem o que fazer além de
 // esperar, e o mestre tem. "O mestre abre quando a cena tiver lugar" DITO AO
 // PRÓPRIO MESTRE é a tela mandando ele fazer o que ela não deixa — que foi
-// exatamente o texto que o piloto carregou até esta fatia.
+// exatamente o texto que o app carregou até esta fatia.
 func TestAnEmptySceneSaysDifferentThingsToEachOfThem(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	// O CONTROLE: os dois chegam na cena vazia. Sem ele, "o jogador não vê
 	// 'Abrir tabuleiro'" seria verdade também sobre uma página que não carregou.
@@ -156,7 +156,7 @@ func TestAnEmptySceneSaysDifferentThingsToEachOfThem(t *testing.T) {
 // A contagem é o que separa a cena montada da cena aberta e abandonada, e é por
 // ela que o mestre decide o que reabrir e o que apagar.
 func TestTheArchiveListsWhatWasEnded(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.onBoard(t) // abre a Taverna e põe UMA peça
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
@@ -189,7 +189,7 @@ func TestTheArchiveListsWhatWasEnded(t *testing.T) {
 // metade que faz o guarda acima significar alguma coisa — sem ela, "o acervo
 // apareceu" seria verdade sobre um botão que aparece sempre.
 func TestWithoutAStoredPlaceThereIsNoArchiveButton(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "Abrir tabuleiro") {
 		t.Fatal("a cena vazia do mestre não desenhou — o guarda mediria a tela errada")
@@ -211,7 +211,7 @@ func TestWithoutAStoredPlaceThereIsNoArchiveButton(t *testing.T) {
 // então não há o que guardar antes. Um teste sobre a regra antiga ficaria verde
 // afirmando um mundo que não é este.
 func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 	f.seedOpenBoard(t, "tavern") // "Taverna do Javali"
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
@@ -268,7 +268,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 // o caminho publicar "não há tabuleiro" para a mesa inteira — o mestre limparia
 // o acervo e a mesa perderia a cena em que estava jogando.
 func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
@@ -295,7 +295,7 @@ func TestDeletingAPlaceDoesNotTakeTheSceneOffTheTable(t *testing.T) {
 
 // TestOnlyTheGmTouchesTheArchive: a trava é do servidor.
 func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "tavern")
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("encerrar deu %d", rec.Code)
@@ -324,7 +324,7 @@ func TestOnlyTheGmTouchesTheArchive(t *testing.T) {
 // o que o mestre procura quando abre o acervo para limpar, e a linha tem de
 // dizer isso em vez de fazer ele contar zeros.
 func TestAnEmptySceneInTheArchiveAnnouncesItselfAsSuch(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Sala esquecida","new_ground":"stone"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir deu %d", rec.Code)
@@ -358,7 +358,7 @@ redação que o resto da Mesa.
 
 // A faixa desenha os três, e o jogador se lê como "você".
 func TestTheTurnStripReachesBothScreens(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	// A CENA COMEÇADA não basta: o `StartScene` deixa o turno em -1, que é "em
 	// cena, ninguém na vez ainda". A faixa só existe DENTRO do combate, e é o
@@ -408,7 +408,7 @@ func TestTheTurnStripReachesBothScreens(t *testing.T) {
 // O PV OCULTO é a prova concreta: o Ogro da cena tem PV escondidos, e eles não
 // podem aparecer por causa da faixa nova.
 func TestThePlayerTurnStripObeysTheSameRedaction(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/proxima-vez", "")
 	f.posta(t, f.mestre, f.tableUrl()+"/iniciativa/proxima-vez", "")
@@ -430,7 +430,7 @@ func TestThePlayerTurnStripObeysTheSameRedaction(t *testing.T) {
 // É o estado em que a maior parte de uma sessão vive, e uma faixa vazia com as
 // setas soltas seria enfeite dizendo nada.
 func TestOutOfCombatTheHeaderKeepsWaiting(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 

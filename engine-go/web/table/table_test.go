@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// O guarda que justifica o piloto reusar `stateForRole` em vez de montar a
+// O guarda que justifica o app reusar `stateForRole` em vez de montar a
 // própria leitura: a PÁGINA obedece à mesma redação que o socket.
 //
 // Provado VERMELHO trocando `live.StateForRole(role, ...)` por `s.deps.Sessions().GetState(...)`

@@ -4,7 +4,7 @@ import { expect, type Page } from '@playwright/test'
  * A MESA DESCARTÁVEL e os passos que chegam ao tabuleiro (ALE-264, extraídos na
  * ALE-174).
  *
- * Eles moravam dentro do `piloto-board.spec.ts`, privados, e mudaram de casa
+ * Eles moravam dentro do `board.spec.ts`, privados, e mudaram de casa
  * quando o segundo spec precisou chegar ao mesmo lugar — o guarda do deslize da
  * peça. É a lição do `CLAUDE.md` acontecendo de novo: **instrumento que mora
  * dentro de um chamador tem exatamente um chamador**, e a alternativa era

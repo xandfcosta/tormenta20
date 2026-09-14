@@ -11,7 +11,7 @@
  *
  * Este arquivo é COLA, não implementação: ele importa os mesmos fontes que a
  * SPA importa e os liga ao HTML do servidor. É a mesma forma do
- * `piloto.src.css`, que importa o `index.css` da SPA — uma fonte, dois
+ * `app.src.css`, que importa o `index.css` da SPA — uma fonte, dois
  * consumidores. Duplicar 584 linhas seria a armadilha de divergência que esta
  * migração já viu duas vezes (a casca e os botões).
  *

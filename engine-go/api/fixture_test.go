@@ -31,7 +31,7 @@ import (
 // acidente de prefixo. É a mesma família do guarda que media o próprio
 // diretório e encolheu ao mudar de casa.
 
-type pilotoFixture struct {
+type sceneFixture struct {
 	s          *Server
 	mestre     int64
 	jogador    int64
@@ -40,10 +40,10 @@ type pilotoFixture struct {
 	charID     int64
 }
 
-// A mesa do piloto: mestre, um jogador com PC de nível 8 COM a perícia
+// A mesa do app: mestre, um jogador com PC de nível 8 COM a perícia
 // Iniciativa (sem ela o bônus cai em zero e o teste do d20 nasce vácuo — a
 // armadilha que a ALE-213 registrou), e um NPC para o mestre esconder.
-func novoPiloto(t *testing.T) pilotoFixture {
+func newSceneFixture(t *testing.T) sceneFixture {
 	t.Helper()
 	s := newTestServer(t)
 	// O CATÁLOGO É O DE VERDADE, e não um `{"items":[]}`.
@@ -76,15 +76,15 @@ func novoPiloto(t *testing.T) pilotoFixture {
 	}
 	// Aqui havia um `_ = s.SocketHandler()`, e o comentário dele dizia que
 	// montar o gateway punha "a PONTE entre os dois transportes debaixo do
-	// teste, porque ela é o custo central do piloto". A ALE-253 tirou o socket
+	// teste, porque ela é o custo central do app". A ALE-253 tirou o socket
 	// do projeto e a ponte junto: há um caminho de publicação só, o hub SSE, e
-	// ele existe desde o `newServer`. O custo central do piloto deixou de
+	// ele existe desde o `newServer`. O custo central do app deixou de
 	// existir em vez de deixar de ser testado.
-	return pilotoFixture{s: s, mestre: mestre, jogador: jogador, campaignID: campaignID, sessionID: sessionID, charID: charID}
+	return sceneFixture{s: s, mestre: mestre, jogador: jogador, campaignID: campaignID, sessionID: sessionID, charID: charID}
 }
 
 // token assina um JWT do usuário — o mesmo caminho do `authed` da casa.
-func (f pilotoFixture) token(t *testing.T, userID int64) string {
+func (f sceneFixture) token(t *testing.T, userID int64) string {
 	t.Helper()
 	user, err := f.s.queries.GetUserByID(context.Background(), userID)
 	if err != nil {
@@ -99,7 +99,7 @@ func (f pilotoFixture) token(t *testing.T, userID int64) string {
 
 // pede manda uma requisição autenticada pelo MesaRouter — que é outro roteador
 // que o `Router()` da API, e por isso o `authed` da casa não serve.
-func (f pilotoFixture) pede(t *testing.T, userID int64, method, path, body string) *httptest.ResponseRecorder {
+func (f sceneFixture) pede(t *testing.T, userID int64, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+f.token(t, userID))
@@ -111,7 +111,7 @@ func (f pilotoFixture) pede(t *testing.T, userID int64, method, path, body strin
 	return rec
 }
 
-func (f pilotoFixture) tableUrl() string {
+func (f sceneFixture) tableUrl() string {
 	return "/mesa/" + strconv.FormatInt(f.campaignID, 10) + "/" + strconv.FormatInt(f.sessionID, 10)
 }
 
@@ -124,7 +124,7 @@ func (f pilotoFixture) tableUrl() string {
 // passou verde na suíte inteira e quebrou toda escrita no servidor real; o
 // defeito apareceu com um curl, não com um teste. Este helper existe para que
 // não apareça assim de novo.
-func (f pilotoFixture) posta(t *testing.T, userID int64, caminho, corpo string) string {
+func (f sceneFixture) posta(t *testing.T, userID int64, caminho, corpo string) string {
 	t.Helper()
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
@@ -148,7 +148,7 @@ func (f pilotoFixture) posta(t *testing.T, userID int64, caminho, corpo string) 
 }
 
 // cena põe a sessão em cena com um ogro de PV OCULTOS e o PC do jogador.
-func (f pilotoFixture) scene(t *testing.T) {
+func (f sceneFixture) scene(t *testing.T) {
 	t.Helper()
 	oculto := true
 	pv, pvMax := int64(12), int64(130)

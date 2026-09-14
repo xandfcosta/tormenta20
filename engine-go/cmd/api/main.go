@@ -197,7 +197,7 @@ func primeCatalogs(path string) *engine.Catalogs {
 	return catalogs
 }
 
-// buildMux monta o binário único: as cenas do piloto, a API em `/api/` e os
+// buildMux monta o binário único: as cenas, a API em `/api/` e os
 // endereços antigos, tudo na mesma porta.
 //
 // Ele já teve DOIS formatos — um de produção, que servia o `dist` da SPA na
@@ -226,13 +226,13 @@ func buildMux(srv *api.Server) *http.ServeMux {
 	// A porta da frente deixou de precisar de redireção — a raiz É o Hub agora.
 	mux.Handle("/", srv.WebRouter())
 	// OS ENDEREÇOS ANTIGOS (ALE-272, fatia 10a). Eram cascas da SPA — um
-	// `beforeLoad` que mandava para o piloto — e nessa forma morreriam com ela.
+	// `beforeLoad` que mandava para o app — e nessa forma morreriam com ela.
 	api.MountLegacyAddresses(mux)
 	// As FONTES que a folha pede por caminho absoluto (`/fonts/…`). Elas eram
 	// servidas pelo `dist` da SPA em produção, e é por isso que o binário sem
 	// SPA desenhava toda tela com uma serifada do sistema.
-	mux.Handle("/fonts/", srv.FontesDoPiloto())
-	mux.Handle("/favicon.svg", srv.FaviconDoPiloto())
+	mux.Handle("/fonts/", srv.FontsHandler())
+	mux.Handle("/favicon.svg", srv.FaviconHandler())
 	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta ali é a
 	// infraestrutura, e ela não sabe de prefixo. Ver `HealthProbe`.
 	mux.Handle("/health", srv.HealthProbe())

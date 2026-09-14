@@ -69,7 +69,7 @@ func (a accountRules) sessionUser(r *http.Request) (AuthUser, error) {
 // Era o guarda `requireSession` da SPA, que morava no cliente (ALE-231).
 //
 // Vale para TODA página do Datastar, e não só para o Hub — a Mesa e a
-// administração tinham a mesma aresta desde o piloto.
+// administração tinham a mesma aresta desde o app.
 func (s *Server) requirePage(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := s.accountRules().sessionUser(r)

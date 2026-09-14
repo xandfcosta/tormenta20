@@ -38,7 +38,7 @@ const avisoDeGravacao = "não está sendo salva"
 // tela a LÊ a cada quadro — que é a regra que o próprio barramento de eventos
 // desta casa escreve: *o evento é a notícia, a verdade está no store.*
 func TestTheGmIsWarnedWhenSavingFails(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	// O CONTROLE primeiro: com o disco saudável a frase NÃO está lá. Sem esta
@@ -60,7 +60,7 @@ func TestTheGmIsWarnedWhenSavingFails(t *testing.T) {
 // sessão e chamar alguém é o mestre. Para o jogador seria um alarme sobre o qual
 // ele não tem o que fazer.
 func TestThePlayerIsNotWarnedAboutSaving(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	quebraAGravacao(t, f)
 
@@ -91,7 +91,7 @@ func TestThePlayerIsNotWarnedAboutSaving(t *testing.T) {
 //
 // Derrubar uma tabela dá exatamente isso — o `sessions`, o `users` e os membros
 // continuam lá, a mesa desenha normalmente, e só a gravação do tabuleiro falha.
-func quebraAGravacao(t *testing.T, f pilotoFixture) {
+func quebraAGravacao(t *testing.T, f sceneFixture) {
 	t.Helper()
 	ctx := context.Background()
 	if _, err := f.s.boards.Open(ctx, f.sessionID, "Taverna do Javali", "tavern"); err != nil {
@@ -122,7 +122,7 @@ func quebraAGravacao(t *testing.T, f pilotoFixture) {
 // A separação em `saveBoard` e `publishBoardState` tornou o engano difícil; este
 // caso o torna impossível de passar despercebido.
 func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
@@ -143,7 +143,7 @@ func TestACommandFromTheTableReachesTheDisk(t *testing.T) {
 // do turno —, então ler uma vez logo depois do comando é uma corrida. Sondagem e
 // não `sleep` fixo, pela razão de sempre: um tempo escolhido nesta máquina é o
 // teste que pisca na de outra pessoa.
-func esperaOTabuleiroNoDisco(t *testing.T, f pilotoFixture) {
+func esperaOTabuleiroNoDisco(t *testing.T, f sceneFixture) {
 	t.Helper()
 	limite := time.Now().Add(2 * time.Second)
 	for time.Now().Before(limite) {

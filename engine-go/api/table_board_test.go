@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func (f pilotoFixture) seedOpenBoard(t *testing.T, terreno string) *board.BoardState {
+func (f sceneFixture) seedOpenBoard(t *testing.T, terreno string) *board.BoardState {
 	t.Helper()
 	b, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, "Taverna do Javali", terreno)
 	if err != nil {
@@ -29,7 +29,7 @@ func (f pilotoFixture) seedOpenBoard(t *testing.T, terreno string) *board.BoardS
 // normal — a maior parte de uma sessão não tem mapa. Desenhar uma grade vazia
 // diria que o mestre abriu uma cena que ele não abriu.
 func TestWithoutABoardTheSceneSaysThereIsNoMap(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(corpo, "Nenhum tabuleiro aberto") {
@@ -48,7 +48,7 @@ func TestWithoutABoardTheSceneSaysThereIsNoMap(t *testing.T) {
 // gargalo por papel que a fila usa — e este teste afirma que a cena passa por
 // ele em vez de decidir por conta própria.
 func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "emboscada", Label: "Ogro", X: 4, Y: 3, Hidden: true}); err != nil {
@@ -82,7 +82,7 @@ func TestTheHiddenTokenDoesNotReachThePlayer(t *testing.T) {
 // cópia da regra, e é assim que duas telas passam a apontar combatentes
 // diferentes (ALE-122).
 func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	f.seedOpenBoard(t, "stone")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
@@ -119,7 +119,7 @@ func TestTheTokenOnTurnLightsUpWithTheSameGoldAsTheTracker(t *testing.T) {
 // não existiria na folha e o chão sairia transparente — o que se parece com
 // defeito de CSS e manda procurar no lugar errado.
 func TestAnInventedTerrainFallsBackToTheDefaultGround(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "vulcão-de-neon")
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -148,7 +148,7 @@ func TestAnInventedTerrainFallsBackToTheDefaultGround(t *testing.T) {
 // a diferença que o barramento comprou: com `chan struct{}` abrir e fechar eram
 // o mesmo sino, então trocar um pelo outro no código passava verde aqui.
 func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	bs := f.s.tableHost().Boards()
 	ctx := context.Background()
 	const sessao = int64(1)
@@ -193,7 +193,7 @@ func TestTheBoardTellsItsListenersOnEveryChange(t *testing.T) {
 // stream relê e o hash o faz calar — trabalho para nada a cada erro de quem
 // clica.
 func TestARefusedMutationTellsNobody(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 	const sessao = int64(2)
 
@@ -227,7 +227,7 @@ func TestARefusedMutationTellsNobody(t *testing.T) {
 // menos que o batimento. O limite é 400ms: folgado para um round-trip local, e
 // menos da metade do batimento, então um verde aqui não pode ser o relógio.
 func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	// O id vem do SERVIDOR (`bs.newID`), não do que eu passo: dois clientes
 	// criando ao mesmo tempo não podem inventar o mesmo. Por isso ele é lido do
@@ -327,7 +327,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 // Este teste mede a separação onde ela importa: mexer na FILA manda o quadro da
 // fila e NÃO manda o do mapa.
 func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Ogro", X: 2, Y: 2}); err != nil {
@@ -423,7 +423,7 @@ func TestATrackerChangeDoesNotPatchTheMap(t *testing.T) {
 // Dragão" já conta a cena que a cortina existe para esconder. Quem o apaga é o
 // `BoardForRole`; o que se prende aqui é que a cena não o reintroduz.
 func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: "Dragão", X: 3, Y: 3}); err != nil {
@@ -470,7 +470,7 @@ func TestTheCurtainHidesTheSceneAndDoesNotLookLikeAnEmptyBoard(t *testing.T) {
 // lugar errado é pior que nenhuma, porque o mestre põe a porta e ela aparece do
 // outro lado da cripta.
 func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":-3,"Y":7},"new_token_name":"  Porta da cripta  ","new_token_size":1,"new_token_look":"object"}`)
@@ -507,7 +507,7 @@ func TestALoosePieceIsBornOnTheSquareTheGmClicked(t *testing.T) {
 // 1-21 (p107) desenharia uma criatura que o livro não tem; e a aparência
 // `character` é a que criaria uma peça que PARECE de jogador sem ninguém atrás.
 func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	casos := []struct{ nome, sinais, espera string }{
 		{"sem nome", `{"from":{"X":1,"Y":1},"new_token_name":"   ","new_token_size":1,"new_token_look":"object"}`, "dê um nome"},
@@ -535,7 +535,7 @@ func TestTheLoosePieceRefusesWhatDrawsNoPiece(t *testing.T) {
 // mão, como quem abre o console — é o que a ALE-144 registrou ao tirar três
 // asserções de AUSÊNCIA da suíte: botão ausente nunca foi prova de trava.
 func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/tabuleiro/pecas/nova", `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)
@@ -560,7 +560,7 @@ func TestOnlyTheGmPutsALoosePieceOnTheMap(t *testing.T) {
 // que ele mude este caso junto, em vez de a gramática dos dez virar dez-e-meio
 // em silêncio.
 func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 
 	doMestre := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
@@ -604,7 +604,7 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 // tinta nova entraria na conta do medidor de contraste — onde uma variante que
 // só aparece com cenário no mapa nasceria sem medição.
 func TestTheSceneryPieceIsDrawnSquareAndTheCreatureIsNot(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	base := f.tableUrl() + "/tabuleiro/pecas/nova"
 	f.posta(t, f.mestre, base, `{"from":{"X":1,"Y":1},"new_token_name":"Porta","new_token_size":1,"new_token_look":"object"}`)

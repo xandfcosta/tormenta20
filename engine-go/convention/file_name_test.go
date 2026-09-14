@@ -14,7 +14,7 @@ import (
 //
 // O par é o que confunde, e por isso ele é decisão registrada no `CLAUDE.md` em
 // vez de convenção implícita: o mesmo arquivo leva as duas línguas —
-// `piloto-board.spec.ts` contendo `test('arrastar a peça propõe a parada')`. O
+// `board.spec.ts` contendo `test('arrastar a peça propõe a parada')`. O
 // arquivo é identificador, a descrição é frase que uma pessoa lê no relatório.
 //
 // Este guarda cobra SÓ a metade do arquivo. A descrição não tem guarda e não

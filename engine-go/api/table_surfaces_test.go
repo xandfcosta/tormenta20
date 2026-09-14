@@ -10,7 +10,7 @@ import (
 )
 
 func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -33,7 +33,7 @@ func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 // A asserção é sobre o RÓTULO que o usuário leria, e não sobre um id interno: é
 // o rótulo que promete.
 func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -59,7 +59,7 @@ func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
 // tiraria o jogador da mesa no meio do combate — e o modo de errar é silencioso,
 // porque o link funciona: ele leva para uma tela legítima, só que a errada.
 func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -88,7 +88,7 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 // O caso prende as DUAS metades, e a segunda tem controle: a ficha SOLTA continua
 // com a volta, senão "não achei a volta" seria verde num HTML vazio.
 func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	naMesa := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -115,7 +115,7 @@ func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
 // diferença entre as duas formas. Um seletor na tela dele esconderia atrás de uma
 // aba o que a forma do mestre existe para mostrar junto.
 func TestTheGmDoesNotGetTheSelector(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	html := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -138,7 +138,7 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 // no dia em que o padrão mudar — a cena nasceria com um sinal e o botão marcando
 // outro.
 func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	html := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(html, `surface: &#39;`+table.DefaultOpeningSurface+`&#39;`) {
@@ -167,7 +167,7 @@ func TestTheOpeningSurfaceIsDerivedAndNotTyped(t *testing.T) {
 // O e2e prova o comportamento com dois clientes; este guarda é a rede barata que
 // falha no commit em que uma das pontas some.
 func TestTheSheetInTheSessionHasAWayToKnowItChanged(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	// DESESCAPADO: `data-signals` e `data-on-*` são valores DINÂMICOS de

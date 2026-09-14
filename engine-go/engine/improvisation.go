@@ -15,7 +15,7 @@ import (
 //
 // ONDE O DADO ROLA foi decisão do dono (ALE-261). A SPA rola no navegador, e o
 // comentário de lá defende isso — "o mestre pego sem resposta no meio da cena
-// recebe uma sem ida ao servidor". No piloto ele rola no SERVIDOR, e o que
+// recebe uma sem ida ao servidor". Aqui ele rola no SERVIDOR, e o que
 // muda o cálculo é que as tabelas JÁ estão no catálogo Go: rolar aqui mantém o
 // mapeamento rolagem→linha num lugar só e não embarca tabela no navegador. Em
 // produção é o mesmo binário que serve a página, então a "ida ao servidor" é a

@@ -267,7 +267,7 @@ func vital(atual, max int64) sheetVital {
 	return v
 }
 
-// sheetRoute é PARA ONDE se abre uma ficha no piloto.
+// sheetRoute é PARA ONDE se abre uma ficha no app.
 //
 // Uma função e não um `Sprintf` espalhado, pela mesma razão do `routes.Table`: no
 // dia da virada ela é o único lugar que precisa ser lido para saber quem manda

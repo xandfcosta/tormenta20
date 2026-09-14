@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func onLens(t *testing.T, f pilotoFixture) string {
+func onLens(t *testing.T, f sceneFixture) string {
 	t.Helper()
 	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
 	if rec.Code != http.StatusOK {
@@ -24,7 +24,7 @@ func onLens(t *testing.T, f pilotoFixture) string {
 // que se afirma é que a peça escondida SAI da tela do mestre enquanto a lente
 // está ligada — e o controle positivo é a mesma tela sem a lente, onde ela está.
 func TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}); err != nil {
@@ -56,7 +56,7 @@ func TestTheLensHidesFromTheGmWhatIsHiddenFromTheTable(t *testing.T) {
 // invisível?" —, e contar o que sobrou na tela não a responde: ele não sabe o
 // que não está vendo.
 func TestTheLensSaysHowManyVanished(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	for _, id := range []string{"a", "b"} {
 		if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
@@ -76,7 +76,7 @@ func TestTheLensSaysHowManyVanished(t *testing.T) {
 // o tabuleiro, o mestre perderia o pincel, o acervo e a própria saída — e ficaria
 // preso na vista da mesa.
 func TestTheLensDoesNotTakeTheGmControlsAway(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := onLens(t, f)
 
@@ -93,7 +93,7 @@ func TestTheLensDoesNotTakeTheGmControlsAway(t *testing.T) {
 // concluir que o mapa sumiu PARA OS JOGADORES — a resposta errada exatamente à
 // pergunta que a lente existe para responder.
 func TestTheLensDiesWithTheScene(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	if !strings.Contains(onLens(t, f), "Voltar à vista do mestre") {
 		t.Fatal("a lente não acendeu — o resto não mede nada")
@@ -115,7 +115,7 @@ func TestTheLensDiesWithTheScene(t *testing.T) {
 // do mestre não pode mudar nada do que o jogador vê — nem, o que seria pior,
 // revelar-lhe que alguém está conferindo.
 func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "visivel", Label: "Taverneiro", X: 1, Y: 1}); err != nil {
@@ -135,7 +135,7 @@ func TestTheLensBelongsToWhoeverLitIt(t *testing.T) {
 
 // TestOnlyTheGmLightsTheLens: a trava é do servidor, e não o botão escondido.
 func TestOnlyTheGmLightsTheLens(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/lente", "")
 	if rec.Code != http.StatusForbidden {

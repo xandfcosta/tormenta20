@@ -17,8 +17,8 @@ import (
 // isso que o navegador manda: a folha é um `<form method="post">` e o redesenho
 // do Datastar manda o MESMO formulário (`contentType: 'form'`).
 
-// postaAForja manda um formulário autenticado pelo roteador do piloto.
-func postaAForja(t *testing.T, f pilotoFixture, userID int64, caminho string, campos url.Values) *httptest.ResponseRecorder {
+// postaAForja manda um formulário autenticado pelo roteador do app.
+func postaAForja(t *testing.T, f sceneFixture, userID int64, caminho string, campos url.Values) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodPost, caminho, strings.NewReader(campos.Encode()))
 	req.Header.Set("Authorization", "Bearer "+f.token(t, userID))
@@ -45,7 +45,7 @@ func aFolhaPreenchida() url.Values {
 // regressão contrária: alguém trocar o catálogo por uma lista curta "só das
 // principais", que é como as cartas costumam começar.
 func TestEveryBookRaceAndClassHasACardInTheForge(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	corpo := f.pede(t, f.jogador, http.MethodGet, "/personagens/nova", "").Body.String()
 
 	racas, classes, _ := book.CharacterCatalogs()
@@ -68,7 +68,7 @@ func TestEveryBookRaceAndClassHasACardInTheForge(t *testing.T) {
 // TestTheFormOnlyOffersEquipmentAfterTheClass: o kit de p140 se conhece pela
 // classe, e antes dela a seção não existe.
 func TestTheFormOnlyOffersEquipmentAfterTheClass(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	vazia := f.pede(t, f.jogador, http.MethodGet, "/personagens/nova", "").Body.String()
 	if strings.Contains(vazia, "Equipamento inicial") {
 		t.Error("a folha vazia já oferece equipamento, sem saber a classe")
@@ -84,7 +84,7 @@ func TestTheFormOnlyOffersEquipmentAfterTheClass(t *testing.T) {
 // TestTheOfferedEquipmentFollowsTheClass — p140, e é o mesmo par de casos do
 // teste de regra do motor, agora atravessando a cena.
 func TestTheOfferedEquipmentFollowsTheClass(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	casos := []struct {
 		classe   string
 		presente []string
@@ -124,7 +124,7 @@ func TestTheOfferedEquipmentFollowsTheClass(t *testing.T) {
 // TestTheForgeRefusesWhatTheKitDoesNotOffer: a tela esconde, o servidor RECUSA. É a
 // fronteira que a rota JSON de criar personagem deixou aberta por escrito.
 func TestTheForgeRefusesWhatTheKitDoesNotOffer(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	casos := []struct {
 		nome   string
 		muda   func(url.Values)
@@ -182,7 +182,7 @@ func TestTheForgeRefusesWhatTheKitDoesNotOffer(t *testing.T) {
 // TestTheRefusalGivesBackWhatWasAnswered: a folha volta preenchida. Redigitar o
 // que estava certo é o castigo que a campanha nova já evitava (ALE-246).
 func TestTheRefusalGivesBackWhatWasAnswered(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	campos := aFolhaPreenchida()
 	campos.Set("origin", "Pirata Espacial")
 
@@ -200,7 +200,7 @@ func TestTheRefusalGivesBackWhatWasAnswered(t *testing.T) {
 
 // TestTheHeroIsBornDressedAndWithAPurse é o teste do NASCIMENTO inteiro (p140).
 func TestTheHeroIsBornDressedAndWithAPurse(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status %d, esperado 303: %s", rec.Code, rec.Body.String())
@@ -266,7 +266,7 @@ func TestTheHeroIsBornDressedAndWithAPurse(t *testing.T) {
 // TestTheHeroIsBornWithWhatTheClassTrainsAndUses: as perícias FIXAS da classe e as
 // proficiências dela. O que se ESCOLHE não nasce escolhido — vira pendência.
 func TestTheHeroIsBornWithWhatTheClassTrainsAndUses(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
 
@@ -301,7 +301,7 @@ func TestTheHeroIsBornWithWhatTheClassTrainsAndUses(t *testing.T) {
 
 // TestTheForgePointBuyRefusesWhatTheBookForbids — p17, Tabela 1-1.
 func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
 	atributos := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
@@ -342,7 +342,7 @@ func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
 // TestTheForgeAttributesBelongToTheOwner: a posse é conferida como em toda rota de
 // personagem.
 func TestTheForgeAttributesBelongToTheOwner(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
 	caminho := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
@@ -374,7 +374,7 @@ func oIDDoDestino(t *testing.T, destino string) int64 {
 	return id
 }
 
-func quantosHerois(t *testing.T, f pilotoFixture) int {
+func quantosHerois(t *testing.T, f sceneFixture) int {
 	t.Helper()
 	lista, err := f.s.queries.ListCharactersByOwner(context.Background(), f.jogador)
 	if err != nil {
@@ -386,7 +386,7 @@ func quantosHerois(t *testing.T, f pilotoFixture) int {
 // TestTheBlankFormAsksForTheChoiceInsteadOfBlamingAnEmptyValue: "não escolheu" e
 // "escolheu o que não existe" chegam no mesmo campo e não são a mesma coisa.
 func TestTheBlankFormAsksForTheChoiceInsteadOfBlamingAnEmptyValue(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	campos := url.Values{"name": {"Sem escolhas"}}
 
 	corpo := postaAForja(t, f, f.jogador, "/personagens/nova", campos).Body.String()

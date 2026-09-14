@@ -10,7 +10,7 @@ import (
 )
 
 func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	// Um personagem que existe, mas de OUTRO dono e fora do roster desta mesa.
 	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", 3, 10, 10, 2, 4)
 
@@ -37,7 +37,7 @@ func TestTheGmDoesNotTrackWhoIsNotInTheCampaign(t *testing.T) {
 // este caminho e o mestre digitar o nome à mão: sem o id ela fica fora do
 // descanso, sem PV de verdade e sem o fio de volta até a pessoa.
 func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	f.posta(t, f.mestre,
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
@@ -58,7 +58,7 @@ func TestTheCastPutsAPlayerInTheTrackerLinkedToTheSheet(t *testing.T) {
 // Quem garante é o `populateParty`, e este guarda é o que afirma que o caminho
 // novo passa por ele em vez de escrever direto.
 func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	rota := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
 	f.posta(t, f.mestre, rota, "{}")
@@ -71,7 +71,7 @@ func TestAddingItTwiceDoesNotDuplicateTheEntry(t *testing.T) {
 
 // TestThePlayerPutsNobodyInTheTracker — o papel, no servidor.
 func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.jogador, "POST",
 		f.tableUrl()+"/elenco/"+strconv.FormatInt(f.charID, 10)+"/na-fila", "{}")
@@ -86,7 +86,7 @@ func TestThePlayerPutsNobodyInTheTracker(t *testing.T) {
 // Oferecer "pôr na iniciativa" a quem já está lá é desenhar um gesto que só
 // pode não fazer nada — a mesma regra que trava os verbos do ciclo da sessão.
 func TestTheCastSaysWhoIsAlreadyInTheTracker(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	rota := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/na-fila"
 
 	antes := f.castMember(t, f.charID)
@@ -103,7 +103,7 @@ func TestTheCastSaysWhoIsAlreadyInTheTracker(t *testing.T) {
 // castMember monta a view pelo caminho de sempre e devolve um cartão do
 // Grupo. Perguntar à view e não ao banco é deliberado: é a view que a tela
 // desenha, e é nela que a marca precisa chegar.
-func (f pilotoFixture) castMember(t *testing.T, characterID int64) table.Member {
+func (f sceneFixture) castMember(t *testing.T, characterID int64) table.Member {
 	t.Helper()
 	view, _, err := f.s.tableScene.LoadView(t.Context(), f.mestre, f.campaignID, f.sessionID)
 	if err != nil {
@@ -130,7 +130,7 @@ func (f pilotoFixture) castMember(t *testing.T, characterID int64) table.Member 
 // compilaria, deixaria o painel com um número plausível, e a ficha do jogador
 // continuaria com o PV de antes (ALE-122).
 func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 
 	// O CONTROLE: o herói NÃO está na fila. Sem ele o caso mediria o caminho da
@@ -179,7 +179,7 @@ func TestTheCastHealsSomeoneWhoIsNotInTheTracker(t *testing.T) {
 // roster, o mestre de uma mesa feriria o personagem de OUTRA campanha — que é
 // pior que pô-lo na fila, porque escreve na ficha de um estranho.
 func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 	forasteiro := seedCharacterAtLevel(t, f.s, f.jogador, "Forasteiro", 3, 10, 10, 2, 4)
 	antes, err := f.s.queries.GetCharacter(ctx, forasteiro)
@@ -207,7 +207,7 @@ func TestTheCastVitalsRefuseSomeoneOutsideTheRoster(t *testing.T) {
 // COM linha na fila, ela ESPELHA o que o elenco fez — senão as duas telas
 // mostram números diferentes do mesmo herói, que é a ALE-122 literal.
 func TestTheCastVitalsMirrorIntoTheTrackerWhenThereIsALine(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
 	base := f.tableUrl() + "/elenco/" + strconv.FormatInt(f.charID, 10) + "/vitais/"

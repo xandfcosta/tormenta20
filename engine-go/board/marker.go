@@ -7,7 +7,7 @@ package board
 // tinha chegado à tela: a lista de cores existia DUAS vezes e as duas discordavam
 // — a autoridade (`AddMarker`) aceita `ouro/carmim/azul/verde` em pt-BR, e o
 // piloto tinha escrito `gold/red/green/blue/violet` à mão, no view e no CSS.
-// Nenhuma das cinco casa com nenhuma das quatro, então TODO marcador do piloto
+// Nenhuma das cinco casa com nenhuma das quatro, então TODO marcador do app
 // caía no dourado — inclusive o carmim que o mestre escolheu na outra tela.
 //
 // O defeito é da família que este repositório persegue: ele não estoura, ele
@@ -73,7 +73,7 @@ func NextMarkerLetter(marcadores []BoardMarker) string {
 // ── os patches TIPADOS, para quem não fala JSON ──────────────────────────────
 //
 // O `ParseMarkerPatch` monta o patch a partir de um `map[string]any`, que é a
-// forma do corpo JSON da SPA. O piloto não tem esse mapa — os gestos dele levam
+// forma do corpo JSON da SPA. O app não tem esse mapa — os gestos dele levam
 // a intenção no CAMINHO —, e montar um mapa só para desmontá-lo em seguida seria
 // atravessar o formato de fio de uma tela para chegar ao domínio da outra.
 

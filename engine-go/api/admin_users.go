@@ -74,7 +74,7 @@ func (h adminHost) deleteUserKeepingCampaigns(r *http.Request, userID, newOwnerI
 }
 
 // errUserNotFound separa "não existe" de "deu errado" para quem CHAMA
-// decidir o que dizer: a rota JSON responde 404, a cena do piloto desenha um
+// decidir o que dizer: a rota JSON responde 404, a cena do app desenha um
 // aviso. A regra não sabe qual é o transporte, e é esse o ponto.
 var errUserNotFound = errors.New("usuário não existe")
 

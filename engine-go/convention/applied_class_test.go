@@ -53,7 +53,7 @@ var (
 
 func TestEveryAppliedClassExistsInTheStylesheet(t *testing.T) {
 	root := filepath.Join("..", "..")
-	folha, err := os.ReadFile(filepath.Join(root, "engine-go", "api", "piloto", "static", "piloto.css"))
+	folha, err := os.ReadFile(filepath.Join(root, "engine-go", "api", "assets", "static", "app.css"))
 	if err != nil {
 		t.Fatalf("ler a folha compilada: %v", err)
 	}
@@ -120,7 +120,7 @@ func TestEveryAppliedClassExistsInTheStylesheet(t *testing.T) {
 		t.Errorf("classe aplicada que NÃO existe na folha compilada — %d de %d:\n  %s\n"+
 			"O elemento aparece SEM ESTILO e nada estoura. Ou a classe foi renomeada só de um "+
 			"lado (a folha-fonte e o `.templ` são dois lugares que nada liga), ou ela é nova e "+
-			"falta rodar `engine-go/scripts/build-piloto-css.sh`.",
+			"falta rodar `engine-go/scripts/build-css.sh`.",
 			len(soltas), len(checked), strings.Join(soltas, "\n  "))
 	}
 	t.Logf("classes aplicadas: %d, todas na folha, de %d arquivos e %d regras", len(checked), filesRead, len(naFolha))

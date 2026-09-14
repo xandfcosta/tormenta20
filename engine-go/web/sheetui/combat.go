@@ -24,7 +24,7 @@ import (
 //
 // # Esta é a primeira conta do servidor com os condicionais LIGADOS
 //
-// Todo uso anterior do motor no piloto passou pelo `sheetFromDTO`, que computa a
+// Todo uso anterior do motor no app passou pelo `sheetFromDTO`, que computa a
 // ficha BASE (`map[string]bool{}`). Aqui isso mentiria: um bárbaro em Fúria veria
 // o ataque de quem não está em Fúria, e a ficha discordaria da Mesa, que já lê o
 // estado ligado. O opt-in do jogador vem do banco dentro do próprio DTO

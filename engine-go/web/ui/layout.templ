@@ -3,7 +3,7 @@ package ui
 // A CASCA da cena, portada da `SceneShell` da SPA (ALE-219, agora em templ pela
 // ALE-227).
 //
-// Ela nasceu de uma observação do dono olhando as duas telas do piloto: "existe
+// Ela nasceu de uma observação do dono olhando as duas telas do app: "existe
 // um padding lateral, estamos usando o padrão de Shell do SolidJS?". Não
 // estávamos — eu tinha escrito `mx-auto max-w-3xl p-3 sm:p-4` numa e
 // `max-w-5xl` na outra, inventando duas. Medido, faltavam CINCO coisas, e só
@@ -20,7 +20,7 @@ package ui
 //     mas sem `env()` ele só serve para o conteúdo entrar DEBAIXO do notch.
 //  5. A escala de espaçamento da casa (`px-4 py-4` no denso), em vez da minha.
 //
-// Fica registrado como o TERCEIRO achado estrutural do piloto, depois da
+// Fica registrado como o TERCEIRO achado estrutural do app, depois da
 // biblioteca de componentes e da faixa de teste: a casca também não atravessa
 // sozinha, e é o que faz duas telas individualmente corretas parecerem de dois
 // aplicativos.
@@ -104,7 +104,7 @@ templ Layout(p Page, corpo templ.Component) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 			<title>{ p.Titulo }</title>
 			<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
-			<link rel="stylesheet" href={ p.Asset("piloto.css") }/>
+			<link rel="stylesheet" href={ p.Asset("app.css") }/>
 			<script type="module" src={ p.Asset("datastar.js") }></script>
 			// `scene.js` é o teclado, os cues de áudio e o posicionamento do
 			// popover — compilado dos MESMOS fontes que a SPA usa (ALE-231), não
@@ -146,7 +146,7 @@ templ Layout(p Page, corpo templ.Component) {
 			// `data-voltar` é o que o Esc LÊ para saber para onde subir, e ele
 			// nunca era emitido: o `p.Voltar` alimentava só o link visível de
 			// voltar, então o driver procurava um atributo que ninguém escrevia e
-			// o Esc estava morto em TODAS as cenas do piloto. Medido antes de
+			// o Esc estava morto em TODAS as cenas. Medido antes de
 			// escrever a legenda de teclado, que por isso não o anuncia.
 			//
 			// Emitido AQUI, na casca, e não em cada cena: uma linha liga o Esc em

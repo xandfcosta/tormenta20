@@ -7,7 +7,7 @@
 #
 # # Por que UM estágio de build e não dois
 #
-# O binário embute a folha e as ilhas de JS do piloto (`go:embed`), e quem as
+# O binário embute a folha e as ilhas de JS (`go:embed`), e quem as
 # compila é o `prebuild` do `engine-go` — Node. Separar "estágio do node" de
 # "estágio do Go" obrigaria a passar os artefatos de um para o outro na mão, que
 # é a forma de o binário sair com uma folha velha sem nada falhar. Um estágio com
@@ -48,7 +48,7 @@ RUN cd engine-go && go mod download
 
 COPY . .
 
-# A FOLHA e as ILHAS do piloto, que o `go:embed` leva para dentro do binário.
+# A FOLHA e as ILHAS do app, que o `go:embed` leva para dentro do binário.
 # Elas são versionadas, então o build não depende deste passo para compilar — ele
 # existe para a imagem não sair com um artefato mais velho que a fonte.
 RUN cd engine-go && pnpm run prebuild

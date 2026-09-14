@@ -23,7 +23,7 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  *
  * O que NÃO está aqui, de propósito: recusa de escolha que o kit não oferece,
  * nascimento com o kit de p140, e o limite da compra de pontos. Isso é regra de
- * SERVIDOR e está preso em `api/piloto_forge_test.go`, que é a camada mais
+ * SERVIDOR e está preso em `api/forge_test.go`, que é a camada mais
  * barata que a segura.
  */
 test.use({ storageState: '.auth/user.json' })
@@ -100,9 +100,9 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 
   // A GRAMÁTICA DE TECLADO, medida aqui e não na lista do
-  // `piloto-keyboard-grammar.spec.ts`: aquele guarda enumera cenas de
+  // `keyboard-grammar.spec.ts`: aquele guarda enumera cenas de
   // endereço FIXO, e o desta tem o id de um herói que só existe depois de
-  // alguém forjar. Sem esta asserção, a única cena do piloto com endereço
+  // alguém forjar. Sem esta asserção, a única cena do app com endereço
   // dinâmico nasceria fora do regime — que é a forma exata do defeito que
   // aquele guarda existe para prender.
   await page.setViewportSize({ width: 1400, height: 900 })

@@ -16,7 +16,7 @@ import (
 // perceber isso.
 
 // sessaoDoBanco relê a linha, que é onde o estado mora de verdade.
-func sessaoDoBanco(t *testing.T, f pilotoFixture) (status string, comeco bool) {
+func sessaoDoBanco(t *testing.T, f sceneFixture) (status string, comeco bool) {
 	t.Helper()
 	s, err := f.s.queries.GetSession(context.Background(), f.sessionID)
 	if err != nil {
@@ -27,7 +27,7 @@ func sessaoDoBanco(t *testing.T, f pilotoFixture) (status string, comeco bool) {
 
 // TestStartingMeansThreeThings — é por isto que a regra merece função própria.
 func TestStartingMeansThreeThings(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 
 	// 1. PLANEJADA começa do zero, e carimba o início.
@@ -80,7 +80,7 @@ func TestStartingMeansThreeThings(t *testing.T) {
 // errada. Carimbar um fim numa noite que não teve início deixaria o histórico
 // dizendo que ela aconteceu.
 func TestEndingASessionThatNeverStartedIsRefused(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 	sess, err := f.s.queries.GetSession(ctx, f.sessionID)
 	if err != nil {
@@ -121,7 +121,7 @@ func TestEndingASessionThatNeverStartedIsRefused(t *testing.T) {
 // os turnos. Os dois verbos morando na mesma tela, um do lado do outro, é
 // exatamente onde a confusão custaria a noite de alguém.
 func TestRestartingCombatEmptiesTheTrackerAndNothingElse(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	ctx := context.Background()
 	f.scene(t)
 

@@ -7,7 +7,7 @@ import (
 )
 
 func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"goblin-salteador","entry_hp":4,"entry_initiative":13,"entry_copies":3}`)
@@ -45,7 +45,7 @@ func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 // desfazer linha por linha. E o `min`/`max` do campo não é a trava: digitar
 // passa direto pelo spinner (ALE-236).
 func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"goblin-salteador","entry_hp":4,"entry_initiative":13,"entry_copies":99}`)
@@ -61,7 +61,7 @@ func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 // desconhecido só chega por adulteração, e engolir em silêncio poria uma linha
 // sem bloco na fila.
 func TestAnInventedCreatureIsRefused(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"grifo-de-neon","entry_hp":10,"entry_initiative":10,"entry_copies":1}`)
@@ -83,7 +83,7 @@ func TestAnInventedCreatureIsRefused(t *testing.T) {
 // pode semear. Se semeasse, cada tecla da busca apagaria o PV que o mestre
 // acabou de ajustar.
 func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	painel := f.tableUrl() + "/bestiario"
 
 	// Primeira abertura: o rascunho na tela não é de ninguém ainda.
@@ -118,7 +118,7 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 // A lista diz o PV e a defesa de cada bicho — é exatamente o que o olho da linha
 // esconde da mesa —, então a trava é do painel INTEIRO e não só do enviar.
 func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rotas := []struct{ metodo, caminho, corpo string }{
 		{http.MethodGet, "/bestiario", ""},

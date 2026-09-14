@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * TODA cena do piloto declara a gramática de teclado da casa.
+ * TODA cena do app declara a gramática de teclado da casa.
  *
  * O defeito que isto prende foi contado antes de ser consertado: 6 das 20 cenas
  * declaravam alguma `data-nav-region` e 14 não declaravam nenhuma. O motor
@@ -41,7 +41,7 @@ const CENAS = [
 
 // A segunda cena da forja NÃO cabe nesta lista: o endereço dela tem o id do
 // herói, e o herói só existe depois de alguém forjar. Ela é medida em
-// `piloto-forge.spec.ts`, que a alcança pelo caminho de verdade — a lista aqui é
+// `forge.spec.ts`, que a alcança pelo caminho de verdade — a lista aqui é
 // de cenas com endereço fixo, e fingir um id faria o guarda medir um 403.
 
 

@@ -2,7 +2,7 @@
   "name": "@tormenta20/engine-go",
   "version": "0.0.0",
   "private": true,
-  "description": "Go API + motor de regras + o PILOTO Datastar, fontes e tudo. `dev` roda air (recarga a quente do cmd/api :3001) lendo .env.development; `build` compila o binário de produção e `start` o sobe com .env.production, servindo as cenas, a API e o stream de UM processo. Produção é esse processo num contêiner: `docker compose up -d --build` na raiz, banco em bind mount no hospedeiro e NENHUM proxy na frente (ALE-273). As fontes do piloto — a folha e as ilhas de JS — moram em api/piloto/src desde a ALE-272 (fatia 10c), quando saíram de dentro da SPA; o `prebuild` as compila para api/piloto/static, que o go:embed leva para dentro do binário.",
+  "description": "Go API + motor de regras + as CENAS em Datastar, fontes e tudo. `dev` roda air (recarga a quente do cmd/api :3001) lendo .env.development; `build` compila o binário de produção e `start` o sobe com .env.production, servindo as cenas, a API e o stream de UM processo. Produção é esse processo num contêiner: `docker compose up -d --build` na raiz, banco em bind mount no hospedeiro e NENHUM proxy na frente (ALE-273). As fontes das cenas — a folha e as ilhas de JS — moram em api/assets/src desde a ALE-272 (fatia 10c), quando saíram de dentro da SPA; o `prebuild` as compila para api/assets/static, que o go:embed leva para dentro do binário.",
   "scripts": {
     "dev": "air",
     "build": "go build -o ./bin/t20-api ./cmd/api",
@@ -11,10 +11,10 @@
     "vet": "go vet ./...",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "seed": "SEED_API_URL=http://localhost:3001 go run ./cmd/seed",
-    "build:piloto-css": "bash ./scripts/build-piloto-css.sh",
-    "build:piloto-js": "bash ./scripts/build-piloto-js.sh",
+    "build:css": "bash ./scripts/build-css.sh",
+    "build:js": "bash ./scripts/build-js.sh",
     "build:icons": "node ./scripts/gen-icons-templ.mjs",
-    "prebuild": "bash ./scripts/build-piloto-css.sh && bash ./scripts/build-piloto-js.sh"
+    "prebuild": "bash ./scripts/build-css.sh && bash ./scripts/build-js.sh"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",

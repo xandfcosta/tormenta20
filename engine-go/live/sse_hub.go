@@ -146,7 +146,7 @@ func (h *SSEHub) entregaLocked(sessionID int64, role string, frame SSEFrame) {
 // POR QUE AQUI E NÃO EM TODO STREAM DA CASA. A ordem importa neste hub porque
 // o que viaja é o CLONE do estado, capturado no instante da mutação: um clone
 // velho que chegue depois de um novo é uma verdade antiga sobrescrevendo uma
-// recente. Há um desenho irmão que é imune por construção — o stream do piloto
+// recente. Há um desenho irmão que é imune por construção — o stream do app
 // (Datastar) manda um AVISO sem estado, e o leitor relê o estado de agora; dois
 // avisos fora de ordem no pior caso mandam reler duas vezes, e não há o que
 // reordenar. Publicar o clone é a escolha certa AQUI porque o cliente da SPA

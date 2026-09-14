@@ -5,12 +5,12 @@ package board
 //
 // Este arquivo NASCEU na colheita do `0f08b14`, e a razão vale escrita. Na base
 // da migração as espécies moram no fim do `vista.go`, que é maquinário de
-// RENDERIZAÇÃO do piloto: lá o servidor desenha o extenso do tabuleiro, porque
+// RENDERIZAÇÃO do app: lá o servidor desenha o extenso do tabuleiro, porque
 // quem enquadra é o navegador por `transform`. A SPA desenha a própria janela e
 // não precisa de nada daquilo — trazer o arquivo inteiro poria código morto na
 // `main` só para carregar um `type` e quatro constantes.
 //
-// Então o domínio veio, o desenho do piloto ficou. As duas branches passam a ter
+// Então o domínio veio, o desenho das cenas ficou. As duas branches passam a ter
 // os mesmos símbolos em arquivos diferentes, e isso é dívida CONHECIDA: quando
 // elas se encontrarem, este arquivo e o fim do `vista.go` colidem. A sessão da
 // migração foi avisada para fazer a mesma separação do lado dela, que é o que

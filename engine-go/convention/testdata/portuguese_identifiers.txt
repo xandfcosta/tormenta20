@@ -61,7 +61,6 @@ cena
 cenaEmCurso
 cenaFixture
 CENAS
-cenasDoPiloto
 cenasDosCatalogos
 cenaSemLivro
 chavesDe
@@ -114,7 +113,6 @@ Escrito
 especializacaoArmaduraLevel
 especializacaoArmaduraRd
 esperaOPrimeiroQuadro
-EstaticoDoPiloto
 existe
 expectBotoesComLimiteVisivel
 expectCinzelAcimaDoPiso
@@ -130,7 +128,6 @@ fila
 filtradasPorNome
 fluxoDaFicha
 fluxoDeTeste
-FontesDoPiloto
 footprintsDaCasa
 formDeCombatente
 gavetaDaFila
@@ -150,7 +147,6 @@ LIMITE_MINIMO
 listaDe
 listaDeIDs
 livroDeMentira
-LivroDoPiloto
 livroServido
 lugarDaURL
 lugarDoAcervo
@@ -185,7 +181,6 @@ oCaminhoCitado
 oIdDoConjurador
 oQueORepositorioDeclara
 oraculoDaCopia
-osFontesDoPiloto
 osIdsDosItens
 osNomesDasClasses
 osNomesDeArquivoDoRepositorio
@@ -201,7 +196,6 @@ pedeNaCena
 pedeNaCenaComLivro
 pedeNaCronica
 pedeNoMestre
-pedeNoPiloto
 pedeOLivro
 pedidaOuTodas
 pegaAVista

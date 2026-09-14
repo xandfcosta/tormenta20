@@ -10,7 +10,7 @@ import (
 )
 
 func TestOnlyTheGmMarksAGroup(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	rec := f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/marcar-area", `{"from":{"X":0,"Y":0},"to":{"X":9,"Y":9}}`)
@@ -41,7 +41,7 @@ func TestOnlyTheGmMarksAGroup(t *testing.T) {
 // uma FORA pelo eixo y. Com uma fora só, um predicado que testasse um eixo e
 // esquecesse o outro passaria em metade dos casos.
 func TestTheLassoMarksOnlyWhatIsInsideIt(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	dentro := f.seedToken(t, "Goblin de dentro", 3, 3)
 	foraNoX := f.seedToken(t, "Goblin à direita", 9, 3)
@@ -67,7 +67,7 @@ func TestTheLassoMarksOnlyWhatIsInsideIt(t *testing.T) {
 // campo. Um caso que comparasse o `marked_tokens` com o id que ele mesmo passou
 // afirmaria sobre uma peça que não existe — e, como `strings.Contains` de um
 // nome inventado é sempre falso, ele acusaria "o laço não pegou" para SEMPRE.
-func (f pilotoFixture) seedToken(t *testing.T, rotulo string, x, y int) string {
+func (f sceneFixture) seedToken(t *testing.T, rotulo string, x, y int) string {
 	t.Helper()
 	estado, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{Label: rotulo, X: x, Y: y})
@@ -91,7 +91,7 @@ func (f pilotoFixture) seedToken(t *testing.T, rotulo string, x, y int) string {
 // no arrasto invertido — e não estoura, não recusa, não diz nada: a barra
 // simplesmente não aparece.
 func TestTheLassoReadsTheCornersInAnyOrder(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	dentro := f.seedToken(t, "Goblin de dentro", 3, 3)
 
@@ -108,7 +108,7 @@ func TestTheLassoReadsTheCornersInAnyOrder(t *testing.T) {
 // Uma marcação que devolvesse as regiões trocaria o mapa debaixo de quem está
 // arrastando — que é exatamente o gesto que acabou de acontecer.
 func TestMarkingDoesNotPatchTheScene(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	resposta := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/marcar-area", "{}")
@@ -123,7 +123,7 @@ func TestMarkingDoesNotPatchTheScene(t *testing.T) {
 // TestAGroupWithNoMarkedTokenRefusesWithASentence: o gesto que não tem sobre o que agir
 // diz isso, em vez de gravar uma versão nova sem mudar nada.
 func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	corpo := f.posta(t, f.mestre, f.tableUrl()+"/tabuleiro/grupo/mover", `{"delta":{"X":1,"Y":1},"marked_tokens":""}`)
@@ -138,7 +138,7 @@ func TestAGroupWithNoMarkedTokenRefusesWithASentence(t *testing.T) {
 // (só o mapa). A segunda importa porque mover um grupo é um arrasto, e devolver
 // a Mesa inteira no meio dele é o defeito de 353 KB que a fatia 3 mediu.
 func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
@@ -173,7 +173,7 @@ func TestTheGroupMovesThemAllInOneResponse(t *testing.T) {
 // dedo andou, e sem ele terminar um laço também moveria a peça da vez para onde
 // o laço terminou.
 func TestTheRestingLayerServesBothGestures(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	// COM PEÇA no mapa: a marca do grupo é vestida pela peça, e num tabuleiro

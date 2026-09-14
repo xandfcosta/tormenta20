@@ -15,7 +15,7 @@ import (
 
 // PÔR NO MAPA (ALE-264, item 5) — ver a linha do GLOSSARY.
 //
-// O gesto que faltava: o tabuleiro do piloto desenhava peças desde o `33380d6`,
+// O gesto que faltava: o tabuleiro desenhava peças desde o `33380d6`,
 // mas só nascia peça por `curl`. Aqui ele ganha a afordância, e o servidor já
 // tinha tudo — `BoardStore.Populate` existe, é idempotente e tem guarda próprio
 // (`board_populate_test.go`).

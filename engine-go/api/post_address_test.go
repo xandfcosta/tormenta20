@@ -295,7 +295,7 @@ func TestTheExtractorStopsAtThePayload(t *testing.T) {
 // `/redefinir-senha`) não escreve endereço nenhum — ela é `<form method="post">`
 // puro, com `SemEstadoDeCliente: true` —, e `/admin` mora noutro servidor,
 // porque só ele leva `ADMIN_EMAILS`.
-func scenesThatWriteAddresses(t *testing.T, f pilotoFixture) []struct {
+func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
 	Nome, Caminho string
 	Usuario       int64
 } {
@@ -367,7 +367,7 @@ func scenesThatWriteAddresses(t *testing.T, f pilotoFixture) []struct {
 // está fria e a fila vazia, então o botão sai SEM o `data-on:click`: o endereço
 // morto simplesmente não está no HTML. É a armadilha do ramo, medida no guarda
 // que existe para medir ramos.
-func openTheLiveTable(t *testing.T, f pilotoFixture) {
+func openTheLiveTable(t *testing.T, f sceneFixture) {
 	t.Helper()
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Ogro","new_initiative":12,"new_hp":130,"new_type":"npc"}`); rec.Code != http.StatusOK {
@@ -412,7 +412,7 @@ func openTheLiveTable(t *testing.T, f pilotoFixture) {
 // Um pedido de verdade a `/personagens/spliced` levaria 404 do handler
 // ("personagem não existe"), e o guarda leria isso como rota faltando.
 func TestEveryAddressAPostWritesExistsInTheRouter(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	openTheLiveTable(t, f)
 
 	mux, ok := f.s.WebRouter().(*chi.Mux)
