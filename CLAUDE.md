@@ -128,146 +128,66 @@ um resultado que alguém notaria quebrar. Tudo abaixo decorre disso.
 
 ### O INSTRUMENTO MENTE COM CARA DE RESULTADO
 
-O formato é sempre o mesmo: a infraestrutura em volta da medição destrói a
-medição, e o que sobra parece um dado. Quatro casos num dia só, e nenhum deles
-pareceu erro na hora:
+A infraestrutura em volta da medição destrói a medição, e o que sobra parece um
+dado. Cada linha abaixo custou uma investigação inteira; a história está na
+issue, e o que fica aqui é a forma de reconhecer a armadilha na próxima vez.
 
-- Um `finally` que fecha contextos de browser lançou "Failed to find context" e
-  **substituiu o erro de verdade** do teste. Limpeza ganha `catch`, sempre:
-  *limpeza não pode falar mais alto que o defeito* (ALE-245).
-- A suíte rodada com `| tail -15` deixou 981 bytes de stdout; procurar uma linha
-  ali e não achar foi lido como "o evento não aconteceu", quando era "o canal não
-  existe" (ALE-238).
-- Uma sonda instalou `MutationObserver` em `document.body` num `addInitScript`,
-  onde o `body` ainda é `null` — e a ausência de mutação virou conclusão
-  (ALE-199).
-- Uma sonda de Playwright mediu zero prévias de arrasto e quase virou "a
-  funcionalidade não existe". A peça estava **debaixo do trilho de ferramentas**:
-  o `boundingBox` devolve a caixa de um elemento COBERTO sem reclamar, e o
-  `mouse.down` acertava o trilho (ALE-203).
-- Um guarda novo leu a folha compilada e **acusou 24 botões VIVOS de nascerem
-  mortos**, em duas rodadas, cada um com o nome acessível na mensagem. As duas
-  causas foram formas de seletor que o parser não sabia ler e **descartava em
-  silêncio**: o `.painel>*` minificado (sem espaço para o `Cut` achar) e a
-  vírgula de dentro de um `:is(a, button, …)`, que o `Split(sel, ",")` picou em
-  pedaços que não casavam com nada. Ramo que ignora o que não entende produz
-  lista de falhas com cara de descoberta — e lista de falhas, ao contrário de
-  decomposição, não tem denominador embutido. Hoje aquele parser FALHA no
-  seletor desconhecido (ALE-294).
+**A pergunta que abre todas elas: "o que este instrumento DESLIGA para
+funcionar, e o que ele não mede?"**
 
-- Uma medição respondeu a pergunta ERRADA por medir a coisa certa. A folha de
-  especificação comparava o botão do servidor com o da SPA e achou 2px de
-  diferença: o `secondary` do servidor tem borda. A conclusão registrada foi "o
-  errado é o nome", e ela sobreviveu meses. **O que ninguém tinha medido era o
-  LIMITE**: o preenchimento sozinho dá 1,30:1 contra o fundo da cena e a borda dá
-  3,57:1, contra o mínimo de 3:1 do WCAG 1.4.11. A borda era conserto, e o botão
-  sem borda da SPA é que era o defeito. O medidor de contraste da casa não
-  acusaria nunca — ele mede a tinta do TEXTO, que continua legível. **Instrumento
-  que compara TAMANHO responde sobre tamanho**; a pergunta seguinte é sempre "e
-  o que ele não mede?" (ALE-250).
-- **O instrumento APAGOU o que ele foi medir, e a ausência tinha cara de
-  ausência.** Conferindo o deslize da peça no tabuleiro, três capturas tiradas a
-  30, 60 e 90ms de uma animação de 200ms saíram **byte a byte idênticas**. A
-  leitura ingênua é "a animação não existe" — e o que existe é que o
-  `screenshot()` do Playwright roda com `animations: 'disabled'` por padrão, o
-  que FINALIZA toda animação finita antes de fotografar. Captura de tela não
-  responde nada sobre linha do tempo; quem responde é amostrar a geometria a
-  cada quadro. **A pergunta é sempre "o que este instrumento desliga para
-  funcionar?"** (ALE-174).
-- **E a sonda seguinte mediu o GESTO em vez do efeito dele.** Trocada a captura
-  por uma amostragem de `getBoundingClientRect()` quadro a quadro, o guarda
-  contou "mais de duas posições" e passou verde — **com o módulo que ele
-  protege removido da página**. Ele estava armado antes do arrasto, e o dedo
-  atravessando quatro casas pinta a peça em cada uma: `630 → 674 → 718 → 762 →
-  806` é a mão, não a animação. Sonda de vida longa mede tudo o que acontece na
-  janela dela, e a janela é parte do desenho — armá-la depois do gesto e antes
-  do efeito foi o conserto (ALE-174).
-- **Um guarda de varredura pode medir a FOLHA e ignorar o galho.** O da ALE-298
-  recusava ouvinte de janela escrito dentro de um `for` — e passou verde sobre o
-  defeito que o originou, porque a cadeia real era `for` → `@expertiseDetail` →
-  `@overlay` e só o último tinha o atributo. **Varredura de um nível não é
-  varredura**; o conserto foi o fecho transitivo de quem chama quem. E o que
-  desmentiu o guarda foi rodá-lo contra a ÁRVORE DE ONTEM, que é melhor que
-  sabotagem por dois motivos: o caso negativo é real, e não há como ele sair
-  inerte (ALE-298).
-- **E a terceira sonda desta mesma família mediu a coisa certa no instante
-  errado.** Conferindo a piscada do vital, uma sonda perguntou ao DOM no momento
-  do `el.animate()` se o véu estava lá: estava. O guarda contou **zero em 151
-  quadros**. As duas mediam o mesmo nó, e a diferença era o INSTANTE — o morph o
-  remove no quadro seguinte, e a animação some *pedida*. **"Existe agora" e
-  "existe quando importa" são perguntas diferentes**, e para animação a segunda é
-  sempre a que vale (ALE-174).
-- **A mesma família, e desta vez o instrumento inflou o defeito em vinte e cinco
-  vezes.** A ALE-177 media alvos de toque com `largura < 24 || altura < 24` e
-  reportou 98 de 175 reprovando o WCAG 2.5.8. Refeita a conta na ficha de hoje,
-  são **58 pequenos e QUATRO reprovando** — porque o critério tem duas exceções
-  que contar tamanho não enxerga: ESPAÇAMENTO (um alvo pequeno passa se o
-  círculo de 24px centrado nele não cruzar outro alvo) e EQUIVALENTE (passa se
-  outro controle da mesma tela faz a mesma coisa e cumpre o piso). Cada perícia
-  tem as duas: 62px de passo entre linhas, e o número de 44×44 disparando o
-  mesmo comando que o nome de 139×20. **Ler a norma até o fim é parte de
-  construir o medidor**, e o conserto proposto a partir do número inflado ia
-  mexer na densidade da tela mais densa do app — por 54 alvos que a norma já
-  aceita (ALE-177).
-- Uma varredura de `grep` sobre os `.templ` contou **9** violações do piso da
-  Cinzel. Eram **14**, e as cinco que faltavam saíram por duas cegueiras
-  diferentes — nenhuma delas visível no resultado. A escada de tamanhos escrita
-  à mão no regex pulou o `text-3xs` (10px): quatro sítios. E o trilho do mestre
-  põe a `font-heading` num `<span>` e o `text-xs` no `<a>` que o contém — **os
-  dois tokens nunca estiveram na mesma `class=`**, e regex nenhum sobre uma
-  linha os junta. Herança é a REGRA do CSS, não a exceção: quem mede tipografia
-  pelo texto do código mede o que foi ESCRITO, e a pergunta é sobre o que é
-  DESENHADO. Só o navegador respondeu (ALE-252).
-
-- **Uma transição em curso faz o computado mentir, e escolher outro INSTANTE não
-  conserta.** Medindo o anel de foco da ficha, 131 botões se decompuseram em
-  quatro aparências — dourado opaco, dourado a 50%, 2px, 3px, offset 1 e offset
-  0 —, a decomposição fechava a soma, e virou issue de ALTA prioridade dizendo
-  que a casa tinha três realces numa aba só. **Era um anel só, lido em três
-  instantes do trajeto:** o `transition-colors` e o `transition-all` do Tailwind
-  v4 incluem `outline-*`, e o realce levava 150ms para chegar ao que o
-  `index.css` promete. A sonda lia na mesma tarefa do `focus()`, que é quando o
-  navegador ainda devolve o valor de PARTIDA de toda propriedade em transição —
-  `3px solid off:0px`, que aquele botão nunca pinta.
-  E ler um quadro depois só troca o erro de lugar: a primeira amostra de uma
-  transição de 150ms continua não sendo o resultado. **A saída não é achar o
-  instante certo, é PERGUNTAR se existe transição** — `getAnimations()` devolve
-  uma `CSSTransition` por propriedade, com o nome dela, e aí o guarda falha
-  dizendo `outline-color em transição de 150ms` em vez de listar aparências.
-  Duas coisas ficam: a conclusão errada era a plausível (uma decomposição com
-  denominador fechado *parece* medição), e **a explicação certa já existia** —
-  num comentário do guarda antigo, que desligava a transição antes de medir
-  exatamente por isso. Instrumento que mora dentro de um chamador tem um
-  chamador; **explicação que mora dentro de um teste tem um leitor** (ALE-318).
-
-- **Um mostrador de estado cujo REPOUSO é igual ao sucesso não testemunha o
-  sucesso.** A faixa das notas diz "Salvo" quando o texto da tela é igual ao que
-  o servidor confirmou — e ela diz isso ANTES de qualquer digitação, porque os
-  dois nascem iguais. Um caso de e2e que escrevia na caixa e afirmava "Salvo"
-  passou verde sem que nada tivesse sido gravado: ele afirmou o estado de
-  REPOUSO e leu como resultado. É o *mock echo* com outra roupa — arranjar o
-  valor e afirmar o valor —, e o conserto é afirmar o CANAL: esperar o POST
-  chegar com 2xx. Vale a pergunta para qualquer indicador: *ele mostra alguma
-  coisa diferente antes e depois do que eu vim medir?* (ALE-218).
+- **Limpeza não pode falar mais alto que o defeito** — um `finally` que estoura
+  substitui o erro de verdade. Limpeza ganha `catch`, sempre (ALE-245).
+- **Nunca rode a suíte com `| tail`** — procurar uma linha no que sobrou e não
+  achar vira "o evento não aconteceu", quando era "o canal não existe" (ALE-238).
+- **Sonda instalada cedo demais mede o nada** — `MutationObserver` num
+  `addInitScript` observa um `body` que ainda é `null` (ALE-199).
+- **`boundingBox` devolve a caixa de um elemento COBERTO sem reclamar** — e o
+  clique acerta quem está por cima (ALE-203).
+- **Ramo que ignora o que não entende produz lista de falhas com cara de
+  descoberta** — um parser que descarta o seletor desconhecido acusou 24 botões
+  vivos. Hoje ele FALHA no que não sabe ler (ALE-294).
+- **Instrumento que compara TAMANHO responde sobre tamanho** — a diferença de
+  2px era real e a pergunta era outra: o LIMITE de contraste do WCAG 1.4.11
+  (ALE-250).
+- **Captura de tela não responde nada sobre linha do tempo** — o `screenshot()`
+  do Playwright FINALIZA toda animação finita antes de fotografar (ALE-174).
+- **Sonda de vida longa mede tudo o que acontece na janela dela** — armada antes
+  do gesto, ela conta a MÃO e não a animação. A janela é parte do desenho
+  (ALE-174).
+- **"Existe agora" e "existe quando importa" são perguntas diferentes** — o nó
+  medido some no quadro seguinte, e a animação some pedida (ALE-174).
+- **Varredura de um nível não é varredura** — o defeito morava em `for` →
+  `@expertiseDetail` → `@overlay`, e só o último tinha o atributo. O conserto é o
+  fecho transitivo (ALE-298).
+- **Ler a norma até o fim é parte de construir o medidor** — contar `< 24px`
+  inflou o defeito em 25×, porque o WCAG 2.5.8 tem duas exceções que tamanho não
+  enxerga: espaçamento e equivalente (ALE-177).
+- **Herança é a REGRA do CSS** — quem mede tipografia pelo texto do código mede
+  o que foi ESCRITO, e a pergunta é sobre o que é DESENHADO. Dois tokens em
+  `class=` diferentes, e regex nenhum os junta (ALE-252).
+- **Transição em curso faz o computado mentir, e escolher outro instante não
+  conserta** — `getAnimations()` responde SE existe transição; ler "no instante
+  certo" é trocar o erro de lugar (ALE-318).
+- **Mostrador cujo REPOUSO é igual ao sucesso não testemunha o sucesso** — a
+  faixa dizia "Salvo" antes de qualquer digitação. Pergunte sempre: *ele mostra
+  algo diferente antes e depois do que eu vim medir?* (ALE-218).
+- **Lista de PROIBIDOS subconta em silêncio** — e, ao contrário de uma
+  decomposição, não tem denominador embutido. Inverta: tenha um PERMITIDOS e
+  falhe no que não conhece (ALE-301).
 
 **O controle é barato e é obrigatório: antes de ler AUSÊNCIA como evidência,
-provar que o canal estaria lá se o evento tivesse acontecido.** Procurar no mesmo
-arquivo uma linha que sai SEMPRE; conferir que a sonda vê o caso positivo
+prove que o canal estaria lá se o evento tivesse acontecido.** Procure no mesmo
+arquivo uma linha que sai SEMPRE; confira que a sonda vê o caso positivo
 conhecido. Sem isso, "não reproduzi" não é evidência de ausência — é ausência de
 evidência, e as duas se parecem no terminal.
 
-**E o canal pode morrer DEPOIS de instalado: um observador precisa afirmar que o
-DOCUMENTO em que ele foi instalado ainda é o mesmo.** Navegação descarta o
-documento, e com ele o `MutationObserver` — a lista de mutações volta VAZIA, que
-é a mesma coisa que "nada mudou". O guarda `não desanexa a cena` (ALE-238) passa
-exatamente no PIOR caso: a cena não desanexou porque a cena deixou de existir.
-Não é um teste que falha em detectar; é um teste que **afirma o oposto do que
-aconteceu**, e ele só foi descoberto porque um clique estourou antes e denunciou
-a navegação.
-
-O mesmo vale para qualquer sonda de vida longa — `addEventListener`,
-`PerformanceObserver`, um `page.on(...)` cujo alvo recarregou. Afirme o documento
-antes de afirmar o silêncio.
+**E o canal pode morrer DEPOIS de instalado.** Navegação descarta o documento e
+com ele o `MutationObserver`; a lista de mutações volta VAZIA, que é a mesma
+coisa que "nada mudou". O guarda `não desanexa a cena` passava no PIOR caso — a
+cena não desanexou porque deixou de existir. Não é um teste que falha em
+detectar: é um teste que **afirma o oposto do que aconteceu** (ALE-238). Vale
+para toda sonda de vida longa: **afirme o documento antes de afirmar o
+silêncio.**
 
 ### Instrumento que DECOMPÕE tem denominador de graça: a soma
 
@@ -302,79 +222,42 @@ de subtrair a altura dela. Somar teria errado pelos mesmos dois motivos acima.
 Cobertura de contraste, de tipografia e de leiaute é função de onde o teste
 NAVEGA, não de quantas asserções ele tem. Dois defeitos de contraste
 sobreviveram anos com o guarda no ar porque ele nunca abria um popover nem
-entrava na cena de campanhas (ALE-237); a mesma forma reapareceu na tipografia
-(ALE-252).
+entrava na cena de campanhas (ALE-237).
 
-**Mas "põe a cena na lista" só resolve enquanto as cenas forem contáveis, e vale
-saber a diferença.** Um guarda que mede a folha do grimório cobre 43 telas por
-AMOSTRAGEM — ele mede uma e vale para todas porque todas passam pelos mesmos
-componentes. No dia em que uma tela escreve as classes à mão, o regime vira
-ENUMERAÇÃO: uma entrada por cena, para sempre, e a que alguém esquecer nasce sem
-medição — em silêncio, que é a marca desta família. Enumerar é remendo; **o que
-restaura a amostragem é a tela nova passar pelos componentes da casa.** Escolher
-o remendo dá sensação de conserto e deixa o buraco aberto (ALE-252).
+**Quatro formas de "não visitar", e só a primeira parece esquecimento:**
 
-> **O remendo foi escolhido, de olhos abertos** (ALE-252): o medidor virou
-> `e2e/tests/support/typography.ts` com `{falhas, medidos}` e passou de UM
-> endereço para quinze, mais o caminhar pelas sete abas da ficha — reprovando de
-> saída dez sítios em cinco cenas que ele nunca tinha olhado. Barato, e achou
-> defeito de verdade. Mas cada cena nova continuava precisando da própria linha.
->
-> **A amostragem voltou na ALE-295**, e o que a devolveu não foi visitar mais
-> cenas: foi o `TestNoHandwrittenLabelRecipe`, que não pergunta "esta cena está
-> na lista?" e sim "alguém escreveu a receita à mão?". 102 dos 122 rótulos
-> passaram pelas três receitas da casa, e a resposta do guarda vale para a cena
-> que nascer amanhã. **Ele é o molde de como esta família se conserta**: a
-> enumeração compra tempo, e quem fecha o buraco é o guarda que força a
-> varredura.
+1. **A cena não está na lista.** Enumerar é remendo: uma entrada por cena, para
+   sempre, e a que alguém esquecer nasce sem medição — em silêncio, que é a
+   marca desta família. **O que restaura a AMOSTRAGEM é um guarda que force a
+   varredura**, e não visitar mais cenas: o `TestNoHandwrittenLabelRecipe` não
+   pergunta "esta cena está na lista?" e sim "alguém escreveu a receita à mão?",
+   e a resposta dele vale para a cena que nascer amanhã (ALE-252, ALE-295).
+2. **O MEDIDOR não é importável.** A ficha atravessou duas fatias sem uma única
+   medição de contraste porque o medidor era função *privada* de outro arquivo
+   de teste. Ninguém a omitiu de uma lista; a lista nunca pôde existir.
+   **Instrumento que mora dentro de um chamador tem exatamente um chamador**, e
+   isso não aparece em revisão de diff (ALE-272).
+3. **O guarda visita a tela com UM ITEM.** Uma tela que desenha N nós iguais tem
+   um comportamento com N=1 e outro com N>1, e medir N=1 é medir a metade em que
+   o defeito é invisível por construção — com uma peça, o primeiro do DOM É o
+   arrastado, e o gesto certo e o errado dão o mesmo resultado. **A pergunta é
+   "quantos itens o caso põe na tela, e o defeito precisa de quantos?"**
+   (ALE-299).
+4. **O guarda visita todas as telas e um só DADO.** As sete abas da ficha, de um
+   guerreiro — e metade do painel de Combate só existe para quem conjura. Quando
+   a tela RAMIFICA pelo dado, percorrer a navegação não é cobertura: é um caso
+   por ramo, com o ramo NOMEADO e o controle afirmando que ele apareceu
+   (ALE-272).
 
-**Duas formas a mais de "não visitar", as duas medidas na ALE-272 e nenhuma
-parecida com esquecer uma cena.**
+**O controle que fecha as quatro é o DENOMINADOR.** Uma lista de reprovados
+vazia e um seletor que não casa com nada se parecem no terminal, e por isso todo
+medidor devolve `{falhas, medidos}`: quem afirma "nada reprovou" afirma junto
+quantos olhou. Sem isso, **"verde" e "não mediu" são a mesma cor**.
 
-A primeira: **o guarda não alcança porque o MEDIDOR não é importável.** A ficha
-em Datastar atravessou duas fatias inteiras sem uma única medição de contraste,
-e não foi decisão — o medidor era função *privada* de outro arquivo de teste.
-Ninguém omitiu a ficha de uma lista; a lista nunca pôde existir. Quando o
-medidor virou módulo de `support/`, a primeira execução reprovou sete rótulos de
-uma vez, todos herdados da tela antiga. **Instrumento que mora dentro de um
-chamador tem exatamente um chamador**, e isso não aparece em nenhuma revisão de
-diff.
-
-**E a terceira, medida na ALE-299: o guarda visita a tela com UM ITEM.** O
-arrasto da peça no tabuleiro tem guarda de e2e desde a ALE-203, cobrando passos
-intermediários, prévia, seta e distância — com **uma peça no mapa**
-(`toHaveCount(1)`). O defeito só existe a partir da segunda: cada peça pendura o
-próprio `pointerup__window`, todas passavam na mesma guarda compartilhada, e
-vencia a ORDEM DO DOM. Com uma peça, o primeiro do DOM É o arrastado, e o gesto
-errado e o certo produzem o mesmo resultado. No rascunho, pegar a segunda peça
-movia a primeira — visível desde o primeiro quadro, e verde na suíte inteira.
-
-Não é ramificar pelo dado, é ramificar pela CARDINALIDADE: uma tela que desenha
-N nós iguais tem um comportamento com N=1 e outro com N>1, e medir N=1 é medir a
-metade em que o defeito é invisível por construção. **A pergunta é "quantos
-itens o caso põe na tela, e o defeito precisa de quantos?"**
-
-A segunda: **o guarda visita todas as telas e um só DADO.** O caminhar pelas
-sete abas da ficha abre as sete — de um herói, e o primeiro do elenco é um
-guerreiro. Metade do painel de Combate (a tripla mágica, com a paleta arcana
-inteira) só existe para quem conjura, então ela estava fora da medição com o
-guarda passando por cima dela sete vezes. Quando a tela RAMIFICA pelo dado,
-percorrer a navegação não é cobertura: é preciso um caso por ramo, e o ramo tem
-de ser nomeado (`quem conjura`), com o controle afirmando que ele apareceu.
-
-**O controle que fecha as duas é o DENOMINADOR.** Uma lista de reprovados vazia
-e um seletor que não casa com nada se parecem no terminal, e por isso o medidor
-devolve `{falhas, medidos}`: quem afirma "nada reprovou" afirma junto quantos
-foram olhados. Sem isso, "verde" e "não mediu" são a mesma cor.
-
-> E saiba o que o medidor NÃO vê: ele lê `color` pelo canvas e ignora o canal
-> ALFA, então `text-x/50` é medido como se fosse opaco. O erro é sempre para o
-> lado seguro — texto translúcido tem contraste PIOR que o medido, nunca melhor
-> —, mas isso quer dizer duas coisas: uma variante `/80` nunca foi validada de
-> verdade, e **sabotar a opacidade não prova guarda nenhum.** Uma sabotagem
-> assim passou verde aqui e quase virou "o guarda está cego"; era sabotagem
-> inerte, e quem a desmentiu foi trocar a tinta por uma cor opaca.
-
+> E saiba o que o medidor NÃO vê: ele lê `color` pelo canvas e ignora o ALFA,
+> então `text-x/50` é medido como se fosse opaco. O erro é para o lado seguro,
+> mas **sabotar a opacidade não prova guarda nenhum** — é sabotagem inerte, e
+> quase virou "o guarda está cego".
 ### O resto
 
 - **Apague teste que custa mais do que protege**: asserção sobre nome de classe e
@@ -401,78 +284,34 @@ Uma convenção escrita e não varrida é aplicada exatamente aos arquivos que a
 apontou. O mecanismo que a faz valer não é o guarda pegar o erro — é o guarda
 **forçar a varredura**: a suíte só fica verde quando o *último* caso foi tratado.
 
-Este repositório já vive disso e nunca escreveu a regra: são **75 guardas de
-varredura** no formato `TestEvery…` / `TestNo…` — toda espécie
-de terreno tem desenho, todo ícone pedido existe no gerado, toda classe
-posicionada por `--col`/`--lin` tem caixa, toda tinta da casa escrita num
-`.templ` existe na folha compilada, toda aba da ficha desenha painel, nenhum nó
-junta `data-show` com `data-attr:style`, nenhuma expressão indexa o sinal da
-lista, nenhum foco pede ao servidor sem guarda de teclado, todo item do kit
-inicial existe no catálogo, nenhuma concessão de origem com escolha nasce fixa,
-todo endereço antigo leva ao piloto, nenhum gesto do tabuleiro escreve o próprio
-endereço, toda ferramenta desenhada no rascunho tem rota nele, nenhum cromo que
-flutua sobre o mapa deixa um controle próprio sem ponteiro, nenhuma cena escreve
-a receita de rótulo à mão, nenhuma cena escreve a receita de FOCO à mão,
-nenhum nó escondido por `data-show` nasce visível,
-todo campo do seed é classificado como referência de catálogo ou não, nenhum id
-de catálogo carrega acento, toda cena de seleção declara os sinais que o gesto
-dela escreve, nenhuma delas desenha o livro de couro que saiu da folha, nenhum
-crachá escreve a própria geometria à mão, todo marcador de trilho diz o NOME e
-não só as iniciais, nenhum componente com ouvinte de TECLA na janela é chamado
-de dentro de um laço, nenhum identificador NOVO nasce em português, nenhum gesto
-de uma peça do tabuleiro responde por outra, nenhum arquivo do repositório tem
-nome em português, todo estático pedido por `Asset(…)` existe na pasta, nenhuma
-chave de atributo do Datastar carrega caixa alta, nenhum sinal novo quebra o
-padrão de nome, todo sinal declarado por valor tem quem o leia, toda classe
-aplicada existe na folha compilada, todo id apontado existe em algum `.templ`,
-toda chave de payload tem o nome do sinal que ela lê, nenhuma rota carrega
-coordenada nem deslocamento no caminho, nenhum parâmetro de caminho permitido
-fica pendurado sem rota, todo endereço que um `@post` escreve
-existe no roteador, todo sinal que a Mesa declara tem quem o leia, todo gesto
-que lê pontos recusa o corpo quebrado com uma frase, nenhuma superfície escreve
-uma tinta de PV sem perguntar à escada. Cada um nasceu de um defeito que tinha
-irmãos.
+Este repositório vive disso. Quantos guardas `TestEvery…`/`TestNo…` existem hoje
+se pergunta ao código, nunca a esta linha:
 
-> O número é conferido com `grep -rn "func TestEvery\|func TestNo[A-Z]"
-> --include=*_test.go .` e estava em 22 por bastante tempo depois de já serem 27
-> — a família cresce a cada issue e a linha não. Se ele divergir de novo, o certo
-> é o `grep`.
->
-> **Ele divergiu de novo, e da forma prevista**: a ALE-292 encontrou 45 onde a
-> linha dizia 44, sem que ninguém tivesse mexido nela. É a terceira vez, e a
-> lição não é "atualizar com mais cuidado" — é que um número escrito à mão sobre
-> uma família que cresce ENVELHECE, e o `grep` é a fonte.
->
-> **Ele DESCEU pela primeira vez na ALE-277**, de 46 para 44, e vale saber por
-> quê: os dois que saíram varriam as rotas de `/characters` do `Router()` da API
-> JSON cobrando 403 de cada uma, e as rotas foram apagadas por não terem
-> consumidor. A invariante não morreu — o `TestNoSheetWriteAcceptsAStranger` faz
-> a mesma varredura no roteador das CENAS, que é onde a ficha se escreve hoje.
-> Um guarda de varredura vale o que vale o terreno que ele varre, e o terreno
-> pode sumir.
->
-> **A gramática mudou na ALE-282**, junto com os outros 773 nomes: os prefixos
-> `…Toda`, `…Todo` e `…Nenhum` viraram `…Every` e `…No`. A regra de idioma
-> sempre disse "nome de teste" com todas as letras; o que faltava era a varredura,
-> e é por isso que a família tinha DUAS grafias escritas nesta mesma linha.
->
-> Aqui morava "as duas gramáticas no `grep` não são descuido", explicando que a
-> varredura era issue própria e que até ela rodar as duas conviviam. **Ela rodou**,
-> e o parágrafo virou mentira sem ninguém mexer nele — que é exatamente o defeito
-> descrito na seção "Documentação", agora acontecido no arquivo que o descreve.
+```
+grep -rn "func TestEvery\|func TestNo[A-Z]" --include=*_test.go .
+```
+
+> Aqui morava a lista dos guardas, um a um, e mais o NÚMERO deles. O número ficou
+> obsoleto **três vezes** sem ninguém mexer na linha — e uma vez ele DESCEU, de
+> 46 para 44, porque o terreno que dois deles varriam foi apagado. A lição não é
+> "atualizar com mais cuidado": é que **um número escrito à mão sobre uma família
+> que cresce envelhece**, e a lista é a coisa que apodrece. O `grep` é a fonte.
 
 - **Uma convenção só foi adotada depois de varrida.** Uma revisão nomeia um
   arquivo; a correção é *todo* arquivo com a mesma forma. Antes de fechar, rode a
   busca que acha os irmãos e diga no commit quantos eram.
-- **Se a regra é mecanizável com o que já roda, ela vira guarda** — um `TestEvery…`/`TestNo…`
-  no pacote que a possui, e não um parágrafo. Guarda de varredura falha com o
-  nome do caso que faltou, que é a diferença entre "conserte isto" e "procure".
+- **Se a regra é mecanizável com o que já roda, ela vira guarda** — um
+  `TestEvery…`/`TestNo…` no pacote que a possui, e não um parágrafo. Guarda de
+  varredura falha com o NOME do caso que faltou, que é a diferença entre
+  "conserte isto" e "procure".
+- **Guarda vale o que vale o terreno que ele varre, e o terreno pode sumir.**
+  Quando uma rota morre, o guarda que a cobria morre junto — confira se a
+  invariante mudou de casa antes de dar por perdida.
 - **Comentário não é correção.** Docstring explicando por que a violação está ali
   é dívida registrada, não desenho — e registrar faz parecer resolvido.
 - **Regra mora aqui ou não existe.** Corpo de commit, comentário no Linear e
   docstring não vinculam: o próximo autor lê o `CLAUDE.md`, conclui que está em
   conformidade, e escreve a mesma coisa de novo.
-
 ## Dependências
 
 - Injete dependência por construtor ou parâmetro, não por global ou import.
@@ -502,268 +341,125 @@ irmãos.
 passa entre o que o compilador consome e o que um humano consome, e não entre
 domínio e infraestrutura.
 
-- **Inglês:** nome de variável, função, tipo, método, campo de struct, constante,
-  pacote, arquivo, nome de teste. Também a fronteira, que já era: tabela, coluna,
-  campo JSON, evento SSE. **E componente `templ`**, que é função — a regra
-  não dizia isso com todas as letras e por isso duas fatias da ALE-272 nasceram
-  com os tipos em inglês e os componentes em português (`oPainelDeCombate` ao
-  lado de `combatPanel`). Decisão do dono, ALE-272 fatia 5: componente novo é
-  inglês; os que já existem ficam, pela regra do parágrafo final desta seção.
+- **Inglês:** variável, função, tipo, método, campo de struct, constante, pacote,
+  arquivo, nome de teste, **componente `templ`** (que é função). E a fronteira:
+  tabela, coluna, campo JSON, evento SSE.
 - **Português:** comentário, docstring, `.md`, mensagem de commit, tudo que
-  aparece na tela, e o texto de mensagem de erro que um humano vai ler.
+  aparece na tela, e o texto de erro que um humano vai ler.
 
-**A ROTA é a exceção da fronteira, e ela fica em PORTUGUÊS.** Decisão do dono,
-ALE-303: `/mestre/bestiario`, `?aba=pericias`, `/tabuleiro/terreno/…` — o
-endereço é a única parte da fronteira que **o cliente VÊ**, e ele entende mais
-fácil na língua da mesa. As outras quatro (tabela, coluna, campo JSON, evento
-SSE) seguem em inglês, porque nenhuma delas aparece para alguém.
+**A ROTA é a exceção da fronteira, e fica em PORTUGUÊS** (decisão do dono,
+ALE-303): o endereço é a única parte da fronteira que **o cliente VÊ**. Duas
+ressalvas: `/health` e `/static/*` ficam em inglês — são a sonda do compose e a
+pasta dos estáticos, convenção que ferramenta de fora reconhece —, e os
+endereços da SPA morta (`/campaigns/new`) também, porque não são rota, são
+LÁPIDE: traduzi-los faria cada um desviar para si mesmo
+(`TestEveryLegacyAddressLandsOnAScene`).
 
-> Aqui a lista dizia "rota" junto com as outras quatro, e a ALE-301 chegou a
-> traduzir `/terreno/dificil` para `/terreno/difficult` obedecendo a ela. A
-> ALE-304 desfez aquilo e varreu o resto: **sem exceção** entre as rotas que uma
-> pessoa alcança.
->
-> **`/health` e `/static/*` ficam em inglês**, e não é fresta: eles não são
-> domínio nem endereço de ninguém — são a sonda do `docker compose` e a pasta dos
-> estáticos, convenção que ferramenta de fora reconhece. A **API JSON** foi junto
-> (`/api/campanhas`, `/api/personagens`), porque essa É domínio.
->
-> E os endereços da SPA morta — `/campaigns/new`, `/characters/{id}` — **seguem
-> em inglês de propósito**: eles não são rota, são LÁPIDE. Existem só para um
-> marcador antigo cair de pé, e traduzi-los faria cada um desviar para si mesmo.
-> Quem cobra é o `TestEveryLegacyAddressLandsOnAScene`, que foi quem denunciou a
-> varredura larga demais.
-
-**A linha exata entre os dois foi fechada pelo dono na ALE-301**, porque quatro
-casos ficavam de fora da lista e cada um foi decidido por palpite pelo menos uma
-vez:
+Os quatro casos que ficavam de fora da lista, e cada um já foi decidido por
+palpite pelo menos uma vez:
 
 | o quê | idioma | por quê |
 |---|---|---|
-| nome do arquivo de spec (`board-drag.spec.ts`) | **inglês** | é nome de arquivo, e a lista acima já dizia isso |
-| a **descrição do teste** — o texto dentro de `test('…')` | **português** | é frase que uma pessoa lê no relatório, como qualquer texto de tela |
-| classe CSS (`.board-token`) | **inglês** | é identificador que o código escreve e casa |
-| id de elemento (`id="finder-field"`) | **inglês** | mesma razão, e o `getElementById` o casa por texto (ALE-302) |
-| sinal do Datastar (`$creature_search`) | **inglês, `snake_case`** | é a FRONTEIRA, como campo JSON e evento SSE — e a forma tem razão própria, logo abaixo |
+| nome do arquivo de spec (`board-drag.spec.ts`) | **inglês** | é nome de arquivo |
+| a **descrição do teste** — o texto dentro de `test('…')` | **português** | é frase que uma pessoa lê no relatório |
+| classe CSS (`.board-token`) | **inglês** | identificador que o código escreve e casa |
+| id de elemento (`id="finder-field"`) | **inglês** | idem, e o `getElementById` o casa por texto |
+| sinal do Datastar (`$creature_search`) | **inglês, `snake_case`** | é FRONTEIRA — e a forma tem razão própria, abaixo |
 
-O par do meio é o que confunde: **o arquivo e a descrição são coisas
-diferentes** e o mesmo spec leva as duas línguas — `board-drag.spec.ts` contendo
-`test('arrastar a peça propõe a parada')`. Eu já chamei essa descrição de "título
-de caso" e de "descrição do teste" na mesma conversa, que é o pecado do
-`GLOSSARY.md`: uma palavra por conceito. **Ela se chama descrição do teste.**
+**O arquivo e a descrição são coisas diferentes**, e o mesmo spec leva as duas
+línguas: `board-drag.spec.ts` contendo `test('arrastar a peça propõe a parada')`.
+Ela se chama **descrição do teste** — uma palavra por conceito.
 
-### O padrão de nome de SINAL, e por que a forma não é gosto
+### Sinal: `snake_case`, inglês, uma grafia em todos os canais
 
-**`snake_case`, em inglês, com UMA grafia só em todos os canais** — a expressão
-(`$creature_search`), a chave de atributo (`data-bind:creature_search`), a tag
-JSON do servidor (`json:"creature_search"`) e a ilha de `.ts`. Prefixo por
-FAMÍLIA quando o sinal pertence a um grupo (`template_*`, `ruler_*`,
-`viewport_*`), para o `grep` achar a família inteira de uma vez.
+A forma foi MEDIDA no navegador, e o mecanismo É a regra:
 
-A forma foi MEDIDA no navegador, e cada alternativa morreu por um motivo
-diferente:
-
-- **camelCase quebra em silêncio.** Nome de atributo é minusculado pelo
-  analisador de HTML: `data-bind:buscaCriatura` chega como
-  `data-bind:buscacriatura` e o Datastar liga um sinal NOVO, deixando o declarado
-  intocado. O fio leva os DOIS e o servidor lê o errado. **Estava vivo** no
-  construtor de encontros (ALE-301), e funcionava por acidente: o `encoding/json`
-  do Go casa campo sem diferenciar caixa quando não há correspondência exata, e a
-  chave ligada vinha por último. Invertida a ordem das chaves, o mesmo código lê
-  `""` e a caixa de busca deixa de filtrar — sem erro em lugar nenhum.
+- **camelCase quebra em silêncio.** Nome de atributo é minusculado pelo parser de
+  HTML: `data-bind:buscaCriatura` chega como `data-bind:buscacriatura` e o
+  Datastar liga um sinal NOVO, deixando o declarado intocado. O fio leva os DOIS
+  e o servidor lê o errado — sem erro em lugar nenhum.
 - **kebab-case vira outra coisa.** O Datastar transforma `-[a-z]` em maiúscula
-  por padrão (é o modificador `case`, e `camel` é o default), então
-  `data-bind:creature-search` liga um sinal em camelCase e a expressão teria de
-  lê-lo naquela outra grafia. São duas grafias para um conceito — exatamente a
-  raiz do defeito acima, com outra roupa.
-- **`_` atravessa intacto.** Não há caixa para perder, e o `-` é o único
-  caractere que a transformação toca. Medido: `data-bind:creature_search` chega
-  ao parser com o nome que o autor escreveu, e o fio leva uma chave só.
+  por padrão, então `data-bind:creature-search` liga um sinal em camelCase: duas
+  grafias para um conceito, que é a raiz do defeito acima.
+- **`_` atravessa intacto** — não há caixa para perder, e o `-` é o único
+  caractere que a transformação toca.
 
-**Nenhum teste podia pegar isso onde ele morava**: a minusculação acontece no
-parser do NAVEGADOR, então o HTML servido ainda tem a caixa que o autor escreveu
-e todo teste de Go vê o nome certo. A garantia desceu para a camada mais barata
-que a segura — o TEXTO do atributo, que é onde o autor erra —, e são dois
-guardas: o `TestNoDatastarAttributeKeyCarriesUppercase`, que varre a forma, e o
-`TestNoNewSignalBreaksTheNamingStandard`, que nasceu CATRACA sobre os 147 sinais
-do dia e hoje varre com a linha de base VAZIA — todo sinal da árvore cumpre o
-padrão. Ele não cobra tradução, e o cabeçalho dele diz isso com todas as letras:
-quem forçou a tradução foi a linha de base encolher a cada superfície varrida,
-porque renomear um sinal o tira da lista e o guarda cobra que ele saia do arquivo
-junto.
+Prefixo por FAMÍLIA quando o sinal pertence a um grupo (`template_*`, `ruler_*`),
+para o `grep` achar a família inteira.
+
+Nenhum teste de Go pega isso — a minusculação acontece no NAVEGADOR, e o HTML
+servido ainda tem a caixa que o autor escreveu. A garantia desceu para o TEXTO do
+atributo: `TestNoDatastarAttributeKeyCarriesUppercase` varre a forma, e
+`TestNoNewSignalBreaksTheNamingStandard` varre com linha de base VAZIA.
 
 #### Renomear um sinal são SETE canais, e nada liga um ao outro
 
-A lista está aqui porque foi construída a pedaços, cada pedaço por um vermelho
-diferente — e porque cinco deles são invisíveis para um `grep` de `$nome`:
+Isto é checklist, não história: renomear é ato humano, nenhum guarda o cobre, e
+**cinco dos sete são invisíveis para um `grep` de `$nome`**.
 
-| # | canal | como ele aparece |
+| # | canal | como aparece |
 |---|---|---|
 | 1 | expressão | `$creature_search` |
 | 2 | chave de atributo | `data-bind:creature_search` |
 | 3 | **valor** de atributo | `data-ref="delete_dialog"` |
-| 4 | declaração | `data-signals="{…}"`, e as strings montadas em Go (`Sinais:`, `StageSignals`) |
+| 4 | declaração | `data-signals="{…}"`, e as strings montadas em Go |
 | 5 | tag JSON do servidor | `json:"creature_search"` |
 | 6 | filtro de remendo | `data-on-signal-patch-filter="{include: /^sheet_version$/}"` |
-| 7 | **argumento de string** | `@pickerDialog("condition_dialog", …)`, que monta `"$" + sinal` lá dentro |
+| 7 | **argumento de string** | `@pickerDialog("condition_dialog", …)`, que monta `"$" + sinal` |
 
-O 3 e o 7 foram os que morderam na ALE-301, e os dois do mesmo jeito: a suíte de
-Go inteira passou verde e quem acusou foi o Playwright. O 3 deixou três diálogos
-(apagar campanha, apagar conta, redefinir senha) sem abrir; o 7 deixou o diálogo
-de aplicar condição sem abrir. **Nos dois casos a expressão passou a ler
-`undefined`, que em JavaScript não é erro** — é o gesto não fazer nada.
+Os canais 3 e 7 deixaram quatro diálogos sem abrir com a suíte de Go inteira
+verde: **a expressão passa a ler `undefined`, que em JavaScript não é erro** — é
+o gesto não fazer nada. O canal 4 tem a armadilha inversa: `undefined != ''` é
+VERDADEIRO, então um `<p>` que devia nascer escondido nasce mostrado.
 
-O canal 5 tem uma armadilha própria na direção contrária: **nem toda tag JSON é
-sinal.** Uma varredura que trocasse `json:"fonte"` sem olhar onde ela mora
-reescreveu o oráculo do markdown e o `Buff` do catálogo, que não têm nada com
-Datastar. Os dois vermelhos vieram de teste, mas o hábito certo é ler o diff das
-tags antes de aceitar.
+**Nem toda tag JSON é sinal** — leia o diff das tags antes de aceitar uma
+varredura. E há um oitavo leitor que não é canal de escrita: a **constante**
+(`const brushSignal = "pincelando"`, lida como `"$" + brushSignal`), que metade
+das vezes mora num bloco `const (…)` com a palavra na linha de cima.
 
-**O que fecha os canais hoje**: o 2 tem o `TestNoDatastarAttributeKeyCarriesUppercase`,
-o 3 tem o `TestEverySignalDeclaredByValueHasAReader`, o 4 tem o
-`TestEverySignalTheTableDeclaresHasAReader`, e a FORMA de todos tem a catraca. O
-7 não tem guarda — são três sítios no repositório, e eles estão nomeados na
-tabela acima justamente porque um `grep` não os acha.
+Quem fecha: `TestEverySignalDeclaredByValueHasAReader` (3),
+`TestEverySignalTheTableDeclaresHasAReader` (4), e a catraca para a FORMA. **O 7
+não tem guarda** — são três sítios, e estão nomeados aqui por isso.
 
-**O canal 4 entrou por um defeito, e ele mostra o que acontece quando um renome
-deixa a DECLARAÇÃO para trás** (ALE-312): a Mesa declarava `erro: ''` e ninguém
-lia `$erro`, porque a ALE-301 renomeou o leitor (`$error`) e a tag do servidor
-(`json:"error"`) e não alcançou a string montada em Go. A expressão passou a ler
-`undefined`, e **`undefined != ''` é VERDADEIRO** — então o `<p>` da recusa, que
-devia nascer escondido, nascia MOSTRADO. Vazio, logo invisível; o próximo pode
-não ser.
+#### O id de elemento tem OITO canais
 
-> **E há um OITAVO leitor, que não está na tabela porque não é canal de escrita:
-> a CONSTANTE.** `const brushSignal = "pincelando"`, lida como `"$" + brushSignal`.
-> A primeira versão do guarda do canal 4 acusou CINCO órfãos e os cinco estavam
-> vivos por esse caminho — o mesmo buraco que fez a contagem de sinais da ALE-301
-> sair 139 em vez de 147. Um guarda que conte leitores tem de contar este, e
-> **exigir a palavra `const` na linha não basta**: metade delas mora num bloco
-> `const (…)`, com a palavra na linha de cima. Isso custou mais dois falsos
-> positivos.
->
-> Dois dos cinco — `pincelando` e `ultimacasa` — **continuam em português**, e
-> foi a constante que os escondeu da varredura. A catraca não os pega: ela cobra
-> a FORMA, e os dois são `snake_case` válido.
+`id="x"` · `getElementById('x')` · `aria-labelledby` · `aria-describedby` ·
+`for=` · `popovertarget` · `querySelector('#x')` · e **`el.id === 'x'`**, que foi
+o que escapou: o renome passou por cima, o Enter deixou de abrir o primeiro
+achado, e nada mais mudou na tela.
 
-#### O id de elemento tem OITO canais, e o oitavo custou um vermelho
+Quem cobra é o `TestEveryReferencedElementIdExists` — todo id APONTADO existe em
+algum `.templ`. Ele não cobra o contrário: um id pode existir só para o CSS.
 
-O molde é o da classe CSS, e o guarda é o `TestEveryReferencedElementIdExists`:
-**todo id apontado existe em algum `.templ`**. Ele não cobra o contrário — um id
-existe legitimamente só para o CSS ou como âncora, e proibir isso mandaria apagar
-desenho válido.
+### Renomear ao encontrar
 
-Os canais: `id="x"` · `getElementById('x')` · `aria-labelledby` ·
-`aria-describedby` · `for=` · `popovertarget` · `querySelector('#x')` · e
-**`el.id === 'x'`**, que é o que escapou. O Enter do buscador comparava
-`activeElement.id` com um literal, e nenhum dos outros sete padrões o via: o
-renome passou por cima, o Enter deixou de abrir o primeiro achado, e **nada mais
-mudou na tela**. Quem acusou foi o Playwright.
+**Identificador em português que você encontrar no caminho vira inglês**, e não
+só o que você ia escrever. Não é preciso sair caçando — é preciso não passar por
+cima. Quando uma fatia move ou reescreve um arquivo, os identificadores dele saem
+em inglês inteiros, não os do diff. **O nome que você CHAMA de fora e não vai
+tocar segue o que está lá**, porque renomear o chamado obriga a varrer todos os
+chamadores.
 
-O que o guarda NÃO vê é o par DINÂMICO — um `id={ sceneId }` e um
-`getElementById(%q)` alimentados pela mesma constante. Isso não é buraco: os dois
-saem do mesmo lugar, então renomear a constante move as duas pontas. O que ele
-pega é a ASSIMETRIA, que é onde o descuido mora.
+O resto tem CATRACA (`TestNoNewIdentifierIsWrittenInPortuguese`): a dívida antiga
+mora numa linha de base que **só pode encolher** — nome novo reprova com o nome
+dele, e nome baselinado que sumiu reprova também, senão o arquivo vira mentira
+sozinho.
 
-> **A regra já estava escrita treze vezes** — treze comentários em `web/table`,
-> `web/sheetui`, `web/finder` e `web/master`, cada um contando a mesma história
-> com um exemplo diferente — e nunca tinha sido varrida. O décimo quarto sítio
-> era o que tinha o defeito. É a tese da seção "Como uma convenção passa a
-> valer", acontecida no repositório que a escreve: **convenção escrita e não
-> varrida vale exatamente nos arquivos que alguém apontou.**
+> A diferença entre a metade com guarda e a sem não foi cuidado, foi varredura: a
+> com guarda saiu 100% em inglês, a sem produziu 39 identificadores em português
+> em sete fatias seguidas (ALE-300).
 
-Das três varreduras que essa decisão abriu, **a dos nomes de arquivo rodou
-inteira** (ALE-301): os 22 specs do `e2e/tests` na fatia 1 e mais **96 arquivos**
-no resto do repositório na fatia 2 — o pacote `tabuleiro/` virou `board/`, o
-`GLOSSARIO.md` virou `GLOSSARY.md`, e as 18 fixtures de `engine-go/parity/`
-ficaram, por decisão do dono, porque o nome delas É o `slug` gravado no dado.
-Quem cobra é o `TestNoFileIsNamedInPortuguese`.
+**Nome de teste foi varrido de uma vez** (`TestEveryTestNameIsEnglish`), e o
+motivo é estrutural: um nome de teste **não tem chamador**.
 
-**A dos SINAIS também rodou** (ALE-301): eram **147** — e não 139, porque a
-primeira contagem não enxergava três que só existiam dentro de constantes Go —,
-varridos em quatro superfícies, com a suíte de Playwright inteira entre uma e
-outra. A linha de base do `signal_debt.txt` foi de 147 a **zero**, e o arquivo
-fica vazio de propósito: enquanto ele existe, uma exceção é uma linha visível em
-vez de um `if` escondido no guarda.
-
-**A das CLASSES CSS fechou as três** (ALE-301): eram **127** e não 121 — seis só
-aparecem em seletor composto, e um `grep` de declaração no início de linha não as
-via. Duas famílias tinham o sufixo vindo de fora do CSS, e o dono decidiu
-traduzir tudo: o id do pincel de terreno é SEGMENTO DE ROTA (`/terreno/dificil`
-virou `/terreno/difficult`) e o chão é DADO GRAVADO, com migração própria — a
-`00013`, que reescreve `$.terrain` nas duas tabelas onde o estado do tabuleiro
-mora.
-
-Quem cobra é o `TestEveryAppliedClassExistsInTheStylesheet`, e ele pega os DOIS
-lados de um renome pela metade sem precisar de lista nenhuma: a folha compilada é
-derivada da folha-fonte MAIS o que o Tailwind acha varrendo o repositório, então
-o nome que sobrou de um lado não está nela de qualquer jeito.
-
-> **E o instrumento da fatia 1 mentiu com cara de resposta.** Ele casava contra
-> uma lista de palavras PORTUGUESAS, e ela não conhecia `fronteira`: a primeira
-> contagem do `engine-go` deu **13**, a lista ampliada deu **18**, e o terreno
-> era **96** — vinte e cinco deles um guarda de fronteira por pacote, invisíveis
-> nas três contagens. **Lista de proibidos subconta em silêncio**, e ao
-> contrário de uma decomposição ela não tem denominador embutido para denunciar.
-> O guarda de hoje inverteu a lista: ele tem um PERMITIDOS de 423 palavras em
-> `convention/testdata/file_name_words.txt` e **falha no segmento que não
-> conhece**, como o parser da ALE-294 passou a fazer com o seletor desconhecido.
-> Palavra inglesa nova custa uma linha; palavra portuguesa lá dentro é um ato
-> visível. Rodado contra a ÁRVORE DE ONTEM ele acusa 80 arquivos onde o velho
-> acusava zero.
-
-O conceito continua sendo o do livro — o que muda é a grafia do identificador.
-`sheet`, e não `characterData`: a tradução é do TERMO do glossário, não uma
-oportunidade de trocar o conceito por um genérico. Termo sem tradução assentada
-(`tormenta`, `goblinoide`) fica como está; é nome próprio.
+O conceito continua sendo o do livro — o que muda é a grafia. `sheet`, e não
+`characterData`: a tradução é do TERMO do glossário, não uma oportunidade de
+trocar o conceito por um genérico. Termo sem tradução assentada (`tormenta`,
+`goblinoide`) fica; é nome próprio.
 
 - **[GLOSSARY.md](GLOSSARY.md) — uma palavra por conceito, e um conceito por
   palavra.** Leia antes de nomear qualquer coisa que o usuário vá ler ou que vá
-  virar identificador. Ele tem a coluna dos termos PROIBIDOS, as colisões abertas
-  que não se consertam por palpite, e a tradução de cada termo. Termo novo:
-  escreva a linha do glossário ANTES do código.
-
-**RENOMEIE AO ENCONTRAR.** Decisão do dono, e ela substitui o que estava escrito
-aqui: identificador em português que você encontrar no caminho vira inglês, e não
-só o que você ia escrever. Não é preciso sair caçando — é preciso não passar por
-cima.
-
-> Aqui morava "o código existente NÃO é varrido de uma vez", com o argumento de
-> que um renome em massa apagaria a procedência de cada linha no `git blame`. O
-> argumento continua verdadeiro para uma varredura de mil identificadores num
-> commit só, e foi por isso que os nomes de TESTE tiveram issue própria — a
-> ALE-282, que **já rodou**: 773 nomes de uma vez, com guarda no fim. O que
-> ele não sustentava era a inércia: com "só o que a sua mudança ia tocar", uma
-> função como `escrevePagina` atravessou quatro fatias sendo lida em toda uma e
-> renomeada em nenhuma.
-
-Na prática: quando uma fatia move ou reescreve um arquivo, os identificadores
-dele saem em inglês inteiros — não os do diff. **O nome que você CHAMA de fora e
-não vai tocar segue o que está lá**, porque renomear o chamado obriga a varrer
-todos os chamadores, e aí é a varredura em massa por outro caminho.
-
-**O resto da regra ganhou CATRACA na ALE-300**
-(`convention.TestNoNewIdentifierIsWrittenInPortuguese`), e vale saber por quê: a
-metade com guarda saiu 100% em inglês e a metade sem guarda produziu **39
-identificadores em português em sete fatias seguidas** — no mesmo commit, os
-nomes de teste certos ao lado de `alternaOFlutuar` e `deslizaAPeca`. A diferença
-entre as duas metades não foi cuidado, foi varredura, e foi o dono quem
-perguntou: *"você está criando em português? e as regras de inglês?"*.
-
-O guarda é catraca e não amostragem, de olhos abertos: os **292** identificadores
-em português que existiam no dia moram numa linha de base que **só pode
-encolher** — nome novo reprova com o nome dele, e nome baselinado que sumiu
-reprova também, senão o arquivo vira mentira sozinho. Varrer 292 nomes COM
-CHAMADOR num commit é a varredura em massa que o parágrafo acima diz que não
-cabe; o que a catraca compra é o buraco parar de crescer.
-
-**Nome de teste é a exceção que já foi varrida, e ela tem guarda**
-(`convention.TestEveryTestNameIsEnglish`). A varredura foi barata onde o resto não
-é, e o motivo é estrutural: um nome de teste **não tem chamador**. Renomear
-`escrevePagina` obriga a mexer em todo lugar que a chama; renomear um `TestX`
-mexe numa linha. É por isso que esta convenção coube num commit e a dos
-identificadores em geral não cabe.
-
+  virar identificador. Termo novo: escreva a linha do glossário ANTES do código.
 ## Commits
 
 **Conventional Commits**, assunto em português, numa linha só.
@@ -813,6 +509,31 @@ Linear (org ALE, projeto Tormenta20). Um `.md` descreve o que o sistema **faz** 
 plano executado vira mentira e fica, descrição executada vira verdade e fica
 certa.
 
+### Regra que tem GUARDA não precisa de história
+
+Um guia carrega a REGRA e o GATILHO: o que fazer, e quando. O CASO que a produziu
+mora na issue, que é onde ele pode ser verificado e onde não custa contexto toda
+sessão.
+
+**Procedência só paga quando as duas coisas valem ao mesmo tempo:** a regra não
+tem guarda, **e** sem o mecanismo ela lê como arbitrária e vai ser derrubada pelo
+próximo. "Sinal em `snake_case`" sozinho parece gosto; com o mecanismo — *o
+parser de HTML minuscula o nome do atributo e o Datastar liga um sinal novo* —
+vira física, e ninguém discute física.
+
+Fora disso, a narrativa cobra caro em dois lugares. Ela faz o arquivo **crescer
+monotonicamente**, porque tirar história parece apagar lição — um guia assim só
+tem uma direção. E ela **apodrece**: duas passagens deste arquivo viraram mentira
+sem ninguém mexer nelas, e uma delas era justamente a que explicava por que duas
+grafias conviviam depois de a varredura já ter rodado.
+
+> Este arquivo tinha 847 linhas quando a regra foi escrita, e 42% delas eram duas
+> seções contando casos. O corte trocou legibilidade por memorabilidade, e essa
+> troca tem um risco que vale saber: **uma lição de uma linha pode não disparar
+> reconhecimento no momento em que você está dentro da armadilha** — que é
+> quando ela vale. Se acontecer, o conserto não é restaurar a narrativa: é
+> escrever o guarda que torna a lição desnecessária.
+
 ## Referência
 
 - O livro: [Tormenta 20](/t20-book.pdf). Toda regra citada com a página, e a
@@ -826,22 +547,6 @@ certa.
   catálogos, as armadilhas do `templ` e as dez do Datastar que não deixam erro
   para trás, os dois defeitos silenciosos do `sqlc`, e por que a bancada copia um
   molde migrado.
-- **`e2e/`** (Playwright) **não tem guia próprio**: o que reger e2e está na
-  seção "Testes" deste arquivo, e é uma regra só — e2e é a faixa mais cara do
+- **`e2e/`** (Playwright) **não tem guia próprio**: o que rege e2e está na seção
+  "Testes" deste arquivo, e é uma regra só — e2e é a faixa mais cara do
   repositório e cada caso se justifica com um mecanismo que só um navegador tem.
-
-  > Aqui morava a entrada do `frontend/`, dizendo que a SPA não tinha guia
-  > próprio porque estava saindo. Ela saiu (ALE-272, fatia 10c), e com ela as
-  > armadilhas de renderização do Solid, os contornos do Kobalte e o `.wasm`.
-  >
-  > Este parágrafo dizia que o que sobreviveu da SPA em
-  > `engine-go/api/piloto/src` era "a folha de tokens, seis componentes e o
-  > driver de teclado das cenas", e ele **envelheceu sem ninguém mexer nele**,
-  > que é a forma que a seção "Documentação" descreve. Os componentes e a folha
-  > de tokens saíram na ALE-314, com o `solid-js` e mais cinco dependências: o
-  > único consumidor deles era a folha de especificação, comparando cada peça
-  > com a contraparte da SPA, e o dono deu a comparação por cumprida. **O que
-  > sobreviveu é TypeScript puro** — o driver de teclado (`attachSceneNav`), o
-  > tocador de som, o gesto de ponteiro das peças e o leitor de PDF —, e ele
-  > nunca dependeu de Solid: o que dependia eram dois invólucros da SPA sem
-  > chamador desde a ALE-272.
