@@ -8,7 +8,7 @@ import (
 	"t20engine/sheet"
 )
 
-// expertiseNames mirrors t20-data EXPERTISE_NAMES — the builtin perícias. A
+// expertiseNames são as perícias do livro. A
 // custom expertise may not reuse one, and only these can be edited via PATCH.
 var expertiseNames = sheet.ToStringSet([]string{
 	"Acrobacia", "Adestramento", "Atletismo", "Atuação", "Cavalgar", "Conhecimento",

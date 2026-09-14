@@ -13,9 +13,11 @@ import (
 // the UI paginates poorly past ~20 anyway). Mirrors session-state.service.ts.
 const InitiativeMaxEntries = 50
 
-// InitiativeEntry is one combatant row in a session's initiative tracker. The optional
-// numeric fields use pointers + omitempty so the JSON matches the socket.io-client shape
-// (absent ⇒ undefined) that the frontend InitiativeEntry expects.
+// InitiativeEntry é uma linha de combatente na fila de iniciativa da sessão.
+//
+// Os campos numéricos opcionais são PONTEIRO com `omitempty` para o JSON
+// distinguir "ausente" de "zero" — um combatente sem iniciativa rolada não é um
+// combatente com iniciativa 0, e achatar os dois apagaria a diferença no fio.
 type InitiativeEntry struct {
 	ID          string `json:"id"`
 	Label       string `json:"label"`

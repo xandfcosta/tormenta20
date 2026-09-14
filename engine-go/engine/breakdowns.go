@@ -1,15 +1,21 @@
 package engine
 
-// This file ports the breakdown layer of derived.ts (the `*Total` helpers) into
-// a single ComputedSheetV2 the future WASM boundary exposes. Each breakdown is a
-// faithful port that reads the resolved ItemEffects (slice 1) over the collected
-// ActiveItems (slice 2). Movement/defense/attribute/expertise live here; the
-// magic/RD/tempHp breakdowns are in breakdowns_magic.go. See PORT-PLAN.md §3 (task
-// #5). Parity oracle: engine-go/parity/<slug>.json `sheetV2`.
+// The BREAKDOWN layer: it turns the resolved ItemEffects into a single
+// ComputedSheetV2, where no number travels alone — each one carries the
+// contributions that made it.
+//
+// That is a product decision and not an engineering one: the sheet must be able
+// to answer "why 12?" with the whole sum on screen.
+//
+// Movement/defense/attribute/expertise live here; the magic/RD/tempHp
+// breakdowns are in breakdowns_magic.go.
+//
+// Parity oracle: engine-go/parity/<slug>.json `sheetV2`.
 
 // BreakdownContribution is one {source, amount, note?} row — the display-shaped
-// contribution the TS breakdowns emit (no bonusType, unlike the resolution
-// Contribution). Note is omitted when empty, matching the TS `...(note?{note}:{})`.
+// contribution a breakdown emits. It carries no bonusType, unlike the resolution
+// Contribution: stacking was already decided upstream. An empty note is omitted
+// so it never travels on the wire.
 type BreakdownContribution struct {
 	Source string `json:"source"`
 	Amount int    `json:"amount"`
@@ -17,7 +23,7 @@ type BreakdownContribution struct {
 }
 
 // SourceAmount is a {source, amount} row (attribute/RD/tempHp contributions,
-// which the TS drops the note from).
+// which carries no note).
 type SourceAmount struct {
 	Source string `json:"source"`
 	Amount int    `json:"amount"`
@@ -69,8 +75,8 @@ type ExpertiseBreakdown struct {
 	ArmorPenaltyApplied int                     `json:"armorPenaltyApplied"`
 }
 
-// ComputedSheetV2 aggregates every breakdown — the rich sheet the endgame WASM
-// boundary returns (replacing the front's derived.ts breakdown calls).
+// ComputedSheetV2 aggregates every breakdown — the rich sheet the scenes draw,
+// where each number arrives with the contributions that made it.
 type ComputedSheetV2 struct {
 	Defense      DefenseBreakdown `json:"defense"`
 	Displacement ValueBreakdown   `json:"displacement"`
@@ -84,7 +90,7 @@ type ComputedSheetV2 struct {
 	BestBaseSpellCd *int                          `json:"bestBaseSpellCd"`
 	// SpellCdByAttribute is the spell save CD keyed by casting attribute (p173),
 	// so a spell row can pick the CD for any of its applicable classes without
-	// re-deriving (derived.ts computeBestCd).
+	// re-deriving.
 	SpellCdByAttribute map[string]int `json:"spellCdByAttribute"`
 	SpellDCBonus       TotalContribs  `json:"spellDCBonus"`
 	PmCostMod          TotalContribs  `json:"pmCostMod"`
@@ -138,13 +144,13 @@ func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bo
 	}
 }
 
-// effectiveAttribute ports derived.ts attributeTotal: raw attribute + summed
+// effectiveAttribute: raw attribute + summed
 // `attribute` modifiers.
 func effectiveAttribute(ch Character, attr string, e ItemEffects) int {
 	return ch.attributeValue(attr) + StatFor(e, ModifierTarget{K: "attribute", Name: attr}).Total
 }
 
-// defenseBreakdown ports derived.ts defenseTotal: 10 + Dex (unless blocked) + mods.
+// defenseBreakdown: 10 + Dex (unless blocked) + mods.
 func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 	stat := StatFor(e, ModifierTarget{K: "defense"})
 	dexApplied := !e.Flags["cannot-apply-dex-to-defense"]
@@ -210,7 +216,7 @@ func hasActiveCondition(ch Character, id string) bool {
 	return false
 }
 
-// displacementBreakdown ports derived.ts displacementTotal (floored at 0), mais
+// displacementBreakdown is the displacement total (floored at 0), mais
 // a sobrecarga: −3m enquanto a mochila passa do limite (p141). Ela entra como
 // contribuição nomeada porque um deslocamento que cai sem dizer por quê é lido
 // como defeito.
@@ -237,7 +243,7 @@ func overloadContrib(amount int) BreakdownContribution {
 	return BreakdownContribution{Source: "Sobrecarga (p141)", Amount: amount}
 }
 
-// attributeBreakdown ports derived.ts attributeTotal + attributeContributions
+// attributeBreakdown is the attribute total plus its contributions
 // ({source, amount}, note dropped).
 func attributeBreakdown(ch Character, attr string, e ItemEffects) AttributeBreakdown {
 	stat := StatFor(e, ModifierTarget{K: "attribute", Name: attr})
@@ -247,10 +253,10 @@ func attributeBreakdown(ch Character, attr string, e ItemEffects) AttributeBreak
 	}
 }
 
-// armorPenaltyExpertises mirrors derived.ts ARMOR_PENALTY_EXPERTISES.
+// armorPenaltyExpertises.
 var armorPenaltyExpertises = map[string]bool{"Acrobacia": true, "Furtividade": true, "Ladinagem": true}
 
-// expertiseBreakdown ports derived.ts expertiseTotalWithItems: ½ level + attr +
+// expertiseBreakdown: ½ level + attr +
 // training + item mods (expertise/expertiseAll/expertiseByAttribute) + armor
 // penalty — que desde a ALE-215 tem duas fontes, a armadura e a sobrecarga.
 func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, carga LoadBreakdown) ExpertiseBreakdown {

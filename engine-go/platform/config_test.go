@@ -84,12 +84,22 @@ func TestLoadConfigReadsTheEnvironmentFile(t *testing.T) {
 	}
 }
 
-// In production this binary serves the SPA, so every call is same-origin and no
-// origin is whitelisted; dev needs the Vite one because the SPA is on :5173.
+// NENHUM ambiente libera origem por fábrica, e o teste existe para prender que os
+// DOIS concordam (ALE-321).
+//
+// Ele já afirmou o contrário: o desenvolvimento vinha com `http://localhost:5173`
+// liberado, porque a SPA era servida pelo Vite naquela porta. A SPA saiu na
+// ALE-272 e o default sobreviveu a ela — um middleware de CORS concedendo
+// credenciais a uma origem que ninguém é dono.
+//
+// O caso ficou porque a invariante é melhor do que era: um ambiente de
+// desenvolvimento MAIS PERMISSIVO que o de produção esconde defeito, e é isso
+// que este teste passa a cobrar. Um processo só serve tudo na mesma porta nos
+// dois ambientes, então mesma-origem é a resposta certa nos dois.
 func TestLoadConfigDefaultsCORSPerEnvironment(t *testing.T) {
 	cases := map[AppEnv]string{
 		EnvProduction:  "",
-		EnvDevelopment: DevCORSOrigins,
+		EnvDevelopment: "",
 	}
 	for appEnv, want := range cases {
 		t.Run(string(appEnv), func(t *testing.T) {
@@ -109,10 +119,10 @@ func TestLoadConfigDefaultsCORSPerEnvironment(t *testing.T) {
 	}
 }
 
-// A lista é o que permite os três apelidos do mesmo servidor de dev (e o IP da
-// LAN, quando alguém abre a mesa pela rede em desenvolvimento). Espaço em
-// branco e vírgula sobrando somem: uma origem VAZIA seria pior que nenhuma,
-// porque o go-chi lê lista vazia como "aceite TODAS" (ALE-119).
+// A lista existe para quem PRECISAR de origem externa — ela deixou de ter valor
+// de fábrica na ALE-321, e não deixou de ser lida. Espaço em branco e vírgula
+// sobrando somem: uma origem VAZIA seria pior que nenhuma, porque o go-chi lê
+// lista vazia como "aceite TODAS" (ALE-119).
 func TestCORSOriginParsesAList(t *testing.T) {
 	casos := []struct {
 		nome string

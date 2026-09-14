@@ -19,10 +19,14 @@ import templruntime "github.com/a-h/templ/runtime"
 // convite — nunca a URL inteira.
 //
 // A origem é do NAVEGADOR e não do servidor, e isso é conserto de um defeito
-// medido: com o `r.Host`, o link nascia apontando para a porta da API
-// (`localhost:3026`) porque o proxy do Vite reescreve o `Host` em
-// desenvolvimento. O link de convite existe para ser MANDADO para outra pessoa,
-// então um host errado é um link morto. É o mesmo padrão que o painel de
+// medido: com o `r.Host`, o link nascia apontando para a porta errada sempre que
+// houvesse qualquer coisa reescrevendo o cabeçalho entre o navegador e o
+// processo. O link de convite existe para ser MANDADO para outra pessoa, então
+// um host errado é um link morto.
+//
+// > O caso medido era o proxy do Vite em desenvolvimento, que saiu na ALE-272.
+// > A regra FICA, e não por inércia: a mesa roda na LAN, alcançada por IP, e o
+// > dia em que alguém puser um proxy na frente o defeito volta igual (ALE-321). É o mesmo padrão que o painel de
 // administração já usa para copiar convite.
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
@@ -61,7 +65,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/invite.templ`, Line: 37, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/invite.templ`, Line: 41, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -103,7 +107,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(nota)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/invite.templ`, Line: 49, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/ui/invite.templ`, Line: 53, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {

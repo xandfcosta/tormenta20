@@ -1,9 +1,14 @@
-// Package engine is a Go port of the Tormenta 20 character-sheet compute
-// engine (t20-data/src/character-sheet.ts). It reproduces the derived-sheet
-// pipeline: attributes, vitals (PV/PM), defense, saves, skills, attacks,
-// conditions and buffs. Only maxPv/maxPm catalog modifiers reach the sheet —
-// every other computed field derives from attributes + inline equipment +
-// active effects (see character-sheet.ts "KEY INSIGHT").
+// Package engine is the Tormenta 20 character-sheet compute engine, and the
+// single authority on the book's rules: attributes, vitals (PV/PM), defense,
+// saves, skills, attacks, conditions and buffs.
+//
+// It imports NOTHING from this project — only the standard library. That purity
+// is the property worth defending: the rules answer with no database, no HTTP
+// and no state, which is why 4,000 lines of rule tests run with no test double.
+//
+// KEY INSIGHT: only maxPv/maxPm catalog modifiers reach the sheet directly.
+// Every other computed field derives from attributes + inline equipment +
+// active effects.
 package engine
 
 // AttributeKeys is the canonical attribute order (attributes.ts).
@@ -29,7 +34,7 @@ func IsAttributeKey(chave string) bool {
 
 // ─── Input ────────────────────────────────────────────────────────────
 
-// CharacterInput mirrors t20-data CharacterInput. Unused catalog fields are
+// CharacterInput. Unused catalog fields are
 // still parsed so the HTTP contract accepts the full body.
 type CharacterInput struct {
 	Level              int                    `json:"level"`

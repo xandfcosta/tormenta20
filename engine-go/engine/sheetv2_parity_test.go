@@ -8,7 +8,7 @@ import (
 
 // TestSheetV2Parity proves the ported breakdown layer (ComputeSheetV2) on real
 // data: for each seed character it primes the catalogs, computes the full sheet
-// and asserts every breakdown matches the TS oracle (`sheetV2`, dumped by the
+// and asserts every breakdown matches o oráculo (`sheetV2`, dumped by the
 // gerado por `go run ./cmd/genoracle`) semantically. This is slice 3 / task #5's target
 // — the collection (slice 2) + resolution (slice 1) tests cover the upstream
 // halves.
@@ -21,7 +21,7 @@ import (
 // the same bonusType: +1 and +2 must resolve to +2 across all 29 perícias, not
 // +3.
 //
-// Regenerate the oracle when the TS rules change:
+// Regenere o oráculo quando a regra mudar:
 //
 //	cd engine-go && go run ./cmd/genoracle
 func TestSheetV2Parity(t *testing.T) {

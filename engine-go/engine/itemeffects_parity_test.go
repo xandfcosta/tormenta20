@@ -7,13 +7,12 @@ import (
 	"testing"
 )
 
-// TestItemEffectsParity feeds each seed character's real `activeItems` (collected
-// by the TS collection layer, dumped by the frontend parity harness) into the
-// ported ComputeItemEffects and asserts the resolved ItemEffects match the TS
-// oracle semantically. This proves the resolution core (slice 1) on real data,
-// not just the inline unit cases. See PORT-PLAN.md §3.
+// TestItemEffectsParity feeds each seed character's real `activeItems` into
+// ComputeItemEffects and asserts the resolved ItemEffects match the oracle
+// semantically. It proves the resolution core on real data, not just the inline
+// unit cases.
 //
-// Regenerate the oracle when the TS rules change:
+// Regenere o oráculo quando a regra mudar:
 //
 //	cd engine-go && go run ./cmd/genoracle
 func TestItemEffectsParity(t *testing.T) {

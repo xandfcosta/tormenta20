@@ -225,14 +225,14 @@ dois — é o mesmo binário (ALE-119):
 | arquivo | `engine-go/.env.development` (versionado) | `engine-go/.env.production` (seu, não versionado) |
 | quem serve as cenas | o próprio binário | o próprio binário |
 | banco | `engine-go/data/t20-dev.db` | `engine-go/data/t20-prod.db` |
-| CORS | libera `http://localhost:5173` (herança da SPA) | nenhum header: tudo é mesma-origem |
+| CORS | nenhum header: tudo é mesma-origem | idem — os dois ambientes concordam |
 | `JWT_SECRET` | público, no repositório | seu, e o boot **falha** sem ele |
 | admin | `mestre@t20.local` (o do seed) | o seu, e o boot **falha** sem nenhum |
 
 **O env do processo vence o arquivo**, então dá pra desviar sem editar nada:
 `PORT=4000 pnpm dev`. E `ENV_FILE=/caminho/outro.env` troca o arquivo inteiro.
 
-Variáveis (defaults em `engine-go/api/config.go`):
+Variáveis (defaults em `engine-go/platform/config.go`):
 
 | var | default | o que faz |
 |---|---|---|
@@ -242,7 +242,7 @@ Variáveis (defaults em `engine-go/api/config.go`):
 | `JWT_SECRET` | — | assina os JWT de sessão; **obrigatório em produção** |
 | `ADMIN_EMAILS` | — | quem administra, separado por vírgula; **obrigatório em produção** |
 | `COOKIE_SECURE` | `false` | ligue quando houver TLS na frente — em HTTP na LAN, ligado, o browser descarta o cookie e o login não conclui |
-| `CORS_ORIGIN` | `http://localhost:5173` (vazio em produção) | a ÚNICA origem liberada; vazio = sem CORS |
+| `CORS_ORIGIN` | vazio nos dois ambientes | as origens liberadas a chamar de fora; vazio = nenhum middleware de CORS |
 | `TLS_CERT_FILE` / `TLS_KEY_FILE` | vazios | o par de certificados; os DOIS preenchidos = este processo fala HTTPS, os dois vazios = HTTP. Meio par **derruba o boot** |
 | `BACKUP_DIR` | `../backups` | onde o `pnpm db:backup` e a tela de admin escrevem |
 | `CATALOG_PATH` | `parity/_catalogs.json` | catálogos dos validadores de mutação |

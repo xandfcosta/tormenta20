@@ -31,8 +31,10 @@ import (
 // `t20_session` antes do Bearer (middleware.go), e o cookie ignora porta, então
 // a sessão criada pela SPA vale aqui.
 //
-// SAÍDA DO PILOTO: apagar `api/mesa*`, a linha do `buildMux` e a entrada do
-// proxy no `vite.config.ts`.
+// > Aqui havia um lembrete de "saída do piloto" mandando apagar `api/mesa*`, a
+// > linha do `buildMux` e a entrada de proxy num `vite.config.ts` — arquivo que
+// > nunca existiu com esse nome. A saída aconteceu (ALE-280, as cenas subiram
+// > para a raiz) e o proxy morreu com a SPA (ALE-321).
 // Routes registra as rotas da Mesa (ALE-278) e as do RASCUNHO DE LUGAR (ALE-292).
 //
 // Aqui dizia "as vinte rotas", e o número já não batia quando a ALE-292 chegou —

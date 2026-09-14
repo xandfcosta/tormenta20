@@ -1,6 +1,13 @@
-// Package db owns the API server's SQLite data layer: schema migrations (goose)
-// and the sqlc-generated typed queries. Kept OUT of the engine package so the
-// WASM build (engine/ + cmd/wasm) stays dependency-free.
+// O pacote db é a camada de dados em SQLite: as migrações do goose e as consultas
+// tipadas que o sqlc gera a partir delas.
+//
+// Ele é mantido FORA do `engine` para o motor de regras continuar puro — só a
+// biblioteca padrão, sem banco e sem HTTP —, que é o que faz as 4.000 linhas de
+// teste de regra rodarem sem dublê nenhum.
+//
+// > A razão escrita aqui era outra: "para o build WASM (engine/ + cmd/wasm)
+// > continuar sem dependências". O WASM saiu na ALE-272 e o `cmd/wasm` com ele;
+// > a propriedade sobreviveu ao motivo, e o motivo de hoje é este (ALE-321).
 package db
 
 import (

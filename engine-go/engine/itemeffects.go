@@ -7,16 +7,16 @@ import (
 	"strconv"
 )
 
-// This file is the Go port of t20-data/src/items/engine.ts — the REAL front
-// derivation engine (computeItemEffects), distinct from the MVP orchestrator
-// (ComputeCharacterSheet) in compute.go. It is catalog-free: it resolves a
-// pre-collected []ActiveItem into ItemEffects (non-stacking by bonusType, flags,
-// conditional opt-ins). The catalog-reading collection layer (activeItemsFor)
-// and the breakdown helpers land in later slices. See PORT-PLAN.md §2/§4.
+// The RESOLUTION engine: it takes a pre-collected []ActiveItem and resolves it
+// into ItemEffects — non-stacking by bonusType, flags, conditional opt-ins.
+//
+// It is catalog-free on purpose: reading the book is the collection layer's job
+// (collect.go), and every ActiveItem arrives already assembled. That split is
+// what lets the whole non-stacking rule be unit-tested with inline data.
 
 // ─── Types (mirror items/types.ts + items/engine.ts) ──────────────────
 
-// ModifierTarget is the TS discriminated union `{ k; ... }` flattened: only the
+// ModifierTarget is uma união achatada por `k`: only the
 // fields a given `k` uses are populated (omitempty keeps the JSON shape 1:1).
 type ModifierTarget struct {
 	K         string `json:"k"`
@@ -26,7 +26,7 @@ type ModifierTarget struct {
 	School    string `json:"school,omitempty"`    // catalyst
 }
 
-// ModifierCondition is the TS `ModifierCondition` union, flattened like above.
+// ModifierCondition is a condição do modificador, achatada do mesmo jeito.
 type ModifierCondition struct {
 	C     string `json:"c"`
 	Type  string `json:"type,omitempty"`  // terrain
@@ -38,7 +38,7 @@ type ModifierCondition struct {
 
 // VitalScale mirrors items/types.ts VitalScale. Only the vitals collector reads
 // it; the resolution engine ignores it. Carried on Modifier so the collection
-// layer round-trips maxPv/maxPm mods byte-equal to the TS oracle.
+// layer round-trips maxPv/maxPm mods byte-equal to o oráculo.
 type VitalScale struct {
 	Per       string `json:"per"`
 	Step      int    `json:"step,omitempty"`
@@ -58,7 +58,7 @@ type Modifier struct {
 }
 
 // UnmarshalJSON rounds a modifier's amount to the nearest int. The engine is
-// integer-modeled (see types.go), but the TS type is `number` and one catalog
+// integer-modeled (see types.go), but o catálogo é quem traz o valor, e um deles
 // entry carries a fractional amount (botas-reforcadas, +1.5m displacement — not
 // equipped by any seed). Rounding at the JSON boundary keeps catalog parsing from
 // failing without widening every total to float. Integer amounts pass through
@@ -116,7 +116,7 @@ type ConditionalEffect struct {
 }
 
 // ItemEffects mirrors items/engine.ts ItemEffects. Flags is a Set (map);
-// MarshalJSON emits it as a sorted array so JSON parity with the TS oracle is
+// MarshalJSON emits it as a sorted array so JSON parity with o oráculo is
 // order-independent.
 type ItemEffects struct {
 	ByTarget    map[string]AggregatedStat
@@ -149,7 +149,7 @@ func (e ItemEffects) MarshalJSON() ([]byte, error) {
 }
 
 // FlagList returns the active flag names sorted — the stable form for JSON and
-// for value comparison against the TS Set.
+// para comparar por valor.
 func (e ItemEffects) FlagList() []string {
 	out := make([]string, 0, len(e.Flags))
 	for f := range e.Flags {
@@ -299,7 +299,7 @@ func absInt(n int) int {
 // resolveStack applies the T20 non-stacking rule: within a target, entries of
 // the same bonusType keep only the highest-abs; 'untyped' stack freely. The
 // contribution order follows the first-seen order of each bonusType (matching
-// the TS Map iteration order) so JSON parity holds.
+// first-seen order) so JSON parity holds.
 func resolveStack(contribs []Contribution) AggregatedStat {
 	order := []string{}
 	byType := map[string][]Contribution{}
@@ -445,7 +445,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 	return ItemEffects{ByTarget: byTarget, Flags: flags, Conditional: conditional}
 }
 
-// firstNonEmpty mirrors the TS `describeCondition(m) || (m.note ?? ”)`.
+// firstNonEmpty devolve a primeira não vazia.
 func firstNonEmpty(a, b string) string {
 	if a != "" {
 		return a
@@ -462,7 +462,7 @@ func StatFor(effects ItemEffects, target ModifierTarget) AggregatedStat {
 }
 
 // ConditionalID is the stable identifier for a conditional effect, used to
-// persist which opt-ins are toggled on. Mirrors the TS join('::').
+// persist which opt-ins are toggled on. Junta com `::`.
 func ConditionalID(c ConditionalEffect) string {
 	return c.Source + "::" +
 		targetKey(c.Target) + "::" +

@@ -9,9 +9,9 @@ packages:
 # rodar qualquer coisa, e o sintoma não menciona este arquivo.
 #
 # Isso é pior do que parece: o contorno óbvio é chamar o binário direto em
-# `node_modules/.bin`, e aí se PULA o `pretest`, que é quem reconstrói o WASM.
-# Foi assim que 12 testes da Mochila caíram contra um motor velho depois da
-# ALE-215 — o teste media o meu wasm, não o código.
+# `node_modules/.bin`, e aí se PULAM os scripts de `pre`/`post` que preparam o
+# artefato. Foi assim que 12 testes da Mochila caíram contra um motor velho
+# depois da ALE-215 — o teste media o artefato antigo, não o código.
 allowBuilds:
   '@parcel/watcher': true
 

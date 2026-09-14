@@ -17,7 +17,7 @@ import (
 // everything and ships no file at all — still overrides it without editing
 // anything on disk.
 //
-//	LoadEnvFile(".env.production") // → PORT, JWT_SECRET, STATIC_DIR… exported
+//	LoadEnvFile(".env.production") // → PORT, JWT_SECRET, COOKIE_NAME… exported
 func LoadEnvFile(path string) error {
 	file, err := os.Open(path)
 	if errors.Is(err, fs.ErrNotExist) {

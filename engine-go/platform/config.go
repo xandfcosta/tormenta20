@@ -1,7 +1,14 @@
-// Package api is the app's HTTP layer: chi router, middleware (CORS +
-// cookie/bearer JWT auth), and per-domain handlers. Deps live here and in
-// cmd/api — never in engine/, so the WASM build stays dep-free.
-
+// O pacote platform é o que NÃO é domínio: configuração, `.env`, compressão,
+// negociação de codificação e os ajudantes de corpo e resposta HTTP.
+//
+// Ele não importa nada do projeto — é folha do grafo, como o `engine` —, e essa
+// é a propriedade que o mantém honesto: qualquer coisa que precise saber o que é
+// uma ficha ou um tabuleiro não cabe aqui.
+//
+// > Aqui morava um comentário abrindo com `Package api is the app's HTTP layer`,
+// > descrevendo chi router, middleware e handlers — nenhum deles deste pacote.
+// > Ele sobreviveu ao arquivo mudar de `api/` para cá, e uma linha em branco o
+// > separava do `package`, então nem doc comment do Go ele era (ALE-321).
 package platform
 
 import (
@@ -45,11 +52,17 @@ type Config struct {
 	JWTExpiresIn string
 	CookieName   string
 	CookieSecure bool
-	// CORSOrigins are the browser origins allowed to call the API cross-origin:
-	// the Vite dev server, under every alias someone may actually type. Empty
-	// means no CORS middleware at all, which is the production shape — the
-	// binary serves the SPA itself, so every call is same-origin and no other
-	// site has any business reaching it.
+	// CORSOrigins são as origens de navegador liberadas a chamar a API de FORA
+	// da origem dela. Vazio é o normal, e é o normal nos DOIS ambientes: um
+	// processo só serve as cenas, a API e o fluxo ao vivo na mesma porta, então
+	// toda chamada é mesma-origem e nenhum outro site tem o que fazer aqui.
+	//
+	// Vazio quer dizer NENHUM middleware de CORS montado, e não uma lista vazia:
+	// o go-chi lê `AllowedOrigins` vazio como "libere TODAS", que com credenciais
+	// ligadas é todo site do mundo (ALE-119).
+	//
+	// Ela continua existindo para quem precisar: `CORS_ORIGIN` no `.env` volta a
+	// montar o middleware com a lista que se escrever.
 	CORSOrigins []string
 	// CatalogPath is the primeEngineCatalogs payload (items/races/…) the API loads
 	// at startup for its mutation validators. Defaults to the committed snapshot.
@@ -115,7 +128,7 @@ func LoadConfig() (Config, error) {
 		JWTExpiresIn:  env("JWT_EXPIRES_IN", "7d"),
 		CookieName:    env("COOKIE_NAME", "t20_session"),
 		CookieSecure:  os.Getenv("COOKIE_SECURE") == "true",
-		CORSOrigins:   SplitOrigins(env("CORS_ORIGIN", defaultCORSOrigin(appEnv))),
+		CORSOrigins:   SplitOrigins(env("CORS_ORIGIN", "")),
 		BackupDir:     env("BACKUP_DIR", "../backups"),
 		BackupEvery:   envDuration("BACKUP_EVERY", 24*time.Hour),
 		BackupKeep:    envInt("BACKUP_KEEP", 7),
@@ -216,25 +229,25 @@ func secretFlaw(secret string) string {
 	return "the public development secret"
 }
 
-// DevCORSOrigins: dev needs the Vite origin whitelisted because the SPA is
-// served by a different port than the API — and it needs EVERY alias of it,
-// because `localhost`, `[::1]` and `127.0.0.1` are the same dev server but
-// three different origins to the browser. Whichever one is not listed loses the
-// socket to a 403 that reaches the screen as "RECONECTANDO…" forever, with no
-// error anywhere (ALE-185).
+// Aqui morava o `DevCORSOrigins`, e com ele o único lugar em que o ambiente de
+// DESENVOLVIMENTO era mais permissivo que o de produção (ALE-321).
 //
-// A máquina na LAN entra aqui também: em desenvolvimento, quem abrir pelo IP da
-// rede acrescenta `http://<ip-da-máquina>:5173` a esta lista. Em PRODUÇÃO nada
-// disso é preciso — um binário só serve SPA, API e socket, então o cliente da
-// LAN é MESMA ORIGEM e passa pelo caminho de baixo do socketOriginAllowed.
-const DevCORSOrigins = "http://localhost:5173,http://[::1]:5173,http://127.0.0.1:5173"
-
-func defaultCORSOrigin(appEnv AppEnv) string {
-	if appEnv == EnvProduction {
-		return ""
-	}
-	return DevCORSOrigins
-}
+// Ele liberava `http://localhost:5173` nas três grafias que o navegador trata
+// como origens diferentes, e a razão era real enquanto durou: a SPA era servida
+// pelo Vite naquela porta, a API respondia na :3001, e a grafia que ficasse de
+// fora perdia o socket para um 403 que chegava na tela como "RECONECTANDO…" para
+// sempre, sem erro em lugar nenhum (ALE-185).
+//
+// A SPA saiu na ALE-272. Desde então nada roda na :5173, e o que sobrou foi um
+// middleware de CORS montado em desenvolvimento concedendo credenciais a uma
+// origem que ninguém é dono — configuração morta que ainda FAZ coisa, que é pior
+// que prosa morta.
+//
+// Hoje o default é vazio nos dois ambientes, e vazio quer dizer NENHUM
+// middleware: um processo só serve as cenas, a API e o fluxo ao vivo na mesma
+// porta, então o celular do jogador na LAN é mesma-origem e passa direto. Quem
+// precisar de uma origem externa escreve `CORS_ORIGIN` no `.env` — a variável
+// continua lida, só deixou de ter um valor de fábrica que ninguém pediu.
 
 // SplitOrigins parses the comma-separated CORS_ORIGIN, dropping blanks: a
 // trailing comma must yield NO origin rather than an empty one, and an empty

@@ -1,7 +1,8 @@
-// Package catalog serves the static reference data (spells, bestiary, items, …)
-// the frontend fetches from GET /catalog/:resource — the same payload the
-// CatalogService, exported from t20-data by the frontend catalog-export harness
-// and embedded here so the Go server needs no TS import.
+// Package catalog serves the static reference data transcribed from the book:
+// spells, bestiary, items, races, origins, powers.
+//
+// It is EMBEDDED in the binary (`go:embed`), so the server carries the book with
+// it and a deploy is one file.
 package catalog
 
 import (
@@ -163,12 +164,11 @@ func LookupActivation(id string) (Activation, bool) {
 
 // resources is the ordered CatalogService registry — the GET /catalog index.
 //
-// The last four are AUTHORED HERE rather than dumped from t20-data like the
-// others: they were the last book tables the front imported at BUILD time, so
-// they were the last catalog bytes in the bundle (ALE-102). Serving them is what
-// let those four t20-data modules die — the point is severing the dependency,
-// not the 8 KB. Their shape is pinned by `rules_tables_test.go`, which is the
-// schema validation that replaces per-field transcription tests.
+// The last four are AUTHORED HERE rather than dumped: they were the last book
+// tables a client imported at BUILD time, and serving them instead is what ended
+// that dependency (ALE-102) — the point was severing it, not the 8 KB. Their
+// shape is pinned by `rules_tables_test.go`, the schema validation that replaces
+// per-field transcription tests.
 var resources = []string{
 	"spells", "bestiary", "items", "conditions", "gods", "races", "origins",
 	"race-defs", "class-powers", "general-powers", "granted-powers", "origins-source",

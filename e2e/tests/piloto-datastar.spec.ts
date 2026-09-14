@@ -147,7 +147,7 @@ test.describe('Administração (piloto Datastar)', () => {
     const primeiro = await campo.inputValue()
     expect(primeiro, 'o link nasceu sem token').toContain('token=')
     // A origem é a do NAVEGADOR, e não a do servidor: com o `r.Host` o link
-    // nasceria apontando para a porta da API, que o proxy do Vite reescreve.
+    // nasceria apontando para a porta errada atrás de qualquer intermediário.
     expect(primeiro).toContain(new URL(page.url()).origin)
 
     await page.getByRole('button', { name: 'Fechar' }).click()

@@ -160,8 +160,8 @@ export default defineConfig({
         url: BASE_URL,
         cwd: '..',
         reuseExistingServer: false,
-        // O build da SPA leva ~3 min com o wasm; 120 s derrubaria a suíte antes
-        // de o servidor existir.
+        // O `go run` compila o app inteiro antes de escutar; 120 s derrubaria a
+        // suíte antes de o servidor existir numa máquina fria.
         timeout: 420_000,
       },
 })

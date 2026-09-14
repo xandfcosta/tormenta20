@@ -11,7 +11,7 @@ import (
 )
 
 // expertiseDef is one builtin perícia (name + keying attribute). Ordered as
-// t20-data EXPERTISES; every character is seeded with all of them on create.
+// as perícias do livro; every character is seeded with all of them on create.
 type expertiseDef struct {
 	name      string
 	attribute string

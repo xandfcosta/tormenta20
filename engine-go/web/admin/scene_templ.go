@@ -661,9 +661,10 @@ func resetDialog() templ.Component {
 
 // mintedReset é o remendo que volta do POST, e carrega o CAMINHO — nunca a URL
 // inteira. A origem é do NAVEGADOR, e isso é conserto de um defeito medido: com
-// o `r.Host` o link nascia apontando para a porta da API, porque o proxy do
-// Vite reescreve o `Host` em desenvolvimento. Link de redefinição existe para
-// ser MANDADO, então host errado é link morto.
+// o `r.Host` o link nascia apontando para a porta errada sempre que houvesse
+// qualquer coisa reescrevendo o cabeçalho no caminho. Link de redefinição existe
+// para ser MANDADO, então host errado é link morto — ver `ui.MintedInvite`, que
+// carrega a medição.
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.
@@ -717,7 +718,7 @@ func mintedReset(caminho string) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/admin/scene.templ`, Line: 296, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/admin/scene.templ`, Line: 297, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 		if templ_7745c5c3_Err != nil {

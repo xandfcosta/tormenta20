@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-// This file ports the top of derived.ts' collection layer: ActiveItemsFor (the
-// entry point) and the item-level modifier assembly — catalog mods, overlays
-// (melhorias/materiais), non-proficiency penalties (p142), weapon-attack
-// mirroring, and the two opt-in homebrew rules. Together with collect_entities.go
-// (race/origin/class/tormenta) it produces the []ActiveItem the resolution engine
-// (ComputeItemEffects) consumes. See PORT-PLAN.md §2/§4 (slice 2).
+// The top of the COLLECTION layer: ActiveItemsFor (the entry point) and the
+// item-level modifier assembly — catalog mods, overlays (melhorias/materiais),
+// non-proficiency penalties (p142), weapon-attack mirroring, and the two opt-in
+// homebrew rules. Together with collect_entities.go (race/origin/class/tormenta)
+// it produces the []ActiveItem the resolution engine (ComputeItemEffects)
+// consumes.
 
 // vestedWear is the shared 'vested' wear-state pointer used by every
 // non-equipment ActiveItem (race/origin/class/effect). Read-only.
@@ -32,9 +32,9 @@ var expertiseNamesSet = toSet([]string{
 	"Reflexos", "Religião", "Sobrevivência", "Vontade",
 })
 
-// ActiveItemsFor ports derived.ts activeItemsFor: collect every active modifier
+// ActiveItemsFor: collect every active modifier
 // source into []ActiveItem — the input the resolution engine consumes. Order is
-// preserved 1:1 with the TS so the parity dump compares byte-equal.
+// significativa: o despejo de paridade compara byte a byte.
 func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
 	proficiencies := parseProficiencySet(ch.Proficiencies)
 	items := []ActiveItem{}
@@ -74,11 +74,12 @@ func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
 	return items
 }
 
-// conditionActiveItem mirrors derived.ts `conditionActiveItem`: the p394 status
-// conditions as a synthetic ActiveItem so their numeric penalties flow through
-// the resolution engine (ALE-28). The modifier table below duplicates t20-data
-// `CONDITION_MODIFIERS` byte-for-byte (Go can't import the TS catalog, like the
-// rest of the engine). Appended last — same position as the TS collector.
+// conditionActiveItem builds the p394 status conditions as a synthetic
+// ActiveItem, so their numeric penalties flow through the resolution engine and
+// obey non-stacking like everything else (ALE-28).
+//
+// It is appended LAST, and the position is load-bearing: the oracle compares
+// byte-equal, so moving it moves every downstream contribution list.
 func conditionActiveItem(ch Character) *ActiveItem {
 	ids := parseStringArray(ch.ActiveConditions)
 	mods := []Modifier{}
@@ -172,7 +173,9 @@ func withPlus(base []Modifier, extra ...Modifier) []Modifier {
 	return append(append([]Modifier{}, base...), extra...)
 }
 
-// conditionModifierTable duplicates t20-data condition-modifiers.ts — keep in sync.
+// conditionModifierTable IS the source of the condition rule (p394). It was a
+// duplicate of a TS table while there were two engines; with one engine there is
+// nothing to keep in sync, and a diff here is a rule change to check in the book.
 // Cada linha derivada cita o texto da p394 que a obriga.
 var conditionModifierTable = map[string][]Modifier{
 	"abalado":      {condAllSkills(-2)},
@@ -259,7 +262,7 @@ func (c *Catalogs) itemActiveItem(it CharacterItem, prof map[string]bool) Active
 	return ActiveItem{Source: it.Name, Equipped: it.Equipped, Modifiers: mods}
 }
 
-// overlayModsWithProvenance ports derived.ts: an overlay's modifiers with the
+// overlayModsWithProvenance: an overlay's modifiers with the
 // overlay NAME folded into each note (so breakdown rows name the melhoria/material).
 func overlayModsWithProvenance(overlay *CatalogItem) []Modifier {
 	if overlay == nil {
@@ -280,7 +283,7 @@ func overlayModsWithProvenance(overlay *CatalogItem) []Modifier {
 	return out
 }
 
-// mirrorWeaponAttackMods ports derived.ts: a weapon's own {attack,scope:this}
+// mirrorWeaponAttackMods: a weapon's own {attack,scope:this}
 // mods mirrored onto its Luta/Pontaria perícia (T20 attacks are expertise tests).
 func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier {
 	if catalog == nil || catalog.Weapon == nil {
@@ -311,7 +314,7 @@ func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier
 	return out
 }
 
-// equilibradaHomebrewMods ports derived.ts: an opt-in +2 that nets out a
+// equilibradaHomebrewMods: an opt-in +2 that nets out a
 // desbalanceada weapon's -2 when the Equilibrada melhoria is attached.
 func equilibradaHomebrewMods(catalog *CatalogItem, improvementIDs []string) []Modifier {
 	if catalog == nil || catalog.Weapon == nil {
@@ -332,7 +335,7 @@ func equilibradaHomebrewMods(catalog *CatalogItem, improvementIDs []string) []Mo
 	}}
 }
 
-// vestedEsotericHomebrewMods ports derived.ts: a HOMEBREW_VESTED_OK esotérico
+// vestedEsotericHomebrewMods: a HOMEBREW_VESTED_OK esotérico
 // worn (vested) keeps its wielded-gated bonuses behind one flagOn toggle.
 func vestedEsotericHomebrewMods(equipped *string, catalog *CatalogItem, ownMods []Modifier) []Modifier {
 	if equipped == nil || *equipped != "vested" {
@@ -357,7 +360,7 @@ func vestedEsotericHomebrewMods(equipped *string, catalog *CatalogItem, ownMods 
 	return out
 }
 
-// nonProficiencyPenalties ports derived.ts: T20 p142 penalties for using a
+// nonProficiencyPenalties: T20 p142 penalties for using a
 // weapon/armor/shield without the required proficiency.
 func nonProficiencyPenalties(catalog *CatalogItem, prof map[string]bool) []Modifier {
 	required := requiredProficiency(catalog)
@@ -427,7 +430,7 @@ func attackExpertiseFor(purpose string) string {
 // effectSourceName ports the item branch of entities/character/effect-source.ts:
 // an ActiveEffect's display name. Spell/activation catalogs aren't primed in the
 // engine (no seed effect needs them), so this covers the manual pool + item
-// sources and falls back to the raw id — matching the TS final default.
+// sources and falls back to the raw id — e cai no id cru como último recurso.
 func (c *Catalogs) effectSourceName(catalogID string) string {
 	if catalogID == "manual-temp-hp" {
 		return "PV temporários (manual)"

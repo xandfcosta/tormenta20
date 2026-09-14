@@ -9,11 +9,11 @@ import (
 
 // TestActiveItemsParity proves the ported collection layer (ActiveItemsFor) on
 // real data: for each seed character it primes the catalogs from _catalogs.json,
-// re-collects the raw Character, and asserts the []ActiveItem match the TS oracle
+// re-collects the raw Character, and asserts the []ActiveItem match o oráculo
 // (`activeItems`, gerado por `go run ./cmd/genoracle`) semantically. This is
 // slice 2's target — the resolution test (slice 1) covers the downstream half.
 //
-// Regenerate the oracle + catalog dump when the TS rules change:
+// Regenere o oráculo e o despejo de catálogo quando a regra mudar:
 //
 //	cd engine-go && go run ./cmd/genoracle
 func TestActiveItemsParity(t *testing.T) {
