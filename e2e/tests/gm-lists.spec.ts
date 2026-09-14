@@ -23,26 +23,22 @@ import {
  */
 test.describe('As listas do mestre', () => {
 
-  test('a ferramenta Bestiário pinta a lista e abre a criatura escolhida', async ({ page }) => {
-    // A ferramenta virou cena do SERVIDOR na ALE-264, e o teste foi REAPONTADO
-    // em vez de apagado: o que ele afirma — a lista pinta, a busca filtra, o
-    // painel mostra a escolhida — continua sendo a promessa da tela, e o id
-    // `table-bestiary-panel` sobreviveu ao porte de propósito.
-    //
-    // A linha é LINK e não botão: abrir uma criatura passou a ser navegação,
-    // com `?criatura=` no endereço.
-    await page.goto('/mestre/bestiario')
-
-    const busca = page.getByRole('searchbox', { name: 'Buscar criatura' })
-    await expect(busca).toBeVisible()
-    await busca.fill('ogro')
-
-    const linha = page.getByRole('link', { name: /^Ogro/ }).first()
-    await expect(linha).toBeVisible()
-    await linha.click()
-
-    await expect(page.getByRole('region', { name: 'Criatura escolhida' })).toContainText('Ogro')
-  })
+  // Aqui morava `a ferramenta Bestiário pinta a lista e abre a criatura
+  // escolhida` (ALE-320).
+  //
+  // Ele foi REAPONTADO duas vezes — nasceu medindo a `VirtualList` da SPA, que
+  // em jsdom renderiza zero linhas, e foi portado para a cena do servidor na
+  // ALE-264. O que ninguém releu na segunda vez foi a JUSTIFICATIVA: a
+  // virtualização saiu junto, e `collection_view.go` diz por quê — "a cena do
+  // servidor manda TUDO, por decisão do dono". Sem lista virtual, o caso passou
+  // a medir HTML renderizado pelo servidor, que é a camada de baixo.
+  //
+  // Quem o cobre hoje: `TestTheBestiaryOpensWithTheWholeBook` (a lista pinta) e
+  // `TestTheSearchIsAnAddress` (a busca filtra, e o filtro é endereço).
+  //
+  // O RESTO DESTE ARQUIVO FICA, e por outro motivo: coluna que some ao alargar a
+  // janela e faixa morta no tablet são LEIAUTE REAL, e disso o navegador é a
+  // única testemunha.
 
 
   /**

@@ -71,7 +71,14 @@ templ sessionConfig(v View) {
 	>
 		<h2 id="session-config-title" class="font-heading text-lg tracking-wide text-grimorio-gold">
 			Sessão { fmt.Sprint(v.SessionNum) }
-			<span class={ ui.SectionLabelClasses("muted", "ml-2 font-normal") }>{ portugueseCycle(v.Status) }</span>
+			// `font-sans` NÃO é enfeite: sem ele o crachá HERDA a Cinzel do `<h2>` e a
+			// desenha a 11px, três abaixo do piso de leitura de 14 (ALE-320). Os dois
+			// tokens nunca estiveram na mesma `class=` — a receita do rótulo dá o
+			// TAMANHO e o `font-heading` do pai dá a FONTE —, que é por que nenhum
+			// `grep` sobre os `.templ` acharia isto: herança é a regra do CSS, e só o
+			// navegador responde. O crachá irmão, no cabeçalho da Mesa, sempre
+			// desenhou em sans; este divergia por morar dentro de um título.
+			<span class={ ui.SectionLabelClasses("muted", "ml-2 font-normal font-sans") }>{ portugueseCycle(v.Status) }</span>
 		</h2>
 		<div class="mt-3 space-y-1 divide-y divide-grimorio-iron/60">
 			<div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 py-3">

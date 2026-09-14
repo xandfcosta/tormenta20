@@ -300,25 +300,21 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
   await expectNadaRolaDeLado(page)
 })
 
-test('as sete abas são endereços, e a ativa se anuncia', async ({ page }) => {
-  const id = await aFichaDoPrimeiro(page)
-
-  const abas = page.getByRole('navigation', { name: 'Seções da ficha' }).getByRole('link')
-  await expect(abas).toHaveCount(7)
-
-  // A ABA É UM ENDEREÇO: recarregar tem de cair na mesma seção. É o contrato que
-  // a SPA tinha e que um sinal de cliente não daria — e é por isso que elas são
-  // links e não botões.
-  await page.goto(`/personagens/${id}?tab=spells`)
-  await expect(page.getByRole('link', { name: 'Magias', exact: true })).toHaveAttribute('aria-current', 'page')
-  await page.reload()
-  await expect(page.getByRole('link', { name: 'Magias', exact: true })).toHaveAttribute('aria-current', 'page')
-
-  // E o endereço ANTIGO da Mochila continua chegando nela: `inventory` é
-  // favorito de quando a aba se chamava assim.
-  await page.goto(`/personagens/${id}?tab=inventory`)
-  await expect(page.getByRole('link', { name: 'Mochila', exact: true })).toHaveAttribute('aria-current', 'page')
-})
+// Aqui morava `as sete abas são endereços, e a ativa se anuncia` (ALE-320).
+//
+// As três coisas que ele afirmava desceram para o Go, que é mais barato e varre
+// mais do que ele varria:
+//
+//   - o ENDEREÇO da aba, o alias `inventory`/`equipment` e o nome inválido caindo
+//     na primeira: `TestTheSheetTabAddressSurvives`, cinco casos de tabela;
+//   - as SETE abas desenhando painel: `TestEverySheetTabDrawsSomething`, com
+//     controle de `visitadas != 7`;
+//   - e o `aria-current` na aba pedida, que era a única parte sem substituto —
+//     ela foi ESCRITA no guarda acima antes de este caso sair, e provada por duas
+//     sabotagens: sete marcas em vez de uma, e uma marca no link errado.
+//
+// Nenhuma delas usa mecanismo que só um navegador tenha: recarregar é outro GET,
+// e `aria-current` é HTML que o servidor escreve.
 
 /**
  * O CELULAR DEITADO, e o orçamento do crachá (ALE-230).

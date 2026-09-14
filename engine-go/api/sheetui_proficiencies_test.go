@@ -286,6 +286,22 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 		if !strings.Contains(tela, ">"+titulo+"</h2>") {
 			t.Errorf("a aba %q não desenhou painel nenhum", aba.Valor)
 		}
+		// E ELA SE ANUNCIA. Esta asserção desceu de um e2e do `piloto-sheet`
+		// (ALE-320): ler `aria-current` é ler HTML, e HTML o servidor escreve —
+		// a camada mais barata que a segura é esta. Lá ela media UMA aba; aqui
+		// ela varre as sete, que é o que a mudança de camada comprou.
+		//
+		// O par CONTA + LUGAR é o guarda inteiro: uma aba ativa a mais não
+		// estoura nada na tela, ela só põe duas seções acesas ao mesmo tempo.
+		if n := strings.Count(tela, `aria-current="page"`); n != 1 {
+			t.Errorf("a aba %q desenhou %d marcas de aba ativa, e a ficha tem UMA", aba.Valor, n)
+			continue
+		}
+		depoisDaMarca := tela[strings.Index(tela, `aria-current="page"`):]
+		rotulado, _, _ := strings.Cut(depoisDaMarca, "</a>")
+		if !strings.Contains(rotulado, aba.Rotulo) {
+			t.Errorf("com ?tab=%s a marca de aba ativa não caiu no link %q", aba.Valor, aba.Rotulo)
+		}
 	}
 	// CONTROLE: sem ele, um `Tabs` que virasse vazio faria o laço não
 	// rodar nenhuma vez e o guarda passar afirmando nada.

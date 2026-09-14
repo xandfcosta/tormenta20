@@ -84,6 +84,7 @@ consume
 contrast
 copy
 core
+coverage
 create
 creatures
 crossrefs
@@ -245,6 +246,7 @@ master
 mcp
 md
 measure
+measured
 members
 middleware
 mjs
@@ -343,6 +345,7 @@ ruler
 rules
 run
 scene
+scenes
 schema
 schools
 scope
