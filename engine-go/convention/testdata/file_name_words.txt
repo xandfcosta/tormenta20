@@ -43,6 +43,7 @@ boards
 body
 book
 boundary
+breakdown
 breakdowns
 brush
 build
@@ -335,6 +336,7 @@ role
 route
 router
 routes
+row
 rows
 rule
 ruler
