@@ -26,9 +26,10 @@ export default defineConfig({
     emptyOutDir: false,
     target: 'es2022',
     lib: {
-      // CINCO entradas e não cinco configs: o `grimorio.js` só é pedido pela
-      // folha de especificação, e carregá-lo em toda cena seria pôr canvas e
-      // medição de contraste no caminho de quem só quer jogar.
+      // QUATRO entradas e não quatro configs. Cada uma existe porque carrega
+      // peso que as outras cenas não devem pagar — o `grimorio` põe canvas e
+      // medição de contraste, o `reader` põe 448 KB de pdf.js, e a `table`
+      // instala observador de mutação sobre o tabuleiro.
       entry: {
         scene: resolve(import.meta.dirname, 'api/piloto/src/scene.ts'),
         grimorio: resolve(import.meta.dirname, 'api/piloto/src/grimorio.ts'),
