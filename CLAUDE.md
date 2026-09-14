@@ -240,6 +240,16 @@ pareceu erro na hora:
   exatamente por isso. Instrumento que mora dentro de um chamador tem um
   chamador; **explicação que mora dentro de um teste tem um leitor** (ALE-318).
 
+- **Um mostrador de estado cujo REPOUSO é igual ao sucesso não testemunha o
+  sucesso.** A faixa das notas diz "Salvo" quando o texto da tela é igual ao que
+  o servidor confirmou — e ela diz isso ANTES de qualquer digitação, porque os
+  dois nascem iguais. Um caso de e2e que escrevia na caixa e afirmava "Salvo"
+  passou verde sem que nada tivesse sido gravado: ele afirmou o estado de
+  REPOUSO e leu como resultado. É o *mock echo* com outra roupa — arranjar o
+  valor e afirmar o valor —, e o conserto é afirmar o CANAL: esperar o POST
+  chegar com 2xx. Vale a pergunta para qualquer indicador: *ele mostra alguma
+  coisa diferente antes e depois do que eu vim medir?* (ALE-218).
+
 **O controle é barato e é obrigatório: antes de ler AUSÊNCIA como evidência,
 provar que o canal estaria lá se o evento tivesse acontecido.** Procurar no mesmo
 arquivo uma linha que sai SEMPRE; conferir que a sonda vê o caso positivo

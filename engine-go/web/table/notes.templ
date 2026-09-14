@@ -76,6 +76,7 @@ templ tableNotes(v View) {
 		id="table-notes"
 		aria-label="Notas da sessão"
 		data-init={ seedNotes(v) }
+		data-on:storage__window={ watchesTheNotesWindow(v) }
 		data-show="$notes_open"
 		style="display:none"
 		class="notes-column fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:shrink-0"
@@ -85,6 +86,7 @@ templ tableNotes(v View) {
 			<div class="flex items-center gap-2">
 				@modesRange()
 				@floatToggle()
+				@detachButton(v)
 				@autosaveState()
 				<button
 					type="button"
@@ -349,10 +351,16 @@ templ notesMode(valor, rotulo string) {
 //
 // `$notes_saved` é escrito pelo SERVIDOR quando a gravação dá certo — é a
 // resposta que afirma "isto está no banco", e não o cliente supondo.
+//
+// O ERRO é TEXTO e não só cor (ALE-218). `$notes_error` existia desde a
+// ALE-269 e só pintava a faixa de vermelho: o mestre via que algo deu errado e
+// não tinha onde ler o quê, com a frase do servidor chegando e morrendo num
+// sinal. A janela bloqueada pelo navegador entrou pelo mesmo canal, e foi ela
+// que mostrou o buraco — um clique que não abre nada precisa dizer por quê.
 templ autosaveState() {
 	<span
 		aria-live="polite"
-		data-text="$notes_saving ? 'Salvando…' : ($notes === $notes_saved ? 'Salvo' : 'Não salvo')"
+		data-text="$notes_error != '' ? $notes_error : ($notes_saving ? 'Salvando…' : ($notes === $notes_saved ? 'Salvo' : 'Não salvo'))"
 		data-class="{'text-destructive-ink': $notes_error != '', 'text-muted-foreground': $notes_error == ''}"
 		class="text-xs"
 	></span>
@@ -362,15 +370,34 @@ templ autosaveState() {
 //
 // Ele ALTERNA em vez de só abrir, porque a coluna empurra o mapa: quem a abriu
 // precisa do mesmo gesto para devolver a largura ao tabuleiro.
-templ notesButton() {
+templ notesButton(v View) {
 	<button
 		type="button"
 		aria-label="Notas da sessão"
-		title="Notas — o que aconteceu nesta sessão, ao lado do mapa"
-		data-attr:aria-pressed="$notes_open ? 'true' : 'false'"
-		data-on:click="$notes_open = !$notes_open"
+		data-attr:title="$notes_window ? 'Notas — trazer de volta a janela delas' : 'Notas — o que aconteceu nesta sessão, ao lado do mapa'"
+		data-attr:aria-pressed="$notes_open || $notes_window ? 'true' : 'false'"
+		data-on:click={ notesButtonGesture(v) }
 		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent lg:size-12"
 	>
 			@ui.Icon("NotebookPen", "size-5")
 		</button>
+}
+
+// O BOTÃO QUE DESTACA as notas numa janela (ALE-218).
+//
+// Ele fica ao lado do alternador de flutuar porque responde à mesma pergunta —
+// ONDE o painel vive —, e é uma AÇÃO e não um estado: depois do clique quem
+// descreve o lugar das notas é a janela, avisando pelo `storage`. Por isso não
+// há `aria-pressed` aqui; o estado "as notas estão numa janela" aparece no
+// botão do trilho, que é quem continua na tela.
+templ detachButton(v View) {
+	<button
+		type="button"
+		aria-label="Abrir as notas numa janela"
+		title="Abrir as notas numa janela — para o segundo monitor"
+		data-on:click={ opensTheNotesWindow(v) }
+		class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent"
+	>
+		@ui.Icon("ExternalLink", "size-3.5")
+	</button>
 }

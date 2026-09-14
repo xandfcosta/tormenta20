@@ -184,3 +184,76 @@ test('flutuar as notas não encolhe o mapa, e encostar volta a encolher', async 
     await apagar()
   }
 })
+
+/**
+ * A JANELA PRÓPRIA, e ela é EXCLUSIVA com a coluna (ALE-218).
+ *
+ * E2E porque a garantia atravessa DOIS documentos: uma janela anuncia por
+ * `localStorage` que tomou as notas, e a outra fecha a coluna ao ouvir o evento
+ * `storage` — que só existe entre janelas de verdade. Um teste de handler vê as
+ * duas metades do HTML e nunca vê o pacto acontecendo, e é o pacto que impede
+ * duas caixas de escreverem a mesma coluna do banco.
+ *
+ * O caminho mais óbvio — mover o nó vivo para uma janela de Document
+ * Picture-in-Picture — foi medido e descartado: o Datastar não segue o nó
+ * adotado por outro documento, e o painel chega lá MUDO, com a faixa ainda
+ * dizendo "Salvo". Daí a cena com endereço próprio.
+ */
+test('destacar as notas abre uma janela e FECHA a coluna; fechá-la devolve as duas', async ({
+  page,
+}) => {
+  const { apagar } = await withTheNotesOpen(page)
+  try {
+    // O CONTROLE: a coluna está aberta AGORA, e é isso que a janela tem de
+    // desfazer. Sem ele, "a coluna está fechada no fim" seria verdade também
+    // se ela nunca tivesse aberto.
+    await expect(page.locator('#table-notes')).toBeVisible()
+
+    const [janela] = await Promise.all([
+      page.waitForEvent('popup'),
+      page.getByRole('button', { name: 'Abrir as notas numa janela' }).click(),
+    ])
+    await janela.waitForLoadState('domcontentloaded')
+
+    expect(janela.url(), 'a janela não abriu no endereço das notas').toContain('/notas')
+    await expect(janela.locator('#notes-window')).toBeVisible()
+    await expect(janela.getByRole('textbox', { name: 'Notas da sessão' })).toBeVisible()
+
+    // A EXCLUSÃO acontecendo: a aba principal fechou a coluna porque a janela
+    // anunciou, e não porque o clique pediu.
+    await expect(page.locator('#table-notes')).toBeHidden()
+
+    // E o botão do trilho passa a dizer que as notas estão em outro lugar — sem
+    // isto, quem voltasse à aba principal veria um botão que "não faz nada".
+    const trilho = page.getByRole('button', { name: 'Notas da sessão' }).first()
+    await expect(trilho).toHaveAttribute('aria-pressed', 'true')
+
+    // A JANELA SALVA sozinha, pelo mesmo autosave da coluna.
+    //
+    // A asserção é o POST e não a faixa dizer "Salvo": ela JÁ dizia "Salvo"
+    // antes de alguém digitar — `$notes` e `$notes_saved` nascem iguais —, e a
+    // primeira versão deste caso passou verde sem que nada tivesse sido gravado.
+    // Arranjar o dublê para devolver X e afirmar X é o que o guia chama de mock
+    // echo; aqui o equivalente era afirmar o estado de repouso.
+    const gravou = janela.waitForResponse(
+      (r) => r.url().includes('/notas') && r.request().method() === 'POST' && r.ok(),
+    )
+    await janela.getByRole('textbox', { name: 'Notas da sessão' }).fill('# Escrito na janela')
+    await gravou
+
+    await janela.close()
+
+    // DEVOLVIDA: a coluna volta a ser oferecida, e o texto que a janela gravou
+    // está lá — que é a prova de que as duas falam com a mesma linha do banco.
+    await expect(trilho).toHaveAttribute('aria-pressed', 'false')
+    await trilho.click()
+    await expect(page.locator('#table-notes')).toBeVisible()
+    await page.reload()
+    await page.getByRole('button', { name: /Notas/ }).first().click()
+    await expect(page.getByRole('textbox', { name: 'Notas da sessão' })).toHaveValue(
+      '# Escrito na janela',
+    )
+  } finally {
+    await apagar()
+  }
+})

@@ -254,7 +254,10 @@ func tableSignalsExpr() string {
 		fmt.Sprintf("template_path: '', template_text: %q", emptyTemplateHint),
 		// As NOTAS da sessão.
 		"notes: '', notes_saved: '', notes_mode: 'duplo', notes_open: false, notes_width: 0, notes_dragging: false, notes_floating: false",
-		"notes_saving: false, notes_error: ''",
+		// `notes_window` é o LUGAR das notas quando ele não é esta aba (ALE-218):
+		// verdadeiro enquanto a janela própria estiver com elas. Quem o escreve
+		// é o `storage`, e não o clique — ver `watchesTheNotesWindow`.
+		"notes_saving: false, notes_error: '', notes_window: false",
 	}, ", ") + "}"
 }
 

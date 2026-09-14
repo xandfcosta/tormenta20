@@ -2983,6 +2983,50 @@ Três coisas que essa medição deixou, e nenhuma delas é sobre contorno:
   estão dentro do trilho e não são item dele — 37 nós acusados de uma vez, na
   folha da forja. A condição do guarda passou a COPIAR o seletor.
 
+## As notas numa janela própria, e o pacto que as torna únicas (ALE-218)
+
+As notas da sessão têm endereço: `GET /mesa/{campanha}/{sessao}/notas` desenha o
+MESMO painel da coluna, sem o mapa em volta. É o último dos quatro lugares que a
+ALE-218 decidiu — lado a lado, empilhado, flutuando e a janela —, e o único que
+sai do leiaute da página.
+
+**Ela é cena e não painel mudado de lugar**, e isso foi medido e não escolhido:
+o nó adotado por outro documento perde o Datastar (ver a armadilha do mesmo nome
+na seção do Datastar). O corpo é reusado — `notesBody`, `modesRange`,
+`autosaveState` são os mesmos —, e o que a cena NÃO tem diz o desenho: sem o
+alternador de flutuar (não há mapa embaixo), sem a divisa de largura (quem
+redimensiona é o sistema), sem o ✕ (fechar é a janela).
+
+**As duas não podem estar abertas ao mesmo tempo, e a razão é o BANCO.** As duas
+escrevem `sessions.notes` com autosave de 1,2s, e as notas não são região do
+stream de propósito — são de um leitor só. Com as duas no ar, quem salva por
+último apaga o parágrafo do outro, sem aviso, com as DUAS faixas dizendo "Salvo".
+
+O pacto é `localStorage` mais o evento `storage`, e não um canal de difusão:
+o evento chega a toda janela da origem sem ninguém segurar um objeto vivo, e é o
+mesmo mecanismo que as outras três preferências das notas já usam. A chave
+guarda o ID DA SESSÃO, porque uma janela aberta na sessão 4 não tem o que dizer
+sobre a 7. Três detalhes que custaram pensamento:
+
+- **Quem fecha a coluna é o ANÚNCIO da janela, não o clique.** A diferença
+  aparece quando o navegador bloqueia o pop-up: ali nada foi tomado, e a coluna
+  fica onde estava em vez de sumir sobre uma janela que não abriu. O bloqueio é
+  dito em PALAVRAS — `window.open` devolvendo nulo é a única pista que existe.
+- **`pagehide` e não `beforeunload`**: aquele pede confirmação em alguns
+  caminhos, e `unload` é pulado quando a página vai para o cache de ida e volta.
+- **A chave pode ficar PRESA** se a janela morrer sem `pagehide` (uma queda do
+  navegador). O conserto é o próprio gesto: com as notas "numa janela", o botão
+  do trilho chama `window.open` com o mesmo NOME — que acha a janela viva ou
+  abre outra. O estado preso se desfaz clicando onde a pessoa já ia clicar.
+
+**E o `window.open` entrou no guarda de endereço** (`TestEveryAddressAPostWritesExistsInTheRouter`,
+ALE-308) em vez de ganhar um próprio: o defeito é o mesmo que o do `@post` com
+caminho morto, e o extrator já sabia parar na primeira vírgula de topo, então o
+nome da janela e as `features` ficam de fora sozinhos. O método é GET porque é
+navegação — e isso não é detalhe: perguntar ao chi por um POST em
+`/mesa/1/4/notas` responderia "existe" pela rota de SALVAR, e o guarda ficaria
+verde sobre um endereço de página que não existisse.
+
 ## Onde a coordenada de um gesto do tabuleiro viaja
 
 **No CORPO, e não no caminho** (ALE-305). O `@post` do Datastar aceita
@@ -3212,12 +3256,13 @@ coordenada vem do ponteiro e obriga a concatenar o endereço, e um passo é um
 literal que o `templ` escreve na renderização, num endereço constante por botão.
 
 
-## Datastar: onze armadilhas que não deixam erro para trás
+## Datastar: doze armadilhas que não deixam erro para trás
 
 As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na
-ALE-235, quatro na ALE-272, a décima na ALE-275 e a décima primeira na ALE-296;
-nenhuma delas escreve uma linha no console — a oitava escreve UMA, e no lugar que
-ninguém olha. Estão aqui porque o sintoma de cada uma aponta para o lugar errado.
+ALE-235, quatro na ALE-272, a décima na ALE-275, a décima primeira na ALE-296 e a
+décima segunda na ALE-218; nenhuma delas escreve uma linha no console — a oitava
+escreve UMA, e no lugar que ninguém olha. Estão aqui porque o sintoma de cada uma
+aponta para o lugar errado.
 
 ### `data-show` esconde TARDE: o nó pinta antes de o Datastar chegar
 
@@ -3540,6 +3585,29 @@ toca atributo que já bate, então um observador de `aria-current` (ou de qualqu
 atributo de estado) só acorda quando o valor MUDA de verdade. Escrevi um `if
 (oldValue === 'true') continue` por medo do pisca-pisca e ele nunca foi
 verdadeiro — provado removendo-o e medindo zero disparos extras.
+
+### O nó que muda de DOCUMENTO perde o Datastar, e continua desenhado
+
+Uma janela própria — Document Picture-in-Picture, um `<iframe>` de outro
+documento — pede o nó vivo emprestado, e a leitura natural é `appendChild` do
+painel lá dentro. O nó VAI: ele é adotado, aparece inteiro, com as classes, o
+texto e os `data-*` no lugar. **O que não vai é a reatividade.** O runtime do
+Datastar mora no documento de origem; o nó adotado sai da árvore que ele observa
+e nada mais o alimenta.
+
+Medido na ALE-218, movendo a coluna das notas para uma janela de PiP, com o
+MESMO `input` sintético dos dois lados: **1 POST antes de mover e ZERO depois**,
+com a faixa de estado continuando a dizer "Salvo" — ela é escrita por sinal, e
+o sinal parou. Não há exceção, não há console, e a tela está perfeita.
+
+O controle importava aqui mais que de costume: a primeira medição comparou um
+`fill()` de verdade antes com um evento sintético depois, e responderia sobre o
+INSTRUMENTO. Com o mesmo evento nos dois lados, a diferença é a janela.
+
+**O que funciona é a janela receber um DOCUMENTO**, com o runtime dela — medido
+na mesma sessão: 18 de 19 nós com `data-show` escondidos pelo Datastar daquele
+documento. Ou seja: superfície que vai para uma janela própria é CENA com
+endereço, e não painel mudado de lugar. Ver "As notas numa janela própria".
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 

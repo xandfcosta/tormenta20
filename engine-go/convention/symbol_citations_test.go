@@ -68,12 +68,15 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	"SameSite":            true,
 	"rc.SetWriteDeadline": true,
 	"EventSource":         true,
-	"NotFoundError":       true,
-	"InvalidStateError":   true,
-	"localeCompare":       true,
-	"scrollTo":            true,
-	"translateX":          true,
-	"ipNet":               true,
+	// A janela das notas usa `localStorage` + o evento `storage`, e o comentário
+	// que explica a escolha precisa NOMEAR a alternativa recusada (ALE-218).
+	"BroadcastChannel":  true,
+	"NotFoundError":     true,
+	"InvalidStateError": true,
+	"localeCompare":     true,
+	"scrollTo":          true,
+	"translateX":        true,
+	"ipNet":             true,
 
 	// ── PROCEDÊNCIA que a regra do bloco não alcança ─────────────────────────
 	//
