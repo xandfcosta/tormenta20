@@ -24,24 +24,29 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  * `/` do `vite.config.ts` que a alcança. Se o piloto for apagado, este
  * arquivo vai junto.
  */
+
+// AQUI MORAVAM CATORZE CÓPIAS de `nenhum texto fica abaixo do mínimo de
+// contraste do AA` (ALE-320) — uma por bloco `describe` deste arquivo.
+//
+// Elas não estavam erradas: contraste exige converter oklch para sRGB e só o
+// navegador faz isso, então a medição continua sendo e2e. O que estava errado
+// era o REGIME. Catorze linhas escritas à mão são uma ENUMERAÇÃO, e o
+// `CLAUDE.md` já nomeia o preço dela desde a ALE-252: a cena que alguém
+// esquecer nasce sem medição, em silêncio, que é a marca desta família.
+//
+// A medição virou um laço sobre `engine-go/web/appearance_scenes.json`, em
+// `appearance.spec.ts`, e quem força o registro a estar completo é o
+// `convention.TestEveryPageSceneIsMeasuredForAppearance`: ele deriva do código
+// quem desenha página inteira e falha com o NOME da cena que ficou de fora.
+//
+// A troca não encolheu a cobertura, ampliou: eram 18 endereços enumerados e são
+// 22 visitas registradas — e a primeira execução achou o LEITOR, que desenhava
+// página desde a ALE-264 sem nunca ter sido medido, e uma Cinzel de 11px no
+// crachá do diálogo de sessão da Mesa.
 test.use({ storageState: '.auth/player.json' })
 
 test.describe('Mesa do jogador (piloto Datastar)', () => {
   test.use({ storageState: '.auth/player.json' })
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/mesa/1/4')
-    // `exact`, e isto é conserto de um defeito LATENTE deste arquivo (ALE-234):
-    // com a cena começada aparece um segundo `<h2>`, "Registrar iniciativa ·
-    // <nome>", e o localizador casava os dois — strict mode violation. Ele
-    // passava porque, quando o guarda foi escrito, nenhum spec antes dele
-    // deixava cena ativa; passou a falhar de forma intermitente conforme a
-    // ORDEM da suíte, que é o pior jeito de um teste falhar.
-    await expect(page.getByRole('heading', { name: 'Iniciativa', exact: true })).toBeVisible()
-
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na Mesa').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'na Mesa')
-  })
 })
 
 /**
@@ -82,37 +87,12 @@ test.describe('Mesa do jogador (piloto Datastar)', () => {
  */
 test.describe('Mesa do mestre (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/mesa/1/4')
-    // A âncora é a região que só o MESTRE tem, e não o `<h2> Iniciativa` do
-    // caso do jogador: a Mesa do mestre é o trilho da ALE-211, onde a fila é um
-    // `nav` recolhido com um botão no lugar do título. Ancorar no que os dois
-    // papéis compartilham teria escondido de novo a metade que este caso veio
-    // medir.
-    await expect(page.getByRole('region', { name: 'Controles do mestre' })).toBeVisible()
-
-    await page.getByRole('button', { name: 'Configurações da sessão' }).click()
-    await expect(page.getByRole('heading', { name: /^Sessão \d/ })).toBeVisible()
-
-    const { falhas, medidos } = await medeOContraste(page)
-    expect(medidos, 'o medidor não achou texto na Mesa do mestre').toBeGreaterThan(100)
-    expect(falhas, 'texto abaixo do AA na Mesa do mestre').toEqual([])
-  })
 })
 
 test.describe('Administração (piloto Datastar)', () => {
   // A tela é do ADMIN, então o estado de login é o do mestre — o `requireAdmin`
   // responde 403 para o jogador, e é o servidor que decide, não a tela.
   test.use({ storageState: '.auth/user.json' })
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/admin')
-    await expect(page.getByRole('heading', { name: 'Administração' })).toBeVisible()
-
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na administração').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'na administração')
-  })
 
   /**
    * A confirmação do DESTRUTIVO é um modal de verdade — sem Kobalte.
@@ -232,17 +212,6 @@ test.describe('A porta (piloto Datastar)', () => {
    * Nenhuma delas dá para medir fora do navegador: converter oklch para sRGB é
    * trabalho dele, e em jsdom o `getComputedStyle` devolve o oklch cru.
    */
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    for (const [caminho, marco] of [
-      ['/entrar', 'Entrar'],
-      ['/criar-conta?convite=nao-importa', 'Criar conta'],
-      ['/redefinir-senha', 'Escolher nova senha'],
-    ] as const) {
-      await page.goto(caminho)
-      await expect(page.getByRole('heading', { name: marco, level: 2 })).toBeVisible()
-      expect(await textoComContrasteBaixo(page), `texto abaixo do AA em ${caminho}`).toEqual([])
-    }
-  })
 
   /**
    * A senha é conferida sem sinal do Datastar: o `data-on:input` lê o campo
@@ -272,13 +241,6 @@ test.describe('A porta (piloto Datastar)', () => {
 
 test.describe('O Hub (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.getByRole('navigation', { name: 'Menu principal' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no Hub').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'no Hub')
-  })
 
   /**
    * A TESE da fatia, medida: o driver de teclado da SPA anda num menu que o
@@ -329,7 +291,7 @@ test.describe('O Hub (piloto Datastar)', () => {
   })
 })
 
-test.describe('O Hub e a SPA dividem a preferência de som', () => {
+test.describe('O Hub e as cenas dividem a preferência de som', () => {
   test.use({ storageState: '.auth/user.json' })
 
   /**
@@ -343,7 +305,7 @@ test.describe('O Hub e a SPA dividem a preferência de som', () => {
    * consequência; a chave é o que uma refatoração distraída quebraria sem que
    * nada mais reclamasse.
    */
-  test('ligar o som no Hub grava na chave que a SPA lê', async ({ page }) => {
+  test('ligar o som no Hub grava na chave que as cenas leem', async ({ page }) => {
     // Limpa ANTES de a página carregar, e é aí que estava um defeito de ORDEM
     // deste teste: limpando depois do `goto`, o `data-init` já tinha lido a
     // preferência antiga para o sinal, e o rótulo nascia "Som ligado" se algum
@@ -370,13 +332,6 @@ test.describe('O Hub e a SPA dividem a preferência de som', () => {
 
 test.describe('A cena de campanhas (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/campanhas')
-    await expect(page.getByRole('listbox', { name: 'Campanhas' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nas campanhas').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'nas campanhas')
-  })
 
   /**
    * O cursor segue o FOCO, e trocar de campanha não custa requisição.
@@ -448,13 +403,6 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
 test.describe('A folha em branco (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/campanhas/nova')
-    await expect(page.getByRole('heading', { name: 'Abrir nova campanha' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na folha em branco').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'na folha em branco')
-  })
-
   // Tela nova se valida nos seis formatos. Aqui importa mais que de costume: a
   // folha hospeda campos de texto, e o espaçamento dela encolhe com a
   // ORIENTAÇÃO justamente porque num telefone deitado o botão de enviar caía
@@ -498,23 +446,18 @@ test.describe('A folha em branco (piloto Datastar)', () => {
     )
   })
 
-  // O endereço antigo é favorito: ele não pode quebrar.
-  test('o endereço antigo /campaigns/new encaminha para a folha nova', async ({ page }) => {
-    await page.goto('/campaigns/new')
-    await expect(page).toHaveURL(/\/campanhas\/nova$/)
-    await expect(page.getByRole('heading', { name: 'Abrir nova campanha' })).toBeVisible()
-  })
+  // Aqui morava `o endereço antigo /campaigns/new encaminha para a folha nova`.
+  //
+  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
+  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
+  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
+  // preservação de parâmetro que este caso guardava:
+  //     {"/campaigns/new", "/campanhas/nova"}
+  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })
 
 test.describe('A crônica (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/campanhas/1')
-    await expect(page.getByRole('navigation', { name: 'Seções da crônica' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na crônica').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'na crônica')
-  })
 
   test('a crônica cabe nos seis formatos', async ({ page }) => {
     await page.goto('/campanhas/1')
@@ -591,13 +534,14 @@ test.describe('A crônica (piloto Datastar)', () => {
     )
   })
 
-  // O endereço antigo é o que os jogadores têm salvo, e o `?tab=` viaja junto:
-  // perdê-lo quebraria todo link de seção já compartilhado.
-  test('o endereço antigo /campanhas/:id encaminha COM a seção', async ({ page }) => {
-    await page.goto('/campanhas/1?tab=sessoes')
-    await expect(page).toHaveURL(/\/campanhas\/1\?tab=sessoes$/)
-    await expect(page.locator('[aria-current="page"]')).toHaveText('Sessões')
-  })
+  // Aqui morava `o endereço antigo /campanhas/:id encaminha COM a seção`.
+  //
+  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
+  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
+  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
+  // preservação de parâmetro que este caso guardava:
+  //     {"/campaigns/12?tab=config", "/campanhas/12?tab=config"}
+  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })
 
 test.describe('A folha de especificação (piloto Datastar)', () => {
@@ -659,23 +603,18 @@ test.describe('A folha de especificação (piloto Datastar)', () => {
   // servidor, e HTML de servidor não tem shadow root para esconder o Tailwind
   // dentro (ALE-314).
 
-  // O endereço antigo é o que os dois comentários do index.css mandam abrir.
-  test('o endereço antigo /grimorio encaminha para a folha nova', async ({ page }) => {
-    await page.goto('/grimorio')
-    await expect(page).toHaveURL(/\/grimorio$/)
-    await expect(page.getByRole('heading', { name: 'Cor' })).toBeVisible()
-  })
+  // Aqui morava `o endereço antigo /grimorio encaminha para a folha nova`.
+  //
+  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
+  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
+  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
+  // preservação de parâmetro que este caso guardava:
+  //     a tabela `legacyAddresses`, varrida por inteiro
+  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })
 
 test.describe('A carta de convite (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/campanhas/entrar')
-    await expect(page.getByRole('heading', { name: 'Entrar na mesa' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na carta').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'na carta')
-  })
 
   test('a carta cabe nos seis formatos', async ({ page }) => {
     await page.goto('/campanhas/entrar')
@@ -723,24 +662,18 @@ test.describe('A carta de convite (piloto Datastar)', () => {
     await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toHaveCount(0)
   })
 
-  // O endereço antigo é o destino do `/join/$token`, que é a URL que o mestre
-  // ENVIA. Perder o token aqui quebraria todo convite já compartilhado.
-  test('o endereço antigo /campaigns/join encaminha COM o token', async ({ page }) => {
-    await page.goto('/campaigns/join?token=um-token-qualquer')
-    await expect(page).toHaveURL(/\/campanhas\/entrar\?token=um-token-qualquer$/)
-    await expect(page.getByRole('heading', { name: 'Entrar na mesa' })).toBeVisible()
-  })
+  // Aqui morava `o endereço antigo /campaigns/join encaminha COM o token`.
+  //
+  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
+  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
+  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
+  // preservação de parâmetro que este caso guardava:
+  //     {"/campaigns/join?token=abc-123", "/campanhas/entrar?token=abc-123"}
+  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })
 
 test.describe('A cena de personagens (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto('/personagens')
-    await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos personagens').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'nos personagens')
-  })
 
   /**
    * A tecla `D` abre o dossiê, e a dica `D` na tela diz a verdade.
@@ -940,27 +873,20 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     await expectNoHorizontalOverflow(page, VIEWPORTS)
   })
 
-  // O endereço antigo é favorito e link de terceiros: ele não pode quebrar. A
-  // promessa vivia numa casca da SPA (`routes/characters.index.tsx`) e desceu
-  // para o Go na fatia 10 — na SPA ela morreria junto com o `git rm`.
-  test('o endereço antigo /characters encaminha para a cena nova', async ({ page }) => {
-    await page.goto('/personagens')
-    await expect(page).toHaveURL(/\/personagens$/)
-    await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
-  })
+  // Aqui morava `o endereço antigo /characters encaminha para a cena nova`.
+  //
+  // Ele media um 303 do servidor — sem mecanismo que só um navegador tenha, que
+  // é a única justificativa de e2e que o guia aceita. Quem varre a tabela
+  // INTEIRA é o `TestEveryLegacyAddressLandsOnAScene`, e ele confere também a
+  // preservação de parâmetro que este caso guardava:
+  //     {"/characters/13?tab=bag", "/personagens/13?tab=bag"}
+  // Uma regra, uma camada: apagar este caso não muda nada que o Go não acuse.
 })
 
 test.describe('O bestiário (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   const BESTIARIO = '/mestre/bestiario'
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto(BESTIARIO)
-    await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no bestiário').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'no bestiário')
-  })
 
   test('o bestiário cabe nos seis formatos', async ({ page }) => {
     await page.goto(BESTIARIO)
@@ -1077,13 +1003,6 @@ test.describe('Os catálogos (piloto Datastar)', () => {
 
   const CATALOGOS = '/mestre/condicoes'
 
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto(CATALOGOS)
-    await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos catálogos').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'nos catálogos')
-  })
-
   /**
    * A ALE-149 DO LADO DO SERVIDOR, e é o único guarda desta cena que precisa
    * mesmo de browser.
@@ -1174,13 +1093,6 @@ test.describe('O construtor de encontros (piloto Datastar)', () => {
 
   const ENCONTROS = '/mestre/encontros'
 
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto(`${ENCONTROS}?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4`)
-    await expect(page.getByRole('heading', { name: 'Construtor de encontros' })).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos encontros').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'nos encontros')
-  })
-
   test('o construtor cabe nos seis formatos', async ({ page }) => {
     await page.goto(`${ENCONTROS}?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4`)
     await expectNoHorizontalOverflow(page, VIEWPORTS)
@@ -1246,19 +1158,6 @@ test.describe('O improviso (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
   const IMPROVISO = '/mestre/improviso'
-
-  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
-    await page.goto(IMPROVISO)
-    await expect(page.getByRole('heading', { name: 'Improviso' })).toBeVisible()
-    // Com resultado na tela: o número grande em dourado é o texto que mais
-    // arrisca contraste, e ele não existe antes da primeira rolagem — medir a
-    // cena vazia mediria a metade fácil.
-    const ruina = page.getByRole('region', { name: 'Ermos — Ruína' })
-    await ruina.getByRole('button', { name: 'Rolar d6' }).click()
-    await expect(ruina.locator('[aria-live="polite"]')).toBeVisible()
-    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no improviso').toEqual([])
-    await expectCinzelAcimaDoPiso(page, 'no improviso')
-  })
 
   test('o improviso cabe nos seis formatos', async ({ page }) => {
     await page.goto(IMPROVISO)

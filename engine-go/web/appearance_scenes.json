@@ -1,0 +1,46 @@
+{
+  "hub": { "visits": [{ "address": "/", "session": "gm" }] },
+  "door": {
+    "visits": [
+      { "address": "/entrar", "session": "none" },
+      { "address": "/criar-conta", "session": "none" }
+    ]
+  },
+  "campaigns": {
+    "visits": [
+      { "address": "/campanhas", "session": "gm" },
+      { "address": "/campanhas/nova", "session": "gm" },
+      { "address": "/campanhas/1", "session": "gm" },
+      { "address": "/campanhas/entrar", "session": "gm" }
+    ]
+  },
+  "characters": { "visits": [{ "address": "/personagens", "session": "gm" }] },
+  "forge": { "visits": [{ "address": "/personagens/nova", "session": "gm" }] },
+  "sheetui": {
+    "visits": [
+      { "address": "/personagens/1", "session": "gm" },
+      { "address": "/personagens/1?tab=combat", "session": "gm" },
+      { "address": "/personagens/1?tab=bag", "session": "gm" },
+      { "address": "/personagens/3?tab=spells", "session": "gm" }
+    ]
+  },
+  "master": {
+    "visits": [
+      { "address": "/mestre/condicoes", "session": "gm" },
+      { "address": "/mestre/bestiario", "session": "gm" },
+      { "address": "/mestre/encontros?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4", "session": "gm" },
+      { "address": "/mestre/improviso", "session": "gm" }
+    ]
+  },
+  "grimoire": { "visits": [{ "address": "/grimorio", "session": "gm" }] },
+  "reader": {
+    "visits": [{ "address": "/livro/ler?p=290&t=Lobo", "session": "gm", "mayBeAbsent": true }]
+  },
+  "table": {
+    "visits": [
+      { "address": "/mesa/1/4", "session": "gm" },
+      { "address": "/mesa/1/4", "session": "player" }
+    ]
+  },
+  "admin": { "visits": [{ "address": "/admin", "session": "gm" }] }
+}
