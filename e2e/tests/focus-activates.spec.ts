@@ -340,7 +340,7 @@ test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
  * no `body`, e quem andava de seta recomeça do primeiro item — relatado pelo
  * dono como "preciso começar na tab de bestiário de novo". A SPA não sofre disso
  * porque lá a troca não descarta o documento; é um custo do transporte que a
- * migração escolheu, e por isso o conserto mora no piloto.
+ * migração escolheu, e por isso o conserto mora no app.
  *
  * E as duas metades importam: restaurar quando veio do teclado, e NÃO restaurar
  * quando veio do mouse — focar o trilho em toda carga roubaria o foco de quem

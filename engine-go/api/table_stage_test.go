@@ -16,7 +16,7 @@ import (
 // na tela, e as duas discordam sobre a mesma fila — que é exatamente o defeito
 // da ALE-122, agora em HTML.
 func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	html := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
@@ -38,7 +38,7 @@ func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
 // inteira para quem o `redactForPlayers` acabou de esvaziá-la — a trava da
 // ALE-210 furada por leiaute.
 func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	html := f.pede(t, f.jogador, "GET", f.tableUrl(), "").Body.String()
@@ -61,7 +61,7 @@ func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
 // e por isso a guarda de papel do `table.TableRegions` e o `if` que desenha o trilho
 // leem a MESMA `view`. Este teste é o que afirma que continuam lendo.
 func TestTheStreamOnlySendsTheRegionTheDocumentHas(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	paraOMestre := idsDasRegioes(t, f, f.mestre)
@@ -77,7 +77,7 @@ func TestTheStreamOnlySendsTheRegionTheDocumentHas(t *testing.T) {
 
 // idsDasRegioes pergunta ao MESMO `table.TableRegions` da produção quais regiões o
 // stream mandaria para aquele papel, montando a view pelo caminho de sempre.
-func idsDasRegioes(t *testing.T, f pilotoFixture, userID int64) map[string]bool {
+func idsDasRegioes(t *testing.T, f sceneFixture, userID int64) map[string]bool {
 	t.Helper()
 	view, _, err := f.s.tableScene.LoadView(t.Context(), userID, f.campaignID, f.sessionID)
 	if err != nil {

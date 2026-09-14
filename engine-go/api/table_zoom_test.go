@@ -15,7 +15,7 @@ import (
 // CÓDIGO são o mesmo número, e que os limites que a tela oferece são os que as
 // expressões cobram. O resto é da fatia do e2e do tabuleiro.
 func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 

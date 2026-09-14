@@ -13,7 +13,7 @@ import (
 )
 
 func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -37,7 +37,7 @@ func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 // Provado VERMELHO com o mesmo desvio do teste acima: sem cena o HTML passou a
 // listar os dois combatentes que o mestre está montando às escondidas.
 func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	// Fila CHEIA e cena DESLIGADA: é o mestre montando a briga antes de começar.
 	if _, err := f.s.tableHost().Sessions().AddInitiativeEntry(f.sessionID, live.InitiativeEntry{
 		Label: "Chefe secreto", Initiative: 22, Type: "npc",
@@ -61,14 +61,14 @@ func TestOffSceneTheTableSendsNoTracker(t *testing.T) {
 	}
 }
 
-// A recusa tem de CHEGAR NA TELA, e é isto que o piloto ganha de graça sobre o
+// A recusa tem de CHEGAR NA TELA, e é isto que o app ganha de graça sobre o
 // socket: a ALE-213 deixou anotado que o cliente não escuta o `exception`, então
 // lá um d20 fora da faixa some em silêncio.
 //
 // Provado VERMELHO devolvendo `http.Error` no lugar do patch de sinal: o corpo
 // virou texto solto que o Datastar descarta, e a tela não muda.
 func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 
 	corpo := f.posta(t, f.jogador, f.tableUrl()+"/iniciativa", `{"d20":47}`)
@@ -92,7 +92,7 @@ func TestTheTableRefusesAD20OutsideTheRangeAndSaysSo(t *testing.T) {
 // zero e 14 == 14 — o teste passaria verde sobre uma tela que somou sozinha,
 // que é exatamente o defeito que ele mira (a armadilha da ALE-213).
 func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	bonus, err := f.s.tableHost().InitiativeBonus(context.Background(), f.charID)
 	if err != nil {
@@ -122,7 +122,7 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 }
 
 // A COMPRESSÃO do stream — o passo (a) da ordem combinada, e o ganho que domina
-// todos os outros: medido neste piloto, 52.332 bytes crus de três remendos viram
+// todos os outros: medido aqui, 52.332 bytes crus de três remendos viram
 // 2.513 em gzip e 1.827 em brotli. Ela é invisível na tela, então quem apagar o
 // `WithCompression()` multiplica a banda por vinte sem nada parecer errado — é
 // exatamente por isso que ela precisa de guarda.
@@ -131,7 +131,7 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 // `http.Client` do Go põe o cabeçalho sozinho e descomprime por baixo do pano,
 // escondendo o `Content-Encoding` que este teste existe para ver.
 func TestTheTableStreamCompresses(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
@@ -204,7 +204,7 @@ func TestTheTableStreamCompresses(t *testing.T) {
 // escuta — que abrir a cena publique `SceneStarted`, e não um sino genérico que
 // serviria igualmente para o encerramento.
 func TestTheTableTellsSubscribersOnEveryMutation(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	sub, parar := f.s.tableHost().Bus().Subscribe(events.OfSession(f.sessionID))
 
 	if _, err := f.s.tableHost().Sessions().StartScene(f.sessionID); err != nil {

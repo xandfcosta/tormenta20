@@ -80,7 +80,7 @@ func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	chefe := seedUser(t, s, "chefe@t20.local")
 
-	rec := pedeNoPiloto(t, s, chefe, http.MethodPost, "/admin/convites")
+	rec := askScene(t, s, chefe, http.MethodPost, "/admin/convites")
 	corpo := rec.Body.String()
 
 	if !strings.Contains(corpo, "invite-url") {
@@ -106,7 +106,7 @@ func TestANonAdminDoesNotReachTheInviteRoute(t *testing.T) {
 	seedUser(t, s, "chefe@t20.local")
 	qualquerUm := seedUser(t, s, "outro@t20.local")
 
-	rec := pedeNoPiloto(t, s, qualquerUm, http.MethodPost, "/admin/convites")
+	rec := askScene(t, s, qualquerUm, http.MethodPost, "/admin/convites")
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("a rota respondeu %d para quem não é admin, esperado 403", rec.Code)
 	}
@@ -118,8 +118,8 @@ func TestANonAdminDoesNotReachTheInviteRoute(t *testing.T) {
 	}
 }
 
-// pedeNoPiloto bate no roteador do piloto, que é OUTRO que o `Router()` da API.
-func pedeNoPiloto(t *testing.T, s *Server, userID int64, metodo, caminho string) *httptest.ResponseRecorder {
+// askScene bate no roteador do app, que é OUTRO que o `Router()` da API.
+func askScene(t *testing.T, s *Server, userID int64, metodo, caminho string) *httptest.ResponseRecorder {
 	t.Helper()
 	u, err := s.queries.GetUserByID(context.Background(), userID)
 	if err != nil {

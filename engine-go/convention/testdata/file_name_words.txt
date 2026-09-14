@@ -14,6 +14,7 @@ admin
 agrees
 air
 and
+app
 appearance
 applied
 apply
@@ -291,7 +292,6 @@ pdf
 pending
 # permitidos falha no que não conhece, que é a forma do `TestNo…` da ALE-294.
 persistence
-piloto
 place
 places
 play

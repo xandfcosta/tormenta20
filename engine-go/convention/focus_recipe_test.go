@@ -92,7 +92,7 @@ func TestNoHandwrittenFocusRing(t *testing.T) {
 			excecoes += len(excecao.FindAllString(linha, -1))
 			for _, achado := range receita.FindAllStringSubmatch(linha, -1) {
 				t.Errorf("%s:%d — `%s` escrito à mão, e ele não faz efeito nenhum.\n"+
-					"    O realce de foco é GLOBAL e mora no `api/piloto/src/index.css`; a regra de lá não é layerada,\n"+
+					"    O realce de foco é GLOBAL e mora no `api/assets/src/index.css`; a regra de lá não é layerada,\n"+
 					"    então ela ganha do utilitário e o que está na `class=` é decoração. APAGUE a classe.\n"+
 					"    (Realce próprio de verdade, quando existir, é regra no `index.css` — e o\n"+
 					"    `e2e/tests/support/focus.ts` cobra que a casa continue tendo uma cara só.)",
@@ -126,7 +126,7 @@ func TestNoHandwrittenFocusRing(t *testing.T) {
 	// existe uma GLOBAL. No dia em que alguém apagar a global, proibir a cópia
 	// deixa o app inteiro sem realce — e o guarda precisa falhar junto, em vez de
 	// seguir cobrando uma regra cuja razão sumiu.
-	folha, err := os.ReadFile("../api/piloto/src/index.css")
+	folha, err := os.ReadFile("../api/assets/src/index.css")
 	if err != nil {
 		t.Fatalf("ler a folha-fonte: %v", err)
 	}

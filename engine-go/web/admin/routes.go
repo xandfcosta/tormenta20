@@ -12,7 +12,7 @@ import (
 	"t20engine/web/ui"
 )
 
-// A tela de administração do piloto (ALE-219, segunda superfície).
+// A tela de administração do app (ALE-219, segunda superfície).
 //
 // A diferença que ela existe para medir: NÃO há stream. Na Mesa, quem
 // redesenhava era o SSE aberto; aqui quem redesenha é a RESPOSTA do próprio
@@ -56,7 +56,7 @@ func (s Scene) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	sse := datastar.NewSSE(w, r)
 	// A REGRA é a mesma do handler HTTP — extraída para `deleteAccount` quando
-	// esta tela precisou dela. O piloto não ganha uma segunda versão de "não se
+	// esta tela precisou dela. O app não ganha uma segunda versão de "não se
 	// apaga a própria conta"; se ganhasse, mediria a cópia.
 	if err := s.deps.DeleteAccount(r, id, s.deps.CurrentUserID(r)); err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": err.Error()})
@@ -111,7 +111,7 @@ func (s Scene) patchPanels(sse *datastar.ServerSentEventGenerator, r *http.Reque
 //
 // A REGRA vem do `mintPasswordReset`, extraída do manipulador JSON quando esta
 // tela precisou dela — sétima vez que a migração encontra regra soldada ao
-// transporte, e a mesma resposta das outras seis. O piloto não ganha uma
+// transporte, e a mesma resposta das outras seis. O app não ganha uma
 // segunda versão do prazo de 24h; se ganhasse, as duas telas poderiam divergir
 // sem ninguém notar.
 func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {

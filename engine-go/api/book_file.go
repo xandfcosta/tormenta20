@@ -141,7 +141,7 @@ func ehLinearizado(cabeca []byte) bool {
 	return strings.Contains(string(cabeca), "/Linearized")
 }
 
-// LivroDoPiloto serve o PDF configurado, com faixas.
+// BookFileHandler serve o PDF configurado, com faixas.
 //
 // `http.ServeFile` responde `Range` sozinho — é isso que faz o visualizador de
 // PDF pedir só os pedaços da página quando o arquivo é linearizado.
@@ -149,7 +149,7 @@ func ehLinearizado(cabeca []byte) bool {
 // O alcance do cache é `private` porque esta rota sai DEPOIS do `requirePage`:
 // `public` autorizaria um cache compartilhado a guardar e reentregar o livro de
 // alguém que entrou para quem não entrou.
-func (s *Server) LivroDoPiloto() http.Handler {
+func (s *Server) BookFileHandler() http.Handler {
 	// Sem livro a rota é 404 e PRONTO — o 404 não passa pela política de cache,
 	// e essa ordem é conserto de um vermelho: um dígito VAZIO fazia
 	// `strings.Contains(ifNoneMatch, "")` responder verdadeiro, e a rota

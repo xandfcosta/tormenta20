@@ -69,7 +69,7 @@ func (sr sheetRules) syncLevelVitals(r *http.Request, id int64, dto sheet.Charac
 
 // classLevelError separa a recusa de REGRA da falha de infraestrutura, para
 // os dois chamadores traduzirem cada uma no idioma da própria tela — a API JSON
-// num erro de campo, o piloto numa frase no rodapé.
+// num erro de campo, o app numa frase no rodapé.
 type classLevelError struct {
 	Campo string
 	Frase string

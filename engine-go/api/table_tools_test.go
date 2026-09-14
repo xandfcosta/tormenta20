@@ -17,7 +17,7 @@ import (
 //
 // Agora a rota não tem espécie no caminho — não há como errar qual.
 func TestTheEraserClearsTheWholeSquare(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	casa := f.tableUrl() + "/tabuleiro/terreno"
 
@@ -54,7 +54,7 @@ func TestTheEraserClearsTheWholeSquare(t *testing.T) {
 // Aqui isso vira uma afirmação sobre a FORMA da rota: se a espécie voltar para o
 // caminho, este teste cai.
 func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
@@ -77,7 +77,7 @@ func TestTheEraserDoesNotDependOnTheSelectedBrush(t *testing.T) {
 // gesto MUDO: a camada de pintura não existe na cena do jogador, então uma
 // ferramenta oferecida a ele seria um modo que liga e não faz nada.
 func TestThePlayerRailLacksWhatThePlayerCannotDo(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()
 

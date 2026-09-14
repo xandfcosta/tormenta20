@@ -179,7 +179,7 @@ func GmSeesVitals(fila []InitiativeEntry, ehMestre bool) bool {
 // Eles vinham do formulário da SPA (`AddCombatantForm`), escritos como atributos
 // dos campos — que é UI e não trava: quem postasse na mão passava por cima dos
 // quatro. Vêm para cá pelo mesmo motivo das outras seis regras desta fatia, e a
-// escolha de virem para o `live` em vez de ficarem no piloto é a que evita o
+// escolha de virem para o `live` em vez de ficarem no app é a que evita o
 // defeito clássico: dois formulários com escadas diferentes deixariam as duas
 // telas discordando sobre o que é um combatente aceitável.
 //

@@ -30,7 +30,7 @@ import (
 // Por isso este caso ANDA pelo fluxo de verdade: servidor HTTP real, o
 // `/stream` aberto, e a pergunta feita ao registro — sem tocar no `Join`.
 func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	srv := httptest.NewServer(f.s.WebRouter())
 	defer srv.Close()
@@ -102,7 +102,7 @@ func esperaOPrimeiroQuadro(t *testing.T, resp *http.Response) {
 // Sondagem e não `sleep` fixo: o `defer` do lado do servidor roda quando o
 // runtime escalona a goroutine, e um tempo fixo escolhido na minha máquina é
 // exatamente o teste que pisca na de outra pessoa.
-func ateSumir(t *testing.T, f pilotoFixture) {
+func ateSumir(t *testing.T, f sceneFixture) {
 	t.Helper()
 	limite := time.Now().Add(2 * time.Second)
 	for time.Now().Before(limite) {

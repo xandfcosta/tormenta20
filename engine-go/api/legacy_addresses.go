@@ -36,7 +36,7 @@ type legacyAddress struct {
 // legacyAddresses é a tabela inteira, na ordem em que as fatias portaram.
 //
 // TRÊS SAÍRAM na ALE-280, quando as cenas subiram para a raiz: `/admin`,
-// `/grimorio` e `/redefinir-senha` eram endereços que a SPA e o piloto
+// `/grimorio` e `/redefinir-senha` eram endereços que a SPA e o app
 // escreviam IGUAIS, e sem o prefixo `/piloto` o destino virou a própria origem.
 // No mux isso não é uma entrada inútil — é um laço: o padrão literal ganha do
 // `"/"` das cenas, então o desvio responderia 302 para si mesmo para sempre, e a
@@ -66,7 +66,7 @@ var legacyAddresses = []legacyAddress{
 	{"/login", withSearch("/entrar", "redirect")},
 	{"/register", withSearch("/criar-conta", "convite")},
 	// `/join/{token}` era um desvio DUPLO na SPA: ela mandava para
-	// `/campaigns/join?token=…`, que por sua vez mandava para o piloto. Aqui ele
+	// `/campaigns/join?token=…`, que por sua vez mandava para o app. Aqui ele
 	// vai direto — dois saltos existiam porque eram duas rotas dela, não porque
 	// alguém precisava passar pelo meio.
 	{"/join/{token}", func(r *http.Request) string {

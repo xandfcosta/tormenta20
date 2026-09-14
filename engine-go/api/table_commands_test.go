@@ -15,7 +15,7 @@ import (
 // tirar três asserções de AUSÊNCIA da suíte: botão ausente nunca foi prova de
 // trava, e a garantia mora na camada mais barata que a sustenta.
 func TestOnlyTheGmCommandsTheTable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	// O corpo é o dos SINAIS que o Datastar manda junto. Só o descanso de dia lê
 	// algum; os outros levam corpo vazio, que é o que o `@post` manda quando a
@@ -47,7 +47,7 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 // O avanço é o botão mais clicado da sessão: esperar até 200ms por um tique que
 // vai calar (o hash não muda depois do remendo) seria pagar latência por nada.
 func TestTheCommandPatchesTheSceneRightAway(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", "")
 	if rec.Code != http.StatusOK {
@@ -64,9 +64,9 @@ func TestTheCommandPatchesTheSceneRightAway(t *testing.T) {
 }
 
 // TestTheCommandAnnouncesToTheWholeTable: enquanto as duas telas existirem, uma escrita
-// pelo piloto tem de chegar na SPA.
+// pelo app tem de chegar na SPA.
 func TestTheCommandAnnouncesToTheWholeTable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
 	defer f.s.sse.Remove(f.sessionID, "espia")
 
@@ -87,23 +87,23 @@ func TestTheCommandAnnouncesToTheWholeTable(t *testing.T) {
 		break
 	}
 	if !viu {
-		t.Error("o comando do piloto não avisou o hub — a SPA ficaria com o estado velho")
+		t.Error("o comando do app não avisou o hub — a SPA ficaria com o estado velho")
 	}
 }
 
 // TestEndingTheSceneFromTheTableExpiresThePartyBlessings — a REGRESSÃO da ALE-220,
-// reaberta pelo piloto.
+// reaberta pelo app.
 //
 // O "Encerrar cena" da API passa pelo `endSceneForTable`, que é o caminho ÚNICO
 // desde aquela issue: ele expira a duração "cena" de toda ficha do grupo ANTES
-// de desligar a cena. O piloto chamava `sessions.EndScene` direto, que só mexe
+// de desligar a cena. O app chamava `sessions.EndScene` direto, que só mexe
 // no rastreador — a fila zerava na tela e a bênção de duração "cena" continuava
 // viva na ficha, que é a colisão C1 do glossário com outro botão.
 //
 // O gesto tem de ser o MESMO nos dois transportes, e a forma de garantir isso
 // não é repetir a sequência aqui: é chamar o mesmo helper.
 func TestEndingTheSceneFromTheTableExpiresThePartyBlessings(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	seedEffect(t, f.s, f.charID, "bencao", "scene")
 	seedEffect(t, f.s, f.charID, "heroismo", "day")
 
@@ -128,7 +128,7 @@ func TestEndingTheSceneFromTheTableExpiresThePartyBlessings(t *testing.T) {
 // continuaria mostrando o efeito morto e o "usado 1/cena" gasto até alguém
 // recarregar — a metade invisível do mesmo defeito.
 func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
 	defer f.s.sse.Remove(f.sessionID, "espia")
 
@@ -178,7 +178,7 @@ func TestEndingTheSceneFromTheTableAnnouncesTheSheetsChanged(t *testing.T) {
 // mestre vê a cena aberta depois de mandar encerrá-la e não tem como saber por
 // quê.
 func TestTheRefusedCommandReachesTheGm(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
@@ -205,7 +205,7 @@ func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 // certa no lugar errado, que é como se lê um defeito. Uma palavra por conceito
 // vale para sinal de página como vale para identificador.
 func TestTheCommandErrorDoesNotInvadeTheRecordError(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(corpo, "command_error") {
 		t.Error("a página do mestre não declarou o sinal do comando")
@@ -220,7 +220,7 @@ func TestTheCommandErrorDoesNotInvadeTheRecordError(t *testing.T) {
 // desenho certo seria apagar o botão, e a fila teria Arwen duas vezes até
 // alguém notar.
 func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
@@ -242,7 +242,7 @@ func TestAddPartyBringsTheCharactersAndCanBeClickedAgain(t *testing.T) {
 // desenhar. Esconder por classe deixaria o HTML na página para quem abrisse o
 // inspetor — e a trava de verdade é o 403 acima, medido em separado.
 func TestThePlayerDoesNotGetAddPartyInTheHtml(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	if corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(corpo, "Adicionar grupo") {
 		t.Error("o HTML do jogador veio com o Adicionar grupo")
@@ -267,7 +267,7 @@ func TestThePlayerDoesNotGetAddPartyInTheHtml(t *testing.T) {
 // "normal", então 24 de PV prova que o sinal atravessou e 28 provaria que ele se
 // perdeu no caminho.
 func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"ruim"}`)
 	if rec.Code != http.StatusOK {
@@ -285,13 +285,13 @@ func TestTheDayRestUsesTheQualityTheGmChose(t *testing.T) {
 
 // E uma qualidade que não existe é RECUSADA, não rebaixada em silêncio.
 //
-// O motor cai em "normal" por conta própria, e para o piloto isso não serve: um
+// O motor cai em "normal" por conta própria, e para o app isso não serve: um
 // sinal adulterado faria o grupo descansar em "normal" enquanto a tela dizia
 // "luxuosa". Um número plausível no lugar do certo é o desfecho que esta
 // migração mais paga para evitar — e a frase nomeia o valor ofensivo e a forma
 // esperada, como o CLAUDE.md pede.
 func TestAnInventedQualityIsRefused(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/descanso/dia", `{"rest_quality":"palaciana"}`)
 	corpo := rec.Body.String()
@@ -315,9 +315,9 @@ func TestAnInventedQualityIsRefused(t *testing.T) {
 // expira a duração "cena" das fichas do grupo, e avisa que elas mudaram.
 //
 // É o `expirePartyScene` dos dois lados desde a ALE-220 — o que se prende aqui é
-// que o piloto chama ELE, e não uma sequência própria.
+// que a cena chama ELE, e não uma sequência própria.
 func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	seedEffect(t, f.s, f.charID, "bencao", "scene")
 	seedEffect(t, f.s, f.charID, "heroismo", "day")
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
@@ -342,7 +342,7 @@ func TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff(t *testing.T) {
 // ── os verbos da LINHA (ALE-263) ─────────────────────────────────────────────
 
 // tracker põe o grupo na fila e devolve o id do combatente do personagem.
-func (f pilotoFixture) tracker(t *testing.T) string {
+func (f sceneFixture) tracker(t *testing.T) string {
 	t.Helper()
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/por-no-mapa", ""); rec.Code != http.StatusOK {
 		t.Fatalf("adicionar grupo deu %d", rec.Code)
@@ -367,7 +367,7 @@ func (f pilotoFixture) tracker(t *testing.T) string {
 // entrada compilaria, deixaria a fila com um número plausível, e a ficha do
 // jogador continuaria com o PV de antes.
 func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/vitais/hp/ferir/5", "")
@@ -396,7 +396,7 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 // O passo não é dado que a página manda: são duas rotas por verbo. Um passo
 // inventado não casa rota nenhuma, e a recusa nomeia o valor e a forma esperada.
 func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	base := f.tableUrl() + "/iniciativa/" + entryID + "/vitais/hp/"
 
@@ -420,7 +420,7 @@ func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
 // remendo atrasado mandariam "esconder" duas vezes e a segunda desfaria a
 // primeira sem ninguém pedir.
 func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	olho := f.tableUrl() + "/iniciativa/" + entryID + "/vitais/hp/oculto"
 
@@ -458,7 +458,7 @@ func TestTheEyeInvertsTheStateTheServerKeeps(t *testing.T) {
 // só na entrada compilaria e deixaria a fila com um número plausível ao lado de
 // uma ficha que não gastou mana (ALE-122, pelo outro lado).
 func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
 	antes, err := f.s.queries.GetCharacter(context.Background(), f.charID)
@@ -501,7 +501,7 @@ func TestSpendingManaGoesThroughTheSheetToo(t *testing.T) {
 // que importa: com padrão por pool os dois DIVERGEM, e um caso que lesse
 // `HpHidden` continuaria verde exatamente no caso que ele veio medir.
 func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Ogro","new_initiative":12,"new_hp":130,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("pôr o ogro na fila deu %d", rec.Code)
@@ -545,7 +545,7 @@ func TestTheFirstEyeClickOnAnNpcRevealsInsteadOfHiding(t *testing.T) {
 // tem. As duas coisas são medidas juntas porque uma sem a outra engana — botão
 // ausente nunca foi prova de trava (ALE-144).
 func TestTheRowVerbsBelongToTheGm(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
@@ -580,7 +580,7 @@ func TestTheRowVerbsBelongToTheGm(t *testing.T) {
 
 // TestRemoveTakesTheCombatantOutOfTheTracker.
 func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	if n := len(f.s.tableHost().Sessions().GetState(f.sessionID).Initiative); n != 1 {
 		t.Fatalf("a fila começou com %d, queria 1", n)
@@ -619,7 +619,7 @@ func TestRemoveTakesTheCombatantOutOfTheTracker(t *testing.T) {
 // uma funcionalidade responde "sim" a quem procura — foi lendo aquele `if` que
 // eu afirmei, errado, que a ALE-214 já estava metade entregue.
 func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	// Fora da mesa primeiro, que é o estado de nascença: sem esta metade, "vi
 	// 'na mesa'" não distinguiria a ligação certa de uma frase fixa.
@@ -655,13 +655,13 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 
 // TestAddingACombatantBuildsTheEntryThroughTheHousePath.
 //
-// O que se prende é a COMPOSIÇÃO: que o piloto chama o `materializeEntry` e a
+// O que se prende é a COMPOSIÇÃO: que a cena chama o `materializeEntry` e a
 // validação do `live`, em vez de montar a linha por conta própria. As duas
 // metades do PV são o ponto — digitado ele vira pool cheio, e ZERO fica de fora
 // em vez de virar 0/0, que é a diferença entre "capanga sem vida rastreada" e
 // "capanga que já está morto".
 func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"  Goblin salteador  ","new_initiative":17,"new_hp":12,"new_type":"npc"}`)
@@ -696,13 +696,13 @@ func TestAddingACombatantBuildsTheEntryThroughTheHousePath(t *testing.T) {
 	}
 }
 
-// E a validação do `live` está LIGADA: o piloto não tem uma segunda escada.
+// E a validação do `live` está LIGADA: o app não tem uma segunda escada.
 //
 // Um caso só, e de propósito — as quatro bordas têm guarda no `live`, contra a
 // regra. O que falta provar aqui é a LIGAÇÃO, e repetir as quatro seria afirmar
 // a mesma coisa em duas camadas.
 func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Ogro","new_initiative":400,"new_hp":0,"new_type":"npc"}`)
@@ -716,7 +716,7 @@ func TestAddingACombatantUsesTheLiveValidation(t *testing.T) {
 
 // E acrescentar é do MESTRE, com as duas metades medidas juntas (ALE-144).
 func TestAddingACombatantBelongsToTheGm(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	corpo := `{"new_name":"Intruso","new_initiative":10,"new_hp":0,"new_type":"npc"}`
 
 	if rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/iniciativa/adicionar", corpo); rec.Code != http.StatusForbidden {
@@ -742,7 +742,7 @@ func TestAddingACombatantBelongsToTheGm(t *testing.T) {
 // MESMO capanga de novo; ninguém confere a fila antes de clicar durante uma
 // luta.
 func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 
 	aceito := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Goblin","new_initiative":17,"new_hp":12,"new_type":"character"}`).Body.String()
@@ -775,7 +775,7 @@ func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
 // e acrescentar de novo — perdendo PV e condições no caminho. Por isso o teste
 // confere que a linha continua sendo A MESMA depois da edição.
 func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	// O CONTROLE do que a issue descreve: o grupo entra com iniciativa ZERO.
 	if fila := f.s.tableHost().Sessions().GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
@@ -815,7 +815,7 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 // cada dizendo "a mesma do formulário de adicionar" — duas cópias que só um
 // comentário mantinha juntas.
 func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 
 	rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
@@ -834,7 +834,7 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 // que a página mande junto: uma tela defasada diria "tem" sobre um combatente
 // que acabou de perder a barra, e a escrita inventaria um pool onde não havia.
 func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Figurante","new_initiative":5,"new_hp":0,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d", rec.Code)
@@ -858,7 +858,7 @@ func TestEditingInventsNoPoolOnALifelessEntry(t *testing.T) {
 
 // TestTheRowVerbsBelongToTheGm já cobre o 403 dos outros; editar entra aqui.
 func TestEditingBelongsToTheGm(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	rec := f.pede(t, f.jogador, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
 		`{"edit_initiative":21,"edit_hp":7}`)
@@ -875,7 +875,7 @@ func TestEditingBelongsToTheGm(t *testing.T) {
 // mas o navegador a desescapa antes de o Datastar compilar. Escape de HTML não é
 // escape de JS, e confundir os dois é como se escreve uma injeção sem querer.
 func TestACombatantWithAQuoteInTheNameDoesNotBreakTheExpression(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"O'Brien, o \"Justo\"","new_initiative":5,"new_hp":0,"new_type":"npc"}`); rec.Code != http.StatusOK {
 		t.Fatalf("acrescentar deu %d", rec.Code)
@@ -901,7 +901,7 @@ func TestACombatantWithAQuoteInTheNameDoesNotBreakTheExpression(t *testing.T) {
 // NPC?". As duas metades ficam juntas de propósito: afirmar só a nova deixaria
 // passar uma tela que diz as duas coisas.
 func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.tracker(t)
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -926,7 +926,7 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 // desenhado para ninguém", e afirmar só o do jogador passaria verde sobre uma
 // fila que não desenha nada.
 func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.tracker(t)
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)

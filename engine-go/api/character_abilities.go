@@ -14,7 +14,7 @@ import (
 // saveProficiencies valida contra o catálogo, tira as repetidas e grava.
 //
 // Extraída na ALE-272 (fatia 2) porque a ficha em Datastar passou a gravar
-// proficiencia pelo mesmo caminho, e a regra e uma so: o painel do piloto e o
+// proficiencia pelo mesmo caminho, e a regra e uma so: o painel do app e o
 // `PATCH /personagens/{id}/proficiencies` guardam com a MESMA validacao. Duas
 // copias divergiriam no dia em que uma categoria nova chegasse — e a copia
 // esquecida aceitaria o que a outra recusa.

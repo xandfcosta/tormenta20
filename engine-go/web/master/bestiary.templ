@@ -109,7 +109,7 @@ templ railNav(atual string) {
 	// sobe um nível procurando literalmente `[data-nav-region="rail"]`, e o
 	// `enterScene` prefere essa região ao entrar na cena. Batizado de "trilha",
 	// como estava, o Esc pulava a subida e saía direto da página — medido.
-	// Três cenas do piloto inventaram nome próprio (`trilha`, `trilho`) e as três
+	// Três cenas do app inventaram nome próprio (`trilha`, `trilho`) e as três
 	// perderam o mesmo comportamento sem nada acusar.
 	//
 	// `data-nav-region` + `data-nav-layout` são o CONTRATO com o driver de
@@ -246,7 +246,7 @@ templ bestiaryScene(v BestiaryView) {
 // O `.mesa-painel` da SPA é `display:none` até 50rem de contêiner, e abaixo
 // disso a lista ficaria sem detalhe nenhum — a SPA abre um diálogo, e não
 // trazer isso perderia a ficha inteira no telefone. A troca é do CSS
-// (`.table-sheet-in-dialog`, na folha do piloto) e não de uma consulta de mídia
+// (`.table-sheet-in-dialog`, na folha da casa) e não de uma consulta de mídia
 // em JS, e ela compõe com o `data-show`: numa tela larga o diálogo fica
 // escondido mesmo com o sinal ligado, porque lá o painel já mostra a ficha.
 //

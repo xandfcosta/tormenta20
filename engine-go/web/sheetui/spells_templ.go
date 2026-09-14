@@ -18,7 +18,7 @@ import (
 //
 // # O catálogo inteiro numa lista, sem virtualizar
 //
-// São 198 magias, e elas saem todas. É a decisão que o piloto já tomou para os
+// São 198 magias, e elas saem todas. É a decisão que o app já tomou para os
 // catálogos do mestre, onde as 992 entradas viajam de uma vez — o que sustenta
 // isso é a lista rolar DENTRO da caixa, e não a página crescer. A corrente de
 // `min-h-0` até o `overflow-y-auto` é o que segura, e há guarda medindo que o

@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-// A tela de ADMINISTRAÇÃO como dado — a segunda superfície do piloto (ALE-219).
+// A tela de ADMINISTRAÇÃO como dado — a segunda superfície do app (ALE-219).
 //
 // Ela existe para responder o que a Mesa não conseguia responder sozinha. A
 // Mesa foi escolhida por ser o caso mais favorável: leitura pura, estado que já
-// era do servidor, zero diálogo. Se o piloto parasse ali, o resultado
+// era do servidor, zero diálogo. Se o app parasse ali, o resultado
 // comportaria duas leituras — "o Datastar funciona" e "eu escolhi a tela mais
 // fácil" —, e elas levam a decisões opostas.
 //

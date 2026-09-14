@@ -6,7 +6,7 @@ import {
 } from './support/geometry'
 
 /**
- * As listas do MESTRE — bestiário e catálogos, nas cenas do piloto.
+ * As listas do MESTRE — bestiário e catálogos, nas cenas.
  *
  * O arquivo nasceu medindo a `VirtualList` da SPA: ela mede as linhas para
  * saber quais existem, e em jsdom todo elemento mede zero — a lista renderiza
@@ -231,7 +231,7 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
  * O CASO MEDE OS DOIS LADOS, e o segundo não é redundância — é o controle. Uma
  * gaveta que se fecha em toda forma passaria com folga numa asserção só de
  * altura, e o custo seria os filtros sumirem da tela larga, que é onde eles mais
- * servem. Este é exatamente o modo de falha que a folha do piloto tenta evitar
+ * servem. Este é exatamente o modo de falha que a folha da casa tenta evitar
  * escrevendo DUAS regras de abertura (`display: revert` e `::details-content`),
  * porque os motores escondem o miolo de um `<details>` fechado de dois jeitos
  * diferentes e um deles pode não existir.

@@ -4,7 +4,7 @@ pnpm workspace monorepo.
 
 ```
 engine-go/ Go: API (:3001), motor de regras, e as CENAS em templ + Datastar —
-           com a folha e as ilhas de JS delas em api/piloto/src (Tailwind v4)
+           com a folha e as ilhas de JS delas em api/assets/src (Tailwind v4)
 e2e/       Playwright, dirigindo o app rodando
 ```
 

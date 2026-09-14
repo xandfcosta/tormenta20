@@ -15,7 +15,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// O stream da Mesa — o piloto Datastar (ALE-219).
+// O stream da Mesa — as cenas em Datastar (ALE-219).
 //
 // Quem embala os eventos é o SDK oficial (`datastar-go`), e não uma cópia do
 // formato escrita aqui: o `data: elements ` por linha, os dois "\n" finais e a

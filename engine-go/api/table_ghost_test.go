@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-func (f pilotoFixture) onBoardAt(t *testing.T, x, y int) string {
+func (f sceneFixture) onBoardAt(t *testing.T, x, y int) string {
 	t.Helper()
 	f.seedOpenBoard(t, "stone")
 	entryID := f.tracker(t)
@@ -31,7 +31,7 @@ func (f pilotoFixture) onBoardAt(t *testing.T, x, y int) string {
 // O CONTROLE vem antes: sem ele, "achei a peça em 3,1" não distingue "a peça
 // andou" de "eu procurei a coisa errada e casei com outro nó".
 func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 	f.turnPlayer(t)
 
@@ -78,7 +78,7 @@ func TestTheTokenIsDrawnWhereItWasDropped(t *testing.T) {
 // Ele é a peça e não um disco genérico: com três zumbis em campo, uma sombra
 // anônima na casa não responde qual deles está a caminho.
 func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 
 	semMovimento := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -125,7 +125,7 @@ func TestTheGhostMarksTheOriginWithTheTokenMonogram(t *testing.T) {
 // O guarda é o PAR: a mesma proposta lida pelos dois papéis, senão "achei a peça
 // em 4,2" não se distingue de "a proposta não chegou".
 func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -152,7 +152,7 @@ func TestForTheGmTheTokenStaysAndTheGhostGoes(t *testing.T) {
 // lados: a seta é o GESTO (dobra onde a pessoa clicou) e não a trilha (que dobra
 // em cada casa), e ela para antes do centro para apontar a peça em vez de riscá-la.
 func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 0, 0)
 	base := f.tableUrl() + "/tabuleiro/" + tokenID
 
@@ -203,7 +203,7 @@ func TestTheArrowBendsAtTheStopsAndEndsAtTheDestinationEdge(t *testing.T) {
 // a classe nova amanhã cai aqui sem acrescentar uma linha, porque a pergunta é
 // sobre o `--col` e não sobre um nome.
 func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 	// A cena precisa ter as três famílias no ar, senão o guarda mede o que
 	// sobrou: terreno pintado, movimento proposto (trilha e paradas) e alcance.
@@ -271,7 +271,7 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 // escrever `else if` num atributo amanhã sem ler nada disto. É o mesmo molde do
 // `TestNoLayerReadsThePointWithoutAddingTheViewport`.
 func TestNoElementRepeatsAnAttribute(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 4, 2)
 	if rec := f.pede(t, f.mestre, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/parada", `{"from":{"X":7,"Y":3}}`); rec.Code != http.StatusOK {

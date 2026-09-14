@@ -27,7 +27,7 @@ import (
 // SERVIDO diz quem precisa dele. Quem acrescentar um botão a um desses painéis
 // amanhã cai aqui sem ler nada disto.
 func TestNoChromeOverTheMapStealsTheClickOffItsControls(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	// A cena mais CHEIA que o mestre vê, senão o guarda mede o que sobrou: com
 	// acervo (o baú só nasce com lugar guardado), com segunda aba (a barra de
 	// abas), com peça (a camada de mover) e com movimento proposto.

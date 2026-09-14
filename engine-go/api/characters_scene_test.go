@@ -293,7 +293,7 @@ func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 // Nas PONTAS não há vizinho, e o palco não pode inventar um. Que a CAIXA vazia
 // continue ocupando a largura — para o retrato não escorregar ao chegar no
 // primeiro herói, família de defeito da ALE-99 — é garantia de LAYOUT, e layout
-// só existe num navegador: está no `piloto-datastar.spec.ts`. Aqui fica só o
+// só existe num navegador: está no `scenes.spec.ts`. Aqui fica só o
 // que é verdade de dado.
 func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)

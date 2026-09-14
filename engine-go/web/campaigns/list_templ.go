@@ -1312,7 +1312,7 @@ func blankSheetStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 // driver de teclado, que procura literalmente `[data-nav-region="rail"]` para o
 // Esc subir um nível e para escolher onde o foco pousa ao entrar na cena. O nome
 // diz o PAPEL da região (a lista que escolhe o que o palco mostra), não onde ela
-// fica na tela — três cenas do piloto já perderam esse comportamento por
+// fica na tela — três cenas já perderam esse comportamento por
 // batizarem a região com nome próprio.
 //
 // O que muda com a posição é a GRAMÁTICA: `row` e `horizontal`, porque agora a

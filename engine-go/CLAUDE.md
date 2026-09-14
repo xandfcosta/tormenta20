@@ -5,7 +5,7 @@ valem; o que está aqui estende ou sobrepõe.
 
 `engine-go` é o app inteiro: a API HTTP na :3001, o motor de regras, e as CENAS
 em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
-`api/piloto/src`, e o kit de apresentação em `web/ui`. Um processo serve tudo, e
+`api/assets/src`, e o kit de apresentação em `web/ui`. Um processo serve tudo, e
 desde a ALE-273 ele também sobe por `docker compose up -d --build`, com o banco
 em bind mount. **O compose não trouxe um segundo runtime**: continua sendo UM
 serviço. O proxy que normalmente viria junto foi considerado e recusado — ele
@@ -145,7 +145,7 @@ o servidor mandava os 3,7 MB crus do `t20.wasm` para um navegador que pedia
 `gzip, br`.
 
 Com a SPA apagada (ALE-272, fatia 10c) não há `dist` para servir nem asset
-pesado para pré-comprimir — os estáticos do piloto são a folha, cinco ilhas de
+pesado para pré-comprimir — os estáticos do app são a folha, cinco ilhas de
 JS e duas fontes, todos embutidos no binário. O que sobrou é a compressão do que
 o servidor RENDERIZA, logo abaixo.
 
@@ -526,9 +526,9 @@ parece com referência, e ela só apareceu quando o
 `TestEveryCreateFieldOfTheSeedIsClassified` obrigou a classificar campo por
 campo. **Guarda que força a varredura acha o que a leitura não acha.**
 
-## O fixture do piloto prima o catálogo DE VERDADE
+## O fixture do app prima o catálogo DE VERDADE
 
-O `novoPiloto` primava `{"items":[]}`, e isso fazia regra sumir do TESTE sem
+O `newSceneFixture` primava `{"items":[]}`, e isso fazia regra sumir do TESTE sem
 sumir da produção — duas vezes na mesma épica, e nenhuma delas apareceu como
 erro:
 
@@ -720,7 +720,7 @@ cena virou pacote; e três são a família das citações.
 
 - **`TestEveryMarkerColorCanBePainted`** e **`TestNoSceneCommandUsesTheDefaultTab`**
   chegaram na ALE-278, pela mesma razão do de baixo e no mesmo dia: o primeiro
-  lia `piloto/piloto.src.css`, um caminho relativo ao `api`; o segundo varria
+  lia `assets/app.src.css`, um caminho relativo ao `api`; o segundo varria
   `piloto_*.go` do próprio diretório. Quando a Mesa virou `web/table`, o arquivo
   sumiu debaixo de um e o glob deixou de casar para o outro. **Os dois falharam
   ALTO porque os dois tinham piso** — e o irmão do foco, que não tinha, teria
@@ -805,11 +805,11 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   o HTML antigo. Isto já produziu uma medição de layout inteira contra a página
   velha — 74px de deslocamento "que não sumiam" depois do conserto, porque o
   conserto não estava no ar.
-- **Classe nova exige `scripts/build-piloto-css.sh`.** Classe que não passou pelo
+- **Classe nova exige `scripts/build-css.sh`.** Classe que não passou pelo
   scanner simplesmente não existe na folha, e o elemento aparece sem estilo em
   vez de dar erro.
   **Aqui morava "o scanner lê `../*.templ`, e só ele", e é falso** — medido na
-  ALE-278: tirar os DOIS `@source` do `piloto.src.css` não muda um byte da folha
+  ALE-278: tirar os DOIS `@source` do `app.src.css` não muda um byte da folha
   compilada (105.328 com, 105.328 sem), porque a detecção automática do Tailwind
   v4 varre da pasta da folha até a raiz do projeto respeitando o `.gitignore`. As
   linhas ficaram como declaração de intenção; quem depurar "classe sumiu" não
@@ -823,7 +823,7 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   a varredura apagou 242 sítios, a folha foi compilada, e só DEPOIS os dois
   guias ganharam a explicação — o passo "Fail if the stylesheet was stale"
   reprovou com uma linha de diferença. A ordem do roteiro é **código → prosa →
-  `build-piloto-css.sh` → `git add`**, e o mesmo vale quando a mudança APAGA
+  `build-css.sh` → `git add`**, e o mesmo vale quando a mudança APAGA
   classe: o artefato guarda o estado de antes.
 - **Regra da casa que precisa GANHAR de um utilitário mora em `@layer utilities`,
   e não em `components`.** No Tailwind v4 a CAMADA decide antes da
@@ -850,7 +850,7 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   dourado, 1,53:1, e atravessou uma fatia inteira (ALE-272). O
   `TestEveryHouseTintExistsInTheStylesheet` varre `piloto_*.templ`, `piloto_*.go` e
   o `web/` INTEIRO, e cobra cada token contra a folha compilada. A paleta mora
-  no `@theme` do `api/piloto/src/index.css`; conferir lá antes de inventar o nome.
+  no `@theme` do `api/assets/src/index.css`; conferir lá antes de inventar o nome.
   **O `web/` entrou na ALE-278 e mostra a forma da falha desta família**: o
   kit mudou de nome de arquivo, o padrão `piloto_*` deixou de casar com ele, e o
   guarda teria seguido verde medindo as cenas e ignorando o botão, o campo e a
@@ -1231,7 +1231,7 @@ existe para conseguir.
 - `Overlays []templ.Component` — o livro, o verbete e o buscador, que leem
   catálogo. A casca só reserva o lugar.
 
-Quem preenche é o `piloto_render.go`, o ÚNICO lugar do projeto que monta uma
+Quem preenche é o `scene_render.go`, o ÚNICO lugar do projeto que monta uma
 página. Pôr esses campos em cada `ui.Page{…}` seria repetir dezoito vezes o que
 não varia.
 

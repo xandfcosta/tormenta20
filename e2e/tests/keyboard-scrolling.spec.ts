@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * A ROLAGEM POR TECLADO nas cenas do piloto Datastar (ALE-264).
+ * A ROLAGEM POR TECLADO nas cenas das cenas em Datastar (ALE-264).
  *
- * O defeito, achado pelo dono na tela de catálogos do mestre: a casca do piloto
+ * O defeito, achado pelo dono na tela de catálogos do mestre: a casca do app
  * é `h-dvh` com `overflow-hidden`, então o DOCUMENTO não rola — quem rola são
  * caixas aninhadas. Uma dessas caixas cujo conteúdo é só TEXTO não tem nenhum
  * descendente focável, e sem `tabindex` o foco nunca entra nela. Seta, PageDown,
@@ -16,7 +16,7 @@ import { expect, test } from '@playwright/test'
  * transborda?", e transbordo é LEIAUTE REAL. Em jsdom `scrollHeight` e
  * `clientHeight` são zero, então a condição nunca dispara e o guarda passaria
  * verde sobre todas as telas, sempre — a pior forma de teste, o que afirma o
- * oposto do que mede. É o mesmo argumento do `piloto-datastar.spec.ts`, que
+ * oposto do que mede. É o mesmo argumento do `scenes.spec.ts`, que
  * precisa do navegador para converter oklch.
  *
  * AMOSTRAGEM e não enumeração: o guarda percorre as cenas e, dentro de cada uma,
@@ -27,7 +27,7 @@ import { expect, test } from '@playwright/test'
 
 // O estado de login é o do MESTRE: quatro das seis cenas são da Mesa do Mestre
 // e as outras duas ele também alcança. É o mesmo `storageState` que o
-// `piloto-datastar.spec.ts` usa para a tela de admin.
+// `scenes.spec.ts` usa para a tela de admin.
 test.use({ storageState: '.auth/user.json' })
 
 const CENAS = [
@@ -72,7 +72,7 @@ for (const cena of CENAS) {
     expect(medida.desenhou, `a cena de ${cena.nome} não desenhou`).toBe(true)
 
     // Se o documento inteiro rola, o teclado já alcança tudo pelo corpo — e a
-    // regra abaixo não se aplica. Hoje nenhuma cena do piloto é assim, mas
+    // regra abaixo não se aplica. Hoje nenhuma cena do app é assim, mas
     // afirmar a condição em vez de assumi-la é o que impede este guarda de
     // acusar uma cena que mudou de casca por um motivo legítimo.
     if (medida.documentoRola) return

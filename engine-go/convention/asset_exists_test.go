@@ -12,25 +12,25 @@ import (
 
 // TODO ESTÁTICO PEDIDO EXISTE NA PASTA (ALE-301).
 //
-// O `EstaticoDoPiloto` monta o endereço por CONCATENAÇÃO — `"/static/" +
+// O `AssetURL` monta o endereço por CONCATENAÇÃO — `"/static/" +
 // arquivo + "?v=" + digito` —, então um nome que não existe produz uma URL de
 // aparência perfeita e um 404 só na hora do pedido. O modo de falhar é o pior
 // desta casa: a ilha de JS não instala, a cena funciona QUASE toda (sem a
 // animação, sem o leitor, sem o deslize da peça) e nada no Go acusa. O
-// `go:embed piloto/static/*` é curinga e compila do mesmo jeito; o
+// `go:embed assets/static/*` é curinga e compila do mesmo jeito; o
 // `TestEveryStaticAddressOnThePageIsVersioned` mede a VERSÃO no endereço e
 // passaria verde sobre um 404.
 //
 // Ele nasceu ao renomear as quatro entradas do bundle (`cena`→`scene`,
 // `leitor`→`reader`, `mesa`→`table`, `pecas-solid`→`tokens-solid`): a corrente
-// tem cinco elos — fonte, chave do `vite.piloto.config.ts`, artefato commitado,
+// tem cinco elos — fonte, chave do `vite.config.ts`, artefato commitado,
 // chamada de `Asset` e o `<script src>` da cena — e nada liga um ao outro. A
 // suíte de e2e inteira passa verde com um elo faltando, porque só o caso que
 // exercita AQUELA ilha percebe.
 var assetCall = regexp.MustCompile(`Asset\("([^"]+)"\)`)
 
 func TestEveryAssetAskedForExists(t *testing.T) {
-	staticDir := filepath.Join("..", "api", "piloto", "static")
+	staticDir := filepath.Join("..", "api", "assets", "static")
 	if _, err := os.Stat(staticDir); err != nil {
 		t.Fatalf("a pasta dos estáticos não está em %s: %v", staticDir, err)
 	}
@@ -88,11 +88,11 @@ func TestEveryAssetAskedForExists(t *testing.T) {
 	}
 	sort.Strings(missing)
 	if len(missing) > 0 {
-		t.Errorf("estático pedido que NÃO existe em api/piloto/static — %d de %d:\n  %s\n"+
+		t.Errorf("estático pedido que NÃO existe em api/assets/static — %d de %d:\n  %s\n"+
 			"O endereço sai montado do mesmo jeito e o navegador leva 404: a ilha de JS não "+
 			"instala e a cena funciona quase toda, em silêncio. Se o nome mudou, mude os CINCO "+
-			"elos — fonte, `vite.piloto.config.ts`, artefato, `Asset(…)` e o `<script src>` — e "+
-			"rode `scripts/build-piloto-js.sh` ANTES de tirar o artefato velho.",
+			"elos — fonte, `vite.config.ts`, artefato, `Asset(…)` e o `<script src>` — e "+
+			"rode `scripts/build-js.sh` ANTES de tirar o artefato velho.",
 			len(missing), len(asked), strings.Join(missing, "\n  "))
 	}
 	t.Logf("estáticos pedidos: %d, %d sem arquivo, de %d arquivos varridos", len(asked), len(missing), filesRead)

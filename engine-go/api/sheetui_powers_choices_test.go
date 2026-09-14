@@ -164,7 +164,7 @@ func TestTheDialogOffersWhatFitsInEachTab(t *testing.T) {
 		t.Error("o diálogo ofereceu um caminho de paladino a um arcanista")
 	}
 }
-func chosen(t *testing.T, f pilotoFixture, id int64) string {
+func chosen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {

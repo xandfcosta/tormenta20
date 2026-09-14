@@ -18,7 +18,7 @@ import (
 // A trava é passar pelo mesmo `BoardForRole` do resto da Mesa, e não uma segunda
 // decisão sobre quem vê o quê.
 func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "crypt")
 	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
 		board.BoardToken{ID: "emboscada", Label: "Ogro emboscado", X: 4, Y: 4, Hidden: true}); err != nil {
@@ -51,7 +51,7 @@ func TestThePlayerTemplateDoesNotCountTheHiddenToken(t *testing.T) {
 // Provado VERMELHO trocando o `writeSignals` pelo `respondGm`: a
 // resposta passou a trazer `table-board` e este teste acusou.
 func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	// As paradas vêm nos SINAIS desde a ALE-203: com número variável de pernas,
@@ -72,7 +72,7 @@ func TestMeasuringDoesNotPatchTheScene(t *testing.T) {
 // cair calada na esfera, que desenharia uma área que ninguém pediu no lugar de
 // dizer que o pedido está errado.
 func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	rec := f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/gabarito", templateBody("piramide", "2", 0, 0, 0, 0))
 	if rec.Code != http.StatusBadRequest {
@@ -108,7 +108,7 @@ func TestTheTemplateRefusesAShapeTheBookDoesNotHave(t *testing.T) {
 // forma de voltar: quem está na mesa mede pelo MESMO endereço e recebe 200. Sem
 // ele, um endereço morto passaria nos dois.
 func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	estranho := seedUser(t, f.s, "estranho@t.com")
 
@@ -136,7 +136,7 @@ func TestWhoIsNotAtTheTableDoesNotMeasureItsScene(t *testing.T) {
 // cena, e a trava de verdade é a rota (o `gmBoardCommand`) — isto
 // aqui é a cortesia de não oferecer o que seria recusado.
 func TestTheRailOffersTheRulerToThePlayer(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	corpo := f.pede(t, f.jogador, http.MethodGet, f.tableUrl(), "").Body.String()

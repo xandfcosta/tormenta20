@@ -533,7 +533,7 @@ test.describe('Grimório — a folha de especificação', () => {
    * mesma que o guarda de tinta percorre — cena nova entra numa linha e ganha
    * as duas medições.
    *
-   * O caminhar pelas SETE ABAS da ficha mora no `piloto-sheet.spec.ts`, junto
+   * O caminhar pelas SETE ABAS da ficha mora no `sheet.spec.ts`, junto
    * do contraste e da tipografia, pela razão que aquele caso registra: à parte
    * ele seria enumeração, e a aba que nascer amanhã nasceria sem medição.
    */

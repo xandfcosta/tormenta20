@@ -26,7 +26,7 @@ fronteira duas vezes.
 */
 
 // draftPlace guarda um lugar no acervo e devolve o id dele.
-func (f pilotoFixture) draftPlace(t *testing.T, nome, chao string) int64 {
+func (f sceneFixture) draftPlace(t *testing.T, nome, chao string) int64 {
 	t.Helper()
 	lugar, err := f.s.tableHost().Boards().NewPlace(context.Background(), f.campaignID, nome, chao)
 	if err != nil {
@@ -35,7 +35,7 @@ func (f pilotoFixture) draftPlace(t *testing.T, nome, chao string) int64 {
 	return lugar.ID
 }
 
-func (f pilotoFixture) draftUrl(placeID int64) string {
+func (f sceneFixture) draftUrl(placeID int64) string {
 	return fmt.Sprintf("/campanhas/%d/lugares/%d", f.campaignID, placeID)
 }
 
@@ -46,7 +46,7 @@ func (f pilotoFixture) draftUrl(placeID int64) string {
 // mesa, e sem uma linha dizendo o contrário o mestre monta a emboscada sem saber
 // de que lado do tempo ele está. É a lição da cortina (ALE-202) aplicada aqui.
 func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.draftUrl(lugar), "").Body.String()
@@ -72,7 +72,7 @@ func TestTheDraftDrawsTheBoardAndSaysNobodyIsWatching(t *testing.T) {
 // — um endereço que RESPONDE, com 403 ou 404, e devolve uma tela que não mudou.
 // O sintoma seria "o pincel não pinta", sem uma linha em lugar nenhum.
 func TestTheDraftGesturesPostToTheArchiveAndNotToATable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.draftUrl(lugar), "").Body.String()
@@ -100,7 +100,7 @@ func TestTheDraftGesturesPostToTheArchiveAndNotToATable(t *testing.T) {
 // `httptest.NewRequest` + recorder não reproduz esse ciclo de vida — a ordem
 // trocada passa verde na suíte e quebra toda escrita no servidor.
 func TestADraftGestureChangesTheArchivedScene(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/pecas/nova", `{"from":{"X":4,"Y":3},"new_token_name":"Porta da cripta","new_token_size":1,"new_token_look":"object"}`)
@@ -128,7 +128,7 @@ func TestADraftGestureChangesTheArchivedScene(t *testing.T) {
 // O que ele veria não é um detalhe: a cripta de sábado, com a emboscada
 // posicionada e os marcadores que ainda não foram revelados.
 func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	pagina := f.pede(t, f.jogador, http.MethodGet, f.draftUrl(lugar), "")
@@ -157,7 +157,7 @@ func TestAStrangerDoesNotReachThePlaceDraft(t *testing.T) {
 // deles precisa de uma sessão do outro lado, e um botão que não pode funcionar é
 // pior que a ausência dele — ele ensina um gesto errado.
 func TestTheDraftDoesNotOfferTheSessionVerbs(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	corpo := f.pede(t, f.mestre, http.MethodGet, f.draftUrl(lugar), "").Body.String()
@@ -187,7 +187,7 @@ func TestTheDraftDoesNotOfferTheSessionVerbs(t *testing.T) {
 // CAMINHO até ela: a sessão viva da campanha é resolvida pelo gateway e chega
 // à regra. Sem isso a regra existiria e nunca seria consultada.
 func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	// A taverna é aberta na sessão da fixture — o estado normal de uma partida
 	// em andamento. O status da sessão NÃO importa para a trava, e é de
 	// propósito: uma sessão encerrada guarda os tabuleiros dela e reabre com
@@ -228,7 +228,7 @@ func TestTheDraftOfAPlaceOnALiveTableIsRefused(t *testing.T) {
 // pendurada num rascunho seria um movimento que ninguém pode confirmar — e o
 // `PlaceScene` a descarta na leitura seguinte, então ela sumiria em silêncio.
 func TestTheDraftMovesThePieceWithoutAProposal(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 	// O ID vem do SERVIDOR e não do teste: o `AddToken` cunha um sempre, e
 	// escolher um aqui seria arranjar um dado que a produção nunca produz.
@@ -272,7 +272,7 @@ GUARDADA, que a resposta não mexe no acervo, e que um estranho não as alcança
 
 // A régua mede no rascunho, e a resposta é só SINAL.
 func TestTheRulerMeasuresInsideTheDraft(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/regua",
@@ -303,7 +303,7 @@ func TestTheRulerMeasuresInsideTheDraft(t *testing.T) {
 // bola de fogo pega o assassino que a mesa ainda não vê. Redigir aqui esconderia
 // dele a própria resposta.
 func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 	if _, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
 		func(b *board.BoardState) error {
@@ -337,7 +337,7 @@ func TestTheDraftTemplateCountsTheHiddenTokenBecauseItIsTheMastersOwn(t *testing
 // sai ANTES de o gabarito ser calculado — um gêmeo que esquecesse essa saída
 // desenharia um cone apontando para onde o servidor achou melhor.
 func TestTheDraftConeWithoutAimAsksForIt(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	resposta := f.posta(t, f.mestre, f.draftUrl(lugar)+"/tabuleiro/gabarito", templateBody("cone", "6", 0, 0, 0, 0))
@@ -355,7 +355,7 @@ func TestTheDraftConeWithoutAimAsksForIt(t *testing.T) {
 // rota aberta entregaria a emboscada por sinal, que é mais fácil de ler que o
 // DOM.
 func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 	if _, err := f.s.tableHost().Boards().EditPlace(context.Background(), f.campaignID, lugar,
 		func(b *board.BoardState) error {
@@ -397,7 +397,7 @@ func TestAStrangerDoesNotMeasureThePlaceDraft(t *testing.T) {
 // numa sessão. A regra de pintura em si já está presa no `board`.
 
 // draftScene lê o que ficou gravado no acervo.
-func (f pilotoFixture) draftScene(t *testing.T, placeID int64) *board.BoardState {
+func (f sceneFixture) draftScene(t *testing.T, placeID int64) *board.BoardState {
 	t.Helper()
 	cena, err := f.s.tableHost().Boards().PlaceScene(context.Background(), f.campaignID, placeID)
 	if err != nil {
@@ -412,7 +412,7 @@ func (f pilotoFixture) draftScene(t *testing.T, placeID int64) *board.BoardState
 // decodificar para (0,0) em SILÊNCIO, e o traço inteiro pousa na quina. Por isso
 // nenhuma ponta deste caso é a origem.
 func TestTheDraftBrushPaintsWhereTheBodySays(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -440,7 +440,7 @@ func TestTheDraftBrushPaintsWhereTheBodySays(t *testing.T) {
 // TestTheDraftEraserClearsOnlyWhatItCrosses: a borracha do rascunho, e a
 // testemunha de fora.
 func TestTheDraftEraserClearsOnlyWhatItCrosses(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	for _, traco := range []string{stroke("dificil", 3, 4, 6, 4), stroke("cobertura", 1, 9, 1, 9)} {
@@ -470,7 +470,7 @@ func TestTheDraftEraserClearsOnlyWhatItCrosses(t *testing.T) {
 // canto perdido não estoura: ele vira (0,0), e a caixa cresce até a quina
 // levando junto tudo que estiver no caminho.
 func TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost,
@@ -505,7 +505,7 @@ func TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt(t *testing.T) {
 // Duas afirmações, e a segunda é a razão de o marcador existir: ele nasce
 // ESCONDIDO, porque marcar a armadilha na frente da mesa entrega a armadilha.
 func TestTheDraftMarkerLandsWhereTheBodySaysAndIsBornHidden(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	lugar := f.draftPlace(t, "Cripta de Thwor", "crypt")
 
 	if rec := f.pede(t, f.mestre, http.MethodPost, f.draftUrl(lugar)+"/tabuleiro/marcadores/novo",

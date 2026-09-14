@@ -1,4 +1,4 @@
-/* A folha do piloto Datastar (ALE-219).
+/* A folha das cenas em Datastar (ALE-219).
  *
  * Ela NÃO redefine cor nenhuma: importa a folha do sistema de desenho, que é
  * onde os tokens moram. Uma segunda paleta é uma paleta que diverge.
@@ -36,9 +36,9 @@
 /* A folha COMPILADA (`static/mesa.css`) é versionada, e isso é decisão e não
  * descuido: o `go:embed` não compila sem ela, então um clone limpo perderia
  * `go build` e `go test` até alguém descobrir que precisa rodar um script de
- * CSS. Foi exatamente essa classe de armadilha — arquivo do piloto derrubando
+ * CSS. Foi exatamente essa classe de armadilha — arquivo do app derrubando
  * o build de outra pessoa — que já custou um servidor fora do ar na main.
- * O preço é um artefato gerado de ~106 KB no git enquanto o piloto durar. */
+ * O preço é um artefato gerado de ~106 KB no git enquanto o app durar. */
 
 /* As classes de preenchimento das barras NASCEM NO GO (`hpTomDe`, em
  * mesa_view.go), então nenhuma delas aparece literalmente num template e o

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// O CACHE dos estáticos do piloto, e o defeito que ele conserta é de EXPERIÊNCIA
+// O CACHE dos estáticos do app, e o defeito que ele conserta é de EXPERIÊNCIA
 // e não de desempenho.
 //
 // Medido: `curl -D -` na folha devolvia `200 OK` e `Content-Length` e MAIS NADA
@@ -41,7 +41,7 @@ var versaoDosEstaticos = digitoDosEstaticos()
 
 func digitoDosEstaticos() string {
 	var caminhos []string
-	_ = fs.WalkDir(pilotoFS, "piloto/static", func(caminho string, d fs.DirEntry, err error) error {
+	_ = fs.WalkDir(assetsFS, "assets/static", func(caminho string, d fs.DirEntry, err error) error {
 		if err == nil && !d.IsDir() {
 			caminhos = append(caminhos, caminho)
 		}
@@ -55,7 +55,7 @@ func digitoDosEstaticos() string {
 
 	soma := sha256.New()
 	for _, caminho := range caminhos {
-		conteudo, err := pilotoFS.ReadFile(caminho)
+		conteudo, err := assetsFS.ReadFile(caminho)
 		if err != nil {
 			continue
 		}
@@ -65,12 +65,12 @@ func digitoDosEstaticos() string {
 	return hex.EncodeToString(soma.Sum(nil))[:12]
 }
 
-// EstaticoDoPiloto monta o endereço versionado de um arquivo estático.
+// AssetURL monta o endereço versionado de um arquivo estático.
 //
 // Usar isto e nunca escrever o caminho à mão: caminho cru continua funcionando,
 // e é servido SEM cache de propósito — então a página que o escrever à mão volta
 // a piscar, em silêncio, e ninguém liga uma coisa à outra.
-func EstaticoDoPiloto(arquivo string) string {
+func AssetURL(arquivo string) string {
 	return "/static/" + arquivo + "?v=" + versaoDosEstaticos
 }
 
@@ -85,7 +85,7 @@ func EstaticoDoPiloto(arquivo string) string {
 // O `alcance` é `public` ou `private`, e não é detalhe: `public` autoriza um
 // cache COMPARTILHADO a guardar a resposta, o que está certo para a folha e as
 // fontes (elas saem sem sessão) e errado para o que só sai depois do
-// `requirePage` — ver `piloto_book.go`.
+// `requirePage` — ver `book_file.go`.
 func comCacheVersionado(versao, alcance string, interno http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("v") == versao {
@@ -107,7 +107,7 @@ func comCacheVersionado(versao, alcance string, interno http.Handler) http.Handl
 	})
 }
 
-// FontesDoPiloto serve as fontes que a FOLHA pede em `/fonts/…`.
+// FontsHandler serve as fontes que a FOLHA pede em `/fonts/…`.
 //
 // O defeito que a criou, relatado pelo dono com o cabeçalho na mão: `GET
 // /fonts/cinzel-latin.woff2` devolvia 404 no binário sem SPA, e a Cinzel caía
@@ -119,8 +119,8 @@ func comCacheVersionado(versao, alcance string, interno http.Handler) http.Handl
 // `TestAsFontesEmbutidasSaoAsMesmasDaSPA` prendendo as duas byte a byte. Com a
 // SPA apagada (ALE-272, fatia 10c) elas deixaram de ser cópia: são as fontes, e
 // o guarda saiu junto com o outro lado que ele comparava.
-func (s *Server) FontesDoPiloto() http.Handler {
-	sub, err := fs.Sub(pilotoFS, "piloto/static/fonts")
+func (s *Server) FontsHandler() http.Handler {
+	sub, err := fs.Sub(assetsFS, "assets/static/fonts")
 	if err != nil {
 		panic("piloto: fontes embutidas ausentes: " + err.Error())
 	}
@@ -130,15 +130,15 @@ func (s *Server) FontesDoPiloto() http.Handler {
 	return http.StripPrefix("/fonts", comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub))))
 }
 
-// FaviconDoPiloto serve o `/favicon.svg` que o layout pede.
+// FaviconHandler serve o `/favicon.svg` que o layout pede.
 //
 // Ele era do `public/` da SPA e o `dist` o servia; com a SPA apagada (ALE-272,
-// fatia 10c) o arquivo veio para os estáticos do piloto. Sem esta rota o ícone
+// fatia 10c) o arquivo veio para os estáticos do app. Sem esta rota o ícone
 // da aba fica com o padrão do navegador — não quebra nada e ninguém liga à
 // causa, que é a marca desta família de perda numa migração.
-func (s *Server) FaviconDoPiloto() http.Handler {
+func (s *Server) FaviconHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bruto, err := pilotoFS.ReadFile("piloto/static/favicon.svg")
+		bruto, err := assetsFS.ReadFile("assets/static/favicon.svg")
 		if err != nil {
 			http.NotFound(w, r)
 			return

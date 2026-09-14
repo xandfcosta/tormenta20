@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func sceneIds(t *testing.T, f pilotoFixture) (ficha, npc string) {
+func sceneIds(t *testing.T, f sceneFixture) (ficha, npc string) {
 	t.Helper()
 	for _, e := range f.s.tableHost().Sessions().GetState(f.sessionID).Initiative {
 		switch e.Type {
@@ -32,7 +32,7 @@ func sceneIds(t *testing.T, f pilotoFixture) (ficha, npc string) {
 // afirma que o NPC estava na fila antes de afirmar que ele não chegou ao mapa —
 // senão "o ogro não veio" seria verdade sobre uma fila vazia.
 func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	ficha, npc := sceneIds(t, f)
@@ -60,7 +60,7 @@ func TestPopulateBringsOnlyWhoWasChosen(t *testing.T) {
 // pode virar "traz todo mundo": a diferença entre recusar e trazer a fila
 // inteira é o vilão do terceiro turno aparecendo na tela da mesa.
 func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 
@@ -83,7 +83,7 @@ func TestWithoutAChoiceTheCommandRefusesInsteadOfBringingEveryone(t *testing.T) 
 // jogador vê uma peça que não anda — um meio-recurso que ninguém reporta porque
 // parece regra. Provado VERMELHO tirando o `SetSpeeds` do `poeNoMapa`.
 func TestTheTokenIsBornWithADisplacement(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
@@ -110,7 +110,7 @@ func TestTheTokenIsBornWithADisplacement(t *testing.T) {
 // página do mestre, "não achei no HTML do jogador" seria igualmente verdade se
 // eu tivesse errado o seletor, e o guarda passaria verde sobre nada.
 func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 
@@ -131,7 +131,7 @@ func TestThePopulateDialogDoesNotReachThePlayer(t *testing.T) {
 // `gmBoardCommand`, afirmada aqui porque esta rota é nova e a trava
 // dela é uma linha de registro que alguém pode trocar sem perceber.
 func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)
@@ -153,7 +153,7 @@ func TestThePlayerDoesNotPopulateTheMap(t *testing.T) {
 // faria o mestre procurar um nome que ele acabou de ver na fila; oferecer faria
 // um clique que o servidor ignora, que é pior — parece que não funcionou.
 func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	ficha, npc := sceneIds(t, f)
@@ -191,7 +191,7 @@ func TestTheCandidatesSayWhoIsAlreadyOnTheMap(t *testing.T) {
 // arquivo mexe no mesmo `BoardState` que o pincel, e as peças novas nascem em
 // posições calculadas. Se pôr no mapa passasse a pintar chão, ninguém veria.
 func TestPopulateDoesNotPaintTerrain(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.scene(t)
 	f.seedOpenBoard(t, "stone")
 	ficha, _ := sceneIds(t, f)

@@ -24,7 +24,7 @@ import (
 // Ele varre o HTML SERVIDO e não o código, que é a única forma de alcançar a
 // expressão que alguém escrever amanhã sem ler nada disto.
 func TestNoExpressionIndexesTheListSignal(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
@@ -69,7 +69,7 @@ func TestNoExpressionIndexesTheListSignal(t *testing.T) {
 // medido: sem ele, o clique sintético que acompanha o botão direito nasce com
 // `offsetX` zero e a régua renasce na ORIGEM do plano no mesmo gesto que a apagou.
 func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 
@@ -89,7 +89,7 @@ func TestTheScreenWiresTheFourRulerGestures(t *testing.T) {
 // TestAForgedRulerIsRefused: o teto de paradas é o tamanho da RESERVA de nós no
 // `.templ`, e uma polilinha maior teria pernas medidas que ninguém desenha.
 func TestAForgedRulerIsRefused(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	// O TETO vai escrito à mão (12 paradas, o tamanho da reserva de nós no
@@ -126,7 +126,7 @@ func TestTheSphereIsBornAtTheIntersection(t *testing.T) {
 	// A metade da REGRA — só a esfera nasce na interseção — mora em `web/table`
 	// desde a ALE-278: ela é função pura e não precisa de banco. Este caso ficou
 	// com a metade que só um servidor montado prova, e as duas continuam presas.
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "Math.round((evt.offsetX") {

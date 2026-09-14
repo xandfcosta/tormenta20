@@ -7,7 +7,7 @@ import { expect, test } from '@playwright/test'
  * caminho inteiro.
  *
  * O clique no menu ficou junto porque ele é uma navegação de VERDADE entre duas
- * páginas do servidor. O `piloto-datastar.spec.ts` afirma os destinos do menu
+ * páginas do servidor. O `scenes.spec.ts` afirma os destinos do menu
  * pelas setas; aqui se afirma que o clique chega lá e que a cena desenhou.
  *
  * (A referência antiga a `pages/home/hub.test.tsx` saiu: aquele arquivo foi

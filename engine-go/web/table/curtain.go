@@ -11,11 +11,11 @@ import (
 // O tabuleiro EXISTE para o mestre e a mesa vê uma cortina no lugar dele
 // (ALE-202): montar a taverna enquanto eles olham a cripta. O servidor já sabia
 // fazer isso inteiro — `SetCurtain` no store, `BoardForRole` esvaziando a cena
-// para quem não é mestre, e o piloto até DESENHAVA o aviso. O que não existia
+// para quem não é mestre, e o app até DESENHAVA o aviso. O que não existia
 // era o gesto: a feature estava no ar e invisível, sem um botão que a ligasse.
 //
 // Encontrada no levantamento que precede a virada da sessão, cruzando os rótulos
-// da SPA com o piloto. É a razão de aquele levantamento existir.
+// da SPA com o app. É a razão de aquele levantamento existir.
 
 func (s Scene) CurtainRoutes(r chi.Router) {
 	// O ESTADO no caminho, e não um alternar: ver o comentário do `runsCurtain`.

@@ -34,7 +34,7 @@ type stageScene struct {
 	// no foco, e a vaga faz o mesmo.
 	itens int
 	quem  int64
-	f     pilotoFixture
+	f     sceneFixture
 	// nomesNoTrilho são nomes que a bancada semeou e que TÊM de aparecer
 	// escritos no marcador — a prova de que ele diz mais que duas letras.
 	nomesNoTrilho []string
@@ -47,14 +47,14 @@ type stageScene struct {
 func stageScenes(t *testing.T) []stageScene {
 	t.Helper()
 
-	elenco := novoPiloto(t)
-	// O `novoPiloto` já semeia um herói para o jogador; faltam dois.
+	elenco := newSceneFixture(t)
+	// O `newSceneFixture` já semeia um herói para o jogador; faltam dois.
 	seedCharacterAtLevel(t, elenco.s, elenco.jogador, "Anã Clériga", 4, 20, 20, 6, 6)
 	seedCharacterAtLevel(t, elenco.s, elenco.jogador, "Elfo Ladino", 2, 14, 14, 0, 0)
 
 	// E já semeia uma campanha para o mestre; faltam duas. A cena de campanhas é
 	// pedida pelo MESTRE, e não pelo jogador: é ele que tem mesa.
-	campanhas := novoPiloto(t)
+	campanhas := newSceneFixture(t)
 	seedCampaign(t, campanhas.s, campanhas.mestre)
 	seedCampaign(t, campanhas.s, campanhas.mestre)
 

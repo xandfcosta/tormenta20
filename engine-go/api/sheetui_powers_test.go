@@ -10,9 +10,9 @@ import (
 	"testing"
 )
 
-func barbaro(t *testing.T, nivel int64) (pilotoFixture, int64) {
+func barbaro(t *testing.T, nivel int64) (sceneFixture, int64) {
 	t.Helper()
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.jogador, Name: "Furioso", Origin: "Batedor", Level: nivel,
 		HpMax: 60, HpCurrent: 60, MpMax: 20, MpCurrent: 20,
@@ -29,13 +29,13 @@ func barbaro(t *testing.T, nivel int64) (pilotoFixture, int64) {
 	return f, id
 }
 
-func powerScreen(t *testing.T, f pilotoFixture, id int64) string {
+func powerScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=abilities", id), "").Body.String()
 }
 
-func powerCommand(t *testing.T, f pilotoFixture, id int64, caminho, corpo string) string {
+func powerCommand(t *testing.T, f sceneFixture, id int64, caminho, corpo string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/poderes/%s?tab=abilities", id, caminho)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
@@ -79,7 +79,7 @@ func TestTheCollectionJoinsTheFiveOrigins(t *testing.T) {
 	}
 }
 
-func choiceCom(t *testing.T, f pilotoFixture, id int64, poderes, origem string) {
+func choiceCom(t *testing.T, f sceneFixture, id int64, poderes, origem string) {
 	t.Helper()
 	var set setBuilder
 	set.Add("classPowers = ?", poderes)
@@ -281,7 +281,7 @@ func TestTheStanceGrantComesAndGoesWithIt(t *testing.T) {
 	}
 }
 
-func effects(t *testing.T, f pilotoFixture, id int64) map[string]bool {
+func effects(t *testing.T, f sceneFixture, id int64) map[string]bool {
 	t.Helper()
 	linhas, err := f.s.sceneCore().Queries().ListActiveEffectsByCharacter(context.Background(), id)
 	if err != nil {

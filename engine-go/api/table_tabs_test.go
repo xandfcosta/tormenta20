@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func (f pilotoFixture) openSecond(t *testing.T, nome string) *board.BoardState {
+func (f sceneFixture) openSecond(t *testing.T, nome string) *board.BoardState {
 	t.Helper()
 	b, err := f.s.tableHost().Boards().Open(context.Background(), f.sessionID, nome, "stone")
 	if err != nil {
@@ -24,7 +24,7 @@ func (f pilotoFixture) openSecond(t *testing.T, nome string) *board.BoardState {
 // região: um `<h2>` por aba faria o leitor de tela anunciar três títulos para
 // uma região que desenha uma cena.
 func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	uma := f.pede(t, f.mestre, http.MethodGet, f.tableUrl(), "").Body.String()
@@ -58,7 +58,7 @@ func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 // para a mesa faria cada clique de um jogador arrastar a tela dos outros cinco —
 // e no meio de um combate ninguém entenderia por que o mapa mudou.
 func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone") // "Taverna do Javali", a primeira
 	cripta := f.openSecond(t, "Cripta")
 
@@ -88,7 +88,7 @@ func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 // cairia na aba padrão — ele pintaria a cripta e o terreno apareceria na taverna
 // que a mesa está vendo, que é a emboscada vazando por outro caminho.
 func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	taverna := f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 	ctx := context.Background()
@@ -114,7 +114,7 @@ func TestTheGestureLandsOnTheTabTheGmIsLookingAt(t *testing.T) {
 // sessão não tem tabuleiro" com a taverna aberta na mesa ao lado — e ele não
 // teria como ligar uma coisa à outra.
 func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 	f.pede(t, f.jogador, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
@@ -147,7 +147,7 @@ func TestClosingATabSendsWhoeverWasOnItBackToTheDefault(t *testing.T) {
 // Rei Caolho" no HTML de quem não pode saber que há uma cripta é o vazamento que
 // não aparece na tela — só no ver-código-fonte.
 func TestATabUnderTheCurtainDoesNotTellThePlayerTheSceneName(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	emboscada := f.openSecond(t, "Cripta do Rei Caolho")
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+emboscada.ID, "")

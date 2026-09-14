@@ -11,21 +11,21 @@ import (
 	"testing"
 )
 
-func bagScreen(t *testing.T, f pilotoFixture, id int64) string {
+func bagScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	return f.pede(t, f.jogador, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=bag", id), "").Body.String()
 }
 
 // bagCommand dispara um gesto e devolve a recusa, ou "".
-func bagCommand(t *testing.T, f pilotoFixture, id int64, caminho string) string {
+func bagCommand(t *testing.T, f sceneFixture, id int64, caminho string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/%s?tab=bag", id, caminho)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, "").Body.String())
 }
 
 // itemSemeia põe um item na ficha e devolve o id.
-func itemSemeia(t *testing.T, f pilotoFixture, id int64, catalogo, nome string, equipado string) int64 {
+func itemSemeia(t *testing.T, f sceneFixture, id int64, catalogo, nome string, equipado string) int64 {
 	t.Helper()
 	item, err := f.s.sceneCore().Queries().CreateItem(context.Background(), sqlcgen.CreateItemParams{
 		Characterid: id, Catalogid: sql.NullString{String: catalogo, Valid: catalogo != ""},
@@ -41,7 +41,7 @@ func itemSemeia(t *testing.T, f pilotoFixture, id int64, catalogo, nome string, 
 
 // equipped lê a coluna direto do banco — o teste não pergunta à tela o que
 // aconteceu no banco.
-func equipped(t *testing.T, f pilotoFixture, itemID int64) string {
+func equipped(t *testing.T, f sceneFixture, itemID int64) string {
 	t.Helper()
 	item, err := f.s.sceneCore().Queries().GetItem(context.Background(), itemID)
 	if err != nil {
@@ -244,14 +244,14 @@ func TestMoneyNeverGoesNegative(t *testing.T) {
 	}
 }
 
-func money(t *testing.T, f pilotoFixture, id int64, modo string, valor float64) string {
+func money(t *testing.T, f sceneFixture, id int64, modo string, valor float64) string {
 	t.Helper()
 	corpo := fmt.Sprintf(`{"tibar_mode":%q,"tibar_value":%v}`, modo, valor)
 	alvo := fmt.Sprintf("/personagens/%d/dinheiro?tab=bag", id)
 	return sceneRefusal(f.pede(t, f.jogador, http.MethodPost, alvo, corpo).Body.String())
 }
 
-func tibar(t *testing.T, f pilotoFixture, id int64) float64 {
+func tibar(t *testing.T, f sceneFixture, id int64) float64 {
 	t.Helper()
 	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {

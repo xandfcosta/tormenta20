@@ -17,7 +17,7 @@ import { expect, type Page, test } from '@playwright/test'
  *     Tailwind zera e da camada de topo do navegador.
  *
  * A página é do Go, não da SPA: é o proxy `/` que a alcança em dev, e o
- * mesmo binário a serve no alvo de build. Se o piloto for apagado, este arquivo
+ * mesmo binário a serve no alvo de build. Se o app for apagado, este arquivo
  * vai junto.
  */
 

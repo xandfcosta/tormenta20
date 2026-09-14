@@ -11,7 +11,7 @@ import (
 )
 
 func TestThePullReachesWhoNeverChoseATab(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone") // a padrão, onde o jogador está sem ter escolhido
 	cripta := f.openSecond(t, "Cripta")
 
@@ -48,7 +48,7 @@ func TestThePullReachesWhoNeverChoseATab(t *testing.T) {
 // pior dos dois mundos: a tela oferece o gesto de voltar e o servidor o desfaz,
 // e a pessoa clica três vezes achando que o clique não pegou.
 func TestAfterThePullThePlayerChoosesAgain(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	taverna := f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID, "")
@@ -71,7 +71,7 @@ func TestAfterThePullThePlayerChoosesAgain(t *testing.T) {
 // Ela é o ponto desta fatia: "parem tudo e olhem isto" é do mestre. Um jogador
 // que puxasse tiraria dos outros cinco exatamente o que a fatia 1 lhes deu.
 func TestThePlayerShowsNothingToTheTable(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 
@@ -103,7 +103,7 @@ func TestThePlayerShowsNothingToTheTable(t *testing.T) {
 // tela, e a sabotagem que arranca a queda passou VERDE. Duas quedas diferentes
 // só se distinguem quando a escolha da pessoa não é a padrão.
 func TestAPullToAnEndedSceneGivesBackTheViewersOwnTab(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone") // "Taverna do Javali", a PADRÃO
 	ponte := f.openSecond(t, "Ponte de Corda")
 	cripta := f.openSecond(t, "Cripta")
@@ -141,7 +141,7 @@ func TestAPullToAnEndedSceneGivesBackTheViewersOwnTab(t *testing.T) {
 // empurrão de superfície, "parem tudo e olhem isto" não faria absolutamente nada
 // na tela de quem nunca tocou em nada.
 func TestAPullToTheTabThePlayerIsAlreadyOnStillTellsThem(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	taverna := f.seedOpenBoard(t, "stone") // a padrão, onde o jogador já está
 	f.openSecond(t, "Cripta")
 
@@ -175,7 +175,7 @@ func TestAPullToTheTabThePlayerIsAlreadyOnStillTellsThem(t *testing.T) {
 // Mede o FIO, e não o estado: o que este caso prende é quantas vezes o remendo
 // de sinal SAI, que é a coisa que a pessoa sente.
 func TestTheSurfaceIsPushedOncePerPull(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	cripta := f.openSecond(t, "Cripta")
 	f.pede(t, f.mestre, http.MethodPost, f.tableUrl()+"/tabuleiro/aba/"+cripta.ID+"/mostrar", "")

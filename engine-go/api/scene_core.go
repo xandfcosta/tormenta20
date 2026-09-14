@@ -56,7 +56,7 @@ func (c sceneCore) Catalogs() *engine.Catalogs { return c.catalogs }
 func (c sceneCore) BookAddress() bookui.BookAddress { return c.livro }
 
 // Asset monta o endereço versionado de um estático.
-func (c sceneCore) Asset(arquivo string) string { return EstaticoDoPiloto(arquivo) }
+func (c sceneCore) Asset(arquivo string) string { return AssetURL(arquivo) }
 
 // CurrentUserID lê quem está pedindo do contexto que o `requirePage` escreveu.
 //
@@ -99,13 +99,13 @@ func (c sceneCore) WritePage(
 	// catálogo. Este é o único lugar do projeto que monta uma página, então é
 	// aqui que a injeção cabe — pôr os campos em cada `ui.Page{…}` seria repetir
 	// dezoito vezes o que não varia.
-	p.Asset = EstaticoDoPiloto
+	p.Asset = AssetURL
 	p.Overlays = []templ.Component{finder.Dialog(), bookui.BookDialog(), bookui.EntryDialog()}
 	if err := ui.Layout(p, corpo).Render(r.Context(), &buf); err != nil {
 		// Em buffer e não direto no `w`: um erro no meio da renderização já
 		// teria mandado 200 e meia página, e o jogador veria uma tela cortada
 		// sem nenhum sinal de que faltou coisa.
-		http.Error(w, fmt.Sprintf("render da página do piloto: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("render da página: %v", err), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

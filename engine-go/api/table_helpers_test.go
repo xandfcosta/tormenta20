@@ -37,7 +37,7 @@ func bodyDraft(dentro string) string {
 // navegador nunca recebeu.
 func compiledStylesheet(t *testing.T) string {
 	t.Helper()
-	folha, err := os.ReadFile(filepath.Join("piloto", "static", "piloto.css"))
+	folha, err := os.ReadFile(filepath.Join("assets", "static", "app.css"))
 	if err != nil {
 		t.Fatalf("ler a folha compilada: %v", err)
 	}

@@ -13,7 +13,7 @@ import (
 // fereOHeroi grava o dano DIRETO no banco: é o arranjo do caso, não o código
 // sob teste. O caminho de ferir de verdade é o da Mesa, e trazê-lo para cá
 // poria dois handlers na frente da pergunta.
-func fereOHeroi(t *testing.T, f pilotoFixture, id, pvAtual, pmAtual int64) {
+func fereOHeroi(t *testing.T, f sceneFixture, id, pvAtual, pmAtual int64) {
 	t.Helper()
 	row, err := f.s.queries.GetCharacter(context.Background(), id)
 	if err != nil {
@@ -27,7 +27,7 @@ func fereOHeroi(t *testing.T, f pilotoFixture, id, pvAtual, pmAtual int64) {
 	}
 }
 
-func osVitaisDe(t *testing.T, f pilotoFixture, id int64) (pv, pvMax, pm, pmMax int64) {
+func osVitaisDe(t *testing.T, f sceneFixture, id int64) (pv, pvMax, pm, pmMax int64) {
 	t.Helper()
 	row, err := f.s.queries.GetCharacter(context.Background(), id)
 	if err != nil {
@@ -38,7 +38,7 @@ func osVitaisDe(t *testing.T, f pilotoFixture, id int64) (pv, pvMax, pm, pmMax i
 
 // umHeroiForjado devolve o id de um herói recém-nascido e o endereço dos
 // atributos dele.
-func umHeroiForjado(t *testing.T, f pilotoFixture) (int64, string) {
+func umHeroiForjado(t *testing.T, f sceneFixture) (int64, string) {
 	t.Helper()
 	rec := postaAForja(t, f, f.jogador, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
@@ -61,7 +61,7 @@ func umHeroiForjado(t *testing.T, f pilotoFixture) (int64, string) {
 // Não é escalada de privilégio, porque exige ser o dono. Mas fura o MESTRE, e o
 // sistema inteiro de vitais existe para o dano ser dele.
 func TestTheAttributeStepDoesNotHealTheHero(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id, atributos := umHeroiForjado(t, f)
 	fereOHeroi(t, f, id, 3, 0)
 
@@ -94,7 +94,7 @@ func TestTheAttributeStepDoesNotHealTheHero(t *testing.T) {
 // de ser a mesma: com "prende na faixa" só para baixo, o ciclo `−` e `+` devolve
 // dois pontos de PV por volta — o mesmo defeito, mais devagar.
 func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id, atributos := umHeroiForjado(t, f)
 
 	// O elfo tem Constituição −1: com a base em +1 o total é 0, e o guerreiro de
@@ -134,7 +134,7 @@ func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 // abrir a ficha com 18 de 20 PV sem nunca ter apanhado. O que deixou de
 // acontecer é a CURA de quem apanhou.
 func TestTheNewbornStillLeavesTheForgeWithFullPools(t *testing.T) {
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id, atributos := umHeroiForjado(t, f)
 
 	if pv, pvMax, pm, pmMax := osVitaisDe(t, f, id); pv != pvMax || pm != pmMax {

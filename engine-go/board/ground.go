@@ -10,7 +10,7 @@ package board
 // tela. Isto vivia no fim do `vista.go`, que é maquinário de RENDERIZAÇÃO do
 // piloto — o servidor desenhando a moldura porque quem enquadra é o navegador.
 //
-// A `main` ainda não tem este arquivo: hoje só o piloto consome a lista, e o
+// A `main` ainda não tem este arquivo: hoje só o app consome a lista, e o
 // equivalente da SPA é o `TERRAIN_LABEL` em TypeScript. Fica aqui já separado
 // para a próxima colheita não repetir a extração — e o nome está avisado do
 // outro lado, para as duas branches não inventarem dois arquivos para a mesma
@@ -27,9 +27,9 @@ type PlaceGround struct {
 // PlaceGrounds é a lista que o mestre escolhe ao abrir uma cena.
 //
 // Ela vive aqui e não na tela porque JÁ EXISTIA duas vezes — em `.chao-*` no CSS
-// do piloto e no `TERRAIN_LABEL` da SPA —, e uma terceira cópia escrita à mão no
+// do app e no `TERRAIN_LABEL` da SPA —, e uma terceira cópia escrita à mão no
 // templ é como nasce a opção que a tela oferece e o CSS não sabe pintar. O
-// `api/piloto_ground_test.go` amarra esta lista ao CSS: acrescentar um chão aqui sem
+// `api/ground_test.go` amarra esta lista ao CSS: acrescentar um chão aqui sem
 // pintá-lo lá derruba o guarda.
 //
 // A ORDEM é a da SPA, e o primeiro é o padrão de quem não escolhe.

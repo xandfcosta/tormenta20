@@ -899,7 +899,7 @@ func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, pa
 // lista junto (ALE-269, item 10).
 //
 // A primeira parada é onde a peça está; cada uma seguinte estende o caminho,
-// contornando o que quem move quiser. É a forma que o piloto usa, e é ela que
+// contornando o que quem move quiser. É a forma que o app usa, e é ela que
 // torna "desfazer a última perna" uma operação exata em vez de um palpite: o
 // caminho se reconstrói pelas paradas que sobraram, e reconstruir é o que o
 // `PathThroughStops` já faz de graça.

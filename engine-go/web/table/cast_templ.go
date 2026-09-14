@@ -25,7 +25,7 @@ import (
 // mais ataques e habilidades — trabalho de outra natureza.
 //
 // O QUE A FICHA MOSTRA, e por que não é a ficha inteira: a SPA abre o
-// `CharacterSheet` completo e editável, e o piloto NÃO TEM ficha — ela é a
+// `CharacterSheet` completo e editável, e o app NÃO TEM ficha — ela é a
 // ÚLTIMA tela da migração e ainda vive na SPA. Construí-la aqui seria fazer a
 // última tela fora de ordem, dentro de uma superfície que é sobre outra coisa.
 // Então esta caixa mostra o que o mestre precisa DA MESA: quem é, como está, e

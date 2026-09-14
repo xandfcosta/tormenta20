@@ -4,7 +4,7 @@ em código é em inglês. Ver "Idioma".
 
 São dois pacotes. `engine-go/` é o app: a API HTTP na :3001, o motor de regras,
 e as CENAS em `.templ` servidas com Datastar — mais a folha e as ilhas de JS
-delas, em `api/piloto/src`. `e2e/` é a suíte de Playwright, que dirige o app
+delas, em `api/assets/src`. `e2e/` é a suíte de Playwright, que dirige o app
 rodando. Um processo serve tudo, e ele sobe por `docker compose up -d --build`
 com o banco em bind mount no hospedeiro — um serviço só, sem proxy na frente
 (ALE-273).
@@ -24,8 +24,8 @@ e a regra tem um lugar só.
   [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — é lá que as regras moram, e o
   número não é repetido aqui de propósito (ver "Documentação").
 - **Mexeu em `.templ`?** `go tool templ generate`, e **leia a saída DELE**, não a
-  do `go build`. **Classe CSS nova no piloto?**
-  `engine-go/scripts/build-piloto-css.sh`. As duas armadilhas — e as dez do
+  do `go build`. **Classe CSS nova no app?**
+  `engine-go/scripts/build-css.sh`. As duas armadilhas — e as dez do
   Datastar que não deixam erro para trás — estão explicadas no
   [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
 - **Antes de commitar:** `go test ./...`, `go vet ./...` e `gofmt` no

@@ -13,7 +13,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "verbatimModuleSyntax": true,
-    "paths": { "@/*": ["./api/piloto/src/*"] }
+    "paths": { "@/*": ["./api/assets/src/*"] }
   },
-  "include": ["api/piloto/src", "vite.piloto.config.ts"]
+  "include": ["api/assets/src", "vite.config.ts"]
 }

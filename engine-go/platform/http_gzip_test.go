@@ -17,7 +17,7 @@ import (
 // O que eles prendem não é "comprime" — é o conjunto de casos em que comprimir
 // está ERRADO, e um deles não deixa erro para trás.
 
-// aCena é um handler que responde como as cenas do piloto respondem.
+// aCena é um handler que responde como as cenas respondem.
 //
 // Ela declara o `Content-Length`, como faz todo handler que serve conteúdo de
 // tamanho conhecido. Sem essa linha não há o que apagar, e a asserção sobre o

@@ -20,7 +20,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// O piloto Datastar (ALE-219): a superfície "Mesa" do jogador renderizada pelo
+// O app Datastar (ALE-219): a superfície "Mesa" do jogador renderizada pelo
 // SERVIDOR, ao lado da SPA e no mesmo binário.
 //
 // Ela mora fora do `Router()` de propósito. O `Router()` é montado sob `/api`
@@ -31,7 +31,7 @@ import (
 // `t20_session` antes do Bearer (middleware.go), e o cookie ignora porta, então
 // a sessão criada pela SPA vale aqui.
 //
-// > Aqui havia um lembrete de "saída do piloto" mandando apagar `api/mesa*`, a
+// > Aqui havia um lembrete de "saída do app" mandando apagar `api/mesa*`, a
 // > linha do `buildMux` e a entrada de proxy num `vite.config.ts` — arquivo que
 // > nunca existiu com esse nome. A saída aconteceu (ALE-280, as cenas subiram
 // > para a raiz) e o proxy morreu com a SPA (ALE-321).

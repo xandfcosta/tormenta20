@@ -12,7 +12,7 @@ import (
 // O ORÁCULO DA CÓPIA DO VERBETE (ALE-269, superfície 6b).
 //
 // Ele nasceu como PARIDADE: enquanto as duas telas existiam, o mestre podia
-// copiar o Ogro pela SPA numa noite e pelo piloto na outra, e o bloco ia para a
+// copiar o Ogro pela SPA numa noite e pelo app na outra, e o bloco ia para a
 // MESMA coluna do MESMO banco. Duas cópias diferentes do mesmo verbete é a
 // divergência mais cara possível aqui, porque ela não aparece — os dois blocos
 // são JSON válido. O esperado era MEDIDO rodando o `creature-from-monster.ts`.

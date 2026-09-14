@@ -19,7 +19,7 @@ func seedOficio(t *testing.T, s *Server, id int64, nome, atributo string) {
 		t.Fatalf("semear o ofício %q: %v", nome, err)
 	}
 }
-func expertiseFixture(t *testing.T) (pilotoFixture, int64) {
+func expertiseFixture(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
 	f, id := fighterFixture(t)
 	seedPericia(t, f.s, id, "Acrobacia", "dexterity", false)
@@ -28,7 +28,7 @@ func expertiseFixture(t *testing.T) (pilotoFixture, int64) {
 	return f, id
 }
 
-func expertiseScreen(t *testing.T, f pilotoFixture, id int64, busca string) string {
+func expertiseScreen(t *testing.T, f sceneFixture, id int64, busca string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d?tab=expertises", id)
 	if busca != "" {
@@ -38,7 +38,7 @@ func expertiseScreen(t *testing.T, f pilotoFixture, id int64, busca string) stri
 }
 
 // expertiseAt manda um dos gestos e devolve a tela redesenhada.
-func expertiseAt(t *testing.T, f pilotoFixture, id int64, caminho string) string {
+func expertiseAt(t *testing.T, f sceneFixture, id int64, caminho string) string {
 	t.Helper()
 	alvo := fmt.Sprintf("/personagens/%d/pericias/%s?tab=expertises", id, caminho)
 	rec := f.pede(t, f.jogador, http.MethodPost, alvo, "")
@@ -49,7 +49,7 @@ func expertiseAt(t *testing.T, f pilotoFixture, id int64, caminho string) string
 }
 
 // training lê o que o BANCO guarda, que é a única fonte da verdade do gesto.
-func training(t *testing.T, f pilotoFixture, id int64, nome string) (treinada bool, atributo string) {
+func training(t *testing.T, f sceneFixture, id int64, nome string) (treinada bool, atributo string) {
 	t.Helper()
 	todas, err := f.s.sceneCore().Queries().ListExpertisesByCharacter(context.Background(), id)
 	if err != nil {

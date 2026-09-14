@@ -16,16 +16,16 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func guerreiro(t *testing.T) (pilotoFixture, int64) {
+func guerreiro(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
-	f := novoPiloto(t)
+	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.jogador, "Guerreiro", 3, 20, 20, 10, 10)
 	seedClasse(t, f.s, id, "Guerreiro", 3)
 	return f, id
 }
 
 // saved lê o blob da coluna, que é a única fonte da verdade do painel.
-func saved(t *testing.T, f pilotoFixture, id int64) map[string]bool {
+func saved(t *testing.T, f sceneFixture, id int64) map[string]bool {
 	t.Helper()
 	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
 	if err != nil {
@@ -35,7 +35,7 @@ func saved(t *testing.T, f pilotoFixture, id int64) map[string]bool {
 }
 
 // saveHand põe um estado que só um ajuste manual produziria.
-func saveHand(t *testing.T, f pilotoFixture, id int64, blob string) {
+func saveHand(t *testing.T, f sceneFixture, id int64, blob string) {
 	t.Helper()
 	err := f.s.sceneCore().Queries().SetProficiencies(context.Background(), sqlcgen.SetProficienciesParams{
 		Proficiencies: blob, UpdatedAt: platform.NowISO(), ID: id,
@@ -255,7 +255,7 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 	}
 	roteador, ok := f.s.WebRouter().(chi.Routes)
 	if !ok {
-		t.Fatal("o roteador do piloto deixou de ser um chi.Mux: esta varredura não alcança mais as rotas")
+		t.Fatal("o roteador do app deixou de ser um chi.Mux: esta varredura não alcança mais as rotas")
 	}
 	if err := chi.Walk(roteador, andar); err != nil {
 		t.Fatalf("varrer as rotas: %v", err)

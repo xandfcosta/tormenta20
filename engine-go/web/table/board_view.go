@@ -518,7 +518,7 @@ func tokenName(p boardToken) string {
 // A lista vem do `tabuleiro` e NÃO é escrita aqui, e esta função é a prova de
 // por quê: ela mantinha um conjunto próprio em inglês — `gold/red/green/blue/
 // violet` — enquanto a autoridade sempre aceitou `ouro/carmim/azul/verde`.
-// Nenhuma das cinco casava com nenhuma das quatro, então TODO marcador do piloto
+// Nenhuma das cinco casava com nenhuma das quatro, então TODO marcador do app
 // caía no dourado, inclusive o carmim escolhido na outra tela. Nada estourava.
 //
 // A cor vem do banco, então é dado de cliente: fora da lista ela cai no padrão,

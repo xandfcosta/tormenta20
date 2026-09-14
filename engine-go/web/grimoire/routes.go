@@ -9,7 +9,7 @@ import (
 
 // A rota da FOLHA DE ESPECIFICAÇÃO (ALE-251).
 //
-// Ela é a única cena do piloto que pede um script PRÓPRIO — o `grimorio.js`,
+// Ela é a única cena do app que pede um script PRÓPRIO — o `grimorio.js`,
 // que mede. Ele não entra no `layout` de todas as páginas de propósito: canvas
 // e cálculo de contraste não têm o que fazer no caminho de quem só quer jogar.
 
