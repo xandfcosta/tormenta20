@@ -309,7 +309,15 @@ templ detailIcon(nome string) {
 templ breakdownRows(rows []breakdownRow) {
 	<ul class="space-y-1">
 		for _, row := range rows {
-			<li class={ "border-b border-grimorio-iron pb-1", templ.KV("text-muted-foreground", row.Muted) }>
+			// A linha INDENTADA explica a de cima em vez de somar ao lado dela — as
+			// contribuições de item sob o "Outros" das Perícias. Ela perde a régua
+			// de baixo e ganha uma à ESQUERDA, porque é a régua de baixo que faz
+			// uma linha ler como PARCELA: com ela, quem soma o que vê chega a −9
+			// debaixo de um total de −2 (o campo existia e nenhum `.templ` o lia).
+			<li class={ "pb-1",
+				templ.KV("border-b border-grimorio-iron", !row.Indented),
+				templ.KV("ml-1 border-l border-grimorio-iron pl-2 text-2xs", row.Indented),
+				templ.KV("text-muted-foreground", row.Muted || row.Indented) }>
 				<div class="flex items-center justify-between gap-2">
 					<span class="truncate">{ row.Label }</span>
 					<span class="shrink-0 font-mono">{ row.Value }</span>
