@@ -7,10 +7,9 @@ import (
 )
 
 // TestVitalsParity proves the catalog-driven vitals (ComputeVitals) on real data:
-// for each seed it builds the same VitalContext the front assembles (attrTotals
-// from engine effects, no conditionals) and asserts {pvMax,pmMax} match the TS
-// oracle (`vitals`, dumped from `enginePools`). Inc.3's target. The lone god-power
-// case is arcanista-erudito (Bênção do Mana). Regenerate:
+// for each seed it builds the VitalContext (attrTotals from engine effects, no
+// conditionals) and asserts {pvMax,pmMax} match the oracle's `vitals`. The lone
+// god-power case is arcanista-erudito (Bênção do Mana). Regenerate:
 //
 //	cd engine-go && go run ./cmd/genoracle
 func TestVitalsParity(t *testing.T) {

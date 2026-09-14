@@ -29,9 +29,6 @@ import (
 // o ataque de quem não está em Fúria, e a ficha discordaria da Mesa, que já lê o
 // estado ligado. O opt-in do jogador vem do banco dentro do próprio DTO
 // (`loadPlayState`), então não há segunda fonte a consultar.
-//
-// É também a primeira chamada de `ComputeWeaponCards` fora do WASM: até agora só
-// o navegador montava cartão de arma.
 
 // combatPanel é a aba Combate pronta para desenhar.
 type panelCombat struct {

@@ -1,6 +1,10 @@
-// Command api is the app's HTTP server. It opens + migrates the SQLite database
-// and serves the domain routes the frontend consumes — via the Vite proxy in
-// dev, and directly alongside the built SPA in production (STATIC_DIR).
+// O comando api é o servidor HTTP do app, e ele é o processo INTEIRO: abre e
+// migra o SQLite, e serve as cenas em templ, a API JSON sob `/api/` e o fluxo ao
+// vivo por SSE — tudo na mesma porta, em todo ambiente.
+//
+// > Aqui dizia que ele servia "as rotas de domínio que o front consome — pelo
+// > proxy do Vite em desenvolvimento, e ao lado da SPA buildada em produção
+// > (STATIC_DIR)". Nada disso existe desde a ALE-272 (ALE-321).
 //
 // The environment comes from `.env.<APP_ENV>` next to the package (ALE-119):
 // `air` boots it as development, `pnpm start` as production.
@@ -130,8 +134,8 @@ func httpServerFor(cfg platform.Config, mux http.Handler) *http.Server {
 //     manda o cabeçalho segura uma goroutine para sempre (slowloris);
 //   - `IdleTimeout` recolhe conexões ociosas do keep-alive;
 //   - `WriteTimeout` fica de FORA de propósito. Ele mataria o fluxo SSE, que é
-//     conexão longa por natureza, e o download do wasm de 780 KB numa rede
-//     ruim. É o timeout que parece obrigatório e é justamente o errado aqui.
+//     conexão longa por natureza, e o download do PDF do livro numa rede ruim.
+//     É o timeout que parece obrigatório e é justamente o errado aqui.
 func serve(ctx context.Context, cfg platform.Config, mux http.Handler) error {
 	server := httpServerFor(cfg, mux)
 	falhou := make(chan error, 1)
@@ -308,10 +312,8 @@ func contentTypeFor(file string) string {
 // autoriza `immutable` por um ano — sem hash no nome seria mentira, e um
 // jogador ficaria com a versão velha até limpar o cache.
 //
-// O resto revalida a cada carga: o `index.html` porque é ele quem aponta para
-// os assets novos (guardá-lo congelaria o app inteiro numa versão), e o
-// `t20.wasm` porque não é hasheado — a revalidação custa um 304 vazio, que o
-// `ServeFile` já responde pelo `Last-Modified`.
+// O resto revalida a cada carga, porque não é hasheado — a revalidação custa um
+// 304 vazio, que o `ServeFile` já responde pelo `Last-Modified`.
 func cacheControlFor(file string) string {
 	if strings.Contains(filepath.ToSlash(file), "/assets/") {
 		return "public, max-age=31536000, immutable"

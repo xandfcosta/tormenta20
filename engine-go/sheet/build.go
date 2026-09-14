@@ -88,7 +88,7 @@ func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (Charact
 
 	// As regras opcionais da mesa entram na ficha AQUI, e num lugar só (ALE-221):
 	// tudo o que calcula — o `GET /sheet`, os PV/PM do nível, o bônus de
-	// iniciativa, a ficha que o navegador recalcula no WASM — passa por este
+	// iniciativa, a ficha inteira que as cenas desenham — passa por este
 	// carregamento. Falha de leitura não derruba a ficha: o `IgnoredRules` fica
 	// zerado, que significa TODAS as regras em vigor. É o lado seguro, e o único
 	// em que um banco mudo não afrouxa regra sem ninguém ver.

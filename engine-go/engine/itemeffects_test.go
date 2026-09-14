@@ -2,8 +2,8 @@ package engine
 
 import "testing"
 
-// Port of t20-data/src/items/__tests__/engine*.test.ts — the resolution core.
-// Catalog-free: every ActiveItem is built inline. See PORT-PLAN.md §3/§4.
+// The resolution core, case by case.
+// Catalog-free: every ActiveItem is built inline.
 
 func strp(s string) *string { return &s }
 

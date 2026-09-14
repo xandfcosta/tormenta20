@@ -6,15 +6,16 @@ import (
 	"fmt"
 )
 
-// This file ports the catalog-reading layer the collection engine depends on:
-// the SHAPES of the fetched catalogs (items, races, origins, class/general
-// powers, racas, tormenta-power ids) plus the sync lookups derived.ts reaches
-// through the frontend *-cache modules (getCatalogItem, getRace, getOrigin,
-// getOriginBenefit, getGeneralPower, ownedClassPowers,
-// raceWithDeformidade, racaByName). Data comes from the same JSON the front
-// fetches — primed ONCE via PrimeEngineCatalogs. See PORT-PLAN.md §2.
+// The catalog-reading layer the collection engine depends on: the SHAPES of the
+// catalogs (items, races, origins, class/general powers, racas, tormenta-power
+// ids) plus the lookups over them — `Item`, `raceEntryByName`,
+// `raceWithDeformidade` and the origin/power accessors below.
+//
+// The data is primed ONCE via PrimeEngineCatalogs and handed in through the
+// Catalogs receiver — never read from a package-level cache, so a test can prime
+// its own without touching global state.
 
-// ─── Catalog shapes (mirror the TS catalog types) ─────────────────────
+// ─── Catalog shapes (o formato que o despejo de catálogo traz) ─────────────────────
 
 // CatalogItem mirrors items/types.ts CatalogItem — only the fields the
 // collection layer reads are typed.
@@ -142,7 +143,7 @@ type attrDelta struct {
 
 // orderedInts is a JSON object of int values that preserves key order on decode
 // (Go maps don't). Used for atributoMod's mods/variants so the derived attribute
-// modifiers land in the same order as the TS Object.entries iteration.
+// modifiers land na ordem em que o catálogo os traz.
 type orderedInts struct {
 	pairs []attrDelta
 }
@@ -173,7 +174,7 @@ func (o *orderedInts) UnmarshalJSON(b []byte) error {
 // ─── Catalogs holder + priming ────────────────────────────────────────
 
 // Catalogs holds every primed catalog the collection layer reads. Injected into
-// ActiveItemsFor instead of the TS module-level caches (CLAUDE.md: deps by
+// ActiveItemsFor em vez de cache no nível do pacote (CLAUDE.md: deps by
 // parameter). Static + primed once, so no reactivity is needed.
 type Catalogs struct {
 	itemsByID     map[string]*CatalogItem
@@ -281,8 +282,8 @@ func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 	return nil
 }
 
-// raceEntryByName finds a racas.ts Raca by name (derived.ts raceEntryByName over
-// racasList) — 17 racas, linear scan is cheap.
+// raceEntryByName finds a raça's attribute entry by name — 17 racas, and the
+// map is built once when the catalogs are primed.
 func (c *Catalogs) raceEntryByName(name string) *RaceAttributeEntry { return c.racasByName[name] }
 
 // raceWithDeformidade returns the first name that owns Deformidade (Lefou p23) —
@@ -302,7 +303,7 @@ func (c *Catalogs) raceWithDeformidade(names ...string) string {
 	return ""
 }
 
-// isTormentaPower mirrors the derived.ts `id in tormentaPowersRecord()` check.
+// isTormentaPower diz se o id é de um poder da Tormenta.
 func (c *Catalogs) isTormentaPower(id string) bool { return c.tormentaIDs[id] }
 
 // ownedClassPowers mirrors abilities-cache.ownedClassPowers → ownedClassPowersIn:

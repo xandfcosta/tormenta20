@@ -1,6 +1,6 @@
 package engine
 
-// Pure, catalog-free rules the breakdown layer needs, ported 1:1 from t20-data:
+// Pure, catalog-free rules the breakdown layer needs,:
 // training bonus (expertises.ts), spell save CD + caster attribute (spells.ts),
 // and the class RD tables (damage-reduction.ts). Distinct from the MVP skill
 // model in skills.go — the real derive uses a level-based training bonus.

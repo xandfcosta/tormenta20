@@ -2,9 +2,8 @@ package engine
 
 import "strings"
 
-// The magic / carrying / damage-reduction / temp-HP breakdowns of derived.ts,
-// ported 1:1. Split from breakdowns.go by responsibility (spell + PM economy,
-// carga, RD, PV temporário). See PORT-PLAN.md §3 (task #5).
+// The magic / carrying / damage-reduction / temp-HP breakdowns. Split from
+// breakdowns.go by responsibility: spell + PM economy, carga, RD, PV temporário.
 
 type RdBreakdown struct {
 	Total   int            `json:"total"`
@@ -16,12 +15,12 @@ type TempHpBreakdown struct {
 	Sources []SourceAmount `json:"sources"`
 }
 
-// flySpeedTotal ports derived.ts: fly speed from effects (0 = can't fly).
+// flySpeedTotal: fly speed from effects (0 = can't fly).
 func flySpeedTotal(e ItemEffects) int {
 	return max(0, StatFor(e, ModifierTarget{K: "flySpeed"}).Total)
 }
 
-// inventorySlotsTotal ports derived.ts (p141): 10 +2/Força (or −1/Força negativa)
+// inventorySlotsTotal (p141): 10 +2/Força (or −1/Força negativa)
 // + item slot mods.
 func inventorySlotsTotal(ch Character, e ItemEffects) int {
 	effStr := effectiveAttribute(ch, "strength", e)
@@ -32,7 +31,7 @@ func inventorySlotsTotal(ch Character, e ItemEffects) int {
 	return base + StatFor(e, ModifierTarget{K: "inventorySlots"}).Total
 }
 
-// casterLevelForPmLimit ports derived.ts (p224): best spellcasting-class level,
+// casterLevelForPmLimit (p224): best spellcasting-class level,
 // or character level for non-casters.
 func casterLevelForPmLimit(ch Character) int {
 	best, found := 0, false
@@ -84,7 +83,7 @@ func bestBaseSpellCd(ch Character, e ItemEffects) *int {
 	return best
 }
 
-// spellCdByAttribute ports derived.ts computeBestCd's per-class CD: the spell
+// spellCdByAttribute is the per-class CD: the spell
 // save CD keyed by casting attribute (10 + ½ nível + FINAL attr mod), so a spell
 // row can pick the CD for any of its applicable classes without re-deriving.
 func spellCdByAttribute(ch Character, e ItemEffects) map[string]int {
@@ -95,12 +94,12 @@ func spellCdByAttribute(ch Character, e ItemEffects) map[string]int {
 	return out
 }
 
-// spellDCBonus ports derived.ts: item spellDC bonus + contributions.
+// spellDCBonus: item spellDC bonus + contributions.
 func spellDCBonus(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "spellDC"})
 }
 
-// pmCostMod ports derived.ts: item pmCost modifier + contributions.
+// pmCostMod: item pmCost modifier + contributions.
 func pmCostMod(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "pmCost"})
 }
@@ -183,7 +182,7 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 	return RdBreakdown{Total: general + especializacao + granted.Total, Sources: sources}
 }
 
-// tempHpFromPowers ports derived.ts: Alma de Bronze (Bárbaro p41) grants
+// tempHpFromPowers: Alma de Bronze (Bárbaro p41) grants
 // nível + Força temp PV while furia is active.
 func tempHpFromPowers(ch Character, e ItemEffects, furiaActive bool) TempHpBreakdown {
 	empty := TempHpBreakdown{Total: 0, Sources: []SourceAmount{}}

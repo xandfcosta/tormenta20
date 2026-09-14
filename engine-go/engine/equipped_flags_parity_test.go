@@ -12,7 +12,7 @@ import (
 // oracle (`equippedFlags`, gerado por `go run ./cmd/genoracle`) — the last
 // effects-cru rule to move off TS (Fase A.3.3).
 //
-// Regenerate the oracle when the TS rules change:
+// Regenere o oráculo quando a regra mudar:
 //
 //	cd engine-go && go run ./cmd/genoracle
 func TestEquippedFlagsParity(t *testing.T) {

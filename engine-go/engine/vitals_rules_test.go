@@ -4,11 +4,10 @@ import "testing"
 
 // PV/PM pools — livro p35 ("Subindo de Nível" e "Multiclasse").
 //
-// These pools were covered only by the parity oracles: byte-equal against a TS
-// snapshot, which proves the two engines AGREE but never that either matches the
-// book. Once the TS side is retired (ALE-104) the oracle regenerates from Go
-// itself, so the rule needs to be pinned against the BOOK here, in the engine
-// that runs it (ALE-105).
+// These pools were once covered only by the parity oracles: byte-equal against a
+// snapshot, which proves the engine did not CHANGE but never that it matches the
+// book. With a single engine the oracle regenerates from Go itself, so the rule
+// is pinned against the BOOK here, in the engine that runs it (ALE-105).
 //
 // The two rules with a worked example in the text:
 //

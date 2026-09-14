@@ -15,9 +15,8 @@ import (
 )
 
 // O intervalo do comentário-batida. Ele NÃO é para detectar queda — disso o
-// contexto cuida —, é para atravessar intermediário que fecha conexão ociosa: o
-// proxy do Vite em desenvolvimento e qualquer coisa entre o mestre e a mesa
-// numa rede doméstica. 25s fica confortavelmente abaixo dos 60s que é o padrão
+// contexto cuida —, é para atravessar intermediário que fecha conexão ociosa:
+// qualquer coisa entre o mestre e a mesa numa rede doméstica. 25s fica confortavelmente abaixo dos 60s que é o padrão
 // mais comum.
 const Heartbeat = 25 * time.Second
 

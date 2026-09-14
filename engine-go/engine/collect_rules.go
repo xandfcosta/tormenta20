@@ -2,7 +2,7 @@ package engine
 
 import "fmt"
 
-// Pure, catalog-free rules ported 1:1 from t20-data: race/origin modifier
+// Pure, catalog-free rules: race/origin modifier
 // assembly (race-logic.ts / origin-logic.ts), atributo resolution
 // (racas-attr.ts), item proficiency (item-classify.ts), Tormenta Carisma math
 // (tormenta-carisma.ts), and class-power ownership (classes/ownership.ts). All
@@ -40,7 +40,7 @@ func raceModifiers(race *RaceDefinition, variantChoices map[string]bool) []Modif
 }
 
 // originModifiers ports abilities/origin-logic.ts: sum the modifiers of the
-// chosen benefits (benefits then poderUnico), matching the TS iteration order.
+// chosen benefits (benefits then poderUnico), e a ORDEM importa: o oráculo compara byte a byte.
 func originModifiers(origin *OriginDefinition, choiceSet map[string]bool) []Modifier {
 	out := []Modifier{}
 	all := make([]OriginBenefit, 0, len(origin.Benefits)+1)
@@ -55,12 +55,10 @@ func originModifiers(origin *OriginDefinition, choiceSet map[string]bool) []Modi
 	return out
 }
 
-// resolveAttributeDeltas ports racas-attr.ts resolveAtributoMod: resolve a raça's
-// atributoMod into an ORDERED list of attribute deltas (the order
-// raceAttributeMods emits them). Returns an error on invalid choices, mirroring
-// the TS throws (the caller swallows them into no mods, like derived.ts'
-// try/catch). Named apart from the MVP engine's map-returning resolveAtributoMod
-// (races.go), which serves the flattened CharacterInput.
+// resolveAttributeDeltas resolves a raça's atributoMod into an ORDERED list of
+// attribute deltas — the order raceAttributeMods emits them, which the oracle
+// compares byte-equal. Invalid choices come back as an error, and the caller
+// swallows it into no mods: a bad column degrades the sheet, never breaks it.
 func resolveAttributeDeltas(raca *RaceAttributeEntry, floatingPicks []string, ascendencia string) ([]attrDelta, error) {
 	mod := raca.AttributeMod
 	switch mod.Kind {

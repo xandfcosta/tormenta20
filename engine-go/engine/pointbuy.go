@@ -2,7 +2,7 @@ package engine
 
 import "fmt"
 
-// Compra de pontos (book p17, Tabela 1-1) — ports t20-data/src/point-buy.ts.
+// Compra de pontos (book p17, Tabela 1-1).
 // All six attributes start at 0 with a 10-point budget; costs 1→1, 2→2, 3→4,
 // 4→7; exactly ONE attribute may drop to −1 to refund 1 point. Racial mods apply
 // after, outside the budget.

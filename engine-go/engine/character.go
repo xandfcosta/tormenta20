@@ -5,7 +5,7 @@ package engine
 // from the flattened CharacterInput the MVP engine consumes. Only the fields the
 // collection layer touches are typed; the many JSON-string columns
 // (proficiencies, classPowers, raceAttributeChoices…) stay as strings and are
-// parsed on demand, exactly as derived.ts does.
+// parsed on demand.
 type Character struct {
 	ID           int    `json:"id"`
 	Origin       string `json:"origin"`
@@ -22,7 +22,7 @@ type Character struct {
 	// espaço (p141). Por isso vive no motor e não só na tela (ALE-215).
 	Tibar float64 `json:"tibar"`
 
-	// JSON-encoded columns (parsed lazily, mirroring derived.ts parse helpers).
+	// JSON-encoded columns, parsed lazily by the collect_parse.go helpers.
 	Proficiencies        string `json:"proficiencies"`
 	RaceAbilityChoices   string `json:"raceAbilityChoices"`
 	RaceAttributeChoices string `json:"raceAttributeChoices"`
@@ -90,7 +90,7 @@ type ActiveEffectRow struct {
 }
 
 // attributeValue reads a raw base attribute by AttributeKey. Mirrors the
-// `character[attr]` index derived.ts uses.
+// `character[attr]` index.
 func (c Character) attributeValue(attr string) int {
 	switch attr {
 	case "strength":

@@ -2,9 +2,9 @@ package engine
 
 import "encoding/json"
 
-// Parsers for the Character's JSON-string columns — 1:1 ports of the derived.ts
-// parse* helpers. Every one degrades to an empty value on malformed JSON, exactly
-// like the TS try/catch, so the collection layer never throws on bad data.
+// Parsers for the Character's JSON-string columns. Every one degrades to an
+// empty value on malformed JSON, so the collection layer never throws on bad
+// data — a sheet with one corrupt column still draws.
 
 // orderedSet is a string set that also preserves first-seen order — the Go stand
 // -in for a JS `Set` built from a JSON array, whose insertion order some callers
@@ -25,7 +25,7 @@ func (s *orderedSet) add(v string) {
 	s.list = append(s.list, v)
 }
 
-// parseChoiceSet ports derived.ts parseChoiceSet: a JSON string[] column into a
+// parseChoiceSet: a JSON string[] column into a
 // deduped, order-preserving set. Non-arrays / bad JSON → empty.
 func parseChoiceSet(raw string) orderedSet {
 	set := newOrderedSet()
@@ -53,7 +53,7 @@ func parseStringArray(raw string) []string {
 
 func parseProficiencySet(raw string) map[string]bool { return toSet(parseStringArray(raw)) }
 
-// parseEffectModifiers ports derived.ts: a JSON Modifier[] blob, or empty.
+// parseEffectModifiers: a JSON Modifier[] blob, or empty.
 func parseEffectModifiers(raw string) []Modifier {
 	var mods []Modifier
 	if err := json.Unmarshal([]byte(raw), &mods); err != nil {
@@ -62,7 +62,7 @@ func parseEffectModifiers(raw string) []Modifier {
 	return mods
 }
 
-// parseClassChoices ports derived.ts: the classChoices JSON keyed by className.
+// parseClassChoices: the classChoices JSON keyed by className.
 // Arrays / bad JSON → empty map.
 func parseClassChoices(raw string) map[string]ClassChoiceSelections {
 	var m map[string]ClassChoiceSelections
@@ -77,7 +77,7 @@ type deformidadeStored struct {
 	tormentaPower string
 }
 
-// raceAttrChoice mirrors derived.ts RaceAttrChoice; `present` distinguishes an
+// raceAttrChoice is one race attribute choice; `present` distinguishes an
 // absent secondary-race entry (TS `undefined`) from a real empty choice.
 type raceAttrChoice struct {
 	floatingPicks []string
@@ -114,7 +114,7 @@ func (d *rawDeformidade) toStored() *deformidadeStored {
 	return &deformidadeStored{pericias: d.Pericias, tormentaPower: d.TormentaPower}
 }
 
-// parseRaceAttributeChoices ports derived.ts: the primary race's attribute
+// parseRaceAttributeChoices: the primary race's attribute
 // choices. Always returns a present choice (empty on bad JSON), like the TS.
 func parseRaceAttributeChoices(raw string) raceAttrChoice {
 	var r rawRaceChoice
@@ -124,7 +124,7 @@ func parseRaceAttributeChoices(raw string) raceAttrChoice {
 	return r.toChoice()
 }
 
-// parseSecondaryRaceChoices ports derived.ts: opted-in secondary races keyed by
+// parseSecondaryRaceChoices: opted-in secondary races keyed by
 // race name. Non-arrays / bad JSON → empty map.
 func parseSecondaryRaceChoices(raw string) map[string]raceAttrChoice {
 	var arr []struct {

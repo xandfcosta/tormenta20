@@ -19,8 +19,8 @@ import (
 //
 // A ficha chega COMPUTADA DO SERVIDOR, pela mesma `ComputeSheetV2` que a Mesa e
 // a cena de personagens já usam. É a decisão 2 da ALE-225 em ação: sem o
-// requisito de offline, não há por que a conta acontecer no navegador — e com
-// ela some o WASM, que é fatia própria no fim desta issue.
+// requisito de offline, não há por que a conta acontecer no navegador. O motor
+// que rodava lá saiu junto com a SPA (ALE-272).
 
 // View é a ficha de um personagem pronta para desenhar.
 type View struct {

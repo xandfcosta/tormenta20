@@ -5,11 +5,11 @@ import (
 	"fmt"
 )
 
-// The non-item ActiveItem sources — race, origin, class powers, general powers,
-// and the Tormenta Carisma penalty — ported 1:1 from derived.ts. Each reads the
-// primed catalogs through the Catalogs receiver.
+// The non-item ActiveItem sources: race, origin, class powers, general powers,
+// and the Tormenta Carisma penalty. Each reads the primed catalogs through the
+// Catalogs receiver.
 
-// raceActiveItems ports derived.ts raceActiveItems: the primary race always, plus
+// raceActiveItems: the primary race always, plus
 // any opted-in secondary. Attribute mods come from the persisted choices; the
 // race's own attribute mods (fixed-race duplicates) are stripped.
 func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
@@ -49,9 +49,9 @@ func (c *Catalogs) raceActiveItems(ch Character) []ActiveItem {
 	return result
 }
 
-// raceAttributeMods ports derived.ts: a race's attribute deltas (from its
+// raceAttributeMods: a race's attribute deltas (from its
 // floating/ascendência choices) as `attribute` modifiers. Empty on incomplete
-// choices, matching the TS try/catch.
+// choices, sem lançar: dado ruim vira escolha vazia.
 func (c *Catalogs) raceAttributeMods(raceName string, choice raceAttrChoice) []Modifier {
 	raca := c.raceEntryByName(raceName)
 	if raca == nil {
@@ -76,7 +76,7 @@ func (c *Catalogs) raceAttributeMods(raceName string, choice raceAttrChoice) []M
 	return out
 }
 
-// deformidadeModifiers ports derived.ts: Deformidade (Lefou p23) as +2 on each
+// deformidadeModifiers: Deformidade (Lefou p23) as +2 on each
 // chosen perícia. The Carisma loss is emitted separately (tormentaCarismaItem).
 func (c *Catalogs) deformidadeModifiers(raceName string, draft *deformidadeStored) []Modifier {
 	if draft == nil || c.raceWithDeformidade(raceName) == "" {
@@ -97,7 +97,7 @@ func (c *Catalogs) deformidadeModifiers(raceName string, draft *deformidadeStore
 	return out
 }
 
-// deformidadeHeldPower ports derived.ts: the Deformidade-swapped poder da
+// deformidadeHeldPower: the Deformidade-swapped poder da
 // Tormenta, from either race blob.
 func (c *Catalogs) deformidadeHeldPower(ch Character) string {
 	if len(ch.Races) > 0 {
@@ -122,7 +122,7 @@ func heldTormenta(d *deformidadeStored) string {
 	return d.tormentaPower
 }
 
-// originActiveItem ports derived.ts: chosen origin benefits' modifiers, plus the
+// originActiveItem: chosen origin benefits' modifiers, plus the
 // modifiers of any concretely picked free-pick power. Nil when it grants nothing.
 func (c *Catalogs) originActiveItem(ch Character) *ActiveItem {
 	origin := c.getOrigin(ch.Origin)
@@ -142,7 +142,7 @@ func (c *Catalogs) originActiveItem(ch Character) *ActiveItem {
 	return &ActiveItem{Source: "Origem: " + origin.Name, Equipped: &vestedWear, Modifiers: mods}
 }
 
-// originPickedPowerIds ports derived.ts: for each CHOSEN free-pick origin
+// originPickedPowerIds: for each CHOSEN free-pick origin
 // benefit, the power ids named in powerChoices. Iterates originChoices in its
 // stored order so the resulting modifier order is stable.
 func (c *Catalogs) originPickedPowerIds(ch Character) []string {
@@ -169,7 +169,7 @@ func (c *Catalogs) originPickedPowerIds(ch Character) []string {
 	return out
 }
 
-// classActiveItems ports derived.ts: one ActiveItem per owned class power that
+// classActiveItems: one ActiveItem per owned class power that
 // carries modifiers, named by the poder (not an opaque class bundle).
 func (c *Catalogs) classActiveItems(ch Character) []ActiveItem {
 	chosen := parseChoiceSet(ch.ClassPowers)
@@ -187,7 +187,7 @@ func (c *Catalogs) classActiveItems(ch Character) []ActiveItem {
 	return out
 }
 
-// generalPowerActiveItem ports derived.ts: general powers (Poder de Combate…)
+// generalPowerActiveItem: general powers (Poder de Combate…)
 // stored in the classPowers blob by bare id. Iterates in stored order.
 func (c *Catalogs) generalPowerActiveItem(ch Character) []ActiveItem {
 	chosen := parseChoiceSet(ch.ClassPowers)
@@ -202,7 +202,7 @@ func (c *Catalogs) generalPowerActiveItem(ch Character) []ActiveItem {
 	return out
 }
 
-// tormentaCarismaItem ports derived.ts: the escalating Carisma loss over the
+// tormentaCarismaItem: the escalating Carisma loss over the
 // TOTAL count of real poderes da Tormenta (picked + the Deformidade-held one).
 func (c *Catalogs) tormentaCarismaItem(ch Character) *ActiveItem {
 	uniq := newOrderedSet()
@@ -239,7 +239,7 @@ func (c *Catalogs) tormentaCarismaItem(ch Character) *ActiveItem {
 }
 
 // jsonStringArray decodes a JSON array, keeping only string elements — the
-// bytes-level twin of parseStringArray (mirrors the TS `.filter(typeof string)`).
+// bytes-level twin of parseStringArray (descarta o que não for string).
 func jsonStringArray(raw json.RawMessage) []string {
 	var arr []any
 	if err := json.Unmarshal(raw, &arr); err != nil {

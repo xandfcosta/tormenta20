@@ -278,9 +278,10 @@ templ resetDialog() {
 
 // mintedReset é o remendo que volta do POST, e carrega o CAMINHO — nunca a URL
 // inteira. A origem é do NAVEGADOR, e isso é conserto de um defeito medido: com
-// o `r.Host` o link nascia apontando para a porta da API, porque o proxy do
-// Vite reescreve o `Host` em desenvolvimento. Link de redefinição existe para
-// ser MANDADO, então host errado é link morto.
+// o `r.Host` o link nascia apontando para a porta errada sempre que houvesse
+// qualquer coisa reescrevendo o cabeçalho no caminho. Link de redefinição existe
+// para ser MANDADO, então host errado é link morto — ver `ui.MintedInvite`, que
+// carrega a medição.
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.

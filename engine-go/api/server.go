@@ -212,9 +212,13 @@ func (s *Server) sceneCore() sceneCore {
 	return sceneCore{queries: s.queries, catalogs: s.catalogs, livro: s.livro.endereco}
 }
 
-// Router builds the HTTP handler: shared middleware + domain routes. Routes carry
-// NO /api prefix — in dev the Vite proxy strips it, and in production cmd/api
-// mounts this under http.StripPrefix("/api") while serving the SPA itself.
+// Router monta o manipulador HTTP: middleware compartilhado e as rotas de
+// domínio. Elas NÃO carregam o prefixo `/api` — quem o põe é o `cmd/api`, com um
+// `http.StripPrefix("/api")`, em todo ambiente.
+//
+// > Aqui dizia que em desenvolvimento "o proxy do Vite tira o prefixo". Tirava,
+// > enquanto houve proxy; hoje os dois ambientes montam do mesmo jeito, e o
+// > `buildMux` explica por que isso é melhor que dois endereços (ALE-321).
 // Router é o que sobrou da API JSON depois da ALE-277: SETE rotas.
 //
 // # Ela foi escrita para a SPA, e a SPA morreu

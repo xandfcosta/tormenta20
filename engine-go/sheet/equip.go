@@ -12,9 +12,7 @@ import (
 // AS REGRAS DE EQUIPAR: o eixo do item, os dois tetos do livro e a conta de
 // espaços.
 //
-// Portadas do `t20-data` e dos validadores do backend Nest — o eixo vinha do
-// `equip-axis.helpers`, os tetos do `rules/equip` e o múltiplo de espaço do
-// `characters.helpers`. A prosa estava em INGLÊS e foi traduzida ao mudar de
+// A prosa estava em INGLÊS e foi traduzida ao mudar de
 // pacote (ALE-278): comentário é o que uma pessoa lê, e a regra de idioma vale
 // para ele.
 //
@@ -34,7 +32,7 @@ const (
 )
 
 // homebrewVestedOK são os esotéricos que podem ser VESTIDOS apesar de o eixo
-// cru dizer só empunhado. Espelha o `items/homebrew` do `t20-data`.
+// cru dizer só empunhado. É regra opcional, ligada por escolha da mesa.
 var homebrewVestedOK = map[string]bool{"medalhao-de-prata": true}
 
 func handsFor(slot string) int {

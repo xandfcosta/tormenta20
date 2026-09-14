@@ -1,11 +1,14 @@
-# Air hot-reload do engine-go em dev (parte do `pnpm dev` do root, via concurrently).
-# B.7 cutover: agora compila+reinicia a API Go (cmd/api :3001) — o server que o
-# front consome via proxy do Vite (/api + /socket.io). O WASM é buildado pelo
-# `predev` do frontend (scripts/build-engine-wasm.sh), então não é rebuildado aqui
-# a cada mudança em .go (mais rápido). O env (JWT_SECRET/PORT) vem do
-# `.env.development` deste diretório, lido pelo próprio binário (ALE-119) — o air
-# roda com o CWD aqui, então o arquivo é achado sem configurar caminho nenhum.
-# cmd/server (motor de bench :3002) continua existindo, só não roda no dev.
+# Air hot-reload do engine-go em dev — e ele É o `pnpm dev`, sem mais nada ao lado.
+#
+# Compila e reinicia o processo único (`cmd/api` na :3001), que serve as cenas, a
+# API e o fluxo ao vivo. O env (JWT_SECRET/PORT) vem do `.env.development` deste
+# diretório, lido pelo próprio binário (ALE-119) — o air roda com o CWD aqui,
+# então o arquivo é achado sem configurar caminho nenhum.
+#
+# > Aqui morava a descrição de um front consumindo `/api` e `/socket.io` por
+# > proxy do Vite, e de um WASM buildado pelo `predev` do frontend. Os três
+# > saíram (socket.io na ALE-253, SPA e WASM na ALE-272) e o texto ficou,
+# > descrevendo uma topologia que não existe (ALE-321).
 root = "."
 tmp_dir = "tmp"
 
@@ -13,7 +16,7 @@ tmp_dir = "tmp"
   cmd = "go build -o ./tmp/engine-server ./cmd/api"
   bin = "./tmp/engine-server"
   include_ext = ["go"]
-  exclude_dir = ["tmp", "cmd/wasm/testdata"]
+  exclude_dir = ["tmp"]
   stop_on_error = true
   # O binário agora encerra com ORDEM (ALE-157): ele recebe o sinal e espera as
   # requisições em curso. Sem estes dois, o air matava e subia o novo processo
