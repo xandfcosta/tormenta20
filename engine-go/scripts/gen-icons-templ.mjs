@@ -1,15 +1,19 @@
 /**
- * Gera `engine-go/api/piloto_icones.templ` a partir do lucide INSTALADO (ALE-231).
+ * Gera `engine-go/web/ui/icons.templ` a partir do lucide INSTALADO (ALE-231).
  *
- * Por que gerar em vez de transcrever: as páginas do Datastar precisam do SVG
- * embutido, e copiar `d="M19 17V5a2 2..."` à mão doze vezes é transcrição — a
- * mesma classe de erro que a auditoria do bestiário encontrou 44 vezes, e que
- * nenhum teste pega, porque um path errado é um path válido.
+ * Por que gerar em vez de transcrever: as cenas precisam do SVG embutido, e
+ * copiar `d="M19 17V5a2 2..."` à mão setenta vezes é transcrição — a mesma
+ * classe de erro que a auditoria do bestiário encontrou 44 vezes, e que nenhum
+ * teste pega, porque um path errado é um path válido.
  *
- * Ele resolve o APELIDO: a SPA escreve `Users2`, e o lucide 1.x guarda esse
- * ícone em `users-round.mjs`. Listar o nome que a SPA usa e deixar o gerador
- * achar o arquivo é o que impede as duas portas de desenharem ícones
- * diferentes quando o pacote renomeia alguma coisa.
+ * Ele resolve o APELIDO: a lista abaixo escreve `Users2`, e o lucide guarda esse
+ * ícone em `users-round.mjs`. Deixar o gerador achar o arquivo é o que impede o
+ * desenho de mudar sozinho quando o pacote renomeia alguma coisa.
+ *
+ * A VERSÃO do lucide é fixada SEM acento circunflexo no `package.json`, e isso
+ * não é zelo: com `^`, o pnpm sobe de minor e redesenha ícone sem ninguém pedir.
+ * Medido — de 1.34 para 1.45 mudam cinco traços (ALE-326). Atualizar é ato
+ * deliberado, e o diff se confere OLHANDO, como o do oráculo se confere no livro.
  *
  *   node scripts/gen-icons-templ.mjs
  */
@@ -18,14 +22,14 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const AQUI = dirname(fileURLToPath(import.meta.url))
-const LUCIDE = resolve(AQUI, '../node_modules/lucide-solid/dist/esm')
+const LUCIDE = resolve(AQUI, '../node_modules/lucide/dist/esm')
 // O destino MUDOU de lugar e o gerador não tinha ido junto (ALE-230): ele ainda
 // escrevia `api/piloto_icones.templ`, um arquivo que não existe mais no
 // repositório, enquanto o arquivo VIVO é `web/ui/icons.templ`. Rodá-lo criava um
 // órfão não rastreado e deixava o ícone novo de fora, sem erro nenhum.
 const SAIDA = resolve(AQUI, '../web/ui/icons.templ')
 
-/** Os nomes como a SPA os escreve. Acrescentar aqui e rodar o gerador. */
+/** Os ícones que as cenas pedem. Acrescentar aqui e rodar o gerador. */
 const QUERIDOS = [
   'Users2',
   'Scroll',
@@ -144,13 +148,18 @@ const QUERIDOS = [
   'Coins',
 ]
 
-const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')
+const indice = readFileSync(resolve(LUCIDE, 'iconsAndAliases.mjs'), 'utf8')
 
 /** Acha o arquivo do ícone seguindo o apelido exportado pelo pacote. */
 function arquivoDe(nome) {
+  // O nome casa EXATO, e a fronteira não é zelo: `as ScrollText` contém
+  // `as Scroll`, e a linha do ScrollText vem ANTES no índice — um casamento por
+  // prefixo desenharia o ícone errado sem erro nenhum. A vírgula é opcional
+  // porque ícone sem apelido fecha direto: `export { default as Scroll } from`.
+  const alvo = new RegExp(`\\bas ${nome}\\s*[,}]`)
   const linha = indice
     .split('\n')
-    .find((l) => l.includes(`as ${nome},`) && l.includes("from './icons/"))
+    .find((l) => alvo.test(l) && l.includes("from './icons/"))
   if (!linha) throw new Error(`lucide não exporta ${nome}`)
   return linha.match(/from '\.\/(icons\/[^']+)'/)[1]
 }
@@ -158,8 +167,8 @@ function arquivoDe(nome) {
 /** Extrai o `iconNode` do módulo. É um literal JS válido, avaliado como tal. */
 function nosDe(arquivo) {
   const fonte = readFileSync(resolve(LUCIDE, arquivo), 'utf8')
-  const bruto = fonte.match(/const iconNode = (\[[\s\S]*?\]);\n/)
-  if (!bruto) throw new Error(`sem iconNode em ${arquivo}`)
+  const bruto = fonte.match(/const \w+ = (\[[\s\S]*?\]);\n/)
+  if (!bruto) throw new Error(`sem o arranjo do ícone em ${arquivo}`)
   // biome-ignore lint/security/noGlobalEval: dado do pacote que nós instalamos, lido do disco, nunca de rede.
   return eval(bruto[1])
 }
