@@ -71,6 +71,7 @@ const QUERIDOS = [
   'PanelLeftOpen',
   // O alternador de ONDE as notas vivem (ALE-218): encostadas ou flutuando.
   'PictureInPicture2',
+  'ExternalLink',
   'X',
   'Settings2',
   'Hourglass',

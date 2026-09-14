@@ -96,6 +96,21 @@ const SUPERFICIES_COM_TINTA = [
     },
   },
   {
+    onde: 'na janela das notas',
+    abre: async (page: Page) => {
+      // A CENA DAS NOTAS FORA DA MESA (ALE-218): mesmo painel, sem mapa em
+      // volta. Ela entra aqui no MESMO commit que a cria, pela razão que a
+      // entrada do rascunho registra logo abaixo — o regime desta lista é
+      // ENUMERAÇÃO, e a cena que alguém esquecer nasce sem medição.
+      //
+      // Endereço direto e não navegado: o gesto que a abre é um `window.open`,
+      // e uma janela nova não é a `page` deste guarda. O id da sessão vem da
+      // seed e é o mesmo que os outros specs da mesa usam.
+      await page.goto('/mesa/1/4/notas')
+      await expect(page.getByRole('heading', { name: /Notas/ })).toBeVisible()
+    },
+  },
+  {
     onde: 'no rascunho de lugar',
     abre: async (page: Page) => {
       // O RASCUNHO (ALE-292) é a superfície do TABULEIRO fora da sessão, e ela

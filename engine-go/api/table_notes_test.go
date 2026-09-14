@@ -154,3 +154,85 @@ func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 		t.Error("o quadrinho remendado aponta para a mesa 0/0: a view da prévia nasceu sem os ids")
 	}
 }
+
+// ── A JANELA PRÓPRIA (ALE-218) ──────────────────────────────────────────────
+
+// TestTheNotesWindowIsTheGmsAlone: a cena tem a MESMA trava do comando.
+//
+// Ela é um endereço que o mestre pode favoritar, então ela é um endereço que
+// qualquer um pode digitar — e as notas da sessão não são do jogador. O guarda
+// existe porque uma cena NOVA não herda a trava de ninguém: a do `notesCommand`
+// protege o POST, e o GET nasceu com a sua própria.
+func TestTheNotesWindowIsTheGmsAlone(t *testing.T) {
+	f := novoPiloto(t)
+	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"# O que o jogador não vê"}`)
+
+	rec := f.pede(t, f.jogador, "GET", f.tableUrl()+"/notas", "")
+
+	if rec.Code != 403 {
+		t.Errorf("o jogador abriu as notas do mestre: %d", rec.Code)
+	}
+	// O CONTROLE do 403: um status certo com o corpo vazando o texto seria a
+	// mesma coisa que não ter trava nenhuma.
+	if strings.Contains(rec.Body.String(), "O que o jogador não vê") {
+		// SEM O CORPO na mensagem: ele é a página inteira, e um `%q` de 8 KB
+		// empurra o veredito para fora da tela de quem está lendo o vermelho.
+		t.Errorf("a recusa veio com a nota dentro do corpo")
+	}
+}
+
+// TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt.
+//
+// Três coisas na mesma asserção, e nenhuma é redundante: a cena traz o TEXTO
+// (senão a janela abre vazia sobre uma nota que existe), traz a PRÉVIA já
+// desenhada (é o markdown, não o cru), e traz o endereço de SALVAR com os ids
+// certos — que é o defeito que o `TestThePatchedPreviewCarriesTheTableIds`
+// pegou uma vez, com a `View` sintética nascendo em `0/0`.
+func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
+	f := novoPiloto(t)
+	f.posta(t, f.mestre, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro **fugiu**"}`)
+
+	rec := f.pede(t, f.mestre, "GET", f.tableUrl()+"/notas", "")
+
+	if rec.Code != 200 {
+		t.Fatalf("a janela das notas respondeu %d", rec.Code)
+	}
+	corpo := rec.Body.String()
+	if !strings.Contains(corpo, "O ogro **fugiu**") {
+		t.Errorf("a caixa de texto não veio com a nota")
+	}
+	if !strings.Contains(corpo, "<strong") {
+		t.Errorf("a prévia não veio desenhada: o markdown chegou cru")
+	}
+	if !strings.Contains(corpo, f.tableUrl()+"/notas") {
+		t.Errorf("a janela não sabe para onde salvar — o endereço com os ids não está no HTML")
+	}
+}
+
+// TestTheNotesWindowAndTheColumnCannotBothHoldTheNotes.
+//
+// As duas escrevem a MESMA coluna `sessions.notes`, e o autosave é de 1,2 s:
+// com as duas abertas, quem salvar por último apaga o parágrafo do outro sem
+// aviso, com as duas faixas dizendo "Salvo". A exclusão é um pacto entre
+// documentos, e o que este guarda prende é a METADE que o servidor desenha —
+// a janela ANUNCIA que tomou, e a Mesa ESCUTA.
+//
+// Ele afirma a chave literal de propósito: as duas pontas a escrevem em
+// arquivos diferentes, e um renome que alcançasse só uma quebraria a exclusão
+// sem quebrar compilação nenhuma. É a mesma forma dos sete canais de um sinal.
+func TestTheNotesWindowAndTheColumnCannotBothHoldTheNotes(t *testing.T) {
+	f := novoPiloto(t)
+
+	janela := f.pede(t, f.mestre, "GET", f.tableUrl()+"/notas", "").Body.String()
+	mesa := f.pede(t, f.mestre, "GET", f.tableUrl(), "").Body.String()
+
+	if !strings.Contains(janela, "t20:notas-janela") {
+		t.Errorf("a janela não anuncia que tomou as notas: a coluna não teria como fechar")
+	}
+	if !strings.Contains(janela, "pagehide") {
+		t.Errorf("a janela não devolve as notas ao fechar: a coluna ficaria trancada para sempre")
+	}
+	if !strings.Contains(mesa, "storage") || !strings.Contains(mesa, "t20:notas-janela") {
+		t.Errorf("a Mesa não escuta o anúncio da janela: as duas caixas ficariam vivas juntas")
+	}
+}

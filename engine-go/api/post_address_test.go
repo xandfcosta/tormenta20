@@ -141,8 +141,20 @@ var unescapeHTML = strings.NewReplacer(
 // pagou por um parser que descartava em silêncio o que não sabia ler (ALE-294).
 func addressesInHTML(origem, html string) (achados []datastarAddress, ilegiveis []string) {
 	texto := unescapeHTML.Replace(html)
-	for _, verbo := range []string{"post", "get", "put", "delete", "patch"} {
+	// `window.open(` É UM ENDEREÇO QUE A CENA ESCREVE (ALE-218), e ele entrou
+	// aqui em vez de ganhar guarda próprio porque o defeito é o mesmo: um
+	// caminho morto num `@post` não faz nada e não avisa; num `window.open` ele
+	// abre uma janela com um 404 dentro, que é pior de ler e igualmente mudo no
+	// console de quem clicou. O `firstArgument` já para na primeira vírgula de
+	// topo, então o NOME da janela e as `features` ficam de fora sozinhos.
+	//
+	// O método é GET porque é navegação: o que se pergunta ao chi é se existe
+	// uma página naquele caminho.
+	for _, verbo := range []string{"post", "get", "put", "delete", "patch", "window.open"} {
 		agulha := "@" + verbo + "("
+		if verbo == "window.open" {
+			agulha = verbo + "("
+		}
 		for pos := 0; ; {
 			corte := strings.Index(texto[pos:], agulha)
 			if corte < 0 {
@@ -160,9 +172,13 @@ func addressesInHTML(origem, html string) (achados []datastarAddress, ilegiveis 
 				ilegiveis = append(ilegiveis, origem+": "+agulha+clipForMessage(argumento)+")")
 				continue
 			}
+			metodo := strings.ToUpper(verbo)
+			if verbo == "window.open" {
+				metodo = "GET"
+			}
 			for _, caminho := range caminhos {
 				achados = append(achados, datastarAddress{
-					Metodo: strings.ToUpper(verbo), Caminho: caminho, Origem: origem,
+					Metodo: metodo, Caminho: caminho, Origem: origem,
 				})
 			}
 		}
@@ -221,6 +237,21 @@ func TestTheAddressExtractorReadsEveryShapeTheScenesWrite(t *testing.T) {
 			[]string{"/mesa/1/1/bestiario"},
 		},
 	}
+	// O `window.open` é a QUINTA forma, e ela não passa pelo `pathsInExpression`
+	// sozinha: o que pode quebrar nela é a AGULHA (ela não tem `@`) e o MÉTODO
+	// (navegação é GET, e perguntar ao chi por um POST em `/mesa/1/4/notas`
+	// responderia "existe" pela rota de salvar — o guarda ficaria verde sobre um
+	// endereço de página que não existe). Por isso o caso mede o extrator
+	// inteiro, e afirma o método.
+	const html = `<button data-on:click="const janela = window.open('/mesa/1/4/notas', 't20-notas', 'popup,width=620'); if (janela) { janela.focus() }">`
+	achados, ilegiveis := addressesInHTML("caso", html)
+	if len(ilegiveis) > 0 {
+		t.Errorf("o extrator não leu o `window.open`: %q", ilegiveis)
+	}
+	if len(achados) != 1 || achados[0].Metodo != "GET" || achados[0].Caminho != "/mesa/1/4/notas" {
+		t.Errorf("o `window.open` saiu como %+v, esperava um GET em /mesa/1/4/notas", achados)
+	}
+
 	for _, caso := range casos {
 		lido := pathsInExpression(caso.expressao)
 		if len(lido) != len(caso.esperado) {
@@ -295,6 +326,10 @@ func scenesThatWriteAddresses(t *testing.T, f pilotoFixture) []struct {
 		{"mesa do mestre", mesa, f.mestre},
 		{"mesa do jogador", mesa, f.jogador},
 		{"tabuleiro do jogador", mesa + "?superficie=tabuleiro", f.jogador},
+		// AS NOTAS NUMA JANELA (ALE-218): cena própria, endereço próprio, e o
+		// `@post` de salvar sai dela também. Cena nova entra nesta lista no
+		// MESMO commit que a cria, ou ela nasce sem medição.
+		{"notas em janela", mesa + "/notas", f.mestre},
 	}
 	// AS SETE ABAS da ficha, e o `?embutida=1` que a Mesa encaixa.
 	for _, aba := range []string{

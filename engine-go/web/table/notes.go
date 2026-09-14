@@ -24,6 +24,11 @@ import (
 
 func (s Scene) RoutesNote(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/notas"
+	// O MESMO endereço serve a CENA e o comando (ALE-218). Não é economia de
+	// rota: a janela própria existe para o mestre pôr as notas no segundo
+	// monitor, e um endereço que ele possa favoritar é metade do que isso
+	// significa. O `notesAddress` monta este caminho do lado do cliente.
+	r.Get(base, s.notesWindowPage)
 	r.Post(base, s.saveNoteSession)
 	r.Post(base+"/tarefa/{linha}/{estado}", s.toggleTask)
 }
@@ -195,8 +200,9 @@ func seedNotes(v View) string {
 	return fmt.Sprintf(
 		"$notes = %s; $notes_saved = %s; $notes_mode = localStorage.getItem('%s') || 'duplo'; "+
 			"$notes_width = Number(localStorage.getItem('%s')) || 0; "+
-			"$notes_floating = localStorage.getItem('%s') === 'true'",
-		texto, texto, notesModeKey, notesWidthKey, notesFloatKey,
+			"$notes_floating = localStorage.getItem('%s') === 'true'; "+
+			"$notes_window = localStorage.getItem('%s') === '%d'",
+		texto, texto, notesModeKey, notesWidthKey, notesFloatKey, notesWindowKey, v.SessionID,
 	)
 }
 
@@ -298,8 +304,18 @@ func storeTheWidth() string {
 	return fmt.Sprintf("localStorage.setItem('%s', $notes_width)", notesWidthKey)
 }
 
+// notesAddress é o endereço das notas desta sessão, e ele tem UM lugar.
+//
+// Ele era escrito por extenso em dois `Sprintf` e passou a ser três com a
+// janela (ALE-218). Três grafias do mesmo caminho é como nasce a quarta que
+// diverge — e o `@post` tem guarda de endereço, mas o `window.open` não tinha
+// até esta issue.
+func notesAddress(v View) string {
+	return fmt.Sprintf("/mesa/%d/%d/notas", v.CampaignID, v.SessionID)
+}
+
 func saveNotes(v View) string {
-	return fmt.Sprintf("@post('/mesa/%d/%d/notas')", v.CampaignID, v.SessionID)
+	return fmt.Sprintf("@post('%s')", notesAddress(v))
 }
 
 func toggleTaskNote(v View, t markdown.Task) string {
@@ -307,14 +323,9 @@ func toggleTaskNote(v View, t markdown.Task) string {
 	if t.Marcada {
 		estado = "desmarcar"
 	}
-	return fmt.Sprintf("@post('/mesa/%d/%d/notas/tarefa/%d/%s')",
-		v.CampaignID, v.SessionID, t.Linha, estado)
+	return fmt.Sprintf("@post('%s/tarefa/%d/%s')", notesAddress(v), t.Linha, estado)
 }
 
-// marked devolve a STRING e não o booleano, e isso é conserto de defeito
-// MEDIDO: o `data-attr` do Datastar trata valor booleano como ATRIBUTO
-// BOOLEANO, e um `aria-checked=""` não anuncia estado nenhum. Aqui o valor é
-// escrito direto no HTML, mas a palavra é a mesma pela mesma razão.
 func marked(marcada bool) string {
 	if marcada {
 		return "true"

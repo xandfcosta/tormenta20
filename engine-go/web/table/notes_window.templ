@@ -1,0 +1,41 @@
+package table
+
+import (
+	"fmt"
+	"t20engine/web/ui"
+)
+
+// A JANELA DAS NOTAS (ALE-218) — a mesma superfície, sem o mapa em volta.
+//
+// O corpo é o MESMO `notesBody` da coluna, e a faixa de modos é a mesma
+// `modesRange`: a janela não é outra tela, é o mesmo painel noutro lugar. Duas
+// cópias do editor divergiriam na primeira mudança de gramática do markdown,
+// que é o defeito que o `.templ` vizinho existe para não ter.
+//
+// O que ela NÃO tem, e cada ausência é uma decisão:
+//
+//   - o alternador de FLUTUAR, porque não há mapa embaixo para cobrir;
+//   - a DIVISA de largura, porque quem redimensiona a janela é o sistema;
+//   - o ✕ de fechar, porque fechar é o botão da janela — e um segundo jeito de
+//     fechar teria de decidir o que fazer com a janela em volta;
+//   - o botão de DESTACAR, que aqui não teria para onde destacar.
+templ notesWindow(v View) {
+	<section
+		id="notes-window"
+		aria-label="Notas da sessão"
+		data-init={ seedNotesWindow(v) }
+		data-on:pagehide__window={ givesTheNotesBack(v) }
+		class="flex min-h-0 flex-1 flex-col gap-2 p-3"
+	>
+		<div class="flex shrink-0 flex-wrap items-center justify-between gap-2">
+			<h1 class={ ui.SectionTitleClasses("painel", "gold", "") }>
+				{ fmt.Sprintf("Notas · Sessão %d", v.SessionNum) }
+			</h1>
+			<div class="flex items-center gap-2">
+				@modesRange()
+				@autosaveState()
+			</div>
+		</div>
+		@notesBody(v)
+	</section>
+}
