@@ -71,12 +71,35 @@ e a regra tem um lugar só.
 
 ## Comentários
 
-- **Preserve os comentários que já existem.** Não os apague num refactor — eles
-  carregam intenção e procedência.
-- Escreva **POR QUÊ**, não O QUÊ. Pule o `// incrementa o contador` sobre o `i++`.
+- **Escreva o POR QUÊ, não o O QUÊ.** Pule o `// incrementa o contador` sobre o
+  `i++`.
+- **O que mais paga é o CAMINHO NÃO TOMADO.** "Por que não o óbvio" é o único
+  conteúdo que o código não diz sozinho, e é o que impede a decisão de ser
+  refeita por quem chegar depois achando que foi descuido. Um cabeçalho de
+  guarda longo se justifica assim — o que ele protege é o ESCOPO da varredura.
+- **A DECISÃO mora aqui; a INVESTIGAÇÃO mora na issue.** Cite `ALE-NNN` e siga.
+  Quem quiser a história tem onde buscá-la, e ela deixa de custar contexto a cada
+  leitura do arquivo.
+- **Explique na MENSAGEM DE FALHA antes do cabeçalho.** Um guarda que falha
+  dizendo o nome do caso e o que fazer entrega a explicação no instante em que
+  ela importa; o cabeçalho só alcança quem já foi abrir o arquivo.
+- **Comentário envelhece como código, e se relê como código.** Um que deixou de
+  ser verdade é defeito entregue, igual a um `.md` errado — e quem o pega é a
+  releitura, não o compilador. O `TestNoCitationNamesAMissingSymbol` cobre uma
+  fatia: citação a símbolo que não existe mais.
 - Docstring em função pública: intenção e um exemplo de uso.
-- Cite a issue ou o SHA quando a linha existe por causa de um defeito específico
-  ou de uma restrição externa.
+
+> Aqui mandava **preservar** os comentários existentes e nunca apagá-los num
+> refactor, "porque carregam intenção e procedência". Essa frase era a CATRACA:
+> somada a "cite a issue", cada conserto acrescentava prosa e nada nunca
+> removia. O resultado medido foram 766 blocos de 10+ linhas no `engine-go`,
+> 11.586 linhas ao todo, e 37% do `web/` em comentário (ALE-324). O substituto
+> não manda apagar — manda RELER, que é o que a seção "Documentação" já exige
+> dos `.md`.
+>
+> **Não existe guarda de tamanho de comentário, e não deve existir**: ele
+> reprovaria justamente os cabeçalhos de guarda, que são os melhores comentários
+> do repositório. Contar linhas responderia sobre linhas.
 
 ## Testes
 
