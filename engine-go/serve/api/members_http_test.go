@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 	"testing"
 
 	"t20engine/infra/db/sqlcgen"
@@ -41,13 +41,13 @@ func newMemberFixture(t *testing.T) memberFixture {
 	otherPc := seedCharacter(t, s, otherOwner, "Vizinho", 20, 30, 5, 10)
 
 	member, err := s.queries.CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: pcID, Addedat: platform.NowISO(),
+		Campaignid: campaignID, Characterid: pcID, Addedat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed member: %v", err)
 	}
 	otherMember, err := s.queries.CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: otherCamp, Characterid: otherPc, Addedat: platform.NowISO(),
+		Campaignid: otherCamp, Characterid: otherPc, Addedat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed other member: %v", err)
@@ -248,6 +248,6 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 // sobre o teto de 1 MB do corpo e o 413 próprio (ALE-157). Eles dirigiam
 // `POST /campanhas/{id}/members`, que saiu na ALE-277.
 //
-// A garantia não é da rota e sim do `platform.DecodeJSON`, que continua no ar
+// A garantia não é da rota e sim do `httpio.DecodeJSON`, que continua no ar
 // e é chamado por todo comando de cena — o teto e a mensagem são de lá, e é lá
 // que eles devem ser presos se alguém quiser um guarda deles.

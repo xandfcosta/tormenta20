@@ -9,7 +9,8 @@ import (
 	"fmt"
 	"net/http"
 	"t20engine/domain/campaign"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/httpio"
 
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -57,7 +58,7 @@ type campaignDetailDTO struct {
 
 func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 	return CampaignDTO{
-		ID: c.ID, OwnerID: c.Ownerid, Name: c.Name, Description: platform.NullToPtr(c.Description),
+		ID: c.ID, OwnerID: c.Ownerid, Name: c.Name, Description: dbvalue.NullToPtr(c.Description),
 		CreatedAt: c.Createdat, UpdatedAt: c.Updatedat,
 	}
 }
@@ -65,10 +66,10 @@ func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 	out, err := s.campaignRules().campaignList(r.Context(), currentUser(r))
 	if err != nil {
-		platform.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
 	}
-	platform.WriteJSON(w, http.StatusOK, out)
+	httpio.WriteJSON(w, http.StatusOK, out)
 }
 
 // campaignList monta a lista COMO A TELA a mostra: o papel de quem olha, o nome
@@ -158,27 +159,27 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 		Name        string  `json:"name"`
 		Description *string `json:"description"`
 	}
-	if !platform.DecodeJSON(w, r, &body) {
+	if !httpio.DecodeJSON(w, r, &body) {
 		return
 	}
 	// As DUAS recusas de uma vez, e em pt-BR: a mesma regra respondendo duas
 	// frases diferentes conforme o transporte é o que faz uma delas envelhecer.
 	name, descricaoTexto, erros := campaign.ValidateText(body.Name, body.Description)
 	if len(erros) > 0 {
-		platform.WriteValidationError(w, erros)
+		httpio.WriteValidationError(w, erros)
 		return
 	}
 	descricao := trimOrNull(&descricaoTexto)
-	now := platform.NowISO()
+	now := dbvalue.NowISO()
 	c, err := s.campaignRules().createCampaign(r.Context(), sqlcgen.CreateCampaignParams{
 		Ownerid: currentUser(r).ID, Name: name, Description: descricao,
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		platform.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
 		return
 	}
-	platform.WriteJSON(w, http.StatusCreated, campaignScalars(c))
+	httpio.WriteJSON(w, http.StatusCreated, campaignScalars(c))
 }
 
 func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
@@ -194,10 +195,10 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	// batendo na chave estrangeira até o processo reiniciar.
 	s.CampaignDeleted(r.Context(), id)
 	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
-		platform.WriteError(w, http.StatusInternalServerError, "Could not delete campaign")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not delete campaign")
 		return
 	}
-	platform.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
+	httpio.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
 }
 
 // resolveRole é a regra de ACESSO a uma campanha, independente de transporte: o
@@ -256,7 +257,7 @@ func (rules campaignRules) loadOwnedCampaign(ctx context.Context, user AuthUser,
 func (rules campaignRules) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64) (sqlcgen.Campaign, bool) {
 	c, status, err := rules.loadOwnedCampaign(r.Context(), currentUser(r), id)
 	if err != nil {
-		platform.WriteError(w, status, err.Error())
+		httpio.WriteError(w, status, err.Error())
 		return c, false
 	}
 	return c, true

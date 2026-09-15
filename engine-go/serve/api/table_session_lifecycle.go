@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // O CICLO DE VIDA DA SESSÃO — iniciar, encerrar e reiniciar o combate.
@@ -31,7 +31,7 @@ func (tr tableRules) StartSession(ctx context.Context, sess sqlcgen.Session) (sq
 	if sess.Status == "active" {
 		return sess, nil
 	}
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	if sess.Status == "ended" {
 		return tr.queries.ReopenSession(ctx, sqlcgen.ReopenSessionParams{UpdatedAt: agora, ID: sess.ID})
 	}
@@ -53,7 +53,7 @@ func (tr tableRules) EndSession(ctx context.Context, sess sqlcgen.Session) (sqlc
 	case "ended":
 		return sess, nil
 	}
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	return tr.queries.EndSession(ctx, sqlcgen.EndSessionParams{
 		EndedAt: sql.NullString{String: agora, Valid: true}, UpdatedAt: agora, ID: sess.ID,
 	})
@@ -66,7 +66,7 @@ func (tr tableRules) EndSession(ctx context.Context, sess sqlcgen.Session) (sqlc
 // confundir com ENCERRAR, que tira a partida do ar.
 func (tr tableRules) RestartCombat(ctx context.Context, sessionID int64) error {
 	if err := tr.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: defaultRuntimeState, UpdatedAt: platform.NowISO(), ID: sessionID,
+		RuntimeState: defaultRuntimeState, UpdatedAt: dbvalue.NowISO(), ID: sessionID,
 	}); err != nil {
 		return err
 	}

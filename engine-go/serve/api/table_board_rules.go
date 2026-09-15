@@ -5,7 +5,7 @@ import (
 	"log"
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
-	"t20engine/infra/platform"
+	"t20engine/infra/wire"
 )
 
 // speedsForBoard mede o deslocamento das peças de personagem que ainda não têm
@@ -64,8 +64,8 @@ func parseSquarePath(raw any) []engine.Square {
 		if !ok {
 			continue
 		}
-		x, okX := platform.IntField(square, "x")
-		y, okY := platform.IntField(square, "y")
+		x, okX := wire.IntField(square, "x")
+		y, okY := wire.IntField(square, "y")
 		if !okX || !okY {
 			continue
 		}

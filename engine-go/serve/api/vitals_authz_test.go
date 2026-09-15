@@ -6,7 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"strings"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 	"testing"
 
 	"t20engine/infra/db/sqlcgen"
@@ -49,7 +49,7 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 
 	sess, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: campaignID, Sessionnumber: 1, Title: sql.NullString{String: "S1", Valid: true},
-		Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
+		Createdat: dbvalue.NowISO(), Updatedat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed session: %v", err)
@@ -143,7 +143,7 @@ func TestSessionForCallerRejectsForeignSession(t *testing.T) {
 
 	foreign, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: theirCampaign, Sessionnumber: 1, Title: sql.NullString{String: "Alheia", Valid: true},
-		Createdat: platform.NowISO(), Updatedat: platform.NowISO(),
+		Createdat: dbvalue.NowISO(), Updatedat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed foreign session: %v", err)

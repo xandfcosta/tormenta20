@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/httpio"
+	"t20engine/infra/wire"
 
 	"t20engine/infra/db/sqlcgen"
 )
@@ -30,8 +32,8 @@ type SessionDTO struct {
 
 func sessionDTO(s sqlcgen.Session) SessionDTO {
 	return SessionDTO{
-		ID: s.ID, CampaignID: s.Campaignid, Title: platform.NullToPtr(s.Title), SessionNumber: s.Sessionnumber,
-		Notes: platform.NullToPtr(s.Notes), Status: s.Status, StartedAt: platform.NullToPtr(s.Startedat), EndedAt: platform.NullToPtr(s.Endedat),
+		ID: s.ID, CampaignID: s.Campaignid, Title: dbvalue.NullToPtr(s.Title), SessionNumber: s.Sessionnumber,
+		Notes: dbvalue.NullToPtr(s.Notes), Status: s.Status, StartedAt: dbvalue.NullToPtr(s.Startedat), EndedAt: dbvalue.NullToPtr(s.Endedat),
 		CreatedAt: s.Createdat, UpdatedAt: s.Updatedat, RuntimeState: s.Runtimestate,
 	}
 }
@@ -79,26 +81,26 @@ func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 		Title         *string `json:"title"`
 		Notes         *string `json:"notes"`
 	}
-	if !platform.DecodeJSON(w, r, &body) {
+	if !httpio.DecodeJSON(w, r, &body) {
 		return
 	}
 	if _, ok := s.campaignRules().ownedCampaign(w, r, cid); !ok {
 		return
 	}
 	if body.SessionNumber == nil || *body.SessionNumber < 1 {
-		platform.WriteValidationError(w, platform.FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
+		httpio.WriteValidationError(w, wire.FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
 		return
 	}
-	now := platform.NowISO()
+	now := dbvalue.NowISO()
 	sess, err := s.queries.CreateSession(r.Context(), sqlcgen.CreateSessionParams{
 		Campaignid: cid, Sessionnumber: *body.SessionNumber, Title: trimOrNull(body.Title), Notes: trimOrNull(body.Notes),
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		platform.WriteError(w, http.StatusInternalServerError, "Could not create session")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not create session")
 		return
 	}
-	platform.WriteJSON(w, http.StatusCreated, sessionDTO(sess))
+	httpio.WriteJSON(w, http.StatusCreated, sessionDTO(sess))
 }
 
 // trimOrNull trims a string pointer, treating nil AND whitespace-only as NULL.

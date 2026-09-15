@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"t20engine/serve/web/campaigns"
 	"testing"
 )
@@ -214,7 +214,7 @@ func TestTheSwitchTogglesWhatIsInForceAndNotTheOpposite(t *testing.T) {
 
 func seedSessao(t *testing.T, s *Server, campanhaID, numero int64) int64 {
 	t.Helper()
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	sess, err := s.queries.CreateSession(context.Background(), sqlcgen.CreateSessionParams{
 		Campaignid: campanhaID, Sessionnumber: numero,
 		Createdat: agora, Updatedat: agora,

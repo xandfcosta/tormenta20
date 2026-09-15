@@ -12,8 +12,8 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/domain/engine"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"t20engine/serve/web/ui"
 )
 
@@ -147,7 +147,7 @@ func (s Scene) saveAttributes(ctx context.Context, id int64, espalhamento map[st
 		Strength: int64(espalhamento["strength"]), Dexterity: int64(espalhamento["dexterity"]),
 		Constitution: int64(espalhamento["constitution"]), Intelligence: int64(espalhamento["intelligence"]),
 		Wisdom: int64(espalhamento["wisdom"]), Charisma: int64(espalhamento["charisma"]),
-		UpdatedAt: platform.NowISO(), ID: id,
+		UpdatedAt: dbvalue.NowISO(), ID: id,
 	})
 }
 

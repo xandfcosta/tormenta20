@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 
 	"github.com/google/uuid"
 
@@ -377,7 +377,7 @@ func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, ch
 	st.Mu.Unlock()
 
 	err := st.q.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: string(blob), UpdatedAt: platform.NowISO(), ID: sessionID,
+		RuntimeState: string(blob), UpdatedAt: dbvalue.NowISO(), ID: sessionID,
 	})
 
 	st.Mu.Lock()

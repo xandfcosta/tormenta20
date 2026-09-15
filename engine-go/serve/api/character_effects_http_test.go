@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 	"testing"
 
 	"t20engine/infra/db/sqlcgen"
@@ -70,7 +70,7 @@ func seedLiveSession(t *testing.T, s *Server, gmID, charID int64) int64 {
 	seedMember(t, s, campaign, charID)
 	sid := seedSession(t, s, campaign)
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		StartedAt: sql.NullString{String: platform.NowISO(), Valid: true}, UpdatedAt: platform.NowISO(), ID: sid,
+		StartedAt: sql.NullString{String: dbvalue.NowISO(), Valid: true}, UpdatedAt: dbvalue.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("start session: %v", err)
 	}
@@ -182,7 +182,7 @@ func TestEndSceneRouteRefusedWithNoRunningSession(t *testing.T) {
 	seedMember(t, s, campaign, char)
 	sid := seedSession(t, s, campaign)
 	if _, err := s.queries.EndSession(context.Background(), sqlcgen.EndSessionParams{
-		EndedAt: sql.NullString{String: platform.NowISO(), Valid: true}, UpdatedAt: platform.NowISO(), ID: sid,
+		EndedAt: sql.NullString{String: dbvalue.NowISO(), Valid: true}, UpdatedAt: dbvalue.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("end session: %v", err)
 	}

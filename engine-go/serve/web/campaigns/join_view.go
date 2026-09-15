@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strconv"
 	"t20engine/domain/sheet"
-	"t20engine/infra/platform"
+	"t20engine/infra/wire"
 	"t20engine/serve/web/characters"
 	"t20engine/serve/web/ui"
 )
@@ -34,7 +34,7 @@ type joinView struct {
 	NumeroDigitado string
 	Herois         []joinHero
 	EscolhidoID    int64
-	Erros          platform.FieldErrorMap
+	Erros          wire.FieldErrorMap
 	Aviso          string
 }
 
@@ -48,7 +48,7 @@ type joinHero struct {
 }
 
 func (s Scene) LoadJoin(ctx context.Context, euID int64, token string) (joinView, error) {
-	v := joinView{Convite: token, TemConvite: token != "", Erros: platform.FieldErrorMap{}}
+	v := joinView{Convite: token, TemConvite: token != "", Erros: wire.FieldErrorMap{}}
 
 	if v.TemConvite {
 		// Convite morto NÃO é erro da página: é uma resposta, e a carta diz

@@ -56,7 +56,7 @@ type tableRules struct {
 
 // configForTable é o pedaço da configuração que a mesa lê: quem administra.
 //
-// Um tipo de uma pergunta em vez da `platform.Config` inteira — a Mesa não
+// Um tipo de uma pergunta em vez da `config.Config` inteira — a Mesa não
 // tem o que fazer com o segredo do JWT nem com a pasta de backup, e o
 // `IsAdminRequester` é a única coisa que ela pergunta à configuração.
 type configForTable struct {

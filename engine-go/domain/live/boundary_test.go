@@ -34,7 +34,7 @@ var permitidos = map[string]bool{
 	"t20engine/infra/db/sqlcgen": true,
 	// A plataforma não é domínio nenhum, então depender dela não cria fronteira
 	// errada nenhuma. É a direção que o guarda de lá garante ser de mão única.
-	"t20engine/infra/platform": true,
+	"t20engine/infra/db/dbvalue": true,
 	// O VOCABULÁRIO DA MESA é shared kernel, e não um contexto (ALE-279).
 	//
 	// Ele entra nesta lista sabendo do aviso que está escrito acima — que

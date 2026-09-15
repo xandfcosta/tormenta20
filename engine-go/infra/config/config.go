@@ -4,7 +4,7 @@
 // Ele não importa nada do projeto — é folha do grafo, como o `engine` —, e essa
 // é a propriedade que o mantém honesto: qualquer coisa que precise saber o que é
 // uma ficha ou um tabuleiro não cabe aqui.
-package platform
+package config
 
 import (
 	"fmt"
@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"t20engine/infra/wire"
 )
 
 // AppEnv nomeia o ambiente. Ele escolhe qual `.env.<AppEnv>` o `LoadConfig` lê E
@@ -197,7 +199,7 @@ func (c Config) validateTLS() error {
 // porque cadastro e login normalizam do mesmo jeito — sem isso, `Mestre@` se
 // cadastraria como uma SEGUNDA conta e seria admin também.
 func (c Config) IsAdmin(email string) bool {
-	return slices.Contains(c.AdminEmails, NormalizeEmail(email))
+	return slices.Contains(c.AdminEmails, wire.NormalizeEmail(email))
 }
 
 // splitEmails lê o ADMIN_EMAILS separado por vírgula, descartando os vazios:
@@ -205,7 +207,7 @@ func (c Config) IsAdmin(email string) bool {
 func splitEmails(raw string) []string {
 	var emails []string
 	for _, part := range strings.Split(raw, ",") {
-		if email := NormalizeEmail(part); email != "" {
+		if email := wire.NormalizeEmail(part); email != "" {
 			emails = append(emails, email)
 		}
 	}

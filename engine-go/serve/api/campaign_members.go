@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 var campaignMemberRoles = map[string]bool{"player": true, "gm": true}
@@ -47,7 +47,7 @@ func (rules campaignRules) joinCampaign(ctx context.Context, sourceID, campaignI
 		return sqlcgen.CampaignMember{}, err
 	}
 	member, err := rules.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: copyID, Addedat: platform.NowISO(),
+		Campaignid: campaignID, Characterid: copyID, Addedat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err

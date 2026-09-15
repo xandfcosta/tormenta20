@@ -11,8 +11,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // OS COMANDOS DA ABA MOCHILA.
@@ -34,7 +34,7 @@ func addCatalogItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Sign
 	_, err = s.deps.Queries().CreateItem(r.Context(), sqlcgen.CreateItemParams{
 		Characterid: row.ID, Catalogid: sql.NullString{String: catalogo.ID, Valid: true},
 		Name: catalogo.Name, Quantity: quantidade, Slots: catalogo.Slots,
-		Improvements: "[]", Createdat: platform.NowISO(),
+		Improvements: "[]", Createdat: dbvalue.NowISO(),
 	})
 	return err
 }
@@ -48,7 +48,7 @@ func addCustomItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signa
 	}
 	_, err = s.deps.Queries().CreateItem(r.Context(), sqlcgen.CreateItemParams{
 		Characterid: row.ID, Name: nome, Quantity: quantidade, Slots: espacos,
-		Improvements: "[]", Createdat: platform.NowISO(),
+		Improvements: "[]", Createdat: dbvalue.NowISO(),
 	})
 	return err
 }
@@ -247,6 +247,6 @@ func changeMoney(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals
 		return fmt.Errorf("%s", erro)
 	}
 	return s.deps.Queries().SetCharacterTibar(r.Context(), sqlcgen.SetCharacterTibarParams{
-		Tibar: saldo, UpdatedAt: platform.NowISO(), ID: row.ID,
+		Tibar: saldo, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	})
 }

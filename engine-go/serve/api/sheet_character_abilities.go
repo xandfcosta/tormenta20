@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 
 	"t20engine/infra/db/sqlcgen"
 )
@@ -41,7 +41,7 @@ func (sr sheetRules) saveProficiencies(
 	}
 	proficiencies := sheet.MarshalStrings(&dedup)
 	if err := sr.queries.SetProficiencies(ctx, sqlcgen.SetProficienciesParams{
-		Proficiencies: proficiencies, UpdatedAt: platform.NowISO(), ID: id,
+		Proficiencies: proficiencies, UpdatedAt: dbvalue.NowISO(), ID: id,
 	}); err != nil {
 		return "", nil, err
 	}

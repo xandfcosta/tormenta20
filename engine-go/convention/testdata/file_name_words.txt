@@ -98,6 +98,7 @@ damage
 data
 datastar
 db
+dbvalue
 dead
 debt
 default
@@ -128,6 +129,7 @@ editor
 effect
 effects
 element
+email
 encoding
 encounter
 encounters
@@ -139,6 +141,7 @@ env
 envfile
 equip
 equipped
+error
 errors
 # Esta lista é um PERMITIDOS e não um proibidos, e a inversão é a lição da
 events
@@ -151,6 +154,7 @@ ext
 # fatia: o guarda de nomes de arquivo nasceu com uma lista de palavras
 favicon
 # ferramenta e de fonte — `datastar`, `solid`, `vite`, `templ`, `sqlc`, `biome`,
+field
 fields
 file
 filters
@@ -432,7 +436,6 @@ undo
 unified
 users
 v2
-validate
 view
 viewport
 viewports

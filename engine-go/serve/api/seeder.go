@@ -5,8 +5,8 @@ import (
 	"t20engine/domain/account"
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // O QUE O GERADOR DA SEED PEDE DA CASA.
@@ -106,7 +106,7 @@ func (sd Seeder) LearnSpell(ctx context.Context, id int64, catalogo string, prep
 	}
 	_, err := sd.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
 		Characterid: id, Catalogspellid: catalogo,
-		Prepared: preparadaEm, Learnedat: platform.NowISO(),
+		Prepared: preparadaEm, Learnedat: dbvalue.NowISO(),
 	})
 	return err
 }
@@ -120,7 +120,7 @@ func (sd Seeder) SetHp(ctx context.Context, id, atual int64) error {
 	return sd.queries.SetCharacterVitals(ctx, sqlcgen.SetCharacterVitalsParams{
 		HpMax: linha.Hpmax, HpCurrent: atual,
 		MpMax: linha.Mpmax, MpCurrent: linha.Mpcurrent,
-		UpdatedAt: platform.NowISO(), ID: id,
+		UpdatedAt: dbvalue.NowISO(), ID: id,
 	})
 }
 

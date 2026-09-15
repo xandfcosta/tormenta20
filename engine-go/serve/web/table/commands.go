@@ -338,7 +338,7 @@ var restQualities = map[string]bool{"ruim": true, "normal": true, "confortavel":
 // garante a ordem é o `gmCommand`, que chama a mutação primeiro. A inversão
 // passa VERDE em teste de handler e só falha no navegador.
 func restQuality(r *http.Request) (string, error) {
-	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `platform.DecodeJSON`
+	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `httpio.DecodeJSON`
 	var sinais struct {
 		Qualidade string `json:"rest_quality"`
 	}

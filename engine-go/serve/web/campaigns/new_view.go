@@ -1,7 +1,7 @@
 package campaigns
 
 import (
-	"t20engine/infra/platform"
+	"t20engine/infra/wire"
 )
 
 // newView é o formulário da folha em branco (ALE-246).
@@ -12,7 +12,7 @@ import (
 type newView struct {
 	Nome      string
 	Descricao string
-	Erros     platform.FieldErrorMap
+	Erros     wire.FieldErrorMap
 	// Aviso é a recusa do formulário inteiro, quando nenhum campo é dono do
 	// problema. Mesma divisão da porta.
 	Aviso string

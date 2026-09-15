@@ -292,7 +292,8 @@ produto, o terceiro é a palavra da mesa. O identificador é que não pode ser s
 Nome de pacote é identificador, então o glossário manda nele — e pela regra do
 §F identificador novo é em inglês. **Os três que estavam em português saíram**:
 `tabuleiro/` virou `board/` na ALE-301, e `aovivo/`/`plataforma/` viraram
-`live/`/`platform/` na ALE-303, por decisão do dono.
+`live/`/`platform/` na ALE-303. O `platform` foi depois REPARTIDO em quatro —
+ver as linhas deles na tabela abaixo.
 
 > Aqui morava "`aovivo/` e `plataforma/` são anteriores à regra e ficam:
 > renomear pacote move todo import do repositório, que é o preço mais alto da
@@ -323,7 +324,10 @@ Nome de pacote é identificador, então o glossário manda nele — e pela regra
 | termo | no código | proibido | o que é |
 | -- | -- | -- | -- |
 | **ao vivo** | `live/`, `live*` | ~~mesa~~ (como pacote), ~~tempo real~~ | **O REGIME: a sessão enquanto está acontecendo.** O que existe só enquanto há gente conectada — o estado da fila em memória, a entrega por SSE, a presença, e a autorização de quem está na sessão. Nomeia o regime e não as pessoas, o que o distingue de `mesa`, e não a linha do banco, o que o distingue de `sessão`. O código já dizia `mountLiveRoutes`, `liveAccess` e `liveCtx` antes de a palavra existir aqui. |
-| **plataforma** | `platform/` | ~~util~~, ~~common~~, ~~shared~~ | **O que não é domínio nenhum**: responder e decodificar HTTP, validar corpo, ler config, negociar codificação. Existe para NÃO virar o saco onde tudo cabe — se um conceito do jogo entrar aqui, a fronteira está errada. Os nomes proibidos são os que convidam exatamente esse acúmulo. |
+| **configuração** | `config/` | ~~env~~, ~~settings~~ | O que o ambiente diz: `.env`, as variáveis, os administradores, o segredo de assinatura. Lido no boot e nunca depois. |
+| **borda HTTP** | `httpio/` | ~~util~~, ~~common~~, ~~shared~~ | Escrever resposta, ler corpo, comprimir. **Conhece `net/http`, e por isso o domínio NÃO o alcança** — é essa a linha que o separa do `wire`. |
+| **fio** | `wire/` | ~~dto~~, ~~shared~~ | O vocabulário da fronteira SEM transporte: ler um campo do corpo já decodificado, recusar um campo pelo nome, a grafia única de um e-mail. É folha, e é o que o domínio alcança. |
+| **valor de coluna** | `dbvalue/` | ~~util~~, ~~sqlhelpers~~ | A tradução entre o valor Go e a forma que a COLUNA guarda: `sql.Null*` nos dois sentidos e o carimbo ISO. Mora ao lado do `sqlcgen` e não dentro do `db` porque aquele importa o driver, e o domínio carimba a hora sem querer um driver junto. |
 
 **Por que `mesa` NÃO serve para o pacote**, e vale ficar escrito porque a
 tentação vai voltar: a linha da seção A diz que "mesa" é metonímia das pessoas

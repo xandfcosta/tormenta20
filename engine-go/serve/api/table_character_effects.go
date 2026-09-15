@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/httpio"
 
 	"t20engine/infra/db/sqlcgen"
 )
@@ -72,18 +73,18 @@ func (tr tableRules) endDay(ctx context.Context, user AuthUser, characterID int6
 func (s *Server) assertGmAtLiveTable(w http.ResponseWriter, r *http.Request, id int64) bool {
 	user := currentUser(r)
 	if _, status, err := s.tableRules().authorizedCharacter(r.Context(), user, id); err != nil {
-		platform.WriteError(w, status, err.Error())
+		httpio.WriteError(w, status, err.Error())
 		return false
 	}
 	gm, err := s.queries.IsGmAtLiveTableForCharacter(r.Context(), sqlcgen.IsGmAtLiveTableForCharacterParams{
 		CharacterId: id, OwnerId: user.ID,
 	})
 	if err != nil {
-		platform.WriteError(w, http.StatusInternalServerError, "Could not check the character's sessions")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not check the character's sessions")
 		return false
 	}
 	if !gm {
-		platform.WriteError(w, http.StatusForbidden, fmt.Sprintf(
+		httpio.WriteError(w, http.StatusForbidden, fmt.Sprintf(
 			"Ending the scene or the day for character %d is the GM's, during a live session", id))
 		return false
 	}
@@ -107,10 +108,10 @@ func (s *Server) clearEffectScopes(
 		return
 	}
 	if status, err := expire(r.Context(), currentUser(r), id); err != nil {
-		platform.WriteError(w, status, err.Error())
+		httpio.WriteError(w, status, err.Error())
 		return
 	}
-	platform.WriteJSON(w, http.StatusOK, map[string][]string{"clearedScopes": cleared})
+	httpio.WriteJSON(w, http.StatusOK, map[string][]string{"clearedScopes": cleared})
 }
 
 // handleEndScene é o "Encerrar cena" da própria ficha (aba Efeitos): um jogador
@@ -144,7 +145,7 @@ func (tr tableRules) restVitals(ctx context.Context, user AuthUser, characterID 
 		mpCurrent: min(row.Mpmax, row.Mpcurrent+gain),
 	}
 	if err := tr.queries.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
-		HpCurrent: next.hpCurrent, MpCurrent: next.mpCurrent, UpdatedAt: platform.NowISO(), ID: characterID,
+		HpCurrent: next.hpCurrent, MpCurrent: next.mpCurrent, UpdatedAt: dbvalue.NowISO(), ID: characterID,
 	}); err != nil {
 		return restedVitals{}, http.StatusInternalServerError, errors.New("Could not update vitals")
 	}

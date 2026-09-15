@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/domain/sheet"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/httpio"
+	"t20engine/infra/wire"
 
 	"t20engine/domain/catalog"
 	"t20engine/infra/db/sqlcgen"
@@ -21,11 +23,11 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	var body struct {
 		ActiveConditions []string `json:"activeConditions"`
 	}
-	if !platform.DecodeJSON(w, r, &body) {
+	if !httpio.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.ActiveConditions == nil {
-		platform.WriteValidationError(w, platform.FieldErrorMap{"activeConditions": {"activeConditions must be an array"}})
+		httpio.WriteValidationError(w, wire.FieldErrorMap{"activeConditions": {"activeConditions must be an array"}})
 		return
 	}
 	var unknown []string
@@ -35,15 +37,15 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	if len(unknown) > 0 {
-		platform.WriteError(w, http.StatusBadRequest, fmt.Sprintf(
+		httpio.WriteError(w, http.StatusBadRequest, fmt.Sprintf(
 			"Unknown condition ids: %s — expected ids from the CONDITIONS catalog", strings.Join(unknown, ", ")))
 		return
 	}
 	activeConditions := sheet.MarshalStrings(&body.ActiveConditions)
 	if err := s.queries.UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
-		ActiveConditions: activeConditions, UpdatedAt: platform.NowISO(), ID: row.ID,
+		ActiveConditions: activeConditions, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	}); err != nil {
-		platform.WriteError(w, http.StatusInternalServerError, "Could not update conditions")
+		httpio.WriteError(w, http.StatusInternalServerError, "Could not update conditions")
 		return
 	}
 	// Avisa a mesa AO VIVO (ALE-245). Sem isto o mestre aplica "Caído" num PC e a
@@ -54,5 +56,5 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	// DEPOIS da escrita, nunca antes: avisar sobre algo que ainda pode falhar
 	// faria a mesa buscar o estado velho e acreditar nele.
 	s.sheetRules().characterChanged(row.ID)
-	platform.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
+	httpio.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
 }

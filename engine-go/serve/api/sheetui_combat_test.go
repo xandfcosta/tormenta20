@@ -7,8 +7,8 @@ import (
 	"strings"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"testing"
 )
 
@@ -35,7 +35,7 @@ func seedEfeitoCondicional(t *testing.T, s *Server, id int64, quanto int) {
 			`"condition":{"c":"context","note":"enquanto estiver em Fúria"}}]`, quanto)
 	_, err := s.sceneCore().Queries().CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
 		Characterid: id, Catalogid: "furia", Scope: "scene",
-		Modifiers: mods, Createdat: platform.NowISO(),
+		Modifiers: mods, Createdat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o efeito condicional: %v", err)
@@ -51,7 +51,7 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: platform.NowISO(), UpdatedAt: platform.NowISO(),
+		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o combatente: %v", err)

@@ -12,8 +12,8 @@ import (
 
 	"t20engine/domain/creature"
 	"t20engine/domain/live"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // O EDITOR DE BLOCO: mexer nos números da cópia, e escrever do zero. O NPC ou
@@ -255,7 +255,7 @@ func (s Scene) triesSaveDraft(c commandCtx) error {
 }
 
 func (s Scene) gravaOBloco(c commandCtx, rascunho npcDraft, blob string) error {
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	if rascunho.ID == 0 {
 		_, err := s.deps.Queries().CreateCampaignCreature(c.R.Context(), sqlcgen.CreateCampaignCreatureParams{
 			Campaignid: c.CampaignID, Name: rascunho.Nome, Block: blob,

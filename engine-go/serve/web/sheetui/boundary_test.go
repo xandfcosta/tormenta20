@@ -37,7 +37,7 @@ var permitidos = map[string]bool{
 	"t20engine/domain/catalog":       true, // ver a nota abaixo — é o LookupSpell, não o Resource
 	"t20engine/infra/db/sqlcgen":     true, // as linhas do banco, pelo `Queries` da porta
 	"t20engine/domain/engine":        true, // os tipos computados que os painéis desenham
-	"t20engine/infra/platform":       true, // o carimbo ISO e os conversores de coluna anulável
+	"t20engine/infra/db/dbvalue":     true,
 	"t20engine/domain/sheet":         true, // a ficha: a forma do dado E as regras dela
 	"t20engine/serve/web/characters": true, // a linha de classes do herói, uma só
 	"t20engine/serve/web/ui":         true, // o kit, a casca e a identidade visual

@@ -2,8 +2,8 @@ package api
 
 import (
 	"database/sql"
+	"t20engine/infra/config"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // AS REGRAS DE CONTA E DE SESSÃO, com casa própria (ALE-278, fatia 6).
@@ -25,7 +25,7 @@ import (
 // convite na MESMA transação — meia conta criada com convite gasto é a pior das
 // duas metades.
 type accountRules struct {
-	cfg     platform.Config
+	cfg     config.Config
 	db      *sql.DB
 	queries *sqlcgen.Queries
 }

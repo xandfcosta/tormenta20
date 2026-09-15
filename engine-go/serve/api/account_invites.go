@@ -13,7 +13,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 	"time"
 
 	"t20engine/infra/db/sqlcgen"
@@ -43,8 +43,8 @@ func mintAccountInvite(ctx context.Context, q *sqlcgen.Queries, criadoPor int64)
 	return q.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
 		Token:     generateInviteToken(),
 		Createdby: criadoPor,
-		Createdat: platform.IsoAt(now),
-		Expiresat: platform.IsoAt(now.Add(accountInviteTTL)),
+		Createdat: dbvalue.IsoAt(now),
+		Expiresat: dbvalue.IsoAt(now.Add(accountInviteTTL)),
 	})
 }
 
@@ -58,7 +58,7 @@ func (a accountRules) usableInvite(ctx context.Context, token string) (sqlcgen.A
 	if err != nil || invite.Usedat.Valid {
 		return sqlcgen.AccountInvite{}, false
 	}
-	expiresAt, err := time.Parse(platform.IsoLayout, invite.Expiresat)
+	expiresAt, err := time.Parse(dbvalue.IsoLayout, invite.Expiresat)
 	if err != nil || time.Now().UTC().After(expiresAt) {
 		return sqlcgen.AccountInvite{}, false
 	}
@@ -100,7 +100,7 @@ func (a accountRules) createUser(
 
 func spend(ctx context.Context, q *sqlcgen.Queries, inviteID, userID int64) error {
 	rows, err := q.SpendAccountInvite(ctx, sqlcgen.SpendAccountInviteParams{
-		Usedat: sql.NullString{String: platform.NowISO(), Valid: true},
+		Usedat: sql.NullString{String: dbvalue.NowISO(), Valid: true},
 		Usedby: sql.NullInt64{Int64: userID, Valid: true},
 		ID:     inviteID,
 	})

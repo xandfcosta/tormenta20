@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"t20engine/infra/platform"
+	"t20engine/infra/config"
 	"time"
 
 	"t20engine/infra/db/sqlcgen"
@@ -36,7 +36,7 @@ import (
 // primeiro.
 type adminHost struct {
 	sceneCore
-	cfg platform.Config
+	cfg config.Config
 	db  *sql.DB
 }
 

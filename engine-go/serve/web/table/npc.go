@@ -15,8 +15,8 @@ import (
 
 	"t20engine/domain/creature"
 	"t20engine/domain/live"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // OS NPCs DA CAMPANHA.
@@ -80,7 +80,7 @@ func saveEntryCast(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("não deu para guardar o bloco de %q", nome)
 	}
-	agora := platform.NowISO()
+	agora := dbvalue.NowISO()
 	if _, err := st.deps.Queries().CreateCampaignCreature(c.R.Context(), sqlcgen.CreateCampaignCreatureParams{
 		Campaignid: c.CampaignID, Name: nome, Block: string(blob),
 		Createdat: agora, Updatedat: agora,

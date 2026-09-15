@@ -35,7 +35,7 @@ var permitidos = map[string]bool{
 	"t20engine/domain/engine": true,
 	// Não é domínio nenhum, então depender dela não cria fronteira errada — a
 	// mesma justificativa dos irmãos.
-	"t20engine/infra/platform": true,
+	"t20engine/infra/db/dbvalue": true,
 	// O LIVRO entrou na ALE-278, e é a única entrada desta lista que mudou o que
 	// este pacote É. Decisão do dono.
 	//

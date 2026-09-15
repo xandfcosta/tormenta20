@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 
 	"t20engine/domain/engine"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // A CONSTRUÇÃO da ficha.
@@ -58,9 +58,9 @@ func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (Charact
 	}
 	for _, it := range items {
 		dto.Items = append(dto.Items, ItemDTO{
-			ID: it.ID, CatalogID: platform.NullToPtr(it.Catalogid), Name: it.Name,
-			Quantity: it.Quantity, Slots: it.Slots, Equipped: platform.NullToPtr(it.Equipped),
-			Improvements: it.Improvements, Material: platform.NullToPtr(it.Material),
+			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
+			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
+			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
 		})
 	}
 

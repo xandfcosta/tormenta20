@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"t20engine/infra/platform"
+	"t20engine/infra/db/dbvalue"
 	"testing"
 
 	"t20engine/infra/db/sqlcgen"
@@ -44,7 +44,7 @@ func newRulesFixture(t *testing.T) rulesFixture {
 func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 	t.Helper()
 	if _, err := f.s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: f.pc, Addedat: platform.NowISO(),
+		Campaignid: campaignID, Characterid: f.pc, Addedat: dbvalue.NowISO(),
 	}); err != nil {
 		t.Fatalf("entrar na campanha %d: %v", campaignID, err)
 	}

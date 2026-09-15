@@ -9,7 +9,7 @@ em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
 desde a ALE-273 ele também sobe por `docker compose up -d --build`, com o banco
 em bind mount. **O compose não trouxe um segundo runtime**: continua sendo UM
 serviço. O proxy que normalmente viria junto foi considerado e recusado — ele
-compraria só a compressão, que mora em `platform.Gzip`, e traria um segundo lugar
+compraria só a compressão, que mora em `httpio.Gzip`, e traria um segundo lugar
 onde o SSE pode ser bufferizado por engano.
 
 ## O mapa das pastas
@@ -30,7 +30,9 @@ engine-go/
 │   └── web/      as quinze cenas, cada uma com a porta dela
 ├── infra/        O QUE NÃO É DOMÍNIO
 │   ├── db/       migrações e as consultas do sqlc
-│   ├── platform/ configuração, gzip, ajudantes de HTTP
+│   ├── config/   o que o ambiente diz, lido no boot
+│   ├── httpio/   a borda HTTP: responder, ler corpo, comprimir
+│   ├── wire/     a fronteira SEM transporte — é o que o domain alcança
 │   └── events/   o barramento tipado
 ├── convention/   os guardas que não são de pacote nenhum
 ├── parity/       os dezoito oráculos de ficha
@@ -99,7 +101,7 @@ não mostra e que já morderam:
 versionado porque nada nele é segredo; o `.env.production` é do dono da mesa e
 não entra no git.
 
-Configuração nova entra em `infra/platform/config.go` **e** nos dois arquivos `.env` — um
+Configuração nova entra em `infra/config/config.go` **e** nos dois arquivos `.env` — um
 default que só existe no Go é um default que ninguém descobre. Se a variável
 puder derrubar produção em silêncio (chave de assinatura, origem liberada),
 ela também entra em `Config.Validate`, que roda antes de o servidor escutar.
@@ -183,7 +185,7 @@ Cena renderizada não existe antes da requisição, então a escolha real para e
 gzip na hora ou nada — o `net/http` não comprime nada sozinho.
 
 **`gzip;q=0` é uma RECUSA**, e um `strings.Contains` a leria como aceitação. É
-por isso que o `platform.AcceptsEncoding` existe em vez de uma busca por
+por isso que o `httpio.AcceptsEncoding` existe em vez de uma busca por
 substring.
 
 Era **nada** até a ALE-273, e a conta é maior do que parece porque todo comando
@@ -191,7 +193,7 @@ da ficha responde redesenhando a cena INTEIRA: a aba de Combate viaja 44,7 KB
 crus, 5,6 KB em gzip, e vai de novo a cada toque no PV. Numa LAN isso não
 aparece; no telefone do jogador com dados móveis, são 44 KB por toque.
 
-Quem faz é o `platform.Gzip`, montado na borda do mux em `cmd/api`. Ele decide
+Quem faz é o `httpio.Gzip`, montado na borda do mux em `cmd/api`. Ele decide
 pelo `Content-Type` que o handler escreveu, e pula o que já chega com
 `Content-Encoding`: recomprimir produz bytes maiores gastando CPU.
 
@@ -931,7 +933,7 @@ ciclo, não é erro, e é a divisão vazando por baixo.
 
 **O destino de uma função é a DEPENDÊNCIA dela.** Não é o assunto, não é quem a
 chama hoje: é do que ela precisa. O `bcrypt` não atravessa para uma cena; um
-ajudante que só fala de `sql.Null*` vai para o `platform`; uma regra que lê o
+ajudante que só fala de `sql.Null*` vai para o `dbvalue`; uma regra que lê o
 livro vai para o `book`.
 
 **A linha divisória dentro de um arquivo é a mesma que entre arquivos**, e

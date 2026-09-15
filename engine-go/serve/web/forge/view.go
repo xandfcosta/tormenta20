@@ -7,7 +7,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
-	"t20engine/infra/platform"
+	"t20engine/infra/wire"
 )
 
 // A FOLHA EM BRANCO DA FORJA — o que a cena desenha.
@@ -29,7 +29,7 @@ type forgeView struct {
 	// conhece pela classe, e oferecer uma armadura antes disso seria oferecer a
 	// escolha errada para o arcanista.
 	Gear   *startingGear
-	Errors platform.FieldErrorMap
+	Errors wire.FieldErrorMap
 	// OrphanRefusals são as recusas cujo campo NÃO está na tela.
 	//
 	// Elas existem porque a folha só desenha o que o kit oferece: mandar uma
@@ -93,7 +93,7 @@ type itemOption struct {
 // Ela é chamada nas três situações e devolve a mesma coisa nas três: a folha
 // vazia do primeiro GET, a folha redesenhada quando a classe muda, e a folha
 // recusada com os erros por campo.
-func blankForgeSheet(folha forgeAnswers, erros platform.FieldErrorMap) forgeView {
+func blankForgeSheet(folha forgeAnswers, erros wire.FieldErrorMap) forgeView {
 	racas, classes, _ := book.CharacterCatalogs()
 	v := forgeView{Name: folha.Name, Errors: erros}
 	for _, raca := range racas {
@@ -111,7 +111,7 @@ func blankForgeSheet(folha forgeAnswers, erros platform.FieldErrorMap) forgeView
 }
 
 // orphanRefusals junta as recusas dos campos que esta folha não desenha.
-func orphanRefusals(erros platform.FieldErrorMap, gear *startingGear) []string {
+func orphanRefusals(erros wire.FieldErrorMap, gear *startingGear) []string {
 	naTela := map[string]bool{"name": true, "race": true, "class": true, "origin": true}
 	if gear != nil {
 		naTela["weaponSimple"] = true

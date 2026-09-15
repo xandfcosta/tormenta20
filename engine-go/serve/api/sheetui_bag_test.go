@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 	"testing"
 )
 
@@ -31,7 +31,7 @@ func itemSemeia(t *testing.T, f sceneFixture, id int64, catalogo, nome string, e
 		Characterid: id, Catalogid: sql.NullString{String: catalogo, Valid: catalogo != ""},
 		Name: nome, Quantity: 1, Slots: 1,
 		Equipped:     sql.NullString{String: equipado, Valid: equipado != ""},
-		Improvements: "[]", Createdat: platform.NowISO(),
+		Improvements: "[]", Createdat: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o item %q: %v", nome, err)
@@ -184,7 +184,7 @@ func TestAnItemFromAnotherSheetCannotBeMoved(t *testing.T) {
 func TestMoneyIsReceivedSpentAndCorrected(t *testing.T) {
 	f, id := fighterFixture(t)
 	if err := f.s.sceneCore().Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
-		Tibar: 35.7, UpdatedAt: platform.NowISO(), ID: id,
+		Tibar: 35.7, UpdatedAt: dbvalue.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("semear o dinheiro: %v", err)
 	}
@@ -204,7 +204,7 @@ func TestMoneyIsReceivedSpentAndCorrected(t *testing.T) {
 	// E RECEBER tem a mesma armadilha do outro lado: 0,1 + 0,2 dá
 	// 0,30000000000000004.
 	if err := f.s.sceneCore().Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
-		Tibar: 0.1, UpdatedAt: platform.NowISO(), ID: id,
+		Tibar: 0.1, UpdatedAt: dbvalue.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("semear o dinheiro: %v", err)
 	}
@@ -230,7 +230,7 @@ func TestMoneyIsReceivedSpentAndCorrected(t *testing.T) {
 func TestMoneyNeverGoesNegative(t *testing.T) {
 	f, id := fighterFixture(t)
 	if err := f.s.sceneCore().Queries().SetCharacterTibar(context.Background(), sqlcgen.SetCharacterTibarParams{
-		Tibar: 50, UpdatedAt: platform.NowISO(), ID: id,
+		Tibar: 50, UpdatedAt: dbvalue.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("semear o dinheiro: %v", err)
 	}

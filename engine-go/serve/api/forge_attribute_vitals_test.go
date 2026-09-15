@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"testing"
 
+	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
-	"t20engine/infra/platform"
 )
 
 // fereOHeroi grava o dano DIRETO no banco: é o arranjo do caso, não o código
@@ -21,7 +21,7 @@ func fereOHeroi(t *testing.T, f sceneFixture, id, pvAtual, pmAtual int64) {
 	}
 	if err := f.s.queries.SetCharacterVitals(context.Background(), sqlcgen.SetCharacterVitalsParams{
 		HpMax: row.Hpmax, HpCurrent: pvAtual, MpMax: row.Mpmax, MpCurrent: pmAtual,
-		UpdatedAt: platform.NowISO(), ID: id,
+		UpdatedAt: dbvalue.NowISO(), ID: id,
 	}); err != nil {
 		t.Fatalf("ferir o herói: %v", err)
 	}
