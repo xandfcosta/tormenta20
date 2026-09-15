@@ -182,7 +182,7 @@ func TestTheRefusedCommandReachesTheGm(t *testing.T) {
 	if rec := f.pede(t, f.mestre, "POST", f.tableUrl()+"/cena/iniciar", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	// A mesma sabotagem do `initiative_rules_test.go`: sem o roster não há como
+	// A mesma sabotagem do `table_initiative_rules_test.go`: sem o roster não há como
 	// alcançar as fichas, e o gesto inteiro tem de recusar.
 	if _, err := f.s.db.Exec("DROP TABLE campaign_members"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)

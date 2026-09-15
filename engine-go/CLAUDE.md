@@ -55,11 +55,26 @@ entrada é decisão, não conveniência.
 
 > Os TESTES moram ao lado do código, e isso é do Go: teste de caixa branca
 > precisa do mesmo diretório para alcançar o que não é exportado. É por isso que
-> `serve/api/` tem 171 entradas — 115 delas são teste.
+> `serve/api/` é de longe o diretório mais populoso do repositório, e que a maior
+> parte das entradas dele é teste — o `ls` é a fonte, e o parágrafo abaixo diz
+> por que um número escrito aqui não sobreviveria.
 
 **Cada cena é um pacote em `web/`**, e o `api` guarda a composição do roteador, as
 portas que cada cena pede e as regras que não são de tela nenhuma. Ver "Como uma
 CENA é construída".
+
+**No `serve/api`, o nome do arquivo diz o ADAPTADOR que o possui**, e o assunto
+vem depois do prefixo: `table_*` é do `tableRules`, `sheet_*` do `sheetRules`,
+`campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono** — o
+`character.go` tinha TRÊS donos, e o arquivo dos membros tinha dois — hoje
+`table_combatants.go` e `campaign_members.go` —, e nenhum dos dois nomes dizia
+qual (ALE-330).
+
+Quem cobra é o `TestEveryAdapterFileCarriesItsPrefix`: ele lê o RECEPTOR dos
+métodos e falha com o nome do arquivo e o do dono. Duas coisas que ele NÃO
+conta, e as duas são de propósito — o `*Server`, que é fiação e está em metade
+do diretório, e os hosts de cena (`tableHost`, `hubHost`), que já têm a
+convenção deles em `*_deps.go` e convivem com um adaptador no mesmo arquivo.
 
 > Aqui morava a contagem: quantos métodos o `*Server` tinha, quantos arquivos o
 > `api` tinha, quantas rotas sobraram. **Dois dos números estavam errados** — o
@@ -739,7 +754,7 @@ cena virou pacote; e três são a família das citações.
 
   Ele só olha `.go` e `.templ`, e essa restrição é o que o torna possível: com as
   extensões todas ele acusa **325**, e a maioria esmagadora (181 `.ts`, 20 `.js`,
-  17 `.tsx`) é a PROCEDÊNCIA que esta casa valoriza — `api/auth.go` citando o
+  17 `.tsx`) é a PROCEDÊNCIA que esta casa valoriza — `api/account_auth.go` citando o
   `auth-user.type.ts` do Nest diz de onde a regra veio e está certo. Um guarda com
   325 exceções é um guarda que alguém apaga; com as extensões do stack VIVO ele
   tem 41 defeitos e vinte lápides declaradas.
@@ -1220,7 +1235,7 @@ não tocava `*Server` nem `http`; o `creature_block.go` importava `fmt` e
 história.
 
 O que NÃO saiu junto e vale saber por quê: os quatro handlers do estado de jogo.
-O `character_play_state.go` misturava a FORMA (dois structs sem dependência) com
+O `table_character_play_state.go` misturava a FORMA (dois structs sem dependência) com
 o encanamento que a grava — os structs viajam dentro do `CharacterDTO`, então
 foram; os handlers ficaram.
 

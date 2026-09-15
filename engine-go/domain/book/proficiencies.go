@@ -32,7 +32,7 @@ func GrantedProficiencies(classNames []string) []string {
 // AS SETE CATEGORIAS, escritas UMA vez (ALE-278).
 //
 // Elas estavam em TRÊS lugares quando a ficha saiu do `api`: esta lista de
-// chaves, um conjunto no `character_abilities.go` que a rota JSON usava para
+// chaves, um conjunto no `sheet_character_abilities.go` que a rota JSON usava para
 // recusar categoria inventada, e a lista com rótulo e grupo que a aba
 // Proficiências desenha. As três com os mesmos sete nomes, na mesma ordem, e
 // nenhuma sabendo das outras.

@@ -13,7 +13,7 @@ import (
 
 // O que a POÇÃO faz, pelo router de verdade (ALE-186, bloco 1).
 //
-// `consume.go` não tinha teste nenhum, e é onde mora a decisão registrada em
+// `sheet_consume.go` não tinha teste nenhum, e é onde mora a decisão registrada em
 // [[spell_engine_deferred]]: catalisador é DECREMENTO INSTANTÂNEO até o motor
 // de magias chegar. O que se prova aqui é o que a mesa observa — a poção some
 // do inventário, o PV sobe e para no máximo, e o inventário é de quem o abriu.

@@ -16,7 +16,7 @@ import (
 // PUBLICAÇÃO — a cena da Mesa a chama pelo `table_scene_deps.go`, e ela é a
 // mesma para os dois papéis desde antes do HTTP.
 //
-// O `liveCtx` fica aqui pelo mesmo motivo: `board_rules.go` e `vitals_rules.go`
+// O `liveCtx` fica aqui pelo mesmo motivo: `table_board_rules.go` e `table_vitals_rules.go`
 // recebem um, e quem os chama hoje é a cena.
 
 // defaultTab é o id vazio, e ele significa "o tabuleiro de quem não escolheu

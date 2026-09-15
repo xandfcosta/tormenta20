@@ -9,6 +9,7 @@ action
 actions
 activates
 activations
+adapter
 address
 addresses
 admin

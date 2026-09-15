@@ -7,7 +7,7 @@ import (
 
 // Quem o mestre escolheu mandar para o mapa (ALE-204).
 //
-// Veio do `api/board_rules.go` na ALE-254, e o compilador apontou: a função lê
+// Veio do `api/table_board_rules.go` na ALE-254, e o compilador apontou: a função lê
 // o corpo da requisição mas DEVOLVE um tipo do tabuleiro, e a decisão sobre o
 // que é uma seleção válida é do contexto que a consome. Ler campo genérico é
 // plataforma; interpretar o que os campos SIGNIFICAM é domínio.

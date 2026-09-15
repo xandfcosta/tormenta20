@@ -165,7 +165,7 @@ uma decisão do dono antes do renome.
 
 Consequência medida: `endScene` existe **três vezes** no pacote `api` —
 `session_state.go` e `session_store.go` desligam a cena, e
-`character_effects.go` limpa a duração "cena" de UMA ficha. Os três nomes
+`table_character_effects.go` limpa a duração "cena" de UMA ficha. Os três nomes
 continuam, e o renome ainda espera decisão do dono.
 
 > A colisão ficou MENOR na ALE-233: o sentido 2 (a duração de efeito) ganhou nome
@@ -238,7 +238,7 @@ entidade.
 
 > O número das colisões NÃO é reaproveitado quando uma sai. `C1`, `C4`, `C6`,
 > `C7` e `C8` são citados por número de dentro do código (`sheet/play_state.go`,
-> `tokens.go`, `vitals_rules.go`) e do README — renumerar quebraria
+> `tokens.go`, `table_vitals_rules.go`) e do README — renumerar quebraria
 > cinco referências em silêncio, que é o defeito que esta issue veio consertar.
 
 **C6 — `condition` e `conditional` são conceitos DIFERENTES a uma letra de
