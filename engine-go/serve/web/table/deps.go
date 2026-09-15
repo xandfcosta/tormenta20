@@ -16,29 +16,16 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A PORTA da MESA (ALE-278), a última cena a sair do `api`.
+// A PORTA da MESA, a mais larga da série: esta é a única cena que MOVIMENTA
+// estado ao vivo. As outras leem o banco e desenham; esta abre e encerra cena,
+// move peça, vira turno e empurra tudo para quem olha. O trilho do mestre tem
+// DOIS métodos — a porta é fina quando a cena não precisa do servidor.
 //
-// Ela é a mais larga da série, e o motivo não é indisciplina: esta cena é a
-// única que MOVIMENTA estado ao vivo. As outras leem o banco e desenham; esta
-// abre e encerra cena, move peça, pinta terreno, mede distância, vira turno e
-// empurra tudo isso para quem está olhando — por dois stores em memória, um
-// hub de SSE e um barramento de eventos.
-//
-// O contraste que ensina é com o trilho do mestre, que tem DOIS métodos: ele
-// desenha o livro embutido e não toca banco. **A porta é fina quando a cena não
-// precisa do servidor, não quando alguém foi disciplinado.**
-//
-// # Os STORES atravessam, e os campos do `Server` não
-//
-// `Boards`, `Sessions`, `Presence` e `Bus` são tipos de OUTROS pacotes
-// (`board`, `live`, `events`) — a cena os recebe inteiros pela mesma
-// razão que a forja recebe o `Queries`: eles são o vocabulário do domínio ao
-// vivo, não o hospedeiro com outro nome. Uma porta que os embrulhasse método a
+// Os STORES atravessam inteiros (`Boards`, `Sessions`, `Presence`, `Bus`): eles
+// são o vocabulário do domínio ao vivo, e uma porta que os embrulhasse método a
 // método teria oitenta entradas e nenhuma fronteira a mais.
 //
-// O que NÃO atravessa é o `*sql.DB`. Duas gravações compunham `setBuilder` +
-// `"UPDATE sessions"` aqui dentro, e cena que compõe SQL é cena com o banco
-// dentro — viraram `SaveNotes` e `SaveSessionTitle`.
+// O `*sql.DB` NÃO atravessa: cena que compõe SQL é cena com o banco dentro.
 type Deps interface {
 	// Queries é o banco, pelas consultas geradas.
 	Queries() *sqlcgen.Queries
@@ -59,25 +46,17 @@ type Deps interface {
 	// IsAdmin diz se quem pede administra, para a cena que o rodapé oferece.
 	IsAdminRequester(ctx context.Context, userID int64) bool
 
-	// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR (ALE-292): a campanha,
-	// quando quem pede a MESTRA, mais a sessão AO VIVO dela.
+	// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR, e não o
+	// `SessionForCaller`: o rascunho acontece quando NÃO há sessão, e usá-lo
+	// aqui exigiria inventar uma para autorizar preparação. É `gm` e não
+	// "membro" — um jogador que abrisse esta tela veria a emboscada de sábado.
 	//
-	// Ela existe porque a trava do rascunho é de OUTRA natureza que a da mesa. O
-	// `SessionForCaller` pergunta por uma sessão, e o rascunho acontece quando
-	// não há nenhuma — usá-lo aqui exigiria inventar uma sessão para autorizar
-	// preparação, que é exatamente o acoplamento que esta issue existe para
-	// desfazer. E é `gm` e não "membro": o acervo é do mestre, e um jogador que
-	// abrisse esta tela veria a emboscada de sábado.
+	// Devolve a CAMPANHA e não um booleano porque a cena escreve o nome dela no
+	// "voltar".
 	//
-	// Ela devolve a CAMPANHA e não um booleano porque a cena escreve o nome dela
-	// no "voltar": um sim-ou-não obrigaria uma segunda ida ao banco só para
-	// desenhar o cabeçalho.
-	//
-	// A trava do lugar que está numa MESA não passa por aqui — ela é do domínio
-	// (`EditPlace`), que a resolve contra todas as sessões da campanha numa
-	// consulta só. Ela chegou a morar nesta porta, e o que a tirou foi o buraco
-	// que a versão de lá tinha: perguntar "qual é a sessão ativa" não vê o
-	// tabuleiro aberto numa sessão encerrada, que reabre com ele.
+	// A trava do lugar que já está numa MESA é do domínio (`EditPlace`), e não
+	// desta porta: perguntar "qual é a sessão ativa" não vê o tabuleiro aberto
+	// numa sessão encerrada, que reabre com ele.
 	PlaceDraftCampaign(ctx context.Context, userID, campaignID int64) (campanha sqlcgen.Campaign, status int, err error)
 
 	// SessionForCaller é a trava de acesso à mesa: existe, e quem pede pertence?
@@ -88,16 +67,11 @@ type Deps interface {
 	// navegador esperando página.
 	SessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error)
 
-	// As perguntas do estado AO VIVO, que o hospedeiro sabe responder porque a
-	// rota JSON faz as mesmas.
-	// Os três primeiros levam sufixo `ForTable` porque o `*Server` JÁ tem
-	// `StartSession`, `EndSession` e `RestartCombat` — com outra forma e outra
-	// pergunta: aqueles recebem a LINHA da sessão e devolvem a linha gravada,
-	// estes recebem o id e devolvem o estado AO VIVO, que é o que a cena
-	// redesenha. É a colisão que o `IsAdmin` das campanhas registrou, e a regra
-	// dela: um contrato que já existe ganha quando é a MESMA pergunta; quando só
-	// a cara é a mesma, forçar um nome só junta duas coisas diferentes. O sufixo
-	// não foi inventado agora — o `endSceneForTable` já usava.
+	// O sufixo `ForTable` existe porque o `*Server` JÁ tem `StartSession`,
+	// `EndSession` e `RestartCombat`, com outra forma: aqueles recebem a LINHA e
+	// devolvem a linha gravada, estes recebem o id e devolvem o estado AO VIVO.
+	// Dois nomes porque são duas perguntas — forçar um só juntaria coisas
+	// diferentes, e o compilador recusaria.
 	StartSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
 	EndSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
 	RestartCombatForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
@@ -105,18 +79,12 @@ type Deps interface {
 	RestParty(userID, campaignID, sessionID int64, escopo, condicao string) (int, int, error)
 	// SelfInitiativeEntry monta a linha de quem entra na fila com o próprio d20.
 	SelfInitiativeEntry(userID, campaignID, characterID, d20 int64) (live.InitiativeEntry, error)
-	// CloneCreatureBlock copia o bloco de criatura do mestre e devolve o id da
-	// cópia (ALE-206).
+	// CloneCreatureBlock é o "chefe que ganha nome": o bloco é um MOLDE que duas
+	// linhas dividem, e clonar só importa quando o mestre vai EDITAR uma delas —
+	// sem a cópia, dar 30 PV ao chefe daria aos outros três zumbis também.
 	//
-	// Ele existe para o "chefe que ganha nome": duas linhas podem dividir um
-	// bloco sem problema — ele é um MOLDE —, e clonar só importa quando o mestre
-	// vai EDITAR uma das duas. Sem a cópia, dar 30 PV a mais ao chefe daria aos
-	// outros três zumbis também.
-	//
-	// É o bloco e NÃO a ficha de personagem, e a diferença é do modelo: neste app
-	// `characterId` é PC de jogador e `creatureId` é a criatura que o mestre
-	// escreveu. Clonar personagem exigiria matricular a cópia na campanha, e todo
-	// membro aparece no painel do Grupo — um zumbi duplicado entraria lá.
+	// É o BLOCO e não a ficha: clonar personagem exigiria matricular a cópia na
+	// campanha, e todo membro aparece no painel do Grupo.
 	CloneCreatureBlock(ctx context.Context, creatureID, campaignID int64, nome string) (int64, error)
 	// MaterializeEntry transforma o pedido de linha nova (ficha, NPC, verbete)
 	// na linha de fila que o store aceita.
@@ -129,27 +97,20 @@ type Deps interface {
 	// elenco mostram.
 	InitiativeBonus(ctx context.Context, characterID int64) (int64, error)
 	ComputedSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error)
-	// SaveFailed diz se a última gravação desta sessão falhou — o tabuleiro OU o
-	// estado da fila, porque para quem está mestrando os dois são "a mesa".
+	// SaveFailed diz se a última gravação desta sessão falhou — tabuleiro ou
+	// fila, porque para quem mestra os dois são "a mesa".
 	//
-	// A cena PERGUNTA a cada quadro em vez de esperar um aviso, e isso é o
-	// desenho e não preguiça: o problema vale enquanto durar, então quem abre a
-	// aba dez minutos depois da primeira falha merece vê-lo. Aviso perdido é
-	// aviso que não existiu (ALE-288).
+	// A cena PERGUNTA a cada quadro em vez de esperar um aviso: o problema vale
+	// enquanto durar, e quem abre a aba dez minutos depois merece vê-lo.
 	SaveFailed(sessionID int64) bool
 	// SpeedsForBoard é o deslocamento de cada peça, que a prévia do movimento lê.
 	SpeedsForBoard(board *board.BoardState) map[string]int
 
-	// SessionDeleted avisa que a sessão deixou de EXISTIR (ALE-270).
+	// SessionDeleted não é o `Sessions().Forget`, que esvazia só o cache da
+	// fila: o tabuleiro continuava no mapa em memória e a gravação seguinte
+	// batia na chave estrangeira, acendendo um `Dirty` que nunca mais sai.
 	//
-	// Ela não é o `Sessions().Forget`, que a cena chamava aqui e que esvazia só o
-	// cache da fila. O tabuleiro daquela sessão continuava no mapa em memória do
-	// `BoardStore`, e a gravação seguinte batia na chave estrangeira — acendendo
-	// um `Dirty` que nunca mais sai, porque só um `Persist` bem-sucedido o apaga.
-	//
-	// É do HOSPEDEIRO porque são DOIS stores, e nenhum conhece o outro: quem sabe
-	// que os dois têm de ser avisados juntos é quem os montou. A cena chamando os
-	// dois na mão seria a terceira cópia da mesma sequência.
+	// É do HOSPEDEIRO porque são DOIS stores e nenhum conhece o outro.
 	SessionDeleted(sessionID int64)
 
 	// PUBLICAR é do hospedeiro: ele conhece o hub e o barramento, e a cena só
@@ -163,31 +124,22 @@ type Deps interface {
 	SaveNotes(ctx context.Context, sessionID int64, texto string) error
 	SaveSessionTitle(ctx context.Context, sessionID int64, titulo string) error
 
-	// PlayerSheet é a ficha EMBUTIDA de quem senta à mesa (ALE-275).
-	//
-	// A cena não monta a cena da ficha: ela pede o painel pronto. Montá-la aqui
-	// obrigaria a Mesa a cumprir a `sheetui.Deps` inteira — dezoito métodos que
-	// ela não usa — só para desenhar um painel. Nulo é caminho normal: quem é
-	// mestre não tem ficha na mesa, e uma ficha que não carrega tira a aba da
-	// tela sem derrubar a sessão.
+	// PlayerSheet é a ficha EMBUTIDA, pedida PRONTA: montá-la aqui obrigaria a
+	// Mesa a cumprir a `sheetui.Deps` inteira para desenhar um painel. Nulo é
+	// caminho normal — mestre não tem ficha na mesa.
 	PlayerSheet(r *http.Request, characterID int64) *sheetui.View
 	// BookAddress é o endereço do livro, ou o zero quando não há `LIVRO_PDF`.
 	// A cena não pergunta "há livro?": o valor já responde, como o leitor.
 	BookAddress() bookui.BookAddress
-	// Asset é o endereço VERSIONADO de um estático. A Mesa precisa de um — a
-	// ilha que anima o que chega pelo fio (ALE-174) —, e ele é `go:embed` do
-	// hospedeiro. Mesma porta que o leitor do livro usa, pelo mesmo motivo: o
-	// que varia é só o nome do arquivo.
+	// Asset é o endereço VERSIONADO de um estático: os arquivos são `go:embed`
+	// do hospedeiro.
 	Asset(arquivo string) string
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, corpo templ.Component)
 }
 
-// Combatant é quem entra na fila, na forma que a CENA declara.
-//
-// O hospedeiro tem um `combatant` de campos minúsculos, e ele é dele: um tipo
-// não exportado não atravessa fronteira. A cena declara o que ela desenha e o
-// hospedeiro mapeia — é o `ListRow` das campanhas outra vez.
+// Combatant é quem entra na fila, na forma que a CENA declara: o `combatant` do
+// hospedeiro não é exportado, e tipo não exportado não atravessa fronteira.
 type Combatant struct {
 	CharacterID int64
 	Name        string
@@ -197,15 +149,12 @@ type Combatant struct {
 	MpMax       int64
 }
 
-// Scene é a cena montada, com as dependências dela e o estado que é DELA.
+// Scene é a cena montada, com as dependências dela e o estado que é DELA: as
+// lentes e as abas escolhidas. Elas vivem no servidor e não num sinal do
+// navegador porque o stream não pergunta nada a ninguém.
 //
-// As lentes e as abas escolhidas eram CAMPOS do `*Server`, e não deviam ser: a
-// pergunta "quem está vendo como a mesa vê" e "que tabuleiro cada um está
-// olhando" só existem nesta tela. Elas moram no servidor e não num sinal do
-// navegador porque o stream não pergunta nada a ninguém — mas o dono é a cena.
-//
-// Por isso o `New` é chamado UMA vez, no registro das rotas: duas chamadas
-// dariam dois estados, e metade da mesa não veria a lente da outra metade.
+// O `New` é chamado UMA vez, no registro das rotas: duas chamadas dariam dois
+// estados, e metade da mesa não veria a lente da outra metade.
 type Scene struct {
 	deps       Deps
 	lenses     *lenses
