@@ -93,6 +93,16 @@ var arquivosAusentesDePROPOSITO = map[string]bool{
 	// fluxo da SPA. O `live/stream.go` o cita para dizer de onde o laço de
 	// entrega veio — e por que o transporte NÃO veio junto.
 	"sse_events.go": true,
+
+	// OS DOIS FÓSSEIS DAS ROTAS JSON, apagados na ALE-330. Eles eram o corpo
+	// das mutações que a SPA chamava, morreram com as rotas na ALE-277, e
+	// atravessaram a reestruturação inteira sem um único chamador — o
+	// compilador do Go não acusa função de PACOTE sem uso, e por isso nada
+	// reclamou. Cada um é citado pelo arquivo que herdou o seu único símbolo
+	// vivo: o `boolToInt` foi para o `character_create.go` e o `nullInt` para o
+	// `session_character_vitals.go`.
+	"character_spells.go":    true,
+	"character_mutations.go": true,
 }
 
 // oCaminhoCitado casa o que parece um arquivo DESTE repositório: um nome com

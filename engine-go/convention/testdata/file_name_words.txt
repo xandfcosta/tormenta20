@@ -257,7 +257,6 @@ money
 move
 movement
 moves
-mutations
 name
 names
 nav

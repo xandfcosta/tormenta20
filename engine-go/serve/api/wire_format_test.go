@@ -149,7 +149,14 @@ func agrafiaDasTags(t *testing.T) {
 		}
 	}
 	// CONTROLE: sem ele, um regex que parou de casar diria verde sobre nada.
-	if sitios < 100 {
+	//
+	// O PISO DESCEU DE 100 PARA 60 na ALE-330, e o motivo é o terreno e não o
+	// instrumento: os quatro fósseis das rotas JSON da SPA foram apagados e
+	// levaram 27 tags junto. Medido dos DOIS lados, que é o que separa um
+	// controle calibrado de um palpite — são 91 tags hoje, e um regex que
+	// parasse de casar daria ZERO. Sessenta fica acima da metade do que existe
+	// e muito longe do zero, com folga para os fósseis que ainda vão sair.
+	if sitios < 60 {
 		t.Fatalf("só %d tags JSON em %d arquivos — o padrão parou de casar e o verde "+
 			"não significa nada", sitios, visitados)
 	}

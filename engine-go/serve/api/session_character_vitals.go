@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -143,4 +144,17 @@ func (v sheetVitals) persistVitals(
 		}
 	}
 	return &hp, &mp, nil
+}
+
+// Ponteiro nulo vira NULL, e não zero — a diferença entre "não mexeu neste
+// vital" e "zerou este vital".
+//
+// Ele morava no `character_mutations.go`, que era o corpo das rotas JSON da SPA
+// e morreu com elas na ALE-277. Isto aqui é o único símbolo daquele arquivo com
+// chamador, e mora com ele (ALE-330).
+func nullInt(p *int64) sql.NullInt64 {
+	if p == nil {
+		return sql.NullInt64{}
+	}
+	return sql.NullInt64{Int64: *p, Valid: true}
 }
