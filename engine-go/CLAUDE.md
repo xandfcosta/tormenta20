@@ -5,7 +5,7 @@ valem; o que está aqui estende ou sobrepõe.
 
 `engine-go` é o app inteiro: a API HTTP na :3001, o motor de regras, e as CENAS
 em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
-`api/assets/src`, e o kit de apresentação em `web/ui`. Um processo serve tudo, e
+`serve/api/assets/src`, e o kit de apresentação em `serve/web/ui`. Um processo serve tudo, e
 desde a ALE-273 ele também sobe por `docker compose up -d --build`, com o banco
 em bind mount. **O compose não trouxe um segundo runtime**: continua sendo UM
 serviço. O proxy que normalmente viria junto foi considerado e recusado — ele
@@ -82,17 +82,15 @@ convenção deles em `*_deps.go` e convivem com um adaptador no mesmo arquivo.
 > escrito à mão sobre coisa que muda envelhece sozinho, e o `grep` é a fonte
 > (ALE-325).
 
-**As cenas atendem na RAIZ**, e `/piloto/*` responde 404 (ALE-280). Duas
-consequências que o `git grep` não mostra e que já morderam:
+**As cenas atendem na RAIZ**, sem prefixo. Duas consequências que o `git grep`
+não mostra e que já morderam:
 
-- **`http.StripPrefix` saiu junto**, e com ele a razão de o `alvoOriginal` ler
-  `RequestURI`. A linha ficou porque `URL.Path` descarta a QUERY — mas o motivo
-  escrito nela era o outro, e explicação que aponta para mecanismo que não existe
-  é pior que nenhuma.
-- **Endereço interno não soma prefixo.** O `"/" + rotaDoLivro` virava `//livro`,
-  que não é uma barra a mais: `//algo` é URL relativa a PROTOCOLO, e o navegador
-  a lê como o HOST `algo`. Quem denunciou foi um teste de cena; o compilador não
-  tem como.
+- **O `alvoOriginal` lê `RequestURI` e não `URL.Path`**, porque o segundo
+  descarta a QUERY.
+- **Endereço interno não soma prefixo.** Um `"/" + rota` vira `//livro`, que não
+  é uma barra a mais: `//algo` é URL relativa a PROTOCOLO, e o navegador a lê
+  como o HOST `algo`. Quem denuncia é um teste de cena; o compilador não tem
+  como.
 
 ## Ambientes
 
@@ -101,7 +99,7 @@ consequências que o `git grep` não mostra e que já morderam:
 versionado porque nada nele é segredo; o `.env.production` é do dono da mesa e
 não entra no git.
 
-Configuração nova entra em `api/config.go` **e** nos dois arquivos `.env` — um
+Configuração nova entra em `infra/platform/config.go` **e** nos dois arquivos `.env` — um
 default que só existe no Go é um default que ninguém descobre. Se a variável
 puder derrubar produção em silêncio (chave de assinatura, origem liberada),
 ela também entra em `Config.Validate`, que roda antes de o servidor escutar.
@@ -119,18 +117,17 @@ cd engine-go && go run ./cmd/genoracle
 > **O diff de um oráculo é revisado contra o LIVRO, nunca aceito porque "o teste
 > ficou verde".**
 
-**Esse momento já chegou.** O `t20-data` foi aposentado, então não há segunda
-implementação: o oráculo é o Go descrevendo o Go, e **um bug no motor vira a nova
-verdade em silêncio**. A mitigação não é técnica, é de processo, e é a linha
-acima.
+**Não há segunda implementação para conferir contra**: o oráculo é o Go
+descrevendo o Go, e **um bug no motor vira a nova verdade em silêncio**. A
+mitigação não é técnica, é de processo, e é a linha acima.
 
-O que o oráculo ainda protege é enorme — a ficha inteira de 18 personagens, ponta
-a ponta, acusando qualquer número que mude sem ter sido pedido. O que ele deixou
-de provar é que DOIS motores concordam.
+O que ele protege é a ficha inteira de 18 personagens, ponta a ponta, acusando
+qualquer número que mude sem ter sido pedido.
 
-Aprendido do jeito difícil: a paridade entre os dois motores esteve **perfeita**
-durante meses enquanto AMBOS erravam a RD do Guerreiro, que não existe no livro
-(ALE-111). Paridade prova concordância; nunca prova correção.
+E a paridade nunca teria salvado: quando havia dois motores, eles estiveram
+**perfeitamente de acordo** durante meses enquanto AMBOS erravam a RD do
+Guerreiro, que não existe no livro. Paridade prova concordância; nunca prova
+correção.
 
 ## Regras vêm do livro, com página
 
@@ -144,26 +141,9 @@ mesma frase.
 livro + 6`. Onze citações erradas já foram corrigidas neste repositório, três
 delas escritas no mesmo dia em que eu as "verifiquei".
 
-## O gerador de tipos da fronteira SAIU
-
-Aqui morava o `go generate ./engine`, que escrevia
-`frontend/src/shared/api/engine-types.ts` — as formas que atravessavam a
-fronteira do WASM —, mais o `TestGeneratedTypesAreCurrent` que falhava apontando
-a primeira linha divergente.
-
-Ele existia porque havia DOIS lados. Com a SPA e o WASM apagados (ALE-272, fatia
-10c) não há fronteira a manter em dia: o motor é chamado de dentro do mesmo
-processo, pelo tipo Go de verdade. O `cmd/tsgen`, o `engine/tsgen.go` e o guarda
-saíram juntos.
-
-A lição que fica, porque ela vale para o próximo gerador: **um tipo com
-`MarshalJSON` próprio precisa declarar a forma de FIO**, e o emissor recusava com
-panic quem não declarasse — refletir a struct em memória produz um tipo que
-mente (o `ItemEffects` guarda flags num Set e serializa um array).
-
 ## O sqlc trunca SQL por causa de comentário acentuado
 
-Comentário em `db/query.sql` é **ASCII**. O sqlc mede a query em bytes e conta o
+Comentário em `infra/db/query.sql` é **ASCII**. O sqlc mede a query em bytes e conta o
 comentário em runas, então cada letra acentuada acima de uma query corta um
 caractere do SQL gerado — **em silêncio**. Na ALE-120 um comentário com três
 acentos gerou `WHERE id = ? AND usedAt IS N`, que ainda compilava.
@@ -194,44 +174,26 @@ aberto).
 **E o guarda de schema precisou aprender o `DROP`**: a lista de esperadas lia só
 os `CREATE`, então toda tabela que qualquer migração já tivesse criado era
 exigida para sempre — o servidor recusaria subir sobre um banco CORRETO,
-nomeando como faltante justamente a que a migração acabou de derrubar. Ver a
-seção abaixo.
+nomeando como faltante justamente a que a migração acabou de derrubar. Ver "O
+boot confere o SCHEMA".
 
-## A PRÉ-COMPRESSÃO do build saiu com a SPA
+## O que o servidor RENDERIZA sai comprimido na hora
 
-Aqui morava a explicação do `spaHandler` escolhendo o irmão `.br`/`.gz` que o
-`postbuild` do front gerava (ALE-153): o `net/http` não comprime nada sozinho, e
-o servidor mandava os 3,7 MB crus do `t20.wasm` para um navegador que pedia
-`gzip, br`.
+Cena renderizada não existe antes da requisição, então a escolha real para ela é
+gzip na hora ou nada — o `net/http` não comprime nada sozinho.
 
-Com a SPA apagada (ALE-272, fatia 10c) não há `dist` para servir nem asset
-pesado para pré-comprimir — os estáticos do app são a folha, cinco ilhas de
-JS e duas fontes, todos embutidos no binário. O que sobrou é a compressão do que
-o servidor RENDERIZA, logo abaixo.
-
-Duas coisas que aquele caminho ensinou e que valem para qualquer arquivo servido
-daqui: o `Content-Type` tem de sair do nome ORIGINAL (adivinhado pela extensão
-do irmão comprimido, o wasm virava `application/octet-stream` e o
-`instantiateStreaming` recusava), e `gzip;q=0` é uma RECUSA — um
-`strings.Contains` a leria como aceitação, e é por isso que
-`plataforma.AcceptsEncoding` existe.
-
-## E o que o servidor RENDERIZA sai comprimido na hora
-
-As duas compressões convivem e a divisão é por NATUREZA do conteúdo, não por
-preguiça de unificar. Asset é imutável e se comprime UMA vez no build, com
-brotli -q11 e os ~8s que ele custa; cena renderizada não existe antes da
-requisição, então para ela a escolha real é gzip na hora ou nada.
+**`gzip;q=0` é uma RECUSA**, e um `strings.Contains` a leria como aceitação. É
+por isso que o `platform.AcceptsEncoding` existe em vez de uma busca por
+substring.
 
 Era **nada** até a ALE-273, e a conta é maior do que parece porque todo comando
 da ficha responde redesenhando a cena INTEIRA: a aba de Combate viaja 44,7 KB
 crus, 5,6 KB em gzip, e vai de novo a cada toque no PV. Numa LAN isso não
 aparece; no telefone do jogador com dados móveis, são 44 KB por toque.
 
-Quem faz é o `plataforma.Gzip`, montado na borda do mux em `cmd/api`. Ele decide
+Quem faz é o `platform.Gzip`, montado na borda do mux em `cmd/api`. Ele decide
 pelo `Content-Type` que o handler escreveu, e pula o que já chega com
-`Content-Encoding` — que é exatamente o caso dos irmãos pré-comprimidos da
-seção acima, e recomprimi-los produziria bytes maiores gastando CPU.
+`Content-Encoding`: recomprimir produz bytes maiores gastando CPU.
 
 **A armadilha mora no SSE, e ela não deixa erro para trás.** A resposta de todo
 comando do Datastar é `text/event-stream` — ela usa o envelope de SSE para
@@ -306,10 +268,8 @@ linha É o endereço que o mestre repassa para a mesa.
 **Medido, não suposto (ALE-118):** com TLS o Chrome negocia **h2** para a
 página. A pré-compressão (`.br`) atravessa o TLS e o h2 intacta.
 
-O tempo real era socket.io e subia para `wss://` numa conexão HTTP/1.1 à parte,
-porque o Go não anuncia o RFC 8441. Com SSE (ALE-253) ele é um `GET` como
-qualquer outro e viaja pelo mesmo h2 — uma conexão a menos e uma exceção a menos
-para lembrar.
+O tempo real é SSE, então ele é um `GET` como qualquer outro e viaja pelo mesmo
+h2 — sem conexão à parte e sem exceção para lembrar.
 
 O que este repositório **não** decide é de onde vem o certificado — as duas
 saídas e o preço de cada uma estão no README, e nenhuma delas se executa de
@@ -377,14 +337,10 @@ candidato.
 
 ## O tempo real é SSE, e o canal MUDOU de dono
 
-Era socket.io até a ALE-253, e a troca não foi de biblioteca: as 37 mensagens que
-subiam pelo socket eram TODAS mutação, e mutação é uma requisição. Bidirecional
-não era requisito, era hábito. O que desceu virou
-`GET /campaigns/{campaignId}/sessions/{id}/events`, um `text/event-stream` que
-fica aberto; o que subia virou uma rota por comando (`mountLiveRoutes`).
-
-**As duas pontas dessa troca saíram na ALE-277**, e o parágrafo acima fica porque
-o argumento continua sendo o certo — o que mudou é quem o exerce. A Mesa em
+**Bidirecional não é requisito, é hábito.** O que sobe é sempre MUTAÇÃO, e
+mutação é uma requisição; o que desce é um `text/event-stream` que fica aberto.
+Foi assim que um socket bidirecional virou uma rota por comando mais um `GET`
+longo, e o argumento continua valendo para o próximo canal. A Mesa em
 Datastar tem fluxo PRÓPRIO (`/mesa/{campanha}/{sessao}/fluxo`, em
 `web/table/stream.go`), ele assina o `events.Bus` e não o `SSEHub`, e os comandos
 dela são rotas da CENA. Nenhuma linha do que este arquivo descrevia como "a rota
@@ -473,19 +429,14 @@ porque não é de ninguém.
 
 ## Catálogos
 
-O catálogo viajava COMPRIMIDO (`writeCatalogJSON`, ALE-159): `spells` sozinho são
-179 KB crus e 40 KB em gzip. Isso importava quando a SPA os buscava por HTTP
-(ALE-107) e eles entravam em toda carga fria. **Hoje as cenas leem o embutido
-direto**, e a rota `GET /catalog/:nome` foi apagada na ALE-277 com o
-`api/catalog.go` inteiro, por ter perdido o consumidor junto com a SPA — o
-`plataforma.AcceptsEncoding` ficou, porque quem serve arquivo estático ainda lê
-`Accept-Encoding`.
+**As cenas leem o catálogo EMBUTIDO direto** — ele não viaja por HTTP, e não há
+rota que o sirva.
 
-O que a decisão de então deixou e continua valendo é o outro lado dela: ler UMA
-vez e guardar, não por requisição, porque o conteúdo vem de `go:embed` e não muda
-enquanto o binário for o mesmo. É o que o `race_traits.go` faz com `sync.Once`.
+A regra que governa quem o lê: **uma vez e guardado**, não por requisição, porque
+o conteúdo vem de `go:embed` e não muda enquanto o binário for o mesmo. É o que
+o `race_traits.go` faz com `sync.Once`.
 
-`catalog/data/*.json` é embutido no binário. **Este é o único lugar onde
+`domain/catalog/data/*.json` é embutido no binário. **Este é o único lugar onde
 catálogo é autorado** — mudar uma magia é editar um arquivo só, e a cena, o
 motor e os testes leem o mesmo arquivo.
 
@@ -498,27 +449,21 @@ bancada mostrou o preço na ALE-272 — um escudo foi VESTIDO num teste porque o
 catálogo do fixture está vazio. **Validação de regra lê o embutido**; o
 `s.catalogs` fica para o motor, que é primado pelo mesmo caminho que o oráculo.
 
-**Regra que só o front sabia é fronteira ABERTA, e a progressão de círculo era
-uma.** Em que nível cada classe destrava cada círculo vivia só no
-`SPELL_PROGRESSION` da SPA, então o servidor não tinha como perguntar — e o
-`validateAugments` aceitava qualquer `requiresCircle`, que são 126 dos 486
-aprimoramentos do catálogo. A tabela virou o campo `spellcasting` das cinco
-classes conjuradoras em `classes.json` (ALE-272), MOVIDA e não retranscrita: um
-teste do front comparava as duas cópias campo a campo, e morreu com a SPA — a
-tabela do catálogo ficou como fonte única. O sintoma que essa família produz é
-sempre o mesmo: a tela tranca e o servidor não.
+**Regra que só a TELA sabe é fronteira aberta, e o sintoma é sempre o mesmo: a
+tela tranca e o servidor não.** Três já morderam — a progressão de círculo (em
+que nível cada classe destrava cada círculo), a compatibilidade entre
+melhoria/material e o item que os recebe, e o limite de nome de campanha.
 
-A fatia 7 fechou a terceira: a compatibilidade entre **melhoria/material** e o
-item que os recebe (`appliesTo`) vivia no `familyFor` do TypeScript, e o
-`handleAddItem` carregava a dívida escrita em comentário. Agora ela é
-`aMelhoriaCabeNoItem`, e o filtro do diálogo é conveniência sobre a mesma regra.
+Hoje as três moram no catálogo ou no domínio: `spellcasting` em `classes.json`,
+`aMelhoriaCabeNoItem`, `campaign.Description`. O filtro que a tela aplica é
+conveniência sobre a mesma regra, nunca a regra.
 
-E a fatia 8 fechou a QUARTA, que era a maior: as regras de ESCOLHA de poder —
-quantas vagas o nível abre (uma por nível a partir do 2º, p33), quantos
-benefícios a origem dá, quais caminhos e quais deuses cada classe aceita — eram
-363 linhas de `shared/rules/abilities-*.ts`, e o `handleUpdateAbilities` gravava
-os cinco blobs sem conferir NADA. Um pedido montado à mão punha vinte poderes num
-personagem de nível 1 e o motor somava os modificadores de todos. A validação é
+E a QUARTA era a maior: as regras de ESCOLHA de poder — quantas vagas o nível
+abre (uma por nível a partir do 2º, p33), quantos benefícios a origem dá, quais
+caminhos e quais deuses cada classe aceita — só a tela sabia, e a gravação
+aceitava os cinco blobs sem conferir NADA. Um pedido montado à mão punha vinte
+poderes num personagem de nível 1, e o motor somava os modificadores de todos. A
+validação é
 `sheet.WithChoicesValid`, ela roda nas DUAS portas (o endpoint JSON e os
 comandos da ficha), e é **estrita**: a escrita tem de deixar a ficha VÁLIDA, e
 não só "não piorar". Decisão do dono, com a razão registrada — o projeto ainda
@@ -700,12 +645,6 @@ As faixas, o vermelho antes de confiar e o que não merece teste estão no
   aquele número é aquele, com a página do livro do lado. Nenhum substitui o
   outro.
 
-  > Aqui morava a frase "teste de paridade prova que os dois motores concordam".
-  > Ela ficou **falsa sem ninguém mexer nela**: o `t20-data` foi aposentado (ver
-  > "Regenerar oráculo"), não há segundo motor, e o mesmo arquivo passou a dizer
-  > as duas coisas. É o defeito que a seção "Documentação" da raiz descreve, e
-  > ele sobreviveu a uma épica inteira.
-
 - **Sabotar é a forma barata de provar que o teste mede o que diz medir**, e no
   Go ela é barata mesmo: inverta o operador, rode o caso, confirme o vermelho,
   reverta. Foi assim que se descobriu que um teste de PV passava por acidente —
@@ -746,18 +685,17 @@ cena virou pacote; e três são a família das citações.
   teste inexistente. A varredura mediu **136** dessas antes de começar: um `.md`
   fica errado sem ninguém mexer nele, e nada no repositório acusava.
 - **`TestNoCitationNamesAMissingFile`** faz o mesmo para CAMINHO DE ARQUIVO, e
-  mediu **41** (ALE-285). A origem delas não foi a SPA: foram as varreduras de
-  idioma. A ALE-282 e a ALE-283 renomearam arquivos para inglês, a ALE-278 moveu
-  famílias inteiras de pacote, e os comentários que apontavam para eles ficaram
-  falando dos nomes velhos — "a regra mora no ..." apontando para quatro arquivos
-  que já se chamavam outra coisa.
+  mediu **41** (ALE-285). A origem é sempre a mesma: um renome ou uma mudança de
+  pacote leva o arquivo e deixa para trás os comentários que apontavam para ele —
+  "a regra mora no ..." nomeando um arquivo que já se chama outra coisa.
 
-  Ele só olha `.go` e `.templ`, e essa restrição é o que o torna possível: com as
-  extensões todas ele acusa **325**, e a maioria esmagadora (181 `.ts`, 20 `.js`,
-  17 `.tsx`) é a PROCEDÊNCIA que esta casa valoriza — `api/account_auth.go` citando o
-  `auth-user.type.ts` do Nest diz de onde a regra veio e está certo. Um guarda com
-  325 exceções é um guarda que alguém apaga; com as extensões do stack VIVO ele
-  tem 41 defeitos e vinte lápides declaradas.
+  Ele só olha `.go` e `.templ`, e a restrição é o que o torna possível: com as
+  extensões todas ele acusa **325**, e a esmagadora maioria (181 `.ts`, 20 `.js`,
+  17 `.tsx`) é PROCEDÊNCIA — um comentário dizendo de onde a regra veio, apontando
+  para um arquivo que nunca vai voltar a existir. Está certo, e um guarda com 325
+  exceções é um guarda que alguém apaga. Nas extensões do stack VIVO a
+  ambiguidade some: um `.go` citado que não existe é endereço velho, não
+  história.
 
   A primeira coisa que ele pegou foi a **própria docstring**, que nomeava os
   arquivos mortos como exemplo. Declará-los teria resolvido e seria errado: a
@@ -779,12 +717,10 @@ cena virou pacote; e três são a família das citações.
   proibisse tiraria do repositório justamente a explicação que impede o defeito.
 
 - **`TestEveryMarkerColorCanBePainted`** e **`TestNoSceneCommandUsesTheDefaultTab`**
-  chegaram na ALE-278, pela mesma razão do de baixo e no mesmo dia: o primeiro
-  lia `assets/app.src.css`, um caminho relativo ao `api`; o segundo varria
-  `piloto_*.go` do próprio diretório. Quando a Mesa virou `web/table`, o arquivo
-  sumiu debaixo de um e o glob deixou de casar para o outro. **Os dois falharam
-  ALTO porque os dois tinham piso** — e o irmão do foco, que não tinha, teria
-  passado verde medindo metade.
+  moram aqui porque um lia um caminho relativo ao `api` e o outro varria um glob
+  de nome; quando a Mesa virou pacote, o arquivo sumiu debaixo de um e o glob
+  deixou de casar para o outro. **Os dois falharam ALTO porque os dois tinham
+  piso** — o irmão do foco, que não tinha, teria passado verde medindo metade.
 
 - **`TestNoFocusAsksTheServerWithoutAKeyboardGuard`** chegou na ALE-278, e não
   por ser regra de repositório desde sempre: ele já existia dentro da cena do
@@ -816,10 +752,9 @@ apagar um teste é um ato, e o ato aparece numa linha.
 
 ## templ — as armadilhas que já custaram tempo
 
-As cenas do `piloto/` são `.templ` compiladas para `.go` por `go tool templ
-generate`. O `.templ` e o `_templ.go` andam juntos e o CI recusa o par
-desencontrado, no mesmo molde do `TestGeneratedTypesAreCurrent`. O que segue foi
-todo descoberto errando — está aqui para ninguém redescobrir:
+As cenas são `.templ` compiladas para `.go` por `go tool templ generate`. O
+`.templ` e o `_templ.go` andam juntos, e o CI recusa o par desencontrado. O que
+segue foi todo descoberto errando — está aqui para ninguém redescobrir:
 
 - **Comentário NÃO vive na lista de atributos de um elemento.** `// ...` entre
   dois atributos derruba o parser, e a mensagem aponta OUTRA linha — nunca a do
@@ -907,16 +842,16 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   parece irmão de `text-grimorio-gold` e não é: `grimorio-ink` não está na
   paleta, o Tailwind não emite regra para o que não conhece, e o elemento fica
   com a cor HERDADA — o crachá de contagem dos Efeitos saiu dourado sobre
-  dourado, 1,53:1, e atravessou uma fatia inteira (ALE-272). O
-  `TestEveryHouseTintExistsInTheStylesheet` varre `piloto_*.templ`, `piloto_*.go` e
-  o `web/` INTEIRO, e cobra cada token contra a folha compilada. A paleta mora
-  no `@theme` do `api/assets/src/index.css`; conferir lá antes de inventar o nome.
-  **O `web/` entrou na ALE-278 e mostra a forma da falha desta família**: o
-  kit mudou de nome de arquivo, o padrão `piloto_*` deixou de casar com ele, e o
-  guarda teria seguido verde medindo as cenas e ignorando o botão, o campo e a
-  casca — os arquivos onde uma tinta errada aparece em TODA tela. Ele é varrido
-  por caminhada e não por lista de pacotes desde que a terceira cena (`web/grimoire`)
-  caiu fora da lista enumerada: enumerar faria a PRÓXIMA cena nascer sem medição.
+  dourado, 1,53:1, e atravessou uma fatia inteira. O
+  `TestEveryHouseTintExistsInTheStylesheet` cobra cada token contra a folha
+  compilada; a paleta mora no `@theme` do `serve/api/assets/src/index.css`, e é
+  lá que se confere antes de inventar um nome.
+  **Ele varre o DIRETÓRIO e não um padrão de nome, e isso custou duas vezes**: o
+  glob era um padrão de NOME, e ele deixou de casar duas vezes: quando o kit
+  mudou de arquivo, e quando os arquivos perderam um prefixo. Nas duas o guarda
+  seguiria VERDE
+  medindo menos. Padrão de nome acopla o guarda à nomenclatura; o diretório é o
+  terreno, e ele não muda de nome sozinho.
   **E o que ele mede deixou de ser só a paleta `grimorio-*` na ALE-276**: os
   PAPÉIS semânticos — `destructive`, `primary`, `muted`, `card`, `popover` e os
   outros — não estavam em `asPaletasDaCasa`, então `text-destructive-foreground`
@@ -1086,9 +1021,9 @@ ALE-278, com a forma exata do `account` — e pelo mesmo defeito, que vale
 registrar porque agora ele tem DOIS casos e um padrão.
 
 A cena escrevia "O nome é obrigatório e cabe em 120 caracteres." e a rota JSON
-respondia `err.Error()`, que era a frase inglesa herdada do NestJS. Duas frases
-para uma regra é o que quebra quando alguém mexe no limite: uma das duas fica
-para trás, e é sempre a que ninguém está olhando.
+respondia `err.Error()`, que era uma frase em inglês. Duas frases para uma regra
+é o que quebra quando alguém mexe no limite: uma das duas fica para trás, e é
+sempre a que ninguém está olhando.
 
 **O padrão, agora com dois casos:** quando uma regra de produto tem um consumidor
 de TELA e um de API, a frase divide antes da conta. No `account` a divergência
@@ -1311,10 +1246,9 @@ compilador não pega é o hifenizado; esse se acha com um `grep` por `-ui.` depo
 
 ### O `extra` do botão NÃO ganha da base, e quem decide é a FOLHA (ALE-316)
 
-`ButtonClasses(v, t, extra)` concatena, e concatenar não resolve conflito — o
-`cn()` da SPA era `tailwind-merge` e fazia isso; o `Join` daqui não faz. **Duas
-classes do mesmo eixo na mesma tag não se somam: vence a que a folha compilada
-declara por ÚLTIMO.** Então um `extra` cuja utilidade venha ANTES da base perde,
+`ButtonClasses(v, t, extra)` concatena, e **concatenar não resolve conflito**: o
+`Join` não é `tailwind-merge`. Duas classes do mesmo eixo na mesma tag não se
+somam — vence a que a folha compilada declara por ÚLTIMO. Então um `extra` cuja utilidade venha ANTES da base perde,
 e perde calado.
 
 Medido nos offsets da folha de hoje:
@@ -1758,10 +1692,9 @@ descreve o estado, o sinal muda a decisão de quem está do outro lado.
 
 ### Animação de ENTRADA numa cena que nunca monta: a classe substitui o mount
 
-Na SPA, animação de entrada era `animate-in` + `<Show keyed>`: o nó era
-RECONSTRUÍDO a cada troca e a animação vinha de graça (ALE-97). Nas cenas
-desenhadas pelo servidor — campanhas, personagens, e toda cena com cursor — nada
-nunca monta: o servidor manda todos os itens e o cursor só alterna `data-show`.
+Nas cenas desenhadas pelo servidor — campanhas, personagens, e toda cena com
+cursor — **nada nunca monta**: o servidor manda todos os itens e o cursor só
+alterna `data-show`. Então não há remontagem de nó para disparar `animate-in`.
 
 **O que substitui o mount é a CLASSE entrando num nó que não a tinha** (ALE-235).
 O item que sai perde a classe, o que entra ganha, e são elementos DIFERENTES —
@@ -2058,8 +1991,7 @@ data-on:click="$alvoId = el.dataset.id;
                $redefinir.showModal()"
 ```
 
-É a mesma família do `<Show keyed>` sem parâmetro que mordeu do lado da SPA
-(ALE-208): **estado de um item sobrevivendo à troca por outro**. Muda o vestido,
-não o defeito. E como o `data-show` é a forma que esta migração multiplica, vale
-conferir a cada cena nova: existe algum nó compartilhado que recebe escrita
-depois da renderização? Se existe, quem troca de item tem de apagá-lo.
+A família é **estado de um item sobrevivendo à troca por outro**, e o `data-show`
+a multiplica. Vale conferir a cada cena nova: existe algum nó compartilhado que
+recebe escrita depois da renderização? Se existe, quem troca de item tem de
+apagá-lo.
