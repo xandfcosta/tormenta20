@@ -82,20 +82,62 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
 
     // A COR do véu diz o sinal, e é a única coisa que separa "levei 12" de
     // "curei 12". Medida no véu que está no ar durante a cura.
-    const corDaCura = await page.evaluate(async () => {
-      const antes = document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]').length
+    //
+    // # Ela ESPERA O ZERO antes do gesto, e o orçamento é em TEMPO (ALE-322)
+    //
+    // A primeira versão guardava `antes = veus.length` e esperava `> antes`. Duas
+    // fragilidades de desenho, independentes de qual delas mordeu:
+    //
+    //   - se um véu SAI e outro ENTRA, a contagem não sobe e o sucesso passa por
+    //     ausência — é o "mostrador cujo REPOUSO é igual ao sucesso" do guia,
+    //     com um contador no lugar do rótulo;
+    //   - o orçamento eram 40 QUADROS (~0,67s), mas o que se espera é uma ida ao
+    //     SERVIDOR: clique, POST, remendo SSE, morph. São relógios diferentes, e
+    //     o de quadros não estica quando o outro fica lento.
+    //
+    // Esperar a contagem chegar a ZERO torna o "apareceu" inequívoco, e o
+    // orçamento em tempo acompanha o que de fato se espera.
+    //
+    // A CAUSA RAIZ SEGUE ABERTA: esta reprovação apareceu em duas de quatro
+    // execuções cheias e nunca isolada, e não foi reproduzida sob instrumentação.
+    // Por isso a mensagem de falha carrega o estado — a próxima ocorrência chega
+    // diagnosticada em vez de exigir outra caçada.
+    const medida = await page.evaluate(async () => {
+      const veus = () => [...document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]')]
+      const quadro = () => new Promise((p) => requestAnimationFrame(p))
+
+      const limpando = performance.now()
+      while (veus().length > 0 && performance.now() - limpando < 3000) await quadro()
+      const veusAntes = veus().length
+
       const curar = [...document.querySelectorAll('button')].find((b) =>
         (b.getAttribute('aria-label') ?? '').startsWith('Curar'),
       )
+      const achouBotao = !!curar
       curar?.click()
-      for (let i = 0; i < 40; i++) {
-        await new Promise((p) => requestAnimationFrame(p))
-        const veus = [...document.querySelectorAll('#table-tracker li > div[aria-hidden="true"]')]
-        if (veus.length > antes) return getComputedStyle(veus[veus.length - 1]).background
+
+      const t0 = performance.now()
+      while (performance.now() - t0 < 3000) {
+        await quadro()
+        const agora = veus()
+        if (agora.length > 0) {
+          return { cor: getComputedStyle(agora[agora.length - 1]).background,
+                   veusAntes, achouBotao, ms: Math.round(performance.now() - t0) }
+        }
       }
-      return ''
+      return { cor: '', veusAntes, achouBotao, ms: Math.round(performance.now() - t0) }
     })
-    expect(corDaCura, 'a cura não pintou véu nenhum').not.toBe('')
+    const corDaCura = medida.cor
+    expect(
+      corDaCura,
+      `a cura não pintou véu nenhum em ${medida.ms}ms — ` +
+        `véus pendurados antes do gesto: ${medida.veusAntes} (zero é o esperado), ` +
+        `botão Curar encontrado: ${medida.achouBotao}. ` +
+        'Se os véus antes forem > 0, o véu do DANO não tinha sumido; se o botão for ' +
+        'false, o gesto não chegou a acontecer; se os dois estiverem certos, a ' +
+        'piscada não foi disparada — e aí o suspeito é o MutationObserver de ' +
+        '`aria-valuenow` ou o morph apagando o véu na janela de um quadro (ALE-322).',
+    ).not.toBe('')
     // `--hp-full` é a cor de vida cheia; `--hp-critical` é a do dano. Elas têm
     // de ser DIFERENTES, senão o sinal não é sinal.
     const corDoDano = await page.evaluate(() =>
