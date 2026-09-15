@@ -10,12 +10,12 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "t20engine/serve/web/ui"
 
-// OS CONTROLES DO MESTRE (ALE-265).
+// OS CONTROLES DO MESTRE.
 //
 // Eles entram na MESMA cena do jogador, e não numa segunda: a tela do mestre é
 // a do jogador mais o que ele comanda. Duas cenas seriam duas listas de
-// combatente para manter em dia, que é o formato exato do defeito da ALE-122 —
-// a mesma tela mostrando 52/95 e 57/95 do mesmo combatente.
+// combatente para manter em dia, e o defeito delas é a mesma tela mostrando
+// 52/95 e 57/95 do mesmo combatente.
 //
 // Quem decide se eles aparecem é o PAPEL, resolvido no servidor pelo mesmo
 // `stateForRole` que o resto da casa usa. Esconder no cliente seria UX; a trava
@@ -151,7 +151,7 @@ func gmControls(v View, r viewGm) templ.Component {
 	})
 }
 
-// tableDrawer é o rodapé do mestre quando o palco é baixo (ALE-263).
+// tableDrawer é o rodapé do mestre quando o palco é baixo.
 //
 // `<details>` e não um popover com JavaScript: abrir e fechar é o que o elemento
 // JÁ faz, e ele leva de graça o teclado, o foco e o "fechar com Escape" que uma
@@ -159,7 +159,7 @@ func gmControls(v View, r viewGm) templ.Component {
 //
 // Quem a mostra e a esconde é a consulta de contêiner na folha, e não uma classe
 // aqui: a decisão é sobre a ALTURA MEDIDA do palco, e essa medida o servidor não
-// tem — é a tradução do `palcoBaixo` que a ALE-265 deixou anotada.
+// tem.
 func tableDrawer(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -211,21 +211,18 @@ func tableDrawer(v View) templ.Component {
 	})
 }
 
-// Os DOIS gestos de fim de duração, e eles NÃO são o mesmo par (ALE-233).
+// Os DOIS gestos de fim de duração, e eles NÃO são o mesmo par.
 //
-// Aqui estava escrito que os dois eram "o par do livro (T20 p105): devolve PV e
-// PM ao grupo". **Metade disso nunca foi verdade.** O de CENA nunca devolveu
-// ponto nenhum — ele expira a duração de cena, os usos "1/cena" e as posturas —,
-// e mesmo assim se chamava "Recuperar · cena", que é a palavra que o painel usa
-// para o descanso. O nome prometia o que a função não fazia, desde sempre.
+// O de CENA não devolve ponto nenhum: ele expira a duração de cena, os usos
+// "1/cena" e as posturas. Por isso ele NÃO se chama "Recuperar · cena" — a
+// palavra "recuperar" é a do descanso, e o nome prometeria o que a função não
+// faz. Os três gestos deste painel se separam pela PALAVRA e não pela cor:
+// "Encerrar cena" tira a fila do ar, "Expirar efeitos" só encerra a duração,
+// "Recuperar · dia" é o único que devolve pontos.
 //
-// Decisão do dono (ALE-233): os dois FICAM, porque "acabou a bênção" nem sempre
-// é "acabou a cena" e o mestre precisa poder expirar a duração sem tirar a fila
-// de ninguém. O que sai é a mentira — o de cena passa a dizer o que faz.
-//
-// E isso separa os três gestos deste painel pela PALAVRA em vez de pela cor, que
-// é o que a ALE-200 pede: "Encerrar cena" tira a fila do ar, "Expirar efeitos"
-// só encerra a duração, "Recuperar · dia" é o único que devolve pontos.
+// Os dois FICAM (decisão do dono), porque "acabou a bênção" nem sempre é
+// "acabou a cena" e o mestre precisa poder expirar a duração sem tirar a fila de
+// ninguém.
 //
 // A de CENA acontece no clique porque não precisa de mais nada. A de DIA precisa
 // da qualidade, que é o que a p105 usa para calcular quanto volta, e só por isso
@@ -259,7 +256,7 @@ func rest(v View) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "descanso/cena"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 132, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 129, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -355,7 +352,7 @@ func restDay(v View) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('day-rest').close(); " + tableCommand(v, "POST", "descanso/dia"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 210, Col: 109}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 200, Col: 109}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -372,13 +369,11 @@ func restDay(v View) templ.Component {
 // turnStep é o voltar. Ele existe porque errar o avanço é o engano mais
 // comum da mesa, e sem ele o conserto é remontar a ordem inteira.
 //
-// O `route` chega INTEIRO, e não como sufixo de um prefixo escrito aqui
-// (ALE-308). Ele era `"initiative/"+route`, com a outra metade no chamador: a
-// ALE-304 traduziu as rotas para português, pegou o avanço — que está inline
-// logo acima — e não pegou este, porque nenhuma das duas metades é um caminho
-// que se possa procurar. O botão ficou postando em `initiative/previous-turn`,
-// que não existe, e o Datastar descarta o remendo de resposta não-2xx: o clique
-// morria sem console, sem frase e sem nada.
+// O `route` chega INTEIRO, e NÃO como sufixo de um prefixo montado aqui: com a
+// rota partida em duas metades, nenhuma delas é um caminho que se possa
+// procurar, e uma varredura que renomeie rotas passa por cima desta. O botão
+// fica postando num endereço que não existe, e o Datastar descarta o remendo de
+// resposta não-2xx — o clique morre sem console, sem frase e sem nada.
 func turnStep(v View, route, label, glyph string, enabled bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -407,7 +402,7 @@ func turnStep(v View, route, label, glyph string, enabled bool) templ.Component 
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 230, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 218, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -425,7 +420,7 @@ func turnStep(v View, route, label, glyph string, enabled bool) templ.Component 
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", route))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 232, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 220, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -448,7 +443,7 @@ func turnStep(v View, route, label, glyph string, enabled bool) templ.Component 
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(glyph)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 238, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 226, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -465,14 +460,13 @@ func turnStep(v View, route, label, glyph string, enabled bool) templ.Component 
 // Abrir e encerrar a cena NÃO são um interruptor, e por isso são dois nós e não
 // um com `if` dentro.
 //
-// Encerrar a cena tira a fila da mesa e é irreversível pelo mesmo clique — desde
-// a ALE-210 a vaga de registrar só existe DENTRO da cena. Um interruptor convida
-// ao clique de volta que não existe; dois verbos dizem o que cada um faz.
+// Encerrar a cena tira a fila da mesa e é irreversível pelo mesmo clique — a
+// vaga de registrar só existe DENTRO da cena. Um interruptor convidaria ao
+// clique de volta que não existe; dois verbos dizem o que cada um faz.
 //
-// Eles se separaram na ALE-263 porque passaram a viver em lugares diferentes: o
-// INICIAR fica na fileira em qualquer altura de palco, e o ENCERRAR desce para a
-// gaveta quando o palco é baixo. Quem escolhe entre eles continua sendo a cena,
-// e continua sendo uma vaga só — nenhum deles aparece com o outro.
+// São dois nós também porque vivem em lugares diferentes: o INICIAR fica na
+// fileira em qualquer altura de palco, e o ENCERRAR desce para a gaveta quando o
+// palco é baixo. Continua sendo uma vaga só — nenhum deles aparece com o outro.
 func endSceneButton(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -501,7 +495,7 @@ func endSceneButton(v View) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "cena/encerrar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 255, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 242, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
@@ -543,7 +537,7 @@ func startScene(v View) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "cena/iniciar"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 263, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/commands.templ`, Line: 250, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {

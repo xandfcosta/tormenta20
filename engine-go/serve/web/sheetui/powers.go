@@ -10,24 +10,18 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// A aba PODERES como dado (ALE-272, fatia 8).
+// A aba PODERES como dado.
 //
-// UMA lista, a da mesa. A ficha antiga tinha dois MODOS — jogo e edição — e o
-// dono resumiu o resultado em "está difícil de ser usada": o modo de edição
-// abria sozinho sempre que havia pendência (o estado normal de quem subiu de
-// nível) e o cromo dele comia 44% do painel no telefone (ALE-217). Escolher
-// poder acontece uma vez por nível e virou diálogo; o que fica na tela é o que
-// a mesa usa.
-//
-// # Duas seções, e a ordem das AÇÕES é a regra
+// UMA lista, a da mesa, e nenhum modo de edição: escolher poder acontece uma vez
+// por nível e mora num DIÁLOGO. O que fica na tela é o que a mesa usa.
 //
 // AÇÕES são o que se ativa: instantâneos e posturas. Elas vêm ordenadas com a
 // postura ATIVA primeiro — é a que a pessoa vai querer encerrar — e depois por
 // PM crescente, com o custo variável por último.
 //
 // PASSIVAS ficam recolhidas atrás de "mostrar (N)": elas já entram nos números
-// da ficha, então na mesa são referência e não ação. A exceção que aparece com
-// o bloco fechado é a passiva de GATILHO com o gatilho no ar — ela está fazendo
+// da ficha, então na mesa são referência e não ação. A exceção que aparece com o
+// bloco fechado é a passiva de GATILHO com o gatilho no ar — ela está fazendo
 // efeito AGORA e sumir seria mentir.
 
 // powersPanel é a aba Poderes pronta para desenhar.
@@ -175,9 +169,8 @@ func stanceStateFor(
 
 // stanceFlag acha a flag que a postura acende.
 //
-// Ela sai do mapa que a fatia 5 montou lendo o catálogo — a postura NÃO declara
-// a própria flag, e derivá-la do id acertaria as duas de hoje e erraria calado
-// na terceira.
+// Ela sai do CATÁLOGO — a postura não declara a própria flag, e derivá-la do id
+// acertaria as duas de hoje e erraria calado na terceira.
 func stanceFlag(spec book.Activation) string {
 	for flag, postura := range stancesFromCatalog() {
 		if postura.Name == spec.Name {
@@ -441,7 +434,7 @@ func powerBadge(kind string) string {
 //
 // PRÉVIA e não decisão: quem cobra é o servidor, com o teto de degraus do nível
 // e o PM disponível. Escrever a regra aqui daria uma segunda conta do mesmo
-// número — o defeito que a ALE-110 registrou.
+// número.
 func costStancePreview(linha powerRow) string {
 	base := strconv.Itoa(linha.Stance.BasePm)
 	passo := strconv.Itoa(linha.Stance.StepPm)

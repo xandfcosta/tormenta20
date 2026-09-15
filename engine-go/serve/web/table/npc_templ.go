@@ -14,16 +14,16 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O PAINEL DO ELENCO (ALE-269, superfície 6b): os NPCs da campanha.
+// O PAINEL DO ELENCO: os NPCs da campanha.
 //
 // Ele é uma CONSULTA do trilho direito — abre com uma pergunta na cabeça ("quem
 // eu já preparei?") e fecha em seguida —, e não uma coluna permanente como as
 // notas. O trilho é o lugar previsível de onde se chama o que se consulta.
 //
 // A palavra "Elenco" aparece em dois lugares e é o MESMO conceito em duas
-// densidades, como na SPA: o trilho esquerdo mostra os jogadores recolhidos em
-// retratos, e este painel mostra o elenco inteiro — os jogadores e os NPCs. Não
-// é a colisão que o GLOSSARY proíbe; é a mesma coisa de perto e de longe.
+// densidades: o trilho esquerdo mostra os jogadores recolhidos em retratos, e
+// este painel mostra o elenco inteiro — os jogadores e os NPCs. Não é a colisão
+// que o GLOSSARY proíbe; é a mesma coisa de perto e de longe.
 func tableCastCampaign(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

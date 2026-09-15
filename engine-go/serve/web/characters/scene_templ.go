@@ -14,32 +14,21 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A cena de PERSONAGENS desenhada (ALE-239) — "palco + dossiê".
+// A cena de PERSONAGENS desenhada — "palco + dossiê".
 //
 // Mesma mecânica da cena de campanhas: todos os palcos desenhados, o cursor é
 // sinal, e ele segue o FOCO do filme. A diferença de forma é a VAGA DE CRIAR:
-// ela é a última posição do cursor e não um link solto (ALE-98). Um `<a>` no
-// fim da fita pareceria igual e quebraria a gramática — as setas o pulariam,
-// porque elas andam entre itens do trilho e não entre links da página.
+// ela é a última posição do cursor e não um link solto. Um `<a>` no fim da fita
+// pareceria igual e quebraria a gramática — as setas o pulariam, porque elas
+// andam entre itens do trilho e não entre links da página.
 //
-// A ANIMAÇÃO DE ENTRADA do palco está aqui desde a ALE-235, e o mecanismo dela
-// é o que aquela issue existia para achar: `animate-in` dispara no MOUNT, e uma
-// cena inteira desenhada com `data-show` nunca monta. **O que substitui o mount
-// é a CLASSE entrando num nó que não a tinha** — o palco que sai perde a classe,
-// o que entra ganha, e são elementos diferentes, então nunca há o caso que não
-// replica ("a mesma animação, já concluída, no mesmo nó").
-//
-// Nenhuma das saídas que a issue previa foi necessária: nem morph, nem reflow
-// forçado, nem id que muda a cada troca. Ver `ui.EnteringStage` e a folha.
-//
-// O MECANISMO É GERAL, e a ALE-297 provou: a cena de campanhas largou o livro de
-// couro, virou palco e herdou a entrada inteira sem uma linha nova de CSS. Foi
-// essa segunda cena que tirou o vizinho, o facho, a entrada e o gesto daqui de
-// dentro para o `ui` — enquanto eram privados deste arquivo, tinham exatamente
-// um chamador possível.
-//
-// A VIRADA DE PÁGINA que ainda restava da ALE-235 morreu com o livro: sem
-// lombada não há folha para atravessar.
+// A ANIMAÇÃO DE ENTRADA do palco: `animate-in` dispara no MOUNT, e uma cena
+// inteira desenhada com `data-show` nunca monta. **O que substitui o mount é a
+// CLASSE entrando num nó que não a tinha** — o palco que sai perde a classe, o
+// que entra ganha, e são elementos diferentes, então nunca há o caso que não
+// replica ("a mesma animação, já concluída, no mesmo nó"). Nem morph, nem
+// reflow forçado, nem id que muda a cada troca. Ver `ui.EnteringStage` e a
+// folha.
 func charactersBody(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -149,7 +138,7 @@ func charactersBar(v View) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{search: %q, dossier: false, %s}", v.Busca, ui.StageSignals(v.CursorID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 66, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 55, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -167,7 +156,7 @@ func charactersBar(v View) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d de %d", len(v.Heroes), v.Total))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 75, Col: 96}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 64, Col: 96}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -188,7 +177,7 @@ func charactersBar(v View) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Busca)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 84, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 73, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -236,7 +225,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$cursor == %d", h.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 98, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 87, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -249,7 +238,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.EnteringStage(h.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 99, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 88, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -262,7 +251,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + ui.StageWash(h.Name))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 107, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 96, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -283,7 +272,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var10 templ.SafeURL
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 112, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 101, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -296,7 +285,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir ficha de " + h.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 113, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 102, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -309,7 +298,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + h.Gradient)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 115, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 104, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -322,7 +311,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(h.Monogram)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 118, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 107, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -343,7 +332,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(h.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 129, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 118, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -368,7 +357,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(h.Role)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 131, Col: 12}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 120, Col: 12}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -395,7 +384,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(h.Summary)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 135, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 124, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -417,7 +406,7 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 		var templ_7745c5c3_Var19 templ.SafeURL
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 137, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 126, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -485,19 +474,18 @@ func heroStage(h HeroCard, anterior, proximo *ui.Neighbor) templ.Component {
 	})
 }
 
-// heroVitals: DEF, PV e PM — nesta ordem, que é a da SPA.
+// heroVitals: DEF, PV e PM, nesta ordem.
 //
 // A Defesa vem PRIMEIRO e nunca some: quando não há motor ela é um travessão.
-// Uma coluna que aparece e desaparece faz o palco dançar ao trocar de herói, e
-// esse é o defeito que a ALE-99 consertou.
+// Uma coluna que aparece e desaparece faz o palco dançar ao trocar de herói.
 //
 // PV e PM levam as cores da casa; o PM fica apagado quando o máximo é zero,
 // porque quem não tem mana não tem por que ler um "0/0" em destaque.
 //
-// O PV segue a ESCADA e o PM não, e a assimetria é do livro: mana acabando é
-// um recurso no fim, vida acabando é um herói morrendo. Até a ALE-316 o PV era
-// `--hp-full` fixo aqui, então o trilho mostrava o elenco inteiro com a mesma
-// cor de saúde — e esta é a tela em que se ESCOLHE quem jogar.
+// O PV segue a ESCADA e o PM não, e a assimetria é do livro: mana acabando é um
+// recurso no fim, vida acabando é um herói morrendo. Com uma cor fixa, o trilho
+// mostraria o elenco inteiro com a mesma saúde — e esta é a tela em que se
+// ESCOLHE quem jogar.
 func heroVitals(h HeroCard) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -611,7 +599,7 @@ func oneVital(rotulo, valor, tom string, apagado bool) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 176, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 164, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -646,7 +634,7 @@ func oneVital(rotulo, valor, tom string, apagado bool) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 177, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 165, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
@@ -695,7 +683,7 @@ func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.EnteringStage(0))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 187, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 175, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -805,12 +793,11 @@ func createStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 // characterFilm é o índice: um salto direto para qualquer herói, que é o
 // que salva um elenco longo do "aperta a seta trinta vezes".
 //
-// A REGIÃO se chama `rail` e não `filme` desde a ALE-181, e o nome é CONTRATO e
-// não gosto: o driver do `scene.js` procura literalmente `[data-nav-region="rail"]`
-// para o Esc subir um nível e para escolher onde o foco pousa ao entrar na cena.
-// Com um nome próprio, esta cena caía no ramo "a primeira região que houver" —
-// que acertava por ser a única. O comentário do trilho de campanhas já avisava
-// que três cenas perderam esse comportamento assim.
+// A REGIÃO se chama `rail` e não `filme`, e o nome é CONTRATO e não gosto: o
+// driver do `scene.js` procura literalmente `[data-nav-region="rail"]` para o
+// Esc subir um nível e para escolher onde o foco pousa ao entrar na cena. Com um
+// nome próprio, a cena cai no ramo "a primeira região que houver" — que acerta
+// enquanto ela for a única.
 func characterFilm(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -891,11 +878,9 @@ func filmFrame(h HeroCard, i int) templ.Component {
 		})
 		templ_7745c5c3_Err = ui.Marker(ui.RailMarker{
 			ID: h.ID, Index: i, Monogram: h.Monogram, Gradient: h.Gradient,
-			// Nome E papel, como o marcador de campanhas. O `aria-label` que este
-			// quadro carregava some junto e isso é conserto, não perda: ele existia
-			// porque o monogram de 48px não dizia quem era, e um nome acessível
-			// escrito à mão sobre um conteúdo que agora o diz seria duas fontes
-			// para a mesma frase.
+			// Nome E papel, como o marcador de campanhas. Sem `aria-label`: o
+			// conteúdo já diz quem é, e um nome acessível escrito à mão por cima
+			// seriam duas fontes para a mesma frase.
 			Name: h.Name, Sub: h.Role,
 			Destino: "/personagens/" + strconv.FormatInt(h.ID, 10),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
@@ -908,8 +893,8 @@ func filmFrame(h HeroCard, i int) templ.Component {
 
 // O ⏎ daqui leva à Forja, como o ⏎ de um herói leva à ficha. Sem ele a gramática
 // do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
-// que abriu tudo até ali não faz nada. (E é a QUINTA vez que um comentário
-// dentro da lista de atributos derruba o `templ generate` — ele não aceita.)
+// que abriu tudo até ali não faz nada. (Ele mora aqui fora porque o `templ` NÃO
+// aceita comentário dentro de uma lista de atributos — o `generate` cai.)
 func createFrame(indice int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -944,8 +929,8 @@ func createFrame(indice int) templ.Component {
 // heroDossier é a gaveta de detalhe. Ela é desenhada para todos e revelada
 // pelo par cursor+`$dossier`: abrir não pede nada ao servidor.
 //
-// As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) — na
-// SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
+// As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) e
+// não de uma consulta: são quatro linhas, e elas já estão na memória do servidor.
 func heroDossier(h HeroCard) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -974,7 +959,7 @@ func heroDossier(h HeroCard) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$dossier && $cursor == %d", h.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 302, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 285, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 		if templ_7745c5c3_Err != nil {
@@ -987,7 +972,7 @@ func heroDossier(h HeroCard) templ.Component {
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.ResolveAttributeValue("Dossiê de " + h.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 304, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 287, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 		if templ_7745c5c3_Err != nil {
@@ -1000,7 +985,7 @@ func heroDossier(h HeroCard) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(h.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 308, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 291, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -1084,7 +1069,7 @@ func heroDossier(h HeroCard) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(h.Race)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 323, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 306, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -1102,7 +1087,7 @@ func heroDossier(h HeroCard) templ.Component {
 				var templ_7745c5c3_Var49 string
 				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(hab.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 328, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 311, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 				if templ_7745c5c3_Err != nil {
@@ -1115,7 +1100,7 @@ func heroDossier(h HeroCard) templ.Component {
 				var templ_7745c5c3_Var50 string
 				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(hab.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 329, Col: 80}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 312, Col: 80}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
@@ -1168,7 +1153,7 @@ func dossierRow(rotulo, valor string) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 340, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 323, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
@@ -1181,7 +1166,7 @@ func dossierRow(rotulo, valor string) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(valor)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 341, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/characters/scene.templ`, Line: 324, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {

@@ -3,15 +3,14 @@ package board
 import "t20engine/domain/engine"
 
 // O TRAÇO do pincel: as casas que o dedo ATRAVESSOU entre dois avisos do
-// ponteiro (ALE-203).
+// ponteiro.
 //
 // # Por que o servidor precisa saber disto
 //
-// O `pointermove` chega a cada quadro, e entre um quadro e o seguinte o dedo pode
-// ter andado mais que uma casa. Medido na bancada: um arrasto de 300px em passos
-// de ~73px pintou 11,6 · 13,6 · 15,7 · 16,8 · 18,9 — as colunas 12, 14 e 17
-// ficaram VAZIAS no meio do traço. É pior num zoom pequeno, onde a casa tem 20px
-// e qualquer movimento normal pula três.
+// O `pointermove` chega a cada quadro, e entre um quadro e o seguinte o dedo
+// pode ter andado mais que uma casa — pintar só onde o ponteiro ESTÁ deixa
+// colunas vazias no meio do traço. É pior num zoom pequeno, onde a casa tem
+// 20px e qualquer movimento normal pula três.
 //
 // A saída é o cliente mandar de ONDE ATÉ ONDE, e não onde ele está: uma
 // requisição por quadro do mesmo jeito, com o segmento inteiro pintado do outro
@@ -74,7 +73,7 @@ func step(delta int) (distancia, sentido int) {
 // JSON que a mesa depois teria de baixar.
 //
 // Cem é largo para o gesto real: num quadro de 16ms nenhum dedo atravessa cem
-// casas. O traço mais longo medido na bancada teve 9.
+// casas.
 const strokeFits = 100
 
 // ValidStroke recusa o segmento que não pode ter saído de um dedo.
@@ -85,14 +84,14 @@ func ValidStroke(de, ate engine.Square) bool {
 	return max(abs(ate.X-de.X), abs(ate.Y-de.Y)) < strokeFits
 }
 
-// ── O RETÂNGULO (ALE-203, item 10 do dono) ───────────────────────────────────
+// ── O RETÂNGULO ──────────────────────────────────────────────────────────────
 //
-// "Não temos ferramenta de seleção em área." Com o pincel na mão, o retângulo
-// ENCHE: uma parede de taverna com dois cantos em vez de vinte passadas.
+// Com o pincel na mão, o retângulo ENCHE: uma parede de taverna com dois cantos
+// em vez de vinte passadas.
 //
-// Ele é irmão do traço e não uma máquina nova — as duas rotas de terreno passaram
-// a receber DOIS CANTOS e a diferir só em quais casas o par nomeia. O que muda é
-// a forma: o traço é a linha entre eles, o retângulo é tudo o que cabe dentro.
+// Ele é irmão do traço e não uma máquina nova — as duas rotas de terreno recebem
+// DOIS CANTOS e diferem só em quais casas o par nomeia. O que muda é a forma: o
+// traço é a linha entre eles, o retângulo é tudo o que cabe dentro.
 
 // RectangleSquares são todas as casas entre os dois cantos, inclusive eles.
 //

@@ -9,7 +9,7 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O FIM DA VIDA de uma sessão, e de tudo que ela deixou em memória (ALE-270).
+// O FIM DA VIDA de uma sessão, e de tudo que ela deixou em memória.
 //
 // A mesa roda de MEMÓRIA: o tabuleiro num mapa por sessão no `BoardStore`, a
 // fila noutro no `SessionStore`. Apagar a linha do banco não esvazia nenhum dos
@@ -32,8 +32,7 @@ import (
 // Função livre sobre os dois stores, e não método de um deles: o `Server` e o
 // adaptador da Mesa chegam aqui por caminhos diferentes, e os dois precisam
 // EXATAMENTE do mesmo par de avisos. Escrevê-lo nos dois lugares é como um
-// deles passa a esquecer um store — que é literalmente o defeito desta issue,
-// onde a cena chamava só o `Sessions().Forget`.
+// deles passa a esquecer um store.
 //
 // Ela é chamada DEPOIS de a linha sair do banco, e a ordem importa numa direção
 // só: avisar antes deixaria uma janela em que a sessão ainda responde e o
@@ -55,11 +54,11 @@ func (s *Server) SessionDeleted(sessionID int64) {
 // cima — por um motivo prosaico: apagar a campanha leva as sessões por cascata,
 // e depois disso não há mais como perguntar quais eram.
 //
-// Falhar em LISTAR não impede o apagar, e a escolha é a mesma do `endBoard` com
-// o `Archive`: o mestre mandou apagar a campanha, e recusar isso porque a
-// faxina de memória não pôde ser planejada seria prender a mesa numa campanha
-// que ele já descartou. O custo do que sobra é um alarme travado até o
-// reinício, e ele fica REGISTRADO — sem esta linha, ninguém saberia por quê.
+// Falhar em LISTAR não impede o apagar: o mestre mandou apagar a campanha, e
+// recusar isso porque a faxina de memória não pôde ser planejada seria prender a
+// mesa numa campanha que ele já descartou. O custo do que sobra é um alarme
+// travado até o reinício, e ele fica REGISTRADO — sem esta linha, ninguém
+// saberia por quê.
 func campaignDeleted(
 	ctx context.Context, q *sqlcgen.Queries,
 	boards *board.BoardStore, sessions *live.SessionStore, campaignID int64,

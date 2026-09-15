@@ -13,13 +13,13 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A CARTA DE CONVITE desenhada (ALE-249): entrar numa mesa.
+// A CARTA DE CONVITE desenhada: entrar numa mesa.
 //
 // Mesma folha do grimório da folha em branco, e é de propósito: toda cena de
 // campanha é página do mesmo livro — a crônica que se lê, a folha que se
 // escreve, e a carta enfiada nela.
 //
-// SEM Datastar, pela terceira vez e pelo mesmo motivo (ALE-229, ALE-246): é um
+// SEM Datastar, pelo mesmo motivo das outras cenas de formulário: é um
 // formulário que NAVEGA ao dar certo. A escolha do herói é um `radio` nativo —
 // não um botão com estado de cliente —, e isso não é economia: `radio` dá de
 // graça o grupo exclusivo, a navegação por setas dentro do grupo, o rótulo lido
@@ -197,8 +197,8 @@ func JoinBody(v joinView) templ.Component {
 // comprometer um herói com ela.
 //
 // Não há estado de "carregando" aqui, e a ausência é o ganho da cena: o convite
-// é resolvido no servidor antes de a página existir. Na SPA a tela monta e
-// espera uma segunda requisição atrás de um esqueleto.
+// é resolvido no servidor antes de a página existir, em vez de a tela montar e
+// esperar uma segunda requisição atrás de um esqueleto.
 func inviteLetter(v joinView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -384,18 +384,16 @@ func heroChoice(v joinView) templ.Component {
 // anel — assim o estado visual segue o estado REAL do controle, e não uma
 // segunda cópia dele guardada em algum lugar.
 // NADA vem pré-selecionado, e isso é decisão e não esquecimento: entrar numa
-// mesa cria uma CÓPIA do herói lá dentro (ALE-33), e sair não é um clique. Um
-// rádio já marcado faz quem estiver distraído sentar o herói errado à mesa.
+// mesa cria uma CÓPIA do herói lá dentro, e sair não é um clique. Um rádio já
+// marcado faz quem estiver distraído sentar o herói errado à mesa.
 //
 // A recusa é do NAVEGADOR, pelo `required`: ele diz "selecione uma destas
-// opções" apontando o grupo. É melhor que o botão desabilitado da SPA, que não
-// diz por que não envia — a mesma queixa que a ALE-80 registrou sobre esta
-// tela. O servidor recusa de novo, porque `required` não sobrevive a um POST
-// feito na mão.
+// opções" apontando o grupo, que é melhor que um botão desabilitado sem dizer
+// por que não envia. O servidor recusa de novo, porque `required` não sobrevive
+// a um POST feito na mão.
 //
 // O anel de foco mora no RÓTULO e não no rádio, pela razão que o `raceTile` da
-// forja registra por extenso — e com o mesmo afastamento de 1px da casa
-// (ALE-318).
+// forja registra por extenso — e com o mesmo afastamento de 1px da casa.
 func heroPlate(h joinHero, marcado bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -424,7 +422,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.FormatInt(h.ID, 10))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 135, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 133, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -447,7 +445,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + h.Gradiente)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 143, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 141, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -460,7 +458,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(h.Iniciais)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 144, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 142, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -473,7 +471,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(h.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 146, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 144, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -486,7 +484,7 @@ func heroPlate(h joinHero, marcado bool) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(h.Subtitulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 147, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/join.templ`, Line: 145, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {

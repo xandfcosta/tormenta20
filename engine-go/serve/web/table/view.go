@@ -10,25 +10,16 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A Mesa do jogador como DADO — as cenas em Datastar (ALE-219).
-//
-// Puro de propósito: o handler busca, este arquivo decide, o template só
-// desenha. É o que deixa a regra provável sem HTTP nenhum, pela mesma razão que
-// o `selfInitiativeEntry` é transport-agnostic (ALE-213) — o que importa não é
-// o transporte.
-//
-// Nenhuma regra NOVA mora aqui. O estado já chega redigido por
-// `stateForRole`/`redactForPlayers`, que é o gargalo único da ALE-210, e a
-// derivação do turno é a tradução literal do `playerTurnState` da SPA. Um
-// piloto que reescrevesse a regra mediria a reescrita, não o Datastar.
+// A Mesa como DADO: o handler busca, este arquivo decide, o template só
+// desenha. Nenhuma regra NOVA mora aqui — o estado já chega redigido por
+// `stateForRole`/`redactForPlayers`, que é o gargalo único.
 
 // View é uma tela inteira da Mesa. Campos exportados porque `html/template`
 // não enxerga os minúsculos — a única razão, e ela é do pacote de template.
 type View struct {
 	// Status é o ciclo da sessão — `planned`, `active` ou `ended`. Ele decide
-	// QUAIS verbos a tela oferece, e não só como ela os pinta: o servidor recusa
-	// encerrar o que nunca começou, e um botão que existe para levar recusa é um
-	// erro desenhado.
+	// QUAIS verbos a tela oferece: o servidor recusa encerrar o que nunca
+	// começou, e um botão que existe para levar recusa é um erro desenhado.
 	Status string
 	// Titulo é o apelido da noite, e pode ser VAZIO: a identidade da sessão é o
 	// NÚMERO. Obrigar a um título faria o mestre inventar texto para salvar.
@@ -37,21 +28,20 @@ type View struct {
 	SessionID  int64
 	SessionNum int64
 	// SceneActive vem do estado JÁ REDIGIDO: fora de cena o `redactForPlayers`
-	// devolve fila limpa, então o falso aqui É a trava da ALE-210 e não
-	// uma segunda decisão tomada na tela.
+	// devolve fila limpa, então o falso aqui É a trava e não uma segunda
+	// decisão tomada na tela.
 	SceneActive bool
 	Round       int
 	Turn        tableTurn
-	// Proximos é a faixa de quem vem depois (ALE-290): a vez e as duas
-	// seguintes, dando a volta. Vazia fora de combate.
+	// Proximos é a faixa de quem vem depois: a vez e as duas seguintes, dando a
+	// volta. Vazia fora de combate.
 	Proximos []turnAhead
 	Grupo    []Member
 	Fila     []tableRow
 	Eu       *tableMe
 	// MinhaFicha é a ficha do personagem DESTE jogador, desenhada dentro da
-	// sessão (ALE-272, fatia 10b). Nil para o mestre e para quem não tem
-	// personagem na campanha — é a mesma trava do `Mestre`: o que a view não
-	// tem, a cena não desenha.
+	// sessão. Nil para o mestre e para quem não tem personagem na campanha — é a
+	// mesma trava do `Mestre`: o que a view não tem, a cena não desenha.
 	//
 	// Ela NÃO é região do stream, e isso é decisão: a ficha é cara de computar
 	// e muda pelos comandos DELA, não pelo que acontece na mesa. Pendurá-la em
@@ -65,23 +55,20 @@ type View struct {
 	// desenhar controle que não existe na view. Esconder por classe deixaria o
 	// HTML na página para quem abrisse o inspetor.
 	Mestre *viewGm
-	// Notas é o caderno da noite (ALE-269, superfície 5), e ele é DO MESTRE: na
-	// SPA o painel vive na `session-gm-view` e o jogador nunca o recebe. Vazio
-	// para quem não é mestre, pela mesma trava do resto — a view não tem o que
-	// desenhar, em vez de a tela esconder.
+	// Notas é o caderno da noite, e ele é DO MESTRE. Vazio para quem não é
+	// mestre, pela mesma trava do resto — a view não tem o que desenhar, em vez
+	// de a tela esconder.
 	Notas string
 	// NotasBlocos é a mesma nota já em ÁRVORE, para o templ montar elementos em
 	// vez de cuspir HTML. Nasce aqui e não no template porque parsear em
 	// template é regra escondida onde ninguém a testa.
 	NotasBlocos []markdown.Block
-	// NPCs é o elenco da CAMPANHA (ALE-269, superfície 6b) — o taverneiro que
-	// não briga e o chefe da semana que vem. Do mestre, como as notas: a view do
-	// jogador não o tem, e por isso não há o que a tela dele esconder.
+	// NPCs é o elenco da CAMPANHA — o taverneiro que não briga e o chefe da
+	// semana que vem. Do mestre, como as notas.
 	NPCs []castNpc
 }
 
-// tableTurn é de quem é a vez, do ponto de vista de quem olha. Espelha o
-// `LiveTurnState` da SPA.
+// tableTurn é de quem é a vez, do ponto de vista de quem olha.
 type tableTurn struct {
 	Kind  string // "mine" | "other" | "idle"
 	Label string
@@ -94,24 +81,21 @@ type tableBar struct {
 	Current int64
 	Max     int64
 	Pct     int
-	// Hidden é "o mestre está escondendo ESTE pool da mesa" (ALE-211).
+	// Hidden é "o mestre está escondendo ESTE pool da mesa".
 	//
-	// Mora na BARRA e não na linha porque desde aquela issue a decisão é por
-	// pool: o PV do grupo aparece e o PM não, e uma flag por linha não teria
-	// como dizer as duas coisas do mesmo combatente. É também o que põe o olho
-	// ao lado da barra que ele esconde, em vez de numa tira onde ele não diz de
-	// qual número está falando.
+	// Mora na BARRA e não na linha porque a decisão é por pool: o PV do grupo
+	// aparece e o PM não, e uma flag por linha não teria como dizer as duas
+	// coisas do mesmo combatente. É também o que põe o olho ao lado da barra que
+	// ele esconde, em vez de numa tira onde ele não diz de qual número fala.
 	//
 	// Para o JOGADOR, uma barra escondida chega sem números e com isto ligado —
-	// é assim que a tela distingue "não tem PV rastreado" de "o mestre escondeu"
-	// (ALE-210).
+	// é assim que a tela distingue "não tem PV rastreado" de "o mestre escondeu".
 	Hidden bool
-	// Tom é a CLASSE do preenchimento — a cor diz "quão mal", não só a largura
-	// (espelha `hpFillVar` do `vital-bar.tsx`).
+	// Tom é a CLASSE do preenchimento — a cor diz "quão mal", não só a largura.
 	//
 	// Classe e não `var(--token)` inline por duas razões que se somam: o
 	// `html/template` sanitiza contexto CSS e um `var(--hp-full)` interpolado
-	// vira `ZgotmplZ`, e classe é o que o scanner do Tailwind sabe procurar.
+	// vira o sentinela ZgotmplZ, e classe é o que o scanner do Tailwind procura.
 	// Como o nome nasce aqui e não no template, o scanner NÃO o vê — por isso
 	// os quatro estão declarados no `@source inline(...)` do `app.src.css`.
 	Tone string
@@ -122,25 +106,20 @@ type Member struct {
 	// CharacterID não é desenhado: é a chave que casa o cartão com a presença.
 	CharacterID int64
 	Nome        string
-	// Iniciais é o monogram do ELENCO no trilho do mestre (ALE-269) — a vaga
-	// do `gmCast` da SPA. O jogador continua lendo o nome inteiro no cartão.
+	// Iniciais é o monogram do elenco no trilho do mestre. O jogador continua
+	// lendo o nome inteiro no cartão.
 	Iniciais string
 	Nivel    int64
 	Classes  string
 	PV       tableBar
 	PM       tableBar
-	// Presenca chega para os DOIS papéis desde a ALE-214.
+	// Presenca chega para os DOIS papéis: saber quem caiu é o que faz a mesa
+	// ESPERAR em vez de continuar sem alguém, e isso vale mais que a discrição
+	// de não dizer ao jogador quem está fora.
 	//
-	// Aqui morava o contrário, com o precedente da SPA: presença por personagem
-	// era do mestre, e "um anel apagado diria 'fora da mesa' a quem não tem por
-	// que saber". Decisão do dono (2026-09-08): saber quem caiu é o que faz a
-	// mesa ESPERAR em vez de continuar sem alguém, e isso vale mais que a
-	// discrição.
-	//
-	// **Continua PONTEIRO e não `bool`**, e essa parte da decisão antiga fica de
-	// pé: "não sei" e "está fora" são coisas diferentes, e um cartão sem dado de
-	// presença não pode afirmar ausência. Nil é o que o remendo desenha quando a
-	// cena ainda não resolveu quem está na mesa.
+	// É PONTEIRO e não `bool`: "não sei" e "está fora" são coisas diferentes, e
+	// um cartão sem dado de presença não pode afirmar ausência. Nil é o que o
+	// remendo desenha quando a cena ainda não resolveu quem está na mesa.
 	Presenca *presencaDoMembro
 	// Defesa é TEXTO e nunca número, pela mesma razão do cartão de personagem:
 	// sem motor ela é desconhecida, e um ZERO é um valor de Defesa plausível e
@@ -156,14 +135,12 @@ type Member struct {
 type presencaDoMembro struct {
 	NaMesa bool
 	// Frase é o nome acessível, porque anel colorido não existe para leitor de
-	// tela (ALE-212). As palavras são as MESMAS da gaveta do elenco na SPA: duas
-	// telas não devem inventar dois vocabulários para o mesmo estado.
+	// tela.
 	Frase string
 }
 
 // marcaAPresenca escreve em cada cartão do Grupo se aquele personagem está na
-// mesa agora. Chamada para os DOIS papéis desde a ALE-214 — ver o comentário do
-// campo `Presenca`.
+// mesa agora. Chamada para os DOIS papéis — ver o campo `Presenca`.
 func marcaAPresenca(grupo []Member, conectados map[int64]bool) {
 	for i := range grupo {
 		naMesa := conectados[grupo[i].CharacterID]
@@ -180,37 +157,31 @@ type tableRow struct {
 	ID         string
 	Rotulo     string
 	Iniciativa int
-	// EhFicha responde a pergunta que o GLOSSARY faz do `type === "character"`:
-	// "esta linha é ficha ou é NPC?". O campo se chamava `PC`, que é termo
-	// PROIBIDO — e o par na tela é `Ficha`/`NPC` pelo mesmo motivo.
+	// EhFicha responde "esta linha é ficha ou é NPC?". O par na tela é
+	// `Ficha`/`NPC`, porque `PC` é termo proibido pelo GLOSSARY.
 	EhFicha bool
 	Minha   bool
 	NaVez   bool
-	// PV nil = linha sem vida rastreada. `Oculto` é outra coisa: o mestre
-	// escondeu, e a flag sobrevive à redação de propósito (ALE-210) — "sem
-	// barra" e "escondido" não são a mesma coisa, e a segunda é informação.
+	// PV nil = linha sem vida rastreada. Escondido é outra coisa: o mestre
+	// escondeu de propósito, e a marca sobrevive à redação — "sem barra" e
+	// "escondido" não são a mesma coisa, e a segunda é informação.
 	PV *tableBar
-	// PM é o mana, e ele entrou na fila na ALE-211 — o dado já viajava no
-	// `InitiativeEntry` desde sempre e a view o descartava.
+	// PM é o mana da linha.
 	PM        *tableBar
 	Condicoes []string
-	// Iniciais é o monogram do trilho de 80px (ALE-269). Nasce na view e não
-	// no template pela convenção da casa — `web/campanhas/list_view.go` faz o
-	// mesmo —, e porque duas letras NÃO são um nome: quem desenha o retrato
-	// precisa do rótulo inteiro ao lado, no `aria-label`.
+	// Iniciais é o monogram do trilho de 80px. Nasce na view e não no template
+	// porque duas letras NÃO são um nome: quem desenha o retrato precisa do
+	// rótulo inteiro ao lado, no `aria-label`.
 	Iniciais string
 }
 
 // portraitLabel é o nome INTEIRO de um combatente do trilho, com os vitais
-// junto (ALE-269).
-//
-// Ele existe porque duas letras não são um nome: o retrato de 80px desenha o
-// monogram, e quem usa leitor de tela — ou o ponteiro parado em cima — precisa
-// ouvir "Ogro, PV 22 de 40" e não "OG".
+// junto: o retrato de 80px desenha só o monogram, e quem usa leitor de tela —
+// ou o ponteiro parado em cima — precisa ouvir "Ogro, PV 22 de 40" e não "OG".
 //
 // PV ausente e PV OCULTO dizem coisas diferentes e a frase separa as duas: a
 // primeira é linha sem vida rastreada, a segunda é o mestre tendo escondido de
-// propósito (ALE-210), e ele é o único que lê este trilho.
+// propósito.
 //
 // @example portraitLabel(tableRow{Rotulo: "Ogro", PV: &tableBar{Current: 22, Max: 40}}) // "Ogro — PV 22 de 40"
 func portraitLabel(l tableRow) string {
@@ -225,7 +196,7 @@ func portraitLabel(l tableRow) string {
 
 // castLabel é o nome de um personagem do elenco recolhido, com a presença
 // junto — porque no trilho ela é um PONTO colorido, e cor não existe para quem
-// usa leitor de tela (ALE-212).
+// usa leitor de tela.
 //
 // @example castLabel(Member{Nome: "Arwen", Nivel: 3}) // "Arwen, Nv 3"
 func castLabel(m Member) string {
@@ -245,7 +216,7 @@ type tableMe struct {
 	NaFila      bool
 }
 
-// tableTurnOf traduz `playerTurnState` (session-player-view.tsx) para o Go.
+// tableTurnOf responde de quem é a vez para quem está olhando.
 //
 // Fora de combate ninguém está na vez. A linha na vez sendo de um personagem
 // MEU é o único caso em que a faixa acende.
@@ -260,27 +231,14 @@ func tableTurnOf(st *live.SessionRuntimeState, meus map[int64]bool) tableTurn {
 	return tableTurn{Kind: "other", Label: naVez.Label}
 }
 
-// A FAIXA DE QUEM VEM DEPOIS (ALE-290): a vez de agora e as duas seguintes, na
-// ordem da mesa, dando a volta.
+// A FAIXA DE QUEM VEM DEPOIS: a vez de agora e as duas seguintes, na ordem da
+// mesa, dando a volta.
 //
-// # Por que ela existe, e o que ela conserta
+// Ler a lista não responde "chamo quem depois?" no ÚLTIMO da rodada — ali o
+// próximo está no TOPO, e é justamente o turno em que a pergunta mais importa.
 //
-// A pergunta "chamo quem depois?" era respondida LENDO uma lista. No trilho do
-// mestre e na iniciativa do jogador a ordem está lá — mas no ÚLTIMO da rodada o
-// próximo está no TOPO da lista, e é justamente o turno em que a pergunta mais
-// importa (ALE-179). Quem lê de cima para baixo não acha ninguém depois da
-// última linha.
-//
-// A conta circular que resolve isso é o `live.UpcomingTurns`, e ela estava no
-// ar desde a ALE-179 com cinco guardas e NENHUMA tela — a mesma família da
-// cortina e da presença. Esta é a tela.
-//
-// # Ela não repete o botão de avanço, e a repetição é deliberada
-//
-// O `NextTurnButton` diz "Próximo: Arwen" e continua dizendo. Os dois respondem
-// coisas diferentes no mesmo instante: a faixa é onde se LÊ a ordem, o botão é o
-// que o CLIQUE vai fazer. Tirar o nome do botão desfaria a ALE-184 — o mestre
-// voltaria a clicar sem saber para quem vai.
+// Ela não substitui o "Próximo: Arwen" do botão, e a repetição é deliberada: a
+// faixa é onde se LÊ a ordem, o botão é o que o CLIQUE vai fazer.
 
 // turnAhead é um lugar na faixa.
 type turnAhead struct {
@@ -296,30 +254,24 @@ type turnAhead struct {
 	// parece a mesma rodada, e não é.
 	ViraARodada bool
 	// DizVoce troca o nome pela palavra, e ela é uma decisão da faixa INTEIRA e
-	// não desta linha: só vale quando UM dos três é de quem olha.
-	//
-	// Medido no navegador (ALE-290): com dois personagens meus na fila a faixa
-	// saiu "você › Tanque Placas Nv10 › ⟲ você", e a pergunta que ela existe para
-	// responder — quanto falta para MIM — ficou sem resposta. A bancada não
-	// pegava porque ela semeia um personagem por pessoa; a seed, com o dono
-	// levando vários, pegou.
+	// não desta linha: a palavra só desambigua enquanto for UMA. Com dois
+	// personagens meus na faixa, "você › Fulano › ⟲ você" deixa de responder
+	// quanto falta para mim.
 	DizVoce bool
 }
 
 // turnStripOf traduz a janela circular para a tela.
 //
 // A REGRA continua no `live`: quem escolhe os três e dá a volta é o
-// `UpcomingTurns`, com os guardas dele. O que se decide aqui são dois fatos de
-// APRESENTAÇÃO, e nenhum deles é do domínio: qual dos três é de quem está
-// olhando, e onde a rodada vira.
+// `UpcomingTurns`. O que se decide aqui são dois fatos de APRESENTAÇÃO: qual
+// dos três é de quem está olhando, e onde a rodada vira.
 //
 // A VOLTA é recalculada do índice em vez de vir do `UpcomingTurns`, que devolve
-// entradas e não posições. Não é a regra reimplementada — a regra é *quem* vem;
-// isto é *onde desenhar o símbolo*, e ela não tem por que saber que existe um.
+// entradas e não posições — a regra é *quem* vem; isto é *onde desenhar o
+// símbolo*.
 //
-// A fila que chega aqui é a que o `StateForRole` já redigiu, como a lista e o
-// tabuleiro: um segundo caminho até os nomes seria um segundo lugar por onde
-// vazar o que a mesa não deve ver.
+// A fila que chega aqui é a que o `StateForRole` já redigiu: um segundo caminho
+// até os nomes seria um segundo lugar por onde vazar o que a mesa não vê.
 func turnStripOf(st *live.SessionRuntimeState, meus map[int64]bool) []turnAhead {
 	janela := live.UpcomingTurns(st.Initiative, st.TurnIndex, turnsAhead)
 	faixa := make([]turnAhead, 0, len(janela))
@@ -353,11 +305,10 @@ func meusNaFaixa(faixa []turnAhead) int {
 
 // turnsAhead é o tamanho da faixa: a vez e as duas seguintes.
 //
-// TRÊS, e o número é escolhido e não medido — o Go não sabe quanto cabe na
-// caixa. Três nomes cabem no cabeçalho a 390px sem truncar a ponto de não
-// identificar ninguém, e respondem a pergunta que a faixa existe para
-// responder. Quem quer a ordem inteira tem o trilho e a gaveta; a faixa não
-// compete com eles, e crescê-la até competir é como ela deixa de caber.
+// TRÊS é escolhido e não medido — o Go não sabe quanto cabe na caixa. Três
+// nomes cabem no cabeçalho a 390px sem truncar a ponto de não identificar
+// ninguém. Quem quer a ordem inteira tem o trilho e a gaveta; crescer a faixa
+// até competir com eles é como ela deixa de caber.
 const turnsAhead = 3
 
 // tableBarOf resolve a porcentagem (presa em 0..100) e o tom.
@@ -372,12 +323,6 @@ func tableBarOf(current, max int64, arcane bool) tableBar {
 	}
 	return bar
 }
-
-// Aqui morava o `hpToneOf`, a tradução literal do `hpFillVar` da SPA. Ele foi
-// para `ui.HpFillTone` na ALE-316, e o motivo é o defeito que ele NÃO impediu:
-// o comentário dele prometia que os limiares eram os mesmos "dos dois lados",
-// e a ficha e a lista de heróis não tinham lado nenhum — elas pintavam verde
-// fixo. Regra privada de um pacote não diverge, ela não alcança.
 
 // tableTrackerOf desenha a fila que o jogador recebeu — já redigida.
 func tableTrackerOf(st *live.SessionRuntimeState, meus map[int64]bool) []tableRow {
@@ -397,7 +342,7 @@ func tableTrackerOf(st *live.SessionRuntimeState, meus map[int64]bool) []tableRo
 		// O `HpMax` nil depois da redação é como o servidor DIZ "isto não é seu
 		// para ver". Desenhar barra aqui inventaria um número — mas a MARCA que
 		// veio junto ainda tem de virar tela, senão "não tem PV" e "o mestre
-		// escondeu" ficam iguais (ALE-210).
+		// escondeu" ficam iguais.
 		linha.PV = poolBar(e.HpCurrent, e.HpMax, e.HpHidden, false)
 		linha.PM = poolBar(e.MpCurrent, e.MpMax, e.MpHidden, true)
 		fila = append(fila, linha)
@@ -410,7 +355,7 @@ func tableTrackerOf(st *live.SessionRuntimeState, meus map[int64]bool) []tableRo
 // Três estados e não dois, e é por isso que ela existe: com número, é barra; sem
 // número mas com a marca, é a barra ESCONDIDA que a tela desenha como frase; sem
 // número e sem marca, é linha que não rastreia aquele pool e não desenha nada.
-// O segundo caso é o que a redação produz para a mesa (ALE-211), e juntá-lo ao
+// O segundo caso é o que a redação produz para a mesa, e juntá-lo ao
 // terceiro faria o jogador ler "este capanga não tem PV" sobre um ogro de 130.
 func poolBar(current, max *int64, hidden *bool, arcane bool) *tableBar {
 	if max != nil {
@@ -468,23 +413,18 @@ func tableViewOf(
 	}
 }
 
-// ── o rastreador do MESTRE (ALE-265) ─────────────────────────────────────────
+// ── o rastreador do MESTRE ───────────────────────────────────────────────────
 //
-// A cena de hoje é a superfície do JOGADOR: ela mostra a fila, o grupo e a vez.
-// O mestre precisa das mesmas coisas mais o que ele COMANDA — avançar o turno,
-// abrir e encerrar a cena, descansar, e mexer nos vitais de quem está na fila.
-//
-// O que decide entre as duas não é uma tela diferente: é o PAPEL, resolvido no
-// servidor pelo mesmo `stateForRole` que o resto da casa usa. A tela do mestre
-// é a do jogador mais os controles, e não uma segunda cena — duas cenas seriam
-// duas listas de combatente para manter em dia.
+// A tela do mestre é a do jogador mais o que ele COMANDA, e não uma segunda
+// cena: duas cenas seriam duas listas de combatente para manter em dia. Quem
+// decide entre as duas é o PAPEL, resolvido no servidor pelo `stateForRole`.
 
 // viewGm é o acréscimo do mestre sobre a `View`.
 type viewGm struct {
-	// Contador é a frase que diz ONDE a sessão está (ALE-210).
+	// Contador é a frase que diz ONDE a sessão está.
 	Contador string
 	// Avanco é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
-	// em vez de o que faz (ALE-184).
+	// em vez de o que faz.
 	Avanco live.NextTurnTarget
 	// VeVitais decide se a fila mostra PV de NPC. A pergunta é sobre a FILA e
 	// não sobre o papel: numa fila só de PCs não há o que reservar.
@@ -496,12 +436,11 @@ type viewGm struct {
 	// apagado que explica.
 	PodeAvancar bool
 	// GravacaoFalhando: a mesa está rodando de MEMÓRIA e o disco não recebeu a
-	// última escrita (ALE-288).
+	// última escrita.
 	//
-	// Ele vive no bloco do MESTRE e não na `View`, e isso é a fronteira: quem
-	// pode parar a sessão e chamar alguém é ele. Para o jogador seria um alarme
-	// sobre o qual não há o que fazer — e a mesma razão que mantém a presença
-	// por personagem fora da tela dele.
+	// Ele vive no bloco do MESTRE e não na `View` porque quem pode parar a sessão
+	// e chamar alguém é ele; para o jogador seria um alarme sobre o qual não há o
+	// que fazer.
 	GravacaoFalhando bool
 }
 
@@ -524,15 +463,9 @@ func ofViewGm(
 
 // tableCommand escreve a chamada Datastar de um comando do mestre.
 //
-// O caminho é o do PILOTO e não o da API JSON, e essa é a mesma escolha das
-// catorze fatias anteriores: a cena tem rotas próprias que chamam as MESMAS
-// regras extraídas. Apontar para `/api/...` acoplaria o app a uma superfície
-// que a migração existe para aposentar, e o ganho — não escrever a rota — some
-// no dia em que a API mudar de forma.
-//
-// O que impede as duas telas de divergirem não é compartilhar a rota: é
-// compartilhar a REGRA. É por isso que a ALE-122 aconteceu com dois transportes
-// chamando dois caminhos de escrita, e não acontece aqui.
+// O caminho é o da CENA e não o da API JSON: as rotas próprias chamam as MESMAS
+// regras extraídas, e o que impede as duas telas de divergirem é compartilhar a
+// REGRA, não a rota.
 func tableCommand(v View, metodo, acao string) string {
 	caminho := fmt.Sprintf("/mesa/%d/%d/%s", v.CampaignID, v.SessionID, acao)
 	if metodo == "POST" {
@@ -557,15 +490,11 @@ func rowCommand(v View, l tableRow, acao string) string {
 // O `@post` recebe uma expressão como ARGUMENTO, e não é um `@post` dentro de
 // cada braço de um ternário: a chamada é uma só, e o que varia é a string. Assim
 // o que o Datastar precisa reescrever é uma ação, não duas dentro de um desvio.
+//
 // healVerb e harmVerb dão a CADA pool o verbo da mesa, e não é enfeite: com os
 // dois passos na mesma linha, "Ferir Arwen" duas vezes são dois controles com o
 // mesmo nome acessível e destinos diferentes — quem usa leitor de tela ouve a
 // mesma frase e tira mana achando que tira vida.
-//
-// Quem acusou foi o e2e do transbordo a 390px, que procura o botão por nome e
-// esbarrou em dois. Ele não veio medir isto; veio medir leiaute — e é o segundo
-// caso desta sessão em que um guarda pega o defeito do vizinho por afirmar algo
-// preciso o bastante para quebrar quando a premissa muda.
 //
 // A frase é a da mesa: PV se fere e se cura, PM se gasta e se recupera. O "de"
 // mora no verbo do mana porque "Gastar PM Arwen" não é português.
@@ -628,14 +557,12 @@ func jsTextHow(s string) string {
 	return string(cru)
 }
 
-// ── As CONDIÇÕES do combatente na tela (ALE-122, portadas na ALE-269) ────────
+// ── As CONDIÇÕES do combatente na tela ──────────────────────────────────────
 
 // openConditions escolhe a linha e abre o diálogo.
 //
-// Ele reescreve OS DOIS sinais, e é quem TROCA de item que limpa — a lição do
-// diálogo de redefinir senha, onde o link da Ana aparecia sob o nome da Bia
-// (está no guia do `engine-go/`). Quem gera não sabe que haverá um próximo;
-// quem troca sabe que houve um anterior.
+// Ele reescreve OS DOIS sinais, e é quem TROCA de item que limpa: quem gera
+// não sabe que haverá um próximo; quem troca sabe que houve um anterior.
 func openConditions(l tableRow) string {
 	return fmt.Sprintf(
 		"$condition_row = %q; $row_conditions = %q; $row_label = %q;"+
@@ -661,7 +588,7 @@ func toggleConditionRow(v View, id string) string {
 	)
 }
 
-// ── O CICLO da sessão na tela (ALE-269) ─────────────────────────────────────
+// ── O CICLO da sessão na tela ───────────────────────────────────────────────
 
 // sessionCommand escreve a chamada de um verbo do ciclo.
 func sessionCommand(v View, acao string) string {
@@ -685,8 +612,7 @@ func campaignChronicle(v View) string {
 // portugueseCycle é o que o crachá do cabeçalho diz.
 //
 // Traduzido AQUI e não no banco: `planned`/`active`/`ended` são a forma de fio,
-// e a tela não deve imprimir identificador — é o mesmo defeito que o crachá de
-// condição tinha, e que custou CAIDO e VULNERAVEL na tela.
+// e a tela não deve imprimir identificador.
 func portugueseCycle(status string) string {
 	switch status {
 	case "active":

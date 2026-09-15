@@ -9,8 +9,8 @@ import (
 	"golang.org/x/text/language"
 )
 
-// INITIATIVE_MAX_ENTRIES — hard ceiling on combatants in one tracker (runaway-Add guard;
-// the UI paginates poorly past ~20 anyway). Mirrors session-state.service.ts.
+// InitiativeMaxEntries é o teto de combatentes numa fila só: guarda contra um
+// Add em disparada, e acima de ~20 a tela já pagina mal.
 const InitiativeMaxEntries = 50
 
 // InitiativeEntry é uma linha de combatente na fila de iniciativa da sessão.
@@ -28,25 +28,25 @@ type InitiativeEntry struct {
 	// do monstro sem procurar no catálogo. Ausente em NPC digitado à mão — e é
 	// por isso que é ponteiro: "sem bloco" é diferente de "bloco vazio".
 	MonsterID *string `json:"monsterId,omitempty"`
-	// CreatureID liga a linha ao bloco de criatura que o MESTRE escreveu
-	// (ALE-137). Diferente do `MonsterID`, que aponta para o verbete imutável do
-	// livro: este é editável e pertence à campanha, e é o que responde "o ogro
-	// que eu modifiquei". Uma linha tem um ou outro, nunca os dois.
+	// CreatureID liga a linha ao bloco de criatura que o MESTRE escreveu.
+	// Diferente do `MonsterID`, que aponta para o verbete imutável do livro:
+	// este é editável e pertence à campanha, e é o que responde "o ogro que eu
+	// modifiquei". Uma linha tem um ou outro, nunca os dois.
 	CreatureID *int64 `json:"creatureId,omitempty"`
 	// Conditions são as condições do livro ativas nesta linha (p394-395).
 	// Moram na LINHA e não no bloco de criatura pelo mesmo motivo que os PV
 	// atuais: condição é estado de combate, e o vilão recorrente não volta na
 	// semana seguinte ainda caído. Para PC a fonte continua sendo a ficha —
-	// aqui é o caminho do NPC, que ficha não tem (ALE-122).
+	// aqui é o caminho do NPC, que ficha não tem.
 	Conditions []string `json:"conditions,omitempty"`
 	// HpHidden esconde os PV desta linha dos JOGADORES: saber que o ogro está com
 	// 12 de 130 muda a decisão de quem está na mesa, e essa é a informação do
 	// mestre. Ponteiro porque a maioria das linhas não decide nada a respeito.
 	HpHidden *bool `json:"hpHidden,omitempty"`
-	// MpHidden é o irmão do `HpHidden` para o mana, e os dois são TRI-ESTADO
-	// desde a ALE-211: nulo é "o mestre não decidiu", e aí vale o padrão do
-	// pool — o PV do grupo aparece, o resto não. Explícito manda nos dois
-	// sentidos, que é como o mestre REVELA o ogro de propósito.
+	// MpHidden é o irmão do `HpHidden` para o mana, e os dois são TRI-ESTADO:
+	// nulo é "o mestre não decidiu", e aí vale o padrão do pool — o PV do grupo
+	// aparece, o resto não. Explícito manda nos dois sentidos, que é como o
+	// mestre REVELA o ogro de propósito.
 	MpHidden  *bool  `json:"mpHidden,omitempty"`
 	HpCurrent *int64 `json:"hpCurrent,omitempty"`
 	HpMax     *int64 `json:"hpMax,omitempty"`
@@ -54,48 +54,44 @@ type InitiativeEntry struct {
 	MpMax     *int64 `json:"mpMax,omitempty"`
 }
 
-// SessionRuntimeState is the live per-session tracker: a DESC-sorted initiative list, the
-// current round, and the index of the combatant on turn (-1 before combat / after Reset).
-// Mirrors the frontend/backend SessionRuntimeState — the shape persisted in
-// Session.runtimeState and broadcast on `session-state`.
+// SessionRuntimeState é o rastreador vivo da sessão: a fila ordenada por
+// iniciativa DESC, a rodada, e o índice de quem está na vez (-1 antes do combate
+// e depois do Reset). É a forma persistida em `Session.runtimeState` e a que sai
+// no evento `session-state`.
 type SessionRuntimeState struct {
-	// Seq é a ORDEM da mutação que produziu este instantâneo (ALE-238). Não
-	// exportado de propósito: é metadado de transporte e não pode entrar no fio.
-	// O `encoding/json` ignora campo não exportado, então nem a persistência nem
-	// o tipo gerado da fronteira mudam — e o `cloneState` o carrega de graça,
-	// porque copia a struct inteira.
+	// Seq é a ORDEM da mutação que produziu este instantâneo. Não exportado de
+	// propósito: é metadado de transporte e não pode entrar no fio. O
+	// `encoding/json` ignora campo não exportado, e o `cloneState` o carrega de
+	// graça porque copia a struct inteira.
 	Seq        uint64
 	Initiative []InitiativeEntry `json:"initiative"`
 	Round      int               `json:"round"`
 	TurnIndex  int               `json:"turnIndex"`
 	// TurnsTaken conta os turnos desde o começo do combate, e é CONTADO em vez
 	// de derivado: rodada × tamanho da lista mente assim que alguém entra ou
-	// morre no meio do combate, que é o normal numa mesa (ALE-142).
+	// morre no meio do combate, que é o normal numa mesa.
 	TurnsTaken int `json:"turnsTaken"`
-	// SceneActive é a CENA como estado explícito (ALE-210): o mestre liga e
-	// desliga, e a mesa só recebe a fila enquanto ela está ligada.
+	// SceneActive é a CENA como estado explícito: o mestre liga e desliga, e a
+	// mesa só recebe a fila enquanto ela está ligada.
 	//
-	// É campo NOVO e não `TurnIndex >= 0` mal nomeado, que era a resposta mais
-	// barata que a issue levantava. Ela não sobrevive ao PRIMEIRO instante do
-	// fluxo: iniciar a cena abre a gaveta para o mestre montar a ordem, então
-	// "cena iniciada, fila vazia" é obrigatório — e `advanceTurn` não tem para
-	// onde ir com a lista vazia, de modo que `TurnIndex` nunca chegaria a 0 ali.
-	//
-	// A recíproca também acontecia: hoje o mestre pode ter oito linhas na fila
-	// com `TurnIndex` −1, montando a briga antes de começar. Um campo só não
-	// consegue dizer "montando" e "fora de cena" ao mesmo tempo.
+	// É campo NOVO e não `TurnIndex >= 0` mal nomeado, que é a resposta mais
+	// barata: ela não sobrevive ao PRIMEIRO instante do fluxo — iniciar a cena
+	// abre a gaveta para o mestre montar a ordem, então "cena iniciada, fila
+	// vazia" é obrigatório, e `advanceTurn` não tem para onde ir com a lista
+	// vazia. A recíproca também acontece: oito linhas na fila com `TurnIndex`
+	// −1 é o mestre montando a briga antes de começar.
 	SceneActive bool `json:"sceneActive"`
 }
 
-// EmptyRuntimeState is a fresh mutable tracker. Each call returns a new slice so different
-// sessions never share the initiative array.
+// EmptyRuntimeState é um rastreador novo. Cada chamada devolve uma fatia nova,
+// para duas sessões nunca compartilharem a fila.
 func EmptyRuntimeState() *SessionRuntimeState {
 	return &SessionRuntimeState{Initiative: []InitiativeEntry{}, Round: 0, TurnIndex: -1}
 }
 
-// EntryPatch is a partial update of an entry (Partial<Omit<InitiativeEntry,'id'>>): only
-// the non-nil fields are applied. Kept separate from InitiativeEntry so "Leave unchanged"
-// (nil) is distinct from "set to zero".
+// EntryPatch é a atualização parcial de uma linha: só os campos não nulos são
+// aplicados. Separado do `InitiativeEntry` para "deixa como está" (nulo) ser
+// diferente de "põe zero".
 type EntryPatch struct {
 	Label       *string `json:"label"`
 	Initiative  *int    `json:"initiative"`
@@ -112,15 +108,14 @@ type EntryPatch struct {
 	// conjunto final.
 	Conditions *[]string `json:"conditions"`
 	// CreatureID liga a linha ao bloco de criatura do mestre depois de a linha
-	// já existir — é o "detalhar este NPC" (ALE-137), que cria o bloco e o
-	// prende ao combatente que já estava na mesa.
+	// já existir — é o "detalhar este NPC", que cria o bloco e o prende ao
+	// combatente que já estava na mesa.
 	CreatureID *int64 `json:"creatureId"`
 }
 
-// sortInitiative keeps the list DESC by initiative, ties broken by label using pt-BR
-// collation (accent-aware, e.g. "Ávila" < "Bravo"), which is what the client's
-// String.localeCompare. The collator is created per call — used only within this single
-// sort goroutine, so no sharing/concurrency concern (Collator isn't concurrency-safe).
+// sortInitiative mantém a lista DESC por iniciativa, com o empate desfeito pelo
+// rótulo em colação pt-BR (sensível a acento: "Ávila" < "Bravo"). O colador é
+// criado A CADA CHAMADA porque `Collator` não é seguro para uso concorrente.
 func sortInitiative(st *SessionRuntimeState) {
 	c := collate.New(language.BrazilianPortuguese)
 	sort.SliceStable(st.Initiative, func(i, j int) bool {
@@ -141,8 +136,8 @@ func FindEntryIndex(st *SessionRuntimeState, entryID string) int {
 	return -1
 }
 
-// turnEntryID returns the id of the entry currently on turn, or "" when none — so a
-// re-sort can restore turnIndex to the same combatant regardless of index shuffles.
+// turnEntryID devolve o id de quem está na vez, ou "" quando não há ninguém —
+// para a reordenação devolver a vez ao MESMO combatente, e não ao mesmo índice.
 func turnEntryID(st *SessionRuntimeState) string {
 	if st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return ""
@@ -150,7 +145,7 @@ func turnEntryID(st *SessionRuntimeState) string {
 	return st.Initiative[st.TurnIndex].ID
 }
 
-// restoreTurn points turnIndex back at the entry that was on turn before a re-sort.
+// restoreTurn devolve o turnIndex à linha que estava na vez antes da reordenação.
 func restoreTurn(st *SessionRuntimeState, id string) {
 	if id == "" {
 		return
@@ -160,8 +155,8 @@ func restoreTurn(st *SessionRuntimeState, id string) {
 	}
 }
 
-// AddEntry appends a combatant (a fresh id is assigned via newID), re-sorts, and preserves
-// who is on turn. Errors when the tracker is full.
+// AddEntry acrescenta um combatente (o id sai do `newID`), reordena e preserva
+// quem está na vez. Falha quando a fila está cheia.
 func AddEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() string) error {
 	if len(st.Initiative) >= InitiativeMaxEntries {
 		return fmt.Errorf("Initiative tracker is full (max %d entries)", InitiativeMaxEntries)
@@ -177,16 +172,14 @@ func AddEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() strin
 
 // numberedLabel numera o REPETIDO na fila: o segundo Ogro entra como "Ogro 2".
 //
-// Quem numera é o SERVIDOR, pela mesma razão do tabuleiro (ALE-192): achar o
-// próximo número livre é decisão sobre o estado, e duas telas adivinhando
-// produziriam dois "Ogro 2". A regra é a MESMA função que o mapa usa
-// (`NextInstanceLabelAmong`) para as duas superfícies não numerarem diferente.
+// Quem numera é o SERVIDOR, pela mesma razão do tabuleiro: achar o próximo
+// número livre é decisão sobre o estado, e duas telas adivinhando produziriam
+// dois "Ogro 2". A regra é a MESMA função que o mapa usa
+// (`NextInstanceLabelAmong`), para as duas superfícies não numerarem diferente.
 //
-// Sem isto, adicionar quatro ogros dava quatro linhas chamadas "Ogro" — e a
-// fila nomeia os botões dela pelo rótulo ("Remover Ogro"), então nem o mestre
-// nem um leitor de tela conseguiam dizer qual é qual. Apareceu ao dar
-// quantidade ao diálogo do bestiário (ALE-208), mas o defeito já existia:
-// mandar um encontro com quatro ogros do Montar encontro fazia o mesmo.
+// Sem isto, quatro ogros davam quatro linhas chamadas "Ogro" — e a fila nomeia
+// os botões dela pelo rótulo ("Remover Ogro"), então nem o mestre nem um leitor
+// de tela conseguiam dizer qual é qual.
 //
 // O rótulo VAZIO passa reto: quem valida a obrigatoriedade é quem materializa a
 // linha, e inventar "1" aqui esconderia o erro dele.
@@ -211,9 +204,9 @@ func numberedLabel(st *SessionRuntimeState, label string) string {
 	return NextInstanceLabelAmong(usados, label)
 }
 
-// upsertCharacterEntry adds a character's entry, or — if that character is already in the
-// tracker — updates only its initiative (a re-roll), keeping mid-combat hp/mp. Preserves
-// who is on turn.
+// upsertCharacterEntry acrescenta a linha do personagem ou — se ele já está na
+// fila — atualiza só a iniciativa dele, que é a rerrolagem, mantendo os PV/PM do
+// meio do combate.
 func upsertCharacterEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() string) error {
 	idx := -1
 	if input.CharacterID != nil {
@@ -234,8 +227,8 @@ func upsertCharacterEntry(st *SessionRuntimeState, input InitiativeEntry, newID 
 	return nil
 }
 
-// UpdateEntry applies a partial patch to an entry (re-sorting + preserving turn only when
-// initiative changes). Errors if the entry is gone.
+// UpdateEntry aplica um patch parcial numa linha. Só reordena (preservando quem
+// está na vez) quando a iniciativa muda.
 func UpdateEntry(st *SessionRuntimeState, entryID string, patch EntryPatch) error {
 	idx := FindEntryIndex(st, entryID)
 	if idx < 0 {
@@ -284,8 +277,9 @@ func UpdateEntry(st *SessionRuntimeState, entryID string, patch EntryPatch) erro
 	return nil
 }
 
-// RemoveEntry drops an entry and fixes turnIndex: shift left when a row before the current
-// turn leaves; wrap to a new round when the row on turn was the tail.
+// RemoveEntry tira uma linha e conserta o turnIndex: desloca para a esquerda
+// quando sai alguém antes da vez, e vira a rodada quando quem estava na vez era
+// o último.
 func RemoveEntry(st *SessionRuntimeState, entryID string) error {
 	idx := FindEntryIndex(st, entryID)
 	if idx < 0 {
@@ -305,12 +299,11 @@ func RemoveEntry(st *SessionRuntimeState, entryID string) error {
 	return nil
 }
 
-// advanceTurn moves to the next combatant, wrapping to index 0 and bumping the round.
-// From the pre-combat state (turnIndex -1) it puts the first combatant on turn without
-// bumping the round.
+// advanceTurn passa a vez, dando a volta no índice 0 e somando uma rodada. Do
+// pré-combate (turnIndex -1) ele põe o primeiro na vez sem somar rodada.
 //
-// Sem CENA não avança (ALE-210). A guarda não é defensiva: ela é o que dá ao
-// estado uma direção única — turno só existe dentro de cena —, e é dela que
+// Sem CENA não avança. A guarda não é defensiva: ela é o que dá ao estado uma
+// direção única — turno só existe dentro de cena —, e é dela que o
 // `parseRuntimeBlob` tira o direito de deduzir a cena de um turno em curso.
 func advanceTurn(st *SessionRuntimeState) {
 	if !st.SceneActive || len(st.Initiative) == 0 {
@@ -332,11 +325,9 @@ func advanceTurn(st *SessionRuntimeState) {
 	}
 }
 
-// rewindTurn desfaz um "Próximo turno" — o erro mais comum da mesa, e cujo único
-// conserto até aqui era dar a volta na iniciativa inteira, o que empurrava a
-// rodada junto. Cruzar a virada de volta devolve a rodada; desfazer o primeiro
-// turno devolve ao pré-combate (turnIndex -1) sem zerar a rodada, porque a
-// rodada 1 JÁ começou e voltar não desfaz isso.
+// rewindTurn desfaz um "Próximo turno". Cruzar a virada de volta devolve a
+// rodada; desfazer o primeiro turno devolve ao pré-combate (turnIndex -1) sem
+// zerar a rodada, porque a rodada 1 JÁ começou e voltar não desfaz isso.
 func rewindTurn(st *SessionRuntimeState) {
 	if len(st.Initiative) == 0 || st.TurnIndex < 0 {
 		return
@@ -359,7 +350,7 @@ func rewindTurn(st *SessionRuntimeState) {
 }
 
 // StartScene liga a cena, e só isso: a ordem se monta DEPOIS. É por esse gesto
-// que a fila passa a existir para a mesa (ALE-210).
+// que a fila passa a existir para a mesa.
 func StartScene(st *SessionRuntimeState) {
 	st.SceneActive = true
 }
@@ -381,11 +372,11 @@ func EndScene(st *SessionRuntimeState) {
 // existe vida ali e que ela está oculta — sem isso, "sem barra" e "escondido"
 // viram a mesma coisa na tela, e o segundo é informação.
 //
-// Fora de cena o jogador não recebe fila NENHUMA (ALE-210). A trava mora aqui, e
-// não numa condição de render, porque não mandar é diferente de não desenhar: a
-// primeira é segurança, a segunda é UX. E mora nesta função em particular porque
-// ela é o gargalo pelo qual os DOIS caminhos do estado passam — o broadcast por
-// sala de papel e o ack do `get-session-state` (ALE-122).
+// Fora de cena o jogador não recebe fila NENHUMA. A trava mora aqui, e não numa
+// condição de render, porque não mandar é diferente de não desenhar: a primeira
+// é segurança, a segunda é UX. E mora nesta função em particular porque ela é o
+// gargalo pelo qual os DOIS caminhos do estado passam — o broadcast por sala de
+// papel e o ack do `get-session-state`.
 func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
 	if !st.SceneActive {
 		// Rastreador limpo e não `cloneState` com a lista zerada: a rodada e o
@@ -396,7 +387,7 @@ func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
 	out := cloneState(st)
 	for i := range out.Initiative {
 		e := &out.Initiative[i]
-		// O PV do GRUPO é o único pool que a mesa vê sem o mestre mandar (ALE-211).
+		// O PV do GRUPO é o único pool que a mesa vê sem o mestre mandar.
 		hideIfSecret(e.HpHidden, e.Type == "character", &e.HpCurrent, &e.HpMax, &e.HpHidden)
 		hideIfSecret(e.MpHidden, false, &e.MpCurrent, &e.MpMax, &e.MpHidden)
 	}
@@ -412,10 +403,9 @@ func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
 // "revelei de propósito" e "nunca decidi" virem a mesma coisa.
 //
 // A marca não é detalhe: sem ela o jogador recebe `HpMax` nulo tanto para "este
-// capanga não tem PV rastreado" quanto para "o mestre está escondendo", e a tela
-// precisa dizer coisas diferentes nos dois casos (ALE-210). Por isso só marcamos
-// o pool que EXISTE — senão a mesa leria "PV ocultos pelo mestre" de um
-// combatente que nunca teve PV.
+// capanga não tem PV rastreado" quanto para "o mestre está escondendo". Por isso
+// só marcamos o pool que EXISTE — senão a mesa leria "PV ocultos pelo mestre" de
+// um combatente que nunca teve PV.
 func hideIfSecret(choice *bool, visibleByDefault bool, current, max **int64, mark **bool) {
 	visible := visibleByDefault
 	if choice != nil {
@@ -432,7 +422,7 @@ func hideIfSecret(choice *bool, visibleByDefault bool, current, max **int64, mar
 // StateForRole é o que UM socket pode ver. Existe porque o broadcast não é o
 // único caminho do estado até a tela: o `ack` do `get-state` hidrata o cliente e
 // responde a quem pediu. Papel desconhecido cai em jogador — errar para o lado
-// que mostra seria vazar por omissão (ALE-122).
+// que mostra seria vazar por omissão.
 func StateForRole(role string, st *SessionRuntimeState) *SessionRuntimeState {
 	if role == "gm" {
 		return st
@@ -440,10 +430,10 @@ func StateForRole(role string, st *SessionRuntimeState) *SessionRuntimeState {
 	return RedactForPlayers(st)
 }
 
-// resetInitiative clears the tracker but keeps the session tracked. Desliga a
-// cena junto (ALE-210): reiniciar é voltar ao ponto de partida, e o ponto de
-// partida é fora de cena com a fila vazia. Deixar a cena ligada aqui produziria
-// o estado "em cena, ninguém na fila" sem ninguém ter pedido por ele.
+// resetInitiative esvazia a fila e desliga a CENA junto: reiniciar é voltar ao
+// ponto de partida, e o ponto de partida é fora de cena com a fila vazia. Deixar
+// a cena ligada aqui produziria o estado "em cena, ninguém na fila" sem ninguém
+// ter pedido por ele.
 func resetInitiative(st *SessionRuntimeState) {
 	st.Initiative = []InitiativeEntry{}
 	st.Round = 0
@@ -452,8 +442,8 @@ func resetInitiative(st *SessionRuntimeState) {
 	st.SceneActive = false
 }
 
-// patchEntryVitals sets absolute hp/mp on an entry, clamped to its max when present.
-// (the DB write-through lives in the store layer).
+// patchEntryVitals grava PV/PM absolutos numa linha, presos ao máximo quando ele
+// existe. A escrita no banco é da camada de store.
 func patchEntryVitals(st *SessionRuntimeState, entryID string, hpCurrent, mpCurrent *int64) error {
 	idx := FindEntryIndex(st, entryID)
 	if idx < 0 {
@@ -469,8 +459,8 @@ func patchEntryVitals(st *SessionRuntimeState, entryID string, hpCurrent, mpCurr
 	return nil
 }
 
-// deltaEntryVitals applies an hp/mp delta ("sofreu 10 de dano" ⇒ hpDelta -10). Absent
-// current counts as 0.
+// deltaEntryVitals aplica um delta de PV/PM ("sofreu 10 de dano" ⇒ hpDelta -10).
+// Atual ausente conta como 0.
 func deltaEntryVitals(st *SessionRuntimeState, entryID string, hpDelta, mpDelta *int64) error {
 	idx := FindEntryIndex(st, entryID)
 	if idx < 0 {
@@ -486,9 +476,9 @@ func deltaEntryVitals(st *SessionRuntimeState, entryID string, hpDelta, mpDelta 
 	return nil
 }
 
-// ClampVital floors a vital at 0 and caps it at max when present. Negative floor is 0: the
-// tracker never displays below 0 (a character at 0 is unconscious/dying, handled
-// narratively). Mirrors the ClampVital in session-state.service.ts.
+// ClampVital prende um recurso vital entre 0 e o máximo, quando há máximo. O
+// piso é 0: a fila nunca mostra abaixo disso — personagem a 0 está caído, e o
+// resto é narrativa.
 func ClampVital(value int64, max *int64) int64 {
 	floored := value
 	if floored < 0 {

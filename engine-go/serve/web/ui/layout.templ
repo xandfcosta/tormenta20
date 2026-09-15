@@ -1,13 +1,7 @@
 package ui
 
-// A CASCA da cena, portada da `SceneShell` da SPA (ALE-219, agora em templ pela
-// ALE-227).
-//
-// Ela nasceu de uma observação do dono olhando as duas telas do app: "existe
-// um padding lateral, estamos usando o padrão de Shell do SolidJS?". Não
-// estávamos — eu tinha escrito `mx-auto max-w-3xl p-3 sm:p-4` numa e
-// `max-w-5xl` na outra, inventando duas. Medido, faltavam CINCO coisas, e só
-// uma era o padding:
+// A CASCA da cena. Escrever o leiaute à mão numa tela nova, em vez de usá-la,
+// perde CINCO coisas, e só uma é o padding:
 //
 //  1. `.scene-grimorio` — é o ESCOPO dos tokens, e o `@custom-variant dark` da
 //     casa dispara nele. Sem a classe, todo utilitário `dark:` das telas
@@ -16,23 +10,20 @@ package ui
 //  3. `h-dvh` com overflow interno. A premissa do app é tela cheia com o
 //     CONTEÚDO rolando, não o documento; sem isso a página rola por fora e a
 //     faixa fixa da Mesa passa a competir com a barra do navegador.
-//  4. `env(safe-area-inset-*)`. O `viewport-fit=cover` já estava no `<head>`,
+//  4. `env(safe-area-inset-*)`. O `viewport-fit=cover` já está no `<head>`,
 //     mas sem `env()` ele só serve para o conteúdo entrar DEBAIXO do notch.
-//  5. A escala de espaçamento da casa (`px-4 py-4` no denso), em vez da minha.
+//  5. A escala de espaçamento da casa (`px-4 py-4` no denso).
 //
-// Fica registrado como o TERCEIRO achado estrutural do app, depois da
-// biblioteca de componentes e da faixa de teste: a casca também não atravessa
-// sozinha, e é o que faz duas telas individualmente corretas parecerem de dois
-// aplicativos.
+// É o que faz duas telas individualmente corretas parecerem do mesmo app.
 
 // Page é o que a casca precisa saber para montar o `<head>` e o
 // `<body>` em volta de um corpo.
 //
-// O corpo NÃO viaja aqui: ele entra como `templ.Component`, e é essa a
-// diferença que a ALE-227 comprou. Antes ele chegava como `template.HTML` —
-// uma string já renderizada com a anotação "confie em mim" — porque o
-// `html/template` não sabe invocar um sub-template por nome dinâmico. Render em
-// duas passadas era a saída, e cada passada era uma chance de escapar errado.
+// O corpo NÃO viaja como HTML pronto: ele entra como `templ.Component`. Uma
+// string já renderizada com a anotação "confie em mim" — a saída do
+// `html/template`, que não sabe invocar um sub-template por nome dinâmico —
+// obrigaria a renderizar em duas passadas, e cada passada é uma chance de
+// escapar errado.
 type Page struct {
 	// Asset monta o endereço VERSIONADO de um estático, e é injetado porque os
 	// arquivos são embutidos noutro pacote. Escrever o caminho à mão continua
@@ -52,9 +43,8 @@ type Page struct {
 	// SemEstadoDeCliente marca a superfície que não pode ter sinal NEM `data-init`
 	// — hoje só a PORTA. Um sinal é estado do cliente e o Datastar o serializa em
 	// TODA requisição seguinte, então qualquer estado ali faria a senha viajar de
-	// novo a cada pedido da página. É o que o `TestTheDoorPutsNothingInADatastarSignal`
-	// cobra, e ele me pegou: ao fazer o `data-init` da restauração de foco sair
-	// sempre, eu o pus também na porta, que não tem trilho para restaurar.
+	// novo a cada pedido da página. É o que o
+	// `TestTheDoorPutsNothingInADatastarSignal` cobra.
 	//
 	// Campo EXPLÍCITO e não inferido da forma da casca: `ui.ShellTitled` descreve o
 	// desenho, e amarrar uma regra de segurança a um nome de leiaute é a regra
@@ -64,11 +54,8 @@ type Page struct {
 	Sinais        string
 	Init          string
 	// Scripts são os módulos EXTRA de UMA cena. O `scene.js` vale para toda
-	// página; estes são para o que é de uma só — hoje a folha de especificação,
-	// que mede o desenho com canvas e `getComputedStyle` e ainda monta as peças
-	// da SPA como elementos customizados (ALE-251). Somam ~77 KB, e carregá-los
-	// em toda cena seria pôr o custo de uma tela de quem CONSTRÓI no caminho de
-	// quem só quer jogar.
+	// página; estes são para o que é de uma só. Carregá-los em toda cena seria
+	// pôr o custo de uma tela de quem CONSTRÓI no caminho de quem só quer jogar.
 	Scripts []string
 	// VoltarRotulo troca o "Voltar" por um destino NOMEADO. A folha de
 	// especificação diz "Hub" porque é para lá que ela volta, e nomear o
@@ -77,9 +64,9 @@ type Page struct {
 	VoltarRotulo string
 }
 
-// ShellShape são as três posturas do `SceneShell` da SPA, e elas se excluem —
-// um campo em vez de dois títulos opcionais, porque "TituloVisivel vazio E
-// TituloDaCena cheio" é um estado que não deveria ser representável.
+// ShellShape são as três posturas da casca, e elas se excluem — um campo em vez
+// de dois títulos opcionais, porque "TituloVisivel vazio E TituloDaCena cheio" é
+// um estado que não deveria ser representável.
 type ShellShape string
 
 const (
@@ -91,8 +78,8 @@ const (
 	// pequeno, `px-4 py-4`.
 	ShellDense ShellShape = "densa"
 	// ui.ShellTitled é a TELA-TÍTULO — o nome do jogo em Cinzel grande e
-	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub, e é a
-	// da PORTA (ALE-229): quem está fora não tem para onde voltar.
+	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub e a da
+	// PORTA: quem está fora não tem para onde voltar.
 	ShellTitled ShellShape = "titulo"
 )
 
@@ -107,9 +94,8 @@ templ Layout(p Page, corpo templ.Component) {
 			<link rel="stylesheet" href={ p.Asset("app.css") }/>
 			<script type="module" src={ p.Asset("datastar.js") }></script>
 			// `scene.js` é o teclado, os cues de áudio e o posicionamento do
-			// popover — compilado dos MESMOS fontes que a SPA usa (ALE-231), não
-			// de uma cópia. Vale para toda página do Datastar, e é `defer` por ser
-			// módulo: ele consulta o DOM ao carregar.
+			// popover. Vale para toda página, e é módulo (logo, adiado): ele
+			// consulta o DOM ao carregar.
 			<script type="module" src={ p.Asset("scene.js") }></script>
 			for _, modulo := range p.Scripts {
 				<script type="module" src={ modulo }></script>
@@ -138,22 +124,15 @@ templ Layout(p Page, corpo templ.Component) {
 				}
 			}
 		>
-			// Os `data-slot` são o CONTRATO OBSERVÁVEL que a SPA publica, e não
-			// enfeite: o e2e da porta lê `[data-slot=scene-shell]` para conferir
-			// que os tokens resolvem a paleta da mesa e não o tema claro do
-			// template. Sem eles a virada quebraria um guarda que continua válido
-			// — a pergunta que ele faz não mudou, só o motor que desenha (ALE-229).
-			// `data-voltar` é o que o Esc LÊ para saber para onde subir, e ele
-			// nunca era emitido: o `p.Voltar` alimentava só o link visível de
-			// voltar, então o driver procurava um atributo que ninguém escrevia e
-			// o Esc estava morto em TODAS as cenas. Medido antes de
-			// escrever a legenda de teclado, que por isso não o anuncia.
+			// Os `data-slot` são CONTRATO OBSERVÁVEL e não enfeite: o e2e da porta
+			// lê `[data-slot=scene-shell]` para conferir que os tokens resolvem a
+			// paleta da mesa e não o tema claro do template.
 			//
-			// Emitido AQUI, na casca, e não em cada cena: uma linha liga o Esc em
-			// toda tela que tem para onde voltar, e a tela nova já nasce com ele.
-			// Sem valor o atributo não sai, que é o caso do Hub — cena raiz, sem
-			// nível acima, e um Esc que não faz nada é melhor que um que salta
-			// para lugar nenhum.
+			// `data-voltar` é o que o Esc LÊ para saber para onde subir, e ele sai
+			// AQUI, na casca, e não em cada cena: uma linha liga o Esc em toda tela
+			// que tem para onde voltar, e a tela nova já nasce com ele. Sem valor o
+			// atributo não sai, que é o caso do Hub — cena raiz, sem nível acima, e
+			// um Esc que não faz nada é melhor que um que salta para lugar nenhum.
 			<section
 				data-slot="scene-shell"
 				data-on:keydown__window={ ShellShortcuts }
@@ -203,7 +182,7 @@ templ Layout(p Page, corpo templ.Component) {
 					}
 					@corpo
 				</div>
-				// O BUSCADOR (ALE-264) é desenhado por último e fora do que rola:
+				// O BUSCADOR é desenhado por último e fora do que rola:
 				// `<dialog>` nativo vai para a camada de topo do navegador, então
 				// onde ele está no documento não muda onde ele aparece — mas
 				// dentro do `overflow-y-auto` ele entraria na conta da rolagem.
@@ -214,15 +193,9 @@ templ Layout(p Page, corpo templ.Component) {
 				// pedido. É o que o `TestTheDoorPutsNothingInADatastarSignal` cobra.
 				if !p.SemEstadoDeCliente {
 					for _, sobreposicao := range p.Overlays {
-			@sobreposicao
-		}
-					// O livro por cima da cena (ALE-264). Nasce vazio: sem `src`
-					// no `<iframe>`, quem nunca abre o livro não paga um byte do
-					// pdf.js. Fora da porta pela mesma razão do buscador.
-								// E a caixa do VERBETE citado por um elo. Mesma razão de
-					// estar aqui: a cena dos catálogos é remendada a cada tecla
-					// da busca, e o diálogo perderia o conteúdo junto.
-							}
+						@sobreposicao
+					}
+				}
 			</section>
 		</body>
 	</html>

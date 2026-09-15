@@ -6,48 +6,28 @@ import (
 	"t20engine/domain/live"
 )
 
-// CONTEXTO: O QUE A MESA AO VIVO PUBLICA — o quadro do tabuleiro, o estado da
-// sessão, e a gravação que anda junto dos dois.
-//
-// Este arquivo é o que sobrou de `board_commands.go` e `session_commands.go`,
-// apagados na ALE-277. Eles traduziam o socket da SPA para HTTP (ALE-253): 36
-// manipuladores, mil linhas, e ZERO chamadores desde que as cenas passaram a
-// mutar o estado direto pela porta delas. O que não morreu com as rotas foi a
-// PUBLICAÇÃO — a cena da Mesa a chama pelo `table_scene_deps.go`, e ela é a
-// mesma para os dois papéis desde antes do HTTP.
-//
-// O `liveCtx` fica aqui pelo mesmo motivo: `table_board_rules.go` e `table_vitals_rules.go`
-// recebem um, e quem os chama hoje é a cena.
+// O QUE A MESA AO VIVO PUBLICA — o quadro do tabuleiro, o estado da sessão, e a
+// gravação que anda junto dos dois. Quem chama é a cena da Mesa, pelo
+// `table_scene_deps.go`, e a publicação é a mesma para os dois papéis.
 
 // defaultTab é o id vazio, e ele significa "o tabuleiro de quem não escolheu
-// nenhum" — o primeiro aberto da sessão (ALE-205, ver `BoardStore.achaLocked`).
+// nenhum" — o primeiro aberto da sessão (ver `BoardStore.achaLocked`). É o que
+// a mesa vê quando quem fecha uma aba não disse qual olhar.
 //
-// Aqui morava "TODA rota deste arquivo o usa", uma afirmação sobre a
-// `SessionTrackerPage` da SPA: um slot de tabuleiro, nenhuma barra de abas,
-// sempre o mesmo quadro. Não há rota neste arquivo desde a ALE-277, e a SPA não
-// existe desde a ALE-272. Quem o usa hoje é o `publishWhatIsLeft` — e a razão
-// mudou junto: a Mesa em Datastar TEM barra de abas, então o padrão não é mais
-// "o único", é o que a mesa vê quando quem fecha uma aba não disse qual olhar.
-//
-// Escrever a constante em vez de um `""` solto continua sendo o que faz essa
-// decisão ser lida por quem passar aqui.
+// Constante em vez de um `""` solto porque é o que faz essa decisão ser lida
+// por quem passar aqui.
 const defaultTab = ""
 
 // saveBoard GRAVA o tabuleiro no disco, e não faz mais nada.
 //
-// Ela era uma linha dentro do `publishBoardState`, e essa vizinhança era uma
-// armadilha (ALE-288): o `SSEHub` não tem ouvinte em produção desde a ALE-272,
-// então a leitura natural de "publicar para ninguém" é apagar a função — e ela
-// levaria a gravação junto. **A mesa passaria a viver só em memória**, que é
-// literalmente a ALE-154.
+// Separada do `publishBoardState` e não uma linha dentro dele: o `SSEHub` não
+// tem ouvinte em produção, então a leitura natural de "publicar para ninguém" é
+// apagar a função — e ela levaria a gravação junto. **A mesa passaria a viver
+// só em memória.** Duas funções com nomes que dizem o que fazem custam uma
+// linha no chamador e tiram essa possibilidade do mapa.
 //
-// Duas funções com nomes que dizem o que fazem custam uma linha a mais no
-// chamador e tiram essa possibilidade do mapa: quem apagar o `publish` lê "o
-// disco" na linha de cima.
-//
-// Em GOROUTINE porque o mestre não espera o disco no meio do turno, e o custo
-// disso está medido: 139ms por toque num prato girante antes do
-// `synchronous=NORMAL` (ALE-273).
+// Em GOROUTINE porque o mestre não espera o disco no meio do turno: num prato
+// girante o toque chega a centenas de milissegundos.
 func (tr tableRules) saveBoard(sessionID int64, board *board.BoardState) {
 	if board == nil {
 		return
@@ -58,11 +38,9 @@ func (tr tableRules) saveBoard(sessionID int64, board *board.BoardState) {
 // saveSession GRAVA o estado da sessão. O irmão do `saveBoard`, e pela mesma
 // razão — ver lá.
 //
-// Ela conta no `emSegundoPlano` e o tabuleiro não, e a diferença é histórica e
-// não desenho: quem espera no `Shutdown` é este contador, e a gravação do
-// tabuleiro nunca entrou nele. Fica anotado como diferença conhecida em vez de
-// "arrumada" de passagem — mexer no que o desligamento espera é decisão de
-// quem mediu o desligamento.
+// Ela conta no `emSegundoPlano` e o tabuleiro não: quem espera no `Shutdown` é
+// este contador. Diferença conhecida e não "arrumada" de passagem — mexer no
+// que o desligamento espera é decisão de quem mediu o desligamento.
 func (tr tableRules) saveSession(sessionID int64) {
 	tr.emSegundoPlano.Add(1)
 	go func() {
@@ -74,25 +52,20 @@ func (tr tableRules) saveSession(sessionID int64) {
 // publishBoardState transmite às duas salas por papel. Ela NÃO grava — ver o
 // `saveBoard`.
 //
-// > **O canal dela não tem ouvinte em produção** desde que a SPA foi apagada
-// > (ALE-272): quem abria conexão no `SSEHub` era a rota `/events`, e a Mesa em
-// > Datastar tem fluxo próprio pelo `events.Bus`. Ela fica porque desmontar o
-// > hub é trabalho com desenho próprio, e o que a ALE-288 precisava era que
-// > apagá-la deixasse de ser perigoso.
+// > **O canal dela não tem ouvinte em produção**: quem abria conexão no
+// > `SSEHub` era a rota `/events`, e a Mesa em Datastar tem fluxo próprio pelo
+// > `events.Bus`. Ela fica porque desmontar o hub é trabalho com desenho
+// > próprio.
 //
-// # A tela antiga tem UM slot, e por isso ela não recebe as outras abas
+// SÓ A ABA PADRÃO é publicada. O destino deste fluxo desenha "o tabuleiro da
+// sessão" e não tem barra de abas, então mandar-lhe o quadro de outra aba
+// trocaria a cena na tela dele sem gesto nenhum e sem volta — a taverna viraria
+// a cripta porque o mestre pintou uma casa numa aba que ele nem sabe que existe.
 //
-// O fluxo SSE daqui é o da SPA, que desenha "o tabuleiro da sessão" e não tem
-// barra de abas (ALE-205). Mandar-lhe o quadro de uma aba que não é a padrão
-// trocaria a cena na tela dela sem gesto nenhum e sem volta — a taverna viraria
-// a cripta porque o mestre pintou uma casa numa aba que a SPA nem sabe que
-// existe. Descartar é estritamente melhor: o que ela mostra continua sendo o
-// que ela mostrava.
-//
-// A GRAVAÇÃO acontece SEMPRE e a publicação não, e é essa a divisão: quem não vê
-// a aba não precisa do quadro, mas o disco precisa de todas. Por isso o `return`
-// abaixo é do publicador e nunca do gravador — trocar as duas de lugar perderia
-// em silêncio a cena de quem não está na aba padrão, que é a ALE-154 outra vez.
+// A GRAVAÇÃO acontece SEMPRE e a publicação não: quem não vê a aba não precisa
+// do quadro, mas o disco precisa de todas. Por isso o `return` abaixo é do
+// publicador e nunca do gravador — trocar as duas de lugar perderia em silêncio
+// a cena de quem não está na aba padrão.
 func (tr tableRules) publishBoardState(sessionID int64, state *board.BoardState) {
 	if state != nil && state.ID != tr.boards.DefaultBoardID(context.Background(), sessionID) {
 		return
@@ -108,22 +81,15 @@ func (tr tableRules) publishBoardState(sessionID int64, state *board.BoardState)
 	tr.sse.EmitOrdered(sessionID, "player", "board-state", ordem, board.BoardForRole("player", state))
 }
 
-// publishWhatIsLeft é o quadro DEPOIS de fechar uma aba (ALE-205).
+// publishWhatIsLeft é o quadro DEPOIS de fechar uma aba.
 //
-// Fechar publicava `nil`, e `nil` é a frase "esta sessão não tem tabuleiro". Com
-// várias abas ela passou a poder ser MENTIRA: fechar a cripta com a taverna
-// aberta apagaria a cena da tela antiga, que continuaria sem tabuleiro nenhum
-// até alguém recarregar — a mesa vendo a grade sumir por uma aba que ela nem
-// sabia que existia.
+// Publicar `nil` seco seria a frase "esta sessão não tem tabuleiro", e com
+// várias abas ela é MENTIRA: fechar a cripta com a taverna aberta apagaria a
+// grade da tela de quem nem sabia que a cripta existia. Quem responde é o
+// estado — sobrou aba, vai a PADRÃO; não sobrou, vai o `nil`, que aí é verdade.
 //
-// Então quem responde é o estado: sobrou aba, vai a PADRÃO; não sobrou, vai o
-// `nil` de sempre, que continua sendo a verdade.
-// Ela GRAVA e publica, os dois passos escritos — como o `PublishBoardState` do
-// adaptador. O `Close` do store já apagou a linha da aba fechada; o que esta
-// regravação alcança é a que SOBROU, e ela fica porque era o comportamento de
-// antes da ALE-288: mexer no que vai ao disco não era o assunto daquela issue,
-// e uma escrita a menos é a espécie de mudança que não tem sintoma até a
-// sessão seguinte.
+// Ela GRAVA e publica, os dois passos escritos. O `Close` do store já apagou a
+// linha da aba fechada; o que esta regravação alcança é a que SOBROU.
 func (tr tableRules) publishWhatIsLeft(ctx context.Context, sessionID int64) {
 	sobrou := tr.boards.Get(ctx, sessionID, defaultTab)
 	tr.saveBoard(sessionID, sobrou)
@@ -142,8 +108,8 @@ func (tr tableRules) warnPersistenceOnBoard(sessionID int64, Dirty bool) {
 	})
 }
 
-// liveCtx é o que o socket chamava de `msgCtx`: quem pediu, em que mesa, com
-// que papel. Resolvido uma vez por requisição.
+// liveCtx é quem pediu, em que mesa, com que papel. Resolvido uma vez por
+// requisição.
 type liveCtx struct {
 	UserID     int64
 	campaignID int64
@@ -152,15 +118,15 @@ type liveCtx struct {
 }
 
 // publishSessionState transmite o estado às duas salas por papel. Ela NÃO grava
-// — ver o `saveSession`. Espelha o `emitSessionState` do gateway.
+// — ver o `saveSession`.
 func (tr tableRules) publishSessionState(sessionID int64, state *live.SessionRuntimeState) {
 	tr.sse.EmitOrdered(sessionID, "gm", "session-state", state.Seq, state)
 	tr.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, live.RedactForPlayers(state))
 }
 
 // persistSessionAndWarn persiste e avisa a mesa SÓ quando o sinal de sujeira
-// vira — primeira falha, ou uma tentativa que se recuperou. Espelha o
-// `persistAndWarn` do gateway; quem é dono do sinal é o store.
+// vira — primeira falha, ou uma tentativa que se recuperou. Quem é dono do
+// sinal é o store.
 func (tr tableRules) persistSessionAndWarn(sessionID int64) {
 	Dirty, changed := tr.sessions.Persist(context.Background(), sessionID)
 	if !changed {

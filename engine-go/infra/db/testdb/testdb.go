@@ -1,47 +1,32 @@
 // Package testdb entrega um SQLite migrado por teste, copiando um molde
-// construído uma vez (ALE-260, extraído do `api` na ALE-281).
+// construído uma vez.
 //
 // # O problema que ele resolve
 //
-// Abrir um banco novo por teste faz o `db.Open` rodar todas as migrações nele.
-// São milhares de migrações com `fsync` numa corrida, e o custo de um `fsync` é
-// o do dispositivo onde o `TMPDIR` cai. Medido nesta máquina:
-//
-//	                        tmpfs        disco girante
-//	migrar do zero .....    7,1 ms          2.102 ms
-//	copiar o molde .....      ~0,1 ms           0,076 ms
-//	reabrir já migrado .      ~1 ms             1 ms
-//
-// No prato girante cada migração custava ~49 ms — a rotação do disco, uma por
-// `fsync` —, e a suíte do `api/` levava 15m01s com 10 s de CPU: 99% de espera. O
-// sintoma mente, porque aparece como "os testes estão lentos", que é a conclusão
-// que faz alguém cortar teste em vez de consertar a bancada.
+// Abrir um banco novo por teste faz o `db.Open` rodar todas as migrações nele, e
+// o custo de cada `fsync` é o do dispositivo onde o `TMPDIR` cai. Em disco
+// girante isso são ~49 ms POR MIGRAÇÃO, e a suíte inteira vira 99% de espera —
+// um sintoma que mente, porque aparece como "os testes estão lentos" e faz
+// alguém cortar teste em vez de consertar a bancada.
 //
 // # Por que o molde e não uma variável de ambiente
 //
 // Exportar `TMPDIR` para um tmpfs funciona — mas só para quem lembrar, e só na
-// máquina de quem lembrou. Quando isto foi medido havia uma sessão vizinha
-// rodando com o `TMPDIR` no disco girante sem saber que pagava quinze minutos
-// por corrida. O molde tira o disco da conta em vez de pedir que alguém escolha
-// o disco certo: o que a bancada não deixa acontecer ninguém precisa lembrar de
-// evitar.
+// máquina de quem lembrou. O molde tira o disco da conta em vez de pedir que
+// alguém escolha o disco certo.
 //
-// # Por que ele virou PACOTE
+// # Por que ele é PACOTE e não um `_test.go`
 //
-// Ele nasceu como `api/bancada_test.go`, e arquivo `_test.go` não exporta nada
-// para fora do pacote. Com o `api` se dividindo em um pacote por cena (ALE-278),
-// a primeira cena a sair ficaria sem molde, sem banco migrado e sem catálogo — e
-// a saída fácil seria ela escrever a própria bancada com um catálogo vazio, que
-// é o defeito que o guia do pacote documenta DUAS vezes: catálogo vazio no
-// fixture é validação desligada em silêncio, com o guarda verde afirmando o
-// contrário do que mede.
+// Arquivo `_test.go` não exporta nada para fora do pacote, e cada cena nova
+// ficaria sem molde, sem banco migrado e sem catálogo — com a saída fácil sendo
+// escrever a própria bancada com um catálogo VAZIO, que é validação desligada em
+// silêncio, com o guarda verde afirmando o contrário do que mede.
 //
 // # O que ele NÃO faz
 //
 // Ele não monta servidor nem semeia dado nenhum. Isso é de quem tem o tipo do
 // servidor, e pôr aqui obrigaria este pacote a importar o `api` — que importaria
-// este de volta nos testes dele, que é um ciclo. O molde é a parte cara e a
-// parte compartilhável; o resto é de cada pacote.
+// este de volta nos testes dele, que é um ciclo.
 package testdb
 
 import (
@@ -61,9 +46,9 @@ var molde string
 //
 //	func TestMain(m *testing.M) { os.Exit(testdb.Run(m)) }
 //
-// O molde é construído UMA vez por binário de teste, que é uma vez por pacote.
-// Em tmpfs isso é ~7 ms, então dividir o `api` em quinze pacotes custa ~105 ms
-// na corrida inteira — a conta foi feita antes de dividir, e não depois.
+// O molde é construído UMA vez por binário de teste, que é uma vez por pacote:
+// em tmpfs isso é alguns milissegundos, então dividir um pacote grande em muitos
+// menores não muda a conta.
 func Run(m *testing.M) int {
 	dir, err := os.MkdirTemp("", "t20-molde-")
 	if err != nil {
@@ -91,8 +76,8 @@ func Run(m *testing.M) int {
 // arquivo vive no `t.TempDir()`, então o próprio `testing` o apaga.
 //
 // O `db.Open` do chamador continua sendo o de produção, com o mesmo
-// `assertSchema` (ALE-154) — o goose encontra a última versão aplicada e não tem
-// o que fazer. É isso que mantém a bancada honesta: o atalho é a CÓPIA, não uma
+// `assertSchema` — o goose encontra a última versão aplicada e não tem o que
+// fazer. É isso que mantém a bancada honesta: o atalho é a CÓPIA, não uma
 // segunda forma de abrir banco.
 func Fresh(t *testing.T) string {
 	t.Helper()
@@ -108,24 +93,19 @@ func Fresh(t *testing.T) string {
 	return destino
 }
 
-// copyFile copia o molde e CONFERE que ele chegou inteiro (ALE-268).
+// copyFile copia o molde e CONFERE que ele chegou inteiro.
 //
-// As três defesas são desta issue, e cada uma pega o que a anterior deixa
-// passar. O CI reprovou uma vez com `no such table: session_boards` junto de um
-// `disk I/O error` — e "no such table" é a frase de um banco não migrado, então
-// quem investiga vai caçar migração e não a cópia.
+// Uma cópia truncada se comporta EXATAMENTE como um banco sem as tabelas, e o
+// teste que a receber reprova dizendo `no such table` — que manda quem investiga
+// caçar migração e não cópia. Daí as três defesas, cada uma pegando o que a
+// anterior deixa passar:
 //
-//  1. O ERRO DO `Close` volta. Ele era descartado num `defer`, e é justamente no
-//     `Close` que uma escrita com buffer reporta a falha que o `Write` engoliu.
+//  1. O ERRO DO `Close` volta. Num `defer` que descarta, perde-se justamente a
+//     falha que uma escrita com buffer só reporta no fechamento.
 //  2. O `Sync` força os bytes ao disco ANTES de alguém abrir o arquivo. Sem ele,
 //     `io.Copy` devolver nil só diz que os bytes saíram do processo.
 //  3. O TAMANHO é conferido, e esta é a que não depende de o sistema de arquivos
-//     reportar coisa alguma. Cópia byte a byte tem o tamanho da origem; se não
-//     tem, o que o teste receberia é um SQLite truncado — que se comporta
-//     exatamente como um banco sem as tabelas.
-//
-// O `PRAGMA synchronous=OFF` do banco de teste é decisão certa para velocidade
-// (ALE-260) e é o que remove a barreira que tornaria isso barulhento sozinho.
+//     reportar coisa alguma.
 func copyFile(de, para string) error {
 	origem, err := os.Open(de)
 	if err != nil {

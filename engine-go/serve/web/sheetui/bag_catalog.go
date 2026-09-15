@@ -9,7 +9,7 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O CATÁLOGO DE ITENS lido pela Mochila (ALE-272, fatia 7).
+// O CATÁLOGO DE ITENS lido pela Mochila.
 //
 // Tudo aqui responde a uma pergunta sobre uma linha da ficha contra o
 // `items.json`: que entrada do livro é esta, o que ela concede, que melhorias

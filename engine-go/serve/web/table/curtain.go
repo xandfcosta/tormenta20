@@ -6,16 +6,11 @@ import (
 	"t20engine/domain/board"
 )
 
-// A CORTINA na Mesa em Datastar (ALE-269, superfície 1) — ver GLOSSARY.md.
+// A CORTINA na Mesa — ver GLOSSARY.md.
 //
-// O tabuleiro EXISTE para o mestre e a mesa vê uma cortina no lugar dele
-// (ALE-202): montar a taverna enquanto eles olham a cripta. O servidor já sabia
-// fazer isso inteiro — `SetCurtain` no store, `BoardForRole` esvaziando a cena
-// para quem não é mestre, e o app até DESENHAVA o aviso. O que não existia
-// era o gesto: a feature estava no ar e invisível, sem um botão que a ligasse.
-//
-// Encontrada no levantamento que precede a virada da sessão, cruzando os rótulos
-// da SPA com o app. É a razão de aquele levantamento existir.
+// O tabuleiro EXISTE para o mestre e a mesa vê uma cortina no lugar dele: montar
+// a taverna enquanto eles olham a cripta. Quem esvazia a cena para quem não é
+// mestre é o `BoardForRole`; o que mora aqui é o gesto que a liga.
 
 func (s Scene) CurtainRoutes(r chi.Router) {
 	// O ESTADO no caminho, e não um alternar: ver o comentário do `runsCurtain`.
@@ -41,9 +36,8 @@ func runsCurtain(st Scene, c commandCtx) (*board.BoardState, error) {
 	// mestre continua recebendo o redesenho dele — o `respondGm` roda de
 	// qualquer jeito, porque a resposta É a confirmação do gesto.
 	//
-	// É a mesma escolha do `handleBoardCurtain` da SPA. Publicar um quadro que
-	// não mudou custa um `BoardForRole` e um remendo em cada tela da mesa para
-	// dizer exatamente o que elas já sabiam.
+	// Publicar um quadro que não mudou custa um `BoardForRole` e um remendo em
+	// cada tela da mesa para dizer exatamente o que elas já sabiam.
 	if !mudou {
 		return nil, nil
 	}

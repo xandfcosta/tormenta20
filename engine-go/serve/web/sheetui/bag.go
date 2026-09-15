@@ -10,7 +10,7 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// A aba MOCHILA como dado (ALE-272, fatia 7).
+// A aba MOCHILA como dado.
 //
 // Três blocos, e a ordem responde a três perguntas diferentes da mesa:
 //
@@ -23,8 +23,8 @@ import (
 // # Nenhum número desta aba é somado aqui
 //
 // Espaços ocupados, limite, dobro do limite, sobrecarga e as duas penalidades
-// são `sheet.Carga` (ALE-215 tirou essa conta da tela). O que este arquivo faz
-// é escolher palavras e agrupar linhas.
+// são `sheet.Carga`. O que este arquivo faz é escolher palavras e agrupar
+// linhas.
 
 // bagPanel é a aba Mochila pronta para desenhar.
 type bagPanel struct {
@@ -465,10 +465,9 @@ func overloadNotice(load loadMeter) string {
 	return aviso
 }
 
-// moneyModes são as três coisas que se fazem com dinheiro na mesa
-// (ALE-224): "achamos 350 no baú", "paguei 80 pela estalagem", e escrever o
-// total — que é o gesto da forja (Tabela 3-1, p140) e o de consertar um erro de
-// digitação.
+// moneyModes são as três coisas que se fazem com dinheiro na mesa: "achamos 350
+// no baú", "paguei 80 pela estalagem", e escrever o total — que é o gesto da
+// forja (Tabela 3-1, p140) e o de consertar um erro de digitação.
 var moneyModes = []filterOption{
 	{Valor: "receber", Rotulo: "Receber"},
 	{Valor: "gastar", Rotulo: "Gastar"},

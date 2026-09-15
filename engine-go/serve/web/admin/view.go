@@ -9,24 +9,10 @@ import (
 	"time"
 )
 
-// A tela de ADMINISTRAÇÃO como dado — a segunda superfície do app (ALE-219).
+// A tela de ADMINISTRAÇÃO como dado: contas, convites e o estado do servidor.
 //
-// Ela existe para responder o que a Mesa não conseguia responder sozinha. A
-// Mesa foi escolhida por ser o caso mais favorável: leitura pura, estado que já
-// era do servidor, zero diálogo. Se o app parasse ali, o resultado
-// comportaria duas leituras — "o Datastar funciona" e "eu escolhi a tela mais
-// fácil" —, e elas levam a decisões opostas.
-//
-// O admin é o oposto em três eixos, e é por isso que é ele:
-//
-//  1. NÃO tem tempo real. O melhor resultado da Mesa foi reusar o
-//     `redactForPlayers` e o SSE, e nada disso transfere para CRUD comum — que é
-//     a maior parte do app.
-//  2. Tem um DESTRUTIVO com confirmação (apagar conta), que é o risco nº 3 da
-//     análise: acessibilidade de diálogo sem Kobalte. Aqui ele é testado na tela
-//     de menor risco do produto, que só o dono vê.
-//  3. Tem dez testes de integração hoje, então o custo de migrar deixa de ser
-//     estimativa.
+// Ao contrário da Mesa, ela NÃO tem tempo real — quem redesenha é a resposta do
+// próprio POST.
 
 // adminView é a tela inteira.
 type adminView struct {
@@ -68,12 +54,9 @@ type serverInfo struct {
 
 // loadAdmin busca tudo o que a tela mostra.
 //
-// Quatro leituras num só handler, e é isso que a tela quer: na SPA são quatro
-// queries que chegam em quatro instantes, com um esqueleto por cima enquanto
-// elas voam. Aqui a página só existe depois que as quatro responderam — o
-// esqueleto deixa de ser necessário porque o estado "carregando" deixa de
-// existir. É a diferença mais visível entre os dois modelos, e ela vale
-// registrar como GANHO: três `Show` e um `SkeletonCardGrid` somem.
+// Quatro leituras num só handler, e é isso que a tela quer: a página só existe
+// depois que as quatro responderam, então não há estado "carregando" para
+// desenhar.
 func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
 	linhas, err := s.deps.Queries().ListUsersWithCounts(ctx)
 	if err != nil {
@@ -126,7 +109,7 @@ func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
 	return adminView{Players: jogadores, Invites: abertos, Machine: servidor}, nil
 }
 
-// posses espelha o `belongings` do `players-panel.tsx`.
+// posses é a frase de quanto a conta tem — mesas e fichas, com o plural certo.
 func belongings(admin bool, campanhas, fichas int64) string {
 	frase := fmt.Sprintf("%s · %s",
 		ui.Plural(campanhas, "campanha", "campanhas"), ui.Plural(fichas, "ficha", "fichas"))
@@ -136,12 +119,11 @@ func belongings(admin bool, campanhas, fichas int64) string {
 	return frase
 }
 
-// deletionCost espelha o `deletionCost`: o diálogo diz o preço ANTES.
+// deletionCost é o preço que o diálogo diz ANTES de confirmar.
 //
-// As campanhas passam para quem apaga, as fichas vão junto — é a decisão que o
-// `DeleteAccount` do hospedeiro implementa (o `handleAdminDeleteUser`, que a
-// implementava antes, foi apagado com as rotas JSON na ALE-277), e a frase
-// existe para que o dono a leia antes de confirmar, e não descubra depois.
+// As campanhas passam para quem apaga e as fichas vão junto — é o que o
+// `DeleteAccount` do hospedeiro faz, e a frase existe para o dono ler antes e
+// não descobrir depois.
 func deletionCost(campanhas, fichas int64) string {
 	f := ui.Plural(fichas, "ficha", "fichas")
 	if campanhas == 0 {
@@ -158,7 +140,7 @@ func firstChars(s string, n int) string {
 	return s[:n]
 }
 
-// inBytes é a mesma escada do `bytes()` do `server-panel.tsx`.
+// inBytes escreve o tamanho na escada de KB/MB/GB.
 func inBytes(n int64) string {
 	const k = 1024.0
 	switch {
@@ -172,13 +154,7 @@ func inBytes(n int64) string {
 }
 
 // expiryLabel traduz o prazo do convite para o que o dono precisa saber: quanto
-// ainda dá para esperar. Porte do `expiryLabel` do `open-invites-panel.tsx`.
-//
-// Ele existe porque a MIGRAÇÃO O PERDEU. A primeira versão desta tela
-// renderizava o ISO cru — e as quatro asserções que o protegem na SPA teriam
-// pegado isso na hora, se eu as tivesse portado ANTES de escrever o template.
-// Fica como a medida mais honesta do custo de trocar de camada de teste: o que
-// se perde não é o teste, é a regra que ele guardava.
+// ainda dá para esperar.
 //
 // ARREDONDA em vez de truncar: um convite recém-criado, com sete dias menos
 // alguns segundos, tem de dizer "7 dias" e não "6". E abaixo de um dia a escala

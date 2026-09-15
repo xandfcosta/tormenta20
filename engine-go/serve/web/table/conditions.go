@@ -11,7 +11,7 @@ import (
 	"t20engine/domain/live"
 )
 
-// AS CONDIÇÕES do combatente na Mesa (ALE-122, portadas na ALE-269).
+// AS CONDIÇÕES do combatente na Mesa.
 //
 // O que se aplica aqui é RASTREIO e não regra, e a distinção é do desenho e não
 // uma limitação: os números de um bloco de criatura são escritos à mão pelo
@@ -27,9 +27,8 @@ import (
 //
 // A lista e o NOME não moram aqui: `book.Catalogs().Condicoes` já é lida do
 // catálogo e já vem ordenada por um collator pt-BR, e o `book.ConditionName` já
-// resolve id → palavra do livro. Eu tinha escrito as três de novo neste arquivo
-// antes de procurar — e uma segunda cópia da tabela do livro é uma cópia que
-// desvia, que é exatamente o defeito que a ALE-122 pagou.
+// resolve id → palavra do livro. Uma segunda cópia da tabela do livro é uma
+// cópia que desvia.
 func conditionEffect(id string) string {
 	for _, c := range book.Catalogs().Condicoes {
 		if c.ID == id {
@@ -46,12 +45,10 @@ func (s Scene) ConditionRoutes(r chi.Router) {
 
 // toggleCondition liga ou desliga uma condição na linha.
 //
-// ALTERNA no servidor, e o conjunto final é montado AQUI — o `EntryPatch`
-// substitui a lista inteira, e a SPA manda o conjunto pronto porque a tela dela
-// o tem em mãos. A Mesa manda só QUAL condição o mestre clicou, e é o servidor
-// que lê a lista atual e devolve a nova: o clique carrega a intenção, não o
-// estado, e uma tela que mandasse o conjunto inteiro apagaria a condição que
-// outro remendo acabou de acrescentar.
+// ALTERNA no servidor, e o conjunto final é montado AQUI: o clique manda só
+// QUAL condição o mestre tocou, e quem lê a lista atual e devolve a nova é o
+// servidor. O gesto carrega a INTENÇÃO e não o estado — uma tela que mandasse o
+// conjunto inteiro apagaria a condição que outro remendo acabou de acrescentar.
 func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
 	id := chi.URLParam(c.R, "id")

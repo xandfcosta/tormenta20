@@ -8,17 +8,11 @@ import (
 	"sync"
 )
 
-// COMPRIMIR O QUE O SERVIDOR RENDERIZA (ALE-273).
-//
-// A SPA já saía comprimida — mas do BUILD, com `.br` e `.gz` gerados ao lado de
-// cada asset (ALE-153). O que o servidor RENDERIZA na hora não passava por nada:
-// medido, a aba de Combate da ficha viaja 44,7 KB crus e 5,6 KB em gzip, e o
-// mesmo HTML vai de novo a cada toque no PV, porque todo comando responde
-// redesenhando a cena inteira.
+// COMPRIMIR O QUE O SERVIDOR RENDERIZA.
 //
 // # Por que não um proxy na frente
 //
-// Porque a decisão do ALE-101 é um processo só, e comprimir aqui custa este
+// Porque a decisão da casa é um processo só, e comprimir aqui custa este
 // arquivo. Um nginx compraria exatamente esta função e traria um segundo
 // runtime, um segundo lugar para configurar TLS e um segundo lugar onde o SSE
 // pode ser bufferizado por engano.
@@ -33,8 +27,7 @@ import (
 // esperando para sempre. Sem erro, sem log, sem nada na tela além de uma mesa
 // que parou de atualizar.
 //
-// Por isso o `Flush` daqui esvazia o gzip ANTES de esvaziar quem está embaixo, e
-// há guarda medindo o fluxo ao vivo com `Accept-Encoding: gzip`.
+// Por isso o `Flush` daqui esvazia o gzip ANTES de esvaziar quem está embaixo.
 
 // tiposComprimiveis são os `Content-Type` que valem a pena.
 //
@@ -49,9 +42,8 @@ var tiposComprimiveis = []string{
 
 // Gzip devolve um middleware que comprime o que o servidor gerou na hora.
 //
-// Ele NÃO toca em resposta que já chega com `Content-Encoding`: é o caso dos
-// assets pré-comprimidos da SPA, e recomprimi-los gastaria CPU para produzir
-// bytes maiores.
+// Ele NÃO toca em resposta que já chega com `Content-Encoding`: recomprimir
+// gastaria CPU para produzir bytes maiores.
 func Gzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !AcceptsEncoding(r.Header.Get("Accept-Encoding"), "gzip") {
@@ -108,7 +100,7 @@ func (e *gzipEnvelope) decide(status int) {
 
 // vaiComprimir é a REGRA, separada para o guarda poder exercitá-la direto.
 func vaiComprimir(h http.Header, status int) bool {
-	// Já vem comprimido do build (`.br`/`.gz` da SPA) — não recomprimir.
+	// Já vem comprimido rio acima — não recomprimir.
 	if h.Get("Content-Encoding") != "" {
 		return false
 	}
@@ -118,17 +110,7 @@ func vaiComprimir(h http.Header, status int) bool {
 		return false
 	}
 	// RESPOSTA PEQUENA SAI CRUA: o envelope do gzip custa ~24 bytes fixos, e
-	// medido no contêiner uma resposta de 19 bytes virou 43. Abaixo de um MTU a
-	// compressão não economiza um pacote sequer.
-	//
-	// O corte olha o `Content-Length` que o handler JÁ declarou, e nunca o
-	// tamanho do corpo — essa é a diferença que mantém o fluxo ao vivo vivo. Um
-	// limiar de verdade precisaria BUFERIZAR até saber o tamanho, e bufferizar é
-	// exatamente o que mata o SSE; um fluxo nunca declara `Content-Length`, então
-	// ele não passa por aqui.
-	// RESPOSTA PEQUENA SAI CRUA: o envelope do gzip custa ~24 bytes fixos, e
-	// medido no contêiner uma resposta de 19 bytes virou 43. Abaixo de um MTU a
-	// compressão não economiza um pacote sequer.
+	// abaixo de um MTU a compressão não economiza um pacote sequer.
 	//
 	// O corte olha o `Content-Length` que o handler JÁ declarou, e nunca o
 	// tamanho do corpo — essa é a diferença que mantém o fluxo ao vivo vivo. Um
@@ -166,8 +148,7 @@ func (e *gzipEnvelope) Write(b []byte) (int, error) {
 // inteiro.
 //
 // Invertida — ou ausente — o quadro do SSE fica preso no buffer do gzip e a Mesa
-// para de atualizar sem nada acusar. É a mesma família das armadilhas do
-// Datastar: nada falha, alguém só espera para sempre.
+// para de atualizar sem nada acusar: nada falha, alguém só espera para sempre.
 func (e *gzipEnvelope) Flush() {
 	// UM FLUSH COMPROMETE OS CABEÇALHOS, então a decisão tem de estar tomada
 	// aqui — e não só no `Write`.
@@ -177,8 +158,7 @@ func (e *gzipEnvelope) Flush() {
 	// `Write`, o `Content-Encoding` chega depois de a resposta já ter saído sem
 	// ele, e o corpo vai comprimido mesmo assim: o cliente lê bytes de gzip como
 	// texto puro, os remendos param de ser aplicados, e nada falha em lugar
-	// nenhum. Foram 27 casos vermelhos no e2e com os unitários todos verdes,
-	// porque eles escreviam o cabeçalho antes de esvaziar.
+	// nenhum.
 	if !e.decidido {
 		e.decide(http.StatusOK)
 	}

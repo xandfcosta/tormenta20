@@ -14,7 +14,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O RASCUNHO DE LUGAR desenhado (ALE-292).
+// O RASCUNHO DE LUGAR desenhado.
 //
 // A tela é o TABULEIRO e mais nada em volta, e essa é a decisão: quem monta uma
 // cripta na quinta-feira quer a superfície inteira para o mapa. A Mesa tem fila,
@@ -75,8 +75,7 @@ func draftBody(v draftView) templ.Component {
 // pior que nenhum**. O mapa do rascunho é IGUALZINHO ao da mesa — mesmo trilho,
 // mesmos pincéis, mesmas peças —, e sem uma linha dizendo o contrário o mestre
 // pode montar a emboscada inteira acreditando que a mesa está vendo, ou pior,
-// acreditando que ela NÃO está enquanto joga. A cortina aprendeu isso na
-// ALE-202; esta tarja é a mesma lição, do outro lado do tempo.
+// acreditando que ela NÃO está enquanto joga.
 func draftHeader(v draftView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -105,7 +104,7 @@ func draftHeader(v draftView) templ.Component {
 		var templ_7745c5c3_Var3 templ.SafeURL
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.CampaignTab(v.CampaignID, "lugares")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 45, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 44, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -118,7 +117,7 @@ func draftHeader(v draftView) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue("Voltar para " + v.CampanhaNome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 46, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 45, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -139,7 +138,7 @@ func draftHeader(v draftView) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(v.CampanhaNome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 50, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 49, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -152,7 +151,7 @@ func draftHeader(v draftView) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(v.Lugar)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 53, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 52, Col: 94}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -194,14 +193,12 @@ func draftHeader(v draftView) templ.Component {
 
 // draftBoardRegion é a região que os gestos remendam.
 //
-// UMA região e não nove, ao contrário da Mesa, e o motivo é o que a tela É: aqui
-// não há fila que mude com o turno nem elenco que mude com a ficha. O que muda é
-// o mapa, e o `command_error` viaja como SINAL — ele não precisa de HTML novo
-// para acender.
+// UMA região e não várias, ao contrário da Mesa, e o motivo é o que a tela É:
+// aqui não há fila que mude com o turno nem elenco que mude com a ficha. O que
+// muda é o mapa, e o `command_error` viaja como SINAL.
 //
-// O id é o do rascunho e NÃO `mesa-tabuleiro`: os dois nunca estão no mesmo
-// documento, mas um remendo mandado para o id errado é escrito no vazio e some
-// sem erro — a família de defeito que o `TableRegions` já registra.
+// O id é o do rascunho e NÃO o da Mesa: os dois nunca estão no mesmo documento,
+// mas um remendo mandado para o id errado é escrito no vazio e some SEM ERRO.
 func draftBoardRegion(v draftView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -238,7 +235,7 @@ func draftBoardRegion(v draftView) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(v.GravadoEm)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 92, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/draft.templ`, Line: 89, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {

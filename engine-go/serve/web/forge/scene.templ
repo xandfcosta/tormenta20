@@ -5,9 +5,9 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A FORJA — a folha em branco de um herói (ALE-272, fatia 9).
+// A FORJA — a folha em branco de um herói.
 //
-// Ela é a mesma folha do tomo da campanha nova (ALE-246), e por isso mora no
+// Ela é a mesma folha do tomo da campanha nova, e por isso mora no
 // `ui.TomeSheet`: mesmo couro, mesma virada de página, com você segurando a pena.
 //
 // O ESTADO TEM UMA CASA SÓ: o próprio formulário. Não há `data-signals` aqui, e
@@ -94,8 +94,8 @@ templ raceChoice(v forgeView) {
 }
 
 // raceTile: o rádio é INVISÍVEL mas real, e o rótulo inteiro é a área de clique
-// — a mesma plaqueta do "entrar na mesa" (ALE-246), pela mesma razão: o estado
-// visual segue o estado REAL do controle, e não uma segunda cópia dele.
+// — a mesma plaqueta do "entrar na mesa", pela mesma razão: o estado visual
+// segue o estado REAL do controle, e não uma segunda cópia dele.
 //
 // Daí o `has-[:focus-visible]:outline-*` escrito à mão, que é a ÚNICA receita de
 // foco do repositório que a regra global do `index.css` não alcança: ela casa
@@ -103,10 +103,8 @@ templ raceChoice(v forgeView) {
 // global `label:has(:focus-visible)` não serve — dez rótulos do app envolvem um
 // campo VISÍVEL, e ali ela desenharia dois anéis concêntricos.
 //
-// O afastamento é 1px e não 2px porque a casa tem UM (ALE-318): estas três
-// plaquetas — as duas da forja e a de entrar na mesa — eram a segunda aparência
-// de foco do app, e quem as achou foi o `support/focus.ts` subindo a árvore a
-// partir do rádio `sr-only`.
+// O afastamento é 1px e não 2px porque a casa tem UM: com 2px estas plaquetas
+// viram uma segunda aparência de foco no app.
 templ raceTile(c raceCard) {
 	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
 		<input type="radio" name="race" value={ c.Name } checked?={ c.Chosen } class="sr-only"/>

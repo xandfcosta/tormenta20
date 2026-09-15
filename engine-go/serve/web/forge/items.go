@@ -7,7 +7,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// O QUE O HERÓI LEVA AO NASCER (ALE-272, fatia 9).
+// O QUE O HERÓI LEVA AO NASCER.
 //
 // Duas procedências, as duas de p140: o kit ("Personagens de 1º nível começam
 // com os itens fornecidos pela sua origem e os itens a seguir") e a linha

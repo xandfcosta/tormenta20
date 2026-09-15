@@ -15,8 +15,8 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A Mesa do jogador desenhada (ALE-219; em templ pela ALE-227). Nenhuma REGRA
-// aqui: o que decide mora em `view.go`, onde se testa sem HTML.
+// A Mesa do jogador desenhada. Nenhuma REGRA aqui: o que decide mora em
+// `view.go`, onde se testa sem HTML.
 func tableScene(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -58,7 +58,7 @@ func tableScene(v View) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetui.SheetRefetch(*v.MinhaFicha))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 59, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 53, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -71,7 +71,7 @@ func tableScene(v View) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(surface(superficieDaFicha))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 62, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 56, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -97,7 +97,7 @@ func tableScene(v View) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(surface(superficieDaMesa))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 71, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 64, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -126,7 +126,7 @@ func tableScene(v View) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(surface(superficieDoTabuleiro))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 79, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 71, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -168,7 +168,7 @@ func tableScene(v View) templ.Component {
 	})
 }
 
-// O SELETOR DE SUPERFÍCIE do jogador (ALE-129, portado na ALE-269).
+// O SELETOR DE SUPERFÍCIE do jogador.
 //
 // DOIS níveis e não um: aqui se escolhe A SUPERFÍCIE, e dentro de cada uma
 // continuam as seções dela. Uma fileira única misturando "partes de mim" com
@@ -176,11 +176,6 @@ func tableScene(v View) templ.Component {
 //
 // Ancorado no topo e sempre visível: a premissa do app é tela cheia, com ninguém
 // rolando a página atrás de menu.
-//
-// DUAS superfícies e não três (decisão do dono): a SPA tem "Minha ficha", e a
-// ficha é a última tela da migração — ela não existe em Datastar. A aba nasce
-// junto com ela. Uma terceira aba agora prometeria na tela o que o app ainda não
-// tem, e o jogador clicaria nela procurando a própria ficha.
 func surfaceSelector(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -214,7 +209,7 @@ func surfaceSelector(v View) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%s ? 'true' : 'false'", surface(superficie.ID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 119, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 100, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -227,7 +222,7 @@ func surfaceSelector(v View) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(surfaceStyling(superficie.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 120, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 101, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 			if templ_7745c5c3_Err != nil {
@@ -240,7 +235,7 @@ func surfaceSelector(v View) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickSurface(superficie.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 121, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 102, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -261,7 +256,7 @@ func surfaceSelector(v View) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(superficie.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 125, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 106, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -280,23 +275,16 @@ func surfaceSelector(v View) templ.Component {
 	})
 }
 
-// AS REGIÕES DA MESA (ALE-264).
-//
-// A cena era UM fragmento, e o stream remendava o `<main id="table">` inteiro a
-// cada mudança de qualquer um — 39.742 bytes medidos, para mover uma peça um
-// quadrado. Isso é desperdício, e é também um PROBLEMA DE COMPORTAMENTO que o
-// dono nomeou: com o arrasto na próxima fatia, um jogador registrando iniciativa
-// substituiria o elemento debaixo do dedo do mestre e cancelaria o gesto.
-//
-// Agora cada região tem raiz com id ESTÁVEL e hash próprio: o stream manda só as
-// que mudaram. Uma mudança na fila não toca no mapa, e uma no mapa não toca na
-// fila.
+// AS REGIÕES DA MESA: cada uma tem raiz com id ESTÁVEL e hash próprio, e o
+// stream manda só as que mudaram. Remendar a cena inteira a cada mudança de
+// qualquer um substituiria o elemento debaixo do dedo de quem arrasta uma peça,
+// cancelando o gesto.
 //
 // A raiz existe SEMPRE, com o condicional por dentro. Uma região que some leva o
 // id junto, e o remendo seguinte não acha onde pousar — o vazio precisa de casca.
 
-// tableHeader é a faixa AO VIVO (ALE-30). Acende em DOURADO na vez do jogador,
-// porque dourado é o que já diz "a vez" na iniciativa e no tabuleiro (ALE-200).
+// tableHeader é a faixa AO VIVO. Acende em DOURADO na vez do jogador, porque
+// dourado é o que já diz "a vez" na iniciativa e no tabuleiro.
 func tableHeader(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -367,7 +355,7 @@ func tableHeader(v View) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(v.SessionNum))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 161, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 135, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -397,7 +385,7 @@ func tableHeader(v View) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(v.Round))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 170, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 144, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -432,11 +420,11 @@ func tableHeader(v View) templ.Component {
 	})
 }
 
-// A FAIXA: agora › depois › depois, com a volta da rodada marcada (ALE-290).
+// A FAIXA: agora › depois › depois, com a volta da rodada marcada.
 //
-// UMA LINHA e não uma tira própria: o cabeçalho já existe, já é `aria-live`, e
-// uma faixa nova custaria altura numa tela que reparte altura entre o mapa, a
-// fila e a ficha. A decisão do dono foi essa, com o mockup na mão.
+// UMA LINHA dentro do cabeçalho e não uma tira própria: o cabeçalho já existe,
+// já é `aria-live`, e uma faixa nova custaria altura numa tela que reparte
+// altura entre o mapa, a fila e a ficha.
 //
 // A SETA é `aria-hidden` e a ordem é dita pela LISTA: um `<ol>` já anuncia
 // "item 1 de 3" em leitor de tela, e o `›` desenhado seria lido como "sinal de
@@ -474,7 +462,7 @@ func turnStrip(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "    ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "     ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -486,7 +474,7 @@ func turnStrip(v View) templ.Component {
 					var templ_7745c5c3_Var19 string
 					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Daqui começa a rodada %d", v.Round+1))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 211, Col: 65}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 182, Col: 65}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 					if templ_7745c5c3_Err != nil {
@@ -499,7 +487,7 @@ func turnStrip(v View) templ.Component {
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("começa a rodada %d:", v.Round+1))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 215, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 186, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -539,7 +527,7 @@ func turnStrip(v View) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(turnStripName(p))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 218, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 189, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -561,11 +549,9 @@ func turnStrip(v View) templ.Component {
 
 // turnStripName escreve "você" no lugar do próprio nome — quando ele é UM.
 //
-// É o que faz a faixa responder a pergunta de quem olha — "quanto falta para
-// mim?" — sem procurar o próprio personagem entre três nomes. Com dois meus na
-// faixa a palavra deixa de responder e passa a atrapalhar ("você › Tanque ›
-// você"), e aí o nome volta; quem decide isso é o `DizVoce`, que enxerga a faixa
-// inteira. Aqui só se escreve o que ele já decidiu.
+// Com dois meus na faixa a palavra deixa de responder e passa a atrapalhar
+// ("você › Tanque › você"), e aí o nome volta. Quem decide isso é o `DizVoce`,
+// que enxerga a faixa inteira; aqui só se escreve o que ele já decidiu.
 func turnStripName(p turnAhead) string {
 	if p.DizVoce {
 		return "você"
@@ -576,9 +562,8 @@ func turnStripName(p turnAhead) string {
 // turnStripInk: a da VEZ é a que se lê primeiro, a minha é dourada, o resto é
 // discreto.
 //
-// UM `class` só e não três condicionais empilhadas, pela armadilha que o
-// `tokenStyling` do tabuleiro já registra: atributo repetido não existe no
-// templ, e o segundo some sem erro.
+// UM `class` só e não três condicionais empilhadas: atributo repetido não
+// existe no templ, e o segundo some sem erro.
 func turnStripInk(p turnAhead) string {
 	switch {
 	case p.Agora:
@@ -590,28 +575,23 @@ func turnStripInk(p turnAhead) string {
 	}
 }
 
-// A GRAVAÇÃO FALHANDO, no cabeçalho e só para o mestre (ALE-288).
+// A GRAVAÇÃO FALHANDO, no cabeçalho e só para o mestre.
 //
 // A mesa roda de MEMÓRIA e escreve no disco a cada mutação. Quando a escrita
 // falha, os stores marcam a sessão e SEGUEM servindo da memória: a tela fica
-// certa, o combate anda, e o disco não tem nada. Foi um dia inteiro assim uma
-// vez (ALE-154), com cada falha numa linha de log que ninguém lê.
+// certa, o combate anda, e o disco não tem nada.
 //
 // No CABEÇALHO e não num canto: ele fica ao lado do "Ao vivo", que é a promessa
-// que este aviso desmente. Um alarme escondido num rodapé que rola é um alarme
-// que chega tarde.
+// que este aviso desmente. Um alarme escondido num rodapé que rola chega tarde.
 //
 // `role="alert"` e não `aria-live="polite"`: o "polite" ao lado espera a leitura
 // terminar, o que está certo para "chegou a sua vez" e errado para isto. E o
-// texto diz O QUE FAZER, porque quem lê é o mestre no meio de uma sessão e a
-// única ação útil é parar antes de perder mais.
+// texto diz O QUE FAZER, porque quem lê é o mestre no meio de uma sessão.
 //
-// A TINTA é a combinação que o `npc_editor.templ` já usa — `destructive/60` na
-// borda, `destructive/10` no fundo, `destructive-ink` no texto —, e copiar em
-// vez de inventar uma variante é deliberado: o medidor de contraste só mede o
-// que ele VISITA, e este aviso só aparece com o disco falhando. Nenhum caminho
-// do e2e o desenha, então uma tinta nova aqui nasceria sem medição. A paleta
-// anota o par como 7,62:1 no painel.
+// A TINTA é a combinação que o `npc_editor.templ` já usa, copiada em vez de
+// inventada de propósito: o medidor de contraste só mede o que ele VISITA, e
+// nenhum caminho do e2e desenha este aviso — uma variante nova aqui nasceria
+// sem medição.
 func savingWarning(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -651,9 +631,9 @@ func savingWarning(v View) templ.Component {
 	})
 }
 
-// Registrar iniciativa — a ÚNICA mutação desta superfície (ALE-213). Some fora de
-// cena pelo mesmo motivo da SPA: gravaria o combatente na fila do mestre sem
-// mudar nada na tela de quem clicou.
+// Registrar iniciativa — a ÚNICA mutação desta superfície. Some fora de cena
+// porque gravaria o combatente na fila do mestre sem mudar nada na tela de quem
+// clicou.
 func tableRegisterRegion(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -694,7 +674,6 @@ func tableRegisterRegion(v View) templ.Component {
 }
 
 // Grupo — como todo mundo está, que é pergunta diferente de "quem age quando".
-// Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
 func tableParty(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -757,9 +736,8 @@ func tableParty(v View) templ.Component {
 	})
 }
 
-// O GRUPO em cartões: a superfície do JOGADOR, como sempre foi.
-//
-// Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
+// O GRUPO em cartões, a superfície do JOGADOR. Aparece FORA de cena de
+// propósito: PV do grupo não é informação de combate.
 func cardsParty(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -809,14 +787,14 @@ func cardsParty(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, m := range v.Grupo {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "         <article class=\"flex items-center gap-2.5 border border-border/60 bg-card/60 p-2.5\"><span aria-hidden=\"true\" class=\"monogram size-11 rounded-sm text-sm\" style=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "       <article class=\"flex items-center gap-2.5 border border-border/60 bg-card/60 p-2.5\"><span aria-hidden=\"true\" class=\"monogram size-11 rounded-sm text-sm\" style=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + ui.NameGradient(m.Nome))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 337, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 296, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 				if templ_7745c5c3_Err != nil {
@@ -829,7 +807,7 @@ func cardsParty(v View) templ.Component {
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(m.Iniciais)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 338, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 297, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
@@ -854,7 +832,7 @@ func cardsParty(v View) templ.Component {
 					var templ_7745c5c3_Var35 string
 					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Nome + " — " + m.Presenca.Frase)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 352, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 309, Col: 54}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 					if templ_7745c5c3_Err != nil {
@@ -880,7 +858,7 @@ func cardsParty(v View) templ.Component {
 					var templ_7745c5c3_Var37 string
 					templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(m.Presenca.Frase)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 357, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 314, Col: 50}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 					if templ_7745c5c3_Err != nil {
@@ -898,7 +876,7 @@ func cardsParty(v View) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(m.Nome)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 359, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 316, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
@@ -911,7 +889,7 @@ func cardsParty(v View) templ.Component {
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(m.Nivel))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 361, Col: 137}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 318, Col: 137}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
@@ -929,7 +907,7 @@ func cardsParty(v View) templ.Component {
 					var templ_7745c5c3_Var40 string
 					templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(m.Classes)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 364, Col: 69}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 321, Col: 69}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 					if templ_7745c5c3_Err != nil {
@@ -970,23 +948,10 @@ func cardsParty(v View) templ.Component {
 // mesa olha — a fila responde "quem age quando", e o mapa responde "quem está
 // onde", que é a pergunta do turno em curso.
 //
-// A raiz com id é o que separa o mapa da fila no remendo, e é ela que faz o
-// arrasto da próxima fatia ser possível: um jogador registrando iniciativa passa
-// a não tocar no elemento debaixo do dedo do mestre.
-// A RAIZ DA REGIÃO participa da altura nos DOIS papéis desde a forma do jogador
-// (ALE-269). Ela era um bloco comum para o jogador, porque lá o mapa era um item
-// numa coluna que rola — e um bloco cresce com o conteúdo.
-//
-// Com o tabuleiro ocupando a superfície inteira isso vira defeito, e ele foi
-// medido: com o zoom em 96px por quadrado, o plano de 1344px de altura empurrou
-// esta raiz para 1440, a `<section>` de dentro foi junto, e a PÁGINA passou a
-// rolar em vez do mapa.
-//
-// Depois da ALE-203 o plano não tem mais altura própria — ele é uma origem de
-// tamanho zero num plano infinito —, e mesmo assim estas classes FICAM: a cena
-// é `flex: 1` e recorta com `overflow: hidden`, e um `flex: 1` só sabe até onde
-// crescer se o ancestral repassar a altura. Sem elas a janela nasceria com a
-// altura do nada.
+// A RAIZ DA REGIÃO participa da altura nos dois papéis, e não é um bloco comum:
+// a cena é `flex: 1` e recorta com `overflow: hidden`, e um `flex: 1` só sabe
+// até onde crescer se o ancestral repassar a altura. Sem estas classes a janela
+// nasce com a altura do nada, e quem rola passa a ser a PÁGINA em vez do mapa.
 func tableBoard(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1024,8 +989,8 @@ func tableBoard(v View) templ.Component {
 	})
 }
 
-// Iniciativa — LEITURA para o jogador (ALE-213); o mestre ganha aqui o que MONTA
-// a fila. O diálogo de editar vem junto porque é dela que ele fala.
+// Iniciativa — LEITURA para o jogador; o mestre ganha aqui o que MONTA a fila.
+// O diálogo de editar vem junto porque é dela que ele fala.
 func tableTracker(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1165,17 +1130,16 @@ func tableTracker(v View) templ.Component {
 	})
 }
 
-// AS CONDIÇÕES do combatente (ALE-122, portadas na ALE-269).
+// AS CONDIÇÕES do combatente.
 //
 // UM diálogo para todas as linhas, e não um por combatente: são 35 condições, e
-// nove linhas × 35 crachás seriam 315 nós redesenhados a cada mudança na fila.
-// Quem diz de QUEM é a caixa são os sinais, reescritos pela ABERTURA — que é o
-// gesto que troca de item, e por isso o que limpa (a lição do link de redefinir
-// senha, no guia do `engine-go/`).
+// uma cópia por linha multiplicaria isso em nós redesenhados a cada mudança na
+// fila. Quem diz de QUEM é a caixa são os sinais, reescritos pela ABERTURA — o
+// gesto que troca de item é o que limpa.
 //
 // A lista vem do CATÁLOGO e já chega ordenada em pt-BR. Uma segunda tabela do
-// livro escrita aqui é uma tabela que desvia: a API já teve 34 ids ao lado das
-// 35 do catálogo, e a que faltava dava 400 ao ser aplicada.
+// livro escrita aqui é uma tabela que desvia: a condição que faltar na cópia dá
+// 400 ao ser aplicada.
 func condicoesDoCombatente(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1209,7 +1173,7 @@ func condicoesDoCombatente(v View) templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 537, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 473, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 			if templ_7745c5c3_Err != nil {
@@ -1222,7 +1186,7 @@ func condicoesDoCombatente(v View) templ.Component {
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(onCondition(c.ID) + " ? 'true' : 'false'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 538, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 474, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 			if templ_7745c5c3_Err != nil {
@@ -1235,7 +1199,7 @@ func condicoesDoCombatente(v View) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'brush-on': " + onCondition(c.ID) + "}")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 539, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 475, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 			if templ_7745c5c3_Err != nil {
@@ -1248,7 +1212,7 @@ func condicoesDoCombatente(v View) templ.Component {
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleConditionRow(v, c.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 540, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 476, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 			if templ_7745c5c3_Err != nil {
@@ -1261,7 +1225,7 @@ func condicoesDoCombatente(v View) templ.Component {
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(c.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 542, Col: 14}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 478, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
@@ -1281,8 +1245,8 @@ func condicoesDoCombatente(v View) templ.Component {
 }
 
 // Os comandos do mestre. A raiz existe para todo mundo e o CONTEÚDO é que é do
-// mestre — a trava continua sendo a view não ter o que desenhar, e o jogador
-// recebe uma casca vazia em vez de um id que some e leva o remendo junto.
+// mestre: a trava é a view não ter o que desenhar, e o jogador recebe uma casca
+// vazia em vez de um id que some e leva o remendo junto.
 func tableCommands(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1366,7 +1330,7 @@ func tableRegister(v View) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(v.Eu.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 578, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 514, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1409,7 +1373,7 @@ func tableRegister(v View) templ.Component {
 		var templ_7745c5c3_Var56 string
 		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(v.Eu.Bonus))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 620, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 551, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 		if templ_7745c5c3_Err != nil {
@@ -1422,7 +1386,7 @@ func tableRegister(v View) templ.Component {
 		var templ_7745c5c3_Var57 string
 		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$d20 + %d", v.Eu.Bonus))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 622, Col: 124}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 553, Col: 124}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 		if templ_7745c5c3_Err != nil {
@@ -1435,7 +1399,7 @@ func tableRegister(v View) templ.Component {
 		var templ_7745c5c3_Var58 string
 		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mesa/%d/%d/iniciativa')", v.CampaignID, v.SessionID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 640, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 570, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 		if templ_7745c5c3_Err != nil {
@@ -1451,9 +1415,9 @@ func tableRegister(v View) templ.Component {
 
 // A LINHA da fila.
 //
-// O `relative` da classe é CONTEXTO DE POSICIONAMENTO e não estilo (ALE-174): a
-// piscada do vital pinta um véu `absolute inset-0` sobre a linha, e sem isto ele
-// se ancoraria no primeiro ancestral posicionado — que é o diálogo da gaveta. O
+// O `relative` da classe é CONTEXTO DE POSICIONAMENTO e não estilo: a piscada
+// do vital pinta um véu `absolute inset-0` sobre a linha, e sem isto ele se
+// ancoraria no primeiro ancestral posicionado — que é o diálogo da gaveta. O
 // sintoma seria a tela inteira piscando de vermelho quando alguém perde 1 PV.
 func tableRowTracker(v View, l tableRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -1542,7 +1506,7 @@ func tableRowTracker(v View, l tableRow) templ.Component {
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(l.Iniciativa))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 669, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 599, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
@@ -1560,7 +1524,7 @@ func tableRowTracker(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var65 string
 		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(l.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 674, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 604, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 		if templ_7745c5c3_Err != nil {
@@ -1631,7 +1595,7 @@ func tableRowTracker(v View, l tableRow) templ.Component {
 				var templ_7745c5c3_Var68 string
 				templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(conditionEffect(c))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 718, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 643, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 				if templ_7745c5c3_Err != nil {
@@ -1644,7 +1608,7 @@ func tableRowTracker(v View, l tableRow) templ.Component {
 				var templ_7745c5c3_Var69 string
 				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(book.ConditionName(c))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 720, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 645, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 				if templ_7745c5c3_Err != nil {
@@ -1678,23 +1642,15 @@ func tableRowTracker(v View, l tableRow) templ.Component {
 	})
 }
 
-// rowVerbs é o que o MESTRE faz com a LINHA: condições e tirar da fila.
+// rowVerbs é o que o MESTRE faz com a LINHA INTEIRA: condições e tirar da fila.
 //
-// Ele já foi maior. Ferir, curar e o olho moravam aqui até a ALE-211, e saíram
-// quando o mana entrou: os três falam de UM pool, e com dois pools por linha uma
-// tira compartilhada não tem como dizer de qual — o `+` ao lado da lixeira não
-// diz se devolve vida ou mana. Foram para o lado da barra que cada um mexe, no
-// `trackerBar`. O que sobrou aqui é o que vale para a linha INTEIRA, com pool ou
-// sem nenhum.
+// Ferir, curar e o olho NÃO moram aqui, e sim ao lado da barra que cada um mexe
+// (`trackerBar`): os três falam de UM pool, e com dois pools por linha uma tira
+// compartilhada não tem como dizer de qual — o `+` ao lado da lixeira não diz se
+// devolve vida ou mana.
 //
-// Aqui morava a `vagaDeVerbo` e a razão dela (ALE-141): com o conjunto mudando
-// de linha para linha, a fileira encolhia e o `−` de uma caía onde estava a
-// lixeira de outra, então o verbo ausente deixava o espaço vazio em vez de
-// sumir. Ela foi apagada porque a causa sumiu — os dois verbos que restaram
-// existem para TODA linha, e uma fileira que não varia não tem como desalinhar.
-//
-// A ordem da ALE-141 continua valendo onde os passos foram parar: o `−` vem
-// DEPOIS do `+` para um polegar apressado não curar quando queria machucar.
+// Os dois verbos que sobraram existem para TODA linha, e é por isso que a
+// fileira não precisa de vaga vazia: fileira que não varia não desalinha.
 func rowVerbs(v View, l tableRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1723,7 +1679,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var71 string
 		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue("Condições de " + l.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 752, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 669, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var71)
 		if templ_7745c5c3_Err != nil {
@@ -1736,7 +1692,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var72 string
 		templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue("Condições de " + l.Rotulo + " (p394-395)")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 753, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 670, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
 		if templ_7745c5c3_Err != nil {
@@ -1749,7 +1705,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var73 string
 		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue(openConditions(l))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 754, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 671, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var73)
 		if templ_7745c5c3_Err != nil {
@@ -1770,7 +1726,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var74 string
 		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue("Remover " + l.Rotulo + " da fila")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 761, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 678, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 		if templ_7745c5c3_Err != nil {
@@ -1783,7 +1739,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var75 string
 		templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue("Remover " + l.Rotulo + " da fila")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 762, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 679, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 		if templ_7745c5c3_Err != nil {
@@ -1796,7 +1752,7 @@ func rowVerbs(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var76 string
 		templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowCommand(v, l, "remover"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 763, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 680, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var76)
 		if templ_7745c5c3_Err != nil {
@@ -1818,17 +1774,16 @@ func rowVerbs(v View, l tableRow) templ.Component {
 	})
 }
 
-// trackerBar é UM pool da linha: a barra, e os verbos que mexem NELA (ALE-211).
+// trackerBar é UM pool da linha: a barra, e os verbos que mexem NELA.
 //
-// O verbo mora ao lado do que ele muda, e isso deixou de ser preferência quando
-// o mana entrou: com dois pools por linha, um `+` numa tira compartilhada não
-// diz de qual número está falando, e o dedo apressado do mestre cura o PV
-// querendo devolver mana.
+// O verbo mora ao lado do que ele muda: com dois pools por linha, um `+` numa
+// tira compartilhada não diz de qual número está falando, e o dedo apressado do
+// mestre cura o PV querendo devolver mana.
 //
 // Três estados, e os três são desenho diferente: sem barra nenhuma a linha não
 // rastreia aquele pool e não sai nada; com a barra ESCONDIDA sai a frase, porque
-// "não tem PV" e "o mestre escondeu" são coisas diferentes (ALE-210); com número
-// sai a barra. Os verbos só existem para o mestre — o jogador lê.
+// "não tem PV" e "o mestre escondeu" são coisas diferentes; com número sai a
+// barra. Os verbos só existem para o mestre — o jogador lê.
 func trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1863,7 +1818,7 @@ func trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) templ.Comp
 				var templ_7745c5c3_Var78 string
 				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 786, Col: 60}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 702, Col: 60}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {
@@ -1915,7 +1870,7 @@ func trackerBar(v View, l tableRow, pool, rotulo string, b *tableBar) templ.Comp
 // Os dois passos são DUAS ROTAS, e o `evt.shiftKey` só escolhe QUAL delas — o
 // número nunca viaja como dado. O `title` conta os dois passos porque atalho que
 // ninguém descobre não existe, e o nome acessível traz o do combatente: numa
-// fila de nove, "Ferir" sozinho não diz quem.
+// fila cheia, "Ferir" sozinho não diz quem.
 func vitalStep(v View, l tableRow, pool, verb, sign, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1944,7 +1899,7 @@ func vitalStep(v View, l tableRow, pool, verb, sign, label string) templ.Compone
 		var templ_7745c5c3_Var80 string
 		templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.ResolveAttributeValue(label + " " + l.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 808, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 724, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var80)
 		if templ_7745c5c3_Err != nil {
@@ -1957,7 +1912,7 @@ func vitalStep(v View, l tableRow, pool, verb, sign, label string) templ.Compone
 		var templ_7745c5c3_Var81 string
 		templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.ResolveAttributeValue(label + " " + l.Rotulo + " — clique 1, Shift+clique 5")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 809, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 725, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var81)
 		if templ_7745c5c3_Err != nil {
@@ -1970,7 +1925,7 @@ func vitalStep(v View, l tableRow, pool, verb, sign, label string) templ.Compone
 		var templ_7745c5c3_Var82 string
 		templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowVital(v, l, pool, verb))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 810, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 726, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var82)
 		if templ_7745c5c3_Err != nil {
@@ -1983,7 +1938,7 @@ func vitalStep(v View, l tableRow, pool, verb, sign, label string) templ.Compone
 		var templ_7745c5c3_Var83 string
 		templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(sign)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 812, Col: 8}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 728, Col: 8}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 		if templ_7745c5c3_Err != nil {
@@ -2001,7 +1956,7 @@ func vitalStep(v View, l tableRow, pool, verb, sign, label string) templ.Compone
 //
 // `aria-pressed` porque é um estado que fica, não uma ação que passa. E o
 // `title` diz de quem se esconde: o ícone sozinho não conta que o segredo é dos
-// jogadores e não do mestre (ALE-133).
+// jogadores e não do mestre.
 func rowEye(v View, l tableRow, pool, rotulo string, hidden bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -2036,7 +1991,7 @@ func rowEye(v View, l tableRow, pool, rotulo string, hidden bool) templ.Componen
 		var templ_7745c5c3_Var86 string
 		templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(hidden))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 823, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 739, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var86)
 		if templ_7745c5c3_Err != nil {
@@ -2054,7 +2009,7 @@ func rowEye(v View, l tableRow, pool, rotulo string, hidden bool) templ.Componen
 			var templ_7745c5c3_Var87 string
 			templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.ResolveAttributeValue("Revelar os " + rotulo + " de " + l.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 825, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 741, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var87)
 			if templ_7745c5c3_Err != nil {
@@ -2067,7 +2022,7 @@ func rowEye(v View, l tableRow, pool, rotulo string, hidden bool) templ.Componen
 			var templ_7745c5c3_Var88 string
 			templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.ResolveAttributeValue("Revelar os " + rotulo + " de " + l.Rotulo + " para os jogadores")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 826, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 742, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var88)
 			if templ_7745c5c3_Err != nil {
@@ -2085,7 +2040,7 @@ func rowEye(v View, l tableRow, pool, rotulo string, hidden bool) templ.Componen
 			var templ_7745c5c3_Var89 string
 			templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ocultar os " + rotulo + " de " + l.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 828, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 744, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var89)
 			if templ_7745c5c3_Err != nil {
@@ -2098,7 +2053,7 @@ func rowEye(v View, l tableRow, pool, rotulo string, hidden bool) templ.Componen
 			var templ_7745c5c3_Var90 string
 			templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ocultar os " + rotulo + " de " + l.Rotulo + " dos jogadores")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 829, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 745, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var90)
 			if templ_7745c5c3_Err != nil {
@@ -2116,7 +2071,7 @@ func rowEye(v View, l tableRow, pool, rotulo string, hidden bool) templ.Componen
 		var templ_7745c5c3_Var91 string
 		templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowCommand(v, l, "vitais/"+pool+"/oculto"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 831, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 747, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var91)
 		if templ_7745c5c3_Err != nil {
@@ -2158,12 +2113,9 @@ func rowEye(v View, l tableRow, pool, rotulo string, hidden bool) templ.Componen
 	})
 }
 
-// barra tem o mesmo contrato de acessibilidade da `VitalBar` da SPA: um
-// `progressbar` de verdade, porque "um pouco de verde" não é resposta para quem
-// não vê a tela — e é o que o e2e consegue ler.
-// barraCompacta é a barra do cartão do Grupo, para duas cabendo numa linha
-// (ALE-214). A diferença para a `barra` é só o que ocupa largura: o rótulo
-// encolhe e o número perde o máximo, que já viaja no `aria-label`.
+// barraCompacta é a barra do cartão do Grupo, feita para duas caberem numa
+// linha. A diferença para a `barra` é só o que ocupa largura: o rótulo encolhe e
+// o número perde o máximo, que já viaja no `aria-label`.
 func barraCompacta(rotulo string, b tableBar) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -2214,7 +2166,7 @@ func barraCompacta(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var96 string
 		templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 851, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 764, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
 		if templ_7745c5c3_Err != nil {
@@ -2227,7 +2179,7 @@ func barraCompacta(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var97 string
 		templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(b.Current))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 854, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 767, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var97)
 		if templ_7745c5c3_Err != nil {
@@ -2240,7 +2192,7 @@ func barraCompacta(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var98 string
 		templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(b.Max))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 856, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 769, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var98)
 		if templ_7745c5c3_Err != nil {
@@ -2253,7 +2205,7 @@ func barraCompacta(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var99 string
 		templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%s %d de %d", rotulo, b.Current, b.Max))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 857, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 770, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var99)
 		if templ_7745c5c3_Err != nil {
@@ -2288,7 +2240,7 @@ func barraCompacta(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var102 string
 		templ_7745c5c3_Var102, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %d%%", b.Pct))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 860, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 773, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
 		if templ_7745c5c3_Err != nil {
@@ -2301,7 +2253,7 @@ func barraCompacta(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var103 string
 		templ_7745c5c3_Var103, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(b.Current))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 862, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 775, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var103))
 		if templ_7745c5c3_Err != nil {
@@ -2314,7 +2266,7 @@ func barraCompacta(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var104 string
 		templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(b.Max))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 862, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 775, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 		if templ_7745c5c3_Err != nil {
@@ -2328,6 +2280,8 @@ func barraCompacta(rotulo string, b tableBar) templ.Component {
 	})
 }
 
+// barra é um `progressbar` de verdade, e não uma tira pintada: "um pouco de
+// verde" não é resposta para quem não vê a tela — e o papel é o que o e2e lê.
 func barra(rotulo string, b tableBar) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -2378,7 +2332,7 @@ func barra(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var108 string
 		templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 868, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 783, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var108))
 		if templ_7745c5c3_Err != nil {
@@ -2391,7 +2345,7 @@ func barra(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var109 string
 		templ_7745c5c3_Var109, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(b.Current))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 871, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 786, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var109)
 		if templ_7745c5c3_Err != nil {
@@ -2404,7 +2358,7 @@ func barra(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var110 string
 		templ_7745c5c3_Var110, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(b.Max))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 873, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 788, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var110)
 		if templ_7745c5c3_Err != nil {
@@ -2417,7 +2371,7 @@ func barra(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var111 string
 		templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%s %d de %d", rotulo, b.Current, b.Max))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 874, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 789, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var111)
 		if templ_7745c5c3_Err != nil {
@@ -2452,7 +2406,7 @@ func barra(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var114 string
 		templ_7745c5c3_Var114, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %d%%", b.Pct))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 877, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 792, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var114))
 		if templ_7745c5c3_Err != nil {
@@ -2465,7 +2419,7 @@ func barra(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var115 string
 		templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(b.Current))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 879, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 794, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var115))
 		if templ_7745c5c3_Err != nil {
@@ -2478,7 +2432,7 @@ func barra(rotulo string, b tableBar) templ.Component {
 		var templ_7745c5c3_Var116 string
 		templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(b.Max))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 879, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 794, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 		if templ_7745c5c3_Err != nil {
@@ -2525,7 +2479,7 @@ func addParty(v View) templ.Component {
 		var templ_7745c5c3_Var118 string
 		templ_7745c5c3_Var118, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableCommand(v, "POST", "iniciativa/por-no-mapa"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 893, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 808, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var118)
 		if templ_7745c5c3_Err != nil {
@@ -2545,16 +2499,10 @@ func addParty(v View) templ.Component {
 // formulário que só existe depois de uma ida ao servidor perderia o que estava
 // digitado a cada remendo da cena, e a cena é remendada a cada mudança de
 // qualquer um na mesa. Pelo mesmo motivo os campos são ligados a SINAIS e nunca
-// recebem `value` do servidor — entrada em curso é do teclado de quem digita,
-// não estado da aplicação (é a mesma escolha do d20, ALE-219).
-//
-// TODOS OS NOMES DE SINAL EM `snake_case`, e isso é obrigatório: eles são chaves
-// de `data-bind:`, e nome de atributo é minusculado pelo analisador de HTML —
-// caixa alta na chave ligaria um sinal NOVO e deixaria o declarado intocado,
-// com o fio levando os dois e o servidor lendo o que ninguém tocou.
+// recebem `value` do servidor.
 //
 // O `Escape` fecha, porque é o gesto que todo mundo tenta primeiro num
-// formulário aberto por engano e o gatilho que o abriu fica longe (ALE-136).
+// formulário aberto por engano e o gatilho que o abriu fica longe.
 func formDeCombatente(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -2629,7 +2577,7 @@ func formDeCombatente(v View) templ.Component {
 		var templ_7745c5c3_Var122 string
 		templ_7745c5c3_Var122, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mesa/%d/%d/iniciativa/adicionar')", v.CampaignID, v.SessionID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 947, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 855, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var122)
 		if templ_7745c5c3_Err != nil {
@@ -2680,7 +2628,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var125 string
 		templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 955, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 863, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var125)
 		if templ_7745c5c3_Err != nil {
@@ -2706,7 +2654,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var127 string
 		templ_7745c5c3_Var127, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 955, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 863, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var127))
 		if templ_7745c5c3_Err != nil {
@@ -2719,7 +2667,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var128 string
 		templ_7745c5c3_Var128, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 957, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 865, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var128)
 		if templ_7745c5c3_Err != nil {
@@ -2732,7 +2680,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var129 string
 		templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.ResolveAttributeValue(min)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 959, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 867, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var129)
 		if templ_7745c5c3_Err != nil {
@@ -2745,7 +2693,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var130 string
 		templ_7745c5c3_Var130, templ_7745c5c3_Err = templ.ResolveAttributeValue(max)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 960, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 868, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var130)
 		if templ_7745c5c3_Err != nil {
@@ -2758,7 +2706,7 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var131 string
 		templ_7745c5c3_Var131, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 962, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 870, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var131)
 		if templ_7745c5c3_Err != nil {
@@ -2772,9 +2720,8 @@ func campoDeNumero(id, rotulo, sinal, min, max string) templ.Component {
 	})
 }
 
-// O `aria-pressed` sai como STRING e não como booleano — ver o comentário do
-// `aria-expanded` lá em cima: o `data-attr` daria `aria-pressed=""`, que é
-// inválido e não anuncia estado nenhum.
+// O `aria-pressed` sai como STRING e não como booleano: o `data-attr` do
+// Datastar daria `aria-pressed=""`, que é inválido e não anuncia estado nenhum.
 func combatantKind(tipo, rotulo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -2803,7 +2750,7 @@ func combatantKind(tipo, rotulo string) templ.Component {
 		var templ_7745c5c3_Var133 string
 		templ_7745c5c3_Var133, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$new_type === '%s' ? 'true' : 'false'", tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 974, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 881, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var133)
 		if templ_7745c5c3_Err != nil {
@@ -2816,7 +2763,7 @@ func combatantKind(tipo, rotulo string) templ.Component {
 		var templ_7745c5c3_Var134 string
 		templ_7745c5c3_Var134, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$new_type = '%s'", tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 975, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 882, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var134)
 		if templ_7745c5c3_Err != nil {
@@ -2829,7 +2776,7 @@ func combatantKind(tipo, rotulo string) templ.Component {
 		var templ_7745c5c3_Var135 string
 		templ_7745c5c3_Var135, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $new_type === '%s', 'border-grimorio-iron text-muted-foreground': $new_type !== '%s'}", tipo, tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 976, Col: 171}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 883, Col: 171}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var135)
 		if templ_7745c5c3_Err != nil {
@@ -2842,7 +2789,7 @@ func combatantKind(tipo, rotulo string) templ.Component {
 		var templ_7745c5c3_Var136 string
 		templ_7745c5c3_Var136, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 978, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 885, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var136))
 		if templ_7745c5c3_Err != nil {
@@ -2856,16 +2803,13 @@ func combatantKind(tipo, rotulo string) templ.Component {
 	})
 }
 
-// numberEditable: para o mestre, a INICIATIVA é botão.
+// numberEditable: para o mestre, a INICIATIVA é botão — sem ela, consertar um
+// número entrado errado custa remover e acrescentar de novo, perdendo PV e
+// condições no caminho.
 //
-// É o gesto que a ALE-122 nomeou e deixou sem saída — "Adicionar grupo" entra
-// com 0 e não havia como consertar, então a única saída era remover e
-// acrescentar de novo, perdendo PV e condições no caminho.
-//
-// O clique SEMEIA os sinais com os valores de AGORA antes de abrir: o diálogo
+// O clique SEMEIA os sinais com os valores de AGORA ANTES de abrir: o diálogo
 // não busca nada, e sem a semeadura ele abriria com o que sobrou da linha
-// anterior. É a tradução do `setValue(props.current)` da SPA, que tem um
-// comentário dizendo exatamente isto.
+// anterior.
 func numberEditable(v View, l tableRow) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -2900,7 +2844,7 @@ func numberEditable(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var139 string
 		templ_7745c5c3_Var139, templ_7745c5c3_Err = templ.ResolveAttributeValue("Editar " + l.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 994, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 898, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var139)
 		if templ_7745c5c3_Err != nil {
@@ -2913,7 +2857,7 @@ func numberEditable(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var140 string
 		templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.ResolveAttributeValue("Editar " + l.Rotulo + " — iniciativa e PV")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 995, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 899, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var140)
 		if templ_7745c5c3_Err != nil {
@@ -2926,7 +2870,7 @@ func numberEditable(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var141 string
 		templ_7745c5c3_Var141, templ_7745c5c3_Err = templ.ResolveAttributeValue(openEdit(v, l))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 996, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 900, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var141)
 		if templ_7745c5c3_Err != nil {
@@ -2952,7 +2896,7 @@ func numberEditable(v View, l tableRow) templ.Component {
 		var templ_7745c5c3_Var143 string
 		templ_7745c5c3_Var143, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(l.Iniciativa))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 999, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 903, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var143))
 		if templ_7745c5c3_Err != nil {
@@ -2966,16 +2910,14 @@ func numberEditable(v View, l tableRow) templ.Component {
 	})
 }
 
-// editarCombatente é DIÁLOGO e não campo na linha, e a razão vale a pena estar
-// escrita: a cena é remendada a cada mudança de qualquer um na mesa, e um input
-// vivo dentro da lista perderia o foco a cada tique. A SPA carrega o mesmo
-// comentário pelo mesmo motivo, lá por causa do broadcast do socket.
+// editarCombatente é DIÁLOGO e não campo na linha: a cena é remendada a cada
+// mudança de qualquer um na mesa, e um input vivo dentro da lista perderia o
+// foco a cada tique.
 //
-// Ele junta iniciativa e PV num diálogo só, e isso é DESVIO da SPA, que tem dois
-// (o da iniciativa no número, o do PV num quinto botão da linha). O motivo é
-// medido: a fileira de verbos já leva quatro alvos de 36px numa linha de 390px,
-// e um quinto não cabe. O ± continua sendo o caminho descoberto para o dano de
-// 1 e 5; este é o caminho do valor exato, que na SPA custava seis cliques.
+// Ele junta iniciativa e PV num diálogo só, e não um por campo: a fileira de
+// verbos já leva quatro alvos de 36px numa linha de 390px, e um quinto não cabe.
+// O ± continua sendo o caminho descoberto para o dano de 1 e 5; este é o caminho
+// do valor exato.
 func editarCombatente(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -3041,14 +2983,14 @@ func editarCombatente(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 214, "\">PV (de <span data-text=\"$edit_hp_max\"></span>)</label> <input id=\"edit-hp\" type=\"number\" min=\"0\" data-attr:max=\"$edit_hp_max\" inputmode=\"numeric\" data-bind=\"edit_hp\" class=\"mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none\"></div><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('edit-combatant').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent\">Cancelar</button><button type=\"button\" data-on:click=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 214, "\">PV (de <span data-text=\"$edit_hp_max\"></span>)</label> <input id=\"edit-hp\" type=\"number\" min=\"0\" data-attr:max=\"$edit_hp_max\" inputmode=\"numeric\" data-bind=\"edit_hp\" class=\"mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none\"></div><div class=\"mt-4 flex justify-end gap-2\"><button type=\"button\" data-on:click=\"document.getElementById('edit-combatant').close()\" class=\"inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent\">Cancelar</button> <button type=\"button\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var149 string
 		templ_7745c5c3_Var149, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveEdit(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 1061, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/table.templ`, Line: 960, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var149)
 		if templ_7745c5c3_Err != nil {

@@ -6,19 +6,11 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel de EFEITOS desenhado (ALE-272, fatia 5).
+// O painel de EFEITOS desenhado.
 //
-// Quatro blocos, e a ordem é a da SPA — condições primeiro porque são as que a
-// mesa aplica no meio de um turno, e situação por último porque é o que se
-// configura uma vez e se esquece.
-//
-// # Os componentes deste arquivo são nomeados em INGLÊS
-//
-// Decisão do dono nesta fatia: componente `templ` é função, e função é
-// identificador. Os vizinhos das fatias 2 a 4 (`proficiencyPanel`,
-// `combatPanel`, `expertisePanel`) ficam como estão — o guia manda o
-// nome que se ESCREVE seguir a regra e o que se CHAMA seguir o que está lá, e
-// varrer o que já existe apagaria a procedência de cada linha por estética.
+// Quatro blocos, e a ORDEM é por frequência na mesa: condições primeiro, porque
+// são as que se aplicam no meio de um turno; situação por último, porque é o que
+// se configura uma vez e se esquece.
 
 // effectsPanelSection é a seção inteira.
 templ effectsPanelSection(v View) {
@@ -26,11 +18,11 @@ templ effectsPanelSection(v View) {
 		<div class="flex shrink-0 items-center gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
 			<h2 class={ ui.SectionTitleClasses("painel", "", "") }>Efeitos</h2>
 			if v.Effects.Count > 0 {
-				// O par de tinta é o da casa (`CountBadge`): `bg-primary` é o
-				// ouro do grimório e `text-primary-foreground` é a tinta que se
-				// lê sobre ele. Aqui morava um `text-grimorio-ink` INVENTADO —
-				// token que não existe não vira regra na folha, e o número saiu
-				// dourado sobre dourado. Ver `TestEveryHouseTintExistsInTheStylesheet`.
+				// O par de tinta é o da casa (`CountBadge`): `bg-primary` é o ouro
+				// do grimório e `text-primary-foreground` é a tinta que se lê sobre
+				// ele. Token INVENTADO não vira regra na folha, e o número sai
+				// dourado sobre dourado — ver
+				// `TestEveryHouseTintExistsInTheStylesheet`.
 				<span aria-hidden="true" class="rounded-full bg-primary px-1.5 text-3xs font-bold text-primary-foreground">
 					{ strconv.Itoa(v.Effects.Count) }
 				</span>
@@ -59,8 +51,8 @@ templ effectsPanelSection(v View) {
 // bookConditionsBlock são as condições do livro em vigor (p394-395).
 //
 // Elas MOVEM os números, e o texto do efeito fica na própria linha em vez de
-// atrás de um toque: uma condição que fosse só crachá foi o defeito da ALE-28, e
-// dizer o que ela faz é o que impede a mesa de tratá-la como decoração.
+// atrás de um toque: dizer o que a condição faz é o que impede a mesa de
+// tratá-la como decoração.
 templ bookConditionsBlock(v View) {
 	<section class="rounded-none border border-grimorio-iron p-3">
 		<div class="flex flex-wrap items-center justify-between gap-2">
@@ -105,9 +97,9 @@ templ bookConditionRow(v View, linha conditionRow) {
 
 // stancesBlock são as posturas em curso.
 //
-// O interruptor de LIGAR não está aqui, e a ausência é decisão de produto da
-// SPA: entrar numa postura custa PM, e o PM é cobrado onde o poder mora. Aqui
-// elas se leem — com o que cada uma custou — e se encerram.
+// O interruptor de LIGAR não está aqui, e a ausência é decisão: entrar numa
+// postura custa PM, e o PM é cobrado onde o poder mora. Aqui elas se leem — com
+// o que cada uma custou — e se encerram.
 templ stancesBlock(v View) {
 	if len(v.Effects.Stances) > 0 {
 		<section class="rounded-none border border-grimorio-iron p-3">
@@ -304,20 +296,19 @@ templ buffPickerDialog(v View) {
 
 // pickerDialog é a moldura dos dois escolhedores.
 //
-// Ela não tem busca, e é medido e não esquecido: são 35 condições e 31 magias
-// com efeito aplicável — listas curtas, que cabem numa rolagem sem filtro. A
-// virtualização que a SPA usa aqui existe porque lá a lista era do catálogo
-// INTEIRO; a regra da casa é virtualizar as LONGAS, e estas não são.
+// Ela não tem busca, e isso é decidido e não esquecido: são algumas dezenas de
+// condições e de magias com efeito aplicável — listas curtas, que cabem numa
+// rolagem sem filtro. A regra da casa é virtualizar as LONGAS, e estas não
+// são.
 templ pickerDialog(sinal, titulo string, opcoes []pickerOption) {
-	// NASCE ESCONDIDO (ALE-296), e o `style` estático é o conserto inteiro.
+	// NASCE ESCONDIDO pelo `style` estático, e ele é o conserto inteiro.
 	//
 	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
 	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
-	// medido com sonda de quadro: até 30 quadros de pano preto sobre a cena, que o
-	// dono relatou como "um dialog que aparece e some".
+	// dezenas de quadros de pano preto sobre a cena.
 	//
-	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
-	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
+	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar
+	// o troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
 	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
 	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<div

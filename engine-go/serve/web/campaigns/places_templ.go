@@ -15,8 +15,8 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O ACERVO DE LUGARES da crônica (ALE-292): onde o mestre prepara a próxima
-// cena, fora da sessão.
+// O ACERVO DE LUGARES da crônica: onde o mestre prepara a próxima cena, fora da
+// sessão.
 //
 // A mesma lista existe DENTRO da Mesa, e as duas não são cópia uma da outra
 // porque respondem a perguntas diferentes. Lá o gesto é "traga esta cena para a
@@ -219,7 +219,7 @@ func placeRow(v oneView, l PlaceRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if l.NaMesaID > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "     ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "    ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -235,7 +235,7 @@ func placeRow(v oneView, l PlaceRow) templ.Component {
 			var templ_7745c5c3_Var10 templ.SafeURL
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.Table(v.ID, l.NaMesaID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 87, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 86, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -271,7 +271,7 @@ func placeRow(v oneView, l PlaceRow) templ.Component {
 			var templ_7745c5c3_Var13 templ.SafeURL
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.PlaceDraft(v.ID, l.ID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 92, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 91, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -297,7 +297,7 @@ func placeRow(v oneView, l PlaceRow) templ.Component {
 			var templ_7745c5c3_Var15 templ.SafeURL
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/campanhas/%d/lugares/%d/excluir", v.ID, l.ID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 98, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 97, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -310,7 +310,7 @@ func placeRow(v oneView, l PlaceRow) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue("Apagar " + l.Nome)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 101, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 100, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -323,7 +323,7 @@ func placeRow(v oneView, l PlaceRow) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue("Apagar " + l.Nome + " do acervo")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 102, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 101, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 			if templ_7745c5c3_Err != nil {
@@ -384,7 +384,7 @@ func newPlaceDialog(v oneView) templ.Component {
 		var templ_7745c5c3_Var19 templ.SafeURL
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/campanhas/%d/lugares/novo", v.ID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 128, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 127, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -435,7 +435,7 @@ func newPlaceDialog(v oneView) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 147, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 144, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 			if templ_7745c5c3_Err != nil {
@@ -448,7 +448,7 @@ func newPlaceDialog(v oneView) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(c.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 147, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/places.templ`, Line: 144, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {

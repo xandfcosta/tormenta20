@@ -3,24 +3,15 @@ package board
 // AS ESPÉCIES DE TERRENO — o que um quadrado FAZ com quem está nele ou atrás
 // dele (T20 p238, Tabela 5-3).
 //
-// Este arquivo NASCEU na colheita do `0f08b14`, e a razão vale escrita. Na base
-// da migração as espécies moram no fim do `vista.go`, que é maquinário de
-// RENDERIZAÇÃO do app: lá o servidor desenha o extenso do tabuleiro, porque
-// quem enquadra é o navegador por `transform`. A SPA desenha a própria janela e
-// não precisa de nada daquilo — trazer o arquivo inteiro poria código morto na
-// `main` só para carregar um `type` e quatro constantes.
-//
-// Então o domínio veio, o desenho das cenas ficou. As duas branches passam a ter
-// os mesmos símbolos em arquivos diferentes, e isso é dívida CONHECIDA: quando
-// elas se encontrarem, este arquivo e o fim do `vista.go` colidem. A sessão da
-// migração foi avisada para fazer a mesma separação do lado dela, que é o que
-// desfaz a dívida em vez de adiá-la.
+// Arquivo próprio, separado do maquinário que DESENHA o tabuleiro: o que está
+// aqui é domínio — um `type` e quatro constantes —, e misturá-lo ao desenho faz
+// qualquer leitor do domínio carregar a renderização junto.
 
 // TerrainKind é uma das quatro coisas que um quadrado FAZ (T20 p238,
 // Tabela 5-3). Ver GLOSSARY.md: terreno é a família, não o chão do lugar.
 type TerrainKind string
 
-// O VALOR é o segmento de ROTA, e por isso está em português (ALE-304): o
+// O VALOR é o segmento de ROTA, e por isso está em português: o
 // endereço é a única parte da fronteira que uma pessoa vê, e `/terreno/dificil`
 // é o que ela entende. As outras fronteiras — tabela, coluna, campo JSON, evento
 // SSE — seguem em inglês, porque nenhuma aparece para ninguém.

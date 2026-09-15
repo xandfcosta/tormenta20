@@ -8,26 +8,22 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// AS PENDÊNCIAS da ficha: o que ainda falta escolher (ALE-272, fatia 8).
+// AS PENDÊNCIAS da ficha: o que ainda falta escolher.
 //
 // Pendência NÃO é erro — a ficha existe para ser preenchida aos poucos, e a
-// forja promete por escrito "dá para criar assim e terminar na ficha"
-// (ALE-169). O que este arquivo faz é olhar a ficha e dizer, com a palavra que a
-// pessoa lê, o que está faltando: o bônus de atributo da raça, os dois
-// benefícios da origem, as vagas de poder abertas, o caminho, o devoto.
+// forja promete por escrito "dá para criar assim e terminar na ficha". O que
+// este arquivo faz é olhar a ficha e dizer, com a palavra que a pessoa lê, o que
+// está faltando: o bônus de atributo da raça, os dois benefícios da origem, as
+// vagas de poder abertas, o caminho, o devoto.
 //
 // # As REGRAS não estão aqui, e é isso que faz a recusa valer
 //
 // Quantas vagas o nível abre, quantos benefícios a origem dá, quais caminhos e
-// quais deuses cada classe aceita: isso é `sheet/choices.go` desde a ALE-278.
-// Elas leem o LIVRO e a FICHA, e a rota JSON as roda também — uma segunda cópia
-// aqui divergiria na primeira regra nova, e a esquecida aceitaria o que a outra
-// recusa. Até a ALE-272 elas eram 363 linhas de `shared/rules/abilities-*.ts` e
-// o `handleUpdateAbilities` gravava os cinco blobs sem conferir NADA: um pedido
-// montado à mão punha vinte poderes num personagem de nível 1, e o motor somava
-// os modificadores de todos.
+// quais deuses cada classe aceita: isso é `sheet/choices.go`. Elas leem o LIVRO
+// e a FICHA, e a rota JSON as roda também — uma segunda cópia aqui divergiria na
+// primeira regra nova, e a esquecida aceitaria o que a outra recusa.
 //
-// A pendência é a MESMA conta vista pelo outro lado — ela conta o que cabe e
+// A pendência é a MESMA conta vista pelo outro lado: ela conta o que cabe e
 // ainda não foi escolhido, onde a validação conta o que foi escolhido e não
 // cabe.
 

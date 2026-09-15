@@ -10,10 +10,10 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "t20engine/serve/web/ui"
 
-// O gesto de PÔR NO MAPA (ALE-264, item 5). A regra e as expressões estão em
-// `tokens.go`; aqui é só o desenho.
+// O gesto de PÔR NO MAPA. A regra e as expressões estão em `tokens.go`; aqui é
+// só o desenho.
 
-// botaoDePorNoMapa: UM botão, DOIS gestos, e o padrão é o seguro (ALE-204).
+// botaoDePorNoMapa: UM botão, DOIS gestos, e o padrão é o seguro.
 //
 // Esquerdo abre o diálogo com as fichas já escolhidas; direito põe as fichas
 // direto. Pôr as fichas no mapa é o gesto de abrir cena e não revela nada — eles
@@ -174,7 +174,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(cand.Nome)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 79, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 77, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -214,7 +214,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(cand.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 85, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 83, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 				if templ_7745c5c3_Err != nil {
@@ -237,7 +237,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(estaEscolhido(cand.ID) + " ? 'true' : 'false'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 87, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 85, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 				if templ_7745c5c3_Err != nil {
@@ -250,7 +250,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("{'brush-on': " + estaEscolhido(cand.ID) + "}")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 88, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 86, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 				if templ_7745c5c3_Err != nil {
@@ -263,7 +263,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleMap(cand.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 89, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 87, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
@@ -276,7 +276,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(cand.Nome)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 92, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 90, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -346,7 +346,7 @@ func poeNoMapaDialogo(v BoardView) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('populate').close(); " + mapCommand(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 118, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tokens.templ`, Line: 116, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {

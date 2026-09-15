@@ -7,23 +7,12 @@ import (
 	"t20engine/domain/live"
 )
 
-// As regras dos vitais na mesa: quem pode editar e o espelho no tracker.
-//
-// Este arquivo é o que SOBROU de `realtime_vitals.go` quando o socket.io foi
-// apagado (ALE-253). O corte foi pelo receptor: o que era `(g *realtimeGateway)`
-// era transporte e morreu junto; o que está aqui é aplicação, e não mudou uma
-// linha ao mudar de vizinho.
-//
-// Aqui morava "as rotas HTTP em `session_commands.go` e `board_commands.go`
-// chamam exatamente as mesmas funções que os eventos chamavam". Os dois
-// arquivos saíram na ALE-277 com os 36 manipuladores deles, que não tinham um
-// chamador desde que as cenas em Datastar passaram a mutar o estado pela porta
-// própria. A frase continua valendo com outro sujeito: quem chama estas funções
-// hoje é a cena da Mesa, e elas continuam sem saber por onde o pedido entrou.
+// As regras dos vitais na mesa: quem pode editar e o espelho no rastreador.
+// Quem as chama é a cena da Mesa, e elas não sabem por onde o pedido entrou.
 
-// assertVitalsEditableFor é a REGRA, e ela mudou de dono junto com o transporte
-// (ALE-253): o mestre edita qualquer combatente, o jogador só o personagem
-// dele, e NPC é do mestre porque não há ficha atrás para conferir dono.
+// assertVitalsEditableFor é a REGRA: o mestre edita qualquer combatente, o
+// jogador só o personagem dele, e NPC é do mestre porque não há ficha atrás para
+// conferir dono.
 func (tr tableRules) assertVitalsEditableFor(ctx context.Context, asked liveCtx, entryID string) error {
 	if asked.Role == "gm" {
 		return nil
@@ -44,12 +33,10 @@ func (tr tableRules) assertVitalsEditableFor(ctx context.Context, asked liveCtx,
 // restParty aplica o descanso a cada personagem do grupo (encerrar cena, ou
 // encerrar dia + curar + espelhar) e devolve quantos DERAM CERTO e o total.
 //
-// Best-effort por personagem de propósito — uma ficha que falha não pode
-// impedir o descanso das outras quatro. Mas o resultado é CONTADO e volta no
-// ack (ALE-155): antes, o encerrar-cena era `_, _ =` e nem entrava na conta, de
-// modo que o mestre lia "descansou" enquanto duas de cinco fichas não tinham
-// descansado. Best-effort é sobre continuar apesar da falha, não sobre esconder
-// que ela houve.
+// Best-effort por personagem de propósito — uma ficha que falha não pode impedir
+// o descanso das outras quatro. Mas o resultado é CONTADO e volta na resposta:
+// descartar a contagem faz o mestre ler "descansou" com duas de cinco fichas de
+// fora. Best-effort é sobre continuar apesar da falha, não sobre escondê-la.
 func (tr tableRules) restParty(user AuthUser, campaignID, sessionID int64, scope, condition string) (done, total int, err error) {
 	if scope != "day" {
 		return tr.expirePartyScene(user, campaignID, sessionID)
@@ -70,12 +57,9 @@ func (tr tableRules) restParty(user AuthUser, campaignID, sessionID int64, scope
 // de escopo "scene", os usos "1/cena" e as posturas (o helper de domínio
 // `EndScene` faz os três).
 //
-// É o caminho ÚNICO desde a ALE-220, e essa unificação É o conserto: o
-// "Encerrar cena" do mestre e o "Expirar efeitos · cena" chamam ESTE helper.
-// (Aquele segundo se chamava "Recuperar · cena" até a ALE-233, e o nome
-// prometia PV e PM que ele nunca deu.)
-// Antes só a Recuperação passava por aqui, e encerrar a cena deixava a bênção
-// de duração "cena" viva na ficha — a colisão C1 do glossário.
+// É o caminho ÚNICO, e a unificação É a regra: o "Encerrar cena" do mestre e o
+// "Expirar efeitos · cena" chamam ESTE helper. Com dois caminhos, encerrar a cena
+// deixa a bênção de duração "cena" viva na ficha — a colisão C1 do glossário.
 func (tr tableRules) expirePartyScene(user AuthUser, campaignID, sessionID int64) (done, total int, err error) {
 	charIDs, err := tr.listMemberCharacterIds(context.Background(), campaignID)
 	if err != nil {
@@ -109,8 +93,9 @@ func (tr tableRules) restCharacterDay(user AuthUser, sessionID, characterID int6
 	return true
 }
 
-// mirrorVitalsToTracker copies freshly-persisted PV/PM onto the matching live tracker entry
-// (if the character is in the current initiative) so bars update without a reload.
+// mirrorVitalsToTracker copia os PV/PM recém-gravados para a linha viva do
+// rastreador, quando o personagem está na iniciativa atual, para as barras
+// mudarem sem recarga.
 func (tr tableRules) mirrorVitalsToTracker(sessionID, characterID int64, vitals restedVitals) {
 	for _, e := range tr.sessions.GetState(sessionID).Initiative {
 		if e.CharacterID != nil && *e.CharacterID == characterID {

@@ -8,14 +8,8 @@ package ui
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// A CASCA da cena, portada da `SceneShell` da SPA (ALE-219, agora em templ pela
-// ALE-227).
-//
-// Ela nasceu de uma observação do dono olhando as duas telas do app: "existe
-// um padding lateral, estamos usando o padrão de Shell do SolidJS?". Não
-// estávamos — eu tinha escrito `mx-auto max-w-3xl p-3 sm:p-4` numa e
-// `max-w-5xl` na outra, inventando duas. Medido, faltavam CINCO coisas, e só
-// uma era o padding:
+// A CASCA da cena. Escrever o leiaute à mão numa tela nova, em vez de usá-la,
+// perde CINCO coisas, e só uma é o padding:
 //
 //  1. `.scene-grimorio` — é o ESCOPO dos tokens, e o `@custom-variant dark` da
 //     casa dispara nele. Sem a classe, todo utilitário `dark:` das telas
@@ -24,23 +18,20 @@ import templruntime "github.com/a-h/templ/runtime"
 //  3. `h-dvh` com overflow interno. A premissa do app é tela cheia com o
 //     CONTEÚDO rolando, não o documento; sem isso a página rola por fora e a
 //     faixa fixa da Mesa passa a competir com a barra do navegador.
-//  4. `env(safe-area-inset-*)`. O `viewport-fit=cover` já estava no `<head>`,
+//  4. `env(safe-area-inset-*)`. O `viewport-fit=cover` já está no `<head>`,
 //     mas sem `env()` ele só serve para o conteúdo entrar DEBAIXO do notch.
-//  5. A escala de espaçamento da casa (`px-4 py-4` no denso), em vez da minha.
+//  5. A escala de espaçamento da casa (`px-4 py-4` no denso).
 //
-// Fica registrado como o TERCEIRO achado estrutural do app, depois da
-// biblioteca de componentes e da faixa de teste: a casca também não atravessa
-// sozinha, e é o que faz duas telas individualmente corretas parecerem de dois
-// aplicativos.
+// É o que faz duas telas individualmente corretas parecerem do mesmo app.
 
 // Page é o que a casca precisa saber para montar o `<head>` e o
 // `<body>` em volta de um corpo.
 //
-// O corpo NÃO viaja aqui: ele entra como `templ.Component`, e é essa a
-// diferença que a ALE-227 comprou. Antes ele chegava como `template.HTML` —
-// uma string já renderizada com a anotação "confie em mim" — porque o
-// `html/template` não sabe invocar um sub-template por nome dinâmico. Render em
-// duas passadas era a saída, e cada passada era uma chance de escapar errado.
+// O corpo NÃO viaja como HTML pronto: ele entra como `templ.Component`. Uma
+// string já renderizada com a anotação "confie em mim" — a saída do
+// `html/template`, que não sabe invocar um sub-template por nome dinâmico —
+// obrigaria a renderizar em duas passadas, e cada passada é uma chance de
+// escapar errado.
 type Page struct {
 	// Asset monta o endereço VERSIONADO de um estático, e é injetado porque os
 	// arquivos são embutidos noutro pacote. Escrever o caminho à mão continua
@@ -60,9 +51,8 @@ type Page struct {
 	// SemEstadoDeCliente marca a superfície que não pode ter sinal NEM `data-init`
 	// — hoje só a PORTA. Um sinal é estado do cliente e o Datastar o serializa em
 	// TODA requisição seguinte, então qualquer estado ali faria a senha viajar de
-	// novo a cada pedido da página. É o que o `TestTheDoorPutsNothingInADatastarSignal`
-	// cobra, e ele me pegou: ao fazer o `data-init` da restauração de foco sair
-	// sempre, eu o pus também na porta, que não tem trilho para restaurar.
+	// novo a cada pedido da página. É o que o
+	// `TestTheDoorPutsNothingInADatastarSignal` cobra.
 	//
 	// Campo EXPLÍCITO e não inferido da forma da casca: `ui.ShellTitled` descreve o
 	// desenho, e amarrar uma regra de segurança a um nome de leiaute é a regra
@@ -72,11 +62,8 @@ type Page struct {
 	Sinais             string
 	Init               string
 	// Scripts são os módulos EXTRA de UMA cena. O `scene.js` vale para toda
-	// página; estes são para o que é de uma só — hoje a folha de especificação,
-	// que mede o desenho com canvas e `getComputedStyle` e ainda monta as peças
-	// da SPA como elementos customizados (ALE-251). Somam ~77 KB, e carregá-los
-	// em toda cena seria pôr o custo de uma tela de quem CONSTRÓI no caminho de
-	// quem só quer jogar.
+	// página; estes são para o que é de uma só. Carregá-los em toda cena seria
+	// pôr o custo de uma tela de quem CONSTRÓI no caminho de quem só quer jogar.
 	Scripts []string
 	// VoltarRotulo troca o "Voltar" por um destino NOMEADO. A folha de
 	// especificação diz "Hub" porque é para lá que ela volta, e nomear o
@@ -85,9 +72,9 @@ type Page struct {
 	VoltarRotulo string
 }
 
-// ShellShape são as três posturas do `SceneShell` da SPA, e elas se excluem —
-// um campo em vez de dois títulos opcionais, porque "TituloVisivel vazio E
-// TituloDaCena cheio" é um estado que não deveria ser representável.
+// ShellShape são as três posturas da casca, e elas se excluem — um campo em vez
+// de dois títulos opcionais, porque "TituloVisivel vazio E TituloDaCena cheio" é
+// um estado que não deveria ser representável.
 type ShellShape string
 
 const (
@@ -99,8 +86,8 @@ const (
 	// pequeno, `px-4 py-4`.
 	ShellDense ShellShape = "densa"
 	// ui.ShellTitled é a TELA-TÍTULO — o nome do jogo em Cinzel grande e
-	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub, e é a
-	// da PORTA (ALE-229): quem está fora não tem para onde voltar.
+	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub e a da
+	// PORTA: quem está fora não tem para onde voltar.
 	ShellTitled ShellShape = "titulo"
 )
 
@@ -132,7 +119,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(p.Titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 105, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 92, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -145,7 +132,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 		var templ_7745c5c3_Var3 templ.SafeURL
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(p.Asset("app.css"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 107, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 94, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -158,7 +145,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Asset("datastar.js"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 108, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 95, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -171,7 +158,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Asset("scene.js"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 113, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 99, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -189,7 +176,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(modulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 115, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 101, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 			if templ_7745c5c3_Err != nil {
@@ -212,7 +199,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Sinais)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 131, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 117, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -232,7 +219,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(RestoreRailFocus + "; " + p.Init)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 135, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 121, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 				if templ_7745c5c3_Err != nil {
@@ -250,7 +237,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(RestoreRailFocus)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 137, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 123, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 				if templ_7745c5c3_Err != nil {
@@ -269,7 +256,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(ShellShortcuts)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 159, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 138, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -287,7 +274,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Voltar)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 161, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 140, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -310,7 +297,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var12 templ.SafeURL
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(p.Voltar))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 176, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 155, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -324,7 +311,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("‹ " + p.VoltarRotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 180, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 159, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -348,7 +335,7 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(p.TituloVisivel)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 191, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/layout.templ`, Line: 170, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -409,12 +396,8 @@ func Layout(p Page, corpo templ.Component) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "      ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</section></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</section></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

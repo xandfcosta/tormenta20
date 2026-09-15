@@ -12,11 +12,11 @@ import (
 	"t20engine/domain/engine"
 )
 
-// O CONSTRUTOR DE ENCONTROS (ALE-259), terceira ferramenta da Mesa do Mestre.
+// O CONSTRUTOR DE ENCONTROS, terceira ferramenta da Mesa do Mestre.
 //
-// Diferente do bestiário e dos catálogos, esta cena tem ESTADO: o encontro
-// sendo montado. Decisão do dono: ele vive nos SINAIS do Datastar, como o sinal
-// efêmero da SPA, e um botão monta o link sob demanda.
+// Diferente do bestiário e dos catálogos, esta cena tem ESTADO: o encontro sendo
+// montado. Decisão do dono: ele vive nos SINAIS do Datastar, e um botão monta o
+// link sob demanda.
 //
 // A alternativa era o encontro SER o endereço, e ela foi recusada por um custo
 // concreto: a quantidade muda a cada clique, então cada `[+]` viraria uma
@@ -117,7 +117,7 @@ func loadEncounters(nivel, grupo int, linhas []encounterRow, busca string) encou
 	}
 	// A busca do painel de adicionar só corre quando há termo: mostrar as 80
 	// criaturas abaixo do encontro empurraria a conta para fora da tela, e a
-	// conta é o assunto desta ferramenta (ALE-170).
+	// conta é o assunto desta ferramenta.
 	if strings.TrimSpace(busca) != "" {
 		v.Achados = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
 			Busca: busca, NDMin: book.CRMin, NDMax: book.CRMax,

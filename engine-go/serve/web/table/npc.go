@@ -19,15 +19,15 @@ import (
 	"t20engine/infra/platform"
 )
 
-// OS NPCs DA CAMPANHA (ALE-269, superfície 6b).
+// OS NPCs DA CAMPANHA.
 //
-// O conceito é o da ALE-212: **iniciativa não é lista de combatentes**. O
+// O conceito é este: INICIATIVA NÃO É LISTA DE COMBATENTES. O
 // taverneiro que não briga, o chefe da semana que vem, o capitão que já
 // apareceu duas vezes — nenhum deles cabia na fila, e a fila esvazia ao fim da
 // cena. O elenco é da CAMPANHA e não da sessão, porque "os NPCs voltam semana
 // que vem" só é verdade assim.
 //
-// O CAMINHO PRINCIPAL É A CÓPIA (decisão do dono): a maioria dos NPCs nasce
+// O CAMINHO PRINCIPAL É A CÓPIA: a maioria dos NPCs nasce
 // como um verbete do bestiário com dois ou três números mexidos. Por isso o
 // gesto de guardar mora DENTRO do painel do bestiário da Mesa, que é onde o
 // mestre já está quando tem a ideia — em vez de um seletor próprio que o faria

@@ -13,7 +13,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A tela de administração desenhada (ALE-219; em templ pela ALE-227).
+// A tela de administração desenhada.
 func adminScene(v adminView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -129,7 +129,7 @@ func playersPanel(v adminView) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(v.Players)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 44, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 42, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -147,7 +147,7 @@ func playersPanel(v adminView) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(j.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 50, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 48, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func playersPanel(v adminView) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(j.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 51, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 49, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -173,7 +173,7 @@ func playersPanel(v adminView) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(j.Belongings)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 53, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 51, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -186,7 +186,7 @@ func playersPanel(v adminView) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(j.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 64, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 62, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -199,7 +199,7 @@ func playersPanel(v adminView) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(j.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 65, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 63, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {
@@ -212,7 +212,7 @@ func playersPanel(v adminView) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue("Redefinir a senha de " + j.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 67, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 65, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -238,7 +238,7 @@ func playersPanel(v adminView) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(j.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 81, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 79, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
@@ -251,7 +251,7 @@ func playersPanel(v adminView) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(j.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 82, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 80, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 				if templ_7745c5c3_Err != nil {
@@ -264,7 +264,7 @@ func playersPanel(v adminView) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(j.Cost)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 83, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 81, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 				if templ_7745c5c3_Err != nil {
@@ -277,7 +277,7 @@ func playersPanel(v adminView) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("Apagar a conta de " + j.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 85, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 83, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 				if templ_7745c5c3_Err != nil {
@@ -351,7 +351,7 @@ func invitesPanel(v adminView) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(v.Invites)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 101, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 99, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -387,7 +387,7 @@ func invitesPanel(v adminView) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 121, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 119, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -400,7 +400,7 @@ func invitesPanel(v adminView) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(c.Expires)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 122, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 120, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -413,7 +413,7 @@ func invitesPanel(v adminView) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.URL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 131, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 127, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 				if templ_7745c5c3_Err != nil {
@@ -426,7 +426,7 @@ func invitesPanel(v adminView) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("Copiar o " + c.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 133, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 129, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 				if templ_7745c5c3_Err != nil {
@@ -500,7 +500,7 @@ func serverPanel(v adminView) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(v.Machine.Environment)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 155, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 151, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -513,7 +513,7 @@ func serverPanel(v adminView) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(v.Machine.Database)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 159, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 155, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -526,7 +526,7 @@ func serverPanel(v adminView) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(v.Machine.DatabaseSize)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 159, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 155, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -539,7 +539,7 @@ func serverPanel(v adminView) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(v.Machine.Contents)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 163, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 159, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -552,7 +552,7 @@ func serverPanel(v adminView) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(v.Machine.LastBackup)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 167, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 163, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
@@ -582,8 +582,7 @@ func serverPanel(v adminView) templ.Component {
 //
 // `m-auto` na caixa porque o PREFLIGHT do Tailwind zera a margem, e é ela que
 // centraliza um `<dialog>` aberto por `showModal()`. Sem isso ele encosta no
-// canto superior esquerdo — o navegador estava certo e a folha de reset é que
-// tirou. Medido: apareceu no canto na primeira abertura.
+// canto superior esquerdo.
 func confirmDialog() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -613,15 +612,14 @@ func confirmDialog() templ.Component {
 	})
 }
 
-// resetDialog entrega o link de uso único que troca a senha de UMA conta
-// (ALE-120): o admin gera e manda, e quem recebe escolhe a própria senha — o
-// admin nunca vê nem digita senha de ninguém.
+// resetDialog entrega o link de uso único que troca a senha de UMA conta: o
+// admin gera e manda, e quem recebe escolhe a própria senha — o admin nunca vê
+// nem digita senha de ninguém.
 //
-// Mesma mecânica do convite do Hub, e pela mesma razão: o token chega por
-// REMENDO do servidor (`#reset-link`) e não por sinal. Sinal de cliente viaja
-// de volta ao servidor em toda requisição seguinte da página, e um token de uso
-// único que abre uma conta EXISTENTE é a última coisa que se quer nesse
-// caminho.
+// O token chega por REMENDO do servidor (`#reset-link`) e NUNCA por sinal:
+// sinal de cliente viaja de volta ao servidor em toda requisição seguinte da
+// página, e um token de uso único que abre uma conta EXISTENTE é a última coisa
+// que se quer nesse caminho.
 func resetDialog() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -660,11 +658,9 @@ func resetDialog() templ.Component {
 }
 
 // mintedReset é o remendo que volta do POST, e carrega o CAMINHO — nunca a URL
-// inteira. A origem é do NAVEGADOR, e isso é conserto de um defeito medido: com
-// o `r.Host` o link nascia apontando para a porta errada sempre que houvesse
-// qualquer coisa reescrevendo o cabeçalho no caminho. Link de redefinição existe
-// para ser MANDADO, então host errado é link morto — ver `ui.MintedInvite`, que
-// carrega a medição.
+// inteira. A origem é do NAVEGADOR: montada com o `r.Host`, ela nasce apontando
+// para a porta errada sempre que alguma coisa reescreva o cabeçalho no caminho,
+// e link de redefinição existe para ser MANDADO — host errado é link morto.
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.
@@ -718,7 +714,7 @@ func mintedReset(caminho string) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 297, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 289, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 		if templ_7745c5c3_Err != nil {

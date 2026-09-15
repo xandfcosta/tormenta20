@@ -27,15 +27,14 @@ type BoardView struct {
 	// antes de o mestre abrir, e ele NÃO desenha grade nenhuma.
 	Aberto bool
 	// Cortina: o tabuleiro EXISTE para o mestre e a mesa vê uma cortina no lugar
-	// dele (ALE-202). É diferente de "não há tabuleiro", e as duas telas precisam
-	// se parecer o MENOS possível: são estados que o jogador resolve de formas
+	// dele. É diferente de "não há tabuleiro", e as duas telas precisam se
+	// parecer o MENOS possível: são estados que o jogador resolve de formas
 	// diferentes — um é esperar, o outro é cutucar o mestre.
 	Cortina bool
-	// AvisoDaCortina é a tira que o MESTRE vê quando ela está fechada, e ela não
-	// é enfeite: o mapa dele fica IGUALZINHO com a cortina aberta ou fechada, e
-	// sem a tira ele narra a taverna, move o taverneiro e pergunta o que a mesa
-	// faz — para uma mesa que está olhando um aviso. É a única coisa na tela dele
-	// que denuncia o modo.
+	// AvisoDaCortina é a tira que o MESTRE vê quando ela está fechada: o mapa
+	// dele fica IGUALZINHO com a cortina aberta ou fechada, e sem a tira ele
+	// narra a taverna para uma mesa que está olhando um aviso. É a única coisa
+	// na tela dele que denuncia o modo.
 	AvisoDaCortina bool
 	Lugar          string
 	// Chao é a APARÊNCIA do lugar (pedra, taverna, cripta…), e não o terreno
@@ -90,7 +89,7 @@ type BoardView struct {
 	// Escrita SÓ pelo `tableBoardBase` e pelo `placeDraftBase`.
 	Base string
 	// TabuleiroID é qual tabuleiro ESTA view desenha, e ele viaja para a tela
-	// porque o COPIAR precisa registrar de onde a peça saiu (ALE-206).
+	// porque o COPIAR precisa registrar de onde a peça saiu.
 	TabuleiroID string
 	// Rascunho é a cena sendo montada NO ACERVO, fora da sessão. É um MODO
 	// declarado, e não `SessionID == 0`: zero também acontece por engano, e
@@ -111,11 +110,11 @@ type BoardView struct {
 	// PecasEscondidas responde "a emboscada está mesmo invisível?". Contar o que
 	// sobrou na tela não responde: ele não sabe o que não está vendo.
 	PecasEscondidas int
-	// Abas são os tabuleiros ABERTOS da sessão (ALE-205), e a barra só existe a
-	// partir de dois: com um só não há o que trocar, e a tira de fichas seria
-	// enfeite ocupando mapa. Ver `tableTabs`.
+	// Abas são os tabuleiros ABERTOS da sessão, e a barra só existe a partir de
+	// dois: com um só não há o que trocar, e a tira de fichas seria enfeite
+	// ocupando mapa. Ver `tableTabs`.
 	Abas []boardTab
-	// Puxado é a tira "o mestre trouxe você para cá", ou nil (ALE-205, fatia 2).
+	// Puxado é a tira "o mestre trouxe você para cá", ou nil.
 	//
 	// É o único aviso desta cena que fala de uma mudança que quem lê NÃO fez: a
 	// cortina e a lente são modos que o dono da tela ligou. Ver `removePull`.
@@ -160,8 +159,7 @@ type boardToken struct {
 	// ninguém calcula com ela.
 	SaiuDe string
 	Pegada int
-	// Monograma, Instancia e Matiz vêm da regra da ALE-179: a cor é da ESPÉCIE e
-	// o número é da INSTÂNCIA.
+	// Monograma, Instancia e Matiz: a cor é da ESPÉCIE e o número é da INSTÂNCIA.
 	Monograma string
 	Instancia string
 	Matiz     int
@@ -220,13 +218,12 @@ type boardSquare struct {
 //
 // A saúde chega de fora, num mapa por `entryId`, porque ela não é do tabuleiro:
 // é da FILA, e o tabuleiro só a mostra. Derivá-la aqui seria a segunda conta de
-// PV do app, que é como a ALE-122 começou.
+// PV do app.
 func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, saude map[string]int, naVez string, quem board.Mover, meus map[int64]bool, campaignID, sessionID int64) BoardView {
-	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que
-	// sai o "Abrir tabuleiro", e um botão sem rota não é botão. A primeira
-	// versão devolvia o zero e o mestre via a moldura tracejada sem gesto
-	// nenhum — o mesmo estado que o jogador vê, que é justamente o que as duas
-	// telas não podem ter em comum.
+	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que sai
+	// o "Abrir tabuleiro", e um botão sem rota não é botão. Devolver o zero aqui
+	// daria ao mestre a MESMA moldura tracejada sem gesto que o jogador vê, que
+	// é justamente o que as duas telas não podem ter em comum.
 	if b == nil {
 		return BoardView{
 			Mestre: quem.Role == "gm", CampaignID: campaignID, SessionID: sessionID,
@@ -240,8 +237,7 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, saude map[st
 	// "ainda não abri um tabuleiro".
 	// A cortina é o que a MESA vê, e não o que o mestre vê: para ele o
 	// `BoardForRole` devolveu a cena inteira, e esconder aqui tiraria o mapa de
-	// quem está montando a cena. A primeira versão disto não olhava o papel e o
-	// guarda acusou — "o mestre perdeu a própria cena com a cortina fechada".
+	// quem está montando a cena.
 	if b.Curtained && quem.Role != "gm" {
 		return BoardView{
 			Aberto: true, Cortina: true, CampaignID: campaignID, SessionID: sessionID,
@@ -251,10 +247,10 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, saude map[st
 	v := BoardView{
 		Aberto: true, AvisoDaCortina: b.Curtained,
 		Lugar: b.Place, Chao: chaoConhecido(b.Terrain),
-		// O ID DESTE tabuleiro, e ele vem do ESTADO e não da aba ativa (ALE-206):
-		// a aba é a escolha de quem olha, e a fonte de qual tabuleiro está
-		// desenhado é o próprio `b`. Ele é o que o COPIAR guarda na área, para o
-		// colar achar a original mesmo depois de a pessoa trocar de aba.
+		// O ID DESTE tabuleiro vem do ESTADO e não da aba ativa: a aba é a
+		// escolha de quem olha, e a fonte de qual tabuleiro está desenhado é o
+		// próprio `b`. Ele é o que o COPIAR guarda na área, para o colar achar a
+		// original mesmo depois de a pessoa trocar de aba.
 		TabuleiroID: b.ID,
 	}
 	comBloco := blocosDaFila(st)
@@ -292,9 +288,9 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, saude map[st
 	if v.Movimento != nil && v.Movimento.Meu {
 		v.Movimento.Restante = alcance.Restante
 	}
-	// A PEÇA POUSA ONDE FOI SOLTA (ALE-203, item 4) e por isso ela é a única
-	// coisa que se arrasta: o losango de destino sumiu junto, porque com a peça
-	// no fim do caminho ele era um segundo alvo em cima do primeiro.
+	// A PEÇA POUSA ONDE FOI SOLTA, e por isso ela é a única coisa que se
+	// arrasta: um losango de destino, com a peça já no fim do caminho, seria um
+	// segundo alvo em cima do primeiro.
 	v.Fantasma = dropWasWhereLandsToken(v.Pecas, v.Movimento, v.Mestre)
 	v.ArrastaAPeca = v.AlvoDoMovimento
 	return v
@@ -367,7 +363,7 @@ func boardTokenOf(t *board.BoardToken, saude map[string]int, comBloco map[string
 // texto que o leitor de tela recebe — sem ele a peça é um disco anônimo.
 func Coordinate(x, y int) string { return fmt.Sprintf("%d, %d", x, y) }
 
-// blocosDaFila diz quais combatentes têm bloco de criatura do mestre (ALE-206).
+// blocosDaFila diz quais combatentes têm bloco de criatura do mestre.
 //
 // Mapa por `entryId` como a saúde, e pela mesma razão: não é do tabuleiro, é da
 // FILA, e o tabuleiro só mostra. Ele decide se o menu da peça OFERECE o
@@ -386,7 +382,7 @@ func blocosDaFila(st *live.SessionRuntimeState) map[string]bool {
 	return comBloco
 }
 
-// saudeDaFila é quanto de PV resta a cada combatente, em porcentagem (ALE-188).
+// saudeDaFila é quanto de PV resta a cada combatente, em porcentagem.
 //
 // Lê o estado JÁ REDIGIDO: o combatente cujo PV o mestre ocultou chega sem
 // `HpMax`, não entra no mapa, e a peça dele sai sem barra. É assim que a redação
@@ -431,7 +427,7 @@ func tokenName(p boardToken) string {
 	nome := p.Rotulo + " em " + p.Onde
 	// A PARADA PROPOSTA na frase, porque a peça está desenhada nela: sem esta
 	// linha o leitor de tela ouviria a peça já no destino e concluiria que o
-	// movimento aconteceu (ALE-203, item 4).
+	// movimento aconteceu.
 	if p.SaiuDe != "" {
 		nome += " — parada proposta, saiu de " + p.SaiuDe
 	}
@@ -446,11 +442,9 @@ func tokenName(p boardToken) string {
 
 // markerColor traduz a cor guardada para a variável que pinta.
 //
-// A lista vem do `tabuleiro` e NÃO é escrita aqui, e esta função é a prova de
-// por quê: ela mantinha um conjunto próprio em inglês — `gold/red/green/blue/
-// violet` — enquanto a autoridade sempre aceitou `ouro/carmim/azul/verde`.
-// Nenhuma das cinco casava com nenhuma das quatro, então TODO marcador do app
-// caía no dourado, inclusive o carmim escolhido na outra tela. Nada estourava.
+// A lista de cores conhecidas vem do `board` e NÃO é escrita aqui: um conjunto
+// próprio que não casasse com o da autoridade jogaria TODO marcador no padrão,
+// sem estourar nada.
 //
 // A cor vem do banco, então é dado de cliente: fora da lista ela cai no padrão,
 // porque string livre daqui iria direto para o `style`.
@@ -461,7 +455,7 @@ func markerColor(c string) string {
 	return "var(--marcador-" + board.DefaultMarkerColor() + ")"
 }
 
-// ── o MOVIMENTO em curso (ALE-266) ───────────────────────────────────────────
+// ── o MOVIMENTO em curso ─────────────────────────────────────────────────────
 //
 // O movimento é uma sequência de PARADAS, e não um destino: a pessoa move a peça
 // para uma casa e pode mover de novo, contornando o que quiser. Mas nada disso
@@ -469,8 +463,8 @@ func markerColor(c string) string {
 // acumulado, e a última parada é o último quadrado dele. Acrescentar uma parada
 // é estender o caminho; e o alcance sai do fim dele com o que sobrou.
 //
-// Foi essa observação que apagou metade do desenho que eu ia fazer: eu ia
-// guardar as paradas num sinal do cliente, com o problema de sumirem num F5.
+// Guardar as paradas num sinal do CLIENTE era a outra opção, e elas sumiriam
+// num F5.
 
 // moveView é o movimento proposto, do ponto de vista de quem olha.
 type moveView struct {
@@ -496,8 +490,8 @@ type moveView struct {
 	// Cancelar está ali do lado, dizendo isso com a palavra certa.
 	PodeDesfazer bool
 	// Origem é a casa de onde a peça SAIU, e ela existe porque a peça deixou de
-	// ficar lá: desde a ALE-203 (item 4) a peça é desenhada onde foi SOLTA, e
-	// quem marca o começo do movimento é o fantasma nesta casa.
+	// ficar lá: a peça é desenhada onde foi SOLTA, e quem marca o começo do
+	// movimento é o fantasma nesta casa.
 	Origem boardSquare
 	// Fim é a casa onde a peça pousa, que é o fim do caminho. É dela que o
 	// arrasto da próxima parada conta o deslocamento — a peça está lá.
@@ -543,16 +537,16 @@ func moveBoard(b *board.BoardState, m board.Mover) *moveView {
 	for _, q := range p.Path {
 		v.Trilha = append(v.Trilha, boardSquare{X: q.X, Y: q.Y})
 	}
-	// As duas PONTAS do caminho, que desde a ALE-203 (item 4) têm desenho de
-	// peça: o fantasma sai da origem e a peça pousa no fim.
+	// As duas PONTAS do caminho têm desenho de peça: o fantasma sai da origem e
+	// a peça pousa no fim.
 	if len(p.Path) > 0 {
 		inicio, fim := p.Path[0], p.Path[len(p.Path)-1]
 		v.Origem = boardSquare{X: inicio.X, Y: inicio.Y}
 		v.Fim = boardSquare{X: fim.X, Y: fim.Y}
 	}
 	// A SETA, os RÓTULOS em metros e a divisão dourado/vermelho saem das MESMAS
-	// dobras e do MESMO terreno (ALE-203, item 13): é o que faz o número escrito
-	// sobre a linha explicar a cor dela em vez de contradizê-la.
+	// dobras e do MESMO terreno: é o que faz o número escrito sobre a linha
+	// explicar a cor dela em vez de contradizê-la.
 	dobras := moveFolds(p)
 	custos := legsCosts(dobras, moveTerrain(b))
 	v.Fio, v.FioSegundo, v.FioAlem = moveWires(dobras, custos, p.Budget)
@@ -618,14 +612,12 @@ func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, quem boar
 	}
 	if alvo == "" && b.Pending == nil {
 		for i := range b.Tokens {
-			// A POSSE é por PEÇA e não por pessoa, e a primeira versão disto
-			// esqueceu: o `Mover` carrega um booleano só, e eu o deixei em falso
-			// no caminho de leitura enquanto o de escrita o resolvia. O efeito era
-			// o jogador NA VEZ dele não ver alcance nenhum — a tela dizia que ele
-			// não podia mover a própria peça, e só o guarda acusou.
+			// A POSSE é por PEÇA e não por pessoa: o `Mover` carrega um booleano
+			// só, e deixá-lo em falso aqui tira o alcance do jogador NA VEZ dele
+			// — a tela diria que ele não pode mover a própria peça.
 			//
 			// Quem responde é o `meus`, montado contra o banco pelo `tableRoster`:
-			// a ponte até a pessoa é o DONO do personagem (ALE-33).
+			// a ponte até a pessoa é o DONO do personagem.
 			dela := quem
 			if id := b.Tokens[i].CharacterID; id != nil {
 				dela.OwnsCharacter = meus[*id]
@@ -672,39 +664,28 @@ func screenSquares(casas []engine.Square) []boardSquare {
 	return out
 }
 
-// moveBalance diz o que SOBRA — ou o que passou (ALE-203, item 13).
+// moveBalance diz o que SOBRA do deslocamento, ou "" quando o caminho passou.
 //
-// O rodapé dizia "sobram %d" sempre, e desde que o caminho caro passou a ser
-// aceito esse número parava em ZERO: o `reachAndTarget` trava o restante
-// em zero de propósito, porque ele alimenta o desenho das casas alcançáveis e
-// alcance negativo não é lugar nenhum. O efeito era um rodapé que dizia "sobram
-// 0" para um caminho que passou três quadrados do deslocamento — verdade sobre
-// o alcance, silêncio sobre o excesso, e a pessoa sem saber quanto encurtar.
+// O `Restante` não serve para dizer o excesso: o `reachAndTarget` o trava em
+// zero de propósito, porque ele alimenta o desenho das casas alcançáveis e
+// alcance negativo não é lugar nenhum.
 //
-// Em METROS, e não em quadrados como o resto da frase: este número é a leitura
-// do trecho VERMELHO da seta, e é ali que a pessoa vai conferi-lo. Duas unidades
-// para a mesma grandeza obrigariam a converter de cabeça justamente na conta que
-// decide o próximo clique.
-//
-// @example moveBalance(&moveView{Custo: 8, Orcamento: 6}) // "ação de movimento + ação principal"
+// @example moveBalance(&moveView{Custo: 4, Orcamento: 6, Restante: 2}) // "sobram 2"
 func moveBalance(m *moveView) string {
 	if m.Custo <= m.Orcamento {
 		return fmt.Sprintf("sobram %d", m.Restante)
 	}
 	// PASSANDO DO DESLOCAMENTO não há saldo a dizer, e quem conta a história é a
-	// LEGENDA logo abaixo. "15,0m além do deslocamento" media a mesma coisa que a
-	// faixa acesa, e ainda ficou ambígua quando surgiu o segundo limiar — além de
-	// QUAL dos dois? O metro por perna continua escrito sobre a seta, que é onde
-	// ele explica a cor.
+	// LEGENDA logo abaixo. Um "além do deslocamento" mediria a mesma coisa que a
+	// faixa acesa, e fica ambíguo com dois limiares — além de QUAL dos dois? O
+	// metro por perna continua escrito sobre a seta, que é onde ele explica a cor.
 	return ""
 }
 
 // spentActions nomeia o que o caminho CUSTA em ações do turno (T20 p233).
 //
-// É a pergunta que o dono pôs em primeiro lugar — *"eles poderão ver o quanto a
-// peça deles pode mover e se eles precisam gastar a ação de movimento e a ação
-// principal"* — e ela não se responde com quadrados: "13 de 6" diz que estourou,
-// não diz que estourar aqui é legítimo e custa o turno inteiro.
+// Em AÇÕES e não em quadrados: "13 de 6" diz que estourou, não diz que estourar
+// aqui é legítimo e custa o turno inteiro.
 //
 // A frase é a MESMA leitura das cores da seta, em palavras: quem não distingue o
 // azul do vermelho no mapa lê aqui, e quem lê o mapa confirma aqui.
@@ -716,10 +697,8 @@ func spentActions(m *moveView) string {
 
 // moveRange é uma linha da LEGENDA das cores, no rodapé do movimento.
 //
-// Ela existe porque as três cores não se explicavam: o dono reparou que "não tem
-// um modo do usuário saber o que as cores indicam". Um mapa que ensina a regra
-// pela cor só ensina se disser o que a cor quer dizer — senão ele pede que a
-// mesa adivinhe, e adivinhar cor é pior que não ter cor.
+// Um mapa que ensina a regra pela cor só ensina se disser o que a cor quer dizer
+// — senão ele pede que a mesa adivinhe, e adivinhar cor é pior que não ter cor.
 type moveRange struct {
 	Classe string
 	Texto  string
@@ -808,9 +787,8 @@ func moveCommand(v BoardView, acao string) string {
 // clickedPointStop traduz o PONTO do clique em quadrado do plano.
 //
 // A conta é do cliente e não do servidor porque ela é sobre PIXELS: o servidor
-// não sabe o zoom, que é do navegador desde que o enquadramento saiu do HTML.
-// Mas ela não é REGRA — é a mesma conversão que o `squareAt` da SPA faz —, e
-// tudo o que decide (o caminho, o custo, se cabe) continua do outro lado.
+// não sabe o zoom, que é do navegador. Mas ela não é REGRA — tudo o que decide
+// (o caminho, o custo, se cabe) continua do outro lado.
 //
 // `offsetX/offsetY` são relativos à camada, que cobre o plano inteiro; a origem
 // da moldura entra somada porque o quadrado 0 da tela é o `X0` do plano, e ele
@@ -845,21 +823,16 @@ func clickedPointStop(v BoardView) string {
 // janela recebe o evento com ou sem captura. Captura seria redundante e é a
 // única chamada da expressão que LANÇA — `NotFoundError` quando o `pointerId`
 // não é de um ponteiro ativo. E uma expressão Datastar que lança aborta a
-// propagação DEPOIS de já ter escrito os sinais: o `pointerup` calculava o
-// deslocamento certo (a URL saía `parada/4/3`) enquanto `data-class` e
-// `data-attr:style` nunca reagiam — o gesto funcionava e era invisível.
-// O QUE `$dragging` GUARDA É UMA IDENTIDADE, e não o nome do gesto (ALE-299).
+// propagação DEPOIS de já ter escrito os sinais: o `pointerup` calcularia o
+// deslocamento certo enquanto `data-class` e `data-attr:style` nunca reagiriam
+// — o gesto funcionando e invisível.
 //
-// Ele guardava o literal `'peca'` — igual para TODAS as peças —, e cada peça
-// pendura o próprio par de ouvintes na janela. Com duas no rascunho, os dois
-// `pointerup` passavam na mesma guarda e o PRIMEIRO DO DOM vencia: pegar o Beta
-// movia o Alfa, que corria atrás do dedo desde o primeiro quadro. Com uma peça
-// só o primeiro do DOM É o arrastado, e por isso o defeito atravessou a fatia
-// inteira com a suíte verde.
-//
-// Hoje o valor é o ID da peça, ou `dragsTheParty` quando o gesto move o grupo. A
-// ordem dos ouvintes deixou de importar porque cada expressão só reconhece a si
-// mesma.
+// O QUE `$dragging` GUARDA É UMA IDENTIDADE, e não o nome do gesto: o ID da
+// peça, ou `dragsTheParty` quando o gesto move o grupo. Cada peça pendura o
+// próprio par de ouvintes na JANELA, então um valor igual para todas faria os
+// `pointerup` de todas passarem na mesma guarda e o primeiro do DOM vencer —
+// pegar uma peça moveria outra. Com o ID, cada expressão só reconhece a si
+// mesma e a ordem dos ouvintes não importa.
 func startsTheDrag(quem string) string {
 	return fmt.Sprintf(
 		"$dragging = '%s'; $drag_start_x = evt.clientX; $drag_start_y = evt.clientY; "+
@@ -876,10 +849,8 @@ const dragsTheParty = "grupo"
 // dragsItself responde se o `pointerdown` DESTA peça move ELA, e não o grupo.
 //
 // Os quatro pedaços do gesto — pegar, seguir, soltar e deslocar na tela — têm de
-// concordar sobre isso, e a divisa mora aqui numa vez só justamente porque eles
-// divergiram: o `tokenStyling` já perguntava `v.ArrastaAPeca == p.ID` enquanto o
-// `takeToken` perguntava `v.Rascunho || v.ArrastaAPeca == id`. No rascunho isso
-// dava a classe de arrasto a UMA peça e o gesto a todas.
+// concordar sobre isso, e por isso a divisa mora aqui numa vez só. Cada um com a
+// sua pergunta dá a classe de arrasto a UMA peça e o gesto a todas.
 func dragsItself(v BoardView, id string) bool {
 	return v.Rascunho || v.ArrastaAPeca == id
 }
@@ -938,14 +909,13 @@ const erasePreview = "$preview_arrow_fits = ''; $preview_arrow_second = ''; $pre
 // propor ali gastaria uma parada no lugar onde a peça já está. Os sinais são
 // limpos NOS DOIS caminhos, senão o `transform` fica pendurado e a peça não
 // volta para o lugar.
-// A PEÇA MARCADA move o GRUPO, e não propõe (ALE-203, item 10).
 //
-// A decisão fica AQUI, num lugar só, porque ela é sobre o que o gesto SIGNIFICA:
-// arrastar a peça da vez propõe um movimento com custo, e arrastar uma peça
-// marcada reposiciona o grupo. Sem esta linha, a peça que é as duas coisas —
-// marcada E alvo do turno — proporia, e o mesmo arrasto significaria coisas
-// diferentes conforme um estado que não está na ponta do dedo. Medido no
-// navegador: marcar o Bandido e arrastá-lo abria a barra de "14 quadrados".
+// A PEÇA MARCADA move o GRUPO, e não propõe. A decisão fica AQUI, num lugar só,
+// porque ela é sobre o que o gesto SIGNIFICA: arrastar a peça da vez propõe um
+// movimento com custo, e arrastar uma peça marcada reposiciona o grupo. Sem
+// esta linha, a peça que é as duas coisas — marcada E alvo do turno — proporia,
+// e o mesmo arrasto significaria coisas diferentes conforme um estado que não
+// está na ponta do dedo.
 //
 // MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
 func dropFor(v BoardView, quem string, x, y int) string {
@@ -966,12 +936,9 @@ func dropFor(v BoardView, quem string, x, y int) string {
 // As variáveis do arrasto moram SÓ no `#table`, e descem por herança até quem
 // está sendo arrastado.
 //
-// A razão é que o `data-attr:style` SUBSTITUI o atributo inteiro. Eu escrevi
-// este aviso e mesmo assim pus o `data-attr:style` no destino também: o
-// resultado foi o `style` dele virar só as variáveis do arrasto, apagando o
-// `--col`/`--lin` que o POSICIONAVAM — o marcador ia parar na quina do plano.
-// Só a medição no navegador mostrou, porque o atributo continuava lá e com cara
-// de certo.
+// A razão é que o `data-attr:style` SUBSTITUI o atributo inteiro: pô-lo num
+// elemento posicionado apaga o `--col`/`--lin` que o posicionava, e a coisa vai
+// parar na quina do plano. O atributo continua lá e com cara de certo.
 //
 // A expressão ficou inline no `table.templ`, num lugar só, para não haver
 // um segundo elemento tentado a usá-la.
@@ -1012,7 +979,7 @@ func takeToken(v BoardView, id string) string {
 //
 // As coordenadas são as DESENHADAS (`p.X`/`p.Y`), que com movimento proposto são
 // o fim do caminho — é o que faz a próxima parada contar do lugar onde a peça
-// está (ALE-203, item 4).
+// está.
 func dropToken(v BoardView, p boardToken) string {
 	if !dragsItself(v, p.ID) {
 		return dropParty(v)
@@ -1023,7 +990,7 @@ func dropToken(v BoardView, p boardToken) string {
 	return erasePreview + "; " + dropFor(v, p.ID, p.X, p.Y)
 }
 
-// draftMoveDrop põe a peça ONDE ELA FOI SOLTA, e acabou (ALE-292).
+// draftMoveDrop põe a peça ONDE ELA FOI SOLTA, e acabou.
 //
 // O arrasto da mesa manda uma PARADA e o servidor devolve uma proposta com
 // custo, para alguém confirmar. Aqui não há vez para gastar nem mesa para
@@ -1080,9 +1047,9 @@ func sceneBoardCommand(v BoardView, acao string) string {
 // formato vem do banco em ISO, e cortar no `T` é mais honesto que reformatar —
 // não inventa fuso que o servidor não guardou.
 func campaignCollection(lugares []board.Place, abertos []*board.BoardState) []lugarDoAcervo {
-	// O índice é montado UMA vez: com 148 lugares e oito abas, comparar cada
-	// linha com cada aba é a lista inteira multiplicada pelo número de cenas
-	// abertas, a cada carga da página e a cada quadro do stream.
+	// O índice é montado UMA vez: comparar cada linha com cada aba é a lista
+	// inteira multiplicada pelo número de cenas abertas, a cada carga da página
+	// e a cada quadro do stream.
 	naMesa := make(map[string]string, len(abertos))
 	for _, aberto := range abertos {
 		naMesa[aberto.Place] = aberto.ID
@@ -1111,7 +1078,7 @@ func placeCommand(v BoardView, placeID int64, acao string) string {
 	return fmt.Sprintf("@post('%s/lugares/%d/%s')", v.Base, placeID, acao)
 }
 
-// tabCommand escreve a troca de aba a partir do acervo (ALE-205, fatia 3).
+// tabCommand escreve a troca de aba a partir do acervo.
 //
 // A MESMA rota que a barra de abas usa, e não uma "reabrir que só troca": o que
 // se quer aqui é literalmente ir até a aba que já existe, e uma segunda porta
@@ -1120,20 +1087,16 @@ func tabCommand(v BoardView, tabuleiroID string) string {
 	return fmt.Sprintf("@post('%s/aba/%s')", v.Base, tabuleiroID)
 }
 
-// ── ONDE O TABULEIRO POSTA (ALE-292) ─────────────────────────────────────────
+// ── ONDE O TABULEIRO POSTA ───────────────────────────────────────────────────
 //
-// As vinte e cinco chamadas do tabuleiro escreviam `/mesa/%d/%d/tabuleiro` à
-// mão, cada uma com o par `v.CampaignID, v.SessionID` no fim do `Sprintf`.
-// Enquanto houve uma superfície só isso foi barato; com o RASCUNHO DE LUGAR são
-// duas, e o mesmo gesto (pintar, pôr peça, marcar) posta em endereços
-// diferentes conforme o que está sendo montado — a mesa de sábado ou o acervo
-// da campanha.
+// O mesmo gesto (pintar, pôr peça, marcar) posta em endereços diferentes
+// conforme o que está sendo montado — a mesa de sábado ou o rascunho de um
+// lugar do acervo. Por isso o prefixo é DADO da `BoardView` (`Base`) e não um
+// literal em cada chamada: quem monta a view decide para onde os gestos dela
+// vão, e nenhum desenho precisa saber que existe mais de um destino.
 //
-// Por isso o prefixo virou DADO da `BoardView` (`Base`) e não continua sendo
-// literal: quem monta a view decide para onde os gestos dela vão, e nenhum
-// desenho precisa saber que existe mais de um destino. As duas funções abaixo
-// são os únicos lugares do pacote onde o caminho do tabuleiro é escrito, e é
-// isso que o `TestNoBoardRouteIsHandwritten` varre.
+// As duas funções abaixo são os únicos lugares do pacote onde o caminho do
+// tabuleiro é escrito, e é isso que o `TestNoBoardRouteIsHandwritten` varre.
 
 // tableBoardBase é o tabuleiro DA MESA: a cena que a sessão está jogando.
 func tableBoardBase(campaignID, sessionID int64) string {
@@ -1141,21 +1104,15 @@ func tableBoardBase(campaignID, sessionID int64) string {
 }
 
 // placeDraftBase é o tabuleiro do RASCUNHO: a cena que o mestre monta no acervo
-// da campanha, fora da sessão (ALE-292).
+// da campanha, fora da sessão.
 //
 // Sem sessão no caminho de propósito — o rascunho é do ACERVO e sobrevive a
-// qualquer sessão, que é a diferença que a issue nomeia entre ele e a cortina.
+// qualquer sessão.
 func placeDraftBase(campaignID, placeID int64) string {
 	return routes.PlaceDraft(campaignID, placeID) + "/tabuleiro"
 }
 
-// ── o PINCEL de terreno (ALE-264, item 5) ────────────────────────────────────
-//
-// UM SINAL para a ferramenta ativa, `pincel`, e não um por espécie. A razão veio
-// da sessão da main, que estava consertando o gêmeo disto na SPA: cinco
-// alternadores independentes deixam ligar dois ao mesmo tempo, e o estado
-// impossível não estoura — ele aparece como o clique indo para a ferramenta
-// errada. Com um sinal só, escolher uma DESescolhe as outras por construção.
+// ── o PINCEL de terreno ──────────────────────────────────────────────────────
 //
 // Vazio é o pincel guardado, e aí o clique volta a mover a peça. É a mesma
 // superfície disputada por dois gestos, e quem arbitra é o sinal.
@@ -1166,11 +1123,10 @@ func placeDraftBase(campaignID, placeID int64) string {
 // o clique ao movimento sem precisar de mais um botão "nenhum".
 //
 // UM SINAL SÓ, e o valor É a ferramenta: as quatro espécies de terreno, o
-// `marcador`, e vazio para mover. A exclusão fica POR CONSTRUÇÃO — não há como
-// duas estarem ligadas, e ninguém precisa lembrar de desligar a vizinha ao
-// acrescentar a sexta. É a mesma conclusão a que a ALE-203 chegou na SPA, onde
-// cinco sinais soltos deixavam pincel e régua ligados ao mesmo tempo, com um
-// roubando o clique do outro.
+// `marcador`, e vazio para mover. Alternadores independentes deixam ligar dois
+// ao mesmo tempo, e o estado impossível não estoura — ele aparece como o clique
+// indo para a ferramenta errada. Aqui a exclusão fica POR CONSTRUÇÃO, e ninguém
+// precisa lembrar de desligar a vizinha ao acrescentar a sexta.
 func pickTool(qual string) string {
 	return fmt.Sprintf("$tool = ($tool === %q ? '' : %q)", qual, qual)
 }
@@ -1182,33 +1138,29 @@ func pickTool(qual string) string {
 // uma ferramenta que a tela liga e o mapa nunca escuta.
 const MarkTool = "marcador"
 
-// NewPieceTool é o valor do sinal quando o clique CRIA uma peça avulsa
-// (ALE-291).
+// NewPieceTool é o valor do sinal quando o clique CRIA uma peça avulsa.
 //
 // Ela é ferramenta pela divisa que o trilho já desenha — "ferramenta muda o que
 // o CLIQUE faz, ação acontece uma vez e acaba" — e mesmo assim NÃO entra na
-// fileira numerada. O `railKeys` tem dez dígitos e o comentário do `numberRail`
-// defende esse teto por escrito: a décima primeira "não ganha uma letra
-// sorteada — ela pede outra ideia". A ideia é esta: um modo ao lado do trilho,
-// que é valor do MESMO sinal `$tool` e por isso continua excluindo as
-// outras por construção.
+// fileira numerada: o `railKeys` tem dez dígitos e a décima primeira ferramenta
+// não ganha uma letra sorteada. Ela é um modo ao lado do trilho, valor do MESMO
+// sinal `$tool`, e por isso continua excluindo as outras por construção.
 //
 // Sem atalho de tecla, então, e de propósito. O botão é focável e é o caminho
-// de teclado; inventar uma letra seria exatamente o que o comentário recusa.
+// de teclado.
 const NewPieceTool = "peca-nova"
 
 // clickedSquareNewPiece cria a peça avulsa NA CASA CLICADA.
 //
-// ELE NOMEIA OS TRÊS SINAIS, e essa é a diferença desta rota para as outras
-// vinte e uma da ALE-305 (ALE-306). O `payload` do Datastar SUBSTITUI os sinais
-// em vez de acrescentá-los, então um gesto que precisa da casa E do formulário
-// tem de listar o formulário à mão.
+// ELE NOMEIA OS TRÊS SINAIS porque o `payload` do Datastar SUBSTITUI os sinais
+// em vez de acrescentá-los: um gesto que precisa da casa E do formulário tem de
+// listar o formulário à mão.
 //
 // O preço é uma grafia a mais de cada nome de sinal, num lugar que um `grep` de
-// `$nome` não acha — e o modo de falhar é o da família: esquecer um faz a peça
-// nascer sem aquele campo, em silêncio. Quem cobra é o
-// `TestEveryPayloadKeyMatchesTheSignalItReads`: a chave tem de ter o nome do
-// sinal que ela lê, então `new_token_name: $new_token_look` reprova.
+// `$nome` não acha — e esquecer um faz a peça nascer sem aquele campo, em
+// silêncio. Quem cobra é o `TestEveryPayloadKeyMatchesTheSignalItReads`: a
+// chave tem de ter o nome do sinal que ela lê, então
+// `new_token_name: $new_token_look` reprova.
 func clickedSquareNewPiece(v BoardView) string {
 	return fmt.Sprintf(
 		"@post('%s/pecas/nova', {payload: {from: {x: %s, y: %s}, "+
@@ -1268,7 +1220,7 @@ func pickMarker(id string) string {
 	return fmt.Sprintf("$marker_chosen = ($marker_chosen === %q ? '' : %q)", id, id)
 }
 
-// curtainCommand escreve o gesto que fecha ou abre (ALE-202, ALE-269).
+// curtainCommand escreve o gesto que fecha ou abre.
 func curtainCommand(v BoardView, estado string) string {
 	return fmt.Sprintf("@post('%s/cortina/%s')", v.Base, estado)
 }

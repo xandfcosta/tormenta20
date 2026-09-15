@@ -9,32 +9,23 @@ import (
 	"t20engine/serve/web/characters"
 )
 
-// A FICHA como dado (ALE-272, fatia 1) — a casca, as abas e o crachá.
+// A FICHA como dado: a casca, as abas e o crachá.
 //
-// É a última tela sem contraparte em Datastar, e é ela que segura a SPA inteira
-// de pé. Esta fatia entrega o que a ficha tem de ENVOLTÓRIO: o endereço, as sete
-// abas e o crachá do jogador. Os painéis vêm um por fatia, do menor para o
-// maior — e enquanto um deles não chegou, a aba dele DIZ isso e leva para a
-// ficha antiga, em vez de mostrar um vazio que parece defeito.
-//
-// A ficha chega COMPUTADA DO SERVIDOR, pela mesma `ComputeSheetV2` que a Mesa e
-// a cena de personagens já usam. É a decisão 2 da ALE-225 em ação: sem o
-// requisito de offline, não há por que a conta acontecer no navegador. O motor
-// que rodava lá saiu junto com a SPA (ALE-272).
+// Ela chega COMPUTADA DO SERVIDOR, pela mesma `ComputeSheetV2` que a Mesa e a
+// cena de personagens usam — sem requisito de offline, não há por que a conta
+// acontecer no navegador.
 
 // View é a ficha de um personagem pronta para desenhar.
 type View struct {
 	ID   int64
 	Nome string
-	// Versao é o `updatedAt` do personagem, e ela existe só para a ficha
-	// EMBUTIDA (ALE-275): o ouvinte que repede a ficha compara o carimbo que o
-	// stream mandou com o que já está na tela, e não pede nada quando são o
-	// mesmo. Sem isso, um gesto do próprio jogador produzia DOIS pedidos — o
-	// dele e o do aviso que a escrita dele acabou de provocar —, e a ficha era
-	// desenhada duas vezes por clique.
+	// Versao é o `updatedAt` do personagem, e existe só para a ficha EMBUTIDA: o
+	// ouvinte que repede a ficha compara o carimbo do stream com o que já está
+	// na tela, e não pede nada quando são o mesmo. Sem isso, um gesto do próprio
+	// jogador produz DOIS pedidos — o dele e o do aviso que a escrita dele
+	// acabou de provocar.
 	Versao string
-	// Embutida diz que esta ficha está sendo desenhada DENTRO da sessão
-	// (ALE-272, fatia 10b), como a superfície "Minha ficha" da SPA.
+	// Embutida diz que esta ficha está sendo desenhada DENTRO da sessão.
 	//
 	// Ela muda duas coisas na tela, e as duas são sobre NAVEGAÇÃO: a barra com
 	// o "‹ Voltar" some (a sessão tem cabeçalho próprio, e voltar dali tiraria
@@ -69,31 +60,30 @@ type View struct {
 	// AbaAtiva é o valor resolvido — nunca o que veio na URL cru, que pode ser
 	// um endereço antigo ou lixo digitado.
 	AbaAtiva string
-	// Proficiencias são os dois blocos do painel homônimo (fatia 2). Elas são
-	// computadas SEMPRE, e não só quando a aba está aberta: são sete linhas
-	// derivadas de dado que a ficha já carregou, e um `if` aqui trocaria
-	// microssegundos por um ramo a mais para um guarda cobrir.
+	// Proficiencias são os dois blocos do painel homônimo. Elas são computadas
+	// SEMPRE, e não só quando a aba está aberta: são sete linhas derivadas de
+	// dado que a ficha já carregou, e um `if` aqui trocaria microssegundos por um
+	// ramo a mais para um guarda cobrir.
 	Proficiencias []proficiencyGroup
-	// Combat é a aba homônima (fatia 3). Como as Proficiências, ela é computada
-	// SEMPRE: o motor já roda uma vez por carga da ficha para a Defesa do
-	// crachá, e repartir esse resultado custa menos que um `if` a mais para um
-	// guarda cobrir.
+	// Combat é a aba homônima, computada SEMPRE pela mesma razão: o motor já roda
+	// uma vez por carga da ficha para a Defesa do crachá, e repartir esse
+	// resultado custa menos que um `if` a mais.
 	Combat panelCombat
-	// Expertises é a aba homônima (fatia 4). Ela é a única que depende do que a
-	// pessoa DIGITOU — o filtro da busca —, e por isso a `Load` recebe o
-	// termo em vez de o painel ir buscá-lo.
+	// Expertises é a aba homônima. Ela é a única que depende do que a pessoa
+	// DIGITOU — o filtro da busca —, e por isso a `Load` recebe o termo em vez de
+	// o painel ir buscá-lo.
 	Expertises expertisePanel
-	// Effects é a aba homônima (fatia 5) — tudo que está mexendo nos números
-	// AGORA, em quatro blocos que diferem por quem é dono do estado.
+	// Effects é a aba homônima — tudo que está mexendo nos números AGORA, em
+	// quatro blocos que diferem por quem é dono do estado.
 	Effects effectsPanel
-	// Spells é a aba homônima (fatia 6) — o grimório, as concedidas por poder e
-	// o catálogo inteiro do Capítulo 4 para aprender.
+	// Spells é a aba homônima — o grimório, as concedidas por poder e o catálogo
+	// inteiro do Capítulo 4 para aprender.
 	Spells spellbookPanel
-	// Bag é a aba homônima (fatia 7) — a tira de equipados, a carga da p141, o
-	// dinheiro e a grade do que está guardado.
+	// Bag é a aba homônima — a tira de equipados, a carga da p141, o dinheiro e a
+	// grade do que está guardado.
 	Bag bagPanel
-	// Powers é a aba homônima (fatia 8) — a lista de jogo: o que se ativa em
-	// cima, o que é passivo recolhido embaixo.
+	// Powers é a aba homônima — a lista de jogo: o que se ativa em cima, o que é
+	// passivo recolhido embaixo.
 	Powers powersPanel
 	// Choices é o diálogo de escolher poderes — a administração da ficha.
 	Choices choicesPanel
@@ -125,25 +115,22 @@ type sheetVital struct {
 
 // Tab é uma das sete seções da ficha.
 type Tab struct {
-	// Valor é o que vai na URL, e ele é o MESMO da SPA — ver `Tabs`.
+	// Valor é o que vai na URL — ver `Tabs`.
 	Valor  string
 	Rotulo string
 	Icone  string
 	Ativa  bool
 }
 
-// Tabs são as sete seções, na ORDEM da SPA.
+// Tabs são as sete seções, na ordem em que aparecem.
 //
-// # Os valores são endereço guardado, e não se "arrumam"
-//
-// `?tab=abilities` continua sendo Poderes, e o comentário da SPA diz por quê: o
-// valor sobreviveu de propósito ao renome Habilidades→Poderes, porque link
+// OS VALORES SÃO ENDEREÇO GUARDADO, e não se "arrumam": `?tab=abilities`
+// continua sendo Poderes apesar do renome Habilidades→Poderes, porque link
 // compartilhado e favorito apontam para ele. O mesmo vale para a chave `tab`
 // estar em inglês enquanto a tela fala português — ela é FRONTEIRA (GLOSSARY
 // §F), e trocá-la quebraria endereços para ganhar estética.
 //
-// A ordem é a do `SHEET_PANELS`, e a primeira é o padrão de quem chega sem
-// `?tab=`.
+// A primeira é o padrão de quem chega sem `?tab=`.
 func Tabs() []Tab {
 	return []Tab{
 		{Valor: "expertises", Rotulo: "Perícias", Icone: "Scroll"},
@@ -168,19 +155,15 @@ func AskedTab(bruto string) string {
 	return Tabs()[0].Valor
 }
 
-// Load busca o personagem e computa a ficha.
-//
-// A POSSE é conferida como em toda rota de personagem: quem não é dono não
-// abre. O `characterFor` é o mesmo gargalo que a API JSON usa — a cena não
-// ganha uma segunda regra sobre quem pode ver a ficha de quem.
 // Load monta a ficha de um personagem para desenhar.
 //
+// A POSSE é conferida aqui, como em toda rota de personagem: a cena não ganha
+// uma segunda regra sobre quem pode ver a ficha de quem.
+//
 // Ela é exportada porque a MESA a chama: o jogador vê a própria ficha dentro da
-// sessão (ALE-275), e o painel é o MESMO desenho — parametrizado por
-// `View.Embutida`. É a mesma direção do `master.LoadBestiaryFrom` e do
-// `characters.Load`: a cena diz como montar a si mesma, e quem compõe é o
-// hospedeiro. A alternativa era um segundo desenho da ficha mantido em dois
-// lugares.
+// sessão, e o painel é o MESMO desenho, parametrizado por `View.Embutida`. A
+// cena diz como montar a si mesma, e quem compõe é o hospedeiro; a alternativa
+// era um segundo desenho da ficha mantido em dois lugares.
 //
 // O status é o do HTTP porque quem chama responde por HTTP; a cena não escreve
 // resposta nenhuma.
@@ -242,7 +225,7 @@ func (s Scene) Load(
 //
 // A FRAÇÃO é o que a mesa fala em voz alta ("doze de vinte"), e a porcentagem é
 // só a largura da barra. Máximo ZERO não vira divisão por zero nem barra cheia:
-// quem não tem mana tem a barra vazia e apagada, que é o que a SPA faz.
+// quem não tem mana tem a barra vazia e apagada.
 func vital(atual, max int64) sheetVital {
 	v := sheetVital{Atual: atual, Max: max, Fracao: strconv.FormatInt(atual, 10) + "/" + strconv.FormatInt(max, 10)}
 	if max <= 0 {
@@ -259,11 +242,8 @@ func vital(atual, max int64) sheetVital {
 	return v
 }
 
-// sheetRoute é PARA ONDE se abre uma ficha no app.
-//
-// Uma função e não um `Sprintf` espalhado, pela mesma razão do `routes.Table`: no
-// dia da virada ela é o único lugar que precisa ser lido para saber quem manda
-// para onde.
+// sheetRoute é PARA ONDE se abre uma ficha no app — uma função e não um
+// `Sprintf` espalhado, para haver um lugar só a ler quando o endereço mudar.
 //
 // @example sheetRoute(7, "bag") // "/personagens/7?tab=bag"
 func sheetRoute(id int64, aba string) string {
@@ -289,8 +269,7 @@ func routeVital(rotulo string) string {
 //
 // O MENOS É O SINAL TIPOGRÁFICO (U+2212) e não o hífen: no mesmo tamanho de
 // fonte o hífen fica mais curto e mais alto que o traço do "+", e a fileira dos
-// quatro botões desalinha. É a mesma escolha que o enquadramento do tabuleiro já
-// faz.
+// quatro botões desalinha.
 func stepSignal(passo int) string {
 	if passo < 0 {
 		return "−" + strconv.Itoa(-passo)
@@ -314,11 +293,9 @@ func stepLabel(rotulo string, passo int) string {
 
 // stepClasses monta as classes com a elegibilidade de cada uma.
 //
-// A REGRA É A DA SPA, e o comentário dela diz por que existe: *"a single-class
-// character steps straight; a multiclass one is ASKED which class takes the
-// level — guessing would silently put a Bardo level on the Guerreiro"*. Adivinhar
-// é o defeito, e ele é silencioso: a ficha fecha certo no total e errado na
-// classe, e só aparece quando alguém for usar um poder que não veio.
+// Quem tem uma classe só sobe direto; quem tem duas é PERGUNTADO qual recebe o
+// nível. Adivinhar é um defeito silencioso: a ficha fecha certo no total e
+// errado na classe, e só aparece quando alguém for usar um poder que não veio.
 //
 // SUBIR exige que o TOTAL caiba em 20 (p32) — o teto é do personagem, não da
 // classe. DESCER exige que a classe tenha mais de um nível: levá-la a zero
@@ -354,7 +331,7 @@ func thatCan(classes []sheetClass, passo int) []sheetClass {
 // directStep é o comando de quem só tem UMA classe elegível — o caso comum.
 //
 // Vazio quando há mais de uma: aí o gesto abre a escolha, porque adivinhar qual
-// classe recebe o nível é o defeito que a SPA nomeia.
+// classe recebe o nível é o defeito que o `stepClasses` descreve.
 func directStep(v View, passo int) string {
 	elegiveis := thatCan(v.AsClasses, passo)
 	if len(elegiveis) != 1 {
@@ -365,18 +342,11 @@ func directStep(v View, passo int) string {
 
 // sheetPost escreve o `@post` de um gesto da ficha, CARREGANDO A ABA ABERTA.
 //
-// # O `?tab=` não é decoração
-//
-// Todo comando da ficha responde redesenhando a cena INTEIRA, e a cena precisa
-// saber em que seção a pessoa está. Sem o `?tab=` o `AskedTab` não acha nada
-// na query e cai na primeira aba — mexer no PV com a Mochila aberta jogava o
-// jogador em Perícias, e a ficha parecia ter se fechado sozinha.
-//
-// Este defeito foi ENTREGUE na fatia 1 e só apareceu na bancada da fatia 2: com
-// todas as abas mostrando o mesmo aviso de "ainda vive na ficha antiga", o salto
-// não tinha como ser visto. O primeiro painel portado o tornou visível no
-// primeiro clique. Ver `TestNoSheetCommandLosesTheTab`, que varre os quatro
-// gestos nas sete abas.
+// O `?tab=` não é decoração: todo comando da ficha responde redesenhando a cena
+// INTEIRA, e a cena precisa saber em que seção a pessoa está. Sem ele o
+// `AskedTab` não acha nada na query e cai na primeira aba — mexer no PV com a
+// Mochila aberta joga o jogador em Perícias, e a ficha parece ter se fechado
+// sozinha. Quem varre é o `TestNoSheetCommandLosesTheTab`.
 func sheetPost(v View, caminho string) string {
 	return fmt.Sprintf("@post('%s')", commandRoute(v, caminho))
 }
@@ -406,15 +376,12 @@ func sheetGet(v View) string {
 	return fmt.Sprintf("@get('%s')", commandRoute(v, ""))
 }
 
-// tabEmbeddedGet troca de seção SEM sair da sessão: o mesmo endereço da
-// ficha, pedido pelo Datastar, remendando o `#sheet-scene` no lugar.
+// tabEmbeddedGet troca de seção SEM sair da sessão: o mesmo endereço da ficha,
+// pedido pelo Datastar, remendando o `#sheet-scene` no lugar.
 //
-// Ele ESCREVE a aba num sinal antes de pedir, e o sinal é o que faz a ficha
-// sobreviver a um aviso do servidor (ALE-275): quando o mestre mexe no
-// personagem, quem repede a ficha é o cliente, e é daqui que ele sabe em que
-// seção a pessoa está. Sem isso o repedido devolveria a aba padrão e tiraria o
-// jogador de onde ele estava — a mesma família do `?tab=` perdido que o
-// `sheetPost` já conserta.
+// Ele ESCREVE a aba num sinal ANTES de pedir, e o sinal é o que faz a ficha
+// sobreviver a um aviso do servidor: quando o mestre mexe no personagem, quem
+// repede a ficha é o cliente, e é daqui que ele sabe em que seção a pessoa está.
 //
 // Dois comandos separados por `;` e NUNCA num ternário: sequência dentro de
 // ternário é erro de sintaxe que o Datastar engole, e o gesto inteiro vira nada.
@@ -430,15 +397,14 @@ func tabEmbeddedGet(v View, aba string) string {
 // quem está olhando — este comando é escrito uma vez, no servidor, e serve para
 // as sete seções.
 func SheetRefetch(v View) string {
-	// A GUARDA é a comparação com o que já está na tela, e ela existe por
-	// medição: sem ela, um gesto do próprio jogador saía como dois pedidos — o
-	// comando dele grava, o stream vê o `updatedAt` novo e manda o aviso, e o
-	// aviso repedia a ficha que o comando acabou de trazer. Medido na bancada:
-	// um clique em "Ferir 1 de PV" produzia um POST e um GET.
+	// A GUARDA é a comparação com o que já está na tela: sem ela, um gesto do
+	// próprio jogador sai como dois pedidos — o comando grava, o stream vê o
+	// `updatedAt` novo e manda o aviso, e o aviso repede a ficha que o comando
+	// acabou de trazer.
 	//
 	// A versão vem do DOM e não de um sinal porque quem a atualiza é o próprio
-	// remendo da ficha: um sinal teria de ser reescrito por fora, e é
-	// exatamente o tipo de segunda escrita que sai de sincronia.
+	// remendo da ficha: um sinal teria de ser reescrito por fora, e é exatamente
+	// o tipo de segunda escrita que sai de sincronia.
 	return fmt.Sprintf(
 		"$sheet_version !== document.getElementById('sheet-scene').dataset.versao && "+
 			"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1')", v.ID)
@@ -447,8 +413,9 @@ func SheetRefetch(v View) string {
 // attributeCommand escreve o `@post` que repõe a perícia noutro atributo.
 //
 // O valor escolhido entra por CONCATENAÇÃO no meio da expressão, e não como
-// texto fixo: são seis opções por linha e 29 linhas, e desenhar um comando por
-// combinação daria 174 comandos numa página que já tem 29 diálogos.
+// texto fixo: são seis atributos por linha e uma linha por perícia, e um comando
+// por combinação daria centenas deles numa página que já tem um diálogo por
+// linha.
 func attributeCommand(v View, comando string) string {
 	return fmt.Sprintf(
 		"@post('/personagens/%d/pericias/atributo/%s/' + evt.target.value + '?tab=%s')",
@@ -494,8 +461,7 @@ func defaultClassCommand(v View) string {
 //
 // DOIS diálogos e não um, porque as listas são diferentes: subir oferece as que
 // cabem no teto, descer oferece as que têm nível de sobra. Um diálogo só teria
-// de ser reescrito no gesto que o abre — e o guia do pacote já registra o que
-// acontece quando um nó compartilhado recebe escrita depois de renderizado.
+// de ser reescrito no gesto que o abre, que é a armadilha do nó COMPARTILHADO.
 func stepDialog(passo int) string {
 	if passo > 0 {
 		return "subir-de-nivel"

@@ -5,13 +5,12 @@ import (
 	"t20engine/domain/engine"
 )
 
-// As LINHAS dos diálogos de decomposição (ALE-272, fatia 3).
+// As LINHAS dos diálogos de decomposição.
 //
 // O motor é dono dos NÚMEROS; o que mora aqui são os rótulos estruturais — "½
-// nível", "FOR", "Treino", "Base" — e a decisão de qual linha aparece. Elas
-// vinham do `stat-rows.ts` da SPA, e vieram para cá pela mesma razão que a tabela
-// de proficiências veio na fatia 2: um rótulo longe do número que ele explica
-// diverge sem ninguém ver.
+// nível", "FOR", "Treino", "Base" — e a decisão de qual linha aparece. Eles
+// moram junto porque um rótulo longe do número que ele explica diverge sem
+// ninguém ver.
 
 // defenseRows é a Defesa linha a linha.
 //

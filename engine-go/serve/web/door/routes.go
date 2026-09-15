@@ -12,7 +12,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// As rotas da PORTA (ALE-229). Anônimas — são elas que criam a sessão.
+// As rotas da PORTA. Anônimas — são elas que criam a sessão.
 //
 // Todas as escritas respondem 303 e não 200: depois de um POST bem-sucedido o
 // navegador tem de trocar para GET, senão recarregar a página de destino
@@ -22,8 +22,8 @@ import (
 
 // Routes monta a porta no roteador de quem a hospeda.
 //
-// Os endereços moram AQUI e não em quem monta (ALE-278): a cena é a dona do que
-// ela atende, e quem a hospeda escolhe só onde encaixá-la.
+// Os endereços moram AQUI e não em quem monta: a cena é a dona do que ela
+// atende, e quem a hospeda escolhe só onde encaixá-la.
 func Routes(r chi.Router, s Scene) {
 	r.Get("/entrar", s.handleSignIn)
 	r.Post("/entrar", s.handleSignInSubmit)
@@ -36,9 +36,8 @@ func Routes(r chi.Router, s Scene) {
 // ── entrar ───────────────────────────────────────────────────────────────────
 
 func (s Scene) handleSignIn(w http.ResponseWriter, r *http.Request) {
-	// Quem já tem sessão não vê a porta. Era o `beforeLoad` da rota `/login`,
-	// isto é, autorização morando no cliente; aqui é o handler, e some junto a
-	// ida à rede que o guarda fazia para descobrir se havia sessão.
+	// Quem já tem sessão não vê a porta, e quem decide isso é o HANDLER: uma
+	// guarda no cliente custaria uma ida à rede só para descobrir se há sessão.
 	if destino, autenticado := s.alreadySignedIn(r); autenticado {
 		http.Redirect(w, r, destino, http.StatusSeeOther)
 		return
@@ -88,10 +87,9 @@ func (s Scene) handleSignUp(w http.ResponseWriter, r *http.Request) {
 	}
 	convite := r.URL.Query().Get("convite")
 	if convite == "" {
-		// Sem convite a tela nem abre — era o outro `beforeLoad` (ALE-120). A
-		// porta já era fechada (o servidor responde 403), mas a TELA ficava
-		// aberta e parecia um cadastro comum. O destino é a de entrar, onde a
-		// frase explica que a mesa é por convite.
+		// Sem convite a tela nem abre. O servidor já recusa com 403, mas uma tela
+		// de cadastro aberta parece um cadastro comum — o destino é a de entrar,
+		// onde a frase explica que a mesa é por convite.
 		http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 		return
 	}
@@ -140,16 +138,13 @@ func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// signUpRefusal traduz o erro do domínio na frase que o jogador lê e no
-// status honesto. As frases da API continuam em inglês e continuam sendo as da
-// API — quem lê JSON não é quem lê tela.
-// signUpRefusal escolhe a FRASE; quem classifica o erro é o hospedeiro.
+// signUpRefusal escolhe a FRASE que o jogador lê; quem classifica o erro é o
+// hospedeiro.
 //
-// Ela lia os sentinelas `errInviteRejected` e `errInviteSpent` direto do `api`,
-// e é justamente esse tipo de alcance que a divisão existe para cortar. A
-// repartição ficou assim: o hospedeiro sabe distinguir os erros dele e devolve
-// um MOTIVO; a cena sabe o que o jogador lê. Nenhum dos dois faz o trabalho do
-// outro, e a voz da porta não vai morar no `api`.
+// A repartição é essa de propósito: o hospedeiro sabe distinguir os erros dele e
+// devolve um MOTIVO, a cena sabe o que o jogador lê. Ler os sentinelas do `api`
+// aqui faria a voz da porta morar lá. As frases da API continuam em inglês —
+// quem lê JSON não é quem lê tela.
 func (s Scene) signUpRefusal(err error) (string, int) {
 	motivo, status := s.deps.SignUpRefusal(err)
 	switch motivo {
@@ -217,12 +212,9 @@ func (s Scene) linkView(r *http.Request, token string) resetView {
 	return v
 }
 
-// saveNewPassword pede o caminho INTEIRO ao hospedeiro, de propósito.
-//
-// Ela gerava o hash aqui, com o `bcryptCost` do `api`. Isso obrigaria a porta a
-// carregar uma constante de custo criptográfico para a cena fazer trabalho que
-// não é dela — e o custo do bcrypt é decisão de segurança do servidor, não de
-// quem desenha o formulário.
+// saveNewPassword pede o caminho INTEIRO ao hospedeiro, de propósito: gerar o
+// hash aqui obrigaria a porta a carregar a constante de custo do bcrypt, que é
+// decisão de segurança do servidor e não de quem desenha o formulário.
 func (s Scene) saveNewPassword(r *http.Request, token, senha string) bool {
 	return s.deps.ResetPassword(r.Context(), token, senha)
 }

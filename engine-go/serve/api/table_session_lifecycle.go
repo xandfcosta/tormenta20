@@ -11,14 +11,13 @@ import (
 
 // O CICLO DE VIDA DA SESSÃO — iniciar, encerrar e reiniciar o combate.
 //
-// A regra vivia DENTRO dos handlers HTTP, misturada com `intParam`,
-// `WriteJSON` e códigos de status. Ela saiu daqui para que a Mesa em Datastar a
-// use sem reescrevê-la (ALE-269): duas telas decidindo por conta própria o que
-// "iniciar" significa é como nasce a divergência que ninguém nota — a SPA
-// reabriria uma sessão encerrada e a Mesa recusaria, ou o contrário.
+// A regra fica FORA dos handlers HTTP, longe de `intParam`, `WriteJSON` e
+// códigos de status: duas telas decidindo por conta própria o que "iniciar"
+// significa é como nasce a divergência que ninguém nota — uma reabriria a sessão
+// encerrada e a outra recusaria.
 //
-// O que se extraiu é a DECISÃO, não a resposta: quem traduz o resultado em JSON
-// ou em remendo continua sendo cada tela.
+// O que mora aqui é a DECISÃO, não a resposta: quem traduz o resultado em JSON
+// ou em remendo é cada tela.
 
 // StartSession — "iniciar" significa TRÊS coisas conforme o estado, e é por
 // isso que ela merece função própria:
@@ -73,14 +72,11 @@ func (tr tableRules) RestartCombat(ctx context.Context, sessionID int64) error {
 	}
 	// ESQUECER O CACHE é metade do gesto, e a metade que não aparece: a fila ao
 	// vivo mora em MEMÓRIA e o banco só é lido na primeira carga, então escrever
-	// a linha limpa sem derrubar o cache deixa a sessão servindo a fila velha —
-	// o reinício "funciona" e nada muda na tela.
+	// a linha limpa sem derrubar o cache deixa a sessão servindo a fila velha — o
+	// reinício "funciona" e nada muda na tela.
 	//
-	// Esta linha estava no `handleClearTracker` — apagado na ALE-277 — e eu a
-	// PERDI ao extrair a regra.
-	// O guarda que eu tinha escrito não pegou porque media o BANCO, que já
-	// estava vazio antes do reset: a fila nunca tinha chegado lá. Foi a
-	// sabotagem que denunciou os dois.
+	// Um guarda que mede o BANCO não pega isto: ele já está vazio antes do
+	// reinício, porque a fila nunca chegou lá.
 	tr.sessions.Forget(sessionID)
 	return nil
 }

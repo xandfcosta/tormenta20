@@ -88,12 +88,10 @@ func writeLevelFailure(w http.ResponseWriter, err error) {
 	platform.WriteError(w, http.StatusInternalServerError, "Could not update class level")
 }
 
-// applyClassLevel é A REGRA do degrau de nível, e ela é UMA para as duas
-// telas (ALE-272).
+// applyClassLevel é A REGRA do degrau de nível, e ela é UMA para as duas telas.
 //
-// Ela estava dentro do handler JSON, e extraí-la é o que impede a ficha em
-// Datastar de divergir da antiga: o nível de um personagem é a SOMA dos níveis
-// de classe, e uma segunda cópia dessa conta é como as duas telas passam a
+// Fora do handler JSON de propósito: o nível de um personagem é a SOMA dos
+// níveis de classe, e uma segunda cópia dessa conta é como duas telas passam a
 // discordar de quanto vale o Guerreiro 3 / Ladino 2.
 //
 // As três garantias que ela carrega, e que a tela não pode reescrever:

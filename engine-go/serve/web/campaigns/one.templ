@@ -9,17 +9,15 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A CRÔNICA desenhada (ALE-255): a página de uma campanha aberta no tomo.
+// A CRÔNICA desenhada: a página de uma campanha aberta no tomo.
 //
 // Mesma folha do grimório das outras cenas de campanha — a folha em branco que
 // se escreve, a carta que se enfia nela, e esta, que é a crônica que se lê.
 //
 // A ABA é um LINK e não um botão com estado, e isso é a decisão que sustenta a
-// cena inteira: `?tab=sessoes` é endereço, então ele volta no histórico, abre
-// em nova aba, e é o que alguém cola no chat da mesa. A versão em React
-// precisava de um `useState` espelhando a URL com dois efeitos e um debounce de
-// 250ms para não travar; no servidor o parâmetro É o estado e chega junto com o
-// pedido. Não há o que espelhar.
+// cena inteira: `?tab=sessoes` é endereço, então ele volta no histórico, abre em
+// nova aba, e é o que alguém cola no chat da mesa. No servidor o parâmetro É o
+// estado e chega junto com o pedido — não há o que espelhar.
 
 templ oneBody(v oneView) {
 	@ui.TomeSheet() {
@@ -86,9 +84,9 @@ templ oneHeader(v oneView) {
 	</header>
 }
 
-// roleAtTable é a sobrancelha: o que EU sou aqui. O nome do dono só aparece
-// para ADMIN que não é dono — para o jogador, marcar a mesa trocaria o
-// "Jogando" dele por "Mesa de Fulano", que é defeito que o e2e já pegou.
+// roleAtTable é a sobrancelha: o que EU sou aqui. O nome do dono só aparece para
+// ADMIN que não é dono — para o jogador, marcar a mesa trocaria o "Jogando" dele
+// por "Mesa de Fulano".
 func roleAtTable(v oneView) string {
 	switch {
 	case v.EhMestre:
@@ -162,10 +160,9 @@ func ariaCurrent(ativa bool) string {
 
 // A visão geral: três sinetes e os dois painéis que resumem a mesa.
 //
-// Os números vêm CONTADOS do servidor. Na SPA eles são calculados na tela a
-// partir de duas consultas separadas, cada uma com o próprio estado de
-// carregando — e havia um instante em que a página dizia "0 heróis" porque uma
-// das duas ainda não tinha voltado.
+// Os números vêm CONTADOS do servidor. Calculados na tela a partir de duas
+// consultas com estados de carregamento próprios, há um instante em que a página
+// diz "0 heróis" porque uma das duas ainda não voltou.
 templ overviewTab(v oneView) {
 	<div class="space-y-6">
 		<div class="grid grid-cols-3 gap-3">
@@ -174,11 +171,10 @@ templ overviewTab(v oneView) {
 			@oneSeal("ShieldCheck", v.SessoesEncerradas, "Encerradas")
 		</div>
 		// `[&>*]:min-w-0` não é enfeite: item de grade tem `min-width: auto`, e
-		// sem isto a trilha é dimensionada pelo MIN-CONTENT dos painéis. A
-		// 390px isso já computou uma coluna de 457px numa caixa de 288, e o
-		// botão de convite foi parar em x=392 numa tela de 390 — inalcançável,
-		// e sem estouro visível porque o `overflow-x-hidden` da cena absorvia
-		// o sintoma (ALE-160).
+		// sem isto a trilha é dimensionada pelo MIN-CONTENT dos painéis. A 390px
+		// isso dá uma coluna de 457px numa caixa de 288 e põe o botão de convite
+		// em x=392 numa tela de 390 — inalcançável, e sem estouro visível porque
+		// o `overflow-x-hidden` da cena absorve o sintoma.
 		<div class="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
 			@onePanel("A mesa", "Grupo") {
 				if len(v.Herois) == 0 {
@@ -287,11 +283,10 @@ templ sessionLine(campanhaID int64, sess sessionRow) {
 }
 
 // O crachá do estado, com as TRÊS cores da casa — e elas não são escolha de
-// gosto. Eu tinha escrito o "ao vivo" com a tinta do PERGAMINHO, que rende
-// 2,59:1 sobre o painel escuro: é a lição da ALE-237 cometida de novo, uma
-// tinta verificada contra uma superfície usada noutra. A receita da SPA usa
-// `--hp-full` (4,66:1 medido na folha de especificação) para o vivo, o dourado
-// para o planejado e o texto apagado para o encerrado.
+// gosto: a tinta do PERGAMINHO no "ao vivo" rende 2,59:1 sobre o painel escuro,
+// que é uma tinta verificada contra uma superfície e usada noutra. O vivo é
+// `--hp-full` (4,66:1), o planejado é o dourado e o encerrado é o texto
+// apagado.
 templ stateBadge(estado string) {
 	switch estado {
 		case "Ao vivo":
@@ -340,10 +335,10 @@ templ membersTab(v oneView) {
 	</div>
 }
 
-// A aba de CONFIGURAÇÃO: o cadastro da crônica, as regras opcionais, e a zona
-// de perigo — nesta ordem, e a do meio não é acidente. Regra opcional é ajuste
-// CORRIQUEIRO e não destruição, então ela fica entre o cadastro e o que apaga
-// (ALE-221); posta depois da zona de perigo, ela herdaria o tom de risco.
+// A aba de CONFIGURAÇÃO: o cadastro da crônica, as regras opcionais, e a zona de
+// perigo — nesta ordem, e a do meio não é acidente. Regra opcional é ajuste
+// CORRIQUEIRO e não destruição, então ela fica entre o cadastro e o que apaga;
+// posta depois da zona de perigo, ela herdaria o tom de risco.
 templ configTab(v oneView) {
 	<div class="space-y-6">
 		@ui.SectionLabel("muted", "") {
@@ -385,20 +380,20 @@ templ campaignForm(v oneView) {
 	</section>
 }
 
-// O LINK DA MESA (ALE-287). Sem ele ninguém entra — e por isso ele fica na
-// configuração, ao lado do nome, e não escondido atrás de um diálogo.
+// O LINK DA MESA. Sem ele ninguém entra — e por isso ele fica na configuração,
+// ao lado do nome, e não escondido atrás de um diálogo.
 //
 // Duas situações e o mesmo painel, porque para quem lê elas são a mesma
 // pergunta ("qual é o link desta mesa?"):
 //
 //   - A mesa TEM link: mostra, oferece copiar, e oferece gerar outro.
-//   - A mesa NÃO tem: é uma campanha aberta antes desta issue, e só o que cabe
-//     é o botão de gerar. A frase diz por que ele está ali, senão parece um
-//     botão que faz o que o de cima faria.
+//   - A mesa NÃO tem: é uma campanha antiga, e só o que cabe é o botão de
+//     gerar. A frase diz por que ele está ali, senão parece um botão que faz o
+//     que o de cima faria.
 //
 // Não há migração de dados justamente por causa do segundo caso: um `UPDATE`
-// varrendo o banco escreveria token para mesas que o dono talvez nem use mais,
-// e o botão custa uma linha e resolve na hora em que alguém precisa.
+// varrendo o banco escreveria token para mesas que o dono talvez nem use mais, e
+// o botão custa uma linha e resolve na hora em que alguém precisa.
 templ invitePanel(v oneView) {
 	<section id="invite-panel" aria-label="Link da mesa" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
 		<header class="space-y-0.5">
@@ -437,9 +432,9 @@ templ invitePanel(v oneView) {
 // perderia a posição de quem está no fim de uma lista de ajustes. O remendo
 // volta só este painel.
 //
-// A falha aparece INLINE e não por aviso flutuante, e isso é porte fiel de uma
-// decisão medida: este mesmo painel é montado dentro de um overlay na cena da
-// sessão, e aviso disparado de dentro de modal não é anunciado.
+// A falha aparece INLINE e não por aviso flutuante: este mesmo painel é montado
+// dentro de um overlay na cena da sessão, e aviso disparado de dentro de modal
+// não é anunciado.
 templ rulesPanel(v oneView) {
 	<section id="rules-panel" aria-label="Regras da campanha" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
 		<header class="space-y-0.5">

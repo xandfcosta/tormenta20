@@ -70,9 +70,8 @@ func tableParams(w http.ResponseWriter, r *http.Request) (campaignID, sessionID 
 
 // handleTablePage é a carga fria: o documento inteiro, já com a fila desenhada.
 //
-// Renderizar o estado JÁ na primeira resposta (em vez de mandar uma casca que
-// espera o primeiro tique do SSE) é o que faz a página não piscar vazia — e é
-// a mesma lição do `settledQuery` na SPA, um andar acima (ALE-96).
+// Renderizar o estado JÁ na primeira resposta, em vez de mandar uma casca que
+// espera o primeiro tique do SSE, é o que faz a página não piscar vazia.
 func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
@@ -90,7 +89,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: tableSignalsExpr(),
 		Init:   fmt.Sprintf("@get('/mesa/%d/%d/fluxo')", campaignID, sessionID),
-		// A ILHA DA MESA (ALE-174): o que anima quando o estado chega pelo fio.
+		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um
 		// observador de mutação sobre o tabuleiro não tem o que fazer na ficha
@@ -101,10 +100,9 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 
 // tableSignalsExpr é o estado que mora no NAVEGADOR, agrupado por superfície.
 //
-// Ele era uma linha só de mil e duzentos caracteres, e a régua a empurrou para
-// mil e quinhentos — a essa altura ninguém mais lia o que estava lá dentro, e
-// sinal repetido ou esquecido não dá erro em lugar nenhum: ele nasce `undefined`
-// no primeiro uso e a expressão que o lê fica muda.
+// Agrupado e comentado porque sinal repetido ou esquecido não dá erro em lugar
+// nenhum: ele nasce `undefined` no primeiro uso e a expressão que o lê fica
+// muda.
 //
 // Nomes MINÚSCULOS nos que aparecem como CHAVE de atributo (`data-bind`,
 // `data-signals`): o HTML minuscula a chave, e um `data-bind="gabaritoTamanho"`
@@ -115,18 +113,14 @@ func tableSignalsExpr() string {
 		// `error` e `command_error` são DOIS sinais e não um. Um só faria a
 		// recusa de "Adicionar grupo" acender a frase vermelha dentro da caixa
 		// "Registrar iniciativa" do mestre que também joga: a frase certa no
-		// lugar errado, que é como se lê um defeito. Uma palavra por conceito
-		// vale para sinal de página como vale para identificador.
+		// lugar errado, que é como se lê um defeito.
 		//
-		// Ele chamava-se `erro` e ninguém o lia (ALE-312): a varredura de idioma
-		// da ALE-301 renomeou o LEITOR (`$error`, em `table.templ`) e o escritor
-		// do servidor (`json:"error"`, em `action.go`) e deixou a DECLARAÇÃO
-		// para trás. Nada estourava — a expressão lia `undefined`, e
-		// `undefined != ''` é verdadeiro, então o `<p>` da recusa nascia MOSTRADO
-		// (vazio, logo invisível) até o primeiro registro.
-		//
-		// O `TestEverySignalDeclaredByValueHasAReader` não alcança este canal:
-		// ele lê o VALOR de atributo (`data-ref="x"`), e a declaração aqui é uma
+		// Renomear um destes é renomear a DECLARAÇÃO aqui junto com o leitor e o
+		// escritor: esquecê-la não estoura nada, porque a expressão passa a ler
+		// `undefined` e `undefined != ''` é verdadeiro — o `<p>` da recusa nasce
+		// MOSTRADO (vazio, logo invisível). O
+		// `TestEverySignalDeclaredByValueHasAReader` não alcança este canal: ele
+		// lê o VALOR de atributo (`data-ref="x"`), e a declaração aqui é uma
 		// string montada em Go.
 		"d20: 10, error: '', command_error: '', move_error: ''",
 		// O chão padrão é DERIVADO e não digitado: escrever 'pedra' aqui seria a
@@ -134,50 +128,43 @@ func tableSignalsExpr() string {
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
 		fmt.Sprintf("new_place: '', new_ground: '%s'", board.DefaultGround()),
-		// A SUPERFÍCIE do jogador (ALE-129): qual das duas ocupa a tela. Abre na
+		// A SUPERFÍCIE do jogador: qual das duas ocupa a tela. Abre na
 		// MESA (decisão do dono) — quem entra na sessão quer saber de quem é a vez
 		// e quem está em cena, e o tabuleiro pode nem estar aberto.
 		fmt.Sprintf("surface: '%s'", DefaultOpeningSurface),
-		// A FICHA DENTRO DA SESSÃO (ALE-275). `fichatab` é a seção que a pessoa
-		// está olhando — quem a escreve é o clique na aba, e quem a lê é o
-		// repedido que o stream dispara; sem ela, um aviso do servidor
-		// redesenharia a ficha na aba padrão e tiraria o jogador de onde ele
-		// estava. `fichaversao` é o carimbo que o servidor empurra quando o
-		// personagem muda no banco, e ele nasce vazio porque a página já chega
-		// com a ficha de agora.
+		// A FICHA DENTRO DA SESSÃO. `sheet_tab` é a seção que a pessoa está
+		// olhando — quem a escreve é o clique na aba, e quem a lê é o repedido
+		// que o stream dispara; sem ela, um aviso do servidor redesenharia a
+		// ficha na aba padrão e tiraria o jogador de onde ele estava.
+		// `sheet_version` é o carimbo que o servidor empurra quando o personagem
+		// muda no banco, e ele nasce vazio porque a página já chega com a ficha
+		// de agora.
 		fmt.Sprintf("sheet_tab: '%s', sheet_version: ''", sheetui.AskedTab("")),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
 		"tool: '', marker_chosen: '', map_selection: ''",
-		// O MENU DA PEÇA (ALE-206). `pecaescolhida` é qual menu está aberto e
-		// `pecaeditada` é qual peça o diálogo está editando: são DOIS porque abrir
-		// o diálogo FECHA o menu, e um sinal só faria o gesto de abrir apagar o
-		// alvo do gesto de salvar.
-		// A SEGUNDA CAMADA do menu não tem sinal: ela é popover NATIVO, e quem
-		// guarda o aberto/fechado é o navegador (ALE-206).
+		// O MENU DA PEÇA. `token_chosen` é qual menu está aberto e `token_edited`
+		// é qual peça o diálogo está editando: são DOIS porque abrir o diálogo
+		// FECHA o menu, e um sinal só faria o gesto de abrir apagar o alvo do
+		// gesto de salvar. A SEGUNDA CAMADA do menu não tem sinal: ela é popover
+		// NATIVO, e quem guarda o aberto/fechado é o navegador.
 		"token_chosen: '', token_edited: '', token_name: '', token_size: 1",
-		// A ÁREA DE TRANSFERÊNCIA da peça (ALE-206), e ela é do CLIENTE de
-		// propósito: é a área de QUEM COPIOU, não da mesa. No servidor ela seria
-		// um estado por usuário e por sessão que ninguém pediu, e que o mestre
-		// encontraria cheio no dia seguinte.
+		// A ÁREA DE TRANSFERÊNCIA da peça, e ela é do CLIENTE de propósito: é a
+		// área de QUEM COPIOU, não da mesa. No servidor ela seria um estado por
+		// usuário e por sessão que ninguém pediu, e que o mestre encontraria
+		// cheio no dia seguinte.
 		//
-		// São quatro sinais e não um objeto porque chave de atributo é
-		// minusculada pelo HTML: escrita em camelCase, ela chega minúscula e liga
-		// um sinal NOVO, com o servidor lendo o antigo para sempre vazio. Daí o
-		// `snake_case`, que atravessa o parser intacto (CLAUDE.md, "Idioma").
-		//
-		// `areatabuleiro` guarda de ONDE a peça veio, e é ele que faz o colar
+		// `area_board` guarda de ONDE a peça veio, e é ele que faz o colar
 		// atravessar as abas: a original pode não estar no tabuleiro em que se
 		// cola, e sem a origem o servidor não teria onde procurá-la.
 		//
-		// `areamodo` é o valor que o SERVIDOR consome e `areafrase` é o que a
+		// `area_mode` é o valor que o SERVIDOR consome e `area_phrase` é o que a
 		// pessoa lê: sem os dois, a faixa diria "Zumbi · sozinha", que é um
 		// identificador de código na tela de alguém.
 		"area_token: '', area_board: '', area_mode: '', area_label: '', area_phrase: ''",
-		// A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril. Os nomes levam
-		// `nova` porque `pecanome` e `pecatamanho` JÁ SÃO do diálogo de EDITAR
-		// peça, logo acima, e vivem no mesmo documento: reusá-los faria o gesto
-		// de criar escrever no alvo do gesto de salvar, que é o defeito que a
-		// linha do `buscador` no GLOSSARY existe para impedir.
+		// A PEÇA AVULSA — a porta, o baú, o barril. Os nomes levam `new_` porque
+		// `token_name` e `token_size` JÁ SÃO do diálogo de EDITAR peça, logo
+		// acima, e vivem no mesmo documento: reusá-los faria o gesto de criar
+		// escrever no alvo do gesto de salvar.
 		"new_token_name: '', new_token_size: 1, new_token_look: 'object'",
 		// A FILA e os verbos da linha.
 		"rest_quality: 'normal', combatant_form: false",
@@ -196,17 +183,16 @@ func tableSignalsExpr() string {
 		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
 		fmt.Sprintf("square: %d", DefaultSquare),
 		"dragging: '', drag_start_x: 0, drag_start_y: 0, drag_x: 0, drag_y: 0",
-		// A JANELA sobre o plano infinito (ALE-203): ela substituiu a rolagem
-		// nativa, que precisava de uma caixa com fim para ter até onde rolar.
+		// A JANELA sobre o plano infinito, no lugar da rolagem nativa: rolagem
+		// precisa de uma caixa com fim para ter até onde rolar.
 		viewportSignals,
-		// O TRAÇO do pincel e da borracha (ALE-203): o modo em curso e a última
-		// casa que ele já mandou.
+		// O TRAÇO do pincel e da borracha: o modo em curso e a última casa que ele
+		// já mandou.
 		brushSignals,
-		// O LAÇO do retângulo (ALE-203, item 10): o modo em curso e os dois cantos.
+		// O LAÇO do retângulo: o modo em curso e os dois cantos.
 		rectSignals,
-		// AS PEÇAS MARCADAS pelo laço (ALE-203, item 10): ids separados por
-		// vírgula, numa string só. Ver `markedTokensSignal` para por que não é
-		// uma lista.
+		// AS PEÇAS MARCADAS pelo laço: ids separados por vírgula, numa string só.
+		// Ver `markedTokensSignal` para por que não é uma lista.
 		fmt.Sprintf("%s: '', %s: false", markedTokensSignal, sinalDoCliqueEngolido),
 		// A RÉGUA: as PARADAS em Coordinate do PLANO (podem ser negativas), a mira
 		// sob o ponteiro, a fase da máquina, os rótulos de cada perna e a frase do
@@ -228,30 +214,28 @@ func tableSignalsExpr() string {
 		fmt.Sprintf("template_path: '', template_text: %q", emptyTemplateHint),
 		// As NOTAS da sessão.
 		"notes: '', notes_saved: '', notes_mode: 'duplo', notes_open: false, notes_width: 0, notes_dragging: false, notes_floating: false",
-		// `notes_window` é o LUGAR das notas quando ele não é esta aba (ALE-218):
-		// verdadeiro enquanto a janela própria estiver com elas. Quem o escreve
-		// é o `storage`, e não o clique — ver `watchesTheNotesWindow`.
+		// `notes_window` é o LUGAR das notas quando ele não é esta aba: verdadeiro
+		// enquanto a janela própria estiver com elas. Quem o escreve é o
+		// `storage`, e não o clique — ver `watchesTheNotesWindow`.
 		"notes_saving: false, notes_error: '', notes_window: false",
 	}, ", ") + "}"
 }
 
-// tableBody escolhe QUAL DAS DUAS FORMAS a página desenha (ALE-269).
+// tableBody escolhe QUAL DAS DUAS FORMAS a página desenha.
 //
 // O jogador recebe a coluna — uma superfície que rola, com Grupo, mapa e fila
 // empilhados. O mestre recebe o PALCO: trilhos nas bordas e o tabuleiro no
-// centro, que é a geometria da `session-gm-view` desde a ALE-198.
+// centro.
 //
-// SÃO DUAS FORMAS E NÃO DUAS TELAS, e a distinção é o que mantém de pé o
-// argumento da ALE-265 contra uma segunda cena: as REGIÕES são as mesmas, com
-// os mesmos ids e os mesmos componentes, e o que muda é onde elas são
-// penduradas. Duas listas de combatente para manter em dia continuaria sendo o
-// defeito da ALE-122; duas ARRUMAÇÕES da mesma lista não é.
+// SÃO DUAS FORMAS E NÃO DUAS TELAS, e a distinção é o que segura o argumento
+// contra uma segunda cena: as REGIÕES são as mesmas, com os mesmos ids e os
+// mesmos componentes, e o que muda é onde elas são penduradas. Duas listas de
+// combatente para manter em dia seria o defeito; duas ARRUMAÇÕES da mesma lista
+// não é.
 //
-// O painel do bestiário só nasce para quem pode abri-lo, pela mesma trava do
-// resto da fatia: não é a tela que esconde, é a página que não o tem. Mandá-lo
-// para todo mundo e escondê-lo por CSS entregaria as 80 criaturas com PV e
-// defesa a quem abrisse o inspetor — e esconder PV de NPC é literalmente o que o
-// olho da linha faz.
+// O painel do bestiário só nasce para quem pode abri-lo: não é a tela que
+// esconde, é a página que não o tem. Mandá-lo para todo mundo e escondê-lo por
+// CSS entregaria as criaturas com PV e defesa a quem abrisse o inspetor.
 func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64) templ.Component {
 	if view.Mestre == nil {
 		return tableScene(view)
@@ -261,7 +245,7 @@ func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64
 
 // tablePlayerSheet carrega a ficha que a superfície "Minha ficha" desenha.
 //
-// Só na CARGA FRIA e não no stream (ALE-272, fatia 10b): a ficha é sete painéis
+// Só na CARGA FRIA e não no stream: a ficha é sete painéis
 // computados, e ela muda pelos comandos DELA — que remendam o `#sheet-scene`
 // direto. Recomputá-la a cada tique da sessão seria pagar o preço mais caro da
 // página para descobrir que nada mudou.
@@ -276,19 +260,14 @@ func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
 	return s.deps.PlayerSheet(r, view.Eu.CharacterID)
 }
 
-// LoadView busca tudo o que a tela precisa e delega a DECISÃO ao
-// `tableViewOf`. Impuro aqui, puro lá.
-// LoadView monta a Mesa inteira para desenhar.
+// LoadView monta a Mesa inteira para desenhar: busca tudo o que a tela precisa
+// e delega a DECISÃO ao `tableViewOf`. Impuro aqui, puro lá.
 //
-// Ela é exportada porque a BANCADA do hospedeiro a chama: nove casos provam o
-// caminho BANCO → PALCO — quem está na fila sai no elenco, com a Defesa e a
-// marca de "já está no mapa" —, e este pacote não tem banco. Importar o
-// `db/testdb` junto com um `*api.Server` seria o ciclo que a divisão existe
-// para evitar.
-//
-// É a mesma direção do `characters.Load` e do `master.LoadBestiaryFrom`: a cena
-// diz como montar a si mesma, e o hospedeiro prova que o que está no banco
-// chega até lá.
+// Ela é exportada porque a BANCADA do hospedeiro a chama, e este pacote não tem
+// banco: importar o `db/testdb` junto com um `*api.Server` seria o ciclo que a
+// divisão existe para evitar. É a mesma direção do `characters.Load` e do
+// `master.LoadBestiaryFrom` — a cena diz como montar a si mesma, e o hospedeiro
+// prova que o que está no banco chega até lá.
 func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID int64) (View, int, error) {
 	sess, role, status, err := s.deps.SessionForCaller(ctx, userID, campaignID, sessionID)
 	if err != nil {
@@ -300,14 +279,14 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 		return View{}, http.StatusInternalServerError, err
 	}
 	// `stateForRole` e não `redactForPlayers` direto: é o mesmo gargalo que o
-	// socket usa (ALE-122/ALE-210), e papel desconhecido cai em jogador. O
-	// piloto não ganha uma segunda decisão sobre quem vê o quê.
+	// socket usa, e papel desconhecido cai em jogador. Esta cena não ganha uma
+	// segunda decisão sobre quem vê o quê.
 	st := live.StateForRole(role, s.deps.Sessions().RefreshCharacterMaxes(ctx, sessionID))
 	grupo, meus, eu := s.tableRoster(ctx, userID, campaignID)
 	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu)
-	// O CICLO da sessão chega à tela (ALE-269): sem o estado, os verbos teriam de
-	// ser oferecidos todos, e "encerrar" numa sessão que nunca começou é o gesto
-	// que o servidor recusa — oferecer o que será recusado é desenhar um erro.
+	// O CICLO da sessão chega à tela porque, sem ele, os verbos teriam de ser
+	// oferecidos todos — e "encerrar" numa sessão que nunca começou é o gesto
+	// que o servidor recusa. Oferecer o que será recusado é desenhar um erro.
 	view.Status = sess.Status
 	if sess.Title.Valid {
 		view.Titulo = sess.Title.String
@@ -318,15 +297,14 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// REDIGIDO, então o combatente cujo PV o mestre ocultou chega sem `HpMax` e a
 	// peça dele sai sem barra — a redação alcança o mapa sem uma segunda decisão.
 	// O `Mover` diz de quem é a vez e de quem é a peça, e a POSSE é resolvida
-	// contra o banco (o `meus` do roster) e nunca contra o cliente — é o mesmo
-	// fio de volta até a pessoa que a ALE-33 fixou.
+	// contra o banco (o `meus` do roster) e nunca contra o cliente.
 	quemOlha := board.Mover{UserID: userID, Role: role}
-	// A ABA que ESTA pessoa está olhando (ALE-205), e não "o tabuleiro da
-	// sessão", que deixou de existir como coisa única. Ela é resolvida contra os
-	// abertos, então a aba que o mestre fechou não deixa ninguém numa tela morta.
+	// A ABA que ESTA pessoa está olhando, e não "o tabuleiro da sessão": não há
+	// tabuleiro único. Ela é resolvida contra os abertos, então a aba que o
+	// mestre fechou não deixa ninguém numa tela morta.
 	aba, puxado, deOnde := s.pullTab(ctx, sessionID, userID)
 	scene := board.BoardForRole(role, s.deps.Boards().Get(ctx, sessionID, aba))
-	// A LENTE DO MESTRE (ALE-193): com ela ligada, o que se desenha é a cena
+	// A LENTE DO MESTRE: com ela ligada, o que se desenha é a cena
 	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `quemOlha` continua
 	// dizendo "mestre", porque a lente é sobre o que ele vê e não sobre o que ele
 	// pode: ele confere a emboscada sem parar de montá-la.
@@ -340,7 +318,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	)
 	view.Tabuleiro.Lente = naLente
 	view.Tabuleiro.PecasEscondidas = escondidas
-	// A BARRA DE ABAS (ALE-205) é a lista dos abertos, redigida pelo papel de
+	// A BARRA DE ABAS é a lista dos abertos, redigida pelo papel de
 	// quem olha — e ela vem depois da lente de propósito: a lente é sobre a CENA
 	// que o mestre está vendo, não sobre quais cenas existem. Um mestre na lente
 	// que perdesse as abas não teria como sair da que está olhando.
@@ -356,12 +334,11 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if role == "gm" {
 		view.Tabuleiro.Acervo = campaignCollection(s.deps.Boards().Places(ctx, campaignID), s.deps.Boards().OpenBoards(ctx, sessionID))
 	}
-	// O rastreador só é MONTADO para o mestre. A trava não é a tela esconder o
-	// bloco: é a view não ter o que desenhar, pelo mesmo `role` que o
-	// `stateForRole` já usou para redigir o estado.
-	// AS NOTAS são do mestre e chegam JÁ EM ÁRVORE (ALE-269). Elas não entram no
+	// AS NOTAS são do mestre e chegam JÁ EM ÁRVORE. Elas não entram no
 	// `tableViewOf` porque não vêm do estado ao vivo: moram na linha da sessão,
-	// que é o mesmo lugar do título e do ciclo.
+	// que é o mesmo lugar do título e do ciclo. A trava não é a tela esconder o
+	// bloco, é a view não ter o que desenhar — pelo mesmo `role` que o
+	// `stateForRole` já usou para redigir o estado.
 	if role == "gm" && sess.Notes.Valid {
 		view.Notas = sess.Notes.String
 		view.NotasBlocos = markdown.Parse(sess.Notes.String)
@@ -369,17 +346,10 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if role == "gm" {
 		view.NPCs = s.CampaignCast(ctx, campaignID)
 	}
-	// A PRESENÇA É DOS DOIS PAPÉIS desde a ALE-214, e isto era o contrário.
-	//
-	// Ela era escrita DENTRO do ramo do mestre, e o comentário de lá explicava
-	// que era isso que a mantinha fora da tela do jogador "sem uma segunda
-	// decisão na cena". O efeito colateral é que o `cardsParty` — que já
-	// desenhava o ponto, o `title` e o rótulo de leitor de tela — nunca entrava
-	// no `if`: código completo e inalcançável pelo único consumidor dele.
-	//
-	// Decisão do dono (2026-09-08): saber quem caiu é o que faz a mesa ESPERAR em
-	// vez de continuar sem alguém. Agora quem calcula é a cena, e o mestre recebe
-	// o mesmo conjunto para o elenco dele.
+	// A PRESENÇA É DOS DOIS PAPÉIS, e não só do mestre (decisão do dono): saber
+	// quem caiu é o que faz a mesa ESPERAR em vez de continuar sem alguém. Por
+	// isso ela é calculada FORA do ramo do mestre — dentro dele, o `cardsParty`
+	// do jogador desenharia o ponto de presença que nunca chegaria.
 	membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
 	conectados := live.ConnectedCharacters(membros, presentes)
 	marcaAPresenca(view.Grupo, conectados)
@@ -395,9 +365,8 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 // iniciativa.
 //
 // A ponte até "quem está olhando" é o `ownerId` do roster, e não o id do
-// personagem: a ficha de um membro é o SNAPSHOT da campanha (ALE-33), então o
-// dono registrado é o único fio de volta até a pessoa. Mesmo caminho do
-// `myCharacterIdsOf` na SPA, pelo mesmo motivo.
+// personagem: a ficha de um membro é o SNAPSHOT da campanha, então o dono
+// registrado é o único fio de volta até a pessoa.
 func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) ([]Member, map[int64]bool, *tableMe) {
 	rows, err := s.deps.Queries().ListMembers(ctx, campaignID)
 	if err != nil {
@@ -415,22 +384,13 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 				eu = &tableMe{CharacterID: m.Characterid, Nome: m.Charname}
 			}
 		}
-		// Aqui morava um filtro de PAPEL, e ele NUNCA excluiu ninguém.
-		//
-		// A intenção estava escrita (ALE-212): "o mestre costuma ter um PC
-		// próprio no roster, e listá-lo aqui faria duas telas discordarem sobre
-		// quem é o grupo". Mas a condição era `m.Role != "player"` sobre uma
-		// coluna que valia `'player'` em toda linha, então ela nunca excluiu
-		// nada — e a coluna saiu na ALE-287.
-		//
-		// **Ele não volta, e a razão é do dono da mesa:** o mestre NÃO tem
-		// personagem próprio. O que ele tem é um elenco de NPCs que entram na
-		// história ou não — e essa decisão é por CENA, tomada na hora de pôr a
-		// linha na fila. NPC nem é membro da campanha: ele entra na iniciativa
-		// por `label` e `initiative`, sem `characterId` (ver `materializeEntry`).
-		//
-		// Ou seja: `campaign_members` só tem personagem de jogador, e o grupo é
-		// o grupo. Não havia o que filtrar.
+		// NÃO entra filtro de PAPEL aqui, e a razão é do dono da mesa: o mestre
+		// NÃO tem personagem próprio. O que ele tem é um elenco de NPCs que
+		// entram na história ou não — decisão por CENA, tomada na hora de pôr a
+		// linha na fila —, e NPC nem é membro da campanha: ele entra na
+		// iniciativa por `label` e `initiative`, sem `characterId` (ver
+		// `materializeEntry`). `campaign_members` só tem personagem de jogador, e
+		// o grupo é o grupo.
 		grupo = append(grupo, Member{
 			CharacterID: m.Characterid,
 			Nome:        m.Charname,
@@ -444,7 +404,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 	}
 	if eu != nil {
 		// O bônus é do MOTOR, nunca do template: é a mesma `ComputeSheetV2` que
-		// a ficha inteira usa (ALE-213).
+		// a ficha inteira usa.
 		if bonus, err := s.deps.InitiativeBonus(ctx, eu.CharacterID); err == nil {
 			eu.Bonus = bonus
 		}
@@ -511,6 +471,6 @@ func (s Scene) memberDefense(ctx context.Context, characterID int64) string {
 	}
 	// A MESMA frase da ficha, e da mesma função: o mestre confere aqui a Defesa
 	// de um jogador para decidir se o ataque acerta, e com o alvo caído o total
-	// é o único número que não responde essa pergunta (ALE-274).
+	// é o único número que não responde essa pergunta.
 	return book.DefenseLabel(ficha.Defense)
 }

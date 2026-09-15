@@ -8,27 +8,22 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// A aba COMBATE como dado (ALE-272, fatia 3).
+// A aba COMBATE como dado.
 //
-// São quatro blocos, na ordem em que a SPA os desenha: os três números que se
-// olha no meio do turno (Defesa e os dois ataques), as três resistências, os
-// seis atributos, e o que só às vezes importa — as fórmulas de arma de quem
-// empunha alguma e a tripla de quem conjura.
+// São quatro blocos: os três números que se olha no meio do turno (Defesa e os
+// dois ataques), as três resistências, os seis atributos, e o que só às vezes
+// importa — as fórmulas de arma de quem empunha alguma e a tripla de quem
+// conjura.
 //
-// # O painel é de LEITURA, e isso muda o desenho inteiro
+// O painel é de LEITURA, e isso muda o desenho inteiro: nenhum botão daqui
+// escreve no banco, a aba inteira é UM `GET`, e os diálogos de decomposição
+// abrem pelo cliente sem pedir nada ao servidor. Por isso a armadilha do
+// Datastar em que o comando perde o `?tab=` não tem onde morder aqui.
 //
-// Nenhum botão daqui escreve no banco: não há `@post`, e por isso a sexta
-// armadilha do Datastar (o comando que perde o `?tab=`) não tem onde morder
-// nesta fatia. A aba inteira é UM `GET`, e os diálogos de decomposição abrem
-// pelo cliente sem pedir nada ao servidor — ver `combatPanel`.
-//
-// # Esta é a primeira conta do servidor com os condicionais LIGADOS
-//
-// Todo uso anterior do motor no app passou pelo `sheetFromDTO`, que computa a
-// ficha BASE (`map[string]bool{}`). Aqui isso mentiria: um bárbaro em Fúria veria
-// o ataque de quem não está em Fúria, e a ficha discordaria da Mesa, que já lê o
-// estado ligado. O opt-in do jogador vem do banco dentro do próprio DTO
-// (`loadPlayState`), então não há segunda fonte a consultar.
+// A conta usa os condicionais LIGADOS, e não a ficha BASE: um bárbaro em Fúria
+// veria o ataque de quem não está em Fúria, e a ficha discordaria da Mesa, que
+// lê o estado ligado. O opt-in do jogador vem do banco dentro do próprio DTO,
+// então não há segunda fonte a consultar.
 
 // combatPanel é a aba Combate pronta para desenhar.
 type panelCombat struct {
@@ -37,16 +32,16 @@ type panelCombat struct {
 	// deixaria a quebra de linha por conta da largura.
 	Tiles []statTile
 	Saves []statTile
-	// Attributes não abrem diálogo — são leitura seca, como na SPA.
+	// Attributes não abrem diálogo — são leitura seca.
 	Attributes []attributeTile
-	// ShowWeapons segue a regra da SPA, que não é óbvia: quem empunha vê os
-	// cartões; o marcial de mãos livres vê o texto de vazio, para a caixa não
-	// parecer quebrada; e o conjurador puro de mãos livres não vê o bloco, porque
-	// para ele a tripla mágica é que é o assunto.
+	// ShowWeapons tem uma regra que não é óbvia: quem empunha vê os cartões; o
+	// marcial de mãos livres vê o texto de vazio, para a caixa não parecer
+	// quebrada; e o conjurador puro de mãos livres não vê o bloco, porque para
+	// ele a tripla mágica é que é o assunto.
 	ShowWeapons bool
 	Weapons     []weaponTile
 	// MagicTiles é vazia para quem não conjura por CLASSE. Um poder que concede
-	// uma magia solta não abre este bloco, e é o mesmo critério da SPA.
+	// uma magia solta não abre este bloco.
 	MagicTiles []statTile
 }
 
@@ -64,8 +59,8 @@ type statTile struct {
 	Value string
 	// Sub é a linha pequena sob o número — hoje só "RD 4".
 	Sub string
-	// Magic troca a paleta para a arcana. A SPA chama isso de `tone`; aqui é um
-	// booleano porque são dois tons e não uma família aberta.
+	// Magic troca a paleta para a arcana. Booleano e não um `tone` aberto porque
+	// são dois tons e não uma família.
 	Magic bool
 	Rows  []breakdownRow
 	// Extra são valores que se RELACIONAM com o número sem somar nele — as
@@ -139,12 +134,6 @@ var theSaves = []struct {
 	{"Vontade", "wisdom", "SAB"},
 }
 
-// sheetForPanels computa a aba Combate de um personagem.
-//
-// SEM CATÁLOGO PRIMADO ela devolve o painel vazio, pela mesma razão que a Defesa
-// do crachá vira travessão: a ficha inteira não pode deixar de abrir por causa
-// de um número, e a aba diz que não sabe em vez de mostrar zeros — um zero é um
-// valor plausível, e o jogador agiria sobre ele.
 // sheetForPanels computa a ficha UMA vez para os painéis que a leem.
 //
 // Combate e Perícias precisam do MESMO resultado, e computar duas vezes daria
@@ -162,14 +151,19 @@ func (s Scene) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheetV2, [
 	if err != nil {
 		return engine.ComputedSheetV2{}, nil, false
 	}
-	// O OPT-IN DO JOGADOR entra na conta, e é a primeira vez que uma cena do
-	// piloto o faz: todo uso anterior passou pela `sheet.Compute`, que computa a
-	// ficha base. Com Fúria ligada, a base mostraria o ataque de quem não está
-	// em Fúria e a ficha discordaria da Mesa.
+	// O OPT-IN DO JOGADOR entra na conta, e não a ficha base da `sheet.Compute`:
+	// com Fúria ligada, a base mostraria o ataque de quem não está em Fúria e a
+	// ficha discordaria da Mesa.
 	active := sheet.ToStringSet(dto.Conditionals)
 	return s.deps.Catalogs().ComputeSheetV2(ec, active), s.deps.Catalogs().ComputeWeaponCards(ec, active), true
 }
 
+// panelOfCombat computa a aba Combate de um personagem.
+//
+// SEM CATÁLOGO PRIMADO ela devolve o painel vazio, pela mesma razão que a Defesa
+// do crachá vira travessão: a ficha inteira não pode deixar de abrir por causa
+// de um número, e a aba diz que não sabe em vez de mostrar zeros — um zero é um
+// valor plausível, e o jogador agiria sobre ele.
 func (s Scene) panelOfCombat(dto sheet.CharacterDTO) panelCombat {
 	sheet, cards, ok := s.sheetForPanels(dto)
 	if !ok {
@@ -211,7 +205,7 @@ func defenseTile(sheet engine.ComputedSheetV2) statTile {
 		Key: "defense", Label: "Defesa", Title: "Defesa", Icon: "Shield",
 		// A Defesa vira DUAS quando algo é direcional — hoje só o Caído (p394).
 		// A frase mora no `book` porque o diálogo do elenco da Mesa mostra a
-		// mesma coisa, e duas telas montando-a por conta divergem (ALE-274).
+		// mesma coisa, e duas telas montando-a por conta divergem.
 		Value: book.DefenseLabel(sheet.Defense),
 		Rows:  defenseRows(sheet),
 	}
@@ -244,9 +238,8 @@ func iconForAttack(key string) string {
 
 // saveTiles são Fortitude, Reflexos e Vontade.
 //
-// O rótulo da caixa é cortado em quatro letras como na SPA ("Fort", "Refl",
-// "Vont") — é o que cabe em três colunas num telefone —, e o nome inteiro vai no
-// diálogo.
+// O rótulo da caixa é cortado em quatro letras ("Fort", "Refl", "Vont") — é o
+// que cabe em três colunas num telefone —, e o nome inteiro vai no diálogo.
 func saveTiles(sheet engine.ComputedSheetV2) []statTile {
 	tiles := make([]statTile, 0, len(theSaves))
 	for _, save := range theSaves {
@@ -353,8 +346,8 @@ func isCaster(sheet engine.ComputedSheetV2) bool {
 // expertiseOrZero acha a perícia na ficha, ou devolve uma zerada.
 //
 // Zero e não erro: uma ficha sem a linha de Luta desenha "+0" e seis linhas de
-// decomposição vazias, que é o que a SPA faz. Derrubar a aba inteira porque uma
-// perícia não foi gravada trocaria um número errado por nenhuma tela.
+// decomposição vazias. Derrubar a aba inteira porque uma perícia não foi gravada
+// trocaria um número errado por nenhuma tela.
 func expertiseOrZero(sheet engine.ComputedSheetV2, name, attribute string) engine.ExpertiseBreakdown {
 	for _, ex := range sheet.Expertises {
 		if ex.Name == name {

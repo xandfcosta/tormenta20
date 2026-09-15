@@ -10,27 +10,23 @@ import (
 	"t20engine/domain/engine"
 )
 
-// O MOVIMENTO da peça na Mesa em Datastar (ALE-266).
+// O MOVIMENTO da peça na Mesa.
 //
 // Uma parada por vez: a pessoa clica numa casa alcançável e a peça propõe ir até
 // lá; clica de novo e o caminho ESTENDE, contornando o que ela quiser. O que
 // impede o estouro do deslocamento é o ALCANCE desenhado, que já vem limitado
-// pelo que sobrou e encolhe a cada parada — medido: 84 casas com o deslocamento
-// inteiro, 12 depois de gastar 4 de 6.
+// pelo que sobrou e encolhe a cada parada.
 //
-// Mas "não dá para clicar no que o servidor recusaria" deixou de ser verdade
-// quando o ARRASTO entrou: clique cai numa casa oferecida, soltura cai onde o
-// dedo estiver, inclusive fora do alcance. Por isso a recusa também PRECISA
-// falar — e fala em `move_error`, no tabuleiro. O alcance continua sendo a
-// realimentação principal; a frase é a rede embaixo dela.
+// Mas "não dá para clicar no que o servidor recusaria" deixa de valer com o
+// ARRASTO: clique cai numa casa oferecida, soltura cai onde o dedo estiver,
+// inclusive fora do alcance. Por isso a recusa também PRECISA falar — e fala em
+// `move_error`, no tabuleiro. O alcance continua sendo a realimentação
+// principal; a frase é a rede embaixo dela.
 //
-// A LISTA DE PARADAS é guardada desde a ALE-269 (item 10), e a linha que estava
-// aqui dizia o contrário — "o CAMINHO proposto já é o acumulado, e a última
-// parada é o último quadrado dele". A primeira metade continua verdadeira; a
-// segunda basta para o Cancelar e não basta para DESFAZER UMA: um trecho legítimo
-// já tem uma dobra (a diagonal vem primeiro), e ela é indistinguível da dobra de
-// uma parada. Quem guarda é o `PendingMove.Stops`, e o caminho passou a ser o que
-// as paradas produzem em vez de o que se emenda à mão.
+// A LISTA DE PARADAS é guardada no `PendingMove.Stops`, e o caminho é o que elas
+// produzem. Deduzir a última parada do fim do caminho basta para o Cancelar e
+// NÃO basta para desfazer UMA: um trecho legítimo já tem uma dobra (a diagonal
+// vem primeiro), e ela é indistinguível da dobra de uma parada.
 
 func (s Scene) MoveRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
@@ -54,8 +50,7 @@ func paraNoQuadrado(st Scene, c commandCtx) (*board.BoardState, error) {
 	return st.propoePorParadas(c, tokenID, append(paradas, destino))
 }
 
-// undoLastStop corrige a última perna sem jogar a rota inteira fora
-// (ALE-266, portado na ALE-269).
+// undoLastStop corrige a última perna sem jogar a rota inteira fora.
 //
 // É a ordem do arrependimento: primeiro se tira a perna errada, e só depois se
 // cancela tudo. Sobrando só a origem, desfazer VIRA cancelar — uma proposta sem
@@ -125,8 +120,8 @@ func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {
 //
 // O `Mover.OwnsCharacter` é o que separa "a peça é sua" de "você disse que é": a
 // peça aponta para um personagem, e quem responde de quem ele é são as fichas da
-// campanha — o mesmo caminho que o `tableRoster` usa para saber quais são os MEUS
-// (ALE-33).
+// campanha — o mesmo caminho que o `tableRoster` usa para saber quais são os
+// MEUS.
 func (s Scene) moveWho(c commandCtx) board.Mover {
 	_, papel, _, err := s.deps.SessionForCaller(c.R.Context(), c.User, c.CampaignID, c.SessionID)
 	if err != nil {
@@ -171,16 +166,15 @@ func (s Scene) gmBoardCommand(
 	return s.boardCommand(mutar, true)
 }
 
-// gmContinuousCommand é o irmão do de cima para o gesto que se REPETE
-// enquanto o dedo está no botão (ALE-203): pintar e apagar terreno arrastando.
+// gmContinuousCommand é o irmão do de cima para o gesto que se REPETE enquanto
+// o dedo está no botão: pintar e apagar terreno arrastando.
 //
-// A diferença é o TAMANHO DA RESPOSTA, e ela é medida: o `respondGm`
-// repinta TODAS as regiões da Mesa, e um clique de pintura devolvia **353 KB**.
-// O comentário dele explicava por que isso era seguro — "ninguém está no meio de
-// um arrasto no instante em que pediu outra coisa" — e essa frase deixa de valer
-// exatamente aqui: no gesto contínuo a pessoa ESTÁ no meio de um arrasto, e cada
-// casa que o dedo cruza mandaria a Mesa inteira de volta. Um traço de vinte
-// casas custaria sete megabytes.
+// A diferença é o TAMANHO DA RESPOSTA, e ela é medida: o `respondGm` repinta
+// TODAS as regiões da Mesa, e um clique de pintura devolvia **353 KB**. No gesto
+// avulso isso é seguro — ninguém está no meio de um arrasto no instante em que
+// pediu outra coisa —, e a frase deixa de valer exatamente aqui: no gesto
+// contínuo a pessoa ESTÁ no meio de um arrasto, e um traço de vinte casas
+// custaria sete megabytes.
 //
 // A resposta fica no `mesa-tabuleiro` porque terreno não aparece em mais lugar
 // nenhum. Quem precisar de outra região não usa este atalho — é uma lista
@@ -219,10 +213,10 @@ func (s Scene) boardCommand(
 		sinais := map[string]any{}
 		estado, err := mutar(s, commandCtx{
 			R: r, User: userID, CampaignID: campaignID, SessionID: sessionID,
-			// A ABA de quem clicou (ALE-205), resolvida aqui e uma vez só: é ela
-			// que diz em QUAL tabuleiro o gesto acontece. Resolver dentro de cada
-			// mutação seria a mesma pergunta escrita vinte vezes, e a vigésima
-			// primeira é a que esquece.
+			// A ABA de quem clicou, resolvida aqui e uma vez só: é ela que diz em
+			// QUAL tabuleiro o gesto acontece. Resolver dentro de cada mutação seria
+			// a mesma pergunta escrita vinte vezes, e a vigésima primeira é a que
+			// esquece.
 			TabuleiroID: s.chosenTabOf(r.Context(), sessionID, userID),
 			Sinais:      sinais,
 		})

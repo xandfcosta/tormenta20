@@ -14,13 +14,12 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O CONSTRUTOR DE ENCONTROS (ALE-259).
+// O CONSTRUTOR DE ENCONTROS.
 //
-// O VEREDITO é o bloco principal, e isso é a ALE-170: a ferramenta existe para
-// responder "esse encontro é duro demais?", e na versão anterior a resposta era
-// uma faixa de 14px — mais discreta que o botão de adicionar criatura logo
-// abaixo. O ND é o número grande, a dificuldade vem ao lado com o peso que
-// merece, e o XP fica secundário porque ele é consequência, não decisão.
+// O VEREDITO é o bloco principal: a ferramenta existe para responder "esse
+// encontro é duro demais?". O ND é o número grande, a dificuldade vem ao lado com
+// o peso que merece, e o XP fica secundário porque ele é consequência, não
+// decisão.
 func encountersScene(v encountersView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -49,7 +48,7 @@ func encountersScene(v encountersView) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(encounterSignals(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 22, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 21, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -193,7 +192,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("encontro-" + sinal)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 50, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 49, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -206,7 +205,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 50, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 49, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -229,7 +228,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue("encontro-" + sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 53, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 52, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -242,7 +241,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(minimo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 55, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 54, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -255,7 +254,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(maximo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 56, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 55, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -268,7 +267,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 57, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 56, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -281,7 +280,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 58, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 57, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -294,7 +293,7 @@ func partyField(sinal, rotulo string, valor, minimo, maximo int) templ.Component
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo + " do grupo")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 60, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 59, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -362,7 +361,7 @@ func verdict(v encountersView) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(roundedCR(v.ND()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 73, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 72, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -401,7 +400,7 @@ func verdict(v encountersView) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(difficultyColor(v.Difficulty().Tom))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 80, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 79, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -414,7 +413,7 @@ func verdict(v encountersView) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(v.Difficulty().Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 81, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 80, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -453,7 +452,7 @@ func verdict(v encountersView) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(xpWritten(v.XPPerCharacter()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 88, Col: 95}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 87, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -512,7 +511,7 @@ func copyEncounterButton(v encountersView) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(encounterAddress(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 106, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 105, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -565,7 +564,7 @@ func composition(v encountersView) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(l.Verbete.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 124, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 123, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -578,7 +577,7 @@ func composition(v encountersView) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs("ND " + book.CRWritten(l.Verbete.ND))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 125, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 124, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -591,7 +590,7 @@ func composition(v encountersView) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs("grupo ND " + roundedCR(l.ND))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 126, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 125, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -612,7 +611,7 @@ func composition(v encountersView) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(l.Qtd))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 129, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 128, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -693,7 +692,7 @@ func quantityStep(m book.Entry, passo, sinal string) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(stepLabel(passo, m.Name))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 147, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 146, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 		if templ_7745c5c3_Err != nil {
@@ -706,7 +705,7 @@ func quantityStep(m book.Entry, passo, sinal string) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/encontros/%s/%s')", passo, m.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 148, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 147, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -719,7 +718,7 @@ func quantityStep(m book.Entry, passo, sinal string) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 150, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 149, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -738,7 +737,7 @@ func quantityStep(m book.Entry, passo, sinal string) templ.Component {
 //
 // A lista só aparece com termo digitado. Mostrar as 80 abaixo da composição
 // empurraria o VEREDITO para fora da tela, e o veredito é o assunto da
-// ferramenta (ALE-170) — a mesma razão pela qual ele é o bloco grande.
+// ferramenta — a mesma razão pela qual ele é o bloco grande.
 func addPanel(v encountersView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -775,7 +774,7 @@ func addPanel(v encountersView) templ.Component {
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Term)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 168, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 167, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 		if templ_7745c5c3_Err != nil {
@@ -804,7 +803,7 @@ func addPanel(v encountersView) templ.Component {
 					var templ_7745c5c3_Var37 string
 					templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue("Acrescentar " + m.Name + " ao encontro")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 183, Col: 61}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 182, Col: 61}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 					if templ_7745c5c3_Err != nil {
@@ -817,7 +816,7 @@ func addPanel(v encountersView) templ.Component {
 					var templ_7745c5c3_Var38 string
 					templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/encontros/adicionar/%s')", m.ID))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 184, Col: 84}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 183, Col: 84}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 					if templ_7745c5c3_Err != nil {
@@ -830,7 +829,7 @@ func addPanel(v encountersView) templ.Component {
 					var templ_7745c5c3_Var39 string
 					templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 187, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 186, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 					if templ_7745c5c3_Err != nil {
@@ -843,7 +842,7 @@ func addPanel(v encountersView) templ.Component {
 					var templ_7745c5c3_Var40 string
 					templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs("ND " + book.CRWritten(m.ND))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 188, Col: 90}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 187, Col: 90}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 					if templ_7745c5c3_Err != nil {
@@ -856,7 +855,7 @@ func addPanel(v encountersView) templ.Component {
 					var templ_7745c5c3_Var41 string
 					templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(book.TypeName(m.Tipo))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 189, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 188, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 					if templ_7745c5c3_Err != nil {
@@ -869,7 +868,7 @@ func addPanel(v encountersView) templ.Component {
 					var templ_7745c5c3_Var42 string
 					templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("PV %d", m.HP))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 190, Col: 99}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 189, Col: 99}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 					if templ_7745c5c3_Err != nil {

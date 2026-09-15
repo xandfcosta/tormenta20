@@ -4,17 +4,14 @@ import "sort"
 
 // Áreas de efeito no mapa de batalha (Tormenta 20, p225).
 //
-// O livro descreve as áreas em uma frase cada e manda ver a ILUSTRAÇÃO da
-// p225 ("conforme os modelos da ilustração") — ou seja, a figura É a regra, e é
-// contra ela que este arquivo foi escrito. Os seis modelos desenhados (cones de
-// 4,5m, 6m e 9m, cada um em duas orientações), as três esferas (raios de 1,5m,
-// 3m e 6m), a linha de 15m e os dois cubos foram TRANSCRITOS quadrado a
-// quadrado da figura, e o teste de regra guarda a contagem de cada um.
+// O livro descreve as áreas em uma frase cada e manda ver a ILUSTRAÇÃO da p225
+// ("conforme os modelos da ilustração") — a figura É a regra, e é contra ela que
+// este arquivo foi escrito, quadrado a quadrado. O teste de regra guarda a
+// contagem de cada modelo.
 //
-// O achado da transcrição: as formas da figura são LOSANGOS, e não círculos.
-// Isso não é detalhe estético — significa que a área usa a mesma régua que o
-// movimento (a diagonal custa o dobro, p238) e que o alcance (p224). Uma só
-// régua no mapa inteiro.
+// As formas da figura são LOSANGOS e não círculos, e isso não é estética:
+// significa que a área usa a mesma régua que o movimento (a diagonal custa o
+// dobro, p238) e que o alcance (p224). Uma só régua no mapa inteiro.
 
 // AreaKind é a categoria de área do livro (p225).
 type AreaKind string

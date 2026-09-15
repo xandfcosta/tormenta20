@@ -6,32 +6,21 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A cena de PERSONAGENS desenhada (ALE-239) — "palco + dossiê".
+// A cena de PERSONAGENS desenhada — "palco + dossiê".
 //
 // Mesma mecânica da cena de campanhas: todos os palcos desenhados, o cursor é
 // sinal, e ele segue o FOCO do filme. A diferença de forma é a VAGA DE CRIAR:
-// ela é a última posição do cursor e não um link solto (ALE-98). Um `<a>` no
-// fim da fita pareceria igual e quebraria a gramática — as setas o pulariam,
-// porque elas andam entre itens do trilho e não entre links da página.
+// ela é a última posição do cursor e não um link solto. Um `<a>` no fim da fita
+// pareceria igual e quebraria a gramática — as setas o pulariam, porque elas
+// andam entre itens do trilho e não entre links da página.
 //
-// A ANIMAÇÃO DE ENTRADA do palco está aqui desde a ALE-235, e o mecanismo dela
-// é o que aquela issue existia para achar: `animate-in` dispara no MOUNT, e uma
-// cena inteira desenhada com `data-show` nunca monta. **O que substitui o mount
-// é a CLASSE entrando num nó que não a tinha** — o palco que sai perde a classe,
-// o que entra ganha, e são elementos diferentes, então nunca há o caso que não
-// replica ("a mesma animação, já concluída, no mesmo nó").
-//
-// Nenhuma das saídas que a issue previa foi necessária: nem morph, nem reflow
-// forçado, nem id que muda a cada troca. Ver `ui.EnteringStage` e a folha.
-//
-// O MECANISMO É GERAL, e a ALE-297 provou: a cena de campanhas largou o livro de
-// couro, virou palco e herdou a entrada inteira sem uma linha nova de CSS. Foi
-// essa segunda cena que tirou o vizinho, o facho, a entrada e o gesto daqui de
-// dentro para o `ui` — enquanto eram privados deste arquivo, tinham exatamente
-// um chamador possível.
-//
-// A VIRADA DE PÁGINA que ainda restava da ALE-235 morreu com o livro: sem
-// lombada não há folha para atravessar.
+// A ANIMAÇÃO DE ENTRADA do palco: `animate-in` dispara no MOUNT, e uma cena
+// inteira desenhada com `data-show` nunca monta. **O que substitui o mount é a
+// CLASSE entrando num nó que não a tinha** — o palco que sai perde a classe, o
+// que entra ganha, e são elementos diferentes, então nunca há o caso que não
+// replica ("a mesma animação, já concluída, no mesmo nó"). Nem morph, nem
+// reflow forçado, nem id que muda a cada troca. Ver `ui.EnteringStage` e a
+// folha.
 
 templ charactersBody(v View) {
 	@charactersBar(v)
@@ -123,8 +112,8 @@ templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 		</div>
 		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
-		// que quebra em duas linhas empurra a fileira do retrato 20px para cima
-		// e os cartões dançam ao percorrer o elenco (ALE-99).
+		// que quebra em duas linhas empurra a fileira do retrato para cima e os
+		// cartões dançam ao percorrer o elenco.
 		<div class="stage-plate max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Name }</h2>
 			@ui.SectionLabel("gold", "mt-1") {
@@ -150,19 +139,18 @@ templ heroStage(h HeroCard, anterior, proximo *ui.Neighbor) {
 	</div>
 }
 
-// heroVitals: DEF, PV e PM — nesta ordem, que é a da SPA.
+// heroVitals: DEF, PV e PM, nesta ordem.
 //
 // A Defesa vem PRIMEIRO e nunca some: quando não há motor ela é um travessão.
-// Uma coluna que aparece e desaparece faz o palco dançar ao trocar de herói, e
-// esse é o defeito que a ALE-99 consertou.
+// Uma coluna que aparece e desaparece faz o palco dançar ao trocar de herói.
 //
 // PV e PM levam as cores da casa; o PM fica apagado quando o máximo é zero,
 // porque quem não tem mana não tem por que ler um "0/0" em destaque.
 //
-// O PV segue a ESCADA e o PM não, e a assimetria é do livro: mana acabando é
-// um recurso no fim, vida acabando é um herói morrendo. Até a ALE-316 o PV era
-// `--hp-full` fixo aqui, então o trilho mostrava o elenco inteiro com a mesma
-// cor de saúde — e esta é a tela em que se ESCOLHE quem jogar.
+// O PV segue a ESCADA e o PM não, e a assimetria é do livro: mana acabando é um
+// recurso no fim, vida acabando é um herói morrendo. Com uma cor fixa, o trilho
+// mostraria o elenco inteiro com a mesma saúde — e esta é a tela em que se
+// ESCOLHE quem jogar.
 templ heroVitals(h HeroCard) {
 	<dl class="flex items-center justify-center gap-5 text-sm">
 		@oneVital("DEF", h.Defense, "", false)
@@ -210,10 +198,9 @@ templ createStage(sozinha bool, anterior *ui.Neighbor) {
 		</div>
 		// A vaga não tem vitais nem resumo, mas precisa da ALTURA deles: sem
 		// essas duas fileiras invisíveis a coluna centralizada puxa o retrato
-		// 70px para cima ao chegar aqui, e o palco DANÇA na última posição do
-		// trilho (ALE-99). Medido: 70px, com o retrato do herói em y=152 e o da
-		// vaga em y=222. Elas espelham a escala de `heroVitals` e da linha de
-		// resumo — mudou lá, muda aqui.
+		// para cima ao chegar aqui, e o palco DANÇA na última posição do trilho.
+		// Elas espelham a escala de `heroVitals` e da linha de resumo — mudou
+		// lá, muda aqui.
 		<div aria-hidden="true" class="invisible flex items-center justify-center gap-5 text-sm">
 			<span class="font-mono text-lg font-semibold tabular-nums">0</span>
 		</div>
@@ -235,12 +222,11 @@ templ createStage(sozinha bool, anterior *ui.Neighbor) {
 // characterFilm é o índice: um salto direto para qualquer herói, que é o
 // que salva um elenco longo do "aperta a seta trinta vezes".
 //
-// A REGIÃO se chama `rail` e não `filme` desde a ALE-181, e o nome é CONTRATO e
-// não gosto: o driver do `scene.js` procura literalmente `[data-nav-region="rail"]`
-// para o Esc subir um nível e para escolher onde o foco pousa ao entrar na cena.
-// Com um nome próprio, esta cena caía no ramo "a primeira região que houver" —
-// que acertava por ser a única. O comentário do trilho de campanhas já avisava
-// que três cenas perderam esse comportamento assim.
+// A REGIÃO se chama `rail` e não `filme`, e o nome é CONTRATO e não gosto: o
+// driver do `scene.js` procura literalmente `[data-nav-region="rail"]` para o
+// Esc subir um nível e para escolher onde o foco pousa ao entrar na cena. Com um
+// nome próprio, a cena cai no ramo "a primeira região que houver" — que acerta
+// enquanto ela for a única.
 templ characterFilm(v View) {
 	<div
 		role="listbox"
@@ -260,11 +246,9 @@ templ characterFilm(v View) {
 templ filmFrame(h HeroCard, i int) {
 	@ui.Marker(ui.RailMarker{
 		ID: h.ID, Index: i, Monogram: h.Monogram, Gradient: h.Gradient,
-		// Nome E papel, como o marcador de campanhas. O `aria-label` que este
-		// quadro carregava some junto e isso é conserto, não perda: ele existia
-		// porque o monogram de 48px não dizia quem era, e um nome acessível
-		// escrito à mão sobre um conteúdo que agora o diz seria duas fontes
-		// para a mesma frase.
+		// Nome E papel, como o marcador de campanhas. Sem `aria-label`: o
+		// conteúdo já diz quem é, e um nome acessível escrito à mão por cima
+		// seriam duas fontes para a mesma frase.
 		Name: h.Name, Sub: h.Role,
 		Destino: "/personagens/" + strconv.FormatInt(h.ID, 10),
 	}) {
@@ -273,8 +257,8 @@ templ filmFrame(h HeroCard, i int) {
 
 // O ⏎ daqui leva à Forja, como o ⏎ de um herói leva à ficha. Sem ele a gramática
 // do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
-// que abriu tudo até ali não faz nada. (E é a QUINTA vez que um comentário
-// dentro da lista de atributos derruba o `templ generate` — ele não aceita.)
+// que abriu tudo até ali não faz nada. (Ele mora aqui fora porque o `templ` NÃO
+// aceita comentário dentro de uma lista de atributos — o `generate` cai.)
 templ createFrame(indice int) {
 	@ui.BlankMarker(indice, "Forjar um herói", "/personagens/nova")
 }
@@ -284,15 +268,14 @@ templ createFrame(indice int) {
 // heroDossier é a gaveta de detalhe. Ela é desenhada para todos e revelada
 // pelo par cursor+`$dossier`: abrir não pede nada ao servidor.
 //
-// As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) — na
-// SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
+// As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) e
+// não de uma consulta: são quatro linhas, e elas já estão na memória do servidor.
 templ heroDossier(h HeroCard) {
-	// NASCE ESCONDIDO (ALE-296), e o `style` estático é o conserto inteiro.
+	// NASCE ESCONDIDO, e o `style` estático é o conserto inteiro.
 	//
-	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
-	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
-	// medido com sonda de quadro: até 30 quadros de pano preto sobre a cena, que o
-	// dono relatou como "um dialog que aparece e some".
+	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até
+	// lá esta sobreposição está no documento com `inset-0` e fundo preto, e
+	// PINTA — dezenas de quadros de pano preto sobre a cena.
 	//
 	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
 	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o

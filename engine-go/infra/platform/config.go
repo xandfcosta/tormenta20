@@ -4,11 +4,6 @@
 // Ele não importa nada do projeto — é folha do grafo, como o `engine` —, e essa
 // é a propriedade que o mantém honesto: qualquer coisa que precise saber o que é
 // uma ficha ou um tabuleiro não cabe aqui.
-//
-// > Aqui morava um comentário abrindo com `Package api is the app's HTTP layer`,
-// > descrevendo chi router, middleware e handlers — nenhum deles deste pacote.
-// > Ele sobreviveu ao arquivo mudar de `api/` para cá, e uma linha em branco o
-// > separava do `package`, então nem doc comment do Go ele era (ALE-321).
 package platform
 
 import (
@@ -21,9 +16,9 @@ import (
 	"time"
 )
 
-// AppEnv names the environment. It picks which `.env.<AppEnv>` file LoadConfig
-// reads AND how strict Validate is — the two are one decision, so they share
-// one variable (APP_ENV) instead of drifting apart.
+// AppEnv nomeia o ambiente. Ele escolhe qual `.env.<AppEnv>` o `LoadConfig` lê E
+// quão rígido o `Validate` é — as duas coisas são uma decisão só, e por isso
+// dividem uma variável (APP_ENV) em vez de derivar cada uma para um lado.
 type AppEnv string
 
 const (
@@ -31,20 +26,21 @@ const (
 	EnvProduction  AppEnv = "production"
 )
 
-// DevJWTSecret is the throwaway signing key `.env.development` ships with. It is
-// committed on purpose — a dev token is worthless — which is exactly why
-// Validate refuses it in production: a copied file must not become the key that
-// signs sessions for everyone on the LAN (ALE-119).
+// DevJWTSecret é a chave de assinatura descartável que vem no
+// `.env.development`. Ela é versionada de propósito — token de desenvolvimento
+// não vale nada —, e é exatamente por isso que o `Validate` a recusa em
+// produção: um arquivo copiado não pode virar a chave que assina a sessão de
+// todo mundo na LAN.
 const DevJWTSecret = "t20-dev-secret"
 
-// Config is the server's environment, read once at startup.
+// Config é o ambiente do servidor, lido uma vez na subida.
 type Config struct {
 	AppEnv AppEnv
-	// AdminEmails is the closed list of accounts that administer the table. The
-	// role lives HERE and not in a database column on purpose (ALE-120): there is
-	// no promote endpoint, so the only way to become admin is editing this file
-	// on the host — no HTTP bug can turn a player into one. The price is that
-	// changing it takes an edit plus a restart.
+	// AdminEmails é a lista fechada de contas que administram a mesa. O papel
+	// mora AQUI e não numa coluna do banco de propósito: não existe rota que
+	// promova ninguém, então o único jeito de virar admin é editar este arquivo
+	// no hospedeiro — nenhum defeito de HTTP transforma um jogador num. O preço
+	// é que mudar a lista custa uma edição mais um reinício.
 	AdminEmails  []string
 	Port         string
 	DatabasePath string
@@ -59,61 +55,55 @@ type Config struct {
 	//
 	// Vazio quer dizer NENHUM middleware de CORS montado, e não uma lista vazia:
 	// o go-chi lê `AllowedOrigins` vazio como "libere TODAS", que com credenciais
-	// ligadas é todo site do mundo (ALE-119).
-	//
-	// Ela continua existindo para quem precisar: `CORS_ORIGIN` no `.env` volta a
-	// montar o middleware com a lista que se escrever.
+	// ligadas é todo site do mundo. `CORS_ORIGIN` no `.env` volta a montar o
+	// middleware com a lista que se escrever.
 	CORSOrigins []string
-	// CatalogPath is the primeEngineCatalogs payload (items/races/…) the API loads
-	// at startup for its mutation validators. Defaults to the committed snapshot.
+	// CatalogPath é o despejo de catálogos (itens, raças, …) que a API carrega na
+	// subida para os validadores de mutação. O padrão é o instantâneo
+	// versionado.
 	CatalogPath string
-	// BackupDir is where the admin screen writes snapshots — the same directory
-	// the `pnpm db:backup` script uses, so a backup made either way shows up in
-	// both places (ALE-120). Relative to engine-go/, which is the server's CWD.
+	// BackupDir é onde a tela de admin escreve os instantâneos — a mesma pasta do
+	// script `pnpm db:backup`, para um backup feito de qualquer um dos dois jeitos
+	// aparecer nos dois lugares. Relativa a `engine-go/`, que é o CWD do
+	// servidor.
 	BackupDir string
 	// BackupEvery é o intervalo do backup automático, e BackupKeep quantos
 	// arquivos ficam. Um backup que depende de alguém lembrar é um backup que
-	// não existe na noite em que importa (ALE-157). Zero em qualquer um dos
-	// dois DESLIGA o automático — a mesa é do dono, e ele pode não querer.
+	// não existe na noite em que importa. Zero em qualquer um dos dois DESLIGA o
+	// automático — a mesa é do dono, e ele pode não querer.
 	BackupEvery time.Duration
 	BackupKeep  int
-	// TLSCertFile e TLSKeyFile ligam o HTTPS NESTE processo (ALE-118). Vazios
-	// nos dois — o padrão — o servidor fala HTTP puro exatamente como antes.
+	// TLSCertFile e TLSKeyFile ligam o HTTPS NESTE processo. Vazios nos dois — o
+	// padrão — o servidor fala HTTP puro.
 	//
-	// O TLS termina aqui, e não num nginx/Caddy na frente, porque a decisão
-	// registrada no `engine-go/CLAUDE.md` é um processo só servindo SPA, API e
-	// socket; pôr um proxy na frente contraria isso e precisa ser deliberado.
-	//
-	// Isto NÃO exclui o outro arranjo: quem terminar TLS fora (um túnel, um
-	// proxy) deixa estes dois vazios, mantém `COOKIE_SECURE=true` e continua
-	// funcionando — o processo segue falando HTTP para quem está na frente.
+	// O TLS termina aqui e não num nginx/Caddy na frente porque a decisão da casa
+	// é um processo só, sem proxy; pôr um na frente contraria isso e precisa ser
+	// deliberado. Isto NÃO exclui o outro arranjo: quem terminar TLS fora deixa
+	// estes dois vazios, mantém `COOKIE_SECURE=true` e continua funcionando.
 	TLSCertFile string
 	TLSKeyFile  string
 	// LivroPDF é o caminho do Tormenta 20 em PDF que o servidor entrega em
 	// `/livro`, e VAZIO é o padrão: sem ele o botão "abrir no livro"
 	// simplesmente não existe, e nada é servido.
 	//
-	// Por configuração e não embutido porque o PDF está FORA do módulo Go
-	// (`../t20-book.pdf`, e ignorado pelo git) — `go:embed` não o alcança —,
-	// e porque servir o livro é decisão do dono da mesa: a mesa conecta pela
-	// rede local, então a rota publica o arquivo para quem entrou.
+	// Por configuração e não embutido: o PDF está FORA do módulo Go
+	// (`../t20-book.pdf`, e ignorado pelo git) e o `go:embed` não o alcança. E
+	// servir o livro é decisão do dono da mesa — a rota publica o arquivo para
+	// quem entrou na rede local.
 	LivroPDF string
 	// LivroAbertura é quantas páginas o ARQUIVO tem antes da página impressa 1.
 	//
-	// Ela existe porque `#page=N` conta páginas do arquivo e o catálogo grava a
-	// página IMPRESSA (`bookPage`). MEDIDO no PDF da casa (407 páginas), pelo
-	// número no RODAPÉ: a página 295 do arquivo imprime "289", a 297 imprime
-	// "291" e a 203 imprime "197" — três amostras em regiões distantes, todas
-	// com abertura 6. Sem isto o botão abriria seis páginas antes, no MESMO
-	// capítulo, que é o tipo de erro que parece certo.
+	// Ela existe porque `#page=N` conta páginas do ARQUIVO e o catálogo grava a
+	// página IMPRESSA (`bookPage`). Sem ela o botão abre seis páginas antes, no
+	// MESMO capítulo, que é o tipo de erro que parece certo.
 	LivroAbertura int
 }
 
-// LoadConfig loads `.env.<APP_ENV>` (or ENV_FILE, when set) and reads the
-// environment. APP_ENV defaults to development, so a bare `go run ./cmd/api`
-// stays the dev setup it has always been.
+// LoadConfig lê o `.env.<APP_ENV>` (ou o ENV_FILE, quando escrito) e o
+// ambiente. APP_ENV cai em development, para um `go run ./cmd/api` pelado
+// continuar sendo o arranjo de desenvolvimento.
 //
-//	APP_ENV=production ./bin/t20-api // → reads .env.production
+//	APP_ENV=production ./bin/t20-api // → lê o .env.production
 func LoadConfig() (Config, error) {
 	appEnv := AppEnv(env("APP_ENV", string(EnvDevelopment)))
 	if err := LoadEnvFile(env("ENV_FILE", ".env."+string(appEnv))); err != nil {
@@ -140,10 +130,10 @@ func LoadConfig() (Config, error) {
 	}, nil
 }
 
-// Validate refuses a boot that would misbehave in silence. Em produção é a chave
-// de assinatura (vazia ou pública, qualquer um que alcance o servidor emite o
-// próprio cookie e é todo mundo de uma vez) e a lista de admins. Em QUALQUER
-// ambiente é o par de TLS pela metade — ver validateTLS. Fora disso o
+// Validate recusa uma subida que se comportaria mal em silêncio. Em produção é
+// a chave de assinatura (vazia ou pública, qualquer um que alcance o servidor
+// emite o próprio cookie, e é todo mundo de uma vez) e a lista de admins. Em
+// QUALQUER ambiente é o par de TLS pela metade — ver `validateTLS`. Fora disso o
 // desenvolvimento segue permissivo de propósito: é o que o faz desenvolvimento.
 func (c Config) Validate() error {
 	// ANTES do desvio de desenvolvimento: um par de TLS pela metade é erro de
@@ -156,28 +146,28 @@ func (c Config) Validate() error {
 		return nil
 	}
 	if c.JWTSecret == "" || c.JWTSecret == DevJWTSecret {
-		// Never echo the value: this error reaches logs the operator may paste.
+		// Nunca ecoe o valor: este erro cai em log que o operador pode colar.
 		return fmt.Errorf(
 			"JWT_SECRET is %s in %s — set your own in .env.production (openssl rand -hex 32)",
 			secretFlaw(c.JWTSecret), c.AppEnv,
 		)
 	}
-	// Registration needs an invite, and only an admin can issue one: a server
-	// with no admin is a server nobody can ever join (ALE-120).
+	// Cadastro precisa de convite, e só um admin emite: servidor sem admin é
+	// servidor em que ninguém nunca entra.
 	if len(c.AdminEmails) == 0 {
 		return fmt.Errorf("ADMIN_EMAILS is empty in %s — nobody could invite the players in", c.AppEnv)
 	}
 	return nil
 }
 
-// TLSEnabled reports whether this process terminates TLS itself.
+// TLSEnabled diz se é este processo que termina o TLS.
 func (c Config) TLSEnabled() bool {
 	return c.TLSCertFile != "" && c.TLSKeyFile != ""
 }
 
-// Scheme is what goes before the address the players type. It exists so the
-// log line and the URL are the same decision: um servidor em HTTPS anunciando
-// `http://` manda a mesa inteira para um endereço que responde 400 (ALE-118).
+// Scheme é o que vem antes do endereço que os jogadores digitam. Ele existe para
+// a linha de log e a URL serem a mesma decisão: um servidor em HTTPS anunciando
+// `http://` manda a mesa inteira para um endereço que responde 400.
 func (c Config) Scheme() string {
 	if c.TLSEnabled() {
 		return "https"
@@ -185,10 +175,10 @@ func (c Config) Scheme() string {
 	return "http"
 }
 
-// validateTLS recusa um par de TLS pela metade. Cair para HTTP em silêncio
-// seria o pior dos mundos: quem escreveu meio par ligou `COOKIE_SECURE=true`
-// junto, e aí o navegador DESCARTA o cookie de sessão — o login não conclui,
-// sem erro em lugar nenhum, e a tela só volta para o início (ALE-118).
+// validateTLS recusa um par de TLS pela metade. Cair para HTTP em silêncio seria
+// o pior dos mundos: quem escreveu meio par ligou `COOKIE_SECURE=true` junto, e
+// aí o navegador DESCARTA o cookie de sessão — o login não conclui, sem erro em
+// lugar nenhum, e a tela só volta para o início.
 func (c Config) validateTLS() error {
 	if (c.TLSCertFile == "") == (c.TLSKeyFile == "") {
 		return nil
@@ -203,15 +193,15 @@ func (c Config) validateTLS() error {
 	)
 }
 
-// IsAdmin reports whether email administers the table. Case-insensitive, which
-// is only safe because registration and login normalize the same way — without
-// that, `Mestre@` could register as a SECOND account and be admin too.
+// IsAdmin diz se o e-mail administra a mesa. Ignora a caixa, o que só é seguro
+// porque cadastro e login normalizam do mesmo jeito — sem isso, `Mestre@` se
+// cadastraria como uma SEGUNDA conta e seria admin também.
 func (c Config) IsAdmin(email string) bool {
 	return slices.Contains(c.AdminEmails, NormalizeEmail(email))
 }
 
-// splitEmails parses the comma-separated ADMIN_EMAILS, dropping blanks so a
-// trailing comma or an empty variable yields no admin rather than an empty one.
+// splitEmails lê o ADMIN_EMAILS separado por vírgula, descartando os vazios:
+// vírgula sobrando ou variável vazia dá NENHUM admin, e não um admin vazio.
 func splitEmails(raw string) []string {
 	var emails []string
 	for _, part := range strings.Split(raw, ",") {
@@ -229,30 +219,10 @@ func secretFlaw(secret string) string {
 	return "the public development secret"
 }
 
-// Aqui morava o `DevCORSOrigins`, e com ele o único lugar em que o ambiente de
-// DESENVOLVIMENTO era mais permissivo que o de produção (ALE-321).
-//
-// Ele liberava `http://localhost:5173` nas três grafias que o navegador trata
-// como origens diferentes, e a razão era real enquanto durou: a SPA era servida
-// pelo Vite naquela porta, a API respondia na :3001, e a grafia que ficasse de
-// fora perdia o socket para um 403 que chegava na tela como "RECONECTANDO…" para
-// sempre, sem erro em lugar nenhum (ALE-185).
-//
-// A SPA saiu na ALE-272. Desde então nada roda na :5173, e o que sobrou foi um
-// middleware de CORS montado em desenvolvimento concedendo credenciais a uma
-// origem que ninguém é dono — configuração morta que ainda FAZ coisa, que é pior
-// que prosa morta.
-//
-// Hoje o default é vazio nos dois ambientes, e vazio quer dizer NENHUM
-// middleware: um processo só serve as cenas, a API e o fluxo ao vivo na mesma
-// porta, então o celular do jogador na LAN é mesma-origem e passa direto. Quem
-// precisar de uma origem externa escreve `CORS_ORIGIN` no `.env` — a variável
-// continua lida, só deixou de ter um valor de fábrica que ninguém pediu.
-
-// SplitOrigins parses the comma-separated CORS_ORIGIN, dropping blanks: a
-// trailing comma must yield NO origin rather than an empty one, and an empty
-// one is worse than none — go-chi reads an empty AllowedOrigins list as "allow
-// ALL", which with credentials on is every website (ALE-119).
+// SplitOrigins lê o CORS_ORIGIN separado por vírgula, descartando os vazios:
+// vírgula sobrando tem de dar NENHUMA origem, e não uma origem vazia — o go-chi
+// lê um `AllowedOrigins` vazio como "libere TODAS", que com credenciais ligadas
+// é todo site do mundo.
 func SplitOrigins(raw string) []string {
 	var origins []string
 	for _, part := range strings.Split(raw, ",") {
@@ -270,7 +240,7 @@ func env(key, fallback string) string {
 	return fallback
 }
 
-// stripFilePrefix turns a Prisma-style "file:./dev.db" URL into a plain path.
+// stripFilePrefix transforma uma URL no estilo "file:./dev.db" num caminho.
 func stripFilePrefix(url string) string {
 	return strings.TrimPrefix(url, "file:")
 }

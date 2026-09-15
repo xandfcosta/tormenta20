@@ -10,42 +10,34 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "fmt"
 
-// O MARCADOR do trilho — a peça que escolhe o que o palco mostra (ALE-181).
+// O MARCADOR do trilho — a peça que escolhe o que o palco mostra.
 //
-// Ele nasceu na cena de campanhas e virou peça da casa quando o elenco precisou
-// da mesma coisa. É a terceira vez neste repositório que a segunda cena é quem
-// paga a extração, e a lição não muda: **instrumento que mora dentro de um
-// chamador tem exatamente um chamador**. A alternativa era copiar trinta linhas
-// de marcação com cinco atributos de contrato dentro, e elas divergiriam no dia
-// em que alguém mexesse na gramática do cursor.
-//
-// # O que ele carrega, e por que cada coisa está aqui
+// Ele é da casa e não de uma cena porque as duas cenas de seleção o usam: copiar
+// a marcação daria duas cópias de cinco atributos de CONTRATO, e elas
+// divergiriam no dia em que alguém mexesse na gramática do cursor.
 //
 // `role="option"` e não `nav`/`button`, porque o trilho ESCOLHE o que o palco
 // mostra e não navega para lugar nenhum. Os cinco atributos de gesto —
 // `data-nav-item`, `data-cue-hover`, o `aria-selected` derivado do cursor e o
 // par `focusin`/`click` — são o contrato com o driver de teclado e com a
-// gramática do cursor (`ui.CursorGesture`), e escrevê-los à mão é onde o sexto
+// gramática do cursor (`ui.CursorGesture`), e escrevê-los à mão é onde o próximo
 // gesto esquece o sentido.
 //
 // O ⏎ leva ao `Destino`. Sem ele a gramática do teclado morre no trilho: a seta
 // chega no marcador e a tecla que abriu tudo até ali não faz nada.
 //
-// # DUAS LETRAS NÃO SÃO UM NOME
+// DUAS LETRAS NÃO SÃO UM NOME, e é a razão de o marcador ser LARGO: uma lista
+// identificada por monogram de 48px se navega às cegas, e as iniciais nem
+// precisam colidir para isso valer.
 //
-// É a razão de o marcador ser largo. O elenco identificava nove heróis por
-// monogram de 48px — `TP CD NN DN MG PS LN BV IG` —, e achar alguém ali é
-// navegar às cegas. As iniciais nem precisam COLIDIR para o defeito existir:
-// medido nesta seed, elas são todas distintas e continuam não sendo nomes.
+// O `Sub` é o papel — "GUERREIRO 10 · ANÃO", "Mestrando" —, e ele não é enfeite:
+// num elenco grande separa dois guerreiros, e na lista de um admin separa a mesa
+// dele das dos outros.
 //
-// O `Sub` é o papel — "GUERREIRO 10 · ANÃO", "Mestrando" —, e ele não é enfeite
-// nas duas cenas: num elenco grande separa dois guerreiros, e na lista de um
-// admin separa a mesa dele das dos outros (ALE-120).
-//
-// O bloco de FILHOS é o canto direito: o ponto pulsante de "ao vivo" das
-// campanhas mora ali. Ele é `children` e não um campo booleano porque a próxima
-// cena vai querer outra coisa nesse canto, e um `AoVivo bool` no kit obrigaria
-// o kit a saber o que é uma sessão.
+// O bloco de FILHOS é o canto direito, onde mora o ponto pulsante de "ao vivo"
+// das campanhas. Ele é `children` e não um campo booleano porque a próxima cena
+// vai querer outra coisa nesse canto, e um `AoVivo bool` no kit obrigaria o kit
+// a saber o que é uma sessão.
 type RailMarker struct {
 	// ID é o valor que o cursor assume. Zero é a VAGA do fim — nenhum id de
 	// campanha ou de herói é zero, e é isso que a torna uma posição do trilho.
@@ -97,7 +89,7 @@ func Marker(m RailMarker) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$cursor == %d ? 'true' : 'false'", m.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 64, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 56, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -110,7 +102,7 @@ func Marker(m RailMarker) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(CursorGesture(m.Index, m.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 65, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 57, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -123,7 +115,7 @@ func Marker(m RailMarker) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(CursorGesture(m.Index, m.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 66, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 58, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -136,7 +128,7 @@ func Marker(m RailMarker) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(theEnterThatOpens(m.Destino))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 67, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 59, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -162,7 +154,7 @@ func Marker(m RailMarker) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + m.Gradient)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 74, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 66, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -175,7 +167,7 @@ func Marker(m RailMarker) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(m.Monogram)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 75, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 67, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -188,7 +180,7 @@ func Marker(m RailMarker) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 77, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 69, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -223,7 +215,7 @@ func Marker(m RailMarker) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(m.Sub)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 78, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 70, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -248,9 +240,9 @@ func Marker(m RailMarker) templ.Component {
 // BlankMarker é a VAGA do fim do trilho — abrir uma campanha nova, forjar um
 // herói.
 //
-// Ela é um marcador como os outros e não um link solto (ALE-98): as setas andam
-// entre itens do trilho, e um `<a>` no fim da fita pareceria igual e seria
-// pulado por elas.
+// Ela é um marcador como os outros e não um link solto: as setas andam entre
+// itens do trilho, e um `<a>` no fim da fita pareceria igual e seria pulado por
+// elas.
 //
 // O `Rotulo` é o nome da coisa que nasce, e ele vem de fora porque cada cena o
 // chama de um jeito — "Folha em branco" na campanha, "Forjar um herói" no
@@ -283,7 +275,7 @@ func BlankMarker(indice int, rotulo, destino string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 100, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 92, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -296,7 +288,7 @@ func BlankMarker(indice int, rotulo, destino string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(CursorGesture(indice, 0))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 102, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 94, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -309,7 +301,7 @@ func BlankMarker(indice int, rotulo, destino string) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(CursorGesture(indice, 0))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 103, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 95, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
@@ -322,7 +314,7 @@ func BlankMarker(indice int, rotulo, destino string) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(theEnterThatOpens(destino))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 104, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 96, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {
@@ -343,7 +335,7 @@ func BlankMarker(indice int, rotulo, destino string) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 110, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/rail.templ`, Line: 102, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {

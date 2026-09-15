@@ -6,13 +6,13 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A CARTA DE CONVITE desenhada (ALE-249): entrar numa mesa.
+// A CARTA DE CONVITE desenhada: entrar numa mesa.
 //
 // Mesma folha do grimório da folha em branco, e é de propósito: toda cena de
 // campanha é página do mesmo livro — a crônica que se lê, a folha que se
 // escreve, e a carta enfiada nela.
 //
-// SEM Datastar, pela terceira vez e pelo mesmo motivo (ALE-229, ALE-246): é um
+// SEM Datastar, pelo mesmo motivo das outras cenas de formulário: é um
 // formulário que NAVEGA ao dar certo. A escolha do herói é um `radio` nativo —
 // não um botão com estado de cliente —, e isso não é economia: `radio` dá de
 // graça o grupo exclusivo, a navegação por setas dentro do grupo, o rótulo lido
@@ -46,11 +46,11 @@ templ JoinBody(v joinView) {
 				<p class="text-sm text-destructive-ink">{ v.Aviso }</p>
 			}
 			// O botão SOME quando não há o que enviar — convite morto ou elenco
-			// vazio —, em vez de ficar desabilitado como na SPA. Divergência
-			// deliberada: nos dois casos não existe nada que a pessoa possa
-			// fazer AQUI, e um botão que não funciona é uma porta pintada na
-			// parede. Quem explica é a carta ("peça um novo link ao mestre") ou
-			// a caixa vazia ("crie um herói"), e as duas oferecem o passo certo.
+			// vazio —, em vez de ficar desabilitado: nos dois casos não existe
+			// nada que a pessoa possa fazer AQUI, e um botão que não funciona é
+			// uma porta pintada na parede. Quem explica é a carta ("peça um novo
+			// link ao mestre") ou a caixa vazia ("crie um herói"), e as duas
+			// oferecem o passo certo.
 			<div class="flex justify-end gap-2">
 				<a href="/campanhas" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }>Cancelar</a>
 				if len(v.Herois) > 0 && (!v.TemConvite || v.ConviteVale) {
@@ -67,8 +67,8 @@ templ JoinBody(v joinView) {
 // comprometer um herói com ela.
 //
 // Não há estado de "carregando" aqui, e a ausência é o ganho da cena: o convite
-// é resolvido no servidor antes de a página existir. Na SPA a tela monta e
-// espera uma segunda requisição atrás de um esqueleto.
+// é resolvido no servidor antes de a página existir, em vez de a tela montar e
+// esperar uma segunda requisição atrás de um esqueleto.
 templ inviteLetter(v joinView) {
 	<div class="flex items-start gap-3 rounded-none border border-grimorio-gold/40 bg-grimorio-panel p-4">
 		@ui.Icon("Mail", "mt-0.5 size-4 shrink-0 text-grimorio-gold")
@@ -115,18 +115,16 @@ templ heroChoice(v joinView) {
 // anel — assim o estado visual segue o estado REAL do controle, e não uma
 // segunda cópia dele guardada em algum lugar.
 // NADA vem pré-selecionado, e isso é decisão e não esquecimento: entrar numa
-// mesa cria uma CÓPIA do herói lá dentro (ALE-33), e sair não é um clique. Um
-// rádio já marcado faz quem estiver distraído sentar o herói errado à mesa.
+// mesa cria uma CÓPIA do herói lá dentro, e sair não é um clique. Um rádio já
+// marcado faz quem estiver distraído sentar o herói errado à mesa.
 //
 // A recusa é do NAVEGADOR, pelo `required`: ele diz "selecione uma destas
-// opções" apontando o grupo. É melhor que o botão desabilitado da SPA, que não
-// diz por que não envia — a mesma queixa que a ALE-80 registrou sobre esta
-// tela. O servidor recusa de novo, porque `required` não sobrevive a um POST
-// feito na mão.
+// opções" apontando o grupo, que é melhor que um botão desabilitado sem dizer
+// por que não envia. O servidor recusa de novo, porque `required` não sobrevive
+// a um POST feito na mão.
 //
 // O anel de foco mora no RÓTULO e não no rádio, pela razão que o `raceTile` da
-// forja registra por extenso — e com o mesmo afastamento de 1px da casa
-// (ALE-318).
+// forja registra por extenso — e com o mesmo afastamento de 1px da casa.
 templ heroPlate(h joinHero, marcado bool) {
 	<label class="flex cursor-pointer items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
 		<input

@@ -23,9 +23,9 @@ import (
 // toda porta — uma que devolve tipo do hospedeiro não é porta, é o hospedeiro
 // com outro nome.
 //
-// O `bcrypt`. A cena escrevia o hash da senha nova com o custo criptográfico do
-// `api`, pedido por uma porta, para fazer trabalho que não é dela. Hoje o
-// `ResetPassword` faz o caminho inteiro do outro lado.
+// O `bcrypt`. Hashear senha não é trabalho da cena, e pedir o custo
+// criptográfico do `api` por uma porta seria fazê-lo mesmo assim: quem faz o
+// caminho inteiro, do outro lado, é o `ResetPassword`.
 type Deps interface {
 	// Queries é o banco. A porta lê UMA coisa: o e-mail que o link de
 	// redefinição aponta.

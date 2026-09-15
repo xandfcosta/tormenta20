@@ -13,31 +13,21 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O ELENCO DA CAMPANHA (ALE-269, superfície 6a — os jogadores).
+// O ELENCO DA CAMPANHA — os jogadores.
 //
-// O conceito que faltava é que **iniciativa não é lista de combatentes**: até
-// aqui, a única forma de alguém existir na sessão era já estar na fila. O
-// elenco responde "quem existe nesta campanha" — e quem põe alguém no combate é
-// o mestre, QUANDO ele quiser.
+// **Iniciativa não é lista de combatentes**: o elenco responde "quem existe
+// nesta campanha", e quem põe alguém no combate é o mestre, QUANDO ele quiser.
 //
-// Esta é a metade dos JOGADORES. Os NPCs da campanha vêm num commit próprio: o
-// piloto não tem CRUD de criatura nenhum, e o editor de bloco são ~25 campos
-// mais ataques e habilidades — trabalho de outra natureza.
-//
-// O QUE A FICHA MOSTRA, e por que não é a ficha inteira: a SPA abre o
-// `CharacterSheet` completo e editável, e o app NÃO TEM ficha — ela é a
-// ÚLTIMA tela da migração e ainda vive na SPA. Construí-la aqui seria fazer a
-// última tela fora de ordem, dentro de uma superfície que é sobre outra coisa.
-// Então esta caixa mostra o que o mestre precisa DA MESA: quem é, como está, e
-// o caminho para o combate. Quando a ficha for migrada, é daqui que ela abre.
+// A caixa mostra o que o mestre precisa DA MESA — quem é, como está, e o
+// caminho para o combate — e não a ficha inteira, que é outra tela.
 //
 // UM DIÁLOGO POR MEMBRO, e não um só reaproveitado — o inverso da escolha das
 // condições, de propósito. Lá são 35 crachás × 9 linhas e um diálogo por linha
-// seriam 315 nós redesenhados; aqui são quatro ou cinco jogadores, e um nó por
-// um. O que se compra com isso é a armadilha que o link de redefinir senha
-// ensinou: nó COMPARTILHADO que recebe escrita depois da renderização mostra o
-// dado do item ANTERIOR sob o nome do próximo. Com um diálogo por pessoa não há
-// o que limpar, porque não há o que sobreviver à troca.
+// seriam 315 nós redesenhados; aqui são quatro ou cinco jogadores. O que se
+// compra é a armadilha do nó COMPARTILHADO que recebe escrita depois da
+// renderização: ele mostra o dado do item ANTERIOR sob o nome do próximo. Com
+// um diálogo por pessoa não há o que limpar, porque não há o que sobreviver à
+// troca.
 
 // gmCast é o segundo bloco do trilho esquerdo — a vaga do `gmCast`.
 //
@@ -95,7 +85,7 @@ func gmCast(v View) templ.Component {
 //
 // O NOME INTEIRO viaja no `aria-label` e no `title`, com a presença junto,
 // porque duas letras não são um nome e cor não existe para quem usa leitor de
-// tela (ALE-212).
+// tela.
 func castPortrait(v View, m Member) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -124,7 +114,7 @@ func castPortrait(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(castLabel(m))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 63, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 53, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -137,7 +127,7 @@ func castPortrait(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(castLabel(m))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 64, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 54, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -150,7 +140,7 @@ func castPortrait(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(openSheetCast(m))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 65, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 55, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -163,7 +153,7 @@ func castPortrait(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(m.Iniciais)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 68, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 58, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -236,7 +226,7 @@ func castSheet(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("elenco-%d", m.CharacterID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 83, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 73, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -249,7 +239,7 @@ func castSheet(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("elenco-%d-titulo", m.CharacterID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 85, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 75, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -262,7 +252,7 @@ func castSheet(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("elenco-%d-titulo", m.CharacterID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 90, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 80, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -275,7 +265,7 @@ func castSheet(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(m.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 90, Col: 141}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 80, Col: 141}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -288,7 +278,7 @@ func castSheet(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(m.Nivel))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 92, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 82, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -306,7 +296,7 @@ func castSheet(v View, m Member) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(m.Classes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 94, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 84, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -320,7 +310,7 @@ func castSheet(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(closeSheetCast(m))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 101, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 91, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -370,7 +360,7 @@ func castSheet(v View, m Member) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(m.Presenca.Frase)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 115, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 105, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -400,7 +390,7 @@ func castSheet(v View, m Member) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(m.Defesa)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 124, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 114, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -423,7 +413,7 @@ func castSheet(v View, m Member) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(closeSheetCast(m) + " " + poeNaFila(v, m))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 132, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 122, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 			if templ_7745c5c3_Err != nil {
@@ -450,7 +440,7 @@ func castSheet(v View, m Member) templ.Component {
 	})
 }
 
-// castBar é uma barra do elenco com os passos que mexem NELA (ALE-211).
+// castBar é uma barra do elenco com os passos que mexem NELA.
 //
 // Ela é irmã do `trackerBar` da fila e não a mesma função, e a diferença é o que
 // as separa: a da fila leva o OLHO, porque esconder é decisão sobre o que a mesa
@@ -460,7 +450,7 @@ func castSheet(v View, m Member) templ.Component {
 // O gesto entra por outra porta pelo mesmo motivo: as rotas da fila são por
 // `entryId`, e metade do elenco não tem linha na iniciativa na maior parte da
 // sessão. Quem manda nos dois é a FICHA, que é o que impede as duas telas de
-// divergirem sobre o mesmo herói (ALE-122).
+// divergirem sobre o mesmo herói.
 func castBar(v View, m Member, pool, rotulo string, b tableBar) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -509,8 +499,7 @@ func castBar(v View, m Member, pool, rotulo string, b tableBar) templ.Component 
 // castStep: clique tira ou devolve 1, Shift+clique 5 — a MESMA escada da fila.
 //
 // Dois números diferentes fariam o mestre chamar de "um golpe" coisas
-// diferentes em duas telas da mesma sessão, que é a família de defeito que a
-// ALE-122 pagou caro para fechar.
+// diferentes em duas telas da mesma sessão.
 func castStep(v View, m Member, pool, verb, sign, label string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -539,7 +528,7 @@ func castStep(v View, m Member, pool, verb, sign, label string) templ.Component 
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(label + " " + m.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 170, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 159, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -552,7 +541,7 @@ func castStep(v View, m Member, pool, verb, sign, label string) templ.Component 
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(label + " " + m.Nome + " — clique 1, Shift+clique 5")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 171, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 160, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -565,7 +554,7 @@ func castStep(v View, m Member, pool, verb, sign, label string) templ.Component 
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue(castVital(v, m, pool, verb))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 172, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 161, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 		if templ_7745c5c3_Err != nil {
@@ -578,7 +567,7 @@ func castStep(v View, m Member, pool, verb, sign, label string) templ.Component 
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(sign)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 174, Col: 8}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/cast.templ`, Line: 163, Col: 8}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {

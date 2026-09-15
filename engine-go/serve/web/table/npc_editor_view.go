@@ -9,12 +9,11 @@ import (
 	"t20engine/domain/creature"
 )
 
-// As expressões e as listas do EDITOR DE BLOCO (ALE-269).
+// As expressões e as listas do EDITOR DE BLOCO.
 //
-// A divisão do trabalho é a mesma do resto do app, e aqui ela cai num lugar
-// incomum: o RASCUNHO inteiro é do navegador — cada caixa escreve num pedaço de
-// `$draft` —, e o servidor só entra onde o navegador não sabe ir sozinho, que
-// é mudar o NÚMERO DE LINHAS de uma lista. Datastar não tem laço no cliente.
+// O RASCUNHO inteiro é do navegador — cada caixa escreve num pedaço de `$draft`
+// — e o servidor só entra onde o navegador não sabe ir sozinho, que é mudar o
+// NÚMERO DE LINHAS de uma lista: o Datastar não tem laço no cliente.
 
 // Os nomes das três listas de tamanho variável. Constantes porque cada uma
 // aparece na rota, no fragmento e no `data-bind` de cada campo: escritas à mão, a
@@ -26,7 +25,7 @@ const (
 	listaDeHabilidades = "habilidade"
 )
 
-// As três abas do editor (decisão do dono).
+// As três abas do editor.
 //
 // Uma coluna só com os ~25 campos mais as três listas rola demais num diálogo de
 // 40rem; as abas cortam por PERGUNTA e não por tamanho — "quais são os números
@@ -51,13 +50,8 @@ var editorTabs = []editorTab{
 // blocoEmBranco é a semente de "criar do zero", e ela NÃO é o zero de tudo.
 //
 // Um bloco todo em zero seria recusado pelo `validateCreature` (PV precisa de 1)
-// e, pior, ensinaria errado: quem escreve do zero está inventando um NPC, não
-// preenchendo um formulário — os padrões do humano médio (Defesa 10, 9m de
+// e, pior, ensinaria errado: os padrões do humano médio (Defesa 10, 9m de
 // deslocamento, PV 10) são o ponto de partida do livro e poupam seis campos.
-//
-// Os mesmos números do `blankCreatureBlock` da SPA, portados e não inventados: as
-// duas telas escrevem na MESMA coluna do MESMO banco, e dois brancos diferentes
-// dariam dois NPCs diferentes para o mesmo gesto.
 func blocoEmBranco() creature.Block {
 	return creature.Block{
 		ND: 1, Tipo: "humanoide", Size: "medio",
@@ -68,14 +62,12 @@ func blocoEmBranco() creature.Block {
 
 // blankDraft é a FORMA do rascunho para a semente da página.
 //
-// A forma inteira e não um objeto vazio, e a razão é uma armadilha do Datastar:
+// A forma INTEIRA e não um objeto vazio, e a razão é uma armadilha do Datastar:
 // `data-bind` num caminho que ainda não existe cria um sinal NOVO em vez de
-// escrever no de baixo, e a caixa nasceria muda até o primeiro `@post`. Semear a
-// forma completa é o que faz cada campo já ter onde escrever no primeiro
-// caractere.
+// escrever no de baixo, e a caixa nasceria muda até o primeiro `@post`.
 //
-// Sai como JSON e não como texto escrito à mão pelo mesmo motivo de sempre: uma
-// segunda grafia dos vinte e cinco campos seria a que envelhece.
+// Sai como JSON e não como texto escrito à mão: uma segunda grafia dos vinte e
+// cinco campos seria a que envelhece.
 func blankDraft() string {
 	bruto, err := json.Marshal(paraOFormulario(0, "", blocoEmBranco()))
 	if err != nil {
@@ -102,16 +94,16 @@ func draftLists(c commandCtx, rascunho npcDraft) []templ.Component {
 
 // draftField é o caminho de um pedaço do rascunho, para o `data-bind`.
 //
-// O caminho é montado aqui e nunca escrito à mão no `.templ`: `rascunho.bloco.hp`
+// O caminho é montado aqui e nunca escrito à mão no `.templ`: `draft.bloco.hp`
 // digitado errado não dá erro em lugar nenhum — a caixa liga um sinal NOVO, o
 // servidor lê o antigo para sempre vazio, e o número some ao salvar.
 //
-// @example draftField("hp") // "rascunho.bloco.hp"
+// @example draftField("hp") // "draft.bloco.hp"
 func draftField(campo string) string { return "draft.bloco." + campo }
 
 // rowField é o mesmo para um item de lista, com o índice no meio.
 //
-// @example rowField(listaDeAtaques, 0, "name") // "rascunho.bloco.attacks.0.name"
+// @example rowField(listaDeAtaques, 0, "name") // "draft.bloco.attacks.0.name"
 func rowField(lista string, indice int, campo string) string {
 	caminho := fmt.Sprintf("draft.bloco.%s.%d", blockName(lista), indice)
 	if campo == "" {
@@ -123,8 +115,8 @@ func rowField(lista string, indice int, campo string) string {
 // blockName traduz o nome da ROTA para o nome do campo no JSON do bloco.
 //
 // Os dois divergem e é deliberado: a rota fala a língua do usuário ("ataque") e
-// o bloco fala a do wire, que veio da SPA e é inglês ("attacks"). Traduzir num
-// lugar só é o que impede a terceira grafia de aparecer num `data-bind`.
+// o bloco fala a do fio, que é inglês ("attacks"). Traduzir num lugar só é o que
+// impede a terceira grafia de aparecer num `data-bind`.
 func blockName(lista string) string {
 	switch lista {
 	case listaDeAtaques:
@@ -138,10 +130,11 @@ func blockName(lista string) string {
 
 // openEditor é o gesto que troca a lista do elenco pelo formulário.
 //
-// O `npcId` vazio abre em branco; com id, o servidor semeia do banco. Quem faz a
-// troca é o SERVIDOR devolvendo `rascunhoaberto`, e não o clique: assim o
+// O `npcID` zero abre em branco; com id, o servidor semeia do banco. Quem faz a
+// troca é o SERVIDOR devolvendo `$draft_open`, e não o clique: assim o
 // formulário nunca aparece antes de ter conteúdo — um editor que abre vazio e
-// preenche meio segundo depois mostra os números de outro NPC no meio do caminho.
+// preenche meio segundo depois mostra os números de outro NPC no meio do
+// caminho.
 func openEditor(v View, npcID int64) string {
 	if npcID == 0 {
 		return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/novo')", v.CampaignID, v.SessionID)
@@ -149,11 +142,8 @@ func openEditor(v View, npcID int64) string {
 	return fmt.Sprintf("@post('/mesa/%d/%d/elenco/npc/%d/editar')", v.CampaignID, v.SessionID, npcID)
 }
 
-// closeEditor é o Cancelar, e ele não fala com o servidor.
-//
-// Não precisa: o rascunho mora no navegador e NADA foi escrito. É a metade que
-// paga a decisão do dono — "Cancelar desfaz de verdade" é grátis quando não há
-// nada a desfazer.
+// closeEditor é o Cancelar, e ele não fala com o servidor: o rascunho mora no
+// navegador e NADA foi escrito.
 const closeEditor = "$draft_open = false; $draft_error = ''"
 
 // listCommand escreve o gesto que acrescenta ou tira uma linha.
@@ -223,16 +213,14 @@ func pickTab(aba string) string { return fmt.Sprintf("$draft_tab = %q", aba) }
 
 // tabStyling liga UMA das duas aparências, e nunca deixa as duas na mesa.
 //
-// Os DOIS lados no `data-class` em vez de a cor apagada ficar no `class` fixo, e
-// isso é uma armadilha de CASCATA que custou uma medição: a marca de aberta
-// (`.tab-on`) mora em `@layer components` e o `text-muted-foreground` é uma
-// utilidade do Tailwind, que vive numa camada POSTERIOR — camada vence
-// especificidade, então o dourado perdia para o cinza sem nada acusar. A aba
-// ficava com a classe certa e a cor errada.
+// Os DOIS lados no `data-class`, e não a cor apagada num `class` fixo: é uma
+// armadilha de CASCATA. A marca de aberta (`.tab-on`) mora em `@layer
+// components` e o `text-muted-foreground` é utilidade do Tailwind, que vive numa
+// camada POSTERIOR — camada vence especificidade, então o dourado perde para o
+// cinza sem nada acusar, com a aba ficando com a classe certa e a cor errada.
 //
 // Alternar as duas resolve por construção e não por ordem: só uma existe no
-// elemento a cada instante, e a regra deixa de depender de onde o Tailwind
-// resolveu escrever a folha.
+// elemento a cada instante.
 func tabStyling(aba string) string {
 	return fmt.Sprintf("{'tab-on': %s, 'text-muted-foreground': !(%s)}", onTabExpr(aba), onTabExpr(aba))
 }
@@ -263,10 +251,9 @@ func orderOrName(nome, oQue string, indice int) string {
 // escrever um título quando o livro escreve uma frase.
 const abilityPlaceholder = "Faro apurado. Recebe +2 em testes de Percepção baseados em olfato."
 
-// Os TIPOS na ordem do trilho do bestiário, e não a do mapa de validação: mapa
-// não tem ordem, e uma lista de opções que se reordena a cada abertura é uma
-// lista que ninguém consegue usar. Reusar a `creatureTiposNaOrdem` do bestiário é o
-// que faz o mestre encontrar "Morto-vivo" no mesmo lugar nas duas telas.
+// Os TIPOS na ordem do trilho do bestiário, e não a de um mapa de validação:
+// mapa não tem ordem, e uma lista de opções que se reordena a cada abertura é
+// uma lista que ninguém consegue usar.
 var creatureTiposNaOrdem = book.CreatureTypes
 
 // Os TAMANHOS na ordem do livro — do menor para o maior, que é a única ordem que

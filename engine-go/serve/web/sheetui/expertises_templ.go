@@ -13,19 +13,18 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel de PERÍCIAS desenhado (ALE-272, fatia 4).
+// O painel de PERÍCIAS desenhado.
 //
-// Uma linha por perícia, em TODA largura — a fileira de crachás que a SPA
-// desenha acima de 640px não existe aqui, por decisão do dono: ela repete o
-// diálogo palavra por palavra, e a auditoria continua a um toque no número.
+// Uma linha por perícia, em TODA largura, e sem fileira de crachás acima de
+// 640px (decisão do dono): ela repetiria o diálogo palavra por palavra, e a
+// auditoria já está a um toque no número.
 //
 // # A BUSCA vai ao SERVIDOR, e é o padrão da casa
 //
-// `data-bind:search` mais um `@get` com debounce, como a cena de campanhas. Ela
-// custa uma ida — 2ms, e a cena volta comprimida desde a ALE-273 — e ganha o
-// filtro sobrevivendo a qualquer outro gesto: o termo viaja como sinal em TODA
-// requisição da ficha, então mexer no PV com a busca escrita devolve a lista
-// ainda filtrada.
+// `data-bind:search` mais um `@get` com debounce, como a cena de campanhas. O
+// que ela compra é o filtro sobrevivendo a qualquer outro gesto: o termo viaja
+// como sinal em TODA requisição da ficha, então mexer no PV com a busca escrita
+// devolve a lista ainda filtrada.
 //
 // O `?tab=` está no `@get` pela MESMA razão que está em todo `@post`: sem ele o
 // resolvedor cai na primeira aba. É a sexta armadilha do Datastar, e aqui ela
@@ -82,7 +81,7 @@ func expertisePanelBody(v View) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("treino " + v.Expertises.TrainingBonus + " • ½ nível " + v.Expertises.HalfLevel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 34, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 33, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -134,7 +133,7 @@ func expertisePanelBody(v View) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs("Nenhuma perícia para \"" + v.Expertises.Search + "\"")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 51, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 50, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -211,7 +210,7 @@ func expertiseTerm(v View) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetGet(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 78, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 77, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -224,7 +223,7 @@ func expertiseTerm(v View) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Expertises.Search)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 79, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 78, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -302,7 +301,7 @@ func expertiseRowBody(v View, linha expertiseRow) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 95, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 94, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -402,7 +401,7 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(totalLabel(linha))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 119, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 118, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -415,7 +414,7 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = '" + linha.Key + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 121, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 120, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -442,7 +441,7 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs("—")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 128, Col: 10}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 127, Col: 10}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -452,7 +451,7 @@ func expertiseTotal(linha expertiseRow) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Total)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 130, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 129, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -565,7 +564,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(linha.Name + " atributo")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 156, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 155, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -578,7 +577,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(attributeCommand(v, linha.Command))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 157, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 156, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -610,7 +609,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Key)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 162, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 161, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 				if templ_7745c5c3_Err != nil {
@@ -623,7 +622,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 162, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 161, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
@@ -641,7 +640,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Key)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 164, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 163, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 				if templ_7745c5c3_Err != nil {
@@ -654,7 +653,7 @@ func attributePicker(v View, linha expertiseRow) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 164, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 163, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -710,7 +709,7 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", linha.Trained))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 175, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 174, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 		if templ_7745c5c3_Err != nil {
@@ -723,7 +722,7 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(linha.Name + " treinada")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 176, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 175, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 		if templ_7745c5c3_Err != nil {
@@ -736,7 +735,7 @@ func trainingButton(v View, linha expertiseRow) templ.Component {
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/treino/"+linha.Command))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 177, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 176, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 		if templ_7745c5c3_Err != nil {
@@ -868,7 +867,7 @@ func expertiseDetail(linha expertiseRow) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Total)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 201, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 200, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -890,8 +889,8 @@ func expertiseDetail(linha expertiseRow) templ.Component {
 
 // craftDialog cria uma perícia que o livro não tem.
 //
-// A TELA DIZ "nova perícia", e NUNCA "ofício" — a palavra é da SPA e é a certa:
-// **Ofício É uma das 29 do livro** (p115), e chamar a perícia inventada de
+// A TELA DIZ "nova perícia", e NUNCA "ofício": **Ofício É uma das 29 do livro**
+// (p115), e chamar a perícia inventada de
 // ofício poria duas coisas diferentes com o mesmo nome na MESMA lista. O
 // identificador em Go continua falando de ofício porque é o conceito interno
 // ("a que o jogador inventou"), e identificador não é o que a pessoa lê.
@@ -1024,7 +1023,7 @@ func craftDialog(v View) templ.Component {
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Key)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 268, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 267, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 			if templ_7745c5c3_Err != nil {
@@ -1037,7 +1036,7 @@ func craftDialog(v View) templ.Component {
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 268, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 267, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 			if templ_7745c5c3_Err != nil {
@@ -1064,7 +1063,7 @@ func craftDialog(v View) templ.Component {
 		var templ_7745c5c3_Var60 string
 		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/pericias/nova") + "; $craft = false")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 274, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/expertises.templ`, Line: 273, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var60)
 		if templ_7745c5c3_Err != nil {

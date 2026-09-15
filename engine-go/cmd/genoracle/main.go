@@ -2,18 +2,15 @@
 //
 // Uso: cd engine-go && go run ./cmd/genoracle
 //
-// Substitui o harness `GEN_ORACLE=1` do front, que os gerava pela implementação
-// TS de referência. Com o `t20-data` aposentado não há segunda implementação, e
-// o oráculo passa a ser o Go descrevendo o Go — por isso a regra de processo do
-// CLAUDE.md deste pacote vale mais do que nunca:
+// Não existe segunda implementação: o oráculo é o Go descrevendo o Go. Por isso
+// a regra de processo do CLAUDE.md deste pacote vale mais do que nunca:
 //
 //	O diff de um oráculo é revisado contra o LIVRO, nunca aceito porque "o
 //	teste ficou verde".
 //
-// O que o oráculo protege continua sendo enorme: é a ficha inteira de 18
-// personagens, ponta a ponta, e ele acusa qualquer mudança de número que não
-// tenha sido pedida. O que ele deixa de provar é que DOIS motores concordam,
-// porque só existe um.
+// O que ele protege é a ficha inteira de 18 personagens, ponta a ponta, e ele
+// acusa qualquer mudança de número que não tenha sido pedida. O que ele NÃO
+// prova é que dois motores concordam, porque só existe um.
 package main
 
 import (
@@ -29,16 +26,16 @@ import (
 type fixture struct {
 	Slug string `json:"slug"`
 	// Raw é o personagem VERBATIM. O `engine.Character` é um espelho PARCIAL de
-	// propósito ("only the fields the collection layer touches are typed"), então
-	// passar a fixture por ele e re-serializar DESCARTA campos que o oráculo
-	// guardava — ownerId, size, mpMax, updatedAt, os timestamps dos efeitos. O
-	// bloco `char` sai como entrou; só o que é CALCULADO é recalculado.
+	// propósito — só os campos que o motor toca são tipados —, então passar a
+	// fixture por ele e re-serializar DESCARTA campos que o oráculo guarda:
+	// ownerId, size, mpMax, updatedAt, os carimbos dos efeitos. O bloco `char`
+	// sai como entrou; só o que é CALCULADO é recalculado.
 	Raw  json.RawMessage  `json:"char"`
 	Char engine.Character `json:"-"`
 }
 
-// oraclePayload é a mesma forma que o harness do front escrevia — a ordem dos
-// campos segue a do JSON commitado para o diff continuar legível.
+// oraclePayload é a forma do oráculo — a ordem dos campos segue a do JSON
+// versionado, para o diff continuar legível.
 type oraclePayload struct {
 	Slug                        string   `json:"slug"`
 	Char                        any      `json:"char"`
@@ -91,7 +88,7 @@ func buildPayload(c *engine.Catalogs, f fixture) (oraclePayload, error) {
 	effects := engine.ComputeItemEffects(c.ActiveItemsFor(f.Char))
 
 	// Todo opt-in que este personagem PODERIA ligar, em ordem estável — é a
-	// segunda passada que exercita a dobra dos condicionais (ALE-106).
+	// segunda passada que exercita a dobra dos condicionais.
 	ids := make([]string, 0, len(effects.Conditional))
 	for _, cond := range effects.Conditional {
 		ids = append(ids, engine.ConditionalID(cond))

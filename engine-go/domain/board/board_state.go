@@ -49,30 +49,27 @@ type BoardToken struct {
 	// faz com o `hpMax`. Zero = nunca medido; vale o padrão do livro.
 	SpeedSquares int `json:"speedSquares,omitempty"`
 	// DeOndeVeio é onde a peça estava ANTES do último movimento confirmado, e é
-	// o que dá ao mestre o "voltar para onde estava" (ALE-206).
+	// o que dá ao mestre o "voltar para onde estava".
 	//
-	// Guardado na PEÇA e não na memória da tela, ao contrário da SPA: lá o
-	// desfazer do posicionamento morre no F5 e não existe na outra aba, e o
-	// gesto que ele conserta — "arrastei o dragão para o lugar errado na frente
-	// de seis pessoas" — é justamente o que se quer desfazer de qualquer tela.
+	// Guardado na PEÇA e não na memória da tela: o gesto que ele conserta —
+	// "arrastei o dragão para o lugar errado na frente de seis pessoas" — é o
+	// que se quer desfazer de QUALQUER tela, e memória de tela morre no F5.
 	//
-	// UMA posição e não uma pilha, como na SPA: o arrependimento do
-	// posicionamento é sobre o gesto que acabou de acontecer, e um histórico
-	// convidaria a andar para trás na cena com um botão que não diz até onde vai.
+	// UMA posição e não uma pilha: o arrependimento é sobre o gesto que acabou
+	// de acontecer, e um histórico convidaria a andar para trás na cena com um
+	// botão que não diz até onde vai.
 	DeOndeVeio *engine.Square `json:"deOndeVeio,omitempty"`
 }
 
-// BoardMarker é um LUGAR marcado no mapa que não é uma peça (ALE-195): a
-// armadilha, a porta que range, o ponto de encontro.
+// BoardMarker é um LUGAR marcado no mapa que não é uma peça: a armadilha, a
+// porta que range, o ponto de encontro.
 //
-// Nem tudo que importa no mapa é criatura ou móvel. Até agora o mestre só tinha
-// a saída de criar uma PEÇA `object` para dizer "a armadilha é aqui", e peça
+// A alternativa seria uma PEÇA `object` dizendo "a armadilha é aqui", e peça
 // ocupa quadrado, entra na conta de quem está na área e aparece na lista de
 // quem o gabarito pega. O marcador não ocupa nada: ele aponta.
 //
-// Texto de DUAS letras ("1A", "B3") e cor de um conjunto fechado — é o que o
-// Roll20 dá de graça no pin dele, e é justamente o que a decisão de síntese
-// desta casa já dispensa de asset.
+// Texto de DUAS letras ("1A", "B3") e cor de um conjunto fechado: o bastante
+// para apontar sem exigir asset.
 type BoardMarker struct {
 	ID    string `json:"id"`
 	X     int    `json:"x"`
@@ -94,8 +91,8 @@ type BoardMarker struct {
 // cliente — dois jogadores olhando pedaços diferentes da mesma cena é uma
 // propriedade, não um bug.
 type BoardState struct {
-	// ID identifica ESTE tabuleiro dentro da sessão (ALE-205), desde que a
-	// sessão passou a poder ter vários abertos ao mesmo tempo.
+	// ID identifica ESTE tabuleiro dentro da sessão, que pode ter vários abertos
+	// ao mesmo tempo.
 	//
 	// Cunhado pelo servidor no `Open`, com o mesmo `newID` das peças, e não pelo
 	// banco: o tabuleiro nasce em MEMÓRIA e a gravação vem depois, então um id
@@ -103,31 +100,29 @@ type BoardState struct {
 	// Na hidratação ele vem da COLUNA e não deste campo — ver `hydrateLocked`.
 	ID string `json:"id"`
 	// Seq é a ORDEM DE ABERTURA dentro da sessão, e ela é a ordem das abas na
-	// tela (ALE-205). Mora numa COLUNA e não no JSON — `json:"-"` — porque é
-	// propriedade da aba e não da cena: o mesmo lugar arquivado reabre em
-	// qualquer posição, e um número gravado dentro da cena reabriria a taverna
-	// no lugar de outra aba.
+	// tela. Mora numa COLUNA e não no JSON — `json:"-"` — porque é propriedade
+	// da aba e não da cena: o mesmo lugar arquivado reabre em qualquer posição,
+	// e um número gravado dentro da cena reabriria a taverna no lugar de outra
+	// aba.
 	//
-	// Contador e não carimbo de tempo, e isso foi MEDIDO: com o instante em
-	// milissegundos, duas cenas abertas no mesmo milissegundo empatam e o
-	// desempate cai no id, que é um UUID. O teste da hidratação pegou o caso.
+	// Contador e não carimbo de tempo: com o instante em milissegundos, duas
+	// cenas abertas no mesmo milissegundo empatam e o desempate cai no id, que
+	// é um UUID.
 	Seq int64 `json:"-"`
 	// Version sobe a cada mutação aceita. É o que vai permitir recusar um
 	// movimento proposto sobre um tabuleiro que já mudou, e o que deixa o
 	// cliente descartar um broadcast atrasado depois de reconectar.
 	Version int64 `json:"version"`
-	// Curtained é a CORTINA (ALE-202): o tabuleiro existe para o mestre e a
-	// mesa vê uma cortina no lugar dele.
+	// Curtained é a CORTINA: o tabuleiro existe para o mestre e a mesa vê uma
+	// cortina no lugar dele.
 	//
 	// Mora no estado e não numa lista de sessões em memória porque tem de
 	// sobreviver a recarregar a página — o mestre monta a emboscada, fecha o
-	// laptop, e a cortina continua fechada. A persistência do tabuleiro já leva
-	// o estado inteiro desde a ALE-124, então isto vem de graça.
+	// laptop, e a cortina continua fechada.
 	//
-	// O padrão é FALSO por uma razão que o comentário do `BoardForRole` já diz:
-	// errar para o lado que mostra seria vazar por omissão. Aqui é o inverso —
-	// um tabuleiro que nasce sob cortina sem o mestre pedir some da mesa sem
-	// ninguém entender, e o erro caro desta issue é achar que se está montando
+	// O padrão é FALSO, e é o inverso do `BoardForRole`, que erra para o lado
+	// que esconde: um tabuleiro nascido sob cortina sem o mestre pedir some da
+	// mesa sem ninguém entender, e o erro caro é achar que se está montando
 	// escondido e não estar. Quem fecha a cortina é um gesto explícito.
 	Curtained bool `json:"curtained"`
 	// Place é o nome do lugar ("Taverna do Javali") — o mestre está montando uma
@@ -153,13 +148,6 @@ type BoardState struct {
 	// A assimetria é a parte que importa e a que um mapa esconderia: ela é
 	// exatamente o que quem for implementar a resolução de ataque precisa ver.
 	//
-	// NÃO é argumento contra o mapa que ele quebraria os Lugares já gravados.
-	// Foi o meu primeiro, e ele não sustenta: o `Archive` faz `json.Marshal` do
-	// estado inteiro, então um `UnmarshalJSON` que leia o `difficult` legado
-	// resolveria em dez linhas. "Quebra os gravados" é razão para ESCREVER a
-	// migração, não para evitar a forma — quem revisar isto não deve herdar o
-	// argumento errado (achado da sessão da main, que foi ler a persistência).
-	//
 	// A repetição está contida no `listForKind`, que é o único lugar que sabe
 	// qual lista guarda qual espécie.
 	Difficult []engine.Square `json:"difficult,omitempty"`
@@ -171,7 +159,7 @@ type BoardState struct {
 	// Elevated: +2 no ataque de quem ataca DE LÁ (p238). É a única espécie que
 	// beneficia quem está nela em vez de proteger.
 	Elevated []engine.Square `json:"elevated,omitempty"`
-	// Markers são os LUGARES apontados no mapa (ALE-195). Não são peças: não
+	// Markers são os LUGARES apontados no mapa. Não são peças: não
 	// ocupam quadrado e não entram na conta de nada.
 	Markers []BoardMarker `json:"markers,omitempty"`
 	// Pending é o movimento proposto e ainda não confirmado — no máximo um.
@@ -200,13 +188,6 @@ func AddToken(b *BoardState, t BoardToken, newID func() string) error {
 	return nil
 }
 
-//
-// A MESMA convenção vive na tela, em `token-appearance.ts`, onde ela decide a
-// cor e o selo da peça (ALE-179) — e as duas precisam concordar, senão a cópia
-// nasce com um nome que o desenho colore como outra espécie. Os dois testes
-// carregam a mesma tabela de exemplos de propósito, com a mesma armadilha: o
-// número no MEIO do nome ("Recruta Nv1 Simples") não é instância.
-
 // nextInstanceLabel devolve o rótulo da cópia: a mesma espécie com o MENOR
 // número livre.
 //
@@ -228,32 +209,27 @@ func nextInstanceLabel(b *BoardState, label string) string {
 }
 
 // DuplicateToken põe outra igual no tabuleiro — "mais um zumbi" é a operação
-// mais repetida ao montar encontro (ALE-192).
+// mais repetida ao montar encontro.
 //
 // A cópia leva o corpo: rótulo renumerado, tamanho, tipo e o ocultamento (o
 // segundo zumbi da emboscada também está escondido).
 //
-// # O LAÇO é a decisão inteira, e ele é a LINHA DA FILA (ALE-206)
+// O LAÇO é a decisão inteira, e ele é a LINHA DA FILA: a barra de PV de uma
+// peça é indexada por `entryId` — o `board_view` lê `saude[*t.EntryID]` —,
+// então é a LINHA, e não a ficha, que decide se um dano aparece nas duas peças
+// ou só numa. São três usos, e o chamador escolhe passando ou não uma linha:
 //
-// A barra de PV de uma peça é indexada por `entryId` — o `board_view` lê
-// `saude[*t.EntryID]` —, então é a LINHA, e não a ficha, que decide se um dano
-// aparece nas duas peças ou só numa. O exemplo que a issue usa prova o ponto: o
-// zumbi é NPC e NPC não tem ficha, com `characterId` nulo por construção.
-//
-// São três usos, e o chamador escolhe passando ou não uma linha:
-//
-//   - `laco == nil` → PEÃO MUDO: sem fila e sem PV, que é o que existia desde a
-//     ALE-192 e continua certo para cenário e para a peça que entra na fila
-//     depois;
+//   - `laco == nil` → PEÃO MUDO: sem fila e sem PV, que é o certo para cenário
+//     e para a peça que entra na fila depois;
 //   - `laco` = a linha DA ORIGINAL → as duas peças sangram JUNTO, com uma barra
 //     só. Serve para o mesmo inimigo desenhado em dois pontos;
 //   - `laco` = uma linha NOVA → a cópia sangra SOZINHA, com PV próprio. Quem
 //     cria a linha é o chamador, porque ela mora no `SessionStore` e não aqui.
 //
-// A FICHA vem do laço e nunca da original, e isso não é detalhe: a linha nova de
-// um NPC não tem ficha, e herdar o `characterId` da original ali daria uma peça
-// dizendo ser de um personagem que a fila dela não conhece — posse e
-// deslocamento, os dois que o `characterId` decide, sairiam da ficha errada.
+// A FICHA vem do laço e nunca da original: a linha nova de um NPC não tem
+// ficha, e herdar o `characterId` da original ali daria uma peça dizendo ser de
+// um personagem que a fila dela não conhece — posse e deslocamento, os dois que
+// o `characterId` decide, sairiam da ficha errada.
 func DuplicateToken(b *BoardState, tokenID string, laco *live.InitiativeEntry, newID func() string) error {
 	original := FindToken(b, tokenID)
 	if original == nil {
@@ -273,7 +249,7 @@ func DuplicateToken(b *BoardState, tokenID string, laco *live.InitiativeEntry, n
 }
 
 // PasteToken põe no tabuleiro uma cópia de uma peça que veio de OUTRO LUGAR —
-// de outra aba, ou da mesma depois de o mestre ter arrastado a vista (ALE-206).
+// de outra aba, ou da mesma depois de o mestre ter arrastado a vista.
 //
 // A diferença para o `DuplicateToken` é o DESTINO e nada mais: lá a cópia nasce
 // colada na original, aqui ela nasce onde a pessoa está olhando. As duas regras
@@ -300,10 +276,8 @@ func PasteToken(b *BoardState, modelo BoardToken, laco *live.InitiativeEntry, x,
 	// O ALVO PRIMEIRO, e só depois a vizinhança. O `freeSpotNear` começa no anel
 	// 1 e nunca olha o próprio quadrado — ele foi escrito para o duplicar, onde
 	// pousar EM CIMA da original é justamente o que não se quer. No colar o alvo
-	// é o alvo: quem apertou CTRL+V está olhando para aquele quadrado.
-	//
-	// Medido, e o teste nasceu vermelho aqui: colar em (12,7) num tabuleiro vazio
-	// pousava em (11,6), a primeira casa do anel de fora.
+	// é o alvo: quem apertou CTRL+V está olhando para aquele quadrado, e sem
+	// esta linha a cópia pousaria na primeira casa do anel de fora.
 	copia.X, copia.Y = x, y
 	if occupied(b, x, y) {
 		spot := freeSpotNear(b, boardSpot{x: x, y: y})
@@ -317,7 +291,7 @@ func PasteToken(b *BoardState, modelo BoardToken, laco *live.InitiativeEntry, x,
 //
 // AO LADO do original, e não na fileira de entrada: quem duplica o zumbi que
 // está no canto do mapa espera o irmão dele ali do lado, não a dez quadrados de
-// distância no lugar combinado onde as peças avulsas nascem (ALE-166).
+// distância no lugar combinado onde as peças avulsas nascem.
 func freeSpotNear(b *BoardState, from boardSpot) boardSpot {
 	for anel := 1; anel <= boardCoordLimit; anel++ {
 		for dy := -anel; dy <= anel; dy++ {
@@ -492,13 +466,11 @@ func abs(v int) int {
 	return v
 }
 
-// EntrySelection nomeia as linhas da iniciativa que o mestre escolheu trazer
-// (ALE-204).
+// EntrySelection nomeia as linhas da iniciativa que o mestre escolheu trazer.
 //
 // Nil é TODAS, e isso não é conveniência: é o que `board-Populate` sem
-// `entryIds` sempre significou, e uma aba aberta antes desta mudança continua
-// mandando exatamente isso. Lista VAZIA é diferente de ausente — "não escolhi"
-// não é "escolhi ninguém".
+// `entryIds` significa, e uma aba antiga continua mandando exatamente isso.
+// Lista VAZIA é diferente de ausente — "não escolhi" não é "escolhi ninguém".
 type EntrySelection map[string]bool
 
 func (s EntrySelection) wants(entryID string) bool { return s == nil || s[entryID] }
@@ -508,16 +480,14 @@ func (s EntrySelection) wants(entryID string) bool { return s == nil || s[entryI
 // Idempotente de propósito, como o `populateParty` do rastreador: clicar duas
 // vezes não duplica ninguém.
 //
-// Antes todos caíam numa fileira única no meio do mapa (ALE-166), e esse é o
-// estado em que o mestre encontra o tabuleiro no segundo em que o combate
-// começa, com a mesa esperando: ele tinha de arrastar nove peças, uma a uma,
-// antes de o tabuleiro servir para alguma coisa. Nascendo em dois lados, ele
-// AJUSTA em vez de DISTRIBUIR — e a informação de lado já existia na linha.
+// Em dois lados e não numa fileira única no meio do mapa: este é o estado em
+// que o mestre encontra o tabuleiro no segundo em que o combate começa, com a
+// mesa esperando, e nascendo em dois lados ele AJUSTA em vez de DISTRIBUIR — a
+// informação de lado já existia na linha.
 //
-// A ESCOLHA entrou depois (ALE-204): trazer a fila inteira punha no mapa o
-// assassino que o mestre montou para aparecer no terceiro turno, e desfazer
-// era peça por peça. Quem não foi escolhido não nasce — nem escondido: peça
-// que não existe não vaza por bug de redação.
+// Quem não foi escolhido não nasce — nem escondido: o assassino que o mestre
+// montou para aparecer no terceiro turno não deve estar no mapa, e peça que não
+// existe não vaza por bug de redação.
 func populateBoard(b *BoardState, st *live.SessionRuntimeState, newID func() string, chosen EntrySelection) int {
 	placed := 0
 	for _, entry := range st.Initiative {
@@ -551,18 +521,15 @@ const (
 )
 
 // TopChromeRows são as fileiras do plano que o CROMO do topo cobre quando a
-// cena abre, e ninguém nasce nelas (ALE-294).
+// cena abre, e ninguém nasce nelas.
 //
 // A janela nasce em (0,0) — o quadrado (0,0) do plano fica na quina de cima da
 // tela, ver `table.viewportSignals` — e o painel de verbos flutua a 0.5rem do
 // topo dela com 50px de altura: 8px de recuo mais 44px do botão mais alto
 // (`min-h-11`) e a borda. Ele termina em y=58px, que no zoom padrão de 44px
-// (`table.DefaultSquare`) são as fileiras 0 e 1.
-//
-// Medido a 390×844 na `73658909`: a peça nova saía em (3,0) com 82% da área sob
-// o painel, e o clique direito nela abria "Afastar o mapa" em vez do menu da
-// peça. Não era só o menu — pintar terreno, largar marcador ou pegar a peça
-// para arrastar naquela faixa também eram do painel.
+// (`table.DefaultSquare`) são as fileiras 0 e 1. Peça nascida ali fica sob o
+// painel, e todo gesto nela — menu da peça, pintar terreno, largar marcador,
+// arrastar — vira gesto do painel.
 //
 // O número é PIXEL DO NAVEGADOR escrito no servidor, e ele não pode ser
 // importado de `web/table` porque aquele pacote importa este. Quem o mantém
@@ -573,7 +540,7 @@ const TopChromeRows = 2
 
 // clusterSpot devolve o primeiro quadrado livre do lado pedido, preenchendo em
 // blocos de três colunas que crescem para baixo — a partir da primeira fileira
-// que o cromo do topo não cobre (ALE-294).
+// que o cromo do topo não cobre.
 //
 // Continua havendo um lugar COMBINADO onde a peça nova aparece, que é o que um
 // plano infinito exige — só que agora são dois, um por lado. E continua
@@ -607,20 +574,6 @@ func hasTokenForEntry(b *BoardState, entryID string) bool {
 
 type boardSpot struct{ x, y int }
 
-// Aqui morava o `nextFreeSpot`, que punha a peça sem posição no primeiro
-// quadrado vazio da fileira de entrada (ALE-166).
-//
-// Ele existia porque o "+ Peça" da ALE-178 não tinha onde pôr a peça: ela
-// nascia num lugar combinado e o mestre arrastava. Sem ele, duas peças criadas
-// seguidas ficavam UMA EM CIMA DA OUTRA.
-//
-// O gesto que chegou na ALE-291 POSICIONA — o clique numa casa diz onde a peça
-// nasce, e a coordenada viaja no caminho —, então a regra ficou sem o problema
-// que resolvia. Ela NÃO é redundante com o `clusterSpot` logo abaixo, e vale
-// dizer para ninguém confundir de novo: aquele põe COMBATENTE em dois lados a
-// seis quadrados (o alcance curto, p224), e este punha CENÁRIO, que não tem
-// lado — uma porta na fileira do grupo diria que ela é aliada.
-
 // boardRowWidth é o comprimento da fileira em que as peças novas nascem. Dez
 // quadrados são 15m: cabe numa tela e é a largura de uma sala.
 const boardRowWidth = 10
@@ -645,7 +598,7 @@ func BoardForRole(papel string, b *BoardState) *BoardState {
 	if b == nil || papel == "gm" {
 		return b
 	}
-	// A CORTINA vem ANTES da redação de peça (ALE-202): com ela fechada, a mesa
+	// A CORTINA vem ANTES da redação de peça: com ela fechada, a mesa
 	// não recebe o mapa nenhum — nem as peças visíveis, nem o terreno, nem o
 	// nome do lugar. Redigir peça por peça deixaria passar tudo o que não está
 	// marcado como escondido, que é justamente a cena que o mestre está
@@ -660,13 +613,12 @@ func BoardForRole(papel string, b *BoardState) *BoardState {
 		// tela da mesa em vez de escondê-la. O contrato do fio é "lista vazia é
 		// uma lista", e quem o garante é aqui, não cada leitor.
 		//
-		// O `ID` ATRAVESSA a cortina, e é o único campo que atravessa (ALE-205).
-		// Sem ele a aba do jogador não teria como se chamar nem como ser clicada,
-		// e a decisão do dono foi que ela APARECE mostrando a cortina — some da
-		// barra dele, a aba trocaria debaixo do dedo de quem estava olhando. O id
-		// é um UUID: ele não conta nada sobre a cena, que é justamente o que a
-		// cortina protege. Quem esconde o NOME continua sendo esta linha, e é o
-		// nome que diria "Cripta do Rei" para quem não devia saber.
+		// O `ID` ATRAVESSA a cortina, e é o único campo que atravessa: sem ele a
+		// aba do jogador não teria como se chamar nem como ser clicada, e a
+		// decisão do dono foi que ela APARECE mostrando a cortina — sumindo da
+		// barra, a aba trocaria debaixo do dedo de quem estava olhando. O id é um
+		// UUID e não conta nada sobre a cena. Quem esconde o NOME é esta linha, e
+		// é o nome que diria "Cripta do Rei" para quem não devia saber.
 		return &BoardState{ID: b.ID, Version: b.Version, Curtained: true, Tokens: []BoardToken{}}
 	}
 	return redactBoardForPlayers(b)
@@ -676,7 +628,7 @@ func BoardForRole(papel string, b *BoardState) *BoardState {
 // escondeu. Some a peça INTEIRA — e essa é a assimetria deliberada em relação ao
 // `hpHidden` da iniciativa, onde a linha fica sem os números: aqui a existência
 // da peça é a informação, e uma peça "presente porém anônima" entregaria a
-// emboscada do mesmo jeito (ALE-124).
+// emboscada do mesmo jeito.
 func redactBoardForPlayers(b *BoardState) *BoardState {
 	out := *b
 	out.Tokens = make([]BoardToken, 0, len(b.Tokens))
@@ -690,7 +642,7 @@ func redactBoardForPlayers(b *BoardState) *BoardState {
 	}
 	// O marcador escondido some INTEIRO, como a peça: o mestre marca a armadilha
 	// antes da mesa chegar nela, e um marcador "presente porém anônimo" diria à
-	// mesa exatamente onde não pisar (ALE-195).
+	// mesa exatamente onde não pisar.
 	out.Markers = make([]BoardMarker, 0, len(b.Markers))
 	for _, marker := range b.Markers {
 		if marker.Hidden {
@@ -708,7 +660,7 @@ func redactBoardForPlayers(b *BoardState) *BoardState {
 
 func strPtr(s string) *string { return &s }
 
-// PendingMove é um movimento PROPOSTO e ainda não confirmado (ALE-124).
+// PendingMove é um movimento PROPOSTO e ainda não confirmado.
 //
 // Ele é ESTADO, e não um evento de arraste no fio. Todo broadcast desta casa
 // carrega o estado inteiro; um fantasma a 60fps seriam kilobytes por quadro
@@ -728,18 +680,16 @@ type PendingMove struct {
 	// Diagonals e Difficult são a CONTA que produziu o custo, não um resumo
 	// dela: quantos passos dobraram por serem diagonais e quantos por entrarem
 	// em terreno difícil (T20 p238). Viajam para a tela poder NOMEAR a regra
-	// em vez de refazer a aritmética em JavaScript (ALE-190).
+	// em vez de refazer a aritmética em JavaScript.
 	Diagonals int `json:"diagonals"`
 	Difficult int `json:"difficult"`
 	// Budget é o DESLOCAMENTO da peça em quadrados, ou -1 fora de combate.
 	//
-	// Ele já foi orçamento no sentido de teto — o número contra o qual o servidor
-	// recusava. Não é mais: quem põe a peça no lugar é o mestre, e o mestre não
-	// tem limite. O que sobrou é DESENHO, e é a tela que o usa para partir a seta
-	// nas três faixas (uma ação de movimento, duas, mais que duas).
-	//
-	// Por isso ele é o deslocamento da PEÇA e não a permissão de quem arrasta —
-	// ver `boardDefaultSpeedSquares`.
+	// É DESENHO e não teto: o servidor não recusa nada por ele, porque quem põe
+	// a peça no lugar é o mestre e o mestre não tem limite. A tela o usa para
+	// partir a seta nas três faixas (uma ação de movimento, duas, mais que
+	// duas). Por isso ele é o deslocamento da PEÇA e não a permissão de quem
+	// arrasta — ver `boardDefaultSpeedSquares`.
 	Budget int `json:"budget"`
 	// ByUserID é quem propôs. O mestre confirma por qualquer um; o jogador só
 	// confirma o que ele mesmo propôs.
@@ -825,12 +775,10 @@ func assertMovable(b *BoardState, st *live.SessionRuntimeState, tokenID string, 
 
 // drawingBudget é o deslocamento da PEÇA, e não a permissão de quem move.
 //
-// O mestre recebia -1 aqui — "sem teto" —, e o número servia às duas coisas ao
-// mesmo tempo: a regra que barrava e o desenho das faixas. Com a trava fora do
-// `CommitMove` sobrou só o desenho, e aí o -1 passou a esconder da mesa
-// justamente o que ela quer ver: *"o mestre não tem limite, mas a parte visual
-// serve para todos"*. Arrastando a peça de um jogador, o mestre vê as mesmas
-// três faixas que o jogador vê, medidas contra o deslocamento DAQUELA peça.
+// O mestre NÃO recebe -1 ("sem teto") aqui, apesar de não ter limite: o número
+// só serve ao DESENHO, e -1 esconderia da mesa justamente o que ela quer ver.
+// Arrastando a peça de um jogador, o mestre vê as mesmas três faixas que o
+// jogador vê, medidas contra o deslocamento DAQUELA peça.
 //
 // FORA DE COMBATE continua -1, e isso não é exceção, é a mesma frase: sem vez
 // não há ação padrão para trocar por movimento (p233), então azul e vermelho
@@ -877,10 +825,9 @@ func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, pa
 	// querer desenhar, e é justamente o caro que a tela precisa mostrar em azul
 	// ("gasta a ação principal") e em vermelho ("não cabe nem em duas").
 	//
-	// Um caminho MALFORMADO continua recusado: `Legal` é falso pelas duas razões
-	// e só a do orçamento passa. Passo inválido não é uma proposta cara, é uma
-	// proposta que não existe — e por isso o `Malformed` teve de nascer separado
-	// (ALE-203).
+	// Um caminho MALFORMADO continua recusado, e é por isso que o `Malformed`
+	// nasceu separado do `Legal`, que é falso pelas duas razões: passo inválido
+	// não é uma proposta cara, é uma proposta que não existe.
 	if cost.Malformed {
 		return fmt.Errorf("%s", cost.Reason)
 	}
@@ -896,7 +843,7 @@ func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, pa
 }
 
 // ProposeMoveWithStops propõe pelas casas em que a pessoa CLICOU, e guarda a
-// lista junto (ALE-269, item 10).
+// lista junto.
 //
 // A primeira parada é onde a peça está; cada uma seguinte estende o caminho,
 // contornando o que quem move quiser. É a forma que o app usa, e é ela que
@@ -967,17 +914,14 @@ func listForKind(b *BoardState, especie TerrainKind) *[]engine.Square {
 }
 
 // ClearSquare tira TODO terreno de um quadrado, seja qual for a espécie
-// (ALE-203, decisão do dono).
+// (decisão do dono).
 //
-// É o conserto do defeito que o dono relatou como "a borracha não funciona".
-// Ela era um MODO que invertia o pincel selecionado, então com `Cobertura` na
-// mão clicar num quadrado de `Difícil` apagava a cobertura que não estava ali —
-// e a tela não dizia nada. Medido na bancada, clique a clique.
-//
-// A borracha agora promete o que o nome diz: a casa fica limpa, e o pincel na
-// mão não entra na conta. O que se perde é "tirar só a cobertura desta casa", e
-// o dono aceitou a troca — repintar o que sobrou é um clique, e descobrir por
-// que um gesto não fez nada é uma noite.
+// O pincel na mão NÃO entra na conta, e a alternativa — a borracha como MODO
+// que inverte o pincel selecionado — é o defeito que ela consertou: com
+// `Cobertura` na mão, clicar num quadrado de `Difícil` apagava a cobertura que
+// não estava ali, e a tela não dizia nada. O que se perde é "tirar só a
+// cobertura desta casa": repintar o que sobrou é um clique, e descobrir por que
+// um gesto não fez nada é uma noite.
 //
 // Devolve se ALGUMA COISA saiu: quem chama usa para não subir a versão (e não
 // acordar a mesa) por um clique em chão limpo.
@@ -1036,13 +980,9 @@ func CommitMove(b *BoardState, st *live.SessionRuntimeState, version int64, by M
 	// QUEM PÕE A PEÇA NO LUGAR É O MESTRE, e só ele.
 	//
 	// O desenho do jogador é SEMPRE só visual: ele serve para a mesa entender o
-	// que ele quer fazer, e quem decide se aconteceu é quem toca a cena. Sem esta
-	// linha o jogador confirmava o próprio movimento, que é o modelo antigo — e
-	// era ele que obrigava o servidor a ter uma regra de deslocamento, porque
-	// alguém sem autoridade estava mexendo no tabuleiro.
-	//
-	// É a MESMA divisa do resto da Mesa (`gmCommand`), e a razão de a trava
-	// de deslocamento ter podido sair inteira logo abaixo.
+	// que ele quer fazer, e quem decide se aconteceu é quem toca a cena. É a
+	// MESMA divisa do resto da Mesa (`gmCommand`), e a razão de a trava de
+	// deslocamento poder não existir logo abaixo.
 	if by.Role != "gm" {
 		return errors.New("só o mestre põe a peça no lugar: o seu movimento é um rascunho para a mesa ver")
 	}
@@ -1056,20 +996,16 @@ func CommitMove(b *BoardState, st *live.SessionRuntimeState, version int64, by M
 	}
 	// NÃO HÁ TRAVA DE DESLOCAMENTO AQUI, e a ausência é deliberada.
 	//
-	// Ela existiu em duas portas — no propor, e depois no confirmar — enquanto o
-	// jogador podia mover a própria peça: era preciso um guarda no servidor
-	// porque o gesto de quem não é o mestre chegava direto ao estado da cena.
-	// Com o confirmar sendo só do mestre, o guarda perdeu o objeto: o mestre não
-	// tem limite, ele faz o que quiser no tabuleiro.
-	//
-	// O deslocamento não sumiu — ele virou DESENHO. As três faixas da seta
-	// (ouro, azul, vermelho) contam à mesa quantas ações aquele caminho custa, e
-	// é a mesa que decide com essa informação na tela. Regra que ninguém aplica
-	// vira teatro; informação que todos veem vira conversa.
+	// Com o confirmar sendo só do mestre, o guarda não tem objeto: o mestre não
+	// tem limite, ele faz o que quiser no tabuleiro. O deslocamento é DESENHO —
+	// as três faixas da seta (ouro, azul, vermelho) contam à mesa quantas ações
+	// aquele caminho custa, e é a mesa que decide com essa informação na tela.
+	// Regra que ninguém aplica vira teatro; informação que todos veem vira
+	// conversa.
 	destination := pending.Path[len(pending.Path)-1]
 	// DE ONDE ELA VEIO fica gravado ANTES de a peça pousar: é o que faz o
-	// "voltar para onde estava" existir depois (ALE-206), e é aqui que a
-	// informação existe pela última vez.
+	// "voltar para onde estava" existir depois, e é aqui que a informação existe
+	// pela última vez.
 	//
 	// No CONFIRMAR e não no propor, porque o provisório não moveu ninguém: a
 	// peça só sai do lugar aqui, e gravar antes daria um "voltar" para um
@@ -1081,7 +1017,7 @@ func CommitMove(b *BoardState, st *live.SessionRuntimeState, version int64, by M
 	return nil
 }
 
-// ReturnToken põe a peça de volta onde ela estava antes do último pouso (ALE-206).
+// ReturnToken põe a peça de volta onde ela estava antes do último pouso.
 //
 // LIMPA o registro ao usar, e por isso o gesto só existe uma vez por movimento: um
 // "voltar" que continuasse disponível andaria para trás na cena com um botão que

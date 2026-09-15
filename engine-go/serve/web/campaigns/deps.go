@@ -148,12 +148,9 @@ const (
 )
 
 // As montagens (`LoadList`, `LoadOne`, `LoadJoin`, `JoinBody`) são EXPORTADAS
-// porque quem prova o caminho banco → tela é a bancada do `api`: este pacote
-// não tem banco, e importar o `db/testdb` com um `*api.Server` seria o ciclo
-// que a divisão existe para evitar.
-//
-// A cena diz COMO montar a si mesma; o hospedeiro prova que o que está no banco
-// chega até lá.
+// porque quem prova o caminho banco → tela é a bancada do `api`: este pacote não
+// tem banco, e importar o `db/testdb` com um `*api.Server` seria o ciclo que a
+// divisão existe para evitar.
 
 // Scene é a cena montada com as dependências dela.
 type Scene struct{ deps Deps }

@@ -11,22 +11,21 @@ import (
 	"t20engine/serve/web/routes"
 )
 
-// O BUSCADOR DO LIVRO (ALE-264): ⌃K abre uma caixa que procura nas 1.072
-// entradas do livro de uma vez — criaturas, condições, magias, poderes e itens
-// —, sem tirar a mão do teclado e sem saber em qual ferramenta a coisa mora.
+// O BUSCADOR DO LIVRO: ⌃K abre uma caixa que procura em todas as entradas do
+// livro de uma vez — criaturas, condições, magias, poderes e itens —, sem tirar
+// a mão do teclado e sem saber em qual ferramenta a coisa mora.
 //
-// A busca não é nova: o servidor já varre os quatro catálogos em
-// `book.Catalogs` e o bestiário em `book.Creatures`. O que este arquivo
-// acrescenta é RANQUEAR (ver `pontuaBusca`) e dar um DESTINO a cada achado —
-// porque aqui a lista é curta e cada linha tem de saber para onde levar.
+// A busca não é nova: o servidor já varre os catálogos em `book.Catalogs` e o
+// bestiário em `book.Creatures`. O que este arquivo acrescenta é RANQUEAR e dar
+// um DESTINO a cada achado — aqui a lista é curta e cada linha tem de saber
+// para onde levar.
 //
-// Decisão do dono, com mockup na mão: o Enter NAVEGA para a cena com a entrada
-// aberta, em vez de desenhar o verbete dentro do próprio diálogo. Reusa as duas
-// cenas que já existem em vez de manter um terceiro desenho da mesma regra.
+// Decisão do dono: o Enter NAVEGA para a cena com a entrada aberta, em vez de
+// desenhar o verbete dentro do próprio diálogo — reusa as cenas que já existem
+// em vez de manter um terceiro desenho da mesma regra.
 //
-// "Com a entrada ABERTA" virou `?entrada=<id>` na segunda passada: o endereço
-// era uma BUSCA pelo nome, e cair numa lista de oito grupos para achar o que se
-// escolheu é o oposto de escolher.
+// "Com a entrada ABERTA" é `?entrada=<id>` e não uma busca pelo nome: cair numa
+// lista de oito grupos para achar o que se escolheu é o oposto de escolher.
 
 // hitsByGroup corta cada grupo, e o corte é DITO na tela ("+12").
 //
@@ -41,9 +40,7 @@ type finderHit struct {
 	Detalhe string
 	Destino string
 	// Pagina é a do livro, e ZERO significa "o catálogo não sabe" — a linha sai
-	// sem número em vez de sair com "p0". Desde a derivação das páginas
-	// (`scripts/book-pages.py`) os cinco catálogos sabem a sua; o que
-	// continua zerado são as 81 entradas que o Índice Remissivo não resolve.
+	// sem número em vez de sair com "p0".
 	Pagina int
 	// ponto não vai para a tela: ele é a ORDEM, e mostrá-lo convidaria a
 	// discutir a nota em vez do resultado.
@@ -77,24 +74,17 @@ type finderView struct {
 func (v finderView) Buscando() bool { return strings.TrimSpace(v.Busca) != "" }
 
 // searchTheBook monta o resultado do ⌃K.
-//
-// A ORDEM DOS GRUPOS é a do acervo e tem razão registrada lá: condição primeiro
-// porque é a consulta mais frequente no meio do combate, criatura em seguida
-// porque é a segunda, e os três do PERSONAGEM no fim — raça, classe e deus são
-// consulta de criação de ficha, não de mesa com o combate em curso.
 func searchTheBook(busca string) finderView {
 	v := buildHits(busca, pelosNomes)
 	if v.Achados > 0 || !v.Buscando() {
 		return v
 	}
-	// SEGUNDA PASSADA, e ela é o conserto de uma medição na tela: com o corpo
-	// das regras valendo sempre, "abal" devolvia 295 entradas — 142 poderes cujo
-	// texto diz "Abalado" — e a condição "Abalado", que era o que se procurava,
-	// saía espremida num grupo de seis ao lado de "Naja" e "Jiboia".
+	// SEGUNDA PASSADA: o corpo da regra só entra quando NOME nenhum casou. Com
+	// ele valendo sempre, "abal" afogava a condição "Abalado" entre as centenas
+	// de poderes cujo TEXTO a menciona.
 	//
-	// Então o corpo da regra só entra quando NOME nenhum casou. Quem digita
-	// "abal" procura o verbete; quem digita "chance de falha" não sabe o nome, e
-	// é para essa pessoa que a passada existe.
+	// Quem digita "abal" procura o verbete; quem digita "chance de falha" não
+	// sabe o nome, e é para essa pessoa que a passada existe.
 	v = buildHits(busca, tambemPeloTexto)
 	v.PeloTexto = v.Achados > 0
 	return v
@@ -139,11 +129,10 @@ func buildHits(busca string, peloTexto bool) finderView {
 
 // sortByRelevance põe na frente o grupo que tem o MELHOR achado.
 //
-// O defeito foi visto pelo dono na tela: digitando "medo", o verbete "Medo" —
-// nome inteiro, a pontuação máxima — aparecia no SEXTO grupo, abaixo de
-// criaturas que só têm a palavra no nome ("Devorador de Medos"). A ordem dos
-// grupos era a da fileira de abas, fixa, e ela é a certa para NAVEGAR (condição
-// primeiro porque é a consulta do combate) e a errada para BUSCAR.
+// A ordem da fileira de abas é a certa para NAVEGAR — condição primeiro porque
+// é a consulta do combate, os três do personagem no fim — e a errada para
+// BUSCAR: com ela fixa, o verbete "Medo" (nome inteiro, pontuação máxima) sai
+// abaixo de criaturas que só têm a palavra no nome.
 //
 // Estável, então a ordem da fileira continua valendo no EMPATE: dois grupos com
 // achados igualmente bons saem na ordem de sempre.
@@ -176,8 +165,7 @@ func foundGroup[T any](
 		// A linha é montada ANTES de saber se ela passa, e é deliberado: pegar o
 		// nome de `campos(e)[0]` seria depender de uma ordem que nada garante, e
 		// no dia em que um `entryFields` mudasse de ordem a pontuação passaria a
-		// medir a descrição — em silêncio, com a lista continuando a sair. São
-		// 1.072 structs por tecla digitada, com 200ms de debounce na frente.
+		// medir a descrição — em silêncio, com a lista continuando a sair.
 		a := comoAchado(e)
 		a.ponto = search.Score(a.Nome, busca)
 		if a.ponto == 0 && peloTexto {
@@ -214,9 +202,9 @@ func bestFirst(a, b finderHit) int {
 
 // ── de cada catálogo para uma linha ──────────────────────────────────────────
 
-// entryFields é o irmão dos `entryFields` do acervo, e o bestiário não tinha
-// um: a cena dele filtra por nome e tipo em `book.FilterCreatures`. Aqui ele precisa
-// existir para o verbete passar pelo mesmo `foundGroup` que os outros quatro.
+// entryFields existe para o verbete do bestiário passar pelo mesmo `foundGroup`
+// que os outros catálogos: a cena dele filtra por outro caminho
+// (`book.FilterCreatures`), que não serve aqui.
 func entryFields(m book.Entry) []string {
 	return append([]string{m.Name, book.TypeName(m.Tipo)}, m.SpecialAbilities...)
 }
@@ -318,20 +306,17 @@ func entryHit(m book.Entry) finderHit {
 	}
 }
 
-// routes.MasterSearch leva à cena dos catálogos com a entrada já filtrada.
+// Os três destinos que as linhas acima usam, e por que são três:
 //
-// Pelo NOME e não por um id na URL, e é escolha e não preguiça: a cena não tem
-// endereço para uma entrada só — ela tem `?aba=` e `?busca=`, que já são
-// endereços recarregáveis. Buscar pelo nome exato deixa a entrada sozinha na
-// lista, que é o que a pessoa pediu, sem inventar um terceiro estado de cena
-// que precisaria ser mantido junto.
-
-// routes.MasterEntry é o endereço de UM verbete: a aba dele, mostrando só ele.
+// `routes.MasterSearch` leva à cena dos catálogos buscando pelo NOME, e não por
+// um id: a cena não tem endereço para uma entrada só — ela tem `?aba=` e
+// `?busca=`, que já são recarregáveis. Inventar um terceiro estado de cena
+// seria mais uma coisa a manter.
 //
-// Diferente do `routes.MasterSearch`, que faz uma BUSCA. A diferença apareceu na
-// tela: clicar no elo "Medo" caía numa busca por "medo" nos oito catálogos, com
-// o verbete procurado espremido no quinto grupo. Quem clica num conceito pediu o
-// conceito.
-
-// routes.MasterBestiarySearch leva à cena do bestiário filtrada. Serve tanto para o "+12"
-// (com o termo digitado) quanto para o que o `entryHit` faz com o id.
+// `routes.MasterEntry` é o endereço de UM verbete: a aba dele, mostrando só
+// ele. Quem clica num conceito pediu o conceito, e não uma busca pelo termo nos
+// oito catálogos.
+//
+// `routes.MasterBestiarySearch` leva à cena do bestiário filtrada, e serve
+// tanto ao "+12" (com o termo digitado) quanto ao que o `entryHit` faz com o
+// id.

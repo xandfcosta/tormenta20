@@ -13,7 +13,7 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O CICLO DA SESSÃO na Mesa em Datastar (ALE-269, superfícies 3, 4 e 11).
+// O CICLO DA SESSÃO na Mesa.
 //
 // Iniciar, encerrar, renomear, reiniciar o combate e sair. A REGRA de cada um
 // mora no `table_session_lifecycle.go` — aqui é só o caminho até ela.
@@ -66,7 +66,7 @@ func renameStart(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		return nil, fmt.Errorf("não entendi o título enviado: %v", err)
 	}
 	titulo := strings.TrimSpace(sinais.Titulo)
-	// A gravação é uma PERGUNTA e não um SET montado aqui (ALE-278): o `title`
+	// A gravação é uma PERGUNTA e não um SET montado aqui: o `title`
 	// desta tabela não tem query própria no sqlc, então quem escreve é um SET —
 	// e quem sabe montá-lo, que vazio é NULL e que a linha tem um `updatedAt` a
 	// carimbar é o hospedeiro. A rota JSON grava a mesma coluna pelo mesmo
@@ -120,13 +120,11 @@ func (s Scene) excluiAPartida(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "não deu para apagar a sessão", http.StatusInternalServerError)
 		return
 	}
-	// O ESTADO EM MEMÓRIA morre junto — a fila E o tabuleiro (ALE-270).
-	//
-	// Aqui estava só o `Sessions().Forget(sessionID)`, e o comentário dele dizia
-	// a verdade sobre metade do problema: sem ele a sessão apagada continuaria
-	// respondendo em memória. O que ele não alcançava era o tabuleiro, que ficava
-	// no mapa do `BoardStore` batendo na chave estrangeira a cada gravação e
-	// deixando a mesa marcada como suja para sempre.
+	// O ESTADO EM MEMÓRIA morre junto — a fila E o tabuleiro. São DOIS
+	// esquecimentos e não um: sem o primeiro a sessão apagada continua
+	// respondendo em memória, e sem o segundo o tabuleiro fica no mapa do
+	// `BoardStore` batendo na chave estrangeira a cada gravação, deixando a mesa
+	// marcada como suja para sempre.
 	s.deps.SessionDeleted(sessionID)
 	http.Redirect(w, r, "/campanhas/"+strconv.FormatInt(campaignID, 10), http.StatusSeeOther)
 }

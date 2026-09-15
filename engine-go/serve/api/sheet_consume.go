@@ -38,10 +38,9 @@ var errDailyPortion = errors.New("apenas uma porção por dia")
 // no máximo, a linha de efeito de cena ou dia, e a baixa do item — tudo numa
 // transação.
 //
-// Ela nasceu extraída na fatia 7 da ALE-272, quando a Mochila em Datastar
-// passou a usar item: reescrever a regra lá daria DUAS respostas para "posso
-// beber esta poção?", e elas divergiriam no dia em que uma mudasse. É a mesma
-// razão do `castSpellForCharacter` da fatia 6.
+// Fora do HTTP porque as duas portas — a rota JSON e a Mochila em Datastar — a
+// chamam: reescrita numa delas, daria DUAS respostas para "posso beber esta
+// poção?". É a mesma razão do `castSpellForCharacter`.
 func (sr sheetRules) consumeItemForCharacter(
 	ctx context.Context, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
 ) (doseUsed, error) {
@@ -176,11 +175,10 @@ func rollGain(rolled *int64, instant *catalog.Instant, isHp bool) (int, bool) {
 // a porção do dia já foi consumida — é ela que o `oncePerDay` lá em cima
 // procura, e é ela que o UNIQUE (characterId, catalogId, scope) protege.
 //
-// Exigir modificadores para criá-la matava a regra da porção diária inteira:
-// os cinco pratos que o catálogo marca como `oncePerDay` (gorad quente,
-// macarrão de Yuvalin, batata valkariana, prato do aventureiro, sopa de peixe)
-// só curam, nenhum tem modificador — então nunca havia marcador para achar, e
-// a mesa comia o mesmo prato a manhã inteira (ALE-186).
+// Exigir modificadores para criá-la mata a regra da porção diária inteira: os
+// cinco pratos que o catálogo marca como `oncePerDay` só curam e nenhum tem
+// modificador, então não haveria marcador para achar e a mesa comeria o mesmo
+// prato a manhã inteira.
 func wantsEffectRow(spec *catalog.Consumable) bool {
 	return spec.Scope != "instant" && (spec.OncePerDay || hasModifiers(spec.Modifiers))
 }
@@ -201,8 +199,8 @@ func hasModifiers(raw json.RawMessage) bool {
 
 var diceRe = regexp.MustCompile(`^(\d+)d(\d+)$`)
 
-// rollAverage ports characters.helpers.ts rollAverage: NdF → floor(N*(F+1)/2),
-// a plain integer as a flat bonus, "" / "0" → just the bonus.
+// rollAverage é a média de uma rolagem: NdF vira `floor(N*(F+1)/2)`, um
+// inteiro pelado vale como bônus fixo, e "" ou "0" devolvem só o bônus.
 func rollAverage(dice string, bonus int) int {
 	t := strings.TrimSpace(dice)
 	if t == "" || t == "0" {

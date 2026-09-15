@@ -14,10 +14,9 @@ const seedChronicleDate = "2026-07-01T12:00:00.000Z"
 
 // demoMember é quem senta à mesa.
 //
-// O `role` saiu na ALE-287 com a coluna: quem mestra é o DONO da campanha, e
-// isso já está dito pelo `ownerEmail` do personagem casado com o dono da mesa —
-// escrever o papel de novo seria uma segunda fonte para o mesmo fato, livre
-// para divergir dela.
+// Sem `role`: quem mestra é o DONO da campanha, e isso já está dito pelo
+// `ownerEmail` do personagem casado com o dono da mesa — escrever o papel de
+// novo seria uma segunda fonte para o mesmo fato, livre para divergir dela.
 type demoMember struct {
 	ownerEmail string
 	charName   string
@@ -45,7 +44,7 @@ func (s demoSession) sessionDate() string {
 	return seedChronicleDate
 }
 
-// demoPlace é uma cena GUARDADA no acervo da campanha (ALE-292).
+// demoPlace é uma cena GUARDADA no acervo da campanha.
 //
 // A cena vai como JSON cru porque é isso que a coluna guarda: o `BoardState`
 // serializado. Montá-la com o tipo do `tabuleiro` obrigaria este gerador a
@@ -86,16 +85,13 @@ var demoCampaigns = []demoCampaign{
 			{4, "", "active", "2026-08-10T19:00:00.000Z", "", ""},
 			{5, "", "planned", "", "", "2026-08-22T19:00:00.000Z"},
 		},
-		// O ACERVO da mesa-vitrine (ALE-271), e ele não é enfeite: o botão
-		// "Lugares da campanha · N" é o ÚNICO item do painel de verbos com texto
-		// e contagem, e era ele que empurrava dois botões para fora da janela a
-		// 390px. Sem acervo na seed, o painel que o e2e mede não é o painel que a
-		// mesa vê — a cena estava na lista dos guardas e o ESTADO não.
+		// O ACERVO da mesa-vitrine não é enfeite: o botão "Lugares da campanha ·
+		// N" é o ÚNICO item do painel de verbos com texto e contagem, e é ele
+		// que aperta a largura a 390px. Sem acervo na seed, o painel que o e2e
+		// mede não é o painel que a mesa vê.
 		//
-		// TRÊS e não cento e quarenta e oito: o que muda a largura é o botão
-		// EXISTIR e a contagem ter dois dígitos, e três lugares já dão isso. Um
-		// acervo grande na seed custaria o dobro do arquivo para medir a mesma
-		// coisa.
+		// TRÊS lugares bastam: o que muda a largura é o botão EXISTIR e a
+		// contagem ter dois dígitos.
 		places: []demoPlace{
 			{"Taverna do Javali", tavernaDoJavali},
 			{"Ponte de Vectora", pontDeVectora},
@@ -143,7 +139,7 @@ var demoCampaigns = []demoCampaign{
 	},
 }
 
-// A cena guardada de "O Chamado de Valkaria" (ALE-292).
+// A cena guardada de "O Chamado de Valkaria".
 //
 // Ela vive nessa campanha DE PROPÓSITO. As mesas do e2e são todas da campanha 1,
 // e um lugar a mais no acervo dela mudaria a contagem do botão "Lugares da
@@ -152,7 +148,7 @@ var demoCampaigns = []demoCampaign{
 // A cena tem peça, peça ESCONDIDA, marcador escondido e terreno difícil porque o
 // guarda de contraste mede o que a tela DESENHA: um lugar vazio seria uma grade
 // em branco, e a medição passaria por cima da tinta que ela existe para
-// conferir. Foi assim que ela achou, na estreia, um marcador carmim a 4,11:1.
+// conferir.
 // A TAVERNA é a cena de interpretação: gente e mobília, sem terreno difícil.
 const tavernaDoJavali = `{"id":"semente-taverna","version":5,"place":"Taverna do Javali","terrain":"tavern",` +
 	`"tokens":[` +

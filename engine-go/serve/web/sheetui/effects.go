@@ -13,26 +13,22 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// A aba EFEITOS como dado (ALE-272, fatia 5).
+// A aba EFEITOS como dado.
 //
 // É tudo que está mexendo nos números do personagem AGORA, em quatro blocos que
 // diferem por QUEM é dono do estado:
 //
 //  1. CONDIÇÕES do livro (p394-395) — coluna `activeConditions`. Elas MOVEM os
-//     números: uma condição que fosse só crachá foi o defeito da ALE-28.
+//     números; uma condição que fosse só crachá não seria uma condição.
 //  2. POSTURAS em curso, com o que cada uma custou. O interruptor de LIGAR mora
 //     nos Poderes, onde o PM é cobrado; aqui elas só se leem e se encerram.
 //  3. EFEITOS ATIVOS — consumível usado e magia de bônus aplicada, com escopo de
 //     cena ou dia.
 //  4. SITUAÇÃO — o opt-in de contexto (terreno, tipo de alvo, item caseiro).
 //
-// # As posturas saem do CATÁLOGO, e a tabela do front era cópia
-//
-// A SPA guarda um `FLAG_ACTIVATIONS` escrito à mão com as duas posturas, o PM e a
-// página. As duas JÁ ESTAVAM no `activations.json` como `"kind": "stance"`, e a
-// FLAG de cada uma sai do poder de mesmo id, lendo o `condition.flag` dos
-// modificadores dele. Não há tabela nova aqui: há uma leitura do que o catálogo
-// já dizia, e o que morre com a SPA é a cópia.
+// As posturas saem do CATÁLOGO e não de uma tabela escrita aqui: elas estão no
+// `activations.json` como `"kind": "stance"`, e a FLAG de cada uma sai do poder
+// de mesmo id, lendo o `condition.flag` dos modificadores dele.
 
 // effectsPanel é a aba Efeitos pronta para desenhar.
 type effectsPanel struct {
@@ -156,12 +152,11 @@ func stancesFromCatalog() map[string]stanceOfBook {
 // stanceStep acha o sufixo do DEGRAU quando a postura não declara a flag no
 // poder de id exato.
 //
-// O catálogo trata as duas posturas de formas DIFERENTES, e isso é achado desta
-// fatia: `class.barbaro.furia` carrega os modificadores no poder de id exato,
-// enquanto `class.bardo.inspiracao` os põe nos degraus numerados
-// (`inspiracao-1`, `-2`, …) e deixa o id base sem modificador nenhum. Ligar só
-// pelo id exato achava UMA das duas — e passava calado, porque a Inspiração
-// simplesmente não aparecia na lista de posturas.
+// O catálogo trata as duas posturas de formas DIFERENTES:
+// `class.barbaro.furia` carrega os modificadores no poder de id exato, enquanto
+// `class.bardo.inspiracao` os põe nos degraus numerados (`inspiracao-1`, `-2`,
+// …) e deixa o id base sem modificador nenhum. Ligar só pelo id exato acha UMA
+// das duas, e passa calado: a outra simplesmente não aparece na lista.
 //
 // O sufixo aceito é `-<dígitos>` e MAIS NADA. Um prefixo solto casaria
 // `class.barbaro.furia-da-savana`, que é outro poder — e no dia em que ele
@@ -336,10 +331,9 @@ func modifierRowsOf(bruto string) []breakdownRow {
 // lê "ataque". Alvo sem tradução assentada cai no próprio `k`, que é feio e
 // honesto — melhor que inventar um nome que não é o do livro.
 //
-// A tabela cresceu na fatia 7 (ALE-272) porque a Mochila desenha o que um item
-// CONCEDE, e aí aparecem alvos que nenhuma condição usa — `inventorySlots`,
-// `spellDC`, `maneuver`, `critRange`. Ela é a mesma lista do
-// `describeModifierTarget` do front, e é o único lugar do Go que a tem.
+// A tabela cobre também o que a Mochila desenha de um item CONCEDIDO
+// (`inventorySlots`, `spellDC`, `maneuver`, `critRange`), e é o único lugar do
+// repositório que a tem.
 func targetLabel(t engine.ModifierTarget) string {
 	nomes := map[string]string{
 		"attack": "Ataque", "damage": "Dano", "defense": "Defesa",
@@ -468,12 +462,8 @@ func situationalRowsOf(offered []engine.ConditionalEffect, ativos map[string]boo
 	return linhas, nil
 }
 
-// itemFlagLabel é o pt-BR de cada flag sempre ativa.
-//
-// Ela veio do `ITEM_FLAG_LABEL` do front, onde as MESMAS seis frases já viviam
-// em DOIS arquivos — o próprio comentário de lá registra a duplicata e pede a
-// consolidação. Aqui elas ficam ao lado de quem as desenha, e um teste do front
-// compara as duas cópias enquanto a SPA viver.
+// itemFlagLabel é o pt-BR de cada flag sempre ativa. Mora ao lado de quem as
+// desenha.
 //
 // Flag desconhecida cai no próprio id, que é feio e HONESTO: inventar uma frase
 // para uma flag nova seria pior, porque a tela diria com confiança algo que
@@ -497,9 +487,7 @@ var itemFlagLabel = map[string]string{
 //
 // Quem as CALCULA é o motor (`ComputeEquippedFlags`), e não uma varredura
 // escrita aqui: ele resolve as condições de uso (vestido, empunhado) e sabe
-// quais modificadores do item contam. A primeira versão desta função varria os
-// itens à mão e ignorava isso — a tela mostrava o id cru da flag porque a
-// tradução também estava faltando, e as duas coisas se escondiam uma na outra.
+// quais modificadores do item contam.
 func alwaysOnRowsOf(flags []engine.EquippedFlag) []alwaysOnRow {
 	linhas := []alwaysOnRow{}
 	for _, f := range flags {

@@ -7,28 +7,18 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// OS SINAIS DA FICHA, lidos UMA VEZ por requisição (ALE-272, fatia 4).
+// OS SINAIS DA FICHA, lidos UMA VEZ por requisição.
 //
-// # Por que uma struct só, e por que uma leitura só
+// UMA struct e UMA leitura porque o `datastar.ReadSignals` CONSOME O CORPO num
+// `POST`: duas chamadas na mesma requisição deixam a segunda sem nada — e sem
+// erro, porque corpo vazio é JSON ausente e não JSON inválido. Quem rodasse por
+// último receberia vazio, e a lista voltaria sem filtro como se a pessoa
+// tivesse apagado a busca.
 //
-// `datastar.ReadSignals` CONSOME O CORPO num `POST`. Duas chamadas na mesma
-// requisição deixam a segunda sem nada — e sem erro, porque um corpo vazio é um
-// JSON ausente e não um JSON inválido. O gesto de criar um ofício precisa do
-// nome digitado, e o redesenho precisa do termo de busca; escritos como duas
-// leituras, o segundo a rodar receberia vazio e a lista voltaria sem filtro,
-// como se a pessoa tivesse apagado a busca.
-//
-// A biblioteca ainda exige a ordem: `ReadSignals` ANTES do `NewSSE`, senão ela
+// A biblioteca ainda exige a ORDEM: `ReadSignals` ANTES do `NewSSE`, senão ela
 // devolve "are you sure you created the SSE ***AFTER*** the ReadSignals?". Num
-// `GET` os sinais vêm na consulta e a ordem não morde, que é justamente o que
-// faria o defeito nascer no dia em que um gesto virasse `POST`.
-//
-// # As chaves são MINÚSCULAS, e não é estilo
-//
-// Chave de atributo é minusculada pelo HTML: escrita em camelCase, ela vira
-// outra chave e liga um sinal NOVO, deixando o que o servidor lê sempre vazio.
-// Só o VALOR de um atributo preserva a caixa — e é por isso que o padrão é
-// `snake_case`, que atravessa o parser intacto nos dois lugares (ALE-301).
+// `GET` os sinais vêm na consulta e a ordem não morde — o que faria o defeito
+// nascer no dia em que um gesto virasse `POST`.
 
 // Signals é o que o cliente manda junto de qualquer gesto da ficha.
 //
@@ -45,15 +35,14 @@ type Signals struct {
 	// catálogo dentro — um `PathEscape` daquilo funciona e é ilegível no log.
 	Situacao *string `json:"conditional"`
 	// Aprimoramentos são as pilhas escolhidas no diálogo de conjurar, uma por
-	// índice: `aug0`..`aug5`. Seis porque é o máximo do catálogo (Conjurar
-	// Monstro), e nomes minúsculos pela regra de sempre.
+	// índice. Seis porque é o máximo do catálogo (Conjurar Monstro).
 	Aug0 *int `json:"augment0"`
 	Aug1 *int `json:"augment1"`
 	Aug2 *int `json:"augment2"`
 	Aug3 *int `json:"augment3"`
 	Aug4 *int `json:"augment4"`
 	Aug5 *int `json:"augment5"`
-	// Os filtros do catálogo de magias. Minúsculos como todos os outros.
+	// Os filtros do catálogo de magias.
 	MagiaBusca   string `json:"spell_search"`
 	MagiaCirculo string `json:"spell_circle"`
 	MagiaEscola  string `json:"spell_school"`

@@ -1,7 +1,7 @@
 package api
 
-// Painel de servidor da tela de administração (ALE-120): o que o dono da mesa
-// precisa saber sem abrir o terminal, e o backup.
+// Painel de servidor da tela de administração: o que o dono da mesa precisa
+// saber sem abrir o terminal, e o backup.
 //
 // O que NÃO está aqui é deliberado: resetar e semear o banco ficam no terminal.
 // Um botão destrutivo num celular, no meio da sessão, com o dedo perto, é
@@ -33,29 +33,30 @@ type backupDTO struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-// backupDatabase writes a consistent snapshot with SQLite's own VACUUM INTO.
+// backupDatabase grava um instantâneo coerente com o próprio VACUUM INTO do
+// SQLite.
 //
-// Not a file copy, and not the sqlite3 CLI either: with WAL on, the `.db` alone
-// is missing whatever still sits in the `-wal`, so copying it while the table is
-// live yields an OLD database and no error to say so (ALE-119 measured exactly
-// that). VACUUM INTO reads a coherent snapshot of both parts, and being built
-// into the driver means the host needs no sqlite3 binary.
+// NÃO é cópia de arquivo, nem o CLI do sqlite3: com o WAL ligado, o `.db`
+// sozinho não tem o que ainda está no `-wal`, então copiá-lo com a mesa viva
+// produz um banco VELHO e nenhum erro que o diga. O `VACUUM INTO` lê as duas
+// partes de uma vez, e por vir no driver dispensa um binário do sqlite3 no
+// hospedeiro.
 func (h adminHost) backupDatabase(ctx context.Context, at time.Time) (string, error) {
 	if err := os.MkdirAll(h.cfg.BackupDir, 0o755); err != nil {
 		return "", fmt.Errorf("create backup dir %q: %w", h.cfg.BackupDir, err)
 	}
 	name := fmt.Sprintf("t20-%s-%s.db", h.cfg.AppEnv, at.Format("20060102-150405"))
 	path := filepath.Join(h.cfg.BackupDir, name)
-	// VACUUM INTO refuses to overwrite, which is the behaviour we want: two
-	// backups in the same second must not silently become one.
+	// O `VACUUM INTO` se recusa a sobrescrever, e é o comportamento que se quer:
+	// dois backups no mesmo segundo não podem virar um em silêncio.
 	if _, err := h.db.ExecContext(ctx, "VACUUM INTO ?", path); err != nil {
 		return "", err
 	}
 	return name, nil
 }
 
-// listBackups reads the directory instead of a table: the files are the truth,
-// and one dropped in by the CLI script has to show up here too.
+// listBackups lê o DIRETÓRIO e não uma tabela: os arquivos são a verdade, e um
+// largado ali pelo script do terminal tem de aparecer aqui também.
 func (h adminHost) listBackups() []backupDTO {
 	entries, err := os.ReadDir(h.cfg.BackupDir)
 	if err != nil {
@@ -81,15 +82,13 @@ func fileSize(path string) int64 {
 	return info.Size()
 }
 
-// ScheduleBackups faz o backup periódico e apaga os mais antigos (ALE-157).
+// ScheduleBackups faz o backup periódico e apaga os mais antigos.
 //
-// O backup manual já existia e já fazia a coisa certa — `VACUUM INTO`, que lê
-// um instantâneo coerente do `.db` MAIS o `-wal` —, mas dependia de alguém
-// lembrar, e backup que depende de memória humana é backup que não existe na
-// noite em que importa.
+// Periódico e não só manual: backup que depende de memória humana é backup que
+// não existe na noite em que importa.
 //
 // Roda em goroutine própria e morre com o contexto do processo, junto com o
-// desligamento gracioso. Não faz backup NO BOOT: subir o servidor três vezes
+// desligamento gracioso. NÃO faz backup no boot: subir o servidor três vezes
 // seguidas para mexer numa configuração não deve encher a pasta.
 func (s *Server) ScheduleBackups(ctx context.Context) {
 	if s.cfg.BackupEvery <= 0 || s.cfg.BackupKeep <= 0 {
@@ -108,8 +107,8 @@ func (s *Server) ScheduleBackups(ctx context.Context) {
 		case at := <-ticker.C:
 			name, err := s.adminHost().backupDatabase(ctx, at)
 			if err != nil {
-				// Best-effort de propósito: a mesa não pode parar porque o
-				// disco encheu. Mas o erro é DITO, não engolido (ALE-155).
+				// Melhor esforço de propósito: a mesa não pode parar porque o
+				// disco encheu. Mas o erro é DITO, não engolido.
 				log.Printf("backup automático falhou: %v", err)
 				continue
 			}

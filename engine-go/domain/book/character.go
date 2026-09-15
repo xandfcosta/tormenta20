@@ -46,8 +46,8 @@ type RaceAttribute struct {
 	Mods  map[string]int `json:"mods"`
 	// Exclude é o atributo PROIBIDO na distribuição — o lefou não põe o +1 em
 	// Carisma, o osteon não põe em Constituição, e os dois ainda levam um −1
-	// nesse mesmo atributo. Ele entrou na fatia 8, com o diálogo que oferece os
-	// atributos: sem ele a tela ofereceria uma escolha que o motor recusa.
+	// nesse mesmo atributo. Sem ele a tela ofereceria uma escolha que o motor
+	// recusa.
 	Exclude string `json:"exclude"`
 }
 
@@ -86,9 +86,7 @@ type Class struct {
 	Name     string `json:"name"`
 	BookPage int    `json:"bookPage"`
 	// Proficiencias é a linha "Proficiências." do bloco da classe (p36–83),
-	// transcrita. Ela chegou na ALE-272 com o painel de Proficiências da ficha:
-	// a tabela existia só em TypeScript, fora do alcance da validação de schema
-	// — ver `web/sheetui/proficiencies.go`.
+	// transcrita — ver `web/sheetui/proficiencies.go`.
 	Proficiencias []string `json:"proficiencies"`
 	// Spellcasting é a tabela de progressão de círculo, e ela é NULA para as
 	// classes que não conjuram — ver `spellcasting.go`.
@@ -110,10 +108,8 @@ type ClassExpertises struct {
 
 // Expertise é uma das 29, com o que o livro imprime ao lado do nome.
 //
-// As duas regras vêm da Tabela 2-1 (p115) e não de uma lista no código: o motor
-// tinha as três de penalidade de armadura escritas à mão em
-// `engine/breakdowns.go`, e a tabela do livro concorda com elas — o que é uma
-// boa notícia e não um motivo para manter duas fontes.
+// As duas regras vêm da Tabela 2-1 (p115) e não de uma lista escrita à mão no
+// código: duas fontes para a mesma tabela divergem.
 type Expertise struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
@@ -162,9 +158,8 @@ type God struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Major bool   `json:"major"`
-	// Os dois elegíveis entraram na fatia 8: o Paladino e o Druida escolhem
-	// devoto de listas próprias (p82 e p61), e é o catálogo que diz quem entra
-	// em cada uma.
+	// O Paladino e o Druida escolhem devoto de listas próprias (p82 e p61), e é
+	// o catálogo que diz quem entra em cada uma.
 	PaladinoEligible  bool     `json:"paladinoEligible"`
 	DruidaEligible    bool     `json:"druidaEligible"`
 	Portfolio         string   `json:"portfolio"`
@@ -238,11 +233,10 @@ func GodFields(d God) []string {
 // palavra nova em português para um conceito que a tela mostra só como
 // "Comum"/"Exótica" — o livro tem a seção "Raças Exóticas" e nada além disso.
 //
-// O valor é `extra` e NÃO `exotica`, e isto é conserto de um defeito que só
-// apareceu ao medir o dado para montar o filtro: eu tinha escrito `exotica`, e
-// como o `else` devolve "Comum", as DEZESSETE raças diziam Comum — inclusive as
-// nove exóticas. Um `switch` com valor desconhecido devolvendo o valor cru seria
-// feio na tela e visível; um `else` com um dos dois rótulos é mentira silenciosa.
+// O valor no dado é `extra` e NÃO `exotica`. Errá-lo não aparece: como o `else`
+// devolve "Comum", as dezessete raças dizem Comum — inclusive as nove exóticas.
+// Um `switch` com valor desconhecido devolvendo o valor cru seria feio na tela e
+// visível; um `else` com um dos dois rótulos é mentira silenciosa.
 func TierName(tier string) string {
 	switch tier {
 	case "extra":
@@ -303,31 +297,25 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 	return racasDoAcervo, classesDoAcervo, deusesDoAcervo
 }
 
-// Os três catálogos DO PERSONAGEM no acervo do mestre (ALE-264): raça, classe e
-// divindade.
+// Os três catálogos DO PERSONAGEM no acervo do mestre: raça, classe e divindade.
 //
-// Eles chegam depois dos quatro primeiros porque a pergunta que respondem é
-// outra. Condição, magia, poder e item são consulta de MESA — o mestre abre no
-// meio do combate. Raça, classe e deus são consulta de CRIAÇÃO, e é por isso que
-// entram no fim da fileira de abas: a ordem das abas segue a frequência da
-// consulta, que é a razão registrada em `collectionTabs` desde a ALE-258.
+// Eles ficam no FIM da fileira de abas porque a ordem segue a frequência da
+// consulta (ver `collectionTabs`): condição, magia, poder e item são consulta de
+// MESA, aberta no meio do combate; raça, classe e deus são consulta de CRIAÇÃO.
 //
-// A CLASSE é o caso especial e vale dizer o que ela NÃO tem: o catálogo dela
-// nasceu nesta issue com três campos — id, nome e página — porque ela existia só
-// como uma lista de nomes dentro de `options.json`. PV, PM e proficiências são
-// transcrição de tabela, e transcrever à mão é exatamente o que o
-// `scripts/book-pages.py` existe para não fazer. O que a tela mostra além
-// do nome ela DERIVA do que já está no repositório: as perícias treinadas saem
-// de `class-expertises`, a conta de poderes sai de `class-powers`. Quem quiser o
-// bloco inteiro tem o botão do livro ao lado do nome.
+// A CLASSE é o caso especial e vale dizer o que ela NÃO tem: três campos apenas
+// — id, nome e página. PV, PM e proficiências são transcrição de tabela, e
+// transcrever à mão é o que o `scripts/book-pages.py` existe para não fazer. O
+// que a tela mostra além do nome ela DERIVA do que já está no repositório: as
+// perícias treinadas saem de `class-expertises`, a conta de poderes sai de
+// `class-powers`. Quem quiser o bloco inteiro tem o botão do livro ao lado.
 
 // ── raça ─────────────────────────────────────────────────────────────────────
 
-// AttributeOrder é a do livro, e ela existe por DUAS razões — a segunda é a
-// que morde: a ordem de um `map` em Go é ALEATÓRIA por projeto, então imprimir
-// os modificadores direto do mapa daria uma ordem diferente a cada render. A
-// página mudaria sozinha entre dois pedidos iguais, e qualquer teste sobre o
-// texto seria intermitente.
+// AttributeOrder é a do livro, e a razão que morde é a segunda: a ordem de um
+// `map` em Go é ALEATÓRIA por projeto, então imprimir os modificadores direto do
+// mapa daria uma ordem diferente a cada render — a página mudaria sozinha entre
+// dois pedidos iguais, e qualquer teste sobre o texto seria intermitente.
 var AttributeOrder = []struct{ Chave, Sigla string }{
 	{"strength", "For"}, {"dexterity", "Des"}, {"constitution", "Con"},
 	{"intelligence", "Int"}, {"wisdom", "Sab"}, {"charisma", "Car"},

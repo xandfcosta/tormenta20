@@ -6,10 +6,10 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel da MOCHILA desenhado (ALE-272, fatia 7).
+// O painel da MOCHILA desenhado.
 //
-// A ordem é a da SPA e ela responde a três perguntas em sequência: o que está
-// na mão, quanto pesa, e o que sobra guardado.
+// A ordem responde a três perguntas em sequência: o que está na mão, quanto
+// pesa, e o que sobra guardado.
 //
 // # A tira de equipados são DOIS TETOS, não casas de corpo
 //
@@ -162,7 +162,7 @@ templ equippedCardItem(v View, card *equippedCard, largo bool) {
 						// `max-w-full truncate` porque um crachá é uma caixa
 						// indivisível: o `flex-wrap` não quebra "Perícia
 						// Intimidação +1", e sem o corte ele é desenhado por
-						// cima do cartão vizinho (ALE-148).
+						// cima do cartão vizinho.
 						<span
 							title={ chip }
 							class="max-w-full truncate rounded-full border border-grimorio-iron bg-muted px-1.5 py-0.5 text-3xs text-foreground"
@@ -242,9 +242,9 @@ templ loadBar(v View) {
 			></div>
 		</div>
 		if v.Bag.Load.Overloaded {
-			// A BARRA é `--hp-critical`; este aviso é TEXTO, e em 10px ele
-			// precisa da tinta da casa — o token da barra rende 3,59:1 sobre o
-			// painel (ALE-240).
+			// A BARRA é `--hp-critical`; este aviso é TEXTO, e em 10px ele precisa
+			// da tinta da casa: o token da barra não alcança o contraste que a
+			// norma pede sobre o painel.
 			<p class="text-3xs font-semibold text-penalty-ink">
 				{ overloadNotice(v.Bag.Load) }
 			</p>
@@ -302,7 +302,7 @@ templ stowedTileItem(ladrilho stowedTile) {
 }
 
 // moneyDialog são as três coisas que se fazem com dinheiro na mesa: receber,
-// gastar e corrigir (ALE-224). O terceiro existe porque escrever o total é o
+// gastar e corrigir. O terceiro existe porque escrever o total é o
 // gesto da forja e o de consertar um erro de digitação.
 templ moneyDialog(v View) {
 	@overlay("dinheiro", "Dinheiro", "Coins", false) {

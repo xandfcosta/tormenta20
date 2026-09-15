@@ -15,7 +15,7 @@ import (
 	"t20engine/infra/platform"
 )
 
-// OS COMANDOS DA ABA MOCHILA (ALE-272, fatia 7).
+// OS COMANDOS DA ABA MOCHILA.
 
 // addCatalogItem põe na mochila um item do Capítulo 3.
 //
@@ -63,9 +63,8 @@ func editItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) e
 	if err != nil {
 		return err
 	}
-	// A gravação é uma PERGUNTA e não um SQL montado aqui (ALE-278): quem sabe
-	// o nome das colunas é o hospedeiro. Mesma decisão que a cena das campanhas
-	// tomou com o `SaveText`.
+	// A gravação é uma PERGUNTA e não um SQL montado aqui: quem sabe o nome das
+	// colunas é o hospedeiro. Mesma decisão do `SaveText` da cena de campanhas.
 	return s.deps.SaveCustomItem(r.Context(), item.ID, nome, quantidade, espacos)
 }
 
@@ -81,9 +80,8 @@ func removeItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 // useItem gasta uma dose do consumível.
 //
 // A regra inteira — a rolagem presa no máximo, a linha de efeito de cena ou dia,
-// a porção diária, a baixa do item — é a MESMA da API JSON
-// (`consumeItemForCharacter`), extraída nesta fatia. Os números rolados vêm por
-// sinal porque quem rola é a MESA: a ficha não rola dado por ninguém.
+// a porção diária, a baixa do item — mora no `ConsumeItem`. Os números rolados
+// vêm por sinal porque quem rola é a MESA: a ficha não rola dado por ninguém.
 func useItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
@@ -94,9 +92,8 @@ func useItem(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) er
 
 // applyOverlays grava as melhorias e o material escolhidos.
 //
-// A COMPATIBILIDADE é conferida aqui (`fitsItemImprovement`), e essa checagem
-// não existia em servidor nenhum até a fatia 7: a regra vivia no filtro do
-// diálogo da SPA, que some junto com ela.
+// A COMPATIBILIDADE é conferida AQUI (`fitsItemImprovement`), no servidor, e não
+// só pelo filtro do diálogo: filtro é UX, e quem postar na mão passa por cima.
 func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
@@ -116,7 +113,7 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, sinais Signa
 	return s.deps.SaveItemOverlays(r.Context(), item.ID, sinais.ItemMelhorias, sinais.ItemMaterial)
 }
 
-// askedQuantity lê a quantidade, com as mesmas bordas da API JSON.
+// askedQuantity lê a quantidade, com as bordas do formulário.
 func askedQuantity(sinais Signals) (int64, error) {
 	if sinais.ItemQtd == nil {
 		return 1, nil
@@ -174,11 +171,6 @@ func stowItem(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 // (`sheet.EquipAxisError` — um escudo não se veste) e os tetos de 2 mãos e 4
 // vestidos (`sheet.EquipLimitErrorOver`, p141). Escrevê-las de novo aqui daria
 // duas regras para a mesma pergunta.
-//
-// Aqui morava "as duas recusas são as mesmas da API JSON", com o
-// `equipLimitCheck` no lugar do nome de cima. A rota JSON foi apagada na
-// ALE-277 e o invólucro dela junto: estas não são mais a segunda cópia de
-// nada, são as únicas — o que só reforça que elas fiquem onde a regra mora.
 func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
@@ -188,15 +180,14 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 	if !slotEquipEh(slot) {
 		return fmt.Errorf("%q não é um lugar de equipar", slot)
 	}
-	// O EIXO sai do catálogo EMBUTIDO, e não do `s.deps.Catalogs()` que a API JSON usa.
+	// O EIXO sai do catálogo EMBUTIDO, e não do `s.deps.Catalogs()`.
 	//
-	// Os dois trazem o mesmo `items.json`, mas o `s.deps.Catalogs()` é primado de um
-	// arquivo por caminho de configuração e o próprio `primeCatalogs` diz o que
+	// Os dois trazem o mesmo `items.json`, mas o `s.deps.Catalogs()` é primado
+	// de um arquivo por caminho de configuração, e o `primeCatalogs` diz o que
 	// acontece quando ele falta: "mutation validators disabled". Uma regra que
-	// se DESLIGA sozinha quando um arquivo some não é uma regra — e a bancada
-	// mostrou o preço, com um escudo sendo vestido num teste porque o catálogo
-	// do fixture está vazio. O `catalog.Resource` é `go:embed`: ele existe
-	// sempre que o binário existe.
+	// se DESLIGA sozinha quando um arquivo some não é uma regra — com o
+	// catálogo vazio, um escudo passa a ser vestível. O `catalog.Resource` é
+	// `go:embed`: ele existe sempre que o binário existe.
 	if _, recusa := sheet.EquipAxisError(howEngineItem(book.ItemByID(itemCatalog(item))), slot); recusa != "" {
 		return fmt.Errorf("%s", recusa)
 	}
@@ -212,10 +203,9 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 
 // saveEquipped escreve a coluna `equipped`.
 //
-// Ela é uma PERGUNTA na porta desde a ALE-278, e o detalhe que era comentário
-// aqui virou responsabilidade do hospedeiro: `character_items` não tem
-// `updatedAt`, então a gravação não toca carimbo nenhum. A cena não precisa
-// saber disso — ela sabe que o item foi para a mão.
+// Ela é uma PERGUNTA na porta, e o detalhe é do hospedeiro: `character_items`
+// não tem `updatedAt`, então a gravação não toca carimbo nenhum. A cena não
+// precisa saber disso — ela sabe que o item foi para a mão.
 func saveEquipped(r *http.Request, s Scene, itemID int64, valor sql.NullString) error {
 	return s.deps.SaveEquipped(r.Context(), itemID, valor)
 }
@@ -247,7 +237,7 @@ func (s Scene) sheetItem(r *http.Request, characterID int64) (sqlcgen.GetItemRow
 //
 // Os TRÊS modos existem porque são três gestos diferentes na mesa: "achamos 350
 // no baú", "paguei 80 pela estalagem", e escrever o total — que é o gesto da
-// forja (Tabela 3-1, p140) e o de consertar um erro de digitação (ALE-224).
+// forja (Tabela 3-1, p140) e o de consertar um erro de digitação.
 func changeMoney(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	if sinais.TibarValor == nil {
 		return fmt.Errorf("informe um valor a partir de 0")

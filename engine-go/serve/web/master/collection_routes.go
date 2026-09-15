@@ -11,12 +11,11 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// As rotas e os handlers dos CATÁLOGOS — separados do `routes.go` na ALE-278.
+// As rotas e os handlers dos CATÁLOGOS, separados do `routes.go`.
 //
-// O REGISTRO das trinta rotas continua num lugar só, no `routes.go`: é ele
-// que o `api` chama, e espalhá-lo faria a cena ter quatro portas de entrada.
-// O que mora aqui são os handlers desta ferramenta. O arquivo único tinha
-// 600 linhas e QUATRO famílias que não se chamam — arquivo é unidade de
+// O REGISTRO das trinta rotas continua num lugar só, no `routes.go`: é ele que o
+// `api` chama, e espalhá-lo faria a cena ter quatro portas de entrada. O que
+// mora aqui são os handlers desta ferramenta — arquivo é unidade de
 // RESPONSABILIDADE e de conflito de merge, não de leitura.
 
 // handleCollection serve os dois casos numa rota, como as outras cenas.

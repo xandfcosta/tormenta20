@@ -9,15 +9,14 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// O DIÁLOGO DE ESCOLHER PODERES como dado (ALE-272, fatia 8).
+// O DIÁLOGO DE ESCOLHER PODERES como dado.
 //
 // # Por que é um diálogo, e não meia tela
 //
-// Ele era um MODO da aba Poderes, e o modo é o que a tornava difícil de usar
-// (ALE-217): ele ABRIA sozinho sempre que havia pendência — o estado normal de
-// quem acabou de subir de nível —, e o cromo dele comia 44% do painel no
-// telefone. Escolher poder acontece uma vez por nível; virar meia tela para isso
-// é caro demais.
+// Como MODO da aba Poderes ele abria sozinho sempre que havia pendência — o
+// estado normal de quem acabou de subir de nível —, e o cromo dele comia quase
+// metade do painel no telefone. Escolher poder acontece uma vez por nível; virar
+// meia tela para isso é caro demais.
 //
 // As três abas de FONTE ficam aqui dentro, e aqui elas fazem sentido: no preparo
 // a pergunta é "de onde vem o que eu ainda posso escolher". Na mesa a pergunta é

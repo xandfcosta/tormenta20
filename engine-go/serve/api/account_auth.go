@@ -18,15 +18,15 @@ import (
 
 const bcryptCost = 12
 
-// AuthUser is the identity contract returned to the client — mirrors
-// backend/src/auth/auth-user.type.ts (name is null when unset).
+// AuthUser é o contrato de identidade devolvido ao cliente. `Name` é nulo quando
+// não foi preenchido.
 type AuthUser struct {
 	ID    int64   `json:"id"`
 	Email string  `json:"email"`
 	Name  *string `json:"name"`
-	// IsAdmin is derived from ADMIN_EMAILS at every request, never stored: the
-	// role has no row to go stale against, and this is what the UI reads to show
-	// the admin door (ALE-120).
+	// IsAdmin é DERIVADO do ADMIN_EMAILS a cada pedido, nunca guardado: o papel
+	// não tem linha para envelhecer, e é isto que a tela lê para mostrar a porta
+	// da administração.
 	IsAdmin bool `json:"isAdmin"`
 }
 
@@ -38,28 +38,22 @@ func (a accountRules) authUser(u sqlcgen.User) AuthUser {
 	return out
 }
 
-// A FORMA dos dois pedidos mora no `account` desde a ALE-278, junto com as
-// validações que a lê. Aqui ficou o handler.
+// A FORMA dos dois pedidos mora no `account`, junto com as validações que a
+// leem. Aqui fica o handler.
 
-// createAccount is the RULE behind registration: resolve the invite this
-// address has to spend, hash, and write the row.
+// createAccount é a REGRA por trás do cadastro: resolve o convite que este
+// endereço tem de gastar, gera o hash e escreve a linha.
 //
-// Transport-agnostic, and this is the THIRD time the pilot has had to do this
-// (after `selfInitiativeEntry` welded to the socket and `deleteAccount` welded
-// to the HTTP handler). The pattern is the same every time — a rule pinned to
-// whichever transport reached it first — and it only shows up when a second
-// one arrives (ALE-229). Worth naming: it is not a coincidence, it is what a
-// codebase with exactly one transport looks like.
+// Ela não depende do transporte, e isso não é zelo: uma regra pregada ao
+// primeiro transporte que a alcançou só aparece como problema quando chega o
+// segundo — e aí ela é reescrita, em vez de reusada.
 func (a accountRules) createAccount(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error) {
-	// A normalização é da REGRA, e não de quem a chama (ALE-277).
-	//
-	// Ela morava no `handleRegister`, apagado com a rota JSON, e a porta em
-	// Datastar a repetia — das duas cópias sobrou a de cima, e uma garantia que
-	// mora no transporte é uma garantia que o próximo transporte esquece. O `IsAdmin` do
+	// A normalização é da REGRA, e não de quem a chama: uma garantia que mora no
+	// transporte é uma garantia que o próximo transporte esquece. O `IsAdmin` do
 	// `ADMIN_EMAILS` já compara normalizado, então um chamador que esquecesse a
-	// linha escreveria `DONO@` como uma SEGUNDA linha em `users`, sem colidir
-	// com `dono@`, e com direito a dispensar convite: dois administradores onde
-	// só devia caber um (ALE-120). É idempotente para quem já normaliza.
+	// linha escreveria `DONO@` como uma SEGUNDA linha em `users`, sem colidir com
+	// `dono@` e com direito a dispensar convite: dois administradores onde só
+	// cabe um. É idempotente para quem já normaliza.
 	body.Email = platform.NormalizeEmail(body.Email)
 	invite, err := a.registrationInvite(ctx, body.Email, body.InviteToken)
 	if err != nil {
@@ -79,13 +73,14 @@ func (a accountRules) createAccount(ctx context.Context, body account.RegisterBo
 	}, invite)
 }
 
-// errInviteRejected is unknown, spent and expired alike — see `inviteRejected`.
+// errInviteRejected cobre desconhecido, gasto e expirado do mesmo jeito — ver o
+// `inviteRejected`.
 var errInviteRejected = errors.New(inviteRejected)
 
-// registrationInvite resolves the invite this registration has to spend. The
-// ADMIN_EMAILS addresses are the exception, and the only one: the owner must be
-// able to create their own account on a fresh machine, and "first to register
-// wins the crown" would hand that to whoever opens the page first (ALE-120).
+// registrationInvite resolve o convite que este cadastro tem de gastar. Os
+// endereços do ADMIN_EMAILS são a exceção, e a única: o dono precisa conseguir
+// criar a própria conta numa máquina nova, e "quem se cadastra primeiro ganha a
+// coroa" entregaria isso a quem abrisse a página antes.
 func (a accountRules) registrationInvite(
 	ctx context.Context, email, token string,
 ) (*sqlcgen.AccountInvite, error) {
@@ -110,17 +105,17 @@ func writeRegisterError(w http.ResponseWriter, err error, email string) {
 	}
 }
 
-// errBadCredentials is the ONE answer for "no such account" and "wrong
-// password": telling them apart hands an anonymous caller a way to enumerate
-// who has an account here.
+// errBadCredentials é a ÚNICA resposta para "não existe essa conta" e "senha
+// errada": distinguir as duas entrega a um chamador anônimo um jeito de enumerar
+// quem tem conta aqui.
 var errBadCredentials = errors.New("invalid credentials")
 
-// authenticate is the RULE behind the login — extracted alongside
-// `createAccount` and for the same reason.
+// authenticate é a REGRA por trás do login, fora do transporte pela mesma razão
+// do `createAccount`.
 //
-// The bcrypt comparison runs even when the e-mail is unknown would be the next
-// hardening step (it does not today, and that is a timing oracle worth an issue
-// of its own); what matters here is that BOTH paths answer the same error.
+// O que importa aqui é que os DOIS caminhos respondem o mesmo erro. Rodar a
+// comparação do bcrypt mesmo com e-mail desconhecido seria o próximo degrau: hoje
+// ela não roda, e isso é um oráculo de tempo.
 func (a accountRules) authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
 	user, err := a.queries.GetUserByEmail(ctx, platform.NormalizeEmail(email))
 	if err != nil {
@@ -132,8 +127,8 @@ func (a accountRules) authenticate(ctx context.Context, email, password string) 
 	return user, nil
 }
 
-// issueSession signs a JWT for the user and sets the session cookie. Returns
-// false (after writing a 500) if signing fails.
+// issueSession assina um JWT para o usuário e põe o biscoito de sessão. Devolve
+// falso (depois de escrever um 500) quando a assinatura falha.
 func (a accountRules) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 	token, err := a.signToken(user)
 	if err != nil {
@@ -146,9 +141,8 @@ func (a accountRules) issueSession(w http.ResponseWriter, user sqlcgen.User) boo
 
 const sessionTTL = 7 * 24 * time.Hour
 
-// signToken: HS256 over {sub, email} with the
-// configured expiry. `sub` is a NUMBER (not a string), which is the shape every
-// across the cutover (and vice versa).
+// signToken assina HS256 sobre `{sub, email}` com a expiração configurada. O
+// `sub` é um NÚMERO e não uma string, que é a forma que o `verifyToken` espera.
 func (a accountRules) signToken(user sqlcgen.User) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   user.ID,
@@ -159,7 +153,8 @@ func (a accountRules) signToken(user sqlcgen.User) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(a.cfg.JWTSecret))
 }
 
-// verifyToken checks the HS256 signature + expiry and returns the user id (sub).
+// verifyToken confere a assinatura HS256 e a expiração, e devolve o id do
+// usuário (`sub`).
 func (a accountRules) verifyToken(tokenStr string) (int64, error) {
 	tok, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -181,9 +176,8 @@ func (a accountRules) verifyToken(tokenStr string) (int64, error) {
 	return int64(sub), nil
 }
 
-// Ela recebe a CONFIGURAÇÃO em vez de pendurar no `*Server` (ALE-278, fatia 6):
-// o hub pede o biscoito expirado pela porta dele, e uma função que só precisa
-// de dois campos não tem razão para exigir um servidor inteiro.
+// Ela recebe a CONFIGURAÇÃO em vez de pendurar no `*Server`: uma função que só
+// precisa de dois campos não tem razão para exigir um servidor inteiro.
 func sessionCookie(cfg platform.Config, value string, maxAge int) *http.Cookie {
 	return &http.Cookie{
 		Name:     cfg.CookieName,
@@ -196,8 +190,8 @@ func sessionCookie(cfg platform.Config, value string, maxAge int) *http.Cookie {
 	}
 }
 
-// parseExpiry handles the JWT_EXPIRES_IN forms this config accepts ("7d", "12h",
-// "30m"). Falls back to 7 days on anything unrecognized.
+// parseExpiry lê as formas de JWT_EXPIRES_IN que esta configuração aceita ("7d",
+// "12h", "30m"). Cai em 7 dias no que não reconhecer.
 func parseExpiry(s string) time.Duration {
 	if s == "" {
 		return sessionTTL

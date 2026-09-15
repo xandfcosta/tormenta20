@@ -51,7 +51,7 @@ func casterLevelForPmLimit(ch Character) int {
 // pmLimitBreakdown is the per-CHARACTER summary behind the HUD's "Limite PM"
 // tile: the best level across the character's spellcasting classes. It is a
 // SUMMARY, not the cap for any given spell — for that, use SpellPmLimit below,
-// which asks which class grants THAT spell (ALE-92).
+// which asks which class grants THAT spell.
 func pmLimitBreakdown(ch Character, e ItemEffects) ValueBreakdown {
 	base := max(1, casterLevelForPmLimit(ch))
 	stat := StatFor(e, ModifierTarget{K: "pmLimit"})
@@ -106,7 +106,7 @@ func pmCostMod(e ItemEffects) TotalContribs {
 
 // characterDamageReduction aggregates the character's passive damage reduction.
 //
-// Book sources, all verified (ALE-111):
+// Book sources, all verified:
 //   - Bárbaro, p42: passive, RD 2 at 5th, +2 every three levels, cap 10 at 17th.
 //   - Cavaleiro "Bastião", p55: chosen path at 5th, RD 5 with heavy armour.
 //   - "Especialização em Armadura": a CHOSEN power requiring 12th level in the
@@ -140,8 +140,8 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 				sources = append(sources, SourceAmount{"Bárbaro (p42)", rd})
 			}
 		case entry.ClassName == "Guerreiro" && heavy:
-			// p65: poder escolhido, 12º nível. NÃO é passivo nem escala — o motor
-			// dava a progressão do Bárbaro a todo Guerreiro desde o 5º (ALE-111).
+			// p65: poder ESCOLHIDO, 12º nível. Não é passivo e não escala — não
+			// confundir com a progressão do Bárbaro.
 			if entry.Level >= especializacaoArmaduraLevel && hasPower("guerreiro", "especializacao-em-armadura") {
 				sources = append(sources, SourceAmount{"Especialização em Armadura", especializacaoArmaduraRd})
 			}
@@ -214,8 +214,8 @@ func tempHpFromPowers(ch Character, e ItemEffects, furiaActive bool) TempHpBreak
 // This is the authority the cast gate hangs on, and it is NOT what
 // `pmLimitBreakdown` above returns: that one is the per-CHARACTER HUD summary
 // ("best caster level"), a defensible summary for a tile but the wrong number
-// for a specific spell. The two used to be separate implementations that
-// disagreed — the sheet offered a cap the server then refused (ALE-92).
+// for a specific spell. Two implementations of this cap disagree, and then the
+// sheet offers what the server refuses.
 //
 // @example SpellPmLimit(bardo7Arcanista1, 0, []string{"Arcanista"}) // 1
 func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
@@ -284,9 +284,9 @@ func resolvePmCostMod(contribs []Contribution) int {
 // O truque continua de graça: ele custa zero por natureza, não por redução, e o
 // piso não alcança o que já era zero.
 //
-// O motor calculava o modificador e o mostrava na ficha, mas o portão de
-// conjurar o ignorava — um Druida de 20º nível pagava preço cheio enquanto o
-// mosaico "Custo PM" dizia −2 (ALE-110).
+// É ela que o PORTÃO de conjurar tem de chamar, e não o valor bruto da tabela:
+// calcular o modificador só para a ficha deixa o mosaico "Custo PM" dizendo −2
+// enquanto a conjuração cobra preço cheio.
 //
 // @example SpellPmCostFor(druida20, 3, 0, nil) // 1
 func (c *Catalogs) SpellPmCostFor(ch Character, basePm, augmentPm int, conditionals map[string]bool) int {

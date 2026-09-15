@@ -28,9 +28,9 @@ type VitalPools struct {
 	PmMax int `json:"pmMax"`
 }
 
-// ComputeVitals ports the front vitals pipeline: multiclass pools (p34-35) + the
-// summed maxPv/maxPm grants, floored at 0. The pool helpers are shared with
-// vitals.go (classVitalsTable/multiclass*).
+// ComputeVitals: multiclass pools (p34-35) + the summed maxPv/maxPm grants,
+// floored at 0. The pool helpers are shared with vitals.go
+// (classVitalsTable/multiclass*).
 func (c *Catalogs) ComputeVitals(ctx VitalContext) VitalPools {
 	con := ctx.AttrTotals["constitution"]
 	gpv, gpm := c.sumVitalGrants(ctx)
@@ -40,14 +40,14 @@ func (c *Catalogs) ComputeVitals(ctx VitalContext) VitalPools {
 	}
 }
 
-// sumVitalGrants ports collectVitalGrants: sum maxPv/maxPm over owned abilities,
+// sumVitalGrants sums maxPv/maxPm over owned abilities,
 // evaluating each scale, with the p226 dedupe — "o valor de um mesmo atributo
 // não se acumula em características do personagem. Ou seja, um clérigo/druida
 // não soma duas vezes sua Sabedoria nos pontos de mana". Por ALVO e ATRIBUTO:
 // dois atributos DIFERENTES no mesmo alvo continuam somando.
 //
 // A metade da DEFESA da mesma regra (o bucaneiro/nobre e o Carisma) não está
-// implementada — o resolveStack agrupa por bonusType, não por atributo (ALE-110).
+// implementada — o resolveStack agrupa por bonusType, não por atributo.
 func (c *Catalogs) sumVitalGrants(ctx VitalContext) (pv, pm int) {
 	seen := map[string]bool{}
 	for _, m := range c.vitalGrantMods(ctx) {

@@ -6,22 +6,17 @@ import (
 	"t20engine/domain/book"
 )
 
-// AS REGRAS DE ATIVAR UM PODER (ALE-272, fatia 8).
-//
-// Elas vinham do `power-rules.ts`, que era o metade-regra do antigo hook de
-// React: decidir se um poder pode ser usado agora, qual limite o prende, e
-// quanto custa entrar numa postura de degraus.
+// AS REGRAS DE ATIVAR UM PODER: se ele pode ser usado agora, qual limite o
+// prende, e quanto custa entrar numa postura de degraus.
 //
 // # O que é COBRADO e o que é só crachá
 //
-// "1/cena" e "1/dia" são cobrados — eles têm contador no banco desde a ALE-222.
-// Um "3/dia" e um "1/rodada" saem como crachá e nada mais, e isso é decisão
-// registrada, não esquecimento: a mesa conta rodadas, a ficha não. Decisão do
-// dono, ALE-272 fatia 8: fica como está.
-
-// O REGISTRO em si mora no `book` (`activations.go`) desde a ALE-278: ele é
-// lido do catálogo, e ler catálogo é do livro. O que segue é o que a TELA decide
-// a partir dele.
+// "1/cena" e "1/dia" são cobrados — eles têm contador no banco. Um "3/dia" e um
+// "1/rodada" saem como crachá e nada mais, e isso é decisão registrada, não
+// esquecimento: a mesa conta rodadas, a ficha não.
+//
+// O REGISTRO em si mora no `book` (`activations.go`): ler catálogo é do livro.
+// O que segue é o que a TELA decide a partir dele.
 
 // ── o LIMITE de usos ─────────────────────────────────────────────────────────
 
@@ -80,10 +75,9 @@ func activationPm(spec book.Activation) int {
 
 // useDecision responde se o poder pode ser usado AGORA, e por que não.
 //
-// A ordem das recusas é a da tela antiga, e ela importa: a razão mostrada é a
-// PRIMEIRA que barra, então "requer Fúria" aparece antes de "PM insuficiente"
-// num poder que precisa das duas coisas — e é a que a pessoa pode resolver
-// primeiro.
+// A ORDEM das recusas importa: a razão mostrada é a PRIMEIRA que barra, então
+// "requer Fúria" aparece antes de "PM insuficiente" num poder que precisa das
+// duas coisas — e é a que a pessoa pode resolver primeiro.
 func useDecision(spec book.Activation, contexto useContext) (bool, string) {
 	if costVariableEh(spec) {
 		return false, "custo variável"

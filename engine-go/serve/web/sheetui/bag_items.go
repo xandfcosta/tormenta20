@@ -8,19 +8,12 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// OS DIÁLOGOS DA MOCHILA como dado (ALE-272, fatia 7).
+// OS DIÁLOGOS DA MOCHILA como dado.
 //
 // Cada item da ficha tem UMA ficha de item, e ela é o alvo de todo toque — o
-// ladrilho da grade e o cartão da tira abrem a mesma caixa. É a decisão da tela
-// antiga e ela se sustenta: as ações de um item são as mesmas onde quer que ele
-// esteja, e dois caminhos diferentes para "usar a poção" seriam dois lugares
-// para esquecer de consertar.
-//
-// # O que a ficha do item mostra
-//
-// O que ele PESA, o que ele CONCEDE, o que o livro diz dele, as melhorias
-// aplicadas — e os botões do que dá para fazer: equipar onde cabe, usar (se for
-// consumível), pôr melhoria, editar e remover.
+// ladrilho da grade e o cartão da tira abrem a mesma caixa: as ações de um item
+// são as mesmas onde quer que ele esteja, e dois caminhos diferentes para "usar
+// a poção" seriam dois lugares para esquecer de consertar.
 
 // itemSheet é a ficha de UM item, pronta para desenhar.
 type itemSheet struct {
@@ -95,7 +88,6 @@ type catalogItemRow struct {
 	Pagina    int
 }
 
-// itemSheetsOf monta uma ficha por item da mochila.
 func itemSheetsOf(dto sheet.CharacterDTO, proficiencias map[string]bool) []itemSheet {
 	fichas := make([]itemSheet, 0, len(dto.Items))
 	for _, item := range dto.Items {
@@ -277,9 +269,7 @@ func protectionRow(protecao book.Armor, ehArmadura bool) string {
 // damageWrittenKinds é o pt-BR do tipo de dano da arma.
 //
 // O catálogo guarda a CHAVE sem acento (`perfuracao`), como todo id deste
-// projeto; quem lê a ficha lê a palavra do livro. Sem esta tabela a tela
-// mostrava "tipo perfuracao", que é o id cru vazando para o jogador — medido na
-// bancada, na ficha da Adaga.
+// projeto; sem esta tabela o id cru vaza para o jogador ("tipo perfuracao").
 var damageWrittenKinds = map[string]string{
 	"corte": "corte", "perfuracao": "perfuração", "impacto": "impacto",
 	"corte-perfuracao": "corte ou perfuração",

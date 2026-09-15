@@ -15,15 +15,13 @@ import (
 	"t20engine/serve/web/table"
 )
 
-// A MESA, com adaptador próprio — a ÚLTIMA cena a largar o servidor
-// (ALE-278, fatia 6).
+// A MESA, com adaptador próprio, e a maior porta do projeto.
 //
-// Trinta e uma assinaturas, a maior porta do projeto. O adaptador é o núcleo
-// mais um `tableRules`, e o `tableRules` toca quase todos os campos do
-// `*Server` — o que está certo, e a razão está escrita lá: a Mesa É a mesa ao
-// vivo, e a mesa ao vivo é o que aqueles stores guardam. O que ela NÃO tem é o
-// livro, os trincos por personagem, a espera do desligamento e os métodos das
-// outras dez cenas.
+// O adaptador é o núcleo mais um `tableRules`, e o `tableRules` toca quase todos
+// os campos do `*Server` — o que está certo, e a razão está escrita lá: a Mesa É
+// a mesa ao vivo, e a mesa ao vivo é o que aqueles stores guardam. O que ela NÃO
+// tem é o livro, os trincos por personagem, a espera do desligamento e os
+// métodos das outras cenas.
 type tableHost struct {
 	sceneCore
 	rules tableRules
@@ -33,15 +31,15 @@ func (s *Server) tableHost() tableHost {
 	return tableHost{sceneCore: s.sceneCore(), rules: s.tableRules()}
 }
 
-// O adaptador cumprindo a porta da MESA (`table.Deps`, ALE-278).
+// O adaptador cumprindo a porta da MESA (`table.Deps`).
 //
 // É a porta mais larga da série, e o arquivo é o lugar de dizer por quê: esta é
 // a única cena que MOVIMENTA estado ao vivo. As outras leem o banco e desenham;
 // esta abre e encerra cena, move peça, pinta terreno, vira turno e empurra tudo
 // para quem está olhando.
 //
-// O sinal de que a fronteira está no lugar continua o mesmo: nenhum destes
-// métodos desenha nada, e nenhum handler da cena toca banco fora do `Queries`.
+// O sinal de que a fronteira está no lugar: nenhum destes métodos desenha nada,
+// e nenhum handler da cena toca banco fora do `Queries`.
 
 // Os quatro STORES do estado ao vivo, inteiros.
 //
@@ -65,8 +63,7 @@ func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 // IsAdminRequester diz se quem pede administra.
 //
 // O nome NÃO é `IsAdmin`: aquele já existe com `(email string)`, e é outra
-// pergunta — "este e-mail é de admin?" contra "quem está pedindo AGORA é?". É a
-// colisão que a cena das campanhas registrou, e a regra que ela deixou: um
+// pergunta — "este e-mail é de admin?" contra "quem está pedindo AGORA é?". Um
 // contrato que já existe ganha quando é a MESMA pergunta; quando só a cara é a
 // mesma, forçar um nome só junta duas coisas diferentes.
 func (h tableHost) IsAdminRequester(ctx context.Context, userID int64) bool {
@@ -84,7 +81,7 @@ func (h tableHost) SessionForCaller(
 	return h.rules.campaign.sessionForCaller(ctx, AuthUser{ID: userID}, campaignID, sessionID)
 }
 
-// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR (ALE-292).
+// PlaceDraftCampaign é a trava do RASCUNHO DE LUGAR.
 //
 // O `loadOwnedCampaign` é a MESMA porta que renomear, apagar, convidar e abrir
 // sessão já atravessam: só o dono passa, com o desvio do admin. Montar o acervo
@@ -113,9 +110,8 @@ func (h tableHost) SessionDeleted(sessionID int64) {
 // StartSessionForTable e EndSessionForTable abrem e encerram a partida e
 // devolvem o estado AO VIVO, que é o que a cena redesenha.
 //
-// A leitura da linha mora aqui e não na cena: ela existia lá só para ser
-// passada de volta ao hospedeiro, que é a forma "duas perguntas em sequência
-// viram uma" que a porta de entrar deixou escrita.
+// A leitura da linha mora aqui e não na cena: lá ela só seria passada de volta
+// ao hospedeiro, e duas perguntas em sequência viram uma.
 func (h tableHost) StartSessionForTable(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	sess, err := h.rules.queries.GetSession(ctx, sessionID)
 	if err != nil {
@@ -161,11 +157,11 @@ func (h tableHost) SelfInitiativeEntry(
 	return h.rules.selfInitiativeEntry(userID, campaignID, characterID, d20)
 }
 
-// CloneCreatureBlock copia o bloco e devolve o id da cópia (ALE-206).
+// CloneCreatureBlock copia o bloco e devolve o id da cópia.
 //
 // Uma leitura e uma escrita, sem transação: o bloco é uma linha só, e não há
-// segundo passo que possa falhar deixando a cópia órfã — que é o que obrigou o
-// `cloneCharacterTx` a ter dono de transação (ALE-156).
+// segundo passo que possa falhar deixando a cópia órfã — que é o que obriga o
+// `cloneCharacterTx` a ter dono de transação.
 //
 // A CAMPANHA vem de fora e não do bloco lido, e isso é deliberado: é o servidor
 // que sabe em qual mesa o gesto aconteceu, e copiar o `campaignId` da origem
@@ -250,11 +246,11 @@ func (h tableHost) SaveFailed(sessionID int64) bool {
 
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────
 
-// Os DOIS passos ficam escritos aqui, e essa é a separação que a ALE-288 fez: o
-// disco primeiro, o fio depois. Antes a gravação era uma linha dentro do
-// publicador, e como o `SSEHub` não tem ouvinte em produção, apagar o publicador
-// — que é a leitura natural de "isto emite para ninguém" — levaria a gravação
-// junto e a mesa passaria a viver só em memória (ALE-154).
+// Os DOIS passos ficam escritos aqui, separados: o disco primeiro, o fio depois.
+// Com a gravação escondida dentro do publicador, apagar o publicador — que é a
+// leitura natural de "isto emite para ninguém", já que o `SSEHub` não tem
+// ouvinte em produção — levaria a gravação junto, e a mesa passaria a viver só
+// em memória.
 func (h tableHost) PublishSessionState(sessionID int64, estado *live.SessionRuntimeState) {
 	h.rules.saveSession(sessionID)
 	h.rules.publishSessionState(sessionID, estado)
@@ -269,13 +265,12 @@ func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 	h.rules.publishWhatIsLeft(ctx, sessionID)
 }
 
-// ── as DUAS escritas que a cena montava em SQL ───────────────────────────────
+// ── as DUAS escritas montadas em SQL ─────────────────────────────────────────
 //
 // A tabela `sessions` não tem query própria no sqlc para estas duas colunas —
-// quem escreve é um SET montado —, e por isso a cena montava `setBuilder` +
-// `"UPDATE sessions"` aqui dentro. Cena que compõe SQL é cena com o banco
-// dentro, e a resposta é a PERGUNTA: quem sabe o nome da coluna, que vazio é
-// NULL e que a linha tem um `updatedAt` a carimbar é o hospedeiro.
+// quem escreve é um SET montado. Elas moram no hospedeiro e não na cena porque
+// cena que compõe SQL é cena com o banco dentro: quem sabe o nome da coluna, que
+// vazio é NULL e que a linha tem um `updatedAt` a carimbar é o hospedeiro.
 
 func (h tableHost) SaveSessionTitle(ctx context.Context, sessionID int64, titulo string) error {
 	var set setBuilder
@@ -301,12 +296,11 @@ func (h tableHost) SaveNotes(ctx context.Context, sessionID int64, texto string)
 
 // ── a casca e a ficha embutida ───────────────────────────────────────────────
 //
-// O `BookAddress` NÃO está aqui: ele já existia no `book_file.go`, com a
-// forma exata que a porta pede. É a regra que a administração deixou — um
-// contrato que já existe ganha, e declarar um segundo daria ao `*Server` dois
-// nomes para a mesma coisa.
+// O `BookAddress` NÃO está aqui: ele já existe no `book_file.go`, com a forma
+// exata que a porta pede, e declarar um segundo daria ao `*Server` dois nomes
+// para a mesma coisa.
 
-// PlayerSheet é a ficha EMBUTIDA de quem senta à mesa (ALE-275).
+// PlayerSheet é a ficha EMBUTIDA de quem senta à mesa.
 //
 // A Mesa pede o painel PRONTO em vez de montar a cena da ficha: montá-la lá
 // obrigaria a Mesa a cumprir a `sheetui.Deps` inteira — dezoito métodos que ela

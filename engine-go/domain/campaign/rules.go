@@ -11,26 +11,13 @@ import (
 )
 
 // As regras de uma CAMPANHA: o que é um nome válido e o que é uma descrição
-// válida (ALE-246, extraídas do `api` na ALE-278).
+// válida.
 //
-// Elas viviam soldadas ao transporte, e em DOIS lugares: o `handleCreateCampaign`
-// e o `handleUpdateCampaign` repetiam o mesmo `if` e a mesma frase, palavra por
-// palavra. Regra duplicada é regra que diverge — basta alguém mexer num dos dois.
+// Elas são pacote e não ficam soldadas ao transporte porque as DUAS portas — a
+// cena e a rota JSON — precisam delas. Regra duplicada é regra que diverge.
 //
-// E ao juntá-las apareceu uma DIVERGÊNCIA que já existia: o `campaign-schema.ts`
-// da SPA recusava descrição acima de 2000 caracteres e o servidor aceitava
-// qualquer tamanho. A regra do texto morava só no cliente, e a virada para
-// servidor-renderizado a teria apagado sem ninguém notar.
-//
-// > Aqui a prosa dizia "as regras de uma CRÔNICA". `crônica` é termo PROIBIDO
-// > pelo GLOSSARY desde 2026-08-22 — a palavra é `campanha` —, e o comentário
-// > atravessou a decisão sem ninguém reler. É o defeito que a seção
-// > "Documentação" descreve, acontecido no arquivo que define o conceito.
-//
-// # Por que pacote, e não `platform`
-//
-// Mesma razão escrita no `account`, e ela vale letra por letra: "o nome cabe em
-// 120 caracteres" é regra de PRODUTO, e o `platform` é infraestrutura sem
+// E não vão para `platform`, pela mesma razão escrita no `account`: "o nome cabe
+// em 120 caracteres" é regra de PRODUTO, e o `platform` é infraestrutura sem
 // domínio. Um conceito do jogo lá dentro é a fronteira no lugar errado.
 
 const (
@@ -42,16 +29,9 @@ const (
 	MaxDescriptionLength = 2000
 )
 
-// AS MENSAGENS SÃO AS QUE O MESTRE LÊ, então são em pt-BR e moram AQUI.
-//
-// Antes eram duas para cada regra: a cena escrevia a dela em português e a rota
-// JSON respondia `err.Error()`, que era uma frase em inglês herdada do NestJS
-// ("name must be between 1 and 120 characters"). Duas frases para uma regra é a
-// forma que o `account` desfez nesta mesma épica, e pelo mesmo motivo: quando
-// alguém mudar o limite, uma das duas fica para trás.
-//
-// Nada media a frase inglesa — nenhum teste a citava —, e é por isso que ela
-// pôde sair junto com a extração em vez de virar issue própria.
+// AS MENSAGENS SÃO AS QUE O MESTRE LÊ, então são em pt-BR e moram AQUI — uma
+// por regra. Duas frases para a mesma regra (uma na cena, outra na rota JSON)
+// deixam uma delas para trás no dia em que alguém mudar o limite.
 const (
 	msgNomeInvalido   = "O nome é obrigatório e cabe em 120 caracteres"
 	msgDescricaoLonga = "A descrição cabe em 2000 caracteres"
@@ -74,11 +54,10 @@ func Name(bruto string) (string, platform.FieldErrorMap) {
 
 // Description apara e valida, devolvendo string VAZIA para ausente.
 //
-// Ela não devolve `sql.NullString`, e isso é a extração corrigindo um vazamento:
-// a versão anterior devolvia o tipo do banco, o que fazia a regra de produto
-// carregar `database/sql`. Quem grava converte — vazio é NULL nos dois caminhos
-// (criar e editar), senão o cliente lê `""` de um e `null` do outro para
-// exatamente a mesma entrada.
+// Ela NÃO devolve `sql.NullString`: isso faria a regra de produto carregar
+// `database/sql`. Quem grava converte — vazio é NULL nos dois caminhos (criar e
+// editar), senão o cliente lê `""` de um e `null` do outro para exatamente a
+// mesma entrada.
 //
 // A medida é em RUNAS e não em bytes: "Coração" tem 7 caracteres para quem
 // escreve e 8 bytes para quem conta errado, e um limite que encolhe conforme os
@@ -116,7 +95,7 @@ func ValidateText(nomeBruto string, descricaoBruta *string) (string, string, pla
 	return nome, descricao, erros
 }
 
-// AS REGRAS OPCIONAIS: o que o mestre DESLIGOU na campanha (ALE-221).
+// AS REGRAS OPCIONAIS: o que o mestre DESLIGOU na campanha.
 //
 // O nome do campo diz o que está DESLIGADO e isso é proposital: valor zero
 // significa "tudo em vigor", que é o padrão do livro. Ver o GLOSSARY, verbete
@@ -129,9 +108,8 @@ func ValidateText(nomeBruto string, descricaoBruta *string) (string, string, pla
 // mensagem de erro — "regra inválida" mandaria o mestre adivinhar qual das
 // dezenas ele digitou errado.
 //
-// **A frase era em INGLÊS** ("unknown rule %q — expected one of %v") e ela chega
-// na tela: a cena a manda para o navegador no sinal `erroDaRegra`. Traduzida na
-// extração, pelo mesmo motivo que as duas mensagens acima — quem lê é o mestre.
+// A frase CHEGA NA TELA: a cena a manda para o navegador no sinal `erroDaRegra`,
+// então ela é em português pelo mesmo motivo que as duas mensagens acima.
 func NormalizeIgnoredRules(brutas []string) ([]string, string) {
 	vistas := map[string]bool{}
 	fora := []string{}

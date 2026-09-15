@@ -9,11 +9,11 @@ import (
 	"t20engine/domain/engine"
 )
 
-// As expressões da RÉGUA e do GABARITO (ALE-269, superfície 8).
+// As expressões da RÉGUA e do GABARITO.
 //
-// Arquivo próprio e não mais um pedaço do `board_view.go`, que
-// já passa de 800 linhas: o que mora aqui é uma responsabilidade fechada — as
-// duas ferramentas que MEDEM, e nenhuma delas muda a cena.
+// Arquivo próprio e não um pedaço do `board_view.go`: o que mora aqui é uma
+// responsabilidade fechada — as duas ferramentas que MEDEM, e nenhuma delas
+// muda a cena.
 //
 // A divisão do trabalho entre os dois lados é a mesma do resto do tabuleiro, e
 // vale dizer onde ela cai: o NAVEGADOR guarda as pontas e traduz pixel em
@@ -24,9 +24,9 @@ import (
 // FerramentaDaRegua e FerramentaDoGabarito são os valores do sinal `$tool`
 // quando o clique MEDE em vez de mover ou pintar.
 //
-// Constantes pela mesma razão da `MarkTool`: cada uma aparece em meia
-// dúzia de expressões e `data-show`, e escrita à mão a sexta ocorrência é a que
-// erra a letra e vira uma ferramenta que a tela liga e o mapa nunca escuta.
+// Constantes pela mesma razão da `MarkTool`: cada uma aparece em meia dúzia de
+// expressões e `data-show`, e escrita à mão a ocorrência que errar a letra vira
+// uma ferramenta que a tela liga e o mapa nunca escuta.
 const (
 	FerramentaDaRegua    = "regua"
 	FerramentaDoGabarito = "gabarito"
@@ -35,10 +35,9 @@ const (
 // onIsBrush é o teste que separa PINTAR de medir, escrito a partir da
 // lista de espécies e nunca à mão.
 //
-// Ele existe porque a régua e o gabarito quebraram a pergunta antiga: a camada de
-// pintura mostrava-se com `$tool != ” && $tool != 'marcador'`, que
-// era verdade para toda ferramenta que ainda não existia. Uma lista escrita à mão
-// no `.templ` teria o mesmo defeito adiado — a espécie nova nasceria fora dela.
+// Perguntar pela NEGATIVA — "não é vazio e não é o marcador" — é verdade para
+// toda ferramenta que ainda não existe, e uma lista escrita à mão no `.templ`
+// tem o mesmo defeito adiado: a espécie nova nasce fora dela.
 func onIsBrush() string {
 	nomes := make([]string, 0, len(board.TerrainKinds))
 	for _, e := range board.TerrainKinds {
@@ -47,27 +46,22 @@ func onIsBrush() string {
 	return fmt.Sprintf("[%s].includes($tool)", strings.Join(nomes, ", "))
 }
 
-// AS FASES da régua. Elas eram 0/1/2 escritas à mão em nove lugares, e a
-// terceira mudou de significado na ALE-203 — "fechada" deixou de ser "as duas
-// pontas postas" e virou "CONGELADA", que é outra coisa.
+// AS FASES da régua, nomeadas e não 0/1/2 à mão: a terceira é CONGELADA — para
+// de seguir o ponteiro —, e não "as duas pontas postas".
 const (
 	reguaParada    = 0
 	reguaMedindo   = 1
 	reguaCongelada = 2
 )
 
-// clickedPointRuler é a máquina da POLILINHA (ALE-203, escolha do dono).
-//
-// Ela era de dois cliques: o primeiro punha a origem, o segundo fechava, o
-// terceiro recomeçava. O dono usou e apontou o que faltava — "a régua não
-// permite calcular distâncias com mais de uma parada" — e escolheu a gramática:
+// clickedPointRuler é a máquina da POLILINHA. A gramática:
 //
 //	esquerdo        acrescenta uma parada (o primeiro começa a régua)
 //	duplo esquerdo  CONGELA: para de seguir o ponteiro e fica desenhada
 //	direito         APAGA, em qualquer estado
 //
 // Três gestos, três efeitos FIXOS: nenhum deles muda de significado conforme o
-// estado, que era o custo das outras duas formas que estavam na mesa.
+// estado.
 //
 // A PARADA REPETIDA é recusada, e isso não é higiene: o duplo clique dispara um
 // clique simples ANTES dele, na mesma casa. Sem esta linha a última parada
@@ -75,17 +69,15 @@ const (
 // quadrado pendurada. Com ela, o segundo clique do duplo não faz nada e o
 // congelamento cai limpo.
 //
-// O ESC NÃO ENTRA, e é medido: o `scene.js` mapeia Escape para "voltar" e chama
-// `stopPropagation` no documento — provado com controle, um `F2` chega a um
-// listener cru na janela e o `Escape` não. Era ele que a nota do dono usava para
-// apagar; quem apaga é o botão direito, que chega.
+// O ESC NÃO APAGA, e a razão é que ele não CHEGA: o `scene.js` mapeia Escape
+// para "voltar" e chama `stopPropagation` no documento. Quem apaga é o botão
+// direito.
 func clickedPointRuler(v BoardView) string {
 	return fmt.Sprintf(
 		// SÓ O BOTÃO PRIMÁRIO acrescenta parada. O `click` do Chrome já é só do
-		// primário, mas o guarda é barato e ele apareceu na bancada: a automação
-		// do navegador dispara um `click` sintético junto com o clique direito, e
-		// o sintético vem com `offsetX` ZERO — o que se via era a régua sendo
-		// apagada e nascendo de novo na ORIGEM do plano, no mesmo gesto.
+		// primário, mas a automação do navegador dispara um `click` sintético
+		// junto com o clique direito, e o sintético vem com `offsetX` ZERO — a
+		// régua era apagada e nascia de novo na ORIGEM do plano, no mesmo gesto.
 		"if (evt.button !== 0) return; const cx = %s, cy = %s; "+
 			"if ($ruler_phase !== %d) { $ruler_points = [[cx, cy]]; $ruler_phase = %d } "+
 			"else { const p = [...$ruler_points], u = p[p.length - 1]; "+
@@ -96,7 +88,7 @@ func clickedPointRuler(v BoardView) string {
 }
 
 // rulerFollowsPointer é a PERNA VIVA: a linha que sai da última parada e vai
-// até o dedo, sempre (pedido do dono).
+// até o dedo.
 //
 // Ela só fala com o servidor quando o ponteiro TROCA DE CASA, pelo mesmo motivo
 // do pincel: a medida muda por quadrado e não por pixel, e postar a cada quadro
@@ -150,9 +142,9 @@ func repatchRuler(v BoardView) string {
 // para divergir da primeira.
 func clickedPointTemplate(v BoardView) string {
 	return fmt.Sprintf(
-		// SÓ O BOTÃO PRIMÁRIO põe gabarito, pela mesma razão medida na régua: o
-		// clique sintético que acompanha o botão direito vem com `offsetX` zero e
-		// poria a área na origem do plano no mesmo gesto que a apagou.
+		// SÓ O BOTÃO PRIMÁRIO põe gabarito, pela mesma razão da régua: o clique
+		// sintético que acompanha o botão direito vem com `offsetX` zero e poria
+		// a área na origem do plano no mesmo gesto que a apagou.
 		//
 		// A ORIGEM pousa onde o LIVRO manda, e é o `$template_at_intersection` quem
 		// diz qual: a esfera na interseção de quatro quadrados, o resto na casa
@@ -209,10 +201,9 @@ func repatchTemplate(v BoardView) string {
 
 // pickShape troca a forma e LARGA o que estava posto.
 //
-// Trocar sem largar foi medido na SPA e desenha errado: o primeiro clique depois
-// da troca cai na regra do segundo e APONTA a forma nova a partir da origem da
-// antiga — escolher "Cone" com uma esfera na tela desenhava um cone apontado para
-// o lado de onde se clicou.
+// Trocar sem largar desenha errado: o primeiro clique depois da troca cai na
+// regra do segundo e APONTA a forma nova a partir da origem da antiga —
+// escolher "Cone" com uma esfera na tela dá um cone apontado a partir dela.
 //
 // O `$template_aims` sai daqui com o valor do SERVIDOR: é o botão que sabe qual
 // forma ele liga, e é o `pointsTemplate` que sabe quais formas apontam.
@@ -251,7 +242,7 @@ func shapeMeasure(k engine.AreaKind) string {
 	}
 }
 
-// bookShapes é a ordem em que a mesa as usa (p225), e ela é a mesma da SPA.
+// bookShapes é a ordem em que a mesa as usa (p225).
 var bookShapes = []engine.AreaKind{
 	engine.AreaSphere, engine.AreaCone, engine.AreaLine, engine.AreaSquare,
 }
@@ -284,9 +275,9 @@ func shapeLabel(k engine.AreaKind) string {
 
 // rulerPath é o `d` da polilinha, do centro de uma parada ao da próxima.
 //
-// A MIRA entra no fim enquanto a régua mede, e é ela a "linha conectando a
-// última parada até o mouse" que o dono pediu. Congelada, o desenho para nas
-// paradas e o ponteiro passeia sem mexer nele.
+// A MIRA entra no fim enquanto a régua mede: é a linha que liga a última parada
+// ao ponteiro. Congelada, o desenho para nas paradas e o ponteiro passeia sem
+// mexer nele.
 var rulerPath = fmt.Sprintf(
 	"(() => { const p = [...$ruler_points]; "+
 		"if ($ruler_phase === %d) p.push([$ruler_aim_x, $ruler_aim_y]); "+
@@ -296,19 +287,13 @@ var rulerPath = fmt.Sprintf(
 // ── LER UMA LISTA DE SINAL SEM CRIAR SINAL NENHUM ────────────────────────────
 //
 // `$ruler_points[0]` NÃO é "o primeiro item da lista": o Datastar lê `$nome...`
-// como CAMINHO DE SINAL e REGISTRA o que não existe. Medido no navegador, com a
-// reserva de doze rótulos no ar, o sinal virou
-//
-//	[[9,3], "", "", "", "", "", "", "", "", "", "", "", "", [17,7], [17,13], …]
-//
-// — doze strings vazias entre a primeira parada e as seguintes, uma por nó da
-// reserva que leu um índice. O desenho saía com pingos na origem do plano e o
-// servidor media zero, sem erro em lugar nenhum. É a mesma família da armadilha
-// que a memória desta casa já registra para `data-bind` em caminho inexistente.
+// como CAMINHO DE SINAL e REGISTRA o que não existe. Cada nó da reserva que lê
+// um índice ausente enfia uma string vazia na lista — o desenho sai com pingos
+// na origem do plano e o servidor mede zero, sem erro em lugar nenhum.
 //
 // A saída é COPIAR a lista para fora do sinal antes de indexá-la. Guardar o
-// sinal numa constante não basta — medido: a constante continua sendo o proxy, e
-// `lista[12]` cria `reguapontos.12` do mesmo jeito. O espalhamento `[...]` anda
+// sinal numa constante NÃO basta: a constante continua sendo o proxy, e
+// `lista[12]` cria `ruler_points.12` do mesmo jeito. O espalhamento `[...]` anda
 // pelo ITERADOR, que só visita os índices que existem, e devolve um vetor comum:
 // depois dele, ler um índice ausente é `undefined` e mais nada.
 //
@@ -370,22 +355,14 @@ func stopsReserve() []int {
 
 // viewportDrawing põe o SVG a falar a língua do tabuleiro: a JANELA e o ZOOM.
 //
-// Ele era um `viewBox` do tamanho da moldura mais um `transform` que descontava
-// a quina dela, e a moldura saiu na ALE-203. A primeira tentativa foi só um
-// `scale($square)` com o SVG dentro do plano deslocado — e ela NÃO DESENHAVA
-// NADA. Medido: o `<path>` tinha caixa certa (176×176 no lugar certo), `fill`
-// certo, `display: block`, e a tela ficava vazia; dar tamanho ao `<svg>` na mão
-// fazia a esfera aparecer na hora.
+// O SVG é filho da CENA e cobre a JANELA, e não do plano com um `scale`. O
+// `<svg>` MAIS EXTERNO recorta pelo VIEWPORT dele, e `overflow: visible` não
+// levanta esse recorte: dentro de um plano de tamanho zero o viewport é 0×0 e
+// tudo cai fora. É um recorte que NÃO ACUSA — o `<path>` fica com caixa certa,
+// `fill` certo, `display: block`, e a tela vazia.
 //
-// A causa é que o `<svg>` MAIS EXTERNO recorta pelo VIEWPORT dele, e `overflow:
-// visible` não levanta esse recorte — dentro de um plano de tamanho zero, o
-// viewport era 0×0 e tudo caía fora. É um recorte que não acusa: nada no DOM
-// diz "isto está cortado".
-//
-// Então o SVG passou a ser filho da CENA e a cobrir a JANELA — que é um recorte
-// que a gente QUER —, e os dois números que todo o resto usa entram aqui no
-// `transform`: a janela desloca, o zoom escala. Nessa ordem, porque a janela é
-// medida em PIXELS e o `scale` viria depois multiplicá-la.
+// A ordem do `transform` é janela e depois zoom, porque a janela é medida em
+// PIXELS e o `scale` viria depois multiplicá-la.
 const viewportDrawing = "`translate(${-$viewport_x}, ${-$viewport_y}) scale(${$square})`"
 
 // metersSize converte o número digitado para a unidade da FICHA.
@@ -410,9 +387,8 @@ func number(n int) string { return strconv.Itoa(n) }
 
 // rulerSignals são a polilinha no navegador.
 //
-// `reguapontos` é uma LISTA de pares e não quatro números soltos, e foi a
-// polilinha que forçou a troca: com número variável de paradas, quatro sinais
-// nomeados viravam oito, depois vinte e quatro.
+// `ruler_points` é uma LISTA de pares e não números soltos: com número variável
+// de paradas, quatro sinais nomeados virariam oito, depois vinte e quatro.
 var rulerSignals = fmt.Sprintf(
 	"ruler_points: [], ruler_aim_x: 0, ruler_aim_y: 0, ruler_phase: %d, ruler_labels: [], ruler_text: %q",
 	reguaParada, emptyRulerHint)

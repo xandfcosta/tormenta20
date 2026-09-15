@@ -5,31 +5,21 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O ELENCO DA CAMPANHA (ALE-269, superfície 6a — os jogadores).
+// O ELENCO DA CAMPANHA — os jogadores.
 //
-// O conceito que faltava é que **iniciativa não é lista de combatentes**: até
-// aqui, a única forma de alguém existir na sessão era já estar na fila. O
-// elenco responde "quem existe nesta campanha" — e quem põe alguém no combate é
-// o mestre, QUANDO ele quiser.
+// **Iniciativa não é lista de combatentes**: o elenco responde "quem existe
+// nesta campanha", e quem põe alguém no combate é o mestre, QUANDO ele quiser.
 //
-// Esta é a metade dos JOGADORES. Os NPCs da campanha vêm num commit próprio: o
-// piloto não tem CRUD de criatura nenhum, e o editor de bloco são ~25 campos
-// mais ataques e habilidades — trabalho de outra natureza.
-//
-// O QUE A FICHA MOSTRA, e por que não é a ficha inteira: a SPA abre o
-// `CharacterSheet` completo e editável, e o app NÃO TEM ficha — ela é a
-// ÚLTIMA tela da migração e ainda vive na SPA. Construí-la aqui seria fazer a
-// última tela fora de ordem, dentro de uma superfície que é sobre outra coisa.
-// Então esta caixa mostra o que o mestre precisa DA MESA: quem é, como está, e
-// o caminho para o combate. Quando a ficha for migrada, é daqui que ela abre.
+// A caixa mostra o que o mestre precisa DA MESA — quem é, como está, e o
+// caminho para o combate — e não a ficha inteira, que é outra tela.
 //
 // UM DIÁLOGO POR MEMBRO, e não um só reaproveitado — o inverso da escolha das
 // condições, de propósito. Lá são 35 crachás × 9 linhas e um diálogo por linha
-// seriam 315 nós redesenhados; aqui são quatro ou cinco jogadores, e um nó por
-// um. O que se compra com isso é a armadilha que o link de redefinir senha
-// ensinou: nó COMPARTILHADO que recebe escrita depois da renderização mostra o
-// dado do item ANTERIOR sob o nome do próximo. Com um diálogo por pessoa não há
-// o que limpar, porque não há o que sobreviver à troca.
+// seriam 315 nós redesenhados; aqui são quatro ou cinco jogadores. O que se
+// compra é a armadilha do nó COMPARTILHADO que recebe escrita depois da
+// renderização: ele mostra o dado do item ANTERIOR sob o nome do próximo. Com
+// um diálogo por pessoa não há o que limpar, porque não há o que sobreviver à
+// troca.
 
 // gmCast é o segundo bloco do trilho esquerdo — a vaga do `gmCast`.
 //
@@ -56,7 +46,7 @@ templ gmCast(v View) {
 //
 // O NOME INTEIRO viaja no `aria-label` e no `title`, com a presença junto,
 // porque duas letras não são um nome e cor não existe para quem usa leitor de
-// tela (ALE-212).
+// tela.
 templ castPortrait(v View, m Member) {
 	<button
 		type="button"
@@ -140,7 +130,7 @@ templ castSheet(v View, m Member) {
 	</dialog>
 }
 
-// castBar é uma barra do elenco com os passos que mexem NELA (ALE-211).
+// castBar é uma barra do elenco com os passos que mexem NELA.
 //
 // Ela é irmã do `trackerBar` da fila e não a mesma função, e a diferença é o que
 // as separa: a da fila leva o OLHO, porque esconder é decisão sobre o que a mesa
@@ -150,7 +140,7 @@ templ castSheet(v View, m Member) {
 // O gesto entra por outra porta pelo mesmo motivo: as rotas da fila são por
 // `entryId`, e metade do elenco não tem linha na iniciativa na maior parte da
 // sessão. Quem manda nos dois é a FICHA, que é o que impede as duas telas de
-// divergirem sobre o mesmo herói (ALE-122).
+// divergirem sobre o mesmo herói.
 templ castBar(v View, m Member, pool, rotulo string, b tableBar) {
 	<div class="flex items-center gap-1">
 		@barra(rotulo, b)
@@ -162,8 +152,7 @@ templ castBar(v View, m Member, pool, rotulo string, b tableBar) {
 // castStep: clique tira ou devolve 1, Shift+clique 5 — a MESMA escada da fila.
 //
 // Dois números diferentes fariam o mestre chamar de "um golpe" coisas
-// diferentes em duas telas da mesma sessão, que é a família de defeito que a
-// ALE-122 pagou caro para fechar.
+// diferentes em duas telas da mesma sessão.
 templ castStep(v View, m Member, pool, verb, sign, label string) {
 	<button
 		type="button"

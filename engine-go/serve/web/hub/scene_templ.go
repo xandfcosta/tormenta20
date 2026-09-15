@@ -10,20 +10,18 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "t20engine/serve/web/ui"
 
-// O HUB desenhado (ALE-231).
+// O HUB desenhado.
 //
-// Três coisas nesta tela respondem, cada uma, a uma pergunta que a migração
-// tinha em aberto:
+// Três coisas desta tela valem dizer:
 //
 //  1. O TECLADO. As setas andam no menu, e nada aqui as implementa: o menu só
-//     DECLARA a forma dele (`data-nav-region`, `data-nav-layout`) e o driver —
-//     o mesmo `scene-nav.ts` da SPA, servido por `scene.js` — lê isso do DOM.
-//     Um DOM vindo do servidor é um DOM.
-//  2. O POPOVER do rodapé, que era Kobalte, é a Popover API NATIVA. Foco,
-//     dispensa por clique fora, `Esc` e camada de topo vêm do navegador; o que
-//     sobra de JavaScript é posicionar, porque a top layer sai do fluxo.
-//  3. O SLIDER de volume, que era Kobalte, é `<input type="range">`. Teclado e
-//     leitor de tela de graça, e melhores.
+//     DECLARA a forma dele (`data-nav-region`, `data-nav-layout`) e o driver,
+//     servido por `scene.js`, lê isso do DOM.
+//  2. O POPOVER do rodapé é a Popover API NATIVA. Foco, dispensa por clique
+//     fora, `Esc` e camada de topo vêm do navegador; o que sobra de JavaScript é
+//     posicionar, porque a top layer sai do fluxo.
+//  3. O SLIDER de volume é `<input type="range">`: teclado e leitor de tela de
+//     graça, e melhores.
 func hub(v hubView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -68,8 +66,8 @@ func hub(v hubView) templ.Component {
 }
 
 // hubMenu é o menu principal. `data-nav-region` + `data-nav-layout` são o
-// contrato com o driver de teclado — o menu declara a forma e nunca importa o
-// driver, exatamente como na SPA.
+// contrato com o driver de teclado: o menu declara a forma e nunca importa o
+// driver.
 func hubMenu(v hubView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -161,7 +159,7 @@ func menuItem(icone_, rotulo, destino string, temProximo bool) templ.Component {
 		var templ_7745c5c3_Var4 templ.SafeURL
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(destino))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 63, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 61, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -182,7 +180,7 @@ func menuItem(icone_, rotulo, destino string, temProximo bool) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 71, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 69, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -235,7 +233,7 @@ func hubFooter(v hubView) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("Menu de " + v.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 84, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 82, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -248,7 +246,7 @@ func hubFooter(v hubView) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(v.Inicial)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 92, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 90, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -261,7 +259,7 @@ func hubFooter(v hubView) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(v.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 94, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/hub/scene.templ`, Line: 92, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {

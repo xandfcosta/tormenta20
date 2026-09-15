@@ -2,12 +2,11 @@ package engine
 
 import "math"
 
-// A carga do livro (p141), inteira. O motor já sabia dizer QUANTO o personagem
-// pode carregar (`inventorySlotsTotal`, o mesmo 10 +2/Força de sempre); o que
-// faltava era o outro lado da conta — quanto ele CARREGA — e o que acontece
-// quando um passa do outro. Enquanto essa metade não existia aqui, a tela
-// somava sozinha, que é uma segunda implementação de regra do livro rodando no
-// navegador (ALE-215).
+// A carga do livro (p141), inteira: quanto o personagem pode carregar
+// (`inventorySlotsTotal`, o 10 +2/Força de sempre) E quanto ele CARREGA, mais o
+// que acontece quando um passa do outro. As duas metades juntas, porque sem esta
+// aqui a tela soma sozinha — uma segunda implementação de regra do livro rodando
+// no navegador.
 
 // CoinsPerSlot — "Cada mil moedas, independentemente do tipo, ocupam 1 espaço"
 // (p141). O dinheiro é carga como qualquer outra coisa: é por isso que os
@@ -36,10 +35,10 @@ type LoadBreakdown struct {
 	// Limit é o mesmo número que a ficha chama de espaços de inventário.
 	Limit int `json:"limit"`
 	Max   int `json:"max"`
-	// Enforced diz se a mesa está USANDO a regra de carga (ALE-221). Com ela
-	// desligada os espaços continuam contados — o livro pede que os jogadores
-	// "não abusem", e para isso é preciso ver o número —, mas o personagem não
-	// fica sobrecarregado e nenhuma penalidade sai daqui.
+	// Enforced diz se a mesa está USANDO a regra de carga. Com ela desligada os
+	// espaços continuam contados — o livro pede que os jogadores "não abusem", e
+	// para isso é preciso ver o número —, mas o personagem não fica sobrecarregado
+	// e nenhuma penalidade sai daqui.
 	Enforced bool `json:"enforced"`
 	// Overloaded e OverMax são FALSE quando a regra está desligada, de propósito:
 	// "sobrecarregado" é a condição do livro, e ela não existe numa mesa que não

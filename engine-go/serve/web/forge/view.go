@@ -10,7 +10,7 @@ import (
 	"t20engine/infra/platform"
 )
 
-// A FOLHA EM BRANCO DA FORJA (ALE-272, fatia 9) — o que a cena desenha.
+// A FOLHA EM BRANCO DA FORJA — o que a cena desenha.
 //
 // A cena inteira sai daqui montada: as cartas com o que cada escolha COMPRA (os
 // atributos da raça, o PV e o PM da classe), as origens, e o equipamento de

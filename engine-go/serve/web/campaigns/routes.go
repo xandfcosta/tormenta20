@@ -17,7 +17,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// A rota da cena de CAMPANHAS (ALE-234).
+// A rota da cena de CAMPANHAS.
 //
 // UMA rota serve os dois casos, e é isso que a mantém pequena: a carga fria
 // devolve a página inteira, e a busca — que chega pelo mesmo `GET` com os
@@ -36,8 +36,8 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/campanhas/{id}/excluir", s.handleDelete)
 	r.Post("/campanhas/{id}/convite", s.handleRotateInvite)
 	r.Post("/campanhas/{id}/regras/{regra}", s.handleToggleRule)
-	// O ACERVO DE LUGARES (ALE-292). A cena LISTA, CRIA e APAGA; quem MONTA a
-	// cena guardada é o tabuleiro, num endereço vizinho
+	// O ACERVO DE LUGARES. A cena LISTA, CRIA e APAGA; quem MONTA a cena
+	// guardada é o tabuleiro, num endereço vizinho
 	// (`/campanhas/{id}/lugares/{placeId}`) servido pela cena da Mesa — é lá que
 	// o mapa mora, e uma segunda superfície de montagem aqui seria a que diverge.
 	r.Post("/campanhas/{id}/lugares/novo", s.handleNewPlace)
@@ -93,7 +93,7 @@ func filterFromRequest(r *http.Request) (busca, papel string) {
 	return busca, papel
 }
 
-// ── a folha em branco: abrir campanha (ALE-246) ──────────────────────────────
+// ── a folha em branco: abrir campanha ────────────────────────────────────────
 
 // handleNew desenha o formulário vazio.
 func (s Scene) handleNew(w http.ResponseWriter, r *http.Request) {
@@ -141,15 +141,15 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 func (s Scene) writeNewPage(w http.ResponseWriter, r *http.Request, status int, v newView) {
 	s.deps.WritePage(w, r, status, ui.Page{
 		Titulo: "Abrir nova campanha",
-		// `ui.ShellDense`: a tela da SPA usa o cabeçalho compacto com o "‹ Voltar",
-		// e sem ele a folha nasce sem saída visível — o Esc existe, mas atalho
-		// não é a única porta.
+		// `ui.ShellDense`: o cabeçalho compacto traz o "‹ Voltar", e sem ele a
+		// folha nasce sem saída visível — o Esc existe, mas atalho não é a única
+		// porta.
 		Forma:  ui.ShellDense,
 		Voltar: "/campanhas",
 	}, newBody(v))
 }
 
-// ── a carta de convite: entrar na mesa (ALE-249) ─────────────────────────────
+// ── a carta de convite: entrar na mesa ───────────────────────────────────────
 
 // handleJoin desenha a carta, com o convite JÁ RESOLVIDO.
 func (s Scene) handleJoin(w http.ResponseWriter, r *http.Request) {
@@ -218,10 +218,9 @@ func (s Scene) handleJoinPost(w http.ResponseWriter, r *http.Request) {
 // destas tem uma AÇÃO diferente do outro lado — pedir link novo, conferir o
 // número, escolher outro herói, ou nada, porque já está lá dentro.
 //
-// Ela recebia o ERRO do hospedeiro e passou a receber o `JoinRefusal` desta cena
-// (ALE-278). O que a tela diz não mudou; o que mudou é que os sentinelas de erro
-// deixaram de atravessar a fronteira. Quem classifica é o hospedeiro, quem
-// escolhe a frase é a cena — a decisão que a porta de entrar deixou escrita.
+// Ela recebe o `JoinRefusal` desta cena e não o ERRO do hospedeiro: sentinela
+// de erro não atravessa a fronteira. Quem classifica é o hospedeiro, quem
+// escolhe a frase é a cena.
 func joinRefusalPhrase(recusa JoinRefusal) (platform.FieldErrorMap, string) {
 	switch recusa {
 	case JoinNoSuchCampaign:
@@ -250,13 +249,13 @@ func (s Scene) writeJoinPage(w http.ResponseWriter, r *http.Request, status int,
 	}, JoinBody(v))
 }
 
-// ── a crônica: a página de uma campanha (ALE-255) ────────────────────────────
+// ── a crônica: a página de uma campanha ──────────────────────────────────────
 
 // handleOne desenha a crônica inteira, com a aba escolhida pelo `?tab=`.
 //
-// UMA resposta, e não três: a tela da SPA dispara consultas separadas para
-// campanha, sessões e membros, cada uma com o próprio estado de carregando —
-// e a visão geral mostra números que só existem depois que as três voltam.
+// UMA resposta, e não três: consultas separadas para campanha, sessões e
+// membros dariam três estados de carregando, e a visão geral mostra números que
+// só existem depois que as três voltam.
 func (s Scene) handleOne(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -277,15 +276,11 @@ func (s Scene) handleOne(w http.ResponseWriter, r *http.Request) {
 	s.writeOnePage(w, r, http.StatusOK, v)
 }
 
-// ── as ações da crônica (ALE-255) ────────────────────────────────────────────
+// ── as ações da crônica ──────────────────────────────────────────────────────
 
-// handleEdit grava nome e descrição.
-//
-// A recusa REDESENHA a aba de configuração com o que foi digitado, como a folha
-// em branco — e pela mesma razão: a descrição é o campo caro de reescrever.
 // handleRotateInvite cunha o link da mesa, e é o MESMO gesto para duas coisas:
-// gerar o primeiro (mesa aberta antes da ALE-287, que nasceu sem) e derrubar o
-// atual para cortar quem já o tem na mão.
+// gerar o primeiro, para a mesa que nasceu sem, e derrubar o atual para cortar
+// quem já o tem na mão.
 //
 // Formulário e 303, e não Datastar: o link muda a URL que a pessoa vai COPIAR,
 // e um remendo de fragmento deixaria a página com o endereço novo no campo e o
@@ -307,6 +302,10 @@ func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
 }
 
+// handleEdit grava nome e descrição.
+//
+// A recusa REDESENHA a aba de configuração com o que foi digitado, como a folha
+// em branco — e pela mesma razão: a descrição é o campo caro de reescrever.
 func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 	id, eu, ok := s.ownerOrRefuse(w, r)
 	if !ok {
@@ -318,9 +317,9 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 	}
 	nomeBruto, descricaoBruta := r.PostFormValue("name"), r.PostFormValue("description")
 
-	// A MESMA regra da folha em branco e da rota JSON. Três telas, uma função —
-	// e desde a ALE-278 uma FRASE também: as mensagens moram no `campaign`,
-	// porque quem lê é o mestre e não o programa.
+	// A MESMA regra da folha em branco e da rota JSON: três telas, uma função. E
+	// uma FRASE também — as mensagens moram no `campaign`, porque quem lê é o
+	// mestre e não o programa.
 	nome, descricaoTexto, erros := campaign.ValidateText(nomeBruto, &descricaoBruta)
 	if len(erros) > 0 {
 		v, erroAoLer := s.LoadOne(r.Context(), eu, s.deps.RequesterIsAdmin(r), id, "config")
@@ -338,12 +337,10 @@ func (s Scene) handleEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// A GRAVAÇÃO é uma pergunta e não um SQL montado aqui (ALE-278).
-	//
-	// Esta cena compunha `setBuilder` + `execTouched` + `"UPDATE campaigns"` à
-	// mão, e cena que compõe SQL é cena com o banco dentro. O hospedeiro sabe
-	// que a coluna se chama `description`, que vazio é NULL e que a linha tem um
-	// `updatedAt` a tocar; a cena sabe que o mestre renomeou a mesa.
+	// A GRAVAÇÃO é uma pergunta e não um SQL montado aqui: cena que compõe SQL é
+	// cena com o banco dentro. O hospedeiro sabe que a coluna se chama
+	// `description`, que vazio é NULL e que a linha tem um `updatedAt` a tocar;
+	// a cena sabe que o mestre renomeou a mesa.
 	if err := s.deps.SaveText(r.Context(), id, nome, descricaoTexto); err != nil {
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
@@ -357,7 +354,7 @@ func (s Scene) handleDelete(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	// ANTES de apagar — ver a razão da ordem na porta (ALE-270).
+	// ANTES de apagar — ver a razão da ordem na porta.
 	s.deps.CampaignDeleted(r.Context(), id)
 	if err := s.deps.Queries().DeleteCampaign(r.Context(), id); err != nil {
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
@@ -442,7 +439,7 @@ func (s Scene) ownerOrRefuse(w http.ResponseWriter, r *http.Request) (int64, int
 	return id, eu, true
 }
 
-// ── o ACERVO DE LUGARES (ALE-292) ────────────────────────────────────────────
+// ── o ACERVO DE LUGARES ──────────────────────────────────────────────────────
 
 // handleNewPlace abre o lugar e LEVA para ele.
 //

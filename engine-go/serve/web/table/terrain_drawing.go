@@ -6,35 +6,23 @@ import (
 	"t20engine/domain/board"
 )
 
-// COMO UMA CASA DE TERRENO SE PARECE (ALE-203, escolha do dono).
+// COMO UMA CASA DE TERRENO SE PARECE: um ÍCONE num canto próprio de cada
+// espécie, sobre uma tinta forte.
 //
-// O desenho anterior eram quatro LAVAGENS de baixo contraste — hachura dourada a
-// 14%, moldura azul, névoa, chanfro — e ele falhava em duas coisas ao mesmo
-// tempo:
+// ÍCONE e não uma lavagem de fundo, por duas razões que se somam. Lavagem de
+// baixo contraste não se lê de longe, e uma mesa olha o tabuleiro de um metro;
+// e lavagem não EMPILHA — folhagens são difícil E camuflagem (p267), e duas
+// lavagens somadas viram uma terceira coisa que não é nenhuma das duas. Com
+// quatro espécies em quatro cantos, duas na mesma casa continuam sendo duas
+// coisas distintas.
 //
-//  1. **Não se lia de longe.** Uma mesa olha o tabuleiro de um metro, às vezes
-//     numa TV. 14% de opacidade sobre pedra escura é um sussurro.
-//  2. **Não EMPILHAVA.** Folhagens são difícil E camuflagem (p267), e duas
-//     lavagens somadas viram uma terceira coisa que não é nenhuma das duas — a
-//     casa fica com "algo", e o mestre não sabe com o quê.
+// OS ÍCONES DIZEM A REGRA, não a aparência: `Shield` para cobertura porque ela é
+// +5 na Defesa, `EyeOff` para camuflagem porque ela é 20% de chance de falha. O
+// mestre não precisa lembrar que "névoa = camuflagem"; ele vê o que a casa FAZ.
 //
-// O que entra: um ÍCONE num canto próprio de cada espécie, sobre uma tinta mais
-// forte. Quatro espécies, quatro cantos — então duas na mesma casa continuam
-// sendo duas coisas distintas, cada uma no lugar dela, em vez de uma mistura.
-//
-// # Os ícones dizem a REGRA, não a aparência
-//
-// `Shield` para cobertura porque ela é +5 na Defesa; `EyeOff` para camuflagem
-// porque ela é 20% de chance de falha. O mestre não precisa lembrar que "névoa =
-// camuflagem": ele vê o que a casa FAZ. É a mesma escolha que fez o `Ruler` e o
-// `Radar` nomearem a régua e o gabarito.
-//
-// # O ícone SOME no zoom pequeno
-//
-// Abaixo de 32px de lado ele vira um borrão de seis pixels, e um borrão não
-// informa nada — só suja. Quem o esconde é uma `@container` no CSS, medindo a
-// casa: nesse regime a TINTA sozinha responde "tem alguma coisa aqui", que é o
-// que cabe em 20px.
+// O ÍCONE SOME no zoom pequeno, porque abaixo de ~32px de lado ele vira um
+// borrão que só suja. Quem o esconde é uma `@container` no CSS, medindo a casa —
+// nesse regime a TINTA sozinha responde "tem alguma coisa aqui".
 
 // speciesDrawing é como uma espécie de terreno aparece na casa e no trilho.
 type speciesDrawing struct {
@@ -47,13 +35,13 @@ type speciesDrawing struct {
 	Canto string
 }
 
-// drawingBySpecies é a tabela, e ela é conferida contra a lista do domínio
-// pelo `TestEveryKindHasADrawing`.
+// drawingBySpecies é a tabela, conferida contra a lista do domínio pelo
+// `TestEveryKindHasADrawing`.
 //
-// Mapa e não campo no `board.PincelDeTerreno`, porque nome de ícone do lucide
-// é APARÊNCIA e o domínio não tem por que conhecê-lo. O preço dessa separação é a
-// espécie nova poder nascer sem desenho — e é exatamente por isso que o guarda
-// existe e que o `drawing` recusa em vez de devolver um branco.
+// Mapa e não campo no tipo do domínio, porque nome de ícone do lucide é
+// APARÊNCIA e o domínio não tem por que conhecê-lo. O preço dessa separação é a
+// espécie nova poder nascer sem desenho — e é por isso que o guarda existe e que
+// o `drawing` recusa em vez de devolver um branco.
 var drawingBySpecies = map[board.TerrainKind]speciesDrawing{
 	board.TerrenoDificil:    {Icone: "Waves", Canto: "northwest"},
 	board.TerrenoCobertura:  {Icone: "Shield", Canto: "northeast"},

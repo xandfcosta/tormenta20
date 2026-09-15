@@ -15,7 +15,7 @@ import (
 	"t20engine/infra/platform"
 )
 
-// OS COMANDOS DA ABA PODERES (ALE-272, fatia 8).
+// OS COMANDOS DA ABA PODERES.
 //
 // Usar um poder e entrar numa postura são as duas escritas que a mesa faz nesta
 // aba; encerrar mora nos Efeitos, onde a postura em curso aparece.
@@ -62,7 +62,7 @@ func usePower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 // São QUATRO escritas para um gesto: o PM sai, o pagamento é registrado, os
 // condicionais da flag sobem, e o que a postura concede vira efeito. O
 // pagamento é registrado para sair não devolver PM — é o que a tabela
-// `character_stances` existe para lembrar (ALE-222).
+// `character_stances` existe para lembrar.
 func enterStance(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
@@ -207,11 +207,12 @@ func pickClassChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 // pickRaceAttributes grava a distribuição de atributo da raça.
 //
 // Os atributos vêm por SINAL porque são uma lista — três chaves de uma vez — e
-// um caminho com três pedaços daria uma rota por combinação. Quem recusa a
-// combinação inválida é o motor, pelo `sheet.WithChoicesValid`... e não: a
-// distribuição tem regra PRÓPRIA (distintas, count exato, atributo proibido), e
-// quem a conhece é o `RaceAttributeChoiceIsComplete`. Gravar e perguntar depois
-// seria aceitar uma ficha inválida por um instante.
+// um caminho com três pedaços daria uma rota por combinação.
+//
+// Quem recusa a combinação inválida NÃO é o `sheet.WithChoicesValid`: a
+// distribuição tem regra PRÓPRIA (distintas, contagem exata, atributo proibido),
+// e quem a conhece é o `RaceAttributeChoiceIsComplete`. Gravar e perguntar
+// depois seria aceitar uma ficha inválida por um instante.
 func pickRaceAttributes(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	escolhas := sinais.RacaAtributos
 	blob, err := json.Marshal(map[string]any{"floatingPicks": escolhas})

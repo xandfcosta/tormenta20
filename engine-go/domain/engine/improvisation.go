@@ -13,13 +13,9 @@ import (
 // livro. A diferença é que aqui o dado ROLA, e rolar é a única coisa desta
 // família que não é função pura.
 //
-// ONDE O DADO ROLA foi decisão do dono (ALE-261). A SPA rola no navegador, e o
-// comentário de lá defende isso — "o mestre pego sem resposta no meio da cena
-// recebe uma sem ida ao servidor". Aqui ele rola no SERVIDOR, e o que
-// muda o cálculo é que as tabelas JÁ estão no catálogo Go: rolar aqui mantém o
-// mapeamento rolagem→linha num lugar só e não embarca tabela no navegador. Em
-// produção é o mesmo binário que serve a página, então a "ida ao servidor" é a
-// mesma ida que desenhou a tela.
+// O dado rola no SERVIDOR: as tabelas já estão no catálogo Go, então rolar aqui
+// mantém o mapeamento rolagem→linha num lugar só e não embarca tabela no
+// navegador.
 
 // Roll é o resultado de um dado, e ele viaja junto com a linha porque o
 // mestre quer VER o número: "saiu 4" é parte da resposta, não detalhe de
@@ -31,11 +27,11 @@ type Roll struct {
 
 // RollDie devolve 1..faces com aleatoriedade CRIPTOGRÁFICA.
 //
-// `crypto/rand` e não `math/rand`, e a razão não é segurança — é que o
-// `math/rand` global do Go tem semente fixa por processo em versões antigas e
-// comportamento surpreendente sob concorrência. Um servidor que serve várias
-// mesas ao mesmo tempo não pode ter duas rolagens correlacionadas, e o custo
-// aqui é irrelevante: são dezenas de rolagens por sessão, não milhões.
+// `crypto/rand` e não `math/rand`, e a razão não é segurança: o `math/rand`
+// global tem comportamento surpreendente sob concorrência, e um servidor que
+// atende várias mesas ao mesmo tempo não pode ter duas rolagens
+// correlacionadas. O custo é irrelevante — são dezenas de rolagens por sessão,
+// não milhões.
 func RollDie(faces int) (Roll, error) {
 	if faces < 2 {
 		return Roll{}, fmt.Errorf("dado precisa de pelo menos 2 faces, veio %d", faces)

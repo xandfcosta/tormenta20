@@ -10,11 +10,8 @@ import (
 	"t20engine/domain/engine"
 )
 
-// A SETA do movimento proposto (ALE-203, item 4 da lista do dono).
-//
-// As palavras dele: *"ao soltar a peça, ela vai ser renderizada no lugar que foi
-// solta e o início mostra a peça transparente para marcar o início do movimento.
-// A seta da régua conecta os dois pontos."*
+// A SETA do movimento proposto: a peça transparente marca o começo, a peça
+// sólida o lugar onde foi solta, e a seta liga os dois pontos.
 //
 // Ela dobra nas PARADAS e não em cada casa do caminho, e a diferença é de
 // natureza: a trilha pintada diz por quais quadrados a peça passa — que é a
@@ -22,16 +19,14 @@ import (
 // GESTO, que é onde a pessoa clicou. Desenhar a seta casa a casa faria dela uma
 // segunda trilha, mais grossa, contando a mesma coisa por cima.
 //
-// Ela carrega NÚMERO e COR: *"mostrar a distância possível em amarelo, em azul
-// quando ultrapassa o deslocamento e está gastando a ação principal, e vermelho
-// quando extrapola ambas"*. As duas coisas se respondem aqui, e as duas contam a
-// MESMA grandeza — o CUSTO em quadrados, convertido em metros —, que é o que faz
-// o número explicar onde cada cor começa.
+// Ela carrega NÚMERO e COR — dourado até o deslocamento, azul enquanto gasta a
+// ação padrão como segundo movimento, vermelho depois —, e as duas coisas contam
+// a MESMA grandeza: o CUSTO em quadrados, convertido em metros. É isso que faz o
+// número explicar onde cada cor começa.
 //
 // Os dois limiares saem do livro (T20 p233): uma ação de movimento, e a ação
 // padrão trocada por uma segunda. Não há terceira, então o vermelho é
-// literalmente "não cabe no turno" — e não "o servidor vai recusar", que era a
-// leitura antiga, de quando a trava existia.
+// literalmente "não cabe no turno" — e não "o servidor vai recusar".
 
 // recuoDaSeta é o quanto a ponta PARA antes do centro da última casa, em
 // quadrados.
@@ -44,12 +39,11 @@ const recuoDaSeta = 0.5
 
 // moveLeg é o RÓTULO de uma perna e o ponto onde ele pousa.
 //
-// O rótulo diz o que a perna CUSTA e não a distância geométrica dela, e isto é
-// decisão do dono, tomada com o caso do terreno difícil na mão: sobre um brejo a
-// régua diz 4,5m e a seta diz 9,0m para a mesma linha. A divergência é o preço, e
-// o que ela compra é o metro do rótulo ser o MESMO metro do deslocamento — sem
-// isso, os números da seta não explicariam onde o vermelho começa, que é a outra
-// metade do item 13.
+// O rótulo diz o que a perna CUSTA e não a distância geométrica dela (decisão do
+// dono): sobre terreno difícil a régua diz 4,5m e a seta diz 9,0m para a mesma
+// linha. A divergência é o preço, e o que ela compra é o metro do rótulo ser o
+// MESMO metro do deslocamento — sem isso os números da seta não explicariam onde
+// o vermelho começa.
 type moveLeg struct {
 	Rotulo string
 	// MeioX e MeioY são o meio da perna em QUADRADOS, com sinal: o plano não tem
@@ -97,8 +91,8 @@ func legsCosts(dobras []engine.Square, terreno engine.MoveTerrain) []int {
 	return custos
 }
 
-// moveWires parte a seta em DOURADO — o que o deslocamento paga — e
-// VERMELHO, o que passa dele (ALE-203, item 13).
+// moveWires parte a seta em DOURADO — o que o deslocamento paga — e VERMELHO, o
+// que passa dele.
 //
 // Devolve "" nos dois com menos de duas dobras: uma seta de um ponto só não liga
 // nada, e um `d` vazio é o jeito de o `<path>` não desenhar sem um `data-show` a
@@ -163,13 +157,11 @@ func point(inicio [2]float64, resto [][2]float64) [][2]float64 {
 // arredondar por perna inteira mentiria em metros sobre quanto falta encurtar.
 //
 // **Reparte o CUSTO, e não os passos do caminho.** A tentação é achar o quadrado
-// exato em que a peça para e cortar ali; medido no navegador, é o que quebra o
-// desenho. A seta é uma RETA entre duas paradas e o caminho no grid não é —
-// numa perna de (-5,0) a (11,6) o caminho anda seis diagonais e dez retos, e a
-// peça para fora da reta. O que a reta representa é o que o RÓTULO dela diz: o
-// custo, em metros. Então quem a divide tem de ser o custo, senão os dois se
-// contradizem sobre a mesma linha — com 33,0m escritos por cima e 9m de
-// deslocamento, cortar por passos pintava 18% de dourado onde a conta dá 27%.
+// exato em que a peça para e cortar ali, e é o que quebra o desenho: a seta é uma
+// RETA entre duas paradas e o caminho no grid não é — numa perna de (-5,0) a
+// (11,6) o caminho anda seis diagonais e dez retos, e a peça para FORA da reta. O
+// que a reta representa é o que o RÓTULO dela diz, o custo em metros, então quem
+// a divide tem de ser o custo; senão os dois se contradizem sobre a mesma linha.
 // Quem mostra as casas percorridas é a TRILHA, que é outro desenho.
 func cutSpeed(custos []int, orcamento int) (int, float64, bool) {
 	if orcamento < 0 {

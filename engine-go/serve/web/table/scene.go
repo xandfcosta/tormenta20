@@ -17,15 +17,15 @@ import (
 	"t20engine/domain/engine"
 )
 
-// ABRIR e ENCERRAR a cena na Mesa em Datastar (ALE-264, item 3).
+// ABRIR e ENCERRAR a cena na Mesa.
 //
 // Abrir tabuleiro NÃO inicia combate, e essa ortogonalidade é o que faz a
 // taverna existir: a cena de interpretação também tem posição. Quem começa o
 // turno é o `next-turn`, e é dele que sai o deslocamento — sem ele o movimento
 // roda sem teto, o que é a regra e não um defeito.
 //
-// Encerrar ARQUIVA (ALE-124): a cena vira um Lugar da campanha com as peças onde
-// estavam. Por isso o rótulo é "Encerrar" e não "Fechar" — fechar sugere perder.
+// Encerrar ARQUIVA: a cena vira um Lugar da campanha com as peças onde estavam.
+// Por isso o rótulo é "Encerrar" e não "Fechar" — fechar sugere perder.
 
 func (s Scene) SceneRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
@@ -33,28 +33,24 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	r.Post(base+"/encerrar", s.gmBoardCommand(endBoard))
 	r.Post(base+"/lugares/{placeId}/reabrir", s.gmBoardCommand(reopenPlace))
 	r.Post(base+"/lugares/{placeId}/remover", s.gmBoardCommand(removeOLugar))
-	// O TRAÇO e não o ponto (ALE-203): as duas rotas recebem de ONDE ATÉ ONDE o
-	// dedo andou desde o aviso anterior do ponteiro. Um clique parado manda o
-	// mesmo par duas vezes, que é um traço de uma casa. Ver `board.StrokeSquares`.
+	// O TRAÇO e não o ponto: as duas rotas recebem de ONDE ATÉ ONDE o dedo andou
+	// desde o aviso anterior do ponteiro. Um clique parado manda o mesmo par
+	// duas vezes, que é um traço de uma casa. Ver `board.StrokeSquares`.
 	//
-	// AS PONTAS VIAJAM NO CORPO, e não no caminho (ALE-305). O endereço era
-	// `/terreno/dificil/2/2/ate/8/5` — quatro números e um `ate` de separador —
-	// porque a razão escrita dizia que coordenada tinha de vir do CLIQUE e não de
-	// um sinal da página, que outro gesto pode ter mexido. A razão continua certa
-	// e não defende o caminho: o `@post` do Datastar aceita `payload`, que
-	// SUBSTITUI os sinais por um corpo calculado no instante do clique. Sinal e
-	// corpo não são a mesma coisa, e o comentário antigo tratava como se fossem.
+	// AS PONTAS VIAJAM NO CORPO, e não no caminho: a coordenada tem de vir do
+	// CLIQUE e não de um sinal da página que outro gesto pode ter mexido, e o
+	// `payload` do `@post` já é isso — ele SUBSTITUI os sinais por um corpo
+	// calculado no instante do clique. Sinal e corpo não são a mesma coisa.
 	r.Post(base+"/terreno", s.gmContinuousCommand(paintTerrain))
-	// A BORRACHA continua com rota PRÓPRIA, e agora a razão é mais forte que
-	// antes: ela é a única que não nomeia espécie NENHUMA, nem no caminho nem no
-	// corpo. Era a espécie que a fazia apagar a coisa errada em silêncio
-	// (ALE-203), e um corpo compartilhado com a pintura devolveria o campo — e o
-	// risco — de graça.
+	// A BORRACHA tem rota PRÓPRIA porque é a única que não nomeia espécie
+	// NENHUMA, nem no caminho nem no corpo — era a espécie que a fazia apagar a
+	// coisa errada em silêncio, e um corpo compartilhado com a pintura
+	// devolveria o campo, e o risco, de graça.
 	r.Post(base+"/terreno/limpar", s.gmContinuousCommand(clearTerrain))
-	// O RETÂNGULO (ALE-203, item 10): os mesmos dois cantos, outra FORMA. Rota
-	// própria e não uma query na de cima porque o que muda é o que o par de
-	// cantos NOMEIA — a linha entre eles ou tudo o que cabe dentro —, e isso é o
-	// significado do pedido, não um modo dele.
+	// O RETÂNGULO: os mesmos dois cantos, outra FORMA. Rota própria e não uma
+	// query na de cima porque o que muda é o que o par de cantos NOMEIA — a
+	// linha entre eles ou tudo o que cabe dentro —, e isso é o significado do
+	// pedido, não um modo dele.
 	r.Post(base+"/terreno/retangulo", s.gmContinuousCommand(fillRect))
 	r.Post(base+"/terreno/limpar/retangulo", s.gmContinuousCommand(clearRect))
 	r.Post(base+"/pecas", s.gmBoardCommand(poeNoMapa))
@@ -84,13 +80,12 @@ func paintTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 	return st.deps.Boards().PaintStroke(c.R.Context(), c.SessionID, c.TabuleiroID, traco, especie, ligado)
 }
 
-// clearTerrain é a BORRACHA (ALE-203): o clique devolve a casa ao chão limpo,
-// seja qual for o terreno nela.
+// clearTerrain é a BORRACHA: o clique devolve a casa ao chão limpo, seja qual
+// for o terreno nela.
 //
-// ROTA PRÓPRIA e não `?apagar=1` na rota de pintar, e a diferença é o que
-// conserta o defeito: aquela precisa de uma ESPÉCIE no caminho, e era justamente
-// a espécie que fazia a borracha apagar a coisa errada em silêncio. Sem espécie
-// no caminho, não há como errar qual.
+// ROTA PRÓPRIA e não `?apagar=1` na rota de pintar: aquela precisa de uma
+// ESPÉCIE, e era justamente a espécie que fazia a borracha apagar a coisa
+// errada em silêncio. Sem espécie no pedido, não há como errar qual.
 func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 	_, traco, err := strokeFromBody(c.R)
 	if err != nil {
@@ -104,9 +99,9 @@ func clearTerrain(st Scene, c commandCtx) (*board.BoardState, error) {
 
 // fillRect e clearRect são os irmãos de área dos dois de cima.
 //
-// Eles chamam as MESMAS gravações (`PaintStroke`, `ClearStroke`) — o nome fala em
-// traço porque foi ele que as pediu primeiro, e o que elas recebem sempre foi uma
-// lista de casas. Quem escolhe a forma é a rota.
+// Eles chamam as MESMAS gravações (`PaintStroke`, `ClearStroke`): o nome fala em
+// traço, mas o que elas recebem é uma lista de casas. Quem escolhe a forma é a
+// rota.
 func fillRect(st Scene, c commandCtx) (*board.BoardState, error) {
 	pedido, casas, err := rectFromBody(c.R)
 	if err != nil {
@@ -131,12 +126,10 @@ func clearRect(st Scene, c commandCtx) (*board.BoardState, error) {
 }
 
 // strokeBody é o TRAÇO como o cliente o manda: os dois cantos e, na pintura, a
-// espécie (ALE-305).
+// espécie.
 //
 // As chaves são INGLESAS porque campo JSON é FRONTEIRA, e só a ROTA saiu dessa
-// lista (ALE-304): o endereço é o que uma pessoa vê, o corpo não. Escrevi
-// `especie`/`de`/`ate` na primeira versão, arrastando o vocabulário da rota para
-// dentro do corpo — o dono pegou.
+// lista: o endereço é o que uma pessoa vê, o corpo não.
 //
 // `from` e `to` são objetos e não quatro campos soltos porque o par é UM conceito
 // — o segmento que o dedo andou desde o aviso anterior do ponteiro —, e separá-lo
@@ -208,11 +201,11 @@ func strokeFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
 
 // rectFromBody é TUDO O QUE CABE entre os dois cantos.
 //
-// SEM TETO DE ÁREA, por decisão do dono (ALE-315): o app roda LOCAL, numa mesa,
-// e o teto de mil casas mordia gesto de verdade — no zoom mínimo o tabuleiro
-// visível tem 68×29 = 1.972 casas, e "pinte tudo o que estou vendo" era
-// recusado. O irmão de cima, o TRAÇO, mantém o dele: ele é um quadro de 16ms, e
-// cem casas ali continuam sendo impossíveis para um dedo.
+// SEM TETO DE ÁREA: o app roda LOCAL, numa mesa, e um teto de mil casas morde
+// gesto de verdade — no zoom mínimo o tabuleiro visível passa de mil e novecentas
+// casas, e "pinte tudo o que estou vendo" seria recusado. O irmão de cima, o
+// TRAÇO, mantém o dele: ele é um quadro de 16ms, e cem casas ali continuam sendo
+// impossíveis para um dedo.
 func rectFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
 	pedido, de, ate, err := pointsFromBody(r)
 	if err != nil {
@@ -221,19 +214,15 @@ func rectFromBody(r *http.Request) (strokeBody, []engine.Square, error) {
 	return pedido, board.RectangleSquares(de, ate), nil
 }
 
-// reopenPlace traz uma cena guardada de volta para a mesa, NUMA ABA NOVA
-// (ALE-205, fatia 3).
+// reopenPlace traz uma cena guardada de volta para a mesa, NUMA ABA NOVA.
 //
-// Era `ShowPlace`, que arquivava a cena atual e entrava no lugar dela — a saída
-// que a ALE-191 inventou para o mestre pular da taverna para a cripta sem perder
-// a taverna. **Com abas, o problema que ela resolvia deixou de existir**: nada é
-// substituído, então não há o que guardar antes, e a taverna continua aberta na
-// aba dela. O arquivamento preventivo saiu com a razão dele.
+// **Sem arquivar a cena atual antes**: nada é substituído, então não há o que
+// guardar — a taverna continua aberta na aba dela.
 //
 // Quem reabre VAI para a aba nova, como quem abre uma cena do zero: ele acabou
 // de escolher aquele lugar numa lista, e deixá-lo na cena anterior faria o gesto
 // parecer que não aconteceu. A MESA não é levada junto — isso é o "mostrar à
-// mesa", que é gesto próprio desde a fatia 2.
+// mesa", que é gesto próprio.
 func reopenPlace(st Scene, c commandCtx) (*board.BoardState, error) {
 	id, err := lugarDaURL(c.R)
 	if err != nil {
@@ -258,8 +247,8 @@ func removeOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	// APAGAR UM LUGAR QUE ESTÁ NA MESA não é apagar (ALE-205, fatia 3): a linha
-	// some do acervo e a cena continua aberta, e no dia em que a aba fechar o
+	// APAGAR UM LUGAR QUE ESTÁ NA MESA não é apagar: a linha some do acervo e a
+	// cena continua aberta, e no dia em que a aba fechar o
 	// `Archive` a grava de novo com o mesmo nome. O mestre veria a taverna que
 	// ele apagou ontem reaparecer sozinha — um gesto que não faz o que diz, e que
 	// desfaz sozinho o trabalho de quem estava limpando o acervo.
@@ -317,10 +306,9 @@ func lugarDaURL(r *http.Request) (int64, error) {
 
 // openBoard monta a cena com o lugar e o chão que o mestre escolheu.
 //
-// Desde a ALE-205 ela ACRESCENTA uma aba em vez de substituir a cena que estava
-// na mesa: é a issue inteira, e o caso de uso é o grupo que se separou — mostrar
-// a cripta não pode custar a taverna. Quem tira cena da mesa continua sendo o
-// encerrar, que arquiva.
+// Ela ACRESCENTA uma aba em vez de substituir a cena que estava na mesa: o
+// grupo que se separou precisa da cripta sem perder a taverna. Quem tira cena
+// da mesa é o encerrar, que arquiva.
 //
 // E QUEM ABRE VAI PARA A ABA NOVA. O mestre digitou o nome do lugar e apertou
 // abrir: deixá-lo na cena anterior faria o gesto parecer que não aconteceu —
@@ -346,10 +334,9 @@ func openBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 
 // endBoard arquiva e tira a cena da mesa.
 //
-// A falha ao ARQUIVAR não impede o encerrar, e a ordem era a do
-// `handleBoardClose` de propósito — ele foi apagado na ALE-277, e o motivo
-// sobreviveu a ele: o mestre mandou tirar a cena da mesa, e recusar isso porque
-// o acervo falhou deixaria a mesa presa numa cena que já acabou.
+// A falha ao ARQUIVAR não impede o encerrar: o mestre mandou tirar a cena da
+// mesa, e recusar isso porque o acervo falhou deixaria a mesa presa numa cena
+// que já acabou.
 func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 	if atual := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.TabuleiroID); atual != nil {
 		if err := st.deps.Boards().Archive(c.R.Context(), c.CampaignID, atual); err != nil {
@@ -357,15 +344,15 @@ func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 		}
 	}
 	st.deps.Boards().Close(c.R.Context(), c.SessionID, c.TabuleiroID)
-	// AS ESCOLHAS DE ABA morrem com a ÚLTIMA cena, e não com esta (ALE-205).
+	// AS ESCOLHAS DE ABA morrem com a ÚLTIMA cena, e não com esta.
 	//
 	// Fechar uma aba com outras abertas não é o fim do tabuleiro: quem estava
 	// olhando a que morreu cai na padrão sozinho, porque o `chosenTabOf` confere a
 	// escolha contra o que existe. Apagar tudo aqui arrastaria de volta para a
 	// padrão gente que estava numa aba que continua aberta.
 	if len(st.deps.Boards().OpenBoards(c.R.Context(), c.SessionID)) == 0 {
-		// A LENTE morre com a cena (ALE-193): "você está vendo como a mesa" sobre
-		// uma tela sem tabuleiro faria o mestre concluir que o mapa sumiu PARA OS
+		// A LENTE morre com a cena: "você está vendo como a mesa" sobre uma tela
+		// sem tabuleiro faria o mestre concluir que o mapa sumiu PARA OS
 		// JOGADORES — a resposta errada exatamente à pergunta que a lente existe
 		// para responder. Apaga a de todo mundo porque a cena era de todo mundo.
 		//
@@ -384,11 +371,11 @@ func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 // signalsScene lê o diálogo de abrir.
 //
 // TODOS OS NOMES SÃO MINÚSCULOS porque são chaves de `data-bind:`, e nome de
-// atributo é minusculado pelo analisador de HTML — um `data-bind:novoChao` liga
-// um sinal `novochao` e deixa o declarado intocado.
+// atributo é minusculado pelo analisador de HTML: um `data-bind:` em camelCase
+// liga um sinal minúsculo NOVO e deixa o declarado intocado.
 //
-// Os dois defaults são a mesma decisão da SPA: lugar em branco vira "Cena",
-// porque o mestre que só quer a grade não deve ser barrado por um campo; e chão
+// Os dois defaults: lugar em branco vira "Cena", porque o mestre que só quer a
+// grade não deve ser barrado por um campo; e chão
 // desconhecido cai no padrão em vez de recusar, porque um valor que a tela não
 // oferece só chega por posse do fio, e a resposta a isso é desenhar pedra e não
 // discutir.

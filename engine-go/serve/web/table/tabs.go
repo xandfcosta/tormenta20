@@ -10,31 +10,25 @@ import (
 	"t20engine/domain/board"
 )
 
-// AS ABAS DE TABULEIRO (ALE-205): o grupo se separou e a cena é uma só.
-//
-// O mestre abre a cripta sem guardar a taverna, e cada pessoa na mesa escolhe
-// qual das duas está olhando. Até aqui mostrar o outro lado significava ARQUIVAR
-// este — a mesa via a grade sumir e voltar —, porque a sessão tinha um tabuleiro
-// e o schema dizia isso com todas as letras (`sessionId INTEGER PRIMARY KEY`).
+// AS ABAS DE TABULEIRO: o mestre abre a cripta sem guardar a taverna, e cada
+// pessoa na mesa escolhe qual das duas está olhando.
 //
 // # Por que a aba ativa é ESTADO DO SERVIDOR, e não um sinal do navegador
 //
-// A issue tinha decidido o contrário em 2026-08-22, e aquilo foi escrito quando
-// o alvo era o SolidJS, onde o componente segura o próprio estado. Em Datastar
-// quem desenha o mapa é o SERVIDOR, e uma aba local custaria duas coisas que
-// não se pagam:
+// Um sinal do navegador é o que se faria num framework em que o componente
+// segura o próprio estado. Em Datastar quem desenha o mapa é o SERVIDOR, e uma
+// aba local custaria duas coisas que não se pagam:
 //
 //   - o stream teria de mandar TODOS os tabuleiros abertos em TODO quadro,
 //     para o cliente poder trocar sem ir ao servidor (o mapa sozinho já é
-//     ~41,7 KB por pintura, medido na ALE-203);
+//     ~41,7 KB por pintura);
 //   - e o jogador receberia no HTML a cena que ele não está olhando, que é
 //     exatamente o que o `BoardForRole` existe para não fazer.
 //
-// A forma certa já estava no projeto: a LENTE (`lenses`) é estado do servidor
-// por `(sessão, pessoa)` pelo mesmo motivo, e está escrito lá — "o stream não
-// pergunta nada a ninguém". Esta é a irmã dela, e paga os mesmos preços: duas
-// abas do navegador da mesma pessoa compartilham a escolha, e a escolha morre
-// com o processo (todo mundo volta para a aba padrão, que é a mais antiga).
+// A LENTE (`lenses`) é estado do servidor por `(sessão, pessoa)` pelo mesmo
+// motivo. Esta é a irmã dela, e paga os mesmos preços: duas abas do navegador da
+// mesma pessoa compartilham a escolha, e a escolha morre com o processo (todo
+// mundo volta para a aba padrão, que é a mais antiga).
 
 // chosenTabs guarda qual tabuleiro cada pessoa está olhando, e o PUXÃO do
 // mestre por cima disso.
@@ -45,10 +39,10 @@ import (
 //
 // # O puxão é um CONTADOR da sessão, e não uma escrita na escolha de cada um
 //
-// "Mostrar esta à mesa" (ALE-205, fatia 2) tinha de alcançar TODO MUNDO, e o
-// mapa de escolhas só conhece quem já escolheu: quem entrou e ficou na aba
-// padrão não tem entrada nenhuma, e um laço sobre o mapa passaria por cima
-// justamente de quem nunca mexeu em nada.
+// "Mostrar esta à mesa" tem de alcançar TODO MUNDO, e o mapa de escolhas só
+// conhece quem já escolheu: quem entrou e ficou na aba padrão não tem entrada
+// nenhuma, e um laço sobre o mapa passaria por cima justamente de quem nunca
+// mexeu em nada.
 //
 // Então o puxão mora na SESSÃO, com um número que só sobe, e cada pessoa guarda
 // qual puxão ela já viu. Quem tem `ForcaVista` menor está sendo puxado agora —
@@ -177,13 +171,7 @@ func (a *chosenTabs) Erase(sessionID int64) {
 }
 
 // chosenTabOf resolve qual tabuleiro esta pessoa está olhando AGORA, conferindo
-// contra os que existem.
-//
-// A conferência é o coração da função e não uma precaução: **a aba que a pessoa
-// escolheu pode ter sido fechada pelo mestre enquanto ela olhava.** Sem cair no
-// padrão, a tela dela ficaria dizendo "esta sessão não tem tabuleiro" com duas
-// cenas abertas na mesa ao lado — e o gesto que causou isso foi de outra pessoa,
-// então ela não teria como ligar uma coisa à outra.
+// contra os que existem — ver `pullTab`, que faz a conferência.
 //
 // Devolve o id VAZIO quando a escolha ainda vale por ser a padrão, e é
 // deliberado: vazio é a palavra do store para "a primeira aberta", e reescrevê-la

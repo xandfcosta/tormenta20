@@ -10,19 +10,17 @@ import (
 	"t20engine/infra/events"
 )
 
-// AS REGRAS DA MESA AO VIVO, com casa própria (ALE-278, fatia 6).
-//
-// Vinte e oito métodos: a iniciativa, o descanso, quem se move e quanto anda,
-// os vitais espelhados no acompanhamento, e a PUBLICAÇÃO do quadro para as duas
-// salas por papel.
+// AS REGRAS DA MESA AO VIVO, com casa própria: a iniciativa, o descanso, quem se
+// move e quanto anda, os vitais espelhados no acompanhamento, e a PUBLICAÇÃO do
+// quadro para as duas salas por papel.
 //
 // # Por que ele carrega quase tudo, e por que isso está certo
 //
-// A medição da porta da Mesa é a única do projeto que toca **todos** os campos
-// do `*Server` menos um: `boards`, `sessions`, `presence`, `sse`, `bus`,
-// `queries`, `catalogs`, `db` e `cfg`. Um adaptador que carrega quase tudo
-// parece a divisão ter falhado, e é o contrário: a Mesa É a mesa ao vivo, e a
-// mesa ao vivo é o que esses stores guardam.
+// Esta porta toca **todos** os campos do `*Server` menos um: `boards`,
+// `sessions`, `presence`, `sse`, `bus`, `queries`, `catalogs`, `db` e `cfg`. Um
+// adaptador que carrega quase tudo parece a divisão ter falhado, e é o
+// contrário: a Mesa É a mesa ao vivo, e a mesa ao vivo é o que esses stores
+// guardam.
 //
 // A diferença entre isto e receber o `*Server` não é o tamanho da lista, é o
 // que ela **não** tem — o `livro`, o `charMu`, o `emSegundoPlano`, a cena da
@@ -48,11 +46,11 @@ type tableRules struct {
 	// painel da ficha embutida. Ela pede a cena PRONTA em vez de montá-la — ver
 	// o `PlayerSheet`.
 	sheetScene sheetHost
-	// emSegundoPlano é PONTEIRO e vem do servidor: a gravação do estado da
-	// sessão roda em goroutine, e quem espera por ela no `Shutdown` é o
-	// servidor. Uma cópia do `sync.WaitGroup` seria um contador que ninguém espera —
-	// e o sintoma é o banco fechando debaixo da escrita, que aparece como falha
-	// de LIMPEZA de diretório temporário e não como o defeito que é (ALE-245).
+	// emSegundoPlano é PONTEIRO e vem do servidor: a gravação do estado da sessão
+	// roda em goroutine, e quem espera por ela no `Shutdown` é o servidor. Uma
+	// cópia do `sync.WaitGroup` seria um contador que ninguém espera — e o
+	// sintoma é o banco fechando debaixo da escrita, que aparece como falha de
+	// LIMPEZA de diretório temporário e não como o defeito que é.
 	emSegundoPlano *sync.WaitGroup
 }
 

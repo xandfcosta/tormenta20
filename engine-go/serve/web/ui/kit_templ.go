@@ -8,47 +8,28 @@ package ui
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// A contraparte templ do `shared/ui` da SPA (ALE-229).
-//
-// Ela nasce agora e não aqui porque o app podia escrever classe à mão
-// em cinco lugares e ainda caber na cabeça. Ela EXISTE porque isso já deu
-// errado: os botões da casa usam `px-2 py-1 text-xs` e `px-3 py-1.5 text-sm`,
-// que não são nenhum dos tamanhos da casa — divergiram do `buttonVariants` no
-// primeiro dia, em silêncio, e ninguém compara duas telas lado a lado.
-//
-// É o risco nomeado na ALE-225 ("sem biblioteca de componentes, token inventado
-// falha em silêncio") atacado no único lugar onde dá: um componente por peça, e
-// as classes escritas UMA vez.
-//
-// As classes são cópia literal do `buttonVariants` e do `Input`/`Label` da SPA.
-// Enquanto as duas portas existirem isso é duplicação de propósito — a fonte
-// única só é possível depois que uma das duas morrer, e escolher divergir agora
-// para evitar duplicar depois seria pagar o custo duas vezes.
+// O kit de peças da casa: um componente por peça, com as classes escritas UMA
+// vez. Token inventado à mão em cinco telas diverge em silêncio, e ninguém
+// compara duas telas lado a lado.
 
-// variante e tamanho são os do `buttonVariants` (cva) da SPA. Só os que o app
-// usa hoje: variante que ninguém pede é classe que o Tailwind emite para
-// ninguém.
+// Só as variantes que o app usa hoje: variante que ninguém pede é classe que o
+// Tailwind emite para ninguém.
 type Variant string
 
 const (
-	// A gramática da ALE-200: entre clicáveis, o dourado FAZ e o crimson
-	// DESTRÓI. Não há terceira cor de ação.
+	// Entre clicáveis, o dourado FAZ e o crimson DESTRÓI. Não há terceira cor
+	// de ação.
 	VariantPrimary     Variant = "default"
 	VariantSecondary   Variant = "secondary"
 	VariantDestructive Variant = "destructive"
-	// O GHOST não tem caixa até o ponteiro chegar, e é o que 18 sítios
-	// desenhavam à mão (ALE-316): o ✕ do diálogo, o 🗑 da linha, o passo do
-	// contador. Ele não quebra a gramática da ALE-200 — não é uma terceira cor
-	// de AÇÃO, é a ausência de cor até o hover.
+	// O GHOST não tem caixa até o ponteiro chegar: o ✕ do diálogo, o 🗑 da
+	// linha, o passo do contador. Ele não é uma terceira cor de AÇÃO, é a
+	// ausência de cor até o hover.
 	VariantGhost Variant = "ghost"
-	// O GHOST QUE DESTRÓI é variante PRÓPRIA e não um `extra`, e a razão foi
-	// MEDIDA (ALE-316): passado como extra, o `hover:text-destructive-ink`
-	// PERDE para o `hover:text-foreground` do ghost, porque a folha compilada
-	// declara o primeiro antes (offsets 72192 e 72256). O botão de apagar
-	// deixaria de ficar vermelho no hover, e nada falharia.
-	//
-	// Ele não abre uma terceira cor de ação — é a gramática da ALE-200 inteira:
-	// o crimson DESTRÓI, aqui sem caixa até o ponteiro chegar.
+	// O GHOST QUE DESTRÓI é variante PRÓPRIA e não um `extra`: passado como
+	// extra, o `hover:text-destructive-ink` PERDE para o `hover:text-foreground`
+	// do ghost, porque a folha compilada declara o primeiro antes. O botão de
+	// apagar deixaria de ficar vermelho no hover, e nada falharia.
 	VariantGhostDanger Variant = "ghost-danger"
 	// O LINK é o nome clicável DENTRO de uma linha — o da perícia, o da magia,
 	// o do efeito. Ele não é um `<a>`: o gesto abre um diálogo na mesma página,
@@ -63,82 +44,39 @@ const (
 	SizeLarge   Size = "lg"
 	SizeSmall   Size = "sm"
 	SizeTiny    Size = "xs"
-	// Os QUADRADOS, que a SPA tinha (`icon`, `icon-sm`, `icon-xs`) e o servidor
-	// não portou — daí os 22 sítios com a geometria escrita à mão (ALE-316).
-	//
-	// O grande é **44px e não 40**, e é a única medida desta lista que não vem
-	// da SPA: o `icon-lg` dela era `size-10`, e a ALE-177 mediu o piso de toque
-	// do WCAG 2.5.8 nesta ficha. Botão de ícone que não tem rótulo ao lado não
-	// tem o EQUIVALENTE que a norma aceita, então ele paga o piso inteiro.
+	// Os QUADRADOS. O grande é **44px e não 40**: botão de ícone não tem rótulo
+	// ao lado, então não tem o EQUIVALENTE que o WCAG 2.5.8 aceita e paga o
+	// piso de toque inteiro.
 	SizeIcon      Size = "icon"
 	SizeIconSmall Size = "icon-sm"
 	SizeIconTiny  Size = "icon-xs"
 	// SizeInline não traz geometria NENHUMA, e existe para o botão que vive
 	// DENTRO de uma linha: o nome da perícia, o da magia, o do efeito. Eles
 	// medem o que a linha der, e qualquer `h-*`/`px-*` do kit quebraria o
-	// leiaute da fileira.
-	//
-	// O que o kit ainda dá a eles é o que importa: a receita de foco e a de
-	// hover, escritas uma vez. Era isso que estava copiado em cada sítio.
+	// leiaute da fileira. O que eles ganham daqui é a receita de foco e a de
+	// hover.
 	SizeInline Size = "inline"
 )
 
-// ButtonClasses mora neste arquivo por vizinhança com o componente, e não por
-// obrigação.
-//
-// Aqui estava escrito que era "uma razão MECÂNICA: o scanner do Tailwind varre
-// `../*.templ`, então uma classe escrita num `.go` comum não seria emitida". Já
-// era **falso** quando a ALE-316 leu: a ALE-278 mediu que tirar os dois
-// `@source` do `app.src.css` não muda um byte da folha, porque a detecção
-// automática do Tailwind v4 varre da pasta da folha até a raiz do projeto. E a
-// própria ALE-316 reconfirmou de acidente — o `text-hp-hurt` que o
-// `ui.HpFillTone` devolve nasceu num `.go` comum e saiu na folha.
-//
-// A linha ficava aqui cobrando que regra de apresentação morasse dentro de um
-// `.templ`, que é o contrário do que a divisão em pacotes existe para conseguir.
+// ButtonClasses é a receita do botão da casa — base, variante e tamanho numa
+// string só —, para quem precisa das classes fora do componente.
 func ButtonClasses(v Variant, t Size, extra string) string {
-	// A FONTE saiu da base e foi para o TAMANHO, e isso é conserto de uma
-	// armadilha silenciosa (ALE-316).
-	//
-	// Duas classes de fonte na mesma tag não se somam: quem vence é a que a
-	// FOLHA COMPILADA declara por último, e o Tailwind v4 as emite da maior para
-	// a menor — medido nos offsets desta folha:
-	//
-	//   .text-base 58566 · .text-lg 58664 · .text-sm 58756 · .text-xs 58940
-	//
-	// Ou seja: com `text-sm` na base, todo `extra` MAIOR perdia em silêncio. O
-	// `SizeTiny` funcionava por sorte (o `text-xs` é menor e vem depois), e o
-	// primeiro botão de ícone a pedir `text-lg` teria saído pequeno sem nada
-	// falhar. Com uma fonte por TAMANHO não há duas para disputar.
-	//
-	// O `gap-2` saiu junto e pelo mesmo motivo, com um defeito VIVO no caminho:
-	// ele vence o `gap-1.5` do `SizeSmall` (offsets 41357 e 41316), então o
-	// botão pequeno nunca teve o respiro apertado que alguém escreveu para ele.
+	// A FONTE mora no TAMANHO e não aqui na base, e o `gap` também: duas classes
+	// de fonte na mesma tag não se somam — vence a que a FOLHA COMPILADA declara
+	// por último, e o Tailwind v4 as emite da maior para a menor. Com `text-sm`
+	// na base, todo `extra` MAIOR perderia em silêncio, sem nada falhar. Com uma
+	// fonte por TAMANHO não há duas para disputar.
 	base := "inline-flex shrink-0 items-center justify-center rounded-sm font-medium whitespace-nowrap transition-all outline-none disabled:pointer-events-none disabled:opacity-50"
-	// A BORDA DO `secondary` É CONSERTO, E NÃO DIVERGÊNCIA (ALE-250). Não tire.
-	//
-	// O `secondary` da SPA não tinha borda, e a folha de especificação media isso
-	// como 2px de divergência — a ALE-250 nasceu propondo tirá-la em nome da
-	// fidelidade. Medido no navegador antes de mexer:
-	//
-	//   preenchimento (`--secondary`) contra o fundo da cena    1,30:1
-	//   a borda (`--grimorio-iron-light`) contra o mesmo fundo   3,57:1
-	//
-	// O mínimo do WCAG 1.4.11 para LIMITE de componente é 3:1. Sem a borda não se
-	// vê onde o botão começa — e o guarda de contraste da casa não acusaria,
-	// porque ele mede a tinta do TEXTO, que continua legível. **A SPA é que tinha
-	// o defeito**, e ele sobreviveu por nunca ter sido medido.
-	//
-	// Quem prende isso é o e2e `todo botão tem limite visível contra o fundo`, na
-	// folha de especificação — que desenha todas as variantes lado a lado e por
-	// isso cobre a família por amostragem.
+	// A BORDA DO `secondary` é conserto, não enfeite. Não tire: o preenchimento
+	// dá 1,30:1 contra o fundo da cena e a borda dá 3,57:1, e o mínimo do WCAG
+	// 1.4.11 para LIMITE de componente é 3:1. Sem ela não se vê onde o botão
+	// começa — e o guarda de contraste não acusa, porque ele mede a tinta do
+	// TEXTO, que continua legível.
 	porVariante := map[Variant]string{
 		VariantPrimary:     "bg-primary text-primary-foreground hover:bg-primary/90",
 		VariantSecondary:   "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
 		VariantDestructive: "bg-destructive text-white hover:bg-destructive/90",
 		// Sem `bg-` nenhum: o ghost é forma e foco, e a cor só chega no hover.
-		// Quem quiser que ele avise PERIGO passa `hover:text-destructive-ink` no
-		// `extra`, que é o que os quatro botões de apagar linha fazem.
 		VariantGhost:       "text-muted-foreground hover:bg-accent hover:text-foreground",
 		VariantGhostDanger: "text-muted-foreground hover:text-destructive-ink",
 		// `underline-offset-2` e não o 4 da SPA: aqui o sublinhado corre debaixo
@@ -146,13 +84,10 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 		VariantLink: "text-foreground underline-offset-2 hover:underline",
 	}
 	porTamanho := map[Size]string{
-		SizeDefault: "h-9 gap-2 px-4 py-2 text-sm",
-		SizeLarge:   "h-10 gap-2 rounded-sm px-6 text-sm",
-		SizeSmall:   "h-8 gap-1.5 rounded-sm px-3 text-sm",
-		SizeTiny:    "h-6 gap-1 rounded-sm px-2 text-xs",
-		// O glifo do ✕ é `text-lg` nos seis diálogos que o desenham à mão, e é
-		// por isso que ele mora AQUI: passado como `extra` ele perderia para o
-		// `text-sm` da base, calado.
+		SizeDefault:   "h-9 gap-2 px-4 py-2 text-sm",
+		SizeLarge:     "h-10 gap-2 rounded-sm px-6 text-sm",
+		SizeSmall:     "h-8 gap-1.5 rounded-sm px-3 text-sm",
+		SizeTiny:      "h-6 gap-1 rounded-sm px-2 text-xs",
 		SizeIcon:      "size-11 text-lg",
 		SizeIconSmall: "size-8 text-sm",
 		SizeIconTiny:  "size-6 text-xs",
@@ -161,7 +96,7 @@ func ButtonClasses(v Variant, t Size, extra string) string {
 	return Join(base, porVariante[v], porTamanho[t], extra)
 }
 
-// botao é o botão da casa. Os atributos chegam como mapa e são espalhados, e é
+// Button é o botão da casa. Os atributos chegam como mapa e são espalhados, e é
 // isso que deixa um só componente servir o `type="submit"` do formulário, o
 // `data-on:click` do Datastar e o `aria-label` da linha de lista.
 //
@@ -231,8 +166,8 @@ func Button(v Variant, t Size, extra string, attrs templ.Attributes) templ.Compo
 	})
 }
 
-// campo é um input rotulado com as mensagens de validação embaixo — a forma que
-// TODO campo de formulário deste app tem (`TextField` + `PanelFrame`).
+// Field é um input rotulado com as mensagens de validação embaixo — a forma que
+// TODO campo de formulário deste app tem.
 //
 // O `Nome` é o `id` E o `name`, porque é ele que liga o `<label for>` ao
 // controle; um rótulo sem controle é o defeito que essa amarração previne.
@@ -247,13 +182,12 @@ type Field struct {
 	Valor        string
 	Autocomplete string
 	Dica         string
-	// Erros vem do `FieldErrorMap` do servidor, que é o MESMO que a API devolve
-	// — a porta não tem validação própria.
+	// Erros vem do `FieldErrorMap` do servidor: a porta não tem validação
+	// própria.
 	Erros []string
-	// Obrigatorio, TamanhoMinimo e Padrao viram validação NATIVA do navegador.
-	// Isso não substitui o servidor; ele continua sendo a autoridade. O que se
-	// ganha é a mensagem localizada e acessível de graça, antes da ida à rede —
-	// exatamente o que o Zod fazia, sem o Zod.
+	// Viram validação NATIVA do navegador, que não substitui o servidor: ele
+	// continua sendo a autoridade. O que se ganha é a mensagem localizada e
+	// acessível de graça, antes da ida à rede.
 	Obrigatorio   bool
 	TamanhoMinimo int
 	TamanhoMaximo int
@@ -287,7 +221,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 199, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 133, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -300,7 +234,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 200, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 134, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -313,7 +247,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 203, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 137, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -326,7 +260,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 204, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 138, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -339,7 +273,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(InputType(c.Tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 205, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 139, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -352,7 +286,7 @@ func TextField(c Field) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 206, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 140, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -370,7 +304,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Autocomplete)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 208, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 142, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -395,7 +329,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMinimo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 214, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 148, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -414,7 +348,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMaximo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 217, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 151, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -433,7 +367,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 221, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 155, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -456,7 +390,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 226, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 160, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -475,7 +409,7 @@ func TextField(c Field) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 229, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 163, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -493,7 +427,7 @@ func TextField(c Field) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 231, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 165, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -519,10 +453,6 @@ func TextField(c Field) templ.Component {
 
 // PanelFrame é o contêiner padrão de uma cena: borda de ferro com um filete
 // dourado por dentro.
-//
-// O desenho veio da variante `stone` do painel emoldurado da SPA, que não
-// existe mais: ele saiu na ALE-314 junto com os outros seis componentes em
-// Solid, quando a migração foi dada por fechada.
 func PanelFrame(extra string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -608,7 +538,7 @@ func SceneTitle(titulo, kicker string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 255, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 185, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -619,14 +549,14 @@ func SceneTitle(titulo, kicker string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if kicker != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "           <p class=\"font-heading text-sm uppercase tracking-[0.3em] text-grimorio-gold\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "   <p class=\"font-heading text-sm uppercase tracking-[0.3em] text-grimorio-gold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(kicker)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 269, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 191, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -645,21 +575,18 @@ func SceneTitle(titulo, kicker string) templ.Component {
 	})
 }
 
-// TextArea é o irmão do `ui.TextField` para texto de vários parágrafos
-// (ALE-246). Mesma gramática de rótulo, erro e dica — o que muda é só o
-// elemento e a altura.
+// TextArea é o irmão do `ui.TextField` para texto de vários parágrafos. Mesma
+// gramática de rótulo, erro e dica — o que muda é só o elemento e a altura.
 //
 // O `maxlength` NATIVO faz o navegador parar a digitação no limite, e isso é
 // melhor que recusar depois: a pessoa vê que chegou ao fim enquanto escreve, em
 // vez de perder o texto ao enviar. O servidor continua sendo a autoridade —
 // `maxlength` não sobrevive a um POST feito na mão.
 //
-// `field-sizing-content` com `min-h-16` é o que a SPA faz, e eu só descobri
-// medindo: a caixa CRESCE com o texto e as `linhas` são só o piso para quem não
-// suporta a propriedade. Eu tinha lido a captura de tela como "3 linhas" e
-// fixado a altura — o que dava 77px onde a SPA dá 64 e, pior, tirava o
-// crescimento. Num telefone DEITADO esses 13px são a diferença entre o botão de
-// enviar estar na tela e não estar.
+// A altura NÃO é fixa: com `field-sizing-content` a caixa cresce com o texto, e
+// `linhas` é só o piso para quem não suporta a propriedade. Fixar a altura em
+// "3 linhas" custa 13px num telefone deitado, que é a diferença entre o botão
+// de enviar estar na tela e não estar.
 func TextArea(c Field, linhas int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -688,7 +615,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 291, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 210, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -701,7 +628,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 292, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 211, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -714,7 +641,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 295, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 214, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -727,7 +654,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 296, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 215, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -740,7 +667,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(linhas))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 297, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 216, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -758,7 +685,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(Int(c.TamanhoMaximo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 299, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 218, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -777,7 +704,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 303, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 222, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 			if templ_7745c5c3_Err != nil {
@@ -795,7 +722,7 @@ func TextArea(c Field, linhas int) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(c.Valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 306, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 225, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -813,7 +740,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 308, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 227, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -832,7 +759,7 @@ func TextArea(c Field, linhas int) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 311, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 230, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -850,7 +777,7 @@ func TextArea(c Field, linhas int) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 313, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 232, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -875,17 +802,16 @@ func TextArea(c Field, linhas int) templ.Component {
 }
 
 // TomeSheet é uma FOLHA do grimório aberta: a capa de couro segurando uma
-// página que preenche a cena (ALE-246, portado do `ui.TomeSheet`).
+// página que preenche a cena. Toda cena de campanha é página do mesmo livro — a
+// crônica que se lê, a folha em branco que se escreve, a carta de convite
+// enfiada nela.
 //
-// Toda cena de campanha é página do mesmo livro — a crônica que se lê, a folha
-// em branco que se escreve, e a carta de convite enfiada nela.
-//
-// O par `max-lg:landscape:` não é enfeite e a chave é LARGURA + ORIENTAÇÃO, não
-// altura: um telefone deitado tem ~390px de altura, e com o espaçamento cheio o
-// botão de enviar cai para fora da tela. Uma consulta por `max-height` também
-// casaria com o telefone EM PÉ e o teclado virtual aberto (390x494) — e estas
+// A chave do `max-lg:landscape:` é LARGURA + ORIENTAÇÃO e não altura: um
+// telefone deitado tem ~390px de altura e o botão de enviar cai para fora da
+// tela com o espaçamento cheio, mas uma consulta por `max-height` casaria
+// também com o telefone EM PÉ e o teclado virtual aberto (390x494) — e estas
 // folhas hospedam campos de texto, então o espaçamento encolheria debaixo do
-// dedo no meio da digitação (ALE-176).
+// dedo no meio da digitação.
 func TomeSheet() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -923,25 +849,18 @@ func TomeSheet() templ.Component {
 	})
 }
 
-// SectionLabel é o cabeçalho de um bloco — a receita `secao` da casa, portada
-// do `SectionLabel` (ALE-251).
-//
-// Ela existe porque eu tinha INVENTADO uma receita em vez de portar esta, e o
-// erro se espalhou por três cenas antes de o guarda da folha de especificação
-// achá-lo. O que eu escrevia era `font-heading text-xs ... tracking-[0.22em]`,
-// e a receita da casa é `text-2xs font-semibold tracking-[0.16em]` — três
-// divergências de uma vez, sendo a pior o Cinzel: ele é serifado de display, e
-// abaixo de 14px vira desenho antes de virar texto (ALE-173). O piso é 14, e
-// `text-xs` é 12.
+// SectionLabel é o cabeçalho de um bloco. NÃO é Cinzel: ela é serifada de
+// display e abaixo de 14px vira desenho antes de virar texto, e esta receita é
+// de 10px.
 //
 // `tom` é "muted" ou "gold". Não há terceira opção de propósito: a casa tem
 // duas, e uma terceira nasceria como cor solta.
+//
 // CUIDADO: ele envolve o conteúdo num `<p>`, que só aceita conteúdo de FRASE.
 // Passar um `<h4>` aqui é HTML inválido, e o navegador não reclama — ele
-// EXPULSA o cabeçalho do parágrafo e deixa um `<p>` vazio para trás. Medido na
-// ALE-262: o `h4` acabava filho da `<section>`, com `text-transform: none`
-// porque a classe ficou no parágrafo abandonado, e a página juntou 24 desses.
-// Para pôr a receita num cabeçalho, use `ui.SectionLabelClasses` direto no elemento.
+// EXPULSA o cabeçalho do parágrafo e deixa um `<p>` vazio para trás, com a
+// classe presa no parágrafo abandonado e o cabeçalho sem estilo nenhum. Para
+// pôr a receita num cabeçalho, use `ui.SectionLabelClasses` direto no elemento.
 func SectionLabel(tom string, extra string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1003,33 +922,24 @@ func SectionLabelClasses(tom, extra string) string {
 	return Join("text-2xs font-semibold uppercase tracking-[0.16em] "+SectionLabelTone(tom), extra)
 }
 
-// ── OS OUTROS DOIS PAPÉIS DA FAMÍLIA (ALE-295, portados da ALE-173) ──────────
+// ── OS OUTROS DOIS PAPÉIS DA FAMÍLIA ────────────────────────────────────────
 //
-// A família de rótulos em CAIXA ALTA tem TRÊS papéis, e isso foi medido, não
-// escolhido: a SPA contou 208 ocorrências escritas de 59 jeitos e descobriu que
-// elas não eram 59 variações da mesma coisa. O `SectionLabel` acima veio na
-// ALE-251; os outros dois ficaram para trás, e as cenas em templ reinventaram os
-// dois em 106 sítios com 30 grafias — o mesmo fenômeno, uma migração depois.
-//
-// **Um componente só para os três seria pior que as 59 grafias**, porque
-// passaria a esconder que são coisas diferentes: o rótulo de campo não é
-// cabeçalho de nada, e vesti-lo de Cinzel mudaria a cara da ficha em dezenas de
-// lugares. Eles compartilham a família e nada mais.
+// A família de rótulos em CAIXA ALTA tem TRÊS papéis, e **um componente só para
+// os três seria pior que escrevê-los à mão**: passaria a esconder que são
+// coisas diferentes. O rótulo de campo não é cabeçalho de nada, e vesti-lo de
+// Cinzel mudaria a cara da ficha em dezenas de lugares. Eles compartilham a
+// família e nada mais.
 
 // SectionTitleClasses é o título de uma SEÇÃO DA CENA: Cinzel grande e dourada.
 //
-// 18px e não 14, e a ALE-173 mediu os dois: subir o cabeçalho de bloco para 14px
-// foi descartado porque **14px é a medida do CORPO do texto neste app**, e um
-// cabeçalho do mesmo tamanho do texto perde a hierarquia que ele existe para
-// criar. A voz da Cinzel fica onde ela lê bem — aqui, e nos títulos de cena.
-// Abaixo de 14 ela não vai (ver `support/typography.ts`).
+// 18px e não 14: **14px é a medida do CORPO do texto neste app**, e um cabeçalho
+// do mesmo tamanho do texto perde a hierarquia que ele existe para criar.
 //
 // O CONTEXTO muda só a entreletra, e a divisão não é deriva: `tracking-wide` é
 // de painel de tela densa — Mochila, Perícias, Grimório — e `[0.16em]` é de
 // passo de forja e ferramenta do mestre. Um passo de cena é o único assunto da
 // tela e o título pode respirar; um cabeçalho de painel disputa espaço com nove
-// outros, e apertar é o que o mantém legível ao lado dos vizinhos. Medido na
-// SPA: 0,45px contra 2,88px no mesmo tamanho.
+// outros, e apertar é o que o mantém legível ao lado dos vizinhos.
 func SectionTitleClasses(contexto, tom, extra string) string {
 	entreletra := "tracking-[0.16em]"
 	if contexto == "painel" {
@@ -1043,12 +953,10 @@ func SectionTitleClasses(contexto, tom, extra string) string {
 
 // FieldLabelClasses é o rótulo colado num VALOR — o "FOR" ao lado do 16.
 //
-// SEM Cinzel, e isso é a decisão mais antiga da família: em 10px ela vira
-// desenho antes de virar texto, e este papel nunca a usou. É o degrau que já
-// estava certo quando o cabeçalho de bloco ainda era a exceção solta (ALE-173).
+// SEM Cinzel: neste tamanho ela vira desenho antes de virar texto.
 //
 // Ele NÃO é cabeçalho de nada, e a distinção tem consequência: o `<span>` do
-// "FOR" ao lado do 16 e o `<h3>` de "Poderes" pediram o mesmo desenho por
+// "FOR" ao lado do 16 e o `<h3>` de "Poderes" pedem o mesmo desenho por
 // acidente de aparência, e trocá-los de papel muda o que a tela diz.
 func FieldLabelClasses(tom, extra string) string {
 	return Join("text-3xs uppercase tracking-widest "+SectionLabelTone(tom), extra)
@@ -1134,8 +1042,7 @@ func SectionLabelTone(tom string) string {
 // `overflow-hidden`, então o DOCUMENTO não rola: quem rola são caixas aninhadas.
 // Uma caixa dessas cujo conteúdo é só TEXTO não tem nenhum descendente focável,
 // e sem `tabindex` o foco nunca entra nela — seta, PageDown, Home e End não
-// fazem nada, e o conteúdo escondido fica inalcançável sem mouse. Medido na
-// tela de catálogos do mestre: 1263px presos, zero focáveis dentro.
+// fazem nada, e o conteúdo escondido fica inalcançável sem mouse.
 //
 // Caixa que CONTÉM links ou botões não sofre disso (o foco entra pelos filhos e
 // a rolagem acompanha), mas ela ganha o atributo do mesmo jeito: uma lista que
@@ -1182,7 +1089,7 @@ func ScrollBox(rotulo string, extra string) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 479, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 376, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 		if templ_7745c5c3_Err != nil {
@@ -1217,17 +1124,13 @@ func ScrollBox(rotulo string, extra string) templ.Component {
 	})
 }
 
-// KeyboardLegend diz como andar na cena SEM o mouse.
+// KeyboardLegend diz como andar na cena SEM o mouse. Uma seta que funciona e
+// ninguém sabe que funciona não existe.
 //
-// O dono pediu depois de perceber que a gramática existia e não se anunciava:
-// "falta as hints de movimentação com teclado". Descoberta é metade de uma
-// afordância — uma seta que funciona e ninguém sabe que funciona não existe.
-//
-// SÓ AS TECLAS QUE FUNCIONAM, e isto é a regra do `@tecla` aplicada a uma
-// legenda: dica de atalho morto é pior que dica nenhuma, porque ensina errado.
-// Por isso o **Esc não está aqui** — eu o media antes de escrever e ele não faz
-// nada nesta cena (mesma URL, mesmo foco, medido com teclado real). Quando
-// alguém ligar o `onEscape` do driver, a tecla entra nesta linha e não antes.
+// SÓ AS TECLAS QUE FUNCIONAM: dica de atalho morto é pior que dica nenhuma,
+// porque ensina errado. Por isso o **Esc não está aqui** — ele não faz nada
+// nesta cena. Quando alguém ligar o `onEscape` do driver, a tecla entra nesta
+// linha e não antes.
 //
 // `xl:flex` porque é a mesma faixa em que o DRIVER liga (`≥xl` com ponteiro
 // fino): anunciar seta para quem está no toque é ruído sobre uma tecla que não
@@ -1236,10 +1139,6 @@ func ScrollBox(rotulo string, extra string) templ.Component {
 // `aria-hidden` porque é repetição visual do modelo de interação: quem usa
 // leitor de tela recebe as REGIÕES anunciadas pelo próprio `role`/`aria-label`,
 // e uma legenda de setas lida em toda cena seria ruído a cada navegação.
-//
-// Sem cor própria, como o `@tecla`: ela herda a de quem a contém. Cor de painel
-// escuro dentro de superfície clara foi como o guarda de contraste pegou a
-// primeira versão daquele componente.
 func KeyboardLegend() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1272,7 +1171,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(" navegar")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 513, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 402, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1285,7 +1184,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(" trocar de painel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 515, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 404, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -1298,7 +1197,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(" abrir")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 517, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 406, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1311,7 +1210,7 @@ func KeyboardLegend() templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(" buscar no livro")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 519, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 408, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1325,38 +1224,35 @@ func KeyboardLegend() templ.Component {
 	})
 }
 
-// A BARRA foca a busca da cena.
+// SlashShortcut: a BARRA foca a busca da cena.
 //
-// Mora na CASCA e não em cada tela: é atalho global, e um `keydown` por cena
-// seria exatamente o que a filosofia proíbe — a regra em N lugares diverge no
-// primeiro que alguém esquecer.
+// Mora na CASCA e não em cada tela: é atalho global, e a regra em N lugares
+// diverge no primeiro que alguém esquecer.
 //
 // A guarda de digitação é o que impede o atalho de roubar a tecla de quem
 // escreve: sem ela, digitar "1/2" numa busca dispararia o atalho e a barra nunca
-// chegaria ao campo. Mesma razão pela qual o driver de navegação se recolhe em
-// alvo de digitação.
+// chegaria ao campo.
 //
 // A busca é achada por `[data-busca-da-cena]` e não por id: cada cena tem a sua
-// com id próprio, e procurar por id obrigaria a casca a conhecer as telas — o
-// contrário de quem serve a quem. Cena sem busca simplesmente não reage, que é
-// melhor que reagir para o lugar errado.
+// com id próprio, e procurar por id obrigaria a casca a conhecer as telas. Cena
+// sem busca simplesmente não reage, que é melhor que reagir para o lugar
+// errado.
 const SlashShortcut = `evt.key === '/' && ` +
 	`!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && ` +
 	`(evt.preventDefault(), document.querySelector('[data-busca-da-cena]')?.focus())`
 
-// O FOCO SOBREVIVE à troca de ferramenta, e o problema é do transporte.
-//
-// O trilho é feito de LINKS, e trocar de ferramenta é NAVEGAR: documento novo,
-// foco no `body`, e quem estava andando de seta recomeça do primeiro item — foi
-// o que o dono relatou ("preciso começar na tab de bestiário de novo"). A SPA
-// não tem isso porque lá a troca não descarta o documento.
+// KeyboardSwapMark faz o FOCO SOBREVIVER à troca de ferramenta, e o problema é
+// do transporte: o trilho é feito de LINKS, e trocar de ferramenta é NAVEGAR —
+// documento novo, foco no `body`, e quem estava andando de seta recomeça do
+// primeiro item.
 //
 // Restaurar SÓ quando a troca veio do TECLADO, e é por isso que existe a marca:
 // focar o trilho em toda carga roubaria o foco de quem clicou, com um cursor
 // dourado aparecendo sozinho e a página saltando para ele. A marca é escrita no
 // `keydown` do próprio link e lida uma vez na carga seguinte.
 //
-// `sessionStorage` e não um sinal: sinal do Datastar não atravessa navegação de
+// O `sessionStorage` do navegador, e não um sinal: sinal do Datastar não
+// atravessa navegação de
 // documento — é justamente o que se perde aqui. E `session` e não `local` porque
 // a marca vale para ESTA aba e para os próximos milissegundos; sobreviver ao
 // fechamento do navegador seria o foco pulando sozinho numa sessão futura.
@@ -1368,10 +1264,8 @@ const RestoreRailFocus = `sessionStorage.getItem('rail_focus') && ` +
 	`(sessionStorage.removeItem('rail_focus'), ` +
 	`document.querySelector('[data-nav-region="rail"] [aria-current]')?.focus())`
 
-// O ⌃K abre o BUSCADOR DO LIVRO (ALE-264).
-//
-// Na casca pela mesma razão da barra: atalho global escrito em cada cena é a
-// regra em N lugares, e ela diverge no primeiro que alguém esquecer.
+// SearchShortcut: o ⌃K abre o BUSCADOR DO LIVRO. Na casca pela mesma razão da
+// barra.
 //
 // SEM guarda de digitação, ao contrário do `/`, e a diferença é o que a tecla
 // significa: `/` é um caractere que a pessoa pode estar escrevendo, e ⌃K não —
@@ -1404,12 +1298,11 @@ const SearchShortcut = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey || 
 // O endereço ganha `&dialogo=1`, que é o que faz a cena de dentro esconder o
 // link de VOLTAR — ver `leitorView.EmDialogo`.
 //
-// O `<iframe>` é a escolha de PERFORMANCE, e ela é medida: o pdf.js são 1,8 MB
-// (540 KB do módulo e 1,3 MB do worker) mais um canvas de alguns milhões de
-// pixels. Num `import()` dinâmico isso tudo passaria a viver DENTRO da cena dos
-// catálogos, que já desenha 992 cartões, e continuaria vivo depois de fechar.
-// Com iframe, o custo nasce no clique e MORRE no fechamento: `about:blank`
-// descarta o documento, o worker e o bitmap de uma vez.
+// O `<iframe>` e não um `import()` dinâmico do pdf.js: são 1,8 MB mais um canvas
+// de alguns milhões de pixels, e num import isso passaria a viver DENTRO da cena
+// dos catálogos e continuaria vivo depois de fechar. Com iframe o custo nasce no
+// clique e MORRE no fechamento — `about:blank` descarta o documento, o worker e
+// o bitmap de uma vez.
 const OpenBookOverlay = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
 	`evt.preventDefault(), ` +
 	`document.getElementById('book-in-dialog').querySelector('iframe').src = el.getAttribute('href') + '&dialogo=1', ` +
@@ -1448,25 +1341,21 @@ const WalkTheSearch = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preven
 	`evt.key === 'Enter' && document.activeElement?.id === 'finder-field' && ` +
 	`(evt.preventDefault(), el.querySelector('[data-resultado]')?.click())`
 
-// Key é a dica de atalho — o `Kbd` da SPA.
-//
-// Ela só é escrita onde a Key FUNCIONA de verdade: uma dica que anuncia um
-// atalho morto é pior que dica nenhuma, porque ensina errado.
+// Key é a dica de atalho. Ela só é escrita onde a tecla FUNCIONA de verdade:
+// uma dica que anuncia um atalho morto é pior que dica nenhuma, porque ensina
+// errado.
 //
 // A chamada tem de começar a LINHA. Escrita no meio de um texto
 // (`Abrir ficha @Key("⏎")`), o templ a trata como texto literal e a página
-// mostra `@Key("⏎")` na tela — medido. É a quarta restrição de sintaxe dele
-// que este porte encontra, depois das três de comentário dentro da lista de
-// atributos.
+// mostra `@Key("⏎")` na tela.
 //
-// Ela NÃO define cor, e isso é a coisa importante: herda a do que a contém, com
-// `opacity-70`. Eu tinha escrito `text-muted-foreground`, que é tinta de painel
-// ESCURO, e dentro do botão dourado deu 1,22:1 — o guarda de contraste pegou.
-// Uma dica de Key aparece dentro de botões de cores diferentes, então cor
-// própria é cor errada em algum deles.
+// Ela NÃO define cor: herda a de quem a contém, com `opacity-70`. Uma dica de
+// tecla aparece dentro de botões de cores diferentes, então cor própria é cor
+// errada em algum deles — `text-muted-foreground` dá 1,22:1 dentro do botão
+// dourado.
 //
-// E some abaixo de `xl`, como na SPA: a Key não existe no toque, e anunciar
-// atalho para quem não tem teclado é ruído.
+// E some abaixo de `xl`: a tecla não existe no toque, e anunciar atalho para
+// quem não tem teclado é ruído.
 func Key(rotulo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1495,7 +1384,7 @@ func Key(rotulo string) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 666, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 545, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1510,11 +1399,8 @@ func Key(rotulo string) templ.Component {
 }
 
 // FilterDrawer recolhe os filtros de uma cena de lista no celular DEITADO, e em
-// nenhuma outra forma (ALE-230).
-//
-// A 844×390 a lista do bestiário recebia 11px — 0,2 de uma criatura —, e o que a
-// comia não era navegação: eram 124px de filtro. Medido, esconder a camada
-// devolve 3,37 linhas, o maior corte disponível naquela cena.
+// nenhuma outra forma: a 844×390 os filtros comem 124px e a lista fica com 11 —
+// menos de uma criatura.
 //
 // A troca é do CSS (`.filters-in-drawer`, na folha da casa) e NÃO de uma
 // consulta de mídia em JS nem de um segundo bloco condicional no `.templ`: são
@@ -1559,7 +1445,7 @@ func FilterDrawer(rotulo string) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 695, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 571, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {

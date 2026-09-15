@@ -15,7 +15,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// O stream da Mesa — as cenas em Datastar (ALE-219).
+// O stream da Mesa.
 //
 // Quem embala os eventos é o SDK oficial (`datastar-go`), e não uma cópia do
 // formato escrita aqui: o `data: elements ` por linha, os dois "\n" finais e a
@@ -23,22 +23,16 @@ import (
 // contrato que envelhece calado — um `data:` com quebra de linha chega truncado
 // sem erro em lugar nenhum.
 //
-// COMPRESSÃO é o ganho dominante e ela é uma opção do SDK. Medido no stream
-// deste piloto: 52.332 bytes crus de três remendos viram 2.513 em gzip e 1.827
-// em brotli — 17KB por remendo caem para ~600. Quadros sucessivos são quase
-// idênticos, e essa redundância é exatamente o que um compressor de stream come.
+// COMPRESSÃO é o ganho dominante e ela é uma opção do SDK: quadros sucessivos
+// são quase idênticos, e essa redundância é exatamente o que um compressor de
+// stream come.
 //
-// A CADÊNCIA deixou de ser só relógio (o passo (b) da ordem combinada). Os
-// stores avisam quem escuta a cada mutação, então o caminho comum acorda na hora
-// em vez de esperar o próximo tique. O relógio continua existindo como BATIMENTO
-// de reserva, e não é redundância: mudanças que a Mesa mostra nascem FORA dos
-// stores — o PV do Grupo vem da ficha, alterado por HTTP —, e nenhum aviso as
-// cobriria. Por isso ele afrouxou de 200ms para 1s: o aviso paga a latência, o
-// batimento paga a abrangência.
-//
-// São DOIS avisos desde a ALE-264, e o segundo nasceu de uma medição: o
-// tabuleiro é outro store, então mover uma peça não acordava ninguém e a
-// mudança só chegava no batimento — 1310ms, cronometrados no navegador.
+// A CADÊNCIA não é só relógio: os stores avisam quem escuta a cada mutação,
+// então o caminho comum acorda na hora em vez de esperar o próximo tique. O
+// relógio continua como BATIMENTO de reserva, e não é redundância — mudanças
+// que a Mesa mostra nascem FORA dos stores (o PV do Grupo vem da ficha,
+// alterado por HTTP), e nenhum aviso as cobriria. Por isso ele é de 1s e não de
+// 200ms: o aviso paga a latência, o batimento paga a abrangência.
 const tableHeartbeat = time.Second
 
 func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
@@ -56,28 +50,20 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// A PRESENÇA é registrada AQUI, e não numa rota própria (ALE-287).
-	//
-	// A Mesa desenha um anel por carta do elenco dizendo quem está com a aba
-	// aberta, e ele ficava CINZA para sempre: quem preenchia o registro era o
-	// handshake da rota `/events` da SPA, apagada na ALE-277 por não ter
-	// consumidor. Ninguém em produção chamava `Join` desde a ALE-272 — o anel
-	// dizia "todos fora" com cara de medição, e o mestre agia sobre isso.
+	// A PRESENÇA é registrada AQUI, e não numa rota própria.
 	//
 	// Este fluxo é o lugar certo por três coisas que ele já tem e uma rota nova
-	// teria de recriar: QUEM está pedindo, EM QUE sessão, e o `r.Context()` que
-	// o servidor cancela quando a aba fecha — que é a saída, e ela é a metade
-	// difícil de acertar num transporte próprio.
+	// teria de recriar: QUEM está pedindo, EM QUE sessão, e o `r.Context()` que o
+	// servidor cancela quando a aba fecha — que é a saída, e ela é a metade difícil
+	// de acertar num transporte próprio.
 	//
-	// O PAPEL sai do `view.Mestre`, que é nil para o jogador: é a mesma leitura
-	// que já decidiu o que desenhar, e não uma segunda pergunta ao banco. Ele
-	// importa ao registro porque quem abre duas abas conta uma vez só, e a
-	// dedupe promove a pessoa a mestre se QUALQUER conexão dela for de mestre.
+	// O PAPEL sai do `view.Mestre`, que é nil para o jogador: é a mesma leitura que
+	// já decidiu o que desenhar, e não uma segunda pergunta ao banco. Ele importa
+	// ao registro porque quem abre duas abas conta uma vez só, e a dedupe promove a
+	// pessoa a mestre se QUALQUER conexão dela for de mestre.
 	//
 	// Não há evento novo: o `writeTable` só manda bytes quando o HTML MUDA, e o
-	// batimento de 1s já leva a mudança às outras abas. Um aviso no barramento
-	// pagaria latência que ninguém está medindo aqui — quem entra na mesa não
-	// tem pressa de aparecer no anel de outra pessoa.
+	// batimento de 1s já leva a mudança às outras abas.
 	papel := "player"
 	if view.Mestre != nil {
 		papel = "gm"
@@ -89,22 +75,16 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	// A ASSINATURA vem ANTES do primeiro quadro, senão uma mutação que caia entre
 	// render e assinatura se perde e a tela fica velha até o batimento.
 	//
-	// UMA, com os interesses de quem está olhando (ALE-279). Eram TRÊS canais —
-	// a sessão, o tabuleiro e a ficha —, um por store, e o `select` abaixo tinha
-	// um `case` para cada um só para juntar de novo o que estava separado por
-	// acidente de onde o estado mora. O tabuleiro precisou do segundo porque sem
-	// ele mover uma peça só aparecia no BATIMENTO: 1310ms para andar um quadrado,
-	// medido no navegador com o mestre arrastando na frente de seis pessoas.
-	//
-	// Quem não tem ficha nesta mesa (o mestre, e quem só assiste) simplesmente
-	// não pede o interesse dela — antes isso era um canal NULO devolvido por uma
-	// função à parte, e agora é um item a menos numa lista.
+	// UMA, com os interesses de quem está olhando. Um canal por store obrigaria um
+	// `case` por store no `select` abaixo, só para juntar de novo o que está
+	// separado por acidente de onde o estado mora. Quem não tem ficha nesta mesa (o
+	// mestre, e quem só assiste) simplesmente não pede o interesse dela.
 	sub, parar := s.deps.Bus().Subscribe(readerInterests(view)...)
 	defer parar()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
 	ultimo := writeTable(r.Context(), sse, view, nil)
-	// O PUXÃO já empurrado NESTA conexão (ALE-205, fatia 2). Ver `PushForMap`.
+	// O PUXÃO já empurrado NESTA conexão. Ver `PushForMap`.
 	var puxaoEmpurrado int64
 	puxaoEmpurrado = PushForMap(s, sse, sessionID, userID, puxaoEmpurrado)
 	// A ficha do jogador SEMEADA e não empurrada: o valor de agora entra como
@@ -123,9 +103,9 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// aqui é o que impede a goroutine de sobreviver ao leitor.
 			return
 		case ev := <-sub.C:
-			// A ficha só é relida quando o evento diz que ELA mudou. Antes a
-			// leitura acontecia a cada tique — uma linha por segundo por jogador
-			// conectado, quase sempre para descobrir que nada mudou.
+			// A ficha só é relida quando o evento diz que ELA mudou: reler a cada
+			// tique é uma linha por segundo por jogador conectado, quase sempre para
+			// descobrir que nada mudou.
 			sheetTouched = sheetTouched || sheetChanged(ev)
 		case <-batimento.C:
 		}
@@ -145,21 +125,18 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// PushForMap leva quem foi puxado para a superfície do TABULEIRO, UMA vez
-// por puxão (ALE-205, fatia 2).
+// PushForMap leva quem foi puxado para a superfície do TABULEIRO, UMA vez por
+// puxão.
 //
 // Sem isto o "parem tudo e olhem isto" falha justamente no caso mais comum, e
 // falha em silêncio: o jogador abre a sessão na superfície **Mesa**, que é a
-// padrão, e o tabuleiro dele está num bloco com `display:none`. Medido na
-// bancada — o puxão chegou, a região do mapa foi remendada, a tira foi escrita
-// no HTML, e a pessoa não viu nada disso porque estava olhando a outra
-// superfície.
+// padrão, e o tabuleiro dele está num bloco com `display:none` — o puxão chega,
+// a região do mapa é remendada, e a pessoa não vê nada disso.
 //
-// UMA VEZ POR PUXÃO, e é o que separa o empurrão da trava (decisão do dono):
-// empurrar a cada quadro faria a pessoa que tenta voltar para a Mesa ser
-// devolvida ao mapa 200ms depois, para sempre. A memória do que já foi empurrado
-// é da CONEXÃO, e não do servidor: duas abas da mesma pessoa merecem o empurrão
-// cada uma, e um contador compartilhado daria o empurrão a uma só.
+// UMA VEZ POR PUXÃO, e é o que separa o empurrão da trava: empurrar a cada
+// quadro faria quem tenta voltar para a Mesa ser devolvido ao mapa no quadro
+// seguinte, para sempre. A memória do que já foi empurrado é da CONEXÃO, e não
+// do servidor: duas abas da mesma pessoa merecem o empurrão cada uma.
 //
 // A SUPERFÍCIE é sinal do navegador — é o cliente que decide o que aparece —,
 // então o que vai daqui é um remendo de SINAL e não de HTML. É o único lugar
@@ -181,11 +158,9 @@ func PushForMap(s Scene, sse *datastar.ServerSentEventGenerator, sessionID, user
 // readerInterests diz o que este stream quer receber: a mesa, sempre; a
 // ficha, só de quem tem uma aqui.
 //
-// Uma LISTA e não um canal nulo. Aqui morava o `readerInterests`, que
-// devolvia `nil` para o mestre porque um canal nulo num `select` nunca dispara —
-// era o truque certo para a forma antiga, e ele deixou de ser necessário: não
-// pedir o interesse é dizer a mesma coisa sem precisar que o leitor conheça o
-// truque.
+// Uma LISTA e não um canal nulo por store: não pedir o interesse diz a mesma
+// coisa sem exigir que quem lê saiba que um canal nulo num `select` nunca
+// dispara.
 func readerInterests(view View) []events.Interest {
 	interesses := []events.Interest{events.OfSession(view.SessionID)}
 	if view.Mestre == nil && view.Eu != nil {
@@ -196,10 +171,10 @@ func readerInterests(view View) []events.Interest {
 
 // sheetChanged diz se este evento mexeu na ficha de quem está olhando.
 //
-// São DOIS, e o segundo é o que a ALE-275 existiu para cobrir: a ficha salva
-// pela própria tela do jogador, e o dano que o mestre aplica pela fila — que
-// chega como vital de um combatente COM personagem atrás. O `Subscribe` já
-// garantiu que o evento é de quem interessa; aqui a pergunta é só que tipo é.
+// São DOIS: a ficha salva pela própria tela do jogador, e o dano que o mestre
+// aplica pela fila — que chega como vital de um combatente COM personagem
+// atrás. O `Subscribe` já garantiu que o evento é de quem interessa; aqui a
+// pergunta é só que tipo é.
 func sheetChanged(ev events.Event) bool {
 	switch e := ev.(type) {
 	case events.CharacterChanged:
@@ -211,34 +186,21 @@ func sheetChanged(ev events.Event) bool {
 }
 
 // announceSheetChange acorda a superfície "Minha ficha" quando o personagem
-// DESTE jogador mudou no banco (ALE-275).
+// DESTE jogador mudou no banco.
 //
-// # Por que um AVISO e não a ficha remendada
+// Um AVISO e não a ficha remendada: a ficha é sete painéis computados e ela NÃO
+// é região do stream (ver `View.MinhaFicha`). O que vai daqui é um SINAL de uma
+// linha; quem repede a ficha é o cliente, e ele repede na ABA em que a pessoa
+// está — coisa que o servidor não tem como saber daqui, porque a aba viaja na
+// query dos comandos DELA e este stream abriu antes de qualquer clique.
 //
-// A ficha é sete painéis computados e ela NÃO é região do stream (ver
-// `View.MinhaFicha`): pendurá-la em `TableRegions` faria cada tique
-// recomputá-la para descobrir que nada mudou, e o tabuleiro sozinho produz um
-// aviso por quadrado arrastado. O que vai daqui é um SINAL de uma linha; quem
-// repede a ficha é o cliente, e ele repede na ABA em que a pessoa está — coisa
-// que o servidor não tem como saber daqui, porque a aba viaja na query dos
-// comandos DELA e este stream abriu antes de qualquer clique.
+// Remendo de HTML é idempotente; remendo de sinal NÃO É. Mandar a versão em
+// todo quadro faria o cliente repedir a ficha sem parar — o gasto exato que
+// esta função existe para evitar. A memória do que já foi avisado é da CONEXÃO,
+// e não do servidor: duas abas da mesma pessoa merecem o aviso cada uma.
 //
-// # A cadência é a do puxão, e pela mesma razão
-//
-// Remendo de HTML é idempotente; remendo de sinal não é. Mandar a versão em
-// TODO quadro faria o cliente repedir a ficha sem parar — o gasto exato que
-// esta função existe para evitar. A memória do que já foi avisado é da
-// CONEXÃO, e não do servidor: duas abas da mesma pessoa merecem o aviso cada
-// uma.
-//
-// # Quem chama é o CANAL, não o relógio
-//
-// Ela só roda quando o `CharacterWatch` cutuca, e é por isso que a leitura do
-// banco aqui é barata: uma linha por MUDANÇA. A primeira versão desta função
-// lia a cada tique do stream — uma linha por segundo por jogador conectado,
-// quase sempre para descobrir que nada mudou —, e o dono cortou isso na
-// revisão: toda ação dentro de uma sessão já é um evento, e o servidor tem os
-// dois outros canais para provar que essa é a forma da casa.
+// Quem chama é o CANAL e não o relógio, e é por isso que a leitura do banco
+// aqui é barata: uma linha por MUDANÇA.
 func announceSheetChange(
 	s Scene, ctx context.Context, sse *datastar.ServerSentEventGenerator,
 	view View, jaAvisada string,
@@ -284,9 +246,9 @@ func sheetVersion(s Scene, ctx context.Context, view View) string {
 // causa dele seria tráfego que não desenha nada.
 //
 // Comparar o HTML RENDERIZADO e não o estado também é escolha: o
-// `refreshCharacterMaxes` devolve struct nova a cada leitura, então igualdade de
-// estado mandaria tudo sempre; e comparar campo a campo seria a lista que
-// envelhece — o defeito que o `cloneState` documenta ter tido com o `TurnsTaken`.
+// `refreshCharacterMaxes` devolve struct nova a cada leitura, então igualdade
+// de estado mandaria tudo sempre; e comparar campo a campo seria a lista que
+// envelhece.
 func writeTable(ctx context.Context, sse *datastar.ServerSentEventGenerator, view View, anterior digitais) digitais {
 	if anterior == nil {
 		anterior = digitais{}
@@ -315,7 +277,7 @@ func writeTable(ctx context.Context, sse *datastar.ServerSentEventGenerator, vie
 // conexão, porque cada uma chegou num momento e viu coisas diferentes.
 type digitais map[string][32]byte
 
-// tableRegion é um pedaço da cena que muda por conta própria (ALE-264).
+// tableRegion é um pedaço da cena que muda por conta própria.
 type tableRegion struct {
 	ID string
 	No templ.Component
@@ -342,20 +304,19 @@ func TableRegions(v View) []tableRegion {
 		// mapa, `TestATrackerChangeDoesNotPatchTheMap` acusou na hora — a peça
 		// debaixo do dedo do mestre seria trocada no meio do arrasto.
 		{"table-populate", tableMap(v)},
-		// O ACERVO é região pela MESMA razão, e ela foi medida (ALE-203): a lista
-		// de 147 lugares guardados era 236 dos 282 KB da região do tabuleiro, e
-		// ela muda duas vezes por sessão enquanto o mapa muda a cada peça que
-		// anda. Ver `tableCollectionPlaces`.
+		// O ACERVO é região pela MESMA razão: a lista de lugares guardados é a maior
+		// parte dos bytes da região do tabuleiro, e ela muda duas vezes por sessão
+		// enquanto o mapa muda a cada peça que anda. Ver `tableCollectionPlaces`.
 		{"table-archive", tableCollectionPlaces(v)},
 		{"table-session-config", tableConfigSession(v)},
 		{"table-tracker", tableTracker(v)},
 		{"table-commands", tableCommands(v)},
 	}
-	// O TRILHO DA FILA só existe no palco do mestre (ALE-269), e por isso ele
-	// entra na lista pela MESMA condição que o desenha. Mandar um remendo para
-	// um id que não está no documento é escrever no vazio — e a lista e a
-	// página não podem discordar sobre quais regiões existem, o que só se
-	// garante fazendo as duas perguntarem à mesma `view`.
+	// O TRILHO DA FILA só existe no palco do mestre, e por isso ele entra na lista
+	// pela MESMA condição que o desenha. Mandar um remendo para um id que não está
+	// no documento é escrever no vazio — e a lista e a página não podem discordar
+	// sobre quais regiões existem, o que só se garante fazendo as duas perguntarem
+	// à mesma `view`.
 	if v.Mestre != nil {
 		regioes = append(regioes, tableRegion{"table-tracker-rail", tableRailTracker(v)})
 		regioes = append(regioes, tableRegion{"table-npcs", tableListNpCs(v)})

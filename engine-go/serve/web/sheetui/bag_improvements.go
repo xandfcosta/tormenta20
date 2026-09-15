@@ -6,21 +6,11 @@ import (
 	"t20engine/domain/book"
 )
 
-// MELHORIA E MATERIAL: a regra de quem cabe em quem (ALE-272, fatia 7).
+// MELHORIA E MATERIAL: a regra de quem cabe em quem.
 //
-// # Esta regra era só da TELA, e agora é do servidor
-//
-// A compatibilidade entre uma melhoria e o item que a recebe vivia inteira no
-// TypeScript: o `familyFor` classificava o item e o diálogo filtrava as listas
-// pelo `appliesTo` do catálogo. O Go tinha o campo e não o lia — o próprio
-// `handleAddItem` registra a dívida em comentário: "overlay compatibility
-// (improvements/material vs the item family) is not yet validated here — the
-// frontend pre-validates it".
-//
-// Pré-validação de tela não é fronteira: um pedido montado à mão põe corda de
-// arco num escudo, e o servidor grava. É a mesma forma do `requiresCircle` dos
-// aprimoramentos, fechada na fatia 6, e ela morreria com a SPA — que é o
-// destino desta migração.
+// Ela é do SERVIDOR e não da tela, e a razão é a de sempre: pré-validação de
+// tela não é fronteira — um pedido montado à mão põe corda de arco num escudo, e
+// o servidor grava.
 
 // categoriesWithoutOverlap são as que nunca recebem melhoria nem material.
 //
@@ -38,9 +28,8 @@ func aceitaMelhoria(catalogo book.Item) bool {
 
 // itemFamily é a classificação grossa que o `appliesTo` do catálogo usa.
 //
-// Quatro famílias, e a última é o resto: arma, armadura, escudo e vestuário. É
-// a mesma tabela do `familyFor` do front, e ela é do CATÁLOGO — não do livro —,
-// então ela mora ao lado de quem a consome.
+// Quatro famílias, e a última é o resto: arma, armadura, escudo e vestuário. Ela
+// é do CATÁLOGO e não do livro, então mora ao lado de quem a consome.
 func itemFamily(catalogo book.Item) string {
 	switch {
 	case strings.HasPrefix(catalogo.Category, "weapon-"):

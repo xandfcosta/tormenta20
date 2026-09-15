@@ -1,27 +1,16 @@
 // Package events é o vocabulário do que acontece numa mesa, e o barramento que
-// o entrega dentro do processo (ALE-279).
+// o entrega dentro do processo.
 //
-// Ele nasceu de quatro mecanismos com a mesma forma e nenhum nome em comum: o
-// `SessionStore.Assinar`, o `BoardStore.Assinar`, o `CharacterWatch.Assinar` e o
-// `SSEHub.Emit`. Os três primeiros eram `chan struct{}` — diziam QUE algo mudou
-// e nunca O QUÊ —, e o `select` do stream da Mesa tinha um `case` para cada um,
-// só para juntar de volta o que estava separado por acidente de onde o estado
-// mora.
+// O evento diz O QUÊ mudou, e não só QUE mudou: um `chan struct{}` por store
+// obriga quem escuta a ter um `case` para cada um, só para juntar de volta o
+// que estava separado por acidente de onde o estado mora.
 //
 // # Isto não é event sourcing
 //
 // O banco continua sendo o estado. O evento diz o que aconteceu para quem
 // precisa reagir; ele não é a fonte da verdade, e não se reconstrói ficha a
-// partir dele. A razão está na ALE-278: as regras do livro são conta e não
-// fluxo, e o `engine/` não é tocado por nada disto.
-//
-// # Por que tudo aqui é em inglês, inclusive os verbos
-//
-// A regra da casa manda identificador novo em inglês, e aqui ela vale inteira.
-// O `CharacterWatch` teve os métodos em português com uma justificativa
-// registrada — o stream chamava os três `Assinar` lado a lado, e três verbos
-// para um ato só seria pior que o desvio. Este pacote SUBSTITUI os três, então
-// aquela justificativa deixou de existir junto com eles.
+// partir dele — as regras do livro são conta e não fluxo, e o `engine/` não é
+// tocado por nada disto.
 package events
 
 import (
@@ -71,19 +60,18 @@ func (i Interest) matches(t Target) bool {
 // queueSize é quantos eventos um ouvinte acumula antes de o barramento começar
 // a descartar.
 //
-// Dezesseis, e não um, que era o que os canais originais tinham. A diferença é
-// de NATUREZA: `chan struct{}` colapsa — dois "mudou" pendentes não dizem mais
-// que um —, e evento tipado não colapsa, porque "o turno passou" e "o combatente
-// saiu" são notícias diferentes. Um buffer de um perderia a segunda de todo par
-// que chega junto, e par junto é o caso comum: o mestre fere e passa o turno no
-// mesmo gesto.
+// Dezesseis, e não um: `chan struct{}` colapsa — dois "mudou" pendentes não
+// dizem mais que um —, e evento tipado NÃO colapsa, porque "o turno passou" e
+// "o combatente saiu" são notícias diferentes. Um buffer de um perderia a
+// segunda de todo par que chega junto, e par junto é o caso comum: o mestre
+// fere e passa o turno no mesmo gesto.
 const queueSize = 16
 
 // Bus delivers events to interested listeners, inside the process.
 //
-// O zero dele já funciona: não existe estado desligado para alguém tolerar, que
-// é a lição do gancho `characterChanged` da ALE-253 — campo que outro arquivo
-// precisa preencher é recurso que nasce metade desligado, e o Go segue verde.
+// O zero dele já funciona: não existe estado desligado para alguém tolerar.
+// Campo que outro arquivo precisa preencher é recurso que nasce metade
+// desligado, e o Go segue verde.
 type Bus struct {
 	mu        sync.Mutex
 	listeners []*listener
@@ -126,12 +114,11 @@ func (b *Bus) Subscribe(interests ...Interest) (Subscription, func()) {
 
 // Publish delivers the event to whoever cares about it.
 //
-// A entrega é NÃO BLOQUEANTE, como nos três canais que este barramento
-// substituiu: um leitor lento nunca pode segurar uma escrita. O que muda é o que
-// acontece com a fila cheia — ali o evento é DESCARTADO e contado, e o contrato
-// com quem escuta continua o de sempre: o evento é a notícia, a verdade está no
-// store. Quem perdeu um evento relê e continua correto; quem quiser confiar na
-// sequência olha `Dropped`.
+// A entrega é NÃO BLOQUEANTE: um leitor lento nunca pode segurar uma escrita.
+// Com a fila cheia o evento é DESCARTADO e contado, e o contrato com quem
+// escuta é: o evento é a notícia, a verdade está no store. Quem perdeu um
+// evento relê e continua correto; quem quiser confiar na sequência olha
+// `Dropped`.
 //
 // # Por que ela poderia ser chamada de dentro da trava de um store
 //
@@ -187,8 +174,8 @@ func (b *Bus) unsubscribe(target *listener) {
 // Listeners is how many are subscribed.
 //
 // Existe para o teste da BAIXA poder afirmar que o `unsubscribe` limpou o
-// registro — a mesma razão do `SessionStore.Ouvintes`. Sem ele o teste diria
-// "não sobrou ouvinte" porque não conseguiu olhar, que é o pior tipo de verde.
+// registro. Sem ele o teste diria "não sobrou ouvinte" porque não conseguiu
+// olhar, que é o pior tipo de verde.
 func (b *Bus) Listeners() int {
 	b.mu.Lock()
 	defer b.mu.Unlock()

@@ -7,7 +7,7 @@ import (
 
 // PresenceUser is one connected participant in a session room. Rosters dedupe by userId
 // (multiple browser tabs of the same user collapse to one chip; a user counts as GM if any
-// of their connections is a GM). Mirrors the frontend PresenceUser + the `presence` broadcast.
+// of their connections is a GM).
 type PresenceUser struct {
 	UserID int64  `json:"userId"`
 	Name   string `json:"name"`
@@ -23,7 +23,7 @@ type sessionRoster struct {
 
 // PresenceRegistry is the in-memory "who's online" tracker for session rooms. Pure
 // bookkeeping (the SSE hub owns the broadcast); rebuilt from live connections, so a
-// server restart starts empty and refills as clients reconnect. Mirrors PresenceRegistry.
+// server restart starts empty and refills as clients reconnect.
 type PresenceRegistry struct {
 	Mu sync.Mutex
 	// sessionID → (connID → presence)
@@ -141,12 +141,10 @@ func sortedInt64Keys(m map[int64]bool) []int64 {
 
 // Roster é quem está na sessão AGORA.
 //
-// Existe porque a cena do mestre em Datastar precisa marcar quem está com a aba
-// aberta, e ela lê o estado a cada desenho em vez de receber avisos — é a mesma
-// diferença de desenho que o `sse_hub.go` registra entre publicar-o-clone e
-// avisar-e-reler. O registro é do pacote e o campo é interno, então de fora
-// ninguém alcançaria; sem isto a cena marcaria "ninguém online" por não
-// conseguir olhar, que é o pior tipo de verde.
+// A cena do mestre lê o estado a cada desenho em vez de receber avisos — é a
+// diferença que o `sse_hub.go` registra entre publicar-o-clone e avisar-e-reler.
+// O campo é interno, então sem este método a cena marcaria "ninguém online" por
+// não conseguir olhar, que é o pior tipo de verde.
 func (p *PresenceRegistry) Roster(sessionID int64) []PresenceUser {
 	p.Mu.Lock()
 	defer p.Mu.Unlock()

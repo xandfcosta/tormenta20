@@ -13,16 +13,15 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// As rotas e os handlers do BESTIÁRIO — separados do `routes.go` na ALE-278.
+// As rotas e os handlers do BESTIÁRIO.
 //
-// O REGISTRO das trinta rotas continua num lugar só, no `routes.go`: é ele
-// que o `api` chama, e espalhá-lo faria a cena ter quatro portas de entrada.
-// O que mora aqui são os handlers desta ferramenta. O arquivo único tinha
-// 600 linhas e QUATRO famílias que não se chamam — arquivo é unidade de
+// O REGISTRO das trinta rotas continua num lugar só, no `routes.go`: é ele que o
+// `api` chama, e espalhá-lo faria a cena ter quatro portas de entrada. O que
+// mora aqui são os handlers desta ferramenta — arquivo é unidade de
 // RESPONSABILIDADE e de conflito de merge, não de leitura.
 
-// O endereço desta cena mora em `web/routes` desde a ALE-278: o buscador linka
-// para ela, e depois de virar pacote ele não alcança mais uma constante daqui.
+// O endereço desta cena mora em `web/routes` porque o buscador linka para ela, e
+// o critério de entrada de lá é estreito: só endereço citado de OUTRA cena.
 // O critério de entrada de lá é estreito — só endereço citado de OUTRA cena.
 
 // handleBestiary serve os DOIS casos numa rota, como a cena de campanhas: a

@@ -1,18 +1,9 @@
 // Package search é o casamento e a pontuação de busca do app.
 //
-// São 271 linhas puras — `strings`, `unicode` e a normalização de acento — que
-// moravam no `api` por história e não por dependência.
-//
-// # Por que virou pacote, e não ficou onde estava
-//
-// Quando o catálogo tipado saiu para o `book` (ALE-278), ele precisou do `Fold`
-// — que desacentua — e não podia importar o `api`. Escrevi uma CÓPIA de nove
-// linhas e escrevi errado: chamei a função que só faz `ToLower`. O efeito foi
-// `book.KeyOfName("Atuação")` devolver "atuação" com acento, e a classe deixar
-// de ligar a perícia que treina — um elo para um endereço que não existe, sem
-// erro, sem panic, sem log.
-//
-// Um pacote apaga a cópia E a razão de haver duas.
+// Pacote próprio e não uma função dentro de quem busca: o `Fold` — que
+// desacentua — é chamado de vários lados, e uma CÓPIA dele que só faça
+// `ToLower` devolve "atuação" com acento e desliga a chave que o nome vira. Um
+// elo para um endereço que não existe, sem erro, sem panic, sem log.
 package search
 
 import (
@@ -25,28 +16,22 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-// A REGRA DA BUSCA das listas (ALE-234).
-//
-// Ela vem do `fuzzy-filter.ts` da SPA, que embrulhava o
-// `@tanstack/match-sorter-utils`, e as duas propriedades dele são as que
-// importam para este app:
+// A REGRA DA BUSCA das listas, com as duas propriedades que importam a este app:
 //
 //   - INSENSÍVEL A ACENTO. O domínio é pt-BR e ninguém digita "Anão" com til
 //     numa busca apressada no meio da sessão.
-//   - TOLERANTE A TYPO. O comentário do arquivo original diz, com todas as
-//     letras, que essa é "a parte que de fato importava" — então descartá-la
-//     na migração seria regressão, não simplificação.
+//   - TOLERANTE A TYPO, que é a parte que de fato pega o erro de digitação.
 //
-// O que NÃO veio junto é o RANQUEAMENTO. O `rankItem` devolve uma pontuação, e
-// a SPA jogava fora: ela só lia `.passed`. Portar a pontuação seria portar
-// código que ninguém lê.
+// O `Matches` das listas não RANQUEIA: elas perguntam "passou?" e desenham em
+// ordem alfabética. Quem precisa de ordem de relevância é o buscador do livro,
+// mais abaixo.
 
-// combina é a transformação que dobra acento: decompõe em base + marca e joga
+// combining é a transformação que dobra acento: decompõe em base + marca e joga
 // as marcas fora. Construída UMA vez porque ela é cara de montar e não tem
 // estado.
 var combining = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 
-// dobra normaliza para comparação: minúsculas e sem acento.
+// Fold normaliza para comparação: minúsculas e sem acento.
 //
 // "Anão" e "anao" viram a mesma coisa, que é o ponto.
 func Fold(s string) string {
@@ -110,16 +95,11 @@ func isSubsequence(campo, alvo string) bool {
 	return false
 }
 
-// ── o RANQUEAMENTO, que só o buscador do livro precisa (ALE-264) ─────────────
+// ── o RANQUEAMENTO, que só o buscador do livro precisa ───────────────────────
 //
-// O comentário no alto deste arquivo diz que a pontuação do `rankItem` não veio
-// da SPA porque ninguém a lia: as listas só perguntam "passou?" e desenham na
-// ordem alfabética. Isso continua verdade para elas.
-//
-// O buscador do livro é outra pergunta. Ele varre 1.072 entradas — 80 criaturas
-// e 992 do acervo — e mostra SEIS por grupo. Sem ordem de relevância, "abal"
-// mostraria as seis primeiras em ordem alfabética entre as que casam, e
-// "Abalado" poderia não estar entre elas. Cortar sem ranquear é escolher ao
+// Ele varre o acervo inteiro e mostra SEIS por grupo. Sem ordem de relevância,
+// "abal" mostraria as seis primeiras em ordem alfabética entre as que casam, e
+// "Abalado" poderia não estar entre elas: cortar sem ranquear é escolher ao
 // acaso o que a pessoa vê.
 
 // pontuaBusca mede o quanto o NOME casa com o que foi digitado. Zero é não
@@ -133,9 +113,9 @@ func isSubsequence(campo, alvo string) bool {
 // com peso baixo — ver `Score`.
 //
 // VÁRIOS TERMOS são exigidos TODOS, e a nota é a média. Sem isso "bola fogo"
-// não acha "Bola de Fogo" — medido: o nome não começa com a frase, não a contém,
-// e pular o "de " estoura a folga do quase-igual. Digitar duas palavras de um
-// nome é como se procura o que se lembra pela metade.
+// não acha "Bola de Fogo": o nome não começa com a frase, não a contém, e pular
+// o "de " estoura a folga do quase-igual. Digitar duas palavras de um nome é
+// como se procura o que se lembra pela metade.
 func Score(nome, busca string) int {
 	alvo := Fold(strings.TrimSpace(busca))
 	if alvo == "" {
@@ -177,11 +157,9 @@ func scoreTerm(campo, termo string) int {
 // isNearlyEqual é a tolerância a typo APERTADA, e ela existe porque a frouxa não
 // serve aqui.
 //
-// O `isSubsequence` aceita letras faltando em qualquer lugar, e o comentário
-// dele já avisa o limite: "numa lista de seis campanhas isso faria a busca
-// devolver a lista inteira". Em 1.072 entradas é pior, e foi MEDIDO na tela —
-// "abal" trouxe "Capitão-Baluarte", "Hobgoblin Mago de Batalha" e "Suporte
-// Ambiental" empurrando resultados de verdade para fora do corte de seis.
+// O `isSubsequence` aceita letras faltando em qualquer lugar, e num acervo de
+// milhares isso empurra o resultado de verdade para fora do corte de seis:
+// "abal" traz "Capitão-Baluarte" e "Suporte Ambiental".
 //
 // A regra: as letras podem faltar, mas o buraco todo cabe em DUAS. "ncromante"
 // continua achando "Necromante" (uma letra pulada), e "abal" para de achar
@@ -204,14 +182,10 @@ func isNearlyEqual(campo, alvo string) bool {
 	return false
 }
 
-// noMatch conta quantas letras foram PULADAS até casar o alvo inteiro, e
-// devolve `noMatch` quando o alvo acaba sem casar.
-//
-// O sentinela é uma CONSTANTE, e isso é conserto de um vermelho: a primeira
-// versão devolvia `len(letras)+1`, que num resto de UMA letra é 2 — dentro da
-// folga. O efeito foi medido na sonda: "abal" casava com "Naja" (o último "a",
-// e nada depois), e a busca por nome devolvia 282 entradas em vez de uma.
-// Sentinela calculado a partir da entrada é sentinela que a entrada alcança.
+// noMatch é o "não casou" que o `gapUntil` devolve, e é uma CONSTANTE e não
+// `len(letras)+1`: num resto de UMA letra o calculado dá 2, que está DENTRO da
+// folga — "abal" passaria a casar com "Naja" pelo último "a". Sentinela
+// calculado a partir da entrada é sentinela que a entrada alcança.
 const noMatch = 1 << 30
 
 func gapUntil(letras, procurado []rune) int {
@@ -236,8 +210,7 @@ func gapUntil(letras, procurado []rune) int {
 //
 // É o que põe "Bola de Fogo" acima de "Explosão de Fogo Congelante" quando se
 // digita "fogo": as duas contêm o termo, mas numa ele abre a palavra. E é o que
-// tira "trabalho" de uma busca por "abal" — medido, era isso que fazia "abal"
-// devolver 296 entradas com "Abalado" perdido no meio.
+// tira "trabalho" de uma busca por "abal".
 //
 // Por LIMITE e não por `strings.Fields`: no corpo de uma regra a palavra vem
 // colada em pontuação ("(abalado", "abalado,"), e cortar só no espaço deixaria
@@ -265,9 +238,9 @@ func startsAWord(campo, alvo string) bool {
 // magia é um acerto de verdade, e ainda assim vale menos que qualquer casamento
 // de nome.
 //
-// TRÊS letras para entrar, e o número é medido: com duas, "ab" aparece no corpo
-// de centenas de regras. O nome continua buscável desde a primeira letra — é lá
-// que a pessoa sabe o que procura.
+// TRÊS letras para entrar: com duas, "ab" aparece no corpo de centenas de
+// regras. O nome continua buscável desde a primeira letra — é lá que a pessoa
+// sabe o que procura.
 //
 // Todos os termos, e cada um abrindo uma PALAVRA. "Contém" cru aqui é o que
 // fazia "abal" achar "trabalho".

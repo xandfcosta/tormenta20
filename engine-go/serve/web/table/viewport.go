@@ -2,31 +2,22 @@ package table
 
 import "fmt"
 
-// A JANELA sobre um plano INFINITO (ALE-203, decisão do dono).
+// A JANELA sobre um plano INFINITO.
 //
-// O tabuleiro deixou de ter moldura. O servidor manda o que EXISTE, em
-// Coordinate absoluta do plano, e quem decide o que aparece é a janela — que
-// mora no NAVEGADOR, ao lado do zoom, e nunca vai ao servidor.
+// O servidor manda o que EXISTE, em coordenada absoluta do plano, e quem decide
+// o que aparece é a janela — que mora no NAVEGADOR, ao lado do zoom, e nunca vai
+// ao servidor.
 //
-// # O que a moldura custava, medido
+// Não há moldura, e ela não volta: moldura CRESCE. Pintar perto da borda
+// expandia o retângulo e mexia na origem, então o mesmo ponto da tela virava
+// outro quadrado entre dois cliques. E ela era uma caixa — fora dela não havia
+// onde clicar, e pintar longe do grupo exigia antes fazer a moldura crescer até
+// lá.
 //
-// Ela CRESCIA. Pintar perto da borda expandia o retângulo e mexia em `X0`, então
-// o mesmo ponto da tela virava outro quadrado entre dois cliques — medido na
-// bancada, `X0` foi de -11 para -12 e tudo andou um quadrado. Era uma das duas
-// causas do "apaguei e não apagou" que o dono relatou.
-//
-// E ela era uma caixa: fora dela não havia onde clicar, então pintar longe do
-// grupo exigia primeiro que a moldura crescesse até lá.
-//
-// # Quem recorta é o NAVEGADOR (decisão do dono)
-//
-// O servidor manda tudo o que existe — o teto já é de 200 peças — e o navegador
-// pinta só o que aparece. A alternativa (o cliente informar a janela e o servidor
-// recortar) faria arrastar a vista virar conversa com a rede, e faria o stream
-// depender de QUEM olha: cada pessoa receberia um recorte diferente do mesmo
-// tabuleiro.
-//
-// O preço aceito é o HTML carregar o mapa inteiro, que é o que ele já fazia.
+// Quem recorta é o NAVEGADOR. A alternativa — o cliente informar a janela e o
+// servidor recortar — faria arrastar a vista virar conversa com a rede, e faria
+// o stream depender de QUEM olha: cada pessoa receberia um recorte diferente do
+// mesmo tabuleiro. O preço aceito é o HTML carregar o mapa inteiro.
 
 // A janela é medida em PIXELS e não em quadrados, e a razão é o arrasto: o dedo
 // anda em pixels, e converter a cada passo daria um degrau visível quando o
@@ -50,13 +41,9 @@ const sceneStyle = "`--quadrado: ${$square}px; --vista-x: ${$viewport_x}px; --vi
 
 // oQuadradoClicado traduz o PONTO do clique em quadrado do plano.
 //
-// UM helper e não uma cópia por camada, e isto INVERTE a decisão anterior. O
-// comentário que estava no `clickedPointMarking` dizia que extrair a conta
-// "faria as duas rotas mudarem juntas no dia em que uma delas precisar do canto e
-// não do centro" — e o dia em que TODAS mudaram juntas chegou primeiro: sem
-// moldura, a conta ganhou a janela dentro dela, e havia cinco cópias para
-// atualizar. Uma que ficasse para trás clicaria no quadrado errado sem erro
-// nenhum.
+// UM helper e não uma cópia por camada: a conta carrega a janela dentro dela, e
+// eram cinco cópias para manter em dia. Uma que ficasse para trás clicaria no
+// quadrado errado sem erro nenhum.
 //
 // A conta é do CLIENTE porque ela é sobre PIXELS: o servidor não sabe o zoom nem
 // onde cada pessoa está olhando. O que ela decide continua sendo do servidor — o
@@ -97,10 +84,8 @@ func planPoint(pixelX, pixelY string) (x, y string) {
 
 // ── ARRASTAR A VISTA ─────────────────────────────────────────────────────────
 //
-// A rolagem nativa saiu com a moldura: ela precisava de uma caixa com tamanho
-// para ter até onde rolar, e num plano infinito não existe fim. O que entra é o
-// arrasto, que é o gesto que a issue pedia desde o começo ("movimento livre") e
-// que o dono cobrou.
+// Sem rolagem nativa: ela precisa de uma caixa com tamanho para ter até onde
+// rolar, e num plano infinito não existe fim.
 
 // ViewTool é o valor do sinal quando o arrasto move a JANELA.
 const ViewTool = "vista"
@@ -120,12 +105,12 @@ const followsView = "$dragging_viewport && ($viewport_x = $viewport_start_x - ev
 
 const dropView = "$dragging_viewport = false"
 
-// wheelMovesViewport: a roda ROLA o plano, e `Ctrl+roda` amplia.
+// wheelMovesViewport: a roda ROLA o plano, e `Ctrl+roda` amplia (convenção de
+// mapa).
 //
-// É a mesma divisão de antes, quando havia rolagem nativa — a roda percorria o
-// mapa e o `Ctrl` ampliava (convenção de mapa). O que muda é que agora a roda
-// escreve na janela em vez de o navegador rolar uma caixa, e por isso ela precisa
-// do `preventDefault`: sem ele, a página inteira rolaria atrás do tabuleiro.
+// A roda escreve na janela em vez de o navegador rolar uma caixa, e por isso ela
+// precisa do `preventDefault`: sem ele, a página inteira rolaria atrás do
+// tabuleiro.
 var wheelMovesViewport = fmt.Sprintf(
 	"evt.preventDefault(); if (evt.ctrlKey) { const janela = evt.currentTarget.getBoundingClientRect(); %s } "+
 		"else { $%s += evt.deltaX; $%s += evt.deltaY }",
@@ -135,9 +120,8 @@ var wheelMovesViewport = fmt.Sprintf(
 
 // centerViewport põe um quadrado do plano no meio da tela.
 //
-// Ela substitui o `scrollTo` do centralizar: sem caixa que rola, o que se move é
-// a janela. E ela é PURA aritmética no cliente — nada vai ao servidor, como todo
-// o resto do enquadramento.
+// Sem caixa que rola, o que se move é a janela — e ela é PURA aritmética no
+// cliente, como todo o resto do enquadramento.
 func centerViewport(x, y int) string {
 	return fmt.Sprintf(
 		"const cena = document.getElementById(%q); "+
@@ -146,21 +130,16 @@ func centerViewport(x, y int) string {
 		sceneId, x, y)
 }
 
-// sceneId é como o centralizar acha a janela para medir.
-//
-// A CENA e não o palco: o palco deixou de existir como caixa que rola, e quem
-// tem o tamanho da janela agora é a caixa que ancora os overlays.
+// sceneId é como o centralizar acha a janela para medir: a CENA, que é a caixa
+// que ancora os overlays e tem o tamanho da janela.
 const sceneId = "board-scene"
 
-// viewportFollowsFocus devolve o que a ROLAGEM NATIVA fazia de graça, e sem ele
-// esta fatia teria embutido uma regressão de teclado.
+// viewportFollowsFocus devolve o que a ROLAGEM NATIVA fazia de graça.
 //
-// MEDIDO, e vermelho antes de escrito: com a peça em (-2039,-1268) e a janela em
-// (92,97,1756×807), um `focus()` na peça deixava tudo exatamente onde estava —
-// `dentro: false`, foco na peça. O navegador TENTA trazer o elemento focado para
-// a vista, mas ele rola um ANCESTRAL ROLÁVEL, e não existe mais nenhum: a cena
-// recorta com `overflow: hidden` e a página não rola. Quem navega por teclado
-// podia focar uma peça que nunca ia conseguir ver.
+// O navegador TENTA trazer o elemento focado para a vista, mas ele rola um
+// ANCESTRAL ROLÁVEL, e aqui não existe nenhum: a cena recorta com
+// `overflow: hidden` e a página não rola. Sem isto, quem navega por teclado foca
+// uma peça que nunca vai conseguir ver.
 //
 // A conta é a do "rolar o mínimo": só o quanto o alvo transborda de cada lado. O
 // alvo INTEIRAMENTE dentro não move nada, e é por isso que o clique numa camada
@@ -174,19 +153,15 @@ const viewportFollowsFocus = "const janela = evt.currentTarget.getBoundingClient
 	"$viewport_x += Math.max(0, alvo.right - janela.right) - Math.max(0, janela.left - alvo.left), " +
 	"$viewport_y += Math.max(0, alvo.bottom - janela.bottom) - Math.max(0, janela.top - alvo.top))"
 
-// AS SETAS NÃO PERCORREM O PLANO, e isto é medido e não escolhido — é a mesma
-// história do Escape que o trilho registra.
+// AS SETAS NÃO PERCORREM O PLANO, e isto é medido e não escolhido.
 //
-// Elas já têm dono: o `scene.js` mapeia as quatro para "mover o foco" na gramática
-// espacial do teclado e chama `preventDefault` + `stopPropagation` no
-// `document`. O evento **nunca chega à janela**, que é onde o `__window` escuta.
-// Provado com controle no mesmo teclado: um `F2` chega a um `addEventListener`
-// cru na janela, um `ArrowRight` não chega — e o `-` do zoom chega, que é o
-// controle positivo do próprio canal.
+// Elas já têm dono: o `scene.js` mapeia as quatro para "mover o foco" na
+// gramática espacial do teclado e chama `preventDefault` + `stopPropagation` no
+// `document`. O evento **nunca chega à janela**, que é onde o `__window` escuta
+// — e o `-` do zoom chega, que é o controle positivo do próprio canal.
 //
-// Então quem percorre o plano pelo teclado é o FOCO, com o `viewportFollowsFocus`
-// acima: a gramática move o foco entre as peças, e a janela vai atrás. Escrever
-// um ramo de seta aqui seria uma promessa que a tela não cumpre.
+// Quem percorre o plano pelo teclado é o FOCO, com o `viewportFollowsFocus`
+// acima. Escrever um ramo de seta aqui seria uma promessa que a tela não cumpre.
 
 // viewportSignals são o estado do enquadramento no navegador.
 //

@@ -12,11 +12,9 @@ package engine
 // armadura de couro, couro batido ou gibão de peles, a sua escolha" a todo
 // mundo. Só a brunea e o escudo são condicionados.
 //
-// A ARMADURA É UMA ESCOLHA, e aqui a versão em TypeScript que este arquivo
-// substitui divergia do livro: `class-starting-kits.ts` trocava as três leves
-// pela brunea assim que a classe usava armaduras pesadas. O livro diz "em vez
-// disso PODE começar com uma brunea" — quem usa pesadas escolhe entre QUATRO, e
-// não recebe uma. Um guerreiro que quisesse gibão de peles não tinha como.
+// A ARMADURA É UMA ESCOLHA: o livro diz "em vez disso PODE começar com uma
+// brunea", então quem usa pesadas escolhe entre QUATRO e não recebe uma —
+// trocar as três leves pela brunea tiraria do guerreiro o gibão de peles.
 
 // Os itens do kit são IDs do catálogo (`catalog/data/items.json`) e não nomes:
 // o item nasce na Mochila ligado à sua linha do livro, com os espaços e o preço

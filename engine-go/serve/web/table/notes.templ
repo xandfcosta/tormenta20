@@ -6,26 +6,23 @@ import (
 	"t20engine/domain/markdown"
 )
 
-// AS NOTAS DA SESSÃO (ALE-269, superfície 5), portadas da `session-notes.tsx`.
-//
-// O que aconteceu, XP, tesouro — em markdown, com o texto de um lado e o
-// resultado do outro. Elas NÃO têm botão de salvar: o mestre escreve no meio do
-// combate e não vai lembrar de confirmar. Salvam sozinhas depois da pausa.
+// AS NOTAS DA SESSÃO: o que aconteceu, XP, tesouro — em markdown, com o texto de
+// um lado e o resultado do outro. Elas NÃO têm botão de salvar: o mestre escreve
+// no meio do combate e não vai lembrar de confirmar; salvam sozinhas depois da
+// pausa.
 //
 // ELAS ABREM COLUNA E EMPURRAM O MAPA, em vez de cobri-lo — é a única exceção
-// aos overlays da cena, e a razão está escrita na SPA: escreve-se enquanto se
-// narra OLHANDO o tabuleiro, e um painel por cima do mapa não serve a esse
-// gesto. Abaixo de 1024 não há espaço para duas, e elas viram gaveta como as
-// outras consultas.
+// aos overlays da cena: escreve-se enquanto se narra OLHANDO o tabuleiro, e um
+// painel por cima do mapa não serve a esse gesto. Abaixo de 1024 não há espaço
+// para duas, e elas viram gaveta como as outras consultas.
 //
 // ── A ARMADILHA QUE GOVERNA ESTE ARQUIVO ────────────────────────────────────
 //
 // A CAIXA DE TEXTO NÃO É REGIÃO, e não pode ser. A cena é remendada a cada
 // mudança de qualquer um na mesa — um jogador registrando iniciativa, um turno
 // virando —, e um `<textarea>` remendado no meio de uma frase apaga o que o
-// mestre está escrevendo. É a mesma lição do campo de título da sessão, um
-// degrau acima: entrada em curso é do teclado de quem digita, nunca estado da
-// aplicação.
+// mestre está escrevendo. Entrada em curso é do teclado de quem digita, nunca
+// estado da aplicação.
 //
 // Por isso o desenho aqui é assimétrico de propósito:
 //
@@ -35,20 +32,18 @@ import (
 //   - a PRÉVIA é região (`mesa-notas-previa`) e é remendada pela resposta do
 //     próprio salvamento.
 //
-// E as notas NÃO entram no `TableRegions`: elas são de um leitor só — o mestre
-// — e nada fora desta aba as muda. Pendurá-las no stream faria o batimento
-// disputar com o teclado dele por nada.
-// A DIVISA entre o mapa e as notas (ALE-218).
+// E as notas NÃO entram no `TableRegions`: elas são de um leitor só — o mestre —
+// e nada fora desta aba as muda.
+
+// A DIVISA entre o mapa e as notas.
 //
-// Ela existe porque a largura era fixa em 40% do palco (ALE-198), e 40% é a
-// resposta certa para uma pergunta que muda: escrever uma cena longa quer mais
-// coluna, e conduzir um combate quer mais mapa.
+// Ela existe porque largura fixa é a resposta certa para uma pergunta que muda:
+// escrever uma cena longa quer mais coluna, e conduzir um combate quer mais mapa.
 //
 // `role="separator"` com `tabindex` e `aria-valuenow` é o padrão de divisa
-// redimensionável, e o teclado NÃO É ENFEITE aqui: a regra da casa diz que
-// **gesto nunca é o único caminho**, e uma divisa que só responde a arrasto é
-// uma preferência que quem não usa ponteiro não tem. As setas andam 32px e o
-// `Home` devolve ao padrão.
+// redimensionável, e o teclado NÃO É ENFEITE aqui: gesto nunca é o único
+// caminho, e uma divisa que só responde a arrasto é uma preferência que quem não
+// usa ponteiro não tem. As setas andam 32px e o `Home` devolve ao padrão.
 //
 // Só a partir de `lg`: abaixo disso a coluna é uma gaveta que cobre a tela
 // inteira, e não há divisa entre duas coisas que não convivem.
@@ -104,13 +99,11 @@ templ tableNotes(v View) {
 
 // O CORPO: a caixa e a prévia, lado a lado quando há largura.
 //
-// O "lado a lado" aqui EMPILHA numa coluna estreita em vez de virar "Escrever",
-// que é o que a SPA faz. A diferença é de mecanismo e não de gosto: lá a decisão
-// vem de um observador que mede a REGIÃO, e o Go não mede caixa (a mesma razão
-// que deixou o `palcoBaixo` para o CSS na ALE-265). Empilhar mantém a promessa
-// do modo — ver o que se escreve e o que sai, ao mesmo tempo — sem que a faixa
-// precise anunciar um modo diferente do que está acontecendo. Quem decide onde
-// cabem duas colunas é a consulta de contêiner na folha, que é quem sabe.
+// O "lado a lado" EMPILHA numa coluna estreita em vez de virar "Escrever": quem
+// decide onde cabem duas colunas é a consulta de contêiner na folha, porque o Go
+// não mede caixa. Empilhar mantém a promessa do modo — ver o que se escreve e o
+// que sai, ao mesmo tempo — sem a faixa anunciar um modo diferente do que está
+// acontecendo.
 templ notesBody(v View) {
 	<div
 		data-class="{'notes-split': $notes_mode === 'duplo'}"
@@ -272,12 +265,10 @@ templ noteSpans(spans []markdown.Span) {
 	}
 }
 
-// A FAIXA DE MODOS (ALE-139): escrever, ler, ou os dois.
+// A FAIXA DE MODOS: escrever, ler, ou os dois.
 //
-// A escolha GRUDA no `localStorage`, com a MESMA chave e os MESMOS valores da
-// SPA (`t20:notas-view`) — é preferência de trabalho, não estado da sessão, e
-// enquanto as duas telas existirem o mestre não deve reescolher ao trocar de
-// uma para a outra.
+// A escolha GRUDA no `localStorage` (`t20:notas-view`) — é preferência de
+// trabalho, não estado da sessão.
 //
 // `fieldset` e não `div role="group"`: o elemento nativo já É o grupo. Ele
 // precisa de `min-w-0` porque o padrão do navegador é `min-content` e ele se
@@ -288,39 +279,30 @@ templ modesRange() {
 		@notesMode("ler", "Ler")
 		@notesMode("duplo", "Lado a lado")
 		// EMPILHADO é um jeito de mostrar OS DOIS, e por isso ele fica na mesma
-		// fileira em vez de virar um segundo eixo (ALE-218). "Onde as duas
-		// metades ficam" só significa alguma coisa quando as duas estão à
-		// mostra — em "Escrever" ou "Ler" há um painel só —, então a gramática
-		// é UM eixo com quatro valores, e não dois eixos com seis botões.
+		// fileira em vez de virar um segundo eixo: "onde as duas metades ficam"
+		// só significa alguma coisa quando as duas estão à mostra, então a
+		// gramática é UM eixo com quatro valores, e não dois eixos com seis
+		// botões.
 		//
-		// Ele custa zero CSS: `grid-template-columns: 1fr` já é o padrão do
-		// arranjo, e a classe `notes-split` que reparte só entra no modo
-		// `duplo`. O que ele muda é o arranjo deixar de ser resposta AUTOMÁTICA
-		// à largura e passar a ser escolha — a 1024 a coluna já empilha sozinha.
+		// O que ele muda é o arranjo deixar de ser resposta AUTOMÁTICA à largura
+		// e passar a ser escolha — a 1024 a coluna já empilha sozinha.
 		@notesMode("empilhado", "Empilhado")
 	</fieldset>
 }
 
-// O DESTAQUE sai do `aria-pressed` e não de um `data-class` paralelo (ALE-218).
+// O DESTAQUE sai do `aria-pressed` e não de um `data-class` paralelo: eram duas
+// fontes para o mesmo estado, e `hover:bg-accent` ganha de um `bg-primary` posto
+// por classe — o modo escolhido PERDIA o dourado enquanto o ponteiro estivesse
+// em cima dele, ou seja, a tela dizia "nenhum escolhido" no instante exato em
+// que a pessoa vai escolher. Com o estilo pendurado na variante `aria-pressed:`,
+// o estado acessível é a ÚNICA fonte.
 //
-// Eram duas fontes para o mesmo estado, e elas discordavam: `hover:bg-accent`
-// ganha de um `bg-primary` posto por classe, então **o modo escolhido perdia o
-// dourado enquanto o ponteiro estivesse em cima dele** — medido, `oklch(0.8
-// 0.11 85)` virando `oklch(0.27 0.016 300)` no hover. A tela dizia "nenhum
-// escolhido" no instante exato em que a pessoa vai escolher.
-//
-// Com o estilo pendurado na variante `aria-pressed:`, o estado acessível é a
-// ÚNICA fonte — é o mesmo desenho do marcador do trilho, que pinta por
-// `aria-selected:`.
-// O SEGUNDO EIXO: encostada ou flutuando (ALE-218).
-//
-// Ele é um alternador e não um par de botões porque são dois estados, e porque
-// ele vale para os QUATRO modos — o que se mostra e onde o painel vive são
-// perguntas independentes.
+// O SEGUNDO EIXO: encostada ou flutuando. Ele é um alternador e não um par de
+// botões porque são dois estados, e porque vale para os QUATRO modos — o que se
+// mostra e onde o painel vive são perguntas independentes.
 //
 // O `title` diz o que o clique FAZ e não o que o estado é: o ícone sozinho não
-// conta a diferença entre "empurra o mapa" e "flutua sobre ele", e essa é toda a
-// escolha.
+// conta a diferença entre "empurra o mapa" e "flutua sobre ele".
 templ floatToggle() {
 	<button
 		type="button"
@@ -345,18 +327,16 @@ templ notesMode(valor, rotulo string) {
 
 // SEM BOTÃO DE SALVAR, o estado do texto tem de estar VISÍVEL o tempo todo.
 //
-// Três estados e não dois, e a distinção importa: enquanto a pausa não chega o
-// texto está "Não salvo", e dizer "Salvando…" ali seria mentira. Quem separa os
-// dois é o `data-indicator`, que só é verdadeiro com o pedido no ar.
+// Três estados e não dois: enquanto a pausa não chega o texto está "Não salvo",
+// e dizer "Salvando…" ali seria mentira. Quem separa os dois é o
+// `data-indicator`, que só é verdadeiro com o pedido no ar.
 //
 // `$notes_saved` é escrito pelo SERVIDOR quando a gravação dá certo — é a
 // resposta que afirma "isto está no banco", e não o cliente supondo.
 //
-// O ERRO é TEXTO e não só cor (ALE-218). `$notes_error` existia desde a
-// ALE-269 e só pintava a faixa de vermelho: o mestre via que algo deu errado e
-// não tinha onde ler o quê, com a frase do servidor chegando e morrendo num
-// sinal. A janela bloqueada pelo navegador entrou pelo mesmo canal, e foi ela
-// que mostrou o buraco — um clique que não abre nada precisa dizer por quê.
+// O ERRO é TEXTO e não só cor: faixa vermelha sem frase deixa o mestre vendo que
+// algo deu errado sem ter onde ler o quê — e a janela bloqueada pelo navegador
+// chega por este mesmo canal.
 templ autosaveState() {
 	<span
 		aria-live="polite"
@@ -383,7 +363,7 @@ templ notesButton(v View) {
 		</button>
 }
 
-// O BOTÃO QUE DESTACA as notas numa janela (ALE-218).
+// O BOTÃO QUE DESTACA as notas numa janela.
 //
 // Ele fica ao lado do alternador de flutuar porque responde à mesma pergunta —
 // ONDE o painel vive —, e é uma AÇÃO e não um estado: depois do clique quem

@@ -7,25 +7,20 @@ import (
 	"t20engine/domain/catalog"
 )
 
-// O REGISTRO DE ATIVAÇÕES: o que um poder custa para ser usado (ALE-272, fatia
-// 8; movido para cá na ALE-278).
+// O REGISTRO DE ATIVAÇÕES: o que um poder custa para ser usado.
 //
 // A tabela vem do `catalog/data/activations.json` — 411 entradas — e é o que
-// responde "este poder se ativa, e com quê". Ela morava na cena da ficha, que
-// lia `catalog.Resource("activations")` DIRETO: é a mesma forma que o `items.go`
-// da forja, o improviso do trilho do mestre e o `race-defs` de personagens
-// tinham, e a regra que aqueles achados deixaram vale aqui igual — **o destino
-// de uma função é a DEPENDÊNCIA dela.** Quem lê o catálogo é do livro.
+// responde "este poder se ativa, e com quê". Ela mora aqui e não na cena porque
+// **o destino de uma função é a DEPENDÊNCIA dela**: quem lê o catálogo é do
+// livro.
 //
-// O que NÃO veio junto é a metade que a cena decide: se o botão está ativo, que
+// O que NÃO mora aqui é a metade que a cena decide: se o botão está ativo, que
 // crachá o limite desenha, e a frase da recusa. Aquilo lê esta tabela e a ficha,
 // e a voz é da tela.
 
-// Activation é a entrada do registro de ativações.
-//
-// Ela cresceu nesta fatia: a fatia 5 lia id, nome, tipo, PM e página para achar
-// as posturas; a lista de jogo precisa também da AÇÃO que o uso consome, do
-// limite, da flag que o gatilho exige e da escala da postura.
+// Activation é a entrada do registro de ativações: id, nome, tipo, PM e página,
+// mais a AÇÃO que o uso consome, o limite, a flag que o gatilho exige e a escala
+// da postura.
 type Activation struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
@@ -33,11 +28,9 @@ type Activation struct {
 	Action string `json:"action"`
 	// PmCost é CRU porque o catálogo escreve duas coisas nele: um número, ou a
 	// palavra "variavel" — 33 das 411 ativações são variáveis. Tipar como `int`
-	// não estoura: o `json.Unmarshal` de uma lista guarda o erro de tipo daquele
-	// campo, segue em frente, e deixa ZERO no lugar. Medido na bancada: a
-	// Paródia do bardo aparecia como "REAÇÃO · 0 PM" com o botão ATIVO, e usá-la
-	// não cobrava nada — o oposto do que a regra manda, que é a ficha não decidir
-	// um custo que a mesa negocia.
+	// NÃO estoura: o `json.Unmarshal` de uma lista guarda o erro de tipo daquele
+	// campo, segue em frente e deixa ZERO no lugar. O poder de custo variável
+	// apareceria como "0 PM" com o botão ATIVO, e usá-lo não cobraria nada.
 	PmCost json.RawMessage `json:"pmCost"`
 	// Uses é `null`, "cena", "dia" ou um número — por isso ele é cru: os três
 	// significam coisas diferentes e só dois são cobrados.

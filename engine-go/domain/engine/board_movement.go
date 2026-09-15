@@ -45,24 +45,29 @@ type MoveCost struct {
 	// Malformed separa o caminho que NÃO É UM CAMINHO — um passo que pulou casa
 	// ou repetiu a mesma — do caminho que é apenas CARO.
 	//
-	// A diferença virou regra na ALE-203, quando o caminho que estoura o
-	// deslocamento passou a ser ACEITO e desenhado com o excesso em vermelho:
-	// quem propõe precisa recusar um e guardar o outro. Sem este campo, a única
-	// forma de distinguir seria reparar que o `Squares` sai ZERO no caminho
-	// malformado — verdade por acidente do `return` de emergência abaixo, e
-	// exatamente o tipo de inferência que se quebra em silêncio quando alguém
-	// resolve devolver o custo parcial.
+	// O caminho que estoura o deslocamento é ACEITO e desenhado com o excesso em
+	// vermelho, então quem propõe precisa recusar um e guardar o outro. Sem este
+	// campo, a única forma de distinguir seria reparar que o `Squares` sai ZERO
+	// no caminho malformado — verdade por acidente do `return` de emergência
+	// abaixo, e exatamente o tipo de inferência que se quebra em silêncio quando
+	// alguém resolve devolver o custo parcial.
 	Malformed bool `json:"malformed,omitempty"`
 	// Diagonals e Difficult contam QUANTOS passos dobraram, e por qual das duas
-	// regras. Existem para a tela poder NOMEAR a regra que produziu o número
-	// (ALE-190) em vez de refazer a conta em JavaScript: o texto sai do mesmo
-	// laço que cobrou o caminho, então ele não tem como divergir do motor — que
-	// é a classe de defeito que a ALE-104 matou.
+	// regras. Existem para a tela poder NOMEAR a regra que produziu o número em
+	// vez de refazer a conta em JavaScript: o texto sai do mesmo laço que cobrou
+	// o caminho, então ele não tem como divergir do motor.
 	//
 	// Um passo pode entrar nos dois (diagonal EM terreno difícil custa 4), e
 	// por isso são dois contadores e não uma soma.
 	Diagonals int `json:"diagonals"`
 	Difficult int `json:"difficult"`
+}
+
+// stepDoubling diz por quais regras UM passo dobrou. Devolvido junto do custo
+// para que quem soma o caminho possa contar as causas sem repetir a decisão.
+type stepDoubling struct {
+	diagonal  bool
+	difficult bool
 }
 
 // stepCost devolve o custo de UM passo entre quadrados adjacentes, em quadrados.
@@ -77,13 +82,6 @@ type MoveCost struct {
 // frases separadas e NUNCA as compõe; a leitura desta casa é multiplicativa, ou
 // seja, uma diagonal em terreno difícil custa 4 quadrados (6m). É decisão de
 // mesa registrada, não texto do livro.
-// stepDoubling diz por quais regras UM passo dobrou. Devolvido junto do custo
-// para que quem soma o caminho possa contar as causas sem repetir a decisão.
-type stepDoubling struct {
-	diagonal  bool
-	difficult bool
-}
-
 func stepCost(from, to Square, terrain MoveTerrain) (int, stepDoubling, error) {
 	dx, dy := abs(to.X-from.X), abs(to.Y-from.Y)
 	if dx > 1 || dy > 1 || (dx == 0 && dy == 0) {
@@ -196,29 +194,13 @@ func abs(v int) int {
 	return v
 }
 
-// Aqui moravam o `ReachableSquares` e o `ReachableInBands` — as duas perguntas
-// "até onde dá para andar" que o `ReachFromStops` absorveu (ALE-289).
-//
-// A primeira devolvia UMA faixa a partir de um ponto; a segunda partia o alcance
-// nas duas ações de movimento do turno (p233). O `ReachFromStops` faz as duas
-// coisas a partir do CAMINHO já percorrido, que é o que as paradas da ALE-266
-// exigiram: as faixas encolhem enquanto a pessoa empilha paradas, e o gasto sai
-// da mesma chamada que as casas — a razão inteira de ele existir é que pedir as
-// duas coisas em duas chamadas já tinha produzido dois números para a mesma
-// regra neste repositório.
-//
-// As duas ficaram no ar com ZERO chamadores de produção. O que as prendia mudou
-// de porta e continua aqui: o LOSANGO da diagonal dobrada, o orçamento negativo
-// que não acende nada, o terreno difícil que encolhe o alcance, e as duas faixas
-// disjuntas. Esta última ganhou de quebra o que não tinha — os números escritos
-// à MÃO a partir da regra, em vez de uma segunda chamada à implementação.
 // costToEachSquare é o Dijkstra cru: cada casa alcançável e o que ela CUSTOU.
 //
-// Separado da função que devolve só as casas porque o custo por casa é o que permite pintar
-// o alcance em FAIXAS (ALE-203): a mesma busca responde "até onde vou com uma
-// ação de movimento" e "até onde vou gastando a ação padrão também", e rodá-la
-// duas vezes para saber as duas coisas seria pagar o dobro por metade da
-// resposta — e abriria a porta para as duas contas divergirem.
+// Devolve o custo POR CASA, e não só as casas, porque é ele que permite pintar o
+// alcance em FAIXAS: a mesma busca responde "até onde vou com uma ação de
+// movimento" e "até onde vou gastando a ação padrão também", e rodá-la duas
+// vezes para saber as duas coisas seria pagar o dobro por metade da resposta — e
+// abriria a porta para as duas contas divergirem.
 func costToEachSquare(from Square, budget int, terrain MoveTerrain) map[Square]int {
 	cost := map[Square]int{from: 0}
 	if budget <= 0 {
@@ -288,11 +270,11 @@ func sortSquares(list []Square) {
 	})
 }
 
-// PathBetween desenha por onde a peça anda de um quadrado a outro (ALE-264).
+// PathBetween desenha por onde a peça anda de um quadrado a outro.
 //
 // Isto é GEOMETRIA e não regra: quem COBRA o caminho é o `PathCost`, logo acima.
-// A distinção é a mesma da ALE-104 — uma segunda implementação da regra da
-// diagonal seria uma segunda verdade sobre o livro.
+// Uma segunda implementação da regra da diagonal aqui seria uma segunda verdade
+// sobre o livro.
 //
 // POR QUE NÃO EXISTE BUSCA DE CAMINHO: com a diagonal custando o dobro (T20
 // p238), um passo diagonal (2) vale exatamente dois passos ortogonais (1+1).
@@ -303,10 +285,9 @@ func sortSquares(list []Square) {
 // A DIAGONAL VEM PRIMEIRO porque é o que o olho espera de quem corta caminho; o
 // custo seria o mesmo em L.
 //
-// Veio da SPA (`board-path.ts`), e vir para cá é o que tira a construção do
-// caminho do NAVEGADOR: a peça arrastada manda só o DESTINO, e o servidor diz
-// por onde ela passou e quanto custou. O cliente deixa de ter opinião sobre a
-// régua do livro.
+// A construção do caminho mora no SERVIDOR e não no navegador: a peça arrastada
+// manda só o DESTINO, e o servidor diz por onde ela passou e quanto custou. O
+// cliente não tem opinião sobre a régua do livro.
 func PathBetween(de, ate Square) []Square {
 	caminho := []Square{de}
 	x, y := de.X, de.Y
@@ -329,7 +310,7 @@ func signOf(n int) int {
 	return 0
 }
 
-// PathThroughStops costura os segmentos entre PARADAS consecutivas (ALE-266).
+// PathThroughStops costura os segmentos entre PARADAS consecutivas.
 //
 // O movimento não é um destino: é uma sequência de lugares onde a peça parou.
 // Só as paradas são guardadas, e o caminho entre duas consecutivas é desenhado
@@ -360,9 +341,9 @@ func PathThroughStops(paradas []Square) []Square {
 // ReachFromStops é o que a tela precisa mostrar ENQUANTO a pessoa monta
 // o movimento: de onde ela está agora, até onde ainda dá para andar.
 //
-// Sem isto o defeito é o que o dono descreveu: a pessoa empilha paradas, o total
-// passa do deslocamento, e ela NÃO SABE O QUE DESFAZER para corrigir. O feedback
-// não é enfeite da funcionalidade — é a metade que a torna usável.
+// Sem isto a pessoa empilha paradas, o total passa do deslocamento, e ela NÃO
+// SABE O QUE DESFAZER para corrigir. O feedback não é enfeite da funcionalidade
+// — é a metade que a torna usável.
 //
 // Devolve o alcance a partir da ÚLTIMA parada com o orçamento RESTANTE, e o
 // restante pode ser ZERO: aí o alcance é VAZIO — a tela diz "acabou" em vez de

@@ -13,10 +13,8 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O CICLO DA SESSÃO na tela (ALE-269, superfícies 3, 4 e 11).
-//
-// A regra mora no `table_session_lifecycle.go` e o caminho no `session.go`;
-// aqui é o desenho.
+// O CICLO DA SESSÃO na tela. A regra mora no `table_session_lifecycle.go` e o
+// caminho no `session.go`; aqui é o desenho.
 
 // O botão que abre as configurações, e o SAIR ao lado dele.
 //
@@ -55,7 +53,7 @@ func sessionVerbs(v View) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(openConfigSession(v))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 24, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 22, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -81,7 +79,7 @@ func sessionVerbs(v View) templ.Component {
 		var templ_7745c5c3_Var3 templ.SafeURL
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(campaignChronicle(v)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 33, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 31, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -97,11 +95,10 @@ func sessionVerbs(v View) templ.Component {
 
 // AS CONFIGURAÇÕES DA SESSÃO — uma linha, uma decisão.
 //
-// O desenho é o da SPA e a razão de ele ser assim está escrita lá: a FRASE de
-// cada linha é o que deixa o botão ser curto ("Encerrar" em vez de "Encerrar
-// sessão") sem virar adivinhação. E a hierarquia é deliberada — excluir, a ação
-// mais rara e a única irreversível, NÃO é o elemento mais forte da tela; o
-// vermelho fica onde a decisão acontece, que é a confirmação.
+// A FRASE de cada linha é o que deixa o botão ser curto ("Encerrar" em vez de
+// "Encerrar sessão") sem virar adivinhação. E a hierarquia é deliberada —
+// excluir, a ação mais rara e a única irreversível, NÃO é o elemento mais forte
+// da tela; o vermelho fica onde a decisão acontece, que é a confirmação.
 //
 // Os verbos são travados pelo ESTADO: iniciar só aparece no que ainda não
 // começou, encerrar só no que está no ar. O servidor recusa o resto, e oferecer
@@ -179,7 +176,7 @@ func sessionConfig(v View) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(v.SessionNum))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 73, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 70, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -210,7 +207,7 @@ func sessionConfig(v View) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(portugueseCycle(v.Status))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 81, Col: 108}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 77, Col: 108}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -223,7 +220,7 @@ func sessionConfig(v View) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(sessionCommand(v, "titulo"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 103, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 99, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -253,7 +250,7 @@ func sessionConfig(v View) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(sessionCommand(v, "iniciar"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 111, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 107, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
@@ -305,7 +302,7 @@ func sessionConfig(v View) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('session-config').close(); " + sessionCommand(v, "encerrar"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 126, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 122, Col: 107}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 				if templ_7745c5c3_Err != nil {
@@ -341,7 +338,7 @@ func sessionConfig(v View) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(sessionCommand(v, "reiniciar"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 137, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 133, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -423,7 +420,7 @@ func confirmDeleteSession(v View) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(v.SessionNum))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 173, Col: 140}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 169, Col: 140}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -436,7 +433,7 @@ func confirmDeleteSession(v View) templ.Component {
 		var templ_7745c5c3_Var20 templ.SafeURL
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(caminhoDeExcluir(v)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 177, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 173, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -480,7 +477,7 @@ func adjustRow(nome, frase string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 196, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 192, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -493,7 +490,7 @@ func adjustRow(nome, frase string) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(frase)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 197, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/session.templ`, Line: 193, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {

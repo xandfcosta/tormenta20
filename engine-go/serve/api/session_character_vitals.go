@@ -9,31 +9,21 @@ import (
 	"t20engine/infra/platform"
 )
 
-// O PV do rastreador É o PV da ficha (ALE-122) — e agora atravessa uma PORTA.
+// O PV do rastreador É o PV da ficha, e ele atravessa uma PORTA.
 //
-// Este arquivo implementa `live.SheetVitals` (ALE-254). Os três métodos
-// eram do `sessionStore`, e o compilador apontou o problema quando o regime
-// virou pacote: eles usam `applyDamagePlan` e `live.ClampVital`, que são regras da
-// FICHA. Um pacote do regime não pode conhecê-las.
+// Este arquivo implementa `live.SheetVitals`. Os métodos moram deste lado porque
+// usam `applyDamagePlan` e `live.ClampVital`, que são regras da FICHA — e um
+// pacote do regime ao vivo não pode conhecê-las. O regime declara o que precisa;
+// quem entrega fica aqui.
 //
-// A troca é a que a issue pedia: o regime declara o que precisa, e quem entrega
-// fica deste lado. Quando o contexto `ficha` nascer, ele assume este tipo sem
-// que uma linha de `live/` mude.
-//
-// Antes desta fatia havia dois PV para o mesmo personagem: o socket escrevia num
-// blob (`sessions.runtimeState`) e o HTTP escrevia na linha do personagem. A
-// mesma tela mostrava 52/95 na iniciativa e 57/95 no card do grupo, e a ficha do
-// jogador — ao lado do rastreador dele — continuava no valor antigo. O espelho
-// existia, mas atrás de uma variável de ambiente que não estava em `.env`
-// nenhum, nem em produção.
-//
-// E o caminho do socket ignorava PV TEMPORÁRIOS: bater 5 num personagem com
-// Armadura Arcana cobrava dos PV reais, enquanto o mesmo 5 pela ficha drenava o
-// pool primeiro. Duas regras para a mesma pancada.
-//
-// Agora a linha do personagem é a fonte: o dano percorre a MESMA regra do
-// `POST /personagens/{id}/damage` e a entrada da iniciativa espelha o que foi
-// gravado. NPC continua vivendo só no rastreador — não há ficha atrás dele.
+// A LINHA DO PERSONAGEM é a fonte, e não um blob no estado da sessão. Com duas
+// fontes a mesma tela mostra 52/95 na iniciativa e 57/95 no card do grupo, e o
+// caminho do socket ignora PV TEMPORÁRIOS: bater 5 num personagem com Armadura
+// Arcana cobraria dos PV reais, enquanto o mesmo 5 pela ficha drena o pool
+// primeiro — duas regras para a mesma pancada. Aqui o dano percorre a MESMA
+// regra do `POST /personagens/{id}/damage` e a entrada da iniciativa espelha o
+// que foi gravado. NPC continua vivendo só no rastreador: não há ficha atrás
+// dele.
 
 // sheetVitals é quem cumpre a porta. Guarda só o que precisa — as queries —
 // em vez de um `*Server` inteiro: uma porta que recebesse o servidor não seria
@@ -148,10 +138,6 @@ func (v sheetVitals) persistVitals(
 
 // Ponteiro nulo vira NULL, e não zero — a diferença entre "não mexeu neste
 // vital" e "zerou este vital".
-//
-// Ele morava no `character_mutations.go`, que era o corpo das rotas JSON da SPA
-// e morreu com elas na ALE-277. Isto aqui é o único símbolo daquele arquivo com
-// chamador, e mora com ele (ALE-330).
 func nullInt(p *int64) sql.NullInt64 {
 	if p == nil {
 		return sql.NullInt64{}

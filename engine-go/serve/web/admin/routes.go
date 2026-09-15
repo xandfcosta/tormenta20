@@ -12,13 +12,11 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A tela de administração do app (ALE-219, segunda superfície).
+// A tela de administração do app.
 //
-// A diferença que ela existe para medir: NÃO há stream. Na Mesa, quem
-// redesenhava era o SSE aberto; aqui quem redesenha é a RESPOSTA do próprio
-// POST, que volta com o remendo do painel afetado. Nenhuma conexão longa,
-// nenhum tique, nenhum comparador de hash — e, de quebra, a granularidade que
-// eu tinha adiado na Mesa aparece aqui de graça, porque sem stream não faz
+// NÃO há stream aqui. Quem redesenha é a RESPOSTA do próprio POST, que volta
+// com o remendo do painel afetado: nenhuma conexão longa, nenhum tique, nenhum
+// comparador de hash. É o que dá a granularidade de graça — sem stream não faz
 // sentido remendar a tela inteira.
 
 // handleAdmin desenha a tela inteira.
@@ -44,10 +42,8 @@ func (s Scene) handleAdmin(w http.ResponseWriter, r *http.Request) {
 // tocava.
 //
 // Dois e não a tela inteira: apagar mexe na lista de jogadores e nas contagens
-// do servidor, e não mexe nos convites. Enumerar os afetados é possível aqui
-// porque a ação é conhecida — foi a mesma decisão que a SPA NÃO pôde tomar, e
-// por isso ela invalida o prefixo `['admin']` inteiro e refaz as quatro
-// leituras.
+// do servidor, e não mexe nos convites. Enumerar os afetados é possível porque
+// a ação é conhecida.
 func (s Scene) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -55,9 +51,8 @@ func (s Scene) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sse := datastar.NewSSE(w, r)
-	// A REGRA é a mesma do handler HTTP — extraída para `deleteAccount` quando
-	// esta tela precisou dela. O app não ganha uma segunda versão de "não se
-	// apaga a própria conta"; se ganhasse, mediria a cópia.
+	// A REGRA mora no `deleteAccount`: o app não ganha uma segunda versão de
+	// "não se apaga a própria conta".
 	if err := s.deps.DeleteAccount(r, id, s.deps.CurrentUserID(r)); err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": err.Error()})
 		return
@@ -77,9 +72,9 @@ func (s Scene) handleBackup(w http.ResponseWriter, r *http.Request) {
 
 // adminPanel é um painel da tela como FUNÇÃO, e não como nome.
 //
-// Era `ui.RenderFragment("admin-jogadores", view)` até a ALE-227: uma string que
-// só erra em runtime, e que exigia dois testes existindo apenas para afirmar
-// que os nomes ainda casavam. Agora um painel que sumisse não compila.
+// Um nome de fragmento em string só erra em runtime, e exige um teste que
+// exista apenas para afirmar que os nomes ainda casam. Assim, um painel que
+// sumir não compila.
 type adminPanel func(adminView) templ.Component
 
 // patchPanels manda um `datastar-patch-elements` por painel.
@@ -109,11 +104,8 @@ func (s Scene) patchPanels(sse *datastar.ServerSentEventGenerator, r *http.Reque
 // com ele. Nada mais muda na tela: gerar um link não altera jogador, convite
 // nem servidor, então não há painel a remendar.
 //
-// A REGRA vem do `mintPasswordReset`, extraída do manipulador JSON quando esta
-// tela precisou dela — sétima vez que a migração encontra regra soldada ao
-// transporte, e a mesma resposta das outras seis. O app não ganha uma
-// segunda versão do prazo de 24h; se ganhasse, as duas telas poderiam divergir
-// sem ninguém notar.
+// A REGRA vem do `mintPasswordReset`: o app não ganha uma segunda versão do
+// prazo de 24h, que é como duas telas divergem sem ninguém notar.
 func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -165,10 +157,9 @@ func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 
 // Routes monta a administração no roteador de quem a hospeda.
 //
-// Os endereços moram AQUI e não em quem monta (ALE-278): a cena é a dona do que
-// ela atende. Antes desta fatia as cinco linhas estavam soltas no
-// `routes.go`, entre as rotas de outras três cenas — esta é a
-// primeira que sai sem nem ter um `Routes` próprio para mover.
+// Os endereços moram AQUI e não em quem monta: a cena é a dona do que ela
+// atende. Soltas num `routes.go` comum, as linhas de uma cena ficam misturadas
+// com as das outras.
 func Routes(r chi.Router, s Scene) {
 	r.Get("/admin", s.handleAdmin)
 	r.Post("/admin/usuarios/{id}/apagar", s.handleDeleteAccount)

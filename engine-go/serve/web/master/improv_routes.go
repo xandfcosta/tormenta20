@@ -10,13 +10,12 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// As rotas e os handlers do IMPROVISO — separados do `routes.go` na ALE-278.
+// Os handlers do IMPROVISO.
 //
-// O REGISTRO das trinta rotas continua num lugar só, no `routes.go`: é ele
-// que o `api` chama, e espalhá-lo faria a cena ter quatro portas de entrada.
-// O que mora aqui são os handlers desta ferramenta. O arquivo único tinha
-// 600 linhas e QUATRO famílias que não se chamam — arquivo é unidade de
-// RESPONSABILIDADE e de conflito de merge, não de leitura.
+// O REGISTRO das rotas da cena continua num lugar só, no `routes.go`: é ele que
+// o `api` chama, e espalhá-lo faria a cena ter quatro portas de entrada. O que
+// mora aqui são os handlers desta ferramenta, porque arquivo é unidade de
+// RESPONSABILIDADE e de conflito de merge.
 
 // handleImprov desenha a cena com os históricos que vieram nos sinais.
 func (s Scene) handleImprov(w http.ResponseWriter, r *http.Request) {

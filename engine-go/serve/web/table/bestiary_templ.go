@@ -15,46 +15,42 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O PAINEL DO BESTIÁRIO dentro da Mesa (ALE-263).
+// O PAINEL DO BESTIÁRIO dentro da Mesa.
 //
-// A lista, os filtros e o bloco são os MESMOS componentes da cena do mestre —
-// é para isso que a `master.BestiaryView.Base` existe. O que este arquivo acrescenta
-// é o invólucro e o gesto que a cena de lá não tem: mandar para a fila.
+// A lista, os filtros e o bloco são os MESMOS componentes da cena do mestre — é
+// para isso que a `master.BestiaryView.Base` existe. O que este arquivo
+// acrescenta é o invólucro e o gesto que a cena de lá não tem: mandar para a
+// fila.
 
 // tableBestiary é o painel inteiro, e ele é a raiz que as rotas remendam.
 //
 // O `data-signals` fica AQUI, na raiz remendada, e por isso ele reinicializa a
-// cada remendo — de propósito: `busca`, `tipos` e `criatura` são o que o
-// SERVIDOR acabou de desenhar, e reecoá-los é o que mantém a tela e o servidor
-// falando do mesmo filtro. Os campos do AJUSTE não estão nele justamente por
-// isso: eles são rascunho do mestre, e reinicializá-los a cada tecla da busca
-// apagaria o PV que ele acabou de baixar. Eles nascem no `<body>`, que nunca é
-// remendado, e só o servidor os semeia — ao abrir OUTRA criatura.
+// cada remendo — de propósito: `busca`, `tipos` e `criatura` são o que o SERVIDOR
+// acabou de desenhar, e reecoá-los é o que mantém a tela e o servidor falando do
+// mesmo filtro. Os campos do AJUSTE não estão nele justamente por isso: eles são
+// rascunho do mestre, e reinicializá-los a cada tecla da busca apagaria o PV que
+// ele acabou de baixar. Eles nascem no `<body>`, que nunca é remendado, e só o
+// servidor os semeia — ao abrir OUTRA criatura.
 //
 // Mora FORA do `<main id="table">` de propósito. A cena é remendada inteira a
 // cada mudança de qualquer um na mesa, e o que este painel guarda — a busca
 // digitada, o filtro aceso, a criatura aberta — é estado de TELA e não da
 // sessão: um remendo da mesa o apagaria a cada turno que alguém avançasse.
 //
-// É `<dialog>` modal e não uma gaveta ao lado, e aqui há um DESVIO da SPA que
-// vale dizer: lá o painel é não-modal em tela larga, para o rastreador continuar
-// recebendo clique atrás dele. A Mesa é uma coluna só — não existe o
-// "ao lado" que justificaria o não-modal —, e o modal traz de graça o foco
-// preso, o Escape e a camada de topo, que é também o que o tira de dentro do
-// `contain` do palco.
+// É `<dialog>` modal e não uma gaveta ao lado: a Mesa é uma coluna só, não existe
+// o "ao lado" que justificaria o não-modal, e o modal traz de graça o foco preso,
+// o Escape e a camada de topo — que é também o que o tira de dentro do `contain`
+// do palco.
 //
 // Ele NÃO fecha ao mandar para a mesa: uma emboscada é uma viagem, não seis.
 //
-// `hidden open:flex` e não só `flex`, e isto é conserto de um defeito que o e2e
-// ANTIGO pegou: o navegador dá `display:none` a `<dialog>` fechado, e um `flex`
-// utilitário SOBREPÕE isso — o painel fechado continuava ocupando a tela inteira
-// e engolia o clique de todo botão da Mesa. É a mesma família do `m-auto` do
-// descanso: utilitário do Tailwind brigando com a folha do agente do usuário,
-// e as duas vezes quem denunciou foi o navegador.
-//
-// Eu não vi na minha própria conferência porque cliquei por JavaScript, e
-// `element.click()` NÃO faz teste de acerto — ele dispara no elemento mesmo com
-// outra coisa por cima. Foi o clique de verdade do Playwright que acusou.
+// `hidden open:flex` e não só `flex`: o navegador dá `display:none` a `<dialog>`
+// fechado, e um `flex` utilitário SOBREPÕE isso — o painel fechado continua
+// ocupando a tela inteira e engole o clique de todo botão da Mesa. É a mesma
+// família do `m-auto` do descanso, utilitário do Tailwind brigando com a folha
+// do agente do usuário. E só um clique de VERDADE acusa: `element.click()` NÃO
+// faz teste de acerto, então ele dispara no elemento mesmo com outra coisa por
+// cima.
 func tableBestiary(v master.BestiaryView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -83,7 +79,7 @@ func tableBestiary(v master.BestiaryView) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(master.BestiarySignals(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 55, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 51, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -96,7 +92,7 @@ func tableBestiary(v master.BestiaryView) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d de %d", len(v.Entries), v.Total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 60, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 56, Col: 94}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -165,9 +161,9 @@ func tableBestiary(v master.BestiaryView) templ.Component {
 
 // adjustEntry é PV, iniciativa e quantas, antes de a criatura entrar.
 //
-// Ele existe porque o que entrava sem ele era quase sempre errado (ALE-208): o
-// mestre quer o ogro com menos PV, ou a iniciativa que ele acabou de rolar nos
-// dados de verdade em cima da mesa. Ajustar depois custa achar a linha na fila.
+// Ele existe porque o que entrava sem ele era quase sempre errado: o mestre quer
+// o ogro com menos PV, ou a iniciativa que ele acabou de rolar nos dados de
+// verdade em cima da mesa. Ajustar depois custa achar a linha na fila.
 //
 // Os campos são ligados a SINAIS e nunca recebem `value` do servidor: entrada em
 // curso é do teclado de quem digita. Quem os semeia do bloco do livro é o
@@ -216,7 +212,7 @@ func adjustEntry(v master.BestiaryView, m book.Entry) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('%s/enviar')", v.BestiaryBase()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 120, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 116, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -229,7 +225,7 @@ func adjustEntry(v master.BestiaryView, m book.Entry) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 123, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 119, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -284,7 +280,7 @@ func campoDoAjuste(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 131, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 127, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -310,7 +306,7 @@ func campoDoAjuste(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 131, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 127, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -323,7 +319,7 @@ func campoDoAjuste(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 136, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 132, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -336,7 +332,7 @@ func campoDoAjuste(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(min)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 138, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 134, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -349,7 +345,7 @@ func campoDoAjuste(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(max)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 139, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 135, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -362,7 +358,7 @@ func campoDoAjuste(id, rotulo, sinal, min, max string) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 141, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/bestiary.templ`, Line: 137, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {

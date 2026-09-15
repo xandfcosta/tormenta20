@@ -9,16 +9,12 @@ import (
 	"t20engine/domain/board"
 )
 
-// OS MARCADORES na Mesa em Datastar (ALE-264, item 5) — o ponto apontado no
-// mapa, ver GLOSSARY.md.
+// OS MARCADORES na Mesa em Datastar — o ponto apontado no mapa, ver
+// GLOSSARY.md.
 //
-// O tabuleiro já DESENHAVA marcadores desde o `33380d6`; o que não existia era
-// gesto para criar, revelar ou apagar um. As rotas JSON (`handleBoardMarker*`)
-// respondiam só à SPA.
-//
-// O verbo que importa é REVELAR (ALE-195): o marcador nasce ESCONDIDO, porque
-// marcar a armadilha na frente da mesa entrega a armadilha. Por isso criar e
-// revelar são dois gestos e não um.
+// O verbo que importa é REVELAR: o marcador nasce ESCONDIDO, porque marcar a
+// armadilha na frente da mesa entrega a armadilha. Por isso criar e revelar são
+// dois gestos e não um.
 
 func (s Scene) MarkerRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/marcadores"
@@ -33,9 +29,8 @@ func (s Scene) MarkerRoutes(r chi.Router) {
 
 // marcaOLugar põe um marcador novo na casa clicada.
 //
-// A LETRA vem do motor (`NextMarkerLetter`) e não da tela: na SPA era o
-// cliente que escolhia "A", "B", "C" e mandava pronto, e duas telas escolhendo
-// letra por conta própria é como nasce o segundo "C" no mesmo mapa.
+// A LETRA vem do motor (`NextMarkerLetter`) e não da tela: duas telas
+// escolhendo letra por conta própria é como nasce o segundo "C" no mesmo mapa.
 func marcaOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 	casa, err := squareOnly(c.R)
 	if err != nil {

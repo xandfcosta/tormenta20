@@ -6,13 +6,12 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O CONSTRUTOR DE ENCONTROS (ALE-259).
+// O CONSTRUTOR DE ENCONTROS.
 //
-// O VEREDITO é o bloco principal, e isso é a ALE-170: a ferramenta existe para
-// responder "esse encontro é duro demais?", e na versão anterior a resposta era
-// uma faixa de 14px — mais discreta que o botão de adicionar criatura logo
-// abaixo. O ND é o número grande, a dificuldade vem ao lado com o peso que
-// merece, e o XP fica secundário porque ele é consequência, não decisão.
+// O VEREDITO é o bloco principal: a ferramenta existe para responder "esse
+// encontro é duro demais?". O ND é o número grande, a dificuldade vem ao lado com
+// o peso que merece, e o XP fica secundário porque ele é consequência, não
+// decisão.
 
 templ encountersScene(v encountersView) {
 	<section
@@ -155,7 +154,7 @@ templ quantityStep(m book.Entry, passo, sinal string) {
 //
 // A lista só aparece com termo digitado. Mostrar as 80 abaixo da composição
 // empurraria o VEREDITO para fora da tela, e o veredito é o assunto da
-// ferramenta (ALE-170) — a mesma razão pela qual ele é o bloco grande.
+// ferramenta — a mesma razão pela qual ele é o bloco grande.
 templ addPanel(v encountersView) {
 	<div class="flex min-h-0 flex-1 flex-col gap-2">
 		<div class="relative shrink-0">

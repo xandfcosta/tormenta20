@@ -11,10 +11,9 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// restMultiplier is the T20 night-rest recovery factor per accommodation quality:
-// PV/PM gained = floor(level × factor). Mirrors REST_MULTIPLIER in
-// characters-effects.service.ts (livro: descanso). An unknown condition falls back to
-// 'normal' — the gateway already defaults, this keeps the domain rule self-contained.
+// restMultiplier é o fator de recuperação do descanso noturno do T20 por
+// qualidade de acomodação: PV/PM ganhos = floor(nível × fator). Acomodação
+// desconhecida cai para 'normal', o que mantém a regra inteira aqui dentro.
 var restMultiplier = map[string]float64{"ruim": 0.5, "normal": 1, "confortavel": 2, "luxuosa": 3}
 
 // restedVitals is the PV/PM current pair a rest leaves the character on.
@@ -23,8 +22,8 @@ type restedVitals struct {
 	mpCurrent int64
 }
 
-// EndScene expires the character's scene-scoped effects (owner-or-GM authorized first).
-// Transport-agnostic — the WS session-rest handler calls this per member character.
+// EndScene expira os efeitos de escopo de CENA do personagem (a autorização —
+// dono ou mestre — roda antes). Sem transporte: quem chama o faz por ficha.
 func (tr tableRules) EndScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
 	if _, status, err := tr.authorizedCharacter(ctx, user, characterID); err != nil {
 		return status, err
@@ -32,17 +31,17 @@ func (tr tableRules) EndScene(ctx context.Context, user AuthUser, characterID in
 	if err := tr.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{Characterid: characterID, Scope: "scene"}); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
 	}
-	// Os usos "1/cena" e as posturas vao junto (ALE-222). Aqui e nao no
-	// `EndScene` da SESSAO: este e o caminho que ja limpa a ficha, e e por onde
-	// os dois transportes passam. Desde a ALE-220 o `EndScene` da sessao
-	// tambem chega ate aqui, uma ficha por vez, pelo `expirePartyScene`.
+	// Os usos "1/cena" e as posturas vão junto. Aqui e não no `EndScene` da
+	// SESSÃO: este é o caminho que já limpa a ficha, e é por onde os dois
+	// transportes passam — o da sessão chega até aqui uma ficha por vez, pelo
+	// `expirePartyScene`.
 	if err := tr.clearScenePlayState(ctx, characterID); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear the play state")
 	}
 	return http.StatusOK, nil
 }
 
-// endDay expires both scene- and day-scoped effects.
+// endDay expira os efeitos de escopo de cena E de dia.
 func (tr tableRules) endDay(ctx context.Context, user AuthUser, characterID int64) (int, error) {
 	if _, status, err := tr.authorizedCharacter(ctx, user, characterID); err != nil {
 		return status, err
@@ -57,20 +56,19 @@ func (tr tableRules) endDay(ctx context.Context, user AuthUser, characterID int6
 }
 
 // assertGmAtLiveTable guarda as rotas de escopo da FICHA: encerrar cena e
-// encerrar dia sao do MESTRE, DURANTE uma sessao -- decisao do dono (ALE-223).
+// encerrar dia são do MESTRE, DURANTE uma sessão.
 //
-// Isto INVERTE o guarda da ALE-216, que recusava enquanto houvesse mesa em
-// curso e liberava fora dela. A leitura nova e que as duas acoes nao pertencem
-// a quem esta editando uma ficha: descanso e decisao da mesa, e mesa e o que
-// existe durante uma sessao. Fora dela ninguem as executa -- nem o dono.
+// As duas ações não pertencem a quem está editando uma ficha: descanso é decisão
+// da mesa, e mesa é o que existe durante uma sessão. Fora dela ninguém as
+// executa — nem o dono.
 //
-// A pergunta e uma so e e PRECISA: mestre de uma campanha DESTE personagem que
-// tenha sessao viva. Compor "e mestre?" com "ha sessao viva?" em duas consultas
-// deixaria passar o mestre da campanha A com sessao rodando na campanha B.
+// A pergunta é UMA SÓ e é PRECISA: mestre de uma campanha DESTE personagem que
+// tenha sessão viva. Compor "é mestre?" com "há sessão viva?" em duas consultas
+// deixaria passar o mestre da campanha A com sessão rodando na campanha B.
 //
-// Autorizacao roda ANTES (e de novo dentro do helper de dominio, que o caminho
-// do socket chama sem este guarda): sem essa ordem, um estranho receberia "nao
-// e o mestre da mesa" e aprenderia que a mesa esta rodando hoje.
+// A autorização roda ANTES (e de novo dentro do helper de domínio, que outro
+// caminho chama sem este guarda): sem essa ordem, um estranho receberia "não é o
+// mestre da mesa" e aprenderia que a mesa está rodando hoje.
 func (s *Server) assertGmAtLiveTable(w http.ResponseWriter, r *http.Request, id int64) bool {
 	user := currentUser(r)
 	if _, status, err := s.tableRules().authorizedCharacter(r.Context(), user, id); err != nil {
@@ -92,9 +90,9 @@ func (s *Server) assertGmAtLiveTable(w http.ResponseWriter, r *http.Request, id 
 	return true
 }
 
-// clearEffectScopes runs one of the scope-expiring domain helpers for the {id}
-// character and answers with the scopes the client must drop from its cached
-// character — a delta, so the sheet updates without a refetch.
+// clearEffectScopes roda um dos helpers de domínio que expiram escopo para o
+// personagem `{id}` e responde com os escopos que o cliente deve descartar da
+// ficha em cache — um delta, para a tela atualizar sem rebuscar.
 func (s *Server) clearEffectScopes(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -115,22 +113,22 @@ func (s *Server) clearEffectScopes(
 	platform.WriteJSON(w, http.StatusOK, map[string][]string{"clearedScopes": cleared})
 }
 
-// handleEndScene is the sheet's own "Encerrar cena" (Efeitos tab): one player
-// ending their scene, as opposed to the GM's session-wide rest that reaches
-// EndScene through the WS gateway.
+// handleEndScene é o "Encerrar cena" da própria ficha (aba Efeitos): um jogador
+// encerrando a cena dele, ao contrário do descanso da mesa inteira que o mestre
+// dispara.
 func (s *Server) handleEndScene(w http.ResponseWriter, r *http.Request) {
 	s.clearEffectScopes(w, r, s.tableRules().EndScene, []string{"scene"})
 }
 
-// handleEndDay ends the day, which also ends the running scene (book rest
-// semantics) — hence both scopes in the delta.
+// handleEndDay encerra o dia, o que encerra a cena em curso junto (é o descanso
+// do livro) — daí os dois escopos no delta.
 func (s *Server) handleEndDay(w http.ResponseWriter, r *http.Request) {
 	s.clearEffectScopes(w, r, s.tableRules().endDay, []string{"scene", "day"})
 }
 
-// restVitals applies the T20 night-rest recovery: PV/PM each gain floor(level × factor),
-// clamped to their max, then persists. Returns the new current values so the gateway can
-// mirror them onto the live tracker.
+// restVitals aplica a recuperação do descanso noturno do T20: PV e PM ganham
+// cada um floor(nível × fator), aparado no máximo, e grava. Devolve os novos
+// valores atuais para quem chama espelhá-los no rastreador vivo.
 func (tr tableRules) restVitals(ctx context.Context, user AuthUser, characterID int64, condition string) (restedVitals, int, error) {
 	row, status, err := tr.authorizedCharacter(ctx, user, characterID)
 	if err != nil {
@@ -168,19 +166,3 @@ type campaignSummaryDTO struct {
 	Description *string `json:"description"`
 	UpdatedAt   string  `json:"updatedAt"`
 }
-
-// Aqui morava o `character_play_state_test.go`, com sete casos sobre o estado de
-// JOGO da ficha (ALE-222). Ele saiu na ALE-277 junto com as rotas JSON que
-// dirigia, e cada garantia dele continua presa em outra camada:
-//
-//   - os USOS de poder (somam, e a cena não se mistura com o dia): a aba de
-//     Poderes da ficha, em `TestUsingChargesTheMpAndCountsTheUse`;
-//   - o DESCANSO de cena e de dia: a Mesa, em
-//     `TestTheSceneRestExpiresTheSheetsWithoutTurningTheSceneOff` e
-//     `TestTheDayRestUsesTheQualityTheGmChose`;
-//   - os SITUACIONAIS: a aba de Efeitos, em `TestActiveConditionalsEnterTheAttack`.
-//
-// Um deles não migrou porque a BEHAVIOR sumiu junto: "a lista de conditionals
-// substitui o conjunto inteiro" era do handler JSON, e a cena alterna UM de cada
-// vez (`toggleSituational`). Guardar uma substituição que ninguém faz seria
-// teste sobre código morto.

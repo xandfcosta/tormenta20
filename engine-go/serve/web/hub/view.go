@@ -8,12 +8,8 @@ import (
 	"unicode"
 )
 
-// O HUB como dado (ALE-231) — o menu principal do jogo.
-//
-// Ele é a terceira superfície do Datastar e a primeira com CROMO DE JOGO:
+// O HUB como dado — o menu principal do jogo, com o CROMO DE JOGO da casa:
 // navegação por setas, cues de áudio, tela cheia e um diálogo com formulário.
-// Se o modelo não sustentasse isso, era melhor descobrir aqui do que no
-// tabuleiro.
 
 type hubView struct {
 	Nome string
@@ -53,10 +49,9 @@ func (s Scene) loadHub(ctx context.Context, eu Viewer) (hubView, error) {
 
 // liveSession responde "há partida em andamento?" numa consulta só.
 //
-// Na SPA isto eram 62 linhas de cliente que abriam N+1 requisições — uma lista
-// de sessões por campanha —, e o arquivo dizia por quê: não existia rota que
-// respondesse a pergunta. Some junto o `createLiveSessionPrefetch`, que existia
-// só para esconder a latência que a própria fan-out criava.
+// UMA consulta e não uma lista de sessões por campanha: a fan-out abre N+1
+// requisições e depois cobra um prefetch só para esconder a latência que ela
+// mesma criou.
 //
 // "Nenhuma linha" é resposta NORMAL e não erro: quase sempre não há partida
 // rolando.
@@ -75,8 +70,8 @@ func (s Scene) liveSession(ctx context.Context, userID int64) (*hubLiveSession, 
 	}, nil
 }
 
-// displayName: o nome quando existe, senão o e-mail, senão "Aventureiro".
-// Mesma cadeia da SPA — quem entra por convite pode não ter dado nome nenhum.
+// displayName: o nome quando existe, senão o e-mail, senão "Aventureiro" —
+// quem entra por convite pode não ter dado nome nenhum.
 func displayName(eu Viewer) string {
 	if eu.Name != nil && strings.TrimSpace(*eu.Name) != "" {
 		return strings.TrimSpace(*eu.Name)

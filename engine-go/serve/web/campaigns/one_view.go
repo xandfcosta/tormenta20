@@ -14,18 +14,14 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// A CRÔNICA como dado (ALE-255): a página de uma campanha aberta no tomo.
+// A CRÔNICA como dado: a página de uma campanha aberta no tomo.
 //
-// A diferença que mais pesa em relação à tela da SPA está na CONTAGEM DE IDAS
-// À REDE. Lá a cena monta e dispara TRÊS consultas — campanha, sessões e
-// membros —, cada uma com o próprio estado de carregando e o próprio esqueleto;
-// a visão geral mostra números que só existem depois que as três voltam. Aqui é
-// uma resposta só, e o número já vem escrito.
+// A página inteira sai de UMA resposta — campanha, sessões e membros —, com os
+// números da visão geral já escritos, em vez de uma consulta por bloco com o
+// próprio estado de carregando.
 //
-// E a ABA é o `?tab=`, que já era o estado na SPA — o comentário de lá conta
-// que a versão em React precisava espelhar isso num `useState` com dois efeitos
-// e um debounce de 250ms. No servidor não há o que espelhar: o parâmetro de
-// consulta É o estado, e ele chega junto com o pedido.
+// E a ABA é o `?tab=`: o parâmetro de consulta É o estado, e chega junto com o
+// pedido — não há o que espelhar no cliente.
 
 type oneView struct {
 	ID        int64
@@ -36,7 +32,7 @@ type oneView struct {
 	EhMestre bool
 	// DonoOutro é o nome do dono quando quem olha é admin e NÃO é o dono. Vazio
 	// para o dono e para o jogador: marcar a mesa de um jogador trocaria o
-	// "Jogando" dele por "Mesa de Fulano", que é defeito que o e2e já pegou.
+	// "Jogando" dele por "Mesa de Fulano".
 	DonoOutro string
 
 	Aba     string
@@ -57,7 +53,7 @@ type oneView struct {
 	// porque é o que separa uma crônica de anos de uma aberta ontem.
 	CriadaEm string
 
-	// Lugares é o ACERVO da campanha (ALE-292), e ele só é carregado na aba dele.
+	// Lugares é o ACERVO da campanha, e ele só é carregado na aba dele.
 	//
 	// Sob demanda e não sempre: uma crônica longa tem dezenas de lugares, e a
 	// visão geral não mostra nenhum — buscá-los a cada abertura da página seria
@@ -71,8 +67,8 @@ type oneView struct {
 	// decidiu — e uma regra nova nasce em vigor sem migração de dados.
 	RegrasIgnoradas []string
 	// LinkDoConvite é o CAMINHO do convite desta mesa, ou "" quando ela não tem
-	// um (ALE-287). Caminho e não URL: quem prefixa a origem é o navegador — ver
-	// a razão medida em `ui.MintedInvite`.
+	// um. Caminho e não URL: quem prefixa a origem é o navegador — ver a razão
+	// em `ui.MintedInvite`.
 	LinkDoConvite string
 	// Erros e Aviso servem à aba de configuração, que é a única com formulário.
 	Erros platform.FieldErrorMap
@@ -121,7 +117,7 @@ func oneTabs(ehMestre bool, pedida string) []oneTab {
 		// LUGARES antes de CONFIG, e a ordem é a do uso: preparar a próxima cena
 		// é trabalho de toda semana, e configurar a mesa acontece uma vez. Config
 		// fecha o trilho porque é o que se procura quando já se sabe o que
-		// procurar (ALE-292).
+		// procurar.
 		todas = append(todas, oneTab{ID: "lugares", Rotulo: "Lugares"})
 		todas = append(todas, oneTab{ID: "config", Rotulo: "Config"})
 	}
@@ -176,8 +172,8 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	if err != nil {
 		return oneView{}, err
 	}
-	// A MESMA regra de acesso da rota JSON e do gateway do socket (ALE-120):
-	// dono é "gm", quem tem personagem na mesa é "player", e o resto não entra.
+	// A MESMA regra de acesso da rota JSON e do gateway do socket: dono é "gm",
+	// quem tem personagem na mesa é "player", e o resto não entra.
 	papel, _, err := s.deps.RoleIn(ctx, euID, c)
 	if err != nil {
 		return oneView{}, err
@@ -219,19 +215,15 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	if err != nil {
 		return oneView{}, err
 	}
-	// O MESTRE PRIMEIRO, e o resto na ordem que veio. É a regra do `sortRoster`
-	// da SPA, portada: numa mesa de seis, quem mestra ser o primeiro da lista é
-	// o que faz o elenco se ler como grupo em vez de como fila.
+	// O MESTRE PRIMEIRO, e o resto na ordem que veio: numa mesa de seis, quem
+	// mestra ser o primeiro da lista é o que faz o elenco se ler como grupo em
+	// vez de como fila.
 	//
-	// ELA NUNCA ACONTECEU até a ALE-287, e não por engano de ordenação: a
-	// comparação era sobre `m.Role`, uma coluna que valia `'player'` em toda
-	// linha. `a.Role == b.Role` dava sempre verdadeiro, a função devolvia zero
-	// para todo par, e a lista saía na ordem em que veio. A coroa ao lado do
-	// nome (ver `heroRow`) nunca foi desenhada pela mesma razão.
-	//
-	// Quem mestra é o DONO da campanha, e essa é a MESMA verdade que o `roleIn`
-	// usa para autorizar. Perguntar ao dono do personagem em vez de a uma coluna
-	// é o que faz a tela e a autorização não poderem divergir.
+	// Quem mestra é o DONO da campanha, e não quem tem `Role` de mestre — a
+	// coluna vale `'player'` em toda linha, e comparar por ela devolve zero para
+	// todo par, deixando a lista na ordem em que veio. O dono é a MESMA verdade
+	// que o `RoleIn` usa para autorizar, e é o que faz a tela e a autorização não
+	// poderem divergir.
 	ehDoMestre := func(m sqlcgen.ListMembersRow) bool { return m.Charownerid == c.Ownerid }
 	slices.SortStableFunc(membros, func(a, b sqlcgen.ListMembersRow) int {
 		switch {
@@ -259,12 +251,11 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		return oneView{}, err
 	}
 	v.TotalSessoes = len(sessoes)
-	// DA MAIS NOVA PARA A MAIS VELHA. O `ListSessions` ordena por número
-	// CRESCENTE, e a primeira versão desta cena pegava as três primeiras para
-	// "sessões recentes" — mostrando as três mais ANTIGAS. O defeito não
-	// aparece numa mesa com três sessões, só numa que já jogou bastante, e a
-	// tela não tem como avisar que está mentindo. Peguei comparando com a da
-	// SPA, que mostra 5, 4, 3 onde a minha mostrava 1, 2, 3.
+	// DA MAIS NOVA PARA A MAIS VELHA, e por isso o laço é de trás para a frente:
+	// o `ListSessions` ordena por número CRESCENTE, então "as recentes" são as
+	// ÚLTIMAS. Tomar as primeiras mostraria as mais antigas — o que não aparece
+	// numa mesa com três sessões, e a tela não tem como avisar que está
+	// mentindo.
 	for i := len(sessoes) - 1; i >= 0; i-- {
 		sess := sessoes[i]
 		if sess.Status == "ended" {

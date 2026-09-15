@@ -8,26 +8,22 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// AS NOTAS NUMA JANELA PRÓPRIA (ALE-218) — a cena, e o pacto que a torna única.
+// AS NOTAS NUMA JANELA PRÓPRIA — a cena, e o pacto que a torna única.
 //
-// Arquivo próprio e não mais um pedaço do `notes.go`: o que está aqui não é o
-// painel ao lado do mapa, é uma CENA com endereço, uma trava de acesso e um
-// protocolo entre duas janelas. O vizinho desenha um painel; este resolve onde
-// as notas moram.
+// Arquivo próprio e não um pedaço do `notes.go`: o que está aqui não é o painel
+// ao lado do mapa, é uma CENA com endereço, uma trava de acesso e um protocolo
+// entre duas janelas. O vizinho desenha um painel; este resolve onde as notas
+// moram.
 
-// A CENA DAS NOTAS NUMA JANELA PRÓPRIA (ALE-218).
+// notesWindowPage serve a cena das notas.
 //
 // # Por que uma cena e não o painel mudado de lugar
 //
 // A forma óbvia — mover o nó vivo para uma janela de Document
-// Picture-in-Picture — foi MEDIDA e não funciona: o Datastar não segue o nó
-// adotado por outro documento. Mesmo `input` sintético, 1 POST antes de mover e
-// ZERO depois, com a faixa continuando a dizer "Salvo". A ligação morre em
-// silêncio, que é o pior jeito de ela morrer.
-//
-// O que funciona é a janela receber um DOCUMENTO, com o runtime dela — medido
-// na mesma sessão: 18 de 19 nós com `data-show` escondidos pelo Datastar da
-// janela. Daí a cena.
+// Picture-in-Picture — não funciona: o Datastar não segue o nó adotado por outro
+// documento, e a ligação morre EM SILÊNCIO, com a faixa continuando a dizer
+// "Salvo" enquanto nada mais é gravado. O que funciona é a janela receber um
+// DOCUMENTO, com o runtime dela. Daí a cena.
 //
 // # Ela é EXCLUSIVA com a coluna, e isso não é gosto
 //
@@ -92,8 +88,6 @@ func seedNotesWindow(v View) string {
 		texto, texto, notesModeKey, takesTheNotes(v),
 	)
 }
-
-// ── a janela própria (ALE-218) ──────────────────────────────────────────────
 
 // notesWindowKey diz QUAL sessão está com as notas numa janela, e é por ela que
 // as duas telas se excluem.
@@ -168,7 +162,7 @@ func notesButtonGesture(v View) string {
 		notesAddress(v), notesWindowName)
 }
 
-// marked devolve a STRING e não o booleano, e isso é conserto de defeito
-// MEDIDO: o `data-attr` do Datastar trata valor booleano como ATRIBUTO
-// BOOLEANO, e um `aria-checked=""` não anuncia estado nenhum. Aqui o valor é
-// escrito direto no HTML, mas a palavra é a mesma pela mesma razão.
+// marked devolve a STRING e não o booleano: o `data-attr` do Datastar trata
+// valor booleano como ATRIBUTO BOOLEANO, e um `aria-checked=""` não anuncia
+// estado nenhum. Aqui o valor é escrito direto no HTML, mas a palavra é a mesma
+// pela mesma razão.

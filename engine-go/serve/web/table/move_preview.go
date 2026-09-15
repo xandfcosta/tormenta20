@@ -11,25 +11,23 @@ import (
 	"t20engine/domain/live"
 )
 
-// A PRÉVIA do movimento DURANTE O ARRASTO (ALE-203, pedido do dono: *"durante o
-// drag do token, mostre a seta apontando para o token movimentando e mostre a
-// distância na seta"*).
+// A PRÉVIA do movimento DURANTE O ARRASTO: a seta apontando para a peça que se
+// move e a distância escrita nela.
 //
-// Até aqui o arrasto era CEGO: o `followsFinger` escrevia um deslocamento em pixels
-// e o CSS empurrava a peça, e mais nada — nenhuma seta, nenhum número. A pessoa
-// só descobria o custo depois de soltar, e se tivesse estourado, desfazia e
-// tentava de novo. A conta que decide o gesto chegava depois do gesto.
+// Sem ela o arrasto é CEGO — o `followsFinger` escreve um deslocamento em pixels
+// e o CSS empurra a peça, e mais nada. A pessoa só descobre o custo depois de
+// soltar, e a conta que decide o gesto chega depois do gesto.
 //
-// NÃO MUTA NADA, e é essa a diferença que a põe aqui e não no
-// `move.go`: a prévia é uma PERGUNTA — "se eu soltar aqui,
-// quanto custa?" — e responder com o mapa remendado trocaria a peça debaixo do
-// dedo de quem está arrastando. É o mesmo argumento que separa a régua dos
-// comandos, e por isso a resposta é do mesmo tamanho: sinais, e só.
+// NÃO MUTA NADA, e é essa a diferença que a põe aqui e não no `move.go`: a
+// prévia é uma PERGUNTA — "se eu soltar aqui, quanto custa?" — e responder com o
+// mapa remendado trocaria a peça debaixo do dedo de quem está arrastando. É o
+// mesmo argumento que separa a régua dos comandos, e por isso a resposta é do
+// mesmo tamanho: sinais, e só.
 //
-// O CAMINHO TODO e não só a perna viva (decisão do dono): as paradas já postas
-// continuam desenhadas e a perna viva ESTENDE o caminho, com as cores
-// recalculadas sobre o TOTAL. É o que responde a pergunta de verdade — "se eu
-// soltar aqui, quanto gastei?" —, que uma perna medida sozinha não responde.
+// O CAMINHO TODO e não só a perna viva: as paradas já postas continuam
+// desenhadas e a perna viva ESTENDE o caminho, com as cores recalculadas sobre o
+// TOTAL. É o que responde a pergunta de verdade — "se eu soltar aqui, quanto
+// gastei?" —, que uma perna medida sozinha não responde.
 
 func (s Scene) MovePreviewRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/{tokenId}"
@@ -73,10 +71,9 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 // prévia mentindo o deslocamento de uma peça que não é dele.
 //
 // A POSSE é resolvida contra o BANCO (o `meus` do roster), como no `moveWho`, e
-// nunca assumida: a primeira versão desta função escrevia `OwnsCharacter: true`
-// direto, e isso teria dado a qualquer jogador o deslocamento da peça de
-// qualquer outro — não pela tela, que só oferece o arrasto da peça dele, mas
-// pela ROTA, que é onde a fronteira mora.
+// nunca assumida: um `OwnsCharacter: true` escrito direto daria a qualquer
+// jogador o deslocamento da peça de qualquer outro — não pela tela, que só
+// oferece o arrasto da peça dele, mas pela ROTA, que é onde a fronteira mora.
 func (s Scene) whoDragsInPreview(r *http.Request, papel string, peca *board.BoardToken) board.Mover {
 	userID := s.deps.CurrentUserID(r)
 	quem := board.Mover{UserID: userID, Role: papel}
@@ -149,15 +146,13 @@ func previewLabels(dobras []engine.Square, custos []int) []map[string]any {
 // previewSignals declaram a seta viva no navegador, com valores INICIAIS.
 //
 // Não é o que faz a prévia existir — o sinal do Datastar é um proxy e nasce na
-// primeira leitura, e a prévia MEDIDA continua funcionando com esta linha
-// removida (conferido sabotando o declarante e rodando o e2e do arrasto). O que
-// ela dá é o valor de partida explícito, que é o que separa "vazio porque ainda
-// não mediu" de "vazio porque o sinal não existe" para quem for ler daqui a um
-// ano.
+// primeira leitura. O que ela dá é o valor de partida explícito, que separa
+// "vazio porque ainda não mediu" de "vazio porque o sinal não existe".
 //
-// `previax`/`previay` nascem NULOS e não zero, e essa parte muda comportamento:
-// zero é uma casa legítima do plano, e um arrasto que começasse nela cairia na
-// trava do "só pede quando o quadrado muda" e não pediria a primeira prévia.
+// `preview_x`/`preview_y` nascem NULOS e não zero, e essa parte muda
+// comportamento: zero é uma casa legítima do plano, e um arrasto que começasse
+// nela cairia na trava do "só pede quando o quadrado muda" e não pediria a
+// primeira prévia.
 const previewSignals = "preview_arrow_fits: '', preview_arrow_second: '', preview_arrow_beyond: '', " +
 	"preview_labels: [], preview_text: '', preview_x: null, preview_y: null"
 

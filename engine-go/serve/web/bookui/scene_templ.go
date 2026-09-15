@@ -19,19 +19,16 @@ import "t20engine/serve/web/ui"
 
 // O LIVRO E OS ELOS — a parte da interface que SABE do domínio.
 //
-// Ela morava em `piloto_ui.templ` junto com o kit, e ficou para trás quando o
-// kit virou `web/ui` (ALE-278, fatia 4). A razão não é tamanho: estes
-// componentes leem `BookAddress` e `trecho`, e o `trecho` nasce de uma
-// consulta ao catálogo de efeitos e de escolas de magia, que vive em
-// `powers.go`, aqui do lado.
-// Levá-los faria o pacote de APRESENTAÇÃO importar catálogo, que é o contrário
-// do que a divisão existe para conseguir.
+// Separada do kit de apresentação (`web/ui`) e não por tamanho: estes
+// componentes leem `BookAddress` e `trecho`, e o `trecho` nasce de uma consulta
+// ao catálogo de efeitos e de escolas de magia, que vive em `powers.go`, aqui
+// do lado. Levá-los faria o pacote de APRESENTAÇÃO importar catálogo, que é o
+// contrário do que a divisão existe para conseguir.
 
-// pageLink abre o PDF do livro na página de uma entrada (ALE-264).
+// pageLink abre o PDF do livro na página de uma entrada.
 //
-// A página JÁ estava escrita na linha ("p289") — virar link é o gesto mais
-// barato que existia aqui: nada de botão novo disputando espaço com o nome da
-// criatura, e a seta diz que abre fora.
+// A página JÁ está escrita na linha ("p289"), e virar link é mais barato que um
+// botão novo disputando espaço com o nome da criatura. A seta diz que abre fora.
 //
 // `data-nav-skip` porque o painel da ficha é uma REGIÃO de layout `column` com
 // UM item, e é isso que faz a vertical ROLAR o bloco em vez de andar (ver o
@@ -84,7 +81,7 @@ func pageLink(livro BookAddress, pagina int, termo string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d ↗", pagina))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 45, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 42, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -133,7 +130,7 @@ func bookAnchor(livro BookAddress, pagina int, termo string) templ.Component {
 		var templ_7745c5c3_Var5 templ.SafeURL
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(livro.AtPage(pagina, termo)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 56, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 53, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -146,7 +143,7 @@ func bookAnchor(livro BookAddress, pagina int, termo string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.OpenBookOverlay)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 57, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 54, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -159,7 +156,7 @@ func bookAnchor(livro BookAddress, pagina int, termo string) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Abrir o livro na página %d", pagina))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 61, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 58, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -223,7 +220,7 @@ func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(pedaco.Texto)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 74, Col: 17}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 71, Col: 17}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -251,7 +248,7 @@ func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(pedaco.Texto)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 78, Col: 17}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 75, Col: 17}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -267,7 +264,7 @@ func Chunk(pedaco book.Chunk, livro BookAddress) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(pedaco.Texto)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 81, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 78, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -360,7 +357,7 @@ func PageSeal(livro BookAddress, pagina int, termo string) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d", pagina))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 126, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 123, Col: 86}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -376,7 +373,7 @@ func PageSeal(livro BookAddress, pagina int, termo string) templ.Component {
 	})
 }
 
-// CrossRef liga uma palavra ao verbete dela (ALE-264).
+// CrossRef liga uma palavra ao verbete dela.
 //
 // O destino é a MESMA cena com a entrada filtrada — o endereço que o buscador
 // já usa —, então o elo não inventa superfície: a entrada aparece sozinha na aba
@@ -423,7 +420,7 @@ func CrossRef(aba, id, nome string) templ.Component {
 		var templ_7745c5c3_Var18 templ.SafeURL
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.MasterEntry(aba, id)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 153, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 150, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -436,7 +433,7 @@ func CrossRef(aba, id, nome string) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(aba)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 154, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 151, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -449,7 +446,7 @@ func CrossRef(aba, id, nome string) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 155, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 152, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -462,7 +459,7 @@ func CrossRef(aba, id, nome string) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(openEntryOver)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 156, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 153, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -475,7 +472,7 @@ func CrossRef(aba, id, nome string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ver " + nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 158, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/bookui/scene.templ`, Line: 155, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -497,8 +494,8 @@ func CrossRef(aba, id, nome string) templ.Component {
 	})
 }
 
-// A CAIXA do verbete do elo (ALE-264): o conceito citado, mostrado por cima da
-// cena que se estava lendo.
+// A CAIXA do verbete do elo: o conceito citado, mostrado por cima da cena que
+// se estava lendo.
 //
 // Ela nasce com o "carregando" e é REMENDADA pelo `#crossref-entry` — o
 // conteúdo vem do servidor, que já tem os oito catálogos em memória. Sem sinal
@@ -576,12 +573,11 @@ func EntryDialog() templ.Component {
 // fragmento sai da memória do servidor e volta em milissegundos na rede da mesa,
 // e abrir depois faria o clique parecer perdido.
 //
-// A aba e a entrada vêm de `data-` e não de partir o `href` em JavaScript, e
-// isso é conserto de um vermelho: quando cada catálogo ganhou cena própria
-// (`/mestre/efeitos?entrada=medo`), a aba saiu da CONSULTA e foi para o
-// CAMINHO — o pedido montado a partir da consulta passou a chegar sem aba, e a
-// caixa abria dizendo "este verbete não está no acervo". Endereço é do
-// navegador; o que o servidor precisa saber, o servidor escreve.
+// A aba e a entrada vêm de `data-` e não de partir o `href` em JavaScript:
+// quando a aba mudou da CONSULTA para o CAMINHO, um pedido montado a partir da
+// consulta passou a chegar sem aba e a caixa abria dizendo "este verbete não
+// está no acervo". Endereço é do navegador; o que o servidor precisa saber, o
+// servidor escreve.
 const openEntryOver = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
 	`evt.preventDefault(), ` +
 	`document.getElementById('entry-in-dialog').showModal(), ` +

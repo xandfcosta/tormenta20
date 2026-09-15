@@ -6,20 +6,15 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// OS DIÁLOGOS DA MOCHILA (ALE-272, fatia 7).
+// OS DIÁLOGOS DA MOCHILA: um por item, mais dois compartilhados — adicionar do
+// catálogo e criar um item custom.
 //
-// Um por item, mais dois compartilhados — adicionar do catálogo e criar um item
-// custom. Todos são desenhados de uma vez e alternados pelo sinal `$detail`,
-// que é a forma desta migração; o custo é HTML a mais no fio e o ganho é que
-// abrir uma caixa não pede nada ao servidor.
+// Todos são desenhados de uma vez e alternados pelo sinal `$detail`: o custo é
+// HTML a mais no fio, e o ganho é que abrir uma caixa não pede nada ao servidor.
 //
-// # Quem TROCA de item limpa
-//
-// O diálogo de melhorias de cada item traz as escolhas dele já marcadas, e o
-// gesto que ABRE zera os campos compartilhados (`$item_name`, `$item_qty`,
-// `$item_slots`, as rolagens): sem isso, o que foi digitado numa caixa
-// reaparece na próxima, que é a armadilha do "remendo em nó compartilhado" do
-// guia do Go.
+// QUEM TROCA DE ITEM LIMPA: o gesto que ABRE zera os campos compartilhados
+// (`$item_name`, `$item_qty`, `$item_slots`, as rolagens), senão o que foi
+// digitado numa caixa reaparece na próxima.
 
 // itemSheetDialog é a ficha de UM item — o alvo de todo toque na Mochila.
 templ itemSheetDialog(v View, ficha itemSheet) {

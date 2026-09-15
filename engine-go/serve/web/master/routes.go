@@ -8,20 +8,19 @@ import (
 	"t20engine/serve/web/routes"
 )
 
-// As rotas da MESA DO MESTRE (ALE-257).
+// As rotas da MESA DO MESTRE.
 //
-// O prefixo é `/mestre/` e não `/mesa/` — a razão está no
-// cabeçalho do `bestiary.templ`: `mesa` já nomeia a sessão ao vivo
-// desde a fatia 1, e uma palavra com dois sentidos no mesmo espaço de endereço
-// é o que o glossário existe para impedir.
+// O prefixo é `/mestre/` e não `/mesa/`: `mesa` já nomeia a sessão ao vivo, e
+// uma palavra com dois sentidos no mesmo espaço de endereço é o que o glossário
+// existe para impedir.
 
-// Routes registra as trinta rotas do `/mestre/*` mais a do verbete.
+// Routes registra as rotas do `/mestre/*` mais a do verbete.
 //
 // Ela recebe a cena e não o roteador sozinho porque esta cena TEM porta — o
-// buscador, que declara zero dependências, é o caso oposto (ALE-278).
+// buscador, que declara zero dependências, é o caso oposto.
 func Routes(r chi.Router, s Scene) {
 	// `/mestre` sozinho não é uma tela: a trilha sempre tem uma ferramenta em
-	// cena. Ele leva à primeira, que é a mesma que a SPA abre.
+	// cena, e ele leva à primeira.
 	r.Get("/mestre", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, routes.MasterBestiary, http.StatusSeeOther)
 	})
@@ -33,23 +32,17 @@ func Routes(r chi.Router, s Scene) {
 	for _, aba := range collectionTabs {
 		r.Get("/mestre/"+aba.ID, s.handleCollection)
 	}
-	// O endereço VELHO continua respondendo, redirecionando: ele foi o único por
-	// duas fatias desta issue, e pode estar colado no chat de alguma mesa.
 	r.Get("/mestre/encontros", s.handleEncounters)
 	r.Post("/mestre/encontros/adicionar/{id}", s.handleEncounterAdd)
 	r.Post("/mestre/encontros/mais/{id}", s.handleEncounterAdd)
 	r.Post("/mestre/encontros/menos/{id}", s.handleEncounterLess)
 	r.Post("/mestre/encontros/remover/{id}", s.handleEncounterRemove)
 	r.Get("/mestre/improviso", s.handleImprov)
-	// A ferramenta DESCONHECIDA cai na primeira, e não em 404.
+	// A ferramenta DESCONHECIDA cai na primeira, e não em 404: ninguém valida o
+	// slug antes de encaminhar, e um 404 transformaria uma URL velha ou digitada
+	// à mão em página de erro em vez de abrir a Mesa.
 	//
-	// Porte de comportamento: a `/gm/$tool` da SPA validava o slug e redirigia,
-	// com o comentário "uma URL digitada à mão ou velha aterrissa na primeira
-	// ferramenta em vez de num palco em branco". Com a virada, quem encaminha
-	// não valida mais — se o servidor devolvesse 404, um link velho de mestre
-	// viraria página de erro em vez de abrir a Mesa.
-	//
-	// No chi o segmento ESTÁTICO ganha do parâmetro, então as quatro rotas
+	// No chi o segmento ESTÁTICO ganha do parâmetro, então as rotas escritas
 	// acima continuam sendo as que atendem; esta só recolhe o resto.
 	r.Get("/mestre/{ferramenta}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, routes.MasterBestiary, http.StatusSeeOther)

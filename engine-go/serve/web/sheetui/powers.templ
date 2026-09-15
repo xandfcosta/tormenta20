@@ -5,7 +5,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel de PODERES desenhado (ALE-272, fatia 8).
+// O painel de PODERES desenhado.
 //
 // UMA lista, a da mesa: as AÇÕES em cima, prontas para usar, e as PASSIVAS
 // recolhidas atrás de um "mostrar (N)". Escolher poder é administração e mora
@@ -75,12 +75,12 @@ templ actionsBlock(v View) {
 	<section class="space-y-1.5">
 		<h3 class={ ui.SectionLabelClasses("muted", "") }>Ações</h3>
 		if len(v.Powers.Actions) == 0 {
-			// A SEÇÃO FICA MESMO VAZIA, e explica (decisão do dono, ALE-217).
-			// Medido: um arcanista de nível 20 tem ZERO ações ativáveis — 26
-			// habilidades, todas passivas. Sumir com a seção faria a tela mudar
-			// de forma por classe, e duas pessoas na mesma mesa veriam layouts
-			// diferentes. A frase manda para as Magias só quem conjura; mandar
-			// um guerreiro para lá seria mandá-lo a uma aba vazia.
+			// A SEÇÃO FICA MESMO VAZIA, e explica (decisão do dono): um arcanista de
+			// nível 20 tem ZERO ações ativáveis — 26 habilidades, todas passivas.
+			// Sumir com a seção faria a tela mudar de forma por classe, e duas
+			// pessoas na mesma mesa veriam leiautes diferentes. A frase manda para
+			// as Magias só quem conjura; mandar um guerreiro para lá seria mandá-lo
+			// a uma aba vazia.
 			<p class="text-xs italic text-muted-foreground">{ noActionsPhrase(v.Powers.IsCaster) }</p>
 		} else {
 			<ul class="space-y-1.5">

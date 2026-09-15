@@ -14,10 +14,10 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel da MOCHILA desenhado (ALE-272, fatia 7).
+// O painel da MOCHILA desenhado.
 //
-// A ordem é a da SPA e ela responde a três perguntas em sequência: o que está
-// na mão, quanto pesa, e o que sobra guardado.
+// A ordem responde a três perguntas em sequência: o que está na mão, quanto
+// pesa, e o que sobra guardado.
 //
 // # A tira de equipados são DOIS TETOS, não casas de corpo
 //
@@ -1405,7 +1405,7 @@ func stowedTileItem(ladrilho stowedTile) templ.Component {
 }
 
 // moneyDialog são as três coisas que se fazem com dinheiro na mesa: receber,
-// gastar e corrigir (ALE-224). O terceiro existe porque escrever o total é o
+// gastar e corrigir. O terceiro existe porque escrever o total é o
 // gesto da forja e o de consertar um erro de digitação.
 func moneyDialog(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
