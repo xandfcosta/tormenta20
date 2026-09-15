@@ -52,7 +52,7 @@ import (
 // outro lado disso é o denominador do próprio medidor: `medeOContraste` devolve
 // `{falhas, medidos}` e o spec recusa um `medidos` baixo demais — é assim que "a
 // cena não carregou" deixa de parecer "nada reprovou".
-const appearanceScenesFile = "web/appearance_scenes.json"
+const appearanceScenesFile = "serve/web/appearance_scenes.json"
 
 type appearanceScene struct {
 	// Visits são os endereços a medir — plural porque uma cena desenha telas
@@ -133,7 +133,7 @@ func TestEveryPageSceneIsMeasuredForAppearance(t *testing.T) {
 // fragmento, e medi-los seria medir de novo a página que os contém.
 func scenesThatDrawAPage(t *testing.T) []string {
 	t.Helper()
-	entries, err := os.ReadDir(filepath.Join("..", "web"))
+	entries, err := os.ReadDir(filepath.Join("..", "serve", "web"))
 	if err != nil {
 		t.Fatalf("ler web/: %v", err)
 	}
@@ -142,7 +142,7 @@ func scenesThatDrawAPage(t *testing.T) []string {
 		if !entry.IsDir() {
 			continue
 		}
-		if packageCallsWritePage(t, filepath.Join("..", "web", entry.Name())) {
+		if packageCallsWritePage(t, filepath.Join("..", "serve", "web", entry.Name())) {
 			scenes = append(scenes, entry.Name())
 		}
 	}

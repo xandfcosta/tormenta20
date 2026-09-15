@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"t20engine/catalog"
+	"t20engine/domain/catalog"
 )
 
 // A CONFERÊNCIA DE TODA REFERÊNCIA AO CATÁLOGO, num lugar só (ALE-226).

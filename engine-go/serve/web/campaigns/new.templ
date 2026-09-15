@@ -1,0 +1,60 @@
+package campaigns
+
+import (
+	"t20engine/domain/campaign"
+	"t20engine/serve/web/ui"
+)
+
+// A FOLHA EM BRANCO (ALE-246): abrir uma campanha nova.
+//
+// Ela é a mesma folha do grimório que a crônica que se lê — mesmo couro, mesma
+// virada de página —, só que vazia e com você segurando a pena. É por isso que
+// ela mora no `ui.TomeSheet` e não numa casca comum.
+//
+// SEM Datastar, e a ausência é a mesma decisão da porta (ALE-229): é um
+// formulário que NAVEGA ao dar certo. `<form method="post">` faz isso desde
+// sempre, sem sinal, sem estado de cliente, e continua funcionando com o
+// JavaScript desligado. Sinal aqui só serviria para reimplementar o que o
+// navegador já faz.
+
+templ newBody(v newView) {
+	@ui.TomeSheet() {
+		// `m-auto`: uma folha em branco segura pouco, então o formulário fica no
+		// MEIO da página em vez de se agarrar ao topo de um retângulo vazio
+		// enorme numa tela grande. Com conteúdo mais alto as margens somem.
+		<div class="m-auto w-full max-w-2xl space-y-6">
+			@ui.SheetTitle("Folha em branco", "Abrir nova campanha")
+			// REGIÃO de conteúdo numa FOLHA DE FORMULÁRIO, e o que ela alcança
+			// hoje são os BOTÕES — os campos de texto não são itens do driver
+			// (`input` está fora do seletor dele de propósito, porque com o foco
+			// dentro a seta edita). O caminho completo pelos campos continua
+			// sendo o TAB.
+			//
+			// Declará-la mesmo assim vale por duas razões: o Esc passa a subir
+			// para a casca em vez de morrer, e a cena deixa de ser a única sem
+			// gramática nenhuma — o que o guarda de cenas cobra.
+			<form method="post" action="/campanhas/nova" data-nav-region="content" data-nav-layout="column" class="space-y-4">
+				@ui.TextField(ui.Field{
+					Nome: "name", Label: "Nome", Valor: v.Nome,
+					Obrigatorio: true, TamanhoMaximo: campaign.MaxNameLength,
+					Erros: v.Erros["name"],
+				})
+				@ui.TextArea(ui.Field{
+					Nome: "description", Label: "Descrição", Valor: v.Descricao,
+					TamanhoMaximo: campaign.MaxDescriptionLength,
+					Erros:         v.Erros["description"],
+				}, 6)
+				if v.Aviso != "" {
+					<p class="text-sm text-destructive-ink">{ v.Aviso }</p>
+				}
+				<div class="flex justify-end gap-2">
+					<a href="/campanhas" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }>Cancelar</a>
+					@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
+						Abrir campanha
+					}
+				</div>
+			</form>
+		</div>
+	}
+}
+

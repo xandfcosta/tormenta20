@@ -1,0 +1,190 @@
+package door
+
+import "t20engine/serve/web/ui"
+
+// A PORTA desenhada (ALE-229): entrar, criar conta e redefinir senha.
+//
+// A decisão que governa este arquivo: aqui NÃO se usa sinal do Datastar.
+//
+// O jeito idiomático seria `data-bind:senha` + `@post`. Um sinal, porém, é
+// estado do CLIENTE, e o Datastar serializa os sinais em toda requisição
+// seguinte — pôr uma senha ali é a senha viajando de novo a cada `@get`/`@post`
+// da página, para sempre. Então a porta é `<form method="post">` puro.
+//
+// O que se ganha junto não é consolo: funciona sem JavaScript nenhum, o
+// gerenciador de senha do navegador funciona porque este é o caminho que ele
+// conhece, e a validação de formato ganha as mensagens NATIVAS — já localizadas
+// e já acessíveis — via `required`, `type="email"` e `minlength`. É o que o Zod
+// fazia, sem o Zod.
+//
+// Fica como dado para a ALE-225: existe superfície inteira onde a resposta
+// certa é zero reatividade de cliente.
+
+// doorFrame é a `AuthShell` da SPA: a moldura de ferro no meio da
+// tela-título, com o rodapé embaixo e o aviso legal por último.
+templ doorFrame(titulo, subtitulo string, rodape templ.Component) {
+	<div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
+		@ui.PanelFrame("space-y-5") {
+			<div class="space-y-1.5">
+				<h2 class={ ui.SectionTitleClasses("cena", "", "") }>{ titulo }</h2>
+				if subtitulo != "" {
+					<p class="text-sm text-muted-foreground">{ subtitulo }</p>
+				}
+			</div>
+			{ children... }
+		}
+		if rodape != nil {
+			<p class="text-center text-sm text-muted-foreground">
+				@rodape
+			</p>
+		}
+		<p class="text-center text-xs text-muted-foreground">
+			Gerenciador não-oficial de Tormenta 20.
+		</p>
+	</div>
+}
+
+// formNotice é a recusa que não pertence a nenhum campo.
+//
+// `role="alert"` porque ela aparece DEPOIS de um envio, sem navegação e sem
+// mover o foco: quem não vê a tela não teria como saber que a tentativa falhou.
+templ formNotice(aviso string) {
+	if aviso != "" {
+		<p role="alert" class="text-sm text-destructive-ink">{ aviso }</p>
+	}
+}
+
+// ── entrar ───────────────────────────────────────────────────────────────────
+
+templ signInPage(v signInView) {
+	@doorFrame("Entrar", "Bem-vindo de volta, aventureiro.", signInFooter()) {
+		<form method="post" action="/entrar" class="space-y-4">
+			if v.Destination != "" {
+				<input type="hidden" name="destino" value={ v.Destination }/>
+			}
+			@ui.TextField(ui.Field{
+				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
+				Valor: v.Email, Erros: v.Errors["email"], Obrigatorio: true,
+			})
+			@ui.TextField(ui.Field{
+				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "current-password",
+				Erros: v.Errors["senha"], Obrigatorio: true,
+			})
+			@formNotice(v.Notice)
+			@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
+				Entrar
+			}
+		</form>
+	}
+}
+
+// Não há link para criar conta, e a ausência é a decisão (ALE-120): esta mesa é
+// por convite, e quem tem um chega pela URL do convite, não por aqui.
+templ signInFooter() {
+	Esta mesa é por convite — peça o link a quem administra.
+}
+
+// ── criar conta ──────────────────────────────────────────────────────────────
+
+templ signUpPage(v signUpView) {
+	@doorFrame("Criar conta", "Junte-se à mesa.", footerWithSignIn()) {
+		<form method="post" action="/criar-conta" class="space-y-4">
+			<input type="hidden" name="convite" value={ v.Invite }/>
+			@ui.TextField(ui.Field{
+				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
+				Valor: v.Email, Erros: v.Errors["email"], Obrigatorio: true,
+			})
+			@ui.TextField(ui.Field{
+				Nome: "nome", Label: "Nome (opcional)", Autocomplete: "name",
+				Valor: v.Name, Erros: v.Errors["nome"], TamanhoMaximo: 80,
+			})
+			@ui.TextField(ui.Field{
+				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "new-password",
+				Dica: "Ao menos 8 caracteres.", Erros: v.Errors["senha"],
+				Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
+			})
+			@passwordConfirmation(v.Errors["confirmar"])
+			@formNotice(v.Notice)
+			@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
+				Criar conta
+			}
+		</form>
+	}
+}
+
+templ footerWithSignIn() {
+	Já tem conta?&nbsp;
+	<a href="/entrar" class="underline underline-offset-4 outline-none">Entrar</a>
+}
+
+// ── redefinir senha ──────────────────────────────────────────────────────────
+
+templ resetPage(v resetView) {
+	@doorFrame("Escolher nova senha", linkSubtitle(v), footerWithSignIn()) {
+		if v.LinkIsValid {
+			<form method="post" action="/redefinir-senha" class="space-y-4">
+				<input type="hidden" name="token" value={ v.Token }/>
+				@ui.TextField(ui.Field{
+					Nome: "senha", Label: "Nova senha", Tipo: "password", Autocomplete: "new-password",
+					Dica: "Ao menos 8 caracteres.", Erros: v.Errors["senha"],
+					Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
+				})
+				@passwordConfirmation(v.Errors["confirmar"])
+				@formNotice(v.Notice)
+				@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
+					Salvar nova senha
+				}
+			</form>
+		} else {
+			// O link é conferido ANTES de desenhar o formulário, e isso deixou de
+			// custar uma consulta com estado de carregamento: na SPA era uma
+			// `useQuery` com "Conferindo o link…" e um `Show`/fallback. Aqui é um
+			// `if` no handler, e o estado "carregando" não existe.
+			<p class="text-sm text-muted-foreground">{ noticeDeadLink }</p>
+		}
+	}
+}
+
+func linkSubtitle(v resetView) string {
+	if v.AccountEmail != "" {
+		return v.AccountEmail
+	}
+	return "Um link de redefinição foi usado para chegar aqui."
+}
+
+// passwordConfirmation é o campo que existe só para pegar o typo.
+//
+// Ele é conferido nos DOIS lados, e os dois são necessários por razões
+// diferentes: o `data-on:input` dá o aviso na hora, e o servidor é quem de fato
+// recusa — sem ele a página deixaria de funcionar com JavaScript desligado,
+// que é justamente o que esta superfície ganhou ao não usar sinais.
+//
+// A comparação lê o campo irmão pelo DOM (`el.form.senha.value`) em vez de por
+// um sinal, e isso é o ponto: a senha não entra em estado de cliente nenhum.
+templ passwordConfirmation(erros []string) {
+	<div class="space-y-2">
+		<label for="confirm" class="flex items-center gap-2 text-sm leading-none font-medium select-none">
+			Confirmar senha
+		</label>
+		<input
+			id="confirm"
+			name="confirmar"
+			type="password"
+			autocomplete="new-password"
+			required
+			data-on:input={ "el.setCustomValidity(el.value === el.form.senha.value ? '' : '" + noticePasswordMismatch + "')" }
+			if len(erros) > 0 {
+				aria-invalid="true"
+				aria-describedby="confirm-error"
+			}
+			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+		/>
+		if len(erros) > 0 {
+			<div id="confirm-error">
+				for _, e := range erros {
+					<p class="text-sm text-destructive-ink">{ e }</p>
+				}
+			</div>
+		}
+	</div>
+}

@@ -2,7 +2,7 @@
 # O módulo JS das cenas em Datastar (ALE-231).
 #
 # Mesma forma e mesmo motivo do `build-css.sh`: o fonte agora é daqui
-# (`api/assets/src/scene.ts`) e o produto é embutido no binário pelo `go:embed`.
+# (`serve/api/assets/src/scene.ts`) e o produto é embutido no binário pelo `go:embed`.
 # Ele vivia em `frontend/` enquanto a SPA existia, porque o driver de teclado, o
 # som e as peças eram compartilhados — a ALE-272 (fatia 10c) trouxe as fontes
 # para cá junto com as dependências.
@@ -21,4 +21,4 @@ cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # pede — e é justamente por rodar fora da thread principal que a página do livro
 # desenha sem travar a cena.
 cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs \
-   ./api/assets/static/pdf.worker.js
+   ./serve/api/assets/static/pdf.worker.js

@@ -12,6 +12,51 @@ serviço. O proxy que normalmente viria junto foi considerado e recusado — ele
 compraria só a compressão, que mora em `platform.Gzip`, e traria um segundo lugar
 onde o SSE pode ser bufferizado por engano.
 
+## O mapa das pastas
+
+Quatro grupos, e a pergunta que cada um responde:
+
+```
+engine-go/
+├── cmd/          os binários: o servidor, a seed, o gerador do oráculo
+├── domain/       O QUE O JOGO É — nada aqui sabe de HTTP
+│   ├── engine/   as regras do livro, PURAS (só a stdlib)
+│   ├── catalog/  o livro transcrito, embutido por go:embed
+│   ├── book/     o catálogo tipado, lido por treze famílias
+│   ├── sheet/  board/  live/   o domínio COM estado
+│   └── campaign/ account/ creature/ search/ markdown/
+├── serve/        O QUE RESPONDE HTTP
+│   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
+│   └── web/      as quinze cenas, cada uma com a porta dela
+├── infra/        O QUE NÃO É DOMÍNIO
+│   ├── db/       migrações e as consultas do sqlc
+│   ├── platform/ configuração, gzip, ajudantes de HTTP
+│   └── events/   o barramento tipado
+├── convention/   os guardas que não são de pacote nenhum
+├── parity/       os dezoito oráculos de ficha
+└── scripts/      a folha e as ilhas de JS
+```
+
+**A seta só aponta para BAIXO**: `domain` não conhece `serve`, `infra` não
+conhece ninguém. Quem garante são os `boundary_test.go` de cada pacote, e as
+listas de permitidos deles são argumentadas linha a linha — acrescentar uma
+entrada é decisão, não conveniência.
+
+**Onde procurar:**
+
+| a pergunta | a pasta |
+|---|---|
+| quanto de PV este herói tem | `domain/engine` |
+| como a ficha é montada do banco | `domain/sheet` |
+| o que a tela desenha | `serve/web/<cena>` |
+| quem cumpre o que a cena pede | `serve/api` |
+| onde o dado é gravado | `infra/db` |
+| por que a suíte reprovou uma convenção | `convention` |
+
+> Os TESTES moram ao lado do código, e isso é do Go: teste de caixa branca
+> precisa do mesmo diretório para alcançar o que não é exportado. É por isso que
+> `serve/api/` tem 171 entradas — 115 delas são teste.
+
 **Cada cena é um pacote em `web/`**, e o `api` guarda a composição do roteador, as
 portas que cada cena pede e as regras que não são de tela nenhuma. Ver "Como uma
 CENA é construída".

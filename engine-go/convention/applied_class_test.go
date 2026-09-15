@@ -53,7 +53,7 @@ var (
 
 func TestEveryAppliedClassExistsInTheStylesheet(t *testing.T) {
 	root := filepath.Join("..", "..")
-	folha, err := os.ReadFile(filepath.Join(root, "engine-go", "api", "assets", "static", "app.css"))
+	folha, err := os.ReadFile(filepath.Join(root, "engine-go", "serve", "api", "assets", "static", "app.css"))
 	if err != nil {
 		t.Fatalf("ler a folha compilada: %v", err)
 	}

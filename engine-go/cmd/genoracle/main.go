@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"t20engine/engine"
+	"t20engine/domain/engine"
 )
 
 type fixture struct {

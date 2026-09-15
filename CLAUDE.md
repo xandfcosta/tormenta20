@@ -4,7 +4,9 @@ em código é em inglês. Ver "Idioma".
 
 São dois pacotes. `engine-go/` é o app: a API HTTP na :3001, o motor de regras,
 e as CENAS em `.templ` servidas com Datastar — mais a folha e as ilhas de JS
-delas, em `api/assets/src`. `e2e/` é a suíte de Playwright, que dirige o app
+delas, em `serve/api/assets/src`. Ele se divide em quatro grupos — `domain/`,
+`serve/`, `infra/` e `cmd/` —, e o mapa de onde procurar cada coisa está no
+[guia dele](engine-go/CLAUDE.md). `e2e/` é a suíte de Playwright, que dirige o app
 rodando. Um processo serve tudo, e ele sobe por `docker compose up -d --build`
 com o banco em bind mount no hospedeiro — um serviço só, sem proxy na frente
 (ALE-273).

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/board"
+	"t20engine/domain/board"
 )
 
 // O guarda da COR do marcador (ALE-264): a lista que o domínio aceita e o CSS
@@ -26,7 +26,7 @@ import (
 // falha foi ALTA, porque o controle da folha existia. O guarda do foco, que não
 // tinha piso, teria passado verde medindo metade.
 func TestEveryMarkerColorCanBePainted(t *testing.T) {
-	css, err := os.ReadFile(filepath.Join("..", "api", "assets", "app.src.css"))
+	css, err := os.ReadFile(filepath.Join("..", "serve", "api", "assets", "app.src.css"))
 	if err != nil {
 		t.Fatalf("ler o CSS da casa: %v", err)
 	}

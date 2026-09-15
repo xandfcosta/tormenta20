@@ -30,7 +30,7 @@ import (
 var assetCall = regexp.MustCompile(`Asset\("([^"]+)"\)`)
 
 func TestEveryAssetAskedForExists(t *testing.T) {
-	staticDir := filepath.Join("..", "api", "assets", "static")
+	staticDir := filepath.Join("..", "serve", "api", "assets", "static")
 	if _, err := os.Stat(staticDir); err != nil {
 		t.Fatalf("a pasta dos estáticos não está em %s: %v", staticDir, err)
 	}
