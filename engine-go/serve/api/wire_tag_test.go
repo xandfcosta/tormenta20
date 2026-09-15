@@ -19,8 +19,9 @@ import (
 // O efeito era grave e silencioso: a SPA lê `campanha.role` em 22 pontos, e com
 // a tag capitalizada o campo chega `undefined`. O `isGm()` passava a ser SEMPRE
 // falso, então o MESTRE recebia a visão de jogador na mesa ao vivo. Um deles
-// (`members.go`) era corpo de ENTRADA, então trocar o papel de um membro
-// simplesmente parava de funcionar.
+// era corpo de ENTRADA — o DTO de membro, que morreu junto com a rota na
+// ALE-277 —, então trocar o papel de um membro simplesmente parava de
+// funcionar.
 //
 // POR QUE NADA PEGOU, e é isto que justifica um guarda novo em vez de confiar
 // nos que existem:

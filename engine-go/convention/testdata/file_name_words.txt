@@ -3,6 +3,7 @@
 #
 abilities
 accents
+access
 account
 action
 actions
@@ -77,6 +78,7 @@ collection
 color
 colors
 combat
+combatants
 commands
 compose
 conditions
