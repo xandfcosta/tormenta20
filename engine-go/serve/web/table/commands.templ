@@ -4,12 +4,12 @@ import "t20engine/serve/web/ui"
 
 
 
-// OS CONTROLES DO MESTRE (ALE-265).
+// OS CONTROLES DO MESTRE.
 //
 // Eles entram na MESMA cena do jogador, e não numa segunda: a tela do mestre é
 // a do jogador mais o que ele comanda. Duas cenas seriam duas listas de
-// combatente para manter em dia, que é o formato exato do defeito da ALE-122 —
-// a mesma tela mostrando 52/95 e 57/95 do mesmo combatente.
+// combatente para manter em dia, e o defeito delas é a mesma tela mostrando
+// 52/95 e 57/95 do mesmo combatente.
 //
 // Quem decide se eles aparecem é o PAPEL, resolvido no servidor pelo mesmo
 // `stateForRole` que o resto da casa usa. Esconder no cliente seria UX; a trava
@@ -43,8 +43,8 @@ templ gmControls(v View, r viewGm) {
 		></p>
 		<div class="ml-auto flex flex-wrap items-center gap-2">
 			@turnStep(v, "iniciativa/vez-anterior", "Turno anterior", "‹", r.PodeAvancar)
-			// O rótulo do avanço diz PARA ONDE vai (ALE-184): o mestre lia "▶" e
-			// contava a lista para saber quem entrava.
+			// O rótulo do avanço diz PARA ONDE vai: com um "▶" o mestre tem de
+			// contar a lista para saber quem entra.
 			<button
 				type="button"
 				if r.PodeAvancar {
@@ -56,9 +56,9 @@ templ gmControls(v View, r viewGm) {
 				}
 			>{ r.Avanco.Label }</button>
 			// O "Iniciar cena" fica SEMPRE na fileira, em qualquer altura de
-			// palco: abaixo de 1024 a SPA tirou o ciclo do trilho justamente para
-			// o mestre no celular não ficar sem caminho nenhum para COMEÇAR
-			// (ALE-210 lida pela ALE-184). O que anda é o par de baixo.
+			// palco: abaixo de 1024 o ciclo sai do trilho, e sem esta exceção o
+			// mestre no celular ficaria sem caminho nenhum para COMEÇAR. O que
+			// anda é o par de baixo.
 			if !v.SceneActive {
 				@startScene(v)
 			}
@@ -78,7 +78,7 @@ templ gmControls(v View, r viewGm) {
 	</section>
 }
 
-// tableDrawer é o rodapé do mestre quando o palco é baixo (ALE-263).
+// tableDrawer é o rodapé do mestre quando o palco é baixo.
 //
 // `<details>` e não um popover com JavaScript: abrir e fechar é o que o elemento
 // JÁ faz, e ele leva de graça o teclado, o foco e o "fechar com Escape" que uma
@@ -86,7 +86,7 @@ templ gmControls(v View, r viewGm) {
 //
 // Quem a mostra e a esconde é a consulta de contêiner na folha, e não uma classe
 // aqui: a decisão é sobre a ALTURA MEDIDA do palco, e essa medida o servidor não
-// tem — é a tradução do `palcoBaixo` que a ALE-265 deixou anotada.
+// tem.
 templ tableDrawer(v View) {
 	<details class="stage-drawer relative">
 		<summary
@@ -104,21 +104,18 @@ templ tableDrawer(v View) {
 	</details>
 }
 
-// Os DOIS gestos de fim de duração, e eles NÃO são o mesmo par (ALE-233).
+// Os DOIS gestos de fim de duração, e eles NÃO são o mesmo par.
 //
-// Aqui estava escrito que os dois eram "o par do livro (T20 p105): devolve PV e
-// PM ao grupo". **Metade disso nunca foi verdade.** O de CENA nunca devolveu
-// ponto nenhum — ele expira a duração de cena, os usos "1/cena" e as posturas —,
-// e mesmo assim se chamava "Recuperar · cena", que é a palavra que o painel usa
-// para o descanso. O nome prometia o que a função não fazia, desde sempre.
+// O de CENA não devolve ponto nenhum: ele expira a duração de cena, os usos
+// "1/cena" e as posturas. Por isso ele NÃO se chama "Recuperar · cena" — a
+// palavra "recuperar" é a do descanso, e o nome prometeria o que a função não
+// faz. Os três gestos deste painel se separam pela PALAVRA e não pela cor:
+// "Encerrar cena" tira a fila do ar, "Expirar efeitos" só encerra a duração,
+// "Recuperar · dia" é o único que devolve pontos.
 //
-// Decisão do dono (ALE-233): os dois FICAM, porque "acabou a bênção" nem sempre
-// é "acabou a cena" e o mestre precisa poder expirar a duração sem tirar a fila
-// de ninguém. O que sai é a mentira — o de cena passa a dizer o que faz.
-//
-// E isso separa os três gestos deste painel pela PALAVRA em vez de pela cor, que
-// é o que a ALE-200 pede: "Encerrar cena" tira a fila do ar, "Expirar efeitos"
-// só encerra a duração, "Recuperar · dia" é o único que devolve pontos.
+// Os dois FICAM (decisão do dono), porque "acabou a bênção" nem sempre é
+// "acabou a cena" e o mestre precisa poder expirar a duração sem tirar a fila de
+// ninguém.
 //
 // A de CENA acontece no clique porque não precisa de mais nada. A de DIA precisa
 // da qualidade, que é o que a p105 usa para calcular quanto volta, e só por isso
@@ -171,19 +168,12 @@ templ restDay(v View) {
 		<h2 id="day-rest-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Descanso de dia</h2>
 		<p class="mt-1 text-sm text-muted-foreground">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p105).</p>
 		<label for="rest-quality" class={ ui.FieldLabelClasses("muted", "mt-3 block") }>Qualidade do descanso</label>
-		// O NOME DO SINAL É `snake_case`, e isso não é desleixo: nome de
-		// ATRIBUTO é minusculado pelo analisador de HTML, então uma chave
-		// em camelCase chega MINÚSCULA e o Datastar liga um sinal NOVO com
-		// esse outro nome. Medido no navegador: o fio levava os DOIS — o
-		// declarado em camelCase com "normal", que ninguém tocou, e o
-		// minúsculo com "luxuosa", que era a escolha real —, e o servidor
-		// lia o primeiro. O mestre escolhia Luxuosa e o grupo descansava em
-		// normal. O `_` atravessa o parser intacto (ALE-301).
-		//
-		// A distinção que salva os outros sinais: `command_error` e `d20`
-		// aparecem só em VALOR de atributo (`data-show`, `data-text`,
-		// `data-signals`), e valor preserva a caixa. A regra é sobre sinal usado
-		// como CHAVE.
+		// O NOME DO SINAL É `snake_case` porque ele aparece como CHAVE de
+		// atributo, e chave de atributo é minusculada pelo analisador de HTML:
+		// em camelCase ela chega MINÚSCULA e o Datastar liga um sinal NOVO com
+		// esse outro nome, enquanto o servidor continua lendo o declarado. O `_`
+		// atravessa o parser intacto. Sinal que só aparece em VALOR de atributo
+		// (`data-show`, `data-text`) preserva a caixa e não corre esse risco.
 		<select
 			id="rest-quality"
 			data-bind:rest_quality
@@ -217,13 +207,11 @@ templ restDay(v View) {
 // turnStep é o voltar. Ele existe porque errar o avanço é o engano mais
 // comum da mesa, e sem ele o conserto é remontar a ordem inteira.
 //
-// O `route` chega INTEIRO, e não como sufixo de um prefixo escrito aqui
-// (ALE-308). Ele era `"initiative/"+route`, com a outra metade no chamador: a
-// ALE-304 traduziu as rotas para português, pegou o avanço — que está inline
-// logo acima — e não pegou este, porque nenhuma das duas metades é um caminho
-// que se possa procurar. O botão ficou postando em `initiative/previous-turn`,
-// que não existe, e o Datastar descarta o remendo de resposta não-2xx: o clique
-// morria sem console, sem frase e sem nada.
+// O `route` chega INTEIRO, e NÃO como sufixo de um prefixo montado aqui: com a
+// rota partida em duas metades, nenhuma delas é um caminho que se possa
+// procurar, e uma varredura que renomeie rotas passa por cima desta. O botão
+// fica postando num endereço que não existe, e o Datastar descarta o remendo de
+// resposta não-2xx — o clique morre sem console, sem frase e sem nada.
 templ turnStep(v View, route, label, glyph string, enabled bool) {
 	<button
 		type="button"
@@ -241,14 +229,13 @@ templ turnStep(v View, route, label, glyph string, enabled bool) {
 // Abrir e encerrar a cena NÃO são um interruptor, e por isso são dois nós e não
 // um com `if` dentro.
 //
-// Encerrar a cena tira a fila da mesa e é irreversível pelo mesmo clique — desde
-// a ALE-210 a vaga de registrar só existe DENTRO da cena. Um interruptor convida
-// ao clique de volta que não existe; dois verbos dizem o que cada um faz.
+// Encerrar a cena tira a fila da mesa e é irreversível pelo mesmo clique — a
+// vaga de registrar só existe DENTRO da cena. Um interruptor convidaria ao
+// clique de volta que não existe; dois verbos dizem o que cada um faz.
 //
-// Eles se separaram na ALE-263 porque passaram a viver em lugares diferentes: o
-// INICIAR fica na fileira em qualquer altura de palco, e o ENCERRAR desce para a
-// gaveta quando o palco é baixo. Quem escolhe entre eles continua sendo a cena,
-// e continua sendo uma vaga só — nenhum deles aparece com o outro.
+// São dois nós também porque vivem em lugares diferentes: o INICIAR fica na
+// fileira em qualquer altura de palco, e o ENCERRAR desce para a gaveta quando o
+// palco é baixo. Continua sendo uma vaga só — nenhum deles aparece com o outro.
 templ endSceneButton(v View) {
 	<button
 		type="button"

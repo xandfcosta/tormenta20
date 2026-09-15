@@ -1,11 +1,10 @@
 package engine
 
-// Character is the Go mirror of the frontend `Character` (shared/api/api.ts) —
-// the RAW persisted sheet the collection layer (ActiveItemsFor) reads, distinct
-// from the flattened CharacterInput the MVP engine consumes. Only the fields the
-// collection layer touches are typed; the many JSON-string columns
-// (proficiencies, classPowers, raceAttributeChoices…) stay as strings and are
-// parsed on demand.
+// Character is the RAW persisted sheet the collection layer (ActiveItemsFor)
+// reads, distinct from the flattened CharacterInput the MVP engine consumes.
+// Only the fields the collection layer touches are typed; the many JSON-string
+// columns (proficiencies, classPowers, raceAttributeChoices…) stay as strings
+// and are parsed on demand.
 type Character struct {
 	ID           int    `json:"id"`
 	Origin       string `json:"origin"`
@@ -19,7 +18,7 @@ type Character struct {
 	Charisma     int    `json:"charisma"`
 
 	// Tibar é o dinheiro do personagem, e ele é CARGA: cada mil moedas ocupam um
-	// espaço (p141). Por isso vive no motor e não só na tela (ALE-215).
+	// espaço (p141). Por isso vive no motor e não só na tela.
 	Tibar float64 `json:"tibar"`
 
 	// JSON-encoded columns, parsed lazily by the collect_parse.go helpers.
@@ -31,11 +30,11 @@ type Character struct {
 	ClassPowers          string `json:"classPowers"`
 	ClassChoices         string `json:"classChoices"`
 	PowerChoices         string `json:"powerChoices"`
-	ActiveConditions     string `json:"activeConditions"` // JSON ConditionId[] — p394 status conditions (ALE-28)
+	ActiveConditions     string `json:"activeConditions"` // JSON ConditionId[] — p394 status conditions
 
 	Displacement int `json:"displacement"`
 
-	// IgnoredRules são as regras opcionais que a campanha desligou (ALE-221).
+	// IgnoredRules são as regras opcionais que a campanha desligou.
 	// Elas não pertencem ao personagem: pertencem à MESA, e chegam aqui porque o
 	// motor é uma função pura da entrada dele. Quem resolve a qual campanha a
 	// ficha responde é o servidor, no `loadCharacter`. Valor zero = tudo em
@@ -49,8 +48,8 @@ type Character struct {
 	Expertises    []CharacterExpertise `json:"expertises"`
 }
 
-// CharacterExpertise mirrors api.ts CharacterExpertise — the per-perícia row the
-// expertise breakdown reads (name + key attribute + trained flag).
+// CharacterExpertise is the per-perícia row the expertise breakdown reads
+// (name + key attribute + trained flag).
 type CharacterExpertise struct {
 	Name      string `json:"name"`
 	Attribute string `json:"attribute"`
@@ -66,14 +65,13 @@ type CharacterClass struct {
 	Level     int    `json:"level"`
 }
 
-// CharacterItem mirrors the api.ts CharacterItem. Equipped is a pointer so the
+// CharacterItem is one row of the character's bag. Equipped is a pointer so the
 // null (unequipped) state is distinguishable from a wear slot.
 type CharacterItem struct {
 	CatalogID *string `json:"catalogId"`
 	Name      string  `json:"name"`
-	// Quantity e Slots são o que a linha PESA na mochila (p141). Ficaram de fora
-	// do espelho até a ALE-215 porque a coleção de efeitos não os lê — quem lê é
-	// a carga.
+	// Quantity e Slots são o que a linha PESA na mochila (p141). Quem os lê não
+	// é a coleção de efeitos, é a CARGA.
 	Quantity     int     `json:"quantity"`
 	Slots        float64 `json:"slots"`
 	Equipped     *string `json:"equipped"`
@@ -81,16 +79,15 @@ type CharacterItem struct {
 	Material     *string `json:"material"`
 }
 
-// ActiveEffectRow mirrors the api.ts ActiveEffect: a consumed scene/day buff
-// carrying a JSON-encoded Modifier[] copied from the catalog at consume time.
+// ActiveEffectRow is a consumed scene/day buff carrying a JSON-encoded
+// Modifier[] copied from the catalog at consume time.
 type ActiveEffectRow struct {
 	CatalogID string `json:"catalogId"`
 	Scope     string `json:"scope"` // 'scene' | 'day'
 	Modifiers string `json:"modifiers"`
 }
 
-// attributeValue reads a raw base attribute by AttributeKey. Mirrors the
-// `character[attr]` index.
+// attributeValue reads a raw base attribute by AttributeKey.
 func (c Character) attributeValue(attr string) int {
 	switch attr {
 	case "strength":

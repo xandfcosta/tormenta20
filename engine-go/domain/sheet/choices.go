@@ -9,27 +9,19 @@ import (
 	"t20engine/domain/engine"
 )
 
-// AS REGRAS DE ESCOLHA de poder (ALE-272, fatia 8; movidas para cá na ALE-278).
+// AS REGRAS DE ESCOLHA de poder: quantos poderes cabem no nível, quantos
+// benefícios a origem dá, quais caminhos e quais deuses cada classe aceita.
 //
-// # Elas eram só da TELA, e o servidor gravava qualquer coisa
+// Elas moram no `sheet` porque leem o LIVRO (o poder existe? este deus serve a
+// esta classe?) e a FICHA (que classes, que nível, que origem) — não cabem no
+// `book`, que não pode importar daqui, nem na cena, que é apresentação e é lida
+// pela rota JSON.
 //
-// Quantos poderes cabem no nível, quantos benefícios a origem dá, quais caminhos
-// e quais deuses cada classe aceita: tudo isso vivia em 363 linhas de
-// `shared/rules/abilities-*.ts`, e o `handleUpdateAbilities` gravava os cinco
-// blobs sem conferir NADA. Um pedido montado à mão punha vinte poderes num
-// personagem de nível 1 — e o motor somava os modificadores de todos.
-//
-// # Por que elas moram no `sheet`
-//
-// Elas leem o LIVRO (o poder existe? este deus serve a esta classe?) e a FICHA
-// (que classes, que nível, que origem), e por isso não cabiam nem no `book`, que
-// não pode importar daqui, nem na cena, que é apresentação e é lida pela rota
-// JSON. Foi a entrada do `book` na lista do guarda desta pasta — decisão do
-// dono, ALE-278 — e a razão inteira está escrita lá.
-//
-// Elas rodam nas DUAS portas: o endpoint JSON e os comandos da ficha em
-// Datastar. Duas validações divergiriam no dia em que uma regra nova chegasse, e
-// a esquecida aceitaria o que a outra recusa.
+// E são a FRONTEIRA, não um espelho da tela: sem elas um pedido montado à mão
+// põe vinte poderes num personagem de nível 1, e o motor soma os modificadores
+// de todos. Rodam nas DUAS portas — a rota JSON e os comandos da ficha em
+// Datastar —, porque duas validações divergem no dia em que uma regra nova
+// chegar e a esquecida aceita o que a outra recusa.
 
 // benefitsOriginLimit são os benefícios que a origem concede: duas perícias e um
 // poder é o desenho do livro (p85), e a ficha os trata como DOIS itens de uma
@@ -128,9 +120,8 @@ func godsThat(deuses []book.God, aceita func(book.God) bool) []ChoiceOption {
 //
 // Ela vale sobre o RESULTADO, e não sobre a diferença: a escrita tem de deixar a
 // ficha inteira válida. É mais estrito que "não acrescente além do limite" — uma
-// ficha que já esteja fora da conta não aceita escrita de escolha nenhuma até
-// ser arrumada — e é a decisão do dono. O projeto ainda não foi usado numa mesa
-// real, então não há ficha antiga fora da conta para proteger.
+// ficha que já esteja fora da conta não aceita escrita de escolha nenhuma até ser
+// arrumada —, e é a decisão do dono.
 func WithChoicesValid(dto CharacterDTO) error {
 	if err := chosenFitPowers(dto); err != nil {
 		return err

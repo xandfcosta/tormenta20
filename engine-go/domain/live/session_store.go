@@ -13,57 +13,55 @@ import (
 	"t20engine/infra/events"
 )
 
-// NewUUID generates a random v4 UUID string for initiative entry ids (randomUUID() in the
-// service). Injected into the store so tests can swap a deterministic generator.
+// NewUUID gera um id v4 aleatório para entrada de iniciativa. Injetado no store
+// para o teste trocar por um gerador determinístico.
 func NewUUID() string { return uuid.NewString() }
 
-// SessionStore holds each session's in-memory runtime state, guarding the pure mutations
-// (session_state.go) with a mutex and persisting fire-and-Forget to Session.runtimeState.
-// Mirrors SessionStateService — a server restart wipes trackers until the first Load()
-// re-hydrates from the DB. Mutation methods return a snapshot (deep-enough copy) so the
-// gateway can serialize/broadcast it without racing a concurrent message on the session.
+// SessionStore guarda o estado vivo de cada sessão em memória: protege as
+// mutações puras (session_state.go) com um mutex e grava em
+// `Session.runtimeState`. Reiniciar o servidor zera os rastreadores até o
+// primeiro `Load()` reidratar do banco, e cada mutação devolve um instantâneo
+// para quem chama serializar e transmitir fora da trava.
 type SessionStore struct {
 	Mu sync.Mutex
-	// ficha é a PORTA para o contexto da ficha (ALE-254): o regime escreve PV e
-	// PM de personagem, mas as REGRAS dessa escrita são de lá. Nulo é caminho
-	// normal em teste de regime puro — quem tem personagem na fila injeta o
-	// implementador.
+	// ficha é a PORTA para o contexto da ficha: o regime escreve PV e PM de
+	// personagem, mas as REGRAS dessa escrita são de lá. Nulo é caminho normal em
+	// teste de regime puro — quem tem personagem na fila injeta o implementador.
 	ficha  SheetVitals
 	States map[int64]*SessionRuntimeState
 	Dirty  map[int64]bool
 	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
-	// atrasado (ALE-238). Mora aqui e não no estado: hidratar do banco troca o
-	// estado, e um contador que vivesse nele voltaria a zero.
+	// atrasado. Mora aqui e não no estado: hidratar do banco troca o estado, e um
+	// contador que vivesse nele voltaria a zero.
 	seqs  map[int64]uint64
 	newID func() string
 	q     *sqlcgen.Queries
-	// persistMus holds a per-session mutex (sessionID → *sync.Mutex) serializing that
-	// session's runtime-state writes so concurrent mutations can't land out of order —
-	// WITHOUT coupling latency across sessions.
+	// persistMus guarda um mutex por sessão (sessionID → *sync.Mutex) serializando
+	// as gravações do estado daquela sessão, para mutações concorrentes não
+	// chegarem fora de ordem — SEM acoplar a latência entre sessões.
 	persistMus sync.Map
-	// bus é por onde as mutações desta sessão viram notícia (ALE-279).
+	// bus é por onde as mutações desta sessão viram notícia.
 	//
-	// Aqui morava `ouvintes map[int64][]chan struct{}`, guardado sob o MESMO `mu`
-	// das mutações — o aviso saía de dentro da trava, junto com a mudança. O
-	// barramento não precisa disso: quem publica é o `apply`, DEPOIS de soltar a
-	// trava, e o evento diz o que aconteceu em vez de só tocar o sino.
+	// Quem publica é o `apply`, DEPOIS de soltar a trava, e o evento diz o que
+	// aconteceu em vez de só tocar o sino.
 	//
 	// Ponteiro e não valor porque ele é COMPARTILHADO com o tabuleiro e com o
-	// servidor: um barramento por store devolveria o problema que esta issue
-	// veio resolver, que é quem escuta ter de juntar as peças de novo. Nulo
-	// EXPLODE, e é para explodir: quem monta um store à mão sem barramento
-	// descobre no primeiro `apply`, e não numa tela que não atualiza.
+	// servidor: um barramento por store devolveria a quem escuta o trabalho de
+	// juntar as peças de novo. Nulo EXPLODE, e é para explodir: quem monta um store
+	// à mão sem barramento descobre no primeiro `apply`, e não numa tela que não
+	// atualiza.
 	bus *events.Bus
 }
 
-// persistLock returns the per-session DB-write mutex, creating it on first use.
+// persistLock devolve o mutex de gravação daquela sessão, criando-o no primeiro
+// uso.
 func (st *SessionStore) persistLock(sessionID int64) *sync.Mutex {
 	m, _ := st.persistMus.LoadOrStore(sessionID, &sync.Mutex{})
 	return m.(*sync.Mutex)
 }
 
-// NewSessionStore recebe a PORTA da ficha por parâmetro (ALE-254) — injetada e
-// não importada, que é o que impede o regime de conhecer as regras da ficha.
+// NewSessionStore recebe a PORTA da ficha por parâmetro — injetada e não
+// importada, que é o que impede o regime de conhecer as regras da ficha.
 func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha SheetVitals, bus *events.Bus) *SessionStore {
 	return &SessionStore{
 		States: map[int64]*SessionRuntimeState{},
@@ -76,15 +74,6 @@ func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha SheetVitals,
 	}
 }
 
-// cloneState copies the state for broadcast. The entry structs are copied by value; their
-// *int64 vitals are shared but never mutated in place (patch/delta always assign a fresh
-// pointer), so the snapshot is safe to serialize outside the lock.
-// cloneState copia por VALOR e só depois recria a fatia. A versão anterior
-// listava os campos um a um, e listar campos é uma lista que envelhece: ao
-// entrar o `TurnsTaken` (ALE-142) a cópia continuou compilando e passou a zerar
-// o contador em silêncio — e é a cópia que vai para o socket e para o banco, de
-// modo que o valor certo existia só na memória do servidor. Assim, campo novo
-// vem junto sem ninguém precisar lembrar.
 // nextSeqLocked devolve a ordem da próxima mutação desta sessão. Chamada SEMPRE
 // com `st.Mu` seguro, que é o que faz a numeração coincidir com a ordem real
 // das mutações.
@@ -98,6 +87,14 @@ func (st *SessionStore) nextSeqLocked(sessionID int64) uint64 {
 	return st.seqs[sessionID]
 }
 
+// cloneState copia o estado para o broadcast: as entradas vão por VALOR e a
+// fatia é recriada. Os vitais `*int64` são compartilhados mas nunca mutados no
+// lugar (patch e delta sempre atribuem ponteiro novo), então o instantâneo é
+// seguro de serializar fora da trava.
+//
+// Por VALOR e não campo a campo: listar campos é uma lista que envelhece, e o
+// campo novo que ficasse de fora continuaria compilando e passaria a zerar o
+// valor em silêncio — na cópia que vai para o fio e para o banco.
 func cloneState(s *SessionRuntimeState) *SessionRuntimeState {
 	out := *s
 	out.Initiative = make([]InitiativeEntry, len(s.Initiative))
@@ -114,9 +111,8 @@ func (st *SessionStore) getOrCreateLocked(sessionID int64) *SessionRuntimeState 
 	return s
 }
 
-// GetState returns a snapshot of the current state (an empty tracker if never loaded).
 // LiveSessionsWithCharacter devolve as sessões EM MEMÓRIA que têm este
-// personagem na fila (ALE-245).
+// personagem na fila.
 //
 // Só as vivas, e isso é o ponto: o aviso serve para atualizar tela aberta. Mesa
 // que ninguém está olhando não precisa ser avisada — quem entrar depois busca o
@@ -136,20 +132,19 @@ func (st *SessionStore) LiveSessionsWithCharacter(characterID int64) []int64 {
 	return out
 }
 
+// GetState devolve um instantâneo do estado atual (rastreador vazio quando a
+// sessão nunca foi carregada).
 func (st *SessionStore) GetState(sessionID int64) *SessionRuntimeState {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	return cloneState(st.getOrCreateLocked(sessionID))
 }
 
-// apply runs a pure mutation under the lock, publishes the event, and returns a
-// snapshot for broadcast.
+// apply roda uma mutação pura sob a trava, publica o evento e devolve o
+// instantâneo para o broadcast.
 //
 // O EVENTO É PARÂMETRO OBRIGATÓRIO, e é isso que substitui uma promessa por uma
-// garantia (ALE-279). Antes o aviso era uma linha aqui dentro, e o comentário
-// prometia que ninguém escapava porque `apply` é o funil das treze mutações —
-// uma promessa que vale enquanto ninguém escrever a décima quarta por fora.
-// Agora não dá para mutar sem dizer O QUE aconteceu: o compilador cobra.
+// garantia: não dá para mutar sem dizer O QUE aconteceu, e o compilador cobra.
 //
 // A publicação sai FORA da trava. O barramento é folha e poderia ser chamado de
 // dentro (ver `events.Bus.Publish`), mas quem acorda agora sabe o que houve e
@@ -166,9 +161,9 @@ func (st *SessionStore) apply(sessionID int64, ev events.Event, fn func(*Session
 
 // applyLocked é a parte que precisa da trava: mutar e tirar o retrato.
 //
-// A `seq` (ALE-253) nasce AQUI DENTRO e não na publicação: ela numera as
-// mutações para o hub reconhecer quadro atrasado, e decidir a sequência e
-// entregar têm de ser atômicos.
+// A `seq` nasce AQUI DENTRO e não na publicação: ela numera as mutações para o
+// hub reconhecer quadro atrasado, e decidir a sequência e entregar têm de ser
+// atômicos.
 func (st *SessionStore) applyLocked(sessionID int64, fn func(*SessionRuntimeState) error) (*SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
@@ -244,15 +239,15 @@ func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, 
 }
 
 // DeltaCharacterVitals move os vitais de um PERSONAGEM, esteja ele na fila ou
-// não (ALE-211).
+// não.
 //
 // O irmão dele, o `DeltaVitals`, entra pela ENTRADA da fila, e é o caminho do
 // COMBATE. Este entra pelo personagem, e é o caminho do ELENCO — onde metade da
 // gente não tem linha na iniciativa durante a maior parte da sessão, que é a
 // razão de o elenco existir separado da fila.
 //
-// Quem manda é a FICHA nos dois, e é isso que impede as duas telas de divergirem
-// sobre o mesmo herói (ALE-122). A fila ESPELHA quando existe linha; quando não
+// Quem manda é a FICHA nos dois, e é isso que impede as duas telas de
+// divergirem sobre o mesmo herói. A fila ESPELHA quando existe linha; quando não
 // existe, não há o que espelhar e a ficha é a única a mudar — devolver o estado
 // como está é a resposta certa, e não um erro, porque "não está na fila" é o
 // caso comum aqui e não uma falha.
@@ -286,8 +281,8 @@ func (st *SessionStore) entryIDForCharacter(sessionID, characterID int64) string
 
 // DeltaVitals move os vitais de uma entrada. Se há personagem atrás dela, quem
 // manda é a FICHA: o delta é aplicado na linha do personagem (dano drenando PV
-// temporários, como o endpoint de dano) e a entrada espelha o resultado
-// (ALE-122). NPC não tem ficha — ali o rastreador é o registro.
+// temporários, como o endpoint de dano) e a entrada espelha o resultado. NPC não
+// tem ficha — ali o rastreador é o registro.
 func (st *SessionStore) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
 	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
@@ -302,8 +297,8 @@ func (st *SessionStore) DeltaVitals(sessionID int64, entryID string, hpDelta, mp
 		func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
-// Load hydrates the session from Session.runtimeState on first access, then serves the
-// cached copy./hydrate.
+// Load hidrata a sessão de `Session.runtimeState` no primeiro acesso e depois
+// serve a cópia em memória.
 func (st *SessionStore) Load(ctx context.Context, sessionID int64) (*SessionRuntimeState, error) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
@@ -319,9 +314,9 @@ func (st *SessionStore) Load(ctx context.Context, sessionID int64) (*SessionRunt
 	return cloneState(s), nil
 }
 
-// parseRuntimeBlob parses a persisted blob, falling back to an empty tracker on malformed
-// input (mirrors the zod safeParse fallback). Blobs are always full (our Marshal + the
-// column default carry round/turnIndex), so partial-blob defaulting isn't needed.
+// parseRuntimeBlob lê um blob gravado e cai para um rastreador vazio quando ele
+// vem malformado. Os blobs são sempre completos (o nosso Marshal e o default da
+// coluna carregam rodada e turno), então não há campo parcial a preencher.
 func parseRuntimeBlob(blob string) *SessionRuntimeState {
 	if blob == "" {
 		return EmptyRuntimeState()
@@ -333,32 +328,24 @@ func parseRuntimeBlob(blob string) *SessionRuntimeState {
 	if parsed.Initiative == nil {
 		parsed.Initiative = []InitiativeEntry{}
 	}
-	// Sessão gravada antes da ALE-210 volta sem `sceneActive`, e o zero de um
+	// Sessão gravada antes de `sceneActive` existir volta sem ele, e o zero de um
 	// bool é `false`: uma mesa que parou na rodada 3 reabriria "fora de cena" e a
 	// fila sumiria para os jogadores até o mestre clicar em iniciar. Um turno em
-	// curso é PROVA de que a cena estava ligada — depois desta issue não existe
-	// turno sem cena (`advanceTurn`), então isto não é remendo de migração: é a
-	// invariante afirmada onde o estado entra no processo.
+	// curso é PROVA de que a cena estava ligada — não existe turno sem cena
+	// (`advanceTurn`), então isto não é remendo de migração: é a invariante
+	// afirmada onde o estado entra no processo.
 	if parsed.TurnIndex >= 0 {
 		parsed.SceneActive = true
 	}
 	return &parsed
 }
 
-// Persist serializes the current state to Session.runtimeState. Fire-and-Forget: never
-// returns an error — it returns (Dirty, changed), where `changed` is true only when the
-// persistence health flipped since the last Persist, so the gateway can broadcast
-// `persistence-warning` exactly on the transitions. The store is the single owner of the
-// Dirty flag (pruned by Forget) — the gateway no longer tracks it. Code-review finding.
-//
-// Serialized so overlapping persists for one session write in order: whichever runs last
-// snapshots the newest state, so the DB converges to the latest instead of a stale capture.
-
 // SaveFailed diz se a última gravação do estado desta sessão falhou.
 //
 // ESTADO e não notícia, e a diferença é o que faz o aviso servir: ele vale
 // enquanto durar, então quem abre a aba dez minutos depois da primeira falha
-// merece vê-lo. Um evento perdido é um evento que não existiu (ALE-288). O irmão dele é o `BoardStore.SaveFailed`.
+// merece vê-lo. Um evento perdido é um evento que não existiu. O irmão dele é o
+// `BoardStore.SaveFailed`.
 //
 // Sob a trava porque o `Dirty` é escrito pelo `Persist`, que roda em goroutine.
 func (st *SessionStore) SaveFailed(sessionID int64) bool {
@@ -367,6 +354,14 @@ func (st *SessionStore) SaveFailed(sessionID int64) bool {
 	return st.Dirty[sessionID]
 }
 
+// Persist serializa o estado atual em `Session.runtimeState`. Dispara e esquece:
+// nunca devolve erro — devolve (Dirty, changed), com `changed` verdadeiro só
+// quando a saúde da gravação VIROU desde o último `Persist`, para quem chama
+// avisar a mesa exatamente nas transições. O store é o dono único da marca.
+//
+// Serializado para que gravações sobrepostas da mesma sessão cheguem em ordem: a
+// última a rodar retrata o estado mais novo, e o banco converge para ele em vez
+// de para uma captura velha.
 func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
 	pm := st.persistLock(sessionID)
 	pm.Lock()
@@ -399,27 +394,23 @@ func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, ch
 	return Dirty, changed
 }
 
-// Forget drops a session's in-memory tracker (e.g. on clear-tracker). It does NOT clear
-// the Dirty flag: that would swallow the Dirty→healthy recovery — a session left Dirty
-// must still Emit persistence-warning{Dirty:false} on the next successful Persist. The
-// Dirty map self-prunes on that success, so it stays small (only currently-Dirty sessions).
+// Forget descarta o rastreador em memória de uma sessão. Ele NÃO limpa o
+// `Dirty`: isso engoliria a recuperação suja→saudável — uma sessão deixada suja
+// ainda precisa avisar `persistence-warning{Dirty:false}` no próximo `Persist`
+// bem-sucedido, e o mapa se poda sozinho nesse sucesso.
 func (st *SessionStore) Forget(sessionID int64) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
 	delete(st.States, sessionID)
 }
 
-// SessionDeleted é o `Forget` de uma sessão que deixou de EXISTIR (ALE-270), e
-// a diferença entre os dois é uma linha: esta apaga o `Dirty` também.
+// SessionDeleted é o `Forget` de uma sessão que deixou de EXISTIR, e a diferença
+// entre os dois é uma linha: esta apaga o `Dirty` também.
 //
 // O argumento do `Forget` acima — *"não limpa o Dirty: isso engoliria a
-// recuperação suja→saudável"* — depende de haver um próximo `Persist` que
-// avise que voltou a gravar. Com a sessão apagada não há: a marca ficaria
-// acesa até o processo reiniciar, sobre uma mesa que ninguém quer gravar.
-//
-// **A premissa de um comentário certo pode deixar de valer sem ninguém mexer
-// nele**, e foi o que aconteceu aqui. Ele não estava errado; ele estava
-// respondendo a outra pergunta.
+// recuperação suja→saudável"* — depende de haver um próximo `Persist` que avise
+// que voltou a gravar. Com a sessão apagada não há: a marca ficaria acesa até o
+// processo reiniciar, sobre uma mesa que ninguém quer gravar.
 func (st *SessionStore) SessionDeleted(sessionID int64) {
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
@@ -427,10 +418,10 @@ func (st *SessionStore) SessionDeleted(sessionID int64) {
 	delete(st.Dirty, sessionID)
 }
 
-// RefreshCharacterMaxes refreshes hpMax/mpMax on every entry carrying a characterId from
-// the DB rows (ceilings only; current untouched) so a mid-session level-up isn't capped at
-// the stale max. Best-effort: a DB blip logs and returns the current
-// snapshot rather than failing the get-session-state pull.
+// RefreshCharacterMaxes relê do banco o PV/PM MÁXIMO de toda entrada com
+// personagem atrás (só os tetos; o atual não é tocado), para um nível subido no
+// meio da sessão não ficar preso ao máximo velho. Melhor esforço: uma piscada do
+// banco vira log e devolve o instantâneo atual em vez de derrubar a leitura.
 func (st *SessionStore) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *SessionRuntimeState {
 	st.Mu.Lock()
 	ids := uniqueCharacterIDs(st.getOrCreateLocked(sessionID))

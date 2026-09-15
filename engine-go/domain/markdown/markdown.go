@@ -5,30 +5,25 @@ import (
 	"strings"
 )
 
-// O MARKDOWN DAS NOTAS DA SESSÃO (ALE-269), portado de
-// `frontend/src/shared/lib/markdown.ts`.
+// O MARKDOWN DAS NOTAS DA SESSÃO.
 //
 // É um markdown PEQUENO, do tamanho de uma nota de mesa, e ele produz uma
 // ÁRVORE — nunca HTML. Quem desenha é o templ, montando elementos a partir
 // daqui, então não existe `innerHTML` no caminho e injeção é impossível por
-// construção: sem parser de terceiro e sem sanitizador atrás dele. É o mesmo
-// argumento que a SPA escreveu, e ele atravessa a fronteira intacto porque o
-// templ escapa texto pelo mesmo motivo que o Solid escapa.
+// construção: sem parser de terceiro e sem sanitizador atrás dele.
 //
-// POR QUE PORTAR EM VEZ DE PUXAR UM GOLDMARK: as duas telas desenham a MESMA
-// nota do banco enquanto a migração durar, e as divergências desta gramática
-// não são detalhe — são as decisões que custaram caro. O comportamento PADRÃO
-// de um parser CommonMark junta linhas soltas num parágrafo só, que é
-// exatamente o defeito que a ALE-122 consertou aqui.
+// POR QUE ESCRITO À MÃO E NÃO UM GOLDMARK: o comportamento PADRÃO de um parser
+// CommonMark junta linhas soltas num parágrafo só, e numa nota de mesa a quebra
+// é intencional — ver `closeParagraph`.
 //
-// A paridade é MEDIDA e não afirmada: `markdown/markdown_test.go` compara esta
-// árvore com a que o JS produz, a partir de um oráculo gerado por
-// `api/testdata/markdown-from-the-js.json`, que hoje é linha de base congelada.
+// A gramática tem linha de base congelada em
+// `api/testdata/markdown-from-the-js.json`, contra a qual o
+// `markdown/markdown_test.go` compara a árvore.
 
 // Span é um trecho de uma linha. `Href` só existe em `elo`.
 //
-// As etiquetas JSON são as do TS de propósito: é o que deixa o teste comparar
-// as duas árvores sem uma terceira tradução no meio.
+// As etiquetas JSON são as da linha de base de propósito: é o que deixa o teste
+// comparar as duas árvores sem uma terceira tradução no meio.
 type Span struct {
 	Kind string `json:"kind"`
 	Text string `json:"text"`
@@ -122,10 +117,10 @@ func oneLineBlock(linha string) (Block, bool) {
 
 // closeParagraph despeja as linhas acumuladas num bloco.
 //
-// CADA LINHA DIGITADA É UMA LINHA NA TELA (ALE-122). Numa nota de mesa a quebra
-// é intencional, e juntá-las como o markdown padrão manda transformava trinta
-// linhas de anotação num parágrafo só. É a divergência que faz este port existir
-// em vez de uma dependência.
+// CADA LINHA DIGITADA É UMA LINHA NA TELA. Numa nota de mesa a quebra é
+// intencional, e juntá-las como o markdown padrão manda transforma trinta
+// linhas de anotação num parágrafo só. É a divergência que faz este parser
+// existir em vez de uma dependência.
 func closeParagraph(blocos []Block, paragrafo []string) ([]Block, []string) {
 	if len(paragrafo) == 0 {
 		return blocos, paragrafo
@@ -253,10 +248,8 @@ func ToggleTask(fonte string, linha int, marcada bool) string {
 	if marcada {
 		novo = "[x]"
 	}
-	// SÓ A PRIMEIRA ocorrência, porque é o que o `String.replace` do JS faz sem
-	// a bandeira `g`. Um `ReplaceAll` aqui reescreveria também um `[x]` que o
-	// mestre tenha escrito no MEIO do texto do item — divergência silenciosa
-	// entre as duas telas sobre a mesma nota.
+	// SÓ A PRIMEIRA ocorrência: um `ReplaceAll` aqui reescreveria também um
+	// `[x]` que o mestre tenha escrito no MEIO do texto do item.
 	pos := checkbox.FindStringIndex(linhas[linha])
 	linhas[linha] = linhas[linha][:pos[0]] + novo + linhas[linha][pos[1]:]
 	return strings.Join(linhas, "\n")

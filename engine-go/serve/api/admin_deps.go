@@ -11,7 +11,7 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O QUE O HOSPEDEIRO DEVE À CENA DE ADMINISTRAÇÃO (ALE-278).
+// O QUE O HOSPEDEIRO DEVE À CENA DE ADMINISTRAÇÃO.
 //
 // A `admin.Deps` é declarada lá, no consumidor. O que mora aqui é o cumprimento
 // dela, e ele é fino: cada método embrulha o que a casa já fazia, com o nome
@@ -23,7 +23,7 @@ import (
 // conhece, e o `backupDTO` em particular teria feito a tela depender da forma do
 // JSON da API de backup.
 //
-// # O adaptador deixou de ser o `*Server` (ALE-278, fatia 6)
+// # O adaptador não é o `*Server`
 //
 // Ele carrega o núcleo mais DUAS coisas: a configuração (é dela que saem o
 // ambiente, o caminho do banco e a política de backup) e o `*sql.DB` (apagar
@@ -31,10 +31,8 @@ import (
 // uma mesa fica órfã de um usuário que não existe).
 //
 // As quatro regras que só esta cena usa — `deleteAccount`,
-// `deleteUserKeepingCampaigns`, `backupDatabase` e `mintPasswordReset` — desceram
-// para cá com ele. Elas nunca foram do servidor: estavam nele porque o handler
-// HTTP que as chamava estava, e o `deleteAccount` em particular é a SEGUNDA
-// regra deste repositório que apareceu soldada ao transporte que a alcançou
+// `deleteUserKeepingCampaigns`, `backupDatabase` e `mintPasswordReset` — moram
+// com ele, e não no servidor: elas não são do transporte que as alcançou
 // primeiro.
 type adminHost struct {
 	sceneCore

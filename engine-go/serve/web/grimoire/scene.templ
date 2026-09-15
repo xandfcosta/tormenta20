@@ -2,16 +2,15 @@ package grimoire
 
 import "t20engine/serve/web/ui"
 
-// A FOLHA DE ESPECIFICAÇÃO do sistema de desenho (ALE-251, portada da ALE-173).
+// A FOLHA DE ESPECIFICAÇÃO do sistema de desenho.
 //
 // Duas regras sustentam esta página, e as duas existem contra o mesmo
 // apodrecer:
 //
 //  1. **Ela LÊ o valor do navegador, nunca o transcreve.** Cada legenda vem do
 //     `getComputedStyle` da amostra ao lado, então o número e o desenho não têm
-//     como discordar. Isso não existe no servidor, e por isso esta é a primeira
-//     ilha de JS da migração que é NECESSÁRIA e não conveniente —
-//     `piloto/grimorio.ts`.
+//     como discordar. O servidor não sabe responder isso, e por isso a ilha de
+//     JS aqui é NECESSÁRIA e não conveniente — `piloto/grimorio.ts`.
 //  2. **Ela usa as peças de VERDADE**, e não imitações com as mesmas classes.
 //     Uma imitação mentiria no primeiro dia em que alguém mexesse no original.
 //
@@ -45,7 +44,7 @@ var accents = []colorSample{
 	{Classe: "bg-grimorio-parchment", Token: "--grimorio-parchment", Nota: "superfície clara"},
 }
 
-// Os papéis, cada um com o par bloco + tinta (ALE-173, P3). Ficam lado a lado
+// Os papéis, cada um com o par bloco + tinta. Ficam lado a lado
 // de propósito: é aqui que se vê que a cor de PREENCHER e a de ESCREVER não
 // podem ser a mesma — a de baixo passa de 4,5:1 e a de cima não.
 var roles = []colorSample{
@@ -110,7 +109,7 @@ var shadcnSteps = []simpleSample{
 	{Classe: "text-xs", Nome: "text-xs"},
 }
 
-// Os três que a casa acrescentou ABAIXO do piso do shadcn (ALE-173).
+// Os três que a casa acrescentou ABAIXO do piso do shadcn.
 var houseSteps = []simpleSample{
 	{Classe: "text-2xs", Nome: "text-2xs", Uso: "rótulo de seção"},
 	{Classe: "text-3xs", Nome: "text-3xs", Uso: "rótulo de campo"},
@@ -167,7 +166,7 @@ templ colorSwatch(a colorSample) {
 
 // radiusCorner: o canto desenhado pela classe, e ao lado o PIXEL que ela virou
 // dentro desta cena — que é a informação que ninguém consegue prever lendo o
-// código, porque a cena redefine o `--radius` (ALE-173).
+// código, porque a cena redefine o `--radius`.
 templ radiusCorner(a simpleSample) {
 	<figure class="w-28 space-y-1">
 		<div data-amostra class={ "h-14 w-full border border-grimorio-gold/60 bg-grimorio-panel-raised", a.Classe }></div>
@@ -211,10 +210,8 @@ templ colorSection() {
 				@colorSwatch(a)
 			}
 		}
-		// O bloco que eu tinha PERDIDO inteiro no primeiro porte, e não só a
-		// prosa: ele nasceu da ALE-237, é a única amostra da folha sobre
-		// superfície CLARA, e some sem deixar rastro porque nada mais na página
-		// depende dele.
+		// A única amostra da folha sobre superfície CLARA. Ela some sem deixar
+		// rastro se alguém a apagar, porque nada mais na página depende dela.
 		@sheetBlock("Tinta sobre pergaminho", "O livro de campanhas é creme, e a conta inverte: o que é legível no painel escuro pode não ser aqui. O crimson base rende 3,95:1 sobre este fundo — abaixo do mínimo de texto —, e por isso a superfície clara tem tinta própria. Ela NÃO é um ajuste no crimson base: aquele é o `--destructive`, medido com branco por cima, e mexer nele mudaria o botão que apaga por um motivo que não é dele.") {
 			<div class="grimorio-parchment-bg flex items-center gap-3 rounded-sm p-3">
 				<span class={ ui.SectionTitleClasses("painel", "", "text-grimorio-parchment-crimson") }>
@@ -313,28 +310,6 @@ templ grimoire() {
 
 // Esta seção mostra cada peça de `web/ui` com o que o navegador RESOLVEU para
 // ela, e a medida é o ponto: sem ela, duas peças parecidas passam por iguais.
-//
-// # AQUI HAVIA DUAS COLUNAS, e vale saber o que a segunda fez (ALE-251)
-//
-// Ela era a peça equivalente da SPA, montada como elemento customizado a partir
-// do componente Solid DE VERDADE — nunca uma imitação, porque uma imitação com
-// as mesmas classes concordaria consigo mesma e não flagraria nada. Comparar as
-// duas lado a lado devolveu CINCO features que um porte tinha perdido: os peeks
-// e o ⏎ da ALE-239, o link de redefinição da ALE-242, e na ALE-246 o
-// `data-tome-root` e o `field-sizing`. A ALE-250 saiu daqui também, e é a que
-// mais ensina: a comparação achou 2px de diferença no `secondary`, e a
-// conclusão registrada — "o errado é o nome" — sobreviveu meses até alguém
-// medir o LIMITE de contraste e descobrir que a borda era o conserto.
-//
-// A coluna saiu na ALE-314, por decisão do dono: a migração fechou e o corpo de
-// prova foi considerado cumprido. O que ela custava era 0,3% do `node_modules`
-// e ~77 KB do binário, então o preço não foi o que decidiu — foi o prazo de
-// validade, que ninguém tinha escrito.
-//
-// **O que saiu junto foi um INVENTÁRIO**, e ele está na ALE-316: oito peças da
-// SPA nunca ganharam contraparte aqui — três variantes de botão, as variantes
-// de crachá e as quatro barras vitais. A folha dizia isso por PRESENÇA, com uma
-// linha "sem par em templ"; agora é uma issue.
 
 templ partPart(nome string, peca templ.Component) {
 	<div data-par class="flex w-full items-center gap-4 border-b border-grimorio-iron/40 py-2 last:border-0">
@@ -346,9 +321,8 @@ templ partPart(nome string, peca templ.Component) {
 }
 
 // measuredCell põe a peça e, embaixo, o que o navegador resolveu para ela. É a
-// regra nº 1 da folha: sem a medida, duas peças parecidas passam por iguais — e
-// foi assim que a primeira versão desta seção deixou passar um erro de 12px no
-// `xs`, quando ela ainda comparava com a SPA.
+// regra nº 1 da folha: sem a medida, duas peças parecidas passam por iguais, e
+// uma diferença de poucos pixels no tamanho `xs` não se vê a olho nu.
 templ measuredCell() {
 	<span class="flex w-full min-w-0 flex-col gap-1">
 		<span data-amostra-cela class="flex items-center gap-2">
@@ -387,7 +361,7 @@ templ sheetButton(v ui.Variant) {
 	}
 }
 
-// O crachá do servidor (ALE-177). Ele é a GEOMETRIA e nada mais, e é por isso
+// O crachá do servidor. Ele é a GEOMETRIA e nada mais, e é por isso
 // que o exemplo traz a borda neutra à mão: escolher uma cor aqui inventaria uma
 // variante que não existe.
 templ sheetBadge() {

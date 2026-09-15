@@ -11,17 +11,12 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A cena de PERSONAGENS como dado (ALE-239) — a segunda cena de seleção, e a
-// primeira em que o SERVIDOR faz trabalho que a SPA pedia por requisição.
+// A cena de PERSONAGENS como dado. A forma é a de campanhas: o cursor é sinal,
+// todos os palcos são desenhados, e a busca vai ao servidor.
 //
-// A forma é a de campanhas (ALE-234): o cursor é sinal, todos os palcos são
-// desenhados, e a busca vai ao servidor. O que muda são três coisas, e as três
-// são ganho de servidor:
-//
-//  1. A DEFESA sai da `ComputeSheetV2`, a mesma da ficha. Na SPA é uma consulta
-//     por personagem, disparada quando o cursor pousa; aqui todas saem juntas.
-//  2. Os TEXTOS das habilidades de raça vêm do catálogo embutido, não baixado.
-//  3. A vaga de CRIAR é posição de cursor, não link — ver `scene.templ`.
+// A DEFESA sai da `ComputeSheetV2`, a mesma da ficha, e todas saem juntas; os
+// TEXTOS das habilidades de raça vêm do catálogo embutido; e a vaga de CRIAR é
+// posição de cursor e não link — ver `scene.templ`.
 
 type View struct {
 	Busca string
@@ -35,11 +30,10 @@ type View struct {
 	Total       int
 	HasAny      bool
 	FilteredAll bool
-	// Neighbors espelha `Heroes` na ordem do trilho, e existe porque o vizinho
-	// é COMPARTILHADO com a cena de campanhas (ALE-297): o `ui.NeighborAt` só
-	// indexa, e quem sabe traduzir um cartão de herói em vizinho é quem tem o
-	// cartão. Montar aqui, uma vez, também evita reconstruir dois vizinhos por
-	// palco desenhado.
+	// Neighbors espelha `Heroes` na ordem do trilho, e existe porque o vizinho é
+	// COMPARTILHADO com a cena de campanhas: o `ui.NeighborAt` só indexa, e quem
+	// sabe traduzir um cartão de herói em vizinho é quem tem o cartão. Montar aqui,
+	// uma vez, também evita reconstruir dois vizinhos por palco desenhado.
 	Neighbors []ui.Neighbor
 }
 
@@ -57,33 +51,29 @@ type HeroCard struct {
 	Summary string
 	Level   int64
 	PV      string
-	// PVInk é a TINTA do PV, e não a cor de preencher uma barra: aqui o vital
-	// é um número e não uma faixa, então ele segue a escada de ESCREVER
-	// (ALE-240 via ALE-316). Ela vive no cartão e não no `templ` porque quem
-	// decide é a view — o componente só pinta o que recebe.
+	// PVInk é a TINTA do PV, e não a cor de preencher uma barra: aqui o vital é um
+	// número e não uma faixa, então ele segue a escada de ESCREVER. Ela vive no
+	// cartão e não no `templ` porque quem decide é a view — o componente só pinta o
+	// que recebe.
 	PVInk string
 	PM    string
 	// Defesa é TEXTO e não número porque ela pode ser desconhecida, e aí é um
-	// travessão. A SPA faz igual, e o motivo dela vale aqui: nunca um zero, que
-	// é um valor de Defesa plausível e errado. Travessão também mantém a fileira
-	// do mesmo tamanho — uma coluna que some faz o palco dançar ao trocar de
-	// herói, que é o defeito da ALE-99.
+	// travessão: nunca um zero, que é um valor de Defesa plausível e errado. O
+	// travessão também mantém a fileira do mesmo tamanho — uma coluna que some faz
+	// o palco dançar ao trocar de herói.
 	Defense string
-	// DefenseVs é a MESMA Defesa dita para quem vai resolver um ataque: um
-	// número quando nada é direcional, e os dois quando algo é — hoje só o Caído
-	// (p394, ALE-274).
+	// DefenseVs é a MESMA Defesa dita para quem vai resolver um ataque: um número
+	// quando nada é direcional, e os dois quando algo é — hoje só o Caído (p394).
 	//
-	// DOIS campos e não um, e a razão é que os dois consumidores fazem perguntas
-	// diferentes. A LISTA de heróis mostra o `Defense`: ela é catálogo fora da
-	// sessão, ninguém está resolvendo ataque ali, e um par de números onde se
-	// compara heróis é ruído. O crachá da FICHA mostra o `DefenseVs`, porque ele
-	// existe justamente para responder "acerta?" — está escrito no comentário
-	// dele, e é a pergunta cuja resposta nunca é o total enquanto o alvo está
-	// caído.
+	// DOIS campos e não um, porque os dois consumidores fazem perguntas diferentes.
+	// A LISTA de heróis mostra o `Defense`: ela é catálogo fora da sessão, ninguém
+	// está resolvendo ataque ali, e um par de números onde se comparam heróis é
+	// ruído. O crachá da FICHA mostra o `DefenseVs`, porque ele existe justamente
+	// para responder "acerta?", e essa resposta nunca é o total enquanto o alvo
+	// está caído.
 	//
 	// A frase dos dois sai da MESMA função (`book.DefenseLabel`), então elas não
-	// podem divergir sobre o que os números significam; o que difere é qual das
-	// duas perguntas cada tela faz.
+	// podem divergir sobre o que os números significam.
 	DefenseVs string
 	NoMana    bool
 	Race      string
@@ -92,18 +82,17 @@ type HeroCard struct {
 	Dossier   []book.RaceAbility
 }
 
-// Load monta a cena para um dono. Ela é EXPORTADA, e vale dizer por quê,
-// porque o consumidor hoje é uma bancada e não uma tela.
+// Load monta a cena para um dono. Ela é EXPORTADA porque o consumidor hoje é
+// uma bancada e não uma tela.
 //
 // O que os nove casos do `api/characters_scene_test.go` prendem é o caminho
 // BANCO → PALCO: personagens gravados de verdade saem na lista, com a contagem,
 // os vizinhos e a Defesa que a ficha mostra. Este pacote não pode provar isso —
-// ele não tem banco, e importar o `db/testdb` junto com um `*api.Server` seria
-// o ciclo que a divisão inteira existe para evitar.
+// ele não tem banco, e importar o `db/testdb` junto com um `*api.Server` seria o
+// ciclo que a divisão inteira existe para evitar.
 //
-// Então a fronteira fica assim: a cena diz COMO montar a si mesma, o hospedeiro
-// prova que o que está no banco chega aqui. É a mesma direção do
-// `master.LoadBestiaryFrom`, que a Mesa lê de fora pelo mesmo motivo.
+// A fronteira fica assim: a cena diz COMO montar a si mesma, o hospedeiro prova
+// que o que está no banco chega aqui.
 func (s Scene) Load(ctx context.Context, ownerID int64, busca string) (View, error) {
 	elenco, err := s.deps.CharacterList(ctx, ownerID)
 	if err != nil {
@@ -129,17 +118,17 @@ func (s Scene) Load(ctx context.Context, ownerID int64, busca string) (View, err
 	return v, nil
 }
 
-// searchFields são os quatro que a SPA indexa: nome, classe primária, origem e
-// raças. Portados como estão — buscar por raça é o que faz "anao" achar o anão,
-// e esse é o caso que a regra de acento existe para servir.
+// searchFields são os quatro campos que a busca indexa: nome, classe primária,
+// origem e raças. Buscar por RAÇA é o que faz "anao" achar o anão, e é o caso
+// que a regra de acento existe para servir.
 func searchFields(c sheet.CharacterDTO) []string {
 	return []string{c.Name, primaryClass(c), c.Origin, racesInLine(c)}
 }
 
 // HeroCardOf é função LIVRE e não método da cena, e a razão é a regra da menor
 // pergunta: de tudo que a `Deps` oferece, o cartão usa só o motor. Deixá-lo
-// método obrigaria quem o chama de fora — a ficha, que reaproveita quatro
-// campos dele — a montar uma `Scene` inteira para pedir um cartão (ALE-278).
+// método obrigaria quem o chama de fora — a ficha, que reaproveita quatro campos
+// dele — a montar uma `Scene` inteira para pedir um cartão.
 func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 	cartao := HeroCard{
 		ID:       c.ID,
@@ -175,11 +164,7 @@ func HeroCardOf(catalogos *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 
 // stageLine é o resumo curto sob os vitais: "Devoto de X · origem · tamanho".
 //
-// Portei o `characterFlavor` primeiro e estava ERRADO — comparando com a tela
-// da SPA lado a lado, aquele é o resumo do DOSSIÊ, e o palco usa outro, mais
-// curto e com separador diferente (` · ` e não ` • `). São duas funções
-// parecidas no mesmo arquivo de origem, e escolher pela semelhança do nome é
-// como se troca uma pela outra.
+// Não confundir com o resumo do DOSSIÊ, que é mais longo e separa com ` • `.
 //
 // `god` é opcional e some quando ausente, em vez de virar "Devoto de ".
 func stageLine(c sheet.CharacterDTO) string {

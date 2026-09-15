@@ -14,17 +14,13 @@ import (
 	"t20engine/domain/live"
 )
 
-// OS COMANDOS DO MESTRE na Mesa em Datastar (ALE-265).
+// OS COMANDOS DO MESTRE na Mesa.
 //
-// Eles NÃO reusam as rotas da API JSON, e a escolha é a mesma das catorze
-// fatias: a cena tem rota própria que chama a MESMA regra. O que impede as duas
-// telas de divergirem não é compartilhar a rota — é compartilhar a regra e o
-// store. A ALE-122 aconteceu com dois transportes escrevendo em dois LUGARES,
-// não em dois caminhos.
+// Eles NÃO reusam as rotas da API JSON: a cena tem rota própria que chama a
+// MESMA regra. O que impede duas telas de divergirem não é compartilhar a rota
+// — é compartilhar a regra e o store.
 //
-// A autorização é a que já existe: o `sessionForCaller` resolve o papel pelo
-// mesmo caminho que a API usa, e papel desconhecido cai em jogador. Esconder o
-// botão é UX; a trava é aqui.
+// Esconder o botão é UX; a trava é aqui.
 
 func (s Scene) TableCommandRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/proxima-vez", s.gmCommand(
@@ -42,21 +38,16 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/cena/encerrar", s.gmCommand(endScene))
 	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/por-no-mapa", s.gmCommand(bringParty))
 	r.Post("/mesa/{campaignId}/{sessionId}/iniciativa/adicionar", s.gmCommand(addCombatant))
-	// DOIS caminhos e não um `/rest` com o escopo no corpo, que é a forma da API
-	// JSON: aqui o VERBO é o caminho, como em `scene/start` e `scene/end`. A
-	// gramática desta superfície já foi escolhida, e misturar as duas faria a
-	// próxima pessoa ter de descobrir qual vale onde.
+	// DOIS caminhos e não um `/descanso` com o escopo no corpo, que é a forma da
+	// API JSON: nesta superfície o VERBO é o caminho, e misturar as duas
+	// gramáticas faria a próxima pessoa ter de descobrir qual vale onde.
 	r.Post("/mesa/{campaignId}/{sessionId}/descanso/cena", s.gmCommand(restParty("scene")))
 	r.Post("/mesa/{campaignId}/{sessionId}/descanso/dia", s.gmCommand(restParty("day")))
-	// O QUE O MESTRE MEXE EM CADA LINHA. O `entryId` vem do caminho como os
-	// outros dois ids, e a autorização é a mesma dos comandos da mesa: o
-	// `gmCommand` já barra quem não é mestre.
-	//
-	// Mais restrito que a API JSON de propósito. Lá o `assertVitalsEditableFor`
-	// deixa o jogador mexer nos vitais do PRÓPRIO personagem, porque lá existe a
-	// tela do jogador que faz isso. Aqui a superfície do jogador é leitura mais
-	// registrar iniciativa (ALE-213), e uma segunda regra de escrita seria uma
-	// porta que nenhuma tela usa.
+	// O QUE O MESTRE MEXE EM CADA LINHA — mais restrito que a API JSON de
+	// propósito. Lá o `assertVitalsEditableFor` deixa o jogador mexer nos vitais
+	// do PRÓPRIO personagem, porque lá existe a tela do jogador que faz isso.
+	// Aqui a superfície do jogador é leitura mais registrar iniciativa, e uma
+	// segunda regra de escrita seria uma porta que nenhuma tela usa.
 	r.Route("/mesa/{campaignId}/{sessionId}/iniciativa/{entryId}", func(r chi.Router) {
 		r.Post("/vitais/{pool}/ferir/{step}", s.gmCommand(moveVitals(-1)))
 		r.Post("/vitais/{pool}/curar/{step}", s.gmCommand(moveVitals(+1)))
@@ -69,16 +60,11 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 // addCombatant é o capanga digitado na hora: nome, iniciativa, PV e se é
 // PC ou NPC.
 //
-// A VALIDAÇÃO é do `live` e não daqui, e essa é a extração de sempre: os
-// limites viviam como atributos dos campos do formulário da SPA, que é UI e não
-// trava — quem postasse na mão passava por cima dos quatro. Com eles no pacote
-// do estado, as duas telas param de poder discordar sobre o que é um combatente
-// aceitável.
+// A VALIDAÇÃO é do `live` e não daqui: limite escrito como atributo de campo é
+// UI e não trava, e quem posta na mão passa por cima dele.
 //
-// Quem MONTA a linha continua sendo o `materializeEntry`, que é o caminho que a
-// API já usa: sem `characterId` ele cai no NPC, e o PV só entra quando foi
-// digitado. Escrever a montagem aqui seria a segunda cópia da mesma regra, que é
-// como a ALE-122 começou.
+// Quem MONTA a linha é o `materializeEntry`, que é o caminho que a API já usa.
+// Escrever a montagem aqui seria a segunda cópia da mesma regra.
 func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	novo, err := signalsCombatant(c.R)
 	if err != nil {
@@ -106,10 +92,10 @@ func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, err
 	}
-	// O formulário volta ao zero, como na SPA: sem isto o nome fica no campo e o
-	// clique seguinte acrescenta o MESMO capanga de novo — e no meio de um
-	// combate ninguém confere a fila antes de clicar. Volta para NPC porque é o
-	// caso comum; o PC digitado à mão é a exceção.
+	// O formulário volta ao zero: sem isto o nome fica no campo e o clique
+	// seguinte acrescenta o MESMO capanga de novo — e no meio de um combate
+	// ninguém confere a fila antes de clicar. Volta para NPC porque é o caso
+	// comum; o PC digitado à mão é a exceção.
 	c.Sinais["new_name"] = ""
 	c.Sinais["new_initiative"] = 10
 	c.Sinais["new_hp"] = 0
@@ -121,10 +107,8 @@ func addCombatant(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 //
 // TODOS OS NOMES EM `snake_case`, e isso é obrigatório e não estilo: eles são
 // chaves de `data-bind:`, e nome de atributo é minusculado pelo analisador de
-// HTML. Caixa alta na chave liga um sinal NOVO e deixa o declarado intocado —
-// o fio leva os dois e o servidor lê o errado. Foi exatamente isso
-// que aconteceu com a qualidade do descanso, e o navegador foi a única
-// testemunha.
+// HTML. Caixa alta na chave liga um sinal NOVO e deixa o declarado intocado — o
+// fio leva os dois e o servidor lê o errado, sem erro em lugar nenhum.
 func signalsCombatant(r *http.Request) (live.CombatantDraft, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
@@ -143,19 +127,17 @@ func signalsCombatant(r *http.Request) (live.CombatantDraft, error) {
 
 // moveVitals é o dano e a cura de UMA linha, e o PASSO vem do CAMINHO.
 //
-// Não é um número que a página manda, e a escolha é a lição desta fatia: sinal é
-// a superfície onde a página e o servidor discordam em silêncio — o
-// `qualidadedodescanso` chegou a viajar com DOIS nomes no fio, e o servidor leu
-// o que ninguém tinha tocado. Um passo em sinal teria de ser validado aqui de
-// qualquer jeito; no caminho, o que não é 1 nem 5 não casa rota nenhuma.
+// Não é um número que a página manda: sinal é a superfície onde a página e o
+// servidor discordam em silêncio, e um passo em sinal teria de ser validado aqui
+// de qualquer jeito. No caminho, o que não é 1 nem 5 não casa rota nenhuma.
 //
-// O sinal do delta é do FECHAMENTO e não de uma comparação de string: "harm" e
-// "heal" são rotas diferentes, então não há o que comparar nem como escrever a
+// O sinal do delta é do FECHAMENTO e não de uma comparação de string: ferir e
+// curar são rotas diferentes, então não há o que comparar nem como escrever a
 // terceira palavra que não existe.
 //
 // Quem sabe somar é o store: com personagem atrás da linha quem manda é a FICHA
-// (o dano drena PV temporários) e a entrada espelha o resultado (ALE-122). O
-// piloto não tem uma segunda conta.
+// (o dano drena PV temporários) e a entrada espelha o resultado. Não há uma
+// segunda conta aqui.
 func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
 	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		raw := chi.URLParam(c.R, "step")
@@ -172,8 +154,8 @@ func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, 
 		state, err := st.deps.Sessions().DeltaVitals(c.SessionID, entryID, hp, mp)
 		// QUANDO HÁ FICHA ATRÁS DA LINHA, quem levou o dano foi o PERSONAGEM e
 		// não o rastreador (ver `DeltaVitals`) — então a ficha de quem está na
-		// mesa mudou, e a tela dele precisa saber (ALE-275). NPC não tem ficha:
-		// ali o `CharacterIDOf` devolve nulo e não há quem avisar.
+		// mesa mudou, e a tela dele precisa saber. NPC não tem ficha: ali o
+		// `CharacterIDOf` devolve nulo e não há quem avisar.
 		if err == nil {
 			if charID := st.deps.Sessions().CharacterIDOf(c.SessionID, entryID); charID != nil {
 				st.deps.CharacterChanged(*charID)
@@ -184,18 +166,10 @@ func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, 
 }
 
 // vitalSteps são os DOIS que a tela oferece: o clique e o Shift+clique.
-//
-// Espelham o `STEP`/`SHIFT_STEP` da SPA, e serem os mesmos números importa pelo
-// motivo de sempre nesta migração — duas escadas diferentes fariam as duas telas
-// chamarem de "um golpe" coisas diferentes.
 var vitalSteps = map[string]int64{"1": 1, "5": 5}
 
-// poolDeltas manda o passo para o pool que a URL nomeia (ALE-211).
-//
-// O `DeltaVitals` sempre soube dos dois — a assinatura dele pede `hpDelta` e
-// `mpDelta` desde que existe, e o caminho da FICHA por baixo também. O que
-// faltava era a fila poder pedir o segundo: até aqui ela mandava `nil` no lugar
-// do mana, para todo combatente, em todo clique.
+// poolDeltas manda o passo para o pool que a URL nomeia — o outro vai nulo,
+// que é como o `DeltaVitals` diz "não mexe".
 func poolDeltas(pool string, delta int64) (hp, mp *int64, ok bool) {
 	switch pool {
 	case "hp":
@@ -219,13 +193,11 @@ func toggleEye(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if i < 0 {
 		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
 	}
-	// A ALTERNÂNCIA parte do que a MESA VÊ hoje, e não do ponteiro — e essa é a
-	// armadilha que a ALE-211 criou ao dar padrão a cada pool.
-	//
-	// Enquanto nulo significava "visível", `nil → true` estava certo. Com o PV
-	// do NPC nascendo ESCONDIDO, o mesmo código gravaria "esconder" sobre uma
-	// linha que já está escondida: o mestre clicaria no olho e a tela não mudaria
-	// nada, que é o defeito mais difícil de reportar — o botão parece morto.
+	// A ALTERNÂNCIA parte do que a MESA VÊ hoje, e não do ponteiro: cada pool tem
+	// um padrão próprio, e nulo NÃO quer dizer "visível" em todos. Invertendo o
+	// ponteiro, o PV do NPC — que já nasce escondido — receberia "esconder" sobre
+	// uma linha escondida, e o mestre clicaria no olho sem a tela mudar nada. É o
+	// defeito mais difícil de reportar: o botão parece morto.
 	e := state.Initiative[i]
 	choice, visibleByDefault := e.MpHidden, false
 	pool := chi.URLParam(c.R, "pool")
@@ -246,11 +218,9 @@ func toggleEye(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	return st.deps.Sessions().UpdateInitiativeEntry(c.SessionID, entryID, patch)
 }
 
-// editaOCombatente corrige a iniciativa e o PV de quem já está na fila.
-//
-// A iniciativa é o gesto que a ALE-122 nomeou e deixou sem saída: "Adicionar
-// grupo" entra com 0 e o mestre não tinha como consertar, então a única saída
-// era remover e acrescentar de novo — perdendo PV e condições no caminho.
+// editaOCombatente corrige a iniciativa e o PV de quem já está na fila. "Pôr no
+// mapa" entra com iniciativa 0, e sem esta porta a única saída seria remover e
+// acrescentar de novo — perdendo PV e condições no caminho.
 //
 // QUEM DECIDE SE HÁ PV PARA EDITAR é o servidor, olhando a linha, e não um sinal
 // que a página mande junto: uma tela defasada diria "tem" sobre um combatente
@@ -283,9 +253,8 @@ func editaOCombatente(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if !temVitais {
 		return estado, nil
 	}
-	// O `PatchVitals` é o caminho da casa e vale por si: com personagem atrás da
-	// linha ele escreve na FICHA e espelha, como o delta faz (ALE-122). Quem
-	// prende o valor ao teto é ele, não uma conta escrita aqui.
+	// Com personagem atrás da linha o `PatchVitals` escreve na FICHA e espelha,
+	// como o delta faz. Quem prende o valor ao teto é ele, não uma conta aqui.
 	return st.deps.Sessions().PatchVitals(c.SessionID, entryID, &edicao.PV, nil)
 }
 
@@ -311,22 +280,21 @@ func edicaoDosSinais(r *http.Request) (struct {
 	return fora, nil
 }
 
-// tiraDaFila remove o combatente. Sem confirmação, como na SPA: o gesto é do
-// meio do combate, e a fila é remontável — o que não é remontável (encerrar a
-// cena) é que ganhou dois verbos distintos em vez de um interruptor.
+// tiraDaFila remove o combatente. Sem confirmação: o gesto é do meio do
+// combate, e a fila é remontável — o que não é remontável (encerrar a cena) é
+// que ganhou dois verbos distintos em vez de um interruptor.
 func tiraDaFila(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	return st.deps.Sessions().RemoveInitiativeEntry(c.SessionID, chi.URLParam(c.R, "entryId"))
 }
 
 // restParty é a RECUPERAÇÃO (T20 p105): devolve PV e PM ao grupo inteiro.
 //
-// Os dois escopos dividem o corpo porque só diferem em duas coisas — a
-// qualidade, que só o de dia usa, e o que o `restParty` faz lá dentro. Duas
-// funções seriam duas chances de uma esquecer o aviso às fichas.
+// Os dois escopos dividem o corpo porque só diferem na qualidade, que só o de
+// dia usa. Duas funções seriam duas chances de uma esquecer o aviso às fichas.
 //
 // O aviso é obrigatório e não é o `session-state`: o que muda no descanso é a
-// FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem estivesse
-// com a ficha aberta na SPA continuaria vendo o PV de antes até recarregar.
+// FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem está com a
+// ficha aberta continua vendo o PV de antes até recarregar.
 func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
 	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		qualidade := "normal"
@@ -345,11 +313,10 @@ func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState
 			"sessionId": c.SessionID, "scope": escopo, "condition": qualidade,
 		})
 		estado := st.deps.Sessions().GetState(c.SessionID)
-		// O PARCIAL é contado e DITO, que é a lição da ALE-155: antes o
-		// encerrar-cena era `_, _ =` e o mestre lia "descansou" enquanto duas de
-		// cinco fichas não tinham descansado. Volta como recusa porque é o
-		// caminho que acende a frase — e "3 de 5" é exatamente o que ele precisa
-		// ver para saber que tem de olhar as outras duas.
+		// O PARCIAL é contado e DITO: descartar a contagem faria o mestre ler
+		// "descansou" com duas de cinco fichas de fora. Volta como recusa porque
+		// é o caminho que acende a frase — e "3 de 5" é o que ele precisa ver
+		// para saber que tem de olhar as outras duas.
 		if feitos < total {
 			return estado, fmt.Errorf("%d de %d fichas descansaram; as outras %d falharam", feitos, total, total-feitos)
 		}
@@ -357,23 +324,19 @@ func restParty(escopo string) func(Scene, commandCtx) (*live.SessionRuntimeState
 	}
 }
 
-// restQualities são as quatro do livro (T20 p105), e a lista existe aqui
-// para RECUSAR o que não é uma delas.
-//
-// O `restMultiplier` do motor cai em "normal" quando não reconhece a palavra, e
-// para o app isso não serve: um sinal adulterado faria o grupo descansar em
-// "normal" enquanto o mestre pediu "luxuosa", e ninguém veria a diferença — um
-// número plausível no lugar do certo é o desfecho que esta migração mais paga
-// para evitar.
+// restQualities são as quatro do livro (T20 p105), e a lista existe aqui para
+// RECUSAR o que não é uma delas: o `restMultiplier` do motor cai em "normal"
+// quando não reconhece a palavra, então um sinal adulterado faria o grupo
+// descansar em "normal" com o mestre tendo pedido "luxuosa", e ninguém veria a
+// diferença.
 var restQualities = map[string]bool{"ruim": true, "normal": true, "confortavel": true, "luxuosa": true}
 
 // restQuality lê o sinal da página.
 //
 // Lê ANTES do `NewSSE`, obrigatoriamente: o SDK assume a resposta e fecha o
-// corpo do pedido, e um `ReadSignals` depois dele encontra o corpo fechado. Isso
-// é garantido pela ordem no `gmCommand`, que chama a mutação primeiro — e
-// a armadilha está registrada no `action.go`, onde ela passou VERDE
-// em teste de handler e falhou no navegador.
+// corpo do pedido, e um `ReadSignals` depois dele encontra o corpo fechado. Quem
+// garante a ordem é o `gmCommand`, que chama a mutação primeiro. A inversão
+// passa VERDE em teste de handler e só falha no navegador.
 func restQuality(r *http.Request) (string, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `platform.DecodeJSON`
 	var sinais struct {
@@ -394,18 +357,17 @@ func restQuality(r *http.Request) (string, error) {
 // botão continua clicável em vez de apagar depois do primeiro uso: o mestre que
 // aceitou um jogador atrasado clica de novo e leva só o que faltava.
 //
-// O filtro de PAPEL é do `listPlayerCombatants`, e não daqui: o mestre costuma
-// ter um PC próprio no roster, e uma segunda opinião sobre quem é o grupo faria
-// esta tela discordar da SPA sobre a mesma pergunta (ALE-212).
+// O filtro de PAPEL é do `PlayerCombatants` e não daqui: o mestre costuma ter um
+// PC próprio no roster, e uma segunda opinião sobre quem é o grupo faria duas
+// superfícies responderem diferente à mesma pergunta.
 func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	combatentes, err := st.deps.PlayerCombatants(c.R.Context(), c.CampaignID)
 	if err != nil {
 		return nil, errors.New("não deu para carregar o grupo desta campanha")
 	}
 	// O erro vem JUNTO com o estado parcial de propósito: pôr quatro dos cinco e
-	// tropeçar no quinto deixou a mesa com quatro combatentes novos, e é esse o
-	// estado que as outras telas precisam receber. Quem transmite o parcial é o
-	// `gmCommand` — ver o comentário lá.
+	// tropeçar no quinto deixa a mesa com quatro combatentes novos, e é esse o
+	// estado que as outras telas precisam receber.
 	estado, err := st.deps.PopulateParty(c.SessionID, combatentes)
 	if estado == nil {
 		estado = st.deps.Sessions().GetState(c.SessionID)
@@ -413,12 +375,9 @@ func bringParty(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	return estado, err
 }
 
-// commandCtx é o que a mutação de um comando do mestre recebe.
-//
-// Os quatro primeiros só precisavam do id da SESSÃO, e a assinatura era um
-// `int64` — foi essa economia que deixou passar o defeito que este arquivo
-// acabou de consertar: `encerrar cena` precisa da CAMPANHA, porque é de lá que
-// vem o grupo cujas fichas expiram, e não tendo como recebê-la ela chamou o
+// commandCtx é o que a mutação de um comando do mestre recebe. É um struct e
+// não o id da sessão solto: comando que precisa da CAMPANHA — encerrar a cena,
+// que expira as fichas do grupo — com uma assinatura estreita acaba chamando o
 // helper que não precisa dela e faz menos.
 type commandCtx struct {
 	R          *http.Request
@@ -426,14 +385,12 @@ type commandCtx struct {
 	CampaignID int64
 	SessionID  int64
 	// TabuleiroID é a ABA em que este comando age, e ela é a aba que QUEM CLICOU
-	// está olhando (ALE-205).
+	// está olhando.
 	//
 	// Ela não vem do caminho nem de um sinal da página: o gateway a resolve no
-	// servidor, pelo `chosenTabs`, e é essa escolha que mantém as vinte
-	// rotas do tabuleiro sem um id a mais na URL. A afirmação que ela faz é de
-	// domínio, e é forte: **não se pinta um tabuleiro que não se está olhando.**
-	// Uma aba no caminho deixaria essa porta aberta sem nenhum gesto que a
-	// abrisse.
+	// servidor, pelo `chosenTabs`. A afirmação que isso faz é de domínio e é
+	// forte — **não se pinta um tabuleiro que não se está olhando** —, e uma aba
+	// no caminho deixaria essa porta aberta sem nenhum gesto que a abrisse.
 	//
 	// Vazia significa a aba PADRÃO — quem entrou na sessão e ainda não escolheu.
 	TabuleiroID string
@@ -446,29 +403,25 @@ type commandCtx struct {
 	// recusa mais comum é o nome, que é o campo mais caro de redigitar no meio
 	// de um combate.
 	//
-	// QUEM GARANTE que a recusa não limpa nada é a ORDEM, e não um descarte aqui:
+	// QUEM GARANTE que a recusa não limpa nada é a ORDEM, e não um descarte:
 	// a mutação só escreve neste mapa depois de a sua própria escrita ter dado
-	// certo, então numa recusa ele chega vazio. Eu tinha posto o descarte por
-	// via das dúvidas e a sabotagem mostrou que ele era código morto — nenhum
-	// caminho o alcançava, e um comentário dizendo que ele protegia algo era
-	// pior do que não tê-lo.
+	// certo, então numa recusa ele chega vazio.
 	Sinais map[string]any
 }
 
-// endScene é o gesto INTEIRO, e a razão de ser função nomeada em vez de um
-// literal na lista acima é que ela faz duas coisas que as outras três não fazem.
+// endScene é o gesto INTEIRO, e por isso é função nomeada e não um literal na
+// lista de rotas: ela faz duas coisas que os outros comandos não fazem.
 //
-// A primeira é a REGRESSÃO da ALE-220, reaberta por este piloto: `EndScene` do
-// store só mexe no rastreador, então a fila zerava na tela e a bênção de duração
-// "cena" continuava viva na FICHA. O livro não deixa margem — "a habilidade dura
-// uma cena inteira, encerrando-se quando esse momento da história acaba" (p227)
-// —, e o `endSceneForTable` é o caminho único que expira as fichas do grupo
-// ANTES de desligar a cena. Aqui é a mesma chamada e não a mesma sequência
-// reescrita: gesto repetido é gesto que diverge.
+// A primeira é NÃO chamar o `EndScene` do store direto — ele só mexe no
+// rastreador, e a fila zeraria na tela com a bênção de duração "cena" viva na
+// FICHA. O livro não deixa margem: "a habilidade dura uma cena inteira,
+// encerrando-se quando esse momento da história acaba" (p227). O
+// `EndSceneForTable` é o caminho único que expira as fichas do grupo ANTES de
+// desligar a cena.
 //
 // A segunda é o aviso: as fichas não estão no estado do rastreador, então sem o
-// `session-rest` o efeito morto e o "usado 1/cena" ficariam na tela da SPA até
-// alguém recarregar.
+// `session-rest` o efeito morto e o "usado 1/cena" ficam na tela até alguém
+// recarregar.
 func endScene(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	estado, err := st.deps.EndSceneForTable(c.User, c.CampaignID, c.SessionID)
 	if err != nil {
@@ -480,12 +433,12 @@ func endScene(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	return estado, nil
 }
 
-// gmCommand é o caminho único dos quatro comandos.
+// gmCommand é o caminho único dos comandos do mestre.
 //
 // Eles só diferem na MUTAÇÃO, e o resto — resolver a mesa, exigir o papel,
-// publicar para a SPA, redesenhar a cena — é idêntico. Sem o parâmetro seriam
-// quatro cópias, e é numa delas que alguém esquece de publicar e a mesa fica
-// vendo o turno velho.
+// publicar o estado, redesenhar a cena — é idêntico. Sem o parâmetro seriam N
+// cópias, e é numa delas que alguém esquece de publicar e a mesa fica vendo o
+// turno velho.
 func (s Scene) gmCommand(
 	mutar func(Scene, commandCtx) (*live.SessionRuntimeState, error),
 ) http.HandlerFunc {
@@ -512,14 +465,10 @@ func (s Scene) gmCommand(
 			R: r, User: userID, CampaignID: campaignID, SessionID: sessionID, Sinais: sinais,
 		})
 		// O que POUSOU se transmite mesmo quando a chamada devolveu erro, e o
-		// `trazer o grupo` é quem o exige: ele põe quatro dos cinco e tropeça no
+		// `bringParty` é quem o exige: ele põe quatro dos cinco e tropeça no
 		// quinto, e os quatro já são o estado da mesa. Segurar a transmissão
 		// porque houve erro deixaria as outras telas com a fila de antes —
-		// best-effort é sobre continuar apesar da falha, não sobre escondê-la
-		// (ALE-155).
-		//
-		// A SPA continua ouvindo o hub: enquanto as duas telas existirem, uma
-		// escrita por aqui tem de chegar lá.
+		// best-effort é sobre continuar apesar da falha, não sobre escondê-la.
 		if estado != nil {
 			s.deps.PublishSessionState(sessionID, estado)
 		}
@@ -527,24 +476,20 @@ func (s Scene) gmCommand(
 	}
 }
 
-// respondGm devolve a cena remendada E a frase da recusa — as duas
-// sempre, e as duas por SSE.
+// respondGm devolve a cena remendada E a frase da recusa — as duas sempre, e as
+// duas por SSE.
 //
-// Os comandos respondiam `http.Error`, e isso era um beco: o Datastar não
-// desenha corpo de resposta 4xx, então a recusa não chegava a lugar nenhum e o
-// mestre clicava olhando para uma tela que não mudava. É o mesmo defeito que a
-// ALE-213 anotou no socket, onde o cliente não escutava o `exception` — e ele
-// ficou urgente com o conserto da ALE-220 neste arquivo, porque encerrar a cena
-// passou a poder falhar DE PROPÓSITO e deixar a cena ligada.
+// A recusa NÃO pode ser um `http.Error`: o Datastar não desenha corpo de
+// resposta 4xx, então ela não chegaria a lugar nenhum e o mestre clicaria
+// olhando para uma tela que não muda.
 //
-// O 403 não vem por aqui e continua sendo `http.Error`: ele é para quem posta na
-// mão, e a tela de quem não é mestre nunca teve o botão.
+// O 403 é a exceção e continua sendo `http.Error`: ele é para quem posta na mão,
+// e a tela de quem não é mestre nunca teve o botão.
 //
-// A cena é remendada NA HORA em vez de esperar o próximo tique do stream. O
-// stream avisa-e-relê, então ele veria a mesma coisa no aviso seguinte e o hash
-// o faria calar — o remendo aqui é o que torna o botão mais clicado da sessão
-// instantâneo. E ele vale também na recusa: redesenhar mostra que a cena
-// continua ABERTA, que é a verdade que o mestre precisa ver ao lado da frase.
+// A cena é remendada NA HORA em vez de esperar o próximo tique do stream, que
+// avisa-e-relê e calaria pelo hash. E o remendo vale também na recusa:
+// redesenhar mostra que a cena continua ABERTA, que é a verdade que o mestre
+// precisa ver ao lado da frase.
 func (s Scene) respondGm(
 	w http.ResponseWriter, r *http.Request,
 	userID int64, campaignID, sessionID int64, recusa error, sinais map[string]any,
@@ -554,13 +499,11 @@ func (s Scene) respondGm(
 	if view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID); err == nil {
 		// Por PADRÃO manda TODAS as regiões e não só as que mudaram, ao contrário
 		// do stream: aqui não há digital anterior para comparar — este caminho
-		// responde a um pedido, não mantém uma conexão.
+		// responde a um pedido, não mantém uma conexão. Vale porque quem recebe
+		// acabou de CLICAR.
 		//
-		// O que justificava mandar tudo era que quem recebe acabou de CLICAR, e
-		// ninguém está no meio de um arrasto no instante em que pede outra coisa.
-		// O GESTO CONTÍNUO da ALE-203 quebrou essa frase — no arrasto do pincel a
-		// pessoa está no meio do gesto, e cada casa cruzada devolvia a Mesa
-		// inteira: 353 KB medidos por clique. Daí o `soAsRegioes`.
+		// O GESTO CONTÍNUO é a exceção que criou o `soAsRegioes`: no arrasto do
+		// pincel cada casa cruzada devolveria a Mesa inteira, 353 KB por casa.
 		//
 		// Falhar ao redesenhar não desfaz a mutação, que já aconteceu e já foi
 		// transmitida; o stream corrige no próximo tique. Por isso é best-effort e
@@ -586,8 +529,7 @@ func (s Scene) respondGm(
 }
 
 // pedidaOuTodas: lista vazia quer dizer "a Mesa inteira", que é o padrão de
-// quase todo comando. Escrito como função e não como `if len(...) == 0` no laço
-// para o caso vazio ficar dito uma vez só, em vez de a cada leitura do laço.
+// quase todo comando.
 func pedidaOuTodas(id string, pedidas []string) bool {
 	if len(pedidas) == 0 {
 		return true

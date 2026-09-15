@@ -5,33 +5,19 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O IMPROVISO (ALE-261) — as tabelas do Cap 6 e o esqueleto de masmorra.
+// O IMPROVISO — as tabelas do Cap 6 e o esqueleto de masmorra.
 //
-// AS CITAÇÕES DE PÁGINA FORAM CONFERIDAS CONTRA O PDF, e precisavam ser: a SPA
-// contradizia a si mesma, com a tela e o arquivo de regras dando páginas
-// diferentes para a mesma tabela. Conferido, cada um acertava metade —
+// AS PÁGINAS DAQUI FORAM CONFERIDAS CONTRA O PDF, uma a uma:
 //
-//	Ruína              p269   (a TELA acertava; não é tabela numerada, é prosa)
-//	Tabela 6-5         p274   (o arquivo de REGRAS acertava)
-//	Tabela 6-2         p263   (o arquivo de REGRAS acertava)
-//	Tabela 6-7         p279   (ninguém acertava: a tela dizia p276)
+//	Ruína              p269   (não é tabela numerada, é prosa)
+//	Tabela 6-5         p274
+//	Tabela 6-2         p263
+//	Tabela 6-7         p279
 //
-// E um erro que nenhum dos dois pegou: o comentário `Tabela 6-4: Ruínas` está
-// errado no NÚMERO e no NOME — a 6-4 é "Viagens", e a Ruína não é tabela
-// numerada. O livro escreve: "Um personagem que entre em uma ruína deve rolar
-// 1d6. Com um resultado 1 ou 2, a ruína possui apenas uma ameaça..." (p269).
-//
-// MÉTODO, e ele importa mais que a tabela acima: confira pelo FOLIO IMPRESSO,
-// nunca pela aritmética do offset. O PDF tem offset de 6 — a página impressa 269
-// é a 275 do arquivo —, mas usar o offset para achar E para confirmar é
-// verificar a suposição com a própria suposição.
-//
-// Foi assim que a 6-7 quase ficou errada de novo: eu cheguei na p278 e parei,
-// porque é ali que o texto MENCIONA a tabela ("usando a Tabela 6-7:
-// Consequências de Buscas"). O corpo dela — `Sucessos / Consequência / 0 / 1
-// castigo` — começa na p279. Citação de tabela aponta para onde a tabela ESTÁ,
-// não para onde o livro fala dela; quem segue a citação quer conferir um
-// resultado. A sessão irmã pegou o um-a-menos conferindo o folio.
+// A 6-7 é a armadilha: a p278 é onde o texto MENCIONA a tabela ("usando a
+// Tabela 6-7: Consequências de Buscas"), e o corpo dela começa na p279. Citação
+// de tabela aponta para onde a tabela ESTÁ, e não para onde o livro fala dela —
+// quem segue a citação quer conferir um resultado.
 //
 // Três tabelas lado a lado e a masmorra embaixo, como o original. A grade é
 // `sm:2 xl:3` e não a `.collection-in-columns` dos catálogos: aqui os cartões são
@@ -98,15 +84,8 @@ templ rollingTable(id, titulo, dado, fonte string, historico []roll) {
 			{ "Rolar " + dado }
 		</button>
 		if len(historico) > 0 {
-			// LIMPAR só aparece com histórico, como na SPA: um botão que não tem
-			// o que fazer ocupa a linha e ensina errado.
-			//
-			// Ele quase se perdeu no porte — eu rolava e acumulava sem como
-			// zerar, e o que o denunciou foi comparar o teste ÓRFÃO
-			// (`roll-history.test.ts`, "limpar esvazia o histórico" — se lê com
-			// `git show 7956b59:frontend/src/features/gm-tools/roll-history.test.ts`) com o
-			// substituto em Go antes de apagá-lo. Apagar primeiro teria levado
-			// a testemunha junto.
+			// LIMPAR só aparece com histórico: um botão que não tem o que fazer
+			// ocupa a linha e ensina errado.
 			@ui.Button(ui.VariantGhost, ui.SizeInline, "self-start px-1 text-xs", templ.Attributes{"type": "button", "aria-label": "Limpar o histórico de " + titulo, "data-on:click": fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id)}) {
 				Limpar
 			}

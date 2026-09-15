@@ -9,7 +9,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// AS ROTAS DA FORJA (ALE-272, fatia 9).
+// AS ROTAS DA FORJA.
 //
 // São três, e as três leem o MESMO formulário: desenhar a folha, redesenhá-la
 // quando a classe ou a origem muda, e forjar. Nenhuma delas guarda rascunho —
@@ -45,7 +45,7 @@ func (s Scene) handleForgeDraft(w http.ResponseWriter, r *http.Request) {
 // handleForgePost cria o herói e leva para a distribuição de atributos.
 //
 // A recusa REDESENHA a folha com o que foi respondido e o erro no campo, em 422
-// — a mesma decisão da folha em branco da campanha (ALE-246). Aqui o 422 é
+// — a mesma decisão da folha em branco da campanha. Aqui o 422 é
 // seguro (e a recusa 200 do Datastar não se aplica) porque este caminho é o
 // `submit` de um formulário de verdade: quem desenha a resposta é o navegador,
 // não um remendo.
@@ -104,7 +104,7 @@ func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v 
 
 // Routes monta a forja no roteador de quem a hospeda.
 //
-// Os endereços moram AQUI e não em quem monta (ALE-278): a cena é a dona do que
+// Os endereços moram AQUI e não em quem monta: a cena é a dona do que
 // ela atende, e quem a hospeda escolhe só onde encaixá-la. As três primeiras
 // rotas são a folha em branco; as duas últimas vivem sob o id porque o herói JÁ
 // existe — o nascimento é o `POST /personagens/nova`, e daqui em diante tudo é

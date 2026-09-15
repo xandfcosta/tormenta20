@@ -12,12 +12,10 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O RASCUNHO DE LUGAR (ALE-292): montar a próxima cena FORA da sessão.
-//
-// A cortina resolve "montar a cripta enquanto a mesa olha a taverna" DURANTE a
-// sessão (ALE-202). O rascunho resolve o outro tempo, que é o da ALE-191:
-// preparar a sessão de sábado na quinta-feira, sem ninguém conectado. Decisão do
-// dono — os dois convivem, e o GLOSSARY registra a linha entre eles.
+// O RASCUNHO DE LUGAR: montar a próxima cena FORA da sessão — preparar a sessão
+// de sábado na quinta-feira, sem ninguém conectado. A cortina resolve o outro
+// tempo, o de montar a cripta enquanto a mesa olha a taverna; os dois convivem,
+// e o GLOSSARY registra a linha entre eles.
 //
 // # Por que não há um estado do rascunho em memória
 //
@@ -69,10 +67,9 @@ const MaxPlaceNameLength = 60
 // NewID cunha um id de peça ou de marcador, com o mesmo cunho da mesa.
 //
 // Exposto para o RASCUNHO, e é a única coisa que ele precisa do store além do
-// `EditPlace`: as mutações dele são as funções PURAS deste pacote (`AddToken`,
-// `AddMarker`, `DuplicateToken`), e as três recebem o cunho de fora porque o
-// servidor é quem numera — dois clientes duplicando ao mesmo tempo não podem
-// inventar o mesmo "Zumbi 3" (ALE-192).
+// `EditPlace`: as mutações dele são as funções PURAS deste pacote, e elas
+// recebem o cunho de fora porque o servidor é quem numera — dois clientes
+// duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3".
 //
 // Um cunho próprio do rascunho seria uma segunda política de identidade sobre as
 // mesmas peças, e elas se encontram: a cena montada aqui vai para a mesa.
@@ -84,12 +81,10 @@ func (bs *BoardStore) NewID() string { return bs.newID() }
 // SILÊNCIO: encerrar a aba chama o `Archive`, que sobrescreve o lugar de mesmo
 // nome — a noite de trabalho no rascunho sumiria sem uma linha na tela.
 //
-// EM QUALQUER SESSÃO DA CAMPANHA, e não só na que está ativa. A primeira versão
-// desta trava olhava a sessão ativa e tinha um buraco: uma sessão ENCERRADA
-// guarda os tabuleiros dela — o `EndSession` não toca em `open_boards` —, e
-// reabri-la os traz de volta. Fechar um deles depois chamaria o `Archive` sobre
-// um lugar montado semanas antes, e o rascunho sumiria pelo caminho que a trava
-// existia para fechar.
+// EM QUALQUER SESSÃO DA CAMPANHA, e não só na que está ativa: uma sessão
+// ENCERRADA guarda os tabuleiros dela — o `EndSession` não toca em `open_boards`
+// —, e reabri-la os traz de volta. Fechar um deles depois chamaria o `Archive`
+// sobre um lugar montado semanas antes.
 //
 // Pelo NOME e não pelo id, porque é o nome que identifica o lugar dentro da
 // campanha — é assim que o `Archive` decide se sobrescreve, e é a mesma conta
@@ -102,9 +97,7 @@ func (bs *BoardStore) NewID() string { return bs.newID() }
 //     vazio e a trava passaria a deixar tudo montar.
 //   - só o BANCO não vê o tabuleiro que acabou de ser aberto: a gravação é
 //     ASSÍNCRONA (ver `persistBoardAndWarn`), e entre o `Open` e o `Persist` a
-//     tabela ainda não sabe dele. O primeiro caso escrito aqui reprovou por
-//     isso, e a lição é a de sempre — a fonte que "obviamente" tem o dado tem
-//     uma janela em que não tem.
+//     tabela ainda não sabe dele.
 func (bs *BoardStore) refusesIfOnATable(ctx context.Context, campaignID int64, nome string) error {
 	if sessao := bs.sessionShowingLocked(nome); sessao != 0 {
 		return placeOnATable(nome)
@@ -133,7 +126,7 @@ func (bs *BoardStore) refusesIfOnATable(ctx context.Context, campaignID int64, n
 }
 
 // PlacesOnATable diz, para cada NOME de lugar aberto numa mesa da campanha, a
-// sessão que o mostra (ALE-292).
+// sessão que o mostra.
 //
 // Ela é a irmã de leitura do `refusesIfOnATable`, e as duas leem as MESMAS duas
 // fontes pela mesma razão: a lista da crônica escreve "nesta mesa agora" ao lado
@@ -241,7 +234,7 @@ func (bs *BoardStore) NewPlace(ctx context.Context, campaignID int64, name, terr
 	// cuidado que o `storedScene` toma na volta.
 	blob, err := json.Marshal(&BoardState{
 		// O chão passa pelo catálogo ANTES de ser gravado: quem cria era a porta
-		// sem guarda, e um id que a folha não pinta vira mapa sem textura (ALE-301).
+		// sem guarda, e um id que a folha não pinta vira mapa sem textura.
 		Version: 1, Place: name, Terrain: KnownGround(terrain), Tokens: []BoardToken{},
 	})
 	if err != nil {

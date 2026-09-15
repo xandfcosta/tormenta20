@@ -17,20 +17,20 @@ type FieldErrorMap map[string][]string
 // FieldError is a domain validation failure that also carries per-field messages.
 // It lets a transport-agnostic domain rule signal a rich validation body without
 // depending on http.ResponseWriter: the HTTP layer renders the full
-// {statusCode,error,message,fieldErrors} envelope; other transports (the WS gateway)
-// just read Error(). Foundation for the B.6 fase-0 extraction.
+// {statusCode,error,message,fieldErrors} envelope; other transports just read
+// Error().
 type FieldError struct {
 	status  int
 	message string
 	fields  FieldErrorMap
 }
 
-// NewFieldError é a porta do `FieldError` para fora do pacote (ALE-254).
+// NewFieldError é a porta do `FieldError` para fora do pacote.
 //
 // Os três campos ficam não exportados de propósito: o construtor é o único
 // lugar onde o envelope se monta, então status e corpo não podem divergir entre
-// os pontos que o criam. Antes de a fronteira existir, cada chamador montava a
-// struct à mão — e o compilador não tinha como impedir um envelope pela metade.
+// os pontos que o criam. Com a struct montada à mão em cada chamador, o
+// compilador não tem como impedir um envelope pela metade.
 func NewFieldError(status int, message string, fields FieldErrorMap) *FieldError {
 	return &FieldError{status: status, message: message, fields: fields}
 }
@@ -39,9 +39,9 @@ func (e *FieldError) Error() string { return e.message }
 
 // WriteFieldError emits the full validation envelope directly, for a handler
 // that already knows the message and the per-field detail and has no domain
-// error to wrap. Thirteen call sites used to build this map literal by hand —
-// the rich shape existed only behind *FieldError, which is awkward to construct
-// inline, so handlers wrote it out instead and the envelope drifted.
+// error to wrap. Without it, the rich shape is reachable only through
+// *FieldError — awkward to construct inline, so handlers write the map literal
+// out by hand and the envelope drifts.
 func WriteFieldError(w http.ResponseWriter, status int, message string, fields FieldErrorMap) {
 	WriteJSON(w, status, map[string]any{
 		"statusCode":  status,
@@ -68,7 +68,7 @@ func WriteDomainError(w http.ResponseWriter, status int, err error) {
 // returns false so the handler can bail.
 // maxBodyBytes é o teto de um corpo de requisição. Um megabyte é folgado para
 // tudo que este app manda — a ficha inteira de nível 20 serializada dá ~40 KB —
-// e o que ele impede é um corpo sem fim segurando memória e goroutine (ALE-157).
+// e o que ele impede é um corpo sem fim segurando memória e goroutine.
 const maxBodyBytes = 1 << 20
 
 func DecodeJSON(w http.ResponseWriter, r *http.Request, dst any) bool {
@@ -89,7 +89,7 @@ func DecodeJSON(w http.ResponseWriter, r *http.Request, dst any) bool {
 	return true
 }
 
-// WriteValidationError emits the same envelope as validation-exception.factory.ts.
+// WriteValidationError emits the validation envelope for a single field.
 func WriteValidationError(w http.ResponseWriter, fields FieldErrorMap) {
 	WriteJSON(w, http.StatusBadRequest, map[string]any{
 		"statusCode":  http.StatusBadRequest,
@@ -99,12 +99,11 @@ func WriteValidationError(w http.ResponseWriter, fields FieldErrorMap) {
 	})
 }
 
-// A pragmatic email shape check — class-validator's IsEmail is stricter, but the
-// frontend pre-validates and the exact RFC is not worth reproducing here.
+// A pragmatic email shape check — the exact RFC is not worth reproducing here.
 // NormalizeEmail is the single spelling of an account. Register and login both
 // run it, so `Mestre@T20.local` and `mestre@t20.local` are ONE account and not
 // two — which is what lets the admin check (Config.IsAdmin) ignore case without
-// opening a door: a case variant can no longer become a second admin (ALE-120).
+// opening a door: a case variant cannot become a second admin.
 func NormalizeEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }

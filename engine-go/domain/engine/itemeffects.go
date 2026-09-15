@@ -7,17 +7,17 @@ import (
 	"strconv"
 )
 
-// The RESOLUTION engine: it takes a pre-collected []ActiveItem and resolves it
-// into ItemEffects — non-stacking by bonusType, flags, conditional opt-ins.
+// O motor de RESOLUÇÃO: recebe uma `[]ActiveItem` já coletada e a resolve em
+// `ItemEffects` — não-empilhamento por `bonusType`, flags, condicionais.
 //
-// It is catalog-free on purpose: reading the book is the collection layer's job
-// (collect.go), and every ActiveItem arrives already assembled. That split is
-// what lets the whole non-stacking rule be unit-tested with inline data.
+// Ele não lê catálogo de propósito: ler o livro é trabalho da camada de COLETA
+// (collect.go), e todo `ActiveItem` chega montado. É essa divisão que deixa a
+// regra inteira de não-empilhamento ser testada com dado inline.
 
-// ─── Types (mirror items/types.ts + items/engine.ts) ──────────────────
+// ─── Tipos ────────────────────────────────────────────────────────────
 
-// ModifierTarget is uma união achatada por `k`: only the
-// fields a given `k` uses are populated (omitempty keeps the JSON shape 1:1).
+// ModifierTarget é uma união achatada por `k`: só os campos que aquele `k` usa
+// são preenchidos (`omitempty` mantém a forma do JSON 1:1).
 type ModifierTarget struct {
 	K         string `json:"k"`
 	Name      string `json:"name,omitempty"`      // expertise, expertiseRemovePenalty, attribute, maneuver, flag
@@ -36,9 +36,9 @@ type ModifierCondition struct {
 	Label string `json:"label,omitempty"` // flagOn, flagOff
 }
 
-// VitalScale mirrors items/types.ts VitalScale. Only the vitals collector reads
-// it; the resolution engine ignores it. Carried on Modifier so the collection
-// layer round-trips maxPv/maxPm mods byte-equal to o oráculo.
+// VitalScale é a escala de um vital. Só o coletor de vitais a lê; o motor de
+// resolução a ignora. Ela viaja no `Modifier` para a camada de coleta devolver
+// os mods de maxPv/maxPm byte a byte iguais ao oráculo.
 type VitalScale struct {
 	Per       string `json:"per"`
 	Step      int    `json:"step,omitempty"`
@@ -46,8 +46,8 @@ type VitalScale struct {
 	Attribute string `json:"attribute,omitempty"`
 }
 
-// Modifier mirrors items/types.ts Modifier. `scale` (maxPv/maxPm) is ignored by
-// the resolution engine but preserved for the collection layer's parity dump.
+// Modifier é um modificador de item. O `scale` (maxPv/maxPm) é ignorado pelo
+// motor de resolução e preservado para o despejo de paridade da coleta.
 type Modifier struct {
 	Target    ModifierTarget     `json:"target"`
 	Amount    int                `json:"amount"`
@@ -57,12 +57,11 @@ type Modifier struct {
 	Scale     *VitalScale        `json:"scale,omitempty"`
 }
 
-// UnmarshalJSON rounds a modifier's amount to the nearest int. The engine is
-// integer-modeled (see types.go), but o catálogo é quem traz o valor, e um deles
-// entry carries a fractional amount (botas-reforcadas, +1.5m displacement — not
-// equipped by any seed). Rounding at the JSON boundary keeps catalog parsing from
-// failing without widening every total to float. Integer amounts pass through
-// unchanged, so parity is unaffected.
+// UnmarshalJSON arredonda o `amount` para o inteiro mais próximo. O motor é
+// modelado em INTEIROS (ver types.go), mas quem traz o valor é o catálogo, e um
+// verbete tem fração (botas-reforcadas, +1,5m de deslocamento). Arredondar na
+// fronteira do JSON impede a análise de falhar sem alargar todo total para
+// float; valor inteiro passa intocado, então a paridade não muda.
 func (m *Modifier) UnmarshalJSON(b []byte) error {
 	var shadow struct {
 		Target    ModifierTarget     `json:"target"`
@@ -86,8 +85,8 @@ func (m *Modifier) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// ActiveItem mirrors items/engine.ts ActiveItem. Equipped is a pointer so the
-// null wear-state (item present but unequipped) is distinguishable from "vested".
+// ActiveItem é um item com os modificadores dele. `Equipped` é ponteiro para o
+// estado NULO (item presente e não equipado) se distinguir de "vestido".
 type ActiveItem struct {
 	Source    string     `json:"source"`
 	Equipped  *string    `json:"equipped"`
@@ -115,9 +114,9 @@ type ConditionalEffect struct {
 	Flag      string         `json:"flag,omitempty"`
 }
 
-// ItemEffects mirrors items/engine.ts ItemEffects. Flags is a Set (map);
-// MarshalJSON emits it as a sorted array so JSON parity with o oráculo is
-// order-independent.
+// ItemEffects são os efeitos já resolvidos. `Flags` é um Set (mapa); o
+// `MarshalJSON` o emite como array ORDENADO, para a paridade de JSON com o
+// oráculo não depender de ordem.
 type ItemEffects struct {
 	ByTarget    map[string]AggregatedStat
 	Flags       map[string]bool
@@ -129,7 +128,7 @@ type ItemEffects struct {
 //
 // Tem nome próprio (em vez de struct anônima) porque é o contrato que o gerador
 // de tipos TS emite — refletir a struct em memória produziria
-// `Flags: Record<string, boolean>`, que é mentira (ALE-108).
+// `Flags: Record<string, boolean>`, que é mentira.
 type ItemEffectsWire struct {
 	ByTarget    map[string]AggregatedStat `json:"byTarget"`
 	Flags       []string                  `json:"flags"`
@@ -148,8 +147,8 @@ func (e ItemEffects) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ItemEffectsWire{byTarget, e.FlagList(), conditional})
 }
 
-// FlagList returns the active flag names sorted — the stable form for JSON and
-// para comparar por valor.
+// FlagList devolve os nomes das flags ativas ordenados — a forma estável para o
+// JSON e para comparar por valor.
 func (e ItemEffects) FlagList() []string {
 	out := make([]string, 0, len(e.Flags))
 	for f := range e.Flags {
@@ -243,8 +242,8 @@ func isUnconditional(m Modifier) bool {
 	case "terrain", "against", "context", "flagOn":
 		return false
 	case "flagOff":
-		// Auto-evaluated against collected flags in the main pass — never a
-		// user-toggled conditional.
+		// Avaliada automaticamente contra as flags já coletadas na passada
+		// principal — nunca é uma condicional que a pessoa liga.
 		return true
 	}
 	return true
@@ -264,7 +263,7 @@ func conditionMet(m Modifier, equipped *string) bool {
 	case "vested":
 		return equipped != nil && *equipped == "vested"
 	case "flagOff":
-		// flagOff passed the flags gate in the main loop — treat as met here.
+		// O `flagOff` já passou pelo portão de flags no laço principal.
 		return true
 	}
 	return false
@@ -296,10 +295,10 @@ func absInt(n int) int {
 
 // ─── non-stacking resolution ──────────────────────────────────────────
 
-// resolveStack applies the T20 non-stacking rule: within a target, entries of
-// the same bonusType keep only the highest-abs; 'untyped' stack freely. The
-// contribution order follows the first-seen order of each bonusType (matching
-// first-seen order) so JSON parity holds.
+// resolveStack aplica a regra de NÃO-EMPILHAMENTO do T20: dentro de um alvo,
+// entradas do mesmo `bonusType` guardam só a de maior valor ABSOLUTO; `untyped`
+// empilha à vontade. A ordem das contribuições segue a de PRIMEIRA APARIÇÃO de
+// cada `bonusType`, que é o que faz a paridade de JSON valer.
 func resolveStack(contribs []Contribution) AggregatedStat {
 	order := []string{}
 	byType := map[string][]Contribution{}
@@ -333,8 +332,8 @@ func resolveStack(contribs []Contribution) AggregatedStat {
 	return AggregatedStat{Total: total, Contributions: kept}
 }
 
-// ConditionalDisplayInput is one conditional-effect row fed to
-// ResolveConditionalDisplay (an active stance's rows).
+// ConditionalDisplayInput é uma linha de efeito condicional entregue ao
+// `ResolveConditionalDisplay` (as linhas de uma postura ativa).
 type ConditionalDisplayInput struct {
 	Target    ModifierTarget `json:"target"`
 	BonusType string         `json:"bonusType"`
@@ -346,9 +345,9 @@ type ConditionalDisplayRow struct {
 	Amount int            `json:"amount"`
 }
 
-// ResolveConditionalDisplay resolves a set of conditional-effect rows (an active
-// stance) for display: buckets by target identity, runs the same per-bonusType
-// resolution, and returns only the surviving {target, amount} rows.
+// ResolveConditionalDisplay resolve as linhas de uma postura ativa para exibir:
+// agrupa por identidade de alvo, roda a mesma resolução por `bonusType`, e
+// devolve só as linhas {alvo, valor} que sobreviveram.
 func ResolveConditionalDisplay(effects []ConditionalDisplayInput) []ConditionalDisplayRow {
 	order := []string{}
 	targets := map[string]ModifierTarget{}
@@ -372,17 +371,17 @@ func ResolveConditionalDisplay(effects []ConditionalDisplayInput) []ConditionalD
 
 // ─── computeItemEffects ───────────────────────────────────────────────
 
-// ComputeItemEffects folds a set of ActiveItems into resolved ItemEffects. A
-// pre-pass collects flags first (so flagOff conditions don't depend on item
-// order), then the main pass buckets unconditional modifiers by target and
-// defers conditional opt-ins to the conditional list.
+// ComputeItemEffects dobra um conjunto de `ActiveItem` em `ItemEffects`
+// resolvidos. Uma passada PRÉVIA coleta as flags primeiro, para as condições
+// `flagOff` não dependerem da ordem dos itens; a principal agrupa os
+// modificadores incondicionais por alvo e adia os condicionais para a lista.
 func ComputeItemEffects(items []ActiveItem) ItemEffects {
 	order := []string{}
 	buckets := map[string][]Contribution{}
 	flags := map[string]bool{}
 	conditional := []ConditionalEffect{}
 
-	// Pre-pass: collect flags from every equipped item first.
+	// Passada prévia: as flags de todo item equipado, antes de tudo.
 	for i := range items {
 		item := items[i]
 		if item.Equipped == nil {
@@ -401,7 +400,7 @@ func ComputeItemEffects(items []ActiveItem) ItemEffects {
 			continue
 		}
 		for _, m := range item.Modifiers {
-			// flagOff: book-passive that switches off while the flag is set.
+			// flagOff: passivo do livro que se DESLIGA enquanto a flag está posta.
 			if m.Condition != nil && m.Condition.C == "flagOff" && flags[m.Condition.Flag] {
 				continue
 			}
@@ -453,7 +452,7 @@ func firstNonEmpty(a, b string) string {
 	return b
 }
 
-// StatFor looks up a target's aggregated stat, defaulting to zeroed.
+// StatFor procura o agregado de um alvo, devolvendo zerado quando não há.
 func StatFor(effects ItemEffects, target ModifierTarget) AggregatedStat {
 	if stat, ok := effects.ByTarget[targetKey(target)]; ok {
 		return stat
@@ -461,8 +460,8 @@ func StatFor(effects ItemEffects, target ModifierTarget) AggregatedStat {
 	return AggregatedStat{Total: 0, Contributions: []Contribution{}}
 }
 
-// ConditionalID is the stable identifier for a conditional effect, used to
-// persist which opt-ins are toggled on. Junta com `::`.
+// ConditionalID é o identificador estável de um efeito condicional, usado para
+// gravar quais opcionais estão ligados. Junta com `::`.
 func ConditionalID(c ConditionalEffect) string {
 	return c.Source + "::" +
 		targetKey(c.Target) + "::" +
@@ -471,9 +470,9 @@ func ConditionalID(c ConditionalEffect) string {
 		c.BonusType
 }
 
-// ApplyActiveConditionals folds the conditional effects whose ids are in
-// activeIds back into byTarget, re-running non-stacking resolution per target.
-// Flag conditionals are ignored (no UI for opt-in flags yet).
+// ApplyActiveConditionals dobra de volta em `byTarget` os efeitos condicionais
+// cujos ids estão em `activeIds`, refazendo a resolução de não-empilhamento por
+// alvo. Condicionais de FLAG são ignoradas (ainda não há tela para ligá-las).
 func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) ItemEffects {
 	if len(activeIds) == 0 {
 		return effects
@@ -482,10 +481,9 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	for key, agg := range effects.ByTarget {
 		buckets[key] = append([]Contribution{}, agg.Contributions...)
 	}
-	// Unlike ComputeItemEffects above, this one needs no key ordering: it emits a
-	// map, and per-key contribution order is already stable because each bucket
-	// is a slice appended in source order. The tracking slice here was built and
-	// then discarded (`_ = order`), which read as if ordering mattered.
+	// Ao contrário do `ComputeItemEffects` acima, esta não precisa ordenar chaves:
+	// ela emite um mapa, e a ordem das contribuições dentro de cada chave já é
+	// estável porque cada balde é uma fatia acrescida na ordem da fonte.
 	remaining := []ConditionalEffect{}
 	for _, c := range effects.Conditional {
 		if !activeIds[ConditionalID(c)] {

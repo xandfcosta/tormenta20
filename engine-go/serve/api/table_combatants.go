@@ -10,23 +10,16 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O QUE O RASTREADOR PRECISA SABER SOBRE UM PERSONAGEM.
-//
-// Esta metade e o `campaign_members.go` eram um arquivo só, e as duas não têm a
-// mesma razão para mudar: aqui é a MESA lendo vitais e bônus para a fila de
-// iniciativa; lá é a CAMPANHA admitindo um herói. O nome que os cobria não
-// dizia nenhum dos dois donos (ALE-330).
+// O QUE O RASTREADOR PRECISA SABER SOBRE UM PERSONAGEM — a MESA lendo vitais e
+// bônus para a fila de iniciativa. Quem admite um herói na campanha é o
+// `campaign_members.go`, que não tem a mesma razão para mudar.
 
 // initiativeBonus é o total da perícia Iniciativa do personagem (½ nível +
-// atributo + treino + itens), lido da ficha COMPUTADA pelo motor (ALE-213).
+// atributo + treino + itens), lido da ficha COMPUTADA pelo motor.
 //
-// Existe porque o total da rolagem passou a ser somado no servidor: a soma é
-// trivial, mas o BÔNUS é regra do livro, e deixá-lo na tela seria uma segunda
-// implementação livre para divergir do motor — o que a ALE-104 apagou. Aqui não
-// há segunda conta: é a mesma `ComputeSheetV2` que a ficha inteira usa.
-//
-// Vizinha do `resolveCombatant` porque é o mesmo assunto — o que o rastreador
-// precisa saber sobre um personagem — e transport-agnostic pela mesma razão.
+// A soma da rolagem é trivial, mas o BÔNUS é regra do livro: computá-lo na tela
+// seria uma segunda implementação livre para divergir do motor. Aqui é a mesma
+// `ComputeSheetV2` que a ficha inteira usa.
 //
 // @example bonus, err := s.initiativeBonus(ctx, 7) // 8, para o Arcanista Nv9
 func (tr tableRules) initiativeBonus(ctx context.Context, characterID int64) (int64, error) {
@@ -61,8 +54,8 @@ func (tr tableRules) initiativeBonus(ctx context.Context, characterID int64) (in
 // acharia nada e devolveria zero em silêncio.
 const initiativeExpertise = "Iniciativa"
 
-// combatant is a character's tracker-relevant snapshot (name + live vitals) for an
-// initiative entry. Transport-agnostic — the WS gateway maps it into an InitiativeEntry.
+// combatant é o retrato de um personagem que interessa ao rastreador — nome mais
+// vitais vivos — para uma linha de iniciativa.
 type combatant struct {
 	characterID int64
 	name        string
@@ -72,11 +65,10 @@ type combatant struct {
 	mpMax       int64
 }
 
-// resolveCombatant resolves a character's tracker stats for an initiative entry, enforcing
-// the campaign rules: the character must be a member of the campaign, and the caller must
-// be either the character's owner or the campaign GM (owner). Transport-agnostic (the WS
-// gateway maps status→WsException). — same
-// check order (character → campaign → membership → authorization).
+// resolveCombatant resolve os números de um personagem para uma linha de
+// iniciativa, cobrando as regras da campanha: o personagem tem de ser membro
+// dela, e quem pede tem de ser o dono do personagem ou o mestre. A ORDEM da
+// checagem é personagem → campanha → filiação → autorização.
 func (tr tableRules) resolveCombatant(ctx context.Context, callerID, campaignID, characterID int64) (combatant, int, error) {
 	ch, err := tr.queries.GetCharacter(ctx, characterID)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -109,19 +101,16 @@ func (tr tableRules) resolveCombatant(ctx context.Context, callerID, campaignID,
 	}, http.StatusOK, nil
 }
 
-// listPlayerCombatants returns every player character in the campaign with live vitals —
-// the GM's one-shot "populate tracker".
+// listPlayerCombatants devolve todo personagem de jogador da campanha com os
+// vitais vivos — é o "pôr o grupo na fila" de um clique do mestre.
 func (tr tableRules) listPlayerCombatants(ctx context.Context, campaignID int64) ([]combatant, error) {
 	rows, err := tr.queries.ListMembers(ctx, campaignID)
 	if err != nil {
 		return nil, err
 	}
 	out := []combatant{}
-	// Aqui morava `if m.Role != "player" { continue }`, e ele NUNCA excluiu
-	// ninguém: a coluna valia `'player'` em toda linha. Ela saiu na ALE-287, e
-	// o filtro não volta — o mestre não tem personagem próprio, e os NPCs dele
-	// não são membros da campanha. Ver a nota mais longa no `tableRoster`, que
-	// tinha o irmão dele.
+	// SEM filtro de papel: o mestre não tem personagem próprio, e os NPCs dele não
+	// são membros da campanha. Ver a nota mais longa no `tableRoster`.
 	for _, m := range rows {
 		out = append(out, combatant{
 			characterID: m.Characterid, name: m.Charname,
@@ -131,8 +120,8 @@ func (tr tableRules) listPlayerCombatants(ctx context.Context, campaignID int64)
 	return out, nil
 }
 
-// listMemberCharacterIds returns the character id of every member (any role) — the set a
-// session-wide rest iterates over.
+// listMemberCharacterIds devolve o id do personagem de cada membro — o conjunto
+// que um descanso de sessão inteira percorre.
 func (tr tableRules) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {
 	rows, err := tr.queries.ListMembers(ctx, campaignID)
 	if err != nil {

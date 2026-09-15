@@ -14,19 +14,18 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// OS GESTOS DO RASCUNHO (ALE-292).
+// OS GESTOS DO RASCUNHO.
 //
 // Cada um é a MESMA mutação pura que a mesa aplica, num `EditPlace` em vez de
-// num tabuleiro vivo. Eles são gêmeos dos da Mesa e não os mesmos, e a escolha
-// é deliberada: o gêmeo é fiação, sem uma linha de regra — quem confere a
-// coordenada, o teto de peças e o tamanho da criatura continua sendo o
-// `tabuleiro`, num lugar só.
+// num tabuleiro vivo. São GÊMEOS dos da Mesa e não os mesmos: o gêmeo é fiação,
+// sem uma linha de regra — quem confere a coordenada, o teto de peças e o
+// tamanho da criatura continua sendo o `tabuleiro`, num lugar só.
 //
-// O que os separa não é acidente de encanamento, é o que o gesto SIGNIFICA. Na
-// mesa, arrastar propõe um movimento com custo e vez, e alguém confirma; aqui a
-// peça vai para a casa e acabou. Fundir os dois caminhos num handler com um `if`
-// faria a Mesa — a superfície mais exercitada do app — depender de uma
-// ramificação que só o rascunho percorre.
+// O que os separa é o que o gesto SIGNIFICA. Na mesa, arrastar propõe um
+// movimento com custo e vez, e alguém confirma; aqui a peça vai para a casa e
+// acabou. Fundir os dois num handler com um `if` faria a Mesa — a superfície
+// mais exercitada do app — depender de uma ramificação que só o rascunho
+// percorre.
 
 // DraftRoutes registra as quatorze rotas do rascunho.
 //
@@ -61,18 +60,17 @@ func (s Scene) DraftRoutes(r chi.Router) {
 	r.Post(base+"/gabarito", s.handleDraftTemplate)
 }
 
-// ── MEDIR o rascunho (ALE-293) ───────────────────────────────────────────────
+// ── MEDIR o rascunho ─────────────────────────────────────────────────────────
 //
-// A régua e o gabarito são desenhadas no rascunho desde a ALE-292, porque elas
-// não são `SoMestre` e o trilho inteiro veio junto com o `boardTable`. As rotas
-// não vieram, e o resultado era o pior defeito desta casa: **o gesto oferecido
-// que o servidor não atende** — 404, tela que não muda, e nada explicando por
-// quê. Quem varre isso agora é o `TestEveryDraftToolHasARoute`.
+// A régua e o gabarito são desenhados no rascunho porque não são `SoMestre` e o
+// trilho inteiro veio junto com o `boardTable`. As rotas PRECISAM vir junto: sem
+// elas o trilho oferece um gesto que o servidor não atende — 404, tela que não
+// muda, e nada explicando por quê. Quem varre isso é o
+// `TestEveryDraftToolHasARoute`.
 //
-// E elas PERTENCEM aqui, o que eu tinha julgado errado. O argumento de deixá-las
-// de fora era que medem "dá para acertar daqui?", pergunta de combate. Decisão
-// do dono: *"cabe a bola de fogo nesta sala?"* é pergunta de PREPARAÇÃO — é
-// montando a cripta que se decide o tamanho dela.
+// E elas pertencem aqui e não só ao combate: *"cabe a bola de fogo nesta
+// sala?"* é pergunta de PREPARAÇÃO — é montando a cripta que se decide o
+// tamanho dela.
 
 // handleDraftRuler é o gêmeo mais fino do arquivo: ele não olha o tabuleiro.
 //
@@ -181,9 +179,8 @@ func (s Scene) draftCommand(
 			return
 		}
 		// A leitura dos sinais vem ANTES do `NewSSE`, e a ordem é obrigatória: o
-		// `NewSSE` assume a resposta e fecha o corpo do pedido. A ordem inversa
-		// passou VERDE em teste de handler e falhou no servidor de verdade, e o
-		// comentário do `handleTableInitiative` conta a história inteira.
+		// `NewSSE` assume a resposta e fecha o corpo do pedido. A ordem inversa passa
+		// VERDE em teste de handler e falha no servidor de verdade.
 		_, err := s.deps.Boards().EditPlace(r.Context(), c.CampaignID, c.PlaceID,
 			func(b *board.BoardState) error { return mutar(s, c, b) })
 
@@ -257,7 +254,7 @@ func draftClearsRect(st Scene, c draftCtx, b *board.BoardState) error {
 
 // ── as PEÇAS ─────────────────────────────────────────────────────────────────
 
-// draftNewLoosePiece é a peça avulsa (ALE-291): a porta, o baú, o barril.
+// draftNewLoosePiece é a peça avulsa: a porta, o baú, o barril.
 //
 // Ela lê a MESMA tira que a mesa lê (`loosePieceSignals`), com as mesmas
 // recusas — nome obrigatório, tamanho do livro (p107), aparência conhecida.
@@ -299,7 +296,7 @@ func draftEditsToken(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftDuplicatesToken(st Scene, c draftCtx, b *board.BoardState) error {
-	// O rascunho não tem fila: laço nulo, sempre peão mudo (ALE-206).
+	// O rascunho não tem fila: laço nulo, sempre peão mudo.
 	return board.DuplicateToken(b, chi.URLParam(c.R, "id"), nil, st.deps.Boards().NewID)
 }
 
@@ -327,7 +324,7 @@ func draftTogglesVisibility(st Scene, c draftCtx, b *board.BoardState) error {
 	return board.UpdateToken(b, id, board.ParseTokenPatch(map[string]any{"hidden": escondida}))
 }
 
-// ── os MARCADORES (ALE-195) ──────────────────────────────────────────────────
+// ── os MARCADORES ────────────────────────────────────────────────────────────
 
 func draftMarksTheSpot(st Scene, c draftCtx, b *board.BoardState) error {
 	casa, err := squareOnly(c.R)

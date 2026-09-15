@@ -4,7 +4,7 @@ import (
 	"t20engine/infra/platform"
 )
 
-// A PORTA como dado (ALE-229): entrar, criar conta e redefinir senha.
+// A PORTA como dado: entrar, criar conta e redefinir senha.
 //
 // Cada tela tem a própria struct, e não uma só com campos opcionais, porque um
 // `Convite` preenchido na tela de entrar — ou um `Token` de redefinição na de
@@ -17,9 +17,9 @@ import (
 // signInView é a tela de login.
 type signInView struct {
 	Email string
-	// Destino é o `?redirect=` que o guarda de rota da SPA carregava: quem foi
-	// mandado para a porta volta para onde estava. Ele viaja em campo OCULTO e
-	// não na URL do POST para o formulário ser o dono do próprio contexto.
+	// Destino é o `?redirect=`: quem foi mandado para a porta volta para onde
+	// estava. Ele viaja em campo OCULTO e não na URL do POST para o formulário
+	// ser o dono do próprio contexto.
 	Destination string
 	Errors      platform.FieldErrorMap
 	// Aviso é a recusa do formulário inteiro, quando nenhum campo é o dono do
@@ -36,7 +36,7 @@ type signUpView struct {
 	Notice string
 }
 
-// resetView é a outra ponta do link que o admin gera (ALE-120).
+// resetView é a outra ponta do link que o admin gera.
 type resetView struct {
 	Token string
 	// AccountEmail é a ÚNICA coisa que esta rota anônima revela, e é o que diz

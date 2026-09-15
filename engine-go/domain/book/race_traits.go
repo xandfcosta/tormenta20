@@ -7,26 +7,17 @@ import (
 	"t20engine/domain/catalog"
 )
 
-// Os TEXTOS das habilidades de raça (ALE-239).
+// Os TEXTOS das habilidades de raça.
 //
-// Este arquivo existe por uma razão específica e vale explicá-la, porque à
-// primeira vista ele parece uma segunda leitura do mesmo catálogo: o
-// `engine.RaceDefinition` NÃO serve aqui. Ele é um subconjunto DELIBERADO —
-// guarda `Modifiers` e `Variants`, que é do que o motor de regras precisa, e
-// não guarda `Name` nem `Description`, que é do que a TELA precisa. O
-// `engine-go/CLAUDE.md` registra que os catálogos tipados são subconjuntos de
-// propósito; ampliar a struct do motor para caber texto de tela faria o motor
-// carregar dado que ele nunca lê.
+// Ele PARECE uma segunda leitura do mesmo catálogo e não é: o
+// `engine.RaceDefinition` não serve aqui porque é um subconjunto DELIBERADO —
+// guarda `Modifiers` e `Variants`, que é do que o motor precisa, e não guarda
+// `Name` nem `Description`, que é do que a TELA precisa. Ampliar a struct do
+// motor para caber texto de tela faria o motor carregar dado que ele nunca lê.
 //
-// Então são dois olhares sobre o MESMO arquivo, cada um com o seu tipo, e não
-// duas fontes de verdade. O arquivo continua sendo um só
-// (`catalog/data/race-defs.json`), autorado num lugar só.
-//
-// E é aqui que o dividendo da ALE-107 aparece pela primeira vez na migração: a
-// SPA BAIXA este catálogo para mostrar quatro linhas de texto no dossiê. No
-// servidor ele já está em memória, embutido no binário — a tela nova não pede
-// nada, e some junto o `settledQuery` que existia porque ler o catálogo ainda
-// pendente suspendia o route match e reanimava a cena inteira (ALE-95).
+// São dois olhares sobre o MESMO arquivo, cada um com o seu tipo, e não duas
+// fontes de verdade: o `catalog/data/race-defs.json` continua autorado num lugar
+// só.
 
 // RaceAbility é o que o dossiê mostra: nome e uma linha.
 type RaceAbility struct {
@@ -49,10 +40,8 @@ type AbilityVariant struct {
 	Name string `json:"name"`
 }
 
-// Lido UMA vez: o conteúdo vem de `go:embed` e não muda enquanto o binário for
-// o mesmo. Era a mesma decisão do `writeCatalogJSON`, que comprimia uma vez em
-// vez de por requisição — ele foi apagado com o `api/catalog.go` na ALE-277, e
-// a decisão continua valendo por si: o custo é de carga, não de pedido.
+// Lido UMA vez: o conteúdo vem de `go:embed` e não muda enquanto o binário for o
+// mesmo — o custo é de carga, não de pedido.
 var (
 	raceTraitsOnce sync.Once
 	raceTraitsByID map[string]RaceForScreen
@@ -73,10 +62,9 @@ func RaceTraitsByKey() map[string]RaceForScreen {
 			return
 		}
 		for _, r := range list {
-			// Por ID E por NOME, porque o personagem guarda a raça por um dos
-			// dois — o `raceAbilityBlurbs` da SPA procura pelos dois pelo mesmo
-			// motivo, e no `race-defs.json` de hoje eles coincidem ("Humano"),
-			// mas coincidir não é o mesmo que ser garantido.
+			// Por ID E por NOME, porque o personagem guarda a raça por um dos dois.
+			// No `race-defs.json` de hoje eles coincidem ("Humano"), mas coincidir
+			// não é o mesmo que ser garantido.
 			raceTraitsByID[r.ID] = r
 			raceTraitsByID[r.Name] = r
 		}

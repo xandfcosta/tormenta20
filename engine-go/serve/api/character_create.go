@@ -30,23 +30,14 @@ var expertisesList = []expertiseDef{
 	{"Sobrevivência", "wisdom"}, {"Vontade", "wisdom"},
 }
 
-// classProficiencies eram as proficiências de cada classe escritas à mão aqui.
-// Elas saíram na ALE-272: a MESMA tabela já vinha do catálogo (`classes.json`,
-// a linha "Proficiências." de p36–83), lida por `book.ProficienciesByClass` para
-// o painel da ficha. Duas cópias da mesma transcrição não divergiram por sorte,
-// e a que ficou é a que a validação de schema alcança.
+// AS PROFICIÊNCIAS de cada classe NÃO são escritas aqui: a tabela vem do
+// catálogo (`classes.json`, a linha "Proficiências." de p36–83), por
+// `book.ProficienciesByClass`. É a cópia que a validação de schema alcança.
 
-// A FORJA é a primeira cena com adaptador PRÓPRIO (ALE-278, fatia 6).
-//
 // `forgeHost` cumpre a `forge.Deps` sem o `*Server` no meio: das seis
 // assinaturas que a forja pede, quatro são do núcleo e duas — estas — precisam
 // só de mais uma coisa, a transação. Por isso o adaptador é o núcleo mais um
 // `*sql.DB`, e não o servidor inteiro.
-//
-// A escolha da forja como primeira não é gosto: a medição de acoplamento da
-// ALE-278 dizia que ela **não vaza nenhum símbolo**, e por isso ela foi também
-// a primeira cena a virar pacote. A mesma propriedade a faz a primeira a largar
-// o servidor.
 type forgeHost struct {
 	sceneCore
 	db *sql.DB
@@ -119,13 +110,11 @@ func (h forgeHost) HealVitals(ctx context.Context, id int64, dto *sheet.Characte
 }
 
 // ShiftVitalsToNewMax recompute os poços e faz os ATUAIS ACOMPANHAREM o delta do
-// máximo, em vez de encherem (ALE-309).
+// máximo, em vez de encherem.
 //
 // A regra é a MESMA da mudança de nível, e usa a mesma função de propósito:
-// `levelVitalsNext`. Uma regra é prendida uma vez, onde ela mora — e aqui isso
-// não é arrumação, é o conserto. Com "prende na faixa" só para baixo, o ciclo
-// `−` e `+` da cena de atributos devolveria dois pontos de PV por volta, que é
-// o mesmo defeito mais devagar.
+// `levelVitalsNext`. Com "prende na faixa" só para baixo, o ciclo `−` e `+` da
+// cena de atributos devolveria dois pontos de PV por volta.
 func (h forgeHost) ShiftVitalsToNewMax(ctx context.Context, id int64, dto *sheet.CharacterDTO) error {
 	return h.recomputeVitals(ctx, id, dto, levelVitalsNext)
 }
@@ -195,11 +184,9 @@ func derefF64(p *float64, def float64) float64 {
 
 // O `prepared` da magia é INTEGER no SQLite e `bool` em Go, e é só isso.
 //
-// Ele morava no `character_spells.go` junto com o DTO das rotas JSON da SPA.
-// Aquelas rotas morreram na ALE-277 e o arquivo virou fóssil inteiro — o
-// compilador do Go não acusa função de pacote sem uso, então ele atravessou a
-// reestruturação em silêncio. Isto aqui é o que sobreviveu, e mora com o único
-// chamador que tem (ALE-330).
+// Mora com o ÚNICO chamador que tem: o compilador do Go não acusa função de
+// pacote sem uso, então uma cópia solta num arquivo vizinho sobrevive em
+// silêncio à morte de quem a chamava.
 func boolToInt(b bool) int64 {
 	if b {
 		return 1

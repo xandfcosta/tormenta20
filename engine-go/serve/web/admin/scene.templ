@@ -5,12 +5,13 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A tela de administração desenhada (ALE-219; em templ pela ALE-227).
+// A tela de administração desenhada.
 
 templ adminScene(v adminView) {
 	<main class="w-full space-y-4">
 		// Uma coluna no telefone, duas a partir de lg com os jogadores — a lista
-		// que cresce — na maior. Mesma repartição da tela da SPA.
+		// que cresce — na maior.
+		//
 		// REGIÃO de conteúdo, `grid` porque a repartição é bidimensional de
 		// verdade: os jogadores numa coluna larga, convites e servidor empilhados
 		// na outra. Com `column` a seta para o lado não teria como atravessar.
@@ -28,11 +29,8 @@ templ adminScene(v adminView) {
 		</div>
 		@confirmDialog()
 		@resetDialog()
-		// O MESMO componente do Hub, e não uma segunda cópia: cunhar convite é
-		// uma coisa só, e duas versões dela divergiriam sem ninguém notar — é a
-		// razão pela qual o `mintAccountInvite` saiu do manipulador HTTP. Fica
-		// aqui porque este é o lugar natural da ação, ao lado da LISTA que ela
-		// muda; a entrada do Hub continua valendo para quem já está lá.
+		// O MESMO componente do Hub, e não uma segunda cópia: cunhar convite é uma
+		// coisa só, e duas versões dela divergiriam sem ninguém notar.
 		@ui.InviteDialog("/admin/convites")
 		<p class="text-sm text-destructive-ink" data-show="$error != ''" data-text="$error"></p>
 	</main>
@@ -56,8 +54,8 @@ templ playersPanel(v adminView) {
 					// tem a guarda do `EhEu`, porque essa não tem volta.
 					//
 					// O `#reset-link` é LIMPO ao abrir, e isso não é zelo: sem
-					// limpar, gerar um link para a Ana, fechar, e abrir a caixa da
-					// Bia mostraria o link da ANA sob o nome da BIA — um link de
+					// limpar, gerar um link para a Ana, fechar e abrir a caixa da
+					// Bia mostra o link da ANA sob o nome da BIA — um link de
 					// redefinição entregue à pessoa errada.
 					<button
 						type="button"
@@ -122,10 +120,8 @@ templ invitesPanel(v adminView) {
 							<span class="block text-xs text-muted-foreground">Expira em { c.Expires }.</span>
 						</span>
 						// A área de transferência é API do NAVEGADOR — não há como o
-						// servidor copiar por ele. É o primeiro lugar do app onde a
-						// expressão faz trabalho de verdade em vez de disparar um
-						// pedido, e o resultado é uma linha: o Datastar não é "sem
-						// JavaScript", é "sem BUNDLE".
+						// servidor copiar por ele. É um dos poucos lugares do app onde a
+						// expressão faz trabalho em vez de disparar um pedido.
 						<button
 							type="button"
 							data-url={ c.URL }
@@ -166,8 +162,8 @@ templ serverPanel(v adminView) {
 		<div class="mt-4 flex flex-wrap items-center justify-between gap-2">
 			<p class="text-xs text-muted-foreground">{ v.Machine.LastBackup }</p>
 			// Sem stream nenhum nesta tela: quem redesenha é a RESPOSTA do POST, que
-			// volta com o remendo deste painel. É a diferença central entre as duas
-			// superfícies das cenas — a Mesa tinha um SSE aberto para isso.
+			// volta com o remendo deste painel. A Mesa precisa de SSE porque lá a
+			// mudança vem de outra pessoa; aqui, de quem clicou.
 			<button
 				type="button"
 				data-indicator:saving
@@ -197,8 +193,7 @@ templ serverPanel(v adminView) {
 //
 // `m-auto` na caixa porque o PREFLIGHT do Tailwind zera a margem, e é ela que
 // centraliza um `<dialog>` aberto por `showModal()`. Sem isso ele encosta no
-// canto superior esquerdo — o navegador estava certo e a folha de reset é que
-// tirou. Medido: apareceu no canto na primeira abertura.
+// canto superior esquerdo.
 templ confirmDialog() {
 	<dialog
 		id="confirm"
@@ -233,15 +228,14 @@ templ confirmDialog() {
 	</dialog>
 }
 
-// resetDialog entrega o link de uso único que troca a senha de UMA conta
-// (ALE-120): o admin gera e manda, e quem recebe escolhe a própria senha — o
-// admin nunca vê nem digita senha de ninguém.
+// resetDialog entrega o link de uso único que troca a senha de UMA conta: o
+// admin gera e manda, e quem recebe escolhe a própria senha — o admin nunca vê
+// nem digita senha de ninguém.
 //
-// Mesma mecânica do convite do Hub, e pela mesma razão: o token chega por
-// REMENDO do servidor (`#reset-link`) e não por sinal. Sinal de cliente viaja
-// de volta ao servidor em toda requisição seguinte da página, e um token de uso
-// único que abre uma conta EXISTENTE é a última coisa que se quer nesse
-// caminho.
+// O token chega por REMENDO do servidor (`#reset-link`) e NUNCA por sinal:
+// sinal de cliente viaja de volta ao servidor em toda requisição seguinte da
+// página, e um token de uso único que abre uma conta EXISTENTE é a última coisa
+// que se quer nesse caminho.
 templ resetDialog() {
 	<dialog
 		id="reset"
@@ -277,11 +271,9 @@ templ resetDialog() {
 }
 
 // mintedReset é o remendo que volta do POST, e carrega o CAMINHO — nunca a URL
-// inteira. A origem é do NAVEGADOR, e isso é conserto de um defeito medido: com
-// o `r.Host` o link nascia apontando para a porta errada sempre que houvesse
-// qualquer coisa reescrevendo o cabeçalho no caminho. Link de redefinição existe
-// para ser MANDADO, então host errado é link morto — ver `ui.MintedInvite`, que
-// carrega a medição.
+// inteira. A origem é do NAVEGADOR: montada com o `r.Host`, ela nasce apontando
+// para a porta errada sempre que alguma coisa reescreva o cabeçalho no caminho,
+// e link de redefinição existe para ser MANDADO — host errado é link morto.
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.

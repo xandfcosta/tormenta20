@@ -14,13 +14,13 @@ import (
 	"t20engine/domain/live"
 )
 
-// O BESTIÁRIO DENTRO DA MESA (ALE-263).
+// O BESTIÁRIO DENTRO DA MESA.
 //
-// A cena do bestiário já existe em `/mestre/bestiario`, e o caminho mais
-// barato teria sido mandar o mestre até lá. Não é o que a mesa quer: uma
-// emboscada é UMA viagem, não seis — o mestre abre, escolhe o ogro, manda dois,
-// vê que faltou um goblin e manda mais. Sair da fila a cada bicho paga o custo
-// justamente no momento em que a mesa está esperando.
+// A cena do bestiário já existe em `/mestre/bestiario`, e o caminho mais barato
+// teria sido mandar o mestre até lá. Não é o que a mesa quer: uma emboscada é
+// UMA viagem, não seis — ele abre, escolhe o ogro, manda dois, vê que faltou um
+// goblin e manda mais. Sair da fila a cada bicho paga o custo justamente no
+// momento em que a mesa está esperando.
 //
 // O DESENHO é o mesmo, e é isso que a `bestiarioView.Base` comprou: a lista, os
 // filtros e o bloco são os mesmos componentes da cena do mestre, apontando para
@@ -75,7 +75,7 @@ func (s Scene) handleBestiaryTable(w http.ResponseWriter, r *http.Request) {
 	// O PAINEL É O DONO DO RASCUNHO: os campos de PV, iniciativa e quantas
 	// nascem do bloco do livro a cada criatura ABERTA. Sem isto, o PV que o
 	// mestre baixou para um ogro reapareceria no próximo bicho e ele não teria
-	// como saber que carregou (é a mesma regra que o diálogo da SPA carrega).
+	// como saber que carregou.
 	//
 	// A comparação com o `rascunhode` é o que separa "abriu outra criatura" de
 	// "digitou na busca": só a primeira semeia. Sem ela, filtrar apagaria o PV
@@ -87,10 +87,10 @@ func (s Scene) handleBestiaryTable(w http.ResponseWriter, r *http.Request) {
 
 // entryDraft são os três campos do ajuste, nascidos do livro.
 //
-// A INICIATIVA é um d20 ROLADO e não o bônus da criatura, e é o que a SPA faz:
-// o mestre quer a linha entrando com uma rolagem, e ajusta se rolou nos dados de
-// verdade em cima da mesa. Rolar no SERVIDOR e não na página é o mesmo princípio
-// do d20 do jogador (ALE-213) — a página não faz conta que vale.
+// A INICIATIVA é um d20 ROLADO e não o bônus da criatura: o mestre quer a linha
+// entrando com uma rolagem, e ajusta se rolou nos dados de verdade em cima da
+// mesa. Rolar no SERVIDOR e não na página é o mesmo princípio do d20 do jogador
+// — a página não faz conta que vale.
 func entryDraft(m book.Entry) map[string]any {
 	return map[string]any{
 		"entry_hp":         m.HP,
@@ -143,9 +143,9 @@ func (s Scene) handleKindBestiaryTable(w http.ResponseWriter, r *http.Request) {
 
 // sendsForTable põe N cópias do verbete na fila.
 //
-// UMA ENTRADA POR CÓPIA, e quem numera os repetidos é o SERVIDOR (ALE-192): a
-// tela não pode adivinhar um número que outro cliente acabou de usar. Todas
-// entram com a MESMA iniciativa — é o que a mesa faz com um bando.
+// UMA ENTRADA POR CÓPIA, e quem numera os repetidos é o SERVIDOR: a tela não
+// pode adivinhar um número que outro cliente acabou de usar. Todas entram com a
+// MESMA iniciativa — é o que a mesa faz com um bando.
 //
 // O `monsterId` viaja junto porque é ele que liga a linha ao verbete do livro, e
 // é o que faz o painel do combatente mostrar o bloco depois.
@@ -177,7 +177,7 @@ func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return estado, err
 		}
 		// O parcial volta junto com o erro: quatro goblins que entraram são o
-		// estado da mesa, e o `gmCommand` o transmite (ALE-155).
+		// estado da mesa, e o `gmCommand` o transmite.
 		if estado, err = st.deps.Sessions().AddInitiativeEntry(c.SessionID, linha); err != nil {
 			return estado, err
 		}
@@ -188,8 +188,8 @@ func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 // maxCopiasDeUmVerbete é o teto de cópias num gesto.
 //
 // Não é regra do livro: é o que separa "quatro goblins" de um zero a mais que
-// enche a fila e o mestre tem de desfazer linha por linha. O número é o mesmo da
-// SPA. A fila tem teto próprio no servidor, e ele responde por si.
+// enche a fila e o mestre tem de desfazer linha por linha. A fila tem teto
+// próprio no servidor, e ele responde por si.
 const maxCopiasDeUmVerbete = 12
 
 type envioDoVerbete struct {

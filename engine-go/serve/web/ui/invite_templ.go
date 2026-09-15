@@ -8,33 +8,24 @@ package ui
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-// O DIÁLOGO DE CONVITE, que é de DUAS cenas.
-//
-// Ele morava no hub e veio para o kit quando o hub saiu do `api` (ALE-278): a
-// administração desenha o mesmo diálogo, e o compilador o apontou no instante em
-// que os dois deixaram de ser o mesmo pacote. Ele não sabe nada de domínio — só
-// desenha o link que outra pessoa cunhou.
+// O DIÁLOGO DE CONVITE, que é de DUAS cenas — o hub e a administração. Ele não
+// sabe nada de domínio: só desenha o link que outra pessoa cunhou.
 
 // MintedInvite é o remendo que volta do POST, e ele carrega o CAMINHO do
 // convite — nunca a URL inteira.
 //
-// A origem é do NAVEGADOR e não do servidor, e isso é conserto de um defeito
-// medido: com o `r.Host`, o link nascia apontando para a porta errada sempre que
-// houvesse qualquer coisa reescrevendo o cabeçalho entre o navegador e o
-// processo. O link de convite existe para ser MANDADO para outra pessoa, então
-// um host errado é um link morto.
-//
-// > O caso medido era o proxy do Vite em desenvolvimento, que saiu na ALE-272.
-// > A regra FICA, e não por inércia: a mesa roda na LAN, alcançada por IP, e o
-// > dia em que alguém puser um proxy na frente o defeito volta igual (ALE-321). É o mesmo padrão que o painel de
-// administração já usa para copiar convite.
+// A origem é do NAVEGADOR e não do servidor: montado com o `r.Host`, o link
+// nasce apontando para a porta errada sempre que alguma coisa reescreva o
+// cabeçalho entre o navegador e o processo. Convite existe para ser MANDADO para
+// outra pessoa, então host errado é link morto — e a mesa roda na LAN, alcançada
+// por IP, onde qualquer proxy na frente reproduz isso.
 //
 // `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
 // "copiar" do teclado, e copiar é a única coisa que se faz com ele.
 //
-// A NOTA vem por parâmetro desde a ALE-287, e não é enfeite: são dois convites
-// com VIDAS diferentes. O de CONTA vale uma vez e some quando alguém o gasta; o
-// de CAMPANHA vale enquanto o mestre não gerar outro. Escrever "serve para uma
+// A NOTA vem por parâmetro e não é enfeite: são dois convites com VIDAS
+// diferentes. O de CONTA vale uma vez e some quando alguém o gasta; o de
+// CAMPANHA vale enquanto o mestre não gerar outro. Escrever "serve para uma
 // conta" embaixo de um link reutilizável faria o mestre gerar um por jogador e
 // derrubar o dos anteriores a cada vez.
 func MintedInvite(caminho, nota string) templ.Component {
@@ -65,7 +56,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/invite.templ`, Line: 41, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/invite.templ`, Line: 32, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -107,7 +98,7 @@ func MintedInvite(caminho, nota string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(nota)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/invite.templ`, Line: 53, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/invite.templ`, Line: 44, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -121,20 +112,17 @@ func MintedInvite(caminho, nota string) templ.Component {
 	})
 }
 
-// InviteDialog cunha o link de conta (ALE-120): o admin gera, entrega, e
-// quem recebe escolhe a própria senha — o admin nunca vê senha nenhuma.
+// InviteDialog cunha o link de conta: o admin gera, entrega, e quem recebe
+// escolhe a própria senha — o admin nunca vê senha nenhuma.
 //
 // A ROTA é parâmetro porque o diálogo vive em duas telas e elas precisam de
-// remendos DIFERENTES (ALE-242): no Hub só volta o link; na administração volta
-// o link E o painel de convites, senão a contagem ao lado dele fica velha na
-// cara de quem acabou de cunhar. O diálogo é um só de propósito — duas cópias
-// divergiriam, e é a mesma razão pela qual o `mintAccountInvite` saiu do
-// manipulador HTTP.
+// remendos DIFERENTES: no Hub só volta o link; na administração volta o link E o
+// painel de convites, senão a contagem ao lado dele fica velha na cara de quem
+// acabou de cunhar.
 //
-// O link chega por remendo do servidor (`#invite-link`), então ele NÃO passa
-// por sinal: um token de uso único em estado de cliente viajaria de volta ao
-// servidor em toda requisição seguinte da página, que é a mesma razão pela qual
-// a senha ficou fora dos sinais na ALE-229.
+// O link chega por remendo do servidor (`#invite-link`) e NÃO passa por sinal:
+// um token de uso único em estado de cliente viajaria de volta ao servidor em
+// toda requisição seguinte da página.
 func InviteDialog(rota string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

@@ -6,7 +6,7 @@ import (
 	"t20engine/domain/creature"
 )
 
-// O EDITOR DE BLOCO desenhado (ALE-269).
+// O EDITOR DE BLOCO desenhado.
 //
 // Ele mora DENTRO do diálogo do elenco e troca de lugar com a lista (decisão do
 // dono): sem diálogo dentro de diálogo, e o formulário fica com os 40rem
@@ -39,11 +39,10 @@ templ blockEditor(v View) {
 		// número do bloco, é como o NPC se chama na mesa — e uma aba que o
 		// escondesse deixaria "salvar sem nome" ser recusado por um campo que a
 		// pessoa não estava vendo.
-		// "Nome do NPC" e não "Nome", e a razão não é o teste que acusou: a cena do
-		// mestre já tem uma caixa chamada "Nome" — a do combatente novo, na fila —,
-		// e duas caixas com o MESMO nome acessível no mesmo documento é ambiguidade
-		// para quem navega por leitor de tela. O e2e só foi o primeiro a tropeçar
-		// nela (`strict mode violation` em `getByLabel('Nome')`).
+		// "Nome do NPC" e não "Nome": a cena do mestre já tem uma caixa chamada
+		// "Nome" — a do combatente novo, na fila —, e duas caixas com o MESMO nome
+		// acessível no mesmo documento é ambiguidade para quem navega por leitor
+		// de tela (e `strict mode violation` no `getByLabel` do e2e).
 		<div class="shrink-0 space-y-1">
 			<label for="npc-name" class={ ui.FieldLabelClasses("muted", "block") }>Nome do NPC</label>
 			<input

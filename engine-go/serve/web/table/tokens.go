@@ -13,12 +13,7 @@ import (
 	"t20engine/domain/live"
 )
 
-// PÔR NO MAPA (ALE-264, item 5) — ver a linha do GLOSSARY.
-//
-// O gesto que faltava: o tabuleiro desenhava peças desde o `33380d6`,
-// mas só nascia peça por `curl`. Aqui ele ganha a afordância, e o servidor já
-// tinha tudo — `BoardStore.Populate` existe, é idempotente e tem guarda próprio
-// (`board_populate_test.go`).
+// PÔR NO MAPA — ver a linha do GLOSSARY.
 //
 // O NOME não é `bringParty` porque esse já existe neste pacote e leva o grupo
 // para a FILA. Mesmo verbo, destinos diferentes: é a colisão que a linha do
@@ -31,8 +26,8 @@ type candidatoAoMapa struct {
 	Nome string
 	// Ficha responde "é ficha de jogador ou é NPC?" (`type == "character"`), que
 	// é o predicado com que o SERVIDOR escolhe o lado do mapa. Usar o mesmo aqui
-	// é o que faz o atalho pôr as peças exatamente na fileira do grupo — decisão
-	// do dono na ALE-204, registrada na colisão C4 do GLOSSARY.
+	// é o que faz o atalho pôr as peças exatamente na fileira do grupo — ver a
+	// colisão C4 do GLOSSARY.
 	Ficha bool
 	// NoMapa: já tem peça. A linha continua aparecendo, marcada e travada, em vez
 	// de sumir: esconder faria o mestre procurar um nome que ele acabou de ver na
@@ -83,11 +78,10 @@ func MapOutsideSheets(candidatos []candidatoAoMapa) []string {
 
 // poeNoMapa faz nascer as peças escolhidas.
 //
-// Duas mutações e não uma, e a segunda é a que se perde num porte apressado: o
-// `Populate` cria as peças e o `SetSpeeds` grava o ORÇAMENTO de movimento delas.
-// Sem o segundo a peça nasce no mapa sem deslocamento, o alcance não acende e o
-// jogador vê uma peça que não anda — um meio-recurso que ninguém reporta porque
-// parece regra. É o que o `handleBoardPopulate` da SPA já fazia.
+// Duas mutações e não uma: o `Populate` cria as peças e o `SetSpeeds` grava o
+// ORÇAMENTO de movimento delas. Sem o segundo a peça nasce no mapa sem
+// deslocamento, o alcance não acende e o jogador vê uma peça que não anda — um
+// meio-recurso que ninguém reporta porque parece regra.
 func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 	escolhidos, err := escolhidosDosSinais(c.R)
 	if err != nil {
@@ -117,10 +111,10 @@ func poeNoMapa(st Scene, c commandCtx) (*board.BoardState, error) {
 // para partir a lista no meio. Um sinal por candidato seria um sinal por nome na
 // fila, criados e destruídos a cada remendo da cena.
 //
-// VAZIO É ERRO, e a distinção importa: `EntrySelection` nil significa TODAS, que
-// é exatamente o padrão inseguro que a ALE-204 tirou do app. Se a leitura falha
-// ou ninguém foi escolhido, o comando recusa em vez de cair no "traz todo mundo"
-// — o vilão do terceiro turno não vai para o mapa por causa de um sinal perdido.
+// VAZIO É ERRO, e a distinção importa: `EntrySelection` nil significa TODAS. Se
+// a leitura falha ou ninguém foi escolhido, o comando recusa em vez de cair no
+// "traz todo mundo" — o vilão do terceiro turno não vai para o mapa por causa de
+// um sinal perdido.
 func escolhidosDosSinais(r *http.Request) (board.EntrySelection, error) {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	var sinais struct {
@@ -153,8 +147,8 @@ func listaDeIDs(ids []string) string { return strings.Join(ids, ",") }
 // LER O DIÁLOGO em vez de escrever os ids no botão não é preferência de estilo:
 // o botão mora na região do MAPA, e id de combatente é dado da FILA. Embutido
 // ali, qualquer mudança na fila mudaria o HTML do mapa e o remendo trocaria a
-// peça debaixo do dedo do mestre no meio do arrasto — foi exatamente isso que o
-// `TestATrackerChangeDoesNotPatchTheMap` acusou na primeira versão.
+// peça debaixo do dedo do mestre no meio do arrasto — é o que o
+// `TestATrackerChangeDoesNotPatchTheMap` prende.
 const dialogSheets = "[...document.querySelectorAll('#populate [data-ficha]')]" +
 	".map((e) => e.dataset.id).join(',')"
 
@@ -193,7 +187,7 @@ func mapCommand(v BoardView) string {
 	return sceneBoardCommand(v, "pecas")
 }
 
-// sheetsShortcut é o clique DIREITO: põe só as fichas, sem diálogo (ALE-204).
+// sheetsShortcut é o clique DIREITO: põe só as fichas, sem diálogo.
 //
 // O gesto nunca é o único caminho — abrir o diálogo e confirmar faz exatamente
 // isto, porque a abertura marca as mesmas fichas. O `preventDefault` é pelo menu
@@ -207,19 +201,13 @@ func sheetsShortcut(v BoardView) string {
 		"; $map_selection && (" + mapCommand(v) + ")"
 }
 
-// A PEÇA AVULSA (ALE-291) — a porta, o baú, o barril.
+// A PEÇA AVULSA — a porta, o baú, o barril.
 //
-// O GLOSSARY promete, na linha de `peça`, que "uma peça pode existir sem linha
-// na fila (a porta, o baú)". A promessa estava sem caminho nenhum: a única rota
-// que criava peça era o `poeNoMapa`, e o `populateBoard` por baixo dela ITERA A
-// INICIATIVA — só nascia peça para quem já era combatente. O mestre não tinha
-// como pôr uma porta no mapa.
+// É o outro caminho de criar peça: o `poeNoMapa` ITERA A INICIATIVA, então por
+// ele só nasce peça para quem já é combatente, e o GLOSSARY promete na linha de
+// `peça` que "uma peça pode existir sem linha na fila".
 //
-// É a família da cortina (ALE-202) e da presença (ALE-287): a capacidade
-// inteira no ar, com teste, e nenhum caminho até ela.
-//
-// A POSIÇÃO VEM DO CORPO, junto com os sinais do desenho (ALE-306). Este bloco
-// dizia "vem do CAMINHO" e sobreviveu à conversão que o desmentiu — o
+// A POSIÇÃO VEM DO CORPO, junto com os sinais do desenho, e não do CAMINHO: o
 // `loosePieceSignals` logo abaixo lê os dois do mesmo corpo, porque o
 // `ReadSignals` o consome inteiro e não há segunda leitura.
 func newLoosePiece(st Scene, c commandCtx) (*board.BoardState, error) {
@@ -257,9 +245,7 @@ func loosePieceSignals(r *http.Request) (loosePieceDraft, engine.Square, error) 
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
 	// UMA leitura e um struct só, porque o CORPO NÃO SE LÊ DUAS VEZES: o
 	// `ReadSignals` do datastar-go copia `r.Body` inteiro num buffer, e um
-	// segundo leitor pegaria vazio. Antes disso a casa vinha do CAMINHO e os
-	// três campos do corpo, então eram dois leitores de fontes diferentes; com o
-	// `payload` os quatro chegam juntos (ALE-306).
+	// segundo leitor pega vazio.
 	var sinais struct {
 		Nome      string             `json:"new_token_name"`
 		Tamanho   int                `json:"new_token_size"`

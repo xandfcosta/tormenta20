@@ -12,38 +12,13 @@ import (
 	"t20engine/domain/live"
 )
 
-// O MENU DE CONTEXTO NA PEÇA (ALE-206), em Datastar.
+// O MENU DE CONTEXTO NA PEÇA: clique direito abre os verbos dela, e o menu é a
+// única casa deles — não há barra de peça nesta Mesa.
 //
-// A issue foi escrita para a SPA e o desenho dela vale igual aqui: clique direito
-// numa peça abre os verbos dela. O que MUDA é a pergunta que ela deixava em
-// aberto — *"decidir se a barra continua existindo ao lado do menu, ou se o menu
-// a substitui, faz parte da issue"*. Nesta Mesa não há barra: o menu é a única
-// casa, e por isso ele carrega o conjunto INTEIRO de verbos, não só os cinco que
-// a issue lista.
-//
-// # O buraco que isto fecha, e como ele passou despercebido
-//
-// A peça em Datastar não tinha gesto NENHUM além de arrastar, e o `BoardStore` já
-// sabia esconder, duplicar, editar e remover desde a ALE-178 — a mesma forma da
-// cortina: a capacidade no ar e invisível.
-//
-// Ele escapou da lista das dez superfícies porque aquele levantamento cruzou
-// RÓTULOS, e os rótulos da peça são todos interpolados (`Esconder ${token.label}`):
-// eles não casam com texto nenhum de nenhum dos dois lados. É a limitação
-// conhecida daquele método, e vale anotá-la — a próxima varredura que confiar só
-// em texto vai perder exatamente a mesma família.
-//
-// A pior das seis é ESCONDER, e a razão é que ela deixa outra superfície mentindo:
-// "ver como jogador" (ALE-193) existe para conferir a emboscada, e sem um gesto
-// de esconder ela responde sempre "nenhuma peça escondida nesta cena".
-//
-// # O clique direito já tem dono, e é a FERRAMENTA que arbitra
-//
-// A issue avisa: na SPA o clique direito apaga terreno com a borracha rápida, e
-// "provavelmente o menu só existe fora das ferramentas de pintura". Nesta Mesa a
-// regra sai de graça e por CONSTRUÇÃO: com ferramenta ligada a peça já é inerte
-// ao ponteiro (o `.board-with-tool` da superfície 8), então o clique
-// direito sobre ela nem chega à peça. Nenhuma condição a mais para lembrar.
+// O clique direito NÃO precisa conviver com a borracha rápida do pincel: com
+// ferramenta ligada, a peça já é inerte ao ponteiro (`.board-with-tool`), então
+// o clique direito sobre ela nem chega até aqui. Nenhuma condição a mais para
+// lembrar.
 
 func (s Scene) TokenActionRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro/pecas/{tokenId}"
@@ -68,10 +43,10 @@ func (s Scene) TokenActionRoutes(r chi.Router) {
 
 // toggleVisibility é o gesto da EMBOSCADA.
 //
-// ALTERNA e não recebe o estado desejado, ao contrário do pincel de terreno: é UM
-// estado com dois lados e um botão com `aria-pressed`. Mandar o valor da tela
-// faria dois cliques rápidos com a resposta atrasada apagarem um ao outro — e
-// aqui o resultado desse empate é a emboscada aparecendo para a mesa.
+// ALTERNA e não recebe o estado desejado, ao contrário do pincel de terreno:
+// mandar o valor da tela faria dois cliques rápidos com a resposta atrasada
+// apagarem um ao outro — e o resultado desse empate é a emboscada aparecendo
+// para a mesa.
 func toggleVisibility(st Scene, c commandCtx) (*board.BoardState, error) {
 	peca, err := st.tokenOfCommand(c)
 	if err != nil {
@@ -81,19 +56,18 @@ func toggleVisibility(st Scene, c commandCtx) (*board.BoardState, error) {
 		board.ParseTokenPatch(map[string]any{"hidden": !peca.Hidden}))
 }
 
-// OS TRÊS DUPLICARES, e a diferença entre eles é o que a cópia faz com a LINHA
-// DA FILA (ALE-206).
+// OS DUPLICARES, e a diferença entre eles é o que a cópia faz com a LINHA DA
+// FILA.
 //
-// A cópia nasce AO LADO da original e com o número seguinte no nome, e o servidor
-// é quem numera — duas telas escolhendo por conta própria é como nasce o segundo
-// "Zumbi 3" no mesmo mapa.
+// A cópia nasce AO LADO da original e com o número seguinte no nome, e o
+// SERVIDOR é quem numera — duas telas escolhendo por conta própria é como nasce
+// o segundo "Zumbi 3" no mesmo mapa.
 //
-// O eixo é a LINHA e não a ficha, e a issue nasceu dizendo o contrário. A barra
-// de PV da peça é indexada por `entryId` (`saude[*t.EntryID]`, no `board_view`),
-// então é a linha que decide se um dano aparece nas duas peças ou só numa — e o
-// zumbi do exemplo sequer tem ficha, porque NPC entra na fila com `characterId`
-// nulo por construção. Duplicar "apontando para a mesma ficha" seria um no-op
-// exatamente no caso que motivou a issue.
+// O eixo é a LINHA e não a ficha: a barra de PV da peça é indexada por `entryId`
+// (`saude[*t.EntryID]`, no `board_view`), então é a linha que decide se um dano
+// aparece nas duas peças ou só numa — e um NPC entra na fila com `characterId`
+// nulo por construção, de modo que duplicar "apontando para a mesma ficha" seria
+// um no-op.
 
 // duplicatesWith é o construtor dos TRÊS duplicares: a peça é a mesma, e o que
 // muda é o laço.
@@ -117,45 +91,31 @@ func duplicatesWith(modo string) func(Scene, commandCtx) (*board.BoardState, err
 
 // clipboardSignals é a ÁREA DE TRANSFERÊNCIA de quem clicou, e ela viaja do
 // cliente porque é dele: a área é de quem copiou, não da mesa.
-//
-// Nomes em `snake_case` pela mesma razão do `tokenSignals`: o analisador de HTML
-// minuscula chave de atributo, então caixa alta ali liga um sinal novo e o
-// servidor fica lendo o antigo, para sempre vazio. O `_` atravessa intacto.
 type clipboardSignals struct {
 	Peca      string `json:"area_token"`
 	Tabuleiro string `json:"area_board"`
 	Modo      string `json:"area_mode"`
-	// O DESTINO viaja junto, no mesmo corpo (ALE-307). Ele é calculado no
-	// instante do Ctrl+V — o meio da vista de quem cola — e o `payload` do
-	// Datastar SUBSTITUI os sinais, então os três acima precisam estar listados
-	// na expressão ao lado dele. Ver `pasteInTheMiddleOfTheView`.
+	// O DESTINO viaja no mesmo corpo, calculado no instante do Ctrl+V. O
+	// `payload` do Datastar SUBSTITUI os sinais em vez de somar a eles, então os
+	// três campos acima precisam estar listados na expressão ao lado dele — ver
+	// `pasteInTheMiddleOfTheView`.
 	Destino struct{ X, Y int } `json:"from"`
 }
 
-// pastesToken põe outra igual onde a pessoa está OLHANDO (ALE-206).
+// pastesToken põe outra igual onde a pessoa está OLHANDO.
 //
-// # Por que ele existe, tendo duplicar
+// Ele existe ao lado do duplicar porque faz três coisas que o duplicar não faz:
+// repete sem perguntar de novo, pousa onde se está olhando depois de arrastar o
+// mapa, e ATRAVESSA AS ABAS — copiar o zumbi na Cripta e colá-lo na Taverna.
 //
-// O duplicar põe a cópia colada na original. O colar faz três coisas que ele não
-// faz: repete sem perguntar de novo, pousa onde se está olhando depois de
-// arrastar o mapa, e ATRAVESSA AS ABAS — copiar o zumbi na Cripta e colá-lo na
-// Taverna. É essa terceira que não tinha caminho nenhum antes.
+// O MODO foi decidido no COPIAR e não aqui: perguntar a cada `CTRL+V` mataria o
+// valor do teclado, que é repetir. A área guarda a resposta dada uma vez, no
+// menu.
 //
-// # O modo foi decidido no COPIAR, e não aqui
-//
-// Decisão do dono (2026-09-05): a issue dizia "ao colar, perguntar", e perguntar
-// a cada `CTRL+V` mataria o valor do teclado, que é repetir. A pergunta continua
-// sendo feita uma vez, no menu, no momento de copiar — e o que a área guarda é a
-// resposta.
-//
-// # Colar ENTRE abas com "sangrando junto" é permitido, e é decisão
-//
-// O mesmo combatente passa a ter peça em dois mapas, com uma barra de PV só.
-// Poderia ser recusado, e não é: a regra do modo é "um combatente, um PV", e ela
-// não fala de mapa. Quem cola na outra aba escolheu isso na tela que diz o modo.
-// O que ele custa está escrito para o dia em que incomodar: a marca da VEZ
-// acende nas duas abas, e quem estiver olhando a Taverna vê o ogro aceso com o
-// combate acontecendo na Cripta.
+// Colar ENTRE abas com "sangrando junto" é PERMITIDO e é decisão: a regra do
+// modo é "um combatente, um PV", e ela não fala de mapa. O preço é a marca da
+// VEZ acender nas duas abas — quem olha a Taverna vê o ogro aceso com o combate
+// acontecendo na Cripta.
 func pastesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	var area clipboardSignals
 	if err := datastar.ReadSignals(c.R, &area); err != nil {
@@ -254,16 +214,13 @@ func (s Scene) queueLineOf(sessionID int64, peca *board.BoardToken) *live.Initia
 }
 
 // nextNameForTheLine é o nome que a cópia VAI receber, calculado ANTES de ela
-// existir.
-//
-// Ele existe porque o bloco é clonado antes da linha, e o bloco leva nome: sem
-// isto, o acervo do mestre ficaria com dois "Zumbi" e a linha com "Zumbi 2" —
-// dois nomes para a mesma criatura, e o olho da fila abrindo um bloco que se
-// chama outra coisa.
+// existir — o bloco é clonado antes da linha, e o bloco leva nome. Sem isto o
+// acervo ficaria com dois "Zumbi" e a linha com "Zumbi 2", e o olho da fila
+// abriria um bloco que se chama outra coisa.
 //
 // A conta é a MESMA do `AddEntry` (o `numberedLabel`), e repeti-la aqui é o
-// preço de precisar do nome cedo. Ela não briga: quem numera de verdade continua
-// sendo o `AddEntry`, e este valor só decide como o BLOCO se chama.
+// preço de precisar do nome cedo. Quem numera de verdade continua sendo o
+// `AddEntry`; este valor só decide como o BLOCO se chama.
 func (s Scene) nextNameForTheLine(sessionID int64, rotulo string) string {
 	estado := s.deps.Sessions().GetState(sessionID)
 	if estado == nil {
@@ -316,11 +273,10 @@ func (s Scene) addsACopyOfTheLine(sessionID int64, modelo live.InitiativeEntry) 
 	return nil, fmt.Errorf("a linha de %s não entrou na fila", modelo.Label)
 }
 
-// wasWhereForTokenBack desfaz o último pouso (ALE-206).
+// wasWhereForTokenBack desfaz o último pouso.
 //
-// "Arrastei o dragão para o lugar errado na frente de seis pessoas" é o gesto que
-// ela conserta, e é por isso que a memória mora na PEÇA e não na tela: quem
-// precisa desfazer pode ter recarregado a página, ou estar na outra aba.
+// A memória mora na PEÇA e não na tela: quem precisa desfazer pode ter
+// recarregado a página, ou estar na outra aba.
 //
 // UMA vez e não uma pilha: voltar limpa o registro, então o botão some depois de
 // usado. Um "voltar" que continuasse disponível andaria para trás na cena sem
@@ -337,10 +293,6 @@ func wasWhereForTokenBack(st Scene, c commandCtx) (*board.BoardState, error) {
 }
 
 // tokenSignals é o que o diálogo de editar manda.
-//
-// Nomes em `snake_case` porque viram chave de atributo, e o analisador de HTML
-// minuscula chave de atributo, então caixa alta ali chega minúscula e liga um
-// sinal NOVO, com o servidor lendo o antigo para sempre vazio.
 type tokenSignals struct {
 	Nome    string `json:"token_name"`
 	Tamanho int    `json:"token_size"`
@@ -374,10 +326,9 @@ func editsToken(st Scene, c commandCtx) (*board.BoardState, error) {
 
 // removesToken tira a peça do tabuleiro, e SÓ do tabuleiro.
 //
-// A linha da iniciativa fica: são dois gestos porque respondem a duas perguntas —
-// "ele saiu do mapa" e "ele saiu do combate" —, e juntá-los faria o mestre perder
-// o combatente ao arrumar a cena. É a mesma separação que o elenco e a fila já
-// têm (superfície 6b).
+// A linha da iniciativa fica: são dois gestos porque respondem a duas perguntas
+// — "ele saiu do mapa" e "ele saiu do combate" —, e juntá-los faria o mestre
+// perder o combatente ao arrumar a cena.
 func removesToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	peca, err := st.tokenOfCommand(c)
 	if err != nil {
@@ -433,19 +384,18 @@ func tokenSize(lado int) bool {
 
 // chosenToken é o teste que abre o menu de UMA peça.
 //
-// UM SINAL com o id dentro, e não um booleano por peça: com dez zumbis no mapa,
-// dez sinais dariam dez lugares onde dois menus podem estar abertos ao mesmo
-// tempo. Com o id, a exclusão é por construção — a mesma escolha do `$tool`
-// e do `$marker_chosen`.
+// UM SINAL com o id dentro, e não um booleano por peça: N booleanos dariam N
+// lugares onde dois menus podem estar abertos ao mesmo tempo. Com o id, a
+// exclusão é por construção — a mesma escolha do `$tool` e do `$marker_chosen`.
 func chosenToken(id string) string {
 	return fmt.Sprintf("$token_chosen === %q", id)
 }
 
 // openMenuToken é o clique DIREITO.
 //
-// `preventDefault` porque o menu do navegador cobriria o nosso; e o gesto NUNCA é
-// o único caminho — a issue pede isso e a peça continua tendo o clique esquerdo
-// para mover, o teclado para focar e o `Enter` para abrir o mesmo menu.
+// `preventDefault` porque o menu do navegador cobriria o nosso; e o gesto NUNCA
+// é o único caminho — a peça continua tendo o clique esquerdo para mover, o
+// teclado para focar e o `Enter` para abrir o mesmo menu.
 func openMenuToken(id string) string {
 	return fmt.Sprintf("evt.preventDefault(); $token_chosen = %q", id)
 }
@@ -453,20 +403,15 @@ func openMenuToken(id string) string {
 // closeMenuToken é a saída, e ela existe em DOIS lugares: o ✕ do menu e o gesto
 // que abre outra peça (o mesmo sinal recebendo outro id).
 //
-// Aqui morava "três lugares: o ✕ do menu, a tecla Esc e …", e o Esc nunca
-// funcionou — medido na ALE-206: com o menu aberto, `Escape` o deixa `display:
-// flex` e só o ✕ o fecha. Não é um defeito a consertar, é uma promessa a
-// retirar: o `scene.js` mapeia Escape para "voltar" e chama `stopPropagation` no
-// documento, então ele não chega. O `railKeyboard` e o `clickedPointRuler` já
-// tinham medido exatamente isso, cada um no seu canto, e os dois escrevem que
-// um ramo de Escape ali "seria uma promessa que a tela não cumpre". Este
-// comentário era essa promessa, escrita.
+// NÃO há saída pelo Esc, e não adianta escrever uma: o `scene.js` mapeia Escape
+// para "voltar" e chama `stopPropagation` no documento, então a tecla não chega
+// até aqui.
 //
 // Ele apaga o SUBMENU junto, e o `openMenuToken` também: sem isso, abrir o menu
-// de outra peça a mostraria com a segunda camada já aberta, porque o
-// `$pecacopia` guarda um id e não um booleano. É a mesma armadilha do nó
-// COMPARTILHADO que o `openEditToken` registra logo abaixo — quem troca de peça
-// é quem tem de limpar o que a anterior deixou.
+// de outra peça a mostraria com a segunda camada já aberta, porque o sinal da
+// cópia guarda um id e não um booleano. É a armadilha do nó COMPARTILHADO que o
+// `openEditToken` registra logo abaixo — quem troca de peça é quem tem de limpar
+// o que a anterior deixou.
 const closeMenuToken = "$token_chosen = ''"
 
 // copyMenuId nomeia a segunda camada de UMA peça.
@@ -486,13 +431,13 @@ func closesTheCopyMenu(tokenID string) string {
 
 // putsInTheClipboard é o gesto de COPIAR: ele não chama o servidor.
 //
-// Copiar é decisão de quem olha, e ela mora no cliente inteira — a área é de
-// QUEM COPIOU, não da mesa. Uma rota aqui gravaria por usuário e por sessão um
-// estado que ninguém pediu, e que o mestre encontraria cheio no dia seguinte.
+// Copiar é decisão de quem olha, e mora no cliente inteira — a área é de QUEM
+// COPIOU, não da mesa. Uma rota aqui gravaria por usuário e por sessão um estado
+// que ninguém pediu, e que o mestre encontraria cheio no dia seguinte.
 //
-// O RÓTULO viaja junto para a faixa poder dizer o que está na área sem uma
-// segunda ida ao servidor. Ele é só para ler: quem manda no que se cola é o par
-// `areapeca` + `areatabuleiro`.
+// O RÓTULO viaja junto para a faixa dizer o que está na área sem uma segunda ida
+// ao servidor. Ele é só para ler: quem manda no que se cola é o par
+// `$area_token` + `$area_board`.
 func putsInTheClipboard(v BoardView, p boardToken, modo, frase string) string {
 	return closesTheCopyMenu(p.ID) + fmt.Sprintf(
 		"$area_token = %q; $area_board = %q; $area_mode = %q; $area_label = %q; $area_phrase = %q; ",
@@ -500,11 +445,9 @@ func putsInTheClipboard(v BoardView, p boardToken, modo, frase string) string {
 	) + closeMenuToken
 }
 
-// emptiesTheClipboard limpa a área, e o gesto é um BOTÃO e nunca o Esc.
-//
-// O Esc não chega: o `scene.js` o mapeia para "voltar" e o mata no documento —
-// medido na ALE-206, e o `railKeyboard` e o `clickedPointRuler` já registram o
-// mesmo. Uma faixa que dissesse "Esc limpa" prometeria o que a tela não cumpre.
+// emptiesTheClipboard limpa a área, e o gesto é um BOTÃO e nunca o Esc: o
+// `scene.js` mapeia Escape para "voltar" e o mata no documento, então uma faixa
+// que dissesse "Esc limpa" prometeria o que a tela não cumpre.
 const emptiesTheClipboard = "$area_token = ''; $area_board = ''; $area_mode = ''; " +
 	"$area_label = ''; $area_phrase = ''"
 

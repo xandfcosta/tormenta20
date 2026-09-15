@@ -1643,6 +1643,22 @@ até ficar verdadeiro", e todos os sinais assim deste repositório nascem `false
 Ele erra para o lado seguro — nascer escondido e aparecer um quadro depois é
 sempre melhor que pintar e sumir.
 
+### `ReadSignals` vem ANTES do `NewSSE`, e a ordem errada passa VERDE no teste
+
+O `NewSSE` ASSUME a resposta e fecha o corpo do pedido. Um `ReadSignals` depois
+dele encontra corpo fechado e o gesto chega sem sinal nenhum — o `datastar-go`
+chega a perguntar de volta *"are you sure you created the SSE ***AFTER*** the
+ReadSignals?"*.
+
+**O que faz esta valer uma seção é como ela escapa:** o `httptest.NewRequest`
+não reproduz esse ciclo de vida, então **o teste de handler passa VERDE** e o
+defeito só aparece no navegador. E num `GET` ela não morde — o corpo é vazio dos
+dois jeitos —, o que faz o defeito nascer no dia em que alguém trocar o gesto
+para `POST`, longe de onde a ordem foi escrita.
+
+O corolário: **o corpo do pedido se lê UMA vez.** O `ReadSignals` copia o
+`r.Body` inteiro num buffer, e um segundo leitor pega vazio — sem erro.
+
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 
 O `data-show` escreve `el.style.display`; o `data-attr:style` reescreve o

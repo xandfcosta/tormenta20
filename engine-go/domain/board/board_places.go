@@ -12,7 +12,7 @@ import (
 	"t20engine/infra/events"
 )
 
-// Place é uma cena guardada da crônica (ALE-124, fatia 5).
+// Place é uma cena guardada da crônica.
 //
 // O que a mesa chama de "lugar" é o tabuleiro CONGELADO: a taverna com as nove
 // peças onde ficaram, para reabrir na semana seguinte sem remontar nada.
@@ -30,8 +30,7 @@ type Place struct {
 //
 // Sobrescreve o lugar de MESMO NOME na mesma crônica: quem reabre a taverna,
 // move duas peças e encerra de novo espera uma taverna — não uma pilha de
-// tavernas quase iguais. É a mesma decisão do "voltar para onde estava" da
-// ALE-178: memória do que importa, não histórico de tudo.
+// tavernas quase iguais. É memória do que importa, não histórico de tudo.
 func (bs *BoardStore) Archive(ctx context.Context, campaignID int64, board *BoardState) error {
 	blob, err := json.Marshal(board)
 	if err != nil {
@@ -77,39 +76,13 @@ func (bs *BoardStore) Places(ctx context.Context, campaignID int64) []Place {
 	return lugares
 }
 
-// Aqui moravam o `ShowPlace`, o `Reopen` e o `reopenLocked` — as três portas com
-// que a ALE-191 resolvia "põe esta cena na mesa" ANTES de existirem abas.
-//
-// O `ShowPlace` arquivava a cena da aba e entrava no lugar dela; o `Reopen` era a
-// primitiva que trocava a cena de UMA aba, ou abria a primeira se não houvesse
-// nenhuma. A ALE-205 tirou o problema que os dois resolviam: com abas nada é
-// substituído, então não há o que guardar antes — e desde então a rota
-// `/lugares/{placeId}/reabrir` entra pelo `OpenPlace`, logo abaixo.
-//
-// Elas ficaram no ar com ZERO chamadores de produção e QUATRO casos de teste em
-// cima (ALE-289), e é isso que as tornava caras: um daqueles casos afirmava, em
-// verde, que trocar de cena ARQUIVA a que estava na mesa — o comportamento exato
-// que a ALE-205 removeu. Um teste que dirige uma porta morta não fica obsoleto
-// junto com ela; ele passa a afirmar o oposto do produto, e continua verde.
-//
-// Nenhuma garantia sumiu, as três mudaram de porta e hoje são presas contra o
-// `OpenPlace`: a posse (`…ThroughOpenPlace`), as peças que voltam onde estavam e
-// o movimento provisório que NÃO volta. A última mora no `storedScene`, por onde
-// as duas portas sempre passaram — foi ela que impediu que a divergência entre
-// os dois caminhos acontecesse enquanto ambos existiam.
-
 // OpenPlace põe um lugar guardado numa ABA NOVA, sem tocar no que já está na
-// mesa (ALE-205, fatia 3).
+// mesa. É o que "Reabrir" faz: as duas cenas ficam abertas, cada uma na sua aba,
+// e não há arquivamento preventivo porque nada é substituído.
 //
-// É o que "Reabrir" passou a fazer, e a diferença com o `ShowPlace` é a issue
-// inteira: lá a cena guardada ENTRAVA no lugar de outra, que ia para o acervo
-// antes; aqui as duas ficam abertas, cada uma na sua aba. O arquivamento
-// preventivo que a ALE-191 inventou deixou de ser necessário porque deixou de
-// haver o que perder — nada é substituído.
-//
-// A posse é conferida como no `RemovePlace`, e pelo mesmo
-// motivo: o id vem do cliente, e sem a checagem um mestre puxaria para a própria
-// mesa a cena de OUTRA campanha.
+// A posse é conferida como no `RemovePlace`, e pelo mesmo motivo: o id vem do
+// cliente, e sem a checagem um mestre puxaria para a própria mesa a cena de
+// OUTRA campanha.
 func (bs *BoardStore) OpenPlace(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
 	b, err := bs.openPlaceLocked(ctx, campaignID, sessionID, placeID)
 	if err != nil {
@@ -139,10 +112,10 @@ func (bs *BoardStore) openPlaceLocked(ctx context.Context, campaignID, sessionID
 
 // inNewTabLocked acrescenta a cena como mais uma aba, com a trava na mão.
 //
-// UM lugar só cunha id e sequência, e é por isso que ele existe: o `Reopen` sem
-// aba e o `OpenPlace` fazem a mesma coisa, e duas cópias disso é como uma delas
-// esquece o teto — que é a diferença entre uma sessão com oito cenas e uma que
-// cresce sem limite carregando tudo em toda hidratação.
+// UM lugar só cunha id e sequência, e é por isso que ele existe: uma segunda
+// cópia disso é como uma delas esquece o TETO de abas — a diferença entre uma
+// sessão com oito cenas e uma que cresce sem limite carregando tudo em toda
+// hidratação.
 func (bs *BoardStore) inNewTabLocked(sessionID int64, cena *BoardState) (*BoardState, error) {
 	if len(bs.boards[sessionID]) >= openBoardsCeiling {
 		return nil, fmt.Errorf(
@@ -156,11 +129,9 @@ func (bs *BoardStore) inNewTabLocked(sessionID int64, cena *BoardState) (*BoardS
 }
 
 // storedScene desempacota o que o acervo guardou, pronto para entrar na mesa.
-//
-// As três decisões que ela carrega estavam soltas no `Reopen`, e a segunda porta
-// de entrada (o `OpenPlace`) precisava exatamente delas — copiadas, seria a
-// forma clássica de uma se esquecer: a cena reaberta por um caminho voltaria com
-// o movimento proposto da semana passada e a do outro não.
+// As três decisões abaixo moram aqui e não em quem chama: copiadas, uma cena
+// reaberta por um caminho voltaria com o movimento proposto da semana passada e
+// a do outro não.
 func storedScene(blob, nome string) (*BoardState, error) {
 	var cena BoardState
 	if err := json.Unmarshal([]byte(blob), &cena); err != nil {
@@ -180,7 +151,7 @@ func storedScene(blob, nome string) (*BoardState, error) {
 }
 
 // PlaceScene devolve a cena INTEIRA de um lugar guardado — é o que o mestre
-// monta sem pôr nada na mesa (ALE-191, fatia 2).
+// monta sem pôr nada na mesa.
 //
 // A lista de lugares viaja sem as cenas de propósito (só nome e contagem), e é
 // por isso que existe esta segunda pergunta: baixar o acervo inteiro para
@@ -210,28 +181,15 @@ func (bs *BoardStore) PlaceScene(ctx context.Context, campaignID, placeID int64)
 
 // SavePlaceScene grava a cena que o mestre montou, sem tocar na mesa.
 //
-// Quem a chama é o `EditPlace` (ALE-292), depois de aplicar UM gesto à cena que
-// ele acabou de ler. Ela continua sendo o único lugar por onde o acervo é
-// escrito, e é por isso que a conferência mora aqui.
+// Quem a chama é o `EditPlace`, depois de aplicar UM gesto à cena que ele acabou
+// de ler — o rascunho é a MESMA superfície do tabuleiro apontada para o acervo,
+// e reusar os handlers de gesto custa menos que inventar um protocolo só dele.
 //
-// # O que esta docstring dizia, e por que deixou de ser verdade
-//
-// Ela dizia: *"este é o ÚNICO lugar do tabuleiro onde um estado inteiro chega
-// pelo cliente… o rascunho não tem concorrência, não tem broadcast e não tem
-// vez, então um handler por gesto seria protocolo para nada."* O raciocínio
-// estava escrito desde a ALE-191 e nunca foi exercido — a função passou duas
-// épicas com zero chamadores de produção.
-//
-// Quando o gesto finalmente chegou, ele veio pelo outro caminho: o rascunho é a
-// MESMA superfície do tabuleiro apontada para o acervo, então ele já tem um
-// handler por gesto, e reusá-los custou menos que inventar um protocolo só
-// dele. O estado inteiro NÃO chega mais pelo cliente em lugar nenhum.
-//
-// A CONFERÊNCIA fica, e ela não virou enfeite: ela deixou de ser a fronteira
-// contra um cliente quebrado e passou a ser o guarda contra uma mutação pura
-// que produza coordenada absurda ou estoure o teto de peças — as puras não
-// sabem de nenhum dos dois. Sem ela, o lixo só apareceria quando a cena
-// chegasse à mesa.
+// A CONFERÊNCIA mora aqui porque este é o único lugar por onde o acervo é
+// escrito. Ela não é a fronteira contra um cliente quebrado: é o guarda contra
+// uma mutação pura que produza coordenada absurda ou estoure o teto de peças —
+// as puras não sabem de nenhum dos dois. Sem ela o lixo só apareceria quando a
+// cena chegasse à mesa.
 func (bs *BoardStore) SavePlaceScene(ctx context.Context, campaignID, placeID int64, cena *BoardState) error {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {

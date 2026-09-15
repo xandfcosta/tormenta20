@@ -15,7 +15,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A cena de CAMPANHAS desenhada (ALE-234).
+// A cena de CAMPANHAS desenhada.
 //
 // O cursor (`$cursor`) é um sinal e o servidor manda TODOS os palcos: trocar de
 // campanha é `data-show`, não requisição. Quem move o cursor é o FOCO — cada
@@ -23,25 +23,11 @@ import (
 // uma linha de teclado nesta tela: o driver do `scene.js` já move foco dentro de
 // uma `data-nav-region`, e o cursor vem de carona.
 //
-// Essa é a diferença de desenho em relação à SPA, e ela é simplificação de
-// verdade: lá o teclado é um modo `delegated` do `scene-nav` com um
-// `onCommand` mapeando cada direção, porque o cursor era estado do componente e
-// o foco não o seguia.
-//
-// O LIVRO DE COURO SAIU (ALE-297), por decisão do dono. A campanha em foco era
-// um tomo aberto — duas folhas de pergaminho separadas por uma lombada — e o
-// elenco, que faz a MESMA pergunta ("escolha um da lista e veja o que
-// escolheu"), era um palco. Duas formas para uma pergunta é o que faz o mestre
-// reaprender a tela ao trocar de cena.
-//
-// O que muda é só o miolo: o cabeçalho, o trilho e a mecânica do cursor já eram
-// os mesmos desde a ALE-264. A gramática compartilhada — vizinho, facho, entrada
-// e gesto — mora no `ui` e foi ESTA cena que a tirou de dentro do `characters`,
-// onde ela tinha um chamador possível e só um.
-//
-// A VIRADA DE PÁGINA morreu junto: sem lombada não há folha para atravessar.
-// O que a ALE-235 tinha de geral já estava entregue na ALE-239, e é o que esta
-// cena herda sem uma linha nova de CSS.
+// A campanha em foco é um PALCO, a mesma forma do elenco de personagens: as duas
+// cenas fazem a mesma pergunta ("escolha um da lista e veja o que escolheu"), e
+// duas formas para uma pergunta fazem o mestre reaprender a tela ao trocar de
+// cena. A gramática compartilhada — vizinho, facho, entrada e gesto — mora no
+// `ui`.
 
 // SceneBody embrulha a cena num elemento com `id`, e é ele que o remendo
 // da busca substitui. O `id` é o que o morph do Datastar casa — sem ele o
@@ -154,12 +140,11 @@ func listBody(v listView) templ.Component {
 	})
 }
 
-// listBar é a fileira do cabeçalho: busca, filtro de papel e as duas
-// portas de entrada.
+// listBar é a fileira do cabeçalho: busca, filtro de papel e as duas portas de
+// entrada.
 //
-// A busca e o filtro viajam na URL (`@get` com os sinais), então a tela
-// filtrada é um endereço que se guarda e se recarrega — coisa que o estado de
-// componente da SPA não dava.
+// A busca e o filtro viajam na URL (`@get` com os sinais), então a tela filtrada
+// é um endereço que se guarda e se recarrega.
 func listBar(v listView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -188,7 +173,7 @@ func listBar(v listView) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{search: %q, role: %q, %s}", v.Busca, v.Papel, ui.StageSignals(v.CursorID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 82, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 67, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -214,7 +199,7 @@ func listBar(v listView) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Busca)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 101, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 86, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -379,7 +364,7 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolText(v.Papel == valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 138, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 123, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -392,7 +377,7 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$role = %q; @get('/campanhas')", valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 139, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 124, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -418,7 +403,7 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 144, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 129, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -435,13 +420,11 @@ func roleChip(v listView, valor, rotulo string) templ.Component {
 // ── o palco ──────────────────────────────────────────────────────────────────
 
 // campaignStage é a campanha em foco: a capa 3:4 ladeada pelos vizinhos
-// apagados, o nome embaixo, o herói que você joga nela e as ações.
+// apagados, o nome embaixo, o herói que você joga nela e as ações. É a MESMA
+// caixa do retrato de herói, com as mesmas larguras.
 //
-// É a MESMA caixa do retrato de herói, com as mesmas larguras, e isso é o ponto
-// da ALE-297 — as duas cenas de seleção passam a ter uma forma só.
-//
-// Todos os palcos são desenhados e o `data-show` escolhe um. É o que faz ←/→
-// não custar requisição.
+// Todos os palcos são desenhados e o `data-show` escolhe um. É o que faz ←/→ não
+// custar requisição.
 func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -470,7 +453,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$cursor == %d", c.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 160, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 143, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {
@@ -483,7 +466,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.EnteringStage(c.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 161, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 144, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -496,7 +479,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + ui.StageWash(c.Nome))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 169, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 152, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -517,7 +500,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		var templ_7745c5c3_Var21 templ.SafeURL
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/campanhas/" + strconv.FormatInt(c.ID, 10)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 174, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 157, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -530,7 +513,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir " + c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 175, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 158, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -543,7 +526,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + c.Gradiente)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 177, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 160, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -556,7 +539,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(c.Iniciais)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 180, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 163, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -577,7 +560,7 @@ func campaignStage(c campaignCard, anterior, proximo *ui.Neighbor) templ.Compone
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 191, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 174, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -658,7 +641,7 @@ func campaignPlate(c campaignCard) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(c.Papel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 205, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 188, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -687,13 +670,13 @@ func campaignPlate(c campaignCard) templ.Component {
 // myHeroBand ocupa a faixa que o palco do elenco dá aos vitais: quem VOCÊ é
 // nesta mesa.
 //
-// A ALTURA É RESERVADA SEMPRE (ALE-99). Andar de uma campanha que você mestra
-// (sem herói) para uma em que você joga faria a capa saltar, e é a mesma família
-// de defeitos do `min-h-[2lh]` do nome.
+// A ALTURA É RESERVADA SEMPRE: andar de uma campanha que você mestra (sem herói)
+// para uma em que você joga faria a capa saltar.
 //
 // O espaçador é a MESMA marcação com `invisible`, e não uma caixa de altura
 // escrita à mão: altura copiada à mão diverge no dia em que o cartão mudar, e o
-// sintoma é o palco dançando de novo — exatamente o que ela existe para impedir.
+// sintoma é o palco dançando de novo — exatamente o que ela existe para
+// impedir.
 func myHeroBand(c campaignCard) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -787,7 +770,7 @@ func oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) temp
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + gradiente)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 245, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 228, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -800,7 +783,7 @@ func oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) temp
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(iniciais)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 246, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 229, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -813,7 +796,7 @@ func oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) temp
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 248, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 231, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -826,7 +809,7 @@ func oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) temp
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(classes)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 249, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 232, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 		if templ_7745c5c3_Err != nil {
@@ -843,23 +826,18 @@ func oneHeroCard(iniciais, nome, classes, gradiente string, espacador bool) temp
 // synopsisTaste é o GOSTO da história, e ele tem exatamente duas linhas —
 // sempre, com sinopse curta, longa ou nenhuma.
 //
-// As duas linhas fixas resolvem dois problemas de uma vez, e o segundo é o
-// grave:
+// A altura fixa resolve dois problemas, e o segundo é o grave:
 //
-//  1. O palco DANÇAVA. Medido na bancada com a seed: a capa pousava em y=126
-//     nas quatro campanhas de sinopse com duas linhas e em y=136 nas três de uma
-//     linha — 10px de salto ao andar no trilho, que é a família da ALE-99, a
-//     mesma do `min-h-[2lh]` do nome.
+//  1. Sem ela o palco DANÇA: uma sinopse de uma linha e outra de duas movem a
+//     capa ao andar no trilho.
 //  2. A sinopse é TEXTO DO MESTRE e vai até 2000 caracteres
 //     (`campaign.MaxDescriptionLength`). Num palco que é uma coluna centralizada
 //     sem rolagem, uma sinopse cheia daria ~28 linhas e empurraria a capa e as
-//     ações para fora da tela. O livro não tinha esse risco: ele crescia dentro
-//     da própria folha. O palco não cresce — ele desloca tudo em volta.
+//     ações para fora da tela — o palco não cresce, ele desloca tudo em volta.
 //
-// Duas e não três: o palco é um CARTAZ (capa, nome, papel, seu herói, um gosto
-// da história, as ações), e a sinopse inteira mora a um clique daqui, na crônica
-// aberta. Trocar por `line-clamp-3`/`min-h-[3lh]` é uma linha, se o dono quiser
-// mais texto — mas custa ~40px, e a 390px o palco tem só isso de folga.
+// Duas linhas e não três: o palco é um CARTAZ, e a sinopse inteira mora a um
+// clique daqui, na crônica aberta. Uma linha a mais custa ~40px, e a 390px o
+// palco tem só isso de folga.
 //
 // A CAIXA é uma só (`synopsisBox`) para os três casos — com sinopse, sem sinopse
 // e o espaçador da vaga. Escrita três vezes, a terceira é a que diverge: já
@@ -937,7 +915,7 @@ func synopsisTaste(sinopse string) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(sinopse)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 287, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 265, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -1004,13 +982,14 @@ func synopsisSpacer() templ.Component {
 // campaignActions: "Abrir campanha" fica SEMPRE na primeira posição e no mesmo
 // tamanho.
 //
-// A regra vem da ALE-96 e da ALE-78: a cena pinta antes de saber se há sessão
-// viva, e um botão que muda de lugar quando o dado chega some debaixo do
-// cursor. Ao vivo ele só troca de preenchimento, cedendo o destaque para
-// "Continuar a sessão", que ENTRA à direita em vez de empurrar.
+// A cena pinta antes de saber se há sessão viva, e um botão que muda de lugar
+// quando o dado chega some debaixo do cursor. Ao vivo ele só troca de
+// preenchimento, cedendo o destaque para "Continuar a sessão", que ENTRA à
+// direita em vez de empurrar.
 //
 // O `⏎` está no primeiro porque é o que a tecla faz com o cursor parado aqui —
-// ver o `keydown` do marcador. Ele não vai no segundo: uma tecla só, um destino.
+// ver o `keydown` do marcador. Ele não vai no segundo: uma tecla só, um
+// destino.
 func campaignActions(c campaignCard) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1048,7 +1027,7 @@ func campaignActions(c campaignCard) templ.Component {
 		var templ_7745c5c3_Var48 templ.SafeURL
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/campanhas/" + strconv.FormatInt(c.ID, 10)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 310, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 289, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1092,7 +1071,7 @@ func campaignActions(c campaignCard) templ.Component {
 			var templ_7745c5c3_Var51 templ.SafeURL
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.Table(c.ID, c.SessaoID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 318, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 297, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -1142,8 +1121,8 @@ func ifLive(c campaignCard, aoVivo, parado ui.Variant) ui.Variant {
 // blankSheetStage é a vaga do fim — e ela existe TAMBÉM com a lista vazia,
 // porque aí ela é a única coisa que dá o que fazer.
 //
-// "Folha em branco" é o nome que a cena de criar já usa (ALE-246), e não uma
-// terceira palavra inventada aqui para a mesma coisa.
+// "Folha em branco" é o nome que a cena de criar já usa, e não uma terceira
+// palavra inventada aqui para a mesma coisa.
 //
 // Os botões **Entrar** e **Nova** do cabeçalho FICAM: a vaga representa só um
 // dos dois caminhos de entrada, e "entrar com o link que o mestre mandou" não
@@ -1181,7 +1160,7 @@ func blankSheetStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.EnteringStage(0))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 348, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/list.templ`, Line: 327, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 			if templ_7745c5c3_Err != nil {
@@ -1296,28 +1275,22 @@ func blankSheetStage(sozinha bool, anterior *ui.Neighbor) templ.Component {
 
 // ── o trilho ─────────────────────────────────────────────────────────────────
 
-// campaignRail são os marcadores. `data-nav-region` + `data-nav-layout`
-// são o contrato com o driver de teclado, e o `focusin` de cada marcador é o
-// que faz o cursor seguir o foco.
+// campaignRail são os marcadores. `data-nav-region` + `data-nav-layout` são o
+// contrato com o driver de teclado, e o `focusin` de cada marcador é o que faz o
+// cursor seguir o foco.
 //
-// `listbox`/`option` e não `nav`/`button`, porque é o que a SPA já expõe —
-// conferido no navegador, o trilho dela sai como `listbox` com as campanhas
-// como `option`. E é a semântica certa: o trilho ESCOLHE o que o palco mostra,
-// não navega para lugar nenhum. Escrever `nav` aqui faria o leitor de tela
-// anunciar duas coisas diferentes para a mesma peça nas duas telas.
-// O trilho é a TIRA de baixo desde a ALE-264, com o mesmo desenho do filme de
-// personagens: borda em cima, rolagem horizontal, altura própria.
+// `listbox`/`option` e não `nav`/`button`: o trilho ESCOLHE o que o palco
+// mostra, não navega para lugar nenhum.
 //
-// O nome da região continua `rail` e isso NÃO é descuido: ele é contrato com o
-// driver de teclado, que procura literalmente `[data-nav-region="rail"]` para o
-// Esc subir um nível e para escolher onde o foco pousa ao entrar na cena. O nome
-// diz o PAPEL da região (a lista que escolhe o que o palco mostra), não onde ela
-// fica na tela — três cenas já perderam esse comportamento por
-// batizarem a região com nome próprio.
+// O nome da região é `rail` mesmo com o trilho deitado embaixo, e isso NÃO é
+// descuido: o driver de teclado procura literalmente
+// `[data-nav-region="rail"]` para o Esc subir um nível e para escolher onde o
+// foco pousa ao entrar na cena. O nome diz o PAPEL da região, não onde ela fica
+// na tela.
 //
-// O que muda com a posição é a GRAMÁTICA: `row` e `horizontal`, porque agora a
-// seta que anda na lista é a lateral. Declarar `column` numa tira deitada faria
-// a seta para baixo procurar um vizinho que está ao lado.
+// O que muda com a posição é a GRAMÁTICA: `row` e `horizontal`, porque a seta
+// que anda na lista é a lateral. Declarar `column` numa tira deitada faria a
+// seta para baixo procurar um vizinho que está ao lado.
 func campaignRail(v listView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1404,9 +1377,8 @@ func campaignMarker(c campaignCard, indice int) templ.Component {
 		})
 		templ_7745c5c3_Err = ui.Marker(ui.RailMarker{
 			ID: c.ID, Index: indice, Monogram: c.Iniciais, Gradient: c.Gradiente,
-			// Nome E papel, como a SPA: o marcador anuncia "Snapshot Test ALE-33
-			// Mestrando". O papel não é enfeite na lista de um admin, que vê mesas
-			// de outras pessoas e precisa distinguir a própria (ALE-120).
+			// Nome E papel: o papel não é enfeite na lista de um admin, que vê mesas
+			// de outras pessoas e precisa distinguir a própria.
 			Name: c.Nome, Sub: c.Papel,
 			Destino: "/campanhas/" + strconv.FormatInt(c.ID, 10),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var60), templ_7745c5c3_Buffer)

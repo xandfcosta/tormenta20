@@ -5,19 +5,18 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel de PERÍCIAS desenhado (ALE-272, fatia 4).
+// O painel de PERÍCIAS desenhado.
 //
-// Uma linha por perícia, em TODA largura — a fileira de crachás que a SPA
-// desenha acima de 640px não existe aqui, por decisão do dono: ela repete o
-// diálogo palavra por palavra, e a auditoria continua a um toque no número.
+// Uma linha por perícia, em TODA largura, e sem fileira de crachás acima de
+// 640px (decisão do dono): ela repetiria o diálogo palavra por palavra, e a
+// auditoria já está a um toque no número.
 //
 // # A BUSCA vai ao SERVIDOR, e é o padrão da casa
 //
-// `data-bind:search` mais um `@get` com debounce, como a cena de campanhas. Ela
-// custa uma ida — 2ms, e a cena volta comprimida desde a ALE-273 — e ganha o
-// filtro sobrevivendo a qualquer outro gesto: o termo viaja como sinal em TODA
-// requisição da ficha, então mexer no PV com a busca escrita devolve a lista
-// ainda filtrada.
+// `data-bind:search` mais um `@get` com debounce, como a cena de campanhas. O
+// que ela compra é o filtro sobrevivendo a qualquer outro gesto: o termo viaja
+// como sinal em TODA requisição da ficha, então mexer no PV com a busca escrita
+// devolve a lista ainda filtrada.
 //
 // O `?tab=` está no `@get` pela MESMA razão que está em todo `@post`: sem ele o
 // resolvedor cai na primeira aba. É a sexta armadilha do Datastar, e aqui ela
@@ -206,8 +205,8 @@ templ expertiseDetail(linha expertiseRow) {
 
 // craftDialog cria uma perícia que o livro não tem.
 //
-// A TELA DIZ "nova perícia", e NUNCA "ofício" — a palavra é da SPA e é a certa:
-// **Ofício É uma das 29 do livro** (p115), e chamar a perícia inventada de
+// A TELA DIZ "nova perícia", e NUNCA "ofício": **Ofício É uma das 29 do livro**
+// (p115), e chamar a perícia inventada de
 // ofício poria duas coisas diferentes com o mesmo nome na MESMA lista. O
 // identificador em Go continua falando de ofício porque é o conceito interno
 // ("a que o jogador inventou"), e identificador não é o que a pessoa lê.
@@ -216,12 +215,12 @@ templ expertiseDetail(linha expertiseRow) {
 // a regra do "remendo em nó compartilhado" do guia do Go: quem gera não sabe que
 // vai haver um próximo, quem troca sabe que houve um anterior.
 templ craftDialog(v View) {
-	// NASCE ESCONDIDO (ALE-296), e o `style` estático é o conserto inteiro.
+	// NASCE ESCONDIDO pelo `style` estático, e ele é o conserto inteiro.
 	//
 	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
 	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
-	// medido com sonda de quadro: até 30 quadros de pano preto sobre a cena, que o
-	// dono relatou como "um dialog que aparece e some".
+	// dezenas de quadros de pano preto sobre a cena, que se lê como "um dialog que
+	// aparece e some".
 	//
 	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
 	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o

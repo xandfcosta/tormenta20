@@ -81,7 +81,7 @@ type Skill struct {
 	// linha estruturada.
 	//
 	// Cuidado com o outro parêntese, que quer o oposto: `Ofício (armeiro) +2`
-	// vem ANTES do número e faz parte do NOME da perícia (ALE-151).
+	// vem ANTES do número e faz parte do NOME da perícia.
 	//
 	// SEM `omitempty` pela mesma razão do `Special` do ataque: ela é uma caixa de
 	// texto do editor, e ausente ela chegaria escrita "undefined".
@@ -101,7 +101,7 @@ var creatureTipos = map[string]bool{
 }
 
 // creatureSizes são os tamanhos do livro, e o tabuleiro lê este campo para
-// saber quantos quadrados a peça ocupa (ALE-124).
+// saber quantos quadrados a peça ocupa.
 var creatureSizes = map[string]bool{
 	"minusculo": true,
 	"pequeno":   true,
@@ -117,11 +117,10 @@ const creatureMaxAttacks = 12
 // dizem o valor recebido e a forma esperada, como manda o guia da raiz: quem lê
 // o erro está com o formulário aberto e precisa saber o que corrigir.
 //
-// EM PORTUGUÊS desde a ALE-269, e não é cosmética: elas eram inglesas enquanto o
-// formulário sempre foi português, e o editor de bloco é a primeira tela em que
-// a recusa é COMUM — salvar sem nome e salvar com PV zero são o caminho normal
-// de quem está inventando um NPC. "hp is 0, must be >= 1" ao lado de uma caixa
-// escrita "Pontos de Vida" faz o mestre procurar um campo que não existe.
+// EM PORTUGUÊS, e não é cosmética: aqui a recusa é COMUM — salvar sem nome e
+// salvar com PV zero são o caminho normal de quem está inventando um NPC —, e
+// "hp is 0, must be >= 1" ao lado de uma caixa escrita "Pontos de Vida" faz o
+// mestre procurar um campo que não existe.
 func Validate(name string, b *Block) error {
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("o NPC precisa de um nome")

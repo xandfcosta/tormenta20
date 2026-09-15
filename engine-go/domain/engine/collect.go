@@ -76,7 +76,7 @@ func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
 
 // conditionActiveItem builds the p394 status conditions as a synthetic
 // ActiveItem, so their numeric penalties flow through the resolution engine and
-// obey non-stacking like everything else (ALE-28).
+// obey non-stacking like everything else.
 //
 // It is appended LAST, and the position is load-bearing: the oracle compares
 // byte-equal, so moving it moves every downstream contribution list.
@@ -153,9 +153,8 @@ func condIntSabCar(n int) []Modifier {
 }
 
 // As condições que a p394 usa para DEFINIR outras. Compor em vez de copiar os
-// números é o que impede uma derivada de ficar com metade do efeito — foi assim
-// que o cego perdeu a penalidade de Reflexos (ALE-112) e que cinco condições
-// ficaram sem efeito nenhum (ALE-115).
+// números é o que impede uma derivada de ficar com metade do efeito: copiada, a
+// derivada fica com a metade que alguém transcreveu.
 var (
 	vulneravelMods   = []Modifier{condDefense(-2)}
 	desprevenidoMods = []Modifier{condDefense(-5), condSkill("Reflexos", -5)}

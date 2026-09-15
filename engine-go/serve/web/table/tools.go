@@ -7,16 +7,8 @@ import (
 	"t20engine/domain/board"
 )
 
-// O TRILHO DE FERRAMENTAS do tabuleiro (ALE-203), em Datastar.
-//
-// A ALE-269 entregou o MODELO desta issue — uma ferramenta ativa por vez, com o
-// que o clique faz legível ANTES do clique — e não entregou a GRAMÁTICA que ela
-// descreve. O dono usou e apontou; o que muda aqui é a FORMA:
-//
-//  1. o trilho é VERTICAL e SOBREPÕE o tabuleiro, em vez de ser uma fileira
-//     horizontal que empurra o mapa para baixo;
-//  2. cada ferramenta tem um NÚMERO de atalho;
-//  3. a BORRACHA deixa de ser um modo do pincel e vira ferramenta própria.
+// O TRILHO DE FERRAMENTAS do tabuleiro: uma ferramenta ativa por vez, com o que
+// o clique faz legível ANTES do clique.
 //
 // # Por que o número sai do trilho INTEIRO, e não do trilho que aparece
 //
@@ -42,23 +34,17 @@ type mapTool struct {
 	// Matiz é a classe que tinge o ícone com a cor da espécie, nos pincéis de
 	// terreno. Vazio nas outras.
 	//
-	// Ela substituiu um QUADRADINHO de cor (`Amostra`), e a troca veio junto com o
-	// desenho novo das casas (ALE-203): quando cada espécie ganhou ícone próprio,
-	// quatro quadradinhos que só diferiam de matiz viraram a legenda que o desenho
-	// da casa acabara de tornar desnecessária. Agora o botão mostra o MESMO ícone
-	// que a casa recebe — o mestre reconhece o pincel pelo que ele pinta.
+	// O botão mostra o MESMO ícone que a casa recebe — o mestre reconhece o pincel
+	// pelo que ele pinta, e não por uma amostra de cor ao lado.
 	Matiz string
 }
 
 // EraserTool é o valor do sinal quando o clique LIMPA a casa.
 //
-// Ela era um modo (`$apagando`) que invertia o pincel selecionado, e isso
-// produziu o defeito que o dono relatou como "a borracha não funciona": com
-// `Cobertura` na mão, clicar num quadrado de `Difícil` apagava a cobertura que
-// não estava lá — em silêncio. Medido na bancada, clique a clique.
-//
-// Agora ela é FERRAMENTA e limpa a casa inteira (decisão do dono): o pincel na
-// mão não importa, e não existe mais o caso em que o gesto não faz nada.
+// FERRAMENTA e não um modo que inverte o pincel na mão: como modo, clicar com
+// `Cobertura` num quadrado de `Difícil` apagava a cobertura que não estava lá —
+// em silêncio. Limpando a casa inteira, o pincel na mão não importa, e não
+// existe mais o caso em que o gesto não faz nada.
 const EraserTool = "borracha"
 
 // MapTools é o trilho inteiro, na ordem em que ele desenha.
@@ -71,9 +57,9 @@ func MapTools() []mapTool {
 	trilho := []mapTool{
 		{ID: "", Rotulo: "Mover a peça", Icone: "MousePointer2",
 			Dica: "Mover a peça: o clique escolhe a casa para onde ela vai"},
-		// A MÃO é a SEGUNDA e não a última, e ela é de TODO MUNDO: sem moldura
-		// não há rolagem nativa, então arrastar a vista deixou de ser conforto e
-		// virou o único jeito de chegar ao outro lado do plano (ALE-203).
+		// A MÃO é a SEGUNDA e não a última, e ela é de TODO MUNDO: sem moldura não há
+		// rolagem nativa, então arrastar a vista deixou de ser conforto e virou o único
+		// jeito de chegar ao outro lado do plano.
 		{ID: ViewTool, Rotulo: "Arrastar a vista", Icone: "Hand",
 			Dica: "Arrastar a vista: o clique e o arrasto percorrem o plano, que não tem bordas"},
 		{ID: FerramentaDaRegua, Rotulo: "Régua", Icone: "Ruler",
@@ -111,10 +97,9 @@ var railKeys = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
 
 // numberRail escreve o atalho de cada ferramenta a partir da posição dela.
 //
-// Os números eram digitados à mão em cada linha, e a mão errou na primeira
-// oportunidade: pôr a vista em segundo lugar teria exigido renumerar as seis
-// abaixo, e uma esquecida daria duas ferramentas com a mesma tecla — a segunda
-// simplesmente nunca ligaria, sem erro nenhum.
+// Digitados à mão em cada linha, inserir uma ferramenta no meio exigiria
+// renumerar as de baixo, e uma esquecida daria duas ferramentas com a mesma
+// tecla — a segunda simplesmente nunca ligaria, sem erro nenhum.
 func numberRail(trilho []mapTool) []mapTool {
 	if len(trilho) > len(railKeys) {
 		panic(fmt.Sprintf("o trilho tem %d ferramentas e só há %d teclas: %v",
@@ -168,15 +153,13 @@ func railKeyboard(mestre bool) string {
 	// ESC NÃO ENTRA AQUI, e isto é medido e não escolhido.
 	//
 	// Ele já tem dono: o `scene.js` mapeia Escape para "voltar" na gramática do
-	// teclado e chama `preventDefault` + `stopPropagation` no `document` — o
-	// evento **nunca chega à janela**, que é onde o `__window` escuta. Provado com
-	// controle no navegador: um `keydown` de `F2` no mesmo nó liga a ferramenta, e
-	// o de `Escape` não chega nem a um `addEventListener` cru na janela.
+	// teclado e chama `preventDefault` + `stopPropagation` no `document` — o evento
+	// **nunca chega à janela**, que é onde o `__window` escuta. Controle: um
+	// `keydown` de `F2` no mesmo nó liga a ferramenta, e o de `Escape` não chega nem
+	// a um `addEventListener` cru na janela.
 	//
-	// A saída para quem ligou a régua sem querer é a TECLA 1, que é a ferramenta
-	// de repouso — ou clicar de novo na que está acesa, que o
-	// `pickTool` já desliga. Escrever um ramo de Escape aqui seria uma
-	// promessa que a tela não cumpre.
+	// A saída para quem ligou a régua sem querer é a TECLA 1, que é a ferramenta de
+	// repouso — ou clicar de novo na que está acesa, que o `pickTool` já desliga.
 	casos = append(casos, "null")
 	return typingTargetWithout + "(" + strings.Join(casos, " : ") + ")"
 }

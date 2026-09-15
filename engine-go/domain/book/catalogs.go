@@ -30,9 +30,8 @@ type Condition struct {
 	BookPage int `json:"bookPage"`
 }
 
-// SpellAugment é o que o livro imprime abaixo da magia: quanto custa a
-// mais e o que muda. Eram `[]any` — a cena só contava quantos havia —, e o
-// dono pediu para poder LER cada um.
+// SpellAugment é o que o livro imprime abaixo da magia: quanto custa a mais e o
+// que muda.
 type SpellAugment struct {
 	PmCost      int    `json:"pmCost"`
 	Kind        string `json:"kind"`
@@ -75,13 +74,9 @@ type Power struct {
 	BookPage    int
 }
 
-// Item é a entrada do catálogo de itens.
-//
-// Ela nasceu com os seis campos que a vitrine do mestre mostra e cresceu na
-// ALE-272 (fatia 7): a Mochila do jogador precisa do EIXO de equipar, das
-// estatísticas de arma/armadura/escudo, do consumível e da família a que uma
-// melhoria se aplica. Um segundo leitor do mesmo `items.json` daria duas
-// verdades sobre o mesmo arquivo, então quem cresce é este.
+// Item é a entrada do catálogo de itens — o que a vitrine do mestre mostra E o
+// que a Mochila do jogador precisa. Um segundo leitor do mesmo `items.json`
+// daria duas verdades sobre o mesmo arquivo, então quem cresce é este.
 type Item struct {
 	ID       string  `json:"id"`
 	Name     string  `json:"name"`
@@ -154,9 +149,8 @@ func Catalogs() GMCatalogs {
 		})
 
 		acervo.Magias = MapOf[Spell]("spells")
-		// Magia ordena por CÍRCULO e depois por nome, como a SPA: o mestre
-		// procura "o que existe de 3º círculo", e alfabético puro embaralharia
-		// os círculos.
+		// Magia ordena por CÍRCULO e depois por nome: o mestre procura "o que
+		// existe de 3º círculo", e alfabético puro embaralharia os círculos.
 		slices.SortStableFunc(acervo.Magias, func(a, b Spell) int {
 			if a.Circle != b.Circle {
 				return a.Circle - b.Circle
@@ -210,10 +204,8 @@ func ListOf[T any](nome string) []T {
 	return lista
 }
 
-// FlattenedPowers junta os três catálogos de poder numa lista só.
-//
-// Os poderes DIVINOS ficam de fora, e a razão é da SPA: o dado deles carrega
-// página do livro e nenhum texto de regra, então não há o que consultar.
+// FlattenedPowers junta os três catálogos de poder numa lista só: habilidade de
+// classe, poder geral/de combate e poder concedido pelos deuses.
 func FlattenedPowers() []Power {
 	var fora []Power
 
@@ -245,20 +237,13 @@ func FlattenedPowers() []Power {
 	return append(fora, DivinePowers()...)
 }
 
-// DivinePowers são os que os DEUSES concedem, e este bloco é conserto de uma
-// lacuna que o dono viu na tela: nos cartões de Valkaria, Wynna e Thwor a maior
-// parte dos poderes concedidos não virava elo.
+// DivinePowers são os que os DEUSES concedem.
 //
-// A causa era um comentário desatualizado. Ele dizia que os poderes divinos
-// "carregam página do livro e nenhum texto de regra, então não há o que
-// consultar" — e o dado DESMENTE: os 80 têm descrição completa. Por causa dessa
-// frase o acervo lia só o `granted-powers`, que são 36 dos 72 nomes.
-//
-// Lidos do `divine-powers`, que é o catálogo completo. Ele guarda uma linha por
-// (poder, DEUS) — "Coragem Total" aparece quatro vezes, uma para Arsenal,
-// Khalmyr, Lin-Wu e Valkaria, com a mesma descrição —, então aqui eles são
-// juntados por NOME e os deuses viram a fonte. Sem juntar, a lista teria o mesmo
-// poder quatro vezes e o elo não saberia para qual apontar.
+// Lidos do `divine-powers` e NÃO do `granted-powers`, que tem metade dos nomes.
+// O completo guarda uma linha por (poder, DEUS) — "Coragem Total" aparece quatro
+// vezes, uma para Arsenal, Khalmyr, Lin-Wu e Valkaria, com a mesma descrição —,
+// então aqui eles são juntados por NOME e os deuses viram a fonte. Sem juntar, a
+// lista teria o mesmo poder quatro vezes e o elo não saberia para qual apontar.
 func DivinePowers() []Power {
 	type divino struct {
 		DeusID      string `json:"deusId"`
@@ -337,13 +322,9 @@ func CategoryName(c string) string {
 
 // ── o que a cena precisa escrever ────────────────────────────────────────────
 
-// ConditionName resolve o id de uma condição no nome que se lê.
-//
-// DIVERGÊNCIA DELIBERADA do original, e por isso escrita: a SPA imprime o
-// `upgradesTo` cru, então a linha sai "Agrava para apavorado" em caixa baixa. O
-// dado do agravamento é um id, e o nome existe no mesmo catálogo — resolver é
-// olhar a tabela ao lado, não inventar. Se alguém preferir o cru, muda aqui e
-// nas duas telas.
+// ConditionName resolve o id de uma condição no nome que se lê. Sem ela a linha
+// sai "Agrava para apavorado" em caixa baixa: o dado do agravamento é um id, e o
+// nome existe no mesmo catálogo.
 func ConditionName(id string) string {
 	for _, c := range Catalogs().Condicoes {
 		if c.ID == id {
@@ -370,15 +351,11 @@ var (
 
 // GodName resolve o id que o poder divino guarda ("lin-wu") no nome que se lê.
 //
-// Lê o catálogo DIRETO e não pelo `CharacterCatalogs`, e isto é conserto de
-// um DEADLOCK que pendurou a suíte inteira sem erro nenhum: aquele carregador
-// tem um `sync.Once` que chama o `FlattenedPowers` para contar os poderes de
-// cada classe, e o `FlattenedPowers` chamava de volta o `CharacterCatalogs`
-// daqui. `Once` reentrante trava para sempre — não é pânico, não é teste
-// vermelho: é o processo parado.
-//
-// Quem apontou o dedo foi o `go test -timeout 25s`, que despeja a pilha de todas
-// as goroutines. Sem o timeout, o sintoma era "a suíte demora".
+// Lê o catálogo DIRETO e NÃO pelo `CharacterCatalogs`: aquele carregador tem um
+// `sync.Once` que chama o `FlattenedPowers`, e chamá-lo de volta daqui fecha o
+// ciclo. `Once` reentrante trava para sempre — não é pânico, não é teste
+// vermelho, é o processo parado, e o sintoma na bancada é "a suíte demora". Quem
+// aponta o dedo é o `go test -timeout`, que despeja a pilha das goroutines.
 var (
 	deusesUmaVez sync.Once
 	nomePorDeus  map[string]string
@@ -444,23 +421,20 @@ func WithSign(n int) string {
 	return strconv.Itoa(n)
 }
 
-// OS ELOS entre entradas do acervo (ALE-264).
+// OS ELOS entre entradas do acervo.
 //
 // O livro é uma rede: a condição Abalado termina em "Medo.", que é um TIPO DE
 // EFEITO definido na p228; ela agrava para Apavorado, que é outra condição; o
-// deus concede poderes que têm verbete próprio. Na tela isso era tudo texto
-// morto — o mestre lia "Medo" e tinha de ir procurar o que era.
+// deus concede poderes que têm verbete próprio.
 //
-// O elo leva para a MESMA cena com a entrada filtrada
-// (`routes.MasterSearch`), que é o endereço que o buscador já usa. Nenhuma
-// superfície nova: a entrada aparece sozinha na aba dela, e o botão do livro
-// está ao lado se a pessoa quiser o texto completo.
+// O elo leva para a MESMA cena com a entrada filtrada (`routes.MasterSearch`),
+// que é o endereço que o buscador já usa — nenhuma superfície nova.
 //
 // O que NÃO virou elo, e é decisão: nome de entrada citado no meio de descrição
-// de MAGIA ou de PODER. Medido no catálogo — são 3 citações em 668 entradas,
-// porque as descrições da casa são resumos e não o texto do livro. Varrer 992
-// descrições atrás de 35 nomes para achar três acertos é custo por tela sem
-// retorno. Nas CONDIÇÕES o número é outro (11 em 35) e por isso elas têm.
+// de MAGIA ou de PODER. São 3 citações em 668 entradas, porque as descrições da
+// casa são resumos e não o texto do livro, e varrer 992 descrições atrás de 35
+// nomes para achar três acertos é custo por tela sem retorno. Nas CONDIÇÕES são
+// 11 em 35, e por isso elas têm.
 
 // trecho é um pedaço de descrição. `Aba` vazia é texto puro; preenchida, o
 // pedaço é um ELO para aquela aba do acervo.
@@ -496,10 +470,7 @@ func WithConditionLinks(texto, exceto string) []Chunk {
 	return WithPageLinks(splitOnNames(texto, conditionNamesBySize(), exceto, "condicoes"))
 }
 
-// pageRef é como o livro cita a si mesmo: "veja a página 230",
-// "pág. 172". Medido no catálogo — são cinco ocorrências, duas nos tipos de
-// efeito e três nos dragões —, e cada uma era texto morto: o número estava lá e
-// não levava a lugar nenhum.
+// pageRef é como o livro cita a si mesmo: "veja a página 230", "pág. 172".
 var pageRef = regexp.MustCompile(`(?i)p[áa]g(?:ina)?\.?\s*(\d{1,3})`)
 
 // WithPageLinks parte os pedaços de TEXTO PURO nas referências de página.
@@ -544,8 +515,8 @@ func splitOnPages(texto string) []Chunk {
 }
 
 // WithLinks é a varredura para os catálogos que NÃO citam condições — só as
-// referências de página. Ver o cabeçalho: em magia e poder as citações de
-// condição são 3 em 668, e varrer 992 descrições atrás delas é custo sem retorno.
+// referências de página. Ver o cabeçalho para por que magia e poder ficam de
+// fora da varredura de nomes.
 func WithLinks(texto string) []Chunk {
 	return splitOnPages(texto)
 }
@@ -631,16 +602,14 @@ func isBoundary(texto string, i int) bool {
 
 // DevoteeLink acha a aba e o id de um devoto do deus ("Elfos", "Bárbaros").
 //
-// O dado vem no PLURAL e as entradas são singulares. A primeira versão tentava
-// só tirar "s" e "es", e o dono viu os buracos: MEDIDOS, faltavam elo em
-// "Anões", "Golens" e "Sereias/Tritões" — plurais que o português não faz
-// acrescentando letra, e um nome composto por barra em que as DUAS metades vão
-// para o plural.
+// O dado vem no PLURAL e as entradas são singulares, e tirar "s"/"es" não basta:
+// "Anões", "Golens" e "Sereias/Tritões" são plurais que o português não faz
+// acrescentando letra, e o último é composto com as DUAS metades no plural.
 //
-// E em "Aggelus" e "Sulfure", que não são plural de nada: são as ASCENDÊNCIAS do
-// suraggel, e o catálogo já as guarda no campo `ascendencias`. O elo leva à raça
-// que as contém — resolver por dado e não por uma tabela de exceções escrita à
-// mão, que envelheceria na primeira raça nova.
+// "Aggelus" e "Sulfure" não são plural de nada: são as ASCENDÊNCIAS do suraggel,
+// e o catálogo já as guarda no campo `ascendencias`. O elo leva à raça que as
+// contém — resolver por dado e não por uma tabela de exceções escrita à mão, que
+// envelheceria na primeira raça nova.
 //
 // Não achou, não vira elo: "Quaisquer" e "Aventureiros (todas as classes)" não
 // são verbete de nada.
@@ -667,8 +636,7 @@ func DevoteeLink(nome string) (aba, id string) {
 }
 
 // singular devolve as formas a tentar, do nome como veio ao singular provável.
-//
-// As regras são as do português, e cada uma nasceu de um caso do catálogo:
+// Cada regra é um caso do catálogo:
 //
 //	"Elfos"            → "Elfo"      (s)
 //	"Caçadores"        → "Caçador"   (es)
@@ -709,32 +677,20 @@ func fold(s string) string {
 	return strings.ToLower(s)
 }
 
-// DefenseLabel é a Defesa como a TELA a diz, e ela é uma só porque duas telas
-// montando a frase por conta é o defeito da ALE-122 (ALE-274).
-//
-// # O que a regra faz
+// DefenseLabel é a Defesa como a TELA a diz, e é UMA função porque a ficha e o
+// diálogo do elenco mostram o mesmo herói: uma frase montada em dois lugares
+// diverge no dia em que uma delas ganhar um caso.
 //
 // O Caído dá −5 na Defesa contra ataques corpo a corpo e +5 contra ataques à
 // distância (T20 p394), então um personagem caído não tem "a Defesa": tem duas.
 // O motor calcula as duas e mantém o `Total` intacto, que é a leitura certa do
-// livro — a Defesa DELE continua sendo o total, e os ±5 se aplicam contra cada
-// tipo de ataque.
+// livro.
 //
-// # Por que o total SAI quando elas divergem
-//
-// Decisão do dono, 2026-09-04. Na mesa a pergunta é "acerta?", e a resposta
-// nunca é o total enquanto o alvo está caído — nenhum ataque testa contra ele.
-// Mostrar 22 em destaque é mostrar, com confiança, o único número que não
-// responde a pergunta que está sendo feita.
-//
-// O total não some do app: ele continua no diálogo de decomposição, com as duas
-// linhas que dizem de onde os ±5 vêm.
-//
-// # E ela é UMA função porque a divergência é o defeito
-//
-// A ficha e o diálogo do elenco mostram o mesmo herói, e a ALE-122 já pagou o
-// preço de duas telas mostrando 52/95 e 57/95 do mesmo combatente. Uma frase
-// montada em dois lugares diverge no dia em que uma delas ganhar um caso.
+// O TOTAL SAI do rótulo quando as duas divergem (decisão do dono): na mesa a
+// pergunta é "acerta?", e enquanto o alvo está caído nenhum ataque testa contra
+// o total — mostrá-lo em destaque é mostrar com confiança o único número que não
+// responde a pergunta feita. Ele continua no diálogo de decomposição, com as
+// duas linhas que dizem de onde os ±5 vêm.
 func DefenseLabel(d engine.DefenseBreakdown) string {
 	if d.VsMelee == d.Total && d.VsRanged == d.Total {
 		return strconv.Itoa(d.Total)

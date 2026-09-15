@@ -10,12 +10,8 @@ import (
 	"t20engine/serve/web/sheetui"
 )
 
-// A CENA DA FICHA, com adaptador próprio (ALE-278, fatia 6).
-//
-// Das dezoito assinaturas que a porta pede, quatro são do núcleo e catorze são
-// escrita de ficha. É a maior porta do projeto e a que mais mudou de dono nesta
-// fatia: o adaptador é o núcleo mais um `sheetRules`, que é onde as regras
-// foram morar.
+// A CENA DA FICHA, com adaptador próprio: o núcleo mais um `sheetRules`, que é
+// onde as regras moram.
 type sheetHost struct {
 	sceneCore
 	rules sheetRules
@@ -25,16 +21,10 @@ func (s *Server) sheetHost() sheetHost {
 	return sheetHost{sceneCore: s.sceneCore(), rules: s.sheetRules()}
 }
 
-// O adaptador cumprindo a porta da FICHA (`sheetui.Deps`, ALE-278).
+// O adaptador cumprindo a porta da FICHA (`sheetui.Deps`).
 //
-// Ela é a maior cena do repositório e a porta tem dezoito métodos — contra onze
-// das campanhas e dois do trilho do mestre. O tamanho não é vício: cinco deles
-// são ESCRITA, e três nasceram nesta fatia trocando SQL que a cena montava à mão
-// pela pergunta correspondente.
-//
-// Como nas outras, o sinal de que a fronteira está no lugar é nenhum destes
-// métodos desenhar nada — e nenhum handler da cena tocar banco fora do
-// `Queries`.
+// O sinal de que a fronteira está no lugar é nenhum destes métodos desenhar
+// nada — e nenhum handler da cena tocar banco fora do `Queries`.
 
 // LoadCharacter e ComputeSheet atravessam pelo adaptador, e não pelo núcleo:
 // só a ficha e a Mesa as pedem, e o núcleo é o que quase toda cena pede.
@@ -67,10 +57,9 @@ func (h sheetHost) CastSpell(
 // ConsumeItem gasta uma dose do consumível.
 //
 // O RESULTADO não atravessa: a cena descarta a dose inteira, e a única recusa
-// que ela precisa — a porção diária — já chega como erro. É a regra da menor
-// pergunta chegando no mesmo lugar que o leitor: às vezes ela é nenhuma. O
-// `doseUsed` carrega o corpo da resposta JSON, com tag `json:` em cada campo, e
-// uma tela que o lesse dependeria do formato de um endpoint que ela não serve.
+// que ela precisa — a porção diária — já chega como erro. O `doseUsed` carrega o
+// corpo da resposta JSON, e uma tela que o lesse dependeria do formato de um
+// endpoint que ela não serve.
 func (h sheetHost) ConsumeItem(
 	r *http.Request, row sqlcgen.Character, itemID int64, pvRolado, pmRolado *int64,
 ) error {
@@ -80,9 +69,9 @@ func (h sheetHost) ConsumeItem(
 
 // ApplyClassLevel sobe ou desce uma classe.
 //
-// O hospedeiro devolve quatro valores e um deles é o `storedVitals`, que é tipo
-// DELE — uma porta que devolvesse isso não seria porta. A cena redesenha a ficha
-// inteira depois de gravar, então ela não precisa de nenhum dos quatro.
+// Nenhum dos valores do hospedeiro atravessa: um deles é o `storedVitals`, que é
+// tipo DELE, e uma porta que o devolvesse não seria porta. A cena redesenha a
+// ficha inteira depois de gravar.
 func (h sheetHost) ApplyClassLevel(r *http.Request, id int64, classe string, nivel int64) error {
 	row, err := h.rules.queries.GetCharacter(r.Context(), id)
 	if err != nil {
@@ -106,12 +95,10 @@ func (h sheetHost) PowerTempHpAmount(
 	return h.rules.powerTempHpAmount(r, row, atributo)
 }
 
-// ── As CINCO escritas ────────────────────────────────────────────────────────
+// ── As ESCRITAS ──────────────────────────────────────────────────────────────
 //
-// As três últimas substituem `setBuilder` + `"UPDATE …"` montados dentro da
-// cena. Cena que compõe SQL é cena com o banco dentro, e o remédio é sempre o
-// mesmo: quem sabe o nome da coluna, o que é NULL e se a tabela tem carimbo é o
-// hospedeiro — a decisão que o `SaveText` das campanhas deixou escrita.
+// Cena que compõe SQL é cena com o banco dentro. Quem sabe o nome da coluna, o
+// que é NULL e se a tabela tem carimbo é o HOSPEDEIRO.
 
 // SaveCustomItem grava nome, quantidade e espaços de um item da mochila.
 //
@@ -136,9 +123,9 @@ func (h sheetHost) SaveEquipped(ctx context.Context, itemID int64, valor sql.Nul
 
 // SaveItemOverlays grava a melhoria e o material escolhidos.
 //
-// A cena manda a LISTA e o nome do material; a serialização em JSON e a
-// tradução de material vazio para NULL são daqui. Nenhuma das duas tabelas de
-// item tem `updatedAt`, e é por isso que o `exec` e não o `execTouched`.
+// A cena manda a LISTA e o nome do material; a serialização em JSON e a tradução
+// de material vazio para NULL são daqui. É `exec` e não `execTouched` porque
+// nenhuma das tabelas de item tem `updatedAt`.
 func (h sheetHost) SaveItemOverlays(
 	ctx context.Context, itemID int64, melhorias []string, material string,
 ) error {
@@ -178,11 +165,8 @@ func (h sheetHost) SaveChoices(ctx context.Context, id int64, escolhas sheetui.C
 
 // ApplyPowerTempHp aplica a reserva de PV temporários de um poder.
 //
-// A cena tinha a transação inteira escrita dentro dela, e o `applyPool` da rota
-// JSON tinha a MESMA sequência — duas cópias de um `BeginTx` sobre a mesma
-// regra. As duas passaram pelo `applyPoolTx`, e então a rota JSON foi apagada
-// na ALE-277: sobrou uma chamadora e a extração continua valendo, porque a
-// conta é do `sheet`, "considere apenas o maior valor" (p256).
+// A transação mora no `applyPoolTx` e não aqui, porque a conta é do `sheet`:
+// "considere apenas o maior valor" (p256).
 func (h sheetHost) ApplyPowerTempHp(
 	ctx context.Context, id int64, powerID, escopo string, quanto int,
 ) error {

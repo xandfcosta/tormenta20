@@ -14,26 +14,23 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// AS NOTAS DA SESSÃO (ALE-269, superfície 5), portadas da `session-notes.tsx`.
-//
-// O que aconteceu, XP, tesouro — em markdown, com o texto de um lado e o
-// resultado do outro. Elas NÃO têm botão de salvar: o mestre escreve no meio do
-// combate e não vai lembrar de confirmar. Salvam sozinhas depois da pausa.
+// AS NOTAS DA SESSÃO: o que aconteceu, XP, tesouro — em markdown, com o texto de
+// um lado e o resultado do outro. Elas NÃO têm botão de salvar: o mestre escreve
+// no meio do combate e não vai lembrar de confirmar; salvam sozinhas depois da
+// pausa.
 //
 // ELAS ABREM COLUNA E EMPURRAM O MAPA, em vez de cobri-lo — é a única exceção
-// aos overlays da cena, e a razão está escrita na SPA: escreve-se enquanto se
-// narra OLHANDO o tabuleiro, e um painel por cima do mapa não serve a esse
-// gesto. Abaixo de 1024 não há espaço para duas, e elas viram gaveta como as
-// outras consultas.
+// aos overlays da cena: escreve-se enquanto se narra OLHANDO o tabuleiro, e um
+// painel por cima do mapa não serve a esse gesto. Abaixo de 1024 não há espaço
+// para duas, e elas viram gaveta como as outras consultas.
 //
 // ── A ARMADILHA QUE GOVERNA ESTE ARQUIVO ────────────────────────────────────
 //
 // A CAIXA DE TEXTO NÃO É REGIÃO, e não pode ser. A cena é remendada a cada
 // mudança de qualquer um na mesa — um jogador registrando iniciativa, um turno
 // virando —, e um `<textarea>` remendado no meio de uma frase apaga o que o
-// mestre está escrevendo. É a mesma lição do campo de título da sessão, um
-// degrau acima: entrada em curso é do teclado de quem digita, nunca estado da
-// aplicação.
+// mestre está escrevendo. Entrada em curso é do teclado de quem digita, nunca
+// estado da aplicação.
 //
 // Por isso o desenho aqui é assimétrico de propósito:
 //
@@ -43,20 +40,18 @@ import (
 //   - a PRÉVIA é região (`mesa-notas-previa`) e é remendada pela resposta do
 //     próprio salvamento.
 //
-// E as notas NÃO entram no `TableRegions`: elas são de um leitor só — o mestre
-// — e nada fora desta aba as muda. Pendurá-las no stream faria o batimento
-// disputar com o teclado dele por nada.
-// A DIVISA entre o mapa e as notas (ALE-218).
+// E as notas NÃO entram no `TableRegions`: elas são de um leitor só — o mestre —
+// e nada fora desta aba as muda.
+
+// A DIVISA entre o mapa e as notas.
 //
-// Ela existe porque a largura era fixa em 40% do palco (ALE-198), e 40% é a
-// resposta certa para uma pergunta que muda: escrever uma cena longa quer mais
-// coluna, e conduzir um combate quer mais mapa.
+// Ela existe porque largura fixa é a resposta certa para uma pergunta que muda:
+// escrever uma cena longa quer mais coluna, e conduzir um combate quer mais mapa.
 //
 // `role="separator"` com `tabindex` e `aria-valuenow` é o padrão de divisa
-// redimensionável, e o teclado NÃO É ENFEITE aqui: a regra da casa diz que
-// **gesto nunca é o único caminho**, e uma divisa que só responde a arrasto é
-// uma preferência que quem não usa ponteiro não tem. As setas andam 32px e o
-// `Home` devolve ao padrão.
+// redimensionável, e o teclado NÃO É ENFEITE aqui: gesto nunca é o único
+// caminho, e uma divisa que só responde a arrasto é uma preferência que quem não
+// usa ponteiro não tem. As setas andam 32px e o `Home` devolve ao padrão.
 //
 // Só a partir de `lg`: abaixo disso a coluna é uma gaveta que cobre a tela
 // inteira, e não há divisa entre duas coisas que não convivem.
@@ -88,7 +83,7 @@ func notesSplitter() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue("Math.round(" + widthRightNow() + ")")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 63, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 58, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -101,7 +96,7 @@ func notesSplitter() templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("Math.round(" + widthCeiling() + ")")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 65, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 60, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -114,7 +109,7 @@ func notesSplitter() templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(widthDragStarts())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 66, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 61, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -127,7 +122,7 @@ func notesSplitter() templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(widthFollowsPointer())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 67, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 62, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -140,7 +135,7 @@ func notesSplitter() templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(widthDragDrops())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 68, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 63, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -153,7 +148,7 @@ func notesSplitter() templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(widthKeyStep())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 69, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 64, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -195,7 +190,7 @@ func tableNotes(v View) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(seedNotes(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 78, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 73, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -208,7 +203,7 @@ func tableNotes(v View) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(watchesTheNotesWindow(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 79, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 74, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -282,13 +277,11 @@ func tableNotes(v View) templ.Component {
 
 // O CORPO: a caixa e a prévia, lado a lado quando há largura.
 //
-// O "lado a lado" aqui EMPILHA numa coluna estreita em vez de virar "Escrever",
-// que é o que a SPA faz. A diferença é de mecanismo e não de gosto: lá a decisão
-// vem de um observador que mede a REGIÃO, e o Go não mede caixa (a mesma razão
-// que deixou o `palcoBaixo` para o CSS na ALE-265). Empilhar mantém a promessa
-// do modo — ver o que se escreve e o que sai, ao mesmo tempo — sem que a faixa
-// precise anunciar um modo diferente do que está acontecendo. Quem decide onde
-// cabem duas colunas é a consulta de contêiner na folha, que é quem sabe.
+// O "lado a lado" EMPILHA numa coluna estreita em vez de virar "Escrever": quem
+// decide onde cabem duas colunas é a consulta de contêiner na folha, porque o Go
+// não mede caixa. Empilhar mantém a promessa do modo — ver o que se escreve e o
+// que sai, ao mesmo tempo — sem a faixa anunciar um modo diferente do que está
+// acontecendo.
 func notesBody(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -317,7 +310,7 @@ func notesBody(v View) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveNotes(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 122, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 115, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -330,7 +323,7 @@ func notesBody(v View) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("# Cena 1\n- O ogro **fugiu** pela ponte\n> \"voltarei\", ele disse")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 125, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 118, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -343,7 +336,7 @@ func notesBody(v View) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(v.Notas)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 127, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 120, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -680,7 +673,7 @@ func noteItem(v View, it markdown.Item) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(marked(it.Tarefa.Marcada))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 231, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 224, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 			if templ_7745c5c3_Err != nil {
@@ -693,7 +686,7 @@ func noteItem(v View, it markdown.Item) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleTaskNote(v, *it.Tarefa))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 232, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 225, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 			if templ_7745c5c3_Err != nil {
@@ -795,7 +788,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 257, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 250, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -813,7 +806,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 259, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 252, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -831,7 +824,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 261, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 254, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -849,7 +842,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var30 templ.SafeURL
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 264, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 257, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -862,7 +855,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 268, Col: 13}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 261, Col: 13}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -876,7 +869,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 270, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 263, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 				if templ_7745c5c3_Err != nil {
@@ -888,12 +881,10 @@ func noteSpans(spans []markdown.Span) templ.Component {
 	})
 }
 
-// A FAIXA DE MODOS (ALE-139): escrever, ler, ou os dois.
+// A FAIXA DE MODOS: escrever, ler, ou os dois.
 //
-// A escolha GRUDA no `localStorage`, com a MESMA chave e os MESMOS valores da
-// SPA (`t20:notas-view`) — é preferência de trabalho, não estado da sessão, e
-// enquanto as duas telas existirem o mestre não deve reescolher ao trocar de
-// uma para a outra.
+// A escolha GRUDA no `localStorage` (`t20:notas-view`) — é preferência de
+// trabalho, não estado da sessão.
 //
 // `fieldset` e não `div role="group"`: o elemento nativo já É o grupo. Ele
 // precisa de `min-w-0` porque o padrão do navegador é `min-content` e ele se
@@ -947,26 +938,19 @@ func modesRange() templ.Component {
 	})
 }
 
-// O DESTAQUE sai do `aria-pressed` e não de um `data-class` paralelo (ALE-218).
+// O DESTAQUE sai do `aria-pressed` e não de um `data-class` paralelo: eram duas
+// fontes para o mesmo estado, e `hover:bg-accent` ganha de um `bg-primary` posto
+// por classe — o modo escolhido PERDIA o dourado enquanto o ponteiro estivesse
+// em cima dele, ou seja, a tela dizia "nenhum escolhido" no instante exato em
+// que a pessoa vai escolher. Com o estilo pendurado na variante `aria-pressed:`,
+// o estado acessível é a ÚNICA fonte.
 //
-// Eram duas fontes para o mesmo estado, e elas discordavam: `hover:bg-accent`
-// ganha de um `bg-primary` posto por classe, então **o modo escolhido perdia o
-// dourado enquanto o ponteiro estivesse em cima dele** — medido, `oklch(0.8
-// 0.11 85)` virando `oklch(0.27 0.016 300)` no hover. A tela dizia "nenhum
-// escolhido" no instante exato em que a pessoa vai escolher.
-//
-// Com o estilo pendurado na variante `aria-pressed:`, o estado acessível é a
-// ÚNICA fonte — é o mesmo desenho do marcador do trilho, que pinta por
-// `aria-selected:`.
-// O SEGUNDO EIXO: encostada ou flutuando (ALE-218).
-//
-// Ele é um alternador e não um par de botões porque são dois estados, e porque
-// ele vale para os QUATRO modos — o que se mostra e onde o painel vive são
-// perguntas independentes.
+// O SEGUNDO EIXO: encostada ou flutuando. Ele é um alternador e não um par de
+// botões porque são dois estados, e porque vale para os QUATRO modos — o que se
+// mostra e onde o painel vive são perguntas independentes.
 //
 // O `title` diz o que o clique FAZ e não o que o estado é: o ícone sozinho não
-// conta a diferença entre "empurra o mapa" e "flutua sobre ele", e essa é toda a
-// escolha.
+// conta a diferença entre "empurra o mapa" e "flutua sobre ele".
 func floatToggle() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -995,7 +979,7 @@ func floatToggle() templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleFloating())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 330, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 312, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 		if templ_7745c5c3_Err != nil {
@@ -1045,7 +1029,7 @@ func notesMode(valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 340, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 322, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 		if templ_7745c5c3_Err != nil {
@@ -1058,7 +1042,7 @@ func notesMode(valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolheOModo(valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 341, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 323, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 		if templ_7745c5c3_Err != nil {
@@ -1071,7 +1055,7 @@ func notesMode(valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 343, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 325, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 		if templ_7745c5c3_Err != nil {
@@ -1087,18 +1071,16 @@ func notesMode(valor, rotulo string) templ.Component {
 
 // SEM BOTÃO DE SALVAR, o estado do texto tem de estar VISÍVEL o tempo todo.
 //
-// Três estados e não dois, e a distinção importa: enquanto a pausa não chega o
-// texto está "Não salvo", e dizer "Salvando…" ali seria mentira. Quem separa os
-// dois é o `data-indicator`, que só é verdadeiro com o pedido no ar.
+// Três estados e não dois: enquanto a pausa não chega o texto está "Não salvo",
+// e dizer "Salvando…" ali seria mentira. Quem separa os dois é o
+// `data-indicator`, que só é verdadeiro com o pedido no ar.
 //
 // `$notes_saved` é escrito pelo SERVIDOR quando a gravação dá certo — é a
 // resposta que afirma "isto está no banco", e não o cliente supondo.
 //
-// O ERRO é TEXTO e não só cor (ALE-218). `$notes_error` existia desde a
-// ALE-269 e só pintava a faixa de vermelho: o mestre via que algo deu errado e
-// não tinha onde ler o quê, com a frase do servidor chegando e morrendo num
-// sinal. A janela bloqueada pelo navegador entrou pelo mesmo canal, e foi ela
-// que mostrou o buraco — um clique que não abre nada precisa dizer por quê.
+// O ERRO é TEXTO e não só cor: faixa vermelha sem frase deixa o mestre vendo que
+// algo deu errado sem ter onde ler o quê — e a janela bloqueada pelo navegador
+// chega por este mesmo canal.
 func autosaveState() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1160,7 +1142,7 @@ func notesButton(v View) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(notesButtonGesture(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 379, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 359, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 		if templ_7745c5c3_Err != nil {
@@ -1182,7 +1164,7 @@ func notesButton(v View) templ.Component {
 	})
 }
 
-// O BOTÃO QUE DESTACA as notas numa janela (ALE-218).
+// O BOTÃO QUE DESTACA as notas numa janela.
 //
 // Ele fica ao lado do alternador de flutuar porque responde à mesma pergunta —
 // ONDE o painel vive —, e é uma AÇÃO e não um estado: depois do clique quem
@@ -1217,7 +1199,7 @@ func detachButton(v View) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(opensTheNotesWindow(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 398, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 378, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 		if templ_7745c5c3_Err != nil {

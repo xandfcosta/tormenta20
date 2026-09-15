@@ -16,12 +16,8 @@ import (
 // tempHp) é APAGADA quando esvazia; a mista fica, com o tempHp zerado, porque
 // os outros modificadores dela continuam valendo.
 //
-// Portada do `temp-hp.helpers` do backend Nest. A prosa estava em INGLÊS e foi
-// traduzida ao mudar de pacote (ALE-278) — comentário é o que uma pessoa lê.
-//
-// Ela mora no `sheet` pela mesma razão do `equip.go`: é regra sobre a ficha,
-// lida pela cena E pelo hospedeiro, e os imports que ela precisa já eram os
-// permitidos deste pacote.
+// Mora no `sheet` pela mesma razão do `equip.go`: é regra sobre a ficha, lida
+// pela cena E pelo hospedeiro.
 
 type TempHpPool struct {
 	EffectID  int64
@@ -29,7 +25,7 @@ type TempHpPool struct {
 	Scope     string
 	Amount    int
 	Pure      bool
-	Mods      []map[string]any // preserved verbatim so a rewrite drops no fields
+	Mods      []map[string]any // guardado CRU, para uma reescrita não perder campo
 }
 
 type DisplacedPool struct {
@@ -153,7 +149,7 @@ func PlanDamage(pools []TempHpPool, HpCurrent, Amount int) DamagePlan {
 		newAmount := pool.Amount - Drained
 		plan.TempHpRemaining += newAmount
 		if newAmount == pool.Amount {
-			continue // untouched — not part of the delta
+			continue // intocada — não entra no delta
 		}
 		removed := newAmount == 0 && pool.Pure
 		plan.Drained = append(plan.Drained, DamageDrain{EffectID: pool.EffectID, NewAmount: newAmount, Removed: removed})

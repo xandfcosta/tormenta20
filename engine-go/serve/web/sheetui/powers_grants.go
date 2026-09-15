@@ -7,23 +7,13 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// AS CONCESSÕES DE UMA POSTURA (ALE-272, fatia 8).
+// AS CONCESSÕES DE UMA POSTURA.
 //
 // Entrar em Fúria não muda só uma flag: os poderes de GATILHO daquela flag que
 // o personagem possui e que CONCEDEM alguma coisa viram efeito de verdade na
 // ficha. Hoje o catálogo tem um caso — a Alma de Bronze do bárbaro (p41), que
 // dá uma reserva de PV temporários de nível + Força enquanto a Fúria dura — e
 // sair da postura leva a reserva embora.
-//
-// # Por que este arquivo não chama o handler JSON
-//
-// O `applyPowerGrant` da API JSON escreve na resposta HTTP no MEIO da
-// transação: ele decide o status e o corpo dentro do mesmo bloco que grava. Não
-// dá para reusá-lo de um comando do Datastar sem refatorar um caminho que a SPA
-// ainda usa — e a SPA sai na próxima fatia. O que se compartilha é a REGRA, que
-// é o que importa: o `sheet.PlanPoolSupremacy` (vale o maior, p256) e o
-// `sheet.ParseTempHpPools` são os mesmos. O que se repete são as vinte linhas de
-// transação, e elas morrem com o handler JSON.
 
 // applyTheGrantsStance liga o que a flag concede.
 //

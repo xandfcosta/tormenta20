@@ -13,18 +13,16 @@ import (
 	"t20engine/serve/web/door"
 )
 
-// A PORTA, com adaptador próprio (ALE-278, fatia 6).
+// A PORTA, com adaptador próprio.
 //
-// `doorHost` é o núcleo mais as REGRAS DE CONTA E SESSÃO — e não o `*Server`.
-// Ele é o adaptador que mais ganhou com a divisão: das nove assinaturas que a
-// porta pede, sete são autenticação, cadastro e redefinição de senha, e todas
-// as sete vivem agora num tipo que diz o que elas são (`accountRules`) em vez
-// de num tipo que diz onde elas estavam.
-// As regras vêm por CAMPO e não embutidas, e o compilador é que decidiu: as
-// duas partes carregam um `queries`, então embutir as duas deixa `h.queries`
-// ambíguo. A ambiguidade é um sintoma honesto — são dois caminhos para a mesma
-// conexão —, e nomear o campo é o que faz cada chamada dizer de qual das duas
-// coisas ela está falando.
+// `doorHost` é o núcleo mais as REGRAS DE CONTA E SESSÃO, e não o `*Server`: das
+// nove assinaturas que a porta pede, sete são autenticação, cadastro e
+// redefinição de senha.
+//
+// As regras vêm por CAMPO e não embutidas, e o compilador é que decidiu: as duas
+// partes carregam um `queries`, então embutir as duas deixa `h.queries` ambíguo.
+// A ambiguidade é um sintoma honesto — são dois caminhos para a mesma conexão —,
+// e nomear o campo é o que faz cada chamada dizer de qual das duas ela fala.
 type doorHost struct {
 	sceneCore
 	accounts accountRules
@@ -34,7 +32,7 @@ func (s *Server) doorHost() doorHost {
 	return doorHost{sceneCore: s.sceneCore(), accounts: s.accountRules()}
 }
 
-// O QUE O HOSPEDEIRO DEVE À CENA DA PORTA (ALE-278).
+// O QUE O HOSPEDEIRO DEVE À CENA DA PORTA.
 //
 // A `door.Deps` é declarada lá, no consumidor — é isso que a torna uma porta e
 // não um segundo nome para o objeto-deus. O que mora aqui é o cumprimento dela,
@@ -67,13 +65,10 @@ func (h doorHost) IssueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 	return h.accounts.issueSession(w, user)
 }
 
-// ResetLinkOwner junta as duas perguntas que a cena fazia em sequência — o link
-// vale? de quem é a conta? — numa só.
-//
-// Elas eram `usableReset` seguida de `GetUserByID`, e a cena carregava o
-// `sqlcgen.PasswordReset` no meio só para ter o `Userid`. A linha do banco não
-// interessa à tela: o que ela mostra é o e-mail, para quem clicou saber que está
-// mudando a conta certa.
+// ResetLinkOwner junta numa só as duas perguntas da cena — o link vale? de quem
+// é a conta? Repartidas, a cena carregaria o `sqlcgen.PasswordReset` no meio só
+// para ter o `Userid`: a linha do banco não interessa à tela, que só mostra o
+// e-mail para quem clicou saber que está mudando a conta certa.
 func (h doorHost) ResetLinkOwner(ctx context.Context, token string) (string, bool) {
 	reset, ok := h.accounts.usableReset(ctx, token)
 	if !ok {
@@ -88,10 +83,9 @@ func (h doorHost) ResetLinkOwner(ctx context.Context, token string) (string, boo
 
 // ResetPassword é o caminho inteiro, e ele fica DESTE lado por causa do bcrypt.
 //
-// A cena gerava o hash ela mesma, com o `bcryptCost` daqui. Isso obrigaria a
-// porta a carregar uma constante de custo criptográfico para a tela fazer
-// trabalho que não é dela — e o custo do bcrypt é decisão de segurança do
-// servidor, não de quem desenha o formulário.
+// Gerar o hash na cena obrigaria a porta a carregar uma constante de custo
+// criptográfico para fazer trabalho que não é dela — o custo do bcrypt é decisão
+// de segurança do servidor, não de quem desenha o formulário.
 func (h doorHost) ResetPassword(ctx context.Context, token, password string) bool {
 	reset, ok := h.accounts.usableReset(ctx, token)
 	if !ok {

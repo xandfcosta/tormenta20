@@ -1,11 +1,10 @@
 package book
 
-// AS PROFICIÊNCIAS QUE A CLASSE CONCEDE (ALE-278).
+// AS PROFICIÊNCIAS QUE A CLASSE CONCEDE.
 //
-// Elas moravam em dois lugares do `api` — a tabela na ficha, o cálculo na
-// criação — e vieram para cá pela dependência: a tabela é lida do
-// `catalog/data/classes.json`, então a pergunta é do LIVRO. A ficha e a forja só
-// recebem a resposta.
+// Elas moram aqui e não na ficha nem na forja porque a tabela é lida do
+// `catalog/data/classes.json`: a pergunta é do LIVRO, e as telas só recebem a
+// resposta.
 
 // grantedProficiencies ports characterProficiencies(...).filter(granted): the
 // default proficiency categories for a class set, in catalog order.
@@ -29,18 +28,13 @@ func GrantedProficiencies(classNames []string) []string {
 	return out
 }
 
-// AS SETE CATEGORIAS, escritas UMA vez (ALE-278).
+// AS SETE CATEGORIAS, escritas UMA vez.
 //
-// Elas estavam em TRÊS lugares quando a ficha saiu do `api`: esta lista de
-// chaves, um conjunto no `sheet_character_abilities.go` que a rota JSON usava para
-// recusar categoria inventada, e a lista com rótulo e grupo que a aba
-// Proficiências desenha. As três com os mesmos sete nomes, na mesma ordem, e
-// nenhuma sabendo das outras.
-//
-// A colisão só apareceu porque o renome de pacote deu o mesmo nome inglês a
-// duas delas e o compilador reclamou. Não havia guarda: três transcrições do
-// mesmo dado compilam e ficam verdes até uma divergir — que é letra por letra o
-// que aconteceu com o `Fold` do `search`.
+// Elas já estiveram em TRÊS lugares — esta lista de chaves, o conjunto que
+// recusava categoria inventada, e a lista com rótulo e grupo que a aba
+// Proficiências desenha —, com os mesmos sete nomes e na mesma ordem. Não há
+// guarda contra isso: três transcrições do mesmo dado compilam e ficam verdes
+// até uma divergir.
 //
 // A ORDEM É A DO LIVRO dentro de cada grupo (p142 para as armas, p148 para as
 // armaduras), e não alfabética: "simples, marciais, exóticas, de fogo" é uma

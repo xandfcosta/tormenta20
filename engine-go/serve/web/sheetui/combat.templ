@@ -2,29 +2,25 @@ package sheetui
 
 import "t20engine/serve/web/ui"
 
-// O painel de COMBATE desenhado (ALE-272, fatia 3).
+// O painel de COMBATE desenhado.
 //
 // Quatro blocos: os três números do meio do turno, as três resistências, os seis
 // atributos, e o que só às vezes importa — as armas empunhadas e a tripla do
 // conjurador.
 //
-// # Os diálogos NÃO pedem nada ao servidor
+// OS DIÁLOGOS NÃO PEDEM NADA AO SERVIDOR: cada caixa traz a decomposição dela já
+// desenhada, escondida, e abrir é escrever UM sinal. Os números já foram
+// computados para desenhar as caixas, e um `@get` por caixa poria uma dezena de
+// pedidos disputando o remendo da mesma cena.
 //
-// Cada caixa traz a decomposição dela já desenhada, escondida, e abrir é escrever
-// UM sinal. É de propósito, e por duas razões: os números já foram computados
-// para desenhar as caixas, então buscá-los de novo seria pedir o que já está na
-// página; e um `@get` por caixa poria onze pedidos disputando o remendo da
-// mesma cena — que é exatamente a sétima armadilha do Datastar, a que custou o
-// vermelho do CI nesta issue.
+// UM sinal e não um por caixa: `$detail` guarda a CHAVE da caixa aberta, e cada
+// sobreposição se compara com ela. Booleanos por caixa precisariam de alguém que
+// apagasse os outros ao abrir mais um, e o dia em que esse alguém esquecesse uma
+// abriria duas ao mesmo tempo.
 //
-// UM sinal e não onze: `$detail` guarda a CHAVE da caixa aberta, e cada
-// sobreposição se compara com ela. Onze booleanos precisariam de alguém que
-// apagasse os outros dez ao abrir o décimo primeiro, e o dia em que esse alguém
-// esquecesse uma caixa abriria duas ao mesmo tempo.
-//
-// O sinal é declarado no `<body>` (ver `sheetHandle`), que nunca é remendado:
-// declarado aqui dentro, o `@post` do PV redeclararia `detalhe` a cada toque —
-// a mesma família do `fichaAberta` do bestiário.
+// O sinal é declarado no `<body>` (ver `sheetHandle`), que NUNCA é remendado:
+// declarado aqui dentro, o `@post` do PV o redeclararia a cada toque e fecharia
+// o diálogo que o jogador acabou de abrir.
 
 // combatPanel é a seção inteira.
 templ combatPanel(v View) {
@@ -77,14 +73,9 @@ templ combatPanel(v View) {
 	}
 }
 
-// A TINTA DO RÓTULO é `penalty-ink` e não o `destructive/80` da SPA, e a troca
-// é conserto de um defeito que veio no porte.
-//
-// O `text-destructive/80` dá 3,22:1 sobre o painel e 3,69:1 sobre o fundo do
-// diálogo — abaixo dos 4,5 do AA, e estes rótulos são `text-4xs`, que é o
-// tamanho que mais precisa. A SPA tem o mesmo defeito desde sempre; ele nunca
-// apareceu porque o medidor de contraste era função privada de outro spec e
-// nunca chegou à ficha (ver `e2e/tests/support/contrast.ts`).
+// A TINTA DO RÓTULO é `penalty-ink` e não `destructive/80`: aquele fica abaixo
+// dos 4,5:1 do AA sobre o painel e sobre o fundo do diálogo, e estes rótulos são
+// `text-4xs`, que é o tamanho que mais precisa.
 //
 // `penalty-ink` é o vermelho LEGÍVEL da casa, com a regra já escrita no
 // `index.css`: `bg-penalty` para o bloco, `text-penalty-ink` para a letra. A
@@ -204,9 +195,8 @@ templ boxDetail(tile statTile) {
 
 // weaponDetail são as DUAS contas de uma arma, cada uma sob o próprio rótulo.
 //
-// Não há caixa de "Total" aqui, e a ausência é a da SPA: uma arma não tem um
-// número só — tem o ataque e tem o dano, e um total entre os dois não
-// significaria nada.
+// Não há caixa de "Total": uma arma não tem um número só — tem o ataque e tem o
+// dano, e um total entre os dois não significaria nada.
 templ weaponDetail(arma weaponTile) {
 	@overlay(arma.Key, arma.Name, "Sword", false) {
 		<div>
@@ -238,12 +228,10 @@ templ weaponDetail(arma weaponTile) {
 // saída é tela travada, e quem navega por teclado não deve depender de descobrir
 // o Esc.
 //
-// O ESC NÃO MORA AQUI (ALE-298), e a razão é aritmética: esta moldura é
-// desenhada POR ITEM da lista, e o ouvinte dela era de JANELA. Medido na aba de
-// Perícias, **trinta ouvintes de Escape numa página** — vinte e nove deles
-// escrevendo o mesmo `$detail = ''`. Um ouvinte de janela não pertence ao nó
-// que o pendura; ele pertence à CENA, e é lá que ele passou a morar. Ver
-// `ficha`.
+// O ESC NÃO MORA AQUI, e a razão é aritmética: esta moldura é desenhada POR
+// ITEM da lista, e um ouvinte de JANELA aqui daria um por item — todos
+// escrevendo o mesmo `$detail = ''`. Ouvinte de janela não pertence ao nó que o
+// pendura; ele pertence à CENA, e é lá que ele mora.
 //
 // `data-expanded` é o que faz o driver de setas se recolher — ele procura
 // `[role="dialog"][data-expanded]`, e sem isto as setas continuariam andando nas
@@ -251,15 +239,14 @@ templ weaponDetail(arma weaponTile) {
 // contrário do que vale para `aria-*`: é a PRESENÇA do atributo que o seletor
 // procura.
 templ overlay(key, titulo, icone string, magic bool) {
-	// NASCE ESCONDIDO (ALE-296), e o `style` estático é o conserto inteiro.
+	// NASCE ESCONDIDO pelo `style` estático, e ele é o conserto inteiro.
 	//
 	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
 	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
-	// medido com sonda de quadro: até 30 quadros de pano preto sobre a cena, que o
-	// dono relatou como "um dialog que aparece e some".
+	// dezenas de quadros de pano preto sobre a cena.
 	//
-	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
-	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
+	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar
+	// o troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
 	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
 	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
 	<div
@@ -268,11 +255,10 @@ templ overlay(key, titulo, icone string, magic bool) {
 		data-on:click="evt.target === el && ($detail = '')"
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4"
 	>
-		// CENTRALIZADO em toda largura, e não folha subindo da borda de baixo: é
-		// a geometria da SPA, e este painel é porte. O bestiário usa a folha de
-		// baixo porque lá o diálogo é a ficha INTEIRA de uma criatura; aqui são
-		// quatro linhas e um total, e uma folha de borda para quatro linhas
-		// pareceria uma gaveta pela metade.
+		// CENTRALIZADO em toda largura, e não folha subindo da borda de baixo: o
+		// bestiário usa a folha de baixo porque lá o diálogo é a ficha INTEIRA de
+		// uma criatura; aqui são quatro linhas e um total, e uma folha de borda
+		// para quatro linhas pareceria uma gaveta pela metade.
 		<div
 			role="dialog"
 			aria-modal="true"
@@ -298,9 +284,8 @@ templ overlay(key, titulo, icone string, magic bool) {
 	</div>
 }
 
-// detailIcon existe só para o comentário do `@icone` não morar na lista de
-// atributos de um elemento, que é a armadilha do templ que já custou oito
-// rodadas.
+// detailIcon existe só para o comentário do ícone não morar na lista de
+// atributos de um elemento, onde o templ não o aceita.
 templ detailIcon(nome string) {
 	@ui.Icon(nome, "size-3.5")
 }
@@ -309,11 +294,10 @@ templ detailIcon(nome string) {
 templ breakdownRows(rows []breakdownRow) {
 	<ul class="space-y-1">
 		for _, row := range rows {
-			// A linha INDENTADA explica a de cima em vez de somar ao lado dela — as
-			// contribuições de item sob o "Outros" das Perícias. Ela perde a régua
-			// de baixo e ganha uma à ESQUERDA, porque é a régua de baixo que faz
-			// uma linha ler como PARCELA: com ela, quem soma o que vê chega a −9
-			// debaixo de um total de −2 (o campo existia e nenhum `.templ` o lia).
+			// A linha INDENTADA explica a de cima em vez de somar ao lado dela. Ela
+			// perde a régua de baixo e ganha uma à ESQUERDA, porque é a régua de
+			// baixo que faz uma linha ler como PARCELA — com ela, quem soma o que
+			// vê chega a um total que não é o que está escrito.
 			<li class={ "pb-1",
 				templ.KV("border-b border-grimorio-iron", !row.Indented),
 				templ.KV("ml-1 border-l border-grimorio-iron pl-2 text-2xs", row.Indented),

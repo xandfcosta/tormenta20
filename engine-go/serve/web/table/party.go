@@ -11,11 +11,9 @@ import (
 	"t20engine/domain/board"
 )
 
-// A SELEÇÃO EM ÁREA de peças (ALE-203, item 10 do dono).
-//
-// "Não temos ferramenta de seleção em área." Com a ferramenta de MOVER na mão, o
-// arrasto no vazio — que hoje não faz nada — marca as peças dentro do retângulo,
-// e os verbos passam a valer para todas.
+// A SELEÇÃO EM ÁREA de peças: com a ferramenta de MOVER na mão, o arrasto no
+// vazio marca as peças dentro do retângulo, e os verbos passam a valer para
+// todas.
 //
 // # Marcar NÃO muta, mover MUTA
 //
@@ -65,13 +63,8 @@ func (s Scene) handleMarcarArea(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// movePartyTable desloca as peças marcadas pelo delta do arrasto.
-//
-// A LISTA E O DELTA vêm do mesmo CORPO (ALE-307). Aqui morava a divisão
-// contrária — o delta no caminho, a lista nos sinais — com o argumento de que o
-// caminho carrega o que o gesto acabou de decidir e o sinal, o estado que já
-// estava lá. O argumento não se sustentava: `payload` carrega os dois, e o que a
-// divisão custava era o endereço montado por concatenação na expressão.
+// movePartyTable desloca as peças marcadas pelo delta do arrasto. A LISTA E O
+// DELTA vêm do mesmo CORPO — ver o `partyDragBody`.
 func movePartyTable(st Scene, c commandCtx) (*board.BoardState, error) {
 	corpo, err := partyDrag(c.R)
 	if err != nil {
@@ -88,9 +81,8 @@ func movePartyTable(st Scene, c commandCtx) (*board.BoardState, error) {
 //
 // Os dois viajam juntos porque o corpo só pode ser lido UMA vez — o
 // `ReadSignals` copia o `r.Body` inteiro num buffer, e a segunda chamada recebe
-// vazio sem erro nenhum. Até a ALE-307 o delta vinha do caminho e a lista do
-// corpo, e a divisão não era desenho: era o que sobrava de escrever o endereço
-// com o delta concatenado dentro de uma expressão do Datastar.
+// vazio sem erro nenhum. Repartir entre caminho e corpo custaria um endereço
+// montado por concatenação dentro de uma expressão do Datastar.
 //
 // O `payload` do `@post` SUBSTITUI os sinais, então `marked_tokens` está
 // listado ao lado do delta na expressão que posta — a mesma forma do colar.

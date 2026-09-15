@@ -5,10 +5,8 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O CICLO DA SESSÃO na tela (ALE-269, superfícies 3, 4 e 11).
-//
-// A regra mora no `table_session_lifecycle.go` e o caminho no `session.go`;
-// aqui é o desenho.
+// O CICLO DA SESSÃO na tela. A regra mora no `table_session_lifecycle.go` e o
+// caminho no `session.go`; aqui é o desenho.
 
 // O botão que abre as configurações, e o SAIR ao lado dele.
 //
@@ -39,11 +37,10 @@ templ sessionVerbs(v View) {
 
 // AS CONFIGURAÇÕES DA SESSÃO — uma linha, uma decisão.
 //
-// O desenho é o da SPA e a razão de ele ser assim está escrita lá: a FRASE de
-// cada linha é o que deixa o botão ser curto ("Encerrar" em vez de "Encerrar
-// sessão") sem virar adivinhação. E a hierarquia é deliberada — excluir, a ação
-// mais rara e a única irreversível, NÃO é o elemento mais forte da tela; o
-// vermelho fica onde a decisão acontece, que é a confirmação.
+// A FRASE de cada linha é o que deixa o botão ser curto ("Encerrar" em vez de
+// "Encerrar sessão") sem virar adivinhação. E a hierarquia é deliberada —
+// excluir, a ação mais rara e a única irreversível, NÃO é o elemento mais forte
+// da tela; o vermelho fica onde a decisão acontece, que é a confirmação.
 //
 // Os verbos são travados pelo ESTADO: iniciar só aparece no que ainda não
 // começou, encerrar só no que está no ar. O servidor recusa o resto, e oferecer
@@ -72,12 +69,11 @@ templ sessionConfig(v View) {
 		<h2 id="session-config-title" class="font-heading text-lg tracking-wide text-grimorio-gold">
 			Sessão { fmt.Sprint(v.SessionNum) }
 			// `font-sans` NÃO é enfeite: sem ele o crachá HERDA a Cinzel do `<h2>` e a
-			// desenha a 11px, três abaixo do piso de leitura de 14 (ALE-320). Os dois
-			// tokens nunca estiveram na mesma `class=` — a receita do rótulo dá o
-			// TAMANHO e o `font-heading` do pai dá a FONTE —, que é por que nenhum
-			// `grep` sobre os `.templ` acharia isto: herança é a regra do CSS, e só o
-			// navegador responde. O crachá irmão, no cabeçalho da Mesa, sempre
-			// desenhou em sans; este divergia por morar dentro de um título.
+			// desenha a 11px, três abaixo do piso de leitura de 14. Os dois tokens
+			// nunca estão na mesma `class=` — a receita do rótulo dá o TAMANHO e o
+			// `font-heading` do pai dá a FONTE —, e é por isso que nenhum `grep`
+			// sobre os `.templ` acha isto: herança é a regra do CSS, e só o navegador
+			// responde.
 			<span class={ ui.SectionLabelClasses("muted", "ml-2 font-normal font-sans") }>{ portugueseCycle(v.Status) }</span>
 		</h2>
 		<div class="mt-3 space-y-1 divide-y divide-grimorio-iron/60">

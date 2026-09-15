@@ -8,7 +8,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// A rota do BUSCADOR DO LIVRO (ALE-264).
+// A rota do BUSCADOR DO LIVRO.
 //
 // Ela devolve SÓ o remendo dos achados: a caixa inteira é desenhada uma vez pela
 // casca e nunca é trocada. É o que mantém o `data-bind` do campo fora do que o
@@ -23,18 +23,13 @@ import (
 // Ele NÃO vai para `web/routes`: o critério de lá é estreito de propósito — só
 // endereço que uma cena cita de OUTRA —, e este é escrito pelos arquivos desta
 // cena e por mais ninguém.
-//
-// O comentário que estava aqui explicava que o `chi` registra sem o `/` porque
-// o `buildMux` o tira com `StripPrefix`. Isso deixou de ser verdade na ALE-280,
-// quando as cenas passaram a atender na raiz e o `StripPrefix` saiu.
 const finderRoute = "/buscador"
 
-// ESTA CENA NÃO TEM PORTA, e ela é a primeira (ALE-278).
+// ESTA CENA NÃO TEM PORTA.
 //
-// A forja declara seis dependências, a porta declara nove. O buscador declara
-// ZERO: ele lê o livro embutido pelo `book`, pontua com o `search`, desenha com
-// o `web/ui` e linka pelo `web/routes` — quatro pacotes que já eram folha. Não
-// há banco, não há sessão, não há casca a montar.
+// Ela declara ZERO dependências: lê o livro embutido pelo `book`, pontua com o
+// `search`, desenha com o `web/ui` e linka pelo `web/routes` — quatro pacotes
+// que já eram folha. Não há banco, não há sessão, não há casca a montar.
 //
 // Por isso `Routes` recebe só o roteador, e não existe `Deps` nem `Scene`. Uma
 // interface vazia declarada "por simetria" seria cerimônia pura: o que dá valor

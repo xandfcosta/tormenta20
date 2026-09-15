@@ -5,13 +5,12 @@ import (
 	"t20engine/domain/creature"
 )
 
-// O VERBETE DO LIVRO VIRANDO BLOCO DO MESTRE (ALE-269, superfície 6b),
-// portado de `frontend/src/features/gm-tools/creature-from-monster.ts`.
+// O VERBETE DO LIVRO VIRANDO BLOCO DO MESTRE.
 //
-// É o "editar este ogro" que a ALE-137 pediu, e é o caminho PRINCIPAL de criar
-// um NPC — decisão do dono: a maioria dos NPCs de campanha nasce como cópia do
-// bestiário com dois ou três números mexidos, e escrever do zero é a exceção.
-// Os dois caminhos terminam no mesmo formulário; o que muda é a SEMENTE.
+// É o "editar este ogro", e é o caminho PRINCIPAL de criar um NPC (decisão do
+// dono): a maioria dos NPCs de campanha nasce como cópia do bestiário com dois
+// ou três números mexidos, e escrever do zero é a exceção. Os dois caminhos
+// terminam no mesmo formulário; o que muda é a SEMENTE.
 //
 // Os campos passam direto, porque o livro modela criatura e NPC do mesmo jeito.
 // As duas coisas que NÃO passam direto estão comentadas onde acontecem.
@@ -36,17 +35,15 @@ func CopyOfEntry(v book.Entry) creature.Block {
 		Vontade:      v.Vontade,
 		HP:           v.HP,
 		Deslocamento: v.Deslocamento,
-		// ATRIBUTO AUSENTE VIRA ZERO, e esta é uma PERDA CONHECIDA — a mesma que
-		// a SPA documenta e aceita. Nove verbetes têm `inteligencia: null` e um
-		// tem `forca: null`, porque o livro escreve TRAVESSÃO: o Zumbi não tem
-		// Inteligência (p297). No bloco do mestre isso vira 0, e "+0" afirma que
-		// ele tem a média de um humano.
+		// ATRIBUTO AUSENTE VIRA ZERO, e esta é uma PERDA CONHECIDA. O livro
+		// escreve TRAVESSÃO onde a criatura não tem o atributo — o Zumbi não tem
+		// Inteligência (p297) —, e no bloco do mestre isso vira 0, que "+0"
+		// afirma ser a média de um humano.
 		//
-		// Aceitar a perda é deliberado nos dois lados: o bloco é NUMÉRICO e não
-		// sabe dizer "não tem", e ensiná-lo exigiria mexer no struct, no
-		// formulário e na validação. A partir da cópia o bloco é DELE e ele
-		// edita; quem guarda a ausência de verdade é o CATÁLOGO, que é a fonte
-		// (ALE-151).
+		// Aceitar a perda é deliberado: o bloco é NUMÉRICO e não sabe dizer "não
+		// tem", e ensiná-lo exigiria mexer no struct, no formulário e na
+		// validação. A partir da cópia o bloco é DELE e ele edita; quem guarda a
+		// ausência de verdade é o CATÁLOGO, que é a fonte.
 		Forca:            orZero(v.Forca),
 		Destreza:         orZero(v.Destreza),
 		Constituicao:     orZero(v.Constituicao),
@@ -72,8 +69,7 @@ func orZero(n *int) int {
 // As três cópias abaixo existem para o bloco do mestre não COMPARTILHAR fatia
 // com o catálogo embutido: o catálogo é imutável e servido a todo mundo, e o
 // bloco nasce para ser editado. Sem a cópia, mexer num ataque do NPC mexeria no
-// verbete que o bestiário desenha para a mesa inteira — e a fonte do livro
-// passaria a mentir para quem a consultasse depois.
+// verbete que o bestiário desenha para a mesa inteira.
 func copyAttacks(de []creature.Attack) []creature.Attack {
 	fora := make([]creature.Attack, len(de))
 	copy(fora, de)

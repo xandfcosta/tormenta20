@@ -8,9 +8,8 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A cena de CAMPANHAS como dado (ALE-234) — a primeira cena de SELEÇÃO da
-// migração: um cursor que anda, um palco que muda com ele, um trilho e uma
-// busca.
+// A cena de CAMPANHAS como dado — uma cena de SELEÇÃO: um cursor que anda, um
+// palco que muda com ele, um trilho e uma busca.
 //
 // A decisão que governa o formato: o servidor entrega TODOS os palcos já
 // desenhados e o cursor é um sinal do cliente. Com uma dúzia de campanhas numa
@@ -34,7 +33,7 @@ type listView struct {
 	FiltrouTudo bool
 	// Neighbors espelha `Campanhas` na ordem do trilho — ver `ui.NeighborAt`.
 	// Montado uma vez aqui em vez de dois por palco desenhado, e no tipo
-	// compartilhado porque o vizinho é a MESMA peça da cena do elenco (ALE-297).
+	// compartilhado porque o vizinho é a MESMA peça da cena do elenco.
 	Neighbors []ui.Neighbor
 }
 
@@ -74,7 +73,7 @@ func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, busca, pape
 		if !passesRole(c.Role, v.Papel) {
 			continue
 		}
-		// Os MESMOS campos que a SPA indexa: nome e sinopse.
+		// Os campos indexados: nome e sinopse.
 		if !search.Matches([]string{c.Name, c.Description}, busca) {
 			continue
 		}
@@ -120,10 +119,9 @@ func cardOf(c ListRow, vivas map[int64]int64) campaignCard {
 
 // liveSessions responde, numa consulta só, quais campanhas têm partida rolando.
 //
-// Era o `createActiveSessionByCampaign`: N+1 requisições do cliente, uma por
-// campanha. É a SEGUNDA fan-out idêntica que a migração encontra — a primeira
-// era a do Hub (ALE-231) —, e duas telas com o mesmo remendo são o sinal de que
-// o buraco estava na API.
+// UMA consulta e não N+1, uma por campanha: a fan-out do cliente é o remendo
+// que aparece quando a resposta não existe no servidor, e ela já apareceu em
+// duas telas.
 func (s Scene) liveSessions(ctx context.Context, userID int64) (map[int64]int64, error) {
 	linhas, err := s.deps.Queries().LiveSessionsForUser(ctx, userID)
 	if err != nil {
@@ -153,8 +151,8 @@ func asInt64(v any) (int64, bool) {
 	return 0, false
 }
 
-// classesInLine: "Arcanista 5 / Guerreiro 2", como a SPA escreve. Sem classe
-// nenhuma cai no nível, que é o que sobra para dizer.
+// classesInLine: "Arcanista 5 / Guerreiro 2". Sem classe nenhuma cai no nível,
+// que é o que sobra para dizer.
 func classesInLine(c *RowCharacter) string {
 	partes := make([]string, 0, len(c.Classes))
 	for _, cl := range c.Classes {

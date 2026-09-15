@@ -2,20 +2,17 @@ package table
 
 import "fmt"
 
-// O GESTO CONTÍNUO do pincel e da borracha (ALE-203, itens 8 e 9 do dono).
-//
-// "Não é possível pintar terreno em vários quadrados segurando o botão direito e
-// nem apagar segurando o botão esquerdo." Pintar uma parede de taverna casa a
-// casa, com um clique por quadrado, é o tipo de trabalho que faz o mestre montar
-// a cena antes da sessão e nunca durante ela.
+// O GESTO CONTÍNUO do pincel e da borracha: pintar e apagar terreno com o botão
+// segurado. Casa a casa, com um clique por quadrado, pintar uma parede de taverna
+// é o tipo de trabalho que faz o mestre montar a cena antes da sessão e nunca
+// durante ela.
 //
 // # A máquina, e por que ela precisa de um sinal de MEMÓRIA
 //
 // O `pointermove` chega dezenas de vezes por segundo e a maior parte deles cai
-// no MESMO quadrado. Postar em todos seria mandar a mesma casa vinte vezes — e o
-// que o `$ultimacasa` guarda é a última que já foi mandada, para o gesto só
-// falar quando o dedo TROCA de casa. Sem ele o servidor recebe uma enxurrada
-// idempotente e a mesa vê a cena piscar.
+// no MESMO quadrado. O `$ultimacasa` guarda a última casa já mandada, para o
+// gesto só falar quando o dedo TROCA de casa. Sem ele o servidor recebe uma
+// enxurrada idempotente e a mesa vê a cena piscar.
 //
 // # O botão DIREITO apaga
 //
@@ -41,12 +38,12 @@ const brushSignal = "pincelando"
 // são sobre o par junto: "mudou de casa?" e "de onde vem o traço?". Dois sinais
 // dariam duas chances de atualizar um e esquecer o outro.
 //
-// A BARRA e não a vírgula, e isso é conserto de um defeito MUDO: com `"x,y"` o
-// caminho saía `terreno/dificil/12,5/ate/12/5`, o chi não casava a rota, o
-// servidor devolvia 404, e o Datastar descartava a resposta sem escrever nada em
-// lugar nenhum — nem no console. O sintoma era o pincel não pintar, sem uma linha
-// de erro para seguir. Guardar já no formato de destino tira a conversão do
-// caminho, e com ela o lugar onde o erro cabia.
+// A BARRA e não a vírgula, porque o erro é MUDO: com `"x,y"` o caminho sai
+// `terreno/dificil/12,5/ate/12/5`, o chi não casa a rota, o servidor devolve 404
+// e o Datastar descarta a resposta sem escrever nada em lugar nenhum — nem no
+// console. O sintoma é o pincel não pintar, sem uma linha de erro para seguir.
+// Guardar já no formato de destino tira a conversão do caminho, e com ela o
+// lugar onde o erro cabe.
 const squareLastSignal = "ultimacasa"
 
 const (
@@ -100,11 +97,10 @@ var wideBrush = fmt.Sprintf("$%s = ''", brushSignal)
 // brushActsOnSquare é o corpo compartilhado: traduz o ponto, sai se a casa é a
 // mesma de antes, e manda o TRAÇO daquela até esta.
 //
-// O SEGMENTO e não o ponto, e isso é conserto de um defeito medido: entre dois
-// avisos do ponteiro o dedo anda mais de uma casa, e mandar só onde ele ESTÁ
-// deixava buraco. Na bancada, um arrasto pintou 11,6 · 13,6 · 15,7 · 16,8 · 18,9
-// — as colunas 12, 14 e 17 vazias. Quem preenche é o `board.StrokeSquares`,
-// porque a conta é regra de tabuleiro e não de tela.
+// O SEGMENTO e não o ponto: entre dois avisos do ponteiro o dedo anda mais de
+// uma casa, e mandar só onde ele ESTÁ deixa buraco — um arrasto pinta 11,6 ·
+// 13,6 · 15,7 · 16,8 · 18,9 e as colunas 12, 14 e 17 ficam vazias. Quem preenche
+// é o `board.StrokeSquares`, porque a conta é regra de tabuleiro e não de tela.
 //
 // O `pointerdown` manda a casa CONTRA ELA MESMA (um traço de uma casa), e é por
 // isso que ele limpa o `$ultimacasa` antes: senão o primeiro traço do gesto sairia
@@ -134,9 +130,9 @@ func brushActsOnSquare(v BoardView) string {
 
 // takesEraser é o traço da BORRACHA: os dois botões apagam.
 //
-// Ela usa a rota sem espécie (`terreno/limpar`), então o `$tool` não entra
-// na conta — que é exatamente o conserto do defeito que o dono relatou como "a
-// borracha não funciona".
+// Ela usa a rota sem espécie (`terreno/limpar`), então o `$tool` não entra na
+// conta: pela rota com espécie, a borracha apagaria só o terreno da ferramenta
+// escolhida e pareceria não funcionar.
 func takesEraser(v BoardView) string { return takesBrush(v, pincelApaga) }
 
 // prendeOMenuDoNavegador é o `contextmenu` das camadas que usam o botão direito.

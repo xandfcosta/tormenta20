@@ -10,13 +10,12 @@ import (
 	"t20engine/domain/live"
 )
 
-// O ELENCO DA CAMPANHA (ALE-269, superfície 6a) — o caminho.
+// O ELENCO DA CAMPANHA — o caminho.
 //
-// UM jogador por vez, que é o buraco que o "Adicionar grupo" não cobre: ele
-// traz o grupo INTEIRO, e a cena em que só a Arwen desce na cripta não tinha
-// gesto nenhum. Antes disto o mestre inventava um combatente com o nome dela à
-// mão, e a linha nascia sem `characterId` — desligada da ficha, sem PV de
-// verdade e fora do descanso.
+// UM jogador por vez, que é o buraco que o "Adicionar grupo" não cobre: ele traz
+// o grupo INTEIRO, e a cena em que só a Arwen desce na cripta não tem gesto
+// nenhum. O combatente inventado à mão para resolver isso nasce sem
+// `characterId` — desligado da ficha, sem PV de verdade e fora do descanso.
 
 func (s Scene) CastRoutes(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/elenco/{characterId}/na-fila",
@@ -50,7 +49,7 @@ func putPlayerTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 //
 // A TRAVA é esta, e ela é do servidor: o id vem do caminho, e o caminho é
 // digitável. Sem a conferência, o mestre de uma mesa alcançaria o personagem de
-// OUTRA campanha — poria na fila, e desde a ALE-211 também FERIRIA.
+// OUTRA campanha — poria na fila, e também FERIRIA.
 //
 // Ela é função própria porque agora tem dois chamadores, e porque uma trava
 // copiada é uma trava que diverge no dia em que alguém apertar só uma delas.
@@ -93,9 +92,9 @@ func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeSta
 			return nil, err
 		}
 		estado, err := st.deps.Sessions().DeltaCharacterVitals(c.SessionID, escolhido.CharacterID, hp, mp)
-		// A ficha de quem está na mesa MUDOU, e a tela dele precisa saber
-		// (ALE-275) — aqui sempre há personagem atrás do gesto, ao contrário da
-		// fila, onde o capanga anônimo não tem quem avisar.
+		// A ficha de quem está na mesa MUDOU, e a tela dele precisa saber —
+		// aqui sempre há personagem atrás do gesto, ao contrário da fila,
+		// onde o capanga anônimo não tem quem avisar.
 		if err == nil {
 			st.deps.CharacterChanged(escolhido.CharacterID)
 		}

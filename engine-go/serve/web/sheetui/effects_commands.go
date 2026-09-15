@@ -14,17 +14,15 @@ import (
 	"t20engine/infra/platform"
 )
 
-// OS COMANDOS DA ABA EFEITOS (ALE-272, fatia 5).
+// OS COMANDOS DA ABA EFEITOS.
 
 // toggleBookCondition liga ou desliga UMA condição do livro (p394-395).
 //
 // # Ela avisa a MESA, e isso não é enfeite
 //
-// O motor deriva Defesa e perícias da condição (ALE-28), então uma condição
-// aplicada sem aviso faz o jogador e o mestre verem números DIFERENTES do mesmo
-// personagem, sem nada na tela dizendo que discordam. Foi o defeito da ALE-245,
-// e o `handleUpdateConditions` da API JSON é o único lugar que o conserta — a
-// ficha em Datastar tinha de conquistar o mesmo, senão o porte REGREDIRIA.
+// O motor deriva Defesa e perícias da condição, então uma condição aplicada sem
+// aviso faz o jogador e o mestre verem números DIFERENTES do mesmo personagem,
+// sem nada na tela dizendo que discordam.
 //
 // O aviso sai DEPOIS da escrita, nunca antes: avisar sobre algo que ainda pode
 // falhar faria a mesa buscar o estado velho e acreditar nele.
@@ -77,9 +75,7 @@ func endAppliedEffect(s Scene, r *http.Request, row sqlcgen.Character, _ Signals
 	}
 	// A POSSE É CONFERIDA ANTES, e a query não a confere por nós: o
 	// `DeleteEffectByID` apaga por id e mais nada, então sem esta leitura um
-	// pedido montado à mão encerraria o efeito de OUTRO personagem. Era a mesma
-	// checagem que o `handleDeleteEffect` da API JSON fazia; com ele apagado na
-	// ALE-277 esta é a ÚNICA, e não a segunda cópia de nada.
+	// pedido montado à mão encerraria o efeito de OUTRO personagem.
 	meta, err := s.deps.Queries().GetActiveEffectMeta(r.Context(), id)
 	if err != nil || meta.Characterid != row.ID {
 		return fmt.Errorf("o efeito %d não é desta ficha", id)
@@ -100,9 +96,9 @@ func endStance(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error
 	}); err != nil {
 		return err
 	}
-	// E O QUE A POSTURA CONCEDEU sai junto (fatia 8): a reserva de PV
-	// temporários da Alma de Bronze dura "enquanto a Fúria durar" (p41), e
-	// deixá-la para trás daria PV que a postura encerrada continua pagando.
+	// E O QUE A POSTURA CONCEDEU sai junto: a reserva de PV temporários da Alma
+	// de Bronze dura "enquanto a Fúria durar" (p41), e deixá-la para trás daria
+	// PV que a postura encerrada continua pagando.
 	if err := s.removeTheGrantsStance(r, row, flag); err != nil {
 		return err
 	}

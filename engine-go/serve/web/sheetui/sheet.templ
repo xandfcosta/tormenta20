@@ -6,12 +6,11 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A FICHA desenhada (ALE-272, fatia 1) — a casca, as sete abas e o crachá.
+// A FICHA desenhada — a casca, as sete abas e o crachá.
 //
-// A forma é a da SPA e a decisão de leiaute mais importante veio de lá: **o
-// crachá fica no PÉ**, não no topo. Ele é a placa do jogador — retrato, nome,
-// classes, PV/PM — e no pé ele fica perto do polegar no telefone, que é onde o
-// PV é mexido a noite inteira.
+// **O crachá fica no PÉ**, não no topo. Ele é a placa do jogador — retrato,
+// nome, classes, PV/PM — e no pé ele fica perto do polegar no telefone, que é
+// onde o PV é mexido a noite inteira.
 //
 // AS ABAS SÃO LINKS, e isso é decisão e não preguiça: `?tab=` é endereço
 // guardado (favorito, link no chat da mesa), então cada aba precisa ser uma URL
@@ -28,17 +27,16 @@ templ SceneBody(v View) {
 	</div>
 }
 
-// O ESC DA FICHA, e ele é UM (ALE-298).
+// O ESC DA FICHA, e ele é UM.
 //
-// Ele morava dentro do `overlay`, que é desenhado por item da lista: a aba de
-// Perícias servia **trinta** ouvintes de Escape, vinte e nove escrevendo o mesmo
+// Ele NÃO mora no `overlay`, que é desenhado por item da lista: ali a aba de
+// Perícias penduraria trinta ouvintes de Escape escrevendo o mesmo
 // `$detail = ''`. Um ouvinte de JANELA não pertence ao nó que o pendura — ele
 // não sabe qual diálogo está por cima e roda de qualquer jeito —, então o lugar
 // dele é a cena.
 //
 // Fechar o que já está fechado não é nada: `$detail` é um valor só, e apagá-lo
-// com nenhum diálogo aberto é a mesma string vazia. Foi isso que tornou os
-// vinte e nove idempotentes, e é isso que torna este UM suficiente.
+// com nenhum diálogo aberto é a mesma string vazia.
 //
 // Os outros diálogos da ficha — Ofício, Aprender, Condição — têm sinal PRÓPRIO e
 // um ouvinte cada, e ficam onde estão: são um por cena, não um por item.
@@ -76,19 +74,18 @@ templ sheetBar(v View) {
 
 // embeddedSheetHeader é o cabeçalho da ficha DENTRO da sessão.
 //
-// Ela existe porque a barra de cima não serve aqui: o ‹ Voltar levaria o jogador
-// para fora da mesa no meio do combate (mesma razão da aba virar botão logo
-// abaixo). Mas tirar a barra inteira tirou junto o NOME, e a ficha embutida
-// passou a abrir em sete abas sem dizer de quem ela é — o crachá do rodapé diz a
-// raça e a classe, nunca o nome.
+// A barra de cima não serve aqui: o ‹ Voltar levaria o jogador para fora da mesa
+// no meio do combate (mesma razão da aba virar botão logo abaixo). Mas tirar a
+// barra inteira tiraria junto o NOME, e a ficha embutida abriria em sete abas
+// sem dizer de quem ela é — o crachá do rodapé diz a raça e a classe, nunca o
+// nome.
 //
 // O título é `h2` e não `h1`: o `h1` da página é o da sessão, e esta é uma
 // região dentro dela.
 //
-// E ela leva SÓ o nome, enquanto a barra da ficha solta leva o papel do lado.
-// Medido a 390px: com o papel junto a placa quebrava em duas fileiras, e a de
-// baixo dizia "GUERREIRO 8 · HUMANO" — que é o que o crachá do rodapé já diz,
-// três dedos abaixo, na mesma tela.
+// E ela leva SÓ o nome, enquanto a barra da ficha solta leva o papel do lado: a
+// 390px o papel junto quebra a placa em duas fileiras, e a de baixo repete o que
+// o crachá do rodapé já diz três dedos abaixo, na mesma tela.
 templ embeddedSheetHeader(v View) {
 	<div class="w-full border-b border-grimorio-iron px-4 py-2">
 		<h2 class="min-w-0 truncate font-heading text-lg tracking-wide text-foreground">{ v.Nome }</h2>
@@ -156,15 +153,10 @@ func tabSheetTint(ativa bool) string {
 }
 
 // sheetPanel desenha a seção ativa.
-//
-// Aqui morava o ramo "esta seção ainda vive na ficha antiga", com o link para a
-// SPA. Ele saiu na fatia 10 junto com a própria ficha antiga: as sete abas estão
-// portadas, então o ramo era código morto — e o `aFichaAntiga`, que o alimentava,
-// saiu com ele.
 templ sheetPanel(v View) {
-	// UM CASO POR ABA, e a lista tem de andar junto com `Tabs`: um
-	// nome lá sem caso aqui abre a aba VAZIA, e tela em branco é lida como
-	// defeito. O guarda `TestEverySheetTabDrawsSomething` prende os dois.
+	// UM CASO POR ABA, e a lista tem de andar junto com `Tabs`: um nome lá sem
+	// caso aqui abre a aba VAZIA, e tela em branco é lida como defeito. O guarda
+	// `TestEverySheetTabDrawsSomething` prende os dois.
 	switch v.AbaAtiva {
 		case "proficiencies":
 			@proficiencyPanel(v)
@@ -189,24 +181,22 @@ templ sheetPanel(v View) {
 // que o PV e o PM moram aqui e nunca num painel — mexer no PV é o gesto mais
 // frequente da noite, e ele não pode depender de qual aba está aberta.
 //
-// DEITADO ELE VIRA FILEIRA (ALE-230). Medido a 844×390: a ficha gastava 366 dos
-// 390px em cromo e a lista ficava com 24 — meia magia —, e o crachá sozinho era
-// 205 desses, mais que a barra e as abas somadas. Empilhado ele tem quatro
-// andares (identidade, nível, PV, PM); deitado os quatro entram na mesma
-// fileira, e o que se recupera vai inteiro para o painel.
+// DEITADO ELE VIRA FILEIRA: a 844×390 ele sozinho come 205 dos 390px, mais que
+// a barra e as abas somadas. Empilhado ele tem quatro andares (identidade,
+// nível, PV, PM); deitado os quatro entram na mesma fileira, e o que se recupera
+// vai inteiro para o painel.
 //
-// A chave é `max-lg:landscape:` e nunca uma consulta de ALTURA, pela razão que
-// o `ui.TomeSheet` já registra: o telefone em pé com o teclado virtual aberto
-// mede 390×494 e casaria com qualquer teto de altura — e aí o crachá se
-// reorganizaria debaixo do dedo no meio da digitação.
+// A chave é `max-lg:landscape:` e nunca uma consulta de ALTURA, pela razão que o
+// `ui.TomeSheet` já registra: o telefone em pé com o teclado virtual aberto mede
+// 390×494 e casaria com qualquer teto de altura.
 //
 // O que NÃO muda deitado são os oito passos de vital: eles são 44px de alvo
-// mínimo, e espremê-los para caber numa linha só trocaria este defeito pelo da
-// ALE-177. A fileira ENROLA, e o teto do guarda são duas fileiras.
+// mínimo, e espremê-los para caber numa linha só trocaria este defeito por um de
+// toque. A fileira ENROLA, e o teto do guarda são duas fileiras.
 templ playerBadge(v View) {
-	// O `id` é HANDLE PUBLICADO e não decoração: o guarda do celular deitado
-	// (ALE-230) mede a altura desta caixa, e prendê-lo em nome de classe seria
-	// a asserção sobre forma de DOM que ninguém prometeu.
+	// O `id` é HANDLE PUBLICADO e não decoração: o guarda do celular deitado mede
+	// a altura desta caixa, e prendê-lo em nome de classe seria a asserção sobre
+	// forma de DOM que ninguém prometeu.
 	<div id="player-badge" class="border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 max-lg:landscape:py-1 sm:px-4">
 		<div class="flex min-w-0 items-stretch gap-3 max-lg:landscape:items-center max-lg:landscape:gap-2">
 			// O retrato ENCOLHE em vez de sair: ele é `aria-hidden`, então some
@@ -225,10 +215,10 @@ templ playerBadge(v View) {
 				// vitais, sem que o desenho empilhado precise de outro nó. Dois
 				// crachás para o mesmo estado seriam dois lugares para consertar.
 				<div class="flex items-start justify-between gap-2 max-lg:landscape:contents">
-					// `sr-only` e NUNCA `hidden`, que é a lição da ALE-271: a raça
-					// e a classe não têm outro canal nesta tela — o `h1` acima leva
-					// o NOME —, e `display:none` as tiraria da árvore de
-					// acessibilidade em vez de só dos pixels.
+					// `sr-only` e NUNCA `hidden`: a raça e a classe não têm outro
+					// canal nesta tela — o `h1` acima leva o NOME —, e
+					// `display:none` as tiraria da árvore de acessibilidade em vez
+					// de só dos pixels.
 					<div class="min-w-0 max-lg:landscape:sr-only">
 						<p class="truncate text-sm text-foreground">{ v.Resumo }</p>
 						if v.Classes != "" {
@@ -236,17 +226,12 @@ templ playerBadge(v View) {
 						}
 					</div>
 					// A DEFESA é o número que a mesa pergunta em voz alta, e por
-					// isso ela fica no crachá e não só na aba Combate — ele
+					// isso ela fica no crachá e não só na aba Combate — o crachá
 					// aparece em TODAS as abas, e a aba Combate é uma.
 					//
-					// Aqui morava a razão original ("com o Combate ainda na ficha
-					// antiga"), e ela venceu: o Combate está na ficha nova desde a
-					// ALE-272. O crachá ficou porque o argumento dele nunca
-					// dependeu disso.
-					//
-					// E é por ser a pergunta do turno que ele mostra o PAR quando
-					// a Defesa é direcional (ALE-274): com o alvo caído, o total é
-					// o único número que não responde "acerta?".
+					// E é por ser a pergunta do turno que ele mostra o PAR quando a
+					// Defesa é direcional: com o alvo caído, o total é o único
+					// número que não responde "acerta?".
 					<div class="flex shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 py-1">
 						<span class={ ui.SectionLabelClasses("muted", "") }>DEF</span>
 						<span class="font-mono text-lg font-semibold tabular-nums text-foreground">{ v.Defesa }</span>
@@ -264,7 +249,7 @@ templ playerBadge(v View) {
 //
 // Ele está aqui porque é o ÚNICO lugar do app que muda o nível de um
 // personagem: não existe tela de edição, e a Forja só cria. Tirá-lo do crachá
-// seria tirar a capacidade, e não mover um controle — é a lição da ALE-183.
+// seria tirar a capacidade, e não mover um controle.
 templ levelRow(v View) {
 	<div class="flex flex-wrap items-center gap-1.5">
 		<span class={ ui.SectionLabelClasses("muted", "") }>Nível</span>
@@ -351,21 +336,18 @@ templ classChoice(v View, passo int, titulo string) {
 // vitalBar é o PV ou o PM, com os passos de mexer.
 //
 // OS PASSOS SÃO 1 E 5, e não um campo de digitar: no meio de um turno o gesto é
-// "levou seis", e dois toques resolvem sem teclado. O campo continua existindo
-// na ficha antiga; ele volta com a aba de Combate, que é onde o dano detalhado
-// mora.
+// "levou seis", e dois toques resolvem sem teclado.
 //
 // A barra é `aria-hidden` e o número é o que se lê: um leitor de tela não tem o
 // que fazer com uma largura em porcento, e a fração já diz tudo.
 //
-// A COR vem da escada da casa (`ui.HpFillTone`) e não de um token fixo. Até a
-// ALE-316 ela era `--hp-full` SEMPRE, com um `templ.KV` preso ao rótulo ser
-// "PV" e nenhum outro ramo possível — então o herói a 17,5% de vida saía verde
-// aqui e vermelho na Mesa, com a largura certa nas duas. Quem lê a ficha pela
-// cor, que é como se lê uma barra, lia a resposta errada.
+// A COR vem da escada da casa (`ui.HpFillTone`) e não de um token fixo. Com tom
+// fixo, o herói a 17,5% de vida sai verde aqui e vermelho na Mesa, com a largura
+// certa nas duas — e quem lê a barra pela cor, que é como se lê uma barra, lê a
+// resposta errada.
 templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
-	// O `relative` é CONTEXTO DE POSICIONAMENTO e não estilo (ALE-174): a
-	// piscada pinta um véu `absolute inset-0` sobre a fileira.
+	// O `relative` é CONTEXTO DE POSICIONAMENTO e não estilo: a piscada pinta um
+	// véu `absolute inset-0` sobre a fileira.
 	<div class={ "relative flex flex-wrap items-center gap-2", templ.KV("opacity-50", apagado) }>
 		<span class={ ui.SectionLabelClasses("muted", "w-6 shrink-0") }>{ rotulo }</span>
 		<div aria-hidden="true" class="h-2 min-w-16 flex-1 overflow-hidden rounded-sm bg-grimorio-iron">
@@ -374,18 +356,17 @@ templ vitalBar(v View, rotulo string, vital sheetVital, apagado bool) {
 				style={ fmt.Sprintf("width: %d%%", vital.Porcento) }
 			></div>
 		</div>
-		// `data-vital` é a âncora da PISCADA (ALE-174), e ela fica na FRAÇÃO e
-		// não na barra: a fração é o número, e a barra é `aria-hidden` de
-		// propósito (ver o cabeçalho). Pôr `role="progressbar"` aqui só para o
-		// JS achar o nó faria a ficha anunciar "PV 39 de 40" e "39/40" em
-		// seguida — duas vozes para o mesmo dado.
+		// `data-vital` é a âncora da PISCADA, e ela fica na FRAÇÃO e não na
+		// barra: a fração é o número, e a barra é `aria-hidden` de propósito (ver
+		// o cabeçalho). Pôr `role="progressbar"` aqui só para o JS achar o nó
+		// faria a ficha anunciar "PV 39 de 40" e "39/40" em seguida — duas vozes
+		// para o mesmo dado.
 		<span data-vital={ rotulo } class="shrink-0 font-mono text-sm tabular-nums text-foreground">{ vital.Fracao }</span>
 		if !apagado {
-			// OS PASSOS SÃO UM GRUPO e a fileira ENROLA — medido a 390px: em
-			// linha única o `+5` do PV terminava em x=399 numa janela de 390, e
-			// sem rolagem que chegasse lá. Fora da janela um botão não é feio: é
-			// inalcançável, e a cura de 5 simplesmente deixa de existir no
-			// telefone. É a mesma família da ALE-162 e da ALE-178.
+			// OS PASSOS SÃO UM GRUPO e a fileira ENROLA: em linha única o `+5` do
+			// PV termina em x=399 numa janela de 390, sem rolagem que chegue lá.
+			// Fora da janela um botão não é feio, é inalcançável — a cura de 5
+			// deixa de existir no telefone.
 			//
 			// ENROLAR e não encolher: os 44px são o mínimo de toque, e um passo
 			// menor trocaria um defeito por outro.

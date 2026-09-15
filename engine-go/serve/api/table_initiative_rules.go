@@ -10,38 +10,16 @@ import (
 	"t20engine/infra/platform"
 )
 
-// As regras da iniciativa e do descanso, fora de qualquer transporte.
-//
-// Este arquivo é o que SOBROU de `realtime_initiative.go` quando o socket.io foi
-// apagado (ALE-253). O corte foi pelo receptor: o que era `(g *realtimeGateway)`
-// era transporte e morreu junto; o que está aqui é aplicação, e não mudou uma
-// linha ao mudar de vizinho.
-//
-// Aqui morava "as rotas HTTP em `session_commands.go` e `board_commands.go`
-// chamam exatamente as mesmas funções que os eventos chamavam". Os dois
-// arquivos saíram na ALE-277 com os 36 manipuladores deles, que não tinham um
-// chamador desde que as cenas em Datastar passaram a mutar o estado pela porta
-// própria. A frase continua valendo com outro sujeito: quem chama estas funções
-// hoje é a cena da Mesa, e elas continuam sem saber por onde o pedido entrou.
+// As regras da iniciativa e do descanso, fora de qualquer transporte: quem as
+// chama é a cena da Mesa, e elas não sabem por onde o pedido entrou.
 
 // selfInitiativeEntry monta a linha de quem registra a PRÓPRIA iniciativa:
 // confere o d20, pergunta o bônus ao motor e soma.
 //
-// Transport-agnostic de propósito, como o `assertVitalsEditable`: é aqui que a
-// regra mora e é aqui que ela se prova, com o handler em volta traduzindo erro
-// em `exception`. Testar pelo socket exigiria um socket, e o que importa não é
-// o transporte.
-//
-// O RECEPTOR virou `*Server` na ALE-219, e essa é a frase que faz a de cima
-// deixar de ser aspiração: enquanto a regra pendia do gateway do socket,
-// "transport-agnostic" era uma intenção escrita em comentário e desmentida pela
-// assinatura — o segundo transporte (a página da Mesa em Datastar) não
-// conseguia alcançá-la sem um socket que ele não tem.
-//
-// A ALE-253 provou o argumento por outro caminho: o socket saiu do projeto
-// inteiro e esta função não mudou uma linha. (Reposto na nona puxada, pela
-// segunda vez — o comentário se perde toda vez que a função muda de arquivo, e
-// sem ele o `*Server` parece escolha de estilo.)
+// O RECEPTOR é `*Server` e não o gateway de um transporte, e isso não é estilo:
+// pendurada num transporte, a regra fica inalcançável para o segundo — e é aqui
+// que ela mora e se prova, com quem chama traduzindo o erro para o formato da
+// porta dele.
 func (tr tableRules) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (live.InitiativeEntry, error) {
 	if d20 < 1 || d20 > 20 {
 		return live.InitiativeEntry{}, fmt.Errorf("d20 must be an integer from 1 to 20, got %d", d20)
@@ -73,9 +51,10 @@ func (tr tableRules) endSceneForTable(user AuthUser, campaignID, sessionID int64
 	return tr.sessions.EndScene(sessionID)
 }
 
-// populateParty adds each not-yet-present player combatant at initiative 0 with live vitals,
-// returning the latest state and the first Add error (with the partial state so the caller
-// can still broadcast what landed).
+// populateParty põe na fila, com iniciativa 0 e vitais vivos, cada combatente de
+// jogador que ainda não está lá. Devolve o estado mais recente e o PRIMEIRO erro
+// de `Add` junto com o estado parcial, para quem chama poder transmitir o que
+// pousou.
 func (tr tableRules) populateParty(sessionID int64, combatants []combatant) (*live.SessionRuntimeState, error) {
 	existing := map[int64]bool{}
 	for _, e := range tr.sessions.GetState(sessionID).Initiative {
@@ -101,9 +80,9 @@ func (tr tableRules) populateParty(sessionID int64, combatants []combatant) (*li
 	return state, nil
 }
 
-// materializeEntry resolves an initiative payload into a concrete entry — an NPC (label +
-// initiative) or a character (name/vitals pulled via resolveCombatant, with optional client
-// overrides).
+// materializeEntry resolve um pedido de iniciativa numa linha concreta — um NPC
+// (rótulo mais iniciativa) ou um personagem (nome e vitais buscados pelo
+// `resolveCombatant`, com sobreposições opcionais do cliente).
 func (tr tableRules) materializeEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (live.InitiativeEntry, error) {
 	if _, hasChar := platform.IntField(input, "characterId"); !hasChar {
 		return materializeNpcEntry(input)
@@ -124,9 +103,9 @@ func materializeNpcEntry(input map[string]any) (live.InitiativeEntry, error) {
 	if t := platform.StringField(input, "type"); t != "" {
 		typ = t
 	}
-	// PV rides along when the client seeds it (a monster dropped in from the
-	// bestiary knows its own pool). Absent stays absent: a bare NPC has no
-	// health to track, and a zeroed bar would mean something it does not.
+	// O PV vai junto quando o cliente o semeia (um monstro vindo do bestiário
+	// sabe o próprio pool). Ausente continua ausente: um NPC pelado não tem vida
+	// a acompanhar, e uma barra zerada diria algo que não é o caso.
 	entry := live.InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}
 	if hp, ok := platform.IntField(input, "hpCurrent"); ok {
 		entry.HpCurrent = &hp
@@ -137,14 +116,14 @@ func materializeNpcEntry(input map[string]any) (live.InitiativeEntry, error) {
 	// O id do bestiário vem do cliente porque é ele que escolheu o verbete; o
 	// servidor não valida contra o catálogo de propósito — um id desconhecido
 	// vira "sem bloco" na tela, não um erro que derruba a adição no meio do
-	// combate (ALE-122).
+	// combate.
 	if monsterID := strings.TrimSpace(platform.StringField(input, "monsterId")); monsterID != "" {
 		entry.MonsterID = &monsterID
 	}
-	// O bloco de criatura do mestre (ALE-137). Mesma escolha do `monsterId`: o
-	// servidor não confere se a criatura existe, porque um id órfão vira "sem
-	// bloco" na tela e não um erro no meio do combate. Quem confere o dono é a
-	// rota HTTP que serve o bloco, e ela só responde ao mestre.
+	// O bloco de criatura do mestre. Mesma escolha do `monsterId`: o servidor não
+	// confere se a criatura existe, porque um id órfão vira "sem bloco" na tela e
+	// não um erro no meio do combate. Quem confere o dono é a rota HTTP que serve
+	// o bloco, e ela só responde ao mestre.
 	if creatureID, ok := platform.IntField(input, "creatureId"); ok && creatureID > 0 {
 		entry.CreatureID = &creatureID
 	}
@@ -175,8 +154,8 @@ func (tr tableRules) materializeCharacterEntry(ctx context.Context, callerID, ca
 	}, nil
 }
 
-// parseEntryPatch reads an update patch from the raw body (only present fields become
-// non-nil, so "Leave unchanged" is distinct from "set to zero").
+// parseEntryPatch lê um remendo de atualização do corpo cru: só campo PRESENTE
+// vira não-nulo, para "deixe como está" ser distinto de "zere".
 func parseEntryPatch(v any) live.EntryPatch {
 	m, _ := v.(map[string]any)
 	p := live.EntryPatch{}
@@ -204,8 +183,7 @@ func parseEntryPatch(v any) live.EntryPatch {
 		{"hpMax", &p.HpMax}, {"mpCurrent", &p.MpCurrent}, {"mpMax", &p.MpMax},
 		// Sem esta linha o cliente manda `creatureId` e o servidor DESCARTA em
 		// silêncio, com tudo compilando: campo novo na struct não entra sozinho
-		// numa lista escrita à mão. Foi o segundo caso do mesmo mecanismo no
-		// mesmo dia — o outro era o `cloneState` zerando o contador de turnos.
+		// numa lista escrita à mão.
 		{"creatureId", &p.CreatureID},
 	} {
 		if i, ok := platform.IntField(m, f.key); ok {
@@ -220,7 +198,8 @@ func parseEntryPatch(v any) live.EntryPatch {
 	return p
 }
 
-// overrideInt returns the body's value for key when present, else def — as a pointer.
+// overrideInt devolve o valor do corpo para a chave quando ele existe, senão o
+// padrão — como ponteiro.
 func overrideInt(m map[string]any, key string, def int64) *int64 {
 	if v, ok := platform.IntField(m, key); ok {
 		return live.PtrInt64(v)
@@ -228,12 +207,11 @@ func overrideInt(m map[string]any, key string, def int64) *int64 {
 	return live.PtrInt64(def)
 }
 
-// parseConditions filtra pelo CATÁLOGO, que é onde as condições são autoradas.
-// Uma lista escrita à mão aqui seria a segunda cópia da tabela do livro, e a
-// primeira já desviou uma vez: faltava `enfeitiçado`, e aplicá-la dava 400
-// (ALE-122). Id desconhecido é descartado em silêncio de propósito — a
-// alternativa seria derrubar a aplicação inteira no meio do combate por causa
-// de um item.
+// parseConditions filtra pelo CATÁLOGO, que é onde as condições são autoradas:
+// uma lista escrita à mão aqui seria a segunda cópia da tabela do livro, e ela
+// desvia — uma condição faltando dá 400 na hora de aplicá-la. Id desconhecido é
+// descartado em silêncio de propósito: a alternativa seria derrubar a aplicação
+// inteira no meio do combate por causa de um item.
 func parseConditions(raw any) []string {
 	items, _ := raw.([]any)
 	out := []string{}

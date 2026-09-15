@@ -10,26 +10,22 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "t20engine/serve/web/ui"
 
-// A PORTA desenhada (ALE-229): entrar, criar conta e redefinir senha.
+// A PORTA desenhada: entrar, criar conta e redefinir senha.
 //
 // A decisão que governa este arquivo: aqui NÃO se usa sinal do Datastar.
 //
 // O jeito idiomático seria `data-bind:senha` + `@post`. Um sinal, porém, é
-// estado do CLIENTE, e o Datastar serializa os sinais em toda requisição
+// estado do CLIENTE, e o Datastar serializa os sinais em TODA requisição
 // seguinte — pôr uma senha ali é a senha viajando de novo a cada `@get`/`@post`
 // da página, para sempre. Então a porta é `<form method="post">` puro.
 //
 // O que se ganha junto não é consolo: funciona sem JavaScript nenhum, o
 // gerenciador de senha do navegador funciona porque este é o caminho que ele
 // conhece, e a validação de formato ganha as mensagens NATIVAS — já localizadas
-// e já acessíveis — via `required`, `type="email"` e `minlength`. É o que o Zod
-// fazia, sem o Zod.
-//
-// Fica como dado para a ALE-225: existe superfície inteira onde a resposta
-// certa é zero reatividade de cliente.
+// e já acessíveis — via `required`, `type="email"` e `minlength`.
 
-// doorFrame é a `AuthShell` da SPA: a moldura de ferro no meio da
-// tela-título, com o rodapé embaixo e o aviso legal por último.
+// doorFrame é a moldura de ferro no meio da tela-título, com o rodapé embaixo e
+// o aviso legal por último.
 func doorFrame(titulo, subtitulo string, rodape templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -96,7 +92,7 @@ func doorFrame(titulo, subtitulo string, rodape templ.Component) templ.Component
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 29, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 25, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -114,7 +110,7 @@ func doorFrame(titulo, subtitulo string, rodape templ.Component) templ.Component
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(subtitulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 31, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 27, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -194,7 +190,7 @@ func formNotice(aviso string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(aviso)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 53, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 49, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -255,7 +251,7 @@ func signInPage(v signInView) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Destination)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 63, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 59, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 				if templ_7745c5c3_Err != nil {
@@ -320,8 +316,8 @@ func signInPage(v signInView) templ.Component {
 	})
 }
 
-// Não há link para criar conta, e a ausência é a decisão (ALE-120): esta mesa é
-// por convite, e quem tem um chega pela URL do convite, não por aqui.
+// Não há link para criar conta, e a ausência é a decisão: esta mesa é por
+// convite, e quem tem um chega pela URL do convite, não por aqui.
 func signInFooter() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -392,7 +388,7 @@ func signUpPage(v signUpView) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Invite)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 92, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 88, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -539,7 +535,7 @@ func resetPage(v resetView) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Token)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 126, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 122, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 				if templ_7745c5c3_Err != nil {
@@ -592,14 +588,14 @@ func resetPage(v resetView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "    <p class=\"text-sm text-muted-foreground\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "   <p class=\"text-sm text-muted-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(noticeDeadLink)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 143, Col: 60}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 138, Col: 60}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -630,9 +626,8 @@ func linkSubtitle(v resetView) string {
 // passwordConfirmation é o campo que existe só para pegar o typo.
 //
 // Ele é conferido nos DOIS lados, e os dois são necessários por razões
-// diferentes: o `data-on:input` dá o aviso na hora, e o servidor é quem de fato
-// recusa — sem ele a página deixaria de funcionar com JavaScript desligado,
-// que é justamente o que esta superfície ganhou ao não usar sinais.
+// diferentes: o `data-on:input` dá o aviso na hora, e o SERVIDOR é quem de fato
+// recusa — sem ele a página deixaria de funcionar com JavaScript desligado.
 //
 // A comparação lê o campo irmão pelo DOM (`el.form.senha.value`) em vez de por
 // um sinal, e isso é o ponto: a senha não entra em estado de cliente nenhum.
@@ -664,7 +659,7 @@ func passwordConfirmation(erros []string) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("el.setCustomValidity(el.value === el.form.senha.value ? '' : '" + noticePasswordMismatch + "')")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 175, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 169, Col: 115}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -697,7 +692,7 @@ func passwordConfirmation(erros []string) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 185, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/door/scene.templ`, Line: 179, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {

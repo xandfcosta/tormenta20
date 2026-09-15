@@ -9,21 +9,20 @@ import (
 	"t20engine/infra/platform"
 )
 
-// A CONSTRUÇÃO da ficha (ALE-278, terceira camada compartilhada).
+// A CONSTRUÇÃO da ficha.
 //
 // `Load` monta o agregado a partir das linhas do banco; `Compute` passa esse
-// agregado pelo motor. Os dois eram métodos do `api.Server` e viraram funções
-// com as dependências por PARÂMETRO — o que elas usavam dele eram as `queries` e
-// os `catalogs`, e nada mais.
+// agregado pelo motor. As dependências vêm por PARÂMETRO — o que eles usam são
+// as `queries` e os `catalogs`, e nada mais.
 //
-// `LoadAndCompute` é a soma dos dois e existe porque a maioria dos chamadores só
-// tem a linha do banco. Quem já tem o agregado na mão chama o `Compute` direto:
-// a cena de personagens precisa da ficha de TODOS de uma vez, e passar pelo
-// caminho completo faria cada herói ser lido do banco DUAS vezes (ALE-239).
+// `LoadAndCompute` é a soma dos dois, para quem só tem a linha do banco. Quem já
+// tem o agregado na mão chama o `Compute` direto: a cena de personagens precisa
+// da ficha de TODOS de uma vez, e passar pelo caminho completo faria cada herói
+// ser lido do banco DUAS vezes.
 
-// loadCharacter attaches the six relations to a character row in the Prisma
-// include order (races/classes/items/effects by id, expertises by name, spells by
-// learnedAt).
+// loadCharacter anexa as seis relações à linha do personagem, em ordem estável:
+// raças, classes, itens e efeitos por id, perícias por nome, magias por
+// `learnedAt`.
 func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (CharacterDTO, error) {
 	dto := CharacterScalarsFrom(c)
 
@@ -86,20 +85,20 @@ func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (Charact
 		})
 	}
 
-	// As regras opcionais da mesa entram na ficha AQUI, e num lugar só (ALE-221):
-	// tudo o que calcula — o `GET /sheet`, os PV/PM do nível, o bônus de
-	// iniciativa, a ficha inteira que as cenas desenham — passa por este
-	// carregamento. Falha de leitura não derruba a ficha: o `IgnoredRules` fica
-	// zerado, que significa TODAS as regras em vigor. É o lado seguro, e o único
-	// em que um banco mudo não afrouxa regra sem ninguém ver.
+	// As regras opcionais da mesa entram na ficha AQUI, e num lugar só: tudo o
+	// que calcula — a rota da ficha, os PV/PM do nível, o bônus de iniciativa, a
+	// ficha inteira que as cenas desenham — passa por este carregamento. Falha de
+	// leitura não derruba a ficha: o `IgnoredRules` fica zerado, que significa
+	// TODAS as regras em vigor. É o lado seguro, e o único em que um banco mudo
+	// não afrouxa regra sem ninguém ver.
 	ignored, err := q.ListIgnoredRulesForCharacter(ctx, c.ID)
 	if err == nil {
 		dto.IgnoredRules = engine.IgnoredRulesFrom(ignored)
 	}
 
-	// O estado de JOGO (ALE-222). Vem junto e nao por endpoint proprio: separado,
-	// a ficha abriria com a Furia desligada e a ligaria um instante depois,
-	// piscando os numeros que ela muda.
+	// O estado de JOGO vem junto e nao por rota propria: separado, a ficha abriria
+	// com a Furia desligada e a ligaria um instante depois, piscando os numeros
+	// que ela muda.
 	//
 	// Este DERRUBA a carga em caso de falha e o de cima nao, e a diferenca e
 	// deliberada: sem o estado de jogo a ficha mente sobre o que esta ligado,
@@ -111,10 +110,9 @@ func Load(ctx context.Context, q *sqlcgen.Queries, c sqlcgen.Character) (Charact
 	return dto, nil
 }
 
-// computeSheet builds the engine input from an already-loaded character row and returns the
-// server-computed ComputedSheetV2 (base sheet, no active conditionals). Shared by GET /sheet
-// and the power-grant temp-HP amount so the Load→engine→compute wiring lives in one place.
-// Caller must ensure s.catalogs is primed.
+// computeSheet monta a entrada do motor a partir de uma linha de personagem já
+// carregada e devolve a ficha computada pelo servidor — ficha base, sem
+// condicional ligada. Os catálogos têm de estar primados.
 func LoadAndCompute(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
 	dto, err := Load(ctx, q, row)
 	if err != nil {
@@ -123,8 +121,8 @@ func LoadAndCompute(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalog
 	return Compute(cat, dto)
 }
 
-// engineCharacterFrom bridges the API aggregate to engine.Character via JSON —
-// both mirror the frontend Character contract, so the round-trip is lossless.
+// engineCharacterFrom leva o agregado até o `engine.Character` por JSON: os dois
+// têm a mesma forma, então a ida e volta não perde nada.
 func EngineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 	var ec engine.Character
 	b, err := json.Marshal(dto)
@@ -136,11 +134,10 @@ func EngineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 
 // Compute computa a ficha de um agregado JÁ CARREGADO.
 //
-// Separado do `computeSheet` para a cena de personagens (ALE-239), que precisa
-// da ficha de TODOS de uma vez: ela já tem os agregados na mão, e passar por
-// `computeSheet` faria cada personagem ser lido do banco DUAS vezes — uma na
-// lista e outra dentro dele. Com uma dúzia de heróis isso é o dobro das
-// consultas para o mesmo resultado.
+// Separado do `computeSheet` para a cena de personagens, que precisa da ficha de
+// TODOS de uma vez: ela já tem os agregados na mão, e passar por `computeSheet`
+// faria cada personagem ser lido do banco DUAS vezes — uma na lista e outra
+// dentro dele.
 func Compute(cat *engine.Catalogs, dto CharacterDTO) (engine.ComputedSheetV2, error) {
 	ec, err := EngineCharacterFrom(dto)
 	if err != nil {

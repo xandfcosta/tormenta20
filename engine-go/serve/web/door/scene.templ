@@ -2,26 +2,22 @@ package door
 
 import "t20engine/serve/web/ui"
 
-// A PORTA desenhada (ALE-229): entrar, criar conta e redefinir senha.
+// A PORTA desenhada: entrar, criar conta e redefinir senha.
 //
 // A decisão que governa este arquivo: aqui NÃO se usa sinal do Datastar.
 //
 // O jeito idiomático seria `data-bind:senha` + `@post`. Um sinal, porém, é
-// estado do CLIENTE, e o Datastar serializa os sinais em toda requisição
+// estado do CLIENTE, e o Datastar serializa os sinais em TODA requisição
 // seguinte — pôr uma senha ali é a senha viajando de novo a cada `@get`/`@post`
 // da página, para sempre. Então a porta é `<form method="post">` puro.
 //
 // O que se ganha junto não é consolo: funciona sem JavaScript nenhum, o
 // gerenciador de senha do navegador funciona porque este é o caminho que ele
 // conhece, e a validação de formato ganha as mensagens NATIVAS — já localizadas
-// e já acessíveis — via `required`, `type="email"` e `minlength`. É o que o Zod
-// fazia, sem o Zod.
-//
-// Fica como dado para a ALE-225: existe superfície inteira onde a resposta
-// certa é zero reatividade de cliente.
+// e já acessíveis — via `required`, `type="email"` e `minlength`.
 
-// doorFrame é a `AuthShell` da SPA: a moldura de ferro no meio da
-// tela-título, com o rodapé embaixo e o aviso legal por último.
+// doorFrame é a moldura de ferro no meio da tela-título, com o rodapé embaixo e
+// o aviso legal por último.
 templ doorFrame(titulo, subtitulo string, rodape templ.Component) {
 	<div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
 		@ui.PanelFrame("space-y-5") {
@@ -78,8 +74,8 @@ templ signInPage(v signInView) {
 	}
 }
 
-// Não há link para criar conta, e a ausência é a decisão (ALE-120): esta mesa é
-// por convite, e quem tem um chega pela URL do convite, não por aqui.
+// Não há link para criar conta, e a ausência é a decisão: esta mesa é por
+// convite, e quem tem um chega pela URL do convite, não por aqui.
 templ signInFooter() {
 	Esta mesa é por convite — peça o link a quem administra.
 }
@@ -136,10 +132,9 @@ templ resetPage(v resetView) {
 				}
 			</form>
 		} else {
-			// O link é conferido ANTES de desenhar o formulário, e isso deixou de
-			// custar uma consulta com estado de carregamento: na SPA era uma
-			// `useQuery` com "Conferindo o link…" e um `Show`/fallback. Aqui é um
-			// `if` no handler, e o estado "carregando" não existe.
+			// O link é conferido ANTES de desenhar o formulário: um link vencido
+			// dizer isso de cara é melhor que falhar no envio com a senha já
+			// digitada duas vezes.
 			<p class="text-sm text-muted-foreground">{ noticeDeadLink }</p>
 		}
 	}
@@ -155,9 +150,8 @@ func linkSubtitle(v resetView) string {
 // passwordConfirmation é o campo que existe só para pegar o typo.
 //
 // Ele é conferido nos DOIS lados, e os dois são necessários por razões
-// diferentes: o `data-on:input` dá o aviso na hora, e o servidor é quem de fato
-// recusa — sem ele a página deixaria de funcionar com JavaScript desligado,
-// que é justamente o que esta superfície ganhou ao não usar sinais.
+// diferentes: o `data-on:input` dá o aviso na hora, e o SERVIDOR é quem de fato
+// recusa — sem ele a página deixaria de funcionar com JavaScript desligado.
 //
 // A comparação lê o campo irmão pelo DOM (`el.form.senha.value`) em vez de por
 // um sinal, e isso é o ponto: a senha não entra em estado de cliente nenhum.

@@ -6,17 +6,12 @@ import (
 	"sync"
 )
 
-// O hub das conexões SSE — o que as SALAS do socket.io eram (ALE-253).
+// O hub das conexões SSE: destinatários agrupados por sessão e por PAPEL,
+// porque o estado sai duas vezes — inteiro para o mestre e redigido para os
+// jogadores, pelo `RedactForPlayers`.
 //
-// A troca não é de biblioteca, é de FORMA: o socket existia para o cliente
-// mandar coisa, e ele não precisava — as 37 mensagens que subiam eram todas
-// mutação, e mutação é `POST`. O que sobra do tempo real é só o de descida, e
-// para descida SSE basta.
-//
-// O que este arquivo substitui é exatamente o que o socket dava de útil:
-// destinatários agrupados por sessão e por PAPEL, porque o estado sai duas
-// vezes — inteiro para o mestre e redigido para os jogadores (ALE-122). O
-// `RedactForPlayers` não mudou uma linha; mudou quem o entrega.
+// SSE e não socket: tudo o que sobe é mutação, e mutação é `POST`. Do tempo
+// real sobra só a descida, e para descida SSE basta.
 
 // SSEFrame é um evento já codificado no formato do fio. Codificar UMA vez por
 // broadcast e não uma por conexão: numa mesa de seis, o estado da iniciativa
@@ -31,8 +26,8 @@ func encodeFrame(event string, payload any) (SSEFrame, error) {
 	return SSEFrame(fmt.Sprintf("event: %s\ndata: %s\n\n", event, body)), nil
 }
 
-// SSEConn é um leitor ligado. O `role` é o do momento da ENTRADA, como no
-// socket: quem for promovido no meio da sessão reconecta (ALE-122).
+// SSEConn é um leitor ligado. O `role` é o do momento da ENTRADA: quem for
+// promovido no meio da sessão reconecta.
 type SSEConn struct {
 	id     string
 	role   string
@@ -130,34 +125,25 @@ func (h *SSEHub) entregaLocked(sessionID int64, role string, frame SSEFrame) {
 	}
 }
 
-// EmitOrdered entrega um evento DESCARTANDO quadro atrasado (ALE-238).
+// EmitOrdered entrega um evento DESCARTANDO quadro atrasado.
 //
-// O defeito que ele conserta é sutil e sobreviveu à troca do socket por SSE,
-// porque a forma foi copiada sem ser revista: a mutação do estado é serializada
-// por uma trava, mas a EMISSÃO acontece depois de a trava cair. Duas mutações
-// concorrentes podem então emitir fora de ordem, e o cliente aplica
-// `setState(next)` com o estado inteiro — o quadro velho vence, e a entrada que
-// só existia no quadro novo some da tela do mestre e da mesa.
+// A mutação do estado é serializada por uma trava, mas a EMISSÃO acontece
+// depois de a trava cair. Duas mutações concorrentes emitem então fora de
+// ordem, e o cliente aplica o estado INTEIRO: o quadro velho vence, e a entrada
+// que só existia no quadro novo some da tela do mestre e da mesa.
+// `TestTheFrameFollowsTheOrderOfTheMutation` reproduz sob `-race`.
 //
-// Foi medido: `TestTheFrameFollowsTheOrderOfTheMutation` reproduz sob `-race` em algumas
-// dezenas de tentativas, e é a assinatura #1 da ALE-238 ("uma condição some no
-// meio de três").
-//
-// POR QUE AQUI E NÃO EM TODO STREAM DA CASA. A ordem importa neste hub porque
-// o que viaja é o CLONE do estado, capturado no instante da mutação: um clone
+// POR QUE AQUI E NÃO EM TODO STREAM DA CASA: a ordem importa neste hub porque o
+// que viaja é o CLONE do estado, capturado no instante da mutação, e um clone
 // velho que chegue depois de um novo é uma verdade antiga sobrescrevendo uma
-// recente. Há um desenho irmão que é imune por construção — o stream do app
-// (Datastar) manda um AVISO sem estado, e o leitor relê o estado de agora; dois
-// avisos fora de ordem no pior caso mandam reler duas vezes, e não há o que
-// reordenar. Publicar o clone é a escolha certa AQUI porque o cliente da SPA
-// não pode reler barato: seria um GET por mutação, para todo mundo na mesa.
-// Escrito porque sem isto a guarda parece paranoia, e a próxima pessoa a
-// simplificaria (obrigado à sessão da migração Datastar pela distinção).
+// recente. O stream do app (Datastar) é imune por construção — ele manda um
+// AVISO sem estado, e o leitor relê o estado de agora; dois avisos fora de
+// ordem mandam reler duas vezes, e não há o que reordenar.
 //
 // A guarda mora AQUI, e não numa trava em volta de cada publicação, porque
-// publicação nova é fácil de esquecer — são nove pontos hoje. O hub é o funil
-// por onde tudo passa, e o que ele não deixa acontecer ninguém precisa lembrar
-// de evitar. É a mesma razão de o guarda de papel viver no `Emit`.
+// publicação nova é fácil de esquecer. O hub é o funil por onde tudo passa, e o
+// que ele não deixa acontecer ninguém precisa lembrar de evitar — é a mesma
+// razão de o guarda de papel viver no `Emit`.
 //
 // `Seq == 0` significa SEM ORDEM: o quadro passa e o destino reinicia. É o que
 // eventos sem contador usam (presença, aviso de persistência) e é o que o
@@ -172,8 +158,8 @@ func (h *SSEHub) EmitOrdered(sessionID int64, role, event string, Seq uint64, pa
 
 	// A trava é UMA e cobre decidir E entregar. Decidir sob trava e entregar
 	// fora dela não conserta nada: outra goroutine se enfia entre as duas e
-	// enfileira o quadro dela primeiro — foi assim que a primeira versão desta
-	// função continuou vermelha, com a contabilidade certa e a fila errada.
+	// enfileira o quadro dela primeiro — a contabilidade fica certa e a fila
+	// errada.
 	h.Mu.Lock()
 	defer h.Mu.Unlock()
 

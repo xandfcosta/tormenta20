@@ -13,7 +13,7 @@ import (
 	"t20engine/infra/platform"
 )
 
-// OS COMANDOS DAS ABAS PERÍCIAS E PROFICIÊNCIAS (ALE-272, fatias 2 e 4).
+// OS COMANDOS DAS ABAS PERÍCIAS E PROFICIÊNCIAS.
 
 // expertiseName lê o nome do caminho, desescapando como a API JSON faz.
 func expertiseName(r *http.Request) string {
@@ -26,10 +26,8 @@ func expertiseName(r *http.Request) string {
 
 // toggleTraining liga ou desliga o treino de UMA perícia.
 //
-// O comando manda a PERÍCIA e não o estado desejado, pela mesma razão da
-// proficiência: mandar "treinada" perde para o clique repetido e para a segunda
-// aba aberta no mesmo personagem. Quem clica quer INVERTER o que está na tela, e
-// o servidor sabe o que está na tela melhor que o botão.
+// O comando manda a PERÍCIA e não o estado desejado: mandar "treinada" perde
+// para o clique repetido e para a segunda aba aberta no mesmo personagem.
 func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	nome := expertiseName(r)
 	// O estado ATUAL vem da lista e não do `GetExpertiseMeta`, que devolve só o
@@ -54,7 +52,8 @@ func toggleTraining(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) 
 // swapAttribute repõe a perícia em outro atributo.
 //
 // O atributo vai no CAMINHO junto do nome: é o valor do `<option>` escolhido, e
-// mandá-lo por sinal faria seis opções de 29 linhas disputarem a mesma chave.
+// mandá-lo por sinal faria as opções de todas as linhas disputarem a mesma
+// chave.
 func swapAttribute(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	atributo := chi.URLParam(r, "atributo")
 	if !engine.IsAttributeKey(atributo) {
@@ -72,9 +71,9 @@ func swapAttribute(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) e
 
 // removeCraft apaga uma perícia INVENTADA pelo jogador.
 //
-// As 29 do livro não se apagam, e a recusa é do servidor e não da tela: a ficha
-// nova não desenha a lixeira numa perícia do livro, mas travar só na UI deixaria
-// a regra sem fronteira — quem montar o `@post` à mão apagaria a Fortitude.
+// As do livro não se apagam, e a recusa é do SERVIDOR e não da tela: travar só
+// na UI deixaria a regra sem fronteira, e quem montasse o `@post` à mão apagaria
+// a Fortitude.
 func removeCraft(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	nome := expertiseName(r)
 	meta, err := s.deps.Queries().GetExpertiseMeta(r.Context(), sqlcgen.GetExpertiseMetaParams{
@@ -93,13 +92,13 @@ func removeCraft(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) err
 	return s.deps.Queries().DeleteExpertiseByID(r.Context(), meta.ID)
 }
 
-// criaOOficio acrescenta uma perícia que o livro não tem — o saber de um ferreiro,
-// a arte de um marinheiro.
+// criaOOficio acrescenta uma perícia que o livro não tem — o saber de um
+// ferreiro, a arte de um marinheiro.
 //
 // Ela nasce TREINADA, porque inventar um ofício e não tê-lo treinado não é um
-// estado que signifique alguma coisa. A validação é a MESMA da API JSON
-// (`saveNewCraft`), extraída na fatia 4: duas validações divergiriam no dia
-// em que uma regra nova chegasse, e a esquecida aceitaria o que a outra recusa.
+// estado que signifique alguma coisa. A validação é a do `SaveNewCraft` e não
+// uma segunda: duas divergiriam no dia em que uma regra nova chegasse, e a
+// esquecida aceitaria o que a outra recusa.
 func criaOOficio(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals) error {
 	nome, atributo := "", "intelligence"
 	if sinais.NovaPericia != nil {
@@ -119,10 +118,8 @@ func criaOOficio(s Scene, r *http.Request, row sqlcgen.Character, sinais Signals
 
 // toggleProficiency liga ou desliga UMA categoria.
 //
-// O comando não manda o estado desejado, manda a categoria: mandar "ligada"
-// perderia para o clique repetido e para a segunda aba aberta no mesmo
-// personagem — quem clica quer INVERTER o que está na tela, e o servidor sabe o
-// que está na tela melhor do que o botão sabe.
+// Manda a CATEGORIA e não o estado desejado, pela mesma razão do
+// `toggleTraining`.
 func toggleProficiency(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {

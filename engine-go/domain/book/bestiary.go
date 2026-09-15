@@ -16,45 +16,31 @@ import (
 	"golang.org/x/text/language"
 )
 
-// O BESTIÁRIO: a entrada do livro e o que se pergunta sobre ela.
-//
-// Ele ficou para trás quando o catálogo tipado saiu (ALE-278, segunda camada), e
-// por um defeito do extrator daquela fatia — um bloco `var ( … )` acima do
-// carregador fazia o regex tratar o parêntese como RECEPTOR de método, e a
-// declaração sumia da lista. Ninguém percebeu porque o resultado foi um pacote
-// que compilava com uma coisa a menos.
-//
-// O que veio é a ENTRADA e as perguntas sobre ela: o filtro por tipo e por ND, os
-// rótulos que traduzem o que o catálogo guarda, e a conta de XP. O que ficou no
-// `api` é a view da CENA — o cursor, os sinais e os gestos.
+// O BESTIÁRIO: a entrada do livro e o que se pergunta sobre ela — o filtro por
+// tipo e por ND, os rótulos que traduzem o que o catálogo guarda, e a conta de
+// XP. O que mora no `api` é a view da CENA: o cursor, os sinais e os gestos.
 
-// verbete é uma entrada do bestiário do livro.
+// Entry é o verbete: uma entrada do bestiário do livro.
 //
 // O nome vem do GLOSSARY.md, seção D: `verbete` é a entrada IMUTÁVEL do livro,
 // `bloco de criatura` é o que o mestre escreve, e `criatura` é o guarda-chuva.
-// A primeira versão disto se chamava `monstro`, que é uma quarta palavra para
-// um conceito que já tem a sua.
 //
-// A primeira versão disto EMBUTIA o `CreatureBlock` do homebrew, com a
-// justificativa de que "a ficha de uma criatura do livro e a de uma inventada
-// são a mesma coisa". O dado desmente, e o `encoding/json` teria aceitado a
-// mentira em SILÊNCIO — três perdas de uma vez:
+// Estrutura PRÓPRIA e não o `CreatureBlock` do homebrew, e o `encoding/json`
+// aceitaria a troca em SILÊNCIO — são três perdas de uma vez:
 //
 //   - `bookPage` não existe no `CreatureBlock`, e é o que a linha mostra
 //     ("p289"). Sumiria.
 //   - o bloco do mestre chama os dois campos de `equipment` e `treasure`; o
 //     livro grava `equipamento` e `tesouro`. Nomes diferentes não casam, e os
-//     dois viriam VAZIOS — exatamente a perda que a ALE-151 consertou, com o
-//     equipamento faltando nos 80 verbetes.
+//     dois viriam VAZIOS.
 //   - e a pior: os atributos são `int` lá e ANULÁVEIS aqui. Nove criaturas têm
 //     `inteligencia: null` e uma tem `forca: null`, porque o livro escreve
 //     TRAVESSÃO — o Zumbi não tem Inteligência (p297). Num `int` isso vira 0, e
-//     "+0" afirma que ele tem a média de um humano. É o defeito que a ALE-151
-//     nomeia palavra por palavra, e o porte o reintroduziria.
+//     "+0" afirma que ele tem a média de um humano.
 //
-// Por isso a estrutura é própria e os seis atributos são ponteiros. O
-// `CreatureAttack` e o `CreatureSkill` são reusados porque esses SIM têm o
-// mesmo formato nos dois lados — conferido campo a campo contra o JSON.
+// Por isso os seis atributos são ponteiros. O `creature.Attack` e o
+// `creature.Skill` são reusados porque esses SIM têm o mesmo formato nos dois
+// lados — conferido campo a campo contra o JSON.
 type Entry struct {
 	ID           string  `json:"id"`
 	Name         string  `json:"name"`
@@ -87,12 +73,11 @@ type Entry struct {
 }
 
 // WithSignPtr escreve o modificador como o livro, e o TRAVESSÃO quando ele não
-// existe. Ver o comentário de `verbete`: ausência não é zero (ALE-151).
+// existe: ausência não é zero.
 //
-// O caso presente delega ao `WithSign` do `catalogs.go` em vez de repetir as
-// três linhas dele. Não é economia: é que a mesma função já existia TRÊS vezes
-// neste repositório — aqui, lá, e como `WithSignPtr` na view do bestiário — e a
-// ficha chamava duas delas, às vezes no mesmo arquivo (ALE-278).
+// O caso presente delega ao `WithSign` em vez de repetir as três linhas dele —
+// a mesma função já existiu TRÊS vezes neste repositório, e a ficha chamava duas
+// delas, às vezes no mesmo arquivo.
 func WithSignPtr(n *int) string {
 	if n == nil {
 		return "—"
@@ -139,12 +124,11 @@ const (
 // A ordem é regra e não apresentação: o mestre procura por desafio, e uma lista
 // alfabética o faria ler 80 linhas para achar as de ND 3.
 //
-// O desempate por nome usa COLLATION pt-BR, como o `sortInitiative`, e não
-// `strings.Compare`. Em bytes, "Á" (0xC3 0x81) vem depois de "Z" — então
-// "Águia" cairia no fim da faixa em vez de no começo. Medi contra as 80
-// criaturas de hoje e as duas ordens coincidem, mas isso é acidente do dado:
-// nenhum nome do livro começa com acento AINDA, e a linha que consertaria isso
-// depois seria escrita por quem visse a lista errada sem saber por quê.
+// O desempate por nome usa COLLATION pt-BR e não `strings.Compare`: em bytes,
+// "Á" (0xC3 0x81) vem depois de "Z", e "Águia" cairia no fim da faixa em vez do
+// começo. Nenhum nome do livro começa com acento AINDA, e é justamente por isso
+// que a linha errada passaria despercebida.
+//
 // O collator nasce por chamada porque não é seguro para concorrência.
 func FilterCreatures(todas []Entry, f CreatureFilter) []Entry {
 	fora := make([]Entry, 0, len(todas))
@@ -170,17 +154,16 @@ func FilterCreatures(todas []Entry, f CreatureFilter) []Entry {
 	return fora
 }
 
-// faixaDeND aperta o que veio da URL para dentro dos limites do livro.
+// CRRange aperta o que veio da URL para dentro dos limites do livro.
 //
 // Um 999 digitado ou um texto que não é número esconderia TODAS as criaturas, e
-// a tela leria como "bestiário vazio" em vez de "filtro absurdo". É o mesmo
-// `clampToRange` que a SPA aplica na entrada dos dois campos — só que aqui a
-// entrada é a URL, que qualquer um edita à mão.
+// a tela leria como "bestiário vazio" em vez de "filtro absurdo". A entrada aqui
+// é a URL, que qualquer um edita à mão.
 //
-// A faixa INVERTIDA (min 10, max 2) devolve lista vazia, e isso é PORTE e não
-// descuido: é o que a SPA faz hoje, e a tela já diz "Nenhuma criatura casa com
-// os filtros", que é resposta honesta. Consertar para "faixa inteira" faria o
-// filtro MENTIR — pedir 10..2 e receber tudo é pior que receber nada.
+// A faixa INVERTIDA (min 10, max 2) devolve lista vazia de propósito: a tela já
+// diz "Nenhuma criatura casa com os filtros", que é resposta honesta. Consertar
+// para "faixa inteira" faria o filtro MENTIR — pedir 10..2 e receber tudo é pior
+// que receber nada.
 func CRRange(minBruto, maxBruto string) (float64, float64) {
 	return numberOrDefault(minBruto, CRMin), numberOrDefault(maxBruto, CRMax)
 }
@@ -198,7 +181,7 @@ func numberOrDefault(bruto string, padrao float64) float64 {
 
 // ── como o livro escreve ─────────────────────────────────────────────────────
 
-// ndEscrito: abaixo de 1 o livro usa FRAÇÃO, não decimal. "ND 0.25" não existe
+// CRWritten: abaixo de 1 o livro usa FRAÇÃO, não decimal. "ND 0.25" não existe
 // em lugar nenhum de Tormenta 20 — a mesa diz "ND 1/4".
 func CRWritten(nd float64) string {
 	switch {
@@ -232,8 +215,8 @@ var TypeLabels = map[string]string{
 	"planar":     "Planar",
 }
 
-// A ordem do trilho de tipos é a do catálogo da SPA, e não alfabética: ela vai
-// do mais comum na mesa para o mais raro.
+// A ordem do trilho de tipos não é alfabética: ela vai do mais comum na mesa
+// para o mais raro.
 var CreatureTypes = []string{"humanoide", "animal", "monstro", "morto-vivo", "construto", "espirito", "planar"}
 
 func TypeName(tipo string) string {
@@ -261,10 +244,8 @@ func SizeName(t string) string {
 
 // XPForCR é o XP de tesouro derivado do ND.
 //
-// Portado do `xpForNd` da SPA, que cita Cap 8 p326 — a página é herdada dali e
-// eu NÃO a reconferi contra o livro nesta fatia, o que fica dito porque o guia
-// do `engine-go` pede citação conferida e uma repetida sem conferir parece uma
-// conferida.
+// A citação de Cap 8 p326 é HERDADA e NÃO foi reconferida contra o livro — fica
+// dito porque uma página repetida sem conferir parece uma conferida.
 func XPForCR(nd float64) int {
 	return int(math.Round(nd * 1000))
 }
@@ -288,19 +269,14 @@ func EntryByID(id string) *Entry {
 	return nil
 }
 
-// ── ABRIR a ficha na hora certa (ALE-264) ────────────────────────────────────
+// ── ABRIR a ficha na hora certa ──────────────────────────────────────────────
 //
-// O clique NÃO abre mais a ficha; quem abre é o SERVIDOR, depois de o conteúdo
-// estar remendado. O defeito que isso conserta foi visto pelo dono e medido
-// depois: clicar numa linha NÃO selecionada fazia a ficha abrir na hora com a
-// criatura ANTERIOR e trocar um quadro depois. Amostrado no navegador — a 0ms a
-// ficha dizia "Bandido", a 16ms dizia "Lobo".
+// O clique NÃO abre a ficha; quem abre é o SERVIDOR, depois de o conteúdo estar
+// remendado. Abrindo no clique, clicar numa linha NÃO selecionada mostra a
+// criatura ANTERIOR e troca um quadro depois — a 0ms a ficha dizia "Bandido", a
+// 16ms dizia "Lobo". Clicar na linha JÁ selecionada não piscava, e é essa
+// diferença que separa conteúdo obsoleto exibido antes do novo de renderização
+// lenta: a lentidão apareceria nas duas linhas.
 //
-// Clicar na linha JÁ selecionada não piscava, e foi essa diferença que o dono
-// isolou sozinho: lá o conteúdo já estava certo, então não havia troca para ver.
-// É a assinatura de conteúdo obsoleto exibido antes do novo, e não de
-// renderização lenta — a lentidão apareceria nas duas linhas.
-//
-// Custa uma ida ao servidor antes de a ficha aparecer, e é o preço certo: 16ms
-// medidos contra um quadro mostrando a criatura errada. Mostrar o errado rápido
-// é pior que mostrar o certo um quadro depois.
+// Custa uma ida ao servidor antes de a ficha aparecer, e é o preço certo:
+// mostrar o errado rápido é pior que mostrar o certo um quadro depois.

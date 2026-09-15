@@ -13,27 +13,21 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A RÉGUA e o GABARITO da mesa em Datastar (ALE-269, superfície 8).
+// A RÉGUA e o GABARITO da mesa: "dá para acertar daqui?" e "se eu soltar aqui,
+// quem pega?".
 //
-// As duas respondem perguntas que a mesa faz em voz alta toda rodada — "dá para
-// acertar daqui?" e "se eu soltar aqui, quem pega?" — e hoje se respondem
-// contando quadrado com o dedo na tela, que é o que um tabuleiro digital existe
-// para poupar.
-//
-// NÃO MUTAM NADA, e é essa a diferença que desenha estes dois caminhos. Medir
-// não muda a cena: nada é publicado, nada é gravado, e a resposta é do TAMANHO
-// de dois sinais — não das nove regiões que o `respondGm` reescreve. Uma
-// medição que remendasse o mapa trocaria a peça debaixo do dedo de quem está
-// arrastando, que é o defeito que a região `mesa-por-no-mapa` já existe para
-// evitar.
+// As duas NÃO MUTAM NADA, e é essa a diferença que desenha estes dois caminhos.
+// A resposta é do tamanho de dois SINAIS, e não das regiões que o `respondGm`
+// reescreve: uma medição que remendasse o mapa trocaria a peça debaixo do dedo
+// de quem está arrastando.
 //
 // E é por isso que a régua NÃO é estado do tabuleiro, ao contrário do movimento
 // proposto: o provisório é estado porque a mesa inteira decide sobre ele; a
 // régua de um jogador não é assunto de ninguém.
 //
-// A CONTA é do motor Go — `engine.Measure` e `engine.AreaSquares`, os mesmos que
-// a SPA chamava pelo WASM. O que vem do navegador são os cliques; o que volta é
-// o desenho e a frase, e nenhuma das duas é recalculada na tela.
+// A CONTA é do motor Go — `engine.Measure` e `engine.AreaSquares`. O que vem do
+// navegador são os cliques; o que volta é o desenho e a frase, e nenhuma das
+// duas é recalculada na tela.
 
 func (s Scene) RulerRoutes(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
@@ -43,14 +37,8 @@ func (s Scene) RulerRoutes(r chi.Router) {
 
 // handleRulerTable devolve a leitura de CADA PERNA e o total da polilinha.
 //
-// A régua virou POLILINHA na ALE-203 ("a régua não permite calcular distâncias
-// com mais de uma parada"), e com ela a rota deixou de ter as pontas no caminho:
-// o número de paradas é variável, e um caminho com número variável de segmentos
-// seria uma rota que muda de forma. As paradas chegam nos SINAIS, que é onde
-// elas já moram.
-//
-// O que volta continua sendo só SINAL — a régua não muta nada, e uma medição que
-// remendasse o mapa trocaria a peça debaixo do dedo de quem está arrastando.
+// As paradas chegam nos SINAIS e não no caminho: o número delas é variável, e um
+// caminho com número variável de segmentos seria uma rota que muda de forma.
 func (s Scene) handleRulerTable(w http.ResponseWriter, r *http.Request) {
 	if _, _, _, ok := s.whoMeasuresTheTable(w, r); !ok {
 		return
@@ -216,15 +204,16 @@ func (s Scene) handleTemplateTable(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// whoMeasuresTheTable é a mesma leitura de acesso dos comandos, sem o papel de mestre.
+// whoMeasuresTheTable é a mesma leitura de acesso dos comandos, sem o papel de
+// mestre.
 //
 // Medir é de TODO MUNDO — "dá para acertar daqui?" é pergunta de quem ataca —, e
 // a trava que sobra é a de sempre: quem não está na mesa não mede a cena dela.
 //
-// Devolve a ABA junto com o papel (ALE-205) porque medir é sempre sobre UMA cena:
-// a régua que perguntasse "o tabuleiro da sessão" mediria a distância na taverna
-// para quem está olhando a cripta, e o número sairia certo sobre o mapa errado —
-// sem nada na tela dizendo que ele é de outro lugar.
+// Devolve a ABA junto com o papel porque medir é sempre sobre UMA cena: a régua
+// que perguntasse "o tabuleiro da sessão" mediria a distância na taverna para
+// quem está olhando a cripta, e o número sairia certo sobre o mapa errado — sem
+// nada na tela dizendo que ele é de outro lugar.
 func (s Scene) whoMeasuresTheTable(w http.ResponseWriter, r *http.Request) (papel string, sessionID int64, tabuleiroID string, ok bool) {
 	campaignID, sessionID, ok := tableParams(w, r)
 	if !ok {
@@ -241,10 +230,10 @@ func (s Scene) whoMeasuresTheTable(w http.ResponseWriter, r *http.Request) (pape
 
 // writeSignals responde SÓ com sinais, e é o que separa medir de comandar.
 //
-// O `respondGm` reescreve as nove regiões porque ele responde a uma
-// MUTAÇÃO, e quem clicou precisa ver a cena nova. Aqui não há cena nova: a
-// resposta são duas cordas, e mandar o mapa junto seria remendar o nó que a
-// pessoa está usando para medir.
+// O `respondGm` reescreve as regiões porque responde a uma MUTAÇÃO, e quem
+// clicou precisa ver a cena nova. Aqui não há cena nova: a resposta são duas
+// cordas, e mandar o mapa junto seria remendar o nó que a pessoa está usando
+// para medir.
 func writeSignals(w http.ResponseWriter, r *http.Request, sinais map[string]any) {
 	sse := datastar.NewSSE(w, r)
 	_ = sse.MarshalAndPatchSignals(sinais)
@@ -381,12 +370,10 @@ func pointsTemplate(k engine.AreaKind) bool {
 //	"Quadrado. Surge NO QUADRADO ou quadrados escolhidos, afetando o piso."
 //	"Cone/Linha. Surge ADJACENTE A VOCÊ e se afasta de você…"
 //
-// O dono pediu uma escolha de "montar esfera centralizada" e o livro respondeu:
-// não há escolha, a esfera é SEMPRE da interseção. O `engine.sphereSquares` já
-// desenhava assim — ele recebe a origem como CANTO. Quem errava era a TELA, que
-// mandava o quadrado do `floor` do clique e desenhava o pingo no CENTRO dele:
-// meio quadrado de deslocamento entre onde a pessoa clicou e onde a bola caiu, e
-// nada na tela dizendo por quê. É a resposta ao "não tem feedback visual algum".
+// Não há escolha de "esfera centralizada": ela é SEMPRE da interseção. O
+// `engine.sphereSquares` recebe a origem como CANTO, e a tela tem de mandar o
+// canto — mandar o quadrado do `floor` do clique e desenhar o pingo no centro
+// dele põe meio quadrado entre onde a pessoa clicou e onde a bola caiu.
 func shapeStartsAtIntersection(k engine.AreaKind) bool {
 	return k == engine.AreaSphere
 }

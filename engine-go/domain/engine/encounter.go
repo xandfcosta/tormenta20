@@ -5,13 +5,9 @@ import "math"
 // A CONTA DO ENCONTRO — Cap 7 p282 (ND de grupo e dificuldade) e Cap 8 p326
 // (XP por desafio).
 //
-// Ela mora no `engine` e não no `api` porque é REGRA DO LIVRO, não desenho de
+// Ela mora no `engine` e não no `serve` porque é REGRA DO LIVRO, não desenho de
 // tela: o construtor de encontros da Mesa e o construtor de dentro da sessão
 // respondem a mesma pergunta, e uma segunda cópia é uma cópia que diverge.
-//
-// Portada da SPA na ALE-259, onde vivia em `shared/lib/encounter-math.ts` e
-// `shared/rules/xp.ts`. A cópia de lá FICA enquanto a ferramenta da SPA
-// existir — as duas convivem durante a migração, e some quando a `/gm` cair.
 
 // PartyChallengeLevel é o ND efetivo de N criaturas iguais (p282).
 //
@@ -46,10 +42,9 @@ type Difficulty struct {
 //
 // A diferença costuma ser FRACIONÁRIA — criatura abaixo de ND 1 dá ND de grupo
 // fracionário, e a regra da dobra usa log2 —, enquanto as faixas são degraus
-// inteiros. Por isso ela é ARREDONDADA primeiro. Sem esse arredondamento, uma
-// diferença pequena e negativa como −0,75 (uma criatura de ND 1/4 contra um
-// grupo de nível 1) escapava tanto do `<= -1` quanto do `== 0` e caía em
-// "Difícil" (ALE-25).
+// inteiros. Por isso ela é ARREDONDADA primeiro: sem isso, uma diferença pequena
+// e negativa como −0,75 (uma criatura de ND 1/4 contra um grupo de nível 1)
+// escapa tanto do `<= -1` quanto do `== 0` e cai em "Difícil".
 func EncounterDifficulty(diferenca float64) Difficulty {
 	degrau := math.Round(diferenca)
 	switch {

@@ -11,26 +11,21 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// A aba PERÍCIAS como dado (ALE-272, fatia 4).
+// A aba PERÍCIAS como dado.
 //
 // Vinte e nove do livro mais os OFÍCIOS que o jogador inventa, cada uma com o
 // total, o atributo que ela usa, o botão de treino e a decomposição por trás do
 // número. É o painel mais pesado da ficha, e o único que escreve em quatro
 // gestos diferentes.
 //
-// # UMA LINHA POR PERÍCIA, EM TODA LARGURA
+// UMA LINHA POR PERÍCIA, sem a fileira de crachás (½ nível, treino, outros) que
+// repetiria palavra por palavra o diálogo de decomposição — decisão do dono. A
+// auditoria fica a um toque no número, e as 29 linhas ficam curtas em toda
+// largura.
 //
-// A SPA desenha uma segunda fileira de crachás (½lvl, treino, outros) acima de
-// 640px, e o comentário dela diz que eles "REPETEM, palavra por palavra, o
-// diálogo de decomposição". Aqui não existem: decisão do dono nesta fatia. A
-// auditoria continua a um toque no número, que é onde ela sempre esteve — e as
-// 29 linhas ficam mais curtas em todo tamanho de tela.
-//
-// # A ORDEM É DO LIVRO, com as três resistências à frente
-//
-// "Teste de Reflexos CD 20" é a consulta mais quente da mesa, então Fortitude,
-// Reflexos e Vontade sobem para o topo; o resto vem na ordem do catálogo, que é
-// alfabética; e os ofícios do jogador fecham a lista. É a ordem da SPA.
+// A ORDEM É DO LIVRO com as três resistências à FRENTE: "Teste de Reflexos CD
+// 20" é a consulta mais quente da mesa. O resto vem na ordem do catálogo, que é
+// alfabética, e os ofícios do jogador fecham a lista.
 
 // expertisePanel é a aba Perícias pronta para desenhar.
 type expertisePanel struct {
@@ -105,9 +100,9 @@ func expertisePanelFor(dto sheet.CharacterDTO, sheet engine.ComputedSheetV2, sea
 // trainingBonusFor é o treino por nível — +2, +4 no 7º, +6 no 15º.
 //
 // Ele é reescrito aqui porque o motor o guarda minúsculo e o cabeçalho precisa
-// do número para DIZER a regra antes de a pessoa abrir um diálogo. A regra em si
-// tem teste no `engine`, com a página; aqui é o mesmo degrau, e
-// `TestTheHeaderSaysTheTrainingForTheLevel` prende os três.
+// do número para DIZER a regra antes de a pessoa abrir um diálogo. A regra tem
+// teste no `engine`, com a página; aqui o
+// `TestTheHeaderSaysTheTrainingForTheLevel` prende os três degraus.
 func trainingBonusFor(level int64) int {
 	switch {
 	case level >= 15:
@@ -234,10 +229,9 @@ func autoFails(sheet engine.ComputedSheetV2, name string) bool {
 
 // expertiseBreakdownRows é a decomposição de uma perícia.
 //
-// A forma é a da SPA e difere da do Combate de propósito: aqui "Outros" é a
-// SOMA dos itens, e as contribuições vêm indentadas por baixo dela. Quem abre
-// uma perícia quer primeiro as quatro parcelas do livro, e só depois de onde
-// saiu a quarta.
+// A forma difere da do Combate de propósito: aqui "Outros" é a SOMA dos itens, e
+// as contribuições vêm indentadas por baixo dela. Quem abre uma perícia quer
+// primeiro as quatro parcelas do livro, e só depois de onde saiu a quarta.
 func expertiseBreakdownRows(ex engine.ExpertiseBreakdown) []breakdownRow {
 	linhas := []breakdownRow{
 		{Label: "½ nível", Value: book.WithSign(ex.HalfLevel)},

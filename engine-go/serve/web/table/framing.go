@@ -5,8 +5,7 @@ import (
 	"strconv"
 )
 
-// O ENQUADRAMENTO do tabuleiro: o zoom e o centralizar (ALE-264 item 6, ALE-269
-// item 9).
+// O ENQUADRAMENTO do tabuleiro: o zoom e o centralizar.
 //
 // Arquivo próprio porque é uma responsabilidade fechada e ela tem um DONO: o
 // NAVEGADOR. Nada aqui vai ao servidor, e é essa escolha que tirou a ida à rede
@@ -17,21 +16,15 @@ import (
 // O que o servidor DÁ é o alvo: ele sabe onde as peças estão, e é ele quem
 // escreve o número que o centralizar persegue.
 
-// ── O ZOOM do plano (ALE-264, item 6) ────────────────────────────────────────
+// ── O ZOOM do plano ──────────────────────────────────────────────────────────
 //
-// `--quadrado` É o zoom, e isso já estava escrito no CSS antes de haver gesto: a
-// grade, as peças, os marcadores e o terreno derivam todos do mesmo número.
-// Mudar UM valor reenquadra a cena inteira.
-//
-// E a conta do clique acompanha de graça: ela já dividia por `$square`, que é
-// o mesmo número. Era isso que o comentário da camada de casas prometia com "o
-// `$square` acompanha o zoom quando ele chegar".
+// `--quadrado` É o zoom: a grade, as peças, os marcadores e o terreno derivam
+// todos do mesmo número, e a conta do clique já divide por `$square`. Mudar UM
+// valor reenquadra a cena inteira.
 
-// Os LIMITES são os da SPA, com as razões dela (`board-viewport.ts`): abaixo de
-// 20 a peça vira um ponto e o rótulo some; acima de 96 uma tela de 1024 mostra
-// 10 quadrados, menos que dois deslocamentos padrão (9m = 6 quadrados, p106), e
-// o mestre deixa de ver para onde dá para andar. Portar os números em vez de
-// inventá-los é o que faz as duas telas enquadrarem igual.
+// Os LIMITES: abaixo de 20 a peça vira um ponto e o rótulo some; acima de 96 uma
+// tela de 1024 mostra 10 quadrados, menos que dois deslocamentos padrão (9m = 6
+// quadrados, p106), e o mestre deixa de ver para onde dá para andar.
 const (
 	quadradoMinimo = 20
 	quadradoMaximo = 96
@@ -45,10 +38,10 @@ const (
 
 // zoomPlan soma um passo ao zoom, preso aos limites.
 //
-// O passo é EXPRESSÃO e não número desde a ALE-203: a roda decide o sinal dele
-// já no navegador (`deltaY < 0 ? ...`), e ela precisava dos mesmos limites que os
-// botões. Escritos à mão lá, seriam a segunda cópia dos tetos — e a que
-// divergiria no dia em que o zoom máximo mudasse.
+// O passo é EXPRESSÃO e não número: a roda decide o sinal dele já no navegador
+// (`deltaY < 0 ? ...`), e ela precisa dos mesmos limites que os botões. Escritos
+// à mão lá, seriam a segunda cópia dos tetos — e a que divergiria no dia em que
+// o zoom máximo mudasse.
 func zoomPlan(passo string) string {
 	return fmt.Sprintf("$square = Math.min(%d, Math.max(%d, $square + (%s)))",
 		quadradoMaximo, quadradoMinimo, passo)
@@ -62,14 +55,12 @@ func ZoomAtLimit(delta int) string {
 	return fmt.Sprintf("$square >= %d", quadradoMaximo)
 }
 
-// zoomAnchored muda o zoom SEM tirar de baixo do ponto o quadrado que estava
-// lá (ALE-203).
+// zoomAnchored muda o zoom SEM tirar de baixo do ponto o quadrado que estava lá.
 //
 // Sem âncora o zoom acontece a partir da QUINA da janela, e num plano infinito
 // isso arrasta a cena inteira debaixo do dedo: aproximar para olhar o ogro do
-// meio da tela empurra o ogro para fora dela. Com a moldura o defeito era menor
-// porque o palco rolava dentro de uma caixa com fim; sem ela, três passos de
-// zoom bastam para perder o grupo.
+// meio da tela empurra o ogro para fora dela, e três passos bastam para perder o
+// grupo.
 //
 // A conta é a de sempre nesta família de ferramentas: guarde o ponto do plano
 // que está sob a âncora, mude a escala, e reescreva a janela para que aquele
@@ -91,7 +82,7 @@ func zoomMidScene(passo string) string {
 		sceneId, zoomAnchored(passo, "janela.width / 2", "janela.height / 2"))
 }
 
-// zoomPeloTeclado: `+` e `-`, as mesmas teclas da SPA.
+// zoomPeloTeclado: `+` e `-`.
 //
 // A guarda de alvo de digitação é a mesma do atalho da barra: sem ela, digitar
 // um "-" no nome de um combatente reenquadraria o tabuleiro atrás do formulário.
@@ -100,15 +91,14 @@ var zoomPeloTeclado = typingTargetWithout +
 		"evt.key === '-' ? (() => { %s })() : null)",
 		zoomMidScene(step(ZoomStep)), zoomMidScene(step(-ZoomStep)))
 
-// ── CENTRALIZAR NAS PEÇAS (ALE-269, item 9) ──────────────────────────────────
+// ── CENTRALIZAR NAS PEÇAS ────────────────────────────────────────────────────
 //
 // Num plano sem bordas "voltar ao começo" não significa nada: o que o mestre
 // quer é ACHAR O GRUPO. Por isso o alvo é a caixa que contém as peças, e não a
-// origem do plano — a mesma decisão que a SPA tomou no `fit`.
+// origem do plano.
 //
-// Ele CENTRALIZA e não aproxima, também como a SPA: mexer no zoom junto tiraria
-// da pessoa a escala que ela acabou de escolher, e achar o grupo é a pergunta
-// que ela fez.
+// Ele CENTRALIZA e não aproxima: mexer no zoom junto tiraria da pessoa a escala
+// que ela acabou de escolher, e achar o grupo é a pergunta que ela fez.
 //
 // A conta é do navegador porque ela é sobre PIXELS e sobre a janela — quantos
 // quadrados cabem na tela é coisa que só o dedo sabe. O que vem do servidor é o
@@ -116,15 +106,14 @@ var zoomPeloTeclado = typingTargetWithout +
 
 // centerTokens põe o grupo no meio da tela.
 //
-// Ela ROLAVA o palco, e o palco deixou de rolar: sem moldura não há caixa com fim
-// para o navegador prender a rolagem. O que se move agora é a JANELA, que é um
-// par de sinais — e por isso a conta de limite também sumiu, porque num plano
-// infinito não existe "pedir mais do que dá".
+// O que se move é a JANELA, que é um par de sinais, e não a rolagem do palco:
+// num plano infinito não há caixa com fim para o navegador prender a rolagem, e
+// por isso também não há conta de limite.
 //
-// O gesto SALTA e não desliza, e isso continua sendo medição e não gosto: com
-// `smooth` (no `scrollTo` ou no CSS) a rolagem não acontecia, o `scrollTop`
-// ficava em ZERO e não havia erro em lugar nenhum. Um botão que anima e não
-// chega é pior que um botão que salta.
+// O gesto SALTA e não desliza, e isso é medição e não gosto: com `smooth` (no
+// `scrollTo` ou no CSS) a rolagem não acontecia, o `scrollTop` ficava em ZERO e
+// não havia erro em lugar nenhum. Um botão que anima e não chega é pior que um
+// botão que salta.
 func centerTokens(v BoardView) string {
 	x, y := centerScene(v)
 	return centerViewport(x, y)
@@ -135,10 +124,8 @@ func centerTokens(v BoardView) string {
 // O corpo da peça entra na conta e não só a âncora dela: uma Colossal ocupa 6×6
 // (p107), e centralizar pela quina deixaria metade do dragão fora da janela.
 //
-// SEM PEÇA o alvo é a ORIGEM do plano, e não mais "o meio da moldura" — a
-// moldura era o que estava desenhado, e agora não há nada desenhado além do que
-// existe. Num plano infinito e vazio, o (0,0) é o único lugar sobre o qual duas
-// pessoas concordam.
+// SEM PEÇA o alvo é a ORIGEM do plano: num plano infinito e vazio, o (0,0) é o
+// único lugar sobre o qual duas pessoas concordam.
 func centerScene(v BoardView) (x, y int) {
 	if len(v.Pecas) == 0 {
 		return 0, 0

@@ -107,8 +107,8 @@ type Deps interface {
 	SpeedsForBoard(board *board.BoardState) map[string]int
 
 	// SessionDeleted não é o `Sessions().Forget`, que esvazia só o cache da
-	// fila: o tabuleiro continuava no mapa em memória e a gravação seguinte
-	// batia na chave estrangeira, acendendo um `Dirty` que nunca mais sai.
+	// fila: o tabuleiro ficaria no mapa em memória e a gravação seguinte bateria
+	// na chave estrangeira, acendendo um `Dirty` que nunca mais sai.
 	//
 	// É do HOSPEDEIRO porque são DOIS stores e nenhum conhece o outro.
 	SessionDeleted(sessionID int64)

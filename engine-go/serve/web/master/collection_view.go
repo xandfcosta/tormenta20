@@ -12,31 +12,22 @@ import (
 	"t20engine/domain/book"
 )
 
-// OS CATÁLOGOS do mestre (ALE-258): condições, magias, poderes e itens numa
-// busca só. Segunda das quatro ferramentas da Mesa do Mestre.
+// OS CATÁLOGOS do mestre: condições, magias, poderes e itens numa busca só.
 //
-// São 992 entradas — 35 condições, 198 magias, 566 poderes e 193 itens (contadas
-// pelo próprio carregador, não estimadas) —, e
-// isso é outra ordem de grandeza que o bestiário. A SPA aguenta com
-// `VirtualList`; a cena do servidor manda TUDO, por decisão do dono, e o
-// raciocínio fica registrado porque ele não é óbvio: hoje o navegador BAIXA
-// 156 KB de JSON de catálogo para poder filtrar, e depois monta a lista aos
-// poucos. Servindo HTML pronto a rede quase empata e o JSON some do bundle; o
-// que sobra de custo é DOM no telefone, que é o preço aceito para o mestre
-// poder rolar a lista inteira e usar o Ctrl+F do navegador — duas coisas que
-// lista virtualizada tira.
+// A cena manda TUDO, e não uma lista virtualizada: o custo é DOM no telefone, e
+// o que se compra com ele é o mestre poder rolar a lista inteira e usar o Ctrl+F
+// do navegador — duas coisas que lista virtualizada tira.
 
 // ── a regra da busca, e ela NÃO é a das outras listas ────────────────────────
 
-// matchesAllTerms: TODO termo separado por espaço precisa aparecer em algum
-// dos campos. "luz cur" casa com o que carrega as duas coisas.
+// matchesAllTerms: TODO termo separado por espaço precisa aparecer em algum dos
+// campos. "luz cur" casa com o que carrega as duas coisas.
 //
-// Isto NÃO é o `search.Matches` das outras cenas, e a diferença é deliberada — o
-// comentário do `catalog-model.ts` a explica e ela sobrevive ao porte. O
-// `search.Matches` é tolerante a typo por subsequência, o que serve para escolher UM
-// item de uma lista; aqui o mestre está estreitando uma REFERÊNCIA por palavras
-// que ele sabe, e subsequência arrastaria quase-acertos que fazem uma consulta
-// de regra parecer errada no meio da sessão.
+// Isto NÃO é o `search.Matches` das outras cenas, e a diferença é deliberada:
+// aquele é tolerante a typo por subsequência, o que serve para escolher UM item
+// de uma lista; aqui o mestre estreita uma REFERÊNCIA por palavras que ele sabe,
+// e subsequência arrastaria quase-acertos que fazem uma consulta de regra
+// parecer errada no meio da sessão.
 //
 // O que as duas compartilham é a `search.Fold`: acento não separa "ilusão" de
 // "ilusao", porque ninguém digita til numa busca apressada.
@@ -62,11 +53,9 @@ type collectionTab struct {
 	Rotulo string
 }
 
-// A ordem é a da SPA: condição primeiro porque é a consulta mais frequente no
-// meio do combate, e item por último porque é a de entre-cenas.
-// As três últimas entraram na ALE-264 e vão no FIM pela mesma razão que decidiu
-// a ordem original: raça, classe e deus são consulta de CRIAÇÃO de personagem, e
-// as quatro primeiras são consulta de mesa com o combate em curso.
+// A ORDEM é por frequência na mesa: condição primeiro, porque é a consulta mais
+// comum no meio do combate. Raça, classe e deus vão no FIM porque são consulta
+// de CRIAÇÃO de personagem, e não de mesa com o combate em curso.
 var collectionTabs = []collectionTab{
 	{"condicoes", "Condições"},
 	{"magias", "Magias"},
@@ -139,14 +128,13 @@ type collectionCriteria struct {
 // collectionView é a cena inteira numa resposta.
 type collectionView struct {
 	Term string
-	// Livro é o endereço do PDF servido (ALE-264). Zero valor = não há livro
-	// configurado, e aí o cartão mostra a página em texto puro — que é o que o
-	// mestre com o livro de papel na mesa usa.
+	// Book é o endereço do PDF servido. Zero valor = não há livro configurado, e
+	// aí o cartão mostra a página em texto puro — que é o que o mestre com o
+	// livro de papel na mesa usa.
 	Book bookui.BookAddress
-	// Aba só importa quando NÃO se está buscando: com termo digitado a cena
-	// mostra os quatro catálogos agrupados, que é a decisão que a ALE-22
-	// registrou — a versão em React filtrava só a aba ativa, e "bola de fogo"
-	// digitado em Condições dizia "nada encontrado" com a magia existindo.
+	// Aba só importa quando NÃO se está buscando: com termo digitado a cena mostra
+	// TODOS os catálogos agrupados. Filtrando só a aba ativa, "bola de fogo"
+	// digitado em Condições diria "nada encontrado" com a magia existindo.
 	Aba string
 	// Entrada é o id do verbete que a cena está mostrando sozinho, ou vazio.
 	Entrada string
@@ -356,8 +344,8 @@ func augmentsWritten(n int) string {
 	return fmt.Sprintf("%d aprimoramentos disponíveis.", n)
 }
 
-// priceWritten é o dinheiro do livro em pt-BR, no MESMO formato do
-// `formatTibar` da SPA: vírgula decimal e no máximo duas casas.
+// priceWritten é o dinheiro do livro em pt-BR: vírgula decimal e no máximo duas
+// casas.
 //
 // Duas casas e não zero porque o preço do livro é fracionário — uma vela custa
 // T$ 0,1 (p143) —, e cortar a fração poria "T$ 0" numa linha de compra.

@@ -39,16 +39,15 @@ type Server struct {
 	// charMu serializa as escritas por personagem (id → *sync.Mutex), para
 	// cliques rápidos de dano e vitais não se perderem no ler-computar-gravar.
 	charMu sync.Map
-	// emSegundoPlano conta o trabalho que continua DEPOIS da resposta, e hoje é
-	// um só: a persistência do estado da sessão, disparada em goroutine para o
-	// mestre não esperar o disco no meio do turno.
+	// emSegundoPlano conta o trabalho que continua DEPOIS da resposta: a
+	// persistência do estado da sessão, disparada em goroutine para o mestre não
+	// esperar o disco no meio do turno.
 	//
 	// Ele existe porque uma goroutine que ninguém espera escreve num banco que
 	// já fechou. Em PRODUÇÃO isso é o `Shutdown` cortando a gravação do estado
-	// da mesa — justamente o que este store existe para guardar. No TESTE é
-	// pior de ler: o `t.TempDir()` falha ao limpar com "directory not empty",
-	// porque o SQLite recria `-wal`/`-shm` depois do `RemoveAll` — e a mensagem
-	// que sobra fala da LIMPEZA, não do defeito (ALE-245, a mesma família).
+	// da mesa. No TESTE é pior de ler: o `t.TempDir()` falha ao limpar com
+	// "directory not empty", porque o SQLite recria `-wal`/`-shm` depois do
+	// `RemoveAll` — e a mensagem que sobra fala da LIMPEZA, não do defeito.
 	emSegundoPlano sync.WaitGroup
 }
 
@@ -72,16 +71,16 @@ func (s *Server) WaitForBackground() {
 // A busca é por sessão VIVA e só as que têm o personagem na fila: avisar mesa
 // que não o tem mandaria todo cliente da casa refazer busca a cada ficha salva.
 //
-// ELE É DO `sheetRules` E MORA NO ARQUIVO DO `Server`, e isso é decisão e não
-// descuido (ALE-330): ele é metade do mecanismo de serialização de escrita por
-// personagem — a trava, o middleware e o id vêm logo abaixo e são do `Server`.
-// Partir por RECEPTOR partiria o mecanismo em dois arquivos que ninguém lê
-// junto, e o mecanismo é a coisa que tem uma razão para mudar.
+// ELE É DO `sheetRules` E MORA NO ARQUIVO DO `Server`, e isso é decisão: ele é
+// metade do mecanismo de serialização de escrita por personagem — a trava, o
+// middleware e o id vêm logo abaixo e são do `Server`. Partir por RECEPTOR
+// partiria em dois arquivos que ninguém lê junto o mecanismo, que é a coisa com
+// uma razão para mudar.
 func (sr sheetRules) characterChanged(characterID int64) {
-	// O AVISO PARA AS CENAS DO SERVIDOR (ALE-275, no barramento desde a ALE-279).
-	// Ele é por PERSONAGEM e não por sessão: quem escuta é o stream da Mesa de
-	// quem tem essa ficha aberta, e a busca por sessão viva abaixo responde outra
-	// pergunta — a do hub SSE, que fala com a sala inteira.
+	// O AVISO PARA AS CENAS DO SERVIDOR é por PERSONAGEM e não por sessão: quem
+	// escuta é o stream da Mesa de quem tem essa ficha aberta, e a busca por
+	// sessão viva abaixo responde outra pergunta — a do hub SSE, que fala com a
+	// sala inteira.
 	sr.bus.Publish(events.CharacterChanged{CharacterID: characterID})
 	for _, sessionID := range sr.sessions.LiveSessionsWithCharacter(characterID) {
 		sr.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
@@ -155,7 +154,7 @@ func NewServer(cfg platform.Config, database *sql.DB, catalogs *engine.Catalogs)
 // primeCatalogs troca o motor e RECONSTRÓI a cena da Mesa, e as duas coisas
 // andam juntas: o adaptador da Mesa COPIA o `*engine.Catalogs` quando é
 // montado, então trocar o campo sem reconstruir deixa a Mesa com o motor de
-// antes. A bancada prima DEPOIS do `NewServer`, e é lá que isso aparece.
+// antes.
 func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.catalogs = catalogs
 	s.tableScene = table.New(s.tableHost())
@@ -168,16 +167,16 @@ func (s *Server) sceneCore() sceneCore {
 	return sceneCore{queries: s.queries, catalogs: s.catalogs, livro: s.livro.endereco}
 }
 
-// Router é o que sobrou da API JSON: SETE rotas, e nenhuma cena as chama — as
-// cenas leem o banco pelo `Queries` da porta delas e desenham HTML. Elas NÃO
+// Router é o que sobrou da API JSON, e nenhuma cena a chama — as cenas leem o
+// banco pelo `Queries` da porta delas e desenham HTML. As rotas daqui NÃO
 // carregam o prefixo `/api`: quem o põe é o `cmd/api`.
 //
 // `/health` é INFRAESTRUTURA — quem bate nele é o `healthcheck` do compose e o
-// `-health` do próprio binário. É o contra-exemplo que esta casa já pagou uma
-// vez: "rota sem consumidor" se decide perguntando quem pergunta DE FORA.
+// `-health` do próprio binário. É o contra-exemplo da faxina de rotas: "rota sem
+// consumidor" se decide perguntando quem pergunta DE FORA.
 //
-// As outras seis são a bancada do e2e, e é o que faz a suíte ser REPETÍVEL —
-// montar tudo pela tela troca segundos de setup por minutos.
+// As demais são a bancada do e2e, e é o que faz a suíte ser REPETÍVEL — montar
+// tudo pela tela troca segundos de setup por minutos.
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RealIP)
@@ -205,8 +204,8 @@ func (s *Server) Router() http.Handler {
 		// id seria apagar seed.
 		r.Get("/", s.handleListCampaigns)
 		r.Delete("/{id}", s.handleDeleteCampaign)
-		// A fixture do `board.spec.ts`: uma mesa descartável por
-		// corrida, montada em duas chamadas em vez de seis telas.
+		// A fixture do `board.spec.ts`: uma mesa descartável por corrida, montada
+		// em duas chamadas em vez de seis telas.
 		r.Post("/", s.handleCreateCampaign)
 		r.Route("/{campaignId}/sessoes", func(r chi.Router) {
 			r.Post("/", s.handleCreateSession)

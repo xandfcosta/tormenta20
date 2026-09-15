@@ -13,7 +13,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel de PROFICIÊNCIAS desenhado (ALE-272, fatia 2).
+// O painel de PROFICIÊNCIAS desenhado.
 //
 // Sete linhas em dois blocos, cada uma um botão que liga ou desliga. Não é
 // formulário com Salvar: o gesto da mesa é "ah, eu tenho escudo" no meio de um
@@ -22,8 +22,8 @@ import (
 //
 // O ESTADO É O DO SERVIDOR. Cada toque manda o comando e recebe a cena inteira
 // de volta pelo remendo; não há sinal de Datastar guardando "marcado" no
-// navegador. É o que a ALE-225 decidiu, e aqui ele se paga na hora: o mesmo
-// personagem aberto em dois aparelhos não diverge.
+// navegador — e é isso que faz o mesmo personagem aberto em dois aparelhos não
+// divergir.
 
 // proficiencyPanel é a seção inteira, com o restaurar no cabeçalho.
 func proficiencyPanel(v View) templ.Component {

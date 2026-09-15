@@ -9,32 +9,24 @@ import (
 	"t20engine/domain/catalog"
 )
 
-// A CONFERÊNCIA DE TODA REFERÊNCIA AO CATÁLOGO, num lugar só (ALE-226).
+// A CONFERÊNCIA DE TODA REFERÊNCIA AO CATÁLOGO, num lugar só.
 //
-// # O defeito que ela fecha
+// Um deus inexistente, um poder concedido escrito errado, uma magia com id
+// inventado ou uma raça fora do catálogo produzem um personagem que nasce SEM
+// aquilo e abre normal — nenhum erro em lugar nenhum.
 //
-// O seed conferia `create.items[].catalogId` e mais nada. Um deus inexistente,
-// um poder concedido escrito errado, uma magia com id inventado ou uma raça fora
-// do catálogo produziam um personagem que nasce SEM aquilo e abre normal —
-// nenhum erro em lugar nenhum. O relato que abriu a issue foi
-// `machado-de-batalha` no lugar de `machado-batalha`.
-//
-// **Seed que mente é caro porque não quebra**: ele entrega um personagem quase
+// SEED QUE MENTE É CARO PORQUE NÃO QUEBRA: ele entrega um personagem quase
 // certo, e o e2e roda contra a seed. Um combatente sem a arma dele vira um teste
-// que mede o ambiente em vez do app — a mesma família do vermelho de CI que a
-// ALE-124 e a ALE-184 já cobraram.
+// que mede o ambiente em vez do app.
 //
-// # Um ponto só, e antes do banco
-//
-// Ela roda depois do `Unmarshal` e antes de o servidor subir: nenhuma linha vai
+// Ela roda depois do `Unmarshal` e ANTES de o servidor subir: nenhuma linha vai
 // para o banco com referência quebrada. Sete checagens espalhadas pelos pontos
 // de uso deixariam a próxima referência nascer descoberta; aqui a lista de
 // campos se lê de cima a baixo.
 //
-// # Ela junta TUDO antes de falhar
-//
-// Falhar no primeiro erro faria quem escreveu cinco ids errados rodar o gerador
-// cinco vezes. O custo de juntar é uma passada; o de não juntar é do humano.
+// E ela junta TUDO antes de falhar: falhar no primeiro erro faria quem escreveu
+// cinco ids errados rodar o gerador cinco vezes. O custo de juntar é uma
+// passada; o de não juntar é do humano.
 
 // referenciaQuebrada é um apontamento que não acha o que aponta.
 type referenciaQuebrada struct {
@@ -144,11 +136,10 @@ func (c catalogoDaSeed) confereUmPersonagem(onde string, ch seedCharacter) []ref
 	for _, nome := range osNomesDasClasses(criar) {
 		quebradas = append(quebradas, c.confere(onde+", create.classes[].className", nome, "classes")...)
 	}
-	// A CHAVE do `classChoices` é um nome de CLASSE — `{"Arcanista": {…}}` —, e é
-	// referência de catálogo como qualquer outra. Ela escapou da primeira versão
-	// porque referência escondida em CHAVE de objeto não se parece com
-	// referência; só apareceu quando o guarda abaixo obrigou a classificar todo
-	// campo do `create`.
+	// A CHAVE do `classChoices` é um nome de CLASSE — `{"Arcanista": {…}}` —, e
+	// é referência de catálogo como qualquer outra. Referência escondida em
+	// CHAVE de objeto não se parece com referência, e foi assim que ela escapou
+	// da primeira versão.
 	for _, nome := range asChavesDe(criar, "classChoices") {
 		quebradas = append(quebradas, c.confere(onde+", create.classChoices{}", nome, "classes")...)
 	}

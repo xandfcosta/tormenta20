@@ -1,6 +1,6 @@
 package events
 
-// O VOCABULÁRIO DA MESA (ALE-279).
+// O VOCABULÁRIO DA MESA.
 //
 // Cada evento é nomeado pelo ATO — o que o mestre ou o jogador fez —, e nunca
 // pela tabela que mudou. "O turno passou" é o que aconteceu; "o
@@ -10,8 +10,7 @@ package events
 // Eles moram todos aqui, e não cada um no pacote que o publica, e isso é
 // deliberado: o `live` e o `tabuleiro` publicam, o `api` escuta, e nenhum dos
 // três precisa importar os outros. Ler este arquivo é ler tudo que pode
-// acontecer numa mesa — que é a pergunta que ninguém conseguia responder quando
-// os avisos eram três `chan struct{}` em três pacotes.
+// acontecer numa mesa.
 //
 // Todos carregam o `SessionID` porque toda notícia de mesa é sobre uma mesa. O
 // `CharacterID` só aparece onde há ficha atrás do combatente: NPC não tem, e
@@ -72,7 +71,7 @@ type InitiativeReset struct {
 
 func (e InitiativeReset) Target() Target { return Target{SessionID: e.SessionID} }
 
-// SceneStarted — a cena começou, e a mesa passa a ver a fila (ALE-210).
+// SceneStarted — a cena começou, e a mesa passa a ver a fila.
 type SceneStarted struct {
 	SessionID int64
 }
@@ -115,9 +114,9 @@ func (e BoardChanged) Target() Target { return Target{SessionID: e.SessionID} }
 
 // CharacterChanged — a ficha de um personagem mudou no banco.
 //
-// Publicado pelo GATEWAY e não por cada comando: passam mais de trinta mutações
+// Publicado pelo GATEWAY e não por cada comando: passam dezenas de mutações
 // pelo `sheetCommand`, e a linha esquecida numa delas seria uma ficha que não
-// atualiza só naquele gesto (ALE-275).
+// atualiza só naquele gesto.
 //
 // Sem `SessionID`, e isso não é esquecimento: a ficha muda por caminhos que não
 // passam por mesa nenhuma — o dono mexendo no PV pela ficha solta —, e o

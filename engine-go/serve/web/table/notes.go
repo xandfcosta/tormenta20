@@ -12,22 +12,18 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 )
 
-// AS NOTAS DA SESSÃO (ALE-269, superfície 5) — o caminho até o banco.
+// AS NOTAS DA SESSÃO — o caminho até o banco. O desenho mora no `.templ`; aqui
+// ficam as expressões que o Datastar executa e as duas rotas que escrevem. A
+// GRAMÁTICA do markdown mora no `markdown/markdown.go`.
 //
-// O desenho mora no `.templ`; aqui ficam as expressões que o Datastar executa e
-// as duas rotas que escrevem. A GRAMÁTICA do markdown mora no
-// `markdown/markdown.go`, que é um port com paridade medida contra o JS.
-//
-// AS NOTAS SÃO DO MESTRE. A trava é o `gmCommand`, que devolve 403 a quem
-// postar na mão — o botão escondido é cortesia para quem não pode, nunca a
-// segurança.
+// AS NOTAS SÃO DO MESTRE. A trava é o `gmCommand`, que devolve 403 a quem postar
+// na mão — o botão escondido é cortesia para quem não pode, nunca a segurança.
 
 func (s Scene) RoutesNote(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/notas"
-	// O MESMO endereço serve a CENA e o comando (ALE-218). Não é economia de
-	// rota: a janela própria existe para o mestre pôr as notas no segundo
-	// monitor, e um endereço que ele possa favoritar é metade do que isso
-	// significa. O `notesAddress` monta este caminho do lado do cliente.
+	// O MESMO endereço serve a CENA e o comando. Não é economia de rota: a
+	// janela própria existe para o mestre pôr as notas no segundo monitor, e um
+	// endereço que ele possa favoritar é metade do que isso significa.
 	r.Get(base, s.notesWindowPage)
 	r.Post(base, s.saveNoteSession)
 	r.Post(base+"/tarefa/{linha}/{estado}", s.toggleTask)
@@ -36,10 +32,9 @@ func (s Scene) RoutesNote(r chi.Router) {
 // notesSignals é o que a página manda: o texto em curso.
 //
 // O NOME DO SINAL É TODO MINÚSCULO porque ele é usado como CHAVE de atributo
-// (`data-bind:notes`), e o analisador de HTML minuscula chave — um
-// `data-bind:notesSignals` chegaria como `notasdasessao` e ligaria um sinal
-// NOVO, com o servidor lendo o antigo para sempre vazio. Já custou uma sessão
-// inteira no descanso de dia.
+// (`data-bind:notes`), e o analisador de HTML minuscula chave: caixa alta ali
+// ligaria um sinal NOVO e deixaria o declarado intocado, com o servidor lendo
+// para sempre um texto vazio.
 type notesSignals struct {
 	Notas string `json:"notes"`
 }
@@ -58,11 +53,9 @@ func readsNotesClient(r *http.Request) (string, error) {
 	return sinais.Notas, nil
 }
 
-// saveNote escreve a coluna `notes` pelo MESMO `setBuilder` do handler JSON.
-//
-// Uma segunda forma de gravar a mesma coluna divergiria no dia em que o
-// `execTouched` mudar — é ele quem carimba o `updatedAt`. Mesmo argumento que o
-// título da sessão registra.
+// saveNote escreve a coluna `notes` pelo MESMO `setBuilder` do handler JSON: uma
+// segunda forma de gravar a mesma coluna divergiria no dia em que o `execTouched`
+// mudar, que é quem carimba o `updatedAt`.
 //
 // NÃO PASSA POR `trimOrNull`, e essa é a diferença que importa aqui: aparar o
 // texto a cada 1,2s comeria a linha em branco que o mestre acabou de abrir para
@@ -147,20 +140,18 @@ func primeiroErro(erros ...error) error {
 
 // respondNotes devolve a prévia e o estado do salvamento.
 //
-// `notassalvas` é escrito SÓ no acerto, e é ele que faz a faixa dizer "Salvo".
-// Escrevê-lo no erro também faria a tela afirmar que está no banco o que o
-// banco recusou — a mentira mais cara que esta superfície pode contar, porque o
-// mestre fecha a aba confiando nela.
-// OS IDS VIAJAM PARA A PRÉVIA, e esta linha existe por um defeito MEDIDO no
-// navegador: a `View` sintética nascia com `CampaignID` e `SessionID` ZERO,
-// e cada quadrinho do fragmento remendado saía apontando para
-// `/mesa/0/0/notas/tarefa/N/marcar`.
+// `notes_saved` é escrito SÓ no acerto, e é ele que faz a faixa dizer "Salvo".
+// Escrevê-lo no erro faria a tela afirmar que está no banco o que o banco
+// recusou — a mentira mais cara que esta superfície pode contar, porque o mestre
+// fecha a aba confiando nela.
 //
-// O sintoma é da pior família desta base: o PRIMEIRO clique funcionava — ele
-// acontece sobre o HTML da carga fria, que tem os ids certos — e a partir do
-// segundo a tela ficava muda, com o botão no lugar, o `aria-checked` desenhado e
-// nenhum erro em canto nenhum. O guarda que o prende é
-// `TestThePatchedPreviewCarriesTheTableIds`.
+// OS IDS VIAJAM PARA A PRÉVIA: uma `View` sintética com `CampaignID` e
+// `SessionID` ZERO faz cada quadrinho do fragmento remendado apontar para
+// `/mesa/0/0/notas/tarefa/N/marcar`. O sintoma é da pior família desta base: o
+// PRIMEIRO clique funciona — ele acontece sobre o HTML da carga fria, que tem os
+// ids certos — e do segundo em diante a tela fica muda, com o botão no lugar, o
+// `aria-checked` desenhado e nenhum erro em canto nenhum. O guarda que o prende
+// é `TestThePatchedPreviewCarriesTheTableIds`.
 func (s Scene) respondNotes(
 	w http.ResponseWriter, r *http.Request,
 	campaignID, sessionID int64, texto string, recusa error,
@@ -186,9 +177,6 @@ func (s Scene) respondNotes(
 
 // seedNotes põe na página o que o servidor sabe, UMA vez.
 //
-// O modo vem do `localStorage` com a MESMA chave da SPA, para a escolha do
-// mestre atravessar as duas telas enquanto as duas existirem.
-//
 // O texto é serializado por `json.Marshal` e não concatenado à mão: uma aspa ou
 // uma quebra de linha na nota fecharia a expressão e derrubaria a página
 // inteira — e nota de mesa é feita de aspas e quebras de linha.
@@ -206,23 +194,22 @@ func seedNotes(v View) string {
 	)
 }
 
-// notesModeKey é a MESMA do `notes-view.ts`. Duas chaves fariam o mestre
-// reescolher o arranjo ao trocar de tela.
+// notesModeKey guarda o arranjo escolhido: é preferência de trabalho, e o mestre
+// não deve reescolher a cada sessão.
 const notesModeKey = "t20:notas-view"
 
 func escolheOModo(valor string) string {
 	return fmt.Sprintf("$notes_mode = '%s'; localStorage.setItem('%s', '%s')", valor, notesModeKey, valor)
 }
 
-// A LARGURA DA COLUNA (ALE-218), e ela GRUDA como os modos grudam.
-//
-// É preferência de trabalho e não estado da sessão — o mestre escolhe uma vez o
-// quanto de mapa quer ver ao lado das notas, e não deve reescolher a cada
-// sessão. Chave própria porque é outra escolha que a do arranjo.
+// A LARGURA DA COLUNA, e ela GRUDA como os modos grudam: é preferência de
+// trabalho e não estado da sessão — o mestre escolhe uma vez o quanto de mapa
+// quer ver ao lado das notas. Chave própria porque é outra escolha que a do
+// arranjo.
 const notesWidthKey = "t20:notas-largura"
 
-// ONDE a coluna vive (ALE-218): encostada, empurrando o mapa, ou flutuando
-// por cima dele. Chave própria, e ela GRUDA como as outras duas escolhas.
+// ONDE a coluna vive: encostada, empurrando o mapa, ou flutuando por cima dele.
+// Chave própria, e ela GRUDA como as outras duas escolhas.
 const notesFloatKey = "t20:notas-flutua"
 
 // toggleFloating é o segundo eixo da faixa, e ele é o ÚNICO que merece um
@@ -241,26 +228,22 @@ func toggleFloating() string {
 // não cabe e a coluna vira uma tira inútil.
 const notesMinWidth = 352 // 22rem
 
-// O TETO é RELATIVO ao palco, e o de 44rem do `clamp` não servia.
+// O TETO é RELATIVO ao palco: 70% deixa o mapa com quase um terço em qualquer
+// janela, que é o que mantém as notas AO LADO do tabuleiro em vez de no lugar
+// dele.
 //
-// Lá ele limitava uma PORCENTAGEM, então nunca era alcançado numa janela
-// pequena. Copiado para uma divisa explícita ele vira uma parede: medido a
-// 1920, 40% já dá exatamente 704px, e a divisa nascia sem PARA ONDE CRESCER —
-// morta numa das duas direções, na tela em que ela mais serve.
-//
-// 70% do palco deixa o mapa com quase um terço em qualquer janela, que é o que
-// mantém as notas ao lado do tabuleiro em vez de no lugar dele.
+// Um teto absoluto em rem vira PAREDE: numa janela larga a coluna já nasce nele,
+// e a divisa fica sem para onde crescer justamente na tela em que ela mais
+// serve.
 func widthCeiling() string {
 	return "(document.getElementById('table-notes').parentElement.getBoundingClientRect().width * 0.7)"
 }
 
-// widthKeyStep é a seta do teclado, e ela existe porque **gesto nunca é o
-// único caminho**: uma divisa que só responde a arrasto é uma preferência que
-// quem não usa ponteiro não tem.
-//
-// 32px por seta, e o `Home` devolve ao padrão — o número redondo é escolha, e o
-// que importa é ele ser grande o bastante para atravessar a faixa em poucos
-// toques e pequeno o bastante para ajustar.
+// widthKeyStep é a seta do teclado, e ela existe porque gesto nunca é o único
+// caminho: uma divisa que só responde a arrasto é uma preferência que quem não
+// usa ponteiro não tem. 32px por seta — grande o bastante para atravessar a
+// faixa em poucos toques, pequeno o bastante para ajustar — e o `Home` devolve
+// ao padrão.
 func widthKeyStep() string {
 	return fmt.Sprintf(
 		"if (evt.key === 'ArrowLeft' || evt.key === 'ArrowRight') { evt.preventDefault(); "+
@@ -270,14 +253,13 @@ func widthKeyStep() string {
 	)
 }
 
-// widthRightNow é o valor de PARTIDA de um ajuste, e ele é medido na tela em
-// vez de cair num padrão.
+// widthRightNow é o valor de PARTIDA de um ajuste, e ele é medido na tela em vez
+// de cair num padrão.
 //
-// Enquanto o mestre não escolhe, `$notes_width` é zero e quem manda é o
-// `clamp` da folha — que depende da janela. Um padrão escrito aqui faria a
-// PRIMEIRA seta SALTAR: medido, a coluna ia de 704px para 384 num toque, porque
-// o piso de 22rem não é o que está na tela. A divisa tem de continuar de onde a
-// coluna está.
+// Enquanto o mestre não escolhe, `$notes_width` é zero e quem manda é o `clamp`
+// da folha, que depende da janela. Um padrão escrito aqui faria a PRIMEIRA seta
+// SALTAR, porque o piso de 22rem não é o que está na tela: a divisa tem de
+// continuar de onde a coluna está.
 func widthRightNow() string {
 	return "($notes_width || document.getElementById('table-notes').getBoundingClientRect().width)"
 }
@@ -304,12 +286,9 @@ func storeTheWidth() string {
 	return fmt.Sprintf("localStorage.setItem('%s', $notes_width)", notesWidthKey)
 }
 
-// notesAddress é o endereço das notas desta sessão, e ele tem UM lugar.
-//
-// Ele era escrito por extenso em dois `Sprintf` e passou a ser três com a
-// janela (ALE-218). Três grafias do mesmo caminho é como nasce a quarta que
-// diverge — e o `@post` tem guarda de endereço, mas o `window.open` não tinha
-// até esta issue.
+// notesAddress é o endereço das notas desta sessão, e ele tem UM lugar: três
+// grafias do mesmo caminho é como nasce a quarta que diverge — e o `@post` tem
+// guarda de endereço, mas o `window.open` não tem.
 func notesAddress(v View) string {
 	return fmt.Sprintf("/mesa/%d/%d/notas", v.CampaignID, v.SessionID)
 }

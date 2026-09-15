@@ -1,13 +1,13 @@
 package api
 
-// Convite de CONTA (ALE-120). Serving the table on the LAN made open
-// registration a real door: anyone reaching http://<ip>:3001 could create an
-// account. Now the admin issues a single-use link and hands it to the player,
-// who still picks their own password — the admin never sees it.
+// Convite de CONTA. A mesa é servida na LAN, então cadastro aberto seria uma
+// porta de verdade: qualquer um que alcançasse o endereço criaria conta. O admin
+// cunha um link de uso único e o entrega ao jogador, que ainda escolhe a própria
+// senha — o admin nunca a vê.
 //
-// Not to be confused with the CAMPAIGN invite (campaigns.inviteToken), which
-// brings an EXISTING user into a mesa. This one is what makes the account exist,
-// which is why it lives on its own route and is spent on use.
+// Não confundir com o convite de CAMPANHA (`campaigns.inviteToken`), que traz um
+// usuário EXISTENTE para uma mesa. Este é o que faz a conta existir, e é por
+// isso que ele mora numa rota própria e se gasta ao ser usado.
 
 import (
 	"context"
@@ -19,14 +19,14 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// accountInviteTTL is deliberately short-ish: the link is passed hand to hand at
-// the table, not mailed, so a week is generous and a stale link left in a chat
-// history stops working.
+// accountInviteTTL é curto de propósito: o link passa de mão em mão na mesa e
+// não por e-mail, então uma semana é generosa — e um link esquecido num
+// histórico de conversa para de funcionar.
 const accountInviteTTL = 7 * 24 * time.Hour
 
-// inviteRejected is the ONE answer for unknown, spent and expired alike — the
-// caller is anonymous, and telling them which of the three it was only helps
-// someone probing tokens.
+// inviteRejected é a ÚNICA resposta para desconhecido, gasto e vencido — quem
+// chama é anônimo, e dizer qual dos três foi só ajuda quem está sondando
+// tokens.
 const inviteRejected = "Invite is invalid or expired"
 
 type accountInviteDTO struct {
@@ -36,11 +36,8 @@ type accountInviteDTO struct {
 
 // mintAccountInvite cunha o link de uso único.
 //
-// Transport-agnostic, e esta é a QUARTA vez que a migração encontra a mesma
-// forma — depois do `selfInitiativeEntry` (socket), do `deleteAccount` (handler
-// HTTP) e do trio da porta (ALE-229). Já não é anedota: é o que uma base com
-// exatamente um transporte parece por dentro, e o segundo transporte é o que
-// torna isso visível.
+// Independente de TRANSPORTE, para o handler HTTP e a cena em templ lerem a
+// mesma regra.
 func mintAccountInvite(ctx context.Context, q *sqlcgen.Queries, criadoPor int64) (sqlcgen.AccountInvite, error) {
 	now := time.Now()
 	return q.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
@@ -51,8 +48,8 @@ func mintAccountInvite(ctx context.Context, q *sqlcgen.Queries, criadoPor int64)
 	})
 }
 
-// usableInvite loads an invite that can still be spent: it exists, nobody used
-// it, and it has not expired.
+// usableInvite carrega um convite que ainda pode ser gasto: ele existe, ninguém
+// o usou, e não venceu.
 func (a accountRules) usableInvite(ctx context.Context, token string) (sqlcgen.AccountInvite, bool) {
 	if token == "" {
 		return sqlcgen.AccountInvite{}, false
@@ -68,17 +65,17 @@ func (a accountRules) usableInvite(ctx context.Context, token string) (sqlcgen.A
 	return invite, true
 }
 
-// errInviteSpent means someone else used the link between the check and the
-// insert. It reaches the player as the same rejection as a stale link.
+// errInviteSpent quer dizer que outra pessoa usou o link entre a conferência e o
+// insert. Ele chega ao jogador como a MESMA recusa de um link vencido.
 var errInviteSpent = errors.New("invite already spent")
 
-// createUser inserts the account and, when the registration came from an invite,
-// spends it in the SAME transaction. That is what makes single use an invariant
-// instead of a hope: two players opening the same link at once both pass the
-// read check, but only one UPDATE finds `usedAt IS NULL`, and the loser's
-// account is rolled back with it (ALE-120).
+// createUser insere a conta e, quando o cadastro veio de um convite, o GASTA na
+// MESMA transação. É o que faz o uso único ser invariante em vez de esperança:
+// dois jogadores abrindo o mesmo link ao mesmo tempo passam os dois pela
+// conferência de leitura, mas só um `UPDATE` acha `usedAt IS NULL`, e a conta do
+// perdedor volta atrás junto.
 //
-// invite is nil when an ADMIN_EMAILS address bootstraps its own account.
+// `invite` é nulo quando um endereço de `ADMIN_EMAILS` cria a própria conta.
 func (a accountRules) createUser(
 	ctx context.Context, params sqlcgen.CreateUserParams, invite *sqlcgen.AccountInvite,
 ) (sqlcgen.User, error) {

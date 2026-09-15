@@ -2,10 +2,10 @@ package table
 
 import "t20engine/serve/web/ui"
 
-// O gesto de PÔR NO MAPA (ALE-264, item 5). A regra e as expressões estão em
-// `tokens.go`; aqui é só o desenho.
+// O gesto de PÔR NO MAPA. A regra e as expressões estão em `tokens.go`; aqui é
+// só o desenho.
 
-// botaoDePorNoMapa: UM botão, DOIS gestos, e o padrão é o seguro (ALE-204).
+// botaoDePorNoMapa: UM botão, DOIS gestos, e o padrão é o seguro.
 //
 // Esquerdo abre o diálogo com as fichas já escolhidas; direito põe as fichas
 // direto. Pôr as fichas no mapa é o gesto de abrir cena e não revela nada — eles
@@ -24,10 +24,8 @@ templ botaoDePorNoMapa(v BoardView) {
 			data-on:contextmenu={ sheetsShortcut(v) }
 			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2 text-sm outline-none transition-colors hover:bg-accent sm:px-3"
 		>
-			// O ÍCONE aparece e o texto sai no telefone (ALE-271). Ele não existia
-			// — este botão era só palavra —, e a alternativa era ele sumir da tela
-			// estreita: um gesto que só existe no desktop é um gesto que a mesa
-			// jogada no sofá não tem.
+			// O ÍCONE aparece e o texto sai no telefone: um gesto que só existe no
+			// desktop é um gesto que a mesa jogada no sofá não tem.
 			//
 			// `UserPlus` e não `Users2`: o que ele faz é TRAZER alguém para o mapa,
 			// e o `Users2` já é o grupo no trilho do mestre — dois desenhos iguais

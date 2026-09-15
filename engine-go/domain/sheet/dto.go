@@ -7,10 +7,10 @@ import (
 	"t20engine/infra/platform"
 )
 
-// CharacterDTO is the character aggregate the frontend consumes (shared/api/api.ts
-// `Character`). sqlc lowercases column identifiers, so the DB structs can't carry
-// the camelCase JSON contract — this hand-written shape does, and the mappers
-// below convert (bool from INTEGER, *string from NULL).
+// CharacterDTO é o agregado do personagem que a fronteira JSON entrega. O sqlc
+// minuscula identificador de coluna, então as structs do banco não podem
+// carregar o contrato camelCase — esta forma escrita à mão carrega, e os
+// mapeadores abaixo convertem (bool vindo de INTEGER, *string vindo de NULL).
 type CharacterDTO struct {
 	ID                   int64   `json:"id"`
 	OwnerID              int64   `json:"ownerId"`
@@ -43,11 +43,11 @@ type CharacterDTO struct {
 	ActiveConditions     string  `json:"activeConditions"`
 	CreatedAt            string  `json:"createdAt"`
 	UpdatedAt            string  `json:"updatedAt"`
-	// IgnoredRules são as regras opcionais desligadas para ESTA ficha (ALE-221).
-	// Não é campo do personagem: é a mesa dele, resolvida em `loadCharacter` e
-	// carimbada aqui para atravessar até o motor pelo `engineCharacterFrom`, que
-	// é um round-trip de JSON. Assim a ficha do servidor e a do navegador
-	// calculam com as mesmas regras sem nenhuma assinatura mudar.
+	// IgnoredRules são as regras opcionais desligadas para ESTA ficha. Não é
+	// campo do personagem: é a mesa dele, resolvida em `loadCharacter` e
+	// carimbada aqui para atravessar até o motor pelo `engineCharacterFrom`,
+	// que é um round-trip de JSON — e assim as duas pontas calculam com as
+	// mesmas regras sem nenhuma assinatura mudar.
 	IgnoredRules  engine.IgnoredRules `json:"ignoredRules"`
 	Races         []RaceDTO           `json:"races"`
 	Classes       []ClassDTO          `json:"classes"`
@@ -55,9 +55,9 @@ type CharacterDTO struct {
 	Items         []ItemDTO           `json:"items"`
 	ActiveEffects []EffectDTO         `json:"activeEffects"`
 	Spells        []SpellDTO          `json:"spells"`
-	// O estado de JOGO da ficha (ALE-222) — situacionais ligados, usos gastos e
-	// o preco pago pelas posturas. Viaja com a ficha porque a tela precisa dos
-	// tres para desenhar o primeiro quadro.
+	// O estado de JOGO da ficha — situacionais ligados, usos gastos e o preço
+	// pago pelas posturas. Viaja com a ficha porque a tela precisa dos três
+	// para desenhar o primeiro quadro.
 	Conditionals []string      `json:"conditionals"`
 	PowerUses    []PowerUseDTO `json:"powerUses"`
 	Stances      []StanceDTO   `json:"stances"`
@@ -105,7 +105,8 @@ type SpellDTO struct {
 	LearnedAt      string `json:"learnedAt"`
 }
 
-// characterScalarsFrom maps the flat DB row; relations are attached by the loader.
+// characterScalarsFrom mapeia a linha achatada do banco; as relações são
+// penduradas pelo carregador.
 func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 	return CharacterDTO{
 		ID:                   c.ID,
@@ -139,7 +140,7 @@ func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 		ActiveConditions:     c.Activeconditions,
 		CreatedAt:            c.Createdat,
 		UpdatedAt:            c.Updatedat,
-		// Relations default to empty slices (never null) — matches the Prisma include.
+		// Relação nasce em fatia VAZIA, nunca nula.
 		Races:         []RaceDTO{},
 		Classes:       []ClassDTO{},
 		Expertises:    []ExpertiseDTO{},
@@ -157,8 +158,8 @@ func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 //
 // A normalização é o ponto: a coluna guarda o que o `JSON.stringify` do
 // navegador produziria, e `null` ali faria o cliente ler ausência onde há lista
-// vazia. Ela veio do `api` na ALE-278 porque a cena da ficha e o hospedeiro
-// gravam a mesma coluna — é a forma do DADO, e é aqui que a forma mora.
+// vazia. Ela mora aqui porque é a forma do DADO — a cena da ficha e o
+// hospedeiro gravam a mesma coluna.
 func MarshalStrings(p *[]string) string {
 	if p == nil {
 		return "[]"
@@ -177,11 +178,6 @@ func MarshalStrings(p *[]string) string {
 // ficha inteira não pode deixar de abrir porque uma linha do banco está errada.
 // Sem nada escolhido é um estado legítimo — um arcanista de nível 1 chega perto
 // disso —, então a degradação é para um estado que a tela sabe desenhar.
-//
-// Ela nasceu na ALE-278 apagando TRÊS cópias deste corpo — as escolhas de poder,
-// as condições ativas e as proficiências, cada uma com o mesmo `Unmarshal` e o
-// mesmo `return nil`. A ida e a volta ficam juntas pelo mesmo motivo que as do
-// `platform.NullToPtr`: separadas, elas divergem.
 func UnmarshalStrings(blob string) []string {
 	var ids []string
 	if json.Unmarshal([]byte(blob), &ids) != nil {

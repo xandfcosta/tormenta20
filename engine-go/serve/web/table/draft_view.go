@@ -12,7 +12,7 @@ import (
 	"t20engine/domain/board"
 )
 
-// O RASCUNHO DE LUGAR desenhado (ALE-292): a superfície do tabuleiro apontada
+// O RASCUNHO DE LUGAR desenhado: a superfície do tabuleiro apontada
 // para o ACERVO em vez de para a mesa.
 //
 // A cena é a MESMA — mesmo trilho, mesmos pincéis, mesma peça avulsa, mesmos

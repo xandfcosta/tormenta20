@@ -1,21 +1,21 @@
-// Command seed regenerates engine-go/seed.sql — a pure-SQL dump of the dev
-// dataset (3 accounts, the diverse test roster, demo chronicles) that applies
-// instantly with `sqlite3 data/t20-dev.db < seed.sql`, no API server (ALE-57).
+// Command seed regenera o `engine-go/seed.sql` — um despejo em SQL puro do
+// conjunto de desenvolvimento (3 contas, o elenco variado de teste, crônicas de
+// demonstração) que se aplica na hora com `sqlite3 data/t20-dev.db < seed.sql`,
+// sem servidor nenhum.
 //
 // Ele monta o dado chamando as REGRAS do app num banco migrado descartável — os
 // hashes de bcrypt, os vitais computados pelo motor e o leque normalizado vêm do
 // mesmo código que o servidor roda, nunca mantidos à mão — e despeja o banco em
 // SQL. O elenco mora no `seed-data.json` embutido, que é a fonte legível.
 //
-// Ele dirigia os MANIPULADORES HTTP em processo até a ALE-287, e as sete rotas
-// que ele usava foram apagadas na ALE-277 por não terem consumidor: o gerador
-// parou de rodar sem que nada acusasse, e a varredura de órfãs não o viu porque
-// ele chamava por CAMINHO EM STRING. Hoje ele pede pela `api.Seeder`, a porta
-// declarada logo abaixo — a mesma forma das onze cenas.
+// Ele pede o que precisa pela `api.Seeder`, a porta declarada logo abaixo. Pedir
+// por CAMINHO EM STRING já fez este gerador parar de rodar sem que nada
+// acusasse, no dia em que as rotas que ele dirigia foram apagadas por não terem
+// consumidor.
 //
-// Regenerate after roster/rule/chronicle changes:
+// Regenerar depois de mudar elenco, regra ou crônica:
 //
-//	go run ./cmd/seed            # writes ./seed.sql (from the engine-go dir)
+//	go run ./cmd/seed            # escreve ./seed.sql (a partir de engine-go/)
 package main
 
 import (
@@ -78,14 +78,14 @@ type casaDaSeed interface {
 	ConsumeItem(ctx context.Context, id, itemID int64) error
 }
 
-// standardTrained is TRAINED_EXPERTISES — every non-simple
-// character trains these, giving the skill list real totals. Simple PCs train none.
+// standardTrained são as perícias que todo personagem não-simples treina, para a
+// lista de perícias ter totais de verdade. Personagem simples não treina nenhuma.
 var standardTrained = []string{
 	"Luta", "Atletismo", "Pontaria", "Reflexos", "Fortitude",
 	"Vontade", "Percepção", "Intimidação", "Investigação", "Misticismo",
 }
 
-// sceneConsumable is the item whose scene effect a sceneEffect character carries.
+// sceneConsumable é o item cujo efeito de cena um personagem `sceneEffect` leva.
 const sceneConsumable = "cosmetico"
 
 func main() {
@@ -97,9 +97,9 @@ func main() {
 	if err := json.Unmarshal(seedData, &sf); err != nil {
 		log.Fatalf("seed-data.json: %v", err)
 	}
-	// ANTES DE O SERVIDOR SUBIR (ALE-226): nenhuma linha vai para o banco com
-	// referência quebrada. Um id de catálogo errado não quebrava nada — ele
-	// produzia um personagem QUASE certo, e o e2e roda contra a seed.
+	// ANTES DE O SERVIDOR SUBIR: nenhuma linha vai para o banco com referência
+	// quebrada. Um id de catálogo errado não quebra nada — ele produz um
+	// personagem QUASE certo, e o e2e roda contra a seed.
 	if err := validateCatalogRefs(sf); err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -123,11 +123,11 @@ func main() {
 	log.Printf("wrote %s — %d/%d characters across %d users", out, seeded, total, len(sf.Users))
 }
 
-// seedEmails lists the accounts this run creates. They go in as ADMIN_EMAILS so
-// registration works: since ALE-120 /auth/register demands an invite, and the
-// first account of an empty database has nobody to have invited it — the
-// generator is its own admin. Nothing of the role reaches seed.sql: it is
-// derived from the environment at request time and has no column.
+// seedEmails são as contas que esta rodada cria. Elas entram como ADMIN_EMAILS
+// para o registro funcionar: o registro exige convite, e a primeira conta de um
+// banco vazio não tem quem a tivesse convidado — o gerador é o próprio admin dele.
+// Nada do papel chega ao seed.sql: ele sai do ambiente na hora do pedido e não
+// tem coluna.
 func seedEmails(sf seedFile) []string {
 	emails := make([]string, 0, len(sf.Users))
 	for _, u := range sf.Users {
@@ -223,16 +223,16 @@ func seedCharacterRow(ctx context.Context, casa casaDaSeed, donoID int64, ch see
 	return nil
 }
 
-// enrichCreate fills the create body with data derived from the catalog + roster
-// flags: vitals the engine will heal, the standard trained perícias (non-simple),
-// and each item's catalog name + slot cost.
+// enrichCreate completa o corpo de criação com o que sai do catálogo e das
+// marcas do elenco: os vitais que o motor vai curar, as perícias treinadas
+// padrão (não-simples) e o nome e o custo de espaço de cada item.
 func enrichCreate(ch seedCharacter) (json.RawMessage, error) {
 	var obj map[string]json.RawMessage
 	if err := json.Unmarshal(ch.Create, &obj); err != nil {
 		return nil, fmt.Errorf("create body: %w", err)
 	}
-	// healVitals recomputes the real maxes from the engine, so pass a value it can
-	// only clamp down to full. Damaged bars are set afterwards via /vitals.
+	// O `healVitals` recalcula os máximos de verdade pelo motor, então passe um
+	// valor que ele só possa aparar para baixo. Barra danificada vem depois.
 	for _, field := range []string{"hpMax", "hpCurrent", "mpMax", "mpCurrent"} {
 		obj[field] = json.RawMessage("9999")
 	}
@@ -248,8 +248,8 @@ func enrichCreate(ch seedCharacter) (json.RawMessage, error) {
 	return json.Marshal(obj)
 }
 
-// resolveItemMetadata fills each item's name + slots from the catalog so the
-// roster references items by catalogId + quantity + equipped alone.
+// resolveItemMetadata completa nome e espaços de cada item a partir do catálogo,
+// para o elenco referenciar item só por catalogId, quantidade e equipado.
 func resolveItemMetadata(obj map[string]json.RawMessage) error {
 	raw, ok := obj["items"]
 	if !ok {

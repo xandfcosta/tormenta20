@@ -7,19 +7,16 @@ import (
 	"t20engine/infra/platform"
 )
 
-// setBuilder accumulates a partial UPDATE: the columns a PATCH body actually
-// carried, plus their values, in order.
+// setBuilder acumula um UPDATE parcial: as colunas que o corpo do PATCH de fato
+// trouxe, com os valores delas, em ordem.
 //
-// Four handlers (campaigns, sessions, character items, character abilities) each
-// grew their own `sets []string` / `args []any` pair — and copied the
-// `//nolint:gosec` alongside, which is the part that matters: the suppression
-// says "the SET clause is a fixed allowlist, not input", and that promise was
-// being re-asserted in four Places where a fifth could quietly break it.
-// Concentrating it here means the claim is made once, next to the only code
-// that builds the clause.
+// Ele existe para o `//nolint:gosec` ser afirmado UMA vez. A supressão promete
+// que a cláusula SET é uma lista fechada de literais e não entrada do usuário, e
+// essa promessa repetida em cada handler é uma promessa que o próximo handler
+// quebra em silêncio.
 //
-// Column names come from literals at the call sites, never from the request —
-// only the values are bound.
+// Nome de coluna vem de LITERAL no sítio de chamada, nunca do pedido — só os
+// valores são ligados.
 //
 // @example
 //
@@ -31,30 +28,31 @@ type setBuilder struct {
 	args    []any
 }
 
-// Add records one column assignment. `clause` must be a literal like "name = ?".
+// Add registra a atribuição de uma coluna. `clause` tem de ser um literal como
+// "name = ?".
 func (b *setBuilder) Add(clause string, value any) {
 	b.columns = append(b.columns, clause)
 	b.args = append(b.args, value)
 }
 
-// empty reports whether the PATCH carried no updatable field — the caller answers
-// 400 rather than running an UPDATE that changes nothing but `updatedAt`.
+// empty diz que o PATCH não trouxe campo atualizável nenhum — o chamador
+// responde 400 em vez de rodar um UPDATE que só mexe no `updatedAt`.
 func (b *setBuilder) empty() bool { return len(b.columns) == 0 }
 
-// exec runs `<prefix> SET <clauses> WHERE id = ?` as recorded, touching no
-// timestamp — `character_items` has no `updatedAt` column at all.
+// exec roda `<prefix> SET <clauses> WHERE id = ?` como foi registrado, sem tocar
+// em carimbo nenhum — `character_items` não tem coluna `updatedAt`.
 func (b *setBuilder) exec(ctx context.Context, db *sql.DB, prefix string, id int64) error {
-	//nolint:gosec // The SET clause is built from column literals at the call
-	// sites — a fixed allowlist. Only values are bound.
+	//nolint:gosec // A cláusula SET é montada de literais de coluna nos sítios de
+	// chamada — lista fechada. Só os valores são ligados.
 	_, err := db.ExecContext(ctx,
 		prefix+" SET "+strings.Join(b.columns, ", ")+" WHERE id = ?",
 		append(append([]any{}, b.args...), id)...)
 	return err
 }
 
-// execTouched is exec plus an `updatedAt` stamp — the shape for every table that
-// HAS the column. Kept as a separate call so the difference is visible where it
-// matters instead of hidden behind a bool.
+// execTouched é o `exec` mais o carimbo de `updatedAt` — a forma de toda tabela
+// que TEM a coluna. É uma chamada separada para a diferença ficar visível onde
+// ela importa, em vez de escondida atrás de um booleano.
 func (b *setBuilder) execTouched(ctx context.Context, db *sql.DB, prefix string, id int64) error {
 	stamped := setBuilder{
 		columns: append(append([]string{}, b.columns...), "updatedAt = ?"),

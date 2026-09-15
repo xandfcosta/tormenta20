@@ -7,23 +7,20 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// AS PROFICIÊNCIAS como dado (ALE-272, fatia 2).
+// AS PROFICIÊNCIAS como dado.
 //
-// A menor das sete abas, e a primeira que traz REGRA para o servidor: até aqui a
-// tabela de "que classe sabe usar o quê" só existia em TypeScript
-// (`frontend/src/shared/rules/proficiencies.ts`), fora do motor. Ela é dado
-// transcrito do livro, então foi para onde o dado transcrito mora — o campo
-// `proficiencies` de `catalog/data/classes.json`, ao lado da página — e o que
-// sobra aqui é só a RESOLUÇÃO: juntar as classes do personagem, aplicar as duas
-// linhas de base e dizer quais categorias ele tem.
+// A tabela de "que classe sabe usar o quê" é dado transcrito do livro, então
+// mora onde o dado transcrito mora: o campo `proficiencies` de
+// `catalog/data/classes.json`, ao lado da página. O que sobra aqui é só a
+// RESOLUÇÃO — juntar as classes do personagem, aplicar as duas linhas de base e
+// dizer quais categorias ele tem.
 //
 // Ser proficiente ou não é o que a Mochila lê para avisar "sem proficiência"
 // (p142: −5 no ataque; a penalidade da armadura nas perícias de Força e
 // Destreza) — esta aba é onde esse aviso se resolve.
 
-// As sete categorias moram no `book` desde a ALE-278 (`ProficiencyCategories`).
-// A lista estava aqui, e mais duas vezes no `api` — ver o comentário de lá, que
-// conta como as três transcrições conviveram sem ninguém notar.
+// As sete categorias moram no `book` (`ProficiencyCategories`), e não aqui: três
+// transcrições da mesma lista já conviveram sem ninguém notar.
 
 // everyoneStartsWith é a proficiência que ninguém precisa ganhar.
 //
@@ -100,13 +97,13 @@ func savedProficiencies(blob string) map[string]bool {
 //     "Todas as classes" em vez de um nome de classe.
 //
 //  2. Quem sabe usar armadura PESADA sabe usar a LEVE. **Isso o livro não
-//     escreve** — conferi a p148, que define as duas categorias e a penalidade
-//     por não proficiência, e não há linha dizendo que uma implica a outra. É
-//     decisão de produto herdada da SPA, e ela é a que NÃO machuca: sem ela,
-//     "restaurar o padrão de classe" tiraria a armadura leve de um guerreiro, e o
-//     motor passaria a aplicar a penalidade da p148 num personagem treinado em
-//     algo mais pesado. Está aqui explícita para poder ser revista de propósito,
-//     e não redescoberta como defeito.
+//     escreve** — a p148 define as duas categorias e a penalidade por não
+//     proficiência, e não há linha dizendo que uma implica a outra. É decisão de
+//     produto, e é a que NÃO machuca: sem ela, "restaurar o padrão de classe"
+//     tiraria a armadura leve de um guerreiro, e o motor passaria a aplicar a
+//     penalidade da p148 num personagem treinado em algo mais pesado. Está aqui
+//     explícita para poder ser revista de propósito, e não redescoberta como
+//     defeito.
 func proficiencySources(dto sheet.CharacterDTO) map[string][]string {
 	daClasse := book.ProficienciesByClass()
 	fontes := map[string][]string{everyoneStartsWith: {everyoneSourceLabel}}
@@ -174,10 +171,9 @@ func proficiencySwap(dto sheet.CharacterDTO, chave string) ([]string, error) {
 	return depois, nil
 }
 
-// A lista que a mensagem de erro cita é a do livro (`book.ProficiencyKeys`).
-// Aqui ela era ordenada em ordem ALFABÉTICA "para a frase não mudar entre duas
-// execuções" — o que resolvia a instabilidade de percorrer um `map` e trocava a
-// escala de dificuldade da p142 por uma ordem que não diz nada.
+// A lista que a mensagem de erro cita é a do livro (`book.ProficiencyKeys`), na
+// ordem DELE e não em ordem alfabética: alfabética também seria estável, e
+// trocaria a escala de dificuldade da p142 por uma ordem que não diz nada.
 
 // sourceTag é o `title` da etiqueta "classe": "Padrão: Guerreiro, Nobre".
 func sourceTag(linha sheetProficiency) string {

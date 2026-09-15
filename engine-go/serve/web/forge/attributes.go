@@ -113,24 +113,15 @@ func (s Scene) stepAttribute(r *http.Request) (recusa string, status int, err er
 		return "", http.StatusInternalServerError, err
 	}
 	// A Constituição mexe no PV máximo (p34), e os ATUAIS acompanham o delta —
-	// a mesma regra da mudança de nível (ALE-309).
+	// a mesma regra da mudança de nível.
 	//
-	// Aqui morava um `fillPools`, e a razão escrita era "o herói ainda está
-	// sendo forjado, então ele fica com os poços CHEIOS". A intenção estava
-	// certa e a cena não a cobrava: `heroOfTheForge` confere id, existência e
-	// posse, e NADA sobre estar sendo forjado — não há como conferir, porque a
-	// tabela `characters` não guarda esse estado.
-	//
-	// O que sobrava era uma bomba de cura de dois cliques: o `−` num atributo é
-	// sempre aceito dentro da faixa (gasta MENOS pontos), o `+` devolve o ponto,
-	// o espalhamento volta ao que era — e os dois passos enchiam os poços. Uma
-	// Lenda de nível 20 com 3 de 180 PV saía com 180, e o sistema inteiro de
-	// vitais existe para o dano ser do MESTRE.
-	//
-	// Acompanhar o delta preserva a intenção sem precisar do estado que não
-	// existe: quem nasce cheio continua cheio quando a Constituição sobe, e quem
-	// apanhou continua ferido. E o ciclo `−`/`+` fecha EXATO, que é o que impede
-	// a bomba de voltar mais devagar.
+	// Encher os poços aqui seria uma bomba de cura de dois cliques: o `−` num
+	// atributo é sempre aceito dentro da faixa (gasta MENOS pontos), o `+`
+	// devolve o ponto, e uma Lenda de nível 20 com 3 de 180 PV sairia com 180.
+	// Não adianta encher só "enquanto o herói é forjado": `heroOfTheForge`
+	// confere id, existência e posse, e a tabela `characters` não guarda esse
+	// estado. O delta fecha o ciclo `−`/`+` EXATO, e o dano continua sendo do
+	// MESTRE.
 	return "", http.StatusOK, s.shiftPools(r, row.ID)
 }
 

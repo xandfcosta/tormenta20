@@ -2,12 +2,8 @@
 // tipadas que o sqlc gera a partir delas.
 //
 // Ele é mantido FORA do `engine` para o motor de regras continuar puro — só a
-// biblioteca padrão, sem banco e sem HTTP —, que é o que faz as 4.000 linhas de
-// teste de regra rodarem sem dublê nenhum.
-//
-// > A razão escrita aqui era outra: "para o build WASM (engine/ + cmd/wasm)
-// > continuar sem dependências". O WASM saiu na ALE-272 e o `cmd/wasm` com ele;
-// > a propriedade sobreviveu ao motivo, e o motivo de hoje é este (ALE-321).
+// biblioteca padrão, sem banco e sem HTTP —, que é o que faz os testes de regra
+// rodarem sem dublê nenhum.
 package db
 
 import (
@@ -28,7 +24,7 @@ var migrationsFS embed.FS
 // applies all pending goose migrations. Uses the pure-Go modernc driver so the
 // server cross-compiles cleanly like the rest of engine-go.
 func Open(path string) (*sql.DB, error) {
-	// Production keeps its database in its own directory (ALE-119), which does
+	// Production keeps its database in its own directory, which does
 	// not exist on a first boot — and SQLite reports the missing directory as a
 	// plain "unable to open database file", which reads like a corrupt file.
 	if dir := filepath.Dir(path); dir != "." {
@@ -37,7 +33,7 @@ func Open(path string) (*sql.DB, error) {
 		}
 	}
 	// `_txlock=immediate`: toda transação pega a trava de ESCRITA já no BEGIN,
-	// em vez do `DEFERRED` padrão, que só a pega na primeira escrita (ALE-156).
+	// em vez do `DEFERRED` padrão, que só a pega na primeira escrita.
 	//
 	// Sem isso, duas requisições simultâneas leem antes de qualquer uma
 	// escrever, e as duas passam por uma trava de unicidade que é decidida no
@@ -49,14 +45,9 @@ func Open(path string) (*sql.DB, error) {
 	// continua livre (WAL), e as oito transações do app são todas de escrita.
 	// Numa mesa doméstica isso é de graça, e o `busy_timeout` acima é quem
 	// cobre a espera.
-	// `synchronous(1)` é NORMAL, e ele vale 139ms POR TOQUE na ficha (ALE-273).
-	//
-	// O padrão do SQLite é FULL, que faz `fsync` a cada commit. Medido neste
-	// repositório, num prato girante: o POST que muda o PV e redevolve a cena
-	// levava 121ms de servidor e 139ms até o número mudar na tela. Com NORMAL,
-	// no MESMO disco, os dois viraram 1,7ms e 12ms — o número que um SSD daria.
-	// O controle que isolou a causa foi trocar só o LUGAR do arquivo (disco →
-	// tmpfs) com o binário idêntico.
+	// `synchronous(1)` é NORMAL, e ele vale mais de cem milissegundos POR TOQUE
+	// na ficha num prato girante — o padrão do SQLite é FULL, que faz `fsync` a
+	// cada commit.
 	//
 	// O QUE SE PERDE, dito com precisão: numa queda de energia, os commits que
 	// ainda não foram sincronizados. O banco NÃO corrompe — essa é a garantia
@@ -66,8 +57,8 @@ func Open(path string) (*sql.DB, error) {
 	//
 	// É `innodb_flush_log_at_trx_commit=2` para quem vem do MariaDB, e é o que a
 	// documentação do SQLite recomenda para WAL na maioria das aplicações. Para
-	// uma ficha de mesa, perder os últimos segundos numa queda de luz custa
-	// menos que 139ms em cada clique de PV — decisão do dono, ALE-273.
+	// uma ficha de mesa, perder os últimos segundos numa queda de luz custa menos
+	// que um décimo de segundo em cada clique de PV — decisão do dono.
 	dsn := fmt.Sprintf(
 		"file:%s?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)"+
 			"&_pragma=synchronous(1)&_pragma=busy_timeout(5000)&_txlock=immediate",
@@ -85,7 +76,7 @@ func Open(path string) (*sql.DB, error) {
 		return nil, err
 	}
 	// Depois de migrar, CONFERIR: a migração constar aplicada não prova que a
-	// tabela existe (ALE-154).
+	// tabela existe.
 	if err := assertSchema(sqlDB, migrationsFS); err != nil {
 		_ = sqlDB.Close()
 		return nil, err

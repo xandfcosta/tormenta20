@@ -6,15 +6,15 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel de MAGIAS desenhado (ALE-272, fatia 6).
+// O painel de MAGIAS desenhado.
 //
 // # O catálogo inteiro numa lista, sem virtualizar
 //
-// São 198 magias, e elas saem todas. É a decisão que o app já tomou para os
-// catálogos do mestre, onde as 992 entradas viajam de uma vez — o que sustenta
-// isso é a lista rolar DENTRO da caixa, e não a página crescer. A corrente de
-// `min-h-0` até o `overflow-y-auto` é o que segura, e há guarda medindo que o
-// DOCUMENTO não fica mais alto que a janela.
+// São 198 magias, e elas saem todas — a mesma decisão dos catálogos do mestre,
+// onde as 992 entradas viajam de uma vez. O que sustenta isso é a lista rolar
+// DENTRO da caixa e não a página crescer: a corrente de `min-h-0` até o
+// `overflow-y-auto` é o que segura, e há guarda medindo que o DOCUMENTO não
+// fica mais alto que a janela.
 //
 // # O diálogo de conjurar guarda as pilhas em SEIS sinais, e não um por magia
 //
@@ -134,8 +134,8 @@ templ preparedToggle(v View, magia learnedSpellRow) {
 //
 // A PRÉVIA do custo é uma soma do cliente sobre números que o servidor mandou, e
 // ela nunca decide nada: quem recusa é o `@post`, com a regra inteira. Uma
-// prévia que decidisse seria uma segunda regra, e a ALE-110 registrou o que
-// acontece quando duas contas do mesmo custo discordam.
+// prévia que decidisse seria uma segunda regra, e duas contas do mesmo custo
+// divergem.
 templ castSpellDialog(v View, magia learnedSpellRow) {
 	@overlay("conjura-"+magia.Command, magia.Name, "Sparkles", true) {
 		<p class="text-xs text-muted-foreground">
@@ -166,9 +166,9 @@ templ castSpellDialog(v View, magia learnedSpellRow) {
 // augmentPicker é um aprimoramento: uma pilha, uma caixa, ou um cadeado.
 //
 // O TRANCADO aparece em vez de sumir. Quem não alcança o círculo merece saber
-// que o aprimoramento existe e por que ele não está disponível — some-lo faria a
+// que o aprimoramento existe e por que ele não está disponível — sumi-lo faria a
 // lista parecer menor do que o livro diz que é. E a fronteira não é este
-// cadeado: o servidor recusa o mesmo pedido (ALE-272, fatia 6).
+// cadeado: o servidor recusa o mesmo pedido.
 templ augmentPicker(a augmentRow) {
 	<div
 		class={ "flex items-center gap-2 rounded-sm border px-2 py-1.5",
@@ -228,12 +228,11 @@ templ augmentStepper(a augmentRow) {
 
 // learnSpellDialog é o catálogo do Capítulo 4, filtrável.
 templ learnSpellDialog(v View) {
-	// NASCE ESCONDIDO (ALE-296), e o `style` estático é o conserto inteiro.
+	// NASCE ESCONDIDO, e o `style` estático é o conserto inteiro.
 	//
 	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
 	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
-	// medido com sonda de quadro: até 30 quadros de pano preto sobre a cena, que o
-	// dono relatou como "um dialog que aparece e some".
+	// dezenas de quadros de pano preto sobre a cena.
 	//
 	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
 	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o

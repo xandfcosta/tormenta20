@@ -9,27 +9,24 @@ import (
 	"strings"
 )
 
-// O CACHE dos estáticos do app, e o defeito que ele conserta é de EXPERIÊNCIA
-// e não de desempenho.
+// O CACHE dos estáticos do app, e o defeito que ele conserta é de EXPERIÊNCIA e
+// não de desempenho.
 //
-// Medido: `curl -D -` na folha devolvia `200 OK` e `Content-Length` e MAIS NADA
-// — sem `Cache-Control`, sem `ETag`, sem `Last-Modified`. Sem validador não há
-// 304, então o navegador rebaixava 113KB de CSS BLOQUEANTE DE RENDERIZAÇÃO a
-// cada troca de página. Como o documento novo não pinta antes da folha chegar, o
-// navegador desiste de segurar os pixels da página anterior e mostra o branco —
-// o "flick" que o dono viu em toda navegação do Datastar. A ficha não piscava
-// porque ela é rota de SPA: não há navegação de documento.
+// Sem validador não há 304, então o navegador rebaixa 113KB de CSS BLOQUEANTE DE
+// RENDERIZAÇÃO a cada troca de página. Como o documento novo não pinta antes de
+// a folha chegar, o navegador desiste de segurar os pixels da página anterior e
+// mostra o BRANCO — o "flick" em toda navegação do Datastar.
 //
 // A CAUSA é uma armadilha do `embed`: arquivo embutido tem modtime ZERO, e o
 // `http.ServeContent` não emite `Last-Modified` de um tempo nulo nem inventa
-// `ETag`. O `http.FileServer` estava certo; o sistema de arquivos por baixo é
-// que não tinha o que datar.
+// `ETag`. O `http.FileServer` está certo; o sistema de arquivos por baixo é que
+// não tem o que datar.
 //
-// A escolha é URL VERSIONADA e não `max-age` curto, e a diferença é o objetivo:
-// `max-age` curto ainda paga uma revalidação, e revalidação de folha bloqueante
-// ainda atrasa a primeira pintura. Com a versão no caminho o navegador não
-// pergunta nada — e não existe janela de folha velha depois de um deploy,
-// porque binário novo muda o dígito e o dígito muda a URL.
+// A escolha é URL VERSIONADA e não `max-age` curto: `max-age` curto ainda paga
+// uma revalidação, e revalidação de folha bloqueante ainda atrasa a primeira
+// pintura. Com a versão no caminho o navegador não pergunta nada — e não existe
+// janela de folha velha depois de um deploy, porque binário novo muda o dígito e
+// o dígito muda a URL.
 
 // versaoDosEstaticos é o dígito do CONJUNTO, e não um por arquivo.
 //
@@ -109,16 +106,9 @@ func comCacheVersionado(versao, alcance string, interno http.Handler) http.Handl
 
 // FontsHandler serve as fontes que a FOLHA pede em `/fonts/…`.
 //
-// O defeito que a criou, relatado pelo dono com o cabeçalho na mão: `GET
-// /fonts/cinzel-latin.woff2` devolvia 404 no binário sem SPA, e a Cinzel caía
-// para uma serifada do sistema em TODA tela — que é justamente o binário em que
-// a cena era revisada. O `@font-face` do `index.css` pede o caminho ABSOLUTO, e
-// quem o resolvia era o `dist` da SPA.
-//
-// As fontes eram CÓPIA das da SPA, com o
-// `TestAsFontesEmbutidasSaoAsMesmasDaSPA` prendendo as duas byte a byte. Com a
-// SPA apagada (ALE-272, fatia 10c) elas deixaram de ser cópia: são as fontes, e
-// o guarda saiu junto com o outro lado que ele comparava.
+// Sem esta rota, `GET /fonts/cinzel-latin.woff2` dá 404 e a Cinzel cai para uma
+// serifada do sistema em TODA tela: o `@font-face` do `index.css` pede o caminho
+// ABSOLUTO, e não há mais nada que o resolva.
 func (s *Server) FontsHandler() http.Handler {
 	sub, err := fs.Sub(assetsFS, "assets/static/fonts")
 	if err != nil {
@@ -130,10 +120,7 @@ func (s *Server) FontsHandler() http.Handler {
 	return http.StripPrefix("/fonts", comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub))))
 }
 
-// FaviconHandler serve o `/favicon.svg` que o layout pede.
-//
-// Ele era do `public/` da SPA e o `dist` o servia; com a SPA apagada (ALE-272,
-// fatia 10c) o arquivo veio para os estáticos do app. Sem esta rota o ícone
+// FaviconHandler serve o `/favicon.svg` que o layout pede. Sem esta rota o ícone
 // da aba fica com o padrão do navegador — não quebra nada e ninguém liga à
 // causa, que é a marca desta família de perda numa migração.
 func (s *Server) FaviconHandler() http.Handler {

@@ -9,17 +9,13 @@ import (
 	"t20engine/domain/engine"
 )
 
-// O IMPROVISO (ALE-261), quarta e última ferramenta da Mesa do Mestre — as
-// tabelas do Cap 6 e o esqueleto de masmorra na hora.
+// O IMPROVISO: as tabelas do Cap 6 e o esqueleto de masmorra na hora, numa tela
+// só — a ideia de masmorra em d20 é uma tabela do Cap 6, e um lugar só é um
+// lugar só para procurar.
 //
-// A SPA tinha isto em DUAS telas, e o comentário de lá conta por que viraram
-// uma: a ideia de masmorra em d20 é uma tabela do Cap 6 que aparecia nas duas, e
-// um lugar só é um lugar só para procurar.
-//
-// O dado rola no SERVIDOR (ver `engine/improvisation.go`), e o HISTÓRICO viaja nos
-// sinais — mesma forma do rascunho do encontro (ALE-259), pela mesma razão: o
-// mestre rola várias vezes seguidas e cada rolagem não pode virar uma entrada no
-// histórico do navegador.
+// O dado rola no SERVIDOR (ver `engine/improvisation.go`), e o HISTÓRICO viaja
+// nos sinais: o mestre rola várias vezes seguidas, e cada rolagem não pode
+// virar uma entrada no histórico do navegador.
 
 // ── o que a tela guarda ──────────────────────────────────────────────────────
 
@@ -34,9 +30,9 @@ type roll struct {
 	Detalhe string `json:"d,omitempty"`
 }
 
-// A profundidade do histórico é a da SPA, e a razão dela sobrevive ao porte: o
-// mestre que rola na mesma tabela duas vezes na cena quer comparar, e guardar só
-// "o último" joga fora a comparação no instante da segunda rolagem.
+// O histórico guarda mais que "o último": o mestre que rola na mesma tabela
+// duas vezes na cena quer COMPARAR, e guardar só o último joga a comparação
+// fora no instante da segunda rolagem.
 const historyDepth = 5
 
 // improvView é a cena inteira. Os quatro históricos são separados porque as
@@ -110,13 +106,11 @@ func rollRuin() (roll, error) {
 // rollChase: Tabela 6-5, d20, p274.
 //
 // O TIPO é a manchete, e não o exemplo. A primeira pergunta numa perseguição é
-// "isto atrapalha ou ajuda?", e é o `kind` que responde — a SPA acerta nisso e a
-// minha primeira versão trocou os dois, pondo o exemplo em cima e perdendo o
-// tipo inteiro. Só apareceu ao olhar a captura: a rolagem 4 saía como "4 —",
-// porque na faixa "nenhum evento" o exemplo do livro é um travessão.
+// "isto atrapalha ou ajuda?", e é o `kind` que responde. Trocar os dois perde o
+// tipo inteiro na faixa "nenhum evento", onde o exemplo do livro é um travessão
+// — a rolagem sai como "4 —".
 //
-// O que a SPA descarta e aqui fica: a CD e o exemplo. Ela mostra
-// "obstaculo · teste: Força" e para aí; o mestre no meio da cena quer o número
+// A CD e o exemplo entram no DETALHE: o mestre no meio da cena quer o número
 // contra o qual rolar e uma frase para narrar, e os dois estão no dado.
 //
 // O `nil` do teste é significativo: na faixa 1-6 não há o que rolar, e um
@@ -146,8 +140,8 @@ func rollChase() (roll, error) {
 }
 
 // Os tipos de evento de perseguição, como se lê. O dado vem em caixa baixa e
-// sem acento; a SPA mostra o valor CRU ("obstaculo"), e resolver é olhar a
-// tabela ao lado — mesma divergência deliberada do `book.ConditionName`.
+// sem acento, e mostrar o valor CRU ("obstaculo") obrigaria a olhar a tabela ao
+// lado — mesma decisão do `book.ConditionName`.
 var eventLabel = map[string]string{
 	"nenhum":    "Nenhum evento",
 	"obstaculo": "Obstáculo",

@@ -71,16 +71,16 @@ func main() {
 	srv := api.NewServer(cfg, database, primeCatalogs(cfg.CatalogPath))
 	mux := platform.Gzip(buildMux(srv))
 
-	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação
-	// (ALE-157): sem isto, um Ctrl-C durante um `VACUUM INTO` ou um persist do
-	// rastreador morria no meio, e o `defer database.Close()` acima NUNCA
-	// rodava — o processo morre por sinal antes de qualquer defer.
+	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação: sem
+	// isto, um Ctrl-C durante um `VACUUM INTO` ou um persist do rastreador morre
+	// no meio, e o `defer database.Close()` acima NUNCA roda — o processo morre
+	// por sinal antes de qualquer defer.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	go srv.ScheduleBackups(ctx)
 
-	announce(cfg) // last, so the address to open is the final line on the screen
+	announce(cfg) // por último, para o endereço ser a última linha da tela
 	if err := serve(ctx, cfg, mux); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
@@ -104,14 +104,14 @@ func httpServerFor(cfg platform.Config, mux http.Handler) *http.Server {
 		IdleTimeout:       120 * time.Second,
 		// Dito com todas as letras porque o padrão do Go pode mudar de versão, e
 		// porque um telefone antigo na mesa negociando TLS 1.0 seria uma queda
-		// silenciosa de segurança. Ignorado quando não há TLS (ALE-118).
+		// silenciosa de segurança. Ignorado quando não há TLS.
 		TLSConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 	}
 }
 
 // serve sobe o HTTP e espera o sinal para desligar com ordem.
 //
-// Os timeouts são escolhidos, não copiados de um exemplo (ALE-157):
+// Os timeouts são escolhidos, não copiados de um exemplo:
 //
 //   - `ReadHeaderTimeout` existe porque sem ele uma conexão que abre e nunca
 //     manda o cabeçalho segura uma goroutine para sempre (slowloris);

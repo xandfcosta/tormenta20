@@ -12,10 +12,6 @@ import (
 // AS REGRAS DE EQUIPAR: o eixo do item, os dois tetos do livro e a conta de
 // espaços.
 //
-// A prosa estava em INGLÊS e foi traduzida ao mudar de
-// pacote (ALE-278): comentário é o que uma pessoa lê, e a regra de idioma vale
-// para ele.
-//
 // Elas moram no `sheet` e não num pacote novo porque é aqui que a ficha já
 // mora: o `CharacterDTO` e o `Compute` estão ao lado, e os três imports que
 // estas regras precisam — `engine`, `sqlcgen`, `platform` — já eram os
@@ -111,12 +107,11 @@ func EquipLimitError(otherEquipped []string, incoming string) string {
 // EquipLimitErrorOver é o `EquipLimitError` sobre as LINHAS do banco, com o
 // item que está sendo trocado fora da conta (`excludeItemID`, 0 = nenhum).
 //
-// Ela existe desde a ALE-278 porque o laço que filtra as linhas estava escrito
-// duas vezes — na rota JSON e na aba Mochila da ficha —, e as duas versões
-// precisam pular exatamente as mesmas duas coisas: o próprio item e a coluna
-// nula. Um filtro repetido é um filtro que diverge; este decide QUAIS itens
-// entram na conta dos tetos, que é a parte da regra que o `EquipLimitError`
-// sozinho não vê.
+// Ela existe porque o laço que filtra as linhas estava escrito duas vezes, e as
+// duas versões precisam pular exatamente as mesmas duas coisas: o próprio item e
+// a coluna nula. Um filtro repetido é um filtro que diverge; este decide QUAIS
+// itens entram na conta dos tetos, que é a parte da regra que o
+// `EquipLimitError` sozinho não vê.
 func EquipLimitErrorOver(equipped []sqlcgen.ListEquippedItemsRow, excludeItemID int64, incoming string) string {
 	others := make([]string, 0, len(equipped))
 	for _, e := range equipped {
@@ -137,9 +132,8 @@ func SlotsNotMultiple(slots float64) bool {
 	return doubled != float64(int64(doubled))
 }
 
-// contains é a única checagem de pertencimento do arquivo. Ela sobrevive como
-// invólucro de uma linha porque os chamadores a nomeiam; o corpo é o
-// `slices.Contains` desde que a dependência entrou.
+// contains é a única checagem de pertencimento do arquivo; o corpo é o
+// `slices.Contains`.
 func contains(xs []string, x string) bool {
 	return slices.Contains(xs, x)
 }

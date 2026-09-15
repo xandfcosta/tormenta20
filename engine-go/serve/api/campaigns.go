@@ -37,9 +37,9 @@ type campaignListDTO struct {
 	CampaignDTO
 	Role      string                `json:"role"`
 	Character *campaignCharacterDTO `json:"character"`
-	// OwnerName is present ONLY on a mesa the caller does not own, which today
-	// means an admin seeing everyone's (ALE-120). Absent is the normal case, so
-	// the UI marks the exception instead of every row.
+	// OwnerName só existe numa mesa que o chamador NÃO possui, o que hoje quer
+	// dizer um admin vendo as de todo mundo. Ausente é o caso normal, então a
+	// tela marca a exceção em vez de marcar toda linha.
 	OwnerName *string `json:"ownerName,omitempty"`
 }
 
@@ -47,11 +47,11 @@ type campaignDetailDTO struct {
 	CampaignDTO
 	Role string `json:"role"`
 	// IgnoredRules acompanha o detalhe porque é nele que a campanha se configura
-	// (ALE-221) — pedir uma segunda rota para desenhar os interruptores faria a
-	// tela piscar entre "tudo ligado" e o estado real.
+	// — pedir uma segunda rota para desenhar os interruptores faria a tela piscar
+	// entre "tudo ligado" e o estado real.
 	IgnoredRules []string `json:"ignoredRules"`
-	// Same rule as the list: present only on a mesa the caller does not own. It
-	// matters MORE here — this is the screen where you rename and delete.
+	// Mesma regra da lista: só numa mesa que o chamador não possui. Aqui ele
+	// importa MAIS — esta é a tela onde se renomeia e se apaga.
 	OwnerName *string `json:"ownerName,omitempty"`
 }
 
@@ -75,11 +75,8 @@ func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 // do dono quando a mesa é de outra pessoa, e o personagem que o chamador tem
 // nela.
 //
-// Transport-agnostic, e esta é a QUINTA vez que a migração encontra a mesma
-// forma — depois do `selfInitiativeEntry`, do `deleteAccount`, do trio da porta
-// (ALE-229) e do `mintAccountInvite` (ALE-231). Não é descuido de ninguém: é o
-// que uma base com exatamente um transporte parece por dentro, e o segundo
-// transporte é o que torna isso visível (ALE-234).
+// Independente de TRANSPORTE de propósito, para o handler HTTP e a cena em templ
+// lerem a mesma regra.
 func (rules campaignRules) campaignList(ctx context.Context, user AuthUser) ([]campaignListDTO, error) {
 	rows, err := rules.visibleCampaigns(ctx, user)
 	if err != nil {
@@ -93,10 +90,10 @@ func (rules campaignRules) campaignList(ctx context.Context, user AuthUser) ([]c
 		case c.Ownerid == user.ID:
 			item.Role = "gm"
 		case user.IsAdmin:
-			// Someone else's mesa, in the list because the caller administers the
-			// table. The condition is IsAdmin and not "the owner map has a name":
-			// a player is also a non-owner here, and leaning on an empty map would
-			// make a future edit to ownerNames hand them "gm" in silence.
+			// Mesa de outra pessoa, na lista porque quem chamou administra o
+			// servidor. A condição é `IsAdmin` e não "o mapa de donos tem um nome":
+			// um jogador também não é dono aqui, e apoiar-se num mapa vazio faria
+			// uma edição futura no `ownerNames` entregar "gm" a ele em silêncio.
 			name := owners[c.Ownerid]
 			item.Role, item.OwnerName = "gm", &name
 		}
@@ -114,9 +111,9 @@ func (rules campaignRules) campaignList(ctx context.Context, user AuthUser) ([]c
 	return out, nil
 }
 
-// visibleCampaigns is what the caller may see listed: their own plus the ones
-// they play in — and, for the admin, every mesa in the table (ALE-120). Without
-// this the admin could reach another's mesa only by typing its URL.
+// visibleCampaigns é o que o chamador pode ver listado: as dele mais as em que
+// joga — e, para o admin, todas as mesas do servidor. Sem isto o admin só
+// alcançaria a mesa de outra pessoa digitando a URL dela.
 func (rules campaignRules) visibleCampaigns(ctx context.Context, user AuthUser) ([]sqlcgen.Campaign, error) {
 	if user.IsAdmin {
 		return rules.queries.ListAllCampaigns(ctx)
@@ -124,8 +121,8 @@ func (rules campaignRules) visibleCampaigns(ctx context.Context, user AuthUser) 
 	return rules.queries.ListCampaignsForUser(ctx, user.ID)
 }
 
-// ownerNames labels the mesas the caller does not own, in ONE query — the list
-// is short but an N+1 here would grow with the table.
+// ownerNames rotula as mesas que o chamador não possui, numa consulta SÓ — a
+// lista é curta, mas um N+1 aqui cresceria com o servidor.
 func (rules campaignRules) ownerNames(ctx context.Context, rows []sqlcgen.Campaign, callerID int64) map[int64]string {
 	var ids []int64
 	for _, c := range rows {
@@ -147,8 +144,8 @@ func (rules campaignRules) ownerNames(ctx context.Context, rows []sqlcgen.Campai
 	return names
 }
 
-// displayName prefers the chosen name and falls back to the e-mail, which is
-// what the player is called everywhere else in the app.
+// displayName prefere o nome escolhido e cai no e-mail, que é como o jogador é
+// chamado em todo o resto do app.
 func displayName(name sql.NullString, email string) string {
 	if name.Valid && name.String != "" {
 		return name.String
@@ -164,10 +161,8 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	if !platform.DecodeJSON(w, r, &body) {
 		return
 	}
-	// As DUAS recusas de uma vez, e em pt-BR: até a ALE-278 esta rota respondia
-	// `err.Error()`, que era a frase inglesa herdada do NestJS, enquanto a cena
-	// escrevia a portuguesa dela. Duas frases para uma regra é o que o `account`
-	// desfez nesta mesma épica.
+	// As DUAS recusas de uma vez, e em pt-BR: a mesma regra respondendo duas
+	// frases diferentes conforme o transporte é o que faz uma delas envelhecer.
 	name, descricaoTexto, erros := campaign.ValidateText(body.Name, body.Description)
 	if len(erros) > 0 {
 		platform.WriteValidationError(w, erros)
@@ -194,9 +189,9 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.campaignRules().ownedCampaign(w, r, id); !ok {
 		return
 	}
-	// ANTES de apagar (ALE-270): a campanha leva as sessões por cascata, e depois
-	// disso não há mais como perguntar quais eram — o estado em memória delas
-	// ficaria batendo na chave estrangeira até o processo reiniciar.
+	// ANTES de apagar: a campanha leva as sessões por cascata, e depois disso não
+	// há mais como perguntar quais eram — o estado em memória delas ficaria
+	// batendo na chave estrangeira até o processo reiniciar.
 	s.CampaignDeleted(r.Context(), id)
 	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
 		platform.WriteError(w, http.StatusInternalServerError, "Could not delete campaign")
@@ -205,33 +200,17 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	platform.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
 }
 
-// Aqui morava o `handleResolveInvite`, que resolvia o token compartilhado de
-// uma mesa em {campaignId, campaignName} para a tela de entrar da SPA. Ele e o
-// `invites_test.go` saíram na ALE-277, e as duas garantias dele estão presas
-// onde a pessoa hoje as vive, em `campaigns_join_test.go`: a carta de convite
-// resolve o token NO SERVIDOR e traz o nome da mesa na primeira pintura, e o
-// convite morto avisa que morreu em vez de oferecer um botão que não abre nada.
+// resolveRole é a regra de ACESSO a uma campanha, independente de transporte: o
+// dono é "gm"; quem tem personagem membro é "player"; o resto é barrado. Devolve
+// o papel e um status à moda do HTTP, que o chamador traduz para o transporte
+// dele.
 //
-// O caso do token ROTACIONADO não veio junto, e não por descuido: nada no app
-// rotaciona convite de campanha desde que a SPA saiu. O `SetInviteToken` fica —
-// a coluna e a consulta são o lugar onde a capacidade volta a morar quando
-// alguma cena oferecer o gesto —, mas hoje o único token que existe é o da
-// seed, e um teste sobre trocar o que não se troca mede a si mesmo.
-
-// resolveRole is the campaign-access domain rule,
-// transport-agnostic so both the HTTP handlers and the WS gateway can gate on it: the
-// owner is the "gm"; a user who owns a member character is a "player"; anyone else is
-// forbidden. Returns the role + an HTTP-ish status the caller maps to its transport.
-// The admin enters ANY mesa as "gm" (ALE-120): the role already exists, carries
-// the tools they came to use, and nothing in the engine assumes a single GM:
-// esta função devolve um PAPEL, e quem barra barra por papel, não por
-// identidade. Two GMs can therefore drive initiative at once; that is the
-// accepted cost of letting the table's owner fix a player's mesa mid-session.
-//
-// A frase original citava o `requireGm` do gateway de socket e a deduplicação
-// por usuário da presença. O gateway morreu na ALE-253 e a presença deixou de
-// ter quem a alimentasse quando a SPA saiu (ALE-272) — o argumento é o mesmo
-// sem eles, e citá-los apontava para dois lugares que não decidem mais nada.
+// O admin entra em QUALQUER mesa como "gm": o papel já existe, carrega as
+// ferramentas que ele veio usar, e nada no motor supõe um mestre só — esta
+// função devolve um PAPEL, e quem barra barra por papel e não por identidade.
+// Dois mestres podem então conduzir a iniciativa ao mesmo tempo, que é o custo
+// aceito por deixar o dono do servidor consertar a mesa de um jogador no meio da
+// sessão.
 func (rules campaignRules) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
 	c, err := rules.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -243,8 +222,8 @@ func (rules campaignRules) resolveRole(ctx context.Context, user AuthUser, campa
 	return rules.roleIn(ctx, user, c)
 }
 
-// roleIn is the same rule over a campaign the caller ALREADY loaded, so a
-// handler that needs both the row and the role does not read it twice.
+// roleIn é a mesma regra sobre uma campanha que o chamador JÁ carregou, para o
+// handler que precisa da linha e do papel não a ler duas vezes.
 func (rules campaignRules) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) (string, int, error) {
 	if c.Ownerid == user.ID || user.IsAdmin {
 		return "gm", http.StatusOK, nil
@@ -256,10 +235,10 @@ func (rules campaignRules) roleIn(ctx context.Context, user AuthUser, c sqlcgen.
 	return "player", http.StatusOK, nil
 }
 
-// loadOwnedCampaign is the owner-only campaign rule, transport-agnostic. The GM (owner)
-// alone passes; everyone else gets Forbidden. This ONE function is the gate for six
-// call sites (rename/delete, invite, members, sessions), which is why the admin
-// bypass costs a single condition here (ALE-120).
+// loadOwnedCampaign é a regra de campanha SÓ DO DONO, independente de
+// transporte: passa o mestre (dono), e o resto recebe Forbidden. Esta função é o
+// gargalo de meia dúzia de sítios (renomear/apagar, convite, membros, sessões),
+// e é por isso que a exceção do admin custa uma condição só.
 func (rules campaignRules) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64) (sqlcgen.Campaign, int, error) {
 	c, err := rules.queries.GetCampaign(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {

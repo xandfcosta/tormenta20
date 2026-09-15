@@ -2,20 +2,18 @@ package hub
 
 import "t20engine/serve/web/ui"
 
-// O HUB desenhado (ALE-231).
+// O HUB desenhado.
 //
-// Três coisas nesta tela respondem, cada uma, a uma pergunta que a migração
-// tinha em aberto:
+// Três coisas desta tela valem dizer:
 //
 //  1. O TECLADO. As setas andam no menu, e nada aqui as implementa: o menu só
-//     DECLARA a forma dele (`data-nav-region`, `data-nav-layout`) e o driver —
-//     o mesmo `scene-nav.ts` da SPA, servido por `scene.js` — lê isso do DOM.
-//     Um DOM vindo do servidor é um DOM.
-//  2. O POPOVER do rodapé, que era Kobalte, é a Popover API NATIVA. Foco,
-//     dispensa por clique fora, `Esc` e camada de topo vêm do navegador; o que
-//     sobra de JavaScript é posicionar, porque a top layer sai do fluxo.
-//  3. O SLIDER de volume, que era Kobalte, é `<input type="range">`. Teclado e
-//     leitor de tela de graça, e melhores.
+//     DECLARA a forma dele (`data-nav-region`, `data-nav-layout`) e o driver,
+//     servido por `scene.js`, lê isso do DOM.
+//  2. O POPOVER do rodapé é a Popover API NATIVA. Foco, dispensa por clique
+//     fora, `Esc` e camada de topo vêm do navegador; o que sobra de JavaScript é
+//     posicionar, porque a top layer sai do fluxo.
+//  3. O SLIDER de volume é `<input type="range">`: teclado e leitor de tela de
+//     graça, e melhores.
 
 templ hub(v hubView) {
 	@hubMenu(v)
@@ -30,8 +28,8 @@ templ hub(v hubView) {
 }
 
 // hubMenu é o menu principal. `data-nav-region` + `data-nav-layout` são o
-// contrato com o driver de teclado — o menu declara a forma e nunca importa o
-// driver, exatamente como na SPA.
+// contrato com o driver de teclado: o menu declara a forma e nunca importa o
+// driver.
 templ hubMenu(v hubView) {
 	<nav
 		aria-label="Menu principal"
@@ -122,7 +120,7 @@ templ playerMenu(v hubView) {
 			<span data-text="$sound ? 'Som ligado' : 'Som desligado'"></span>
 		</button>
 		// O slider só existe com o som ligado: slider sobre o mudo é controle
-		// morto, e o que ele resolve é o sino do "Sua vez" alto demais (ALE-180).
+		// morto, e o que ele resolve é o sino do "Sua vez" alto demais.
 		<div style="display:none" data-show="$sound" class="px-2 pb-2 pt-1">
 			<label for="volume" class="flex justify-between text-xs text-muted-foreground">
 				Volume
@@ -154,7 +152,7 @@ templ playerMenu(v hubView) {
 		</button>
 		if v.EhAdmin {
 			// Desenhado só para admin, e isso é UX: quem chegar na mão leva 403 do
-			// servidor, que é onde a fronteira mora (ALE-120).
+			// servidor, que é onde a fronteira mora.
 			<button
 				type="button"
 				data-on:click="$invite_dialog.showModal()"
@@ -169,9 +167,7 @@ templ playerMenu(v hubView) {
 			</a>
 		}
 		// Placeholder até existir tela de configurações, e DESABILITADO em vez de
-		// ausente: ele diz que o lugar existe e ainda não abriu. Portado tal e
-		// qual — a lista de garantias do `hub.test.tsx` foi conferida uma a uma, e
-		// este item era o único que eu tinha deixado cair sem perceber.
+		// ausente: ele diz que o lugar existe e ainda não abriu.
 		<button type="button" disabled class={ quickItemClass(false) }>
 			@ui.Icon("Settings", "size-4")
 			<span>Configurações</span>

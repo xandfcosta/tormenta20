@@ -6,25 +6,25 @@ import (
 	"fmt"
 )
 
-// The catalog-reading layer the collection engine depends on: the SHAPES of the
-// catalogs (items, races, origins, class/general powers, racas, tormenta-power
-// ids) plus the lookups over them — `Item`, `raceEntryByName`,
-// `raceWithDeformidade` and the origin/power accessors below.
+// A camada de leitura de catálogo de que o motor depende: a FORMA de cada
+// catálogo (itens, raças, origens, poderes de classe e gerais, ids de poder da
+// Tormenta) mais as consultas sobre eles.
 //
-// The data is primed ONCE via PrimeEngineCatalogs and handed in through the
-// Catalogs receiver — never read from a package-level cache, so a test can prime
-// its own without touching global state.
+// O dado é primado UMA vez pelo `PrimeEngineCatalogs` e entregue pelo receptor
+// `Catalogs` — nunca lido de um cache no nível do pacote, para um teste poder
+// primar o próprio sem tocar em estado global.
 
-// ─── Catalog shapes (o formato que o despejo de catálogo traz) ─────────────────────
+// ─── O formato que o despejo de catálogo traz ────────────────────────────────
 
-// CatalogItem mirrors items/types.ts CatalogItem — only the fields the
-// collection layer reads are typed.
+// CatalogItem é a entrada de item: só os campos que esta camada lê são
+// tipados.
 type CatalogItem struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Category string `json:"category"`
-	// Equip axis + Slots + AppliesTo feed the API's mutation validators (equip
-	// axis, carga, overlay compatibility); the derive ignores them.
+	// Equip, Slots e AppliesTo alimentam os validadores de mutação da API (eixo
+	// de equipar, carga, compatibilidade de sobreposição); a derivação os
+	// ignora.
 	Equip     string       `json:"equip"`
 	Slots     float64      `json:"slots"`
 	AppliesTo []string     `json:"appliesTo,omitempty"`
@@ -32,8 +32,8 @@ type CatalogItem struct {
 	Modifiers []Modifier   `json:"modifiers"`
 }
 
-// Item returns the catalog item by id, or nil if unknown — the exported accessor
-// the API server uses for its item-mutation validators.
+// Item devolve o item do catálogo pelo id, ou nulo quando ele não existe — é o
+// acessor que os validadores de mutação de item usam.
 func (c *Catalogs) Item(id string) *CatalogItem { return c.itemsByID[id] }
 
 type WeaponStats struct {
@@ -46,8 +46,8 @@ type WeaponStats struct {
 	Finesse   bool     `json:"finesse"` // inherent Des-on-attack (Adaga) — ALE-31
 }
 
-// RaceDefinition mirrors abilities/types.ts RaceDefinition (the abilities
-// catalog race, distinct from the racas.ts Raca below).
+// RaceDefinition é a raça do catálogo de habilidades, distinta da `Raca` de
+// atributos mais abaixo.
 type RaceDefinition struct {
 	ID               string         `json:"id"`
 	Name             string         `json:"name"`
@@ -66,7 +66,7 @@ type RaceAbilityVariant struct {
 	Modifiers []Modifier `json:"modifiers"`
 }
 
-// OriginDefinition mirrors abilities/types.ts OriginDefinition.
+// OriginDefinition é a origem do catálogo de habilidades.
 type OriginDefinition struct {
 	ID         string          `json:"id"`
 	Name       string          `json:"name"`
@@ -80,7 +80,7 @@ type OriginBenefit struct {
 	PowerPick string     `json:"powerPick,omitempty"` // 'combate' | 'tormenta'
 }
 
-// ClassPower mirrors abilities/types.ts ClassPower (collection-relevant fields).
+// ClassPower é o poder de classe, nos campos que esta camada lê.
 type ClassPower struct {
 	ID              string           `json:"id"`
 	ClassName       string           `json:"className"`
@@ -95,31 +95,31 @@ type GrantedByChoice struct {
 	Value string `json:"value"`
 }
 
-// GeneralPower mirrors abilities/general-powers.ts GeneralPower.
+// GeneralPower é o poder geral ou de combate.
 type GeneralPower struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
 	Modifiers []Modifier `json:"modifiers"`
 }
 
-// GrantedPower mirrors abilities/granted-powers.ts GrantedPower (poder concedido
-// do deus) — only name + modifiers are read (Bênção do Mana → maxPm). Keyed by
-// NAME because the picker stores the poder's name in Character.godPower.
+// GrantedPower é o poder concedido do deus — só o nome e os modificadores são
+// lidos (Bênção do Mana → maxPm). Indexado por NOME porque é o nome que o
+// `Character.godPower` guarda.
 type GrantedPower struct {
 	Name      string     `json:"name"`
 	Modifiers []Modifier `json:"modifiers"`
 }
 
-// RaceAttributeEntry mirrors racas.ts RaceAttributeEntry (only name + atributoMod are read here).
+// RaceAttributeEntry é a entrada de atributo de uma raça (só o nome e o
+// `atributoMod` são lidos aqui).
 type RaceAttributeEntry struct {
 	Name         string       `json:"name"`
 	AttributeMod AttributeMod `json:"atributoMod"`
 }
 
-// AttributeMod is the racas.ts AttributeMod union flattened by `kind`. `Mods` and
-// `Variants` use orderedInts because raceAttributeMods emits one modifier per
-// entry in the SOURCE object's key order (Object.entries) — a plain map would
-// scramble it and break activeItems parity.
+// AttributeMod é a união de modificadores de raça, achatada por `kind`. `Mods` e
+// `Variants` usam `orderedInts` porque um modificador sai por entrada NA ORDEM
+// em que o catálogo as traz — um mapa comum embaralharia.
 type AttributeMod struct {
 	Kind     string                 `json:"kind"` // fixed | floating | subraca-gated
 	Mods     orderedInts            `json:"mods"`
@@ -135,15 +135,15 @@ type AttributePenalty struct {
 	Value     int    `json:"value"`
 }
 
-// attrDelta is one attribute→amount entry, kept in an ordered slice.
+// attrDelta é um par atributo→quantidade, guardado em fatia ordenada.
 type attrDelta struct {
 	attr   string
 	amount int
 }
 
-// orderedInts is a JSON object of int values that preserves key order on decode
-// (Go maps don't). Used for atributoMod's mods/variants so the derived attribute
-// modifiers land na ordem em que o catálogo os traz.
+// orderedInts é um objeto JSON de inteiros que PRESERVA a ordem das chaves na
+// decodificação — mapa de Go não preserva. Usado nos `mods`/`variants` do
+// `atributoMod`, para os modificadores derivados saírem na ordem do catálogo.
 type orderedInts struct {
 	pairs []attrDelta
 }
@@ -171,11 +171,11 @@ func (o *orderedInts) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// ─── Catalogs holder + priming ────────────────────────────────────────
+// ─── O porta-catálogos e a primagem ──────────────────────────────────────────
 
-// Catalogs holds every primed catalog the collection layer reads. Injected into
-// ActiveItemsFor em vez de cache no nível do pacote (CLAUDE.md: deps by
-// parameter). Static + primed once, so no reactivity is needed.
+// Catalogs guarda todo catálogo primado que esta camada lê. Injetado no
+// `ActiveItemsFor` em vez de virar cache no nível do pacote — dependência por
+// parâmetro. Estático e primado uma vez, então não precisa de reatividade.
 type Catalogs struct {
 	itemsByID     map[string]*CatalogItem
 	racesByID     map[string]*RaceDefinition
@@ -187,8 +187,8 @@ type Catalogs struct {
 	tormentaIDs   map[string]bool
 }
 
-// enginePayload is the JSON shape `cmd/genoracle` dumps to
-// engine-go/parity/_catalogs.json (mirrors ensureCatalogs' priming inputs).
+// enginePayload é a forma JSON que o `cmd/genoracle` despeja em
+// `engine-go/parity/_catalogs.json`.
 type enginePayload struct {
 	Items         []CatalogItem                 `json:"items"`
 	Races         []RaceDefinition              `json:"races"`
@@ -200,9 +200,9 @@ type enginePayload struct {
 	TormentaIDs   []string                      `json:"tormentaPowerIds"`
 }
 
-// PrimeEngineCatalogs ingests the fetched-catalog JSON (the same data the front
-// primes via ensureCatalogs) into an indexed Catalogs. Returns an error with the
-// offending shape rather than panicking, so the WASM boundary can surface it.
+// PrimeEngineCatalogs ingere o JSON dos catálogos num `Catalogs` indexado.
+// Devolve erro NOMEANDO a forma ofensora em vez de entrar em pânico, para quem
+// chama poder mostrá-la.
 func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	var p enginePayload
 	if err := json.Unmarshal(raw, &p); err != nil {
@@ -244,7 +244,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	return c, nil
 }
 
-// ─── Lookups (mirror the frontend *-cache accessors) ──────────────────
+// ─── As consultas ────────────────────────────────────────────────────────────
 
 func (c *Catalogs) getCatalogItem(id string) *CatalogItem { return c.itemsByID[id] }
 
@@ -252,11 +252,11 @@ func (c *Catalogs) getRace(id string) *RaceDefinition { return c.racesByID[id] }
 
 func (c *Catalogs) getGeneralPower(id string) *GeneralPower { return c.generalByID[id] }
 
-// grantedPowerByName mirrors abilities-cache.grantedPowerByName — the god power
-// keyed by its book name (Character.godPower stores the name).
+// grantedPowerByName é o poder concedido do deus indexado pelo nome do livro,
+// que é o que o `Character.godPower` guarda.
 func (c *Catalogs) grantedPowerByName(name string) *GrantedPower { return c.grantedByName[name] }
 
-// getOrigin looks up an origin by id (abilities-cache getOrigin).
+// getOrigin acha uma origem pelo id.
 func (c *Catalogs) getOrigin(id string) *OriginDefinition {
 	for _, o := range c.origins {
 		if o.ID == id {
@@ -266,8 +266,8 @@ func (c *Catalogs) getOrigin(id string) *OriginDefinition {
 	return nil
 }
 
-// getOriginBenefit finds a benefit across all origins, including the poder único
-// — mirrors abilities-cache.getOriginBenefit.
+// getOriginBenefit acha um benefício em TODAS as origens, inclusive o poder
+// único.
 func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 	for _, o := range c.origins {
 		for i := range o.Benefits {
@@ -282,12 +282,11 @@ func (c *Catalogs) getOriginBenefit(benefitID string) *OriginBenefit {
 	return nil
 }
 
-// raceEntryByName finds a raça's attribute entry by name — 17 racas, and the
-// map is built once when the catalogs are primed.
+// raceEntryByName acha a entrada de atributo de uma raça pelo nome. O mapa é
+// montado uma vez, quando os catálogos são primados.
 func (c *Catalogs) raceEntryByName(name string) *RaceAttributeEntry { return c.racasByName[name] }
 
-// raceWithDeformidade returns the first name that owns Deformidade (Lefou p23) —
-// mirrors abilities-cache.raceWithDeformidade.
+// raceWithDeformidade devolve o primeiro nome que tem Deformidade (Lefou p23).
 func (c *Catalogs) raceWithDeformidade(names ...string) string {
 	owners := map[string]bool{}
 	for _, r := range c.racesByID {
@@ -306,9 +305,9 @@ func (c *Catalogs) raceWithDeformidade(names ...string) string {
 // isTormentaPower diz se o id é de um poder da Tormenta.
 func (c *Catalogs) isTormentaPower(id string) bool { return c.tormentaIDs[id] }
 
-// ownedClassPowers mirrors abilities-cache.ownedClassPowers → ownedClassPowersIn:
-// every class power owned for a class + level + chosen ids + choices, in catalog
-// order (so downstream ActiveItem order is deterministic).
+// ownedClassPowers são todos os poderes de classe que o personagem tem para uma
+// classe, nível, ids escolhidos e escolhas — em ordem de CATÁLOGO, para a ordem
+// dos `ActiveItem` lá na frente ser determinística.
 func (c *Catalogs) ownedClassPowers(
 	className string,
 	classLevel int,

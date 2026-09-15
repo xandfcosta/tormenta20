@@ -1,13 +1,13 @@
 package engine
 
-// As regras que o livro deixa NA MÃO DO MESTRE (ALE-221).
+// As regras que o livro deixa NA MÃO DO MESTRE.
 //
 // O T20 não manda aplicar tudo. Sobre os limites de carga ele diz, com todas as
 // letras: "O mestre pode ignorar essa regra, desde que os jogadores não abusem"
 // (p141). Um app que aplica sempre escolhe um estilo de jogo pelo mestre — e
 // escolhe o mais punitivo. O interruptor entra no motor como ENTRADA, porque a
-// autoridade das regras é daqui (ALE-104): se a tela decidisse sozinha se pinta
-// a penalidade, voltariam as duas implementações da mesma regra.
+// autoridade das regras é daqui: se a tela decidisse sozinha se pinta a
+// penalidade, seriam duas implementações da mesma regra.
 
 // IgnoredRules são as regras que a campanha DESLIGOU.
 //

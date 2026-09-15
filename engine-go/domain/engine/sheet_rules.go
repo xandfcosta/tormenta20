@@ -1,11 +1,10 @@
 package engine
 
-// Pure, catalog-free rules the breakdown layer needs,:
-// training bonus (expertises.ts), spell save CD + caster attribute (spells.ts),
-// and the class RD tables (damage-reduction.ts). Distinct from the MVP skill
+// Pure, catalog-free rules the breakdown layer needs: training bonus, spell save
+// CD + caster attribute, and the class RD tables. Distinct from the MVP skill
 // model in skills.go — the real derive uses a level-based training bonus.
 
-// trainingBonusForLevel ports expertises.ts: +2 / +4 (7º) / +6 (15º).
+// trainingBonusForLevel: +2 / +4 (7º) / +6 (15º).
 func trainingBonusForLevel(level int) int {
 	if level >= 15 {
 		return 6
@@ -50,9 +49,9 @@ func isSpellcastingClass(className string) bool {
 // classes casts with, honouring the Caminho do Arcanista (p37). Returns "" for a
 // class that does not cast.
 //
-// The Feiticeiro lançava com Inteligência na ficha enquanto o catálogo já lhe
-// somava PM por Carisma — as duas metades da mesma frase do livro, uma certa e
-// uma errada (ALE-113). O exemplo trabalhado da p173 é uma feiticeira.
+// O Feiticeiro lança com CARISMA, e é o mesmo atributo pelo qual o catálogo lhe
+// soma PM — as duas metades da mesma frase do livro. O exemplo trabalhado da
+// p173 é uma feiticeira.
 //
 // @example spellcastingAttributeFor(samiraFeiticeira, "Arcanista") // "charisma"
 func spellcastingAttributeFor(ch Character, className string) string {
@@ -106,5 +105,5 @@ const especializacaoArmaduraLevel = 12
 // armadura pesada, você recebe redução de dano 5". Escolhido no 5º nível, valor
 // fixo. Confirmado no livro; o Cavaleiro tem ainda outras duas fontes de RD 5
 // que o motor NÃO modela (Especialização em Armadura, p54, cumulativa com esta;
-// e Desprezar os Covardes, p54) — ver ALE-111.
+// e Desprezar os Covardes, p54).
 const cavaleiroBastiaoRd = 5

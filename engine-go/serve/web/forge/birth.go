@@ -12,19 +12,18 @@ import (
 	"t20engine/infra/platform"
 )
 
-// O NASCIMENTO DO HERÓI (ALE-272, fatia 9).
+// O NASCIMENTO DO HERÓI.
 //
 // A forja curta faz quatro perguntas — nome, raça, classe, origem — mais o
 // equipamento inicial de p140, e o que sai dela é um personagem VÁLIDO de 1º
 // nível, não um rascunho. O que ela não pergunta são as escolhas que a ficha já
-// sabe fazer desde as fatias 2 a 8: os dois benefícios da origem (p85), o treino
-// de perícia, os atributos de raça, o caminho, o devoto. Isso vira PENDÊNCIA, e
-// pendência não é erro.
+// sabe fazer: os dois benefícios da origem (p85), o treino de perícia, os
+// atributos de raça, o caminho, o devoto. Isso vira PENDÊNCIA, e pendência não
+// é erro.
 //
-// A AUTORIDADE É DAQUI. A rota JSON de criar personagem diz por escrito que as
-// checagens de catálogo estão adiadas porque "o frontend pré-valida"; esta não
-// adia nada — raça, classe, origem e cada peça do equipamento são conferidas
-// contra o catálogo antes de virarem linha no banco.
+// A AUTORIDADE É DAQUI: raça, classe, origem e cada peça do equipamento são
+// conferidas contra o catálogo antes de virarem linha no banco, sem adiar nada
+// para uma pré-validação do cliente.
 
 // heroNameMax é o teto do nome. O mesmo do nome de campanha: é a coluna de
 // texto de uma tela, e duas medidas diferentes para a mesma coisa só produzem a
@@ -232,9 +231,9 @@ func (s Scene) heroAggregate(r *http.Request, id int64) (sheet.CharacterDTO, err
 // agregado já gravado — antes de existir linha no banco não há de onde tirar o
 // PV da classe. Nascer com o poço no zero seria nascer inconsciente.
 //
-// Ela tem UM chamador, o nascimento, e é o encher à força que a prende ali. A
-// cena de atributos chamava esta aqui e virava uma bomba de cura (ALE-309); o
-// que ela usa hoje é o `shiftPools`.
+// Ela tem UM chamador, o nascimento, e é o encher à força que a prende ali:
+// chamá-la de uma cena que mexe em herói JÁ em jogo é uma bomba de cura. Quem
+// mexe numa ficha viva usa o `shiftPools`.
 func (s Scene) fillPools(r *http.Request, id int64) error {
 	dto, err := s.heroAggregate(r, id)
 	if err != nil {

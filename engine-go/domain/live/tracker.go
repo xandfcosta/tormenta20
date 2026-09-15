@@ -6,21 +6,10 @@ import (
 	"strings"
 )
 
-// AS REGRAS DO RASTREADOR (ALE-265).
-//
-// Elas vinham de `frontend/src/features/session-tracker/tracker-rules.ts`, e a
-// razão de estarem lá era a mesma das dez regras que esta migração já
-// desentranhou: foi onde o componente precisou delas. A diferença é que aquelas
-// estavam soldadas ao TRANSPORTE (o gateway do socket) e estas estão soldadas à
-// TELA — mas o efeito é o mesmo, e o segundo consumidor não as alcança.
-//
-// Ficam no `live` e não no `api` porque falam do estado da sessão ao vivo, que
-// é o que este pacote é. A cópia da SPA fica enquanto a tela dela existir; as
-// duas convivem durante a migração e some com a virada do rastreador.
-//
-// O que NÃO veio junto foi o `palcoBaixo`. Ver o comentário no fim.
+// AS REGRAS DO RASTREADOR ficam no `live` e não no `api` porque falam do estado
+// da sessão ao vivo, que é o que este pacote é.
 
-// UpcomingTurns é quem está na vez e quem vem depois, na ORDEM DA MESA (ALE-179).
+// UpcomingTurns é quem está na vez e quem vem depois, na ORDEM DA MESA.
 //
 // A lista é CIRCULAR: depois do último vem o primeiro, com a rodada seguinte.
 // Cortar no fim deixaria a tira vazia justamente no turno em que saber "quem
@@ -28,9 +17,9 @@ import (
 //
 // Fora de combate (`turno` negativo) não há vez de ninguém e não há fila.
 //
-// CUIDADO, e o comentário da SPA registra isto: ela devolve uma JANELA, não a
-// fila. Usá-la para enumerar quem está em combate devolve `quantos` de nove
-// combatentes, e uma limpeza baseada nela deixa quatro para trás (ALE-211).
+// CUIDADO: ela devolve uma JANELA, não a fila. Usá-la para enumerar quem está em
+// combate devolve `quantos` de nove combatentes, e uma limpeza baseada nela
+// deixa quatro para trás.
 func UpcomingTurns(fila []InitiativeEntry, turno, quantos int) []InitiativeEntry {
 	if turno < 0 || len(fila) == 0 || quantos <= 0 {
 		return nil
@@ -51,18 +40,17 @@ type NextTurnTarget struct {
 	Entry *InitiativeEntry
 }
 
-// NextTurnButton escreve o rótulo do botão mais clicado da sessão (ALE-184).
+// NextTurnButton escreve o rótulo do botão mais clicado da sessão.
 //
-// Ele diz PARA ONDE vai, e não o que faz: o mestre lia "▶" e contava a lista
-// para saber quem entrava. Fora de combate o verbo muda — "Próximo: Arwen"
-// mentiria sobre uma rodada que ainda não começou, e quem clica ali está
-// COMEÇANDO o combate.
+// Ele diz PARA ONDE vai, e não o que faz: com um "▶" o mestre conta a lista para
+// saber quem entra. Fora de combate o verbo muda — "Próximo: Arwen" mentiria
+// sobre uma rodada que ainda não começou, e quem clica ali está COMEÇANDO o
+// combate.
 //
-// Fila vazia não tem para onde ir, e prometer um nome seria inventá-lo. O
-// rótulo diz o MOTIVO de estar desligado e não o verbo que não vai acontecer:
-// desde a ALE-210 esta vaga só existe DENTRO da cena, e "em cena sem ninguém na
-// fila" é o instante em que o mestre acabou de iniciar e vai montar a ordem —
-// ali um "Próximo turno" apagado não explica o que falta fazer.
+// Fila vazia não tem para onde ir, e prometer um nome seria inventá-lo. O rótulo
+// diz o MOTIVO de estar desligado e não o verbo que não vai acontecer: "em cena
+// sem ninguém na fila" é o instante em que o mestre acabou de iniciar e vai
+// montar a ordem, e ali um "Próximo turno" apagado não explica o que falta.
 func NextTurnButton(fila []InitiativeEntry, turno int) NextTurnTarget {
 	if len(fila) == 0 {
 		return NextTurnTarget{Label: "Ninguém na fila"}
@@ -79,14 +67,14 @@ func NextTurnButton(fila []InitiativeEntry, turno int) NextTurnTarget {
 }
 
 // TurnCounter é a frase que diz ONDE a sessão está: fora de cena, em cena
-// montando a ordem, ou em que turno de que rodada (ALE-210).
+// montando a ordem, ou em que turno de que rodada.
 //
 // É função e não aninhamento de condicionais porque são QUATRO estados
 // exclusivos, e o que decide entre eles é regra — a cena existe antes da fila, e
 // a fila existe antes do turno.
 //
-// "Rodada 0" aparece de propósito no terceiro caso: é o que a faixa já dizia
-// antes daquela issue, e a rodada só vira 1 no primeiro avanço.
+// "Rodada 0" aparece de propósito no terceiro caso: a rodada só vira 1 no
+// primeiro avanço.
 func TurnCounter(cenaAtiva bool, rodada, turno int, naFila int) string {
 	if !cenaAtiva {
 		return "Fora de cena"
@@ -109,19 +97,6 @@ type TableMember struct {
 	// OwnerID é zero quando o membro não tem personagem ligado.
 	OwnerID int64
 }
-
-// Aqui morava o `MyCharacters`, que montava "quais personagens são de quem está
-// olhando" a partir de uma lista de membros já carregada (ALE-289).
-//
-// Ele ficou sem chamador de produção: quem responde essa pergunta hoje é o
-// `tableRoster` da cena da Mesa, que a resolve contra o BANCO enquanto monta o
-// elenco — outra entrada, mesmo conceito.
-//
-// A regra da ALE-33 não saiu com ele. Ela continua presa, e num lugar melhor:
-// `TestTheReachOnlyShowsWhenThereIsABudget` a exercita pelo caminho inteiro,
-// e foi ele que acusou o defeito que a docstring do `reachAndTarget` registra —
-// o jogador na vez dele sem ver alcance nenhum, porque a POSSE é por peça e o
-// caminho de leitura não a resolvia.
 
 // ConnectedCharacters são os personagens de quem está com a aba aberta agora.
 //
@@ -159,34 +134,18 @@ func GmSeesVitals(fila []InitiativeEntry, ehMestre bool) bool {
 	return false
 }
 
-// O `palcoBaixo` da SPA NÃO foi portado, e isso é decisão e não esquecimento.
-//
-// Ele responde "o palco comporta a faixa de turno em duas fileiras?" a partir da
-// ALTURA MEDIDA do palco — 416px, medidos a 844×390 com uma ficha aberta, onde
-// o cromo comia 65% da tela. É pergunta de LEIAUTE, e no servidor ela não tem
-// resposta: o Go não mede caixa.
-//
-// A tradução certa é consulta de CONTÊINER no CSS, como o painel do bestiário
-// (`.mesa-painel`, ALE-172) — e ela é melhor que o original, porque a SPA
-// precisava de JS só por causa da lista virtualizada. O comentário de lá avisa
-// que a consulta tem de ser por ALTURA e não por mídia, porque o teclado virtual
-// mexe na altura da JANELA (ALE-176) enquanto a altura do PALCO é outra coisa.
-
 // ── acrescentar um combatente ────────────────────────────────────────────────
 
 // Os limites do que o mestre pode digitar ao acrescentar um combatente.
 //
-// Eles vinham do formulário da SPA (`AddCombatantForm`), escritos como atributos
-// dos campos — que é UI e não trava: quem postasse na mão passava por cima dos
-// quatro. Vêm para cá pelo mesmo motivo das outras seis regras desta fatia, e a
-// escolha de virem para o `live` em vez de ficarem no app é a que evita o
-// defeito clássico: dois formulários com escadas diferentes deixariam as duas
-// telas discordando sobre o que é um combatente aceitável.
+// Eles moram aqui e não nos atributos do campo, que são UI e não trava: quem
+// postasse na mão passaria por cima dos quatro. E moram no `live` e não no app
+// porque dois formulários com escadas diferentes deixariam as duas telas
+// discordando sobre o que é um combatente aceitável.
 //
-// Os números são os que a SPA já praticava. A faixa da iniciativa é de
-// jogabilidade e não do livro: um d20 mais bônus cabe folgado nela, e o que ela
-// barra é o dedo escorregado que digita 400 e manda o combatente para o topo de
-// toda rodada até alguém achar o erro.
+// A faixa da iniciativa é de jogabilidade e não do livro: um d20 mais bônus cabe
+// folgado nela, e o que ela barra é o dedo escorregado que digita 400 e manda o
+// combatente para o topo de toda rodada até alguém achar o erro.
 const (
 	MaxLabelLetters = 60
 	MinInitiative   = -5
@@ -234,10 +193,9 @@ func ValidateCombatantDraft(c CombatantDraft) error {
 // ValidateInitiative é a faixa jogável, e ela vale tanto para o combatente que
 // NASCE quanto para o que é CORRIGIDO depois.
 //
-// Está separada porque tem dois chamadores: acrescentar e editar. Na SPA ela era
-// duas constantes copiadas em dois componentes (`AddCombatantForm` e
-// `InitiativeEditDialog`), com um comentário em cada dizendo "a mesma do
-// formulário de adicionar" — duas cópias que só um comentário mantinha juntas.
+// Está separada porque tem dois chamadores: acrescentar e editar. Como duas
+// constantes copiadas em dois formulários, o que as mantinha iguais era um
+// comentário.
 func ValidateInitiative(v int) error {
 	if v < MinInitiative || v > MaxInitiative {
 		return fmt.Errorf("iniciativa %d está fora da faixa de %d a %d", v, MinInitiative, MaxInitiative)

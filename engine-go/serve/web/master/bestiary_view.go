@@ -12,40 +12,36 @@ import (
 	"github.com/a-h/templ"
 )
 
-// O BESTIÁRIO como dado (ALE-257).
+// O BESTIÁRIO como dado.
 //
-// O catálogo deixa de ir ao navegador, e aqui isso pesa mais que na cena de
-// personagens: são 62 KB de criaturas que a SPA baixa para PODER filtrar. No
-// servidor ele já está em memória por `go:embed`, e o que atravessa a rede é a
-// lista filtrada.
+// O catálogo fica em memória no servidor por `go:embed`, e o que atravessa a
+// rede é a lista JÁ FILTRADA.
 //
-// Some junto a LISTA VIRTUALIZADA, e a razão é medida e não gosto: o bestiário
-// tem 80 criaturas. Virtualização é maquinaria para lista que não cabe, e a 80
-// ela cobra o custo sem cobrir problema nenhum — inclusive o de precisar de e2e
-// porque jsdom mede zero.
+// Sem LISTA VIRTUALIZADA, de propósito: virtualização é maquinaria para lista
+// que não cabe, e o bestiário tem 80 criaturas — a 80 ela cobra o custo sem
+// cobrir problema nenhum, inclusive o de precisar de e2e porque jsdom mede
+// zero.
 
 // BestiaryView é o que a cena precisa para se desenhar inteira, numa resposta.
 //
-// A SPA baixa o catálogo (62 KB) para PODER filtrar; aqui a filtragem já
-// aconteceu e o que atravessa é o resultado. `Total` viaja junto porque a linha
-// "12 de 80" precisa dos dois números, e sem ele a tela não sabe se o filtro
-// apertou muito ou se o bestiário é pequeno.
+// `Total` viaja junto do resultado filtrado porque a linha "12 de 80" precisa
+// dos dois números: sem ele a tela não sabe se o filtro apertou muito ou se o
+// bestiário é pequeno.
 type BestiaryView struct {
 	// Base é o prefixo das rotas que ESTA cena chama, e existe porque o mesmo
-	// desenho serve dois lugares: a cena do mestre em `/mestre/bestiario`
-	// e o painel da Mesa em `/mesa/{c}/{s}/bestiario`. O que muda entre
-	// as duas é o ENDEREÇO, não a lista nem o bloco — e um segundo desenho seria
-	// a mesma criatura mantida em dois lugares.
+	// desenho serve dois lugares: a cena do mestre em `/mestre/bestiario` e o
+	// painel da Mesa em `/mesa/{c}/{s}/bestiario`. O que muda entre as duas é o
+	// ENDEREÇO, não a lista nem o bloco.
 	//
 	// Sem valor não há rota: o `BestiaryBase` recusa a string vazia em vez de
 	// deixar o botão apontar para a página atual, que é o defeito silencioso
 	// desta forma — o clique "funciona" e recarrega a cena.
 	Base string
-	// Livro é o endereço do PDF do livro (ALE-264), e o ZERO VALOR é o caso
-	// normal: sem `LIVRO_PDF` configurado não há livro para abrir e o bloco não
-	// desenha o botão. Ele vem pedido no construtor, ao lado da Base, pela mesma
-	// razão que ela — são os dois endereços de que a cena depende, e um deles
-	// esquecido some em silêncio.
+	// Book é o endereço do PDF do livro, e o ZERO VALOR é o caso normal: sem
+	// `LIVRO_PDF` configurado não há livro para abrir e o bloco não desenha o
+	// botão. Vem pedido no construtor, ao lado da Base, pela mesma razão que
+	// ela — são os dois endereços de que a cena depende, e um deles esquecido
+	// some em silêncio.
 	Book    bookui.BookAddress
 	Entries []book.Entry
 	Total   int
@@ -54,20 +50,16 @@ type BestiaryView struct {
 	Types   []string
 	CRMin   float64
 	CRMax   float64
-	// Abrir diz que ESTE pedido veio de um clique numa linha, e por isso a ficha
-	// tem de nascer aberta. Vem da URL e não de um sinal: a MESMA rota serve a
-	// busca e os filtros de tipo, e os dois mandam os sinais TODOS — inclusive o
-	// `criatura` já escolhido. Um sinal não separaria "escolhi esta criatura" de
-	// "digitei uma letra com uma criatura já escolhida", e a busca passaria a
-	// abrir a ficha sozinha a cada tecla.
+	// Open diz que ESTE pedido veio de um clique numa linha, e por isso a ficha
+	// tem de nascer aberta. Vem da URL e não de um sinal — a razão está no
+	// `openTheEntry`.
 	Open bool
 }
 
 // chosenOrFirst: a cena SEMPRE mostra um bloco quando há lista.
 //
-// A SPA faz `shown().find(...) ?? shown()[0]`, e a razão de portar isso é que o
-// painel vazio ao lado de uma lista cheia parece defeito. Quando o filtro muda
-// e a criatura escolhida sai da lista, cai na primeira em vez de esvaziar.
+// Quando o filtro muda e a criatura escolhida sai da lista, cai na primeira em
+// vez de esvaziar — painel vazio ao lado de uma lista cheia parece defeito.
 func chosenOrFirst(lista []book.Entry, id string) *book.Entry {
 	if len(lista) == 0 {
 		return nil
@@ -80,12 +72,11 @@ func chosenOrFirst(lista []book.Entry, id string) *book.Entry {
 	return &lista[0]
 }
 
-// loadBestiary monta a cena a partir do que veio na URL ou nos sinais.
-// LoadBestiaryFrom exige a BASE como primeiro parâmetro, e isso é a lição de
-// um guarda que acusou na hora: a primeira versão deixava o campo de fora e um
-// teste de outra pasta montou a cena sem ele. Construtor que consegue produzir
-// valor inválido é o próprio defeito — pedir aqui torna o esquecimento
-// impossível em vez de detectável.
+// LoadBestiaryFrom monta a cena a partir do que veio na URL ou nos sinais.
+//
+// A BASE é o primeiro parâmetro e é obrigatória: construtor que consegue
+// produzir valor inválido é o próprio defeito — pedir aqui torna o
+// esquecimento impossível em vez de detectável.
 func LoadBestiaryFrom(base string, livro bookui.BookAddress, busca string, tipos []string, ndMin, ndMax float64, escolhido string) BestiaryView {
 	todos := book.Creatures()
 	lista := book.FilterCreatures(todos, book.CreatureFilter{Busca: busca, Tipos: tipos, NDMin: ndMin, NDMax: ndMax})
@@ -129,17 +120,16 @@ func BestiarySignals(v BestiaryView) string {
 	}
 	busca, _ := json.Marshal(v.Term)
 	criatura, _ := json.Marshal(escolhida)
-	// `fichaAberta` sai DAQUI e não de um evento de sinal separado, e a razão é o
-	// que a medição mostrou: este `data-signals` mora no `#bestiary`, que É o
-	// elemento remendado, então ele REDECLARA os sinais a cada remendo. Um
-	// evento de sinal mandado depois do conteúdo era desfeito por esta linha —
-	// o fio levava `{"fichaAberta":true}` e o diálogo continuava `display:none`.
+	// `sheet_open` sai DAQUI e não de um evento de sinal separado: este
+	// `data-signals` mora no `#bestiary`, que É o elemento remendado, então ele
+	// REDECLARA os sinais a cada remendo. Um evento de sinal mandado depois do
+	// conteúdo é desfeito por esta linha — o fio leva `{"sheet_open":true}` e o
+	// diálogo continua `display:none`.
 	//
-	// É o mesmo perigo que o `web/ui/layout.templ` já tinha escrito ao pôr os
-	// sinais da página no `<body>`, que nunca é remendado. Aqui a saída não é
-	// mover: é o servidor redeclarar com o valor CERTO, e aí o conteúdo e o
-	// estado de aberto chegam no MESMO remendo — atômicos, sem janela em que um
-	// esteja aplicado e o outro não.
+	// A saída não é mover os sinais para um elemento que ninguém remenda: é o
+	// servidor redeclarar com o valor CERTO, e aí o conteúdo e o estado de
+	// aberto chegam no MESMO remendo — atômicos, sem janela em que um esteja
+	// aplicado e o outro não.
 	return fmt.Sprintf(`{search: %s, ndMin: %s, ndMax: %s, tipos: %s, creature: %s, sheet_open: %t}`,
 		busca, crInBox(v.CRMin), crInBox(v.CRMax), tipos, criatura, v.Open)
 }
@@ -148,8 +138,8 @@ func BestiarySignals(v BestiaryView) string {
 //
 // Uma base vazia produziria `@get(”)`, que o navegador resolve para a página
 // ATUAL: o filtro pareceria funcionar (a página recarrega) e não filtraria nada.
-// Um pânico no render é barulhento e acontece na primeira vez que alguém monta a
-// cena sem dizer de onde ela fala.
+// O pânico é barulhento e acontece na primeira vez que alguém monta a cena sem
+// dizer de onde ela fala.
 func (v BestiaryView) BestiaryBase() string {
 	if v.Base == "" {
 		panic("bestiarioView sem Base: a cena não sabe para que rota falar")
@@ -158,11 +148,6 @@ func (v BestiaryView) BestiaryBase() string {
 }
 
 // ToggleType liga ou desliga UM crachá de tipo no conjunto.
-//
-// Extraída porque tem dois chamadores desde que o painel da Mesa nasceu — a cena
-// do mestre e ele —, e "alternar" é regra pequena o bastante para alguém
-// reescrever sem notar que já existia, e grande o bastante para as duas cópias
-// discordarem sobre o que fazer com um tipo repetido.
 //
 // Tipo que o catálogo não conhece é RECUSADO e não descartado: a URL é editável
 // à mão, e um tipo inventado no conjunto filtraria tudo fora — a tela leria
@@ -193,7 +178,7 @@ func openTheEntry(base string) string {
 	return base + "?abrir=1"
 }
 
-// ── campos alcançáveis pela SETA (ALE-264) ───────────────────────────────────
+// ── campos alcançáveis pela SETA ─────────────────────────────────────────────
 
 // navigableField são os atributos que põem um `<input>` na navegação por setas.
 //
@@ -207,16 +192,15 @@ func openTheEntry(base string) string {
 // (`isTypingTarget`) e — a parte que importa — se recolhe SEM consumir a tecla:
 // não há `stop(e)`, então o evento continua até o elemento. Um `keydown` no
 // próprio campo alcança o Esc, e é assim que a porta de saída existe sem tocar
-// no driver, que é compartilhado com a SPA.
+// no driver.
 //
 // Esc sobe para o TRILHO e não apenas tira o foco, porque é o que a gramática da
 // casa faz em toda parte: o `handleBack` do driver leva para
 // `[data-nav-region="rail"]` antes de sair da cena. Duas saídas diferentes para
 // a mesma tecla seria a pessoa aprendendo duas regras.
 //
-// É `keydown` por cena? Não: é UM helper, usado por todo campo que entra na
-// navegação. A filosofia proíbe "hand-roll per-scene keydown handlers", e o que
-// ela protege é justamente isto — a regra num lugar só.
+// É um helper e não um `keydown` escrito por cena, para a regra ficar num lugar
+// só.
 func navigableField() templ.Attributes {
 	return templ.Attributes{
 		"data-nav-item": "",

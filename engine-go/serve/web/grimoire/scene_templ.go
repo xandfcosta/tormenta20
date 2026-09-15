@@ -10,16 +10,15 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "t20engine/serve/web/ui"
 
-// A FOLHA DE ESPECIFICAÇÃO do sistema de desenho (ALE-251, portada da ALE-173).
+// A FOLHA DE ESPECIFICAÇÃO do sistema de desenho.
 //
 // Duas regras sustentam esta página, e as duas existem contra o mesmo
 // apodrecer:
 //
 //  1. **Ela LÊ o valor do navegador, nunca o transcreve.** Cada legenda vem do
 //     `getComputedStyle` da amostra ao lado, então o número e o desenho não têm
-//     como discordar. Isso não existe no servidor, e por isso esta é a primeira
-//     ilha de JS da migração que é NECESSÁRIA e não conveniente —
-//     `piloto/grimorio.ts`.
+//     como discordar. O servidor não sabe responder isso, e por isso a ilha de
+//     JS aqui é NECESSÁRIA e não conveniente — `piloto/grimorio.ts`.
 //  2. **Ela usa as peças de VERDADE**, e não imitações com as mesmas classes.
 //     Uma imitação mentiria no primeiro dia em que alguém mexesse no original.
 //
@@ -53,7 +52,7 @@ var accents = []colorSample{
 	{Classe: "bg-grimorio-parchment", Token: "--grimorio-parchment", Nota: "superfície clara"},
 }
 
-// Os papéis, cada um com o par bloco + tinta (ALE-173, P3). Ficam lado a lado
+// Os papéis, cada um com o par bloco + tinta. Ficam lado a lado
 // de propósito: é aqui que se vê que a cor de PREENCHER e a de ESCREVER não
 // podem ser a mesma — a de baixo passa de 4,5:1 e a de cima não.
 var roles = []colorSample{
@@ -118,7 +117,7 @@ var shadcnSteps = []simpleSample{
 	{Classe: "text-xs", Nome: "text-xs"},
 }
 
-// Os três que a casa acrescentou ABAIXO do piso do shadcn (ALE-173).
+// Os três que a casa acrescentou ABAIXO do piso do shadcn.
 var houseSteps = []simpleSample{
 	{Classe: "text-2xs", Nome: "text-2xs", Uso: "rótulo de seção"},
 	{Classe: "text-3xs", Nome: "text-3xs", Uso: "rótulo de campo"},
@@ -156,7 +155,7 @@ func sheetSection(id, titulo string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 124, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 123, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -169,7 +168,7 @@ func sheetSection(id, titulo string) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(id + "-titulo")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 124, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 123, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -191,7 +190,7 @@ func sheetSection(id, titulo string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(id + "-titulo")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 125, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 124, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -217,7 +216,7 @@ func sheetSection(id, titulo string) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 126, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 125, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -282,7 +281,7 @@ func sheetBlock(titulo, nota string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 138, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 137, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -302,7 +301,7 @@ func sheetBlock(titulo, nota string) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(nota)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 141, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 140, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -382,7 +381,7 @@ func colorSwatch(a colorSample) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(a.Token)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 156, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 155, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -406,7 +405,7 @@ func colorSwatch(a colorSample) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nota)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 162, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 161, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -427,7 +426,7 @@ func colorSwatch(a colorSample) templ.Component {
 
 // radiusCorner: o canto desenhado pela classe, e ao lado o PIXEL que ela virou
 // dentro desta cena — que é a informação que ninguém consegue prever lendo o
-// código, porque a cena redefine o `--radius` (ALE-173).
+// código, porque a cena redefine o `--radius`.
 func radiusCorner(a simpleSample) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -478,7 +477,7 @@ func radiusCorner(a simpleSample) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 175, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 174, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -543,7 +542,7 @@ func textRow(a simpleSample) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(a.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 187, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 186, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -561,7 +560,7 @@ func textRow(a simpleSample) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(a.Uso)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 190, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 189, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -694,7 +693,7 @@ func colorSection() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "     ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "   ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1042,7 +1041,7 @@ func grimoire() templ.Component {
 			var templ_7745c5c3_Var45 templ.SafeURL
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("#" + item.Nome))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 293, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 290, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -1055,7 +1054,7 @@ func grimoire() templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(item.Uso)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 295, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 292, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -1106,28 +1105,6 @@ func grimoire() templ.Component {
 
 // Esta seção mostra cada peça de `web/ui` com o que o navegador RESOLVEU para
 // ela, e a medida é o ponto: sem ela, duas peças parecidas passam por iguais.
-//
-// # AQUI HAVIA DUAS COLUNAS, e vale saber o que a segunda fez (ALE-251)
-//
-// Ela era a peça equivalente da SPA, montada como elemento customizado a partir
-// do componente Solid DE VERDADE — nunca uma imitação, porque uma imitação com
-// as mesmas classes concordaria consigo mesma e não flagraria nada. Comparar as
-// duas lado a lado devolveu CINCO features que um porte tinha perdido: os peeks
-// e o ⏎ da ALE-239, o link de redefinição da ALE-242, e na ALE-246 o
-// `data-tome-root` e o `field-sizing`. A ALE-250 saiu daqui também, e é a que
-// mais ensina: a comparação achou 2px de diferença no `secondary`, e a
-// conclusão registrada — "o errado é o nome" — sobreviveu meses até alguém
-// medir o LIMITE de contraste e descobrir que a borda era o conserto.
-//
-// A coluna saiu na ALE-314, por decisão do dono: a migração fechou e o corpo de
-// prova foi considerado cumprido. O que ela custava era 0,3% do `node_modules`
-// e ~77 KB do binário, então o preço não foi o que decidiu — foi o prazo de
-// validade, que ninguém tinha escrito.
-//
-// **O que saiu junto foi um INVENTÁRIO**, e ele está na ALE-316: oito peças da
-// SPA nunca ganharam contraparte aqui — três variantes de botão, as variantes
-// de crachá e as quatro barras vitais. A folha dizia isso por PRESENÇA, com uma
-// linha "sem par em templ"; agora é uma issue.
 func partPart(nome string, peca templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1156,7 +1133,7 @@ func partPart(nome string, peca templ.Component) templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 341, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 316, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1197,9 +1174,8 @@ func partPart(nome string, peca templ.Component) templ.Component {
 }
 
 // measuredCell põe a peça e, embaixo, o que o navegador resolveu para ela. É a
-// regra nº 1 da folha: sem a medida, duas peças parecidas passam por iguais — e
-// foi assim que a primeira versão desta seção deixou passar um erro de 12px no
-// `xs`, quando ela ainda comparava com a SPA.
+// regra nº 1 da folha: sem a medida, duas peças parecidas passam por iguais, e
+// uma diferença de poucos pixels no tamanho `xs` não se vê a olho nu.
 func measuredCell() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1468,7 +1444,7 @@ func sheetButton(v ui.Variant) templ.Component {
 	})
 }
 
-// O crachá do servidor (ALE-177). Ele é a GEOMETRIA e nada mais, e é por isso
+// O crachá do servidor. Ele é a GEOMETRIA e nada mais, e é por isso
 // que o exemplo traz a borda neutra à mão: escolher uma cor aqui inventaria uma
 // variante que não existe.
 func sheetBadge() templ.Component {
@@ -1554,7 +1530,7 @@ func sheetButtonInSize(t ui.Size, texto string) templ.Component {
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(texto)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 401, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 375, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
@@ -1786,7 +1762,7 @@ func motionSection() templ.Component {
 						var templ_7745c5c3_Var75 string
 						templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(d.Uso)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 454, Col: 14}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/grimoire/scene.templ`, Line: 428, Col: 14}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 						if templ_7745c5c3_Err != nil {

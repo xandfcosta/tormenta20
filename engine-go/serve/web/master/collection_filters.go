@@ -7,7 +7,7 @@ import (
 	"t20engine/domain/book"
 )
 
-// OS FILTROS de cada catálogo (ALE-264).
+// OS FILTROS de cada catálogo.
 //
 // O bestiário sempre teve os dele — ND e tipo —, e os outros oito nasceram com
 // busca e mais nada. O dono pediu filtro específico por catálogo, e a forma é a

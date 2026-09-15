@@ -9,14 +9,12 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O LEITOR (ALE-264): a cena que abre o PDF do livro na página do verbete e o
-// DESTACA.
+// O LEITOR: a cena que abre o PDF do livro na página do verbete e o DESTACA.
 //
-// Ela saiu do `api` na ALE-278, e a OUTRA metade do arquivo original ficou lá:
-// ler `LIVRO_PDF` no boot, cunhar o dígito de cache e servir o arquivo com
-// faixas. A divisão é por dependência — o que ficou toca `os.Stat` e o disco do
-// dono da mesa; esta desenha uma página e não sabe onde o arquivo está, só o
-// endereço dele.
+// Servir o ARQUIVO é do hospedeiro — ler `LIVRO_PDF` no boot, cunhar o dígito
+// de cache, responder com faixas. A divisão é por dependência: aquilo toca
+// `os.Stat` e o disco do dono da mesa; esta cena desenha uma página e não sabe
+// onde o arquivo está, só o endereço dele.
 //
 // **Não é o visualizador do navegador**, que continua a um clique de distância.
 // A distinção importa e está no GLOSSARY: o leitor mostra uma página por vez

@@ -1,28 +1,18 @@
 package ui
 
-// A ESCADA DO PV: a COR diz "quão mal", e não só a largura (ALE-316).
+// A ESCADA DO PV: a COR diz "quão mal", e não só a largura.
 //
-// Ela mora no kit porque é lida por QUATRO superfícies que não se importam —
-// a Mesa, o tabuleiro, a ficha e a lista de heróis —, e porque é regra de
+// Ela mora no kit porque é lida por QUATRO superfícies que não se importam entre
+// si — a Mesa, o tabuleiro, a ficha e a lista de heróis — e porque é regra de
 // APRESENTAÇÃO: quanto de vida vira qual tinta da casa. O `web/ui` é o único
 // pacote que as quatro já importam.
 //
-// # Por que ela virou pacote, e o que isso consertou
-//
-// Ela era `hpToneOf`, privada de `web/table`, portada da `hpFillVar` da SPA com
-// os mesmos limiares de propósito — *"duas escadas divergiriam em silêncio,
-// cada tela chamando de 'ferido' uma coisa diferente"*, diz o comentário
-// original. **E foi exatamente isso que aconteceu**, por um caminho que aquele
-// comentário não previa: a ficha e a lista de heróis não portaram escada
-// NENHUMA. As duas escreviam `--hp-full` fixo, então o mesmo herói a 17,5% de
-// PV saía verde numa tela e vermelho na outra.
-//
-// Privada de um pacote, uma regra não diverge — ela simplesmente não alcança,
-// e quem precisa dela escreve outra coisa. É a mesma forma do `Fold` que o
-// `book` copiou errado (ALE-278) e do medidor de contraste que não era
-// importável (ALE-272).
+// Privada de um pacote, uma regra não diverge — ela simplesmente NÃO ALCANÇA, e
+// quem precisa dela escreve outra coisa: enquanto a escada foi privada do
+// `web/table`, a ficha e a lista de heróis escreviam `--hp-full` fixo, e o mesmo
+// herói a 17,5% de PV saía verde numa tela e vermelho na outra.
 
-// hpCritical e hpHurt são os limiares, em porcento, e eles são os da SPA.
+// hpCritical e hpHurt são os limiares, em porcento.
 //
 // Escritos como constantes porque são a REGRA e não números soltos: quem mudar
 // um deles está mudando o que a mesa chama de "ferido", e isso se faz em um
@@ -70,21 +60,18 @@ func HpFillTone(pct int) string {
 	return "bg-hp-full"
 }
 
-// HpInkTone é a classe que ESCREVE o PV, e ela NÃO é a de preencher (ALE-240).
+// HpInkTone é a classe que ESCREVE o PV, e ela NÃO é a de preencher.
 //
 // Os três tons foram escolhidos como cor de BARRA, e dois deles servem de texto
-// por acaso — medido sobre o painel: o verde dá 5,34:1 e o âmbar 6,25:1. O
-// `--hp-critical` dá **4,11:1**, abaixo do mínimo de texto pequeno. Ou seja:
-// exatamente na hora em que a barra grita "este aqui está morrendo", o número
-// ao lado dela seria o menos legível da tela.
+// por acaso: sobre o painel o verde dá 5,34:1 e o âmbar 6,25:1, mas o
+// `--hp-critical` dá 4,11:1 — abaixo do mínimo de texto pequeno. Exatamente na
+// hora em que a barra grita "este aqui está morrendo", o número ao lado dela
+// seria o menos legível da tela.
 //
-// O crítico escreve com a tinta de perigo da casa, que a ALE-237 fechou em
-// 5,21:1 sobre o painel. Tinta própria seria um segundo vermelho quase idêntico
-// ao lado do primeiro, e a casa tem uma palavra por conceito.
-//
-// É a mesma divisão que a ALE-292 aplicou ao marcador do tabuleiro, pela mesma
-// razão e com o mesmo número: lá a letra do marcador em `--hp-critical` dava
-// 4,11:1 sobre o mapa.
+// O crítico escreve com a tinta de perigo da casa, que dá 5,21:1 sobre o painel.
+// Tinta própria seria um segundo vermelho quase idêntico ao lado do primeiro, e
+// a casa tem uma palavra por conceito. É a mesma divisão que o marcador do
+// tabuleiro faz, pela mesma razão e com o mesmo número.
 //
 // Exemplo:
 //

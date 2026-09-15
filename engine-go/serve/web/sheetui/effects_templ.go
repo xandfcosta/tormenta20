@@ -14,19 +14,11 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel de EFEITOS desenhado (ALE-272, fatia 5).
+// O painel de EFEITOS desenhado.
 //
-// Quatro blocos, e a ordem é a da SPA — condições primeiro porque são as que a
-// mesa aplica no meio de um turno, e situação por último porque é o que se
-// configura uma vez e se esquece.
-//
-// # Os componentes deste arquivo são nomeados em INGLÊS
-//
-// Decisão do dono nesta fatia: componente `templ` é função, e função é
-// identificador. Os vizinhos das fatias 2 a 4 (`proficiencyPanel`,
-// `combatPanel`, `expertisePanel`) ficam como estão — o guia manda o
-// nome que se ESCREVE seguir a regra e o que se CHAMA seguir o que está lá, e
-// varrer o que já existe apagaria a procedência de cada linha por estética.
+// Quatro blocos, e a ORDEM é por frequência na mesa: condições primeiro, porque
+// são as que se aplicam no meio de um turno; situação por último, porque é o que
+// se configura uma vez e se esquece.
 
 // effectsPanelSection é a seção inteira.
 func effectsPanelSection(v View) templ.Component {
@@ -84,7 +76,7 @@ func effectsPanelSection(v View) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(v.Effects.Count))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 35, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 27, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -97,7 +89,7 @@ func effectsPanelSection(v View) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(activeWrittenEffects(v.Effects.Count))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 39, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 31, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -159,8 +151,8 @@ func effectsPanelSection(v View) templ.Component {
 // bookConditionsBlock são as condições do livro em vigor (p394-395).
 //
 // Elas MOVEM os números, e o texto do efeito fica na própria linha em vez de
-// atrás de um toque: uma condição que fosse só crachá foi o defeito da ALE-28, e
-// dizer o que ela faz é o que impede a mesa de tratá-la como decoração.
+// atrás de um toque: dizer o que a condição faz é o que impede a mesa de
+// tratá-la como decoração.
 func bookConditionsBlock(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -295,7 +287,7 @@ func bookConditionRow(v View, linha conditionRow) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 93, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 85, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -313,7 +305,7 @@ func bookConditionRow(v View, linha conditionRow) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("p" + strconv.Itoa(linha.Page))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 95, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 87, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -331,7 +323,7 @@ func bookConditionRow(v View, linha conditionRow) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Effect)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 98, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 90, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -373,9 +365,9 @@ func bookConditionRow(v View, linha conditionRow) templ.Component {
 
 // stancesBlock são as posturas em curso.
 //
-// O interruptor de LIGAR não está aqui, e a ausência é decisão de produto da
-// SPA: entrar numa postura custa PM, e o PM é cobrado onde o poder mora. Aqui
-// elas se leem — com o que cada uma custou — e se encerram.
+// O interruptor de LIGAR não está aqui, e a ausência é decisão: entrar numa
+// postura custa PM, e o PM é cobrado onde o poder mora. Aqui elas se leem — com
+// o que cada uma custou — e se encerram.
 func stancesBlock(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -432,7 +424,7 @@ func stancesBlock(v View) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 118, Col: 80}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 110, Col: 80}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -450,7 +442,7 @@ func stancesBlock(v View) templ.Component {
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Steps)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 120, Col: 81}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 112, Col: 81}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -469,7 +461,7 @@ func stancesBlock(v View) templ.Component {
 					var templ_7745c5c3_Var21 string
 					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Paid)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 123, Col: 83}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 115, Col: 83}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 					if templ_7745c5c3_Err != nil {
@@ -492,7 +484,7 @@ func stancesBlock(v View) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("Encerrar " + linha.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 127, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 119, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 				if templ_7745c5c3_Err != nil {
@@ -505,7 +497,7 @@ func stancesBlock(v View) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/efeitos/postura/"+linha.Command))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 128, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 120, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 				if templ_7745c5c3_Err != nil {
@@ -646,7 +638,7 @@ func appliedEffectsBlock(v View) templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 159, Col: 19}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 151, Col: 19}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {
@@ -665,7 +657,7 @@ func appliedEffectsBlock(v View) templ.Component {
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Scope)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 161, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 153, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
@@ -857,7 +849,7 @@ func alwaysOnList(v View) templ.Component {
 				var templ_7745c5c3_Var41 string
 				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 202, Col: 81}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 194, Col: 81}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 				if templ_7745c5c3_Err != nil {
@@ -870,7 +862,7 @@ func alwaysOnList(v View) templ.Component {
 				var templ_7745c5c3_Var42 string
 				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Source)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 203, Col: 83}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 195, Col: 83}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
@@ -939,7 +931,7 @@ func situationalToggle(v View, linha situationalRow) templ.Component {
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%t", linha.Active))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 221, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 213, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 		if templ_7745c5c3_Err != nil {
@@ -952,7 +944,7 @@ func situationalToggle(v View, linha situationalRow) templ.Component {
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(linha.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 222, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 214, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 		if templ_7745c5c3_Err != nil {
@@ -965,7 +957,7 @@ func situationalToggle(v View, linha situationalRow) templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue("$conditional = '" + linha.Key + "'; " + sheetPost(v, "/efeitos/situacao"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 223, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 215, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 		if templ_7745c5c3_Err != nil {
@@ -993,7 +985,7 @@ func situationalToggle(v View, linha situationalRow) templ.Component {
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 232, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 224, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -1006,7 +998,7 @@ func situationalToggle(v View, linha situationalRow) templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Source)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 233, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 225, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1029,7 +1021,7 @@ func situationalToggle(v View, linha situationalRow) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue("Detalhar " + linha.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 239, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 231, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -1042,7 +1034,7 @@ func situationalToggle(v View, linha situationalRow) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue("$detail = 'situacao-" + linha.Key + "'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 241, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 233, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 			if templ_7745c5c3_Err != nil {
@@ -1068,7 +1060,7 @@ func situationalToggle(v View, linha situationalRow) templ.Component {
 			var templ_7745c5c3_Var55 string
 			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(linha.Modifiers)) + " mods")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 243, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 235, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 			if templ_7745c5c3_Err != nil {
@@ -1128,7 +1120,7 @@ func appliedEffectDetail(linha appliedEffectRow) templ.Component {
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Scope)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 251, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 243, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 			if templ_7745c5c3_Err != nil {
@@ -1201,7 +1193,7 @@ func situationalDetail(linha situationalRow) templ.Component {
 				var templ_7745c5c3_Var61 string
 				templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(linha.Source)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 264, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 256, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 				if templ_7745c5c3_Err != nil {
@@ -1268,7 +1260,7 @@ func conditionPickerDialog(v View) templ.Component {
 				var templ_7745c5c3_Var64 string
 				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/efeitos/condicao/"+opcao.Command) + "; $condition_dialog = false")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 276, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 268, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 				if templ_7745c5c3_Err != nil {
@@ -1281,7 +1273,7 @@ func conditionPickerDialog(v View) templ.Component {
 				var templ_7745c5c3_Var65 string
 				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 279, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 271, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 				if templ_7745c5c3_Err != nil {
@@ -1294,7 +1286,7 @@ func conditionPickerDialog(v View) templ.Component {
 				var templ_7745c5c3_Var66 string
 				templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Detail)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 280, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 272, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 				if templ_7745c5c3_Err != nil {
@@ -1360,7 +1352,7 @@ func buffPickerDialog(v View) templ.Component {
 				var templ_7745c5c3_Var69 string
 				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetPost(v, "/efeitos/aplica/"+opcao.Command) + "; $buff_dialog = false")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 295, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 287, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 				if templ_7745c5c3_Err != nil {
@@ -1373,7 +1365,7 @@ func buffPickerDialog(v View) templ.Component {
 				var templ_7745c5c3_Var70 string
 				templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 298, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 290, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 				if templ_7745c5c3_Err != nil {
@@ -1386,7 +1378,7 @@ func buffPickerDialog(v View) templ.Component {
 				var templ_7745c5c3_Var71 string
 				templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Detail)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 299, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 291, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 				if templ_7745c5c3_Err != nil {
@@ -1409,10 +1401,10 @@ func buffPickerDialog(v View) templ.Component {
 
 // pickerDialog é a moldura dos dois escolhedores.
 //
-// Ela não tem busca, e é medido e não esquecido: são 35 condições e 31 magias
-// com efeito aplicável — listas curtas, que cabem numa rolagem sem filtro. A
-// virtualização que a SPA usa aqui existe porque lá a lista era do catálogo
-// INTEIRO; a regra da casa é virtualizar as LONGAS, e estas não são.
+// Ela não tem busca, e isso é decidido e não esquecido: são algumas dezenas de
+// condições e de magias com efeito aplicável — listas curtas, que cabem numa
+// rolagem sem filtro. A regra da casa é virtualizar as LONGAS, e estas não
+// são.
 func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1441,7 +1433,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var73 string
 		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue("$" + sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 324, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 315, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var73)
 		if templ_7745c5c3_Err != nil {
@@ -1454,7 +1446,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var74 string
 		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue("evt.target === el && ($" + sinal + " = false)")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 326, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 317, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 		if templ_7745c5c3_Err != nil {
@@ -1467,7 +1459,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var75 string
 		templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue("evt.key === 'Escape' && ($" + sinal + " = false)")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 327, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 318, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 		if templ_7745c5c3_Err != nil {
@@ -1480,7 +1472,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var76 string
 		templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 333, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 324, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var76)
 		if templ_7745c5c3_Err != nil {
@@ -1493,7 +1485,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var77 string
 		templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue("$" + sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 334, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 325, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 		if templ_7745c5c3_Err != nil {
@@ -1528,7 +1520,7 @@ func pickerDialog(sinal, titulo string, opcoes []pickerOption) templ.Component {
 		var templ_7745c5c3_Var80 string
 		templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 337, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/effects.templ`, Line: 328, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 		if templ_7745c5c3_Err != nil {

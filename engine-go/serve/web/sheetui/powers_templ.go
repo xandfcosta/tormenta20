@@ -13,7 +13,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O painel de PODERES desenhado (ALE-272, fatia 8).
+// O painel de PODERES desenhado.
 //
 // UMA lista, a da mesa: as AÇÕES em cima, prontas para usar, e as PASSIVAS
 // recolhidas atrás de um "mostrar (N)". Escolher poder é administração e mora

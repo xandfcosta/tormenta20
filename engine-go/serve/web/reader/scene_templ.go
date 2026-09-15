@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "fmt"
 
-// A CENA DO LEITOR (ALE-264): o livro aberto na página do verbete.
+// A CENA DO LEITOR: o livro aberto na página do verbete.
 //
 // Ela é uma casca NUA e ocupa a tela inteira porque é para LER: cabeçalho de
 // cena, trilho e migalhas roubariam altura da página do livro, que é o único

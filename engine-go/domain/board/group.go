@@ -6,7 +6,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// O GRUPO DE PEÇAS marcado por um retângulo (ALE-203, item 10 do dono).
+// O GRUPO DE PEÇAS marcado por um retângulo.
 //
 // "Não temos ferramenta de seleção em área." Chegou uma horda de seis zumbis, e
 // hoje reposicioná-los é seis arrastos — cada um com proposta, parada e
@@ -62,7 +62,7 @@ func TokensInRectangle(b *BoardState, de, ate engine.Square) []string {
 // por uma corrida que não é dele.
 //
 // O `DeOndeVeio` é gravado como no pouso de uma peça só: o "voltar para onde
-// estava" do menu (ALE-206) tem de funcionar depois de um movimento de grupo.
+// estava" do menu tem de funcionar depois de um movimento de grupo.
 func MoveGroup(b *BoardState, ids []string, dx, dy int) error {
 	if b == nil {
 		return fmt.Errorf("não há tabuleiro para mover o grupo")

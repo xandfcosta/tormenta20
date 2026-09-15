@@ -33,7 +33,7 @@ func (s *Server) WebRouter() http.Handler {
 	// por rota, mas porque dentro dele ela seria inalcançável para exatamente
 	// quem precisa dela.
 	door.Routes(r, door.New(s.doorHost()))
-	// O HUB (ALE-231): o menu principal, atrás de sessão como todo o resto.
+	// O HUB: o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
 		hub.Routes(r, hub.New(s.hubHost()))

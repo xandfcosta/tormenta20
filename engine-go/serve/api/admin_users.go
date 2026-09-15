@@ -1,6 +1,6 @@
 package api
 
-// Tela de administração (ALE-120): quem está na mesa, o que cada um tem, e as
+// Tela de administração: quem está na mesa, o que cada um tem, e as
 // duas ações que sobram sobre uma conta — mandar um link de redefinição de
 // senha e apagar. Tudo atrás de requireAdmin; a UI só decide o que MOSTRAR.
 
@@ -31,11 +31,9 @@ type adminUserDTO struct {
 // deleteAccount is the RULE behind the delete: you cannot remove your own
 // account, and the campaigns move to whoever removes it.
 //
-// Transport-agnostic on purpose. It was extracted when the pilot's admin screen
-// (ALE-219) needed the same rule from a second transport and found it welded to
-// the HTTP handler — the SECOND time the pilot hit that shape, after
-// `selfInitiativeEntry`, which was welded to the socket gateway. Two surfaces,
-// two rules pinned to whichever transport reached them first.
+// Transport-agnostic on purpose: two surfaces need this rule, and welding it to
+// the HTTP handler would leave the second one calling its own route from the
+// inside or copying the rule.
 func (h adminHost) deleteAccount(r *http.Request, id, callerID int64) (int64, int, error) {
 	if id == callerID {
 		// Not paranoia: the admin list shows your own row, and the menu is the
@@ -78,13 +76,11 @@ func (h adminHost) deleteUserKeepingCampaigns(r *http.Request, userID, newOwnerI
 // aviso. A regra não sabe qual é o transporte, e é esse o ponto.
 var errUserNotFound = errors.New("usuário não existe")
 
-// mintPasswordReset cunha o link de uso único que o admin entrega (ALE-120).
+// mintPasswordReset cunha o link de uso único que o admin entrega.
 //
-// A REGRA está aqui e não no manipulador HTTP, e esta é a SÉTIMA vez que a
-// migração encontra o mesmo padrão — sete é padrão, não anedota. Duas telas
-// precisam cunhar o mesmo link, e enquanto a conta de validade morava dentro
-// de um `http.HandlerFunc` a segunda tela só tinha duas saídas: chamar a
-// própria rota por dentro, ou copiar a conta.
+// A REGRA está aqui e não no manipulador HTTP: duas telas cunham o mesmo link, e
+// com a conta de validade dentro de um `http.HandlerFunc` a segunda só teria
+// duas saídas — chamar a própria rota por dentro, ou copiar a conta.
 //
 // O prazo é 24h contra os 7 dias do convite, e a diferença é de risco: o
 // convite abre uma conta que ainda NÃO existe, este abre uma que já existe e

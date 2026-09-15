@@ -70,7 +70,15 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	"EventSource":         true,
 	// A janela das notas usa `localStorage` + o evento `storage`, e o comentário
 	// que explica a escolha precisa NOMEAR a alternativa recusada (ALE-218).
-	"BroadcastChannel":  true,
+	"BroadcastChannel": true,
+	// O `sessionStorage` guarda a marca de foco do trilho entre duas navegações
+	// de documento, e o comentário que explica por que não é um sinal do
+	// Datastar precisa nomeá-lo.
+	//
+	// Ele passou a aparecer aqui quando a ALE-333 tirou a menção à SPA daquele
+	// bloco: a válvula da `aProcedenciaDeclarada` perdoava a citação por causa
+	// da palavra morta, não por mérito. Limpar a prosa RELIGOU o guarda.
+	"sessionStorage":    true,
 	"NotFoundError":     true,
 	"InvalidStateError": true,
 	"localeCompare":     true,

@@ -5,18 +5,12 @@ import (
 	"strconv"
 )
 
-// A GRAMÁTICA DA CENA DE SELEÇÃO — palco, vizinhos, cursor e entrada (ALE-297).
+// A GRAMÁTICA DA CENA DE SELEÇÃO — palco, vizinhos, cursor e entrada.
 //
 // Duas cenas fazem a mesma pergunta ("escolha um da lista e veja o que
 // escolheu"): o elenco (`web/characters`) e as campanhas (`web/campaigns`). O
 // que está aqui é o que as duas têm de dizer IGUAL, porque quando elas divergem
 // quem paga é o mestre, que reaprende a tela ao trocar de cena.
-//
-// Isto morava dentro de `characters/view.go`, privado, e mudou de casa quando a
-// segunda cena precisou. É a lição escrita no `CLAUDE.md` com todas as letras:
-// **instrumento que mora dentro de um chamador tem exatamente um chamador** — e
-// isso não aparece em revisão de diff nenhuma, porque não há linha errada, só
-// uma linha que não pôde ser escrita.
 
 // Neighbor é o retrato APAGADO que ladeia o palco — quem vem antes e quem vem
 // depois no trilho.
@@ -40,8 +34,7 @@ type Neighbor struct {
 //
 // Nil NÃO significa "não desenhe": significa ESPAÇADOR. Sem a caixa vazia nas
 // pontas da lista o palco escorrega para o lado ao chegar no primeiro ou no
-// último item, que é a família de defeitos da ALE-99 — a mesma razão do
-// `min-h-[2lh]` no nome e do travessão na Defesa.
+// último item.
 func NeighborAt(vizinhos []Neighbor, i int) *Neighbor {
 	if i < 0 || i >= len(vizinhos) {
 		return nil
@@ -59,22 +52,14 @@ func StageWash(nome string) string {
 		strconv.Itoa(NameHue(nome)) + " / 0.14), transparent 70%)"
 }
 
-// A ENTRADA DO PALCO (ALE-235, entregue na ALE-239): a classe que substitui o
-// mount.
+// A ENTRADA DO PALCO: a CLASSE é o que substitui o mount.
 //
-// Na SPA a animação era `animate-in`, que dispara no mount — e o `<Show keyed>`
-// reconstruía o nó a cada troca justamente para ela disparar (ALE-97). Aqui a
-// cena inteira é desenhada e o cursor só alterna `data-show`: **nada nunca
-// monta**, e uma animação presa ao mount não tocaria nunca.
-//
-// O que substitui o mount é a CLASSE entrando num nó que não a tinha. O palco
-// que sai perde a classe e o que entra ganha — são elementos DIFERENTES, então
-// não existe o caso que não replica ("a mesma animação, já concluída, no mesmo
-// nó"). Isso dispensa o morph, o reflow forçado e o id que muda a cada troca,
-// que eram as saídas que a issue previa.
-//
-// Que ele é GERAL e não um remendo do elenco é o que a ALE-297 provou: a cena de
-// campanhas herdou a entrada inteira sem uma linha nova de CSS.
+// A cena inteira é desenhada e o cursor só alterna `data-show` — **nada nunca
+// monta**, e uma animação presa ao mount não tocaria nunca. O que dispara aqui é
+// a classe entrando num nó que não a tinha: o palco que sai perde a classe e o
+// que entra ganha, e como são elementos DIFERENTES não existe o caso que não
+// replica ("a mesma animação, já concluída, no mesmo nó"). Isso dispensa o
+// morph, o reflow forçado e o id que muda a cada troca.
 
 // EnteringStage escreve o `data-class` de um palco.
 //
@@ -88,26 +73,22 @@ func EnteringStage(id int64) string {
 }
 
 // CursorGesture é o ÚNICO escritor de `$cursor` numa cena de seleção, e é por
-// isso que ele é uma função (ALE-235).
+// isso que ele é uma função.
 //
-// São CINCO gestos que movem o cursor no elenco — o quadro do filme no clique e
-// no foco, os dois retratos vizinhos e a vaga de criar — e o mesmo tanto em
-// campanhas. Escrito à mão cinco vezes, o sexto é o que esquece: o palco
-// entraria pelo lado errado, sem erro em lugar nenhum, e só quem conhece a
-// animação notaria. O `TestEveryGestureThatMovesTheCursorSaysTheDirection`
-// varre AS DUAS CENAS e recusa um `$cursor =` que não venha daqui.
+// São cinco gestos por cena que movem o cursor — o quadro no clique e no foco,
+// os dois retratos vizinhos e a vaga de criar. Escrito à mão, o próximo é o que
+// esquece a direção: o palco entra pelo lado errado, sem erro em lugar nenhum. O
+// `TestEveryGestureThatMovesTheCursorSaysTheDirection` varre AS DUAS CENAS e
+// recusa um `$cursor =` que não venha daqui.
 //
-// # Ele é IDEMPOTENTE, e isso foi medido no navegador
+// ELE É IDEMPOTENTE, e a guarda é a razão: um clique num quadro dispara
+// `focusin` E `click`, os dois com este mesmo gesto. Sem ela a primeira passagem
+// calcula o sentido certo e a SEGUNDA recalcula com o índice já atualizado — `N
+// >= N` é sempre verdade —, e o palco entra "adiante" mesmo andando para trás.
 //
-// Um clique num quadro do filme dispara `focusin` E `click`, os dois com este
-// mesmo gesto. Sem a guarda, a primeira passagem calcula o sentido certo e
-// escreve o índice; a SEGUNDA recalcula com o índice já atualizado — `N >= N` é
-// sempre verdade — e o palco entra "adiante" mesmo andando para trás. O sintoma
-// é uma animação na direção errada, que ninguém lê como defeito de lógica.
-//
-// A guarda é um `if` de statements e não um ternário: ver a armadilha do
-// Datastar no guia do pacote — sequência de comandos dentro de um ternário é
-// erro de sintaxe, o framework engole o parse e o gesto INTEIRO vira nada.
+// A guarda é um `if` de statements e não um ternário: sequência de comandos
+// dentro de um ternário é erro de sintaxe, o Datastar engole o parse e o gesto
+// INTEIRO vira nada.
 //
 // @example CursorGesture(2, 41) // "if ($last_index != 2) { … } $cursor = 41"
 func CursorGesture(index int, id int64) string {
@@ -131,11 +112,9 @@ func StageSignals(cursorID int64) string {
 
 // theEnterThatOpens é o ⏎ de um marcador do trilho.
 //
-// Ele é função e não string escrita à mão em cada cena pelo motivo de sempre
-// nesta família: são quatro sítios hoje (dois por cena de seleção), e o quinto é
-// o que esquece o `preventDefault` — sem ele o navegador dispara o `click` do
-// botão JUNTO, e o gesto vira "escolher e abrir" quando a pessoa só queria
-// escolher.
+// Ele é função e não string escrita à mão em cada cena: o sítio que esquecer o
+// `preventDefault` deixa o navegador disparar o `click` do botão JUNTO, e o
+// gesto vira "escolher e abrir" quando a pessoa só queria escolher.
 //
 // @example theEnterThatOpens("/personagens/41")
 func theEnterThatOpens(destino string) string {

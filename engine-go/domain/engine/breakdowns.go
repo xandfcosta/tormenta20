@@ -1,29 +1,29 @@
 package engine
 
-// The BREAKDOWN layer: it turns the resolved ItemEffects into a single
-// ComputedSheetV2, where no number travels alone — each one carries the
-// contributions that made it.
+// A camada de DECOMPOSIÇÃO: ela transforma os `ItemEffects` resolvidos num
+// `ComputedSheetV2` em que nenhum número viaja sozinho — cada um leva as
+// contribuições que o formaram.
 //
-// That is a product decision and not an engineering one: the sheet must be able
-// to answer "why 12?" with the whole sum on screen.
+// Isso é decisão de produto e não de engenharia: a ficha tem de responder "por
+// que 12?" com a soma inteira na tela.
 //
-// Movement/defense/attribute/expertise live here; the magic/RD/tempHp
-// breakdowns are in breakdowns_magic.go.
+// Deslocamento, defesa, atributo e perícia moram aqui; magia, RD e PV
+// temporários estão no `breakdowns_magic.go`.
 //
-// Parity oracle: engine-go/parity/<slug>.json `sheetV2`.
+// Oráculo de paridade: `engine-go/parity/<slug>.json`, chave `sheetV2`.
 
-// BreakdownContribution is one {source, amount, note?} row — the display-shaped
-// contribution a breakdown emits. It carries no bonusType, unlike the resolution
-// Contribution: stacking was already decided upstream. An empty note is omitted
-// so it never travels on the wire.
+// BreakdownContribution é uma linha {source, amount, note?} — a contribuição na
+// forma que a tela desenha. Ela NÃO carrega `bonusType`, ao contrário da
+// `Contribution` da resolução: o empilhamento já foi decidido antes. Nota vazia
+// é omitida para nunca viajar no fio.
 type BreakdownContribution struct {
 	Source string `json:"source"`
 	Amount int    `json:"amount"`
 	Note   string `json:"note,omitempty"`
 }
 
-// SourceAmount is a {source, amount} row (attribute/RD/tempHp contributions,
-// which carries no note).
+// SourceAmount é uma linha {source, amount} — contribuição de atributo, de RD e
+// de PV temporário, que não carrega nota.
 type SourceAmount struct {
 	Source string `json:"source"`
 	Amount int    `json:"amount"`
@@ -42,8 +42,8 @@ type DefenseBreakdown struct {
 	Contributions []BreakdownContribution `json:"contributions"`
 }
 
-// ValueBreakdown is the shared {base, itemBonus, total, contributions} shape
-// (displacement, pmLimit).
+// ValueBreakdown é a forma {base, itemBonus, total, contributions} compartilhada
+// pelo deslocamento e pelo limite de PM.
 type ValueBreakdown struct {
 	Base          int                     `json:"base"`
 	ItemBonus     int                     `json:"itemBonus"`
@@ -51,7 +51,7 @@ type ValueBreakdown struct {
 	Contributions []BreakdownContribution `json:"contributions"`
 }
 
-// TotalContribs is the {total, contributions} shape (spellDCBonus, pmCostMod).
+// TotalContribs é a forma {total, contributions} (spellDCBonus, pmCostMod).
 type TotalContribs struct {
 	Total         int                     `json:"total"`
 	Contributions []BreakdownContribution `json:"contributions"`
@@ -75,15 +75,13 @@ type ExpertiseBreakdown struct {
 	ArmorPenaltyApplied int                     `json:"armorPenaltyApplied"`
 }
 
-// ComputedSheetV2 aggregates every breakdown — the rich sheet the scenes draw,
-// where each number arrives with the contributions that made it.
+// ComputedSheetV2 junta todas as decomposições — a ficha rica que as cenas
+// desenham, em que cada número chega com as contribuições que o formaram.
 type ComputedSheetV2 struct {
 	Defense      DefenseBreakdown `json:"defense"`
 	Displacement ValueBreakdown   `json:"displacement"`
 	FlySpeed     int              `json:"flySpeed"`
 	// Carga é a p141 inteira — os espaços ocupados, o limite e a sobrecarga.
-	// Ela substituiu o antigo `inventorySlots`, que dizia só o limite e deixava
-	// a outra metade da conta para a tela somar (ALE-215).
 	Carga           LoadBreakdown                 `json:"carga"`
 	Attributes      map[string]AttributeBreakdown `json:"attributes"`
 	PmLimit         ValueBreakdown                `json:"pmLimit"`
@@ -109,8 +107,8 @@ type ComputedSheetV2 struct {
 	AutoFailExpertises []string `json:"autoFailExpertises"`
 }
 
-// ComputeSheetV2 resolves the full breakdown sheet for a raw Character under the
-// given active conditionals — the collection → resolution → breakdown pipeline.
+// ComputeSheetV2 monta a ficha decomposta de um `Character` cru sob os
+// condicionais ligados — o caminho coleta → resolução → decomposição.
 func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bool) ComputedSheetV2 {
 	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), activeConditionals)
 	carga := loadBreakdownOf(ch, inventorySlotsTotal(ch, effects))
@@ -144,13 +142,12 @@ func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bo
 	}
 }
 
-// effectiveAttribute: raw attribute + summed
-// `attribute` modifiers.
+// effectiveAttribute: o atributo cru mais os modificadores de `attribute`.
 func effectiveAttribute(ch Character, attr string, e ItemEffects) int {
 	return ch.attributeValue(attr) + StatFor(e, ModifierTarget{K: "attribute", Name: attr}).Total
 }
 
-// defenseBreakdown: 10 + Dex (unless blocked) + mods.
+// defenseBreakdown: 10 + Destreza (quando ela se aplica) + modificadores.
 func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 	stat := StatFor(e, ModifierTarget{K: "defense"})
 	dexApplied := !e.Flags["cannot-apply-dex-to-defense"]
@@ -188,8 +185,7 @@ func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 //
 // Vive aqui, e não como modificador de catálogo, porque o motor de itens não
 // avalia `scale` fora de PV/PM e não tem noção de TETO — a Insolência precisa
-// das duas coisas. Estava no catálogo sem modificador nenhum: aparecia na ficha
-// e não mexia na Defesa (ALE-115).
+// das duas coisas.
 func insolenciaDefense(ch Character, e ItemEffects) int {
 	if e.Flags["armadura-pesada"] || hasActiveCondition(ch, "imovel") {
 		return 0
@@ -216,9 +212,9 @@ func hasActiveCondition(ch Character, id string) bool {
 	return false
 }
 
-// displacementBreakdown is the displacement total (floored at 0), mais
-// a sobrecarga: −3m enquanto a mochila passa do limite (p141). Ela entra como
-// contribuição nomeada porque um deslocamento que cai sem dizer por quê é lido
+// displacementBreakdown é o deslocamento total (com piso em 0) mais a
+// sobrecarga: −3m enquanto a mochila passa do limite (p141). Ela entra como
+// contribuição NOMEADA porque um deslocamento que cai sem dizer por quê é lido
 // como defeito.
 func displacementBreakdown(ch Character, e ItemEffects, carga LoadBreakdown) ValueBreakdown {
 	stat := StatFor(e, ModifierTarget{K: "displacement"})
@@ -243,8 +239,8 @@ func overloadContrib(amount int) BreakdownContribution {
 	return BreakdownContribution{Source: "Sobrecarga (p141)", Amount: amount}
 }
 
-// attributeBreakdown is the attribute total plus its contributions
-// ({source, amount}, note dropped).
+// attributeBreakdown é o total do atributo com as contribuições dele, na forma
+// {source, amount} — a nota não vai junto.
 func attributeBreakdown(ch Character, attr string, e ItemEffects) AttributeBreakdown {
 	stat := StatFor(e, ModifierTarget{K: "attribute", Name: attr})
 	return AttributeBreakdown{
@@ -253,12 +249,11 @@ func attributeBreakdown(ch Character, attr string, e ItemEffects) AttributeBreak
 	}
 }
 
-// armorPenaltyExpertises.
 var armorPenaltyExpertises = map[string]bool{"Acrobacia": true, "Furtividade": true, "Ladinagem": true}
 
-// expertiseBreakdown: ½ level + attr +
-// training + item mods (expertise/expertiseAll/expertiseByAttribute) + armor
-// penalty — que desde a ALE-215 tem duas fontes, a armadura e a sobrecarga.
+// expertiseBreakdown: ½ nível + atributo + treino + modificadores de item
+// (expertise/expertiseAll/expertiseByAttribute) + penalidade de armadura, que
+// tem duas fontes: a armadura vestida e a sobrecarga.
 func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, carga LoadBreakdown) ExpertiseBreakdown {
 	halfLevel := ch.Level / 2
 	attrValue := effectiveAttribute(ch, state.Attribute, e)

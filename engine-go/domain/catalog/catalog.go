@@ -1,8 +1,8 @@
-// Package catalog serves the static reference data transcribed from the book:
-// spells, bestiary, items, races, origins, powers.
+// Package catalog serve o dado de referência transcrito do livro: magias,
+// bestiário, itens, raças, origens, poderes.
 //
-// It is EMBEDDED in the binary (`go:embed`), so the server carries the book with
-// it and a deploy is one file.
+// Ele é EMBUTIDO no binário (`go:embed`), então o servidor carrega o livro
+// consigo e um deploy é um arquivo só.
 package catalog
 
 import (
@@ -31,12 +31,11 @@ type Augment struct {
 	PmCost int    `json:"pmCost"`
 	Kind   string `json:"kind"`
 	// RequiresCircle é o círculo MÍNIMO que o personagem precisa alcançar para
-	// escolher este aprimoramento, e ele entrou na ALE-272 porque a regra estava
-	// só na tela: 126 dos 486 aprimoramentos o têm, e o `validateAugments`
-	// aceitava qualquer um porque este campo simplesmente não era lido.
+	// escolher este aprimoramento. Cento e vinte e seis dos 486 aprimoramentos o
+	// têm, e um `validateAugments` que não o leia aceita qualquer um.
 	//
-	// Ponteiro e não zero: círculo 0 é o TRUQUE, um valor legítimo, e um
-	// `int` zerado não distinguiria "exige truque" de "não exige nada".
+	// Ponteiro e não zero: círculo 0 é o TRUQUE, um valor legítimo, e um `int`
+	// zerado não distinguiria "exige truque" de "não exige nada".
 	RequiresCircle *int `json:"requiresCircle"`
 }
 
@@ -134,7 +133,7 @@ var (
 
 // ActivationsLoaded diz se as concessões de poder foram carregadas. Existe para
 // o `/health` poder ANUNCIAR a degradação: sem elas o servidor sobe e funciona,
-// mas poder nenhum concede nada, e isso morria numa linha de log (ALE-155).
+// mas poder nenhum concede nada, e isso morria numa linha de log.
 func ActivationsLoaded() bool {
 	_, _ = LookupActivation("") // força o `sync.Once`, senão isto responde antes da carga
 	return len(activationsByID) > 0
@@ -162,35 +161,33 @@ func LookupActivation(id string) (Activation, bool) {
 	return a, ok
 }
 
-// resources is the ordered CatalogService registry — the GET /catalog index.
+// resources é o registro ORDENADO de recursos — o índice de `GET /catalog`.
 //
-// The last four are AUTHORED HERE rather than dumped: they were the last book
-// tables a client imported at BUILD time, and serving them instead is what ended
-// that dependency (ALE-102) — the point was severing it, not the 8 KB. Their
-// shape is pinned by `rules_tables_test.go`, the schema validation that replaces
-// per-field transcription tests.
+// Alguns são ESCRITOS AQUI em vez de despejados: eram as últimas tabelas do
+// livro que um cliente importava em tempo de BUILD, e servi-las é o que encerrou
+// essa dependência — o ponto era cortá-la, não os 8 KB. A forma delas é presa
+// pelo `rules_tables_test.go`, a validação de schema que substitui teste de
+// transcrição campo a campo.
 var resources = []string{
 	"spells", "bestiary", "items", "conditions", "gods", "races", "origins",
 	"race-defs", "class-powers", "general-powers", "granted-powers", "origins-source",
 	"tormenta-powers", "divine-powers", "activations",
 	"class-expertises", "devotee-terms", "gm-tables", "dungeon-design",
-	// `classes` nasceu na ALE-264 com três campos — id, nome e página do livro.
-	// As classes existiam só como uma lista de NOMES dentro de `options.json`, e
-	// sem lugar para a página não havia botão para o livro. Ver
-	// `scripts/book-pages.py`.
+	// `classes` tem três campos — id, nome e página do livro. As classes existiam
+	// só como uma lista de NOMES dentro de `options.json`, e sem lugar para a
+	// página não havia botão para o livro. Ver `scripts/book-pages.py`.
 	"classes",
-	// `effect-types` nasceu na ALE-264 pelo mesmo motivo de `classes`: a
-	// condição CITA o tipo ("Abalado … Medo.") e não havia para onde o elo
-	// apontar. As definições saem do texto da p228, extraídas pelo
-	// `scripts/book-pages.py`.
+	// `effect-types` existe pelo mesmo motivo de `classes`: a condição CITA o tipo
+	// ("Abalado … Medo.") e não havia para onde o elo apontar. As definições saem
+	// do texto da p228, extraídas pelo `scripts/book-pages.py`.
 	"effect-types",
-	// `spell-schools` (ALE-264), pelo mesmo motivo: a magia CITA a escola e
-	// não havia para onde o elo apontar — o nome dela nem aparecia no cartão.
-	// As oito definições saem do texto da p172.
+	// `spell-schools`, idem: a magia CITA a escola e não havia para onde o elo
+	// apontar — o nome dela nem aparecia no cartão. As oito definições saem do
+	// texto da p172.
 	"spell-schools",
-	// `expertises` (ALE-264): elas existiam como lista de nome e atributo dentro
-	// do `options.json`, sem página e sem as duas regras que o livro imprime ao
-	// lado de cada uma — só treinada e penalidade de armadura, da Tabela 2-1.
+	// `expertises` existiam como lista de nome e atributo dentro do `options.json`,
+	// sem página e sem as duas regras que o livro imprime ao lado de cada uma — só
+	// treinada e penalidade de armadura, da Tabela 2-1.
 	"expertises",
 }
 
@@ -222,7 +219,7 @@ func Options() ([]byte, error) {
 	return files.ReadFile("data/options.json")
 }
 
-// SpellIDs e ItemIDs existem para a SUGESTÃO de vizinho (ALE-226): recusar um id
+// SpellIDs e ItemIDs existem para a SUGESTÃO de vizinho: recusar um id
 // desconhecido sem dizer qual é o parecido deixa quem leu a mensagem procurando
 // na mão, e errar id é erro de digitação — digitação erra por pouco.
 func SpellIDs() []string {
@@ -250,7 +247,7 @@ var (
 
 // OptionList devolve os valores aceitos de uma lista de criação — `races`,
 // `classes`, `origins`, `gods`, `sizes`, `expertises` —, ou `nil` para uma lista
-// que não existe (ALE-226).
+// que não existe.
 //
 // Ela existe porque o catálogo sabia procurar ITEM, MAGIA e ATIVAÇÃO e mais
 // nada: um deus inventado, uma raça fora do livro ou uma origem com erro de
@@ -303,12 +300,11 @@ var (
 	conditionIDSet map[string]bool
 )
 
-// IsCondition reports whether id is a book condition (p394-395).
+// IsCondition diz se o id é uma condição do livro (p394-395).
 //
-// Lê do CATÁLOGO, que é onde as condições são autoradas. A API tinha uma lista
-// de 34 ids escrita à mão ao lado das 35 do catálogo, e a que faltava —
-// `enfeitiçado` — dava 400 ao ser aplicada, tanto para o jogador quanto para o
-// mestre. Uma cópia da tabela do livro é uma cópia que desvia (ALE-122).
+// Lê do CATÁLOGO, que é onde as condições são autoradas. Uma lista escrita à mão
+// ao lado da do catálogo desvia: a que faltava — `enfeitiçado` — dava 400 ao ser
+// aplicada, tanto para o jogador quanto para o mestre.
 func IsCondition(id string) bool {
 	conditionsOnce.Do(func() {
 		conditionIDSet = map[string]bool{}
@@ -327,8 +323,8 @@ func IsCondition(id string) bool {
 	return conditionIDSet[id]
 }
 
-// ConditionIDs lists every book condition, for tests that must walk the table
-// instead of repeating it.
+// ConditionIDs lista todas as condições do livro, para o teste que precisa
+// PERCORRER a tabela em vez de repeti-la.
 func ConditionIDs() []string {
 	ids := make([]string, 0, len(conditionIDSet))
 	IsCondition("") // garante o parse antes de ler o mapa

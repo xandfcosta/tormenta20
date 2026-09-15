@@ -1,40 +1,17 @@
 // Package account é o que uma CONTA aceita: o que é um e-mail, o que é uma
 // senha, e a forma dos dois pedidos que criam sessão.
 //
-// Ele saiu do `api` na ALE-278, junto com a extração da cena da porta, e o
-// motivo não foi arrumação: eram DUAS cópias da mesma regra, e elas já tinham
-// divergido.
+// É um pacote e não parte da porta porque a regra é lida pela cena da porta E
+// pela API JSON, e depende só do `platform`. O destino de uma função é a
+// DEPENDÊNCIA dela — pô-la em `web/door` faria a API JSON importar um pacote de
+// CENA para validar, que é o contrário da direção que a divisão existe para
+// criar. É a mesma forma do `search`, e pelo mesmo motivo declarado lá: função
+// pura hospedada num pacote grande faz quem não pode importar aquele pacote
+// escrever uma cópia, e a cópia sai errada de um jeito que compila.
 //
-// # As duas cópias, medidas
-//
-// O `api` tinha `validateRegister`/`validateLogin`/`validatePassword` com as
-// mensagens em pt-BR, e `ValidateRegister`/`ValidateLogin`/`ValidatePassword`
-// com as mesmas regras em inglês. Não era código morto esperando limpeza: a
-// `ValidatePassword` inglesa era chamada pela rota JSON que redefine a senha, e
-// a portuguesa pela tela da porta. **A mesma regra recusando com dois textos**,
-// e um deles na língua que a regra de idioma proíbe para o que um humano lê.
-//
-// As outras duas grafias inglesas eram mesmo dívida: a `ValidateLogin` não tinha
-// chamador nenhum, e a `ValidateRegister` tinha exatamente um — um teste, que
-// afirmava as frases em inglês. Mudar o mínimo da senha na cópia VIVA deixava
-// aquele teste verde, porque ele prendia a outra.
-//
-// # Por que um pacote, e não a porta
-//
-// A regra é lida pela cena da porta E pela API JSON, e depende só do
-// `platform`. O destino de uma função é a DEPENDÊNCIA dela — pô-la em
-// `web/door` faria a API JSON importar um pacote de CENA para validar, que é o
-// contrário da direção que a divisão existe para criar.
-//
-// É a mesma forma do `search`, e pelo mesmo motivo declarado lá: quando uma
-// função pura fica hospedada num pacote grande, quem não pode importar aquele
-// pacote escreve uma cópia — e a cópia sai errada de um jeito que compila. Aqui
-// ela já tinha saído.
-//
-// Ela NÃO vai para `platform` de propósito: aquele pacote é infraestrutura sem
-// domínio, e "a senha precisa ter ao menos 8 caracteres" é regra de PRODUTO.
-// Quem a mudar está mudando o que o jogador pode fazer, não como o servidor
-// escreve JSON.
+// E NÃO vai para `platform`: aquele pacote é infraestrutura sem domínio, e "a
+// senha precisa ter ao menos 8 caracteres" é regra de PRODUTO. Quem a mudar está
+// mudando o que o jogador pode fazer, não como o servidor escreve JSON.
 package account
 
 import (
@@ -55,21 +32,14 @@ type RegisterBody struct {
 	Email    string  `json:"email"`
 	Password string  `json:"password"`
 	Name     *string `json:"name"`
-	// InviteToken is the single-use link the admin handed the player. Required
-	// for everyone but the ADMIN_EMAILS addresses (ALE-120).
+	// InviteToken é o link de uso único que o admin entregou ao jogador.
+	// Obrigatório para todo mundo menos os endereços do ADMIN_EMAILS.
 	InviteToken string `json:"inviteToken"`
 }
 
-// AS MENSAGENS SÃO AS QUE O JOGADOR LÊ, então são em pt-BR (ALE-229).
-//
-// Eram em inglês — herança das frases do class-validator do NestJS —, e a SPA
-// escondia isso validando com Zod antes de chamar. Servidor-renderizado elas
-// chegam na cara de quem digitou, e o buraco já existia: uma senha de 200
-// caracteres passa pelo Zod (que só checa o mínimo) e volta "password must be
-// shorter than or equal to 128 characters".
-//
-// A rota JSON de redefinir senha respondia exatamente essas frases em inglês até
-// a ALE-278, porque chamava a outra cópia. Agora há uma só.
+// AS MENSAGENS SÃO AS QUE O JOGADOR LÊ, então são em pt-BR — e são UMAS SÓ, para
+// as duas portas. A cena as mostra na cara de quem digitou, e a rota JSON
+// responde as mesmas.
 const (
 	msgEmailInvalido = "E-mail inválido"
 	msgSenhaCurta    = "A senha precisa ter ao menos 8 caracteres"
@@ -78,9 +48,8 @@ const (
 	msgNomeLongo     = "O nome pode ter no máximo 80 caracteres"
 )
 
-// Um teste pragmático de FORMA de e-mail — o `IsEmail` do class-validator é mais
-// estrito, e a diferença não vale a superfície: quem digita errado descobre no
-// convite que não chega.
+// Um teste pragmático de FORMA de e-mail. Um validador estrito não vale a
+// superfície: quem digita errado descobre no convite que não chega.
 var emailRe = regexp.MustCompile(`^[^@\s]+@[^@\s]+\.[^@\s]+$`)
 
 func IsEmail(s string) bool { return emailRe.MatchString(s) }
@@ -104,8 +73,8 @@ func ValidateRegister(b RegisterBody) platform.FieldErrorMap {
 }
 
 // ValidatePassword é A regra de senha, uma só, dividida pelo registro e pelo
-// link de redefinição (ALE-120) — duas grafias de "ao menos 8" divergiriam, e a
-// tela que ficasse mais frouxa seria a que importa.
+// link de redefinição — duas grafias de "ao menos 8" divergem, e a tela que
+// ficar mais frouxa é a que importa.
 func ValidatePassword(password string) platform.FieldErrorMap {
 	f := platform.FieldErrorMap{}
 	length := utf8.RuneCountInString(password)

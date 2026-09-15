@@ -13,33 +13,19 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O IMPROVISO (ALE-261) — as tabelas do Cap 6 e o esqueleto de masmorra.
+// O IMPROVISO — as tabelas do Cap 6 e o esqueleto de masmorra.
 //
-// AS CITAÇÕES DE PÁGINA FORAM CONFERIDAS CONTRA O PDF, e precisavam ser: a SPA
-// contradizia a si mesma, com a tela e o arquivo de regras dando páginas
-// diferentes para a mesma tabela. Conferido, cada um acertava metade —
+// AS PÁGINAS DAQUI FORAM CONFERIDAS CONTRA O PDF, uma a uma:
 //
-//	Ruína              p269   (a TELA acertava; não é tabela numerada, é prosa)
-//	Tabela 6-5         p274   (o arquivo de REGRAS acertava)
-//	Tabela 6-2         p263   (o arquivo de REGRAS acertava)
-//	Tabela 6-7         p279   (ninguém acertava: a tela dizia p276)
+//	Ruína              p269   (não é tabela numerada, é prosa)
+//	Tabela 6-5         p274
+//	Tabela 6-2         p263
+//	Tabela 6-7         p279
 //
-// E um erro que nenhum dos dois pegou: o comentário `Tabela 6-4: Ruínas` está
-// errado no NÚMERO e no NOME — a 6-4 é "Viagens", e a Ruína não é tabela
-// numerada. O livro escreve: "Um personagem que entre em uma ruína deve rolar
-// 1d6. Com um resultado 1 ou 2, a ruína possui apenas uma ameaça..." (p269).
-//
-// MÉTODO, e ele importa mais que a tabela acima: confira pelo FOLIO IMPRESSO,
-// nunca pela aritmética do offset. O PDF tem offset de 6 — a página impressa 269
-// é a 275 do arquivo —, mas usar o offset para achar E para confirmar é
-// verificar a suposição com a própria suposição.
-//
-// Foi assim que a 6-7 quase ficou errada de novo: eu cheguei na p278 e parei,
-// porque é ali que o texto MENCIONA a tabela ("usando a Tabela 6-7:
-// Consequências de Buscas"). O corpo dela — `Sucessos / Consequência / 0 / 1
-// castigo` — começa na p279. Citação de tabela aponta para onde a tabela ESTÁ,
-// não para onde o livro fala dela; quem segue a citação quer conferir um
-// resultado. A sessão irmã pegou o um-a-menos conferindo o folio.
+// A 6-7 é a armadilha: a p278 é onde o texto MENCIONA a tabela ("usando a
+// Tabela 6-7: Consequências de Buscas"), e o corpo dela começa na p279. Citação
+// de tabela aponta para onde a tabela ESTÁ, e não para onde o livro fala dela —
+// quem segue a citação quer conferir um resultado.
 //
 // Três tabelas lado a lado e a masmorra embaixo, como o original. A grade é
 // `sm:2 xl:3` e não a `.collection-in-columns` dos catálogos: aqui os cartões são
@@ -73,7 +59,7 @@ func improvScene(v improvView) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(improvSignals(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 46, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 32, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -207,7 +193,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 86, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 72, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -220,7 +206,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 88, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 74, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -233,7 +219,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fonte)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 89, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 75, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -246,7 +232,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/improviso/%s')", id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 93, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 79, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -259,7 +245,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue("rolando" + id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 94, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 80, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -276,7 +262,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs("Rolar " + dado)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 98, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 84, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -287,7 +273,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 			return templ_7745c5c3_Err
 		}
 		if len(historico) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "         ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "  ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -327,7 +313,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(historico[0].Rolagem))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 124, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 103, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -340,7 +326,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(historico[0].Texto)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 125, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 104, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -358,7 +344,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(historico[0].Detalhe)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 128, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 107, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -386,7 +372,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 					var templ_7745c5c3_Var16 string
 					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(s.Rolagem))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 138, Col: 87}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 117, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -399,7 +385,7 @@ func rollingTable(id, titulo, dado, fonte string, historico []roll) templ.Compon
 					var templ_7745c5c3_Var17 string
 					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(s.Texto)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 139, Col: 39}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 118, Col: 39}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -481,7 +467,7 @@ func dungeonPlanner(v improvView) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(salasMinimo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 164, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 143, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -494,7 +480,7 @@ func dungeonPlanner(v improvView) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(salasMaximo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 165, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 144, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -507,7 +493,7 @@ func dungeonPlanner(v improvView) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.Int(v.Salas))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 166, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 145, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -586,7 +572,7 @@ func skeletonRow(rotulo, valor string) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 194, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 173, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -599,7 +585,7 @@ func skeletonRow(rotulo, valor string) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 195, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/improv.templ`, Line: 174, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {

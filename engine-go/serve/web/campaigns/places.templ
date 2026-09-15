@@ -7,8 +7,8 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O ACERVO DE LUGARES da crônica (ALE-292): onde o mestre prepara a próxima
-// cena, fora da sessão.
+// O ACERVO DE LUGARES da crônica: onde o mestre prepara a próxima cena, fora da
+// sessão.
 //
 // A mesma lista existe DENTRO da Mesa, e as duas não são cópia uma da outra
 // porque respondem a perguntas diferentes. Lá o gesto é "traga esta cena para a
@@ -78,11 +78,10 @@ templ placeRow(v oneView, l PlaceRow) {
 			</span>
 		</span>
 		if l.NaMesaID > 0 {
-			// O QUE ESTÁ NA MESA NÃO SE MONTA NEM SE APAGA, e não é cortesia
-			// vazia: as duas coisas seriam desfeitas pelo `Archive` quando a aba
-			// encerrasse — o rascunho some, e o lugar apagado volta. As travas de
-			// verdade são do servidor; isto é não oferecer o gesto que ele
-			// recusa. O que sobra é ir até onde a cena está.
+			// O QUE ESTÁ NA MESA NÃO SE MONTA NEM SE APAGA: as duas coisas seriam
+			// desfeitas pelo `Archive` quando a aba encerrasse — o rascunho some,
+			// e o lugar apagado volta. As travas de verdade são do servidor; isto
+			// é não oferecer o gesto que ele recusa.
 			<a
 				href={ templ.SafeURL(routes.Table(v.ID, l.NaMesaID)) }
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }
@@ -128,10 +127,8 @@ templ newPlaceDialog(v oneView) {
 		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/lugares/novo", v.ID)) } class="mt-3 space-y-4">
 			// SEM `TamanhoMaximo`, ao contrário do formulário da campanha logo
 			// ali: o teto do nome do lugar é do `tabuleiro`, que esta cena não
-			// alcança (ver o guarda de fronteira). Repeti-lo aqui seria a
-			// segunda verdade sobre quantas letras cabem, e a que fica para trás
-			// é sempre a da tela — o `maxlength` é conforto, e a fronteira é o
-			// servidor, que recusa com a frase.
+			// alcança. Repeti-lo aqui seria a segunda verdade sobre quantas letras
+			// cabem, e a que fica para trás é sempre a da tela.
 			@ui.TextField(ui.Field{
 				Nome: "name", Label: "Nome do lugar", Valor: "",
 				Obrigatorio: true, Erros: v.Erros["place"],

@@ -11,7 +11,7 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// A aba MAGIAS como dado (ALE-272, fatia 6).
+// A aba MAGIAS como dado.
 //
 // O grimório do personagem: só o que ele APRENDEU, cada magia com preparar,
 // esquecer e conjurar. "Aprender" abre o catálogo inteiro do Capítulo 4 com
@@ -25,11 +25,10 @@ import (
 //
 // # O SERVIDOR é a autoridade do custo, e a tela só antecipa
 //
-// A SPA calcula o PM no cliente com `shared/rules` para poupar uma ida ao
-// servidor nas recusas óbvias. Aqui não há pré-validação nenhuma: o `@post`
-// responde em ~2ms e a recusa vem com a frase certa. O que a tela mostra é uma
-// PRÉVIA do total, somada por expressão do Datastar sobre números que o servidor
-// já mandou — e ela nunca decide nada.
+// Não há pré-validação de PM no cliente: o `@post` responde em milissegundos e a
+// recusa vem com a frase certa. O que a tela mostra é uma PRÉVIA do total,
+// somada por expressão do Datastar sobre números que o servidor já mandou — e
+// ela nunca decide nada.
 
 // spellbookPanel é a aba Magias pronta para desenhar.
 type spellbookPanel struct {
@@ -352,8 +351,7 @@ func thatOpensCastGesture(magia learnedSpellRow) string {
 //
 // Ela é PRÉVIA e não decisão: quem recusa é o servidor, com a regra inteira — o
 // teto da p224, a redução de custo por item e o PM disponível. Escrever a regra
-// aqui daria uma segunda conta do mesmo número, que é o defeito que a ALE-110
-// registrou.
+// aqui daria uma segunda conta do mesmo número.
 //
 // Aprimoramento TRANCADO fica de fora da soma: ele não tem contador, então o
 // sinal dele nunca sobe — mas somá-lo mostraria um custo que o servidor não

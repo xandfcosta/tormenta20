@@ -9,12 +9,9 @@ import (
 	"t20engine/domain/board"
 )
 
-// VER COMO JOGADOR (ALE-193, portado na ALE-269 como superfície 7).
-//
-// A lente do mestre sobre a própria cena: ele confere a emboscada SEM parar de
-// montá-la. Até existir, a única forma de saber o que a mesa está vendo era
-// abrir dois navegadores com dois logins — foi assim que a ALE-178 foi
-// verificada, e é caro demais para se fazer no meio de uma sessão.
+// VER COMO JOGADOR: a lente do mestre sobre a própria cena — ele confere a
+// emboscada SEM parar de montá-la. Sem ela, saber o que a mesa está vendo exige
+// abrir dois navegadores com dois logins.
 //
 // A CÓPIA VEM DO SERVIDOR e nunca de uma segunda regra na tela: é literalmente o
 // que o `BoardForRole("player", …)` manda à mesa, o mesmo gargalo por papel que
@@ -30,12 +27,8 @@ import (
 // resposta que ele estava buscando seria a errada.
 //
 // Ela é EFÊMERA de propósito: mora em memória e morre com o processo. É um modo
-// de conferência de meia dúzia de segundos, não uma preferência.
-//
-// Divergência anotada da SPA: lá a lente é por ABA (um sinal do componente), e
-// aqui é por PESSOA na sessão — duas abas do mesmo mestre acendem juntas. É
-// consequência de o modo morar no servidor, e o caso ("o mestre com duas abas da
-// mesma mesa") não é o que a lente existe para servir.
+// de conferência de meia dúzia de segundos, não uma preferência. E é por PESSOA
+// na sessão, não por aba — duas abas do mesmo mestre acendem juntas.
 
 // lenses guarda quem está vendo a cena como a mesa.
 //

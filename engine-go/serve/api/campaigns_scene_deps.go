@@ -14,33 +14,27 @@ import (
 	"t20engine/serve/web/campaigns"
 )
 
-// A CENA DE CAMPANHAS e o adaptador que cumpre a porta dela (`campaigns.Deps`,
-// ALE-278).
+// A CENA DE CAMPANHAS e o adaptador que cumpre a porta dela (`campaigns.Deps`).
 //
-// Os onze métodos moram num arquivo próprio, e não espalhados pelos arquivos de
+// Os métodos moram num arquivo próprio, e não espalhados pelos arquivos de
 // domínio, porque juntos eles são UMA coisa: a tradução entre o vocabulário da
-// cena e o do hospedeiro. Ler os onze de uma vez é o que mostra se a fronteira
+// cena e o do hospedeiro. Ler todos de uma vez é o que mostra se a fronteira
 // está no lugar — e o sinal de que está é nenhum deles desenhar nada.
 //
-// # Quem os cumpre deixou de ser o `*Server` (fatia 6)
-//
-// Das doze assinaturas que a porta pede, quatro são do núcleo e OITO são regra
-// de campanha — listar as mesas de quem olha, dizer o papel de cada um, entrar
-// numa mesa, guardar as regras ignoradas. Por isso o adaptador é o núcleo mais
-// um `campaignRules`: o que esta cena precisa da casa é exatamente "as regras
-// de quem é dono do quê", e não um servidor.
+// Quem os cumpre é o núcleo mais um `campaignRules`, e não o `*Server`: o que
+// esta cena precisa da casa é exatamente "as regras de quem é dono do quê".
 type campaignsHost struct {
 	sceneCore
 	rules campaignRules
-	// boards é o acervo de LUGARES da campanha (ALE-292), e é a única coisa do
-	// domínio ao vivo que esta cena alcança — pelas três perguntas da porta, e
-	// não pelo store inteiro. A crônica lista, cria e apaga um lugar; quem MONTA
-	// a cena é a cena do tabuleiro.
+	// boards é o acervo de LUGARES da campanha, e é a única coisa do domínio ao
+	// vivo que esta cena alcança — pelas três perguntas da porta, e não pelo
+	// store inteiro. A crônica lista, cria e apaga um lugar; quem MONTA a cena é
+	// a cena do tabuleiro.
 	//
-	// O `sessions` entrou na ALE-270 e NÃO abre a mesma concessão: ele não
-	// atravessa a porta da cena, e vive aqui só para a faxina de memória de
-	// apagar a campanha — que é do hospedeiro, e que a cena pede como PERGUNTA
-	// (`CampaignDeleted`) e não como store.
+	// O `sessions` NÃO abre a mesma concessão: ele não atravessa a porta da
+	// cena, e vive aqui só para a faxina de memória de apagar a campanha — que é
+	// do hospedeiro, e que a cena pede como PERGUNTA (`CampaignDeleted`) e não
+	// como store.
 	boards   *board.BoardStore
 	sessions *live.SessionStore
 }
@@ -51,14 +45,12 @@ func (s *Server) campaignsHost() campaignsHost {
 
 // List traduz o `campaignList` para a forma que a CENA declarou.
 //
-// A cena consumia o `campaignListDTO` direto, e ele é a resposta de
-// `GET /campaigns`: tag `json:` em cada campo, nome do fio. Uma tela que o
-// lesse passaria a depender do formato de um endpoint que ela não serve — é o
-// que a administração recusou com o `backupDTO`.
+// A cena NÃO consome o `campaignListDTO` direto: ele é a resposta de
+// `GET /campaigns`, com tag `json:` em cada campo, e uma tela que o lesse
+// passaria a depender do formato de um endpoint que ela não serve.
 //
 // O mapeamento é aqui e a CONSULTA continua uma só: duplicá-la do lado da cena
-// seria trocar um acoplamento por uma cópia, e cópia de consulta é a família de
-// defeito que esta épica mais encontrou.
+// seria trocar um acoplamento por uma cópia.
 func (h campaignsHost) List(ctx context.Context, userID int64, admin bool) ([]campaigns.ListRow, error) {
 	linhas, err := h.rules.campaignList(ctx, AuthUser{ID: userID, IsAdmin: admin})
 	if err != nil {
@@ -106,10 +98,9 @@ func (h campaignsHost) SaveIgnoredRules(ctx context.Context, campanhaID int64, r
 
 // SaveText grava o nome e a descrição da campanha.
 //
-// Ela existe porque a cena montava `setBuilder` + `execTouched` +
-// `"UPDATE campaigns"` à mão. Cena que compõe SQL é cena com o banco dentro, e
-// o que atravessa a fronteira agora é a PERGUNTA — o hospedeiro é que sabe o
-// nome da coluna, que vazio é NULL e que a linha tem um `updatedAt` a tocar.
+// O SQL mora aqui e não na cena: cena que compõe SQL é cena com o banco dentro.
+// O que atravessa a fronteira é a PERGUNTA — o hospedeiro é que sabe o nome da
+// coluna, que vazio é NULL e que a linha tem um `updatedAt` a tocar.
 func (h campaignsHost) SaveText(ctx context.Context, campanhaID int64, nome, descricao string) error {
 	var set setBuilder
 	set.Add("name = ?", nome)
@@ -125,8 +116,7 @@ func (h campaignsHost) SaveText(ctx context.Context, campanhaID int64, nome, des
 // as duas viram a mesma frase — e distinguir diria a um estranho se um id
 // existe.
 //
-// Quem CLASSIFICA é o hospedeiro, quem escolhe a FRASE é a cena: a decisão que a
-// porta de entrar deixou escrita (ALE-278).
+// Quem CLASSIFICA é o hospedeiro, quem escolhe a FRASE é a cena.
 func (h campaignsHost) Join(ctx context.Context, campanhaID, heroiID, quemPede int64, convite string) campaigns.JoinRefusal {
 	_, err := h.rules.joinTable(ctx, joinRequest{
 		CampanhaID: campanhaID, PersonagemID: heroiID,
@@ -154,16 +144,14 @@ func (h campaignsHost) Join(ctx context.Context, campanhaID, heroiID, quemPede i
 //
 // O nome não é `IsAdmin` porque este `*Server` já tem um — `IsAdmin(email)`,
 // que a administração pede e que olha a CONFIGURAÇÃO. São perguntas diferentes
-// com a mesma cara, e o compilador recusaria as duas com o mesmo nome. É o
-// contrário do caso do `MintAccountInvite`: lá um contrato existente ganhou
-// porque era a MESMA pergunta; aqui ele não ganha porque não é.
+// com a mesma cara, e reusar o nome faria uma responder pela outra.
 func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUser(r).IsAdmin }
 
-// OpenTable abre a mesa COM link de convite (ALE-287).
+// OpenTable abre a mesa COM link de convite.
 //
-// A cena chamava o `CreateCampaign` direto e a mesa nascia sem link — e sem
-// link ela não aceita ninguém. Cunhar é do hospedeiro: é `crypto/rand` e é a
-// política de quem entra, nenhuma das duas coisas é da tela.
+// Chamar o `CreateCampaign` direto faz a mesa nascer sem link — e sem link ela
+// não aceita ninguém. Cunhar é do hospedeiro: é `crypto/rand` e é a política de
+// quem entra, nenhuma das duas coisas é da tela.
 func (h campaignsHost) OpenTable(
 	ctx context.Context, donoID int64, nome, descricao string,
 ) (int64, error) {
@@ -179,7 +167,7 @@ func (h campaignsHost) OpenTable(
 }
 
 // InviteLink devolve "" quando a mesa não tem link, e isso é estado normal:
-// toda campanha aberta antes da ALE-287 nasceu assim.
+// campanha antiga nasceu sem.
 func (h campaignsHost) InviteLink(ctx context.Context, campanhaID int64) string {
 	return h.rules.inviteOf(ctx, campanhaID)
 }
@@ -200,12 +188,12 @@ func descricaoOuNulo(texto string) sql.NullString {
 	return sql.NullString{}
 }
 
-// CampaignDeleted é a faxina de memória das sessões da campanha (ALE-270).
+// CampaignDeleted é a faxina de memória das sessões da campanha.
 func (h campaignsHost) CampaignDeleted(ctx context.Context, campanhaID int64) {
 	campaignDeleted(ctx, h.rules.queries, h.boards, h.sessions, campanhaID)
 }
 
-// ── o ACERVO DE LUGARES da crônica (ALE-292) ─────────────────────────────────
+// ── o ACERVO DE LUGARES da crônica ───────────────────────────────────────────
 
 // Places lista o acervo, já dizendo qual lugar está numa MESA agora.
 //

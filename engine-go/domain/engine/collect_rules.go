@@ -2,14 +2,13 @@ package engine
 
 import "fmt"
 
-// Pure, catalog-free rules: race/origin modifier
-// assembly (race-logic.ts / origin-logic.ts), atributo resolution
-// (racas-attr.ts), item proficiency (item-classify.ts), Tormenta Carisma math
-// (tormenta-carisma.ts), and class-power ownership (classes/ownership.ts). All
-// operate on values passed in — no globals.
+// Regras puras, sem catálogo: montagem dos modificadores de raça e de origem,
+// resolução de atributo, proficiência de item, a conta de Carisma da Tormenta e
+// a posse de poder de classe. Todas operam sobre os valores recebidos — sem
+// global.
 
-// raceModifiers ports abilities/race-logic.ts raceModifiers: attribute bonuses
-// as `attribute` mods, then each ability's modifiers + the chosen variant's.
+// raceModifiers monta os bônus de atributo como mods `attribute`, e depois os
+// modificadores de cada habilidade mais os da variante escolhida.
 func raceModifiers(race *RaceDefinition, variantChoices map[string]bool) []Modifier {
 	out := []Modifier{}
 	for _, attr := range AttributeKeys {
@@ -39,8 +38,8 @@ func raceModifiers(race *RaceDefinition, variantChoices map[string]bool) []Modif
 	return out
 }
 
-// originModifiers ports abilities/origin-logic.ts: sum the modifiers of the
-// chosen benefits (benefits then poderUnico), e a ORDEM importa: o oráculo compara byte a byte.
+// originModifiers soma os modificadores dos benefícios escolhidos (benefícios e
+// depois poderUnico), e a ORDEM importa: o oráculo compara byte a byte.
 func originModifiers(origin *OriginDefinition, choiceSet map[string]bool) []Modifier {
 	out := []Modifier{}
 	all := make([]OriginBenefit, 0, len(origin.Benefits)+1)
@@ -55,10 +54,10 @@ func originModifiers(origin *OriginDefinition, choiceSet map[string]bool) []Modi
 	return out
 }
 
-// resolveAttributeDeltas resolves a raça's atributoMod into an ORDERED list of
-// attribute deltas — the order raceAttributeMods emits them, which the oracle
-// compares byte-equal. Invalid choices come back as an error, and the caller
-// swallows it into no mods: a bad column degrades the sheet, never breaks it.
+// resolveAttributeDeltas resolve o `atributoMod` de uma raça numa lista ORDENADA
+// de deltas — a ordem em que o oráculo os compara byte a byte. Escolha inválida
+// volta como erro, e quem chama o engole em "nenhum mod": coluna ruim degrada a
+// ficha, nunca a quebra.
 func resolveAttributeDeltas(raca *RaceAttributeEntry, floatingPicks []string, ascendencia string) ([]attrDelta, error) {
 	mod := raca.AttributeMod
 	switch mod.Kind {
@@ -102,12 +101,11 @@ func resolveFloating(raca *RaceAttributeEntry, mod AttributeMod, picks []string)
 // RaceAttributeChoiceIsComplete diz se a raça JÁ recebeu a escolha de atributo
 // que ela pede — o `+1 ×3` do humano, a ascendência do suraggel.
 //
-// Exportada na ALE-272 (fatia 8): a ficha precisa mostrar essa pendência, e a
-// forja promete por escrito "dá para criar assim e terminar na ficha". Ela
-// PERGUNTA em vez de repetir a condição: quantas escolhas cada raça pede, que
-// elas sejam distintas e qual atributo é proibido já está no `resolveFloating`,
-// e uma segunda cópia divergiria no dia em que uma raça nova tivesse uma quarta
-// condição.
+// Exportada porque a ficha precisa mostrar essa pendência, e a forja promete por
+// escrito "dá para criar assim e terminar na ficha". Ela PERGUNTA em vez de
+// repetir a condição: quantas escolhas cada raça pede, que elas sejam distintas
+// e qual atributo é proibido já está no `resolveFloating`, e uma segunda cópia
+// divergiria no dia em que uma raça nova tivesse uma quarta condição.
 //
 // Raça desconhecida conta como completa: não dá para cobrar escolha de uma raça
 // que o catálogo não tem.
@@ -122,16 +120,16 @@ func (c *Catalogs) RaceAttributeChoiceIsComplete(raceName, choicesJSON string) b
 }
 
 // RequiredProficiency é a proficiência que um item exige para ser usado sem
-// penalidade, ou "" quando ele não exige nenhuma (item-classify.ts).
+// penalidade, ou "" quando ele não exige nenhuma.
 //
-// Exportada na ALE-272 (fatia 7): a Mochila marca o item equipado SEM
-// proficiência, e essa marca tem de sair da MESMA tabela que decide a
-// penalidade do motor. Uma segunda cópia no pacote `api` daria uma tela que
-// avisa sobre um item e um motor que penaliza outro.
+// Exportada porque a Mochila marca o item equipado SEM proficiência, e essa
+// marca tem de sair da MESMA tabela que decide a penalidade do motor. Uma
+// segunda cópia daria uma tela que avisa sobre um item e um motor que penaliza
+// outro.
 func RequiredProficiency(item *CatalogItem) string { return requiredProficiency(item) }
 
-// requiredProficiency ports items/catalog/item-classify.ts: the proficiency an
-// item requires to use without penalty, or "" for none.
+// requiredProficiency é a tabela: a proficiência que um item exige para ser
+// usado sem penalidade, ou "" para nenhuma.
 func requiredProficiency(item *CatalogItem) string {
 	switch item.Category {
 	case "weapon-simple":
@@ -152,17 +150,16 @@ func requiredProficiency(item *CatalogItem) string {
 	return ""
 }
 
-// carismaLossFromPowers (tormenta-carisma.ts) already lives in tormenta.go —
-// the collection layer reuses it.
+// carismaLossFromPowers mora no tormenta.go — a camada de coleta a reusa.
 
 // OwnsClassPower é a REGRA de posse de um poder de classe: automático pelo
 // nível, escolhido pelo id, ou concedido por uma escolha da classe (o caminho
 // do arcanista, o deus do clérigo).
 //
-// Exportada na ALE-272 (fatia 8): a aba Poderes lista o que o personagem TEM, e
-// essa lista precisa ser a mesma que a derivação soma. Uma segunda leitura no
-// pacote `api` daria uma tela mostrando um poder que a ficha não conta — ou o
-// contrário, que é pior, porque o número aparece sem explicação.
+// Exportada porque a aba Poderes lista o que o personagem TEM, e essa lista
+// precisa ser a mesma que a derivação soma. Uma segunda leitura daria uma tela
+// mostrando um poder que a ficha não conta — ou o contrário, que é pior, porque
+// o número aparece sem explicação.
 func OwnsClassPower(
 	power *ClassPower,
 	classLevel int,
@@ -172,8 +169,8 @@ func OwnsClassPower(
 	return ownsClassPower(power, classLevel, chosen, choice)
 }
 
-// ownsClassPower ports classes/ownership.ts ownsClassPower: auto by level,
-// elective by picked id, or grantedByChoice matching a classChoices value.
+// ownsClassPower: automático pelo nível, eletivo pelo id escolhido, ou concedido
+// por um valor casado em `classChoices`.
 func ownsClassPower(
 	power *ClassPower,
 	classLevel int,
@@ -192,8 +189,7 @@ func ownsClassPower(
 	return choice.value(power.GrantedByChoice.Field) == power.GrantedByChoice.Value
 }
 
-// ClassChoiceSelections mirrors classes/ownership.ts ClassChoiceSelections — one
-// class's devoto/caminho picks.
+// ClassChoiceSelections são as escolhas de devoto e de caminho de UMA classe.
 type ClassChoiceSelections struct {
 	Devoto  string `json:"devoto"`
 	Caminho string `json:"caminho"`

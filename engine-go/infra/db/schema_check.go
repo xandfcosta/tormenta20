@@ -9,41 +9,32 @@ import (
 	"strings"
 )
 
-// A migração pode CONSTAR aplicada sem a tabela existir (ALE-154).
+// A migração pode CONSTAR aplicada sem a tabela existir.
 //
-// Foi o que aconteceu: a `session_boards` sumiu do banco de desenvolvimento com
-// a 00005 marcada em `goose_db_version`, o goose disse "no migrations to run" e
-// o servidor subiu inteiro. O tabuleiro passou um dia vivendo só em memória —
-// cada gravação falhava numa linha de log que ninguém lê, e a tela estava
-// perfeita até o processo reiniciar.
+// Com a versão marcada em `goose_db_version` e a tabela ausente — down parcial,
+// restauração de backup antigo, experimento —, o goose diz "no migrations to
+// run" e o servidor sobe inteiro. O tabuleiro passa a viver só em memória: cada
+// gravação falha numa linha de log que ninguém lê, e a tela fica perfeita até o
+// processo reiniciar.
 //
-// A causa (down parcial, restauração de backup antigo, experimento) importa
-// menos que o fato de nada ter acusado. Confiar no `goose_db_version` é confiar
-// justamente em quem mentiu; então o boot pergunta ao SCHEMA.
+// Confiar no `goose_db_version` é confiar justamente em quem mentiu; então o
+// boot pergunta ao SCHEMA.
 
 // createTable casa o nome nas duas formas que as migrações usam. `[^\S\n]` no
 // lugar de `\s` de propósito: `\s` atravessaria a quebra de linha e engoliria a
 // linha seguinte quando um `CREATE TABLE` estivesse mal formatado.
 var createTable = regexp.MustCompile(`(?i)CREATE\s+TABLE(?:[^\S\n]+IF[^\S\n]+NOT[^\S\n]+EXISTS)?[^\S\n]+["'` + "`" + `]?(\w+)`)
 
-// dropTable é o irmão do `createTable`, e ele existe porque sem ele o schema
-// nunca pode PERDER uma tabela (ALE-205).
-//
-// A derivação lia só os `CREATE`, então toda tabela criada por qualquer migração
-// era esperada para sempre: a `00010` troca a `session_boards` de 1:1 para uma
-// linha por tabuleiro aberto, e enquanto o guarda ignorasse o `DROP` da seção
-// Up o servidor recusaria subir sobre um banco CORRETO — nomeando como faltante
-// exatamente a tabela que a migração acabou de derrubar de propósito.
-//
-// O guarda continua derivado, que é a propriedade que importa: ele só aprendeu
-// o segundo verbo que as migrações usam.
+// dropTable é o irmão do `createTable`, e sem ele o schema derivado nunca
+// PERDE uma tabela: lendo só os `CREATE`, toda tabela criada por qualquer
+// migração é esperada para sempre, e o servidor recusa subir sobre um banco
+// CORRETO — nomeando como faltante exatamente a tabela que uma migração
+// derrubou de propósito.
 var dropTable = regexp.MustCompile(`(?i)DROP\s+TABLE(?:[^\S\n]+IF[^\S\n]+EXISTS)?[^\S\n]+["'` + "`" + `]?(\w+)`)
 
 // expectedTables lê das PRÓPRIAS migrações embutidas quais tabelas têm de
-// existir. Uma lista escrita à mão envelheceria em silêncio, e este repositório
-// já foi mordido duas vezes por isso no mesmo dia (o `cloneState` que zerou o
-// `TurnsTaken`, o `parseEntryPatch` que descartou o `creatureId`). Derivada,
-// ela nasce certa a cada migração nova sem ninguém lembrar de nada.
+// existir. Uma lista escrita à mão envelheceria em silêncio; derivada, ela
+// nasce certa a cada migração nova sem ninguém lembrar de nada.
 //
 // A ORDEM dos arquivos é o que faz criar e derrubar significarem alguma coisa:
 // as migrações rodam em ordem de nome, e a resposta é o schema DEPOIS da última.

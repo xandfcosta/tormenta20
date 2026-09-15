@@ -16,23 +16,19 @@ import (
 	"t20engine/infra/platform"
 )
 
-// O EDITOR DE BLOCO (ALE-269): mexer nos números da cópia, e escrever do zero.
-//
-// É a resposta à queixa que abriu a ALE-137 — *"o mestre acaba tendo que
-// imaginar, ou inventar, ou anotar em algum lugar os itens, PM, perícias"* —, e
-// é a segunda metade da superfície 6b: lá o NPC nasce como cópia do livro, aqui
-// ele vira o NPC daquela campanha. Os dois caminhos terminam neste formulário; o
-// que muda é a SEMENTE.
+// O EDITOR DE BLOCO: mexer nos números da cópia, e escrever do zero. O NPC ou
+// nasce como cópia do livro ou nasce em branco; os dois caminhos terminam neste
+// formulário, e o que muda é a SEMENTE.
 //
 // # O RASCUNHO mora no NAVEGADOR, e essa é a decisão que desenha o arquivo
 //
-// Decisão do dono: "Salvar explícito, e Cancelar desfaz de verdade". Um rascunho
-// no servidor precisaria de dono, de prazo de validade e de uma resposta para
-// "duas abas editando o mesmo NPC" — e ainda assim Cancelar teria de apagá-lo.
-// Num sinal do navegador, Cancelar não precisa desfazer nada: NADA FOI ESCRITO.
+// Salvar é explícito e Cancelar desfaz de verdade. Um rascunho no servidor
+// precisaria de dono, de prazo de validade e de uma resposta para "duas abas
+// editando o mesmo NPC" — e ainda assim Cancelar teria de apagá-lo. Num sinal
+// do navegador, Cancelar não precisa desfazer nada: NADA FOI ESCRITO.
 //
 // O preço é conhecido e aceito: recarregar a página no meio da edição perde o
-// rascunho, exatamente como fechar o diálogo da SPA perde o dele.
+// rascunho.
 //
 // # Por que as LISTAS passam pelo servidor mesmo assim
 //
@@ -213,10 +209,9 @@ func itemWithout[T any](itens []T, indice int) ([]T, error) {
 // que precisa ser redesenhada.
 func saveDraft(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	// A RECUSA VAI PARA O EDITOR, e não para o `command_error` do rodapé — que é
-	// a saída normal do `gmCommand`. É o mesmo argumento do
-	// `move_error`: quem lê a frase está com o formulário aberto POR CIMA do
-	// rodapé, e uma recusa escrita atrás do diálogo é uma recusa que ninguém lê.
-	// Medido no navegador antes de virar isto: "salvar sem nome" não dizia nada.
+	// a saída normal do `gmCommand`. É o mesmo argumento do `move_error`: quem
+	// lê a frase está com o formulário aberto POR CIMA do rodapé, e uma recusa
+	// escrita atrás do diálogo é uma recusa que ninguém lê.
 	//
 	// Por isso o erro é devolvido como SINAL e a função sai sem erro: o comando
 	// não falhou, ele recusou — e quem tinha de saber já soube.

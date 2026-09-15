@@ -9,12 +9,10 @@ import (
 	"t20engine/domain/sheet"
 )
 
-// O ACERVO DE PODERES de um personagem (ALE-272, fatia 8).
-//
-// Cinco procedências, e a ficha antiga já as tratava como uma lista só: as
-// habilidades da RAÇA, os benefícios de ORIGEM escolhidos, as habilidades
-// AUTOMÁTICAS de classe (as que o nível concede), e os poderes ESCOLHIDOS —
-// de classe, gerais e da Tormenta.
+// O ACERVO DE PODERES de um personagem, numa lista só: as habilidades da RAÇA,
+// os benefícios de ORIGEM escolhidos, as habilidades AUTOMÁTICAS de classe (as
+// que o nível concede), e os poderes ESCOLHIDOS — de classe, gerais e da
+// Tormenta.
 //
 // # Por que o nome e o texto NÃO vêm do motor
 //
@@ -141,11 +139,11 @@ func automaticOwnership(
 	return engine.OwnsClassPower(doMotor, int(classe.Level), nil, escolhas[classe.ClassName])
 }
 
-// chosenPowers lê o blob `classChoices` — o caminho do arcanista, o deus
-// do clérigo. Blob torto vira mapa vazio: a aba não pode deixar de abrir porque
-// uma linha do banco está errada.
-// chosenPowers são os ids da coluna `classPowers` — poder de classe,
-// poder geral ou poder da Tormenta, nessa ordem de busca.
+// chosenPowers são os ids da coluna `classPowers` — poder de classe, poder
+// geral ou poder da Tormenta, nessa ordem de busca.
+//
+// Blob torto vira lista vazia: a aba não pode deixar de abrir porque uma linha
+// do banco está errada.
 func chosenPowers(dto sheet.CharacterDTO) []ownedPower {
 	var ids []string
 	if json.Unmarshal([]byte(dto.ClassPowers), &ids) != nil {
@@ -248,5 +246,5 @@ func savedAncestry(blob string) string {
 // sheet.OriginBenefitsOf são os benefícios MAIS o poder único.
 //
 // O catálogo guarda o poder único num campo à parte, e a ficha o trata como um
-// dos dois que a pessoa leva (p85) — a SPA já os juntava assim. Sem isso o poder
-// da origem não aparece em lugar nenhum e não dá para escolhê-lo.
+// dos dois que a pessoa leva (p85). Sem isso o poder da origem não aparece em
+// lugar nenhum e não dá para escolhê-lo.
